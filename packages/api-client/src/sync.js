@@ -40,6 +40,7 @@ class UniversalSyncManager {
     this.listeners = new Set();
     this.activeSource = null;
     this.reconnectTimer = null;
+    this.heartbeatTimer = null;
     this.isConnected = false;
     this.lastVersions = {};
     this.tokenGetter = null;
@@ -75,9 +76,31 @@ class UniversalSyncManager {
   }
 
   /**
+   * Start periodic heartbeat check for instant recovery if SSE stream pauses.
+   */
+  startHeartbeat(intervalMs = 4000) {
+    if (this.heartbeatTimer) return;
+    this.heartbeatTimer = setInterval(() => {
+      if (this.listeners.size > 0) {
+        this.checkSyncStatus().catch(() => {});
+      }
+    }, intervalMs);
+  }
+
+  stopHeartbeat() {
+    if (this.heartbeatTimer) {
+      clearInterval(this.heartbeatTimer);
+      this.heartbeatTimer = null;
+    }
+  }
+
+  /**
    * Start real-time SSE sync connection if token is available.
+   * Works universally on Web (EventSource) and React Native (XMLHttpRequest chunk streaming).
    */
   async connect() {
+    this.startHeartbeat(4000);
+
     if (this.activeSource || !this.tokenGetter) return;
 
     let token = this.tokenGetter();
@@ -90,6 +113,7 @@ class UniversalSyncManager {
 
     try {
       if (typeof EventSource !== 'undefined') {
+        // Web / Standard Browser
         const es = new EventSource(streamUrl);
 
         es.addEventListener('open', () => {
@@ -119,16 +143,112 @@ class UniversalSyncManager {
           this.isConnected = false;
           es.close();
           this.activeSource = null;
-          // Exponential backoff reconnect
           if (!this.reconnectTimer) {
             this.reconnectTimer = setTimeout(() => {
               this.reconnectTimer = null;
               this.connect();
-            }, 5000);
+            }, 3000);
           }
         };
 
         this.activeSource = es;
+      } else if (typeof XMLHttpRequest !== 'undefined') {
+        // React Native (Expo) - Native XMLHttpRequest chunk streaming
+        const xhr = new XMLHttpRequest();
+        xhr.open('GET', streamUrl, true);
+        xhr.setRequestHeader('Accept', 'text/event-stream');
+        xhr.setRequestHeader('Cache-Control', 'no-cache');
+
+        let seenIndex = 0;
+        let buffer = '';
+
+        const parseSSEChunk = (text) => {
+          buffer += text;
+          const messages = buffer.split('\n\n');
+          buffer = messages.pop() || '';
+
+          for (const rawMsg of messages) {
+            if (!rawMsg.trim() || rawMsg.startsWith(':')) {
+              continue; // Heartbeat or comment
+            }
+            let eventType = 'message';
+            let dataStr = '';
+            const lines = rawMsg.split('\n');
+            for (const line of lines) {
+              if (line.startsWith('event:')) {
+                eventType = line.slice(6).trim();
+              } else if (line.startsWith('data:')) {
+                dataStr += (dataStr ? '\n' : '') + line.slice(5).trim();
+              }
+            }
+            if (dataStr) {
+              try {
+                const data = JSON.parse(dataStr);
+                if (eventType === 'connected' && data?.status?.versions) {
+                  this.lastVersions = data.status.versions;
+                } else if (eventType === 'sync' && data?.domain && data?.version) {
+                  this.lastVersions[data.domain] = data.version;
+                  this._notify(data);
+                } else if (data?.type) {
+                  this._notify(data);
+                }
+              } catch (e) {}
+            }
+          }
+        };
+
+        xhr.onprogress = () => {
+          try {
+            const currentText = xhr.responseText || '';
+            if (currentText.length > seenIndex) {
+              const chunk = currentText.slice(seenIndex);
+              seenIndex = currentText.length;
+              parseSSEChunk(chunk);
+            }
+          } catch {}
+        };
+
+        xhr.onreadystatechange = () => {
+          if (xhr.readyState === 2 || xhr.readyState === 3) {
+            this.isConnected = true;
+            try {
+              const currentText = xhr.responseText || '';
+              if (currentText.length > seenIndex) {
+                const chunk = currentText.slice(seenIndex);
+                seenIndex = currentText.length;
+                parseSSEChunk(chunk);
+              }
+            } catch {}
+          } else if (xhr.readyState === 4) {
+            this.isConnected = false;
+            this.activeSource = null;
+            if (!this.reconnectTimer) {
+              this.reconnectTimer = setTimeout(() => {
+                this.reconnectTimer = null;
+                this.connect();
+              }, 3000);
+            }
+          }
+        };
+
+        xhr.onerror = () => {
+          this.isConnected = false;
+          this.activeSource = null;
+          if (!this.reconnectTimer) {
+            this.reconnectTimer = setTimeout(() => {
+              this.reconnectTimer = null;
+              this.connect();
+            }, 3000);
+          }
+        };
+
+        this.activeSource = {
+          close: () => {
+            try { xhr.abort(); } catch {}
+          },
+        };
+
+        xhr.send();
       }
     } catch (err) {
       this.activeSource = null;
@@ -137,6 +257,7 @@ class UniversalSyncManager {
   }
 
   disconnect() {
+    this.stopHeartbeat();
     if (this.activeSource) {
       try {
         this.activeSource.close();

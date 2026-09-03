@@ -36,6 +36,11 @@ export function useUniversalSync(currentUser, onUserUpdated) {
 
         case 'closet_updated':
           try {
+            if (event?.payload?.action === 'delete' && event?.payload?.item_id) {
+              closetStore.remove(event.payload.item_id);
+            } else if (event?.payload?.action === 'update' && event?.payload?.item_id && event?.payload?.patch) {
+              closetStore.upsert({ id: event.payload.item_id, ...event.payload.patch });
+            }
             if (closetStore?.prewarm) {
               closetStore.prewarm({ force: true });
             }

@@ -33,7 +33,14 @@ export function setStoredViewPreference(view) {
 export function bestImageUrl(item, opts = {}) {
   if (!item) return null;
 
-  const viewMode = opts.viewMode || (opts.skipReconstruction ? 'original' : (opts.useStoredPreference ? getStoredViewPreference() : 'repaired'));
+  // Determine effective view mode:
+  // Item preference > explicit opts.viewMode > global stored preference > default 'repaired'
+  const itemPref = item.preferred_image_view || item.preferred_view;
+  const itemMode = itemPref
+    ? (itemPref === 'clean' || itemPref === 'original' ? 'original' : 'repaired')
+    : undefined;
+
+  const viewMode = opts.viewMode || (opts.skipReconstruction ? 'original' : (itemMode || (opts.useStoredPreference ? getStoredViewPreference() : 'repaired')));
 
   // 1. AI-reconstructed image (background-free studio quality)
   if (viewMode !== 'original' && !opts.skipReconstruction) {

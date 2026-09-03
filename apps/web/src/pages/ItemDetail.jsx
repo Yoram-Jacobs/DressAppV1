@@ -200,6 +200,7 @@ const EDITABLE_FIELDS = [
   'reconstruction_metadata',
   'clean_image_url',
   'clean_image_status',
+  'preferred_image_view',
 ];
 
 /** Pick the subset of fields we mutate + normalise to a stable shape.
@@ -277,6 +278,7 @@ function toFormState(item, user = null) {
     reconstruction_metadata: item.reconstruction_metadata || null,
     clean_image_url: item.clean_image_url || null,
     clean_image_status: item.clean_image_status || null,
+    preferred_image_view: item.preferred_image_view || null,
   };
 }
 
@@ -694,6 +696,9 @@ export default function ItemDetail() {
       const data = await api.getItem(id);
       setItem(data);
       setForm(toFormState(data, user));
+      if (data?.preferred_image_view) {
+        setShowingOriginal(data.preferred_image_view === 'clean' || data.preferred_image_view === 'original');
+      }
     } catch (err) {
       const is404 = err?.response?.status === 404;
       toast.error(is404 ? t('itemDetail.notFound') : (err?.response?.data?.detail || t('common.error')));
@@ -1646,7 +1651,14 @@ export default function ItemDetail() {
                   onClick={() => {
                     setShowingOriginal((s) => {
                       const next = !s;
+                      const pref = next ? 'clean' : 'reconstructed';
                       setStoredViewPreference(next ? 'original' : 'repaired');
+                      if (item?.id) {
+                        api.patchItem(item.id, { preferred_image_view: pref }).catch(() => {});
+                        closetStore.upsert({ id: item.id, preferred_image_view: pref });
+                        setItem((prev) => (prev ? { ...prev, preferred_image_view: pref } : prev));
+                        setForm((prev) => (prev ? { ...prev, preferred_image_view: pref } : prev));
+                      }
                       return next;
                     });
                   }}
@@ -1655,8 +1667,8 @@ export default function ItemDetail() {
                 >
                   <RefreshCw className="h-3 w-3" />
                   {showingOriginal
-                    ? t('itemDetail.repair.showRepaired')
-                    : t('itemDetail.repair.showOriginal')}
+                    ? t('itemDetail.repair.showRepaired', { defaultValue: 'Show repaired' })
+                    : t('itemDetail.repair.showOriginal', { defaultValue: 'Original crop' })}
                 </button>
               </>
             )}
