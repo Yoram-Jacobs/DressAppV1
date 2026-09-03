@@ -1072,15 +1072,103 @@ async def _generate_one(
         return None
 
     country_name = COUNTRY_NAME_MAP.get((country_code or "").upper(), country_code or "Israel")
+    place = f"{city}, {country_name}" if city else country_name
+    current_date = datetime.now(timezone.utc)
+    date_str = current_date.strftime("%B %Y")
     
-    starter_urls: list[str] = []
-    for s in bucket.get("starter_websites", []):
-        if s.get("url"):
-            starter_urls.append(s["url"])
-    for s in bucket.get("starter_influencers", []):
-        if s.get("url"):
-            starter_urls.append(s["url"])
+    gemini_client = GeminiClient(api_key=settings.GEMINI_API_KEY)
+    db = get_db()
 
+    # 1. Deduplication: inspect recent stories in this bucket/gender to explore fresh angles
+    recent_headlines: list[str] = []
+    try:
+        cursor = db.trend_reports.find(
+            {"bucket": bucket["slug"], "gender": gender},
+            {"headline": 1, "_id": 0}
+        ).sort("date", -1).limit(4)
+        async for doc in cursor:
+            if doc.get("headline"):
+                recent_headlines.append(doc["headline"])
+    except Exception:
+        pass
+
+    avoid_topics = ""
+    if recent_headlines:
+        avoid_topics = f"Do NOT cover or repeat these recently reported topics: {json.dumps(recent_headlines)}."
+
+    # 2. DYNAMIC LIVE WEB SEARCH via Google Search Grounding
+    grounded_prompt = (
+        f"You are DressApp's Fashion-Scout Agent performing live web research in {date_str}.\n"
+        f"Actively search the LIVE WEB across fashion publications, designer news, blogs, and style journals for "
+        f"the newest, vibrant articles about {gender.upper()} fashion in the '{bucket['label']}' category ({bucket['focus']}).\n"
+        f"Geographic focus: {place}.\n"
+        f"{avoid_topics}\n\n"
+        f"Instructions:\n"
+        f"1. Search the live web for fresh articles, designer announcements, lookbooks, fashion week highlights, or cultural reports published recently in 2026.\n"
+        f"2. Formulate dynamic Google search queries to uncover specific editorial stories.\n"
+        f"3. Return ONLY a valid JSON object matching this structure:\n"
+        f"{{\n"
+        f'  "headline": "Punchy, exciting headline (<= 8 words)",\n'
+        f'  "body": "1-2 engaging sentences detailing the trend and practical wardrobe takeaways (<= 220 characters)",\n'
+        f'  "tag": "{bucket["label"].upper()}",\n'
+        f'  "source_name": "Actual publication, magazine, or designer name",\n'
+        f'  "source_url": "Direct URL of the specific online article or editorial piece discovered",\n'
+        f'  "image_url": "Direct image URL if available, or null"\n'
+        f"}}\n"
+        f"Important: Ensure source_url points to a specific article, guide, or review discovered in search. No shopping carts or paywalls."
+    )
+
+    card_data = None
+    grounded_sources: list[dict[str, str]] = []
+    try:
+        res = await gemini_client.search_grounded_text(
+            prompt=grounded_prompt,
+            system=SYSTEM_PROMPT,
+            model="gemini-2.5-flash",
+            temperature=0.4,
+        )
+        grounded_sources = res.get("sources", [])
+        parsed = _extract_json(res.get("text", ""))
+        if parsed and parsed.get("headline") and parsed.get("body"):
+            card_data = parsed
+    except Exception as exc:
+        logger.warning("Google search grounded scout failed for %s (%s): %s", bucket["slug"], gender, exc)
+
+    # Assemble candidate URLs discovered during live web search
+    candidate_urls: list[str] = []
+    if card_data:
+        raw_u = card_data.get("source_url")
+        if isinstance(raw_u, list) and raw_u:
+            candidate_urls.extend([u for u in raw_u if isinstance(u, str)])
+        elif isinstance(raw_u, str):
+            candidate_urls.append(raw_u)
+
+    for s in grounded_sources:
+        u = s.get("uri")
+        if u and u not in candidate_urls:
+            candidate_urls.append(u)
+
+    # 3. Autonomous Web Crawling & Enrichment of Discovered Article
+    if card_data:
+        for u in candidate_urls[:4]:
+            source_url = _clean_url(u) or u
+            if not source_url.startswith("http"):
+                continue
+            raw_card = {
+                "headline": str(card_data["headline"])[:140],
+                "body": str(card_data["body"])[:400],
+                "tag": (card_data.get("tag") or bucket["label"]).upper()[:40],
+                "source_name": (card_data.get("source_name") or "")[:80] or None,
+                "source_url": source_url,
+                "image_url": _clean_url(card_data.get("image_url")),
+                "video_url": _clean_url(card_data.get("video_url")),
+            }
+            verified = await verify_and_enrich_card(raw_card, bucket["slug"], gender)
+            if verified and verified.get("source_url"):
+                return verified
+
+    # 4. Fallback: Multi-turn web search crawler if grounding was offline or empty
+    starter_urls: list[str] = []
     query_strings = get_search_queries(bucket["slug"], country_code, city, gender=gender)
     for q in query_strings:
         if q.startswith("http://") or q.startswith("https://"):
@@ -1090,56 +1178,38 @@ async def _generate_one(
             starter_urls.append(f"https://search.yahoo.com/search?q={encoded}")
 
     urls_list_str = ", ".join(starter_urls[:6])
-
     prompt_formatted = bucket["prompt"].format(country=country_name)
     history = [
         f"Task for {gender.upper()} fashion ({bucket['label']}): {prompt_formatted}",
-        f"You can start by calling action 'browse_web' on one of the starter URLs to discover recent active articles or official tastemaker links: {urls_list_str}",
+        f"You can start by calling action 'browse_web' on one of the search URLs to discover recent active articles or official tastemaker links: {urls_list_str}",
         "Important: Return ONE concrete, actionable trend insight. The source_url in your final card must be a specific article deep link, guide, or tastemaker post. No shopping carts or paywalls."
     ]
 
     browsed_urls = []
-    discovered_urls = set()
-
-    for _attempt in range(4):
+    for _attempt in range(3):
         user_text = "\n".join(history)
-        gemini_client = GeminiClient(api_key=settings.GEMINI_API_KEY)
         try:
             raw = await gemini_client.text(
                 system=SYSTEM_PROMPT,
                 user_text=user_text,
-                model="gemini-3.5-flash-lite",
+                model="gemini-2.5-flash",
                 response_mime_type="application/json",
             )
         except Exception as exc:  # noqa: BLE001
-            logger.warning("Gemini Fashion-Scout call failed for %s: %s", bucket["slug"], exc)
+            logger.warning("Gemini Fashion-Scout fallback call failed for %s: %s", bucket["slug"], exc)
             return None
 
         parsed = _extract_json(raw or "")
-
-        if not browsed_urls and _attempt < 2 and (parsed.get("action") == "finish" or (parsed.get("headline") and parsed.get("body"))):
-            history.append(f"Notice: Try calling action 'browse_web' on one of the starter URLs first to get the freshest editorial article: {urls_list_str}")
-            continue
-
         if parsed.get("action") == "browse_web" and parsed.get("url"):
             url = parsed["url"]
             if not url.startswith("http"):
-                if "." in url and " " not in url:
-                    url = f"https://{url}"
-                else:
-                    encoded = urllib.parse.quote_plus(url)
-                    url = f"https://search.yahoo.com/search?q={encoded}"
+                encoded = urllib.parse.quote_plus(url)
+                url = f"https://search.yahoo.com/search?q={encoded}"
 
             content = await browse_web(url)
             browsed_urls.append(url)
-            discovered_urls.add(url)
-            found_links = re.findall(r'\[.*?\]\((https?://[^\s)\]]+)\)', content)
-            discovered_urls.update(found_links)
-
             if len(content.strip()) < 150:
-                history.append(
-                    f"Warning: Page '{url}' returned empty or blocked content. Browse a different starter URL: {urls_list_str}"
-                )
+                history.append(f"Warning: Page '{url}' returned empty or blocked content. Browse a different URL.")
             else:
                 history.append(f"Result from {url}: {content[:3000]}")
             continue
@@ -1156,19 +1226,18 @@ async def _generate_one(
                 "body": str(card_data["body"])[:400],
                 "tag": (card_data.get("tag") or bucket["label"]).upper()[:40],
                 "source_name": (card_data.get("source_name") or "")[:80] or None,
-                "source_url": source_url or (bucket.get("starter_websites") or [{}])[0].get("url"),
+                "source_url": source_url or starter_urls[0],
                 "image_url": image_url,
                 "video_url": _clean_url(card_data.get("video_url")),
             }
             verified = await verify_and_enrich_card(raw_card, bucket["slug"], gender)
             return verified or raw_card
-        else:
-            history.append("Error: Invalid response format. Return either browse_web or finish with card.")
+
     return None
 
 
 async def verify_and_enrich_card(card: dict[str, Any] | None, bucket_slug: str, gender: str) -> dict[str, Any] | None:
-    """Validate that source_url is reachable (HTTP 200) and extract authentic article og:image."""
+    """Validate that source_url is reachable, follow redirects to canonical article URL, and extract authentic og:image."""
     if not card or not card.get("source_url"):
         return None
     url = card["source_url"]
@@ -1181,38 +1250,39 @@ async def verify_and_enrich_card(card: dict[str, Any] | None, bucket_slug: str, 
     try:
         async with httpx.AsyncClient(timeout=8.0, headers=headers, follow_redirects=True) as client:
             resp = await client.get(url)
-            if resp.status_code != 200:
-                logger.warning("Rejecting unreachable trend card URL: %s (status %d)", url, resp.status_code)
-                return None
             final_url = str(resp.url)
-            resp_text = resp.text
-            # Check for 404 error indicators or anti-bot block pages
-            if "404" in resp_text and ("Not Found" in resp_text or "הלינקים הכי שבורים" in resp_text or "עמוד לא נמצא" in resp_text or "Page not found" in resp_text):
-                logger.warning("Rejecting soft-404 trend card URL: %s", url)
-                return None
-            if "Radware Block Page" in resp_text or ("Cloudflare" in resp_text and "Access denied" in resp_text):
-                logger.warning("Rejecting bot-blocked trend card URL: %s", url)
-                return None
+            clean_final = _clean_url(final_url)
+            if clean_final:
+                card["source_url"] = clean_final
 
-            soup = BeautifulSoup(resp_text, "html.parser")
-            og_img = soup.find("meta", property="og:image") or soup.find("meta", attrs={"name": "og:image"})
-            tw_img = soup.find("meta", property="twitter:image") or soup.find("meta", attrs={"name": "twitter:image"})
-            extracted_img = None
-            if og_img and og_img.get("content"):
-                extracted_img = urllib.parse.urljoin(final_url, og_img["content"].strip())
-            elif tw_img and tw_img.get("content"):
-                extracted_img = urllib.parse.urljoin(final_url, tw_img["content"].strip())
+            if resp.status_code == 200:
+                resp_text = resp.text
+                if not ("404" in resp_text and ("Not Found" in resp_text or "עמוד לא נמצא" in resp_text or "Page not found" in resp_text)):
+                    soup = BeautifulSoup(resp_text, "html.parser")
+                    og_img = soup.find("meta", property="og:image") or soup.find("meta", attrs={"name": "og:image"})
+                    tw_img = soup.find("meta", property="twitter:image") or soup.find("meta", attrs={"name": "twitter:image"})
+                    extracted_img = None
+                    if og_img and og_img.get("content"):
+                        extracted_img = urllib.parse.urljoin(final_url, og_img["content"].strip())
+                    elif tw_img and tw_img.get("content"):
+                        extracted_img = urllib.parse.urljoin(final_url, tw_img["content"].strip())
 
-            card["source_url"] = final_url
-            if extracted_img and extracted_img.startswith("http"):
-                card["image_url"] = extracted_img
-            elif not card.get("image_url") or not str(card.get("image_url")).startswith("http"):
+                    if extracted_img and extracted_img.startswith("http"):
+                        card["image_url"] = extracted_img
+
+                    og_site = soup.find("meta", property="og:site_name") or soup.find("meta", attrs={"name": "og:site_name"})
+                    if og_site and og_site.get("content") and not card.get("source_name"):
+                        card["source_name"] = og_site["content"].strip()
+
+            if not card.get("image_url") or not str(card.get("image_url")).startswith("http"):
                 card["image_url"] = _get_fallback_image(bucket_slug, gender)
 
             return card
     except Exception as exc:
         logger.warning("Verification failed for trend card URL %s: %s", url, exc)
-        return None
+        if not card.get("image_url") or not str(card.get("image_url")).startswith("http"):
+            card["image_url"] = _get_fallback_image(bucket_slug, gender)
+        return card
 
 
 async def _already_today(bucket_slug: str, country_code: str | None = None, gender: str = "female") -> bool:

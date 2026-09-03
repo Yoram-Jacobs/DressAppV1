@@ -174,6 +174,7 @@ class GeminiClient:
         max_tokens: int | None,
         response_mime_type: str | None,
         response_schema: dict[str, Any] | None,
+        tools: list[Any] | None = None,
     ) -> Any:
         cfg_kwargs: dict[str, Any] = {}
         if system:
@@ -189,6 +190,8 @@ class GeminiClient:
                 cfg_kwargs["response_schema"] = response_schema.model_json_schema()
             else:
                 cfg_kwargs["response_schema"] = response_schema
+        if tools:
+            cfg_kwargs["tools"] = tools
 
         if cfg_kwargs and _genai_types is not None:
             return _genai_types.GenerateContentConfig(**cfg_kwargs)
@@ -205,6 +208,7 @@ class GeminiClient:
         max_tokens: int | None = None,
         response_mime_type: str | None = None,
         response_schema: dict[str, Any] | None = None,
+        tools: list[Any] | None = None,
     ) -> str:
         """Text-only completion. Returns the model's response text."""
         config = self._build_config(
@@ -213,6 +217,7 @@ class GeminiClient:
             max_tokens=max_tokens,
             response_mime_type=response_mime_type,
             response_schema=response_schema,
+            tools=tools,
         )
         resp = await self._client.aio.models.generate_content(
             model=_normalise_model(model),
@@ -220,6 +225,66 @@ class GeminiClient:
             config=config,
         )
         return _coerce_text(resp)
+
+    async def search_grounded_text(
+        self,
+        *,
+        prompt: str,
+        system: str | None = None,
+        model: str = DEFAULT_TEXT_MODEL,
+        temperature: float | None = 0.3,
+    ) -> dict[str, Any]:
+        """Generate text grounded with live Google Search.
+        
+        Returns dict with:
+          - text: generated response text
+          - sources: list of dicts [{"uri": str, "title": str}] from grounding_chunks
+          - search_queries: list of search queries executed
+        """
+        tools = None
+        if _genai_types is not None:
+            tools = [_genai_types.Tool(google_search=_genai_types.GoogleSearch())]
+
+        config = self._build_config(
+            system=system,
+            temperature=temperature,
+            max_tokens=None,
+            response_mime_type=None,
+            response_schema=None,
+            tools=tools,
+        )
+        resp = await self._client.aio.models.generate_content(
+            model=_normalise_model(model),
+            contents=prompt,
+            config=config,
+        )
+
+        sources: list[dict[str, str]] = []
+        queries: list[str] = []
+
+        candidates = getattr(resp, "candidates", None) or []
+        if candidates:
+            c0 = candidates[0]
+            g_meta = getattr(c0, "grounding_metadata", None)
+            if g_meta:
+                q_list = getattr(g_meta, "web_search_queries", None) or []
+                queries = [str(q) for q in q_list]
+
+                chunks = getattr(g_meta, "grounding_chunks", None) or []
+                for chunk in chunks:
+                    web = getattr(chunk, "web", None)
+                    if web:
+                        uri = getattr(web, "uri", None)
+                        title = getattr(web, "title", None)
+                        if uri:
+                            sources.append({"uri": str(uri), "title": str(title or "")})
+
+        text = _coerce_text(resp)
+        return {
+            "text": text,
+            "sources": sources,
+            "search_queries": queries,
+        }
 
     # ----------------------------------------------------------------- vision
     async def vision(
