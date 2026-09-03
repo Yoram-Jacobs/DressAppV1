@@ -711,12 +711,15 @@ async def create_item(
                 "checked": True,
                 "is_missing": False,
                 "recommendation_source": None,
-                "recommendation_url": None
+                "recommendation_url": None,
             })
             await db.suitcases.update_one(
                 {"id": active_s["id"]},
                 {"$set": {"packing_list": p_list, "updated_at": datetime.now(timezone.utc).isoformat()}}
             )
+
+    from app.services.sync_service import broadcast_sync_event
+    await broadcast_sync_event(user["id"], "closet_updated", {"action": "create", "item_id": doc.get("id")})
 
     return doc
 
@@ -5820,6 +5823,10 @@ async def update_item(
 
     if updated and "_id" in updated:
         updated.pop("_id")
+
+    from app.services.sync_service import broadcast_sync_event
+    await broadcast_sync_event(user["id"], "closet_updated", {"action": "update", "item_id": item_id})
+
     return updated
 
 
@@ -6009,6 +6016,9 @@ async def delete_item(
         # Auto-demotion is a UX nicety — never let a failure here
         # break the delete itself (the item is already gone).
         logger.warning("star auto-demotion failed for %s: %s", item_id, exc)
+
+    from app.services.sync_service import broadcast_sync_event
+    await broadcast_sync_event(user["id"], "closet_updated", {"action": "delete", "item_id": item_id})
 
     return Response(status_code=204)
 

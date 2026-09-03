@@ -7,4 +7,4 @@
  * Metro will pick streamNdjson.native.js on React Native targets,
  * and streamNdjson.js on web.
  */
-export { streamNdjson } from './streamNdjson';
+export { streamNdjson } from './streamNdjson.js';

@@ -36,6 +36,7 @@ let webpackConfig = {
   webpack: {
     alias: {
       '@': path.resolve(__dirname, 'src'),
+      '@dressapp/api-client': path.resolve(__dirname, '../../packages/api-client/src/index.js'),
       'lucide-react': path.resolve(__dirname, 'node_modules/lucide-react/dist/cjs/lucide-react.js'),
       'recharts': path.resolve(__dirname, 'node_modules/recharts/lib/index.js'),
       'motion-utils': require.resolve('motion-utils'),

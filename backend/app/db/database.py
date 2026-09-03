@@ -1,6 +1,7 @@
 """MongoDB (Motor) client with idempotent index bootstrap."""
 from __future__ import annotations
 
+import asyncio
 import logging
 
 from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorDatabase
@@ -10,21 +11,25 @@ from app.config import settings
 logger = logging.getLogger(__name__)
 
 _client: AsyncIOMotorClient | None = None
-_db: AsyncIOMotorDatabase | None = None
+_clients_by_loop: dict[int, AsyncIOMotorClient] = {}
 
 
 def get_client() -> AsyncIOMotorClient:
     global _client
-    if _client is None:
-        _client = AsyncIOMotorClient(settings.MONGO_URL)
-    return _client
+    try:
+        loop = asyncio.get_running_loop()
+        loop_id = id(loop)
+        if loop_id not in _clients_by_loop:
+            _clients_by_loop[loop_id] = AsyncIOMotorClient(settings.MONGO_URL)
+        return _clients_by_loop[loop_id]
+    except RuntimeError:
+        if _client is None:
+            _client = AsyncIOMotorClient(settings.MONGO_URL)
+        return _client
 
 
 def get_db() -> AsyncIOMotorDatabase:
-    global _db
-    if _db is None:
-        _db = get_client()[settings.DB_NAME]
-    return _db
+    return get_client()[settings.DB_NAME]
 
 
 async def ensure_indexes() -> None:

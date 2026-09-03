@@ -57,6 +57,8 @@ async def stylist_create_session(
 ) -> dict[str, Any]:
     """Create a fresh session. The title will be filled on the first turn."""
     session = await create_session(user["id"])
+    from app.services.sync_service import broadcast_sync_event
+    await broadcast_sync_event(user["id"], "stylist_updated", {"action": "create_session", "session_id": session.get("id")})
     return _safe_session(session)
 
 
@@ -68,6 +70,8 @@ async def stylist_delete_session(
     ok = await delete_session(session_id, user["id"])
     if not ok:
         raise HTTPException(404, "Session not found")
+    from app.services.sync_service import broadcast_sync_event
+    await broadcast_sync_event(user["id"], "stylist_updated", {"action": "delete_session", "session_id": session_id})
     return {"deleted": True, "session_id": session_id}
 
 
@@ -325,6 +329,9 @@ async def stylist_endpoint(
                 session["title"] = title
         except Exception as exc:  # noqa: BLE001
             logger.warning("Title generation failed for %s: %s", session["id"], exc)
+
+    from app.services.sync_service import broadcast_sync_event
+    await broadcast_sync_event(user["id"], "stylist_updated", {"action": "message", "session_id": session["id"]})
 
     return {
         "session_id": session["id"],

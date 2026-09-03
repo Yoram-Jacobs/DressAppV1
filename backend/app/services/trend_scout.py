@@ -1513,6 +1513,10 @@ async def run_trend_scout(
         country_code,
         target_genders
     )
+    if user and user.get("id"):
+        from app.services.sync_service import broadcast_sync_event
+        await broadcast_sync_event(user["id"], "trend_scout_updated", {"date": today})
+
     return {
         "generated": [{k: v for k, v in r.items() if k != "_id"} for r in results],
         "skipped": skipped,

@@ -36,6 +36,8 @@ import { calendar, misc } from './misc.js';
 import { campaignApi } from './campaigns.js';
 import { avatar } from './avatar.js';
 
+import { sync, syncManager } from './sync.js';
+
 /**
  * Build the merged `api` object from domain modules.
  * Each domain module is a plain object of functions that already
@@ -68,6 +70,7 @@ export function buildApi() {
     ...calendar,
     ...misc,
     ...campaignApi,
+    ...sync,
   };
 }
 
@@ -76,9 +79,10 @@ export function buildApi() {
 // ============================================================
 export { auth, users, closet, listings, transactions, stylist, outfits };
 export { suitcase, admin, trends, professionals, promotions, pricing, share, avatar };
-export { calendar, misc, campaignApi };
+export { calendar, misc, campaignApi, sync, syncManager };
 
 // ============================================================
 // Streaming utilities
 // ============================================================
 export { streamNdjson } from './streamNdjson.js';
+

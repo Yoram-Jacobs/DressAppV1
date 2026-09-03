@@ -171,6 +171,8 @@ async def save_outfit(
         )
 
     logger.info("Saved outfit id=%s user_id=%s", outfit_id, user["id"])
+    from app.services.sync_service import broadcast_sync_event
+    await broadcast_sync_event(user["id"], "lookbook_updated", {"action": "create", "outfit_id": outfit_id})
     return _safe_doc(doc)
 
 
@@ -186,6 +188,8 @@ async def delete_saved_outfit(
         raise HTTPException(status_code=404, detail="Outfit not found")
         
     res = await db.outfits.delete_one({"id": outfit_id, "user_id": user["id"]})
+    from app.services.sync_service import broadcast_sync_event
+    await broadcast_sync_event(user["id"], "lookbook_updated", {"action": "delete", "outfit_id": outfit_id})
     return {"deleted": True, "id": outfit_id}
 
 

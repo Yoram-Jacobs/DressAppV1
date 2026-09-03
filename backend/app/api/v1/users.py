@@ -164,6 +164,8 @@ async def update_migration_flag(
             "updated_at": datetime.now(timezone.utc).isoformat(),
         }
     await db.users.update_one({"id": user["id"]}, {"$set": update_data})
+    from app.services.sync_service import broadcast_sync_event
+    await broadcast_sync_event(user["id"], "profile_updated")
     return {"status": "ok", "migration_flag": flag}
 
 
@@ -394,6 +396,8 @@ async def update_me(
                 pass
             
         await db.users.update_one({"id": user["id"]}, {"$set": set_ops})
+        from app.services.sync_service import broadcast_sync_event
+        await broadcast_sync_event(user["id"], "profile_updated")
 
     updated = await db.users.find_one({"id": user["id"]}, {"_id": 0})
     if updated is not None:

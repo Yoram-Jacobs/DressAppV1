@@ -161,8 +161,8 @@ export function TrendScoutScreen() {
     if (refreshing) return;
     setRefreshing(true);
     try {
-      await api.trendsRunNowDev(true, selectedGender, country);
       await prewarm({ language, country, gender: selectedGender, force: true });
+      api.trendsRunNowDev(true, selectedGender, country).catch(() => {});
     } catch {
       await prewarm({ language, country, gender: selectedGender, force: true });
     } finally {

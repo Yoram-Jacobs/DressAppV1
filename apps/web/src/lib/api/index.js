@@ -13,7 +13,7 @@ import { campaignApi } from '@dressapp/api-client';
 import {
   auth, users, closet, listings, transactions, stylist, outfits,
   suitcase, admin, trends, professionals, promotions, pricing, share, avatar,
-  calendar, misc, streamNdjson,
+  calendar, misc, streamNdjson, sync, syncManager,
 } from '@dressapp/api-client';
 
 const STORAGE_TOKEN = 'dressapp.token';
@@ -53,7 +53,7 @@ export { campaignApi };
 // ============================================================
 // Shared infrastructure exports (backward compatibility)
 // ============================================================
-export { client, API_BASE, tokenStore, userStore, streamNdjson };
+export { client, API_BASE, tokenStore, userStore, streamNdjson, sync, syncManager };
 
 // ============================================================
 // Default export: the raw axios client

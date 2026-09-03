@@ -37,7 +37,7 @@ interface TrendScoutState {
   lastFetch: number;
 }
 
-const STORAGE_KEY = 'dressapp_mobile_trend_scout_cache';
+const STORAGE_KEY = 'dressapp_mobile_trend_scout_cache_v3';
 const FRESH_MS = 30 * 60 * 1000; // 30 minutes
 
 let _state: TrendScoutState = {
@@ -66,6 +66,8 @@ function setState(updater: (prev: TrendScoutState) => TrendScoutState) {
     JSON.stringify({
       cards: _state.cards,
       lastFetch: _state.lastFetch,
+      cachedGender: (_state as any).cachedGender,
+      cachedLanguage: (_state as any).cachedLanguage,
     })
   ).catch(() => {});
 }
@@ -81,7 +83,9 @@ function setState(updater: (prev: TrendScoutState) => TrendScoutState) {
           ..._state,
           cards: data.cards,
           lastFetch: data.lastFetch || 0,
-        };
+          cachedGender: data.cachedGender,
+          cachedLanguage: data.cachedLanguage,
+        } as any;
         notify();
       }
     }
@@ -100,8 +104,8 @@ export const trendScoutStore = {
 
   isFresh(gender?: string | null, language?: string | null): boolean {
     const timeFresh = Date.now() - _state.lastFetch < FRESH_MS && _state.cards.length > 0;
-    const genderMatch = !gender || !(_state as any).cachedGender || (_state as any).cachedGender === gender;
-    const langMatch = !language || !(_state as any).cachedLanguage || (_state as any).cachedLanguage === language;
+    const genderMatch = !gender || (_state as any).cachedGender === gender;
+    const langMatch = !language || (_state as any).cachedLanguage === language;
     return timeFresh && genderMatch && langMatch;
   },
 
