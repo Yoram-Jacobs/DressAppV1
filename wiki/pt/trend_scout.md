@@ -1,37 +1,32 @@
-# Radar de Tendências & Inspiração Pessoal
+# Trend Scout & Inspiração Pessoal
 
-Descubra feeds selecionados de inteligência de moda adaptados ao seu ecossistema de gênero e à sua cultura local.
+Descubra tendências globais de moda todos os dias e recrie os visuais com peças do seu próprio guarda-roupa!
 
 ## Visão Geral
-O Radar de Tendências (Trend Scout) organiza automaticamente 7 categorias distintas de moda para os ecossistemas masculino e feminino. O conteúdo é profundamente ancorado na localização do dispositivo do usuário (ex.: Israel), utilizando fontes editoriais de acesso aberto, estilistas locais e influenciadores autênticos.
-
-### Categorias do Ecossistema (7 Buckets)
-1. **Notícias Locais (Local News)**: Ancorado no país do dispositivo (ex.: Israel), destacando editoriais de moda locais abertos, alfaiataria autoral e cobertura de designers nacionais.
-2. **Passarelas Mundiais (Runway)**: Análises sazonais de coleções internacionais de Alta-Costura e Prêt-à-Porter.
-3. **Moda Urbana (Street Style)**: Estética urbana autêntica e combinações práticas para o dia a dia.
-4. **Sustentabilidade (Sustainability)**: Moda ecológica, economia circular e práticas têxteis éticas.
-5. **Influenciadores & Formadores de Opinião (Influencers & Tastemakers)**: Destaques de personalidades globais e análise de seus estilos característicos.
-6. **Vintage & Moda de Arquivo (Vintage & Archival)**: História da moda, peças de arquivo e coleções atemporais (sem links de compras ou comércio eletrônico).
-7. **Cuidados & Reparos (Maintenance & Repairs)**: Dicas práticas de conservação de roupas, costura, sapataria e preservação de tecidos.
-
-## Regras de Qualidade e Higiene de Links
-- **Sem links de compras ou e-commerce**: Bloqueio rigoroso de plataformas de vendas (Amazon, Shein, ASOS, links de carrinho).
-- **Sem paywalls ou cadastro obrigatório**: Filtro de sites que exigem assinatura ou cadastro prévio para leitura.
-- **Links diretos e limpos**: Remoção de redirecionamentos de buscadores (Google / Yahoo) para exibir a URL direta da fonte original.
-
-## Cronograma de Atualização
-- **Tarefa mensal agendada**: Executada automaticamente à meia-noite UTC no dia 1º de cada mês para atualizar categorias e links com dados em tempo real.
-- **Atualização diária / sob demanda**: Disponível a qualquer momento pelo botão de atualização no app.
+O Trend Scout é a sua revista de moda diária no DressApp. Todas as manhãs ele reúne as principais novidades dos desfiles e revistas especializadas em 4 canais dinâmicos: **Passarela (Runway)**, **Streetwear**, **Sustentabilidade** e **Influenciadores**. Com o botão **"Estilizar com meu guarda-roupa"**, você encontra na hora peças que já possui para usar essa tendência!
 
 ## Pré-requisitos
-- Localização do dispositivo ativada ou país de residência configurado no perfil.
-- Assinatura ativa no plano Manager ou Professional.
+- Um perfil DressApp ativo.
+- Localização ativada para receber tendências e notícias regionais relevantes.
 
 ## Passo a Passo
-1. **Abrir o Radar**: Acesse a tela de Tendências ou o painel do Estilista.
-2. **Alternar Gênero**: Alterne entre moda feminina e masculina a qualquer momento.
-3. **Filtrar por Categoria**: Escolha uma das 7 abas para focar seu feed.
-4. **Ler as Fontes**: Clique no selo de link externo em qualquer cartão para ler o artigo original na íntegra.
+1. **Abrir o Trend Scout**: Toque em **Trend Scout** na tela inicial ou no menu do Estilista.
+2. **Explorar os 4 Canais Diários**:
+   - 🌟 **Runway**: Alta-costura e destaques das passarelas internacionais.
+   - 👟 **Streetwear**: Looks urbanos autênticos, modernos e confortáveis.
+   - 🌿 **Sustentabilidade**: Moda consciente, conservação de peças e reciclagem.
+   - ✨ **Influenciadores**: Visuais que estão bombando nas redes sociais.
+3. **Ler Matérias Originais**: Toque no link externo do card para ler a matéria completa em veículos como Vogue ou GQ sem paywall.
+4. **Estilizar com seu guarda-roupa (em 1 toque)**:
+   - Gostou de uma tendência? Toque em **Estilizar com meu guarda-roupa**!
+   - A IA busca na hora em seu closet peças de cores e cortes parecidos para você arrasar hoje mesmo sem gastar nada!
 
 ## Resultados Esperados
-Um feed editorial completo, atualizado e contextualizado com a sua identidade de estilo e o seu contexto cultural.
+Um feed refinado e sob medida que traz inspiração diária para valorizar as roupas que você já comprou.
+
+## Solução de Problemas
+- **Cards não atualizam**: As novidades chegam diariamente às 07:00 UTC. Deslize para baixo para atualizar.
+- **Conteúdo fora do seu estilo**: Revise seus dados e preferências de estilo no Perfil.
+
+## Limitações
+- O Trend Scout foca em jornalismo de moda e filtra anúncios e links comerciais insistentes.

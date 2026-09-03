@@ -1,25 +1,31 @@
-# Centro de comando do armário virtual
+# Centro de Comando do Guarda-Roupa Virtual
 
-Gerencie, pesquise e agrupe seu guarda-roupa digitalizado com facilidade.
+Gerencie, pesquise e organize suas roupas digitalizadas com total facilidade.
 
-## Visão geral
-A área de trabalho Armário exibe todo o seu inventário em uma grade de pintura instantânea, suportando filtros de consulta de texto, pesquisa de similaridade semântica e conjuntos de grupos coordenados.
+## Visão Geral
+O Closet exibe todas as suas roupas em uma grade de carregamento instantâneo. Você pode navegar pelas peças, pesquisar por cor ou estilo, organizar vários itens simultaneamente com a etiquetagem em grupo e criar conjuntos coordenados.
 
 ## Pré-requisitos
-- Itens de armário armazenados (pelo menos um item digitalizado).
+- Pelo menos uma peça digitalizada no seu guarda-roupa.
 
-## Passo a passo
-1. **Navegar**: percorra sua grade. Um botão flutuante Scroll-To-Top está disponível para retornos rápidos.
-2. **Pesquisa**: Insira palavras-chave (por exemplo, "camisa vermelha") ou use a pesquisa semântica para recuperar itens correspondentes instantaneamente.
-3. **Etiqueta/excluir em massa**: pressione o botão seletor para editar tags em massa ou remover itens desatualizados.
-4. **Grupos e conjuntos**: arraste e solte itens uns sobre os outros para criar itens únicos com múltiplas visualizações ou conjuntos de roupas coordenados.
+## Passo a Passo
+1. **Navegar pelo Guarda-Roupa**: Role pela grade. Use as abas (*Partes de Cima*, *Partes de Baixo*, *Casacos*, *Sapatos*, *Acessórios*, *Vestidos*) para filtrar em segundos.
+2. **Pesquisar com Facilidade**: Digite palavras-chave (ex.: *"suéter azul"*, *"linho"*) ou descreva o estilo com suas próprias palavras (*"algo confortável para o outono"*).
+3. **Etiquetagem em Grupo (Organização Rápida)**:
+   - Toque no botão **Selecionar / Edição em Lote** na barra superior.
+   - Escolha as roupas desejadas ou toque em *"Selecionar todas as partes de cima"*.
+   - Toque no botão flutuante **Etiquetar Grupo** na parte inferior.
+   - Escolha as estações (*Primavera*, *Verão*, *Outono*, *Inverno*), estilos (*Casual*, *Smart Casual*, *Trabalho*, *Festa*) ou adicione tags personalizadas (*"Férias"*, *"Escritório"*).
+   - Toque em **Aplicar às peças selecionadas** para atualizar tudo de uma vez só!
+4. **Criar Conjuntos Coordenados**: Arraste peças complementares uma sobre a outra para uni-las como conjunto (como um terno de duas peças).
+5. **Editar Detalhes**: Toque em qualquer peça para atualizar informações, preços e recortes de fotos.
 
-## Resultados esperados
-Navegação rápida e execução de consultas, com renderização instantânea da interface do usuário apoiada por cache local do lado do cliente.
+## Resultados Esperados
+Um guarda-roupa digital impecável que carrega instantaneamente, permitindo organizar dezenas de roupas em poucos segundos.
 
-## Solução de problemas
-- **Cartões cinza/vazios**: se os itens exibirem espaços reservados cinza, clique em "Reparar miniaturas" nas configurações para regenerar as visualizações dos cartões.
-- **Categoria de grupo errada**: Divida o grupo em itens individuais para redefinir as portas do categorizador.
+## Solução de Problemas
+- **Miniaturas cinzas**: Toque em **Reparar Miniaturas** nas configurações para recriar as fotos.
+- **Agrupamento por engano**: Abra os detalhes da peça e toque em **Desagrupar**.
 
 ## Limitações
-- A pesquisa semântica funciona melhor em consultas claras e descritivas.
+- Contas gratuitas armazenam até 150 peças. Convide amigos (+10 vagas por cadastro) ou assine o Pro para espaço ilimitado.

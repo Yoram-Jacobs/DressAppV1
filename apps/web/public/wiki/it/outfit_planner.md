@@ -1,25 +1,33 @@
-# Pianificatore Outfit & Canvas
+# Pianificatore di Outfit e Manichino 2D
 
-Componi, sovrapponi e rivedi layout coordinati.
+Componi, sovrapponi e visualizza outfit coordinati sul tuo avatar virtuale prima di vestirti.
 
 ## Panoramica
-Il Pianificatore Outfit fornisce un canvas di avatar 2D visivo (che supporta sia i ritagli di foto reali del corpo dell'utente sia i manichini vettoriali dinamici SVG) con offset di punti di riferimento calibrati (`top-[14.5%]` da colletto a scollatura e `top-[36.5%]` da cintola a vita) per sovrapporre capi superiori, inferiori, capispalla e calzature perfettamente aderenti ai contorni del corpo.
+Il Pianificatore di Outfit mette a disposizione un avatar 2D sul quale puoi provare comodamente i tuoi vestiti. Puoi scoprire come si abbinano maglie, pantaloni, scarpe e accessori, visualizzare giacche e cappotti accesi o spenti e controllare i punteggi di armonia cromatica e stagionale.
 
-## Requisiti preliminari
-- Articoli salvati nell'armadio.
+## Prerequisiti
+- Capi digitalizzati nel tuo armadio.
+- (Opzionale) Una foto a figura intera nel tuo profilo se preferisci provare i vestiti sulla tua silhouette reale.
 
-## Passo dopo passo
-1. **Seleziona canvas**: Apri il Pianificatore e fai clic su un giorno o su una nuova bozza.
-2. **Sovrapponi articoli**: Trascina i vestiti sull'avatar 2D. I capispalla si sovrappongono automaticamente sopra le magliette interne.
-3. **Valuta la vestibilità**: Controlla i punteggi di compatibilità e gli avvisi (ad es. conflitti di colore o avvisi meteo).
-4. **Salva**: Imposta un titolo e programma il look nel tuo diario del guardaroba. Gli aggiornamenti vengono trasmessi in modo thread-safe tramite `useOutfitStore`.
+## Istruzioni dettagliate
+1. **Apri il Manichino**: Tocca la scheda **Outfit Canvas** nell'app.
+2. **Vesti il tuo avatar**: Trascina o tocca i vestiti per posizionarli:
+   - I top si allineano perfettamente al collo.
+   - I pantaloni e le gonne aderiscono al punto vita.
+   - Le scarpe si posizionano sui piedi.
+3. **Sovrapposizione di giacche e cappotti ("Con / Senza giacca")**:
+   - Aggiungi una giacca, cardigan o cappotto.
+   - Usa il selettore per vedere il look **Con giacca** o **Senza giacca** (lasciando visibile la maglia sotto).
+4. **Tocca per i dettagli**: Tocca qualsiasi capo sul manichino per aprire la scheda o cambiarlo.
+5. **Verifica l'armonia**: Controlla le barre di affinità per colori, tessuti, meteo e formalità.
+6. **Salva sul calendario**: Tocca **Salva look** per pianificare l'outfit.
 
 ## Risultati attesi
-Composizioni di outfit sovrapposte con eleganza salvate nel tuo calendario e visibili come anteprime di schede a griglia senza cicli di polling delle richieste di rete in background.
+Un'anteprima realistica del tuo look che cancella ogni dubbio e ti fa risparmiare tempo la mattina.
 
 ## Risoluzione dei problemi
-- **Ordine dei livelli errato**: Riverifica la categoria dell'articolo; i capispalla devono essere classificati come "Outerwear" per sovrapporsi correttamente.
-- **Avvisi di sovrapposizione**: Se l'avatar avverte di capi ripetuti, controlla se hai indossato lo stesso outfit nello stesso luogo di recente.
+- **La giacca appare dietro la maglia**: Verifica che sia classificata nella categoria "Capispalla".
+- **Avatar sproporzionato**: Modifica altezza e peso nel tuo Profilo o tocca "Reimposta avatar".
 
 ## Limitazioni
-- I livelli sono gestiti automaticamente in base ai tag di categoria; le sovrascritture manuali di z-index non sono supportate.
+- I capispalla si sovrappongono automaticamente sopra i top; sequenze di sovrapposizione insolite non sono al momento modificabili a mano.

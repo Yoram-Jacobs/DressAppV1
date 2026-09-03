@@ -1,25 +1,31 @@
-# Centro de comando del armario virtual
+# Centro de Mando del Armario Virtual
 
-Administre, busque y agrupe su guardarropa digitalizado con facilidad.
+Gestiona, busca y organiza tu armario digital con total facilidad.
 
-## Descripción general
-El espacio de trabajo Closet muestra todo su inventario en una cuadrícula de pintura instantánea, que admite filtros de consulta de texto, búsqueda de similitudes semánticas y conjuntos de grupos coordinados.
+## Resumen
+El espacio de trabajo del Armario muestra todas tus prendas en una cuadrícula de carga instantánea. Puedes explorar toda tu ropa, buscar por color o estilo, organizar prendas mediante el etiquetado grupal y combinar prendas en conjuntos coordinados.
 
 ## Requisitos previos
-- Artículos de armario almacenados (al menos un artículo digitalizado).
+- Al menos una prenda digitalizada en tu armario.
 
 ## Paso a paso
-1. **Examinar**: Desplázate por tu cuadrícula. Un botón flotante de desplazamiento hacia arriba está disponible para retornos rápidos.
-2. **Buscar**: ingrese palabras clave (por ejemplo, "camisa roja") o utilice la búsqueda semántica para recuperar elementos coincidentes al instante.
-3. **Etiqueta masiva/Eliminar**: presione el botón selector para editar etiquetas de forma masiva o eliminar elementos obsoletos.
-4. **Grupos y conjuntos**: arrastre y suelte artículos entre sí para crear artículos individuales con múltiples vistas o conjuntos de ropa coordinados.
+1. **Explora tu armario**: Desplázate por la cuadrícula. Usa las pestañas de categorías (*Partes superiores*, *Partes inferiores*, *Prendas de abrigo*, *Calzado*, *Accesorios*, *Vestidos*) para filtrar prendas en segundos.
+2. **Búsqueda fácil**: Escribe palabras clave (p. ej., *"suéter azul"*, *"lino"*) o frases descriptivas naturales (*"algo cómodo para el otoño"*) para buscar por estilo visual y semántico.
+3. **Etiquetado grupal (Organización masiva)**:
+   - Pulsa el botón **Seleccionar / Edición por lotes** en la barra superior.
+   - Elige las prendas que deseas actualizar o toca *"Seleccionar todas las partes superiores"*.
+   - Pulsa el botón flotante **Etiquetar grupo** en la parte inferior.
+   - Selecciona las temporadas (*Primavera*, *Verano*, *Otoño*, *Invierno*), formalidad (*Informal*, *Casual elegante*, *Negocios*, *Formal*) o añade etiquetas personalizadas (*"Vacaciones"*, *"Oficina"*).
+   - Pulsa **Aplicar a las prendas seleccionadas** para actualizar todas a la vez.
+4. **Crea conjuntos coordinados**: Arrastra y suelta prendas complementarias una sobre otra para vincularlas como un conjunto coordinado (como un traje de dos piezas).
+5. **Edita detalles de la prenda**: Pulsa cualquier tarjeta para abrir el editor de detalles, ajustar etiquetas o generar recortes transparentes limpios.
 
 ## Resultados esperados
-Navegación y ejecución de consultas rápidas, con representación instantánea de la interfaz de usuario respaldada por almacenamiento en caché local del lado del cliente.
+Un armario digital perfectamente organizado que carga al instante, permitiéndote encontrar, filtrar y etiquetar decenas de prendas en cuestión de segundos.
 
 ## Solución de problemas
-- **Tarjetas grises/vacías**: si los elementos muestran marcadores de posición grises, haga clic en "Reparar miniaturas" en la configuración para regenerar las vistas previas de las tarjetas.
-- **Categoría de grupo incorrecta**: vuelva a dividir el grupo en elementos individuales para restablecer las puertas del categorizador.
+- **Tarjetas grises o vacías**: Si una vista previa se ve gris, pulsa **Reparar miniaturas** en configuración para regenerar las fotos.
+- **Agrupación accidental**: Si agrupaste dos prendas por error, abre los detalles de la prenda y pulsa **Desagrupar** para separarlas nuevamente.
 
 ## Limitaciones
-- La búsqueda semántica funciona mejor con consultas claras y descriptivas.
+- Las cuentas gratuitas pueden almacenar hasta 150 prendas. Para ampliar tu espacio, invita a amigos (+10 espacios por registro) o pásate al plan Pro para disfrutar de espacio ilimitado.

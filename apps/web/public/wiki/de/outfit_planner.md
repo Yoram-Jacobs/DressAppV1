@@ -1,25 +1,33 @@
-# Outfit-Planer & Canvas
+# Outfit-Planer & 2D-Leinwand
 
-Entwerfen, schichten und überprüfen Sie koordinierte Layouts.
+Kombinieren, schichten und überprüfen Sie abgestimmte Outfits auf Ihrem virtuellen Avatar vor dem Anziehen.
 
-## Übersicht
-Der Outfit-Planer bietet eine visuelle 2D-Avatar-Canvas (die sowohl Freistellungen echter Körperfotos von Benutzern als auch dynamische Vektor-SVG-Mannequins unterstützt) mit kalibrierten Landmark-Offsets (`top-[14.5%]` Kragen bis Ausschnitt und `top-[36.5%]` Bund bis Taille), um Oberteile, Unterteile, Oberbekleidung und Schuhe bündig an den Körpergrenzen zu schichten.
+## Überblick
+Der Outfit-Planer bietet eine interaktive 2D-Avatar-Leinwand, auf der Sie Kleidung unkompliziert anprobieren können. Sie sehen sofort, wie Oberteile, Hosen, Schuhe und Accessoires harmonieren, können Jacken und Mäntel an- und ablegen und Verträglichkeitswerte prüfen.
 
 ## Voraussetzungen
-- Gespeicherte Garderobenartikel.
+- Digitalisierte Kleidungsstücke in Ihrem Schrank.
+- (Optional) Ein Ganzkörperfoto in Ihrem Profil für eine persönliche Silhouette.
 
 ## Schritt für Schritt
-1. **Canvas auswählen**: Öffnen Sie den Planer und klicken Sie auf einen Tag oder einen neuen Entwurf.
-2. **Artikel schichten**: Ziehen Sie Kleidungsstücke auf den 2D-Avatar. Oberbekleidung wird automatisch über Hemden geschichtet.
-3. **Passform bewerten**: Überprüfen Sie Kompatibilitätswerte und Warnungen (z. B. Farbkonflikte oder Wetterwarnungen).
-4. **Speichern**: Legen Sie einen Titel fest und planen Sie den Look in Ihrem Garderobentagebuch. Aktualisierungen werden threadsicher über `useOutfitStore` gestreamt.
+1. **Leinwand öffnen**: Tippen Sie auf den Reiter **Outfit Canvas** in der App.
+2. **Avatar anziehen**: Ziehen Sie Kleidungsstücke auf die Figur:
+   - Oberteile legen sich sauber um den Halsausschnitt.
+   - Hosen und Röcke schließen bündig an der Taille an.
+   - Schuhe stehen stabil auf der Fußebene.
+3. **Schichten von Jacken & Mänteln ("Mit / Ohne Jacke")**:
+   - Fügen Sie eine Jacke oder einen Mantel hinzu.
+   - Nutzen Sie den Umschalter, um das Outfit **Mit Jacke** oder **Ohne Jacke** (Oberteil darunter sichtbar) zu betrachten.
+4. **Details antippen**: Tippen Sie auf ein Kleidungsstück am Avatar, um Details zu öffnen oder Alternativen zu wählen.
+5. **Harmonie prüfen**: Sehen Sie auf einen Blick, wie Farben, Stoffe und Wetter zusammenpassen.
+6. **Im Kalender sichern**: Tippen Sie auf **Look speichern**, um das Outfit zu terminieren.
 
 ## Erwartete Ergebnisse
-Wunderschön geschichtete Outfit-Kompositionen, die in Ihrem Kalender gespeichert sind und als Rasterkarten-Vorschauen ohne Hintergrund-Netzwerkanfrage-Polling-Schleifen sichtbar sind.
+Eine realistische, stilvolle Vorschau Ihres Outfits, die morgendliche Zweifel beseitigt.
 
 ## Fehlerbehebung
-- **Ebenenreihenfolge falsch**: Überprüfen Sie die Kategorie des Artikels erneut; Oberbekleidung muss als „Outerwear“ klassifiziert sein, um korrekt geschichtet zu werden.
-- **Überlappungswarnungen**: Wenn der Avatar vor wiederholtem Tragen warnt, prüfen Sie, ob Sie dasselbe Outfit kürzlich am selben Ort getragen haben.
+- **Jacke liegt hinter dem Hemd**: Stellen Sie sicher, dass die Jacke als "Jacken & Mäntel" kategorisiert ist.
+- **Avatar wirkt verzerrt**: Prüfen Sie Größe und Gewicht in Ihrem Profil oder tippen Sie auf "Avatar zurücksetzen".
 
 ## Einschränkungen
-- Ebenen werden automatisch basierend auf Kategorie-Tags verwaltet; manuelle z-index Überschreibungen werden nicht unterstützt.
+- Jacken legen sich automatisch über Oberteile; außergewöhnliche Schichtungen sind manuell noch nicht verschiebbar.

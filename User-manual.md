@@ -15,12 +15,16 @@ DressApp is an AI-driven personal wardrobe manager, styling advisor, and circula
 - **Cost-Per-Wear (CPW) Analytics**: Insights into wardrobe capitalization value, utilization rates, and usage optimization.
 
 ### Technology Architecture
-- **Backend Edge**: Python 3.11 with FastAPI, using asynchronous Motor drivers connected to a MongoDB Atlas cluster.
-- **Frontend SPA**: React 19 single-page application utilizing `useSyncExternalStore` custom stores (`stylistStore`, `dailySuggestionsStore`, `useOutfitStore`, `useClosetStore`, `useSuitcaseStore`), Tailwind CSS, Shadcn/UI primitives, and `react-i18next` supporting 12 locales.
+- **Monorepo Structure**: Turborepo workspace linking applications (`apps/web`, `apps/mobile`, `apps/android-twa`) and shared libraries (`packages/api-client`, `packages/eyes-native`, `packages/i18n`, `packages/types`).
+- **Backend Edge**: Python 3.11 with FastAPI, using asynchronous Motor drivers connected to a hosted MongoDB Atlas M10 cluster.
+- **Frontend SPA & Mobile**:
+  - **Web**: React 19 single-page application utilizing `useSyncExternalStore` custom stores (`stylistStore`, `dailySuggestionsStore`, `useOutfitStore`, `useClosetStore`, `useSuitcaseStore`), Tailwind CSS, Shadcn/UI primitives, and `react-i18next` supporting 13 localized languages.
+  - **Mobile**: Expo SDK 53 / React Native 0.79 with React Navigation Native Stack, NativeWind styling, and offline SWR caching via `MobileClosetRepository`.
 - **State & Network Optimization**: In-flight request deduplication, 15-minute store caching, and `visibilitychange` tab revalidation yielding zero background GET requests when idle.
-- **Local Machine Learning & Sizing**: CPU-local U2-Net (`rembg`) background matting, SegFormer-b2 clothing parsing, Fashion-CLIP embeddings, and ANSUR II physical body measurement regression model (`body_predictor.py`). Optionally routes to self-hosted GPU containers (SegFormer-b3 + BiRefNet) for fast operations.
+- **Local Machine Learning & Sizing**: CPU-local U2-Net (`rembg`) background matting, SegFormer-b2 clothing parsing, Fashion-CLIP embeddings, and ANSUR II physical body measurement regression model (`body_predictor.py`). Optionally routes to self-hosted GPU containers (SegFormer-b3 + BiRefNet) or Gemma-4 E2B LoRA containers for edge operations.
 - **Conversational STT/TTS**: Real-time client-side Web Speech recognition fallback, multimodal server-side Gemini 2.5 Flash modulations, and on-device offline Piper/Sherpa-ONNX engines.
 - **External Integration Services**: OpenWeatherMap API for weather fetching, Google Calendar OAuth for daily schedule exports, OpenStreetMap (Nominatim) address autocomplete, and PayPal Subscriptions/Checkout REST APIs.
+- **Production Host**: Hetzner Cloud CPX32 VPS (4 AMD vCPUs, 8 GB RAM) at `dressapp.co`, running a 3-container Docker Compose stack with Caddy 2 automated TLS reverse proxying.
 
 ---
 
@@ -86,6 +90,15 @@ INGESTION PARADIGMS: Photography, EU Product Passports, and Digital Commerce Rec
    - Nano Banana reconstructs the missing or occluded regions, rendering a photorealistic preview card directly in the chat thread.
 5. **Interactive Application**: Tap **Apply as garment photo** to update the in-memory garment photo, then click **Save** in the action bar to persist the new image to MongoDB.
 
+#### E. Group Tagging (Bulk Wardrobe Organization)
+1. **Activate Batch Selection**: Open the **Closet** screen and tap the **Select / Batch Edit** button in the header toolbar.
+2. **Select Multiple Garments**: Tap checkboxes on garment cards to select items in bulk, or use category quick-select pills (*"Select all Tops"*, *"Select all Outerwear"*).
+3. **Open Group Tagging Sheet**: Tap **Group Tag** in the bottom floating actions bar.
+4. **Batch Assign Attributes**:
+   - **Season**: Bulk assign seasonal suitability (*Spring*, *Summer*, *Fall*, *Winter*).
+   - **Formality & Dress Code**: Apply unified style classifications (*Casual*, *Smart-Casual*, *Business*, *Formal*, *Athletic*, *Loungewear*).
+   - **Occasion & Tags**: Add custom organizational tags (e.g., `"Workwear"`, `"Vacation"`, `"Capsule Wardrobe"`).
+5. **Atomic Batch Application**: Click **Apply Tags to N Items**. The frontend submits an atomic batch update, instantaneously synchronizing your closet store via `useSyncExternalStore` (~16ms) and immediately enhancing AI Stylist context matching without manual per-item editing.
 
 ---
 
@@ -531,7 +544,28 @@ Set daily styling alerts to receive outfit recommendations automatically.
 
 ---
 
-### 3.9 Marketplace (Resale, Renting, Swapping, Gifting)
+### 3.9 Trend Scout (Daily Fashion Intelligence)
+Discover curated global fashion trends synchronized with your personal wardrobe.
+
+1. **Four Curated Trend Buckets**:
+   - **Runway**: High fashion, designer collections, seasonal fashion weeks, and directional silhouettes.
+   - **Streetwear**: Urban streetwear, sneaker culture, utilitarian layering, and casual counter-culture.
+   - **Sustainability**: Circular fashion, eco-friendly textiles, upcycling, and zero-waste garment care.
+   - **Influencers**: Viral fashion aesthetic movements (quiet luxury, gorpcore, vintage minimalism) across social creators.
+2. **Automated Synthesis Engine**:
+   - The background scheduler crawls verified fashion sources via BeautifulSoup.
+   - Gemini models extract trend keywords, dominant color palettes, and garment silhouettes, validating all outbound source links.
+   - Summaries are dynamically localized into all 13 supported languages.
+3. **Personalized Demographic Ranking**:
+   - Trend cards are dynamically scored against your user profile (lifestyle, occupation, and aesthetic preferences).
+   - If a card category mismatches your registered sex profile, a -2.0 score penalty is applied to demote it, ensuring your feed remains relevant.
+4. **Interactive Actions**:
+   - **Style with My Closet**: Tap this button on any trend card to prompt the AI Stylist to search your digitized wardrobe for matching pieces or close aesthetic equivalents.
+   - **Bookmark to Wardrobe Diary**: Pin inspirational trends to your personal diary to guide future purchases or custom outfit planning.
+
+---
+
+### 3.10 Marketplace (Resale, Renting, Swapping, Gifting)
 Engage in the peer-to-peer circular fashion marketplace.
 
 - **Create a Listing**: Open an item's detail page, select **Edit Intent**, and choose a non-private intent:
@@ -547,7 +581,7 @@ Engage in the peer-to-peer circular fashion marketplace.
 
 ---
 
-### 3.10 Shopping Assistant Chrome Extension & Mobile Bookmarklet
+### 3.11 Shopping Assistant Chrome Extension & Mobile Bookmarklet
 
 A cross-platform client-side utility that resolves sizing uncertainty on third-party e-commerce storefronts by overlaying personalized size recommendations directly on product pages.
 
@@ -694,7 +728,7 @@ interface AnalyzeChartIn {
 
 ---
 
-### 3.11 Admin Panel Dashboard
+### 3.12 Admin Panel Dashboard
 System liveness validation, financial bookkeeping, and user account management.
 
 1. Navigate to `/admin` (available to administrator roles).
@@ -703,23 +737,27 @@ System liveness validation, financial bookkeeping, and user account management.
 4. **Users**: View active credits, roles, and lifetime payments. Use direct actions to Promote or Demote users.
 5. **Listings**: View listing states and toggle active flags to suspend fraudulent items.
 
-### 3.12 Subscriptions, Billing, and Localized Payments (Atzmai Gateway)
-Integration with PayPal and Atzmai APIs for subscription management, credit purchases, and automated bookkeeping.
+---
 
-1. **Atzmai Gateway Integration**: Handles local Israeli payments in ILS/USD supporting:
-   - **Regular Credit Cards**: Standard online transactions.
-   - **Bit Payment Integration**: Direct mobile checkout links.
-   - **Recurring Payments**: Standing orders (direct debit equivalents) for monthly/annual subscriptions.
-2. **Purchasing Credit Packs**: Credit purchases are initiated by posting a request with a desired plan selection to the checkout router. Price points include:
-   - **10 credits pack**: $1.99 / 10.00 ILS
-   - **25 credits pack**: $3.99 / 25.00 ILS
-   - **50 credits pack**: $7.99 / 50.00 ILS
-   - **Custom top-up amount**: User-specified amount in cents (minimum 5.00 ILS threshold).
-3. **Webhook Processing & Verification**: Upon payment authorization, the gateway sends a callback containing the transaction details to `POST /api/v1/atzmai/webhook`. The system verifies the order payload:
-   - Checks matching database transaction documents (`db.atzmai_topups`).
-   - Confirms success status (`captured`).
-   - Allocates the purchased quantity to the user's paid credit buckets.
-4. **Invoicing & Receipts**: On successful capture, the backend contacts the gateway billing API to retrieve PDF attachments of localized invoices and receipts. These files are dispatched to the user's email address via automated confirmation messages.
+### 3.13 Subscriptions, Billing, and Localized Payments
+Integration with PayPal Subscriptions and Atzmai APIs for subscription management, credit purchases, and automated bookkeeping.
+
+1. **PayPal Pro Subscription (Closet Capacity)**:
+   - Upgrades free accounts (150-item ceiling) to unlimited closet storage via the PayPal Subscriptions REST API.
+   - Monthly and annual tiers with automatic recurring billing and instant webhooks updating user roles.
+2. **Pre-Paid AI Credit Bucket Management**:
+   - **Daily Free Credits**: 10 free credits granted every 24 hours with a strict 30-day expiration window.
+   - **Paid Credit Packs**: Purchased globally via PayPal or locally via Atzmai; paid credits **never expire**:
+     - *10 credits pack*: $1.99 / 10.00 ILS
+     - *25 credits pack*: $3.99 / 25.00 ILS
+     - *50 credits pack*: $7.99 / 50.00 ILS
+     - *100 credits pack*: $15.99 / 55.00 ILS
+   - **Aging & Consumption Priority**: AI operations automatically consume credits from the oldest soonest-expiring free bucket first, protecting permanent paid credits.
+3. **Atzmai Gateway Integration (Israel / ILS)**:
+   - Handles localized payments supporting regular credit cards, Bit payment direct checkout links, and standing orders.
+4. **Webhook Processing & Invoice Delivery**:
+   - Authorized payments emit signed webhook notifications to `/api/v1/paypal/webhook` and `/api/v1/atzmai/webhook`.
+   - On verification, credits are credited atomically, and localized invoice PDFs are dispatched directly to the customer's email.
 
 ---
 

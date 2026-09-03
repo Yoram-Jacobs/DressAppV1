@@ -153,6 +153,7 @@ function MiniAvatarOutfit({
       dress: null,
     };
     for (const g of garments) {
+      const targetId = g?.id || g?._id || g?.closet_item_id || g?.clothing_id;
       let closetItem: any = closetItems.find(
         (it: any) => it && (it.id === targetId || it._id === targetId || String(it.id) === String(targetId))
       );

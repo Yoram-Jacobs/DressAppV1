@@ -1,28 +1,29 @@
-# Estilista IA Conversacional
+# Estilista Personal con Inteligencia Artificial
 
-Interactúe con un estilista personal inteligente que conoce su armario, el clima y su agenda.
+Conversa con un estilista inteligente que conoce tu armario, el clima y tu agenda diaria.
 
-## Descripción general
-El Estilista IA procesa consultas de estilo por voz o texto en lenguaje natural, integrando automáticamente condiciones meteorológicas, eventos del calendario y notificaciones push impulsadas por almacenes personalizados `useSyncExternalStore` seguros para hilos (`stylistStore` y `dailySuggestionsStore`) con almacenamiento en caché de 15 minutos y deduplicación de solicitudes activas.
+## Resumen
+El Estilista IA es tu asesor de moda personal en la app. Puedes chatear con él escribiendo o hablando en voz alta como si fuera un amigo. El estilista consulta el pronóstico del tiempo local, revisa tus eventos en Google Calendar y te sugiere conjuntos completos y elegantes armados directamente con ropa que ya tienes en tu armario.
 
 ## Requisitos previos
-- Una clave API de Gemini (o créditos predeterminados del sistema).
-- Eventos de calendario conectados.
+- Al menos una prenda superior, una prenda inferior y un par de zapatos en tu armario.
+- Permiso de micrófono habilitado si deseas usar el dictado por voz manos libres.
+- (Opcional) Cuenta de Google Calendar conectada para sugerencias adaptadas a tus eventos.
 
 ## Paso a paso
-1. **Iniciar sesión**: Abra la pestaña Stylist y seleccione Chat, Shuffle o Match.
-2. **Entrada de voz**: Toque el micrófono, pronuncie su consulta (p. ej., "Sugiéreme un conjunto para un día lluvioso") y toque enviar.
-3. **Reproducción de audio**: Escuche la justificación de estilo generada a través del reproductor de voz de alta fidelidad.
-4. **Aleatorio (Shuffle)**: Haga clic en el botón Sparkles para hacer girar la máquina tragamonedas; la IA alinea automáticamente las prendas coincidentes en el foco.
-5. **Navegación sin esperas**: La navegación entre Stylist y otras pestañas utiliza preferencias almacenadas en memoria sin activar bucles de solicitudes GET a la base de datos.
+1. **Abre el Estilista**: Toca la pestaña **AI Stylist** en la barra de navegación inferior.
+2. **Habla o escribe**: Toca el **icono del micrófono** y pregunta qué ponerte (p. ej., *"¿Qué me pongo para un almuerzo informal en un día lluvioso?"* o *"Sugiéreme un look elegante"*).
+3. **Escucha el consejo hablado**: El estilista te responde con voz natural y muestra las tarjetas del conjunto recomendado. Toca **Reproducir respuesta** para escuchar el consejo cuando quieras.
+4. **Usa la herramienta Aleatoria (Shuffle)**: ¿Buscas inspiración fresca? Toca la pestaña **Shuffle** para hacer girar tu armario y descubrir combinaciones increíbles en las que no habías pensado.
+5. **Guarda tus favoritos**: Toca **Guardar en diario** para programar el conjunto en tu calendario personal de atuendos.
 
 ## Resultados esperados
-Composiciones de prendas personalizadas diseñadas según sus preferencias personales, restricciones estacionales y agenda.
+Sugerencias de ropa personalizadas y adaptadas al clima y a tus actividades, acompañadas de explicaciones claras sobre por qué las prendas combinan tan bien.
 
 ## Solución de problemas
-- **El audio se reproduce muy lento**: Alterne entre Gemini TTS y la alternativa Web Speech API en la configuración de Profile.
-- **Sugerencias repetidas**: Asegúrese de que su historial del calendario de conjuntos esté actualizado para que el algoritmo de rotación pueda bloquear prendas repetidas.
+- **El micrófono no detecta la voz**: Asegúrate de haber otorgado permisos de micrófono a DressApp en la configuración de tu navegador o dispositivo.
+- **Sugerencias repetidas**: Registra lo que usas a diario en tu calendario para que el estilista sepa qué prendas vestiste recientemente y priorice las menos usadas.
 
 ## Limitaciones
-- Las recomendaciones requieren al menos una prenda superior, una prenda inferior y un calzado en el armario para completar un look.
-- La transcripción de voz puede recurrir a la escritura de texto estándar en dispositivos periféricos no compatibles.
+- El estilista sugiere exclusivamente prendas que ya están digitalizadas en tu armario.
+- Cada interacción de estilismo consume 1 crédito de IA (los usuarios gratuitos reciben 10 créditos gratis cada día).

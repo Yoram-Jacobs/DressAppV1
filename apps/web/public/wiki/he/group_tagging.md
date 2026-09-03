@@ -1,20 +1,30 @@
-# Group Tagging of Closet Items
+# תיוג קבוצתי (ארגון מהיר של הארון)
 
-## Goal
-The goal of the Group tagging feature is to allow fast, bulk categorization of closet garments. The user can select multiple items in their closet and tag them all at once with a single click.
+ארגנו עשרות בגדים בשניות בעזרת עריכה מרוכזת בלחיצה אחת.
 
-## Purpose
-- **Speed & Efficiency**: Instead of entering tags item-by-item, users can select several garments (e.g., all formal jackets or all gym wear) and apply the tags instantly.
-- **Improved AI Stylist Accuracy**: Fine-grained categories/tags (e.g., “Work”, “GYM”, “Swimwear”, “Uniforms”) guide the Stylist's reasoning process. Predefined tags enable the Stylist to locate the most relevant items for specific outfit requests (for example, choosing "work"-tagged items first when constructing a "work outfit").
-- **Smart Fallbacks**: If certain tagged layers are missing (e.g., no upper-body "work"-tagged items), the Stylist will dynamically match other suitable garments.
+## סקירה כללית
+תיוג קבוצתי מאפשר לכם לעדכן מספר בגדים בו-זמנית במקום לערוך אותם בנפרד. סמנו מספר פריטים בארון שלכם והגדירו עונות, רמת רשמיות ותגיות אירוע בפעולה מהירה אחת!
 
-## Key Points & Implementation Details
-1. **User Interface Integration**:
-   - Added a **Tag** button in the Closet selection floater.
-   - Built a comma-separated tagging dialog (`AlertDialog`) that pops up when clicked.
-2. **Optimistic UI Update**:
-   - Tags are merged onto the selected closet items locally first so the changes reflect instantly in the user interface.
-3. **Background Syncing**:
-   - Sends the tag update requests (`api.patchItem`) to the database in the background to ensure data consistency without blocking user interactions.
-4. **i18next Localization**:
-   - All text messages, dialog titles, placeholders, and feedback notifications support translations cleanly using options-based defaults.
+## דרישות מוקדמות
+- בגדים דיגיטליים קיימים בארון שלכם.
+
+## שלב אחר שלב
+1. **פתיחת הארון**: עברו אל לשונית **Closet**.
+2. **הפעלת מצב בחירה**: לחצו על כפתור **בחירה / עריכה מרוכזת** בסרגל הכלים העליון.
+3. **בחירת בגדים**: לחצו על הפריטים שברצונכם לערוך, או לחצו על כפתור קטגוריה (כגון *"בחר את כל החולצות"*).
+4. **פתיחת חלונית התיוג**: לחצו על הכפתור הצף **תיוג קבוצתי** בתחתית המסך.
+5. **הגדרת מאפיינים**:
+   - סמנו את **העונות** (*אביב*, *קיץ*, *סתיו*, *חורף*).
+   - בחרו את **קוד הלבוש** (*יומיומי*, *סמארט קז'ואל*, *עסקי*, *רשמי*, *ספורטיבי*).
+   - הוסיפו **תגיות מותאמות אישית** (*"חופשה"*, *"קפסולת קיץ"*, *"חדר כושר"*).
+6. **החלת השינויים**: לחצו על **החל על הפריטים שנבחרו**. כל הפריטים בארון שלכם יתעדכנו מיידית!
+
+## תוצאות צפויות
+כל הבגדים שנבחרו מציגים את התגיות החדשות מיד ללא צורך ברענון הדף.
+
+## פתרון בעיות
+- **התגית לא הוחלה על פריט מסוים**: ודאו שתיבת הסימון של הפריט סומנה לפני הלחיצה על החל.
+- **הסרת תגית**: בחרו שוב את הפריטים, בטלו את סימון התגית בחלון, ולחצו על החל.
+
+## מגבלות
+- תיוג קבוצתי מעדכן תגיות, עונות ורשמיות; שמות פריט ומחירי רכישה מעודכנים בנפרד בתוך עריכת הפריט.

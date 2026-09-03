@@ -1,20 +1,30 @@
-# Group Tagging of Closet Items
+# Étiquetage Groupé (Organisation Rapide du Dressing)
 
-## Goal
-The goal of the Group tagging feature is to allow fast, bulk categorization of closet garments. The user can select multiple items in their closet and tag them all at once with a single click.
+Organisez des dizaines de vêtements en un clin d'œil grâce à la modification groupée en 1 clic.
 
-## Purpose
-- **Speed & Efficiency**: Instead of entering tags item-by-item, users can select several garments (e.g., all formal jackets or all gym wear) and apply the tags instantly.
-- **Improved AI Stylist Accuracy**: Fine-grained categories/tags (e.g., “Work”, “GYM”, “Swimwear”, “Uniforms”) guide the Stylist's reasoning process. Predefined tags enable the Stylist to locate the most relevant items for specific outfit requests (for example, choosing "work"-tagged items first when constructing a "work outfit").
-- **Smart Fallbacks**: If certain tagged layers are missing (e.g., no upper-body "work"-tagged items), the Stylist will dynamically match other suitable garments.
+## Vue d'ensemble
+L'étiquetage groupé vous permet de mettre à jour plusieurs vêtements en même temps au lieu de les éditer un par un. Sélectionnez vos pièces et appliquez des saisons, styles ou étiquettes en une seule manipulation !
 
-## Key Points & Implementation Details
-1. **User Interface Integration**:
-   - Added a **Tag** button in the Closet selection floater.
-   - Built a comma-separated tagging dialog (`AlertDialog`) that pops up when clicked.
-2. **Optimistic UI Update**:
-   - Tags are merged onto the selected closet items locally first so the changes reflect instantly in the user interface.
-3. **Background Syncing**:
-   - Sends the tag update requests (`api.patchItem`) to the database in the background to ensure data consistency without blocking user interactions.
-4. **i18next Localization**:
-   - All text messages, dialog titles, placeholders, and feedback notifications support translations cleanly using options-based defaults.
+## Conditions préalables
+- Des vêtements enregistrés dans votre dressing.
+
+## Instructions pas à pas
+1. **Ouvrir le Dressing**: Rendez-vous sur l'onglet **Closet**.
+2. **Activer la sélection**: Appuyez sur le bouton **Sélectionner / Modifier par lot** en haut.
+3. **Choisir les vêtements**: Touchez les articles souhaités ou sélectionnez une catégorie (*"Sélectionner tous les hauts"*).
+4. **Ouvrir la fenêtre d'étiquetage**: Appuyez sur le bouton flottant **Étiqueter le groupe** en bas.
+5. **Définir les critères**:
+   - Cochez les **Saisons** (*Printemps*, *Été*, *Automne*, *Hiver*).
+   - Choisissez le **Style** (*Décontracté*, *Chic décontracté*, *Professionnel*, *Habillé*, *Sport*).
+   - Ajoutez des **Étiquettes personnalisées** (*"Vacances"*, *"Sport"*).
+6. **Appliquer**: Touchez **Appliquer aux articles sélectionnés**. Tout s'actualise aussitôt !
+
+## Résultats attendus
+Tous les vêtements sélectionnés adoptent leurs nouvelles caractéristiques sans rechargement de page.
+
+## Dépannage
+- **Une étiquette ne s'est pas appliquée**: Assurez-vous que l'article était bien coché avant d'appliquer.
+- **Supprimer une étiquette**: Sélectionnez à nouveau les pièces, décochez l'élément et appuyez sur Appliquer.
+
+## Limites
+- L'étiquetage groupé modifie les étiquettes, saisons et styles ; les titres et prix se personnalisent individuellement dans la fiche de chaque vêtement.

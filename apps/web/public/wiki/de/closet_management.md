@@ -1,25 +1,31 @@
-# Virtuelles Schrank-Kommandozentrum
+# Virtueller Kleiderschrank: Schaltzentrale
 
-Verwalten, durchsuchen und gruppieren Sie Ihre digitalisierte Garderobe ganz einfach.
+Verwalten, durchsuchen und organisieren Sie Ihre digitale Garderobe mit Leichtigkeit.
 
-## Übersicht
-Der Closet-Arbeitsbereich zeigt Ihren gesamten Bestand in einem Instant-Paint-Raster an und unterstützt Textabfragefilter, semantische Ähnlichkeitssuche und koordinierte Gruppensätze.
+## Überblick
+Der Kleiderschrank-Bereich zeigt Ihre gesamte Garderobe in einer sofort ladenden Übersicht an. Sie können durch alle Kleidungsstücke stöbern, nach Farben oder Stilen suchen, mehrere Teile mit Gruppen-Tagging auf einmal organisieren und Outfits zu abgestimmten Sets kombinieren.
 
 ## Voraussetzungen
-- Eingelagerte Schrankgegenstände (mindestens ein Gegenstand digitalisiert).
+- Mindestens ein digitalisiertes Kleidungsstück in Ihrem Schrank.
 
 ## Schritt für Schritt
-1. **Durchsuchen**: Scrollen Sie durch Ihr Raster. Für eine schnelle Rückkehr steht eine schwebende Scroll-To-Top-Schaltfläche zur Verfügung.
-2. **Suche**: Geben Sie Schlüsselwörter ein (z. B. „rotes Hemd“) oder verwenden Sie die semantische Suche, um passende Artikel sofort abzurufen.
-3. **Massen-Tags/Löschen**: Drücken Sie die Auswahltaste, um Tags in großen Mengen zu bearbeiten oder veraltete Elemente zu entfernen.
-4. **Gruppen und Sets**: Ziehen Sie Elemente per Drag-and-Drop aufeinander, um mehrere Einzelansichten oder koordinierte Kleidungssets zu erstellen.
+1. **Garderobe durchstöbern**: Scrollen Sie durch Ihren Kleiderschrank. Nutzen Sie die Kategorie-Filter (*Oberteile*, *Hosen & Röcke*, *Jacken & Mäntel*, *Schuhe*, *Accessoires*, *Kleider*), um Teile sekundenschnell zu finden.
+2. **Einfache Suche**: Geben Sie Stichwörter ein (z. B. *"blauer Pullover"*, *"Leinen"*) oder beschreiben Sie Ihren Wunschstil in ganzen Sätzen (*"etwas Gemütliches für den Herbst"*).
+3. **Gruppen-Tagging (Massenorganisation)**:
+   - Tippen Sie in der oberen Leiste auf die Schaltfläche **Auswählen / Mehrfachauswahl**.
+   - Wählen Sie die gewünschten Kleidungsstücke aus oder tippen Sie auf *"Alle Oberteile auswählen"*.
+   - Tippen Sie unten auf die schwebende Schaltfläche **Gruppen-Tag**.
+   - Wählen Sie Jahreszeiten (*Frühling*, *Sommer*, *Herbst*, *Winter*), Dresscodes (*Freizeit*, *Smart Casual*, *Business*, *Festlich*) oder eigene Tags (*"Urlaub"*, *"Büro"*).
+   - Tippen Sie auf **Auf ausgewählte Teile anwenden**, um alle Teile sofort zu aktualisieren!
+4. **Abgestimmte Sets erstellen**: Ziehen Sie passende Kleidungsstücke per Drag-and-Drop aufeinander, um sie als festes Set zu verbinden (z. B. ein zweiteiliger Anzug).
+5. **Artikeldetails bearbeiten**: Tippen Sie auf ein Kleidungsstück, um Details, Preise und freigestellte Fotos anzupassen.
 
 ## Erwartete Ergebnisse
-Schnelle Navigation und Abfrageausführung mit sofortiger UI-Wiedergabe, unterstützt durch clientseitiges lokales Caching.
+Ein übersichtlicher digitaler Kleiderschrank, der sofort lädt und es Ihnen ermöglicht, Dutzende Kleidungsstücke in Sekundenschnelle zu sortieren.
 
 ## Fehlerbehebung
-- **Graue/leere Karten**: Wenn Elemente graue Platzhalter anzeigen, klicken Sie in den Einstellungen auf „Miniaturansichten reparieren“, um die Kartenvorschau neu zu erstellen.
-- **Falsche Gruppenkategorie**: Teilen Sie die Gruppe wieder in einzelne Elemente auf, um die Kategorisierungstore zurückzusetzen.
+- **Graue oder leere Vorschaubilder**: Wenn Bilder grau dargestellt werden, tippen Sie in den Einstellungen auf **Vorschaubilder reparieren**.
+- **Versehentliches Gruppieren**: Wenn Sie zwei Kleidungsstücke versehentlich verbunden haben, öffnen Sie die Artikeldetails und tippen Sie auf **Gruppe aufheben**.
 
 ## Einschränkungen
-- Die semantische Suche funktioniert am besten bei klaren, beschreibenden Abfragen.
+- Kostenlose Konten können bis zu 150 Kleidungsstücke speichern. Laden Sie Freunde ein (+10 Plätze pro Anmeldung) oder wechseln Sie zu Pro für unbegrenzten Speicherplatz.

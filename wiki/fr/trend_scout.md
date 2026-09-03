@@ -1,37 +1,32 @@
-# Éclaireur de Tendances & Inspiration Personnelle
+# Trend Scout & Inspiration Personnelle
 
-Découvrez des flux d'intelligence mode personnalisés, adaptés à votre écosystème de genre et à votre culture locale.
+Découvrez chaque jour les tendances de mode mondiales et recréez-les instantanément avec les vêtements de votre dressing !
 
-## Présentation
-L'Éclaireur de Tendances (Trend Scout) sélectionne automatiquement 7 catégories distinctes d'actualités et d'inspirations mode pour les écosystèmes masculin et féminin. Celles-ci sont profondément ancrées dans le pays de votre appareil (ex. Israël), s'appuyant sur des sources éditoriales en accès libre, des créateurs locaux et des personnalités influentes.
+## Vue d'ensemble
+Trend Scout est votre magazine de mode quotidien dans DressApp. Chaque matin, il rassemble les actualités des plus grands magazines et les classe en 4 rubriques claires : **Défilés (Runway)**, **Streetwear**, **Éco-responsabilité** et **Influenceurs**. Grâce au bouton magique **"Créer le style avec mon dressing"**, trouvez immédiatement les pièces que vous possédez déjà pour adopter ce style !
 
-### Catégories de l'Écosystème (7 Catégories)
-1. **Actualités Locales (Local News)**: Ancré dans le pays de votre appareil (ex. Israël), mettant en avant des éditoriaux de mode locaux ouverts, la confection artisanale et les créateurs régionaux.
-2. **Défilés Mondiaux (Runway)**: Revues saisonnières des collections Haute Couture et Prêt-à-Porter internationales.
-3. **Style Urbain (Street Style)**: Esthétique urbaine authentique et idées de superpositions au quotidien.
-4. **Mode Responsable (Sustainability)**: Éco-responsabilité, économie circulaire et pratiques textiles éthiques.
-5. **Influenceurs & Créateurs de Tendances (Influencers & Tastemakers)**: Portraits de personnalités inspirantes mondiales et décryptage de leurs styles signatures.
-6. **Vintage & Mode d'Archive (Vintage & Archival)**: Évolution historique de la mode, pièces d'archives et élégance intemporelle (sans liens marchands ou boutiques).
-7. **Entretien & Réparations (Maintenance & Repairs)**: Conseils pratiques pour le soin des vêtements, la couture, la cordonnerie et la longévité des étoffes.
+## Conditions préalables
+- Un profil DressApp actif.
+- Géolocalisation activée pour recevoir des tendances adaptées à votre région.
 
-## Règles de Qualité et d'Intégrité des Liens
-- **Aucun lien commercial ou e-commerce**: Exclusion stricte des plateformes d'achat (Amazon, Shein, ASOS, paniers d'achat).
-- **Aucun paywall ni inscription obligatoire**: Filtrage des sites payants ou nécessitant la création d'un compte pour lire l'article.
-- **Liens directs et vérifiés**: Suppression des redirections des moteurs de recherche (Google / Yahoo) afin d'exposer directement les URL sources.
+## Instructions pas à pas
+1. **Ouvrir Trend Scout**: Appuyez sur **Trend Scout** sur l'écran d'accueil ou dans le menu du Styliste.
+2. **Découvrir les 4 rubriques**:
+   - 🌟 **Runway**: Les défilés haute couture et inspirations des podiums.
+   - 👟 **Streetwear**: Des styles urbains modernes et décontractés.
+   - 🌿 **Éco-responsabilité**: La mode durable, l'entretien des matières et le recyclage.
+   - ✨ **Influenceurs**: Les looks tendance et viraux des réseaux sociaux.
+3. **Lire les articles d'origine**: Touchez le lien pour lire l'article complet sur Vogue ou GQ sans mur payant.
+4. **Créer le style avec mon dressing (en 1 clic)**:
+   - Une tendance vous plaît ? Appuyez sur le bouton **Créer le style avec mon dressing** !
+   - Le Styliste IA recherche aussitôt dans votre garde-robe les couleurs et coupes similaires pour porter la tendance sans rien acheter de nouveau !
 
-## Fréquence d'Actualisation
-- **Tâche mensuelle programmée**: Exécution automatique à minuit UTC le 1er de chaque mois pour actualiser les catégories et renouveler les liens avec des données en temps réel.
-- **Actualisation quotidienne ou à la demande**: Disponible à tout moment via le bouton de rafraîchissement dans l'application.
+## Résultats attendus
+Un fil de mode élégant et sur mesure qui vous inspire au quotidien avec vos propres vêtements.
 
-## Prérequis
-- Localisation de l'appareil activée ou pays de résidence défini dans le profil.
-- Abonnement actif Manager ou Professional.
+## Dépannage
+- **Les cartes ne changent pas**: Le fil s'actualise tous les jours à 07h00 UTC. Glissez vers le bas pour rafraîchir.
+- **Articles inadaptés**: Vérifiez vos informations de profil et vos préférences de style.
 
-## Guide Pas à Pas
-1. **Ouvrir l'Éclaireur**: Accédez à l'onglet Tendances ou au panneau Styliste.
-2. **Changer de genre**: Basculez entre Mode Féminine et Mode Masculine à tout moment.
-3. **Filtrer par catégorie**: Choisissez l'un des 7 onglets pour cibler votre flux.
-4. **Lire les sources**: Cliquez sur le badge externe d'une carte pour consulter l'article d'origine.
-
-## Résultats Attendus
-Un flux éditorial riche, actualisé et ancré localement, parfaitement aligné avec votre profil stylistique et votre identité culturelle.
+## Limites
+- Trend Scout privilégie l'inspiration journalistique et filtre les publicités marchandes intrusives.

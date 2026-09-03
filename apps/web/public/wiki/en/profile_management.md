@@ -10,7 +10,7 @@ The **Profile & Settings** page (`https://dressapp.co/me`) serves as the central
 ## Prerequisites
 - An active DressApp account.
 - (Optional) Device camera permissions for full-body photo upload.
-- (Optional) Location permissions for local stylist campaign targeting and weather forecasting.
+- (Optional) Location permissions for local stylist campaign targeting, cultural restrictions and weather forecasting.
 
 ---
 

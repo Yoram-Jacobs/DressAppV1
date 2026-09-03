@@ -1,20 +1,30 @@
-# Group Tagging of Closet Items
+# समूह टैगिंग (अलमारी की तेज़ व्यवस्था)
 
-## Goal
-The goal of the Group tagging feature is to allow fast, bulk categorization of closet garments. The user can select multiple items in their closet and tag them all at once with a single click.
+1-टैप बैच संपादन के साथ सेकंडों में दर्जनों कपड़े व्यवस्थित करें।
 
-## Purpose
-- **Speed & Efficiency**: Instead of entering tags item-by-item, users can select several garments (e.g., all formal jackets or all gym wear) and apply the tags instantly.
-- **Improved AI Stylist Accuracy**: Fine-grained categories/tags (e.g., “Work”, “GYM”, “Swimwear”, “Uniforms”) guide the Stylist's reasoning process. Predefined tags enable the Stylist to locate the most relevant items for specific outfit requests (for example, choosing "work"-tagged items first when constructing a "work outfit").
-- **Smart Fallbacks**: If certain tagged layers are missing (e.g., no upper-body "work"-tagged items), the Stylist will dynamically match other suitable garments.
+## अवलोकन
+समूह टैगिंग से आप एक-एक करके बदलने के बजाय एक साथ कई कपड़ों के गुण अपडेट कर सकते हैं। कपड़े चुनें और एक ही बार में मौसम और स्टाइल टैग लगाएं!
 
-## Key Points & Implementation Details
-1. **User Interface Integration**:
-   - Added a **Tag** button in the Closet selection floater.
-   - Built a comma-separated tagging dialog (`AlertDialog`) that pops up when clicked.
-2. **Optimistic UI Update**:
-   - Tags are merged onto the selected closet items locally first so the changes reflect instantly in the user interface.
-3. **Background Syncing**:
-   - Sends the tag update requests (`api.patchItem`) to the database in the background to ensure data consistency without blocking user interactions.
-4. **i18next Localization**:
-   - All text messages, dialog titles, placeholders, and feedback notifications support translations cleanly using options-based defaults.
+## पूर्वापेक्षाएँ
+- डिजिटल अलमारी में कपड़े उपलब्ध होने चाहिए।
+
+## चरण-दर-चरण निर्देश
+1. **अलमारी खोलें**: **Closet** टैब पर जाएं।
+2. **चयन मोड चालू करें**: ऊपर **चुनें / सामूहिक संपादन** बटन दबाएँ।
+3. **कपड़े चुनें**: उन कपड़ों पर टैप करें जिन्हें आप बदलना चाहते हैं या पूरी श्रेणी चुनें (*"सभी टॉप्स चुनें"*).
+4. **टैग विंडो खोलें**: नीचे तैरते **समूह टैग** बटन पर टैप करें।
+5. **विशेषताएं चुनें**:
+   - **मौसम** चुनें (*वसंत*, *गर्मी*, *पतझड़*, *सर्दी*).
+   - **ड्रेस कोड** चुनें (*कैज़ुअल*, *स्मार्ट कैज़ुअल*, *व्यावसायिक*, *औपचारिक*, *स्पोर्ट्स*).
+   - **कस्टम टैग** लिखें (*"छुट्टी"*, *"जिम"*).
+6. **लागू करें**: **चयनित कपड़ों पर लागू करें** पर टैप करें। अलमारी तुरंत अपडेट हो जाएगी!
+
+## अपेक्षित परिणाम
+बिना पेज रीलोड किए सभी चुने हुए कपड़ों पर नए टैग तुरंत दिखने लगते हैं।
+
+## समस्या निवारण
+- **टैग लागू नहीं हुआ**: सुनिश्चित करें कि लागू करने से पहले कपड़े पर टिक लगा था।
+- **टैग हटाना**: कपड़े फिर से चुनें, टैग से टिक हटाएं और लागू करें दबाएं।
+
+## सीमाएँ
+- समूह संपादन टैग, मौसम और कोड बदलता है; नाम और कीमतें कपड़े के व्यक्तिगत विवरण में बदली जाती हैं।

@@ -1,20 +1,30 @@
-# Group Tagging of Closet Items
+# Gruppen-Tagging (Massenorganisation)
 
-## Goal
-The goal of the Group tagging feature is to allow fast, bulk categorization of closet garments. The user can select multiple items in their closet and tag them all at once with a single click.
+Organisieren Sie Dutzende Kleidungsstücke in Sekunden mit 1-Klick-Stapelbearbeitung.
 
-## Purpose
-- **Speed & Efficiency**: Instead of entering tags item-by-item, users can select several garments (e.g., all formal jackets or all gym wear) and apply the tags instantly.
-- **Improved AI Stylist Accuracy**: Fine-grained categories/tags (e.g., “Work”, “GYM”, “Swimwear”, “Uniforms”) guide the Stylist's reasoning process. Predefined tags enable the Stylist to locate the most relevant items for specific outfit requests (for example, choosing "work"-tagged items first when constructing a "work outfit").
-- **Smart Fallbacks**: If certain tagged layers are missing (e.g., no upper-body "work"-tagged items), the Stylist will dynamically match other suitable garments.
+## Überblick
+Mit Gruppen-Tagging können Sie mehrere Kleidungsstücke gleichzeitig aktualisieren, statt jedes einzeln zu bearbeiten. Wählen Sie Teile aus und weisen Sie Jahreszeiten oder Dresscodes mit einem Klick zu.
 
-## Key Points & Implementation Details
-1. **User Interface Integration**:
-   - Added a **Tag** button in the Closet selection floater.
-   - Built a comma-separated tagging dialog (`AlertDialog`) that pops up when clicked.
-2. **Optimistic UI Update**:
-   - Tags are merged onto the selected closet items locally first so the changes reflect instantly in the user interface.
-3. **Background Syncing**:
-   - Sends the tag update requests (`api.patchItem`) to the database in the background to ensure data consistency without blocking user interactions.
-4. **i18next Localization**:
-   - All text messages, dialog titles, placeholders, and feedback notifications support translations cleanly using options-based defaults.
+## Voraussetzungen
+- Kleidungsstücke in Ihrem digitalen Kleiderschrank.
+
+## Schritt für Schritt
+1. **Kleiderschrank öffnen**: Wechseln Sie zum Reiter **Closet**.
+2. **Auswahlmodus starten**: Tippen Sie oben auf **Auswählen / Mehrfachauswahl**.
+3. **Kleidung wählen**: Tippen Sie auf Teile oder eine Kategorie (*"Alle Oberteile auswählen"*).
+4. **Gruppen-Tagging öffnen**: Tippen Sie unten auf die schwebende Schaltfläche **Gruppen-Tag**.
+5. **Eigenschaften festlegen**:
+   - Jahreszeiten wählen (*Frühling*, *Sommer*, *Herbst*, *Winter*).
+   - Dresscode festlegen (*Freizeit*, *Smart Casual*, *Business*, *Festlich*).
+   - Eigene Tags hinzufügen (*"Urlaub"*, *"Fitness"*).
+6. **Übernehmen**: Tippen Sie auf **Auf ausgewählte Teile anwenden**. Fertig!
+
+## Erwartete Ergebnisse
+Alle gewählten Kleidungsstücke zeigen die neuen Tags sofort ohne Neuladen der Seite an.
+
+## Fehlerbehebung
+- **Tag nicht übernommen**: Stellen Sie sicher, dass das Häkchen am Artikel vor dem Klick gesetzt war.
+- **Tag entfernen**: Artikel erneut auswählen, Haken entfernen und auf Übernehmen tippen.
+
+## Einschränkungen
+- Gruppen-Tagging bearbeitet Tags, Jahreszeiten und Dresscodes; Titel und Preise werden einzeln angepasst.

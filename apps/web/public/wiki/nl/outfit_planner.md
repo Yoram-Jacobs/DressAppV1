@@ -1,25 +1,33 @@
-# Outfitplanner & Canvas
+# Outfit Planner & 2D Avatar
 
-Stel gecoördineerde layouts samen, laag ze en bekijk ze.
+Combineer, laag en bekijk gecoördineerde outfits op uw virtuele avatar voordat u zich aankleedt.
 
 ## Overzicht
-De Outfitplanner biedt een visueel 2D-avatarcanvas (dat zowel uitsneden van echte lichaamsfoto's van gebruikers als dynamische vector SVG-mannequins ondersteunt) met gecalibreerde landmark-offsets (`top-[14.5%]` kraag-tot-halslijn en `top-[36.5%]` tailleband-tot-taillelijn) om bovenstukken, onderstukken, outerwear en schoenen naadloos op de lichaamsgrenzen te lagen.
+De Outfit Planner biedt een interactieve 2D-avatar waarop u gemakkelijk kleding kunt passen. U ziet meteen hoe tops, broeken, schoenen en accessoires samengaan, kunt jassen aan- en uittrekken en harmonie-scores controleren.
 
 ## Vereisten
-- Opgeslagen kledingkastartikelen.
+- Gedigitaliseerde kledingstukken in uw kast.
+- (Optioneel) Een foto van uzelf in uw profiel voor een realistische paspop op uw eigen lichaamsbouw.
 
-## Stap-voor-stap
-1. **Selecteer canvas**: Open de Planner en klik op een dag of een nieuw concept.
-2. **Artikelen lagen**: Sleep kledingstukken naar de 2D-avatar. Outerwear wordt automatisch over binnenhemden gestapeld.
-3. **Pasvorm beoordelen**: Controleer compatibiliteitsscores en waarschuwingen (bijv. kleurconflicten of weerwaarschuwingen).
-4. **Opslaan**: Stel een titel in en plan de look in uw kledingkastdagboek. Updates worden thread-safe gestreamd via `useOutfitStore`.
+## Stapsgewijze instructies
+1. **Paspop openen**: Tik op het tabblad **Outfit Canvas** in de app.
+2. **Avatar aankleden**: Sleep kledingstukken naar de paspop of tik erop:
+   - Tops sluiten netjes aan rond de halslijn.
+   - Broeken en rokken sluiten aan op de taille.
+   - Schoenen staan precies op de voeten.
+3. **Jassen & vesten laagjesweergave ("Met / Zonder jas")**:
+   - Voeg een jas, vest of colbert toe.
+   - Gebruik de knop om uw look **Met jas** of **Zonder jas** (top eronder zichtbaar) te bekijken.
+4. **Details bekijken**: Tik op een kledingstuk op de paspop om details te openen of een ander item te kiezen.
+5. **Harmoniescores controleren**: Bekijk hoe goed kleuren, stoffen en het weer op elkaar zijn afgestemd.
+6. **Opslaan in kalender**: Tik op **Look opslaan** om de outfit vast te leggen.
 
 ## Verwachte resultaten
-Prachtig gelaagde outfitcomposities opgeslagen in uw kalender en zichtbaar als rasterkaart-voorbeelden zonder achtergrondnetwerkverzoek-pollinglussen.
+Een realistische en mooie weergave van uw outfit die ochtendstress voor de kledingkast wegneemt.
 
 ## Probleemoplossing
-- **Laagvolgorde onjuist**: Controleer de categorie van het artikel opnieuw; outerwear moet worden gecategoriseerd als "Outerwear" om correct te stapelen.
-- **Overlapwaarschuwingen**: Als de avatar waarschuwt voor herhaald dragen, controleer dan of u recentelijk dezelfde outfit op dezelfde locatie hebt gedragen.
+- **Jas verschijnt onder het shirt**: Controleer of het kledingstuk is gecategoriseerd als "Jassen" zodat het er vanzelf overheen valt.
+- **Avatar oogt vertekend**: Controleer lengte en gewicht in uw Profiel of tik op "Avatar herstellen".
 
 ## Beperkingen
-- Lagen worden automatisch beheerd op basis van categorietags; handmatige z-index-overschrijvingen worden niet ondersteund.
+- Jassen worden automatisch over tops gedragen; afwijkende laagvolgordes zijn vooralsnog niet handmatig versleepbaar.
