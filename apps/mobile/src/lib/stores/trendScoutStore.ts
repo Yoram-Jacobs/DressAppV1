@@ -98,12 +98,15 @@ export const trendScoutStore = {
     return () => listeners.delete(listener);
   },
 
-  isFresh(): boolean {
-    return Date.now() - _state.lastFetch < FRESH_MS && _state.cards.length > 0;
+  isFresh(gender?: string | null, language?: string | null): boolean {
+    const timeFresh = Date.now() - _state.lastFetch < FRESH_MS && _state.cards.length > 0;
+    const genderMatch = !gender || !(_state as any).cachedGender || (_state as any).cachedGender === gender;
+    const langMatch = !language || !(_state as any).cachedLanguage || (_state as any).cachedLanguage === language;
+    return timeFresh && genderMatch && langMatch;
   },
 
   async prewarm(options: { language?: string; country?: string | null; gender?: string | null; force?: boolean } = {}): Promise<void> {
-    if (!options.force && this.isFresh()) {
+    if (!options.force && this.isFresh(options.gender, options.language)) {
       return;
     }
 
@@ -115,20 +118,27 @@ export const trendScoutStore = {
         gender: options.gender || undefined,
       });
       const rawList = Array.isArray(res?.cards) ? res.cards : (Array.isArray(res) ? res : []);
-      const cards = rawList.map((it: any, idx: number) => ({
-        ...it,
-        id: it.id || `trend-${idx}`,
-        title: it.title || it.headline || '',
-        description: it.description || it.summary || '',
-      }));
+      const cards = rawList.map((it: any, idx: number) => {
+        const rawImg = it.image_url || '';
+        const isBroken = rawImg.includes('ynet-pic1.ynet.co.il') || rawImg.includes('example.com') || !rawImg.startsWith('http');
+        return {
+          ...it,
+          id: it.id || `trend-${idx}`,
+          title: it.title || it.headline || '',
+          description: it.description || it.summary || '',
+          image_url: isBroken ? undefined : it.image_url,
+        };
+      });
 
       setState((prev) => ({
         ...prev,
         cards,
         loading: false,
         lastFetch: Date.now(),
+        cachedGender: options.gender || undefined,
+        cachedLanguage: options.language || 'en',
         error: null,
-      }));
+      } as any));
     } catch (err: any) {
       setState((prev) => ({
         ...prev,

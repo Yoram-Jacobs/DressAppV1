@@ -111,7 +111,8 @@ function TrendCardImage({
   const [error, setError] = useState(false);
   const g = gender === 'male' ? 'male' : 'female';
   const fallbackUrl = DEFAULT_MOBILE_IMAGES[`${canonicalBucket}-${g}`] || DEFAULT_MOBILE_IMAGES[`local-${g}`];
-  const uri = (!error && imageUrl && imageUrl.startsWith('http')) ? imageUrl : fallbackUrl;
+  const isBroken = !imageUrl || !imageUrl.startsWith('http') || imageUrl.includes('ynet-pic1.ynet.co.il') || imageUrl.includes('example.com');
+  const uri = (!error && !isBroken) ? imageUrl : fallbackUrl;
 
   return (
     <Image
@@ -578,11 +579,15 @@ const styles = StyleSheet.create({
     fontFamily: fonts.displayBold,
     fontSize: fontSizes.base,
     lineHeight: fontSizes.base * 1.3,
+    textAlign: I18nManager.isRTL ? 'right' : 'left',
+    writingDirection: I18nManager.isRTL ? 'rtl' : 'ltr',
   },
   desc: {
     fontFamily: fonts.body,
     fontSize: fontSizes.xs,
     lineHeight: fontSizes.xs * 1.4,
+    textAlign: I18nManager.isRTL ? 'right' : 'left',
+    writingDirection: I18nManager.isRTL ? 'rtl' : 'ltr',
   },
   sourceRow: {
     flexDirection: 'row',
@@ -593,6 +598,8 @@ const styles = StyleSheet.create({
   sourceText: {
     fontFamily: fonts.body,
     fontSize: 11,
+    textAlign: I18nManager.isRTL ? 'right' : 'left',
+    writingDirection: I18nManager.isRTL ? 'rtl' : 'ltr',
   },
   paywallCard: {
     padding: spacing[5],
