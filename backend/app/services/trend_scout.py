@@ -1372,14 +1372,10 @@ async def run_trend_scout(
 
     results: list[dict[str, Any]] = []
     skipped: list[str] = []
+    sem = asyncio.Semaphore(4)
 
-    for g in target_genders:
-        buckets_to_run = MENS_BUCKETS if g == "male" else WOMENS_BUCKETS
-        for bucket in buckets_to_run:
-            if not force and await _already_today(bucket["slug"], country_code, gender=g):
-                skipped.append(f"{g}:{bucket['slug']}")
-                continue
-
+    async def _process_bucket(g: str, bucket: dict[str, Any]) -> dict[str, Any] | None:
+        async with sem:
             card = await _generate_one(
                 bucket,
                 client_type=client_type,
@@ -1388,7 +1384,7 @@ async def run_trend_scout(
                 gender=g
             )
             if not card:
-                continue
+                return None
 
             doc = {
                 "id": str(uuid.uuid4()),
@@ -1405,7 +1401,7 @@ async def run_trend_scout(
                 "source_url": card.get("source_url"),
                 "image_url": card.get("image_url"),
                 "video_url": card.get("video_url"),
-                "model": settings.DEFAULT_STYLIST_MODEL,
+                "model": "gemini-2.5-flash-grounded",
                 "created_at": datetime.now(timezone.utc).isoformat(),
             }
             await db.trend_reports.replace_one(
@@ -1419,7 +1415,23 @@ async def run_trend_scout(
                 doc,
                 upsert=True
             )
-            results.append(doc)
+            return doc
+
+    tasks = []
+    for g in target_genders:
+        buckets_to_run = MENS_BUCKETS if g == "male" else WOMENS_BUCKETS
+        for bucket in buckets_to_run:
+            if not force and await _already_today(bucket["slug"], country_code, gender=g):
+                skipped.append(f"{g}:{bucket['slug']}")
+                continue
+            tasks.append(_process_bucket(g, bucket))
+
+    generated_docs = await asyncio.gather(*tasks, return_exceptions=True)
+    for res in generated_docs:
+        if isinstance(res, dict):
+            results.append(res)
+        elif isinstance(res, Exception):
+            logger.warning("Bucket processing raised exception: %s", res)
 
     logger.info(
         "Trend-Scout run complete: generated=%d, skipped=%d, country_code=%s, genders=%s",
