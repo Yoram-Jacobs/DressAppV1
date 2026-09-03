@@ -1374,8 +1374,19 @@ async def _already_today(bucket_slug: str, country_code: str | None = None, gend
     return bool(existing)
 
 
+_seed_data_initialized = False
+_trend_feed_cache: dict[str, tuple[float, list[dict[str, Any]]]] = {}
+CACHE_TTL_SECONDS = 600
+
+def clear_trend_feed_cache() -> None:
+    _trend_feed_cache.clear()
+
+
 async def ensure_seed_data() -> None:
     """Ensure database has canonical initial starting trend cards and heal missing images & article deep links."""
+    global _seed_data_initialized
+    if _seed_data_initialized:
+        return
     db = get_db()
     # Heal existing seed/canonical documents with direct article deep links and images
     for seed in CANONICAL_SEED_CARDS:
@@ -1401,6 +1412,7 @@ async def ensure_seed_data() -> None:
                 doc,
                 upsert=True
             )
+    _seed_data_initialized = True
 
 
 # ---------------------------------------------------------------------------
@@ -1513,6 +1525,7 @@ async def run_trend_scout(
         country_code,
         target_genders
     )
+    clear_trend_feed_cache()
     if user and user.get("id"):
         from app.services.sync_service import broadcast_sync_event
         await broadcast_sync_event(user["id"], "trend_scout_updated", {"date": today})
@@ -1635,6 +1648,14 @@ async def fashion_scout_feed(
 
     country = country.upper() if country else None
 
+    # Check in-memory feed cache for instant 0ms retrieval
+    import time
+    cache_key = f"{target_gender}_{language}_{country}_{limit}_{bool(user)}"
+    now = time.time()
+    cached_entry = _trend_feed_cache.get(cache_key)
+    if cached_entry and (now - cached_entry[0] < CACHE_TTL_SECONDS):
+        return [dict(c) for c in cached_entry[1]]
+
     # Query matching candidate cards
     cursor = (
         db.trend_reports.find(
@@ -1659,7 +1680,9 @@ async def fashion_scout_feed(
     canon = canon[:limit]
 
     if language == "en":
-        return [_ensure_card_image(dict(c)) for c in canon]
+        final_cards = [_ensure_card_image(dict(c)) for c in canon]
+        _trend_feed_cache[cache_key] = (now, [dict(c) for c in final_cards])
+        return final_cards
 
     # Fast batch query: Check MongoDB cache for all canon IDs in one single index lookup
     canon_ids = [c.get("id") for c in canon if c.get("id")]
@@ -1744,7 +1767,9 @@ async def fashion_scout_feed(
                 await _safe_translate(bg_c)
         asyncio.create_task(_trans_remaining(need_background_trans))
 
-    return list(translated_priority) + remaining_out
+    final_cards = list(translated_priority) + remaining_out
+    _trend_feed_cache[cache_key] = (now, [dict(c) for c in final_cards])
+    return final_cards
 
 
 async def _translate_card(
