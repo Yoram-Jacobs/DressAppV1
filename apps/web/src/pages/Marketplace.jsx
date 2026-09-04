@@ -117,6 +117,10 @@ export default function Marketplace() {
     (async () => {
       try {
         await streamBrowse(browseParams, { signal: ac.signal });
+        const slot = browseStore.get(browseParams);
+        if (!cancelled && (!slot || !slot.items || slot.items.length === 0)) {
+          await browseStore.ensure(browseParams, { force: true });
+        }
       } catch (err) {
         if (!cancelled) {
           // Surface only non-abort errors. Aborts are expected when

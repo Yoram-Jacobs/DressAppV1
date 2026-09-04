@@ -456,67 +456,74 @@ async def browse_listings_stream(
     _ = user
 
     async def gen():
-        # Total is computed once up-front so the client can size its
-        # skeleton grid before listings start streaming in.
-        total = await repos.count(db.listings, query)
-        yield (
-            json.dumps(
-                {"type": "start", "total": total, "geo": start_geo}
-            )
-            + "\n"
-        )
-
         emitted = 0
-        if use_geo:
-            geo_near_opts = {
-                "near": {"type": "Point", "coordinates": [lng, lat]},
-                "distanceField": "distance_m",
-                "query": query,
-                "spherical": True,
-            }
-            if radius_km:
-                geo_near_opts["maxDistance"] = radius_km * 1000
-            pipeline = [
-                {"$geoNear": geo_near_opts},
-                {"$skip": skip},
-                {"$limit": limit},
-                {"$project": {"_id": 0}},
-            ]
-            cursor = db.listings.aggregate(pipeline)
-            async for doc in cursor:
-                if "distance_m" in doc:
-                    doc["distance_km"] = round(doc["distance_m"] / 1000, 1)
-                _sanitize_listing_browse_doc(doc)
-                yield (
-                    json.dumps({"type": "item", "data": doc}) + "\n"
+        try:
+            # Total is computed once up-front so the client can size its
+            # skeleton grid before listings start streaming in.
+            total = await repos.count(db.listings, query)
+            yield (
+                json.dumps(
+                    {"type": "start", "total": total, "geo": start_geo}
                 )
-                emitted += 1
-                await asyncio.sleep(0)
-        else:
-            cursor = (
-                db.listings.find(query, {"_id": 0})
-                .sort("created_at", -1)
-                .skip(skip)
-                .limit(limit)
+                + "\n"
             )
-            async for doc in cursor:
-                if lat is not None and lng is not None:
-                    dist = calculate_distance_km(doc.get("location"), lat, lng)
-                    if dist is not None:
-                        doc["distance_km"] = dist
-                _sanitize_listing_browse_doc(doc)
-                yield (
-                    json.dumps({"type": "item", "data": doc}) + "\n"
-                )
-                emitted += 1
-                # Yield to the loop every row so the bytes actually
-                # leave the box one-by-one instead of being coalesced
-                # into one big TCP write at the end.
-                await asyncio.sleep(0)
 
-        yield (
-            json.dumps({"type": "done", "emitted": emitted}) + "\n"
-        )
+            if use_geo:
+                geo_near_opts = {
+                    "near": {"type": "Point", "coordinates": [lng, lat]},
+                    "distanceField": "distance_m",
+                    "query": query,
+                    "spherical": True,
+                }
+                if radius_km:
+                    geo_near_opts["maxDistance"] = radius_km * 1000
+                pipeline = [
+                    {"$geoNear": geo_near_opts},
+                    {"$skip": skip},
+                    {"$limit": limit},
+                    {"$project": {"_id": 0}},
+                ]
+                cursor = db.listings.aggregate(pipeline, allowDiskUse=True)
+                async for doc in cursor:
+                    if "distance_m" in doc:
+                        doc["distance_km"] = round(doc["distance_m"] / 1000, 1)
+                    _sanitize_listing_browse_doc(doc)
+                    yield (
+                        json.dumps({"type": "item", "data": doc}) + "\n"
+                    )
+                    emitted += 1
+                    await asyncio.sleep(0)
+            else:
+                cursor = (
+                    db.listings.find(query, {"_id": 0})
+                    .sort("created_at", -1)
+                    .allow_disk_use(True)
+                    .skip(skip)
+                    .limit(limit)
+                )
+                async for doc in cursor:
+                    if lat is not None and lng is not None:
+                        dist = calculate_distance_km(doc.get("location"), lat, lng)
+                        if dist is not None:
+                            doc["distance_km"] = dist
+                    _sanitize_listing_browse_doc(doc)
+                    yield (
+                        json.dumps({"type": "item", "data": doc}) + "\n"
+                    )
+                    emitted += 1
+                    # Yield to the loop every row so the bytes actually
+                    # leave the box one-by-one instead of being coalesced
+                    # into one big TCP write at the end.
+                    await asyncio.sleep(0)
+
+            yield (
+                json.dumps({"type": "done", "emitted": emitted}) + "\n"
+            )
+        except Exception as exc:
+            logger.error("Error in browse_listings_stream for query %s: %s", query, exc, exc_info=True)
+            yield (
+                json.dumps({"type": "done", "emitted": emitted, "error": str(exc)}) + "\n"
+            )
 
     return StreamingResponse(
         gen(),
