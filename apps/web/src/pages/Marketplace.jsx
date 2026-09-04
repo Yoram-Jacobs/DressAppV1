@@ -231,8 +231,8 @@ export default function Marketplace() {
               en-route. */}
           {!loading && !browseProgress.running && items.length === 0 && (
             <div className="text-center py-16" data-testid="marketplace-empty-state">
-              <h2 className="font-display text-2xl">{t('market.noMatching')}</h2>
-              <p className="text-sm text-muted-foreground mt-2">{t('market.noMatchingSub')}</p>
+              <h2 className="font-display text-2xl">{t('market.noListings', { defaultValue: 'No listings found' })}</h2>
+              <p className="text-sm text-muted-foreground mt-2">{t('market.noListingsDesc', { defaultValue: 'Try changing your search or category filters.' })}</p>
             </div>
           )}
 
