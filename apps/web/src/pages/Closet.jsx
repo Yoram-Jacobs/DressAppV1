@@ -58,8 +58,12 @@ const _CATEGORY_SYNONYMS = {
   bottom:     new Set(['bottom', 'bottoms']),
   outerwear:  new Set(['outerwear']),
   shoes:      new Set(['shoes', 'footwear']),
-  accessory:  new Set(['accessory', 'accessories']),
-  dress:      new Set(['dress', 'dresses', 'full body']),
+  footwear:   new Set(['shoes', 'footwear']),
+  accessory:  new Set(['accessory', 'accessories', 'headwear']),
+  accessories:new Set(['accessory', 'accessories', 'headwear']),
+  headwear:   new Set(['accessory', 'accessories', 'headwear']),
+  dress:      new Set(['dress', 'dresses', 'full body', 'full_body', 'fullbody', 'full-body', 'one-piece']),
+  dresses:    new Set(['dress', 'dresses', 'full body', 'full_body', 'fullbody', 'full-body', 'one-piece']),
 };
 
 function _matchesCategory(item, requested) {

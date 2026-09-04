@@ -25,6 +25,35 @@ from app.services.auth import get_current_user, get_current_user_optional
 from app.services.fashion_clip import fashion_clip_service
 from app.services.fees import compute_fees
 import math
+import re
+
+_CATEGORY_SYNONYMS: dict[str, list[str]] = {
+    "top": ["top", "tops"],
+    "bottom": ["bottom", "bottoms"],
+    "outerwear": ["outerwear"],
+    "shoes": ["shoes", "footwear"],
+    "footwear": ["shoes", "footwear"],
+    "accessory": ["accessory", "accessories", "headwear"],
+    "accessories": ["accessory", "accessories", "headwear"],
+    "headwear": ["accessory", "accessories", "headwear"],
+    "dress": ["dress", "dresses", "full body", "full_body", "fullbody", "full-body", "one-piece"],
+    "dresses": ["dress", "dresses", "full body", "full_body", "fullbody", "full-body", "one-piece"],
+    "full body": ["dress", "dresses", "full body", "full_body", "fullbody", "full-body", "one-piece"],
+    "full_body": ["dress", "dresses", "full body", "full_body", "fullbody", "full-body", "one-piece"],
+    "fullbody": ["dress", "dresses", "full body", "full_body", "fullbody", "full-body", "one-piece"],
+    "underwear": ["underwear"],
+}
+
+
+def _build_category_filter(category: str | None) -> dict[str, Any] | None:
+    if not category or category.strip().lower() == "all":
+        return None
+    raw = category.strip().lower()
+    lookup_key = raw.replace("_", " ")
+    synonyms = _CATEGORY_SYNONYMS.get(raw) or _CATEGORY_SYNONYMS.get(lookup_key) or [raw]
+    pattern = "^(" + "|".join(re.escape(s) for s in synonyms) + ")$"
+    return {"$regex": pattern, "$options": "i"}
+
 
 def haversine_distance(coord1: list[float], coord2: list[float]) -> float:
     # coord1, coord2 are [lng, lat]
@@ -318,8 +347,9 @@ async def browse_listings(
     query: dict[str, Any] = {"status": status}
     if source:
         query["source"] = source
-    if category:
-        query["category"] = category
+    cat_filter = _build_category_filter(category)
+    if cat_filter:
+        query["category"] = cat_filter
     if mode:
         query["mode"] = mode
     if seller_id:
@@ -432,8 +462,9 @@ async def browse_listings_stream(
     query: dict[str, Any] = {"status": status}
     if source:
         query["source"] = source
-    if category:
-        query["category"] = category
+    cat_filter = _build_category_filter(category)
+    if cat_filter:
+        query["category"] = cat_filter
     if mode:
         query["mode"] = mode
     if seller_id:
