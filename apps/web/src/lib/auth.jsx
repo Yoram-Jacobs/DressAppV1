@@ -1,11 +1,17 @@
 import { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import { api, tokenStore, userStore } from '@/lib/api';
+import { useUniversalSync } from '@/hooks/useUniversalSync';
 
 const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(() => userStore.get());
   const [loading, setLoading] = useState(Boolean(tokenStore.get()) && !userStore.get());
+
+  useUniversalSync(user, (updated) => {
+    setUser(updated);
+    userStore.set(updated);
+  });
 
   const refresh = useCallback(async () => {
     if (!tokenStore.get()) {

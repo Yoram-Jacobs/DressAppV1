@@ -2359,7 +2359,9 @@ const styles = StyleSheet.create({
     ...shadows.sm,
   },
   cardImageBox: {
-    height: 240,
+    width: '100%',
+    aspectRatio: 3 / 4,
+    maxHeight: 420,
     backgroundColor: '#F5F2EB',
     position: 'relative',
     alignItems: 'center',

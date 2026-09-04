@@ -1080,7 +1080,9 @@
     "harmonyFit": "Kleur- en pasharmonie",
     "fitted": "Gepast",
     "hidden": "Verborgen",
-    "selectGarmentSlot": "Kies {{role}}"
+    "selectGarmentSlot": "Kies {{role}}",
+    "realPhoto": "Echte foto",
+    "mannequin": "Mannequin"
   },
   "outfitCompletion": {
     "cta": "Maak de outfit compleet",
@@ -1673,7 +1675,12 @@
     "importWardrobe": "Garderobe importeren",
     "chooseLanguage": "Select Language",
     "planLabel": "{{tier}}-abonnement",
-    "creditsLabel": "{{credits}} credits"
+    "creditsLabel": "{{credits}} credits",
+    "groups": {
+      "identity": "Identiteit",
+      "subscription": "Abonnement",
+      "more": "Meer"
+    }
   },
   "admin": {
     "title": "Beheerder",
@@ -2511,7 +2518,22 @@
       "my_digital_avatar": "Mijn digitale avatar",
       "this_3d_avatar_is_generated": "Deze 3D-avatar wordt gegenereerd op basis van uw lichaamsafmetingen. Update uw afmetingen in uw profiel om te zien hoe de vorm zich automatisch aanpast.",
       "tip": "Tip:",
-      "you_can_drag_to_rotate": "U kunt slepen om te roteren en scrollen om te zoomen. De vorm die je hier ziet, drijft onze virtuele proeffysica-engine aan."
+      "you_can_drag_to_rotate": "U kunt slepen om te roteren en scrollen om te zoomen. De vorm die je hier ziet, drijft onze virtuele proeffysica-engine aan.",
+      "avatar_saved_successfully": "Digitaal avatarprofiel succesvol opgeslagen!",
+      "failed_to_save_measurements": "Opslaan van afmetingen mislukt. Probeer het opnieuw.",
+      "subtitle_description": "Kalibreer uw lichaamsmaten of upload een foto van het gehele lichaam.",
+      "vector_mannequin": "Mannequin",
+      "real_photo": "Echte foto",
+      "female": "Vrouw",
+      "male": "Man",
+      "height": "Lengte",
+      "shoulders": "Schouderbreedte",
+      "chest": "Borstomtrek",
+      "waist": "Tailleomtrek",
+      "hip": "Heupomtrek",
+      "arm_length": "Armlengte",
+      "inseam": "Binnenbeenlengte",
+      "info_note": "Lichaamsmaten kalibreren de fysica van virtueel passen en maatadviezen in de hele app."
     }
   },
   "trends": {

@@ -1,25 +1,34 @@
-# Fehlerbehebung & Limits
+# Fehlerbehebung & Praktische Hilfe
 
-Schnelle Lösungen für häufiges App-Verhalten, Grenzwerte und Einstellungen.
+Schnelle und einfache Lösungen für häufige Fragen, Berechtigungen und Limits.
 
-## Übersicht
-Finden Sie schnelle Lösungen für Kameraberechtigungen, langsame Upload-Geschwindigkeiten, Fragen zu Kontolimits und Transkriptionen von Sprach-Chats.
+## Überblick
+Hier finden Sie unkomplizierte Antworten zur Kamera, Verarbeitungsgeschwindigkeit, Schranklimits und Spracheinstellungen.
 
 ## Voraussetzungen
-- Internetverbindung.
+- Eine aktive Internetverbindung.
+- Ein moderner Webbrowser (Google Chrome, Apple Safari) oder die DressApp Mobile-App.
 
-## Schritt-für-Schritt-Anleitung
-1. **Kamerablockierung**: Wenn die Kamera nicht startet, gehen Sie zu den Browsereinstellungen, wählen Sie DressApp aus und setzen Sie die Kameraberechtigungen zurück.
-2. **Stockende Uploads**: Wenn das Laden bei mehreren Fotos einfriert, warten Sie, bis die sequenzielle Hintergrundwarteschlange diese nacheinander verarbeitet hat.
-3. **Kleiderschrank voll**: Kostenlose Nutzer sind auf ein Basislimit von 50 Artikeln beschränkt. Abonnieren Sie die Manager- oder Professional-Stufe auf der **Preisseite** (`/pricing`), oder laden Sie einen Freund ein, um +10 Plätze pro Registrierung zu erhalten (bis zu maximal 200 Artikel).
-4. **API-Fehler**: Wenn KI-Funktionen fehlschlagen, überprüfen Sie Ihre benutzerdefinierten Google AI Studio-Schlüssel auf Ihrer Profilseite.
+## Schritt für Schritt
+1. **Kamera startet nicht**:
+   - Öffnen Sie Ihre Browser- oder Geräteeinstellungen, wählen Sie **DressApp** und setzen Sie die **Kamera**-Berechtigung auf "Zulassen". Seite neu laden.
+2. **Meldung "Maximale Kapazität erreicht"**:
+   - Kostenlose Konten speichern bis zu **150 Teile**.
+   - Laden Sie Freunde ein für **+10 Gratis-Plätze** (bis zu 1.000 Teile) oder wechseln Sie zu **Pro** für unbegrenzte Kapazität.
+3. **Spracheingabe funktioniert nicht**:
+   - Mikrofon-Berechtigung im Browser überprüfen.
+   - Prüfen Sie, ob Ihr Gerät nicht stummgeschaltet ist.
+4. **Bildverarbeitung dauert kurz**:
+   - Bei mehreren Kleidungsstücken auf einem Foto schneidet die KI jedes Teil einzeln frei. Sie können die App währenddessen normal weiternutzen!
+5. **Google Kalender verknüpfen**:
+   - Unter **Profil** &rarr; **Google Kalender** auf **Verbinden** tippen.
 
 ## Erwartete Ergebnisse
-Schnelle Lösung von Berechtigungs- und Konfigurationsproblemen, ohne dass technische Support-Tickets erforderlich sind.
+Schnelle Problemlösung, damit Ihr Kleiderschrank reibungslos funktioniert.
 
 ## Fehlerbehebung
-- **Datenbankprobleme**: Wenn Artikel nicht synchronisiert sind, melden Sie sich ab und wieder an, um die Token-Sitzungen zu aktualisieren.
-- **RTL-Layoutprobleme**: Wenn sich arabische/hebräische Overlays überschneiden, aktualisieren Sie Ihren Browser auf die neueste Version.
+- **Problem besteht weiterhin?** Einmal ab- und wieder anmelden oder Browser-Cache leeren.
+- **RTL-Sprachen**: Hebräisch und Arabisch spiegeln sich automatisch von rechts nach links.
 
 ## Einschränkungen
-- Plattformgrenzen werden strikt durchgesetzt, um Serverressourcen zu schützen.
+- Der Kleiderschrank-Import aus anderen Apps erfordert einen Computer-Browser.

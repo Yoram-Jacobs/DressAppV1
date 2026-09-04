@@ -70,6 +70,19 @@ export function ProfileDetailsCard() {
             <h3 className="font-display text-xl mt-0.5">{t('profile.title')}</h3>
           </div>
           <div className="flex items-center gap-2">
+            <Button
+              onClick={save}
+              disabled={busy || saveBusy}
+              className="rounded-full px-4 text-xs font-semibold shadow-sm"
+              data-testid="profile-details-header-save-btn"
+            >
+              {busy || saveBusy ? (
+                <Loader2 className="h-3.5 w-3.5 animate-spin me-1.5" />
+              ) : (
+                <Save className="h-3.5 w-3.5 me-1.5" />
+              )}
+              {t('profile.saveProfile', { defaultValue: 'Save profile' })}
+            </Button>
             {user?.google_connected && (
               <Button
                 variant="outline"
@@ -141,18 +154,19 @@ export function ProfileDetailsCard() {
           <CampaignNotificationsSection form={form} setCampaignPref={setCampaignPref} t={t} />
         </Accordion>
 
-        <div className="flex justify-end">
+        <div className="flex justify-end pt-2">
           <Button
             onClick={save}
-            disabled={busy || saveBusy || !isDirty}
-            className="rounded-xl"
+            disabled={busy || saveBusy}
+            size="lg"
+            className="rounded-xl px-6 font-semibold shadow-editorial"
             data-testid="profile-details-save-btn"
           >
             {busy || saveBusy ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
+              <Loader2 className="h-4 w-4 animate-spin me-2" />
             ) : (
               <>
-                <Save className="h-4 w-4 me-2" /> {t('profile.saveProfile')}
+                <Save className="h-4 w-4 me-2" /> {t('profile.saveProfile', { defaultValue: 'Save profile' })}
               </>
             )}
           </Button>

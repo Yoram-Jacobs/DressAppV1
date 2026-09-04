@@ -19,7 +19,7 @@ DressApp turns a closet of physical clothes into a structured, quarriable wardro
 | **Capture** | Snap or upload photos. The vision pipeline crops each garment, removes the background, and auto-fills 20+ attributes (category, fabric, fit, season, dress-code, colours, condition, repair advice…). |
 | **Auto-fill & Re-analyse** | Falls back to local SegFormer + rembg + Gemini. The **Re-analyse Photo** card features an interactive AI prompt box allowing users to ask **The Eyes** for specific modifications (*"Remove the shoes"*, *"Complete the hole where the hand was"*, *"Remove metal studs"*) executing photorealistic inpainting via **Nano Banana** (`gemini-3.1-flash-lite-image`). |
 | **DPP QR scan** | Scans EU Digital Product Passport QR codes (JSON-LD or inline JSON), imports brand, fibre composition, supply-chain trace and care info — even without a photo. |
-| **AI Stylist & Audio** | Conversational chat (text or voice) that pulls weather, your calendar, your closet, and your cultural context to suggest complete outfits. Speaks 12 languages. Integrated STT/TTS routes between Gemma4 and Gemini 2.5 Flash, with native Web Speech transcription fallback and mobile offline VITS models (Piper/Sherpa-ONNX). |
+| **AI Stylist & Audio** | Conversational chat (text or voice) that pulls weather, your calendar, your closet, and your cultural context to suggest complete outfits. Speaks 13 languages. Integrated STT/TTS routes between Gemma4 and Gemini 2.5 Flash, with native Web Speech transcription fallback and mobile offline VITS models (Piper/Sherpa-ONNX). |
 | **Marketplace** | Sell, swap or donate pieces. Region-matched feed, Live PayPal checkout, transparent platform fee (7% after processing). |
 | **Experts directory** | Find vetted stylists, tailors and designers. Self-serve promotion campaigns (Draft/Pending/Active/Paused/Rejected lifecycles) with daily billing options ($1.00 USD/day PayPal checkout), customizable notification timing, and detailed performance reports drive a region-aware ticker on the home screen. Includes a dedicated My Campaigns dashboard for active expert tracking. |
 | **Trend Scout** | Daily background scheduler curates four trend buckets — runway, street, sustainability, influencers. Uses web scraping (BeautifulSoup), Gemini JSON synthesis, link-validation and dynamic translation, with personalized demographic ranking. |
@@ -78,12 +78,13 @@ DressApp turns a closet of physical clothes into a structured, quarriable wardro
         └─ Direct GEMINI_API_KEY → text + image generation
 ```
 
-A more detailed write-up has been archived to the external Appendix directory to keep the main codebase clean and compact:
-*   Architecture specifications: [ARCHITECTURE.md](file:///D:/ai/Emergent/Appendix/docs/ARCHITECTURE.md)
-*   Database shape & collections: [MONGODB_SCHEMA.md](file:///D:/ai/Emergent/Appendix/docs/MONGODB_SCHEMA.md)
-*   Audio & Speech subsystems: [Audio.md](file:///D:/ai/Emergent/Appendix/docs/Audio.md)
-*   Monetization & billing engine: [Monetization.md](file:///D:/ai/Emergent/Appendix/docs/Monetization.md)
-*   Fashion news scraper & Personalization: [Trends-Scout.md](file:///D:/ai/Emergent/Appendix/docs/Trends-Scout.md)
+### In-depth documentation
+
+*   **Technical Architecture**: [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) — Monorepo structure, FARM runtime, ML vision stack, and Hetzner VPS topology.
+*   **Database Schema**: [`docs/MONGODB_SCHEMA.md`](docs/MONGODB_SCHEMA.md) — Complete 15-collection MongoDB Atlas schema, indexes, and credit bucket definitions.
+*   **Domain Context & ADRs**: [`CONTEXT.md`](CONTEXT.md) and [`docs/adr/`](docs/adr/) — Bounded contexts, architectural decision records, and deep module boundaries.
+*   **Modular Wiki**: [`wiki/en/overview.md`](wiki/en/overview.md) — 40 detailed feature guides localized into 13 languages.
+*   **Deployment Facts**: [`CONCRETE_FACTS.md`](CONCRETE_FACTS.md) — Authoritative hardware, container layouts, and operational reference commands.
 
 ---
 
@@ -91,81 +92,95 @@ A more detailed write-up has been archived to the external Appendix directory to
 
 ```
 .
-├── .agents/                # AI Agent workflows
-│   └── workflows/
-│       ├── deploy.md       # Target A / SSH deployment runbook
-│       ├── labrrerian.md   # Documentation maintenance and linting guide
-│       ├── translator.md   # Locale file translation workflow
-│       └── user-manual.md  # User manual generation workflow
-├── wiki/                   # Localized help & modular wiki (13 languages)
-│   ├── en/                 # English topic files (38 guides)
-│   ├── ar/                 # Arabic, de/ German, es/ Spanish, …
-│   └── …                   # One directory per supported locale
-├── backend/                # FastAPI service
-│   ├── server.py           # App entry, ASGI bindings, CORS
+├── apps/
+│   ├── web/                     # React 19 Web SPA (CRA + Craco, Tailwind, i18next)
+│   ├── mobile/                  # Expo 53 / React Native 0.79 Mobile App (iOS / Android)
+│   └── android-twa/             # Android Trusted Web Activity packaging wrapper
+│
+├── packages/
+│   ├── api-client/              # Shared isomorphic REST & streaming NDJSON client
+│   ├── eyes-native/             # Native vision processing bindings for mobile
+│   ├── i18n/                    # Canonical translation catalogs across 13 locales
+│   └── types/                   # Shared TypeScript definitions for domain models
+│
+├── backend/                     # FastAPI Python 3.11 Backend Service
+│   ├── server.py                # ASGI application root & CORS configuration
 │   ├── app/
-│   │   ├── api/v1/         # Versioned routers (closet, listings, stylist, …)
-│   │   ├── services/       # Business logic + ML services
-│   │   ├── models/         # Pydantic schemas
-│   │   ├── db/             # Mongo bootstrap + index creation
-│   │   └── core/           # Settings, security, deps
-│   ├── scripts/
-│   │   └── seed_demo.py    # Idempotent demo-data seeder
-│   ├── requirements.txt    # Lightweight deps — installed by both deploys
-│   └── requirements-ml.txt # Heavy ML stack (torch, transformers, rembg)
-│                           # — only installed by the Hetzner Dockerfile
+│   │   ├── api/v1/              # Versioned API routes (auth, closet, stylist, marketplace, etc.)
+│   │   ├── core/                # Configuration, JWT security, and dependency injection
+│   │   ├── db/                  # Motor MongoDB client and index initialization
+│   │   ├── models/              # Pydantic v2 schemas (schemas.py, credit.py)
+│   │   └── services/            # Business logic, vision matting, stylist agent, and billing
+│   ├── scripts/                 # Seeding and maintenance utilities
+│   ├── requirements.txt         # Production backend dependencies
+│   └── requirements-ml.txt     # Local ML stack (torch, transformers, rembg)
 │
-├── frontend/               # React SPA (Create-React-App + craco)
-│   ├── src/
-│   │   ├── pages/          # Top-level routes
-│   │   ├── components/     # Shared UI (DppScanner, AdTicker, …)
-│   │   ├── components/ui/  # Shadcn primitives
-│   │   ├── lib/            # api client, i18n, helpers
-│   │   └── locales/        # 13 translation files
-│   └── package.json
-│
-├── chrome-extension/       # Manifest V3 Shopping Assistant extension
-│   ├── manifest.json       # Config for Chromium browsers
-│   └── src/                # React popup, background SW, and content scripts
-│
-├── inference-server/       # Self-hosted GPU endpoint for fast vision models
-│   ├── main.py             # FastAPI wrapper for SegFormer + BiRefNet
-│   └── Dockerfile          # RunPod/Lambda Labs GPU container setup
-│
-└── deploy/                 # Production deploy kit
-    ├── docker-compose.yml
-    ├── Dockerfile.backend
-    ├── Dockerfile.frontend
-    ├── Caddyfile
-    ├── nginx-frontend.conf
-    └── DEPLOY.md           # Step-by-step VPS guide
+├── chrome-extension/            # Manifest V3 Shopping Assistant Extension
+├── inference-server/            # Optional standalone GPU inference server (BiRefNet / Gemma-4)
+├── deploy/                      # Production Docker Compose, Caddyfile, and Dockerfiles
+│   ├── docker-compose.yml
+│   ├── Dockerfile.backend
+│   ├── Dockerfile.frontend
+│   ├── Caddyfile
+│   ├── nginx-frontend.conf
+│   └── DEPLOY.md                # Step-by-step VPS deployment guide
+├── docs/                        # Technical documentation, ADRs, and schema references
+│   ├── ARCHITECTURE.md          # Full system architecture
+│   ├── MONGODB_SCHEMA.md        # MongoDB Atlas collection schemas
+│   ├── adr/                     # Architectural Decision Records (0001 - 0004)
+│   └── agents/                  # AI agent guidelines and domain documentation
+├── .agents/                     # AI agent skills & workflows
+│   └── workFlows/               # Core workflows (deploy, labrrerian, translator, user-manual)
+├── quarantine/                  # Archived historical session notes and debug logs
+└── wiki/                        # Localized two-layer user documentation (13 languages)
 ```
-
-*Note: Documentation (`docs/`), test suites (`tests/`), helper utility scripts (`scripts/`, `scratch/`), test iteration reports (`test_reports/`), quarantine handoffs (`quarantine/`), and local model weights (`Eyes_V4_local/`, `Eyes_V4_SH_local/`) have been moved/archived to the external Appendix directory at [D:\\ai\\Emergent\\Appendix](file:///D:/ai/Emergent/Appendix) to keep the active repository lightweight.*
 
 ---
 
 ## Getting started — local dev
 
+### Monorepo Setup
+
+```bash
+# Install workspace dependencies from the repo root:
+yarn install
+```
+
 ### Backend
 
 ```bash
 cd backend
-# Hot-reload is on in supervisor; you only need to restart on dep changes:
-sudo supervisorctl restart backend
-# Required env (already populated in /app/backend/.env):
-#   MONGO_URL, DB_NAME, JWT_SECRET, GEMINI_API_KEY
-#   GOOGLE_OAUTH_CLIENT_ID/SECRET, DEEPGRAM_API_KEY, OPENWEATHER_API_KEY,
-#   GROQ_API_KEY, HF_TOKEN, PAYPAL_LIVE_CLIENT_ID/SECRET, PAYPAL_ENV
+
+# Create and activate a Python 3.11 virtual environment:
+python -m venv .venv
+# On Linux/macOS:
+source .venv/bin/activate
+# On Windows PowerShell:
+.\.venv\Scripts\Activate.ps1
+
+# Install dependencies:
+pip install -r requirements.txt
+
+# Run the FastAPI development server:
+python server.py   # Or: uvicorn server:app --reload --port 8001
 ```
 
-### Frontend
+Required environment variables in `backend/.env`:
+`MONGO_URL`, `DB_NAME`, `JWT_SECRET`, `GEMINI_API_KEY`, `GOOGLE_OAUTH_CLIENT_ID`, `GOOGLE_OAUTH_CLIENT_SECRET`, `DEEPGRAM_API_KEY`, `OPENWEATHER_API_KEY`, `PAYPAL_LIVE_CLIENT_ID`, `PAYPAL_LIVE_CLIENT_SECRET`, `PAYPAL_ENV`.
+
+### Web Frontend
 
 ```bash
-cd frontend
-yarn install
-sudo supervisorctl restart frontend
-# REACT_APP_BACKEND_URL is preconfigured in frontend/.env
+# Start the React 19 web application:
+yarn --cwd apps/web start
+# Access at http://localhost:3000 (REACT_APP_BACKEND_URL defaults to http://localhost:8001)
+```
+
+### Mobile App (Expo)
+
+```bash
+# Start the Expo development server:
+yarn --cwd apps/mobile start
 ```
 
 ### Seed demo data (optional)
@@ -174,7 +189,6 @@ For a fresh database, populate listings, professionals, trend cards and a demo u
 
 ```bash
 cd backend
-# Seed script resides in backend/scripts/seed_demo.py
 python -m scripts.seed_demo   # idempotent — re-running upserts
 ```
 
@@ -213,8 +227,9 @@ docker compose up -d --build
 1. Fork → branch off `main`
 2. Run lint before pushing:
    - Python — `ruff check backend/`
-   - JS/TS — `cd frontend && yarn lint`
-3. Open a PR. CI runs the full test suite. (Pruned test scripts can be restored from the external Appendix [tests/](file:///D:/ai/Emergent/Appendix/tests/) directory for debugging).
+   - TypeScript / Web — `yarn --cwd apps/web lint`
+   - Mobile — `yarn --cwd apps/mobile lint`
+3. Open a PR. CI runs the full test suite.
 
 ---
 

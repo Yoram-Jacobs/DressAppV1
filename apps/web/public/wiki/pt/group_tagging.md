@@ -1,20 +1,30 @@
-# Group Tagging of Closet Items
+# Etiquetagem em Grupo (Organização Rápida do Closet)
 
-## Goal
-The goal of the Group tagging feature is to allow fast, bulk categorization of closet garments. The user can select multiple items in their closet and tag them all at once with a single click.
+Organize dezenas de roupas em segundos com edição em lote em 1 toque.
 
-## Purpose
-- **Speed & Efficiency**: Instead of entering tags item-by-item, users can select several garments (e.g., all formal jackets or all gym wear) and apply the tags instantly.
-- **Improved AI Stylist Accuracy**: Fine-grained categories/tags (e.g., “Work”, “GYM”, “Swimwear”, “Uniforms”) guide the Stylist's reasoning process. Predefined tags enable the Stylist to locate the most relevant items for specific outfit requests (for example, choosing "work"-tagged items first when constructing a "work outfit").
-- **Smart Fallbacks**: If certain tagged layers are missing (e.g., no upper-body "work"-tagged items), the Stylist will dynamically match other suitable garments.
+## Visão Geral
+A etiquetagem em grupo permite atualizar várias peças de uma só vez em vez de editar uma por uma. Selecione suas roupas e defina estações, ocasiões e etiquetas em um único toque!
 
-## Key Points & Implementation Details
-1. **User Interface Integration**:
-   - Added a **Tag** button in the Closet selection floater.
-   - Built a comma-separated tagging dialog (`AlertDialog`) that pops up when clicked.
-2. **Optimistic UI Update**:
-   - Tags are merged onto the selected closet items locally first so the changes reflect instantly in the user interface.
-3. **Background Syncing**:
-   - Sends the tag update requests (`api.patchItem`) to the database in the background to ensure data consistency without blocking user interactions.
-4. **i18next Localization**:
-   - All text messages, dialog titles, placeholders, and feedback notifications support translations cleanly using options-based defaults.
+## Pré-requisitos
+- Roupas cadastradas no seu guarda-roupa digital.
+
+## Passo a Passo
+1. **Abrir o Closet**: Acesse a aba **Closet**.
+2. **Ativar Seleção**: Toque em **Selecionar / Edição em Lote** na barra superior.
+3. **Escolher as Peças**: Toque nos itens desejados ou em uma categoria (*"Selecionar todas as partes de cima"*).
+4. **Abrir a Janela de Tags**: Toque no botão flutuante **Etiquetar Grupo** abaixo.
+5. **Definir Atributos**:
+   - Marque as **Estações** (*Primavera*, *Verão*, *Outono*, *Inverno*).
+   - Escolha o **Estilo** (*Casual*, *Smart Casual*, *Trabalho*, *Festa*, *Esportivo*).
+   - Adicione **Etiquetas Personalizadas** (*"Férias"*, *"Academia"*).
+6. **Aplicar**: Toque em **Aplicar às peças selecionadas**. Seu closet é atualizado instantaneamente!
+
+## Resultados Esperados
+Todas as peças selecionadas passam a exibir as novas etiquetas imediatamente, sem precisar recarregar a página.
+
+## Solução de Problemas
+- **Tag não foi aplicada**: Certifique-se de que o item estava marcado antes de tocar em Aplicar.
+- **Remover uma tag**: Selecione os itens novamente, desmarque a tag e toque em Aplicar.
+
+## Limitações
+- A edição em grupo altera etiquetas, estações e estilos; nomes e preços são editados individualmente na ficha de cada peça.

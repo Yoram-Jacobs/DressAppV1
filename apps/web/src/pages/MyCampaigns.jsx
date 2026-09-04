@@ -6,8 +6,8 @@ import {
   Tag,
   Clock,
   CheckCircle2,
-  CircleX as XCircle,
-  CircleAlert as AlertCircle,
+  XCircle,
+  AlertCircle,
   ArchiveX,
   Ban,
   Eye,
@@ -15,13 +15,14 @@ import {
   SendHorizonal,
   Trash2,
   Settings,
+  Pause as PauseCircle,
+  Play as PlayCircle,
   CreditCard,
   Loader2,
   ExternalLink,
   DollarSign,
   FileText,
 } from 'lucide-react';
-import { PauseCircle } from "lucide-react";
 import {
   Dialog,
   DialogContent,

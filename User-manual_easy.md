@@ -1,310 +1,271 @@
 # DressApp — Easy User Guide & Manual
 
-Welcome to **DressApp**, your personal AI fashion assistant and digital wardrobe manager! This simple guide walks you through every feature step by step so you can organize your clothes, get smart daily outfit ideas, and make the most of your closet.
+Welcome to **DressApp**, your personal AI fashion assistant and smart digital wardrobe! This easy-to-follow guide walks you through every feature step by step so you can organize your clothes, get smart daily outfit ideas, shop smarter, and make the most of your closet.
+
+Whether you are using DressApp on the web at [dressapp.co](https://dressapp.co) or on your mobile device, this manual will help you look your best every day with zero stress.
 
 ---
 
 ## 1. Getting Started
 
 ### What is DressApp?
-DressApp turns your real-world physical closet into a smart digital wardrobe on your phone or computer. With DressApp, you can:
-- **Snap photos** of your clothes to automatically crop out backgrounds and tag items.
-- **Get daily outfit suggestions** tailored to your weather, calendar events, and personal style.
-- **Try on clothes virtually** on a customizable 2D avatar or your own body photo.
-- **Scan Digital Product Passports (DPP)** on retail labels to verify eco-friendly materials and garment care.
+DressApp turns your physical closet into an intelligent digital wardrobe right on your phone or computer. With DressApp, you can:
+- **Snap photos** of your clothes to automatically crop out backgrounds, complete cut-off pieces, and tag items.
+- **Group tag** multiple clothes at once to organize seasons and styles in seconds.
+- **Get personalized daily outfit suggestions** tailored to your local weather, calendar schedule, and personal style.
+- **Try on outfits virtually** on a customizable 2D mannequin or a photo of your own body.
+- **Discover daily fashion trends** with Trend Scout and instantly style them using clothes you already own.
+- **Track your wardrobe value & Cost-Per-Wear** to see which clothes give you the best value.
+- **Pack for trips** with the AI Suitcase Assistant so you never overpack or forget an outfit.
+- **Scan Digital Product Passports (DPP)** on retail tags to verify eco-friendly materials and garment care.
 - **Buy, sell, swap, or rent clothes** directly with other fashion lovers in the circular marketplace.
+- **Shop online with confidence** using our Shopping Assistant browser extension to get recommended sizes automatically.
 
-### Basic Setup
-1. **Open the App**: Visit [https://dressapp.co](https://dressapp.co) on Google Chrome or Apple Safari.
-2. **Grant Permissions**:
-   - Allow **Camera** access to take photos of your clothes and scan QR tags.
-   - Allow **Microphone** access to talk to your AI Stylist hands-free.
-   - Allow **Location** access for accurate local weather and local stylist recommendations.
+### Basic Setup & Permissions
+1. **Open the App**: Visit [https://dressapp.co](https://dressapp.co) in Google Chrome or Apple Safari, or open the DressApp mobile app on iOS/Android.
+2. **Grant Helpful Permissions**:
+   - **Camera**: Allows you to take photos of your clothes and scan DPP QR codes on tags.
+   - **Microphone**: Allows you to talk to your AI Stylist hands-free.
+   - **Location**: Allows DressApp to check your local temperature and weather for accurate outfit styling.
 
 ---
 
 ## 2. Step-by-Step Instructions
 
 ### Step 1: Adding Clothes to Your Closet
-Adding your wardrobe items to DressApp is fast and easy:
+Adding garments to your digital closet takes just a few seconds. Choose whichever method is easiest for you:
 
 #### Option A: Take or Upload Photos
-1. Tap **Add Item** from the bottom menu.
-2. Choose **Take Photo** to take a picture of your garment (or a full-body outfit), or **Upload Photos** from your gallery.
-3. The app automatically checks if you already added the same item (instant duplicate warning).
-4. **AI Multi-Item Cropping**: If your photo contains a full outfit, DressApp automatically separates the jacket, top, skirt/pants, and shoes into separate cards.
+1. Tap **Add Item** from the navigation bar.
+2. Choose **Take Photo** to snap a picture of your garment (or a full-outfit mirror selfie), or choose **Upload Photos** from your gallery.
+3. **Instant Duplicate Check**: The app quickly checks if you already added the same garment so you never duplicate items by accident.
+4. **Multi-Garment Splitting**: If your photo contains a full outfit, DressApp automatically detects and splits the top, pants/skirt, jacket, and shoes into separate cards.
 5. **AI Quality Checker & Automatic Image Completion**:
-   - The AI inspects each cropped item to see if it is complete or cut off.
-   - **Image Completion**: If parts of a garment are occluded by your arms, bags, hair, or cut off by the photo edges (such as a skirt with a cropped hem or a jacket occluded by a bag), the AI automatically out-paints and completes the missing fabric into a full, symmetrical piece.
-   - **Studio Reconstruction**: If an item is severely cut off (like shoes where only the toe caps are visible), the AI automatically reconstructs the full pair into a clean catalog product photo.
-6. Tap **Save** to add the garments to your closet grid. Generative completions finish smoothly in the background while you continue using the app.
+   - **Pristine Items**: Clean photos have their background removed instantly into a crisp, transparent image.
+   - **Image Completion**: If parts of a garment are covered by your hands, a bag, or hair (or cut off by the camera frame), the AI automatically completes the missing fabric symmetrically.
+   - **Studio Reconstruction**: If an item is severely cut off (like a photo where only the toe of a shoe is visible), the AI reconstructs the full item into a clean studio catalog photo.
+6. Tap **Save** to add the items to your closet!
 
-#### Option B: Scan Product Passport QR Codes
-1. Tap **Scan QR (DPP)** on the Add Item page.
-2. Scan the QR code printed on your garment's label.
-3. The app imports brand details, fabric composition, washing instructions, and sustainability scores automatically.
+#### Option B: Scan Product Passport QR Codes (DPP)
+1. Tap **Scan QR (DPP)** on the Add Item screen.
+2. Point your camera at the QR code printed on your garment's retail tag.
+3. The app instantly imports the brand name, exact fabric composition, washing instructions, and sustainability score.
 
 #### Option C: Import Shopping Receipts
-1. Tap **Add Item** and open the **Digital Import** tab.
-2. Select how you want to import your receipt:
-   - **Paste Text**: Paste the confirmation text directly from your email.
-   - **Upload File**: Upload a receipt image, invoice screenshot, or a PDF file (like Zara or ASOS store invoices).
+1. Tap **Add Item** and switch to the **Digital Import** tab.
+2. Choose how you want to provide your receipt:
+   - **Paste Text**: Paste the order confirmation text from your email.
+   - **Upload File**: Upload an invoice image, screenshot, or store PDF (e.g. from Zara, ASOS, or H&M).
    - **Web Link**: Paste the web link to your order confirmation page.
-3. **Select Individual Clothes**: If your receipt image lists multiple clothes, click and drag box selectors directly over each item to crop them out one by one.
-4. Tap **Extract Selected Items**. The AI will automatically read the brand name, price, purchase size, and category.
-5. **Receipt-Locked Fields**: Once saved, all commercial details from the receipt (like price, brand, and size) are locked. If you later upload a photo to update the clothing's thumbnail, these verified details will never be accidentally modified by the AI.
+3. **Interactive Box Selection**: If your receipt image shows multiple items, simply draw boxes over each item to crop them out one by one.
+4. Tap **Extract Selected Items**. The AI reads the brand, price, purchase date, and size.
+5. **Receipt-Locked Protection**: Purchase details imported from receipts are safely locked (`from_receipt: true`). Even if you re-take a photo later, the verified price and brand will never be accidentally overwritten.
 
-#### Option D: Edit & Modify Photos with The Eyes & Nano Banana
-1. Open any garment in your closet to open the **Item Details** editor.
-2. Scroll to the **Re-analyse Photo & AI Eyes Assistant** card.
-3. **Chat or Dictate Instructions**: Type or tap the microphone to speak what you want to change:
-   - *"Remove the shoes"*
-   - *"Complete the hole where the hand was"*
-   - *"Remove the metal studs from the jacket's front"*
-   - *"Refine fabric composition to 100% cashmere"*
-4. **Quick Prompt Chips**: Tap quick starters (🪄 *Remove shoes*, ✂️ *Complete hole*, 💎 *Remove studs*, 🔍 *Refine fabric*) for instant 1-tap edits.
-5. **Nano Banana Studio Inpainting**: When you ask for image changes, **Nano Banana** creates a clean, photorealistic image preview right inside the chat.
-6. Tap **Apply as garment photo** and hit **Save** to keep your updated look!
-
-
----
-
-### Step 2: Talking to Your AI Stylist
-Need advice on what to wear today? Your AI Stylist is ready to chat:
-
-1. Tap **AI Stylist** in the menu.
-2. Tap the **Microphone icon** and ask a question out loud, like:
-   - *"What should I wear for a rainy afternoon lunch?"*
-   - *"Suggest a casual outfit with my blue denim jacket."*
-3. The AI Stylist checks your local weather forecast, calendar schedule, and closet items, then speaks back to you with personalized outfit proposals!
-4. Tap **Play reply** to hear the stylist's voice again anytime.
+#### Option D: Refine & Inpaint Photos with The Eyes & Nano Banana
+1. Open any garment from your closet to view the **Item Details** editor.
+2. Scroll to the **Re-analyse Photo & AI Eyes Assistant** section.
+3. **Chat or Dictate Your Wishes**: Type or speak instructions using natural words:
+   - *"Remove the shoes from the crop"*
+   - *"Complete the sleeve where the hand was"*
+   - *"Remove the metal studs from the jacket"*
+   - *"Change the fabric texture to smooth silk"*
+4. **1-Tap Quick Starter Chips**: Tap handy chips like 🪄 *Remove shoes*, ✂️ *Complete hole*, 💎 *Remove studs*, or 🔍 *Refine fabric*.
+5. **Instant Preview**: **Nano Banana** creates a clean, photorealistic image right inside the chat.
+6. Tap **Apply as garment photo** and hit **Save** to keep your fresh look!
 
 ---
 
-### Step 3: Setting Up Your Profile & Body Avatar
-Personalize your virtual avatar and style preferences:
+### Step 2: Organizing Your Wardrobe & Group Tagging
+Have dozens of clothes you want to organize at once? Group Tagging makes bulk wardrobe management effortless:
 
-1. Go to **Profile** (`/me`).
-2. **Language & Voice**: Select your preferred language (12 supported languages including English, Spanish, French, Hebrew, and Arabic) and TTS voice profile.
-3. **Photos & Avatar**:
+1. Open your **Closet** tab.
+2. Tap the **Select / Batch Edit** button in the top toolbar to turn on multi-select mode.
+3. Tap the items you want to update (or tap a category chip like *"Select all Tops"*).
+4. Tap the floating **Group Tag** button at the bottom.
+5. Select the attributes you want to apply to all selected items at once:
+   - **Seasons**: Spring, Summer, Fall, Winter.
+   - **Formality & Occasions**: Casual, Smart Casual, Business, Formal, Athletic, Loungewear.
+   - **Custom Tags**: Type custom labels (such as *"Vacation"*, *"Office Wear"*, or *"Weekend"*).
+6. Tap **Apply to Selected Items**. Your closet grid updates immediately!
+
+---
+
+### Step 3: Talking to Your AI Stylist
+Need advice on what to wear for a meeting, a date, or unpredictable weather? Your AI Stylist is always ready to talk:
+
+1. Tap **AI Stylist** in the bottom menu.
+2. Tap the **Microphone icon** and speak out loud, or type your question:
+   - *"What should I wear for a rainy outdoor lunch today?"*
+   - *"Put together a chic casual outfit featuring my white sneakers."*
+   - *"I have an important business presentation at 2 PM. What looks best?"*
+3. The AI Stylist checks your local weather, your Google Calendar schedule, your saved style preferences, and your closet inventory.
+4. The stylist responds with personalized outfit proposals and speaks the answer back to you in a warm, natural voice.
+5. Tap **Play reply** anytime to hear the advice spoken again.
+
+---
+
+### Step 4: Setting Up Your Profile & Body Avatar
+Tailor your experience to your unique body shape and style preferences:
+
+1. Go to your **Profile** page (`/me`).
+2. **Language & Voice**: Select your preferred language (DressApp supports **13 languages** including English, Spanish, French, German, Italian, Portuguese, Japanese, Hebrew, and Arabic with automatic right-to-left layout) and pick your favorite stylist voice.
+3. **Photos & Body Avatar**:
    - Upload a full-body photo for realistic try-ons, or use the dynamic 2D vector mannequin.
-   - Select your exact **Skin Tone** from the interactive color palette.
-   - Click **Remove Photo** anytime to instantly revert to the vector mannequin.
-4. **Automatic Body Measurement & Sizing Predictor**:
-   - Enter just 4 basic numbers: **Height**, **Weight**, **Waist**, and **Foot Length**.
-   - DressApp automatically predicts your shoulders, chest, hip, sleeve, and inseam measurements.
-   - It also translates these metrics into recommended retail standard sizes: **Shirt Size**, **Pants Size**, **Shoe Size**, and **Dress/Bra Size** (for women), automatically pre-filling them in your profile.
-5. **Style Profile**: Set your favorite aesthetics, preferred color palettes, and modesty preferences (*Casual/Relaxed*, *Moderate*, *Conservative*).
+   - Select your exact skin tone from the interactive color palette.
+   - Tap **Remove Photo** anytime to switch back to the mannequin.
+4. **Automatic Body Sizing Predictor (ANSUR II)**:
+   - Enter just 4 simple measurements: **Height**, **Weight**, **Waist**, and **Foot Length**.
+   - DressApp automatically calculates your shoulder width, chest, hips, sleeve length, and inseam.
+   - It also auto-fills standard retail clothing sizes: **Shirt Size** (XS–3XL), **Pants Size** (waist inches), **Shoe Size** (US & EU), and **Dress/Bra Size** for women.
+5. **Style & Modesty Preferences**: Set your favorite colors, preferred aesthetics, and modesty comfort level (*Casual/Relaxed*, *Moderate*, *Conservative*).
+6. **Google Calendar Connection**: Connect your Google account so the AI Stylist knows when you have weddings, flights, or gym sessions planned.
 
 ---
 
-### Step 4: Planning Outfits & Virtual Try-On
-Preview and layer outfits before getting dressed:
+### Step 5: Planning Outfits & Virtual Try-On
+See how clothes look together before taking them off the hanger:
 
-1. Open **Outfit Canvas**.
-2. **2D Virtual Try-On**: See your top, bottom, outerwear, and shoes layered perfectly on your avatar.
-3. **Outerwear Layering**: View your outfit with a jacket layered on top ("With Outerwear") and see what's underneath ("Without Outerwear").
-4. **Interactive Details**: Tap any item on the avatar to view its details or edit its info.
-5. **Compatibility Score**: View harmony scores for color balance, pattern matching, weather suitability, and event appropriateness.
-
----
-
-### Step 5: Suitcase Packing Assistant
-Never forget an item when traveling:
-
-1. Tap **Suitcase** and enter your destination, trip dates, and planned activities.
-2. The AI assistant builds a complete packing list and daily outfit schedule based on destination weather.
-3. Use the chat box to request adjustments (e.g., *"Add a formal dinner dress for night 2"*).
-4. Tap **Approve Suitcase** to save your trip packing list.
+1. Open the **Outfit Canvas** tab.
+2. **Layer Clothes Seamlessly**: Mix and match tops, bottoms, outerwear, shoes, and accessories on your 2D avatar.
+3. **Outerwear Layering ("With / Without Outerwear")**: Toggle between seeing your outfit with a coat or jacket on top, and seeing the underlying top and bottoms when you take the jacket off.
+4. **Interactive Garments**: Tap any garment directly on your avatar to open its details or swap it for another piece.
+5. **Compatibility Scores**: View real-time scores for color harmony, pattern balance, weather comfort, and event appropriateness.
+6. Tap **Save to Diary** to save your favorite combinations for future wear.
 
 ---
 
-### Step 6: Daily Scheduler & Push Notifications
-Get morning outfit recommendations sent directly to your phone or computer:
+### Step 6: Wardrobe Insights & Cost-Per-Wear
+Learn what you actually wear and make smarter shopping decisions:
+
+1. Tap **Wardrobe Insights** in the navigation menu.
+2. **Total Wardrobe Value**: See the total estimated value of all clothes in your digital closet.
+3. **Cost-Per-Wear (CPW)**: Every time you wear an outfit, log it in your diary. DressApp calculates:
+   $$\text{Cost Per Wear} = \frac{\text{Purchase Price}}{\text{Number of Times Worn}}$$
+   Watch your investment garments become more cost-effective each time you wear them!
+4. **Efficiency Leaderboard**: Discover your most-worn wardrobe champions and identify neglected pieces that you can sell, swap, or donate.
+5. **Color & Category Breakdown**: Explore interactive visual charts showing your wardrobe's dominant colors and category distributions.
+
+---
+
+### Step 7: Suitcase Packing Assistant
+Take the stress out of packing for vacations and business trips:
+
+1. Tap **Suitcase** in the menu and tap **New Trip**.
+2. Enter your destination city, departure date, return date, and primary activities (e.g. *"Beach, dining out, and walking"*).
+3. The AI assistant fetches the destination forecast and builds a complete packing checklist and daily outfit schedule from your closet.
+4. **Refine via Chat**: Ask for tweaks in plain language (e.g., *"Add a formal dress for Saturday night"* or *"I prefer flat shoes only"*).
+5. Tap **Approve Suitcase** to save your checklist. Check off items on your phone as you place them into your luggage!
+
+---
+
+### Step 8: Daily Scheduler & Morning Push Notifications
+Wake up every morning to a ready-to-wear outfit suggestion:
 
 1. Open **Profile** -> **Scheduler & Push**.
-2. Turn on daily proposals and choose your notification time (e.g., 07:00 AM).
-3. Select your preferred style focus (*Casual*, *Smart Casual*, *Formal*, *Athletic*).
-4. Every morning, you'll receive a push alert featuring 3 fresh outfit combinations from your wardrobe!
+2. Turn on daily morning proposals.
+3. Pick your preferred delivery time (e.g., 07:00 AM) and your desired style focus (*Casual*, *Smart Casual*, *Business*, *Athletic*).
+4. Every morning, you will receive a push notification on your device with 3 personalized outfit ideas matched to today's weather!
 
 ---
 
-### Step 7: Circular Fashion Marketplace
-Buy, sell, trade, or rent pre-loved clothing:
+### Step 9: Trend Scout & "Style with My Closet"
+Stay ahead of global fashion trends without spending a fortune on new clothes:
 
-1. **List an Item**: Open any garment in your closet, tap **Edit Intent**, and choose *For Sale*, *Rent*, *Swap*, or *Donate*.
-2. **Try-On Sandbox**: Test-fit marketplace items directly on your avatar alongside your existing clothes before buying!
-3. **Checkout**: Complete transactions securely using integrated PayPal checkout buttons.
-
----
-
-### Step 8: Import Your Wardrobe from Other Apps
-
-Already have your clothes organized in another app? DressApp can import them automatically so you don't have to re-photograph everything!
-
-**Supported Apps:**
-- Whering
-- Acloset
-- Stylebook
-- Smartli
-- BeautyAI
-- Or any other app (you can type the name)
-
-#### How to Import (Desktop Only)
-
-1. **Open Profile**: Go to your Profile page and click the **"Import Wardrobe"** button.
-2. **Choose Your App**: Select your competitor app from the grid, or type in a custom app name.
-3. **Log In**: A new browser tab will open to your competitor's login page. Log in to your account there.
-4. **Install the Bookmarklet**: You'll see a "Share & Start Agent" button. Drag it to your browser's bookmarks bar (the bar below the address bar).
-5. **Go to Your Wardrobe**: In the competitor app, navigate to your wardrobe or closet view where all your clothes are displayed.
-6. **Start the Import**: Click the bookmarklet button you just installed.
-7. **Sit Back and Relax**: The agent will automatically:
-   - Scroll through your wardrobe
-   - Detect and capture each garment image
-   - Stream the captured items back to DressApp in batches
-8. **AI Does the Work**: Each captured garment is automatically analyzed by our AI Stylist, which identifies:
-   - What type of item it is (shirt, pants, dress, etc.)
-   - The colors
-   - The fabric/material
-   - The brand (if visible)
-   - What season and occasion it's best for
-   - How formal or casual it is
-9. **Review Your Items**: Once the import finishes, check your Closet tab to see all your newly imported items. You can edit any details as needed.
-
-#### Important Tips
-
-- **Desktop Only**: Wardrobe import only works on desktop computers (not phones or tablets). This is because it needs special browser features that aren't available on mobile.
-- **Keep DressApp Open**: Don't close the DressApp tab while the import is running. You can close the competitor app tab once the import starts.
-- **No Duplicates**: The system automatically detects and prevents importing the same item twice.
-- **Quality Control**: Items that can't be clearly identified (obscured images, non-clothing items) are automatically filtered out.
-- **Server-Side Processing**: Once the import starts, the AI analysis happens on our servers. Even if you close your browser, the analysis will continue.
-
-#### Troubleshooting Import
-
-- **Bookmarklet not showing?** Make sure your bookmarks bar is visible. Press Ctrl+Shift+B (Windows) or Cmd+Shift+B (Mac) to show it.
-- **Items not appearing?** Try refreshing the competitor page and starting the bookmarklet again.
-- **Import stalls?** Check that all wardrobe items are fully visible in the browser window. The tool works best when it can see complete garment cards.
-- **Need to re-analyze items?** Contact support and we can re-run the AI analysis on your imported items.
+1. Open the **Trend Scout** section on your home feed.
+2. Browse 4 curated daily fashion channels:
+   - 🌟 **Runway**: High-fashion runway highlights and designer themes.
+   - 👟 **Streetwear**: Casual, urban, and modern daily street fashion.
+   - 🌿 **Sustainability**: Eco-friendly fashion, circular materials, and conscious styling.
+   - ✨ **Influencers**: Trending styles popular across social media.
+3. **1-Tap "Style with My Closet"**:
+   - See a trend you love? Tap **Style with My Closet** on any trend card!
+   - The AI Stylist immediately searches your existing closet for matching colors, silhouettes, and fabrics to recreate that trend using clothes you already own.
 
 ---
 
-### Step 9: Shopping Assistant Browser Extension
+### Step 10: Circular Fashion Marketplace
+Declutter your closet or discover pre-loved fashion from other members:
 
-Never worry about picking the wrong size again! DressApp's Shopping Assistant works directly on popular stores like SHEIN, AliExpress, and more to give you personalized size recommendations.
-
-#### What Does It Do?
-
-When you're shopping online, the extension automatically:
-- **Scans size charts** on product pages
-- **Compares** the chart to your saved body measurements
-- **Recommends** the perfect size for you with confidence scores
-
-#### How to Install
-
-**Option A: Chrome Extension (Recommended)**
-1. Visit [dressapp.co/extension/connect](https://dressapp.co/extension/connect)
-2. Click **"Connect to DressApp"** to link your account
-3. The extension installs automatically in Chrome
-4. Look for the DressApp icon in your browser toolbar
-
-**Option B: Mobile Bookmarklet**
-1. On your phone, go to your DressApp Profile page
-2. Find the **Shopping Assistant** section
-3. Copy the bookmarklet code
-4. Add it to your mobile browser's bookmarks
-
-#### How to Use
-
-1. **Visit any supported store** (SHEIN, AliExpress, Zara, Asos, etc.)
-2. **Look for the DressApp button** - you'll see:
-   - A floating button in the bottom-left corner (`* DressApp`)
-   - OR an inline button next to the size selector (`* DressApp size`)
-3. **Click the button** - the extension automatically:
-   - Scans the page for size charts
-   - Analyzes the chart using AI
-   - Shows your personalized size recommendation
-4. **See your result** - a card appears showing:
-   - Your recommended size (e.g., "Size 38")
-   - Confidence level (e.g., "90% confident")
-   - Which measurements matched (bust, waist, etc.)
-   - Alternative sizes if you prefer a looser or tighter fit
-
-#### Manual Crop (If Auto-Detection Doesn't Work)
-
-Sometimes size charts are hidden or in unusual formats. No problem!
-
-1. Click the DressApp button
-2. If no chart is found automatically, you'll see **"Drag a box around the size chart"**
-3. **Click and drag** to draw a box around the size chart area
-4. Adjust the box using the resize handles if needed
-5. Click **Apply** (or press Enter)
-6. The extension analyzes the cropped area and shows your recommendation
-
-#### What You'll See
-
-**Size Recommendation Card:**
-- Recommended size with confidence percentage
-- Why this size fits your measurements
-- Alternative sizes (e.g., "M for a snug fit" or "L for a relaxed fit")
-
-**Warning Cards:**
-- If your profile measurements seem unusual, you'll get a friendly heads-up
-- If you're not logged in, you'll be prompted to connect your account
-
-#### Troubleshooting
-
-- **No DressApp button visible?** Refresh the page and wait a few seconds for the extension to load.
-- **"No clear match" message?** Try drawing a tighter box around just the size chart area.
-- **"DressApp was just updated"?** Refresh the page to load the latest version.
-- **Permission requests?** The extension may ask for permission to read the page - this is normal and required to analyze size charts.
-
-#### Supported Stores
-
-The extension works on most e-commerce sites, including:
-- SHEIN
-- AliExpress
-- Zara
-- Asos
-- H&M
-- And many more!
-
-#### Privacy & Security
-
-- Your body measurements are stored securely in your DressApp account
-- The extension only reads size chart data from product pages
-- No personal shopping data is shared with third parties
-- You can disconnect the extension anytime from your DressApp profile
+1. **List an Item**: Open any garment in your closet, tap **Edit Intent**, and choose *For Sale*, *Rent*, *Swap*, or *Donate*. Set your desired price or rental tariff.
+2. **Virtual Try-On Sandbox**: Before buying an item from another user, tap **Try in Sandbox** to test-fit their garment directly onto your avatar alongside your existing clothes!
+3. **Safe Checkout**: Buy items securely using PayPal checkout buttons. DressApp charges a simple 7% platform fee on completed sales to ensure buyer and seller protection.
 
 ---
 
-### Step 10: Subscriptions, Tiers, and Prepaid Credits
+### Step 11: Import Your Wardrobe from Other Apps (Desktop)
+Already have your wardrobe saved in another app? Don't re-photograph everything!
 
-Manage your subscription limits and purchase extra AI styling credits:
+1. Open your **Profile** page on your desktop computer and click **Import Wardrobe**.
+2. Select the app you're coming from (e.g. **Whering**, **Acloset**, **Stylebook**, **Smartli**, **BeautyAI**, or any other).
+3. Drag the **"Share & Start Agent"** bookmarklet to your browser's bookmarks bar.
+4. Log into your competitor account, open your wardrobe view, and click the bookmarklet.
+5. The agent scrolls through your clothes, captures the images, and transfers them into DressApp automatically!
+6. Each item is automatically categorized, tagged, and matted by our AI.
+
+---
+
+### Step 12: Shopping Assistant Browser Extension
+Never buy the wrong size online again!
+
+1. Install the **DressApp Shopping Assistant** from [dressapp.co/extension/connect](https://dressapp.co/extension/connect) or add the mobile shopping bookmarklet.
+2. When shopping on stores like **SHEIN**, **AliExpress**, **Zara**, **ASOS**, or **H&M**, click the floating **DressApp Size** button on any product page.
+3. The extension reads the store's size chart, compares it to your saved body measurements, and recommends your best-fitting size with confidence scores.
+4. If a size chart is hidden, use the **Drag Box** tool to outline the chart manually.
+
+---
+
+### Step 13: Subscriptions, Credit Packs & Local Payments
+Understand your plan and manage your AI styling credits:
 
 1. **Monetization Tiers**:
-   - **Free Plan**: $0.00 / month. Stores up to 150 closet items. Includes 10 free daily AI credits (which expire after 30 days). You can expand your closet capacity by sharing your invite link (+10 clothing slots per friend registration, up to a maximum limit of 1000 items).
-   - **Manager (Pro) Plan**: $4.99 / month. Stores unlimited closet items and includes unlimited daily AI operations. Comes with a 14-day free trial and a 50-credit initial allocation.
-   - **Professional (Business) Plan**: $9.99 / month. Designed for professional stylists, containing all Manager features plus support for creating ad campaigns in the feed. Comes with a 30-day free trial and a 300-credit initial allocation.
-2. **Prepaid Credit Packs**:
-   If you run out of credits, you can purchase additional packs to prevent service interruptions:
-   - **10 credits pack**: $1.99
-   - **25 credits pack**: $3.99
-   - **50 credits pack**: $7.99
-   - **100 credits pack**: $15.99
-   - **Custom amount**: Purchase any custom quantity (minimum amount of 5.00 ILS).
-   - **Note**: Paid credits never expire, whereas daily free credits expire in 30 days. The system automatically consumes your oldest expiring free credits first before using paid credits.
-3. **Localized Local Payments (Atzmai Gateway)**:
-   For users in Israel, you can pay easily in ILS (Shekels) or USD using **Bit** or Israeli credit cards. Supports single purchases or recurring direct debit subscriptions.
-4. **Automated Receipts & Invoices**:
-   After any purchase, you will receive a thank-you email with official invoice and receipt PDFs generated from the gateway.
+   - **Free Tier ($0/month)**: Stores up to **150 closet garments** with full access to basic styling and marketplace features. Includes **10 free daily AI credits** (which refresh every 24 hours and have a 30-day lifespan).
+   - **Pro Plan ($4.99/month or $29.99/year)**: Upgrades you to **unlimited closet storage**, priority image processing, and 50 initial bonus credits. Comes with a 14-day free trial.
+   - **Business / Expert Plan ($29/month)**: Designed for professional stylists and local tailors, including directory listings and client booking tools.
+2. **Viral Referral Bonus**:
+   - On the free plan, invite friends using your unique referral link found under **Profile -> Invite Friends**.
+   - Every friend who signs up gives you **+10 bonus closet slots** for free (up to 1,000 items)!
+3. **Prepaid Credit Packs (Paid Credits Never Expire)**:
+   - Need extra AI credits for heavy styling or photo inpainting? Purchase packs anytime:
+     - **10 credits**: $1.99 (or 10.00 ILS)
+     - **25 credits**: $3.99 (or 25.00 ILS)
+     - **50 credits**: $7.99 (or 50.00 ILS)
+     - **100 credits**: $15.99 (or 55.00 ILS)
+   - **Smart Credit Spending**: The system always spends your oldest soonest-expiring free daily credits first, protecting your permanent paid credits!
+4. **Localized Israeli Payments (Atzmai Gateway)**:
+   - For users in Israel, pay conveniently in ILS using **Bit** or Israeli credit cards with automated tax invoice delivery to your email.
 
 ---
 
-## 3. Quick Troubleshooting & Tips
+### Step 14: Administrator Panel (For Store & Platform Managers)
+If your account has administrative permissions:
+- Open `/admin` to view platform health metrics, active user registrations, total items matted, and marketplace transactions.
+- Easily review and moderate community listings to keep the marketplace safe and stylish.
 
+---
 
-- **Free Tier Closet Capacity**: Free accounts store up to 150 items. Upgrade to **Pro** ($4.99/month) or invite friends (+10 extra slots per friend invite) for unlimited space!
-- **Voice Typing Not Working**: Make sure microphone permissions are allowed in your browser settings (Chrome or Safari recommended).
-- **Background Removal**: For the cleanest photo cutouts, photograph clothing against a contrasting wall or bedsheet.
-- **Wardrobe Import Issues**: Make sure you're using a desktop browser (Chrome or Safari recommended). The import feature doesn't work on mobile devices.
-- **Shopping Assistant Not Working?** Try refreshing the page. Make sure you're logged into your DressApp account and the extension is enabled in your browser settings.
+## 3. What to Expect (Expected Results)
+
+- **Quick Uploads**: Clothing photos upload and process in seconds with clean transparent backgrounds.
+- **Natural Voice Conversations**: The AI Stylist answers your voice questions promptly in clear, friendly speech.
+- **Accurate Recommendations**: Suggestions reflect real local weather and your real closet contents—no hallucinated clothes you don't own!
+- **Accurate Sizing**: The 4-measurement predictor saves you time and accurately identifies your retail sizes across international brands.
+- **Zero Loss of Receipt Details**: Important purchase receipts stay locked and safe while letting you edit images freely.
+
+---
+
+## 4. Quick Troubleshooting & Tips
+
+- **"Closet Limit Reached (150 Items)"**: Free accounts hold up to 150 items. You can invite friends to gain +10 free slots per signup, or tap **Upgrade to Pro** ($4.99/mo) for unlimited storage.
+- **Microphone or Voice Typing Not Responding**: Ensure microphone permissions are enabled in your browser or device settings. In Chrome, click the lock icon in the address bar to check permissions.
+- **Background Removal Quality**: For the crispest cutout, lay clothes flat against a contrasting surface (like a plain bedsheet, wood floor, or light wall) with good lighting.
+- **Wardrobe Import Stalling?** Competitor wardrobe import works best on desktop computers in Google Chrome. Ensure the competitor closet page is scrolled so items are visible.
+- **Size Recommendation Not Showing?** Click the DressApp extension icon and make sure your DressApp account is connected with your body measurements filled out.
+
+---
+
+## 5. Helpful Limitations to Keep in Mind
+
+- **Free Tier Capacity**: Baseline storage is 150 garments. To store more, invite friends or activate a Pro subscription.
+- **Daily Free Credits**: The 10 daily free AI credits expire after 30 days if unused. Purchased credit packs never expire.
+- **Desktop Requirement for Bookmarklet**: The competitor wardrobe migration bookmarklet requires desktop browser bookmark capabilities and cannot run inside mobile phone browsers.
+- **Receipt OCR Quality**: When taking photos of physical paper receipts, ensure the text is well-lit, flat, and legible for optimal brand and price extraction.

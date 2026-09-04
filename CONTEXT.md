@@ -19,27 +19,27 @@ graph TD
 
 ### 1. User & Quota Context
 * **Responsibility:** User profiles, preferences (e.g., physical sizing), and subscription tier limits (150 garments ceiling for free tier, custom invite referral tracking).
-* **Key Components:** [schemas.py:User](file:///C:/DressApp_AG/backend/app/models/schemas.py), [quota_manager.py](file:///C:/DressApp_AG/backend/app/services/quota_manager.py).
+* **Key Components:** [`schemas.py:User`](backend/app/models/schemas.py), [`quota_manager.py`](backend/app/services/quota_manager.py).
 
 ### 2. Closet & Ingestion Context
 * **Responsibility:** Adding garments, background matting (`rembg`), clothing category segmentation (`SegFormer`), DPP QR parsing, conversational re-analysis (The Eyes), and generative inpainting/editing via Nano Banana (`gemini-3.1-flash-lite-image`).
-* **Key Components:** [clothing_parser.py](file:///C:/DressApp_AG/backend/app/services/clothing_parser.py), [background_matting.py](file:///C:/DressApp_AG/backend/app/services/background_matting.py), [dpp_parser.py](file:///C:/DressApp_AG/backend/app/services/dpp_parser.py), [gemini_image_service.py](file:///C:/DressApp_AG/backend/app/services/gemini_image_service.py).
+* **Key Components:** [`clothing_parser.py`](backend/app/services/clothing_parser.py), [`background_matting.py`](backend/app/services/background_matting.py), [`dpp_parser.py`](backend/app/services/dpp_parser.py), [`gemini_image_service.py`](backend/app/services/gemini_image_service.py).
 
 ### 3. AI Stylist & Audio Context
 * **Responsibility:** Outfit generation, conversational text/voice interfaces (Deepgram STT/TTS, local Piper), weather-based rules, and Google Calendar event integration.
-* **Key Components:** [gemini_stylist.py](file:///C:/DressApp_AG/backend/app/services/gemini_stylist.py), [outfit_composer.py](file:///C:/DressApp_AG/backend/app/services/outfit_composer.py), [calendar_service.py](file:///C:/DressApp_AG/backend/app/services/calendar_service.py).
+* **Key Components:** [`gemini_stylist.py`](backend/app/services/gemini_stylist.py), [`outfit_composer.py`](backend/app/services/outfit_composer.py), [`calendar_service.py`](backend/app/services/calendar_service.py).
 
 ### 4. Marketplace Context
 * **Responsibility:** Swap & sell listings, geo-fenced search queries, item listings, and secure transaction workflows.
-* **Key Components:** [listings.py](file:///C:/DressApp_AG/backend/app/api/v1/listings.py), [marketplace_search.py](file:///C:/DressApp_AG/backend/app/services/marketplace_search.py).
+* **Key Components:** [`listings.py`](backend/app/api/v1/listings.py), [`marketplace_search.py`](backend/app/services/marketplace_search.py).
 
 ### 5. Experts & Advertising Campaigns Context
 * **Responsibility:** Directory of vetted tailors/stylists, self-serve promo campaign management, performance reports, and daily $1.00 USD ad ticker placement.
-* **Key Components:** [campaign_service.py](file:///C:/DressApp_AG/backend/app/services/campaign_service.py), [professional_matcher.py](file:///C:/DressApp_AG/backend/app/services/professional_matcher.py).
+* **Key Components:** [`campaign_service.py`](backend/app/services/campaign_service.py), [`professional_matcher.py`](backend/app/services/professional_matcher.py).
 
 ### 6. Billing, Credits & Payments Context
 * **Responsibility:** Processing transactions, PayPal integration, credit balance ledger, and invoice management.
-* **Key Components:** [paypal_client.py](file:///C:/DressApp_AG/backend/app/services/paypal_client.py), [pricing.py](file:///C:/DressApp_AG/backend/app/services/pricing.py).
+* **Key Components:** [`paypal_client.py`](backend/app/services/paypal_client.py), [`pricing.py`](backend/app/services/pricing.py).
 
 ---
 

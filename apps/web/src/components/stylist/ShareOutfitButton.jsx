@@ -57,7 +57,7 @@ export function ShareOutfitButton({ rec, sessionId, size = 'sm' }) {
       variant="outline"
       onClick={share}
       disabled={busy}
-      className="sharebtn"
+      className="rounded-full h-8 gap-1"
       data-testid="share-outfit-btn"
     >
       {busy ? (
@@ -67,7 +67,7 @@ export function ShareOutfitButton({ rec, sessionId, size = 'sm' }) {
       ) : (
         <Copy className="h-3.5 w-3.5" />
       )}
-      {t('common.share', { defaultValue: 'Share' })}
+      <span className="text-xs">{t('common.share', { defaultValue: 'Share' })}</span>
     </Button>
   );
 }

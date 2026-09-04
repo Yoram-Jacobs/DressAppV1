@@ -32,6 +32,7 @@ import { useTheme } from '@mobile/theme';
 import { fonts, fontSizes, spacing, radii } from '@mobile/theme/tokens';
 import { api } from '@mobile/lib/api';
 import { useClosetStore } from '@mobile/lib/stores';
+import { getItemImageUrl, resolveImageUrl } from '@mobile/lib/imageUtils';
 
 export interface PlannerSlotItem {
   id: string;
@@ -111,7 +112,7 @@ export function OutfitPlannerView({ onTryOn }: { onTryOn?: (slots: PlannerSlotIt
               id: outer.id,
               name: outer.name || outer.title || 'Outerwear',
               category: 'Outerwear',
-              image_url: outer.clean_image_url || outer.thumbnail_data_url || outer.image_url || outer.segmented_image_url,
+              image_url: getItemImageUrl(outer) || resolveImageUrl(outer.clean_image_url || outer.thumbnail_data_url || outer.image_url),
               brand: outer.brand,
             }
           : null,
@@ -126,7 +127,7 @@ export function OutfitPlannerView({ onTryOn }: { onTryOn?: (slots: PlannerSlotIt
               id: top.id,
               name: top.name || top.title || 'Top',
               category: top.category || 'Top',
-              image_url: top.clean_image_url || top.thumbnail_data_url || top.image_url || top.segmented_image_url,
+              image_url: getItemImageUrl(top) || resolveImageUrl(top.clean_image_url || top.thumbnail_data_url || top.image_url),
               brand: top.brand,
             }
           : null,
@@ -141,7 +142,7 @@ export function OutfitPlannerView({ onTryOn }: { onTryOn?: (slots: PlannerSlotIt
               id: bottom.id,
               name: bottom.name || bottom.title || 'Bottom',
               category: 'Bottom',
-              image_url: bottom.clean_image_url || bottom.thumbnail_data_url || bottom.image_url || bottom.segmented_image_url,
+              image_url: getItemImageUrl(bottom) || resolveImageUrl(bottom.clean_image_url || bottom.thumbnail_data_url || bottom.image_url),
               brand: bottom.brand,
             }
           : null,
@@ -156,7 +157,7 @@ export function OutfitPlannerView({ onTryOn }: { onTryOn?: (slots: PlannerSlotIt
               id: shoes.id,
               name: shoes.name || shoes.title || 'Footwear',
               category: 'Footwear',
-              image_url: shoes.clean_image_url || shoes.thumbnail_data_url || shoes.image_url || shoes.segmented_image_url,
+              image_url: getItemImageUrl(shoes) || resolveImageUrl(shoes.clean_image_url || shoes.thumbnail_data_url || shoes.image_url),
               brand: shoes.brand,
             }
           : null,
@@ -171,13 +172,12 @@ export function OutfitPlannerView({ onTryOn }: { onTryOn?: (slots: PlannerSlotIt
               id: acc.id,
               name: acc.name || acc.title || 'Accessory',
               category: 'Accessories',
-              image_url: acc.clean_image_url || acc.thumbnail_data_url || acc.image_url || acc.segmented_image_url,
+              image_url: getItemImageUrl(acc) || resolveImageUrl(acc.clean_image_url || acc.thumbnail_data_url || acc.image_url),
               brand: acc.brand,
             }
           : null,
         locked: false,
       },
-
     ]);
     setHasInitialized(true);
   }, [closetItems, hasInitialized]);
@@ -222,7 +222,7 @@ export function OutfitPlannerView({ onTryOn }: { onTryOn?: (slots: PlannerSlotIt
               name: randomItem.name || randomItem.title || slot.role,
               category: randomItem.category || slot.role,
               brand: randomItem.brand,
-              image_url: randomItem.clean_image_url || randomItem.thumbnail_data_url || randomItem.image_url || randomItem.segmented_image_url,
+              image_url: getItemImageUrl(randomItem) || resolveImageUrl(randomItem.clean_image_url || randomItem.thumbnail_data_url || randomItem.image_url),
             },
           };
         })
@@ -244,7 +244,7 @@ export function OutfitPlannerView({ onTryOn }: { onTryOn?: (slots: PlannerSlotIt
                   name: item.name || item.title || slot.role,
                   category: item.category || slot.role,
                   brand: item.brand,
-                  image_url: item.clean_image_url || item.thumbnail_data_url || item.image_url || item.segmented_image_url,
+                  image_url: getItemImageUrl(item) || resolveImageUrl(item.clean_image_url || item.thumbnail_data_url || item.image_url),
                 }
               : null,
           };
@@ -375,7 +375,7 @@ export function OutfitPlannerView({ onTryOn }: { onTryOn?: (slots: PlannerSlotIt
                   ]}
                 >
                   {slot.item?.image_url ? (
-                    <Image source={{ uri: slot.item.image_url }} style={styles.slotImg} resizeMode="contain" />
+                    <Image source={{ uri: resolveImageUrl(slot.item.image_url) }} style={styles.slotImg} resizeMode="contain" />
                   ) : (
                     <SlotIcon size={24} color={colors.mutedFg} style={{ opacity: 0.5 }} />
                   )}
@@ -520,7 +520,7 @@ export function OutfitPlannerView({ onTryOn }: { onTryOn?: (slots: PlannerSlotIt
                   );
                 }
 
-                const img = item.clean_image_url || item.thumbnail_data_url || item.image_url || item.segmented_image_url;
+                const img = getItemImageUrl(item) || resolveImageUrl(item.image_url || item.thumbnail_data_url);
                 return (
                   <TouchableOpacity
                     style={[styles.pickerItemCard, { backgroundColor: colors.card, borderColor: colors.border }]}

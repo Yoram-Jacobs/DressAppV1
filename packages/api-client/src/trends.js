@@ -23,9 +23,19 @@ export const trends = {
         },
       })
       .then((r) => r.data),
+  /**
+   * @param {boolean} [force]
+   * @param {string | null} [gender]
+   * @param {string | null} [country]
+   */
   trendsRunNowDev: (force = true, gender = null, country = null) =>
     client.post('/trends/run-now-dev', null, { params: { force, ...(gender ? { gender } : {}), ...(country ? { country } : {}) } }).then((r) => r.data),
   // Admin-only force refresh
+  /**
+   * @param {boolean} [force]
+   * @param {string | null} [country]
+   * @param {string | null} [gender]
+   */
   trendsRefreshAdmin: (force = true, country = null, gender = null) =>
     client.post('/trends/run-now', null, { params: { force, ...(country ? { country } : {}), ...(gender ? { gender } : {}) } }).then((r) => r.data),
 };

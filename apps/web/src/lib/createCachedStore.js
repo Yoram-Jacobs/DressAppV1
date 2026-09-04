@@ -102,11 +102,10 @@ export function createCachedStore({
         _notify();
         return { items, total };
       } catch (err) {
-        // Set cooldown on error so failed requests don't loop on every render
+        // Don't poison the cache on failure; let the next call retry.
         const slot = cache.get(key);
         if (slot && slot.inflight === inflight) {
           delete slot.inflight;
-          slot.ts = Date.now();
         }
         throw err;
       }
@@ -182,6 +181,9 @@ export function createCachedStore({
     try {
       return await ensure(filters);
     } catch {
+      // Swallow — prewarm is best-effort. Failures will surface on
+      // the next page-driven call.
+      initialised = false;
       return null;
     }
   };

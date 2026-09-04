@@ -13,7 +13,7 @@
     "navigationDividerColor":  "#000000",
     "navigationColorDark":  "#000000",
     "packageId":  "co.dressapp.twa",
-    "appVersion":  "1.0.7",
+    "appVersion":  "1.0.0",
     "backgroundColor":  "#F7F4EE",
     "host":  "dressapp.co",
     "themeColor":  "#1F6F6B",
@@ -25,7 +25,7 @@
     "orientation":  "portrait-primary",
     "fallbackType":  "customtabs",
     "splashScreenFadeOutDuration":  300,
-    "appVersionCode":  8,
+    "appVersionCode":  1,
     "monochromeIconUrl":  "",
     "navigationDividerColorDark":  "#000000",
     "alphaMaskableThreshold":  100,
@@ -34,6 +34,6 @@
 
                                  ],
     "themeColorDark":  "#1F6F6B",
-    "appVersionName":  "1.0.7",
+    "appVersionName":  "1.0.0",
     "name":  "DressApp"
 }

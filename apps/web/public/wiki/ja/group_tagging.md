@@ -1,20 +1,30 @@
-# Group Tagging of Closet Items
+# グループタグ付け（クローゼットのまとめて整理）
 
-## Goal
-The goal of the Group tagging feature is to allow fast, bulk categorization of closet garments. The user can select multiple items in their closet and tag them all at once with a single click.
+ワンタップの一括編集で、何十着もの服を数秒で整理できます。
 
-## Purpose
-- **Speed & Efficiency**: Instead of entering tags item-by-item, users can select several garments (e.g., all formal jackets or all gym wear) and apply the tags instantly.
-- **Improved AI Stylist Accuracy**: Fine-grained categories/tags (e.g., “Work”, “GYM”, “Swimwear”, “Uniforms”) guide the Stylist's reasoning process. Predefined tags enable the Stylist to locate the most relevant items for specific outfit requests (for example, choosing "work"-tagged items first when constructing a "work outfit").
-- **Smart Fallbacks**: If certain tagged layers are missing (e.g., no upper-body "work"-tagged items), the Stylist will dynamically match other suitable garments.
+## 概要
+グループタグ付けを使うと、服を1着ずつ編集する手間がなくなり、複数の服を選んで季節やドレスコードを一度に設定できます。
 
-## Key Points & Implementation Details
-1. **User Interface Integration**:
-   - Added a **Tag** button in the Closet selection floater.
-   - Built a comma-separated tagging dialog (`AlertDialog`) that pops up when clicked.
-2. **Optimistic UI Update**:
-   - Tags are merged onto the selected closet items locally first so the changes reflect instantly in the user interface.
-3. **Background Syncing**:
-   - Sends the tag update requests (`api.patchItem`) to the database in the background to ensure data consistency without blocking user interactions.
-4. **i18next Localization**:
-   - All text messages, dialog titles, placeholders, and feedback notifications support translations cleanly using options-based defaults.
+## 前提条件
+- クローゼットに服が登録されていること。
+
+## ステップバイステップの手順
+1. **クローゼットを開く**: **Closet** タブを選択します。
+2. **選択モードにする**: 上部の **選択 / 一括編集** ボタンをタップします。
+3. **服を選ぶ**: 設定したい服をタップして選ぶか、カテゴリー（例：*「すべてのトップスを選択」*）をタップします。
+4. **タグ画面を開く**: 画面下に表示される **グループタグ** ボタンをタップします。
+5. **タグを選択**:
+   - **季節**（*春*、*夏*、*秋*、*冬*）をチェック。
+   - **ドレスコード**（*カジュアル*、*スマートカジュアル*、*ビジネス*、*フォーマル*、*スポーツ*）を選択。
+   - **カスタムタグ**（*「旅行用」*、*「ジム」* など）を入力。
+6. **適用する**: **選択したアイテムに適用** をタップします。瞬時にクローゼット全体に反映されます！
+
+## 期待される結果
+選択した服すべてに新しいタグがすぐ反映され、ページの再読み込みも不要です。
+
+## トラブルシューティング
+- **一部の服にタグが付かなかった**: 適用ボタンを押す前に、その服にチェックが入っていたかご確認ください。
+- **タグを外したい**: 再度服を選択し、タグのチェックを外して適用を押します。
+
+## 制限事項
+- 一括編集ではタグ、季節、ドレスコードを更新できます。服の名前や購入価格は各アイテムの詳細画面で個別に変更します。

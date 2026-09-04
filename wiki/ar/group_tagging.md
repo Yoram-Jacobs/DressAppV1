@@ -1,20 +1,30 @@
-# Group Tagging of Closet Items
+# التصنيف الجماعي (تنظيم الخزانة دفعة واحدة)
 
-## Goal
-The goal of the Group tagging feature is to allow fast, bulk categorization of closet garments. The user can select multiple items in their closet and tag them all at once with a single click.
+نظّم عشرات الملابس في ثوانٍ معدودة بلمسة واحدة.
 
-## Purpose
-- **Speed & Efficiency**: Instead of entering tags item-by-item, users can select several garments (e.g., all formal jackets or all gym wear) and apply the tags instantly.
-- **Improved AI Stylist Accuracy**: Fine-grained categories/tags (e.g., “Work”, “GYM”, “Swimwear”, “Uniforms”) guide the Stylist's reasoning process. Predefined tags enable the Stylist to locate the most relevant items for specific outfit requests (for example, choosing "work"-tagged items first when constructing a "work outfit").
-- **Smart Fallbacks**: If certain tagged layers are missing (e.g., no upper-body "work"-tagged items), the Stylist will dynamically match other suitable garments.
+## نظرة عامة
+تتيح لك ميزة التصنيف الجماعي تعديل عدة قطع ملابس معًا بدلاً من تعديل كل قطعة منفردة. حدد ملابس متعددة وعيّن لها الفصول وقواعد اللباس أو علامات المناسبات بنقرة واحدة!
 
-## Key Points & Implementation Details
-1. **User Interface Integration**:
-   - Added a **Tag** button in the Closet selection floater.
-   - Built a comma-separated tagging dialog (`AlertDialog`) that pops up when clicked.
-2. **Optimistic UI Update**:
-   - Tags are merged onto the selected closet items locally first so the changes reflect instantly in the user interface.
-3. **Background Syncing**:
-   - Sends the tag update requests (`api.patchItem`) to the database in the background to ensure data consistency without blocking user interactions.
-4. **i18next Localization**:
-   - All text messages, dialog titles, placeholders, and feedback notifications support translations cleanly using options-based defaults.
+## المتطلبات الأساسية
+- وجود قطع ملابس في خزانتك الرقمية.
+
+## خطوة بخطوة
+1. **افتح الخزانة**: انتقل إلى تبويب **Closet**.
+2. **فعّل وضع التحديد**: اضغط على زر **تحديد / تعديل متعدد** في شريط الأدوات العلوي.
+3. **اختر الملابس**: اضغط على القطع التي تريد تعديلها، أو اضغط على تصنيف كامل (مثل *"تحديد جميع القمصان"*).
+4. **افتح لوحة التصنيف الجماعي**: اضغط على زر **تصنيف جماعي** العائم أسفل الشاشة.
+5. **عيّن الخصائص**:
+   - حدد **المواسم** (*الربيع*، *الصيف*، *الخريف*، *الشتاء*).
+   - اختر **قواعد اللباس** (*يومي*، *أنيق غير رسمي*، *عمل*، *رسمي*، *رياضي*).
+   - أضف **تصنيفات مخصصة** (*"إجازة"*, *"ملابس العمل"*, *"النادي"*).
+6. **تطبيق**: اضغط على **تطبيق على العناصر المحددة**. ستتحدث كل القطع في خزانتك على الفور!
+
+## النتائج المتوقعة
+تحديث فوري لجميع الملابس المحددة بالعلامات الجديدة دون الحاجة لإعادة تحميل الصفحة.
+
+## استكشاف الأخطاء وإصلاحها
+- **لم يتم تطبيق العلامة على قطعة معينة**: تأكد من وضع علامة الاختيار على القطعة قبل الضغط على تطبيق.
+- **إزالة علامة سابقة**: حدد القطع مجددًا وأزل علامة الصح عنها ثم اضغط تطبيق.
+
+## القيود
+- يقوم التعديل الجماعي بتحديث العلامات والمواسم والرسمية؛ بينما يتم تعديل أسماء القطع وأسعار الشراء من داخل بطاقة كل قطعة.

@@ -100,7 +100,13 @@ export const dailySuggestionsStore = {
 
     setState((prev) => ({ ...prev, loading: !prev.suggestion, error: null }));
     try {
-      const data = await api.plannerScout({ occasion: 'daily' });
+      let data: any = null;
+      if ((api as any).getDailyProposal) {
+        data = await (api as any).getDailyProposal().catch(() => null);
+      }
+      if (!data || !data.items || data.items.length === 0) {
+        data = await api.plannerScout({ occasion: 'daily' });
+      }
       setState((prev) => ({
         ...prev,
         suggestion: data,
@@ -114,6 +120,21 @@ export const dailySuggestionsStore = {
         loading: false,
         error: err?.message || 'Failed to load daily suggestion',
       }));
+    }
+  },
+
+  async act(action: string, proposalId?: string): Promise<any> {
+    if ((api as any).actOnDailyProposal) {
+      try {
+        const res = await (api as any).actOnDailyProposal(action, proposalId);
+        if (res) {
+          setState((prev) => ({
+            ...prev,
+            suggestion: res,
+          }));
+        }
+        return res;
+      } catch {}
     }
   },
 

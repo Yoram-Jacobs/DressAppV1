@@ -331,7 +331,9 @@ async def run_background_matte(
         return
 
     try:
-        compressed_result = compress_image_bytes(result, max_dim=1024, quality=75)
+        from app.services.vision.image import _fit_crop_to_card
+        fitted_result, _ = _fit_crop_to_card(result, crop_mime="image/png")
+        compressed_result = compress_image_bytes(fitted_result, max_dim=1024, quality=75)
         temp_img = Image.open(io.BytesIO(compressed_result))
         mime = "image/png" if temp_img.mode in ("RGBA", "LA") else "image/webp"
         ext = "png" if mime == "image/png" else "webp"
@@ -536,6 +538,10 @@ async def run_background_reconstruction(
     except Exception:
         mime = result.get("mime_type", "image/png")
     data_url = f"data:{mime};base64,{recon_b64}"
+    from app.services.vision.image import fit_image_data_url_to_card
+    data_url = fit_image_data_url_to_card(data_url) or data_url
+    clean_url = fit_image_data_url_to_card(result.get("clean_image_url")) if result.get("clean_image_url") else data_url
+
     meta = {
         "method": "reconstruction",
         "quality_status": analysis.get("image_quality_status"),
@@ -551,6 +557,7 @@ async def run_background_reconstruction(
         {
             "$set": {
                 "reconstructed_image_url": data_url,
+                "clean_image_url": clean_url,
                 "reconstruction_metadata": meta,
                 "updated_at": datetime.now(timezone.utc).isoformat(),
                 "thumbnail_data_url": None,

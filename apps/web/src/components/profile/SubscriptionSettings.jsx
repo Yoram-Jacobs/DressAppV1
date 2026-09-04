@@ -9,7 +9,7 @@ import { AccordionItem, AccordionTrigger, AccordionContent } from '@/components/
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Crown, Loader2 } from 'lucide-react';
+import { Crown, Loader2, Sparkles as Zap } from 'lucide-react';
 
 export function SubscriptionSettings() {
   const { t } = useTranslation();

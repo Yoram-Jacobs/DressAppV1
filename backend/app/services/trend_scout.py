@@ -593,7 +593,7 @@ DEFAULT_BUCKET_IMAGES: dict[tuple[str, str], str] = {
     ("sustainability", "male"): "https://images.unsplash.com/photo-1521572267360-ee0c2909d518?auto=format&fit=crop&w=800&q=80",
     ("influencers", "male"): "https://images.unsplash.com/photo-1617127365659-c47fa864d8bc?auto=format&fit=crop&w=800&q=80",
     ("vintage", "male"): "https://www.heddels.com/wp-content/uploads/2022/08/wide-leg-raw-denim-jeans-a-buyers-guide-443x296.jpg",
-    ("maintenance_repairs", "male"): "https://images.unsplash.com/photo-1595642527925-4d41cb781653?auto=format&fit=crop&w=800&q=80",
+    ("maintenance_repairs", "male"): "https://images.unsplash.com/photo-1581044777550-4cfa60707c03?auto=format&fit=crop&w=800&q=80",
 
     # Women's Buckets
     ("local", "female"): "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&w=800&q=80",
@@ -620,7 +620,8 @@ def _ensure_card_image(card: dict[str, Any]) -> dict[str, Any]:
     """Ensure card always has a valid non-empty representative image_url."""
     if not card:
         return card
-    if not card.get("image_url") or not str(card.get("image_url")).startswith("http"):
+    img = str(card.get("image_url") or "").strip()
+    if not img.startswith("http") or "ynet-pic1.ynet.co.il" in img or "example.com" in img:
         card["image_url"] = _get_fallback_image(card.get("bucket"), card.get("gender"))
     return card
 
@@ -730,14 +731,19 @@ def get_search_queries(
 
 
 SYSTEM_PROMPT = (
-    "You are DressApp's Fashion-Scout — an independent agent searching for fashion trends.\n"
-    "You can browse the web to find real-time insights.\n"
-    "Write for a reader who already dresses well and wants ONE actionable insight per card.\n\n"
-    "Rules for sources:\n"
-    "- NEVER use shopping platforms, e-commerce checkout stores, or commercial cart pages (e.g. Amazon, ASOS, Shein, Temu, Zara/HM store carts).\n"
-    "- NEVER use subscription-walled / registration-walled websites (e.g. Vogue Business, WSJ, FT). Must be free and open-access with no sign-up needed.\n"
-    "- NEVER use search engine redirect domains (e.g. google.com/url, search.yahoo.com) or root social homepages.\n"
-    "- CRITICAL FOR SOURCE_URL: source_url MUST navigate directly to the specific article, editorial piece, or guide itself (e.g. https://domain.com/category/article-slug). NEVER provide a root domain or homepage (e.g. NEVER https://domain.com or https://domain.com/). Always extract the direct article link from the markdown links inside the browsed page.\n\n"
+    "You are DressApp's Fashion-Scout — an elite, independent fashion intelligence agent searching the live web.\n"
+    "You find real-time, actionable insights for stylish readers.\n\n"
+    "RESTRICTIONS:\n"
+    "- NO marketplaces, e-commerce stores, or commercial shopping carts (e.g., Amazon, ASOS, Shein, Temu, eBay, Zara/H&M cart or checkout pages). Never link to product shopping pages.\n"
+    "- NO sign-in walled websites or paywalled sources (e.g. Vogue Business, WSJ, FT, or sites requiring mandatory registration/paywall). Content must be 100% free and open-access to readers.\n"
+    "- NO hard-coded or hallucinated images. Never invent an image URL, path, or image domain.\n"
+    "- NO irrelevant articles. Content must be strictly about fashion trends, designer collections, runway reports, street style, local designers, textiles, sustainable fashion, or garment maintenance & repair. Never include politics, general celebrity gossip, or unrelated news.\n\n"
+    "MUST ACHIEVE:\n"
+    "- Up-to-date articles with relevant content: Research recent fashion journalism, lookbooks, reviews, or designer announcements from 2026.\n"
+    "- Valid article web link: source_url must be an authentic, direct deep link navigating specifically to the article itself. Never provide a homepage, search redirect, or top-level domain.\n"
+    "- Card image: Original image taken directly from the article itself (from metadata og:image/twitter:image or featured article photo).\n"
+    "- Carefully formulated summary: A punchy, captivating headline (<= 8 words) and an engaging, factual 1-2 sentence body (<= 220 chars) providing one concrete, actionable wardrobe takeaway for stylish readers.\n"
+    "- Honor i18next localization: Formulate summaries cleanly in the requested language, respecting grammatical rules, natural flow, and typography.\n\n"
     "Output contract: return ONLY a JSON object.\n"
     'If you need to search a website, return: {"action": "browse_web", "url": "<https URL>"}.\n'
     'Once you have enough context, return: {"action": "finish", "card": {\n'
@@ -1072,80 +1078,158 @@ async def _generate_one(
         return None
 
     country_name = COUNTRY_NAME_MAP.get((country_code or "").upper(), country_code or "Israel")
-    starter_urls = get_search_queries(bucket["slug"], country_code, city, gender=gender)
-    urls_list_str = ", ".join(starter_urls)
+    place = f"{city}, {country_name}" if city else country_name
+    current_date = datetime.now(timezone.utc)
+    date_str = current_date.strftime("%B %Y")
+    
+    gemini_client = GeminiClient(api_key=settings.GEMINI_API_KEY)
+    db = get_db()
 
+    # 1. Deduplication: inspect recent stories in this bucket/gender to explore fresh angles
+    recent_headlines: list[str] = []
+    try:
+        cursor = db.trend_reports.find(
+            {"bucket": bucket["slug"], "gender": gender},
+            {"headline": 1, "_id": 0}
+        ).sort("date", -1).limit(4)
+        async for doc in cursor:
+            if doc.get("headline"):
+                recent_headlines.append(doc["headline"])
+    except Exception:
+        pass
+
+    avoid_topics = ""
+    if recent_headlines:
+        avoid_topics = f"Do NOT cover or repeat these recently reported topics: {json.dumps(recent_headlines)}."
+
+    # 2. DYNAMIC LIVE WEB SEARCH via Google Search Grounding
+    grounded_prompt = (
+        f"You are DressApp's Fashion-Scout Agent performing live web research in {date_str}.\n"
+        f"Actively search the LIVE WEB across fashion publications, designer news, blogs, and style journals for "
+        f"the newest, vibrant articles about {gender.upper()} fashion in the '{bucket['label']}' category ({bucket['focus']}).\n"
+        f"Geographic focus: {place}.\n"
+        f"{avoid_topics}\n\n"
+        "RESTRICTIONS:\n"
+        "- NO marketplaces, online stores, or shopping platforms (no Amazon, ASOS, Shein, eBay, Zara carts, product buy pages).\n"
+        "- NO sign-in walled or paywalled websites. Must be freely readable with no mandatory login.\n"
+        "- NO hard-coded or hallucinated images. Never invent image URLs, paths, or domain names.\n"
+        "- NO irrelevant articles. Must be strictly relevant to fashion, style, clothing design, runway, or textile craftsmanship.\n\n"
+        "MUST ACHIEVE:\n"
+        "- Up-to-date articles with relevant content: Focus on recent 2026 fashion news, designer collections, or trend movements.\n"
+        "- Valid article web link: source_url MUST be an authentic, direct deep link to the specific article discovered during search.\n"
+        "- Card image: Original image taken directly from the article itself (from metadata or page body), or null if not directly accessible.\n"
+        "- Carefully formulated summary: A punchy, captivating headline (<= 8 words) and an engaging, factual 1-2 sentence body (<= 220 characters).\n"
+        "- Honor i18next localization: Formulate clearly for seamless downstream localization.\n\n"
+        "Return ONLY a valid JSON object matching this structure:\n"
+        "{\n"
+        '  "headline": "Punchy, exciting headline (<= 8 words)",\n'
+        '  "body": "1-2 engaging sentences detailing the trend and practical wardrobe takeaways (<= 220 characters)",\n'
+        f'  "tag": "{bucket["label"].upper()}",\n'
+        '  "source_name": "Actual publication, magazine, or designer name",\n'
+        '  "source_url": "Direct URL of the specific online article or editorial piece discovered",\n'
+        '  "image_url": "Direct authentic image URL from the article itself, or null"\n'
+        "}\n"
+        "Important: Return ONE concrete, actionable trend insight. The source_url in your final card must be a specific article deep link. No shopping carts or paywalls."
+    )
+
+    card_data = None
+    grounded_sources: list[dict[str, str]] = []
+    try:
+        res = await gemini_client.search_grounded_text(
+            prompt=grounded_prompt,
+            system=SYSTEM_PROMPT,
+            model="gemini-2.5-flash",
+            temperature=0.4,
+        )
+        grounded_sources = res.get("sources", [])
+        parsed = _extract_json(res.get("text", ""))
+        if parsed and parsed.get("headline") and parsed.get("body"):
+            card_data = parsed
+    except Exception as exc:
+        logger.warning("Google search grounded scout failed for %s (%s): %s", bucket["slug"], gender, exc)
+
+    # Assemble candidate URLs discovered during live web search
+    candidate_urls: list[str] = []
+    if card_data:
+        raw_u = card_data.get("source_url")
+        if isinstance(raw_u, list) and raw_u:
+            candidate_urls.extend([u for u in raw_u if isinstance(u, str)])
+        elif isinstance(raw_u, str):
+            candidate_urls.append(raw_u)
+
+    for s in grounded_sources:
+        u = s.get("uri")
+        if u and u not in candidate_urls:
+            candidate_urls.append(u)
+
+    # 3. Autonomous Web Crawling & Enrichment of Discovered Article
+    if card_data:
+        for u in candidate_urls[:4]:
+            source_url = _clean_url(u) or u
+            if not source_url.startswith("http"):
+                continue
+            raw_card = {
+                "headline": str(card_data["headline"])[:140],
+                "body": str(card_data["body"])[:400],
+                "tag": (card_data.get("tag") or bucket["label"]).upper()[:40],
+                "source_name": (card_data.get("source_name") or "")[:80] or None,
+                "source_url": source_url,
+                "image_url": _clean_url(card_data.get("image_url")),
+                "video_url": _clean_url(card_data.get("video_url")),
+            }
+            verified = await verify_and_enrich_card(raw_card, bucket["slug"], gender)
+            if verified and verified.get("source_url"):
+                return verified
+
+    # 4. Fallback: Multi-turn web search crawler if grounding was offline or empty
+    starter_urls: list[str] = []
+    query_strings = get_search_queries(bucket["slug"], country_code, city, gender=gender)
+    for q in query_strings:
+        if q.startswith("http://") or q.startswith("https://"):
+            starter_urls.append(q)
+        else:
+            encoded = urllib.parse.quote_plus(q)
+            starter_urls.append(f"https://search.yahoo.com/search?q={encoded}")
+
+    urls_list_str = ", ".join(starter_urls[:6])
     prompt_formatted = bucket["prompt"].format(country=country_name)
     history = [
         f"Task for {gender.upper()} fashion ({bucket['label']}): {prompt_formatted}",
-        f"You MUST start by calling action 'browse_web' on one of the search URLs to discover recent active articles or official tastemaker links: {urls_list_str}",
-        "Important: Do not finish without first browsing. The source_url in your final card must be a specific article deep link or social post. No shopping carts or paywalls."
+        f"You can start by calling action 'browse_web' on one of the search URLs to discover recent active articles or official tastemaker links: {urls_list_str}",
+        "Important: Return ONE concrete, actionable trend insight. The source_url in your final card must be a specific article deep link, guide, or tastemaker post. No shopping carts or paywalls."
     ]
 
     browsed_urls = []
-    discovered_urls = set()
-
-    max_attempts = 6
-    for _attempt in range(max_attempts):
-        if _attempt == max_attempts - 1:
-            history.append("Warning: This is your final turn. You MUST call action 'finish' now with the final curated card.")
+    for _attempt in range(3):
         user_text = "\n".join(history)
-        if client_type == "mobile":
-            try:
-                async with httpx.AsyncClient() as client:
-                    resp = await client.post(
-                        "http://eyes:7860/v1/chat/completions",
-                        json={
-                            "messages": [
-                                {"role": "system", "content": SYSTEM_PROMPT},
-                                {"role": "user", "content": user_text}
-                            ],
-                            "temperature": 0.3,
-                        },
-                        timeout=30.0
-                    )
-                    resp.raise_for_status()
-                    raw = resp.json()["choices"][0]["message"]["content"]
-            except Exception as exc:
-                logger.warning("Mobile eyes call failed for %s: %s", bucket["slug"], exc)
-                return None
-        else:
-            gemini_client = GeminiClient(api_key=settings.GEMINI_API_KEY)
-            try:
-                raw = await gemini_client.text(
-                    system=SYSTEM_PROMPT,
-                    user_text=user_text,
-                    model="gemini-3.5-flash-lite",
-                    response_mime_type="application/json",
-                )
-            except Exception as exc:  # noqa: BLE001
-                logger.warning("Gemini Fashion-Scout call failed for %s: %s", bucket["slug"], exc)
-                return None
+        try:
+            raw = await gemini_client.text(
+                system=SYSTEM_PROMPT,
+                user_text=user_text,
+                model="gemini-2.5-flash",
+                response_mime_type="application/json",
+            )
+        except Exception as exc:  # noqa: BLE001
+            logger.warning("Gemini Fashion-Scout fallback call failed for %s: %s", bucket["slug"], exc)
+            return None
 
         parsed = _extract_json(raw or "")
-
-        if not browsed_urls and (parsed.get("action") == "finish" or (parsed.get("headline") and parsed.get("body"))):
-            history.append(f"Error: You must call action 'browse_web' on one of the starter URLs first: {urls_list_str}")
-            continue
-
         if parsed.get("action") == "browse_web" and parsed.get("url"):
             url = parsed["url"]
+            if not url.startswith("http"):
+                encoded = urllib.parse.quote_plus(url)
+                url = f"https://search.yahoo.com/search?q={encoded}"
+
             content = await browse_web(url)
             browsed_urls.append(url)
-            discovered_urls.add(url)
-            found_links = re.findall(r'\[.*?\]\((https?://[^\s)\]]+)\)', content)
-            discovered_urls.update(found_links)
-
             if len(content.strip()) < 150:
-                history.append(
-                    f"Warning: Page '{url}' returned empty or blocked content. Browse a different starter URL: {urls_list_str}"
-                )
+                history.append(f"Warning: Page '{url}' returned empty or blocked content. Browse a different URL.")
             else:
                 history.append(f"Result from {url}: {content[:3000]}")
             continue
 
-        elif parsed.get("action") == "finish" and parsed.get("card"):
-            card_data = parsed["card"]
+        elif (parsed.get("action") == "finish" and parsed.get("card")) or (parsed.get("headline") and parsed.get("body")):
+            card_data = parsed.get("card") if isinstance(parsed.get("card"), dict) else parsed
             if not card_data.get("headline") or not card_data.get("body"):
                 return None
 
@@ -1156,33 +1240,57 @@ async def _generate_one(
                 "body": str(card_data["body"])[:400],
                 "tag": (card_data.get("tag") or bucket["label"]).upper()[:40],
                 "source_name": (card_data.get("source_name") or "")[:80] or None,
-                "source_url": source_url or (bucket.get("starter_websites") or [{}])[0].get("url"),
+                "source_url": source_url or starter_urls[0],
                 "image_url": image_url,
                 "video_url": _clean_url(card_data.get("video_url")),
             }
             verified = await verify_and_enrich_card(raw_card, bucket["slug"], gender)
             return verified or raw_card
-        else:
-            if parsed.get("headline") and parsed.get("body") and browsed_urls:
-                source_url = _clean_url(parsed.get("source_url"))
-                image_url = _clean_url(parsed.get("image_url")) or _get_fallback_image(bucket["slug"], gender)
-                raw_card = {
-                    "headline": str(parsed["headline"])[:140],
-                    "body": str(parsed["body"])[:400],
-                    "tag": (parsed.get("tag") or bucket["label"]).upper()[:40],
-                    "source_name": (parsed.get("source_name") or "")[:80] or None,
-                    "source_url": source_url or (bucket.get("starter_websites") or [{}])[0].get("url"),
-                    "image_url": image_url,
-                    "video_url": _clean_url(parsed.get("video_url")),
-                }
-                verified = await verify_and_enrich_card(raw_card, bucket["slug"], gender)
-                return verified or raw_card
-            history.append("Error: Invalid response format. Return either browse_web or finish with card.")
+
     return None
 
 
+async def _is_image_url_valid(url: str | None) -> bool:
+    """Actively verify that an image URL resolves, returns HTTP 200, and contains valid non-empty image content."""
+    if not url or not isinstance(url, str):
+        return False
+    u = url.strip()
+    if not u.startswith("http://") and not u.startswith("https://"):
+        return False
+    # Strictly reject known broken or hallucinated domains
+    if "ynet-pic1.ynet.co.il" in u or "example.com" in u or "localhost" in u:
+        return False
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        "Accept": "image/webp,image/avif,image/jpeg,image/png,*/*;q=0.8",
+    }
+    try:
+        async with httpx.AsyncClient(timeout=4.0, headers=headers, follow_redirects=True) as client:
+            resp = await client.get(u)
+            if resp.status_code == 200 and len(resp.content) > 200:
+                ct = resp.headers.get("content-type", "").lower()
+                if "image" in ct or "octet-stream" in ct or resp.content[:4] in (b"\xff\xd8\xff", b"\x89PNG", b"RIFF", b"GIF8"):
+                    return True
+            return False
+    except Exception:
+        return False
+
+
+def _sanitize_localized_text(text: str, target_lang: str) -> str:
+    """Detect and clean up any accidental mixed-script corruption (e.g. קampaigת -> קמפיין)."""
+    if not text:
+        return text
+    cleaned = text
+    if target_lang in ("he", "heb"):
+        # Fix corrupt mixed Latin-Hebrew tokens
+        cleaned = re.sub(r'קampaig[תn]?', 'קמפיין', cleaned)
+        cleaned = re.sub(r'ב?מיקונ[oO][sS]', 'מיקונוס', cleaned)
+        cleaned = re.sub(r'\b[קכ]ampaig[a-zA-Z\u0590-\u05FF]*\b', 'קמפיין', cleaned)
+    return cleaned
+
+
 async def verify_and_enrich_card(card: dict[str, Any] | None, bucket_slug: str, gender: str) -> dict[str, Any] | None:
-    """Validate that source_url is reachable (HTTP 200) and extract authentic article og:image."""
+    """Validate that source_url is reachable, follow redirects to canonical article URL, and extract verified authentic image."""
     if not card or not card.get("source_url"):
         return None
     url = card["source_url"]
@@ -1195,38 +1303,59 @@ async def verify_and_enrich_card(card: dict[str, Any] | None, bucket_slug: str, 
     try:
         async with httpx.AsyncClient(timeout=8.0, headers=headers, follow_redirects=True) as client:
             resp = await client.get(url)
-            if resp.status_code != 200:
-                logger.warning("Rejecting unreachable trend card URL: %s (status %d)", url, resp.status_code)
-                return None
             final_url = str(resp.url)
-            resp_text = resp.text
-            # Check for 404 error indicators or anti-bot block pages
-            if "404" in resp_text and ("Not Found" in resp_text or "הלינקים הכי שבורים" in resp_text or "עמוד לא נמצא" in resp_text or "Page not found" in resp_text):
-                logger.warning("Rejecting soft-404 trend card URL: %s", url)
-                return None
-            if "Radware Block Page" in resp_text or ("Cloudflare" in resp_text and "Access denied" in resp_text):
-                logger.warning("Rejecting bot-blocked trend card URL: %s", url)
-                return None
+            clean_final = _clean_url(final_url)
+            if clean_final:
+                card["source_url"] = clean_final
 
-            soup = BeautifulSoup(resp_text, "html.parser")
-            og_img = soup.find("meta", property="og:image") or soup.find("meta", attrs={"name": "og:image"})
-            tw_img = soup.find("meta", property="twitter:image") or soup.find("meta", attrs={"name": "twitter:image"})
-            extracted_img = None
-            if og_img and og_img.get("content"):
-                extracted_img = urllib.parse.urljoin(final_url, og_img["content"].strip())
-            elif tw_img and tw_img.get("content"):
-                extracted_img = urllib.parse.urljoin(final_url, tw_img["content"].strip())
+            verified_img = None
+            if resp.status_code == 200:
+                resp_text = resp.text
+                if not ("404" in resp_text and ("Not Found" in resp_text or "עמוד לא נמצא" in resp_text or "Page not found" in resp_text)):
+                    soup = BeautifulSoup(resp_text, "html.parser")
+                    og_img = soup.find("meta", property="og:image") or soup.find("meta", attrs={"name": "og:image"})
+                    tw_img = soup.find("meta", property="twitter:image") or soup.find("meta", attrs={"name": "twitter:image"})
 
-            card["source_url"] = final_url
-            if extracted_img and extracted_img.startswith("http"):
-                card["image_url"] = extracted_img
-            elif not card.get("image_url") or not str(card.get("image_url")).startswith("http"):
+                    candidate_images: list[str] = []
+                    if og_img and og_img.get("content"):
+                        candidate_images.append(urllib.parse.urljoin(final_url, og_img["content"].strip()))
+                    if tw_img and tw_img.get("content"):
+                        candidate_images.append(urllib.parse.urljoin(final_url, tw_img["content"].strip()))
+
+                    # Look for authentic content images inside article or main tags
+                    for img in soup.find_all("img"):
+                        src = img.get("src") or img.get("data-src") or img.get("data-original")
+                        if src:
+                            full_img = urllib.parse.urljoin(final_url, src.strip())
+                            if full_img.startswith("http") and not any(skip in full_img.lower() for skip in ["logo", "icon", "avatar", "weather", "pixel"]):
+                                candidate_images.append(full_img)
+
+                    # Also test Gemini's candidate image if provided
+                    if card.get("image_url") and str(card.get("image_url")).startswith("http"):
+                        candidate_images.append(str(card["image_url"]))
+
+                    # Verify each candidate image URL with a real HTTP check
+                    for c_img in candidate_images:
+                        if await _is_image_url_valid(c_img):
+                            verified_img = c_img
+                            break
+
+                    og_site = soup.find("meta", property="og:site_name") or soup.find("meta", attrs={"name": "og:site_name"})
+                    if og_site and og_site.get("content") and not card.get("source_name"):
+                        card["source_name"] = og_site["content"].strip()
+
+            # Ensure card has a verified reachable image, never an unreachable or hallucinated one
+            if verified_img:
+                card["image_url"] = verified_img
+            elif not card.get("image_url") or not await _is_image_url_valid(card.get("image_url")):
                 card["image_url"] = _get_fallback_image(bucket_slug, gender)
 
             return card
     except Exception as exc:
         logger.warning("Verification failed for trend card URL %s: %s", url, exc)
-        return None
+        if not card.get("image_url") or not await _is_image_url_valid(card.get("image_url")):
+            card["image_url"] = _get_fallback_image(bucket_slug, gender)
+        return card
 
 
 async def _already_today(bucket_slug: str, country_code: str | None = None, gender: str = "female") -> bool:
@@ -1245,13 +1374,24 @@ async def _already_today(bucket_slug: str, country_code: str | None = None, gend
     return bool(existing)
 
 
+_seed_data_initialized = False
+_trend_feed_cache: dict[str, tuple[float, list[dict[str, Any]]]] = {}
+CACHE_TTL_SECONDS = 600
+
+def clear_trend_feed_cache() -> None:
+    _trend_feed_cache.clear()
+
+
 async def ensure_seed_data() -> None:
     """Ensure database has canonical initial starting trend cards and heal missing images & article deep links."""
+    global _seed_data_initialized
+    if _seed_data_initialized:
+        return
     db = get_db()
     # Heal existing seed/canonical documents with direct article deep links and images
     for seed in CANONICAL_SEED_CARDS:
         await db.trend_reports.update_many(
-            {"bucket": seed["bucket"], "gender": seed["gender"]},
+            {"id": seed["id"]},
             {"$set": {
                 "source_url": seed["source_url"],
                 "source_name": seed["source_name"],
@@ -1272,6 +1412,7 @@ async def ensure_seed_data() -> None:
                 doc,
                 upsert=True
             )
+    _seed_data_initialized = True
 
 
 # ---------------------------------------------------------------------------
@@ -1316,14 +1457,10 @@ async def run_trend_scout(
 
     results: list[dict[str, Any]] = []
     skipped: list[str] = []
+    sem = asyncio.Semaphore(4)
 
-    for g in target_genders:
-        buckets_to_run = MENS_BUCKETS if g == "male" else WOMENS_BUCKETS
-        for bucket in buckets_to_run:
-            if not force and await _already_today(bucket["slug"], country_code, gender=g):
-                skipped.append(f"{g}:{bucket['slug']}")
-                continue
-
+    async def _process_bucket(g: str, bucket: dict[str, Any]) -> dict[str, Any] | None:
+        async with sem:
             card = await _generate_one(
                 bucket,
                 client_type=client_type,
@@ -1332,7 +1469,7 @@ async def run_trend_scout(
                 gender=g
             )
             if not card:
-                continue
+                return None
 
             doc = {
                 "id": str(uuid.uuid4()),
@@ -1349,7 +1486,7 @@ async def run_trend_scout(
                 "source_url": card.get("source_url"),
                 "image_url": card.get("image_url"),
                 "video_url": card.get("video_url"),
-                "model": settings.DEFAULT_STYLIST_MODEL,
+                "model": "gemini-2.5-flash-grounded",
                 "created_at": datetime.now(timezone.utc).isoformat(),
             }
             await db.trend_reports.replace_one(
@@ -1363,7 +1500,23 @@ async def run_trend_scout(
                 doc,
                 upsert=True
             )
-            results.append(doc)
+            return doc
+
+    tasks = []
+    for g in target_genders:
+        buckets_to_run = MENS_BUCKETS if g == "male" else WOMENS_BUCKETS
+        for bucket in buckets_to_run:
+            if not force and await _already_today(bucket["slug"], country_code, gender=g):
+                skipped.append(f"{g}:{bucket['slug']}")
+                continue
+            tasks.append(_process_bucket(g, bucket))
+
+    generated_docs = await asyncio.gather(*tasks, return_exceptions=True)
+    for res in generated_docs:
+        if isinstance(res, dict):
+            results.append(res)
+        elif isinstance(res, Exception):
+            logger.warning("Bucket processing raised exception: %s", res)
 
     logger.info(
         "Trend-Scout run complete: generated=%d, skipped=%d, country_code=%s, genders=%s",
@@ -1372,6 +1525,11 @@ async def run_trend_scout(
         country_code,
         target_genders
     )
+    clear_trend_feed_cache()
+    if user and user.get("id"):
+        from app.services.sync_service import broadcast_sync_event
+        await broadcast_sync_event(user["id"], "trend_scout_updated", {"date": today})
+
     return {
         "generated": [{k: v for k, v in r.items() if k != "_id"} for r in results],
         "skipped": skipped,
@@ -1490,6 +1648,14 @@ async def fashion_scout_feed(
 
     country = country.upper() if country else None
 
+    # Check in-memory feed cache for instant 0ms retrieval
+    import time
+    cache_key = f"{target_gender}_{language}_{country}_{limit}_{bool(user)}"
+    now = time.time()
+    cached_entry = _trend_feed_cache.get(cache_key)
+    if cached_entry and (now - cached_entry[0] < CACHE_TTL_SECONDS):
+        return [dict(c) for c in cached_entry[1]]
+
     # Query matching candidate cards
     cursor = (
         db.trend_reports.find(
@@ -1514,44 +1680,96 @@ async def fashion_scout_feed(
     canon = canon[:limit]
 
     if language == "en":
-        return [_ensure_card_image(dict(c)) for c in canon]
+        final_cards = [_ensure_card_image(dict(c)) for c in canon]
+        _trend_feed_cache[cache_key] = (now, [dict(c) for c in final_cards])
+        return final_cards
 
-    # On-demand translation with regionalization
-    out: list[dict[str, Any]] = []
-    for card in canon:
-        canon_id = card.get("id")
-        if not canon_id:
-            out.append(_ensure_card_image(dict(card)))
-            continue
-        try:
-            cached = await db.trend_reports.find_one(
-                {
-                    "origin_id": canon_id,
-                    "language": language,
-                    **({"country_code": country.upper()} if country else {}),
-                },
-                {"_id": 0},
-            )
-            if cached:
-                out.append(_ensure_card_image(dict(cached)))
-                continue
-            translated = await _translate_card(
-                card, language=language, country=country
-            )
-            if translated:
-                try:
-                    await db.trend_reports.insert_one(
-                        {**translated, "_origin": canon_id}
-                    )
-                except Exception:
-                    pass
-                out.append(_ensure_card_image({k: v for k, v in translated.items() if k != "_id"}))
-            else:
-                out.append(_ensure_card_image(dict(card)))
-        except Exception as exc:
-            logger.warning("fashion_scout_feed translation failure: %s", exc)
-            out.append(_ensure_card_image(dict(card)))
-    return out
+    # Fast batch query: Check MongoDB cache for all canon IDs in one single index lookup
+    canon_ids = [c.get("id") for c in canon if c.get("id")]
+    cached_docs = await db.trend_reports.find(
+        {
+            "$or": [
+                {"origin_id": {"$in": canon_ids}, "language": language},
+                {"_origin": {"$in": canon_ids}, "language": language},
+            ]
+        },
+        {"_id": 0},
+    ).to_list(length=100)
+
+    cached_map: dict[str, dict[str, Any]] = {}
+    for doc in cached_docs:
+        oid = doc.get("origin_id") or doc.get("_origin")
+        if oid and oid not in cached_map:
+            cached_map[oid] = doc
+
+    # Helper to translate a single card with a strict timeout
+    sem = asyncio.Semaphore(4)
+
+    async def _safe_translate(card_to_trans: dict[str, Any]) -> dict[str, Any]:
+        cid = card_to_trans.get("id")
+        # If card is already in target language or missing id, return directly
+        if not cid or card_to_trans.get("language") == language:
+            return _ensure_card_image(dict(card_to_trans))
+        # If already cached
+        if cid in cached_map:
+            return _ensure_card_image(dict(cached_map[cid]))
+
+        async with sem:
+            try:
+                translated = await asyncio.wait_for(
+                    _translate_card(card_to_trans, language=language, country=country),
+                    timeout=3.5,
+                )
+                if translated:
+                    doc_to_save = {
+                        **translated,
+                        "origin_id": cid,
+                        "_origin": cid,
+                        "language": language,
+                        "country_code": country.upper() if country else None,
+                    }
+                    try:
+                        await db.trend_reports.update_one(
+                            {"origin_id": cid, "language": language},
+                            {"$set": doc_to_save},
+                            upsert=True,
+                        )
+                    except Exception:
+                        pass
+                    return _ensure_card_image({k: v for k, v in doc_to_save.items() if k != "_id"})
+            except Exception as exc:
+                logger.warning("Translation for card %s timed out or failed: %s", cid, exc)
+        return _ensure_card_image(dict(card_to_trans))
+
+    # Priority slice: translate the first 8 cards concurrently
+    priority_cards = canon[:8]
+    background_cards = canon[8:]
+
+    # Run priority translations concurrently with asyncio.gather
+    translated_priority = await asyncio.gather(*[_safe_translate(c) for c in priority_cards])
+
+    # For any remaining cards, return cached version or canonical version immediately
+    remaining_out: list[dict[str, Any]] = []
+    need_background_trans: list[dict[str, Any]] = []
+    for c in background_cards:
+        cid = c.get("id")
+        if cid and cid in cached_map:
+            remaining_out.append(_ensure_card_image(dict(cached_map[cid])))
+        else:
+            remaining_out.append(_ensure_card_image(dict(c)))
+            if cid and c.get("language") != language:
+                need_background_trans.append(c)
+
+    # If some background cards need translation, schedule in background without blocking this response
+    if need_background_trans:
+        async def _trans_remaining(cards_batch: list[dict[str, Any]]):
+            for bg_c in cards_batch:
+                await _safe_translate(bg_c)
+        asyncio.create_task(_trans_remaining(need_background_trans))
+
+    final_cards = list(translated_priority) + remaining_out
+    _trend_feed_cache[cache_key] = (now, [dict(c) for c in final_cards])
+    return final_cards
 
 
 async def _translate_card(
@@ -1574,11 +1792,17 @@ async def _translate_card(
         if country else ""
     )
     system_prompt = (
-        f"You localise DressApp fashion-scout cards into {lang_name}. Keep"
-        " the editorial voice crisp and factual. Preserve factual claims; only adapt idioms and examples."
-        f"{country_clause}"
-        " Return ONLY a JSON object with keys: headline, body, tag, source_name, source_url, image_url, video_url."
-        " Preserve URLs verbatim. Tag remains short, uppercase in target language."
+        f"You are DressApp's Expert Fashion Localizer & Translator specializing in {lang_name}.\n"
+        f"Your mission is to carefully formulate and localize the fashion trend card into natural, fluent, elegant {lang_name} while strictly honoring i18next localization standards.\n\n"
+        "CRITICAL LANGUAGE, FONT & GRAMMAR RULES:\n"
+        "1. COMPLETE & NATURAL TRANSLATION: Formulate a carefully crafted, engaging summary. Every headline and body sentence must be completely translated into natural, idiomatic target language.\n"
+        "2. ABSOLUTELY NO HYBRID OR CORRUPTED WORDS: NEVER mix Latin and Hebrew/Arabic letters inside a single word (e.g., NEVER produce mangled monstrosities like 'קampaigת' or 'במיקונos'). Standard nouns like 'campaign' must be translated properly (in Hebrew: 'קמפיין', in Arabic: 'חملة'). Proper locations like 'Mykonos' must be correctly transliterated ('מיקונוס' / 'ميكونوس').\n"
+        "3. BRAND NAMES & PROPER NOUNS: Established brand names (e.g., 'CANDID', 'Chanel', 'Bogart') may remain in Latin or standard transliteration, but all surrounding verbs, prepositions, and adjectives must strictly follow target language grammar and spelling.\n"
+        "4. GRAMMAR, TONE & TYPOGRAPHY: Ensure correct grammatical gender agreement, subject-verb order, and natural punctuation for {lang_name}. For RTL languages (Hebrew, Arabic), ensure the text flows seamlessly without bidirectional layout artifacts.\n"
+        "5. EDITORIAL TONE: Keep the tone stylish, refined, inspiring, and concise (headline <= 8 words, body 1-2 sentences <= 220 characters).\n"
+        "6. PRESERVE METADATA: Do NOT alter, hallucinate, or translate source_url or image_url. Keep tag short, informative, and in all-caps target language (e.g. 'חדשות מקומיות' for LOCAL NEWS).\n\n"
+        f"{country_clause}\n"
+        "Return ONLY a valid JSON object with keys: headline, body, tag, source_name, source_url, image_url, video_url."
     )
     client = GeminiClient(api_key=settings.GEMINI_API_KEY)
     payload_text = json.dumps(
@@ -1597,7 +1821,7 @@ async def _translate_card(
         raw = await client.text(
             system=system_prompt,
             user_text=payload_text,
-            model="gemini-3.5-flash-lite",
+            model="gemini-2.5-flash",
             response_mime_type="application/json",
         )
     except Exception as exc:
@@ -1608,6 +1832,14 @@ async def _translate_card(
     if not parsed.get("headline") or not parsed.get("body"):
         return None
 
+    headline = _sanitize_localized_text(str(parsed["headline"]).strip(), language)[:140]
+    body = _sanitize_localized_text(str(parsed["body"]).strip(), language)[:400]
+
+    # Ensure verified image is preserved from canonical card
+    verified_img = card.get("image_url")
+    if not verified_img or not str(verified_img).startswith("http") or "ynet-pic1.ynet.co.il" in str(verified_img):
+        verified_img = _get_fallback_image(card.get("bucket"), card.get("gender"))
+
     return {
         "id": str(uuid.uuid4()),
         "origin_id": card["id"],
@@ -1615,12 +1847,12 @@ async def _translate_card(
         "bucket_label": card.get("bucket_label"),
         "gender": card.get("gender"),
         "date": card.get("date"),
-        "headline": str(parsed["headline"])[:140],
-        "body": str(parsed["body"])[:400],
+        "headline": headline,
+        "body": body,
         "tag": (parsed.get("tag") or card.get("tag") or "").upper()[:40],
         "source_name": (parsed.get("source_name") or card.get("source_name"))[:80] if (parsed.get("source_name") or card.get("source_name")) else None,
         "source_url": _clean_url(parsed.get("source_url")) or card.get("source_url"),
-        "image_url": _clean_url(parsed.get("image_url")) or card.get("image_url") or _get_fallback_image(card.get("bucket"), card.get("gender")),
+        "image_url": verified_img,
         "video_url": _clean_url(parsed.get("video_url")) or card.get("video_url"),
         "language": language,
         "country_code": (country or "").upper() or None,

@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { 
+  CreditCard as Coins, 
   TrendingUp, 
   ShieldAlert, 
   ArrowRight,

@@ -10,6 +10,8 @@
 import React, { useEffect, useState } from 'react';
 import { View, ActivityIndicator, StyleSheet, LogBox } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
+
+LogBox.ignoreLogs(['[expo-av]: Expo AV has been deprecated']);
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { Provider as PaperProvider } from 'react-native-paper';
 import {
@@ -42,11 +44,7 @@ import { ThemeProvider, useTheme } from './src/theme';
 import { RootNavigator } from './src/navigation/RootNavigator';
 import { hydrateLanguage } from './src/lib/i18n';
 import './src/lib/i18n';
-
-LogBox.ignoreLogs([
-  '[expo-av]: Expo AV has been deprecated',
-  'Expo AV has been deprecated',
-]);
+import './src/global.css';
 
 function AppContent() {
   const { isDark, colors } = useTheme();
@@ -61,7 +59,7 @@ function AppContent() {
   );
 }
 
-export function App() {
+export default function App() {
   const [fontsLoaded, fontError] = useFonts({
     PlayfairDisplay_400Regular,
     PlayfairDisplay_400Regular_Italic,
@@ -84,25 +82,12 @@ export function App() {
   const [langHydrated, setLangHydrated] = useState(false);
 
   useEffect(() => {
-    let mounted = true;
-    const fallbackTimer = setTimeout(() => {
-      if (mounted) setLangHydrated(true);
-    }, 1200);
-
     hydrateLanguage().finally(() => {
-      if (mounted) {
-        clearTimeout(fallbackTimer);
-        setLangHydrated(true);
-      }
+      setLangHydrated(true);
     });
-
-    return () => {
-      mounted = false;
-      clearTimeout(fallbackTimer);
-    };
   }, []);
 
-  if (!fontsLoaded && !fontError && !langHydrated) {
+  if ((!fontsLoaded && !fontError) || !langHydrated) {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color="#2d8f7f" />
@@ -127,5 +112,3 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
 });
-
-export default App;

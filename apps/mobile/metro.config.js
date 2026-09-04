@@ -65,12 +65,15 @@ config.resolver.sourceExts = [
   'cjs',
 ];
 
-// llama.rn stub + singleton packages
+// llama.rn stub — the only extraNodeModules entry needed.
+// Everything else resolves through normal hierarchical lookup + nodeModulesPaths.
 config.resolver.extraNodeModules = {
   'llama.rn': LLAMA_STUB,
-  react: path.resolve(workspaceRoot, 'node_modules/react'),
-  'react-native': path.resolve(workspaceRoot, 'node_modules/react-native'),
-  'react-native-safe-area-context': path.resolve(workspaceRoot, 'node_modules/react-native-safe-area-context'),
 };
 
-module.exports = config;
+module.exports = withNativewind(config, {
+  // inline variables break PlatformColor in CSS variables
+  inlineVariables: false,
+  // We add className support manually
+  globalClassNamePolyfill: false,
+});

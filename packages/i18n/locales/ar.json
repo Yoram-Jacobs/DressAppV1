@@ -1007,7 +1007,9 @@
     "harmonyFit": "تناسق الألوان والمقاس",
     "fitted": "تمت القياس",
     "hidden": "مخفي",
-    "selectGarmentSlot": "اختيار {{role}}"
+    "selectGarmentSlot": "اختيار {{role}}",
+    "realPhoto": "صورة حقيقية",
+    "mannequin": "مانيكان"
   },
   "outfitCompletion": {
     "cta": "أكمل الإطلالة",
@@ -1600,7 +1602,12 @@
     "importWardrobe": "استيراد خزانة الملابس",
     "chooseLanguage": "Select Language",
     "planLabel": "خطة {{tier}}",
-    "creditsLabel": "{{credits}} رصيد"
+    "creditsLabel": "{{credits}} رصيد",
+    "groups": {
+      "identity": "الهوية",
+      "subscription": "الاشتراك",
+      "more": "المزيد"
+    }
   },
   "admin": {
     "title": "الإدارة",
@@ -2438,7 +2445,22 @@
       "my_digital_avatar": "صورتي الرمزية الرقمية",
       "this_3d_avatar_is_generated": "تم إنشاء هذا المجسم ثلاثي الأبعاد بناءً على قياسات جسمك. قم بتحديث قياساتك في ملفك الشخصي لتراها تتكيف تلقائياً.",
       "tip": "نصيحة:",
-      "you_can_drag_to_rotate": "يمكنك السحب للتدوير والتمرير للتكبير والتصغير. الشكل الذي تراه هنا يشغل محرك فيزياء التجربة الافتراضية الخاص بنا."
+      "you_can_drag_to_rotate": "يمكنك السحب للتدوير والتمرير للتكبير والتصغير. الشكل الذي تراه هنا يشغل محرك فيزياء التجربة الافتراضية الخاص بنا.",
+      "avatar_saved_successfully": "تم حفظ ملف الأفاتار الرقمي بنجاح!",
+      "failed_to_save_measurements": "فشل حفظ القياسات. يرجى المحاولة مرة أخرى.",
+      "subtitle_description": "قم بمعايرة قياسات جسمك أو ارفع صورة كاملة للجسم.",
+      "vector_mannequin": "مانيكان",
+      "real_photo": "صورة حقيقية",
+      "female": "أنثى",
+      "male": "ذكر",
+      "height": "الطول",
+      "shoulders": "عرض الكتفين",
+      "chest": "محيط الصدر",
+      "waist": "محيط الخصر",
+      "hip": "محيط الوركين",
+      "arm_length": "طول الذراع",
+      "inseam": "طول الساق الداخلي",
+      "info_note": "تعاير قياسات الجسم فيزياء تجربة الملابس الافتراضية وتوصيات المقاسات في جميع أنحاء التطبيق."
     }
   },
   "trends": {

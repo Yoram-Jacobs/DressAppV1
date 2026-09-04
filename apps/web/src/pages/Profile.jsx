@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
-import { LogOut, Loader2, Languages, Bell, Newspaper, Calendar, Users, TrendingUp, Key, Info, ExternalLink, Save, Chrome, Bookmark, Sparkles, Crown, Shirt } from 'lucide-react';
+import { LogOut, Loader2, Languages, Bell, Newspaper, Calendar, Users, TrendingUp, Key, CreditCard as Coins, Info, ExternalLink, Save, Globe, Bookmark, Sparkles, Crown, Shirt } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 import { toast } from 'sonner';
 import { api } from '@/lib/api';
@@ -132,11 +132,24 @@ export default function Profile() {
 
   return (
     <div className="container-px max-w-3xl mx-auto pt-6 md:pt-10">
-      <div className="flex items-end justify-between mb-6">
+      <div className="flex items-center justify-between mb-6">
         <div>
           <div className="caps-label text-muted-foreground">{t('profile.accountLabel')}</div>
           <h1 className="font-display text-3xl sm:text-4xl mt-1">{t('profile.title')}</h1>
         </div>
+        <Button
+          onClick={save}
+          disabled={busy}
+          className="rounded-full px-5 py-2.5 font-semibold shadow-editorial text-sm"
+          data-testid="profile-main-header-save-btn"
+        >
+          {busy ? (
+            <Loader2 className="h-4 w-4 animate-spin me-2" />
+          ) : (
+            <Save className="h-4 w-4 me-2" />
+          )}
+          {t('profile.saveProfile', { defaultValue: 'Save profile' })}
+        </Button>
       </div>
 
       {/* Explore Section (Secondary Nav) */}

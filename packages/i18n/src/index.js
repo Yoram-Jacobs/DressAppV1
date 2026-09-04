@@ -107,13 +107,11 @@ export function createI18n({ getStoredLang, setStoredLang, defaultLang = 'en' } 
     return defaultLang;
   }
 
-  const i18n = i18nBase;
+  const i18n = i18nBase.createInstance();
 
-  if (!i18n.isInitialized) {
-    i18n.use(initReactI18next);
-  }
-
-  i18n.init({
+  i18n
+    .use(initReactI18next)
+    .init({
       resources,
       lng: pickInitialLanguage(),
       fallbackLng: 'en',

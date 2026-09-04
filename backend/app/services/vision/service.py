@@ -562,7 +562,7 @@ class GarmentVisionService:
             raw = await gem.vision(
                 system=system_prompt,
                 user_parts=[user_text] + shrunk_list,
-                model="gemini-2.5-flash",
+                model="gemini-3.5-flash",
                 temperature=0.1,
                 response_mime_type="application/json",
             )
@@ -576,7 +576,7 @@ class GarmentVisionService:
                 ok=ok,
                 latency_ms=int((time.perf_counter() - t0) * 1000),
                 error=last_err,
-                extra={"provider": "gemini", "model": "gemini-2.5-flash"},
+                extra={"provider": "gemini", "model": "gemini-3.5-flash"},
             )
             
         parsed = _extract_json(raw or "")
@@ -1964,7 +1964,7 @@ class GarmentVisionService:
                 "or does it contain a person wearing MULTIPLE GARMENTS (a full outfit, e.g. a shirt AND pants)? "
                 "Reply with exactly one word: 'SINGLE' or 'MULTIPLE'."
             )
-            model = getattr(self, "flash_model", "gemini-2.5-flash")
+            model = getattr(self, "flash_model", "gemini-3.5-flash")
             resp = await client.vision(
                 user_parts=[prompt, image_bytes],
                 model=model,
@@ -2084,12 +2084,11 @@ class GarmentVisionService:
                 if count == 0:
                     logger.info("Gatekeeper: photo %d has 0 garments — dropping it", idx)
                     return idx, []
-                elif count == 1:
-                    logger.info("Gatekeeper: photo %d has 1 garment — bypassing SegFormer and routing to whole-image crop", idx)
+                
+                logger.info("Gatekeeper: photo %d has %d garment(s) — running SegFormer detect_items", idx, count)
+                detections = await self.detect_items(img_bytes)
+                if not detections and count == 1:
                     detections = [{"bbox": [0, 0, 1000, 1000], "kind": "garment", "label": "garment"}]
-                else:
-                    logger.info("Gatekeeper: photo %d has %d garments — running SegFormer detect_items", idx, count)
-                    detections = await self.detect_items(img_bytes)
             except Exception as exc:
                 logger.warning("analyze_outfits_stream: detect_items / gatekeep failed for idx %d: %s", idx, repr(exc)[:160])
                 return idx, []

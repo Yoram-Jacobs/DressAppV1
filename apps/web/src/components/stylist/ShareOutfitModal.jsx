@@ -22,8 +22,15 @@ import {
   Send,
   Sparkles,
   Check,
-  Instagram,
 } from 'lucide-react';
+
+const InstagramIcon = (props) => (
+  <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" {...props}>
+    <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
+    <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
+    <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line>
+  </svg>
+);
 
 export default function ShareOutfitModal({ open, onOpenChange, outfit, sessionId }) {
   const { t } = useTranslation();
@@ -232,17 +239,20 @@ export default function ShareOutfitModal({ open, onOpenChange, outfit, sessionId
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md w-full rounded-[18px] overflow-hidden p-5 max-h-[96vh] flex flex-col">
-          <DialogTitle className="flex items-center gap-2">
-            <Share2 className="h-4 w-4 text-primary-brand" />
-           <h6 className='text-[14px]'> {t('stylist.shareOutfit', { defaultValue: 'Share Outfit' })}</h6>
+      <DialogContent className="max-w-md w-full bg-card border-border rounded-2xl overflow-hidden p-6 max-h-[96vh] flex flex-col">
+        <DialogHeader className="pb-2 border-b border-border/60">
+          <DialogTitle className="flex items-center gap-2 text-foreground font-display text-lg">
+            <Share2 className="h-5 w-5 text-brand" />
+            {t('stylist.shareOutfit', { defaultValue: 'Share Outfit' })}
           </DialogTitle>
+        </DialogHeader>
+
         {/* Outer scroll area for layout preview */}
         <div className="flex-1 overflow-y-auto py-4 space-y-6 flex flex-col items-center">
           {/* Card to export (html2canvas targeting this ref) */}
-          <div className="relative w-[320px] aspect-[9/16] bg-accent-beige text-white rounded-2xl overflow-hidden flex flex-col border border-white/10" ref={cardRef}>
+          <div className="relative w-[320px] aspect-[9/16] bg-slate-950 text-white rounded-2xl overflow-hidden shadow-2xl flex flex-col border border-white/10" ref={cardRef}>
             {/* 65% Height: Avatar Viewer */}
-            <div className="h-[65%] w-full relative bg-primary-brand from-slate-900 via-slate-950 to-slate-950 overflow-hidden flex items-center justify-center">
+            <div className="h-[65%] w-full relative bg-gradient-to-b from-slate-900 via-slate-950 to-slate-950 overflow-hidden flex items-center justify-center">
               <OutfitAvatarViewer
                 shapeParams={user?.avatar_shape_params || {}}
                 sex={user?.sex || 'female'}
@@ -254,26 +264,28 @@ export default function ShareOutfitModal({ open, onOpenChange, outfit, sessionId
                 {t('stylist.shareOutfit.myLook', { defaultValue: 'AI Suggested Look' })}
               </div>
             </div>
+
             {/* 20% Height: Garment Chips */}
-            <div className="h-[20%] w-full p-3 bg-accent-beige backdrop-blur border-t border-white/5 flex flex-col justify-center gap-1.5">
-              <div className="text-[12px] uppercase text-dark-brand font-semibold">
+            <div className="h-[20%] w-full px-4 py-3 bg-slate-900/60 backdrop-blur border-t border-white/5 flex flex-col justify-center gap-1.5">
+              <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
                 {t('stylist.shareOutfit.pieces', { defaultValue: 'Outfit Pieces' })}
               </div>
               <div className="flex flex-wrap gap-1 overflow-y-auto max-h-[70%] scrollbar-thin">
                 {items.map((it, idx) => (
-                  <span key={idx} className="inline-flex items-center text-[12px] font-semibold bg-white/10 text-text-brand px-2 py-0.5 rounded-full capitalize">
+                  <span key={idx} className="inline-flex items-center text-[10px] font-medium bg-white/10 text-white px-2 py-0.5 rounded-full capitalize">
                     {it.role}: {it.title || it.description || 'Item'}
                   </span>
                 ))}
               </div>
             </div>
+
             {/* 15% Height: DressApp branding + QR code */}
-            <div className="h-[15%] w-full p-3 bg-primary-brand border-t border-white/5 flex items-center justify-between">
+            <div className="h-[15%] w-full px-4 py-3 bg-slate-950 border-t border-white/5 flex items-center justify-between">
               <div className="space-y-1">
-                <div className="text-sm font-bold text-white flex items-center gap-1">
-                  <span className="text-white">⬡</span> DressApp
+                <div className="text-sm font-bold tracking-tight text-white flex items-center gap-1">
+                  <span className="text-brand">⬡</span> DressApp
                 </div>
-                <div className="text-[10px] text-muted-foreground uppercase tracking-wider leading-none">
+                <div className="text-[9px] text-muted-foreground uppercase tracking-wider leading-none">
                   {t('stylist.shareOutfit.tagline', { defaultValue: 'Your AI fashion editor' })}
                 </div>
               </div>
@@ -284,7 +296,7 @@ export default function ShareOutfitModal({ open, onOpenChange, outfit, sessionId
                     shareUrl + '?utm_source=outfit_share&utm_medium=app_share'
                   )}`}
                   alt="QR Link"
-                  className="w-12 h-12 rounded bg-white p-0.5"
+                  className="w-11 h-11 rounded bg-white p-0.5"
                   crossOrigin="anonymous"
                 />
               ) : (
@@ -295,37 +307,43 @@ export default function ShareOutfitModal({ open, onOpenChange, outfit, sessionId
             </div>
           </div>
         </div>
+
         {/* Share actions bar */}
-        <div className="pt-4 flex gap-2 justify-center items-center flex-wrap">
-          <Button
-            onClick={handleWhatsApp}
-            disabled={minting}
-            variant="outline"
-            className="rounded-xl font-medium text-xs h-[40px] w-[40px] flex items-center justify-center px-0 py-0"
-          >
-            <Send className="h-4 w-4 rotate-45 -translate-y-0.5" />
-          </Button>
-          <Button
-            onClick={handleInstagram}
-            disabled={minting || rendering}
-            variant="outline"
-            className="rounded-xl font-medium text-xs h-[40px] w-[40px] flex items-center justify-center px-0 py-0"
-          >
-            {rendering ? <Loader2 className="h-4 w-4 animate-spin" /> : <Instagram className="h-4 w-4" />}
-          </Button>
+        <div className="pt-4 border-t border-border/60 grid grid-cols-2 gap-2">
           <Button
             onClick={handleCopyLink}
             disabled={minting || copied}
             variant="outline"
-            className="rounded-xl gap-2 font-medium text-xs px-5 py-5"
+            className="rounded-xl gap-2 font-medium text-xs py-5"
           >
             {copied ? <Check className="h-4 w-4 text-emerald-500" /> : <Copy className="h-4 w-4" />}
             {copied ? t('common.copied', { defaultValue: 'Copied!' }) : t('stylist.shareOutfit.copyLink', { defaultValue: 'Copy Link' })}
           </Button>
+
+          <Button
+            onClick={handleWhatsApp}
+            disabled={minting}
+            variant="outline"
+            className="rounded-xl gap-2 font-medium text-xs py-5"
+          >
+            <Send className="h-4 w-4 rotate-45 -translate-y-0.5" />
+            WhatsApp
+          </Button>
+
+          <Button
+            onClick={handleInstagram}
+            disabled={minting || rendering}
+            variant="outline"
+            className="rounded-xl gap-2 font-medium text-xs py-5"
+          >
+            {rendering ? <Loader2 className="h-4 w-4 animate-spin" /> : <InstagramIcon className="h-4 w-4" />}
+            Instagram
+          </Button>
+
           <Button
             onClick={handleDownload}
             disabled={minting || rendering}
-            className="rounded-xl bg-brand text-brand-foreground hover:bg-brand/90 gap-2 font-semibold text-xs px-5 py-5"
+            className="rounded-xl bg-brand text-brand-foreground hover:bg-brand/90 gap-2 font-semibold text-xs py-5"
           >
             {rendering ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
             {t('stylist.shareOutfit.downloadPng', { defaultValue: 'Download PNG' })}

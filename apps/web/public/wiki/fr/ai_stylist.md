@@ -1,28 +1,29 @@
-# Styliste IA Conversationnel
+# Styliste Personnel avec Intelligence Artificielle
 
-Échangez avec un styliste personnel intelligent qui connaît votre garde-robe, la météo et votre emploi du temps.
+Échangez avec un styliste intelligent qui connaît votre garde-robe, la météo et votre planning.
 
-## Aperçu
-Le Styliste IA traite les requêtes de style vocales ou textuelles en langage naturel, en intégrant automatiquement les conditions météorologiques, les événements du calendrier et les notifications push alimentées par des stores personnalisés `useSyncExternalStore` sécurisés (`stylistStore` et `dailySuggestionsStore`) avec une mise en cache de 15 minutes et une dédoublonnement des requêtes en cours.
+## Vue d'ensemble
+L'AI Stylist est votre conseiller mode personnel au quotidien. Discutez avec lui par écrit ou à la voix comme avec un ami. Le styliste consulte les prévisions météo locales, vos événements sur Google Agenda et compose des tenues complètes et élégantes créées directement à partir de vos propres vêtements.
 
-## Prérequis
-- Une clé API Gemini (or des crédits système par défaut).
-- Événements de calendrier connectés.
+## Conditions préalables
+- Au moins un haut, un bas et une paire de chaussures enregistrés dans votre dressing.
+- Autorisation du micro activée pour poser vos questions à la voix.
+- (Facultatif) Google Agenda connecté pour adapter les conseils à vos rendez-vous.
 
-## Étape par étape
-1. **Démarrer la session** : Ouvrez l'onglet Stylist et sélectionnez Chat, Shuffle ou Match.
-2. **Saisie vocale** : Appuyez sur le microphone, énoncez votre requête (ex. « Suggère une tenue pour un jour de pluie »), puis appuyez pour envoyer.
-3. **Lecture audio** : Écoutez la justification de style générée via le lecteur vocal haute fidélité.
-4. **Mélanger (Shuffle)** : Cliquez sur le bouton Sparkles pour faire tourner la machine à sous ; l'IA aligne automatiquement les articles correspondants au centre.
-5. **Navigation sans attente** : La navigation entre Stylist et les autres onglets utilise les préférences mises en cache en mémoire sans déclencher de boucles de requêtes GET vers la base de données.
+## Instructions pas à pas
+1. **Ouvrir le Styliste**: Appuyez sur l'onglet **AI Stylist** dans le menu inférieur.
+2. **Parler ou écrire**: Touchez l'**icône micro** et demandez conseil (ex. : *"Que porter pour un déjeuner sous la pluie aujourd'hui ?"* ou *"Propose-moi une tenue élégante pour le travail"*).
+3. **Écouter la réponse vocale**: Le styliste répond avec une voix naturelle et affiche les vêtements assortis. Touchez **Réécouter** pour entendre à nouveau son explication.
+4. **Essayer le mode Shuffle**: Envie de nouveauté ? Touchez l'onglet **Shuffle** pour faire tourner votre dressing et découvrir des combinaisons inattendues !
+5. **Enregistrer vos tenues**: Appuyez sur **Enregistrer dans le journal** pour planifier ce look dans votre calendrier personnel.
 
 ## Résultats attendus
-Compositions de tenues personnalisées conçues selon vos préférences personnelles, les contraintes saisonnières et votre emploi du temps.
+Des suggestions de tenues personnalisées adaptées à la météo et à votre planning, avec une explication claire et bienveillante.
 
 ## Dépannage
-- **Lecture audio trop lente** : Basculez entre Gemini TTS et la solution de secours Web Speech API dans les paramètres du Profile.
-- **Suggestions répétées** : Assurez-vous que l'historique de votre calendrier de tenues est mis à jour afin que l'algorithme de rotation puisse bloquer les répétitions.
+- **Le micro n'enregistre rien**: Vérifiez que vous avez autorisé l'accès au micro dans les réglages de votre navigateur ou de votre téléphone.
+- **Tenues souvent répétées**: Enregistrez vos tenues portées dans le calendrier afin que le styliste privilégie vos vêtements moins souvent portés.
 
-## Limitations
-- Les recommandations nécessitent au moins un haut, un bas et une paire de chaussures dans le dressing pour compléter un look.
-- La transcription vocale peut revenir à la saisie de texte standard sur les appareils non pris en charge.
+## Limites
+- Le styliste compose des tenues uniquement à partir des vêtements présents dans votre dressing numérique.
+- Chaque échange avec le styliste utilise 1 crédit IA (les comptes gratuits reçoivent 10 crédits offerts par jour).

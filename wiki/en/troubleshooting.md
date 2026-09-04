@@ -1,25 +1,34 @@
-# Troubleshooting & Limits
+# Troubleshooting & Helpful Solutions
 
-Quick fixes for common app behaviors, limits, and settings.
+Quick, easy solutions for common questions, permissions, and app limits.
 
 ## Overview
-Find quick solutions for camera permissions, slow upload speeds, account limit questions, and voice chat transcriptions.
+Find fast answers for camera access, upload speed questions, closet limit ceilings, and audio settings so you can get back to styling effortlessly.
 
 ## Prerequisites
-- Internet connection.
+- An active internet connection.
+- A modern web browser (Google Chrome or Apple Safari recommended) or the DressApp mobile app.
 
-## Step-by-Step
-1. **Camera block**: If the camera won't start, go to browser settings, select DressApp, and reset Camera permissions.
-2. **Stalled uploads**: If loading freezes on multiple photos, wait for the background sequential queue to process them one-by-one.
-3. **Closet full**: Free users are capped at a baseline of 50 items. Subscribe to the Manager or Professional tier on the **Pricing page** (`/pricing`), or invite a friend to get +10 slots per signup (up to 200 items max).
-4. **API errors**: If AI features fail, verify your custom Google AI Studio keys in your Profile page.
+## Step-by-Step Instructions
+1. **Camera Won't Turn On**:
+   - Open your browser or device settings, find **DressApp**, and ensure **Camera** permissions are set to "Allow". Refresh the page.
+2. **"Closet Capacity Reached" Message**:
+   - Free accounts store up to **150 garments**.
+   - You can invite friends to get **+10 extra slots** per signup (up to 1,000 items), delete unworn clothes, or tap **Upgrade to Pro** ($4.99/mo) for unlimited storage.
+3. **Voice Typing or Audio Replay Not Working**:
+   - Verify that microphone permissions are allowed in your browser settings.
+   - Check that your phone or computer volume is turned up and not muted or in "Do Not Disturb" mode.
+4. **Photos Taking Time to Process**:
+   - Multi-item outfits take a few moments as the AI cuts out backgrounds, inspects image completeness, and extracts clothing tags. Items process smoothly one-by-one; you can continue browsing the app while they finish!
+5. **Connecting Google Calendar**:
+   - Go to **Profile** &rarr; **Google Calendar** and tap **Connect**. Authorize calendar permissions so the Stylist can check your daily events.
 
 ## Expected Results
-Fast resolution of permissions and configurations without requiring technical support tickets.
+Fast resolution of common issues so your digital wardrobe runs smoothly.
 
 ## Troubleshooting
-- **Database issues**: If items are out of sync, log out and log back in to refresh token sessions.
-- **RTL layout issues**: If Arabic/Hebrew overlays overlap, update your browser to the latest version.
+- **Still experiencing issues?** Log out of your account and log back in, or clear your browser cache to refresh your session.
+- **RTL Language Displays**: In Hebrew and Arabic, text and tabs mirror automatically to the right for natural reading.
 
 ## Limitations
-- Platforms limits are strictly enforced to protect server resources.
+- Digital wardrobe imports from competitor apps require a desktop browser and cannot be started from mobile phones.

@@ -47,20 +47,22 @@ export const dailySuggestionsStore = {
     }
     _set({ loading: true, error: null });
     try {
-      const [proposalsRes, calStatus, notifRes, calEventsRes] = await Promise.allSettled([
-        api.listScheduledProposals ? api.listScheduledProposals() : Promise.resolve([]),
+      const [dailyPropRes, calStatus, notifRes, calEventsRes] = await Promise.allSettled([
+        api.getDailyProposal ? api.getDailyProposal() : Promise.resolve(null),
         api.calendarStatus ? api.calendarStatus() : Promise.resolve({ connected: false }),
         api.listSimulatedNotifications ? api.listSimulatedNotifications() : Promise.resolve({ notifications: [] }),
         api.calendarUpcoming ? api.calendarUpcoming(24) : Promise.resolve({ events: [] }),
       ]);
 
-      const proposals = proposalsRes.status === 'fulfilled' ? (proposalsRes.value?.proposals || proposalsRes.value || []) : [];
+      const dailyProposal = dailyPropRes.status === 'fulfilled' ? dailyPropRes.value : null;
+      const proposals = dailyProposal ? [dailyProposal] : [];
       const calendarConnected = calStatus.status === 'fulfilled' ? !!calStatus.value?.connected : false;
       const notifications = notifRes.status === 'fulfilled' ? (notifRes.value?.notifications || []) : [];
       const calendarEvents = calEventsRes.status === 'fulfilled' ? (calEventsRes.value?.events || []) : [];
 
       _set({
         proposals,
+        dailyProposal,
         calendarConnected,
         notifications,
         calendarEvents,
@@ -75,8 +77,34 @@ export const dailySuggestionsStore = {
     }
   },
 
+  async act(action, proposalId) {
+    if (api.actOnDailyProposal) {
+      const updated = await api.actOnDailyProposal(action, proposalId);
+      if (updated) {
+        _set({
+          proposals: [updated],
+          dailyProposal: updated,
+        });
+      }
+      return updated;
+    }
+  },
+
+  async generate(force = true) {
+    if (api.generateDailyProposal) {
+      const proposal = await api.generateDailyProposal(force);
+      if (proposal) {
+        _set({
+          proposals: [proposal],
+          dailyProposal: proposal,
+        });
+      }
+      return proposal;
+    }
+  },
+
   setProposals(proposals) {
-    _set({ proposals });
+    _set({ proposals, dailyProposal: proposals?.[0] || null });
   },
 
   setNotifications(notifications) {

@@ -28,6 +28,7 @@ import { WorkProgressFloater } from '@mobile/components/WorkProgressFloater';
 import { WorkBatchDoneToast } from '@mobile/components/WorkBatchDoneToast';
 import { HelpModal } from '@mobile/components/help';
 import { prewarmAllStores, resetAllStores } from '@mobile/lib/stores';
+import { useUniversalSync } from '@mobile/hooks/useUniversalSync';
 
 const Root = createNativeStackNavigator<RootStackParamList>();
 
@@ -36,6 +37,9 @@ export function RootNavigator() {
   const navRef = useNavigationContainerRef<RootStackParamList>();
   const { isAuthenticated, isLoading } = useAuthState();
   const prevAuthRef = React.useRef<boolean | null>(null);
+
+  // Global cross-device real-time sync
+  useUniversalSync(isAuthenticated);
 
   // Eager prewarm all database loading screens when authenticated
   useEffect(() => {

@@ -4,10 +4,12 @@ const path = require('path');
 // Add JDK 17 bin directory to PATH so keytool/gradle can be found
 process.env.PATH = "C:\\Program Files\\Microsoft\\jdk-17.0.19.10-hotspot\\bin;" + process.env.PATH;
 
-const child = spawn('npx', ['bubblewrap', 'build'], {
+const bubblewrapBin = path.join(__dirname, 'node_modules', '@bubblewrap', 'cli', 'bin', 'bubblewrap.js');
+console.log(`Spawning bubblewrap build...`);
+
+const child = spawn('node', [bubblewrapBin, 'build'], {
     cwd: __dirname,
     env: process.env,
-    shell: true,
     stdio: ['pipe', 'pipe', 'inherit'] // Pipe stdin and stdout, inherit stderr
 });
 

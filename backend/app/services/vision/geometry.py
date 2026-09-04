@@ -65,17 +65,17 @@ _BBOX_PAD_TRBL_BY_CATEGORY: dict[str, tuple[float, float, float, float]] = {
     # of vertical breathing room below before the SegFormer
     # confidence drops). Skirt + footwear cards untouched —
     # they were already clean per the user screenshot.
-    "top":        (0.06, 0.06, 0.06, 0.06),
-    "bottom":     (0.06, 0.06, 0.06, 0.06),
-    "dress":      (0.06, 0.06, 0.06, 0.06),
-    "fullbody":   (0.06, 0.06, 0.06, 0.06),
-    "full body":  (0.06, 0.06, 0.06, 0.06),
-    "outerwear":  (0.06, 0.06, 0.06, 0.06),
-    "footwear":   (0.06, 0.06, 0.06, 0.06),
-    "headwear":   (0.06, 0.06, 0.06, 0.06),
-    "accessory":  (0.06, 0.06, 0.06, 0.06),
-    "accessories": (0.06, 0.06, 0.06, 0.06),
-    "underwear":  (0.06, 0.06, 0.06, 0.06),
+    "top":        (0.04, 0.03, -0.025, 0.03),
+    "bottom":     (-0.015, 0.03, -0.015, 0.03),
+    "dress":      (0.03, 0.03, 0.01, 0.03),
+    "fullbody":   (0.03, 0.03, 0.03, 0.03),
+    "full body":  (0.03, 0.03, 0.03, 0.03),
+    "outerwear":  (0.03, 0.03, -0.015, 0.03),
+    "footwear":   (-0.01, 0.03, 0.03, 0.03),
+    "headwear":   (0.04, 0.04, 0.01, 0.04),
+    "accessory":  (0.03, 0.03, 0.03, 0.03),
+    "accessories": (0.03, 0.03, 0.03, 0.03),
+    "underwear":  (0.02, 0.02, 0.02, 0.02),
 }
 _BBOX_PAD_TRBL_DEFAULT = (
     _BBOX_PADDING_PCT, _BBOX_PADDING_PCT,
@@ -354,14 +354,8 @@ def _looks_already_cropped(detections: list[dict[str, Any]]) -> bool:
     areas = [_area(d["bbox"]) for d in detections]
     largest_area = max(areas) if areas else 0
 
-    # Signal 0 (NEW, takes precedence): any single detection that already
-    # covers >= the single-item threshold means the photo is dominated by
-    # one garment. Other small detections are SegFormer label-confusion
-    # fragments (e.g. labelling part of a patterned t-shirt as "Dress" and
-    # another part as "Upper-clothes"). Treat as single-item so we feed
-    # the WHOLE photo through rembg + Gemini once instead of shredding it
-    # into nonsensical sub-crops.
-    if largest_area >= frame_area * _SINGLE_ITEM_AREA_FRAC:
+    # Signal 0: single category detection covering >= single-item threshold
+    if len(garment_kinds) <= 1 and largest_area >= frame_area * _SINGLE_ITEM_AREA_FRAC:
         return True
 
     # Signal 1: one dominant detection (only triggers when nothing crossed

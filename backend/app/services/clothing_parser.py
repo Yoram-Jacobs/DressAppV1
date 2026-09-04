@@ -798,6 +798,13 @@ def _suppress_overlapping_garments(
 
         for kept_idx, (kept_lbl, kept_item, kept_area) in enumerate(kept):
             kept_cat = kept_item.get("category")
+            # Distinct fashion categories (e.g. headwear vs top, top vs bottom, bottom vs footwear, accessory vs garment)
+            # must stay separate and not be merged.
+            if kept_cat != item_cat:
+                garment_set = {"top", "dress", "outerwear"}
+                if not (kept_cat in garment_set and item_cat in garment_set):
+                    continue
+
             bb_kept = _bbox(kept_item["mask"])
 
             # 1. Dilated pixel intersection & containment

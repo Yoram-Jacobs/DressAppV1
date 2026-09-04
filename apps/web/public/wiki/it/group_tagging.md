@@ -1,20 +1,30 @@
-# Group Tagging of Closet Items
+# Tagging di Gruppo (Organizzazione Rapida dell'Armadio)
 
-## Goal
-The goal of the Group tagging feature is to allow fast, bulk categorization of closet garments. The user can select multiple items in their closet and tag them all at once with a single click.
+Organizza decine di vestiti in un attimo con la modifica in blocco con 1 tocco.
 
-## Purpose
-- **Speed & Efficiency**: Instead of entering tags item-by-item, users can select several garments (e.g., all formal jackets or all gym wear) and apply the tags instantly.
-- **Improved AI Stylist Accuracy**: Fine-grained categories/tags (e.g., “Work”, “GYM”, “Swimwear”, “Uniforms”) guide the Stylist's reasoning process. Predefined tags enable the Stylist to locate the most relevant items for specific outfit requests (for example, choosing "work"-tagged items first when constructing a "work outfit").
-- **Smart Fallbacks**: If certain tagged layers are missing (e.g., no upper-body "work"-tagged items), the Stylist will dynamically match other suitable garments.
+## Panoramica
+Il tagging di gruppo ti consente di aggiornare più capi contemporaneamente anziché modificarli singolarmente. Seleziona più pezzi e assegna stagioni, stili o etichette speciali con un solo tocco!
 
-## Key Points & Implementation Details
-1. **User Interface Integration**:
-   - Added a **Tag** button in the Closet selection floater.
-   - Built a comma-separated tagging dialog (`AlertDialog`) that pops up when clicked.
-2. **Optimistic UI Update**:
-   - Tags are merged onto the selected closet items locally first so the changes reflect instantly in the user interface.
-3. **Background Syncing**:
-   - Sends the tag update requests (`api.patchItem`) to the database in the background to ensure data consistency without blocking user interactions.
-4. **i18next Localization**:
-   - All text messages, dialog titles, placeholders, and feedback notifications support translations cleanly using options-based defaults.
+## Prerequisiti
+- Capi registrati nel tuo armadio digitale.
+
+## Istruzioni dettagliate
+1. **Apri l'Armadio**: Vai alla scheda **Closet**.
+2. **Attiva la selezione**: Tocca il pulsante **Seleziona / Modifica in blocco** in alto.
+3. **Scegli i capi**: Tocca gli articoli o una categoria (*"Seleziona tutti i top"*).
+4. **Apri il menu di gruppo**: Tocca il pulsante fluttuante **Tag di gruppo** in basso.
+5. **Imposta i dettagli**:
+   - Seleziona le **Stagioni** (*Primavera*, *Estate*, *Autunno*, *Inverno*).
+   - Scegli il **Dress Code** (*Casual*, *Smart Casual*, *Business*, *Elegante*, *Sportivo*).
+   - Aggiungi **Tag personalizzati** (*"Vacanze"*, *"Palestra"*).
+6. **Applica**: Tocca **Applica ai capi selezionati**. Tutto l'armadio si aggiorna istantaneamente!
+
+## Risultati attesi
+Tutti i capi selezionati mostrano subito i nuovi tag senza bisogno di ricaricare la pagina.
+
+## Risoluzione dei problemi
+- **Tag non applicato a un capo**: Assicurati che la casella del capo fosse spuntata prima di cliccare su Applica.
+- **Rimuovere un tag**: Seleziona di nuovo i capi, togli la spunta dal tag e tocca Applica.
+
+## Limitazioni
+- Il tagging di gruppo modifica etichette, stagioni e dress code; nomi e prezzi si modificano nella scheda del singolo capo.

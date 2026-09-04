@@ -1,20 +1,30 @@
-# Group Tagging of Closet Items
+# Etiquetado Grupal (Organización Masiva del Armario)
 
-## Goal
-The goal of the Group tagging feature is to allow fast, bulk categorization of closet garments. The user can select multiple items in their closet and tag them all at once with a single click.
+Organiza decenas de prendas en segundos con edición en lote en 1 toque.
 
-## Purpose
-- **Speed & Efficiency**: Instead of entering tags item-by-item, users can select several garments (e.g., all formal jackets or all gym wear) and apply the tags instantly.
-- **Improved AI Stylist Accuracy**: Fine-grained categories/tags (e.g., “Work”, “GYM”, “Swimwear”, “Uniforms”) guide the Stylist's reasoning process. Predefined tags enable the Stylist to locate the most relevant items for specific outfit requests (for example, choosing "work"-tagged items first when constructing a "work outfit").
-- **Smart Fallbacks**: If certain tagged layers are missing (e.g., no upper-body "work"-tagged items), the Stylist will dynamically match other suitable garments.
+## Resumen
+El etiquetado grupal te permite actualizar varias prendas a la vez en lugar de editarlas una por una. Selecciona prendas en tu armario y asigna temporadas, ocasiones y etiquetas con un solo toque.
 
-## Key Points & Implementation Details
-1. **User Interface Integration**:
-   - Added a **Tag** button in the Closet selection floater.
-   - Built a comma-separated tagging dialog (`AlertDialog`) that pops up when clicked.
-2. **Optimistic UI Update**:
-   - Tags are merged onto the selected closet items locally first so the changes reflect instantly in the user interface.
-3. **Background Syncing**:
-   - Sends the tag update requests (`api.patchItem`) to the database in the background to ensure data consistency without blocking user interactions.
-4. **i18next Localization**:
-   - All text messages, dialog titles, placeholders, and feedback notifications support translations cleanly using options-based defaults.
+## Requisitos previos
+- Prendas guardadas en tu armario digital.
+
+## Paso a paso
+1. **Abre el Armario**: Ve a la pestaña **Closet**.
+2. **Activa la selección**: Pulsa el botón **Seleccionar / Edición por lotes** en la barra superior.
+3. **Elige prendas**: Toca las prendas que deseas o selecciona una categoría (*"Seleccionar todas las partes superiores"*).
+4. **Abre la ventana de etiquetado**: Pulsa el botón flotante **Etiquetar grupo** abajo.
+5. **Define atributos**:
+   - Marca las **Temporadas** (*Primavera*, *Verano*, *Otoño*, *Invierno*).
+   - Elige la **Formalidad** (*Informal*, *Casual elegante*, *Negocios*, *Formal*, *Deportivo*).
+   - Añade **Etiquetas personalizadas** (*"Vacaciones"*, *"Gimnasio"*).
+6. **Aplica**: Pulsa **Aplicar a las prendas seleccionadas**. ¡Todo tu armario se actualiza al instante!
+
+## Resultados esperados
+Todas las prendas seleccionadas muestran sus nuevas etiquetas de inmediato sin recargar la página.
+
+## Solución de problemas
+- **No se aplicó la etiqueta a una prenda**: Asegúrate de que la prenda estuviera seleccionada antes de aplicar.
+- **Quitar una etiqueta**: Vuelve a seleccionar las prendas, desmarca la casilla y pulsa Aplicar.
+
+## Limitaciones
+- La edición masiva modifica etiquetas, temporadas y formalidad; los nombres de prenda y precios se ajustan individualmente en la ficha de cada prenda.

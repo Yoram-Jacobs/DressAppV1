@@ -32,6 +32,7 @@ import { DailySuggestionView } from '@mobile/components/stylist/DailySuggestionV
 import { OutfitPlannerView, PlannerSlotItem } from '@mobile/components/stylist/OutfitPlannerView';
 import { VirtualTryOnView, TryOnItem } from '@mobile/components/stylist/VirtualTryOnView';
 import { HelpFloater } from '@mobile/components/help';
+import { resolveImageUrl } from '@mobile/lib/imageUtils';
 
 type StylistTab = 'chat' | 'daily' | 'planner' | 'tryon';
 
@@ -78,7 +79,7 @@ export function StylistScreen() {
           category: g.category || g.role,
           sub_category: g.sub_category || g.subcategory,
           color: g.color || (Array.isArray(g.colors) && g.colors[0]?.name) || undefined,
-          image_url: g.image_url || g.thumbnail_data_url,
+          image_url: resolveImageUrl(g.image_url || g.thumbnail_data_url),
         }))
       );
     }
@@ -95,7 +96,7 @@ export function StylistScreen() {
       category: g.category || g.role,
       sub_category: g.sub_category || g.subcategory,
       color: g.color || (Array.isArray(g.colors) && g.colors[0]?.name) || undefined,
-      image_url: g.image_url || g.thumbnail_data_url,
+      image_url: resolveImageUrl(g.image_url || g.thumbnail_data_url),
     }));
     setTryOnOutfit(items);
     setPreviousScreen(null);
@@ -111,7 +112,7 @@ export function StylistScreen() {
       role: s.category,
       category: s.category,
       color: s.color,
-      image_url: s.image_url,
+      image_url: resolveImageUrl(s.image_url),
     }));
     setTryOnOutfitData({
       name: 'Custom Planner Look',
@@ -255,7 +256,7 @@ export function StylistScreen() {
                   category: g.category || g.role,
                   sub_category: g.sub_category || g.subcategory,
                   color: g.color || (Array.isArray(g.colors) && g.colors[0]?.name) || undefined,
-                  image_url: g.image_url || g.thumbnail_data_url,
+                  image_url: resolveImageUrl(g.image_url || g.thumbnail_data_url),
                 }))
               );
               setPreviousScreen(null);

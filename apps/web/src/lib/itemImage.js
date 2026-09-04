@@ -2,8 +2,8 @@
  * Centralised "best image" resolver for a ClosetItem document.
  *
  * Checks all possible image fields in priority order (background-free first):
- *   1. clean_image_url        ← background-removed cutout (transparent PNG)
- *   2. reconstructed_image_url ← AI-reconstructed background-free image
+ *   1. reconstruct_image_url / reconstructed_image_url ← AI-reconstructed background-free studio image
+ *   2. clean_image_url        ← background-removed cutout (transparent PNG)
  *   3. cutout_url             ← segmented cutout
  *   4. segmented_image_url    ← alternative segmented form
  *   5. image_variants         ← AVIF/WebP transcoded variants
@@ -16,16 +16,40 @@
  * rendered on a white card background, which causes a white rectangle to appear
  * when overlaid on the avatar. All background-free sources are preferred first.
  */
+export function getStoredViewPreference() {
+  try {
+    return localStorage.getItem('dressapp_preferred_image_view') || 'repaired';
+  } catch (e) {
+    return 'repaired';
+  }
+}
+
+export function setStoredViewPreference(view) {
+  try {
+    localStorage.setItem('dressapp_preferred_image_view', view);
+  } catch (e) {}
+}
+
 export function bestImageUrl(item, opts = {}) {
   if (!item) return null;
 
-  // 1. Background-free clean cutout (highest priority for avatar overlay)
-  if (item.clean_image_url) return item.clean_image_url;
+  // Determine effective view mode:
+  // Item preference > explicit opts.viewMode > global stored preference > default 'repaired'
+  const itemPref = item.preferred_image_view || item.preferred_view;
+  const itemMode = itemPref
+    ? (itemPref === 'clean' || itemPref === 'original' ? 'original' : 'repaired')
+    : undefined;
 
-  // 2. AI-reconstructed image (background removed)
-  if (!opts.skipReconstruction && item.reconstructed_image_url) {
-    return item.reconstructed_image_url;
+  const viewMode = opts.viewMode || (opts.skipReconstruction ? 'original' : (itemMode || (opts.useStoredPreference ? getStoredViewPreference() : 'repaired')));
+
+  // 1. AI-reconstructed image (background-free studio quality)
+  if (viewMode !== 'original' && !opts.skipReconstruction) {
+    if (item.reconstruct_image_url) return item.reconstruct_image_url;
+    if (item.reconstructed_image_url) return item.reconstructed_image_url;
   }
+
+  // 2. Background-free clean cutout (Original crop)
+  if (item.clean_image_url) return item.clean_image_url;
 
   // 3. Segmented / cutout forms
   if (item.cutout_url) return item.cutout_url;
@@ -52,7 +76,6 @@ export function bestImageUrl(item, opts = {}) {
 
   if (item.photo_url) return item.photo_url;
   return null;
-
 }
 
 /**

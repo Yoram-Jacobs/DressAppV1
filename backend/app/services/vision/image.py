@@ -190,6 +190,135 @@ _CARD_CANVAS_W = 900
 _CARD_CANVAS_H = 1200
 
 
+def _extract_garment_mask(img: Image.Image) -> np.ndarray:
+    """Extract binary mask of garment (255 for garment, 0 for background).
+
+    Works for both RGBA cutouts and RGB photos with neutral/solid backgrounds.
+    """
+    import cv2
+    import numpy as np
+
+    has_alpha = (
+        img.mode in ("RGBA", "LA")
+        or (img.mode == "P" and "transparency" in img.info)
+    )
+    if has_alpha:
+        img_rgba = img.convert("RGBA")
+        alpha = np.array(img_rgba.split()[-1])
+        coverage = np.mean(alpha > 30)
+        if 0.02 < coverage < 0.95:
+            return (alpha > 30).astype(np.uint8) * 255
+
+    # RGB fallback: segment by color contrast against corners/borders
+    rgb = np.array(img.convert("RGB"))
+    h, w = rgb.shape[:2]
+    if h < 10 or w < 10:
+        return np.ones((h, w), dtype=np.uint8) * 255
+
+    border_pixels = np.concatenate([
+        rgb[0, :],
+        rgb[h - 1, :],
+        rgb[:, 0],
+        rgb[:, w - 1],
+    ], axis=0).astype(np.float32)
+
+    bg_color = np.median(border_pixels, axis=0)
+    diff = rgb.astype(np.float32) - bg_color
+    dist = np.sqrt(np.sum(diff ** 2, axis=2))
+    mask = (dist > 22).astype(np.uint8) * 255
+
+    kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (5, 5))
+    mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel)
+    mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, kernel)
+
+    num_labels, labels, stats, _ = cv2.connectedComponentsWithStats(mask)
+    if num_labels > 1:
+        min_area = (h * w) * 0.01
+        clean_mask = np.zeros_like(mask)
+        for i in range(1, num_labels):
+            if stats[i, cv2.CC_STAT_AREA] >= min_area:
+                clean_mask[labels == i] = 255
+        if np.any(clean_mask):
+            mask = clean_mask
+
+    return mask
+
+
+def _orient_and_deskew_garment(img: Image.Image, mask: np.ndarray | None = None) -> Image.Image:
+    """Detect tilt/skew angle of the garment and rotate it upright.
+
+    Uses bilateral mirror symmetry search. Garments are designed to be
+    symmetric along their vertical spine. When rotated upright, the left
+    and right halves achieve maximum overlap (IoU).
+
+    Skips tilt-fixing for 0° to 5° item tilt, maintaining centering and
+    canvas expansion without altering straight garments.
+    """
+    try:
+        import numpy as np
+
+        if mask is None:
+            mask = _extract_garment_mask(img)
+
+        pts = np.column_stack(np.where(mask > 20))
+        if len(pts) < 100:
+            return img
+
+        mask_img = Image.fromarray(mask, mode="L")
+        bbox = mask_img.getbbox()
+        if not bbox or (bbox[2] - bbox[0] < 10) or (bbox[3] - bbox[1] < 10):
+            return img
+
+        mask_cropped = mask_img.crop(bbox)
+
+        def _get_iou(deg: float, size: int = 100) -> float:
+            rot = mask_cropped.rotate(deg, resample=Image.NEAREST, expand=True)
+            b = rot.getbbox()
+            if not b:
+                return 0.0
+            c = rot.crop(b).resize((size, size), resample=Image.NEAREST)
+            arr = np.array(c) > 0
+            flipped = np.fliplr(arr)
+            inter = np.sum(arr & flipped)
+            union = np.sum(arr | flipped)
+            return inter / float(max(1, union))
+
+        iou_0 = _get_iou(0.0)
+        best_angle = 0.0
+        max_iou = iou_0
+
+        # Search within +/- 35 deg in steps of 2 deg
+        for deg in range(-35, 36, 2):
+            if deg == 0:
+                continue
+            iou = _get_iou(float(deg))
+            if iou > max_iou:
+                max_iou = iou
+                best_angle = float(deg)
+
+        # Fine search around best_angle in steps of 0.5 deg
+        refined_angle = best_angle
+        refined_iou = max_iou
+        if abs(best_angle) > 5.0:
+            for offset in [-1.5, -1.0, -0.5, 0.0, 0.5, 1.0, 1.5]:
+                deg = best_angle + offset
+                if abs(deg) > 35:
+                    continue
+                iou = _get_iou(deg, size=120)
+                if iou > refined_iou:
+                    refined_iou = iou
+                    refined_angle = deg
+
+        # Rule: Skip tilt-fixing for 0° to 5° item tilt.
+        # Also require at least +0.05 IoU improvement over 0° to prevent false rotation on straight garments.
+        if abs(refined_angle) > 5.0 and (refined_iou - iou_0 >= 0.05):
+            img = img.rotate(refined_angle, resample=Image.BICUBIC, expand=True)
+    except Exception as exc:
+        logger.debug("_orient_and_deskew_garment failed: %s", exc)
+
+    return img
+
+
 def _fit_crop_to_card(
     crop_bytes: bytes,
     *,
@@ -197,37 +326,13 @@ def _fit_crop_to_card(
     canvas_w: int = _CARD_CANVAS_W,
     canvas_h: int = _CARD_CANVAS_H,
 ) -> tuple[bytes, str]:
-    """Rescale a per-item crop and center it on a fixed-aspect canvas.
+    """Rescale a per-item crop, deskew upright, extend to 90% canvas, and center.
 
-    The frontend renders each garment card inside an
-    ``aspect-[3/4]`` portrait window with ``object-cover``. Without
-    normalisation, crop bytes coming out of the pipeline span a wide
-    range of aspect ratios:
-
-      * wide footwear / belt crops → ``object-cover`` clips the heel
-        and toe out of view;
-      * narrow earring / strap crops → the item shrinks to a thin
-        sliver inside the card;
-      * the rembg matte from a tiny-bbox accessory can come back at
-        full source resolution (rembg composites alpha onto the
-        original full-res RGB), so the card receives a multi-MB
-        image where the visible garment occupies only a fraction of
-        the frame.
-
-    This helper produces a uniform 3:4 portrait canvas containing
-    the crop, scaled to fit (either up OR down) so the longer side
-    of the garment touches the canvas edge, then centered. Aspect
-    ratio is always preserved so the item never gets squished or
-    clipped. RGBA inputs preserve their alpha on a fully transparent
-    canvas; RGB inputs are pasted onto a neutral white canvas and
-    stay JPEG. Returns ``(out_bytes, out_mime)``.
-
-    Example: a 25x120 shoe matte → upscaled to 250x1200 (the larger
-    side hits the canvas height), then centered horizontally on the
-    900x1200 canvas with ~325px of transparent padding on each side.
-
-    On any decode / re-encode failure we fall back to the original
-    bytes + mime so a single bad crop can never break the response.
+    1. Extracts garment mask (works for both RGBA cutouts and RGB studio/phone photos).
+    2. Aligns major symmetry axis straight upright.
+    3. Crops tight to non-background garment boundaries.
+    4. Dynamically scales with a 0.90 safety margin, reaching up to 1080px height.
+    5. Centers on fixed 900x1200 portrait canvas.
     """
     try:
         img = Image.open(io.BytesIO(crop_bytes))
@@ -235,17 +340,32 @@ def _fit_crop_to_card(
     except Exception:  # noqa: BLE001
         return crop_bytes, crop_mime
 
-    has_alpha = (
-        img.mode in ("RGBA", "LA")
-        or (img.mode == "P" and "transparency" in img.info)
-    )
     try:
-        if has_alpha:
-            img = img.convert("RGBA")
+        import numpy as np
+        mask = _extract_garment_mask(img)
+        pts = np.column_stack(np.where(mask > 0))
+        if len(pts) > 100:
+            rgba = img.convert("RGBA")
+            rgba.putalpha(Image.fromarray(mask, mode="L"))
+            rgba = _orient_and_deskew_garment(rgba, mask=mask)
+            bbox = rgba.getbbox()
+            if bbox and (bbox[2] - bbox[0] > 4) and (bbox[3] - bbox[1] > 4):
+                img = rgba.crop(bbox)
         else:
-            img = img.convert("RGB")
-    except Exception:  # noqa: BLE001
-        return crop_bytes, crop_mime
+            has_alpha = (
+                img.mode in ("RGBA", "LA")
+                or (img.mode == "P" and "transparency" in img.info)
+            )
+            if has_alpha:
+                img = img.convert("RGBA")
+                img = _orient_and_deskew_garment(img)
+                bbox = img.getbbox()
+                if bbox and (bbox[2] - bbox[0] > 4) and (bbox[3] - bbox[1] > 4):
+                    img = img.crop(bbox)
+            else:
+                img = img.convert("RGB")
+    except Exception as exc:  # noqa: BLE001
+        logger.debug("_fit_crop_to_card extraction failed: %s", exc)
 
     iw, ih = img.size
     if iw <= 0 or ih <= 0:
@@ -267,12 +387,32 @@ def _fit_crop_to_card(
 
     try:
         canvas = Image.new("RGBA", (canvas_w, canvas_h), (0, 0, 0, 0))
-        # Support pasting both RGB and RGBA correctly
         if img.mode != "RGBA":
             img = img.convert("RGBA")
-        canvas.paste(img, (ox, oy))
+        canvas.paste(img, (ox, oy), mask=img)
         buf = io.BytesIO()
         canvas.save(buf, format="PNG", optimize=True)
         return buf.getvalue(), "image/png"
     except Exception:  # noqa: BLE001
         return crop_bytes, crop_mime
+
+
+def fit_image_data_url_to_card(
+    data_url: str | None,
+    canvas_w: int = _CARD_CANVAS_W,
+    canvas_h: int = _CARD_CANVAS_H,
+) -> str | None:
+    """Normalize a base64 data URL image to fit within a 900x1200 canvas with 0.90 safety margin."""
+    if not data_url or not isinstance(data_url, str) or not data_url.startswith("data:image/"):
+        return data_url
+    try:
+        header, encoded = data_url.split(",", 1)
+        mime = "image/png" if "png" in header.lower() else "image/jpeg"
+        import base64
+        raw_bytes = base64.b64decode(encoded.strip())
+        fitted_bytes, fitted_mime = _fit_crop_to_card(raw_bytes, crop_mime=mime, canvas_w=canvas_w, canvas_h=canvas_h)
+        fitted_b64 = base64.b64encode(fitted_bytes).decode("ascii")
+        return f"data:{fitted_mime};base64,{fitted_b64}"
+    except Exception:
+        return data_url
+

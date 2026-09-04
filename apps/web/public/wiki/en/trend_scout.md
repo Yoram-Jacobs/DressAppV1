@@ -1,37 +1,32 @@
 # Trend Scout & Personal Inspiration
 
-Discover curated fashion intelligence feeds tailored to your gender ecosystem and local culture.
+Discover daily global fashion trends and recreate them instantly using clothes from your own closet.
 
 ## Overview
-Trend Scout automatically curates 7 distinct fashion intelligence buckets for Men's and Women's Fashion Ecosystems, deeply anchored to the user's device country location (e.g. Israel) with open-access editorial sources, local designers, and authentic influencers.
-
-### Ecosystem Buckets (7 Categories)
-1. **Local News**: Anchored to device country location (e.g. Israel) focusing on open-access domestic editorials, boutique tailoring, and local designers.
-2. **Runway (Worldwide)**: Haute couture and ready-to-wear seasonal runway reviews.
-3. **Street Style**: Authentic urban street style and everyday layering aesthetics.
-4. **Sustainability**: Eco-friendly fashion, circularity, and ethical material practices.
-5. **Mainstream Influencers & Tastemakers**: Curated global tastemaker spotlights and signature aesthetics.
-6. **Vintage & Archival**: Historical fashion evolution, archival curation, and legacy garments (no e-commerce shopping links).
-7. **Maintenance & Repairs**: Practical garment care, mending, cobbling, and material preservation.
-
-## Quality & Link Hygiene Rules
-- **No Shopping/E-commerce Links**: Strictly restricts shopping and checkout platforms (Amazon, Shein, ASOS, cart links).
-- **No Paywalls/Registration**: Restricts registration-walled websites; no sign-up or subscription needed to view sources.
-- **Direct Clean Links**: Strips search engine redirect wrappers to expose authentic source URLs directly.
-
-## Refresh Schedule
-- **Monthly Scheduled Task**: Automatically executes at midnight UTC on the 1st of every month to refresh buckets and replace outdated links based on real-time data.
-- **Daily / On-Demand Refresh**: Available anytime via the in-app refresh trigger.
+Trend Scout is your daily fashion newspaper inside DressApp. Every morning, it gathers fresh fashion reports from top fashion publications and organizes them into four easy-to-read channels: **Runway**, **Streetwear**, **Sustainability**, and **Influencers**. With the 1-click **"Style with My Closet"** button, you can immediately find pieces in your own wardrobe that echo that runway style!
 
 ## Prerequisites
-- Device location or home country set in profile.
-- Manager or Professional plan tier.
+- An active DressApp profile.
+- Location enabled to receive regional trend spotlights and local fashion news.
 
-## Step-by-Step
-1. **Open Scout**: Navigate to the Trend Scout page or Stylist panel.
-2. **Toggle Gender**: Switch between Women's Fashion and Men's Fashion ecosystems anytime.
-3. **Filter by Category**: Select any of the 7 bucket tabs to focus your feed.
-4. **Read Sources**: Click the external link badge on any card to read original editorial articles directly.
+## Step-by-Step Instructions
+1. **Open Trend Scout**: Tap **Trend Scout** on your home feed or from the Stylist sidebar.
+2. **Explore the 4 Daily Channels**:
+   - 🌟 **Runway**: Discover seasonal themes and haute couture runway highlights.
+   - 👟 **Streetwear**: See authentic, everyday street styles and modern casual looks.
+   - 🌿 **Sustainability**: Learn about eco-friendly fashion, circular styling, and care tips.
+   - ✨ **Influencers**: Explore trending aesthetics and viral styling ideas.
+3. **Read Authentic Articles**: Tap the external link on any card to read the full original story on reputable magazines like Vogue, Elle, or GQ without paywalls.
+4. **Style with My Closet (1-Tap Magic)**:
+   - Love a particular trend? Tap the **Style with My Closet** button right on the card!
+   - The AI Stylist immediately searches your digitized clothes to find matching colors, silhouettes, and fabrics so you can wear the trend today without buying anything new!
 
 ## Expected Results
-A rich, curated, localized stream of fashion news and insights aligned with your gender ecosystem and local cultural identity.
+A curated, magazine-style feed tailored to your personal aesthetic, giving you daily inspiration and fresh outfit combinations from your own clothes.
+
+## Troubleshooting
+- **Cards not updating**: The feed refreshes daily at 07:00 UTC. If you haven't seen new cards, swipe down to pull-to-refresh.
+- **Opposite-gender articles appearing**: Ensure your profile demographics are filled out in Settings so our smart filter can prioritize styles matching your preferences.
+
+## Limitations
+- Trend Scout focuses on inspiration and editorial articles; it deliberately filters out aggressive shopping advertisements and commercial cart links.

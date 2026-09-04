@@ -17,7 +17,7 @@ import { AspectRatio } from '@/components/ui/aspect-ratio';
 import { Badge } from '@/components/ui/badge';
 import {
   CheckCircle2,
-  CircleX as XCircle,
+  XCircle,
   Clock,
   AlertTriangle,
   ArrowRight,

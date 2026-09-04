@@ -48,7 +48,9 @@ import { OutfitCompletionSheet } from '@mobile/components/OutfitCompletionSheet'
 import { RichSelectionFloater } from '@mobile/components/closet/RichSelectionFloater';
 import { HelpFloater } from '@mobile/components/help';
 import { LoadingVideo } from '@mobile/components/common/LoadingVideo';
+import { ScrollToTopFloater } from '@mobile/components/common/ScrollToTopFloater';
 import { labelForCategory, labelForIntent, labelForColor, getTaxonomyMismatches } from '@mobile/lib/taxonomy';
+import { getItemImageUrl } from '@mobile/lib/imageUtils';
 import type { ClosetStackParamList } from '@mobile/navigation/types';
 
 type ClosetNavProp = NativeStackNavigationProp<ClosetStackParamList, 'Closet'>;
@@ -69,6 +71,35 @@ export function ClosetScreen() {
 
   const { items, loading, prewarm, removeMany, deleteManyItems } = useClosetStore({ prewarm: true });
   const [refreshing, setRefreshing] = useState(false);
+
+  // Real-time polling for pending background reconstructions (Nano Banana) & clean cutouts
+  useEffect(() => {
+    const pendingItems = (items || []).filter(
+      (it: any) =>
+        it &&
+        (it.clean_image_status === 'pending' ||
+          (it.reconstruction_metadata?.deferred && !it.reconstructed_image_url))
+    );
+    if (pendingItems.length === 0) return;
+
+    const interval = setInterval(async () => {
+      let updatedAny = false;
+      for (const pItem of pendingItems) {
+        try {
+          const fresh = await (api as any).getItem?.((pItem as any).id);
+          if (fresh && fresh.id) {
+            closetStore.upsert(fresh as any);
+            updatedAny = true;
+          }
+        } catch {}
+      }
+      if (updatedAny) {
+        closetRepo.refresh({ force: false }).catch(() => {});
+      }
+    }, 3000);
+
+    return () => clearInterval(interval);
+  }, [items]);
 
   // Search & Filter state
   const [searchQuery, setSearchQuery] = useState('');
@@ -92,6 +123,9 @@ export function ClosetScreen() {
 
   // Outfit Completion Sheet
   const [completionOpen, setCompletionOpen] = useState(false);
+
+  // Fast Scroll to Top floater state
+  const [showScrollTop, setShowScrollTop] = useState(false);
 
   // Drag and drop grouping (Multi-view Garment Support)
   const [draggedId, setDraggedId] = useState<string | null>(null);
@@ -152,7 +186,13 @@ export function ClosetScreen() {
   };
 
   const handleScroll = (e: any) => {
-    scrollOffsetRef.current = e.nativeEvent.contentOffset.y;
+    const y = e.nativeEvent.contentOffset.y;
+    scrollOffsetRef.current = y;
+    if (y > 250 && !showScrollTop) {
+      setShowScrollTop(true);
+    } else if (y <= 250 && showScrollTop) {
+      setShowScrollTop(false);
+    }
   };
 
   const startDrag = (id: string, startPageX: number, startPageY: number) => {
@@ -607,13 +647,7 @@ export function ClosetScreen() {
     const isSelected = selectedIds.has(item.id);
     const isDragged = draggedId === item.id;
     const isDragOver = dragOverId === item.id;
-    const imgUri =
-      item.thumbnail_data_url ||
-      item.clean_image_url ||
-      item.reconstructed_image_url ||
-      item.segmented_image_url ||
-      item.original_image_url ||
-      item.image_url;
+    const imgUri = getItemImageUrl(item);
 
     if (viewMode === 'list') {
       return (
@@ -1042,6 +1076,12 @@ export function ClosetScreen() {
         />
       )}
 
+      {/* ── Fast Scroll To Top Floater ─────────────────────────────── */}
+      <ScrollToTopFloater
+        visible={showScrollTop && !selectMode}
+        onPress={() => flatListRef.current?.scrollToOffset({ offset: 0, animated: true })}
+      />
+
       {/* ── Batch Tagging Modal ────────────────────────────────────────── */}
       <Modal visible={tagModalOpen} transparent animationType="fade">
         <View style={styles.modalBackdrop}>
@@ -1129,12 +1169,7 @@ export function ClosetScreen() {
 
       {isDragging && draggedId && (() => {
         const draggedItem = items.find(it => it.id === draggedId);
-        const draggedImg = draggedItem?.thumbnail_data_url ||
-          draggedItem?.clean_image_url ||
-          draggedItem?.reconstructed_image_url ||
-          draggedItem?.segmented_image_url ||
-          draggedItem?.original_image_url ||
-          draggedItem?.image_url;
+        const draggedImg = getItemImageUrl(draggedItem);
 
         const screenW = Dimensions.get('window').width;
         const isRtl = I18nManager.isRTL;
@@ -1312,7 +1347,7 @@ const styles = StyleSheet.create({
   },
   gridImgWrap: {
     width: '100%',
-    aspectRatio: 1,
+    aspectRatio: 3 / 4,
     position: 'relative',
   },
   gridImg: {

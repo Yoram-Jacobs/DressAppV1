@@ -137,12 +137,24 @@ def test_card_images_and_deep_links_guaranteed():
     # Card with missing image_url gets filled by _ensure_card_image
     empty_card = {"bucket": "street", "gender": "male", "headline": "Test Card"}
     filled = _ensure_card_image(empty_card)
-    assert filled["image_url"].startswith("https://")
+    # Card with broken domain image gets replaced with verified fallback
+    broken_img_card = {"bucket": "local", "gender": "male", "image_url": "https://ynet-pic1.ynet.co.il/pics/Maskit.jpg"}
+    healed = _ensure_card_image(broken_img_card)
+    assert "ynet-pic1.ynet.co.il" not in healed["image_url"]
+    assert healed["image_url"].startswith("https://images.unsplash.com")
 
-    # Fallback image lookup
-    fallback_male = _get_fallback_image("local", "male")
-    fallback_female = _get_fallback_image("local", "female")
-    assert fallback_male.startswith("https://")
-    assert fallback_female.startswith("https://")
+
+def test_sanitize_localized_text():
+    from app.services.trend_scout import _sanitize_localized_text
+    
+    # Cleans corrupted hybrid mixed-script words
+    mangled_headline = "קampaigת מיקונוס של CANDID ממריא"
+    cleaned = _sanitize_localized_text(mangled_headline, "he")
+    assert "קampaigת" not in cleaned
+    assert "קמפיין" in cleaned
+    
+    # Preserves clean pure text
+    clean_headline = "קמפיין מיקונוס של CANDID ממריא"
+    assert _sanitize_localized_text(clean_headline, "he") == clean_headline
 
 

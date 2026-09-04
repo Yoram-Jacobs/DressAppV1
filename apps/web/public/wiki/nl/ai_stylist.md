@@ -1,28 +1,29 @@
-# Interactieve AI-Stylist
+# Persoonlijke AI-Stylist
 
-Ga het gesprek aan met een intelligente persoonlijke stylist die uw kledingkast, het weer en uw agenda kent.
+Praat met een intelligente stylist die uw kledingkast, het weer en uw dagplanning door en door kent.
 
 ## Overzicht
-De AI-Stylist verwerkt natuurlijke taal spraak- of tekststylingvragen en integreert automatisch weersomstandigheden, kalendergebeurtenissen en pushmeldingen via thread-safe `useSyncExternalStore` custom stores (`stylistStore` en `dailySuggestionsStore`) met 15 minuten caching en in-flight verzoekontdubbeling.
+De AI Stylist is uw persoonlijke modeadviseur in de app. U kunt typen of ontspannen hardop praten alsof u met een vriend chat. De stylist controleert het lokale weerbericht, bekijkt uw Google Agenda-afspraken en stelt complete, stijlvolle outfits samen uit kleding die u al heeft.
 
 ## Vereisten
-- Een Gemini API-sleutel (of standaard systeemtegoeden).
-- Gekoppelde kalendergebeurtenissen.
+- Minstens één top, één broek/rok en één paar schoenen in uw kledingkast.
+- Microfoontoestemming ingeschakeld voor handsfree spraakbediening.
+- (Optioneel) Gekoppelde Google Agenda voor outfits afgestemd op uw afspraken.
 
-## Stap-voor-stap
-1. **Start sessie**: Open het tabblad Stylist en selecteer Chat, Shuffle of Match.
-2. **Spraakinvoer**: Tik op de microfoon, spreek uw vraag in (bijv. "Stel een outfit voor voor een regenachtige dag") en tik om te verzenden.
-3. **Audio-afspelen**: Luister naar de gegenereerde stylingonderbouwing via de high-fidelity spraakspeler.
-4. **Shuffle**: Klik op de knop Sparkles om de fruitautomaat te laten draaien; de AI lijnt automatisch overeenkomende items in focus uit.
-5. **Zero-Idle-navigatie**: Navigeren tussen Stylist en andere tabbladen gebruikt in-memory gecachte voorkeuren zonder database GET-verzoeklussen te activeren.
+## Stapsgewijze instructies
+1. **Stylist openen**: Tik op het tabblad **AI Stylist** in de onderste navigatiebalk.
+2. **Praten of typen**: Tik op het **microfoonicoon** en vraag om advies (bijv. *"Wat kan ik vandaag dragen voor een lunch in de regen?"* of *"Stel een chique werkoutfit voor"*).
+3. **Luister naar het advies**: De stylist antwoordt met een natuurlijke stem en toont de bijbehorende kledingstukken. Tik op **Antwoord afspelen** om het advies opnieuw te beluisteren.
+4. **Gebruik de Shuffle-knop**: Zin in iets nieuws? Tik op **Shuffle** om uw kledingkast te husselen en verrassende combinaties te ontdekken!
+5. **Favorieten opslaan**: Tik op **Opslaan in dagboek** om de outfit in te plannen in uw persoonlijke kalender.
 
 ## Verwachte resultaten
-Aangepaste outfit-layouts gestyled rond uw persoonlijke voorkeuren, seizoensgebonden beperkingen en agenda.
+Gepersonaliseerde outfits afgestemd op het weer en uw planning, voorzien van een vriendelijke uitleg over waarom de kledingstukken zo goed samengaan.
 
 ## Probleemoplossing
-- **Audio speelt te langzaam af**: Schakel tussen Gemini TTS en de Web Speech API fallback in Profile-instellingen.
-- **Herhaalde suggesties**: Zorg ervoor dat uw outfitkalendergeschiedenis is bijgewerkt zodat het rotatie-algoritme herhaald dragen kan blokkeren.
+- **Microfoon herkent geen stem**: Controleer of de app microfoontoegang heeft in uw browser- of apparaatinstellingen.
+- **Herhalende suggesties**: Houd in uw kalender bij wat u draagt, zodat de stylist weet wat u recent aan had en ongedragen kleding voorrang geeft.
 
 ## Beperkingen
-- Aanbevelingen vereisen minstens één bovenstuk, één onderstuk en één paar schoenen in de kledingkast om een look te voltooien.
-- Spraaktranscriptie kan terugvallen op standaard tekstinvoer op niet-ondersteunde edge-apparaten.
+- De stylist stelt uitsluitend outfits samen uit kledingstukken die u in uw digitale kast heeft opgeslagen.
+- Elk stylinggesprek kost 1 AI-credit (gratis gebruikers ontvangen dagelijks 10 gratis credits).

@@ -8,12 +8,10 @@ export default function OutfitAvatarViewer({ shapeParams, sex, outfitItemsMap, c
   const { t } = useTranslation();
 
   return (
-    <div className={cn('avatar-stage', className)}>
-      <div className="avatar-stage__viewer">
-        <AvatarViewer shapeParams={shapeParams} sex={sex} outfitItems={outfitItemsMap} onItemClick={onItemClick} />
-      </div>
+    <div className={cn("relative w-full aspect-[4/5] bg-secondary/10 shrink-0", className)}>
+      <AvatarViewer shapeParams={shapeParams} sex={sex} outfitItems={outfitItemsMap} onItemClick={onItemClick} />
       {badgeContent && (
-        <Badge className="avatar-stage__badge caps-label">
+        <Badge className="absolute top-3 start-3 rounded-full caps-label bg-background/90 text-foreground border border-border backdrop-blur">
           {badgeContent}
         </Badge>
       )}

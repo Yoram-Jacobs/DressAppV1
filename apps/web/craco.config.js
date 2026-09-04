@@ -1,5 +1,6 @@
 // craco.config.js
 const path = require("path");
+const { getLoaders, loaderByName } = require("@craco/craco");
 require("dotenv").config();
 
 // Check if we're in development/preview mode (not production build)
@@ -32,30 +33,27 @@ let webpackConfig = {
       },
     },
   },
-  style: {
-    postcss: {
-      mode: "file",
-    },
-  },
   webpack: {
     alias: {
       '@': path.resolve(__dirname, 'src'),
-      'react': path.resolve(__dirname, '../../node_modules/react'),
-      'react-dom': path.resolve(__dirname, '../../node_modules/react-dom'),
-      'react-i18next': path.resolve(__dirname, '../../node_modules/react-i18next'),
-      'tailwindcss': path.resolve(__dirname, 'node_modules/tailwindcss'),
-      'lucide-react$': 'lucide-react/dist/cjs/lucide-react.js',
-      'recharts$': 'recharts/lib/index.js',
-      'motion-utils$': path.resolve(__dirname, '../../node_modules/motion-utils/dist/cjs/index.js'),
-      'motion-dom$': path.resolve(__dirname, '../../node_modules/motion-dom/dist/cjs/index.js'),
+      '@dressapp/api-client': path.resolve(__dirname, '../../packages/api-client/src/index.js'),
+      'motion-utils': require.resolve('motion-utils'),
       // Override the package stub so the full Sonner toast fires on web
       './aiNotice.js': path.resolve(__dirname, 'src/lib/aiNotice.jsx'),
     },
     configure: (webpackConfig) => {
-      // Remove ModuleScopePlugin so monorepo packages and root node_modules resolve cleanly
+      // Add root node_modules to resolve paths for monorepo hoisting
+      webpackConfig.resolve.modules = [
+        path.resolve(__dirname, 'src'),
+        path.resolve(__dirname, 'node_modules'),
+        path.resolve(__dirname, '../../node_modules'),
+        'node_modules',
+      ];
+
+      // Remove ModuleScopePlugin to allow aliases and monorepo packages outside src/
       if (webpackConfig.resolve && webpackConfig.resolve.plugins) {
         webpackConfig.resolve.plugins = webpackConfig.resolve.plugins.filter(
-          (plugin) => plugin.constructor.name !== 'ModuleScopePlugin'
+          (plugin) => plugin.constructor && plugin.constructor.name !== 'ModuleScopePlugin'
         );
       }
 
@@ -84,6 +82,23 @@ let webpackConfig = {
           fullySpecified: false,
         },
       });
+
+      // Ensure postcss-loader uses local tailwindcss v3, not root v4
+      try {
+        const { matches } = getLoaders(webpackConfig, loaderByName('postcss-loader'));
+        const localTw = require(path.resolve(__dirname, 'node_modules/tailwindcss'));
+        for (const m of matches) {
+          if (m?.loader?.options?.postcssOptions?.plugins) {
+            const plugins = m.loader.options.postcssOptions.plugins;
+            const twIdx = plugins.indexOf('tailwindcss');
+            if (twIdx !== -1) {
+              plugins[twIdx] = localTw;
+            }
+          }
+        }
+      } catch (err) {
+        console.warn('Could not override tailwindcss in postcss-loader:', err);
+      }
 
       return webpackConfig;
     },

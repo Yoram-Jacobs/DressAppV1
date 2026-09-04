@@ -4,7 +4,6 @@ import { useTranslation } from 'react-i18next';
 import { bestImageUrl } from '@/lib/itemImage';
 import { closetStore } from '@/lib/closetStore';
 import { useAuth } from '@/lib/auth';
-import { cn } from '@/lib/utils';
 import ImageWithPlaceholder from '@/components/ImageWithPlaceholder';
 import DynamicAvatar from '@/components/DynamicAvatar';
 
@@ -161,70 +160,43 @@ export default function AvatarViewer2D({ shapeParams = {}, measurements: provide
     return res;
   }, [outfitItems]);
 
-  /**
-   * Renders one garment layer.
-   * `slotKey` maps to a fixed-position class in avatar-viewer.css
-   * (.avatar-slot--<slotKey>) — the *only* things that stay dynamic here
-   * are the framer-motion animation values, since those depend on the
-   * wearer's computed scale factors and can't be known ahead of time.
-   */
-  const renderGarment = (slotKey, altText, initial = {}, animate = {}, imgAlign = 'top', elevated = false) => {
-    const garment = garments[slotKey];
+  const renderGarment = (roleKey, altText, extraClasses = '', initial = {}, animate = {}, imgAlignClass = 'object-top', objectFitMode = 'contain') => {
+    const garment = garments[roleKey];
     if (!garment || !garment.url) return null;
     const clickable = onItemClick && garment.id;
     return (
       <motion.div
         initial={initial}
         animate={animate}
-        className={cn(
-          'avatar-slot',
-          `avatar-slot--${slotKey}`,
-          elevated && 'avatar-slot--elevated',
-          clickable ? 'avatar-slot--clickable' : 'avatar-slot--static'
-        )}
+        className={`absolute drop-shadow-md ${extraClasses} ${clickable ? 'cursor-pointer hover:scale-[1.02] transition-transform z-50' : 'pointer-events-none'}`}
         onClick={clickable ? (e) => { e.stopPropagation(); onItemClick(garment.id); } : undefined}
       >
         <ImageWithPlaceholder
           src={garment.url}
           placeholder={garment.placeholder}
           alt={altText}
-          objectFit="contain"
-          className={cn('avatar-slot__img', `avatar-slot__img--${imgAlign}`)}
+          objectFit={objectFitMode}
+          className={`w-full h-full ${imgAlignClass}`}
         />
       </motion.div>
     );
   };
 
-  const renderLayers = () => (
-    <>
-      {renderGarment('headwear', t('taxonomy.categories.headwear', { defaultValue: 'Headwear' }), { opacity: 0, y: -10, x: "-50%" }, { opacity: 1, y: 0, x: "-50%" }, 'bottom')}
-      {renderGarment('glasses', t('taxonomy.categories.glasses', { defaultValue: 'Glasses' }), { opacity: 0, x: "-50%" }, { opacity: 1, x: "-50%" }, 'center')}
-      {renderGarment('accessory', t('taxonomy.categories.accessory', { defaultValue: 'Accessory' }), { opacity: 0, x: "-50%" }, { opacity: 1, x: "-50%" }, 'top')}
-
-      {garments.dress && garments.dress.url ? (
-        renderGarment('dress', t('taxonomy.categories.dress', { defaultValue: 'Dress' }), { opacity: 0, scale: 0.95, x: "-50%" }, { opacity: 1, scale: 1, x: "-50%" }, 'top', true)
-      ) : (
-        <>
-          {renderGarment('top', t('taxonomy.categories.top', { defaultValue: 'Top' }), { opacity: 0, scale: 0.95, x: "-50%" }, { opacity: 1, scale: 1, x: "-50%", scaleX: scales.chest / scales.width }, 'top')}
-          {renderGarment('bottom', t('taxonomy.categories.bottom', { defaultValue: 'Bottom' }), { opacity: 0, scale: 0.95, x: "-50%" }, { opacity: 1, scale: 1, x: "-50%", scaleX: scales.hips / scales.width }, 'top')}
-        </>
-      )}
-
-      {renderGarment('belt', t('taxonomy.categories.belt', { defaultValue: 'Belt' }), { opacity: 0, y: 5, x: "-50%" }, { opacity: 1, y: 0, x: "-50%" }, 'center')}
-      {renderGarment('outerwear', t('taxonomy.categories.outerwear', { defaultValue: 'Outerwear' }), { opacity: 0, scale: 0.96, x: "-50%" }, { opacity: 1, scale: 1, x: "-50%" }, 'top', true)}
-      {renderGarment('shoes', t('taxonomy.categories.shoes', { defaultValue: 'Shoes' }), { opacity: 0, y: 10, x: "-50%" }, { opacity: 1, y: 0, x: "-50%" }, 'bottom')}
-    </>
-  );
-
   return (
-    <div className="avatar-viewer">
-      <div className="avatar-viewer__figure">
+    <div className="relative w-full h-full bg-gradient-to-b from-secondary/30 via-secondary/15 to-background overflow-hidden flex items-center justify-center p-0 shadow-inner group">
+      {/* Dynamic Background Sparkle */}
+      <div className="absolute inset-0 opacity-15 pointer-events-none bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-accent/30 via-transparent to-transparent" />
+      
+      {/* 2D Dynamic Bezier SVG Avatar or Real Body Photo Container */}
+      <div 
+        className="relative h-full aspect-[1/2] flex items-center justify-center transition-all duration-500"
+      >
         {activeBodyPhotoUrl ? (
-          <div className="avatar-viewer__photo-wrap">
+          <div className="relative w-full h-full flex items-center justify-center">
             <img
               src={activeBodyPhotoUrl}
               alt={t('profile.bodyPhoto', { defaultValue: 'Full-body photo' })}
-              className="avatar-viewer__photo"
+              className="w-full h-full object-contain rounded-xl drop-shadow-md"
             />
             {/* Render Try-On Garments on top of real body photo */}
             {renderGarment('headwear', t('taxonomy.categories.headwear', { defaultValue: 'Headwear' }), 'top-[1%] left-1/2 w-[34%] aspect-square z-30', { opacity: 0, y: -10, x: "-50%" }, { opacity: 1, y: 0, x: "-50%" }, 'object-bottom', 'contain')}
@@ -278,11 +250,7 @@ export default function AvatarViewer2D({ shapeParams = {}, measurements: provide
               <motion.div
                 initial={{ opacity: 0, x: 10 }}
                 animate={{ opacity: 1, x: 0 }}
-                className={cn(
-                  'avatar-slot',
-                  'avatar-slot--bag',
-                  onItemClick && garments.bag.id ? 'avatar-slot--clickable' : 'avatar-slot--static'
-                )}
+                className={`absolute top-[40%] right-[-5%] w-[40%] h-[30%] z-25 drop-shadow-md ${onItemClick && garments.bag.id ? 'cursor-pointer hover:scale-[1.02] transition-transform' : 'pointer-events-none'}`}
                 onClick={onItemClick && garments.bag.id ? (e) => { e.stopPropagation(); onItemClick(garments.bag.id); } : undefined}
               >
                 <ImageWithPlaceholder
@@ -290,7 +258,7 @@ export default function AvatarViewer2D({ shapeParams = {}, measurements: provide
                   placeholder={garments.bag.placeholder}
                   alt={t('taxonomy.sub_category.bag', { defaultValue: 'Bag' })}
                   objectFit="contain"
-                  className="avatar-slot__img"
+                  className="w-full h-full"
                 />
               </motion.div>
             )}

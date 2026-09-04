@@ -1,20 +1,30 @@
-# Group Tagging of Closet Items
+# Групповая Разметка (Быстрая Организация Гардероба)
 
-## Goal
-The goal of the Group tagging feature is to allow fast, bulk categorization of closet garments. The user can select multiple items in their closet and tag them all at once with a single click.
+Наведите порядок среди десятков вещей за пару секунд с помощью массового редактирования в 1 клик.
 
-## Purpose
-- **Speed & Efficiency**: Instead of entering tags item-by-item, users can select several garments (e.g., all formal jackets or all gym wear) and apply the tags instantly.
-- **Improved AI Stylist Accuracy**: Fine-grained categories/tags (e.g., “Work”, “GYM”, “Swimwear”, “Uniforms”) guide the Stylist's reasoning process. Predefined tags enable the Stylist to locate the most relevant items for specific outfit requests (for example, choosing "work"-tagged items first when constructing a "work outfit").
-- **Smart Fallbacks**: If certain tagged layers are missing (e.g., no upper-body "work"-tagged items), the Stylist will dynamically match other suitable garments.
+## Обзор
+Групповая разметка позволяет обновлять свойства сразу нескольких вещей вместо того, чтобы редактировать каждую по отдельности. Отметьте нужные вещи и задайте сезоны, дресс-код и метки одним нажатием!
 
-## Key Points & Implementation Details
-1. **User Interface Integration**:
-   - Added a **Tag** button in the Closet selection floater.
-   - Built a comma-separated tagging dialog (`AlertDialog`) that pops up when clicked.
-2. **Optimistic UI Update**:
-   - Tags are merged onto the selected closet items locally first so the changes reflect instantly in the user interface.
-3. **Background Syncing**:
-   - Sends the tag update requests (`api.patchItem`) to the database in the background to ensure data consistency without blocking user interactions.
-4. **i18next Localization**:
-   - All text messages, dialog titles, placeholders, and feedback notifications support translations cleanly using options-based defaults.
+## Предварительные требования
+- Добавленные вещи в вашем гардеробе.
+
+## Пошаговые инструкции
+1. **Открыть Гардероб**: Перейдите на вкладку **Closet**.
+2. **Включить режим выбора**: Нажмите кнопку **Выбрать / Массовое редактирование** вверху.
+3. **Выбрать вещи**: Нажмите на нужные предметы или категорию (*"Выбрать весь верх"*).
+4. **Открыть окно разметки**: Нажмите всплывающую кнопку **Групповые метки** внизу экрана.
+5. **Настроить параметры**:
+   - Отметьте **Сезоны** (*Весна*, *Лето*, *Осень*, *Зима*).
+   - Выберите **Дресс-код** (*Повседневный*, *Smart Casual*, *Деловой*, *Вечерний*, *Спортивный*).
+   - Добавьте **Свои метки** (*"Отпуск"*, *"Спортзал"*).
+6. **Применить**: Нажмите **Применить к выбранным вещам**. Весь гардероб обновится моментально!
+
+## Ожидаемые результаты
+Все выбранные вещи мгновенно получат новые метки без перезагрузки страницы.
+
+## Устранение неполадок
+- **Метка не добавилась**: Убедитесь, что галочка на вещи была активна перед нажатием кнопки Применить.
+- **Удалить метку**: Выберите вещи снова, снимите галочку с метки и нажмите Применить.
+
+## Ограничения
+- Массовое редактирование обновляет метки, сезоны и дресс-код; названия и цены настраиваются индивидуально в карточке вещи.

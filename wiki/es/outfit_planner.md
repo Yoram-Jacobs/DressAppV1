@@ -1,25 +1,33 @@
-# Planificador de Conjuntos y Lienzo
+# Planificador de Atuendos y Lienzo 2D
 
-Componga, superponga y revise diseños coordinados.
+Combina, superpone y previsualiza conjuntos coordinados en tu avatar virtual antes de vestirte.
 
-## Descripción general
-El Planificador de Conjuntos proporciona un lienzo visual de avatar 2D (compatible con recortes de fotos reales del cuerpo del usuario y maniquíes vectoriales dinámicos SVG) con desplazamientos de puntos de referencia calibrados (`top-[14.5%]` de cuello a escote y `top-[36.5%]` de pretina a cintura) para superponer prendas superiores, inferiores, abrigos y calzado al ras de los límites del cuerpo.
+## Resumen
+El Planificador de Atuendos ofrece un lienzo interactivo con un avatar 2D donde puedes probarte la ropa. Puedes ver cómo combinan camisetas, pantalones, zapatos y accesorios, activar o desactivar prendas de abrigo y consultar puntuaciones de compatibilidad en tiempo real.
 
 ## Requisitos previos
-- Prendas guardadas en el armario.
+- Ropa digitalizada en tu armario.
+- (Opcional) Una foto de cuerpo entero en tu perfil si prefieres probarte prendas sobre tu silueta real.
 
 ## Paso a paso
-1. **Seleccionar lienzo**: Abra el Planificador y haga clic en un día o nuevo borrador.
-2. **Superponer prendas**: Arrastre las prendas sobre el avatar 2D. Los abrigos se superponen automáticamente sobre las camisetas interiores.
-3. **Evaluar ajuste**: Verifique las puntuaciones de compatibilidad y advertencias (p. ej., conflictos de color o alertas meteorológicas).
-4. **Guardar**: Asigne un título y programe el look en su diario de armario. Las actualizaciones se transmiten de forma segura mediante `useOutfitStore`.
+1. **Abre el Lienzo**: Toca la pestaña **Outfit Canvas** en la app.
+2. **Viste a tu avatar**: Arrastra o pulsa prendas para colocarlas sobre el maniquí:
+   - Las prendas superiores se ajustan naturalmente al cuello.
+   - Los pantalones y faldas se alinean cómodamente con la cintura.
+   - Los zapatos se colocan con precisión en la base.
+3. **Superposición de prendas de abrigo ("Con / Sin abrigo")**:
+   - Añade una chaqueta, cárdigan o abrigo.
+   - Usa el selector para ver tu conjunto **Con abrigo** (chaqueta abrochada) o **Sin abrigo** (dejando visible la camiseta y el pantalón).
+4. **Toca para ver detalles**: Pulsa cualquier prenda en el avatar para abrir su ficha o cambiarla por otra.
+5. **Comprueba las puntuaciones**: Revisa las barras de armonía que indican compatibilidad de colores, tejidos, clima y formalidad.
+6. **Guarda en tu diario**: Pulsa **Guardar look** para programar el conjunto en tu calendario.
 
 ## Resultados esperados
-Composiciones de prendas superpuestas elegantemente guardadas en su calendario y visibles como vistas previas en tarjetas de cuadrícula sin bucles de sondeo de solicitudes de red en segundo plano.
+Una vista previa atractiva y realista de tu look que evita dudas y cambios de ropa apresurados por la mañana.
 
 ## Solución de problemas
-- **Orden de capas incorrecto**: Vuelva a verificar la categoría del elemento; la ropa de abrigo debe clasificarse como "Outerwear" para apilarse correctamente.
-- **Alertas de superposición**: Si el avatar advierte sobre prendas repetidas, verifique si usó el mismo conjunto en la misma ubicación recientemente.
+- **El abrigo queda detrás de la camiseta**: Comprueba que la chaqueta esté categorizada como "Prendas de abrigo" para que el sistema la coloque siempre por encima.
+- **El avatar se ve desproporcionado**: Ajusta tu altura y peso en el Perfil o pulsa "Restablecer avatar".
 
 ## Limitaciones
-- Las capas se gestionan automáticamente según las etiquetas de categoría; no se admiten anulaciones manuales de z-index.
+- Las prendas de abrigo se superponen automáticamente a las camisetas; combinaciones inusuales no se pueden reorganizar manualmente por ahora.

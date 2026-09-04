@@ -80,20 +80,33 @@ def _sanitize_listing_browse_doc(doc: dict[str, Any]) -> dict[str, Any]:
                     safe_images.append(img)
         doc["images"] = safe_images
 
-    # Derive best thumbnail/clean image
-    best_img = (
-        doc.get("clean_image_url")
-        or doc.get("reconstructed_image_url")
-        or (doc.get("images")[0] if doc.get("images") and len(doc["images"]) > 0 else None)
-        or doc.get("thumbnail_data_url")
-        or doc.get("image_url")
+    # Derive best thumbnail/clean image in priority order:
+    # 1. reconstructed_image_url / reconstruct_image_url
+    # 2. clean_image_url
+    # 3. images[0] / thumbnail_data_url / image_url
+    recon_or_clean = (
+        doc.get("reconstructed_image_url")
+        or doc.get("reconstruct_image_url")
+        or doc.get("clean_image_url")
     )
 
-    if not doc.get("thumbnail_data_url") and best_img:
-        doc["thumbnail_data_url"] = best_img
-
-    if not doc.get("images") and best_img:
-        doc["images"] = [best_img]
+    if recon_or_clean:
+        doc["thumbnail_data_url"] = recon_or_clean
+        images = doc.get("images")
+        if not images:
+            doc["images"] = [recon_or_clean]
+        elif isinstance(images, list) and len(images) > 0 and images[0] != recon_or_clean:
+            doc["images"] = [recon_or_clean] + [i for i in images if i != recon_or_clean]
+    else:
+        best_img = (
+            (doc.get("images")[0] if doc.get("images") and len(doc["images"]) > 0 else None)
+            or doc.get("thumbnail_data_url")
+            or doc.get("image_url")
+        )
+        if not doc.get("thumbnail_data_url") and best_img:
+            doc["thumbnail_data_url"] = best_img
+        if not doc.get("images") and best_img:
+            doc["images"] = [best_img]
 
     return doc
 

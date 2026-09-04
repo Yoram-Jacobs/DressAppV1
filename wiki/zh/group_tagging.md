@@ -1,20 +1,30 @@
-# Group Tagging of Closet Items
+# 批量标签（衣橱极速批量整理）
 
-## Goal
-The goal of the Group tagging feature is to allow fast, bulk categorization of closet garments. The user can select multiple items in their closet and tag them all at once with a single click.
+一键批量编辑，数秒内轻松整理几十件衣物。
 
-## Purpose
-- **Speed & Efficiency**: Instead of entering tags item-by-item, users can select several garments (e.g., all formal jackets or all gym wear) and apply the tags instantly.
-- **Improved AI Stylist Accuracy**: Fine-grained categories/tags (e.g., “Work”, “GYM”, “Swimwear”, “Uniforms”) guide the Stylist's reasoning process. Predefined tags enable the Stylist to locate the most relevant items for specific outfit requests (for example, choosing "work"-tagged items first when constructing a "work outfit").
-- **Smart Fallbacks**: If certain tagged layers are missing (e.g., no upper-body "work"-tagged items), the Stylist will dynamically match other suitable garments.
+## 概述
+批量标签功能让您可以同时更新多件衣物的属性，告别繁琐的单件修改。勾选多件衣物，一键批量指定季节、着装规范或特定场合标签！
 
-## Key Points & Implementation Details
-1. **User Interface Integration**:
-   - Added a **Tag** button in the Closet selection floater.
-   - Built a comma-separated tagging dialog (`AlertDialog`) that pops up when clicked.
-2. **Optimistic UI Update**:
-   - Tags are merged onto the selected closet items locally first so the changes reflect instantly in the user interface.
-3. **Background Syncing**:
-   - Sends the tag update requests (`api.patchItem`) to the database in the background to ensure data consistency without blocking user interactions.
-4. **i18next Localization**:
-   - All text messages, dialog titles, placeholders, and feedback notifications support translations cleanly using options-based defaults.
+## 先决条件
+- 数字化衣橱中已有衣物。
+
+## 分步说明
+1. **打开衣橱**: 切换至 **Closet** 选项卡。
+2. **开启多选模式**: 点击顶部工具栏中的 **多选 / 批量编辑** 按钮。
+3. **选择衣物**: 勾选需要设置的单品，或直接按分类全选（如 *"全选所有上装"*）。
+4. **展开批量标签面板**: 点击屏幕底部浮动的 **批量标签** 按钮。
+5. **勾选属性**:
+   - 勾选 **季节**（*春*、*夏*、*秋*、*冬*）。
+   - 选择 **着装规范**（*休闲*、*商务休闲*、*正装*、*晚装*、*运动*）。
+   - 输入 **自定义标签**（如 *“度假”*、*“健身房”*）。
+6. **保存应用**: 点击 **应用至所选衣物**。整个衣橱即刻刷新生效！
+
+## 预期结果
+所有勾选的衣物立即显示新标签，无需重新加载页面。
+
+## 故障排除
+- **某件衣服未成功打上标签**: 请确认在点击应用前该衣服的复选框已高亮勾选。
+- **移除已有标签**: 重新选中相应衣物，在面板中取消勾选该标签并点击应用。
+
+## 局限性
+- 批量编辑支持更新标签、季节和着装规范；衣物名称及购买价格需在单品详情内个别编辑。

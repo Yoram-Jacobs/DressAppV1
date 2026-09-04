@@ -1,25 +1,34 @@
-# Problemen oplossen & Limieten
+# Probleemoplossing & Handige Tips
 
-Snelle oplossingen voor algemeen app-gedrag, limieten en instellingen.
+Snelle en eenvoudige oplossingen voor veelgestelde vragen, toestemmingen en limieten.
 
 ## Overzicht
-Vind snelle oplossingen voor cameramachtigingen, trage upload-snelheden, vragen over accountlimieten en transcripties van voicechats.
+Vind direct antwoorden over cameragebruik, verwerkingssnelheid, kastlimieten en geluidsinstellingen.
 
-## Prerequisites (Vereisten)
-- Internetverbinding.
+## Vereisten
+- Een actieve internetverbinding.
+- Een moderne webbrowser (Google Chrome, Apple Safari) of de mobiele DressApp-app.
 
-## Stappenplan
-1. **Camerablokkering**: Als de camera niet start, ga dan naar de browserinstellingen, selecteer DressApp en stel de cameramachtigingen opnieuw in.
-2. **Vastgelopen uploads**: Als het laden vastloopt op meerdere foto's, wacht dan tot de sequentiële achtergrondwachtrij deze één voor één heeft verwerkt.
-3. **Kledingkast vol**: Gratis gebruikers zijn beperkt tot een basislimiet van 50 items. Neem een abonnement op het niveau Manager of Professional op de **tarievenpagina** (`/pricing`), of nodig een vriend uit om +10 plaatsen per aanmelding te krijgen (tot maximaal 200 items).
-4. **API-fouten**: Als AI-functies mislukken, controleer dan uw aangepaste Google AI Studio-sleutels op uw profielpagina.
+## Stapsgewijze instructies
+1. **Camera start niet**:
+   - Ga naar uw browserinstellingen, zoek **DressApp** en geef toestemming voor de **Camera**. Pagina vernieuwen.
+2. **Melding "Maximale capaciteit bereikt"**:
+   - Gratis accounts kunnen maximaal **150 kledingstukken** opslaan.
+   - Nodig vrienden uit voor **+10 gratis plekken** per aanmelding (tot 1.000 items) of neem **Pro** voor onbeperkte opslag.
+3. **Microfoon of spraak werkt niet**:
+   - Controleer microfoontoestemming in uw browser.
+   - Zorg dat het geluid van uw toestel niet gedempt is.
+4. **Foto's verwerken duurt even**:
+   - Bij foto's met meerdere kledingstukken snijdt de AI elk item nauwkeurig los. U kunt de app ondertussen gewoon blijven gebruiken!
+5. **Google Agenda koppelen**:
+   - Ga naar **Profiel** &rarr; **Google Agenda** en tik op **Verbinden**.
 
 ## Verwachte resultaten
-Snelle oplossing van machtigingen en configuraties zonder dat er technische ondersteuningstickets nodig zijn.
+Snelle oplossingen zodat u zorgeloos van uw digitale garderobe kunt genieten.
 
-## Problemen oplossen
-- **Databaseproblemen**: Als items niet zijn gesynchroniseerd, meld u dan af en meld u weer aan om tokensessies te vernieuwen.
-- **RTL-lay-outproblemen**: Als Arabische/Hebreeuwse overlays elkaar overlappen, werk uw browser dan bij naar de nieuwste versie.
+## Probleemoplossing
+- **Blijft het probleem bestaan?** Log even uit en opnieuw in, of wis het browsergeheugen.
+- **RTL-talen**: Hebreeuws en Arabisch spiegelen automatisch van rechts naar links.
 
 ## Beperkingen
-- Platformlimieten worden strikt gehandhaafd om serverbronnen te beschermen.
+- Kleding importeren uit andere apps vereist een computerbrowser.

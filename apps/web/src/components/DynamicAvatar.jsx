@@ -1,6 +1,5 @@
 import React, { useMemo } from 'react';
 
-
 /**
  * Dynamic 2D Human Avatar Generator for DressApp.
  * Accepts numeric measurements (cm), gender, and skin tone color.
@@ -36,7 +35,7 @@ export default function DynamicAvatar({
     // SVG Fixed Coordinate Space
     const X0 = 100; // Center X axis
     const viewBoxHeight = 450;
-
+    
     // Scale body height proportionally to height input in cm
     // 170cm reference => 360 SVG height units
     const totalBodySvgHeight = 360 * (numH / 170.0);
@@ -204,10 +203,11 @@ export default function DynamicAvatar({
   const activeSkinColor = skinColor || '#9CA3AF';
 
   return (
-    <div className={`avatar-wrapper ${className}`}>
+    <div className={`relative w-full h-full flex items-center justify-center select-none ${className}`}>
       <svg
         viewBox="0 0 200 450"
-        className="avatar-svg"
+        className="w-full h-full drop-shadow-md transition-all duration-300 ease-out"
+        style={{ maxHeight: '100%' }}
       >
         <defs>
           <linearGradient id="mannequinShading" x1="0%" y1="0%" x2="100%" y2="0%">
@@ -220,7 +220,7 @@ export default function DynamicAvatar({
 
         {/* Mannequin Guide Lines */}
         {showGuideLines && (
-          <g className="avatar-guide-lines">
+          <g className="text-slate-400/30 dark:text-slate-500/30 stroke-current stroke-[0.75] stroke-dasharray-[2,3]">
             <line x1="15" y1={geometry.yShoulders} x2="185" y2={geometry.yShoulders} />
             <line x1="20" y1={geometry.yChest} x2="180" y2={geometry.yChest} />
             <line x1="25" y1={geometry.yWaist} x2="175" y2={geometry.yWaist} />
@@ -230,16 +230,11 @@ export default function DynamicAvatar({
         )}
 
         {/* --- Silhouette Paths --- */}
-        <g
-          fill={activeSkinColor}
-          stroke={activeSkinColor}
-          strokeWidth="1"
-          strokeLinejoin="round"
-        >
-          <path d={geometry.bodyPath} className="avatar-path" />
-          <path d={geometry.armPathR} className="avatar-path" />
-          <path d={geometry.armPathL} className="avatar-path" />
-          <path d={geometry.headPath} className="avatar-path" />
+        <g fill={activeSkinColor} stroke={activeSkinColor} strokeWidth="1" strokeLinejoin="round">
+          <path d={geometry.bodyPath} className="transition-all duration-300" />
+          <path d={geometry.armPathR} className="transition-all duration-300" />
+          <path d={geometry.armPathL} className="transition-all duration-300" />
+          <path d={geometry.headPath} className="transition-all duration-300" />
 
           {/* Depth Shading Overlay */}
           <path d={geometry.bodyPath} fill="url(#mannequinShading)" stroke="none" />
@@ -276,7 +271,7 @@ export default function DynamicAvatar({
         )}
 
         {/* Collarbone Feature Line */}
-        <g className="avatar-collarbone">
+        <g stroke="currentColor" strokeWidth="0.5" className="text-black/15 dark:text-white/20 fill-none">
           <path d={`M 85,${geometry.yShoulders + 4} Q 100,${geometry.yShoulders + 9} 115,${geometry.yShoulders + 4}`} />
         </g>
       </svg>

@@ -35,7 +35,7 @@ import {
   Loader2,
   CheckCircle2,
   Clock,
-  CircleX as XCircle,
+  XCircle,
   Package,
 } from 'lucide-react';
 import { api } from '@/lib/api';

@@ -1,25 +1,34 @@
-# Dépannage & Limitations
+# Dépannage et Réponses Utiles
 
-Solutions rapides pour les comportements, limites et paramètres courants de l'application.
+Des solutions simples et rapides pour vos questions fréquentes, autorisations et limites de l'application.
 
-## Présentation générale
-Trouvez des solutions rapides pour les autorisations de caméra, les vitesses de téléchargement lentes, les questions sur les limites de compte et les transcriptions de chat vocal.
+## Vue d'ensemble
+Trouvez facilement les réponses concernant l'appareil photo, la vitesse de traitement, les limites de stockage et les réglages audio.
 
 ## Conditions préalables
-- Connexion Internet.
+- Une connexion internet active.
+- Un navigateur moderne (Google Chrome, Apple Safari) ou l'application mobile DressApp.
 
-## Étape par étape
-1. **Blocage de la caméra** : Si la caméra ne démarre pas, accédez aux paramètres du navigateur, sélectionnez DressApp et réinitialisez les autorisations de la caméra.
-2. **Téléchargements bloqués** : Si le chargement se fige sur plusieurs photos, attendez que la file d'attente séquentielle en arrière-plan les traite une par une.
-3. **Garde-robe pleine** : Les utilisateurs gratuits sont limités à une base de 50 éléments. Abonnez-vous au niveau Manager ou Professional sur la **page des tarifs** (`/pricing`), ou invitez un ami pour obtenir +10 emplacements par inscription (jusqu'à un maximum de 200 éléments).
-4. **Erreurs d'API** : Si les fonctionnalités d'IA échouent, vérifiez vos clés personnalisées Google AI Studio sur votre page de profil.
+## Instructions pas à pas
+1. **L'appareil photo ne s'ouvre pas**:
+   - Ouvrez les paramètres de votre navigateur, cherchez **DressApp** et autorisez l'**Appareil photo**. Actualisez la page.
+2. **Message "Capacité maximale atteinte"**:
+   - Les comptes gratuits enregistrent jusqu'à **150 vêtements**.
+   - Invitez des proches pour gagner **+10 places gratuites** par ami (jusqu'à 1 000 pièces) ou passez à **Pro** pour un stockage illimité.
+3. **Le micro ou la voix ne fonctionnent pas**:
+   - Vérifiez l'autorisation du micro dans les réglages du navigateur.
+   - Vérifiez que le volume de votre appareil n'est pas coupé.
+4. **Le traitement des photos prend un instant**:
+   - Lorsqu'une photo contient plusieurs vêtements, l'IA sépare chaque pièce avec précision. Vous pouvez continuer d'utiliser l'application pendant ce temps !
+5. **Connecter Google Agenda**:
+   - Rendez-vous dans **Profil** &rarr; **Google Agenda** et cliquez sur **Connecter**.
 
 ## Résultats attendus
-Résolution rapide des autorisations et des configurations sans nécessiter de tickets d'assistance technique.
+Une résolution rapide pour profiter pleinement de votre dressing numérique.
 
 ## Dépannage
-- **Problèmes de base de données** : Si les éléments ne sont pas synchronisés, déconnectez-vous et reconnectez-vous pour actualiser les sessions de jetons (tokens).
-- **Problèmes de mise en page RTL** : Si les superpositions en arabe ou en hébreu se chevauchent, mettez à jour votre navigateur vers la version la plus récente.
+- **Le problème persiste ?** Déconnectez-vous et reconnectez-vous, ou videz le cache du navigateur.
+- **Affichage droite-à-gauche (RTL)** : En hébreu et en arabe, l'interface s'inverse automatiquement pour une lecture naturelle.
 
-## Limitations
-- Les limites de la plateforme sont strictement appliquées pour protéger les ressources du serveur.
+## Limites
+- L'import de dressing depuis d'autres applications nécessite un ordinateur de bureau.

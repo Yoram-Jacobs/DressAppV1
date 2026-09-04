@@ -249,6 +249,8 @@ class UpdateItemIn(BaseModel):
     wear_count: int | None = None
     last_worn_at: str | None = None
     notes: str | None = None
+    # View preference ('clean' vs 'reconstructed')
+    preferred_image_view: str | None = None
     # Phase Q — reconstruction knobs
     reconstructed_image_url: str | None = None
     reconstruction_metadata: dict[str, Any] | None = None
@@ -474,9 +476,11 @@ async def create_item(
             doc["reconstructed_image_url"] = payload.reconstructed_image_b64
         else:
             mime = (payload.reconstruction_metadata or {}).get("mime_type", "image/png")
-            doc["reconstructed_image_url"] = (
-                f"data:{mime};base64,{payload.reconstructed_image_b64}"
-            )
+    # Normalize all image data URLs (deskew upright + 0.90 safety margin on 900x1200 canvas)
+    from app.services.vision.image import fit_image_data_url_to_card
+    for img_key in ("clean_image_url", "reconstructed_image_url", "segmented_image_url", "cutout_url"):
+        if doc.get(img_key) and isinstance(doc[img_key], str) and doc[img_key].startswith("data:image/"):
+            doc[img_key] = fit_image_data_url_to_card(doc[img_key]) or doc[img_key]
 
     # Phase R (July 2026) — receipt-import provenance persistence.
     # Store receipt flags before any background task is queued so the
@@ -707,12 +711,15 @@ async def create_item(
                 "checked": True,
                 "is_missing": False,
                 "recommendation_source": None,
-                "recommendation_url": None
+                "recommendation_url": None,
             })
             await db.suitcases.update_one(
                 {"id": active_s["id"]},
                 {"$set": {"packing_list": p_list, "updated_at": datetime.now(timezone.utc).isoformat()}}
             )
+
+    from app.services.sync_service import broadcast_sync_event
+    await broadcast_sync_event(user["id"], "closet_updated", {"action": "create", "item_id": doc.get("id")})
 
     return doc
 
@@ -2420,12 +2427,28 @@ async def list_items(
         raw = it.get("raw")
         if isinstance(raw, dict):
             raw.pop("preview", None)
-        # Strip heavy *_image_url fields ONLY when a thumbnail was
-        # successfully produced. If the thumbnail pipeline failed for
-        # this item, keep one image URL so the grid still has something
-        # to show (the user would otherwise see an empty card).
-        if isinstance(it.get("thumbnail_data_url"), str) and it.get("thumbnail_data_url"):
-            for img_key in ("original_image_url", "segmented_image_url", "reconstructed_image_url", "clean_image_url", "cutout_url"):
+        recon_or_clean = (
+            it.get("reconstructed_image_url")
+            or it.get("reconstruct_image_url")
+            or it.get("clean_image_url")
+        )
+        if recon_or_clean:
+            it["reconstructed_image_url"] = recon_or_clean
+            # Only set thumbnail_data_url to recon_or_clean if it's a URL or tiny data-URL (< 15 KB).
+            # Huge inline data URLs (> 15 KB) in bulk list responses cause Android OOM crashes.
+            if isinstance(recon_or_clean, str):
+                if not recon_or_clean.startswith("data:") or len(recon_or_clean) <= 15000:
+                    it["thumbnail_data_url"] = recon_or_clean
+                elif not it.get("thumbnail_data_url") or len(str(it.get("thumbnail_data_url"))) > 15000:
+                    # Strip huge data-URL from list response
+                    it.pop("thumbnail_data_url", None)
+            if isinstance(it.get("reconstructed_image_url"), str) and len(it["reconstructed_image_url"]) > 15000 and it["reconstructed_image_url"].startswith("data:"):
+                # Avoid returning full-size data URLs in list response
+                it.pop("reconstructed_image_url", None)
+            if isinstance(it.get("clean_image_url"), str) and len(it["clean_image_url"]) > 15000 and it["clean_image_url"].startswith("data:"):
+                it.pop("clean_image_url", None)
+        elif isinstance(it.get("thumbnail_data_url"), str) and it.get("thumbnail_data_url"):
+            for img_key in ("original_image_url", "segmented_image_url", "cutout_url"):
                 val = it.get(img_key)
                 if isinstance(val, str) and val.startswith("data:"):
                     it.pop(img_key, None)
@@ -4679,7 +4702,8 @@ async def chat_analyse_item(
 
                 # Update in-memory reconstructed_image_url & clean_image_url
                 # Always prefer the transparent clean cutout so clothes layer perfectly without background boxes
-                final_img = clean_image_url_out or image_url_out
+                from app.services.vision.image import fit_image_data_url_to_card
+                final_img = fit_image_data_url_to_card(clean_image_url_out or image_url_out)
                 updated_doc["reconstructed_image_url"] = final_img
                 updated_doc["clean_image_url"] = final_img
                 updated_doc["clean_image_status"] = "ready" if clean_image_url_out else "fallback"
@@ -5406,14 +5430,17 @@ async def update_item(
             patch["reconstructed_image_url"] = None
         elif patch["reconstructed_image_url"]:
             patch["reconstructed_image_url"] = compress_image_url_or_b64(patch["reconstructed_image_url"], max_dim=1024, quality=75)
+            from app.services.vision.image import fit_image_data_url_to_card
+            patch["reconstructed_image_url"] = fit_image_data_url_to_card(patch["reconstructed_image_url"])
             # If clean_image_url is not provided, unbind the reconstructed image from its background
             if not patch.get("clean_image_url"):
                 from app.services.garment_visuals import GarmentVisuals
                 cln_url = await GarmentVisuals.ensure_transparent_cutout(patch["reconstructed_image_url"])
                 if cln_url:
-                    patch["clean_image_url"] = cln_url
+                    cln_fitted = fit_image_data_url_to_card(cln_url)
+                    patch["clean_image_url"] = cln_fitted
                     patch["clean_image_status"] = "ready"
-                    patch["reconstructed_image_url"] = cln_url
+                    patch["reconstructed_image_url"] = cln_fitted
     # The `clear_reconstruction` flag is a command, not a value we persist.
     # Pop it + translate into explicit null-sets on the related columns.
     if patch.pop("clear_reconstruction", False):
@@ -5796,6 +5823,10 @@ async def update_item(
 
     if updated and "_id" in updated:
         updated.pop("_id")
+
+    from app.services.sync_service import broadcast_sync_event
+    await broadcast_sync_event(user["id"], "closet_updated", {"action": "update", "item_id": item_id})
+
     return updated
 
 
@@ -5985,6 +6016,9 @@ async def delete_item(
         # Auto-demotion is a UX nicety — never let a failure here
         # break the delete itself (the item is already gone).
         logger.warning("star auto-demotion failed for %s: %s", item_id, exc)
+
+    from app.services.sync_service import broadcast_sync_event
+    await broadcast_sync_event(user["id"], "closet_updated", {"action": "delete", "item_id": item_id})
 
     return Response(status_code=204)
 

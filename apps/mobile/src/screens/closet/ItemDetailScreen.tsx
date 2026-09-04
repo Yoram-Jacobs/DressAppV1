@@ -71,6 +71,7 @@ import { useClosetStore, closetStore } from '@mobile/lib/stores/closetStore';
 import { closetRepo } from '@mobile/lib/repositories/closetRepository';
 import { useUserStore } from '@mobile/lib/stores';
 import { deriveSizeFromPreferences } from '@mobile/lib/size_preferences';
+import { setMobileViewPreference } from '@mobile/lib/imageUtils';
 import { TaxonomySelectModal } from '@mobile/components/TaxonomySelectModal';
 import { WeightedList, WeightedItem } from '@mobile/components/WeightedList';
 import { DppPanel } from '@mobile/components/DppPanel';
@@ -344,6 +345,9 @@ export function ItemDetailScreen() {
         const parsed = toFormState(cached, user);
         setForm(parsed);
         setOriginalForm(parsed);
+        if (cached.preferred_image_view) {
+          setViewingCutout(cached.preferred_image_view !== 'clean' && cached.preferred_image_view !== 'original');
+        }
       }
 
       setLoading(cached ? false : true);
@@ -369,6 +373,9 @@ export function ItemDetailScreen() {
         const parsed = toFormState(activeTarget, user);
         setForm(parsed);
         setOriginalForm(parsed);
+        if (data.preferred_image_view) {
+          setViewingCutout(data.preferred_image_view !== 'clean' && data.preferred_image_view !== 'original');
+        }
       }
     } catch (e: any) {
       console.warn('Failed to load item:', e);
@@ -607,6 +614,19 @@ export function ItemDetailScreen() {
     }
   };
 
+  const handleToggleView = (showCutout: boolean) => {
+    setViewingCutout(showCutout);
+    const pref = showCutout ? 'reconstructed' : 'clean';
+    setMobileViewPreference(showCutout ? 'repaired' : 'original');
+    if (itemId) {
+      api.patchItem(itemId, { preferred_image_view: pref }).catch(() => {});
+      closetStore.upsert({ id: itemId, preferred_image_view: pref } as any);
+      closetRepo.upsert({ id: itemId, preferred_image_view: pref } as any);
+      setForm((prev) => ({ ...prev, preferred_image_view: pref } as any));
+      setItem((prev: any) => (prev ? { ...prev, preferred_image_view: pref } : prev));
+    }
+  };
+
   const handleSave = async () => {
     if (!itemId) return;
     setSaving(true);
@@ -659,6 +679,7 @@ export function ItemDetailScreen() {
         cultural_tags: form.cultural_tags,
         notes: form.notes.trim() || undefined,
         reconstructed_image_url: form.reconstructed_image_url || undefined,
+        preferred_image_view: viewingCutout ? 'reconstructed' : 'clean',
       };
 
       await api.patchItem(itemId, updates);
@@ -893,10 +914,13 @@ export function ItemDetailScreen() {
 
   const hasReconstruction = Boolean(reconstructedUrl);
 
-  const cutoutOrRepairedUrl = reconstructedUrl || cleanCutoutUrl || variantUrl || fallbackThumb || rawOriginalUrl;
-  const rawUrl = rawOriginalUrl || variantUrl || fallbackThumb || cutoutOrRepairedUrl;
+  // 'AI-repaired' view: reconstructed image -> clean cutout fallback
+  const aiRepairedUrl = reconstructedUrl || cleanCutoutUrl || variantUrl || fallbackThumb || rawOriginalUrl;
+  // 'Original crop' view: clean cutout image (clean_image_url) -> raw fallback
+  const originalCropUrl = cleanCutoutUrl || rawOriginalUrl || variantUrl || fallbackThumb || aiRepairedUrl;
 
-  const currentImg = viewingCutout ? cutoutOrRepairedUrl : (rawUrl || cutoutOrRepairedUrl);
+  // Show clean_image_url on 'Original crop' (!viewingCutout), or AI-repaired image on 'AI-repaired' (viewingCutout)
+  const currentImg = viewingCutout ? aiRepairedUrl : originalCropUrl;
 
   const timesWorn = item?.wear_count || item?.times_worn || 0;
   const priceUnits = form.price_cents || 0;
@@ -998,12 +1022,12 @@ export function ItemDetailScreen() {
             )}
           </View>
 
-          {/* Toggle between AI cutout / repaired & original */}
-          {cutoutOrRepairedUrl && rawUrl && cutoutOrRepairedUrl !== rawUrl && (
+          {/* Toggle between AI-repaired & Original crop */}
+          {aiRepairedUrl && originalCropUrl && (reconstructedUrl || cleanCutoutUrl !== rawOriginalUrl) && (
             <View style={[styles.cutoutToggleWrap, { backgroundColor: colors.card }]}>
               <TouchableOpacity
                 style={[styles.cutoutToggleBtn, viewingCutout && { backgroundColor: colors.accent }]}
-                onPress={() => setViewingCutout(true)}
+                onPress={() => handleToggleView(true)}
               >
                 {hasReconstruction ? (
                   <Lucide.Wand2 size={11} color={viewingCutout ? '#fff' : colors.mutedFg} />
@@ -1012,17 +1036,17 @@ export function ItemDetailScreen() {
                 )}
                 <Text style={[styles.cutoutToggleText, { color: viewingCutout ? '#fff' : colors.mutedFg }]}>
                   {hasReconstruction
-                    ? t('itemDetail.repair.showRepaired', { defaultValue: 'Repaired' })
-                    : t('itemDetail.cutout', { defaultValue: 'Cutout' })}
+                    ? t('itemDetail.repair.showRepaired', { defaultValue: 'AI-repaired' })
+                    : t('itemDetail.cutout', { defaultValue: 'AI-repaired' })}
                 </Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={[styles.cutoutToggleBtn, !viewingCutout && { backgroundColor: colors.accent }]}
-                onPress={() => setViewingCutout(false)}
+                onPress={() => handleToggleView(false)}
               >
-                <Lucide.Camera size={11} color={!viewingCutout ? '#fff' : colors.mutedFg} />
+                <Lucide.Crop size={11} color={!viewingCutout ? '#fff' : colors.mutedFg} />
                 <Text style={[styles.cutoutToggleText, { color: !viewingCutout ? '#fff' : colors.mutedFg }]}>
-                  {t('itemDetail.original', { defaultValue: 'Original' })}
+                  {t('itemDetail.originalCrop', { defaultValue: 'Original crop' })}
                 </Text>
               </TouchableOpacity>
             </View>
@@ -1950,11 +1974,11 @@ export function ItemDetailScreen() {
 
           {/* Scroll to Top floating button */}
           <TouchableOpacity
-            style={[styles.floatingScrollTopBtn, { backgroundColor: colors.accent }]}
+            style={[styles.floatingScrollTopBtn, { backgroundColor: colors.brand || '#9333ea' }]}
             onPress={() => scrollViewRef.current?.scrollTo({ y: 0, animated: true })}
             activeOpacity={0.8}
           >
-            <Lucide.ArrowUp size={18} color="#FFF" />
+            <Lucide.ArrowUp size={20} color="#FFF" strokeWidth={2.5} />
           </TouchableOpacity>
         </View>
       )}

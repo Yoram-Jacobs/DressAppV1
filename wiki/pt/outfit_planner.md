@@ -1,25 +1,33 @@
-# Planeador de Conjuntos e Lona
+# Planejador de Looks e Manequim 2D
 
-Componha, sobreponha e reveja esquemas coordenados.
+Monte, sobreponha e visualize combinações perfeitas no seu avatar virtual antes de se vestir.
 
 ## Visão Geral
-O Planeador de Conjuntos oferece uma lona visual de avatar 2D (suportando tanto recortes de fotos reais do corpo do utilizador como manequins vetoriais dinâmicos SVG) com desvios de pontos de referência calibrados (`top-[14.5%]` do colar ao decote e `top-[36.5%]` da cintura à linha da cintura) para sobrepor peças superiores, inferiores, agasalhos e calçado perfeitamente alinhados com os limites do corpo.
+O Planejador de Looks oferece um manequim virtual interativo 2D para você experimentar suas roupas com tranquilidade. Veja como blusas, calças, sapatos e acessórios se combinam, ative ou desative casacos e confira notas de harmonia em tempo real.
 
 ## Pré-requisitos
-- Itens de guarda-roupa guardados.
+- Roupas digitalizadas no seu closet.
+- (Opcional) Foto de corpo inteiro no seu perfil para provar as roupas na sua própria silhueta.
 
 ## Passo a Passo
-1. **Selecionar Lona**: Abra o Planeador e clique num dia ou num novo rascunho.
-2. **Sobrepor Itens**: Arraste vestuário sobre o avatar 2D. Os agasalhos ficam automaticamente sobrepostos às t-shirts interiores.
-3. **Avaliar Ajuste**: Verifique as pontuações de compatibilidade e avisos (ex.: conflitos de cores ou alertas meteorológicos).
-4. **Guardar**: Defina um título e agende o look no seu diário de guarda-roupa. As atualizaciones são transmitidas de forma segura através de `useOutfitStore`.
+1. **Abrir o Manequim**: Toque na aba **Outfit Canvas** no aplicativo.
+2. **Vestir o Avatar**: Arraste ou toque nas peças para posicioná-las:
+   - Partes de cima se ajustam naturalmente à gola.
+   - Calças e saias alinham perfeitamente à cintura.
+   - Sapatos ficam posicionados nos pés.
+3. **Sobreposição de Casacos ("Com / Sem Casaco")**:
+   - Adicione uma jaqueta, casaco ou sobretudo.
+   - Use o seletor para ver o visual **Com Casaco** ou **Sem Casaco** (blusa visível por baixo).
+4. **Ver Detalhes**: Toque em qualquer peça no manequim para abrir seus detalhes ou trocar por outra.
+5. **Conferir Harmonia**: Veja as barras que indicam a harmonia de cores, tecidos, clima e ocasião.
+6. **Agendar no Calendário**: Toque em **Salvar Look** para registrar o visual no seu diário.
 
 ## Resultados Esperados
-Composições de conjuntos sobrepostas com elegância guardadas no seu calendário e visíveis como pré-visualizações em cartões de grelha sem ciclos de consultas de rede em segundo plano.
+Uma prévia realista e elegante da sua roupa que elimina indecisões na hora de se vestir.
 
-## Resolução de Problemas
-- **Ordem das camadas incorreta**: Reverifique a categoria do item; os agasalhos devem ser classificados como "Outerwear" para sobrepor corretamente.
-- **Alertas de sobreposição**: Se o avatar avisar sobre uso repetido, verifique se vestiu o mesmo conjunto no mesmo local recentemente.
+## Solução de Problemas
+- **O casaco fica atrás da blusa**: Certifique-se de que a jaqueta está classificada como "Casacos" para ficar por cima.
+- **Avatar desproporcional**: Ajuste altura e peso no seu Perfil ou toque em "Redefinir Avatar".
 
 ## Limitações
-- As camadas são geridas automaticamente com base nas etiquetas de categoria; a substituição manual de z-index não é suportada.
+- Casacos sobrepõem blusas automaticamente; ordens incomuns de sobreposição ainda não são ajustáveis manualmente.

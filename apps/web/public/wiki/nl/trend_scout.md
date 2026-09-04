@@ -1,37 +1,32 @@
 # Trend Scout & Persoonlijke Inspiratie
 
-Ontdek samengestelde fashion intelligence-feeds afgestemd op uw gender-ecosysteem en lokale cultuur.
+Ontdek dagelijks wereldwijde modetrends en boots ze direct na met kleding uit uw eigen kast!
 
 ## Overzicht
-Trend Scout selecteert automatisch 7 verschillende categorieën van mode-inzichten voor zowel heren- als damesmode-ecosystemen. Deze zijn diep verankerd in de apparaatlocatie van de gebruiker (bijv. Israël) met vrij toegankelijke redactionele bronnen, lokale ontwerpers en toonaangevende influencers.
-
-### Ecosysteem-categorieën (7 Buckets)
-1. **Lokaal Nieuws (Local News)**: Verankerd in het land van het apparaat (bijv. Israël) met de nadruk op open-access lokale modeverslagen, boetieksnijwerk en reportages over binnenlandse ontwerpers.
-2. **Wereldwijde Catwalks (Runway)**: Seizoensoverzichten van internationale Haute Couture- en Ready-to-Wear-collecties.
-3. **Streetstyle (Street Style)**: Authentieke stedelijke straatstijl en praktische ideeën voor dagelijkse kledingcombinaties.
-4. **Duurzaamheid (Sustainability)**: Milieubewuste mode, circulariteit en ethische kledingproductie.
-5. **Toonaangevende Influencers (Influencers & Tastemakers)**: Portretten van internationale smaakmakers en analyses van hun kenmerkende stijlen.
-6. **Vintage & Archiefmode (Vintage & Archival)**: Historische mode-evolutie, zeldzame archiefstukken en tijdloze klassiekers (zonder commerciële of e-commerce links).
-7. **Verzorging & Reparaties (Maintenance & Repairs)**: Praktische gidsen voor kledingverzorging, herstelwerk, schoenmakerij en textielbehoud.
-
-## Kwaliteits- en Linkhygiëneregels
-- **Geen winkel- of e-commerce links**: Strikte uitsluiting van verkoopplatforms (Amazon, Shein, ASOS, winkelwagenlinks).
-- **Geen betaalmuren of registratieverplichtingen**: Uitsluiting van websites die een abonnement of account vereisen om te lezen.
-- **Directe en schone links**: Verwijdering van redirects van zoekmachines (Google / Yahoo) om direct naar de oorspronkelijke bron te verwijzen.
-
-## Vernieuwingsschema
-- **Maandelijkse geplande taak**: Wordt automatisch uitgevoerd om middernacht UTC op de 1e van elke maand om categorieën en links te actualiseren met realtime gegevens.
-- **Dagelijkse / Handmatige vernieuwing**: Altijd direct beschikbaar via de vernieuwknop in de app.
+Trend Scout is uw dagelijkse modemagazine in DressApp. Elke ochtend verzamelt het nieuws uit toonaangevende modebladen en verdeelt dit over 4 overzichtelijke kanalen: **Catwalk (Runway)**, **Streetwear**, **Duurzaamheid** en **Influencers**. Met de magische knop **"Stylen met mijn kledingkast"** vindt u meteen bijpassende kledingstukken in uw eigen garderobe!
 
 ## Vereisten
-- Apparaatlocatie ingeschakeld of thuisland ingesteld in profiel.
-- Actief Manager- of Professional-abonnement.
+- Een actief DressApp-profiel.
+- Locatietoegang ingeschakeld voor regionale modetrends en tips bij u in de buurt.
 
-## Stappenplan
-1. **Open Scout**: Ga naar het scherm Trends of het Stylist-paneel.
-2. **Kies Gender**: Schakel op elk moment tussen dames- en herenmode.
-3. **Filter op categorie**: Selecteer een van de 7 tabbladen om uw feed te verfijnen.
-4. **Lees bronnen**: Klik op de externe linkbadge van een kaart om het originele artikel te lezen.
+## Stapsgewijze instructies
+1. **Trend Scout openen**: Tik op **Trend Scout** op uw startscherm of in het Stylist-menu.
+2. **Ontdek de 4 dagelijkse kanalen**:
+   - 🌟 **Runway**: Hoogwaardige catwalkbeelden en seizoensthema's.
+   - 👟 **Streetwear**: Echte, comfortabele straatstijlen voor elke dag.
+   - 🌿 **Duurzaamheid**: Milieuvriendelijke mode, kledingonderhoud en recycling.
+   - ✨ **Influencers**: De populairste stijlen op sociale media.
+3. **Oorspronkelijke artikelen lezen**: Tik op de externe link op een kaart om het volledige artikel te lezen op bladen als Vogue of GQ zonder betaalmuur.
+4. **Stylen met uw eigen kast (in 1 klik)**:
+   - Bevalt een trend u? Tik op **Stylen met mijn kledingkast**!
+   - De AI zoekt direct in uw garderobe naar vergelijkbare kleuren en pasvormen, zodat u de trend vandaag al kunt dragen zonder iets nieuws te kopen!
 
 ## Verwachte resultaten
-Een actuele, rijke en lokaal verankerde feed met mode-inspiratie die naadloos aansluit bij uw stijlprofiel en culturele identiteit.
+Een inspirerend modeoverzicht dat perfect aansluit op uw smaak en u dagelijks verrast met nieuwe ideeën uit uw eigen kast.
+
+## Probleemoplossing
+- **Kaarten vernieuwen niet**: Het overzicht ververst dagelijks om 07:00 UTC. Veeg omlaag om te vernieuwen.
+- **Niet-passende artikelen**: Controleer uw profielgegevens en stijlvoorkeuren in Instellingen.
+
+## Beperkingen
+- Trend Scout richt zich puur op redactionele inspiratie en filtert opdringerige reclames en winkelkoppelingen weg.

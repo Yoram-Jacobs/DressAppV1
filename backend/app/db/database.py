@@ -1,6 +1,7 @@
 """MongoDB (Motor) client with idempotent index bootstrap."""
 from __future__ import annotations
 
+import asyncio
 import logging
 
 from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorDatabase
@@ -10,21 +11,25 @@ from app.config import settings
 logger = logging.getLogger(__name__)
 
 _client: AsyncIOMotorClient | None = None
-_db: AsyncIOMotorDatabase | None = None
+_clients_by_loop: dict[int, AsyncIOMotorClient] = {}
 
 
 def get_client() -> AsyncIOMotorClient:
     global _client
-    if _client is None:
-        _client = AsyncIOMotorClient(settings.MONGO_URL)
-    return _client
+    try:
+        loop = asyncio.get_running_loop()
+        loop_id = id(loop)
+        if loop_id not in _clients_by_loop:
+            _clients_by_loop[loop_id] = AsyncIOMotorClient(settings.MONGO_URL)
+        return _clients_by_loop[loop_id]
+    except RuntimeError:
+        if _client is None:
+            _client = AsyncIOMotorClient(settings.MONGO_URL)
+        return _client
 
 
 def get_db() -> AsyncIOMotorDatabase:
-    global _db
-    if _db is None:
-        _db = get_client()[settings.DB_NAME]
-    return _db
+    return get_client()[settings.DB_NAME]
 
 
 async def ensure_indexes() -> None:
@@ -97,12 +102,8 @@ async def ensure_indexes() -> None:
         await db.trend_reports.drop_index("bucket_1_date_1_language_1")
     except Exception:  # noqa: BLE001
         pass
-    try:
-        await db.trend_reports.drop_index("bucket_1_date_1_language_1_country_code_1")
-    except Exception:  # noqa: BLE001
-        pass
     await db.trend_reports.create_index(
-        [("bucket", 1), ("date", 1), ("language", 1), ("country_code", 1), ("gender", 1)], unique=True, sparse=True
+        [("bucket", 1), ("date", 1), ("language", 1), ("country_code", 1)], unique=True, sparse=True
     )
     await db.trend_reports.create_index(
         [("origin_id", 1), ("language", 1), ("country_code", 1)],
@@ -209,6 +210,74 @@ async def ensure_indexes() -> None:
             logger.info("MongoDB migration: backfilled coordinates for %d listings", updated_count)
     except Exception as e:
         logger.warning("MongoDB listing location backfill failed: %s", e)
+
+    # Backfill legacy closet items and listings to prioritize reconstructed_image_url -> clean_image_url
+    try:
+        legacy_closet_count = 0
+        async for item in db.closet_items.find({
+            "$or": [
+                {"reconstruct_image_url": {"$exists": True, "$ne": None}},
+                {"reconstructed_image_url": {"$exists": True, "$ne": None}},
+                {"clean_image_url": {"$exists": True, "$ne": None}},
+            ]
+        }):
+            recon = item.get("reconstruct_image_url") or item.get("reconstructed_image_url")
+            clean = item.get("clean_image_url")
+            best = recon or clean
+            if best:
+                update_fields = {}
+                if recon and not item.get("reconstructed_image_url"):
+                    update_fields["reconstructed_image_url"] = recon
+                if item.get("thumbnail_data_url") != best:
+                    update_fields["thumbnail_data_url"] = best
+                if update_fields:
+                    await db.closet_items.update_one({"id": item["id"]}, {"$set": update_fields})
+                    legacy_closet_count += 1
+        if legacy_closet_count > 0:
+            logger.info("MongoDB migration: backfilled reconstructed/clean image priority for %d legacy closet items", legacy_closet_count)
+
+        legacy_listing_count = 0
+        async for listing in db.listings.find({}):
+            recon = listing.get("reconstruct_image_url") or listing.get("reconstructed_image_url")
+            clean = listing.get("clean_image_url")
+            best = recon or clean
+            if best:
+                update_fields = {}
+                if recon and not listing.get("reconstructed_image_url"):
+                    update_fields["reconstructed_image_url"] = recon
+                if listing.get("thumbnail_data_url") != best:
+                    update_fields["thumbnail_data_url"] = best
+                images = listing.get("images") or []
+                if not images or (isinstance(images, list) and len(images) > 0 and images[0] != best):
+                    update_fields["images"] = [best] + [i for i in images if i != best]
+                if update_fields:
+                    await db.listings.update_one({"id": listing["id"]}, {"$set": update_fields})
+                    legacy_listing_count += 1
+        if legacy_listing_count > 0:
+            logger.info("MongoDB migration: backfilled reconstructed/clean image priority for %d legacy listings", legacy_listing_count)
+
+        # Normalize clean_image_url and reconstructed_image_url (deskew + 0.90 safety margin) for all closet items
+        from app.services.vision.image import fit_image_data_url_to_card
+        normalized_item_count = 0
+        async for item in db.closet_items.find({}):
+            update_fields = {}
+            clean = item.get("clean_image_url")
+            recon = item.get("reconstructed_image_url")
+            if clean and isinstance(clean, str) and clean.startswith("data:image/"):
+                norm_clean = fit_image_data_url_to_card(clean)
+                if norm_clean and norm_clean != clean:
+                    update_fields["clean_image_url"] = norm_clean
+            if recon and isinstance(recon, str) and recon.startswith("data:image/"):
+                norm_recon = fit_image_data_url_to_card(recon)
+                if norm_recon and norm_recon != recon:
+                    update_fields["reconstructed_image_url"] = norm_recon
+                query = {"id": item["id"]} if item.get("id") else {"_id": item["_id"]}
+                await db.closet_items.update_one(query, {"$set": update_fields})
+                normalized_item_count += 1
+        if normalized_item_count > 0:
+            logger.info("MongoDB migration: normalized clean/reconstructed images for %d closet items", normalized_item_count)
+    except Exception as e:
+        logger.warning("MongoDB legacy image priority backfill failed: %s", e)
 
     logger.info("MongoDB indexes ensured")
 

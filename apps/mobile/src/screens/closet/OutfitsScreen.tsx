@@ -10,7 +10,7 @@
  *   - Full RTL and i18n support
  */
 
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useRef } from 'react';
 import {
   View,
   Text,
@@ -33,6 +33,8 @@ import { useTheme } from '@mobile/theme';
 import { fonts, fontSizes, spacing, radii } from '@mobile/theme/tokens';
 import { useOutfitStore } from '@mobile/lib/stores';
 import { LoadingVideo } from '@mobile/components/common/LoadingVideo';
+import { ScrollToTopFloater } from '@mobile/components/common/ScrollToTopFloater';
+import { resolveImageUrl } from '@mobile/lib/imageUtils';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { StylistStackParamList } from '@mobile/navigation/types';
@@ -92,6 +94,19 @@ export function OutfitsScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [expanded, setExpanded] = useState<string | null>(null);
 
+  // Fast Scroll to Top floater state
+  const flatListRef = useRef<FlatList>(null);
+  const [showScrollTop, setShowScrollTop] = useState(false);
+
+  const handleScroll = (e: any) => {
+    const y = e?.nativeEvent?.contentOffset?.y ?? 0;
+    if (y > 250 && !showScrollTop) {
+      setShowScrollTop(true);
+    } else if (y <= 250 && showScrollTop) {
+      setShowScrollTop(false);
+    }
+  };
+
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
     try {
@@ -148,8 +163,7 @@ export function OutfitsScreen() {
       id: g.closet_item_id || g.id || String(Math.random()),
       name: g.title || g.name || g.role || 'Garment',
       role: g.role || g.category,
-      image_url: g.clean_image_url || g.image_url || g.thumbnail_data_url || g.cutout_url || g.segmented_image_url,
-
+      image_url: resolveImageUrl(g.clean_image_url || g.image_url || g.thumbnail_data_url || g.cutout_url || g.segmented_image_url),
     }));
 
     const piecesCount = garments.length;
@@ -171,7 +185,7 @@ export function OutfitsScreen() {
                 {garments.slice(0, 4).map((g, idx) => (
                   <View key={idx} style={styles.collageItem}>
                     {g.image_url ? (
-                      <Image source={{ uri: g.image_url }} style={styles.collageImg} resizeMode="contain" />
+                      <Image source={{ uri: resolveImageUrl(g.image_url) }} style={styles.collageImg} resizeMode="contain" />
                     ) : (
                       <Lucide.Shirt size={14} color={colors.mutedFg} />
                     )}
@@ -240,7 +254,7 @@ export function OutfitsScreen() {
                 >
                   <View style={[styles.garmentImageWrap, { backgroundColor: colors.cardOffWhite }]}>
                     {g.image_url ? (
-                      <Image source={{ uri: g.image_url }} style={styles.garmentImage} resizeMode="contain" />
+                      <Image source={{ uri: resolveImageUrl(g.image_url) }} style={styles.garmentImage} resizeMode="contain" />
                     ) : (
                       <Lucide.Shirt size={22} color={colors.mutedFg} />
                     )}
@@ -350,14 +364,23 @@ export function OutfitsScreen() {
         </View>
       ) : (
         <FlatList
+          ref={flatListRef}
           data={outfits}
           renderItem={renderOutfit}
           keyExtractor={(item) => item.id}
           contentContainerStyle={styles.listContent}
           showsVerticalScrollIndicator={false}
+          onScroll={handleScroll}
+          scrollEventThrottle={16}
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />}
         />
       )}
+
+      {/* ── Fast Scroll To Top Floater ─────────────────────────────── */}
+      <ScrollToTopFloater
+        visible={showScrollTop}
+        onPress={() => flatListRef.current?.scrollToOffset({ offset: 0, animated: true })}
+      />
     </SafeAreaView>
   );
 }

@@ -478,6 +478,8 @@ def _ensure_complete_outfit(prop: dict[str, Any], raw_closet: list[dict[str, Any
         )
 
         sanitized_items.append({
+            "id": cid,
+            "closet_item_id": cid,
             "role": true_role,
             "category": c_item.get("category") or true_role.title(),
             "sub_category": c_item.get("sub_category") or c_item.get("item_type") or "",
@@ -488,7 +490,6 @@ def _ensure_complete_outfit(prop: dict[str, Any], raw_closet: list[dict[str, Any
             "clean_image_url": clean_img,
             "image_url": clean_img,
             "thumbnail_data_url": c_item.get("thumbnail_data_url") or clean_img,
-            "closet_item_id": cid,
         })
 
     # 1b. Check for clashing accessories (e.g. formal necktie / bowtie on casual T-shirt, tank top, shorts, etc.)
@@ -541,6 +542,8 @@ def _ensure_complete_outfit(prop: dict[str, Any], raw_closet: list[dict[str, Any
                 or t_item.get("image_url")
             )
             sanitized_items.append({
+                "id": t_item["id"],
+                "closet_item_id": t_item["id"],
                 "role": "top",
                 "category": t_item.get("category") or "Top",
                 "sub_category": t_item.get("sub_category") or t_item.get("item_type") or "",
@@ -550,7 +553,6 @@ def _ensure_complete_outfit(prop: dict[str, Any], raw_closet: list[dict[str, Any
                 "clean_image_url": t_clean_img,
                 "image_url": t_clean_img,
                 "thumbnail_data_url": t_item.get("thumbnail_data_url") or t_clean_img,
-                "closet_item_id": t_item["id"]
             })
             logger.info("Hydrated missing top %s into proposal", t_item["id"])
             has_top = True
@@ -571,6 +573,8 @@ def _ensure_complete_outfit(prop: dict[str, Any], raw_closet: list[dict[str, Any
                 or b_item.get("image_url")
             )
             sanitized_items.append({
+                "id": b_item["id"],
+                "closet_item_id": b_item["id"],
                 "role": "bottom",
                 "category": b_item.get("category") or "Bottom",
                 "sub_category": b_item.get("sub_category") or b_item.get("item_type") or "",
@@ -580,7 +584,6 @@ def _ensure_complete_outfit(prop: dict[str, Any], raw_closet: list[dict[str, Any
                 "clean_image_url": b_clean_img,
                 "image_url": b_clean_img,
                 "thumbnail_data_url": b_item.get("thumbnail_data_url") or b_clean_img,
-                "closet_item_id": b_item["id"]
             })
             logger.info("Hydrated missing bottom %s into proposal", b_item["id"])
             has_bottom = True
@@ -601,6 +604,8 @@ def _ensure_complete_outfit(prop: dict[str, Any], raw_closet: list[dict[str, Any
                 or sh_item.get("image_url")
             )
             sanitized_items.append({
+                "id": sh_item["id"],
+                "closet_item_id": sh_item["id"],
                 "role": "shoes",
                 "category": sh_item.get("category") or "Footwear",
                 "sub_category": sh_item.get("sub_category") or sh_item.get("item_type") or "",
@@ -610,7 +615,6 @@ def _ensure_complete_outfit(prop: dict[str, Any], raw_closet: list[dict[str, Any
                 "clean_image_url": sh_clean_img,
                 "image_url": sh_clean_img,
                 "thumbnail_data_url": sh_item.get("thumbnail_data_url") or sh_clean_img,
-                "closet_item_id": sh_item["id"]
             })
             logger.info("Hydrated missing shoes %s into proposal", sh_item["id"])
             has_shoes = True
@@ -845,7 +849,21 @@ async def generate_scheduled_proposals(
             
             # Validate that the item matches an actual item in the closet list
             if not item.get("closet_item_id") or item["closet_item_id"] not in valid_ids:
-                raise ValueError(f"LLM suggested item not in closet list: {item}")
+                desc = (item.get("description") or item.get("title") or "").lower().strip()
+                role = norm_category(item.get("role") or item.get("category"))
+                if role in ("footwear", "shoes"):
+                    role = "shoes"
+                found_match = None
+                if desc:
+                    found_match = next((x for x in raw_closet if x.get("title", "").lower() in desc or desc in x.get("title", "").lower()), None)
+                if not found_match and role:
+                    found_match = next((x for x in raw_closet if norm_category(x.get("category")) == role), None)
+                if found_match:
+                    item["closet_item_id"] = found_match["id"]
+                    logger.info("Recovered unmapped LLM item '%s' to closet item %s (%s)", desc, found_match["id"], found_match.get("title"))
+                else:
+                    logger.warning("Dropping unmapped LLM item not in closet list: %s", item)
+                    item["closet_item_id"] = None
         
         # Guarantee complete outfit (Top + Bottom + Shoes or Dress + Shoes)
         _ensure_complete_outfit(prop, raw_closet)

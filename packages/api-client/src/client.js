@@ -8,6 +8,7 @@
 
 import axios from 'axios';
 import { _setSingleton } from './_singleton.js';
+import { syncManager } from './sync.js';
 
 /**
  * @param {object} adapters
@@ -91,6 +92,13 @@ export function createApiClient({
   // Wire the singleton so domain modules (auth.js, closet.js, etc.)
   // see the configured client without needing to import it as a parameter.
   _setSingleton(client, API_BASE, tokenStore, userStore);
+
+  try {
+    syncManager.init({
+      getToken: tokenStore.get,
+      backendUrl: BASE,
+    });
+  } catch {}
 
   return { client, API_BASE, tokenStore, userStore };
 }

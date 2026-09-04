@@ -84,15 +84,16 @@ export const GoogleAuthButton = ({
   return (
     <Button
       type="button"
+      variant="outline"
       onClick={onClick}
       disabled={busy || disabled}
-      className=""
+      className="w-full rounded-xl border-border bg-background hover:bg-accent/5"
       data-testid={testId}
     >
       {busy ? (
         <Loader2 className="h-4 w-4 me-2 animate-spin" />
       ) : (
-        <GoogleGlyph className="h-4 w-4"/>
+        <GoogleGlyph className="h-4 w-4 me-2" />
       )}
       {label}
     </Button>

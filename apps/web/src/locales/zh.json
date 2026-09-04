@@ -1080,7 +1080,9 @@
     "harmonyFit": "色彩与剪裁协调度",
     "fitted": "已试穿",
     "hidden": "已隐藏",
-    "selectGarmentSlot": "选择 {{role}}"
+    "selectGarmentSlot": "选择 {{role}}",
+    "realPhoto": "真实照片",
+    "mannequin": "人体模型"
   },
   "outfitCompletion": {
     "cta": "完成搭配",
@@ -1673,7 +1675,12 @@
     "importWardrobe": "导入衣橱",
     "chooseLanguage": "Select Language",
     "planLabel": "{{tier}}套餐",
-    "creditsLabel": "{{credits}}积分"
+    "creditsLabel": "{{credits}}积分",
+    "groups": {
+      "identity": "身份信息",
+      "subscription": "订阅会员",
+      "more": "更多"
+    }
   },
   "admin": {
     "title": "管理",
@@ -2511,7 +2518,22 @@
       "my_digital_avatar": "我的数字分身",
       "this_3d_avatar_is_generated": "此3D分身是基于您的身体测量数据生成的。您可在个人资料中更新尺寸，分身形状会自动适应。",
       "tip": "提示：",
-      "you_can_drag_to_rotate": "您可以拖拽旋转并滑动缩放。此处显示的形状将驱动我们的虚拟试衣物理引擎。"
+      "you_can_drag_to_rotate": "您可以拖拽旋转并滑动缩放。此处显示的形状将驱动我们的虚拟试衣物理引擎。",
+      "vector_mannequin": "人体模型",
+      "real_photo": "真实照片",
+      "avatar_saved_successfully": "数字分身个人资料保存成功！",
+      "failed_to_save_measurements": "保存尺寸失败。请重试。",
+      "subtitle_description": "校准您的身体尺寸或上传全身照片。",
+      "female": "女性",
+      "male": "男性",
+      "height": "身高",
+      "shoulders": "肩宽",
+      "chest": "胸围",
+      "waist": "腰围",
+      "hip": "臀围",
+      "arm_length": "臂长",
+      "inseam": "内长（腿长）",
+      "info_note": "身体测量数据用于校准整个应用中的虚拟试衣物理效果和尺码推荐。"
     }
   },
   "trends": {

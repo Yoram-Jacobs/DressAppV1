@@ -30,6 +30,9 @@ import { useAuth } from '@/lib/auth';
 import { api } from '@/lib/api';
 
 export const LanguagePicker = ({
+  size = 'icon',
+  variant = 'outline',
+  className,
   testIdSuffix = '',
 }) => {
   const { i18n, t } = useTranslation();
@@ -79,19 +82,21 @@ export const LanguagePicker = ({
       <DropdownMenuTrigger asChild>
         <Button
           type="button"
-          className="!p-0 !bg-transparent text-dark-brand shadow-none hover:text-primary-brand"
+          variant={variant}
+          size={size}
+          className={className}
           aria-label={t('language.change', { defaultValue: 'Change language' })}
           data-testid={`language-picker-trigger${testIdSuffix ? '-' + testIdSuffix : ''}`}
         >
-          <Globe className="!h-[30px] !w-[30px]" />
+          <Globe className="h-[18px] w-[18px]" />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent
         align="end"
-        className="w-56 shadow-lg"
+        className="w-56"
         data-testid="language-picker-menu"
       >
-        <DropdownMenuLabel className="text-text-brand">
+        <DropdownMenuLabel className="caps-label text-muted-foreground">
           {t('language.label', { defaultValue: 'Language' })}
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
@@ -108,7 +113,7 @@ export const LanguagePicker = ({
             >
               <span className="truncate">{l.nativeName}</span>
               {active ? (
-                <Check className="h-4 w-4 text-primary-brand shrink-0" />
+                <Check className="h-4 w-4 text-[hsl(var(--accent))] shrink-0" />
               ) : null}
             </DropdownMenuItem>
           );

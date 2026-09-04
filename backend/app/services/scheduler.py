@@ -42,66 +42,13 @@ async def _safe_run() -> None:
     try:
         result = await run_trend_scout()
         logger.info(
-            "Trend-Scout daily run (default): generated=%d skipped=%d date=%s",
+            "Trend-Scout daily run: generated=%d skipped=%d date=%s",
             len(result.get("generated") or []),
             len(result.get("skipped") or []),
             result.get("date"),
         )
     except Exception as exc:  # noqa: BLE001
-        logger.warning("Trend-Scout daily run (default) failed: %s", exc)
-
-    # Dynamic run for other premium users' countries
-    try:
-        db = get_db()
-        cursor = db.users.find(
-            {
-                "subscription.is_active": True,
-                "subscription.tier": {"$in": ["manager", "professional"]}
-            },
-            {"address.country": 1, "address.country_code": 1, "home_location.country": 1, "home_location.country_code": 1}
-        )
-        countries = set()
-        async for user in cursor:
-            addr = user.get("address") or {}
-            if isinstance(addr, dict):
-                cc = addr.get("country_code") or addr.get("country")
-                if isinstance(cc, str) and cc.strip():
-                    countries.add(cc.strip().upper())
-            hl = user.get("home_location") or {}
-            if isinstance(hl, dict):
-                cc = hl.get("country_code") or hl.get("country")
-                if isinstance(cc, str) and cc.strip():
-                    countries.add(cc.strip().upper())
-
-        iso_countries = set()
-        for c in countries:
-            if c in {"ISRAEL", "IL"}:
-                iso_countries.add("IL")
-            elif c in {"UNITED STATES", "USA", "US"}:
-                iso_countries.add("US")
-            elif c in {"UNITED KINGDOM", "UK", "GB"}:
-                iso_countries.add("GB")
-            elif c in {"FRANCE", "FR"}:
-                iso_countries.add("FR")
-            elif len(c) == 2:
-                iso_countries.add(c)
-
-        for cc in iso_countries:
-            if cc == "IL":  # Default run already covers IL
-                continue
-            try:
-                res = await run_trend_scout(country_code=cc)
-                logger.info(
-                    "Trend-Scout daily run (%s): generated=%d skipped=%d date=%s",
-                    cc,
-                    len(res.get("generated") or []),
-                    len(res.get("skipped") or []),
-                    res.get("date"),
-                )
-            except Exception as e:
-                logger.warning("Trend-Scout daily run (%s) failed: %s", cc, e)
-    except Exception as exc:  # noqa: BLE001
-        logger.warning("Trend-Scout daily run dynamic countries resolution failed: %s", exc)
+        logger.warning("Trend-Scout daily run failed: %s", exc)
 
 
 async def _safe_monthly_run() -> None:
@@ -306,6 +253,7 @@ def _generate_fallback_advice(
                         "clean_image_url": top_clean,
                         "image_url": top_clean,
                         "thumbnail_data_url": top.get("thumbnail_data_url") or top_clean,
+                        "id": top.get("id"),
                         "closet_item_id": top.get("id")
                     },
                     {
@@ -319,6 +267,7 @@ def _generate_fallback_advice(
                         "clean_image_url": bottom_clean,
                         "image_url": bottom_clean,
                         "thumbnail_data_url": bottom.get("thumbnail_data_url") or bottom_clean,
+                        "id": bottom.get("id"),
                         "closet_item_id": bottom.get("id")
                     },
                 ]
@@ -335,6 +284,7 @@ def _generate_fallback_advice(
                         "clean_image_url": shoe_clean,
                         "image_url": shoe_clean,
                         "thumbnail_data_url": chosen_shoe.get("thumbnail_data_url") or shoe_clean,
+                        "id": chosen_shoe.get("id"),
                         "closet_item_id": chosen_shoe.get("id")
                     })
                 if chosen_acc:
@@ -350,6 +300,7 @@ def _generate_fallback_advice(
                         "clean_image_url": acc_clean,
                         "image_url": acc_clean,
                         "thumbnail_data_url": chosen_acc.get("thumbnail_data_url") or acc_clean,
+                        "id": chosen_acc.get("id"),
                         "closet_item_id": chosen_acc.get("id")
                     })
 
@@ -400,6 +351,7 @@ def _generate_fallback_advice(
                     "clean_image_url": dress_clean,
                     "image_url": dress_clean,
                     "thumbnail_data_url": dress.get("thumbnail_data_url") or dress_clean,
+                    "id": dress.get("id"),
                     "closet_item_id": dress.get("id")
                 },
             ]
@@ -416,6 +368,7 @@ def _generate_fallback_advice(
                     "clean_image_url": shoe_clean,
                     "image_url": shoe_clean,
                     "thumbnail_data_url": chosen_shoe.get("thumbnail_data_url") or shoe_clean,
+                    "id": chosen_shoe.get("id"),
                     "closet_item_id": chosen_shoe.get("id")
                 })
             if chosen_acc:
@@ -431,6 +384,7 @@ def _generate_fallback_advice(
                     "clean_image_url": acc_clean,
                     "image_url": acc_clean,
                     "thumbnail_data_url": chosen_acc.get("thumbnail_data_url") or acc_clean,
+                    "id": chosen_acc.get("id"),
                     "closet_item_id": chosen_acc.get("id")
                 })
 
@@ -706,16 +660,16 @@ async def check_scheduler_triggers() -> None:
                             "why": prop.get("why"),
                             "items": [
                                 {
-                                    # closet_item_id is CRITICAL — without it, the frontend saves
-                                    # outfits with null closet references (empty avatar mannequins).
-                                    "closet_item_id": it.get("closet_item_id") or it.get("id"),
                                     "id": it.get("closet_item_id") or it.get("id"),
-                                    "title": it.get("title") or it.get("name"),
+                                    "closet_item_id": it.get("closet_item_id") or it.get("id"),
+                                    "title": it.get("title") or it.get("name") or it.get("description"),
+                                    "name": it.get("name") or it.get("title") or it.get("description"),
                                     "description": it.get("description") or it.get("title") or it.get("name"),
                                     "role": it.get("role") or it.get("category"),
                                     "category": it.get("category") or it.get("role"),
                                     "clean_image_url": it.get("clean_image_url") if (isinstance(it.get("clean_image_url"), str) and not it.get("clean_image_url", "").startswith("data:")) else None,
                                     "image_url": it.get("image_url") if (isinstance(it.get("image_url"), str) and not it.get("image_url", "").startswith("data:")) else None,
+                                    "thumbnail_data_url": it.get("thumbnail_data_url") if (isinstance(it.get("thumbnail_data_url"), str) and not it.get("thumbnail_data_url", "").startswith("data:")) else None,
                                     "color": it.get("color"),
                                 }
                                 for it in prop.get("items", [])
@@ -774,6 +728,10 @@ def start_scheduler() -> None:
         logger.info(
             "Trend-Scout daily scheduled (at %02d:%02d UTC)", hour, minute
         )
+
+        if settings.TREND_SCOUT_RUN_ON_STARTUP:
+            asyncio.create_task(_safe_run())
+            logger.info("Trend-Scout run on startup triggered in background")
 
         # Trend-Scout monthly refresh (midnight on the 1st of every month)
         _scheduler.add_job(

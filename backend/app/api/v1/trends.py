@@ -47,17 +47,11 @@ def check_trend_scout_access(user: dict) -> None:
 async def get_latest_trends(
     per_bucket: int = Query(default=1, ge=1, le=5),
     gender: str | None = Query(default=None, regex="^(male|female)$"),
-    country: str | None = Query(default=None),
+    country: str | None = Query(default=None, max_length=4),
     user: dict = Depends(get_current_user),
 ) -> dict[str, Any]:
     """Public-safe read: newest card(s) per bucket for the user's gender ecosystem."""
     check_trend_scout_access(user)
-    if country:
-        country = country.strip().upper()
-        if country in {"ISRAEL"}:
-            country = "IL"
-        elif country in {"UNITED STATES", "USA"}:
-            country = "US"
     if not country:
         user_countries = _country_codes(user)
         if user_countries:
@@ -108,7 +102,7 @@ async def get_last_refresh() -> dict[str, Any]:
 async def get_fashion_scout_feed(
     limit: int = Query(default=12, ge=1, le=50),
     language: str | None = Query(default=None, max_length=8),
-    country: str | None = Query(default=None),
+    country: str | None = Query(default=None, max_length=4),
     gender: str | None = Query(default=None, regex="^(male|female)$"),
     personalized: bool = Query(default=True),
     user: dict = Depends(get_current_user),
@@ -118,12 +112,6 @@ async def get_fashion_scout_feed(
     Returns cards matching the user's gender ecosystem and device country location.
     """
     check_trend_scout_access(user)
-    if country:
-        country = country.strip().upper()
-        if country in {"ISRAEL"}:
-            country = "IL"
-        elif country in {"UNITED STATES", "USA"}:
-            country = "US"
     if not gender and user:
         user_sex = (user.get("sex") or user.get("gender") or "female").lower()
         gender = "male" if user_sex == "male" else "female"
@@ -165,7 +153,14 @@ async def run_trend_scout_now(
 ) -> dict[str, Any]:
     """Admin-only trigger for an immediate Trend-Scout run (for testing)."""
     client_type = "mobile" if x_device_type == "mobile" else "desktop"
-    return await run_trend_scout(force=force, client_type=client_type, user=user, country_code=country, gender=gender)
+    res = await run_trend_scout(force=force, client_type=client_type, user=user, country_code=country, gender=gender)
+    try:
+        if user and user.get("id"):
+            from app.services.sync_service import broadcast_sync_event
+            await broadcast_sync_event(user["id"], "trend_scout_updated", {"action": "refresh", "gender": gender, "country": country})
+    except Exception as exc:
+        logger.warning("Failed to broadcast trend_scout_updated: %s", exc)
+    return res
 
 
 @router.post("/run-now-dev")
@@ -182,4 +177,11 @@ async def run_trend_scout_now_dev(
     if not user:
         raise HTTPException(401, "auth required")
     client_type = "mobile" if x_device_type == "mobile" else "desktop"
-    return await run_trend_scout(force=force, client_type=client_type, user=user, country_code=country, gender=gender)
+    res = await run_trend_scout(force=force, client_type=client_type, user=user, country_code=country, gender=gender)
+    try:
+        if user and user.get("id"):
+            from app.services.sync_service import broadcast_sync_event
+            await broadcast_sync_event(user["id"], "trend_scout_updated", {"action": "refresh", "gender": gender, "country": country})
+    except Exception as exc:
+        logger.warning("Failed to broadcast trend_scout_updated: %s", exc)
+    return res

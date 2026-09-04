@@ -1,28 +1,29 @@
-# Estilista de IA Conversacional
+# Estilista Pessoal com Inteligência Artificial
 
-Interaja com um estilista pessoal inteligente que conhece o seu guarda-roupa, o tempo e a sua agenda.
+Converse com um estilista inteligente que conhece seu guarda-roupa, a previsão do tempo e sua rotina diária.
 
 ## Visão Geral
-O Estilista de IA processa consultas de estilo por voz ou texto em linguagem natural, integrando automaticamente condições meteorológicas, eventos do calendário e notificações push através de stores personalizados `useSyncExternalStore` seguros para threads (`stylistStore` e `dailySuggestionsStore`) com cache de 15 minutos e eliminação de pedidos duplicados em curso.
+O AI Stylist é seu consultor de moda pessoal no aplicativo. Você pode conversar digitando ou falando em voz alta como se estivesse conversando com um amigo. Ele consulta a previsão do tempo local, dá uma olhada nos seus compromissos do Google Agenda e sugere looks completos e estilosos montados com as roupas que você já possui.
 
 ## Pré-requisitos
-- Uma chave API Gemini (ou créditos padrão do sistema).
-- Eventos de calendário ligados.
+- Pelo menos uma blusa/camisa, uma calça/saia e um par de sapatos no seu closet.
+- Permissão de microfone ativada para falar por voz.
+- (Opcional) Google Agenda conectado para recomendações adequadas aos seus eventos.
 
 ## Passo a Passo
-1. **Iniciar Sessão**: Abra o separador Stylist e selecione Chat, Shuffle ou Match.
-2. **Entrada de Voz**: Toque no microfone, fale a sua consulta (ex.: "Sugere um conjunto para um dia de chuva") e toque para enviar.
-3. **Reprodução de Áudio**: Ouça a explicação de estilo gerada através do reprodutor de voz de alta fidelidade.
-4. **Misturar (Shuffle)**: Clique no botão Sparkles para rodar a máquina; a IA alinha automaticamente os itens correspondentes em foco.
-5. **Navegação sem Espera**: A navegação entre o Stylist e outros separadores utiliza preferências em memória sem acionar ciclos de pedidos GET à base de dados.
+1. **Abrir o Estilista**: Toque na aba **AI Stylist** no menu inferior.
+2. **Falar ou Digitar**: Toque no **ícone do microfone** e peça uma sugestão (ex.: *"O que vestir para um almoço em um dia chuvoso?"* ou *"Sugira um visual elegante"*).
+3. **Ouvir o Conselho Falado**: O estilista responde com voz natural e exibe as roupas combinadas. Toque em **Ouvir resposta** para escutar novamente.
+4. **Usar a Ferramenta Shuffle**: Quer uma surpresa criativa? Toque em **Shuffle** para girar seu guarda-roupa e descobrir combinações inéditas!
+5. **Salvar no Diário**: Toque em **Salvar Look** para agendar a combinação no seu calendário.
 
 ## Resultados Esperados
-Esquemas de conjuntos personalizados criados em torno das suas preferências pessoais, restrições sazonais e agenda.
+Sugestões de looks sob medida para o clima e sua agenda, acompanhadas de explicações claras sobre por que as peças combinam.
 
-## Resolução de Problemas
-- **Áudio reproduz demasiado devagar**: Alterne entre o Gemini TTS e o recurso Web Speech API nas definições de Profile.
-- **Sugestões repetidas**: Certifique-se de que o seu histórico do calendário de conjuntos está atualizado para que o algoritmo de rotação possa bloquear o uso repetido de peças.
+## Solução de Problemas
+- **Microfone não capta**: Verifique as permissões de microfone nas configurações do seu navegador ou aparelho.
+- **Sugestões repetidas**: Registre o que você veste no calendário para que o estilista priorize peças ainda não usadas.
 
 ## Limitações
-- As recomendações requerem pelo menos uma peça superior, uma peça inferior e um par de sapatos no guarda-roupa para completar um look.
-- A transcrição de voz pode recorrer à introdução de texto padrão em dispositivos não suportados.
+- O estilista sugere apenas peças já cadastradas no seu guarda-roupa digital.
+- Cada interação consome 1 crédito de IA (usuários gratuitos ganham 10 créditos diários grátis).

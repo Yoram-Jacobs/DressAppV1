@@ -1,78 +1,40 @@
-import { useEffect, useRef, useState, useMemo } from "react";
+import { useEffect, useRef, useState, useMemo } from 'react';
+import { useNavigate, useSearchParams, useLocation } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
-  Link,
-  useNavigate,
-  useSearchParams,
-  useLocation,
-} from "react-router-dom";
-import { useTranslation } from "react-i18next";
-import { motion, AnimatePresence } from "framer-motion";
+  ArrowLeft, Upload, Plus, Loader2, Eye, Wand2, Shirt, Store,
+  HandCoins, Gift, Repeat, Trash2, Save, Tag, AlertTriangle,
+  X, Sparkles, Camera, RefreshCw, QrCode, ChevronDown, ChevronUp, Link2,
+  FileText, Folder, Check, Image as ImageIcon, Calendar
+} from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Card, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import {
-  ArrowLeft,
-  Upload,
-  Plus,
-  Loader2,
-  Eye,
-  Wand2,
-  Shirt,
-  Store,
-  HandCoins,
-  Gift,
-  Repeat,
-  Trash2,
-  Save,
-  Tag,
-  AlertTriangle,
-  X,
-  Sparkles,
-  Camera,
-  RefreshCw,
-  QrCode,
-  ChevronDown,
-  ChevronUp,
-  Link2,
-  FileText,
-  Folder,
-  Check,
-  Image as ImageIcon,
-  Calendar,
-} from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from '@/components/ui/select';
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { Progress } from "@/components/ui/progress";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { api } from "@/lib/api";
-import { cn, sha256File, aHashFile, colorSignatureFile } from "@/lib/utils";
-import { findDuplicatesInCloset } from "@/lib/duplicateDetection";
-import { closetStore } from "@/lib/closetStore";
-import { useClosetStore, useClosetItems } from "@/lib/useClosetStore";
-import { workStore } from "@/lib/workStore";
-import DuplicatePreflightDialog from "@/components/DuplicatePreflightDialog";
-import { DppScanner } from "@/components/DppScanner";
-import { WeightedList } from "@/components/WeightedList";
-import { ScanningPipeline } from "@/components/ScanningPipeline";
-import { useAuth } from "@/lib/auth";
-import { deriveSizeFromPreferences } from "@/lib/size_preferences";
+  Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
+} from '@/components/ui/dialog';
+import { Progress } from '@/components/ui/progress';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { api } from '@/lib/api';
+import { cn, sha256File, aHashFile, colorSignatureFile } from '@/lib/utils';
+import { findDuplicatesInCloset } from '@/lib/duplicateDetection';
+import { closetStore } from '@/lib/closetStore';
+import { useClosetStore, useClosetItems } from '@/lib/useClosetStore';
+import { workStore } from '@/lib/workStore';
+import DuplicatePreflightDialog from '@/components/DuplicatePreflightDialog';
+import { DppScanner } from '@/components/DppScanner';
+import { WeightedList } from '@/components/WeightedList';
+import { ScanningPipeline } from '@/components/ScanningPipeline';
+import { useAuth } from '@/lib/auth';
+import { deriveSizeFromPreferences } from '@/lib/size_preferences';
 import {
   labelForCategory,
   labelForDressCode,
@@ -84,137 +46,61 @@ import {
   labelForQuality,
   labelForIntent,
   labelForItemType,
-} from "@/lib/taxonomy";
-import { toast } from "sonner";
-import { useRememberedDirectory } from "@/hooks/useRememberedDirectory";
-import ClosetBanner from "../assets/img/inner6.webp";
+} from '@/lib/taxonomy';
+import { toast } from 'sonner';
+import { useRememberedDirectory } from '@/hooks/useRememberedDirectory';
+
 /* -------------------- constants -------------------- */
 const CATEGORY_OPTIONS = [
-  "Top",
-  "Bottom",
-  "Outerwear",
-  "Full Body",
-  "Footwear",
-  "Accessories",
-  "Underwear",
+  'Top', 'Bottom', 'Outerwear', 'Full Body', 'Footwear', 'Accessories', 'Underwear',
 ];
 const DRESS_CODE_OPTIONS = [
-  "casual",
-  "smart-casual",
-  "business",
-  "formal",
-  "athletic",
-  "loungewear",
+  'casual', 'smart-casual', 'business', 'formal', 'athletic', 'loungewear',
 ];
-const GENDER_OPTIONS = ["men", "women", "unisex", "kids"];
-const SEASON_OPTIONS = ["spring", "summer", "fall", "winter", "all"];
-const STATE_OPTIONS = ["new", "used"];
-const CONDITION_OPTIONS = ["bad", "fair", "good", "excellent"];
-const QUALITY_OPTIONS = ["budget", "mid", "premium", "luxury"];
+const GENDER_OPTIONS = ['men', 'women', 'unisex', 'kids'];
+const SEASON_OPTIONS = ['spring', 'summer', 'fall', 'winter', 'all'];
+const STATE_OPTIONS = ['new', 'used'];
+const CONDITION_OPTIONS = ['bad', 'fair', 'good', 'excellent'];
+const QUALITY_OPTIONS = ['budget', 'mid', 'premium', 'luxury'];
 const PATTERN_OPTIONS = [
-  "solid",
-  "striped",
-  "plaid",
-  "floral",
-  "herringbone",
-  "polka",
-  "paisley",
-  "geometric",
-  "abstract",
+  'solid', 'striped', 'plaid', 'floral', 'herringbone', 'polka', 'paisley',
+  'geometric', 'abstract',
 ];
 const INTENT_OPTIONS = [
-  {
-    value: "own",
-    icon: Shirt,
-    tone: "bg-slate-100 text-slate-900 border-slate-200",
-  },
-  {
-    value: "for_sale",
-    icon: HandCoins,
-    tone: "bg-amber-100 text-amber-900 border-amber-200",
-  },
-  {
-    value: "donate",
-    icon: Gift,
-    tone: "bg-emerald-100 text-emerald-900 border-emerald-200",
-  },
-  {
-    value: "swap",
-    icon: Repeat,
-    tone: "bg-sky-100 text-sky-900 border-sky-200",
-  },
-  {
-    value: "rent",
-    icon: Calendar,
-    tone: "bg-indigo-100 text-indigo-900 border-indigo-200",
-  },
+  { value: 'own', icon: Shirt, tone: 'bg-slate-100 text-slate-900 border-slate-200' },
+  { value: 'for_sale', icon: HandCoins, tone: 'bg-amber-100 text-amber-900 border-amber-200' },
+  { value: 'donate', icon: Gift, tone: 'bg-emerald-100 text-emerald-900 border-emerald-200' },
+  { value: 'swap', icon: Repeat, tone: 'bg-sky-100 text-sky-900 border-sky-200' },
+  { value: 'rent', icon: Calendar, tone: 'bg-indigo-100 text-indigo-900 border-indigo-200' },
 ];
 
 const getDefaultCurrency = () => {
   try {
-    const locale = (navigator.language || "en-US").toUpperCase();
-    const country = locale.split("-")[1];
-
+    const locale = (navigator.language || 'en-US').toUpperCase();
+    const country = locale.split('-')[1];
+    
     const countryToCurrency = {
-      US: "USD",
-      IL: "ILS",
-      GB: "GBP",
-      JP: "JPY",
-      IN: "INR",
-      RU: "RUB",
-      CN: "CNY",
-      TW: "TWD",
-      HK: "HKD",
-      CA: "CAD",
-      AU: "AUD",
-      NZ: "NZD",
-      CH: "CHF",
-      BR: "BRL",
-      MX: "MXN",
-      AR: "ARS",
-      CL: "CLP",
-      CO: "COP",
-      PE: "PEN",
-      UY: "UYU",
-      ZA: "ZAR",
-      SG: "SGD",
-      MY: "MYR",
-      TH: "THB",
-      ID: "IDR",
-      PH: "PHP",
-      KR: "KRW",
-      AE: "AED",
-      SA: "SAR",
-      EG: "EGP",
-      TR: "TRY",
-      SE: "SEK",
-      NO: "NOK",
-      DK: "DKK",
-      PL: "PLN",
+      US: 'USD', IL: 'ILS', GB: 'GBP', JP: 'JPY', IN: 'INR', RU: 'RUB',
+      CN: 'CNY', TW: 'TWD', HK: 'HKD', CA: 'CAD', AU: 'AUD', NZ: 'NZD',
+      CH: 'CHF', BR: 'BRL', MX: 'MXN', AR: 'ARS', CL: 'CLP', CO: 'COP',
+      PE: 'PEN', UY: 'UYU', ZA: 'ZAR', SG: 'SGD', MY: 'MYR', TH: 'THB',
+      ID: 'IDR', PH: 'PHP', KR: 'KRW', AE: 'AED', SA: 'SAR', EG: 'EGP',
+      TR: 'TRY', SE: 'SEK', NO: 'NOK', DK: 'DKK', PL: 'PLN'
     };
 
     if (country && countryToCurrency[country]) {
       return countryToCurrency[country];
     }
 
-    const lang = locale.split("-")[0].toLowerCase();
+    const lang = locale.split('-')[0].toLowerCase();
     const langToCurrency = {
-      he: "ILS",
-      ja: "JPY",
-      hi: "INR",
-      ru: "RUB",
-      zh: "CNY",
-      de: "EUR",
-      fr: "EUR",
-      it: "EUR",
-      es: "EUR",
-      pt: "EUR",
-      ar: "AED",
+      he: 'ILS', ja: 'JPY', hi: 'INR', ru: 'RUB', zh: 'CNY',
+      de: 'EUR', fr: 'EUR', it: 'EUR', es: 'EUR', pt: 'EUR', ar: 'AED'
     };
 
-    return langToCurrency[lang] || "USD";
+    return langToCurrency[lang] || 'USD';
   } catch (e) {
-    return "USD";
+    return 'USD';
   }
 };
 
@@ -224,15 +110,15 @@ const fileToBase64 = async (file, maxSide = 800, quality = 0.6) => {
     const reader = new FileReader();
     reader.onload = () => {
       const dataUrl = reader.result;
-      if (typeof dataUrl !== "string") {
-        return reject(new Error("Failed to read image as data URL"));
+      if (typeof dataUrl !== 'string') {
+        return reject(new Error('Failed to read image as data URL'));
       }
       const img = new Image();
       img.onload = () => {
         let width = img.naturalWidth || img.width || 0;
         let height = img.naturalHeight || img.height || 0;
         if (!width || !height) {
-          const comma = dataUrl.indexOf(",");
+          const comma = dataUrl.indexOf(',');
           return resolve(comma >= 0 ? dataUrl.slice(comma + 1) : dataUrl);
         }
         if (width > maxSide || height > maxSide) {
@@ -245,29 +131,29 @@ const fileToBase64 = async (file, maxSide = 800, quality = 0.6) => {
           }
         }
         try {
-          const canvas = document.createElement("canvas");
+          const canvas = document.createElement('canvas');
           canvas.width = width;
           canvas.height = height;
-          const ctx = canvas.getContext("2d");
+          const ctx = canvas.getContext('2d');
           if (!ctx) {
-            const comma = dataUrl.indexOf(",");
+            const comma = dataUrl.indexOf(',');
             return resolve(comma >= 0 ? dataUrl.slice(comma + 1) : dataUrl);
           }
-          ctx.fillStyle = "#FFFFFF";
+          ctx.fillStyle = '#FFFFFF';
           ctx.fillRect(0, 0, width, height);
           ctx.drawImage(img, 0, 0, width, height);
-          const outDataUrl = canvas.toDataURL("image/jpeg", quality);
+          const outDataUrl = canvas.toDataURL('image/jpeg', quality);
           canvas.width = 0;
           canvas.height = 0;
-          const comma = outDataUrl.indexOf(",");
+          const comma = outDataUrl.indexOf(',');
           resolve(comma >= 0 ? outDataUrl.slice(comma + 1) : outDataUrl);
         } catch (_) {
-          const comma = dataUrl.indexOf(",");
+          const comma = dataUrl.indexOf(',');
           resolve(comma >= 0 ? dataUrl.slice(comma + 1) : dataUrl);
         }
       };
       img.onerror = () => {
-        const comma = dataUrl.indexOf(",");
+        const comma = dataUrl.indexOf(',');
         resolve(comma >= 0 ? dataUrl.slice(comma + 1) : dataUrl);
       };
       img.src = dataUrl;
@@ -277,44 +163,29 @@ const fileToBase64 = async (file, maxSide = 800, quality = 0.6) => {
   });
 };
 
-const fmtCents = (cents, cur = "USD") =>
-  new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: cur || "USD",
-  }).format((cents || 0) / 100);
+const fmtCents = (cents, cur = 'USD') =>
+  new Intl.NumberFormat('en-US', { style: 'currency', currency: cur || 'USD' }).format(
+    (cents || 0) / 100
+  );
 
 const blankFields = () => ({
-  name: "",
-  title: "",
-  caption: "",
-  category: "",
-  sub_category: "",
-  item_type: "",
-  brand: "",
-  gender: "",
-  dress_code: "",
-  season: [],
-  tradition: "",
-  colors: [],
-  fabric_materials: [],
-  pattern: "",
-  state: "",
-  condition: "",
-  quality: "",
+  name: '', title: '', caption: '',
+  category: '', sub_category: '', item_type: '', brand: '',
+  gender: '', dress_code: '', season: [], tradition: '',
+  colors: [], fabric_materials: [], pattern: '',
+  state: '', condition: '', quality: '',
   // Price defaults to 0 (whole-unit display) — was empty before
   // which surfaced as "—" everywhere downstream and forced users
   // through an awkward "first time you set a price" path. ``currency``
   // defaults to USD but ItemDetail lets the user change it later;
   // the marketplace card now honours whatever's on the item.
-  size: "",
-  price_cents: 0,
-  currency: getDefaultCurrency(),
-  marketplace_intent: "own",
-  repair_advice: "",
+  size: '', price_cents: 0, currency: getDefaultCurrency(),
+  marketplace_intent: 'own',
+  repair_advice: '',
   tags: [],
-  image_quality_status: "",
-  image_quality_reason: "",
-  reconstruction_prompt: "",
+  image_quality_status: '',
+  image_quality_reason: '',
+  reconstruction_prompt: '',
 });
 
 /** Coerce analyze payload into a plain, editable form dict.
@@ -333,7 +204,7 @@ const hydrate = (a, user) => {
       Object.entries(a || {}).filter(([k]) => k in blankFields()),
     ),
   };
-  if (user && (!out.size || String(out.size).trim() === "")) {
+  if (user && (!out.size || String(out.size).trim() === '')) {
     const pref = deriveSizeFromPreferences(user, out);
     if (pref) out.size = pref;
   }
@@ -343,106 +214,79 @@ const hydrate = (a, user) => {
 /* -------------------- Stepper Component -------------------- */
 function Stepper({ cards, saving, bgBatch }) {
   const { t } = useTranslation();
-
+  
   // Calculate states
   const total = cards.length || (bgBatch ? bgBatch.total : 0);
-  const scanned = cards.filter(
-    (c) => c.status !== "scanning" && c.status !== "error",
-  ).length;
-
+  const scanned = cards.filter(c => c.status !== 'scanning' && c.status !== 'error').length;
+  
   let currentStep = 1;
   if (saving || (bgBatch && bgBatch.processed === bgBatch.total)) {
     currentStep = 3;
   } else if (total > 0) {
     currentStep = 2;
   }
-  const steps = [
-    {
-      id: 1,
-      key: "capture",
-      label: t("addItem.step.capture", { defaultValue: "Capture" }),
-    },
-    {
-      id: 2,
-      key: "refinement",
-      label: t("addItem.step.refinement", { defaultValue: "Refine" }),
-    },
-    {
-      id: 3,
-      key: "save",
-      label: t("addItem.step.save", { defaultValue: "Integrate" }),
-    },
-  ];
-
-  const progressWidth =
-    currentStep === 1 ? "0%" : currentStep === 2 ? "50%" : "100%";
-
+  
   return (
-    <>
-      <div
-        className="w-full max-w-2xl mx-auto mb-10 px-4"
-        data-testid="capture-stepper"
-      >
-        <div className="relative flex items-center justify-between">
-          {/* Track — inset by half circle width (w-8 = 32px, so inset 16px = start-4/end-4) */}
-          <div className="absolute start-4 end-4 top-4 h-[2px] bg-border rounded-full">
-            <motion.div
-              className="h-full rounded-full bg-primary-brand"
-              initial={false}
-              animate={{ width: progressWidth }}
-              transition={{ duration: 0.35, ease: "easeInOut" }}
-            />
+    <div className="w-full max-w-2xl mx-auto mb-8 px-4" data-testid="capture-stepper">
+      <div className="relative flex items-center justify-between">
+        {/* Progress Line */}
+        <div className="absolute start-0 top-1/2 -translate-y-1/2 end-0 h-0.5 bg-border -z-10">
+          <motion.div 
+            className="h-full bg-[hsl(var(--accent))]"
+            initial={false}
+            animate={{ 
+              width: currentStep === 1 ? '0%' : currentStep === 2 ? '50%' : '100%' 
+            }}
+            transition={{ duration: 0.3 }}
+          />
+        </div>
+        
+        {/* Step 1: Capture */}
+        <div className="flex flex-col items-center">
+          <div className={`h-8 w-8 rounded-full flex items-center justify-center text-xs font-semibold border-2 transition-colors duration-300 ${
+            currentStep >= 1 
+              ? 'bg-[hsl(var(--accent))] text-white border-[hsl(var(--accent))] shadow-[0_0_10px_rgba(31,111,107,0.3)]' 
+              : 'bg-background text-muted-foreground border-border'
+          }`}>
+            {currentStep > 1 ? '✓' : '1'}
           </div>
+          <span className={`text-[10px] caps-label mt-2 font-medium text-center ${currentStep >= 1 ? 'text-foreground' : 'text-muted-foreground'}`}>
+            {t('addItem.step.capture', { defaultValue: 'Capture' })}
+          </span>
+        </div>
 
-          {steps.map((step) => {
-            const isDone = currentStep > step.id;
-            const isActive = currentStep === step.id;
-            const isFinal = step.id === 3;
+        {/* Step 2: Refine Details */}
+        <div className="flex flex-col items-center">
+          <div className={`h-8 w-8 rounded-full flex items-center justify-center text-xs font-semibold border-2 transition-colors duration-300 ${
+            currentStep >= 2
+              ? currentStep > 2 
+                ? 'bg-[hsl(var(--accent))] text-white border-[hsl(var(--accent))] shadow-[0_0_10px_rgba(31,111,107,0.3)]'
+                : 'bg-background text-[hsl(var(--accent))] border-[hsl(var(--accent))] font-bold shadow-[0_0_10px_rgba(31,111,107,0.15)]'
+              : 'bg-background text-muted-foreground border-border'
+          }`}>
+            {currentStep > 2 ? '✓' : '2'}
+          </div>
+          <span className={`text-[10px] caps-label mt-2 font-medium text-center ${currentStep >= 2 ? 'text-foreground' : 'text-muted-foreground'}`}>
+            {t('addItem.step.refinement', { defaultValue: 'Refine' })}
+            {currentStep === 2 && total > 0 && ` (${scanned}/${total})`}
+          </span>
+        </div>
 
-            return (
-              <div
-                key={step.id}
-                className="relative z-10 flex flex-col items-center gap-2"
-              >
-                <div
-                  className={[
-                    "flex h-8 w-8 items-center justify-center rounded-full border-2 text-xs font-bold transition-all duration-300",
-                    isFinal && isActive
-                      ? "bg-brand text-brand-foreground border-brand shadow-[0_0_0_4px_rgba(31,92,69,0.12)] animate-pulse"
-                      : isDone
-                        ? "bg-primary-brand text-white border-primary-brand shadow-[0_0_0_4px_rgba(31,92,69,0.12)]"
-                        : isActive
-                          ? "bg-primary-brand text-white border-primary-brand font-bold shadow-[0_0_0_4px_rgba(31,92,69,0.12)]"
-                          : "bg-background text-text-brand border-border",
-                  ].join(" ")}
-                >
-                  {isDone ? (
-                    <Check className="h-4 w-4" strokeWidth={3} />
-                  ) : (
-                    step.id
-                  )}
-                </div>
-
-                <span
-                  className={[
-                    "text-[12px] font-bold uppercase tracking-wide text-center transition-colors duration-300",
-                    isActive || isDone ? "text-dark-brand" : "text-text-brand",
-                  ].join(" ")}
-                >
-                  {step.label}
-                  {isActive && step.key === "refinement" && total > 0 && (
-                    <span className="text-muted-foreground font-normal normal-case tracking-normal">
-                      {" "}
-                      ({scanned}/{total})
-                    </span>
-                  )}
-                </span>
-              </div>
-            );
-          })}
+        {/* Step 3: Save */}
+        <div className="flex flex-col items-center">
+          <div className={`h-8 w-8 rounded-full flex items-center justify-center text-xs font-semibold border-2 transition-colors duration-300 ${
+            currentStep === 3 
+              ? 'bg-brand text-brand-foreground border-brand shadow-[0_0_12px_rgba(232,96,60,0.4)] animate-pulse' 
+              : 'bg-background text-muted-foreground border-border'
+          }`}>
+            3
+          </div>
+          <span className={`text-[10px] caps-label mt-2 font-medium text-center ${currentStep === 3 ? 'text-foreground' : 'text-muted-foreground'}`}>
+            {t('addItem.step.save', { defaultValue: 'Integrate' })}
+          </span>
         </div>
       </div>
-    </>
+    </div>
   );
 }
 
@@ -453,7 +297,7 @@ export default function AddItem() {
   const location = useLocation();
   const { user } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
-  const isSuitcase = searchParams.get("from") === "suitcase";
+  const isSuitcase = searchParams.get('from') === 'suitcase';
   const [cards, setCards] = useState([]); // [{id,file,previewUrl,base64,status,progress,fields,error,dppData?}]
   const [saving, setSaving] = useState(false);
 
@@ -478,17 +322,17 @@ export default function AddItem() {
   // ``saveAll`` to flush them too and then navigates.
   const [pendingAutoSave, setPendingAutoSave] = useState(false);
   const [scanOpen, setScanOpen] = useState(false);
-  const [receiptText, setReceiptText] = useState("");
+  const [receiptText, setReceiptText] = useState('');
   const [isExtracting, setIsExtracting] = useState(false);
-  const [importMode, setImportMode] = useState("text"); // 'text' | 'file' | 'url'
+  const [importMode, setImportMode] = useState('text'); // 'text' | 'file' | 'url'
   const [importFile, setImportFile] = useState(null);
-  const [importUrl, setImportUrl] = useState("");
+  const [importUrl, setImportUrl] = useState('');
   const [selectors, setSelectors] = useState([]);
   const [dragState, setDragState] = useState(null);
   const [extractedItems, setExtractedItems] = useState([]);
   const [linkingItemId, setLinkingItemId] = useState(null);
   const [closetModalOpen, setClosetModalOpen] = useState(false);
-  const [closetSearch, setClosetSearch] = useState("");
+  const [closetSearch, setClosetSearch] = useState('');
   const itemImageInputRef = useRef(null);
   const [activeItemForImage, setActiveItemForImage] = useState(null);
   const [imagePreviewUrl, setImagePreviewUrl] = useState(null);
@@ -502,11 +346,10 @@ export default function AddItem() {
   // every open tab simultaneously.
   const closetItems = useClosetItems();
   const closetItemsFiltered = useMemo(() => {
-    return (closetItems || []).filter(
-      (it) =>
-        it.title?.toLowerCase().includes(closetSearch.toLowerCase()) ||
-        it.brand?.toLowerCase().includes(closetSearch.toLowerCase()) ||
-        it.category?.toLowerCase().includes(closetSearch.toLowerCase()),
+    return (closetItems || []).filter(it => 
+      it.title?.toLowerCase().includes(closetSearch.toLowerCase()) ||
+      it.brand?.toLowerCase().includes(closetSearch.toLowerCase()) ||
+      it.category?.toLowerCase().includes(closetSearch.toLowerCase())
     );
   }, [closetItems, closetSearch]);
 
@@ -515,15 +358,13 @@ export default function AddItem() {
       setImagePreviewUrl(null);
       return;
     }
-    if (
-      importFile.type.startsWith("image/") ||
-      importFile.type === "application/pdf"
-    ) {
+    if (importFile.type.startsWith('image/') || importFile.type === 'application/pdf') {
       const url = URL.createObjectURL(importFile);
       setImagePreviewUrl(url);
       return () => URL.revokeObjectURL(url);
     }
   }, [importFile]);
+
 
   const receiptFileInputRef = useRef(null);
   // Background batch state — shown instead of cards when user uploads
@@ -560,27 +401,22 @@ export default function AddItem() {
   // re-opens in the same folder next time.  Safari/Firefox fall back to the
   // hidden <input> .click() path — the browser handles its own last-dir.
   const [isUrlModalOpen, setIsUrlModalOpen] = useState(false);
-  const [urlInput, setUrlInput] = useState("");
+  const [urlInput, setUrlInput] = useState('');
   const [isUrlLoading, setIsUrlLoading] = useState(false);
 
-  const { openFilePicker: openImagePicker } = useRememberedDirectory("images");
-  const { openFilePicker: openReceiptPicker } =
-    useRememberedDirectory("receipts");
+  const { openFilePicker: openImagePicker } = useRememberedDirectory('images');
+  const { openFilePicker: openReceiptPicker } = useRememberedDirectory('receipts');
 
   const handleUrlUpload = async (url) => {
     if (!url || !url.trim()) return;
     setIsUrlLoading(true);
-    const loadingId = toast.loading(
-      t("addItem.urlImporting", {
-        defaultValue: "Importing image from URL...",
-      }),
-    );
+    const loadingId = toast.loading(t('addItem.urlImporting', { defaultValue: 'Importing image from URL...' }));
     try {
       const res = await api.fetchImageUrl(url.trim());
       if (res?.image_b64) {
         const b64 = res.image_b64;
-        const mime = res.mime_type || "image/jpeg";
-
+        const mime = res.mime_type || 'image/jpeg';
+        
         const cardId = `url-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
         const newCard = {
           id: cardId,
@@ -588,84 +424,61 @@ export default function AddItem() {
           mime: mime,
           previewUrl: `data:${mime};base64,${b64}`,
           base64: b64,
-          status: "scanning",
+          status: 'scanning',
           progress: 4,
           fields: blankFields(),
           error: null,
           label: null,
-          sourceFilename: "url-upload.jpg",
+          sourceFilename: 'url-upload.jpg',
         };
-
+        
         setCards((prev) => [...prev, newCard]);
         setIsUrlModalOpen(false);
-        setUrlInput("");
-        toast.success(
-          t("addItem.urlImportSuccess", {
-            defaultValue: "Image imported successfully!",
-          }),
-          { id: loadingId },
-        );
-
+        setUrlInput('');
+        toast.success(t('addItem.urlImportSuccess', { defaultValue: 'Image imported successfully!' }), { id: loadingId });
+        
         analyzeCard(newCard);
       } else {
-        toast.error(
-          t("addItem.urlImportFailed", {
-            defaultValue: "Failed to import image from URL",
-          }),
-          { id: loadingId },
-        );
+        toast.error(t('addItem.urlImportFailed', { defaultValue: 'Failed to import image from URL' }), { id: loadingId });
       }
     } catch (err) {
-      console.error("[handleUrlUpload] Error:", err);
-      toast.error(
-        err?.response?.data?.detail ||
-          t("addItem.urlImportFailed", {
-            defaultValue: "Failed to import image from URL",
-          }),
-        { id: loadingId },
-      );
+      console.error('[handleUrlUpload] Error:', err);
+      toast.error(err?.response?.data?.detail || t('addItem.urlImportFailed', { defaultValue: 'Failed to import image from URL' }), { id: loadingId });
     } finally {
       setIsUrlLoading(false);
     }
   };
 
-  const pickFilesWithMemory = () =>
-    openImagePicker({
-      accept: [{ description: "Images", accept: { "image/*": [] } }],
-      multiple: true,
-      fallbackInputRef: fileInputRef,
-      onFiles: (files) => handleFiles(files),
-    });
+  const pickFilesWithMemory = () => openImagePicker({
+    accept: [{ description: 'Images', accept: { 'image/*': [] } }],
+    multiple: true,
+    fallbackInputRef: fileInputRef,
+    onFiles: (files) => handleFiles(files),
+  });
 
   // Hydrate from a DPP scan or auto-open Camera when navigated with ?source=camera
   useEffect(() => {
-    const src = searchParams.get("source");
-    if (src === "camera") {
-      searchParams.delete("source");
+    const src = searchParams.get('source');
+    if (src === 'camera') {
+      searchParams.delete('source');
       setSearchParams(searchParams, { replace: true });
       setTimeout(() => {
         openCamera();
       }, 150);
       return;
     }
-    if (src !== "dpp") return;
+    if (src !== 'dpp') return;
     let raw = null;
     try {
-      raw = sessionStorage.getItem("dpp_draft");
-      sessionStorage.removeItem("dpp_draft");
-    } catch (_) {
-      /* ignore */
-    }
+      raw = sessionStorage.getItem('dpp_draft');
+      sessionStorage.removeItem('dpp_draft');
+    } catch (_) { /* ignore */ }
     // Always clear the query string so a browser refresh doesn't replay.
-    searchParams.delete("source");
+    searchParams.delete('source');
     setSearchParams(searchParams, { replace: true });
     if (!raw) return;
     let parsed = null;
-    try {
-      parsed = JSON.parse(raw);
-    } catch (_) {
-      return;
-    }
+    try { parsed = JSON.parse(raw); } catch (_) { return; }
     const res = parsed?.payload;
     if (!res) return;
     hydrateFromDpp(res);
@@ -678,7 +491,7 @@ export default function AddItem() {
     const analysis = first.analysis || {};
     const dppData = first.dpp_data || null;
     const hasImage = !!first.crop_base64;
-    const mime = first.crop_mime || "image/png";
+    const mime = first.crop_mime || 'image/png';
     const previewUrl = hasImage
       ? `data:${mime};base64,${first.crop_base64}`
       : null;
@@ -688,29 +501,29 @@ export default function AddItem() {
       mime: hasImage ? mime : null,
       previewUrl,
       base64: hasImage ? first.crop_base64 : null,
-      status: "ready",
+      status: 'ready',
       progress: 100,
       fields: hydrate(analysis, user),
       error: null,
       label: first.label || analysis.item_type || null,
       dppData,
-      source: "dpp",
+      source: 'dpp',
     };
     setCards((prev) => [draft, ...prev]);
-    toast.success(t("dpp.scanner.imported"));
+    toast.success(t('dpp.scanner.imported'));
   };
 
   const handleScanDecoded = async (payload) => {
     setScanOpen(false);
     if (!payload) return;
-    const loadingId = toast.loading(t("dpp.scanner.importing"));
+    const loadingId = toast.loading(t('dpp.scanner.importing'));
     try {
       const res = await api.importDpp(payload);
       toast.dismiss(loadingId);
       if (res?.parse_error) {
         toast.error(
           t(`dpp.scanner.errors.${res.parse_error}`, {
-            defaultValue: t("dpp.scanner.noData"),
+            defaultValue: t('dpp.scanner.noData'),
           }),
         );
         return;
@@ -718,7 +531,7 @@ export default function AddItem() {
       hydrateFromDpp(res);
     } catch (err) {
       toast.dismiss(loadingId);
-      toast.error(err?.response?.data?.detail || t("dpp.scanner.importFailed"));
+      toast.error(err?.response?.data?.detail || t('dpp.scanner.importFailed'));
     }
   };
 
@@ -728,49 +541,29 @@ export default function AddItem() {
       setImportFile(null);
       return;
     }
-
+    
     setImportFile(file);
-
-    const isImage = file.type.startsWith("image/");
-    const isPdf = file.type === "application/pdf";
-
+    
+    const isImage = file.type.startsWith('image/');
+    const isPdf = file.type === 'application/pdf';
+    
     if (isPdf) {
       setIsExtracting(true);
-      const loadingId = toast.loading(
-        t("addItem.import.extractingText", {
-          defaultValue: "Extracting text using Gemini OCR...",
-        }),
-      );
+      const loadingId = toast.loading(t('addItem.import.extractingText', { defaultValue: 'Extracting text using Gemini OCR...' }));
       try {
         const formData = new FormData();
-        formData.append("file", file);
+        formData.append('file', file);
         const res = await api.extractPdfText(formData);
         if (res.text) {
           setReceiptText(res.text);
-          toast.success(
-            t("addItem.import.textExtracted", {
-              defaultValue: "Text extracted successfully via Gemini OCR!",
-            }),
-            { id: loadingId },
-          );
+          toast.success(t('addItem.import.textExtracted', { defaultValue: 'Text extracted successfully via Gemini OCR!' }), { id: loadingId });
           await handleExtractReceipt(file, res.text);
         } else {
-          toast.error(
-            t("addItem.import.textEmpty", {
-              defaultValue: "No readable text found.",
-            }),
-            { id: loadingId },
-          );
+          toast.error(t('addItem.import.textEmpty', { defaultValue: 'No readable text found.' }), { id: loadingId });
         }
       } catch (err) {
         console.error(err);
-        toast.error(
-          err?.response?.data?.detail ||
-            t("addItem.import.textError", {
-              defaultValue: "Failed to extract text.",
-            }),
-          { id: loadingId },
-        );
+        toast.error(err?.response?.data?.detail || t('addItem.import.textError', { defaultValue: 'Failed to extract text.' }), { id: loadingId });
       } finally {
         setIsExtracting(false);
       }
@@ -783,20 +576,19 @@ export default function AddItem() {
     }
 
     // Check if it is a text-based format
-    const isText =
-      file.type.startsWith("text/") ||
-      file.name.endsWith(".txt") ||
-      file.name.endsWith(".csv") ||
-      file.name.endsWith(".json") ||
-      file.name.endsWith(".html") ||
-      file.name.endsWith(".rtf") ||
-      file.name.endsWith(".xml") ||
-      file.name.endsWith(".md");
-
+    const isText = file.type.startsWith('text/') || 
+                   file.name.endsWith('.txt') || 
+                   file.name.endsWith('.csv') || 
+                   file.name.endsWith('.json') || 
+                   file.name.endsWith('.html') || 
+                   file.name.endsWith('.rtf') ||
+                   file.name.endsWith('.xml') ||
+                   file.name.endsWith('.md');
+                   
     if (isText) {
       const reader = new FileReader();
       reader.onload = async (evt) => {
-        const text = evt.target?.result || "";
+        const text = evt.target?.result || '';
         setReceiptText(text);
         await handleExtractReceipt(file, text);
       };
@@ -806,8 +598,8 @@ export default function AddItem() {
 
   const handleCancelDocument = () => {
     setImportFile(null);
-    setReceiptText("");
-    setImportUrl("");
+    setReceiptText('');
+    setImportUrl('');
     setExtractedItems([]);
   };
 
@@ -817,37 +609,29 @@ export default function AddItem() {
       reader.onload = (e) => {
         const img = new Image();
         img.onload = () => {
-          const canvas = document.createElement("canvas");
-          const ctx = canvas.getContext("2d");
-
+          const canvas = document.createElement('canvas');
+          const ctx = canvas.getContext('2d');
+          
           // Calculate bounds in pixels
           const x = (selector.x / 100) * img.width;
           const y = (selector.y / 100) * img.height;
           const w = (selector.w / 100) * img.width;
           const h = (selector.h / 100) * img.height;
-
+          
           canvas.width = w;
           canvas.height = h;
           ctx.drawImage(img, x, y, w, h, 0, 0, w, h);
-
-          canvas.toBlob(
-            (blob) => {
-              if (blob) {
-                const croppedFile = new File(
-                  [blob],
-                  `crop-${selector.id}-${file.name}`,
-                  { type: "image/jpeg" },
-                );
-                resolve(croppedFile);
-              } else {
-                reject(new Error("Canvas crop failed"));
-              }
-            },
-            "image/jpeg",
-            0.9,
-          );
+          
+          canvas.toBlob((blob) => {
+            if (blob) {
+              const croppedFile = new File([blob], `crop-${selector.id}-${file.name}`, { type: 'image/jpeg' });
+              resolve(croppedFile);
+            } else {
+              reject(new Error('Canvas crop failed'));
+            }
+          }, 'image/jpeg', 0.9);
         };
-        img.onerror = () => reject(new Error("Image load failed"));
+        img.onerror = () => reject(new Error('Image load failed'));
         img.src = e.target.result;
       };
       reader.onerror = () => reject(reader.error);
@@ -856,25 +640,25 @@ export default function AddItem() {
   };
 
   const cropText = (text, selector) => {
-    const lines = text.split("\n");
+    const lines = text.split('\n');
     const startLine = Math.floor((selector.y / 100) * lines.length);
     const endLine = Math.ceil(((selector.y + selector.h) / 100) * lines.length);
-    return lines.slice(startLine, endLine).join("\n");
+    return lines.slice(startLine, endLine).join('\n');
   };
 
   const handleSelectorMouseDown = (e, id, mode) => {
     e.preventDefault();
-    const selector = selectors.find((s) => s.id === id);
+    const selector = selectors.find(s => s.id === id);
     if (!selector) return;
-
+    
     const clientX = e.clientX;
     const clientY = e.clientY;
-
-    const container = e.currentTarget.closest(".selector-container");
+    
+    const container = e.currentTarget.closest('.selector-container');
     if (!container) return;
     const rect = container.getBoundingClientRect();
     const host = container.parentElement;
-
+    
     setDragState({
       id,
       mode,
@@ -887,15 +671,15 @@ export default function AddItem() {
       containerWidth: rect.width,
       containerHeight: rect.height,
       startScrollTop: host ? host.scrollTop : 0,
-      startScrollLeft: host ? host.scrollLeft : 0,
+      startScrollLeft: host ? host.scrollLeft : 0
     });
   };
 
   const handleSelectorTouchStart = (e, id, mode) => {
-    const selector = selectors.find((s) => s.id === id);
+    const selector = selectors.find(s => s.id === id);
     if (!selector) return;
-
-    const container = e.currentTarget.closest(".selector-container");
+    
+    const container = e.currentTarget.closest('.selector-container');
     if (!container) return;
     const rect = container.getBoundingClientRect();
     const host = container.parentElement;
@@ -909,14 +693,14 @@ export default function AddItem() {
       const initialDist = Math.sqrt(dx * dx + dy * dy);
       const angleRad = Math.abs(Math.atan2(dy, dx));
       const angleDeg = (angleRad * 180) / Math.PI;
-
-      let pinchMode = "pinchDiag";
+      
+      let pinchMode = 'pinchDiag';
       if (angleDeg < 25) {
-        pinchMode = "pinchX";
+        pinchMode = 'pinchX';
       } else if (angleDeg > 65) {
-        pinchMode = "pinchY";
+        pinchMode = 'pinchY';
       }
-
+      
       setDragState({
         id,
         mode: pinchMode,
@@ -930,7 +714,7 @@ export default function AddItem() {
         containerWidth: rect.width,
         containerHeight: rect.height,
         startScrollTop: host ? host.scrollTop : 0,
-        startScrollLeft: host ? host.scrollLeft : 0,
+        startScrollLeft: host ? host.scrollLeft : 0
       });
       return;
     }
@@ -938,7 +722,7 @@ export default function AddItem() {
     // Fallback to 1-finger drag/resize
     const touch = e.touches[0];
     if (!touch) return;
-
+    
     setDragState({
       id,
       mode,
@@ -951,134 +735,83 @@ export default function AddItem() {
       containerWidth: rect.width,
       containerHeight: rect.height,
       startScrollTop: host ? host.scrollTop : 0,
-      startScrollLeft: host ? host.scrollLeft : 0,
+      startScrollLeft: host ? host.scrollLeft : 0
     });
   };
 
   useEffect(() => {
     const handleMouseMove = (e) => {
       if (!dragState) return;
-      if (e.type === "touchmove" && e.cancelable) {
+      if (e.type === 'touchmove' && e.cancelable) {
         e.preventDefault();
       }
 
-      if (
-        (dragState.mode === "pinchX" ||
-          dragState.mode === "pinchY" ||
-          dragState.mode === "pinchDiag") &&
-        e.type === "touchmove" &&
-        e.touches &&
-        e.touches.length === 2
-      ) {
+      if ((dragState.mode === 'pinchX' || dragState.mode === 'pinchY' || dragState.mode === 'pinchDiag') && e.type === 'touchmove' && e.touches && e.touches.length === 2) {
         const t1 = e.touches[0];
         const t2 = e.touches[1];
-
-        if (dragState.mode === "pinchX") {
+        
+        if (dragState.mode === 'pinchX') {
           const currentDx = Math.abs(t1.clientX - t2.clientX);
           const scaleX = currentDx / (dragState.initialDx || 1);
-          setSelectors((prev) =>
-            prev.map((s) => {
-              if (s.id !== dragState.id) return s;
-              const newW = Math.max(
-                5,
-                Math.min(100 - s.x, dragState.startWidth * scaleX),
-              );
-              return { ...s, w: Number(newW.toFixed(2)) };
-            }),
-          );
-        } else if (dragState.mode === "pinchY") {
+          setSelectors(prev => prev.map(s => {
+            if (s.id !== dragState.id) return s;
+            const newW = Math.max(5, Math.min(100 - s.x, dragState.startWidth * scaleX));
+            return { ...s, w: Number(newW.toFixed(2)) };
+          }));
+        } else if (dragState.mode === 'pinchY') {
           const currentDy = Math.abs(t1.clientY - t2.clientY);
           const scaleY = currentDy / (dragState.initialDy || 1);
-          setSelectors((prev) =>
-            prev.map((s) => {
-              if (s.id !== dragState.id) return s;
-              const newH = Math.max(
-                1.2,
-                Math.min(100 - s.y, dragState.startHeight * scaleY),
-              );
-              return { ...s, h: Number(newH.toFixed(2)) };
-            }),
-          );
-        } else if (dragState.mode === "pinchDiag") {
+          setSelectors(prev => prev.map(s => {
+            if (s.id !== dragState.id) return s;
+            const newH = Math.max(1.2, Math.min(100 - s.y, dragState.startHeight * scaleY));
+            return { ...s, h: Number(newH.toFixed(2)) };
+          }));
+        } else if (dragState.mode === 'pinchDiag') {
           const dx = t1.clientX - t2.clientX;
           const dy = t1.clientY - t2.clientY;
           const currentDist = Math.sqrt(dx * dx + dy * dy);
           const scale = currentDist / (dragState.initialDist || 1);
-          setSelectors((prev) =>
-            prev.map((s) => {
-              if (s.id !== dragState.id) return s;
-              const newW = Math.max(
-                5,
-                Math.min(100 - s.x, dragState.startWidth * scale),
-              );
-              const newH = Math.max(
-                1.2,
-                Math.min(100 - s.y, dragState.startHeight * scale),
-              );
-              return {
-                ...s,
-                w: Number(newW.toFixed(2)),
-                h: Number(newH.toFixed(2)),
-              };
-            }),
-          );
+          setSelectors(prev => prev.map(s => {
+            if (s.id !== dragState.id) return s;
+            const newW = Math.max(5, Math.min(100 - s.x, dragState.startWidth * scale));
+            const newH = Math.max(1.2, Math.min(100 - s.y, dragState.startHeight * scale));
+            return { ...s, w: Number(newW.toFixed(2)), h: Number(newH.toFixed(2)) };
+          }));
         }
         return;
       }
-
-      const clientX = e.type === "touchmove" ? e.touches[0].clientX : e.clientX;
-      const clientY = e.type === "touchmove" ? e.touches[0].clientY : e.clientY;
-
-      const container = document.querySelector(".selector-container");
+      
+      const clientX = e.type === 'touchmove' ? e.touches[0].clientX : e.clientX;
+      const clientY = e.type === 'touchmove' ? e.touches[0].clientY : e.clientY;
+      
+      const container = document.querySelector('.selector-container');
       const host = container ? container.parentElement : null;
       const currentScrollTop = host ? host.scrollTop : 0;
       const currentScrollLeft = host ? host.scrollLeft : 0;
-
+      
       const scrollDeltaX = currentScrollLeft - (dragState.startScrollLeft || 0);
       const scrollDeltaY = currentScrollTop - (dragState.startScrollTop || 0);
-
-      const deltaX = clientX - dragState.startX + scrollDeltaX;
-      const deltaY = clientY - dragState.startY + scrollDeltaY;
-
+      
+      const deltaX = (clientX - dragState.startX) + scrollDeltaX;
+      const deltaY = (clientY - dragState.startY) + scrollDeltaY;
+      
       const deltaXPercent = (deltaX / dragState.containerWidth) * 100;
       const deltaYPercent = (deltaY / dragState.containerHeight) * 100;
-
-      setSelectors((prev) =>
-        prev.map((s) => {
-          if (s.id !== dragState.id) return s;
-
-          if (dragState.mode === "move") {
-            const newX = Math.max(
-              0,
-              Math.min(100 - s.w, dragState.startLeft + deltaXPercent),
-            );
-            const newY = Math.max(
-              0,
-              Math.min(100 - s.h, dragState.startTop + deltaYPercent),
-            );
-            return {
-              ...s,
-              x: Number(newX.toFixed(2)),
-              y: Number(newY.toFixed(2)),
-            };
-          } else if (dragState.mode === "resize") {
-            const newW = Math.max(
-              5,
-              Math.min(100 - s.x, dragState.startWidth + deltaXPercent),
-            );
-            const newH = Math.max(
-              1.2,
-              Math.min(100 - s.y, dragState.startHeight + deltaYPercent),
-            );
-            return {
-              ...s,
-              w: Number(newW.toFixed(2)),
-              h: Number(newH.toFixed(2)),
-            };
-          }
-          return s;
-        }),
-      );
+      
+      setSelectors(prev => prev.map(s => {
+        if (s.id !== dragState.id) return s;
+        
+        if (dragState.mode === 'move') {
+          const newX = Math.max(0, Math.min(100 - s.w, dragState.startLeft + deltaXPercent));
+          const newY = Math.max(0, Math.min(100 - s.h, dragState.startTop + deltaYPercent));
+          return { ...s, x: Number(newX.toFixed(2)), y: Number(newY.toFixed(2)) };
+        } else if (dragState.mode === 'resize') {
+          const newW = Math.max(5, Math.min(100 - s.x, dragState.startWidth + deltaXPercent));
+          const newH = Math.max(1.2, Math.min(100 - s.y, dragState.startHeight + deltaYPercent));
+          return { ...s, w: Number(newW.toFixed(2)), h: Number(newH.toFixed(2)) };
+        }
+        return s;
+      }));
     };
 
     const handleMouseUp = () => {
@@ -1086,19 +819,17 @@ export default function AddItem() {
     };
 
     if (dragState) {
-      window.addEventListener("mousemove", handleMouseMove);
-      window.addEventListener("mouseup", handleMouseUp);
-      window.addEventListener("touchmove", handleMouseMove, { passive: false });
-      window.addEventListener("touchend", handleMouseUp);
+      window.addEventListener('mousemove', handleMouseMove);
+      window.addEventListener('mouseup', handleMouseUp);
+      window.addEventListener('touchmove', handleMouseMove, { passive: false });
+      window.addEventListener('touchend', handleMouseUp);
     }
-
+    
     return () => {
-      window.removeEventListener("mousemove", handleMouseMove);
-      window.removeEventListener("mouseup", handleMouseUp);
-      window.removeEventListener("touchmove", handleMouseMove, {
-        passive: false,
-      });
-      window.removeEventListener("touchend", handleMouseUp);
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseup', handleMouseUp);
+      window.removeEventListener('touchmove', handleMouseMove, { passive: false });
+      window.removeEventListener('touchend', handleMouseUp);
     };
   }, [dragState]);
 
@@ -1106,69 +837,60 @@ export default function AddItem() {
     // Place the new selector directly below the last one (bottom edge + small gap)
     const last = selectors[selectors.length - 1];
     const nextY = last ? Math.min(last.y + last.h + 2, 90) : 10;
-    setSelectors((prev) => [
-      ...prev,
-      {
-        id: Date.now(),
-        x: last ? last.x : 0,
-        y: nextY,
-        w: last ? last.w : 100,
-        h: last ? last.h : 2,
-      },
-    ]);
+    setSelectors(prev => [...prev, {
+      id: Date.now(),
+      x: last ? last.x : 0,
+      y: nextY,
+      w: last ? last.w : 100,
+      h: last ? last.h : 2
+    }]);
   };
 
   const handleRemoveSelector = (id) => {
-    setSelectors((prev) => prev.filter((s) => s.id !== id));
+    setSelectors(prev => prev.filter(s => s.id !== id));
   };
 
   const handleExtractReceipt = async (fileToUse = null, textToUse = null) => {
     setIsExtracting(true);
-    const loadingId = toast.loading(
-      t("addItem.import.extracting", { defaultValue: "Extracting items..." }),
-    );
-
+    const loadingId = toast.loading(t('addItem.import.extracting', { defaultValue: 'Extracting items...' }));
+    
     try {
       const file = fileToUse !== null ? fileToUse : importFile;
       const textVal = textToUse !== null ? textToUse : receiptText;
-      const isImage = file && file.type.startsWith("image/");
-
+      const isImage = file && file.type.startsWith('image/');
+      
       const formData = new FormData();
       if (isImage) {
-        formData.append("file", file);
+        formData.append('file', file);
       } else if (file) {
-        formData.append("text", textVal || "");
-      } else if (importMode === "text") {
-        formData.append("text", textVal || "");
-      } else if (importMode === "url") {
-        formData.append("url", importUrl);
+        formData.append('text', textVal || '');
+      } else if (importMode === 'text') {
+        formData.append('text', textVal || '');
+      } else if (importMode === 'url') {
+        formData.append('url', importUrl);
       }
-
+      
       const res = await api.parseReceipt(formData);
-
-      const brand = res.brand || "Generic";
-      const item_type = res.item_type || "Garment";
-      const size = res.size || "M";
+      
+      const brand = res.brand || 'Generic';
+      const item_type = res.item_type || 'Garment';
+      const size = res.size || 'M';
       const priceCents = res.price_cents || 0;
-      const category = res.category || "Top";
+      const category = res.category || 'Top';
       const name = res.name || `${brand} ${item_type}`;
-      const gender = res.gender || "unisex";
-
+      const gender = res.gender || 'unisex';
+      
       let colors = [];
       if (res.colors && res.colors.length) {
-        const rawColors = res.colors.map((c) => {
-          if (typeof c === "string") return { name: c, pct: null };
-          if (c && typeof c === "object" && c.name)
-            return { name: c.name, pct: c.pct ?? null };
-          return { name: "grey", pct: null };
+        const rawColors = res.colors.map(c => {
+          if (typeof c === 'string') return { name: c, pct: null };
+          if (c && typeof c === 'object' && c.name) return { name: c.name, pct: c.pct ?? null };
+          return { name: 'grey', pct: null };
         });
-
-        const hasPctCount = rawColors.filter((c) => c.pct !== null).length;
-        const totalKnownPct = rawColors.reduce(
-          (sum, c) => sum + (c.pct || 0),
-          0,
-        );
-
+        
+        const hasPctCount = rawColors.filter(c => c.pct !== null).length;
+        const totalKnownPct = rawColors.reduce((sum, c) => sum + (c.pct || 0), 0);
+        
         if (hasPctCount === rawColors.length) {
           colors = rawColors;
         } else {
@@ -1176,32 +898,29 @@ export default function AddItem() {
           const nullCount = rawColors.length - hasPctCount;
           const share = Math.floor(remainingPct / nullCount);
           let distributed = 0;
-
+          
           colors = rawColors.map((c, idx) => {
             if (c.pct !== null) return c;
-            const isLastNull = rawColors
-              .slice(idx + 1)
-              .every((rc) => rc.pct !== null);
-            const val = isLastNull ? remainingPct - distributed : share;
+            const isLastNull = rawColors.slice(idx + 1).every(rc => rc.pct !== null);
+            const val = isLastNull ? (remainingPct - distributed) : share;
             distributed += val;
             return { name: c.name, pct: val };
           });
         }
       } else {
-        colors = [{ name: "grey", pct: 100 }];
+        colors = [{ name: 'grey', pct: 100 }];
       }
-
+        
       let base64Preview = null;
       if (res.image_base64) {
-        base64Preview = `data:${res.image_mime || "image/jpeg"};base64,${res.image_base64}`;
+        base64Preview = `data:${res.image_mime || 'image/jpeg'};base64,${res.image_base64}`;
       } else if (file && isImage) {
         try {
           const b64 = await fileToBase64(file);
           base64Preview = `data:image/jpeg;base64,${b64}`;
         } catch (_) {}
       } else {
-        const svgColor =
-          (colors && colors[0] && colors[0].name) || "hsl(var(--accent))";
+        const svgColor = (colors && colors[0] && colors[0].name) || 'hsl(var(--accent))';
         const svgIcon = `
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100%" height="100%">
             <defs>
@@ -1223,41 +942,38 @@ export default function AddItem() {
       }
 
       setSaving(true);
-      setIngestPhase("saving");
+      setIngestPhase('saving');
 
-      const isSvg =
-        base64Preview && base64Preview.startsWith("data:image/svg+xml");
+      const isSvg = base64Preview && base64Preview.startsWith('data:image/svg+xml');
       const hasImage = !!(base64Preview && !isSvg);
 
       const receiptLockedFields = [
-        name ? "title" : null,
-        brand ? "brand" : null,
-        size ? "size" : null,
-        priceCents || priceCents === 0 ? "price_cents" : null,
-        priceCents || priceCents === 0 ? "purchase_price_cents" : null,
-        category ? "category" : null,
-        colors && colors.length ? "colors" : null,
-        colors && colors.length ? "color" : null,
-        gender ? "gender" : null,
-        "state",
+        name ? 'title' : null,
+        brand ? 'brand' : null,
+        size ? 'size' : null,
+        (priceCents || priceCents === 0) ? 'price_cents' : null,
+        (priceCents || priceCents === 0) ? 'purchase_price_cents' : null,
+        category ? 'category' : null,
+        (colors && colors.length) ? 'colors' : null,
+        (colors && colors.length) ? 'color' : null,
+        gender ? 'gender' : null,
+        'state',
       ].filter(Boolean);
 
       const payload = {
-        title: name || "Unnamed Garment",
-        category: category || "Top",
-        brand: brand || "Generic",
-        size: size || "",
+        title: name || 'Unnamed Garment',
+        category: category || 'Top',
+        brand: brand || 'Generic',
+        size: size || '',
         price_cents: priceCents || 0,
         purchase_price_cents: priceCents || 0,
-        color: colors?.[0]?.name || "grey",
+        color: colors?.[0]?.name || 'grey',
         colors: colors,
         gender: gender,
-        state: "new",
-        purchase_date: new Date().toISOString().split("T")[0],
-        image_base64: hasImage ? base64Preview.split(",")[1] : undefined,
-        image_mime: hasImage
-          ? base64Preview.split(";")[0].split(":")[1] || "image/jpeg"
-          : undefined,
+        state: 'new',
+        purchase_date: new Date().toISOString().split('T')[0],
+        image_base64: hasImage ? base64Preview.split(',')[1] : undefined,
+        image_mime: hasImage ? (base64Preview.split(';')[0].split(':')[1] || 'image/jpeg') : undefined,
         from_receipt: true,
         receipt_locked_fields: receiptLockedFields,
       };
@@ -1266,68 +982,50 @@ export default function AddItem() {
       if (created?.item) {
         closetStore.upsert(created.item);
       }
-
+      
       toast.dismiss(loadingId);
-      toast.success(
-        t("addItem.import.success", {
-          defaultValue: "Successfully extracted and saved item!",
-        }),
-      );
-
-      setIngestPhase("syncing");
+      toast.success(t('addItem.import.success', { defaultValue: 'Successfully extracted and saved item!' }));
+      
+      setIngestPhase('syncing');
       await closetStore.prewarm({ force: true });
-
-      setReceiptText("");
+      
+      setReceiptText('');
       setImportFile(null);
-      setImportUrl("");
-
-      nav("/closet");
+      setImportUrl('');
+      
+      nav('/closet');
     } catch (err) {
       toast.dismiss(loadingId);
-      toast.error(
-        err?.response?.data?.detail ||
-          t("addItem.import.error", {
-            defaultValue:
-              "Could not parse receipt. Please verify formatting and try again.",
-          }),
-      );
+      toast.error(err?.response?.data?.detail || t('addItem.import.error', { defaultValue: 'Could not parse receipt. Please verify formatting and try again.' }));
     } finally {
       setIsExtracting(false);
       setSaving(false);
-      setIngestPhase("idle");
+      setIngestPhase('idle');
     }
   };
 
   const handleItemImageChange = async (e) => {
     const file = e.target.files?.[0];
     if (!file || !activeItemForImage) return;
-
+    
     try {
       const b64 = await fileToBase64(file);
-      setExtractedItems((prev) =>
-        prev.map((item) => {
-          if (item.id === activeItemForImage) {
-            return {
-              ...item,
-              base64Image: `data:${file.type || "image/jpeg"};base64,${b64}`,
-            };
-          }
-          return item;
-        }),
-      );
-      toast.success(
-        t("addItem.import.imageAttached", { defaultValue: "Photo attached." }),
-      );
+      setExtractedItems(prev => prev.map(item => {
+        if (item.id === activeItemForImage) {
+          return {
+            ...item,
+            base64Image: `data:${file.type || 'image/jpeg'};base64,${b64}`
+          };
+        }
+        return item;
+      }));
+      toast.success(t('addItem.import.imageAttached', { defaultValue: 'Photo attached.' }));
     } catch (err) {
       console.error(err);
-      toast.error(
-        t("addItem.failedToLoadImage", {
-          defaultValue: "Failed to load image.",
-        }),
-      );
+      toast.error(t('addItem.failedToLoadImage', { defaultValue: 'Failed to load image.' }));
     } finally {
       setActiveItemForImage(null);
-      e.target.value = "";
+      e.target.value = '';
     }
   };
 
@@ -1338,77 +1036,62 @@ export default function AddItem() {
 
   const openSelectClosetItemModal = (itemId) => {
     setLinkingItemId(itemId);
-    setClosetSearch("");
+    setClosetSearch('');
     setClosetModalOpen(true);
   };
 
   const handleLinkItem = (closetItem) => {
-    setExtractedItems((prev) =>
-      prev.map((item) => {
-        if (item.id === linkingItemId) {
-          return {
-            ...item,
-            closetItem,
-            base64Image:
-              item.base64Image ||
-              closetItem.original_image_url ||
-              closetItem.clean_image_url ||
-              null,
-          };
-        }
-        return item;
-      }),
-    );
+    setExtractedItems(prev => prev.map(item => {
+      if (item.id === linkingItemId) {
+        return {
+          ...item,
+          closetItem,
+          base64Image: item.base64Image || closetItem.clean_image_url || closetItem.thumbnail_data_url || closetItem.original_image_url || null
+
+        };
+      }
+      return item;
+    }));
     setClosetModalOpen(false);
     setLinkingItemId(null);
   };
 
   const handleUnlinkItem = (itemId) => {
-    setExtractedItems((prev) =>
-      prev.map((item) => {
-        if (item.id === itemId) {
-          return { ...item, closetItem: null };
-        }
-        return item;
-      }),
-    );
+    setExtractedItems(prev => prev.map(item => {
+      if (item.id === itemId) {
+        return { ...item, closetItem: null };
+      }
+      return item;
+    }));
   };
 
   const handleToggleItemSelect = (itemId) => {
-    setExtractedItems((prev) =>
-      prev.map((item) => {
-        if (item.id === itemId) {
-          return { ...item, selected: !item.selected };
-        }
-        return item;
-      }),
-    );
+    setExtractedItems(prev => prev.map(item => {
+      if (item.id === itemId) {
+        return { ...item, selected: !item.selected };
+      }
+      return item;
+    }));
   };
 
   const handleEditItemField = (itemId, field, value) => {
-    setExtractedItems((prev) =>
-      prev.map((item) => {
-        if (item.id === itemId) {
-          return { ...item, [field]: value };
-        }
-        return item;
-      }),
-    );
+    setExtractedItems(prev => prev.map(item => {
+      if (item.id === itemId) {
+        return { ...item, [field]: value };
+      }
+      return item;
+    }));
   };
 
   const handleSaveExtractedItems = async () => {
-    const itemsToSave = extractedItems.filter((item) => item.selected);
+    const itemsToSave = extractedItems.filter(item => item.selected);
     if (!itemsToSave.length) {
-      toast.error(
-        t("addItem.import.noSelectedItems", {
-          defaultValue: "Please select at least one item to save.",
-        }),
-      );
+      toast.error(t('addItem.import.noSelectedItems', { defaultValue: 'Please select at least one item to save.' }));
       return;
     }
 
     setSaving(true);
-    setIngestPhase("saving");
+    setIngestPhase('saving');
     setIngestProgress({ done: 0, total: itemsToSave.length });
 
     try {
@@ -1419,50 +1102,41 @@ export default function AddItem() {
             size: item.size || item.closetItem.size,
             price_cents: item.price_cents || 0,
             purchase_price_cents: item.price_cents || 0,
-            purchase_date: new Date().toISOString().split("T")[0],
+            purchase_date: new Date().toISOString().split('T')[0],
           };
           const updated = await api.updateItem(item.closetItem.id, patchBody);
           // Upsert the patched item into the store immediately so the
           // Closet grid shows the fresh price/brand without a round-trip.
           if (updated?.item) closetStore.upsert(updated.item);
         } else {
-          const isSvg =
-            item.base64Image &&
-            item.base64Image.startsWith("data:image/svg+xml");
+          const isSvg = item.base64Image && item.base64Image.startsWith('data:image/svg+xml');
           const hasImage = !!(item.base64Image && !isSvg);
 
           const receiptLockedFields = [
-            item.name ? "title" : null,
-            item.brand ? "brand" : null,
-            item.size ? "size" : null,
-            item.price_cents || item.price_cents === 0 ? "price_cents" : null,
-            item.price_cents || item.price_cents === 0
-              ? "purchase_price_cents"
-              : null,
-            item.category ? "category" : null,
-            item.colors && item.colors.length ? "colors" : null,
-            item.colors && item.colors.length ? "color" : null,
+            item.name   ? 'title' : null,
+            item.brand  ? 'brand' : null,
+            item.size   ? 'size' : null,
+            (item.price_cents || item.price_cents === 0) ? 'price_cents' : null,
+            (item.price_cents || item.price_cents === 0) ? 'purchase_price_cents' : null,
+            item.category ? 'category' : null,
+            (item.colors && item.colors.length) ? 'colors' : null,
+            (item.colors && item.colors.length) ? 'color' : null,
           ].filter(Boolean);
 
           const payload = {
-            title: item.name || "Unnamed Garment",
-            category: item.category || "Top",
-            brand: item.brand || "Generic",
-            size: item.size || "",
+            title: item.name || 'Unnamed Garment',
+            category: item.category || 'Top',
+            brand: item.brand || 'Generic',
+            size: item.size || '',
             price_cents: item.price_cents || 0,
             purchase_price_cents: item.price_cents || 0,
-            color: item.colors?.[0]?.name || "grey",
-            colors:
-              item.colors && item.colors.length
-                ? item.colors.map((c) =>
-                    typeof c === "string" ? { name: c, pct: null } : c,
-                  )
-                : [{ name: "grey", pct: null }],
-            purchase_date: new Date().toISOString().split("T")[0],
-            image_base64: hasImage ? item.base64Image.split(",")[1] : undefined,
-            image_mime: hasImage
-              ? item.base64Image.split(";")[0].split(":")[1] || "image/jpeg"
-              : undefined,
+            color: item.colors?.[0]?.name || 'grey',
+            colors: item.colors && item.colors.length
+              ? item.colors.map(c => typeof c === 'string' ? { name: c, pct: null } : c)
+              : [{ name: 'grey', pct: null }],
+            purchase_date: new Date().toISOString().split('T')[0],
+            image_base64: hasImage ? item.base64Image.split(',')[1] : undefined,
+            image_mime: hasImage ? (item.base64Image.split(';')[0].split(':')[1] || 'image/jpeg') : undefined,
             from_receipt: true,
             receipt_locked_fields: receiptLockedFields,
           };
@@ -1472,25 +1146,22 @@ export default function AddItem() {
           if (created?.item) closetStore.upsert(created.item);
         }
         // Advance the progress ring after each item saves.
-        setIngestProgress((prev) => ({ ...prev, done: prev.done + 1 }));
+        setIngestProgress(prev => ({ ...prev, done: prev.done + 1 }));
       }
 
       // Phase 2: force-refresh the store so the Closet grid shows the
       // real server state (includes clean_image_status, thumbnails, etc.)
-      setIngestPhase("syncing");
+      setIngestPhase('syncing');
       await closetStore.prewarm({ force: true });
 
       // All done — navigate with a clean slate.
       setExtractedItems([]);
-      setReceiptText("");
+      setReceiptText('');
       setImportFile(null);
-      setImportUrl("");
-      nav("/closet");
+      setImportUrl('');
+      nav('/closet');
     } catch (err) {
-      toast.error(
-        err?.response?.data?.detail ||
-          t("addItem.import.saveFailed", { defaultValue: "Ingestion failed" }),
-      );
+      toast.error(err?.response?.data?.detail || t('addItem.import.saveFailed', { defaultValue: 'Ingestion failed' }));
     } finally {
       setSaving(false);
       setIngestPhase(null);
@@ -1498,16 +1169,13 @@ export default function AddItem() {
     }
   };
 
+
   const handleFiles = async (fileList) => {
     const rawList = Array.from(fileList || []);
-    const files = rawList.filter((f) => {
-      const type = f.type || "";
-      const name = f.name || "";
-      return (
-        !type ||
-        type.startsWith("image/") ||
-        /\.(jpe?g|png|webp|heic|heif|bmp|gif)$/i.test(name)
-      );
+    const files = rawList.filter(f => {
+      const type = f.type || '';
+      const name = f.name || '';
+      return !type || type.startsWith('image/') || /\.(jpe?g|png|webp|heic|heif|bmp|gif)$/i.test(name);
     });
     if (!files.length) return;
 
@@ -1519,18 +1187,14 @@ export default function AddItem() {
       try {
         const b64 = await fileToBase64(rawF);
         if (!b64) continue;
-
+        
         // Convert base64 to Blob synchronously to bypass CSP connection blocks on data URLs
         let blob;
         try {
           const byteCharacters = atob(b64);
           const byteArrays = [];
           const sliceSize = 512;
-          for (
-            let offset = 0;
-            offset < byteCharacters.length;
-            offset += sliceSize
-          ) {
+          for (let offset = 0; offset < byteCharacters.length; offset += sliceSize) {
             const slice = byteCharacters.slice(offset, offset + sliceSize);
             const byteNumbers = new Array(slice.length);
             for (let i = 0; i < slice.length; i++) {
@@ -1539,34 +1203,32 @@ export default function AddItem() {
             const byteArray = new Uint8Array(byteNumbers);
             byteArrays.push(byteArray);
           }
-          blob = new Blob(byteArrays, { type: "image/jpeg" });
+          blob = new Blob(byteArrays, { type: 'image/jpeg' });
         } catch (_) {
           blob = rawF;
         }
-
+        
         // Use a safe File constructor wrapper that falls back to Blob to avoid TypeError on certain WebView/mobile browsers
         let f;
         try {
-          f = new File([blob], rawF.name || "image.jpg", {
-            type: "image/jpeg",
-          });
+          f = new File([blob], rawF.name || 'image.jpg', { type: 'image/jpeg' });
         } catch (_) {
           f = blob;
           try {
-            Object.defineProperty(f, "name", {
-              value: rawF.name || "image.jpg",
+            Object.defineProperty(f, 'name', {
+              value: rawF.name || 'image.jpg',
               writable: false,
-              configurable: true,
+              configurable: true
             });
           } catch (_) {
-            f.name = rawF.name || "image.jpg";
+            f.name = rawF.name || 'image.jpg';
           }
         }
 
         const sha256 = await sha256File(f);
         const phash = await aHashFile(f);
         const color_sig = await colorSignatureFile(f);
-
+        
         fingerprints.push({
           file: f,
           originalFile: rawF,
@@ -1578,20 +1240,12 @@ export default function AddItem() {
           _b64: b64,
         });
       } catch (err) {
-        console.error(
-          "[handleFiles] Error processing image file:",
-          rawF.name,
-          err,
-        );
+        console.error('[handleFiles] Error processing image file:', rawF.name, err);
       }
     }
 
     if (!fingerprints.length) {
-      toast.error(
-        t("addItem.uploadFailed", {
-          defaultValue: "Failed to process image. Please try again.",
-        }),
-      );
+      toast.error(t('addItem.uploadFailed', { defaultValue: 'Failed to process image. Please try again.' }));
       return;
     }
 
@@ -1645,7 +1299,7 @@ export default function AddItem() {
       const dupShas = new Set();
       const dupPhashes = new Set();
       matches.forEach((m) => {
-        if (m.existing?.id && !m.existing.id.startsWith("batch-")) {
+        if (m.existing?.id && !m.existing.id.startsWith('batch-')) {
           if (m.sha256) dupShas.add(m.sha256);
           if (m.phash) dupPhashes.add(m.phash);
         }
@@ -1673,7 +1327,7 @@ export default function AddItem() {
       const skipped = fingerprints.length - survivors.length;
       if (!survivors.length) {
         toast.message(
-          t("addItem.preflight.allDuplicatesSkippedBatch", {
+          t('addItem.preflight.allDuplicatesSkippedBatch', {
             count: skipped,
             defaultValue: `Skipped ${skipped} photos already in your closet — nothing new to upload.`,
           }),
@@ -1699,9 +1353,7 @@ export default function AddItem() {
           (m.phash && x.phash === m.phash),
       );
       const file = fp?.file;
-      const previewUrl = fp?._b64
-        ? `data:${file?.type || "image/jpeg"};base64,${fp._b64}`
-        : null;
+      const previewUrl = fp?._b64 ? `data:${file?.type || 'image/jpeg'};base64,${fp._b64}` : null;
       const matchKey = m.sha256 || m.phash || `${m.filename}-${m.size_bytes}`;
       return { ...m, previewUrl, matchKey };
     });
@@ -1711,7 +1363,7 @@ export default function AddItem() {
       onResolve: (decisions) => {
         // Free the temporary object URLs we created for the dialog.
         matchesEnriched.forEach((m) => {
-          if (m.previewUrl?.startsWith("blob:")) {
+          if (m.previewUrl?.startsWith('blob:')) {
             URL.revokeObjectURL(m.previewUrl);
           }
         });
@@ -1732,13 +1384,13 @@ export default function AddItem() {
         const survivors = fingerprints.filter((fp) => {
           const choice = decisionFor(fp);
           if (choice === undefined) return true; // wasn't a duplicate
-          return choice === "add";
+          return choice === 'add';
         });
         if (!survivors.length) {
           toast.message(
-            t("addItem.preflight.allSkipped", {
+            t('addItem.preflight.allSkipped', {
               defaultValue:
-                "All selected photos were duplicates and were skipped.",
+                'All selected photos were duplicates and were skipped.',
             }),
           );
           return;
@@ -1749,7 +1401,7 @@ export default function AddItem() {
         // robust lookup.
         const acks = { sha: new Set(), ph: new Set() };
         matchesEnriched.forEach((m) => {
-          if (decisions[m.matchKey] === "add") {
+          if (decisions[m.matchKey] === 'add') {
             if (m.sha256) acks.sha.add(m.sha256);
             if (m.phash) acks.ph.add(m.phash);
           }
@@ -1773,19 +1425,17 @@ export default function AddItem() {
     const drafts = [];
     for (const fp of fingerprints) {
       const file = fp.file;
-      const b64 = fp._b64 || (await fileToBase64(file));
+      const b64 = fp._b64 || await fileToBase64(file);
       const isDup =
         (fp.sha256 && acks.sha.has(fp.sha256)) ||
         (fp.phash && acks.ph.has(fp.phash));
       drafts.push({
         id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
         file,
-        mime: file.type || "image/jpeg",
-        previewUrl: b64
-          ? `data:${file.type || "image/jpeg"};base64,${b64}`
-          : null,
+        mime: file.type || 'image/jpeg',
+        previewUrl: b64 ? `data:${file.type || 'image/jpeg'};base64,${b64}` : null,
         base64: b64,
-        status: "scanning", // scanning | ready | error | saving | saved
+        status: 'scanning', // scanning | ready | error | saving | saved
         progress: 4,
         fields: blankFields(),
         error: null,
@@ -1814,10 +1464,8 @@ export default function AddItem() {
   // time, items 2..N actually get analysed instead of silently
   // falling through to the "save raw image" branch.
   // ------------------------------------------------------------------
-  async function handleBatchBackground(fingerprints, skippedDuplicates = 0) {
-    console.log(
-      `[handleBatchBackground] Starting: ${fingerprints.length} fingerprints, ${skippedDuplicates} skipped dups`,
-    );
+    async function handleBatchBackground(fingerprints, skippedDuplicates = 0) {
+    console.log(`[handleBatchBackground] Starting: ${fingerprints.length} fingerprints, ${skippedDuplicates} skipped dups`);
     setBgBatch({
       total: fingerprints.length,
       processed: 0,
@@ -1829,7 +1477,7 @@ export default function AddItem() {
       analyzeFailed: 0,
     });
 
-    const requestLang = (i18n.language || "").split("-")[0] || "en";
+    const requestLang = (i18n.language || '').split('-')[0] || 'en';
     const b64List = [];
     for (const fp of fingerprints) {
       if (fp._b64) {
@@ -1839,139 +1487,114 @@ export default function AddItem() {
       } else if (fp.file) {
         b64List.push(await fileToBase64(fp.file));
       } else {
-        b64List.push("");
+        b64List.push('');
       }
     }
-
+    
     let detectMetas = [];
     let totalItemsExpected = 0;
     const savePromises = [];
-
+    
     const handleDetect = (frame) => {
       // detect frame gives us total items across all images
       const metas = frame.items_meta || [];
       detectMetas = metas;
       totalItemsExpected = metas.length;
-      console.log(
-        `[handleBatchBackground] detect: ${metas.length} items detected across ${new Set(metas.map((m) => m.image_index)).size} images`,
-      );
+      console.log(`[handleBatchBackground] detect: ${metas.length} items detected across ${new Set(metas.map(m => m.image_index)).size} images`);
       // We can bump processed to something to show it started
-      setBgBatch((b) => (b ? { ...b, processed: 1 } : null));
+      setBgBatch(b => b ? { ...b, processed: 1 } : null);
     };
 
     const handleItem = (frame) => {
-      console.log(
-        `[handleBatchBackground] item frame: index=${frame.index}, image_index=${frame.image_index}, has_analysis=${!!frame.analysis}`,
-      );
+      console.log(`[handleBatchBackground] item frame: index=${frame.index}, image_index=${frame.image_index}, has_analysis=${!!frame.analysis}`);
       const p = (async () => {
-        const meta = detectMetas[frame.index] || {};
-        const idx = meta.image_index ?? frame.image_index ?? 0;
-        const fp = fingerprints[idx];
-        const sourceMeta = {
-          sourceSha256: fp.sha256 || null,
-          sourcePhash: fp.phash || null,
-          sourceColorSig: fp.color_sig || null,
-          sourceFilename: fp.file?.name || null,
-          sourceSizeBytes:
-            typeof fp.file?.size === "number" ? fp.file.size : null,
-        };
+      const meta = detectMetas[frame.index] || {};
+      const idx = meta.image_index ?? frame.image_index ?? 0;
+      const fp = fingerprints[idx];
+      const sourceMeta = {
+        sourceSha256: fp.sha256 || null,
+        sourcePhash: fp.phash || null,
+        sourceColorSig: fp.color_sig || null,
+        sourceFilename: fp.file?.name || null,
+        sourceSizeBytes: typeof fp.file?.size === 'number' ? fp.file.size : null,
+      };
+      
+      const analysis = frame.analysis || {};
+      const cropB64 = meta.crop_base64 || b64List[idx];
+      const mime = meta.crop_mime || fp.file?.type || 'image/jpeg';
+      
+      const cardLike = {
+        base64: b64List[idx],
+        cropBase64: meta.crop_base64 || undefined,
+        mime,
+        file: null,
+        fields: hydrate(analysis, user),
+        useReconstructed: false,
+        deferMatte: !!meta.defer_matte,
+        ...sourceMeta,
+      };
 
-        const analysis = frame.analysis || {};
-        const cropB64 = meta.crop_base64 || b64List[idx];
-        const mime = meta.crop_mime || fp.file?.type || "image/jpeg";
-
-        const cardLike = {
-          base64: b64List[idx],
-          cropBase64: meta.crop_base64 || undefined,
-          mime,
+      if (frame.potential_duplicate) {
+        const dupCard = {
+          id: `bgdup-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
           file: null,
-          fields: hydrate(analysis, user),
-          useReconstructed: false,
-          deferMatte: !!meta.defer_matte,
-          ...sourceMeta,
+          mime,
+          previewUrl: `data:${mime};base64,${cropB64}`,
+          base64: cropB64,
+          originalCropUrl: `data:${mime};base64,${cropB64}`,
+          status: 'ready',
+          progress: 100,
+          fields: cardLike.fields,
+          potentialDuplicate: frame.potential_duplicate,
+          pendingBatchSave: true,
+          sourceSha256: cardLike.sourceSha256 || null,
+          sourcePhash: cardLike.sourcePhash || null,
+          sourceColorSig: cardLike.sourceColorSig || null,
+          sourceFilename: cardLike.sourceFilename || null,
+          sourceSizeBytes: cardLike.sourceSizeBytes || null,
+          isDuplicate: true,
         };
+        setCards((prev) => [...prev, dupCard]);
+        setBgBatch((b) => b ? { ...b, pendingDuplicates: (b.pendingDuplicates || 0) + 1, processed: b.processed + 1 } : b);
+        return;
+      }
 
-        if (frame.potential_duplicate) {
-          const dupCard = {
-            id: `bgdup-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
-            file: null,
-            mime,
-            previewUrl: `data:${mime};base64,${cropB64}`,
-            base64: cropB64,
-            originalCropUrl: `data:${mime};base64,${cropB64}`,
-            status: "ready",
-            progress: 100,
-            fields: cardLike.fields,
-            potentialDuplicate: frame.potential_duplicate,
-            pendingBatchSave: true,
-          };
-          setCards((prev) => [...prev, dupCard]);
-          setBgBatch((b) =>
-            b
-              ? {
-                  ...b,
-                  pendingDuplicates: (b.pendingDuplicates || 0) + 1,
-                  processed: b.processed + 1,
-                }
-              : b,
-          );
-          return;
+      try {
+        const created = await api.createItem(buildCreatePayload(cardLike, isSuitcase));
+        if (created && created.id) {
+          try {
+            const { closetStore } = await import('@/lib/closetStore');
+            closetStore.upsert(created);
+          } catch { /* ignore */ }
         }
-
-        try {
-          const created = await api.createItem(
-            buildCreatePayload(cardLike, isSuitcase),
-          );
-          if (created && created.id) {
-            try {
-              const { closetStore } = await import("@/lib/closetStore");
-              closetStore.upsert(created);
-            } catch {
-              /* ignore */
-            }
-          }
-          setBgBatch((b) =>
-            b ? { ...b, saved: b.saved + 1, processed: b.processed + 1 } : null,
-          );
-        } catch (_) {
-          setBgBatch((b) =>
-            b
-              ? { ...b, failed: b.failed + 1, processed: b.processed + 1 }
-              : null,
-          );
-        }
+        setBgBatch(b => b ? { ...b, saved: b.saved + 1, processed: b.processed + 1 } : null);
+      } catch (_) {
+        setBgBatch(b => b ? { ...b, failed: b.failed + 1, processed: b.processed + 1 } : null);
+      }
       })();
       savePromises.push(p);
       return p;
     };
 
     const handleItemSkip = (frame) => {
-      console.log(
-        `[handleBatchBackground] item_skip: index=${frame.index}, reason=${frame.reason}`,
-      );
-      setBgBatch((b) => (b ? { ...b, processed: b.processed + 1 } : null));
+      console.log(`[handleBatchBackground] item_skip: index=${frame.index}, reason=${frame.reason}`);
+      setBgBatch(b => b ? { ...b, processed: b.processed + 1 } : null);
     };
 
     try {
       await api.analyzeItemImage(
         { images_base64: b64List, language: requestLang },
-        {
-          onDetect: handleDetect,
-          onItem: handleItem,
-          onItemSkip: handleItemSkip,
-        },
+        { onDetect: handleDetect, onItem: handleItem, onItemSkip: handleItemSkip }
       );
     } catch (err) {
       // Stream failed. Try to save all remaining as fallbacks?
       // For now just error out gracefully
-      console.error("[handleBatchBackground] analyzeItemImage failed:", err);
-      setBgBatch((b) =>
-        b ? { ...b, failed: b.failed + (b.total - b.processed) } : null,
-      );
+      console.error('[handleBatchBackground] analyzeItemImage failed:', err);
+      setBgBatch(b => b ? { ...b, failed: b.failed + (b.total - b.processed) } : null);
     }
 
     await Promise.all(savePromises);
-    console.log("[handleBatchBackground] All save promises resolved");
+    console.log('[handleBatchBackground] All save promises resolved');
 
     // Final checks and navigation
     setBgBatch((b) => {
@@ -1980,72 +1603,46 @@ export default function AddItem() {
       const analyzeFailed = b?.analyzeFailed ?? 0;
       const pendingDuplicates = b?.pendingDuplicates ?? 0;
       const skippedDups = b?.skippedDuplicates ?? 0;
-      console.log(
-        `[handleBatchBackground] DONE: saved=${saved}, failed=${failed}, analyzeFailed=${analyzeFailed}, pendingDuplicates=${pendingDuplicates}, skippedDups=${skippedDups}`,
-      );
-
+      console.log(`[handleBatchBackground] DONE: saved=${saved}, failed=${failed}, analyzeFailed=${analyzeFailed}, pendingDuplicates=${pendingDuplicates}, skippedDups=${skippedDups}`);
+      
       const dupTrailer = skippedDups
-        ? " " +
-          t("addItem.bgUpload.skippedDupSuffix", {
-            count: skippedDups,
-            defaultValue: "(skipped {{count}} already in closet)",
-          })
-        : "";
+        ? ' ' + t('addItem.bgUpload.skippedDupSuffix', { count: skippedDups, defaultValue: '(skipped {{count}} already in closet)' })
+        : '';
 
       if (pendingDuplicates) {
-        toast.message(
-          t("addItem.bgUpload.duplicatesPending", {
-            saved,
-            pending: pendingDuplicates,
-            defaultValue:
-              "Saved {{saved}} new items · {{pending}} look like duplicates — review them below.",
-          }) + dupTrailer,
-        );
+        toast.message(t('addItem.bgUpload.duplicatesPending', {
+          saved, pending: pendingDuplicates,
+          defaultValue: 'Saved {{saved}} new items · {{pending}} look like duplicates — review them below.',
+        }) + dupTrailer);
       } else if (saved && !failed) {
-        toast.success(
-          t("addItem.bgUpload.done", {
-            count: saved,
-            defaultValue:
-              "Saved {{count}} items. Edit any misfits in your closet.",
-          }) + dupTrailer,
-        );
+        toast.success(t('addItem.bgUpload.done', {
+          count: saved,
+          defaultValue: 'Saved {{count}} items. Edit any misfits in your closet.',
+        }) + dupTrailer);
       } else if (saved && failed) {
-        toast.message(
-          t("addItem.bgUpload.partial", {
-            saved,
-            failed,
-            defaultValue: "Saved {{saved}} · {{failed}} failed",
-          }) + dupTrailer,
-        );
+        toast.message(t('addItem.bgUpload.partial', {
+          saved, failed,
+          defaultValue: 'Saved {{saved}} · {{failed}} failed',
+        }) + dupTrailer);
       } else if (!saved && !pendingDuplicates && !skippedDups) {
-        toast.error(
-          t("addItem.bgUpload.failed", {
-            defaultValue: "Could not save any items. Please try again.",
-          }),
-        );
+        toast.error(t('addItem.bgUpload.failed', { defaultValue: 'Could not save any items. Please try again.' }));
       }
-
+      
       setTimeout(() => {
-        if (saved && !pendingDuplicates)
-          nav(isSuitcase ? "/suitcase" : "/closet");
+        if (saved && !pendingDuplicates) nav(isSuitcase ? '/suitcase' : '/closet');
       }, 1200);
       return null;
     });
-  }
+  };
 
   const analyzeCards = async (cardsList) => {
     const cardsToProcess = cardsList.filter((card) => {
       if (analyzeInFlight.current.has(card.id)) {
-        console.warn(
-          `[analyzeCards] skipped duplicate analyze for card ${card.id} — already in flight`,
-        );
+        console.warn(`[analyzeCards] skipped duplicate analyze for card ${card.id} — already in flight`);
         return false;
       }
       analyzeInFlight.current.add(card.id);
-      workStore.registerAnalyze(
-        card.id,
-        card.sourceFilename || card.file?.name || null,
-      );
+      workStore.registerAnalyze(card.id, card.sourceFilename || card.file?.name || null);
       return true;
     });
 
@@ -2057,39 +1654,37 @@ export default function AddItem() {
       const target = Math.min(92, 4 + elapsed * 5);
       setCards((prev) =>
         prev.map((c) =>
-          cardsToProcess.some((cp) => cp.id === c.id) && c.status === "scanning"
+          cardsToProcess.some(cp => cp.id === c.id) && c.status === 'scanning'
             ? { ...c, progress: target }
-            : c,
-        ),
+            : c
+        )
       );
     }, 250);
 
     let perCardIds = {};
-    cardsToProcess.forEach((c) => {
-      perCardIds[c.id] = [];
-    });
+    cardsToProcess.forEach(c => { perCardIds[c.id] = []; });
     let flatSlotIds = [];
 
     try {
-      const requestLang = (i18n.language || "").split("-")[0] || "en";
+      const requestLang = (i18n.language || '').split('-')[0] || 'en';
 
       const buildBaseCard = (meta, cardId, originalCard) => ({
         id: cardId,
         file: null,
-        mime: meta.crop_mime || "image/jpeg",
+        mime: meta.crop_mime || 'image/jpeg',
         previewUrl: meta.crop_base64
-          ? `data:${meta.crop_mime || "image/jpeg"};base64,${meta.crop_base64}`
+          ? `data:${meta.crop_mime || 'image/jpeg'};base64,${meta.crop_base64}`
           : originalCard.previewUrl,
         base64: originalCard.base64,
         cropBase64: meta.crop_base64 || undefined,
         originalCropUrl: meta.crop_base64
-          ? `data:${meta.crop_mime || "image/jpeg"};base64,${meta.crop_base64}`
+          ? `data:${meta.crop_mime || 'image/jpeg'};base64,${meta.crop_base64}`
           : null,
         reconstructedUrl: null,
         reconstructedB64: null,
         reconstructionMeta: null,
         useReconstructed: false,
-        status: "scanning",
+        status: 'scanning',
         progress: 60,
         fields: hydrate({}, user),
         error: null,
@@ -2108,51 +1703,47 @@ export default function AddItem() {
       });
 
       const handleDetect = (frame) => {
-        const metas = (frame.items_meta || []).map((m, i) => ({
-          ...m,
-          _slot: i,
-        }));
+        const metas = (frame.items_meta || []).map((m, i) => ({ ...m, _slot: i }));
         if (metas.length === 0) return;
 
         const counts = {};
-        metas.forEach((m) => {
+        metas.forEach(m => {
           const imgIdx = m.image_index ?? 0;
           counts[imgIdx] = (counts[imgIdx] || 0) + 1;
         });
 
         const newCards = [];
         metas.forEach((m) => {
-          const imgIdx = m.image_index ?? 0;
-          const origCard = cardsToProcess[imgIdx];
-          if (!origCard) {
-            flatSlotIds.push(null);
-            return;
-          }
-          const newId = `${origCard.id}-${perCardIds[origCard.id].length}`;
-          perCardIds[origCard.id].push(newId);
-          flatSlotIds.push({ id: newId, origCard });
-          newCards.push(buildBaseCard(m, newId, origCard));
+           const imgIdx = m.image_index ?? 0;
+           const origCard = cardsToProcess[imgIdx];
+           if (!origCard) {
+               flatSlotIds.push(null);
+               return;
+           }
+           const newId = `${origCard.id}-${perCardIds[origCard.id].length}`;
+           perCardIds[origCard.id].push(newId);
+           flatSlotIds.push({ id: newId, origCard });
+           newCards.push(buildBaseCard(m, newId, origCard));
         });
 
         cardsToProcess.forEach((origCard, idx) => {
-          const count = counts[idx] || 0;
-          if (count > 0) {
-            workStore.updateAnalyze(origCard.id, { items: 0, total: count });
-          } else {
-            // No items detected for this card. We should probably mark it as error later, but for now we skip.
-            // We don't remove it from DOM yet, we just leave it.
-          }
+           const count = counts[idx] || 0;
+           if (count > 0) {
+               workStore.updateAnalyze(origCard.id, { items: 0, total: count });
+           } else {
+               // No items detected for this card. We should probably mark it as error later, but for now we skip.
+               // We don't remove it from DOM yet, we just leave it.
+           }
         });
 
         setCards((prev) => {
-          const idsToRemove = new Set(cardsToProcess.map((c) => c.id));
-          const filtered = prev.filter((c) => !idsToRemove.has(c.id));
+          const idsToRemove = new Set(cardsToProcess.map(c => c.id));
+          const filtered = prev.filter(c => !idsToRemove.has(c.id));
           return [...filtered, ...newCards];
         });
 
-        cardsToProcess.forEach((c) => {
-          if (c.previewUrl?.startsWith("blob:"))
-            URL.revokeObjectURL(c.previewUrl);
+        cardsToProcess.forEach(c => {
+           if (c.previewUrl?.startsWith('blob:')) URL.revokeObjectURL(c.previewUrl);
         });
       };
 
@@ -2164,14 +1755,14 @@ export default function AddItem() {
         const job = workStore.getSnapshot().analyzeJobs[origCard.id];
         if (job) {
           workStore.updateAnalyze(origCard.id, {
-            items: Math.min((job.items || 0) + 1, job.total || job.items + 1),
+            items: Math.min((job.items || 0) + 1, job.total || (job.items + 1)),
           });
         }
 
         const rec = frame.reconstruction;
         const recValidated = !!(rec && rec.validated && rec.image_b64);
         const reconstructedUrl = recValidated
-          ? `data:${rec.mime_type || "image/png"};base64,${rec.image_b64}`
+          ? `data:${rec.mime_type || 'image/png'};base64,${rec.image_b64}`
           : null;
 
         setCards((prev) =>
@@ -2179,7 +1770,7 @@ export default function AddItem() {
             c.id === slotId
               ? {
                   ...c,
-                  status: "ready",
+                  status: 'ready',
                   progress: 100,
                   fields: hydrate(frame.analysis || {}, user),
                   label: frame.label || frame.analysis?.item_type || c.label,
@@ -2189,12 +1780,9 @@ export default function AddItem() {
                   deferMatte: !!frame.defer_matte,
                   needsReconstruction: !!frame.needs_reconstruction,
                   reconstructionReasons: frame.reconstruction_reasons || [],
-                  imageQualityStatus:
-                    frame.analysis?.image_quality_status || null,
-                  imageQualityReason:
-                    frame.analysis?.image_quality_reason || null,
-                  reconstructionPrompt:
-                    frame.analysis?.reconstruction_prompt || null,
+                  imageQualityStatus: frame.analysis?.image_quality_status || null,
+                  imageQualityReason: frame.analysis?.image_quality_reason || null,
+                  reconstructionPrompt: frame.analysis?.reconstruction_prompt || null,
                   reconstructedUrl,
                   reconstructedB64: recValidated ? rec.image_b64 : null,
                   reconstructionMeta: recValidated
@@ -2208,8 +1796,8 @@ export default function AddItem() {
                   useReconstructed: recValidated,
                   previewUrl: recValidated ? reconstructedUrl : c.previewUrl,
                 }
-              : c,
-          ),
+              : c
+          )
         );
       };
 
@@ -2232,86 +1820,72 @@ export default function AddItem() {
                     ...c.fields,
                     ...frame.fields,
                   },
-                  label:
-                    frame.fields.sub_category ||
-                    frame.fields.item_type ||
-                    c.label ||
-                    frame.fields.title ||
-                    frame.fields.name,
+                  label: frame.fields.sub_category || frame.fields.item_type || c.label || frame.fields.title || frame.fields.name,
                 }
-              : c,
-          ),
+              : c
+          )
         );
       };
 
-      const images_base64 = cardsToProcess.map((c) => c.base64);
+      const images_base64 = cardsToProcess.map(c => c.base64);
       const payload = { images_base64, language: requestLang };
 
-      const resp = await api.analyzeItemImage(payload, {
-        onDetect: handleDetect,
-        onItem: handleItem,
-        onItemSkip: handleItemSkip,
-        onField: handleField,
-      });
+      const resp = await api.analyzeItemImage(
+        payload,
+        {
+          onDetect: handleDetect,
+          onItem: handleItem,
+          onItemSkip: handleItemSkip,
+          onField: handleField,
+        }
+      );
       clearInterval(tick);
 
       const finalCount = resp?.count || (resp?.items || []).length;
       if (finalCount === 0) {
         setCards((prev) =>
           prev.map((c) =>
-            cardsToProcess.some((cp) => cp.id === c.id)
+            cardsToProcess.some(cp => cp.id === c.id)
               ? {
                   ...c,
-                  status: "error",
+                  status: 'error',
                   progress: 0,
-                  error: t("addItem.analyzeFailed", {
-                    defaultValue: "Analysis failed",
-                  }),
+                  error: t('addItem.analyzeFailed', { defaultValue: 'Analysis failed' }),
                 }
-              : c,
-          ),
+              : c
+          )
         );
-        toast.error(
-          t("addItem.analyzeFailed", { defaultValue: "Analysis failed" }),
-        );
+        toast.error(t('addItem.analyzeFailed', { defaultValue: 'Analysis failed' }));
         return;
       }
 
-      toast.success(
-        t("addItem.detected", {
-          count: finalCount,
-          defaultValue: "Detected {{count}} item(s)",
-        }),
-      );
+      toast.success(t('addItem.detected', { count: finalCount, defaultValue: 'Detected {{count}} item(s)' }));
     } catch (err) {
       clearInterval(tick);
-      const msg =
-        err?.response?.data?.detail ||
-        err?.message ||
-        t("addItem.analyzeFailed", { defaultValue: "Analysis failed" });
+      const msg = err?.response?.data?.detail || err?.message || t('addItem.analyzeFailed', { defaultValue: 'Analysis failed' });
 
       const erroredIds = new Set();
-      cardsToProcess.forEach((origCard) => {
-        const children = perCardIds[origCard.id] || [];
-        if (children.length > 0) {
-          children.forEach((cid) => erroredIds.add(cid));
-        } else {
-          erroredIds.add(origCard.id);
-        }
+      cardsToProcess.forEach(origCard => {
+         const children = perCardIds[origCard.id] || [];
+         if (children.length > 0) {
+             children.forEach(cid => erroredIds.add(cid));
+         } else {
+             erroredIds.add(origCard.id);
+         }
       });
 
       setCards((prev) =>
         prev.map((c) =>
           erroredIds.has(c.id)
-            ? { ...c, status: "error", progress: 0, error: msg }
-            : c,
-        ),
+            ? { ...c, status: 'error', progress: 0, error: msg }
+            : c
+        )
       );
       toast.error(msg);
     } finally {
-      cardsToProcess.forEach((origCard) => {
-        analyzeInFlight.current.delete(origCard.id);
-        workStore.completeAnalyze(origCard.id);
+      cardsToProcess.forEach(origCard => {
+         analyzeInFlight.current.delete(origCard.id);
+         workStore.completeAnalyze(origCard.id);
       });
     }
   };
@@ -2337,21 +1911,14 @@ export default function AddItem() {
     // N photos…" even if the user navigates away from /add mid-batch.
     // The label uses the source filename when available so a multi-
     // upload batch shows recognisable progress.
-    workStore.registerAnalyze(
-      card.id,
-      card.sourceFilename || card.file?.name || null,
-    );
+    workStore.registerAnalyze(card.id, card.sourceFilename || card.file?.name || null);
     // Faux-progress timer so the scanning animation paces with the API call.
     const startedAt = Date.now();
     const tick = setInterval(() => {
       const elapsed = (Date.now() - startedAt) / 1000;
       const target = Math.min(92, 4 + elapsed * 5); // reaches ~92 by 18s
       setCards((prev) =>
-        prev.map((c) =>
-          c.id === card.id && c.status === "scanning"
-            ? { ...c, progress: target }
-            : c,
-        ),
+        prev.map((c) => (c.id === card.id && c.status === 'scanning' ? { ...c, progress: target } : c))
       );
     }, 250);
     // Hoisted above the try/catch so the catch handler can read
@@ -2366,7 +1933,7 @@ export default function AddItem() {
     try {
       // Pass current UI locale so Gemini name/caption come back in the
       // language the user is reading the app in — see ``AnalyzeIn.language``.
-      const requestLang = (i18n.language || "").split("-")[0] || "en";
+      const requestLang = (i18n.language || '').split('-')[0] || 'en';
 
       // Patch M19 (May 2026) — streaming NDJSON path. The backend's
       // /closet/analyze emits frames as Gemini's batched call streams
@@ -2382,21 +1949,21 @@ export default function AddItem() {
       const buildBaseCard = (meta, cardId) => ({
         id: cardId,
         file: null,
-        mime: meta.crop_mime || "image/jpeg",
+        mime: meta.crop_mime || 'image/jpeg',
         previewUrl: meta.crop_base64
-          ? `data:${meta.crop_mime || "image/jpeg"};base64,${meta.crop_base64}`
+          ? `data:${meta.crop_mime || 'image/jpeg'};base64,${meta.crop_base64}`
           : card.previewUrl,
         base64: card.base64,
         cropBase64: meta.crop_base64 || undefined,
         originalCropUrl: meta.crop_base64
-          ? `data:${meta.crop_mime || "image/jpeg"};base64,${meta.crop_base64}`
+          ? `data:${meta.crop_mime || 'image/jpeg'};base64,${meta.crop_base64}`
           : null,
         reconstructedUrl: null,
         reconstructedB64: null,
         reconstructionMeta: null,
         useReconstructed: false,
         // Still scanning until the matching ``item`` frame lands.
-        status: "scanning",
+        status: 'scanning',
         progress: 60,
         fields: hydrate({}, user),
         error: null,
@@ -2433,8 +2000,7 @@ export default function AddItem() {
           if (idx < 0) return prev;
           return [...prev.slice(0, idx), ...newCards, ...prev.slice(idx + 1)];
         });
-        if (card.previewUrl?.startsWith("blob:"))
-          URL.revokeObjectURL(card.previewUrl);
+        if (card.previewUrl?.startsWith('blob:')) URL.revokeObjectURL(card.previewUrl);
       };
 
       const handleItem = (frame) => {
@@ -2446,7 +2012,7 @@ export default function AddItem() {
         const job = workStore.getSnapshot().analyzeJobs[card.id];
         if (job) {
           workStore.updateAnalyze(card.id, {
-            items: Math.min((job.items || 0) + 1, job.total || job.items + 1),
+            items: Math.min((job.items || 0) + 1, job.total || (job.items + 1)),
           });
         }
         // Reconstruction (Nano Banana) is disabled by the backend
@@ -2455,32 +2021,26 @@ export default function AddItem() {
         const rec = frame.reconstruction;
         const recValidated = !!(rec && rec.validated && rec.image_b64);
         const reconstructedUrl = recValidated
-          ? `data:${rec.mime_type || "image/png"};base64,${rec.image_b64}`
+          ? `data:${rec.mime_type || 'image/png'};base64,${rec.image_b64}`
           : null;
         setCards((prev) =>
           prev.map((c) =>
             c.id === slotId
               ? {
                   ...c,
-                  status: "ready",
+                  status: 'ready',
                   progress: 100,
                   fields: hydrate(frame.analysis || {}, user),
                   label: frame.label || c.label,
                   potentialDuplicate: frame.potential_duplicate || null,
                   fromOnePass: !!frame.one_pass,
                   reconstructionAdvised: !!frame.reconstruction_advised,
-                  deferMatte:
-                    frame.defer_matte !== undefined
-                      ? !!frame.defer_matte
-                      : c.deferMatte,
+                  deferMatte: frame.defer_matte !== undefined ? !!frame.defer_matte : c.deferMatte,
                   needsReconstruction: !!frame.needs_reconstruction,
                   reconstructionReasons: frame.reconstruction_reasons || [],
-                  imageQualityStatus:
-                    frame.analysis?.image_quality_status || null,
-                  imageQualityReason:
-                    frame.analysis?.image_quality_reason || null,
-                  reconstructionPrompt:
-                    frame.analysis?.reconstruction_prompt || null,
+                  imageQualityStatus: frame.analysis?.image_quality_status || null,
+                  imageQualityReason: frame.analysis?.image_quality_reason || null,
+                  reconstructionPrompt: frame.analysis?.reconstruction_prompt || null,
                   reconstructedUrl,
                   reconstructedB64: recValidated ? rec.image_b64 : null,
                   reconstructionMeta: recValidated
@@ -2494,8 +2054,8 @@ export default function AddItem() {
                   useReconstructed: recValidated,
                   previewUrl: recValidated ? reconstructedUrl : c.previewUrl,
                 }
-              : c,
-          ),
+              : c
+          )
         );
       };
 
@@ -2517,15 +2077,10 @@ export default function AddItem() {
                     ...c.fields,
                     ...frame.fields,
                   },
-                  label:
-                    frame.fields.sub_category ||
-                    frame.fields.item_type ||
-                    c.label ||
-                    frame.fields.title ||
-                    frame.fields.name,
+                  label: frame.fields.sub_category || frame.fields.item_type || c.label || frame.fields.title || frame.fields.name,
                 }
-              : c,
-          ),
+              : c
+          )
         );
       };
 
@@ -2536,7 +2091,7 @@ export default function AddItem() {
           onItem: handleItem,
           onItemSkip: handleItemSkip,
           onField: handleField,
-        },
+        }
       );
       clearInterval(tick);
 
@@ -2549,33 +2104,21 @@ export default function AddItem() {
             c.id === card.id
               ? {
                   ...c,
-                  status: "error",
+                  status: 'error',
                   progress: 0,
-                  error: t("addItem.analyzeFailed", {
-                    defaultValue: "Analysis failed",
-                  }),
+                  error: t('addItem.analyzeFailed', { defaultValue: 'Analysis failed' }),
                 }
-              : c,
-          ),
+              : c
+          )
         );
-        toast.error(
-          t("addItem.analyzeFailed", { defaultValue: "Analysis failed" }),
-        );
+        toast.error(t('addItem.analyzeFailed', { defaultValue: 'Analysis failed' }));
         return;
       }
 
-      toast.success(
-        t("addItem.detected", {
-          count: finalCount,
-          defaultValue: "Detected {{count}} item(s)",
-        }),
-      );
+      toast.success(t('addItem.detected', { count: finalCount, defaultValue: 'Detected {{count}} item(s)' }));
     } catch (err) {
       clearInterval(tick);
-      const msg =
-        err?.response?.data?.detail ||
-        err?.message ||
-        t("addItem.analyzeFailed", { defaultValue: "Analysis failed" });
+      const msg = err?.response?.data?.detail || err?.message || t('addItem.analyzeFailed', { defaultValue: 'Analysis failed' });
       // Bug-fix May 2026 — when ``handleDetect`` has already replaced
       // the original ``card.id`` with per-item slot cards
       // (``perCardIds`` populated), the stream error that follows
@@ -2586,16 +2129,15 @@ export default function AddItem() {
       // placeholder values like "Cream Linen Blazer" as if Gemini
       // had populated them — the exact mis-state reported on
       // production after the May 18 outage.
-      const erroredIds =
-        perCardIds && perCardIds.length > 0
-          ? new Set(perCardIds)
-          : new Set([card.id]);
+      const erroredIds = perCardIds && perCardIds.length > 0
+        ? new Set(perCardIds)
+        : new Set([card.id]);
       setCards((prev) =>
         prev.map((c) =>
           erroredIds.has(c.id)
-            ? { ...c, status: "error", progress: 0, error: msg }
-            : c,
-        ),
+            ? { ...c, status: 'error', progress: 0, error: msg }
+            : c
+        )
       );
       toast.error(msg);
     } finally {
@@ -2612,11 +2154,7 @@ export default function AddItem() {
 
   const retryCard = (card) => {
     setCards((prev) =>
-      prev.map((c) =>
-        c.id === card.id
-          ? { ...c, status: "scanning", progress: 4, error: null }
-          : c,
-      ),
+      prev.map((c) => (c.id === card.id ? { ...c, status: 'scanning', progress: 4, error: null } : c))
     );
     analyzeCard(card);
   };
@@ -2624,17 +2162,14 @@ export default function AddItem() {
   const removeCard = (cardId) => {
     setCards((prev) => {
       const target = prev.find((c) => c.id === cardId);
-      if (target?.previewUrl?.startsWith("blob:"))
-        URL.revokeObjectURL(target.previewUrl);
+      if (target?.previewUrl?.startsWith('blob:')) URL.revokeObjectURL(target.previewUrl);
       return prev.filter((c) => c.id !== cardId);
     });
   };
 
   const updateField = (cardId, patch) => {
     setCards((prev) =>
-      prev.map((c) =>
-        c.id === cardId ? { ...c, fields: { ...c.fields, ...patch } } : c,
-      ),
+      prev.map((c) => (c.id === cardId ? { ...c, fields: { ...c.fields, ...patch } } : c))
     );
   };
 
@@ -2642,10 +2177,7 @@ export default function AddItem() {
     let timer;
     try {
       const timeout = new Promise((_, reject) => {
-        timer = setTimeout(
-          () => reject(new Error("Save timed out")),
-          timeoutMs,
-        );
+        timer = setTimeout(() => reject(new Error('Save timed out')), timeoutMs);
       });
       return await Promise.race([api.createItem(body), timeout]);
     } finally {
@@ -2656,23 +2188,17 @@ export default function AddItem() {
   // Phase Q: patch top-level card props (e.g., `useReconstructed` toggle).
   const patchCard = (cardId, patch) => {
     setCards((prev) =>
-      prev.map((c) => (c.id === cardId ? { ...c, ...patch } : c)),
+      prev.map((c) => (c.id === cardId ? { ...c, ...patch } : c))
     );
   };
 
   const saveAll = async () => {
-    const ready = cards.filter(
-      (c) =>
-        c.status === "ready" ||
-        c.status === "error" /* still savable if user fills */,
-    );
-    const scanning = cards.filter((c) => c.status === "scanning");
+    const ready = cards.filter((c) => c.status === 'ready' || c.status === 'error' /* still savable if user fills */);
+    const scanning = cards.filter((c) => c.status === 'scanning');
 
     // Patch M20.2 — neither ready nor scanning → nothing to save.
     if (!ready.length && !scanning.length) {
-      toast.error(
-        t("addItem.nothingToSave", { defaultValue: "Nothing to save yet" }),
-      );
+      toast.error(t('addItem.nothingToSave', { defaultValue: 'Nothing to save yet' }));
       return;
     }
 
@@ -2682,11 +2208,11 @@ export default function AddItem() {
     if (!ready.length) {
       setPendingAutoSave(true);
       toast.info(
-        t("addItem.queuedForAutoSave", {
+        t('addItem.queuedForAutoSave', {
           count: scanning.length,
           defaultValue:
             scanning.length === 1
-              ? "Waiting for 1 photo to finish analysing — will save automatically."
+              ? 'Waiting for 1 photo to finish analysing — will save automatically.'
               : `Waiting for ${scanning.length} photos to finish analysing — will save automatically.`,
         }),
       );
@@ -2723,16 +2249,13 @@ export default function AddItem() {
     const validCards = [];
     const skipped = [];
     for (const card of ready) {
-      if (card.status === "error" && !card.fields?.title) {
+      if (card.status === 'error' && !card.fields?.title) {
         skipped.push(card);
         continue;
       }
       try {
         const body = buildCreatePayload(card, isSuitcase);
-        if (!body.title)
-          throw new Error(
-            t("addItem.titleRequired", { defaultValue: "Title is required" }),
-          );
+        if (!body.title) throw new Error(t('addItem.titleRequired', { defaultValue: 'Title is required' }));
         validCards.push({ card, body });
       } catch (err) {
         skipped.push({ ...card, _buildErr: err });
@@ -2740,27 +2263,15 @@ export default function AddItem() {
     }
 
     if (skipped.length) {
-      setCards((prev) =>
-        prev.map((c) =>
-          skipped.find((s) => s.id === c.id)
-            ? {
-                ...c,
-                status: "error",
-                error:
-                  c.error ||
-                  t("addItem.titleRequired", {
-                    defaultValue: "Title is required",
-                  }),
-              }
-            : c,
-        ),
-      );
+      setCards((prev) => prev.map((c) =>
+        skipped.find((s) => s.id === c.id)
+          ? { ...c, status: 'error', error: c.error || t('addItem.titleRequired', { defaultValue: 'Title is required' }) }
+          : c,
+      ));
     }
     if (!validCards.length) {
       setSaving(false);
-      toast.error(
-        t("addItem.noneSaved", { defaultValue: "No items were saved" }),
-      );
+      toast.error(t('addItem.noneSaved', { defaultValue: 'No items were saved' }));
       return;
     }
 
@@ -2773,24 +2284,25 @@ export default function AddItem() {
     const nowIso = new Date().toISOString();
     for (const { card, body } of validCards) {
       const tempId =
-        typeof crypto !== "undefined" && crypto.randomUUID
+        (typeof crypto !== 'undefined' && crypto.randomUUID)
           ? crypto.randomUUID()
           : `tmp-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
       // Use a data URL (not blob:) so the thumbnail survives the
       // AddItem unmount. blob: URLs are document-scoped and would
       // 404 the moment the user lands on /closet.
-      const dataUrl = card.base64
-        ? `data:${card.mime || card.file?.type || "image/jpeg"};base64,${card.base64}`
-        : card.previewUrl || null;
+      const dataUrl =
+        card.base64
+          ? `data:${card.mime || card.file?.type || 'image/jpeg'};base64,${card.base64}`
+          : (card.previewUrl || null);
       const filename = card.sourceFilename || card.file?.name || null;
       const optimisticItem = {
         id: tempId,
-        user_id: undefined, // server fills on create; never rendered
-        source: body.source || "Private",
+        user_id: undefined,         // server fills on create; never rendered
+        source: body.source || 'Private',
         name: body.name || body.title,
         title: body.title,
         caption: body.caption || null,
-        category: body.category || "Top",
+        category: body.category || 'Top',
         sub_category: body.sub_category || null,
         item_type: body.item_type || null,
         brand: body.brand || null,
@@ -2807,7 +2319,7 @@ export default function AddItem() {
         quality: body.quality || null,
         price_cents: body.price_cents || 0,
         currency: body.currency || getDefaultCurrency(),
-        marketplace_intent: body.marketplace_intent || "own",
+        marketplace_intent: body.marketplace_intent || 'own',
         tags: body.tags || [],
         original_image_url: dataUrl,
         thumbnail_data_url: dataUrl,
@@ -2833,9 +2345,7 @@ export default function AddItem() {
       // Visual state on the AddItem cards in case the user doesn't
       // navigate immediately (e.g. nav blocked by an unsaved-changes
       // guard somewhere upstream).
-      setCards((prev) =>
-        prev.map((c) => (c.id === card.id ? { ...c, status: "saved" } : c)),
-      );
+      setCards((prev) => prev.map((c) => (c.id === card.id ? { ...c, status: 'saved' } : c)));
     }
 
     // Step 3 — instant feedback + (conditional) navigate.
@@ -2845,13 +2355,14 @@ export default function AddItem() {
     // analyses complete; the ``pendingAutoSave`` effect below will
     // re-fire ``saveAll`` once they finish to flush the rest into
     // the closet, then navigate.
-    const stillScanning = cards.some((c) => c.status === "scanning");
+    const stillScanning = cards.some((c) => c.status === 'scanning');
     if (stillScanning) {
       toast.info(
-        t("addItem.savedSomeWaitingForRest", {
+        t('addItem.savedSomeWaitingForRest', {
           saved: validCards.length,
-          remaining: cards.filter((c) => c.status === "scanning").length,
-          defaultValue: `Saved ${validCards.length} — waiting for ${cards.filter((c) => c.status === "scanning").length} more to finish analysing.`,
+          remaining: cards.filter((c) => c.status === 'scanning').length,
+          defaultValue:
+            `Saved ${validCards.length} — waiting for ${cards.filter((c) => c.status === 'scanning').length} more to finish analysing.`,
         }),
       );
       setPendingAutoSave(true);
@@ -2860,19 +2371,19 @@ export default function AddItem() {
       // the navigation is deferred.
     } else {
       toast.success(
-        t("addItem.savedOptimistic", {
+        t('addItem.savedOptimistic', {
           count: validCards.length,
           defaultValue:
             validCards.length === 1
-              ? "Added to your closet — syncing in background"
+              ? 'Added to your closet — syncing in background'
               : `${validCards.length} items added to your closet — syncing in background`,
         }),
       );
       setSaving(false);
       setPendingAutoSave(false);
-      nav(isSuitcase ? "/suitcase" : "/closet");
+      nav(isSuitcase ? '/suitcase' : '/closet');
     }
-
+    
     // Step 4+5 — parallel persistence + reconciliation. Runs after
     // navigation; failures surface via ``closetStore.recordSaveFailures``
     // which the Closet page renders as a single end-of-batch dialog.
@@ -2882,9 +2393,9 @@ export default function AddItem() {
       for (const tid of tempIds) {
         try {
           const res = await createItemWithTimeout(ghosts.get(tid).body);
-          results.push({ status: "fulfilled", value: res });
+          results.push({ status: 'fulfilled', value: res });
         } catch (err) {
-          results.push({ status: "rejected", reason: err });
+          results.push({ status: 'rejected', reason: err });
         }
       }
       const failures = [];
@@ -2893,7 +2404,7 @@ export default function AddItem() {
         const tid = tempIds[i];
         const g = ghosts.get(tid);
         const r = results[i];
-        if (r.status === "fulfilled" && r.value && r.value.id) {
+        if (r.status === 'fulfilled' && r.value && r.value.id) {
           // Swap ghost → canonical. We remove first so a server item
           // that re-uses the temp UUID by coincidence (impossible —
           // server mints its own — but defensive) doesn't collide.
@@ -2906,7 +2417,7 @@ export default function AddItem() {
           // ("You have news in your closet") fire when the last one
           // drains, regardless of which page the user is on.
           if (
-            r.value.clean_image_status === "pending" ||
+            r.value.clean_image_status === 'pending' ||
             r.value.needs_reconstruction ||
             r.value.reconstruction_metadata?.deferred
           ) {
@@ -2915,9 +2426,8 @@ export default function AddItem() {
         } else {
           closetStore.remove(tid);
           const detail =
-            (r.reason &&
-              (r.reason.response?.data?.detail || r.reason.message)) ||
-            "Save failed";
+            (r.reason && (r.reason.response?.data?.detail || r.reason.message))
+            || 'Save failed';
           failures.push({
             id: tid,
             title: g.title,
@@ -2936,11 +2446,9 @@ export default function AddItem() {
     };
     // Don't await — let it run in the background. The Closet page
     // is a separate React tree at this point.
-    settle().catch(() => {
-      /* recorded individually above */
-    });
+    settle().catch(() => { /* recorded individually above */ });
   };
-
+  
   // Patch M20.2 — Auto-save queue driver.
   //
   // When the user pressed Save mid-batch, ``pendingAutoSave`` is set
@@ -2961,1317 +2469,906 @@ export default function AddItem() {
   });
   useEffect(() => {
     if (!pendingAutoSave) return;
-    const stillScanning = cards.some((c) => c.status === "scanning");
+    const stillScanning = cards.some((c) => c.status === 'scanning');
     if (stillScanning) return;
     // Drain — flush whatever's ready/error now. saveAll handles the
     // navigation if no scanning cards remain after this pass.
-    if (typeof saveAllRef.current === "function") {
+    if (typeof saveAllRef.current === 'function') {
       saveAllRef.current();
     }
   }, [cards, pendingAutoSave]);
 
   return (
-    <>
-      {/* banner-start */}
-      <section
-        className="
-        relative isolate overflow-hidden
-        bg-cover bg-center bg-no-repeat
-         mt-[var(--header-height)]
-      "
-        style={{
-          backgroundImage: `url(${ClosetBanner})`,
-        }}
-      >
-        {/* Dark gradient overlay */}
+    <div className="container-px max-w-6xl mx-auto pt-6 md:pt-10 pb-28" data-testid="add-item-page">
+      {(cards.length > 0 || !!bgBatch) && (
         <div
-          className="
-          absolute inset-0 -z-0
-          bg-[linear-gradient(90deg,#080b09_0%,#101612_43%,rgba(16,22,18,0.48)_67%,rgba(16,22,18,0.08)_100%)]
-        "
-        />
+          className="sticky top-0 z-30 -mx-4 sm:-mx-6 px-4 sm:px-6 py-3 mb-6 bg-background/85 backdrop-blur-md border-b border-border/40 supports-[backdrop-filter]:bg-background/70"
+          data-testid="add-item-action-bar"
+        >
+          <div className="flex items-center gap-2">
 
-        <div className="relative z-10 w-full">
-          <div
-            className="
-            px-10 py-20
-            max-[991px]:px-[35px] max-[991px]:py-[45px]
-            max-[767px]:px-5 max-[767px]:py-[38px]
-            max-[480px]:px-4 max-[480px]:py-8
-          "
-          >
-            <div className="max-w-[520px]">
-              {/* {t("addItem.label", { defaultValue: "Add to closet" })} */}
-              {/* Title */}
-              <h1
-                className="
-                m-0 mb-5
-                text-[40px] leading-[50px]
-                font-bold
-                tracking-normal
-                text-white
-                max-[767px]:text-[42px]
-                max-[480px]:text-[35px]
-              "
-              >
-                {t("addItem.title", { defaultValue: "Upload & auto-fill" })}
-              </h1>
-
-              {/* Description */}
-              <p
-                className="
-                my-5
-                max-w-[450px]
-                text-[14px]
-                leading-6
-                tracking-[0.5px]
-                text-white/60
-                max-[767px]:max-w-full
-                max-[767px]:mt-[15px]
-              "
-              >
-                {t("addItem.subtitle", {
-                  defaultValue:
-                    "Pick one or many photos. The Eyes will scan each piece and pre-fill every field — you review, tweak, and tag for the marketplace.",
-                })}
-              </p>
-            </div>
+            <div className="flex-1" />
+            <Button onClick={pickFilesWithMemory} variant="outline" className="rounded-xl" disabled={!!bgBatch} data-testid="add-item-add-more">
+              <Plus className="h-4 w-4 me-2" /> {t('addItem.addPhotos', { defaultValue: 'Add photos' })}
+            </Button>
+            <Button
+              onClick={saveAll}
+              disabled={
+                saving
+                || !!bgBatch
+                // Patch M20.2 — Allow Save while some cards are still
+                // scanning (so the user can queue the batch); keep
+                // disabled while a previous queue is still draining
+                // (``pendingAutoSave``) to avoid re-entrant calls.
+                || pendingAutoSave
+                || (!cards.some((c) => c.status === 'ready') && !cards.some((c) => c.status === 'scanning'))
+              }
+              className="rounded-xl"
+              data-testid="add-item-save-all"
+            >
+              {(saving || pendingAutoSave) ? <Loader2 className="h-4 w-4 me-2 animate-spin" /> : <Save className="h-4 w-4 me-2" />}
+              {pendingAutoSave
+                ? t('addItem.saveAllPending', { defaultValue: 'Saving — waiting for analysis…' })
+                : t('addItem.saveAll', { defaultValue: 'Save' })}
+            </Button>
           </div>
         </div>
-      </section>
-      <section className="w-full overflow-hidden bg-[var(--accent-beige)] px-[40px] py-[80px] max-[991px]:px-[5px] max-[991px]:py-[40px]">
-        {/* stepper-component */}
-        <Stepper cards={cards} saving={saving} bgBatch={bgBatch} />
-        <div className="" data-testid="add-item-page">
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/*"
-            multiple
-            className="sr-only"
-            data-testid="add-item-file-input"
-            onChange={(e) => {
-              handleFiles(e.target.files);
-              e.target.value = "";
-            }}
-          />
-          {/* Native camera capture — on mobile, `capture="environment"` opens
+      )}
+
+      <Stepper cards={cards} saving={saving} bgBatch={bgBatch} />
+
+      <div className="mb-6">
+        <div className="caps-label text-muted-foreground">{t('addItem.label', { defaultValue: 'Add to closet' })}</div>
+        <h1 className="font-display text-3xl sm:text-4xl mt-1">{t('addItem.title', { defaultValue: 'Upload & auto-fill' })}</h1>
+        <p className="text-sm text-muted-foreground mt-2 max-w-2xl">
+          {t('addItem.subtitle', { defaultValue: 'Pick one or many photos. The Eyes will scan each piece and pre-fill every field — you review, tweak, and tag for the marketplace.' })}
+        </p>
+      </div>
+
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*"
+        multiple
+        className="sr-only"
+        data-testid="add-item-file-input"
+        onChange={(e) => {
+          const files = Array.from(e.target.files || []);
+          e.target.value = '';
+          if (files.length > 0) {
+            handleFiles(files);
+          }
+        }}
+      />
+      {/* Native camera capture — on mobile, `capture="environment"` opens
           the rear camera directly; on desktop, falls back to a file
           picker so the button is safe to show everywhere. */}
-          <input
-            ref={cameraInputRef}
-            type="file"
-            accept="image/*"
-            capture="environment"
-            className="sr-only"
-            data-testid="add-item-camera-input"
-            onChange={(e) => {
-              handleFiles(e.target.files);
-              e.target.value = "";
-            }}
-          />
-          {/* Phase Z2 — pre-flight duplicate dialog. Pops up BEFORE any
+      <input
+        ref={cameraInputRef}
+        type="file"
+        accept="image/*"
+        capture="environment"
+        className="sr-only"
+        data-testid="add-item-camera-input"
+        onChange={(e) => {
+          const files = Array.from(e.target.files || []);
+          e.target.value = '';
+          if (files.length > 0) {
+            handleFiles(files);
+          }
+        }}
+      />
+
+      {/* Phase Z2 — pre-flight duplicate dialog. Pops up BEFORE any
           analyze / Gemini cost when the user has selected ≤5 photos
           and at least one of them collides on SHA-256 with an item
           already in their closet. Multi-row, scrollable, per-row
           Skip / "Add anyway ⭐" — see component for full spec. */}
-          <DuplicatePreflightDialog
-            open={!!preflight}
-            matches={preflight?.matches || []}
-            onResolve={(decisions) => {
-              if (preflight?.onResolve) {
-                preflight.onResolve(decisions);
-              } else {
-                setPreflight(null);
-              }
-            }}
-          />
-          <Dialog
-            open={isUrlModalOpen}
-            onOpenChange={(open) => {
-              if (!open) {
-                setIsUrlModalOpen(false);
-                setUrlInput("");
-              }
-            }}
-          >
-            <DialogContent className="sm:max-w-md">
-              <DialogHeader>
-                <DialogTitle>
-                  {t("addItem.urlModalTitle", {
-                    defaultValue: "Import image from URL",
-                  })}
-                </DialogTitle>
-                <DialogDescription>
-                  {t("addItem.urlModalLabel", {
-                    defaultValue: "Paste image web address (URL)",
-                  })}
-                </DialogDescription>
-              </DialogHeader>
-              <div className="flex items-center space-x-2 py-4 rtl:space-x-reverse">
-                <div className="grid flex-1 gap-2">
-                  <Label htmlFor="url" className="sr-only">
-                    URL
-                  </Label>
-                  <Input
-                    id="url"
-                    placeholder={t("addItem.urlModalPlaceholder", {
-                      defaultValue: "https://example.com/garment.jpg",
-                    })}
-                    value={urlInput}
-                    onChange={(e) => setUrlInput(e.target.value)}
-                    disabled={isUrlLoading}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter" && !isUrlLoading) {
-                        handleUrlUpload(urlInput);
-                      }
-                    }}
-                    className=" h-11 w-full rounded-[8px]
-                                border border-gray-200
-                                bg-white
-                                text-sm text-gray-900
-                                shadow-none outline-none
-                                placeholder:text-gray-400
-                                focus:border-primary-brand
-                                focus:outline-none
-                                focus:ring-0
-                                focus-visible:outline-none
-                                focus-visible:ring-0"
-                  />
-                </div>
-              </div>
-              <DialogFooter className="sm:justify-end gap-2">
-                <Button
-                  type="button"
-                  variant="ghost"
-                  onClick={() => {
-                    setIsUrlModalOpen(false);
-                    setUrlInput("");
-                  }}
-                  disabled={isUrlLoading}
-                  className="h-auto
-                              rounded-full
-                              border-0
-                              px-7
-                              py-2.5
-                              font-sans
-                              text-[14px]
-                              font-semibold
-                              text-dark-brand
-                              shadow-none
-                              transition-all
-                              duration-300
-                              hover:-translate-y-0.5"
-                >
-                  {t("common.cancel", { defaultValue: "Cancel" })}
-                </Button>
-                <Button
-                  type="button"
-                  onClick={() => handleUrlUpload(urlInput)}
-                  disabled={isUrlLoading || !urlInput.trim()}
-                  className=" h-auto
-                              rounded-full
-                              border-0
-                              bg-[var(--primary-color)]
-                              px-7
-                              py-2.5
-                              font-sans
-                              text-[14px]
-                              font-medium
-                              text-white
-                              shadow-none
-                              transition-all
-                              duration-300
-                              hover:-translate-y-0.5
-                              hover:bg-[var(--primary-hover)]
-                              hover:text-white
-                              hover:shadow-[0_10px_30px_rgba(31,92,69,0.22)] 
-                              disabled:transform-none 
-                              disabled:opacity-50"
-                >
-                  {isUrlLoading ? (
-                    <>
-                      <Loader2 className="h-4 w-4 animate-spin me-2" />
-                      {t("addItem.urlModalButton", { defaultValue: "Import" })}
-                    </>
-                  ) : (
-                    t("addItem.urlModalButton", { defaultValue: "Import" })
-                  )}
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
-          {/* Duplicate-detection modal (post-analysis fallback). Pops one
+      <DuplicatePreflightDialog
+        open={!!preflight}
+        matches={preflight?.matches || []}
+        onResolve={(decisions) => {
+          if (preflight?.onResolve) {
+            preflight.onResolve(decisions);
+          } else {
+            setPreflight(null);
+          }
+        }}
+      />
+
+      <Dialog open={isUrlModalOpen} onOpenChange={(open) => { if (!open) { setIsUrlModalOpen(false); setUrlInput(''); } }}>
+        <DialogContent className="sm:max-w-md rounded-[calc(var(--radius)+6px)]">
+          <DialogHeader>
+            <DialogTitle>{t('addItem.urlModalTitle', { defaultValue: 'Import image from URL' })}</DialogTitle>
+            <DialogDescription>
+              {t('addItem.urlModalLabel', { defaultValue: 'Paste image web address (URL)' })}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex items-center space-x-2 py-4 rtl:space-x-reverse">
+            <div className="grid flex-1 gap-2">
+              <Label htmlFor="url" className="sr-only">URL</Label>
+              <Input
+                id="url"
+                placeholder={t('addItem.urlModalPlaceholder', { defaultValue: 'https://example.com/garment.jpg' })}
+                value={urlInput}
+                onChange={(e) => setUrlInput(e.target.value)}
+                disabled={isUrlLoading}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && !isUrlLoading) {
+                    handleUrlUpload(urlInput);
+                  }
+                }}
+                className="rounded-xl"
+              />
+            </div>
+          </div>
+          <DialogFooter className="sm:justify-end gap-2">
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={() => { setIsUrlModalOpen(false); setUrlInput(''); }}
+              disabled={isUrlLoading}
+              className="rounded-xl"
+            >
+              {t('common.cancel', { defaultValue: 'Cancel' })}
+            </Button>
+            <Button
+              type="button"
+              onClick={() => handleUrlUpload(urlInput)}
+              disabled={isUrlLoading || !urlInput.trim()}
+              className="rounded-xl px-5"
+            >
+              {isUrlLoading ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin me-2" />
+                  {t('addItem.urlModalButton', { defaultValue: 'Import' })}
+                </>
+              ) : (
+                t('addItem.urlModalButton', { defaultValue: 'Import' })
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Duplicate-detection modal (post-analysis fallback). Pops one
           first card with an unconfirmed potentialDuplicate becomes the
           active question. "Cancel" discards that card; "Add anyway"
           stamps it as confirmed and moves on (or, for cards that came
           from the batch path, immediately POSTs /closet so the
           fire-and-forget batch flow stays fire-and-forget). */}
-          <DuplicateConfirmDialog
-            cards={cards}
-            onCancel={(cardId) => {
-              setCards((prev) => {
-                const removed = prev.find((c) => c.id === cardId);
-                if (removed?.previewUrl?.startsWith("blob:"))
-                  URL.revokeObjectURL(removed.previewUrl);
-                // Decrement the batch's pendingDuplicates counter so the
-                // final toast / nav logic stays accurate after a discard.
-                if (removed?.pendingBatchSave) {
-                  setBgBatch((b) =>
-                    b
-                      ? {
-                          ...b,
-                          pendingDuplicates: Math.max(
-                            0,
-                            (b.pendingDuplicates || 0) - 1,
-                          ),
-                        }
-                      : b,
-                  );
-                }
-                return prev.filter((c) => c.id !== cardId);
-              });
-            }}
-            onConfirm={async (cardId) => {
-              // Snapshot the card so we don't lose state to the
-              // setCards stamp below if we have to read from it after.
-              const card = cards.find((c) => c.id === cardId);
-              if (!card) return;
+      <DuplicateConfirmDialog
+        cards={cards}
+        onCancel={(cardId) => {
+          setCards((prev) => {
+            const removed = prev.find((c) => c.id === cardId);
+            if (removed?.previewUrl?.startsWith('blob:')) URL.revokeObjectURL(removed.previewUrl);
+            // Decrement the batch's pendingDuplicates counter so the
+            // final toast / nav logic stays accurate after a discard.
+            if (removed?.pendingBatchSave) {
+              setBgBatch((b) =>
+                b
+                  ? {
+                      ...b,
+                      pendingDuplicates: Math.max(
+                        0,
+                        (b.pendingDuplicates || 0) - 1,
+                      ),
+                    }
+                  : b,
+              );
+            }
+            return prev.filter((c) => c.id !== cardId);
+          });
+        }}
+        onConfirm={async (cardId) => {
+          // Snapshot the card so we don't lose state to the
+          // setCards stamp below if we have to read from it after.
+          const card = cards.find((c) => c.id === cardId);
+          if (!card) return;
 
-              // Cards that came through the foreground / interactive path
-              // just get stamped — the user clicks "Save All" afterwards.
-              if (!card.pendingBatchSave) {
-                setCards((prev) =>
-                  prev.map((c) =>
-                    c.id === cardId ? { ...c, duplicateConfirmed: true } : c,
-                  ),
-                );
-                return;
-              }
+          // Cards that came through the foreground / interactive path
+          // just get stamped — the user clicks "Save All" afterwards.
+          if (!card.pendingBatchSave) {
+            setCards((prev) =>
+              prev.map((c) =>
+                c.id === cardId ? { ...c, duplicateConfirmed: true } : c,
+              ),
+            );
+            return;
+          }
 
-              // Batch-origin cards: save immediately and remove from the
-              // cards list. This restores the "uploads continue in the
-              // background" UX while still requiring an explicit user
-              // confirmation for each duplicate.
-              try {
-                await api.createItem(buildCreatePayload(card, isSuitcase));
-                setCards((prev) => prev.filter((c) => c.id !== cardId));
-                setBgBatch((b) =>
-                  b
-                    ? {
-                        ...b,
-                        saved: (b.saved || 0) + 1,
-                        pendingDuplicates: Math.max(
-                          0,
-                          (b.pendingDuplicates || 0) - 1,
-                        ),
-                      }
-                    : b,
-                );
-              } catch (err) {
-                // Saving failed — keep the card visible so the user can
-                // edit + retry through the normal Save All flow. We stamp
-                // duplicateConfirmed so the dialog doesn't pop again for
-                // this card.
-                setCards((prev) =>
-                  prev.map((c) =>
-                    c.id === cardId
-                      ? {
-                          ...c,
-                          duplicateConfirmed: true,
-                          pendingBatchSave: false,
-                        }
-                      : c,
-                  ),
-                );
-                toast.error(
-                  err?.response?.data?.detail ||
-                    t("addItem.duplicate.saveFailed", {
-                      defaultValue:
-                        "Could not save the duplicate item. Please review and use Save All.",
-                    }),
-                );
-              }
-            }}
-          />
-          {bgBatch ? (
-            <div
-              className="w-full border border-border rounded-[12px] p-8 sm:p-10 bg-card flex flex-col items-center text-center"
-              data-testid="add-item-bg-batch-card"
-              aria-live="polite"
-            >
-              <ScanningPipeline variant="block" />
-              <div className="text-sm text-muted-foreground mt-1 max-w-md">
-                {t("addItem.bgUpload.processingBody", {
+          // Batch-origin cards: save immediately and remove from the
+          // cards list. This restores the "uploads continue in the
+          // background" UX while still requiring an explicit user
+          // confirmation for each duplicate.
+          try {
+            await api.createItem(buildCreatePayload(card, isSuitcase));
+            setCards((prev) => prev.filter((c) => c.id !== cardId));
+            setBgBatch((b) =>
+              b
+                ? {
+                    ...b,
+                    saved: (b.saved || 0) + 1,
+                    pendingDuplicates: Math.max(
+                      0,
+                      (b.pendingDuplicates || 0) - 1,
+                    ),
+                  }
+                : b,
+            );
+          } catch (err) {
+            // Saving failed — keep the card visible so the user can
+            // edit + retry through the normal Save All flow. We stamp
+            // duplicateConfirmed so the dialog doesn't pop again for
+            // this card.
+            setCards((prev) =>
+              prev.map((c) =>
+                c.id === cardId
+                  ? { ...c, duplicateConfirmed: true, pendingBatchSave: false }
+                  : c,
+              ),
+            );
+            toast.error(
+              err?.response?.data?.detail ||
+                t('addItem.duplicate.saveFailed', {
                   defaultValue:
-                    "You can leave this page — we’ll keep going in the background. Edit any misfits in your closet when we’re done.",
+                    'Could not save the duplicate item. Please review and use Save All.',
+                }),
+            );
+          }
+        }}
+      />
+
+      {bgBatch ? (
+        <div
+          className="w-full border border-border rounded-[calc(var(--radius)+10px)] p-8 sm:p-10 bg-card flex flex-col items-center text-center"
+          data-testid="add-item-bg-batch-card"
+          aria-live="polite"
+        >
+          <ScanningPipeline variant="block" />
+          <div className="text-sm text-muted-foreground mt-1 max-w-md">
+            {t('addItem.bgUpload.processingBody', {
+              defaultValue: 'You can leave this page — we’ll keep going in the background. Edit any misfits in your closet when we’re done.',
+            })}
+          </div>
+          <div className="mt-5 w-full max-w-md">
+            <div className="flex items-center justify-between text-xs text-muted-foreground mb-1">
+              <span data-testid="bg-batch-counter">
+                {bgBatch.processed} / {bgBatch.total}
+              </span>
+              <span>
+                {t('addItem.bgUpload.savedFailed', {
+                  saved: bgBatch.saved,
+                  failed: bgBatch.failed,
+                  defaultValue: `saved ${bgBatch.saved} · failed ${bgBatch.failed}`,
+                })}
+              </span>
+            </div>
+            <Progress
+              value={bgBatch.total ? (bgBatch.processed / bgBatch.total) * 100 : 0}
+              className="h-2"
+              data-testid="bg-batch-progress"
+            />
+            {bgBatch.pendingDuplicates ? (
+              // Surfaced inline so the user knows the modal popping
+              // up over the progress card is intentional — these
+              // are uploads that matched something already in the
+              // closet and need their explicit OK before saving.
+              <div
+                className="mt-3 text-xs text-amber-700 dark:text-amber-400"
+                data-testid="bg-batch-duplicates"
+              >
+                {t('addItem.bgUpload.duplicatesInline', {
+                  count: bgBatch.pendingDuplicates,
+                  defaultValue: `${bgBatch.pendingDuplicates} item(s) need your confirmation — they look like duplicates of items already in your closet.`,
                 })}
               </div>
-              <div className="mt-5 w-full max-w-md">
-                <div className="flex items-center justify-between text-xs text-muted-foreground mb-1">
-                  <span data-testid="bg-batch-counter">
-                    {bgBatch.processed} / {bgBatch.total}
-                  </span>
-                  <span>
-                    {t("addItem.bgUpload.savedFailed", {
-                      saved: bgBatch.saved,
-                      failed: bgBatch.failed,
-                      defaultValue: `saved ${bgBatch.saved} · failed ${bgBatch.failed}`,
-                    })}
-                  </span>
+            ) : null}
+          </div>
+        </div>
+      ) : cards.length === 0 ? (
+        <Tabs defaultValue="upload" className="w-full">
+          <TabsList className="grid w-full grid-cols-2 mb-6 max-w-md mx-auto p-1 bg-muted/60 rounded-xl">
+            <TabsTrigger value="upload" className="rounded-lg py-2 text-sm font-medium transition-all" data-testid="add-item-tab-upload">
+              <Camera className="h-4 w-4 me-2" /> {t('addItem.tabs.upload', { defaultValue: 'Camera & Upload' })}
+            </TabsTrigger>
+            <TabsTrigger value="import" className="rounded-lg py-2 text-sm font-medium transition-all" data-testid="add-item-tab-import">
+              <Sparkles className="h-4 w-4 me-2" /> {t('addItem.tabs.import', { defaultValue: 'Digital Import' })}
+            </TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="upload" className="mt-0 focus-visible:ring-0 focus-visible:ring-offset-0">
+            <div
+              className="w-full border-2 border-dashed border-border rounded-[calc(var(--radius)+10px)] p-10 sm:p-12 bg-card flex flex-col items-center text-center cursor-pointer hover:bg-card/85 transition-colors"
+              data-testid="add-item-dropzone"
+              onClick={pickFilesWithMemory}
+              onDragOver={(e) => e.preventDefault()}
+              onDrop={(e) => {
+                e.preventDefault();
+                handleFiles(e.dataTransfer.files);
+              }}
+            >
+              <div className="h-14 w-14 rounded-full bg-secondary flex items-center justify-center mb-3">
+                <Eye className="h-6 w-6" />
+              </div>
+              <div className="font-display text-xl">{t('addItem.dropzoneTitle', { defaultValue: 'Let The Eyes see your pieces' })}</div>
+              <div className="text-sm text-muted-foreground mt-1 max-w-md">
+                {t('addItem.dropzoneBody', { defaultValue: 'Snap a quick shot with your camera or upload existing photos. JPG, PNG, HEIC supported — each piece is analysed in parallel.' })}
+              </div>
+              <div 
+                className="mt-5 flex flex-wrap items-center justify-center gap-2"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <Button
+                  type="button"
+                  className="rounded-xl"
+                  onClick={openCamera}
+                  data-testid="add-item-open-camera-button"
+                >
+                  <Camera className="h-4 w-4 me-2" /> {t('addItem.takePhoto', { defaultValue: 'Take photo' })}
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="rounded-xl"
+                  onClick={pickFilesWithMemory}
+                  data-testid="add-item-pick-files-button"
+                >
+                  <Upload className="h-4 w-4 me-2" /> {t('addItem.uploadPhotos', { defaultValue: 'Upload photos' })}
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="rounded-xl"
+                  onClick={() => setIsUrlModalOpen(true)}
+                  data-testid="add-item-url-button"
+                >
+                  <Link2 className="h-4 w-4 me-2" /> {t('addItem.uploadUrl', { defaultValue: 'URL' })}
+                </Button>
+                <Button
+                  type="button"
+                  variant="secondary"
+                  className="rounded-xl px-3.5"
+                  onClick={openScanner}
+                  title={t('dpp.nav.scanLabel')}
+                  aria-label={t('dpp.nav.scanLabel')}
+                  data-testid="add-item-scan-dpp-button"
+                >
+                  <QrCode className="h-4 w-4" />
+                </Button>
+              </div>
+              <div className="mt-4 flex items-center justify-center">
+                <div className="text-xs text-muted-foreground flex items-center gap-2 max-w-md">
+                  <Badge variant="outline" className="border-[hsl(var(--accent))] text-[hsl(var(--accent))]">
+                    {t('dpp.addItem.tileBadge')}
+                  </Badge>
+                  <span>{t('dpp.addItem.tileSubtitle')}</span>
                 </div>
-                <Progress
-                  value={
-                    bgBatch.total
-                      ? (bgBatch.processed / bgBatch.total) * 100
-                      : 0
-                  }
-                  className="h-2"
-                  data-testid="bg-batch-progress"
-                />
-                {bgBatch.pendingDuplicates ? (
-                  // Surfaced inline so the user knows the modal popping
-                  // up over the progress card is intentional — these
-                  // are uploads that matched something already in the
-                  // closet and need their explicit OK before saving.
-                  <div
-                    className="mt-3 text-xs text-amber-700 dark:text-amber-400"
-                    data-testid="bg-batch-duplicates"
-                  >
-                    {t("addItem.bgUpload.duplicatesInline", {
-                      count: bgBatch.pendingDuplicates,
-                      defaultValue: `${bgBatch.pendingDuplicates} item(s) need your confirmation — they look like duplicates of items already in your closet.`,
-                    })}
-                  </div>
-                ) : null}
               </div>
             </div>
-          ) : cards.length === 0 ? (
-            <Tabs defaultValue="upload" className="w-full">
-              <div className="flex w-full justify-center">
-                <TabsList className="inline-flex mb-10 items-center gap-1 rounded-full bg-white p-[5px]">
-                  <TabsTrigger
-                    value="upload"
-                    className="group flex items-center gap-[7px] rounded-full px-[20px] py-[10px] text-[12px] font-bold text-text-brand bg-transparent border-0 transition-all duration-200 whitespace-nowrap hover:text-primary-brand hover:bg-primary-shadow data-[state=active]:bg-primary-brand data-[state=active]:text-white"
-                    data-testid="add-item-tab-upload"
-                  >
-                    <Camera className="h-4 w-4" />
-                    {t("addItem.tabs.upload", {
-                      defaultValue: "Camera & Upload",
-                    })}
-                  </TabsTrigger>
+          </TabsContent>
+          
+          <TabsContent value="import" className="mt-0 focus-visible:ring-0 focus-visible:ring-offset-0">
+            <div 
+              className="w-full border border-border rounded-[calc(var(--radius)+10px)] p-8 sm:p-10 bg-card/60 backdrop-blur-md flex flex-col items-center text-center relative overflow-hidden"
+              data-testid="add-item-digital-import-pane"
+            >
+              {/* Subtle background glow */}
+              <div className="absolute top-0 end-0 w-48 h-48 bg-[hsl(var(--accent))]/5 rounded-full blur-3xl pointer-events-none -me-12 -mt-12" />
+              <div className="absolute bottom-0 start-0 w-48 h-48 bg-[hsl(var(--accent))]/5 rounded-full blur-3xl pointer-events-none -ms-12 -mb-12" />
 
-                  <TabsTrigger
-                    value="import"
-                    className="group flex items-center gap-[7px] rounded-full px-[20px] py-[10px] text-[12px] font-bold text-text-brand bg-transparent border-0 transition-all duration-200 whitespace-nowrap hover:text-primary-brand hover:bg-primary-shadow data-[state=active]:bg-primary-brand data-[state=active]:text-white"
-                    data-testid="add-item-tab-import"
-                  >
-                    <Sparkles className="h-4 w-4" />
-                    {t("addItem.tabs.import", {
-                      defaultValue: "Digital Import",
-                    })}
-                  </TabsTrigger>
-                </TabsList>
-              </div>
-              <TabsContent
-                value="upload"
-                className="mt-0 focus-visible:ring-0 focus-visible:ring-offset-0"
-              >
-                <div
-                  className="w-full border-2 border-dashed border-border rounded-[12px] p-10 sm:p-12 bg-white flex flex-col items-center text-center cursor-pointer hover:bg-card/85 transition-colors"
-                  data-testid="add-item-dropzone"
-                  onClick={pickFilesWithMemory}
-                  onDragOver={(e) => e.preventDefault()}
-                  onDrop={(e) => {
-                    e.preventDefault();
-                    handleFiles(e.dataTransfer.files);
-                  }}
-                >
-                  <div className="h-14 w-14 rounded-full bg-accent-beige flex items-center justify-center mb-3">
-                    <Eye className="h-6 w-6 text-primary-brand" />
+              {!(importFile || (importMode === 'text' && receiptText.trim()) || (importMode === 'url' && importUrl.trim())) ? (
+                <>
+                  <div className="h-14 w-14 rounded-full bg-secondary flex items-center justify-center mb-4 border border-border">
+                    <Sparkles className="h-6 w-6 text-[hsl(var(--accent))]" />
                   </div>
-                  <h6 className="text-[20px] text-dark-brand font-bold">
-                    {t("addItem.dropzoneTitle", {
-                      defaultValue: "Let the eyes see your pieces",
-                    })}
-                  </h6>
-                  <p className="text-[14px] text-text-brand font-bold mt-1 max-w-md">
-                    {t("addItem.dropzoneBody", {
-                      defaultValue:
-                        "Snap a quick shot with your camera or upload existing photos. JPG, PNG, HEIC supported — each piece is analysed in parallel.",
-                    })}
+                  
+                  <h3 className="font-display text-xl font-semibold mb-2">
+                    {t('addItem.import.title', { defaultValue: 'Digital Receipt & Email Import' })}
+                  </h3>
+                  <p className="text-sm text-muted-foreground max-w-md mb-6">
+                    {t('addItem.import.body', { defaultValue: 'Paste the text of a digital receipt, order confirmation email, or store invoice. Our parser will instantly extract brand, price, size, and category details.' })}
                   </p>
-                  <div
-                    className="mt-5 flex flex-wrap items-center justify-center gap-2"
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    <Button
-                      type="button"
-                      className="
-                        h-auto
-                        rounded-full
-                        border-0
-                        bg-[var(--primary-color)]
-                        px-7
-                        py-3.5
-                        font-sans
-                        text-sm
-                        font-medium
-                        text-white
-                        shadow-none
-                        transition-all
-                        duration-300
-                        hover:-translate-y-0.5
-                        hover:bg-[var(--primary-hover)]
-                        hover:text-white
-                        hover:shadow-[0_10px_30px_rgba(31,92,69,0.22)]
-                      "
-                      onClick={openCamera}
-                      data-testid="add-item-open-camera-button"
-                    >
-                      <Camera className="h-4 w-4" />{" "}
-                      {t("addItem.takePhoto", { defaultValue: "Take photo" })}
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      className="
-                        h-auto
-                        rounded-full
-                        border
-                        border-black/10
-                        bg-white
-                        px-7
-                        py-3.5
-                        font-sans
-                        text-sm
-                        font-semibold
-                        text-[var(--dark-color)]
-                        shadow-none
-                        transition-all
-                        duration-300
-                        hover:-translate-y-0.5
-                        hover:bg-white
-                        hover:text-[var(--primary-color)]
-                        hover:shadow-[var(--shadow-medium)]
-                      "
-                      onClick={pickFilesWithMemory}
-                      data-testid="add-item-pick-files-button"
-                    >
-                      <Upload className="h-4 w-4" />{" "}
-                      {t("addItem.uploadPhotos", {
-                        defaultValue: "Upload photos",
-                      })}
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      className="
-                        h-auto
-                        rounded-full
-                        border
-                        border-black/10
-                        bg-white
-                        px-7
-                        py-3.5
-                        font-sans
-                        text-sm
-                        font-semibold
-                        text-[var(--dark-color)]
-                        shadow-none
-                        transition-all
-                        duration-300
-                        hover:-translate-y-0.5
-                        hover:bg-white
-                        hover:text-[var(--primary-color)]
-                        hover:shadow-[var(--shadow-medium)]
-                      "
-                      onClick={() => setIsUrlModalOpen(true)}
-                      data-testid="add-item-url-button"
-                    >
-                      <Link2 className="h-4 w-4" />{" "}
-                      {t("addItem.uploadUrl", { defaultValue: "URL" })}
-                    </Button>
-                    <Button
-                      type="button"
-                      className="group h-12 w-12 rounded-full bg-accent-beige flex items-center justify-center hover:text-white"
-                      onClick={openScanner}
-                      title={t("dpp.nav.scanLabel")}
-                      aria-label={t("dpp.nav.scanLabel")}
-                      data-testid="add-item-scan-dpp-button"
-                    >
-                      <QrCode className="h-6 w-6 text-primary-brand group-hover:text-white transition-colors " />
-                    </Button>
-                  </div>
 
-                  {/* Bottom badge + subtitle section — redesigned */}
-                  <div
-                    className="mt-5 flex items-center justify-center gap-2 max-w-md mx-auto rounded-full border border-[hsl(var(--border))] bg-accent-beige px-4 py-2"
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    <Badge
-                      variant="outline"
-                      className="shrink-0 rounded-full border-[hsl(var(--accent))] bg-primary-shadow text-primary-brand font-medium px-2.5 py-0.5 text-[11px] tracking-wide"
+                  {/* Import Mode Selector */}
+                  <div className="flex items-center gap-1.5 p-1 bg-muted rounded-xl mb-6 max-w-sm w-full border border-border/40">
+                    <button
+                      type="button"
+                      onClick={() => { setImportMode('text'); setImportFile(null); }}
+                      className={`flex-1 py-1.5 px-3 rounded-lg text-xs font-medium transition-all duration-200 ${
+                        importMode === 'text'
+                          ? 'bg-background text-foreground shadow-sm'
+                          : 'text-muted-foreground hover:text-foreground'
+                      }`}
                     >
-                      {t("dpp.addItem.tileBadge")}
-                    </Badge>
-                    <span className="text-[12px] text-text-brand font-bold text-left">
-                      {t("dpp.addItem.tileSubtitle")}
+                      {t('addItem.import.modes.text', { defaultValue: 'Paste Text' })}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => { setImportMode('file'); setReceiptText(''); }}
+                      className={`flex-1 py-1.5 px-3 rounded-lg text-xs font-medium transition-all duration-200 ${
+                        importMode === 'file'
+                          ? 'bg-background text-foreground shadow-sm'
+                          : 'text-muted-foreground hover:text-foreground'
+                      }`}
+                    >
+                      {t('addItem.import.modes.file', { defaultValue: 'Upload File' })}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => { setImportMode('url'); setImportFile(null); setReceiptText(''); }}
+                      className={`flex-1 py-1.5 px-3 rounded-lg text-xs font-medium transition-all duration-200 ${
+                        importMode === 'url'
+                          ? 'bg-background text-foreground shadow-sm'
+                          : 'text-muted-foreground hover:text-foreground'
+                      }`}
+                    >
+                      {t('addItem.import.modes.url', { defaultValue: 'Web Link' })}
+                    </button>
+                  </div>
+                  
+                  <div className="w-full max-w-lg mb-6 min-h-[160px] flex flex-col justify-center">
+                    {importMode === 'text' && (
+                      <Textarea
+                        value={receiptText}
+                        onChange={(e) => setReceiptText(e.target.value)}
+                        placeholder={t('addItem.import.placeholder', { 
+                          defaultValue: 'Paste order confirmation email or receipt text here...\n\nExample:\nOrder Date: June 15, 2026\nMerchant: Zara\n1x Cotton Poplin Shirt - Blue - Size M - $49.90' 
+                        })}
+                        className="min-h-[160px] bg-background/50 border-border rounded-xl placeholder:text-muted-foreground/50 focus-visible:ring-[hsl(var(--accent))] transition-all duration-300 resize-y p-4 text-sm"
+                        disabled={isExtracting}
+                      />
+                    )}
+                    
+                    {importMode === 'file' && (
+                      <div 
+                        onClick={() => openReceiptPicker({
+                          accept: [
+                            { description: 'Images', accept: { 'image/*': [] } },
+                            { description: 'Documents', accept: {
+                              'application/pdf': ['.pdf'],
+                              'text/plain': ['.txt'],
+                              'text/html': ['.html', '.htm'],
+                              'text/csv': ['.csv'],
+                              'application/json': ['.json'],
+                              'application/rtf': ['.rtf'],
+                            }},
+                          ],
+                          multiple: false,
+                          fallbackInputRef: receiptFileInputRef,
+                          onFiles: ([file]) => {
+                            // Synthesise a fake event to reuse the existing handler
+                            const dt = new DataTransfer();
+                            dt.items.add(file);
+                            handleImportFileChange({ target: { files: dt.files } });
+                          },
+                        })}
+                        className="border-2 border-dashed border-border hover:border-[hsl(var(--accent))] bg-background/30 hover:bg-background/50 rounded-xl p-6 flex flex-col items-center justify-center cursor-pointer transition-all duration-300 group min-h-[160px]"
+                      >
+                        <input
+                          type="file"
+                          ref={receiptFileInputRef}
+                          accept="image/*, application/pdf, text/plain, text/html, text/csv, application/json, application/rtf, .txt, .html, .htm, .csv, .json, .rtf, .doc, .docx"
+                          onChange={handleImportFileChange}
+                          className="sr-only"
+                        />
+                        <Upload className="h-8 w-8 text-muted-foreground group-hover:text-[hsl(var(--accent))] mb-3 transition-colors" />
+                        <div className="text-sm font-medium text-foreground mb-1">
+                          {t('addItem.import.fileDropzoneTitle', { defaultValue: 'Drag & drop your receipt or invoice' })}
+                        </div>
+                        <div className="text-xs text-muted-foreground">
+                          {t('addItem.import.fileDropzoneBody', { defaultValue: 'Supports image, PDF, text, JSON, and document files' })}
+                        </div>
+                      </div>
+                    )}
+
+                    {importMode === 'url' && (
+                      <Input
+                        type="url"
+                        value={importUrl}
+                        onChange={(e) => setImportUrl(e.target.value)}
+                        placeholder={t('addItem.import.urlPlaceholder', { 
+                          defaultValue: 'Enter receipt URL (e.g., https://zara.com/orders/...)' 
+                        })}
+                        className="bg-background/50 border-border rounded-xl placeholder:text-muted-foreground/50 focus-visible:ring-[hsl(var(--accent))] transition-all duration-300 p-4 text-sm h-12"
+                        disabled={isExtracting}
+                      />
+                    )}
+                  </div>
+                </>
+              ) : (
+                /* Document Preview & Selector Container */
+                <div className="w-full flex flex-col items-center mt-2">
+                  <div className="text-sm font-semibold mb-3 flex items-center justify-between w-full border-b border-border/40 pb-3">
+                    <span className="flex items-center gap-1.5">
+                      <FileText className="h-4 w-4 text-[hsl(var(--accent))]" />
+                      {t('addItem.import.previewTitle', { defaultValue: 'Receipt Preview' })}
                     </span>
-                  </div>
-                </div>
-              </TabsContent>
-              <TabsContent
-                value="import"
-                className="mt-0 focus-visible:ring-0 focus-visible:ring-offset-0"
-              >
-                <div
-                  className="w-full border-2 border-dashed border-border rounded-[12px] p-10 sm:p-12 bg-white flex flex-col items-center text-center cursor-pointer hover:bg-card/85 transition-colors"
-                  data-testid="add-item-digital-import-pane"
-                >
-                  {!(
-                    importFile ||
-                    (importMode === "text" && receiptText.trim()) ||
-                    (importMode === "url" && importUrl.trim())
-                  ) ? (
-                    <>
-                      <div className="h-14 w-14 rounded-full bg-accent-beige flex items-center justify-center mb-3">
-                        <Sparkles className="h-6 w-6 text-primary-brand" />
-                      </div>
-                      <h6 className="text-[20px] text-dark-brand font-bold">
-                        {t("addItem.import.title", {
-                          defaultValue: "Digital Receipt & Email Import",
-                        })}
-                      </h6>
-                      <p className="text-[14px] text-text-brand font-bold mt-2 mb-5 max-w-lg">
-                        {t("addItem.import.body", {
-                          defaultValue:
-                            "Paste the text of a digital receipt, order confirmation email, or store invoice. Our parser will instantly extract brand, price, size, and category details.",
-                        })}
-                      </p>
-                      {/* Import Mode Selector */}
-                      <div className="flex items-center gap-1.5 p-1 bg-primary-shadow rounded-full mb-6 max-w-sm w-full border border-border/40">
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setImportMode("text");
-                            setImportFile(null);
-                          }}
-                          className={`flex-1 py-2 px-3 rounded-lg text-[12px] font-bold transition-all duration-200 ${
-                            importMode === "text"
-                              ? "bg-white text-primary-brand shadow-sm"
-                              : "text-text-brand hover:text-primary-brand"
-                          }`}
-                        >
-                          {t("addItem.import.modes.text", {
-                            defaultValue: "Paste Text",
-                          })}
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setImportMode("file");
-                            setReceiptText("");
-                          }}
-                          className={`flex-1 py-2 px-3 rounded-lg text-[12px] font-bold transition-all duration-200 ${
-                            importMode === "file"
-                              ? "bg-white text-primary-brand shadow-sm"
-                              : "text-text-brand hover:text-primary-brand"
-                          }`}
-                        >
-                          {t("addItem.import.modes.file", {
-                            defaultValue: "Upload File",
-                          })}
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setImportMode("url");
-                            setImportFile(null);
-                            setReceiptText("");
-                          }}
-                          className={`flex-1 py-2 px-3 rounded-lg text-[12px] font-bold transition-all duration-200 ${
-                            importMode === "url"
-                              ? "bg-white text-primary-brand shadow-sm"
-                              : "text-text-brand hover:text-primary-brand"
-                          }`}
-                        >
-                          {t("addItem.import.modes.url", {
-                            defaultValue: "Web Link",
-                          })}
-                        </button>
-                      </div>
-                      <div className="w-full max-w-lg mb-6 min-h-[160px] flex flex-col justify-center">
-                        {importMode === "text" && (
-                          <Textarea
-                            value={receiptText}
-                            onChange={(e) => setReceiptText(e.target.value)}
-                            placeholder={t("addItem.import.placeholder", {
-                              defaultValue:
-                                "Paste order confirmation email or receipt text here...\n\nExample:\nOrder Date: June 15, 2026\nMerchant: Zara\n1x Cotton Poplin Shirt - Blue - Size M - $49.90",
-                            })}
-                            className="
-                            w-full rounded-[8px]
-                            border border-gray-200
-                            bg-white
-                            text-sm text-gray-900
-                            shadow-none outline-none
-                            placeholder:text-gray-400
-                            focus:border-primary-brand
-                            focus:outline-none
-                            focus:ring-0
-                            focus-visible:outline-none
-                            focus-visible:ring-0
-                            min-h-[160px] transition-all duration-300 resize-y p-4"
-                            disabled={isExtracting}
-                          />
-                        )}
-
-                        {importMode === "file" && (
-                          <div
-                            onClick={() =>
-                              openReceiptPicker({
-                                accept: [
-                                  {
-                                    description: "Images",
-                                    accept: { "image/*": [] },
-                                  },
-                                  {
-                                    description: "Documents",
-                                    accept: {
-                                      "application/pdf": [".pdf"],
-                                      "text/plain": [".txt"],
-                                      "text/html": [".html", ".htm"],
-                                      "text/csv": [".csv"],
-                                      "application/json": [".json"],
-                                      "application/rtf": [".rtf"],
-                                    },
-                                  },
-                                ],
-                                multiple: false,
-                                fallbackInputRef: receiptFileInputRef,
-                                onFiles: ([file]) => {
-                                  // Synthesise a fake event to reuse the existing handler
-                                  const dt = new DataTransfer();
-                                  dt.items.add(file);
-                                  handleImportFileChange({
-                                    target: { files: dt.files },
-                                  });
-                                },
-                              })
-                            }
-                            className="border-2 border-dashed border-border hover:border-primary-brand hover:bg-accent-beige rounded-[12px] p-6 flex flex-col items-center justify-center cursor-pointer transition-smooth duration-300 group min-h-[160px]"
-                          >
-                            <input
-                              type="file"
-                              ref={receiptFileInputRef}
-                              accept="image/*, application/pdf, text/plain, text/html, text/csv, application/json, application/rtf, .txt, .html, .htm, .csv, .json, .rtf, .doc, .docx"
-                              onChange={handleImportFileChange}
-                              className="sr-only"
-                            />
-                            <Upload className="h-8 w-8 text-text-brand group-hover:text-primary-brand mb-2 transition-colors" />
-                            <div className="text-[16px] font-bold text-dark-brand mb-1">
-                              {t("addItem.import.fileDropzoneTitle", {
-                                defaultValue:
-                                  "Drag & drop your receipt or invoice",
-                              })}
-                            </div>
-                            <div className="text-[14px] text-text-brand font-semibold">
-                              {t("addItem.import.fileDropzoneBody", {
-                                defaultValue:
-                                  "Supports image, PDF, text, JSON, and document files",
-                              })}
-                            </div>
-                          </div>
-                        )}
-
-                        {importMode === "url" && (
-                          <Input
-                            type="url"
-                            value={importUrl}
-                            onChange={(e) => setImportUrl(e.target.value)}
-                            placeholder={t("addItem.import.urlPlaceholder", {
-                              defaultValue:
-                                "Enter receipt URL (e.g., https://zara.com/orders/...)",
-                            })}
-                            className=" h-11 w-full rounded-[8px]
-                                        border border-gray-200
-                                        bg-white
-                                        text-sm text-gray-900
-                                        shadow-none outline-none
-                                        placeholder:text-gray-400
-                                        focus:border-primary-brand
-                                        focus:outline-none
-                                        focus:ring-0
-                                        focus-visible:outline-none
-                                        focus-visible:ring-0"
-                            disabled={isExtracting}
-                          />
-                        )}
-                      </div>
-                    </>
-                  ) : (
-                    /* Document Preview & Selector Container */
-                    <div className="w-full flex flex-col items-center">
-                      <div className="text-sm font-semibold mb-3 flex items-center justify-between w-full border-b border-border/40 pb-3">
-                        <span className="flex items-center gap-1.5">
-                          <FileText className="h-4 w-4 text-[hsl(var(--accent))]" />
-                          {t("addItem.import.previewTitle", {
-                            defaultValue: "Receipt Preview",
-                          })}
-                        </span>
-                        <div className="flex items-center gap-2">
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="xs"
-                            onClick={handleCancelDocument}
-                            className="rounded-lg text-[11px] font-semibold text-muted-foreground hover:text-foreground hover:bg-secondary flex items-center gap-1"
-                            data-testid="add-item-change-file-button"
-                          >
-                            <ArrowLeft className="h-3 w-3" />
-                            {t("addItem.import.changeDocument", {
-                              defaultValue: "Change File",
-                            })}
-                          </Button>
-                        </div>
-                      </div>
-
-                      {/* Selector Container */}
-                      <div className="max-w-lg border border-border rounded-[12px] ">
-                        <div className="relative aspect-[4/3] selector-container select-none">
-                          {/* The Preview Content */}
-                          {receiptText ? (
-                            // Text block (either pasted, text file, or OCR'd text)
-                            <div className="w-full h-auto p-4 bg-background/50 font-mono text-xs text-left whitespace-pre-wrap leading-normal pointer-events-none">
-                              {receiptText}
-                            </div>
-                          ) : importFile &&
-                            importFile.type.startsWith("image/") &&
-                            imagePreviewUrl ? (
-                            <img
-                              src={imagePreviewUrl}
-                              alt={t("addItem.receiptPreviewAlt", {
-                                defaultValue: "Receipt Preview",
-                              })}
-                              className="w-full h-full object-contain pointer-events-none"
-                            />
-                          ) : importFile &&
-                            importFile.type === "application/pdf" &&
-                            imagePreviewUrl ? (
-                            <object
-                              data={imagePreviewUrl}
-                              type="application/pdf"
-                              className="w-full h-[2000px] border-0 pointer-events-none"
-                            >
-                              <iframe
-                                src={imagePreviewUrl}
-                                className="w-full h-[2000px] border-0 pointer-events-none"
-                                title={t("addItem.pdfPreviewTitle", {
-                                  defaultValue: "PDF Preview",
-                                })}
-                              />
-                            </object>
-                          ) : null}
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  {!importFile && (
-                    <div className="flex justify-center w-full">
+                    <div className="flex items-center gap-2">
                       <Button
                         type="button"
-                        onClick={handleExtractReceipt}
-                        disabled={
-                          isExtracting ||
-                          (importMode === "text" && !receiptText.trim()) ||
-                          (importMode === "url" && !importUrl.trim())
-                        }
-                        className=" h-auto
-                                    rounded-full
-                                    border-0
-                                    bg-[var(--primary-color)]
-                                    px-7
-                                    py-3.5
-                                    font-sans
-                                    text-sm
-                                    font-medium
-                                    text-white
-                                    shadow-none
-                                    transition-all
-                                    duration-300
-                                    hover:-translate-y-0.5
-                                    hover:bg-[var(--primary-hover)]
-                                    hover:text-white
-                                    hover:shadow-[0_10px_30px_rgba(31,92,69,0.22)] 
-                                    disabled:transform-none 
-                                    disabled:opacity-50"
-                        data-testid="extract-receipt-button"
+                        variant="ghost"
+                        size="xs"
+                        onClick={handleCancelDocument}
+                        className="rounded-lg text-[11px] font-semibold text-muted-foreground hover:text-foreground hover:bg-secondary flex items-center gap-1"
+                        data-testid="add-item-change-file-button"
                       >
-                        {isExtracting ? (
-                          <>
-                            <Loader2 className="h-4 w-4 animate-spin" />
-                            {t("addItem.import.extracting", {
-                              defaultValue: "Extracting...",
-                            })}
-                          </>
-                        ) : (
-                          <>
-                            <Sparkles className="h-4 w-4" />
-                            {t("addItem.import.extractButton", {
-                              defaultValue: "Extract Items",
-                            })}
-                          </>
-                        )}
+                        <ArrowLeft className="h-3 w-3" />
+                        {t('addItem.import.changeDocument', { defaultValue: 'Change File' })}
                       </Button>
                     </div>
-                  )}
-
-                  {/* Extracted Ingestion List */}
-                  {extractedItems.length > 0 && (
-                    <div className="w-full flex flex-col mt-8 border-t border-border/40 pt-6 text-left">
-                      {/* Header */}
-                      <h4 className="font-display text-base font-semibold mb-4 flex items-center justify-between">
-                        <span>
-                          {t("addItem.import.extractedListTitle", {
-                            defaultValue: "Parsed Receipt Items",
-                          })}
-                        </span>
-
-                        <span className="text-xs text-muted-foreground">
-                          {extractedItems.filter((i) => i.selected).length} /{" "}
-                          {extractedItems.length}{" "}
-                          {t("addItem.import.selected", {
-                            defaultValue: "selected",
-                          })}
-                        </span>
-                      </h4>
-
-                      {/* Items */}
-                      <div className="space-y-4 max-h-[500px] overflow-y-auto pe-1 scrollbar-thin">
-                        {extractedItems.map((item) => (
-                          <div
-                            key={item.id}
-                            className={cn(
-                              "p-4 rounded-2xl border flex flex-col md:flex-row gap-4 transition-all duration-300 relative",
-                              item.selected
-                                ? "border-border bg-card"
-                                : "border-border/30 bg-card/20 opacity-60",
-                            )}
-                          >
-                            {/* Checkbox */}
-                            <div className="absolute top-4 left-4 md:static flex items-center justify-center">
-                              <input
-                                type="checkbox"
-                                checked={item.selected}
-                                onChange={() => handleToggleItemSelect(item.id)}
-                                className="h-4 w-4 rounded border-border text-[hsl(var(--accent))] focus:ring-[hsl(var(--accent))]"
-                              />
-                            </div>
-
-                            {/* Image */}
-                            <div className="relative w-20 h-24 bg-secondary/10 rounded-xl overflow-hidden shrink-0 border border-border/40 flex items-center justify-center self-center">
-                              {item.base64Image ? (
-                                <img
-                                  src={item.base64Image}
-                                  alt={item.name}
-                                  className="w-full h-full object-cover"
-                                />
-                              ) : (
-                                <div className="flex flex-col items-center justify-center p-2 text-center text-[10px] text-muted-foreground/60">
-                                  <Shirt className="h-6 w-6 opacity-30 mb-1" />
-                                  <span>
-                                    {t("addItem.import.noImage", {
-                                      defaultValue: "No Image",
-                                    })}
-                                  </span>
-                                </div>
-                              )}
-                            </div>
-
-                            {/* Details */}
-                            <div className="flex-1 min-w-0 grid grid-cols-2 gap-3 pt-6 md:pt-0">
-                              <div className="col-span-2">
-                                <Label className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">
-                                  {t("addItem.import.fieldTitle", {
-                                    defaultValue: "Title",
-                                  })}
-                                </Label>
-
-                                <Input
-                                  value={item.name}
-                                  onChange={(e) =>
-                                    handleEditItemField(
-                                      item.id,
-                                      "name",
-                                      e.target.value,
-                                    )
-                                  }
-                                  className="h-9 rounded-lg text-xs"
-                                />
-                              </div>
-
-                              <div>
-                                <Label className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">
-                                  {t("addItem.import.fieldBrand", {
-                                    defaultValue: "Brand",
-                                  })}
-                                </Label>
-
-                                <Input
-                                  value={item.brand}
-                                  onChange={(e) =>
-                                    handleEditItemField(
-                                      item.id,
-                                      "brand",
-                                      e.target.value,
-                                    )
-                                  }
-                                  className="h-9 rounded-lg text-xs"
-                                />
-                              </div>
-
-                              <div>
-                                <Label className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">
-                                  {t("addItem.import.fieldPrice", {
-                                    defaultValue: "Price ($)",
-                                  })}
-                                </Label>
-
-                                <Input
-                                  type="number"
-                                  step="0.01"
-                                  value={item.price_cents / 100}
-                                  onChange={(e) =>
-                                    handleEditItemField(
-                                      item.id,
-                                      "price_cents",
-                                      Math.round(Number(e.target.value) * 100),
-                                    )
-                                  }
-                                  className="h-9 rounded-lg text-xs"
-                                />
-                              </div>
-                            </div>
-
-                            {/* Actions */}
-                            <div className="flex flex-row md:flex-col justify-center gap-2 border-t md:border-t-0 md:border-s border-border/30 pt-3 md:pt-0 md:ps-4 min-w-[120px]">
-                              {/* Attach Photo */}
-                              <Button
-                                variant="outline"
-                                size="xs"
-                                type="button"
-                                onClick={() =>
-                                  triggerFileForExtractedItem(item.id)
-                                }
-                                className="flex-1 md:flex-initial rounded-lg text-[10px] font-semibold h-8 flex items-center justify-center gap-1.5"
-                              >
-                                <Plus className="h-3 w-3" />
-
-                                {t("addItem.import.attachPhoto", {
-                                  defaultValue: "Attach Photo",
-                                })}
-                              </Button>
-
-                              {/* Closet Link */}
-                              {item.closetItem ? (
-                                <div className="flex flex-col items-center gap-1 mt-0.5">
-                                  <button
-                                    type="button"
-                                    title={item.closetItem.title}
-                                    onClick={() =>
-                                      setClosetItemDetailPane(item.closetItem)
-                                    }
-                                    className="relative w-16 h-16 rounded-xl overflow-hidden border-2 border-[hsl(var(--accent))] shadow-md hover:scale-105 active:scale-95 transition-transform bg-secondary/20 flex items-center justify-center cursor-pointer"
-                                  >
-                                    {item.closetItem.original_image_url ||
-                                    item.closetItem.clean_image_url ? (
-                                      <img
-                                        src={
-                                          item.closetItem.original_image_url ||
-                                          item.closetItem.clean_image_url
-                                        }
-                                        alt={item.closetItem.title}
-                                        className="w-full h-full object-cover"
-                                      />
-                                    ) : (
-                                      <Shirt className="h-6 w-6 text-[hsl(var(--accent))]/60" />
-                                    )}
-
-                                    <span className="absolute inset-0 flex items-end justify-center pb-1 bg-gradient-to-t from-black/50 to-transparent">
-                                      <span className="text-[8px] font-bold text-white leading-none text-center px-0.5 truncate max-w-full">
-                                        {t("addItem.import.linked", {
-                                          defaultValue: "Linked",
-                                        })}
-                                      </span>
-                                    </span>
-                                  </button>
-
-                                  <button
-                                    type="button"
-                                    onClick={() =>
-                                      openSelectClosetItemModal(item.id)
-                                    }
-                                    className="text-[8px] text-muted-foreground hover:text-foreground border-0 bg-transparent cursor-pointer underline underline-offset-1"
-                                  >
-                                    {t("addItem.import.change", {
-                                      defaultValue: "Change",
-                                    })}
-                                  </button>
-
-                                  <button
-                                    type="button"
-                                    onClick={() => handleUnlinkItem(item.id)}
-                                    className="text-[8px] text-rose-500 hover:text-rose-700 border-0 bg-transparent cursor-pointer"
-                                  >
-                                    {t("addItem.import.unlink", {
-                                      defaultValue: "Unlink",
-                                    })}
-                                  </button>
-                                </div>
-                              ) : (
-                                <Button
-                                  variant="outline"
-                                  size="xs"
-                                  type="button"
-                                  onClick={() =>
-                                    openSelectClosetItemModal(item.id)
-                                  }
-                                  className="flex-1 md:flex-initial rounded-lg text-[10px] font-semibold h-8 flex items-center justify-center gap-1.5"
-                                >
-                                  <Folder className="h-3 w-3" />
-
-                                  {t("addItem.import.linkCloset", {
-                                    defaultValue: "Link Closet",
-                                  })}
-                                </Button>
-                              )}
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-
-                      {/* Bottom Actions */}
-                      <div className="flex justify-end gap-3 mt-6">
-                        <Button
-                          variant="outline"
-                          type="button"
-                          onClick={() => setExtractedItems([])}
-                          className="rounded-xl px-5 h-11 text-sm font-semibold"
-                        >
-                          {t("addItem.import.clearList", {
-                            defaultValue: "Clear List",
-                          })}
-                        </Button>
-
-                        <Button
-                          type="button"
-                          onClick={handleSaveExtractedItems}
-                          disabled={
-                            saving || !extractedItems.some((i) => i.selected)
-                          }
-                          className="rounded-xl px-6 h-11 bg-brand text-brand-foreground hover:bg-brand/90 font-semibold shadow-sm flex items-center gap-2"
-                        >
-                          {saving ? (
-                            <>
-                              <Loader2 className="h-4 w-4 animate-spin" />
-                              {t("addItem.import.saving", {
-                                defaultValue: "Saving…",
-                              })}
-                            </>
-                          ) : (
-                            <>
-                              <Check className="h-4 w-4" />
-                              {t("addItem.import.saveIngest", {
-                                defaultValue: "Save & Ingest Items",
-                              })}
-                            </>
-                          )}
-                        </Button>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Hidden file input for item attachment */}
-                  <input
-                    type="file"
-                    ref={itemImageInputRef}
-                    accept="image/*"
-                    onChange={handleItemImageChange}
-                    className="sr-only"
-                  />
-
-                  {/* Select Closet Item Dialog */}
-                  <Dialog
-                    open={closetModalOpen}
-                    onOpenChange={setClosetModalOpen}
-                  >
-                    <DialogContent className="sm:max-w-[425px]">
-                      <DialogHeader>
-                        <DialogTitle>
-                          {t("addItem.import.selectClosetItem", {
-                            defaultValue: "Link to Closet Item",
-                          })}
-                        </DialogTitle>
-                        <DialogDescription>
-                          {t("addItem.import.selectClosetItemDesc", {
-                            defaultValue:
-                              "Select an existing item in your closet to update its price and brand details.",
-                          })}
-                        </DialogDescription>
-                      </DialogHeader>
-
-                      <div className="space-y-4 py-2">
-                        <Input
-                          type="search"
-                          placeholder={t("common.search", {
-                            defaultValue: "Search closet...",
-                          })}
-                          value={closetSearch}
-                          onChange={(e) => setClosetSearch(e.target.value)}
-                          className="rounded-xl border-border focus-visible:ring-[hsl(var(--accent))]"
+                  </div>
+                  
+                  {/* Selector Container */}
+                  <div className="w-full max-w-lg aspect-[3/4] overflow-y-auto border border-border rounded-2xl bg-muted/20 scrollbar-thin">
+                    <div className="relative w-full min-h-full pb-64 selector-container select-none">
+                      {/* The Preview Content */}
+                      {receiptText ? (
+                        // Text block (either pasted, text file, or OCR'd text)
+                        <div className="w-full h-auto p-4 bg-background/50 font-mono text-xs text-left whitespace-pre-wrap leading-normal pointer-events-none">
+                          {receiptText}
+                        </div>
+                      ) : importFile && importFile.type.startsWith('image/') && imagePreviewUrl ? (
+                        <img
+                          src={imagePreviewUrl}
+                          alt={t('addItem.receiptPreviewAlt', { defaultValue: 'Receipt Preview' })}
+                          className="w-full h-auto object-contain pointer-events-none"
                         />
+                      ) : (importFile && importFile.type === 'application/pdf' && imagePreviewUrl) ? (
+                        <object
+                          data={imagePreviewUrl}
+                          type="application/pdf"
+                          className="w-full h-[2000px] border-0 pointer-events-none"
+                        >
+                          <iframe
+                            src={imagePreviewUrl}
+                            className="w-full h-[2000px] border-0 pointer-events-none"
+                            title={t('addItem.pdfPreviewTitle', { defaultValue: 'PDF Preview' })}
+                          />
+                        </object>
+                      ) : null}
+                    </div>
+                  </div>
+                </div>
+              )}
 
-                        <ScrollArea className="h-[250px] pr-2">
-                          <div className="space-y-2">
-                            {closetItemsFiltered.map((it) => (
-                              <div
-                                key={it.id}
-                                onClick={() => handleLinkItem(it)}
-                                className="flex items-center gap-3 p-2 rounded-xl border border-border/60 hover:border-[hsl(var(--accent))] hover:bg-secondary/40 cursor-pointer transition-colors"
-                              >
-                                <div className="w-10 h-10 rounded-lg bg-secondary/20 overflow-hidden shrink-0 border border-border/40 flex items-center justify-center">
-                                  {it.original_image_url ||
-                                  it.clean_image_url ? (
-                                    <img
-                                      src={
-                                        it.original_image_url ||
-                                        it.clean_image_url
-                                      }
-                                      alt={it.title}
-                                      className="w-full h-full object-cover"
-                                    />
-                                  ) : (
-                                    <Shirt className="h-5 w-5 text-muted-foreground" />
-                                  )}
-                                </div>
-                                <div className="min-w-0 flex-1">
-                                  <div className="text-xs font-semibold text-foreground truncate">
-                                    {it.title}
-                                  </div>
-                                  <div className="text-[10px] text-muted-foreground truncate">
-                                    {it.brand ||
-                                      t("addItem.genericBrand", {
-                                        defaultValue: "Generic",
-                                      })}{" "}
-                                    · {it.category}
-                                  </div>
-                                </div>
-                              </div>
-                            ))}
-                            {closetItemsFiltered.length === 0 && (
-                              <div className="text-center py-8 text-xs text-muted-foreground">
-                                {t("addItem.import.noMatchingItems", {
-                                  defaultValue: "No closet items found.",
-                                })}
-                              </div>
-                            )}
-                          </div>
-                        </ScrollArea>
-                      </div>
-                    </DialogContent>
-                  </Dialog>
-
-                  {/* Closet Item Detail Pane */}
-                  <Dialog
-                    open={!!closetItemDetailPane}
-                    onOpenChange={(open) => {
-                      if (!open) setClosetItemDetailPane(null);
-                    }}
+              {!importFile && (
+                <div className="flex justify-center w-full mt-6">
+                  <Button
+                    type="button"
+                    onClick={handleExtractReceipt}
+                    disabled={
+                      isExtracting || 
+                      (importMode === 'text' && !receiptText.trim()) ||
+                      (importMode === 'url' && !importUrl.trim())
+                    }
+                    className="rounded-xl px-6 py-2.5 bg-gradient-to-r from-[hsl(var(--accent))] to-[hsl(var(--accent-hover,var(--accent)))] text-white font-medium shadow-md hover:shadow-lg transition-all duration-300 transform hover:-translate-y-0.5 active:translate-y-0 disabled:transform-none disabled:opacity-50"
+                    data-testid="extract-receipt-button"
                   >
-                    <DialogContent className="sm:max-w-[380px] p-0 overflow-hidden rounded-2xl">
-                      {closetItemDetailPane && (
-                        <>
-                          {/* Image */}
-                          <div className="w-full aspect-[3/4] bg-secondary/20 relative overflow-hidden">
-                            {closetItemDetailPane.original_image_url ||
-                            closetItemDetailPane.clean_image_url ? (
-                              <img
-                                src={
-                                  closetItemDetailPane.original_image_url ||
-                                  closetItemDetailPane.clean_image_url
-                                }
-                                alt={closetItemDetailPane.title}
-                                className="w-full h-full object-contain"
-                              />
-                            ) : (
-                              <div className="w-full h-full flex items-center justify-center">
-                                <Shirt className="h-20 w-20 text-muted-foreground/30" />
-                              </div>
-                            )}
-                            {/* Gradient overlay */}
-                            <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-background/90 to-transparent pointer-events-none" />
-                          </div>
-                          {/* Details */}
-                          <div className="px-5 pb-5 pt-3 space-y-2">
-                            <h3 className="font-display font-semibold text-base text-foreground leading-tight">
-                              {closetItemDetailPane.title}
-                            </h3>
-                            <div className="flex flex-wrap gap-2">
-                              {closetItemDetailPane.brand && (
-                                <span className="text-[11px] bg-secondary px-2 py-0.5 rounded-full text-muted-foreground font-medium">
-                                  {closetItemDetailPane.brand}
-                                </span>
-                              )}
-                              {closetItemDetailPane.category && (
-                                <span className="text-[11px] bg-secondary px-2 py-0.5 rounded-full text-muted-foreground font-medium">
-                                  {closetItemDetailPane.category}
-                                </span>
-                              )}
-                              {closetItemDetailPane.size && (
-                                <span className="text-[11px] bg-secondary px-2 py-0.5 rounded-full text-muted-foreground font-medium">
-                                  {t("addItem.sizeChipLabel", {
-                                    size: closetItemDetailPane.size,
-                                    defaultValue: "Size {{size}}",
-                                  })}
-                                </span>
-                              )}
-                              {closetItemDetailPane.color && (
-                                <span className="text-[11px] bg-secondary px-2 py-0.5 rounded-full text-muted-foreground font-medium">
-                                  {closetItemDetailPane.color}
-                                </span>
-                              )}
+                    {isExtracting ? (
+                      <>
+                        <Loader2 className="h-4 w-4 me-2 animate-spin" />
+                        {t('addItem.import.extracting', { defaultValue: 'Extracting...' })}
+                      </>
+                    ) : (
+                      <>
+                        <Sparkles className="h-4 w-4 me-2" />
+                        {t('addItem.import.extractButton', { defaultValue: 'Extract Items' })}
+                      </>
+                    )}
+                  </Button>
+                </div>
+              )}
+
+              {/* Extracted Ingestion List */}
+              {extractedItems.length > 0 && (
+                <div className="w-full flex flex-col mt-8 border-t border-border/40 pt-6 text-left">
+                  <h4 className="font-display text-base font-semibold mb-4 flex items-center justify-between">
+                    <span>{t('addItem.import.extractedListTitle', { defaultValue: 'Parsed Receipt Items' })}</span>
+                    <span className="text-xs text-muted-foreground">
+                      {extractedItems.filter(i => i.selected).length} / {extractedItems.length} {t('addItem.import.selected', { defaultValue: 'selected' })}
+                    </span>
+                  </h4>
+                  
+                  <div className="space-y-4 max-h-[500px] overflow-y-auto pe-1 scrollbar-thin">
+                    {extractedItems.map((item, idx) => (
+                      <div 
+                        key={item.id} 
+                        className={cn(
+                          "p-4 rounded-2xl border flex flex-col md:flex-row gap-4 transition-all duration-300 relative",
+                          item.selected ? "border-border bg-card" : "border-border/30 bg-card/20 opacity-60"
+                        )}
+                      >
+                        {/* Checkbox */}
+                        <div className="absolute top-4 left-4 md:static flex items-center justify-center">
+                          <input
+                            type="checkbox"
+                            checked={item.selected}
+                            onChange={() => handleToggleItemSelect(item.id)}
+                            className="h-4 w-4 rounded border-border text-[hsl(var(--accent))] focus:ring-[hsl(var(--accent))]"
+                          />
+                        </div>
+                        
+                        {/* Image Preview / Plus Button */}
+                        <div className="relative w-20 h-24 bg-secondary/10 rounded-xl overflow-hidden shrink-0 border border-border/40 flex items-center justify-center self-center">
+                          {item.base64Image ? (
+                            <img src={item.base64Image} alt={item.name} className="w-full h-full object-cover" />
+                          ) : (
+                            <div className="flex flex-col items-center justify-center p-2 text-center text-[10px] text-muted-foreground/60">
+                              <Shirt className="h-6 w-6 opacity-30 mb-1" />
+                              <span>{t('addItem.import.noImage', { defaultValue: 'No Image' })}</span>
                             </div>
-                            {closetItemDetailPane.price_cents > 0 && (
-                              <p className="text-sm font-semibold text-[hsl(var(--accent))]">
-                                $
-                                {(
-                                  closetItemDetailPane.price_cents / 100
-                                ).toFixed(2)}
-                              </p>
-                            )}
+                          )}
+                        </div>
+                        
+                        {/* Item Details Inputs */}
+                        <div className="flex-1 min-w-0 grid grid-cols-2 gap-3 pt-6 md:pt-0">
+                          <div className="col-span-2">
+                            <Label className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">{t('addItem.import.fieldTitle', { defaultValue: 'Title' })}</Label>
+                            <Input
+                              value={item.name}
+                              onChange={(e) => handleEditItemField(item.id, 'name', e.target.value)}
+                              className="h-9 rounded-lg text-xs"
+                            />
                           </div>
+                          <div>
+                            <Label className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">{t('addItem.import.fieldBrand', { defaultValue: 'Brand' })}</Label>
+                            <Input
+                              value={item.brand}
+                              onChange={(e) => handleEditItemField(item.id, 'brand', e.target.value)}
+                              className="h-9 rounded-lg text-xs"
+                            />
+                          </div>
+                          <div>
+                            <Label className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">{t('addItem.import.fieldPrice', { defaultValue: 'Price ($)' })}</Label>
+                            <Input
+                              type="number"
+                              step="0.01"
+                              value={item.price_cents / 100}
+                              onChange={(e) => handleEditItemField(item.id, 'price_cents', Math.round(Number(e.target.value) * 100))}
+                              className="h-9 rounded-lg text-xs"
+                            />
+                          </div>
+                        </div>
+                        
+                        {/* Actions Pane */}
+                        <div className="flex flex-row md:flex-col justify-center gap-2 border-t md:border-t-0 md:border-s border-border/30 pt-3 md:pt-0 md:ps-4 min-w-[120px]">
+                          {/* Attach Image Button */}
+                          <Button
+                            variant="outline"
+                            size="xs"
+                            type="button"
+                            onClick={() => triggerFileForExtractedItem(item.id)}
+                            className="flex-1 md:flex-initial rounded-lg text-[10px] font-semibold h-8 flex items-center justify-center gap-1.5"
+                          >
+                            <Plus className="h-3 w-3" />
+                            {t('addItem.import.attachPhoto', { defaultValue: 'Attach Photo' })}
+                          </Button>
+                          
+                          {/* Link Closet Item Button */}
+                          {item.closetItem ? (
+                            // Linked state — show thumbnail chip
+                            <div className="flex flex-col items-center gap-1 mt-0.5">
+                              <button
+                                type="button"
+                                title={item.closetItem.title}
+                                onClick={() => setClosetItemDetailPane(item.closetItem)}
+                                className="relative w-16 h-16 rounded-xl overflow-hidden border-2 border-[hsl(var(--accent))] shadow-md hover:scale-105 active:scale-95 transition-transform bg-secondary/20 flex items-center justify-center cursor-pointer"
+                              >
+                                {item.closetItem.clean_image_url || item.closetItem.thumbnail_data_url || item.closetItem.original_image_url ? (
+                                  <img
+                                    src={item.closetItem.clean_image_url || item.closetItem.thumbnail_data_url || item.closetItem.original_image_url}
+                                    alt={item.closetItem.title}
+                                    className="w-full h-full object-cover"
+                                  />
+
+                                ) : (
+                                  <Shirt className="h-6 w-6 text-[hsl(var(--accent))]/60" />
+                                )}
+                                <span className="absolute inset-0 flex items-end justify-center pb-1 bg-gradient-to-t from-black/50 to-transparent">
+                                  <span className="text-[8px] font-bold text-white leading-none text-center px-0.5 truncate max-w-full">{t('addItem.import.linked', { defaultValue: 'Linked' })}</span>
+                                </span>
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => openSelectClosetItemModal(item.id)}
+                                className="text-[8px] text-muted-foreground hover:text-foreground border-0 bg-transparent cursor-pointer underline underline-offset-1"
+                              >
+                                {t('addItem.import.change', { defaultValue: 'Change' })}
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => handleUnlinkItem(item.id)}
+                                className="text-[8px] text-rose-500 hover:text-rose-700 border-0 bg-transparent cursor-pointer"
+                              >
+                                {t('addItem.import.unlink', { defaultValue: 'Unlink' })}
+                              </button>
+                            </div>
+                          ) : (
+                            <Button
+                              variant="outline"
+                              size="xs"
+                              type="button"
+                              onClick={() => openSelectClosetItemModal(item.id)}
+                              className="flex-1 md:flex-initial rounded-lg text-[10px] font-semibold h-8 flex items-center justify-center gap-1.5"
+                            >
+                              <Folder className="h-3 w-3" />
+                              {t('addItem.import.linkCloset', { defaultValue: 'Link Closet' })}
+                            </Button>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  
+                  <div className="flex justify-end gap-3 mt-6">
+                    <Button
+                      variant="outline"
+                      type="button"
+                      onClick={() => setExtractedItems([])}
+                      className="rounded-xl px-5 h-11 text-sm font-semibold"
+                    >
+                      {t('addItem.import.clearList', { defaultValue: 'Clear List' })}
+                    </Button>
+                    <Button
+                      type="button"
+                      onClick={handleSaveExtractedItems}
+                      disabled={saving || !extractedItems.some(i => i.selected)}
+                      className="rounded-xl px-6 h-11 bg-brand text-brand-foreground hover:bg-brand/90 font-semibold shadow-sm flex items-center gap-2"
+                    >
+                      {saving ? (
+                        <>
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                          {t('addItem.import.saving', { defaultValue: 'Saving…' })}
+                        </>
+                      ) : (
+                        <>
+                          <Check className="h-4 w-4" />
+                          {t('addItem.import.saveIngest', { defaultValue: 'Save & Ingest Items' })}
                         </>
                       )}
-                    </DialogContent>
-                  </Dialog>
-                </div>
-              </TabsContent>
-            </Tabs>
-          ) : (
-            <>
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3 bg-white rounded-[12px] p-5">
-                <div className="flex items-center gap-2 self-start sm:self-auto">
-                  <input
-                    type="checkbox"
-                    id="quick-confirm-mode"
-                    checked={quickConfirm}
-                    onChange={(e) => setQuickConfirm(e.target.checked)}
-                    className="sr-only peer"
-                    data-testid="quick-confirm-toggle"
-                  />
+                    </Button>
+                  </div>
 
+                  {/* ── Phase R — Receipt ingest analysis overlay ──────────────────── */}
+                  <AnimatePresence>
+                    {ingestPhase && (
+                      <motion.div
+                        key="ingest-overlay"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        transition={{ duration: 0.3 }}
+                        className="absolute inset-0 z-50 flex flex-col items-center justify-center rounded-2xl"
+                        style={{
+                          background: 'hsl(var(--background) / 0.92)',
+                          backdropFilter: 'blur(12px)',
+                          WebkitBackdropFilter: 'blur(12px)',
+                        }}
+                      >
+                        <div className="relative flex items-center justify-center mb-8">
+                          <motion.div
+                            className="absolute rounded-full border-2 border-[hsl(var(--accent))]/30"
+                            style={{ width: 120, height: 120 }}
+                            animate={{ scale: [1, 1.18, 1], opacity: [0.4, 0.1, 0.4] }}
+                            transition={{ duration: 2.2, repeat: Infinity, ease: 'easeInOut' }}
+                          />
+                          <motion.div
+                            className="absolute rounded-full border border-[hsl(var(--accent))]/20"
+                            style={{ width: 90, height: 90 }}
+                            animate={{ scale: [1, 1.12, 1], opacity: [0.3, 0.05, 0.3] }}
+                            transition={{ duration: 2.2, repeat: Infinity, ease: 'easeInOut', delay: 0.3 }}
+                          />
+                          <svg width="80" height="80" viewBox="0 0 80 80" className="-rotate-90">
+                            <circle
+                              cx="40" cy="40" r="34"
+                              fill="none"
+                              stroke="hsl(var(--border))"
+                              strokeWidth="4"
+                            />
+                            <motion.circle
+                              cx="40" cy="40" r="34"
+                              fill="none"
+                              stroke="hsl(var(--accent))"
+                              strokeWidth="4"
+                              strokeLinecap="round"
+                              strokeDasharray={2 * Math.PI * 34}
+                              animate={{
+                                strokeDashoffset: ingestPhase === 'syncing'
+                                  ? 0
+                                  : ingestProgress.total > 0
+                                    ? (2 * Math.PI * 34) * (1 - ingestProgress.done / ingestProgress.total)
+                                    : 2 * Math.PI * 34,
+                              }}
+                              transition={{ duration: 0.5, ease: 'easeOut' }}
+                            />
+                          </svg>
+                          <div className="absolute flex items-center justify-center">
+                            {ingestPhase === 'syncing' ? (
+                              <motion.div
+                                animate={{ rotate: 360 }}
+                                transition={{ duration: 1.2, repeat: Infinity, ease: 'linear' }}
+                              >
+                                <RefreshCw className="h-7 w-7 text-[hsl(var(--accent))]" />
+                              </motion.div>
+                            ) : (
+                              <Sparkles className="h-7 w-7 text-[hsl(var(--accent))]" />
+                            )}
+                          </div>
+                        </div>
+
+                        <AnimatePresence mode="wait">
+                          <motion.p
+                            key={ingestPhase}
+                            initial={{ opacity: 0, y: 6 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -6 }}
+                            transition={{ duration: 0.25 }}
+                            className="text-base font-semibold text-foreground mb-1 text-center"
+                          >
+                            {ingestPhase === 'syncing'
+                              ? t('addItem.import.ingestSyncing', { defaultValue: 'Syncing to your Closet…' })
+                              : t('addItem.import.ingestCataloguing', {
+                                  defaultValue: 'Cataloguing item {{done}} of {{total}}…',
+                                  done: ingestProgress.done + 1,
+                                  total: ingestProgress.total,
+                                })
+                            }
+                          </motion.p>
+                        </AnimatePresence>
+
+                        <p className="text-xs text-muted-foreground text-center max-w-[240px]">
+                          {ingestPhase === 'syncing'
+                            ? t('addItem.import.ingestSyncingHint', { defaultValue: 'Refreshing your wardrobe — almost there.' })
+                            : t('addItem.import.ingestAnalysisHint', { defaultValue: 'Running rembg & Gemini Vision in the background.' })
+                          }
+                        </p>
+
+                        {ingestPhase === 'saving' && ingestProgress.total > 0 && (
+                          <motion.div
+                            initial={{ opacity: 0, scale: 0.85 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            className="mt-5 px-4 py-1.5 rounded-full bg-[hsl(var(--accent))]/10 border border-[hsl(var(--accent))]/20 text-xs font-mono text-[hsl(var(--accent))]"
+                          >
+                            {ingestProgress.done} / {ingestProgress.total}
+                          </motion.div>
+                        )}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+              )}
+            </div>
+
+            {/* Hidden file input for item attachment */}
+            <input
+              type="file"
+              ref={itemImageInputRef}
+              accept="image/*"
+              onChange={handleItemImageChange}
+              className="sr-only"
+            />
+
+            {/* Select Closet Item Dialog */}
+            <Dialog open={closetModalOpen} onOpenChange={setClosetModalOpen}>
+              <DialogContent className="sm:max-w-[425px]">
+                <DialogHeader>
+                  <DialogTitle>{t('addItem.import.selectClosetItem', { defaultValue: 'Link to Closet Item' })}</DialogTitle>
+                  <DialogDescription>
+                    {t('addItem.import.selectClosetItemDesc', { defaultValue: 'Select an existing item in your closet to update its price and brand details.' })}
+                  </DialogDescription>
+                </DialogHeader>
+                
+                <div className="space-y-4 py-2">
+                  <Input
+                    type="search"
+                    placeholder={t('common.search', { defaultValue: 'Search closet...' })}
+                    value={closetSearch}
+                    onChange={(e) => setClosetSearch(e.target.value)}
+                    className="rounded-xl border-border focus-visible:ring-[hsl(var(--accent))]"
+                  />
+                  
                   <ScrollArea className="h-[250px] pe-2">
                     <div className="space-y-2">
                       {closetItemsFiltered.map((it) => (
@@ -4281,238 +3378,187 @@ export default function AddItem() {
                           className="flex items-center gap-3 p-2 rounded-xl border border-border/60 hover:border-[hsl(var(--accent))] hover:bg-secondary/40 cursor-pointer transition-colors"
                         >
                           <div className="w-10 h-10 rounded-lg bg-secondary/20 overflow-hidden shrink-0 border border-border/40 flex items-center justify-center">
-                            {it.original_image_url || it.clean_image_url ? (
-                              <img
-                                src={
-                                  it.original_image_url || it.clean_image_url
-                                }
-                                alt={it.title}
-                                className="w-full h-full object-cover"
-                              />
+                            {it.clean_image_url || it.thumbnail_data_url || it.original_image_url ? (
+                              <img src={it.clean_image_url || it.thumbnail_data_url || it.original_image_url} alt={it.title} className="w-full h-full object-cover" />
                             ) : (
                               <Shirt className="h-5 w-5 text-muted-foreground" />
                             )}
                           </div>
                           <div className="min-w-0 flex-1">
-                            <div className="text-xs font-semibold text-foreground truncate">
-                              {it.title}
-                            </div>
-                            <div className="text-[10px] text-muted-foreground truncate">
-                              {it.brand ||
-                                t("addItem.genericBrand", {
-                                  defaultValue: "Generic",
-                                })}{" "}
-                              · {it.category}
-                            </div>
+                            <div className="text-xs font-semibold text-foreground truncate">{it.title}</div>
+                            <div className="text-[10px] text-muted-foreground truncate">{it.brand || t('addItem.genericBrand', { defaultValue: 'Generic' })} · {it.category}</div>
                           </div>
                         </div>
                       ))}
                       {closetItemsFiltered.length === 0 && (
                         <div className="text-center py-8 text-xs text-muted-foreground">
-                          {t("addItem.import.noMatchingItems", {
-                            defaultValue: "No closet items found.",
-                          })}
+                          {t('addItem.import.noMatchingItems', { defaultValue: 'No closet items found.' })}
                         </div>
                       )}
                     </div>
                   </ScrollArea>
                 </div>
-                <div className="flex items-center gap-2 justify-end">
-                  <Button
-                    type="button"
-                    size="sm"
-                    className=" h-auto
-                                rounded-full
-                                border-0
-                                bg-[var(--primary-color)]
-                                px-4
-                                py-2
-                                font-sans
-                                text-sm
-                                font-medium
-                                text-white
-                                shadow-none
-                                transition-all
-                                duration-300
-                                hover:-translate-y-0.5
-                                hover:bg-[var(--primary-hover)]
-                                hover:text-white
-                                hover:shadow-[0_10px_30px_rgba(31,92,69,0.22)]"
-                    onClick={openCamera}
-                    data-testid="add-item-camera-more-button"
-                  >
-                    <Camera className="h-4 w-4" />
-                    {t("addItem.takePhoto")}
-                  </Button>
-                  <Button
-                    type="button"
-                    size="sm"
-                    className=" h-auto
-                                rounded-full
-                                border
-                                border-black/10
-                                bg-white
-                                px-4
-                                py-2
-                                font-sans
-                                text-sm
-                                font-semibold
-                                text-[var(--dark-color)]
-                                shadow-none
-                                transition-all
-                                duration-300
-                                hover:-translate-y-0.5
-                                hover:bg-white
-                                hover:text-[var(--primary-color)]
-                                hover:shadow-[var(--shadow-medium)]"
-                    onClick={pickFilesWithMemory}
-                    data-testid="add-item-upload-more-button"
-                  >
-                    <Plus className="h-4 w-4" />
-                    {t("addItem.addPhotos")}
-                  </Button>
-                  <Button
-                    type="button"
-                    size="sm"
-                    className=" h-auto
-                                rounded-full
-                                border
-                                border-black/10
-                                bg-white
-                                px-4
-                                py-2
-                                font-sans
-                                text-sm
-                                font-semibold
-                                text-[var(--dark-color)]
-                                shadow-none
-                                transition-all
-                                duration-300
-                                hover:-translate-y-0.5
-                                hover:bg-white
-                                hover:text-[var(--primary-color)]
-                                hover:shadow-[var(--shadow-medium)]"
-                    onClick={() => setIsUrlModalOpen(true)}
-                    data-testid="add-item-url-more-button"
-                  >
-                    <Link2 className="h-4 w-4" />
-                    {t("addItem.uploadUrl", { defaultValue: "URL" })}
-                  </Button>
-                  <Button
-                    type="button"
-                    size="sm"
-                    className="group h-9 w-9 rounded-full bg-accent-beige flex items-center justify-center hover:text-white"
-                    onClick={openScanner}
-                    title={t("dpp.nav.scanLabel")}
-                    aria-label={t("dpp.nav.scanLabel")}
-                    data-testid="add-item-scan-dpp-more-button"
-                  >
-                    <QrCode className="h-6 w-6 text-primary-brand group-hover:text-white transition-colors" />
-                  </Button>
-                  {(cards.length > 0 || !!bgBatch) && (
-                    <div className="" data-testid="add-item-action-bar">
-                      <Button
-                        onClick={saveAll}
-                        disabled={
-                          saving ||
-                          !!bgBatch ||
-                          // Patch M20.2 — Allow Save while some cards are still
-                          // scanning (so the user can queue the batch); keep
-                          // disabled while a previous queue is still draining
-                          // (``pendingAutoSave``) to avoid re-entrant calls.
-                          pendingAutoSave ||
-                          (!cards.some((c) => c.status === "ready") &&
-                            !cards.some((c) => c.status === "scanning"))
-                        }
-                        className=" h-auto
-                                    rounded-full
-                                    border-0
-                                    bg-[var(--primary-color)]
-                                    px-4
-                                    py-2
-                                    font-sans
-                                    text-sm
-                                    font-medium
-                                    text-white
-                                    shadow-none
-                                    transition-all
-                                    duration-300
-                                    hover:-translate-y-0.5
-                                    hover:bg-[var(--primary-hover)]
-                                    hover:text-white
-                                    hover:shadow-[0_10px_30px_rgba(31,92,69,0.22)]"
-                        data-testid="add-item-save-all"
-                      >
-                        {saving || pendingAutoSave ? (
-                          <Loader2 className="h-4 w-4 animate-spin" />
-                        ) : (
-                          <Save className="h-4 w-4" />
-                        )}
-                        {pendingAutoSave
-                          ? t("addItem.saveAllPending", {
-                              defaultValue: "Saving — waiting for analysis…",
-                            })
-                          : t("addItem.saveAll", { defaultValue: "Save" })}
-                      </Button>
+              </DialogContent>
+            </Dialog>
+
+            {/* Closet Item Detail Pane */}
+            <Dialog open={!!closetItemDetailPane} onOpenChange={(open) => { if (!open) setClosetItemDetailPane(null); }}>
+              <DialogContent className="sm:max-w-[380px] p-0 overflow-hidden rounded-2xl">
+                {closetItemDetailPane && (
+                  <>
+                    {/* Image */}
+                    <div className="w-full aspect-[3/4] bg-secondary/20 relative overflow-hidden">
+                      {closetItemDetailPane.clean_image_url || closetItemDetailPane.thumbnail_data_url || closetItemDetailPane.original_image_url ? (
+                        <img
+                          src={closetItemDetailPane.clean_image_url || closetItemDetailPane.thumbnail_data_url || closetItemDetailPane.original_image_url}
+                          alt={closetItemDetailPane.title}
+                          className="w-full h-full object-contain"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center">
+                          <Shirt className="h-20 w-20 text-muted-foreground/30" />
+                        </div>
+                      )}
+                      {/* Gradient overlay */}
+                      <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-background/90 to-transparent pointer-events-none" />
                     </div>
-                  )}
-                </div>
-              </div>
-              <div
-                className="grid grid-cols-1 lg:grid-cols-2 gap-4"
-                data-testid="add-item-cards-grid"
+                    {/* Details */}
+                    <div className="px-5 pb-5 pt-3 space-y-2">
+                      <h3 className="font-display font-semibold text-base text-foreground leading-tight">{closetItemDetailPane.title}</h3>
+                      <div className="flex flex-wrap gap-2">
+                        {closetItemDetailPane.brand && (
+                          <span className="text-[11px] bg-secondary px-2 py-0.5 rounded-full text-muted-foreground font-medium">{closetItemDetailPane.brand}</span>
+                        )}
+                        {closetItemDetailPane.category && (
+                          <span className="text-[11px] bg-secondary px-2 py-0.5 rounded-full text-muted-foreground font-medium">{closetItemDetailPane.category}</span>
+                        )}
+                        {closetItemDetailPane.size && (
+                          <span className="text-[11px] bg-secondary px-2 py-0.5 rounded-full text-muted-foreground font-medium">{t('addItem.sizeChipLabel', { size: closetItemDetailPane.size, defaultValue: 'Size {{size}}' })}</span>
+                        )}
+                        {closetItemDetailPane.color && (
+                          <span className="text-[11px] bg-secondary px-2 py-0.5 rounded-full text-muted-foreground font-medium">{closetItemDetailPane.color}</span>
+                        )}
+                      </div>
+                      {closetItemDetailPane.price_cents > 0 && (
+                        <p className="text-sm font-semibold text-[hsl(var(--accent))]">
+                          ${(closetItemDetailPane.price_cents / 100).toFixed(2)}
+                        </p>
+                      )}
+                    </div>
+                  </>
+                )}
+              </DialogContent>
+            </Dialog>
+          </TabsContent>
+        </Tabs>
+      ) : (
+        <>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3">
+            <div className="flex items-center gap-2 bg-secondary/30 px-3 py-1.5 rounded-xl border border-border/50 self-start sm:self-auto">
+              <input
+                type="checkbox"
+                id="quick-confirm-mode"
+                checked={quickConfirm}
+                onChange={(e) => setQuickConfirm(e.target.checked)}
+                className="sr-only peer"
+                data-testid="quick-confirm-toggle"
+              />
+              <label
+                htmlFor="quick-confirm-mode"
+                className="relative w-8 h-4 bg-muted peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-[hsl(var(--accent))] cursor-pointer"
+              />
+              <label htmlFor="quick-confirm-mode" className="text-xs font-semibold cursor-pointer select-none text-foreground flex items-center gap-1.5">
+                <Sparkles className="h-3.5 w-3.5 text-[hsl(var(--accent))]" />
+                {t('addItem.quickConfirmMode', { defaultValue: 'Quick Confirm Mode' })}
+              </label>
+            </div>
+            
+            <div className="flex items-center gap-2 justify-end">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="rounded-lg"
+                onClick={openCamera}
+                data-testid="add-item-camera-more-button"
               >
-                {cards.map((card) => (
-                  <ItemCard
-                    key={card.id}
-                    card={card}
-                    onRetry={() => retryCard(card)}
-                    onRemove={() => removeCard(card.id)}
-                    onChange={(patch) => updateField(card.id, patch)}
-                    onCardPatch={(patch) => patchCard(card.id, patch)}
-                    quickConfirm={quickConfirm}
-                  />
-                ))}
-              </div>
-            </>
-          )}
-          <DppScanner
-            open={scanOpen}
-            onOpenChange={setScanOpen}
-            onDecoded={handleScanDecoded}
-          />
-        </div>
-      </section>
-    </>
+                <Camera className="h-4 w-4 me-1.5" /> {t('addItem.takePhoto')}
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="rounded-lg"
+                onClick={pickFilesWithMemory}
+                data-testid="add-item-upload-more-button"
+              >
+                <Plus className="h-4 w-4 me-1.5" /> {t('addItem.addPhotos')}
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="rounded-lg"
+                onClick={() => setIsUrlModalOpen(true)}
+                data-testid="add-item-url-more-button"
+              >
+                <Link2 className="h-4 w-4 me-1.5" /> {t('addItem.uploadUrl', { defaultValue: 'URL' })}
+              </Button>
+              <Button
+                type="button"
+                variant="secondary"
+                size="sm"
+                className="rounded-lg px-2.5"
+                onClick={openScanner}
+                title={t('dpp.nav.scanLabel')}
+                aria-label={t('dpp.nav.scanLabel')}
+                data-testid="add-item-scan-dpp-more-button"
+              >
+                <QrCode className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+          
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4" data-testid="add-item-cards-grid">
+            {cards.map((card) => (
+              <ItemCard
+                key={card.id}
+                card={card}
+                onRetry={() => retryCard(card)}
+                onRemove={() => removeCard(card.id)}
+                onChange={(patch) => updateField(card.id, patch)}
+                onCardPatch={(patch) => patchCard(card.id, patch)}
+                quickConfirm={quickConfirm}
+              />
+            ))}
+          </div>
+        </>
+      )}
+      <DppScanner
+        open={scanOpen}
+        onOpenChange={setScanOpen}
+        onDecoded={handleScanDecoded}
+      />
+    </div>
   );
 }
 
 /* -------------------- item card -------------------- */
-function ItemCard({
-  card,
-  onRetry,
-  onRemove,
-  onChange,
-  onCardPatch,
-  quickConfirm,
-}) {
+function ItemCard({ card, onRetry, onRemove, onChange, onCardPatch, quickConfirm }) {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { fields, status, progress, previewUrl, error } = card;
-  const isBusy = status === "scanning";
-  const saved = status === "saved";
-  const hasReconstruction = !!(
-    card.reconstructedUrl && card.reconstructionMeta
-  );
+  const isBusy = status === 'scanning';
+  const saved = status === 'saved';
+  const hasReconstruction = !!(card.reconstructedUrl && card.reconstructionMeta);
   const showingReconstructed = hasReconstruction && card.useReconstructed;
 
-  const isQuotaError = !!(
-    error &&
-    (error.toLowerCase().includes("credit") ||
-      error.toLowerCase().includes("quota") ||
-      error.toLowerCase().includes("limit") ||
-      error.toLowerCase().includes("exhausted"))
-  );
+  const isQuotaError = !!(error && (
+    error.toLowerCase().includes('credit') || 
+    error.toLowerCase().includes('quota') || 
+    error.toLowerCase().includes('limit') || 
+    error.toLowerCase().includes('exhausted')
+  ));
 
   const [sections, setSections] = useState({
     basic: true,
@@ -4526,26 +3572,20 @@ function ItemCard({
 
   return (
     <Card
-      className={`rounded-[12px] shadow-editorial overflow-hidden ${saved ? "opacity-75" : ""}`}
+      className={`rounded-[calc(var(--radius)+10px)] shadow-editorial overflow-hidden ${saved ? 'opacity-75' : ''}`}
       data-testid="add-item-card"
     >
-      <CardContent>
-        <div className="grid grid-cols-1 md:grid-cols-[350px_1fr] gap-0 bg-white">
+      <CardContent className="p-0">
+        <div className="grid grid-cols-1 md:grid-cols-[220px_1fr] gap-0">
           {/* Photo + scanning */}
-          <div className="relative">
+          <div className="relative bg-secondary/40">
             <div
-              className={`aspect-[3/4] md:aspect-auto md:h-full w-full ${isBusy ? "scanning" : ""}`}
+              className={`aspect-[3/4] md:aspect-auto md:h-full w-full ${isBusy ? 'scanning' : ''}`}
               data-testid="add-item-card-photo"
             >
               <img
                 src={previewUrl}
-                alt={
-                  fields.name ||
-                  fields.title ||
-                  t("addItem.pendingGarmentAlt", {
-                    defaultValue: "Pending garment",
-                  })
-                }
+                alt={fields.name || fields.title || t('addItem.pendingGarmentAlt', { defaultValue: 'Pending garment' })}
                 className="w-full h-full object-cover"
               />
             </div>
@@ -4556,39 +3596,29 @@ function ItemCard({
               >
                 <Wand2 className="h-3 w-3 text-[hsl(var(--accent))]" />
                 {showingReconstructed
-                  ? t("itemDetail.repair.showingRepaired")
-                  : t("itemDetail.repair.showingOriginal")}
+                  ? t('itemDetail.repair.showingRepaired')
+                  : t('itemDetail.repair.showingOriginal')}
               </div>
             )}
             {hasReconstruction && !isBusy && (
               <button
                 type="button"
-                onClick={() =>
-                  onCardPatch?.({
-                    useReconstructed: !showingReconstructed,
-                    previewUrl: showingReconstructed
-                      ? card.originalCropUrl
-                      : card.reconstructedUrl,
-                  })
-                }
+                onClick={() => onCardPatch?.({
+                  useReconstructed: !showingReconstructed,
+                  previewUrl: showingReconstructed
+                    ? card.originalCropUrl
+                    : card.reconstructedUrl,
+                })}
                 className="absolute top-2 end-2 inline-flex items-center gap-1 rounded-full bg-background/90 backdrop-blur border border-border px-2 py-1 text-[10px] font-medium hover:bg-secondary transition-colors"
                 data-testid="add-item-toggle-reconstruction"
-                aria-label={
-                  showingReconstructed
-                    ? t("itemDetail.repair.ariaShowOriginal")
-                    : t("itemDetail.repair.ariaShowRepaired")
-                }
+                aria-label={showingReconstructed
+                  ? t('itemDetail.repair.ariaShowOriginal')
+                  : t('itemDetail.repair.ariaShowRepaired')}
               >
                 {showingReconstructed ? (
-                  <>
-                    <RefreshCw className="h-3 w-3" />{" "}
-                    {t("itemDetail.repair.toggleOriginal")}
-                  </>
+                  <><RefreshCw className="h-3 w-3" /> {t('itemDetail.repair.toggleOriginal')}</>
                 ) : (
-                  <>
-                    <Wand2 className="h-3 w-3" />{" "}
-                    {t("itemDetail.repair.toggleAI")}
-                  </>
+                  <><Wand2 className="h-3 w-3" /> {t('itemDetail.repair.toggleAI')}</>
                 )}
               </button>
             )}
@@ -4601,52 +3631,38 @@ function ItemCard({
                 <Progress value={progress} className="h-1 mt-1.5" />
               </div>
             )}
-            {status === "error" && !isBusy && (
-              <div className="absolute bg-rose-50/95 text-rose-900 px-3 py-2 text-xs flex flex-col gap-1.5 border-t border-rose-200">
+            {status === 'error' && !isBusy && (
+              <div className="absolute bottom-0 start-0 end-0 bg-rose-50/95 text-rose-900 px-3 py-2 text-xs flex flex-col gap-1.5 border-t border-rose-200">
                 <div className="flex items-start gap-2">
                   <AlertTriangle className="h-3.5 w-3.5 mt-0.5 shrink-0 text-rose-600" />
                   <span className="flex-1 font-medium">
-                    {isQuotaError
-                      ? t("addItem.quotaBlockedDesc", {
-                          defaultValue:
-                            "AI features are locked due to insufficient credits or tier limitations.",
-                        })
-                      : error ||
-                        t("addItem.analyzeFailed", {
-                          defaultValue: "Analysis failed",
-                        })}
+                    {isQuotaError 
+                      ? t('addItem.quotaBlockedDesc', { defaultValue: 'AI features are locked due to insufficient credits or tier limitations.' })
+                      : (error || t('addItem.analyzeFailed', { defaultValue: 'Analysis failed' }))}
                   </span>
                 </div>
                 {isQuotaError ? (
                   <div className="flex flex-wrap gap-x-2 gap-y-1 ps-6 text-[10px] font-semibold text-rose-800">
-                    <button
+                    <button 
                       type="button"
-                      onClick={() => navigate("/me?open=ai-config")}
+                      onClick={() => navigate('/me?open=ai-config')} 
                       className="underline hover:text-rose-950 cursor-pointer"
                     >
-                      {t("addItem.configureKeyLink", {
-                        defaultValue: "Configure API Key",
-                      })}
+                      {t('addItem.configureKeyLink', { defaultValue: 'Configure API Key' })}
                     </button>
                     <span className="text-rose-400">|</span>
-                    <button
+                    <button 
                       type="button"
-                      onClick={() => navigate("/pricing")}
+                      onClick={() => navigate('/pricing')} 
                       className="underline hover:text-rose-950 cursor-pointer"
                     >
-                      {t("addItem.upgradeTierLink", {
-                        defaultValue: "Upgrade Tier",
-                      })}
+                      {t('addItem.upgradeTierLink', { defaultValue: 'Upgrade Tier' })}
                     </button>
                   </div>
                 ) : (
                   <div className="ps-6">
-                    <button
-                      onClick={onRetry}
-                      className="underline font-bold shrink-0 hover:text-rose-950"
-                      data-testid="add-item-retry"
-                    >
-                      {t("addItem.tryAgain", { defaultValue: "Try again" })}
+                    <button onClick={onRetry} className="underline font-bold shrink-0 hover:text-rose-950" data-testid="add-item-retry">
+                      {t('addItem.tryAgain', { defaultValue: 'Try again' })}
                     </button>
                   </div>
                 )}
@@ -4654,9 +3670,7 @@ function ItemCard({
             )}
             {saved && (
               <div className="absolute inset-0 flex items-center justify-center bg-background/60 backdrop-blur-[2px]">
-                <Badge className="bg-emerald-600 text-white">
-                  {t("addItem.saved", { defaultValue: "Saved" })}
-                </Badge>
+                <Badge className="bg-emerald-600 text-white">{t('addItem.saved', { defaultValue: 'Saved' })}</Badge>
               </div>
             )}
             {!saved && (
@@ -4664,15 +3678,13 @@ function ItemCard({
                 type="button"
                 onClick={onRemove}
                 className="absolute top-2 end-2 h-8 w-8 rounded-full bg-background/80 backdrop-blur flex items-center justify-center hover:bg-background"
-                aria-label={t("addItem.removePhoto", {
-                  defaultValue: "Remove this photo",
-                })}
+                aria-label={t('addItem.removePhoto', { defaultValue: 'Remove this photo' })}
                 data-testid="add-item-remove"
               >
                 <X className="h-4 w-4" />
               </button>
             )}
-            {card.label && !isBusy && status !== "error" && (
+            {card.label && !isBusy && status !== 'error' && (
               <div
                 className="absolute top-2 start-2 max-w-[70%]"
                 data-testid="add-item-detected-label"
@@ -4686,39 +3698,33 @@ function ItemCard({
                 </Badge>
               </div>
             )}
-            {card.polishStatus === "pending" && (
+            {card.polishStatus === 'pending' && (
               <div className="absolute bottom-2 start-2">
                 <Badge
                   variant="secondary"
                   className="bg-background/90 text-[10px] backdrop-blur border-border/60 flex items-center gap-1 text-muted-foreground"
                 >
                   <Loader2 className="h-2.5 w-2.5 animate-spin text-[hsl(var(--accent))]" />
-                  {t("item.polishingPhoto", {
-                    defaultValue: "Polishing photo…",
-                  })}
+                  {t('item.polishingPhoto', { defaultValue: 'Polishing photo…' })}
                 </Badge>
               </div>
             )}
           </div>
+
           {/* Fields */}
-          <div className="p-5">
+          <div className="p-5 space-y-4">
             {quickConfirm ? (
               <div className="space-y-4" data-testid="quick-confirm-fields">
                 {/* Item Name */}
                 <div className="space-y-1">
-                  <Label
-                    htmlFor={`${card.id}-quick-name`}
-                    className="caps-label text-muted-foreground"
-                  >
-                    {t("addItem.itemName", { defaultValue: "Item Name" })}
+                  <Label htmlFor={`${card.id}-quick-name`} className="caps-label text-muted-foreground">
+                    {t('addItem.itemName', { defaultValue: 'Item Name' })}
                   </Label>
                   <Input
                     id={`${card.id}-quick-name`}
-                    value={fields.name || ""}
+                    value={fields.name || ''}
                     onChange={(e) => onChange({ name: e.target.value })}
-                    placeholder={t("addItem.namePlaceholder", {
-                      defaultValue: "e.g. Cotton Blue Shirt",
-                    })}
+                    placeholder={t('addItem.namePlaceholder', { defaultValue: 'e.g. Cotton Blue Shirt' })}
                     disabled={saved}
                     data-testid="add-item-name"
                     className="font-display text-lg bg-transparent border-0 border-b rounded-none px-0 focus-visible:ring-0 focus-visible:border-[hsl(var(--accent))]"
@@ -4729,29 +3735,16 @@ function ItemCard({
                 <div className="grid grid-cols-3 gap-3">
                   {/* Category */}
                   <div className="space-y-1">
-                    <Label
-                      htmlFor={`${card.id}-quick-category`}
-                      className="caps-label text-muted-foreground"
-                    >
-                      {t("addItem.category", { defaultValue: "Category" })}
+                    <Label htmlFor={`${card.id}-quick-category`} className="caps-label text-muted-foreground">
+                      {t('addItem.category', { defaultValue: 'Category' })}
                     </Label>
                     <Select
-                      value={fields.category || ""}
-                      onValueChange={(v) =>
-                        onChange({ category: v === "__clear" ? "" : v })
-                      }
+                      value={fields.category || ''}
+                      onValueChange={(v) => onChange({ category: v === '__clear' ? '' : v })}
                       disabled={saved}
                     >
-                      <SelectTrigger
-                        id={`${card.id}-quick-category`}
-                        className="rounded-xl"
-                        data-testid="add-item-category"
-                      >
-                        <SelectValue
-                          placeholder={t("addItem.selectPlaceholder", {
-                            defaultValue: "Select...",
-                          })}
-                        />
+                      <SelectTrigger id={`${card.id}-quick-category`} className="rounded-xl" data-testid="add-item-category">
+                        <SelectValue placeholder={t('addItem.selectPlaceholder', { defaultValue: 'Select...' })} />
                       </SelectTrigger>
                       <SelectContent>
                         {CATEGORY_OPTIONS.map((o) => (
@@ -4765,19 +3758,14 @@ function ItemCard({
 
                   {/* Brand */}
                   <div className="space-y-1">
-                    <Label
-                      htmlFor={`${card.id}-quick-brand`}
-                      className="caps-label text-muted-foreground"
-                    >
-                      {t("addItem.brand", { defaultValue: "Brand" })}
+                    <Label htmlFor={`${card.id}-quick-brand`} className="caps-label text-muted-foreground">
+                      {t('addItem.brand', { defaultValue: 'Brand' })}
                     </Label>
                     <Input
                       id={`${card.id}-quick-brand`}
-                      value={fields.brand || ""}
+                      value={fields.brand || ''}
                       onChange={(e) => onChange({ brand: e.target.value })}
-                      placeholder={t("addItem.brandPlaceholder", {
-                        defaultValue: "e.g. Zara",
-                      })}
+                      placeholder={t('addItem.brandPlaceholder', { defaultValue: 'e.g. Zara' })}
                       disabled={saved}
                       data-testid="add-item-brand"
                       className="rounded-xl"
@@ -4786,19 +3774,14 @@ function ItemCard({
 
                   {/* Size */}
                   <div className="space-y-1">
-                    <Label
-                      htmlFor={`${card.id}-quick-size`}
-                      className="caps-label text-muted-foreground"
-                    >
-                      {t("addItem.size", { defaultValue: "Size" })}
+                    <Label htmlFor={`${card.id}-quick-size`} className="caps-label text-muted-foreground">
+                      {t('addItem.size', { defaultValue: 'Size' })}
                     </Label>
                     <Input
                       id={`${card.id}-quick-size`}
-                      value={fields.size || ""}
+                      value={fields.size || ''}
                       onChange={(e) => onChange({ size: e.target.value })}
-                      placeholder={t("addItem.sizePlaceholder", {
-                        defaultValue: "e.g. M",
-                      })}
+                      placeholder={t('addItem.sizePlaceholder', { defaultValue: 'e.g. M' })}
                       disabled={saved}
                       data-testid="add-item-size"
                       className="rounded-xl"
@@ -4812,9 +3795,7 @@ function ItemCard({
                   labelKey="addItem.color"
                   items={fields.colors}
                   onChange={(v) => onChange({ colors: v })}
-                  placeholder={t("addItem.colorSlotPlaceholder", {
-                    defaultValue: "Color name",
-                  })}
+                  placeholder={t('addItem.colorSlotPlaceholder', { defaultValue: 'Color name' })}
                   disabled={saved}
                   testid="add-item-colors"
                 />
@@ -4822,122 +3803,82 @@ function ItemCard({
             ) : (
               <>
                 {/* 1. Basic Info Section */}
-                <div className="">
+                <div className="border border-border rounded-xl overflow-hidden bg-card shadow-sm">
                   <button
                     type="button"
-                    onClick={() => toggleSection("basic")}
-                    className="w-full flex items-center justify-between p-3 bg-primary-shadow mb-5 rounded-[8px] transition-colors text-start focus:outline-none"
+                    onClick={() => toggleSection('basic')}
+                    className="w-full flex items-center justify-between p-3 bg-secondary/10 hover:bg-secondary/20 transition-colors text-start focus:outline-none"
                   >
                     <div className="flex-1 min-w-0 pe-2">
-                      <span className="text-[12px] font-bold text-dark-brand">
-                        {t("addItem.section.basic", {
-                          defaultValue: "Basic Info",
-                        })}
+                      <span className="text-xs font-semibold uppercase tracking-wider text-foreground">
+                        {t('addItem.section.basic', { defaultValue: 'Basic Info' })}
                       </span>
                       {!sections.basic && (
                         <div className="text-[11px] text-muted-foreground truncate mt-0.5">
-                          {[fields.category, fields.brand, fields.size]
-                            .filter(Boolean)
-                            .join(" · ") || "—"}
+                          {[fields.category, fields.brand, fields.size].filter(Boolean).join(' · ') || '—'}
                         </div>
                       )}
                     </div>
-                    {sections.basic ? (
-                      <ChevronUp className="h-4 w-4 text-muted-foreground" />
-                    ) : (
-                      <ChevronDown className="h-4 w-4 text-muted-foreground" />
-                    )}
+                    {sections.basic ? <ChevronUp className="h-4 w-4 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 text-muted-foreground" />}
                   </button>
-
+                  
                   <AnimatePresence initial={false}>
                     {sections.basic && (
                       <motion.div
                         initial={{ height: 0, opacity: 0 }}
-                        animate={{ height: "auto", opacity: 1 }}
+                        animate={{ height: 'auto', opacity: 1 }}
                         exit={{ height: 0, opacity: 0 }}
                         transition={{ duration: 0.2 }}
-                        className="space-y-4 overflow-hidden"
+                        className="border-t border-border p-4 space-y-4 overflow-hidden"
                       >
-                        <NameCaption
-                          idPrefix={card.id}
-                          fields={fields}
-                          onChange={onChange}
-                          disabled={saved}
-                        />
-                        <BasicTaxonomyGrid
-                          idPrefix={card.id}
-                          fields={fields}
-                          onChange={onChange}
-                          disabled={saved}
-                        />
+                        <NameCaption idPrefix={card.id} fields={fields} onChange={onChange} disabled={saved} />
+                        <BasicTaxonomyGrid idPrefix={card.id} fields={fields} onChange={onChange} disabled={saved} />
                       </motion.div>
                     )}
                   </AnimatePresence>
                 </div>
 
                 {/* 2. Styling Details Section */}
-                <div className="">
+                <div className="border border-border rounded-xl overflow-hidden bg-card shadow-sm">
                   <button
                     type="button"
-                    onClick={() => toggleSection("styling")}
-                    className="w-full flex items-center justify-between p-3 bg-primary-shadow mb-5 rounded-[8px] transition-colors text-start focus:outline-none"
+                    onClick={() => toggleSection('styling')}
+                    className="w-full flex items-center justify-between p-3 bg-secondary/10 hover:bg-secondary/20 transition-colors text-start focus:outline-none"
                   >
                     <div className="flex-1 min-w-0 pe-2">
-                      <span className="text-[12px] font-bold text-dark-brand">
-                        {t("addItem.section.styling", {
-                          defaultValue: "Styling Details",
-                        })}
+                      <span className="text-xs font-semibold uppercase tracking-wider text-foreground">
+                        {t('addItem.section.styling', { defaultValue: 'Styling Details' })}
                       </span>
                       {!sections.styling && (
                         <div className="text-[11px] text-muted-foreground truncate mt-0.5">
                           {[
-                            fields.gender,
-                            fields.dress_code,
-                            fields.season && fields.season.length
-                              ? fields.season.join("/")
-                              : null,
-                          ]
-                            .filter(Boolean)
-                            .join(" · ") || "—"}
+                            fields.gender, 
+                            fields.dress_code, 
+                            fields.season && fields.season.length ? fields.season.join('/') : null
+                          ].filter(Boolean).join(' · ') || '—'}
                         </div>
                       )}
                     </div>
-                    {sections.styling ? (
-                      <ChevronUp className="h-4 w-4 text-muted-foreground" />
-                    ) : (
-                      <ChevronDown className="h-4 w-4 text-muted-foreground" />
-                    )}
+                    {sections.styling ? <ChevronUp className="h-4 w-4 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 text-muted-foreground" />}
                   </button>
-
+                  
                   <AnimatePresence initial={false}>
                     {sections.styling && (
                       <motion.div
                         initial={{ height: 0, opacity: 0 }}
-                        animate={{ height: "auto", opacity: 1 }}
+                        animate={{ height: 'auto', opacity: 1 }}
                         exit={{ height: 0, opacity: 0 }}
                         transition={{ duration: 0.2 }}
                         className="border-t border-border p-4 space-y-4 overflow-hidden"
                       >
-                        <StylingTaxonomyGrid
-                          idPrefix={card.id}
-                          fields={fields}
-                          onChange={onChange}
-                          disabled={saved}
-                        />
-                        <SeasonPicker
-                          idPrefix={card.id}
-                          fields={fields}
-                          onChange={onChange}
-                          disabled={saved}
-                        />
+                        <StylingTaxonomyGrid idPrefix={card.id} fields={fields} onChange={onChange} disabled={saved} />
+                        <SeasonPicker idPrefix={card.id} fields={fields} onChange={onChange} disabled={saved} />
                         <WeightedList
                           idPrefix={card.id}
                           labelKey="addItem.color"
                           items={fields.colors}
                           onChange={(v) => onChange({ colors: v })}
-                          placeholder={t("addItem.colorSlotPlaceholder", {
-                            defaultValue: "Color name",
-                          })}
+                          placeholder={t('addItem.colorSlotPlaceholder', { defaultValue: 'Color name' })}
                           disabled={saved}
                           testid="add-item-colors"
                         />
@@ -4947,50 +3888,37 @@ function ItemCard({
                           onChange={(v) => onChange({ tags: v })}
                           disabled={saved}
                         />
-                        <IntentSelector
-                          idPrefix={card.id}
-                          fields={fields}
-                          onChange={onChange}
-                          disabled={saved}
-                        />
+                        <IntentSelector idPrefix={card.id} fields={fields} onChange={onChange} disabled={saved} />
                       </motion.div>
                     )}
                   </AnimatePresence>
                 </div>
 
                 {/* 3. Care & Repair Section */}
-                <div className="">
+                <div className="border border-border rounded-xl overflow-hidden bg-card shadow-sm">
                   <button
                     type="button"
-                    onClick={() => toggleSection("care")}
-                    className="w-full flex items-center justify-between p-3 bg-primary-shadow mb-5 rounded-[8px] transition-colors text-start focus:outline-none"
+                    onClick={() => toggleSection('care')}
+                    className="w-full flex items-center justify-between p-3 bg-secondary/10 hover:bg-secondary/20 transition-colors text-start focus:outline-none"
                   >
                     <div className="flex-1 min-w-0 pe-2">
-                      <span className="text-[12px] font-bold text-dark-brand">
-                        {t("addItem.section.care", {
-                          defaultValue: "Care & Repair",
-                        })}
+                      <span className="text-xs font-semibold uppercase tracking-wider text-foreground">
+                        {t('addItem.section.care', { defaultValue: 'Care & Repair' })}
                       </span>
                       {!sections.care && (
                         <div className="text-[11px] text-muted-foreground truncate mt-0.5">
-                          {[fields.state, fields.condition, fields.quality]
-                            .filter(Boolean)
-                            .join(" · ") || "—"}
+                          {[fields.state, fields.condition, fields.quality].filter(Boolean).join(' · ') || '—'}
                         </div>
                       )}
                     </div>
-                    {sections.care ? (
-                      <ChevronUp className="h-4 w-4 text-muted-foreground" />
-                    ) : (
-                      <ChevronDown className="h-4 w-4 text-muted-foreground" />
-                    )}
+                    {sections.care ? <ChevronUp className="h-4 w-4 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 text-muted-foreground" />}
                   </button>
-
+                  
                   <AnimatePresence initial={false}>
                     {sections.care && (
                       <motion.div
                         initial={{ height: 0, opacity: 0 }}
-                        animate={{ height: "auto", opacity: 1 }}
+                        animate={{ height: 'auto', opacity: 1 }}
                         exit={{ height: 0, opacity: 0 }}
                         transition={{ duration: 0.2 }}
                         className="border-t border-border p-4 space-y-4 overflow-hidden"
@@ -5002,31 +3930,18 @@ function ItemCard({
                           >
                             <Wand2 className="h-4 w-4 mt-0.5 shrink-0" />
                             <div>
-                              <div className="font-medium">
-                                {t("addItem.repairTip", {
-                                  defaultValue: "Repair tip",
-                                })}
-                              </div>
-                              <div className="mt-0.5">
-                                {fields.repair_advice}
-                              </div>
+                              <div className="font-medium">{t('addItem.repairTip', { defaultValue: 'Repair tip' })}</div>
+                              <div className="mt-0.5">{fields.repair_advice}</div>
                             </div>
                           </div>
                         )}
-                        <QualityRow
-                          idPrefix={card.id}
-                          fields={fields}
-                          onChange={onChange}
-                          disabled={saved}
-                        />
+                        <QualityRow idPrefix={card.id} fields={fields} onChange={onChange} disabled={saved} />
                         <WeightedList
                           idPrefix={card.id}
                           labelKey="addItem.material"
                           items={fields.fabric_materials}
                           onChange={(v) => onChange({ fabric_materials: v })}
-                          placeholder={t("addItem.fabricSlotPlaceholder", {
-                            defaultValue: "Fabric name",
-                          })}
+                          placeholder={t('addItem.fabricSlotPlaceholder', { defaultValue: 'Fabric name' })}
                           disabled={saved}
                           testid="add-item-fabrics"
                         />
@@ -5049,35 +3964,25 @@ function NameCaption({ idPrefix, fields, onChange, disabled }) {
   return (
     <div className="space-y-3">
       <div>
-        <Label
-          htmlFor={`${idPrefix}-name`}
-          className="caps-label text-muted-foreground"
-        >
-          {t("addItem.itemName")}
-        </Label>
+        <Label htmlFor={`${idPrefix}-name`} className="caps-label text-muted-foreground">{t('addItem.itemName')}</Label>
         <Input
           id={`${idPrefix}-name`}
-          value={fields.name || ""}
+          value={fields.name || ''}
           onChange={(e) => onChange({ name: e.target.value })}
-          placeholder={t("addItem.namePlaceholder")}
+          placeholder={t('addItem.namePlaceholder')}
           disabled={disabled}
           data-testid="add-item-name"
           className="mt-1 font-display text-xl bg-transparent border-0 border-b rounded-none px-0 focus-visible:ring-0 focus-visible:border-[hsl(var(--accent))]"
         />
       </div>
       <div>
-        <Label
-          htmlFor={`${idPrefix}-caption`}
-          className="caps-label text-muted-foreground"
-        >
-          {t("addItem.caption")}
-        </Label>
+        <Label htmlFor={`${idPrefix}-caption`} className="caps-label text-muted-foreground">{t('addItem.caption')}</Label>
         <Textarea
           id={`${idPrefix}-caption`}
-          value={fields.caption || ""}
+          value={fields.caption || ''}
           onChange={(e) => onChange({ caption: e.target.value })}
           rows={2}
-          placeholder={t("addItem.captionPlaceholder")}
+          placeholder={t('addItem.captionPlaceholder')}
           disabled={disabled}
           data-testid="add-item-caption"
           className="mt-1 resize-none"
@@ -5089,13 +3994,11 @@ function NameCaption({ idPrefix, fields, onChange, disabled }) {
 
 function IntentSelector({ idPrefix, fields, onChange, disabled }) {
   const { t } = useTranslation();
-  const intent = fields.marketplace_intent || "own";
-  const showPriceInput = intent === "for_sale" || intent === "rent";
+  const intent = fields.marketplace_intent || 'own';
+  const showPriceInput = intent === 'for_sale' || intent === 'rent';
   // Only compute preview for 'for_sale' or 'rent'
   const priceCents = Number(fields.price_cents) || 0;
-  const stripeFee = showPriceInput
-    ? Math.round(priceCents * 0.029) + (priceCents > 0 ? 30 : 0)
-    : 0;
+  const stripeFee = showPriceInput ? Math.round(priceCents * 0.029) + (priceCents > 0 ? 30 : 0) : 0;
   const netAfterStripe = Math.max(0, priceCents - stripeFee);
   const platformFee = Math.round(netAfterStripe * 0.07);
   const sellerNet = netAfterStripe - platformFee;
@@ -5104,16 +4007,16 @@ function IntentSelector({ idPrefix, fields, onChange, disabled }) {
     <div className="rounded-2xl border border-border p-3 bg-secondary/30">
       <div className="flex items-center justify-between mb-2">
         <Label className="caps-label text-muted-foreground flex items-center gap-1">
-          <Tag className="h-3 w-3" /> {t("addItem.marketplaceIntent")}
+          <Tag className="h-3 w-3" /> {t('addItem.marketplaceIntent')}
         </Label>
         <Badge variant="outline" className="text-[10px]">
-          {t("addItem.intent_own")}
+          {t('addItem.intent_own')}
         </Badge>
       </div>
       <div
         className="grid grid-cols-2 sm:grid-cols-4 gap-2"
         role="radiogroup"
-        aria-label={t("addItem.marketplaceIntent")}
+        aria-label={t('addItem.marketplaceIntent')}
       >
         {INTENT_OPTIONS.map((o) => {
           const active = intent === o.value;
@@ -5128,9 +4031,7 @@ function IntentSelector({ idPrefix, fields, onChange, disabled }) {
               onClick={() => onChange({ marketplace_intent: o.value })}
               data-testid={`add-item-intent-${o.value}`}
               className={`rounded-xl border px-3 py-2 text-sm flex items-center justify-center gap-1.5 transition-colors ${
-                active
-                  ? `${o.tone} font-medium`
-                  : "bg-background text-muted-foreground hover:text-foreground border-border"
+                active ? `${o.tone} font-medium` : 'bg-background text-muted-foreground hover:text-foreground border-border'
               }`}
             >
               <Icon className="h-3.5 w-3.5" /> {labelForIntent(o.value, t)}
@@ -5139,18 +4040,12 @@ function IntentSelector({ idPrefix, fields, onChange, disabled }) {
         })}
       </div>
       {showPriceInput && (
-        <div
-          className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3"
-          data-testid="add-item-fee-preview"
-        >
+        <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3" data-testid="add-item-fee-preview">
           <div>
-            <Label
-              htmlFor={`${idPrefix}-price`}
-              className="caps-label text-muted-foreground"
-            >
-              {intent === "rent"
-                ? `${t("addItem.priceDaily", { defaultValue: "Daily Tariff" })} (${fields.currency || "USD"})`
-                : `${t("addItem.price")} (${fields.currency || "USD"})`}
+            <Label htmlFor={`${idPrefix}-price`} className="caps-label text-muted-foreground">
+              {intent === 'rent'
+                ? `${t('addItem.priceDaily', { defaultValue: 'Daily Tariff' })} (${fields.currency || 'USD'})`
+                : `${t('addItem.price')} (${fields.currency || 'USD'})`}
             </Label>
             <Input
               id={`${idPrefix}-price`}
@@ -5169,11 +4064,9 @@ function IntentSelector({ idPrefix, fields, onChange, disabled }) {
               // it as 100 cents = $1). Whole-unit semantics are now
               // identical between AddItem and ItemDetail.
               value={
-                fields.price_cents != null &&
-                fields.price_cents !== "" &&
-                Number(fields.price_cents) !== 0
+                fields.price_cents != null && fields.price_cents !== '' && Number(fields.price_cents) !== 0
                   ? String(Math.round(Number(fields.price_cents) / 100))
-                  : ""
+                  : ''
               }
               onChange={(e) => {
                 const raw = e.target.value;
@@ -5181,8 +4074,7 @@ function IntentSelector({ idPrefix, fields, onChange, disabled }) {
                 // empty field collapses to 0 so the user can never
                 // accidentally save a "no price" listing.
                 if (raw && !/^\d*$/.test(raw)) return;
-                const units =
-                  raw === "" ? 0 : Math.max(0, parseInt(raw, 10) || 0);
+                const units = raw === '' ? 0 : Math.max(0, parseInt(raw, 10) || 0);
                 onChange({ price_cents: units * 100 });
               }}
               placeholder="0"
@@ -5192,18 +4084,9 @@ function IntentSelector({ idPrefix, fields, onChange, disabled }) {
             />
           </div>
           <div className="text-xs text-muted-foreground self-end">
-            <div className="flex justify-between">
-              <span>{t("addItem.stripeFee")}</span>
-              <span className="font-mono">{fmtCents(stripeFee)}</span>
-            </div>
-            <div className="flex justify-between">
-              <span>{t("transactions.platform7")}</span>
-              <span className="font-mono">{fmtCents(platformFee)}</span>
-            </div>
-            <div className="flex justify-between font-medium text-foreground">
-              <span>{t("addItem.youReceive")}</span>
-              <span className="font-mono">{fmtCents(sellerNet)}</span>
-            </div>
+            <div className="flex justify-between"><span>{t('addItem.stripeFee')}</span><span className="font-mono">{fmtCents(stripeFee)}</span></div>
+            <div className="flex justify-between"><span>{t('transactions.platform7')}</span><span className="font-mono">{fmtCents(platformFee)}</span></div>
+            <div className="flex justify-between font-medium text-foreground"><span>{t('addItem.youReceive')}</span><span className="font-mono">{fmtCents(sellerNet)}</span></div>
           </div>
         </div>
       )}
@@ -5213,222 +4096,15 @@ function IntentSelector({ idPrefix, fields, onChange, disabled }) {
 
 function BasicTaxonomyGrid({ idPrefix, fields, onChange, disabled }) {
   const { t } = useTranslation();
-  const row = (
-    label,
-    value,
-    setter,
-    options,
-    testid,
-    placeholder,
-    formatter,
-  ) => {
+  const row = (label, value, setter, options, testid, placeholder, formatter) => {
     const fieldId = `${idPrefix}-${testid}`;
     return (
-      <div>
-        <Label htmlFor={fieldId} className="caps-label text-muted-foreground">
-          {label}
-        </Label>
-        {options ? (
-          <Select
-            value={value || ""}
-            onValueChange={(v) => setter(v === "__clear" ? "" : v)}
-            disabled={disabled}
-          >
-            <SelectTrigger
-              id={fieldId}
-              className="mt-1 rounded-xl"
-              data-testid={testid}
-            >
-              <SelectValue
-                placeholder={placeholder || t("addItem.selectPlaceholder")}
-              />
-            </SelectTrigger>
-            <SelectContent>
-              {options.map((o) => (
-                <SelectItem key={o} value={o}>
-                  {formatter ? formatter(o, t) : o}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        ) : (
-          <Input
-            id={fieldId}
-            value={value || ""}
-            onChange={(e) => setter(e.target.value)}
-            placeholder={placeholder || ""}
-            disabled={disabled}
-            data-testid={testid}
-            className="mt-1 rounded-xl"
-          />
-        )}
-      </div>
-    );
-  };
-
-  return (
-    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-      {row(
-        t("addItem.category"),
-        fields.category,
-        (v) => onChange({ category: v }),
-        CATEGORY_OPTIONS,
-        "add-item-category",
-        t("addItem.categoryPlaceholder"),
-        labelForCategory,
-      )}
-      {row(
-        t("addItem.subCategory"),
-        fields.sub_category,
-        (v) => onChange({ sub_category: v }),
-        null,
-        "add-item-subcategory",
-        t("addItem.subCategoryPlaceholder"),
-      )}
-      {row(
-        t("addItem.itemType"),
-        fields.item_type,
-        (v) => onChange({ item_type: v }),
-        null,
-        "add-item-itemtype",
-        t("addItem.itemTypePlaceholder"),
-      )}
-      {row(
-        t("addItem.brand"),
-        fields.brand,
-        (v) => onChange({ brand: v }),
-        null,
-        "add-item-brand",
-        t("addItem.brandPlaceholder"),
-      )}
-      {row(
-        t("addItem.size"),
-        fields.size,
-        (v) => onChange({ size: v }),
-        null,
-        "add-item-size",
-        t("addItem.sizePlaceholder"),
-      )}
-    </div>
-  );
-}
-
-function StylingTaxonomyGrid({ idPrefix, fields, onChange, disabled }) {
-  const { t } = useTranslation();
-  const row = (
-    label,
-    value,
-    setter,
-    options,
-    testid,
-    placeholder,
-    formatter,
-  ) => {
-    const fieldId = `${idPrefix}-${testid}`;
-    return (
-      <div>
-        <Label htmlFor={fieldId} className="caps-label text-muted-foreground">
-          {label}
-        </Label>
-        {options ? (
-          <Select
-            value={value || ""}
-            onValueChange={(v) => setter(v === "__clear" ? "" : v)}
-            disabled={disabled}
-          >
-            <SelectTrigger
-              id={fieldId}
-              className="mt-1 rounded-xl"
-              data-testid={testid}
-            >
-              <SelectValue
-                placeholder={placeholder || t("addItem.selectPlaceholder")}
-              />
-            </SelectTrigger>
-            <SelectContent>
-              {options.map((o) => (
-                <SelectItem key={o} value={o}>
-                  {formatter ? formatter(o, t) : o}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        ) : (
-          <Input
-            id={fieldId}
-            value={value || ""}
-            onChange={(e) => setter(e.target.value)}
-            placeholder={placeholder || ""}
-            disabled={disabled}
-            data-testid={testid}
-            className="mt-1 rounded-xl"
-          />
-        )}
-      </div>
-    );
-  };
-
-  return (
-    <div className="grid grid-cols-2 sm:grid-cols-2 gap-3">
-      {row(
-        t("itemDetail.edit.gender"),
-        fields.gender,
-        (v) => onChange({ gender: v }),
-        GENDER_OPTIONS,
-        "add-item-gender",
-        t("addItem.genderPlaceholder"),
-        labelForGender,
-      )}
-      {row(
-        t("addItem.dressCode"),
-        fields.dress_code,
-        (v) => onChange({ dress_code: v }),
-        DRESS_CODE_OPTIONS,
-        "add-item-dresscode",
-        t("addItem.dressCodePlaceholder"),
-        labelForDressCode,
-      )}
-      {row(
-        t("addItem.pattern"),
-        fields.pattern,
-        (v) => onChange({ pattern: v }),
-        PATTERN_OPTIONS,
-        "add-item-pattern",
-        t("addItem.patternPlaceholder"),
-        labelForPattern,
-      )}
-      {row(
-        t("addItem.tradition"),
-        fields.tradition,
-        (v) => onChange({ tradition: v }),
-        null,
-        "add-item-tradition",
-        t("addItem.traditionPlaceholder"),
-      )}
-    </div>
-  );
-}
-
-function QualityRow({ idPrefix, fields, onChange, disabled }) {
-  const { t } = useTranslation();
-  const cell = (label, value, setter, options, testid, formatter) => {
-    const fieldId = `${idPrefix}-${testid}`;
-    return (
-      <div>
-        <Label htmlFor={fieldId} className="caps-label text-muted-foreground">
-          {label}
-        </Label>
-        <Select
-          value={value || ""}
-          onValueChange={(v) => setter(v === "__clear" ? "" : v)}
-          disabled={disabled}
-        >
-          <SelectTrigger
-            id={fieldId}
-            className="mt-1 rounded-xl"
-            data-testid={testid}
-          >
-            <SelectValue placeholder={t("addItem.selectPlaceholder")} />
+    <div>
+      <Label htmlFor={fieldId} className="caps-label text-muted-foreground">{label}</Label>
+      {options ? (
+        <Select value={value || ''} onValueChange={(v) => setter(v === '__clear' ? '' : v)} disabled={disabled}>
+          <SelectTrigger id={fieldId} className="mt-1 rounded-xl" data-testid={testid}>
+            <SelectValue placeholder={placeholder || t('addItem.selectPlaceholder')} />
           </SelectTrigger>
           <SelectContent>
             {options.map((o) => (
@@ -5438,35 +4114,101 @@ function QualityRow({ idPrefix, fields, onChange, disabled }) {
             ))}
           </SelectContent>
         </Select>
-      </div>
-    );
-  };
+      ) : (
+        <Input
+          id={fieldId}
+          value={value || ''}
+          onChange={(e) => setter(e.target.value)}
+          placeholder={placeholder || ''}
+          disabled={disabled}
+          data-testid={testid}
+          className="mt-1 rounded-xl"
+        />
+      )}
+    </div>
+  )};
+
+  return (
+    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+      {row(t('addItem.category'), fields.category, (v) => onChange({ category: v }), CATEGORY_OPTIONS, 'add-item-category', t('addItem.categoryPlaceholder'), labelForCategory)}
+      {row(t('addItem.subCategory'), fields.sub_category, (v) => onChange({ sub_category: v }), null, 'add-item-subcategory', t('addItem.subCategoryPlaceholder'))}
+      {row(t('addItem.itemType'), fields.item_type, (v) => onChange({ item_type: v }), null, 'add-item-itemtype', t('addItem.itemTypePlaceholder'))}
+      {row(t('addItem.brand'), fields.brand, (v) => onChange({ brand: v }), null, 'add-item-brand', t('addItem.brandPlaceholder'))}
+      {row(t('addItem.size'), fields.size, (v) => onChange({ size: v }), null, 'add-item-size', t('addItem.sizePlaceholder'))}
+    </div>
+  );
+}
+
+function StylingTaxonomyGrid({ idPrefix, fields, onChange, disabled }) {
+  const { t } = useTranslation();
+  const row = (label, value, setter, options, testid, placeholder, formatter) => {
+    const fieldId = `${idPrefix}-${testid}`;
+    return (
+    <div>
+      <Label htmlFor={fieldId} className="caps-label text-muted-foreground">{label}</Label>
+      {options ? (
+        <Select value={value || ''} onValueChange={(v) => setter(v === '__clear' ? '' : v)} disabled={disabled}>
+          <SelectTrigger id={fieldId} className="mt-1 rounded-xl" data-testid={testid}>
+            <SelectValue placeholder={placeholder || t('addItem.selectPlaceholder')} />
+          </SelectTrigger>
+          <SelectContent>
+            {options.map((o) => (
+              <SelectItem key={o} value={o}>
+                {formatter ? formatter(o, t) : o}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      ) : (
+        <Input
+          id={fieldId}
+          value={value || ''}
+          onChange={(e) => setter(e.target.value)}
+          placeholder={placeholder || ''}
+          disabled={disabled}
+          data-testid={testid}
+          className="mt-1 rounded-xl"
+        />
+      )}
+    </div>
+  )};
+
+  return (
+    <div className="grid grid-cols-2 sm:grid-cols-2 gap-3">
+      {row(t('itemDetail.edit.gender'), fields.gender, (v) => onChange({ gender: v }), GENDER_OPTIONS, 'add-item-gender', t('addItem.genderPlaceholder'), labelForGender)}
+      {row(t('addItem.dressCode'), fields.dress_code, (v) => onChange({ dress_code: v }), DRESS_CODE_OPTIONS, 'add-item-dresscode', t('addItem.dressCodePlaceholder'), labelForDressCode)}
+      {row(t('addItem.pattern'), fields.pattern, (v) => onChange({ pattern: v }), PATTERN_OPTIONS, 'add-item-pattern', t('addItem.patternPlaceholder'), labelForPattern)}
+      {row(t('addItem.tradition'), fields.tradition, (v) => onChange({ tradition: v }), null, 'add-item-tradition', t('addItem.traditionPlaceholder'))}
+    </div>
+  );
+}
+
+function QualityRow({ idPrefix, fields, onChange, disabled }) {
+  const { t } = useTranslation();
+  const cell = (label, value, setter, options, testid, formatter) => {
+    const fieldId = `${idPrefix}-${testid}`;
+    return (
+    <div>
+      <Label htmlFor={fieldId} className="caps-label text-muted-foreground">{label}</Label>
+      <Select value={value || ''} onValueChange={(v) => setter(v === '__clear' ? '' : v)} disabled={disabled}>
+        <SelectTrigger id={fieldId} className="mt-1 rounded-xl" data-testid={testid}>
+          <SelectValue placeholder={t('addItem.selectPlaceholder')} />
+        </SelectTrigger>
+        <SelectContent>
+          {options.map((o) => (
+            <SelectItem key={o} value={o}>
+              {formatter ? formatter(o, t) : o}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </div>
+  )};
   return (
     <div className="grid grid-cols-3 gap-3">
-      {cell(
-        t("addItem.state"),
-        fields.state,
-        (v) => onChange({ state: v }),
-        STATE_OPTIONS,
-        "add-item-state",
-        labelForState,
-      )}
-      {cell(
-        t("addItem.condition"),
-        fields.condition,
-        (v) => onChange({ condition: v }),
-        CONDITION_OPTIONS,
-        "add-item-condition",
-        labelForCondition,
-      )}
-      {cell(
-        t("addItem.qualityLabel"),
-        fields.quality,
-        (v) => onChange({ quality: v }),
-        QUALITY_OPTIONS,
-        "add-item-quality",
-        labelForQuality,
-      )}
+      {cell(t('addItem.state'), fields.state, (v) => onChange({ state: v }), STATE_OPTIONS, 'add-item-state', labelForState)}
+      {cell(t('addItem.condition'), fields.condition, (v) => onChange({ condition: v }), CONDITION_OPTIONS, 'add-item-condition', labelForCondition)}
+      {cell(t('addItem.qualityLabel'), fields.quality, (v) => onChange({ quality: v }), QUALITY_OPTIONS, 'add-item-quality', labelForQuality)}
     </div>
   );
 }
@@ -5476,28 +4218,18 @@ function SeasonPicker({ idPrefix, fields, onChange, disabled }) {
   const active = new Set(fields.season || []);
   const toggle = (s) => {
     const next = new Set(active);
-    if (s === "all") {
-      next.clear();
-      next.add("all");
-    } else {
-      next.delete("all");
-      if (next.has(s)) next.delete(s);
-      else next.add(s);
+    if (s === 'all') { next.clear(); next.add('all'); }
+    else {
+      next.delete('all');
+      if (next.has(s)) next.delete(s); else next.add(s);
     }
     onChange({ season: Array.from(next) });
   };
   const labelId = `${idPrefix}-season`;
   return (
     <div>
-      <Label id={labelId} className="caps-label text-muted-foreground">
-        {t("addItem.season")}
-      </Label>
-      <div
-        className="mt-1 flex flex-wrap gap-1.5"
-        role="group"
-        aria-labelledby={labelId}
-        data-testid="add-item-season"
-      >
+      <Label id={labelId} className="caps-label text-muted-foreground">{t('addItem.season')}</Label>
+      <div className="mt-1 flex flex-wrap gap-1.5" role="group" aria-labelledby={labelId} data-testid="add-item-season">
         {SEASON_OPTIONS.map((s) => {
           const on = active.has(s);
           return (
@@ -5509,9 +4241,7 @@ function SeasonPicker({ idPrefix, fields, onChange, disabled }) {
               aria-pressed={on}
               data-testid={`add-item-season-${s}`}
               className={`rounded-full px-3 py-1 text-xs border ${
-                on
-                  ? "bg-[hsl(var(--accent))] text-white border-[hsl(var(--accent))]"
-                  : "bg-background border-border text-muted-foreground"
+                on ? 'bg-[hsl(var(--accent))] text-white border-[hsl(var(--accent))]' : 'bg-background border-border text-muted-foreground'
               }`}
             >
               {labelForSeason(s, t)}
@@ -5528,33 +4258,27 @@ function SeasonPicker({ idPrefix, fields, onChange, disabled }) {
 // reuse the exact same control. See top-of-file imports.
 function TagsEditor({ idPrefix, items, onChange, disabled }) {
   const { t } = useTranslation();
-  const [draft, setDraft] = useState("");
+  const [draft, setDraft] = useState('');
   const add = () => {
     const v = draft.trim();
     if (!v) return;
     if (!items.includes(v)) onChange([...items, v]);
-    setDraft("");
+    setDraft('');
   };
   const fieldId = `${idPrefix}-tag-input`;
   return (
     <div>
-      <Label htmlFor={fieldId} className="caps-label text-muted-foreground">
-        {t("addItem.tags")}
-      </Label>
+      <Label htmlFor={fieldId} className="caps-label text-muted-foreground">{t('addItem.tags')}</Label>
       <div className="mt-1 flex flex-wrap gap-1.5" data-testid="add-item-tags">
         {items.map((tag) => (
-          <Badge
-            key={tag}
-            variant="outline"
-            className="text-[11px] ps-2 pe-1 flex items-center gap-1"
-          >
+          <Badge key={tag} variant="outline" className="text-[11px] ps-2 pe-1 flex items-center gap-1">
             {tag}
             <button
               type="button"
               onClick={() => onChange(items.filter((x) => x !== tag))}
               disabled={disabled}
               className="h-4 w-4 rounded-full hover:bg-secondary flex items-center justify-center"
-              aria-label={t("addItem.removeTagAria", { label: tag })}
+              aria-label={t('addItem.removeTagAria', { label: tag })}
             >
               <X className="h-3 w-3" />
             </button>
@@ -5565,25 +4289,13 @@ function TagsEditor({ idPrefix, items, onChange, disabled }) {
             id={fieldId}
             value={draft}
             onChange={(e) => setDraft(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                e.preventDefault();
-                add();
-              }
-            }}
-            placeholder={t("addItem.addTag")}
+            onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); add(); } }}
+            placeholder={t('addItem.addTag')}
             disabled={disabled}
             className="h-8 text-xs rounded-full w-32"
             data-testid="add-item-tag-input"
           />
-          <Button
-            type="button"
-            size="sm"
-            variant="ghost"
-            className="text-xs h-8"
-            onClick={add}
-            disabled={disabled || !draft.trim()}
-          >
+          <Button type="button" size="sm" variant="ghost" className="text-xs h-8" onClick={add} disabled={disabled || !draft.trim()}>
             <Plus className="h-3 w-3" />
           </Button>
         </div>
@@ -5598,14 +4310,11 @@ function buildCreatePayload(card, inSuitcase = false) {
   const asBase64 = card.base64;
   // Drop empty/falsy optional keys to satisfy enum validators on the backend.
   const body = {
-    source:
-      f.marketplace_intent && f.marketplace_intent !== "own"
-        ? "Shared"
-        : "Private",
+    source: f.marketplace_intent && f.marketplace_intent !== 'own' ? 'Shared' : 'Private',
     name: f.name || undefined,
-    title: f.name || f.title || "Unnamed garment",
+    title: f.name || f.title || 'Unnamed garment',
     caption: f.caption || undefined,
-    category: f.category || "Top",
+    category: f.category || 'Top',
     sub_category: f.sub_category || undefined,
     item_type: f.item_type || undefined,
     brand: f.brand || undefined,
@@ -5622,25 +4331,20 @@ function buildCreatePayload(card, inSuitcase = false) {
     condition: f.condition || undefined,
     quality: f.quality || undefined,
     repair_advice: f.repair_advice || undefined,
-    price_cents:
-      f.price_cents === "" || f.price_cents == null ? 0 : Number(f.price_cents),
+    price_cents: f.price_cents === '' || f.price_cents == null ? 0 : Number(f.price_cents),
     currency: f.currency || getDefaultCurrency(),
-    marketplace_intent: f.marketplace_intent || "own",
+    marketplace_intent: f.marketplace_intent || 'own',
     tags: f.tags || [],
     image_base64: asBase64 || undefined,
     crop_base64: card.cropBase64 || undefined,
-    image_mime: asBase64
-      ? card.mime || card.file?.type || "image/jpeg"
-      : undefined,
+    image_mime: asBase64 ? (card.mime || card.file?.type || 'image/jpeg') : undefined,
     // Phase Q: forward the reconstructed image when the user kept it
-    reconstructed_image_b64:
-      card.useReconstructed && card.reconstructedB64
-        ? card.reconstructedB64
-        : undefined,
-    reconstruction_metadata:
-      card.useReconstructed && card.reconstructionMeta
-        ? card.reconstructionMeta
-        : undefined,
+    reconstructed_image_b64: card.useReconstructed && card.reconstructedB64
+      ? card.reconstructedB64
+      : undefined,
+    reconstruction_metadata: card.useReconstructed && card.reconstructionMeta
+      ? card.reconstructionMeta
+      : undefined,
     // Phase V6: preserve DPP provenance imported via QR scan.
     dpp_data: card.dppData || undefined,
     // Phase Z2 — photo fingerprint passthrough so future uploads of
@@ -5652,9 +4356,7 @@ function buildCreatePayload(card, inSuitcase = false) {
     source_color_sig: card.sourceColorSig || undefined,
     source_filename: card.sourceFilename || undefined,
     source_size_bytes:
-      typeof card.sourceSizeBytes === "number"
-        ? card.sourceSizeBytes
-        : undefined,
+      typeof card.sourceSizeBytes === 'number' ? card.sourceSizeBytes : undefined,
     is_duplicate: card.isDuplicate ? true : undefined,
     in_suitcase: inSuitcase ? true : undefined,
     // Phase O.6 — flag the backend so it skips the synchronous
@@ -5670,22 +4372,15 @@ function buildCreatePayload(card, inSuitcase = false) {
     // ``_run_background_matte`` either way.
     defer_matte: card.deferMatte ? true : undefined,
     needs_reconstruction: card.needsReconstruction ? true : undefined,
-    reconstruction_reasons:
-      card.reconstructionReasons && card.reconstructionReasons.length
-        ? card.reconstructionReasons
-        : undefined,
-    image_quality_status:
-      f.image_quality_status || card.imageQualityStatus || undefined,
-    image_quality_reason:
-      f.image_quality_reason || card.imageQualityReason || undefined,
-    reconstruction_prompt:
-      f.reconstruction_prompt || card.reconstructionPrompt || undefined,
+    reconstruction_reasons: (card.reconstructionReasons && card.reconstructionReasons.length) ? card.reconstructionReasons : undefined,
+    image_quality_status: f.image_quality_status || card.imageQualityStatus || undefined,
+    image_quality_reason: f.image_quality_reason || card.imageQualityReason || undefined,
+    reconstruction_prompt: f.reconstruction_prompt || card.reconstructionPrompt || undefined,
   };
   // Strip undefined to keep payload clean (Pydantic `extra=forbid` still accepts unset fields).
-  return Object.fromEntries(
-    Object.entries(body).filter(([, v]) => v !== undefined),
-  );
+  return Object.fromEntries(Object.entries(body).filter(([, v]) => v !== undefined));
 }
+
 
 /* -------------------- DuplicateConfirmDialog -------------------- */
 /**
@@ -5702,7 +4397,7 @@ function buildCreatePayload(card, inSuitcase = false) {
 function DuplicateConfirmDialog({ cards, onCancel, onConfirm }) {
   const { t } = useTranslation();
   const active = cards.find(
-    (c) => c.potentialDuplicate && !c.duplicateConfirmed,
+    (c) => c.potentialDuplicate && !c.duplicateConfirmed
   );
   const open = !!active;
   const dup = active?.potentialDuplicate;
@@ -5710,12 +4405,12 @@ function DuplicateConfirmDialog({ cards, onCancel, onConfirm }) {
     active?.fields?.title ||
     active?.fields?.name ||
     active?.fields?.item_type ||
-    t("addItem.duplicate.thisItem", { defaultValue: "this item" });
+    t('addItem.duplicate.thisItem', { defaultValue: 'this item' });
   const existingTitle =
     dup?.title ||
     dup?.name ||
     dup?.item_type ||
-    t("addItem.duplicate.thisItem", { defaultValue: "this item" });
+    t('addItem.duplicate.thisItem', { defaultValue: 'this item' });
 
   return (
     <Dialog
@@ -5733,14 +4428,14 @@ function DuplicateConfirmDialog({ cards, onCancel, onConfirm }) {
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 font-display text-xl">
             <AlertTriangle className="h-5 w-5 text-amber-500" />
-            {t("addItem.duplicate.title", {
-              defaultValue: "Already in your closet",
+            {t('addItem.duplicate.title', {
+              defaultValue: 'Already in your closet',
             })}
           </DialogTitle>
           <DialogDescription className="text-sm leading-relaxed">
-            {t("addItem.duplicate.body", {
+            {t('addItem.duplicate.body', {
               defaultValue:
-                "It looks like “{{existing}}” is already in your closet. Do you want to add this new “{{incoming}}” as a duplicate?",
+                'It looks like “{{existing}}” is already in your closet. Do you want to add this new “{{incoming}}” as a duplicate?',
               existing: existingTitle,
               incoming: newTitle,
             })}
@@ -5759,7 +4454,7 @@ function DuplicateConfirmDialog({ cards, onCancel, onConfirm }) {
                 data-testid="duplicate-existing-thumb"
               />
               <span className="caps-label text-muted-foreground">
-                {t("addItem.duplicate.existing", { defaultValue: "Existing" })}
+                {t('addItem.duplicate.existing', { defaultValue: 'Existing' })}
               </span>
             </div>
           ) : null}
@@ -5772,9 +4467,7 @@ function DuplicateConfirmDialog({ cards, onCancel, onConfirm }) {
                 data-testid="duplicate-incoming-thumb"
               />
               <span className="caps-label text-muted-foreground">
-                {t("addItem.duplicate.incoming", {
-                  defaultValue: "New upload",
-                })}
+                {t('addItem.duplicate.incoming', { defaultValue: 'New upload' })}
               </span>
             </div>
           ) : null}
@@ -5789,7 +4482,7 @@ function DuplicateConfirmDialog({ cards, onCancel, onConfirm }) {
             data-testid="duplicate-cancel-button"
           >
             <X className="h-4 w-4 me-2" />
-            {t("addItem.duplicate.cancel", { defaultValue: "Discard upload" })}
+            {t('addItem.duplicate.cancel', { defaultValue: 'Discard upload' })}
           </Button>
           <Button
             type="button"
@@ -5798,7 +4491,7 @@ function DuplicateConfirmDialog({ cards, onCancel, onConfirm }) {
             data-testid="duplicate-confirm-button"
           >
             <Plus className="h-4 w-4 me-2" />
-            {t("addItem.duplicate.confirm", { defaultValue: "Add anyway" })}
+            {t('addItem.duplicate.confirm', { defaultValue: 'Add anyway' })}
           </Button>
         </DialogFooter>
       </DialogContent>

@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import {
   ArrowLeft,
   ArrowRight,
-  CircleCheck as CheckCircle,
+  CheckCircle,
   Tag,
   MapPin,
   Users,
@@ -15,7 +15,7 @@ import {
   CreditCard,
   ExternalLink,
   Loader2,
-  AlertTriangle,
+  AlertTriangle
 } from 'lucide-react';
 import {
   Dialog,
