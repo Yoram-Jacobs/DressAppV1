@@ -7,17 +7,19 @@
 
 const BACKEND_URL = process.env.EXPO_PUBLIC_BACKEND_URL ?? 'https://dressapp.co';
 
-export function resolveImageUrl(url: string | null | undefined): string | undefined {
-  if (!url) return undefined;
+export function resolveImageUrl(url: any): string | undefined {
+  if (!url || typeof url !== 'string') return undefined;
+  const trimmed = url.trim();
+  if (!trimmed) return undefined;
   if (
-    url.startsWith('data:') ||
-    url.startsWith('http://') ||
-    url.startsWith('https://') ||
-    url.startsWith('file://')
+    trimmed.startsWith('data:') ||
+    trimmed.startsWith('http://') ||
+    trimmed.startsWith('https://') ||
+    trimmed.startsWith('file://')
   ) {
-    return url;
+    return trimmed;
   }
-  const cleanPath = url.startsWith('/') ? url : `/${url}`;
+  const cleanPath = trimmed.startsWith('/') ? trimmed : `/${trimmed}`;
   return `${BACKEND_URL}${cleanPath}`;
 }
 

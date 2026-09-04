@@ -34,6 +34,7 @@ import { useTheme } from '@mobile/theme';
 import { fonts, fontSizes, spacing, radii } from '@mobile/theme/tokens';
 import { useMarketplaceStore, ListingItem, TransactionItem } from '@mobile/lib/stores/marketplaceStore';
 import { labelForCategory, labelForIntent, labelForCondition } from '@mobile/lib/taxonomy';
+import { getItemImageUrl, resolveImageUrl } from '@mobile/lib/imageUtils';
 import { HelpFloater } from '@mobile/components/help';
 import { ScrollToTopFloater } from '@mobile/components/common/ScrollToTopFloater';
 import type { MarketStackParamList } from '@mobile/navigation/types';
@@ -189,13 +190,14 @@ export function MarketplaceScreen() {
   const s = makeStyles(colors);
 
   const renderListingCard = ({ item }: { item: any }) => {
-    const thumb =
+    const thumb = getItemImageUrl(item) || resolveImageUrl(
       item.reconstruct_image_url ||
       item.reconstructed_image_url ||
       item.clean_image_url ||
       (Array.isArray(item.images) && item.images[0]) ||
       item.thumbnail_data_url ||
-      item.image_url;
+      item.image_url
+    ) || undefined;
 
     const isFree = item.listing_type === 'donate' || item.price_cents === 0;
     const isSwap = item.listing_type === 'swap';

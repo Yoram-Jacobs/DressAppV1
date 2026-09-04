@@ -36,6 +36,7 @@ import { api } from '@mobile/lib/api';
 import { labelForCondition, labelForCategory } from '@mobile/lib/taxonomy';
 import { SwapPickerModal } from '@mobile/components/SwapPickerModal';
 import { marketplaceStore } from '@mobile/lib/stores/marketplaceStore';
+import { getItemImageUrl, resolveImageUrl } from '@mobile/lib/imageUtils';
 import type { MarketStackParamList } from '@mobile/navigation/types';
 
 type ListingDetailNavProp = NativeStackNavigationProp<MarketStackParamList, 'ListingDetail'>;
@@ -239,10 +240,11 @@ export function ListingDetailScreen() {
 
   const fm = listing.financial_metadata || {};
   const isOwner = currentUser?.id && (listing.seller_id === currentUser.id || listing.user_id === currentUser.id);
-  const images = Array.isArray(listing.images) && listing.images.length > 0
-    ? listing.images
-    : [listing.image_url || listing.thumbnail_data_url].filter(Boolean);
-  const mainImage = images[0] || null;
+  const mainImage = getItemImageUrl(listing) || resolveImageUrl(
+    (Array.isArray(listing.images) && listing.images[0]) ||
+    listing.image_url ||
+    listing.thumbnail_data_url
+  ) || null;
 
   const mode = listing.mode || listing.listing_type || 'sell';
   const isFree = mode === 'donate' || (typeof fm.list_price_cents === 'number' && fm.list_price_cents === 0);
@@ -541,9 +543,11 @@ export function ListingDetailScreen() {
 
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.similarList}>
               {similar.map((sim) => {
-                const simImg = Array.isArray(sim.images) && sim.images.length > 0
-                  ? sim.images[0]
-                  : sim.image_url || sim.thumbnail_data_url;
+                const simImg = getItemImageUrl(sim) || resolveImageUrl(
+                  (Array.isArray(sim.images) && sim.images[0]) ||
+                  sim.image_url ||
+                  sim.thumbnail_data_url
+                ) || null;
                 const simPrice = formatPrice(sim.financial_metadata?.list_price_cents ?? sim.price_cents, sim.currency);
                 return (
                   <TouchableOpacity
