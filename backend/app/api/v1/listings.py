@@ -447,7 +447,7 @@ async def browse_listings_stream(
             max_price_cents
         )
 
-    use_geo = lat is not None and lng is not None
+    use_geo = lat is not None and lng is not None and radius_km is not None
 
     # Note on `user`: the optional auth dependency is consumed for
     # parity with the JSON endpoint (future filters may want to know

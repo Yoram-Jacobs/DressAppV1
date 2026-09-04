@@ -5510,83 +5510,87 @@ async def update_item(
     _MARKETPLACE_INTENTS = {"for_sale", "swap", "donate", "rent"}
     _INTENT_TO_MODE = {"for_sale": "sell", "swap": "swap", "donate": "donate", "rent": "rent"}
 
-    # Should we OPEN a listing on this update?
-    # Triggered when EITHER signal newly indicates marketplace participation.
+    target_intent = new_intent if new_intent is not None else updated.get("marketplace_intent")
+    target_source = new_source if new_source is not None else updated.get("source")
+
+    # Should we OPEN or ENSURE an active listing on this update?
     open_listing = False
-    chosen_mode = "swap"  # safe default for the source-only path
+    chosen_mode = "swap"  # safe default
     chosen_price_cents = 0
-    # Honour the currency on the closet item itself — fall back to the
-    # patched value, then the loaded item, then USD as a last resort.
-    # Without this the auto-listing flow used to hardcode USD even
-    # when the user picked ILS / EUR / etc on the closet card, so the
-    # marketplace card showed "$10" instead of "₪10".
+
     chosen_currency = (
         patch.get("currency")
         or updated.get("currency")
         or (prior or {}).get("currency")
         or "USD"
     )
-    if new_source == "Shared" and prior_source != "Shared":
+
+    if target_intent in _MARKETPLACE_INTENTS or target_source == "Shared":
         open_listing = True
-    if new_intent in _MARKETPLACE_INTENTS and prior_intent not in _MARKETPLACE_INTENTS:
-        open_listing = True
-        chosen_mode = _INTENT_TO_MODE[new_intent]
-        # Carry the user's listed price across when they set one.
-        if new_intent in ("for_sale", "rent"):
+        if target_intent in _MARKETPLACE_INTENTS:
+            chosen_mode = _INTENT_TO_MODE[target_intent]
+        else:
+            chosen_mode = "swap"
+        if chosen_mode in ("sell", "rent"):
             chosen_price_cents = int(
                 patch.get("price_cents") or updated.get("price_cents") or 0
             )
 
     # Should we CLOSE the auto-created listing on this update?
     close_listing = False
-    if new_source == "Private" and prior_source == "Shared":
-        close_listing = True
-    if (
-        new_intent is not None
-        and new_intent not in _MARKETPLACE_INTENTS
-        and prior_intent in _MARKETPLACE_INTENTS
-    ):
-        close_listing = True
+    if not open_listing:
+        if (new_source == "Private" and prior_source == "Shared") or (
+            new_intent is not None
+            and new_intent not in _MARKETPLACE_INTENTS
+            and prior_intent in _MARKETPLACE_INTENTS
+        ):
+            close_listing = True
 
     if open_listing:
         try:
             existing = await db.listings.find_one(
                 {"closet_item_id": item_id, "seller_id": user["id"]},
-                {"_id": 0, "id": 1, "status": 1, "mode": 1, "auto_created": 1},
             )
             if existing and existing.get("status") in ("draft", "active", "reserved"):
-                # Already has a live listing. If we know the desired
-                # mode (intent path), patch the mode on the existing
-                # auto-created listing so a user who originally hit
-                # "Share" then later picks "For Sale" sees the right
-                # CTA on the marketplace card. Never modify a
-                # human-curated listing (auto_created=False).
-                if (
-                    existing.get("auto_created")
-                    and chosen_mode != existing.get("mode")
-                ):
-                    # Recompute fees for the new (price, currency)
-                    # tuple so the marketplace card stays consistent
-                    # — without this an item that flipped from
-                    # ``swap`` → ``for_sale`` kept its old $0 price
-                    # and stale fee rows.
-                    fees = compute_fees(chosen_price_cents)
-                    await db.listings.update_one(
-                        {"id": existing["id"]},
+                fees = compute_fees(chosen_price_cents)
+                set_fields: dict[str, Any] = {
+                    "mode": chosen_mode,
+                    "currency": chosen_currency,
+                    "financial_metadata.list_price_cents": chosen_price_cents,
+                    "financial_metadata.currency": chosen_currency,
+                    "financial_metadata.platform_fee_percent": 7.0,
+                    "financial_metadata.estimated_seller_net_cents": fees.seller_net_cents,
+                    "updated_at": datetime.now(timezone.utc).isoformat(),
+                }
+                recon = updated.get("reconstructed_image_url") or updated.get("reconstruct_image_url")
+                clean = updated.get("clean_image_url")
+                best = recon or clean
+                if best:
+                    set_fields["reconstructed_image_url"] = recon
+                    set_fields["clean_image_url"] = clean
+                    set_fields["thumbnail_data_url"] = best
+                    imgs = existing.get("images") or []
+                    if not imgs or (isinstance(imgs, list) and len(imgs) > 0 and imgs[0] != best):
+                        set_fields["images"] = [best] + [i for i in imgs if i != best]
+
+                if existing.get("status") != "active":
+                    set_fields["status"] = "active"
+                await db.listings.update_one(
+                    {"id": existing["id"]},
+                    {"$set": set_fields},
+                )
+                if updated.get("source") != "Shared" or not updated.get("auto_listing_id"):
+                    await db.closet_items.update_one(
+                        {"id": item_id, "user_id": user["id"]},
                         {"$set": {
-                            "mode": chosen_mode,
-                            "currency": chosen_currency,
-                            "financial_metadata.list_price_cents": chosen_price_cents,
-                            "financial_metadata.currency": chosen_currency,
-                            "financial_metadata.platform_fee_percent": 7.0,
-                            "financial_metadata.estimated_seller_net_cents": fees.seller_net_cents,
-                            "updated_at": datetime.now(timezone.utc).isoformat(),
+                            "source": "Shared",
+                            "auto_listing_id": existing["id"],
+                            "auto_listing_needs_completion": False,
                         }},
                     )
+                    updated["source"] = "Shared"
+                updated["auto_listing_id"] = existing["id"]
             else:
-                # Build a minimal listing using info already on the
-                # closet item. We import lazily so closet.py doesn't
-                # take a hard dep on the listings module at import time.
                 from app.models.schemas import (
                     FinancialMetadata,
                     Listing,
@@ -5628,12 +5632,6 @@ async def update_item(
                             images.append(url)
                             break
 
-                # Same condition vocab mapping as in create_item /
-                # backfill: GarmentCondition (excellent/good/fair/bad)
-                # → Listing condition (new/like_new/good/fair).
-                # Without it items with condition='excellent' blew up
-                # Pydantic validation and the auto-list silently
-                # failed.
                 _COND_MAP = {
                     "excellent": "like_new",
                     "like_new": "like_new",
@@ -5646,11 +5644,29 @@ async def update_item(
                     updated.get("condition") or updated.get("state") or "good"
                 )
                 listing_condition = _COND_MAP.get(raw_cond, "good")
-                # Compute fees up-front so the marketplace card shows
-                # the right "you receive" hint immediately. Without
-                # this the listing went out with platform_fee=0 and
-                # seller_net=0 — confusing on cards/checkouts.
                 fees = compute_fees(chosen_price_cents)
+
+                # Ensure location is a valid GeoJSON dict or None
+                loc = updated.get("location")
+                if not isinstance(loc, dict):
+                    loc = None
+                if not loc and user.get("home_location"):
+                    home = user["home_location"]
+                    lat_coord = home.get("lat")
+                    lng_coord = home.get("lng")
+                    if lat_coord is not None and lng_coord is not None:
+                        loc = {
+                            "type": "Point",
+                            "coordinates": [float(lng_coord), float(lat_coord)],
+                            "city": home.get("city"),
+                            "country": home.get("country"),
+                            "region": home.get("region"),
+                        }
+
+                clean_img = updated.get("clean_image_url")
+                recon_img = updated.get("reconstructed_image_url")
+                thumb_img = updated.get("thumbnail_data_url") or (images[0] if images else None)
+
                 listing = Listing(
                     closet_item_id=item_id,
                     seller_id=user["id"],
@@ -5662,7 +5678,10 @@ async def update_item(
                     size=updated.get("size"),
                     condition=listing_condition,
                     images=images,
-                    location=updated.get("location"),
+                    clean_image_url=clean_img,
+                    reconstructed_image_url=recon_img,
+                    thumbnail_data_url=thumb_img,
+                    location=loc,
                     currency=chosen_currency,
                     financial_metadata=FinancialMetadata(
                         list_price_cents=chosen_price_cents,
@@ -5674,10 +5693,6 @@ async def update_item(
                     status="active",
                 )
                 await repos.insert(db.listings, listing.model_dump())
-                # Also flip ``source`` to Shared so downstream code
-                # (filters, feeds) sees the item as published. We do
-                # this even when the trigger was ``marketplace_intent``
-                # alone, so the two flags stay consistent.
                 source_patch: dict[str, Any] = {
                     "auto_listing_id": listing.id,
                     "auto_listing_needs_completion": True,
@@ -5693,14 +5708,10 @@ async def update_item(
                 if "source" in source_patch:
                     updated["source"] = "Shared"
                 logger.info(
-                    "auto-listed closet item %s as listing %s mode=%s "
-                    "trigger=%s",
-                    item_id, listing.id, chosen_mode,
-                    "intent" if new_intent in _MARKETPLACE_INTENTS else "source",
+                    "auto-listed closet item %s as listing %s mode=%s trigger=%s",
+                    item_id, listing.id, chosen_mode, target_intent,
                 )
         except Exception as exc:  # noqa: BLE001
-            # Auto-list is a UX nicety — never block the underlying
-            # closet update if it fails.
             logger.warning("auto-list failed for %s: %s", item_id, exc)
 
     elif close_listing:
@@ -5820,6 +5831,25 @@ async def update_item(
                     "listing sync failed for closet item %s: %s",
                     item_id, exc,
                 )
+
+    # Always sync reconstructed_image_url & clean_image_url to all linked listings
+    recon_img = updated.get("reconstructed_image_url") or updated.get("reconstruct_image_url")
+    clean_img = updated.get("clean_image_url")
+    best_img = recon_img or clean_img
+    if best_img:
+        try:
+            async for lst in db.listings.find({"closet_item_id": item_id}):
+                l_fields = {
+                    "reconstructed_image_url": recon_img,
+                    "clean_image_url": clean_img,
+                    "thumbnail_data_url": best_img,
+                }
+                imgs = lst.get("images") or []
+                if not imgs or (isinstance(imgs, list) and len(imgs) > 0 and imgs[0] != best_img):
+                    l_fields["images"] = [best_img] + [i for i in imgs if i != best_img]
+                await db.listings.update_one({"id": lst["id"]}, {"$set": l_fields})
+        except Exception as exc:  # noqa: BLE001
+            logger.warning("listing image sync failed for closet item %s: %s", item_id, exc)
 
     if updated and "_id" in updated:
         updated.pop("_id")

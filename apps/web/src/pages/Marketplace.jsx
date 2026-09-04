@@ -123,7 +123,12 @@ export default function Marketplace() {
           // the user changes filters quickly.
           if (err?.name !== 'AbortError') {
             // eslint-disable-next-line no-console
-            console.warn('Marketplace browse stream failed', err);
+            console.warn('Marketplace browse stream failed, falling back to JSON list', err);
+            try {
+              await browseStore.ensure(browseParams, { force: true });
+            } catch (fallbackErr) {
+              console.warn('Marketplace JSON fallback failed', fallbackErr);
+            }
           }
         }
       }

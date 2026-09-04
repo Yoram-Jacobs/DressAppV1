@@ -190,6 +190,9 @@ export function ListingDetailScreen() {
             setRemoving(true);
             try {
               await api.deleteListing(listing.id);
+              marketplaceStore.removeListing(listing.id);
+              marketplaceStore.fetchBrowse({}, { force: true }).catch(() => {});
+              marketplaceStore.fetchMyListings(true).catch(() => {});
               Alert.alert(
                 t('common.success', { defaultValue: 'Success' }),
                 t('market.listingRemoved', { defaultValue: 'Removed from marketplace' })

@@ -22,6 +22,7 @@ import {
   Linking,
   ScrollView,
   I18nManager,
+  BackHandler,
 } from 'react-native';
 import { Image } from 'expo-image';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -151,13 +152,37 @@ export function TrendScoutScreen() {
 
   const BackIcon = I18nManager.isRTL ? Lucide.ArrowRight : Lucide.ArrowLeft;
 
-  const handleBack = () => {
-    if (navigation.canGoBack()) {
-      navigation.goBack();
-    } else {
-      navigation.navigate('MainTabs' as any, { screen: 'ClosetTab' });
+  const handleBack = useCallback(() => {
+    const can = navigation.canGoBack();
+    console.log('[TrendScout] handleBack called, canGoBack:', can);
+    try {
+      if (can) {
+        navigation.goBack();
+      } else {
+        navigation.navigate('Profile');
+      }
+    } catch (err) {
+      console.warn('[TrendScout] handleBack error:', err);
+      try {
+        navigation.navigate('Profile');
+      } catch {
+        // no-op
+      }
     }
-  };
+  }, [navigation]);
+
+  useEffect(() => {
+    console.log('[TrendScout] Registering BackHandler');
+    const sub = BackHandler.addEventListener('hardwareBackPress', () => {
+      console.log('[TrendScout] hardwareBackPress fired');
+      handleBack();
+      return true;
+    });
+    return () => {
+      console.log('[TrendScout] Unregistering BackHandler');
+      sub.remove();
+    };
+  }, [handleBack]);
 
   const country = (user?.address?.country_code || (user as any)?.country || 'IL').toString().toUpperCase();
   const language = (i18n.language || 'en').split('-')[0].toLowerCase();

@@ -20,7 +20,11 @@ export async function streamNdjson(path, {
   onLine,
   signal,
 } = {}) {
-  const url = new URL(`${API_BASE}${path}`);
+  const fullPath = `${API_BASE}${path}`;
+  const base = (typeof window !== 'undefined' && window.location?.origin)
+    ? window.location.origin
+    : 'http://localhost';
+  const url = new URL(fullPath, fullPath.startsWith('http://') || fullPath.startsWith('https://') ? undefined : base);
   if (params && typeof params === 'object') {
     Object.entries(params).forEach(([k, v]) => {
       if (v !== undefined && v !== null) url.searchParams.set(k, String(v));

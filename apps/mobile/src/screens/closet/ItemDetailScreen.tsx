@@ -68,6 +68,7 @@ import {
   labelForState,
 } from '@mobile/lib/taxonomy';
 import { useClosetStore, closetStore } from '@mobile/lib/stores/closetStore';
+import { marketplaceStore } from '@mobile/lib/stores/marketplaceStore';
 import { closetRepo } from '@mobile/lib/repositories/closetRepository';
 import { useUserStore } from '@mobile/lib/stores';
 import { deriveSizeFromPreferences } from '@mobile/lib/size_preferences';
@@ -684,6 +685,10 @@ export function ItemDetailScreen() {
 
       await api.patchItem(itemId, updates);
       await prewarm({ force: true });
+      if (updates.marketplace_intent && updates.marketplace_intent !== 'own') {
+        marketplaceStore.fetchBrowse({}, { force: true }).catch(() => {});
+        marketplaceStore.fetchMyListings(true).catch(() => {});
+      }
       setOriginalForm(form);
       Alert.alert(
         t('common.success', { defaultValue: 'Saved' }),
@@ -1725,7 +1730,7 @@ export function ItemDetailScreen() {
               <View style={styles.threeColRow}>
                 <View style={styles.flex1}>
                   <Text style={[styles.inputLabel, { color: colors.mutedFg }]}>
-                    {`PRICE (${form.currency || 'USD'})`}
+                    {t('itemDetail.edit.priceWithCurrency', { currency: form.currency || 'USD', defaultValue: `PRICE (${form.currency || 'USD'})` })}
                   </Text>
                   <TextInput
                     style={[styles.textInput, { backgroundColor: colors.background, borderColor: colors.border, color: colors.foreground }]}

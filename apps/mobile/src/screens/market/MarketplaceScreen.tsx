@@ -25,7 +25,7 @@ import {
 } from 'react-native';
 import { Image } from 'expo-image';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useTranslation } from 'react-i18next';
 import * as Lucide from 'lucide-react-native';
@@ -46,7 +46,7 @@ const INTENT_MODES = [
   { id: 'swap', labelKey: 'taxonomy.intent.swap', fallback: 'Swap' },
   { id: 'donate', labelKey: 'taxonomy.intent.donate', fallback: 'Donate' },
   { id: 'rent', labelKey: 'taxonomy.intent.rent', fallback: 'Rent' },
-  { id: 'Retail', labelKey: 'taxonomy.source.retail', fallback: 'Retail' },
+  { id: 'Retail', labelKey: 'taxonomy.source.Retail', fallback: 'Retail' },
 ] as const;
 
 const CATEGORY_TABS = [
@@ -90,6 +90,12 @@ export function MarketplaceScreen() {
   const flatListRef = useRef<FlatList>(null);
   const [showScrollTop, setShowScrollTop] = useState(false);
 
+  // Horizontal chips refs for RTL auto-alignment
+  const intentScrollRef = useRef<ScrollView>(null);
+  const catScrollRef = useRef<ScrollView>(null);
+  const hasScrolledIntentRef = useRef(false);
+  const hasScrolledCatRef = useRef(false);
+
   const handleScroll = (e: any) => {
     const y = e?.nativeEvent?.contentOffset?.y ?? 0;
     if (y > 250 && !showScrollTop) {
@@ -116,11 +122,11 @@ export function MarketplaceScreen() {
       }
     } else if (activeMainTab === 'my_listings') {
       if (force || myListings.length === 0) {
-        await fetchMyListings();
+        await fetchMyListings(force);
       }
     } else if (activeMainTab === 'transactions') {
       if (force || transactions.length === 0) {
-        await fetchTransactions();
+        await fetchTransactions({ force });
       }
     }
   }, [activeMainTab, browseItems.length, myListings.length, transactions.length, fetchBrowse, fetchMyListings, fetchTransactions]);
@@ -128,6 +134,13 @@ export function MarketplaceScreen() {
   useEffect(() => {
     loadData();
   }, [activeMainTab]);
+
+  // When screen regains focus, quietly refresh active tab if needed
+  useFocusEffect(
+    useCallback(() => {
+      loadData(false);
+    }, [loadData])
+  );
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
@@ -357,10 +370,17 @@ export function MarketplaceScreen() {
 
           {/* Mode / Intent Filter Chips */}
           <ScrollView
+            ref={intentScrollRef}
             horizontal
             showsHorizontalScrollIndicator={false}
             style={s.filterScrollView}
             contentContainerStyle={s.filterRow}
+            onContentSizeChange={() => {
+              if (isRtl && !hasScrolledIntentRef.current) {
+                intentScrollRef.current?.scrollToEnd({ animated: false });
+                hasScrolledIntentRef.current = true;
+              }
+            }}
           >
             {INTENT_MODES.map((mode) => {
               const isSelected = activeIntent === mode.id;
@@ -389,10 +409,17 @@ export function MarketplaceScreen() {
 
           {/* Category Chips */}
           <ScrollView
+            ref={catScrollRef}
             horizontal
             showsHorizontalScrollIndicator={false}
             style={s.categoryScrollView}
             contentContainerStyle={s.categoryRow}
+            onContentSizeChange={() => {
+              if (isRtl && !hasScrolledCatRef.current) {
+                catScrollRef.current?.scrollToEnd({ animated: false });
+                hasScrolledCatRef.current = true;
+              }
+            }}
           >
             {CATEGORY_TABS.map((cat) => {
               const isSelected = activeCategory === cat;

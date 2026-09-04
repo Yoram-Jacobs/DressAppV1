@@ -30,6 +30,10 @@ export interface ListingItem {
   location?: string;
   distance_km?: number;
   created_at?: string;
+  source?: string;
+  mode?: string;
+  is_retail?: boolean;
+  financial_metadata?: any;
 }
 
 export interface TransactionItem {
@@ -158,6 +162,10 @@ function normalizeListing(it: any): ListingItem {
     location: typeof it.location === 'string' ? it.location : it.location?.city || '',
     distance_km: typeof it.distance_km === 'number' ? it.distance_km : undefined,
     created_at: it.created_at || '',
+    source: it.source || (it.is_retail ? 'Retail' : 'Shared'),
+    mode: it.mode || it.listing_type || 'sell',
+    is_retail: it.source === 'Retail' || !!it.is_retail,
+    financial_metadata: it.financial_metadata,
   };
 }
 

@@ -238,13 +238,27 @@ async def ensure_indexes() -> None:
 
         legacy_listing_count = 0
         async for listing in db.listings.find({}):
-            recon = listing.get("reconstruct_image_url") or listing.get("reconstructed_image_url")
-            clean = listing.get("clean_image_url")
+            closet_item_id = listing.get("closet_item_id")
+            closet_item = None
+            if closet_item_id:
+                closet_item = await db.closet_items.find_one({"id": closet_item_id})
+
+            recon = (
+                listing.get("reconstruct_image_url")
+                or listing.get("reconstructed_image_url")
+                or (closet_item and (closet_item.get("reconstructed_image_url") or closet_item.get("reconstruct_image_url")))
+            )
+            clean = (
+                listing.get("clean_image_url")
+                or (closet_item and closet_item.get("clean_image_url"))
+            )
             best = recon or clean
             if best:
                 update_fields = {}
-                if recon and not listing.get("reconstructed_image_url"):
+                if recon and listing.get("reconstructed_image_url") != recon:
                     update_fields["reconstructed_image_url"] = recon
+                if clean and listing.get("clean_image_url") != clean:
+                    update_fields["clean_image_url"] = clean
                 if listing.get("thumbnail_data_url") != best:
                     update_fields["thumbnail_data_url"] = best
                 images = listing.get("images") or []
