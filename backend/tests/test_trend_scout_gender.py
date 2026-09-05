@@ -140,9 +140,9 @@ async def test_cards_deduplication_by_url_and_image():
     mock_cursor = MagicMock()
 
     sample_duplicate_cards = [
-        {"id": "1", "bucket": "influencers", "gender": "male", "source_url": "https://example.com/same-article", "image_url": "https://images.unsplash.com/photo-1.jpg"},
-        {"id": "2", "bucket": "influencers", "gender": "male", "source_url": "https://example.com/same-article", "image_url": "https://images.unsplash.com/photo-1.jpg"},
-        {"id": "3", "bucket": "street", "gender": "male", "source_url": "https://example.com/other-article", "image_url": "https://images.unsplash.com/photo-2.jpg"},
+        {"id": "1", "bucket": "influencers", "gender": "male", "source_url": "https://fashion.walla.co.il/item/100", "image_url": "https://images.unsplash.com/photo-1.jpg"},
+        {"id": "2", "bucket": "influencers", "gender": "male", "source_url": "https://fashion.walla.co.il/item/100", "image_url": "https://images.unsplash.com/photo-1.jpg"},
+        {"id": "3", "bucket": "street", "gender": "male", "source_url": "https://www.apetogentleman.com/trends/2026", "image_url": "https://images.unsplash.com/photo-2.jpg"},
     ]
 
     async def mock_cursor_iter(self):
@@ -161,7 +161,7 @@ async def test_cards_deduplication_by_url_and_image():
         res = await fashion_scout_feed(limit=10, gender="male", country="IL")
         urls = [c["source_url"] for c in res]
         assert len(urls) == len(set(urls))
-        assert urls.count("https://example.com/same-article") == 1
+        assert urls.count("https://fashion.walla.co.il/item/100") == 1
 
 
 def test_card_images_no_hardcoded_or_hallucinated():
