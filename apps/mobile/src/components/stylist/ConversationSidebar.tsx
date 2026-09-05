@@ -677,7 +677,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
   },
   backdrop: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     backgroundColor: 'rgba(0, 0, 0, 0.45)',
   },
   drawerContainer: {
@@ -827,7 +827,7 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   actionSheetBackdrop: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
   },
   actionSheetCard: {
     borderTopLeftRadius: radii['2xl'],

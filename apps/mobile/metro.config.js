@@ -71,9 +71,69 @@ config.resolver.extraNodeModules = {
   'llama.rn': LLAMA_STUB,
 };
 
-module.exports = withNativewind(config, {
+const finalConfig = withNativewind(config, {
   // inline variables break PlatformColor in CSS variables
   inlineVariables: false,
   // We add className support manually
   globalClassNamePolyfill: false,
 });
+
+// ── Metro 0.81+ / react-native-css compatibility shim ────────────────────────
+// react-native-css emits legacy { eventsQueue } on watcher 'change', but Metro
+// 0.81+ (_onHasteChange) expects { changes: { addedFiles, modifiedFiles, removedFiles }, rootDir }.
+const originalEnhanceMiddleware = finalConfig.server?.enhanceMiddleware;
+finalConfig.server = {
+  ...finalConfig.server,
+  enhanceMiddleware(middleware, metroServer) {
+    const app = originalEnhanceMiddleware
+      ? originalEnhanceMiddleware(middleware, metroServer)
+      : middleware;
+
+    try {
+      const bundler = metroServer?.getBundler?.()?.getBundler?.();
+      if (bundler) {
+        // Defensive check on DependencyGraph._onHasteChange
+        if (bundler._depGraph && typeof bundler._depGraph._onHasteChange === 'function') {
+          const origHasteChange = bundler._depGraph._onHasteChange.bind(bundler._depGraph);
+          bundler._depGraph._onHasteChange = function (changeEvent) {
+            if (!changeEvent || !changeEvent.changes) {
+              this.emit?.('change');
+              return;
+            }
+            return origHasteChange(changeEvent);
+          };
+        }
+
+        // Intercept FileMap watcher.emit to provide valid changes structure
+        const watcher = bundler.getWatcher?.();
+        if (watcher && !watcher.__metro_v81_change_shimmed) {
+          watcher.__metro_v81_change_shimmed = true;
+          const originalEmit = watcher.emit.bind(watcher);
+          watcher.emit = function (event, ...args) {
+            if (event === 'change' && args[0] && !args[0].changes && args[0].eventsQueue) {
+              const rootDir = bundler.projectRoot || workspaceRoot;
+              const eventObj = args[0];
+              eventObj.rootDir = rootDir;
+              eventObj.changes = {
+                addedFiles: [],
+                modifiedFiles: (eventObj.eventsQueue || []).map((e) => [
+                  path.relative(rootDir, e.filePath),
+                  e.metadata || { modifiedTime: Date.now(), size: 1, type: 'virtual' },
+                ]),
+                removedFiles: [],
+              };
+            }
+            return originalEmit(event, ...args);
+          };
+        }
+      }
+    } catch (err) {
+      console.warn('[metro.config.js] Failed to install react-native-css watcher compatibility shim:', err);
+    }
+
+    return app;
+  },
+};
+
+module.exports = finalConfig;
+
