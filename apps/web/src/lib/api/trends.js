@@ -20,6 +20,7 @@ export const trends = {
           ...(params.gender ? { gender: params.gender } : {}),
           ...(params.language ? { language: params.language } : {}),
           ...(params.country ? { country: params.country } : {}),
+          ...(params._t ? { _t: params._t } : {}),
         },
       })
       .then((r) => r.data),

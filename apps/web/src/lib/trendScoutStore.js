@@ -53,7 +53,11 @@ export const trendScoutStore = {
     }
     _set({ loading: true, error: null });
     try {
-      const res = await api.fashionScoutFeed(50, { language, country, gender });
+      const feedParams = { language, country, gender };
+      if (force) {
+        feedParams._t = Date.now();
+      }
+      const res = await api.fashionScoutFeed(50, feedParams);
       const rawCards = Array.isArray(res?.cards) ? res.cards : [];
       const cleanCards = rawCards.filter((c) => {
         const u = c?.source_url || '';

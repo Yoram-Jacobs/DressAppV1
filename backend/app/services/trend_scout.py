@@ -413,7 +413,7 @@ def _ensure_card_image(card: dict[str, Any]) -> dict[str, Any]:
     if not card:
         return card
     img = str(card.get("image_url") or "").strip()
-    if not img.startswith("http") or "ynet-pic1.ynet.co.il" in img or "example.com" in img:
+    if not img.startswith("http") or "ynet-pic1.ynet.co.il" in img or "example.com" in img or "photo-1617127365659-c47fa864d8bc" in img:
         card["image_url"] = None
     return card
 
@@ -494,16 +494,28 @@ def get_search_queries(
 
     elif canonical_slug == "influencers":
         social_kws = " ".join(social_platforms) if social_platforms else "social media creators"
-        if gender == "male":
-            queries = [
-                f"mens style tastemakers {style_filter} {social_kws} capsule wardrobe trends 2026".strip(),
-                f"menswear style aesthetic {style_filter} {social_kws} outfit inspiration daily fashion 2026".strip(),
-            ]
+        if (country_code or "").upper() == "IL":
+            if gender == "male":
+                queries = [
+                    f"אופנת גברים {style_filter} {social_kws} בלוגרים משפיענים סטייל ישראל 2026".strip(),
+                    f"menswear style tastemakers {style_filter} {social_kws} Tel Aviv Israeli creators 2026".strip(),
+                ]
+            else:
+                queries = [
+                    f"אופנה {style_filter} {social_kws} מובילות דעה בלוגריות סטייל ישראל 2026".strip(),
+                    f"women fashion tastemakers {style_filter} {social_kws} Tel Aviv Israeli style creators 2026".strip(),
+                ]
         else:
-            queries = [
-                f"womens fashion tastemakers {style_filter} {social_kws} aesthetic styling tips 2026".strip(),
-                f"women style creators {style_filter} {social_kws} trending outfits fashion inspiration 2026".strip(),
-            ]
+            if gender == "male":
+                queries = [
+                    f"mens style tastemakers {style_filter} {social_kws} {place} capsule wardrobe trends 2026".strip(),
+                    f"menswear style creators {style_filter} {social_kws} {place} outfit inspiration daily fashion 2026".strip(),
+                ]
+            else:
+                queries = [
+                    f"womens fashion tastemakers {style_filter} {social_kws} {place} aesthetic styling tips 2026".strip(),
+                    f"women style creators {style_filter} {social_kws} {place} trending outfits fashion inspiration 2026".strip(),
+                ]
 
     elif canonical_slug == "vintage":
         if gender == "male":
@@ -962,6 +974,8 @@ async def _generate_one(
         if social_platforms:
             p_lines.append(f"- Influencing Social Platforms: {', '.join(social_platforms)}")
         p_lines.append(f"Ensure the discovered article and practical wardrobe takeaway specifically embody the {dress_code or ''} dress code and {style or ''} aesthetic.")
+        if bucket.get("slug") == "influencers" and social_platforms:
+            p_lines.append(f"SPECIAL INFLUENCER DIRECTIVE: Prioritize local fashion creators, tastemakers, or editorial features spotlighting viral fashion styling and trends on user's authorized platforms ({', '.join(social_platforms)}).")
         personalization_prompt = "\n".join(p_lines) + "\n\n"
 
     # 2. DYNAMIC LIVE WEB SEARCH via Google Search Grounding
@@ -1340,6 +1354,9 @@ async def ensure_seed_data() -> None:
         {"source_url": {"$regex": r"ynetnews\.com", "$options": "i"}},
         {"source_url": {"$regex": r"fashionbeans\.com/table_of_content", "$options": "i"}},
         {"source_url": {"$regex": r"youtube\.com/watch\?v=R9_1q_yF0l0", "$options": "i"}},
+        {"source_url": {"$regex": r"amiri-fall-2026-campaign", "$options": "i"}},
+        {"source_url": {"$regex": r"hed-mayner-fw26.*archetypes", "$options": "i"}},
+        {"image_url": {"$regex": r"photo-1617127365659-c47fa864d8bc", "$options": "i"}},
     ]
     for pat in disallowed_patterns:
         try:
@@ -1550,6 +1567,8 @@ async def run_trend_scout(
     db = get_db()
     await ensure_seed_data()
     today = date.today().isoformat()
+    if force:
+        clear_trend_feed_cache()
 
     city = None
     if user:
@@ -1751,7 +1770,23 @@ async def latest_trend_cards(
                 async for doc in cursor:
                     out.append(doc)
 
-    return [_ensure_card_image(dict(c)) for c in out]
+    deduped_out: list[dict[str, Any]] = []
+    seen_srcs: set[str] = set()
+    seen_imgs: set[str] = set()
+    for c in out:
+        s_u = (c.get("source_url") or "").strip().lower()
+        i_u = (c.get("image_url") or "").strip().lower()
+        if s_u and s_u in seen_srcs:
+            continue
+        if i_u and i_u in seen_imgs:
+            continue
+        if s_u:
+            seen_srcs.add(s_u)
+        if i_u:
+            seen_imgs.add(i_u)
+        deduped_out.append(c)
+
+    return [_ensure_card_image(dict(c)) for c in deduped_out]
 
 
 async def fashion_scout_feed(
@@ -1811,6 +1846,24 @@ async def fashion_scout_feed(
 
     # Filter out any lingering cards with un-cleaned or broken URLs
     canon = [c for c in canon if _clean_url(c.get("source_url"))]
+
+    # Deduplicate cards so duplicate source_url or identical non-empty image_url cannot repeat
+    deduped_canon: list[dict[str, Any]] = []
+    seen_sources: set[str] = set()
+    seen_images: set[str] = set()
+    for c in canon:
+        src_u = (c.get("source_url") or "").strip().lower()
+        img_u = (c.get("image_url") or "").strip().lower()
+        if src_u and src_u in seen_sources:
+            continue
+        if img_u and img_u in seen_images:
+            continue
+        if src_u:
+            seen_sources.add(src_u)
+        if img_u:
+            seen_images.add(img_u)
+        deduped_canon.append(c)
+    canon = deduped_canon
 
     # If canon is empty, trigger dynamic run_trend_scout in background
     if not canon:

@@ -80,6 +80,12 @@ def test_search_queries_localization_and_gender():
     assert any("womens" in q or "runway" in q or "couture" in q for q in women_runway_queries)
     assert not any("site:" in q or "lofficielusa.com" in q for q in women_runway_queries)
 
+    # Men's Influencer queries with Facebook connected in Israel
+    men_inf_raw = get_search_queries("influencers", country_code="IL", gender="male", social_platforms=["facebook"])
+    men_inf_queries = [urllib.parse.unquote_plus(q) for q in men_inf_raw]
+    assert any("facebook" in q.lower() for q in men_inf_queries)
+    assert any("ישראל" in q or "Tel Aviv" in q for q in men_inf_queries)
+
 
 def test_gender_ranking():
     user_male = {
@@ -128,6 +134,33 @@ async def test_latest_trend_cards_no_hardcoded_seeds():
         assert cards == []
 
 
+@pytest.mark.anyio
+async def test_cards_deduplication_by_url_and_image():
+    mock_db = MagicMock()
+    mock_cursor = MagicMock()
+
+    sample_duplicate_cards = [
+        {"id": "1", "bucket": "influencers", "gender": "male", "source_url": "https://example.com/same-article", "image_url": "https://images.unsplash.com/photo-1.jpg"},
+        {"id": "2", "bucket": "influencers", "gender": "male", "source_url": "https://example.com/same-article", "image_url": "https://images.unsplash.com/photo-1.jpg"},
+        {"id": "3", "bucket": "street", "gender": "male", "source_url": "https://example.com/other-article", "image_url": "https://images.unsplash.com/photo-2.jpg"},
+    ]
+
+    async def mock_cursor_iter():
+        for c in sample_duplicate_cards:
+            yield c
+
+    mock_cursor.__aiter__ = mock_cursor_iter
+    mock_cursor.sort.return_value = mock_cursor
+    mock_cursor.limit.return_value = mock_cursor
+    mock_db.trend_reports.find.return_value = mock_cursor
+
+    with patch("app.services.trend_scout.get_db", return_value=mock_db):
+        res = await fashion_scout_feed(limit=10, gender="male", country="IL")
+        urls = [c["source_url"] for c in res]
+        assert len(urls) == len(set(urls))
+        assert urls.count("https://example.com/same-article") == 1
+
+
 def test_card_images_no_hardcoded_or_hallucinated():
     from app.services.trend_scout import _ensure_card_image
 
@@ -145,6 +178,11 @@ def test_card_images_no_hardcoded_or_hallucinated():
     broken_img_card = {"bucket": "local", "gender": "male", "image_url": "https://ynet-pic1.ynet.co.il/pics/Maskit.jpg"}
     healed = _ensure_card_image(broken_img_card)
     assert healed["image_url"] is None
+
+    # Card with hardcoded stock photo is cleared to None
+    stock_img_card = {"bucket": "influencers", "gender": "male", "image_url": "https://images.unsplash.com/photo-1617127365659-c47fa864d8bc?auto=format&fit=crop&w=800&q=80"}
+    stock_healed = _ensure_card_image(stock_img_card)
+    assert stock_healed["image_url"] is None
 
 
 def test_sanitize_localized_text():
