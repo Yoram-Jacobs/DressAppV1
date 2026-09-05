@@ -41,20 +41,21 @@ interface Props {
 }
 
 const SUGGESTED_STYLES = [
-  'Vintage',
-  'Quiet Luxury',
-  'Minimalist',
-  'Streetwear',
-  'Old Money',
-  'Boho & Casual',
-  'Cyberpunk',
-  'Y2K',
-  'Classic Business',
-  'Athleisure',
+  { id: 'vintage', label: 'Vintage' },
+  { id: 'quiet_luxury', label: 'Quiet Luxury' },
+  { id: 'minimalist', label: 'Minimalist' },
+  { id: 'streetwear', label: 'Streetwear' },
+  { id: 'old_money', label: 'Old Money' },
+  { id: 'boho_casual', label: 'Boho & Casual' },
+  { id: 'cyberpunk', label: 'Cyberpunk' },
+  { id: 'y2k', label: 'Y2K' },
+  { id: 'classic_business', label: 'Classic Business' },
+  { id: 'athleisure', label: 'Athleisure' },
 ];
 
 const PLATFORM_EMOJIS: Record<string, string> = {
   instagram: '📸',
+  facebook: '📘',
   pinterest: '📌',
   tiktok: '🎵',
   x: '𝕏',
@@ -263,11 +264,12 @@ export const TrendScoutSettingsModal: React.FC<Props> = ({
                 {/* Preset Chips */}
                 <View style={styles.chipsRow}>
                   {SUGGESTED_STYLES.map((st) => {
-                    const isSelected = customStyle.toLowerCase() === st.toLowerCase();
+                    const localizedLabel = t(`trends.styles.${st.id}`, { defaultValue: st.label });
+                    const isSelected = customStyle.toLowerCase() === st.label.toLowerCase() || customStyle.toLowerCase() === localizedLabel.toLowerCase();
                     return (
                       <TouchableOpacity
-                        key={st}
-                        onPress={() => setCustomStyle(st)}
+                        key={st.id}
+                        onPress={() => setCustomStyle(localizedLabel)}
                         style={[
                           styles.chip,
                           {
@@ -282,7 +284,7 @@ export const TrendScoutSettingsModal: React.FC<Props> = ({
                             { color: isSelected ? colors.primaryFg : colors.foreground },
                           ]}
                         >
-                          {st}
+                          {localizedLabel}
                         </Text>
                       </TouchableOpacity>
                     );

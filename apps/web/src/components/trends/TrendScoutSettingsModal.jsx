@@ -25,20 +25,21 @@ import {
 } from 'lucide-react';
 
 const SUGGESTED_STYLES = [
-  'Vintage',
-  'Quiet Luxury',
-  'Minimalist',
-  'Streetwear',
-  'Old Money',
-  'Boho & Casual',
-  'Cyberpunk',
-  'Y2K',
-  'Classic Business',
-  'Athleisure',
+  { id: 'vintage', label: 'Vintage' },
+  { id: 'quiet_luxury', label: 'Quiet Luxury' },
+  { id: 'minimalist', label: 'Minimalist' },
+  { id: 'streetwear', label: 'Streetwear' },
+  { id: 'old_money', label: 'Old Money' },
+  { id: 'boho_casual', label: 'Boho & Casual' },
+  { id: 'cyberpunk', label: 'Cyberpunk' },
+  { id: 'y2k', label: 'Y2K' },
+  { id: 'classic_business', label: 'Classic Business' },
+  { id: 'athleisure', label: 'Athleisure' },
 ];
 
 const PLATFORM_ICONS = {
   instagram: '📸',
+  facebook: '📘',
   pinterest: '📌',
   tiktok: '🎵',
   x: '𝕏',
@@ -246,19 +247,20 @@ export function TrendScoutSettingsModal({ open, onOpenChange, onRefreshTriggered
               {/* Preset Chips */}
               <div className="flex flex-wrap gap-1.5 pt-1">
                 {SUGGESTED_STYLES.map((style) => {
-                  const isSelected = customStyle.toLowerCase() === style.toLowerCase();
+                  const localizedLabel = t(`trends.styles.${style.id}`, { defaultValue: style.label });
+                  const isSelected = customStyle.toLowerCase() === style.label.toLowerCase() || customStyle.toLowerCase() === localizedLabel.toLowerCase();
                   return (
                     <button
-                      key={style}
+                      key={style.id}
                       type="button"
-                      onClick={() => setCustomStyle(style)}
+                      onClick={() => setCustomStyle(localizedLabel)}
                       className={`text-xs px-2.5 py-1 rounded-lg border transition-all ${
                         isSelected
                           ? 'border-brand bg-brand text-primary-foreground font-semibold shadow-xs'
                           : 'border-border bg-card text-muted-foreground hover:border-brand/40 hover:text-foreground'
                       }`}
                     >
-                      {style}
+                      {localizedLabel}
                     </button>
                   );
                 })}

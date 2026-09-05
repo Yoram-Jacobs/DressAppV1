@@ -43,8 +43,9 @@ def test_clean_url_enforcement():
     assert _clean_url("https://www.facebook.com/login/?next=https://example.com") is None
     assert _clean_url("https://www.instagram.com/p/12345") is None
 
-    # Disallowed dummy / hallucinated URLs
-    assert _clean_url("https://www.ynetnews.com/culture/article/S12345678") is None
+    # Disallowed table of contents / TOC index paths
+    assert _clean_url("https://www.fashionbeans.com/table_of_content/20-summer-fashion-staples") is None
+    assert _clean_url("https://example-mag.com/toc/summer-guide") is None
 
     # Search engine redirect unwrapping
     google_redirect = "https://www.google.com/url?q=https%3A%2F%2Ffashionista.com%2F2026%2Ftrend&sa=U"
@@ -257,7 +258,9 @@ async def test_closet_analysis_and_custom_style_override():
         # 3. Verify settings retrieval
         settings = await get_user_trend_scout_settings("user_123")
         assert settings["custom_style"] == "Quiet Luxury"
-        assert len(settings["social_platforms"]) >= 5
+        assert len(settings["social_platforms"]) >= 6
+        platform_ids = {p["id"] for p in settings["social_platforms"]}
+        assert "facebook" in platform_ids
 
 
 def test_weekly_sunday_schedule():

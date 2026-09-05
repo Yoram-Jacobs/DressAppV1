@@ -370,6 +370,7 @@ COUNTRY_NAME_MAP: dict[str, str] = {
 # ---------------------------------------------------------------------------
 DEFAULT_SOCIAL_PLATFORMS: list[dict[str, Any]] = [
     {"id": "instagram", "name": "Instagram", "icon": "Instagram", "connected": False, "username": None, "active": False},
+    {"id": "facebook", "name": "Facebook", "icon": "Facebook", "connected": False, "username": None, "active": False},
     {"id": "pinterest", "name": "Pinterest", "icon": "Pin", "connected": False, "username": None, "active": False},
     {"id": "tiktok", "name": "TikTok", "icon": "Video", "connected": False, "username": None, "active": False},
     {"id": "x", "name": "X (Twitter)", "icon": "Twitter", "connected": False, "username": None, "active": False},
@@ -403,6 +404,7 @@ DISALLOWED_URL_PATHS = (
     "/cart", "/checkout", "/collections/", "/products/", "/product/",
     "/buy", "/p/", "/dp/", "/gp/product/", "/shop/", "/store/", "/sale/",
     "/login", "/signin", "/sign-in", "/register", "/auth",
+    "/table_of_content", "/table-of-content", "/table_of_contents", "/toc/",
 )
 
 
@@ -1000,7 +1002,7 @@ async def _generate_one(
         res = await gemini_client.search_grounded_text(
             prompt=grounded_prompt,
             system=SYSTEM_PROMPT,
-            model="gemini-2.5-flash",
+            model="gemini-3.5-flash",
             temperature=0.4,
         )
         grounded_sources = res.get("sources", [])
@@ -1076,7 +1078,7 @@ async def _generate_one(
             raw = await gemini_client.text(
                 system=SYSTEM_PROMPT,
                 user_text=user_text,
-                model="gemini-2.5-flash",
+                model="gemini-3.5-flash",
                 response_mime_type="application/json",
             )
         except Exception as exc:  # noqa: BLE001
@@ -1202,16 +1204,30 @@ async def verify_and_enrich_card(card: dict[str, Any] | None, bucket_slug: str, 
             h1_text = " ".join([h.get_text() for h in soup.find_all("h1")])
             check_sample = f"{page_title} {h1_text} {resp_text[:2500]}".lower()
 
-            # 2. SOFT 404 NOT FOUND DETECTION
+            # 2. SOFT 404 & VIDEO UNAVAILABLE NOT FOUND DETECTION
             soft_404_markers = (
                 "404 page not found", "404 not found", "page not found", "page cannot be found",
                 "the page you requested does not exist", "this page is unavailable",
                 "could not be found", "page doesn't exist", "error 404", "שגיאה 404",
                 "עמוד לא נמצא", "הדף לא נמצא", "העמוד המבוקש אינו קיים",
-                "seite nicht gefunden", "page introuvable",
+                "seite nicht gefunden", "page introuvable", "sorry page", "ynetglobal - sorry page",
+                "this video isn't available anymore", "video unavailable", "this video is unavailable",
             )
             if any(marker in check_sample for marker in soft_404_markers):
-                logger.info("Soft 404 detected on %s: REJECTED", clean_final)
+                logger.info("Soft 404 or unavailable media detected on %s: REJECTED", clean_final)
+                return None
+
+            # Check for YouTube specifically
+            if "youtube.com" in clean_final.lower() or "youtu.be" in clean_final.lower():
+                if any(yt_err in check_sample for yt_err in ("video unavailable", "this video is unavailable", "this video isn't available", "offlineabilityentity")):
+                    logger.info("Unavailable YouTube video rejected on %s", clean_final)
+                    return None
+
+            # Substantive article verification: ensure article body is not empty
+            paragraphs = soup.find_all("p")
+            combined_p_text = " ".join(p.get_text(strip=True) for p in paragraphs)
+            if len(combined_p_text) < 200 and not ("youtube.com" in clean_final.lower() or "youtu.be" in clean_final.lower()):
+                logger.info("Article on %s has insufficient text content (%d chars): REJECTED", clean_final, len(combined_p_text))
                 return None
 
             # 3. ONLINE STORE / MARKETPLACE DETECTION
@@ -1321,6 +1337,9 @@ async def ensure_seed_data() -> None:
         {"source_url": {"$regex": r"vertexaisearch\.cloud\.google\.com", "$options": "i"}},
         {"source_url": {"$regex": r"S12345678", "$options": "i"}},
         {"source_url": {"$regex": r"timeout\.co\.il/topic/", "$options": "i"}},
+        {"source_url": {"$regex": r"ynetnews\.com", "$options": "i"}},
+        {"source_url": {"$regex": r"fashionbeans\.com/table_of_content", "$options": "i"}},
+        {"source_url": {"$regex": r"youtube\.com/watch\?v=R9_1q_yF0l0", "$options": "i"}},
     ]
     for pat in disallowed_patterns:
         try:
@@ -1604,7 +1623,7 @@ async def run_trend_scout(
                 "video_url": card.get("video_url"),
                 "dress_code": lead_dress_code,
                 "style": effective_style,
-                "model": "gemini-2.5-flash-grounded",
+                "model": "gemini-3.5-flash-grounded",
                 "created_at": datetime.now(timezone.utc).isoformat(),
             }
             await db.trend_reports.replace_one(
@@ -1972,7 +1991,7 @@ async def _translate_card(
         raw = await client.text(
             system=system_prompt,
             user_text=payload_text,
-            model="gemini-2.5-flash",
+            model="gemini-3.5-flash",
             response_mime_type="application/json",
         )
     except Exception as exc:
