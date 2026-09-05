@@ -2724,12 +2724,12 @@
         "closet_group_desc": "Combineer individuele kledingstukken tot een gesynchroniseerde set (zoals een pak of bijpassende jurkensets) om ervoor te zorgen dat ze samen worden voorgesteld. Je kunt sets op elk gewenst moment weer opsplitsen in afzonderlijke items.",
         "closet_edit_title": "Bewerkingsvenster (itemDetails)",
         "closet_edit_desc": "Verfijn de geparseerde parameters. Bewerk handmatig de seizoenscompatibiliteit, formaliteitstags, primaire/secundaire kleuren, stoffen en aangepaste annotaties in de detaileditor van het item.",
-        "trend_scout_title": "Trendscout",
-        "trend_scout_p1": "Houd uw modestijl voorop met onze dagelijks samengestelde feed:",
-        "trend_feed_title": "Dagelijkse modefeed",
-        "trend_feed_desc": "Ontvangt stijlsuggesties, modetrends en artikelen die specifiek zijn afgestemd op uw profielvoorkeuren.",
-        "trend_buckets_title": "Trend-emmers",
-        "trend_buckets_desc": "Ontdek vier samengestelde categorieën: SS26 Runway (nieuwste high-fashion), News Flash (brekende stijlrapporten), Recycling (duurzame mode) en Influencers (sociale trendsetters).",
+        "trend_scout_title": "Trend Scout",
+        "trend_scout_p1": "Blijf vooroplopen met onze dagelijks gecureerde moderadar en gepersonaliseerde stijlaanbevelingen:",
+        "trend_feed_title": "Dagelijkse Moderadar (7 Gecureerde Kanalen)",
+        "trend_feed_desc": "Ontdek 📍 Lokaal Nieuws, 👑 Catwalk, 👟 Streetstyle, 🌿 Duurzaamheid, ✨ Influencers & Iconen, ♻️ Vintage & Archief, en 🔧 Verzorging & Reparaties.",
+        "trend_buckets_title": "Trendkanalen",
+        "trend_buckets_desc": "Ontdek 7 gecureerde kanalen: Lokaal Nieuws, SS26 Runway, Streetstyle, Duurzaamheid, Influencers, Vintage en Kledingonderhoud.",
         "experts_title": "Vraag het aan een professional",
         "experts_p1": "Maak rechtstreeks contact met mode-experts uit de echte wereld via DressApp:",
         "experts_dir_title": "Mode-expertgids",
@@ -2823,7 +2823,13 @@
         "campaigns_maps_help_title": "Google Maps Integratie",
         "campaigns_maps_help_desc": "Klik op een aanbieding om de beschrijving te bekijken, kortingscodes te kopiëren en de boetiek, ontwerper of stylist rechtstreeks op Google Maps te vinden.",
         "campaigns_save_help_title": "Aanbiedingen opslaan en delen",
-        "campaigns_save_help_desc": "Sla uw favoriete lokale aanbiedingen op om ze later te bekijken, of deel ze rechtstreeks met vrienden."
+        "campaigns_save_help_desc": "Sla uw favoriete lokale aanbiedingen op om ze later te bekijken, of deel ze rechtstreeks met vrienden.",
+        "trend_closet_title": "1 Tik: \"Stylen met mijn Kledingkast\"",
+        "trend_closet_desc": "Tik op de knop op een trendkaart en laat de AI Stylist kleuren en silhouetten direct matchen met kledingstukken die al in je kast hangen.",
+        "trend_personalization_title": "Personalisatie & Social Feeds (⚙️)",
+        "trend_personalization_desc": "Kies stijlesthetieken (Quiet Luxury, Vintage, Streetwear, Old Money, Minimalistisch, Y2K), koppel sociale accounts en bekijk je kastprofiel.",
+        "trend_gender_title": "Doelgroepselectie & Live Vernieuwen",
+        "trend_gender_desc": "Schakel soepel tussen Dames- en Herenmode, lees geverifieerde artikelen op Vogue/GQ en tik op Vernieuwen (🔄) voor realtime updates."
     },
     "campaigns": {
         "status": {

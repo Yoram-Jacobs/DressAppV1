@@ -2724,12 +2724,12 @@
         "closet_group_desc": "Combine peças individuais em um conjunto sincronizado (como um terno ou conjuntos de vestidos combinando) para garantir que sejam sugeridos juntos. Você pode desagrupar conjuntos em itens únicos a qualquer momento.",
         "closet_edit_title": "Painel de edição (itemDetails)",
         "closet_edit_desc": "Ajuste os parâmetros analisados. Edite manualmente a compatibilidade da estação, etiquetas de formalidade, cores primárias/secundárias, tecidos e anotações personalizadas dentro do editor de detalhes do item.",
-        "trend_scout_title": "Observador de tendências",
-        "trend_scout_p1": "Mantenha seu estilo de moda sempre atualizado com nosso feed diário selecionado:",
-        "trend_feed_title": "Feed diário de moda",
-        "trend_feed_desc": "Recebe sugestões de estilo, tendências de moda e artigos personalizados especificamente para atender às preferências do seu perfil.",
-        "trend_buckets_title": "Grupos de tendências",
-        "trend_buckets_desc": "Explore quatro categorias selecionadas: SS26 Runway (última alta moda), News Flash (relatórios de estilo de última hora), Reciclagem (moda sustentável) e Influenciadores (criadores de tendências sociais).",
+        "trend_scout_title": "Explorador de Tendências (Trend Scout)",
+        "trend_scout_p1": "Mantenha seu estilo sempre à frente com nosso radar diário de moda e recomendações personalizadas:",
+        "trend_feed_title": "Radar Diário de Moda (7 Canais Selecionados)",
+        "trend_feed_desc": "Explore 📍 Notícias Locais, 👑 Passarela, 👟 Moda Urbana, 🌿 Sustentabilidade, ✨ Criadores e Ícones, ♻️ Vintage e Arquivo, e 🔧 Cuidados e Reparos.",
+        "trend_buckets_title": "Canais de Tendências",
+        "trend_buckets_desc": "Explore 7 canais selecionados: Notícias Locais, Desfiles SS26, Street Style, Sustentabilidade, Influenciadores, Vintage e Cuidado com Roupas.",
         "experts_title": "Pergunte a um profissional",
         "experts_p1": "Conecte-se com especialistas em moda do mundo real diretamente no DressApp:",
         "experts_dir_title": "Diretório de especialistas em moda",
@@ -2823,7 +2823,13 @@
         "campaigns_maps_help_title": "Integração com Google Maps",
         "campaigns_maps_help_desc": "Clique em qualquer oferta para ver sua descrição, copiar códigos de desconto e localizar a boutique, designer ou estilista diretamente no Google Maps.",
         "campaigns_save_help_title": "Salvar e compartilhar ofertas",
-        "campaigns_save_help_desc": "Marque suas ofertas locais favoritas para ver mais tarde ou compartilhe-as diretamente com amigos."
+        "campaigns_save_help_desc": "Marque suas ofertas locais favoritas para ver mais tarde ou compartilhe-as diretamente com amigos.",
+        "trend_closet_title": "1 Toque: \"Estilizar com Meu Guarda-Roupa\"",
+        "trend_closet_desc": "Toque no botão em qualquer cartão de tendência para que a Estilista IA combine cores e silhuetas diretamente com as roupas do seu closet.",
+        "trend_personalization_title": "Personalização e Redes Sociais (⚙️)",
+        "trend_personalization_desc": "Personalize estéticas (Quiet Luxury, Vintage, Streetwear, Old Money, Minimalista, Y2K), conecte redes sociais e veja o perfil automático do closet.",
+        "trend_gender_title": "Filtro por Gênero e Atualização ao Vivo",
+        "trend_gender_desc": "Alterne facilmente entre moda Feminina e Masculina, leia matérias na Vogue/GQ e toque em Atualizar (🔄) para novidades instantâneas."
     },
     "campaigns": {
         "status": {

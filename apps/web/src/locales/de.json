@@ -2652,11 +2652,11 @@
         "closet_edit_title": "Bearbeitungsbereich (itemDetails)",
         "closet_edit_desc": "Geparste Parameter optimieren. Bearbeiten Sie Saisonkompatibilität, Formalitäts-Tags, Primär-/Sekundärfarben, Stoffe und benutzerdefinierte Anmerkungen manuell im Detaileditor des Artikels.",
         "trend_scout_title": "Trend Scout",
-        "trend_scout_p1": "Bleiben Sie mit unserem täglich kuratierten Feed mit Ihrem Modestil auf dem Laufenden:",
-        "trend_feed_title": "Täglicher Mode-Feed",
-        "trend_feed_desc": "Erhält Stilvorschläge, Modetrends und Artikel, die speziell auf Ihre Profilpräferenzen zugeschnitten sind.",
-        "trend_buckets_title": "Trend-Buckets",
-        "trend_buckets_desc": "Entdecken Sie vier kuratierte Kategorien: SS26 Runway (neueste High-Fashion), News Flash (aktuelle Modeberichte), Recycling (nachhaltige Mode) und Influencer (soziale Trendsetter).",
+        "trend_scout_p1": "Bleiben Sie inspiriert mit unserem täglich kuratierten Modedar und persönlichen Style-Empfehlungen:",
+        "trend_feed_title": "Täglicher Modedar (7 kuratierte Kanäle)",
+        "trend_feed_desc": "Entdecken Sie 📍 Lokale News, 👑 Laufsteg, 👟 Street Style, 🌿 Nachhaltigkeit, ✨ Influencer & Ikonen, ♻️ Vintage & Archiv und 🔧 Pflege & Reparatur.",
+        "trend_buckets_title": "Trend-Kanäle",
+        "trend_buckets_desc": "Erkunden Sie 7 kuratierte Kanäle: Lokale News, SS26 Runway, Street Style, Nachhaltigkeit, Influencer, Vintage und Textilpflege.",
         "experts_title": "Fragen Sie einen Fachmann",
         "experts_p1": "Vernetzen Sie sich direkt in DressApp mit echten Modeexperten:",
         "experts_dir_title": "Modeexpertenverzeichnis",
@@ -2750,7 +2750,13 @@
         "campaigns_maps_help_title": "Google Maps Integration",
         "campaigns_maps_help_desc": "Klicken Sie auf ein Angebot, um die Beschreibung anzuzeigen, Rabattcodes zu kopieren und die Boutique direkt auf Google Maps zu finden.",
         "campaigns_save_help_title": "Angebote speichern & teilen",
-        "campaigns_save_help_desc": "Speichern Sie Ihre bevorzugten lokalen Angebote, um sie später anzusehen, oder teilen Sie sie mit Freunden."
+        "campaigns_save_help_desc": "Speichern Sie Ihre bevorzugten lokalen Angebote, um sie später anzusehen, oder teilen Sie sie mit Freunden.",
+        "trend_closet_title": "1-Klick \"Mit meinem Kleiderschrank stylen\"",
+        "trend_closet_desc": "Tippen Sie auf die Schaltfläche einer Trendkarte, damit der KI-Stylist Farben und Silhouetten direkt mit Kleidungsstücken aus Ihrem Kleiderschrank abgleicht.",
+        "trend_personalization_title": "Personalisierung & Social Feeds (⚙️)",
+        "trend_personalization_desc": "Wählen Sie Stil-Ästhetiken (Quiet Luxury, Vintage, Streetwear, Old Money, Minimalist, Y2K), verknüpfen Sie Social Accounts und prüfen Sie Ihr Kleiderschrank-Profil.",
+        "trend_gender_title": "Geschlechterauswahl & Live-Aktualisierung",
+        "trend_gender_desc": "Wechseln Sie mühelos zwischen Damen- und Herrenmode, lesen Sie verifizierte Artikel auf Vogue/GQ und tippen Sie auf Aktualisieren (🔄) für Sofort-Updates."
     },
     "campaigns": {
         "status": {

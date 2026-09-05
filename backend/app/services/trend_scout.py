@@ -812,6 +812,36 @@ def _user_keyword_set(user: dict[str, Any]) -> set[str]:
     return _tokens(" ".join(parts))
 
 
+def normalize_country_code(val: str | None) -> str | None:
+    """Robustly normalize any country name or code string to a standard 2-letter uppercase ISO code."""
+    if not val:
+        return None
+    cleaned = str(val).strip().upper().rstrip("+")
+    if not cleaned:
+        return None
+    mapping = {
+        "ISRAEL": "IL",
+        "ישראל": "IL",
+        "UNITED STATES": "US",
+        "USA": "US",
+        "UNITED KINGDOM": "GB",
+        "UK": "GB",
+        "FRANCE": "FR",
+        "GERMANY": "DE",
+        "ITALY": "IT",
+        "SPAIN": "ES",
+        "CANADA": "CA",
+        "AUSTRALIA": "AU",
+    }
+    if cleaned in mapping:
+        return mapping[cleaned]
+    if len(cleaned) == 2:
+        return cleaned
+    if "ISRAEL" in cleaned or "ישראל" in cleaned:
+        return "IL"
+    return cleaned[:2]
+
+
 def _country_codes(user: dict[str, Any]) -> set[str]:
     """Best-effort country code set for the viewer (upper-case, 2-letter)."""
     out: set[str] = set()
@@ -821,21 +851,9 @@ def _country_codes(user: dict[str, Any]) -> set[str]:
             for k in ("country_code", "country"):
                 v = source.get(k)
                 if isinstance(v, str) and v.strip():
-                    val = v.strip().upper()
-                    if len(val) == 2:
-                        out.add(val)
-                    elif val in {"ISRAEL"}:
-                        out.add("IL")
-                    elif val in {"UNITED STATES", "USA", "US"}:
-                        out.add("US")
-                    elif val in {"UNITED KINGDOM", "UK", "GB"}:
-                        out.add("GB")
-                    elif val in {"FRANCE"}:
-                        out.add("FR")
-                    elif val in {"GERMANY"}:
-                        out.add("DE")
-                    elif val in {"ITALY"}:
-                        out.add("IT")
+                    norm = normalize_country_code(v)
+                    if norm:
+                        out.add(norm)
     return out
 
 
@@ -1583,7 +1601,7 @@ async def run_trend_scout(
         if user_countries:
             country_code = next(iter(user_countries))
 
-    country_code = country_code.upper() if country_code else "IL"
+    country_code = normalize_country_code(country_code) or "IL"
 
     # Resolve target gender: if None, process both genders
     if gender:
@@ -1818,7 +1836,7 @@ async def fashion_scout_feed(
     else:
         target_gender = "female"
 
-    country = country.upper() if country else None
+    country = normalize_country_code(country)
 
     # Check in-memory feed cache for instant 0ms retrieval
     import time

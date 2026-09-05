@@ -16,6 +16,7 @@ import * as Lucide from 'lucide-react-native';
 import { useTheme } from '@mobile/theme';
 import { fonts, fontSizes, spacing, radii } from '@mobile/theme/tokens';
 import { api } from '@mobile/lib/api';
+import { toCountryCode } from '@mobile/lib/country';
 
 interface Platform {
   id: string;
@@ -161,7 +162,7 @@ export const TrendScoutSettingsModal: React.FC<Props> = ({
         setRefreshing(true);
         try {
           try {
-            await api.trendsRunNowDev(true, selectedGender, country);
+            await api.trendsRunNowDev(true, selectedGender, toCountryCode(country));
           } catch (runErr) {
             console.warn('[TrendScout] trendsRunNowDev warning:', runErr);
           }
@@ -469,7 +470,7 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-y-between',
+    justifyContent: 'space-between',
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md,
     borderBottomWidth: 1,
@@ -481,16 +482,16 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   headerTitle: {
-    fontFamily: fonts.semiBold,
+    fontFamily: fonts.bodySemiBold,
     fontSize: fontSizes.lg,
   },
   loadingContainer: {
-    paddingVertical: spacing.xxl,
+    paddingVertical: spacing['2xl'],
     alignItems: 'center',
     gap: spacing.sm,
   },
   loadingText: {
-    fontFamily: fonts.regular,
+    fontFamily: fonts.body,
     fontSize: fontSizes.sm,
   },
   body: {
@@ -514,11 +515,11 @@ const styles = StyleSheet.create({
     gap: spacing.xs,
   },
   infoCardTitle: {
-    fontFamily: fonts.semiBold,
+    fontFamily: fonts.bodySemiBold,
     fontSize: fontSizes.sm,
   },
   itemCountText: {
-    fontFamily: fonts.regular,
+    fontFamily: fonts.body,
     fontSize: fontSizes.xs,
   },
   badgeRow: {
@@ -533,7 +534,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   badgeText: {
-    fontFamily: fonts.medium,
+    fontFamily: fonts.bodyMedium,
     fontSize: fontSizes.xs,
   },
   section: {
@@ -545,15 +546,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   sectionTitle: {
-    fontFamily: fonts.semiBold,
+    fontFamily: fonts.bodySemiBold,
     fontSize: fontSizes.sm,
   },
   resetText: {
-    fontFamily: fonts.medium,
+    fontFamily: fonts.bodyMedium,
     fontSize: fontSizes.xs,
   },
   activeCounter: {
-    fontFamily: fonts.regular,
+    fontFamily: fonts.body,
     fontSize: fontSizes.xs,
   },
   input: {
@@ -561,12 +562,12 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderRadius: radii.md,
     paddingHorizontal: spacing.md,
-    fontFamily: fonts.regular,
+    fontFamily: fonts.body,
     fontSize: fontSizes.sm,
     marginTop: spacing.xs,
   },
   hintText: {
-    fontFamily: fonts.regular,
+    fontFamily: fonts.body,
     fontSize: fontSizes.xs,
     marginTop: 2,
   },
@@ -583,7 +584,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   chipText: {
-    fontFamily: fonts.medium,
+    fontFamily: fonts.bodyMedium,
     fontSize: fontSizes.xs,
   },
   platformsList: {
@@ -607,16 +608,16 @@ const styles = StyleSheet.create({
     fontSize: 22,
   },
   platformName: {
-    fontFamily: fonts.semiBold,
+    fontFamily: fonts.bodySemiBold,
     fontSize: fontSizes.sm,
   },
   platformHandle: {
-    fontFamily: fonts.regular,
+    fontFamily: fonts.body,
     fontSize: fontSizes.xs,
     marginLeft: 4,
   },
   platformStatus: {
-    fontFamily: fonts.regular,
+    fontFamily: fonts.body,
     fontSize: fontSizes.xs,
   },
   platformRight: {
@@ -634,7 +635,7 @@ const styles = StyleSheet.create({
     borderRadius: radii.md,
   },
   toggleBtnText: {
-    fontFamily: fonts.medium,
+    fontFamily: fonts.bodyMedium,
     fontSize: fontSizes.xs,
   },
   disconnectBtn: {
@@ -651,7 +652,7 @@ const styles = StyleSheet.create({
     borderStyle: 'dashed',
   },
   connectBtnText: {
-    fontFamily: fonts.medium,
+    fontFamily: fonts.bodyMedium,
     fontSize: fontSizes.xs,
   },
   connectBox: {
@@ -662,7 +663,7 @@ const styles = StyleSheet.create({
     marginTop: spacing.xs,
   },
   connectBoxTitle: {
-    fontFamily: fonts.semiBold,
+    fontFamily: fonts.bodySemiBold,
     fontSize: fontSizes.xs,
   },
   connectBoxRow: {
@@ -676,7 +677,7 @@ const styles = StyleSheet.create({
     borderRadius: radii.md,
     paddingHorizontal: spacing.sm,
     fontSize: fontSizes.xs,
-    fontFamily: fonts.regular,
+    fontFamily: fonts.body,
   },
   saveHandleBtn: {
     justifyContent: 'center',
@@ -684,7 +685,7 @@ const styles = StyleSheet.create({
     borderRadius: radii.md,
   },
   saveHandleBtnText: {
-    fontFamily: fonts.semiBold,
+    fontFamily: fonts.bodySemiBold,
     fontSize: fontSizes.xs,
   },
   actionsRow: {
@@ -702,7 +703,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   secondaryBtnText: {
-    fontFamily: fonts.medium,
+    fontFamily: fonts.bodyMedium,
     fontSize: fontSizes.sm,
   },
   primaryBtn: {
@@ -715,7 +716,7 @@ const styles = StyleSheet.create({
     gap: spacing.xs,
   },
   primaryBtnText: {
-    fontFamily: fonts.semiBold,
+    fontFamily: fonts.bodySemiBold,
     fontSize: fontSizes.sm,
   },
 });

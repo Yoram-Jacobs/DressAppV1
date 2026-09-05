@@ -2724,12 +2724,12 @@
         "closet_group_desc": "将单件服装组合成同步套装（例如套装或配套礼服套装），以确保将它们放在一起推荐。您可以随时将集合取消组合成单个项目。",
         "closet_edit_title": "编辑窗格（itemDetails）",
         "closet_edit_desc": "微调解析的参数。在商品的详细信息编辑器中手动编辑季节兼容性、正式标签、主色/辅色、面料和自定义注释。",
-        "trend_scout_title": "趋势侦察",
-        "trend_scout_p1": "通过我们每日精选的动态，让您的时尚风格保持领先地位：",
-        "trend_feed_title": "每日时尚动态",
-        "trend_feed_desc": "接收专门根据您的个人资料偏好定制的风格建议、时尚趋势和文章。",
-        "trend_buckets_title": "趋势桶",
-        "trend_buckets_desc": "探索四个精选类别：SS26 Runway（最新高级时装）、News Flash（突破性风格报道）、Recycling（可持续时尚）和 Influencers（社会潮流引领者）。",
+        "trend_scout_title": "潮流侦探 (Trend Scout)",
+        "trend_scout_p1": "通过我们每日精选的全球时尚雷达与个性化穿搭建议，始终走在潮流前沿：",
+        "trend_feed_title": "每日时尚雷达（7大精选频道）",
+        "trend_feed_desc": "探索 📍 本地资讯、👑 秀场精选、👟 街头潮流、🌿 环保时尚、✨ 顶流红人、♻️ 古着档案与 🔧 衣服养护。",
+        "trend_buckets_title": "趋势精选频道",
+        "trend_buckets_desc": "探索7大精选频道：本地资讯、SS26 秀场、街头穿搭、环保可持续、时尚红人、古着档案和衣物养护。",
         "experts_title": "询问专业人士",
         "experts_p1": "直接在 DressApp 内与现实世界的时尚专家联系：",
         "experts_dir_title": "时尚专家名录",
@@ -2823,7 +2823,13 @@
         "campaigns_maps_help_title": "谷歌地图集成",
         "campaigns_maps_help_desc": "单击任何优惠即可查看其描述、复制折扣代码并直接在 Google 地图上找到精品店、设计师或造型师。",
         "campaigns_save_help_title": "保存并分享优惠",
-        "campaigns_save_help_desc": "为您最喜欢的本地优惠添加书签以便稍后查看，或直接与朋友分享。"
+        "campaigns_save_help_desc": "为您最喜欢的本地优惠添加书签以便稍后查看，或直接与朋友分享。",
+        "trend_closet_title": "一键直达：“用我的衣橱搭同款”",
+        "trend_closet_desc": "点击任意趋势卡片上的按钮，AI 造型师立即提取该趋势的色彩与轮廓，从您已录入的衣橱中寻找最匹配的服饰重现搭配。",
+        "trend_personalization_title": "个性化与社交平台偏好设置 (⚙️)",
+        "trend_personalization_desc": "自选风格美学（老钱风、静奢风、街头风、复古、极简、Y2K等），关联社交账号，查看系统自动生成的衣橱风格档案。",
+        "trend_gender_title": "性别精准定位与实时刷新",
+        "trend_gender_desc": "一键轻松切换女士与男士时尚板块，阅读 Vogue/GQ 正版权威报道，点击刷新按钮（🔄）即刻获取最新潮流情报。"
     },
     "campaigns": {
         "status": {

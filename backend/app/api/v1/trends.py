@@ -122,7 +122,7 @@ async def get_last_refresh() -> dict[str, Any]:
 async def get_fashion_scout_feed(
     limit: int = Query(default=12, ge=1, le=50),
     language: str | None = Query(default=None, max_length=8),
-    country: str | None = Query(default=None, max_length=4),
+    country: str | None = Query(default=None, max_length=64),
     gender: str | None = Query(default=None, regex="^(male|female)$"),
     personalized: bool = Query(default=True),
     user: dict = Depends(get_current_user),
@@ -166,7 +166,7 @@ async def get_fashion_scout_feed(
 @router.post("/run-now")
 async def run_trend_scout_now(
     force: bool = Query(default=False),
-    country: str | None = Query(default=None, max_length=4),
+    country: str | None = Query(default=None, max_length=64),
     gender: str | None = Query(default=None, regex="^(male|female)$"),
     x_device_type: str | None = Header(default=None),
     user: dict = Depends(require_admin),
@@ -186,7 +186,7 @@ async def run_trend_scout_now(
 @router.post("/run-now-dev")
 async def run_trend_scout_now_dev(
     force: bool = Query(default=True),
-    country: str | None = Query(default=None, max_length=4),
+    country: str | None = Query(default=None, max_length=64),
     gender: str | None = Query(default=None, regex="^(male|female)$"),
     x_device_type: str | None = Header(default=None),
     user: dict = Depends(get_current_user),

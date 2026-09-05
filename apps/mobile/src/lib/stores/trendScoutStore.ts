@@ -8,6 +8,7 @@
 import { api } from '@mobile/lib/api';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useSyncExternalStore, useEffect } from 'react';
+import { toCountryCode } from '@mobile/lib/country';
 
 export interface TrendCard {
   id: string;
@@ -68,6 +69,7 @@ function setState(updater: (prev: TrendScoutState) => TrendScoutState) {
       lastFetch: _state.lastFetch,
       cachedGender: (_state as any).cachedGender,
       cachedLanguage: (_state as any).cachedLanguage,
+      cachedDate: (_state as any).cachedDate,
     })
   ).catch(() => {});
 }
@@ -85,6 +87,7 @@ function setState(updater: (prev: TrendScoutState) => TrendScoutState) {
           lastFetch: data.lastFetch || 0,
           cachedGender: data.cachedGender,
           cachedLanguage: data.cachedLanguage,
+          cachedDate: data.cachedDate,
         } as any;
         notify();
       }
@@ -119,20 +122,34 @@ export const trendScoutStore = {
     const today = new Date().toISOString().slice(0, 10);
     setState((prev) => ({ ...prev, loading: prev.cards.length === 0, error: null }));
     try {
-      const res = await api.fashionScoutFeed(15, {
+      const feedParams: any = {
         language: options.language || 'en',
-        country: options.country || undefined,
+        country: options.country ? toCountryCode(options.country) : undefined,
         gender: options.gender || undefined,
-      });
+      };
+      if (options.force) {
+        feedParams._t = Date.now();
+      }
+      const res = await api.fashionScoutFeed(30, feedParams);
       const rawList = Array.isArray(res?.cards) ? res.cards : (Array.isArray(res) ? res : []);
+      const seenUrls = new Set<string>();
+      const seenImgs = new Set<string>();
       const cards = rawList
         .filter((it: any) => {
-          const u = it?.source_url || '';
-          return u.startsWith('http') && !u.includes('example.com') && !u.includes('shopisrael.com');
+          const u = (it?.source_url || '').trim().toLowerCase();
+          const img = (it?.image_url || '').trim().toLowerCase();
+          if (!u.startsWith('http') || u.includes('example.com') || u.includes('shopisrael.com')) {
+            return false;
+          }
+          if (seenUrls.has(u)) return false;
+          seenUrls.add(u);
+          if (img && seenImgs.has(img)) return false;
+          if (img) seenImgs.add(img);
+          return true;
         })
         .map((it: any, idx: number) => {
           const rawImg = it.image_url || '';
-          const isBroken = rawImg.includes('ynet-pic1.ynet.co.il') || rawImg.includes('example.com') || !rawImg.startsWith('http');
+          const isBroken = rawImg.includes('ynet-pic1.ynet.co.il') || rawImg.includes('example.com') || rawImg.includes('photo-1617127365659-c47fa864d8bc') || !rawImg.startsWith('http');
           return {
             ...it,
             id: it.id || `trend-${idx}`,

@@ -2651,12 +2651,12 @@
         "closet_group_desc": "Combina i singoli capi in un Set sincronizzato (come un abito o set di abiti abbinati) per garantire che siano suggeriti insieme. Puoi separare i set in singoli elementi in qualsiasi momento.",
         "closet_edit_title": "Riquadro modifica (itemDetails)",
         "closet_edit_desc": "Perfeziona i parametri analizzati. Modifica manualmente la compatibilità della stagione, i tag di formalità, i colori primari/secondari, i tessuti e le annotazioni personalizzate all'interno dell'editor dei dettagli dell'articolo.",
-        "trend_scout_title": "Trend Scout",
-        "trend_scout_p1": "Mantieni il tuo stile di moda all'avanguardia con il nostro feed quotidiano curato:",
-        "trend_feed_title": "Feed quotidiano sulla moda",
-        "trend_feed_desc": "Riceve suggerimenti di stile, tendenze della moda e articoli su misura per soddisfare le preferenze del tuo profilo.",
-        "trend_buckets_title": "Secchi di trend",
-        "trend_buckets_desc": "Esplora quattro categorie curate: P/E 26 Runway (ultima alta moda), News Flash (rapporti di stile dell'ultima ora), Riciclo (moda sostenibile) e Influencer (trendsetter sociali).",
+        "trend_scout_title": "Trend Scout (Esploratore Tendenze)",
+        "trend_scout_p1": "Rimani sempre al passo con il nostro radar di moda quotidiano e i consigli di stile su misura:",
+        "trend_feed_title": "Radar Quotidiano della Moda (7 Canali Curati)",
+        "trend_feed_desc": "Esplora 📍 Notizie Locali, 👑 Passerella, 👟 Street Style, 🌿 Sostenibilità, ✨ Influencer & Icone, ♻️ Vintage & Archivio e 🔧 Cura & Riparazioni.",
+        "trend_buckets_title": "Canali di Tendenza",
+        "trend_buckets_desc": "Esplora 7 canali curati: Notizie Locali, Passerelle SS26, Street Style, Sostenibilità, Influencer, Vintage e Cura dei Capi.",
         "experts_title": "Chiedi a un professionista",
         "experts_p1": "Connettiti con esperti di moda del mondo reale direttamente all'interno di DressApp:",
         "experts_dir_title": "Directory di esperti di moda",
@@ -2750,7 +2750,13 @@
         "campaigns_maps_help_title": "Integrazione Google Maps",
         "campaigns_maps_help_desc": "Fai clic su qualsiasi offerta per visualizzare la descrizione, copiare i codici sconto e individuare la boutique direttamente su Google Maps.",
         "campaigns_save_help_title": "Salva e Condividi Offerte",
-        "campaigns_save_help_desc": "Aggiungi ai preferiti le tue offerte locali per visualizzarle in seguito o condividile direttamente con gli amici."
+        "campaigns_save_help_desc": "Aggiungi ai preferiti le tue offerte locali per visualizzarle in seguito o condividile direttamente con gli amici.",
+        "trend_closet_title": "1 Tocco: \"Abbina con il mio Armadio\"",
+        "trend_closet_desc": "Tocca il pulsante su qualsiasi scheda di tendenza: lo Stylist IA abbinerà colori e silhouette direttamente ai capi presenti nel tuo armadio digitale.",
+        "trend_personalization_title": "Personalizzazione e Feed Social (⚙️)",
+        "trend_personalization_desc": "Personalizza gli stili estetici (Quiet Luxury, Vintage, Streetwear, Old Money, Minimalist, Y2K), collega i tuoi account social e visualizza il profilo armadio.",
+        "trend_gender_title": "Selezione Genere e Aggiornamento Live",
+        "trend_gender_desc": "Passa facilmente dalla moda Donna a quella Uomo, leggi articoli verificati su Vogue/GQ e tocca Aggiorna (🔄) per novità in tempo reale."
     },
     "campaigns": {
         "status": {

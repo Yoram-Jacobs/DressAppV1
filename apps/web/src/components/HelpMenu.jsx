@@ -637,16 +637,18 @@ export default function HelpMenu() {
             {activeTab === 'trend-scout' && (
               <div className="space-y-4">
                 <h2 className="text-2xl font-bold flex items-center gap-2 border-b pb-2 text-primary">
-                  <TrendingUp className="h-6 w-6" /> {t('help.trend_scout_title')}
+                  <TrendingUp className="h-6 w-6" /> {t('help.trend_scout_title', { defaultValue: 'Trend Scout' })}
                 </h2>
-                <p className="text-muted-foreground">{t('help.trend_scout_p1')}</p>
+                <p className="text-muted-foreground">{t('help.trend_scout_p1', { defaultValue: 'Stay inspired with our daily curated fashion radar and style recommendations:' })}</p>
                 <div className="space-y-3">
                   {[
-                    { title: t('help.trend_feed_title'), desc: t('help.trend_feed_desc') },
-                    { title: t('help.trend_buckets_title'), desc: t('help.trend_buckets_desc') }
+                    { title: t('help.trend_feed_title', { defaultValue: 'Daily Fashion Radar (7 Curated Channels)' }), desc: t('help.trend_feed_desc', { defaultValue: 'Explore 📍 Local News, 👑 Runway, 👟 Street Style, 🌿 Sustainability, ✨ Influencers & Icons, ♻️ Vintage / Archival, and 🔧 Care & Repairs.' }) },
+                    { title: t('help.trend_closet_title', { defaultValue: '1-Tap "Style with My Closet"' }), desc: t('help.trend_closet_desc', { defaultValue: 'Tap the button on any trend card to let our AI Stylist match the trend\'s colors and silhouette directly to clothes already hanging in your digitized wardrobe.' }) },
+                    { title: t('help.trend_personalization_title', { defaultValue: 'Personalization & Social Feeds (⚙️)' }), desc: t('help.trend_personalization_desc', { defaultValue: 'Customize style aesthetics (Quiet Luxury, Vintage, Streetwear, Old Money, Minimalist, Y2K), connect social accounts, and view your automated closet profile.' }) },
+                    { title: t('help.trend_gender_title', { defaultValue: 'Gender Targeting & Live Refresh' }), desc: t('help.trend_gender_desc', { defaultValue: 'Toggle effortlessly between Women\'s and Men\'s fashion, read verified articles on Vogue/GQ, and tap Refresh (🔄) for instant real-time updates.' }) },
                   ].map((item, idx) => (
                     <div key={idx} className="p-4 rounded-xl border border-border bg-secondary/10 space-y-1">
-                      <h4 className="font-semibold text-sm">{item.title}</h4>
+                      <h4 className="font-semibold text-sm text-foreground">{item.title}</h4>
                       <p className="text-xs text-muted-foreground leading-relaxed">{item.desc}</p>
                     </div>
                   ))}

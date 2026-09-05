@@ -34,6 +34,7 @@ import { useTheme } from '@mobile/theme';
 import { fonts, fontSizes, spacing, radii, shadows } from '@mobile/theme/tokens';
 import { useTrendScoutStore, useUserStore } from '@mobile/lib/stores';
 import { api } from '@mobile/lib/api';
+import { toCountryCode } from '@mobile/lib/country';
 import { ScrollToTopFloater } from '@mobile/components/common/ScrollToTopFloater';
 import { TrendScoutSettingsModal } from '@mobile/components/trends/TrendScoutSettingsModal';
 
@@ -54,6 +55,7 @@ interface TrendItem {
   is_local?: boolean;
   city?: string;
   country?: string;
+  date?: string;
 }
 
 const BUCKET_ICONS: Record<string, any> = {
@@ -95,7 +97,7 @@ function TrendCardImage({
   const [error, setError] = useState(false);
   const { colors } = useTheme();
   const BucketIcon = BUCKET_ICONS[canonicalBucket] || Lucide.Sparkles;
-  const isBroken = !imageUrl || !imageUrl.startsWith('http') || imageUrl.includes('ynet-pic1.ynet.co.il') || imageUrl.includes('example.com');
+  const isBroken = !imageUrl || !imageUrl.startsWith('http') || imageUrl.includes('ynet-pic1.ynet.co.il') || imageUrl.includes('example.com') || imageUrl.includes('photo-1617127365659-c47fa864d8bc');
 
   if (error || isBroken) {
     return (
@@ -103,7 +105,7 @@ function TrendCardImage({
         style={[
           styles.cardImg,
           styles.placeholderImg,
-          { backgroundColor: colors.surfaceVariant || '#f1f5f9' },
+          { backgroundColor: colors.secondary || '#f1f5f9' },
         ]}
       >
         <BucketIcon size={40} color={colors.primary || '#6366f1'} />
@@ -181,7 +183,7 @@ export function TrendScoutScreen() {
     };
   }, [handleBack]);
 
-  const country = (user?.address?.country_code || (user as any)?.country || 'IL').toString().toUpperCase();
+  const country = toCountryCode(user?.address?.country_code || (user as any)?.country_code || (user as any)?.country);
   const language = (i18n.language || 'en').split('-')[0].toLowerCase();
 
   const { cards: items, loading, prewarm } = useTrendScoutStore({ prewarm: false });
@@ -193,7 +195,11 @@ export function TrendScoutScreen() {
     if (refreshing) return;
     setRefreshing(true);
     try {
-      api.trendsRunNowDev(true, selectedGender, country).catch(() => {});
+      try {
+        await api.trendsRunNowDev(true, selectedGender, country);
+      } catch (runErr) {
+        console.warn('[TrendScout] trendsRunNowDev warning:', runErr);
+      }
       await prewarm({ language, country, gender: selectedGender, force: true });
     } catch {
       await prewarm({ language, country, gender: selectedGender, force: true });
@@ -441,6 +447,31 @@ export function TrendScoutScreen() {
               onRefresh={onRefresh}
               tintColor={colors.accent}
             />
+          }
+          ListEmptyComponent={
+            !loading ? (
+              <View style={styles.emptyContainer}>
+                <Lucide.Sparkles size={44} color={colors.accent} />
+                <Text style={[styles.emptyTitle, { color: colors.foreground }]}>
+                  {t('trends.noTrendsTitle', { defaultValue: 'No Trends Found' })}
+                </Text>
+                <Text style={[styles.emptyDesc, { color: colors.mutedFg }]}>
+                  {t('trends.noTrendsDesc', {
+                    defaultValue: "We couldn't find any active trend cards for this filter. Check back later or trigger a live refresh.",
+                  })}
+                </Text>
+                <TouchableOpacity
+                  style={[styles.emptyRefreshBtn, { backgroundColor: colors.primary }]}
+                  onPress={onRefresh}
+                  disabled={refreshing}
+                  accessibilityRole="button"
+                >
+                  <Text style={[styles.emptyRefreshBtnText, { color: colors.primaryFg }]}>
+                    {refreshing ? t('common.loading', { defaultValue: 'Refreshing...' }) : t('stylist.refreshScout', { defaultValue: 'Refresh Feed' })}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            ) : null
           }
           ListFooterComponent={
             !isPaying ? (
@@ -697,6 +728,35 @@ const styles = StyleSheet.create({
   },
   upgradeBtnText: {
     color: '#fff',
+    fontFamily: fonts.bodyBold,
+    fontSize: fontSizes.xs,
+  },
+  emptyContainer: {
+    padding: spacing[8],
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing[3],
+    marginTop: spacing[8],
+  },
+  emptyTitle: {
+    fontFamily: fonts.displayBold,
+    fontSize: fontSizes.lg,
+    textAlign: 'center',
+  },
+  emptyDesc: {
+    fontFamily: fonts.body,
+    fontSize: fontSizes.sm,
+    lineHeight: fontSizes.sm * 1.4,
+    textAlign: 'center',
+    maxWidth: 280,
+  },
+  emptyRefreshBtn: {
+    paddingHorizontal: spacing[5],
+    paddingVertical: spacing[2.5],
+    borderRadius: radii.lg,
+    marginTop: spacing[2],
+  },
+  emptyRefreshBtnText: {
     fontFamily: fonts.bodyBold,
     fontSize: fontSizes.xs,
   },
