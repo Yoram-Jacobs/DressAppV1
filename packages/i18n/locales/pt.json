@@ -1156,8 +1156,8 @@
         "languageUpdated": "Idioma atualizado",
         "inviteFriends": "Convidar amigos",
         "inviteSubject": "Junte-se a mim no DressApp",
-        "inviteBody": "Estou usando o DressApp para organizar meu guarda-roupa com um personal stylist de IA. Junte-se a mim aqui:",
-        "inviteCopied": "Link de convite copiado",
+        "inviteBody": "Compartilhe seu link de indicação pessoal para convidar amigos. Vocês dois ganham créditos de IA de bônus!",
+        "inviteCopied": "Link de convite copiado para a área de transferência!",
         "sections": {
             "identity": "Identidade",
             "contact": "Contato",
@@ -1457,10 +1457,10 @@
         "importWardrobeTitle": "Import Wardrobe From Other Apps",
         "importWardrobeDesc": "Migrate your existing catalog seamlessly from Whering, Acloset, Stylebook, and other digital wardrobe apps.",
         "supportedPlatforms": "Supported Wardrobe Platforms",
-        "inviteShareMessage": "I",
-        "shareFailed": "Failed to share invite link.",
-        "inviteTitle": "Invite Friends & Stylists",
-        "shareLink": "Share Invite Link",
+        "inviteShareMessage": "Estou usando o DressApp para organizar meu guarda-roupa e montar looks com IA! Junte-se aqui:",
+        "shareFailed": "Falha ao compartilhar o link de convite.",
+        "inviteTitle": "Convidar amigos e estilistas",
+        "shareLink": "Compartilhar link de convite",
         "missingCore": "Missing Core Measurements",
         "missingCoreDesc": "Please fill Height, Weight, Waist, and Foot Length to run smart AI prediction.",
         "measurementsDesc": "Enter 4 core biometrics to automatically calculate full body proportions and sizing.",
@@ -1522,7 +1522,11 @@
             "identity": "Identidade",
             "subscription": "Assinatura",
             "more": "Mais"
-        }
+        },
+        "inviteWebTab": "Link da web",
+        "invitePlayStoreTab": "Link do Google Play",
+        "shareGooglePlay": "Compartilhar link do Google Play",
+        "invitePlayStoreMessage": "Estou usando o DressApp para organizar meu closet e montar looks com IA! Baixe no Google Play:"
     },
     "admin": {
         "title": "Administrador",

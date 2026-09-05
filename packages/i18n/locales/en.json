@@ -1198,8 +1198,8 @@
         "languageUpdated": "Language updated",
         "inviteFriends": "Invite Friends",
         "inviteSubject": "Join me on DressApp",
-        "inviteBody": "I'm using DressApp to manage my wardrobe with an AI stylist. Join me here:",
-        "inviteCopied": "Invite link copied",
+        "inviteBody": "Share your personal referral link to invite friends. You both receive bonus AI credits!",
+        "inviteCopied": "Invite link copied to clipboard!",
         "inviteDesc": "Share DressApp with your friends and family",
         "settingsTitle": "System Preferences",
         "sections": {
@@ -1470,7 +1470,7 @@
         "importWardrobeTitle": "Import Wardrobe From Other Apps",
         "importWardrobeDesc": "Migrate your existing catalog seamlessly from Whering, Acloset, Stylebook, and other digital wardrobe apps.",
         "supportedPlatforms": "Supported Wardrobe Platforms",
-        "inviteShareMessage": "I",
+        "inviteShareMessage": "I'm using DressApp to organize my closet and style outfits with AI! Join here:",
         "shareFailed": "Failed to share invite link.",
         "inviteTitle": "Invite Friends & Stylists",
         "shareLink": "Share Invite Link",
@@ -1533,7 +1533,11 @@
             "identity": "Identity",
             "subscription": "Subscription",
             "more": "More"
-        }
+        },
+        "inviteWebTab": "Web Link",
+        "invitePlayStoreTab": "Google Play Link",
+        "shareGooglePlay": "Share Google Play Link",
+        "invitePlayStoreMessage": "I'm using DressApp to organize my closet and style outfits with AI! Get it on Google Play:"
     },
     "admin": {
         "title": "Admin",

@@ -1156,8 +1156,8 @@
         "languageUpdated": "Idioma actualizado",
         "inviteFriends": "Invitar amigos",
         "inviteSubject": "Únete a mí en DressApp",
-        "inviteBody": "Uso DressApp para organizar mi armario con un estilista de AI. Únete aquí:",
-        "inviteCopied": "Enlace de invitación copiado",
+        "inviteBody": "Comparte tu enlace de referido personal para invitar amigos. ¡Ambos recibirán créditos de IA adicionales!",
+        "inviteCopied": "¡Enlace de invitación copiado al portapapeles!",
         "sections": {
             "identity": "Identidad",
             "contact": "Contacto",
@@ -1457,10 +1457,10 @@
         "importWardrobeTitle": "Import Wardrobe From Other Apps",
         "importWardrobeDesc": "Migrate your existing catalog seamlessly from Whering, Acloset, Stylebook, and other digital wardrobe apps.",
         "supportedPlatforms": "Supported Wardrobe Platforms",
-        "inviteShareMessage": "I",
-        "shareFailed": "Failed to share invite link.",
-        "inviteTitle": "Invite Friends & Stylists",
-        "shareLink": "Share Invite Link",
+        "inviteShareMessage": "¡Uso DressApp para organizar mi armario y armar looks con IA! Únete aquí:",
+        "shareFailed": "No se pudo compartir el enlace de invitación.",
+        "inviteTitle": "Invitar a amigos y estilistas",
+        "shareLink": "Compartir enlace de invitación",
         "missingCore": "Missing Core Measurements",
         "missingCoreDesc": "Please fill Height, Weight, Waist, and Foot Length to run smart AI prediction.",
         "measurementsDesc": "Enter 4 core biometrics to automatically calculate full body proportions and sizing.",
@@ -1522,7 +1522,11 @@
             "identity": "Identidad",
             "subscription": "Suscripción",
             "more": "Más"
-        }
+        },
+        "inviteWebTab": "Enlace web",
+        "invitePlayStoreTab": "Enlace de Google Play",
+        "shareGooglePlay": "Compartir enlace de Google Play",
+        "invitePlayStoreMessage": "¡Uso DressApp para organizar mi armario y armar looks con IA! Consíguela en Google Play:"
     },
     "admin": {
         "title": "Administrador",

@@ -18,6 +18,7 @@ import {
   Share,
   Alert,
   Linking,
+  I18nManager,
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import * as Lucide from 'lucide-react-native';
@@ -222,11 +223,13 @@ const styles = StyleSheet.create({
   title: {
     fontFamily: fonts.bodyBold,
     fontSize: fontSizes.sm,
+    textAlign: I18nManager.isRTL ? 'right' : 'left',
   },
   sub: {
     fontFamily: fonts.body,
     fontSize: fontSizes.xs,
-    lineHeight: 16,
+    lineHeight: 18,
+    textAlign: I18nManager.isRTL ? 'right' : 'left',
   },
   tabRow: {
     flexDirection: 'row',
@@ -236,9 +239,10 @@ const styles = StyleSheet.create({
   tabPill: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 5,
-    paddingHorizontal: 10,
-    paddingVertical: 5,
+    gap: 6,
+    minHeight: 32,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
     borderRadius: radii.full,
     borderWidth: 1,
   },
@@ -255,12 +259,15 @@ const styles = StyleSheet.create({
   urlText: {
     fontFamily: fonts.bodyMedium,
     fontSize: fontSizes.xs,
+    textAlign: 'left',
   },
   shareBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 6,
+    gap: 8,
+    minHeight: 44,
+    paddingHorizontal: spacing.md,
     paddingVertical: 10,
     borderRadius: radii.full,
   },
@@ -273,8 +280,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 6,
-    paddingVertical: 9,
+    gap: 8,
+    minHeight: 44,
+    paddingHorizontal: spacing.md,
+    paddingVertical: 10,
     borderRadius: radii.full,
     borderWidth: 1,
   },

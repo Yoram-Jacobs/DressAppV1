@@ -1165,8 +1165,8 @@
         "languageUpdated": "Sprache aktualisiert",
         "inviteFriends": "Freunde einladen",
         "inviteSubject": "Komm zu DressApp",
-        "inviteBody": "Ich nutze DressApp, um meinen Kleiderschrank mit einem AI-Stylisten zu organisieren. Sei dabei:",
-        "inviteCopied": "Einladungslink kopiert",
+        "inviteBody": "Teilen Sie Ihren persönlichen Empfehlungslink, um Freunde einzuladen. Sie erhalten beide zusätzliche AI-Credits!",
+        "inviteCopied": "Einladungslink in die Zwischenablage kopiert!",
         "sections": {
             "identity": "Identität",
             "contact": "Kontakt",
@@ -1425,7 +1425,7 @@
         "annualPlanDesc": "Sparen Sie 50 % im Vergleich zur monatlichen Abrechnung.",
         "perYear": " / Jahr",
         "upgradeAnnualBtn": "Jährlich upgraden",
-        "inviteDesc": "Teilen Sie DressApp mit Ihren Freunden und Ihrer Familie",
+        "inviteDesc": "Teilen Sie DressApp mit Freunden und Familie",
         "voiceLanguageDesc": "Stylist virtual voice and accessibility settings",
         "aiProvider": "AI Engine & Model Provider",
         "selectedModel": "Active AI Model",
@@ -1457,10 +1457,10 @@
         "importWardrobeTitle": "Import Wardrobe From Other Apps",
         "importWardrobeDesc": "Migrate your existing catalog seamlessly from Whering, Acloset, Stylebook, and other digital wardrobe apps.",
         "supportedPlatforms": "Supported Wardrobe Platforms",
-        "inviteShareMessage": "I",
-        "shareFailed": "Failed to share invite link.",
-        "inviteTitle": "Invite Friends & Stylists",
-        "shareLink": "Share Invite Link",
+        "inviteShareMessage": "Ich nutze DressApp, um meinen Kleiderschrank zu organisieren und Outfits mit AI zu stylen! Hier mitmachen:",
+        "shareFailed": "Teilen des Einladungslinks fehlgeschlagen.",
+        "inviteTitle": "Freunde & Stylisten einladen",
+        "shareLink": "Einladungslink teilen",
         "missingCore": "Missing Core Measurements",
         "missingCoreDesc": "Please fill Height, Weight, Waist, and Foot Length to run smart AI prediction.",
         "measurementsDesc": "Enter 4 core biometrics to automatically calculate full body proportions and sizing.",
@@ -1522,7 +1522,11 @@
             "identity": "Identität",
             "subscription": "Abonnement",
             "more": "Mehr"
-        }
+        },
+        "inviteWebTab": "Web-Link",
+        "invitePlayStoreTab": "Google Play-Link",
+        "shareGooglePlay": "Google Play-Link teilen",
+        "invitePlayStoreMessage": "Ich nutze DressApp für Styling und Schrankorganisation mit AI! Jetzt bei Google Play laden:"
     },
     "admin": {
         "title": "Admin",
