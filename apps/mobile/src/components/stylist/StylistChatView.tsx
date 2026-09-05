@@ -29,8 +29,13 @@ import {
   Modal,
 } from 'react-native';
 import { Image } from 'expo-image';
-import { Audio } from 'expo-av';
 import * as ImagePicker from 'expo-image-picker';
+import {
+  useAudioRecorder,
+  RecordingPresets,
+  requestRecordingPermissionsAsync,
+  setAudioModeAsync,
+} from 'expo-audio';
 import { useNavigation } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
 import * as Lucide from 'lucide-react-native';
@@ -99,7 +104,7 @@ export function StylistChatView({ onSelectOutfitForTryOn }: StylistChatViewProps
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [sessions, setSessions] = useState<StylistSession[]>([]);
   const [sessionsLoading, setSessionsLoading] = useState(false);
-  const [recording, setRecording] = useState<Audio.Recording | null>(null);
+  const audioRecorder = useAudioRecorder(RecordingPresets.HIGH_QUALITY);
   const [isRecording, setIsRecording] = useState(false);
 
   // Attached media state
@@ -708,7 +713,7 @@ export function StylistChatView({ onSelectOutfitForTryOn }: StylistChatViewProps
   // Voice Recording
   const startRecording = async () => {
     try {
-      const { status } = await Audio.requestPermissionsAsync();
+      const { status } = await requestRecordingPermissionsAsync();
       if (status !== 'granted') {
         Alert.alert(
           t('common.permissionRequired', { defaultValue: 'Permission required' }),
@@ -716,9 +721,9 @@ export function StylistChatView({ onSelectOutfitForTryOn }: StylistChatViewProps
         );
         return;
       }
-      await Audio.setAudioModeAsync({ allowsRecordingIOS: true, playsInSilentModeIOS: true });
-      const { recording: rec } = await Audio.Recording.createAsync(Audio.RecordingOptionsPresets.HIGH_QUALITY);
-      setRecording(rec);
+      await setAudioModeAsync({ allowsRecording: true, playsInSilentMode: true });
+      await audioRecorder.prepareToRecordAsync();
+      audioRecorder.record();
       setIsRecording(true);
     } catch (e: any) {
       Alert.alert(
@@ -729,14 +734,13 @@ export function StylistChatView({ onSelectOutfitForTryOn }: StylistChatViewProps
   };
 
   const stopRecording = async () => {
-    if (!recording) return;
+    if (!isRecording) return;
     setIsRecording(false);
     setLoading(true);
     try {
-      await recording.stopAndUnloadAsync();
-      await Audio.setAudioModeAsync({ allowsRecordingIOS: false });
-      const uri = recording.getURI();
-      setRecording(null);
+      await audioRecorder.stop();
+      await setAudioModeAsync({ allowsRecording: false });
+      const uri = audioRecorder.uri;
 
       if (!uri) throw new Error('No audio recording found');
 

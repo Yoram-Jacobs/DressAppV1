@@ -10,8 +10,6 @@
 import React, { useEffect, useState } from 'react';
 import { View, ActivityIndicator, StyleSheet, LogBox } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
-
-LogBox.ignoreLogs(['[expo-av]: Expo AV has been deprecated']);
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { Provider as PaperProvider } from 'react-native-paper';
 import {
@@ -51,7 +49,7 @@ function AppContent() {
 
   return (
     <>
-      <StatusBar style={isDark ? 'light' : 'dark'} translucent />
+      <StatusBar style={isDark ? 'light' : 'dark'} />
       <PaperProvider>
         <RootNavigator />
       </PaperProvider>
