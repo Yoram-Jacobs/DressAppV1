@@ -17,6 +17,7 @@ import {
   StyleSheet,
   Share,
   Alert,
+  Linking,
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import * as Lucide from 'lucide-react-native';
@@ -92,6 +93,17 @@ export function InviteFriendsSection({ userId }: InviteProps) {
             {t('profile.shareLink', { defaultValue: 'Share Invite Link' })}
           </Text>
         </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[styles.playStoreBtn, { borderColor: colors.accent, backgroundColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.03)' }]}
+          onPress={() => Linking.openURL(GOOGLE_PLAY_URL).catch(() => {})}
+          activeOpacity={0.75}
+        >
+          <Lucide.ExternalLink size={14} color={colors.accent} />
+          <Text style={[styles.playStoreBtnText, { color: colors.accent }]}>
+            {t('profile.openGooglePlay', { defaultValue: 'View on Google Play' })}
+          </Text>
+        </TouchableOpacity>
       </View>
     </View>
   );
@@ -148,4 +160,18 @@ const styles = StyleSheet.create({
     fontFamily: fonts.bodyBold,
     fontSize: fontSizes.xs,
   },
+  playStoreBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    paddingVertical: 9,
+    borderRadius: radii.full,
+    borderWidth: 1,
+  },
+  playStoreBtnText: {
+    fontFamily: fonts.bodyBold,
+    fontSize: fontSizes.xs,
+  },
 });
+

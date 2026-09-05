@@ -10,14 +10,15 @@ export const auth = {
    * full-page redirect to that URL (popup-less PKCE-style flow).
    * Pass ``mobile: true`` from native clients so the backend redirects
    * to ``dressapp://auth/callback`` instead of the web ``/auth/callback``.
-   * @param {{ withCalendar?: boolean, next?: string | null, mobile?: boolean, returnUrl?: string | null }} [options]
+   * @param {{ withCalendar?: boolean, next?: string | null, mobile?: boolean, returnUrl?: string | null, ref?: string | null }} [options]
    */
-  googleLoginStart: ({ withCalendar = false, next = '', mobile = false, returnUrl = '' } = {}) => {
+  googleLoginStart: ({ withCalendar = false, next = '', mobile = false, returnUrl = '', ref = '' } = {}) => {
     const params = new URLSearchParams();
     if (withCalendar) params.set('with_calendar', 'true');
     if (next) params.set('next', next);
     if (mobile) params.set('mobile', '1');
     if (returnUrl) params.set('return_url', returnUrl);
+    if (ref) params.set('ref', ref);
     const qs = params.toString();
     return client
       .get(`/auth/google/login/start${qs ? `?${qs}` : ''}`)
