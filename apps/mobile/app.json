@@ -76,7 +76,8 @@
           "androidMode": "default",
           "androidCollapsedTitle": "DressApp"
         }
-      ]
+      ],
+      "./plugins/withGooglePlayRequirements.js"
     ],
     "scheme": "dressapp",
     "updates": {
