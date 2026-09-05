@@ -145,7 +145,7 @@ async def test_cards_deduplication_by_url_and_image():
         {"id": "3", "bucket": "street", "gender": "male", "source_url": "https://example.com/other-article", "image_url": "https://images.unsplash.com/photo-2.jpg"},
     ]
 
-    async def mock_cursor_iter():
+    async def mock_cursor_iter(*args, **kwargs):
         for c in sample_duplicate_cards:
             yield c
 
@@ -153,6 +153,9 @@ async def test_cards_deduplication_by_url_and_image():
     mock_cursor.sort.return_value = mock_cursor
     mock_cursor.limit.return_value = mock_cursor
     mock_db.trend_reports.find.return_value = mock_cursor
+
+    from app.services.trend_scout import clear_trend_feed_cache
+    clear_trend_feed_cache()
 
     with patch("app.services.trend_scout.get_db", return_value=mock_db):
         res = await fashion_scout_feed(limit=10, gender="male", country="IL")
