@@ -22,7 +22,7 @@ import { labelForSource, labelForIntent } from '@/lib/taxonomy';
 //                  so won't visually clash with For-sale listings)
 // ---------------------------------------------------------------------
 const SOURCE_STYLES = {
-  Private: 'bg-secondary text-foreground border border-border',
+  Private: 'bg-white text-primary-brand border border-border',
   Shared:
     'bg-[hsl(var(--accent))]/10 text-[hsl(var(--accent))] border border-[hsl(var(--accent))]/30',
   Retail:
@@ -77,8 +77,7 @@ export const SourceTagBadge = ({
       data-intent={resolvedIntent || undefined}
       data-source={source}
       variant="outline"
-      className={cn('rounded-full caps-label px-2.5 py-1 whitespace-nowrap', style, className)}
-    >
+      className={cn('rounded-full font-extrabold whitespace-nowrap', style, className)}>
       {label}
     </Badge>
   );

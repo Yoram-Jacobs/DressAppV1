@@ -2,6 +2,7 @@ import { Outlet, Navigate } from 'react-router-dom';
 import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { TopNav } from '@/components/TopNav';
+import { Footer } from "@/components/Footer";
 import { BottomTabs } from '@/components/BottomTabs';
 import { LanguageSync } from '@/components/LanguageSync';
 import { LocationBanner } from '@/components/LocationBanner';
@@ -14,6 +15,7 @@ import { outfitStore } from '@/lib/outfitStore';
 import { Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { api } from '@/lib/api';
+import { ArrowUp } from "lucide-react";
 
 function urlBase64ToUint8Array(base64String) {
   const padding = '='.repeat((4 - base64String.length % 4) % 4);
@@ -32,10 +34,10 @@ import OnboardingMigrationModal from '@/components/OnboardingMigrationModal';
 import LoginClosetReminderModal from '@/components/LoginClosetReminderModal';
 import { useClosetStore } from '@/lib/useClosetStore';
 import { useState } from 'react';
-
 export const AppLayout = () => {
   const { t } = useTranslation();
   const { user, loading, refresh } = useAuth();
+  const [show, setShow] = useState(false);
   const { items, lastFullSync } = useClosetStore();
   const [dismissedLoginReminder, setDismissedLoginReminder] = useState(() => {
     return sessionStorage.getItem('dressapp_dismissed_login_reminder') === 'true';
@@ -46,11 +48,11 @@ export const AppLayout = () => {
   useEffect(() => {
     if (loading) return;
     if (user) {
-      closetStore.prewarm().catch(() => {});
-      prewarmMarketplace(user.id).catch(() => {});
-      prewarmExperts().catch(() => {});
-      prewarmSuitcase().catch(() => {});
-      outfitStore.prewarm().catch(() => {});
+      closetStore.prewarm().catch(() => { });
+      prewarmMarketplace(user.id).catch(() => { });
+      prewarmExperts().catch(() => { });
+      prewarmSuitcase().catch(() => { });
+      outfitStore.prewarm().catch(() => { });
     } else {
       closetStore.reset();
       resetMarketplace();
@@ -59,15 +61,36 @@ export const AppLayout = () => {
       outfitStore.reset();
     }
   }, [user, loading]);
+  // back-to-top
+  useEffect(() => {
+    const handleScroll = () => {
+      setShow(window.scrollY > 400);
+    };
 
+    window.addEventListener("scroll", handleScroll);
+
+    // Initial check
+    handleScroll();
+
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+    };
+  }, []);
+
+  const scrollToTop = () => {
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    });
+  };
   // Tab visibility revalidation to keep devices in sync (Closet, Suitcase, and User Listings)
   useEffect(() => {
     if (loading || !user) return;
 
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible') {
-        closetStore.incrementalSync().catch(() => {});
-        prewarmSuitcase().catch(() => {});
+        closetStore.incrementalSync().catch(() => { });
+        prewarmSuitcase().catch(() => { });
       }
     };
 
@@ -120,7 +143,7 @@ export const AppLayout = () => {
           if (sub) {
             await registerSub(sub);
           } else if (
-            Notification.permission === 'granted' || 
+            Notification.permission === 'granted' ||
             (user?.scheduler_settings?.enabled && Notification.permission === 'default')
           ) {
             if (Notification.permission === 'default') {
@@ -163,17 +186,18 @@ export const AppLayout = () => {
       <LanguageSync />
       <TopNav />
       <LocationBanner />
-      <main id="main-content" tabIndex={-1} className="flex-1 pb-safe-tabs md:pb-10">
+      <main id="main-content" tabIndex={-1}>
         <Outlet />
       </main>
+      <Footer />
       <BottomTabs />
 
       {/* Onboarding Migration Question Modal — desktop only */}
       {showOnboardingMigration && !('ontouchstart' in window) && (
         <OnboardingMigrationModal
           isOpen={true}
-          onClose={() => { refresh().catch(() => {}); }}
-          onFlagUpdated={() => { refresh().catch(() => {}); }}
+          onClose={() => { refresh().catch(() => { }); }}
+          onFlagUpdated={() => { refresh().catch(() => { }); }}
         />
       )}
 
@@ -188,6 +212,19 @@ export const AppLayout = () => {
           }}
         />
       )}
+      {/* <!-- back-to-top-button --> */}
+      <button
+        id="backToTopBtn"
+        onClick={scrollToTop}
+        aria-label="Back to top"
+        className={`fixed bottom-[50px] end-[30px] z-[999] flex h-12 w-12 cursor-pointer items-center justify-center rounded-full border-none bg-[var(--primary-color)] text-white shadow-[var(--shadow-medium)] transition-smooth hover:bg-[var(--primary-hover)] hover:-translate-y-1 ${show
+            ? "visible translate-y-0 opacity-100"
+            : "invisible translate-y-[15px] opacity-0"
+          }`}
+      >
+        <ArrowUp size={20} strokeWidth={2.5} />
+      </button>
+
     </div>
   );
 };

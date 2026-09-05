@@ -11,7 +11,7 @@ export function ExploreBackButton({ to = '/stylist' }) {
     <Button
       variant="outline"
       onClick={() => navigate(to)}
-      className="fixed bottom-20 end-4 md:bottom-6 md:end-6 z-50 rounded-full shadow-lg border border-border/80 bg-background/85 backdrop-blur-md hover:bg-accent hover:text-accent-foreground flex items-center gap-1.5 transition-all active:scale-95 px-4 py-5 font-semibold text-xs text-foreground"
+      className="rounded-full shadow-none border-none bg-transparent hover:!bg-transparent hover:text-primary-brand flex items-center gap-1.5 transition-all active:scale-95 px-0 py-0 font-semibold text-xs text-dark-brand mb-3"
       data-testid="back-to-explore"
     >
       <ArrowLeft className="h-4 w-4" />

@@ -30,9 +30,6 @@ import { useAuth } from '@/lib/auth';
 import { api } from '@/lib/api';
 
 export const LanguagePicker = ({
-  size = 'icon',
-  variant = 'outline',
-  className,
   testIdSuffix = '',
 }) => {
   const { i18n, t } = useTranslation();
@@ -82,21 +79,19 @@ export const LanguagePicker = ({
       <DropdownMenuTrigger asChild>
         <Button
           type="button"
-          variant={variant}
-          size={size}
-          className={className}
+          className="!p-0 !bg-transparent text-dark-brand shadow-none hover:text-primary-brand"
           aria-label={t('language.change', { defaultValue: 'Change language' })}
           data-testid={`language-picker-trigger${testIdSuffix ? '-' + testIdSuffix : ''}`}
         >
-          <Globe className="h-[18px] w-[18px]" />
+          <Globe className="!h-[30px] !w-[30px]" />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent
         align="end"
-        className="w-56"
+        className="w-56 shadow-lg"
         data-testid="language-picker-menu"
       >
-        <DropdownMenuLabel className="caps-label text-muted-foreground">
+        <DropdownMenuLabel className="text-text-brand">
           {t('language.label', { defaultValue: 'Language' })}
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
@@ -106,14 +101,14 @@ export const LanguagePicker = ({
             <DropdownMenuItem
               key={l.code}
               onSelect={() => change(l.code)}
-              className="flex items-center justify-between gap-2 cursor-pointer"
+              className="group flex items-center justify-between gap-2 cursor-pointer"
               data-testid={`language-picker-option-${l.code}`}
               data-active={active || undefined}
               dir={l.dir}
             >
               <span className="truncate">{l.nativeName}</span>
               {active ? (
-                <Check className="h-4 w-4 text-[hsl(var(--accent))] shrink-0" />
+                <Check className="h-4 w-4 text-primary-brand shrink-0 group-hover:text-white" />
               ) : null}
             </DropdownMenuItem>
           );

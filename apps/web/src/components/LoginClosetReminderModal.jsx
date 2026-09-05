@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { HelpCircle, Sparkles, UploadCloud, ArrowRight, X } from 'lucide-react';
+import { CircleHelp as HelpCircle, Sparkles, UploadCloud, ArrowRight, X } from 'lucide-react';
 import { toast } from 'sonner';
 import OnboardingMigrationModal from './OnboardingMigrationModal';
 
@@ -43,20 +43,20 @@ export default function LoginClosetReminderModal({ isOpen, onClose, user }) {
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={(val) => { if (!val) onClose(); }}>
+   <Dialog open={true} onOpenChange={(val) => { if (!val) onClose(); }}>
       <DialogContent className="max-w-md rounded-2xl p-6 bg-card border border-border shadow-2xl">
         <div className="space-y-4">
-          <div className="mx-auto w-12 h-12 rounded-full bg-accent/10 text-accent flex items-center justify-center">
+          <div className="mx-auto w-12 h-12 rounded-full bg-primary-shadow text-primary-brand flex items-center justify-center">
             <Sparkles className="w-6 h-6" />
           </div>
 
           <DialogHeader className="text-center">
-            <DialogTitle className="text-xl font-bold font-display">
+            <DialogTitle className="text-[20px] font-bold text-dark-brand">
               {isMigrateUser
                 ? t('login_reminder.migrateTitle', { defaultValue: 'Import Your Closet to Start Styling!' })
                 : t('login_reminder.newTitle', { defaultValue: 'Your Closet is Empty — Let\'s Add Your First Item!' })}
             </DialogTitle>
-            <DialogDescription className="text-sm text-muted-foreground mt-2 leading-relaxed">
+            <DialogDescription className="text-center text-[14px] text-text-brand font-semibold mt-2 leading-relaxed">
               {isMigrateUser
                 ? t('login_reminder.migrateSub', { defaultValue: 'Adding your garments is essential for the AI Stylist, Outfit Canvas, and Recommendations to perform properly. Complete your migration or add items manually.' })
                 : t('login_reminder.newSub', { defaultValue: 'Your closet currently has 0 items. Adding your garments allows the AI Stylist to generate tailored daily recommendations, packing lists, and weather outfits.' })}
@@ -68,7 +68,7 @@ export default function LoginClosetReminderModal({ isOpen, onClose, user }) {
             <a
               href="#help"
               onClick={handleOpenHelpDoc}
-              className="inline-flex items-center gap-1.5 text-xs text-accent hover:underline font-medium"
+              className="inline-flex items-center gap-1.5 text-xs text-primary-brand hover:underline font-medium"
               data-testid="login-reminder-help-link"
             >
               <HelpCircle className="w-3.5 h-3.5" />
@@ -77,13 +77,29 @@ export default function LoginClosetReminderModal({ isOpen, onClose, user }) {
           </div>
 
           {/* Action Buttons */}
-          <div className="pt-3 border-t border-border/50">
+          <div className="pt-3">
             {isMigrateUser ? (
               // Case B: Users flagged as 'Migrate' (Let's start, Migrate, Dismiss)
               <div className="grid grid-cols-3 gap-2">
                 <Button
                   onClick={handleLetsStart}
-                  className="rounded-xl h-10 text-xs font-semibold bg-primary text-primary-foreground hover:opacity-90 flex items-center justify-center gap-1"
+                  className=" h-auto
+          rounded-full
+          border-0
+          bg-[var(--primary-color)]
+          px-7
+          py-3.5
+          font-sans
+          text-sm
+          font-medium
+          text-white
+          shadow-none
+          transition-all
+          duration-300
+          hover:-translate-y-0.5
+          hover:bg-[var(--primary-hover)]
+          hover:text-white
+          hover:shadow-[0_10px_30px_rgba(31,92,69,0.22)]"
                   data-testid="login-reminder-start-btn"
                 >
                   {t('login_reminder.letsStart', { defaultValue: 'Let\'s start' })}
@@ -127,7 +143,24 @@ export default function LoginClosetReminderModal({ isOpen, onClose, user }) {
                 <Button
                   variant="outline"
                   onClick={onClose}
-                  className="rounded-xl h-11 text-sm font-medium border-border hover:bg-muted"
+                  className=" h-auto
+        rounded-full
+        border
+        border-black/10
+        bg-white
+        px-7
+        py-3.5
+        font-sans
+        text-sm
+        font-semibold
+        text-[var(--dark-color)]
+        shadow-none
+        transition-all
+        duration-300
+        hover:-translate-y-0.5
+        hover:bg-white
+        hover:text-[var(--primary-color)]
+        hover:shadow-[var(--shadow-medium)]"
                   data-testid="login-reminder-dismiss-btn"
                 >
                   {t('common.dismiss', { defaultValue: 'Dismiss' })}
@@ -136,7 +169,7 @@ export default function LoginClosetReminderModal({ isOpen, onClose, user }) {
             )}
           </div>
         </div>
-      </DialogContent>
-    </Dialog>
+    </DialogContent>
+    </Dialog >
   );
 }

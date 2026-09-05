@@ -19,7 +19,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
@@ -43,6 +42,11 @@ import { useAuth } from '@/lib/auth';
 import { transactionsStore } from '@/lib/marketplaceStore';
 import { useCachedList } from '@/lib/createCachedStore';
 import { toast } from 'sonner';
+// same banner image used on the Privacy Policy page — swap this import
+// if you want a dedicated image for Transactions.
+import PrivacyBanner from '../assets/img/inner6.webp';
+import ReceiptIllustration from '../assets/img/receipt.png';
+
 
 const fmt = (cents, cur = 'USD') =>
   new Intl.NumberFormat('en-US', { style: 'currency', currency: cur || 'USD' }).format(
@@ -146,104 +150,225 @@ export default function Transactions() {
   ];
 
   return (
-    <div className="container-px max-w-5xl mx-auto pt-6 md:pt-10 pb-20" data-testid="transactions-page">
-      <div className="flex items-end justify-between mb-6 gap-3 flex-wrap">
-        <div>
-          <div className="caps-label text-muted-foreground">{t('transactions.label', { defaultValue: 'Ledger' })}</div>
-          <h1 className="font-display text-3xl sm:text-4xl mt-1">{t('transactions.title', { defaultValue: 'Your transactions' })}</h1>
-          <p className="text-sm text-muted-foreground mt-2 max-w-xl">{t('transactions.subtitle', { defaultValue: 'Every purchase or sale you make through DressApp. 7% platform fee is applied after payment processing.' })}</p>
-        </div>
-        <Button variant="outline" asChild className="rounded-xl" data-testid="transactions-goto-market">
-          <Link to="/market"><ArrowUpRight className="h-4 w-4 me-2" /> {t('transactions.goMarket', { defaultValue: 'Marketplace' })}</Link>
-        </Button>
-      </div>
-
-      <Tabs value={activeKind} onValueChange={setActiveKind} className="w-full">
-        <TabsList
-          className="rounded-xl flex-wrap h-auto"
-          data-testid="transactions-kind-tabs"
-        >
-          {TAB_DEFS.map((tab) => (
-            <TabsTrigger
-              key={tab.value}
-              value={tab.value}
-              className="gap-2"
-              data-testid={`transactions-tab-${tab.value}`}
-            >
-              {tab.label}
-              <Badge
-                variant="secondary"
-                className="text-[10px] h-5 px-1.5 min-w-[22px] justify-center"
-                data-testid={`transactions-tab-count-${tab.value}`}
-              >
-                {tab.count}
-              </Badge>
-            </TabsTrigger>
-          ))}
-        </TabsList>
-
-        {/* Status filter chips — shared across all tabs. */}
+    <div data-testid="transactions-page">
+      {/* Banner Section */}
+      <section
+        className="
+          relative isolate overflow-hidden
+          bg-cover bg-center bg-no-repeat
+        "
+        style={{
+          backgroundImage: `url(${PrivacyBanner})`,
+        }}
+      >
+        {/* Dark gradient overlay */}
         <div
-          className="flex flex-wrap gap-2 mt-5"
-          data-testid="transactions-status-filters"
-          aria-label={t('pages.transactions.filter_by_status')}
-        >
-          {STATUS_FILTER_OPTIONS.map((s) => {
-            const Icon = STATUS_ICON[s];
-            const active = statusFilter.includes(s);
-            return (
-              <Toggle
-                key={s}
-                pressed={active}
-                onPressedChange={() => toggleStatus(s)}
-                className={[
-                  'rounded-full border border-border data-[state=on]:border-[hsl(var(--accent))]',
-                  'data-[state=on]:bg-[hsl(var(--accent))]/10 data-[state=on]:text-[hsl(var(--accent))]',
-                  'h-8 px-3 text-xs capitalize gap-1.5',
-                ].join(' ')}
-                data-testid={`transactions-status-chip-${s}`}
-              >
-                {Icon && <Icon className="h-3 w-3" />}
-                {t(`pages.transactions.status.${s}`, { defaultValue: s })}
-              </Toggle>
-            );
-          })}
-          {statusFilter.length > 0 && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setStatusFilter([])}
-              className="h-8 text-xs"
-              data-testid="transactions-status-clear"
-            >
-              {t('common.clear', { defaultValue: 'Clear' })}
-            </Button>
-          )}
-        </div>
+          className="
+            absolute inset-0 -z-0
+            bg-[linear-gradient(90deg,#080b09_0%,#101612_43%,rgba(16,22,18,0.48)_67%,rgba(16,22,18,0.08)_100%)]
+          "
+        />
 
-        <TabsContent value={activeKind} className="mt-6">
-          {loading ? (
-            <div className="space-y-3" data-testid="transactions-loading">
-              {Array.from({ length: 4 }).map((_, i) => (
-                <Skeleton key={i} className="h-28 w-full rounded-[calc(var(--radius)+6px)]" />
-              ))}
+        <div className="relative z-10 w-full">
+          <div
+            className="
+              px-10 py-20
+              max-[991px]:px-[35px] max-[991px]:py-[45px]
+              max-[767px]:px-5 max-[767px]:py-[38px]
+              max-[480px]:px-4 max-[480px]:py-8
+            "
+          >
+            <div className="max-w-[520px]">
+              {/* Title */}
+              <h1
+                className="
+                  m-0 mb-0
+                  text-[40px] leading-[40px]
+                  font-bold
+                  tracking-normal
+                  text-white
+                  max-[767px]:text-[42px]
+                  max-[480px]:text-[35px]
+                "
+              >
+                {t('transactions.bannerTitle', { defaultValue: 'Your Transactions' })}
+              </h1>
+              {/* Description */}
+              <p
+                className="
+                  my-5
+                  max-w-[450px]
+                  text-[14px]
+                  leading-6
+                  tracking-[0.5px]
+                  text-white/60
+                  max-[767px]:max-w-full
+                  max-[767px]:mt-[15px]
+                "
+              >
+                {t('transactions.subtitle', { defaultValue: 'A 7% platform fee is applied after payment processing.' })}
+              </p>
             </div>
-          ) : activeItems.length === 0 ? (
-            <EmptyState kind={activeKind} hasFilter={statusFilter.length > 0} />
-          ) : (
-            <div className="space-y-3" data-testid="transactions-list">
-              {activeItems.map((tx) => (
-                <TransactionRow
-                  key={tx.id}
-                  tx={tx}
-                  userId={user?.id}
-                  onConfirmed={refresh}
-                />
+          </div>
+        </div>
+      </section>
+      <section className="bg-accent-beige px-[40px] py-[40px] max-[767px]:px-5 max-[767px]:py-10">
+        <Tabs value={activeKind} onValueChange={setActiveKind} className="w-full">
+          {/* Segmented pill tabs — matches the Camera & Upload / Digital Import control */}
+          <div className="flex items-end justify-between mb-5">
+            <TabsList
+              className="
+        inline-flex flex-wrap h-auto w-fit
+        bg-white rounded-full p-1.5 gap-1
+        border border-border/40 shadow-sm
+      "
+              data-testid="transactions-kind-tabs"
+            >
+              {TAB_DEFS.map((tab) => (
+                <TabsTrigger
+                  key={tab.value}
+                  value={tab.value}
+                  className="
+            gap-2 group flex gap-0.5 items-center rounded-full px-4 py-2
+            text-[14px] font-semibold
+            text-text-brand
+            transition-colors
+            data-[state=active]:bg-primary-brand
+            data-[state=active]:text-white
+            data-[state=active]:shadow-none
+          "
+                  data-testid={`transactions-tab-${tab.value}`}
+                >
+                  {tab.label}
+                  <Badge
+                    variant="secondary"
+                    className="
+              text-[10px] h-5 px-1.5 min-w-[20px] justify-center
+              bg-primary-shadow text-primary-brand
+             group-data-[state=active]:bg-white
+            "
+                    data-testid={`transactions-tab-count-${tab.value}`}
+                  >
+                    {tab.count}
+                  </Badge>
+                </TabsTrigger>
               ))}
+            </TabsList>
+            <Button
+              className=" h-auto
+                      rounded-full
+                      border-0
+                      bg-[var(--primary-color)]
+                      px-7
+                      py-3.5
+                      font-sans
+                      text-sm
+                      font-medium
+                      text-white
+                      shadow-none
+                      transition-all
+                      duration-300
+                      hover:-translate-y-0.5
+                      hover:bg-[var(--primary-hover)]
+                      hover:text-white
+                      hover:shadow-[0_10px_30px_rgba(31,92,69,0.22)]"
+              asChild
+              data-testid="transactions-goto-market"
+            >
+              <Link to="/market">
+                <ArrowUpRight className="h-4 w-4" /> {t('transactions.goMarket', { defaultValue: 'Marketplace' })}
+              </Link>
+            </Button>
+          </div>
+          <div className='bg-white p-5 rounded-[12px] shadow-sm border border-border'>
+            {/* Status filter chips — shared across all tabs. */}
+            <div
+              className="flex flex-wrap gap-2 pb-5"
+              data-testid="transactions-status-filters"
+              aria-label={t('pages.transactions.filter_by_status')}
+            >
+              {STATUS_FILTER_OPTIONS.map((s) => {
+                const Icon = STATUS_ICON[s];
+                const active = statusFilter.includes(s);
+                return (
+                  <Toggle
+                    key={s}
+                    pressed={active}
+                    onPressedChange={() => toggleStatus(s)}
+                    className={[
+                      'rounded-full bg-white border border-primary-brand',
+                      'data-[state=on]:border-emerald-900 data-[state=on]:bg-emerald-900',
+                      'data-[state=on]:text-white',
+                      'h-9 px-3.5 text-xs capitalize gap-1.5 font-bold',
+                      'shadow-sm hover:bg-white hover:border-border text-primary-brand',
+                    ].join(' ')}
+                    data-testid={`transactions-status-chip-${s}`}
+                  >
+                    {Icon && <Icon className="h-3.5 w-3.5" />}
+                    {t(`pages.transactions.status.${s}`, { defaultValue: s })}
+                  </Toggle>
+                );
+              })}
+              {statusFilter.length > 0 && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setStatusFilter([])}
+                  className="h-9 text-xs font-bold"
+                  data-testid="transactions-status-clear"
+                >
+                  {t('common.clear', { defaultValue: 'Clear' })}
+                </Button>
+              )}
             </div>
-          )}
-        </TabsContent>
-      </Tabs>
+            <TabsContent value={activeKind}>
+              {loading ? (
+                <div className="space-y-3" data-testid="transactions-loading">
+                  {Array.from({ length: 4 }).map((_, i) => (
+                    <Skeleton key={i} className="h-16 w-full rounded-xl" />
+                  ))}
+                </div>
+              ) : activeItems.length === 0 ? (
+                <EmptyState kind={activeKind} hasFilter={statusFilter.length > 0} />
+              ) : (
+                <div className="rounded-[12px] border border-border overflow-hidden overflow-x-auto" data-testid="transactions-list">
+                  <table className="w-full border-collapse min-w-[720px]">
+                    <thead>
+                      <tr className="border-b border-border bg-primary-shadow">
+                        <th className="text-left text-[12px] font-bold uppercase tracking-wide text-text-brand px-4 py-3">
+                          {t('pages.transactions.type', { defaultValue: 'Type' })}
+                        </th>
+                        <th className="text-left text-[12px] font-bold uppercase tracking-wide text-text-brand px-4 py-3">
+                          {t('pages.transactions.status_label', { defaultValue: 'Status' })}
+                        </th>
+                        <th className="text-left text-[12px] font-bold uppercase tracking-wide text-text-brand px-4 py-3">
+                          {t('pages.transactions.date', { defaultValue: 'Date' })}
+                        </th>
+                        <th className="text-left text-[12px] font-bold uppercase tracking-wide text-text-brand px-4 py-3">
+                          {t('pages.transactions.details', { defaultValue: 'Details' })}
+                        </th>
+                        <th className="text-right text-[12px] font-bold uppercase tracking-wide text-text-brand px-4 py-3">
+                          {t('pages.transactions.action', { defaultValue: 'Action' })}
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {activeItems.map((tx) => (
+                        <TransactionRow
+                          key={tx.id}
+                          tx={tx}
+                          userId={user?.id}
+                          onConfirmed={refresh}
+                        />
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </TabsContent>
+          </div>
+        </Tabs>
+      </section>
     </div>
   );
 }
@@ -275,18 +400,33 @@ function EmptyState({ kind, hasFilter }) {
 
   return (
     <div
-      className="text-center py-16 border border-dashed rounded-[calc(var(--radius)+6px)]"
+      className="text-center py-[40px]"
       data-testid="transactions-empty-state"
     >
-      <Receipt className="h-8 w-8 mx-auto text-muted-foreground" />
-      <h2 className="font-display text-xl mt-3">{copy.title}</h2>
-      <p className="text-sm text-muted-foreground mt-2 max-w-md mx-auto">
+      {/* Illustration */}
+      <div className="flex justify-center mb-3">
+        <img
+          src={ReceiptIllustration}
+          alt={t("pages.closet.flat_lay_empty_state")}
+          className="h-auto w-[200px] object-contain"
+        />
+      </div>
+      <h2 className="text-[20px] font-bold text-dark-brand">{copy.title}</h2>
+      <p className="text-[14px] font-semibold text-text-brand max-w-md mx-auto">
         {hasFilter
           ? t('transactions.emptyFilter', { defaultValue: 'Nothing matches the active status filter. Try clearing it.' })
           : copy.sub}
       </p>
-      <Button asChild className="mt-4 rounded-xl" data-testid="transactions-empty-cta">
-        <Link to="/market">{t('pages.transactions.explore_the_marketplace', { defaultValue: 'Explore the marketplace' })}</Link>
+
+      <Button
+        asChild
+        className="mt-4 h-auto rounded-full bg-emerald-900 hover:bg-emerald-800 px-6 py-3 text-sm font-medium text-white shadow-none transition-all duration-300 hover:-translate-y-0.5 !gap-0.5"
+        data-testid="transactions-empty-cta"
+      >
+        <Link to="/market">
+          <ArrowUpRight className="h-4 w-4" />
+          {t('pages.transactions.explore_the_marketplace', { defaultValue: 'Explore the marketplace' })}
+        </Link>
       </Button>
     </div>
   );
@@ -318,103 +458,115 @@ function TransactionRow({ tx, userId, onConfirmed }) {
   };
 
   return (
-    <Card
-      className="rounded-[calc(var(--radius)+6px)] shadow-editorial"
+    <tr
+      className="border-b border-border last:border-0 hover:bg-black/[0.015] transition-colors align-middle"
       data-testid="transactions-list-item"
       data-kind={kind}
       id={`tx-${tx.id}`}
     >
-      <CardContent className="p-4 flex flex-col sm:flex-row sm:items-center gap-4">
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 flex-wrap">
-            <KIcon className="h-4 w-4 text-[hsl(var(--accent))] shrink-0" />
-            <span className="font-medium text-sm truncate">
+      {/* Type */}
+      <td className="px-4 py-4">
+        <div className="flex items-center gap-2.5">
+          <span className="h-8 w-8 rounded-full bg-primary-shadow flex items-center justify-center shrink-0">
+            <KIcon className="h-4 w-4 text-primary-brand" />
+          </span>
+          <div className="min-w-0">
+            <div className="font-bold text-sm truncate">
               {kind === 'buy' && t('pages.transactions.purchase', { defaultValue: 'Purchase' })}
               {kind === 'rent' && t('pages.transactions.rental', { defaultValue: 'Rental' })}
               {kind === 'swap' && t('pages.transactions.swap', { defaultValue: 'Swap' })}
               {kind === 'donate' && t('pages.transactions.donation', { defaultValue: 'Donation' })}
-            </span>
-            <Badge
-              variant="outline"
-              className={`text-[11px] gap-1 ${STATUS_TONE[tx.status] || ''}`}
-              data-testid="transactions-status-badge"
-            >
-              {SIcon && <SIcon className="h-3 w-3" />}
-              {t(`pages.transactions.status.${tx.status}`, { defaultValue: tx.status })}
-            </Badge>
+            </div>
             {(kind === 'buy' || kind === 'rent') && (
-              <span className="text-xs text-muted-foreground">
-                · {isBuyerSide ? t('transactions.buyer') : t('transactions.seller')}
-              </span>
+              <div className="text-xs font-bold text-text-brand">
+                {isBuyerSide ? t('transactions.buyer') : t('transactions.seller')}
+              </div>
             )}
-          </div>
-          <div className="text-xs text-muted-foreground mt-1">
-            {new Date(tx.created_at).toLocaleString()}
           </div>
         </div>
-
-        <div className="flex flex-wrap items-center gap-4 sm:gap-6 text-end sm:text-start">
-          {(kind === 'buy' || kind === 'rent') ? (
-            <>
-              <div>
-                <div className="caps-label text-muted-foreground">{t('transactions.gross')}</div>
-                <div className="font-display text-base">{fmt(f.gross_cents, cur)}</div>
-              </div>
-              <div>
-                <div className="caps-label text-muted-foreground">
-                  {isBuyerSide ? t('transactions.youPaid') : t('transactions.yourNet')}
-                </div>
-                <div className="font-display text-base">
-                  {isBuyerSide ? fmt(f.gross_cents, cur) : fmt(f.seller_net_cents, cur)}
-                </div>
-              </div>
-            </>
-          ) : kind === 'donate' ? (
+      </td>
+      {/* Status */}
+      <td className="px-4 py-4">
+        <Badge
+          variant="outline"
+          className={`text-[11px] gap-1 w-fit ${STATUS_TONE[tx.status] || ''}`}
+          data-testid="transactions-status-badge"
+        >
+          {SIcon && <SIcon className="h-3 w-3" />}
+          {t(`pages.transactions.status.${tx.status}`, { defaultValue: tx.status })}
+        </Badge>
+      </td>
+      {/* Date */}
+      <td className="px-4 py-4 whitespace-nowrap">
+        <span className="text-xs font-bold text-text-brand">
+          {new Date(tx.created_at).toLocaleString()}
+        </span>
+      </td>
+      {/* Details / amount */}
+      <td className="px-4 py-4">
+        {(kind === 'buy' || kind === 'rent') ? (
+          <div className="flex items-center gap-6">
             <div>
-              <div className="caps-label text-muted-foreground">
-                {(f.gross_cents || 0) > 0 ? t('transactions.gross') : t('transactions.fees')}
+              <div className="font-bold text-text-brand text-[10px]">{t('transactions.gross')}</div>
+              <div className="font-semibold text-sm">{fmt(f.gross_cents, cur)}</div>
+            </div>
+            <div>
+              <div className="font-bold text-text-brand text-[10px]">
+                {isBuyerSide ? t('transactions.youPaid') : t('transactions.yourNet')}
               </div>
-              <div className="font-display text-base">
-                {(f.gross_cents || 0) > 0 ? fmt(f.gross_cents, cur) : fmt(0, cur)}
+              <div className="font-semibold text-sm">
+                {isBuyerSide ? fmt(f.gross_cents, cur) : fmt(f.seller_net_cents, cur)}
               </div>
             </div>
-          ) : (
-            <div>
-              <div className="caps-label text-muted-foreground">{t('taxonomy.intent.swap')}</div>
-              <div className="font-display text-base">{t('pages.transactions.item_item')}</div>
+          </div>
+        ) : kind === 'donate' ? (
+          <div>
+            <div className="font-bold text-text-brand text-[10px]">
+              {(f.gross_cents || 0) > 0 ? t('transactions.gross') : t('transactions.fees')}
             </div>
-          )}
+            <div className="font-semibold text-sm">
+              {(f.gross_cents || 0) > 0 ? fmt(f.gross_cents, cur) : fmt(0, cur)}
+            </div>
+          </div>
+        ) : (
+          <div>
+            <div className="font-bold text-text-brand text-[10px]">{t('taxonomy.intent.swap')}</div>
+            <div className="font-semibold text-sm">{t('pages.transactions.item_item')}</div>
+          </div>
+        )}
+      </td>
 
-          <div className="flex items-center gap-1.5">
-            {canConfirm && (
-              <Button
-                size="sm"
-                className="rounded-full"
-                onClick={handleConfirm}
-                disabled={busy}
-                data-testid="transactions-confirm-receipt"
-              >
-                {busy ? (
-                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                ) : (
-                  <>
-                    <Check className="h-3.5 w-3.5 me-1" /> {t('pages.transactions.confirm_receipt')}
-                  </>
-                )}
-              </Button>
-            )}
+      {/* Action */}
+      <td className="px-4 py-4">
+        <div className="flex items-center justify-end gap-1.5">
+          {canConfirm && (
             <Button
-              asChild
-              variant="ghost"
               size="sm"
-              className="rounded-full"
-              data-testid="transactions-open-listing"
+              className="rounded-full !gap-0.5"
+              onClick={handleConfirm}
+              disabled={busy}
+              data-testid="transactions-confirm-receipt"
             >
-              <Link to={`/market/${tx.listing_id}`}>{t('transactions.view', { defaultValue: 'View' })}</Link>
+              {busy ? (
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+              ) : (
+                <>
+                  <Check className="h-3.5 w-3.5" /> {t('pages.transactions.confirm_receipt')}
+                </>
+              )}
             </Button>
-          </div>
+          )}
+          <Button
+            asChild
+            variant="ghost"
+            size="sm"
+            className="rounded-full font-bold  hover:underline"
+            data-testid="transactions-open-listing"
+          >
+            <Link to={`/market/${tx.listing_id}`}>{t('transactions.view', { defaultValue: 'View' })}</Link>
+          </Button>
         </div>
-      </CardContent>
-    </Card>
+      </td>
+    </tr>
   );
 }

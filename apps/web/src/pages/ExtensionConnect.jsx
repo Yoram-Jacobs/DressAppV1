@@ -304,12 +304,12 @@ function Shell({ title, tone, children }) {
       ? 'text-amber-600'
       : 'text-primary';
   return (
-    <div className="flex min-h-[100svh] items-center justify-center bg-background p-6">
-      <Card className="w-full max-w-md rounded-2xl border bg-card shadow-sm" data-testid="extension-connect-card">
-        <CardContent className="p-6">
-          <div className={`mb-4 flex items-center gap-2 ${accent}`}>
+    <div className="flex min-h-[100svh] items-center justify-center bg-accent-beige p-6">
+      <Card className="w-full max-w-md rounded-2xl bg-card shadow-md" data-testid="extension-connect-card">
+        <CardContent className="p-6 text-center">
+          <div className={`mb-4 flex items-center justify-center gap-1 ${accent}`}>
             <Icon className="h-5 w-5" />
-            <h1 className="text-base font-semibold">{title}</h1>
+            <h1 className="text-[20px] text-dark-brand font-bold">{title}</h1>
           </div>
           {children}
         </CardContent>
