@@ -141,17 +141,25 @@ export function TrendScoutSettingsModal({ open, onOpenChange, onRefreshTriggered
       if (autoRefresh) {
         setRefreshing(true);
         try {
-          await api.trendsRunNowDev(true, selectedGender, country);
+          try {
+            await api.trendsRunNowDev(true, selectedGender, country);
+          } catch (runErr) {
+            console.warn('trendsRunNowDev background refresh notice:', runErr);
+          }
           if (onRefreshTriggered) {
-            await onRefreshTriggered();
+            try {
+              await onRefreshTriggered();
+            } catch (trigErr) {
+              console.warn('onRefreshTriggered failed:', trigErr);
+            }
           }
           toast.success(t('trends.feedRefreshedSuccess', { defaultValue: 'Trend Scout refreshed for your style & platforms!' }));
-          onOpenChange(false);
         } catch (err) {
           console.error('Refresh failed:', err);
           toast.error(t('trends.refreshFailed', { defaultValue: 'Scout refresh encountered an error' }));
         } finally {
           setRefreshing(false);
+          onOpenChange(false);
         }
       } else {
         onOpenChange(false);

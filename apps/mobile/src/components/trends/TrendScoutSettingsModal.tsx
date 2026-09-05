@@ -160,13 +160,21 @@ export const TrendScoutSettingsModal: React.FC<Props> = ({
       if (autoRefresh) {
         setRefreshing(true);
         try {
-          await api.trendsRunNowDev(true, selectedGender, country);
-          await onRefreshTriggered();
-          onClose();
+          try {
+            await api.trendsRunNowDev(true, selectedGender, country);
+          } catch (runErr) {
+            console.warn('[TrendScout] trendsRunNowDev warning:', runErr);
+          }
+          try {
+            await onRefreshTriggered();
+          } catch (trigErr) {
+            console.warn('[TrendScout] onRefreshTriggered warning:', trigErr);
+          }
         } catch (err) {
           Alert.alert(t('common.error', { defaultValue: 'Error' }), t('trends.refreshFailed', { defaultValue: 'Scout refresh failed' }));
         } finally {
           setRefreshing(false);
+          onClose();
         }
       } else {
         onClose();

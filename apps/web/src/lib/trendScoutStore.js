@@ -69,6 +69,7 @@ export const trendScoutStore = {
       });
       return _state;
     } catch (err) {
+      console.warn('trendScoutStore.prewarm failed:', err);
       _set({ error: err });
       return _state;
     } finally {

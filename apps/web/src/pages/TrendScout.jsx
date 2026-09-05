@@ -60,15 +60,16 @@ const BUCKET_KEYS = [
 function TrendCardMedia({ card, canonicalBucket }) {
   const [imgError, setImgError] = useState(false);
   const visual = BUCKET_VISUALS[canonicalBucket] || DEFAULT_BUCKET_VISUAL;
-  const Icon = visual.Icon;
-  const hasValidImage = Boolean(card.image_url && !imgError);
+  const Icon = visual?.Icon || Sparkles;
+  const imageUrl = typeof card?.image_url === 'string' ? card.image_url.trim() : '';
+  const hasValidImage = Boolean(imageUrl && !imgError && imageUrl.startsWith('http'));
 
   if (hasValidImage) {
     return (
       <div className="relative aspect-[16/10] w-full overflow-hidden bg-secondary/30 border-b border-border/40 select-none">
         <img
-          src={card.image_url}
-          alt={card.headline || card.title || 'Trend Scout'}
+          src={imageUrl}
+          alt={typeof card.headline === 'string' ? card.headline : (typeof card.title === 'string' ? card.title : 'Trend Scout')}
           loading="lazy"
           onError={() => setImgError(true)}
           className="h-full w-full object-cover transition-transform duration-500 hover:scale-105"
@@ -77,13 +78,17 @@ function TrendCardMedia({ card, canonicalBucket }) {
     );
   }
 
+  const tagLabel = typeof card?.source_name === 'string'
+    ? card.source_name
+    : (typeof card?.tag === 'string' ? card.tag : 'Trend Scout');
+
   return (
     <div className="relative aspect-[16/10] w-full overflow-hidden bg-gradient-to-br from-secondary/60 via-secondary/30 to-muted/50 border-b border-border/40 select-none flex flex-col items-center justify-center p-4">
-      <div className={`rounded-2xl p-4 ${visual.tone} backdrop-blur-sm shadow-sm transition-transform duration-300 hover:scale-110`}>
+      <div className={`rounded-2xl p-4 ${visual?.tone || DEFAULT_BUCKET_VISUAL.tone} backdrop-blur-sm shadow-sm transition-transform duration-300 hover:scale-110`}>
         <Icon className="h-10 w-10 stroke-[1.5]" />
       </div>
-      <span className="mt-2 text-xs font-medium tracking-wide uppercase text-muted-foreground/80">
-        {card.source_name || card.tag || 'Trend Scout'}
+      <span className="mt-2 text-xs font-medium tracking-wide uppercase text-muted-foreground/80 truncate max-w-[85%] text-center">
+        {tagLabel}
       </span>
     </div>
   );
@@ -316,23 +321,27 @@ export default function TrendScout() {
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredCards.map((card, i) => {
-            const canonicalBucket = card.bucket === 'ss26-runway' ? 'runway'
-              : card.bucket === 'second_hand' ? 'vintage'
-              : card.bucket === 'recycling' ? 'maintenance_repairs'
-              : card.bucket === 'news_flash' ? 'local'
-              : card.bucket;
+            const rawBucket = typeof card?.bucket === 'string' ? card.bucket : '';
+            const canonicalBucket = rawBucket === 'ss26-runway' ? 'runway'
+              : rawBucket === 'second_hand' ? 'vintage'
+              : rawBucket === 'recycling' ? 'maintenance_repairs'
+              : rawBucket === 'news_flash' ? 'local'
+              : rawBucket;
 
-            const localisedBucket = card.bucket
-              ? t(`trends.bucket.${card.bucket}`, { defaultValue: t(`trends.bucket.${canonicalBucket}`, { defaultValue: '' }) })
+            const localisedBucket = rawBucket
+              ? t(`trends.bucket.${rawBucket}`, { defaultValue: t(`trends.bucket.${canonicalBucket}`, { defaultValue: '' }) })
               : '';
-            const chip = localisedBucket || card.label || card.tag;
-            const headline = card.headline || card.title;
-            const body = card.summary || card.body || card.blurb;
-            const sourceUrl = card.source_url;
-            const sourceName = card.source_name;
+            const rawChip = localisedBucket || card?.label || card?.tag || '';
+            const chip = typeof rawChip === 'string' ? rawChip : String(rawChip || '');
+            const rawHeadline = card?.headline || card?.title || '';
+            const headline = typeof rawHeadline === 'string' ? rawHeadline : String(rawHeadline || '');
+            const rawBody = card?.summary || card?.body || card?.blurb || '';
+            const body = typeof rawBody === 'string' ? rawBody : String(rawBody || '');
+            const sourceUrl = typeof card?.source_url === 'string' && card.source_url.startsWith('http') ? card.source_url : null;
+            const sourceName = typeof card?.source_name === 'string' ? card.source_name : null;
             const visual = BUCKET_VISUALS[canonicalBucket] || DEFAULT_BUCKET_VISUAL;
-            const BucketIcon = visual.Icon;
-            const key = card.id || `${chip || 'trend'}-${headline || i}`;
+            const BucketIcon = visual?.Icon || Sparkles;
+            const key = card?.id || `${chip || 'trend'}-${headline || i}`;
 
             return (
               <motion.div
@@ -348,7 +357,7 @@ export default function TrendScout() {
 
                   <div className="flex items-center justify-between px-5 py-3 border-b border-border/55 bg-secondary/30">
                     <div className="flex items-center gap-2">
-                      <span className={`inline-flex items-center justify-center h-7 w-7 rounded-full ${visual.tone}`}>
+                      <span className={`inline-flex items-center justify-center h-7 w-7 rounded-full ${visual?.tone || DEFAULT_BUCKET_VISUAL.tone}`}>
                         <BucketIcon className="h-3.5 w-3.5" aria-hidden="true" />
                       </span>
                       {chip ? (
@@ -358,12 +367,12 @@ export default function TrendScout() {
                       ) : null}
                     </div>
                     <div className="flex items-center gap-1.5">
-                      {card.date ? (
+                      {card?.date ? (
                         <span className="text-[10px] text-muted-foreground font-medium px-1.5 py-0.5 rounded bg-background/60">
-                          {card.date}
+                          {String(card.date)}
                         </span>
                       ) : null}
-                      {card.gender && (
+                      {card?.gender && (
                         <Badge variant="secondary" className="text-[9px] uppercase font-semibold">
                           {card.gender === 'male' ? t('trends.men', { defaultValue: 'Men' }) : t('trends.women', { defaultValue: 'Women' })}
                         </Badge>
