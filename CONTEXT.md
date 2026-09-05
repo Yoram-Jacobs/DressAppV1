@@ -41,6 +41,10 @@ graph TD
 * **Responsibility:** Processing transactions, PayPal integration, credit balance ledger, and invoice management.
 * **Key Components:** [`paypal_client.py`](backend/app/services/paypal_client.py), [`pricing.py`](backend/app/services/pricing.py).
 
+### 7. Trend Scout & Autonomous Fashion Intelligence Context
+* **Responsibility:** Multi-channel global/domestic trend discovery across 7 channels (Local News, Runway, Street Style, Sustainability, Influencers, Vintage, Care & Repairs), anti-commerce/anti-paywall verification, demographic ranking, multi-lingual Gemini localization across 13 locales, and 1-tap "Style with My Closet" AI Stylist handoff.
+* **Key Components:** [`trend_scout.py`](backend/app/services/trend_scout.py), [`trends.py`](backend/app/api/v1/trends.py), `trend_reports` collection.
+
 ---
 
 ## Glossary of Terms
@@ -61,3 +65,6 @@ graph TD
 | **Transparency Invariant** | Closet / Visuals | Architectural rule enforcing that all inpainting and clean assets store transparent PNGs without background bonding boxes. |
 | **StylingContext** | Stylist | The deep module (`styling_context.py`) synthesizing multi-modal grounding (wardrobe, sizing, weather, calendar, i18next) for all styling workflows. |
 | **MobileClosetRepository** | Mobile / Store | The deep module (`closetRepository.ts`) managing offline AsyncStorage hydration, SWR background revalidation, optimistic mutations, and instant slot summaries. |
+| **Trend Scout / Fashion Scout** | Trend Scout | Autonomous fashion intelligence pipeline discovering, parsing, and ranking curated trend cards across 7 distinct channels for Men and Women. |
+| **Heuristic Shield** | Trend Scout / Safety | Verification engine (`_verify_trend_card`) that eliminates commercial links, shopping carts, paywalls, and broken images before cards enter the database. |
+| **Style with My Closet** | Trend Scout / Stylist | 1-Tap bridge converting trend card aesthetics (silhouette, drape, color scheme) into immediate AI Stylist outfit proposals from the user's existing closet. |

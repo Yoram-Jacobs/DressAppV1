@@ -1458,10 +1458,263 @@ export function getBundledWiki(lang: string, topic: string): string | null {
 }
 """
 
-bundled_wiki_path = os.path.join(base_dir, 'apps', 'mobile', 'src', 'lib', 'bundledWiki.ts')
-with open(bundled_wiki_path, 'w', encoding='utf-8') as f:
-    f.write(ts_output)
-print(f"Successfully generated {bundled_wiki_path} (size: {os.path.getsize(bundled_wiki_path)} bytes)")
+appendix_doc = """# Trends-Scout System Architecture & Technical Master Manual
+
+## 1. Executive Summary & Value Proposition
+
+### High-Level Overview
+**Trends-Scout** (also operating as **Fashion-Scout**) is DressApp's autonomous, agentic intelligence pipeline that continuously discovers, extracts, filters, verifies, and delivers real-time global and domestic fashion trends. Operating through scheduled cron sweeps (midnight UTC on the 1st of every month, daily sweeps at 07:00 UTC, and on-demand user/admin triggers), Trends-Scout retrieves authentic content from targeted, authoritative fashion publications across the globe.
+
+It parses raw HTML, extracts OpenGraph metadata and inline anchor links, validates source integrity via strict anti-commerce/anti-paywall heuristic engines, and employs Google Gemini (`gemini-2.5-flash` and `gemini-3.5-flash`) to formulate structured, magazine-grade editorial cards. Every card is dynamically scored against user demographic profiles, closet silhouettes, and social network preferences, and localized across 13 distinct languages with zero developer jargon.
+
+```
+       GLOBAL / DOMESTIC FASHION OUTLETS
+    (Vogue, GQ, Elle, Hypebeast, Walla, etc.)
+                      │
+                      ▼
+    ┌───────────────────────────────────┐
+    │     Crawling & Parsing Engine     │  ◄── Strict Anti-Commerce Filter
+    │  (httpx + BeautifulSoup + OpenGraph) │  ◄── Anti-Paywall / Anti-Bot Shield
+    └─────────────────┬─────────────────┘
+                      │
+                      ▼
+    ┌───────────────────────────────────┐
+    │     Gemini Synthesis Agent        │
+    │  (gemini-2.5-flash JSON Contract) │  ◄── Verified Deep Link & Image Pinning
+    └─────────────────┬─────────────────┘
+                      │
+                      ▼
+    ┌───────────────────────────────────┐
+    │     MongoDB `trend_reports`       │
+    │  (Gender, Bucket, Country, Lang)  │
+    └─────────────────┬─────────────────┘
+                      │
+          ┌───────────┴───────────┐
+          ▼                       ▼
+┌──────────────────┐    ┌──────────────────┐
+│  Mobile Client   │    │    Web Client    │
+│ (Expo / RN 0.79) │    │  (React 19 SPA)  │
+└──────────────────┘    └──────────────────┘
+```
+
+### Architectural Flow
+
+```mermaid
+graph TD
+    %% Scheduling & On-Demand Triggers
+    CronMonth[Monthly Sweep: Midnight UTC 1st] -->|Triggers| RunScout[run_trend_scout Engine]
+    CronDaily[Daily Sweep: 07:00 UTC] -->|Triggers| RunScout
+    UserAccess[Feed Request: GET /trends/fashion-scout] -->|Stale Check < 4 cards today| LazyRefresh[Lazy Background Refresh]
+    LazyRefresh -->|Async Task| RunScout
+    ClientRefresh[User 🔄 Header Refresh / Client Sync] -->|POST /trends/run-now-dev| RunScout
+    AdminForce[Admin Force: POST /trends/run-now?force=true] -->|Synchronous| RunScout
+
+    %% Crawl Parameter Resolution
+    RunScout --> ResolveTarget[Resolve Target: Gender, Country, City, Closet Profile]
+    ResolveTarget --> QueryBuilder[get_search_queries: Bucket + Style + Socials]
+    
+    %% Multi-Bucket Execution
+    QueryBuilder --> BucketsFork{Iterate 7 Channels}
+    BucketsFork -->|Channel 1| BLocal[Local News: Regional Outlets]
+    BucketsFork -->|Channel 2| BRunway[Runway: Haute Couture & Lookbooks]
+    BucketsFork -->|Channel 3| BStreet[Street Style: Urban Culture & Sneakers]
+    BucketsFork -->|Channel 4| BSustain[Sustainability: Circular Fashion & Fabrics]
+    BucketsFork -->|Channel 5| BInfluencers[Influencers: Viral Aesthetics & Icons]
+    BucketsFork -->|Channel 6| BVintage[Vintage / Archival: Heritage & History]
+    BucketsFork -->|Channel 7| BCare[Care & Repairs: Mending & Longevity]
+
+    %% Web Fetching & Verification
+    BLocal & BRunway & BStreet & BSustain & BInfluencers & BVintage & BCare --> Scrape[browse_web: httpx + BeautifulSoup]
+    Scrape --> LinkExtraction[Extract Inline Markdown Links + Hero Images]
+    LinkExtraction --> AgentLoop[Gemini 2.5 Flash Agent Synthesis]
+    AgentLoop --> VerifyCard[_verify_trend_card: Strict Domain & Heuristic Audit]
+    
+    VerifyCard -->|Reject: Shop / Paywall / Soft 404| Discard[Discard Hallucinated / Invalid Candidate]
+    VerifyCard -->|Pass: Verified Deep Link & Image| CanonSave[(MongoDB trend_reports Upsert)]
+
+    %% Feed Serving & Personalization
+    CanonSave --> FetchFeed[fashion_scout_feed API Query]
+    FetchFeed --> Personalize[rank_cards_for_user: Scoring Matrix]
+    Personalize --> CacheCheck{Language == 'en'?}
+    CacheCheck -->|Yes| Deliver[Deliver Canonical Cards to Client]
+    CacheCheck -->|No| TransEngine[_translate_card: Gemini 3.5 Flash]
+    TransEngine --> TransCache[(MongoDB Cache: origin_id + language)]
+    TransCache --> Deliver
+```
+
+### User Value Proposition
+*   **Dual Gender Ecosystems**: Distinct 7-channel intelligence streams customized separately for Men's and Women's fashion aesthetics.
+*   **1-Tap "Style with My Closet"**: Directly transfers trend aesthetic tokens (color palette, silhouette drape, fabric weight) into the conversational AI Stylist, instantly finding matching garments already hanging in the user's digitized wardrobe.
+*   **Zero-Jargon Editorial Purity**: Formatted as engaging, approachable fashion magazine stories with high-resolution editorial imagery, categorical badges, and published date stamps.
+*   **Strict Anti-Commerce & Anti-Paywall Shield**: Rigid heuristic engines reject shopping carts, checkout URLs (`/cart`, `/buy`, `shopify`), fast-fashion retailers (Shein, Temu, ASOS), and paywalled sources, ensuring pure educational and styling value.
+*   **Deep Geolocation & Cultural Anchoring**: Automatically detects user location (e.g., Israel, Japan, US, France, UK) to highlight domestic designers, local fashion weeks, and regional boutique events.
+*   **Multi-Platform Social Sync**: Connects and factors in user preferences from Instagram, Pinterest, TikTok, Facebook, Threads, and X into crawl queries and card weighting.
+
+---
+
+## 2. Comprehensive User Manual
+
+### Visual Interface Topology
+
+The Trends-Scout system is unified across web desktop (`apps/web/src/pages/TrendScout.jsx`) and mobile native (`apps/mobile/src/screens/me/TrendScoutScreen.tsx`):
+
+```
++─────────────────────────────────────────────────────────────────────────────+
+|  ← Explore      TREND SCOUT & FASHION RADAR          [ ⚙️ Settings ] [ 🔄 ]  |
++─────────────────────────────────────────────────────────────────────────────+
+|  [ ♀ Women's Fashion ]  |  [ ♂ Men's Fashion ]   (Gender Ecosystem Toggle)   |
++─────────────────────────────────────────────────────────────────────────────+
+|  (All) (📍Local) (👑Runway) (👟Street) (🌿Eco) (✨Icons) (♻️Vintage) (🔧Care)|
++─────────────────────────────────────────────────────────────────────────────+
+|                                                                             |
+|  ┌─────────────────────────────────┐  ┌──────────────────────────────────┐  |
+|  │ [ HERO EDITORIAL IMAGE ]        │  │ [ HERO EDITORIAL IMAGE ]         │  |
+|  │                                 │  │                                  │  |
+|  │ [📍 LOCAL NEWS]      [2026-09]  │  │ [👑 RUNWAY]           [2026-09]  │  |
+|  │ Tel Aviv Fashion Week Debuts    │  │ Sculptural Silhouettes & Drapes  │  |
+|  │ Domestic designers showcase     │  │ Fluid tailoring and wide-leg     │  |
+|  │ linen drapes and desert hues... │  │ pleats dominate the new season...│  |
+|  │                                 │  │                                  │  |
+|  │ [ ✨ Style with My Closet ]     │  │ [ ✨ Style with My Closet ]      │  |
+|  │ [ ↗ Read at Walla Fashion ]     │  │ [ ↗ Read at The Fashionisto ]    │  |
+|  └─────────────────────────────────┘  └──────────────────────────────────┘  |
+|                                                                             |
++─────────────────────────────────────────────────────────────────────────────+
+```
+
+### Operational Workflows & Modes
+
+#### 1. 1-Tap "Style with My Closet" Action
+*   **Trigger**: User clicks the prominent **"Style with My Closet"** button located on any trend card.
+*   **Action Flow**:
+    1. The client intercepts the trend card's metadata (`tag`, `headline`, `body`, `bucket`).
+    2. Constructs a localized contextual prompt (e.g., *"How can I style this trend using clothes from my wardrobe? Trend: [Headline] - [Body]"*).
+    3. Navigates seamlessly to the AI Stylist interface (`/stylist` on Web, `StylistTab` on Mobile).
+    4. The AI Stylist parses the user's digitized wardrobe, analyzes color harmony, garment types, and formality, and outputs 2-3 outfit proposals utilizing clothes the user already owns.
+    5. The user can preview the proposed looks on their 2D character avatar and save the combination directly to their Wardrobe Diary.
+
+#### 2. The 7 Curated Channels
+Users can filter their feed via top category pills:
+1.  📍 **Local News (`local` / `news_flash`)**: Anchored directly to the user's country code (e.g., Israel, Japan, France). Highlights domestic designer spotlights, regional fashion weeks, and local boutique news.
+2.  👑 **Runway (`runway` / `ss26-runway`)**: High-fashion runway reviews, seasonal lookbooks, couture collections, and major fashion house directions.
+3.  👟 **Street Style (`street`)**: Urban fashion movements, sneaker releases, subcultural aesthetics, and modern streetwear ensembles.
+4.  🌿 **Sustainability (`sustainability`)**: Eco-textile innovations, circular fashion initiatives, zero-waste design, and fair-wage garment practices.
+5.  ✨ **Influencers & Icons (`influencers`)**: Viral social style movements, red-carpet fashion breakdowns, and creator-driven styling formulas.
+6.  ♻️ **Vintage / Archival (`vintage` / `second_hand`)**: Historical fashion retrospects, vintage denim curation, archival designer analysis, and thrift culture (strictly non-commercial).
+7.  🔧 **Care & Repairs (`maintenance_repairs` / `recycling`)**: Step-by-step practical guides on visible mending, denim darning, Goodyear welt cobbling, sweater depilling, and garment longevity.
+
+#### 3. Gender Ecosystem Switcher
+*   A dedicated pill selector in the header allows users to instantly flip between **Women's Fashion** and **Men's Fashion**.
+*   The selection alters the API query parameter (`gender=male|female`), updating the feed with distinct channel sources, starter publications, and targeted keywords without resetting the user's primary account settings.
+
+#### 4. Personalization & Social Configuration Modal (⚙️)
+*   **Access**: Tapping the gear icon opens `TrendScoutSettingsModal`.
+*   **Style Aesthetics**: Select from 10 curated tags (*Quiet Luxury*, *Vintage*, *Minimalist*, *Streetwear*, *Old Money*, *Boho & Casual*, *Cyberpunk*, *Y2K*, *Classic Business*, *Athleisure*) or type a custom aesthetic.
+*   **Connected Platforms**: Link usernames for Instagram, Pinterest, TikTok, Facebook, Threads, and X.
+*   **Automated Closet Profile**: Displays the user's lead dress code (e.g., Casual, Business Casual) and dominant style computed from existing closet items.
+*   **Save & Refresh**: Persists settings to MongoDB via `PUT /api/v1/trends/settings` and clears local client caches to fetch newly targeted cards.
+
+#### 5. Real-Time Radar Sweep (🔄)
+*   Users can trigger an on-demand live radar sweep using the header refresh button (or pull-to-refresh on mobile).
+*   Calls `POST /api/v1/trends/run-now-dev` to immediately scan starter feeds, generate fresh cards, and broadcast a real-time WebSocket sync event (`trend_scout_updated`).
+
+---
+
+## 3. Technology Stack & Capability Deep-Dive
+
+### Microservice Architecture & Data Flow
+*   **Framework**: FastAPI with asynchronous I/O (`asyncio`, `httpx`).
+*   **Database**: MongoDB (`motor` async driver), utilizing the `trend_reports`, `trend_scout_settings`, and `closet_items` collections.
+*   **AI Engine**: Google Gemini API via `GeminiClient` (`gemini-2.5-flash` for extraction, `gemini-3.5-flash` for multilingual localization).
+*   **Scheduling**: `APScheduler` executing background jobs in `backend/app/services/scheduler.py`.
+
+### Database Schema & Indexing (`trend_reports`)
+
+```json
+{
+  "_id": "66da1b4a7801b7a2e8e45a19",
+  "id": "c39a859e-e317-48f0-b9f0-25e24c08466b",
+  "bucket": "local",
+  "bucket_label": "Local News",
+  "gender": "female",
+  "headline": "Tel Aviv Fashion Week Highlights Desert Tones and Sustainable Linen",
+  "body": "Emerging Israeli designers showcased relaxed tailoring infused with earthy terracotta and olive drapes...",
+  "tag": "LOCAL NEWS",
+  "source_name": "Fashion Forward",
+  "source_url": "https://fashionforward.mako.co.il/news/2026-runway-recap/",
+  "image_url": "https://img.mako.co.il/2026/09/01/fashion_linen_hero.jpg",
+  "video_url": null,
+  "date": "2026-09-05",
+  "created_at": "2026-09-05T07:15:30.123456+00:00",
+  "country_code": "IL",
+  "language": "en",
+  "origin_id": null
+}
+```
+
+#### MongoDB Indexes
+1.  `[("bucket", 1), ("gender", 1), ("date", 1), ("language", 1), ("country_code", 1)]` (Sparse) — Powers zero-latency bucket lookups.
+2.  `[("origin_id", 1), ("language", 1), ("country_code", 1)]` (Sparse) — Fast multi-lingual translation cache retrieval.
+3.  `[("created_at", -1)]` — Supports freshness sorting and stale-for-seconds queries.
+
+### Strict Link Verification & Heuristic Shield (`_verify_trend_card`)
+To prevent LLM hallucination and ensure strict editorial quality, every synthesized candidate card passes through a multi-stage validation gauntlet:
+
+```python
+# Heuristic Protection Pipeline
+1. Status Code Validation: Must return HTTP 200 OK (rejects 4xx, 5xx, timeouts).
+2. Anti-Commerce Filter: Rejects forms with action="/cart", "/checkout", "/buy",
+   and detects Shopify/WooCommerce shopping platform signatures.
+3. Anti-Paywall Filter: Rejects URLs containing /subscribe, /signin, /login,
+   and scans DOM for "subscriber-only" or "sign in to read".
+4. Soft 404 Detection: Analyzes page title and H1 headers for localized missing-page
+   strings ("404 not found", "שגיאה 404", "seite nicht gefunden", "page introuvable").
+5. Substantive Text Gate: Rejects pages with combined body text < 200 characters.
+6. OpenGraph Hero Extraction: Resolves authentic og:image or twitter:image metadata;
+   strictly eliminates dummy/hallucinated images.
+```
+
+### Personalization & Demographic Ranking Algorithm
+When a user requests their personalized radar (`GET /api/v1/trends/fashion-scout?personalized=true`), cards are evaluated and dynamically re-ordered via `rank_cards_for_user`:
+
+$$\\text{Final Score} = S_{\\text{gender}} + S_{\\text{recency}} + S_{\\text{keywords}} + S_{\\text{affinity}} + S_{\\text{closet}} + S_{\\text{social}} + S_{\\text{country}}$$
+
+#### Mathematical Scoring Components:
+*   **Gender Alignment ($S_{\\text{gender}}$)**:
+    *   Direct match with user gender: $+15.0$
+    *   Opposite gender mismatch: $-10.0$
+*   **Recency Boost ($S_{\\text{recency}}$)**:
+    *   Card published on current date: $+10.0$
+*   **Keyword Overlap ($S_{\\text{keywords}}$)**:
+    *   Tokens overlapping user profile attributes: $+2.0 \\times \\text{count}$
+*   **Bucket Affinity ($S_{\\text{affinity}}$)**:
+    *   Weighting defined in `_BUCKET_AFFINITY` for matching interests (e.g., "vintage" $\\rightarrow$ `vintage`: $+6.0$).
+*   **Closet Dress Code & Style Match ($S_{\\text{closet}}$)**:
+    *   Card mentions user's lead dress code (e.g., "casual", "formal"): $+6.0$
+    *   Card mentions user's effective style (e.g., "quiet luxury", "streetwear"): $+6.0$
+*   **Social Platform Boost ($S_{\\text{social}}$)**:
+    *   Card matches linked social channels (e.g., TikTok aesthetic, Instagram look): $+3.0$
+*   **Geographic Affinity ($S_{\\text{country}}$)**:
+    *   Direct card country code match: $+8.0$
+    *   Country name mention in headline or body: $+3.0$
+
+### Multilingual Localization & Two-Layer Help Architecture
+*   **13 Supported Locales**: English (`en`), Hebrew (`he`), Arabic (`ar`), German (`de`), Spanish (`es`), French (`fr`), Hindi (`hi`), Italian (`it`), Japanese (`ja`), Dutch (`nl`), Portuguese (`pt`), Russian (`ru`), Chinese (`zh`).
+*   **Two-Tier Translation Engine**:
+    *   **Priority Tier**: Concurrently translates the top 8 ranked cards via `asyncio.gather` with strict 3.5-second timeouts.
+    *   **Background Tier**: Asynchronously translates remaining cards in the background without blocking initial HTTP response.
+*   **RTL Optimization**: Complete bidirectional layout support for Hebrew and Arabic, guaranteeing zero letter-corruption or hybrid-script artifacts.
+*   **Two-Layer Help Support**:
+    *   **Layer 1 (UI Cards)**: 4 concise summary cards in `HelpMenu.jsx` and `HelpModal.tsx`.
+    *   **Layer 2 (Detailed Wiki)**: Comprehensive 6-section guides pre-bundled in `apps/mobile/src/lib/bundledWiki.ts` (6.87 MB) for offline access.
+"""
+
+appendix_file = r"D:\ai\Emergent\Appendix\docs\Trends-Scout.md"
+if os.path.exists(os.path.dirname(appendix_file)):
+    with open(appendix_file, "w", encoding="utf-8") as f:
+        f.write(appendix_doc.strip() + "\n")
+    print(f"Successfully updated {appendix_file}!")
+
 
 
 
