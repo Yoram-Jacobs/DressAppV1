@@ -1,23 +1,29 @@
-"""Trend-Scout / Fashion-Scout agent.
+"""Trend-Scout / Fashion-Scout Agent & Intelligence Engine.
 
 Runs on a monthly schedule (midnight UTC on the 1st of every month) as well as
-daily/on-demand refreshes. Curates gender-sensitive fashion intelligence:
-- Men's Fashion Ecosystem (7 buckets) for male users.
-- Women's Fashion Ecosystem (7 buckets) for female users.
+daily lazy-refresh and on-demand live triggers. Powered by Gemini 3.5 Flash for
+editorial web crawling, style synthesis, and multi-language translation.
 
-Buckets:
-  1. local: Local News (anchored to device country e.g. Israel / IL)
-  2. runway: Runway (Worldwide Fashion News)
-  3. street: Street Style
-  4. sustainability: Sustainability
-  5. influencers: Mainstream Influencers & Tastemakers
-  6. vintage: Vintage & Archival Fashion (No shopping)
-  7. maintenance_repairs: Maintenance & Repairs (Garment care, mending, cobbling)
+Demographic Ecosystems:
+- Men's Fashion Ecosystem (7 buckets) tailored to male wardrobe aesthetics.
+- Women's Fashion Ecosystem (7 buckets) tailored to female wardrobe aesthetics.
 
-Enforces strict source rules:
-- Restricts shopping/e-commerce checkout platforms (Amazon, ASOS, Shein, cart/checkout links).
-- Restricts registration-walled / paywalled sites (no sign-up needed).
-- Exposes true authentic deep links, never search redirect wrappers.
+Curated Fashion Buckets:
+  1. local: Local News & City Radar (anchored to device country e.g. Israel / IL).
+  2. runway: Runway & Haute Couture (fashion weeks & international designer debuts).
+  3. street: Street Style (global fashion capitals & subcultural street trends).
+  4. sustainability: Sustainability (circular economy, textile science & slow fashion).
+  5. influencers: Mainstream Influencers & Tastemakers (derives local and global trends,
+     incorporating user-authorized social platforms: Instagram, Facebook, TikTok, Pinterest, X, Threads).
+  6. vintage: Vintage & Archival Fashion (curatorial retrospectives; strictly editorial, no shopping).
+  7. maintenance_repairs: Care & Repairs (garment care, tailoring, mending & footwear upkeep).
+
+Strict Editorial Guardrails & Quality Filters:
+- Restricts shopping/e-commerce checkout platforms (Amazon, ASOS, Shein, Temu, cart/checkout links).
+- Restricts registration-walled / paywalled sites (no mandatory sign-up needed).
+- Authentic deep links only: verified editorial sources, never search redirect wrappers or broken URLs.
+- Deduplication: strict uniqueness on source_url and image_url across feed queries.
+- Multi-language localization: async translation & caching across all 13 supported languages.
 """
 from __future__ import annotations
 
