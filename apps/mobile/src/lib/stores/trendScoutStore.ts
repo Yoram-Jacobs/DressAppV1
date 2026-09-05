@@ -103,10 +103,12 @@ export const trendScoutStore = {
   },
 
   isFresh(gender?: string | null, language?: string | null): boolean {
+    const today = new Date().toISOString().slice(0, 10);
     const timeFresh = Date.now() - _state.lastFetch < FRESH_MS && _state.cards.length > 0;
     const genderMatch = !gender || (_state as any).cachedGender === gender;
     const langMatch = !language || (_state as any).cachedLanguage === language;
-    return timeFresh && genderMatch && langMatch;
+    const dayMatch = (_state as any).cachedDate === today;
+    return timeFresh && genderMatch && langMatch && dayMatch;
   },
 
   async prewarm(options: { language?: string; country?: string | null; gender?: string | null; force?: boolean } = {}): Promise<void> {
@@ -114,6 +116,7 @@ export const trendScoutStore = {
       return;
     }
 
+    const today = new Date().toISOString().slice(0, 10);
     setState((prev) => ({ ...prev, loading: prev.cards.length === 0, error: null }));
     try {
       const res = await api.fashionScoutFeed(15, {
@@ -122,17 +125,22 @@ export const trendScoutStore = {
         gender: options.gender || undefined,
       });
       const rawList = Array.isArray(res?.cards) ? res.cards : (Array.isArray(res) ? res : []);
-      const cards = rawList.map((it: any, idx: number) => {
-        const rawImg = it.image_url || '';
-        const isBroken = rawImg.includes('ynet-pic1.ynet.co.il') || rawImg.includes('example.com') || !rawImg.startsWith('http');
-        return {
-          ...it,
-          id: it.id || `trend-${idx}`,
-          title: it.title || it.headline || '',
-          description: it.description || it.summary || '',
-          image_url: isBroken ? undefined : it.image_url,
-        };
-      });
+      const cards = rawList
+        .filter((it: any) => {
+          const u = it?.source_url || '';
+          return u.startsWith('http') && !u.includes('example.com') && !u.includes('shopisrael.com');
+        })
+        .map((it: any, idx: number) => {
+          const rawImg = it.image_url || '';
+          const isBroken = rawImg.includes('ynet-pic1.ynet.co.il') || rawImg.includes('example.com') || !rawImg.startsWith('http');
+          return {
+            ...it,
+            id: it.id || `trend-${idx}`,
+            title: it.title || it.headline || '',
+            description: it.description || it.summary || '',
+            image_url: isBroken ? undefined : it.image_url,
+          };
+        });
 
       setState((prev) => ({
         ...prev,
@@ -141,6 +149,7 @@ export const trendScoutStore = {
         lastFetch: Date.now(),
         cachedGender: options.gender || undefined,
         cachedLanguage: options.language || 'en',
+        cachedDate: today,
         error: null,
       } as any));
     } catch (err: any) {

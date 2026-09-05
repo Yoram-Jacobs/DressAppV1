@@ -4,7 +4,6 @@ from datetime import datetime, timezone
 from app.services.trend_scout import (
     MENS_BUCKETS,
     WOMENS_BUCKETS,
-    CANONICAL_SEED_CARDS,
     get_search_queries,
     _clean_url,
     latest_trend_cards,
@@ -24,26 +23,28 @@ def test_mens_and_womens_ecosystem_structure():
     assert men_slugs == expected_slugs
     assert women_slugs == expected_slugs
 
-    # Verify seed cards cover all 14 buckets
-    men_seeds = [s for s in CANONICAL_SEED_CARDS if s["gender"] == "male"]
-    women_seeds = [s for s in CANONICAL_SEED_CARDS if s["gender"] == "female"]
-    assert len(men_seeds) == 7
-    assert len(women_seeds) == 7
-
 
 def test_clean_url_enforcement():
     # Valid direct links
     assert _clean_url("https://fashion.walla.co.il/item/123") == "https://fashion.walla.co.il/item/123"
     assert _clean_url("https://www.lofficielusa.com/fashion/article") == "https://www.lofficielusa.com/fashion/article"
 
-    # Disallowed shopping / checkout platforms
+    # Disallowed shopping / checkout platforms & online stores
     assert _clean_url("https://www.amazon.com/dp/B08N5WRWNW") is None
     assert _clean_url("https://www.shein.com/goods-p-12345.html") is None
     assert _clean_url("https://www.zara.com/shop/cart") is None
+    assert _clean_url("https://shopisrael.com/blogs/style-gifts/fashion-forward-israel-inspired-clothes-for-the-modern-wardrobe") is None
+    assert _clean_url("https://brand.myshopify.com/products/jacket") is None
+    assert _clean_url("https://store.brand.com/item/123") is None
 
-    # Disallowed paywalls
+    # Disallowed paywalls & social logins
     assert _clean_url("https://www.voguebusiness.com/companies/story") is None
     assert _clean_url("https://www.wsj.com/articles/fashion-123") is None
+    assert _clean_url("https://www.facebook.com/login/?next=https://example.com") is None
+    assert _clean_url("https://www.instagram.com/p/12345") is None
+
+    # Disallowed dummy / hallucinated URLs
+    assert _clean_url("https://www.ynetnews.com/culture/article/S12345678") is None
 
     # Search engine redirect unwrapping
     google_redirect = "https://www.google.com/url?q=https%3A%2F%2Ffashionista.com%2F2026%2Ftrend&sa=U"
@@ -51,21 +52,32 @@ def test_clean_url_enforcement():
 
 
 def test_search_queries_localization_and_gender():
+    import urllib.parse
+
     # Men's local query for Israel
-    men_il_queries = get_search_queries("local", country_code="IL", gender="male")
-    assert any("fashion.walla.co.il" in q or "timeout.co.il" in q or "אופנת גברים" in q for q in men_il_queries)
+    men_il_raw = get_search_queries("local", country_code="IL", gender="male")
+    men_il_queries = [urllib.parse.unquote_plus(q) for q in men_il_raw]
+    assert any("אופנת גברים" in q or "Tel Aviv" in q for q in men_il_queries)
+    # Ensure NO hardcoded website domains
+    assert not any("site:" in q or "fashion.walla.co.il" in q or "timeout.co.il" in q for q in men_il_queries)
 
     # Women's local query for Israel
-    women_il_queries = get_search_queries("local", country_code="IL", gender="female")
-    assert any("fashionforward.mako.co.il" in q or "atmag.co.il" in q or "מעצבים ישראלים" in q for q in women_il_queries)
+    women_il_raw = get_search_queries("local", country_code="IL", gender="female")
+    women_il_queries = [urllib.parse.unquote_plus(q) for q in women_il_raw]
+    assert any("מעצבים ישראלים" in q or "Tel Aviv" in q for q in women_il_queries)
+    assert not any("site:" in q or "fashionforward.mako.co.il" in q or "atmag.co.il" in q for q in women_il_queries)
 
     # Men's Runway queries
-    men_runway_queries = get_search_queries("runway", country_code=None, gender="male")
-    assert any("thefashionisto.com" in q or "fuckingyoung.es" in q or "malemodelscene.net" in q for q in men_runway_queries)
+    men_runway_raw = get_search_queries("runway", country_code=None, gender="male")
+    men_runway_queries = [urllib.parse.unquote_plus(q) for q in men_runway_raw]
+    assert any("menswear" in q or "mens" in q or "runway" in q for q in men_runway_queries)
+    assert not any("site:" in q or "thefashionisto.com" in q for q in men_runway_queries)
 
     # Women's Runway queries
-    women_runway_queries = get_search_queries("runway", country_code=None, gender="female")
-    assert any("lofficielusa.com" in q or "fashionista.com" in q for q in women_runway_queries)
+    women_runway_raw = get_search_queries("runway", country_code=None, gender="female")
+    women_runway_queries = [urllib.parse.unquote_plus(q) for q in women_runway_raw]
+    assert any("womens" in q or "runway" in q or "couture" in q for q in women_runway_queries)
+    assert not any("site:" in q or "lofficielusa.com" in q for q in women_runway_queries)
 
 
 def test_gender_ranking():
@@ -80,20 +92,26 @@ def test_gender_ranking():
         "home_location": {"country_code": "IL", "city": "Tel Aviv"}
     }
 
+    sample_cards = [
+        {"id": "c_male", "headline": "Men Fashion", "gender": "male", "bucket": "runway", "date": "2026-08-01"},
+        {"id": "c_female", "headline": "Women Fashion", "gender": "female", "bucket": "runway", "date": "2026-08-01"},
+    ]
+
     # Male ranking should boost male cards
-    ranked_for_male = rank_cards_for_user(CANONICAL_SEED_CARDS, user_male)
+    ranked_for_male = rank_cards_for_user(sample_cards, user_male)
     assert ranked_for_male[0]["gender"] == "male"
 
     # Female ranking should boost female cards
-    ranked_for_female = rank_cards_for_user(CANONICAL_SEED_CARDS, user_female)
+    ranked_for_female = rank_cards_for_user(sample_cards, user_female)
     assert ranked_for_female[0]["gender"] == "female"
 
 
 @pytest.mark.anyio
-async def test_latest_trend_cards_fallback():
+async def test_latest_trend_cards_no_hardcoded_seeds():
     mock_db = MagicMock()
     mock_cursor = MagicMock()
 
+    # When database is empty, return empty list (no hardcoded/pre-coded cards injected)
     async def empty_iter(*args, **kwargs):
         if False:
             yield
@@ -102,46 +120,30 @@ async def test_latest_trend_cards_fallback():
     mock_cursor.sort.return_value = mock_cursor
     mock_cursor.limit.return_value = mock_cursor
     mock_db.trend_reports.find.return_value = mock_cursor
-    mock_db.trend_reports.count_documents = AsyncMock(return_value=1)
-    mock_db.trend_reports.update_many = AsyncMock()
+    mock_db.trend_reports.count_documents = AsyncMock(return_value=0)
 
     with patch("app.services.trend_scout.get_db", return_value=mock_db):
-        cards_male = await latest_trend_cards(gender="male", country="IL")
-        assert len(cards_male) == 7
-        assert all(c["gender"] == "male" for c in cards_male)
-        assert all(bool(c.get("image_url") and c["image_url"].startswith("http")) for c in cards_male)
-
-        cards_female = await latest_trend_cards(gender="female", country="IL")
-        assert len(cards_female) == 7
-        assert all(c["gender"] == "female" for c in cards_female)
-        assert all(bool(c.get("image_url") and c["image_url"].startswith("http")) for c in cards_female)
+        cards = await latest_trend_cards(gender="male", country="IL")
+        assert cards == []
 
 
-def test_card_images_and_deep_links_guaranteed():
-    from app.services.trend_scout import _ensure_card_image, _get_fallback_image
-    import urllib.parse
+def test_card_images_no_hardcoded_or_hallucinated():
+    from app.services.trend_scout import _ensure_card_image
 
-    # All canonical seed cards must have valid image URLs and deep article source links
-    for seed in CANONICAL_SEED_CARDS:
-        assert seed.get("image_url") is not None
-        assert seed["image_url"].startswith("https://")
+    # Card with valid scraped image is preserved
+    valid_card = {"bucket": "street", "gender": "male", "image_url": "https://example-article.com/real_photo.jpg"}
+    res = _ensure_card_image(valid_card)
+    assert res["image_url"] == "https://example-article.com/real_photo.jpg"
 
-        # Must have specific source URL and not just root domain
-        source_url = seed.get("source_url")
-        assert source_url is not None
-        assert source_url.startswith("https://")
-        parsed = urllib.parse.urlparse(source_url)
-        path = (parsed.path or "").strip("/")
-        assert len(path) > 0, f"Seed card {seed['id']} has root domain source_url: {source_url}"
-
-    # Card with missing image_url gets filled by _ensure_card_image
+    # Card with missing image_url remains None (no hardcoded Unsplash image)
     empty_card = {"bucket": "street", "gender": "male", "headline": "Test Card"}
     filled = _ensure_card_image(empty_card)
-    # Card with broken domain image gets replaced with verified fallback
+    assert filled["image_url"] is None
+
+    # Card with broken domain image is cleared to None (no hallucinated / fallback stock image)
     broken_img_card = {"bucket": "local", "gender": "male", "image_url": "https://ynet-pic1.ynet.co.il/pics/Maskit.jpg"}
     healed = _ensure_card_image(broken_img_card)
-    assert "ynet-pic1.ynet.co.il" not in healed["image_url"]
-    assert healed["image_url"].startswith("https://images.unsplash.com")
+    assert healed["image_url"] is None
 
 
 def test_sanitize_localized_text():
@@ -156,5 +158,113 @@ def test_sanitize_localized_text():
     # Preserves clean pure text
     clean_headline = "קמפיין מיקונוס של CANDID ממריא"
     assert _sanitize_localized_text(clean_headline, "he") == clean_headline
+
+
+def test_prompt_restrictions_and_must_achieve_rules():
+    from app.services.trend_scout import SYSTEM_PROMPT
+
+    # Verify all restrictions are explicitly included
+    assert "No marketplaces or online stores" in SYSTEM_PROMPT
+    assert "No sign-in walled websites" in SYSTEM_PROMPT
+    assert "No hard-coded or hallucinated images" in SYSTEM_PROMPT
+    assert "No irrelevant articles" in SYSTEM_PROMPT
+    assert "No 404 Not Found - always verify article web links" in SYSTEM_PROMPT
+
+    # Verify all must-achieve goals are explicitly included
+    assert "Up-to-date articles with category-filtered, relevant new content" in SYSTEM_PROMPT
+    assert "Valid article web link. Must validate the link before publishing" in SYSTEM_PROMPT
+    assert "Card image: Original image scraped from the article" in SYSTEM_PROMPT
+    assert "A carefully formulated summary of the article. Always localize to the user's language and translate carefully. Verify using the language rules, font, and grammar" in SYSTEM_PROMPT
+    assert "Honor i18next localization" in SYSTEM_PROMPT
+
+
+@pytest.mark.anyio
+async def test_verify_and_enrich_card_filters_and_enrichment():
+    from app.services.trend_scout import verify_and_enrich_card
+
+    # Rejected URLs (stores, 404 dummy, paywalls, root domain)
+    assert await verify_and_enrich_card({"source_url": "https://shopisrael.com/blogs/style-gifts/fashion-forward"}, "local", "female") is None
+    assert await verify_and_enrich_card({"source_url": "https://www.ynetnews.com/culture/article/S12345678"}, "local", "female") is None
+    assert await verify_and_enrich_card({"source_url": "https://www.facebook.com/login/?next=https://fashion.com"}, "local", "female") is None
+    assert await verify_and_enrich_card({"source_url": "https://amazon.com/dp/B012345678"}, "local", "female") is None
+    assert await verify_and_enrich_card({"source_url": "https://zara.com/us/en/cart"}, "local", "female") is None
+    assert await verify_and_enrich_card({"source_url": "https://fashionista.com"}, "runway", "female") is None
+
+
+@pytest.mark.anyio
+async def test_closet_analysis_and_custom_style_override():
+    from app.services.trend_scout import (
+        analyze_user_closet_profile,
+        save_user_trend_scout_settings,
+        get_user_trend_scout_settings,
+    )
+
+    mock_db = MagicMock()
+    mock_closet_cursor = MagicMock()
+    mock_closet_cursor.to_list = AsyncMock(return_value=[
+        {"dress_code": "formal", "style": "vintage", "tags": ["retro"]},
+        {"dress_code": "formal", "style": "classic"},
+        {"dress_code": "casual", "style": "streetwear"},
+    ])
+    async def mock_aiter(self):
+        for item in [
+            {"dress_code": "formal", "style": "vintage", "tags": ["retro"]},
+            {"dress_code": "formal", "style": "classic"},
+            {"dress_code": "casual", "style": "streetwear"},
+        ]:
+            yield item
+
+    mock_closet_cursor.__aiter__ = mock_aiter
+    mock_db.closet_items.find.return_value = mock_closet_cursor
+    mock_db.clothes.find.return_value = mock_closet_cursor
+
+
+    stored_settings = {}
+    async def mock_find_one(query, *args, **kwargs):
+        return stored_settings.get(query.get("user_id"))
+
+    async def mock_update_one(query, update, *args, **kwargs):
+        stored_settings[query["user_id"]] = update["$set"]
+
+    async def mock_replace_one(query, doc, *args, **kwargs):
+        stored_settings[query["user_id"]] = doc
+
+    mock_db.trend_scout_settings.find_one = AsyncMock(side_effect=mock_find_one)
+    mock_db.trend_scout_settings.update_one = AsyncMock(side_effect=mock_update_one)
+    mock_db.trend_scout_settings.replace_one = AsyncMock(side_effect=mock_replace_one)
+    mock_db.users.find_one = AsyncMock(return_value={"id": "user_123", "gender": "female"})
+    mock_db.users.update_one = AsyncMock()
+
+
+
+
+    with patch("app.services.trend_scout.get_db", return_value=mock_db):
+
+        # 1. Baseline without custom style: Lead dress code is formal, lead style is vintage
+        profile = await analyze_user_closet_profile("user_123")
+        assert profile["lead_dress_code"].lower() == "formal"
+        assert profile["lead_closet_style"].lower() == "vintage"
+        assert profile["effective_style"].lower() == "vintage"
+
+        # 2. Set custom style: overrides closet lead style
+        await save_user_trend_scout_settings("user_123", {"custom_style": "Quiet Luxury"})
+        profile_override = await analyze_user_closet_profile("user_123")
+        assert profile_override["lead_dress_code"].lower() == "formal"
+        assert profile_override["lead_closet_style"].lower() == "vintage"
+        assert profile_override["custom_style"] == "Quiet Luxury"
+        assert profile_override["effective_style"] == "Quiet Luxury"
+
+        # 3. Verify settings retrieval
+        settings = await get_user_trend_scout_settings("user_123")
+        assert settings["custom_style"] == "Quiet Luxury"
+        assert len(settings["social_platforms"]) >= 5
+
+
+def test_weekly_sunday_schedule():
+    from app.services.scheduler import _safe_weekly_run, _safe_monthly_run
+    assert callable(_safe_weekly_run)
+    assert callable(_safe_monthly_run)
+
+
 
 

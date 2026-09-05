@@ -28,4 +28,12 @@ export const trends = {
   // Admin-only force refresh
   trendsRefreshAdmin: (force = true, country = null, gender = null) =>
     client.post('/trends/run-now', null, { params: { force, ...(country ? { country } : {}), ...(gender ? { gender } : {}) } }).then((r) => r.data),
+  // Personalization settings
+  getSettings: () => client.get('/trends/settings').then((r) => r.data),
+  updateSettings: (payload) => client.put('/trends/settings', payload).then((r) => r.data),
+  connectSocial: (platform_id, username = null) =>
+    client.post('/trends/settings/social/connect', { platform_id, username }).then((r) => r.data),
+  disconnectSocial: (platform_id) =>
+    client.post('/trends/settings/social/disconnect', { platform_id }).then((r) => r.data),
 };
+

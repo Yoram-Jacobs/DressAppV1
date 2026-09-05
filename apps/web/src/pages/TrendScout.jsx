@@ -15,6 +15,7 @@ import {
   MapPin,
   RefreshCw,
   Loader2,
+  Settings,
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -26,6 +27,8 @@ import { useTrendScoutStore } from '@/lib/trendScoutStore';
 import { api } from '@/lib/api';
 import { toast } from 'sonner';
 import { ExploreBackButton } from '@/components/ExploreBackButton';
+import { TrendScoutSettingsModal } from '@/components/trends/TrendScoutSettingsModal';
+
 
 const BUCKET_VISUALS = {
   local:                { Icon: Newspaper,  tone: 'bg-indigo-500/10 text-indigo-600 dark:text-indigo-400' },
@@ -54,39 +57,34 @@ const BUCKET_KEYS = [
   'maintenance_repairs',
 ];
 
-const DEFAULT_FRONTEND_IMAGES = {
-  'local-male': 'https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&w=800&q=80',
-  'runway-male': 'https://images.unsplash.com/photo-1516257984-b1b4d707412e?auto=format&fit=crop&w=800&q=80',
-  'street-male': 'https://images.unsplash.com/photo-1552374196-1ab2a1c593e8?auto=format&fit=crop&w=800&q=80',
-  'sustainability-male': 'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?auto=format&fit=crop&w=800&q=80',
-  'influencers-male': 'https://images.unsplash.com/photo-1617127365659-c47fa864d8bc?auto=format&fit=crop&w=800&q=80',
-  'vintage-male': 'https://www.heddels.com/wp-content/uploads/2022/08/wide-leg-raw-denim-jeans-a-buyers-guide-443x296.jpg',
-  'maintenance_repairs-male': 'https://images.unsplash.com/photo-1581044777550-4cfa60707c03?auto=format&fit=crop&w=800&q=80',
-
-  'local-female': 'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&w=800&q=80',
-  'runway-female': 'https://images.unsplash.com/photo-1509631179647-0177331693ae?auto=format&fit=crop&w=800&q=80',
-  'street-female': 'https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=800&q=80',
-  'sustainability-female': 'https://images.unsplash.com/photo-1544441893-675973e31985?auto=format&fit=crop&w=800&q=80',
-  'influencers-female': 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=800&q=80',
-  'vintage-female': 'https://images.unsplash.com/photo-1558769132-cb1aea458c5e?auto=format&fit=crop&w=800&q=80',
-  'maintenance_repairs-female': 'https://images.unsplash.com/photo-1520006403909-838d6b92c22e?auto=format&fit=crop&w=800&q=80',
-};
-
 function TrendCardMedia({ card, canonicalBucket }) {
   const [imgError, setImgError] = useState(false);
-  const g = card.gender === 'male' ? 'male' : 'female';
-  const fallbackUrl = DEFAULT_FRONTEND_IMAGES[`${canonicalBucket}-${g}`] || DEFAULT_FRONTEND_IMAGES[`local-${g}`];
-  const srcToUse = (!imgError && card.image_url) ? card.image_url : fallbackUrl;
+  const visual = BUCKET_VISUALS[canonicalBucket] || DEFAULT_BUCKET_VISUAL;
+  const Icon = visual.Icon;
+  const hasValidImage = Boolean(card.image_url && !imgError);
+
+  if (hasValidImage) {
+    return (
+      <div className="relative aspect-[16/10] w-full overflow-hidden bg-secondary/30 border-b border-border/40 select-none">
+        <img
+          src={card.image_url}
+          alt={card.headline || card.title || 'Trend Scout'}
+          loading="lazy"
+          onError={() => setImgError(true)}
+          className="h-full w-full object-cover transition-transform duration-500 hover:scale-105"
+        />
+      </div>
+    );
+  }
 
   return (
-    <div className="relative aspect-[16/10] w-full overflow-hidden bg-secondary/50 border-b border-border/40 select-none">
-      <img
-        src={srcToUse}
-        alt={card.headline || card.title || 'Trend Scout'}
-        loading="lazy"
-        onError={() => setImgError(true)}
-        className="h-full w-full object-cover transition-transform duration-500 hover:scale-105"
-      />
+    <div className="relative aspect-[16/10] w-full overflow-hidden bg-gradient-to-br from-secondary/60 via-secondary/30 to-muted/50 border-b border-border/40 select-none flex flex-col items-center justify-center p-4">
+      <div className={`rounded-2xl p-4 ${visual.tone} backdrop-blur-sm shadow-sm transition-transform duration-300 hover:scale-110`}>
+        <Icon className="h-10 w-10 stroke-[1.5]" />
+      </div>
+      <span className="mt-2 text-xs font-medium tracking-wide uppercase text-muted-foreground/80">
+        {card.source_name || card.tag || 'Trend Scout'}
+      </span>
     </div>
   );
 }
@@ -102,6 +100,7 @@ export default function TrendScout() {
   const [selectedGender, setSelectedGender] = useState(initialGender);
   const [activeCategory, setActiveCategory] = useState('all');
   const [refreshing, setRefreshing] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
 
   const language = (user?.preferred_language || i18n.language || 'en')
     .split('-')[0]
@@ -251,6 +250,17 @@ export default function TrendScout() {
             )}
             <span className="text-xs hidden sm:inline">{t('stylist.refreshScout', { defaultValue: 'Refresh' })}</span>
           </Button>
+
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => setSettingsOpen(true)}
+            className="rounded-xl h-9 w-9 p-0 text-muted-foreground hover:text-foreground"
+            data-testid="trend-scout-settings-btn"
+            title={t('trends.personalizationSettings', { defaultValue: 'Personalization & Social Feeds' })}
+          >
+            <Settings className="h-4 w-4" />
+          </Button>
         </div>
       </div>
 
@@ -347,11 +357,18 @@ export default function TrendScout() {
                         </div>
                       ) : null}
                     </div>
-                    {card.gender && (
-                      <Badge variant="secondary" className="text-[9px] uppercase font-semibold">
-                        {card.gender === 'male' ? t('trends.men', { defaultValue: 'Men' }) : t('trends.women', { defaultValue: 'Women' })}
-                      </Badge>
-                    )}
+                    <div className="flex items-center gap-1.5">
+                      {card.date ? (
+                        <span className="text-[10px] text-muted-foreground font-medium px-1.5 py-0.5 rounded bg-background/60">
+                          {card.date}
+                        </span>
+                      ) : null}
+                      {card.gender && (
+                        <Badge variant="secondary" className="text-[9px] uppercase font-semibold">
+                          {card.gender === 'male' ? t('trends.men', { defaultValue: 'Men' }) : t('trends.women', { defaultValue: 'Women' })}
+                        </Badge>
+                      )}
+                    </div>
                   </div>
                   <CardContent className="p-5 flex-1 flex flex-col">
                     {headline ? (
@@ -390,6 +407,18 @@ export default function TrendScout() {
 
       {/* Floating Back Button */}
       <ExploreBackButton />
+
+      {/* Settings Modal */}
+      <TrendScoutSettingsModal
+        open={settingsOpen}
+        onOpenChange={setSettingsOpen}
+        onRefreshTriggered={async () => {
+          await trendStore.prewarm({ language, country, gender: selectedGender, force: true });
+        }}
+        selectedGender={selectedGender}
+        country={country}
+      />
     </div>
   );
 }
+

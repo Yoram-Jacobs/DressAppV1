@@ -35,6 +35,7 @@ import { fonts, fontSizes, spacing, radii, shadows } from '@mobile/theme/tokens'
 import { useTrendScoutStore, useUserStore } from '@mobile/lib/stores';
 import { api } from '@mobile/lib/api';
 import { ScrollToTopFloater } from '@mobile/components/common/ScrollToTopFloater';
+import { TrendScoutSettingsModal } from '@mobile/components/trends/TrendScoutSettingsModal';
 
 interface TrendItem {
   id?: string;
@@ -80,24 +81,6 @@ const BUCKETS = [
   { id: 'maintenance_repairs', labelKey: 'trends.bucket.maintenance_repairs', fallback: 'Care & Repairs' },
 ] as const;
 
-const DEFAULT_MOBILE_IMAGES: Record<string, string> = {
-  'local-male': 'https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&w=800&q=80',
-  'runway-male': 'https://images.unsplash.com/photo-1516257984-b1b4d707412e?auto=format&fit=crop&w=800&q=80',
-  'street-male': 'https://images.unsplash.com/photo-1552374196-1ab2a1c593e8?auto=format&fit=crop&w=800&q=80',
-  'sustainability-male': 'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?auto=format&fit=crop&w=800&q=80',
-  'influencers-male': 'https://images.unsplash.com/photo-1617127365659-c47fa864d8bc?auto=format&fit=crop&w=800&q=80',
-  'vintage-male': 'https://www.heddels.com/wp-content/uploads/2022/08/wide-leg-raw-denim-jeans-a-buyers-guide-443x296.jpg',
-  'maintenance_repairs-male': 'https://images.unsplash.com/photo-1581044777550-4cfa60707c03?auto=format&fit=crop&w=800&q=80',
-
-  'local-female': 'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&w=800&q=80',
-  'runway-female': 'https://images.unsplash.com/photo-1509631179647-0177331693ae?auto=format&fit=crop&w=800&q=80',
-  'street-female': 'https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=800&q=80',
-  'sustainability-female': 'https://images.unsplash.com/photo-1544441893-675973e31985?auto=format&fit=crop&w=800&q=80',
-  'influencers-female': 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=800&q=80',
-  'vintage-female': 'https://images.unsplash.com/photo-1558769132-cb1aea458c5e?auto=format&fit=crop&w=800&q=80',
-  'maintenance_repairs-female': 'https://images.unsplash.com/photo-1520006403909-838d6b92c22e?auto=format&fit=crop&w=800&q=80',
-};
-
 function TrendCardImage({
   imageUrl,
   canonicalBucket,
@@ -110,16 +93,29 @@ function TrendCardImage({
   headline?: string;
 }) {
   const [error, setError] = useState(false);
-  const g = gender === 'male' ? 'male' : 'female';
-  const fallbackUrl = DEFAULT_MOBILE_IMAGES[`${canonicalBucket}-${g}`] || DEFAULT_MOBILE_IMAGES[`local-${g}`];
+  const { colors } = useTheme();
+  const BucketIcon = BUCKET_ICONS[canonicalBucket] || Lucide.Sparkles;
   const isBroken = !imageUrl || !imageUrl.startsWith('http') || imageUrl.includes('ynet-pic1.ynet.co.il') || imageUrl.includes('example.com');
-  const uri = (!error && !isBroken) ? imageUrl : fallbackUrl;
+
+  if (error || isBroken) {
+    return (
+      <View
+        style={[
+          styles.cardImg,
+          styles.placeholderImg,
+          { backgroundColor: colors.surfaceVariant || '#f1f5f9' },
+        ]}
+      >
+        <BucketIcon size={40} color={colors.primary || '#6366f1'} />
+      </View>
+    );
+  }
 
   return (
     <Image
-      source={{ uri }}
+      source={{ uri: imageUrl }}
       style={styles.cardImg}
-      resizeMode="cover"
+      contentFit="cover"
       onError={() => setError(true)}
       accessibilityLabel={headline || 'Fashion Trend'}
     />
@@ -135,6 +131,7 @@ export function TrendScoutScreen() {
   const userSex = (user?.sex || user?.gender || 'female').toLowerCase();
   const [selectedGender, setSelectedGender] = useState<'male' | 'female'>(userSex === 'male' ? 'male' : 'female');
   const [refreshing, setRefreshing] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const [activeBucket, setActiveBucket] = useState<string>('all');
 
   // Fast Scroll to Top floater state
@@ -273,6 +270,14 @@ export function TrendScoutScreen() {
                 </Text>
               </View>
             ) : null}
+
+            {item.date ? (
+              <View style={[styles.genderBadge, { backgroundColor: colors.secondary }]}>
+                <Text style={[styles.genderBadgeText, { color: colors.mutedFg }]}>
+                  {item.date}
+                </Text>
+              </View>
+            ) : null}
           </View>
 
           <Text style={[styles.title, { color: colors.foreground }]} numberOfLines={2}>
@@ -369,7 +374,18 @@ export function TrendScoutScreen() {
             <Lucide.RotateCw size={18} color={colors.foreground} />
           )}
         </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[styles.refreshBtn, { borderColor: colors.border, backgroundColor: colors.card }]}
+          onPress={() => setSettingsOpen(true)}
+          accessibilityLabel={t('trends.personalizationSettings', { defaultValue: 'Personalization Settings' })}
+          accessibilityRole="button"
+          activeOpacity={0.7}
+        >
+          <Lucide.Settings size={18} color={colors.foreground} />
+        </TouchableOpacity>
       </View>
+
 
       {/* ── Bucket Filter Pills ──────────────────────────────────────── */}
       <ScrollView
@@ -457,9 +473,21 @@ export function TrendScoutScreen() {
         visible={showScrollTop}
         onPress={() => flatListRef.current?.scrollToOffset({ offset: 0, animated: true })}
       />
+
+      {/* ── Trend Scout Personalization Settings Modal ─────────────── */}
+      <TrendScoutSettingsModal
+        visible={settingsOpen}
+        onClose={() => setSettingsOpen(false)}
+        onRefreshTriggered={async () => {
+          await prewarm({ language, country, gender: selectedGender, force: true });
+        }}
+        selectedGender={selectedGender}
+        country={country}
+      />
     </SafeAreaView>
   );
 }
+
 
 const styles = StyleSheet.create({
   root: {

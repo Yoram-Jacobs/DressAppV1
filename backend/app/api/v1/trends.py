@@ -6,6 +6,7 @@ from datetime import datetime, timezone
 from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Header
+from pydantic import BaseModel, Field
 
 from app.db.database import get_db
 from app.services.auth import get_current_user, get_current_user_optional, require_admin
@@ -16,11 +17,30 @@ from app.services.trend_scout import (
     rank_cards_for_user,
     run_trend_scout,
     _country_codes,
+    get_user_trend_scout_settings,
+    save_user_trend_scout_settings,
+    connect_user_social_platform,
+    disconnect_user_social_platform,
+    analyze_user_closet_profile,
 )
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/trends", tags=["trends"])
+
+
+class TrendScoutSettingsPayload(BaseModel):
+    custom_style: str | None = None
+    social_platforms: list[dict[str, Any]] | None = None
+
+
+class SocialConnectPayload(BaseModel):
+    platform_id: str
+    username: str | None = None
+
+
+class SocialDisconnectPayload(BaseModel):
+    platform_id: str
 
 
 def check_trend_scout_access(user: dict) -> None:
@@ -185,3 +205,68 @@ async def run_trend_scout_now_dev(
     except Exception as exc:
         logger.warning("Failed to broadcast trend_scout_updated: %s", exc)
     return res
+
+
+@router.get("/settings")
+async def get_trend_scout_settings_endpoint(
+    user: dict = Depends(get_current_user),
+) -> dict[str, Any]:
+    """Retrieve user Trend Scout personalization settings, social platforms, and closet analysis."""
+    check_trend_scout_access(user)
+    user_id = str(user.get("id") or user.get("_id"))
+    settings = await get_user_trend_scout_settings(user_id, user=user)
+    closet_profile = await analyze_user_closet_profile(user_id, user=user)
+    return {
+        "success": True,
+        "settings": settings,
+        "closet_profile": closet_profile,
+    }
+
+
+@router.put("/settings")
+async def update_trend_scout_settings_endpoint(
+    payload: TrendScoutSettingsPayload,
+    user: dict = Depends(get_current_user),
+) -> dict[str, Any]:
+    """Save user Trend Scout personalization preferences (custom style override and social platforms)."""
+    check_trend_scout_access(user)
+    user_id = str(user.get("id") or user.get("_id"))
+    data = payload.dict(exclude_unset=True)
+    saved = await save_user_trend_scout_settings(user_id, data)
+    closet_profile = await analyze_user_closet_profile(user_id, user=user)
+    return {
+        "success": True,
+        "settings": saved,
+        "closet_profile": closet_profile,
+    }
+
+
+@router.post("/settings/social/connect")
+async def connect_social_account_endpoint(
+    payload: SocialConnectPayload,
+    user: dict = Depends(get_current_user),
+) -> dict[str, Any]:
+    """Connect a social media platform account for Trend Scout."""
+    check_trend_scout_access(user)
+    user_id = str(user.get("id") or user.get("_id"))
+    saved = await connect_user_social_platform(user_id, payload.platform_id, payload.username)
+    return {
+        "success": True,
+        "settings": saved,
+    }
+
+
+@router.post("/settings/social/disconnect")
+async def disconnect_social_account_endpoint(
+    payload: SocialDisconnectPayload,
+    user: dict = Depends(get_current_user),
+) -> dict[str, Any]:
+    """Disconnect a social media platform account for Trend Scout."""
+    check_trend_scout_access(user)
+    user_id = str(user.get("id") or user.get("_id"))
+    saved = await disconnect_user_social_platform(user_id, payload.platform_id)
+    return {
+        "success": True,
+        "settings": saved,
+    }
+

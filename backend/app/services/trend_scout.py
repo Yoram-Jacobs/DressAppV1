@@ -365,210 +365,15 @@ COUNTRY_NAME_MAP: dict[str, str] = {
     "CH": "Switzerland",
 }
 
-
 # ---------------------------------------------------------------------------
-# Canonical Initial Seed Data (Instant Zero-Latency Fallback)
+# Supported Social Media Platforms
 # ---------------------------------------------------------------------------
-CANONICAL_SEED_CARDS: list[dict[str, Any]] = [
-    # --- MEN'S ECOSYSTEM ---
-    {
-        "id": "seed-men-local-il",
-        "bucket": "local",
-        "gender": "male",
-        "country_code": "IL",
-        "headline": "חדשות אופנה וסטייל בתל אביב: מעצבים מקומיים",
-        "body": "עדכוני אופנה, מעצבים מקומיים וקולקציות חדשות בסצנת הסטייל של תל אביב עם התאמה לאקלים הים-תיכוני.",
-        "tag": "LOCAL NEWS",
-        "source_name": "Time Out Tel Aviv",
-        "source_url": "https://timeout.co.il/topic/%D7%90%D7%95%D7%A4%D7%A0%D7%94/",
-        "image_url": "https://static.timeout.co.il/www/images/share_image.png",
-        "date": "2026-08-01",
-        "language": "en",
-    },
-    {
-        "id": "seed-men-runway",
-        "bucket": "runway",
-        "gender": "male",
-        "country_code": None,
-        "headline": "Men’s Fashion Through the Decades: Tailoring & Silhouette Shifts",
-        "body": "Analysis of evolving silhouettes, architectural shoulders, and relaxed fluid drapes across runway lookbooks.",
-        "tag": "RUNWAY",
-        "source_name": "The Fashionisto",
-        "source_url": "https://www.thefashionisto.com/articles/fashion-through-the-decades-men/",
-        "image_url": "https://images.unsplash.com/photo-1516257984-b1b4d707412e?auto=format&fit=crop&w=800&q=80",
-        "date": "2026-08-01",
-        "language": "en",
-    },
-    {
-        "id": "seed-men-street",
-        "bucket": "street",
-        "gender": "male",
-        "country_code": None,
-        "headline": "Streetwear Movements: Functional Utility & Retro Runners",
-        "body": "Urban street style fuses archival trail silhouettes with loose-fit carpenter trousers and tonal modular layering.",
-        "tag": "STREET STYLE",
-        "source_name": "Ape to Gentleman",
-        "source_url": "https://www.apetogentleman.com/mens-fashion-trends/",
-        "image_url": "https://www.apetogentleman.com/wp-content/uploads/2022/05/FALL-WINTER-TRENDS.jpg",
-        "date": "2026-08-01",
-        "language": "en",
-    },
-    {
-        "id": "seed-men-sustainability",
-        "bucket": "sustainability",
-        "gender": "male",
-        "country_code": None,
-        "headline": "Sustainable Menswear Brands: Ethical Sourcing & Traceability",
-        "body": "Investigating closed-loop organic cotton, regenerative hemp, and transparent ethical auditing in modern menswear.",
-        "tag": "SUSTAINABILITY",
-        "source_name": "Good On You",
-        "source_url": "https://goodonyou.eco/sustainable-menswear-brands/",
-        "image_url": "https://goodonyou.eco/wp-content/uploads/2021/12/MaggieZhou-Menswear-1200x630.jpg",
-        "date": "2026-08-01",
-        "language": "en",
-    },
-    {
-        "id": "seed-men-influencers",
-        "bucket": "influencers",
-        "gender": "male",
-        "country_code": None,
-        "headline": "Smart-Casual Tastemakers: Modern Luxury & Minimalist Tailoring",
-        "body": "Tastemakers demonstrate how relaxed blazers, structured neutral knits, and tailored trousers build cohesive capsule wardrobes.",
-        "tag": "TASTEMAKERS",
-        "source_name": "The Fashionisto",
-        "source_url": "https://www.thefashionisto.com/story/amiri-fall-2026-campaign/",
-        "image_url": "https://images.unsplash.com/photo-1617127365659-c47fa864d8bc?auto=format&fit=crop&w=800&q=80",
-        "date": "2026-08-01",
-        "language": "en",
-    },
-    {
-        "id": "seed-men-vintage",
-        "bucket": "vintage",
-        "gender": "male",
-        "country_code": None,
-        "headline": "Archival Workwear & Heritage Denim Buying Guides",
-        "body": "Deep dives into shuttle-loom selvedge denim history, military surplus construction, and vintage garment tags.",
-        "tag": "VINTAGE & ARCHIVAL",
-        "source_name": "Heddels",
-        "source_url": "https://www.heddels.com/buying-guides/",
-        "image_url": "https://www.heddels.com/wp-content/uploads/2022/08/wide-leg-raw-denim-jeans-a-buyers-guide-443x296.jpg",
-        "date": "2026-08-01",
-        "language": "en",
-    },
-    {
-        "id": "seed-men-repairs",
-        "bucket": "maintenance_repairs",
-        "gender": "male",
-        "country_code": None,
-        "headline": "Garment Care & Cobbling Maintenance Guides",
-        "body": "Mastering denim chainstitch mending, leather conditioning, and shoe care to extend wardrobe investments by decades.",
-        "tag": "MAINTENANCE & REPAIRS",
-        "source_name": "Put This On",
-        "source_url": "https://putthison.com/all-articles/",
-        "image_url": "https://images.unsplash.com/photo-1581044777550-4cfa60707c03?auto=format&fit=crop&w=800&q=80",
-        "date": "2026-08-01",
-        "language": "en",
-    },
-
-    # --- WOMEN'S ECOSYSTEM ---
-    {
-        "id": "seed-women-local-il",
-        "bucket": "local",
-        "gender": "female",
-        "country_code": "IL",
-        "headline": "הפקות אופנה ומעצבות ישראליות: גוונים ארציים ופיסוליות",
-        "body": "מעצבות ישראליות מובילות קו טבעי ונושם של משי אורגני, גווני טרקוטה ארציים ותכשיטי בוטיק ייחודיים.",
-        "tag": "LOCAL NEWS",
-        "source_name": "Walla! Fashion",
-        "source_url": "https://fashion.walla.co.il/category/2131",
-        "image_url": "https://images.wcdn.co.il/f_auto,q_auto,w_1200,t_54/3/6/9/0/3690025-46.jpg",
-        "date": "2026-08-01",
-        "language": "en",
-    },
-    {
-        "id": "seed-women-runway",
-        "bucket": "runway",
-        "gender": "female",
-        "country_code": None,
-        "headline": "Runway Lookbooks: Sculptural Volume & Silhouette Play",
-        "body": "International runway showcases blend sheer layering, sculptural corsetry, and kinetic fringe for confident eveningwear.",
-        "tag": "RUNWAY",
-        "source_name": "The Fashionisto",
-        "source_url": "https://www.thefashionisto.com/story/amiri-fall-2026-campaign/",
-        "image_url": "https://images.unsplash.com/photo-1509631179647-0177331693ae?auto=format&fit=crop&w=800&q=80",
-        "date": "2026-08-01",
-        "language": "en",
-    },
-    {
-        "id": "seed-women-street",
-        "bucket": "street",
-        "gender": "female",
-        "country_code": None,
-        "headline": "Oversized Tailoring & Conscious Street Style Standards",
-        "body": "Fashion week attendees elevate voluminous blazers with delicate ballet flats, wide-leg poplin trousers, and verified ethical staples.",
-        "tag": "STREET STYLE",
-        "source_name": "Good On You",
-        "source_url": "https://goodonyou.eco/how-we-rate/",
-        "image_url": "https://goodonyou.eco/wp-content/uploads/2018/12/opengraph-1200x630.jpg",
-        "date": "2026-08-01",
-        "language": "en",
-    },
-    {
-        "id": "seed-women-sustainability",
-        "bucket": "sustainability",
-        "gender": "female",
-        "country_code": None,
-        "headline": "Circular Fashion Advocacy & The #NoNewClothes Challenge",
-        "body": "Global slow-fashion leaders spotlight transparent garment worker standards and lab-grown mycelium leather alternatives in everyday staples.",
-        "tag": "SUSTAINABILITY",
-        "source_name": "Remake",
-        "source_url": "https://remake.world/no-new-clothes-2024/",
-        "image_url": "https://images.unsplash.com/photo-1532453286298-9836439e1607?auto=format&fit=crop&w=800&q=80",
-        "date": "2026-08-01",
-        "language": "en",
-    },
-    {
-        "id": "seed-women-influencers",
-        "bucket": "influencers",
-        "gender": "female",
-        "country_code": None,
-        "headline": "Quiet Luxury & Minimalist Tastemaker Staples",
-        "body": "Tastemakers showcase effortless Parisian-Scandi blends, combining crisp poplin shirts with vintage knitwear staples.",
-        "tag": "TASTEMAKERS",
-        "source_name": "Ape to Gentleman",
-        "source_url": "https://www.apetogentleman.com/mens-fashion-trends/",
-        "image_url": "https://www.apetogentleman.com/wp-content/uploads/2022/05/FALL-WINTER-TRENDS.jpg",
-        "date": "2026-08-01",
-        "language": "en",
-    },
-    {
-        "id": "seed-women-vintage",
-        "bucket": "vintage",
-        "gender": "female",
-        "country_code": None,
-        "headline": "Archival Heritage & Enduring Craftsmanship Retrospectives",
-        "body": "Curated retrospectives examine historic fashion silhouettes, archive collector panels, and museum-grade textile preservation methodologies.",
-        "tag": "VINTAGE & ARCHIVAL",
-        "source_name": "Heddels",
-        "source_url": "https://www.heddels.com/buying-guides/five-plus-one/",
-        "image_url": "https://images.unsplash.com/photo-1558769132-cb1aea458c5e?auto=format&fit=crop&w=800&q=80",
-        "date": "2026-08-01",
-        "language": "en",
-    },
-    {
-        "id": "seed-women-repairs",
-        "bucket": "maintenance_repairs",
-        "gender": "female",
-        "country_code": None,
-        "headline": "Visible Mending & Survival Sewing Skills Tutorials",
-        "body": "Creative Japanese boro embroidery, sweater defuzzing, and invisible zipper repairs empower sustainable closet longevity directly at home.",
-        "tag": "MAINTENANCE & REPAIRS",
-        "source_name": "Repair What You Wear",
-        "source_url": "https://repairwhatyouwear.com/core-mending-skills/",
-        "image_url": "https://images.unsplash.com/photo-1520006403909-838d6b92c22e?auto=format&fit=crop&w=800&q=80",
-        "date": "2026-08-01",
-        "language": "en",
-    },
+DEFAULT_SOCIAL_PLATFORMS: list[dict[str, Any]] = [
+    {"id": "instagram", "name": "Instagram", "icon": "Instagram", "connected": False, "username": None, "active": False},
+    {"id": "pinterest", "name": "Pinterest", "icon": "Pin", "connected": False, "username": None, "active": False},
+    {"id": "tiktok", "name": "TikTok", "icon": "Video", "connected": False, "username": None, "active": False},
+    {"id": "x", "name": "X (Twitter)", "icon": "Twitter", "connected": False, "username": None, "active": False},
+    {"id": "threads", "name": "Threads", "icon": "AtSign", "connected": False, "username": None, "active": False},
 ]
 
 
@@ -576,53 +381,38 @@ CANONICAL_SEED_CARDS: list[dict[str, Any]] = [
 # Search Queries & Filtering
 # ---------------------------------------------------------------------------
 DISALLOWED_SHOPPING_DOMAINS = (
-    "amazon.", "ebay.", "shein.", "aliexpress.", "asos.com/shop", "temu.com",
-    "zara.com/shop", "hm.com/shop", "etsy.com", "target.com", "walmart.com",
-    "shop.", "store.", "cart", "checkout", "buy-now"
+    "amazon.", "ebay.", "shein.", "aliexpress.", "asos.com", "temu.com",
+    "zara.com", "hm.com", "etsy.com", "target.com", "walmart.com",
+    "shopify", "myshopify", "shopisrael.com", "poshmark", "depop", "mercari",
+    "farfetch.com", "net-a-porter.com", "ssense.com", "mytheresa.com",
+    "nordstrom.com", "macys.com", "bloomingdales.com", "revolve.com",
+    "boohoo.com", "prettylittlething.com", "urbanoutfitters.com",
+    "mango.com", "pullandbear.com", "bershka.com", "stradivarius.com",
+    "massimodutti.com", "cos.com", "gap.com", "shop.", "store.", "cart",
+    "checkout", "buy-now",
 )
 
 DISALLOWED_PAYWALL_DOMAINS = (
-    "voguebusiness.com", "wsj.com", "ft.com", "bloomberg.com"
+    "voguebusiness.com", "wsj.com", "ft.com", "bloomberg.com",
+    "nytimes.com", "businessoffashion.com", "wwd.com",
+    "facebook.com", "instagram.com", "twitter.com", "x.com", "tiktok.com",
+    "linkedin.com", "pinterest.com",
 )
 
-DEFAULT_BUCKET_IMAGES: dict[tuple[str, str], str] = {
-    # Men's Buckets
-    ("local", "male"): "https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&w=800&q=80",
-    ("runway", "male"): "https://images.unsplash.com/photo-1516257984-b1b4d707412e?auto=format&fit=crop&w=800&q=80",
-    ("street", "male"): "https://images.unsplash.com/photo-1552374196-1ab2a1c593e8?auto=format&fit=crop&w=800&q=80",
-    ("sustainability", "male"): "https://images.unsplash.com/photo-1521572267360-ee0c2909d518?auto=format&fit=crop&w=800&q=80",
-    ("influencers", "male"): "https://images.unsplash.com/photo-1617127365659-c47fa864d8bc?auto=format&fit=crop&w=800&q=80",
-    ("vintage", "male"): "https://www.heddels.com/wp-content/uploads/2022/08/wide-leg-raw-denim-jeans-a-buyers-guide-443x296.jpg",
-    ("maintenance_repairs", "male"): "https://images.unsplash.com/photo-1581044777550-4cfa60707c03?auto=format&fit=crop&w=800&q=80",
-
-    # Women's Buckets
-    ("local", "female"): "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&w=800&q=80",
-    ("runway", "female"): "https://images.unsplash.com/photo-1509631179647-0177331693ae?auto=format&fit=crop&w=800&q=80",
-    ("street", "female"): "https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=800&q=80",
-    ("sustainability", "female"): "https://images.unsplash.com/photo-1544441893-675973e31985?auto=format&fit=crop&w=800&q=80",
-    ("influencers", "female"): "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=800&q=80",
-    ("vintage", "female"): "https://images.unsplash.com/photo-1558769132-cb1aea458c5e?auto=format&fit=crop&w=800&q=80",
-    ("maintenance_repairs", "female"): "https://images.unsplash.com/photo-1520006403909-838d6b92c22e?auto=format&fit=crop&w=800&q=80",
-}
-
-
-def _get_fallback_image(bucket_slug: str | None, gender: str | None) -> str:
-    canonical = BUCKET_SLUG_ALIASES.get(bucket_slug or "", bucket_slug or "local")
-    g = "male" if (gender or "").lower() == "male" else "female"
-    return (
-        DEFAULT_BUCKET_IMAGES.get((canonical, g))
-        or DEFAULT_BUCKET_IMAGES.get(("local", g))
-        or "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&w=800&q=80"
-    )
+DISALLOWED_URL_PATHS = (
+    "/cart", "/checkout", "/collections/", "/products/", "/product/",
+    "/buy", "/p/", "/dp/", "/gp/product/", "/shop/", "/store/", "/sale/",
+    "/login", "/signin", "/sign-in", "/register", "/auth",
+)
 
 
 def _ensure_card_image(card: dict[str, Any]) -> dict[str, Any]:
-    """Ensure card always has a valid non-empty representative image_url."""
+    """Ensure card image_url is valid http or None (no hardcoded/hallucinated images)."""
     if not card:
         return card
     img = str(card.get("image_url") or "").strip()
     if not img.startswith("http") or "ynet-pic1.ynet.co.il" in img or "example.com" in img:
-        card["image_url"] = _get_fallback_image(card.get("bucket"), card.get("gender"))
+        card["image_url"] = None
     return card
 
 
@@ -630,102 +420,120 @@ def get_search_queries(
     bucket_slug: str,
     country_code: str | None,
     city: str | None = None,
-    gender: str = "female"
+    gender: str = "female",
+    *,
+    dress_code: str | None = None,
+    style: str | None = None,
+    social_platforms: list[str] | None = None,
 ) -> list[str]:
-    """Build high-relevance search queries targeting open-access editorial fashion outlets."""
+    """Build high-relevance search queries targeting open-access editorial fashion outlets.
+
+    Incorporates user closet dress code, style preferences, and active social platforms.
+    """
     canonical_slug = BUCKET_SLUG_ALIASES.get(bucket_slug, bucket_slug)
     country_name = COUNTRY_NAME_MAP.get((country_code or "").upper(), country_code or "Israel")
     place = f"{city} {country_name}" if (city and country_name) else country_name
     gender_word = "menswear men" if gender == "male" else "womenswear women"
+    style_filter = " ".join(filter(None, [dress_code, style])).strip()
 
     if canonical_slug == "local":
         if (country_code or "").upper() == "IL":
             if gender == "male":
-                return [
-                    "site:fashion.walla.co.il OR site:timeout.co.il אופנת גברים תל אביב",
-                    "site:prtfl.co.il אופנה מעצבים ישראלים גברים",
-                    "Israeli menswear fashion designers Tel Aviv style",
+                queries = [
+                    f"אופנת גברים {style_filter} מעצבים ישראלים תל אביב חדשות 2026".strip(),
+                    f"Israeli menswear {style_filter} fashion designers Tel Aviv editorial 2026".strip(),
                 ]
-            return [
-                "site:fashionforward.mako.co.il OR site:atmag.co.il אופנה מעצבים ישראלים",
-                "site:fashion-israel.co.il מגזין אופנה ישראלי",
-                "Israeli fashion designers boutique Tel Aviv style trends",
+            else:
+                queries = [
+                    f"אופנה {style_filter} מעצבים ישראלים מגזין כתבות סטייל 2026".strip(),
+                    f"Israeli womens {style_filter} fashion designers boutique Tel Aviv trends 2026".strip(),
+                ]
+        else:
+            queries = [
+                f"{place} {gender_word} {style_filter} fashion news local designers trends 2026".strip(),
+                f"top {gender_word} {style_filter} fashion magazines boutique style {place} 2026".strip(),
             ]
-        return [
-            f"{place} {gender_word} fashion news local designers trends 2026",
-            f"top {gender_word} fashion magazines boutique style {place}",
-        ]
 
     elif canonical_slug == "runway":
         if gender == "male":
-            return [
-                "site:thefashionisto.com OR site:fuckingyoung.es runway menswear trends 2026",
-                "site:malemodelscene.net menswear runway fashion week lookbook 2026",
+            queries = [
+                f"menswear {style_filter} runway trends fashion week collections lookbook 2026".strip(),
+                f"mens designer {style_filter} fashion week haute couture reviews 2026".strip(),
             ]
-        return [
-            "site:lofficielusa.com OR site:fashionista.com runway fashion trends 2026",
-            "site:crash.fr fashion week couture runway highlights",
-        ]
+        else:
+            queries = [
+                f"womens {style_filter} runway fashion trends fashion week collections 2026".strip(),
+                f"haute couture {style_filter} runway fashion week reviews highlights 2026".strip(),
+            ]
 
     elif canonical_slug == "street":
         if gender == "male":
-            return [
-                "site:hypebeast.com OR site:highsnobiety.com street style menswear sneakers 2026",
-                "site:pausemag.co.uk street style urban fashion men",
+            queries = [
+                f"street style menswear {style_filter} fashion week urban outfits 2026".strip(),
+                f"men street style {style_filter} trends fashion week photography 2026".strip(),
             ]
-        return [
-            "site:styledumonde.com OR site:whowhatwear.com street style fashion week women",
-            "site:refinery29.com/en-us/fashion street style outfits trends",
-        ]
+        else:
+            queries = [
+                f"women street style {style_filter} fashion week outfits editorial trends 2026".strip(),
+                f"street style womenswear {style_filter} trends global fashion week 2026".strip(),
+            ]
 
     elif canonical_slug == "sustainability":
         if gender == "male":
-            return [
-                "site:goodonyou.eco OR site:eco-stylist.com mens sustainable ethical fashion",
-                "site:fashionrevolution.org ethical sustainable clothing guides",
+            queries = [
+                f"mens sustainable ethical {style_filter} fashion circular textiles 2026".strip(),
+                f"menswear eco conscious {style_filter} clothing sustainable design news 2026".strip(),
             ]
-        return [
-            "site:remake.world OR site:ecocult.com sustainable slow fashion women",
-            "site:thegoodtrade.com/category/style ethical conscious style",
-        ]
+        else:
+            queries = [
+                f"womens sustainable slow {style_filter} fashion circular textiles ethical clothing 2026".strip(),
+                f"eco conscious {style_filter} fashion ethical wardrobe styling news 2026".strip(),
+            ]
 
     elif canonical_slug == "influencers":
+        social_kws = " ".join(social_platforms) if social_platforms else "social media creators"
         if gender == "male":
-            return [
-                "site:fashionbeans.com OR site:apetogentleman.com mens style tastemaker outfits",
-                "site:valetmag.com everyday smart casual menswear capsule",
+            queries = [
+                f"mens style tastemakers {style_filter} {social_kws} capsule wardrobe trends 2026".strip(),
+                f"menswear style aesthetic {style_filter} {social_kws} outfit inspiration daily fashion 2026".strip(),
             ]
-        return [
-            "site:elle.com/fashion OR site:cosmopolitan.com/style-beauty/fashion viral aesthetic trends",
-            "site:glamour.com/fashion fashion creators styling tips women",
-        ]
+        else:
+            queries = [
+                f"womens fashion tastemakers {style_filter} {social_kws} aesthetic styling tips 2026".strip(),
+                f"women style creators {style_filter} {social_kws} trending outfits fashion inspiration 2026".strip(),
+            ]
 
     elif canonical_slug == "vintage":
         if gender == "male":
-            return [
-                "site:sabukaru.online OR site:heddels.com vintage menswear archival workwear",
-                "site:vintagefashionguild.org vintage fashion history identification",
+            queries = [
+                f"vintage menswear {style_filter} archival workwear denim heritage fashion history 2026".strip(),
+                f"archival mens fashion {style_filter} vintage garments retrospective history".strip(),
             ]
-        return [
-            "site:showstudio.com OR site:thevintagewomanmagazine.com archival fashion history women",
-            "site:documentjournal.com fashion archive history retrospective",
-        ]
+        else:
+            queries = [
+                f"vintage womenswear {style_filter} archival fashion history designer garments retrospective".strip(),
+                f"vintage fashion history {style_filter} styling iconic archival clothing 2026".strip(),
+            ]
 
     elif canonical_slug == "maintenance_repairs":
         if gender == "male":
-            return [
-                "site:putthison.com OR site:denimhunters.com raw denim repair darning garment care",
-                "site:heddels.com/category/education/maintenance-and-repair cobbling denim mending",
+            queries = [
+                "menswear garment care repair darning cobbling clothing longevity guide",
+                "mens clothing care visible mending repair denim maintenance",
             ]
-        return [
-            "site:repairwhatyouwear.com OR site:fixing.fashion visible mending garment repair",
-            "site:gathered.how/sewing-and-quilting/sewing clothes mending upcycling guide",
-        ]
+        else:
+            queries = [
+                "visible mending garment repair clothes upcycling care guide",
+                "clothing longevity visible mending textile care guide 2026",
+            ]
 
-    queries = [f"{gender_word} fashion trends 2026 {place}"]
+    else:
+        queries = [f"{gender_word} {style_filter} fashion trends 2026 {place}".strip()]
+
     urls = []
     for q in queries:
-        encoded = urllib.parse.quote_plus(q)
+        clean_q = re.sub(r"\s+", " ", q).strip()
+        encoded = urllib.parse.quote_plus(clean_q)
         urls.append(f"https://search.yahoo.com/search?q={encoded}")
     return urls
 
@@ -734,16 +542,17 @@ SYSTEM_PROMPT = (
     "You are DressApp's Fashion-Scout — an elite, independent fashion intelligence agent searching the live web.\n"
     "You find real-time, actionable insights for stylish readers.\n\n"
     "RESTRICTIONS:\n"
-    "- NO marketplaces, e-commerce stores, or commercial shopping carts (e.g., Amazon, ASOS, Shein, Temu, eBay, Zara/H&M cart or checkout pages). Never link to product shopping pages.\n"
-    "- NO sign-in walled websites or paywalled sources (e.g. Vogue Business, WSJ, FT, or sites requiring mandatory registration/paywall). Content must be 100% free and open-access to readers.\n"
-    "- NO hard-coded or hallucinated images. Never invent an image URL, path, or image domain.\n"
-    "- NO irrelevant articles. Content must be strictly about fashion trends, designer collections, runway reports, street style, local designers, textiles, sustainable fashion, or garment maintenance & repair. Never include politics, general celebrity gossip, or unrelated news.\n\n"
+    "* No marketplaces or online stores: Never link to Amazon, eBay, ASOS, Shein, Temu, AliExpress, Etsy, Shopify stores (e.g. shopisrael.com), Zara/H&M store carts, or any commercial checkout or product sales pages.\n"
+    "* No sign-in walled websites: Never link to paywalled or login-walled sources (e.g. Vogue Business paywall, WSJ, FT, Bloomberg, or sites requiring mandatory registration or sign-in). Content must be 100% free and open-access to readers.\n"
+    "* No hard-coded or hallucinated images: Never invent, guess, or hallucinate an image URL, path, or image domain. Only return authentic original images discovered in the article, or null.\n"
+    "* No irrelevant articles: Content must be strictly about fashion trends, designer collections, runway reports, street style, local designers, sustainable textiles, or garment care and repair. Never include politics, general gossip, or unrelated news.\n"
+    "* No 404 Not Found - always verify article web links: Source URLs must be active, valid, direct deep links navigating directly to the specific article. Never provide dead links, homepages, search engine redirect wrappers, or root domains.\n\n"
     "MUST ACHIEVE:\n"
-    "- Up-to-date articles with relevant content: Research recent fashion journalism, lookbooks, reviews, or designer announcements from 2026.\n"
-    "- Valid article web link: source_url must be an authentic, direct deep link navigating specifically to the article itself. Never provide a homepage, search redirect, or top-level domain.\n"
-    "- Card image: Original image taken directly from the article itself (from metadata og:image/twitter:image or featured article photo).\n"
-    "- Carefully formulated summary: A punchy, captivating headline (<= 8 words) and an engaging, factual 1-2 sentence body (<= 220 chars) providing one concrete, actionable wardrobe takeaway for stylish readers.\n"
-    "- Honor i18next localization: Formulate summaries cleanly in the requested language, respecting grammatical rules, natural flow, and typography.\n\n"
+    "* Up-to-date articles with category-filtered, relevant new content: Research recent fashion journalism, lookbooks, reviews, or designer announcements from 2026 tailored to the specific category bucket.\n"
+    "* Valid article web link. Must validate the link before publishing: source_url must be an authentic, direct deep link to the specific article.\n"
+    "* Card image: Original image scraped from the article (og:image, twitter:image, or main featured editorial photo), or null.\n"
+    "* A carefully formulated summary of the article. Always localize to the user's language and translate carefully. Verify using the language rules, font, and grammar: A punchy headline (<= 8 words) and an engaging, factual 1-2 sentence body (<= 220 characters) providing one concrete, actionable wardrobe takeaway for stylish readers.\n"
+    "* Honor i18next localization: Formulate summaries cleanly in the requested language, respecting grammatical rules, natural flow, typography, and font conventions.\n\n"
     "Output contract: return ONLY a JSON object.\n"
     'If you need to search a website, return: {"action": "browse_web", "url": "<https URL>"}.\n'
     'Once you have enough context, return: {"action": "finish", "card": {\n'
@@ -854,7 +663,7 @@ def _extract_json(raw: str) -> dict[str, Any]:
 
 
 def _clean_url(value: Any) -> str | None:
-    """Keep only https URLs, unwrap search redirects, and strip shopping or paywalled domains."""
+    """Keep only https URLs, unwrap search redirects, and strictly reject shopping, paywalled, or login domains."""
     if not value or not isinstance(value, str):
         return None
     v = value.strip()
@@ -866,7 +675,7 @@ def _clean_url(value: Any) -> str | None:
         v = "https://" + v[len("http://") :]
 
     lowered = v.lower()
-    if "example.com" in lowered or "localhost" in lowered:
+    if any(bad in lowered for bad in ("example.com", "localhost", "placeholder", "dummy", "s12345678", "12345678")):
         return None
 
     # Unwrap search redirects (e.g. google.com/url?q=... or url=...)
@@ -886,12 +695,33 @@ def _clean_url(value: Any) -> str | None:
                 lowered = v.lower()
                 break
 
-    # Strip e-commerce shopping / cart platforms
-    if any(shop in lowered for shop in DISALLOWED_SHOPPING_DOMAINS):
+    parsed = urllib.parse.urlparse(v)
+    host = (parsed.netloc or "").lower()
+    path = (parsed.path or "").lower()
+
+    # Reject if hostname has no dot
+    if not host or "." not in host:
         return None
 
-    # Strip paywalled domains
-    if any(pw in lowered for pw in DISALLOWED_PAYWALL_DOMAINS):
+    # Reject disallowed shopping domains
+    if any(shop in host for shop in DISALLOWED_SHOPPING_DOMAINS):
+        return None
+
+    # Reject shop/store subdomains or store prefixes (e.g. shopisrael.com, store.xyz.com, shoptelaviv.com)
+    if host.startswith("shop") or host.startswith("store.") or host.startswith("stores.") or host.startswith("buy.") or host.startswith("market."):
+        return None
+
+    # Reject paywall and login/social domains
+    if any(pw in host for pw in DISALLOWED_PAYWALL_DOMAINS):
+        return None
+
+    # Reject e-commerce cart/checkout/product paths or login/auth paths
+    if any(p in path for p in DISALLOWED_URL_PATHS):
+        return None
+
+    # Reject root/empty paths — must be deep article link
+    clean_path = path.strip("/")
+    if not clean_path:
         return None
 
     return v[:300]
@@ -998,8 +828,9 @@ def _country_codes(user: dict[str, Any]) -> set[str]:
 def rank_cards_for_user(
     cards: list[dict[str, Any]],
     user: dict[str, Any],
+    closet_profile: dict[str, Any] | None = None,
 ) -> list[dict[str, Any]]:
-    """Sort cards for the user based on gender match, locality, keywords, and recency."""
+    """Sort cards for the user based on gender match, locality, keywords, closet style, and recency."""
     if not cards:
         return cards
     user_keywords = _user_keyword_set(user)
@@ -1041,6 +872,19 @@ def rank_cards_for_user(
             if kw in user_keywords:
                 score += weight
 
+        # Closet dress code & style matching (+6.0 each)
+        if closet_profile:
+            dc = (closet_profile.get("lead_dress_code") or "").lower()
+            st = (closet_profile.get("effective_style") or "").lower()
+            blob_lower = f"{card.get('body', '')} {card.get('headline', '')} {card.get('tag', '')} {card.get('dress_code', '')} {card.get('style', '')}".lower()
+            if dc and dc in blob_lower:
+                score += 6.0
+            if st and st in blob_lower:
+                score += 6.0
+            for sp in closet_profile.get("social_platforms") or []:
+                if str(sp).lower() in blob_lower:
+                    score += 3.0
+
         # Country match
         if user_countries:
             card_country = card.get("country_code")
@@ -1072,7 +916,11 @@ async def _generate_one(
     client_type: str = "desktop",
     country_code: str | None = None,
     city: str | None = None,
-    gender: str = "female"
+    gender: str = "female",
+    *,
+    dress_code: str | None = None,
+    style: str | None = None,
+    social_platforms: list[str] | None = None,
 ) -> dict[str, Any] | None:
     if not settings.GEMINI_API_KEY:
         return None
@@ -1102,24 +950,38 @@ async def _generate_one(
     if recent_headlines:
         avoid_topics = f"Do NOT cover or repeat these recently reported topics: {json.dumps(recent_headlines)}."
 
+    personalization_prompt = ""
+    if dress_code or style or social_platforms:
+        p_lines = ["\nUSER WARDROBE & STYLE PERSONALIZATION FILTER:"]
+        if dress_code:
+            p_lines.append(f"- Lead Dress Code: {dress_code.title()}")
+        if style:
+            p_lines.append(f"- Lead Style / Aesthetic: {style.title()}")
+        if social_platforms:
+            p_lines.append(f"- Influencing Social Platforms: {', '.join(social_platforms)}")
+        p_lines.append(f"Ensure the discovered article and practical wardrobe takeaway specifically embody the {dress_code or ''} dress code and {style or ''} aesthetic.")
+        personalization_prompt = "\n".join(p_lines) + "\n\n"
+
     # 2. DYNAMIC LIVE WEB SEARCH via Google Search Grounding
     grounded_prompt = (
         f"You are DressApp's Fashion-Scout Agent performing live web research in {date_str}.\n"
         f"Actively search the LIVE WEB across fashion publications, designer news, blogs, and style journals for "
         f"the newest, vibrant articles about {gender.upper()} fashion in the '{bucket['label']}' category ({bucket['focus']}).\n"
         f"Geographic focus: {place}.\n"
+        f"{personalization_prompt}"
         f"{avoid_topics}\n\n"
         "RESTRICTIONS:\n"
-        "- NO marketplaces, online stores, or shopping platforms (no Amazon, ASOS, Shein, eBay, Zara carts, product buy pages).\n"
-        "- NO sign-in walled or paywalled websites. Must be freely readable with no mandatory login.\n"
-        "- NO hard-coded or hallucinated images. Never invent image URLs, paths, or domain names.\n"
-        "- NO irrelevant articles. Must be strictly relevant to fashion, style, clothing design, runway, or textile craftsmanship.\n\n"
+        "* No marketplaces or online stores: Never link to Amazon, eBay, ASOS, Shein, Temu, AliExpress, Etsy, Shopify stores (e.g. shopisrael.com), Zara/H&M store carts, or any commercial checkout or product sales pages.\n"
+        "* No sign-in walled websites: Never link to paywalled or login-walled sources (e.g. Vogue Business paywall, WSJ, FT, Bloomberg, or sites requiring mandatory registration or sign-in). Content must be 100% free and open-access to readers.\n"
+        "* No hard-coded or hallucinated images: Never invent, guess, or hallucinate an image URL, path, or image domain. Only return authentic original images discovered in the article, or null.\n"
+        "* No irrelevant articles: Content must be strictly about fashion trends, designer collections, runway reports, street style, local designers, sustainable textiles, or garment care and repair. Never include politics, general gossip, or unrelated news.\n"
+        "* No 404 Not Found - always verify article web links: Source URLs must be active, valid, direct deep links navigating directly to the specific article. Never provide dead links, homepages, search engine redirect wrappers, or root domains.\n\n"
         "MUST ACHIEVE:\n"
-        "- Up-to-date articles with relevant content: Focus on recent 2026 fashion news, designer collections, or trend movements.\n"
-        "- Valid article web link: source_url MUST be an authentic, direct deep link to the specific article discovered during search.\n"
-        "- Card image: Original image taken directly from the article itself (from metadata or page body), or null if not directly accessible.\n"
-        "- Carefully formulated summary: A punchy, captivating headline (<= 8 words) and an engaging, factual 1-2 sentence body (<= 220 characters).\n"
-        "- Honor i18next localization: Formulate clearly for seamless downstream localization.\n\n"
+        "* Up-to-date articles with category-filtered, relevant new content: Research recent fashion journalism, lookbooks, reviews, or designer announcements from 2026 tailored to the specific category bucket.\n"
+        "* Valid article web link. Must validate the link before publishing: source_url MUST be an authentic, direct deep link to the specific article discovered during search.\n"
+        "* Card image: Original image scraped from the article itself (from metadata og:image/twitter:image or page body), or null.\n"
+        "* A carefully formulated summary of the article. Always localize to the user's language and translate carefully. Verify using the language rules, font, and grammar: A punchy headline (<= 8 words) and an engaging, factual 1-2 sentence body (<= 220 characters) providing one concrete, actionable wardrobe takeaway for stylish readers.\n"
+        "* Honor i18next localization: Formulate clearly for seamless downstream localization.\n\n"
         "Return ONLY a valid JSON object matching this structure:\n"
         "{\n"
         '  "headline": "Punchy, exciting headline (<= 8 words)",\n'
@@ -1129,7 +991,7 @@ async def _generate_one(
         '  "source_url": "Direct URL of the specific online article or editorial piece discovered",\n'
         '  "image_url": "Direct authentic image URL from the article itself, or null"\n'
         "}\n"
-        "Important: Return ONE concrete, actionable trend insight. The source_url in your final card must be a specific article deep link. No shopping carts or paywalls."
+        "Important: Return ONE concrete, actionable trend insight. The source_url in your final card must be a specific article deep link. No shopping carts, online stores, or paywalls."
     )
 
     card_data = None
@@ -1164,7 +1026,7 @@ async def _generate_one(
 
     # 3. Autonomous Web Crawling & Enrichment of Discovered Article
     if card_data:
-        for u in candidate_urls[:4]:
+        for u in candidate_urls[:8]:
             source_url = _clean_url(u) or u
             if not source_url.startswith("http"):
                 continue
@@ -1182,8 +1044,16 @@ async def _generate_one(
                 return verified
 
     # 4. Fallback: Multi-turn web search crawler if grounding was offline or empty
+    query_strings = get_search_queries(
+        bucket["slug"],
+        country_code,
+        city,
+        gender=gender,
+        dress_code=dress_code,
+        style=style,
+        social_platforms=social_platforms,
+    )
     starter_urls: list[str] = []
-    query_strings = get_search_queries(bucket["slug"], country_code, city, gender=gender)
     for q in query_strings:
         if q.startswith("http://") or q.startswith("https://"):
             starter_urls.append(q)
@@ -1234,7 +1104,7 @@ async def _generate_one(
                 return None
 
             source_url = _clean_url(card_data.get("source_url"))
-            image_url = _clean_url(card_data.get("image_url")) or _get_fallback_image(bucket["slug"], gender)
+            image_url = _clean_url(card_data.get("image_url"))
             raw_card = {
                 "headline": str(card_data["headline"])[:140],
                 "body": str(card_data["body"])[:400],
@@ -1245,7 +1115,8 @@ async def _generate_one(
                 "video_url": _clean_url(card_data.get("video_url")),
             }
             verified = await verify_and_enrich_card(raw_card, bucket["slug"], gender)
-            return verified or raw_card
+            if verified and verified.get("source_url"):
+                return verified
 
     return None
 
@@ -1257,8 +1128,9 @@ async def _is_image_url_valid(url: str | None) -> bool:
     u = url.strip()
     if not u.startswith("http://") and not u.startswith("https://"):
         return False
-    # Strictly reject known broken or hallucinated domains
-    if "ynet-pic1.ynet.co.il" in u or "example.com" in u or "localhost" in u:
+    # Strictly reject known broken, hallucinated, dummy or placeholder domains
+    lowered = u.lower()
+    if any(d in lowered for d in ("ynet-pic1.ynet.co.il", "example.com", "localhost", "placeholder", "dummy", "default_avatar", "1x1")):
         return False
     headers = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
@@ -1267,7 +1139,7 @@ async def _is_image_url_valid(url: str | None) -> bool:
     try:
         async with httpx.AsyncClient(timeout=4.0, headers=headers, follow_redirects=True) as client:
             resp = await client.get(u)
-            if resp.status_code == 200 and len(resp.content) > 200:
+            if resp.status_code == 200 and len(resp.content) >= 3000:
                 ct = resp.headers.get("content-type", "").lower()
                 if "image" in ct or "octet-stream" in ct or resp.content[:4] in (b"\xff\xd8\xff", b"\x89PNG", b"RIFF", b"GIF8"):
                     return True
@@ -1290,72 +1162,126 @@ def _sanitize_localized_text(text: str, target_lang: str) -> str:
 
 
 async def verify_and_enrich_card(card: dict[str, Any] | None, bucket_slug: str, gender: str) -> dict[str, Any] | None:
-    """Validate that source_url is reachable, follow redirects to canonical article URL, and extract verified authentic image."""
+    """Validate that source_url is reachable (HTTP 200), strictly not 404, not an online store or sign-in wall,
+    and scrape the authentic original article image.
+    """
     if not card or not card.get("source_url"):
         return None
-    url = card["source_url"]
-    if not url.startswith("http"):
+    raw_url = card["source_url"]
+    clean_url = _clean_url(raw_url)
+    if not clean_url:
+        logger.info("Trend link rejected by domain/path filter: %s", raw_url)
         return None
+
     headers = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
         "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
+        "Accept-Language": "en-US,en;q=0.9,he;q=0.8",
     }
     try:
         async with httpx.AsyncClient(timeout=8.0, headers=headers, follow_redirects=True) as client:
-            resp = await client.get(url)
+            resp = await client.get(clean_url)
+            # 1. HARD HTTP ERROR CHECK: Must return 200 OK
+            if resp.status_code != 200:
+                logger.info("Trend link verification failed: %s returned HTTP %d (REJECTED)", clean_url, resp.status_code)
+                return None
+
             final_url = str(resp.url)
             clean_final = _clean_url(final_url)
-            if clean_final:
-                card["source_url"] = clean_final
+            if not clean_final:
+                logger.info("Trend final redirected URL %s is disallowed (REJECTED)", final_url)
+                return None
+
+            resp_text = resp.text
+            if not resp_text or len(resp_text.strip()) < 300:
+                logger.info("Trend link %s returned empty or blocked content (REJECTED)", clean_final)
+                return None
+
+            soup = BeautifulSoup(resp_text, "html.parser")
+            page_title = (soup.title.string or "") if soup.title else ""
+            h1_text = " ".join([h.get_text() for h in soup.find_all("h1")])
+            check_sample = f"{page_title} {h1_text} {resp_text[:2500]}".lower()
+
+            # 2. SOFT 404 NOT FOUND DETECTION
+            soft_404_markers = (
+                "404 page not found", "404 not found", "page not found", "page cannot be found",
+                "the page you requested does not exist", "this page is unavailable",
+                "could not be found", "page doesn't exist", "error 404", "שגיאה 404",
+                "עמוד לא נמצא", "הדף לא נמצא", "העמוד המבוקש אינו קיים",
+                "seite nicht gefunden", "page introuvable",
+            )
+            if any(marker in check_sample for marker in soft_404_markers):
+                logger.info("Soft 404 detected on %s: REJECTED", clean_final)
+                return None
+
+            # 3. ONLINE STORE / MARKETPLACE DETECTION
+            store_markers = (
+                'action="/cart', 'action="/checkout', 'action="/buy',
+                'window.shopify', 'cdn.shopify.com', 'shopify.theme',
+                'add-to-cart', 'add to cart', 'add to bag', 'buy now with 1-click',
+                'free shipping on orders', 'items in your cart', 'proceed to checkout',
+                'shopping cart', 'view cart', 'in stock', 'out of stock',
+            )
+            has_cart_form = False
+            for form in soup.find_all("form"):
+                action = (form.get("action") or "").lower()
+                if any(p in action for p in ("/cart", "/checkout", "/buy")):
+                    has_cart_form = True
+                    break
+            if has_cart_form or sum(1 for m in store_markers if m in check_sample) >= 2:
+                logger.info("Online store / marketplace detected on %s: REJECTED", clean_final)
+                return None
+
+            # 4. SIGN-IN WALLED / PAYWALL DETECTION
+            paywall_markers = (
+                "sign in to read", "subscribe to continue reading", "subscriber-only",
+                "already a subscriber? log in", "create a free account to read",
+                "sign in to continue", "members only",
+            )
+            if any(pm in check_sample for pm in paywall_markers):
+                logger.info("Sign-in wall / paywall detected on %s: REJECTED", clean_final)
+                return None
+
+            # 5. SCRAPE ORIGINAL ARTICLE IMAGE
+            candidate_images: list[str] = []
+            og_img = soup.find("meta", property="og:image") or soup.find("meta", attrs={"name": "og:image"})
+            tw_img = soup.find("meta", property="twitter:image") or soup.find("meta", attrs={"name": "twitter:image"})
+            if og_img and og_img.get("content"):
+                candidate_images.append(urllib.parse.urljoin(final_url, og_img["content"].strip()))
+            if tw_img and tw_img.get("content"):
+                candidate_images.append(urllib.parse.urljoin(final_url, tw_img["content"].strip()))
+
+            # Look for hero images inside article or main tags
+            article_tag = soup.find("article") or soup.find("main") or soup
+            for img in article_tag.find_all("img"):
+                src = img.get("src") or img.get("data-src") or img.get("data-original")
+                if src:
+                    full_img = urllib.parse.urljoin(final_url, src.strip())
+                    if full_img.startswith("http") and not any(skip in full_img.lower() for skip in ["logo", "icon", "avatar", "pixel", "badge", "tracker"]):
+                        candidate_images.append(full_img)
+
+            if card.get("image_url") and str(card["image_url"]).startswith("http"):
+                candidate_images.append(str(card["image_url"]))
 
             verified_img = None
-            if resp.status_code == 200:
-                resp_text = resp.text
-                if not ("404" in resp_text and ("Not Found" in resp_text or "עמוד לא נמצא" in resp_text or "Page not found" in resp_text)):
-                    soup = BeautifulSoup(resp_text, "html.parser")
-                    og_img = soup.find("meta", property="og:image") or soup.find("meta", attrs={"name": "og:image"})
-                    tw_img = soup.find("meta", property="twitter:image") or soup.find("meta", attrs={"name": "twitter:image"})
+            for c_img in candidate_images[:5]:
+                if await _is_image_url_valid(c_img):
+                    verified_img = c_img
+                    break
 
-                    candidate_images: list[str] = []
-                    if og_img and og_img.get("content"):
-                        candidate_images.append(urllib.parse.urljoin(final_url, og_img["content"].strip()))
-                    if tw_img and tw_img.get("content"):
-                        candidate_images.append(urllib.parse.urljoin(final_url, tw_img["content"].strip()))
+            card["image_url"] = verified_img
+            card["source_url"] = clean_final
 
-                    # Look for authentic content images inside article or main tags
-                    for img in soup.find_all("img"):
-                        src = img.get("src") or img.get("data-src") or img.get("data-original")
-                        if src:
-                            full_img = urllib.parse.urljoin(final_url, src.strip())
-                            if full_img.startswith("http") and not any(skip in full_img.lower() for skip in ["logo", "icon", "avatar", "weather", "pixel"]):
-                                candidate_images.append(full_img)
-
-                    # Also test Gemini's candidate image if provided
-                    if card.get("image_url") and str(card.get("image_url")).startswith("http"):
-                        candidate_images.append(str(card["image_url"]))
-
-                    # Verify each candidate image URL with a real HTTP check
-                    for c_img in candidate_images:
-                        if await _is_image_url_valid(c_img):
-                            verified_img = c_img
-                            break
-
-                    og_site = soup.find("meta", property="og:site_name") or soup.find("meta", attrs={"name": "og:site_name"})
-                    if og_site and og_site.get("content") and not card.get("source_name"):
-                        card["source_name"] = og_site["content"].strip()
-
-            # Ensure card has a verified reachable image, never an unreachable or hallucinated one
-            if verified_img:
-                card["image_url"] = verified_img
-            elif not card.get("image_url") or not await _is_image_url_valid(card.get("image_url")):
-                card["image_url"] = _get_fallback_image(bucket_slug, gender)
+            # Extract source_name from og:site_name if not provided
+            if not card.get("source_name"):
+                og_site = soup.find("meta", property="og:site_name") or soup.find("meta", attrs={"name": "og:site_name"})
+                if og_site and og_site.get("content"):
+                    card["source_name"] = og_site["content"].strip()
 
             return card
     except Exception as exc:
-        logger.warning("Verification failed for trend card URL %s: %s", url, exc)
-        if not card.get("image_url") or not await _is_image_url_valid(card.get("image_url")):
-            card["image_url"] = _get_fallback_image(bucket_slug, gender)
-        return card
+        logger.warning("Verification failed for trend card URL %s: %s", clean_url, exc)
+        return None
 
 
 async def _already_today(bucket_slug: str, country_code: str | None = None, gender: str = "female") -> bool:
@@ -1383,36 +1309,211 @@ def clear_trend_feed_cache() -> None:
 
 
 async def ensure_seed_data() -> None:
-    """Ensure database has canonical initial starting trend cards and heal missing images & article deep links."""
+    """Ensure database has canonical initial starting trend cards, prunes broken cards, and heals missing images & article deep links."""
     global _seed_data_initialized
     if _seed_data_initialized:
         return
     db = get_db()
-    # Heal existing seed/canonical documents with direct article deep links and images
-    for seed in CANONICAL_SEED_CARDS:
-        await db.trend_reports.update_many(
-            {"id": seed["id"]},
-            {"$set": {
-                "source_url": seed["source_url"],
-                "source_name": seed["source_name"],
-                "image_url": seed["image_url"],
-            }},
-        )
-    count = await db.trend_reports.count_documents({})
-    if count == 0:
-        logger.info("Seeding initial canonical Trend Scout cards for Men and Women...")
-        for seed in CANONICAL_SEED_CARDS:
-            doc = {
-                **seed,
-                "model": "seed-canonical-v1",
-                "created_at": datetime.now(timezone.utc).isoformat(),
-            }
-            await db.trend_reports.replace_one(
-                {"bucket": seed["bucket"], "gender": seed["gender"], "country_code": seed.get("country_code")},
-                doc,
-                upsert=True
-            )
+    # Prune existing broken, store, or 404 cards from MongoDB
+    disallowed_patterns = [
+        {"source_url": {"$regex": r"shopisrael\.com", "$options": "i"}},
+        {"source_url": {"$regex": r"facebook\.com/login", "$options": "i"}},
+        {"source_url": {"$regex": r"vertexaisearch\.cloud\.google\.com", "$options": "i"}},
+        {"source_url": {"$regex": r"S12345678", "$options": "i"}},
+        {"source_url": {"$regex": r"timeout\.co\.il/topic/", "$options": "i"}},
+    ]
+    for pat in disallowed_patterns:
+        try:
+            res = await db.trend_reports.delete_many(pat)
+            if res.deleted_count > 0:
+                logger.info("Pruned %d broken/disallowed trend cards matching %s", res.deleted_count, pat)
+        except Exception as exc:
+            logger.warning("Failed pruning disallowed trend cards: %s", exc)
+
     _seed_data_initialized = True
+
+
+# ---------------------------------------------------------------------------
+# Trend Scout User Settings & Wardrobe Analysis
+# ---------------------------------------------------------------------------
+async def get_user_trend_scout_settings(user_id: str, user: dict | None = None) -> dict[str, Any]:
+    """Retrieve the Trend Scout settings (custom style & social media accounts) for a user."""
+    db = get_db()
+    settings_doc = await db.trend_scout_settings.find_one({"user_id": user_id}, {"_id": 0})
+    if not settings_doc:
+        if not user:
+            user = await db.users.find_one({"id": user_id}) or {}
+        settings_doc = user.get("trend_scout_settings") or {}
+
+    existing_platforms = {p["id"]: p for p in settings_doc.get("social_platforms") or [] if isinstance(p, dict) and p.get("id")}
+    merged_platforms = []
+    for default_p in DEFAULT_SOCIAL_PLATFORMS:
+        pid = default_p["id"]
+        if pid in existing_platforms:
+            merged_platforms.append({**default_p, **existing_platforms[pid]})
+        else:
+            merged_platforms.append(dict(default_p))
+
+    return {
+        "user_id": user_id,
+        "custom_style": settings_doc.get("custom_style") or "",
+        "social_platforms": merged_platforms,
+    }
+
+
+async def save_user_trend_scout_settings(user_id: str, payload: dict[str, Any]) -> dict[str, Any]:
+    """Save user Trend Scout settings (custom style & social media accounts) and sync to DB."""
+    db = get_db()
+    current = await get_user_trend_scout_settings(user_id)
+    update_data: dict[str, Any] = {
+        "user_id": user_id,
+        "custom_style": (str(payload.get("custom_style", current.get("custom_style") or ""))).strip(),
+        "updated_at": datetime.now(timezone.utc).isoformat(),
+    }
+    if "social_platforms" in payload and isinstance(payload["social_platforms"], list):
+        update_data["social_platforms"] = payload["social_platforms"]
+    else:
+        update_data["social_platforms"] = current.get("social_platforms", [])
+
+    await db.trend_scout_settings.replace_one(
+        {"user_id": user_id},
+        update_data,
+        upsert=True
+    )
+    await db.users.update_one(
+        {"id": user_id},
+        {"$set": {"trend_scout_settings": update_data}}
+    )
+    clear_trend_feed_cache()
+    return await get_user_trend_scout_settings(user_id)
+
+
+async def connect_user_social_platform(user_id: str, platform_id: str, username: str) -> dict[str, Any]:
+    """Connect a social media platform account for a user."""
+    settings_data = await get_user_trend_scout_settings(user_id)
+    platforms = settings_data.get("social_platforms", [])
+    clean_username = username.strip()
+    if clean_username and not clean_username.startswith("@") and platform_id in ("instagram", "tiktok", "x", "threads"):
+        clean_username = f"@{clean_username}"
+
+    found = False
+    for p in platforms:
+        if p["id"] == platform_id:
+            p["connected"] = True
+            p["username"] = clean_username or p["name"]
+            p["active"] = True
+            p["connected_at"] = datetime.now(timezone.utc).isoformat()
+            found = True
+            break
+    if not found:
+        platforms.append({
+            "id": platform_id,
+            "name": platform_id.title(),
+            "connected": True,
+            "username": clean_username,
+            "active": True,
+            "connected_at": datetime.now(timezone.utc).isoformat(),
+        })
+
+    return await save_user_trend_scout_settings(user_id, {"social_platforms": platforms})
+
+
+async def disconnect_user_social_platform(user_id: str, platform_id: str) -> dict[str, Any]:
+    """Disconnect a social media platform account for a user."""
+    settings_data = await get_user_trend_scout_settings(user_id)
+    platforms = settings_data.get("social_platforms", [])
+    for p in platforms:
+        if p["id"] == platform_id:
+            p["connected"] = False
+            p["username"] = None
+            p["active"] = False
+            p.pop("connected_at", None)
+            break
+    return await save_user_trend_scout_settings(user_id, {"social_platforms": platforms})
+
+
+async def analyze_user_closet_profile(user_id: str, user: dict | None = None) -> dict[str, Any]:
+    """Analyze the user's closet for the leading dress code and style.
+
+    By analyzing the user's closet for the leading dress code and style,
+    it adds another layer of filtering to the web search results.
+    If the user entered a custom style in their Trend Scout settings,
+    that custom style overrides or refines the detected style.
+    """
+    db = get_db()
+    if not user:
+        user = await db.users.find_one({"id": user_id}) or {}
+
+    items_cursor = db.closet_items.find(
+        {"user_id": user_id},
+        {"dress_code": 1, "style": 1, "tags": 1, "sub_category": 1, "cultural_tags": 1, "category": 1}
+    )
+    items = [item async for item in items_cursor]
+    if not items and hasattr(db, "clothes"):
+        items_cursor = db.clothes.find(
+            {"user_id": user_id},
+            {"dress_code": 1, "style": 1, "tags": 1, "sub_category": 1, "cultural_tags": 1, "category": 1}
+        )
+        items = [item async for item in items_cursor]
+
+
+    # Tally dress codes
+    dress_code_counts: dict[str, int] = {}
+    for item in items:
+        dc = (item.get("dress_code") or "").strip().lower()
+        if dc and dc not in ("all", "unknown", "other"):
+            dress_code_counts[dc] = dress_code_counts.get(dc, 0) + 1
+
+    lead_dress_code = "casual"
+    if dress_code_counts:
+        lead_dress_code = max(dress_code_counts, key=dress_code_counts.get)
+
+    # Tally styles
+    style_counts: dict[str, int] = {}
+    for item in items:
+        st = (item.get("style") or "").strip().lower()
+        if st and st not in ("all", "unknown", "other"):
+            style_counts[st] = style_counts.get(st, 0) + 2
+
+        for t_raw in (item.get("tags") or []):
+            t_clean = str(t_raw).strip().lower()
+            if t_clean in (
+                "vintage", "hip-hop", "hiphop", "streetwear", "minimalist",
+                "classic", "boho", "preppy", "grunge", "y2k", "quiet luxury",
+                "old money", "formal", "casual", "chic", "punk", "athletic"
+            ):
+                style_counts[t_clean] = style_counts.get(t_clean, 0) + 1
+
+    # Add user's explicit style profile aesthetics
+    user_aesthetics = (user.get("style_profile") or {}).get("aesthetics") or []
+    for aes in user_aesthetics:
+        aes_clean = str(aes).strip().lower()
+        if aes_clean:
+            style_counts[aes_clean] = style_counts.get(aes_clean, 0) + 3
+
+    lead_closet_style = "contemporary"
+    if style_counts:
+        lead_closet_style = max(style_counts, key=style_counts.get)
+
+    # Read user's Trend Scout settings
+    scout_settings = await get_user_trend_scout_settings(user_id, user=user)
+    custom_style = (scout_settings.get("custom_style") or "").strip()
+
+    effective_style = custom_style if custom_style else lead_closet_style
+
+    active_socials = [
+        p["id"] for p in scout_settings.get("social_platforms", [])
+        if p.get("active") and p.get("connected")
+    ]
+
+    return {
+        "lead_dress_code": lead_dress_code,
+        "lead_closet_style": lead_closet_style,
+        "custom_style": custom_style or None,
+        "effective_style": effective_style,
+        "social_platforms": active_socials,
+        "closet_item_count": len(items),
+    }
 
 
 # ---------------------------------------------------------------------------
@@ -1426,7 +1527,7 @@ async def run_trend_scout(
     country_code: str | None = None,
     gender: str | None = None,
 ) -> dict[str, Any]:
-    """Generate and persist today's fashion-scout cards for the requested gender & country."""
+    """Generate and persist today's fashion-scout cards for the requested gender & country, incorporating closet dress code & style."""
     db = get_db()
     await ensure_seed_data()
     today = date.today().isoformat()
@@ -1455,6 +1556,18 @@ async def run_trend_scout(
     else:
         target_genders = ["female", "male"]
 
+    # Closet & Style Analysis for Personalized Crawling
+    closet_profile: dict[str, Any] = {}
+    if user and user.get("id"):
+        try:
+            closet_profile = await analyze_user_closet_profile(user["id"], user=user)
+        except Exception as exc:
+            logger.warning("Closet profile analysis failed for user %s: %s", user.get("id"), exc)
+
+    lead_dress_code = closet_profile.get("lead_dress_code")
+    effective_style = closet_profile.get("effective_style")
+    active_socials = closet_profile.get("social_platforms") or []
+
     results: list[dict[str, Any]] = []
     skipped: list[str] = []
     sem = asyncio.Semaphore(4)
@@ -1466,7 +1579,10 @@ async def run_trend_scout(
                 client_type=client_type,
                 country_code=country_code,
                 city=city,
-                gender=g
+                gender=g,
+                dress_code=lead_dress_code,
+                style=effective_style,
+                social_platforms=active_socials,
             )
             if not card:
                 return None
@@ -1486,6 +1602,8 @@ async def run_trend_scout(
                 "source_url": card.get("source_url"),
                 "image_url": card.get("image_url"),
                 "video_url": card.get("video_url"),
+                "dress_code": lead_dress_code,
+                "style": effective_style,
                 "model": "gemini-2.5-flash-grounded",
                 "created_at": datetime.now(timezone.utc).isoformat(),
             }
@@ -1519,11 +1637,13 @@ async def run_trend_scout(
             logger.warning("Bucket processing raised exception: %s", res)
 
     logger.info(
-        "Trend-Scout run complete: generated=%d, skipped=%d, country_code=%s, genders=%s",
+        "Trend-Scout run complete: generated=%d, skipped=%d, country_code=%s, genders=%s, dress_code=%s, style=%s",
         len(results),
         len(skipped),
         country_code,
-        target_genders
+        target_genders,
+        lead_dress_code,
+        effective_style,
     )
     clear_trend_feed_cache()
     if user and user.get("id"):
@@ -1537,22 +1657,28 @@ async def run_trend_scout(
     }
 
 
-async def monthly_trend_scout_refresh() -> dict[str, Any]:
-    """Monthly scheduled refresh executed at midnight UTC on the 1st of every month.
+async def weekly_trend_scout_refresh() -> dict[str, Any]:
+    """Weekly scheduled Trend-Scout refresh executed on Sunday at 10:00 AM local time.
 
     Refreshes both Men's and Women's Fashion Ecosystems with authentic real-time data
     for primary target locations.
     """
-    logger.info("Starting monthly Trend Scout refresh on the 1st of the month at 00:00 UTC...")
-    results = {}
-    for country in ["IL", "US", "GB", "FR"]:
+    logger.info("Executing weekly Trend-Scout refresh on Sunday at 10:00 AM local time...")
+    results: dict[str, Any] = {}
+    for country in ["IL", "US", "GB", "FR", "DE"]:
         for g in ["female", "male"]:
             try:
                 res = await run_trend_scout(force=True, country_code=country, gender=g)
                 results[f"{country}_{g}"] = len(res.get("generated") or [])
             except Exception as exc:  # noqa: BLE001
-                logger.warning("Monthly Trend Scout refresh failed for %s (%s): %s", country, g, exc)
+                logger.warning("Weekly Trend Scout refresh failed for %s (%s): %s", country, g, exc)
+    clear_trend_feed_cache()
     return results
+
+
+async def monthly_trend_scout_refresh() -> dict[str, Any]:
+    """Legacy monthly alias directing to weekly_trend_scout_refresh."""
+    return await weekly_trend_scout_refresh()
 
 
 async def latest_trend_cards(
@@ -1606,14 +1732,6 @@ async def latest_trend_cards(
                 async for doc in cursor:
                     out.append(doc)
 
-    # Fallback to seed cards if database is still missing some buckets
-    if len(out) < len(active_buckets):
-        existing_slugs = {c["bucket"] for c in out}
-        for seed in CANONICAL_SEED_CARDS:
-            if seed["gender"] == gender and seed["bucket"] not in existing_slugs:
-                out.append(seed)
-                existing_slugs.add(seed["bucket"])
-
     return [_ensure_card_image(dict(c)) for c in out]
 
 
@@ -1650,7 +1768,8 @@ async def fashion_scout_feed(
 
     # Check in-memory feed cache for instant 0ms retrieval
     import time
-    cache_key = f"{target_gender}_{language}_{country}_{limit}_{bool(user)}"
+    today = date.today().isoformat()
+    cache_key = f"{target_gender}_{language}_{country}_{today}_{limit}_{bool(user)}"
     now = time.time()
     cached_entry = _trend_feed_cache.get(cache_key)
     if cached_entry and (now - cached_entry[0] < CACHE_TTL_SECONDS):
@@ -1671,12 +1790,34 @@ async def fashion_scout_feed(
     )
     canon = [doc async for doc in cursor]
 
-    # If canon is empty, fill with canonical seeds
+    # Filter out any lingering cards with un-cleaned or broken URLs
+    canon = [c for c in canon if _clean_url(c.get("source_url"))]
+
+    # If canon is empty, trigger dynamic run_trend_scout in background
     if not canon:
-        canon = [s for s in CANONICAL_SEED_CARDS if s.get("gender") == target_gender]
+        logger.info(
+            "No active trend scout cards found for %s (%s). Triggering run_trend_scout in background...",
+            country or "IL", target_gender
+        )
+        asyncio.create_task(run_trend_scout(country_code=country or "IL", gender=target_gender))
+
+    # Lazy Daily Refresh: if fewer than 4 cards are dated today, trigger background refresh
+    today_cards = [c for c in canon if c.get("date") == today]
+    if len(today_cards) < 4:
+        logger.info(
+            "Lazy Daily Refresh: only %d cards for %s (%s) on %s. Triggering run_trend_scout in background...",
+            len(today_cards), country or "IL", target_gender, today
+        )
+        asyncio.create_task(run_trend_scout(country_code=country or "IL", gender=target_gender))
 
     if user is not None:
-        canon = rank_cards_for_user(canon, user)
+        closet_profile = None
+        if user.get("id"):
+            try:
+                closet_profile = await analyze_user_closet_profile(user["id"], user=user)
+            except Exception as exc:
+                logger.warning("Closet profile analysis failed in feed: %s", exc)
+        canon = rank_cards_for_user(canon, user, closet_profile=closet_profile)
     canon = canon[:limit]
 
     if language == "en":
@@ -1794,13 +1935,23 @@ async def _translate_card(
     system_prompt = (
         f"You are DressApp's Expert Fashion Localizer & Translator specializing in {lang_name}.\n"
         f"Your mission is to carefully formulate and localize the fashion trend card into natural, fluent, elegant {lang_name} while strictly honoring i18next localization standards.\n\n"
-        "CRITICAL LANGUAGE, FONT & GRAMMAR RULES:\n"
-        "1. COMPLETE & NATURAL TRANSLATION: Formulate a carefully crafted, engaging summary. Every headline and body sentence must be completely translated into natural, idiomatic target language.\n"
-        "2. ABSOLUTELY NO HYBRID OR CORRUPTED WORDS: NEVER mix Latin and Hebrew/Arabic letters inside a single word (e.g., NEVER produce mangled monstrosities like 'קampaigת' or 'במיקונos'). Standard nouns like 'campaign' must be translated properly (in Hebrew: 'קמפיין', in Arabic: 'חملة'). Proper locations like 'Mykonos' must be correctly transliterated ('מיקונוס' / 'ميكونوس').\n"
-        "3. BRAND NAMES & PROPER NOUNS: Established brand names (e.g., 'CANDID', 'Chanel', 'Bogart') may remain in Latin or standard transliteration, but all surrounding verbs, prepositions, and adjectives must strictly follow target language grammar and spelling.\n"
-        "4. GRAMMAR, TONE & TYPOGRAPHY: Ensure correct grammatical gender agreement, subject-verb order, and natural punctuation for {lang_name}. For RTL languages (Hebrew, Arabic), ensure the text flows seamlessly without bidirectional layout artifacts.\n"
-        "5. EDITORIAL TONE: Keep the tone stylish, refined, inspiring, and concise (headline <= 8 words, body 1-2 sentences <= 220 characters).\n"
-        "6. PRESERVE METADATA: Do NOT alter, hallucinate, or translate source_url or image_url. Keep tag short, informative, and in all-caps target language (e.g. 'חדשות מקומיות' for LOCAL NEWS).\n\n"
+        "RESTRICTIONS:\n"
+        "* No marketplaces or online stores.\n"
+        "* No sign-in walled websites.\n"
+        "* No hard-coded or hallucinated images.\n"
+        "* No irrelevant articles.\n"
+        "* No 404 Not Found - always verify and preserve article web links.\n\n"
+        "MUST ACHIEVE:\n"
+        "* Up-to-date articles with category-filtered, relevant new content.\n"
+        "* Valid article web link. Must validate the link before publishing: Keep the exact verified source_url untouched. Never alter, translate, or invent web links.\n"
+        "* Card image: Original image scraped from the article: Keep the exact verified image_url untouched.\n"
+        "* A carefully formulated summary of the article. Always localize to the user's language and translate carefully. Verify using the language rules, font, and grammar:\n"
+        f"  - Complete, natural, idiomatic translation into {lang_name}.\n"
+        "  - ABSOLUTELY NO HYBRID OR CORRUPTED WORDS: NEVER mix Latin and Hebrew/Arabic letters inside a single word (e.g., NEVER produce 'קampaigת' or 'במיקונos'). Standard nouns must be translated cleanly (in Hebrew: 'קמפיין', in Arabic: 'حملة'). Proper locations must be transliterated ('מיקונוס' / 'ميكونוס').\n"
+        f"  - Ensure correct grammatical gender agreement, subject-verb order, and typography for {lang_name}.\n"
+        "  - For RTL languages (Hebrew, Arabic), ensure text flows seamlessly without bidirectional layout artifacts.\n"
+        "  - Keep the tone stylish, refined, inspiring, and concise (headline <= 8 words, body 1-2 sentences <= 220 characters).\n"
+        f"* Honor i18next localization: Localize all text fields (headline, body, tag) to {lang_name}. Tag should be short, informative, all-caps (e.g. 'חדשות מקומיות' for LOCAL NEWS).\n\n"
         f"{country_clause}\n"
         "Return ONLY a valid JSON object with keys: headline, body, tag, source_name, source_url, image_url, video_url."
     )
@@ -1835,10 +1986,10 @@ async def _translate_card(
     headline = _sanitize_localized_text(str(parsed["headline"]).strip(), language)[:140]
     body = _sanitize_localized_text(str(parsed["body"]).strip(), language)[:400]
 
-    # Ensure verified image is preserved from canonical card
+    # Preserve verified image from canonical card if valid
     verified_img = card.get("image_url")
     if not verified_img or not str(verified_img).startswith("http") or "ynet-pic1.ynet.co.il" in str(verified_img):
-        verified_img = _get_fallback_image(card.get("bucket"), card.get("gender"))
+        verified_img = None
 
     return {
         "id": str(uuid.uuid4()),
