@@ -24,6 +24,8 @@ import * as Lucide from 'lucide-react-native';
 import { useTheme } from '@mobile/theme';
 import { fonts, fontSizes, spacing, radii } from '@mobile/theme/tokens';
 
+export const GOOGLE_PLAY_URL = 'https://play.google.com/store/apps/details?id=com.project.dressapp';
+
 interface InviteProps {
   userId?: string;
 }
@@ -38,9 +40,10 @@ export function InviteFriendsSection({ userId }: InviteProps) {
 
   const handleShare = async () => {
     try {
+      const shareMessage = `${t('profile.inviteShareMessage', { defaultValue: "I'm using DressApp to organize my closet and style outfits with AI! Join here:" })} ${inviteUrl}\n\nGet DressApp on Google Play: ${GOOGLE_PLAY_URL}`;
       await Share.share({
         title: t('profile.inviteSubject', { defaultValue: 'Join me on DressApp' }),
-        message: `${t('profile.inviteShareMessage', { defaultValue: "I'm using DressApp to organize my closet and style outfits with AI! Join here:" })} ${inviteUrl}`,
+        message: shareMessage,
         url: inviteUrl,
       });
     } catch {

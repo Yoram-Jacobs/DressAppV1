@@ -79,6 +79,22 @@ function MigrationMessageListener() {
   return null;
 }
 
+/** Global listener to capture referral ID from ?ref= query parameter on landing */
+function ReferralParamListener() {
+  useEffect(() => {
+    try {
+      const searchParams = new URLSearchParams(window.location.search);
+      const refId = searchParams.get('ref');
+      if (refId && refId !== 'invite') {
+        localStorage.setItem('dressapp_ref_id', refId);
+      }
+    } catch {
+      /* noop */
+    }
+  }, []);
+  return null;
+}
+
 function OutfitsRedirect() {
   const location = useLocation();
   const search = location.search;
@@ -88,6 +104,7 @@ function OutfitsRedirect() {
 function App() {
   return (
     <BrowserRouter>
+      <ReferralParamListener />
       <HelmetProvider>
         <AuthProvider>
           <LocationProvider>

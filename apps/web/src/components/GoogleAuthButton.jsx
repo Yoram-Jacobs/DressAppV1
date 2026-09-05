@@ -45,10 +45,12 @@ export const GoogleAuthButton = ({
 
   const onClick = async () => {
     setBusy(true);
+    const refId = typeof window !== 'undefined' ? localStorage.getItem('dressapp_ref_id') : null;
     try {
       const res = await api.googleLoginStart({
         withCalendar,
         next,
+        ref: refId,
       });
       if (res?.authorization_url) {
         window.location.assign(res.authorization_url);
@@ -60,6 +62,7 @@ export const GoogleAuthButton = ({
         const qs = new URLSearchParams();
         if (withCalendar) qs.set('with_calendar', 'true');
         if (next) qs.set('next', next);
+        if (refId) qs.set('ref', refId);
         const qStr = qs.toString();
         const fRes = await fetch(`/api/v1/auth/google/login/start${qStr ? `?${qStr}` : ''}`, {
           method: 'GET',
