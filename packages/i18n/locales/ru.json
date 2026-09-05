@@ -1155,9 +1155,9 @@
         "saveFailed": "Ошибка сохранения",
         "languageUpdated": "Язык обновлён",
         "inviteFriends": "Пригласить друзей",
-        "inviteSubject": "Присоединяйся ко мне в DressApp",
-        "inviteBody": "Я использую DressApp для организации гардероба с AI-стилистом. Присоединяйся:",
-        "inviteCopied": "Ссылка-приглашение скопирована",
+        "inviteSubject": "Присоединяйтесь ко мне в DressApp",
+        "inviteBody": "Поделитесь своей реферальной ссылкой, чтобы пригласить друзей. Вы оба получите бонусные кредиты AI!",
+        "inviteCopied": "Ссылка-приглашение скопирована в буфер обмена!",
         "sections": {
             "identity": "Личность",
             "contact": "Контакты",
@@ -1457,10 +1457,10 @@
         "importWardrobeTitle": "Import Wardrobe From Other Apps",
         "importWardrobeDesc": "Migrate your existing catalog seamlessly from Whering, Acloset, Stylebook, and other digital wardrobe apps.",
         "supportedPlatforms": "Supported Wardrobe Platforms",
-        "inviteShareMessage": "I",
-        "shareFailed": "Failed to share invite link.",
-        "inviteTitle": "Invite Friends & Stylists",
-        "shareLink": "Share Invite Link",
+        "inviteShareMessage": "Я использую DressApp для организации гардероба и подбора образов с AI! Присоединяйтесь:",
+        "shareFailed": "Не удалось поделиться ссылкой-приглашением.",
+        "inviteTitle": "Пригласить друзей и стилистов",
+        "shareLink": "Поделиться ссылкой-приглашением",
         "missingCore": "Missing Core Measurements",
         "missingCoreDesc": "Please fill Height, Weight, Waist, and Foot Length to run smart AI prediction.",
         "measurementsDesc": "Enter 4 core biometrics to automatically calculate full body proportions and sizing.",
@@ -1522,7 +1522,11 @@
             "identity": "Идентификация",
             "subscription": "Подписка",
             "more": "Ещё"
-        }
+        },
+        "inviteWebTab": "Веб-ссылка",
+        "invitePlayStoreTab": "Ссылка на Google Play",
+        "shareGooglePlay": "Поделиться ссылкой на Google Play",
+        "invitePlayStoreMessage": "Я использую DressApp для организации гардероба и стиля с AI! Скачайте в Google Play:"
     },
     "admin": {
         "title": "Админ",

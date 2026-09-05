@@ -1185,10 +1185,10 @@
         "saveFailed": "השמירה נכשלה",
         "languageUpdated": "השפה עודכנה",
         "inviteFriends": "הזמנת חברים",
-        "inviteSubject": "הצטרף אליי ל-DressApp",
-        "inviteBody": "אני משתמש ב-DressApp כדי לארגן את הארון עם סטייליסט AI. הצטרף גם אתה:",
-        "inviteCopied": "קישור ההזמנה הועתק",
-        "inviteDesc": "שתף את DressApp עם החברים והמשפחה שלך",
+        "inviteSubject": "הצטרפו אליי ל-DressApp",
+        "inviteBody": "שתפו את קישור ההפניה האישי שלכם להזמנת חברים. שניכם תזכו בקרדיטים נוספים ל-AI!",
+        "inviteCopied": "קישור ההזמנה הועתק ללוח!",
+        "inviteDesc": "שתפו את DressApp עם חברים ובני משפחה",
         "settingsTitle": "העדפות מערכת",
         "sections": {
             "identity": "זהות",
@@ -1462,7 +1462,7 @@
         },
         "selectedModel": "מודל AI פעיל",
         "shareFailed": "שיתוף קישור ההזמנה נכשל.",
-        "shareLink": "שתף קישור הזמנה",
+        "shareLink": "שיתוף קישור הזמנה",
         "shoeSize": "מידת נעליים (EU/US)",
         "shoeSizePlaceholder": "EU 42 / US 9",
         "shoulders": "כתפיים",
@@ -1543,8 +1543,8 @@
         "importWardrobeDesc": "העבר את הקטלוג הקיים שלך בקלות מ-Whering, Acloset, Stylebook ואפליקציות ארון דיגיטליות נוספות.",
         "importWardrobeTitle": "ייבוא ארון מאפליקציות אחרות",
         "inseam": "אורך רגל פנימי (Inseam)",
-        "inviteShareMessage": "הצטרף אלי ל-DressApp — הסטייליסט האישי והארון החכם ב-AI!",
-        "inviteTitle": "הזמן חברים וסטייליסטים",
+        "inviteShareMessage": "אני משתמש/ת ב-DressApp כדי לארגן את הארון ולעצב לוקים עם AI! הצטרפו כאן:",
+        "inviteTitle": "הזמנת חברים וסטייליסטים",
         "lastNamePlaceholder": "שם משפחה",
         "male": "גבר",
         "managePlanBtn": "נהל תוכנית והוסף קרדיטים",
@@ -1562,7 +1562,11 @@
             "identity": "זהות",
             "subscription": "מנוי",
             "more": "עוד"
-        }
+        },
+        "inviteWebTab": "קישור לאתר",
+        "invitePlayStoreTab": "קישור ל-Google Play",
+        "shareGooglePlay": "שיתוף קישור ל-Google Play",
+        "invitePlayStoreMessage": "אני משתמש/ת ב-DressApp כדי לארגן את הארון ולעצב לוקים עם AI! הורידו ב-Google Play:"
     },
     "admin": {
         "title": "ניהול",

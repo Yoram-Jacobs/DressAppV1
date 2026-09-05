@@ -1189,10 +1189,10 @@
         "saveFailed": "Opslaan mislukt",
         "languageUpdated": "Taal bijgewerkt",
         "inviteFriends": "Vrienden uitnodigen",
-        "inviteSubject": "Sluit je aan bij DressApp",
-        "inviteBody": "Ik gebruik DressApp om mijn garderobe te beheren met een AI-stylist. Sluit me hier bij aan:",
-        "inviteCopied": "Uitnodigingslink gekopieerd",
-        "inviteDesc": "Deel DressApp met je vrienden en familie",
+        "inviteSubject": "Doe mee op DressApp",
+        "inviteBody": "Deel uw persoonlijke verwijzingslink om vrienden uit te nodigen. Jullie ontvangen beiden extra AI-credits!",
+        "inviteCopied": "Uitnodigingslink gekopieerd naar klembord!",
+        "inviteDesc": "Deel DressApp met uw vrienden en familie",
         "settingsTitle": "Systeemvoorkeuren",
         "sections": {
             "identity": "Identiteit",
@@ -1457,10 +1457,10 @@
         "importWardrobeTitle": "Import Wardrobe From Other Apps",
         "importWardrobeDesc": "Migrate your existing catalog seamlessly from Whering, Acloset, Stylebook, and other digital wardrobe apps.",
         "supportedPlatforms": "Supported Wardrobe Platforms",
-        "inviteShareMessage": "I",
-        "shareFailed": "Failed to share invite link.",
-        "inviteTitle": "Invite Friends & Stylists",
-        "shareLink": "Share Invite Link",
+        "inviteShareMessage": "Ik gebruik DressApp om mijn kledingkast te organiseren en outfits te stylen met AI! Doe hier mee:",
+        "shareFailed": "Kan uitnodigingslink niet delen.",
+        "inviteTitle": "Vrienden & stylisten uitnodigen",
+        "shareLink": "Uitnodigingslink delen",
         "missingCore": "Missing Core Measurements",
         "missingCoreDesc": "Please fill Height, Weight, Waist, and Foot Length to run smart AI prediction.",
         "measurementsDesc": "Enter 4 core biometrics to automatically calculate full body proportions and sizing.",
@@ -1522,7 +1522,11 @@
             "identity": "Identiteit",
             "subscription": "Abonnement",
             "more": "Meer"
-        }
+        },
+        "inviteWebTab": "Weblink",
+        "invitePlayStoreTab": "Google Play-link",
+        "shareGooglePlay": "Google Play-link delen",
+        "invitePlayStoreMessage": "Ik gebruik DressApp om mijn kledingkast te beheren en outfits te stylen met AI! Download op Google Play:"
     },
     "admin": {
         "title": "Beheerder",
