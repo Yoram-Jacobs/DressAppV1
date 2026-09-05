@@ -7,7 +7,12 @@ import { AccordionItem, AccordionTrigger, AccordionContent } from '@/components/
 import { toast } from 'sonner';
 import { useAuth } from '@/lib/auth';
 
-export const GOOGLE_PLAY_URL = 'https://play.google.com/store/apps/details?id=com.project.dressapp';
+export const GOOGLE_PLAY_BASE_URL = 'https://play.google.com/store/apps/details?id=com.project.dressapp';
+
+export function getGooglePlayAffiliateUrl(userId) {
+  if (!userId) return GOOGLE_PLAY_BASE_URL;
+  return `${GOOGLE_PLAY_BASE_URL}&referrer=${encodeURIComponent(`ref=${userId}`)}`;
+}
 
 /**
  * Invite-friends action — web-today, mobile-ready-tomorrow.
@@ -25,11 +30,12 @@ export function InviteFriendsButton() {
   const [busy, setBusy] = useState(false);
 
   const inviteUrl = user?.id ? `${window.location.origin}/?ref=${user.id}` : `${window.location.origin}/?ref=invite`;
+  const playStoreUrl = getGooglePlayAffiliateUrl(user?.id);
 
   const share = async () => {
     setBusy(true);
     const bodyText = t('profile.inviteBody');
-    const shareMessage = `${bodyText} ${inviteUrl}\n\nGet DressApp on Google Play: ${GOOGLE_PLAY_URL}`;
+    const shareMessage = `${bodyText} ${inviteUrl}\n\nGet DressApp on Google Play: ${playStoreUrl}`;
     const payload = {
       title: t('profile.inviteSubject'),
       text: shareMessage,
@@ -85,7 +91,7 @@ export function InviteFriendsButton() {
               {t('profile.inviteBody')}
             </p>
             <a
-              href={GOOGLE_PLAY_URL}
+              href={playStoreUrl}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-1.5 text-[11px] font-medium text-[hsl(var(--accent))] hover:underline mt-1"
