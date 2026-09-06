@@ -113,11 +113,19 @@ def _sanitize_listing_browse_doc(doc: dict[str, Any]) -> dict[str, Any]:
     # 1. reconstructed_image_url / reconstruct_image_url
     # 2. clean_image_url
     # 3. images[0] / thumbnail_data_url / image_url
-    recon_or_clean = (
-        doc.get("reconstructed_image_url")
-        or doc.get("reconstruct_image_url")
-        or doc.get("clean_image_url")
-    )
+    pref = doc.get("preferred_image_view")
+    if pref in ("clean", "original"):
+        recon_or_clean = (
+            doc.get("clean_image_url")
+            or doc.get("reconstructed_image_url")
+            or doc.get("reconstruct_image_url")
+        )
+    else:
+        recon_or_clean = (
+            doc.get("reconstructed_image_url")
+            or doc.get("reconstruct_image_url")
+            or doc.get("clean_image_url")
+        )
 
     if recon_or_clean:
         doc["thumbnail_data_url"] = recon_or_clean
@@ -244,30 +252,42 @@ async def create_listing(
                 {"group_id": group_id, "user_id": user["id"]}
             )
             group_items.sort(key=lambda x: 0 if x.get("group_role") == "host" else 1)
-            for g_item in group_items:
-                for fld in (
-                    "clean_image_url",
-                    "reconstructed_image_url",
-                    "cutout_url",
-                    "thumbnail_data_url",
-                    "image_url",
-                    "segmented_image_url",
-                    "original_image_url",
-                ):
-                    url = g_item.get(fld)
-                    if isinstance(url, str) and url:
-                        images.append(url)
-                        break
-        else:
-            for fld in (
-                "clean_image_url",
-                "reconstructed_image_url",
+            pref = (closet_item or {}).get("preferred_image_view")
+            flds = (
+                ("clean_image_url", "reconstructed_image_url")
+                if pref in ("clean", "original")
+                else ("reconstructed_image_url", "clean_image_url")
+            )
+            candidate_fields = (
+                *flds,
                 "cutout_url",
                 "thumbnail_data_url",
                 "image_url",
                 "segmented_image_url",
                 "original_image_url",
-            ):
+            )
+            for g_item in group_items:
+                for fld in candidate_fields:
+                    url = g_item.get(fld)
+                    if isinstance(url, str) and url:
+                        images.append(url)
+                        break
+        else:
+            pref = (closet_item or {}).get("preferred_image_view")
+            flds = (
+                ("clean_image_url", "reconstructed_image_url")
+                if pref in ("clean", "original")
+                else ("reconstructed_image_url", "clean_image_url")
+            )
+            candidate_fields = (
+                *flds,
+                "cutout_url",
+                "thumbnail_data_url",
+                "image_url",
+                "segmented_image_url",
+                "original_image_url",
+            )
+            for fld in candidate_fields:
                 url = closet_item.get(fld)
                 if isinstance(url, str) and url:
                     images.append(url)
@@ -314,6 +334,8 @@ async def create_listing(
     )
 
     doc = listing.model_dump()
+    if closet_item and closet_item.get("preferred_image_view"):
+        doc["preferred_image_view"] = closet_item["preferred_image_view"]
     await repos.insert(db.listings, doc)
 
     # Transition the closet_item's source (Private → Shared/Retail).

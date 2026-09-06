@@ -271,12 +271,28 @@ async def ensure_indexes() -> None:
             logger.info("MongoDB migration: backfilled reconstructed/clean image priority for %d legacy listings", legacy_listing_count)
 
         # Normalize clean_image_url and reconstructed_image_url (deskew + 0.90 safety margin) for all closet items
+        # Also restore clean_image_url if it was previously overwritten with reconstructed_image_url
         from app.services.vision.image import fit_image_data_url_to_card
         normalized_item_count = 0
         async for item in db.closet_items.find({}):
             update_fields = {}
             clean = item.get("clean_image_url")
             recon = item.get("reconstructed_image_url")
+
+            # Check if clean_image_url was overwritten with reconstructed_image_url
+            if recon and clean and clean == recon:
+                variants = item.get("image_variants") or {}
+                orig_candidate = (
+                    variants.get("original")
+                    or (variants.get("webp") or {}).get("large")
+                    or (variants.get("webp") or {}).get("medium")
+                    or item.get("cutout_url")
+                    or item.get("segmented_image_url")
+                )
+                if orig_candidate and orig_candidate != recon:
+                    clean = orig_candidate
+                    update_fields["clean_image_url"] = clean
+
             if clean and isinstance(clean, str) and clean.startswith("data:image/"):
                 norm_clean = fit_image_data_url_to_card(clean)
                 if norm_clean and norm_clean != clean:
@@ -285,6 +301,8 @@ async def ensure_indexes() -> None:
                 norm_recon = fit_image_data_url_to_card(recon)
                 if norm_recon and norm_recon != recon:
                     update_fields["reconstructed_image_url"] = norm_recon
+
+            if update_fields:
                 query = {"id": item["id"]} if item.get("id") else {"_id": item["_id"]}
                 await db.closet_items.update_one(query, {"$set": update_fields})
                 normalized_item_count += 1

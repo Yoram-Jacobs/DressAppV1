@@ -195,7 +195,6 @@ def _extract_garment_mask(img: Image.Image) -> np.ndarray:
 
     Works for both RGBA cutouts and RGB photos with neutral/solid backgrounds.
     """
-    import cv2
     import numpy as np
 
     has_alpha = (
@@ -227,19 +226,23 @@ def _extract_garment_mask(img: Image.Image) -> np.ndarray:
     dist = np.sqrt(np.sum(diff ** 2, axis=2))
     mask = (dist > 22).astype(np.uint8) * 255
 
-    kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (5, 5))
-    mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel)
-    mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, kernel)
+    try:
+        import cv2
+        kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (5, 5))
+        mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel)
+        mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, kernel)
 
-    num_labels, labels, stats, _ = cv2.connectedComponentsWithStats(mask)
-    if num_labels > 1:
-        min_area = (h * w) * 0.01
-        clean_mask = np.zeros_like(mask)
-        for i in range(1, num_labels):
-            if stats[i, cv2.CC_STAT_AREA] >= min_area:
-                clean_mask[labels == i] = 255
-        if np.any(clean_mask):
-            mask = clean_mask
+        num_labels, labels, stats, _ = cv2.connectedComponentsWithStats(mask)
+        if num_labels > 1:
+            min_area = (h * w) * 0.01
+            clean_mask = np.zeros_like(mask)
+            for i in range(1, num_labels):
+                if stats[i, cv2.CC_STAT_AREA] >= min_area:
+                    clean_mask[labels == i] = 255
+            if np.any(clean_mask):
+                mask = clean_mask
+    except Exception:
+        pass
 
     return mask
 

@@ -1623,11 +1623,19 @@ function ItemCardInner({ item, isSelected, showCheckbox, score }) {
         {(() => {
           const thumbUrl = bestImageUrl(item, { useStoredPreference: true });
           const polishing = isCleanImagePending(item);
+          const variantsMatch = Boolean(
+            item.image_variants &&
+            thumbUrl &&
+            item.image_variants.original &&
+            (thumbUrl === item.image_variants.original ||
+              thumbUrl.endsWith(item.image_variants.original) ||
+              item.image_variants.original.endsWith(thumbUrl))
+          );
           if (thumbUrl) {
             return (
               <>
                 <ProgressiveImage
-                  variants={item.image_variants}
+                  variants={variantsMatch ? item.image_variants : null}
                   originalSrc={thumbUrl}
                   alt={item.title}
                   objectFit="contain"

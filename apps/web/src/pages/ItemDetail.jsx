@@ -1439,9 +1439,18 @@ export default function ItemDetail() {
   // reconstruction layer so they can compare the un-restyled photo;
   // every other field (clean rembg PNG / segmented JPG / raw original)
   // still falls back in the canonical order.
-  const preferredImage = bestImageUrl(mergedItem, {
-    skipReconstruction: showingOriginal,
-  });
+  const preferredImage = showingOriginal
+    ? (
+        (mergedItem.clean_image_url && mergedItem.clean_image_url !== mergedItem.reconstructed_image_url ? mergedItem.clean_image_url : null) ||
+        mergedItem.image_variants?.original ||
+        mergedItem.image_variants?.webp?.large ||
+        mergedItem.cutout_url ||
+        mergedItem.segmented_image_url ||
+        bestImageUrl(mergedItem, { skipReconstruction: true }) ||
+        mergedItem.clean_image_url ||
+        mergedItem.original_image_url
+      )
+    : (mergedItem.reconstructed_image_url || bestImageUrl(mergedItem, { skipReconstruction: false }));
   // "Repair photo" CTA visibility:
   //   • the one-pass /analyze response asked us to advise it
   //     (``reconstruction_advised: true``), AND

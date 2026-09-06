@@ -919,10 +919,13 @@ export function ItemDetailScreen() {
 
   const hasReconstruction = Boolean(reconstructedUrl);
 
+  const distinctCleanCutout =
+    cleanCutoutUrl && cleanCutoutUrl !== reconstructedUrl ? cleanCutoutUrl : null;
+
   // 'AI-repaired' view: reconstructed image -> clean cutout fallback
-  const aiRepairedUrl = reconstructedUrl || cleanCutoutUrl || variantUrl || fallbackThumb || rawOriginalUrl;
-  // 'Original crop' view: clean cutout image (clean_image_url) -> raw fallback
-  const originalCropUrl = cleanCutoutUrl || rawOriginalUrl || variantUrl || fallbackThumb || aiRepairedUrl;
+  const aiRepairedUrl = reconstructedUrl || distinctCleanCutout || cleanCutoutUrl || variantUrl || fallbackThumb || rawOriginalUrl;
+  // 'Original crop' view: clean cutout image (clean_image_url) -> raw fallback (distinguished from reconstructed studio photo)
+  const originalCropUrl = distinctCleanCutout || rawOriginalUrl || variantUrl || fallbackThumb || cleanCutoutUrl || aiRepairedUrl;
 
   // Show clean_image_url on 'Original crop' (!viewingCutout), or AI-repaired image on 'AI-repaired' (viewingCutout)
   const currentImg = viewingCutout ? aiRepairedUrl : originalCropUrl;

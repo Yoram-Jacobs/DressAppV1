@@ -23,7 +23,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/lib/auth';
 import { useLocation as useAppLocation } from '@/lib/location';
-import { useTrendScoutStore } from '@/lib/trendScoutStore';
+import { useTrendScoutStore, prewarmTrendScout } from '@/lib/trendScoutStore';
 import { api } from '@/lib/api';
 import { toast } from 'sonner';
 import { ExploreBackButton } from '@/components/ExploreBackButton';
@@ -128,18 +128,18 @@ export default function TrendScout() {
 
   useEffect(() => {
     if (isBlocked) return;
-    trendStore.prewarm({ language, country, gender: selectedGender });
-  }, [language, country, selectedGender, isBlocked, trendStore]);
+    prewarmTrendScout({ language, country, gender: selectedGender });
+  }, [language, country, selectedGender, isBlocked]);
 
   const handleRefresh = async () => {
     if (refreshing) return;
     setRefreshing(true);
     try {
       await api.trendsRunNowDev(true, selectedGender, country);
-      await trendStore.prewarm({ language, country, gender: selectedGender, force: true });
+      await prewarmTrendScout({ language, country, gender: selectedGender, force: true });
       toast.success(t('stylist.scoutRefreshed', { defaultValue: 'Trend feed refreshed with real-time live data!' }));
     } catch {
-      await trendStore.prewarm({ language, country, gender: selectedGender, force: true });
+      await prewarmTrendScout({ language, country, gender: selectedGender, force: true });
     } finally {
       setRefreshing(false);
     }

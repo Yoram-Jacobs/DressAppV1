@@ -79,6 +79,7 @@ import { useOutfitStore } from '@/lib/useOutfitStore';
 import { useLocation as useAppLocation } from '@/lib/location';
 import { prewarmStylist, loadStylistMessages } from '@/lib/stylistStore';
 import { useDailySuggestionsStore } from '@/lib/dailySuggestionsStore';
+import { bestImageUrl } from '@/lib/itemImage';
 import {
   isSTTSupported,
   isTTSSupported,
@@ -128,7 +129,7 @@ const getOutfitPiecesMap = (o, closetItems = []) => {
             (g.title && (c.title === g.title || c.name === g.title))
           );
           if (ci) {
-            img = img || ci.clean_image_url || ci.reconstructed_image_url || ci.cutout_url || ci.thumbnail_data_url || ci.image_url;
+            img = bestImageUrl(ci) || img;
             cid = cid || ci.id;
           }
         }
@@ -153,7 +154,7 @@ const getRecommendationPiecesMap = (rec, closetItems) => {
           map[item.role] = { 
             id: closetItem.id,
             closet_item_id: closetItem.id,
-            image_url: closetItem.image_url,
+            image_url: bestImageUrl(closetItem) || closetItem.image_url,
             clean_image_url: closetItem.clean_image_url,
             cutout_url: closetItem.cutout_url,
             segmented_image_url: closetItem.segmented_image_url,
@@ -467,7 +468,7 @@ export default function Stylist() {
           closet_item_id: cid,
           role: it.role || ci?.category?.toLowerCase() || 'top',
           title: it.title || it.description || it.name || ci?.title || ci?.name || '',
-          image_url: it.clean_image_url || it.image_url || ci?.clean_image_url || ci?.image_url || '',
+          image_url: (ci ? bestImageUrl(ci) : null) || bestImageUrl(it) || it.clean_image_url || it.image_url || '',
         };
       }),
       usage: {
@@ -769,7 +770,7 @@ export default function Stylist() {
           closet_item_id: cid,
           role: it.role || ci?.category?.toLowerCase() || 'top',
           title: it.title || it.description || it.name || ci?.title || ci?.name || '',
-          image_url: it.clean_image_url || it.image_url || ci?.clean_image_url || ci?.image_url || '',
+          image_url: (ci ? bestImageUrl(ci) : null) || bestImageUrl(it) || it.clean_image_url || it.image_url || '',
         };
       }),
       usage: {

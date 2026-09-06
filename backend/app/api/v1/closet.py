@@ -587,6 +587,10 @@ async def create_item(
     # the saved item gets its ``reconstructed_image_url`` patched in
     # seconds-to-minutes later. Mirrors ``needs_bg_matte`` above.
     if payload.needs_reconstruction and raw_bytes:
+        if not doc.get("reconstruction_metadata") or not isinstance(doc.get("reconstruction_metadata"), dict):
+            doc["reconstruction_metadata"] = {"deferred": True, "status": "pending"}
+        else:
+            doc["reconstruction_metadata"]["deferred"] = True
         # We use the item's existing analysis fields as the prompt
         # source. Build the same shape ``reconstruct()`` expects.
         recon_analysis: dict[str, Any] = {
@@ -2444,18 +2448,23 @@ async def list_items(
         raw = it.get("raw")
         if isinstance(raw, dict):
             raw.pop("preview", None)
-        recon_or_clean = (
-            it.get("reconstructed_image_url")
-            or it.get("reconstruct_image_url")
-            or it.get("clean_image_url")
-        )
-        if recon_or_clean:
-            it["reconstructed_image_url"] = recon_or_clean
-            # Only set thumbnail_data_url to recon_or_clean if it's a URL or tiny data-URL (< 15 KB).
-            # Huge inline data URLs (> 15 KB) in bulk list responses cause Android OOM crashes.
-            if isinstance(recon_or_clean, str):
-                if not recon_or_clean.startswith("data:") or len(recon_or_clean) <= 15000:
-                    it["thumbnail_data_url"] = recon_or_clean
+        pref = it.get("preferred_image_view") or it.get("preferred_view")
+        if pref in ("clean", "original"):
+            best_display_img = (
+                it.get("clean_image_url")
+                or it.get("reconstructed_image_url")
+                or it.get("reconstruct_image_url")
+            )
+        else:
+            best_display_img = (
+                it.get("reconstructed_image_url")
+                or it.get("reconstruct_image_url")
+                or it.get("clean_image_url")
+            )
+        if best_display_img:
+            if isinstance(best_display_img, str):
+                if not best_display_img.startswith("data:") or len(best_display_img) <= 15000:
+                    it["thumbnail_data_url"] = best_display_img
                 elif not it.get("thumbnail_data_url") or len(str(it.get("thumbnail_data_url"))) > 15000:
                     # Strip huge data-URL from list response
                     it.pop("thumbnail_data_url", None)
@@ -4725,8 +4734,7 @@ async def chat_analyse_item(
                 from app.services.vision.image import fit_image_data_url_to_card
                 final_img = fit_image_data_url_to_card(clean_image_url_out or image_url_out)
                 updated_doc["reconstructed_image_url"] = final_img
-                updated_doc["clean_image_url"] = final_img
-                updated_doc["clean_image_status"] = "ready" if clean_image_url_out else "fallback"
+                # Do NOT overwrite clean_image_url (preserving the original cutout)
                 image_url_out = final_img
                 updated_doc["reconstruction_metadata"] = {
                     "method": "nano_banana_chat",
@@ -4867,9 +4875,8 @@ async def repair_item_image(
         "reconstruction_metadata": meta,
         "updated_at": datetime.now(timezone.utc).isoformat(),
     }
-    if out.get("clean_image_url"):
-        update_doc["clean_image_url"] = out["clean_image_url"]
-        update_doc["clean_image_status"] = "ready"
+    from app.services.vision.image import fit_image_data_url_to_card
+    data_url = fit_image_data_url_to_card(data_url) or data_url
 
     if not preview:
         await db.closet_items.update_one(
@@ -4877,12 +4884,18 @@ async def repair_item_image(
             {"$set": update_doc, "$unset": {"thumbnail_data_url": ""}},
         )
         item = await repos.find_one(db.closet_items, {"id": item_id}) or item
+        try:
+            from app.services.sync_service import broadcast_sync_event
+            await broadcast_sync_event(
+                user["id"],
+                "closet_updated",
+                {"action": "update", "item_id": item_id, "reconstructed_image_url": data_url},
+            )
+        except Exception as sync_exc:
+            logger.debug("Repair broadcast_sync_event skipped: %s", sync_exc)
     else:
         item["reconstructed_image_url"] = data_url
         item["reconstruction_metadata"] = meta
-        if out.get("clean_image_url"):
-            item["clean_image_url"] = out["clean_image_url"]
-            item["clean_image_status"] = "ready"
         
     return {"item": item, "reconstruction": out, "applied": True}
 
@@ -5454,22 +5467,14 @@ async def update_item(
             patch["reconstructed_image_url"] = compress_image_url_or_b64(patch["reconstructed_image_url"], max_dim=1024, quality=75)
             from app.services.vision.image import fit_image_data_url_to_card
             patch["reconstructed_image_url"] = fit_image_data_url_to_card(patch["reconstructed_image_url"])
-            # If clean_image_url is not provided, unbind the reconstructed image from its background
-            if not patch.get("clean_image_url"):
-                from app.services.garment_visuals import GarmentVisuals
-                cln_url = await GarmentVisuals.ensure_transparent_cutout(patch["reconstructed_image_url"])
-                if cln_url:
-                    cln_fitted = fit_image_data_url_to_card(cln_url)
-                    patch["clean_image_url"] = cln_fitted
-                    patch["clean_image_status"] = "ready"
-                    patch["reconstructed_image_url"] = cln_fitted
+    if "clean_image_url" in patch and patch["clean_image_url"]:
+        from app.services.vision.image import fit_image_data_url_to_card
+        patch["clean_image_url"] = fit_image_data_url_to_card(patch["clean_image_url"]) or patch["clean_image_url"]
     # The `clear_reconstruction` flag is a command, not a value we persist.
     # Pop it + translate into explicit null-sets on the related columns.
     if patch.pop("clear_reconstruction", False):
         patch["reconstructed_image_url"] = None
         patch["reconstruction_metadata"] = None
-        patch["clean_image_url"] = None
-        patch["clean_image_status"] = None
     patch["updated_at"] = datetime.now(timezone.utc).isoformat()
     db = get_db()
     # Snapshot prior values so we can detect transitions AFTER the update
