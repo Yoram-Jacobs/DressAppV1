@@ -1414,6 +1414,11 @@ async def analyze_item_image(
                 )
             except asyncio.TimeoutError:
                 yield b" "
+            except Exception:
+                # Underlying task completed with an exception; break out
+                # of the loop so task.result() handles it and yields the
+                # JSON error envelope instead of abruptly terminating the stream.
+                break
         # Task complete — yield the final body (or an error envelope).
         try:
             body = task.result()
