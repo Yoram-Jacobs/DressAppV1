@@ -45,6 +45,8 @@ class UniversalSyncManager {
     this.lastVersions = {};
     this.tokenGetter = null;
     this.baseUrl = '';
+    this.isCheckingStatus = false;
+    this.lastStatusCheck = 0;
   }
 
   /**
@@ -76,15 +78,19 @@ class UniversalSyncManager {
   }
 
   /**
-   * Start periodic heartbeat check for instant recovery if SSE stream pauses.
+   * Optional fallback watchdog if SSE stream pauses.
+   * When SSE is connected, server push events provide real-time updates and
+   * the server sends keepalive comments every 20s. Polling is disabled while connected.
    */
-  startHeartbeat(intervalMs = 4000) {
+  startHeartbeat(intervalMs = 60000) {
     if (this.heartbeatTimer) return;
+    const safeInterval = Math.max(intervalMs, 30000);
     this.heartbeatTimer = setInterval(() => {
-      if (this.listeners.size > 0) {
+      // Only check status as fallback if SSE is disconnected
+      if (this.listeners.size > 0 && !this.isConnected) {
         this.checkSyncStatus().catch(() => {});
       }
-    }, intervalMs);
+    }, safeInterval);
   }
 
   stopHeartbeat() {
@@ -99,7 +105,6 @@ class UniversalSyncManager {
    * Works universally on Web (EventSource) and React Native (XMLHttpRequest chunk streaming).
    */
   async connect() {
-    this.startHeartbeat(4000);
 
     if (this.activeSource || !this.tokenGetter) return;
 
@@ -274,10 +279,22 @@ class UniversalSyncManager {
   /**
    * Check sync status and reconcile stale domains.
    * Useful when returning from background or focusing browser tab.
+   * Enforces a cooldown and in-flight guard to eliminate redundant network requests.
+   * @param {{ force?: boolean }} [options]
    */
-  async checkSyncStatus() {
+  async checkSyncStatus({ force = false } = {}) {
+    if (this.isCheckingStatus) return;
+
+    const now = Date.now();
+    // 15-second cooldown unless explicitly forced
+    if (!force && now - this.lastStatusCheck < 15000) {
+      return;
+    }
+
+    this.isCheckingStatus = true;
     try {
       const status = await sync.getSyncStatus();
+      this.lastStatusCheck = Date.now();
       if (!status || !status.versions) return;
 
       const serverVersions = status.versions;
@@ -301,7 +318,11 @@ class UniversalSyncManager {
           });
         });
       }
-    } catch {}
+    } catch {
+      // Quietly swallow network/transient failures
+    } finally {
+      this.isCheckingStatus = false;
+    }
   }
 }
 
