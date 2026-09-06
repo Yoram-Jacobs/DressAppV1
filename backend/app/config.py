@@ -599,6 +599,10 @@ class Settings:
     TREND_SCOUT_RUN_ON_STARTUP: bool = (
         os.environ.get("TREND_SCOUT_RUN_ON_STARTUP", "false").lower() == "true"
     )
+    # Enable Google Search Grounding ($35 / 1000 search queries). Disabled by default to prevent billing anomalies.
+    TREND_SCOUT_USE_SEARCH_GROUNDING: bool = (
+        os.environ.get("TREND_SCOUT_USE_SEARCH_GROUNDING", "false").lower() == "true"
+    )
 
     def require(self, *keys: str) -> None:
         missing = [k for k in keys if not getattr(self, k, None)]

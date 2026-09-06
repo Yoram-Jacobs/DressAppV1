@@ -744,19 +744,10 @@ def start_scheduler() -> None:
             "Trend-Scout daily scheduled (at %02d:%02d UTC)", hour, minute
         )
 
-        # Catch-up interval every 4 hours: ensures fresh daily trends across timezones & reboots
-        _scheduler.add_job(
-            _safe_run,
-            IntervalTrigger(hours=4, timezone="UTC"),
-            id="trend_scout_catchup_interval",
-            replace_existing=True,
-            misfire_grace_time=3600,
-        )
-        logger.info("Trend-Scout 4-hour catch-up interval scheduled")
-
-        # Startup verification: kick off background check so today's cards are guaranteed
-        asyncio.create_task(_safe_run())
-        logger.info("Trend-Scout startup verification triggered in background")
+        # If enabled via TREND_SCOUT_RUN_ON_STARTUP, run one safe verification on boot
+        if settings.TREND_SCOUT_RUN_ON_STARTUP:
+            asyncio.create_task(_safe_run())
+            logger.info("Trend-Scout startup run triggered in background")
 
         # Trend-Scout weekly refresh: fires once a week on Sunday at 10:00 AM local time (defaulting to 07:00 UTC)
         _scheduler.add_job(

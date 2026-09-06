@@ -1039,19 +1039,21 @@ async def _generate_one(
 
     card_data = None
     grounded_sources: list[dict[str, str]] = []
-    try:
-        res = await gemini_client.search_grounded_text(
-            prompt=grounded_prompt,
-            system=SYSTEM_PROMPT,
-            model="gemini-3.5-flash",
-            temperature=0.4,
-        )
-        grounded_sources = res.get("sources", [])
-        parsed = _extract_json(res.get("text", ""))
-        if parsed and parsed.get("headline") and parsed.get("body"):
-            card_data = parsed
-    except Exception as exc:
-        logger.warning("Google search grounded scout failed for %s (%s): %s", bucket["slug"], gender, exc)
+    # Only invoke Google Search Grounding if explicitly enabled via config ($35 per 1,000 queries)
+    if getattr(settings, "TREND_SCOUT_USE_SEARCH_GROUNDING", False):
+        try:
+            res = await gemini_client.search_grounded_text(
+                prompt=grounded_prompt,
+                system=SYSTEM_PROMPT,
+                model="gemini-3.5-flash",
+                temperature=0.4,
+            )
+            grounded_sources = res.get("sources", [])
+            parsed = _extract_json(res.get("text", ""))
+            if parsed and parsed.get("headline") and parsed.get("body"):
+                card_data = parsed
+        except Exception as exc:
+            logger.warning("Google search grounded scout failed for %s (%s): %s", bucket["slug"], gender, exc)
 
     # Assemble candidate URLs discovered during live web search
     candidate_urls: list[str] = []
@@ -1086,7 +1088,7 @@ async def _generate_one(
             if verified and verified.get("source_url"):
                 return verified
 
-    # 4. Fallback: Multi-turn web search crawler if grounding was offline or empty
+    # 4. Multi-turn web search crawler (uses free web scraping with Yahoo / starter sites)
     query_strings = get_search_queries(
         bucket["slug"],
         country_code,
@@ -1119,11 +1121,11 @@ async def _generate_one(
             raw = await gemini_client.text(
                 system=SYSTEM_PROMPT,
                 user_text=user_text,
-                model="gemini-3.5-flash",
+                model="gemini-3.5-flash-lite",
                 response_mime_type="application/json",
             )
         except Exception as exc:  # noqa: BLE001
-            logger.warning("Gemini Fashion-Scout fallback call failed for %s: %s", bucket["slug"], exc)
+            logger.warning("Gemini Fashion-Scout crawler call failed for %s: %s", bucket["slug"], exc)
             return None
 
         parsed = _extract_json(raw or "")
@@ -1360,6 +1362,10 @@ async def _already_today(bucket_slug: str, country_code: str | None = None, gend
 _seed_data_initialized = False
 _trend_feed_cache: dict[str, tuple[float, list[dict[str, Any]]]] = {}
 CACHE_TTL_SECONDS = 600
+
+# Global concurrency lock to guarantee only ONE Trend Scout run executes at any time
+_scout_lock = asyncio.Lock()
+_scout_in_progress = False
 
 def clear_trend_feed_cache() -> None:
     _trend_feed_cache.clear()
@@ -1607,6 +1613,33 @@ async def run_trend_scout(
     gender: str | None = None,
 ) -> dict[str, Any]:
     """Generate and persist today's fashion-scout cards for the requested gender & country, incorporating closet dress code & style."""
+    global _scout_in_progress
+    if _scout_in_progress:
+        logger.warning("Trend-Scout run requested while another run is in progress. Skipping to prevent concurrency stampede.")
+        return {"generated": [], "skipped": ["concurrent_run_in_progress"], "date": date.today().isoformat()}
+
+    async with _scout_lock:
+        _scout_in_progress = True
+        try:
+            return await _run_trend_scout_internal(
+                force=force,
+                client_type=client_type,
+                user=user,
+                country_code=country_code,
+                gender=gender,
+            )
+        finally:
+            _scout_in_progress = False
+
+
+async def _run_trend_scout_internal(
+    *,
+    force: bool = False,
+    client_type: str = "desktop",
+    user: dict | None = None,
+    country_code: str | None = None,
+    gender: str | None = None,
+) -> dict[str, Any]:
     db = get_db()
     await ensure_seed_data()
     today = date.today().isoformat()
@@ -1908,22 +1941,9 @@ async def fashion_scout_feed(
         deduped_canon.append(c)
     canon = deduped_canon
 
-    # If canon is empty, trigger dynamic run_trend_scout in background
+    # If canon is empty, fallback to canonical seed cards
     if not canon:
-        logger.info(
-            "No active trend scout cards found for %s (%s). Triggering run_trend_scout in background...",
-            country or "IL", target_gender
-        )
-        asyncio.create_task(run_trend_scout(country_code=country or "IL", gender=target_gender))
-
-    # Lazy Daily Refresh: if fewer than 4 cards are dated today, trigger background refresh
-    today_cards = [c for c in canon if c.get("date") == today]
-    if len(today_cards) < 4:
-        logger.info(
-            "Lazy Daily Refresh: only %d cards for %s (%s) on %s. Triggering run_trend_scout in background...",
-            len(today_cards), country or "IL", target_gender, today
-        )
-        asyncio.create_task(run_trend_scout(country_code=country or "IL", gender=target_gender))
+        canon = [s for s in CANONICAL_SEED_CARDS if s.get("gender") == target_gender]
 
     if user is not None:
         closet_profile = None
@@ -2006,22 +2026,12 @@ async def fashion_scout_feed(
 
     # For any remaining cards, return cached version or canonical version immediately
     remaining_out: list[dict[str, Any]] = []
-    need_background_trans: list[dict[str, Any]] = []
     for c in background_cards:
         cid = c.get("id")
         if cid and cid in cached_map:
             remaining_out.append(_ensure_card_image(dict(cached_map[cid])))
         else:
             remaining_out.append(_ensure_card_image(dict(c)))
-            if cid and c.get("language") != language:
-                need_background_trans.append(c)
-
-    # If some background cards need translation, schedule in background without blocking this response
-    if need_background_trans:
-        async def _trans_remaining(cards_batch: list[dict[str, Any]]):
-            for bg_c in cards_batch:
-                await _safe_translate(bg_c)
-        asyncio.create_task(_trans_remaining(need_background_trans))
 
     final_cards = list(translated_priority) + remaining_out
     _trend_feed_cache[cache_key] = (now, [dict(c) for c in final_cards])
@@ -2087,7 +2097,7 @@ async def _translate_card(
         raw = await client.text(
             system=system_prompt,
             user_text=payload_text,
-            model="gemini-3.5-flash",
+            model="gemini-3.5-flash-lite",
             response_mime_type="application/json",
         )
     except Exception as exc:
