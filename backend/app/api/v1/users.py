@@ -268,20 +268,26 @@ async def update_me(
                     except Exception as exc:
                         logger.warning("Gemini key validation failed during patch: %s", exc)
                         err_text = str(exc)
-                        if "API_KEY_SERVICE_BLOCKED" in err_text or "blocked" in err_text.lower():
+                        if "RESOURCE_EXHAUSTED" in err_text or "spending cap" in err_text.lower():
+                            # The key is authentic and recognized by Google, but currently at its project spend cap.
+                            # Save the key so the user does not have to re-enter it once they adjust the cap in AI Studio.
+                            logger.info("Saving verified Google Gemini key (current status: spend cap reached).")
+                        elif "API_KEY_SERVICE_BLOCKED" in err_text or "blocked" in err_text.lower():
                             msg = (
                                 "This Google API key is blocked from accessing Gemini (API_KEY_SERVICE_BLOCKED). "
                                 "Please ensure 'Generative Language API' is enabled in your Google Cloud Console, "
                                 "or generate a dedicated key at Google AI Studio (https://aistudio.google.com/app/apikey)."
                             )
-                        elif "RESOURCE_EXHAUSTED" in err_text or "spending cap" in err_text.lower():
-                            msg = "This Google Gemini key has exceeded its quota or monthly spend cap (RESOURCE_EXHAUSTED)."
+                            raise HTTPException(
+                                status_code=400,
+                                detail=msg,
+                            ) from exc
                         else:
                             msg = f"Google Gemini API key validation failed: {exc}"
-                        raise HTTPException(
-                            status_code=400,
-                            detail=msg,
-                        ) from exc
+                            raise HTTPException(
+                                status_code=400,
+                                detail=msg,
+                            ) from exc
 
                 # Encrypt new key
                 merged_keys[key_name] = encrypt_api_key(key_str)
@@ -521,6 +527,14 @@ async def validate_api_key(
             raise ValueError("Empty response received from Gemini.")
         except Exception as exc:
             logger.warning("Google AI key validation failed: %s", exc)
+            err_text = str(exc)
+            if "RESOURCE_EXHAUSTED" in err_text or "spending cap" in err_text.lower():
+                return {
+                    "valid": True,
+                    "warning": True,
+                    "provider": "google_ai",
+                    "message": "Google Gemini key is valid, but your project monthly spend cap is reached. Adjust it at https://aistudio.google.com/spend.",
+                }
             raise HTTPException(
                 status_code=400,
                 detail=f"Invalid Google Gemini API key: {exc}",
