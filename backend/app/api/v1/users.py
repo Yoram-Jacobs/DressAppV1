@@ -1,6 +1,7 @@
 """User profile routes."""
 from __future__ import annotations
 
+import logging
 from datetime import datetime, timezone
 from typing import Any
 
@@ -12,6 +13,7 @@ from app.models.schemas import CulturalContext, StyleProfile
 from app.services.auth import get_current_user, verify_password
 from app.services.avatar_service import calculate_shape_parameters
 
+logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/users", tags=["users"])
 
 
@@ -260,7 +262,7 @@ async def update_me(
                     from app.services.gemini_client import GeminiClient
                     client = GeminiClient(api_key=key_str)
                     try:
-                        resp = await client.text("Test connection.", model="gemini-3.5-flash")
+                        resp = await client.text(user_text="Test connection.", model="gemini-3.5-flash")
                         if not resp:
                             raise ValueError("No response from Google Gemini")
                     except Exception as exc:
@@ -477,8 +479,6 @@ async def delete_me(
     
     # 4. Dispatch deletion notification email
     from app.services import email_service
-    import logging
-    logger = logging.getLogger(__name__)
     try:
         await email_service.send_deletion_email(
             to=user["email"],
@@ -511,7 +511,7 @@ async def validate_api_key(
         from app.services.gemini_client import GeminiClient
         client = GeminiClient(api_key=key)
         try:
-            resp = await client.text("Test connection.", model="gemini-3.5-flash")
+            resp = await client.text(user_text="Test connection.", model="gemini-3.5-flash")
             if resp:
                 return {
                     "valid": True,

@@ -92,7 +92,7 @@ export function AIConfiguration() {
       setApiKeyInput('');
     } catch (err) {
       console.error(err);
-      toast.error(t('profile.saveFailed', { defaultValue: 'Save failed' }));
+      toast.error(err?.response?.data?.detail || t('profile.saveFailed', { defaultValue: 'Save failed' }));
     } finally {
       setBusy(false);
     }
