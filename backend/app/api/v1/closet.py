@@ -41,11 +41,15 @@ from app.models.schemas import (
     WeightedTag,
 )
 from app.services import repos
-from app.services.auth import get_current_user
+from app.services.auth import (
+    get_current_user,
+    resolve_user_gemini_api_key,
+    resolve_user_gemini_model,
+)
 from app.services.fees import compute_fees
-from app.services.vision import garment_vision_service
+from app.services.vision import garment_vision_service, get_garment_vision_service
 from app.services.fashion_clip import fashion_clip_service
-from app.services.gemini_image_service import gemini_image_service
+from app.services.gemini_image_service import gemini_image_service, get_gemini_image_service
 from app.services.image_compression import (
     compress_b64_image,
     compress_image_bytes,
@@ -1096,7 +1100,8 @@ async def analyze_item_image(
     ``_status`` set to the intended HTTP status so the frontend can
     detect failure via a small downstream check (see ``api.js``).
     """
-    if garment_vision_service is None:
+    active_vision = get_garment_vision_service(user=user)
+    if active_vision is None:
         raise HTTPException(503, "Garment analyzer not configured")
     if not payload.image_base64 and not payload.image_url and not payload.images_base64:
         raise HTTPException(400, "image_base64, images_base64, or image_url is required")
@@ -1212,7 +1217,7 @@ async def analyze_item_image(
             # intensive model calls) without blocking fast detect IO.
 
             try:
-                streamer = garment_vision_service.analyze_outfits_stream(
+                streamer = active_vision.analyze_outfits_stream(
                     raw_list, language=user_lang,
                 )
 
@@ -1321,7 +1326,7 @@ async def analyze_item_image(
         try:
             items_out: list[dict[str, Any]] = []
             items_meta: list[dict[str, Any]] = []
-            streamer = garment_vision_service.analyze_outfits_stream(
+            streamer = active_vision.analyze_outfits_stream(
                 raw_list, language=user_lang,
             )
             from app.services.vision import _is_unidentifiable
@@ -1778,7 +1783,8 @@ async def analyze_diag(
         code_markers["already_cropped_check_error"] = repr(exc)
     out["code_markers"] = code_markers
 
-    if garment_vision_service is None:
+    service_to_test = get_garment_vision_service(user=user) or garment_vision_service
+    if service_to_test is None:
         out["status"] = "service_not_initialised"
         return out
 
@@ -1801,11 +1807,11 @@ async def analyze_diag(
     # without log truncation.
     probes: dict[str, Any] = {}
     for label, model in (
-        ("default_model", settings.GARMENT_VISION_MODEL),
+        ("default_model", getattr(service_to_test, "model", settings.GARMENT_VISION_MODEL)),
         ("crop_model", settings.GARMENT_VISION_CROP_MODEL),
     ):
         try:
-            res = await garment_vision_service.analyze(test_bytes, model=model)
+            res = await service_to_test.analyze(test_bytes, model=model)
             probes[label] = {
                 "model": model,
                 "ok": True,
@@ -2008,6 +2014,10 @@ async def _run_reanalyze_items(
     db,
 ) -> None:
     """Shared background worker: run Stylist (Gemini) analysis on a batch of closet items."""
+    active_vision = get_garment_vision_service(user=user)
+    if active_vision is None:
+        logger.warning("[migration] No vision service available for user %s", (user or {}).get("id"))
+        return
     user_lang = (user or {}).get("preferred_language") or "en"
     imported = 0
     skipped = 0
@@ -2037,7 +2047,7 @@ async def _run_reanalyze_items(
 
             try:
                 async with _ANALYZE_LOCK:
-                    parsed = await garment_vision_service.analyze(raw, language=user_lang)
+                    parsed = await active_vision.analyze(raw, language=user_lang)
             except Exception as exc:
                 logger.warning("[migration] Re-analyze failed for %s: %s", item_id, exc)
                 skipped += 1
@@ -2186,7 +2196,8 @@ async def save_migration_crops(
     # This avoids a race condition where the client closes between
     # saving crops and starting analysis.
     job_id: str | None = None
-    if saved > 0 and garment_vision_service is not None:
+    vision_service = get_garment_vision_service(user=user)
+    if saved > 0 and vision_service is not None:
         job_id = f"reanalyze_{uuid.uuid4().hex[:12]}"
         _migration_status[job_id] = {
             "status": "processing",
@@ -2230,7 +2241,8 @@ async def reanalyze_by_brand(
     then processes each through The Eyes (Gemini) one by one.
     Returns a job_id for polling via /migration/status/{job_id}.
     """
-    if garment_vision_service is None:
+    vision_service = get_garment_vision_service(user=user)
+    if vision_service is None:
         raise HTTPException(503, "Garment analyzer not configured")
 
     db = get_db()
@@ -3833,13 +3845,14 @@ async def complete_outfit(
             logger.warning("Complete-outfit weather fetch failed: %s", exc)
 
     # ------- 6. Stylist rationale (Gemini) -------
-    from app.services.gemini_stylist import gemini_stylist_service
+    from app.services.gemini_stylist import get_gemini_stylist_service
 
     rationale = ""
     outfit_recommendations: list[dict[str, Any]] = []
     do_dont: list[str] = []
     spoken_reply = ""
-    if gemini_stylist_service is not None:
+    stylist_service = get_gemini_stylist_service(user=user)
+    if stylist_service is not None:
         try:
             anchors_pretty = [_anchor_summary(a) for a in anchors]
             closet_short = [
@@ -3892,7 +3905,7 @@ async def complete_outfit(
                 "preferred_language": user.get("preferred_language", "en"),
                 "style_profile": user.get("style_profile"),
             }
-            advice = await gemini_stylist_service.advise(
+            advice = await stylist_service.advise(
                 session_id=f"complete-outfit:{user['id']}",
                 user_text=request_text,
                 image_base64=None,
@@ -4191,13 +4204,14 @@ async def set_item_photo(
     segmented_data_url: str | None = None
     segmentation_model: str | None = None
 
-    if payload.auto_segment and garment_vision_service is not None:
+    vision_service = get_garment_vision_service(user=user)
+    if payload.auto_segment and vision_service is not None:
         # Fast single-item pipeline: just run the detector and crop/matte it.
         # We don't run the full `analyze_outfit` because we don't need the 
         # 11-second Gemini LLM analysis (we are only replacing the photo, not 
         # rewriting the item's metadata).
         try:
-            detections = await garment_vision_service.detect_items(raw)
+            detections = await vision_service.detect_items(raw)
             if detections:
                 best_det = max(
                     detections,
@@ -4207,7 +4221,7 @@ async def set_item_photo(
                     ),
                 )
                 raw_crops = await asyncio.to_thread(
-                    garment_vision_service._bbox_crop_useful, raw, [best_det]
+                    vision_service._bbox_crop_useful, raw, [best_det]
                 )
                 from app.services.vision.image import _apply_fast_matte
                 out = await asyncio.to_thread(_apply_fast_matte, raw_crops)
@@ -4220,14 +4234,10 @@ async def set_item_photo(
                     b64_bytes = None
                 
                 if b64_bytes:
-                    b64 = base64.b64encode(b64_bytes).decode("ascii")
-                    segmented_data_url = f"data:{mime or 'image/png'};base64,{b64}"
-                    segmentation_model = "the_eyes_single"
+                    segmented_data_url = f"data:{mime};base64,{base64.b64encode(b64_bytes).decode('ascii')}"
+                    segmentation_model = getattr(vision_service, "model", "gemini-3.5-flash")
         except Exception as exc:  # noqa: BLE001
-            logger.warning(
-                "set_item_photo: auto-segment failed (%s); keeping raw",
-                repr(exc)[:160],
-            )
+            logger.warning("auto_segment failed on photo replace: %s", exc)
 
     update_doc: dict[str, Any] = {
         "original_image_url": original_data_url,
@@ -4275,7 +4285,6 @@ async def set_item_photo(
     }
 
 
-
 @router.post("/{item_id}/reanalyze")
 async def reanalyze_item(
     item_id: str,
@@ -4292,10 +4301,7 @@ async def reanalyze_item(
     """Re-run **The Eyes** on an existing item's stored image and patch
     the analysis-derived fields back onto the document.
 
-    Use-cases:
-    * User uploaded a poor photo, replaced it with a better one (with
-      ``auto_segment=False`` so the analysis didn't run automatically),
-      and now wants the form auto-filled from the new photo.
+    Useful in two real-world flows:
     * A previous analysis returned junk (regression / model glitch)
       and the user wants a fresh attempt.
     * Receipt-sourced item has an attached image; the user taps "Analyse"
@@ -4309,7 +4315,8 @@ async def reanalyze_item(
     ``receipt_locked_fields`` stored on the document, which permanently
     protects fields that originated from the receipt parser.
     """
-    if garment_vision_service is None:
+    vision_service = get_garment_vision_service(user=user)
+    if vision_service is None:
         raise HTTPException(503, "Garment analyzer not configured")
 
     db = get_db()
@@ -4333,7 +4340,7 @@ async def reanalyze_item(
     user_lang = (user or {}).get("preferred_language") or "en"
     try:
         async with _ANALYZE_LOCK:
-            parsed = await garment_vision_service.analyze(raw, language=user_lang)
+            parsed = await vision_service.analyze(raw, language=user_lang)
     except Exception as exc:  # noqa: BLE001
         logger.warning("Re-analyse failed: %r", exc)
         raise HTTPException(
@@ -4534,14 +4541,16 @@ async def chat_analyse_item(
             user_lang = "en"
 
     # Build conversation context for Gemini
+    user_api_key = resolve_user_gemini_api_key(user)
+    user_model = resolve_user_gemini_model(user)
+
     from app.services.gemini_client import GeminiClient
 
     gemini_client = None
-    if settings.GEMINI_API_KEY:
-        try:
-            gemini_client = GeminiClient(api_key=settings.GEMINI_API_KEY)
-        except Exception as exc:
-            logger.warning("Failed to initialize GeminiClient: %s", exc)
+    try:
+        gemini_client = GeminiClient(api_key=user_api_key or settings.GEMINI_API_KEY)
+    except Exception as exc:
+        logger.warning("Failed to initialize GeminiClient: %s", exc)
 
     if not gemini_client:
         raise HTTPException(503, "AI Eyes assistant is temporarily unavailable.")
@@ -4598,6 +4607,7 @@ async def chat_analyse_item(
             user_parts=user_parts,
             system=system_prompt,
             response_mime_type="application/json",
+            model=user_model,
         )
         clean_json = (decision_raw or "").strip()
         import re as _re
@@ -4672,7 +4682,12 @@ async def chat_analyse_item(
     updated_doc: dict[str, Any] = {}
 
     if action == "image_edit":
-        if gemini_image_service is None:
+        img_service = (
+            get_gemini_image_service(user=user, api_key=user_api_key)
+            if (user_api_key and user_api_key != settings.GEMINI_API_KEY)
+            else gemini_image_service
+        )
+        if img_service is None:
             reply = _get_localized_closet_msg("image_edit_unavailable", user_lang)
             action = "clarification"
         else:
@@ -4681,7 +4696,7 @@ async def chat_analyse_item(
                 await deduct_user_credits(db, user, cost=1)
 
                 edit_prompt = decision.get("image_edit_prompt") or user_msg
-                edit_res = await gemini_image_service.edit(
+                edit_res = await img_service.edit(
                     raw,
                     edit_prompt,
                     garment_metadata={
@@ -5026,9 +5041,10 @@ async def upload_group_member(
     # Fast single-item segmentation
     segmented_data_url = None
     segmentation_model = None
-    if garment_vision_service is not None:
+    vision_service = get_garment_vision_service(user=user)
+    if vision_service is not None:
         try:
-            detections = await garment_vision_service.detect_items(raw)
+            detections = await vision_service.detect_items(raw)
             if detections:
                 best_det = max(
                     detections,
@@ -5038,7 +5054,7 @@ async def upload_group_member(
                     ),
                 )
                 raw_crops = await asyncio.to_thread(
-                    garment_vision_service._bbox_crop_useful, raw, [best_det]
+                    vision_service._bbox_crop_useful, raw, [best_det]
                 )
                 from app.services.vision.image import _apply_fast_matte
                 out = await asyncio.to_thread(_apply_fast_matte, raw_crops)
@@ -5254,9 +5270,10 @@ async def group_edit(
         # Fast single-item segmentation
         segmented_data_url = None
         segmentation_model = None
-        if garment_vision_service is not None:
+        vision_service = get_garment_vision_service(user=user)
+        if vision_service is not None:
             try:
-                detections = await garment_vision_service.detect_items(raw)
+                detections = await vision_service.detect_items(raw)
                 if detections:
                     best_det = max(
                         detections,
@@ -5266,7 +5283,7 @@ async def group_edit(
                         ),
                     )
                     raw_crops = await asyncio.to_thread(
-                        garment_vision_service._bbox_crop_useful, raw, [best_det]
+                        vision_service._bbox_crop_useful, raw, [best_det]
                     )
                     from app.services.vision.image import _apply_fast_matte
                     out = await asyncio.to_thread(_apply_fast_matte, raw_crops)
@@ -6077,7 +6094,8 @@ async def edit_item_image(
     source_bytes = await _read_image_bytes_from_url(source_url)
     if not source_bytes:
         raise HTTPException(400, "Failed to retrieve source image bytes")
-    if gemini_image_service is None:
+    img_service = get_gemini_image_service(user=user)
+    if img_service is None:
         # Nano Banana (gemini-3.1-flash-lite-image) requires a direct
         # GEMINI_API_KEY. The legacy HF FLUX fallback was retired in May
         # 2026, so when the direct key is absent we surface a clean 503
@@ -6088,7 +6106,7 @@ async def edit_item_image(
         if not await deduct_user_credits(db, user, cost=1):
             raise HTTPException(status_code=402, detail="Insufficient credits or quota limit reached")
 
-        edit = await gemini_image_service.edit(
+        edit = await img_service.edit(
             source_bytes,
             prompt,
             garment_metadata={
@@ -6164,7 +6182,10 @@ async def extract_pdf_text(
 
         # Try Gemini Multimodal OCR first
         try:
-            gemini = await get_default_client()
+            from app.services.gemini_client import get_gemini_client
+            user_api_key = resolve_user_gemini_api_key(user)
+            user_model = resolve_user_gemini_model(user)
+            gemini = get_gemini_client(user=user, api_key=user_api_key)
             prompt = (
                 "You are a high-precision, multilingual OCR engine. "
                 "Extract and transcribe ALL text from the attached document row-by-row (horizontally across the page). "
@@ -6182,6 +6203,7 @@ async def extract_pdf_text(
 
             ocr_text = await gemini.vision(
                 user_parts=user_parts,
+                model=user_model,
                 temperature=0.0
             )
             if ocr_text and ocr_text.strip():
@@ -6307,11 +6329,15 @@ async def parse_receipt(
         if not await deduct_user_credits(db, user, cost=1):
             raise HTTPException(status_code=402, detail="Insufficient credits or quota limit reached")
 
-        gemini = await get_default_client()
+        from app.services.gemini_client import get_gemini_client
+        user_api_key = resolve_user_gemini_api_key(user)
+        user_model = resolve_user_gemini_model(user)
+        gemini = get_gemini_client(user=user, api_key=user_api_key)
         response_text = await gemini.vision(
             user_parts=parts,
             system=system_instructions,
-            response_mime_type="application/json"
+            response_mime_type="application/json",
+            model=user_model,
         )
         
         # Clean any code fences
@@ -6327,10 +6353,11 @@ async def parse_receipt(
         return json.loads(cleaned_text)
 
     async def run_visual():
-        if not is_image or garment_vision_service is None or not image_bytes:
+        vision_service = get_garment_vision_service(user=user)
+        if not is_image or vision_service is None or not image_bytes:
             return None
         try:
-            detections = await garment_vision_service.detect_items(image_bytes)
+            detections = await vision_service.detect_items(image_bytes)
             if not detections:
                 return None
             best_det = max(
@@ -6341,7 +6368,7 @@ async def parse_receipt(
                 ),
             )
             raw_crops = await asyncio.to_thread(
-                garment_vision_service._bbox_crop_useful, image_bytes, [best_det]
+                vision_service._bbox_crop_useful, image_bytes, [best_det]
             )
             if not raw_crops:
                 return None
@@ -6387,7 +6414,7 @@ async def parse_receipt(
                 logger.warning("Background removal failed on receipt visual crop: %s", bg_err)
 
             user_lang = user.get("preferred_language") or "en"
-            analysis_raw = await garment_vision_service.analyze(
+            analysis_raw = await vision_service.analyze(
                 crop_bytes,
                 language=user_lang,
             )

@@ -1,2 +1,7 @@
-from .service import GarmentVisionService as GarmentVisionService, _build_vision_service as _build_vision_service, garment_vision_service as garment_vision_service
+from .service import (
+    GarmentVisionService as GarmentVisionService,
+    _build_vision_service as _build_vision_service,
+    garment_vision_service as garment_vision_service,
+    get_garment_vision_service as get_garment_vision_service,
+)
 from .geometry import _is_unidentifiable as _is_unidentifiable, _looks_already_cropped as _looks_already_cropped

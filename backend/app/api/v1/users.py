@@ -260,14 +260,25 @@ async def update_me(
                     from app.services.gemini_client import GeminiClient
                     client = GeminiClient(api_key=key_str)
                     try:
-                        resp = await client.text("Test connection.", model="gemini-3.5-flash-lite")
+                        resp = await client.text("Test connection.", model="gemini-3.5-flash")
                         if not resp:
                             raise ValueError("No response from Google Gemini")
                     except Exception as exc:
                         logger.warning("Gemini key validation failed during patch: %s", exc)
+                        err_text = str(exc)
+                        if "API_KEY_SERVICE_BLOCKED" in err_text or "blocked" in err_text.lower():
+                            msg = (
+                                "This Google API key is blocked from accessing Gemini (API_KEY_SERVICE_BLOCKED). "
+                                "Please ensure 'Generative Language API' is enabled in your Google Cloud Console, "
+                                "or generate a dedicated key at Google AI Studio (https://aistudio.google.com/app/apikey)."
+                            )
+                        elif "RESOURCE_EXHAUSTED" in err_text or "spending cap" in err_text.lower():
+                            msg = "This Google Gemini key has exceeded its quota or monthly spend cap (RESOURCE_EXHAUSTED)."
+                        else:
+                            msg = f"Google Gemini API key validation failed: {exc}"
                         raise HTTPException(
                             status_code=400,
-                            detail=f"Google Gemini API key is invalid: {exc}",
+                            detail=msg,
                         ) from exc
 
                 # Encrypt new key
@@ -500,7 +511,7 @@ async def validate_api_key(
         from app.services.gemini_client import GeminiClient
         client = GeminiClient(api_key=key)
         try:
-            resp = await client.text("Test connection.", model="gemini-3.5-flash-lite")
+            resp = await client.text("Test connection.", model="gemini-3.5-flash")
             if resp:
                 return {
                     "valid": True,

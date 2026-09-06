@@ -111,7 +111,7 @@ class Settings:
         or os.environ.get("GOOGLE_API_KEY")  # accept the canonical google-genai name too
         or None
     )
-    DEFAULT_STYLIST_MODEL: str = os.environ.get("DEFAULT_STYLIST_MODEL", "gemini-3.5-flash-lite")
+    DEFAULT_STYLIST_MODEL: str = os.environ.get("DEFAULT_STYLIST_MODEL", "gemini-3.5-flash")
     DEFAULT_STYLIST_PROVIDER: str = os.environ.get("DEFAULT_STYLIST_PROVIDER", "gemini")
 
     # --- Phase O: Stylist brain provider ---

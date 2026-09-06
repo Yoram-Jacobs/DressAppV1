@@ -26,7 +26,11 @@ export function AIConfiguration() {
   
   const [providerMode, setProviderMode] = useState('custom_keys');
   const [activeProviderId, setActiveProviderId] = useState(user?.ai_configuration?.selected_provider || 'google_ai');
-  const [activeModel, setActiveModel] = useState(user?.ai_configuration?.selected_model || 'gemini-2.5-flash');
+  const initialModel = user?.ai_configuration?.selected_model;
+  const normalizedInitialModel = (initialModel === 'gemini-2.5-flash' || initialModel === 'gemini-3.5-flash-lite')
+    ? 'gemini-3.5-flash'
+    : (initialModel || 'gemini-3.5-flash');
+  const [activeModel, setActiveModel] = useState(normalizedInitialModel);
   const [apiKeyInput, setApiKeyInput] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -54,7 +58,11 @@ export function AIConfiguration() {
     try {
       const currentConfig = user?.ai_configuration || {};
       const newProviderId = providerId || currentConfig.selected_provider || 'google_ai';
-      const newModelVal = modelVal || (providerId ? (PROVIDERS.find(p => p.id === providerId)?.defaultModel || 'gemini-2.5-flash') : (currentConfig.selected_model || 'gemini-2.5-flash'));
+      const rawModel = currentConfig.selected_model;
+      const normalizedCurrentModel = (rawModel === 'gemini-2.5-flash' || rawModel === 'gemini-3.5-flash-lite')
+        ? 'gemini-3.5-flash'
+        : (rawModel || 'gemini-3.5-flash');
+      const newModelVal = modelVal || (providerId ? (PROVIDERS.find(p => p.id === providerId)?.defaultModel || 'gemini-3.5-flash') : normalizedCurrentModel);
       
       const payload = {
         ai_configuration: {

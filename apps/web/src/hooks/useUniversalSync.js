@@ -5,7 +5,7 @@
  * Listens to Server-Sent Events (SSE) and window visibility changes,
  * automatically updating all client stores whenever changes occur on any device.
  */
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { syncManager, api } from '@/lib/api';
 import { closetStore } from '@/lib/closetStore';
 import { dailySuggestionsStore } from '@/lib/dailySuggestionsStore';
@@ -14,22 +14,32 @@ import { trendScoutStore } from '@/lib/trendScoutStore';
 import { outfitStore } from '@/lib/outfitStore';
 
 export function useUniversalSync(currentUser, onUserUpdated) {
+  const onUserUpdatedRef = useRef(onUserUpdated);
   useEffect(() => {
-    if (!currentUser) return;
+    onUserUpdatedRef.current = onUserUpdated;
+  }, [onUserUpdated]);
+
+  const userId = currentUser?.id || null;
+
+  useEffect(() => {
+    if (!userId) {
+      syncManager.disconnect();
+      return;
+    }
 
     // Connect to SSE stream
     syncManager.connect();
 
     // Subscribe to sync events
     const unsubscribe = syncManager.subscribe(async (event) => {
-      const { type, domain } = event || {};
+      const { type } = event || {};
 
       switch (type) {
         case 'profile_updated':
           try {
             const updated = await api.getMe();
-            if (updated && onUserUpdated) {
-              onUserUpdated(updated);
+            if (updated && onUserUpdatedRef.current) {
+              onUserUpdatedRef.current(updated);
             }
           } catch {}
           break;
@@ -86,7 +96,9 @@ export function useUniversalSync(currentUser, onUserUpdated) {
 
     // Window focus and tab visibility listeners for state reconciliation
     const handleFocus = () => {
-      syncManager.checkSyncStatus();
+      if (document.visibilityState === 'visible') {
+        syncManager.checkSyncStatus();
+      }
     };
 
     const handleVisibilityChange = () => {
@@ -103,5 +115,5 @@ export function useUniversalSync(currentUser, onUserUpdated) {
       window.removeEventListener('focus', handleFocus);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
-  }, [currentUser, onUserUpdated]);
+  }, [userId]);
 }

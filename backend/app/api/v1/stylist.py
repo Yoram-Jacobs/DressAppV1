@@ -170,24 +170,16 @@ async def stylist_endpoint(
         context={"lat": lat, "lng": lng, "include_calendar": include_calendar},
     )
 
-    # Resolve user's mandatory API key
-    api_key_resolved = None
-    ai_config = user.get("ai_configuration") or {}
-    encrypted_key = (ai_config.get("custom_keys") or {}).get("google_ai")
-    if encrypted_key:
-        from app.services.auth import decrypt_api_key
-        try:
-            api_key_resolved = decrypt_api_key(encrypted_key)
-        except Exception:
-            api_key_resolved = None
+    # Resolve user's API key and model
+    from app.services.auth import resolve_user_gemini_api_key, resolve_user_gemini_model
+    api_key_resolved = resolve_user_gemini_api_key(user)
+    user_model = resolve_user_gemini_model(user)
 
     if not api_key_resolved:
         raise HTTPException(
             status_code=400,
             detail="A valid Google Gemini API key is required. Please set your key in Profile -> AI Configuration.",
         )
-
-
 
     # Phase S — render user preferences once (cheap, ~1ms) so we can
     # both inject them into the LLM prompt AND echo the applied keys.
@@ -216,6 +208,7 @@ async def stylist_endpoint(
             user_preferences_block=prefs_block,
             synthesize_tts=not skip_tts,
             api_key=api_key_resolved,
+            model=user_model,
         )
         
         # Deduct credit and count usage
@@ -235,9 +228,31 @@ async def stylist_endpoint(
         # Phase S: never 500 the chat — degrade gracefully so the user
         # gets a soft apology instead of a hard error. Especially
         # important when the user asks about something not in the closet.
-        logger.exception("Stylist pipeline failed")
+        err_msg = str(exc)
+        logger.exception("Stylist pipeline failed: %s", err_msg)
         _req_lang = (user_profile.get("preferred_language") or "en").lower()
-        if _req_lang == "he":
+        if "API_KEY_SERVICE_BLOCKED" in err_msg or "blocked" in err_msg.lower():
+            _fallback_summary = (
+                "מפתח ה-API של Google חסום לגישה ל-Gemini (שגיאת API_KEY_SERVICE_BLOCKED). "
+                "נא לוודא ש-Generative Language API מופעל ב-Google Cloud Console, או לייצר מפתח מ-Google AI Studio (aistudio.google.com) ולהזינו בפרופיל."
+                if _req_lang == "he" else
+                "Your Google API key is blocked for Generative Language API (API_KEY_SERVICE_BLOCKED). "
+                "Please enable 'Generative Language API' in Google Cloud Console or generate a key from Google AI Studio (aistudio.google.com)."
+            )
+        elif "RESOURCE_EXHAUSTED" in err_msg or "429" in err_msg or "spending cap" in err_msg.lower():
+            _fallback_summary = (
+                "מכסת השימוש ב-Gemini הסתיימה (429 Resource Exhausted / Spending Cap). "
+                "נא לבדוק את מגבלות התקציב ב-Google AI Studio או להזין מפתח פעיל בהגדרות הפרופיל."
+                if _req_lang == "he" else
+                "Google Gemini quota exceeded (429 Resource Exhausted). Please check your spend cap in Google AI Studio or update your API key in profile settings."
+            )
+        elif "API_KEY_INVALID" in err_msg:
+            _fallback_summary = (
+                "מפתח ה-API של Google Gemini אינו תקין. נא לעדכן את המפתח בהגדרות הפרופיל."
+                if _req_lang == "he" else
+                "Google Gemini API key is invalid. Please update your API key in profile settings."
+            )
+        elif _req_lang == "he":
             _fallback_summary = "מצטער — התקשיתי בהרכבת ההמלצה. נסה לנסח מחדש או לבחור פריטים אחרים מהארון."
         elif _req_lang == "ar":
             _fallback_summary = "عذرًا — واجهت مشكلة في إعداد التوصية. حاول إعادة الصياغة أو إرفاق صورة."
@@ -427,16 +442,9 @@ async def compose_outfit_endpoint(
     from app.services.user_preferences import render_user_preferences
     prefs_block, applied_prefs = render_user_preferences(user)
 
-    # Resolve user's mandatory API key
-    api_key_resolved = None
-    ai_config = user.get("ai_configuration") or {}
-    encrypted_key = (ai_config.get("custom_keys") or {}).get("google_ai")
-    if encrypted_key:
-        from app.services.auth import decrypt_api_key
-        try:
-            api_key_resolved = decrypt_api_key(encrypted_key)
-        except Exception:
-            api_key_resolved = None
+    # Resolve user's API key
+    from app.services.auth import resolve_user_gemini_api_key
+    api_key_resolved = resolve_user_gemini_api_key(user)
 
     if not api_key_resolved:
         raise HTTPException(
@@ -672,16 +680,10 @@ async def planner_scout_endpoint(
             for g in lst
         ]
 
-    # Resolve user's mandatory API key
-    api_key_resolved = None
-    ai_config = user.get("ai_configuration") or {}
-    encrypted_key = (ai_config.get("custom_keys") or {}).get("google_ai")
-    if encrypted_key:
-        from app.services.auth import decrypt_api_key
-        try:
-            api_key_resolved = decrypt_api_key(encrypted_key)
-        except Exception:
-            api_key_resolved = None
+    # Resolve user's API key and model
+    from app.services.auth import resolve_user_gemini_api_key, resolve_user_gemini_model
+    api_key_resolved = resolve_user_gemini_api_key(user)
+    user_model = resolve_user_gemini_model(user)
 
     if not api_key_resolved:
         raise HTTPException(
@@ -711,7 +713,7 @@ async def planner_scout_endpoint(
     )
 
     from app.services.gemini_stylist import GeminiStylistService, gemini_stylist_service
-    svc = GeminiStylistService(api_key=api_key_resolved) if api_key_resolved else gemini_stylist_service
+    svc = GeminiStylistService(api_key=api_key_resolved, model=user_model) if api_key_resolved else gemini_stylist_service
     if svc is None:
         raise RuntimeError("Stylist service unavailable")
 

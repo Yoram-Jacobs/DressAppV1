@@ -302,7 +302,14 @@ export function ProfileScreen() {
 
         // AI Config
         if (u.ai_configuration?.selected_provider) setSelectedProvider(u.ai_configuration.selected_provider);
-        if (u.ai_configuration?.selected_model) setSelectedModel(u.ai_configuration.selected_model);
+        if (u.ai_configuration?.selected_model) {
+          const m = u.ai_configuration.selected_model;
+          setSelectedModel(
+            m === 'gemini-2.5-flash' || m === 'gemini-3.5-flash-lite'
+              ? 'gemini-3.5-flash'
+              : m
+          );
+        }
         if (u.preferred_voice_id) setPreferredVoiceId(u.preferred_voice_id);
         if (u.ai_configuration?.custom_keys) setCustomKeys(u.ai_configuration.custom_keys);
 

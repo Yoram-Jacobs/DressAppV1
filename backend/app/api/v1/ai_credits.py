@@ -110,7 +110,7 @@ async def get_pricing_info(user: dict = Depends(get_current_user)) -> Dict[str, 
                 "plan_type": user_tier,
                 "ai_provider_mode": "custom_keys",
                 "ai_provider": user_record.get("ai_configuration", {}).get("selected_provider", "google_ai"),
-                "ai_model": user_record.get("ai_configuration", {}).get("selected_model", "gemini-3.5-flash-lite"),
+                "ai_model": user_record.get("ai_configuration", {}).get("selected_model", "gemini-3.5-flash"),
             },
             "credits": {
                 "total_credits": 0,
