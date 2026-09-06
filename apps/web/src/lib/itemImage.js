@@ -32,24 +32,35 @@ export function setStoredViewPreference(view) {
 
 export function resolveMediaUrl(url) {
   if (!url || typeof url !== 'string') return url;
-  if (
-    url.startsWith('data:') ||
-    url.startsWith('blob:') ||
-    url.startsWith('http://') ||
-    url.startsWith('https://')
-  ) {
+  if (url.startsWith('data:') || url.startsWith('blob:')) {
     return url;
   }
-  // In local development, resolve relative /static/ and /uploads/ paths to production media server
-  if (url.startsWith('/static/') || url.startsWith('/uploads/')) {
-    if (typeof window !== 'undefined' && window.location?.hostname) {
-      const isLocal = ['localhost', '127.0.0.1', '0.0.0.0', '::1'].includes(
-        window.location.hostname
-      );
-      if (isLocal) {
-        return `https://dressapp.co${url}`;
+  if (typeof window !== 'undefined' && window.location?.hostname) {
+    const isLocal = ['localhost', '127.0.0.1', '0.0.0.0', '::1'].includes(
+      window.location.hostname
+    );
+    if (isLocal) {
+      if (
+        url.includes('localhost:8001/static/') ||
+        url.includes('127.0.0.1:8001/static/') ||
+        url.includes('localhost:3000/static/') ||
+        url.includes('127.0.0.1:3000/static/')
+      ) {
+        const pathPart = url.split('/static/')[1];
+        return `https://dressapp.co/static/${pathPart}`;
+      }
+      const clean = url.startsWith('/') ? url.slice(1) : url;
+      if (clean.startsWith('static/')) {
+        return `https://dressapp.co/${clean}`;
+      }
+      if (clean.startsWith('uploads/') || clean.startsWith('items/')) {
+        const fullUploadsPath = clean.startsWith('uploads/') ? clean : `uploads/${clean}`;
+        return `https://dressapp.co/static/${fullUploadsPath}`;
       }
     }
+  }
+  if (url.startsWith('http://') || url.startsWith('https://')) {
+    return url;
   }
   return url;
 }

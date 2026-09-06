@@ -57,6 +57,7 @@ import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
 import { Pencil } from 'lucide-react';
 import { useClosetStore } from '@/lib/useClosetStore';
+import { bestImageUrl, resolveMediaUrl } from '@/lib/itemImage';
 import { useLocalStorageSync } from '@/lib/useLocalStorageSync';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { WaveformAudioPlayer } from '@/components/WaveformAudioPlayer';
@@ -126,7 +127,7 @@ const getOutfitPiecesMap = (o) => {
   if (Array.isArray(o?.garments)) {
     o.garments.forEach((g) => {
       if (g && g.role) {
-        map[g.role] = { image_url: g.image_url };
+        map[g.role] = { ...g, image_url: resolveMediaUrl(g.image_url || g.clean_image_url) };
       }
     });
   }
@@ -2089,33 +2090,42 @@ export default function Stylist() {
                       {t('outfits.outfitPieces', { defaultValue: 'Outfit Pieces' })}
                     </div>
                     <div className="grid grid-cols-2 sm:grid-cols-3 max-[420px]:grid-cols-1 gap-3">
-                      {Array.isArray(selectedOutfitForDetail?.garments) && selectedOutfitForDetail.garments.map((g, idx) => (
-                        <div
-                          key={idx}
-                          onClick={() => navigate(`/closet/${g.closet_item_id}`, {
-                            state: {
-                              fromOutfits: true,
-                              returnToOutfitId: selectedOutfitForDetail.id
-                            }
-                          })}
-                          className="bg-white border border-[#ccc] rounded-[12px] p-3.5 flex items-center gap-3 cursor-pointer transition-all duration-180 hover:border-[var(--primary-color)] hover:shadow-[0_4px_14px_rgba(31,107,92,0.1)] hover:-translate-y-0.5 group"
-                        >
-                          <div className="w-12 h-12 rounded-xl bg-[var(--primary-shadow)] text-[var(--primary-color)] flex items-center justify-center flex-shrink-0 overflow-hidden">
-                            {g.image_url ? (
-                              <img src={g.image_url} alt={g.title || ''} className="w-full h-full object-cover" />
-                            ) : (
-                              roleIcon(g.role)
-                            )}
-                          </div>
-                          <div className="min-w-0 flex-1">
-                            <div className="text-[10px] font-bold uppercase tracking-[0.06em] text-[var(--primary-color)] mb-0.5">{labelForRole(g.role, t)}</div>
-                            <div className="text-[13px] font-semibold text-[var(--text-color)] overflow-hidden text-ellipsis whitespace-nowrap">
-                              {g.title || g.description || t('addItem.preflight.untitled', { defaultValue: 'Garment' })}
+                      {Array.isArray(selectedOutfitForDetail?.garments) && selectedOutfitForDetail.garments.map((g, idx) => {
+                        const closetItem = closetItems.find(it => it && it.id === g.closet_item_id);
+                        const imgUrl = resolveMediaUrl(bestImageUrl(closetItem) || g.image_url || g.clean_image_url || closetItem?.image_url);
+                        return (
+                          <div
+                            key={idx}
+                            onClick={() => navigate(`/closet/${g.closet_item_id}`, {
+                              state: {
+                                fromOutfits: true,
+                                returnToOutfitId: selectedOutfitForDetail.id
+                              }
+                            })}
+                            className="bg-white border border-[#ccc] rounded-[12px] p-3.5 flex items-center gap-3 cursor-pointer transition-all duration-180 hover:border-[var(--primary-color)] hover:shadow-[0_4px_14px_rgba(31,107,92,0.1)] hover:-translate-y-0.5 group"
+                          >
+                            <div className="w-12 h-12 rounded-xl bg-[var(--primary-shadow)] text-[var(--primary-color)] flex items-center justify-center flex-shrink-0 overflow-hidden">
+                              {imgUrl ? (
+                                <img
+                                  src={imgUrl}
+                                  alt={g.title || ''}
+                                  className="w-full h-full object-cover"
+                                  onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                                />
+                              ) : (
+                                roleIcon(g.role)
+                              )}
                             </div>
+                            <div className="min-w-0 flex-1">
+                              <div className="text-[10px] font-bold uppercase tracking-[0.06em] text-[var(--primary-color)] mb-0.5">{labelForRole(g.role, t)}</div>
+                              <div className="text-[13px] font-semibold text-[var(--text-color)] overflow-hidden text-ellipsis whitespace-nowrap">
+                                {g.title || g.description || closetItem?.title || closetItem?.name || t('addItem.preflight.untitled', { defaultValue: 'Garment' })}
+                              </div>
+                            </div>
+                            <ChevronRight className="w-4 h-4 text-[var(--text-muted)] flex-shrink-0 transition-all duration-180 group-hover:text-[var(--primary-color)] group-hover:translate-x-0.5 rtl:rotate-180 rtl:group-hover:-translate-x-0.5" />
                           </div>
-                          <ChevronRight className="w-4 h-4 text-[var(--text-muted)] flex-shrink-0 transition-all duration-180 group-hover:text-[var(--primary-color)] group-hover:translate-x-0.5 rtl:rotate-180 rtl:group-hover:-translate-x-0.5" />
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   </TabsContent>
                   <TabsContent value="metrics" className="w-full">
