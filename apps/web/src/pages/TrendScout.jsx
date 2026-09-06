@@ -59,10 +59,14 @@ const BUCKET_KEYS = [
 
 function TrendCardMedia({ card, canonicalBucket }) {
   const [imgError, setImgError] = useState(false);
+  const [proxyAttempted, setProxyAttempted] = useState(false);
   const visual = BUCKET_VISUALS[canonicalBucket] || DEFAULT_BUCKET_VISUAL;
   const Icon = visual?.Icon || Sparkles;
-  const imageUrl = typeof card?.image_url === 'string' ? card.image_url.trim() : '';
-  const hasValidImage = Boolean(imageUrl && !imgError && imageUrl.startsWith('http'));
+  const rawImageUrl = typeof card?.image_url === 'string' ? card.image_url.trim() : '';
+  const imageUrl = proxyAttempted
+    ? `/api/v1/trends/image-proxy?url=${encodeURIComponent(rawImageUrl)}`
+    : rawImageUrl;
+  const hasValidImage = Boolean(rawImageUrl && !imgError && rawImageUrl.startsWith('http'));
 
   if (hasValidImage) {
     return (
@@ -71,7 +75,14 @@ function TrendCardMedia({ card, canonicalBucket }) {
           src={imageUrl}
           alt={typeof card.headline === 'string' ? card.headline : (typeof card.title === 'string' ? card.title : 'Trend Scout')}
           loading="lazy"
-          onError={() => setImgError(true)}
+          referrerPolicy="no-referrer"
+          onError={() => {
+            if (!proxyAttempted && rawImageUrl) {
+              setProxyAttempted(true);
+            } else {
+              setImgError(true);
+            }
+          }}
           className="h-full w-full object-cover transition-transform duration-500 hover:scale-105"
         />
       </div>

@@ -5,7 +5,8 @@ import logging
 from datetime import datetime, timezone
 from typing import Any
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Header
+import httpx
+from fastapi import APIRouter, Depends, HTTPException, Query, Header, Response
 from pydantic import BaseModel, Field
 
 from app.db.database import get_db
@@ -269,4 +270,41 @@ async def disconnect_social_account_endpoint(
         "success": True,
         "settings": saved,
     }
+
+
+@router.get("/image-proxy")
+async def proxy_trend_image(url: str = Query(..., description="Target image URL to proxy")) -> Response:
+    """Proxy external trend article images to bypass CDN anti-hotlinking referer checks."""
+    if not url.startswith("http://") and not url.startswith("https://"):
+        raise HTTPException(status_code=400, detail="Invalid image URL scheme")
+
+    # SSRF protection: block private IP ranges and localhost
+    lowered = url.lower()
+    blocked_hosts = ("localhost", "127.0.0.1", "0.0.0.0", "10.", "192.168.", "169.254.")
+    if any(h in lowered for h in blocked_hosts):
+        raise HTTPException(status_code=400, detail="Disallowed target host")
+
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        "Accept": "image/webp,image/avif,image/jpeg,image/png,*/*;q=0.8",
+    }
+    try:
+        async with httpx.AsyncClient(timeout=8.0, headers=headers, follow_redirects=True) as client:
+            resp = await client.get(url)
+            if resp.status_code != 200:
+                raise HTTPException(status_code=resp.status_code, detail="Remote image fetch failed")
+            content_type = resp.headers.get("content-type", "image/jpeg")
+            return Response(
+                content=resp.content,
+                media_type=content_type,
+                headers={
+                    "Cache-Control": "public, max-age=86400, s-maxage=86400",
+                    "Access-Control-Allow-Origin": "*",
+                },
+            )
+    except HTTPException:
+        raise
+    except Exception as exc:
+        raise HTTPException(status_code=502, detail=f"Failed to fetch image: {exc}")
+
 

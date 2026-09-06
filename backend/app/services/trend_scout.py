@@ -419,7 +419,10 @@ def _ensure_card_image(card: dict[str, Any]) -> dict[str, Any]:
     if not card:
         return card
     img = str(card.get("image_url") or "").strip()
-    if not img.startswith("http") or "ynet-pic1.ynet.co.il" in img or "example.com" in img or "photo-1617127365659-c47fa864d8bc" in img:
+    if (
+        not img.startswith("http")
+        or any(d in img for d in ("ynet-pic1.ynet.co.il", "example.com", "photo-1617127365659-c47fa864d8bc", "images.unsplash.com", "images.pexels.com"))
+    ):
         card["image_url"] = None
     return card
 
@@ -1389,6 +1392,22 @@ async def ensure_seed_data() -> None:
                 logger.info("Pruned %d broken/disallowed trend cards matching %s", res.deleted_count, pat)
         except Exception as exc:
             logger.warning("Failed pruning disallowed trend cards: %s", exc)
+
+    # Nullify hallucinated stock image URLs that return 404
+    try:
+        updated = await db.trend_reports.update_many(
+            {
+                "$or": [
+                    {"image_url": {"$regex": r"images\.unsplash\.com", "$options": "i"}},
+                    {"image_url": {"$regex": r"images\.pexels\.com", "$options": "i"}},
+                ]
+            },
+            {"$set": {"image_url": None}},
+        )
+        if updated.modified_count > 0:
+            logger.info("Nullified %d hallucinated stock photo URLs in trend_reports", updated.modified_count)
+    except Exception as exc:
+        logger.warning("Failed nullifying dead stock photo URLs: %s", exc)
 
     _seed_data_initialized = True
 
