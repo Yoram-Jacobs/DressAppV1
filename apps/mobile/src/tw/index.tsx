@@ -52,7 +52,7 @@ export type ScrollViewProps = React.ComponentProps<typeof RNScrollView> & {
 };
 
 export const ScrollView = (props: ScrollViewProps) => {
-  return useCssElement(RNScrollView, props, {
+  return useCssElement(RNScrollView as any, props, {
     className: 'style',
     contentContainerClassName: 'contentContainerStyle',
   });
@@ -65,7 +65,7 @@ export type PressableProps = React.ComponentProps<typeof RNPressable> & {
 };
 
 export const Pressable = (props: PressableProps) => {
-  return useCssElement(RNPressable, props, { className: 'style' });
+  return useCssElement(RNPressable as any, props, { className: 'style' });
 };
 Pressable.displayName = 'CSS(Pressable)';
 
@@ -75,7 +75,7 @@ export type TextInputProps = React.ComponentProps<typeof RNTextInput> & {
 };
 
 export const TextInput = (props: TextInputProps) => {
-  return useCssElement(RNTextInput, props, { className: 'style' });
+  return useCssElement(RNTextInput as any, props, { className: 'style' });
 };
 TextInput.displayName = 'CSS(TextInput)';
 
@@ -97,7 +97,7 @@ function XXTouchableHighlight(
 export const TouchableHighlight = (
   props: React.ComponentProps<typeof RNTouchableHighlight> & { className?: string },
 ) => {
-  return useCssElement(XXTouchableHighlight, props, { className: 'style' });
+  return useCssElement(XXTouchableHighlight as any, props, { className: 'style' });
 };
 TouchableHighlight.displayName = 'CSS(TouchableHighlight)';
 

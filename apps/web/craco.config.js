@@ -33,10 +33,17 @@ let webpackConfig = {
       },
     },
   },
+  style: {
+    postcss: {
+      mode: "file",
+    },
+  },
   webpack: {
     alias: {
       '@': path.resolve(__dirname, 'src'),
       '@dressapp/api-client': path.resolve(__dirname, '../../packages/api-client/src/index.js'),
+      'lucide-react$': 'lucide-react/dist/cjs/lucide-react.js',
+      'recharts$': 'recharts/lib/index.js',
       'motion-utils': require.resolve('motion-utils'),
       // Override the package stub so the full Sonner toast fires on web
       './aiNotice.js': path.resolve(__dirname, 'src/lib/aiNotice.jsx'),
@@ -58,15 +65,15 @@ let webpackConfig = {
       }
 
       // Add ignored patterns to reduce watched directories
-        webpackConfig.watchOptions = {
-          ...webpackConfig.watchOptions,
-          ignored: [
-            '**/node_modules/**',
-            '**/.git/**',
-            '**/build/**',
-            '**/dist/**',
-            '**/coverage/**',
-            '**/public/**',
+      webpackConfig.watchOptions = {
+        ...webpackConfig.watchOptions,
+        ignored: [
+          '**/node_modules/**',
+          '**/.git/**',
+          '**/build/**',
+          '**/dist/**',
+          '**/coverage/**',
+          '**/public/**',
         ],
       };
 
@@ -125,6 +132,5 @@ webpackConfig.devServer = (devServerConfig) => {
 
   return devServerConfig;
 };
-
 
 module.exports = webpackConfig;

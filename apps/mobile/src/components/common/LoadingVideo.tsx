@@ -6,7 +6,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, Text, ActivityIndicator } from 'react-native';
-import { Video, ResizeMode } from 'expo-av';
+import { useVideoPlayer, VideoView } from 'expo-video';
 import { Asset } from 'expo-asset';
 import { useTheme } from '@mobile/theme';
 import { fonts, fontSizes, spacing } from '@mobile/theme/tokens';
@@ -44,24 +44,21 @@ export function LoadingVideo({ message, size = 220 }: LoadingVideoProps) {
     };
   }, []);
 
+  const player = useVideoPlayer(videoUri, (p) => {
+    p.loop = true;
+    p.muted = true;
+    p.play();
+  });
+
   return (
     <View style={styles.container}>
       <View style={[styles.videoWrapper, { width: size, height: size }]}>
-        {videoUri && !videoError ? (
-          <Video
-            source={{ uri: videoUri }}
-            rate={1.0}
-            volume={0.0}
-            isMuted={true}
-            resizeMode={ResizeMode.CONTAIN}
-            shouldPlay
-            isLooping
-            useNativeControls={false}
+        {videoUri && !videoError && player ? (
+          <VideoView
+            player={player}
+            contentFit="contain"
+            nativeControls={false}
             style={styles.video}
-            onError={(err) => {
-              console.warn('LoadingVideo playback error:', err);
-              setVideoError(true);
-            }}
           />
         ) : (
           <ActivityIndicator size="large" color={colors.accent} />

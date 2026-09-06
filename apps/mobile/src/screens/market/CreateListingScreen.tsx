@@ -36,6 +36,7 @@ import { fonts, fontSizes, spacing, radii, shadows } from '@mobile/theme/tokens'
 import { api } from '@mobile/lib/api';
 import { useClosetStore, ClosetItem } from '@mobile/lib/stores/closetStore';
 import { labelForCategory, labelForCondition } from '@mobile/lib/taxonomy';
+import { getItemImageUrl } from '@mobile/lib/imageUtils';
 
 const LISTING_TYPES = ['sale', 'swap', 'donate', 'rent'] as const;
 
@@ -129,7 +130,7 @@ export function CreateListingScreen() {
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.itemPickerScroll}>
             {closet.items.map((it) => {
               const isSelected = selectedItemId === it.id;
-              const img = it.thumbnail_data_url || it.image_url;
+              const img = getItemImageUrl(it) || null;
               return (
                 <TouchableOpacity
                   key={it.id}

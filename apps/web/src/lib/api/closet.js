@@ -1,4 +1,4 @@
-import { client, tokenStore } from './client.js';
+import { client, tokenStore, getBackendUrl } from './client.js';
 import { streamNdjson } from './streaming.js';
 
 export const closet = {
@@ -66,10 +66,7 @@ export const closet = {
         });
     }
 
-    const rawBackendUrl = (process.env.REACT_APP_BACKEND_URL || '').trim();
-    const baseUrl = (rawBackendUrl && !rawBackendUrl.endsWith('://') && rawBackendUrl !== 'https://' && rawBackendUrl !== 'http://')
-      ? rawBackendUrl.replace(/\/+$/, '')
-      : '';
+    const baseUrl = getBackendUrl();
     const url = `${baseUrl}/api/v1/closet/analyze`;
     const token = tokenStore.get();
     return (async () => {

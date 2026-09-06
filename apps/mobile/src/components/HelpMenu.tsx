@@ -170,7 +170,7 @@ const SECTIONS: HelpSection[] = [
     fallbackTitle: 'Trend Scout',
     icon: Lucide.TrendingUp,
     p1Key: 'help.trend_scout_p1',
-    fallbackP1: 'Daily fashion feeds across 4 channels with 1-tap "Style with My Closet" matching.',
+    fallbackP1: 'Daily fashion radar across 7 curated channels with 1-tap "Style with My Closet" matching.',
   },
   {
     id: 'experts',
