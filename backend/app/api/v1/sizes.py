@@ -786,8 +786,10 @@ async def _via_gemini_vision(
     user_text: str,
     image_b64: str,
     timeout_s: float = 30.0,
+    api_key: str | None = None,
+    model: str = "gemini-3.5-flash",
 ) -> str:
-    """Direct Gemini 2.5 Flash multimodal call.
+    """Direct Gemini multimodal call.
 
     Mirrors the closet pipeline's ``GarmentVisionService.analyze``
     Gemini branch — the only multimodal route we know works on this
@@ -802,12 +804,13 @@ async def _via_gemini_vision(
         raise RuntimeError(
             "Gemini vision unavailable: google-genai not installed."
         )
-    if not settings.GEMINI_API_KEY:
+    key = api_key or settings.GEMINI_API_KEY
+    if not key:
         raise RuntimeError(
             "Gemini vision unavailable: no GEMINI_API_KEY."
         )
 
-    client = GeminiClient(api_key=settings.GEMINI_API_KEY)
+    client = GeminiClient(api_key=key)
     # Convert the legacy base64 payload back to bytes so the wrapper
     # can wrap it in a ``types.Part``. The chart screenshot is JPEG.
     try:
@@ -820,7 +823,7 @@ async def _via_gemini_vision(
         client.vision(
             system=system_prompt,
             user_parts=[user_text, image_bytes],
-            model="gemini-3.5-flash-lite",
+            model=model,
         ),
         timeout=timeout_s,
     )
@@ -834,6 +837,9 @@ async def analyze_chart(
     user: dict = Depends(get_current_user),
 ) -> AnalyzeChartOut:
     t0 = time.time()
+    from app.services.auth import resolve_user_gemini_api_key, resolve_user_gemini_model
+    user_api_key = resolve_user_gemini_api_key(user)
+    user_model = resolve_user_gemini_model(user)
 
     measurements = (user or {}).get("body_measurements") or {}
     has_measurements = bool(measurements)
@@ -916,6 +922,8 @@ async def analyze_chart(
                 user_text=user_prompt,
                 image_b64=payload.chart_screenshot_b64,
                 timeout_s=30.0,
+                api_key=user_api_key,
+                model=user_model,
             )
             parsed = _coerce_response(raw)
             if parsed:
@@ -927,7 +935,7 @@ async def analyze_chart(
                 error=None if parsed else "non-JSON or empty Gemini reply",
                 extra={
                     "provider": "gemini",
-                    "model": "gemini-3.5-flash-lite",
+                    "model": user_model,
                     "op": "size-chart",
                 },
             )
@@ -977,12 +985,12 @@ async def analyze_chart(
             log.info("Gemini text-only fallback: combined_text len=%d, snippet=%r", len(combined_text), combined_text[:200])
             t_text = time.time()
             try:
-                client = GeminiClient(api_key=settings.GEMINI_API_KEY)
+                client = GeminiClient(api_key=user_api_key or settings.GEMINI_API_KEY)
                 raw = await asyncio.wait_for(
                     client.text(
                         user_text=user_prompt,
                         system=_SYSTEM_PROMPT,
-                        model="gemini-3.5-flash-lite",
+                        model=user_model,
                         response_mime_type="application/json",
                     ),
                     timeout=30.0,
@@ -994,7 +1002,7 @@ async def analyze_chart(
                     "garment-text",
                     ok=parsed is not None,
                     latency_ms=int((time.time() - t_text) * 1000),
-                    extra={"provider": "gemini", "op": "size-chart-text"},
+                    extra={"provider": "gemini", "op": "size-chart-text", "model": user_model},
                 )
             except Exception as exc:  # noqa: BLE001
                 log.warning("Gemini text-only fallback failed: %r (after %d ms)", exc, int((time.time() - t_text) * 1000))

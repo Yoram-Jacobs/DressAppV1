@@ -1,3 +1,4 @@
+
 /**
  * createCachedStore — tiny factory for a "list endpoint" cache shared
  * across the app.
@@ -194,6 +195,17 @@ export function createCachedStore({
     _notify();
   };
 
+  const setSlot = (filters, data) => {
+    const key = _stableKey(filters);
+    cache.set(key, {
+      items: data?.items || [],
+      total: typeof data?.total === 'number' ? data.total : (data?.items?.length || 0),
+      ts: data?.ts || Date.now(),
+    });
+    _touch(key);
+    _notify();
+  };
+
   return {
     name,
     get,
@@ -202,6 +214,7 @@ export function createCachedStore({
     prewarm,
     upsertItem,
     removeItem,
+    setSlot,
     invalidate,
     subscribe,
     getSnapshotToken,
@@ -234,7 +247,6 @@ export function useCachedList(store, filters, { revalidateOnMount = true } = {})
   // Lazy revalidate. We can't useEffect here because that'd require
   // a stable filter object per call — instead we just fire-and-forget
   // the ensure() call. Stale-while-revalidate semantics: returns
-  // cached data immediately and quietly refreshes in the background.
   if (revalidateOnMount && (!entry || !fresh)) {
     // Don't await — render with whatever we already have.
     store.ensure(filters).catch(() => {});

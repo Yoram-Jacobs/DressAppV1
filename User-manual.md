@@ -544,24 +544,32 @@ Set daily styling alerts to receive outfit recommendations automatically.
 
 ---
 
-### 3.9 Trend Scout (Daily Fashion Intelligence)
-Discover curated global fashion trends synchronized with your personal wardrobe.
+### 3.9 Trend Scout (Autonomous Fashion Radar & Intelligence)
+Discover curated global and domestic fashion trends synchronized with your personal wardrobe.
 
-1. **Four Curated Trend Buckets**:
-   - **Runway**: High fashion, designer collections, seasonal fashion weeks, and directional silhouettes.
-   - **Streetwear**: Urban streetwear, sneaker culture, utilitarian layering, and casual counter-culture.
-   - **Sustainability**: Circular fashion, eco-friendly textiles, upcycling, and zero-waste garment care.
-   - **Influencers**: Viral fashion aesthetic movements (quiet luxury, gorpcore, vintage minimalism) across social creators.
-2. **Automated Synthesis Engine**:
-   - The background scheduler crawls verified fashion sources via BeautifulSoup.
-   - Gemini models extract trend keywords, dominant color palettes, and garment silhouettes, validating all outbound source links.
-   - Summaries are dynamically localized into all 13 supported languages.
-3. **Personalized Demographic Ranking**:
-   - Trend cards are dynamically scored against your user profile (lifestyle, occupation, and aesthetic preferences).
-   - If a card category mismatches your registered sex profile, a -2.0 score penalty is applied to demote it, ensuring your feed remains relevant.
-4. **Interactive Actions**:
-   - **Style with My Closet**: Tap this button on any trend card to prompt the AI Stylist to search your digitized wardrobe for matching pieces or close aesthetic equivalents.
+1. **Seven Curated Channels**:
+   - 📍 **Local News (`local`)**: Regional fashion events, domestic designer showcases, and boutique news anchored directly to your home country.
+   - 👑 **Runway (`runway`)**: Haute couture, seasonal fashion weeks (SS/FW lookbooks), directional silhouettes, and major fashion house aesthetics.
+   - 👟 **Street Style (`street`)**: Urban fashion movements, sneaker releases, utilitarian layering, and modern subcultural aesthetics.
+   - 🌿 **Sustainability (`sustainability`)**: Eco-textile innovations, circular fashion initiatives, zero-waste garment care, and fair-wage fashion.
+   - ✨ **Influencers & Icons (`influencers`)**: Viral creator styling movements (quiet luxury, old money, Y2K), red-carpet recaps, and contemporary creator formulas.
+   - ♻️ **Vintage / Archival (`vintage`)**: Archival designer retrospectives, heritage denim curation, and non-commercial second-hand history.
+   - 🔧 **Care & Repairs (`maintenance_repairs`)**: Actionable tutorials on visible mending, fabric depilling, sneaker cleaning, cobbling, and garment longevity.
+2. **Dual Gender Ecosystems & Instant Switcher**:
+   - Distinct intelligence streams independently curated for Men's and Women's fashion aesthetics.
+   - Header ecosystem selector allows instantaneous switching between Women's and Men's radar without altering account defaults.
+3. **Automated Synthesis Engine & Strict Heuristic Shield**:
+   - Scheduled cron sweeps (monthly on the 1st at midnight UTC, daily at 07:00 UTC, or on-demand user refresh via 🔄) crawl authoritative publications via `httpx` + `BeautifulSoup`.
+   - Google Gemini synthesizes magazine-grade editorial cards with verified OpenGraph hero images and authentic outbound source articles.
+   - Strict heuristic shield actively rejects e-commerce checkout URLs (`/cart`, `/buy`, Shopify/WooCommerce), fast-fashion storefronts, paywalls/login gates, and broken links.
+   - Priority 2-tier concurrency localizes cards into all 13 supported languages via Gemini Flash with full RTL support.
+4. **Demographic Personalization & Social Sync**:
+   - Cards are dynamically re-ranked via demographic scoring considering gender alignment (+15/-10), publication recency (+10), wardrobe silhouette match (+6), and geographic affinity (+8/+3).
+   - Configure aesthetic preferences and link social profiles (Instagram, Pinterest, TikTok, Facebook, Threads, X) via the Settings Modal (⚙️).
+5. **Interactive Actions**:
+   - **Style with My Closet**: 1-Tap button transfers trend tokens (silhouette, drape, color scheme) to the conversational AI Stylist, instantly generating outfit combinations from clothes you already own.
    - **Bookmark to Wardrobe Diary**: Pin inspirational trends to your personal diary to guide future purchases or custom outfit planning.
+
 
 ---
 

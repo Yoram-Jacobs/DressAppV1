@@ -26,7 +26,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from app.services.gemini_image_service import gemini_image_service
+from app.services.gemini_image_service import gemini_image_service, get_gemini_image_service
 
 logger = logging.getLogger(__name__)
 
@@ -202,19 +202,22 @@ async def reconstruct(
     *,
     reasons: list[str] | None = None,
     validate: bool = True,
+    api_key: str | None = None,
+    user: dict[str, Any] | None = None,
 ) -> dict[str, Any] | None:
     """Run the Nano Banana reconstructor on a crop and return a data payload.
 
     Routes between image completion (edit) and full reconstruction (generate)
     based on the Quality Checker status.
     """
-    # Reconstruction now runs only on Nano Banana (`gemini-3.1-flash-lite-image`).
-    # The legacy HF FLUX.1-schnell fallback was retired in May 2026 — if no
-    # direct ``GEMINI_API_KEY`` is configured we return ``None`` and the
-    # caller keeps the original crop.
-    if gemini_image_service is None:
+    # Reconstruction runs on Nano Banana (`gemini-3.1-flash-lite-image`).
+    # Uses user-provided Gemini API key if available, falling back to system key.
+    if user or api_key:
+        image_service = get_gemini_image_service(user=user, api_key=api_key) or gemini_image_service
+    else:
+        image_service = gemini_image_service
+    if image_service is None:
         return None
-    image_service = gemini_image_service
     using = "nano-banana"
     
     # Pre-matte the image to remove people/legs/hands and prevent safety blocks

@@ -41,11 +41,15 @@ from app.models.schemas import (
     WeightedTag,
 )
 from app.services import repos
-from app.services.auth import get_current_user
+from app.services.auth import (
+    get_current_user,
+    resolve_user_gemini_api_key,
+    resolve_user_gemini_model,
+)
 from app.services.fees import compute_fees
-from app.services.vision import garment_vision_service
+from app.services.vision import garment_vision_service, get_garment_vision_service
 from app.services.fashion_clip import fashion_clip_service
-from app.services.gemini_image_service import gemini_image_service
+from app.services.gemini_image_service import gemini_image_service, get_gemini_image_service
 from app.services.image_compression import (
     compress_b64_image,
     compress_image_bytes,
@@ -583,6 +587,10 @@ async def create_item(
     # the saved item gets its ``reconstructed_image_url`` patched in
     # seconds-to-minutes later. Mirrors ``needs_bg_matte`` above.
     if payload.needs_reconstruction and raw_bytes:
+        if not doc.get("reconstruction_metadata") or not isinstance(doc.get("reconstruction_metadata"), dict):
+            doc["reconstruction_metadata"] = {"deferred": True, "status": "pending"}
+        else:
+            doc["reconstruction_metadata"]["deferred"] = True
         # We use the item's existing analysis fields as the prompt
         # source. Build the same shape ``reconstruct()`` expects.
         recon_analysis: dict[str, Any] = {
@@ -1096,7 +1104,8 @@ async def analyze_item_image(
     ``_status`` set to the intended HTTP status so the frontend can
     detect failure via a small downstream check (see ``api.js``).
     """
-    if garment_vision_service is None:
+    active_vision = get_garment_vision_service(user=user)
+    if active_vision is None:
         raise HTTPException(503, "Garment analyzer not configured")
     if not payload.image_base64 and not payload.image_url and not payload.images_base64:
         raise HTTPException(400, "image_base64, images_base64, or image_url is required")
@@ -1212,7 +1221,7 @@ async def analyze_item_image(
             # intensive model calls) without blocking fast detect IO.
 
             try:
-                streamer = garment_vision_service.analyze_outfits_stream(
+                streamer = active_vision.analyze_outfits_stream(
                     raw_list, language=user_lang,
                 )
 
@@ -1321,7 +1330,7 @@ async def analyze_item_image(
         try:
             items_out: list[dict[str, Any]] = []
             items_meta: list[dict[str, Any]] = []
-            streamer = garment_vision_service.analyze_outfits_stream(
+            streamer = active_vision.analyze_outfits_stream(
                 raw_list, language=user_lang,
             )
             from app.services.vision import _is_unidentifiable
@@ -1409,6 +1418,11 @@ async def analyze_item_image(
                 )
             except asyncio.TimeoutError:
                 yield b" "
+            except Exception:
+                # Underlying task completed with an exception; break out
+                # of the loop so task.result() handles it and yields the
+                # JSON error envelope instead of abruptly terminating the stream.
+                break
         # Task complete — yield the final body (or an error envelope).
         try:
             body = task.result()
@@ -1778,7 +1792,8 @@ async def analyze_diag(
         code_markers["already_cropped_check_error"] = repr(exc)
     out["code_markers"] = code_markers
 
-    if garment_vision_service is None:
+    service_to_test = get_garment_vision_service(user=user) or garment_vision_service
+    if service_to_test is None:
         out["status"] = "service_not_initialised"
         return out
 
@@ -1801,11 +1816,11 @@ async def analyze_diag(
     # without log truncation.
     probes: dict[str, Any] = {}
     for label, model in (
-        ("default_model", settings.GARMENT_VISION_MODEL),
+        ("default_model", getattr(service_to_test, "model", settings.GARMENT_VISION_MODEL)),
         ("crop_model", settings.GARMENT_VISION_CROP_MODEL),
     ):
         try:
-            res = await garment_vision_service.analyze(test_bytes, model=model)
+            res = await service_to_test.analyze(test_bytes, model=model)
             probes[label] = {
                 "model": model,
                 "ok": True,
@@ -2008,6 +2023,10 @@ async def _run_reanalyze_items(
     db,
 ) -> None:
     """Shared background worker: run Stylist (Gemini) analysis on a batch of closet items."""
+    active_vision = get_garment_vision_service(user=user)
+    if active_vision is None:
+        logger.warning("[migration] No vision service available for user %s", (user or {}).get("id"))
+        return
     user_lang = (user or {}).get("preferred_language") or "en"
     imported = 0
     skipped = 0
@@ -2037,7 +2056,7 @@ async def _run_reanalyze_items(
 
             try:
                 async with _ANALYZE_LOCK:
-                    parsed = await garment_vision_service.analyze(raw, language=user_lang)
+                    parsed = await active_vision.analyze(raw, language=user_lang)
             except Exception as exc:
                 logger.warning("[migration] Re-analyze failed for %s: %s", item_id, exc)
                 skipped += 1
@@ -2186,7 +2205,8 @@ async def save_migration_crops(
     # This avoids a race condition where the client closes between
     # saving crops and starting analysis.
     job_id: str | None = None
-    if saved > 0 and garment_vision_service is not None:
+    vision_service = get_garment_vision_service(user=user)
+    if saved > 0 and vision_service is not None:
         job_id = f"reanalyze_{uuid.uuid4().hex[:12]}"
         _migration_status[job_id] = {
             "status": "processing",
@@ -2230,7 +2250,8 @@ async def reanalyze_by_brand(
     then processes each through The Eyes (Gemini) one by one.
     Returns a job_id for polling via /migration/status/{job_id}.
     """
-    if garment_vision_service is None:
+    vision_service = get_garment_vision_service(user=user)
+    if vision_service is None:
         raise HTTPException(503, "Garment analyzer not configured")
 
     db = get_db()
@@ -2427,18 +2448,23 @@ async def list_items(
         raw = it.get("raw")
         if isinstance(raw, dict):
             raw.pop("preview", None)
-        recon_or_clean = (
-            it.get("reconstructed_image_url")
-            or it.get("reconstruct_image_url")
-            or it.get("clean_image_url")
-        )
-        if recon_or_clean:
-            it["reconstructed_image_url"] = recon_or_clean
-            # Only set thumbnail_data_url to recon_or_clean if it's a URL or tiny data-URL (< 15 KB).
-            # Huge inline data URLs (> 15 KB) in bulk list responses cause Android OOM crashes.
-            if isinstance(recon_or_clean, str):
-                if not recon_or_clean.startswith("data:") or len(recon_or_clean) <= 15000:
-                    it["thumbnail_data_url"] = recon_or_clean
+        pref = it.get("preferred_image_view") or it.get("preferred_view")
+        if pref in ("clean", "original"):
+            best_display_img = (
+                it.get("clean_image_url")
+                or it.get("reconstructed_image_url")
+                or it.get("reconstruct_image_url")
+            )
+        else:
+            best_display_img = (
+                it.get("reconstructed_image_url")
+                or it.get("reconstruct_image_url")
+                or it.get("clean_image_url")
+            )
+        if best_display_img:
+            if isinstance(best_display_img, str):
+                if not best_display_img.startswith("data:") or len(best_display_img) <= 15000:
+                    it["thumbnail_data_url"] = best_display_img
                 elif not it.get("thumbnail_data_url") or len(str(it.get("thumbnail_data_url"))) > 15000:
                     # Strip huge data-URL from list response
                     it.pop("thumbnail_data_url", None)
@@ -3833,13 +3859,14 @@ async def complete_outfit(
             logger.warning("Complete-outfit weather fetch failed: %s", exc)
 
     # ------- 6. Stylist rationale (Gemini) -------
-    from app.services.gemini_stylist import gemini_stylist_service
+    from app.services.gemini_stylist import get_gemini_stylist_service
 
     rationale = ""
     outfit_recommendations: list[dict[str, Any]] = []
     do_dont: list[str] = []
     spoken_reply = ""
-    if gemini_stylist_service is not None:
+    stylist_service = get_gemini_stylist_service(user=user)
+    if stylist_service is not None:
         try:
             anchors_pretty = [_anchor_summary(a) for a in anchors]
             closet_short = [
@@ -3892,7 +3919,7 @@ async def complete_outfit(
                 "preferred_language": user.get("preferred_language", "en"),
                 "style_profile": user.get("style_profile"),
             }
-            advice = await gemini_stylist_service.advise(
+            advice = await stylist_service.advise(
                 session_id=f"complete-outfit:{user['id']}",
                 user_text=request_text,
                 image_base64=None,
@@ -4191,13 +4218,14 @@ async def set_item_photo(
     segmented_data_url: str | None = None
     segmentation_model: str | None = None
 
-    if payload.auto_segment and garment_vision_service is not None:
+    vision_service = get_garment_vision_service(user=user)
+    if payload.auto_segment and vision_service is not None:
         # Fast single-item pipeline: just run the detector and crop/matte it.
         # We don't run the full `analyze_outfit` because we don't need the 
         # 11-second Gemini LLM analysis (we are only replacing the photo, not 
         # rewriting the item's metadata).
         try:
-            detections = await garment_vision_service.detect_items(raw)
+            detections = await vision_service.detect_items(raw)
             if detections:
                 best_det = max(
                     detections,
@@ -4207,7 +4235,7 @@ async def set_item_photo(
                     ),
                 )
                 raw_crops = await asyncio.to_thread(
-                    garment_vision_service._bbox_crop_useful, raw, [best_det]
+                    vision_service._bbox_crop_useful, raw, [best_det]
                 )
                 from app.services.vision.image import _apply_fast_matte
                 out = await asyncio.to_thread(_apply_fast_matte, raw_crops)
@@ -4220,14 +4248,10 @@ async def set_item_photo(
                     b64_bytes = None
                 
                 if b64_bytes:
-                    b64 = base64.b64encode(b64_bytes).decode("ascii")
-                    segmented_data_url = f"data:{mime or 'image/png'};base64,{b64}"
-                    segmentation_model = "the_eyes_single"
+                    segmented_data_url = f"data:{mime};base64,{base64.b64encode(b64_bytes).decode('ascii')}"
+                    segmentation_model = getattr(vision_service, "model", "gemini-3.5-flash")
         except Exception as exc:  # noqa: BLE001
-            logger.warning(
-                "set_item_photo: auto-segment failed (%s); keeping raw",
-                repr(exc)[:160],
-            )
+            logger.warning("auto_segment failed on photo replace: %s", exc)
 
     update_doc: dict[str, Any] = {
         "original_image_url": original_data_url,
@@ -4275,7 +4299,6 @@ async def set_item_photo(
     }
 
 
-
 @router.post("/{item_id}/reanalyze")
 async def reanalyze_item(
     item_id: str,
@@ -4292,10 +4315,7 @@ async def reanalyze_item(
     """Re-run **The Eyes** on an existing item's stored image and patch
     the analysis-derived fields back onto the document.
 
-    Use-cases:
-    * User uploaded a poor photo, replaced it with a better one (with
-      ``auto_segment=False`` so the analysis didn't run automatically),
-      and now wants the form auto-filled from the new photo.
+    Useful in two real-world flows:
     * A previous analysis returned junk (regression / model glitch)
       and the user wants a fresh attempt.
     * Receipt-sourced item has an attached image; the user taps "Analyse"
@@ -4309,7 +4329,8 @@ async def reanalyze_item(
     ``receipt_locked_fields`` stored on the document, which permanently
     protects fields that originated from the receipt parser.
     """
-    if garment_vision_service is None:
+    vision_service = get_garment_vision_service(user=user)
+    if vision_service is None:
         raise HTTPException(503, "Garment analyzer not configured")
 
     db = get_db()
@@ -4333,7 +4354,7 @@ async def reanalyze_item(
     user_lang = (user or {}).get("preferred_language") or "en"
     try:
         async with _ANALYZE_LOCK:
-            parsed = await garment_vision_service.analyze(raw, language=user_lang)
+            parsed = await vision_service.analyze(raw, language=user_lang)
     except Exception as exc:  # noqa: BLE001
         logger.warning("Re-analyse failed: %r", exc)
         raise HTTPException(
@@ -4534,14 +4555,16 @@ async def chat_analyse_item(
             user_lang = "en"
 
     # Build conversation context for Gemini
+    user_api_key = resolve_user_gemini_api_key(user)
+    user_model = resolve_user_gemini_model(user)
+
     from app.services.gemini_client import GeminiClient
 
     gemini_client = None
-    if settings.GEMINI_API_KEY:
-        try:
-            gemini_client = GeminiClient(api_key=settings.GEMINI_API_KEY)
-        except Exception as exc:
-            logger.warning("Failed to initialize GeminiClient: %s", exc)
+    try:
+        gemini_client = GeminiClient(api_key=user_api_key or settings.GEMINI_API_KEY)
+    except Exception as exc:
+        logger.warning("Failed to initialize GeminiClient: %s", exc)
 
     if not gemini_client:
         raise HTTPException(503, "AI Eyes assistant is temporarily unavailable.")
@@ -4598,6 +4621,7 @@ async def chat_analyse_item(
             user_parts=user_parts,
             system=system_prompt,
             response_mime_type="application/json",
+            model=user_model,
         )
         clean_json = (decision_raw or "").strip()
         import re as _re
@@ -4672,7 +4696,12 @@ async def chat_analyse_item(
     updated_doc: dict[str, Any] = {}
 
     if action == "image_edit":
-        if gemini_image_service is None:
+        img_service = (
+            get_gemini_image_service(user=user, api_key=user_api_key)
+            if (user_api_key and user_api_key != settings.GEMINI_API_KEY)
+            else gemini_image_service
+        )
+        if img_service is None:
             reply = _get_localized_closet_msg("image_edit_unavailable", user_lang)
             action = "clarification"
         else:
@@ -4681,7 +4710,7 @@ async def chat_analyse_item(
                 await deduct_user_credits(db, user, cost=1)
 
                 edit_prompt = decision.get("image_edit_prompt") or user_msg
-                edit_res = await gemini_image_service.edit(
+                edit_res = await img_service.edit(
                     raw,
                     edit_prompt,
                     garment_metadata={
@@ -4705,8 +4734,7 @@ async def chat_analyse_item(
                 from app.services.vision.image import fit_image_data_url_to_card
                 final_img = fit_image_data_url_to_card(clean_image_url_out or image_url_out)
                 updated_doc["reconstructed_image_url"] = final_img
-                updated_doc["clean_image_url"] = final_img
-                updated_doc["clean_image_status"] = "ready" if clean_image_url_out else "fallback"
+                # Do NOT overwrite clean_image_url (preserving the original cutout)
                 image_url_out = final_img
                 updated_doc["reconstruction_metadata"] = {
                     "method": "nano_banana_chat",
@@ -4847,9 +4875,8 @@ async def repair_item_image(
         "reconstruction_metadata": meta,
         "updated_at": datetime.now(timezone.utc).isoformat(),
     }
-    if out.get("clean_image_url"):
-        update_doc["clean_image_url"] = out["clean_image_url"]
-        update_doc["clean_image_status"] = "ready"
+    from app.services.vision.image import fit_image_data_url_to_card
+    data_url = fit_image_data_url_to_card(data_url) or data_url
 
     if not preview:
         await db.closet_items.update_one(
@@ -4857,12 +4884,18 @@ async def repair_item_image(
             {"$set": update_doc, "$unset": {"thumbnail_data_url": ""}},
         )
         item = await repos.find_one(db.closet_items, {"id": item_id}) or item
+        try:
+            from app.services.sync_service import broadcast_sync_event
+            await broadcast_sync_event(
+                user["id"],
+                "closet_updated",
+                {"action": "update", "item_id": item_id, "reconstructed_image_url": data_url},
+            )
+        except Exception as sync_exc:
+            logger.debug("Repair broadcast_sync_event skipped: %s", sync_exc)
     else:
         item["reconstructed_image_url"] = data_url
         item["reconstruction_metadata"] = meta
-        if out.get("clean_image_url"):
-            item["clean_image_url"] = out["clean_image_url"]
-            item["clean_image_status"] = "ready"
         
     return {"item": item, "reconstruction": out, "applied": True}
 
@@ -5026,9 +5059,10 @@ async def upload_group_member(
     # Fast single-item segmentation
     segmented_data_url = None
     segmentation_model = None
-    if garment_vision_service is not None:
+    vision_service = get_garment_vision_service(user=user)
+    if vision_service is not None:
         try:
-            detections = await garment_vision_service.detect_items(raw)
+            detections = await vision_service.detect_items(raw)
             if detections:
                 best_det = max(
                     detections,
@@ -5038,7 +5072,7 @@ async def upload_group_member(
                     ),
                 )
                 raw_crops = await asyncio.to_thread(
-                    garment_vision_service._bbox_crop_useful, raw, [best_det]
+                    vision_service._bbox_crop_useful, raw, [best_det]
                 )
                 from app.services.vision.image import _apply_fast_matte
                 out = await asyncio.to_thread(_apply_fast_matte, raw_crops)
@@ -5254,9 +5288,10 @@ async def group_edit(
         # Fast single-item segmentation
         segmented_data_url = None
         segmentation_model = None
-        if garment_vision_service is not None:
+        vision_service = get_garment_vision_service(user=user)
+        if vision_service is not None:
             try:
-                detections = await garment_vision_service.detect_items(raw)
+                detections = await vision_service.detect_items(raw)
                 if detections:
                     best_det = max(
                         detections,
@@ -5266,7 +5301,7 @@ async def group_edit(
                         ),
                     )
                     raw_crops = await asyncio.to_thread(
-                        garment_vision_service._bbox_crop_useful, raw, [best_det]
+                        vision_service._bbox_crop_useful, raw, [best_det]
                     )
                     from app.services.vision.image import _apply_fast_matte
                     out = await asyncio.to_thread(_apply_fast_matte, raw_crops)
@@ -5432,22 +5467,14 @@ async def update_item(
             patch["reconstructed_image_url"] = compress_image_url_or_b64(patch["reconstructed_image_url"], max_dim=1024, quality=75)
             from app.services.vision.image import fit_image_data_url_to_card
             patch["reconstructed_image_url"] = fit_image_data_url_to_card(patch["reconstructed_image_url"])
-            # If clean_image_url is not provided, unbind the reconstructed image from its background
-            if not patch.get("clean_image_url"):
-                from app.services.garment_visuals import GarmentVisuals
-                cln_url = await GarmentVisuals.ensure_transparent_cutout(patch["reconstructed_image_url"])
-                if cln_url:
-                    cln_fitted = fit_image_data_url_to_card(cln_url)
-                    patch["clean_image_url"] = cln_fitted
-                    patch["clean_image_status"] = "ready"
-                    patch["reconstructed_image_url"] = cln_fitted
+    if "clean_image_url" in patch and patch["clean_image_url"]:
+        from app.services.vision.image import fit_image_data_url_to_card
+        patch["clean_image_url"] = fit_image_data_url_to_card(patch["clean_image_url"]) or patch["clean_image_url"]
     # The `clear_reconstruction` flag is a command, not a value we persist.
     # Pop it + translate into explicit null-sets on the related columns.
     if patch.pop("clear_reconstruction", False):
         patch["reconstructed_image_url"] = None
         patch["reconstruction_metadata"] = None
-        patch["clean_image_url"] = None
-        patch["clean_image_status"] = None
     patch["updated_at"] = datetime.now(timezone.utc).isoformat()
     db = get_db()
     # Snapshot prior values so we can detect transitions AFTER the update
@@ -5510,83 +5537,87 @@ async def update_item(
     _MARKETPLACE_INTENTS = {"for_sale", "swap", "donate", "rent"}
     _INTENT_TO_MODE = {"for_sale": "sell", "swap": "swap", "donate": "donate", "rent": "rent"}
 
-    # Should we OPEN a listing on this update?
-    # Triggered when EITHER signal newly indicates marketplace participation.
+    target_intent = new_intent if new_intent is not None else updated.get("marketplace_intent")
+    target_source = new_source if new_source is not None else updated.get("source")
+
+    # Should we OPEN or ENSURE an active listing on this update?
     open_listing = False
-    chosen_mode = "swap"  # safe default for the source-only path
+    chosen_mode = "swap"  # safe default
     chosen_price_cents = 0
-    # Honour the currency on the closet item itself — fall back to the
-    # patched value, then the loaded item, then USD as a last resort.
-    # Without this the auto-listing flow used to hardcode USD even
-    # when the user picked ILS / EUR / etc on the closet card, so the
-    # marketplace card showed "$10" instead of "₪10".
+
     chosen_currency = (
         patch.get("currency")
         or updated.get("currency")
         or (prior or {}).get("currency")
         or "USD"
     )
-    if new_source == "Shared" and prior_source != "Shared":
+
+    if target_intent in _MARKETPLACE_INTENTS or target_source == "Shared":
         open_listing = True
-    if new_intent in _MARKETPLACE_INTENTS and prior_intent not in _MARKETPLACE_INTENTS:
-        open_listing = True
-        chosen_mode = _INTENT_TO_MODE[new_intent]
-        # Carry the user's listed price across when they set one.
-        if new_intent in ("for_sale", "rent"):
+        if target_intent in _MARKETPLACE_INTENTS:
+            chosen_mode = _INTENT_TO_MODE[target_intent]
+        else:
+            chosen_mode = "swap"
+        if chosen_mode in ("sell", "rent"):
             chosen_price_cents = int(
                 patch.get("price_cents") or updated.get("price_cents") or 0
             )
 
     # Should we CLOSE the auto-created listing on this update?
     close_listing = False
-    if new_source == "Private" and prior_source == "Shared":
-        close_listing = True
-    if (
-        new_intent is not None
-        and new_intent not in _MARKETPLACE_INTENTS
-        and prior_intent in _MARKETPLACE_INTENTS
-    ):
-        close_listing = True
+    if not open_listing:
+        if (new_source == "Private" and prior_source == "Shared") or (
+            new_intent is not None
+            and new_intent not in _MARKETPLACE_INTENTS
+            and prior_intent in _MARKETPLACE_INTENTS
+        ):
+            close_listing = True
 
     if open_listing:
         try:
             existing = await db.listings.find_one(
                 {"closet_item_id": item_id, "seller_id": user["id"]},
-                {"_id": 0, "id": 1, "status": 1, "mode": 1, "auto_created": 1},
             )
             if existing and existing.get("status") in ("draft", "active", "reserved"):
-                # Already has a live listing. If we know the desired
-                # mode (intent path), patch the mode on the existing
-                # auto-created listing so a user who originally hit
-                # "Share" then later picks "For Sale" sees the right
-                # CTA on the marketplace card. Never modify a
-                # human-curated listing (auto_created=False).
-                if (
-                    existing.get("auto_created")
-                    and chosen_mode != existing.get("mode")
-                ):
-                    # Recompute fees for the new (price, currency)
-                    # tuple so the marketplace card stays consistent
-                    # — without this an item that flipped from
-                    # ``swap`` → ``for_sale`` kept its old $0 price
-                    # and stale fee rows.
-                    fees = compute_fees(chosen_price_cents)
-                    await db.listings.update_one(
-                        {"id": existing["id"]},
+                fees = compute_fees(chosen_price_cents)
+                set_fields: dict[str, Any] = {
+                    "mode": chosen_mode,
+                    "currency": chosen_currency,
+                    "financial_metadata.list_price_cents": chosen_price_cents,
+                    "financial_metadata.currency": chosen_currency,
+                    "financial_metadata.platform_fee_percent": 7.0,
+                    "financial_metadata.estimated_seller_net_cents": fees.seller_net_cents,
+                    "updated_at": datetime.now(timezone.utc).isoformat(),
+                }
+                recon = updated.get("reconstructed_image_url") or updated.get("reconstruct_image_url")
+                clean = updated.get("clean_image_url")
+                best = recon or clean
+                if best:
+                    set_fields["reconstructed_image_url"] = recon
+                    set_fields["clean_image_url"] = clean
+                    set_fields["thumbnail_data_url"] = best
+                    imgs = existing.get("images") or []
+                    if not imgs or (isinstance(imgs, list) and len(imgs) > 0 and imgs[0] != best):
+                        set_fields["images"] = [best] + [i for i in imgs if i != best]
+
+                if existing.get("status") != "active":
+                    set_fields["status"] = "active"
+                await db.listings.update_one(
+                    {"id": existing["id"]},
+                    {"$set": set_fields},
+                )
+                if updated.get("source") != "Shared" or not updated.get("auto_listing_id"):
+                    await db.closet_items.update_one(
+                        {"id": item_id, "user_id": user["id"]},
                         {"$set": {
-                            "mode": chosen_mode,
-                            "currency": chosen_currency,
-                            "financial_metadata.list_price_cents": chosen_price_cents,
-                            "financial_metadata.currency": chosen_currency,
-                            "financial_metadata.platform_fee_percent": 7.0,
-                            "financial_metadata.estimated_seller_net_cents": fees.seller_net_cents,
-                            "updated_at": datetime.now(timezone.utc).isoformat(),
+                            "source": "Shared",
+                            "auto_listing_id": existing["id"],
+                            "auto_listing_needs_completion": False,
                         }},
                     )
+                    updated["source"] = "Shared"
+                updated["auto_listing_id"] = existing["id"]
             else:
-                # Build a minimal listing using info already on the
-                # closet item. We import lazily so closet.py doesn't
-                # take a hard dep on the listings module at import time.
                 from app.models.schemas import (
                     FinancialMetadata,
                     Listing,
@@ -5628,12 +5659,6 @@ async def update_item(
                             images.append(url)
                             break
 
-                # Same condition vocab mapping as in create_item /
-                # backfill: GarmentCondition (excellent/good/fair/bad)
-                # → Listing condition (new/like_new/good/fair).
-                # Without it items with condition='excellent' blew up
-                # Pydantic validation and the auto-list silently
-                # failed.
                 _COND_MAP = {
                     "excellent": "like_new",
                     "like_new": "like_new",
@@ -5646,11 +5671,29 @@ async def update_item(
                     updated.get("condition") or updated.get("state") or "good"
                 )
                 listing_condition = _COND_MAP.get(raw_cond, "good")
-                # Compute fees up-front so the marketplace card shows
-                # the right "you receive" hint immediately. Without
-                # this the listing went out with platform_fee=0 and
-                # seller_net=0 — confusing on cards/checkouts.
                 fees = compute_fees(chosen_price_cents)
+
+                # Ensure location is a valid GeoJSON dict or None
+                loc = updated.get("location")
+                if not isinstance(loc, dict):
+                    loc = None
+                if not loc and user.get("home_location"):
+                    home = user["home_location"]
+                    lat_coord = home.get("lat")
+                    lng_coord = home.get("lng")
+                    if lat_coord is not None and lng_coord is not None:
+                        loc = {
+                            "type": "Point",
+                            "coordinates": [float(lng_coord), float(lat_coord)],
+                            "city": home.get("city"),
+                            "country": home.get("country"),
+                            "region": home.get("region"),
+                        }
+
+                clean_img = updated.get("clean_image_url")
+                recon_img = updated.get("reconstructed_image_url")
+                thumb_img = updated.get("thumbnail_data_url") or (images[0] if images else None)
+
                 listing = Listing(
                     closet_item_id=item_id,
                     seller_id=user["id"],
@@ -5662,7 +5705,10 @@ async def update_item(
                     size=updated.get("size"),
                     condition=listing_condition,
                     images=images,
-                    location=updated.get("location"),
+                    clean_image_url=clean_img,
+                    reconstructed_image_url=recon_img,
+                    thumbnail_data_url=thumb_img,
+                    location=loc,
                     currency=chosen_currency,
                     financial_metadata=FinancialMetadata(
                         list_price_cents=chosen_price_cents,
@@ -5674,10 +5720,6 @@ async def update_item(
                     status="active",
                 )
                 await repos.insert(db.listings, listing.model_dump())
-                # Also flip ``source`` to Shared so downstream code
-                # (filters, feeds) sees the item as published. We do
-                # this even when the trigger was ``marketplace_intent``
-                # alone, so the two flags stay consistent.
                 source_patch: dict[str, Any] = {
                     "auto_listing_id": listing.id,
                     "auto_listing_needs_completion": True,
@@ -5693,14 +5735,10 @@ async def update_item(
                 if "source" in source_patch:
                     updated["source"] = "Shared"
                 logger.info(
-                    "auto-listed closet item %s as listing %s mode=%s "
-                    "trigger=%s",
-                    item_id, listing.id, chosen_mode,
-                    "intent" if new_intent in _MARKETPLACE_INTENTS else "source",
+                    "auto-listed closet item %s as listing %s mode=%s trigger=%s",
+                    item_id, listing.id, chosen_mode, target_intent,
                 )
         except Exception as exc:  # noqa: BLE001
-            # Auto-list is a UX nicety — never block the underlying
-            # closet update if it fails.
             logger.warning("auto-list failed for %s: %s", item_id, exc)
 
     elif close_listing:
@@ -5820,6 +5858,25 @@ async def update_item(
                     "listing sync failed for closet item %s: %s",
                     item_id, exc,
                 )
+
+    # Always sync reconstructed_image_url & clean_image_url to all linked listings
+    recon_img = updated.get("reconstructed_image_url") or updated.get("reconstruct_image_url")
+    clean_img = updated.get("clean_image_url")
+    best_img = recon_img or clean_img
+    if best_img:
+        try:
+            async for lst in db.listings.find({"closet_item_id": item_id}):
+                l_fields = {
+                    "reconstructed_image_url": recon_img,
+                    "clean_image_url": clean_img,
+                    "thumbnail_data_url": best_img,
+                }
+                imgs = lst.get("images") or []
+                if not imgs or (isinstance(imgs, list) and len(imgs) > 0 and imgs[0] != best_img):
+                    l_fields["images"] = [best_img] + [i for i in imgs if i != best_img]
+                await db.listings.update_one({"id": lst["id"]}, {"$set": l_fields})
+        except Exception as exc:  # noqa: BLE001
+            logger.warning("listing image sync failed for closet item %s: %s", item_id, exc)
 
     if updated and "_id" in updated:
         updated.pop("_id")
@@ -6047,7 +6104,8 @@ async def edit_item_image(
     source_bytes = await _read_image_bytes_from_url(source_url)
     if not source_bytes:
         raise HTTPException(400, "Failed to retrieve source image bytes")
-    if gemini_image_service is None:
+    img_service = get_gemini_image_service(user=user)
+    if img_service is None:
         # Nano Banana (gemini-3.1-flash-lite-image) requires a direct
         # GEMINI_API_KEY. The legacy HF FLUX fallback was retired in May
         # 2026, so when the direct key is absent we surface a clean 503
@@ -6058,7 +6116,7 @@ async def edit_item_image(
         if not await deduct_user_credits(db, user, cost=1):
             raise HTTPException(status_code=402, detail="Insufficient credits or quota limit reached")
 
-        edit = await gemini_image_service.edit(
+        edit = await img_service.edit(
             source_bytes,
             prompt,
             garment_metadata={
@@ -6134,7 +6192,10 @@ async def extract_pdf_text(
 
         # Try Gemini Multimodal OCR first
         try:
-            gemini = await get_default_client()
+            from app.services.gemini_client import get_gemini_client
+            user_api_key = resolve_user_gemini_api_key(user)
+            user_model = resolve_user_gemini_model(user)
+            gemini = get_gemini_client(user=user, api_key=user_api_key)
             prompt = (
                 "You are a high-precision, multilingual OCR engine. "
                 "Extract and transcribe ALL text from the attached document row-by-row (horizontally across the page). "
@@ -6152,6 +6213,7 @@ async def extract_pdf_text(
 
             ocr_text = await gemini.vision(
                 user_parts=user_parts,
+                model=user_model,
                 temperature=0.0
             )
             if ocr_text and ocr_text.strip():
@@ -6277,11 +6339,15 @@ async def parse_receipt(
         if not await deduct_user_credits(db, user, cost=1):
             raise HTTPException(status_code=402, detail="Insufficient credits or quota limit reached")
 
-        gemini = await get_default_client()
+        from app.services.gemini_client import get_gemini_client
+        user_api_key = resolve_user_gemini_api_key(user)
+        user_model = resolve_user_gemini_model(user)
+        gemini = get_gemini_client(user=user, api_key=user_api_key)
         response_text = await gemini.vision(
             user_parts=parts,
             system=system_instructions,
-            response_mime_type="application/json"
+            response_mime_type="application/json",
+            model=user_model,
         )
         
         # Clean any code fences
@@ -6297,10 +6363,11 @@ async def parse_receipt(
         return json.loads(cleaned_text)
 
     async def run_visual():
-        if not is_image or garment_vision_service is None or not image_bytes:
+        vision_service = get_garment_vision_service(user=user)
+        if not is_image or vision_service is None or not image_bytes:
             return None
         try:
-            detections = await garment_vision_service.detect_items(image_bytes)
+            detections = await vision_service.detect_items(image_bytes)
             if not detections:
                 return None
             best_det = max(
@@ -6311,7 +6378,7 @@ async def parse_receipt(
                 ),
             )
             raw_crops = await asyncio.to_thread(
-                garment_vision_service._bbox_crop_useful, image_bytes, [best_det]
+                vision_service._bbox_crop_useful, image_bytes, [best_det]
             )
             if not raw_crops:
                 return None
@@ -6357,7 +6424,7 @@ async def parse_receipt(
                 logger.warning("Background removal failed on receipt visual crop: %s", bg_err)
 
             user_lang = user.get("preferred_language") or "en"
-            analysis_raw = await garment_vision_service.analyze(
+            analysis_raw = await vision_service.analyze(
                 crop_bytes,
                 language=user_lang,
             )

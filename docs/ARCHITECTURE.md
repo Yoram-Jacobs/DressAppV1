@@ -153,6 +153,15 @@ The billing engine in `backend/app/services/pricing.py` and `backend/app/models/
 - **Web SPA (`apps/web`)**: Utilizes React 19's `useSyncExternalStore` for external state stores across Closet, Stylist, Marketplace, and Daily Suggestions. Implements in-flight request deduplication, 15-minute caching, and tab focus revalidation (`visibilitychange`).
 - **Mobile (`apps/mobile`)**: Implements `MobileClosetRepository` (`apps/mobile/src/lib/repositories/closetRepository.ts`) providing instant offline hydration from `AsyncStorage`, optimistic item mutations, and stale-while-revalidate (SWR) background syncing.
 
+### 4.5 Trends-Scout Autonomous Fashion Intelligence Pipeline
+
+- **Dual Gender Intelligence**: Curates 7 independent channels separately for Men's and Women's fashion ecosystems (`local`, `runway`, `street`, `sustainability`, `influencers`, `vintage`, `maintenance_repairs`).
+- **Discovery & Crawling Engine** (`backend/app/services/trend_scout.py`): Scheduled cron sweeps (monthly on the 1st at midnight UTC, daily at 07:00 UTC) scrape authoritative publications via `httpx` + `BeautifulSoup`, extracting OpenGraph metadata and inline anchors.
+- **Strict Heuristic & Quality Shield (`_verify_trend_card`)**: Validates HTTP 200 responses, rejects commercial checkout links (`/cart`, `/buy`, Shopify/WooCommerce), filters paywalls/login gates, identifies soft-404 strings across languages, and verifies high-resolution OpenGraph hero imagery.
+- **Demographic Personalization Engine (`rank_cards_for_user`)**: Evaluates user profile attributes, closet lead dress code, style tags, and linked social channels (Instagram, Pinterest, TikTok, etc.) to re-rank card relevance.
+- **Multilingual Localization & Offline Caching**: Priority translation tier with `asyncio.gather` (top 8 cards, 3.5s timeout) and background queue for remaining cards using Gemini Flash across 13 locales, with complete two-layer help integration and pre-bundled offline wiki support.
+- **1-Tap Closet Styling**: Passes extracted trend aesthetic tokens (silhouette, fabric drape, color palette) directly to the conversational AI Stylist to propose outfits from garments the user already owns.
+
 ---
 
 ## 5. Deployment Topology

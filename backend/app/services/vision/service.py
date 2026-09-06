@@ -54,25 +54,20 @@ logger = logging.getLogger(__name__)
 
 
 class GarmentVisionService:
-    def __init__(self) -> None:
+    def __init__(self, api_key: str | None = None, model: str | None = None) -> None:
         # We tolerate a missing EMERGENT_LLM_KEY if HF is configured for
         # both analysis AND detection. In practice we keep Gemini Flash
         # for detection, so both keys are typically required.
-        self.model = settings.GARMENT_VISION_MODEL
+        self.model = model or settings.GARMENT_VISION_MODEL or "gemini-3.5-flash"
         self.provider = settings.GARMENT_VISION_PROVIDER
         # Detection stays on Gemini Flash for Phase A.
         self.detect_provider = settings.GARMENT_VISION_DETECT_PROVIDER
-        self.detect_model = settings.GARMENT_VISION_DETECT_MODEL
+        self.detect_model = settings.GARMENT_VISION_DETECT_MODEL or "gemini-3.5-flash"
         # Per-crop analyser (multi-item pipeline).
-        self.crop_model = settings.GARMENT_VISION_CROP_MODEL
+        self.crop_model = settings.GARMENT_VISION_CROP_MODEL or "gemini-3.5-flash"
         self.max_items = settings.GARMENT_VISION_MAX_ITEMS
-        # Gemini chat key — direct GEMINI_API_KEY from .env. The
-        # historical EMERGENT_LLM_KEY routing was removed in the
-        # google-genai migration; ``gemini_chat_key`` returns
-        # GEMINI_API_KEY (canonical) and is retained so this constructor
-        # keeps failing-fast when the operator forgot to configure the
-        # native key.
-        self.api_key = settings.gemini_chat_key
+        # Gemini chat key — explicit parameter, else direct GEMINI_API_KEY from .env.
+        self.api_key = api_key or settings.gemini_chat_key
         # Native google-genai client (single SDK touchpoint). Lazily
         # created on first use so a missing key only blows up on the
         # gemini-needing branch — Gemma-only deployments stay green.
@@ -2308,6 +2303,14 @@ class GarmentVisionService:
                             )
                             return slot_idx, analysis
                         except Exception as exc:  # noqa: BLE001
+                            err_str = str(exc)
+                            if (
+                                "API_KEY_SERVICE_BLOCKED" in err_str
+                                or "PERMISSION_DENIED" in err_str
+                                or "RESOURCE_EXHAUSTED" in err_str
+                                or "API_KEY_INVALID" in err_str
+                            ):
+                                raise
                             logger.warning(
                                 "analyze_outfits_stream: concurrent analyze failed slot=%d: %s",
                                 slot_idx, repr(exc)[:160],
@@ -2357,14 +2360,20 @@ class GarmentVisionService:
                 emitted, err_text[:400],
             )
             low = err_text.lower()
-            if "permission_denied" in low or " 403" in low or "permission denied" in low:
-                msg = "Garment analyzer: API rejected the request (403)."
+            if "api_key_service_blocked" in low or "blocked" in low:
+                msg = (
+                    "Your Google API key is blocked for Generative Language API (API_KEY_SERVICE_BLOCKED). "
+                    "Please enable 'Generative Language API' in Google Cloud Console or generate a key from Google AI Studio (aistudio.google.com)."
+                )
+                status = 403
+            elif "permission_denied" in low or " 403" in low or "permission denied" in low:
+                msg = "Garment analyzer: API rejected the request (403). Check your Gemini API key permissions."
                 status = 403
             elif "unauthenticated" in low or " 401" in low:
                 msg = "Garment analyzer: API rejected the key (401)."
                 status = 401
-            elif "resource_exhausted" in low or " 429" in low or "quota" in low:
-                msg = "Garment analyzer: quota exhausted (429). Wait a minute and retry."
+            elif "resource_exhausted" in low or " 429" in low or "quota" in low or "spending cap" in low:
+                msg = "Garment analyzer: Gemini quota or spend cap exhausted (429). Please check spend cap in Google AI Studio."
                 status = 429
             elif "not_found" in low or " 404" in low or "model not found" in low:
                 msg = "Garment analyzer: requested model is not available (404)."
@@ -2634,3 +2643,20 @@ def _build_vision_service() -> GarmentVisionService | None:
 
 
 garment_vision_service = _build_vision_service()
+
+
+def get_garment_vision_service(
+    user: dict[str, Any] | None = None,
+    api_key: str | None = None,
+) -> GarmentVisionService | None:
+    """Return a GarmentVisionService instance scoped to the user's API key if available,
+    falling back to the default process-wide service."""
+    from app.services.auth import resolve_user_gemini_api_key, resolve_user_gemini_model
+    effective_key = api_key or resolve_user_gemini_api_key(user)
+    if effective_key:
+        try:
+            model = resolve_user_gemini_model(user) if user else "gemini-3.5-flash"
+            return GarmentVisionService(api_key=effective_key, model=model)
+        except Exception as exc:
+            logger.warning("Failed to build user-scoped GarmentVisionService: %s", exc)
+    return garment_vision_service

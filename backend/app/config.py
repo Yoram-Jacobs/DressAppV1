@@ -111,7 +111,7 @@ class Settings:
         or os.environ.get("GOOGLE_API_KEY")  # accept the canonical google-genai name too
         or None
     )
-    DEFAULT_STYLIST_MODEL: str = os.environ.get("DEFAULT_STYLIST_MODEL", "gemini-3.5-flash-lite")
+    DEFAULT_STYLIST_MODEL: str = os.environ.get("DEFAULT_STYLIST_MODEL", "gemini-3.5-flash")
     DEFAULT_STYLIST_PROVIDER: str = os.environ.get("DEFAULT_STYLIST_PROVIDER", "gemini")
 
     # --- Phase O: Stylist brain provider ---
@@ -598,6 +598,10 @@ class Settings:
     # If True, attempt a run on server startup (best-effort, non-blocking).
     TREND_SCOUT_RUN_ON_STARTUP: bool = (
         os.environ.get("TREND_SCOUT_RUN_ON_STARTUP", "false").lower() == "true"
+    )
+    # Enable Google Search Grounding ($35 / 1000 search queries). Disabled by default to prevent billing anomalies.
+    TREND_SCOUT_USE_SEARCH_GROUNDING: bool = (
+        os.environ.get("TREND_SCOUT_USE_SEARCH_GROUNDING", "false").lower() == "true"
     )
 
     def require(self, *keys: str) -> None:

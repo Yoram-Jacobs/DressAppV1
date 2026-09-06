@@ -15,6 +15,7 @@ import {
   MapPin,
   RefreshCw,
   Loader2,
+  Settings,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -26,6 +27,7 @@ import { useTrendScoutStore } from "@/lib/trendScoutStore";
 import { api } from "@/lib/api";
 import { toast } from "sonner";
 import { ExploreBackButton } from "@/components/ExploreBackButton";
+import { TrendScoutSettingsModal } from "@/components/trends/TrendScoutSettingsModal";
 import TrendScoutBanner from "../assets/img/inner6.webp";
 
 const BUCKET_VISUALS = {
@@ -155,6 +157,7 @@ export default function TrendScout() {
   const [selectedGender, setSelectedGender] = useState(initialGender);
   const [activeCategory, setActiveCategory] = useState("all");
   const [refreshing, setRefreshing] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
 
   const language = (user?.preferred_language || i18n.language || "en")
     .split("-")[0]
@@ -428,6 +431,16 @@ export default function TrendScout() {
               {t("stylist.refreshScout", { defaultValue: "Refresh" })}
             </span>
           </Button>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => setSettingsOpen(true)}
+            className="rounded-xl h-9 w-9 p-0 bg-white border border-border text-text-brand hover:text-primary-brand"
+            data-testid="trend-scout-settings-btn"
+            title={t('trends.personalizationSettings', { defaultValue: 'Personalization & Social Feeds' })}
+          >
+            <Settings className="h-4 w-4" />
+          </Button>
         </div>
         {/* Category Tabs */}
         <div className="flex items-center gap-2 overflow-x-auto pb-4 mb-5 no-scrollbar">
@@ -604,6 +617,10 @@ export default function TrendScout() {
           </div>
         )}
       </div>
+      <TrendScoutSettingsModal
+        open={settingsOpen}
+        onOpenChange={setSettingsOpen}
+      />
     </>
   );
 }

@@ -191,6 +191,24 @@ export function TrendScoutScreen() {
   const userTier = ((user?.subscription?.is_active && user?.subscription?.tier) || user?.subscription_tier || 'free').toLowerCase();
   const isPaying = (user?.subscription?.is_active && userTier !== 'free') || userTier === 'manager' || userTier === 'professional' || userTier === 'pro';
 
+  const handleGenderSwitch = useCallback(async (newGender: 'male' | 'female') => {
+    if (newGender === selectedGender) return;
+    setSelectedGender(newGender);
+    // Prewarm feed immediately for the selected gender
+    prewarm({ language, country, gender: newGender });
+
+    // Check if the selected gender already has cards
+    const existingCount = items.filter((it) => it.gender === newGender).length;
+    if (existingCount < 4) {
+      try {
+        await api.trendsRunNowDev(false, newGender, country);
+        await prewarm({ language, country, gender: newGender, force: true });
+      } catch (runErr) {
+        console.warn('[TrendScout] On-demand gender crawl warning:', runErr);
+      }
+    }
+  }, [selectedGender, items, prewarm, language, country]);
+
   const onRefresh = useCallback(async () => {
     if (refreshing) return;
     setRefreshing(true);
@@ -337,7 +355,7 @@ export function TrendScoutScreen() {
               styles.genderPill,
               selectedGender === 'female' && { backgroundColor: colors.primary, borderColor: colors.primary },
             ]}
-            onPress={() => setSelectedGender('female')}
+            onPress={() => handleGenderSwitch('female')}
           >
             <Text
               style={[
@@ -353,7 +371,7 @@ export function TrendScoutScreen() {
               styles.genderPill,
               selectedGender === 'male' && { backgroundColor: colors.primary, borderColor: colors.primary },
             ]}
-            onPress={() => setSelectedGender('male')}
+            onPress={() => handleGenderSwitch('male')}
           >
             <Text
               style={[

@@ -105,7 +105,6 @@ class UniversalSyncManager {
    * Works universally on Web (EventSource) and React Native (XMLHttpRequest chunk streaming).
    */
   async connect() {
-
     if (this.activeSource || !this.tokenGetter) return;
 
     let token = this.tokenGetter();

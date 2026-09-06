@@ -15,6 +15,7 @@ import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
 import { isRtl } from '@/lib/i18n';
 import { api } from '@/lib/api';
+import { ErrorBoundary } from '@/components/ErrorBoundary';
 
 // Synchronously loaded core routes for zero-latency initial load
 import Login from '@/pages/Login';
@@ -79,6 +80,22 @@ function MigrationMessageListener() {
   return null;
 }
 
+/** Global listener to capture referral ID from ?ref= query parameter on landing */
+function ReferralParamListener() {
+  useEffect(() => {
+    try {
+      const searchParams = new URLSearchParams(window.location.search);
+      const refId = searchParams.get('ref');
+      if (refId && refId !== 'invite') {
+        localStorage.setItem('dressapp_ref_id', refId);
+      }
+    } catch {
+      /* noop */
+    }
+  }, []);
+  return null;
+}
+
 function OutfitsRedirect() {
   const location = useLocation();
   const search = location.search;
@@ -88,56 +105,59 @@ function OutfitsRedirect() {
 function App() {
   return (
     <BrowserRouter>
+      <ReferralParamListener />
       <HelmetProvider>
         <AuthProvider>
           <LocationProvider>
             <PayPalProvider>
-              <Suspense fallback={<PageLoadingFallback />}>
-                <Routes>
-                  {/* Public routes that don't require auth/layout */}
-                  <Route path="/login" element={<PublicOnly><Login /></PublicOnly>} />
-                  <Route path="/register" element={<PublicOnly><Register /></PublicOnly>} />
-                  <Route path="/auth/callback" element={<AuthCallback />} />
-                  <Route path="/mock-atzmai-payment-link" element={<MockAtzmaiPayment />} />
-                  
-                  {/* Extension bridge route */}
-                  <Route path="/extension/connect" element={<ExtensionConnect />} />
-                  
-                  {/* Main application routes wrapped in AppLayout */}
-                  <Route element={<AppLayout />}>
-                    <Route path="/" element={<Navigate to="/home" replace />} />
-                    <Route path="/home" element={<Home />} />
-                    <Route path="/closet" element={<Closet />} />
-                    <Route path="/suitcase" element={<Suitcase />} />
-                    <Route path="/closet/add" element={<AddItem />} />
-                    <Route path="/closet/:id" element={<ItemDetail />} />
-                    <Route path="/stylist" element={<Stylist />} />
-                    <Route path="/outfits" element={<OutfitsRedirect />} />
-                    <Route path="/market" element={<Marketplace />} />
-                    <Route path="/market/create" element={<CreateListing />} />
-                    <Route path="/market/:id" element={<ListingDetail />} />
-                    <Route path="/transactions" element={<Transactions />} />
-                    <Route path="/transactions/:id/landing" element={<TransactionLanding />} />
-                    <Route path="/admin" element={<Admin />} />
-                    <Route path="/experts" element={<ExpertsDirectory />} />
-                    <Route path="/campaigns/create" element={<CreateCampaign />} />
-                    <Route path="/campaigns/mine" element={<MyCampaigns />} />
-                    <Route path="/campaigns/:id" element={<CampaignDetail />} />
-                    <Route path="/ads" element={<AdsManager />} />
-                    <Route path="/me" element={<Profile />} />
-                    <Route path="/delete-account" element={<DeleteAccount />} />
-                    <Route path="/privacy" element={<Privacy />} />
-                    <Route path="/terms" element={<TermsOfService />} />
-                    <Route path="/me/stats" element={<WardrobeStats />} />
-                    <Route path="/trends" element={<TrendScout />} />
-                    <Route path="/avatar" element={<AvatarPage />} />
-                    <Route path="/pricing" element={<Pricing />} />
-                  </Route>
-                  
-                  {/* Fallback route */}
-                  <Route path="*" element={<Navigate to="/home" replace />} />
-                </Routes>
-              </Suspense>
+              <ErrorBoundary>
+                <Suspense fallback={<PageLoadingFallback />}>
+                  <Routes>
+                    {/* Public routes that don't require auth/layout */}
+                    <Route path="/login" element={<PublicOnly><Login /></PublicOnly>} />
+                    <Route path="/register" element={<PublicOnly><Register /></PublicOnly>} />
+                    <Route path="/auth/callback" element={<AuthCallback />} />
+                    <Route path="/mock-atzmai-payment-link" element={<MockAtzmaiPayment />} />
+                    
+                    {/* Extension bridge route */}
+                    <Route path="/extension/connect" element={<ExtensionConnect />} />
+                    
+                    {/* Main application routes wrapped in AppLayout */}
+                    <Route element={<AppLayout />}>
+                      <Route path="/" element={<Navigate to="/home" replace />} />
+                      <Route path="/home" element={<Home />} />
+                      <Route path="/closet" element={<Closet />} />
+                      <Route path="/suitcase" element={<Suitcase />} />
+                      <Route path="/closet/add" element={<AddItem />} />
+                      <Route path="/closet/:id" element={<ItemDetail />} />
+                      <Route path="/stylist" element={<Stylist />} />
+                      <Route path="/outfits" element={<OutfitsRedirect />} />
+                      <Route path="/market" element={<Marketplace />} />
+                      <Route path="/market/create" element={<CreateListing />} />
+                      <Route path="/market/:id" element={<ListingDetail />} />
+                      <Route path="/transactions" element={<Transactions />} />
+                      <Route path="/transactions/:id/landing" element={<TransactionLanding />} />
+                      <Route path="/admin" element={<Admin />} />
+                      <Route path="/experts" element={<ExpertsDirectory />} />
+                      <Route path="/campaigns/create" element={<CreateCampaign />} />
+                      <Route path="/campaigns/mine" element={<MyCampaigns />} />
+                      <Route path="/campaigns/:id" element={<CampaignDetail />} />
+                      <Route path="/ads" element={<AdsManager />} />
+                      <Route path="/me" element={<Profile />} />
+                      <Route path="/delete-account" element={<DeleteAccount />} />
+                      <Route path="/privacy" element={<Privacy />} />
+                      <Route path="/terms" element={<TermsOfService />} />
+                      <Route path="/me/stats" element={<WardrobeStats />} />
+                      <Route path="/trends" element={<TrendScout />} />
+                      <Route path="/avatar" element={<AvatarPage />} />
+                      <Route path="/pricing" element={<Pricing />} />
+                    </Route>
+                    
+                    {/* Fallback route */}
+                    <Route path="*" element={<Navigate to="/home" replace />} />
+                  </Routes>
+                </Suspense>
+              </ErrorBoundary>
             </PayPalProvider>
           </LocationProvider>
         </AuthProvider>

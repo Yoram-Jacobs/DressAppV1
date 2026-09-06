@@ -102,18 +102,14 @@ def _language_directive(code: str | None) -> str:
 
 
 class GeminiStylistService:
-    def __init__(self, api_key: str | None = None) -> None:
-        # Native google-genai path: requires a direct GEMINI_API_KEY.
-        # The legacy EMERGENT_LLM_KEY fallback was removed when this
-        # service migrated off the Emergent proxy — keeping the var
-        # defined in env is harmless but it never feeds into real
-        # calls any more.
+    def __init__(self, api_key: str | None = None, model: str | None = None) -> None:
+        # Native google-genai path: requires a direct GEMINI_API_KEY or user-provided key.
         self.api_key = api_key or settings.GEMINI_API_KEY
         if not self.api_key:
             raise RuntimeError(
-                "No GEMINI_API_KEY configured. Set it in /app/backend/.env or pass it explicitly."
+                "No Gemini API key available. Set GEMINI_API_KEY or provide user API key."
             )
-        self.model = settings.DEFAULT_STYLIST_MODEL
+        self.model = model or settings.DEFAULT_STYLIST_MODEL or "gemini-3.5-flash"
         self.provider = settings.DEFAULT_STYLIST_PROVIDER
         self._client = GeminiClient(api_key=self.api_key)
 
@@ -230,18 +226,21 @@ class GeminiStylistService:
                     response_mime_type="application/json",
                 )
             except Exception as exc:
-                logger.warning("Gemini stylist call failed (%s), attempting fallback with system key and default model", exc)
-                try:
-                    fallback_client = GeminiClient(api_key=settings.GEMINI_API_KEY)
-                    raw = await fallback_client.vision(
-                        system=sys_msg,
-                        user_parts=user_parts,
-                        model=DEFAULT_VISION_MODEL,
-                        response_mime_type="application/json",
-                    )
-                except Exception as fallback_exc:
-                    logger.error("Fallback Gemini stylist call failed: %s", fallback_exc)
-                    raise exc from fallback_exc
+                if settings.GEMINI_API_KEY and settings.GEMINI_API_KEY != self.api_key:
+                    logger.warning("Gemini stylist call failed (%s), attempting fallback with system key and default model", exc)
+                    try:
+                        fallback_client = GeminiClient(api_key=settings.GEMINI_API_KEY)
+                        raw = await fallback_client.vision(
+                            system=sys_msg,
+                            user_parts=user_parts,
+                            model=DEFAULT_VISION_MODEL,
+                            response_mime_type="application/json",
+                        )
+                    except Exception as fallback_exc:
+                        logger.error("Fallback Gemini stylist call failed: %s", fallback_exc)
+                        raise exc from fallback_exc
+                else:
+                    raise exc
         return _parse_json(raw)
 
 
@@ -331,3 +330,27 @@ async def parse_urls_and_context(text: str | None, session_id: str = "") -> str:
 gemini_stylist_service = (
     GeminiStylistService() if settings.GEMINI_API_KEY else None
 )
+
+
+def get_gemini_stylist_service(
+    user: dict[str, Any] | None = None,
+    api_key: str | None = None,
+    model: str | None = None,
+) -> GeminiStylistService | None:
+    """Return a GeminiStylistService instance resolved for the user or system."""
+    if not api_key and user:
+        from app.services.auth import resolve_user_gemini_api_key
+        api_key = resolve_user_gemini_api_key(user)
+    if not model and user:
+        from app.services.auth import resolve_user_gemini_model
+        model = resolve_user_gemini_model(user)
+    if not api_key:
+        api_key = settings.GEMINI_API_KEY
+    if not api_key:
+        return gemini_stylist_service
+    try:
+        return GeminiStylistService(api_key=api_key, model=model)
+    except Exception as exc:
+        logger.warning("Failed to initialize user-specific GeminiStylistService: %s", exc)
+        return gemini_stylist_service
+

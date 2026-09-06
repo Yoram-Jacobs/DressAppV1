@@ -7,6 +7,13 @@ import { AccordionItem, AccordionTrigger, AccordionContent } from '@/components/
 import { toast } from 'sonner';
 import { useAuth } from '@/lib/auth';
 
+export const GOOGLE_PLAY_BASE_URL = 'https://play.google.com/store/apps/details?id=com.project.dressapp';
+
+export function getGooglePlayAffiliateUrl(userId) {
+  if (!userId) return GOOGLE_PLAY_BASE_URL;
+  return `${GOOGLE_PLAY_BASE_URL}&referrer=${encodeURIComponent(`ref=${userId}`)}`;
+}
+
 /**
  * Invite-friends action — web-today, mobile-ready-tomorrow.
  *
@@ -23,26 +30,29 @@ export function InviteFriendsButton() {
   const [busy, setBusy] = useState(false);
 
   const inviteUrl = user?.id ? `${window.location.origin}/?ref=${user.id}` : `${window.location.origin}/?ref=invite`;
+  const playStoreUrl = getGooglePlayAffiliateUrl(user?.id);
 
   const share = async () => {
     setBusy(true);
+    const bodyText = t('profile.inviteBody');
+    const shareMessage = `${bodyText} ${inviteUrl}\n\nGet DressApp on Google Play: ${playStoreUrl}`;
     const payload = {
       title: t('profile.inviteSubject'),
-      text: t('profile.inviteBody'),
+      text: shareMessage,
       url: inviteUrl,
     };
     try {
       if (navigator.share) {
         await navigator.share(payload);
       } else {
-        await navigator.clipboard.writeText(`${payload.text} ${payload.url}`);
+        await navigator.clipboard.writeText(shareMessage);
         toast.success(t('profile.inviteCopied'));
       }
     } catch (err) {
       if (err?.name !== 'AbortError') {
         // AbortError just means the user closed the share sheet.
         try {
-          await navigator.clipboard.writeText(`${payload.text} ${payload.url}`);
+          await navigator.clipboard.writeText(shareMessage);
           toast.success(t('profile.inviteCopied'));
         } catch {
           toast.error(t('common.error'));
@@ -76,9 +86,19 @@ export function InviteFriendsButton() {
       </AccordionTrigger>
       <AccordionContent className="px-5 pb-5 pt-3 border-t border-border/40 bg-secondary/5">
         <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
-          <p className="text-xs text-muted-foreground max-w-md text-start">
-            {t('profile.inviteBody')}
-          </p>
+          <div className="space-y-1 max-w-md text-start">
+            <p className="text-xs text-muted-foreground">
+              {t('profile.inviteBody')}
+            </p>
+            <a
+              href={playStoreUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 text-[11px] font-medium text-[hsl(var(--accent))] hover:underline mt-1"
+            >
+              📱 Get DressApp on Google Play
+            </a>
+          </div>
           <div className="shrink-0 w-full sm:w-auto">
             <Button
               onClick={share}

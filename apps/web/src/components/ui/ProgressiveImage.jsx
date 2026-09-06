@@ -42,9 +42,18 @@ export default function ProgressiveImage({
   const handleLoad = () => setIsLoaded(true);
 
   const isDataUrl = typeof originalSrc === 'string' && originalSrc.startsWith('data:image');
+  const variantsMatch = Boolean(
+    variants && (
+      !variants.original ||
+      !originalSrc ||
+      variants.original === originalSrc ||
+      variants.original.endsWith(originalSrc) ||
+      originalSrc.endsWith(variants.original)
+    )
+  );
 
   // Fallback to legacy single-image rendering
-  if (isDataUrl || !variants || (!variants.blurhash && !variants.webp)) {
+  if (isDataUrl || !variants || (!variants.blurhash && !variants.webp) || !variantsMatch) {
     return (
       <img
         src={resolveMediaUrl(originalSrc || variants?.original)}

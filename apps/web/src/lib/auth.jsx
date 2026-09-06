@@ -8,10 +8,12 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(() => userStore.get());
   const [loading, setLoading] = useState(Boolean(tokenStore.get()) && !userStore.get());
 
-  useUniversalSync(user, (updated) => {
+  const handleUserUpdated = useCallback((updated) => {
     setUser(updated);
     userStore.set(updated);
-  });
+  }, []);
+
+  useUniversalSync(user, handleUserUpdated);
 
   const refresh = useCallback(async () => {
     if (!tokenStore.get()) {

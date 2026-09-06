@@ -53,6 +53,7 @@ async def get_styling_advice(
     user_preferences_block: str | None = None,
     synthesize_tts: bool = True,
     api_key: str | None = None,
+    model: str | None = None,
 ) -> dict[str, Any]:
     """Run the full multimodal stylist pipeline and return a combined payload."""
     if not (user_text or voice_audio):
@@ -63,7 +64,7 @@ async def get_styling_advice(
     # without touching this call site. If neither resolves, the
     # ``RuntimeError`` bubbles up and the endpoint turns it into a 503.
     try:
-        brain = stylist_brain_service(api_key=api_key)
+        brain = stylist_brain_service(api_key=api_key, model=model)
     except RuntimeError as exc:
         raise RuntimeError(
             f"Stylist brain is not configured: {exc}"

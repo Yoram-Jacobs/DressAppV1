@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -1354,4 +1355,113 @@ export default function HelpMenu() {
       </div>
     </div>
   );
+}
+=======
+import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { 
+  BookOpen, Info, ShieldAlert, Sparkles, User, BarChart4, 
+  MapPin, Phone, HelpCircle, AlertTriangle, Layers, Wallet, 
+  ShoppingBag, Search, ClipboardList, Camera, Mic, Grid, TrendingUp, UserRound, Loader2, Bell, Chrome, Megaphone
+} from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { useAuth } from '@/lib/auth';
+
+export default function HelpMenu() {
+  const { t, i18n } = useTranslation();
+  const { user } = useAuth();
+  const [activeTab, setActiveTab] = useState('overview');
+
+  const isRtl = i18n.language === 'he' || i18n.language === 'ar';
+  const viewerIsPro = !!user?.professional?.is_professional;
+
+  const SECTIONS = [
+    { id: 'overview', label: t('help.overview_title'), icon: BookOpen, wiki: 'overview' },
+    { id: 'prerequisites', label: t('help.prereq_title'), icon: ClipboardList, wiki: 'prerequisites' },
+    { id: 'adding-clothes', label: t('help.add_clothes_title'), icon: Camera, wiki: 'adding_clothes' },
+    { id: 'closet-page', label: t('help.closet_page_title'), icon: Grid, wiki: 'closet_management' },
+    { id: 'ai-stylist', label: t('help.stylist_title'), icon: Mic, wiki: 'ai_stylist' },
+    { id: 'scheduler-push', label: t('help.scheduler_push_title'), icon: Bell, wiki: 'scheduler' },
+    { id: 'profile-matters', label: t('help.profile_title'), icon: User, wiki: 'profile_management' },
+    { id: 'wardrobe-stats', label: t('help.stats_title'), icon: BarChart4, wiki: 'wardrobe_insights' },
+    { id: 'dress-up', label: t('help.planner_title'), icon: Layers, wiki: 'outfit_planner' },
+    { id: 'suitcase', label: t('help.suitcase_title'), icon: MapPin, wiki: 'suitcase_packing' },
+    { id: 'marketplace', label: t('help.market_title'), icon: ShoppingBag, wiki: 'marketplace_listing' },
+    { id: 'shopping-assistant', label: t('help.shopping_assistant_title'), icon: Chrome, wiki: 'chrome_extension' },
+    { id: 'import-wardrobe', label: t('help.import_wardrobe_title'), icon: Search, wiki: 'import_wardrobe' },
+    { id: 'trend-scout', label: t('help.trend_scout_title'), icon: TrendingUp, wiki: 'trend_scout' },
+    { id: 'experts', label: t('help.experts_title'), icon: UserRound, wiki: 'experts_registry' },
+    ...(viewerIsPro ? [
+      { id: 'expert-campaigns', label: t('help.expert_campaigns_title', { defaultValue: 'My Campaigns (Expert)' }), icon: Megaphone, wiki: 'expert_campaigns' },
+      { id: 'create-campaign', label: t('help.create_campaign_title', { defaultValue: 'New Campaign (Expert)' }), icon: Sparkles, wiki: 'create_campaign' },
+    ] : [
+      { id: 'campaigns', label: t('help.campaigns_help_title'), icon: Megaphone, wiki: 'campaigns' },
+    ]),
+    { id: 'tiers', label: t('help.tiers_title', { defaultValue: 'Subscription Tiers' }), icon: Wallet, wiki: 'monetization' },
+    { id: 'troubleshooting', label: t('help.trouble_title'), icon: HelpCircle, wiki: 'troubleshooting' },
+  ];
+
+  const activeSection = SECTIONS.find(s => s.id === activeTab);
+
+  const [viewingGuide, setViewingGuide] = useState(false);
+  const [guideContent, setGuideContent] = useState('');
+  const [loadingGuide, setLoadingGuide] = useState(false);
+
+  useEffect(() => {
+    setViewingGuide(false);
+    setGuideContent('');
+  }, [activeTab]);
+
+  const loadGuide = async () => {
+    if (!activeSection) return;
+    setLoadingGuide(true);
+    try {
+      const res = await fetch(`/wiki/${i18n.language || 'en'}/${activeSection.wiki}.md`);
+      if (res.ok) {
+        const text = await res.text();
+        setGuideContent(text);
+        setViewingGuide(true);
+      } else {
+        const fallbackRes = await fetch(`/wiki/en/${activeSection.wiki}.md`);
+        if (fallbackRes.ok) {
+          const text = await fallbackRes.text();
+          setGuideContent(text);
+          setViewingGuide(true);
+        }
+      }
+    } catch (err) {
+      console.error("Failed to load guide:", err);
+    } finally {
+      setLoadingGuide(false);
+    }
+  };
+
+  const parseMarkdown = (mdText) => {
+    if (!mdText) return null;
+    
+    const lines = mdText.split('\n');
+    const elements = [];
+    let listItems = [];
+    
+    const flushList = (key) => {
+      if (listItems.length > 0) {
+        elements.push(
+          <ul key={`list-${key}`} className="list-disc pl-5 space-y-1.5 my-3 text-muted-foreground text-sm">
+            {listItems.map((item, i) => <li key={i}>{parseInline(item)}</li>)}
+          </ul>
+        );
+        listItems = [];
+      }
+    };
+    
+    const parseInline = (text) => {
+      const parts = [];
+      const regex = /(\*\*.*?\*\*|`.*?`|\[.*?\]\(.*?\))/g;
+      let match;
+      let lastIndex = 0;
+      let keyIdx = 0;
+      
+      while ((match = regex.exec(text)) !== null) {
+        const matchText = match[0];
 }

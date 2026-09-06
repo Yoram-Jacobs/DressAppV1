@@ -78,15 +78,34 @@ export function bestImageUrl(item, opts = {}) {
   const viewMode = opts.viewMode || (opts.skipReconstruction ? 'original' : (itemMode || (opts.useStoredPreference ? getStoredViewPreference() : 'repaired')));
 
   let resolved = null;
+  const reconUrl = item.reconstructed_image_url || item.reconstruct_image_url;
 
   // 1. AI-reconstructed image (background-free studio quality)
   if (viewMode !== 'original' && !opts.skipReconstruction) {
-    if (item.reconstruct_image_url) resolved = item.reconstruct_image_url;
-    else if (item.reconstructed_image_url) resolved = item.reconstructed_image_url;
+    if (item.reconstructed_image_url) resolved = item.reconstructed_image_url;
+    else if (item.reconstruct_image_url) resolved = item.reconstruct_image_url;
   }
 
   // 2. Background-free clean cutout (Original crop)
-  if (!resolved && item.clean_image_url) resolved = item.clean_image_url;
+  if (!resolved) {
+    if (viewMode === 'original' || opts.skipReconstruction) {
+      if (item.clean_image_url && item.clean_image_url !== reconUrl) {
+        resolved = item.clean_image_url;
+      } else if (item.image_variants?.original) {
+        resolved = item.image_variants.original;
+      } else if (item.image_variants?.webp?.large) {
+        resolved = item.image_variants.webp.large;
+      } else if (item.cutout_url && item.cutout_url !== reconUrl) {
+        resolved = item.cutout_url;
+      } else if (item.segmented_image_url && item.segmented_image_url !== reconUrl) {
+        resolved = item.segmented_image_url;
+      } else if (item.clean_image_url) {
+        resolved = item.clean_image_url;
+      }
+    } else {
+      if (item.clean_image_url) resolved = item.clean_image_url;
+    }
+  }
 
   // 3. Segmented / cutout forms
   if (!resolved && item.cutout_url) resolved = item.cutout_url;
