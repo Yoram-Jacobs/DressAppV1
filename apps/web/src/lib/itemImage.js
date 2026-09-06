@@ -42,20 +42,24 @@ export function resolveMediaUrl(url) {
     if (isLocal) {
       if (
         url.includes('localhost:8001/static/') ||
-        url.includes('127.0.0.1:8001/static/') ||
+        url.includes('127.0.0.1:8001/static/')
+      ) {
+        return url;
+      }
+      if (
         url.includes('localhost:3000/static/') ||
         url.includes('127.0.0.1:3000/static/')
       ) {
         const pathPart = url.split('/static/')[1];
-        return `https://dressapp.co/static/${pathPart}`;
+        return `http://localhost:8001/static/${pathPart}`;
       }
       const clean = url.startsWith('/') ? url.slice(1) : url;
       if (clean.startsWith('static/')) {
-        return `https://dressapp.co/${clean}`;
+        return `http://localhost:8001/${clean}`;
       }
       if (clean.startsWith('uploads/') || clean.startsWith('items/')) {
         const fullUploadsPath = clean.startsWith('uploads/') ? clean : `uploads/${clean}`;
-        return `https://dressapp.co/static/${fullUploadsPath}`;
+        return `http://localhost:8001/static/${fullUploadsPath}`;
       }
     }
   }

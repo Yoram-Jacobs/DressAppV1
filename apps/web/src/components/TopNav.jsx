@@ -13,6 +13,38 @@ import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { BrandLogo } from '@/components/BrandLogo';
 import HelpMenu from '@/components/HelpMenu';
 import { LanguagePicker } from '@/components/LanguagePicker';
+import { resolveMediaUrl } from '@/lib/itemImage';
+
+const NavAvatar = ({ user, initials, className = "h-full w-full", imgClassName = "h-full w-full rounded-full object-cover", testId }) => {
+  const [imgFailed, setImgFailed] = useState(false);
+  const rawUrl = user?.face_photo_url || user?.avatar_url;
+  const photoUrl = resolveMediaUrl(rawUrl);
+
+  // Reset failure state whenever the user's photo URL changes
+  const prevUrlRef = useState(rawUrl);
+  if (prevUrlRef[0] !== rawUrl) {
+    prevUrlRef[1](rawUrl);
+    if (imgFailed) setImgFailed(false);
+  }
+
+  if (photoUrl && !imgFailed) {
+    return (
+      <img
+        src={photoUrl}
+        alt={user?.display_name || 'User'}
+        onError={() => setImgFailed(true)}
+        className={imgClassName}
+        data-testid={testId}
+      />
+    );
+  }
+
+  return (
+    <span className={cn("inline-flex items-center justify-center rounded-full bg-[hsl(var(--accent))] font-medium text-white", className)}>
+      {initials}
+    </span>
+  );
+};
 
 export const TopNav = () => {
   const { t } = useTranslation();
@@ -101,34 +133,16 @@ export const TopNav = () => {
                 className="h-10 w-10 overflow-hidden rounded-full p-0 border border-border/80 focus-visible:ring-2 focus-visible:ring-[var(--primary-color)]"
                 data-testid="topnav-avatar-button"
               >
-                {(user?.face_photo_url || user?.avatar_url) ? (
-                  <img
-                    src={user.face_photo_url || user.avatar_url}
-                    alt={user?.display_name || 'User'}
-                    className="h-full w-full rounded-full object-cover"
-                  />
-                ) : (
-                  <span className="inline-flex h-full w-full items-center justify-center rounded-full bg-[hsl(var(--accent))] font-medium text-white">
-                    {initials}
-                  </span>
-                )}
+                <NavAvatar user={user} initials={initials} testId="topnav-avatar-img" />
               </Button>
             </DropdownMenuTrigger>
 
             <DropdownMenuContent align="end" className="w-56">
               {/* User Info */}
               <div className="flex items-center gap-3 px-3 py-2.5 text-sm">
-                {(user?.face_photo_url || user?.avatar_url) ? (
-                  <img
-                    src={user.face_photo_url || user.avatar_url}
-                    alt={user?.display_name || 'User'}
-                    className="h-9 w-9 shrink-0 rounded-full border border-border/80 object-cover"
-                  />
-                ) : (
-                  <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[hsl(var(--accent))] font-medium text-white">
-                    {initials}
-                  </span>
-                )}
+                <div className="h-9 w-9 shrink-0 overflow-hidden rounded-full border border-border/80">
+                  <NavAvatar user={user} initials={initials} className="h-9 w-9" imgClassName="h-9 w-9 rounded-full object-cover" />
+                </div>
                 <div className="min-w-0 flex-1">
                   <div className="truncate text-sm font-bold text-foreground">
                     {user?.display_name || t('nav.guest')}
@@ -226,17 +240,7 @@ export const TopNav = () => {
                 className="h-8 w-8 overflow-hidden rounded-full p-0 border border-border"
                 data-testid="mobile-avatar-button"
               >
-                {(user?.face_photo_url || user?.avatar_url) ? (
-                  <img
-                    src={user.face_photo_url || user.avatar_url}
-                    alt={user?.display_name || 'User'}
-                    className="h-full w-full rounded-full object-cover"
-                  />
-                ) : (
-                  <span className="inline-flex h-full w-full items-center justify-center rounded-full bg-[hsl(var(--accent))] text-xs font-medium text-white">
-                    {initials}
-                  </span>
-                )}
+                <NavAvatar user={user} initials={initials} className="text-xs" imgClassName="h-full w-full rounded-full object-cover" testId="mobile-avatar-img" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-52">
