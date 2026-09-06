@@ -23,6 +23,7 @@ import {
   Sparkles,
   Check,
   Camera,
+  Instagram,
 } from 'lucide-react';
 
 export default function ShareOutfitModal({ open, onOpenChange, outfit, sessionId }) {
