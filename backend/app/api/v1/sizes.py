@@ -1201,21 +1201,18 @@ class PredictMeasurementsOut(BaseModel):
     response_model=PredictMeasurementsOut,
     summary="Predict body measurements from core biometrics",
 )
+@router.post(
+    "/predict_measurements",
+    response_model=PredictMeasurementsOut,
+    include_in_schema=False,
+)
 async def predict_measurements(payload: PredictMeasurementsIn):
     """Predict 6 body measurements from 4 core inputs + gender.
 
     Uses a GradientBoostingRegressor trained on the public-domain
-    ANSUR II dataset (~6 000 subjects).  Stateless, no auth required —
+    ANSUR II dataset (~6 000 subjects). Stateless, no auth required —
     can be called during onboarding before the user has an account.
     """
-    try:
-        from app.services.body_predictor import get_predictor
-    except ImportError:
-        raise HTTPException(
-            status_code=501,
-            detail="ML prediction model not available (scikit-learn not installed).",
-        )
-
     g_str = (payload.gender or "female").lower()
     if g_str not in ("male", "female"):
         g_str = "female"
@@ -1225,8 +1222,10 @@ async def predict_measurements(payload: PredictMeasurementsIn):
     wa = payload.waist if (payload.waist and payload.waist > 0) else 80.0
     fl = payload.foot_length if (payload.foot_length and payload.foot_length > 0) else 26.0
 
-    predictor = get_predictor()
+    result = None
     try:
+        from app.services.body_predictor import get_predictor
+        predictor = get_predictor()
         result = predictor.predict(
             height_cm=h,
             weight_kg=w,
@@ -1234,17 +1233,15 @@ async def predict_measurements(payload: PredictMeasurementsIn):
             foot_length_cm=fl,
             gender=g_str,
         )
-    except FileNotFoundError as exc:
-        raise HTTPException(status_code=503, detail=str(exc))
     except Exception as exc:
-        # Fallback response if prediction fails
+        logger.warning("ML body predictor unavailable or failed, using anthropometric formula: %s", exc)
         result = {
-            "shoulders": round(h * 0.23, 1),
-            "chest": round(wa * 1.15, 1),
-            "hip": round(wa * 1.2, 1),
+            "shoulders": round(h * 0.235, 1) if g_str == "male" else round(h * 0.22, 1),
+            "chest": round(wa * 1.18 + (w - 70) * 0.2, 1) if g_str == "male" else round(wa * 1.12 + (w - 60) * 0.2, 1),
+            "hip": round(wa * 1.15 + (w - 70) * 0.15, 1) if g_str == "male" else round(wa * 1.28 + (w - 60) * 0.25, 1),
             "sleeve": round(h * 0.35, 1),
             "inseam": round(h * 0.45, 1),
-            "outseam": round(h * 0.6, 1),
+            "outseam": round(h * 0.60, 1),
         }
 
     # Calculate recommended sizes and measurements dict
