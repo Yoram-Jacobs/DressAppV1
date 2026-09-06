@@ -37,6 +37,7 @@ import {
   User as UserIcon,
   Check,
   Image as ImageIcon,
+  Unlink,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ScrollToTop } from '@/components/ScrollToTop';
@@ -857,28 +858,48 @@ export default function ItemDetail() {
     toast.success(t('common.success'));
   };
 
-  const onDeleteMember = (memberId) => {
-    const confirmDelete = window.confirm(t('closet.confirmDeleteTitle'));
-    if (!confirmDelete) return;
+  const onUnbindMember = (memberId) => {
+    const confirmUngroup = window.confirm(
+      t('itemDetail.ungroupConfirm', {
+        defaultValue:
+          'Are you sure you want to remove this garment from the group? It will return to your closet as a standalone card.',
+      })
+    );
+    if (!confirmUngroup) return;
 
-    setDeletedGroupMemberIds((prev) => {
-      const next = new Set(prev);
-      next.add(memberId);
-      return next;
-    });
-    setAddedGroupMembers((prev) => prev.filter((x) => x.id !== memberId));
+    // If it was just newly uploaded in this session, remove from uploads
     setNewUploadedMembers((prev) => prev.filter((x) => x.id !== memberId));
+    // If it was just added from closet in this session, remove from added
+    setAddedGroupMembers((prev) => prev.filter((x) => x.id !== memberId));
 
+    // If it is an existing group member in DB, mark for ungrouping
+    const isDbMember = groupItemsState.some((x) => x.id === memberId);
+    if (isDbMember) {
+      setDeletedGroupMemberIds((prev) => {
+        const next = new Set(prev);
+        next.add(memberId);
+        return next;
+      });
+    }
+
+    const remaining = currentGroupItems.filter((x) => x.id !== memberId);
     if (hostIdState === memberId) {
-      const remaining = currentGroupItems.filter((x) => x.id !== memberId);
       if (remaining.length > 0) {
         setHostIdState(remaining[0].id);
       } else {
         setHostIdState(item.id);
       }
     }
-    toast.success(t('common.success'));
+    if (activeViewIdState === memberId) {
+      setActiveViewIdState(remaining.length > 0 ? remaining[0].id : (hostIdState || item.id));
+    }
+    toast.success(
+      t('itemDetail.ungroupSuccess', {
+        defaultValue: 'Garment removed from group successfully.',
+      })
+    );
   };
+  const onDeleteMember = onUnbindMember;
 
   const setField = (key, val) => setForm((f) => ({ ...f, [key]: val }));
 
@@ -944,7 +965,13 @@ export default function ItemDetail() {
       });
     }
     
-    updatedHost.group_members = remainingMembers;
+    if (remainingMembers.length === 0) {
+      updatedHost.group_id = null;
+      updatedHost.group_role = null;
+      updatedHost.group_members = [];
+    } else {
+      updatedHost.group_members = remainingMembers;
+    }
     
     // Apply changes locally to the store immediately!
     closetStore.upsert(updatedHost);
@@ -1746,13 +1773,14 @@ export default function ItemDetail() {
                     </Button>
                     <Button
                       type="button"
-                      variant="destructive"
-                      onClick={() => onDeleteMember(activeViewIdState)}
+                      variant="outline"
+                      onClick={() => onUnbindMember(activeViewIdState)}
                       disabled={saving}
-                      className="flex-1 h-10"
+                      className="flex-1 h-10 border-border hover:bg-muted text-foreground"
+                      data-testid="unbind-member-view-btn"
                     >
-                      <Trash2 className="h-4 w-4 me-2" />
-                      {t('addItem.remove')}
+                      <Unlink className="h-4 w-4 me-2 text-muted-foreground" />
+                      {t('itemDetail.ungroupTitle', { defaultValue: 'Remove from Group' })}
                     </Button>
                   </>
                 ) : (
