@@ -142,6 +142,25 @@ export default function TrendScout() {
     prewarmTrendScout({ language, country, gender: selectedGender });
   }, [language, country, selectedGender, isBlocked]);
 
+  const handleGenderSwitch = async (newGender) => {
+    if (newGender === selectedGender) return;
+    setSelectedGender(newGender);
+    // Prewarm feed immediately for the newly selected gender
+    prewarmTrendScout({ language, country, gender: newGender });
+
+    // Check if the selected gender already has cards
+    const existingCount = (trendStore.cards || []).filter((c) => c.gender === newGender).length;
+    if (existingCount < 4) {
+      // Fire on-demand crawling strictly for the 7 buckets of this selected gender
+      try {
+        await api.trendsRunNowDev(false, newGender, country);
+        await prewarmTrendScout({ language, country, gender: newGender, force: true });
+      } catch (err) {
+        console.warn('[TrendScout] On-demand gender crawl error:', err);
+      }
+    }
+  };
+
   const handleRefresh = async () => {
     if (refreshing) return;
     setRefreshing(true);
@@ -229,7 +248,7 @@ export default function TrendScout() {
           <div className="inline-flex rounded-xl bg-secondary/80 p-1 border border-border">
             <button
               type="button"
-              onClick={() => setSelectedGender('female')}
+              onClick={() => handleGenderSwitch('female')}
               className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
                 selectedGender === 'female'
                   ? 'bg-card text-foreground shadow-sm'
@@ -240,7 +259,7 @@ export default function TrendScout() {
             </button>
             <button
               type="button"
-              onClick={() => setSelectedGender('male')}
+              onClick={() => handleGenderSwitch('male')}
               className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
                 selectedGender === 'male'
                   ? 'bg-card text-foreground shadow-sm'

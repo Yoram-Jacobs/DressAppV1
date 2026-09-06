@@ -1661,14 +1661,14 @@ async def _run_trend_scout_internal(
 
     country_code = normalize_country_code(country_code) or "IL"
 
-    # Resolve target gender: if None, process both genders
+    # Resolve target gender: strictly 1 demographic gender (7 buckets max per run)
     if gender:
         target_genders = [gender.lower()]
     elif user:
         user_sex = (user.get("sex") or user.get("gender") or "female").lower()
         target_genders = ["male" if user_sex == "male" else "female"]
     else:
-        target_genders = ["female", "male"]
+        target_genders = ["female"]
 
     # Closet & Style Analysis for Personalized Crawling
     closet_profile: dict[str, Any] = {}

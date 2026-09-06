@@ -174,6 +174,9 @@ async def run_trend_scout_now(
 ) -> dict[str, Any]:
     """Admin-only trigger for an immediate Trend-Scout run (for testing)."""
     client_type = "mobile" if x_device_type == "mobile" else "desktop"
+    if not gender and user:
+        user_sex = (user.get("sex") or user.get("gender") or "female").lower()
+        gender = "male" if user_sex == "male" else "female"
     res = await run_trend_scout(force=force, client_type=client_type, user=user, country_code=country, gender=gender)
     try:
         if user and user.get("id"):
@@ -198,6 +201,9 @@ async def run_trend_scout_now_dev(
     if not user:
         raise HTTPException(401, "auth required")
     client_type = "mobile" if x_device_type == "mobile" else "desktop"
+    if not gender:
+        user_sex = (user.get("sex") or user.get("gender") or "female").lower()
+        gender = "male" if user_sex == "male" else "female"
     res = await run_trend_scout(force=force, client_type=client_type, user=user, country_code=country, gender=gender)
     try:
         if user and user.get("id"):
