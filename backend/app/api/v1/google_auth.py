@@ -119,10 +119,21 @@ async def google_oauth_start(
     if not calendar_service.enabled:
         raise HTTPException(503, "Google OAuth not configured on server")
     redirect_uri = calendar_service.resolve_redirect_uri(request)
+    frontend_origin = None
+    ref_header = request.headers.get("origin") or request.headers.get("referer")
+    if ref_header:
+        from urllib.parse import urlparse
+
+        p = urlparse(ref_header)
+        if p.scheme and p.netloc:
+            frontend_origin = f"{p.scheme}://{p.netloc}"
+    if not frontend_origin:
+        frontend_origin = _frontend_origin(request)
+
     state = _build_state(
         user["id"],
         purpose="google-oauth-link",
-        extra={"redirect_uri": redirect_uri},
+        extra={"redirect_uri": redirect_uri, "frontend_origin": frontend_origin},
     )
     try:
         url = calendar_service.build_authorization_url(state, request=request)
@@ -193,6 +204,9 @@ async def _handle_calendar_link_callback(
     user_id = data.get("sub")
     if not user_id:
         return RedirectResponse(f"{redirect_base}?calendar=error&reason=missing_user")
+
+    if data.get("frontend_origin"):
+        redirect_base = f"{data['frontend_origin']}/me"
 
     redirect_uri = data.get("redirect_uri")
     try:
@@ -285,6 +299,8 @@ def _frontend_origin(request: Request) -> str:
         or request.url.netloc
     )
     host = (host or "").split(",")[0].strip()
+    if host in ("localhost:8001", "127.0.0.1:8001"):
+        return f"{scheme}://localhost:3000"
     return f"{scheme}://{host}" if host else ""
 
 
@@ -526,6 +542,17 @@ async def google_login_start(
         request, callback_path=LOGIN_CALLBACK_PATH
     )
 
+    frontend_origin = None
+    ref_header = request.headers.get("origin") or request.headers.get("referer")
+    if ref_header:
+        from urllib.parse import urlparse
+
+        p = urlparse(ref_header)
+        if p.scheme and p.netloc:
+            frontend_origin = f"{p.scheme}://{p.netloc}"
+    if not frontend_origin:
+        frontend_origin = _frontend_origin(request)
+
     state = _build_state(
         purpose="google-oauth-login",
         extra={
@@ -533,6 +560,7 @@ async def google_login_start(
             "next": safe_next,
             "mobile": bool(mobile),
             "redirect_uri": redirect_uri,
+            "frontend_origin": frontend_origin,
             "return_url": return_url,
             "ref": ref,
         },
@@ -618,14 +646,7 @@ async def _handle_login_callback(
     tokens, mint a DressApp JWT, redirect to the frontend with the token
     in the URL hash fragment (so it never hits any access log).
     """
-    origin = _frontend_origin(request) or ""
-
-    # --- Best-effort mobile detection (before full state validation) ---
-    # Try to peek at the state JWT to detect mobile=true BEFORE the
-    # full validation, so that error redirects go to dressapp:// instead
-    # of the web. We use options={"verify_exp": False} to avoid rejecting
-    # expired tokens during this peek — the full validation below will
-    # enforce expiry properly.
+    # --- Best-effort mobile detection & origin resolution (before full state validation) ---
     _peek_state: dict[str, Any] | None = None
     if state:
         try:
@@ -637,6 +658,8 @@ async def _handle_login_callback(
         except jwt.InvalidTokenError:
             pass  # best-effort — errors handled below
 
+    origin = (_peek_state.get("frontend_origin") if _peek_state else None) or _frontend_origin(request) or ""
+
     if error:
         logger.warning("Google sign-in OAuth error: %s", error)
         return _smart_error_redirect(origin, error, _peek_state)
@@ -647,6 +670,9 @@ async def _handle_login_callback(
         state_data = _read_state(state, expected_purpose="google-oauth-login")
     except HTTPException as exc:
         return _smart_error_redirect(origin, exc.detail.replace(" ", "_"), _peek_state)
+
+    if state_data.get("frontend_origin"):
+        origin = state_data["frontend_origin"]
 
     with_calendar = bool(state_data.get("with_calendar"))
     next_path = state_data.get("next") or "/home"
