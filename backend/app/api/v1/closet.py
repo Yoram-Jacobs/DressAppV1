@@ -4466,6 +4466,20 @@ def _get_localized_closet_msg(msg_type: str, lang: str, user_msg: str = "") -> s
             "ja": f"画像の変更を試みました（{user_msg}）が、処理中に問題が発生しました。もう一度お試しください。",
             "hi": f"मैंने छवि को संशोधित करने का प्रयास किया ({user_msg}), लेकिन प्रसंस्करण के दौरान एक समस्या आई। कृपया पुन: प्रयास करें।",
         },
+        "image_edit_quota_exceeded": {
+            "he": "מגבלת ה-AI של הפרויקט מוצתה (חריגה ממגבלת התקציב החודשית ב-Google AI Studio). ניתן להגדיל את התקציב ב-https://ai.studio/spend או להזין מפתח API אישי בהגדרות הפרופיל.",
+            "ar": "تم الوصول إلى الحد الأقصى لميزانية الذكاء الاصطناعي في Google AI Studio. يرجى تعديل حد الإنفاق في https://ai.studio/spend أو إضافة مفتاح API خاص بك في إعدادات الملف الشخصي.",
+            "en": "AI spending cap reached: The project has exceeded its monthly spending limit in Google AI Studio. Please adjust your budget cap at https://ai.studio/spend or configure your personal API key in Profile settings.",
+            "es": "Límite de gasto de IA alcanzado: El proyecto ha superado el límite mensual en Google AI Studio. Ajusta el límite en https://ai.studio/spend o ingresa tu clave API en Ajustes de Perfil.",
+            "fr": "Plafond budgétaire IA atteint : Le projet a dépassé sa limite mensuelle sur Google AI Studio. Veuillez ajuster le plafond sur https://ai.studio/spend ou renseigner votre clé API dans votre profil.",
+            "de": "KI-Budgetlimit erreicht: Das Projekt hat das monatliche Ausgabenlimit in Google AI Studio überschritten. Bitte passe das Limit unter https://ai.studio/spend an oder trage deinen API-Schlüssel im Profil ein.",
+            "it": "Limite di spesa IA raggiunto: Il progetto ha superato il limite mensile in Google AI Studio. Modifica il limite su https://ai.studio/spend o inserisci la tua chiave API personale nel profilo.",
+            "pt": "Limite de gastos de IA atingido: O projeto excedeu o limite mensal no Google AI Studio. Ajuste o limite em https://ai.studio/spend ou insira sua chave de API nas configurações de perfil.",
+            "ru": "Достигнут лимит расходов AI: Проект превысил месячный лимит в Google AI Studio. Пожалуйста, увеличьте лимит на https://ai.studio/spend или укажите свой собственный API-ключ в профиле.",
+            "zh": "已达到 AI 支出上限：项目已超出 Google AI Studio 的月度预算限制。请在 https://ai.studio/spend 调整上限，或在个人资料中配置您自己的 API 密钥。",
+            "ja": "AIの利用上限に達しました：Google AI Studioの月間支出上限を超えています。https://ai.studio/spend で上限を調整するか、プロフィール設定で独自のAPIキーを設定してください。",
+            "hi": "एआई खर्च सीमा समाप्त हो गई है: परियोजना Google AI Studio में अपनी मासिक खर्च सीमा पार कर गई है। कृपया https://ai.studio/spend पर सीमा समायोजित करें या प्रोफ़ाइल में अपनी एपीआई कुंजी दर्ज करें।",
+        },
         "image_edit_unavailable": {
             "he": "עריכת תמונות אינה זמינה כעת בשרת. אנא ודא שהמערכת מוגדרת כראוי.",
             "ar": "خدمة تعديل الصور غير متوفرة حالياً على الخادم. يرجى التأكد من تكوين النظام.",
@@ -4744,7 +4758,11 @@ async def chat_analyse_item(
                 }
             except Exception as edit_exc:
                 logger.warning("Nano Banana chat edit failed: %s", edit_exc)
-                reply = _get_localized_closet_msg("image_edit_failed", user_lang, user_msg=user_msg)
+                exc_str = str(edit_exc).lower()
+                if "spending cap" in exc_str or "resource_exhausted" in exc_str or "quota" in exc_str or "429" in exc_str:
+                    reply = _get_localized_closet_msg("image_edit_quota_exceeded", user_lang)
+                else:
+                    reply = _get_localized_closet_msg("image_edit_failed", user_lang, user_msg=user_msg)
                 action = "clarification"
 
     elif action == "metadata_update":
