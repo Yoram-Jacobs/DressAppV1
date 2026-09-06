@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Blurhash } from 'react-blurhash';
+import { resolveMediaUrl } from '@/lib/itemImage';
 
 /**
  * ProgressiveImage - Mimics Pinterest/Instagram image loading strategy.
@@ -14,7 +15,7 @@ export default function ProgressiveImage({
   alt,
   className,
   style,
-  objectFit = 'cover',
+  objectFit = 'contain',
   forceVisible = false
 }) {
   const [isLoaded, setIsLoaded] = useState(false);
@@ -36,7 +37,7 @@ export default function ProgressiveImage({
     );
     observer.observe(imgRef.current);
     return () => observer.disconnect();
-  }, []);
+  }, [forceVisible]);
 
   const handleLoad = () => setIsLoaded(true);
 
@@ -46,7 +47,7 @@ export default function ProgressiveImage({
   if (isDataUrl || !variants || (!variants.blurhash && !variants.webp)) {
     return (
       <img
-        src={originalSrc || variants?.original}
+        src={resolveMediaUrl(originalSrc || variants?.original)}
         alt={alt}
         className={className}
         style={{ objectFit, ...style }}
@@ -56,9 +57,9 @@ export default function ProgressiveImage({
   }
 
   // Determine best sizes (simplification, typically you'd pick based on container)
-  const avifUrl = variants.avif?.medium || variants.avif?.small;
-  const webpUrl = variants.webp?.medium || variants.webp?.small;
-  const fallbackUrl = variants.original || originalSrc;
+  const avifUrl = resolveMediaUrl(variants.avif?.medium || variants.avif?.small);
+  const webpUrl = resolveMediaUrl(variants.webp?.medium || variants.webp?.small);
+  const fallbackUrl = resolveMediaUrl(variants.original || originalSrc);
 
   return (
     <div

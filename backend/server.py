@@ -114,10 +114,30 @@ async def get_status_checks() -> List[StatusCheck]:
 api_router.include_router(api_v1_router)
 app.include_router(api_router)
 
-# Mount /static to serve static uploads
+# Mount /static to serve static uploads (with automatic cloud fallback in development)
 static_dir = ROOT_DIR / "static"
 static_dir.mkdir(parents=True, exist_ok=True)
-app.mount("/static", StaticFiles(directory=str(static_dir)), name="static")
+
+from starlette.exceptions import HTTPException as StarletteHTTPException
+from starlette.responses import RedirectResponse
+
+class FallbackStaticFiles(StaticFiles):
+    async def get_response(self, path: str, scope):
+        norm_path = path.replace("\\", "/").lstrip("/")
+        try:
+            resp = await super().get_response(path, scope)
+            if resp.status_code == 404 and (norm_path.startswith("uploads/") or norm_path.startswith("items/")):
+                clean_path = norm_path if norm_path.startswith("uploads/") else f"uploads/{norm_path}"
+                return RedirectResponse(f"https://dressapp.co/static/{clean_path}", status_code=307)
+            return resp
+        except (StarletteHTTPException, Exception) as exc:
+            status = getattr(exc, "status_code", 404)
+            if status == 404 and (norm_path.startswith("uploads/") or norm_path.startswith("items/")):
+                clean_path = norm_path if norm_path.startswith("uploads/") else f"uploads/{norm_path}"
+                return RedirectResponse(f"https://dressapp.co/static/{clean_path}", status_code=307)
+            raise
+
+app.mount("/static", FallbackStaticFiles(directory=str(static_dir)), name="static")
 
 # Mount /wiki to serve documentation
 wiki_dir = ROOT_DIR.parent / "wiki"

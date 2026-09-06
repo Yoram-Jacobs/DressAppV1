@@ -30,6 +30,30 @@ export function setStoredViewPreference(view) {
   } catch (e) {}
 }
 
+export function resolveMediaUrl(url) {
+  if (!url || typeof url !== 'string') return url;
+  if (
+    url.startsWith('data:') ||
+    url.startsWith('blob:') ||
+    url.startsWith('http://') ||
+    url.startsWith('https://')
+  ) {
+    return url;
+  }
+  // In local development, resolve relative /static/ and /uploads/ paths to production media server
+  if (url.startsWith('/static/') || url.startsWith('/uploads/')) {
+    if (typeof window !== 'undefined' && window.location?.hostname) {
+      const isLocal = ['localhost', '127.0.0.1', '0.0.0.0', '::1'].includes(
+        window.location.hostname
+      );
+      if (isLocal) {
+        return `https://dressapp.co${url}`;
+      }
+    }
+  }
+  return url;
+}
+
 export function bestImageUrl(item, opts = {}) {
   if (!item) return null;
 
@@ -42,40 +66,43 @@ export function bestImageUrl(item, opts = {}) {
 
   const viewMode = opts.viewMode || (opts.skipReconstruction ? 'original' : (itemMode || (opts.useStoredPreference ? getStoredViewPreference() : 'repaired')));
 
+  let resolved = null;
+
   // 1. AI-reconstructed image (background-free studio quality)
   if (viewMode !== 'original' && !opts.skipReconstruction) {
-    if (item.reconstruct_image_url) return item.reconstruct_image_url;
-    if (item.reconstructed_image_url) return item.reconstructed_image_url;
+    if (item.reconstruct_image_url) resolved = item.reconstruct_image_url;
+    else if (item.reconstructed_image_url) resolved = item.reconstructed_image_url;
   }
 
   // 2. Background-free clean cutout (Original crop)
-  if (item.clean_image_url) return item.clean_image_url;
+  if (!resolved && item.clean_image_url) resolved = item.clean_image_url;
 
   // 3. Segmented / cutout forms
-  if (item.cutout_url) return item.cutout_url;
-  if (item.segmented_image_url) return item.segmented_image_url;
+  if (!resolved && item.cutout_url) resolved = item.cutout_url;
+  if (!resolved && item.segmented_image_url) resolved = item.segmented_image_url;
 
   // 4. Listing images array
-  if (Array.isArray(item.images) && item.images.length > 0 && typeof item.images[0] === 'string' && item.images[0]) {
-    return item.images[0];
+  if (!resolved && Array.isArray(item.images) && item.images.length > 0 && typeof item.images[0] === 'string' && item.images[0]) {
+    resolved = item.images[0];
   }
 
   // 5. Dynamic Transcoding Variants (AVIF/WebP)
-  if (item.image_variants) {
-    if (item.image_variants.avif?.medium) return item.image_variants.avif.medium;
-    if (item.image_variants.webp?.medium) return item.image_variants.webp.medium;
-    if (item.image_variants.original) return item.image_variants.original;
+  if (!resolved && item.image_variants) {
+    if (item.image_variants.avif?.medium) resolved = item.image_variants.avif.medium;
+    else if (item.image_variants.webp?.medium) resolved = item.image_variants.webp.medium;
+    else if (item.image_variants.original) resolved = item.image_variants.original;
   }
 
   // 6. Raw originals / generic image URL
-  if (item.original_image_url) return item.original_image_url;
-  if (item.image_url) return item.image_url;
+  if (!resolved && item.original_image_url) resolved = item.original_image_url;
+  if (!resolved && item.image_url) resolved = item.image_url;
 
   // 7. Thumbnail (has white card background)
-  if (item.thumbnail_data_url) return item.thumbnail_data_url;
+  if (!resolved && item.thumbnail_data_url) resolved = item.thumbnail_data_url;
 
-  if (item.photo_url) return item.photo_url;
-  return null;
+  if (!resolved && item.photo_url) resolved = item.photo_url;
+
+  return resolveMediaUrl(resolved);
 }
 
 /**
@@ -84,3 +111,4 @@ export function bestImageUrl(item, opts = {}) {
 export function isCleanImagePending(item) {
   return !!(item && item.clean_image_status === 'pending');
 }
+
