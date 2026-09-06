@@ -53,6 +53,13 @@ export const TopNav = () => {
             <NavLink
               key={to}
               to={to}
+              onClick={() => {
+                if (window.location.pathname === to) {
+                  window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
+                  const mainEl = document.getElementById('main-content');
+                  if (mainEl) mainEl.scrollTo({ top: 0, behavior: 'smooth' });
+                }
+              }}
               data-testid={`topnav-link-${key}`}
               className={({ isActive }) =>
                 cn(

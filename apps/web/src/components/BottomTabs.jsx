@@ -10,6 +10,14 @@ export const BottomTabs = () => {
   const { user } = useAuth();
   const userPhoto = user?.face_photo_url || user?.avatar_url;
 
+  const handleTabClick = (path) => {
+    if (window.location.pathname === path) {
+      window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
+      const mainEl = document.getElementById('main-content');
+      if (mainEl) mainEl.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
+
   return (
     <nav
       data-testid="bottom-tabs"
@@ -22,6 +30,7 @@ export const BottomTabs = () => {
         <li className="flex">
           <NavLink
             to="/closet"
+            onClick={() => handleTabClick('/closet')}
             data-testid="bottom-tab-closet"
             aria-label={t('nav.closet')}
             className={({ isActive }) =>
@@ -55,6 +64,7 @@ export const BottomTabs = () => {
         <li className="flex">
           <NavLink
             to="/stylist"
+            onClick={() => handleTabClick('/stylist')}
             data-testid="bottom-tab-stylist"
             aria-label={t('nav.stylist')}
             className={({ isActive }) =>
@@ -106,6 +116,7 @@ export const BottomTabs = () => {
         <li className="flex">
           <NavLink
             to="/market"
+            onClick={() => handleTabClick('/market')}
             data-testid="bottom-tab-market"
             aria-label={t('nav.market')}
             className={({ isActive }) =>
@@ -139,6 +150,7 @@ export const BottomTabs = () => {
         <li className="flex">
           <NavLink
             to="/me"
+            onClick={() => handleTabClick('/me')}
             data-testid="bottom-tab-me"
             aria-label={t('nav.me')}
             className={({ isActive }) =>
