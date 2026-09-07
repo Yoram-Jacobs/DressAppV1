@@ -43,7 +43,6 @@ let webpackConfig = {
       '@': path.resolve(__dirname, 'src'),
       '@dressapp/api-client': path.resolve(__dirname, '../../packages/api-client/src/index.js'),
       'lucide-react': require.resolve('lucide-react'),
-      'recharts': require.resolve('recharts'),
       'reselect': path.resolve(__dirname, '../../node_modules/@reduxjs/toolkit/node_modules/reselect'),
       'motion-utils': require.resolve('motion-utils'),
       // Override the package stub so the full Sonner toast fires on web
