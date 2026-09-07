@@ -62,9 +62,9 @@ class GarmentVisionService:
         self.provider = settings.GARMENT_VISION_PROVIDER
         # Detection stays on Gemini Flash for Phase A.
         self.detect_provider = settings.GARMENT_VISION_DETECT_PROVIDER
-        self.detect_model = settings.GARMENT_VISION_DETECT_MODEL or "gemini-3.5-flash"
+        self.detect_model = model or settings.GARMENT_VISION_DETECT_MODEL or "gemini-3.5-flash"
         # Per-crop analyser (multi-item pipeline).
-        self.crop_model = settings.GARMENT_VISION_CROP_MODEL or "gemini-3.5-flash"
+        self.crop_model = model or settings.GARMENT_VISION_CROP_MODEL or "gemini-3.5-flash"
         self.max_items = settings.GARMENT_VISION_MAX_ITEMS
         # Gemini chat key — explicit parameter, else direct GEMINI_API_KEY from .env.
         self.api_key = api_key or settings.gemini_chat_key
@@ -2333,6 +2333,22 @@ class GarmentVisionService:
                             analysis = await self.analyze(
                                 c_bytes, language=language, think=False
                             )
+                            if isinstance(analysis, dict):
+                                _enforce_segformer_category(
+                                    analysis,
+                                    segformer_kind=det.get("kind"),
+                                    label=det.get("label"),
+                                    is_single_item=det.get("is_single_item", False),
+                                )
+                                # Ensure title is populated so _is_unidentifiable doesn't drop it prematurely
+                                if not analysis.get("title") and analysis.get("name"):
+                                    analysis["title"] = analysis["name"]
+                                if not analysis.get("title") and (det.get("label") or det.get("kind")):
+                                    analysis["title"] = (det.get("label") or det.get("kind")).capitalize()
+                                if not analysis.get("item_type") and not analysis.get("sub_category"):
+                                    fallback_type = (det.get("label") or det.get("kind") or "garment").lower()
+                                    analysis["item_type"] = fallback_type
+                                    analysis["sub_category"] = fallback_type.capitalize()
                             return slot_idx, analysis
                         except Exception as exc:  # noqa: BLE001
                             err_str = str(exc)
