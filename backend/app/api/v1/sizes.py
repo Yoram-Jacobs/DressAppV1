@@ -1223,6 +1223,7 @@ async def predict_measurements(payload: PredictMeasurementsIn):
     fl = payload.foot_length if (payload.foot_length and payload.foot_length > 0) else 26.0
 
     result = None
+    predictor = None
     try:
         from app.services.body_predictor import get_predictor
         predictor = get_predictor()
@@ -1268,7 +1269,7 @@ async def predict_measurements(payload: PredictMeasurementsIn):
 
     return PredictMeasurementsOut(
         **result,
-        model_version=getattr(predictor, "model_version", "v1.0-fallback"),
+        model_version=getattr(predictor, "model_version", "v1.0-fallback") if predictor else "v1.0-fallback",
         measurements=measurements_dict,
         recommended_sizes=rec_sizes,
     )
