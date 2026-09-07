@@ -1583,7 +1583,7 @@ export default function Stylist() {
                             <div className="text-[11px] font-bold tracking-wide uppercase mb-1">
                               {t('stylist.doDont', { defaultValue: 'Do & Don\'t' })}
                             </div>
-                            <ul className="list-disc pl-5 m-0 flex flex-col gap-0.5">
+                            <ul className="list-disc ps-5 m-0 flex flex-col gap-0.5">
                               {m.payload.do_dont.filter(Boolean).map((d, k) => (
                                 <li key={`${m.id || 'msg'}-dd-${k}-${String(d).slice(0, 24)}`}>{d}</li>
                               ))}
@@ -1659,7 +1659,7 @@ export default function Stylist() {
                             <summary className="cursor-pointer hover:text-[var(--dark-color)]">
                               {t('stylist.preferencesApplied', { count: m.payload.applied_preferences.filter(Boolean).length })}
                             </summary>
-                            <div className="pl-2 pt-1 leading-relaxed">
+                            <div className="ps-2 pt-1 leading-relaxed">
                               {m.payload.applied_preferences.filter(Boolean).join(' · ')}
                             </div>
                           </details>
@@ -1676,7 +1676,7 @@ export default function Stylist() {
                                 className="rounded-full h-8"
                                 data-testid={`stylist-stop-speak-${m.id}`}
                               >
-                                <VolumeX className="h-3.5 w-3.5 mr-1" />
+                                <VolumeX className="h-3.5 w-3.5 me-1" />
                                 {t('stylist.stopSpeaking', { defaultValue: 'Stop Speaking' })}
                               </Button>
                             ) : (
@@ -1687,7 +1687,7 @@ export default function Stylist() {
                                 className="rounded-full h-8"
                                 data-testid={`stylist-play-speak-${m.id}`}
                               >
-                                <Volume2 className="h-3.5 w-3.5 mr-1" />
+                                <Volume2 className="h-3.5 w-3.5 me-1" />
                                 {t('stylist.playReply', { defaultValue: 'Play Reply' })}
                               </Button>
                             )}
@@ -2448,7 +2448,7 @@ export default function Stylist() {
                             }
                           }).flatMap(n => (n.payload?.proposals || n.payload?.outfit_recommendations || []));
 
-                          const activeProposal = (todayProposal && todayProposal.date === todayDateStr && (todayProposal.items || []).length > 0) ? todayProposal : null;
+                          const activeProposal = (dailyProposal && dailyProposal.date === todayDateStr && (dailyProposal.items || []).length > 0) ? dailyProposal : null;
                           const hasTodayContent = todayOutfit || activeProposal || todayNotifRecs.length > 0;
                           if (!hasTodayContent) return null;
 
@@ -2795,11 +2795,11 @@ export default function Stylist() {
                 <Button size="xs" variant="outline" className="rounded-lg h-8 text-xs font-semibold px-3" onClick={handleJumpToToday}>
                   {t('calendar.todayBtn', { defaultValue: 'Today' })}
                 </Button>
-                <div className="flex items-center border border-border rounded-lg overflow-hidden h-8">
-                  <Button size="icon" variant="ghost" className="h-full w-8 rounded-none border-r border-border" onClick={handlePrevDay} aria-label={t('calendar.prevDayAria', { defaultValue: 'Previous day' })}>
+                <div className="flex items-center border border-border rounded-lg overflow-hidden h-10">
+                  <Button size="icon" variant="ghost" className="h-full w-11 min-w-[44px] rounded-none border-r border-border" onClick={handlePrevDay} aria-label={t('calendar.prevDayAria', { defaultValue: 'Previous day' })}>
                     <ChevronLeft className="h-4 w-4 rtl:rotate-180" />
                   </Button>
-                  <Button size="icon" variant="ghost" className="h-full w-8 rounded-none" onClick={handleNextDay} aria-label={t('calendar.nextDayAria', { defaultValue: 'Next day' })}>
+                  <Button size="icon" variant="ghost" className="h-full w-11 min-w-[44px] rounded-none" onClick={handleNextDay} aria-label={t('calendar.nextDayAria', { defaultValue: 'Next day' })}>
                     <ChevronRight className="h-4 w-4 rtl:rotate-180" />
                   </Button>
                 </div>
