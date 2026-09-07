@@ -730,6 +730,8 @@
         "ungroupFailed": "Kleidungsstück konnte nicht aus der Gruppe entfernt werden."
     },
     "stylist": {
+        "heroTitle": "Dein persönlicher KI-Stylist",
+        "heroDescription": "Erhalte personalisierte Outfit-Empfehlungen, Styling-Tipps und Mode-Inspirationen, die auf deine Garderobe, den Anlass und das lokale Wetter abgestimmt sind.",
         "colorMatching": "Farbharmonie",
         "patternMatching": "Musterabstimmung",
         "bodyFitting": "Körperform-Passform",

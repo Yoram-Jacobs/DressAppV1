@@ -730,6 +730,8 @@
         "ungroupFailed": "Falha ao remover peça do grupo."
     },
     "stylist": {
+        "heroTitle": "Seu estilista pessoal com IA",
+        "heroDescription": "Receba recomendações de looks personalizados, dicas de estilo e inspirações de moda sob medida para seu guarda-roupa, ocasião e clima local.",
         "colorMatching": "Harmonia de cores",
         "patternMatching": "Combinação de estampas",
         "bodyFitting": "Caimento no corpo",

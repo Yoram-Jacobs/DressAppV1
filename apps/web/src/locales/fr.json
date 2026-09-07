@@ -640,6 +640,8 @@
         "addAllSuggested": "Ajouter suggestions (+{{count}})"
     },
     "stylist": {
+        "heroTitle": "Votre styliste personnel IA",
+        "heroDescription": "Obtenez des recommandations de tenues personnalisées, des conseils de style et des inspirations mode adaptés à votre garde-robe, votre occasion et la météo locale.",
         "colorMatching": "Harmonie des couleurs",
         "patternMatching": "Accord des motifs",
         "bodyFitting": "Ajustement morphologique",

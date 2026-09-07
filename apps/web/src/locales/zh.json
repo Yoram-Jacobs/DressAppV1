@@ -713,6 +713,8 @@
         "addAllSuggested": "添加推荐 (+{{count}})"
     },
     "stylist": {
+        "heroTitle": "您的专属AI造型师",
+        "heroDescription": "根据您的衣橱、场合和当地天气，获取量身定制的穿搭推荐、造型建议和时尚灵感。",
         "colorMatching": "色彩搭配",
         "patternMatching": "图案协调",
         "bodyFitting": "身形剪裁",

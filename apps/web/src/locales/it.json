@@ -640,6 +640,8 @@
         "addAllSuggested": "Aggiungi suggeriti (+{{count}})"
     },
     "stylist": {
+        "heroTitle": "Il tuo personal stylist AI",
+        "heroDescription": "Ricevi consigli personalizzati sugli outfit, suggerimenti di stile e ispirazione di moda su misura per il tuo guardaroba, l'occasione e il meteo locale.",
         "colorMatching": "Abbinamento colori",
         "patternMatching": "Abbinamento fantasie",
         "bodyFitting": "Vestibilità corpo",

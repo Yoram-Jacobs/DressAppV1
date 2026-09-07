@@ -713,6 +713,8 @@
         "addAllSuggested": "Suggesties toevoegen (+{{count}})"
     },
     "stylist": {
+        "heroTitle": "Je persoonlijke AI-stylist",
+        "heroDescription": "Ontvang gepersonaliseerde outfit-aanbevelingen, stijladvies en mode-inspiratie afgestemd op je kledingkast, gelegenheid en het lokale weer.",
         "colorMatching": "Kleurmatching",
         "patternMatching": "Patroonmatching",
         "bodyFitting": "Lichaamspasvorm",
