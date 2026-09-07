@@ -717,11 +717,11 @@ function MyListings() {
     );
 
   return (
-    <div className="market-mylistings">
+    <div className="space-y-6">
       {/* Heading row: count on the left, contextual sync action on the right */}
-      <div className="market-mylistings-heading">
-        <div className="market-mylistings-heading-left">
-          <span className="market-mylistings-count">
+      <div className="flex items-center justify-between gap-3">
+        <div className="text-sm text-[#7d827a] font-medium flex items-center gap-3">
+          <span className="font-semibold text-[#141e19]">
             {t("market.myListingsCount", {
               count: items.length,
               defaultValue: `${items.length} listing${items.length === 1 ? "" : "s"}`,
@@ -775,7 +775,7 @@ function MyListings() {
 
         <button
           type="button"
-          className="market-sync-link"
+          className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-black/10 bg-white text-xs font-semibold text-[#141e19] hover:bg-black/5 transition-colors cursor-pointer disabled:opacity-50"
           onClick={syncMarketplace}
           disabled={syncing}
           data-testid="sync-marketplace-btn"
@@ -788,50 +788,44 @@ function MyListings() {
       </div>
 
       {items.length === 0 ? (
-        <div className="market-mylistings-empty">
-          <div className="market-empty-icon">
+        <div className="py-16 text-center text-[#7d827a]">
+          <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-[#f4f4ef] flex items-center justify-center text-2xl text-[#b5b5ae]">
             <i className="fa-solid fa-shirt"></i>
           </div>
-          <h2>{t("market.noMyListings")}</h2>
+          <h2 className="text-lg font-bold text-[#141e19]">{t("market.noMyListings")}</h2>
         </div>
       ) : (
         <div
-          className="market-mylistings-grid"
+          className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6"
           data-testid="market-my-listings-grid"
         >
           {items.map((l) => (
             <div
               key={l.id}
-              className="market-mylisting-card"
+              className="group rounded-2xl overflow-hidden border border-black/5 bg-white h-full transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] hover:-translate-y-2 hover:shadow-[0_24px_48px_rgba(20,30,25,0.12)] hover:border-[rgba(31,92,69,0.15)] flex flex-col justify-between"
               data-testid={`my-listing-card-${l.id}`}
             >
-              <Link to={`/market/${l.id}`} className="market-mylisting-link">
-                <div className="market-mylisting-image">
-                  {(l.images || [])[0] ? (
-                    <img src={l.images[0]} alt={l.title} />
-                  ) : (
-                    <div className="no-image">
-                      <i className="fa-solid fa-image"></i>
-                    </div>
-                  )}
-                  <div className="market-card-badge">
+              <Link to={`/market/${l.id}`} className="block no-underline text-inherit flex-1">
+                <div className="relative aspect-square overflow-hidden bg-[#f4f4ef]">
+                  <MarketplaceItemImage item={l} t={t} />
+                  <div className="absolute top-2.5 left-2.5 z-[2] [&>*]:!bg-[var(--primary-color)] [&>*]:!text-white [&>*]:!font-extrabold [&>*]:!text-[9px] [&>*]:tracking-[1.5px] [&>*]:!px-2.5 [&>*]:!py-1.5 [&>*]:!rounded-full [&>*]:!border-none">
                     <SourceTagBadge source={l.source} mode={l.mode} />
                   </div>
                   <span
-                    className={`market-mylisting-status market-status-${(l.status || "").toLowerCase()}`}
+                    className="absolute bottom-2.5 right-2.5 z-[2] bg-white text-[var(--primary-color)] text-[10px] font-extrabold tracking-[0.04em] capitalize px-2.5 py-1.5 rounded-full shadow-sm"
                   >
                     {l.status}
                   </span>
                 </div>
-                <div className="market-mylisting-body">
-                  <div className="market-mylisting-title">{l.title}</div>
+                <div className="p-4">
+                  <div className="text-base font-bold text-[#141e19] truncate">{l.title}</div>
                 </div>
               </Link>
-              <div className="market-mylisting-footer">
+              <div className="p-3 pt-0">
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="market-remove-btn"
+                  className="w-full rounded-xl text-xs h-8 text-rose-700 hover:text-rose-800 hover:bg-rose-50"
                   onClick={(e) => {
                     e.preventDefault();
                     e.stopPropagation();

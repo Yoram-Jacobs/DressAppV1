@@ -53,7 +53,7 @@ export async function streamNdjson(path, {
   const headers = {
     Accept: 'application/x-ndjson, application/json',
   };
-  if (token) headers.Authorization = `Bearer ${token}`;
+  if (effectiveToken) headers.Authorization = `Bearer ${effectiveToken}`;
   if (body !== undefined) headers['Content-Type'] = 'application/json';
 
   const resp = await fetch(url, {
