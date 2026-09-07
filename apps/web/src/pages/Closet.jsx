@@ -1,6 +1,6 @@
 /* global setTimeout, clearTimeout */
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useTranslation, Trans } from "react-i18next";
 import {
   Plus,
@@ -1539,7 +1539,7 @@ export default function Closet() {
                   <div className="mb-5 flex flex-col items-center justify-center gap-3 text-sm text-gray-600 sm:flex-row sm:gap-8">
                     <div className="flex items-center gap-2">
                       <Sparkles className="h-[18px] w-[18px] text-primary-brand" />
-                      <span classname="font-bold text-text-brand text-[14px]">
+                      <span className="font-bold text-text-brand text-[14px]">
                         {t("closet.autoCategory", {
                           defaultValue: "Auto-categorize with AI",
                         })}
@@ -1548,7 +1548,7 @@ export default function Closet() {
 
                     <div className="flex items-center gap-2">
                       <Wand2 className="h-[18px] w-[18px] text-primary-brand" />
-                      <span classname="font-bold text-text-brand text-[14px]">
+                      <span className="font-bold text-text-brand text-[14px]">
                         {t("closet.detectDetails", {
                           defaultValue: "Detect colors and patterns",
                         })}
@@ -1557,7 +1557,7 @@ export default function Closet() {
 
                     <div className="flex items-center gap-2">
                       <Layers3 className="h-[18px] w-[18px] text-primary-brand" />
-                      <span classname="font-bold text-text-brand text-[14px]">
+                      <span className="font-bold text-text-brand text-[14px]">
                         {t("closet.smartSuggestions", {
                           defaultValue: "Smart outfit suggestions",
                         })}
@@ -2157,6 +2157,7 @@ export default function Closet() {
 /* -------------------- shared card body -------------------- */
 function ItemCardInner({ item, isSelected, showCheckbox, score }) {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const groupItems = useMemo(() => {
     if (!item.group_id) return [];
     const allItems = (closetStore.getSnapshot().items || []).filter(Boolean);
@@ -2183,186 +2184,6 @@ function ItemCardInner({ item, isSelected, showCheckbox, score }) {
   }, [groupItems]);
 
   return (
-    // <AspectRatio ratio={3 / 4} className="bg-secondary relative">
-    //   {(() => {
-    //     const thumbUrl = bestImageUrl(item);
-    //     const polishing = isCleanImagePending(item);
-    //     if (thumbUrl) {
-    //       return (
-    //         <>
-    //           <ProgressiveImage
-    //             variants={item.image_variants}
-    //             originalSrc={thumbUrl}
-    //             alt={item.title}
-    //             objectFit="contain"
-    //             className="w-full h-full select-none"
-    //             draggable={false}
-    //             style={{ WebkitTouchCallout: 'none' }}
-    //             data-testid="closet-item-thumb"
-    //           />
-    //           {polishing && (
-    //             // Phase O.6 — subtle "polishing photo…" affordance
-    //             // while the backend's background rembg matte is
-    //             // running. The closet poll (Closet.jsx top-level)
-    //             // will swap the image in-place when status flips
-    //             // to "ready".
-    //             //
-    //             // Patch M20.1 (May 2026, user feedback) — Kept as
-    //             // a per-card textual badge alongside the global
-    //             // ``WorkProgressFloater``. The floater shows
-    //             // aggregate "Polishing N/M photos" progress; this
-    //             // badge identifies WHICH specific cards are still
-    //             // mid-polish so the user can scan and know what's
-    //             // about to update. Both indicators co-exist by
-    //             // design.
-    //             <div
-    //               className="absolute inset-0 flex items-end justify-start p-2 pointer-events-none"
-    //               data-testid="closet-item-polishing"
-    //             >
-    //               <Badge
-    //                 variant="outline"
-    //                 className="bg-background/85 backdrop-blur text-[10px] border-[hsl(var(--accent))]/40 animate-pulse"
-    //               >
-    //                 {t('item.polishingPhoto', { defaultValue: 'Polishing photo…' })}
-    //               </Badge>
-    //             </div>
-    //           )}
-    //         </>
-    //       );
-    //     }
-    //     if (item.dpp_data) {
-    //       return (
-    //         <div
-    //           className="w-full h-full flex flex-col items-center justify-center gap-1.5 bg-gradient-to-br from-[hsl(var(--accent))]/10 to-muted text-muted-foreground"
-    //           data-testid="closet-item-dpp-placeholder"
-    //         >
-    //           <QrCode className="h-7 w-7 text-[hsl(var(--accent))]/70" />
-    //           <span className="caps-label text-[10px]">{t('closet.dpp', { defaultValue: 'DPP' })}</span>
-    //         </div>
-    //       );
-    //     }
-    //     return (
-    //       <div className="w-full h-full flex items-center justify-center text-muted-foreground caps-label">
-    //         {t('market.noImage')}
-    //       </div>
-    //     );
-    //   })()}
-    //   {typeof score === 'number' && (
-    //     <Badge
-    //       variant="outline"
-    //       className="absolute top-2 end-2 bg-background/85 backdrop-blur text-[10px] border-[hsl(var(--accent))]/50 flex items-center gap-1"
-    //       data-testid="closet-item-score"
-    //     >
-    //       <Sparkles className="h-2.5 w-2.5 text-[hsl(var(--accent))]" />
-    //       {Math.round(score * 100)}%
-    //     </Badge>
-    //   )}
-    //   {showCheckbox && (
-    //     <div
-    //       className={`absolute top-2 start-2 h-6 w-6 rounded-full flex items-center justify-center border-2 transition-colors ${isSelected
-    //         ? 'bg-[hsl(var(--accent))] border-[hsl(var(--accent))] text-[hsl(var(--accent-foreground))]'
-    //         : 'bg-background/80 border-border backdrop-blur'
-    //         }`}
-    //       aria-hidden="true"
-    //       data-testid={isSelected ? 'closet-item-selected-mark' : 'closet-item-unselected-mark'}
-    //     >
-    //       {isSelected ? (
-    //         <CheckCircle2 className="h-4 w-4" />
-    //       ) : (
-    //         <Circle className="h-4 w-4 text-muted-foreground opacity-0" />
-    //       )}
-    //     </div>
-    //   )}
-    //   {showCheckbox && isSelected && (
-    //     <div className="absolute inset-0 bg-[hsl(var(--accent))]/10 pointer-events-none" />
-    //   )}
-    //   {/* Phase Z2 — red ⭐ overlay marks items the user explicitly
-    //       kept as duplicates of an existing closet entry. The
-    //       Stylist Brain filters these out of recommendations, so
-    //       this badge tells the user "yes, I have this twice, but
-    //       outfit suggestions won't double-count it." */}
-    //   {item.is_duplicate && (
-    //     <div
-    //       className={`absolute ${typeof score === 'number' ? 'top-10' : 'top-2'} end-2 h-7 w-7 rounded-full bg-rose-600 text-white flex items-center justify-center shadow-md ring-2 ring-background`}
-    //       title={t('closet.duplicateBadge', {
-    //         defaultValue:
-    //           'Marked as a duplicate — kept on purpose, hidden from outfit suggestions.',
-    //       })}
-    //       data-testid="closet-item-duplicate-star"
-    //     >
-    //       <Star className="h-3.5 w-3.5 fill-white" />
-    //     </div>
-    //   )}
-    //   {/* Phase Z4 — pulsing sparkle marks items that were just
-    //       saved optimistically and are still syncing to the server.
-    //       Disappears the moment the canonical server item replaces
-    //       the ghost in ``closetStore``. The animation is a soft
-    //       opacity/scale pulse (not a spin, which reads as "error"
-    //       in fashion-app context); pointer-events-none so it never
-    //       blocks the card's link. */}
-    //   {item._pendingSync && (
-    //     <div
-    //       className="absolute inset-x-0 bottom-0 flex items-center justify-center gap-1.5 px-2 py-1.5 pointer-events-none bg-gradient-to-t from-background/95 via-background/80 to-transparent"
-    //       data-testid="closet-item-pending-sync"
-    //       aria-live="polite"
-    //       aria-label={t('closet.pendingSync', { defaultValue: 'Syncing…' })}
-    //     >
-    //       <span className="relative inline-flex h-3 w-3">
-    //         <span className="absolute inset-0 rounded-full bg-[hsl(var(--accent))] opacity-60 animate-ping" />
-    //         <Sparkles className="relative h-3 w-3 text-[hsl(var(--accent))] animate-pulse" />
-    //       </span>
-    //       <span className="text-[10px] font-medium uppercase tracking-wider text-[hsl(var(--accent))]">
-    //         {t('closet.pendingSync', { defaultValue: 'Syncing' })}
-    //       </span>
-    //     </div>
-    //   )}
-    // </AspectRatio>
-    // <CardContent className="p-3">
-    //   <div className="flex items-center justify-between gap-2">
-    //     <div className="font-medium text-sm truncate">{item.title}</div>
-    //     <div className="flex items-center gap-1.5 shrink-0">
-    //       {isSet && (
-    //         <Badge variant="secondary" className="bg-emerald-500/10 text-emerald-600 border border-emerald-500/20 text-[10px] caps-label px-1.5 py-0.5 rounded">
-    //           {t('closet.outfitSet', { defaultValue: 'Outfit set' })}
-    //         </Badge>
-    //       )}
-    //       <SourceTagBadge source={item.source} intent={item.marketplace_intent} className="hidden md:inline-flex" />
-    //     </div>
-    //   </div>
-    //   <div className="text-xs text-muted-foreground mt-1 flex justify-between items-center gap-2">
-    //     <span className="truncate">
-    //       {isSet ? (
-    //         (() => {
-    //           const sorted = [...groupItems].sort((a, b) => (a.group_role === 'host' ? -1 : 1));
-    //           const categoryNames = sorted.map(it => labelForCategory(it.category, t));
-    //           return categoryNames.join(' · ');
-    //         })()
-    //       ) : (
-    //         [labelForCategory(item.category, t), labelForColor(item.color, t)].filter(Boolean).join(' · ')
-    //       )}
-    //     </span>
-    //     {typeof item.wear_count === 'number' && (
-    //       <span className="text-[10px] font-medium bg-secondary/80 px-1.5 py-0.5 rounded-full text-foreground whitespace-nowrap shrink-0" title={t('item.timesWorn', { count: item.wear_count, defaultValue: `Worn ${item.wear_count} times` })}>
-    //         {t('item.wearsCount', { count: item.wear_count, defaultValue: `${item.wear_count} wear${item.wear_count === 1 ? '' : 's'}` })}
-    //       </span>
-    //     )}
-    //   </div>
-    //   {/* Auto-list "Complete listing" CTA — appears when an item
-    //       has been auto-listed (Private→Shared toggle) and the user
-    //       hasn't yet refined the listing's price / mode / description.
-    //       One tap takes them to the edit-listing form. */}
-    //   {item.auto_listing_needs_completion && item.auto_listing_id && (
-    //     <Link
-    //       to={`/marketplace/listing/${item.auto_listing_id}/edit`}
-    //       data-testid="closet-item-complete-listing-cta"
-    //       className="mt-2 flex items-center justify-center gap-1.5 text-[11px] uppercase tracking-wider font-semibold py-1.5 rounded-md bg-[hsl(var(--accent))]/12 text-[hsl(var(--accent))] hover:bg-[hsl(var(--accent))]/20 transition-colors"
-    //     >
-    //       <Sparkles className="h-3 w-3" />
-    //       {t('closet.completeListingCta', { defaultValue: 'Complete listing' })}
-    //     </Link>
-    //   )}
-    // </CardContent>
-
     <Card
       className={`h-full relative overflow-hidden rounded-[12px] border border-border bg-white shadow-sm transition-smooth ${isSelected
         ? "border-primary-brand"
@@ -2575,8 +2396,13 @@ function ItemCardInner({ item, isSelected, showCheckbox, score }) {
 
         {/* COMPLETE LISTING */}
         {item.auto_listing_needs_completion && item.auto_listing_id && (
-          <Link
-            to={`/marketplace/listing/${item.auto_listing_id}/edit`}
+          <button
+            type="button"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              navigate(`/marketplace/listing/${item.auto_listing_id}/edit`);
+            }}
             data-testid="closet-item-complete-listing-cta"
             className="mt-3 inline-flex items-center gap-1.5 text-xs font-semibold text-[hsl(var(--accent))] transition-colors hover:opacity-80"
           >
@@ -2585,7 +2411,7 @@ function ItemCardInner({ item, isSelected, showCheckbox, score }) {
             {t("closet.completeListingCta", {
               defaultValue: "Complete listing",
             })}
-          </Link>
+          </button>
         )}
       </CardContent>
     </Card>
