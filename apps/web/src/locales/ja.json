@@ -1640,11 +1640,12 @@
         },
         "intent": {
             "own": "保管",
-            "for_sale": "For sale",
-            "donate": "Donate",
+            "for_sale": "販売中",
+            "donate": "寄付",
             "swap": "交換",
             "rent": "レンタル",
-            "keep": "保管"
+            "keep": "保管",
+            "sell": "販売中"
         },
         "source": {
             "all": "すべてのソース",

@@ -1768,12 +1768,12 @@
             "formal": "Formal"
         },
         "intent": {
-            "own": "Guardar",
+            "own": "Manter",
             "for_sale": "À venda",
             "donate": "Doar",
             "swap": "Trocar",
             "rent": "Alugar",
-            "keep": "Guardar",
+            "keep": "Manter",
             "sell": "À venda",
             "repair": "Reparar",
             "recycle": "Reciclar"

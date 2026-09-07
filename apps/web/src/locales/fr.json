@@ -1640,11 +1640,12 @@
         },
         "intent": {
             "own": "Garder",
-            "for_sale": "For sale",
-            "donate": "Donate",
-            "swap": "Swap",
-            "rent": "Location",
-            "keep": "Garder"
+            "for_sale": "À vendre",
+            "donate": "Donner",
+            "swap": "Échanger",
+            "rent": "Louer",
+            "keep": "Garder",
+            "sell": "À vendre"
         },
         "source": {
             "all": "All sources",

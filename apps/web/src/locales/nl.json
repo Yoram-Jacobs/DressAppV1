@@ -1712,12 +1712,13 @@
             "formal": "Formeel"
         },
         "intent": {
-            "own": "Bewaren",
+            "own": "Behouden",
             "for_sale": "Te koop",
-            "donate": "Doneer",
-            "swap": "Ruil",
-            "rent": "Huur",
-            "keep": "Bewaren"
+            "donate": "Doneren",
+            "swap": "Ruilen",
+            "rent": "Huren",
+            "keep": "Behouden",
+            "sell": "Te koop"
         },
         "source": {
             "all": "Alle bronnen",

@@ -1713,11 +1713,12 @@
         },
         "intent": {
             "own": "Оставить",
-            "for_sale": "For sale",
-            "donate": "Donate",
-            "swap": "На обмен",
+            "for_sale": "Продажа",
+            "donate": "Донат",
+            "swap": "Обмен",
             "rent": "Аренда",
-            "keep": "Оставить"
+            "keep": "Оставить",
+            "sell": "Продажа"
         },
         "source": {
             "all": "Все источники",

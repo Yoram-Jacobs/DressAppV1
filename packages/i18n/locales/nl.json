@@ -1768,12 +1768,12 @@
             "formal": "Formeel"
         },
         "intent": {
-            "own": "Bewaren",
+            "own": "Behouden",
             "for_sale": "Te koop",
             "donate": "Doneren",
             "swap": "Ruilen",
             "rent": "Huren",
-            "keep": "Bewaren",
+            "keep": "Behouden",
             "sell": "Te koop",
             "repair": "Repareren",
             "recycle": "Recyclen"

@@ -1761,12 +1761,12 @@
             "formal": "Formal"
         },
         "intent": {
-            "own": "Conservar",
+            "own": "Guardar",
             "for_sale": "En venta",
             "donate": "Donar",
             "swap": "Intercambiar",
             "rent": "Alquilar",
-            "keep": "Conservar",
+            "keep": "Guardar",
             "sell": "En venta",
             "repair": "Reparar",
             "recycle": "Reciclar"

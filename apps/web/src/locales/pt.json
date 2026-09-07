@@ -1712,12 +1712,13 @@
             "formal": "Formal"
         },
         "intent": {
-            "own": "Guardar",
-            "for_sale": "For sale",
-            "donate": "Donate",
+            "own": "Manter",
+            "for_sale": "À venda",
+            "donate": "Doar",
             "swap": "Trocar",
-            "rent": "Aluguel",
-            "keep": "Guardar"
+            "rent": "Alugar",
+            "keep": "Manter",
+            "sell": "À venda"
         },
         "source": {
             "all": "Todas as fontes",

@@ -1639,12 +1639,13 @@
             "formal": "Formale"
         },
         "intent": {
-            "own": "Tieni",
-            "for_sale": "For sale",
-            "donate": "Donate",
-            "swap": "Scambia",
-            "rent": "Noleggio",
-            "keep": "Tieni"
+            "own": "Tenere",
+            "for_sale": "In vendita",
+            "donate": "Donare",
+            "swap": "Scambiare",
+            "rent": "Noleggiare",
+            "keep": "Tenere",
+            "sell": "In vendita"
         },
         "source": {
             "all": "Tutte le fonti",

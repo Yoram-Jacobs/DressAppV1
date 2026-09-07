@@ -41,6 +41,7 @@ let webpackConfig = {
   webpack: {
     alias: {
       '@': path.resolve(__dirname, 'src'),
+      '@dressapp/i18n': path.resolve(__dirname, '../../packages/i18n/src/index.js'),
       '@dressapp/api-client': path.resolve(__dirname, '../../packages/api-client/src/index.js'),
       'lucide-react': require.resolve('lucide-react'),
       'reselect': path.resolve(__dirname, '../../node_modules/@reduxjs/toolkit/node_modules/reselect'),

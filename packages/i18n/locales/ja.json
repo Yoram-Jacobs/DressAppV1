@@ -1769,12 +1769,12 @@
         },
         "intent": {
             "own": "保管",
-            "for_sale": "販売",
+            "for_sale": "販売中",
             "donate": "寄付",
             "swap": "交換",
             "rent": "レンタル",
             "keep": "保管",
-            "sell": "販売",
+            "sell": "販売中",
             "repair": "お直し",
             "recycle": "リサイクル"
         },

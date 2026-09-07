@@ -1640,11 +1640,12 @@
         },
         "intent": {
             "own": "Behalten",
-            "for_sale": "For sale",
-            "donate": "Donate",
+            "for_sale": "Zu verkaufen",
+            "donate": "Spenden",
             "swap": "Tauschen",
             "rent": "Mieten",
-            "keep": "Behalten"
+            "keep": "Behalten",
+            "sell": "Zu verkaufen"
         },
         "source": {
             "all": "Alle Quellen",
