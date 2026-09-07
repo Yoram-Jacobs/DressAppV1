@@ -50,6 +50,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { api } from "@/lib/api";
 import { useClosetStore } from "@/lib/useClosetStore";
 import { useSuitcaseStore } from "@/lib/useSuitcaseStore";
+import { KNOWN_WELCOME_MESSAGES } from "@/lib/suitcaseStore";
 import { bestImageUrl } from "@/lib/itemImage";
 import { toast } from "sonner";
 import { labelForCategory, labelForRole } from "@/lib/taxonomy";
@@ -210,7 +211,7 @@ function OutfitCanvas({
 }
 
 function Suitcase() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const closet = useClosetStore({ prewarm: true });
 
@@ -245,6 +246,8 @@ function Suitcase() {
   const [activeTab, setActiveTab] = useState("suitcase");
   const [isSelectionMode, setIsSelectionMode] = useState(false);
   const [selectedArchives, setSelectedArchives] = useState([]);
+  const [selectedArchiveId, setSelectedArchiveId] = useState(null);
+  const [activeArchive, setActiveArchive] = useState(null);
 
   const handleDeleteArchives = async () => {
     if (selectedArchives.length === 0) return;
@@ -274,7 +277,7 @@ function Suitcase() {
   // Gathering form state
   const [destinations, setDestinations] = useState("");
   const [purpose, setPurpose] = useState("pleasure");
-  const [preferredStyle, setPreferredStyle] = useState("casual");
+  const [preferredStyle, setPreferredStyle] = useState("");
   const [departureTime, setDepartureTime] = useState("");
   const [returnTime, setReturnTime] = useState("");
   const [notes, setNotes] = useState("");
@@ -284,12 +287,31 @@ function Suitcase() {
     if (activeSuitcase) {
       setDestinations(activeSuitcase.destinations || "");
       setPurpose(activeSuitcase.purpose || "pleasure");
-      setPreferredStyle(activeSuitcase.preferred_style || "casual");
+      setPreferredStyle(activeSuitcase.preferred_style || "");
       setDepartureTime(activeSuitcase.departure_time || "");
       setReturnTime(activeSuitcase.return_time || "");
       setNotes(activeSuitcase.notes || "");
     }
   }, [activeSuitcase]);
+
+  // Automatically sync single welcome message when locale changes
+  useEffect(() => {
+    if (Array.isArray(messages) && messages.length === 1) {
+      const first = messages[0];
+      if (
+        first.role === "assistant" &&
+        (first.isWelcome || KNOWN_WELCOME_MESSAGES.has((first.text || "").trim()))
+      ) {
+        const localizedWelcome = t("suitcase.welcomeChat", {
+          defaultValue:
+            "Hello! I am your Suitcase Assistant. Where are we traveling, and what is the plan? You can use the inputs above or simply chat with me.",
+        });
+        if (first.text !== localizedWelcome) {
+          setMessages([{ ...first, isWelcome: true, text: localizedWelcome }]);
+        }
+      }
+    }
+  }, [i18n.language, t, messages, setMessages]);
 
   const [chatInput, setChatInput] = useState("");
   const [chatLoading, setChatLoading] = useState(false);
@@ -1095,13 +1117,14 @@ function Suitcase() {
         // Reset inputs
         setDestinations("");
         setPurpose("pleasure");
-        setPreferredStyle("casual");
+        setPreferredStyle("");
         setDepartureTime("");
         setReturnTime("");
         setNotes("");
         setMessages([
           {
             role: "assistant",
+            isWelcome: true,
             text: t("suitcase.welcomeChat", {
               defaultValue:
                 "Hello! I am your Suitcase Assistant. Where are we traveling, and what is the plan? You can use the inputs above or simply chat with me.",
@@ -2606,11 +2629,24 @@ function Suitcase() {
                                 : "bg-accent-beige text-text-brand rounded-tl-[30px] rounded-tr-[30px] rounded-br-[30px] rounded-bl-[0px]"
                             }`}
                           >
-                            {typeof msg.text === "string"
-                              ? msg.text
-                              : msg.text
+                            {(() => {
+                              if (
+                                msg.role === "assistant" &&
+                                (msg.isWelcome ||
+                                  (index === 0 && (!messages || messages.length === 1)) ||
+                                  KNOWN_WELCOME_MESSAGES.has((msg.text || "").trim()))
+                              ) {
+                                return t("suitcase.welcomeChat", {
+                                  defaultValue:
+                                    "Hello! I am your Suitcase Assistant. Where are we traveling, and what is the plan? You can use the inputs above or simply chat with me.",
+                                });
+                              }
+                              return typeof msg.text === "string"
+                                ? msg.text
+                                : msg.text
                                 ? JSON.stringify(msg.text)
-                                : ""}
+                                : "";
+                            })()}
                           </div>
                         </div>
                       ),

@@ -259,7 +259,7 @@ export default function HelpMenu() {
         <div className="p-4 border-b border-border">
           <div className="flex items-center gap-2 font-semibold">
             <BookOpen className="h-5 w-5 text-primary" />
-            <span>{isRtl ? (i18n.language === 'he' ? 'תוכן העניינים' : 'جدول المحتويات') : 'Table of Contents'}</span>
+            <span>{t('help.tableOfContents', { defaultValue: isRtl ? (i18n.language === 'he' ? 'תוכן העניינים' : 'جدول المحتويات') : 'Table of Contents' })}</span>
           </div>
         </div>
         <ScrollArea className="flex-1 py-2">

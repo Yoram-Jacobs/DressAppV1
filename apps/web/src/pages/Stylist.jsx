@@ -2477,10 +2477,12 @@ export default function Stylist() {
                                         )}
                                       </div>
                                       <p className="text-xs text-text-brand mt-0.5">
-                                        {todayOutfit
-                                          ? (todayOutfit.description || getOutfitName(todayOutfit.name))
-                                          : activeProposal?.description || t('stylist.todaySuggestionSubtitle', { defaultValue: 'Personalized look curated for your day.' })}
-                                      </p>
+                                         {todayOutfit
+                                           ? (todayOutfit.description || getOutfitName(todayOutfit.name))
+                                           : ((activeProposal?.description && !activeProposal.description.includes('Curated based on your style profile'))
+                                               ? activeProposal.description
+                                               : t('stylist.todaySuggestionSubtitle', { defaultValue: 'Curated based on your style profile, weather conditions, and closet harmony.' }))}
+                                       </p>
                                     </div>
                                   </div>
                                   <div className="flex items-center gap-2">

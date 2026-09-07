@@ -254,9 +254,10 @@ export default function Marketplace() {
                     max-[767px]:mt-[15px]
                   "
               >
-                Discover pre-loved fashion, list your wardrobe, or connect with
-                nearby buyers and sellers. Shop smarter, earn from your closet,
-                and embrace sustainable style—all in one marketplace.
+                {t("market.heroSubtitle", {
+                  defaultValue:
+                    "Discover pre-loved fashion, list your wardrobe, or connect with nearby buyers and sellers. Shop smarter, earn from your closet, and embrace sustainable style—all in one marketplace.",
+                })}
               </p>
             </div>
           </div>

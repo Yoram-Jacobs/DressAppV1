@@ -1032,7 +1032,7 @@ export default function Closet() {
                     ? total
                     : 0}
 
-                  <span className="text-[#666]">Items</span>
+                  <span className="text-[#666]">{t("common.items", { defaultValue: "Items" })}</span>
                 </div>
               </div>
 
