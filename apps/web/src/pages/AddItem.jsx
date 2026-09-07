@@ -65,6 +65,7 @@ import { api } from "@/lib/api";
 import { cn, sha256File, aHashFile, colorSignatureFile } from "@/lib/utils";
 import { findDuplicatesInCloset } from "@/lib/duplicateDetection";
 import { closetStore } from "@/lib/closetStore";
+import { bestImageUrl, resolveMediaUrl } from "@/lib/itemImage";
 import { useClosetStore, useClosetItems } from "@/lib/useClosetStore";
 import { workStore } from "@/lib/workStore";
 import DuplicatePreflightDialog from "@/components/DuplicatePreflightDialog";
@@ -1351,6 +1352,7 @@ export default function AddItem() {
             closetItem,
             base64Image:
               item.base64Image ||
+              resolveMediaUrl(bestImageUrl(closetItem)) ||
               closetItem.clean_image_url ||
               closetItem.thumbnail_data_url ||
               closetItem.original_image_url ||
@@ -2081,7 +2083,7 @@ export default function AddItem() {
         previewUrl: meta.crop_base64
           ? `data:${meta.crop_mime || "image/jpeg"};base64,${meta.crop_base64}`
           : originalCard.previewUrl,
-        base64: originalCard.base64,
+        base64: meta.crop_base64 || originalCard.base64,
         cropBase64: meta.crop_base64 || undefined,
         originalCropUrl: meta.crop_base64
           ? `data:${meta.crop_mime || "image/jpeg"};base64,${meta.crop_base64}`
@@ -2387,7 +2389,7 @@ export default function AddItem() {
         previewUrl: meta.crop_base64
           ? `data:${meta.crop_mime || "image/jpeg"};base64,${meta.crop_base64}`
           : card.previewUrl,
-        base64: card.base64,
+        base64: meta.crop_base64 || card.base64,
         cropBase64: meta.crop_base64 || undefined,
         originalCropUrl: meta.crop_base64
           ? `data:${meta.crop_mime || "image/jpeg"};base64,${meta.crop_base64}`
@@ -2780,10 +2782,12 @@ export default function AddItem() {
       // Use a data URL (not blob:) so the thumbnail survives the
       // AddItem unmount. blob: URLs are document-scoped and would
       // 404 the moment the user lands on /closet.
-      const dataUrl = card.base64
-        ? `data:${card.mime || card.file?.type || "image/jpeg"};base64,${card.base64}`
+      const rawB64 = card.cropBase64 || card.base64;
+      const dataUrl = rawB64
+        ? (rawB64.startsWith("data:") ? rawB64 : `data:${card.mime || card.file?.type || "image/jpeg"};base64,${rawB64}`)
         : card.previewUrl || null;
       const filename = card.sourceFilename || card.file?.name || null;
+      const isPngCutout = card.mime === "image/png" || (typeof dataUrl === "string" && dataUrl.startsWith("data:image/png"));
       const optimisticItem = {
         id: tempId,
         user_id: undefined, // server fills on create; never rendered
@@ -2810,6 +2814,8 @@ export default function AddItem() {
         currency: body.currency || getDefaultCurrency(),
         marketplace_intent: body.marketplace_intent || "own",
         tags: body.tags || [],
+        clean_image_url: card.cleanImageUrl || (isPngCutout ? dataUrl : null),
+        clean_image_status: isPngCutout ? "ready" : "pending",
         original_image_url: dataUrl,
         thumbnail_data_url: dataUrl,
         created_at: nowIso,
@@ -3980,14 +3986,18 @@ export default function AddItem() {
                                     }
                                     className="relative w-16 h-16 rounded-xl overflow-hidden border-2 border-[hsl(var(--accent))] shadow-md hover:scale-105 active:scale-95 transition-transform bg-secondary/20 flex items-center justify-center cursor-pointer"
                                   >
-                                    {item.closetItem.clean_image_url ||
+                                    {bestImageUrl(item.closetItem) ||
+                                      item.closetItem.clean_image_url ||
                                       item.closetItem.thumbnail_data_url ||
                                       item.closetItem.original_image_url ? (
                                       <img
                                         src={
-                                          item.closetItem.clean_image_url ||
-                                          item.closetItem.thumbnail_data_url ||
-                                          item.closetItem.original_image_url
+                                          resolveMediaUrl(
+                                            bestImageUrl(item.closetItem) ||
+                                            item.closetItem.clean_image_url ||
+                                            item.closetItem.thumbnail_data_url ||
+                                            item.closetItem.original_image_url
+                                          )
                                         }
                                         alt={item.closetItem.title}
                                         className="w-full h-full object-cover"
@@ -4139,12 +4149,18 @@ export default function AddItem() {
                                 className="flex items-center gap-3 p-2 rounded-xl border border-border/60 hover:border-[hsl(var(--accent))] hover:bg-secondary/40 cursor-pointer transition-colors"
                               >
                                 <div className="w-10 h-10 rounded-lg bg-secondary/20 overflow-hidden shrink-0 border border-border/40 flex items-center justify-center">
-                                  {it.original_image_url ||
-                                    it.clean_image_url ? (
+                                  {bestImageUrl(it) ||
+                                    it.clean_image_url ||
+                                    it.thumbnail_data_url ||
+                                    it.original_image_url ? (
                                     <img
                                       src={
-                                        it.original_image_url ||
-                                        it.clean_image_url
+                                        resolveMediaUrl(
+                                          bestImageUrl(it) ||
+                                          it.clean_image_url ||
+                                          it.thumbnail_data_url ||
+                                          it.original_image_url
+                                        )
                                       }
                                       alt={it.title}
                                       className="w-full h-full object-cover"
@@ -4192,14 +4208,18 @@ export default function AddItem() {
                         <>
                           {/* Image */}
                           <div className="w-full aspect-[3/4] bg-secondary/20 relative overflow-hidden">
-                            {closetItemDetailPane.clean_image_url ||
+                            {bestImageUrl(closetItemDetailPane) ||
+                              closetItemDetailPane.clean_image_url ||
                               closetItemDetailPane.thumbnail_data_url ||
                               closetItemDetailPane.original_image_url ? (
                               <img
                                 src={
-                                  closetItemDetailPane.clean_image_url ||
-                                  closetItemDetailPane.thumbnail_data_url ||
-                                  closetItemDetailPane.original_image_url
+                                  resolveMediaUrl(
+                                    bestImageUrl(closetItemDetailPane) ||
+                                    closetItemDetailPane.clean_image_url ||
+                                    closetItemDetailPane.thumbnail_data_url ||
+                                    closetItemDetailPane.original_image_url
+                                  )
                                 }
                                 alt={closetItemDetailPane.title}
                                 className="w-full h-full object-contain"
@@ -4278,10 +4298,18 @@ export default function AddItem() {
                         className="flex items-center gap-2 p-2 rounded-[12px] border border-border hover:border-primary-brand hover:bg-primary-shadow cursor-pointer transition-colors"
                       >
                         <div className="w-10 h-10 rounded-full bg-accent-beige overflow-hidden shrink-0 border border-border flex items-center justify-center">
-                          {it.original_image_url || it.clean_image_url ? (
+                          {bestImageUrl(it) ||
+                            it.clean_image_url ||
+                            it.thumbnail_data_url ||
+                            it.original_image_url ? (
                             <img
                               src={
-                                it.original_image_url || it.clean_image_url
+                                resolveMediaUrl(
+                                  bestImageUrl(it) ||
+                                  it.clean_image_url ||
+                                  it.thumbnail_data_url ||
+                                  it.original_image_url
+                                )
                               }
                               alt={it.title}
                               className="w-full h-full object-cover"
@@ -5552,7 +5580,7 @@ function TagsEditor({ idPrefix, items, onChange, disabled }) {
 /* -------------------- payload builder -------------------- */
 function buildCreatePayload(card, inSuitcase = false) {
   const f = card.fields || {};
-  const asBase64 = card.base64;
+  const asBase64 = card.cropBase64 || card.base64;
   // Drop empty/falsy optional keys to satisfy enum validators on the backend.
   const body = {
     source:
@@ -5586,6 +5614,11 @@ function buildCreatePayload(card, inSuitcase = false) {
     tags: f.tags || [],
     image_base64: asBase64 || undefined,
     crop_base64: card.cropBase64 || undefined,
+    clean_image_url:
+      card.cleanImageUrl ||
+      (card.mime === "image/png" && asBase64
+        ? (asBase64.startsWith("data:") ? asBase64 : `data:image/png;base64,${asBase64}`)
+        : undefined),
     image_mime: asBase64
       ? card.mime || card.file?.type || "image/jpeg"
       : undefined,

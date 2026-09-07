@@ -130,6 +130,8 @@ class CreateItemIn(BaseModel):
     original_image_url: str | None = None
     image_base64: str | None = None
     crop_base64: str | None = None
+    clean_image_url: str | None = None
+    clean_image_status: str | None = None
     image_mime: str = "image/jpeg"
     # Phase Q — Wardrobe Reconstructor (optional; set by /analyze response)
     reconstructed_image_b64: str | None = None
@@ -404,6 +406,8 @@ async def create_item(
         cultural_tags=payload.cultural_tags,
         tags=tags_list,
         original_image_url=payload.original_image_url,
+        clean_image_url=payload.clean_image_url,
+        clean_image_status=payload.clean_image_status,
         purchase_price_cents=payload.purchase_price_cents,
         purchase_currency=payload.purchase_currency,
         purchase_date=payload.purchase_date,
@@ -428,31 +432,39 @@ async def create_item(
     )
     doc = item.model_dump()
 
-    # Phase P / Patch 7 Fix: Maintain both the uncropped photo (original_image_url)
-    # and the tight crop from /analyze (segmented_image_url). This ensures the
-    # uncropped user photo is preserved forever, but the UX still gets the crop 
-    # to display while the background matte is pending.
-    if payload.image_base64:
+    # For a cropped garment item, its original source image IS the crop.
+    # If no crop is provided, fall back to the uploaded parent image.
+    crop_data_url = None
+    if payload.crop_base64:
+        if payload.crop_base64.startswith("data:"):
+            crop_data_url = payload.crop_base64
+        else:
+            _mime = payload.image_mime or "image/jpeg"
+            if not _mime.startswith("image/"):
+                _mime = "image/jpeg"
+            crop_data_url = f"data:{_mime};base64,{payload.crop_base64}"
+        doc["segmented_image_url"] = crop_data_url
+        doc["original_image_url"] = crop_data_url
+
+    if payload.image_base64 and not doc.get("original_image_url"):
         if payload.image_base64.startswith("data:"):
             doc["original_image_url"] = payload.image_base64
         else:
             _mime = payload.image_mime or "image/jpeg"
             if not _mime.startswith("image/"):
                 _mime = "image/jpeg"
-            doc["original_image_url"] = (
-                f"data:{_mime};base64,{payload.image_base64}"
-            )
-    
-    if payload.crop_base64:
-        if payload.crop_base64.startswith("data:"):
-            doc["segmented_image_url"] = payload.crop_base64
-        else:
-            _mime = payload.image_mime or "image/jpeg"
-            if not _mime.startswith("image/"):
-                _mime = "image/jpeg"
-            doc["segmented_image_url"] = (
-                f"data:{_mime};base64,{payload.crop_base64}"
-            )
+            doc["original_image_url"] = f"data:{_mime};base64,{payload.image_base64}"
+
+    if payload.clean_image_url:
+        doc["clean_image_url"] = payload.clean_image_url
+        doc["clean_image_status"] = "ready"
+    else:
+        # If the crop or image is a transparent PNG (e.g. from rembg/SegFormer),
+        # treat it as clean_image_url immediately.
+        primary_url = doc.get("segmented_image_url") or doc.get("original_image_url")
+        if primary_url and ("image/png" in primary_url[:30].lower()):
+            doc["clean_image_url"] = primary_url
+            doc["clean_image_status"] = "ready"
 
     # Phase Z2.1 — if the client didn't compute a phash (older client,
     # camera capture, etc.) AND we have raw bytes here, compute one
@@ -515,7 +527,10 @@ async def create_item(
     # Standard closet uploads already receive their clean crop from
     # the analyzer. We do not run post-save background rembg matting on
     # standard items to prevent unwanted image artifacts/over-cropping.
-    needs_bg_matte = False
+    needs_bg_matte = bool(
+        not doc.get("clean_image_url")
+        and (payload.defer_matte or payload.from_one_pass)
+    )
 
     # Resolve the raw bytes for the background task once, shared by all branches.
     raw_for_bg: bytes | None = None
@@ -703,10 +718,18 @@ async def create_item(
     # are only needed during the /analyze pipeline, which completes before the
     # user confirms saving. clean_image_url (rembg transparent PNG, set by the
     # background matte task a few seconds later) is the sole display image.
-    await db.closet_items.update_one(
-        {"id": doc["id"]},
-        {"$unset": {"original_image_url": "", "segmented_image_url": ""}},
-    )
+    # Drop analysis-phase temporaries immediately after save ONLY IF clean_image_url is present.
+    # If clean_image_url is not ready yet, keep original_image_url so the item is never left without an image.
+    if doc.get("clean_image_url"):
+        await db.closet_items.update_one(
+            {"id": doc["id"]},
+            {"$unset": {"original_image_url": "", "segmented_image_url": ""}},
+        )
+    else:
+        await db.closet_items.update_one(
+            {"id": doc["id"]},
+            {"$unset": {"segmented_image_url": ""}},
+        )
 
     if payload.in_suitcase:
         active_s = await db.suitcases.find_one({"user_id": user["id"], "status": {"$ne": "completed"}})
