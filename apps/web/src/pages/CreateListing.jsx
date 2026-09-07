@@ -10,6 +10,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { toast } from 'sonner';
 import { Loader2, ArrowLeft } from 'lucide-react';
 import { api } from '@/lib/api';
+import { bestImageUrl } from '@/lib/itemImage';
 
 const fmt = (cents, cur = 'USD') =>
   new Intl.NumberFormat('en-US', { style: 'currency', currency: cur }).format((cents || 0) / 100);
@@ -60,6 +61,30 @@ function deriveCondition(item) {
   if (raw.includes('fair') || raw.includes('worn') || raw.includes('vintage'))
     return 'fair';
   return null;
+}
+
+function LinkedItemThumb({ item, fallbackText }) {
+  const [hasError, setHasError] = useState(false);
+  const src = !hasError ? bestImageUrl(item) : null;
+
+  if (src) {
+    return (
+      <img
+        src={src}
+        alt={item?.title || 'Closet item'}
+        onError={() => setHasError(true)}
+        className="h-full w-full object-cover"
+        data-testid="listing-linked-item-thumb"
+      />
+    );
+  }
+
+  return (
+    <div className="flex h-full w-full flex-col items-center justify-center text-[#b5b5ae] gap-1 p-1">
+      <i className="fa-solid fa-image text-base"></i>
+      <span className="text-[9px] text-muted-foreground line-clamp-1">{fallbackText}</span>
+    </div>
+  );
 }
 
 export default function CreateListing() {
@@ -203,34 +228,14 @@ export default function CreateListing() {
                 {(() => {
                   const linkedItem = closet.find((c) => c.id === form.closet_item_id);
                   if (!linkedItem) return null;
-                  const thumb =
-                    linkedItem.reconstruct_image_url ||
-                    linkedItem.reconstructed_image_url ||
-                    linkedItem.clean_image_url ||
-                    linkedItem.thumbnail_data_url ||
-                    linkedItem.cutout_url ||
-                    linkedItem.image_url ||
-                    linkedItem.segmented_image_url ||
-                    linkedItem.original_image_url;
 
                   return (
                     <div
                       className="mt-3 flex items-center gap-3 rounded-xl border border-border p-2"
                       data-testid="listing-linked-item-preview"
                     >
-                      <div className="h-16 w-16 flex-shrink-0 overflow-hidden rounded-lg bg-muted">
-                        {thumb ? (
-                          <img
-                            src={thumb}
-                            alt={linkedItem.title || 'Closet item'}
-                            className="h-full w-full object-cover"
-                            data-testid="listing-linked-item-thumb"
-                          />
-                        ) : (
-                          <div className="flex h-full w-full items-center justify-center text-[10px] text-muted-foreground">
-                            {t('createListing.linkNone')}
-                          </div>
-                        )}
+                      <div className="h-16 w-16 flex-shrink-0 overflow-hidden rounded-lg bg-muted flex items-center justify-center">
+                        <LinkedItemThumb item={linkedItem} fallbackText={t('createListing.linkNone')} />
                       </div>
                       <div className="min-w-0 flex-1">
                         <div
