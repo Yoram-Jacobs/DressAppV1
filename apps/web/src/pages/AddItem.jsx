@@ -1351,8 +1351,9 @@ export default function AddItem() {
             closetItem,
             base64Image:
               item.base64Image ||
-              closetItem.original_image_url ||
               closetItem.clean_image_url ||
+              closetItem.thumbnail_data_url ||
+              closetItem.original_image_url ||
               null,
           };
         }
@@ -3979,12 +3980,14 @@ export default function AddItem() {
                                     }
                                     className="relative w-16 h-16 rounded-xl overflow-hidden border-2 border-[hsl(var(--accent))] shadow-md hover:scale-105 active:scale-95 transition-transform bg-secondary/20 flex items-center justify-center cursor-pointer"
                                   >
-                                    {item.closetItem.original_image_url ||
-                                      item.closetItem.clean_image_url ? (
+                                    {item.closetItem.clean_image_url ||
+                                      item.closetItem.thumbnail_data_url ||
+                                      item.closetItem.original_image_url ? (
                                       <img
                                         src={
-                                          item.closetItem.original_image_url ||
-                                          item.closetItem.clean_image_url
+                                          item.closetItem.clean_image_url ||
+                                          item.closetItem.thumbnail_data_url ||
+                                          item.closetItem.original_image_url
                                         }
                                         alt={item.closetItem.title}
                                         className="w-full h-full object-cover"
@@ -4189,12 +4192,14 @@ export default function AddItem() {
                         <>
                           {/* Image */}
                           <div className="w-full aspect-[3/4] bg-secondary/20 relative overflow-hidden">
-                            {closetItemDetailPane.original_image_url ||
-                              closetItemDetailPane.clean_image_url ? (
+                            {closetItemDetailPane.clean_image_url ||
+                              closetItemDetailPane.thumbnail_data_url ||
+                              closetItemDetailPane.original_image_url ? (
                               <img
                                 src={
-                                  closetItemDetailPane.original_image_url ||
-                                  closetItemDetailPane.clean_image_url
+                                  closetItemDetailPane.clean_image_url ||
+                                  closetItemDetailPane.thumbnail_data_url ||
+                                  closetItemDetailPane.original_image_url
                                 }
                                 alt={closetItemDetailPane.title}
                                 className="w-full h-full object-contain"
