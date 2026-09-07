@@ -1234,7 +1234,7 @@ async def predict_measurements(payload: PredictMeasurementsIn):
             gender=g_str,
         )
     except Exception as exc:
-        logger.warning("ML body predictor unavailable or failed, using anthropometric formula: %s", exc)
+        log.warning("ML body predictor unavailable or failed, using anthropometric formula: %s", exc)
         result = {
             "shoulders": round(h * 0.235, 1) if g_str == "male" else round(h * 0.22, 1),
             "chest": round(wa * 1.18 + (w - 70) * 0.2, 1) if g_str == "male" else round(wa * 1.12 + (w - 60) * 0.2, 1),
