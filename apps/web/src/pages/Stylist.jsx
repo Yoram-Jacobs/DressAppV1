@@ -57,6 +57,7 @@ import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
 import { Pencil } from 'lucide-react';
 import { useClosetStore } from '@/lib/useClosetStore';
+import { closetStore } from '@/lib/closetStore';
 import { bestImageUrl, resolveMediaUrl } from '@/lib/itemImage';
 import { useLocalStorageSync } from '@/lib/useLocalStorageSync';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
@@ -98,6 +99,25 @@ const roleIcon = (role) => {
   if (key.includes('outer') || key.includes('jacket')) return <ShirtIcon />;
   return <Tag />;
 };
+
+const PieceThumbnail = ({ imgUrl, alt, role }) => {
+  const [error, setError] = useState(false);
+  if (!imgUrl || error) {
+    return (
+      <div className="w-full h-full flex items-center justify-center text-[var(--primary-color)]">
+        {roleIcon(role)}
+      </div>
+    );
+  }
+  return (
+    <img
+      src={imgUrl}
+      alt={alt || ''}
+      className="w-full h-full object-cover"
+      onError={() => setError(true)}
+    />
+  );
+};
 const base64ToUrl = (b64, mime = 'audio/mpeg') => {
   if (!b64) return null;
   const bin = atob(b64);
@@ -122,12 +142,25 @@ const formatMonthDay = (date, t) => {
   return `${monthStr} ${date.getDate()}`;
 };
 
-const getOutfitPiecesMap = (o) => {
+const getOutfitPiecesMap = (o, customItems) => {
+  const closetList = customItems || closetStore.getSnapshot().items || [];
   const map = {};
   if (Array.isArray(o?.garments)) {
     o.garments.forEach((g) => {
       if (g && g.role) {
-        map[g.role] = { ...g, image_url: resolveMediaUrl(g.image_url || g.clean_image_url) };
+        const cItem = closetList.find(c => c && (c.id === g.closet_item_id || c.id === g.id));
+        const resolvedImg = resolveMediaUrl(bestImageUrl(cItem) || g.clean_image_url || g.image_url || cItem?.image_url);
+        map[g.role] = {
+          ...g,
+          ...(cItem || {}),
+          image_url: resolvedImg,
+          clean_image_url: resolveMediaUrl(cItem?.clean_image_url || g.clean_image_url),
+          cutout_url: resolveMediaUrl(cItem?.cutout_url || g.cutout_url),
+          segmented_image_url: resolveMediaUrl(cItem?.segmented_image_url || g.segmented_image_url),
+          thumbnail_data_url: cItem?.thumbnail_data_url || g.thumbnail_data_url,
+          reconstructed_image_url: resolveMediaUrl(cItem?.reconstructed_image_url || g.reconstructed_image_url),
+          original_image_url: resolveMediaUrl(cItem?.original_image_url || g.original_image_url),
+        };
       }
     });
   }
@@ -2105,16 +2138,11 @@ export default function Stylist() {
                             className="bg-white border border-[#ccc] rounded-[12px] p-3.5 flex items-center gap-3 cursor-pointer transition-all duration-180 hover:border-[var(--primary-color)] hover:shadow-[0_4px_14px_rgba(31,107,92,0.1)] hover:-translate-y-0.5 group"
                           >
                             <div className="w-12 h-12 rounded-xl bg-[var(--primary-shadow)] text-[var(--primary-color)] flex items-center justify-center flex-shrink-0 overflow-hidden">
-                              {imgUrl ? (
-                                <img
-                                  src={imgUrl}
-                                  alt={g.title || ''}
-                                  className="w-full h-full object-cover"
-                                  onError={(e) => { e.currentTarget.style.display = 'none'; }}
-                                />
-                              ) : (
-                                roleIcon(g.role)
-                              )}
+                              <PieceThumbnail
+                                imgUrl={imgUrl}
+                                alt={g.title || ''}
+                                role={g.role}
+                              />
                             </div>
                             <div className="min-w-0 flex-1">
                               <div className="text-[10px] font-bold uppercase tracking-[0.06em] text-[var(--primary-color)] mb-0.5">{labelForRole(g.role, t)}</div>
@@ -2238,7 +2266,7 @@ export default function Stylist() {
                   max-[480px]:text-[35px]
                 "
               >
-                {t("Your Personal AI Stylist")}
+                {t('stylist.heroTitle', { defaultValue: 'Your Personal AI Stylist' })}
               </h1>
               {/* Description */}
               <p
@@ -2253,7 +2281,7 @@ export default function Stylist() {
                   max-[767px]:mt-[15px]
                 "
               >
-                Get personalized outfit recommendations, style advice, and fashion inspiration tailored to your wardrobe, occasion, and local weather.
+                {t('stylist.heroDescription', { defaultValue: 'Get personalized outfit recommendations, style advice, and fashion inspiration tailored to your wardrobe, occasion, and local weather.' })}
               </p>
             </div>
           </div>
@@ -2377,8 +2405,8 @@ export default function Stylist() {
                                 <h3 className="text-[14px] font-semibold text-dark-brand">
                                   {t('profile.schedulerPushReminders', { defaultValue: 'Schedule & Push Reminders' })}
                                 </h3>
-                                <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-text-brand font-semibold">
-                                  <span className="flex items-center gap-1">
+                                <div className="flex flex-wrap items-center gap-2 text-xs text-text-brand font-semibold">
+                                  <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-secondary/10 border border-border">
                                     <span className={cn(
                                       "h-2 w-2 rounded-full",
                                       user?.scheduler_settings?.enabled ? "bg-primary-brand animate-pulse" : "bg-primary-shadow"
@@ -2387,32 +2415,33 @@ export default function Stylist() {
                                       {user?.scheduler_settings?.enabled
                                         ? t('common.enabled', { defaultValue: 'Enabled' })
                                         : t('common.unenabled', { defaultValue: 'Unenabled' })}
-                                      {user?.scheduler_settings?.enabled && (
-                                        <>
-                                          {', '}
-                                          {getFrequencyLabel(user?.scheduler_settings?.frequency, user?.scheduler_settings?.weekday, i18n.language, t)}
-                                          {', '}
-                                          {(() => {
-                                            try {
-                                              const tVal = (typeof user?.scheduler_settings?.time === 'string') ? user.scheduler_settings.time : '07:00';
-                                              const [h, m] = tVal.split(':');
-                                              const hInt = parseInt(h, 10) || 7;
-                                              const mStr = m || '00';
-                                              const ampm = hInt >= 12 ? 'PM' : 'AM';
-                                              const h12 = hInt % 12 || 12;
-                                              return `${h12.toString().padStart(2, '0')}:${mStr} ${ampm}`;
-                                            } catch (e) {
-                                              return '07:00 AM';
-                                            }
-                                          })()}
-                                          {', '}
-                                          <span className="capitalize">
-                                            {getStyleLabel(user?.scheduler_settings?.style_option, user?.scheduler_settings?.custom_style, t)}
-                                          </span>
-                                        </>
-                                      )}
                                     </span>
                                   </span>
+                                  {user?.scheduler_settings?.enabled && (
+                                    <>
+                                      <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-secondary/5 border border-border text-[11px]" dir="auto">
+                                        {getFrequencyLabel(user?.scheduler_settings?.frequency, user?.scheduler_settings?.weekday, i18n.language, t)}
+                                      </span>
+                                      <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-secondary/5 border border-border text-[11px]" dir="ltr">
+                                        {(() => {
+                                          try {
+                                            const tVal = (typeof user?.scheduler_settings?.time === 'string') ? user.scheduler_settings.time : '07:00';
+                                            const [h, m] = tVal.split(':');
+                                            const hInt = parseInt(h, 10) || 7;
+                                            const mStr = m || '00';
+                                            const ampm = hInt >= 12 ? 'PM' : 'AM';
+                                            const h12 = hInt % 12 || 12;
+                                            return `${h12.toString().padStart(2, '0')}:${mStr} ${ampm}`;
+                                          } catch (e) {
+                                            return '07:00 AM';
+                                          }
+                                        })()}
+                                      </span>
+                                      <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-secondary/5 border border-border text-[11px] capitalize" dir="auto">
+                                        {getStyleLabel(user?.scheduler_settings?.style_option, user?.scheduler_settings?.custom_style, t)}
+                                      </span>
+                                    </>
+                                  )}
                                 </div>
                               </div>
                             </div>

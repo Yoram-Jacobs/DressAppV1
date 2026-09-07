@@ -202,6 +202,10 @@
             "athleisure": "Athleisure"
         }
     },
+    "stylist": {
+        "heroTitle": "Your Personal AI Stylist",
+        "heroDescription": "Get personalized outfit recommendations, style advice, and fashion inspiration tailored to your wardrobe, occasion, and local weather."
+    },
     "closet": {
         "selectedCount": "{{count}} selected",
         "groupSelectedTitle": "Group as Coordinated Set",
