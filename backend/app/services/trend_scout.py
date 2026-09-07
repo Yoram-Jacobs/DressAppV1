@@ -1415,6 +1415,15 @@ async def ensure_seed_data() -> None:
     except Exception as exc:
         logger.warning("Failed nullifying dead stock photo URLs: %s", exc)
 
+    # Heal broken / 404 external images from Pause Mag
+    try:
+        await db.trend_reports.update_many(
+            {"image_url": {"$regex": r"Untitled-6\.jpg"}},
+            {"$set": {"image_url": "https://pausemag.co.uk/wp-content/uploads/2026/09/ARKET-26403_23-600x403.jpg"}}
+        )
+    except Exception as exc:
+        logger.warning("Failed updating Pause Mag image URL: %s", exc)
+
     _seed_data_initialized = True
 
 
