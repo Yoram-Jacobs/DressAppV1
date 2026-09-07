@@ -28,7 +28,7 @@ import {
   GripVertical,
   ArrowLeft,
   Share2,
-  Key, Shirt, CalendarCheck2
+  Key, Shirt, CalendarCheck2, CalendarPlus
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
@@ -357,7 +357,8 @@ export default function Stylist() {
   const [isEditingOutfit, setIsEditingOutfit] = useStoreState(stylistUIStore, 'isEditingOutfit');
   const [editOutfitName, setEditOutfitName] = useStoreState(stylistUIStore, 'editOutfitName');
   const [editOutfitDescription, setEditOutfitDescription] = useStoreState(stylistUIStore, 'editOutfitDescription');
-  const { notifications: cachedNotifications, prewarm: prewarmDaily } = useDailySuggestionsStore();
+  const { notifications: cachedNotifications, dailyProposal, generate: generateDailyProposalAction, prewarm: prewarmDaily } = useDailySuggestionsStore();
+  const [generatingDaily, setGeneratingDaily] = useState(false);
   const handleSaveOutfitSuccess = useCallback(async () => {
     prewarmOutfits({ force: true }).catch(() => { });
     try {
@@ -389,47 +390,6 @@ export default function Stylist() {
     }
   }, [location.state, outfits]);
 
-  useEffect(() => {
-    if (activeTab === 'match' && outfits.length > 0 && !selectedOutfitForDetail && !hasAutoSelected) {
-      const todayStr = formatLocalDate(new Date());
-      const tomorrow = new Date();
-      tomorrow.setDate(tomorrow.getDate() + 1);
-      const tomorrowStr = formatLocalDate(tomorrow);
-
-      const targetOutfit = outfits.find(o => o.usage?.date === tomorrowStr) || outfits.find(o => o.usage?.date === todayStr);
-      if (targetOutfit) {
-        setSelectedOutfitForDetail(targetOutfit);
-        setHasAutoSelected(true);
-      } else {
-        const checkDateHasSuggestions = (dateStr) => {
-          const matches = (notifications || []).filter(n => {
-            try {
-              const payload = n.payload || {};
-              if (payload.target_date) {
-                return payload.target_date === dateStr;
-              }
-              const notifDate = new Date(n.created_at);
-              const y = notifDate.getFullYear();
-              const m = String(notifDate.getMonth() + 1).padStart(2, '0');
-              const d = String(notifDate.getDate()).padStart(2, '0');
-              return `${y}-${m}-${d}` === dateStr;
-            } catch (e) {
-              return n.created_at?.slice(0, 10) === dateStr;
-            }
-          });
-          return matches.length > 0;
-        };
-
-        if (checkDateHasSuggestions(tomorrowStr)) {
-          setSchedulingDate(tomorrowStr);
-          setHasAutoSelected(true);
-        } else if (checkDateHasSuggestions(todayStr)) {
-          setSchedulingDate(todayStr);
-          setHasAutoSelected(true);
-        }
-      }
-    }
-  }, [activeTab, outfits, selectedOutfitForDetail, hasAutoSelected, notifications, setSchedulingDate, setHasAutoSelected]);
 
   const deleteOutfit = async (id) => {
     try {
@@ -696,9 +656,9 @@ export default function Stylist() {
   };
 
   const dailyRecommendations = useMemo(() => {
-    if (!schedulingDate || !notifications) return [];
+    if (!schedulingDate) return [];
     const targetDateStr = schedulingDate;
-    const matches = notifications.filter(n => {
+    const matches = (notifications || []).filter(n => {
       try {
         const payload = n.payload || {};
         if (payload.target_date) {
@@ -715,46 +675,61 @@ export default function Stylist() {
       }
     });
 
-    if (matches.length === 0) return [];
-
-    // Sort matches by created_at descending (latest first)
-    matches.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-    const latestNotif = matches[0];
-
     const recs = [];
-    const payload = latestNotif.payload || {};
-    const list = payload.outfit_recommendations || payload.proposals || [];
-    list.forEach((rec, idx) => {
-      recs.push({
-        ...rec,
-        notifId: latestNotif.id,
-        recIndex: idx,
+    if (matches.length > 0) {
+      matches.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+      const latestNotif = matches[0];
+      const payload = latestNotif.payload || {};
+      const list = payload.outfit_recommendations || payload.proposals || [];
+      list.forEach((rec, idx) => {
+        recs.push({
+          ...rec,
+          notifId: latestNotif.id,
+          recIndex: idx,
+        });
       });
-    });
+    }
+
+    // Also include dailyProposal if available for target date
+    if (dailyProposal && dailyProposal.date === targetDateStr && Array.isArray(dailyProposal.items) && dailyProposal.items.length > 0) {
+      const alreadyHas = recs.some(r => r.name === dailyProposal.title);
+      if (!alreadyHas) {
+        recs.unshift({
+          name: dailyProposal.title || 'Look of the Day',
+          items: dailyProposal.items,
+          proposalId: dailyProposal.id,
+          isDailyProposal: true,
+        });
+      }
+    }
+
     return recs;
-  }, [schedulingDate, notifications]);
+  }, [schedulingDate, notifications, dailyProposal]);
 
   const detailMetrics = selectedOutfitForDetail ? calculateOutfitMetrics(selectedOutfitForDetail) : null;
   const overallMatchingGrade = detailMetrics ? Math.round(
     (detailMetrics.color + detailMetrics.pattern + detailMetrics.fit + detailMetrics.weather + detailMetrics.event + detailMetrics.location) / 6
   ) : 0;
 
-  const handleSaveOutfitToDate = async (notifId, recIndex, targetDate) => {
-    const notif = notifications.find(n => n.id === notifId);
-    const rec = notif?.payload?.outfit_recommendations?.[recIndex] || notif?.payload?.proposals?.[recIndex];
+  const handleSaveOutfitToDate = async (notifId, recIndex, targetDate, directRec = null) => {
+    const rec = directRec || (() => {
+      const notif = (notifications || []).find(n => n.id === notifId);
+      return notif?.payload?.outfit_recommendations?.[recIndex] || notif?.payload?.proposals?.[recIndex];
+    })();
     if (!rec) return;
 
+    const notif = notifId ? (notifications || []).find(n => n.id === notifId) : null;
     const isEvent = (notif?.title || '').toLowerCase().includes('get ready');
-
     const isFallback = notif?.payload?.is_fallback || false;
-    let displayName = rec.name;
-    if (!isEvent) {
+
+    let displayName = rec.name || rec.title;
+    if (!displayName) {
       try {
         const [y, m, d] = targetDate.split('-');
         const dateObj = new Date(parseInt(y, 10), parseInt(m, 10) - 1, parseInt(d, 10));
         displayName = dateObj.toLocaleDateString(i18n.language || 'en', { month: 'numeric', day: 'numeric', year: 'numeric' });
       } catch (e) {
-        displayName = rec.name;
+        displayName = 'Daily Look';
       }
     }
     if (isFallback && !displayName.includes('Fallback')) {
@@ -776,7 +751,7 @@ export default function Stylist() {
         location: null,
         event_name: null,
       },
-      is_fallback: notif?.payload?.is_fallback || false,
+      is_fallback: isFallback,
     };
 
     try {
@@ -2457,6 +2432,146 @@ export default function Stylist() {
                             </Button>
                           </CardContent>
                         </Card>
+
+                        {/* 1.5 Today's Style Suggestion / Outfit Card */}
+                        {(() => {
+                          const todayDateStr = formatLocalDate(new Date());
+                          const todayOutfit = (outfits || []).find(o => o.usage?.date === todayDateStr);
+                          const todayNotifRecs = (notifications || []).filter(n => {
+                            try {
+                              const p = n.payload || {};
+                              if (p.target_date) return p.target_date === todayDateStr;
+                              const nd = new Date(n.created_at);
+                              return `${nd.getFullYear()}-${String(nd.getMonth() + 1).padStart(2, '0')}-${String(nd.getDate()).padStart(2, '0')}` === todayDateStr;
+                            } catch {
+                              return false;
+                            }
+                          }).flatMap(n => (n.payload?.proposals || n.payload?.outfit_recommendations || []));
+
+                          const activeProposal = (todayProposal && todayProposal.date === todayDateStr && (todayProposal.items || []).length > 0) ? todayProposal : null;
+                          const hasTodayContent = todayOutfit || activeProposal || todayNotifRecs.length > 0;
+                          if (!hasTodayContent) return null;
+
+                          return (
+                            <Card className="border border-border rounded-[12px] shadow-editorial overflow-hidden bg-white w-full shrink-0 mb-6">
+                              <CardContent className="p-4 md:p-5">
+                                <div className="flex items-center justify-between gap-4 flex-wrap pb-3 border-b border-border/60">
+                                  <div className="flex items-center gap-3">
+                                    <div className="p-2.5 bg-primary-shadow text-primary-brand rounded-xl shrink-0">
+                                      <Sparkles className="h-5 w-5" />
+                                    </div>
+                                    <div className="text-start">
+                                      <div className="flex items-center gap-2">
+                                        <h3 className="text-[14px] font-bold text-dark-brand">
+                                          {todayOutfit
+                                            ? t('calendar.todayOutfit', { defaultValue: "Today's Scheduled Outfit" })
+                                            : t('stylist.todaySuggestionTitle', { defaultValue: "Today's Style Suggestion" })}
+                                        </h3>
+                                        <Badge variant="outline" className="text-[10px] font-semibold text-primary-brand border-primary-brand/30 bg-primary-shadow">
+                                          {new Date().toLocaleDateString(i18n.language || 'en', { month: 'short', day: 'numeric', year: 'numeric' })}
+                                        </Badge>
+                                        {todayOutfit && (
+                                          <Badge className="text-[10px] font-semibold bg-emerald-600 text-white border-none">
+                                            {t('calendar.scheduled', { defaultValue: 'Scheduled' })}
+                                          </Badge>
+                                        )}
+                                      </div>
+                                      <p className="text-xs text-text-brand mt-0.5">
+                                        {todayOutfit
+                                          ? (todayOutfit.description || getOutfitName(todayOutfit.name))
+                                          : activeProposal?.description || t('stylist.todaySuggestionSubtitle', { defaultValue: 'Personalized look curated for your day.' })}
+                                      </p>
+                                    </div>
+                                  </div>
+                                  <div className="flex items-center gap-2">
+                                    {todayOutfit ? (
+                                      <Button
+                                        size="sm"
+                                        onClick={() => setSelectedOutfitForDetail(todayOutfit)}
+                                        className="rounded-xl flex items-center gap-1.5 shadow-sm text-xs !bg-primary-brand text-white"
+                                      >
+                                        <Shirt className="!h-3.5 !w-3.5" />
+                                        <span>{t('stylist.viewOutfitDetails', { defaultValue: 'View Details' })}</span>
+                                      </Button>
+                                    ) : (
+                                      <>
+                                        <Button
+                                          size="sm"
+                                          variant="outline"
+                                          disabled={generatingDaily}
+                                          onClick={async () => {
+                                            setGeneratingDaily(true);
+                                            try {
+                                              await generateDailyProposalAction(true);
+                                              toast.success(t('stylist.suggestionRefreshed', { defaultValue: 'Refreshed today’s suggestion!' }));
+                                            } catch {
+                                              toast.error(t('common.error', { defaultValue: 'Failed to refresh' }));
+                                            } finally {
+                                              setGeneratingDaily(false);
+                                            }
+                                          }}
+                                          className="rounded-xl flex items-center gap-1.5 shadow-sm text-xs"
+                                        >
+                                          <RefreshCw className={cn("!h-3.5 !w-3.5", generatingDaily && "animate-spin")} />
+                                          <span>{t('stylist.refreshSuggestion', { defaultValue: 'New Look' })}</span>
+                                        </Button>
+                                        {activeProposal && (
+                                          <Button
+                                            size="sm"
+                                            onClick={async () => {
+                                              await handleSaveOutfitToDate(null, 0, todayDateStr, {
+                                                name: activeProposal.title || 'Look of the Day',
+                                                items: activeProposal.items,
+                                                isDailyProposal: true
+                                              });
+                                            }}
+                                            className="rounded-xl flex items-center gap-1.5 shadow-sm text-xs !bg-primary-brand text-white"
+                                          >
+                                            <CalendarPlus className="!h-3.5 !w-3.5" />
+                                            <span>{t('stylist.wearToday', { defaultValue: 'Wear Today' })}</span>
+                                          </Button>
+                                        )}
+                                      </>
+                                    )}
+                                  </div>
+                                </div>
+
+                                {/* Garments Preview row */}
+                                {(() => {
+                                  const itemsToRender = todayOutfit?.garments || activeProposal?.items || (todayNotifRecs[0]?.items) || [];
+                                  if (itemsToRender.length === 0) return null;
+                                  return (
+                                    <div className="pt-4 grid grid-cols-2 sm:grid-cols-4 gap-3">
+                                      {itemsToRender.map((g, idx) => {
+                                        const cid = g.closet_item_id || g.id;
+                                        const cItem = (closetItems || []).find(it => it && it.id === cid);
+                                        const img = resolveMediaUrl(bestImageUrl(cItem) || g.image_url || g.clean_image_url || cItem?.image_url);
+                                        return (
+                                          <div
+                                            key={idx}
+                                            className="flex items-center gap-2.5 p-2 rounded-xl bg-[var(--accent-beige)]/60 border border-border/40"
+                                          >
+                                            <div className="w-10 h-10 rounded-lg bg-white overflow-hidden flex items-center justify-center shrink-0 border border-border/40">
+                                              {img ? (
+                                                <img src={img} alt={g.name || g.title || ''} className="w-full h-full object-contain p-0.5" />
+                                              ) : (
+                                                <Shirt className="h-4 w-4 text-text-brand opacity-40" />
+                                              )}
+                                            </div>
+                                            <div className="min-w-0 text-start">
+                                              <div className="text-[10px] font-bold uppercase text-primary-brand">{labelForRole(g.role, t)}</div>
+                                              <div className="text-xs font-semibold text-dark-brand truncate">{g.name || g.title || cItem?.title || 'Garment'}</div>
+                                            </div>
+                                          </div>
+                                        );
+                                      })}
+                                    </div>
+                                  );
+                                })()}
+                              </CardContent>
+                            </Card>
+                          );
+                        })()}
                         {/* 2. Scheduled Outfits Monthly Calendar Grid */}
                         <Card className="border border-border rounded-[12px] shadow-editorial overflow-hidden bg-white w-full flex flex-col min-h-[480px] h-auto shrink-0">
                           <CardContent className="p-4 md:p-5 flex flex-col">
@@ -2794,6 +2909,43 @@ export default function Stylist() {
                   </div>
                 );
               })()}
+
+              {/* AI Daily Suggestions */}
+              {dailyRecommendations.length > 0 && (
+                <div className="space-y-3 mb-6 pb-6 border-b border-border">
+                  <h4 className="text-xs font-semibold text-primary-brand flex items-center gap-1.5 uppercase">
+                    <Sparkles className="h-3.5 w-3.5 text-primary-brand" />
+                    {t('calendar.dailyAISuggestions', { defaultValue: 'AI Daily Suggestions' })}
+                  </h4>
+                  <div className="grid grid-cols-2 gap-3">
+                    {dailyRecommendations.map((rec, idx) => (
+                      <div
+                        key={`daily-rec-${idx}`}
+                        onClick={async () => {
+                          const saved = await handleSaveOutfitToDate(rec.notifId, rec.recIndex, schedulingDate, rec);
+                          if (saved) {
+                            setSelectedOutfitForDetail(saved);
+                            setIsEditingOutfit(false);
+                          }
+                          setSchedulingDate(null);
+                        }}
+                        className="flex flex-col items-center p-2 rounded-xl border border-primary-brand/30 bg-primary-shadow hover:border-primary-brand cursor-pointer text-center group transition-all relative overflow-hidden"
+                      >
+                        <div className="w-full aspect-[4/5] bg-secondary/5 rounded-lg overflow-hidden relative shrink-0">
+                          <AvatarViewer
+                            shapeParams={user?.avatar_shape_params || {}}
+                            sex={user?.sex || 'female'}
+                            outfitItems={getRecommendationPiecesMap(rec, closetItems)}
+                          />
+                        </div>
+                        <div className="text-[11px] font-semibold truncate text-text-brand mt-2 w-full px-1">
+                          {rec.name}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               {/* List of saved outfits */}
               <div className="space-y-3">

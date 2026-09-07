@@ -50,7 +50,7 @@ export default function ShareOutfitModal({ open, onOpenChange, outfit, sessionId
   // Fetch garment images on mount so they are loaded and ready for rendering
   useEffect(() => {
     let cancelled = false;
-    if (ids.length === 0) return () => {};
+    if (!open || ids.length === 0) return () => {};
 
     const localItems = (closetStore.getItemsSnapshot() || []).filter(Boolean);
     const localMap = new Map(localItems.map(it => [it.id, it]));
@@ -94,7 +94,7 @@ export default function ShareOutfitModal({ open, onOpenChange, outfit, sessionId
     return () => {
       cancelled = true;
     };
-  }, [ids]);
+  }, [open, ids.join('|')]);
 
   const outfitItemsMap = useMemo(() => {
     const map = {};

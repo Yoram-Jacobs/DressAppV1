@@ -5957,6 +5957,22 @@ async def delete_item(
                 # Re-run group analysis on remaining members in background
                 background_tasks.add_task(reanalyze_group_helper, group_id, user["id"])
 
+    # Phase Outfits cleanup — remove deleted garment references from outfits
+    try:
+        await db.outfits.update_many(
+            {"user_id": user["id"], "garments.closet_item_id": item_id},
+            {"$pull": {"garments": {"closet_item_id": item_id}}}
+        )
+        await db.outfits.update_many(
+            {"user_id": user["id"], "items.closet_item_id": item_id},
+            {"$pull": {"items": {"closet_item_id": item_id}}}
+        )
+        await db.outfits.delete_many(
+            {"user_id": user["id"], "garments": {"$size": 0}}
+        )
+    except Exception as exc:
+        logger.warning("outfit cleanup failed for closet item %s: %s", item_id, exc)
+
     # Marketplace cleanup — when a user deletes a closet item that
     # is linked to one or more listings, silently retire the open
     # listings so the item doesn't linger on the marketplace with

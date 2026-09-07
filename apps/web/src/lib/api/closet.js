@@ -1,11 +1,25 @@
 import { client, tokenStore, getBackendUrl } from './client.js';
 import { streamNdjson } from './streaming.js';
 
+const _missingItemIds = new Set();
+
 export const closet = {
   // --- basic CRUD ---
   listCloset: (params = {}) =>
     client.get('/closet', { params }).then((r) => r.data),
-  getItem: (id) => client.get(`/closet/${id}`).then((r) => r.data),
+  getItem: async (id) => {
+    if (!id || _missingItemIds.has(id)) return null;
+    try {
+      const res = await client.get(`/closet/${id}`);
+      return res.data;
+    } catch (err) {
+      if (err?.response?.status === 404) {
+        _missingItemIds.add(id);
+        return null;
+      }
+      throw err;
+    }
+  },
   createItem: (body) => client.post('/closet', body).then((r) => r.data),
   patchItem: (id, body) => client.patch(`/closet/${id}`, body).then((r) => r.data),
   updateItem: (id, body) => client.patch(`/closet/${id}`, body).then((r) => r.data),

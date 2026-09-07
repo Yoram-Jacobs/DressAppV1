@@ -110,45 +110,66 @@ async def _generate_and_save_daily_proposal(user: dict, date_str: str, force: bo
     """Helper to pick a smart outfit from closet and store it in daily_proposals."""
     db = get_db()
     
-    # Check if existing exists unless force=True
+    # Check if valid existing exists unless force=True
     if not force:
         existing = await db.daily_proposals.find_one(
             {"user_id": user["id"], "date": date_str},
             {"_id": 0},
         )
-        if existing:
+        if existing and len(existing.get("items") or []) > 0:
             return existing
             
     # Fetch user's closet items
     cursor = db.closet_items.find({"user_id": user["id"]}).limit(30)
     items = [doc async for doc in cursor]
-    
-    # Categorize items
-    tops = [i for i in items if i.get("category") in ("top", "shirt", "t-shirt", "sweater", "blouse", "jacket")]
-    bottoms = [i for i in items if i.get("category") in ("bottom", "pants", "jeans", "skirt", "shorts")]
-    shoes = [i for i in items if i.get("category") in ("shoes", "sneakers", "boots", "sandals")]
-    
+
+    def _cat(i: dict) -> str:
+        return (i.get("category") or "").strip().lower()
+
+    def _best_img(i: dict) -> str | None:
+        return (
+            i.get("reconstructed_image_url")
+            or i.get("clean_image_url")
+            or i.get("image_url")
+            or i.get("thumbnail_url")
+            or i.get("thumbnail_data_url")
+        )
+
+    # Categorize items robustly
+    tops = [i for i in items if _cat(i) in ("top", "shirt", "t-shirt", "sweater", "blouse", "jacket", "outerwear")]
+    bottoms = [i for i in items if _cat(i) in ("bottom", "pants", "jeans", "skirt", "shorts")]
+    shoes = [i for i in items if _cat(i) in ("shoes", "sneakers", "boots", "sandals", "footwear")]
+
     selected_items: list[dict[str, Any]] = []
     if tops:
+        t0 = tops[0]
         selected_items.append({
-            "id": tops[0].get("id"),
-            "name": tops[0].get("title") or tops[0].get("name") or "Top",
-            "category": tops[0].get("category"),
-            "image_url": tops[0].get("image_url") or tops[0].get("thumbnail_url"),
+            "id": t0.get("id"),
+            "closet_item_id": t0.get("id"),
+            "role": "top",
+            "name": t0.get("title") or t0.get("name") or "Top",
+            "category": t0.get("category"),
+            "image_url": _best_img(t0),
         })
     if bottoms:
+        b0 = bottoms[0]
         selected_items.append({
-            "id": bottoms[0].get("id"),
-            "name": bottoms[0].get("title") or bottoms[0].get("name") or "Bottom",
-            "category": bottoms[0].get("category"),
-            "image_url": bottoms[0].get("image_url") or bottoms[0].get("thumbnail_url"),
+            "id": b0.get("id"),
+            "closet_item_id": b0.get("id"),
+            "role": "bottom",
+            "name": b0.get("title") or b0.get("name") or "Bottom",
+            "category": b0.get("category"),
+            "image_url": _best_img(b0),
         })
     if shoes:
+        s0 = shoes[0]
         selected_items.append({
-            "id": shoes[0].get("id"),
-            "name": shoes[0].get("title") or shoes[0].get("name") or "Shoes",
-            "category": shoes[0].get("category"),
-            "image_url": shoes[0].get("image_url") or shoes[0].get("thumbnail_url"),
+            "id": s0.get("id"),
+            "closet_item_id": s0.get("id"),
+            "role": "shoes",
+            "name": s0.get("title") or s0.get("name") or "Shoes",
+            "category": s0.get("category"),
+            "image_url": _best_img(s0),
         })
         
     proposal = {
