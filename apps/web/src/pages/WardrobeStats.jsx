@@ -600,7 +600,8 @@ export default function WardrobeStats() {
                       </Select>
                     </div>
                   </div>
-                  <div className="h-[400px] w-full flex items-center justify-center min-h-0">
+
+                  <div className="h-[360px] w-full flex items-center justify-center min-h-0 [&_.recharts-surface]:outline-none [&_.recharts-wrapper]:outline-none">
                     {colorData.length > 0 ? (
                       <ResponsiveContainer width="100%" height="100%">
                         {chartView === 'bars' ? (
@@ -636,8 +637,8 @@ export default function WardrobeStats() {
                               nameKey="name"
                               cx="50%"
                               cy="50%"
-                              innerRadius={chartView === 'ring' ? 45 : 0}
-                              outerRadius={70}
+                              innerRadius={chartView === 'ring' ? 70 : 0}
+                              outerRadius={110}
                               paddingAngle={chartView === 'ring' ? 2 : 0}
                             >
                               {colorData.map((entry, index) => (
@@ -652,6 +653,7 @@ export default function WardrobeStats() {
                       <span className="text-xs text-text-brand">{t('stats.noColorData', { defaultValue: 'No color tags specified.' })}</span>
                     )}
                   </div>
+
                   {colorData.length > 0 && chartView !== 'bars' && (
                     <div className="mt-4 border-t border-border pt-4 flex flex-col items-center">
                       <div
