@@ -1847,7 +1847,7 @@ const RECENTLY_ADDED_MORE_COUNT = 18;
                 <div className="flex items-center justify-between gap-4 border-b border-black/[0.06] px-5 py-4 max-[575px]:flex-col max-[575px]:items-start">
                   <div>
                     <h5 className="m-0 flex items-center text-[14px] font-black text-[var(--dark-color)]">
-                      <i className="bi bi-magic mr-2 text-[var(--primary-color)]" />
+                      <i className="bi bi-magic me-2 text-[var(--primary-color)]" />
                       {t("home.aiEditor.title", {
                         defaultValue: "AI Styled Fashion Editor",
                       })}
@@ -1865,7 +1865,7 @@ const RECENTLY_ADDED_MORE_COUNT = 18;
                     type="button"
                     className="inline-flex items-center rounded-full border border-black/[0.08] bg-white px-4 py-2 text-[11px] font-bold text-[var(--dark-color)] transition-smooth hover:-translate-y-[1px] hover:border-[var(--primary-color)] hover:text-[var(--primary-color)]"
                   >
-                    <i className="bi bi-download mr-2" />
+                    <i className="bi bi-download me-2" />
                     {t("home.aiEditor.exportLook", {
                       defaultValue: "Export Look",
                     })}
@@ -1885,7 +1885,7 @@ const RECENTLY_ADDED_MORE_COUNT = 18;
                     />
 
                     {/* AI Match Badge */}
-                    <span className="absolute left-4 top-4 inline-flex items-center gap-1.5 rounded-full border border-white/50 bg-white/90 px-3 py-1.5 text-[10px] font-black text-[var(--primary-color)] shadow-[0_8px_20px_rgba(23,20,15,0.12)] backdrop-blur-sm">
+                    <span className="absolute start-4 top-4 inline-flex items-center gap-1.5 rounded-full border border-white/50 bg-white/90 px-3 py-1.5 text-[10px] font-black text-[var(--primary-color)] shadow-[0_8px_20px_rgba(23,20,15,0.12)] backdrop-blur-sm">
                       <i className="bi bi-stars" />
                       {t("home.aiEditor.aiMatch", {
                         percent: AI_MATCH_PERCENT,
@@ -1999,7 +1999,7 @@ const RECENTLY_ADDED_MORE_COUNT = 18;
                       type="button"
                       className="mt-auto flex w-full items-center justify-center rounded-[50px] bg-[var(--primary-color)] px-5 py-3.5 text-[13px] font-black text-white shadow-[var(--primary-shadow)] transition-smooth hover:-translate-y-[2px] hover:bg-[var(--primary-hover)] hover:shadow-[0_8px_24px_rgba(31,92,69,0.25)]"
                     >
-                      <i className="bi bi-stars mr-2" />
+                      <i className="bi bi-stars me-2" />
                       {t("home.aiEditor.regenerate", {
                         defaultValue: "Regenerate with AI",
                       })}

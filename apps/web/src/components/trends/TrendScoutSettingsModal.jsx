@@ -22,6 +22,7 @@ import {
   Link2,
   Unlink,
   Layers,
+  Zap,
 } from 'lucide-react';
 
 const SUGGESTED_STYLES = [
@@ -212,15 +213,18 @@ export function TrendScoutSettingsModal({ open, onOpenChange, onRefreshTriggered
                 </span>
               </div>
               <div className="flex flex-wrap gap-2 pt-1">
-                <Badge variant="outline" className="text-xs border-brand/40 bg-brand/5 text-brand px-2.5 py-0.5 rounded-full">
-                  👔 {t('trends.leadDressCode', { defaultValue: 'Lead Dress Code' })}: <strong className="ms-1">{closetProfile?.lead_dress_code || 'Casual'}</strong>
+                <Badge variant="outline" className="text-xs border-brand/40 bg-brand/5 text-brand px-2.5 py-0.5 rounded-full inline-flex items-center gap-1">
+                  <Shirt className="h-3 w-3 shrink-0" />
+                  <span>{t('trends.leadDressCode', { defaultValue: 'Lead Dress Code' })}: <strong className="ms-1">{closetProfile?.lead_dress_code || 'Casual'}</strong></span>
                 </Badge>
-                <Badge variant="outline" className="text-xs border-indigo-400/40 bg-indigo-500/5 text-indigo-600 dark:text-indigo-400 px-2.5 py-0.5 rounded-full">
-                  ✨ {t('trends.leadClosetStyle', { defaultValue: 'Closet Style' })}: <strong className="ms-1">{closetProfile?.lead_closet_style || 'Classic'}</strong>
+                <Badge variant="outline" className="text-xs border-accent/40 bg-accent/5 text-accent px-2.5 py-0.5 rounded-full inline-flex items-center gap-1">
+                  <Sparkles className="h-3 w-3 shrink-0" />
+                  <span>{t('trends.leadClosetStyle', { defaultValue: 'Closet Style' })}: <strong className="ms-1">{closetProfile?.lead_closet_style || 'Classic'}</strong></span>
                 </Badge>
                 {closetProfile?.effective_style && closetProfile?.effective_style !== closetProfile?.lead_closet_style && (
-                  <Badge variant="outline" className="text-xs border-amber-500/40 bg-amber-500/10 text-amber-600 dark:text-amber-400 px-2.5 py-0.5 rounded-full">
-                    ⚡ {t('trends.customActive', { defaultValue: 'Active Override' })}: <strong className="ms-1">{closetProfile.effective_style}</strong>
+                  <Badge variant="outline" className="text-xs border-amber-500/40 bg-amber-500/10 text-amber-600 dark:text-amber-400 px-2.5 py-0.5 rounded-full inline-flex items-center gap-1">
+                    <Zap className="h-3 w-3 shrink-0" />
+                    <span>{t('trends.customActive', { defaultValue: 'Active Override' })}: <strong className="ms-1">{closetProfile.effective_style}</strong></span>
                   </Badge>
                 )}
               </div>

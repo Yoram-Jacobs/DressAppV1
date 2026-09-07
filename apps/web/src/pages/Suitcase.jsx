@@ -62,6 +62,13 @@ import {
   AccordionTrigger,
   AccordionContent,
 } from "@/components/ui/accordion";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { SuitcaseErrorBoundary } from "@/components/SuitcaseErrorBoundary";
 import ClosetBanner from "../assets/img/inner6.webp";
 // Helper to find a closet item matching an outfit item (by ID or fallback title match)
@@ -1390,37 +1397,38 @@ function Suitcase() {
                                 defaultValue: "Purpose",
                               })}
                             </label>
-                            <select
-                              className="w-full h-11 rounded-[8px] border border-border bg-white px-[12px] py-[6px] text-sm text-gray-900 shadow-none outline-none transition-[var(--transition-smooth)] focus:border-[var(--primary-color)] focus:shadow-[0_0_0_3px_rgba(31,92,69,0.1)]"
-                              value={purpose}
-                              onChange={(e) => setPurpose(e.target.value)}
-                            >
-                              <option value="business">
-                                {t("suitcase.purpose_business", {
-                                  defaultValue: "Business trip",
-                                })}
-                              </option>
-                              <option value="pleasure">
-                                {t("suitcase.purpose_pleasure", {
-                                  defaultValue: "Hotel vacation / Pleasure",
-                                })}
-                              </option>
-                              <option value="safari">
-                                {t("suitcase.purpose_safari", {
-                                  defaultValue: "Safari trip",
-                                })}
-                              </option>
-                              <option value="camping">
-                                {t("suitcase.purpose_camping", {
-                                  defaultValue: "Outdoor camping",
-                                })}
-                              </option>
-                              <option value="tracking">
-                                {t("suitcase.purpose_tracking", {
-                                  defaultValue: "Tracking / Outdoors",
-                                })}
-                              </option>
-                            </select>
+                            <Select value={purpose} onValueChange={setPurpose}>
+                              <SelectTrigger className="w-full h-11 rounded-lg">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="business">
+                                  {t("suitcase.purpose_business", {
+                                    defaultValue: "Business trip",
+                                  })}
+                                </SelectItem>
+                                <SelectItem value="pleasure">
+                                  {t("suitcase.purpose_pleasure", {
+                                    defaultValue: "Hotel vacation / Pleasure",
+                                  })}
+                                </SelectItem>
+                                <SelectItem value="safari">
+                                  {t("suitcase.purpose_safari", {
+                                    defaultValue: "Safari trip",
+                                  })}
+                                </SelectItem>
+                                <SelectItem value="camping">
+                                  {t("suitcase.purpose_camping", {
+                                    defaultValue: "Outdoor camping",
+                                  })}
+                                </SelectItem>
+                                <SelectItem value="tracking">
+                                  {t("suitcase.purpose_tracking", {
+                                    defaultValue: "Tracking / Outdoors",
+                                  })}
+                                </SelectItem>
+                              </SelectContent>
+                            </Select>
                           </div>
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

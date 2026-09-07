@@ -6,6 +6,16 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { AspectRatio } from '@/components/ui/aspect-ratio';
 import { Badge } from '@/components/ui/badge';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { SourceTagBadge } from '@/components/SourceTagBadge';
 import { SwapPickerModal } from '@/components/SwapPickerModal';
 import StyleSandbox from '@/components/market/StyleSandbox';
@@ -43,7 +53,22 @@ export default function ListingDetail() {
   const [swapOpen, setSwapOpen] = useState(false);
   const [donateSubmitting, setDonateSubmitting] = useState(false);
   const [removing, setRemoving] = useState(false);
+  const [removeDialogOpen, setRemoveDialogOpen] = useState(false);
   const [sandboxOpen, setSandboxOpen] = useState(false);
+
+  const handleRemoveListing = async () => {
+    setRemoving(true);
+    try {
+      await api.deleteListing(listing.id);
+      toast.success(t('market.listingRemoved', { defaultValue: 'Removed from marketplace' }));
+      nav('/market');
+    } catch (err) {
+      toast.error(err?.response?.data?.detail || t('market.removeFailed', { defaultValue: 'Could not remove listing' }));
+    } finally {
+      setRemoving(false);
+      setRemoveDialogOpen(false);
+    }
+  };
 
   useEffect(() => {
     setLoading(true);
@@ -146,7 +171,7 @@ export default function ListingDetail() {
                   data-testid="listing-detail-shipping"
                 >
                   <span>
-                    + {fmt(listing.shipping_fee_cents, fm.currency)} shipping
+                    + {fmt(listing.shipping_fee_cents, fm.currency)} {t('market.shipping', { defaultValue: 'shipping' })}
                   </span>
                   <span className="text-[hsl(var(--accent))] text-xs">
                     {t('pages.listingDetail.or_meet_locally_to_skip')}
@@ -270,7 +295,7 @@ export default function ListingDetail() {
                   <dd>{fmt(fm.list_price_cents, fm.currency)}</dd>
                 </div>
                 <div className="flex justify-between"><dt className="text-muted-foreground">{t('market.processingFee')}</dt><dd>− {fmt(fm.stripe_processing_fee_fixed_cents, fm.currency)} + 2.9%</dd></div>
-                <div className="flex justify-between"><dt className="text-muted-foreground">{t('market.platformFee')}</dt><dd></dd></div>
+                <div className="flex justify-between"><dt className="text-muted-foreground">{t('market.platformFee')} (7%)</dt><dd>− {fmt(fm.platform_fee_cents || Math.round((fm.list_price_cents || 0) * 0.07), fm.currency)}</dd></div>
                 <div className="flex justify-between font-medium border-t border-border pt-2"><dt>{t('market.sellerNet')}</dt><dd>{fmt(fm.estimated_seller_net_cents, fm.currency)}</dd></div>
               </dl>
             </CardContent>
@@ -278,39 +303,12 @@ export default function ListingDetail() {
 
           {isOwner ? (
             <div className="space-y-2" data-testid="listing-owner-actions">
-              {/* Owner-only "Remove from marketplace" CTA. Hard-deletes
-                  the listing AND resets the linked closet item back to
-                  Private/own (atomic on the backend), so the closet
-                  card flips to Private on next render.
-
-                  NOTE: A "Manage in My listings" link used to live
-                  here but it just bounced the user back to the
-                  marketplace tab without any actual editing surface,
-                  so it was removed per user feedback. Editing of
-                  price/currency/intent happens on the closet item's
-                  detail page (the source of truth) — the listing
-                  inherits those values automatically. */}
+              {/* Owner-only "Remove from marketplace" CTA */}
               <Button
                 variant="ghost"
                 className="w-full rounded-xl text-rose-700 hover:text-rose-800 hover:bg-rose-50"
                 disabled={removing}
-                onClick={async () => {
-                  if (!window.confirm(
-                    t('market.confirmRemoveListing', {
-                      defaultValue: `Remove "${listing.title}" from the marketplace? Your closet item stays — only the listing is removed.`,
-                    }),
-                  )) return;
-                  setRemoving(true);
-                  try {
-                    await api.deleteListing(listing.id);
-                    toast.success(t('market.listingRemoved', { defaultValue: 'Removed from marketplace' }));
-                    nav('/market');
-                  } catch (err) {
-                    toast.error(err?.response?.data?.detail || t('market.removeFailed', { defaultValue: 'Could not remove listing' }));
-                  } finally {
-                    setRemoving(false);
-                  }
-                }}
+                onClick={() => setRemoveDialogOpen(true)}
                 data-testid="listing-remove-button"
               >
                 {removing ? (
@@ -325,6 +323,40 @@ export default function ListingDetail() {
                   </>
                 )}
               </Button>
+
+              <AlertDialog open={removeDialogOpen} onOpenChange={setRemoveDialogOpen}>
+                <AlertDialogContent data-testid="listing-remove-confirm-dialog">
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>
+                      {t('market.removeListing', { defaultValue: 'Remove from marketplace' })}
+                    </AlertDialogTitle>
+                    <AlertDialogDescription>
+                      {t('market.confirmRemoveListing', {
+                        defaultValue: `Remove "${listing.title}" from the marketplace? Your closet item stays — only the listing is removed.`,
+                      })}
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel disabled={removing}>
+                      {t('common.cancel', { defaultValue: 'Cancel' })}
+                    </AlertDialogCancel>
+                    <AlertDialogAction
+                      onClick={handleRemoveListing}
+                      disabled={removing}
+                      className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                    >
+                      {removing ? (
+                        <>
+                          <Loader2 className="h-4 w-4 me-2 animate-spin" />
+                          {t('market.removing', { defaultValue: 'Removing…' })}
+                        </>
+                      ) : (
+                        t('common.delete', { defaultValue: 'Delete' })
+                      )}
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
             </div>
           ) : listing.status === 'active' ? (
             <div data-testid="listing-cta-wrapper" className="space-y-3">

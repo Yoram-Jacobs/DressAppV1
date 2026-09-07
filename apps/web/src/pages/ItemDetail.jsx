@@ -38,6 +38,8 @@ import {
   Check,
   Image as ImageIcon,
   Unlink,
+  Scissors,
+  Gem,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ScrollToTop } from '@/components/ScrollToTop';
@@ -2002,10 +2004,10 @@ export default function ItemDetail() {
           <DppPanel dppData={item.dpp_data} />
 
           {/* Clean background card (Phase V Fix 2) */}
-          <Card className="rounded-[calc(var(--radius)+6px)] shadow-editorial border-t-2 border-[hsl(325_80%_65%)]" data-testid="item-clean-bg-card">
+          <Card className="rounded-[calc(var(--radius)+6px)] shadow-editorial border-t-2 border-accent" data-testid="item-clean-bg-card">
             <CardContent className="p-5 space-y-3">
               <div className="flex items-center gap-3 mb-2 pb-2 border-b border-border/45">
-                <div className="p-2 rounded-xl bg-[hsl(325_80%_95%)] text-[hsl(325_80%_50%)] dark:bg-[hsl(325_30%_18%)] dark:text-[hsl(325_80%_70%)] shrink-0">
+                <div className="p-2 rounded-xl bg-accent/10 text-accent dark:bg-accent/20 dark:text-accent shrink-0">
                   <Wand2 className="h-5 w-5" />
                 </div>
                 <div>
@@ -2190,33 +2192,37 @@ export default function ItemDetail() {
                     type="button"
                     onClick={() => onSendReanalyzePrompt(t('itemDetail.reanalyze.promptRemoveShoes'))}
                     disabled={reanalyzeChatBusy || analyzing}
-                    className="text-[11px] px-2.5 py-1 rounded-lg bg-secondary/80 hover:bg-secondary text-secondary-foreground transition-colors border border-border/40 disabled:opacity-50"
+                    className="inline-flex items-center gap-1 text-[11px] px-2.5 py-1 rounded-lg bg-secondary/80 hover:bg-secondary text-secondary-foreground transition-colors border border-border/40 disabled:opacity-50"
                   >
-                    🪄 {t('itemDetail.reanalyze.promptRemoveShoes')}
+                    <Wand2 className="h-3 w-3 shrink-0 text-accent" />
+                    <span>{t('itemDetail.reanalyze.promptRemoveShoes')}</span>
                   </button>
                   <button
                     type="button"
                     onClick={() => onSendReanalyzePrompt(t('itemDetail.reanalyze.promptCompleteHole'))}
                     disabled={reanalyzeChatBusy || analyzing}
-                    className="text-[11px] px-2.5 py-1 rounded-lg bg-secondary/80 hover:bg-secondary text-secondary-foreground transition-colors border border-border/40 disabled:opacity-50"
+                    className="inline-flex items-center gap-1 text-[11px] px-2.5 py-1 rounded-lg bg-secondary/80 hover:bg-secondary text-secondary-foreground transition-colors border border-border/40 disabled:opacity-50"
                   >
-                    ✂️ {t('itemDetail.reanalyze.promptCompleteHole')}
+                    <Scissors className="h-3 w-3 shrink-0 text-muted-foreground" />
+                    <span>{t('itemDetail.reanalyze.promptCompleteHole')}</span>
                   </button>
                   <button
                     type="button"
                     onClick={() => onSendReanalyzePrompt(t('itemDetail.reanalyze.promptRemoveStuds'))}
                     disabled={reanalyzeChatBusy || analyzing}
-                    className="text-[11px] px-2.5 py-1 rounded-lg bg-secondary/80 hover:bg-secondary text-secondary-foreground transition-colors border border-border/40 disabled:opacity-50"
+                    className="inline-flex items-center gap-1 text-[11px] px-2.5 py-1 rounded-lg bg-secondary/80 hover:bg-secondary text-secondary-foreground transition-colors border border-border/40 disabled:opacity-50"
                   >
-                    💎 {t('itemDetail.reanalyze.promptRemoveStuds')}
+                    <Gem className="h-3 w-3 shrink-0 text-muted-foreground" />
+                    <span>{t('itemDetail.reanalyze.promptRemoveStuds')}</span>
                   </button>
                   <button
                     type="button"
                     onClick={() => onSendReanalyzePrompt(t('itemDetail.reanalyze.promptFixMaterials'))}
                     disabled={reanalyzeChatBusy || analyzing}
-                    className="text-[11px] px-2.5 py-1 rounded-lg bg-secondary/80 hover:bg-secondary text-secondary-foreground transition-colors border border-border/40 disabled:opacity-50"
+                    className="inline-flex items-center gap-1 text-[11px] px-2.5 py-1 rounded-lg bg-secondary/80 hover:bg-secondary text-secondary-foreground transition-colors border border-border/40 disabled:opacity-50"
                   >
-                    🔍 {t('itemDetail.reanalyze.promptFixMaterials')}
+                    <Search className="h-3 w-3 shrink-0 text-muted-foreground" />
+                    <span>{t('itemDetail.reanalyze.promptFixMaterials')}</span>
                   </button>
                 </div>
               </div>

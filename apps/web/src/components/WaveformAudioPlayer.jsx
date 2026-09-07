@@ -49,7 +49,7 @@ export const WaveformAudioPlayer = ({ src, label = 'Stylist audio reply' }) => {
         onClick={toggle}
         aria-label={playing ? 'Pause' : 'Play'}
         data-testid="audio-player-play-button"
-        className="rounded-full h-10 w-10 bg-[hsl(var(--accent))] hover:bg-[hsl(var(--accent))]/90 text-[hsl(var(--accent-foreground))]"
+        className="rounded-full h-11 w-11 min-h-[44px] min-w-[44px] shrink-0 bg-[hsl(var(--accent))] hover:bg-[hsl(var(--accent))]/90 text-[hsl(var(--accent-foreground))]"
       >
         {playing ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
       </Button>

@@ -21,6 +21,9 @@ import {
   Tag,
   Luggage,
   Layers as Layers3,
+  LayoutGrid,
+  Grid,
+  List,
 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -157,6 +160,11 @@ export default function Closet() {
   const [searchMode, setSearchMode] = useLocalStorageSync(
     "dressapp.closet.searchMode",
     "keyword",
+  );
+  // View mode: 'grid' (2 cols mobile), 'compact' (3 cols mobile), or 'list' (1 col)
+  const [viewMode, setViewMode] = useLocalStorageSync(
+    "dressapp.closet.viewMode",
+    "grid",
   );
   const [semanticActive, setSemanticActive] = useState(false);
   const [semanticItems, setSemanticItems] = useState([]);
@@ -1041,8 +1049,10 @@ export default function Closet() {
             max-[767px]:mt-[15px]
           "
               >
-                Organize your wardrobe, explore every piece and create better
-                outfits effortlessly.
+                {t("closet.heroSubtitle", {
+                  defaultValue:
+                    "Organize your wardrobe, explore every piece and create better outfits effortlessly.",
+                })}
               </p>
 
               {/* Buttons */}
@@ -1070,7 +1080,7 @@ export default function Closet() {
               hover:text-white
             "
                 >
-                  <i className="fa-solid fa-plus mr-2" />
+                  <i className="fa-solid fa-plus me-2" />
                   {t("closet.addItem")}
                 </Link>
 
@@ -1102,7 +1112,7 @@ export default function Closet() {
           </div>
         </div>
       </section>
-      <section className="w-full overflow-hidden bg-[var(--accent-beige)] px-[40px] py-[80px] max-[991px]:px-[5px] max-[991px]:py-[40px]">
+      <section className="w-full overflow-hidden bg-[var(--accent-beige)] px-[40px] py-[80px] max-[991px]:px-[5px] max-[991px]:py-[40px] pb-safe-tabs">
         {/* Phase Z2.3 + Z2.6 — two ambient progress chips, side-by-side.
               ``HashRepairChip`` ticks during the duplicate-detector
               tune-up (fires first after prewarm). ``ThumbRepairChip``
@@ -1148,7 +1158,7 @@ export default function Closet() {
                   className="
                       h-11 w-full rounded-[8px] mb-0
                       border border-gray-200
-                      bg-white pl-10 pr-10
+                      bg-white px-10
                       text-sm text-gray-900
                       shadow-none outline-none
                       placeholder:text-gray-400
@@ -1588,7 +1598,7 @@ export default function Closet() {
               hover:text-white
             "
                   >
-                    <i className="fa-solid fa-plus mr-2"></i>
+                    <i className="fa-solid fa-plus me-2"></i>
 
                     {t("closet.addItem", {
                       defaultValue: "Add Your First Item",
@@ -1598,35 +1608,86 @@ export default function Closet() {
               </div>
             </div>
           </div>
-          // <div className="mt-10 text-center max-w-md mx-auto" data-testid="closet-empty-state">
-          //   <div className="mx-auto w-40 h-40 rounded-full bg-secondary/70 mb-6 overflow-hidden">
-          //     <img
-          //       src="https://images.unsplash.com/photo-1654773125909-6d73f0c12407?w=600&q=80"
-          //       alt={t('pages.closet.flat_lay_empty_state')}
-          //       className="w-full h-full object-cover"
-          //     />
-          //   </div>
-          //   <h2 className="font-display text-2xl">{t('closet.emptyTitle')}</h2>
-          //   <p className="text-sm text-muted-foreground mt-2">
-          //     {t('closet.emptySub')}
-          //   </p>
-          //   <Button asChild className="mt-5 rounded-xl hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 group" data-testid="closet-empty-add-button">
-          //     <Link to="/closet/add"><Plus className="h-4 w-4 me-2 text-yellow-400 group-hover:drop-shadow-[0_0_8px_rgba(250,204,21,0.8)] transition-all duration-200" /> <span className="text-yellow-400 group-hover:drop-shadow-[0_0_8px_rgba(250,204,21,0.8)] transition-all duration-200">{t('closet.addItem')}</span></Link>
-          //   </Button>
-          // </div>
         )}
         {!loading && items.length > 0 && (
-          <div
-            className="
-                  grid w-full
-                  grid-cols-5
-                  gap-4
-                  sm:grid-cols-3
-                  lg:grid-cols-4
-                  xl:grid-cols-5
-                "
-            data-testid="closet-grid"
-          >
+          <div className="w-full space-y-4">
+            {/* View Mode & Column Density Toolbar */}
+            <div
+              className="flex items-center justify-between px-1"
+              data-testid="closet-view-mode-bar"
+            >
+              <span className="text-xs font-semibold text-muted-foreground">
+                {t("closet.itemsCount", {
+                  count: items.length,
+                  defaultValue: "{{count}} items",
+                })}
+              </span>
+              <div
+                className="inline-flex items-center gap-1 rounded-lg border border-border bg-card p-1 shadow-xs"
+                role="group"
+                aria-label={t("closet.viewModeLabel", {
+                  defaultValue: "Grid density",
+                })}
+                data-testid="closet-view-mode-group"
+              >
+                <button
+                  type="button"
+                  onClick={() => setViewMode("grid")}
+                  aria-pressed={viewMode === "grid"}
+                  aria-label={t("closet.view2Cols", { defaultValue: "2 columns" })}
+                  title={t("closet.view2Cols", { defaultValue: "2 columns" })}
+                  data-testid="closet-view-2cols"
+                  className={`inline-flex h-8 w-8 items-center justify-center rounded-md text-xs transition-colors ${
+                    viewMode === "grid"
+                      ? "bg-[hsl(var(--accent))] text-white shadow-xs"
+                      : "text-muted-foreground hover:text-foreground hover:bg-secondary"
+                  }`}
+                >
+                  <LayoutGrid className="h-4 w-4" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setViewMode("compact")}
+                  aria-pressed={viewMode === "compact"}
+                  aria-label={t("closet.view3Cols", { defaultValue: "3 columns" })}
+                  title={t("closet.view3Cols", { defaultValue: "3 columns" })}
+                  data-testid="closet-view-3cols"
+                  className={`inline-flex h-8 w-8 items-center justify-center rounded-md text-xs transition-colors ${
+                    viewMode === "compact"
+                      ? "bg-[hsl(var(--accent))] text-white shadow-xs"
+                      : "text-muted-foreground hover:text-foreground hover:bg-secondary"
+                  }`}
+                >
+                  <Grid className="h-4 w-4" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setViewMode("list")}
+                  aria-pressed={viewMode === "list"}
+                  aria-label={t("closet.viewList", { defaultValue: "List view" })}
+                  title={t("closet.viewList", { defaultValue: "List view" })}
+                  data-testid="closet-view-list"
+                  className={`inline-flex h-8 w-8 items-center justify-center rounded-md text-xs transition-colors ${
+                    viewMode === "list"
+                      ? "bg-[hsl(var(--accent))] text-white shadow-xs"
+                      : "text-muted-foreground hover:text-foreground hover:bg-secondary"
+                  }`}
+                >
+                  <List className="h-4 w-4" />
+                </button>
+              </div>
+            </div>
+
+            <div
+              className={`grid w-full ${
+                viewMode === "compact"
+                  ? "grid-cols-3 gap-2.5 sm:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6"
+                  : viewMode === "list"
+                  ? "grid-cols-1 gap-3 max-w-2xl mx-auto"
+                  : "grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5"
+              }`}
+              data-testid="closet-grid"
+            >
             {items.map((it) => {
               const isSelected = selected.has(it.id);
 
@@ -1718,6 +1779,7 @@ export default function Closet() {
                 </Link>
               );
             })}
+            </div>
           </div>
         )}
         {/* Confirm delete dialog */}

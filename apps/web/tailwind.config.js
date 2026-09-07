@@ -19,7 +19,7 @@ module.exports = {
       // Project font
       fontFamily: {
         sans: ["Plus Jakarta Sans", "sans-serif"],
-        // heading: ["Gloock", "serif"],
+        display: ["Plus Jakarta Sans", "sans-serif"],
       },
 
       fontWeight: {
