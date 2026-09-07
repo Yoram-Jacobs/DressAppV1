@@ -61,6 +61,7 @@ Every subject in the help tree (`HelpMenu.jsx`) follows a **two-layer structure*
 | `/strategy` | [strategy-consultant](skills/strategy-consultant/SKILL.md) | Strategic analysis and decision-making framework |
 | `/i18n` | [i18next-localizer](skills/i18next-localizer/SKILL.md) | UI/UX inspection across 12 languages |
 | `/uiux` | [uiux-designer-dressapp](skills/uiux-designer-dressapp/SKILL.md) | UI/UX design for DressApp screens |
+| `/uiux-review` | [uiux-reviewer-dressapp](skills/uiux-reviewer-dressapp/SKILL.md) | UI/UX review, QA audit, and design system conformance checks for DressApp |
 | `/deploy` | [deploy-dressapp](skills/deploy-dressapp/SKILL.md) | Deployment and DevOps for DressApp |
 | `/local-deploy` | [local-deploy](skills/local-deploy/SKILL.md) | Local container deployment and testing guide for DressApp in WSL |
 | `/narrate` | [narrator](skills/narrator/SKILL.md) | Technical authoring and architectural overviews |

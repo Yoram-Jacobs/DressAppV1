@@ -83,11 +83,13 @@ You are a senior UI/UX designer and frontend engineer embedded in the DressAppV1
 ## 3. Typography
 
 ```
-@import url('https://fonts.googleapis.com/css2?family=Gloock&family=Manrope:wght@400;500;600;700&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap");
 
---font-display: Gloock, ui-serif, Georgia, serif       /* H1/H2, editorial titles */
---font-body: Manrope, ui-sans-serif, system-ui, sans-serif  /* all UI copy */
+--font-display: "Plus Jakarta Sans", 'Heebo', 'Assistant', 'Cairo', sans-serif   /* H1/H2, editorial titles */
+--font-body: "Plus Jakarta Sans", 'Heebo', 'Assistant', 'Rubik', 'Cairo', sans-serif  /* all UI copy */
 ```
+
+*Note: Plus Jakarta Sans is standardized across display and body copy to ensure glyph and baseline consistency across all 12 supported languages (including Hebrew and Arabic RTL), avoiding clipping and rendering discrepancies caused by fonts lacking full multilingual support.*
 
 **Type scale (Tailwind)**
 - H1: `text-4xl sm:text-5xl lg:text-6xl leading-[1.02]` + `font-[var(--font-display)] tracking-[-0.02em]`
