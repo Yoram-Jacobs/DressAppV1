@@ -1097,7 +1097,10 @@
         "buyerProtection": "Protected by DressApp Community Standard",
         "rentalPriceDay": "Daily tariff",
         "confirmRemoveListing": "Remove \"{{title}}\" from the marketplace? Your closet item stays — only the listing is removed.",
-        "sourceRetail": "Retail"
+        "sourceRetail": "Retail",
+        "source": "Source",
+        "category": "Category",
+        "distance": "Radius"
     },
     "createListing": {
         "title": "Create a listing",
@@ -1781,7 +1784,9 @@
             "bad": "Bad",
             "fair": "Fair",
             "good": "Good",
-            "excellent": "Excellent"
+            "excellent": "Excellent",
+            "new": "New",
+            "like_new": "Like new"
         },
         "quality": {
             "budget": "Budget",

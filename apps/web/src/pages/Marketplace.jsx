@@ -15,7 +15,7 @@ import { Badge } from '@/components/ui/badge';
 import { StreamingProgressChip } from '@/components/StreamingProgressChip';
 import { api } from '@/lib/api';
 import { bestImageUrl } from '@/lib/itemImage';
-import { labelForCategory, labelForSource, labelForIntent } from '@/lib/taxonomy';
+import { labelForCategory, labelForSource, labelForIntent, labelForCondition } from '@/lib/taxonomy';
 
 import { useLocation as useAppLocation } from '@/lib/location';
 import { useAuth } from '@/lib/auth';
@@ -65,6 +65,31 @@ const CATEGORIES = [
 const RADIUS_OPTIONS = ["any", "5", "25", "50", "200"];
 
 const INITIAL_FILTERS = { source: "all", category: "all", radius: "any" };
+
+function MarketplaceItemImage({ item, t }) {
+  const [hasError, setHasError] = useState(false);
+  const src = !hasError ? bestImageUrl(item) : null;
+
+  if (src) {
+    return (
+      <img
+        src={src}
+        alt={item.title}
+        onError={() => setHasError(true)}
+        className="w-full h-full object-cover transition-transform duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-[1.08]"
+      />
+    );
+  }
+
+  return (
+    <div className="w-full h-full flex flex-col gap-1.5 justify-center items-center text-[#b5b5ae]">
+      <i className="fa-solid fa-image text-[22px]"></i>
+      <span className="text-[11px] font-semibold">
+        {t("market.noImage", { defaultValue: "No image" })}
+      </span>
+    </div>
+  );
+}
 
 export default function Marketplace() {
   const { t } = useTranslation();
@@ -280,7 +305,6 @@ export default function Marketplace() {
               <div className="topaligntab">
                 <Link
                   to="/market/create"
-                  asChild
                   data-testid="marketplace-create-listing"
                   className="inline-flex items-center justify-center bg-[var(--primary-color)] text-white border-none rounded-full px-[22px] py-[15px] text-[13px] font-bold leading-none transition-all duration-300 hover:bg-[var(--primary-hover)] hover:-translate-y-0.5 hover:shadow-[0_8px_24px_rgba(31,92,69,0.25)]"
                 >
@@ -302,10 +326,10 @@ export default function Marketplace() {
 
                   <div className="mb-4">
                     <label className="block text-[11px] font-extrabold uppercase tracking-[0.05em] text-[#9a9a94] mb-2">
-                      {t("market.source", { defaultValue: "Source" })}
+                      {t("market.sourceFilter", { defaultValue: t("market.source", { defaultValue: "Source" }) })}
                     </label>
                     <Select
-                      value={filters.source}
+                      value={SOURCES.includes(filters.source) ? filters.source : "all"}
                       onValueChange={(v) =>
                         setFilters((f) => ({ ...f, source: v }))
                       }
@@ -319,7 +343,11 @@ export default function Marketplace() {
                       <SelectContent>
                         {SOURCES.map((s) => (
                           <SelectItem key={s} value={s}>
-                            {_INTENT_VALUES.has(s)
+                            {s === "all"
+                              ? t("taxonomy.source.all", {
+                                  defaultValue: "All sources",
+                                })
+                              : _INTENT_VALUES.has(s)
                               ? labelForIntent(s, t)
                               : labelForSource(s, t)}
                           </SelectItem>
@@ -330,10 +358,10 @@ export default function Marketplace() {
 
                   <div className="mb-4">
                     <label className="block text-[11px] font-extrabold uppercase tracking-[0.05em] text-[#9a9a94] mb-2">
-                      {t("market.category", { defaultValue: "Category" })}
+                      {t("market.categoryFilter", { defaultValue: t("market.category", { defaultValue: "Category" }) })}
                     </label>
                     <Select
-                      value={filters.category}
+                      value={CATEGORIES.includes(filters.category) ? filters.category : "all"}
                       onValueChange={(v) =>
                         setFilters((f) => ({ ...f, category: v }))
                       }
@@ -424,20 +452,7 @@ export default function Marketplace() {
                         >
                           <div className="group rounded-2xl overflow-hidden border border-black/5 bg-white h-full transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] hover:-translate-y-2 hover:shadow-[0_24px_48px_rgba(20,30,25,0.12)] hover:border-[rgba(31,92,69,0.15)]">
                             <div className="relative aspect-square overflow-hidden bg-[#f4f4ef]">
-                              {(l.images || [])[0] ? (
-                                <img
-                                  src={l.images[0]}
-                                  alt={l.title}
-                                  className="w-full h-full object-cover transition-transform duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-[1.08]"
-                                />
-                              ) : (
-                                <div className="w-full h-full flex flex-col gap-1.5 justify-center items-center text-[#b5b5ae]">
-                                  <i className="fa-solid fa-image text-[22px]"></i>
-                                  <span className="text-[11px] font-semibold">
-                                    {t("market.noImage")}
-                                  </span>
-                                </div>
-                              )}
+                              <MarketplaceItemImage item={l} t={t} />
                               <div className="absolute top-2.5 left-2.5 z-[2] [&>*]:!bg-[var(--primary-color)] [&>*]:!text-white [&>*]:!font-extrabold [&>*]:!text-[9px] [&>*]:tracking-[1.5px] [&>*]:!px-2.5 [&>*]:!py-1.5 [&>*]:!rounded-full [&>*]:!border-none">
                                 <SourceTagBadge
                                   source={l.source}
@@ -446,7 +461,7 @@ export default function Marketplace() {
                               </div>
                               {l.condition && (
                                 <span className="absolute bottom-2.5 right-2.5 z-[2] bg-white text-[var(--primary-color)] text-[10px] font-extrabold tracking-[0.04em] capitalize px-2.5 py-1.5 rounded-full">
-                                  {t(`taxonomy.condition.${l.condition}`)}
+                                  {labelForCondition(l.condition, t)}
                                 </span>
                               )}
                             </div>

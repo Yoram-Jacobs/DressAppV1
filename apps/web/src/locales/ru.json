@@ -1032,7 +1032,10 @@
         "buyerProtection": "Защищено стандартами сообщества DressApp",
         "rentalPriceDay": "Дневной тариф",
         "confirmRemoveListing": "Удалить «{{title}}» с маркетплейса? Вещь останется в гардеробе — удалится только объявление.",
-        "sourceRetail": "Ритейл"
+        "sourceRetail": "Ритейл",
+        "source": "Источник",
+        "category": "Категория",
+        "distance": "Радиус"
     },
     "createListing": {
         "title": "Создать объявление",
@@ -1681,7 +1684,9 @@
             "bad": "Плохое",
             "fair": "Удовлетворительное",
             "good": "Хорошее",
-            "excellent": "Отличное"
+            "excellent": "Отличное",
+            "new": "Новый",
+            "like_new": "Как новый"
         },
         "quality": {
             "budget": "Бюджет",

@@ -1049,7 +1049,10 @@
         "buyerProtection": "DressApp कम्युनिटी मानक द्वारा सुरक्षित",
         "rentalPriceDay": "दैनिक किराया",
         "confirmRemoveListing": "क्या आप \"{{title}}\" को मार्केटप्लेस से हटाना चाहते हैं? यह कपड़ा आपकी अलमारी में रहेगा — केवल लिस्टिंग हटेगी।",
-        "sourceRetail": "रिटेल"
+        "sourceRetail": "रिटेल",
+        "source": "स्रोत",
+        "category": "श्रेणी",
+        "distance": "दायरा"
     },
     "createListing": {
         "title": "लिस्टिंग बनाएं",
@@ -1734,7 +1737,9 @@
             "good": "अच्छा",
             "excellent": "उत्कृष्ट",
             "new_with_tags": "टैग के साथ नया",
-            "very_good": "बहुत अच्छा"
+            "very_good": "बहुत अच्छा",
+            "new": "नया",
+            "like_new": "नए जैसा"
         },
         "quality": {
             "budget": "बजट",

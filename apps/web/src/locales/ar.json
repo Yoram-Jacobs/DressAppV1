@@ -959,7 +959,10 @@
         "buyerProtection": "محمي بمعايير مجتمع DressApp",
         "rentalPriceDay": "السعر اليومي",
         "confirmRemoveListing": "هل تريد إزالة \"{{title}}\" من السوق؟ ستبقى القطعة في خزانتك — فقط سيتم حذف العرض.",
-        "sourceRetail": "متاجر تجزئة"
+        "sourceRetail": "متاجر تجزئة",
+        "source": "المصدر",
+        "category": "الفئة",
+        "distance": "نصف القطر"
     },
     "createListing": {
         "title": "إنشاء إعلان",
@@ -1608,7 +1611,9 @@
             "bad": "سيئة",
             "fair": "مقبولة",
             "good": "جيدة",
-            "excellent": "ممتازة"
+            "excellent": "ممتازة",
+            "new": "جديد",
+            "like_new": "كالجديد"
         },
         "quality": {
             "budget": "اقتصادي",

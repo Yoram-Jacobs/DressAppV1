@@ -1049,7 +1049,10 @@
         "buyerProtection": "Protegido por el estándar de DressApp",
         "rentalPriceDay": "Tarifa diaria",
         "confirmRemoveListing": "¿Eliminar \"{{title}}\" del mercado? Tu prenda permanecerá en el armario — solo se cancelará la publicación.",
-        "sourceRetail": "Tienda / Retail"
+        "sourceRetail": "Tienda / Retail",
+        "source": "Origen",
+        "category": "Categoría",
+        "distance": "Radio"
     },
     "createListing": {
         "title": "Crear anuncio",
@@ -1730,7 +1733,9 @@
             "bad": "Malo",
             "fair": "Aceptable",
             "good": "Bueno",
-            "excellent": "Excelente"
+            "excellent": "Excelente",
+            "new": "Nuevo",
+            "like_new": "Como nuevo"
         },
         "quality": {
             "budget": "Económico",

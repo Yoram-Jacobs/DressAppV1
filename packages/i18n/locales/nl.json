@@ -1049,7 +1049,10 @@
         "buyerProtection": "Beschermd door DressApp-communitystandaard",
         "rentalPriceDay": "Dagtarief",
         "confirmRemoveListing": "\"{{title}}\" van de marktplaats verwijderen? Je kledingstuk blijft in je kast — alleen de advertentie wordt verwijderd.",
-        "sourceRetail": "Winkel / Retail"
+        "sourceRetail": "Winkel / Retail",
+        "source": "Bron",
+        "category": "Categorie",
+        "distance": "Radius"
     },
     "createListing": {
         "title": "Maak een vermelding",
@@ -1734,7 +1737,9 @@
             "good": "Goed",
             "excellent": "Uitstekend",
             "new_with_tags": "Nieuw met prijskaartje",
-            "very_good": "Zeer goed"
+            "very_good": "Zeer goed",
+            "new": "Nieuw",
+            "like_new": "Zo goed als nieuw"
         },
         "quality": {
             "budget": "Begroting",

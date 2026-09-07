@@ -1049,7 +1049,10 @@
         "buyerProtection": "DressApp コミュニティ保護基準適用",
         "rentalPriceDay": "1日あたりのレンタル料",
         "confirmRemoveListing": "「{{title}}」をマーケットプレイスから削除しますか？ クローゼットのアイテムは保持され、出品情報のみ削除されます。",
-        "sourceRetail": "リテール"
+        "sourceRetail": "リテール",
+        "source": "ソース",
+        "category": "カテゴリー",
+        "distance": "範囲"
     },
     "createListing": {
         "title": "出品を作成",
@@ -1734,7 +1737,9 @@
             "good": "良い",
             "excellent": "非常に良い",
             "new_with_tags": "タグ付き新品",
-            "very_good": "目立った傷なし"
+            "very_good": "目立った傷なし",
+            "new": "新品",
+            "like_new": "ほぼ新品"
         },
         "quality": {
             "budget": "バジェット",

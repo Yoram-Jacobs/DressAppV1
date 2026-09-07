@@ -946,6 +946,10 @@
         "loading": "טוען…",
         "noTx": "אין עדיין עסקאות.",
         "netShort": "נטו {{amount}}",
+        "filters": "מסננים",
+        "source": "מקור",
+        "category": "קטגוריה",
+        "distance": "מרחק",
         "sourceFilter": "מקור",
         "categoryFilter": "קטגוריה",
         "noImage": "אין תמונה",
@@ -1675,6 +1679,8 @@
             "used": "משומש"
         },
         "condition": {
+            "new": "חדש",
+            "like_new": "כמו חדש",
             "bad": "גרוע",
             "fair": "סביר",
             "good": "טוב",

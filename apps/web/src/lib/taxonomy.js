@@ -66,8 +66,10 @@ export const labelForState = (code, t) => {
 
 export const labelForCondition = (code, t) => {
   if (!code) return '';
-  const key = `taxonomy.condition.${code}`;
-  return fallback(t, key, code);
+  const normalized = String(code).trim().toLowerCase().replace(/\s+/g, '_');
+  const key = `taxonomy.condition.${normalized}`;
+  const rawFallback = normalized.replace(/_/g, ' ');
+  return fallback(t, key, rawFallback);
 };
 
 export const labelForQuality = (code, t) => {

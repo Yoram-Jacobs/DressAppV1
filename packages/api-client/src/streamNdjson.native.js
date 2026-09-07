@@ -27,19 +27,21 @@
  * @param {AbortSignal} [options.signal]
  * @param {string} options.apiBase   Full API base URL (injected by the client)
  * @param {string|null} options.token Bearer token (injected by the client)
- * @returns {Promise<object|null>}
- */
+import { API_BASE as singletonApiBase, tokenStore } from './_singleton.js';
+
 export async function streamNdjson(path, {
   method = 'POST',
   params,
   body,
   onLine,
   signal,
-  apiBase = '',
-  token = null,
+  apiBase,
+  token,
 } = {}) {
+  const effectiveApiBase = apiBase !== undefined ? apiBase : singletonApiBase;
+  const effectiveToken = token !== undefined ? token : (tokenStore?.get?.() || null);
   // Build URL with query params
-  let url = `${apiBase}${path}`;
+  let url = `${effectiveApiBase}${path}`;
   if (params && typeof params === 'object') {
     const qs = Object.entries(params)
       .filter(([, v]) => v !== undefined && v !== null)

@@ -959,7 +959,10 @@
         "buyerProtection": "Geschützt durch den DressApp Community-Standard",
         "rentalPriceDay": "Tagespreis",
         "confirmRemoveListing": "\"{{title}}\" vom Marktplatz entfernen? Der Artikel bleibt in deinem Kleiderschrank — nur das Angebot wird gelöscht.",
-        "sourceRetail": "Einzelhandel"
+        "sourceRetail": "Einzelhandel",
+        "source": "Quelle",
+        "category": "Kategorie",
+        "distance": "Umkreis"
     },
     "createListing": {
         "title": "Inserat erstellen",
@@ -1608,7 +1611,9 @@
             "bad": "Schlecht",
             "fair": "Akzeptabel",
             "good": "Gut",
-            "excellent": "Hervorragend"
+            "excellent": "Hervorragend",
+            "new": "Neu",
+            "like_new": "Wie neu"
         },
         "quality": {
             "budget": "Budget",

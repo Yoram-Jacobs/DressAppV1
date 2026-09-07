@@ -1108,7 +1108,10 @@
         "buyerProtection": "מוגן בתקן קהילת DressApp",
         "rentalPriceDay": "תעריף יומי",
         "confirmRemoveListing": "להסיר את \"{{title}}\" מהמרקטפלייס? הפריט יישאר בארון — רק המודעה תוסר.",
-        "sourceRetail": "ריטייל"
+        "sourceRetail": "ריטייל",
+        "source": "מקור",
+        "category": "קטגוריה",
+        "distance": "רדיוס"
     },
     "createListing": {
         "title": "צור מודעה",
@@ -1814,7 +1817,9 @@
             "good": "טוב",
             "excellent": "מצוין",
             "new_with_tags": "חדש עם תוויות",
-            "very_good": "טוב מאוד"
+            "very_good": "טוב מאוד",
+            "new": "חדש",
+            "like_new": "כמו חדש"
         },
         "quality": {
             "budget": "בסיסי",

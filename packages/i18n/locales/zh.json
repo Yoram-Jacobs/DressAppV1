@@ -1049,7 +1049,10 @@
         "buyerProtection": "受 DressApp 社区安全标准保护",
         "rentalPriceDay": "每日租金",
         "confirmRemoveListing": "确定从市集中下架“{{title}}”吗？衣橱中的衣物仍将保留，仅删除市集发布信息。",
-        "sourceRetail": "零售 / 品牌"
+        "sourceRetail": "零售 / 品牌",
+        "source": "来源",
+        "category": "类别",
+        "distance": "半径范围"
     },
     "createListing": {
         "title": "创建商品",
@@ -1734,7 +1737,9 @@
             "good": "良好",
             "excellent": "极佳",
             "new_with_tags": "全新带吊牌",
-            "very_good": "非常好"
+            "very_good": "非常好",
+            "new": "全新",
+            "like_new": "几乎全新"
         },
         "quality": {
             "budget": "经济",
