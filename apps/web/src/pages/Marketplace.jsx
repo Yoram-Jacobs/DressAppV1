@@ -814,7 +814,9 @@ function MyListings() {
                   <span
                     className="absolute bottom-2.5 right-2.5 z-[2] bg-white text-[var(--primary-color)] text-[10px] font-extrabold tracking-[0.04em] capitalize px-2.5 py-1.5 rounded-full shadow-sm"
                   >
-                    {l.status}
+                    {t(`market.status${(l.status || '').charAt(0).toUpperCase()}${(l.status || '').slice(1)}`, {
+                      defaultValue: l.status,
+                    })}
                   </span>
                 </div>
                 <div className="p-4">

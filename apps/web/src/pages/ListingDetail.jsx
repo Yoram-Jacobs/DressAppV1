@@ -49,14 +49,22 @@ export default function ListingDetail() {
     setLoading(true);
     setSimilarLoading(true);
     api.getListing(id)
-      .then(setListing)
-      .catch(() => { toast.error(t('market.listingNotFound')); nav('/market'); })
+      .then((data) => {
+        setListing(data);
+        return api.getSimilarListings(id, { limit: 6 })
+          .then((res) => {
+            setSimilar(res.items || []);
+            setSimilarMode(res.mode || null);
+          })
+          .catch(() => { /* non-fatal */ })
+          .finally(() => setSimilarLoading(false));
+      })
+      .catch(() => {
+        toast.error(t('market.listingNotFound'));
+        setSimilarLoading(false);
+        nav('/market');
+      })
       .finally(() => setLoading(false));
-
-    api.getSimilarListings(id, { limit: 6 })
-      .then((res) => { setSimilar(res.items || []); setSimilarMode(res.mode || null); })
-      .catch(() => { /* non-fatal */ })
-      .finally(() => setSimilarLoading(false));
   }, [id, nav, t]);
 
   const createOrder = async () => {
