@@ -15,6 +15,7 @@ import { closetRepo } from '@mobile/lib/repositories/closetRepository';
 import { dailySuggestionsStore } from '@mobile/lib/stores/dailySuggestionsStore';
 import { trendScoutStore } from '@mobile/lib/stores/trendScoutStore';
 import { outfitStore } from '@mobile/lib/stores/outfitStore';
+import { toCountryCode } from '@mobile/lib/country';
 
 export function useUniversalSync(isLoggedIn: boolean = true) {
   useEffect(() => {
@@ -50,7 +51,7 @@ export function useUniversalSync(isLoggedIn: boolean = true) {
           try {
             const u = userStore.getSnapshot().user;
             const lang = (u?.language || 'en').split('-')[0].toLowerCase();
-            const cntry = (u?.address?.country_code || (u as any)?.country || 'IL').toString().toUpperCase();
+            const cntry = toCountryCode(u?.address?.country_code || (u as any)?.country_code || (u as any)?.country);
             const g = (u?.sex || u?.gender || 'female').toLowerCase();
             trendScoutStore.prewarm({ language: lang, country: cntry, gender: g, force: true }).catch(() => {});
           } catch {

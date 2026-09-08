@@ -46,21 +46,31 @@ const BUCKET_STYLES = {
 
 /** Hero visual: image > video poster > colored gradient fallback. */
 function ScoutMedia({ card }) {
+  const [proxyAttempted, setProxyAttempted] = useState(false);
   const gradient = BUCKET_STYLES[card.bucket] || BUCKET_STYLES['news_flash'];
-  if (card.image_url) {
+  const rawImageUrl = typeof card?.image_url === 'string' ? card.image_url.trim() : '';
+  const imageUrl = proxyAttempted
+    ? `/api/v1/trends/image-proxy?url=${encodeURIComponent(rawImageUrl)}`
+    : rawImageUrl;
+
+  if (rawImageUrl) {
     return (
       <div className="relative aspect-[16/9] overflow-hidden rounded-lg bg-secondary">
         <img
-          src={card.image_url}
+          src={imageUrl}
           alt={card.headline}
           loading="lazy"
+          referrerPolicy="no-referrer"
           onError={(e) => {
-            // If the image is a fabricated URL the <img> errors; we swap to a gradient.
-            e.currentTarget.style.display = 'none';
-            e.currentTarget.parentElement?.classList.add(
-              'bg-gradient-to-br',
-              ...gradient.split(' '),
-            );
+            if (!proxyAttempted) {
+              setProxyAttempted(true);
+            } else {
+              e.currentTarget.style.display = 'none';
+              e.currentTarget.parentElement?.classList.add(
+                'bg-gradient-to-br',
+                ...gradient.split(' '),
+              );
+            }
           }}
           className="h-full w-full object-cover"
         />

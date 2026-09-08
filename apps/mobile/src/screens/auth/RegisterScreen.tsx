@@ -25,6 +25,7 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Button } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
@@ -56,7 +57,8 @@ export default function RegisterScreen() {
     if (busy) return;
     setBusy(true);
     try {
-      const data = await api.googleLoginStart({ mobile: true });
+      const storedRef = await AsyncStorage.getItem('dressapp_ref_id').catch(() => null);
+      const data = await api.googleLoginStart({ mobile: true, ref: storedRef || '' });
       if (!data?.authorization_url) {
         throw new Error('No authorization URL returned from server.');
       }

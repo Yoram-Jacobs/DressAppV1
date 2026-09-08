@@ -559,7 +559,7 @@ export function ClosetAddScreen() {
       });
     } catch (err: any) {
       console.warn('Analysis error:', err);
-      const errMsg = err?.response?.data?.detail || err?.message || t('addItem.analyzeFailed', { defaultValue: 'Analysis failed' });
+      const errMsg = err?.response?.data?.detail || err?.response?.data?._error || err?.message || t('addItem.analyzeFailed', { defaultValue: 'Analysis failed' });
       setCards((prev) =>
         prev.map((c) => (c.id === tempCardId ? { ...c, status: 'error', progress: 0, error: errMsg } : c))
       );

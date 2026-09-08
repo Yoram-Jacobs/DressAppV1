@@ -375,6 +375,18 @@ async def run_background_matte(
         item_id, provider, faithful, len(result),
     )
 
+    try:
+        item_doc = await repos.find_one(db.closet_items, {"id": item_id})
+        if item_doc and item_doc.get("user_id"):
+            from app.services.sync_service import broadcast_sync_event
+            await broadcast_sync_event(
+                item_doc["user_id"],
+                "closet_updated",
+                {"action": "update", "item_id": item_id, "clean_image_url": clean_url},
+            )
+    except Exception as sync_exc:
+        logger.debug("Matte broadcast_sync_event skipped: %s", sync_exc)
+
 
 def _apply_defaults(parsed: Dict[str, Any]) -> Dict[str, Any]:
     parsed.setdefault("category", "Top")
@@ -530,17 +542,22 @@ async def run_background_reconstruction(
         )
         return
 
-    recon_b64 = compress_b64_image(result['image_b64'], max_dim=1024, quality=75)
+    recon_raw = base64.b64decode(result['image_b64'])
+    from app.services.vision.image import _fit_crop_to_card
+    fitted_recon, fitted_mime = _fit_crop_to_card(recon_raw, crop_mime="image/png")
+    compressed_recon = compress_image_bytes(fitted_recon, max_dim=1024, quality=75)
+    temp_img = Image.open(io.BytesIO(compressed_recon))
+    mime = "image/png" if temp_img.mode in ("RGBA", "LA") else "image/webp"
+    ext = "png" if mime == "image/png" else "webp"
+
     try:
-        temp_raw = base64.b64decode(recon_b64)
-        temp_img = Image.open(io.BytesIO(temp_raw))
-        mime = "image/png" if temp_img.mode in ("RGBA", "LA") else "image/jpeg"
-    except Exception:
-        mime = result.get("mime_type", "image/png")
-    data_url = f"data:{mime};base64,{recon_b64}"
-    from app.services.vision.image import fit_image_data_url_to_card
-    data_url = fit_image_data_url_to_card(data_url) or data_url
-    clean_url = fit_image_data_url_to_card(result.get("clean_image_url")) if result.get("clean_image_url") else data_url
+        recon_url = await UploadManager.upload_bytes(compressed_recon, mime, ext)
+    except Exception as upload_exc:
+        logger.warning(
+            "Background reconstruction upload failed for item %s (%s); falling back to inline base64",
+            item_id, upload_exc,
+        )
+        recon_url = f"data:{mime};base64,{base64.b64encode(compressed_recon).decode('ascii')}"
 
     meta = {
         "method": "reconstruction",
@@ -552,12 +569,12 @@ async def run_background_reconstruction(
         "deferred": True,
         "updated_at": datetime.now(timezone.utc).isoformat(),
     }
+    # NOTE: We preserve clean_image_url (the original crop's cutout) and only update reconstructed_image_url
     await db.closet_items.update_one(
         {"id": item_id},
         {
             "$set": {
-                "reconstructed_image_url": data_url,
-                "clean_image_url": clean_url,
+                "reconstructed_image_url": recon_url,
                 "reconstruction_metadata": meta,
                 "updated_at": datetime.now(timezone.utc).isoformat(),
                 "thumbnail_data_url": None,
@@ -570,6 +587,18 @@ async def run_background_reconstruction(
         "(model=%s in %.1fs reasons=%s)",
         item_id, result.get("model"), elapsed, reasons,
     )
+
+    try:
+        item_doc = await repos.find_one(db.closet_items, {"id": item_id})
+        if item_doc and item_doc.get("user_id"):
+            from app.services.sync_service import broadcast_sync_event
+            await broadcast_sync_event(
+                item_doc["user_id"],
+                "closet_updated",
+                {"action": "update", "item_id": item_id, "reconstructed_image_url": recon_url},
+            )
+    except Exception as sync_exc:
+        logger.debug("Reconstruction broadcast_sync_event skipped: %s", sync_exc)
 
 async def reanalyze_group_helper(group_id: str, user_id: str) -> None:
     from app.services.vision import garment_vision_service

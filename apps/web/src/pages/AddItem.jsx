@@ -1965,6 +1965,8 @@ export default function AddItem() {
       // Stream failed. Try to save all remaining as fallbacks?
       // For now just error out gracefully
       console.error("[handleBatchBackground] analyzeItemImage failed:", err);
+      const msg = err?.response?.data?.detail || err?.response?.data?._error || err?.message;
+      if (msg) toast.error(msg);
       setBgBatch((b) =>
         b ? { ...b, failed: b.failed + (b.total - b.processed) } : null,
       );
@@ -2285,10 +2287,7 @@ export default function AddItem() {
       );
     } catch (err) {
       clearInterval(tick);
-      const msg =
-        err?.response?.data?.detail ||
-        err?.message ||
-        t("addItem.analyzeFailed", { defaultValue: "Analysis failed" });
+      const msg = err?.response?.data?.detail || err?.response?.data?._error || err?.message || t('addItem.analyzeFailed', { defaultValue: 'Analysis failed' });
 
       const erroredIds = new Set();
       cardsToProcess.forEach((origCard) => {
@@ -2572,10 +2571,7 @@ export default function AddItem() {
       );
     } catch (err) {
       clearInterval(tick);
-      const msg =
-        err?.response?.data?.detail ||
-        err?.message ||
-        t("addItem.analyzeFailed", { defaultValue: "Analysis failed" });
+      const msg = err?.response?.data?.detail || err?.response?.data?._error || err?.message || t('addItem.analyzeFailed', { defaultValue: 'Analysis failed' });
       // Bug-fix May 2026 — when ``handleDetect`` has already replaced
       // the original ``card.id`` with per-item slot cards
       // (``perCardIds`` populated), the stream error that follows
@@ -5098,7 +5094,7 @@ function IntentSelector({ idPrefix, fields, onChange, disabled }) {
               disabled={disabled}
               onClick={() => onChange({ marketplace_intent: o.value })}
               data-testid={`add-item-intent-${o.value}`}
-              className={`rounded-xl font-bold bg-white border px-2 py-2 text-[12px] flex items-center justify-center gap-1 transition-colors ${active
+              className={`rounded-xl font-bold bg-primary-brand border px-2 py-2 text-[12px] flex items-center justify-center gap-1 transition-colors ${active
                 ? `${o.tone} font-bold`
                 : "bg-yellow-brand text-primary-brand hover:text-dark-brand border-border"
                 }`}
@@ -5536,7 +5532,7 @@ function TagsEditor({ idPrefix, items, onChange, disabled }) {
             className="!gap-0"
             disabled={disabled || !draft.trim()}
           >
-            <Plus className="h-3 w-3 text-white"/>Add
+            <Plus className="h-3 w-3 text-white" />Add
           </Button>
         </div>
       </div>

@@ -46,7 +46,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     AsyncStorage.setItem(THEME_STORAGE_KEY, mode).catch(() => {});
   };
 
-  const scheme = themeMode === 'system' ? systemScheme : themeMode;
+  const scheme: ColorSchemeName = (themeMode === 'system' ? systemScheme : themeMode) ?? 'light';
   const isDark = scheme === 'dark';
   const colors = isDark ? darkColors : lightColors;
   const currentFonts = getLanguageFonts(i18n.language);

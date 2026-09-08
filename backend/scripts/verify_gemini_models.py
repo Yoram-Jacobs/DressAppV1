@@ -1,13 +1,13 @@
-"""Prove the post-migration wiring really hits Gemini 3.5 Flash-Lite + Nano Banana.
+"""Prove the post-migration wiring really hits Gemini 3.5 Flash + Nano Banana.
 
 Three live calls:
 
-1. ``GeminiStylistService.advise(...)`` — must call **gemini-3.5-flash-lite**
+1. ``GeminiStylistService.advise(...)`` — must call **gemini-3.5-flash**
    (settings.DEFAULT_STYLIST_MODEL).
 2. ``GeminiImageService.generate(prompt=...)`` — must call **nano banana**
    (settings.GEMINI_IMAGE_MODEL = 'gemini-3.1-flash-lite-image').
 3. ``GarmentVisionService.analyze(image_bytes=...)`` — must call
-   **gemini-3.5-flash-lite** (settings.GARMENT_VISION_MODEL).
+   **gemini-3.5-flash** (settings.GARMENT_VISION_MODEL).
 
 Each call prints the model the SDK actually saw via a tiny SDK
 instrumentation wrapper, plus the elapsed time so you can compare

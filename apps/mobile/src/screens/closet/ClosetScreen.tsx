@@ -63,6 +63,29 @@ const CATEGORIES = ['all', 'top', 'bottom', 'outerwear', 'shoes', 'accessory', '
 const SOURCES = ['all', 'Private', 'for_sale', 'swap', 'donate', 'Retail'];
 const SEASONS = ['all', 'spring', 'summer', 'fall', 'winter'];
 
+const _CATEGORY_SYNONYMS: Record<string, Set<string>> = {
+  top:         new Set(['top', 'tops']),
+  bottom:      new Set(['bottom', 'bottoms']),
+  outerwear:   new Set(['outerwear']),
+  shoes:       new Set(['shoes', 'footwear']),
+  footwear:    new Set(['shoes', 'footwear']),
+  accessory:   new Set(['accessory', 'accessories', 'headwear']),
+  accessories: new Set(['accessory', 'accessories', 'headwear']),
+  headwear:    new Set(['accessory', 'accessories', 'headwear']),
+  dress:       new Set(['dress', 'dresses', 'full body', 'full_body', 'fullbody', 'full-body', 'one-piece']),
+  dresses:     new Set(['dress', 'dresses', 'full body', 'full_body', 'fullbody', 'full-body', 'one-piece']),
+};
+
+function matchesCategory(itemCategory?: string, filterCat?: string): boolean {
+  if (!filterCat || filterCat === 'all') return true;
+  if (!itemCategory) return false;
+  const requested = filterCat.toLowerCase().trim();
+  const synonyms = _CATEGORY_SYNONYMS[requested] || new Set([requested]);
+  const cat = itemCategory.toLowerCase().trim();
+  if (synonyms.has(cat)) return true;
+  return cat.includes(requested) || requested.includes(cat);
+}
+
 export function ClosetScreen() {
   const { t } = useTranslation();
   const navigation = useNavigation<ClosetNavProp>();
@@ -427,8 +450,7 @@ export function ClosetScreen() {
 
         // Category filter
         if (activeCategory !== 'all') {
-          const cat = (it.category || '').toLowerCase();
-          if (!cat.includes(activeCategory.toLowerCase())) return false;
+          if (!matchesCategory(it.category, activeCategory)) return false;
         }
 
         // Source / Intent filter

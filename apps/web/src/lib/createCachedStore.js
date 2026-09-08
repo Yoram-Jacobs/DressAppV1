@@ -194,6 +194,17 @@ export function createCachedStore({
     _notify();
   };
 
+  const setSlot = (filters, data) => {
+    const key = _stableKey(filters);
+    cache.set(key, {
+      items: data?.items || [],
+      total: typeof data?.total === 'number' ? data.total : (data?.items?.length || 0),
+      ts: data?.ts || Date.now(),
+    });
+    _touch(key);
+    _notify();
+  };
+
   return {
     name,
     get,
@@ -202,6 +213,7 @@ export function createCachedStore({
     prewarm,
     upsertItem,
     removeItem,
+    setSlot,
     invalidate,
     subscribe,
     getSnapshotToken,

@@ -35,6 +35,7 @@ import * as Lucide from 'lucide-react-native';
 import { useTheme } from '@mobile/theme';
 import { fonts, fontSizes, spacing, radii, shadows } from '@mobile/theme/tokens';
 import { api } from '@mobile/lib/api';
+import { toCountryCode } from '@mobile/lib/country';
 import { useClosetStore, useTrendScoutStore, useUserStore, useMarketplaceStore } from '@mobile/lib/stores';
 import { LanguagePicker } from '@mobile/components/LanguagePicker';
 import { HelpFloater } from '@mobile/components/help';
@@ -92,7 +93,7 @@ export default function HomeScreen() {
   const language = (i18n.language || 'en').split('-')[0].toLowerCase();
   const userSex = (user?.sex || user?.gender || 'female').toLowerCase();
   const gender = userSex === 'male' ? 'male' : 'female';
-  const country = (user?.address?.country_code || (user as any)?.country || 'IL').toString().toUpperCase();
+  const country = toCountryCode(user?.address?.country_code || (user as any)?.country_code || (user as any)?.country);
 
   const onRefresh = async () => {
     setRefreshing(true);

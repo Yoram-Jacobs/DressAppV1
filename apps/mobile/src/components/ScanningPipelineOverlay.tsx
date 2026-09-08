@@ -104,7 +104,7 @@ export function ScanningPipelineOverlay({ visible = true, variant = 'block' }: P
 
 const blockS = StyleSheet.create({
   root: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     alignItems: 'center',
     justifyContent: 'center',
     gap: spacing[3],

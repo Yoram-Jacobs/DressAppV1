@@ -37,17 +37,19 @@ let webpackConfig = {
     alias: {
       '@': path.resolve(__dirname, 'src'),
       '@dressapp/api-client': path.resolve(__dirname, '../../packages/api-client/src/index.js'),
+      'react': path.resolve(__dirname, '../../node_modules/react'),
+      'react-dom': path.resolve(__dirname, '../../node_modules/react-dom'),
+      'lucide-react': path.resolve(__dirname, '../../node_modules/lucide-react'),
       'motion-utils': require.resolve('motion-utils'),
       // Override the package stub so the full Sonner toast fires on web
       './aiNotice.js': path.resolve(__dirname, 'src/lib/aiNotice.jsx'),
     },
     configure: (webpackConfig) => {
-      // Add root node_modules to resolve paths for monorepo hoisting
+      // Ensure root node_modules is searched for monorepo package hoisting
       webpackConfig.resolve.modules = [
-        path.resolve(__dirname, 'src'),
         path.resolve(__dirname, 'node_modules'),
         path.resolve(__dirname, '../../node_modules'),
-        'node_modules',
+        ...(webpackConfig.resolve.modules || ['node_modules']),
       ];
 
       // Remove ModuleScopePlugin to allow aliases and monorepo packages outside src/
@@ -83,10 +85,16 @@ let webpackConfig = {
         },
       });
 
+      // Ignore missing source map warnings from 3rd-party packages like html5-qrcode
+      webpackConfig.ignoreWarnings = [
+        ...(webpackConfig.ignoreWarnings || []),
+        /Failed to parse source map/,
+      ];
+
       // Ensure postcss-loader uses local tailwindcss v3, not root v4
       try {
         const { matches } = getLoaders(webpackConfig, loaderByName('postcss-loader'));
-        const localTw = require(path.resolve(__dirname, 'node_modules/tailwindcss'));
+        const localTw = require('tailwindcss');
         for (const m of matches) {
           if (m?.loader?.options?.postcssOptions?.plugins) {
             const plugins = m.loader.options.postcssOptions.plugins;

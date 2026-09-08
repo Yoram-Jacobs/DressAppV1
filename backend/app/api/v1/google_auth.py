@@ -506,6 +506,10 @@ async def google_login_start(
         default=None,
         description="Optional custom return URL (e.g. exp://... in Expo Go) for mobile auth callbacks.",
     ),
+    ref: str | None = Query(
+        default=None,
+        description="Optional referrer user ID from invite link.",
+    ),
 ) -> dict[str, Any]:
     """Public endpoint that returns the Google authorization URL for the
     *sign-in / sign-up* flow. No DressApp credentials required.
@@ -530,6 +534,7 @@ async def google_login_start(
             "mobile": bool(mobile),
             "redirect_uri": redirect_uri,
             "return_url": return_url,
+            "ref": ref,
         },
     )
 
@@ -835,6 +840,22 @@ async def _handle_login_callback(
             # Provision 10 free credits (expiring in 30 days) on signup as per pricing spec
             new_user.add_credit_bucket(amount=10, credit_type="free", days_until_expiry=30)
             user_doc = new_user.model_dump()
+
+            # Process referral if present
+            ref_id = state_data.get("ref")
+            if ref_id and ref_id != "invite" and ref_id != new_user.id:
+                referrer = await db.users.find_one({"id": ref_id})
+                if referrer:
+                    user_doc["referred_by"] = ref_id
+                    await db.users.update_one(
+                        {"id": ref_id},
+                        {
+                            "$inc": {"closet_capacity_bonus": 10},
+                            "$set": {"updated_at": datetime.now(timezone.utc).isoformat()},
+                        },
+                    )
+                    logger.info("google sign-in: awarded +10 closet slots to referrer id=%s for new user id=%s", ref_id, new_user.id)
+
             user_doc["roles"] = apply_admin_role(user_doc.get("roles"), email)
             await repos.insert(db.users, user_doc)
             logger.info("google sign-in: created new user email=%s id=%s", email, new_user.id)

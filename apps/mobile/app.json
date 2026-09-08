@@ -3,15 +3,10 @@
     "name": "DressApp",
     "slug": "dressapp",
     "owner": "krembo",
-    "version": "1.0.5",
+    "version": "1.0.7",
     "orientation": "default",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
-    "splash": {
-      "image": "./assets/splash.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#FAF8F5"
-    },
     "assetBundlePatterns": [
       "**/*"
     ],
@@ -32,7 +27,7 @@
         "backgroundColor": "#FAF8F5"
       },
       "package": "com.project.dressappV1",
-      "versionCode": 9,
+      "versionCode": 8,
       "permissions": [
         "android.permission.CAMERA",
         "android.permission.RECORD_AUDIO",
@@ -61,9 +56,16 @@
           "photosPermission": "Allow DressApp to access your photos to add clothes to your closet."
         }
       ],
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/splash.png",
+          "resizeMode": "contain",
+          "backgroundColor": "#FAF8F5"
+        }
+      ],
       "expo-font",
       "expo-secure-store",
-      "expo-av",
       [
         "expo-notifications",
         {
@@ -74,10 +76,10 @@
           "androidMode": "default",
           "androidCollapsedTitle": "DressApp"
         }
-      ]
+      ],
+      "./plugins/withGooglePlayRequirements.js"
     ],
     "scheme": "dressapp",
-    "newArchEnabled": true,
     "updates": {
       "url": "https://u.expo.dev/e46e33b6-54a8-493a-9817-41f2daa6ead3"
     }

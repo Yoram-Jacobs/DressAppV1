@@ -140,6 +140,8 @@ async def generate_text(
     response_schema: dict[str, Any] | None = None,
     max_tokens: int | None = None,
     temperature: float | None = None,
+    api_key: str | None = None,
+    model: str = "gemini-3.5-flash",
 ) -> str:
     from app.services import eyes_override
     from app.services.vision.llm import _call_gemma_space
@@ -160,11 +162,12 @@ async def generate_text(
         except Exception as exc:
             logger.warning("Gemma Space call failed; falling back to Gemini. Error: %s", exc)
 
-    logger.info("Routing text request to Gemini Client")
-    client = GeminiClient()
+    logger.info("Routing text request to Gemini Client (model=%s)", model)
+    client = GeminiClient(api_key=api_key)
     return await client.text(
         user_text=user_text,
         system=system,
+        model=model,
         temperature=temperature,
         max_tokens=max_tokens,
         response_mime_type=response_mime_type,
@@ -221,7 +224,16 @@ async def suitcase_chat(
         "}"
     )
 
-    resp_str = await generate_text(user_text=prompt, response_mime_type="application/json")
+    from app.services.auth import resolve_user_gemini_api_key, resolve_user_gemini_model
+    user_api_key = resolve_user_gemini_api_key(user)
+    user_model = resolve_user_gemini_model(user)
+
+    resp_str = await generate_text(
+        user_text=prompt,
+        response_mime_type="application/json",
+        api_key=user_api_key,
+        model=user_model,
+    )
     import re
     try:
         return json.loads(resp_str)
@@ -402,6 +414,10 @@ async def pack_suitcase(
     except Exception as e:
         logger.warning("Failed to retrieve user calendar events: %s", e)
 
+    from app.services.auth import resolve_user_gemini_api_key, resolve_user_gemini_model
+    user_api_key = resolve_user_gemini_api_key(user)
+    user_model = resolve_user_gemini_model(user)
+
     # 3. Get destination coordinates & weather
     weather_ctx = None
     weather_summary = "Weather information unavailable."
@@ -412,7 +428,12 @@ async def pack_suitcase(
             f"Respond ONLY with a JSON object in this format: "
             f'{{"lat": float, "lng": float, "timezone": string}}'
         )
-        geo_str = await generate_text(user_text=geo_prompt, response_mime_type="application/json")
+        geo_str = await generate_text(
+            user_text=geo_prompt,
+            response_mime_type="application/json",
+            api_key=user_api_key,
+            model=user_model,
+        )
         geo_data = json.loads(geo_str)
         lat = geo_data.get("lat")
         lng = geo_data.get("lng")
@@ -516,7 +537,9 @@ async def pack_suitcase(
     analysis_str = await generate_text(
         user_text=user_brief,
         system=system_prompt,
-        response_mime_type="application/json"
+        response_mime_type="application/json",
+        api_key=user_api_key,
+        model=user_model,
     )
     analysis = json.loads(analysis_str)
 
@@ -790,7 +813,16 @@ async def enter_suitcase_location(
         f'{{"is_danger_zone": boolean, "is_holy_place": boolean, "alert_title": string, "alert_body": string}}'
     )
 
-    resp_str = await generate_text(user_text=prompt, response_mime_type="application/json")
+    from app.services.auth import resolve_user_gemini_api_key, resolve_user_gemini_model
+    user_api_key = resolve_user_gemini_api_key(user)
+    user_model = resolve_user_gemini_model(user)
+
+    resp_str = await generate_text(
+        user_text=prompt,
+        response_mime_type="application/json",
+        api_key=user_api_key,
+        model=user_model,
+    )
     res = json.loads(resp_str)
 
     if res.get("is_danger_zone") or res.get("is_holy_place"):

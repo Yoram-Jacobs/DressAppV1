@@ -69,17 +69,17 @@ def _coerce_image_part(part: Any) -> bytes | None:
 class GeminiImageService:
     """Thin async wrapper around `google-genai` for Nano Banana."""
 
-    def __init__(self) -> None:
+    def __init__(self, api_key: str | None = None) -> None:
         if _genai is None:
             raise RuntimeError(
                 "google-genai is not installed. Add `google-genai` to "
                 "requirements.txt and reinstall."
             )
-        if not settings.GEMINI_API_KEY:
+        self.api_key = api_key or settings.GEMINI_API_KEY
+        if not self.api_key:
             raise RuntimeError(
                 "GEMINI_API_KEY is not configured. Required for Nano Banana."
             )
-        self.api_key = settings.GEMINI_API_KEY
         self.model = settings.GEMINI_IMAGE_MODEL
         # The SDK is sync — we instantiate a Client per service and call it
         # from a worker thread. The client is cheap and thread-safe.
@@ -266,6 +266,28 @@ gemini_image_service = (
     GeminiImageService() if (settings.has_native_gemini and _genai is not None) else None
 )
 
+
+def get_gemini_image_service(
+    user: dict[str, Any] | None = None,
+    api_key: str | None = None,
+) -> GeminiImageService | None:
+    """Return a GeminiImageService initialized with the resolved user or system API key."""
+    if not api_key and user:
+        from app.services.auth import resolve_user_gemini_api_key
+        api_key = resolve_user_gemini_api_key(user)
+    if not api_key:
+        api_key = settings.GEMINI_API_KEY
+    if not api_key or _genai is None:
+        return gemini_image_service
+    if api_key == settings.GEMINI_API_KEY:
+        return gemini_image_service
+    try:
+        return GeminiImageService(api_key=api_key)
+    except Exception as exc:
+        logger.warning("Failed to initialize user-specific GeminiImageService: %s", exc)
+        return gemini_image_service
+
+
 if gemini_image_service is None:
     logger.info(
         "Nano Banana disabled (no GEMINI_API_KEY or google-genai missing). "
@@ -276,3 +298,4 @@ else:
     logger.info(
         "Nano Banana enabled — model=%s", gemini_image_service.model
     )
+

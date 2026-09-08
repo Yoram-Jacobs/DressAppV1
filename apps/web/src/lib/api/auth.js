@@ -9,11 +9,12 @@ export const auth = {
    * Returns ``{ authorization_url }``. The caller is expected to do a
    * full-page redirect to that URL (popup-less PKCE-style flow).
    */
-  googleLoginStart: ({ withCalendar = false, next = null, mobile = false } = {}) => {
+  googleLoginStart: ({ withCalendar = false, next = null, mobile = false, ref = null } = {}) => {
     const params = new URLSearchParams();
     if (withCalendar) params.set('with_calendar', 'true');
     if (next) params.set('next', next);
     if (mobile) params.set('mobile', '1');
+    if (ref) params.set('ref', ref);
     const qs = params.toString();
     return client
       .get(`/auth/google/login/start${qs ? `?${qs}` : ''}`)

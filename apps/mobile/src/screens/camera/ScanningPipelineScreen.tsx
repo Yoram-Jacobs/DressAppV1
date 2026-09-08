@@ -98,7 +98,7 @@ export function ScanningPipelineScreen() {
   return (
     <SafeAreaView style={styles.root} edges={['bottom', 'top']}>
       <CameraView 
-        style={StyleSheet.absoluteFillObject} 
+        style={StyleSheet.absoluteFill} 
         facing="back"
         enableTorch={flash === 'on'}
         ref={cameraRef}
@@ -132,7 +132,7 @@ export function ScanningPipelineScreen() {
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: '#000' },
   overlay: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     justifyContent: 'space-between',
   },
   center: { justifyContent: 'center', alignItems: 'center', padding: 32 },

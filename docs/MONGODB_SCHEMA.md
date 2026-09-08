@@ -21,7 +21,7 @@
 | `stylist_messages` | Individual conversation turns within a stylist session | `(session_id, created_at)` compound, `session_id` |
 | `embeddings` | Multi-modal vector store for visual and semantic retrieval | `entity_type`, `entity_id`, Atlas Vector Search index on `vector` |
 | `cultural_rules` | Regional, religious, and dress-code constraints | `(region, religion, occasion)` compound |
-| `trend_reports` | Daily automated fashion trend reports (Trend Scout) | `date`, `category`, `(date, category)` (unique) |
+| `trend_reports` | Global and local fashion trend intelligence cards (Trend Scout) | `(date, bucket)`, `(bucket, date, language, country_code)` (unique, sparse), `(origin_id, language, country_code)` (unique, partialFilter), `created_at` |
 | `outfits` | Saved AI and user-composed outfit sets | `user_id`, `created_at`, `(user_id, created_at)` |
 | `ad_campaigns` | Expert directory promotional campaigns | `(owner_id, created_at)`, `(status, target_country, target_region)` |
 | `user_credits` | Expert advertising credits per user and currency | `(user_id, currency)` (unique) |
@@ -329,3 +329,54 @@ Powers the verified Experts directory, self-serve home feed ad tickers, and cred
   "updated_at": "2026-09-03T00:00:00Z"
 }
 ```
+
+---
+
+### 2.8 `trend_reports` & `trend_scout_settings`
+
+Editorial trend cards discovered, parsed, and synthesized across 7 Men's and Women's channels (Trend Scout), plus user personalization preferences.
+
+```json
+// trend_reports
+{
+  "_id": "66da1b4a7801b7a2e8e45a19",
+  "id": "c39a859e-e317-48f0-b9f0-25e24c08466b",
+  "bucket": "local",
+  "bucket_label": "Local News",
+  "gender": "female",
+  "headline": "Tel Aviv Fashion Week Highlights Desert Tones and Sustainable Linen",
+  "body": "Emerging Israeli designers showcased relaxed tailoring infused with earthy terracotta and olive drapes...",
+  "tag": "LOCAL NEWS",
+  "source_name": "Fashion Forward",
+  "source_url": "https://fashionforward.mako.co.il/news/2026-runway-recap/",
+  "image_url": "https://img.mako.co.il/2026/09/01/fashion_linen_hero.jpg",
+  "video_url": null,
+  "date": "2026-09-05",
+  "created_at": "2026-09-05T07:15:30.123456+00:00",
+  "country_code": "IL",
+  "language": "en",
+  "origin_id": null
+}
+
+// trend_scout_settings
+{
+  "user_id": "c1f7b0f6-9f1e-4518-8f15-3b9845012345",
+  "style_keywords": ["Quiet Luxury", "Vintage", "Minimalist"],
+  "custom_style": "Architectural tailoring",
+  "social_platforms": {
+    "instagram": "jordan_styles",
+    "pinterest": "jordan_boards",
+    "tiktok": null,
+    "facebook": null,
+    "threads": null,
+    "x": null
+  },
+  "updated_at": "2026-09-05T12:00:00Z"
+}
+```
+
+#### Trend Scout Indexes (`backend/app/db/database.py`):
+- `[("date", -1), ("bucket", 1)]` — Chronological bucket query optimization.
+- `[("bucket", 1), ("date", 1), ("language", 1), ("country_code", 1)]` (unique, sparse) — Canonical card deduplication across buckets, dates, languages, and geographic regions.
+- `[("origin_id", 1), ("language", 1), ("country_code", 1)]` (unique, partialFilter: `{"origin_id": {"$type": "string"}}`) — High-speed retrieval of translated editorial cards across 13 locales.
+

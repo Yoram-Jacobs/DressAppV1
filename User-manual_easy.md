@@ -171,15 +171,21 @@ Wake up every morning to a ready-to-wear outfit suggestion:
 ### Step 9: Trend Scout & "Style with My Closet"
 Stay ahead of global fashion trends without spending a fortune on new clothes:
 
-1. Open the **Trend Scout** section on your home feed.
-2. Browse 4 curated daily fashion channels:
-   - 🌟 **Runway**: High-fashion runway highlights and designer themes.
-   - 👟 **Streetwear**: Casual, urban, and modern daily street fashion.
-   - 🌿 **Sustainability**: Eco-friendly fashion, circular materials, and conscious styling.
-   - ✨ **Influencers**: Trending styles popular across social media.
-3. **1-Tap "Style with My Closet"**:
+1. Open the **Trend Scout** section from your home feed or navigation bar.
+2. **Switch Between Women's and Men's Fashion**: Use the top toggle to instantly view trends tailored to women's or men's style aesthetics.
+3. Browse 7 curated daily and monthly channels:
+   - 📍 **Local News**: Emerging designers, local fashion weeks, and boutique events happening in your home region.
+   - 👑 **Runway**: Haute couture, seasonal fashion week highlights, and directional designer looks.
+   - 👟 **Street Style**: Urban fashion, sneaker drops, and modern casual street wear.
+   - 🌿 **Sustainability**: Eco-friendly textiles, zero-waste clothing care, and conscious brands.
+   - ✨ **Influencers & Icons**: Viral fashion movements (quiet luxury, old money, Y2K) and celebrity red-carpet breakdowns.
+   - ♻️ **Vintage / Archival**: Timeless archival pieces, thrift style, and vintage denim curation (strictly non-commercial).
+   - 🔧 **Care & Repairs**: Step-by-step easy guides for mending, removing sweater fuzz, sneaker care, and making your clothes last longer.
+4. **1-Tap "Style with My Closet"**:
    - See a trend you love? Tap **Style with My Closet** on any trend card!
    - The AI Stylist immediately searches your existing closet for matching colors, silhouettes, and fabrics to recreate that trend using clothes you already own.
+5. **Clean & Safe Reading**: Every trend is rigorously filtered to eliminate shopping carts, ads, and paid sponsor walls, keeping your inspiration pure and creative.
+
 
 ---
 

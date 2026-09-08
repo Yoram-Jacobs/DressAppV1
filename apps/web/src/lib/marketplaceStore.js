@@ -274,11 +274,11 @@ export const marketplaceProgress = {
           }
           if (ev.type === 'done') {
             // Atomically prune items the server no longer returns
-            // for this filter set. ``upsertItem`` mutated the slot
-            // in-place; here we just remove anything whose id
-            // wasn't streamed.
+            // for this filter set, or set an empty slot if 0 items streamed.
             const slot = browseStore.get(filters);
-            if (slot && Array.isArray(slot.items)) {
+            if (!slot) {
+              browseStore.setSlot(filters, { items: [], total: Number(ev.total) || 0, ts: Date.now() });
+            } else if (Array.isArray(slot.items)) {
               const stale = slot.items
                 .filter((it) => !seenIds.has(it.id))
                 .map((it) => it.id);

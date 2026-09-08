@@ -24,6 +24,7 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Button } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
@@ -106,15 +107,23 @@ export default function LoginScreen() {
 
   // ── Deep link listener ───────────────────────────────────────────────────
   React.useEffect(() => {
+    const handleUrl = (url: string | null) => {
+      if (!url) return;
+      // Capture ?ref= or &ref= from deep link or invitation
+      try {
+        const refMatch = url.match(/[?&]ref=([^&#]+)/);
+        if (refMatch && refMatch[1] && refMatch[1] !== 'invite') {
+          AsyncStorage.setItem('dressapp_ref_id', decodeURIComponent(refMatch[1])).catch(() => {});
+        }
+      } catch {}
+      processAuthUrl(url);
+    };
+
     // Check initial cold launch URL
-    Linking.getInitialURL().then((url) => {
-      if (url) processAuthUrl(url);
-    });
+    Linking.getInitialURL().then(handleUrl);
 
     // Listen for incoming URLs while app is open
-    const sub = Linking.addEventListener('url', ({ url }) => {
-      if (url) processAuthUrl(url);
-    });
+    const sub = Linking.addEventListener('url', ({ url }) => handleUrl(url));
 
     return () => sub.remove();
   }, []);
@@ -126,7 +135,8 @@ export default function LoginScreen() {
     try {
       const returnUrl = Linking.createURL('auth/callback');
       console.log('[LoginScreen] OAuth returnUrl:', returnUrl);
-      const data = await api.googleLoginStart({ mobile: true, returnUrl });
+      const storedRef = await AsyncStorage.getItem('dressapp_ref_id').catch(() => null);
+      const data = await api.googleLoginStart({ mobile: true, returnUrl, ref: storedRef || '' });
       if (!data?.authorization_url) {
         throw new Error('No authorization URL returned from server.');
       }
@@ -146,27 +156,6 @@ export default function LoginScreen() {
         ?? (err as { message?: string })?.message
         ?? t('auth.signInError', { defaultValue: 'Sign-in failed. Please try again.' });
       Alert.alert(t('common.error', { defaultValue: 'Error' }), detail);
-    } finally {
-      setBusy(false);
-    }
-  };
-
-  // ── Guest / Demo Sign In ──────────────────────────────────────────────────
-  const handleGuestSignIn = async () => {
-    setBusy(true);
-    try {
-      const res = await api.devBypass();
-      if (res?.access_token) {
-        await tokenStore.set(res.access_token);
-        emitAuthChange(true);
-      } else {
-        throw new Error('No token received from dev bypass.');
-      }
-    } catch (err: any) {
-      Alert.alert(
-        t('common.error', { defaultValue: 'Error' }),
-        err?.response?.data?.detail || err?.message || t('auth.guestLoginError', { defaultValue: 'Failed to continue as guest.' })
-      );
     } finally {
       setBusy(false);
     }
@@ -213,18 +202,6 @@ export default function LoginScreen() {
               labelStyle={s.googleBtnLabel}
             >
               {t('auth.continueWithGoogle', { defaultValue: 'Continue with Google' })}
-            </Button>
-
-            {/* Guest / Explore button */}
-            <Button
-              testID="login-guest-button"
-              mode="contained-tonal"
-              onPress={handleGuestSignIn}
-              disabled={busy}
-              style={{ marginTop: spacing[3], borderRadius: radii.md }}
-              contentStyle={{ height: 44 }}
-            >
-              {t('auth.continueAsGuest', { defaultValue: 'Explore as Guest' })}
             </Button>
 
             {/* Divider */}

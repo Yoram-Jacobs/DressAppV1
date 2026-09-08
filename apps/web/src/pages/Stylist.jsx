@@ -78,6 +78,7 @@ import { useOutfitStore } from '@/lib/useOutfitStore';
 import { useLocation as useAppLocation } from '@/lib/location';
 import { prewarmStylist, loadStylistMessages } from '@/lib/stylistStore';
 import { useDailySuggestionsStore } from '@/lib/dailySuggestionsStore';
+import { bestImageUrl } from '@/lib/itemImage';
 import {
   isSTTSupported,
   isTTSSupported,
@@ -143,7 +144,7 @@ const getRecommendationPiecesMap = (rec, closetItems) => {
           map[item.role] = {
             id: closetItem.id,
             closet_item_id: closetItem.id,
-            image_url: closetItem.image_url,
+            image_url: bestImageUrl(closetItem) || closetItem.image_url,
             clean_image_url: closetItem.clean_image_url,
             cutout_url: closetItem.cutout_url,
             segmented_image_url: closetItem.segmented_image_url,

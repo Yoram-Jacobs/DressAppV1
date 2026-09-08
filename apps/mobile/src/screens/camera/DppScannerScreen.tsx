@@ -129,7 +129,7 @@ export function DppScannerScreen() {
   return (
     <SafeAreaView style={styles.root} edges={['bottom', 'top']}>
       <CameraView 
-        style={StyleSheet.absoluteFillObject} 
+        style={StyleSheet.absoluteFill} 
         facing="back"
         onBarcodeScanned={scanned ? undefined : handleBarCodeScanned}
         barcodeScannerSettings={{
@@ -241,7 +241,7 @@ export function DppScannerScreen() {
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: '#000' },
   overlay: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
   },
   center: { justifyContent: 'center', alignItems: 'center', padding: 32 },
   permissionText: { textAlign: 'center', marginBottom: 16, fontSize: 16 },

@@ -44,12 +44,24 @@ export function bestImageUrl(item, opts = {}) {
 
   // 1. AI-reconstructed image (background-free studio quality)
   if (viewMode !== 'original' && !opts.skipReconstruction) {
-    if (item.reconstruct_image_url) return item.reconstruct_image_url;
     if (item.reconstructed_image_url) return item.reconstructed_image_url;
+    if (item.reconstruct_image_url) return item.reconstruct_image_url;
   }
 
   // 2. Background-free clean cutout (Original crop)
-  if (item.clean_image_url) return item.clean_image_url;
+  const reconUrl = item.reconstructed_image_url || item.reconstruct_image_url;
+  if (viewMode === 'original' || opts.skipReconstruction) {
+    if (item.clean_image_url && item.clean_image_url !== reconUrl) {
+      return item.clean_image_url;
+    }
+    if (item.image_variants?.original) return item.image_variants.original;
+    if (item.image_variants?.webp?.large) return item.image_variants.webp.large;
+    if (item.cutout_url && item.cutout_url !== reconUrl) return item.cutout_url;
+    if (item.segmented_image_url && item.segmented_image_url !== reconUrl) return item.segmented_image_url;
+    if (item.clean_image_url) return item.clean_image_url;
+  } else {
+    if (item.clean_image_url) return item.clean_image_url;
+  }
 
   // 3. Segmented / cutout forms
   if (item.cutout_url) return item.cutout_url;

@@ -121,10 +121,16 @@ def encrypt_api_key(plain_key: str) -> str:
 
 
 def decrypt_api_key(encrypted_key: str) -> str | None:
+    if not encrypted_key:
+        return None
+    cleaned = encrypted_key.strip()
+    # If the key is already a plain API key (e.g. standard Google 'AIza...' or not Fernet formatted)
+    if not cleaned.startswith("gAAAAA"):
+        return cleaned
     try:
         key = hashlib.sha256(settings.JWT_SECRET.encode()).digest()
         cipher = Fernet(base64.urlsafe_b64encode(key))
-        res = cipher.decrypt(encrypted_key.encode()).decode()
+        res = cipher.decrypt(cleaned.encode()).decode()
         # Handle cases where key was accidentally encrypted multiple times
         while res and res.startswith("gAAAAA"):
             try:
@@ -133,5 +139,56 @@ def decrypt_api_key(encrypted_key: str) -> str | None:
                 break
         return res
     except Exception as exc:
-        logger.error("Failed to decrypt API key: %s", exc)
-        return None
+        logger.warning("Failed to decrypt API key via Fernet: %s", exc)
+        # If it's a non-empty key that failed decryption, return as-is if long enough
+        return cleaned if len(cleaned) >= 20 else None
+
+
+def resolve_user_gemini_api_key(user: dict[str, Any] | None = None) -> str | None:
+    """Resolve the active Google Gemini API key for a request.
+
+    Priority:
+    1. User's explicit custom key in ``user['ai_configuration']['custom_keys']['google_ai']``
+    2. User's custom key under alternative provider names (``gemini``)
+    3. User's direct ``ai_configuration.api_keys`` / ``google_ai_key`` / ``api_key``
+    4. Server environment fallback: ``settings.GEMINI_API_KEY`` or ``settings.GOOGLE_API_KEY``
+    """
+    if user and isinstance(user, dict):
+        ai_config = user.get("ai_configuration") or {}
+        custom_keys = ai_config.get("custom_keys") or {}
+        api_keys = ai_config.get("api_keys") or {}
+        candidate = (
+            custom_keys.get("google_ai")
+            or custom_keys.get("gemini")
+            or api_keys.get("google_ai")
+            or api_keys.get("gemini")
+            or ai_config.get("google_ai_key")
+            or ai_config.get("api_key")
+        )
+        if candidate and isinstance(candidate, str) and candidate.strip():
+            decrypted = decrypt_api_key(candidate)
+            if decrypted:
+                return decrypted
+
+    # Fallback to server environment key
+    return (
+        settings.GEMINI_API_KEY
+        or os.environ.get("GEMINI_API_KEY")
+        or os.environ.get("GOOGLE_API_KEY")
+        or None
+    )
+
+
+def resolve_user_gemini_model(user: dict[str, Any] | None = None) -> str:
+    """Resolve the active Gemini multimodal model for a user, defaulting to gemini-3.5-flash."""
+    default_model = getattr(settings, "DEFAULT_STYLIST_MODEL", "gemini-3.5-flash") or "gemini-3.5-flash"
+    if user and isinstance(user, dict):
+        ai_config = user.get("ai_configuration") or {}
+        selected = ai_config.get("selected_model")
+        if selected and isinstance(selected, str) and selected.strip():
+            selected = selected.strip()
+            # Normalize legacy deprecated model strings
+            if selected in ("gemini-2.5-flash", "gemini-3.5-flash-lite"):
+                return "gemini-3.5-flash"
+            return selected
+    return default_model

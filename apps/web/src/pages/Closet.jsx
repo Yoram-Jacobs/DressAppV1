@@ -20,6 +20,7 @@ import {
   AlertTriangle,
   Tag,
   Luggage,
+  ArrowRight,
   Layers as Layers3,
 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
@@ -1723,12 +1724,12 @@ export default function Closet() {
         {/* Confirm delete dialog */}
         <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
           <AlertDialogContent data-testid="closet-delete-confirm-dialog">
-              <AlertDialogTitle>
-                {t("closet.confirmDeleteTitle")}
-              </AlertDialogTitle>
-              <AlertDialogDescription>
-                {t("closet.confirmDeleteBody", { count: selected.size })}
-              </AlertDialogDescription>
+            <AlertDialogTitle>
+              {t("closet.confirmDeleteTitle")}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {t("closet.confirmDeleteBody", { count: selected.size })}
+            </AlertDialogDescription>
             <AlertDialogFooter>
               <AlertDialogCancel data-testid="closet-delete-cancel">
                 {t("common.cancel", { defaultValue: "Cancel" })}
@@ -1951,20 +1952,20 @@ export default function Closet() {
         {/* Taxonomy gatekeeper warning dialog */}
         <AlertDialog open={gatekeeperOpen} onOpenChange={setGatekeeperOpen}>
           <AlertDialogContent data-testid="closet-gatekeeper-dialog">
-              <AlertDialogTitle>
-                {t("closet.gatekeeper.title", {
-                  defaultValue: "Mismatched Properties Warning",
-                })}
-              </AlertDialogTitle>
-              <AlertDialogDescription>
-                {t("closet.gatekeeper.body", {
-                  defaultValue:
-                    "The items you are grouping have mismatched properties: {{mismatches}}. Are you sure you want to group them?",
-                  mismatches: gatekeeperMismatches
-                    .map((field) => getTaxonomyFieldLabel(field))
-                    .join(", "),
-                })}
-              </AlertDialogDescription>
+            <AlertDialogTitle>
+              {t("closet.gatekeeper.title", {
+                defaultValue: "Mismatched Properties Warning",
+              })}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {t("closet.gatekeeper.body", {
+                defaultValue:
+                  "The items you are grouping have mismatched properties: {{mismatches}}. Are you sure you want to group them?",
+                mismatches: gatekeeperMismatches
+                  .map((field) => getTaxonomyFieldLabel(field))
+                  .join(", "),
+              })}
+            </AlertDialogDescription>
             <AlertDialogFooter>
               <AlertDialogCancel
                 data-testid="closet-gatekeeper-cancel"
@@ -1995,17 +1996,17 @@ export default function Closet() {
         {/* Group tagging dialog */}
         <AlertDialog open={tagOpen} onOpenChange={setTagOpen}>
           <AlertDialogContent data-testid="closet-tag-dialog">
-              <AlertDialogTitle>
-                {t("closet.tagConfirmTitle", {
-                  defaultValue: "Tag Selected Items",
-                })}
-              </AlertDialogTitle>
-              <AlertDialogDescription>
-                {t("closet.tagConfirmBody", {
-                  defaultValue:
-                    "Enter tags separated by commas to add them to all selected garments.",
-                })}
-              </AlertDialogDescription>
+            <AlertDialogTitle>
+              {t("closet.tagConfirmTitle", {
+                defaultValue: "Tag Selected Items",
+              })}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {t("closet.tagConfirmBody", {
+                defaultValue:
+                  "Enter tags separated by commas to add them to all selected garments.",
+              })}
+            </AlertDialogDescription>
             <div className="py-4">
               <Input
                 type="text"
@@ -2374,12 +2375,19 @@ function ItemCardInner({ item, isSelected, showCheckbox, score }) {
         {(() => {
           const thumbUrl = bestImageUrl(item);
           const polishing = isCleanImagePending(item);
-
+          const variantsMatch = Boolean(
+            item.image_variants &&
+            thumbUrl &&
+            item.image_variants.original &&
+            (thumbUrl === item.image_variants.original ||
+              thumbUrl.endsWith(item.image_variants.original) ||
+              item.image_variants.original.endsWith(thumbUrl))
+          );
           if (thumbUrl) {
             return (
               <>
                 <ProgressiveImage
-                  variants={item.image_variants}
+                  variants={variantsMatch ? item.image_variants : null}
                   originalSrc={thumbUrl}
                   alt={item.title}
                   objectFit="contain"
@@ -2407,7 +2415,6 @@ function ItemCardInner({ item, isSelected, showCheckbox, score }) {
               </>
             );
           }
-
           if (item.dpp_data) {
             return (
               <div
@@ -2431,7 +2438,6 @@ function ItemCardInner({ item, isSelected, showCheckbox, score }) {
             </div>
           );
         })()}
-
         {/* SCORE */}
         {typeof score === "number" && (
           <span
@@ -2442,7 +2448,6 @@ function ItemCardInner({ item, isSelected, showCheckbox, score }) {
             {Math.round(score * 100)}%
           </span>
         )}
-
         {/* CHECKBOX */}
         {showCheckbox && (
           <div
@@ -2462,16 +2467,14 @@ function ItemCardInner({ item, isSelected, showCheckbox, score }) {
             )}
           </div>
         )}
-
         {/* SELECTED OVERLAY */}
         {showCheckbox && isSelected && (
           <div className="pointer-events-none absolute inset-0 z-10 bg-primary-shadow" />
         )}
-
         {/* DUPLICATE */}
         {item.is_duplicate && (
           <div
-            className={`absolute right-3 z-20 flex h-8 w-8 items-center justify-center rounded-full border border-white bg-white/90 text-gray-700 shadow-none backdrop-blur-sm ${typeof score === "number" ? "top-12" : "top-3"
+            className={`absolute right-3 z-20 flex h-8 w-8 items-center justify-center rounded-full bg-yellow-brand shadow-none backdrop-blur-sm ${typeof score === "number" ? "top-12" : "top-3"
               }`}
             title={t("closet.duplicateBadge", {
               defaultValue:
@@ -2479,14 +2482,13 @@ function ItemCardInner({ item, isSelected, showCheckbox, score }) {
             })}
             data-testid="closet-item-duplicate-star"
           >
-            <Star className="h-4 w-4" />
+            <Star className="h-4 w-4 text-primary-brand" />
           </div>
         )}
-
         {/* PENDING SYNC */}
         {item._pendingSync && (
           <div
-            className="absolute bottom-3 left-3 z-20 inline-flex items-center gap-2 rounded-full bg-white/90 px-3 py-1.5 text-xs font-medium text-gray-700 backdrop-blur-sm"
+            className="absolute bottom-3 left-3 z-20 inline-flex items-center gap-2 rounded-full bg-white px-3 py-1.5 text-xs font-bold text-dark-brand"
             data-testid="closet-item-pending-sync"
             aria-live="polite"
             aria-label={t("closet.pendingSync", {
@@ -2494,11 +2496,9 @@ function ItemCardInner({ item, isSelected, showCheckbox, score }) {
             })}
           >
             <span className="relative flex h-4 w-4 items-center justify-center">
-              <span className="absolute h-4 w-4 animate-ping rounded-full bg-[hsl(var(--accent))]/30" />
-
-              <Sparkles className="relative z-10 h-3.5 w-3.5 text-[hsl(var(--accent))]" />
+              <span className="absolute h-4 w-4 animate-ping rounded-full bg-primary-shadow" />
+              <Sparkles className="relative z-10 h-3.5 w-3.5 text-primary-brand" />
             </span>
-
             <span>
               {t("closet.pendingSync", {
                 defaultValue: "Syncing",
@@ -2533,7 +2533,6 @@ function ItemCardInner({ item, isSelected, showCheckbox, score }) {
             />
           </div>
         </div>
-
         {/* CATEGORY / COLOR + WEAR COUNT */}
         <div className="mt-2 flex items-center justify-between gap-2">
           <span className="min-w-0 truncate text-[12px] text-text-brand font-semibold">
@@ -2572,19 +2571,17 @@ function ItemCardInner({ item, isSelected, showCheckbox, score }) {
             </span>
           )}
         </div>
-
         {/* COMPLETE LISTING */}
         {item.auto_listing_needs_completion && item.auto_listing_id && (
           <Link
             to={`/marketplace/listing/${item.auto_listing_id}/edit`}
             data-testid="closet-item-complete-listing-cta"
-            className="mt-3 inline-flex items-center gap-1.5 text-xs font-semibold text-[hsl(var(--accent))] transition-colors hover:opacity-80"
+            className="mt-1 inline-flex items-center gap-1 text-[14px] font-semibold text-primary-brand transition-colors hover:text-dark-brand hover:underline"
           >
-            <Sparkles className="h-3.5 w-3.5" />
-
             {t("closet.completeListingCta", {
               defaultValue: "Complete listing",
             })}
+            <ArrowRight className="!h-3.5 !w-3.5" />
           </Link>
         )}
       </CardContent>
@@ -2619,22 +2616,22 @@ function SaveFailuresDialog({ failures, onDismiss }) {
         className="max-w-md"
         data-testid="closet-save-failures-dialog"
       >
-          <AlertDialogTitle className="flex items-center gap-2">
-            <AlertTriangle className="h-5 w-5 text-amber-500" aria-hidden />
-            {t("closet.saveFailuresTitle", {
-              count: failures.length,
-              defaultValue:
-                failures.length === 1
-                  ? "1 photo didn't make it"
-                  : `${failures.length} photos didn't make it`,
-            })}
-          </AlertDialogTitle>
-          <AlertDialogDescription>
-            {t("closet.saveFailuresBody", {
-              defaultValue:
-                "These items couldn\u2019t be saved to your closet. Please try uploading them again.",
-            })}
-          </AlertDialogDescription>
+        <AlertDialogTitle className="flex items-center gap-2">
+          <AlertTriangle className="h-5 w-5 text-amber-500" aria-hidden />
+          {t("closet.saveFailuresTitle", {
+            count: failures.length,
+            defaultValue:
+              failures.length === 1
+                ? "1 photo didn't make it"
+                : `${failures.length} photos didn't make it`,
+          })}
+        </AlertDialogTitle>
+        <AlertDialogDescription>
+          {t("closet.saveFailuresBody", {
+            defaultValue:
+              "These items couldn\u2019t be saved to your closet. Please try uploading them again.",
+          })}
+        </AlertDialogDescription>
 
         <ul
           className="max-h-72 overflow-y-auto -mx-2 px-2 space-y-2 py-1"

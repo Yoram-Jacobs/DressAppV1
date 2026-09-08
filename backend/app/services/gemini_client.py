@@ -428,6 +428,17 @@ def get_default_client_sync() -> GeminiClient:
     return _default_client
 
 
+def get_gemini_client(
+    user: dict[str, Any] | None = None,
+    api_key: str | None = None,
+) -> GeminiClient:
+    """Return a GeminiClient initialized with the resolved user or system API key."""
+    if not api_key and user:
+        from app.services.auth import resolve_user_gemini_api_key
+        api_key = resolve_user_gemini_api_key(user)
+    return GeminiClient(api_key=api_key)
+
+
 __all__ = [
     "GeminiClient",
     "GeminiUnavailable",
@@ -435,4 +446,5 @@ __all__ = [
     "DEFAULT_VISION_MODEL",
     "get_default_client",
     "get_default_client_sync",
+    "get_gemini_client",
 ]

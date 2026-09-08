@@ -405,17 +405,25 @@ export function HelpModal() {
         return (
           <View style={styles.layer1Content}>
             <Text style={[styles.introText, { color: colors.foreground }]}>
-              {t('help.trend_scout_p1', { defaultValue: 'Keep your fashion style ahead of the curve with our daily curated feed:' })}
+              {t('help.trend_scout_p1', { defaultValue: 'Stay inspired with our daily curated fashion radar and style recommendations:' })}
             </Text>
             <View style={styles.stepsContainer}>
               {[
                 {
-                  title: t('help.trend_feed_title', { defaultValue: 'Daily Fashion Feed' }),
-                  desc: t('help.trend_feed_desc', { defaultValue: 'Receives style suggestions, daily runway reports, and articles matched to your profile with 1-tap "Style with My Closet" recommendations.' })
+                  title: t('help.trend_feed_title', { defaultValue: 'Daily Fashion Radar (7 Curated Channels)' }),
+                  desc: t('help.trend_feed_desc', { defaultValue: 'Explore 📍 Local News, 👑 Runway, 👟 Street Style, 🌿 Sustainability, ✨ Influencers & Icons, ♻️ Vintage / Archival, and 🔧 Care & Repairs.' }),
                 },
                 {
-                  title: t('help.trend_buckets_title', { defaultValue: 'The 4 Curated Channels' }),
-                  desc: t('help.trend_buckets_desc', { defaultValue: 'Explore Runway (high-fashion reviews), Streetwear (urban looks), Sustainability (eco-fashion & care), and Influencers (trendsetters).' })
+                  title: t('help.trend_closet_title', { defaultValue: '1-Tap "Style with My Closet"' }),
+                  desc: t('help.trend_closet_desc', { defaultValue: 'Tap the button on any trend card to let our AI Stylist match the trend\'s colors and silhouette directly to clothes already hanging in your digitized wardrobe.' }),
+                },
+                {
+                  title: t('help.trend_personalization_title', { defaultValue: 'Personalization & Social Feeds (⚙️)' }),
+                  desc: t('help.trend_personalization_desc', { defaultValue: 'Customize style aesthetics (Quiet Luxury, Vintage, Streetwear, Old Money, Minimalist, Y2K), connect social accounts, and view your automated closet profile.' }),
+                },
+                {
+                  title: t('help.trend_gender_title', { defaultValue: 'Gender Targeting & Live Refresh' }),
+                  desc: t('help.trend_gender_desc', { defaultValue: 'Toggle effortlessly between Women\'s and Men\'s fashion, read verified articles on Vogue/GQ, and tap Refresh (🔄) for instant real-time updates.' }),
                 },
               ].map((item, idx) => (
                 <View key={idx} style={[styles.featureCard, { backgroundColor: colors.secondary, borderColor: colors.border }]}>

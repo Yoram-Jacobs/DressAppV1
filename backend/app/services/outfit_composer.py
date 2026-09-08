@@ -78,7 +78,7 @@ async def compose_outfit(
 
     # 1) Per-image analysis ----------------------------------------
     if image_bytes_list:
-        candidates = await _analyze_uploads(image_bytes_list[:MAX_CANDIDATES])
+        candidates = await _analyze_uploads(image_bytes_list[:MAX_CANDIDATES], api_key=api_key)
     timings["analyze_ms"] = int((time.perf_counter() - t0) * 1000)
 
     # 2) Dedup -----------------------------------------------------
@@ -174,9 +174,11 @@ async def compose_outfit(
 
 
 # ─── 1) per-image analysis ──────────────────────────────────
-async def _analyze_uploads(image_bytes_list: list[bytes]) -> list[dict[str, Any]]:
+async def _analyze_uploads(image_bytes_list: list[bytes], api_key: str | None = None) -> list[dict[str, Any]]:
     """Run garment_vision on every upload concurrently."""
-    if garment_vision_service is None:
+    from app.services.vision import get_garment_vision_service
+    gv_svc = get_garment_vision_service(api_key=api_key)
+    if gv_svc is None:
         logger.warning("garment_vision_service is None — composer running blind")
         return []
     sem = asyncio.Semaphore(3)  # bounded so we don't blow Atlas / model RAM
@@ -184,7 +186,7 @@ async def _analyze_uploads(image_bytes_list: list[bytes]) -> list[dict[str, Any]
     async def _one(idx: int, raw: bytes) -> dict[str, Any] | None:
         async with sem:
             try:
-                analysis = await garment_vision_service.analyze(raw)
+                analysis = await gv_svc.analyze(raw)
             except Exception as exc:  # noqa: BLE001
                 logger.warning("Composer analyze[%d] failed: %s", idx, repr(exc)[:160])
                 return None

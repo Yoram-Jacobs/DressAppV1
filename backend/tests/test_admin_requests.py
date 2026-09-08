@@ -34,7 +34,7 @@ async def test_admin_list_users_request_counts():
             "display_name": "User One",
             "roles": ["user"],
             "ai_configuration": {
-                "selected_model": "gemini-3.5-flash-lite",
+                "selected_model": "gemini-3.5-flash",
                 "current_credits": 1000,
                 "credits_used_this_month": 0
             }

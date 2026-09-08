@@ -65,10 +65,10 @@ class GeminiStylistBrain:
 
     provider_name = "gemini"
 
-    def __init__(self, api_key: str | None = None) -> None:
-        if api_key:
+    def __init__(self, api_key: str | None = None, model: str | None = None) -> None:
+        if api_key or model:
             from app.services.gemini_stylist import GeminiStylistService
-            self._svc = GeminiStylistService(api_key=api_key)
+            self._svc = GeminiStylistService(api_key=api_key, model=model)
         else:
             if gemini_stylist_service is None:
                 raise RuntimeError(
@@ -196,9 +196,9 @@ def build_stylist_brain() -> StylistBrain:
 _service: StylistBrain | None = None
 
 
-def stylist_brain_service(api_key: str | None = None) -> StylistBrain:
-    if api_key:
-        return GeminiStylistBrain(api_key=api_key)
+def stylist_brain_service(api_key: str | None = None, model: str | None = None) -> StylistBrain:
+    if api_key or model:
+        return GeminiStylistBrain(api_key=api_key, model=model)
     global _service
     if _service is None:
         _service = build_stylist_brain()

@@ -173,7 +173,7 @@ export const closet = {
                   callbacks.onDone?.(parsed);
                 } else if (parsed.type === 'error') {
                   const err = new Error(parsed.message || 'Analyze failed');
-                  err.response = { status: parsed.status || 500, data: parsed };
+                  err.response = { status: parsed.status || 500, data: { detail: parsed.message, _error: parsed.message, ...parsed } };
                   throw err;
                 } else if (parsed.items && Array.isArray(parsed.items)) {
                   items.push(...parsed.items);
@@ -257,7 +257,7 @@ export const closet = {
                 const err = new Error(frame.message || 'Analyze failed');
                 err.response = {
                   status: frame.status || 503,
-                  data: { detail: frame.message },
+                  data: { detail: frame.message, _error: frame.message },
                 };
                 callbacks.onError?.(frame);
                 throw err;
@@ -274,6 +274,9 @@ export const closet = {
           detect: detectMeta,
         };
       } catch (streamErr) {
+        if (streamErr?.response?.data?.detail || streamErr?.response?.data?._error) {
+          throw streamErr;
+        }
         console.warn('[analyzeItemImage] Stream failed, falling back to standard axios POST:', streamErr);
         // Fallback to standard axios POST with custom response transformer to tolerate leading whitespace keepalive
         return client
@@ -314,7 +317,7 @@ export const closet = {
             }
             if (data && data._status && Number(data._status) >= 400) {
               const err = new Error(data._error || 'Analyze failed');
-              err.response = { status: Number(data._status), data };
+              err.response = { status: Number(data._status), data: { detail: data._error, ...data } };
               throw err;
             }
             if (data.items_meta) {

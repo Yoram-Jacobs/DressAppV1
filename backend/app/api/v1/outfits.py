@@ -119,10 +119,15 @@ async def save_outfit(
                 g_dict["title"] = item.get("title") or item.get("name")
             variants = item.get("image_variants") or {}
             webp_large = (variants.get("webp") or {}).get("large") if isinstance(variants, dict) else None
+            pref = item.get("preferred_image_view") or item.get("preferred_view")
+            if pref in ("clean", "original"):
+                primary_img = item.get("clean_image_url") or item.get("reconstructed_image_url")
+            else:
+                primary_img = item.get("reconstructed_image_url") or item.get("clean_image_url")
+
             best_img = (
                 g_dict.get("image_url")
-                or item.get("clean_image_url")
-                or item.get("reconstructed_image_url")
+                or primary_img
                 or item.get("cutout_url")
                 or webp_large
                 or item.get("thumbnail_data_url")

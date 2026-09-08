@@ -147,7 +147,7 @@ class WardrobeMigrationAgent:
                 response_text = await self.client.vision(
                     user_parts=[jpeg_bytes],
                     system=system_prompt,
-                    model="gemini-3.5-flash-lite",
+                    model="gemini-3.5-flash",
                     response_mime_type="application/json",
                     response_schema=response_schema,
                 )
@@ -308,7 +308,7 @@ class WardrobeMigrationAgent:
             class_resp = await self.client.vision(
                 user_parts=[crop_bytes],
                 system=class_prompt,
-                model="gemini-3.5-flash-lite",
+                model="gemini-3.5-flash",
                 response_mime_type="application/json",
                 response_schema=class_schema,
             )
@@ -473,7 +473,7 @@ class WardrobeMigrationAgent:
             class_resp = await self.client.vision(
                 user_parts=[crop_bytes],
                 system=stylist_prompt,
-                model="gemini-3.5-flash-lite",
+                model="gemini-3.5-flash",
                 response_mime_type="application/json",
                 response_schema=stylist_schema,
             )

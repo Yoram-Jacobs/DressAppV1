@@ -1,6 +1,7 @@
 """User profile routes."""
 from __future__ import annotations
 
+import logging
 from datetime import datetime, timezone
 from typing import Any
 
@@ -12,6 +13,7 @@ from app.models.schemas import CulturalContext, StyleProfile
 from app.services.auth import get_current_user, verify_password
 from app.services.avatar_service import calculate_shape_parameters
 
+logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/users", tags=["users"])
 
 
@@ -260,15 +262,32 @@ async def update_me(
                     from app.services.gemini_client import GeminiClient
                     client = GeminiClient(api_key=key_str)
                     try:
-                        resp = await client.text("Test connection.", model="gemini-3.5-flash-lite")
+                        resp = await client.text(user_text="Test connection.", model="gemini-3.5-flash")
                         if not resp:
                             raise ValueError("No response from Google Gemini")
                     except Exception as exc:
                         logger.warning("Gemini key validation failed during patch: %s", exc)
-                        raise HTTPException(
-                            status_code=400,
-                            detail=f"Google Gemini API key is invalid: {exc}",
-                        ) from exc
+                        err_text = str(exc)
+                        if "RESOURCE_EXHAUSTED" in err_text or "spending cap" in err_text.lower():
+                            # The key is authentic and recognized by Google, but currently at its project spend cap.
+                            # Save the key so the user does not have to re-enter it once they adjust the cap in AI Studio.
+                            logger.info("Saving verified Google Gemini key (current status: spend cap reached).")
+                        elif "API_KEY_SERVICE_BLOCKED" in err_text or "blocked" in err_text.lower():
+                            msg = (
+                                "This Google API key is blocked from accessing Gemini (API_KEY_SERVICE_BLOCKED). "
+                                "Please ensure 'Generative Language API' is enabled in your Google Cloud Console, "
+                                "or generate a dedicated key at Google AI Studio (https://aistudio.google.com/app/apikey)."
+                            )
+                            raise HTTPException(
+                                status_code=400,
+                                detail=msg,
+                            ) from exc
+                        else:
+                            msg = f"Google Gemini API key validation failed: {exc}"
+                            raise HTTPException(
+                                status_code=400,
+                                detail=msg,
+                            ) from exc
 
                 # Encrypt new key
                 merged_keys[key_name] = encrypt_api_key(key_str)
@@ -466,8 +485,6 @@ async def delete_me(
     
     # 4. Dispatch deletion notification email
     from app.services import email_service
-    import logging
-    logger = logging.getLogger(__name__)
     try:
         await email_service.send_deletion_email(
             to=user["email"],
@@ -500,7 +517,7 @@ async def validate_api_key(
         from app.services.gemini_client import GeminiClient
         client = GeminiClient(api_key=key)
         try:
-            resp = await client.text("Test connection.", model="gemini-3.5-flash-lite")
+            resp = await client.text(user_text="Test connection.", model="gemini-3.5-flash")
             if resp:
                 return {
                     "valid": True,
@@ -510,6 +527,14 @@ async def validate_api_key(
             raise ValueError("Empty response received from Gemini.")
         except Exception as exc:
             logger.warning("Google AI key validation failed: %s", exc)
+            err_text = str(exc)
+            if "RESOURCE_EXHAUSTED" in err_text or "spending cap" in err_text.lower():
+                return {
+                    "valid": True,
+                    "warning": True,
+                    "provider": "google_ai",
+                    "message": "Google Gemini key is valid, but your project monthly spend cap is reached. Adjust it at https://aistudio.google.com/spend.",
+                }
             raise HTTPException(
                 status_code=400,
                 detail=f"Invalid Google Gemini API key: {exc}",
