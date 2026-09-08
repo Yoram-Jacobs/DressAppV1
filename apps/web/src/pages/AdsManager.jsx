@@ -37,7 +37,7 @@ import { api } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
 import { PayPalCheckoutButton } from '@/lib/paypal';
 import { Wallet } from 'lucide-react';
-
+import PrivacyBanner from '../assets/img/inner6.webp';
 const DEFAULT_CREATIVE = {
   headline: '',
   body: '',
@@ -188,22 +188,77 @@ export default function AdsManager() {
   }
 
   return (
-    <div className="container-px max-w-5xl mx-auto pt-6 md:pt-10">
-      <div className="flex items-end justify-between gap-4 mb-6 flex-wrap">
-        <div>
-          <div className="caps-label text-muted-foreground">{t('nav.ads')}</div>
-          <h1 className="font-display text-3xl sm:text-4xl mt-1" data-testid="ads-title">
-            {t('ads.title')}
-          </h1>
-          <p className="text-sm text-muted-foreground mt-2 max-w-xl">
-            {t('ads.subtitle')}
-          </p>
-        </div>
+    <>
+     {/* Banner Section */}
+          <section
+            className="
+                  relative isolate overflow-hidden
+                  bg-cover bg-center bg-no-repeat
+                "
+            style={{
+              backgroundImage: `url(${PrivacyBanner})`,
+            }}
+          >
+            {/* Dark gradient overlay */}
+            <div
+              className="
+                    absolute inset-0 -z-0
+                    bg-[linear-gradient(90deg,#080b09_0%,#101612_43%,rgba(16,22,18,0.48)_67%,rgba(16,22,18,0.08)_100%)]
+                  "
+            />
+    
+            <div className="relative z-10 w-full">
+              <div
+                className="
+                      px-10 py-20
+                      max-[991px]:px-[35px] max-[991px]:py-[45px]
+                      max-[767px]:px-5 max-[767px]:py-[38px]
+                      max-[480px]:px-4 max-[480px]:py-8
+                    "
+              >
+                <div className="max-w-[520px]">
+                  {/* Title */}
+                  <h1
+                    className="
+                          m-0 mb-0
+                          text-[40px] leading-[40px]
+                          font-bold
+                          tracking-normal
+                          text-white
+                          max-[767px]:text-[42px]
+                          max-[480px]:text-[35px]
+                        "
+                  >
+                     {t('ads.title')}
+                  </h1>
+                  {/* Description */}
+                  <p
+                    className="
+                          my-5
+                          max-w-[450px]
+                          text-[14px]
+                          leading-6
+                          tracking-[0.5px]
+                          text-white/60
+                          max-[767px]:max-w-full
+                          max-[767px]:mt-[15px]
+                        "
+                  >
+                     {t('ads.subtitle')}
+                  </p>
+                   <div className="">
         <Button onClick={openNew} className="rounded-xl" data-testid="ads-new-btn">
-          <Plus className="h-4 w-4 me-1" />
+          <Plus className="h-4 w-4" />
           {t('ads.newCampaign')}
         </Button>
       </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+    <div className="container-px max-w-5xl mx-auto pt-6 md:pt-10">
+     
 
       {items === null ? (
         <div className="flex items-center justify-center py-20 text-muted-foreground">
@@ -259,6 +314,7 @@ export default function AdsManager() {
         </DialogContent>
       </Dialog>
     </div>
+        </>
   );
 }
 
