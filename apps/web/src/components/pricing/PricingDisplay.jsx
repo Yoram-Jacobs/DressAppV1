@@ -4,13 +4,14 @@ import { motion } from 'framer-motion';
 import { 
   Check, 
   CheckCircle2,
+  XCircle,
   Loader2,
   Sliders,
   Sparkles
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
 const featureKeys = {
   "Up to 50 closet items": "pricing.features.closetLimitFree",
@@ -25,6 +26,33 @@ const featureKeys = {
   "Ad Campaigns included": "pricing.features.campaignsAccess",
   "Dedicated support": "pricing.features.dedicatedSupport"
 };
+
+// Same visual language as the Transactions page status badges.
+function FeatureFlag({ included }) {
+  const { t } = useTranslation();
+  return (
+    <Badge
+      variant="outline"
+      className={`text-[11px] gap-1 w-fit mx-auto ${
+        included
+          ? 'bg-emerald-100 text-emerald-900 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-900'
+          : 'bg-rose-100 text-rose-900 border-rose-200'
+      }`}
+    >
+      {included ? (
+        <>
+          <CheckCircle2 className="h-3 w-3" />
+          {t('pricing.included', { defaultValue: 'Included' })}
+        </>
+      ) : (
+        <>
+          <XCircle className="h-3 w-3" />
+          {t('pricing.notIncluded', { defaultValue: 'Not included' })}
+        </>
+      )}
+    </Badge>
+  );
+}
 
 export function PricingDisplay({ 
   pricingData, 
@@ -62,24 +90,62 @@ export function PricingDisplay({
     return { priceStr: '$0', subStr: '' };
   };
 
+  // Rows for the comparison table. Keeping this data-driven (instead of
+  // hand-rolled JSX per row like before) makes it trivial to add/remove a
+  // feature row without touching markup.
+  const COMPARE_ROWS = [
+    {
+      label: t('pricing.features.closetLimit', { defaultValue: 'Closet Items Capacity' }),
+      free: '50',
+      manager: t('pricing.unlimited', { defaultValue: 'Unlimited' }),
+      professional: t('pricing.unlimited', { defaultValue: 'Unlimited' }),
+      type: 'text',
+    },
+    {
+      label: t('pricing.features.dailyLimit', { defaultValue: 'Daily AI operation limit' }),
+      free: t('pricing.tenRequests', { defaultValue: '10 requests' }),
+      manager: t('pricing.unlimited', { defaultValue: 'Unlimited' }),
+      professional: t('pricing.unlimited', { defaultValue: 'Unlimited' }),
+      type: 'text',
+    },
+    {
+      label: t('pricing.features.marketplace', { defaultValue: 'Marketplace options' }),
+      free: t('pricing.swapDonateOnly', { defaultValue: 'Swap & Donate only' }),
+      manager: t('pricing.rentSellIncluded', { defaultValue: 'Rent & Sell included' }),
+      professional: t('pricing.rentSellIncluded', { defaultValue: 'Rent & Sell included' }),
+      type: 'text',
+    },
+    {
+      label: t('pricing.features.trendScout', { defaultValue: 'Trend Scout access' }),
+      free: false,
+      manager: true,
+      professional: true,
+      type: 'flag',
+    },
+    {
+      label: t('pricing.features.scheduler', { defaultValue: 'Schedule & push notifications' }),
+      free: false,
+      manager: true,
+      professional: true,
+      type: 'flag',
+    },
+    {
+      label: t('pricing.features.campaigns', { defaultValue: 'Ad Campaigns creation' }),
+      free: false,
+      manager: false,
+      professional: true,
+      type: 'flag',
+    },
+  ];
+
   return (
     <div id="tiers" className="space-y-12">
       {/* Header section with toggle */}
-      <div className="relative text-center pt-8 pb-10 max-w-2xl mx-auto">
-        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-semibold tracking-wider uppercase bg-accent/10 text-accent border border-accent/25 mb-4">
-          <Sparkles className="h-3 w-3 animate-pulse" />
-          {t('pricing.membershipTitle', { defaultValue: 'DressApp Club' })}
-        </span>
-        <h1 className="text-4xl sm:text-5xl font-display tracking-tight text-primary mb-4">
-          {t('pricing.title', { defaultValue: 'Membership Pricing Plans' })}
-        </h1>
-        <p className="text-sm sm:text-base text-muted-foreground font-body leading-relaxed">
-          {t('pricing.subtitle', { defaultValue: 'Choose the plan that fits your style. Upgrade, downgrade, or cancel at any time.' })}
-        </p>
-
+      <div className="relative bg-white p-3 rounded-[12px]">
+       
         {/* Toggle Switch */}
-        <div className="mt-8 flex items-center justify-center gap-3">
-          <span className={`text-xs font-semibold ${!isAnnual ? 'text-primary' : 'text-muted-foreground'}`}>
+        <div className="flex items-center justify-center gap-3">
+          <span className={`text-xs font-semibold ${!isAnnual ? 'text-primary' : 'text-text-brand'}`}>
             {t('pricing.monthlyBilling', { defaultValue: 'Monthly' })}
           </span>
           
@@ -98,7 +164,7 @@ export function PricingDisplay({
             />
           </button>
 
-          <span className={`text-xs font-semibold flex items-center gap-1.5 ${isAnnual ? 'text-primary' : 'text-muted-foreground'}`}>
+          <span className={`text-xs font-semibold flex items-center gap-1.5 ${isAnnual ? 'text-primary' : 'text-text-brand'}`}>
             {t('pricing.annualBilling', { defaultValue: 'Annual' })}
             <span className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-[rgba(232,96,60,0.10)] text-[rgb(232,96,60)] border border-[rgba(232,96,60,0.20)]">
               {t('pricing.savePercent', { defaultValue: '-20%' })}
@@ -123,9 +189,9 @@ export function PricingDisplay({
               className="h-full"
             >
               <Card 
-                className={`relative flex flex-col h-full rounded-[calc(var(--radius)+6px)] overflow-hidden transition-all duration-200 border bg-card ${
+                className={`relative flex flex-col h-full rounded-[12px] shadow-sm overflow-hidden transition-all duration-200 border bg-card ${
                   isPro 
-                    ? 'border-[hsl(var(--accent))] shadow-[var(--shadow-sm)] md:scale-[1.03] z-10' 
+                    ? 'border-primary-brand z-10' 
                     : 'border-border'
                 }`}
                 data-testid={`tier-card-${tier.name.toLowerCase()}`}
@@ -140,30 +206,30 @@ export function PricingDisplay({
                 )}
 
                 <CardHeader className="p-6 pb-4">
-                  <CardTitle className="text-xl font-display uppercase tracking-wider">
+                  <CardTitle className="text-[20px] font-bold uppercase tracking-wider">
                     {t('pricing.tier.' + tier.name.toLowerCase(), { defaultValue: tier.name })}
                   </CardTitle>
-                  <CardDescription className="text-xs mt-1 min-h-[32px] font-body">
+                  <CardDescription className="text-[14px] mt-1 min-h-[32px] font-semibold text-text-brand">
                     {tier.name.toLowerCase() === 'free' && t('pricing.freeDesc', { defaultValue: 'Perfect for exploring and digitalizing your basic closet.' })}
                     {tier.name.toLowerCase() === 'manager' && t('pricing.managerDesc', { defaultValue: 'Optimal stylist plan with no limitations on garments or AI operations.' })}
                     {tier.name.toLowerCase() === 'professional' && t('pricing.professionalDesc', { defaultValue: 'Unlimited resources with expert-focused campaign creator slots.' })}
                   </CardDescription>
                   
                   <div className="mt-4 flex items-baseline gap-1">
-                    <span className="text-3xl font-bold tracking-tight font-body">{priceStr}</span>
-                    <span className="text-xs text-muted-foreground font-semibold">{tier.price > 0 ? (isAnnual ? t('pricing.perYear', { defaultValue: '/yr' }) : t('pricing.perMonth', { defaultValue: '/mo' })) : ''}</span>
+                    <span className="text-3xl tracking-tight font-bold">{priceStr}</span>
+                    <span className="text-xs text-text-brand font-semibold">{tier.price > 0 ? (isAnnual ? t('pricing.perYear', { defaultValue: '/yr' }) : t('pricing.perMonth', { defaultValue: '/mo' })) : ''}</span>
                   </div>
-                  {subStr && <p className="text-[10px] text-muted-foreground mt-0.5">{subStr}</p>}
+                  {subStr && <p className="text-[10px] text-text-brand mt-0.5">{subStr}</p>}
                 </CardHeader>
 
                 <CardContent className="p-6 pt-0 flex-1 flex flex-col">
-                  <div className="border-t border-border/80 my-4" />
+                  <div className="border-t border-border my-4" />
                   
-                  <ul className="space-y-3 flex-1 font-body text-xs text-foreground/90">
+                  <ul className="space-y-3 flex-1 font-body text-xs text-text-brand">
                     {tier.features.map((feature, i) => (
                       <li key={i} className="flex items-start gap-2.5">
-                        <div className="h-4 w-4 rounded-full bg-[hsl(var(--accent))]/10 flex items-center justify-center shrink-0 mt-0.5">
-                          <Check className="h-2.5 w-2.5 text-[hsl(var(--accent))]" />
+                        <div className="h-4 w-4 rounded-full bg-primary-shadow flex items-center justify-center shrink-0 mt-0.5">
+                          <Check className="h-2.5 w-2.5 text-primary-brand" />
                         </div>
                         <span>{getLocalizedFeature(feature)}</span>
                       </li>
@@ -205,83 +271,71 @@ export function PricingDisplay({
         })}
       </div>
 
-      {/* Compare Features Flat Table */}
-      <section data-testid="pricing-compare-section">
-        <h2 className="text-xl sm:text-2xl font-display tracking-tight text-primary mb-6 flex items-center gap-2">
-          <Sliders className="h-5 w-5 text-accent" />
+      {/* Compare Features Table — restyled to match the Transactions page table:
+          rounded bordered wrapper, bg-primary-shadow header row, subtle row
+          hover, and status-style badges for included/excluded features. */}
+      <section className="bg-white p-5 rounded-[12px] shadow-sm border border-border" data-testid="pricing-compare-section">
+        <h2 className="text-[20px] font-bold text-dark-brand mb-6 flex items-center gap-2">
+          <Sliders className="!h-4 !w-4 text-primary-brand" />
           {t('pricing.featureComparisonHeader', { defaultValue: 'Compare Plan Features' })}
         </h2>
-
-        <div className="rounded-2xl border border-border bg-card overflow-hidden shadow-[var(--shadow-sm)]">
-          <Table>
-            <TableHeader className="bg-secondary/40 font-body">
-              <TableRow className="border-border">
-                <TableHead className="w-[30%] text-xs font-semibold py-4 text-muted-foreground">
-                  {t('pricing.compareFeatureCol', { defaultValue: 'Features' })}
-                </TableHead>
-                <TableHead className="text-center text-xs font-semibold py-4 text-primary">
-                  {t('pricing.tier.free', { defaultValue: 'Free' })}
-                </TableHead>
-                <TableHead className="text-center text-xs font-semibold py-4 text-primary">
-                  {t('pricing.tier.manager', { defaultValue: 'Manager' })}
-                </TableHead>
-                <TableHead className="text-center text-xs font-semibold py-4 text-accent font-bold">
-                  {t('pricing.tier.professional', { defaultValue: 'Professional' })}
-                </TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody className="text-xs font-body divide-y divide-border">
-              <TableRow className="border-border/60">
-                <TableCell className="font-semibold py-3.5 text-muted-foreground">
-                  {t('pricing.features.closetLimit', { defaultValue: 'Closet Items Capacity' })}
-                </TableCell>
-                <TableCell className="text-center py-3.5">50</TableCell>
-                <TableCell className="text-center py-3.5 font-semibold text-primary">{t('pricing.unlimited', { defaultValue: 'Unlimited' })}</TableCell>
-                <TableCell className="text-center py-3.5 font-semibold text-accent bg-accent/5">{t('pricing.unlimited', { defaultValue: 'Unlimited' })}</TableCell>
-              </TableRow>
-              <TableRow className="border-border/60">
-                <TableCell className="font-semibold py-3.5 text-muted-foreground">
-                  {t('pricing.features.dailyLimit', { defaultValue: 'Daily AI operation limit' })}
-                </TableCell>
-                <TableCell className="text-center py-3.5">{t('pricing.tenRequests', { defaultValue: '10 requests' })}</TableCell>
-                <TableCell className="text-center py-3.5 font-semibold text-primary">{t('pricing.unlimited', { defaultValue: 'Unlimited' })}</TableCell>
-                <TableCell className="text-center py-3.5 font-semibold text-accent bg-accent/5">{t('pricing.unlimited', { defaultValue: 'Unlimited' })}</TableCell>
-              </TableRow>
-              <TableRow className="border-border/60">
-                <TableCell className="font-semibold py-3.5 text-muted-foreground">
-                  {t('pricing.features.marketplace', { defaultValue: 'Marketplace options' })}
-                </TableCell>
-                <TableCell className="text-center py-3.5 text-muted-foreground">{t('pricing.swapDonateOnly', { defaultValue: 'Swap & Donate only' })}</TableCell>
-                <TableCell className="text-center py-3.5 font-semibold text-primary">{t('pricing.rentSellIncluded', { defaultValue: 'Rent & Sell included' })}</TableCell>
-                <TableCell className="text-center py-3.5 font-semibold text-accent bg-accent/5">{t('pricing.rentSellIncluded', { defaultValue: 'Rent & Sell included' })}</TableCell>
-              </TableRow>
-              <TableRow className="border-border/60">
-                <TableCell className="font-semibold py-3.5 text-muted-foreground">
-                  {t('pricing.features.trendScout', { defaultValue: 'Trend Scout access' })}
-                </TableCell>
-                <TableCell className="text-center py-3.5 text-rose-500 font-bold">✕</TableCell>
-                <TableCell className="text-center py-3.5 text-accent font-bold">✓</TableCell>
-                <TableCell className="text-center py-3.5 text-accent font-bold bg-accent/5">✓</TableCell>
-              </TableRow>
-              <TableRow className="border-border/60">
-                <TableCell className="font-semibold py-3.5 text-muted-foreground">
-                  {t('pricing.features.scheduler', { defaultValue: 'Schedule & push notifications' })}
-                </TableCell>
-                <TableCell className="text-center py-3.5 text-rose-500 font-bold">✕</TableCell>
-                <TableCell className="text-center py-3.5 text-accent font-bold">✓</TableCell>
-                <TableCell className="text-center py-3.5 text-accent font-bold bg-accent/5">✓</TableCell>
-              </TableRow>
-              <TableRow className="border-border/60">
-                <TableCell className="font-semibold py-3.5 text-muted-foreground">
-                  {t('pricing.features.campaigns', { defaultValue: 'Ad Campaigns creation' })}
-                </TableCell>
-                <TableCell className="text-center py-3.5 text-rose-500 font-bold">✕</TableCell>
-                <TableCell className="text-center py-3.5 text-rose-500 font-bold">✕</TableCell>
-                <TableCell className="text-center py-3.5 text-accent font-bold bg-accent/5">✓</TableCell>
-              </TableRow>
-            </TableBody>
-          </Table>
-        </div>
+          <div
+            className="rounded-[12px] border border-border overflow-hidden overflow-x-auto"
+            data-testid="pricing-compare-table"
+          >
+            <table className="w-full border-collapse min-w-[720px]">
+              <thead>
+                <tr className="border-b border-border bg-primary-shadow">
+                  <th className="text-left text-[12px] font-bold uppercase tracking-wide text-text-brand px-4 py-3">
+                    {t('pricing.compareFeatureCol', { defaultValue: 'Features' })}
+                  </th>
+                  <th className="text-center text-[12px] font-bold uppercase tracking-wide text-text-brand px-4 py-3">
+                    {t('pricing.tier.free', { defaultValue: 'Free' })}
+                  </th>
+                  <th className="text-center text-[12px] font-bold uppercase tracking-wide text-text-brand px-4 py-3">
+                    {t('pricing.tier.manager', { defaultValue: 'Manager' })}
+                  </th>
+                  <th className="text-center text-[12px] font-bold uppercase tracking-wide text-primary-brand px-4 py-3">
+                    {t('pricing.tier.professional', { defaultValue: 'Professional' })}
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {COMPARE_ROWS.map((row, i) => (
+                  <tr
+                    key={i}
+                    className="border-b border-border last:border-0 hover:bg-black/[0.015] transition-colors align-middle"
+                    data-testid="pricing-compare-row"
+                  >
+                    <td className="px-4 py-4">
+                      <span className="font-bold text-sm text-text-brand">{row.label}</span>
+                    </td>
+                    <td className="px-4 py-4 text-center">
+                      {row.type === 'flag' ? (
+                        <FeatureFlag included={row.free} />
+                      ) : (
+                        <span className="text-sm font-semibold text-text-brand">{row.free}</span>
+                      )}
+                    </td>
+                    <td className="px-4 py-4 text-center">
+                      {row.type === 'flag' ? (
+                        <FeatureFlag included={row.manager} />
+                      ) : (
+                        <span className="text-sm font-semibold text-text-brand">{row.manager}</span>
+                      )}
+                    </td>
+                    <td className="px-4 py-4 text-center bg-primary-shadow/30">
+                      {row.type === 'flag' ? (
+                        <FeatureFlag included={row.professional} />
+                      ) : (
+                        <span className="text-sm font-bold text-primary-brand">{row.professional}</span>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
       </section>
     </div>
   );

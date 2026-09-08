@@ -2438,7 +2438,6 @@ export default function Stylist() {
                             </Button>
                           </CardContent>
                         </Card>
-
                         {/* 1.5 Today's Style Suggestion / Outfit Card */}
                         {(() => {
                           const todayDateStr = formatLocalDate(new Date());
@@ -2791,7 +2790,6 @@ export default function Stylist() {
               </form>
             </DialogContent>
           </Dialog>
-
           {/* Google Calendar Modal */}
           <Dialog open={calendarModalOpen} onOpenChange={setCalendarModalOpen}>
             <DialogContent className="!max-w-4xl rounded-[12px]" data-testid="stylist-calendar-dialog">
@@ -2870,7 +2868,6 @@ export default function Stylist() {
               </div>
             </DialogContent>
           </Dialog>
-
           {/* Outfit Selector Dialog */}
           <Dialog open={schedulingDate !== null} onOpenChange={(open) => { if (!open) setSchedulingDate(null); }}>
             <DialogContent className="sm:max-w-[425px] max-h-[90vh] overflow-y-auto" data-testid="stylist-schedule-dialog">
@@ -3010,7 +3007,6 @@ export default function Stylist() {
               </div>
             </DialogContent>
           </Dialog>
-
           <Dialog open={keyErrorOpen} onOpenChange={setKeyErrorOpen}>
             <DialogContent>
               <div className="mx-auto w-12 h-12 rounded-full bg-rose-500/10 text-rose-500 flex items-center justify-center mb-2">

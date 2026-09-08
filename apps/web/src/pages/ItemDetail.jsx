@@ -1650,7 +1650,7 @@ export default function ItemDetail() {
                       type="button"
                       onClick={onReshootPhoto}
                       disabled={reshootingPhoto || uploadingPhoto}
-                      className="inline-flex items-center gap-1.5 rounded-full bg-[hsl(var(--accent))]/95 text-[hsl(var(--accent-foreground))] backdrop-blur border border-[hsl(var(--accent))]/70 px-2.5 py-1 text-[11px] font-medium hover:bg-[hsl(var(--accent))] transition-colors disabled:opacity-60 shadow-editorial"
+                      className="inline-flex items-center gap-1.5 rounded-full bg-primary-brand !text-white border border-border px-2.5 py-1 text-[11px] font-medium hover:bg-primary-hover"
                       data-testid="item-detail-repair-photo-btn"
                       aria-label={t('item.repairPhoto', { defaultValue: 'Repair photo' })}
                     >
@@ -1718,7 +1718,7 @@ export default function ItemDetail() {
                     className="absolute top-3 start-3 inline-flex items-center gap-1.5 rounded-full bg-background/90 backdrop-blur border border-border px-2.5 py-1 text-[11px] font-semibold"
                     data-testid="item-detail-repaired-badge"
                   >
-                    <Wand2 className="h-3 w-3 text-[hsl(var(--accent))]" />
+                    <Wand2 className="h-3 w-3 text-primary-brand" />
                     {showingOriginal
                       ? t('itemDetail.repair.showingOriginal')
                       : t('itemDetail.repair.showingRepaired')}
@@ -1813,7 +1813,7 @@ export default function ItemDetail() {
                         type="button"
                         onClick={() => onSetFront(activeViewIdState)}
                         disabled={saving}
-                        className="flex-1 bg-[hsl(var(--accent))] hover:bg-[hsl(var(--accent))]/90 text-white h-10"
+                        className="flex-1 bg-primary-brand hover:bg-primary-hover text-white h-10"
                       >
                         <BadgeCheck className="h-4 w-4 me-2" />
                         {t('common.apply')}

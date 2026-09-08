@@ -42,8 +42,6 @@ import { useAuth } from '@/lib/auth';
 import { transactionsStore } from '@/lib/marketplaceStore';
 import { useCachedList } from '@/lib/createCachedStore';
 import { toast } from 'sonner';
-// same banner image used on the Privacy Policy page — swap this import
-// if you want a dedicated image for Transactions.
 import PrivacyBanner from '../assets/img/inner6.webp';
 import ReceiptIllustration from '../assets/img/receipt.png';
 

@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
+import { ExploreBackButton } from '@/components/ExploreBackButton';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Switch } from '@/components/ui/switch';
 import { Table, TableHeader, TableHead, TableRow, TableBody, TableCell } from '@/components/ui/table';
@@ -21,7 +22,7 @@ import { useAuth } from '@/lib/auth';
 import { useLocalStorageSync } from '@/lib/useLocalStorageSync';
 import { useAdminStore, adminStore } from '@/lib/adminStore';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
-
+import PrivacyBanner from '../assets/img/inner6.webp';
 const fmtCents = (cents, cur = 'USD') =>
   new Intl.NumberFormat('en-US', { style: 'currency', currency: cur || 'USD' }).format(
     (cents || 0) / 100
@@ -47,7 +48,7 @@ export default function Admin() {
   const { t } = useTranslation();
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useLocalStorageSync('dressapp.admin.activeTab', 'overview');
-  
+
   const [showScrollTop, setShowScrollTop] = useState(false);
   useEffect(() => {
     const handleScroll = () => {
@@ -65,30 +66,167 @@ export default function Admin() {
   if (user && !isAdmin) return <Navigate to="/home" replace />;
 
   return (
-    <div className="container-px max-w-7xl mx-auto pt-6 md:pt-10 pb-20" data-testid="admin-page">
-      <div className="flex items-end justify-between mb-6 gap-4 flex-wrap">
-        <div>
-          <div className="caps-label text-muted-foreground">{t('admin.title')}</div>
-          <h1 className="font-display text-3xl sm:text-4xl mt-1">{t('admin.title')}</h1>
-          <p className="text-sm text-muted-foreground mt-2 max-w-xl">
-            {t('admin.subtitle')}
-          </p>
-        </div>
-        <Button asChild variant="outline" className="rounded-xl" data-testid="admin-back-home">
-          <Link to="/home">{t('common.back')}</Link>
-        </Button>
-      </div>
+    <>
+      {/* Banner Section */}
+      <section
+        className="
+              relative isolate overflow-hidden
+              bg-cover bg-center bg-no-repeat
+            "
+        style={{
+          backgroundImage: `url(${PrivacyBanner})`,
+        }}
+      >
+        {/* Dark gradient overlay */}
+        <div
+          className="
+                absolute inset-0 -z-0
+                bg-[linear-gradient(90deg,#080b09_0%,#101612_43%,rgba(16,22,18,0.48)_67%,rgba(16,22,18,0.08)_100%)]
+              "
+        />
 
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="rounded-xl flex-wrap h-auto p-1" data-testid="admin-tabs">
-          <TabsTrigger value="overview" data-testid="admin-tab-overview">{t('admin.overview')}</TabsTrigger>
-          <TabsTrigger value="providers" data-testid="admin-tab-providers">{t('admin.providers')}</TabsTrigger>
-          <TabsTrigger value="trends" data-testid="admin-tab-trends">{t('admin.trendScout')}</TabsTrigger>
-          <TabsTrigger value="users" data-testid="admin-tab-users">{t('admin.users')}</TabsTrigger>
-          <TabsTrigger value="listings" data-testid="admin-tab-listings">{t('admin.listings')}</TabsTrigger>
-          <TabsTrigger value="transactions" data-testid="admin-tab-transactions">{t('admin.transactions')}</TabsTrigger>
-          <TabsTrigger value="system" data-testid="admin-tab-system">{t('admin.system')}</TabsTrigger>
-          <TabsTrigger value="campaigns" data-testid="admin-tab-campaigns">{t('campaigns.admin.queueTitle', { defaultValue: 'Campaign Queue' })}</TabsTrigger>
+        <div className="relative z-10 w-full">
+          <div
+            className="
+                  px-10 py-20
+                  max-[991px]:px-[35px] max-[991px]:py-[45px]
+                  max-[767px]:px-5 max-[767px]:py-[38px]
+                  max-[480px]:px-4 max-[480px]:py-8
+                "
+          >
+            <div className="max-w-[520px]">
+              {/* Title */}
+              <h1
+                className="
+                      m-0 mb-0
+                      text-[40px] leading-[40px]
+                      font-bold
+                      tracking-normal
+                      text-white
+                      max-[767px]:text-[42px]
+                      max-[480px]:text-[35px]
+                    "
+              >
+                {t('admin.title')}
+              </h1>
+              {/* Description */}
+              <p
+                className="
+                      my-5
+                      max-w-[450px]
+                      text-[14px]
+                      leading-6
+                      tracking-[0.5px]
+                      text-white/60
+                      max-[767px]:max-w-full
+                      max-[767px]:mt-[15px]
+                    "
+              >
+                {t('admin.subtitle')}
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+      <section className="bg-accent-beige px-[40px] py-[40px] max-[767px]:px-5 max-[767px]:py-10" data-testid="admin-page">
+        <ExploreBackButton />
+           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <TabsList
+          className="
+            inline-flex flex-wrap h-auto w-fit
+            bg-white rounded-full p-1.5 gap-1
+            border border-border/40 shadow-sm mb-2
+          "
+          data-testid="admin-tabs"
+        >
+          <TabsTrigger
+            value="overview"
+            className="
+              rounded-full px-4 py-2 text-[14px] font-semibold
+              text-text-brand transition-colors
+              data-[state=active]:bg-primary-brand data-[state=active]:text-white data-[state=active]:shadow-none
+            "
+            data-testid="admin-tab-overview"
+          >
+            {t('admin.overview')}
+          </TabsTrigger>
+          <TabsTrigger
+            value="providers"
+            className="
+              rounded-full px-4 py-2 text-[14px] font-semibold
+              text-text-brand transition-colors
+              data-[state=active]:bg-primary-brand data-[state=active]:text-white data-[state=active]:shadow-none
+            "
+            data-testid="admin-tab-providers"
+          >
+            {t('admin.providers')}
+          </TabsTrigger>
+          <TabsTrigger
+            value="trends"
+            className="
+              rounded-full px-4 py-2 text-[14px] font-semibold
+              text-text-brand transition-colors
+              data-[state=active]:bg-primary-brand data-[state=active]:text-white data-[state=active]:shadow-none
+            "
+            data-testid="admin-tab-trends"
+          >
+            {t('admin.trendScout')}
+          </TabsTrigger>
+          <TabsTrigger
+            value="users"
+            className="
+              rounded-full px-4 py-2 text-[14px] font-semibold
+              text-text-brand transition-colors
+              data-[state=active]:bg-primary-brand data-[state=active]:text-white data-[state=active]:shadow-none
+            "
+            data-testid="admin-tab-users"
+          >
+            {t('admin.users')}
+          </TabsTrigger>
+          <TabsTrigger
+            value="listings"
+            className="
+              rounded-full px-4 py-2 text-[14px] font-semibold
+              text-text-brand transition-colors
+              data-[state=active]:bg-primary-brand data-[state=active]:text-white data-[state=active]:shadow-none
+            "
+            data-testid="admin-tab-listings"
+          >
+            {t('admin.listings')}
+          </TabsTrigger>
+          <TabsTrigger
+            value="transactions"
+            className="
+              rounded-full px-4 py-2 text-[14px] font-semibold
+              text-text-brand transition-colors
+              data-[state=active]:bg-primary-brand data-[state=active]:text-white data-[state=active]:shadow-none
+            "
+            data-testid="admin-tab-transactions"
+          >
+            {t('admin.transactions')}
+          </TabsTrigger>
+          <TabsTrigger
+            value="system"
+            className="
+              rounded-full px-4 py-2 text-[14px] font-semibold
+              text-text-brand transition-colors
+              data-[state=active]:bg-primary-brand data-[state=active]:text-white data-[state=active]:shadow-none
+            "
+            data-testid="admin-tab-system"
+          >
+            {t('admin.system')}
+          </TabsTrigger>
+          <TabsTrigger
+            value="campaigns"
+            className="
+              rounded-full px-4 py-2 text-[14px] font-semibold
+              text-text-brand transition-colors
+              data-[state=active]:bg-primary-brand data-[state=active]:text-white data-[state=active]:shadow-none
+            "
+            data-testid="admin-tab-campaigns"
+          >
+            {t('campaigns.admin.queueTitle', { defaultValue: 'Campaign Queue' })}
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview" className="mt-6"><OverviewSection /></TabsContent>
@@ -101,16 +239,8 @@ export default function Admin() {
         <TabsContent value="campaigns" className="mt-6"><CampaignQueueTab /></TabsContent>
       </Tabs>
 
-      {showScrollTop && (
-        <Button
-          onClick={scrollToTop}
-          className="fixed bottom-6 right-6 z-50 rounded-full h-12 w-12 p-0 shadow-editorial bg-primary text-primary-foreground hover:scale-105 active:scale-95 transition-all duration-200"
-          data-testid="admin-scroll-top"
-        >
-          <ArrowUp className="h-5 w-5" />
-        </Button>
-      )}
-    </div>
+      </section>
+    </>
   );
 }
 
@@ -118,7 +248,7 @@ export default function Admin() {
 function OverviewSection() {
   const { t } = useTranslation();
   const { overview: data, loadingOverview: loading } = useAdminStore();
-  
+
   const refresh = async (force = false) => {
     try {
       await adminStore.loadOverview({ force });
@@ -947,7 +1077,7 @@ function CampaignQueueTab() {
             <DialogTitle>{t('campaigns.admin.rejectTitle', { defaultValue: 'Reject Campaign' })}</DialogTitle>
             <DialogDescription>{t('campaigns.admin.rejectDesc', { defaultValue: 'Please provide a reason for rejecting this campaign.' })}</DialogDescription>
           </DialogHeader>
-          <Input 
+          <Input
             value={rejectReason}
             onChange={(e) => setRejectReason(e.target.value)}
             placeholder={t('campaigns.admin.reasonPlaceholder', { defaultValue: 'Reason...' })}

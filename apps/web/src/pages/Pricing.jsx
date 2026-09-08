@@ -4,18 +4,19 @@ import { useTranslation } from 'react-i18next';
 import { api } from '@/lib/api';
 import { toast } from 'sonner';
 import { useAuth } from '@/lib/auth';
-import { Loader2, AlertTriangle } from 'lucide-react';
+import { Loader2, AlertTriangle,Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 import { QuotaMonitor } from '@/components/pricing/QuotaMonitor';
 import { PricingDisplay } from '@/components/pricing/PricingDisplay';
+import PricingBanner from '../assets/img/inner6.webp';
 
 export default function Pricing() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
   const { user } = useAuth();
-  
+
   const [pricingData, setPricingData] = useState(null);
   const [quotaStatus, setQuotaStatus] = useState({});
   const [loading, setLoading] = useState(true);
@@ -31,7 +32,7 @@ export default function Pricing() {
       try {
         const pricingRes = await api.getPricingInfo();
         setPricingData(pricingRes);
-        
+
         const quotaRes = await api.getQuotaStatus();
         setQuotaStatus(quotaRes);
       } catch (err) {
@@ -149,36 +150,89 @@ export default function Pricing() {
   const currentPlanName = pricingData?.pricing_plan?.plan_type || 'free';
 
   return (
-    <div className="relative min-h-screen pb-[calc(env(safe-area-inset-bottom)+88px)] px-4 sm:px-6 max-w-6xl mx-auto overflow-hidden space-y-12">
-      {/* Visual background wash */}
-      <div 
-        className="absolute top-0 inset-x-0 h-[600px] pointer-events-none opacity-50 dark:opacity-20"
+    <>
+      {/* Banner Section — same as Privacy page, content pricing ke liye */}
+      <section
+        className="
+          relative isolate overflow-hidden
+          bg-cover bg-center bg-no-repeat
+        "
         style={{
-          backgroundImage: `
-            radial-gradient(900px circle at 15% 10%, rgba(31,111,107,0.14), transparent 55%),
-            radial-gradient(700px circle at 85% 5%, rgba(232,96,60,0.10), transparent 50%)
-          `
+          backgroundImage: `url(${PricingBanner})`,
         }}
-      />
+      >
+        {/* Dark gradient overlay */}
+        <div
+          className="
+            absolute inset-0 -z-0
+            bg-[linear-gradient(90deg,#080b09_0%,#101612_43%,rgba(16,22,18,0.48)_67%,rgba(16,22,18,0.08)_100%)]
+          "
+        />
 
-      {/* Noise overlay on hero section */}
-      <div className="absolute top-0 inset-x-0 h-[300px] pointer-events-none opacity-[0.04] bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-neutral-900 to-transparent" />
-
-      {/* Pricing and tier display selection */}
-      <PricingDisplay
-        pricingData={pricingData}
-        currentPlanName={currentPlanName}
-        isAnnual={isAnnual}
-        setIsAnnual={setIsAnnual}
-        subBusy={subBusy}
-        handleUpgrade={handleUpgrade}
-      />
-
-      {/* Quota status, warnings, and daily limits monitor */}
-      <QuotaMonitor
-        quotaStatus={quotaStatus}
-        pricingData={pricingData}
-      />
-    </div>
+        <div className="relative z-10 w-full">
+          <div
+            className="
+              px-10 py-20
+              max-[991px]:px-[35px] max-[991px]:py-[45px]
+              max-[767px]:px-5 max-[767px]:py-[38px]
+              max-[480px]:px-4 max-[480px]:py-8
+            "
+          >
+            <div className="max-w-[520px]">
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-semibold tracking-wider uppercase bg-accent/10 text-accent border border-accent/25 mb-4">
+          <Sparkles className="h-3 w-3 animate-pulse" />
+          {t('pricing.membershipTitle', { defaultValue: 'DressApp Club' })}
+        </span>
+              {/* Title */}
+              <h1
+                className="
+                  m-0 mb-0
+                  text-[40px] leading-[40px]
+                  font-bold
+                  tracking-normal
+                  text-white
+                  max-[767px]:text-[42px]
+                  max-[480px]:text-[35px]
+                "
+              >
+                      {t('pricing.title', { defaultValue: 'Membership Pricing Plans' })}
+              </h1>
+              {/* Description */}
+              <p
+                className="
+                  my-5
+                  max-w-[450px]
+                  text-[14px]
+                  leading-6
+                  tracking-[0.5px]
+                  text-white/60
+                  max-[767px]:max-w-full
+                  max-[767px]:mt-[15px]
+                "
+              >
+                 {t('pricing.subtitle', { defaultValue: 'Choose the plan that fits your style. Upgrade, downgrade, or cancel at any time.' })}
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+      <div className="px-[40px] py-[80px] bg-accent-beige">
+        {/* Rest of the page content wrapped with side padding */}
+          {/* Pricing and tier display selection */}
+          <PricingDisplay
+            pricingData={pricingData}
+            currentPlanName={currentPlanName}
+            isAnnual={isAnnual}
+            setIsAnnual={setIsAnnual}
+            subBusy={subBusy}
+            handleUpgrade={handleUpgrade}
+          />
+          {/* Quota status, warnings, and daily limits monitor */}
+          <QuotaMonitor
+            quotaStatus={quotaStatus}
+            pricingData={pricingData}
+          />
+      </div>
+    </>
   );
 }

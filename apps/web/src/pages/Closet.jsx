@@ -1128,7 +1128,7 @@ export default function Closet() {
           <ThumbRepairChip progress={store.thumbProgress} />
         </div>
         <div className="w-full">
-          <div className="rounded-[12px] border-0 bg-white p-[20px] shadow-sm mb-[20px]">
+          <div className="rounded-[12px] border-0 bg-white p-[20px] shadow-sm mb-[16px]">
             <form
               onSubmit={onSearch}
               data-testid="closet-filter-bar"
@@ -1617,7 +1617,7 @@ export default function Closet() {
               className="flex items-center justify-between px-1"
               data-testid="closet-view-mode-bar"
             >
-              <span className="text-xs font-semibold text-muted-foreground">
+              <span className="text-[16px] font-bold text-dark-brand">
                 {t("closet.itemsCount", {
                   count: items.length,
                   defaultValue: "{{count}} items",
@@ -1640,8 +1640,8 @@ export default function Closet() {
                   data-testid="closet-view-2cols"
                   className={`inline-flex h-8 w-8 items-center justify-center rounded-md text-xs transition-colors ${
                     viewMode === "grid"
-                      ? "bg-[hsl(var(--accent))] text-white shadow-xs"
-                      : "text-muted-foreground hover:text-foreground hover:bg-secondary"
+                      ? "bg-primary-brand text-white shadow-xs"
+                      : "text-text-brand hover:text-text-brand hover:bg-primary-shadow"
                   }`}
                 >
                   <LayoutGrid className="h-4 w-4" />
@@ -1655,8 +1655,8 @@ export default function Closet() {
                   data-testid="closet-view-3cols"
                   className={`inline-flex h-8 w-8 items-center justify-center rounded-md text-xs transition-colors ${
                     viewMode === "compact"
-                      ? "bg-[hsl(var(--accent))] text-white shadow-xs"
-                      : "text-muted-foreground hover:text-foreground hover:bg-secondary"
+                      ? "bg-primary-brand text-white shadow-xs"
+                      : "text-text-brand hover:text-text-brand hover:bg-primary-shadow"
                   }`}
                 >
                   <Grid className="h-4 w-4" />
@@ -1670,8 +1670,8 @@ export default function Closet() {
                   data-testid="closet-view-list"
                   className={`inline-flex h-8 w-8 items-center justify-center rounded-md text-xs transition-colors ${
                     viewMode === "list"
-                      ? "bg-[hsl(var(--accent))] text-white shadow-xs"
-                      : "text-muted-foreground hover:text-foreground hover:bg-secondary"
+                       ? "bg-primary-brand text-white shadow-xs"
+                      : "text-text-brand hover:text-text-brand hover:bg-primary-shadow"
                   }`}
                 >
                   <List className="h-4 w-4" />
@@ -2528,9 +2528,9 @@ function SaveFailuresDialog({ failures, onDismiss }) {
           {failures.map((f) => (
             <li
               key={f.id}
-              className="flex items-center gap-3 rounded-lg border border-border bg-card/50 p-2"
+              className="flex items-center gap-3 rounded-[12px] border border-border bg-white p-2"
             >
-              <div className="relative shrink-0 h-14 w-14 overflow-hidden rounded-md bg-muted">
+              <div className="relative shrink-0 h-14 w-14 overflow-hidden rounded-full p-3 bg-accent-beige">
                 {f.thumbnail ? (
                   <img
                     src={f.thumbnail}
@@ -2538,7 +2538,7 @@ function SaveFailuresDialog({ failures, onDismiss }) {
                     className="h-full w-full object-cover"
                   />
                 ) : (
-                  <div className="h-full w-full flex items-center justify-center text-muted-foreground">
+                  <div className="h-full w-full flex items-center justify-center text-text-brand">
                     <AlertTriangle className="h-5 w-5" aria-hidden />
                   </div>
                 )}
@@ -2552,7 +2552,7 @@ function SaveFailuresDialog({ failures, onDismiss }) {
                 </div>
                 {f.filename && (
                   <div
-                    className="truncate text-[11px] text-muted-foreground"
+                    className="truncate text-[11px] text-text-brand"
                     title={f.filename}
                   >
                     {f.filename}

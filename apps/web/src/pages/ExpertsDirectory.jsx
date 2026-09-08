@@ -115,7 +115,7 @@ export default function ExpertsDirectory() {
     <>
       {/* banner-start */}
       <section
-        className="relative isolate overflow-hidden bg-cover bg-center bg-no-repeat mt-20"
+        className="relative isolate overflow-hidden bg-cover bg-center bg-no-repeat"
         style={{ backgroundImage: `url(${expertsBannerImg})` }}
       >
         <div
@@ -155,14 +155,13 @@ export default function ExpertsDirectory() {
           </div>
         </div>
       </section>
-
-      <section className="bg-[var(--accent-beige)] px-10 py-10 max-[991px]:px-[5px] max-[991px]:py-10">
+      <section className="bg-[var(--accent-beige)] px-[40px] py-[40px] max-[991px]:px-[5px] max-[991px]:py-10">
         <div className="w-full">
           {/* tabs */}
           <div
             role="tablist"
             aria-label={t('experts.tabBar')}
-            className="inline-flex items-center gap-1 p-[5px] bg-white rounded-full my-5 overflow-x-auto max-w-full"
+            className="inline-flex items-center gap-1 p-[5px] bg-white rounded-full mb-5 overflow-x-auto max-w-full"
           >
             {TABS.map(({ id, label, Icon }) => (
               <button
@@ -173,7 +172,7 @@ export default function ExpertsDirectory() {
                 data-testid={`experts-tab-${id}`}
                 className={`
                   inline-flex items-center gap-1.5 whitespace-nowrap
-                  px-5 py-2.5 rounded-full text-sm font-bold transition-all duration-300
+                  px-5 py-2.5 rounded-full text-[12px] font-bold transition-all duration-300
                   ${
                     activeTab === id
                       ? 'bg-[var(--primary-color)] text-white'
@@ -186,18 +185,17 @@ export default function ExpertsDirectory() {
               </button>
             ))}
           </div>
-
           {/* ---- EXPERTS TAB ---- */}
           {activeTab === 'experts' && (
             <>
               {/* Filters */}
               <div
-                className="bg-white rounded-[20px] shadow-[0_12px_36px_rgba(20,30,25,0.06)] p-5 mb-5"
+                className="bg-white rounded-[12px] shadow-[0_12px_36px_rgba(20,30,25,0.06)] p-5 mb-5"
                 data-testid="experts-filter-card"
               >
                 <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
                   <div className="md:col-span-12">
-                    <div className="flex items-center justify-between mb-2 flex-wrap gap-2">
+                    <div className="flex items-center justify-between lex-wrap gap-2">
                       <h6 className="text-base font-extrabold text-[var(--dark-color)] mb-0 flex items-center gap-2">
                         <i className="fa-solid fa-sliders text-[var(--primary-color)] text-sm" />
                         {t('experts.filters.title', { defaultValue: 'Filters' })}
@@ -220,21 +218,17 @@ export default function ExpertsDirectory() {
                       )}
                     </div>
                   </div>
-
                   <div className="md:col-span-3">
                     <div className="flex flex-col">
                       <label className="text-sm font-bold text-[#666] mb-2.5">{t('experts.filters.search')}</label>
                       <div className="relative">
-                        <SearchIcon className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--text-color)] pointer-events-none" />
+                        <SearchIcon className="absolute right-3 top-3 w-4 h-4 text-[var(--text-color)] pointer-events-none" />
                         <input
                           value={draft.q}
                           onChange={(e) => setDraft({ ...draft, q: e.target.value })}
                           onKeyDown={(e) => e.key === 'Enter' && apply()}
                           className="
-                            w-full h-[46px] rounded-xl border border-black/10 bg-[#fdfdfb]
-                            px-3.5 pr-10 text-sm text-[var(--dark-color)]
-                            focus:border-[var(--primary-color)] focus:ring-2 focus:ring-[var(--primary-color)]/10
-                            focus:outline-none transition
+                            px-[12px] py-[6px] mb-[15px] h-11 w-full rounded-[8px] border border-gray-200 bg-white text-sm text-gray-900 shadow-none outline-none transition-[var(--transition-smooth)] placeholder:text-gray-400 focus:border-[var(--primary-color)] focus:shadow-[0_0_0_3px_rgba(31,92,69,0.1)]
                           "
                           placeholder={t('experts.filters.search')}
                           data-testid="experts-filter-search"
@@ -242,7 +236,6 @@ export default function ExpertsDirectory() {
                       </div>
                     </div>
                   </div>
-
                   <div className="md:col-span-3">
                     <div className="flex flex-col">
                       <label className="text-sm font-bold text-[#666] mb-2.5">{t('experts.filters.profession')}</label>
@@ -253,10 +246,7 @@ export default function ExpertsDirectory() {
                           onChange={(e) => setDraft({ ...draft, profession: e.target.value })}
                           onKeyDown={(e) => e.key === 'Enter' && apply()}
                           className="
-                            w-full h-[46px] rounded-xl border border-black/10 bg-[#fdfdfb]
-                            px-3.5 text-sm text-[var(--dark-color)]
-                            focus:border-[var(--primary-color)] focus:ring-2 focus:ring-[var(--primary-color)]/10
-                            focus:outline-none transition
+                           px-[12px] py-[6px] mb-[15px] h-11 w-full rounded-[8px] border border-gray-200 bg-white text-sm text-gray-900 shadow-none outline-none transition-[var(--transition-smooth)] placeholder:text-gray-400 focus:border-[var(--primary-color)] focus:shadow-[0_0_0_3px_rgba(31,92,69,0.1)]
                           "
                           placeholder={t('experts.filters.anyProfession')}
                           data-testid="experts-filter-profession"
@@ -269,7 +259,6 @@ export default function ExpertsDirectory() {
                       </div>
                     </div>
                   </div>
-
                   <div className="md:col-span-3">
                     <div className="flex flex-col">
                       <label className="text-sm font-bold text-[#666] mb-2.5">{t('experts.filters.country')}</label>
@@ -279,10 +268,7 @@ export default function ExpertsDirectory() {
                           onChange={(e) => setDraft({ ...draft, country: e.target.value })}
                           onKeyDown={(e) => e.key === 'Enter' && apply()}
                           className="
-                            w-full h-[46px] rounded-xl border border-black/10 bg-[#fdfdfb]
-                            px-3.5 text-sm text-[var(--dark-color)]
-                            focus:border-[var(--primary-color)] focus:ring-2 focus:ring-[var(--primary-color)]/10
-                            focus:outline-none transition
+                            px-[12px] py-[6px] mb-[15px] h-11 w-full rounded-[8px] border border-gray-200 bg-white text-sm text-gray-900 shadow-none outline-none transition-[var(--transition-smooth)] placeholder:text-gray-400 focus:border-[var(--primary-color)] focus:shadow-[0_0_0_3px_rgba(31,92,69,0.1)]
                           "
                           placeholder={t('pages.expertsDirectory.il_us_fr')}
                           data-testid="experts-filter-country"
@@ -290,7 +276,6 @@ export default function ExpertsDirectory() {
                       </div>
                     </div>
                   </div>
-
                   <div className="md:col-span-3">
                     <div className="flex flex-col">
                       <label className="text-sm font-bold text-[#666] mb-2.5">{t('experts.filters.region')}</label>
@@ -301,10 +286,7 @@ export default function ExpertsDirectory() {
                           onKeyDown={(e) => e.key === 'Enter' && apply()}
                           placeholder={t('experts.filters.region', { defaultValue: 'City or region' })}
                           className="
-                            w-full h-[46px] rounded-xl border border-black/10 bg-[#fdfdfb]
-                            px-3.5 text-sm text-[var(--dark-color)]
-                            focus:border-[var(--primary-color)] focus:ring-2 focus:ring-[var(--primary-color)]/10
-                            focus:outline-none transition
+                           px-[12px] py-[6px] mb-[15px] h-11 w-full rounded-[8px] border border-gray-200 bg-white text-sm text-gray-900 shadow-none outline-none transition-[var(--transition-smooth)] placeholder:text-gray-400 focus:border-[var(--primary-color)] focus:shadow-[0_0_0_3px_rgba(31,92,69,0.1)]
                           "
                           data-testid="experts-filter-region"
                         />
@@ -312,16 +294,15 @@ export default function ExpertsDirectory() {
                     </div>
                   </div>
                 </div>
-
-                <div className="flex items-center gap-2.5 mt-[18px] flex-wrap">
+                <div className="flex items-center gap-2.5 flex-wrap">
                   <button
                     onClick={apply}
                     disabled={loading}
                     data-testid="experts-apply-filters"
                     className="
                       inline-flex items-center gap-2
-                      bg-[var(--primary-color)] hover:bg-[var(--dark-color)]
-                      text-white text-xs font-semibold rounded-full px-5 py-2.5
+                      bg-[var(--primary-color)] border border-primary-brand hover:bg-[var(--dark-color)]
+                      text-white text-xs font-semibold rounded-full px-6 py-3
                       transition disabled:opacity-60
                     "
                   >
@@ -334,7 +315,7 @@ export default function ExpertsDirectory() {
                     className="
                       inline-flex items-center gap-2
                       border border-[#666] hover:border-[var(--primary-color)] hover:text-[var(--primary-color)]
-                      text-xs font-semibold rounded-full px-5 py-2.5
+                      text-xs font-semibold rounded-full px-6 py-3
                       transition disabled:opacity-60
                     "
                   >
@@ -352,7 +333,6 @@ export default function ExpertsDirectory() {
                   )}
                 </div>
               </div>
-
               {showSkeleton ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
                   {Array.from({ length: 6 }).map((_, i) => (
@@ -364,7 +344,7 @@ export default function ExpertsDirectory() {
                 </div>
               ) : items.length === 0 ? (
                 <div
-                  className="bg-white rounded-xl shadow-[0_12px_35px_rgba(27,45,35,0.06)]"
+                  className="bg-white rounded-[12px] shadow-[0_12px_35px_rgba(27,45,35,0.06)]"
                   data-testid="experts-empty"
                 >
                   <div className="p-10 md:p-20">
@@ -373,10 +353,10 @@ export default function ExpertsDirectory() {
                     </div>
                     <div className="flex justify-center items-center">
                       <div className="text-center">
-                        <h2 className="text-[30px] font-bold leading-10 text-black mb-1.5">
+                        <h2 className="text-[20px] font-bold leading-10 text-dark-brand">
                           {t("experts.emptyTitle")}
                         </h2>
-                        <p className="text-[#686f6b] text-base leading-relaxed max-w-[560px] mx-auto mt-3.5">
+                        <p className="text-text-brand text-[14px] font-semibold text-base leading-relaxed max-w-[560px] mx-auto">
                           {t("experts.emptyBody")}
                         </p>
                       </div>
@@ -392,7 +372,6 @@ export default function ExpertsDirectory() {
               )}
             </>
           )}
-
           {/* ---- CAMPAIGNS TAB ---- */}
           {activeTab === 'campaigns' && (
             <>
@@ -404,7 +383,7 @@ export default function ExpertsDirectory() {
                     className="
                       inline-flex items-center gap-2
                       border border-[var(--primary-color)] text-[var(--primary-color)]
-                      hover:bg-[var(--primary-shadow)]
+                      hover:border-dark-brand hover:text-dark-brand
                       rounded-full px-5 py-2.5 text-sm font-semibold transition
                     "
                   >
@@ -428,10 +407,8 @@ export default function ExpertsDirectory() {
             </>
           )}
         </div>
-
         {/* Regional ad ticker at the bottom */}
         <AdTicker placement="experts" className="mt-6" />
-        {/* <ExploreBackButton /> */}
       </section>
     </>
   );
@@ -460,7 +437,7 @@ function ExpertCard({ expert }) {
     <div data-testid={`expert-card-${expert.id}`}>
       <div
         className="
-          bg-white border border-black/[0.06] rounded-xl p-6 text-center h-full
+          bg-white border border-border rounded-[12px] p-6 text-center h-full
           shadow-sm hover:shadow-[0_20px_50px_rgba(0,0,0,0.12)] hover:-translate-y-2
           transition-all duration-300
         "
@@ -523,7 +500,7 @@ function ExpertCard({ expert }) {
                 flex-1 inline-flex items-center justify-center gap-1
                 border border-[var(--primary-color)] text-[var(--primary-color)]
                 hover:bg-[var(--primary-color)] hover:text-white
-                rounded-full px-2 py-2 text-xs font-bold transition
+                rounded-full px-2 py-3 text-xs font-bold transition
               "
             >
               <Globe className="h-3.5 w-3.5" />
@@ -538,7 +515,7 @@ function ExpertCard({ expert }) {
                 flex-1 inline-flex items-center justify-center gap-1
                 border border-[var(--primary-color)] text-[var(--primary-color)]
                 hover:bg-[var(--primary-color)] hover:text-white
-                rounded-full px-2 py-2 text-xs font-bold transition
+                rounded-full px-2 py-3 text-xs font-bold transition
               "
             >
               <Phone className="h-3.5 w-3.5" />
@@ -553,7 +530,7 @@ function ExpertCard({ expert }) {
                 flex-1 inline-flex items-center justify-center gap-1
                 border border-[var(--primary-color)] text-[var(--primary-color)]
                 hover:bg-[var(--primary-color)] hover:text-white
-                rounded-full px-2 py-2 text-xs font-bold transition
+                rounded-full px-2 py-3 text-xs font-bold transition
               "
             >
               <Mail className="h-3.5 w-3.5" />

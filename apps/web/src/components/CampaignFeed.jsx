@@ -11,7 +11,7 @@ import {
 import { CampaignCard, CampaignCardSkeleton } from '@/components/CampaignCard';
 import { campaignApi } from '@/lib/api';
 import { useLocation } from '@/lib/location';
-
+import market5 from "@/assets/img/market5.webp";
 /**
  * CampaignFeed — infinite-scroll grid of active campaigns.
  *
@@ -89,17 +89,17 @@ export function CampaignFeed() {
   ];
 
   return (
-    <div className="space-y-4" data-testid="campaign-feed">
+    <div className="bg-white p-5 rounded-[12px] border border-border shadow-sm space-y-4" data-testid="campaign-feed">
       {/* Sort control */}
       <div className="flex items-center justify-between gap-3 flex-wrap">
-        <p className="text-sm text-muted-foreground">
+        <p className="text-[14px] font-bold text-dark-brand">
           {total > 0 && t('campaigns.feed.countLabel', { count: total })}
         </p>
         <div className="flex items-center gap-2">
-          <SlidersHorizontal className="h-4 w-4 text-muted-foreground" />
+          <SlidersHorizontal className="h-4 w-4 text-primary-brand" />
           <Select value={sort} onValueChange={setSort}>
             <SelectTrigger
-              className="w-44 rounded-xl"
+              className="w-44"
               data-testid="campaign-feed-sort"
             >
               <SelectValue />
@@ -114,7 +114,6 @@ export function CampaignFeed() {
           </Select>
         </div>
       </div>
-
       {/* Grid */}
       {initialLoad ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -127,8 +126,19 @@ export function CampaignFeed() {
           className="text-center py-16 text-muted-foreground"
           data-testid="campaign-feed-empty"
         >
-          <p className="text-lg font-display">{t('campaigns.feed.empty.title')}</p>
-          <p className="text-sm mt-1">{t('campaigns.feed.empty.body')}</p>
+          <div className="relative flex items-center justify-center mb-5">
+            <img src={market5} className="h-[250px] object-cover" />
+          </div>
+          <div className="flex justify-center items-center">
+            <div className="text-center">
+              <h2 className="text-[20px] font-bold leading-10 text-dark-brand">
+                {t('campaigns.feed.empty.title')}
+              </h2>
+              <p className="text-text-brand text-[14px] font-semibold text-base leading-relaxed max-w-[560px] mx-auto">
+                {t('campaigns.feed.empty.body')}
+              </p>
+            </div>
+          </div>
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -137,7 +147,6 @@ export function CampaignFeed() {
           ))}
         </div>
       )}
-
       {/* Infinite scroll sentinel */}
       <div ref={sentinelRef} className="h-4" aria-hidden="true" />
 

@@ -489,12 +489,12 @@ export default function WardrobeStats() {
               {/* Value Card */}
               <Card className="rounded-[12px] border border-border bg-white shadow-sm hover:shadow-md transition-shadow">
                 <CardContent className="p-5 flex items-center gap-4">
-                  <div className="h-12 w-12 rounded-2xl bg-accent-lilac/30 text-brand flex items-center justify-center shrink-0">
+                  <div className="h-12 w-12 rounded-full bg-primary-shadow text-primary-brand flex items-center justify-center shrink-0">
                     <DollarSign className="h-6 w-6" />
                   </div>
                   <div>
-                    <span className="text-xs text-text-brand block font-medium">{t('stats.totalValue', { defaultValue: 'Closet Worth' })}</span>
-                    <span className="text-2xl font-bold font-display text-foreground" data-testid="stats-total-value">
+                    <span className="text-xs text-text-brand block font-semibold">{t('stats.totalValue', { defaultValue: 'Closet Worth' })}</span>
+                    <span className="text-[20px] font-bold text-dark-brand" data-testid="stats-total-value">
                       ${totalValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </span>
                   </div>
@@ -504,12 +504,12 @@ export default function WardrobeStats() {
               {/* Utilization Card */}
               <Card className="rounded-[12px] border border-border bg-white shadow-sm hover:shadow-md transition-shadow">
                 <CardContent className="p-5 flex items-center gap-4">
-                  <div className="h-12 w-12 rounded-2xl bg-accent-green/10 text-accent-green flex items-center justify-center shrink-0">
+                  <div className="h-12 w-12 rounded-full bg-primary-shadow text-primary-brand flex items-center justify-center shrink-0">
                     <Percent className="h-6 w-6" />
                   </div>
                   <div>
-                    <span className="text-xs text-text-brand block font-medium">{t('stats.utilization', { defaultValue: 'Closet Utilization' })}</span>
-                    <span className="text-2xl font-bold font-display text-foreground" data-testid="stats-utilization">
+                    <span className="text-xs text-text-brand block font-semibold">{t('stats.utilization', { defaultValue: 'Closet Utilization' })}</span>
+                    <span className="text-[20px] font-bold text-dark-brand" data-testid="stats-utilization">
                       {utilization}%
                     </span>
                   </div>
@@ -519,12 +519,12 @@ export default function WardrobeStats() {
               {/* Active Items Worn */}
               <Card className="rounded-[12px] border border-border bg-white shadow-sm hover:shadow-md transition-shadow">
                 <CardContent className="p-4 md:p-6 flex flex-col md:flex-row items-start md:items-center gap-3 md:gap-4">
-                  <div className="h-10 w-10 md:h-12 md:w-12 rounded-xl md:rounded-2xl bg-orange-100 dark:bg-orange-950/20 text-orange-500 flex items-center justify-center shrink-0">
+                  <div className="h-12 w-12 rounded-full bg-primary-shadow text-primary-brand flex items-center justify-center shrink-0">
                     <TrendingUp className="h-5 w-5 md:h-6 md:w-6" />
                   </div>
                   <div>
-                    <span className="text-[10px] md:text-xs text-text-brand block font-medium">{t('stats.wornRatio', { defaultValue: 'Items Worn' })}</span>
-                    <span className="text-xl md:text-2xl font-bold font-display text-foreground" data-testid="stats-items-ratio">
+                    <span className="text-[10px] md:text-xs text-text-brand block font-semibold">{t('stats.wornRatio', { defaultValue: 'Items Worn' })}</span>
+                    <span className="text-[20px] font-bold text-dark-brand" data-testid="stats-items-ratio">
                       {wornItems} / {items.length}
                     </span>
                   </div>
@@ -534,12 +534,12 @@ export default function WardrobeStats() {
               {/* Avg CPW */}
               <Card className="rounded-[12px] border border-border bg-white shadow-sm hover:shadow-md transition-shadow">
                 <CardContent className="p-4 md:p-6 flex flex-col md:flex-row items-start md:items-center gap-3 md:gap-4">
-                  <div className="h-10 w-10 md:h-12 md:w-12 rounded-xl md:rounded-2xl bg-accent-yellow/20 text-accent-yellow flex items-center justify-center shrink-0">
+                  <div className="h-12 w-12 rounded-full bg-primary-shadow text-primary-brand flex items-center justify-center shrink-0">
                     <Activity className="h-5 w-5 md:h-6 md:w-6" />
                   </div>
                   <div>
-                    <span className="text-[10px] md:text-xs text-text-brand block font-medium">{t('stats.avgCpw', { defaultValue: 'Avg Cost/Wear' })}</span>
-                    <span className="text-xl md:text-2xl font-bold font-display text-foreground" data-testid="stats-avg-cpw">
+                    <span className="text-[10px] md:text-xs text-text-brand block font-semibold">{t('stats.avgCpw', { defaultValue: 'Avg Cost/Wear' })}</span>
+                    <span className="text-[20px] font-bold text-dark-brand" data-testid="stats-avg-cpw">
                       ${avgCpw.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </span>
                   </div>
@@ -729,8 +729,8 @@ export default function WardrobeStats() {
                       </ResponsiveContainer>
                     ) : (
                       <div className="flex h-full items-center justify-center">
-                        <div className="text-center p-6 text-text-brand text-xs bg-accent-beige rounded-full border border-dashed border-border">
-                          <Award className="h-6 w-6 mx-auto mb-2 opacity-50" />
+                        <div className="text-center p-3 text-text-brand text-xs font-bold bg-accent-beige rounded-[12px] border border-border">
+                          <Award className="h-6 w-6 mx-auto mb-3 text-primary-brand" />
                           <span>{t('stats.noCPWData', { defaultValue: 'Purchase price is required to calculate cost-per-wear stats.' })}</span>
                         </div>
                       </div>
@@ -749,67 +749,65 @@ export default function WardrobeStats() {
               <>
                 {/* Primary KPI Grid for Impact */}
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-5">
-                  <Card className="rounded-3xl border border-border shadow-sm bg-card hover:shadow-md transition-shadow">
+                  <Card className="rounded-[12px] border border-border bg-white shadow-sm hover:shadow-md transition-shadow">
                     <CardContent className="p-6 flex items-center gap-4">
-                      <div className="h-12 w-12 rounded-2xl bg-accent-green/20 text-accent-green flex items-center justify-center shrink-0">
+                      <div className="h-12 w-12 rounded-full bg-primary-shadow text-primary-brand flex items-center justify-center shrink-0">
                         <Percent className="h-6 w-6" />
                       </div>
                       <div>
-                        <span className="text-xs text-text-brand block font-medium">{t('wardrobeStats.sustainability.utilisationTitle', { defaultValue: 'Wardrobe Utilisation' })}</span>
-                        <span className="text-2xl font-bold font-display text-foreground">
+                        <span className="text-[10px] md:text-xs text-text-brand block font-semibold">{t('wardrobeStats.sustainability.utilisationTitle', { defaultValue: 'Wardrobe Utilisation' })}</span>
+                        <span className="text-[20px] font-bold text-dark-brand">
                           {sustainabilityData.utilisation_pct}%
                         </span>
                       </div>
                     </CardContent>
                   </Card>
-
-                  <Card className="rounded-3xl border border-border shadow-sm bg-card hover:shadow-md transition-shadow">
+                  <Card className="rounded-[12px] border border-border bg-white shadow-sm hover:shadow-md transition-shadow">
                     <CardContent className="p-6 flex items-center gap-4">
-                      <div className="h-12 w-12 rounded-2xl bg-brand/10 text-brand flex items-center justify-center shrink-0">
+                      <div className="h-12 w-12 rounded-full bg-primary-shadow text-primary-brand flex items-center justify-center shrink-0">
                         <Leaf className="h-6 w-6" />
                       </div>
                       <div>
-                        <span className="text-xs text-text-brand block font-medium">{t('wardrobeStats.sustainability.carbonTitle', { defaultValue: 'Carbon Tracked' })}</span>
-                        <span className="text-2xl font-bold font-display text-foreground">
+                        <span className="text-[10px] md:text-xs text-text-brand block font-semibold">{t('wardrobeStats.sustainability.carbonTitle', { defaultValue: 'Carbon Tracked' })}</span>
+                        <span className="text-[20px] font-bold text-dark-brand">
                           {sustainabilityData.carbon_sum} <span className="text-sm text-text-brand font-normal">kg CO₂</span>
                         </span>
                       </div>
                     </CardContent>
                   </Card>
-
-                  <Card className="rounded-3xl border border-border shadow-sm bg-card hover:shadow-md transition-shadow">
+                  <Card className="rounded-[12px] border border-border bg-white shadow-sm hover:shadow-md transition-shadow">
                     <CardContent className="p-6 flex items-center gap-4">
-                      <div className="h-12 w-12 rounded-2xl bg-orange-100 dark:bg-orange-950/20 text-orange-500 flex items-center justify-center shrink-0">
+                      <div className="h-12 w-12 rounded-full bg-primary-shadow text-primary-brand flex items-center justify-center shrink-0">
                         <ShoppingBag className="h-6 w-6" />
                       </div>
                       <div>
-                        <span className="text-xs text-text-brand block font-medium">{t('wardrobeStats.sustainability.intakeManual', { defaultValue: 'Manual Adds' })}</span>
-                        <span className="text-2xl font-bold font-display text-foreground">
+                        <span className="text-[10px] md:text-xs text-text-brand block font-semibold">{t('wardrobeStats.sustainability.intakeManual', { defaultValue: 'Manual Adds' })}</span>
+                        <span className="text-[20px] font-bold text-dark-brand">
                           {sustainabilityData.intake_breakdown.manual}
                         </span>
                       </div>
                     </CardContent>
                   </Card>
-
-                  <Card className="rounded-3xl border border-border shadow-sm bg-card hover:shadow-md transition-shadow">
+                  <Card className="rounded-[12px] border border-border bg-white shadow-sm hover:shadow-md transition-shadow">
                     <CardContent className="p-6 flex items-center gap-4">
-                      <div className="h-12 w-12 rounded-2xl bg-blue-100 dark:bg-blue-950/20 text-blue-500 flex items-center justify-center shrink-0">
+                      <div className="h-12 w-12 rounded-full bg-primary-shadow text-primary-brand flex items-center justify-center shrink-0">
                         <Droplets className="h-6 w-6" />
                       </div>
                       <div>
-                        <span className="text-xs text-text-brand block font-medium">{t('wardrobeStats.sustainability.intakeReceipt', { defaultValue: 'From Receipts' })}</span>
-                        <span className="text-2xl font-bold font-display text-foreground">
+                        <span className="text-[10px] md:text-xs text-text-brand block font-semibold">{t('wardrobeStats.sustainability.intakeReceipt', { defaultValue: 'From Receipts' })}</span>
+                        <span className="text-[20px] font-bold text-dark-brand">
                           {sustainabilityData.intake_breakdown.receipt}
                         </span>
                       </div>
                     </CardContent>
                   </Card>
                 </div>
-
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                  <Card className="lg:col-span-2 rounded-[12px] border border-border bg-white shadow-sm">
-                    <CardTitle className="text-lg font-display">{t('wardrobeStats.sustainability.cpwTrendTitle', { defaultValue: 'Cost-per-wear Trend' })}</CardTitle>
-                    <p className="text-sm text-text-brand">{t('wardrobeStats.sustainability.cpwTrendDesc', { defaultValue: 'Your 6-month closet value efficiency.' })}</p>
+                 <Card className="rounded-[12px] lg:col-span-2 border border-border bg-white shadow-sm p-5 flex flex-col gap-4">
+                    <CardHeader className="p-0">
+                      <h6 className="text-[16px] font-bold text-dark-brand">{t('wardrobeStats.sustainability.cpwTrendTitle', { defaultValue: 'Cost-per-wear Trend' })}</h6>
+                      <p className="text-[14px] font-semibold text-text-brand">{t('wardrobeStats.sustainability.cpwTrendDesc', { defaultValue: 'Your 6-month closet value efficiency.' })}</p>
+                    </CardHeader>
                     <CardContent className="p-5 h-[300px]">
                       <ResponsiveContainer width="100%" height="100%">
                         <AreaChart data={sustainabilityData.cpw_trend} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
@@ -831,7 +829,6 @@ export default function WardrobeStats() {
                       </ResponsiveContainer>
                     </CardContent>
                   </Card>
-
                   <Card className="rounded-[12px] border border-border shadow-sm p-5 bg-white flex flex-col justify-center text-center overflow-hidden flex-1 min-h-[300px]">
                     {!actionType ? (
                       <>
@@ -848,10 +845,10 @@ export default function WardrobeStats() {
                     ) : (
                       <div className="flex flex-col h-full w-full text-left">
                         <div className="flex items-center justify-between mb-4">
-                          <h3 className="font-display font-bold text-lg text-brand">
+                          <h3 className="font-bold text-[20px] mb-2 text-dark-brand">
                             {actionType === 'sell' ? t('wardrobeStats.sustainability.selectToSell', { defaultValue: 'Select items to sell' }) : t('wardrobeStats.sustainability.selectToDonate', { defaultValue: 'Select items to donate' })}
                           </h3>
-                          <Button variant="ghost" size="icon" onClick={() => { setActionType(null); setSelectedItemIds([]); }} className="h-8 w-8 text-text-brand hover:bg-black/5 rounded-full">
+                          <Button variant="ghost" size="icon" onClick={() => { setActionType(null); setSelectedItemIds([]); }} className="h-8 w-8 text-text-brand hover:bg-primary-shadow rounded-full">
                             <X className="h-4 w-4" />
                           </Button>
                         </div>
@@ -860,13 +857,13 @@ export default function WardrobeStats() {
                           {unwornItems.map((item) => {
                             const isSelected = selectedItemIds.includes(item.id);
                             return (
-                              <div key={item.id} className="flex items-center gap-3 py-2 bg-white/50 rounded-xl px-3 border border-border/50">
+                              <div key={item.id} className="flex items-center gap-3 bg-white rounded-[12px] p-3 border border-border">
                                 <button
                                   onClick={() => toggleSelection(item.id)}
                                   className="text-brand focus:outline-none shrink-0"
                                 >
                                   {isSelected ? (
-                                    <CheckSquare className="h-5 w-5 fill-brand/20 text-brand" />
+                                    <CheckSquare className="h-5 w-5 fill-white text-primary-brand" />
                                   ) : (
                                     <Square className="h-5 w-5 text-text-brand" />
                                   )}
@@ -875,16 +872,16 @@ export default function WardrobeStats() {
                                 <img
                                   src={bestImageUrl(item) || 'https://via.placeholder.com/150'}
                                   alt={item.title}
-                                  className="h-10 w-10 rounded-lg object-cover shrink-0 cursor-pointer hover:opacity-80 transition-opacity"
+                                  className="h-10 w-10 bg-accent-beige rounded-full object-contain shrink-0 cursor-pointer hover:opacity-80 transition-opacity"
                                   onClick={() => navigate(`/closet/${item.id}`)}
                                 />
 
                                 <div className="min-w-0 flex-1">
                                   <div
-                                    className="cursor-pointer hover:underline text-foreground"
+                                    className="cursor-pointer hover:underline text-dark-brand"
                                     onClick={() => navigate(`/closet/${item.id}`)}
                                   >
-                                    <p className="text-sm font-medium truncate">{item.title || t('common.untitled', { defaultValue: 'Untitled' })}</p>
+                                    <p className="text-[12px] font-semibold truncate">{item.title || t('common.untitled', { defaultValue: 'Untitled' })}</p>
                                   </div>
                                 </div>
                               </div>
@@ -895,7 +892,7 @@ export default function WardrobeStats() {
                           )}
                         </div>
 
-                        <div className="pt-4 mt-auto border-t border-border/50 flex gap-2">
+                        <div className="pt-4 mt-auto flex gap-2">
                           <Button
                             variant="outline"
                             onClick={() => { setActionType(null); setSelectedItemIds([]); }}

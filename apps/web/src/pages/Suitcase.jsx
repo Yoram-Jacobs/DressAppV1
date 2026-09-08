@@ -170,7 +170,7 @@ function OutfitCanvas({
   if (!hasImages) {
     return (
       <div
-        className={`relative aspect-[4/3] bg-muted/45 flex flex-col items-center justify-center border-b border-border text-muted-foreground ${className}`}
+        className={`relative aspect-[4/3] bg-muted/45 flex flex-col items-center justify-center border-b border-border text-text-brand ${className}`}
         onClick={onClick}
       >
         <ShoppingBag className="h-8 w-8 mb-2 opacity-40" />
@@ -482,8 +482,8 @@ function Suitcase() {
         missing_notes:
           state.viewState === "reviewing"
             ? state.packingData?.danger_zones_info ||
-              state.packingData?.cultural_guidelines ||
-              ""
+            state.packingData?.cultural_guidelines ||
+            ""
             : "",
         local_fashion_stores:
           state.viewState === "reviewing"
@@ -1223,8 +1223,7 @@ function Suitcase() {
       <section
         className="
                 relative isolate overflow-hidden
-                bg-cover bg-center bg-no-repeat
-                 mt-[var(--header-height)]"
+                bg-cover bg-center bg-no-repeat"
         style={{
           backgroundImage: `url(${ClosetBanner})`,
         }}
@@ -1465,7 +1464,7 @@ function Suitcase() {
                               type="date"
                               value={
                                 departureTime &&
-                                typeof departureTime === "string"
+                                  typeof departureTime === "string"
                                   ? departureTime.split("T")[0]
                                   : ""
                               }
@@ -1575,22 +1574,22 @@ function Suitcase() {
                         {/* Modesty or Danger alerts */}
                         {(packingData.danger_zones_info ||
                           packingData.cultural_guidelines) && (
-                          <div className="rounded-[12px] mb-[15px] border border-red-200 dark:border-red-950/50 bg-red-50/55 dark:bg-red-950/10 p-3 flex flex-col md:flex-row gap-3 items-start">
-                            <AlertTriangle className="h-6 w-6 text-red-500 shrink-0" />
-                            <div className="space-y-1">
-                              <h3 className="text-[12px] font-semibold text-red-500 dark:text-red-300 text-base">
-                                {t("suitcase.alertTitle", {
-                                  defaultValue:
-                                    "Modesty & Safety Constraints Detected",
-                                })}
-                              </h3>
-                              <p className="text-[12px] text-red-500 dark:text-red-400 leading-relaxed font-semibold">
-                                {packingData.danger_zones_info ||
-                                  packingData.cultural_guidelines}
-                              </p>
+                            <div className="rounded-[12px] mb-[15px] border border-red-200 dark:border-red-950/50 bg-red-50/55 dark:bg-red-950/10 p-3 flex flex-col md:flex-row gap-3 items-start">
+                              <AlertTriangle className="h-6 w-6 text-red-500 shrink-0" />
+                              <div className="space-y-1">
+                                <h3 className="text-[12px] font-semibold text-red-500 dark:text-red-300 text-base">
+                                  {t("suitcase.alertTitle", {
+                                    defaultValue:
+                                      "Modesty & Safety Constraints Detected",
+                                  })}
+                                </h3>
+                                <p className="text-[12px] text-red-500 dark:text-red-400 leading-relaxed font-semibold">
+                                  {packingData.danger_zones_info ||
+                                    packingData.cultural_guidelines}
+                                </p>
+                              </div>
                             </div>
-                          </div>
-                        )}
+                          )}
                         <Accordion type="multiple" className="w-full space-y-4">
                           {/* Proposed Daily Outfits */}
                           <AccordionItem
@@ -1676,7 +1675,7 @@ function Suitcase() {
                                                       />
                                                     ) : (
                                                       <div className="h-9 w-9 rounded-lg bg-muted flex items-center justify-center shrink-0">
-                                                        <ShoppingBag className="h-4 w-4 text-muted-foreground" />
+                                                        <ShoppingBag className="h-4 w-4 text-text-brand" />
                                                       </div>
                                                     )}
                                                     <div className="">
@@ -1701,19 +1700,19 @@ function Suitcase() {
                                                   >
                                                     {item.status === "closet"
                                                       ? t(
-                                                          "suitcase.inClosetBadge",
-                                                          {
-                                                            defaultValue:
-                                                              "In Closet",
-                                                          },
-                                                        )
+                                                        "suitcase.inClosetBadge",
+                                                        {
+                                                          defaultValue:
+                                                            "In Closet",
+                                                        },
+                                                      )
                                                       : t(
-                                                          "suitcase.missingBadge",
-                                                          {
-                                                            defaultValue:
-                                                              "Missing",
-                                                          },
-                                                        )}
+                                                        "suitcase.missingBadge",
+                                                        {
+                                                          defaultValue:
+                                                            "Missing",
+                                                        },
+                                                      )}
                                                   </Badge>
                                                 </div>
                                               );
@@ -1767,14 +1766,14 @@ function Suitcase() {
                                       deletedCategories.has(catCode);
                                     const suggestions = showSuggestions
                                       ? (closet.items || [])
-                                          .filter(
-                                            (item) =>
-                                              getGroupedCategory(
-                                                item.category,
-                                              ) === catCode &&
-                                              !alreadyPackedIds.has(item.id),
-                                          )
-                                          .slice(0, 3)
+                                        .filter(
+                                          (item) =>
+                                            getGroupedCategory(
+                                              item.category,
+                                            ) === catCode &&
+                                            !alreadyPackedIds.has(item.id),
+                                        )
+                                        .slice(0, 3)
                                       : [];
                                     return (
                                       <div key={catCode} className="space-y-2">
@@ -1824,7 +1823,7 @@ function Suitcase() {
                                                     />
                                                   ) : (
                                                     <div className="h-9 w-9 rounded-lg bg-muted flex items-center justify-center shrink-0">
-                                                      <ShoppingBag className="h-4 w-4 text-muted-foreground" />
+                                                      <ShoppingBag className="h-4 w-4 text-text-brand" />
                                                     </div>
                                                   )}
                                                   <div className="flex flex-col">
@@ -1893,7 +1892,7 @@ function Suitcase() {
                                         </div>
                                         {suggestions.length > 0 && (
                                           <div className="mt-4 p-3 bg-muted/30 border border-dashed border-border rounded-xl">
-                                            <p className="text-xs font-semibold text-muted-foreground mb-2 flex items-center gap-1.5">
+                                            <p className="text-xs font-semibold text-text-brand mb-2 flex items-center gap-1.5">
                                               <Sparkles className="h-3 w-3 text-[hsl(var(--accent))]" />
                                               {t(
                                                 "suitcase.suggestedReplacements",
@@ -1919,11 +1918,11 @@ function Suitcase() {
                                                     />
                                                   ) : (
                                                     <div className="h-8 w-8 rounded-lg bg-muted flex items-center justify-center shrink-0">
-                                                      <ShoppingBag className="h-3.5 w-3.5 text-muted-foreground" />
+                                                      <ShoppingBag className="h-3.5 w-3.5 text-text-brand" />
                                                     </div>
                                                   )}
                                                   <div className="min-w-0 flex-1">
-                                                    <p className="text-xs font-medium truncate text-foreground leading-tight">
+                                                    <p className="text-xs font-medium truncate text-dark-brand leading-tight">
                                                       {sugItem.title}
                                                     </p>
                                                   </div>
@@ -2020,7 +2019,7 @@ function Suitcase() {
                                 <AccordionTrigger className="hover:no-underline py-4">
                                   <div className="flex items-center gap-2">
                                     <ShoppingBag className="h-5 w-5 text-red-500" />
-                                    <span className="text-lg font-display font-semibold text-foreground">
+                                    <span className="text-lg font-display font-semibold text-dark-brand">
                                       {t("suitcase.gapsHeader", {
                                         defaultValue:
                                           "Gaps: Missing Clothing Items",
@@ -2028,7 +2027,7 @@ function Suitcase() {
                                     </span>
                                   </div>
                                 </AccordionTrigger>
-                                <AccordionContent className="pt-2 pb-6 text-foreground">
+                                <AccordionContent className="pt-2 pb-6 text-dark-brand">
                                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     {(Array.isArray(packingData?.missing_items)
                                       ? packingData.missing_items
@@ -2048,7 +2047,7 @@ function Suitcase() {
                                           <p className="text-sm font-medium text-red-900 dark:text-red-300">
                                             {m.description}
                                           </p>
-                                          <p className="text-xs text-muted-foreground">
+                                          <p className="text-xs text-text-brand">
                                             {m.reason_needed}
                                           </p>
                                         </div>
@@ -2130,7 +2129,7 @@ function Suitcase() {
                             <MapPin className="h-6 w-6 text-[hsl(var(--accent))]" />
                           </div>
                           <div>
-                            <p className="text-xs font-semibold text-muted-foreground uppercase">
+                            <p className="text-xs font-semibold text-text-brand uppercase">
                               {t("suitcase.destinationsCard", {
                                 defaultValue: "Destinations",
                               })}
@@ -2147,7 +2146,7 @@ function Suitcase() {
                             <Calendar className="h-6 w-6 text-amber-500" />
                           </div>
                           <div>
-                            <p className="text-xs font-semibold text-muted-foreground uppercase">
+                            <p className="text-xs font-semibold text-text-brand uppercase">
                               {t("suitcase.statusCard", {
                                 defaultValue: "Status",
                               })}
@@ -2164,7 +2163,7 @@ function Suitcase() {
                             <Briefcase className="h-6 w-6 text-emerald-500" />
                           </div>
                           <div>
-                            <p className="text-xs font-semibold text-muted-foreground uppercase">
+                            <p className="text-xs font-semibold text-text-brand uppercase">
                               {t("suitcase.stylePurposeCard", {
                                 defaultValue: "Style & Purpose",
                               })}
@@ -2207,14 +2206,14 @@ function Suitcase() {
                         <AccordionTrigger className="hover:no-underline py-4">
                           <div className="flex items-center gap-2">
                             <Calendar className="h-5 w-5 text-[hsl(var(--accent))]" />
-                            <span className="text-lg font-display font-semibold text-foreground">
+                            <span className="text-lg font-display font-semibold text-dark-brand">
                               {t("suitcase.myTravelOutfits", {
                                 defaultValue: "My Travel Outfits",
                               })}
                             </span>
                           </div>
                         </AccordionTrigger>
-                        <AccordionContent className="pt-2 pb-6 text-foreground">
+                        <AccordionContent className="pt-2 pb-6 text-dark-brand">
                           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                             {(Array.isArray(activeSuitcase?.outfits)
                               ? activeSuitcase.outfits
@@ -2231,7 +2230,7 @@ function Suitcase() {
                                       <Badge className="bg-primary/10 text-primary hover:bg-primary/20 rounded-md py-0.5 text-[10px]">
                                         {outfit.time_to_wear}
                                       </Badge>
-                                      <span className="text-[10px] font-semibold text-muted-foreground">
+                                      <span className="text-[10px] font-semibold text-text-brand">
                                         {outfit.date}
                                       </span>
                                     </div>
@@ -2239,7 +2238,7 @@ function Suitcase() {
                                       {outfit.outfit_name}
                                     </CardTitle>
                                     <CardDescription className="text-[10px] flex items-center gap-1">
-                                      <MapPin className="h-2.5 w-2.5 text-muted-foreground" />
+                                      <MapPin className="h-2.5 w-2.5 text-text-brand" />
                                       {outfit.location}
                                     </CardDescription>
                                   </CardHeader>
@@ -2272,11 +2271,11 @@ function Suitcase() {
                                               />
                                             ) : (
                                               <div className="h-7 w-7 rounded-md bg-muted flex items-center justify-center shrink-0">
-                                                <ShoppingBag className="h-3 w-3 text-muted-foreground" />
+                                                <ShoppingBag className="h-3 w-3 text-text-brand" />
                                               </div>
                                             )}
                                             <div className="min-w-0 flex-1">
-                                              <p className="text-[9px] uppercase font-semibold text-muted-foreground leading-none">
+                                              <p className="text-[9px] uppercase font-semibold text-text-brand leading-none">
                                                 {labelForRole(item.role, t)}
                                               </p>
                                               <p className="text-xs font-medium truncate">
@@ -2302,7 +2301,7 @@ function Suitcase() {
                           <div className="flex items-center justify-between w-full pe-4">
                             <div className="flex items-center gap-2">
                               <Luggage className="h-5 w-5 text-[hsl(var(--accent))]" />
-                              <span className="text-lg font-display font-semibold text-foreground">
+                              <span className="text-lg font-display font-semibold text-dark-brand">
                                 {t("suitcase.packingListChecklist", {
                                   defaultValue: "Packing List Checklist",
                                 })}
@@ -2320,7 +2319,7 @@ function Suitcase() {
                             </Badge>
                           </div>
                         </AccordionTrigger>
-                        <AccordionContent className="pt-2 pb-6 text-foreground">
+                        <AccordionContent className="pt-2 pb-6 text-dark-brand">
                           <div className="flex justify-end mb-4">
                             <Button
                               size="sm"
@@ -2343,7 +2342,7 @@ function Suitcase() {
                                 return (
                                   <div key={catCode} className="space-y-2">
                                     <div className="flex justify-between items-center pb-1 border-b border-border/40 mb-2">
-                                      <h3 className="text-xs font-semibold uppercase text-muted-foreground">
+                                      <h3 className="text-xs font-semibold uppercase text-text-brand">
                                         {labelForCategory(catCode, t)}
                                       </h3>
                                       <Button
@@ -2385,7 +2384,7 @@ function Suitcase() {
                                                 {item.checked ? (
                                                   <CheckSquare className="h-5 w-5 fill-primary-brand" />
                                                 ) : (
-                                                  <Square className="h-5 w-5 text-muted-foreground" />
+                                                  <Square className="h-5 w-5 text-text-brand" />
                                                 )}
                                               </button>
 
@@ -2404,7 +2403,7 @@ function Suitcase() {
                                                 />
                                               ) : (
                                                 <div className="h-9 w-9 rounded-lg bg-muted flex items-center justify-center shrink-0">
-                                                  <ShoppingBag className="h-4 w-4 text-muted-foreground" />
+                                                  <ShoppingBag className="h-4 w-4 text-text-brand" />
                                                 </div>
                                               )}
 
@@ -2419,7 +2418,7 @@ function Suitcase() {
                                                   }
                                                 >
                                                   <p
-                                                    className={`text-sm font-medium truncate ${item.checked ? "line-through text-muted-foreground" : ""}`}
+                                                    className={`text-sm font-medium truncate ${item.checked ? "line-through text-text-brand" : ""}`}
                                                   >
                                                     {item.title}
                                                   </p>
@@ -2449,7 +2448,7 @@ function Suitcase() {
                                               ) : (
                                                 <Badge
                                                   variant="outline"
-                                                  className="hidden md:inline-flex text-muted-foreground rounded-md shrink-0"
+                                                  className="hidden md:inline-flex text-text-brand rounded-md shrink-0"
                                                 >
                                                   {t("suitcase.inClosetBadge", {
                                                     defaultValue: "In Closet",
@@ -2499,8 +2498,8 @@ function Suitcase() {
                                 </span>
                               </div>
                             </AccordionTrigger>
-                            <AccordionContent className="pt-2 pb-6 text-foreground">
-                              <div className="text-xs text-muted-foreground mb-4 font-medium">
+                            <AccordionContent className="pt-2 pb-6 text-dark-brand">
+                              <div className="text-xs text-text-brand mb-4 font-medium">
                                 {t("suitcase.localAdvisorDesc", {
                                   defaultValue:
                                     "Missing items? Buy them locally in the destination area.",
@@ -2526,7 +2525,7 @@ function Suitcase() {
                                         {store.name}
                                         <MapPin className="h-3 w-3 text-amber-600" />
                                       </h4>
-                                      <p className="text-xs text-muted-foreground">
+                                      <p className="text-xs text-text-brand">
                                         {store.address_or_area}
                                       </p>
                                       <p className="text-xs italic text-amber-700 mt-1">
@@ -2549,7 +2548,7 @@ function Suitcase() {
                             <AccordionTrigger className="hover:no-underline py-4">
                               <div className="flex items-center gap-2">
                                 <ShoppingBag className="h-5 w-5 text-red-500" />
-                                <span className="text-lg font-display font-semibold text-foreground">
+                                <span className="text-lg font-display font-semibold text-dark-brand">
                                   {t("suitcase.gapsHeader", {
                                     defaultValue:
                                       "Gaps: Missing Clothing Items",
@@ -2557,7 +2556,7 @@ function Suitcase() {
                                 </span>
                               </div>
                             </AccordionTrigger>
-                            <AccordionContent className="pt-2 pb-6 text-foreground">
+                            <AccordionContent className="pt-2 pb-6 text-dark-brand">
                               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 {(Array.isArray(activeSuitcase?.missing_items)
                                   ? activeSuitcase.missing_items
@@ -2577,7 +2576,7 @@ function Suitcase() {
                                       <p className="text-sm font-medium text-red-900 dark:text-red-300">
                                         {m.description}
                                       </p>
-                                      <p className="text-xs text-muted-foreground">
+                                      <p className="text-xs text-text-brand">
                                         {m.reason_needed}
                                       </p>
                                     </div>
@@ -2616,18 +2615,16 @@ function Suitcase() {
                       (msg, index) => (
                         <div
                           key={index}
-                          className={`flex ${
-                            msg.role === "user"
+                          className={`flex ${msg.role === "user"
                               ? "justify-end"
                               : "justify-start"
-                          }`}
+                            }`}
                         >
                           <div
-                            className={`max-w-[85%] px-[15px] py-[5px] text-[12px] leading-relaxed font-bold mb-[15px] ${
-                              msg.role === "user"
+                            className={`max-w-[85%] px-[15px] py-[5px] text-[12px] leading-relaxed font-bold mb-[15px] ${msg.role === "user"
                                 ? "bg-primary-brand text-white rounded-tl-[30px] rounded-tr-[30px] rounded-br-[0px] rounded-bl-[30px]"
                                 : "bg-accent-beige text-text-brand rounded-tl-[30px] rounded-tr-[30px] rounded-br-[30px] rounded-bl-[0px]"
-                            }`}
+                              }`}
                           >
                             {(() => {
                               if (
@@ -2644,8 +2641,8 @@ function Suitcase() {
                               return typeof msg.text === "string"
                                 ? msg.text
                                 : msg.text
-                                ? JSON.stringify(msg.text)
-                                : "";
+                                  ? JSON.stringify(msg.text)
+                                  : "";
                             })()}
                           </div>
                         </div>
@@ -2710,7 +2707,7 @@ function Suitcase() {
                 <Loader2 className="h-8 w-8 animate-spin text-[hsl(var(--accent))]" />
               </div>
             ) : !archives || archives.length === 0 ? (
-              <div className="text-center py-10 text-muted-foreground text-sm">
+              <div className="text-center py-10 text-text-brand text-sm">
                 {t("suitcase.noArchives", {
                   defaultValue:
                     "No archived travel packing lists found. Start a trip to archive it!",
@@ -2734,18 +2731,17 @@ function Suitcase() {
                           setSelectedArchive(arch);
                         }
                       }}
-                      className={`relative rounded-2xl border bg-card shadow-sm transition-all cursor-pointer overflow-hidden ${
-                        isSelected
+                      className={`relative rounded-2xl border bg-card shadow-sm transition-all cursor-pointer overflow-hidden ${isSelected
                           ? "border-primary-brand ring-1 ring-primary-brand"
                           : "border-border hover:scale-[1.01] hover:border-primary/30"
-                      }`}
+                        }`}
                     >
                       {isSelectionMode && (
                         <div className="absolute top-3 end-3 z-10 text-primary-brand">
                           {isSelected ? (
                             <CheckSquare className="h-5 w-5" />
                           ) : (
-                            <Square className="h-5 w-5 text-muted-foreground/50" />
+                            <Square className="h-5 w-5 text-text-brand/50" />
                           )}
                         </div>
                       )}
@@ -2758,12 +2754,12 @@ function Suitcase() {
                           {t("suitcase.tripDates", {
                             dep:
                               arch?.departure_time &&
-                              typeof arch.departure_time === "string"
+                                typeof arch.departure_time === "string"
                                 ? arch.departure_time.split("T")[0]
                                 : "",
                             ret:
                               arch?.return_time &&
-                              typeof arch.return_time === "string"
+                                typeof arch.return_time === "string"
                                 ? arch.return_time.split("T")[0]
                                 : "",
                             defaultValue: "Trip dates: {{dep}} to {{ret}}",
@@ -2771,7 +2767,7 @@ function Suitcase() {
                         </CardDescription>
                       </CardHeader>
                       <CardContent className="pt-3">
-                        <p className="text-xs text-muted-foreground font-medium capitalize">
+                        <p className="text-xs text-text-brand font-medium capitalize">
                           {t("suitcase.purposeLabel", {
                             defaultValue: "Purpose",
                           })}
@@ -2785,7 +2781,7 @@ function Suitcase() {
                           })}
                           : {arch.preferred_style}
                         </p>
-                        <p className="text-xs text-muted-foreground mt-2 truncate">
+                        <p className="text-xs text-text-brand mt-2 truncate">
                           {arch.notes ||
                             t("suitcase.archiveNoNotes", {
                               defaultValue: "No notes.",
@@ -2873,12 +2869,12 @@ function Suitcase() {
                   {t("suitcase.tripDates", {
                     dep:
                       selectedArchive?.departure_time &&
-                      typeof selectedArchive.departure_time === "string"
+                        typeof selectedArchive.departure_time === "string"
                         ? selectedArchive.departure_time.split("T")[0]
                         : "",
                     ret:
                       selectedArchive?.return_time &&
-                      typeof selectedArchive.return_time === "string"
+                        typeof selectedArchive.return_time === "string"
                         ? selectedArchive.return_time.split("T")[0]
                         : "",
                     defaultValue: "Trip dates: {{dep}} to {{ret}}",
@@ -2887,7 +2883,7 @@ function Suitcase() {
               </DialogHeader>
               <div className="space-y-4 py-3">
                 <div>
-                  <h4 className="text-sm font-semibold uppercase text-muted-foreground mb-1">
+                  <h4 className="text-sm font-semibold uppercase text-text-brand mb-1">
                     {t("suitcase.tripDetailsHeader", {
                       defaultValue: "Trip Details",
                     })}
@@ -2909,7 +2905,7 @@ function Suitcase() {
                     </span>
                   </p>
                   {selectedArchive.notes && (
-                    <p className="text-xs text-muted-foreground mt-1 italic">
+                    <p className="text-xs text-text-brand mt-1 italic">
                       {t("suitcase.archiveNotesLabel", {
                         notes: selectedArchive.notes,
                         defaultValue: "Notes: {{notes}}",
@@ -2919,7 +2915,7 @@ function Suitcase() {
                 </div>
 
                 <div>
-                  <h4 className="text-sm font-semibold uppercase text-muted-foreground mb-2">
+                  <h4 className="text-sm font-semibold uppercase text-text-brand mb-2">
                     {t("suitcase.savedOutfitsHeader", {
                       defaultValue: "Saved Outfits",
                     })}
@@ -2935,14 +2931,14 @@ function Suitcase() {
                           key={idx}
                           className="p-3 bg-secondary/35 rounded-xl border border-border space-y-1"
                         >
-                          <div className="flex justify-between items-center text-[10px] text-muted-foreground">
+                          <div className="flex justify-between items-center text-[10px] text-text-brand">
                             <span className="font-semibold">{outfit.date}</span>
                             <span>{outfit.time_to_wear}</span>
                           </div>
                           <h5 className="text-sm font-semibold">
                             {outfit.outfit_name}
                           </h5>
-                          <ul className="text-xs space-y-0.5 text-muted-foreground mt-1.5 list-disc list-inside">
+                          <ul className="text-xs space-y-0.5 text-text-brand mt-1.5 list-disc list-inside">
                             {(Array.isArray(outfit?.items) ? outfit.items : [])
                               .filter(Boolean)
                               .map((it, itIdx) => (
@@ -2957,7 +2953,7 @@ function Suitcase() {
                 </div>
 
                 <div>
-                  <h4 className="text-sm font-semibold uppercase text-muted-foreground mb-2">
+                  <h4 className="text-sm font-semibold uppercase text-text-brand mb-2">
                     {t("suitcase.archivedChecklistHeader", {
                       defaultValue: "Archived Packing Checklist",
                     })}
@@ -3102,7 +3098,7 @@ function Suitcase() {
                               />
                             ) : (
                               <div className="h-10 w-10 rounded-lg bg-muted flex items-center justify-center shrink-0">
-                                <ShoppingBag className="h-4.5 w-4.5 text-muted-foreground" />
+                                <ShoppingBag className="h-4.5 w-4.5 text-text-brand" />
                               </div>
                             )}
 
@@ -3125,11 +3121,11 @@ function Suitcase() {
                           >
                             {item.status === "closet"
                               ? t("suitcase.inClosetBadge", {
-                                  defaultValue: "In Closet",
-                                })
+                                defaultValue: "In Closet",
+                              })
                               : t("suitcase.missingBadge", {
-                                  defaultValue: "Missing",
-                                })}
+                                defaultValue: "Missing",
+                              })}
                           </Badge>
                         </div>
                       );
@@ -3221,22 +3217,19 @@ function AddFromClosetDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="rounded-2xl max-w-xl max-h-[80vh] flex flex-col p-6">
-        <DialogHeader className="pb-2">
-          <DialogTitle className="text-xl font-display font-bold flex items-center gap-2">
-            <Luggage className="h-5 w-5 text-primary" />
-            {t("suitcase.addFromClosetHeader", {
-              defaultValue: "Add Garment from Closet",
-            })}
-          </DialogTitle>
-          <DialogDescription>
-            {t("suitcase.addFromClosetDesc", {
-              defaultValue:
-                "Choose a garment from your closet to pack in your suitcase.",
-            })}
-          </DialogDescription>
-        </DialogHeader>
-
+      <DialogContent className="rounded-[20px] max-w-xl max-h-[80vh] flex flex-col p-5">
+        <DialogTitle className="flex items-center gap-2">
+          <Luggage className="h-5 w-5 text-primary-brand" />
+          {t("suitcase.addFromClosetHeader", {
+            defaultValue: "Add Garment from Closet",
+          })}
+        </DialogTitle>
+        <DialogDescription>
+          {t("suitcase.addFromClosetDesc", {
+            defaultValue:
+              "Choose a garment from your closet to pack in your suitcase.",
+          })}
+        </DialogDescription>
         {/* Filters and search bar */}
         <div className="space-y-3 my-2">
           <Input
@@ -3245,9 +3238,8 @@ function AddFromClosetDialog({
             })}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="rounded-xl focus-visible:ring-1"
+            className=""
           />
-
           <div className="flex flex-wrap gap-1.5 pb-2">
             <Button
               variant={selectedCategory === "all" ? "default" : "outline"}
@@ -3268,11 +3260,10 @@ function AddFromClosetDialog({
             ))}
           </div>
         </div>
-
         {/* Closet items grid */}
         <div className="flex-1 overflow-y-auto min-h-[300px] pe-1">
           {filteredItems.length === 0 ? (
-            <div className="text-center py-10 text-muted-foreground text-sm">
+            <div className="text-center py-10 text-text-brand text-sm">
               {t("suitcase.noClosetItemsFound", {
                 defaultValue: "No items match your filters.",
               })}
@@ -3283,13 +3274,12 @@ function AddFromClosetDialog({
                 <div
                   key={item.id}
                   onClick={() => onSelect(item)}
-                  className={`group relative cursor-pointer border border-border bg-card rounded-xl overflow-hidden shadow-sm transition-all ${
-                    alreadyPackedIds.has(item.id)
+                  className={`group relative cursor-pointer border border-border bg-card rounded-[12px] overflow-hidden shadow-sm transition-all ${alreadyPackedIds.has(item.id)
                       ? "opacity-55 pointer-events-none"
-                      : "hover:border-primary/45"
-                  }`}
+                      : "hover:border-primary-brand"
+                    }`}
                 >
-                  <div className="aspect-square bg-muted/30 relative flex items-center justify-center overflow-hidden">
+                  <div className="aspect-square bg-accent-beige relative flex items-center justify-center overflow-hidden">
                     {bestImageUrl(item) ? (
                       <img
                         src={bestImageUrl(item)}
@@ -3297,7 +3287,7 @@ function AddFromClosetDialog({
                         className="object-cover w-full h-full group-hover:scale-[1.03] transition-transform duration-200"
                       />
                     ) : (
-                      <ShoppingBag className="h-8 w-8 text-muted-foreground" />
+                      <ShoppingBag className="h-8 w-8 text-text-brand" />
                     )}
                     {alreadyPackedIds.has(item.id) && (
                       <Badge className="absolute top-2 end-2 bg-primary/95 text-white">
@@ -3306,10 +3296,10 @@ function AddFromClosetDialog({
                     )}
                   </div>
                   <div className="p-2 border-t border-border bg-card/60 backdrop-blur-sm">
-                    <p className="text-xs font-semibold truncate text-foreground">
+                    <p className="text-[12px] font-bold truncate text-dark-brand">
                       {item.title || item.name || "Untitled"}
                     </p>
-                    <p className="text-[10px] text-muted-foreground truncate uppercase">
+                    <p className="text-[10px] text-text-brand truncate font-semibold">
                       {labelForCategory(item.category, t)}
                     </p>
                   </div>
@@ -3318,12 +3308,9 @@ function AddFromClosetDialog({
             </div>
           )}
         </div>
-
-        <DialogFooter className="pt-4 border-t border-border">
+        <DialogFooter className="pt-4">
           <Button
-            variant="outline"
             onClick={() => onOpenChange(false)}
-            className="rounded-xl"
           >
             {t("common.close", { defaultValue: "Close" })}
           </Button>
