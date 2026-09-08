@@ -62,9 +62,9 @@ class GarmentVisionService:
         self.provider = settings.GARMENT_VISION_PROVIDER
         # Detection stays on Gemini Flash for Phase A.
         self.detect_provider = settings.GARMENT_VISION_DETECT_PROVIDER
-        self.detect_model = settings.GARMENT_VISION_DETECT_MODEL or "gemini-3.5-flash"
+        self.detect_model = model or settings.GARMENT_VISION_DETECT_MODEL or "gemini-3.5-flash"
         # Per-crop analyser (multi-item pipeline).
-        self.crop_model = settings.GARMENT_VISION_CROP_MODEL or "gemini-3.5-flash"
+        self.crop_model = model or settings.GARMENT_VISION_CROP_MODEL or "gemini-3.5-flash"
         self.max_items = settings.GARMENT_VISION_MAX_ITEMS
         # Gemini chat key — explicit parameter, else direct GEMINI_API_KEY from .env.
         self.api_key = api_key or settings.gemini_chat_key
@@ -1594,7 +1594,20 @@ class GarmentVisionService:
         # Phase-O.6 single-pass path. This is the dominant win for
         # the analyze latency budget (saves ~10-30s per crop, serial).
         if settings.AUTO_MATTE_CROPS and raw_crops:
-            crops = await asyncio.to_thread(_apply_fast_matte, raw_crops)
+            fast_crops = await asyncio.to_thread(_apply_fast_matte, raw_crops)
+            crops = []
+            for det, cbytes, mime in fast_crops:
+                det["defer_matte"] = False
+                if mime != "image/png":
+                    try:
+                        from app.services import background_matting
+                        matted = await background_matting.matte_crop(cbytes)
+                        if matted:
+                            cbytes = matted
+                            mime = "image/png"
+                    except Exception as exc:
+                        logger.info("rembg crop matte failed: %s", exc)
+                crops.append((det, cbytes, mime))
         else:
             for det, _, _ in raw_crops:
                 det["defer_matte"] = False
@@ -1699,24 +1712,30 @@ class GarmentVisionService:
 
             defer_matte = settings.AUTO_MATTE_CROPS
             best_det: dict[str, Any] | None = None
-            if settings.AUTO_MATTE_CROPS and detections:
-                best_det = max(
-                    detections,
-                    key=lambda d: (
-                        max(0, d["bbox"][2] - d["bbox"][0])
-                        * max(0, d["bbox"][3] - d["bbox"][1])
-                    ),
-                )
-                raw_crops = await asyncio.to_thread(
-                    self._bbox_crop_useful, image_bytes, [best_det], is_single_item=True,
-                )
-                out = await asyncio.to_thread(_apply_fast_matte, raw_crops)
-                if out:
-                    d_meta, crop_bytes, crop_mime = out[0]
-                    defer_matte = d_meta.get("defer_matte", False)
-                elif raw_crops:
-                    d_meta, crop_bytes, crop_mime = raw_crops[0]
-                    defer_matte = d_meta.get("defer_matte", False)
+            if settings.AUTO_MATTE_CROPS:
+                if detections:
+                    best_det = max(
+                        detections,
+                        key=lambda d: (
+                            max(0, d["bbox"][2] - d["bbox"][0])
+                            * max(0, d["bbox"][3] - d["bbox"][1])
+                        ),
+                    )
+                    raw_crops = await asyncio.to_thread(
+                        self._bbox_crop_useful, image_bytes, [best_det], is_single_item=True,
+                    )
+                    out = await asyncio.to_thread(_apply_fast_matte, raw_crops)
+                    if out:
+                        d_meta, crop_bytes, crop_mime = out[0]
+                    elif raw_crops:
+                        d_meta, crop_bytes, crop_mime = raw_crops[0]
+
+                if crop_mime != "image/png":
+                    matted = await self._whole_image_matte(crop_bytes)
+                    if matted:
+                        crop_bytes = matted
+                        crop_mime = "image/png"
+                        defer_matte = False
 
             fitted_bytes, fitted_mime = _fit_crop_to_card(
                 crop_bytes, crop_mime=crop_mime,
@@ -1771,7 +1790,20 @@ class GarmentVisionService:
         )
 
         if settings.AUTO_MATTE_CROPS and raw_crops:
-            crops = await asyncio.to_thread(_apply_fast_matte, raw_crops)
+            fast_crops = await asyncio.to_thread(_apply_fast_matte, raw_crops)
+            crops = []
+            for det, cbytes, mime in fast_crops:
+                det["defer_matte"] = False
+                if mime != "image/png":
+                    try:
+                        from app.services import background_matting
+                        matted = await background_matting.matte_crop(cbytes)
+                        if matted:
+                            cbytes = matted
+                            mime = "image/png"
+                    except Exception as exc:
+                        logger.info("rembg crop matte failed: %s", exc)
+                crops.append((det, cbytes, mime))
         else:
             for det, _, _ in raw_crops:
                 det["defer_matte"] = False
@@ -2301,6 +2333,22 @@ class GarmentVisionService:
                             analysis = await self.analyze(
                                 c_bytes, language=language, think=False
                             )
+                            if isinstance(analysis, dict):
+                                _enforce_segformer_category(
+                                    analysis,
+                                    segformer_kind=det.get("kind"),
+                                    label=det.get("label"),
+                                    is_single_item=det.get("is_single_item", False),
+                                )
+                                # Ensure title is populated so _is_unidentifiable doesn't drop it prematurely
+                                if not analysis.get("title") and analysis.get("name"):
+                                    analysis["title"] = analysis["name"]
+                                if not analysis.get("title") and (det.get("label") or det.get("kind")):
+                                    analysis["title"] = (det.get("label") or det.get("kind")).capitalize()
+                                if not analysis.get("item_type") and not analysis.get("sub_category"):
+                                    fallback_type = (det.get("label") or det.get("kind") or "garment").lower()
+                                    analysis["item_type"] = fallback_type
+                                    analysis["sub_category"] = fallback_type.capitalize()
                             return slot_idx, analysis
                         except Exception as exc:  # noqa: BLE001
                             err_str = str(exc)

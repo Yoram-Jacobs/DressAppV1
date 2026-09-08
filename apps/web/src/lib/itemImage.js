@@ -30,6 +30,45 @@ export function setStoredViewPreference(view) {
   } catch (e) {}
 }
 
+export function resolveMediaUrl(url) {
+  if (!url || typeof url !== 'string') return url;
+  if (url.startsWith('data:') || url.startsWith('blob:')) {
+    return url;
+  }
+  if (typeof window !== 'undefined' && window.location?.hostname) {
+    const isLocal = ['localhost', '127.0.0.1', '0.0.0.0', '::1'].includes(
+      window.location.hostname
+    );
+    if (isLocal) {
+      if (
+        url.includes('localhost:8001/static/') ||
+        url.includes('127.0.0.1:8001/static/')
+      ) {
+        return url;
+      }
+      if (
+        url.includes('localhost:3000/static/') ||
+        url.includes('127.0.0.1:3000/static/')
+      ) {
+        const pathPart = url.split('/static/')[1];
+        return `http://localhost:8001/static/${pathPart}`;
+      }
+      const clean = url.startsWith('/') ? url.slice(1) : url;
+      if (clean.startsWith('static/')) {
+        return `http://localhost:8001/${clean}`;
+      }
+      if (clean.startsWith('uploads/') || clean.startsWith('items/')) {
+        const fullUploadsPath = clean.startsWith('uploads/') ? clean : `uploads/${clean}`;
+        return `http://localhost:8001/static/${fullUploadsPath}`;
+      }
+    }
+  }
+  if (url.startsWith('http://') || url.startsWith('https://')) {
+    return url;
+  }
+  return url;
+}
+
 export function bestImageUrl(item, opts = {}) {
   if (!item) return null;
 
@@ -42,52 +81,62 @@ export function bestImageUrl(item, opts = {}) {
 
   const viewMode = opts.viewMode || (opts.skipReconstruction ? 'original' : (itemMode || (opts.useStoredPreference ? getStoredViewPreference() : 'repaired')));
 
+  let resolved = null;
+  const reconUrl = item.reconstructed_image_url || item.reconstruct_image_url;
+
   // 1. AI-reconstructed image (background-free studio quality)
   if (viewMode !== 'original' && !opts.skipReconstruction) {
-    if (item.reconstructed_image_url) return item.reconstructed_image_url;
-    if (item.reconstruct_image_url) return item.reconstruct_image_url;
+    if (item.reconstructed_image_url) resolved = item.reconstructed_image_url;
+    else if (item.reconstruct_image_url) resolved = item.reconstruct_image_url;
   }
 
   // 2. Background-free clean cutout (Original crop)
-  const reconUrl = item.reconstructed_image_url || item.reconstruct_image_url;
-  if (viewMode === 'original' || opts.skipReconstruction) {
-    if (item.clean_image_url && item.clean_image_url !== reconUrl) {
-      return item.clean_image_url;
+  if (!resolved) {
+    if (viewMode === 'original' || opts.skipReconstruction) {
+      if (item.clean_image_url && item.clean_image_url !== reconUrl) {
+        resolved = item.clean_image_url;
+      } else if (item.image_variants?.original) {
+        resolved = item.image_variants.original;
+      } else if (item.image_variants?.webp?.large) {
+        resolved = item.image_variants.webp.large;
+      } else if (item.cutout_url && item.cutout_url !== reconUrl) {
+        resolved = item.cutout_url;
+      } else if (item.segmented_image_url && item.segmented_image_url !== reconUrl) {
+        resolved = item.segmented_image_url;
+      } else if (item.clean_image_url) {
+        resolved = item.clean_image_url;
+      }
+    } else {
+      if (item.clean_image_url) resolved = item.clean_image_url;
     }
-    if (item.image_variants?.original) return item.image_variants.original;
-    if (item.image_variants?.webp?.large) return item.image_variants.webp.large;
-    if (item.cutout_url && item.cutout_url !== reconUrl) return item.cutout_url;
-    if (item.segmented_image_url && item.segmented_image_url !== reconUrl) return item.segmented_image_url;
-    if (item.clean_image_url) return item.clean_image_url;
-  } else {
-    if (item.clean_image_url) return item.clean_image_url;
   }
 
   // 3. Segmented / cutout forms
-  if (item.cutout_url) return item.cutout_url;
-  if (item.segmented_image_url) return item.segmented_image_url;
+  if (!resolved && item.cutout_url) resolved = item.cutout_url;
+  if (!resolved && item.segmented_image_url) resolved = item.segmented_image_url;
 
   // 4. Listing images array
-  if (Array.isArray(item.images) && item.images.length > 0 && typeof item.images[0] === 'string' && item.images[0]) {
-    return item.images[0];
+  if (!resolved && Array.isArray(item.images) && item.images.length > 0 && typeof item.images[0] === 'string' && item.images[0]) {
+    resolved = item.images[0];
   }
 
   // 5. Dynamic Transcoding Variants (AVIF/WebP)
-  if (item.image_variants) {
-    if (item.image_variants.avif?.medium) return item.image_variants.avif.medium;
-    if (item.image_variants.webp?.medium) return item.image_variants.webp.medium;
-    if (item.image_variants.original) return item.image_variants.original;
+  if (!resolved && item.image_variants) {
+    if (item.image_variants.avif?.medium) resolved = item.image_variants.avif.medium;
+    else if (item.image_variants.webp?.medium) resolved = item.image_variants.webp.medium;
+    else if (item.image_variants.original) resolved = item.image_variants.original;
   }
 
   // 6. Raw originals / generic image URL
-  if (item.original_image_url) return item.original_image_url;
-  if (item.image_url) return item.image_url;
+  if (!resolved && item.original_image_url) resolved = item.original_image_url;
+  if (!resolved && item.image_url) resolved = item.image_url;
 
   // 7. Thumbnail (has white card background)
-  if (item.thumbnail_data_url) return item.thumbnail_data_url;
+  if (!resolved && item.thumbnail_data_url) resolved = item.thumbnail_data_url;
 
-  if (item.photo_url) return item.photo_url;
-  return null;
+  if (!resolved && item.photo_url) resolved = item.photo_url;
+
+  return resolveMediaUrl(resolved);
 }
 
 /**
@@ -96,3 +145,4 @@ export function bestImageUrl(item, opts = {}) {
 export function isCleanImagePending(item) {
   return !!(item && item.clean_image_status === 'pending');
 }
+

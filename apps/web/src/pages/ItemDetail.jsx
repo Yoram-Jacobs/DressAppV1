@@ -943,7 +943,6 @@ export default function ItemDetail() {
         updated_at: new Date().toISOString()
       });
     }
-
     if (remainingMembers.length === 0) {
       updatedHost.group_id = null;
       updatedHost.group_role = null;
@@ -951,7 +950,6 @@ export default function ItemDetail() {
     } else {
       updatedHost.group_members = remainingMembers;
     }
-
     // Apply changes locally to the store immediately!
     closetStore.upsert(updatedHost);
     for (const m of remainingMembers) {

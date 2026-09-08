@@ -2549,9 +2549,9 @@
   integrity sha512-Vo+PSpZG2/fmgmiNzYK9qWRh8h/CHrwD0mo1h1DzL4yzHNSfWYujGTYsWGreD000gcgmZ7K4Ys6Tx9TxtsKdDw==
 
 "@maxim_mazurok/gapi.client.androidpublisher-v3@latest":
-  version "0.5.20260902"
-  resolved "https://registry.npmjs.org/@maxim_mazurok/gapi.client.androidpublisher-v3/-/gapi.client.androidpublisher-v3-0.5.20260902.tgz#e175cbbf411cef3d20bc6e39dc28e83c82646fe2"
-  integrity sha512-GyeO7C/4G4xvU6Ro8WCP9FC8Xw6a2rIzZPjjLqdCIBCFaZix94//tANjFQc5x618nK11cYvEoGmYZDIm4Gxmcw==
+  version "0.5.20260907"
+  resolved "https://registry.npmjs.org/@maxim_mazurok/gapi.client.androidpublisher-v3/-/gapi.client.androidpublisher-v3-0.5.20260907.tgz#f80ef0ad384167f00431aba0d84ea5adef5fda22"
+  integrity sha512-D4HrFiG7lRv7+kLZWtygB9fsPJ4K711HaN/XTnVt8Gw2e3wGQqg1Cl5j0rTcBAmkB2WNoPBdIHPhNV7+bEroEQ==
   dependencies:
     "@types/gapi.client" "*"
     "@types/gapi.client.discovery-v1" "*"
@@ -10701,7 +10701,7 @@ lightningcss-win32-x64-msvc@1.30.1:
 
 lightningcss@1.30.1, lightningcss@1.32.0, lightningcss@^1.30.1:
   version "1.30.1"
-  resolved "https://registry.npmjs.org/lightningcss/-/lightningcss-1.30.1.tgz#78e979c2d595bfcb90d2a8c0eb632fe6c5bfed5d"
+  resolved "https://registry.yarnpkg.com/lightningcss/-/lightningcss-1.30.1.tgz#78e979c2d595bfcb90d2a8c0eb632fe6c5bfed5d"
   integrity sha512-xi6IyHML+c9+Q3W0S4fCQJOym42pyurFiJUHEcEyHS0CeKzia4yZDEsLlqOFykxOdHpNy0NmvVO31vcSqAxJCg==
   dependencies:
     detect-libc "^2.0.3"
@@ -10871,9 +10871,9 @@ lucide-react-native@^1.31.0:
   integrity sha512-PwqFe7jqEHaCQDQs5jp8+IeEMrXb/Uq0lBQH3na6iE27IVxW3YUsIArARzXbOvvrfDuYD4d/I+YqRTT7w6djJw==
 
 lucide-react@^1.41.0:
-  version "1.41.0"
-  resolved "https://registry.npmjs.org/lucide-react/-/lucide-react-1.41.0.tgz#6cabc941a55413a9a9363665c95508a7b48311ef"
-  integrity sha512-6lksP35l6KszDKUeRTi4LV7i6DEe0Yzl2ALJm9j4c5xEYN91GdW1xGsawGMOg2mgjF5GHBVX8pKX9kP+cWsP3Q==
+  version "1.42.0"
+  resolved "https://registry.npmjs.org/lucide-react/-/lucide-react-1.42.0.tgz#1504824d77a73c88d3efe381bd8957fc2f435659"
+  integrity sha512-b3jprplnoLS8n5etw1z8xODe3hF/yjKATrTitsrKrnjUhCef5BdDct6Ppv3zVvzFwmtfWgLO6XNM3C9fAD93ug==
 
 lz-string@^1.5.0:
   version "1.5.0"
@@ -10944,11 +10944,6 @@ mdn-data@2.0.4:
   version "2.0.4"
   resolved "https://registry.npmjs.org/mdn-data/-/mdn-data-2.0.4.tgz#699b3c38ac6f1d728091a64650b65d388502fd5b"
   integrity sha512-iV3XNKw06j5Q7mi6h+9vbx23Tv7JkjEVgKHW4pimwyDGWm0OIQntJJ+u1C6mg6mK1EaTv42XQ7w76yuzH7M2cA==
-
-media-typer@0.3.0:
-  version "0.3.0"
-  resolved "https://registry.npmjs.org/media-typer/-/media-typer-0.3.0.tgz#8710d7af0aa626f8fffa1ce00168545263255748"
-  integrity sha512-dq+qelQ9akHpcOl/gUVRTxVIOkAJ1wR3QAvb4RsVjS8oVoFjDGTc679wJYmUmknUF5HwMLOgb5O+a3KxfWapPQ==
 
 memfs@^3.1.2, memfs@^3.4.3:
   version "3.6.0"
@@ -11399,7 +11394,7 @@ mime-db@1.52.0:
   resolved "https://registry.npmjs.org/mime-db/-/mime-db-1.54.0.tgz"
   integrity sha512-aU5EJuIN2WDemCcAp2vFBfp/m4EAhWJnUNSSw0ixs7/kXbd6Pg64EmwJkNdFhB8aWt1sH2CTXrLxo/iAGV3oPQ==
 
-mime-types@^2.1.27, mime-types@^2.1.28, mime-types@^2.1.31, mime-types@^2.1.35, mime-types@~2.1.24, mime-types@~2.1.34, mime-types@~2.1.35:
+mime-types@^2.1.27, mime-types@^2.1.28, mime-types@^2.1.31, mime-types@^2.1.35, mime-types@~2.1.34, mime-types@~2.1.35:
   version "2.1.35"
   resolved "https://registry.npmjs.org/mime-types/-/mime-types-2.1.35.tgz"
   integrity sha512-ZDY+bPm5zTTF+YpCrAU9nK0UgICYPT0QtT1NZWFv4s++TNkcgVaT0g6+4R2uI4MjQjzysHB1zxuWL50hzaeXiw==

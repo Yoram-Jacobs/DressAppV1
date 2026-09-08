@@ -38,6 +38,7 @@ import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useTranslation } from 'react-i18next';
 import * as Lucide from 'lucide-react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { useTheme } from '@mobile/theme';
 import { fonts, fontSizes, spacing, radii, shadows } from '@mobile/theme/tokens';
@@ -135,6 +136,21 @@ export function ClosetScreen() {
   const [activeSeason, setActiveSeason] = useState<string>('all');
   const [sortBy, setSortBy] = useState<SortOption>('newest');
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
+
+  useEffect(() => {
+    AsyncStorage.getItem('dressapp_closet_view_mode')
+      .then((saved) => {
+        if (saved === 'grid' || saved === 'compact' || saved === 'list') {
+          setViewMode(saved as ViewMode);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  const handleViewModeChange = useCallback((mode: ViewMode) => {
+    setViewMode(mode);
+    AsyncStorage.setItem('dressapp_closet_view_mode', mode).catch(() => {});
+  }, []);
 
   // Multi-select state
   const [selectMode, setSelectMode] = useState(false);
@@ -1011,22 +1027,52 @@ export function ClosetScreen() {
         {/* View Mode Toggle */}
         <View style={styles.viewModeGroup}>
           <TouchableOpacity
-            style={[styles.viewModeBtn, viewMode === 'grid' && { backgroundColor: colors.secondary }]}
-            onPress={() => setViewMode('grid')}
+            style={[
+              styles.viewModeBtn,
+              viewMode === 'grid' && {
+                backgroundColor: colors.secondary,
+                borderColor: colors.accent,
+                borderWidth: 1.5,
+              },
+            ]}
+            hitSlop={{ top: 8, bottom: 8, left: 6, right: 6 }}
+            onPress={() => handleViewModeChange('grid')}
+            accessibilityLabel={t('closet.view2Cols', { defaultValue: '2 columns' })}
+            accessibilityState={{ selected: viewMode === 'grid' }}
           >
-            <Lucide.LayoutGrid size={15} color={viewMode === 'grid' ? colors.accent : colors.mutedFg} />
+            <Lucide.LayoutGrid size={16} color={viewMode === 'grid' ? colors.accent : colors.mutedFg} />
           </TouchableOpacity>
           <TouchableOpacity
-            style={[styles.viewModeBtn, viewMode === 'compact' && { backgroundColor: colors.secondary }]}
-            onPress={() => setViewMode('compact')}
+            style={[
+              styles.viewModeBtn,
+              viewMode === 'compact' && {
+                backgroundColor: colors.secondary,
+                borderColor: colors.accent,
+                borderWidth: 1.5,
+              },
+            ]}
+            hitSlop={{ top: 8, bottom: 8, left: 6, right: 6 }}
+            onPress={() => handleViewModeChange('compact')}
+            accessibilityLabel={t('closet.view3Cols', { defaultValue: '3 columns' })}
+            accessibilityState={{ selected: viewMode === 'compact' }}
           >
-            <Lucide.Grid size={15} color={viewMode === 'compact' ? colors.accent : colors.mutedFg} />
+            <Lucide.Grid size={16} color={viewMode === 'compact' ? colors.accent : colors.mutedFg} />
           </TouchableOpacity>
           <TouchableOpacity
-            style={[styles.viewModeBtn, viewMode === 'list' && { backgroundColor: colors.secondary }]}
-            onPress={() => setViewMode('list')}
+            style={[
+              styles.viewModeBtn,
+              viewMode === 'list' && {
+                backgroundColor: colors.secondary,
+                borderColor: colors.accent,
+                borderWidth: 1.5,
+              },
+            ]}
+            hitSlop={{ top: 8, bottom: 8, left: 6, right: 6 }}
+            onPress={() => handleViewModeChange('list')}
+            accessibilityLabel={t('closet.viewList', { defaultValue: 'List view' })}
+            accessibilityState={{ selected: viewMode === 'list' }}
           >
-            <Lucide.List size={15} color={viewMode === 'list' ? colors.accent : colors.mutedFg} />
+            <Lucide.List size={16} color={viewMode === 'list' ? colors.accent : colors.mutedFg} />
           </TouchableOpacity>
         </View>
       </View>
@@ -1352,9 +1398,9 @@ const styles = StyleSheet.create({
     gap: 2,
   },
   viewModeBtn: {
-    width: 28,
-    height: 28,
-    borderRadius: radii.sm,
+    width: 32,
+    height: 32,
+    borderRadius: radii.md,
     alignItems: 'center',
     justifyContent: 'center',
   },

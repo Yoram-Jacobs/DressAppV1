@@ -1,4 +1,7 @@
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> 1f9efdea44a0b51a387dba3850a8368689577b9a
 """/api/v1/trends \u2014 read + admin trigger endpoints for the Trend-Scout."""
 from __future__ import annotations
 
@@ -6,7 +9,9 @@ import logging
 from datetime import datetime, timezone
 from typing import Any
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Header
+import httpx
+from fastapi import APIRouter, Depends, HTTPException, Query, Header, Response
+from pydantic import BaseModel, Field
 
 from app.db.database import get_db
 from app.services.auth import get_current_user, get_current_user_optional, require_admin
@@ -17,11 +22,30 @@ from app.services.trend_scout import (
     rank_cards_for_user,
     run_trend_scout,
     _country_codes,
+    get_user_trend_scout_settings,
+    save_user_trend_scout_settings,
+    connect_user_social_platform,
+    disconnect_user_social_platform,
+    analyze_user_closet_profile,
 )
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/trends", tags=["trends"])
+
+
+class TrendScoutSettingsPayload(BaseModel):
+    custom_style: str | None = None
+    social_platforms: list[dict[str, Any]] | None = None
+
+
+class SocialConnectPayload(BaseModel):
+    platform_id: str
+    username: str | None = None
+
+
+class SocialDisconnectPayload(BaseModel):
+    platform_id: str
 
 
 def check_trend_scout_access(user: dict) -> None:
@@ -103,7 +127,7 @@ async def get_last_refresh() -> dict[str, Any]:
 async def get_fashion_scout_feed(
     limit: int = Query(default=12, ge=1, le=50),
     language: str | None = Query(default=None, max_length=8),
-    country: str | None = Query(default=None, max_length=4),
+    country: str | None = Query(default=None, max_length=64),
     gender: str | None = Query(default=None, regex="^(male|female)$"),
     personalized: bool = Query(default=True),
     user: dict = Depends(get_current_user),
@@ -147,13 +171,16 @@ async def get_fashion_scout_feed(
 @router.post("/run-now")
 async def run_trend_scout_now(
     force: bool = Query(default=False),
-    country: str | None = Query(default=None, max_length=4),
+    country: str | None = Query(default=None, max_length=64),
     gender: str | None = Query(default=None, regex="^(male|female)$"),
     x_device_type: str | None = Header(default=None),
     user: dict = Depends(require_admin),
 ) -> dict[str, Any]:
     """Admin-only trigger for an immediate Trend-Scout run (for testing)."""
     client_type = "mobile" if x_device_type == "mobile" else "desktop"
+    if not gender and user:
+        user_sex = (user.get("sex") or user.get("gender") or "female").lower()
+        gender = "male" if user_sex == "male" else "female"
     res = await run_trend_scout(force=force, client_type=client_type, user=user, country_code=country, gender=gender)
     try:
         if user and user.get("id"):
@@ -167,7 +194,7 @@ async def run_trend_scout_now(
 @router.post("/run-now-dev")
 async def run_trend_scout_now_dev(
     force: bool = Query(default=True),
-    country: str | None = Query(default=None, max_length=4),
+    country: str | None = Query(default=None, max_length=64),
     gender: str | None = Query(default=None, regex="^(male|female)$"),
     x_device_type: str | None = Header(default=None),
     user: dict = Depends(get_current_user),
@@ -178,6 +205,9 @@ async def run_trend_scout_now_dev(
     if not user:
         raise HTTPException(401, "auth required")
     client_type = "mobile" if x_device_type == "mobile" else "desktop"
+    if not gender:
+        user_sex = (user.get("sex") or user.get("gender") or "female").lower()
+        gender = "male" if user_sex == "male" else "female"
     res = await run_trend_scout(force=force, client_type=client_type, user=user, country_code=country, gender=gender)
     try:
         if user and user.get("id"):
@@ -186,6 +216,7 @@ async def run_trend_scout_now_dev(
     except Exception as exc:
         logger.warning("Failed to broadcast trend_scout_updated: %s", exc)
     return res
+<<<<<<< HEAD
 =======
 """/api/v1/trends \u2014 read + admin trigger endpoints for the Trend-Scout."""
 from __future__ import annotations
@@ -401,6 +432,8 @@ async def run_trend_scout_now_dev(
     except Exception as exc:
         logger.warning("Failed to broadcast trend_scout_updated: %s", exc)
     return res
+=======
+>>>>>>> 1f9efdea44a0b51a387dba3850a8368689577b9a
 
 
 @router.get("/settings")
@@ -503,4 +536,7 @@ async def proxy_trend_image(url: str = Query(..., description="Target image URL 
         raise HTTPException(status_code=502, detail=f"Failed to fetch image: {exc}")
 
 
+<<<<<<< HEAD
 >>>>>>> add75210561e3cce6fda9a8d37f394cb10747d0e
+=======
+>>>>>>> 1f9efdea44a0b51a387dba3850a8368689577b9a

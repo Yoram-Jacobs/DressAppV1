@@ -50,6 +50,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { api } from "@/lib/api";
 import { useClosetStore } from "@/lib/useClosetStore";
 import { useSuitcaseStore } from "@/lib/useSuitcaseStore";
+import { KNOWN_WELCOME_MESSAGES } from "@/lib/suitcaseStore";
 import { bestImageUrl } from "@/lib/itemImage";
 import { toast } from "sonner";
 import { labelForCategory, labelForRole } from "@/lib/taxonomy";
@@ -62,6 +63,13 @@ import {
   AccordionTrigger,
   AccordionContent,
 } from "@/components/ui/accordion";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { SuitcaseErrorBoundary } from "@/components/SuitcaseErrorBoundary";
 import ClosetBanner from "../assets/img/inner6.webp";
 // Helper to find a closet item matching an outfit item (by ID or fallback title match)
@@ -203,7 +211,7 @@ function OutfitCanvas({
 }
 
 function Suitcase() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const closet = useClosetStore({ prewarm: true });
 
@@ -238,6 +246,8 @@ function Suitcase() {
   const [activeTab, setActiveTab] = useState("suitcase");
   const [isSelectionMode, setIsSelectionMode] = useState(false);
   const [selectedArchives, setSelectedArchives] = useState([]);
+  const [selectedArchiveId, setSelectedArchiveId] = useState(null);
+  const [activeArchive, setActiveArchive] = useState(null);
 
   const handleDeleteArchives = async () => {
     if (selectedArchives.length === 0) return;
@@ -267,7 +277,7 @@ function Suitcase() {
   // Gathering form state
   const [destinations, setDestinations] = useState("");
   const [purpose, setPurpose] = useState("pleasure");
-  const [preferredStyle, setPreferredStyle] = useState("casual");
+  const [preferredStyle, setPreferredStyle] = useState("");
   const [departureTime, setDepartureTime] = useState("");
   const [returnTime, setReturnTime] = useState("");
   const [notes, setNotes] = useState("");
@@ -277,12 +287,31 @@ function Suitcase() {
     if (activeSuitcase) {
       setDestinations(activeSuitcase.destinations || "");
       setPurpose(activeSuitcase.purpose || "pleasure");
-      setPreferredStyle(activeSuitcase.preferred_style || "casual");
+      setPreferredStyle(activeSuitcase.preferred_style || "");
       setDepartureTime(activeSuitcase.departure_time || "");
       setReturnTime(activeSuitcase.return_time || "");
       setNotes(activeSuitcase.notes || "");
     }
   }, [activeSuitcase]);
+
+  // Automatically sync single welcome message when locale changes
+  useEffect(() => {
+    if (Array.isArray(messages) && messages.length === 1) {
+      const first = messages[0];
+      if (
+        first.role === "assistant" &&
+        (first.isWelcome || KNOWN_WELCOME_MESSAGES.has((first.text || "").trim()))
+      ) {
+        const localizedWelcome = t("suitcase.welcomeChat", {
+          defaultValue:
+            "Hello! I am your Suitcase Assistant. Where are we traveling, and what is the plan? You can use the inputs above or simply chat with me.",
+        });
+        if (first.text !== localizedWelcome) {
+          setMessages([{ ...first, isWelcome: true, text: localizedWelcome }]);
+        }
+      }
+    }
+  }, [i18n.language, t, messages, setMessages]);
 
   const [chatInput, setChatInput] = useState("");
   const [chatLoading, setChatLoading] = useState(false);
@@ -1088,13 +1117,14 @@ function Suitcase() {
         // Reset inputs
         setDestinations("");
         setPurpose("pleasure");
-        setPreferredStyle("casual");
+        setPreferredStyle("");
         setDepartureTime("");
         setReturnTime("");
         setNotes("");
         setMessages([
           {
             role: "assistant",
+            isWelcome: true,
             text: t("suitcase.welcomeChat", {
               defaultValue:
                 "Hello! I am your Suitcase Assistant. Where are we traveling, and what is the plan? You can use the inputs above or simply chat with me.",
@@ -1390,37 +1420,38 @@ function Suitcase() {
                                 defaultValue: "Purpose",
                               })}
                             </label>
-                            <select
-                              className="w-full h-11 rounded-[8px] border border-border bg-white px-[12px] py-[6px] text-sm text-gray-900 shadow-none outline-none transition-[var(--transition-smooth)] focus:border-[var(--primary-color)] focus:shadow-[0_0_0_3px_rgba(31,92,69,0.1)]"
-                              value={purpose}
-                              onChange={(e) => setPurpose(e.target.value)}
-                            >
-                              <option value="business">
-                                {t("suitcase.purpose_business", {
-                                  defaultValue: "Business trip",
-                                })}
-                              </option>
-                              <option value="pleasure">
-                                {t("suitcase.purpose_pleasure", {
-                                  defaultValue: "Hotel vacation / Pleasure",
-                                })}
-                              </option>
-                              <option value="safari">
-                                {t("suitcase.purpose_safari", {
-                                  defaultValue: "Safari trip",
-                                })}
-                              </option>
-                              <option value="camping">
-                                {t("suitcase.purpose_camping", {
-                                  defaultValue: "Outdoor camping",
-                                })}
-                              </option>
-                              <option value="tracking">
-                                {t("suitcase.purpose_tracking", {
-                                  defaultValue: "Tracking / Outdoors",
-                                })}
-                              </option>
-                            </select>
+                            <Select value={purpose} onValueChange={setPurpose}>
+                              <SelectTrigger className="w-full h-11 rounded-lg">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="business">
+                                  {t("suitcase.purpose_business", {
+                                    defaultValue: "Business trip",
+                                  })}
+                                </SelectItem>
+                                <SelectItem value="pleasure">
+                                  {t("suitcase.purpose_pleasure", {
+                                    defaultValue: "Hotel vacation / Pleasure",
+                                  })}
+                                </SelectItem>
+                                <SelectItem value="safari">
+                                  {t("suitcase.purpose_safari", {
+                                    defaultValue: "Safari trip",
+                                  })}
+                                </SelectItem>
+                                <SelectItem value="camping">
+                                  {t("suitcase.purpose_camping", {
+                                    defaultValue: "Outdoor camping",
+                                  })}
+                                </SelectItem>
+                                <SelectItem value="tracking">
+                                  {t("suitcase.purpose_tracking", {
+                                    defaultValue: "Tracking / Outdoors",
+                                  })}
+                                </SelectItem>
+                              </SelectContent>
+                            </Select>
                           </div>
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -2598,11 +2629,24 @@ function Suitcase() {
                                 : "bg-accent-beige text-text-brand rounded-tl-[30px] rounded-tr-[30px] rounded-br-[30px] rounded-bl-[0px]"
                             }`}
                           >
-                            {typeof msg.text === "string"
-                              ? msg.text
-                              : msg.text
+                            {(() => {
+                              if (
+                                msg.role === "assistant" &&
+                                (msg.isWelcome ||
+                                  (index === 0 && (!messages || messages.length === 1)) ||
+                                  KNOWN_WELCOME_MESSAGES.has((msg.text || "").trim()))
+                              ) {
+                                return t("suitcase.welcomeChat", {
+                                  defaultValue:
+                                    "Hello! I am your Suitcase Assistant. Where are we traveling, and what is the plan? You can use the inputs above or simply chat with me.",
+                                });
+                              }
+                              return typeof msg.text === "string"
+                                ? msg.text
+                                : msg.text
                                 ? JSON.stringify(msg.text)
-                                : ""}
+                                : "";
+                            })()}
                           </div>
                         </div>
                       ),

@@ -1,7 +1,7 @@
-import { useEffect, useMemo, useState } from 'react';
-import { useTranslation } from 'react-i18next';
-import { Link } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { useEffect, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
+import { Link } from "react-router-dom";
+import { motion } from "framer-motion";
 import {
   Sparkles,
   Crown,
@@ -16,19 +16,19 @@ import {
   RefreshCw,
   Loader2,
   Settings,
-} from 'lucide-react';
-import { Card, CardContent } from '@/components/ui/card';
-import { Skeleton } from '@/components/ui/skeleton';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { useAuth } from '@/lib/auth';
-import { useLocation as useAppLocation } from '@/lib/location';
-import { useTrendScoutStore, prewarmTrendScout } from '@/lib/trendScoutStore';
-import { api } from '@/lib/api';
-import { toast } from 'sonner';
-import { ExploreBackButton } from '@/components/ExploreBackButton';
-import { TrendScoutSettingsModal } from '@/components/trends/TrendScoutSettingsModal';
-
+} from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { useAuth } from "@/lib/auth";
+import { useLocation as useAppLocation } from "@/lib/location";
+import { useTrendScoutStore } from "@/lib/trendScoutStore";
+import { api } from "@/lib/api";
+import { toast } from "sonner";
+import { ExploreBackButton } from "@/components/ExploreBackButton";
+import { TrendScoutSettingsModal } from "@/components/trends/TrendScoutSettingsModal";
+import TrendScoutBanner from "../assets/img/inner6.webp";
 
 const BUCKET_VISUALS = {
   local:                { Icon: Newspaper,  tone: 'bg-indigo-500/10 text-indigo-600 dark:text-indigo-400' },
@@ -291,6 +291,16 @@ export default function TrendScout() {
             variant="outline"
             onClick={() => setSettingsOpen(true)}
             className="rounded-xl h-9 w-9 p-0 text-muted-foreground hover:text-foreground"
+            data-testid="trend-scout-settings-btn"
+            title={t('trends.personalizationSettings', { defaultValue: 'Personalization & Social Feeds' })}
+          >
+            <Settings className="h-4 w-4" />
+          </Button>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => setSettingsOpen(true)}
+            className="rounded-xl h-9 w-9 p-0 bg-white border border-border text-text-brand hover:text-primary-brand"
             data-testid="trend-scout-settings-btn"
             title={t('trends.personalizationSettings', { defaultValue: 'Personalization & Social Feeds' })}
           >

@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
-import { bestImageUrl } from '@/lib/itemImage';
+import { bestImageUrl, resolveMediaUrl } from '@/lib/itemImage';
 import { closetStore } from '@/lib/closetStore';
 import { useAuth } from '@/lib/auth';
 import ImageWithPlaceholder from '@/components/ImageWithPlaceholder';
@@ -11,7 +11,7 @@ export default function AvatarViewer2D({ shapeParams = {}, measurements: provide
   const { t } = useTranslation();
   const { user } = useAuth();
 
-  const activeBodyPhotoUrl = bodyPhotoUrl !== undefined ? (bodyPhotoUrl || null) : (user?.body_photo_url || null);
+  const activeBodyPhotoUrl = resolveMediaUrl(bodyPhotoUrl !== undefined ? (bodyPhotoUrl || null) : (user?.body_photo_url || null));
   const activeSkinColor = skinColor !== '#9CA3AF' ? skinColor : (user?.skin_tone || '#9CA3AF');
 
   // Normalize params between 0 and 1
@@ -140,8 +140,8 @@ export default function AvatarViewer2D({ shapeParams = {}, measurements: provide
             groupItems.forEach(gItem => {
               const gSlot = resolveSlot(gItem.category, gItem, gItem);
               res[gSlot] = {
-                url: bestImageUrl(gItem) || gItem.clean_image_url || gItem.image_data_url || gItem.segmented_image_url || gItem.image_url || gItem.original_image_url,
-                placeholder: gItem.placeholder_data_url || null,
+                url: resolveMediaUrl(bestImageUrl(gItem) || gItem.clean_image_url || gItem.image_data_url || gItem.segmented_image_url || gItem.image_url || gItem.original_image_url),
+                placeholder: resolveMediaUrl(gItem.placeholder_data_url || null),
                 id: gItem.id
               };
             });
@@ -150,8 +150,8 @@ export default function AvatarViewer2D({ shapeParams = {}, measurements: provide
         }
  
         res[slot] = {
-           url: bestImageUrl(item) || item.clean_image_url || item.image_data_url || item.segmented_image_url || item.image_url || item.original_image_url || item.url,
-           placeholder: item.placeholder_data_url || item.placeholder || null,
+           url: resolveMediaUrl(bestImageUrl(item) || item.clean_image_url || item.image_data_url || item.segmented_image_url || item.image_url || item.original_image_url || item.url),
+           placeholder: resolveMediaUrl(item.placeholder_data_url || item.placeholder || null),
            id: item.closet_item_id || item.id || null
         };
 
@@ -197,6 +197,7 @@ export default function AvatarViewer2D({ shapeParams = {}, measurements: provide
               src={activeBodyPhotoUrl}
               alt={t('profile.bodyPhoto', { defaultValue: 'Full-body photo' })}
               className="w-full h-full object-contain rounded-xl drop-shadow-md"
+              onError={(e) => { e.currentTarget.style.display = 'none'; }}
             />
             {/* Render Try-On Garments on top of real body photo */}
             {renderGarment('headwear', t('taxonomy.categories.headwear', { defaultValue: 'Headwear' }), 'top-[1%] left-1/2 w-[34%] aspect-square z-30', { opacity: 0, y: -10, x: "-50%" }, { opacity: 1, y: 0, x: "-50%" }, 'object-bottom', 'contain')}

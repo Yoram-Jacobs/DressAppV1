@@ -105,7 +105,7 @@ def _sanitize_listing_browse_doc(doc: dict[str, Any]) -> dict[str, Any]:
                     or img.startswith("/")
                 ):
                     safe_images.append(img)
-                elif img.startswith("data:image/") and len(img) <= 50000:
+                elif img.startswith("data:image/") and len(img) <= 5000000:
                     safe_images.append(img)
         doc["images"] = safe_images
 

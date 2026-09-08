@@ -24,6 +24,7 @@ import { useClosetStore } from "@/lib/useClosetStore";
 import { useLocation as useAppLocation } from "@/lib/location";
 import { useTrendScoutStore } from "@/lib/trendScoutStore";
 import { api } from "@/lib/api";
+import { bestImageUrl, resolveMediaUrl } from "@/lib/itemImage";
 import { AdTicker } from "@/components/AdTicker";
 import { LanguagePicker } from "@/components/LanguagePicker";
 import { toast } from "sonner";
@@ -290,6 +291,10 @@ export default function Home() {
         ? `${item.currency === "ILS" ? "₪" : item.currency === "EUR" ? "€" : "$"}${item.price}`
         : (mode === "donate" ? t("market.free", { defaultValue: "Free" }) : "");
 
+      const rawImg = item.clean_image_url || item.image_url || (Array.isArray(item.images) && item.images[0]);
+      const defaultImg = DEFAULT_MARKETPLACE_ITEMS[idx % DEFAULT_MARKETPLACE_ITEMS.length]?.image || market1;
+      const img = resolveMediaUrl(rawImg) || defaultImg;
+
       return {
         id: item.id || `live-${idx}`,
         badge,
@@ -297,7 +302,8 @@ export default function Home() {
         price: priceStr,
         condition: item.condition || "Good",
         location: item.location || item.city || "Global",
-        image: item.clean_image_url || item.image_url || (Array.isArray(item.images) && item.images[0]) || market1,
+        image: img,
+        fallbackImage: defaultImg,
         link: `/market`,
       };
     });
@@ -563,28 +569,38 @@ const RECENTLY_ADDED_MORE_COUNT = 18;
 
   const displayClosetGarments = useMemo(() => {
     if (!closet.items || closet.items.length === 0) return CLOSET_GARMENTS;
-    return closet.items.slice(0, 3).map((item, idx) => ({
-      id: item.id || `closet-${idx}`,
-      image: item.clean_image_url || item.image_url || CLOSET_GARMENTS[idx % CLOSET_GARMENTS.length].image,
-      altKey: "home.closet.garments.shirt.alt",
-      altDefault: item.name || item.category || "Closet item",
-      categoryKey: "home.closet.garments.shirt.category",
-      categoryDefault: item.category || item.subcategory || "Wardrobe",
-      nameKey: "home.closet.garments.shirt.name",
-      nameDefault: item.name || item.brand || "Wardrobe Item",
-      metaKey: "home.closet.garments.shirt.meta",
-      metaDefault: item.color ? `${item.color}${item.season ? ' · ' + item.season : ''}` : `No. 00${idx + 1}`,
-    }));
+    return closet.items.slice(0, 3).map((item, idx) => {
+      const fallbackImg = CLOSET_GARMENTS[idx % CLOSET_GARMENTS.length].image;
+      const resolvedImg = bestImageUrl(item) || item.clean_image_url || item.image_url || fallbackImg;
+      return {
+        id: item.id || `closet-${idx}`,
+        image: resolvedImg,
+        fallbackImage: fallbackImg,
+        altKey: "home.closet.garments.shirt.alt",
+        altDefault: item.name || item.category || "Closet item",
+        categoryKey: "home.closet.garments.shirt.category",
+        categoryDefault: item.category || item.subcategory || "Wardrobe",
+        nameKey: "home.closet.garments.shirt.name",
+        nameDefault: item.name || item.brand || "Wardrobe Item",
+        metaKey: "home.closet.garments.shirt.meta",
+        metaDefault: item.color ? `${item.color}${item.season ? ' · ' + item.season : ''}` : `No. 00${idx + 1}`,
+      };
+    });
   }, [closet.items]);
 
   const displayRecentlyAdded = useMemo(() => {
     if (!closet.items || closet.items.length === 0) return RECENTLY_ADDED_THUMBS;
-    return closet.items.slice(0, 4).map((item, idx) => ({
-      id: item.id || `thumb-${idx}`,
-      image: item.clean_image_url || item.image_url || RECENTLY_ADDED_THUMBS[idx % RECENTLY_ADDED_THUMBS.length].image,
-      altKey: "home.closet.recent.sneakers",
-      altDefault: item.name || "Recent item",
-    }));
+    return closet.items.slice(0, 4).map((item, idx) => {
+      const fallbackImg = RECENTLY_ADDED_THUMBS[idx % RECENTLY_ADDED_THUMBS.length].image;
+      const resolvedImg = bestImageUrl(item) || item.clean_image_url || item.image_url || fallbackImg;
+      return {
+        id: item.id || `thumb-${idx}`,
+        image: resolvedImg,
+        fallbackImage: fallbackImg,
+        altKey: "home.closet.recent.sneakers",
+        altDefault: item.name || "Recent item",
+      };
+    });
   }, [closet.items]);
 
   const recentlyAddedMoreCount = Math.max(0, (closet.total || closet.items?.length || 0) - displayRecentlyAdded.length);
@@ -1253,6 +1269,11 @@ const RECENTLY_ADDED_MORE_COUNT = 18;
                       <div className="aspect-[4/5] w-full max-w-[190px] overflow-hidden rounded-[14px] border-[6px] border-white bg-white shadow-[0_22px_40px_-18px_rgba(23,20,15,0.35)] max-[991px]:max-w-[140px]">
                         <img
                           src={garment.image}
+                          onError={(e) => {
+                            if (garment.fallbackImage && e.target.src !== garment.fallbackImage) {
+                              e.target.src = garment.fallbackImage;
+                            }
+                          }}
                           alt={t(garment.altKey, {
                             defaultValue: garment.altDefault,
                           })}
@@ -1300,6 +1321,11 @@ const RECENTLY_ADDED_MORE_COUNT = 18;
                       >
                         <img
                           src={thumb.image}
+                          onError={(e) => {
+                            if (thumb.fallbackImage && e.target.src !== thumb.fallbackImage) {
+                              e.target.src = thumb.fallbackImage;
+                            }
+                          }}
                           alt={t(thumb.altKey, { defaultValue: thumb.altDefault })}
                           className="block h-full w-full object-cover"
                         />
@@ -1727,6 +1753,11 @@ const RECENTLY_ADDED_MORE_COUNT = 18;
                     <Link to={item.link || "/market"} className="relative block aspect-[4/3] w-full overflow-hidden bg-white">
                       <img
                         src={item.image}
+                        onError={(e) => {
+                          if (item.fallbackImage && e.target.src !== item.fallbackImage) {
+                            e.target.src = item.fallbackImage;
+                          }
+                        }}
                         alt={item.title}
                         className="h-full w-full object-cover transition-transform duration-500 ease-out group-hover:scale-[1.04]"
                       />
@@ -1847,7 +1878,7 @@ const RECENTLY_ADDED_MORE_COUNT = 18;
                 <div className="flex items-center justify-between gap-4 border-b border-black/[0.06] px-5 py-4 max-[575px]:flex-col max-[575px]:items-start">
                   <div>
                     <h5 className="m-0 flex items-center text-[14px] font-black text-[var(--dark-color)]">
-                      <i className="bi bi-magic mr-2 text-[var(--primary-color)]" />
+                      <i className="bi bi-magic me-2 text-[var(--primary-color)]" />
                       {t("home.aiEditor.title", {
                         defaultValue: "AI Styled Fashion Editor",
                       })}
@@ -1865,7 +1896,7 @@ const RECENTLY_ADDED_MORE_COUNT = 18;
                     type="button"
                     className="inline-flex items-center rounded-full border border-black/[0.08] bg-white px-4 py-2 text-[11px] font-bold text-[var(--dark-color)] transition-smooth hover:-translate-y-[1px] hover:border-[var(--primary-color)] hover:text-[var(--primary-color)]"
                   >
-                    <i className="bi bi-download mr-2" />
+                    <i className="bi bi-download me-2" />
                     {t("home.aiEditor.exportLook", {
                       defaultValue: "Export Look",
                     })}
@@ -1885,7 +1916,7 @@ const RECENTLY_ADDED_MORE_COUNT = 18;
                     />
 
                     {/* AI Match Badge */}
-                    <span className="absolute left-4 top-4 inline-flex items-center gap-1.5 rounded-full border border-white/50 bg-white/90 px-3 py-1.5 text-[10px] font-black text-[var(--primary-color)] shadow-[0_8px_20px_rgba(23,20,15,0.12)] backdrop-blur-sm">
+                    <span className="absolute start-4 top-4 inline-flex items-center gap-1.5 rounded-full border border-white/50 bg-white/90 px-3 py-1.5 text-[10px] font-black text-[var(--primary-color)] shadow-[0_8px_20px_rgba(23,20,15,0.12)] backdrop-blur-sm">
                       <i className="bi bi-stars" />
                       {t("home.aiEditor.aiMatch", {
                         percent: AI_MATCH_PERCENT,
@@ -1999,7 +2030,7 @@ const RECENTLY_ADDED_MORE_COUNT = 18;
                       type="button"
                       className="mt-auto flex w-full items-center justify-center rounded-[50px] bg-[var(--primary-color)] px-5 py-3.5 text-[13px] font-black text-white shadow-[var(--primary-shadow)] transition-smooth hover:-translate-y-[2px] hover:bg-[var(--primary-hover)] hover:shadow-[0_8px_24px_rgba(31,92,69,0.25)]"
                     >
-                      <i className="bi bi-stars mr-2" />
+                      <i className="bi bi-stars me-2" />
                       {t("home.aiEditor.regenerate", {
                         defaultValue: "Regenerate with AI",
                       })}
@@ -2234,7 +2265,7 @@ const RECENTLY_ADDED_MORE_COUNT = 18;
               className="mb-4 inline-flex items-center gap-2 rounded-full border border-[#d7e1de] bg-primary-shadow px-[15px] py-[5px] text-[12px] font-bold uppercase tracking-[1.5px] text-primary-brand"
             >
               <span className="h-[7px] w-[7px] rounded-full bg-primary-brand" />
-              {t("home.trendScout.tag", {
+              {t("home.trendScoutSection.tag", {
                 defaultValue: "Fashion Intelligence",
               })}
             </motion.span>
@@ -2260,7 +2291,7 @@ const RECENTLY_ADDED_MORE_COUNT = 18;
                 transition={{ duration: 0.65, delay: 0.3, ease: "easeOut" }}
                 className="max-w-[620px] text-[16px] leading-[26px] font-semibold text-text-brand"
               >
-                {t("home.trendScout.description", {
+                {t("home.trendScoutSection.description", {
                   defaultValue:
                     "Get styled ahead of the global curve. Discover real-time stylistic shifts curated by computational trend models.",
                 })}
@@ -2427,7 +2458,7 @@ const RECENTLY_ADDED_MORE_COUNT = 18;
                     ref={trendPrevRef}
                     type="button"
                     className="trend-swiper-prev !absolute !start-0 !top-1/2 !z-20 !m-0 !flex !h-11 !w-11 !-translate-y-1/2 !items-center !justify-center !rounded-full !border-0 !bg-[#1F6F6B] !text-white !shadow-md md:!-start-4"
-                    aria-label={t("home.trendScout.prevAria", {
+                    aria-label={t("home.trendScoutSection.prevAria", {
                       defaultValue: "Previous trend",
                     })}
                   >
@@ -2437,7 +2468,7 @@ const RECENTLY_ADDED_MORE_COUNT = 18;
                     ref={trendNextRef}
                     type="button"
                     className="trend-swiper-next !absolute !end-0 !top-1/2 !z-20 !m-0 !flex !h-11 !w-11 !-translate-y-1/2 !items-center !justify-center !rounded-full !border-0 !bg-[#1F6F6B] !text-white !shadow-md md:!-end-4"
-                    aria-label={t("home.trendScout.nextAria", {
+                    aria-label={t("home.trendScoutSection.nextAria", {
                       defaultValue: "Next trend",
                     })}
                   >

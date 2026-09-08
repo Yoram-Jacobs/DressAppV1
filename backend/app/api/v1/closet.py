@@ -130,6 +130,8 @@ class CreateItemIn(BaseModel):
     original_image_url: str | None = None
     image_base64: str | None = None
     crop_base64: str | None = None
+    clean_image_url: str | None = None
+    clean_image_status: str | None = None
     image_mime: str = "image/jpeg"
     # Phase Q — Wardrobe Reconstructor (optional; set by /analyze response)
     reconstructed_image_b64: str | None = None
@@ -404,6 +406,8 @@ async def create_item(
         cultural_tags=payload.cultural_tags,
         tags=tags_list,
         original_image_url=payload.original_image_url,
+        clean_image_url=payload.clean_image_url,
+        clean_image_status=payload.clean_image_status,
         purchase_price_cents=payload.purchase_price_cents,
         purchase_currency=payload.purchase_currency,
         purchase_date=payload.purchase_date,
@@ -428,31 +432,39 @@ async def create_item(
     )
     doc = item.model_dump()
 
-    # Phase P / Patch 7 Fix: Maintain both the uncropped photo (original_image_url)
-    # and the tight crop from /analyze (segmented_image_url). This ensures the
-    # uncropped user photo is preserved forever, but the UX still gets the crop 
-    # to display while the background matte is pending.
-    if payload.image_base64:
+    # For a cropped garment item, its original source image IS the crop.
+    # If no crop is provided, fall back to the uploaded parent image.
+    crop_data_url = None
+    if payload.crop_base64:
+        if payload.crop_base64.startswith("data:"):
+            crop_data_url = payload.crop_base64
+        else:
+            _mime = payload.image_mime or "image/jpeg"
+            if not _mime.startswith("image/"):
+                _mime = "image/jpeg"
+            crop_data_url = f"data:{_mime};base64,{payload.crop_base64}"
+        doc["segmented_image_url"] = crop_data_url
+        doc["original_image_url"] = crop_data_url
+
+    if payload.image_base64 and not doc.get("original_image_url"):
         if payload.image_base64.startswith("data:"):
             doc["original_image_url"] = payload.image_base64
         else:
             _mime = payload.image_mime or "image/jpeg"
             if not _mime.startswith("image/"):
                 _mime = "image/jpeg"
-            doc["original_image_url"] = (
-                f"data:{_mime};base64,{payload.image_base64}"
-            )
-    
-    if payload.crop_base64:
-        if payload.crop_base64.startswith("data:"):
-            doc["segmented_image_url"] = payload.crop_base64
-        else:
-            _mime = payload.image_mime or "image/jpeg"
-            if not _mime.startswith("image/"):
-                _mime = "image/jpeg"
-            doc["segmented_image_url"] = (
-                f"data:{_mime};base64,{payload.crop_base64}"
-            )
+            doc["original_image_url"] = f"data:{_mime};base64,{payload.image_base64}"
+
+    if payload.clean_image_url:
+        doc["clean_image_url"] = payload.clean_image_url
+        doc["clean_image_status"] = "ready"
+    else:
+        # If the crop or image is a transparent PNG (e.g. from rembg/SegFormer),
+        # treat it as clean_image_url immediately.
+        primary_url = doc.get("segmented_image_url") or doc.get("original_image_url")
+        if primary_url and ("image/png" in primary_url[:30].lower()):
+            doc["clean_image_url"] = primary_url
+            doc["clean_image_status"] = "ready"
 
     # Phase Z2.1 — if the client didn't compute a phash (older client,
     # camera capture, etc.) AND we have raw bytes here, compute one
@@ -515,7 +527,10 @@ async def create_item(
     # Standard closet uploads already receive their clean crop from
     # the analyzer. We do not run post-save background rembg matting on
     # standard items to prevent unwanted image artifacts/over-cropping.
-    needs_bg_matte = False
+    needs_bg_matte = bool(
+        not doc.get("clean_image_url")
+        and (payload.defer_matte or payload.from_one_pass)
+    )
 
     # Resolve the raw bytes for the background task once, shared by all branches.
     raw_for_bg: bytes | None = None
@@ -703,10 +718,18 @@ async def create_item(
     # are only needed during the /analyze pipeline, which completes before the
     # user confirms saving. clean_image_url (rembg transparent PNG, set by the
     # background matte task a few seconds later) is the sole display image.
-    await db.closet_items.update_one(
-        {"id": doc["id"]},
-        {"$unset": {"original_image_url": "", "segmented_image_url": ""}},
-    )
+    # Drop analysis-phase temporaries immediately after save ONLY IF clean_image_url is present.
+    # If clean_image_url is not ready yet, keep original_image_url so the item is never left without an image.
+    if doc.get("clean_image_url"):
+        await db.closet_items.update_one(
+            {"id": doc["id"]},
+            {"$unset": {"original_image_url": "", "segmented_image_url": ""}},
+        )
+    else:
+        await db.closet_items.update_one(
+            {"id": doc["id"]},
+            {"$unset": {"segmented_image_url": ""}},
+        )
 
     if payload.in_suitcase:
         active_s = await db.suitcases.find_one({"user_id": user["id"], "status": {"$ne": "completed"}})
@@ -3130,6 +3153,8 @@ async def backfill_marketplace_listings(
             "clean_image_url": 1,
             "reconstructed_image_url": 1,
             "cutout_url": 1,
+            "segmented_image_url": 1,
+            "original_image_url": 1,
             "image_url": 1,
             "image_variants": 1,
             "auto_listing_id": 1, "source": 1,
@@ -3334,6 +3359,8 @@ async def backfill_marketplace_listings_stream(
             "clean_image_url": 1,
             "reconstructed_image_url": 1,
             "cutout_url": 1,
+            "segmented_image_url": 1,
+            "original_image_url": 1,
             "image_url": 1,
             "image_variants": 1,
             "auto_listing_id": 1, "source": 1,
@@ -4466,6 +4493,20 @@ def _get_localized_closet_msg(msg_type: str, lang: str, user_msg: str = "") -> s
             "ja": f"画像の変更を試みました（{user_msg}）が、処理中に問題が発生しました。もう一度お試しください。",
             "hi": f"मैंने छवि को संशोधित करने का प्रयास किया ({user_msg}), लेकिन प्रसंस्करण के दौरान एक समस्या आई। कृपया पुन: प्रयास करें।",
         },
+        "image_edit_quota_exceeded": {
+            "he": "מגבלת ה-AI של הפרויקט מוצתה (חריגה ממגבלת התקציב החודשית ב-Google AI Studio). ניתן להגדיל את התקציב ב-https://ai.studio/spend או להזין מפתח API אישי בהגדרות הפרופיל.",
+            "ar": "تم الوصول إلى الحد الأقصى لميزانية الذكاء الاصطناعي في Google AI Studio. يرجى تعديل حد الإنفاق في https://ai.studio/spend أو إضافة مفتاح API خاص بك في إعدادات الملف الشخصي.",
+            "en": "AI spending cap reached: The project has exceeded its monthly spending limit in Google AI Studio. Please adjust your budget cap at https://ai.studio/spend or configure your personal API key in Profile settings.",
+            "es": "Límite de gasto de IA alcanzado: El proyecto ha superado el límite mensual en Google AI Studio. Ajusta el límite en https://ai.studio/spend o ingresa tu clave API en Ajustes de Perfil.",
+            "fr": "Plafond budgétaire IA atteint : Le projet a dépassé sa limite mensuelle sur Google AI Studio. Veuillez ajuster le plafond sur https://ai.studio/spend ou renseigner votre clé API dans votre profil.",
+            "de": "KI-Budgetlimit erreicht: Das Projekt hat das monatliche Ausgabenlimit in Google AI Studio überschritten. Bitte passe das Limit unter https://ai.studio/spend an oder trage deinen API-Schlüssel im Profil ein.",
+            "it": "Limite di spesa IA raggiunto: Il progetto ha superato il limite mensile in Google AI Studio. Modifica il limite su https://ai.studio/spend o inserisci la tua chiave API personale nel profilo.",
+            "pt": "Limite de gastos de IA atingido: O projeto excedeu o limite mensal no Google AI Studio. Ajuste o limite em https://ai.studio/spend ou insira sua chave de API nas configurações de perfil.",
+            "ru": "Достигнут лимит расходов AI: Проект превысил месячный лимит в Google AI Studio. Пожалуйста, увеличьте лимит на https://ai.studio/spend или укажите свой собственный API-ключ в профиле.",
+            "zh": "已达到 AI 支出上限：项目已超出 Google AI Studio 的月度预算限制。请在 https://ai.studio/spend 调整上限，或在个人资料中配置您自己的 API 密钥。",
+            "ja": "AIの利用上限に達しました：Google AI Studioの月間支出上限を超えています。https://ai.studio/spend で上限を調整するか、プロフィール設定で独自のAPIキーを設定してください。",
+            "hi": "एआई खर्च सीमा समाप्त हो गई है: परियोजना Google AI Studio में अपनी मासिक खर्च सीमा पार कर गई है। कृपया https://ai.studio/spend पर सीमा समायोजित करें या प्रोफ़ाइल में अपनी एपीआई कुंजी दर्ज करें।",
+        },
         "image_edit_unavailable": {
             "he": "עריכת תמונות אינה זמינה כעת בשרת. אנא ודא שהמערכת מוגדרת כראוי.",
             "ar": "خدمة تعديل الصور غير متوفرة حالياً على الخادم. يرجى التأكد من تكوين النظام.",
@@ -4744,7 +4785,11 @@ async def chat_analyse_item(
                 }
             except Exception as edit_exc:
                 logger.warning("Nano Banana chat edit failed: %s", edit_exc)
-                reply = _get_localized_closet_msg("image_edit_failed", user_lang, user_msg=user_msg)
+                exc_str = str(edit_exc).lower()
+                if "spending cap" in exc_str or "resource_exhausted" in exc_str or "quota" in exc_str or "429" in exc_str:
+                    reply = _get_localized_closet_msg("image_edit_quota_exceeded", user_lang)
+                else:
+                    reply = _get_localized_closet_msg("image_edit_failed", user_lang, user_msg=user_msg)
                 action = "clarification"
 
     elif action == "metadata_update":
@@ -5934,6 +5979,22 @@ async def delete_item(
             else:
                 # Re-run group analysis on remaining members in background
                 background_tasks.add_task(reanalyze_group_helper, group_id, user["id"])
+
+    # Phase Outfits cleanup — remove deleted garment references from outfits
+    try:
+        await db.outfits.update_many(
+            {"user_id": user["id"], "garments.closet_item_id": item_id},
+            {"$pull": {"garments": {"closet_item_id": item_id}}}
+        )
+        await db.outfits.update_many(
+            {"user_id": user["id"], "items.closet_item_id": item_id},
+            {"$pull": {"items": {"closet_item_id": item_id}}}
+        )
+        await db.outfits.delete_many(
+            {"user_id": user["id"], "garments": {"$size": 0}}
+        )
+    except Exception as exc:
+        logger.warning("outfit cleanup failed for closet item %s: %s", item_id, exc)
 
     # Marketplace cleanup — when a user deletes a closet item that
     # is linked to one or more listings, silently retire the open

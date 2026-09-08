@@ -1,4 +1,7 @@
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> 1f9efdea44a0b51a387dba3850a8368689577b9a
 """APScheduler boot — schedules the Trend-Scout agent, user styling notifications, and credit cleanup.
 
 This module manages all scheduled background tasks for the DressApp backend.
@@ -15,7 +18,7 @@ from apscheduler.triggers.interval import IntervalTrigger
 
 from app.config import settings
 from app.db.database import get_db
-from app.services.trend_scout import run_trend_scout, monthly_trend_scout_refresh
+from app.services.trend_scout import run_trend_scout, weekly_trend_scout_refresh, monthly_trend_scout_refresh
 from app.services.push_service import send_push_notification
 from app.services.stylist_scheduler_brain import generate_scheduled_proposals
 from app.services.i18n import t
@@ -40,24 +43,39 @@ def _parse_hhmm(hhmm: str) -> tuple[int, int]:
 
 
 async def _safe_run() -> None:
+    """Daily scheduled refresh executed for key user locations across men's and women's fashion."""
     try:
-        result = await run_trend_scout()
-        logger.info(
-            "Trend-Scout daily run: generated=%d skipped=%d date=%s",
-            len(result.get("generated") or []),
-            len(result.get("skipped") or []),
-            result.get("date"),
-        )
+        logger.info("Starting Trend-Scout daily scheduled refresh across target countries...")
+        for c_code in ["IL", "US", "GB", "FR", "DE"]:
+            for g in ["female", "male"]:
+                try:
+                    result = await run_trend_scout(country_code=c_code, gender=g)
+                    logger.info(
+                        "Trend-Scout daily run (%s, %s): generated=%d skipped=%d date=%s",
+                        c_code,
+                        g,
+                        len(result.get("generated") or []),
+                        len(result.get("skipped") or []),
+                        result.get("date"),
+                    )
+                except Exception as e:
+                    logger.warning("Trend-Scout daily run failed for %s (%s): %s", c_code, g, e)
     except Exception as exc:  # noqa: BLE001
-        logger.warning("Trend-Scout daily run failed: %s", exc)
+        logger.warning("Trend-Scout daily scheduled run failed: %s", exc)
+
+
+async def _safe_weekly_run() -> None:
+    """Weekly scheduled Trend-Scout refresh executed on Sunday at 10:00 AM local time."""
+    try:
+        result = await weekly_trend_scout_refresh()
+        logger.info("Trend-Scout weekly Sunday 10am refresh complete: %s", result)
+    except Exception as exc:  # noqa: BLE001
+        logger.warning("Trend-Scout weekly refresh failed: %s", exc)
 
 
 async def _safe_monthly_run() -> None:
-    try:
-        result = await monthly_trend_scout_refresh()
-        logger.info("Trend-Scout monthly refresh complete: %s", result)
-    except Exception as exc:  # noqa: BLE001
-        logger.warning("Trend-Scout monthly refresh failed: %s", exc)
+    """Legacy monthly runner kept for backward compatibility."""
+    await _safe_weekly_run()
 
 
 async def _expire_old_free_credits_job() -> None:
@@ -730,19 +748,20 @@ def start_scheduler() -> None:
             "Trend-Scout daily scheduled (at %02d:%02d UTC)", hour, minute
         )
 
+        # If enabled via TREND_SCOUT_RUN_ON_STARTUP, run one safe verification on boot
         if settings.TREND_SCOUT_RUN_ON_STARTUP:
             asyncio.create_task(_safe_run())
-            logger.info("Trend-Scout run on startup triggered in background")
+            logger.info("Trend-Scout startup run triggered in background")
 
-        # Trend-Scout monthly refresh (midnight on the 1st of every month)
+        # Trend-Scout weekly refresh: fires once a week on Sunday at 10:00 AM local time (defaulting to 07:00 UTC)
         _scheduler.add_job(
-            _safe_monthly_run,
-            CronTrigger(day=1, hour=0, minute=0, timezone="UTC"),
-            id="trend_scout_monthly_refresh",
+            _safe_weekly_run,
+            CronTrigger(day_of_week="sun", hour=hour, minute=minute, timezone="UTC"),
+            id="trend_scout_weekly_refresh",
             replace_existing=True,
             misfire_grace_time=3600,
         )
-        logger.info("Trend-Scout monthly refresh scheduled: 1st of every month at 00:00 UTC")
+        logger.info("Trend-Scout weekly refresh scheduled: every Sunday at %02d:%02d UTC (10:00 AM local time)", hour, minute)
 
     # Credit cleanup: expire old free credits (daily at 02:00 UTC)
     # Free credits expire after 30 days per Pricing-Plane.md requirement
@@ -797,6 +816,7 @@ def shutdown_scheduler() -> None:
             _scheduler.shutdown(wait=False)
         except Exception as exc:  # noqa: BLE001
             logger.warning("Scheduler shutdown error: %s", exc)
+<<<<<<< HEAD
 =======
 """APScheduler boot — schedules the Trend-Scout agent, user styling notifications, and credit cleanup.
 
@@ -1613,4 +1633,6 @@ def shutdown_scheduler() -> None:
         except Exception as exc:  # noqa: BLE001
             logger.warning("Scheduler shutdown error: %s", exc)
 >>>>>>> add75210561e3cce6fda9a8d37f394cb10747d0e
+=======
+>>>>>>> 1f9efdea44a0b51a387dba3850a8368689577b9a
     _scheduler = None

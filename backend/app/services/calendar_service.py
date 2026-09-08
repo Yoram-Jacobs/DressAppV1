@@ -166,6 +166,8 @@ class CalendarService:
         if request is not None:
             base = _public_base_url(request)
             if base:
+                if "localhost:8001" in base or "127.0.0.1:8001" in base:
+                    return "http://localhost:3000/me"
                 return f"{base}/me"
         return "/me"
 

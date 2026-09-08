@@ -28,7 +28,7 @@ import {
   GripVertical,
   ArrowLeft,
   Share2,
-  Key, Shirt, CalendarCheck2
+  Key, Shirt, CalendarCheck2, CalendarPlus
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
@@ -57,6 +57,8 @@ import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
 import { Pencil } from 'lucide-react';
 import { useClosetStore } from '@/lib/useClosetStore';
+import { closetStore } from '@/lib/closetStore';
+import { bestImageUrl, resolveMediaUrl } from '@/lib/itemImage';
 import { useLocalStorageSync } from '@/lib/useLocalStorageSync';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { WaveformAudioPlayer } from '@/components/WaveformAudioPlayer';
@@ -78,7 +80,6 @@ import { useOutfitStore } from '@/lib/useOutfitStore';
 import { useLocation as useAppLocation } from '@/lib/location';
 import { prewarmStylist, loadStylistMessages } from '@/lib/stylistStore';
 import { useDailySuggestionsStore } from '@/lib/dailySuggestionsStore';
-import { bestImageUrl } from '@/lib/itemImage';
 import {
   isSTTSupported,
   isTTSSupported,
@@ -97,6 +98,25 @@ const roleIcon = (role) => {
   if (key.includes('shoe') || key.includes('sneaker')) return <Footprints />;
   if (key.includes('outer') || key.includes('jacket')) return <ShirtIcon />;
   return <Tag />;
+};
+
+const PieceThumbnail = ({ imgUrl, alt, role }) => {
+  const [error, setError] = useState(false);
+  if (!imgUrl || error) {
+    return (
+      <div className="w-full h-full flex items-center justify-center text-[var(--primary-color)]">
+        {roleIcon(role)}
+      </div>
+    );
+  }
+  return (
+    <img
+      src={imgUrl}
+      alt={alt || ''}
+      className="w-full h-full object-cover"
+      onError={() => setError(true)}
+    />
+  );
 };
 const base64ToUrl = (b64, mime = 'audio/mpeg') => {
   if (!b64) return null;
@@ -122,18 +142,34 @@ const formatMonthDay = (date, t) => {
   return `${monthStr} ${date.getDate()}`;
 };
 
-const getOutfitPiecesMap = (o) => {
+const getOutfitPiecesMap = (o, closetItems = []) => {
   const map = {};
-  if (Array.isArray(o?.garments)) {
-    o.garments.forEach((g) => {
+  const garments = Array.isArray(o?.garments) && o.garments.length > 0 ? o.garments : (Array.isArray(o?.items) ? o.items : []);
+  if (Array.isArray(garments)) {
+    garments.forEach((g) => {
       if (g && g.role) {
-        map[g.role] = { image_url: g.image_url };
+        let img = g.image_url || g.clean_image_url || g.thumbnail_data_url;
+        let cid = g.closet_item_id || g.id;
+        if (Array.isArray(closetItems) && closetItems.length > 0) {
+          const ci = closetItems.find(c => 
+            (cid && (c.id === cid || c._id === cid)) ||
+            (g.title && (c.title === g.title || c.name === g.title))
+          );
+          if (ci) {
+            img = bestImageUrl(ci) || img;
+            cid = cid || ci.id;
+          }
+        }
+        map[g.role] = { 
+          id: cid,
+          closet_item_id: cid,
+          image_url: img 
+        };
       }
     });
   }
   return map;
 };
-
 const getRecommendationPiecesMap = (rec, closetItems) => {
   const map = {};
   if (Array.isArray(rec?.items)) {
@@ -141,9 +177,10 @@ const getRecommendationPiecesMap = (rec, closetItems) => {
       if (item && item.role) {
         const closetItem = closetItems.find(c => c.id === item.closet_item_id);
         if (closetItem) {
-          map[item.role] = {
+          map[item.role] = { 
             id: closetItem.id,
             closet_item_id: closetItem.id,
+            image_url: closetItem.image_url,
             image_url: bestImageUrl(closetItem) || closetItem.image_url,
             clean_image_url: closetItem.clean_image_url,
             cutout_url: closetItem.cutout_url,
@@ -324,7 +361,8 @@ export default function Stylist() {
   const [isEditingOutfit, setIsEditingOutfit] = useStoreState(stylistUIStore, 'isEditingOutfit');
   const [editOutfitName, setEditOutfitName] = useStoreState(stylistUIStore, 'editOutfitName');
   const [editOutfitDescription, setEditOutfitDescription] = useStoreState(stylistUIStore, 'editOutfitDescription');
-  const { notifications: cachedNotifications, prewarm: prewarmDaily } = useDailySuggestionsStore();
+  const { notifications: cachedNotifications, dailyProposal, generate: generateDailyProposalAction, prewarm: prewarmDaily } = useDailySuggestionsStore();
+  const [generatingDaily, setGeneratingDaily] = useState(false);
   const handleSaveOutfitSuccess = useCallback(async () => {
     prewarmOutfits({ force: true }).catch(() => { });
     try {
@@ -356,47 +394,6 @@ export default function Stylist() {
     }
   }, [location.state, outfits]);
 
-  useEffect(() => {
-    if (activeTab === 'match' && outfits.length > 0 && !selectedOutfitForDetail && !hasAutoSelected) {
-      const todayStr = formatLocalDate(new Date());
-      const tomorrow = new Date();
-      tomorrow.setDate(tomorrow.getDate() + 1);
-      const tomorrowStr = formatLocalDate(tomorrow);
-
-      const targetOutfit = outfits.find(o => o.usage?.date === tomorrowStr) || outfits.find(o => o.usage?.date === todayStr);
-      if (targetOutfit) {
-        setSelectedOutfitForDetail(targetOutfit);
-        setHasAutoSelected(true);
-      } else {
-        const checkDateHasSuggestions = (dateStr) => {
-          const matches = (notifications || []).filter(n => {
-            try {
-              const payload = n.payload || {};
-              if (payload.target_date) {
-                return payload.target_date === dateStr;
-              }
-              const notifDate = new Date(n.created_at);
-              const y = notifDate.getFullYear();
-              const m = String(notifDate.getMonth() + 1).padStart(2, '0');
-              const d = String(notifDate.getDate()).padStart(2, '0');
-              return `${y}-${m}-${d}` === dateStr;
-            } catch (e) {
-              return n.created_at?.slice(0, 10) === dateStr;
-            }
-          });
-          return matches.length > 0;
-        };
-
-        if (checkDateHasSuggestions(tomorrowStr)) {
-          setSchedulingDate(tomorrowStr);
-          setHasAutoSelected(true);
-        } else if (checkDateHasSuggestions(todayStr)) {
-          setSchedulingDate(todayStr);
-          setHasAutoSelected(true);
-        }
-      }
-    }
-  }, [activeTab, outfits, selectedOutfitForDetail, hasAutoSelected, notifications, setSchedulingDate, setHasAutoSelected]);
 
   const deleteOutfit = async (id) => {
     try {
@@ -443,6 +440,7 @@ export default function Stylist() {
         closet_item_id: it.closet_item_id || it.id,
         role: it.role,
         title: it.description || it.title || it.name,
+        image_url: (ci ? bestImageUrl(ci) : null) || bestImageUrl(it) || it.clean_image_url || it.image_url || '',
       })),
       usage: {
         date: targetDate,
@@ -663,9 +661,9 @@ export default function Stylist() {
   };
 
   const dailyRecommendations = useMemo(() => {
-    if (!schedulingDate || !notifications) return [];
+    if (!schedulingDate) return [];
     const targetDateStr = schedulingDate;
-    const matches = notifications.filter(n => {
+    const matches = (notifications || []).filter(n => {
       try {
         const payload = n.payload || {};
         if (payload.target_date) {
@@ -682,46 +680,61 @@ export default function Stylist() {
       }
     });
 
-    if (matches.length === 0) return [];
-
-    // Sort matches by created_at descending (latest first)
-    matches.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-    const latestNotif = matches[0];
-
     const recs = [];
-    const payload = latestNotif.payload || {};
-    const list = payload.outfit_recommendations || payload.proposals || [];
-    list.forEach((rec, idx) => {
-      recs.push({
-        ...rec,
-        notifId: latestNotif.id,
-        recIndex: idx,
+    if (matches.length > 0) {
+      matches.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+      const latestNotif = matches[0];
+      const payload = latestNotif.payload || {};
+      const list = payload.outfit_recommendations || payload.proposals || [];
+      list.forEach((rec, idx) => {
+        recs.push({
+          ...rec,
+          notifId: latestNotif.id,
+          recIndex: idx,
+        });
       });
-    });
+    }
+
+    // Also include dailyProposal if available for target date
+    if (dailyProposal && dailyProposal.date === targetDateStr && Array.isArray(dailyProposal.items) && dailyProposal.items.length > 0) {
+      const alreadyHas = recs.some(r => r.name === dailyProposal.title);
+      if (!alreadyHas) {
+        recs.unshift({
+          name: dailyProposal.title || 'Look of the Day',
+          items: dailyProposal.items,
+          proposalId: dailyProposal.id,
+          isDailyProposal: true,
+        });
+      }
+    }
+
     return recs;
-  }, [schedulingDate, notifications]);
+  }, [schedulingDate, notifications, dailyProposal]);
 
   const detailMetrics = selectedOutfitForDetail ? calculateOutfitMetrics(selectedOutfitForDetail) : null;
   const overallMatchingGrade = detailMetrics ? Math.round(
     (detailMetrics.color + detailMetrics.pattern + detailMetrics.fit + detailMetrics.weather + detailMetrics.event + detailMetrics.location) / 6
   ) : 0;
 
-  const handleSaveOutfitToDate = async (notifId, recIndex, targetDate) => {
-    const notif = notifications.find(n => n.id === notifId);
-    const rec = notif?.payload?.outfit_recommendations?.[recIndex] || notif?.payload?.proposals?.[recIndex];
+  const handleSaveOutfitToDate = async (notifId, recIndex, targetDate, directRec = null) => {
+    const rec = directRec || (() => {
+      const notif = (notifications || []).find(n => n.id === notifId);
+      return notif?.payload?.outfit_recommendations?.[recIndex] || notif?.payload?.proposals?.[recIndex];
+    })();
     if (!rec) return;
 
+    const notif = notifId ? (notifications || []).find(n => n.id === notifId) : null;
     const isEvent = (notif?.title || '').toLowerCase().includes('get ready');
-
     const isFallback = notif?.payload?.is_fallback || false;
-    let displayName = rec.name;
-    if (!isEvent) {
+
+    let displayName = rec.name || rec.title;
+    if (!displayName) {
       try {
         const [y, m, d] = targetDate.split('-');
         const dateObj = new Date(parseInt(y, 10), parseInt(m, 10) - 1, parseInt(d, 10));
         displayName = dateObj.toLocaleDateString(i18n.language || 'en', { month: 'numeric', day: 'numeric', year: 'numeric' });
       } catch (e) {
-        displayName = rec.name;
+        displayName = 'Daily Look';
       }
     }
     if (isFallback && !displayName.includes('Fallback')) {
@@ -736,6 +749,7 @@ export default function Stylist() {
         closet_item_id: it.closet_item_id || it.id,
         role: it.role,
         title: it.description || it.title || it.name,
+        image_url: (ci ? bestImageUrl(ci) : null) || bestImageUrl(it) || it.clean_image_url || it.image_url || '',
       })),
       usage: {
         date: targetDate,
@@ -743,7 +757,7 @@ export default function Stylist() {
         location: null,
         event_name: null,
       },
-      is_fallback: notif?.payload?.is_fallback || false,
+      is_fallback: isFallback,
     };
 
     try {
@@ -1575,7 +1589,7 @@ export default function Stylist() {
                             <div className="text-[11px] font-bold tracking-wide uppercase mb-1">
                               {t('stylist.doDont', { defaultValue: 'Do & Don\'t' })}
                             </div>
-                            <ul className="list-disc pl-5 m-0 flex flex-col gap-0.5">
+                            <ul className="list-disc ps-5 m-0 flex flex-col gap-0.5">
                               {m.payload.do_dont.filter(Boolean).map((d, k) => (
                                 <li key={`${m.id || 'msg'}-dd-${k}-${String(d).slice(0, 24)}`}>{d}</li>
                               ))}
@@ -1651,7 +1665,7 @@ export default function Stylist() {
                             <summary className="cursor-pointer hover:text-[var(--dark-color)]">
                               {t('stylist.preferencesApplied', { count: m.payload.applied_preferences.filter(Boolean).length })}
                             </summary>
-                            <div className="pl-2 pt-1 leading-relaxed">
+                            <div className="ps-2 pt-1 leading-relaxed">
                               {m.payload.applied_preferences.filter(Boolean).join(' · ')}
                             </div>
                           </details>
@@ -1668,7 +1682,7 @@ export default function Stylist() {
                                 className="rounded-full h-8"
                                 data-testid={`stylist-stop-speak-${m.id}`}
                               >
-                                <VolumeX className="h-3.5 w-3.5 mr-1" />
+                                <VolumeX className="h-3.5 w-3.5 me-1" />
                                 {t('stylist.stopSpeaking', { defaultValue: 'Stop Speaking' })}
                               </Button>
                             ) : (
@@ -1679,7 +1693,7 @@ export default function Stylist() {
                                 className="rounded-full h-8"
                                 data-testid={`stylist-play-speak-${m.id}`}
                               >
-                                <Volume2 className="h-3.5 w-3.5 mr-1" />
+                                <Volume2 className="h-3.5 w-3.5 me-1" />
                                 {t('stylist.playReply', { defaultValue: 'Play Reply' })}
                               </Button>
                             )}
@@ -2090,33 +2104,37 @@ export default function Stylist() {
                       {t('outfits.outfitPieces', { defaultValue: 'Outfit Pieces' })}
                     </div>
                     <div className="grid grid-cols-2 sm:grid-cols-3 max-[420px]:grid-cols-1 gap-3">
-                      {Array.isArray(selectedOutfitForDetail?.garments) && selectedOutfitForDetail.garments.map((g, idx) => (
-                        <div
-                          key={idx}
-                          onClick={() => navigate(`/closet/${g.closet_item_id}`, {
-                            state: {
-                              fromOutfits: true,
-                              returnToOutfitId: selectedOutfitForDetail.id
-                            }
-                          })}
-                          className="bg-white border border-[#ccc] rounded-[12px] p-3.5 flex items-center gap-3 cursor-pointer transition-all duration-180 hover:border-[var(--primary-color)] hover:shadow-[0_4px_14px_rgba(31,107,92,0.1)] hover:-translate-y-0.5 group"
-                        >
-                          <div className="w-12 h-12 rounded-xl bg-[var(--primary-shadow)] text-[var(--primary-color)] flex items-center justify-center flex-shrink-0 overflow-hidden">
-                            {g.image_url ? (
-                              <img src={g.image_url} alt={g.title || ''} className="w-full h-full object-cover" />
-                            ) : (
-                              roleIcon(g.role)
-                            )}
-                          </div>
-                          <div className="min-w-0 flex-1">
-                            <div className="text-[10px] font-bold uppercase tracking-[0.06em] text-[var(--primary-color)] mb-0.5">{labelForRole(g.role, t)}</div>
-                            <div className="text-[13px] font-semibold text-[var(--text-color)] overflow-hidden text-ellipsis whitespace-nowrap">
-                              {g.title || g.description || t('addItem.preflight.untitled', { defaultValue: 'Garment' })}
+                      {Array.isArray(selectedOutfitForDetail?.garments) && selectedOutfitForDetail.garments.map((g, idx) => {
+                        const closetItem = closetItems.find(it => it && it.id === g.closet_item_id);
+                        const imgUrl = resolveMediaUrl(bestImageUrl(closetItem) || g.image_url || g.clean_image_url || closetItem?.image_url);
+                        return (
+                          <div
+                            key={idx}
+                            onClick={() => navigate(`/closet/${g.closet_item_id}`, {
+                              state: {
+                                fromOutfits: true,
+                                returnToOutfitId: selectedOutfitForDetail.id
+                              }
+                            })}
+                            className="bg-white border border-[#ccc] rounded-[12px] p-3.5 flex items-center gap-3 cursor-pointer transition-all duration-180 hover:border-[var(--primary-color)] hover:shadow-[0_4px_14px_rgba(31,107,92,0.1)] hover:-translate-y-0.5 group"
+                          >
+                            <div className="w-12 h-12 rounded-xl bg-[var(--primary-shadow)] text-[var(--primary-color)] flex items-center justify-center flex-shrink-0 overflow-hidden">
+                              <PieceThumbnail
+                                imgUrl={imgUrl}
+                                alt={g.title || ''}
+                                role={g.role}
+                              />
                             </div>
+                            <div className="min-w-0 flex-1">
+                              <div className="text-[10px] font-bold uppercase tracking-[0.06em] text-[var(--primary-color)] mb-0.5">{labelForRole(g.role, t)}</div>
+                              <div className="text-[13px] font-semibold text-[var(--text-color)] overflow-hidden text-ellipsis whitespace-nowrap">
+                                {g.title || g.description || closetItem?.title || closetItem?.name || t('addItem.preflight.untitled', { defaultValue: 'Garment' })}
+                              </div>
+                            </div>
+                            <ChevronRight className="w-4 h-4 text-[var(--text-muted)] flex-shrink-0 transition-all duration-180 group-hover:text-[var(--primary-color)] group-hover:translate-x-0.5 rtl:rotate-180 rtl:group-hover:-translate-x-0.5" />
                           </div>
-                          <ChevronRight className="w-4 h-4 text-[var(--text-muted)] flex-shrink-0 transition-all duration-180 group-hover:text-[var(--primary-color)] group-hover:translate-x-0.5 rtl:rotate-180 rtl:group-hover:-translate-x-0.5" />
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   </TabsContent>
                   <TabsContent value="metrics" className="w-full">
@@ -2229,7 +2247,7 @@ export default function Stylist() {
                   max-[480px]:text-[35px]
                 "
               >
-                {t("Your Personal AI Stylist")}
+                {t('stylist.heroTitle', { defaultValue: 'Your Personal AI Stylist' })}
               </h1>
               {/* Description */}
               <p
@@ -2244,7 +2262,7 @@ export default function Stylist() {
                   max-[767px]:mt-[15px]
                 "
               >
-                Get personalized outfit recommendations, style advice, and fashion inspiration tailored to your wardrobe, occasion, and local weather.
+                {t('stylist.heroDescription', { defaultValue: 'Get personalized outfit recommendations, style advice, and fashion inspiration tailored to your wardrobe, occasion, and local weather.' })}
               </p>
             </div>
           </div>
@@ -2368,8 +2386,8 @@ export default function Stylist() {
                                 <h3 className="text-[14px] font-semibold text-dark-brand">
                                   {t('profile.schedulerPushReminders', { defaultValue: 'Schedule & Push Reminders' })}
                                 </h3>
-                                <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-text-brand font-semibold">
-                                  <span className="flex items-center gap-1">
+                                <div className="flex flex-wrap items-center gap-2 text-xs text-text-brand font-semibold">
+                                  <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-secondary/10 border border-border">
                                     <span className={cn(
                                       "h-2 w-2 rounded-full",
                                       user?.scheduler_settings?.enabled ? "bg-primary-brand animate-pulse" : "bg-primary-shadow"
@@ -2378,32 +2396,33 @@ export default function Stylist() {
                                       {user?.scheduler_settings?.enabled
                                         ? t('common.enabled', { defaultValue: 'Enabled' })
                                         : t('common.unenabled', { defaultValue: 'Unenabled' })}
-                                      {user?.scheduler_settings?.enabled && (
-                                        <>
-                                          {', '}
-                                          {getFrequencyLabel(user?.scheduler_settings?.frequency, user?.scheduler_settings?.weekday, i18n.language, t)}
-                                          {', '}
-                                          {(() => {
-                                            try {
-                                              const tVal = (typeof user?.scheduler_settings?.time === 'string') ? user.scheduler_settings.time : '07:00';
-                                              const [h, m] = tVal.split(':');
-                                              const hInt = parseInt(h, 10) || 7;
-                                              const mStr = m || '00';
-                                              const ampm = hInt >= 12 ? 'PM' : 'AM';
-                                              const h12 = hInt % 12 || 12;
-                                              return `${h12.toString().padStart(2, '0')}:${mStr} ${ampm}`;
-                                            } catch (e) {
-                                              return '07:00 AM';
-                                            }
-                                          })()}
-                                          {', '}
-                                          <span className="capitalize">
-                                            {getStyleLabel(user?.scheduler_settings?.style_option, user?.scheduler_settings?.custom_style, t)}
-                                          </span>
-                                        </>
-                                      )}
                                     </span>
                                   </span>
+                                  {user?.scheduler_settings?.enabled && (
+                                    <>
+                                      <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-secondary/5 border border-border text-[11px]" dir="auto">
+                                        {getFrequencyLabel(user?.scheduler_settings?.frequency, user?.scheduler_settings?.weekday, i18n.language, t)}
+                                      </span>
+                                      <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-secondary/5 border border-border text-[11px]" dir="ltr">
+                                        {(() => {
+                                          try {
+                                            const tVal = (typeof user?.scheduler_settings?.time === 'string') ? user.scheduler_settings.time : '07:00';
+                                            const [h, m] = tVal.split(':');
+                                            const hInt = parseInt(h, 10) || 7;
+                                            const mStr = m || '00';
+                                            const ampm = hInt >= 12 ? 'PM' : 'AM';
+                                            const h12 = hInt % 12 || 12;
+                                            return `${h12.toString().padStart(2, '0')}:${mStr} ${ampm}`;
+                                          } catch (e) {
+                                            return '07:00 AM';
+                                          }
+                                        })()}
+                                      </span>
+                                      <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-secondary/5 border border-border text-[11px] capitalize" dir="auto">
+                                        {getStyleLabel(user?.scheduler_settings?.style_option, user?.scheduler_settings?.custom_style, t)}
+                                      </span>
+                                    </>
+                                  )}
                                 </div>
                               </div>
                             </div>
@@ -2419,6 +2438,148 @@ export default function Stylist() {
                             </Button>
                           </CardContent>
                         </Card>
+
+                        {/* 1.5 Today's Style Suggestion / Outfit Card */}
+                        {(() => {
+                          const todayDateStr = formatLocalDate(new Date());
+                          const todayOutfit = (outfits || []).find(o => o.usage?.date === todayDateStr);
+                          const todayNotifRecs = (notifications || []).filter(n => {
+                            try {
+                              const p = n.payload || {};
+                              if (p.target_date) return p.target_date === todayDateStr;
+                              const nd = new Date(n.created_at);
+                              return `${nd.getFullYear()}-${String(nd.getMonth() + 1).padStart(2, '0')}-${String(nd.getDate()).padStart(2, '0')}` === todayDateStr;
+                            } catch {
+                              return false;
+                            }
+                          }).flatMap(n => (n.payload?.proposals || n.payload?.outfit_recommendations || []));
+
+                          const activeProposal = (dailyProposal && dailyProposal.date === todayDateStr && (dailyProposal.items || []).length > 0) ? dailyProposal : null;
+                          const hasTodayContent = todayOutfit || activeProposal || todayNotifRecs.length > 0;
+                          if (!hasTodayContent) return null;
+
+                          return (
+                            <Card className="border border-border rounded-[12px] shadow-editorial overflow-hidden bg-white w-full shrink-0 mb-6">
+                              <CardContent className="p-4 md:p-5">
+                                <div className="flex items-center justify-between gap-4 flex-wrap pb-3 border-b border-border/60">
+                                  <div className="flex items-center gap-3">
+                                    <div className="p-2.5 bg-primary-shadow text-primary-brand rounded-xl shrink-0">
+                                      <Sparkles className="h-5 w-5" />
+                                    </div>
+                                    <div className="text-start">
+                                      <div className="flex items-center gap-2">
+                                        <h3 className="text-[14px] font-bold text-dark-brand">
+                                          {todayOutfit
+                                            ? t('calendar.todayOutfit', { defaultValue: "Today's Scheduled Outfit" })
+                                            : t('stylist.todaySuggestionTitle', { defaultValue: "Today's Style Suggestion" })}
+                                        </h3>
+                                        <Badge variant="outline" className="text-[10px] font-semibold text-primary-brand border-primary-brand/30 bg-primary-shadow">
+                                          {new Date().toLocaleDateString(i18n.language || 'en', { month: 'short', day: 'numeric', year: 'numeric' })}
+                                        </Badge>
+                                        {todayOutfit && (
+                                          <Badge className="text-[10px] font-semibold bg-emerald-600 text-white border-none">
+                                            {t('calendar.scheduled', { defaultValue: 'Scheduled' })}
+                                          </Badge>
+                                        )}
+                                      </div>
+                                      <p className="text-xs text-text-brand mt-0.5">
+                                         {todayOutfit
+                                           ? (todayOutfit.description || getOutfitName(todayOutfit.name))
+                                           : ((activeProposal?.description && !activeProposal.description.includes('Curated based on your style profile'))
+                                               ? activeProposal.description
+                                               : t('stylist.todaySuggestionSubtitle', { defaultValue: 'Curated based on your style profile, weather conditions, and closet harmony.' }))}
+                                       </p>
+                                    </div>
+                                  </div>
+                                  <div className="flex items-center gap-2">
+                                    {todayOutfit ? (
+                                      <Button
+                                        size="sm"
+                                        onClick={() => setSelectedOutfitForDetail(todayOutfit)}
+                                        className="rounded-xl flex items-center gap-1.5 shadow-sm text-xs !bg-primary-brand text-white"
+                                      >
+                                        <Shirt className="!h-3.5 !w-3.5" />
+                                        <span>{t('stylist.viewOutfitDetails', { defaultValue: 'View Details' })}</span>
+                                      </Button>
+                                    ) : (
+                                      <>
+                                        <Button
+                                          size="sm"
+                                          variant="outline"
+                                          disabled={generatingDaily}
+                                          onClick={async () => {
+                                            setGeneratingDaily(true);
+                                            try {
+                                              await generateDailyProposalAction(true);
+                                              toast.success(t('stylist.suggestionRefreshed', { defaultValue: 'Refreshed today’s suggestion!' }));
+                                            } catch {
+                                              toast.error(t('common.error', { defaultValue: 'Failed to refresh' }));
+                                            } finally {
+                                              setGeneratingDaily(false);
+                                            }
+                                          }}
+                                          className="rounded-xl flex items-center gap-1.5 shadow-sm text-xs"
+                                        >
+                                          <RefreshCw className={cn("!h-3.5 !w-3.5", generatingDaily && "animate-spin")} />
+                                          <span>{t('stylist.refreshSuggestion', { defaultValue: 'New Look' })}</span>
+                                        </Button>
+                                        {activeProposal && (
+                                          <Button
+                                            size="sm"
+                                            onClick={async () => {
+                                              await handleSaveOutfitToDate(null, 0, todayDateStr, {
+                                                name: activeProposal.title || 'Look of the Day',
+                                                items: activeProposal.items,
+                                                isDailyProposal: true
+                                              });
+                                            }}
+                                            className="rounded-xl flex items-center gap-1.5 shadow-sm text-xs !bg-primary-brand text-white"
+                                          >
+                                            <CalendarPlus className="!h-3.5 !w-3.5" />
+                                            <span>{t('stylist.wearToday', { defaultValue: 'Wear Today' })}</span>
+                                          </Button>
+                                        )}
+                                      </>
+                                    )}
+                                  </div>
+                                </div>
+
+                                {/* Garments Preview row */}
+                                {(() => {
+                                  const itemsToRender = todayOutfit?.garments || activeProposal?.items || (todayNotifRecs[0]?.items) || [];
+                                  if (itemsToRender.length === 0) return null;
+                                  return (
+                                    <div className="pt-4 grid grid-cols-2 sm:grid-cols-4 gap-3">
+                                      {itemsToRender.map((g, idx) => {
+                                        const cid = g.closet_item_id || g.id;
+                                        const cItem = (closetItems || []).find(it => it && it.id === cid);
+                                        const img = resolveMediaUrl(bestImageUrl(cItem) || g.image_url || g.clean_image_url || cItem?.image_url);
+                                        return (
+                                          <div
+                                            key={idx}
+                                            className="flex items-center gap-2.5 p-2 rounded-xl bg-[var(--accent-beige)]/60 border border-border/40"
+                                          >
+                                            <div className="w-10 h-10 rounded-lg bg-white overflow-hidden flex items-center justify-center shrink-0 border border-border/40">
+                                              {img ? (
+                                                <img src={img} alt={g.name || g.title || ''} className="w-full h-full object-contain p-0.5" />
+                                              ) : (
+                                                <Shirt className="h-4 w-4 text-text-brand opacity-40" />
+                                              )}
+                                            </div>
+                                            <div className="min-w-0 text-start">
+                                              <div className="text-[10px] font-bold uppercase text-primary-brand">{labelForRole(g.role, t)}</div>
+                                              <div className="text-xs font-semibold text-dark-brand truncate">{g.name || g.title || cItem?.title || 'Garment'}</div>
+                                            </div>
+                                          </div>
+                                        );
+                                      })}
+                                    </div>
+                                  );
+                                })()}
+                              </CardContent>
+                            </Card>
+                          );
+                        })()}
                         {/* 2. Scheduled Outfits Monthly Calendar Grid */}
                         <Card className="border border-border rounded-[12px] shadow-editorial overflow-hidden bg-white w-full flex flex-col min-h-[480px] h-auto shrink-0">
                           <CardContent className="p-4 md:p-5 flex flex-col">
@@ -2642,11 +2803,11 @@ export default function Stylist() {
                 <Button size="xs" variant="outline" className="rounded-lg h-8 text-xs font-semibold px-3" onClick={handleJumpToToday}>
                   {t('calendar.todayBtn', { defaultValue: 'Today' })}
                 </Button>
-                <div className="flex items-center border border-border rounded-lg overflow-hidden h-8">
-                  <Button size="icon" variant="ghost" className="h-full w-8 rounded-none border-r border-border" onClick={handlePrevDay} aria-label={t('calendar.prevDayAria', { defaultValue: 'Previous day' })}>
+                <div className="flex items-center border border-border rounded-lg overflow-hidden h-10">
+                  <Button size="icon" variant="ghost" className="h-full w-11 min-w-[44px] rounded-none border-r border-border" onClick={handlePrevDay} aria-label={t('calendar.prevDayAria', { defaultValue: 'Previous day' })}>
                     <ChevronLeft className="h-4 w-4 rtl:rotate-180" />
                   </Button>
-                  <Button size="icon" variant="ghost" className="h-full w-8 rounded-none" onClick={handleNextDay} aria-label={t('calendar.nextDayAria', { defaultValue: 'Next day' })}>
+                  <Button size="icon" variant="ghost" className="h-full w-11 min-w-[44px] rounded-none" onClick={handleNextDay} aria-label={t('calendar.nextDayAria', { defaultValue: 'Next day' })}>
                     <ChevronRight className="h-4 w-4 rtl:rotate-180" />
                   </Button>
                 </div>
@@ -2756,6 +2917,43 @@ export default function Stylist() {
                   </div>
                 );
               })()}
+
+              {/* AI Daily Suggestions */}
+              {dailyRecommendations.length > 0 && (
+                <div className="space-y-3 mb-6 pb-6 border-b border-border">
+                  <h4 className="text-xs font-semibold text-primary-brand flex items-center gap-1.5 uppercase">
+                    <Sparkles className="h-3.5 w-3.5 text-primary-brand" />
+                    {t('calendar.dailyAISuggestions', { defaultValue: 'AI Daily Suggestions' })}
+                  </h4>
+                  <div className="grid grid-cols-2 gap-3">
+                    {dailyRecommendations.map((rec, idx) => (
+                      <div
+                        key={`daily-rec-${idx}`}
+                        onClick={async () => {
+                          const saved = await handleSaveOutfitToDate(rec.notifId, rec.recIndex, schedulingDate, rec);
+                          if (saved) {
+                            setSelectedOutfitForDetail(saved);
+                            setIsEditingOutfit(false);
+                          }
+                          setSchedulingDate(null);
+                        }}
+                        className="flex flex-col items-center p-2 rounded-xl border border-primary-brand/30 bg-primary-shadow hover:border-primary-brand cursor-pointer text-center group transition-all relative overflow-hidden"
+                      >
+                        <div className="w-full aspect-[4/5] bg-secondary/5 rounded-lg overflow-hidden relative shrink-0">
+                          <AvatarViewer
+                            shapeParams={user?.avatar_shape_params || {}}
+                            sex={user?.sex || 'female'}
+                            outfitItems={getRecommendationPiecesMap(rec, closetItems)}
+                          />
+                        </div>
+                        <div className="text-[11px] font-semibold truncate text-text-brand mt-2 w-full px-1">
+                          {rec.name}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               {/* List of saved outfits */}
               <div className="space-y-3">

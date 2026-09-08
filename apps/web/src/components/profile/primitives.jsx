@@ -13,6 +13,7 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import { fileToDataUrl } from '@/lib/profileImage';
+import { resolveMediaUrl } from '@/lib/itemImage';
 
 export function PhotoSlot({ label, value, onChange, testid }) {
   const { t } = useTranslation();
@@ -33,6 +34,8 @@ export function PhotoSlot({ label, value, onChange, testid }) {
     }
   };
 
+  const resolvedValue = resolveMediaUrl(value);
+
   return (
     <div
       className="rounded-2xl border border-border p-3 bg-secondary/40"
@@ -41,9 +44,9 @@ export function PhotoSlot({ label, value, onChange, testid }) {
       <div className="caps-label text-muted-foreground mb-2">{label}</div>
       <div className="flex items-center gap-3">
         <div className="relative h-20 w-20 rounded-xl overflow-hidden bg-background border border-border shrink-0">
-          {value ? (
+          {resolvedValue ? (
             <img
-              src={value}
+              src={resolvedValue}
               alt={label}
               className="h-full w-full object-cover"
             />

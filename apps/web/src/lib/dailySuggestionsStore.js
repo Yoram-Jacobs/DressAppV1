@@ -137,6 +137,9 @@ export const setProposalsDailySuggestions = dailySuggestionsStore.setProposals.b
 export const setNotificationsDailySuggestions = dailySuggestionsStore.setNotifications.bind(dailySuggestionsStore);
 export const setCalendarEventsDailySuggestions = dailySuggestionsStore.setCalendarEvents.bind(dailySuggestionsStore);
 
+export const actDailyProposal = dailySuggestionsStore.act.bind(dailySuggestionsStore);
+export const generateDailyProposal = dailySuggestionsStore.generate.bind(dailySuggestionsStore);
+
 export function useDailySuggestionsStore() {
   const snap = useSyncExternalStore(_subscribe, _getSnapshot, _getSnapshot);
 
@@ -146,5 +149,7 @@ export function useDailySuggestionsStore() {
     setProposals: setProposalsDailySuggestions,
     setNotifications: setNotificationsDailySuggestions,
     setCalendarEvents: setCalendarEventsDailySuggestions,
+    act: actDailyProposal,
+    generate: generateDailyProposal,
   };
 }

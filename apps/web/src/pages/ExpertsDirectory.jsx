@@ -38,6 +38,12 @@ const INITIAL_FILTERS = {
   q: '',
 };
 
+function getProfessionLabel(raw, t) {
+  if (!raw) return '';
+  const key = raw.toLowerCase().trim().replace(/[\s-]+/g, '_');
+  return t(`experts.professions.${key}`, { defaultValue: raw });
+}
+
 export default function ExpertsDirectory() {
   const { t } = useTranslation();
   const loc = useLocation?.();
@@ -194,7 +200,7 @@ export default function ExpertsDirectory() {
                     <div className="flex items-center justify-between mb-2 flex-wrap gap-2">
                       <h6 className="text-base font-extrabold text-[var(--dark-color)] mb-0 flex items-center gap-2">
                         <i className="fa-solid fa-sliders text-[var(--primary-color)] text-sm" />
-                        Filters
+                        {t('experts.filters.title', { defaultValue: 'Filters' })}
                       </h6>
                       {activeTab === 'experts' && (
                         <span
@@ -257,7 +263,7 @@ export default function ExpertsDirectory() {
                         />
                         <datalist id="experts-profession-suggestions">
                           {professions.map((p) => (
-                            <option key={p} value={p} />
+                            <option key={p} value={p} label={getProfessionLabel(p, t)} />
                           ))}
                         </datalist>
                       </div>
@@ -293,6 +299,7 @@ export default function ExpertsDirectory() {
                           value={draft.region}
                           onChange={(e) => setDraft({ ...draft, region: e.target.value })}
                           onKeyDown={(e) => e.key === 'Enter' && apply()}
+                          placeholder={t('experts.filters.region', { defaultValue: 'City or region' })}
                           className="
                             w-full h-[46px] rounded-xl border border-black/10 bg-[#fdfdfb]
                             px-3.5 text-sm text-[var(--dark-color)]
@@ -484,12 +491,12 @@ function ExpertCard({ expert }) {
         <div className="flex flex-wrap items-center justify-center gap-2 mb-3.5">
           {prof.profession && (
             <span className="inline-block bg-[var(--primary-shadow)] text-[var(--primary-color)] text-[11px] uppercase tracking-wide font-bold px-3.5 py-1 rounded-full">
-              {prof.profession}
+              {getProfessionLabel(prof.profession, t)}
             </span>
           )}
           {biz.name && (
             <span className="inline-block bg-[var(--primary-shadow)] text-[var(--primary-color)] text-[11px] uppercase tracking-wide font-bold px-3.5 py-1 rounded-full">
-              {biz.name}
+              {getProfessionLabel(biz.name, t)}
             </span>
           )}
         </div>

@@ -68,6 +68,37 @@ async def list_saved_outfits(
     db = get_db()
     cursor = db.outfits.find({"user_id": user["id"]}).sort([("created_at", -1)]).limit(limit)
     rows = [doc async for doc in cursor]
+
+    # Collect all closet_item_ids from the returned outfits to verify existence
+    item_ids = set()
+    for r in rows:
+        for g in r.get("garments", []):
+            cid = g.get("closet_item_id")
+            if cid:
+                item_ids.add(cid)
+
+    if item_ids:
+        existing_items = await db.closet_items.find(
+            {"id": {"$in": list(item_ids)}},
+            {"id": 1}
+        ).to_list(length=None)
+        existing_id_set = {it["id"] for it in existing_items}
+
+        for r in rows:
+            if "garments" in r:
+                r["garments"] = [
+                    g for g in r["garments"]
+                    if not g.get("closet_item_id") or g.get("closet_item_id") in existing_id_set
+                ]
+            if "items" in r:
+                r["items"] = [
+                    g for g in r["items"]
+                    if not g.get("closet_item_id") or g.get("closet_item_id") in existing_id_set
+                ]
+
+        # Only retain outfits that still have valid garments
+        rows = [r for r in rows if len(r.get("garments", [])) > 0]
+
     return {"outfits": [_safe_doc(r) for r in rows]}
 
 

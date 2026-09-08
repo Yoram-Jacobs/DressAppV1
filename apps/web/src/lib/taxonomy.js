@@ -66,8 +66,10 @@ export const labelForState = (code, t) => {
 
 export const labelForCondition = (code, t) => {
   if (!code) return '';
-  const key = `taxonomy.condition.${code}`;
-  return fallback(t, key, code);
+  const normalized = String(code).trim().toLowerCase().replace(/\s+/g, '_');
+  const key = `taxonomy.condition.${normalized}`;
+  const rawFallback = normalized.replace(/_/g, ' ');
+  return fallback(t, key, rawFallback);
 };
 
 export const labelForQuality = (code, t) => {
@@ -90,8 +92,19 @@ export const labelForFormality = (code, t) => {
 
 export const labelForIntent = (code, t) => {
   if (!code) return '';
-  const key = `taxonomy.intent.${code}`;
-  return fallback(t, key, code);
+  let normalized = String(code).trim().toLowerCase().replace(/\s+/g, '_');
+  if (normalized === 'keep') normalized = 'own';
+  if (normalized === 'sell') normalized = 'for_sale';
+  const map = {
+    own: 'Keep',
+    for_sale: 'For sale',
+    donate: 'Donate',
+    swap: 'Swap',
+    rent: 'Rent',
+  };
+  const key = `taxonomy.intent.${normalized}`;
+  const addItemKey = `addItem.intent_${normalized}`;
+  return fallback(t, key, fallback(t, addItemKey, map[normalized] || code));
 };
 
 export const labelForSource = (code, t) => {

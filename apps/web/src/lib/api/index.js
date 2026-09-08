@@ -16,6 +16,8 @@ import {
   calendar, misc, streamNdjson, sync, syncManager,
 } from '@dressapp/api-client';
 
+import { getBackendUrl } from './client.js';
+
 const STORAGE_TOKEN = 'dressapp.token';
 const STORAGE_USER  = 'dressapp.user';
 
@@ -33,7 +35,7 @@ const { client, API_BASE, tokenStore, userStore } = createApiClient({
       }
     } catch { /* ignore */ }
   },
-  backendUrl: (process.env.REACT_APP_BACKEND_URL || '').trim(),
+  backendUrl: getBackendUrl(),
 });
 
 // ============================================================

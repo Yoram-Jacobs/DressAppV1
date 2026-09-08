@@ -2,6 +2,7 @@ import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { AccordionItem, AccordionTrigger, AccordionContent } from '@/components/ui/accordion';
 import { Sparkles, Globe, Bookmark, Info } from 'lucide-react';
+import { toast } from 'sonner';
 
 export function ShoppingAssistant() {
   const { t } = useTranslation();
@@ -73,7 +74,7 @@ export function ShoppingAssistant() {
                 className="inline-flex items-center justify-center rounded-xl bg-emerald-600 px-4 py-2 text-xs font-semibold text-white shadow hover:bg-emerald-500 transition-colors cursor-grab"
                 onClick={(e) => {
                   e.preventDefault();
-                  alert(t('profile.bookmarkletInstruction', { defaultValue: "To use: Drag this button to your bookmarks bar. Click it on any store product page to get size recommendations." }));
+                  toast.info(t('profile.bookmarkletInstruction', { defaultValue: "To use: Drag this button to your bookmarks bar. Click it on any store product page to get size recommendations." }));
                 }}
               >
                 {t('profile.bookmarkletBtn', { defaultValue: 'DressApp Assistant' })}

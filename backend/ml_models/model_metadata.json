@@ -1,6 +1,6 @@
 {
   "model_version": "ansur2-gbr-v1",
-  "trained_at": "2026-07-19T08:22:52.864245+00:00",
+  "trained_at": "2026-09-07T13:25:20.765291+00:00",
   "dataset": "ANSUR II (2012) \u2014 US Army Anthropometric Survey",
   "n_train": 4854,
   "n_test": 1214,

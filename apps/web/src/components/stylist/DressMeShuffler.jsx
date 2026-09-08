@@ -817,11 +817,12 @@ export default function DressMeShuffler({ onSaveSuccess, onOpenCalendar }) {
           </div>
 
           {aiRationale && (
-            <div className="p-[16px_18px] rounded-2xl border border-[#e6dcf5] bg-[#f6f1fb] text-start">
-              <span className="text-[13px] font-bold text-[#7c4fd6] flex items-center gap-1.5 mb-1.5 before:content-['✨'] before:text-xs">
+            <div className="p-[16px_18px] rounded-2xl border border-accent/20 bg-accent/5 text-start">
+              <span className="text-[13px] font-bold text-accent flex items-center gap-1.5 mb-1.5">
+                <Sparkles className="h-3.5 w-3.5 text-accent shrink-0" />
                 {t('stylist.aiRationale', { defaultValue: "Stylist's Advice" })}
               </span>
-              <p className="text-[13.5px] text-[#33302e] font-medium leading-[1.65]">
+              <p className="text-[13.5px] text-foreground font-medium leading-[1.65]">
                 {aiRationale}
               </p>
             </div>
