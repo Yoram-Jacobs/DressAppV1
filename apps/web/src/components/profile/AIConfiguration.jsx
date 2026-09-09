@@ -143,62 +143,56 @@ export function AIConfiguration() {
   return (
     <AccordionItem
       value="ai-config"
-      className="border border-border/80 rounded-2xl bg-card overflow-hidden shadow-sm hover:shadow-[0_4px_20px_-4px_rgba(0,0,0,0.08)] transition-all duration-300"
+      className="p-3 border border-border rounded-[12px] bg-white overflow-hidden shadow-sm hover:shadow-[0_4px_20px_-4px_rgba(0,0,0,0.08)] hover:border-primary-brand hover:bg-primary-shadow transition-all duration-300"
       id="ai-configuration-section"
     >
-      <AccordionTrigger className="hover:no-underline px-5 py-4 focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-none">
+      <AccordionTrigger className="hover:no-underline focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-none py-0">
         <div className="flex items-center gap-4 text-start">
-          <div className="p-2.5 rounded-xl bg-[hsl(35_92%_95%)] text-[hsl(35_92%_52%)] dark:bg-[hsl(35_30%_18%)] dark:text-[hsl(35_92%_70%)] shrink-0 transition-transform duration-200">
+          <div className="p-2.5 rounded-full bg-[hsl(35_92%_95%)] text-[hsl(35_92%_52%)] dark:bg-[hsl(35_30%_18%)] dark:text-[hsl(35_92%_70%)] shrink-0 transition-transform duration-200">
             <Key className="h-5 w-5" />
           </div>
           <div>
-            <span className="text-sm font-semibold tracking-wide block text-foreground uppercase">
+            <span className="text-[13px] font-bold block text-dark-brand">
               {t('profile.aiConfig.title', { defaultValue: 'AI Configuration' })}
             </span>
-            <span className="text-[10px] text-muted-foreground font-normal block mt-0.5 normal-case">
+            <span className="text-[11px] text-text-brand font-semibold block normal-case">
               {t('profile.aiConfig.subtitle', { defaultValue: 'Manage your AI service providers and customize API keys.' })}
             </span>
           </div>
         </div>
       </AccordionTrigger>
-      
-      <AccordionContent className="px-5 pb-5 pt-3 border-t border-border/40 bg-secondary/5 space-y-4">
+      <AccordionContent className="border-t border-border space-y-4 pt-3 pb-0 mt-3">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-start">
           <div className="space-y-2">
-            <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              {t('profile.aiConfig.providerLabel', { defaultValue: 'Active Provider' })}
-            </Label>
+            <Label>{t('profile.aiConfig.providerLabel', { defaultValue: 'Active Provider' })}</Label>
             <Select
               value={activeProviderId}
               onValueChange={(val) => handleSaveConfig('custom_keys', null, val)}
               disabled={busy}
               dir={isRtl ? 'rtl' : 'ltr'}
             >
-              <SelectTrigger className="rounded-xl bg-card w-full">
+              <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent className="rounded-xl">
+              <SelectContent>
                 {PROVIDERS.map(p => (
                   <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </div>
-
           <div className="space-y-2">
-            <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              {t('profile.aiConfig.modelLabel', { defaultValue: 'Model Preference' })}
-            </Label>
+            <Label>{t('profile.aiConfig.modelLabel', { defaultValue: 'Model Preference' })}</Label>
             <Select
               value={activeModel}
               onValueChange={(val) => handleSaveConfig('custom_keys', null, null, val)}
               disabled={busy}
               dir={isRtl ? 'rtl' : 'ltr'}
             >
-              <SelectTrigger className="rounded-xl bg-card w-full">
+              <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent className="rounded-xl">
+              <SelectContent>
                 {activeProvider.models.map(m => (
                   <SelectItem key={m} value={m}>{m}</SelectItem>
                 ))}
@@ -206,10 +200,9 @@ export function AIConfiguration() {
             </Select>
           </div>
         </div>
-
-        <div className="p-4 rounded-2xl bg-card border border-border/50 space-y-3 shadow-sm text-start">
+        <div className="p-3 rounded-[12px] border border-border bg-yellow-shadow shadow-sm text-start">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-foreground flex items-center gap-2">
+            <span className="text-[14px] font-semibold text-dark-brand flex items-center gap-2">
               {t('profile.aiConfig.providerKeyLabel', { defaultValue: '{{providerName}} Key:', providerName: activeProvider.name })}
               {hasSelectedProviderKey ? (
                 <span className="inline-flex items-center gap-1 text-[10px] text-emerald-600 dark:text-emerald-400 font-medium">
@@ -225,7 +218,7 @@ export function AIConfiguration() {
             </span>
             <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
               <DialogTrigger asChild>
-                <Button variant="outline" size="xs" className="rounded-lg text-[10px] h-6 bg-secondary/50">
+                <Button className="text-[10px] h-6 px-3">
                   {hasSelectedProviderKey 
                     ? t('common.edit', { defaultValue: 'Edit' }) 
                     : t('profile.aiConfig.connectKey', { defaultValue: 'Connect Key' })}
@@ -237,13 +230,13 @@ export function AIConfiguration() {
                     <Key className="h-4 w-4 text-primary" />
                     {t('profile.aiConfig.modelSelectorTitleProvider', { defaultValue: 'Connect {{providerName}} Key', providerName: activeProvider.name })}
                   </DialogTitle>
-                  <DialogDescription className="text-xs text-muted-foreground">
+                  <DialogDescription className="text-xs text-text-brand">
                     {t('profile.aiConfig.setupInstructions', { defaultValue: 'Setting up your custom API key is easy! Follow these steps:' })}
                   </DialogDescription>
                 </DialogHeader>
                 
                 <div className="space-y-4 py-2">
-                  <div className="text-xs space-y-2 text-foreground/90 bg-secondary/25 p-3.5 rounded-xl border border-border/40">
+                  <div className="text-xs space-y-2 text-dark-brand/90 bg-secondary/25 p-3.5 rounded-xl border border-border/40">
                     <p>{steps.step1}</p>
                     <p>{steps.step2}</p>
                     <p>{steps.step3}</p>
@@ -284,7 +277,7 @@ export function AIConfiguration() {
               </DialogContent>
             </Dialog>
           </div>
-          <p className="text-[11px] text-muted-foreground leading-normal">
+          <p className="text-[12px] text-text-brand font-semibold italic">
             {t('profile.aiConfig.setupInstructions', { defaultValue: 'Configure your own developer key to run queries directly against your own account quota.' })}
           </p>
         </div>

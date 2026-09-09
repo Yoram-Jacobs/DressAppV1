@@ -15,20 +15,17 @@ const SEX_OPTIONS = ['female', 'male'];
 
 export function DemographicsSection({ form, setField, t, googleConnected, syncGoogleProfile, syncingGoogle }) {
   return (
-    <AccordionItem value="demographics" className="border border-border/80 rounded-2xl bg-card overflow-hidden shadow-sm hover:shadow-[0_4px_20px_-4px_rgba(0,0,0,0.08)] transition-all duration-300">
-      <AccordionTrigger
-        className="hover:no-underline px-5 py-4 focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-none"
-        data-testid="profile-accordion-demographics"
-      >
-        <div className="flex items-center gap-4 text-start w-full">
+    <AccordionItem value="demographics" className="p-3 border border-border rounded-[12px] bg-white overflow-hidden shadow-sm hover:shadow-[0_4px_20px_-4px_rgba(0,0,0,0.08)] hover:border-primary-brand hover:bg-primary-shadow transition-all duration-300">
+      <AccordionTrigger className="hover:no-underline focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-none py-0">
+        <div className="flex items-center gap-4 text-start">
           <div className="p-2.5 rounded-xl bg-[hsl(18_78%_94%)] text-[hsl(18_78%_56%)] dark:bg-[hsl(18_30%_18%)] dark:text-[hsl(18_78%_70%)] shrink-0 transition-transform duration-200">
             <Fingerprint className="h-5 w-5" />
           </div>
-          <div className="flex-1 min-w-0">
-            <span className="text-sm font-semibold tracking-wide block text-foreground uppercase">
+          <div>
+            <span className="text-[13px] font-bold block text-dark-brand">
               {t('profile.sections.demographics')}
             </span>
-            <span className="text-[10px] text-muted-foreground font-normal block mt-0.5 normal-case truncate max-w-[200px]">
+            <span className="text-[11px] text-text-brand font-semibold block normal-case">
               {t('profile.sections.demographicsDesc', { defaultValue: 'Gender, occupational background, and personal status' })}
             </span>
           </div>
@@ -54,27 +51,26 @@ export function DemographicsSection({ form, setField, t, googleConnected, syncGo
           )}
         </div>
       </AccordionTrigger>
-      <AccordionContent className="px-5 pb-5 pt-3 border-t border-border/40 bg-secondary/5">
+      <AccordionContent className="border-t border-border space-y-3 pt-3 pb-0 mt-3">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           <Field label={t('profile.sex')}>
             <Select
-               value={form.sex || ''}
-               onValueChange={(v) => setField('sex', v || '')}
-             >
-               <SelectTrigger
-                 className="rounded-xl bg-card"
-                 data-testid="profile-field-sex"
-               >
-                 <SelectValue />
-               </SelectTrigger>
-               <SelectContent>
-                 {SEX_OPTIONS.map((s) => (
-                   <SelectItem key={s} value={s}>
-                     {t(`profile.sex_${s}`)}
-                   </SelectItem>
-                 ))}
-               </SelectContent>
-             </Select>
+              value={form.sex || ''}
+              onValueChange={(v) => setField('sex', v || '')}
+            >
+              <SelectTrigger
+                data-testid="profile-field-sex"
+              >
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {SEX_OPTIONS.map((s) => (
+                  <SelectItem key={s} value={s}>
+                    {t(`profile.sex_${s}`)}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </Field>
           <Field label={t('profile.personalStatus')}>
             <Select
@@ -82,7 +78,6 @@ export function DemographicsSection({ form, setField, t, googleConnected, syncGo
               onValueChange={(v) => setField('personal_status', v || '')}
             >
               <SelectTrigger
-                className="rounded-xl bg-card"
                 data-testid="profile-field-personal_status"
               >
                 <SelectValue />
@@ -109,7 +104,6 @@ export function DemographicsSection({ form, setField, t, googleConnected, syncGo
               })}
               maxLength={80}
               autoComplete="organization-title"
-              className="rounded-xl bg-card"
               data-testid="profile-field-occupation"
             />
           </Field>

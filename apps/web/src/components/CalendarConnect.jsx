@@ -82,17 +82,17 @@ export const CalendarConnect = () => {
   return (
     <AccordionItem
       value="calendar"
-      className="border border-border/80 rounded-2xl bg-card overflow-hidden shadow-sm hover:shadow-[0_4px_20px_-4px_rgba(0,0,0,0.08)] transition-all duration-300"
+      className="p-3 border border-border rounded-[12px] bg-white overflow-hidden shadow-sm hover:shadow-[0_4px_20px_-4px_rgba(0,0,0,0.08)] hover:border-primary-brand hover:bg-primary-shadow transition-all duration-300"
       data-testid="calendar-connect-card"
     >
-      <AccordionTrigger className="hover:no-underline px-5 py-4 focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-none">
+      <AccordionTrigger className="hover:no-underline focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-none py-0">
         <div className="flex items-center gap-4 text-start">
           <div className="p-2.5 rounded-xl bg-[hsl(217_91%_95%)] text-[hsl(217_91%_56%)] dark:bg-[hsl(217_30%_18%)] dark:text-[hsl(217_91%_70%)] shrink-0 transition-transform duration-200">
             <Calendar className="h-5 w-5" />
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <span className="text-sm font-semibold tracking-wide block text-foreground uppercase">
+              <span className="text-[13px] font-bold block text-dark-brand">
                 {t('calendar.title', { defaultValue: 'Google Calendar' })}
               </span>
               {loading ? null : status.connected ? (
@@ -113,25 +113,25 @@ export const CalendarConnect = () => {
                 </Badge>
               )}
             </div>
-            <span className="text-[10px] text-muted-foreground font-normal block mt-0.5 normal-case">
+            <span className="text-[11px] text-text-brand font-semibold block normal-case">
               {t('calendar.description', { defaultValue: 'Sync daily outfit proposals directly to your Google Calendar' })}
             </span>
           </div>
         </div>
       </AccordionTrigger>
-      <AccordionContent className="px-5 pb-5 pt-3 border-t border-border/40 bg-secondary/5">
+      <AccordionContent className="border-t border-border space-y-3 pt-4 pb-0 mt-3">
         <div className="space-y-3">
           {status.connected && status.google_email ? (
             <div
-              className="text-xs text-muted-foreground text-start"
+              className="text-[12px] font-semibold text-text-brand text-start"
               data-testid="calendar-connected-email"
             >
-              {t('calendar.signedInAs')} <span className="font-medium text-foreground">{status.google_email}</span>
+              {t('calendar.signedInAs')} <span className="font-bold text-dark-brand">{status.google_email}</span>
             </div>
           ) : null}
 
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-1">
-            <p className="text-xs text-muted-foreground max-w-md text-start">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
+            <p className="text-[12px] font-semibold text-text-brand ">
               {t('calendar.offlineHint', { defaultValue: 'Connect your Google account to automatically export styled outfits as calendar events.' })}
             </p>
             <div className="shrink-0 w-full sm:w-auto">
@@ -144,14 +144,14 @@ export const CalendarConnect = () => {
                   variant="outline"
                   disabled={busy}
                   onClick={disconnect}
-                  className="rounded-xl w-full sm:w-auto bg-card"
+                  className="!gap-1"
                   data-testid="calendar-disconnect-button"
                 >
                   {busy ? (
                     <Loader2 className="h-4 w-4 animate-spin" />
                   ) : (
                     <>
-                      <Unlink className="h-4 w-4 me-2" /> {t('calendar.disconnectAction')}
+                      <Unlink className="!h-3 !w-3" /> {t('calendar.disconnectAction')}
                     </>
                   )}
                 </Button>
@@ -159,14 +159,14 @@ export const CalendarConnect = () => {
                 <Button
                   disabled={busy}
                   onClick={connect}
-                  className="rounded-xl w-full sm:w-auto"
                   data-testid="calendar-connect-button"
+                  className="!gap-1"
                 >
                   {busy ? (
                     <Loader2 className="h-4 w-4 animate-spin" />
                   ) : (
                     <>
-                      <LinkIcon className="h-4 w-4 me-2" /> {t('calendar.connectAction')}
+                      <LinkIcon className="!h-3 !w-3" /> {t('calendar.connectAction')}
                     </>
                   )}
                 </Button>

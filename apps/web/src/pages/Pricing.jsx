@@ -6,26 +6,21 @@ import { toast } from 'sonner';
 import { useAuth } from '@/lib/auth';
 import { Loader2, AlertTriangle,Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-
 import { QuotaMonitor } from '@/components/pricing/QuotaMonitor';
 import { PricingDisplay } from '@/components/pricing/PricingDisplay';
 import PricingBanner from '../assets/img/inner6.webp';
-
 export default function Pricing() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
   const { user } = useAuth();
-
   const [pricingData, setPricingData] = useState(null);
   const [quotaStatus, setQuotaStatus] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isAnnual, setIsAnnual] = useState(false);
-
   const [subBusy, setSubBusy] = useState(false);
   const [searchParams, setSearchParams] = useSearchParams();
-
   // Fetch comprehensive pricing information and quota status on mount
   useEffect(() => {
     const fetchPricingData = async () => {
@@ -42,7 +37,6 @@ export default function Pricing() {
         setLoading(false);
       }
     };
-
     fetchPricingData();
   }, []);
 
@@ -126,8 +120,8 @@ export default function Pricing() {
   if (loading) {
     return (
       <div className="min-h-[60vh] flex flex-col items-center justify-center gap-4">
-        <Loader2 className="h-8 w-8 animate-spin text-[hsl(var(--accent))]" />
-        <p className="text-sm text-muted-foreground animate-pulse">
+        <Loader2 className="h-8 w-8 animate-spin text-primary-brand" />
+        <p className="text-sm text-text-brand animate-pulse">
           {t('common.loading', { defaultValue: 'Loading pricing plans...' })}
         </p>
       </div>
@@ -146,12 +140,10 @@ export default function Pricing() {
       </div>
     );
   }
-
   const currentPlanName = pricingData?.pricing_plan?.plan_type || 'free';
-
   return (
     <>
-      {/* Banner Section — same as Privacy page, content pricing ke liye */}
+      {/* Banner Section */}
       <section
         className="
           relative isolate overflow-hidden
@@ -216,7 +208,7 @@ export default function Pricing() {
           </div>
         </div>
       </section>
-      <div className="px-[40px] py-[80px] bg-accent-beige">
+      <section className="px-[40px] py-[40px] bg-accent-beige">
         {/* Rest of the page content wrapped with side padding */}
           {/* Pricing and tier display selection */}
           <PricingDisplay
@@ -232,7 +224,7 @@ export default function Pricing() {
             quotaStatus={quotaStatus}
             pricingData={pricingData}
           />
-      </div>
+      </section>
     </>
   );
 }

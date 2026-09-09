@@ -22,20 +22,17 @@ export function ContactSection({
   syncingGoogle,
 }) {
   return (
-    <AccordionItem value="contact" className="border border-border/80 rounded-2xl bg-card overflow-hidden shadow-sm hover:shadow-[0_4px_20px_-4px_rgba(0,0,0,0.08)] transition-all duration-300">
-      <AccordionTrigger
-        className="hover:no-underline px-5 py-4 focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-none"
-        data-testid="profile-accordion-contact"
-      >
-        <div className="flex items-center gap-4 text-start w-full">
+    <AccordionItem value="contact" className="p-3 border border-border rounded-[12px] bg-white overflow-hidden shadow-sm hover:shadow-[0_4px_20px_-4px_rgba(0,0,0,0.08)] hover:border-primary-brand hover:bg-primary-shadow transition-all duration-300">
+      <AccordionTrigger className="hover:no-underline focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-none py-0">
+        <div className="flex items-center gap-4 text-start">
           <div className="p-2.5 rounded-xl bg-[hsl(174_44%_93%)] text-[hsl(174_44%_33%)] dark:bg-[hsl(174_30%_18%)] dark:text-[hsl(174_44%_60%)] shrink-0 transition-transform duration-200">
             <MapPin className="h-5 w-5" />
           </div>
           <div className="flex-1 min-w-0">
-            <span className="text-sm font-semibold tracking-wide block text-foreground uppercase">
+            <span className="text-[13px] font-bold block text-dark-brand">
               {t('profile.sections.contact')}
             </span>
-            <span className="text-[10px] text-muted-foreground font-normal block mt-0.5 normal-case truncate max-w-[200px]">
+            <span className="text-[11px] text-text-brand font-semibold block normal-case">
               {t('profile.sections.contactDesc', { defaultValue: 'Phone number, delivery address, and localization' })}
             </span>
           </div>
@@ -61,7 +58,7 @@ export function ContactSection({
           )}
         </div>
       </AccordionTrigger>
-      <AccordionContent className="px-5 pb-5 pt-3 border-t border-border/40 bg-secondary/5">
+      <AccordionContent className="border-t border-border space-y-3 pt-3 pb-0 mt-3">
         {googleConnected && !(form.phone || form.address.line1 || form.address.city) && (
           <div className="flex items-center gap-2 p-3 rounded-xl bg-[hsl(217_91%_97%)] dark:bg-[hsl(217_30%_15%)] border border-[hsl(217_91%_85%)] dark:border-[hsl(217_30%_25%)] mb-3">
             <Sparkles className="h-4 w-4 text-[hsl(217_91%_56%)] shrink-0" />
@@ -70,7 +67,7 @@ export function ContactSection({
             </span>
           </div>
         )}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-3 gap-y-2">
           <Field label={t('profile.phone')} htmlFor="f-phone">
             <Input
               id="f-phone"
@@ -78,7 +75,6 @@ export function ContactSection({
               value={form.phone}
               onChange={(e) => setField('phone', e.target.value)}
               placeholder={t('profile.phonePlaceholder')}
-              className="rounded-xl bg-card"
               data-testid="profile-field-phone"
             />
           </Field>
@@ -116,7 +112,6 @@ export function ContactSection({
               value={form.address.line2}
               onChange={(e) => setNested('address', 'line2', e.target.value)}
               autoComplete="address-line2"
-              className="rounded-xl bg-card"
             />
           </Field>
           <Field label={t('profile.city')} htmlFor="f-city">
@@ -152,7 +147,6 @@ export function ContactSection({
               value={form.address.region}
               onChange={(e) => setNested('address', 'region', e.target.value)}
               autoComplete="address-level1"
-              className="rounded-xl bg-card"
             />
           </Field>
           <Field label={t('profile.postalCode')} htmlFor="f-zip">
@@ -161,7 +155,6 @@ export function ContactSection({
               value={form.address.postal_code}
               onChange={(e) => setNested('address', 'postal_code', e.target.value)}
               autoComplete="postal-code"
-              className="rounded-xl bg-card"
             />
           </Field>
           <Field label={t('profile.country')} htmlFor="f-country">

@@ -93,19 +93,18 @@ export function SubscriptionSettings() {
   return (
     <AccordionItem
       value="subscription"
-      className="border border-border/80 rounded-2xl bg-card overflow-hidden shadow-sm hover:shadow-[0_4px_20px_-4px_rgba(0,0,0,0.08)] transition-all duration-300"
-    >
-      <AccordionTrigger className="hover:no-underline px-5 py-4 focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-none">
+      className="p-3 border border-border rounded-[12px] bg-white overflow-hidden shadow-sm hover:shadow-[0_4px_20px_-4px_rgba(0,0,0,0.08)] hover:border-primary-brand hover:bg-primary-shadow transition-all duration-300">
+      <AccordionTrigger className="hover:no-underline focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-none py-0">
         <div className="flex items-center gap-4 text-start">
           <div className="p-2.5 rounded-xl bg-[hsl(47_95%_90%)] text-[hsl(47_95%_40%)] dark:bg-[hsl(47_30%_18%)] dark:text-[hsl(47_95%_70%)] shrink-0 transition-transform duration-200">
             <Crown className="h-5 w-5" />
           </div>
           <div>
-            <span className="text-sm font-semibold tracking-wide block text-foreground uppercase">
+            <span className="text-[13px] font-bold block text-dark-brand">
               {t('profile.subscription', { defaultValue: 'Subscription & Limits' })}
             </span>
-            <span className="text-[10px] text-muted-foreground font-normal block mt-0.5 normal-case">
-              {userTier !== 'free' 
+            <span className="text-[11px] text-text-brand font-semibold block normal-case">
+              {userTier !== 'free'
                 ? t('profile.subActiveSummary', { defaultValue: 'Active: {{plan}} plan (Expires: {{date}})', plan: userTier.toUpperCase(), date: expiresAt })
                 : t('profile.subFreeSummary', { defaultValue: 'Free Plan: {{count}} / {{capacity}} items used', count: closetCount, capacity: capacity })
               }
@@ -113,28 +112,26 @@ export function SubscriptionSettings() {
           </div>
         </div>
       </AccordionTrigger>
-      <AccordionContent className="px-5 pb-5 pt-3 border-t border-border/40 bg-secondary/5 space-y-4">
+      <AccordionContent className="border-t border-border space-y-4 pt-3 pb-0 mt-3">
         {userTier !== 'free' ? (
           <div className="space-y-3 text-start">
-            <div className="p-4 rounded-xl border border-[hsl(47_95%_80%)] bg-[hsl(47_95%_97%)] dark:bg-[hsl(47_30%_12%)] dark:border-[hsl(47_30%_25%)] flex items-center justify-between">
+            <div className="p-4 rounded-[12px] border border-[hsl(47_95%_80%)] bg-[hsl(47_95%_97%)] dark:bg-[hsl(47_30%_12%)] dark:border-[hsl(47_30%_25%)] flex items-center justify-between">
               <div>
-                <h4 className="font-semibold text-foreground flex items-center gap-1.5">
+                <h4 className="font-bold text-dark-brand text-[14px] flex items-center gap-1.5 mb-1">
                   <Crown className="h-4 w-4 text-[hsl(47_95%_50%)]" /> {t('profile.planTitle', { defaultValue: 'DressApp {{tier}} ({{plan}})', tier: userTier.toUpperCase(), plan: planType.toUpperCase() })}
                 </h4>
-                <p className="text-xs text-muted-foreground mt-0.5">
+                <p className="text-xs text-text-brand font-semibold">
                   {t('profile.renewalDate', { defaultValue: 'Renewal date: {{date}}', date: expiresAt })}
                 </p>
               </div>
-              <Badge className="bg-[hsl(47_95%_45%)] text-white dark:bg-[hsl(47_95%_35%)]">{t('profile.statusActive', { defaultValue: 'Active' })}</Badge>
+              <Badge className="bg-[hsl(47_95%_45%)] text-white hover:!bg-dark-brand dark:bg-[hsl(47_95%_35%)]">{t('profile.statusActive', { defaultValue: 'Active' })}</Badge>
             </div>
-            
-            <p className="text-xs text-muted-foreground">
-              {userTier === 'professional' 
+            <p className="text-[12px] text-text-brand font-semibold italic">
+              {userTier === 'professional'
                 ? t('profile.professionalPlanBenefits', { defaultValue: 'You have unlimited closet slots, unlimited daily requests, full marketplace access, and active ad campaign management.' })
                 : t('profile.managerPlanBenefits', { defaultValue: 'You have unlimited closet slots, unlimited daily requests, and full marketplace access.' })}
             </p>
-
-            <div className="pt-2 flex justify-end">
+            <div className="flex justify-end">
               <Button
                 variant="destructive"
                 size="sm"
@@ -142,20 +139,20 @@ export function SubscriptionSettings() {
                 disabled={busy}
                 className="rounded-xl"
               >
-                {busy && <Loader2 className="h-4 w-4 animate-spin me-2" />}
+                {busy && <Loader2 className="h-4 w-4 animate-spin" />}
                 {t('profile.cancelSubBtn', { defaultValue: 'Cancel Subscription' })}
               </Button>
             </div>
           </div>
         ) : (
-          <div className="space-y-4 text-start">
+          <div className="space-y-3 text-start">
             <div className="space-y-1">
-              <div className="flex justify-between text-xs text-foreground font-medium mb-1">
+              <div className="flex justify-between text-xs text-dark-brand font-medium mb-1">
                 <span>{t('profile.closetCapacity', { defaultValue: 'Closet Capacity' })}</span>
                 <span>{t('profile.closetCapacityItems', { defaultValue: '{{count}} / {{capacity}} items', count: closetCount, capacity: capacity })}</span>
               </div>
               <div className="h-2 bg-border rounded-full overflow-hidden">
-                <div 
+                <div
                   className="h-full bg-primary transition-all duration-300"
                   style={{ width: `${Math.min(100, (closetCount / capacity) * 100)}%` }}
                 />
@@ -166,12 +163,10 @@ export function SubscriptionSettings() {
                 </p>
               )}
             </div>
-
             <Separator className="my-2" />
-
             <div className="flex flex-col gap-4 pt-1">
-              <Link 
-                to="/pricing#tiers" 
+              <Link
+                to="/pricing#tiers"
                 className="flex-1 flex items-center justify-between p-4 rounded-xl border border-border bg-card hover:bg-secondary/10 transition-colors group"
               >
                 <div className="flex items-center gap-3">
@@ -179,10 +174,10 @@ export function SubscriptionSettings() {
                     <Crown className="h-5 w-5" />
                   </div>
                   <div className="text-start">
-                    <span className="font-semibold text-sm block text-foreground">
+                    <span className="font-semibold text-sm block text-dark-brand">
                       {t('profile.selectYourPlan', { defaultValue: 'Select your plan' })}
                     </span>
-                    <span className="text-xs text-muted-foreground block mt-0.5">
+                    <span className="text-xs text-text-brand block mt-0.5">
                       {t('profile.selectYourPlanDesc', { defaultValue: 'Choose a monthly or annual subscription tier.' })}
                     </span>
                   </div>

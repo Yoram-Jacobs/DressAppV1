@@ -116,12 +116,12 @@ export const TopNav = () => {
           <Button
             variant="ghost"
             size="icon"
-            className="rounded-full h-10 w-10 text-muted-foreground hover:text-[var(--primary-color)] hover:bg-secondary/60 transition-colors"
+            className="rounded-full h-10 w-10 text-dark-brand hover:text-primary-brand hover:bg-priamry-shadow transition-colors"
             onClick={() => setHelpOpen(true)}
             data-testid="topnav-help-button"
             aria-label="Open Help Menu"
           >
-            <HelpCircle className="h-5 w-5" />
+            <HelpCircle className="!h-[30px] !w-[30px]" />
           </Button>
 
           {/* User Dropdown */}
@@ -130,7 +130,7 @@ export const TopNav = () => {
               <Button
                 variant="ghost"
                 aria-label={t('nav.openUserMenu')}
-                className="h-10 w-10 overflow-hidden rounded-full p-0 border border-border/80 focus-visible:ring-2 focus-visible:ring-[var(--primary-color)]"
+                className="h-[35px] w-[35px] overflow-hidden rounded-full p-0 border border-border focus-visible:ring-2 focus-visible:ring-[var(--primary-color)]"
                 data-testid="topnav-avatar-button"
               >
                 <NavAvatar user={user} initials={initials} testId="topnav-avatar-img" />
@@ -140,14 +140,14 @@ export const TopNav = () => {
             <DropdownMenuContent align="end" className="w-56">
               {/* User Info */}
               <div className="flex items-center gap-3 px-3 py-2.5 text-sm">
-                <div className="h-9 w-9 shrink-0 overflow-hidden rounded-full border border-border/80">
+                <div className="h-9 w-9 shrink-0 overflow-hidden rounded-full border border-border">
                   <NavAvatar user={user} initials={initials} className="h-9 w-9" imgClassName="h-9 w-9 rounded-full object-cover" />
                 </div>
                 <div className="min-w-0 flex-1">
                   <div className="truncate text-sm font-bold text-foreground">
                     {user?.display_name || t('nav.guest')}
                   </div>
-                  <div className="truncate text-xs text-muted-foreground">
+                  <div className="truncate text-xs text-text-brand">
                     {user?.email}
                   </div>
                 </div>
@@ -159,7 +159,7 @@ export const TopNav = () => {
                 onClick={() => nav('/transactions')}
                 data-testid="topnav-menu-transactions"
               >
-                <Receipt className="h-4 w-4 me-2" />
+                <Receipt className="h-4 w-4" />
                 {t('nav.transactions')}
               </DropdownMenuItem>
 
@@ -168,7 +168,7 @@ export const TopNav = () => {
                   onClick={() => nav('/ads')}
                   data-testid="topnav-menu-ads"
                 >
-                  <Megaphone className="h-4 w-4 me-2" />
+                  <Megaphone className="h-4 w-4" />
                   {t('nav.ads')}
                 </DropdownMenuItem>
               )}
@@ -178,7 +178,7 @@ export const TopNav = () => {
                   onClick={() => nav('/admin')}
                   data-testid="topnav-menu-admin"
                 >
-                  <Shield className="h-4 w-4 me-2" />
+                  <Shield className="h-4 w-4" />
                   {t('nav.admin')}
                 </DropdownMenuItem>
               )}
@@ -187,7 +187,7 @@ export const TopNav = () => {
                 onClick={() => nav('/me')}
                 data-testid="topnav-menu-settings"
               >
-                <Settings className="h-4 w-4 me-2" />
+                <Settings className="h-4 w-4" />
                 {t('nav.settings')}
               </DropdownMenuItem>
 
@@ -200,8 +200,8 @@ export const TopNav = () => {
                 }}
                 data-testid="topnav-menu-logout"
               >
-                <LogOut className="h-4 w-4 me-2 text-destructive" />
-                <span className="text-destructive font-medium">{t('nav.signOut')}</span>
+                <LogOut className="h-4 w-4 text-destructive" />
+                <span className="text-destructive">{t('nav.signOut')}</span>
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -224,7 +224,7 @@ export const TopNav = () => {
           <Button
             variant="ghost"
             size="icon"
-            className="h-9 w-9 rounded-full p-0 text-muted-foreground hover:bg-secondary/60 hover:text-foreground"
+            className="h-9 w-9 rounded-full p-0 text-dark-brand hover:text-primary-brand hover:bg-priamry-shadow"
             onClick={() => setHelpOpen(true)}
             data-testid="mobile-help-button"
             aria-label="Open Help Menu"
@@ -246,7 +246,7 @@ export const TopNav = () => {
             <DropdownMenuContent align="end" className="w-52">
               <div className="px-3 py-2 text-xs">
                 <div className="font-bold truncate">{user?.display_name || t('nav.guest')}</div>
-                <div className="text-muted-foreground truncate">{user?.email}</div>
+                <div className="text-text-brand truncate">{user?.email}</div>
               </div>
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={() => nav('/me')}>
