@@ -74,7 +74,7 @@ import { api } from '@/lib/api';
 import { useClosetStore } from '@/lib/useClosetStore';
 import { closetStore } from '@/lib/closetStore';
 import { workStore } from '@/lib/workStore';
-import { bestImageUrl, getStoredViewPreference, setStoredViewPreference } from '@/lib/itemImage';
+import { bestImageUrl, resolveMediaUrl, getStoredViewPreference, setStoredViewPreference } from '@/lib/itemImage';
 import {
   labelForCategory,
   labelForDressCode,
@@ -1416,18 +1416,21 @@ export default function ItemDetail() {
   // reconstruction layer so they can compare the un-restyled photo;
   // every other field (clean rembg PNG / segmented JPG / raw original)
   // still falls back in the canonical order.
-  const preferredImage = showingOriginal
-    ? (
-      (mergedItem.clean_image_url && mergedItem.clean_image_url !== mergedItem.reconstructed_image_url ? mergedItem.clean_image_url : null) ||
-      mergedItem.image_variants?.original ||
-      mergedItem.image_variants?.webp?.large ||
-      mergedItem.cutout_url ||
-      mergedItem.segmented_image_url ||
-      bestImageUrl(mergedItem, { skipReconstruction: true }) ||
-      mergedItem.clean_image_url ||
-      mergedItem.original_image_url
-    )
-    : (mergedItem.reconstructed_image_url || bestImageUrl(mergedItem, { skipReconstruction: false }));
+  const preferredImage = resolveMediaUrl(
+    showingOriginal
+      ? (
+        (mergedItem.clean_image_url && mergedItem.clean_image_url !== mergedItem.reconstructed_image_url ? mergedItem.clean_image_url : null) ||
+        mergedItem.image_variants?.original ||
+        mergedItem.image_variants?.webp?.large ||
+        mergedItem.cutout_url ||
+        mergedItem.segmented_image_url ||
+        bestImageUrl(mergedItem, { skipReconstruction: true }) ||
+        mergedItem.clean_image_url ||
+        mergedItem.original_image_url ||
+        mergedItem.reconstructed_image_url
+      )
+      : (mergedItem.reconstructed_image_url || bestImageUrl(mergedItem, { skipReconstruction: false }))
+  );
   // "Repair photo" CTA visibility:
   //   • the one-pass /analyze response asked us to advise it
   //     (``reconstruction_advised: true``), AND
@@ -2019,7 +2022,7 @@ export default function ItemDetail() {
                   {item.variants.map((v, i) => (
                     <a key={i} href={v.url} target="_blank" rel="noreferrer" className="flex-shrink-0 w-28">
                       <div className="aspect-[3/4] rounded-xl overflow-hidden border border-border">
-                        <img src={v.url} alt={v.prompt} className="w-full h-full object-cover" />
+                        <img src={resolveMediaUrl(v.url)} alt={v.prompt} className="w-full h-full object-cover" />
                       </div>
                       <div className="text-[11px] text-text-brand mt-1 truncate">{v.prompt}</div>
                     </a>
@@ -2152,7 +2155,7 @@ export default function ItemDetail() {
                                 <div className="bg-accent-beige rounded-[12px] p-3 space-y-2 flex items-center justify-center flex-col">
                                   <div className="relative aspect-square max-h-48 w-full overflow-hidden">
                                     <img
-                                      src={msg.image_url}
+                                      src={resolveMediaUrl(msg.image_url)}
                                       alt="Reconstructed preview"
                                       className="h-full w-full object-contain"
                                     />
