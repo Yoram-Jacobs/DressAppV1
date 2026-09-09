@@ -61,7 +61,8 @@ export function PricingDisplay({
   subBusy,
   handleUpgrade
 }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const isRtl = i18n.dir() === 'rtl';
 
   const getLocalizedFeature = (feature) => {
     const key = featureKeys[feature];
@@ -156,7 +157,7 @@ export function PricingDisplay({
               layout
               transition={{ type: 'spring', stiffness: 500, damping: 30 }}
               className="h-4 w-4 bg-[hsl(var(--accent))] rounded-full shadow-sm"
-              animate={{ x: isAnnual ? 24 : 0 }}
+              animate={{ x: isAnnual ? (isRtl ? -24 : 24) : 0 }}
             />
           </button>
           <span className={`text-xs font-semibold flex items-center gap-1.5 ${isAnnual ? 'text-primary' : 'text-text-brand'}`}>
