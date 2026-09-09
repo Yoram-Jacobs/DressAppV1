@@ -3,8 +3,8 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
-    "@dressapp/api-client": "*",
-    "@dressapp/i18n": "*",
+    "@dressapp/api-client": "file:../../packages/api-client",
+    "@dressapp/i18n": "file:../../packages/i18n",
     "@hookform/resolvers": "^5.0.1",
     "@paypal/react-paypal-js": "^9.1.1",
     "@radix-ui/react-accordion": "^1.2.8",
