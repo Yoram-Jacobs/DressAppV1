@@ -50,7 +50,6 @@ const DeleteAccount = lazy(() => import('@/pages/DeleteAccount'));
 const Privacy = lazy(() => import('@/pages/Privacy'));
 const TermsOfService = lazy(() => import('@/pages/TermsOfService'));
 const Pricing = lazy(() => import('@/pages/Pricing'));
-const MockAtzmaiPayment = lazy(() => import('@/pages/MockAtzmaiPayment'));
 
 /** Global listener for migration postMessage events from the bookmarklet popup. */
 function MigrationMessageListener() {
@@ -117,7 +116,6 @@ function App() {
                     <Route path="/login" element={<PublicOnly><Login /></PublicOnly>} />
                     <Route path="/register" element={<PublicOnly><Register /></PublicOnly>} />
                     <Route path="/auth/callback" element={<AuthCallback />} />
-                    <Route path="/mock-atzmai-payment-link" element={<MockAtzmaiPayment />} />
                     
                     {/* Extension bridge route */}
                     <Route path="/extension/connect" element={<ExtensionConnect />} />

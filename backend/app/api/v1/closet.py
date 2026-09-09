@@ -59,6 +59,15 @@ from app.services.image_compression import (
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/closet", tags=["closet"])
 
+# Retain strong references to background asyncio tasks to prevent premature GC
+_active_background_tasks: set[asyncio.Task] = set()
+
+
+def _track_task(task: asyncio.Task) -> asyncio.Task:
+    _active_background_tasks.add(task)
+    task.add_done_callback(_active_background_tasks.discard)
+    return task
+
 # Process-wide guard around the heavy analyze pipeline (SegFormer +
 # Gemini API calls). Historically this was a hard Semaphore(1) because
 # rembg ran INSIDE ``/analyze`` and two concurrent onnxruntime sessions
@@ -2224,7 +2233,7 @@ async def save_migration_crops(
             limit=500,
         )
 
-        asyncio.create_task(_run_reanalyze_items(saved_items, user, job_id, db))
+        _track_task(asyncio.create_task(_run_reanalyze_items(saved_items, user, job_id, db)))
 
     return {
         "items_saved": saved,
@@ -2272,7 +2281,7 @@ async def reanalyze_by_brand(
         "items": [],
     }
 
-    asyncio.create_task(_run_reanalyze_items(items, user, job_id, db))
+    _track_task(asyncio.create_task(_run_reanalyze_items(items, user, job_id, db)))
     return {"job_id": job_id, "total_items": len(items)}
 
 
@@ -2421,7 +2430,7 @@ async def list_items(
             logger.debug("Background thumbnail backfill skipped: %s", exc)
 
     import asyncio as _asyncio
-    _asyncio.create_task(_async_backfill())
+    _track_task(_asyncio.create_task(_async_backfill()))
 
     _HEAVY_FIELDS = (
         "clip_embedding",

@@ -1,4 +1,5 @@
 import logging
+import secrets
 import uuid
 from datetime import datetime, timezone
 from typing import Any, Literal, Optional
@@ -98,7 +99,8 @@ async def create_atzmai_topup(
 
     # Resolve callback and redirect URLs dynamically
     base_url = str(req.base_url).rstrip("/")
-    callback_url = f"{base_url}/api/v1/atzmai/webhook"
+    webhook_token = secrets.token_urlsafe(32)
+    callback_url = f"{base_url}/api/v1/atzmai/webhook?token={webhook_token}"
     
     # Redirect URL using settings.APP_PUBLIC_URL
     redirect_url = f"{settings.APP_PUBLIC_URL}/profile"
@@ -166,6 +168,7 @@ async def create_atzmai_topup(
     topup_doc = {
         "id": topup_id,
         "atzmai_payment_id": atzmai_payment_id,
+        "webhook_token": webhook_token,
         "user_id": user["id"],
         "amount_cents": amount_cents,
         "currency": currency,
@@ -201,15 +204,46 @@ async def get_atzmai_topup_status(
     return doc
 
 @router.post("/webhook")
-async def atzmai_webhook(payload: AtzmaiCallbackPayload) -> dict[str, Any]:
+async def atzmai_webhook(
+    payload: AtzmaiCallbackPayload,
+    req: Request,
+    token: Optional[str] = None,
+) -> dict[str, Any]:
     db = get_db()
     atzmai_payment_id = payload.atzmai_payment_id
     logger.info(f"Atzmai webhook received for payment ID {atzmai_payment_id}, payload: {payload.model_dump()}")
     
+    # 1. Immediate token/signature check upfront
+    incoming_token = token or req.headers.get("x-atzmai-webhook-token")
+    if not incoming_token and req.headers.get("authorization", "").startswith("Bearer "):
+        incoming_token = req.headers.get("authorization")[7:].strip()
+
+    global_secret = settings.ATZMAI_WEBHOOK_SECRET
+
+    # If incoming token is completely absent or empty, reject immediately unless mock mode
+    if not incoming_token and not atzmai_client.is_mock_mode():
+        logger.warning(f"Unauthorized Atzmai webhook call rejected (no token provided) for payment ID: {atzmai_payment_id}")
+        raise HTTPException(403, "Invalid or missing webhook verification token")
+
     topup = await db.atzmai_topups.find_one({"atzmai_payment_id": atzmai_payment_id})
     if not topup:
         logger.warning(f"Atzmai webhook matching top-up not found for payment ID: {atzmai_payment_id}")
         return {"ok": False, "reason": "topup_not_found"}
+
+    # Authenticate webhook: verify cryptographically matching token or global secret
+    expected_token = topup.get("webhook_token")
+
+    token_valid = False
+    if expected_token and incoming_token and secrets.compare_digest(incoming_token, expected_token):
+        token_valid = True
+    elif global_secret and incoming_token and secrets.compare_digest(incoming_token, global_secret):
+        token_valid = True
+    elif atzmai_client.is_mock_mode():
+        token_valid = True
+
+    if not token_valid:
+        logger.warning(f"Unauthorized Atzmai webhook call rejected for payment ID: {atzmai_payment_id}")
+        raise HTTPException(403, "Invalid or missing webhook verification token")
 
     if topup.get("status") == "captured":
         logger.info(f"Atzmai payment {atzmai_payment_id} already marked as captured. Skipping.")
