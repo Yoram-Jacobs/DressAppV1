@@ -269,10 +269,8 @@ export const closetStore = {
   async prewarm({ force = false } = {}) {
     await _idbPromise;
     if (!force && _state.loading) return _state.items;
-    if (!force && _state.lastFullSync && Date.now() - _state.lastFullSync < FRESH_MS) {
-      if (_state.items && _state.items.length > 0) {
-        return _state.items;
-      }
+    if (!force && _state.items && _state.items.length > 0 && _state.lastFullSync && Date.now() - _state.lastFullSync < FRESH_MS) {
+      return _state.items;
     }
     _set({ loading: true, error: null });
     try {
@@ -305,9 +303,9 @@ export const closetStore = {
    * Returns the number of items added/updated.
    */
   async incrementalSync({ force = false } = {}) {
-    if (!_state.lastFullSync || _state.items.length === 0) {
+    if (!_state.lastFullSync || !_state.items || _state.items.length === 0) {
       // Never fully populated — incremental makes no sense yet.
-      return this.prewarm();
+      return this.prewarm({ force: true });
     }
     if (!force && Date.now() - _state.lastIncSync < MIN_INCREMENTAL_SYNC_INTERVAL_MS) {
       return 0;
@@ -359,9 +357,13 @@ export const closetStore = {
       const removed = beforeCount - nextItems.length;
       mutations += removed;
 
+      if (nextItems.length === 0 && liveIds.size > 0) {
+        return this.prewarm({ force: true });
+      }
+
       _set({
         items: mutations ? nextItems : _state.items,
-        total: idsRes?.total || nextItems.length,
+        total: idsRes?.total !== undefined ? idsRes.total : nextItems.length,
         lastIncSync: Date.now(),
       });
       return mutations;

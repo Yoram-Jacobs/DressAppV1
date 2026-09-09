@@ -35,37 +35,30 @@ export function resolveMediaUrl(url) {
   if (url.startsWith('data:') || url.startsWith('blob:')) {
     return url;
   }
-  if (typeof window !== 'undefined' && window.location?.hostname) {
-    const isLocal = ['localhost', '127.0.0.1', '0.0.0.0', '::1'].includes(
-      window.location.hostname
-    );
-    if (isLocal) {
-      if (
-        url.includes('localhost:8001/static/') ||
-        url.includes('127.0.0.1:8001/static/')
-      ) {
-        return url;
-      }
-      if (
-        url.includes('localhost:3000/static/') ||
-        url.includes('127.0.0.1:3000/static/')
-      ) {
-        const pathPart = url.split('/static/')[1];
-        return `http://localhost:8001/static/${pathPart}`;
-      }
-      const clean = url.startsWith('/') ? url.slice(1) : url;
-      if (clean.startsWith('static/')) {
-        return `http://localhost:8001/${clean}`;
-      }
-      if (clean.startsWith('uploads/') || clean.startsWith('items/')) {
-        const fullUploadsPath = clean.startsWith('uploads/') ? clean : `uploads/${clean}`;
-        return `http://localhost:8001/static/${fullUploadsPath}`;
-      }
-    }
-  }
+
+  const rawBackend = (process.env.REACT_APP_BACKEND_URL || '').trim().replace(/\/+$/, '');
+  const isLocal = typeof window !== 'undefined' && window.location?.hostname
+    ? ['localhost', '127.0.0.1', '0.0.0.0', '::1'].includes(window.location.hostname)
+    : false;
+  const backendBase = rawBackend || (isLocal ? 'http://localhost:8001' : '');
+
   if (url.startsWith('http://') || url.startsWith('https://')) {
+    if (backendBase && (url.includes('localhost:8001/static/') || url.includes('127.0.0.1:8001/static/') || url.includes('localhost:3000/static/') || url.includes('127.0.0.1:3000/static/'))) {
+      const pathPart = url.split('/static/')[1];
+      return `${backendBase}/static/${pathPart}`;
+    }
     return url;
   }
+
+  const clean = url.startsWith('/') ? url.slice(1) : url;
+  if (clean.startsWith('static/')) {
+    return backendBase ? `${backendBase}/${clean}` : `/${clean}`;
+  }
+  if (clean.startsWith('uploads/') || clean.startsWith('items/')) {
+    const fullUploadsPath = clean.startsWith('uploads/') ? clean : `uploads/${clean}`;
+    return backendBase ? `${backendBase}/static/${fullUploadsPath}` : `/static/${fullUploadsPath}`;
+  }
+
   return url;
 }
 

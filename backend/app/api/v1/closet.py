@@ -91,7 +91,7 @@ logger.info(
 
 
 class CreateItemIn(BaseModel):
-    model_config = ConfigDict(extra="forbid")
+    model_config = ConfigDict(extra="ignore")
     source: Source = "Private"
     # Descriptive
     name: str | None = None
@@ -213,7 +213,7 @@ class CreateItemIn(BaseModel):
 
 
 class UpdateItemIn(BaseModel):
-    model_config = ConfigDict(extra="forbid")
+    model_config = ConfigDict(extra="ignore")
     source: Source | None = None
     # Grouping
     group_id: str | None = None
@@ -1066,7 +1066,7 @@ async def preflight_duplicates(
 
 
 class AnalyzeIn(BaseModel):
-    model_config = ConfigDict(extra="forbid")
+    model_config = ConfigDict(extra="ignore")
     image_base64: str | None = None
     images_base64: list[str] | None = None
     image_url: str | None = None

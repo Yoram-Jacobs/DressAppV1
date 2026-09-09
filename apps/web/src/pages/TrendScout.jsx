@@ -23,7 +23,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/lib/auth";
 import { useLocation as useAppLocation } from "@/lib/location";
-import { useTrendScoutStore } from "@/lib/trendScoutStore";
+import { useTrendScoutStore, prewarmTrendScout } from "@/lib/trendScoutStore";
 import { api } from "@/lib/api";
 import { toast } from "sonner";
 import { ExploreBackButton } from "@/components/ExploreBackButton";

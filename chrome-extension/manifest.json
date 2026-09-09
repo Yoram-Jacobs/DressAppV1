@@ -2,8 +2,8 @@
   "manifest_version": 3,
   "name": "DressApp Shopping Assistant",
   "short_name": "DressApp",
-  "description": "Real-time size recommendations on Zara, ASOS, Shein, H&M, Amazon, AliExpress and more — powered by your DressApp measurements.",
-  "version": "0.1.0",
+  "description": "Real-time clothing size recommendations on major fashion and retail stores — powered by your DressApp body measurements.",
+  "version": "0.1.2",
   "action": {
     "default_title": "DressApp Shopping Assistant",
     "default_popup": "src/popup/index.html",
@@ -70,7 +70,20 @@
     "tabs"
   ],
   "host_permissions": [
-    "<all_urls>"
+    "https://*.zara.com/*",
+    "https://*.asos.com/*",
+    "https://*.shein.com/*",
+    "https://*.hm.com/*",
+    "https://*.amazon.com/*",
+    "https://*.amazon.co.uk/*",
+    "https://*.amazon.de/*",
+    "https://*.amazon.fr/*",
+    "https://*.amazon.it/*",
+    "https://*.amazon.es/*",
+    "https://*.aliexpress.com/*",
+    "https://*.aliexpress.us/*",
+    "https://dressapp.co/*",
+    "https://*.dressapp.co/*"
   ],
   "externally_connectable": {
     "matches": [
@@ -83,7 +96,22 @@
   "web_accessible_resources": [
     {
       "resources": ["icons/*.png"],
-      "matches": ["<all_urls>"]
+      "matches": [
+        "https://*.zara.com/*",
+        "https://*.asos.com/*",
+        "https://*.shein.com/*",
+        "https://*.hm.com/*",
+        "https://*.amazon.com/*",
+        "https://*.amazon.co.uk/*",
+        "https://*.amazon.de/*",
+        "https://*.amazon.fr/*",
+        "https://*.amazon.it/*",
+        "https://*.amazon.es/*",
+        "https://*.aliexpress.com/*",
+        "https://*.aliexpress.us/*",
+        "https://dressapp.co/*",
+        "https://*.dressapp.co/*"
+      ]
     }
   ]
 }

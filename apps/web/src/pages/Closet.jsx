@@ -806,12 +806,13 @@ export default function Closet() {
     }
   }, []);
 
-  // Mount: incremental sync only (the eager prewarm in AppLayout
-  // already populated the store). Filter changes no longer trigger
-  // any network — they re-filter the in-memory list. This is the
-  // core of the "don't fully reload on navigation" UX win.
+  // Mount: eager sync (force prewarm if empty, incremental otherwise).
   useEffect(() => {
-    store.incrementalSync().catch(() => { });
+    if (!store.items || store.items.length === 0) {
+      store.prewarm({ force: true }).catch(() => { });
+    } else {
+      store.incrementalSync().catch(() => { });
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
