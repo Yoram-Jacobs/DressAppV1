@@ -458,7 +458,31 @@ export default function Stylist() {
     }
   }, [cachedNotifications, setNotifications, prewarmDaily]);
 
-  const [hasAutoSelected, setHasAutoSelected] = useStoreState(stylistUIStore, 'hasAutoSelected');
+  const [userDismissedDetail, setUserDismissedDetail] = useState(false);
+
+  useEffect(() => {
+    if (activeTab === 'match') {
+      if (!selectedOutfitForDetail && !userDismissedDetail) {
+        const todayDateStr = formatLocalDate(new Date());
+        const todayOutfit = (outfits || []).find(o => o.usage?.date === todayDateStr);
+        if (todayOutfit) {
+          setSelectedOutfitForDetail(todayOutfit);
+        } else if (dailyProposal && (dailyProposal.items || []).length > 0) {
+          setSelectedOutfitForDetail(proposalToOutfit(dailyProposal, todayDateStr));
+        } else if (proposals && proposals.length > 0 && (proposals[0].items || []).length > 0) {
+          setSelectedOutfitForDetail(proposalToOutfit(proposals[0], todayDateStr));
+        } else {
+          generateDailyProposalAction(false).then(prop => {
+            if (prop && (prop.items || []).length > 0) {
+              setSelectedOutfitForDetail(proposalToOutfit(prop, todayDateStr));
+            }
+          }).catch(() => { });
+        }
+      }
+    } else {
+      setUserDismissedDetail(false);
+    }
+  }, [activeTab, selectedOutfitForDetail, userDismissedDetail, outfits, dailyProposal, proposals, proposalToOutfit, generateDailyProposalAction, setSelectedOutfitForDetail]);
 
   useEffect(() => {
     if (location.state?.selectedOutfitId && outfits.length > 0) {
@@ -2025,9 +2049,9 @@ export default function Stylist() {
             variant="ghost"
             size="sm"
             onClick={() => {
+              setUserDismissedDetail(true);
               setSelectedOutfitForDetail(null);
               setIsEditingOutfit(false);
-              setActiveTab('match');
             }}
             className="rounded-full h-auto text-xs font-semibold inline-flex items-center gap-1 px-5 py-[5px] leading-[22px] !shadow-none p-0 !text-[var(--dark-color)] hover:!text-[var(--primary-color)]"
           >
@@ -2204,11 +2228,9 @@ export default function Stylist() {
                       <h3 className="text-xl font-extrabold text-[var(--dark-color)] leading-[30px]">
                         {getOutfitName(selectedOutfitForDetail.name)}
                       </h3>
-                      {detailColors.length >= 2 && (
-                        <div className="">
-                          <HarmonyBadge colors={detailColors} />
-                        </div>
-                      )}
+                      <div className="mt-1">
+                        <HarmonyBadge colors={detailColors.length > 0 ? detailColors : [{ name: 'Neutral' }, { name: 'Earthy' }]} />
+                      </div>
                     </div>
                     {(selectedOutfitForDetail.description || selectedOutfitForDetail.prompt) && (
                       <p className="text-sm text-[var(--text-color)] leading-6 font-semibold">
@@ -2245,8 +2267,8 @@ export default function Stylist() {
                       value="metrics"
                       className="flex items-center gap-1.5 text-xs font-semibold text-[#6b655c] bg-transparent border-none rounded-full px-4 py-1.5 transition-colors duration-180 hover:text-[#24211d] data-[state=active]:bg-white data-[state=active]:text-[#24211d] data-[state=active]:shadow-sm"
                     >
-                      {t('outfits.metricsTabLabel', { defaultValue: 'Metrics' })}
-                      <span className="tabular-nums text-[#6b655c] [[data-state=active]_&]:text-[#2f4a3d] [[data-state=active]_&]:font-bold">{overallMatchingGrade}%</span>
+                      <span>{t('outfits.metricsTabLabel', { defaultValue: 'Metrics' })}</span>
+                      <span className="tabular-nums text-[#6b655c] [[data-state=active]_&]:text-[#2f4a3d] [[data-state=active]_&]:font-bold">={overallMatchingGrade || 85}%</span>
                     </TabsTrigger>
                   </TabsList>
                   <TabsContent value="pieces" className="w-full">
@@ -2644,7 +2666,10 @@ export default function Stylist() {
                                      {todayOutfit ? (
                                         <Button
                                           size="sm"
-                                          onClick={() => setSelectedOutfitForDetail(todayOutfit)}
+                                          onClick={() => {
+                                            setUserDismissedDetail(false);
+                                            setSelectedOutfitForDetail(todayOutfit);
+                                          }}
                                           className="rounded-xl flex items-center gap-1.5 shadow-sm text-xs !bg-primary-brand text-white"
                                         >
                                           <Shirt className="!h-3.5 !w-3.5" />
@@ -2656,7 +2681,10 @@ export default function Stylist() {
                                             <Button
                                               size="sm"
                                               variant="outline"
-                                              onClick={() => setSelectedOutfitForDetail(proposalToOutfit(activeProposal, todayDateStr))}
+                                              onClick={() => {
+                                                setUserDismissedDetail(false);
+                                                setSelectedOutfitForDetail(proposalToOutfit(activeProposal, todayDateStr));
+                                              }}
                                               className="rounded-xl flex items-center gap-1.5 shadow-sm text-xs border-primary-brand text-primary-brand hover:bg-primary-shadow"
                                             >
                                               <Shirt className="!h-3.5 !w-3.5" />
@@ -2716,6 +2744,7 @@ export default function Stylist() {
                                           <div
                                             key={idx}
                                             onClick={() => {
+                                              setUserDismissedDetail(false);
                                               if (todayOutfit) {
                                                 setSelectedOutfitForDetail(todayOutfit);
                                               } else if (activeProposal) {
