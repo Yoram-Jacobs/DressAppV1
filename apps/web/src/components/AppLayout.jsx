@@ -38,7 +38,7 @@ export const AppLayout = () => {
   const { t } = useTranslation();
   const { user, loading, refresh } = useAuth();
   const [show, setShow] = useState(false);
-  const { items, lastFullSync } = useClosetStore();
+  const { items, total, isLoaded, error: closetError } = useClosetStore();
   const [dismissedLoginReminder, setDismissedLoginReminder] = useState(() => {
     return sessionStorage.getItem('dressapp_dismissed_login_reminder') === 'true';
   });
@@ -163,11 +163,13 @@ export const AppLayout = () => {
     }
   }, [user, loading]);
 
+  const hasClosetItems = (items && items.length > 0) || (total > 0);
+
   useEffect(() => {
-    if (user && !user.migration_flag && 'ontouchstart' in window) {
+    if (isLoaded && !closetError && user && !user.migration_flag && !hasClosetItems && 'ontouchstart' in window) {
       toast.info(t('profile.mobileDesktopGuide', { defaultValue: 'Wardrobe import is available on the desktop version of DressApp. Please open your account on a desktop browser to continue.' }), { duration: 8000 });
     }
-  }, [user]);
+  }, [user, isLoaded, closetError, hasClosetItems, t]);
 
   if (loading) {
     return (
@@ -178,8 +180,8 @@ export const AppLayout = () => {
   }
   if (!user) return <Navigate to="/login" replace />;
 
-  const showOnboardingMigration = user && !user.migration_flag;
-  const showLoginReminder = user && user.migration_flag && lastFullSync > 0 && items.length === 0 && !dismissedLoginReminder && !showOnboardingMigration;
+  const showOnboardingMigration = isLoaded && !closetError && user && !user.migration_flag && !hasClosetItems;
+  const showLoginReminder = isLoaded && !closetError && user && user.migration_flag && !hasClosetItems && !dismissedLoginReminder && !showOnboardingMigration;
 
   return (
     <div className="page-shell">

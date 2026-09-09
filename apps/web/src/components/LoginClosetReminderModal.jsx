@@ -43,7 +43,7 @@ export default function LoginClosetReminderModal({ isOpen, onClose, user }) {
   };
 
   return (
-   <Dialog open={true} onOpenChange={(val) => { if (!val) onClose(); }}>
+   <Dialog open={isOpen ?? true} onOpenChange={(val) => { if (!val) onClose(); }}>
       <DialogContent className="max-w-md rounded-2xl p-6 bg-card border border-border shadow-2xl">
         <div className="space-y-4">
           <div className="mx-auto w-12 h-12 rounded-full bg-primary-shadow text-primary-brand flex items-center justify-center">

@@ -25,6 +25,7 @@ import {
   LayoutGrid,
   Grid,
   List,
+  Shirt,
 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -51,6 +52,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { SourceTagBadge } from "@/components/SourceTagBadge";
 import { OutfitCompletionSheet } from "@/components/OutfitCompletionSheet";
+import OnboardingMigrationModal from "@/components/OnboardingMigrationModal";
 import { HashRepairChip } from "@/components/closet/HashRepairChip";
 import { ThumbRepairChip } from "@/components/closet/ThumbRepairChip";
 import { api } from "@/lib/api";
@@ -231,6 +233,9 @@ export default function Closet() {
   const [tagOpen, setTagOpen] = useState(false);
   const [tagInput, setTagInput] = useState("");
   const [tagging, setTagging] = useState(false);
+
+  // Wardrobe migration modal state
+  const [isMigrationModalOpen, setIsMigrationModalOpen] = useState(false);
 
   const getTaxonomyFieldLabel = (field) => {
     switch (field) {
@@ -1577,35 +1582,69 @@ export default function Closet() {
                     </div>
                   </div>
 
-                  {/* Add Item Button */}
-                  <Link
-                    to="/closet/add"
-                    data-testid="closet-empty-add-button"
-                    className="
-               inline-flex
-              items-center
-              justify-center
-              rounded-full
-              bg-[var(--primary-color)]
-              px-5 py-3.5
-              text-[14px]
-              font-bold
-              leading-none
-              text-white
-              no-underline
-              shadow-[var(--primary-shadow)]
-              transition-all duration-300
-              hover:-translate-y-[2px]
-              hover:bg-[var(--primary-hover)]
-              hover:text-white
-            "
-                  >
-                    <i className="fa-solid fa-plus me-2"></i>
+                  {/* Action Buttons */}
+                  <div className="flex flex-wrap items-center justify-center gap-3">
+                    <Link
+                      to="/closet/add"
+                      data-testid="closet-empty-add-button"
+                      className="
+                        inline-flex
+                        items-center
+                        justify-center
+                        rounded-full
+                        bg-[var(--primary-color)]
+                        px-5 py-3.5
+                        text-[14px]
+                        font-bold
+                        leading-none
+                        text-white
+                        no-underline
+                        shadow-[var(--primary-shadow)]
+                        transition-all duration-300
+                        hover:-translate-y-[2px]
+                        hover:bg-[var(--primary-hover)]
+                        hover:text-white
+                      "
+                    >
+                      <Plus className="h-4 w-4 me-2" />
+                      {t("closet.addItem", {
+                        defaultValue: "Add Item",
+                      })}
+                    </Link>
 
-                    {t("closet.addItem", {
-                      defaultValue: "Add Your First Item",
-                    })}
-                  </Link>
+                    <Button
+                      type="button"
+                      onClick={() => {
+                        if ('ontouchstart' in window) {
+                          toast.info(t('profile.mobileDesktopGuide', { defaultValue: 'Wardrobe import is available on the desktop version of DressApp. Please open your account on a desktop browser to continue.' }), { duration: 8000 });
+                        } else {
+                          setIsMigrationModalOpen(true);
+                        }
+                      }}
+                      className="
+                        inline-flex
+                        items-center
+                        justify-center
+                        rounded-full
+                        bg-[var(--primary-color)]
+                        px-5 py-3.5
+                        text-[14px]
+                        font-bold
+                        leading-none
+                        text-white
+                        shadow-[var(--primary-shadow)]
+                        transition-all duration-300
+                        hover:-translate-y-[2px]
+                        hover:bg-[var(--primary-hover)]
+                        hover:text-white
+                        h-auto
+                      "
+                      data-testid="closet-empty-import-wardrobe-button"
+                    >
+                      <Shirt className="h-4 w-4 me-2" />
+                      <span>{t('profile.importWardrobePill', { defaultValue: 'Import Wardrobe' })}</span>
+                    </Button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -2213,6 +2252,17 @@ export default function Closet() {
             })()}
           </div>
         )}
+        {/* Wardrobe Migration Modal */}
+        <OnboardingMigrationModal
+          isOpen={isMigrationModalOpen}
+          onClose={() => {
+            setIsMigrationModalOpen(false);
+            store.prewarm({ force: true }).catch(() => {});
+          }}
+          onFlagUpdated={() => {
+            store.prewarm({ force: true }).catch(() => {});
+          }}
+        />
       </section>
     </>
   );

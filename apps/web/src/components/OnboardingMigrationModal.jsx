@@ -29,11 +29,13 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
   const { t } = useTranslation();
   const location = useLocation();
 
-  // Kill modal (not process) when user navigates to Closet page
+  // Kill modal (not process) when user navigates to Closet page from another route
+  const prevPathRef = useRef(location.pathname);
   useEffect(() => {
-    if (isOpen && location.pathname === '/closet') {
+    if (isOpen && prevPathRef.current !== location.pathname && location.pathname === '/closet') {
       onClose();
     }
+    prevPathRef.current = location.pathname;
   }, [isOpen, location.pathname, onClose]);
 
   // Steps: 'ask' | 'app_search' | 'web_login'

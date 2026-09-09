@@ -59,6 +59,7 @@ const _defaultState = {
   lastFullSync: 0,    // epoch ms of the last full /closet fetch
   lastIncSync: 0,     // epoch ms of the last incremental sync
   loading: false,
+  isLoaded: false,
   error: null,
   // Phase Z4 — optimistic "Save all" support. ``lastSaveFailures``
   // is a transient list of save-failure descriptors produced when
@@ -113,6 +114,7 @@ function loadState() {
         ..._defaultState,
         ...parsed,
         loading: false,
+        isLoaded: false,
         error: null,
         repairProgress: {
           ..._defaultState.repairProgress,
@@ -165,8 +167,12 @@ let _state = loadState();
 
 let _idbPromise = typeof window !== 'undefined' ? getItem('closet_items').then(items => {
   if (items && items.length > 0 && _state.items.length === 0) {
-    _state.items = items.filter(Boolean);
-    _notify();
+    const validItems = items.filter(Boolean);
+    _set({
+      items: validItems,
+      total: _state.total || validItems.length,
+      isLoaded: true,
+    });
   }
 }).catch(e => console.error('Failed to load items from IndexedDB', e)) : Promise.resolve();
 
@@ -270,6 +276,9 @@ export const closetStore = {
     await _idbPromise;
     if (!force && _state.loading) return _state.items;
     if (!force && _state.items && _state.items.length > 0 && _state.lastFullSync && Date.now() - _state.lastFullSync < FRESH_MS) {
+      if (!_state.isLoaded) {
+        _set({ isLoaded: true });
+      }
       return _state.items;
     }
     _set({ loading: true, error: null });
@@ -282,11 +291,12 @@ export const closetStore = {
         total: res.total || next.length,
         lastFullSync: now,
         lastIncSync: now,
+        isLoaded: true,
       });
 
       return next;
     } catch (err) {
-      _set({ error: err });
+      _set({ error: err, isLoaded: true });
       throw err;
     } finally {
       _set({ loading: false });
@@ -457,6 +467,7 @@ export const closetStore = {
       total: 0,
       lastFullSync: 0,
       lastIncSync: 0,
+      isLoaded: false,
       error: null,
       lastSaveFailures: [],
       repairProgress: {
