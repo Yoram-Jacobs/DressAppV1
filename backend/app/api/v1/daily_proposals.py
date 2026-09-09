@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+import random
 import uuid
 from datetime import datetime, timezone
 from typing import Any, List
@@ -12,6 +13,11 @@ from pydantic import BaseModel, ConfigDict, Field
 from app.db.database import get_db
 from app.services.auth import get_current_user
 from app.services.sync_service import broadcast_sync_event
+from app.services.stylist_scheduler_brain import (
+    calculate_garment_style_score,
+    generate_scheduled_proposals,
+    norm_category,
+)
 
 logger = logging.getLogger("dressapp.daily_proposals")
 
@@ -31,18 +37,44 @@ class ProposalGenerateIn(BaseModel):
     force: bool = False
 
 
+def _resolve_effective_style(user: dict, occasion: str | None = None) -> str:
+    sched = user.get("scheduler_settings") or {}
+    style_option = sched.get("style_option") or sched.get("style")
+    if style_option == "custom" and sched.get("custom_style"):
+        return sched.get("custom_style").strip()
+    if sched.get("custom_style") and style_option not in ("casual", "formal", "sport", "smart_casual"):
+        return sched.get("custom_style").strip()
+    if sched.get("style_dress_for") and sched.get("style_dress_for") not in ("daily", "default"):
+        return sched.get("style_dress_for").strip()
+    if sched.get("custom_style"):
+        return sched.get("custom_style").strip()
+    if occasion and occasion != "daily":
+        return occasion.strip()
+    return sched.get("style_dress_for") or "casual"
+
+
 @router.get("/daily-proposal")
 async def get_daily_proposal(user: dict = Depends(get_current_user)) -> dict[str, Any]:
     """Get today's shared daily outfit proposal for the user across all devices."""
     db = get_db()
     today_str = datetime.now(timezone.utc).strftime("%Y-%m-%d")
     
-    doc = await db.daily_proposals.find_one(
-        {"user_id": user["id"], "date": today_str},
+    # Return worn proposal first if already chosen
+    worn_doc = await db.daily_proposals.find_one(
+        {"user_id": user["id"], "date": today_str, "worn": True},
         {"_id": 0},
     )
+    if worn_doc and len(worn_doc.get("items") or []) > 0:
+        return worn_doc
+
+    # Otherwise return the most recent active proposal for today
+    doc = await db.daily_proposals.find_one(
+        {"user_id": user["id"], "date": today_str, "dismissed": {"$ne": True}},
+        {"_id": 0},
+        sort=[("created_at", -1)],
+    )
     
-    if doc:
+    if doc and len(doc.get("items") or []) > 0:
         return doc
         
     # If not found, attempt to generate proposal
@@ -56,7 +88,7 @@ async def generate_daily_proposal(
 ) -> dict[str, Any]:
     """Generate or regenerate today's daily proposal."""
     today_str = datetime.now(timezone.utc).strftime("%Y-%m-%d")
-    res = await _generate_and_save_daily_proposal(user, today_str, force=body.force)
+    res = await _generate_and_save_daily_proposal(user, today_str, force=body.force, occasion=body.occasion)
     await broadcast_sync_event(user["id"], "daily_suggestions_updated", {"proposal_id": res.get("id")})
     return res
 
@@ -96,7 +128,15 @@ async def act_on_daily_proposal(
     )
     
     if not res:
-        raise HTTPException(status_code=404, detail="Proposal not found")
+        # Fallback to date query if proposal_id wasn't found
+        res = await db.daily_proposals.find_one_and_update(
+            {"user_id": user["id"], "date": today_str},
+            {"$set": update_data},
+            return_document=True,
+            projection={"_id": 0},
+        )
+        if not res:
+            raise HTTPException(status_code=404, detail="Proposal not found")
 
     # If worn, purge unselected intermediate daily proposals for this user & date
     if body.action == "wear":
@@ -105,7 +145,7 @@ async def act_on_daily_proposal(
                 "user_id": user["id"],
                 "date": today_str,
                 "id": {"$ne": res.get("id")},
-                "worn": {"$ne": True}
+                "worn": {"$ne": True},
             })
         except Exception as p_err:
             logger.warning("Failed to purge intermediate proposals: %s", p_err)
@@ -122,31 +162,39 @@ async def _generate_and_save_daily_proposal(
     user: dict,
     date_str: str,
     force: bool = False,
-    occasion: str = "daily"
+    occasion: str = "daily",
 ) -> dict[str, Any]:
     """Helper to pick or generate a smart, diverse outfit from closet and store it in daily_proposals."""
-    import random
-    from app.services.stylist_scheduler_brain import generate_scheduled_proposals
     db = get_db()
+    effective_occasion = _resolve_effective_style(user, occasion)
     
     # Check if valid existing exists unless force=True
     if not force:
         existing = await db.daily_proposals.find_one(
-            {"user_id": user["id"], "date": date_str},
+            {"user_id": user["id"], "date": date_str, "dismissed": {"$ne": True}},
             {"_id": 0},
+            sort=[("created_at", -1)],
         )
         if existing and len(existing.get("items") or []) > 0:
             return existing
             
+    # Gather items already used in today's proposals to avoid repeats on "New Look"
+    past_proposals_cursor = db.daily_proposals.find({"user_id": user["id"], "date": date_str})
+    past_proposals = [doc async for doc in past_proposals_cursor]
+    past_item_ids: set[str] = set()
+    for pdp in past_proposals:
+        for it in (pdp.get("items") or []):
+            if it.get("id"):
+                past_item_ids.add(it["id"])
+            if it.get("closet_item_id"):
+                past_item_ids.add(it["closet_item_id"])
+
     # Fetch user's closet items
-    cursor = db.closet_items.find({"user_id": user["id"]}).limit(100)
+    cursor = db.closet_items.find({"user_id": user["id"], "is_duplicate": {"$ne": True}}).limit(100)
     items = [doc async for doc in cursor]
 
     def _cat(i: dict) -> str:
-        return (i.get("category") or "").strip().lower()
-
-    def _subcat(i: dict) -> str:
-        return (i.get("sub_category") or i.get("subcategory") or "").strip().lower()
+        return norm_category(i.get("category"))
 
     def _best_img(i: dict) -> str | None:
         return (
@@ -165,11 +213,21 @@ async def _generate_and_save_daily_proposal(
 
     ai_generated = False
     try:
-        scheduler_res = await generate_scheduled_proposals(user, style_dress_for=occasion)
+        scheduler_res = await generate_scheduled_proposals(user, style_dress_for=effective_occasion)
         recs = scheduler_res.get("outfit_recommendations") or []
         if recs:
-            # Pick a random recommendation if multiple exist for diversity
-            chosen_rec = random.choice(recs)
+            # Score each recommendation by novelty (fewest overlapping items with past_item_ids)
+            def _rec_novelty_score(r: dict) -> int:
+                r_items = r.get("items") or []
+                novel = sum(1 for it in r_items if (it.get("closet_item_id") or it.get("id")) not in past_item_ids)
+                return novel
+
+            sorted_recs = sorted(recs, key=_rec_novelty_score, reverse=True)
+            # Pick from the top candidates with highest novel items
+            top_novelty = _rec_novelty_score(sorted_recs[0])
+            top_candidates = [r for r in sorted_recs if _rec_novelty_score(r) == top_novelty]
+            chosen_rec = random.choice(top_candidates)
+
             proposal_title = chosen_rec.get("name") or proposal_title
             proposal_desc = chosen_rec.get("why") or proposal_desc
             confidence = chosen_rec.get("confidence")
@@ -197,21 +255,29 @@ async def _generate_and_save_daily_proposal(
     # 2. Smart Diversified Closet Fallback if AI didn't return full outfit
     if not ai_generated or len(selected_items) < 2:
         selected_items = []
-        # Categorize items robustly
-        tops = [i for i in items if _cat(i) in ("top", "tops", "shirt", "t-shirt", "sweater", "blouse", "polo", "hoodie")]
-        bottoms = [i for i in items if _cat(i) in ("bottom", "bottoms", "pants", "jeans", "skirt", "shorts", "trousers", "leggings")]
-        shoes = [i for i in items if _cat(i) in ("shoes", "sneakers", "boots", "sandals", "footwear", "heels", "loafers")]
-        dresses = [i for i in items if _cat(i) in ("dress", "one-piece", "jumpsuit", "romper")]
-        outerwear = [i for i in items if _cat(i) in ("outerwear", "jacket", "coat", "blazer", "cardigan", "vest")]
-        accessories = [i for i in items if _cat(i) in ("accessory", "accessories", "bag", "belt", "hat", "scarf")]
+        # Categorize items into buckets
+        tops = [i for i in items if _cat(i) == "top"]
+        bottoms = [i for i in items if _cat(i) == "bottom"]
+        shoes = [i for i in items if _cat(i) == "shoes"]
+        dresses = [i for i in items if _cat(i) == "dress"]
+        outerwear = [i for i in items if _cat(i) == "outerwear"]
+        accessories = [i for i in items if _cat(i) == "accessory"]
 
-        # Shuffle for diverse combination on every click
-        random.shuffle(tops)
-        random.shuffle(bottoms)
-        random.shuffle(shoes)
-        random.shuffle(dresses)
-        random.shuffle(outerwear)
-        random.shuffle(accessories)
+        # Sort each bucket: unused today first, then matching custom style tag, then lowest wear count, with random jitter
+        def _fallback_sort_key(item: dict) -> tuple:
+            iid = item.get("id")
+            already_used = 1 if (iid in past_item_ids) else 0
+            style_score = calculate_garment_style_score(item, effective_occasion)
+            wear_count = item.get("wear_count") or 0
+            jitter = random.random()
+            return (already_used, -style_score, wear_count, jitter)
+
+        tops.sort(key=_fallback_sort_key)
+        bottoms.sort(key=_fallback_sort_key)
+        shoes.sort(key=_fallback_sort_key)
+        dresses.sort(key=_fallback_sort_key)
+        outerwear.sort(key=_fallback_sort_key)
+        accessories.sort(key=_fallback_sort_key)
 
         # Decide whether dress or top+bottom
         use_dress = bool(dresses and (not tops or not bottoms or random.random() < 0.25))
@@ -259,7 +325,7 @@ async def _generate_and_save_daily_proposal(
                 "image_url": _best_img(s0),
             })
 
-        # Optionally add outerwear (50% chance if available)
+        # Optionally add outerwear
         if outerwear and random.random() < 0.5:
             ow0 = outerwear[0]
             selected_items.append({
@@ -271,7 +337,7 @@ async def _generate_and_save_daily_proposal(
                 "image_url": _best_img(ow0),
             })
 
-        # Optionally add accessory (40% chance if available)
+        # Optionally add accessory
         if accessories and random.random() < 0.4:
             acc0 = accessories[0]
             selected_items.append({
@@ -283,15 +349,17 @@ async def _generate_and_save_daily_proposal(
                 "image_url": _best_img(acc0),
             })
 
-        # Generate vibrant title based on selected items
+        # Generate vibrant title based on selected items & occasion
         color_names = [i.get("color") for i in items if i.get("id") in [x["id"] for x in selected_items] and i.get("color")]
         style_adjectives = ["Effortless", "Crisp", "Polished", "Modern", "Refined", "Relaxed", "Vibrant", "Chic", "Smart"]
         adj = random.choice(style_adjectives)
-        if color_names:
+        if effective_occasion and effective_occasion not in ("casual", "daily", "default"):
+            proposal_title = f"{adj} {effective_occasion.title()} Look"
+        elif color_names:
             proposal_title = f"{adj} {color_names[0].title()} Look"
         else:
             proposal_title = f"{adj} Everyday Look"
-        proposal_desc = "Curated based on your style profile, weather conditions, and closet harmony."
+        proposal_desc = f"Curated based on your '{effective_occasion}' preference, weather conditions, and closet harmony."
         proposal_harmony = random.randint(88, 97) if len(selected_items) >= 2 else 85
         
     proposal = {
@@ -311,10 +379,6 @@ async def _generate_and_save_daily_proposal(
         "updated_at": datetime.now(timezone.utc).isoformat(),
     }
     
-    await db.daily_proposals.update_one(
-        {"user_id": user["id"], "date": date_str},
-        {"$set": proposal},
-        upsert=True,
-    )
+    await db.daily_proposals.insert_one(proposal)
     
     return {k: v for k, v in proposal.items() if k != "_id"}

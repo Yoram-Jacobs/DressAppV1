@@ -59,7 +59,7 @@ const _defaultState = {
   lastFullSync: 0,    // epoch ms of the last full /closet fetch
   lastIncSync: 0,     // epoch ms of the last incremental sync
   loading: false,
-  isLoaded: false,
+  isLoaded: false,    // true once IndexedDB cache or network prewarm has resolved
   error: null,
   // Phase Z4 — optimistic "Save all" support. ``lastSaveFailures``
   // is a transient list of save-failure descriptors produced when
@@ -114,7 +114,6 @@ function loadState() {
         ..._defaultState,
         ...parsed,
         loading: false,
-        isLoaded: false,
         error: null,
         repairProgress: {
           ..._defaultState.repairProgress,
@@ -167,14 +166,15 @@ let _state = loadState();
 
 let _idbPromise = typeof window !== 'undefined' ? getItem('closet_items').then(items => {
   if (items && items.length > 0 && _state.items.length === 0) {
-    const validItems = items.filter(Boolean);
-    _set({
-      items: validItems,
-      total: _state.total || validItems.length,
-      isLoaded: true,
-    });
+    _state.items = items.filter(Boolean);
   }
-}).catch(e => console.error('Failed to load items from IndexedDB', e)) : Promise.resolve();
+  _state.isLoaded = true;
+  _notify();
+}).catch(e => {
+  console.error('Failed to load items from IndexedDB', e);
+  _state.isLoaded = true;
+  _notify();
+}) : Promise.resolve();
 
 const _listeners = new Set();
 const _deletedIds = new Set();
@@ -275,11 +275,10 @@ export const closetStore = {
   async prewarm({ force = false } = {}) {
     await _idbPromise;
     if (!force && _state.loading) return _state.items;
-    if (!force && _state.items && _state.items.length > 0 && _state.lastFullSync && Date.now() - _state.lastFullSync < FRESH_MS) {
-      if (!_state.isLoaded) {
-        _set({ isLoaded: true });
+    if (!force && _state.lastFullSync && Date.now() - _state.lastFullSync < FRESH_MS) {
+      if (_state.items && _state.items.length > 0) {
+        return _state.items;
       }
-      return _state.items;
     }
     _set({ loading: true, error: null });
     try {
@@ -313,9 +312,9 @@ export const closetStore = {
    * Returns the number of items added/updated.
    */
   async incrementalSync({ force = false } = {}) {
-    if (!_state.lastFullSync || !_state.items || _state.items.length === 0) {
+    if (!_state.lastFullSync || _state.items.length === 0) {
       // Never fully populated — incremental makes no sense yet.
-      return this.prewarm({ force: true });
+      return this.prewarm();
     }
     if (!force && Date.now() - _state.lastIncSync < MIN_INCREMENTAL_SYNC_INTERVAL_MS) {
       return 0;
@@ -367,13 +366,9 @@ export const closetStore = {
       const removed = beforeCount - nextItems.length;
       mutations += removed;
 
-      if (nextItems.length === 0 && liveIds.size > 0) {
-        return this.prewarm({ force: true });
-      }
-
       _set({
         items: mutations ? nextItems : _state.items,
-        total: idsRes?.total !== undefined ? idsRes.total : nextItems.length,
+        total: idsRes?.total || nextItems.length,
         lastIncSync: Date.now(),
       });
       return mutations;

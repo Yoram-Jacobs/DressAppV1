@@ -1,5 +1,5 @@
 import { Outlet, Navigate } from 'react-router-dom';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { TopNav } from '@/components/TopNav';
 import { Footer } from "@/components/Footer";
@@ -12,10 +12,12 @@ import { prewarmMarketplace, resetMarketplace, myListingsStore } from '@/lib/mar
 import { prewarmExperts, resetExperts } from '@/lib/expertsStore';
 import { prewarmSuitcase, resetSuitcase } from '@/lib/suitcaseStore';
 import { outfitStore } from '@/lib/outfitStore';
-import { Loader2 } from 'lucide-react';
+import { Loader2, ArrowUp } from 'lucide-react';
 import { toast } from 'sonner';
 import { api } from '@/lib/api';
-import { ArrowUp } from "lucide-react";
+import OnboardingMigrationModal from '@/components/OnboardingMigrationModal';
+import LoginClosetReminderModal from '@/components/LoginClosetReminderModal';
+import { useClosetStore } from '@/lib/useClosetStore';
 
 function urlBase64ToUint8Array(base64String) {
   const padding = '='.repeat((4 - base64String.length % 4) % 4);
@@ -30,10 +32,6 @@ function urlBase64ToUint8Array(base64String) {
   return outputArray;
 }
 
-import OnboardingMigrationModal from '@/components/OnboardingMigrationModal';
-import LoginClosetReminderModal from '@/components/LoginClosetReminderModal';
-import { useClosetStore } from '@/lib/useClosetStore';
-import { useState } from 'react';
 export const AppLayout = () => {
   const { t } = useTranslation();
   const { user, loading, refresh } = useAuth();
@@ -61,6 +59,7 @@ export const AppLayout = () => {
       outfitStore.reset();
     }
   }, [user, loading]);
+
   // back-to-top
   useEffect(() => {
     const handleScroll = () => {
@@ -68,8 +67,6 @@ export const AppLayout = () => {
     };
 
     window.addEventListener("scroll", handleScroll);
-
-    // Initial check
     handleScroll();
 
     return () => {
@@ -83,6 +80,7 @@ export const AppLayout = () => {
       behavior: "smooth",
     });
   };
+
   // Tab visibility revalidation to keep devices in sync (Closet, Suitcase, and User Listings)
   useEffect(() => {
     if (loading || !user) return;
@@ -143,7 +141,7 @@ export const AppLayout = () => {
           if (sub) {
             await registerSub(sub);
           } else if (
-            Notification.permission === 'granted' ||
+            Notification.permission === 'granted' || 
             (user?.scheduler_settings?.enabled && Notification.permission === 'default')
           ) {
             if (Notification.permission === 'default') {
@@ -188,7 +186,7 @@ export const AppLayout = () => {
       <LanguageSync />
       <TopNav />
       <LocationBanner />
-      <main id="main-content" tabIndex={-1}>
+      <main id="main-content" tabIndex={-1} className="flex-1 pb-safe-tabs md:pb-10">
         <Outlet />
       </main>
       <Footer />
@@ -226,7 +224,6 @@ export const AppLayout = () => {
       >
         <ArrowUp size={20} strokeWidth={2.5} />
       </button>
-
     </div>
   );
 };

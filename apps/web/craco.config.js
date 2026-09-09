@@ -33,15 +33,9 @@ let webpackConfig = {
       },
     },
   },
-  style: {
-    postcss: {
-      mode: "file",
-    },
-  },
   webpack: {
     alias: {
       '@': path.resolve(__dirname, 'src'),
-      '@dressapp/i18n': path.resolve(__dirname, '../../packages/i18n/src/index.js'),
       '@dressapp/api-client': path.resolve(__dirname, '../../packages/api-client/src/index.js'),
       'lucide-react': require.resolve('lucide-react'),
       'motion-utils': require.resolve('motion-utils'),
@@ -64,15 +58,15 @@ let webpackConfig = {
       }
 
       // Add ignored patterns to reduce watched directories
-      webpackConfig.watchOptions = {
-        ...webpackConfig.watchOptions,
-        ignored: [
-          '**/node_modules/**',
-          '**/.git/**',
-          '**/build/**',
-          '**/dist/**',
-          '**/coverage/**',
-          '**/public/**',
+        webpackConfig.watchOptions = {
+          ...webpackConfig.watchOptions,
+          ignored: [
+            '**/node_modules/**',
+            '**/.git/**',
+            '**/build/**',
+            '**/dist/**',
+            '**/coverage/**',
+            '**/public/**',
         ],
       };
 
@@ -89,16 +83,10 @@ let webpackConfig = {
         },
       });
 
-      // Ignore missing source map warnings from 3rd-party packages like html5-qrcode
-      webpackConfig.ignoreWarnings = [
-        ...(webpackConfig.ignoreWarnings || []),
-        /Failed to parse source map/,
-      ];
-
       // Ensure postcss-loader uses local tailwindcss v3, not root v4
       try {
         const { matches } = getLoaders(webpackConfig, loaderByName('postcss-loader'));
-        const localTw = require('tailwindcss');
+        const localTw = require(path.resolve(__dirname, 'node_modules/tailwindcss'));
         for (const m of matches) {
           if (m?.loader?.options?.postcssOptions?.plugins) {
             const plugins = m.loader.options.postcssOptions.plugins;
@@ -118,32 +106,17 @@ let webpackConfig = {
 };
 
 webpackConfig.devServer = (devServerConfig) => {
-  devServerConfig.historyApiFallback = true;
-
-  devServerConfig.proxy = {
-    '/api': {
-      target: 'http://localhost:8001',
-      changeOrigin: true,
-      ws: true,
-    },
-  };
-
-  if (
-    config.enableHealthCheck &&
-    setupHealthEndpoints &&
-    healthPluginInstance
-  ) {
-    const originalSetupMiddlewares =
-      devServerConfig.setupMiddlewares;
+  // Add health check endpoints if enabled
+  if (config.enableHealthCheck && setupHealthEndpoints && healthPluginInstance) {
+    const originalSetupMiddlewares = devServerConfig.setupMiddlewares;
 
     devServerConfig.setupMiddlewares = (middlewares, devServer) => {
+      // Call original setup if exists
       if (originalSetupMiddlewares) {
-        middlewares = originalSetupMiddlewares(
-          middlewares,
-          devServer
-        );
+        middlewares = originalSetupMiddlewares(middlewares, devServer);
       }
 
+      // Setup health endpoints
       setupHealthEndpoints(devServer, healthPluginInstance);
 
       return middlewares;
@@ -152,5 +125,6 @@ webpackConfig.devServer = (devServerConfig) => {
 
   return devServerConfig;
 };
+
 
 module.exports = webpackConfig;
