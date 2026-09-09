@@ -352,6 +352,7 @@ class Settings:
     ATZMAI_CLIENT_SECRET: str = os.environ.get("ATZMAI_CLIENT_SECRET", "clientSecret")
     ATZMAI_BASE_URL: str = os.environ.get("ATZMAI_BASE_URL", "https://externalapi.atzmai.botlee.com/api")
     ATZMAI_AGENT_ID: int = int(os.environ.get("ATZMAI_AGENT_ID", "123"))
+    ATZMAI_WEBHOOK_SECRET: str = os.environ.get("ATZMAI_WEBHOOK_SECRET", "")
 
     # --- Phase V: Clothing parser + matting (commercial-safe, MIT models) ---
     # Primary clothing segmentation model (per-class parser).
