@@ -83,6 +83,7 @@ interface ClosetRepoState {
   items: ClosetItem[];
   total: number;
   loading: boolean;
+  isLoaded: boolean;
   error: string | null;
   lastFullSync: number;
 }
@@ -94,6 +95,7 @@ let _state: ClosetRepoState = {
   items: [],
   total: 0,
   loading: false,
+  isLoaded: false,
   error: null,
   lastFullSync: 0,
 };
@@ -168,11 +170,18 @@ function setState(updater: (prev: ClosetRepoState) => ClosetRepoState) {
           items: data.items,
           total: data.total || data.items.length,
           lastFullSync: data.lastFullSync || 0,
+          isLoaded: true,
         };
         notify();
+        return;
       }
     }
-  } catch {}
+    _state.isLoaded = true;
+    notify();
+  } catch {
+    _state.isLoaded = true;
+    notify();
+  }
 })();
 
 function normalizeCategorySlot(cat: any): keyof Omit<WardrobeSummary, 'total'> {
@@ -254,12 +263,14 @@ export const closetRepo = {
           total: data?.total ?? items.length,
           loading: false,
           lastFullSync: Date.now(),
+          isLoaded: true,
           error: null,
         }));
       } catch (err: any) {
         setState((prev) => ({
           ...prev,
           loading: false,
+          isLoaded: true,
           error: err?.message || 'Failed to sync wardrobe',
         }));
       } finally {
@@ -418,6 +429,7 @@ export const closetRepo = {
       items: [],
       total: 0,
       loading: false,
+      isLoaded: false,
       error: null,
       lastFullSync: 0,
     }));
@@ -450,6 +462,7 @@ export function useCloset(options: { autoPrewarm?: boolean } = {}) {
     items: state.items,
     total: state.total,
     loading: state.loading,
+    isLoaded: state.isLoaded,
     error: state.error,
     summary,
     refresh,

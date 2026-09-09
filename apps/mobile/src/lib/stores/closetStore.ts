@@ -18,6 +18,7 @@ export { closetRepo, useCloset };
 export type ClosetState = ReturnType<typeof closetRepo.getSnapshot>;
 
 export interface ClosetStoreState extends ClosetState {
+  refresh: (options?: { force?: boolean }) => Promise<void>;
   prewarm: (options?: { force?: boolean }) => Promise<void>;
   upsert: (item: ClosetItem) => Promise<ClosetItem> | void;
   remove: (itemId: string) => void;
@@ -41,6 +42,10 @@ export const closetStore = {
 
   isFresh() {
     return closetRepo.isFresh();
+  },
+
+  refresh(options: { force?: boolean } = {}) {
+    return closetRepo.refresh(options);
   },
 
   prewarm(options: { force?: boolean } = {}) {
@@ -109,6 +114,7 @@ export function useClosetStore<T = ClosetStoreState>(
 
   const full: ClosetStoreState = {
     ...state,
+    refresh: (opts) => closetStore.refresh(opts),
     prewarm: (opts) => closetStore.prewarm(opts),
     upsert: (it) => closetStore.upsert(it),
     remove: (id) => closetStore.remove(id),
