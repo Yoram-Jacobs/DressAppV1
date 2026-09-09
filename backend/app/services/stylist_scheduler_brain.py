@@ -15,13 +15,15 @@ logger = logging.getLogger(__name__)
 
 
 SYNONYMS = {
-    "עבודה": ["עבודה", "work", "business", "business-casual", "business casual", "smart-casual", "smart casual", "formal", "office", "workwear"],
-    "work": ["עבודה", "work", "business", "business-casual", "business casual", "smart-casual", "smart casual", "formal", "office", "workwear"],
-    "business": ["עבודה", "work", "business", "business-casual", "business casual", "smart-casual", "smart casual", "formal", "office", "workwear"],
-    "business casual": ["עבודה", "work", "business", "business-casual", "business casual", "smart-casual", "smart casual", "formal", "office", "workwear"],
-    "business-casual": ["עבודה", "work", "business", "business-casual", "business casual", "smart-casual", "smart casual", "formal", "office", "workwear"],
-    "smart-casual": ["עבודה", "work", "business", "business-casual", "business casual", "smart-casual", "smart casual", "formal", "office", "workwear", "smart casual"],
-    "smart casual": ["עבודה", "work", "business", "business-casual", "business casual", "smart-casual", "smart casual", "formal", "office", "workwear", "smart-casual"],
+    "עבודה": ["עבודה", "work", "business", "business-casual", "business casual", "smart-casual", "smart casual", "formal", "office", "workwear", "משרד", "חליפה", "מכופתרת"],
+    "work": ["עבודה", "work", "business", "business-casual", "business casual", "smart-casual", "smart casual", "formal", "office", "workwear", "משרד", "חליפה", "מכופתרת"],
+    "business": ["עבודה", "work", "business", "business-casual", "business casual", "smart-casual", "smart casual", "formal", "office", "workwear", "משרד", "חליפה", "מכופתרת"],
+    "business casual": ["עבודה", "work", "business", "business-casual", "business casual", "smart-casual", "smart casual", "formal", "office", "workwear", "משרד", "חליפה", "מכופתרת"],
+    "business-casual": ["עבודה", "work", "business", "business-casual", "business casual", "smart-casual", "smart casual", "formal", "office", "workwear", "משרד", "חליפה", "מכופתרת"],
+    "smart-casual": ["עבודה", "work", "business", "business-casual", "business casual", "smart-casual", "smart casual", "formal", "office", "workwear", "משרד", "חליפה", "מכופתרת", "smart casual"],
+    "smart casual": ["עבודה", "work", "business", "business-casual", "business casual", "smart-casual", "smart casual", "formal", "office", "workwear", "משרד", "חליפה", "מכופתרת", "smart-casual"],
+    "office": ["עבודה", "work", "business", "business-casual", "business casual", "smart-casual", "smart casual", "formal", "office", "workwear", "משרד"],
+    "משרד": ["עבודה", "work", "business", "business-casual", "business casual", "smart-casual", "smart casual", "formal", "office", "workwear", "משרד"],
     "casual": ["casual", "יומיום", "יומיומי", "קז'ואל", "everyday", "everyday wear"],
     "יומיום": ["casual", "יומיום", "יומיומי", "קז'ואל", "everyday", "everyday wear"],
     "יומיומי": ["casual", "יומיום", "יומיומי", "קז'ואל", "everyday", "everyday wear"],
@@ -72,27 +74,38 @@ def calculate_garment_style_score(item: dict, style_dress_for: str | None) -> in
         return 0
         
     prompt_lower = style_dress_for.strip().lower()
-    tags = [str(t).lower() for t in (item.get("tags") or [])]
-    custom_tags = [str(t).lower() for t in (item.get("custom_tags") or [])]
+    tags = [str(t).lower().strip() for t in (item.get("tags") or []) if t]
+    custom_tags = [str(t).lower().strip() for t in (item.get("custom_tags") or []) if t]
     title = str(item.get("title") or item.get("name") or "").lower()
     sub_cat = str(item.get("sub_category") or item.get("item_type") or "").lower()
     cat = norm_category(item.get("category"))
     dress_code = str(item.get("dress_code") or "").lower()
     material = str(item.get("material") or "").lower()
-    all_text = f"{title} {sub_cat} {cat} {dress_code} {material} {' '.join(tags)} {' '.join(custom_tags)}"
+    description = str(item.get("description") or "").lower()
+    all_text = f"{title} {sub_cat} {cat} {dress_code} {material} {description} {' '.join(tags)} {' '.join(custom_tags)}"
     
     score = 0
     
-    # Check exact tag / token matches
+    # 1. Expand synonyms for prompt_lower
+    syns = set(SYNONYMS.get(prompt_lower, [prompt_lower]))
+    syns.add(prompt_lower)
+    
+    # Direct tag or custom tag match (Massive priority boost)
     for t in tags + custom_tags:
-        if t and t in prompt_lower:
-            score += 30
+        if t in syns or any(s in t for s in syns if len(s) >= 2) or prompt_lower in t:
+            score += 60
+            
+    # Text / Title / Description match
+    for s in syns:
+        if len(s) >= 2 and s in all_text:
+            score += 35
             
     # Formality / Occasion analysis
     is_formal_or_smart = any(w in prompt_lower for w in (
         "elegant", "smart casual", "smart-casual", "business", "formal", "party", "birthday", 
         "dinner", "restaurant", "wedding", "cocktail", "celebration", "date night", "asian food",
-        "אלגנטי", "ערב", "מסיבה", "מסעדה", "חתונה", "אירוע", "חגיגי", "יומולדת", "יום הולדת"
+        "אלגנטי", "ערב", "מסיבה", "מסעדה", "חתונה", "אירוע", "חגיגי", "יומולדת", "יום הולדת",
+        "עבודה", "work", "office", "משרד", "workwear", "business-casual", "business casual"
     ))
     
     is_swim_beach = any(w in prompt_lower for w in (
@@ -116,18 +129,18 @@ def calculate_garment_style_score(item: dict, style_dress_for: str | None) -> in
         if any(w in all_text for w in ("running shorts", "gym shorts")):
             return -60
             
-        # Boosts for elegant / smart casual pieces
-        if any(w in all_text for w in ("button", "dress shirt", "collared", "polo", "oxford", "linen shirt", "חולצה מכופתרת", "פולו")):
+        # Boosts for elegant / smart casual / work pieces
+        if any(w in all_text for w in ("button", "dress shirt", "collared", "polo", "oxford", "linen shirt", "חולצה מכופתרת", "פולו", "מכופתרת")):
             score += 40
-        if any(w in all_text for w in ("blazer", "suit", "jacket", "בלייזר", "חליפה")):
+        if any(w in all_text for w in ("blazer", "suit", "jacket", "בלייזר", "חליפה", "ג'קט")):
             score += 35
-        if any(w in all_text for w in ("chino", "trouser", "slacks", "dress pants", "tailored", "מכנסיים", "צ'ינו", "אלגנט")):
+        if any(w in all_text for w in ("chino", "trouser", "slacks", "dress pants", "tailored", "מכנסיים", "צ'ינו", "אלגנט", "מחויט")):
             score += 35
         if any(w in all_text for w in ("leather", "derby", "loafer", "chelsea", "boot", "smart", "מוקסין", "נעלי עור", "מגפיים")):
             score += 30
         if any(w in all_text for w in ("dress", "one-piece", "jumpsuit", "שמלה")):
             score += 35
-        if dress_code in ("business", "formal", "cocktail", "smart_casual", "smart casual"):
+        if dress_code in ("business", "formal", "cocktail", "smart_casual", "smart casual", "work"):
             score += 25
             
     elif is_swim_beach:
@@ -232,14 +245,16 @@ async def get_rotation_prioritized_closet(
                     final_items.extend(g_members)
         items = final_items
 
-    # Check if there is at least one exact case-insensitive tag match in the user's closet
+    # Check if there is at least one exact case-insensitive tag or synonym match in the user's closet
     has_exact_tag_match = False
     if style_dress_for:
         style_clean = style_dress_for.strip().lower()
+        syns = set(SYNONYMS.get(style_clean, [style_clean]))
+        syns.add(style_clean)
         for it in items:
-            it_tags = [t.lower() for t in (it.get("tags") or [])]
-            it_custom = [t.lower() for t in (it.get("custom_tags") or [])]
-            if style_clean in it_tags or style_clean in it_custom:
+            it_tags = [str(t).lower().strip() for t in (it.get("tags") or []) if t]
+            it_custom = [str(t).lower().strip() for t in (it.get("custom_tags") or []) if t]
+            if any(s in it_tags or s in it_custom or any(s in t for t in it_tags + it_custom) for s in syns):
                 has_exact_tag_match = True
                 break
 
@@ -734,6 +749,12 @@ async def generate_scheduled_proposals(
     target_date_str = target_date.strftime("%Y-%m-%d")
 
     style_prompt = style_dress_for or "casual/daily dress"
+    syns_list = SYNONYMS.get(style_prompt.strip().lower(), [])
+    if syns_list:
+        syns_hint = f" (Keywords/Tags: {', '.join(syns_list)})"
+    else:
+        syns_hint = ""
+    style_display = f"{style_prompt}{syns_hint}"
     
     weather_info = ""
     if weather:
@@ -760,14 +781,14 @@ async def generate_scheduled_proposals(
         f"Generate EXACTLY 3 complete, distinct, and coordinated full-body outfit recommendations for {target_day_name} ({target_date_str}) from the user's Closet items below, "
         f"following Fashion and Social Rules and Restrictions.\n\n"
         f"CONTEXT & APPLIED FILTERS:\n"
-        f"- Target Occasion / Style Preference: '{style_prompt}'\n"
+        f"- Target Occasion / Style Preference: '{style_display}'\n"
         f"{weather_line}"
         f"{calendar_line}\n"
         f"STRICT STYLING RULES & RESTRICTIONS:\n"
         f"1. FASHION & SOCIAL/RELIGIOUS RESTRICTIONS:\n"
         f"   - Always follow timeless fashion harmony rules (color theory, texture/material pairing, proportional silhouette, pattern clash prevention) and respect any local social, modest, or religious restrictions.\n"
         f"2. APPLIED TAG FILTERS & PREFERENCES:\n"
-        f"   - If the closet items list below contains garments with the tag '{style_prompt}' (case-insensitive), prioritize selecting those items. Only when no matching tags are found or to complete the outfit (e.g. if there are no shoes with that tag), select other items matching the intent/style of the preference.\n"
+        f"   - If the closet items list below contains garments with the tag '{style_prompt}' or matching tags/synonyms ({', '.join(syns_list) if syns_list else style_prompt}), prioritize selecting those items. Only when no matching tags are found or to complete the outfit (e.g. if there are no shoes with that tag), select other items matching the intent/style of the preference.\n"
         f"3. ROTATION & DIVERSITY (NO REPEATS ACROSS OUTFITS):\n"
         f"   - Rotate items within categories: make every item count and get used.\n"
         f"   - The 3 generated outfits MUST be 3 DISTINCT, UNIQUE looks with NO DUPLICATE TOPS, NO DUPLICATE BOTTOMS, and NO DUPLICATE SHOES across the 3 recommendations whenever multiple options are available in the closet.\n"
