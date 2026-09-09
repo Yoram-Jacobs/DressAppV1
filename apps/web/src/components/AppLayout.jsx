@@ -1,7 +1,8 @@
 import { Outlet, Navigate } from 'react-router-dom';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { TopNav } from '@/components/TopNav';
+import { Footer } from "@/components/Footer";
 import { BottomTabs } from '@/components/BottomTabs';
 import { LanguageSync } from '@/components/LanguageSync';
 import { LocationBanner } from '@/components/LocationBanner';
@@ -11,9 +12,12 @@ import { prewarmMarketplace, resetMarketplace, myListingsStore } from '@/lib/mar
 import { prewarmExperts, resetExperts } from '@/lib/expertsStore';
 import { prewarmSuitcase, resetSuitcase } from '@/lib/suitcaseStore';
 import { outfitStore } from '@/lib/outfitStore';
-import { Loader2 } from 'lucide-react';
+import { Loader2, ArrowUp } from 'lucide-react';
 import { toast } from 'sonner';
 import { api } from '@/lib/api';
+import OnboardingMigrationModal from '@/components/OnboardingMigrationModal';
+import LoginClosetReminderModal from '@/components/LoginClosetReminderModal';
+import { useClosetStore } from '@/lib/useClosetStore';
 
 function urlBase64ToUint8Array(base64String) {
   const padding = '='.repeat((4 - base64String.length % 4) % 4);
@@ -28,15 +32,11 @@ function urlBase64ToUint8Array(base64String) {
   return outputArray;
 }
 
-import OnboardingMigrationModal from '@/components/OnboardingMigrationModal';
-import LoginClosetReminderModal from '@/components/LoginClosetReminderModal';
-import { useClosetStore } from '@/lib/useClosetStore';
-import { useState } from 'react';
-
 export const AppLayout = () => {
   const { t } = useTranslation();
   const { user, loading, refresh } = useAuth();
-  const { items, isLoaded, error: closetError } = useClosetStore();
+  const [show, setShow] = useState(false);
+  const { items, total, isLoaded, error: closetError } = useClosetStore();
   const [dismissedLoginReminder, setDismissedLoginReminder] = useState(() => {
     return sessionStorage.getItem('dressapp_dismissed_login_reminder') === 'true';
   });
@@ -46,11 +46,11 @@ export const AppLayout = () => {
   useEffect(() => {
     if (loading) return;
     if (user) {
-      closetStore.prewarm().catch(() => {});
-      prewarmMarketplace(user.id).catch(() => {});
-      prewarmExperts().catch(() => {});
-      prewarmSuitcase().catch(() => {});
-      outfitStore.prewarm().catch(() => {});
+      closetStore.prewarm().catch(() => { });
+      prewarmMarketplace(user.id).catch(() => { });
+      prewarmExperts().catch(() => { });
+      prewarmSuitcase().catch(() => { });
+      outfitStore.prewarm().catch(() => { });
     } else {
       closetStore.reset();
       resetMarketplace();
@@ -60,14 +60,35 @@ export const AppLayout = () => {
     }
   }, [user, loading]);
 
+  // back-to-top
+  useEffect(() => {
+    const handleScroll = () => {
+      setShow(window.scrollY > 400);
+    };
+
+    window.addEventListener("scroll", handleScroll);
+    handleScroll();
+
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+    };
+  }, []);
+
+  const scrollToTop = () => {
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    });
+  };
+
   // Tab visibility revalidation to keep devices in sync (Closet, Suitcase, and User Listings)
   useEffect(() => {
     if (loading || !user) return;
 
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible') {
-        closetStore.incrementalSync().catch(() => {});
-        prewarmSuitcase().catch(() => {});
+        closetStore.incrementalSync().catch(() => { });
+        prewarmSuitcase().catch(() => { });
       }
     };
 
@@ -140,8 +161,10 @@ export const AppLayout = () => {
     }
   }, [user, loading]);
 
+  const hasClosetItems = (items && items.length > 0) || (total > 0);
+
   useEffect(() => {
-    if (user && !user.migration_flag && isLoaded && !closetError && !hasClosetItems && 'ontouchstart' in window) {
+    if (isLoaded && !closetError && user && !user.migration_flag && !hasClosetItems && 'ontouchstart' in window) {
       toast.info(t('profile.mobileDesktopGuide', { defaultValue: 'Wardrobe import is available on the desktop version of DressApp. Please open your account on a desktop browser to continue.' }), { duration: 8000 });
     }
   }, [user, isLoaded, closetError, hasClosetItems, t]);
@@ -155,11 +178,8 @@ export const AppLayout = () => {
   }
   if (!user) return <Navigate to="/login" replace />;
 
-  const hasClosetItems = items && items.length > 0;
-  // Guard dialogs: Only check empty-closet status after the store has completed loading,
-  // and do not trigger false positives if an error occurred during loading.
-  const showOnboardingMigration = user && !user.migration_flag && isLoaded && !closetError && !hasClosetItems;
-  const showLoginReminder = user && user.migration_flag && isLoaded && !closetError && !hasClosetItems && !dismissedLoginReminder && !showOnboardingMigration;
+  const showOnboardingMigration = isLoaded && !closetError && user && !user.migration_flag && !hasClosetItems;
+  const showLoginReminder = isLoaded && !closetError && user && user.migration_flag && !hasClosetItems && !dismissedLoginReminder && !showOnboardingMigration;
 
   return (
     <div className="page-shell">
@@ -169,14 +189,15 @@ export const AppLayout = () => {
       <main id="main-content" tabIndex={-1} className="flex-1 pb-safe-tabs md:pb-10">
         <Outlet />
       </main>
+      <Footer />
       <BottomTabs />
 
       {/* Onboarding Migration Question Modal — desktop only */}
       {showOnboardingMigration && !('ontouchstart' in window) && (
         <OnboardingMigrationModal
           isOpen={true}
-          onClose={() => { refresh().catch(() => {}); }}
-          onFlagUpdated={() => { refresh().catch(() => {}); }}
+          onClose={() => { refresh().catch(() => { }); }}
+          onFlagUpdated={() => { refresh().catch(() => { }); }}
         />
       )}
 
@@ -191,6 +212,18 @@ export const AppLayout = () => {
           }}
         />
       )}
+      {/* <!-- back-to-top-button --> */}
+      <button
+        id="backToTopBtn"
+        onClick={scrollToTop}
+        aria-label="Back to top"
+        className={`fixed bottom-[50px] end-[30px] z-[999] flex h-12 w-12 cursor-pointer items-center justify-center rounded-full border-none bg-[var(--primary-color)] text-white shadow-[var(--shadow-medium)] transition-smooth hover:bg-[var(--primary-hover)] hover:-translate-y-1 ${show
+            ? "visible translate-y-0 opacity-100"
+            : "invisible translate-y-[15px] opacity-0"
+          }`}
+      >
+        <ArrowUp size={20} strokeWidth={2.5} />
+      </button>
     </div>
   );
 };
