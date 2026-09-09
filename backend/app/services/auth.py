@@ -60,11 +60,51 @@ def decode_token(token: str) -> dict[str, Any]:
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Invalid token") from exc
 
 
+class AuthenticatedUser(dict):
+    """Pydantic-backed dict wrapper for authenticated user documents.
+
+    Provides full backward compatibility as a standard Python dictionary
+    (allowing `user["id"]`, `user.get("roles")`, `isinstance(user, dict)`,
+    and dictionary test mock overrides) while simultaneously providing typed
+    attribute access (`user.id`, `user.email`, `user.roles`) and direct access
+    to the validated Pydantic model via `user.model`.
+    """
+
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        super().__init__(*args, **kwargs)
+        self._user_model: User | None = None
+
+    @classmethod
+    def from_doc(cls, doc: dict[str, Any] | None) -> AuthenticatedUser | None:
+        if doc is None:
+            return None
+        instance = cls(doc)
+        try:
+            from app.models.schemas import User
+            instance._user_model = User.model_validate(doc)
+        except Exception as exc:
+            logger.debug("Failed to validate User pydantic model in AuthenticatedUser: %s", exc)
+        return instance
+
+    @property
+    def model(self) -> User | None:
+        return self._user_model
+
+    def __getattr__(self, name: str) -> Any:
+        if name in self:
+            return self[name]
+        if self._user_model is not None and hasattr(self._user_model, name):
+            return getattr(self._user_model, name)
+        raise AttributeError(f"{type(self).__name__!r} object has no attribute {name!r}")
+
+
 async def _fetch_user(user_id: str) -> dict[str, Any] | None:
     return await get_db().users.find_one({"id": user_id}, {"_id": 0})
 
 
-async def get_current_user(authorization: str | None = Header(default=None)) -> dict[str, Any]:
+async def get_current_user(
+    authorization: str | None = Header(default=None),
+) -> AuthenticatedUser:
     if not authorization or not authorization.lower().startswith("bearer "):
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Missing bearer token")
     token = authorization.split(" ", 1)[1].strip()
@@ -75,12 +115,12 @@ async def get_current_user(authorization: str | None = Header(default=None)) -> 
     user = await _fetch_user(user_id)
     if not user:
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, "User not found")
-    return user
+    return AuthenticatedUser.from_doc(user)
 
 
 async def get_current_user_optional(
     authorization: str | None = Header(default=None),
-) -> dict[str, Any] | None:
+) -> AuthenticatedUser | None:
     if not authorization:
         return None
     try:
@@ -89,10 +129,10 @@ async def get_current_user_optional(
         return None
 
 
-async def require_admin(user: dict = Depends(get_current_user)) -> dict[str, Any]:
+async def require_admin(user: dict = Depends(get_current_user)) -> AuthenticatedUser:
     if "admin" not in (user.get("roles") or []):
         raise HTTPException(status.HTTP_403_FORBIDDEN, "Admin role required")
-    return user
+    return user if isinstance(user, AuthenticatedUser) else AuthenticatedUser.from_doc(user)
 
 
 def apply_admin_role(roles: list[str] | None, email: str | None) -> list[str]:
