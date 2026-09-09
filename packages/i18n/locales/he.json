@@ -1249,6 +1249,9 @@
     "viewOutfitDetails": "צפה בפרטים",
     "suggestionRefreshed": "הצעת היום רועננה בהצלחה!",
     "refreshSuggestion": "לוק חדש",
+    "previousLook": "לוק קודם",
+    "lookCounter": "לוק {{current}} מתוך {{total}}",
+    "tryOnAvatar": "הצג לוק",
     "wearToday": "ללבוש היום"
   },
   "outfitCompletion": {

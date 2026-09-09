@@ -1233,6 +1233,9 @@
     "viewOutfitDetails": "Details bekijken",
     "suggestionRefreshed": "Suggestie van vandaag vernieuwd!",
     "refreshSuggestion": "Nieuwe look",
+    "previousLook": "Vorige look",
+    "lookCounter": "Look {{current}} van {{total}}",
+    "tryOnAvatar": "Bekijk look",
     "wearToday": "Vandaag dragen"
   },
   "outfitCompletion": {

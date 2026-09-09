@@ -361,8 +361,83 @@ export default function Stylist() {
   const [isEditingOutfit, setIsEditingOutfit] = useStoreState(stylistUIStore, 'isEditingOutfit');
   const [editOutfitName, setEditOutfitName] = useStoreState(stylistUIStore, 'editOutfitName');
   const [editOutfitDescription, setEditOutfitDescription] = useStoreState(stylistUIStore, 'editOutfitDescription');
-  const { notifications: cachedNotifications, dailyProposal, generate: generateDailyProposalAction, prewarm: prewarmDaily } = useDailySuggestionsStore();
+  const { notifications: cachedNotifications, dailyProposal, proposals, generate: generateDailyProposalAction, prewarm: prewarmDaily, act: actDailyProposal } = useDailySuggestionsStore();
   const [generatingDaily, setGeneratingDaily] = useState(false);
+
+  const proposalToOutfit = useCallback((prop, dateStr) => {
+    if (!prop) return null;
+    const rawItems = prop.items || prop.garments || [];
+    const targetDate = dateStr || prop.date || formatLocalDate(new Date());
+    return {
+      id: prop.id || `prop_${Date.now()}`,
+      isDailyProposal: true,
+      name: prop.title || prop.name || 'Look of the Day',
+      description: prop.description || 'Curated based on your style profile, weather conditions, and closet harmony.',
+      prompt: prop.style_preference || 'casual',
+      source_workflow: 'scheduled',
+      garments: rawItems.map(it => {
+        const cid = it.closet_item_id || it.id;
+        const ci = (closetItems || []).find(c => c && (c.id === cid || c._id === cid));
+        return {
+          closet_item_id: cid,
+          role: it.role,
+          title: it.name || it.title || it.description || ci?.title || ci?.name || 'Garment',
+          image_url: resolveMediaUrl(bestImageUrl(ci) || it.image_url || it.clean_image_url || ci?.image_url || ''),
+        };
+      }),
+      items: rawItems,
+      usage: {
+        date: targetDate,
+        time: '08:00',
+      },
+      harmony_score: prop.harmony_score || 94,
+      proposal_raw: prop,
+    };
+  }, [closetItems]);
+
+  const handleWearDailyProposal = useCallback(async (prop) => {
+    const todayDateStr = formatLocalDate(new Date());
+    const rawItems = prop.items || prop.garments || [];
+    const body = {
+      name: prop.name || prop.title || 'Look of the Day',
+      description: prop.description || 'Daily style suggestion',
+      source_workflow: 'scheduled',
+      prompt: prop.prompt || user?.scheduler_settings?.style_dress_for || 'casual',
+      garments: rawItems.map(it => {
+        const cid = it.closet_item_id || it.id;
+        const ci = (closetItems || []).find(c => c && (c.id === cid || c._id === cid));
+        return {
+          closet_item_id: cid,
+          role: it.role,
+          title: it.name || it.title || it.description || ci?.title || ci?.name || 'Garment',
+          image_url: resolveMediaUrl(bestImageUrl(ci) || it.image_url || it.clean_image_url || ci?.image_url || ''),
+        };
+      }),
+      usage: {
+        date: todayDateStr,
+        time: '08:00',
+      },
+      is_fallback: false,
+    };
+
+    try {
+      const saved = await api.saveOutfit(body);
+      const savedOutfit = saved?.outfit || saved;
+      upsert(savedOutfit);
+      
+      const propId = prop.id || prop.proposal_raw?.id;
+      if (propId && actDailyProposal) {
+        await actDailyProposal('wear', propId, todayDateStr);
+      }
+      
+      setSelectedOutfitForDetail(savedOutfit);
+      toast.success(t('stylist.outfitSaved', { defaultValue: 'Saved as today’s scheduled outfit!' }));
+    } catch (err) {
+      console.error("Wear daily proposal error:", err);
+      toast.error(err?.response?.data?.detail || t('stylist.saveFailed', { defaultValue: 'Failed to schedule outfit.' }));
+    }
+  }, [closetItems, user, upsert, actDailyProposal, setSelectedOutfitForDetail, t]);
+
   const handleSaveOutfitSuccess = useCallback(async () => {
     prewarmOutfits({ force: true }).catch(() => { });
     try {
@@ -393,7 +468,6 @@ export default function Stylist() {
       }
     }
   }, [location.state, outfits]);
-
 
   const deleteOutfit = async (id) => {
     try {
@@ -1938,9 +2012,15 @@ export default function Stylist() {
         .filter(Boolean)
       : [];
 
+    const isDaily = Boolean(selectedOutfitForDetail.isDailyProposal);
+    const todayDateStr = formatLocalDate(new Date());
+    const currentLookIndex = (proposals || []).findIndex(p => p.id === (selectedOutfitForDetail.proposal_raw?.id || selectedOutfitForDetail.id));
+    const idx = currentLookIndex >= 0 ? currentLookIndex : Math.max(0, (proposals?.length || 1) - 1);
+    const totalLooks = Math.max(1, proposals?.length || 1);
+
     return (
       <div className='bg-white rounded-[12px] shadow-[0_12px_36px_rgba(20,30,25,0.06)] p-5'>
-        <div className="flex items-center justify-between pb-5">
+        <div className="flex items-center justify-between pb-5 flex-wrap gap-3">
           <Button
             variant="ghost"
             size="sm"
@@ -1953,40 +2033,110 @@ export default function Stylist() {
           >
             <ArrowLeft className="h-4 w-4 rtl:rotate-180" /> {t('common.back', { defaultValue: 'Back' })}
           </Button>
-          <div className="flex items-center gap-2">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => {
-                setEditOutfitName(selectedOutfitForDetail.name);
-                setEditOutfitDescription(selectedOutfitForDetail.description || selectedOutfitForDetail.prompt || '');
-                setIsEditingOutfit(true);
-              }}
-              className="!bg-[var(--primary-color)] px-5 py-[5px] rounded-full text-xs leading-[22px] !text-white h-auto w-auto inline-flex !gap-2 hover:!bg-[var(--dark-color)]"
-              title={t('common.edit', { defaultValue: 'Edit' })}
-            >
-              <Pencil className="!h-3 !w-3" />{t('common.edit', { defaultValue: 'Edit' })}
-            </Button>
-            <Button
-              variant="destructive"
-              size="sm"
-              onClick={async () => {
-                await deleteOutfit(selectedOutfitForDetail.id);
-                setSelectedOutfitForDetail(null);
-                setIsEditingOutfit(false);
-              }}
-              className="rounded-full h-auto text-xs font-semibold inline-flex items-center gap-2 px-5 py-[5px] leading-[22px] !shadow-none"
-            >
-              <Trash2 className="!h-3.5 !w-3.5" /> {t('common.delete', { defaultValue: 'Delete' })}
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setShareDetailModalOpen(true)}
-              className="rounded-full h-auto text-xs font-semibold inline-flex items-center gap-2 px-5 py-[5px] leading-[22px] !shadow-none border border-[#666] hover:!border-[var(--primary-color)] hover:!text-[var(--primary-color)]"
-            >
-              <Share2 className="!h-3.5 !w-3.5" /> {t('common.share', { defaultValue: 'Share' })}
-            </Button>
+          <div className="flex items-center gap-2 flex-wrap">
+            {isDaily ? (
+              <>
+                {proposals && proposals.length > 1 && (
+                  <>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      disabled={idx <= 0}
+                      onClick={() => {
+                        const prevProp = proposals[idx - 1];
+                        if (prevProp) {
+                          setSelectedOutfitForDetail(proposalToOutfit(prevProp, todayDateStr));
+                        }
+                      }}
+                      className="rounded-full h-auto text-xs font-semibold inline-flex items-center gap-1.5 px-4 py-[5px] leading-[22px] !shadow-none border border-[#666] hover:!border-[var(--primary-color)] hover:!text-[var(--primary-color)] disabled:opacity-40"
+                    >
+                      <ArrowLeft className="h-3.5 w-3.5 rtl:rotate-180" />
+                      <span>{t('stylist.previousLook', { defaultValue: 'Previous Look' })}</span>
+                    </Button>
+                    <Badge variant="outline" className="text-xs font-bold text-[var(--dark-color)] border-[#ccc] px-3 py-1 bg-[#fafafa]">
+                      {t('stylist.lookCounter', { defaultValue: 'Look {{current}} of {{total}}', current: idx + 1, total: totalLooks })}
+                    </Badge>
+                  </>
+                )}
+                <Button
+                  size="sm"
+                  variant="outline"
+                  disabled={generatingDaily}
+                  onClick={async () => {
+                    setGeneratingDaily(true);
+                    try {
+                      const newProp = await generateDailyProposalAction(true);
+                      if (newProp) {
+                        setSelectedOutfitForDetail(proposalToOutfit(newProp, todayDateStr));
+                        toast.success(t('stylist.suggestionRefreshed', { defaultValue: 'Refreshed today’s suggestion!' }));
+                      }
+                    } catch {
+                      toast.error(t('common.error', { defaultValue: 'Failed to refresh' }));
+                    } finally {
+                      setGeneratingDaily(false);
+                    }
+                  }}
+                  className="rounded-full h-auto text-xs font-semibold inline-flex items-center gap-1.5 px-4 py-[5px] leading-[22px] !shadow-none border border-[#666] hover:!border-[var(--primary-color)] hover:!text-[var(--primary-color)]"
+                >
+                  <RefreshCw className={cn("!h-3.5 !w-3.5", generatingDaily && "animate-spin")} />
+                  <span>{t('stylist.refreshSuggestion', { defaultValue: 'New Look' })}</span>
+                </Button>
+                <Button
+                  size="sm"
+                  onClick={async () => {
+                    await handleWearDailyProposal(selectedOutfitForDetail.proposal_raw || selectedOutfitForDetail);
+                  }}
+                  className="rounded-full h-auto text-xs font-semibold inline-flex items-center gap-1.5 px-5 py-[5px] leading-[22px] text-white !bg-[var(--primary-color)] hover:!bg-[var(--dark-color)] !shadow-none"
+                >
+                  <CalendarPlus className="!h-3.5 !w-3.5" />
+                  <span>{t('stylist.wearToday', { defaultValue: 'Wear Today' })}</span>
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShareDetailModalOpen(true)}
+                  className="rounded-full h-auto text-xs font-semibold inline-flex items-center gap-2 px-4 py-[5px] leading-[22px] !shadow-none border border-[#666] hover:!border-[var(--primary-color)] hover:!text-[var(--primary-color)]"
+                >
+                  <Share2 className="!h-3.5 !w-3.5" /> {t('common.share', { defaultValue: 'Share' })}
+                </Button>
+              </>
+            ) : (
+              <>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => {
+                    setEditOutfitName(selectedOutfitForDetail.name);
+                    setEditOutfitDescription(selectedOutfitForDetail.description || selectedOutfitForDetail.prompt || '');
+                    setIsEditingOutfit(true);
+                  }}
+                  className="!bg-[var(--primary-color)] px-5 py-[5px] rounded-full text-xs leading-[22px] !text-white h-auto w-auto inline-flex !gap-2 hover:!bg-[var(--dark-color)]"
+                  title={t('common.edit', { defaultValue: 'Edit' })}
+                >
+                  <Pencil className="!h-3 !w-3" />{t('common.edit', { defaultValue: 'Edit' })}
+                </Button>
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  onClick={async () => {
+                    await deleteOutfit(selectedOutfitForDetail.id);
+                    setSelectedOutfitForDetail(null);
+                    setIsEditingOutfit(false);
+                  }}
+                  className="rounded-full h-auto text-xs font-semibold inline-flex items-center gap-2 px-5 py-[5px] leading-[22px] !shadow-none"
+                >
+                  <Trash2 className="!h-3.5 !w-3.5" /> {t('common.delete', { defaultValue: 'Delete' })}
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShareDetailModalOpen(true)}
+                  className="rounded-full h-auto text-xs font-semibold inline-flex items-center gap-2 px-5 py-[5px] leading-[22px] !shadow-none border border-[#666] hover:!border-[var(--primary-color)] hover:!text-[var(--primary-color)]"
+                >
+                  <Share2 className="!h-3.5 !w-3.5" /> {t('common.share', { defaultValue: 'Share' })}
+                </Button>
+              </>
+            )}
           </div>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -1996,7 +2146,7 @@ export default function Stylist() {
               <AvatarViewer
                 shapeParams={user?.avatar_shape_params || {}}
                 sex={user?.sex || 'female'}
-                outfitItems={getOutfitPiecesMap(selectedOutfitForDetail)}
+                outfitItems={getOutfitPiecesMap(selectedOutfitForDetail, closetItems)}
               />
             </div>
           </div>
@@ -2490,58 +2640,68 @@ export default function Stylist() {
                                       </p>
                                     </div>
                                   </div>
-                                  <div className="flex items-center gap-2">
-                                    {todayOutfit ? (
-                                      <Button
-                                        size="sm"
-                                        onClick={() => setSelectedOutfitForDetail(todayOutfit)}
-                                        className="rounded-xl flex items-center gap-1.5 shadow-sm text-xs !bg-primary-brand text-white"
-                                      >
-                                        <Shirt className="!h-3.5 !w-3.5" />
-                                        <span>{t('stylist.viewOutfitDetails', { defaultValue: 'View Details' })}</span>
-                                      </Button>
-                                    ) : (
-                                      <>
+                                   <div className="flex items-center gap-2 flex-wrap">
+                                     {todayOutfit ? (
                                         <Button
                                           size="sm"
-                                          variant="outline"
-                                          disabled={generatingDaily}
-                                          onClick={async () => {
-                                            setGeneratingDaily(true);
-                                            try {
-                                              await generateDailyProposalAction(true);
-                                              toast.success(t('stylist.suggestionRefreshed', { defaultValue: 'Refreshed today’s suggestion!' }));
-                                            } catch {
-                                              toast.error(t('common.error', { defaultValue: 'Failed to refresh' }));
-                                            } finally {
-                                              setGeneratingDaily(false);
-                                            }
-                                          }}
-                                          className="rounded-xl flex items-center gap-1.5 shadow-sm text-xs"
+                                          onClick={() => setSelectedOutfitForDetail(todayOutfit)}
+                                          className="rounded-xl flex items-center gap-1.5 shadow-sm text-xs !bg-primary-brand text-white"
                                         >
-                                          <RefreshCw className={cn("!h-3.5 !w-3.5", generatingDaily && "animate-spin")} />
-                                          <span>{t('stylist.refreshSuggestion', { defaultValue: 'New Look' })}</span>
+                                          <Shirt className="!h-3.5 !w-3.5" />
+                                          <span>{t('stylist.viewOutfitDetails', { defaultValue: 'View Details' })}</span>
                                         </Button>
-                                        {activeProposal && (
+                                      ) : (
+                                        <>
+                                          {activeProposal && (
+                                            <Button
+                                              size="sm"
+                                              variant="outline"
+                                              onClick={() => setSelectedOutfitForDetail(proposalToOutfit(activeProposal, todayDateStr))}
+                                              className="rounded-xl flex items-center gap-1.5 shadow-sm text-xs border-primary-brand text-primary-brand hover:bg-primary-shadow"
+                                            >
+                                              <Shirt className="!h-3.5 !w-3.5" />
+                                              <span>{t('stylist.tryOnAvatar', { defaultValue: 'View Look' })}</span>
+                                            </Button>
+                                          )}
                                           <Button
                                             size="sm"
+                                            variant="outline"
+                                            disabled={generatingDaily}
                                             onClick={async () => {
-                                              await handleSaveOutfitToDate(null, 0, todayDateStr, {
-                                                name: activeProposal.title || 'Look of the Day',
-                                                items: activeProposal.items,
-                                                isDailyProposal: true
-                                              });
+                                              setGeneratingDaily(true);
+                                              try {
+                                                const newProp = await generateDailyProposalAction(true);
+                                                if (newProp && selectedOutfitForDetail?.isDailyProposal) {
+                                                  setSelectedOutfitForDetail(proposalToOutfit(newProp, todayDateStr));
+                                                }
+                                                toast.success(t('stylist.suggestionRefreshed', { defaultValue: 'Refreshed today’s suggestion!' }));
+                                              } catch {
+                                                toast.error(t('common.error', { defaultValue: 'Failed to refresh' }));
+                                              } finally {
+                                                setGeneratingDaily(false);
+                                              }
                                             }}
-                                            className="rounded-xl flex items-center gap-1.5 shadow-sm text-xs !bg-primary-brand text-white"
+                                            className="rounded-xl flex items-center gap-1.5 shadow-sm text-xs"
                                           >
-                                            <CalendarPlus className="!h-3.5 !w-3.5" />
-                                            <span>{t('stylist.wearToday', { defaultValue: 'Wear Today' })}</span>
+                                            <RefreshCw className={cn("!h-3.5 !w-3.5", generatingDaily && "animate-spin")} />
+                                            <span>{t('stylist.refreshSuggestion', { defaultValue: 'New Look' })}</span>
                                           </Button>
-                                        )}
-                                      </>
-                                    )}
+                                          {activeProposal && (
+                                            <Button
+                                              size="sm"
+                                              onClick={async () => {
+                                                await handleWearDailyProposal(activeProposal);
+                                              }}
+                                              className="rounded-xl flex items-center gap-1.5 shadow-sm text-xs !bg-primary-brand text-white"
+                                            >
+                                              <CalendarPlus className="!h-3.5 !w-3.5" />
+                                              <span>{t('stylist.wearToday', { defaultValue: 'Wear Today' })}</span>
+                                            </Button>
+                                          )}
+                                        </>
+                                      )}
+                                    </div>
                                   </div>
-                                </div>
                                 {/* Garments Preview row */}
                                 {(() => {
                                   const itemsToRender = todayOutfit?.garments || activeProposal?.items || (todayNotifRecs[0]?.items) || [];
@@ -2550,11 +2710,18 @@ export default function Stylist() {
                                     <div className="flex gap-2 overflow-x-auto flex-nowrap pb-3">
                                       {itemsToRender.map((g, idx) => {
                                         const cid = g.closet_item_id || g.id;
-                                        const cItem = (closetItems || []).find(it => it && it.id === cid);
+                                        const cItem = (closetItems || []).find(it => it && (it.id === cid || it._id === cid));
                                         const img = resolveMediaUrl(bestImageUrl(cItem) || g.image_url || g.clean_image_url || cItem?.image_url);
                                         return (
                                           <div
                                             key={idx}
+                                            onClick={() => {
+                                              if (todayOutfit) {
+                                                setSelectedOutfitForDetail(todayOutfit);
+                                              } else if (activeProposal) {
+                                                setSelectedOutfitForDetail(proposalToOutfit(activeProposal, todayDateStr));
+                                              }
+                                            }}
                                             className="flex items-center gap-2 p-2 rounded-[12px] border border-border hover:border-primary-brand hover:bg-primary-shadow cursor-pointer transition-colors"
                                           >
                                             <div className="w-10 h-10 rounded-full bg-accent-beige overflow-hidden shrink-0 border border-border flex items-center justify-center">
@@ -2567,7 +2734,7 @@ export default function Stylist() {
                                             <div className="min-w-0 flex-1">
                                               <h6 className="text-[12px] font-bold text-dark-brand truncate">{labelForRole(g.role, t)}</h6>
                                               <p className="text-[10px] text-text-brand font-semibold truncate">
-                                               {g.name || g.title || cItem?.title || 'Garment'}
+                                               {g.name || g.title || cItem?.title || cItem?.name || 'Garment'}
                                               </p>
                                             </div>
                                           </div>

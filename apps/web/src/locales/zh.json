@@ -1233,6 +1233,9 @@
     "viewOutfitDetails": "查看详情",
     "suggestionRefreshed": "今日穿搭推荐已刷新！",
     "refreshSuggestion": "换一套",
+    "previousLook": "上一套",
+    "lookCounter": "第 {{current}} / {{total}} 套",
+    "tryOnAvatar": "查看穿搭",
     "wearToday": "今日穿着"
   },
   "outfitCompletion": {

@@ -77,14 +77,21 @@ export const dailySuggestionsStore = {
     }
   },
 
-  async act(action, proposalId) {
+  async act(action, proposalId, date) {
     if (api.actOnDailyProposal) {
-      const updated = await api.actOnDailyProposal(action, proposalId);
+      const updated = await api.actOnDailyProposal(action, proposalId, date);
       if (updated) {
-        _set({
-          proposals: [updated],
-          dailyProposal: updated,
-        });
+        if (action === 'wear') {
+          _set({
+            proposals: [updated],
+            dailyProposal: updated,
+          });
+        } else {
+          _set({
+            proposals: _state.proposals.map(p => (p.id === updated.id ? updated : p)),
+            dailyProposal: updated,
+          });
+        }
       }
       return updated;
     }
@@ -94,8 +101,9 @@ export const dailySuggestionsStore = {
     if (api.generateDailyProposal) {
       const proposal = await api.generateDailyProposal(force);
       if (proposal) {
+        const nextProposals = [...(_state.proposals || []).filter(p => p.id !== proposal.id), proposal];
         _set({
-          proposals: [proposal],
+          proposals: nextProposals,
           dailyProposal: proposal,
         });
       }

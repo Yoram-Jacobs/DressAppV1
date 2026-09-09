@@ -1233,6 +1233,9 @@
     "viewOutfitDetails": "Подробнее",
     "suggestionRefreshed": "Предложение на сегодня обновлено!",
     "refreshSuggestion": "Новый образ",
+    "previousLook": "Предыдущий образ",
+    "lookCounter": "Образ {{current}} из {{total}}",
+    "tryOnAvatar": "Посмотреть образ",
     "wearToday": "Надеть сегодня"
   },
   "outfitCompletion": {

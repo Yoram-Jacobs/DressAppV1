@@ -1233,6 +1233,9 @@
     "viewOutfitDetails": "Ver detalhes",
     "suggestionRefreshed": "Sugestão de hoje atualizada!",
     "refreshSuggestion": "Novo look",
+    "previousLook": "Look anterior",
+    "lookCounter": "Look {{current}} de {{total}}",
+    "tryOnAvatar": "Ver look",
     "wearToday": "Vestir hoje"
   },
   "outfitCompletion": {

@@ -1233,6 +1233,9 @@
     "viewOutfitDetails": "عرض التفاصيل",
     "suggestionRefreshed": "تم تحديث اقتراح اليوم بنجاح!",
     "refreshSuggestion": "إطلالة جديدة",
+    "previousLook": "الإطلالة السابقة",
+    "lookCounter": "إطلالة {{current}} من {{total}}",
+    "tryOnAvatar": "عرض الإطلالة",
     "wearToday": "ارتداء اليوم"
   },
   "outfitCompletion": {

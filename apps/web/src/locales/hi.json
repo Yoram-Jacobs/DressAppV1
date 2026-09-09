@@ -1233,6 +1233,9 @@
     "viewOutfitDetails": "विवरण देखें",
     "suggestionRefreshed": "आज का सुझाव रीफ़्रेश हो गया!",
     "refreshSuggestion": "नया लुक",
+    "previousLook": "पिछला लुक",
+    "lookCounter": "लुक {{current}} / {{total}}",
+    "tryOnAvatar": "लुक देखें",
     "wearToday": "आज पहनें"
   },
   "outfitCompletion": {

@@ -97,6 +97,18 @@ async def act_on_daily_proposal(
     
     if not res:
         raise HTTPException(status_code=404, detail="Proposal not found")
+
+    # If worn, purge unselected intermediate daily proposals for this user & date
+    if body.action == "wear":
+        try:
+            await db.daily_proposals.delete_many({
+                "user_id": user["id"],
+                "date": today_str,
+                "id": {"$ne": res.get("id")},
+                "worn": {"$ne": True}
+            })
+        except Exception as p_err:
+            logger.warning("Failed to purge intermediate proposals: %s", p_err)
         
     await broadcast_sync_event(
         user["id"],
@@ -106,8 +118,15 @@ async def act_on_daily_proposal(
     return res
 
 
-async def _generate_and_save_daily_proposal(user: dict, date_str: str, force: bool = False) -> dict[str, Any]:
-    """Helper to pick a smart outfit from closet and store it in daily_proposals."""
+async def _generate_and_save_daily_proposal(
+    user: dict,
+    date_str: str,
+    force: bool = False,
+    occasion: str = "daily"
+) -> dict[str, Any]:
+    """Helper to pick or generate a smart, diverse outfit from closet and store it in daily_proposals."""
+    import random
+    from app.services.stylist_scheduler_brain import generate_scheduled_proposals
     db = get_db()
     
     # Check if valid existing exists unless force=True
@@ -120,11 +139,14 @@ async def _generate_and_save_daily_proposal(user: dict, date_str: str, force: bo
             return existing
             
     # Fetch user's closet items
-    cursor = db.closet_items.find({"user_id": user["id"]}).limit(30)
+    cursor = db.closet_items.find({"user_id": user["id"]}).limit(100)
     items = [doc async for doc in cursor]
 
     def _cat(i: dict) -> str:
         return (i.get("category") or "").strip().lower()
+
+    def _subcat(i: dict) -> str:
+        return (i.get("sub_category") or i.get("subcategory") or "").strip().lower()
 
     def _best_img(i: dict) -> str | None:
         return (
@@ -135,53 +157,153 @@ async def _generate_and_save_daily_proposal(user: dict, date_str: str, force: bo
             or i.get("thumbnail_data_url")
         )
 
-    # Categorize items robustly
-    tops = [i for i in items if _cat(i) in ("top", "shirt", "t-shirt", "sweater", "blouse", "jacket", "outerwear")]
-    bottoms = [i for i in items if _cat(i) in ("bottom", "pants", "jeans", "skirt", "shorts")]
-    shoes = [i for i in items if _cat(i) in ("shoes", "sneakers", "boots", "sandals", "footwear")]
-
+    # 1. Try AI-powered recommendation first
     selected_items: list[dict[str, Any]] = []
-    if tops:
-        t0 = tops[0]
-        selected_items.append({
-            "id": t0.get("id"),
-            "closet_item_id": t0.get("id"),
-            "role": "top",
-            "name": t0.get("title") or t0.get("name") or "Top",
-            "category": t0.get("category"),
-            "image_url": _best_img(t0),
-        })
-    if bottoms:
-        b0 = bottoms[0]
-        selected_items.append({
-            "id": b0.get("id"),
-            "closet_item_id": b0.get("id"),
-            "role": "bottom",
-            "name": b0.get("title") or b0.get("name") or "Bottom",
-            "category": b0.get("category"),
-            "image_url": _best_img(b0),
-        })
-    if shoes:
-        s0 = shoes[0]
-        selected_items.append({
-            "id": s0.get("id"),
-            "closet_item_id": s0.get("id"),
-            "role": "shoes",
-            "name": s0.get("title") or s0.get("name") or "Shoes",
-            "category": s0.get("category"),
-            "image_url": _best_img(s0),
-        })
+    proposal_title = "Look of the Day"
+    proposal_desc = "Curated based on your style profile, weather conditions, and closet harmony."
+    proposal_harmony = 94
+
+    ai_generated = False
+    try:
+        scheduler_res = await generate_scheduled_proposals(user, style_dress_for=occasion)
+        recs = scheduler_res.get("outfit_recommendations") or []
+        if recs:
+            # Pick a random recommendation if multiple exist for diversity
+            chosen_rec = random.choice(recs)
+            proposal_title = chosen_rec.get("name") or proposal_title
+            proposal_desc = chosen_rec.get("why") or proposal_desc
+            confidence = chosen_rec.get("confidence")
+            if confidence:
+                proposal_harmony = min(99, max(80, int(confidence * 100)))
+
+            item_map = {item["id"]: item for item in items}
+            for it in chosen_rec.get("items", []):
+                cid = it.get("closet_item_id")
+                closet_doc = item_map.get(cid)
+                if closet_doc:
+                    selected_items.append({
+                        "id": closet_doc.get("id"),
+                        "closet_item_id": closet_doc.get("id"),
+                        "role": it.get("role") or _cat(closet_doc) or "item",
+                        "name": closet_doc.get("title") or closet_doc.get("name") or it.get("description") or "Garment",
+                        "category": closet_doc.get("category"),
+                        "image_url": _best_img(closet_doc),
+                    })
+            if len(selected_items) >= 2:
+                ai_generated = True
+    except Exception as ai_exc:
+        logger.warning("AI scheduled proposals generation fallback: %s", ai_exc)
+
+    # 2. Smart Diversified Closet Fallback if AI didn't return full outfit
+    if not ai_generated or len(selected_items) < 2:
+        selected_items = []
+        # Categorize items robustly
+        tops = [i for i in items if _cat(i) in ("top", "tops", "shirt", "t-shirt", "sweater", "blouse", "polo", "hoodie")]
+        bottoms = [i for i in items if _cat(i) in ("bottom", "bottoms", "pants", "jeans", "skirt", "shorts", "trousers", "leggings")]
+        shoes = [i for i in items if _cat(i) in ("shoes", "sneakers", "boots", "sandals", "footwear", "heels", "loafers")]
+        dresses = [i for i in items if _cat(i) in ("dress", "one-piece", "jumpsuit", "romper")]
+        outerwear = [i for i in items if _cat(i) in ("outerwear", "jacket", "coat", "blazer", "cardigan", "vest")]
+        accessories = [i for i in items if _cat(i) in ("accessory", "accessories", "bag", "belt", "hat", "scarf")]
+
+        # Shuffle for diverse combination on every click
+        random.shuffle(tops)
+        random.shuffle(bottoms)
+        random.shuffle(shoes)
+        random.shuffle(dresses)
+        random.shuffle(outerwear)
+        random.shuffle(accessories)
+
+        # Decide whether dress or top+bottom
+        use_dress = bool(dresses and (not tops or not bottoms or random.random() < 0.25))
+
+        if use_dress and dresses:
+            d0 = dresses[0]
+            selected_items.append({
+                "id": d0.get("id"),
+                "closet_item_id": d0.get("id"),
+                "role": "dress",
+                "name": d0.get("title") or d0.get("name") or "Dress",
+                "category": d0.get("category"),
+                "image_url": _best_img(d0),
+            })
+        else:
+            if tops:
+                t0 = tops[0]
+                selected_items.append({
+                    "id": t0.get("id"),
+                    "closet_item_id": t0.get("id"),
+                    "role": "top",
+                    "name": t0.get("title") or t0.get("name") or "Top",
+                    "category": t0.get("category"),
+                    "image_url": _best_img(t0),
+                })
+            if bottoms:
+                b0 = bottoms[0]
+                selected_items.append({
+                    "id": b0.get("id"),
+                    "closet_item_id": b0.get("id"),
+                    "role": "bottom",
+                    "name": b0.get("title") or b0.get("name") or "Bottom",
+                    "category": b0.get("category"),
+                    "image_url": _best_img(b0),
+                })
+
+        if shoes:
+            s0 = shoes[0]
+            selected_items.append({
+                "id": s0.get("id"),
+                "closet_item_id": s0.get("id"),
+                "role": "shoes",
+                "name": s0.get("title") or s0.get("name") or "Shoes",
+                "category": s0.get("category"),
+                "image_url": _best_img(s0),
+            })
+
+        # Optionally add outerwear (50% chance if available)
+        if outerwear and random.random() < 0.5:
+            ow0 = outerwear[0]
+            selected_items.append({
+                "id": ow0.get("id"),
+                "closet_item_id": ow0.get("id"),
+                "role": "outerwear",
+                "name": ow0.get("title") or ow0.get("name") or "Outerwear",
+                "category": ow0.get("category"),
+                "image_url": _best_img(ow0),
+            })
+
+        # Optionally add accessory (40% chance if available)
+        if accessories and random.random() < 0.4:
+            acc0 = accessories[0]
+            selected_items.append({
+                "id": acc0.get("id"),
+                "closet_item_id": acc0.get("id"),
+                "role": "accessory",
+                "name": acc0.get("title") or acc0.get("name") or "Accessory",
+                "category": acc0.get("category"),
+                "image_url": _best_img(acc0),
+            })
+
+        # Generate vibrant title based on selected items
+        color_names = [i.get("color") for i in items if i.get("id") in [x["id"] for x in selected_items] and i.get("color")]
+        style_adjectives = ["Effortless", "Crisp", "Polished", "Modern", "Refined", "Relaxed", "Vibrant", "Chic", "Smart"]
+        adj = random.choice(style_adjectives)
+        if color_names:
+            proposal_title = f"{adj} {color_names[0].title()} Look"
+        else:
+            proposal_title = f"{adj} Everyday Look"
+        proposal_desc = "Curated based on your style profile, weather conditions, and closet harmony."
+        proposal_harmony = random.randint(88, 97) if len(selected_items) >= 2 else 85
         
     proposal = {
         "id": f"prop_{uuid.uuid4().hex[:12]}",
         "user_id": user["id"],
         "date": date_str,
-        "title": "Look of the Day",
-        "description": "Curated based on your style profile, weather conditions, and closet harmony.",
+        "title": proposal_title,
+        "description": proposal_desc,
         "weather_summary": "Mild & Pleasant",
         "temperature": 22,
         "items": selected_items,
-        "harmony_score": 94 if len(selected_items) >= 2 else 85,
+        "harmony_score": proposal_harmony,
         "worn": False,
         "liked": False,
         "dismissed": False,

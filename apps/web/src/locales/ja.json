@@ -1233,7 +1233,10 @@
     "viewOutfitDetails": "詳細を見る",
     "suggestionRefreshed": "今日の提案を更新しました！",
     "refreshSuggestion": "別のルック",
-    "wearToday": "今日着用する"
+    "previousLook": "前のルック",
+    "lookCounter": "ルック {{current}} / {{total}}",
+    "tryOnAvatar": "ルックを見る",
+    "wearToday": "今日着る"
   },
   "outfitCompletion": {
     "cta": "コーデを完成",
