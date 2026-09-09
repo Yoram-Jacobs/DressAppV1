@@ -37,12 +37,19 @@ let webpackConfig = {
     alias: {
       '@': path.resolve(__dirname, 'src'),
       '@dressapp/api-client': path.resolve(__dirname, '../../packages/api-client/src/index.js'),
-      'lucide-react': path.resolve(__dirname, 'node_modules/lucide-react/dist/cjs/lucide-react.js'),
+      'lucide-react': require.resolve('lucide-react'),
       'motion-utils': require.resolve('motion-utils'),
       // Override the package stub so the full Sonner toast fires on web
       './aiNotice.js': path.resolve(__dirname, 'src/lib/aiNotice.jsx'),
     },
     configure: (webpackConfig) => {
+      // Ensure root node_modules is searched for monorepo package hoisting
+      webpackConfig.resolve.modules = [
+        path.resolve(__dirname, 'node_modules'),
+        path.resolve(__dirname, '../../node_modules'),
+        ...(webpackConfig.resolve.modules || ['node_modules']),
+      ];
+
       // Remove ModuleScopePlugin to allow aliases and monorepo packages outside src/
       if (webpackConfig.resolve && webpackConfig.resolve.plugins) {
         webpackConfig.resolve.plugins = webpackConfig.resolve.plugins.filter(

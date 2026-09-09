@@ -22,9 +22,9 @@ import Login from '@/pages/Login';
 import Register from '@/pages/Register';
 import AuthCallback from '@/pages/AuthCallback';
 import Home from '@/pages/Home';
-import Closet from '@/pages/Closet';
 
 // Lazy-loaded secondary routes for optimal code-splitting
+const Closet = lazy(() => import('@/pages/Closet'));
 const AddItem = lazy(() => import('@/pages/AddItem'));
 const ItemDetail = lazy(() => import('@/pages/ItemDetail'));
 const Stylist = lazy(() => import('@/pages/Stylist'));

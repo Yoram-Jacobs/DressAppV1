@@ -36,7 +36,7 @@ import { useState } from 'react';
 export const AppLayout = () => {
   const { t } = useTranslation();
   const { user, loading, refresh } = useAuth();
-  const { items, lastFullSync } = useClosetStore();
+  const { items, isLoaded, error: closetError } = useClosetStore();
   const [dismissedLoginReminder, setDismissedLoginReminder] = useState(() => {
     return sessionStorage.getItem('dressapp_dismissed_login_reminder') === 'true';
   });
@@ -141,10 +141,10 @@ export const AppLayout = () => {
   }, [user, loading]);
 
   useEffect(() => {
-    if (user && !user.migration_flag && 'ontouchstart' in window) {
+    if (user && !user.migration_flag && isLoaded && !closetError && !hasClosetItems && 'ontouchstart' in window) {
       toast.info(t('profile.mobileDesktopGuide', { defaultValue: 'Wardrobe import is available on the desktop version of DressApp. Please open your account on a desktop browser to continue.' }), { duration: 8000 });
     }
-  }, [user]);
+  }, [user, isLoaded, closetError, hasClosetItems, t]);
 
   if (loading) {
     return (
@@ -155,8 +155,11 @@ export const AppLayout = () => {
   }
   if (!user) return <Navigate to="/login" replace />;
 
-  const showOnboardingMigration = user && !user.migration_flag;
-  const showLoginReminder = user && user.migration_flag && lastFullSync > 0 && items.length === 0 && !dismissedLoginReminder && !showOnboardingMigration;
+  const hasClosetItems = items && items.length > 0;
+  // Guard dialogs: Only check empty-closet status after the store has completed loading,
+  // and do not trigger false positives if an error occurred during loading.
+  const showOnboardingMigration = user && !user.migration_flag && isLoaded && !closetError && !hasClosetItems;
+  const showLoginReminder = user && user.migration_flag && isLoaded && !closetError && !hasClosetItems && !dismissedLoginReminder && !showOnboardingMigration;
 
   return (
     <div className="page-shell">

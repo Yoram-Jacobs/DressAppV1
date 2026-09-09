@@ -41,6 +41,7 @@ export function useClosetStore({ prewarm = false } = {}) {
     items: snap.items,
     total: snap.total,
     loading: snap.loading,
+    isLoaded: snap.isLoaded,
     error: snap.error,
     lastFullSync: snap.lastFullSync,
     lastIncSync: snap.lastIncSync,
