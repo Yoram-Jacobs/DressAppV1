@@ -122,7 +122,7 @@ export function PhotoSlot({ label, value, onChange, testid }) {
 export function Field({ label, children, htmlFor }) {
   return (
     <div className="space-y-1">
-      <Label htmlFor={htmlFor} className="caps-label text-muted-foreground">
+      <Label htmlFor={htmlFor} className="">
         {label}
       </Label>
       {children}

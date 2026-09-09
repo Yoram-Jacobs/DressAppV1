@@ -72,7 +72,6 @@ export function StreamingProgressChip({
 }) {
   const [phase, setPhase] = useState('idle');
   const [visible, setVisible] = useState(false);
-
   const running = !!progress?.running;
   const hasError = !!progress?.lastError;
   const failed = progress?.failed || 0;
@@ -126,14 +125,14 @@ export function StreamingProgressChip({
       data-testid={testId}
       data-phase={phase}
       className={cn(
-        'inline-flex items-center gap-1.5 rounded-full',
-        'px-2.5 py-1 text-xs font-medium',
+        'inline-flex items-center gap-1 rounded-full',
+        'px-2.5 py-1 text-[10px] font-bold',
         'border transition-opacity duration-300',
         'select-none whitespace-nowrap',
         phase === 'running' &&
-          'border-border bg-secondary/60 text-foreground/80',
+          'border-border bg-secondary text-text-brand',
         phase === 'success' &&
-          'border-[hsl(var(--accent))]/40 bg-[hsl(var(--accent))]/10 text-[hsl(var(--accent-foreground))]',
+          'border-primary-brand bg-primary-brand text-white',
         phase === 'failure' &&
           'border-destructive/40 bg-destructive/10 text-destructive',
         className,

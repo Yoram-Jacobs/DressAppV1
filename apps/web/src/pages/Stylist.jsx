@@ -151,7 +151,7 @@ const getOutfitPiecesMap = (o, closetItems = []) => {
         let img = g.image_url || g.clean_image_url || g.thumbnail_data_url;
         let cid = g.closet_item_id || g.id;
         if (Array.isArray(closetItems) && closetItems.length > 0) {
-          const ci = closetItems.find(c => 
+          const ci = closetItems.find(c =>
             (cid && (c.id === cid || c._id === cid)) ||
             (g.title && (c.title === g.title || c.name === g.title))
           );
@@ -160,10 +160,10 @@ const getOutfitPiecesMap = (o, closetItems = []) => {
             cid = cid || ci.id;
           }
         }
-        map[g.role] = { 
+        map[g.role] = {
           id: cid,
           closet_item_id: cid,
-          image_url: img 
+          image_url: img
         };
       }
     });
@@ -177,7 +177,7 @@ const getRecommendationPiecesMap = (rec, closetItems) => {
       if (item && item.role) {
         const closetItem = closetItems.find(c => c.id === item.closet_item_id);
         if (closetItem) {
-          map[item.role] = { 
+          map[item.role] = {
             id: closetItem.id,
             closet_item_id: closetItem.id,
             image_url: closetItem.image_url,
@@ -1855,7 +1855,7 @@ export default function Stylist() {
 
         <div className="relative flex items-center gap-2 border border-[#ccc] bg-white rounded-full p-2 transition-all focus-within:border-[var(--primary-color)] focus-within:shadow-[0_0_0_3px_rgba(31,92,69,0.15)]">
           <Textarea value={text} onChange={(e) => setText(e.target.value)} rows={1} placeholder={t('stylist.composerPlaceholder', { defaultValue: 'Type your message...' })}
-            className="flex-1 min-h-9 max-h-40 border-0 mb-0 bg-transparent resize-none p-1.5 text-sm shadow-none focus-visible:outline-none focus-visible:shadow-none" data-testid="stylist-composer-textarea"/>
+            className="flex-1 min-h-9 max-h-40 border-0 mb-0 bg-transparent resize-none p-1.5 text-sm shadow-none focus-visible:outline-none focus-visible:shadow-none" data-testid="stylist-composer-textarea" />
           <div className="flex items-center gap-1 shrink-0">
             {recording ? (
               <Button
@@ -2460,9 +2460,9 @@ export default function Stylist() {
                           return (
                             <Card className="border border-border rounded-[12px] shadow-editorial overflow-hidden bg-white w-full shrink-0 mb-6">
                               <CardContent className="p-4 md:p-5">
-                                <div className="flex items-center justify-between gap-4 flex-wrap pb-3 border-b border-border/60">
+                                <div className="flex items-center justify-between gap-4 flex-wrap pb-3">
                                   <div className="flex items-center gap-3">
-                                    <div className="p-2.5 bg-primary-shadow text-primary-brand rounded-xl shrink-0">
+                                    <div className="p-2.5 bg-primary-shadow text-primary-brand rounded-full shrink-0">
                                       <Sparkles className="h-5 w-5" />
                                     </div>
                                     <div className="text-start">
@@ -2472,7 +2472,7 @@ export default function Stylist() {
                                             ? t('calendar.todayOutfit', { defaultValue: "Today's Scheduled Outfit" })
                                             : t('stylist.todaySuggestionTitle', { defaultValue: "Today's Style Suggestion" })}
                                         </h3>
-                                        <Badge variant="outline" className="text-[10px] font-semibold text-primary-brand border-primary-brand/30 bg-primary-shadow">
+                                        <Badge variant="outline" className="text-[10px] font-semibold text-primary-brand border-primary-brand bg-white">
                                           {new Date().toLocaleDateString(i18n.language || 'en', { month: 'short', day: 'numeric', year: 'numeric' })}
                                         </Badge>
                                         {todayOutfit && (
@@ -2482,12 +2482,12 @@ export default function Stylist() {
                                         )}
                                       </div>
                                       <p className="text-xs text-text-brand mt-0.5">
-                                         {todayOutfit
-                                           ? (todayOutfit.description || getOutfitName(todayOutfit.name))
-                                           : ((activeProposal?.description && !activeProposal.description.includes('Curated based on your style profile'))
-                                               ? activeProposal.description
-                                               : t('stylist.todaySuggestionSubtitle', { defaultValue: 'Curated based on your style profile, weather conditions, and closet harmony.' }))}
-                                       </p>
+                                        {todayOutfit
+                                          ? (todayOutfit.description || getOutfitName(todayOutfit.name))
+                                          : ((activeProposal?.description && !activeProposal.description.includes('Curated based on your style profile'))
+                                            ? activeProposal.description
+                                            : t('stylist.todaySuggestionSubtitle', { defaultValue: 'Curated based on your style profile, weather conditions, and closet harmony.' }))}
+                                      </p>
                                     </div>
                                   </div>
                                   <div className="flex items-center gap-2">
@@ -2542,13 +2542,12 @@ export default function Stylist() {
                                     )}
                                   </div>
                                 </div>
-
                                 {/* Garments Preview row */}
                                 {(() => {
                                   const itemsToRender = todayOutfit?.garments || activeProposal?.items || (todayNotifRecs[0]?.items) || [];
                                   if (itemsToRender.length === 0) return null;
                                   return (
-                                    <div className="pt-4 grid grid-cols-2 sm:grid-cols-4 gap-3">
+                                    <div className="flex gap-2 overflow-x-auto flex-nowrap pb-3">
                                       {itemsToRender.map((g, idx) => {
                                         const cid = g.closet_item_id || g.id;
                                         const cItem = (closetItems || []).find(it => it && it.id === cid);
@@ -2556,18 +2555,20 @@ export default function Stylist() {
                                         return (
                                           <div
                                             key={idx}
-                                            className="flex items-center gap-2.5 p-2 rounded-xl bg-[var(--accent-beige)]/60 border border-border/40"
+                                            className="flex items-center gap-2 p-2 rounded-[12px] border border-border hover:border-primary-brand hover:bg-primary-shadow cursor-pointer transition-colors"
                                           >
-                                            <div className="w-10 h-10 rounded-lg bg-white overflow-hidden flex items-center justify-center shrink-0 border border-border/40">
+                                            <div className="w-10 h-10 rounded-full bg-accent-beige overflow-hidden shrink-0 border border-border flex items-center justify-center">
                                               {img ? (
                                                 <img src={img} alt={g.name || g.title || ''} className="w-full h-full object-contain p-0.5" />
                                               ) : (
                                                 <Shirt className="h-4 w-4 text-text-brand opacity-40" />
                                               )}
                                             </div>
-                                            <div className="min-w-0 text-start">
-                                              <div className="text-[10px] font-bold uppercase text-primary-brand">{labelForRole(g.role, t)}</div>
-                                              <div className="text-xs font-semibold text-dark-brand truncate">{g.name || g.title || cItem?.title || 'Garment'}</div>
+                                            <div className="min-w-0 flex-1">
+                                              <h6 className="text-[12px] font-bold text-dark-brand truncate">{labelForRole(g.role, t)}</h6>
+                                              <p className="text-[10px] text-text-brand font-semibold truncate">
+                                               {g.name || g.title || cItem?.title || 'Garment'}
+                                              </p>
                                             </div>
                                           </div>
                                         );

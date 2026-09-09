@@ -175,11 +175,11 @@ export function AddressAutocomplete({
             placeholder={placeholder}
             disabled={disabled}
             autoComplete={autoComplete}
-            className="rounded-xl pe-9"
+            className=""
             data-testid={testid}
           />
           {loading && (
-            <Loader2 className="absolute end-3 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin text-muted-foreground" />
+            <Loader2 className="absolute end-3 top-[15px] h-4 w-4 animate-spin text-primary-brand" />
           )}
         </div>
       </PopoverAnchor>
@@ -210,17 +210,17 @@ export function AddressAutocomplete({
               <li
                 key={item.place_id}
                 className={cn(
-                  'flex cursor-pointer items-start gap-2 rounded-lg px-2 py-1.5 text-sm',
-                  'hover:bg-accent focus-visible:bg-accent',
+                  'group flex cursor-pointer items-start gap-2 rounded-[8px] py-2 px-2 text-[12px]',
+                  'hover:bg-primary-brand focus-visible:bg-primary-brand',
                 )}
                 onClick={() => handlePick(item)}
                 data-testid={`${testid}-suggestion`}
               >
-                <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
+                <MapPin className="h-4 w-4 shrink-0 text-primary-brand group-hover:text-white" />
                 <div className="min-w-0 flex-1">
-                  <div className="truncate font-medium">{primary}</div>
+                  <div className="truncate font-bold text-dark-brand group-hover:text-white">{primary}</div>
                   {secondary && (
-                    <div className="truncate text-xs text-muted-foreground">
+                    <div className="truncate text-[10px] text-text-brand group-hover:text-white font-semibold">
                       {secondary}
                     </div>
                   )}

@@ -10,7 +10,7 @@ import { AspectRatio } from '@/components/ui/aspect-ratio';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { SourceTagBadge } from '@/components/SourceTagBadge';
-import { Plus, MapPin } from 'lucide-react';
+import { Plus, MapPin, CheckCircle2, Clock, XCircle, Package, Receipt } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { StreamingProgressChip } from '@/components/StreamingProgressChip';
 import { api } from '@/lib/api';
@@ -35,6 +35,33 @@ const fmt = (cents, cur = "USD") =>
   new Intl.NumberFormat("en-US", { style: "currency", currency: cur }).format(
     (cents || 0) / 100,
   );
+
+// Status → color/icon mapping shared by the inline transactions table
+// (mirrors the standalone Transactions page styling so both surfaces
+// read as one consistent design).
+const STATUS_TONE = {
+  pending: 'bg-amber-100 text-amber-900 border-amber-200',
+  completed: 'bg-emerald-100 text-emerald-900 border-emerald-200',
+  accepted: 'bg-emerald-100 text-emerald-900 border-emerald-200',
+  shipped: 'bg-sky-100 text-sky-900 border-sky-200',
+  paid: 'bg-emerald-100 text-emerald-900 border-emerald-200',
+  denied: 'bg-rose-100 text-rose-900 border-rose-200',
+  cancelled: 'bg-rose-100 text-rose-900 border-rose-200',
+  refunded: 'bg-slate-100 text-slate-800 border-slate-200',
+  failed: 'bg-rose-100 text-rose-900 border-rose-200',
+};
+
+const STATUS_ICON = {
+  pending: Clock,
+  completed: CheckCircle2,
+  accepted: CheckCircle2,
+  shipped: Package,
+  paid: CheckCircle2,
+  denied: XCircle,
+  cancelled: XCircle,
+  refunded: Receipt,
+  failed: XCircle,
+};
 
 // Marketplace filter dropdown.
 //
@@ -82,9 +109,9 @@ function MarketplaceItemImage({ item, t }) {
   }
 
   return (
-    <div className="w-full h-full flex flex-col gap-1.5 justify-center items-center text-[#b5b5ae]">
+    <div className="w-full h-full flex flex-col gap-1.5 justify-center items-center text-text-brand">
       <i className="fa-solid fa-image text-[22px]"></i>
-      <span className="text-[11px] font-semibold">
+      <span className="text-[12px] font-semibold">
         {t("market.noImage", { defaultValue: "No image" })}
       </span>
     </div>
@@ -205,8 +232,7 @@ export default function Marketplace() {
       <section
         className="
             relative isolate overflow-hidden
-            bg-cover bg-center bg-no-repeat
-             mt-[var(--header-height)]"
+            bg-cover bg-center bg-no-repeat"
         style={{
           backgroundImage: `url(${ClosetBanner})`,
         }}
@@ -238,7 +264,7 @@ export default function Marketplace() {
                     max-[480px]:text-[35px]
                   "
               >
-                {t("market.hero")}
+                {t("market.title")}-{t("market.hero")}
               </h1>
 
               {/* Description */}
@@ -259,51 +285,7 @@ export default function Marketplace() {
                     "Discover pre-loved fashion, list your wardrobe, or connect with nearby buyers and sellers. Shop smarter, earn from your closet, and embrace sustainable style—all in one marketplace.",
                 })}
               </p>
-            </div>
-          </div>
-        </div>
-      </section>
-      <section className="px-[40px] py-[80px] bg-[var(--accent-beige)]">
-        <div className="flex items-center justify-between">
-          <h2 className="font-extrabold leading-10 text-[var(--dark-color)] text-[30px] tracking-[0.5px] mb-0">
-            {t("market.title")}
-          </h2>
-        </div>
-        <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <div className="flex flex-wrap items-center justify-between">
-            <div className="">
-              <TabsList
-                data-testid="marketplace-tabs"
-                className="inline-flex items-center gap-1 p-[5px] bg-white rounded-full my-5"
-              >
-                <TabsTrigger
-                  value="browse"
-                  data-testid="marketplace-tab-browse"
-                  className="group inline-flex items-center gap-[7px] px-5 py-[10px] rounded-full text-sm font-bold text-[var(--text-color)] bg-transparent border-none transition-all duration-300 cursor-pointer whitespace-nowrap hover:text-[var(--primary-color)] hover:bg-[var(--primary-shadow)] data-[state=active]:!bg-[var(--primary-color)] data-[state=active]:!text-white"
-                >
-                  <i className="fa-solid fa-store text-xs opacity-70 transition-all duration-300 group-data-[state=active]:opacity-100 group-data-[state=active]:text-white"></i>{" "}
-                  {t("market.browse")}
-                </TabsTrigger>
-                <TabsTrigger
-                  value="mine"
-                  data-testid="marketplace-tab-mine"
-                  className="group inline-flex items-center gap-[7px] px-5 py-[10px] rounded-full text-sm font-bold text-[var(--text-color)] bg-transparent border-none transition-all duration-300 cursor-pointer whitespace-nowrap hover:text-[var(--primary-color)] hover:bg-[var(--primary-shadow)] data-[state=active]:!bg-[var(--primary-color)] data-[state=active]:!text-white"
-                >
-                  <i className="fa-solid fa-shirt text-xs opacity-70 transition-all duration-300 group-data-[state=active]:opacity-100 group-data-[state=active]:text-white"></i>{" "}
-                  {t("market.myListings")}
-                </TabsTrigger>
-                <TabsTrigger
-                  value="tx"
-                  data-testid="marketplace-tab-transactions"
-                  className="group inline-flex items-center gap-[7px] px-5 py-[10px] rounded-full text-sm font-bold text-[var(--text-color)] bg-transparent border-none transition-all duration-300 cursor-pointer whitespace-nowrap hover:text-[var(--primary-color)] hover:bg-[var(--primary-shadow)] data-[state=active]:!bg-[var(--primary-color)] data-[state=active]:!text-white"
-                >
-                  <i className="fa-solid fa-receipt text-xs opacity-70 transition-all duration-300 group-data-[state=active]:opacity-100 group-data-[state=active]:text-white"></i>{" "}
-                  {t("market.transactionsTab")}
-                </TabsTrigger>
-              </TabsList>
-            </div>
-            <div className="">
-              <div className="topaligntab">
+              <div className="">
                 <Link
                   to="/market/create"
                   data-testid="marketplace-create-listing"
@@ -315,9 +297,41 @@ export default function Marketplace() {
               </div>
             </div>
           </div>
-
+        </div>
+      </section>
+      <section className="px-[40px] py-[40px] bg-[var(--accent-beige)]">
+        <Tabs value={activeTab} onValueChange={setActiveTab}>
+          <TabsList
+            data-testid="marketplace-tabs"
+            className="inline-flex items-center gap-1 p-[5px] bg-white rounded-full my-5"
+          >
+            <TabsTrigger
+              value="browse"
+              data-testid="marketplace-tab-browse"
+              className="group inline-flex items-center gap-[7px] px-5 py-[10px] rounded-full text-[12px] font-bold text-[var(--text-color)] bg-transparent border-none transition-all duration-300 cursor-pointer whitespace-nowrap hover:text-[var(--primary-color)] hover:bg-[var(--primary-shadow)] data-[state=active]:!bg-[var(--primary-color)] data-[state=active]:!text-white"
+            >
+              <i className="fa-solid fa-store text-xs opacity-70 transition-all duration-300 group-data-[state=active]:opacity-100 group-data-[state=active]:text-white"></i>{" "}
+              {t("market.browse")}
+            </TabsTrigger>
+            <TabsTrigger
+              value="mine"
+              data-testid="marketplace-tab-mine"
+              className="group inline-flex items-center gap-[7px] px-5 py-[10px] rounded-full text-[12px] font-bold text-[var(--text-color)] bg-transparent border-none transition-all duration-300 cursor-pointer whitespace-nowrap hover:text-[var(--primary-color)] hover:bg-[var(--primary-shadow)] data-[state=active]:!bg-[var(--primary-color)] data-[state=active]:!text-white"
+            >
+              <i className="fa-solid fa-shirt text-xs opacity-70 transition-all duration-300 group-data-[state=active]:opacity-100 group-data-[state=active]:text-white"></i>{" "}
+              {t("market.myListings")}
+            </TabsTrigger>
+            <TabsTrigger
+              value="tx"
+              data-testid="marketplace-tab-transactions"
+              className="group inline-flex items-center gap-[7px] px-5 py-[10px] rounded-full text-[12px] font-bold text-[var(--text-color)] bg-transparent border-none transition-all duration-300 cursor-pointer whitespace-nowrap hover:text-[var(--primary-color)] hover:bg-[var(--primary-shadow)] data-[state=active]:!bg-[var(--primary-color)] data-[state=active]:!text-white"
+            >
+              <i className="fa-solid fa-receipt text-xs opacity-70 transition-all duration-300 group-data-[state=active]:opacity-100 group-data-[state=active]:text-white"></i>{" "}
+              {t("market.transactionsTab")}
+            </TabsTrigger>
+          </TabsList>
           <TabsContent value="browse">
-            <div className="grid grid-cols-1 lg:grid-cols-[260px_minmax(0,1fr)] gap-3 items-start">
+            <div className="grid grid-cols-1 lg:grid-cols-[260px_minmax(0,1fr)] gap-4 items-start">
               <div className="min-w-0">
                 <div className="bg-white border border-border rounded-[12px] p-4 shadow-[0_8px_24px_rgba(20,30,25,0.05)]">
                   <div className="flex items-center gap-2 text-[13px] font-extrabold uppercase tracking-[0.06em] text-[var(--dark-color)] pb-[14px] mb-4 border-b border-[#eee]">
@@ -346,11 +360,11 @@ export default function Marketplace() {
                           <SelectItem key={s} value={s}>
                             {s === "all"
                               ? t("taxonomy.source.all", {
-                                  defaultValue: "All sources",
-                                })
+                                defaultValue: "All sources",
+                              })
                               : _INTENT_VALUES.has(s)
-                              ? labelForIntent(s, t)
-                              : labelForSource(s, t)}
+                                ? labelForIntent(s, t)
+                                : labelForSource(s, t)}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -426,47 +440,46 @@ export default function Marketplace() {
                   {(filters.source !== "all" ||
                     filters.category !== "all" ||
                     filters.radius !== "any") && (
-                    <button
-                      type="button"
-                      className="w-full mt-[18px] p-[10px] border border-dashed border-[rgba(31,92,69,0.35)] bg-transparent rounded-xl text-[var(--primary-color)] text-xs font-extrabold cursor-pointer transition-all duration-300 hover:bg-[var(--primary-shadow)]"
-                      onClick={() => setFilters(INITIAL_FILTERS)}
-                    >
-                      {t("market.clearFilters", {
-                        defaultValue: "Clear all filters",
-                      })}
-                    </button>
-                  )}
+                      <button
+                        type="button"
+                        className="w-full mt-[18px] p-[10px] border border-dashed border-[rgba(31,92,69,0.35)] bg-transparent rounded-xl text-[var(--primary-color)] text-xs font-extrabold cursor-pointer transition-all duration-300 hover:bg-[var(--primary-shadow)]"
+                        onClick={() => setFilters(INITIAL_FILTERS)}
+                      >
+                        {t("market.clearFilters", {
+                          defaultValue: "Clear all filters",
+                        })}
+                      </button>
+                    )}
                 </div>
               </div>
               <div className="min-w-0">
                 {!loading && items.length > 0 && (
                   <div
-                    className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-3 gap-y-3"
+                    className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-4 gap-y-4"
                     data-testid="marketplace-grid"
                   >
                     {items.map((l) => (
                       <div key={l.id}>
                         <Link
                           to={`/market/${l.id}`}
-                          className="block no-underline text-inherit"
+                          className="block no-underline text-inherit h-full"
                           data-testid="marketplace-item-card"
                         >
-                          <div className="group rounded-2xl overflow-hidden border border-black/5 bg-white h-full transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] hover:-translate-y-2 hover:shadow-[0_24px_48px_rgba(20,30,25,0.12)] hover:border-[rgba(31,92,69,0.15)]">
-                            <div className="relative aspect-square overflow-hidden bg-[#f4f4ef]">
+                          <div className="group rounded-[12px] overflow-hidden border border-border shadow-sm bg-white h-full transition-smooth hover:-translate-y-1 hover:shadow-md hover:border-primary-brand">
+                            <div className="relative aspect-square overflow-hidden bg-[#ddd]">
                               <MarketplaceItemImage item={l} t={t} />
-                              <div className="absolute top-2.5 left-2.5 z-[2] [&>*]:!bg-[var(--primary-color)] [&>*]:!text-white [&>*]:!font-extrabold [&>*]:!text-[9px] [&>*]:tracking-[1.5px] [&>*]:!px-2.5 [&>*]:!py-1.5 [&>*]:!rounded-full [&>*]:!border-none">
+                              <div className="absolute top-2.5 left-2.5 z-[2] [&>*]:!bg-[var(--primary-color)] [&>*]:!text-white [&>*]:!font-extrabold [&>*]:!text-[9px] [&>*]:!px-2.5 [&>*]:!py-1.5 [&>*]:!rounded-full [&>*]:!border-none">
                                 <SourceTagBadge
                                   source={l.source}
                                   mode={l.mode}
                                 />
                               </div>
                               {l.condition && (
-                                <span className="absolute bottom-2.5 right-2.5 z-[2] bg-white text-[var(--primary-color)] text-[10px] font-extrabold tracking-[0.04em] capitalize px-2.5 py-1.5 rounded-full">
+                                <span className="absolute bottom-2.5 right-2.5 z-[2] bg-white text-[var(--primary-color)] text-[10px] font-extrabold px-2.5 py-1.5 rounded-full">
                                   {labelForCondition(l.condition, t)}
                                 </span>
                               )}
                             </div>
-
                             <div className="p-[15px]">
                               <div className="flex items-center justify-between mb-[5px]">
                                 {l.brand && (
@@ -480,17 +493,15 @@ export default function Marketplace() {
                                   </span>
                                 )}
                               </div>
-
                               <h4 className="text-sm font-bold leading-5 mb-[5px] text-black line-clamp-1">
                                 {l.title}
                               </h4>
-
                               <div className="flex items-center justify-between mb-0">
                                 <span className="text-[18px] font-black text-[var(--primary-color)] tracking-[-0.3px]">
                                   {fmt(
                                     l.financial_metadata?.list_price_cents,
                                     l.financial_metadata?.currency ||
-                                      l.currency,
+                                    l.currency,
                                   )}
                                   {l.mode === "rent" && (
                                     <span className="text-[11px] font-semibold text-[var(--text-color)] ml-0.5">
@@ -504,12 +515,11 @@ export default function Marketplace() {
                                       l.financial_metadata
                                         ?.estimated_seller_net_cents,
                                       l.financial_metadata?.currency ||
-                                        l.currency,
+                                      l.currency,
                                     ),
                                   })}
                                 </span>
                               </div>
-
                               {typeof l.distance_km === "number" && (
                                 <div className="flex items-center gap-1 text-[11px] font-semibold text-[#9a9a94] pb-1">
                                   <MapPin size={12} />
@@ -527,14 +537,14 @@ export default function Marketplace() {
                 )}
                 {(loading ||
                   (browseProgress.running && items.length === 0)) && (
-                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                    {Array.from({ length: 8 }).map((_, i) => (
-                      <div key={i}>
-                        <Skeleton className="aspect-[3/4] w-full rounded-[calc(var(--radius)+6px)]" />
-                      </div>
-                    ))}
-                  </div>
-                )}
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                      {Array.from({ length: 8 }).map((_, i) => (
+                        <div key={i}>
+                          <Skeleton className="aspect-[4/3] w-full rounded-[12px]" />
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 {!loading && !browseProgress.running && items.length === 0 && (
                   <div
                     className="border-0 rounded-xl bg-white shadow-[0_12px_35px_rgba(27,45,35,0.06)]"
@@ -549,7 +559,7 @@ export default function Marketplace() {
                           <h2 className="mb-[5px] text-black text-[30px] font-bold leading-10">
                             {t("market.noMatching")}
                           </h2>
-                          <p className="max-w-[560px] mx-auto mt-[14px] mb-6 text-[#686f6b] text-base leading-[1.65]">
+                          <p className="max-w-[560px] mx-auto mt-[14px] mb-6 text-[#686f6b] text-[14px] leading-[1.65]">
                             {t("market.noMatchingSub")}
                           </p>
                         </div>
@@ -627,9 +637,9 @@ function MyListings() {
     } catch (err) {
       toast.error(
         err?.response?.data?.detail ||
-          t("market.removeFailed", {
-            defaultValue: "Could not remove listing",
-          }),
+        t("market.removeFailed", {
+          defaultValue: "Could not remove listing",
+        }),
       );
     } finally {
       setRemovingId(null);
@@ -703,26 +713,25 @@ function MyListings() {
     } catch (err) {
       toast.error(
         err?.message ||
-          t("market.syncFailed", {
-            defaultValue: "Could not sync marketplace",
-          }),
+        t("market.syncFailed", {
+          defaultValue: "Could not sync marketplace",
+        }),
       );
     }
   };
 
   if (loading)
     return (
-      <div className="py-10 caps-label text-muted-foreground">
+      <div className="py-10 text-[14px] text-text-brand font-semibold">
         {t("market.loading")}
       </div>
     );
-
   return (
     <div className="space-y-6">
       {/* Heading row: count on the left, contextual sync action on the right */}
       <div className="flex items-center justify-between gap-3">
-        <div className="text-sm text-[#7d827a] font-medium flex items-center gap-3">
-          <span className="font-semibold text-[#141e19]">
+        <div className="flex items-center gap-3">
+          <span className="text-[16px] font-bold text-dark-brand">
             {t("market.myListingsCount", {
               count: items.length,
               defaultValue: `${items.length} listing${items.length === 1 ? "" : "s"}`,
@@ -773,10 +782,9 @@ function MyListings() {
             testId="market-backfill-chip"
           />
         </div>
-
         <button
           type="button"
-          className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-black/10 bg-white text-xs font-semibold text-[#141e19] hover:bg-black/5 transition-colors cursor-pointer disabled:opacity-50"
+          className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-border bg-white text-[12px] font-semibold text-dark-brand transition-colors cursor-pointer disabled:opacity-50 hover:text-primary-brand transition-smooth"
           onClick={syncMarketplace}
           disabled={syncing}
           data-testid="sync-marketplace-btn"
@@ -787,48 +795,47 @@ function MyListings() {
             : t("market.syncMarketplace", { defaultValue: "Sync from closet" })}
         </button>
       </div>
-
       {items.length === 0 ? (
         <div className="py-16 text-center text-[#7d827a]">
           <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-[#f4f4ef] flex items-center justify-center text-2xl text-[#b5b5ae]">
             <i className="fa-solid fa-shirt"></i>
           </div>
-          <h2 className="text-lg font-bold text-[#141e19]">{t("market.noMyListings")}</h2>
+          <h2 className="text-lg font-bold text-dark-brand">{t("market.noMyListings")}</h2>
         </div>
       ) : (
         <div
-          className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6"
+          className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4"
           data-testid="market-my-listings-grid"
         >
           {items.map((l) => (
             <div
               key={l.id}
-              className="group rounded-2xl overflow-hidden border border-black/5 bg-white h-full transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] hover:-translate-y-2 hover:shadow-[0_24px_48px_rgba(20,30,25,0.12)] hover:border-[rgba(31,92,69,0.15)] flex flex-col justify-between"
+              className="group rounded-[12px] overflow-hidden border border-border bg-white shadow-sm h-full transition-smooth hover:-translate-y-1 hover:shadow-md hover:border-primary-brand flex flex-col justify-between"
               data-testid={`my-listing-card-${l.id}`}
             >
               <Link to={`/market/${l.id}`} className="block no-underline text-inherit flex-1">
-                <div className="relative aspect-square overflow-hidden bg-[#f4f4ef]">
+                <div className="relative aspect-square overflow-hidden bg-[#ddd]">
                   <MarketplaceItemImage item={l} t={t} />
-                  <div className="absolute top-2.5 left-2.5 z-[2] [&>*]:!bg-[var(--primary-color)] [&>*]:!text-white [&>*]:!font-extrabold [&>*]:!text-[9px] [&>*]:tracking-[1.5px] [&>*]:!px-2.5 [&>*]:!py-1.5 [&>*]:!rounded-full [&>*]:!border-none">
+                  <div className="absolute top-2.5 left-2.5 z-[2] [&>*]:!bg-[var(--primary-color)] [&>*]:!text-white [&>*]:!font-extrabold [&>*]:!text-[9px] [&>*]:!px-2.5 [&>*]:!py-1.5 [&>*]:!rounded-full [&>*]:!border-none">
                     <SourceTagBadge source={l.source} mode={l.mode} />
                   </div>
                   <span
-                    className="absolute bottom-2.5 right-2.5 z-[2] bg-white text-[var(--primary-color)] text-[10px] font-extrabold tracking-[0.04em] capitalize px-2.5 py-1.5 rounded-full shadow-sm"
+                    className="absolute bottom-2.5 right-2.5 z-[2] bg-white text-[var(--primary-color)] text-[10px] font-extrabold px-2.5 py-1.5 rounded-full shadow-sm"
                   >
                     {t(`market.status${(l.status || '').charAt(0).toUpperCase()}${(l.status || '').slice(1)}`, {
                       defaultValue: l.status,
                     })}
                   </span>
                 </div>
-                <div className="p-4">
-                  <div className="text-base font-bold text-[#141e19] truncate">{l.title}</div>
+                <div className="p-3 text-center">
+                  <h6 className="text-[14px] font-bold text-dark-brand truncate">{l.title}</h6>
                 </div>
               </Link>
-              <div className="p-3 pt-0">
+              <div className="p-3 pt-0 flex justify-center">
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="w-full rounded-xl text-xs h-8 text-rose-700 hover:text-rose-800 hover:bg-rose-50"
+                  className="text-xs h-8 text-white bg-destructive hover:bg-dark-brand hover:!text-white"
                   onClick={(e) => {
                     e.preventDefault();
                     e.stopPropagation();
@@ -840,8 +847,8 @@ function MyListings() {
                   {removingId === l.id
                     ? t("market.removing", { defaultValue: "Removing…" })
                     : t("market.removeListing", {
-                        defaultValue: "Remove listing",
-                      })}
+                      defaultValue: "Remove listing",
+                    })}
                 </Button>
               </div>
             </div>
@@ -866,13 +873,10 @@ function InlineTransactions() {
     },
   );
   return (
-    <div className="market-tx">
-      <div className="market-tx-toolbar">
+    <div className="bg-white border border-border shadow-sm p-5 rounded-[12px]">
+      <div className="flex justify-end mb-4">
         <Select value={tab} onValueChange={setTab}>
-          <SelectTrigger
-            className="market-tx-select"
-            data-testid="tx-role-select"
-          >
+          <SelectTrigger className="w-48" data-testid="tx-role-select">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -977,61 +981,82 @@ function InlineTransactions() {
           <p>
             {tab === "buyer"
               ? t("transactions.emptyBuyerSub", {
-                  defaultValue: "Items you purchase will show up here.",
-                })
+                defaultValue: "Items you purchase will show up here.",
+              })
               : t("transactions.emptySellerSub", {
-                  defaultValue: "Items you sell will show up here.",
-                })}
+                defaultValue: "Items you sell will show up here.",
+              })}
           </p>
         </div>
       ) : (
-        <div className="market-tx-table-wrap">
-          <table className="market-tx-table" data-testid="tx-list">
+        <div className="rounded-[12px] border border-border overflow-hidden overflow-x-auto" data-testid="tx-list">
+          <table className="w-full border-collapse min-w-[720px]">
             <thead>
-              <tr>
-                <th>
+              <tr className="border-b border-border bg-primary-shadow">
+                <th className="text-left text-[12px] font-bold uppercase tracking-wide text-text-brand px-4 py-3">
                   {t("transactions.listingCol", { defaultValue: "Listing" })}
                 </th>
-                <th>
+                <th className="text-left text-[12px] font-bold uppercase tracking-wide text-text-brand px-4 py-3">
                   {t("transactions.statusCol", { defaultValue: "Status" })}
                 </th>
-                <th>{t("transactions.dateCol", { defaultValue: "Date" })}</th>
-                <th className="text-right">
+                <th className="text-left text-[12px] font-bold uppercase tracking-wide text-text-brand px-4 py-3">
+                  {t("transactions.dateCol", { defaultValue: "Date" })}
+                </th>
+                <th className="text-right text-[12px] font-bold uppercase tracking-wide text-text-brand px-4 py-3">
                   {t("transactions.amountCol", { defaultValue: "Amount" })}
                 </th>
               </tr>
             </thead>
             <tbody>
-              {items.map((tx) => (
-                <tr key={tx.id} data-testid={`tx-row-${tx.id}`}>
-                  <td className="market-tx-listing">
-                    #{tx.listing_id.slice(0, 8)}
-                  </td>
-                  <td>
-                    <span
-                      className={`market-tx-status-pill market-tx-status-${(tx.status || "").toLowerCase()}`}
-                    >
-                      {tx.status}
-                    </span>
-                  </td>
-                  <td className="market-tx-date">
-                    {new Date(tx.created_at).toLocaleDateString(undefined, {
-                      day: "numeric",
-                      month: "short",
-                      year: "numeric",
-                    })}
-                  </td>
-                  <td className="text-right">
-                    <div className="market-tx-amount">
-                      {fmt(tx.financial?.gross_cents, tx.currency)}
-                    </div>
-                    <div className="market-tx-fee">
-                      {t("market.sellerNet")}{" "}
-                      {fmt(tx.financial?.seller_net_cents, tx.currency)}
-                    </div>
-                  </td>
-                </tr>
-              ))}
+              {items.map((tx) => {
+                const StatusIcon = STATUS_ICON[(tx.status || "").toLowerCase()];
+                return (
+                  <tr
+                    key={tx.id}
+                    className="border-b border-border last:border-0 hover:bg-black/[0.015] transition-colors align-middle"
+                    data-testid={`tx-row-${tx.id}`}
+                  >
+                    <td className="px-4 py-4">
+                      <div className="flex items-center gap-2.5">
+                        <span className="h-8 w-8 rounded-full bg-primary-shadow flex items-center justify-center shrink-0">
+                          <Receipt className="h-4 w-4 text-primary-brand" />
+                        </span>
+                        <span className="font-bold text-sm">
+                          #{tx.listing_id.slice(0, 8)}
+                        </span>
+                      </div>
+                    </td>
+                    <td className="px-4 py-4">
+                      <Badge
+                        variant="outline"
+                        className={`text-[11px] gap-1 w-fit ${STATUS_TONE[(tx.status || "").toLowerCase()] || ''}`}
+                        data-testid="tx-status-badge"
+                      >
+                        {StatusIcon && <StatusIcon className="h-3 w-3" />}
+                        {tx.status}
+                      </Badge>
+                    </td>
+                    <td className="px-4 py-4 whitespace-nowrap">
+                      <span className="text-xs font-bold text-text-brand">
+                        {new Date(tx.created_at).toLocaleDateString(undefined, {
+                          day: "numeric",
+                          month: "short",
+                          year: "numeric",
+                        })}
+                      </span>
+                    </td>
+                    <td className="px-4 py-4 text-right">
+                      <div className="font-semibold text-sm">
+                        {fmt(tx.financial?.gross_cents, tx.currency)}
+                      </div>
+                      <div className="text-[10px] font-bold text-text-brand">
+                        {t("market.sellerNet")}{" "}
+                        {fmt(tx.financial?.seller_net_cents, tx.currency)}
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>

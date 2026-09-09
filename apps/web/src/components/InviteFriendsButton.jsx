@@ -66,44 +66,44 @@ export function InviteFriendsButton() {
   return (
     <AccordionItem
       value="invite"
-      className="border border-border/80 rounded-2xl bg-card overflow-hidden shadow-sm hover:shadow-[0_4px_20px_-4px_rgba(0,0,0,0.08)] transition-all duration-300"
+      className="p-3 border border-border rounded-[12px] bg-white overflow-hidden shadow-sm hover:shadow-[0_4px_20px_-4px_rgba(0,0,0,0.08)] hover:border-primary-brand hover:bg-primary-shadow transition-all duration-300"
       data-testid="invite-friends-card"
     >
-      <AccordionTrigger className="hover:no-underline px-5 py-4 focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-none">
+      <AccordionTrigger className="hover:no-underline focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-none py-0">
         <div className="flex items-center gap-4 text-start">
           <div className="p-2.5 rounded-xl bg-[hsl(271_81%_95%)] text-[hsl(271_81%_56%)] dark:bg-[hsl(271_30%_18%)] dark:text-[hsl(271_81%_70%)] shrink-0 transition-transform duration-200">
             <Users className="h-5 w-5" />
           </div>
           <div>
-            <span className="text-sm font-semibold tracking-wide block text-foreground uppercase">
+            <span className="text-[13px] font-bold block text-dark-brand">
               {t('profile.inviteFriends', { defaultValue: 'Invite Friends' })}
             </span>
-            <span className="text-[10px] text-muted-foreground font-normal block mt-0.5 normal-case">
+            <span className="text-[11px] text-text-brand font-semibold block normal-case">
               {t('profile.inviteDesc', { defaultValue: 'Share DressApp with your friends and family' })}
             </span>
           </div>
         </div>
       </AccordionTrigger>
-      <AccordionContent className="px-5 pb-5 pt-3 border-t border-border/40 bg-secondary/5">
+      <AccordionContent className="border-t border-border space-y-3 pt-4 pb-0 mt-3">
         <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
-          <div className="space-y-1 max-w-md text-start">
-            <p className="text-xs text-muted-foreground">
+          <div className="space-y-1">
+            <p className="text-[12px] font-semibold text-text-brand">
               {t('profile.inviteBody')}
             </p>
             <a
               href={playStoreUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 text-[11px] font-medium text-[hsl(var(--accent))] hover:underline mt-1"
+              className="inline-flex text-[12px] font-bold text-primary-brand hover:underline"
             >
-              📱 Get DressApp on Google Play
+              Get DressApp on Google Play
             </a>
           </div>
           <div className="shrink-0 w-full sm:w-auto">
             <Button
               onClick={share}
               disabled={busy}
-              className="rounded-xl w-full sm:w-auto"
+              className=""
               data-testid="invite-friends-btn"
             >
               {busy ? (
@@ -111,9 +111,9 @@ export function InviteFriendsButton() {
               ) : (
                 <>
                   {navigator.share ? (
-                    <Share2 className="h-4 w-4 me-2" />
+                    <Share2 className="!h-3 !w-3" />
                   ) : (
-                    <Copy className="h-4 w-4 me-2" />
+                    <Copy className="!h-3 !w-3" />
                   )}
                   {t('profile.inviteFriends')}
                 </>

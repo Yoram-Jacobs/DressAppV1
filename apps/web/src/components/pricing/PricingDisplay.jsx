@@ -1,8 +1,8 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
-import { 
-  Check, 
+import {
+  Check,
   CheckCircle2,
   XCircle,
   Loader2,
@@ -33,11 +33,10 @@ function FeatureFlag({ included }) {
   return (
     <Badge
       variant="outline"
-      className={`text-[11px] gap-1 w-fit mx-auto ${
-        included
+      className={`text-[11px] gap-1 w-fit mx-auto ${included
           ? 'bg-emerald-100 text-emerald-900 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-900'
           : 'bg-rose-100 text-rose-900 border-rose-200'
-      }`}
+        }`}
     >
       {included ? (
         <>
@@ -54,13 +53,13 @@ function FeatureFlag({ included }) {
   );
 }
 
-export function PricingDisplay({ 
-  pricingData, 
-  currentPlanName, 
-  isAnnual, 
-  setIsAnnual, 
-  subBusy, 
-  handleUpgrade 
+export function PricingDisplay({
+  pricingData,
+  currentPlanName,
+  isAnnual,
+  setIsAnnual,
+  subBusy,
+  handleUpgrade
 }) {
   const { t } = useTranslation();
 
@@ -72,19 +71,19 @@ export function PricingDisplay({
   const getDisplayPrice = (tier) => {
     if (tier.name.toLowerCase() === 'free') return { priceStr: '$0', subStr: '' };
     if (tier.name.toLowerCase() === 'manager') {
-      return { 
-        priceStr: isAnnual ? '$50' : '$5', 
-        subStr: isAnnual 
-          ? t('pricing.billedAnnually', { price: '50', defaultValue: 'billed annually ($50)' }) 
-          : t('pricing.billedMonthly', { price: '5', defaultValue: 'billed monthly ($5)' }) 
+      return {
+        priceStr: isAnnual ? '$50' : '$5',
+        subStr: isAnnual
+          ? t('pricing.billedAnnually', { price: '50', defaultValue: 'billed annually ($50)' })
+          : t('pricing.billedMonthly', { price: '5', defaultValue: 'billed monthly ($5)' })
       };
     }
     if (tier.name.toLowerCase() === 'professional') {
-      return { 
-        priceStr: isAnnual ? '$100' : '$10', 
-        subStr: isAnnual 
-          ? t('pricing.billedAnnually', { price: '100', defaultValue: 'billed annually ($100)' }) 
-          : t('pricing.billedMonthly', { price: '10', defaultValue: 'billed monthly ($10)' }) 
+      return {
+        priceStr: isAnnual ? '$100' : '$10',
+        subStr: isAnnual
+          ? t('pricing.billedAnnually', { price: '100', defaultValue: 'billed annually ($100)' })
+          : t('pricing.billedMonthly', { price: '10', defaultValue: 'billed monthly ($10)' })
       };
     }
     return { priceStr: '$0', subStr: '' };
@@ -139,16 +138,13 @@ export function PricingDisplay({
   ];
 
   return (
-    <div id="tiers" className="space-y-12">
+    <div id="tiers" className="space-y-4">
       {/* Header section with toggle */}
-      <div className="relative bg-white p-3 rounded-[12px]">
-       
-        {/* Toggle Switch */}
-        <div className="flex items-center justify-center gap-3">
+      <div className="relative p-4 bg-white rounded-full w-fit">
+        <div className="flex items-center gap-3">
           <span className={`text-xs font-semibold ${!isAnnual ? 'text-primary' : 'text-text-brand'}`}>
             {t('pricing.monthlyBilling', { defaultValue: 'Monthly' })}
           </span>
-          
           <button
             type="button"
             onClick={() => setIsAnnual(!isAnnual)}
@@ -163,7 +159,6 @@ export function PricingDisplay({
               animate={{ x: isAnnual ? 24 : 0 }}
             />
           </button>
-
           <span className={`text-xs font-semibold flex items-center gap-1.5 ${isAnnual ? 'text-primary' : 'text-text-brand'}`}>
             {t('pricing.annualBilling', { defaultValue: 'Annual' })}
             <span className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-[rgba(232,96,60,0.10)] text-[rgb(232,96,60)] border border-[rgba(232,96,60,0.20)]">
@@ -172,14 +167,12 @@ export function PricingDisplay({
           </span>
         </div>
       </div>
-
       {/* Pricing Cards Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-stretch" data-testid="pricing-tiers-grid">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-stretch" data-testid="pricing-tiers-grid">
         {pricingData.pricing_tiers.map((tier, index) => {
           const isPro = tier.name.toLowerCase() === 'professional';
           const isCurrent = currentPlanName.toLowerCase() === tier.name.toLowerCase();
           const { priceStr, subStr } = getDisplayPrice(tier);
-
           return (
             <motion.div
               key={tier.name}
@@ -188,12 +181,11 @@ export function PricingDisplay({
               transition={{ delay: index * 0.1 }}
               className="h-full"
             >
-              <Card 
-                className={`relative flex flex-col h-full rounded-[12px] shadow-sm overflow-hidden transition-all duration-200 border bg-card ${
-                  isPro 
-                    ? 'border-primary-brand z-10' 
+              <Card
+                className={`relative flex flex-col h-full rounded-[20px] shadow-sm overflow-hidden transition-all duration-200 border bg-white ${isPro
+                    ? 'border-primary-brand z-10'
                     : 'border-border'
-                }`}
+                  }`}
                 data-testid={`tier-card-${tier.name.toLowerCase()}`}
               >
                 {/* Popular ribbon */}
@@ -204,42 +196,38 @@ export function PricingDisplay({
                     </span>
                   </div>
                 )}
-
-                <CardHeader className="p-6 pb-4">
-                  <CardTitle className="text-[20px] font-bold uppercase tracking-wider">
+                <CardHeader className="bg-yellow-shadow p-5">
+                  <CardTitle className="text-[20px] font-bold text-primary-brand">
                     {t('pricing.tier.' + tier.name.toLowerCase(), { defaultValue: tier.name })}
                   </CardTitle>
-                  <CardDescription className="text-[14px] mt-1 min-h-[32px] font-semibold text-text-brand">
+                  <CardDescription className="text-[14px] font-semibold text-text-brand italic">
                     {tier.name.toLowerCase() === 'free' && t('pricing.freeDesc', { defaultValue: 'Perfect for exploring and digitalizing your basic closet.' })}
                     {tier.name.toLowerCase() === 'manager' && t('pricing.managerDesc', { defaultValue: 'Optimal stylist plan with no limitations on garments or AI operations.' })}
                     {tier.name.toLowerCase() === 'professional' && t('pricing.professionalDesc', { defaultValue: 'Unlimited resources with expert-focused campaign creator slots.' })}
                   </CardDescription>
-                  
-                  <div className="mt-4 flex items-baseline gap-1">
-                    <span className="text-3xl tracking-tight font-bold">{priceStr}</span>
-                    <span className="text-xs text-text-brand font-semibold">{tier.price > 0 ? (isAnnual ? t('pricing.perYear', { defaultValue: '/yr' }) : t('pricing.perMonth', { defaultValue: '/mo' })) : ''}</span>
-                  </div>
-                  {subStr && <p className="text-[10px] text-text-brand mt-0.5">{subStr}</p>}
                 </CardHeader>
-
-                <CardContent className="p-6 pt-0 flex-1 flex flex-col">
-                  <div className="border-t border-border my-4" />
-                  
-                  <ul className="space-y-3 flex-1 font-body text-xs text-text-brand">
+                <CardContent className="p-5 flex-1 flex flex-col">
+                  <div className='mb-4'>
+                    <div className="flex items-baseline gap-1">
+                      <span className="text-[20px] text-dark-brand font-bold">{priceStr}</span>
+                      <span className="text-[10px] text-text-brand font-semibold">{tier.price > 0 ? (isAnnual ? t('pricing.perYear', { defaultValue: '/yr' }) : t('pricing.perMonth', { defaultValue: '/mo' })) : ''}</span>
+                    </div>
+                    {subStr && <p className="text-[12px] text-text-brand font-semibold">{subStr}</p>}
+                  </div>
+                  <ul className="space-y-3 flex-1">
                     {tier.features.map((feature, i) => (
                       <li key={i} className="flex items-start gap-2.5">
-                        <div className="h-4 w-4 rounded-full bg-primary-shadow flex items-center justify-center shrink-0 mt-0.5">
+                        <div className="h-4 w-4 rounded-full bg-primary-shadow flex items-center justify-center shrink-0">
                           <Check className="h-2.5 w-2.5 text-primary-brand" />
                         </div>
-                        <span>{getLocalizedFeature(feature)}</span>
+                        <span className='text-text-brand text-[11px] font-semibold'>{getLocalizedFeature(feature)}</span>
                       </li>
                     ))}
                   </ul>
-
-                  <div className="mt-8">
+                  <div className="mt-4">
                     {isCurrent ? (
-                      <Button variant="secondary" className="w-full rounded-xl cursor-not-allowed opacity-80" disabled data-testid={`tier-select-current-${tier.name.toLowerCase()}`}>
-                        <CheckCircle2 className="h-4 w-4 me-1.5 text-accent" />
+                      <Button variant="secondary" className="w-full cursor-not-allowed opacity-80" disabled data-testid={`tier-select-current-${tier.name.toLowerCase()}`}>
+                        <CheckCircle2 className="h-4 w-4 text-primary-brand" />
                         {t('pricing.currentPlan', { defaultValue: 'Your Current Plan' })}
                       </Button>
                     ) : (
@@ -247,13 +235,12 @@ export function PricingDisplay({
                         onClick={() => handleUpgrade(tier.name)}
                         disabled={subBusy}
                         variant={isPro ? 'default' : 'outline'}
-                        className={`w-full rounded-xl hover:translate-y-[-1px] active:scale-[0.98] transition-all duration-150 ${
-                          isPro ? 'bg-primary text-primary-foreground shadow' : 'border-border'
-                        }`}
+                        className={`w-full ${isPro ? 'bg-primary-brand text-white' : 'border-border'
+                          }`}
                         data-testid={`tier-select-${tier.name.toLowerCase()}`}
                       >
                         {subBusy ? (
-                          <Loader2 className="h-4 w-4 me-1.5 animate-spin" />
+                          <Loader2 className="h-4 w-4 animate-spin" />
                         ) : (
                           <>
                             {tier.price > 0
@@ -270,7 +257,6 @@ export function PricingDisplay({
           );
         })}
       </div>
-
       {/* Compare Features Table — restyled to match the Transactions page table:
           rounded bordered wrapper, bg-primary-shadow header row, subtle row
           hover, and status-style badges for included/excluded features. */}
@@ -279,63 +265,63 @@ export function PricingDisplay({
           <Sliders className="!h-4 !w-4 text-primary-brand" />
           {t('pricing.featureComparisonHeader', { defaultValue: 'Compare Plan Features' })}
         </h2>
-          <div
-            className="rounded-[12px] border border-border overflow-hidden overflow-x-auto"
-            data-testid="pricing-compare-table"
-          >
-            <table className="w-full border-collapse min-w-[720px]">
-              <thead>
-                <tr className="border-b border-border bg-primary-shadow">
-                  <th className="text-left text-[12px] font-bold uppercase tracking-wide text-text-brand px-4 py-3">
-                    {t('pricing.compareFeatureCol', { defaultValue: 'Features' })}
-                  </th>
-                  <th className="text-center text-[12px] font-bold uppercase tracking-wide text-text-brand px-4 py-3">
-                    {t('pricing.tier.free', { defaultValue: 'Free' })}
-                  </th>
-                  <th className="text-center text-[12px] font-bold uppercase tracking-wide text-text-brand px-4 py-3">
-                    {t('pricing.tier.manager', { defaultValue: 'Manager' })}
-                  </th>
-                  <th className="text-center text-[12px] font-bold uppercase tracking-wide text-primary-brand px-4 py-3">
-                    {t('pricing.tier.professional', { defaultValue: 'Professional' })}
-                  </th>
+        <div
+          className="rounded-[12px] border border-border overflow-hidden overflow-x-auto"
+          data-testid="pricing-compare-table"
+        >
+          <table className="w-full border-collapse min-w-[720px]">
+            <thead>
+              <tr className="border-b border-border bg-primary-shadow">
+                <th className="text-left text-[12px] font-bold uppercase tracking-wide text-text-brand px-4 py-3">
+                  {t('pricing.compareFeatureCol', { defaultValue: 'Features' })}
+                </th>
+                <th className="text-center text-[12px] font-bold uppercase tracking-wide text-text-brand px-4 py-3">
+                  {t('pricing.tier.free', { defaultValue: 'Free' })}
+                </th>
+                <th className="text-center text-[12px] font-bold uppercase tracking-wide text-text-brand px-4 py-3">
+                  {t('pricing.tier.manager', { defaultValue: 'Manager' })}
+                </th>
+                <th className="text-center text-[12px] font-bold uppercase tracking-wide text-primary-brand px-4 py-3">
+                  {t('pricing.tier.professional', { defaultValue: 'Professional' })}
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {COMPARE_ROWS.map((row, i) => (
+                <tr
+                  key={i}
+                  className="border-b border-border last:border-0 hover:bg-black/[0.015] transition-colors align-middle"
+                  data-testid="pricing-compare-row"
+                >
+                  <td className="px-4 py-4">
+                    <span className="font-bold text-sm text-text-brand">{row.label}</span>
+                  </td>
+                  <td className="px-4 py-4 text-center">
+                    {row.type === 'flag' ? (
+                      <FeatureFlag included={row.free} />
+                    ) : (
+                      <span className="text-sm font-semibold text-text-brand">{row.free}</span>
+                    )}
+                  </td>
+                  <td className="px-4 py-4 text-center">
+                    {row.type === 'flag' ? (
+                      <FeatureFlag included={row.manager} />
+                    ) : (
+                      <span className="text-sm font-semibold text-text-brand">{row.manager}</span>
+                    )}
+                  </td>
+                  <td className="px-4 py-4 text-center bg-primary-shadow/30">
+                    {row.type === 'flag' ? (
+                      <FeatureFlag included={row.professional} />
+                    ) : (
+                      <span className="text-sm font-bold text-primary-brand">{row.professional}</span>
+                    )}
+                  </td>
                 </tr>
-              </thead>
-              <tbody>
-                {COMPARE_ROWS.map((row, i) => (
-                  <tr
-                    key={i}
-                    className="border-b border-border last:border-0 hover:bg-black/[0.015] transition-colors align-middle"
-                    data-testid="pricing-compare-row"
-                  >
-                    <td className="px-4 py-4">
-                      <span className="font-bold text-sm text-text-brand">{row.label}</span>
-                    </td>
-                    <td className="px-4 py-4 text-center">
-                      {row.type === 'flag' ? (
-                        <FeatureFlag included={row.free} />
-                      ) : (
-                        <span className="text-sm font-semibold text-text-brand">{row.free}</span>
-                      )}
-                    </td>
-                    <td className="px-4 py-4 text-center">
-                      {row.type === 'flag' ? (
-                        <FeatureFlag included={row.manager} />
-                      ) : (
-                        <span className="text-sm font-semibold text-text-brand">{row.manager}</span>
-                      )}
-                    </td>
-                    <td className="px-4 py-4 text-center bg-primary-shadow/30">
-                      {row.type === 'flag' ? (
-                        <FeatureFlag included={row.professional} />
-                      ) : (
-                        <span className="text-sm font-bold text-primary-brand">{row.professional}</span>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </section>
     </div>
   );

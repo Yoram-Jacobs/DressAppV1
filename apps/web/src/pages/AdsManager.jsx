@@ -38,6 +38,7 @@ import { useAuth } from '@/lib/auth';
 import { PayPalCheckoutButton } from '@/lib/paypal';
 import { Wallet } from 'lucide-react';
 import PrivacyBanner from '../assets/img/inner6.webp';
+import noexpert from "../assets/img/noexpert.svg";
 const DEFAULT_CREATIVE = {
   headline: '',
   body: '',
@@ -186,40 +187,39 @@ export default function AdsManager() {
       </div>
     );
   }
-
   return (
     <>
-     {/* Banner Section */}
-          <section
-            className="
+      {/* Banner Section */}
+      <section
+        className="
                   relative isolate overflow-hidden
                   bg-cover bg-center bg-no-repeat
                 "
-            style={{
-              backgroundImage: `url(${PrivacyBanner})`,
-            }}
-          >
-            {/* Dark gradient overlay */}
-            <div
-              className="
+        style={{
+          backgroundImage: `url(${PrivacyBanner})`,
+        }}
+      >
+        {/* Dark gradient overlay */}
+        <div
+          className="
                     absolute inset-0 -z-0
                     bg-[linear-gradient(90deg,#080b09_0%,#101612_43%,rgba(16,22,18,0.48)_67%,rgba(16,22,18,0.08)_100%)]
                   "
-            />
-    
-            <div className="relative z-10 w-full">
-              <div
-                className="
+        />
+
+        <div className="relative z-10 w-full">
+          <div
+            className="
                       px-10 py-20
                       max-[991px]:px-[35px] max-[991px]:py-[45px]
                       max-[767px]:px-5 max-[767px]:py-[38px]
                       max-[480px]:px-4 max-[480px]:py-8
                     "
-              >
-                <div className="max-w-[520px]">
-                  {/* Title */}
-                  <h1
-                    className="
+          >
+            <div className="max-w-[520px]">
+              {/* Title */}
+              <h1
+                className="
                           m-0 mb-0
                           text-[40px] leading-[40px]
                           font-bold
@@ -228,12 +228,12 @@ export default function AdsManager() {
                           max-[767px]:text-[42px]
                           max-[480px]:text-[35px]
                         "
-                  >
-                     {t('ads.title')}
-                  </h1>
-                  {/* Description */}
-                  <p
-                    className="
+              >
+                {t('ads.title')}
+              </h1>
+              {/* Description */}
+              <p
+                className="
                           my-5
                           max-w-[450px]
                           text-[14px]
@@ -243,78 +243,72 @@ export default function AdsManager() {
                           max-[767px]:max-w-full
                           max-[767px]:mt-[15px]
                         "
-                  >
-                     {t('ads.subtitle')}
-                  </p>
-                   <div className="">
-        <Button onClick={openNew} className="rounded-xl" data-testid="ads-new-btn">
-          <Plus className="h-4 w-4" />
-          {t('ads.newCampaign')}
-        </Button>
-      </div>
-                </div>
+              >
+                {t('ads.subtitle')}
+              </p>
+              <div className="">
+                <Button onClick={openNew} className="!gap-1" data-testid="ads-new-btn">
+                  <Plus className="h-4 w-4" />
+                  {t('ads.newCampaign')}
+                </Button>
               </div>
             </div>
-          </section>
-
-    <div className="container-px max-w-5xl mx-auto pt-6 md:pt-10">
-     
-
-      {items === null ? (
-        <div className="flex items-center justify-center py-20 text-muted-foreground">
-          <Loader2 className="h-6 w-6 animate-spin" />
+          </div>
         </div>
-      ) : (
-        <>
-          <CreditBalanceCard />
-          {items.length === 0 ? (
-            <Card className="rounded-[calc(var(--radius)+6px)] shadow-editorial mt-4" data-testid="ads-empty">
-              <CardContent className="p-10 text-center">
-                <Megaphone className="h-8 w-8 mx-auto text-muted-foreground" />
-                <p className="text-muted-foreground mt-3">{t('ads.empty')}</p>
-              </CardContent>
-            </Card>
-          ) : (
-            <div className="space-y-3 mt-4" data-testid="ads-list">
-              {items.map((c) => (
-                <AdCampaignRow
-                  key={c.id}
-                  campaign={c}
-                  onEdit={() => openEdit(c)}
-                  onToggle={() => togglePause(c)}
-                  onDelete={() => remove(c)}
-                />
-              ))}
-            </div>
-          )}
-        </>
-      )}
-
-      {/* Campaign editor dialog */}
-      <Dialog open={open} onOpenChange={(v) => { if (!v) { setOpen(false); setEditing(null); } }}>
-        <DialogContent className="sm:max-w-2xl max-h-[88vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="font-display">
-              {editing?.id ? t('ads.editCampaign') : t('ads.newCampaign')}
-            </DialogTitle>
-          </DialogHeader>
-          {editing && <AdCampaignForm form={editing} onChange={setEditing} />}
-          <DialogFooter>
-            <Button
-              variant="secondary"
-              onClick={() => { setOpen(false); setEditing(null); }}
-              className="rounded-xl"
-            >
-              <X className="h-4 w-4 me-1" /> {t('common.cancel', { defaultValue: 'Cancel' })}
-            </Button>
-            <Button onClick={save} disabled={busy} className="rounded-xl" data-testid="ads-save-btn">
-              {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : (<><Save className="h-4 w-4 me-1" /> {t('ads.saveCampaign')}</>)}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    </div>
-        </>
+      </section>
+      <section className="bg-accent-beige px-[40px] py-[40px] max-[767px]:px-5 max-[767px]:py-10">
+        {items === null ? (
+          <div className="flex items-center justify-center py-20 text-primary-brand">
+            <Loader2 className="h-6 w-6 animate-spin" />
+          </div>
+        ) : (
+          <>
+            <CreditBalanceCard />
+            {items.length === 0 ? (
+              <Card className="bg-white rounded-[12px] shadow-[0_12px_35px_rgba(27,45,35,0.06)] mt-4" data-testid="ads-empty">
+                <CardContent className="p-10 text-center">
+                  <div className="flex items-center justify-center mb-0">
+                    <img src={noexpert} className="h-[250px] object-cover" alt="" />
+                  </div>
+                  <p className="text-text-brand text-[14px] font-semibold">{t('ads.empty')}</p>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="space-y-3 mt-4" data-testid="ads-list">
+                {items.map((c) => (
+                  <AdCampaignRow
+                    key={c.id}
+                    campaign={c}
+                    onEdit={() => openEdit(c)}
+                    onToggle={() => togglePause(c)}
+                    onDelete={() => remove(c)}
+                  />
+                ))}
+              </div>
+            )}
+          </>
+        )}
+        {/* Campaign editor dialog */}
+        <Dialog open={open} onOpenChange={(v) => { if (!v) { setOpen(false); setEditing(null); } }}>
+          <DialogContent className="sm:max-w-2xl max-h-[88vh] overflow-y-auto">
+            <DialogTitle>{editing?.id ? t('ads.editCampaign') : t('ads.newCampaign')}</DialogTitle>
+            {editing && <AdCampaignForm form={editing} onChange={setEditing} />}
+            <DialogFooter>
+              <Button
+                variant="outline"
+                className="!gap-1"
+                onClick={() => { setOpen(false); setEditing(null); }}
+              >
+                <X className="h-4 w-4" /> {t('common.cancel', { defaultValue: 'Cancel' })}
+              </Button>
+              <Button onClick={save} disabled={busy} data-testid="ads-save-btn">
+                {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : (<><Save className="h-4 w-4" /> {t('ads.saveCampaign')}</>)}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      </section>
+    </>
   );
 }
 
@@ -331,7 +325,7 @@ function AdCampaignRow({ campaign: c, onEdit, onToggle, onDelete }) {
 
   return (
     <Card
-      className="rounded-[calc(var(--radius)+6px)] shadow-editorial"
+      className="rounded-[12px] shadow-sm bg-white border border-border"
       data-testid={`ads-row-${c.id}`}
     >
       <CardContent className="p-5">
@@ -408,14 +402,13 @@ function AdCampaignForm({ form, onChange }) {
     onChange({ ...form, creative: { ...form.creative, ...patch } });
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-2">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
         <div>
           <Label>{t('ads.campaignName')}</Label>
           <Input
             value={form.name}
             onChange={(e) => set({ name: e.target.value })}
-            className="rounded-xl mt-1"
             data-testid="ads-form-name"
           />
         </div>
@@ -424,19 +417,16 @@ function AdCampaignForm({ form, onChange }) {
           <Input
             value={form.profession || ''}
             onChange={(e) => set({ profession: e.target.value })}
-            className="rounded-xl mt-1"
             data-testid="ads-form-profession"
           />
         </div>
       </div>
-
-      <div className="space-y-3">
-        <div className="caps-label text-muted-foreground">{t('ads.creative.title')}</div>
+      <div className="">
+        <Label>{t('ads.creative.title')}</Label>
         <Input
           value={form.creative.headline}
           onChange={(e) => setCreative({ headline: e.target.value })}
           placeholder={t('ads.creative.headline')}
-          className="rounded-xl"
           data-testid="ads-form-headline"
         />
         <Textarea
@@ -444,33 +434,29 @@ function AdCampaignForm({ form, onChange }) {
           value={form.creative.body || ''}
           onChange={(e) => setCreative({ body: e.target.value })}
           placeholder={t('ads.creative.body')}
-          className="rounded-xl"
           data-testid="ads-form-body"
         />
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
           <Input
             value={form.creative.image_url || ''}
             onChange={(e) => setCreative({ image_url: e.target.value })}
             placeholder={t('ads.creative.imageUrl')}
-            className="rounded-xl"
           />
           <Input
             value={form.creative.cta_label || ''}
             onChange={(e) => setCreative({ cta_label: e.target.value })}
             placeholder={t('ads.creative.ctaLabel')}
-            className="rounded-xl"
           />
           <Input
             value={form.creative.cta_url || ''}
             onChange={(e) => setCreative({ cta_url: e.target.value })}
             placeholder={t('ads.creative.ctaUrl')}
-            className="rounded-xl md:col-span-2"
+            className="md:col-span-2"
           />
         </div>
       </div>
-
-      <div className="space-y-3">
-        <div className="caps-label text-muted-foreground">{t('ads.budget.title')}</div>
+      <div className="">
+        <Label>{t('ads.budget.title')}</Label>
         <div className="grid grid-cols-2 gap-3">
           <div>
             <Label>{t('ads.budget.daily')}</Label>
@@ -479,7 +465,6 @@ function AdCampaignForm({ form, onChange }) {
               min="0"
               value={form.daily_budget_cents}
               onChange={(e) => set({ daily_budget_cents: e.target.value })}
-              className="rounded-xl mt-1"
               data-testid="ads-form-daily-budget"
             />
           </div>
@@ -490,16 +475,14 @@ function AdCampaignForm({ form, onChange }) {
               min="0"
               value={form.bid_cents}
               onChange={(e) => set({ bid_cents: e.target.value })}
-              className="rounded-xl mt-1"
               data-testid="ads-form-bid"
             />
           </div>
         </div>
-        <div className="text-xs text-muted-foreground">{t('ads.budget.hint')}</div>
+        <div className="text-[12px] font-semibold text-text-brand">{t('ads.budget.hint')}</div>
       </div>
-
-      <div className="space-y-3">
-        <div className="caps-label text-muted-foreground">{t('ads.schedule.title')}</div>
+      <div className="">
+        <Label>{t('ads.schedule.title')}</Label>
         <div className="grid grid-cols-2 gap-3">
           <div>
             <Label>{t('ads.schedule.start')}</Label>
@@ -507,7 +490,6 @@ function AdCampaignForm({ form, onChange }) {
               type="date"
               value={form.start_date || ''}
               onChange={(e) => set({ start_date: e.target.value })}
-              className="rounded-xl mt-1"
             />
           </div>
           <div>
@@ -516,36 +498,31 @@ function AdCampaignForm({ form, onChange }) {
               type="date"
               value={form.end_date || ''}
               onChange={(e) => set({ end_date: e.target.value })}
-              className="rounded-xl mt-1"
             />
           </div>
         </div>
       </div>
-
-      <div className="space-y-3">
-        <div className="caps-label text-muted-foreground">{t('ads.targeting.title')}</div>
+      <div className="">
+        <Label>{t('ads.targeting.title')}</Label>
         <div className="grid grid-cols-2 gap-3">
           <Input
             value={form.target_country || ''}
             onChange={(e) => set({ target_country: e.target.value })}
             placeholder={t('ads.targeting.country')}
-            className="rounded-xl"
             data-testid="ads-form-country"
           />
           <Input
             value={form.target_region || ''}
             onChange={(e) => set({ target_region: e.target.value })}
             placeholder={t('ads.targeting.region')}
-            className="rounded-xl"
             data-testid="ads-form-region"
           />
         </div>
       </div>
-
-      <div>
+      <div className="">
         <Label>{t('ads.statusLabel')}</Label>
         <Select value={form.status || 'draft'} onValueChange={(v) => set({ status: v })}>
-          <SelectTrigger className="rounded-xl mt-1" data-testid="ads-form-status">
+          <SelectTrigger data-testid="ads-form-status">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -586,33 +563,33 @@ function CreditBalanceCard() {
   return (
     <>
       <Card
-        className="rounded-[calc(var(--radius)+6px)] shadow-editorial"
+        className="bg-white rounded-[12px] shadow-sm border border-border"
         data-testid="credit-balance-card"
       >
         <CardContent className="p-5 flex items-center gap-4 flex-wrap">
-          <div className="h-12 w-12 rounded-xl bg-[hsl(var(--accent))]/10 text-[hsl(var(--accent))] inline-flex items-center justify-center shrink-0">
+          <div className="h-12 w-12 rounded-full bg-primary-shadow text-primary-brand inline-flex items-center justify-center shrink-0">
             <Wallet className="h-5 w-5" />
           </div>
           <div className="flex-1 min-w-0">
-            <div className="caps-label text-muted-foreground">
+            <div className="text-[12px] text-primary-brand font-semibold">
               {t('credits.balanceLabel')}
             </div>
             <div
-              className="font-display text-2xl leading-none mt-1"
+              className="font-bold text-[20px] text-dark-brand"
               data-testid="credit-balance-amount"
             >
               {balance?.currency || currency} {display}
             </div>
-            <div className="text-xs text-muted-foreground mt-1">
+            <div className="text-[12px] text-text-brand font-semibold">
               {t('credits.balanceHint')}
             </div>
           </div>
           <Button
             onClick={() => setOpen(true)}
-            className="rounded-xl"
+            className="!gap-1"
             data-testid="credit-topup-open-btn"
           >
-            <Plus className="h-4 w-4 me-1" />
+            <Plus className="h-4 w-4" />
             {t('credits.topup')}
           </Button>
         </CardContent>
@@ -690,14 +667,12 @@ function TopupDialog({ open, onOpenChange, currency, onCurrencyChange, onTopped 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle className="font-display">{t('credits.topupTitle')}</DialogTitle>
-        </DialogHeader>
+        <DialogTitle>{t('credits.topupTitle')}</DialogTitle>
         <div className="space-y-4">
           <div>
             <Label>{t('credits.currency')}</Label>
             <Select value={currency} onValueChange={onCurrencyChange}>
-              <SelectTrigger className="rounded-xl mt-1" data-testid="topup-currency">
+              <SelectTrigger data-testid="topup-currency">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -717,11 +692,10 @@ function TopupDialog({ open, onOpenChange, currency, onCurrencyChange, onTopped 
                   key={p.id}
                   type="button"
                   onClick={() => setPack(p.id)}
-                  className={`rounded-xl border p-3 text-sm text-center transition-colors ${
-                    pack === p.id
-                      ? 'border-[hsl(var(--accent))] bg-[hsl(var(--accent))]/10 text-[hsl(var(--accent))]'
-                      : 'border-border hover:bg-secondary/40'
-                  }`}
+                  className={`rounded-full text-text-brand font-semibold border px-3 py-2 text-[12px] text-center transition-colors ${pack === p.id
+                    ? 'border-primary-brand bg-white text-primary-brand'
+                    : 'border-border hover:bg-secondary'
+                    }`}
                   data-testid={`topup-pack-${p.id}`}
                 >
                   {p.label}
@@ -739,12 +713,12 @@ function TopupDialog({ open, onOpenChange, currency, onCurrencyChange, onTopped 
                 step="1"
                 value={custom}
                 onChange={(e) => setCustom(e.target.value)}
-                className="rounded-xl mt-1"
+                className=""
                 data-testid="topup-custom-amount"
               />
             </div>
           )}
-          <div className="pt-2">
+          <div className="">
             <PayPalCheckoutButton
               createOrder={createOrder}
               captureOrder={captureOrder}
@@ -754,16 +728,14 @@ function TopupDialog({ open, onOpenChange, currency, onCurrencyChange, onTopped 
               disabled={!canPay || phase === 'success'}
               testId="topup-paypal-button"
             />
-            <div className="text-[10px] text-muted-foreground mt-2 text-center">
+            <div className="text-[12px] text-text-brand font-semibold mt-2 text-center">
               {t('credits.paypalDisclosure')}
             </div>
           </div>
         </div>
         <DialogFooter>
           <Button
-            variant="secondary"
             onClick={() => onOpenChange(false)}
-            className="rounded-xl"
           >
             {t('common.close')}
           </Button>

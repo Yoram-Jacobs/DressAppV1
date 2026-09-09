@@ -130,115 +130,113 @@ export default function Admin() {
       </section>
       <section className="bg-accent-beige px-[40px] py-[40px] max-[767px]:px-5 max-[767px]:py-10" data-testid="admin-page">
         <ExploreBackButton />
-           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList
-          className="
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <TabsList
+            className="
             inline-flex flex-wrap h-auto w-fit
             bg-white rounded-full p-1.5 gap-1
-            border border-border/40 shadow-sm mb-2
+            border border-border/40 shadow-sm mb-5
           "
-          data-testid="admin-tabs"
-        >
-          <TabsTrigger
-            value="overview"
-            className="
-              rounded-full px-4 py-2 text-[14px] font-semibold
+            data-testid="admin-tabs"
+          >
+            <TabsTrigger
+              value="overview"
+              className="
+              rounded-full px-4 py-2 text-[12px] font-semibold
               text-text-brand transition-colors
               data-[state=active]:bg-primary-brand data-[state=active]:text-white data-[state=active]:shadow-none
             "
-            data-testid="admin-tab-overview"
-          >
-            {t('admin.overview')}
-          </TabsTrigger>
-          <TabsTrigger
-            value="providers"
-            className="
-              rounded-full px-4 py-2 text-[14px] font-semibold
+              data-testid="admin-tab-overview"
+            >
+              {t('admin.overview')}
+            </TabsTrigger>
+            <TabsTrigger
+              value="providers"
+              className="
+              rounded-full px-4 py-2 text-[12px] font-semibold
               text-text-brand transition-colors
               data-[state=active]:bg-primary-brand data-[state=active]:text-white data-[state=active]:shadow-none
             "
-            data-testid="admin-tab-providers"
-          >
-            {t('admin.providers')}
-          </TabsTrigger>
-          <TabsTrigger
-            value="trends"
-            className="
-              rounded-full px-4 py-2 text-[14px] font-semibold
+              data-testid="admin-tab-providers"
+            >
+              {t('admin.providers')}
+            </TabsTrigger>
+            <TabsTrigger
+              value="trends"
+              className="
+              rounded-full px-4 py-2 text-[12px] font-semibold
               text-text-brand transition-colors
               data-[state=active]:bg-primary-brand data-[state=active]:text-white data-[state=active]:shadow-none
             "
-            data-testid="admin-tab-trends"
-          >
-            {t('admin.trendScout')}
-          </TabsTrigger>
-          <TabsTrigger
-            value="users"
-            className="
-              rounded-full px-4 py-2 text-[14px] font-semibold
+              data-testid="admin-tab-trends"
+            >
+              {t('admin.trendScout')}
+            </TabsTrigger>
+            <TabsTrigger
+              value="users"
+              className="
+              rounded-full px-4 py-2 text-[12px] font-semibold
               text-text-brand transition-colors
               data-[state=active]:bg-primary-brand data-[state=active]:text-white data-[state=active]:shadow-none
             "
-            data-testid="admin-tab-users"
-          >
-            {t('admin.users')}
-          </TabsTrigger>
-          <TabsTrigger
-            value="listings"
-            className="
-              rounded-full px-4 py-2 text-[14px] font-semibold
+              data-testid="admin-tab-users"
+            >
+              {t('admin.users')}
+            </TabsTrigger>
+            <TabsTrigger
+              value="listings"
+              className="
+              rounded-full px-4 py-2 text-[12px] font-semibold
               text-text-brand transition-colors
               data-[state=active]:bg-primary-brand data-[state=active]:text-white data-[state=active]:shadow-none
             "
-            data-testid="admin-tab-listings"
-          >
-            {t('admin.listings')}
-          </TabsTrigger>
-          <TabsTrigger
-            value="transactions"
-            className="
-              rounded-full px-4 py-2 text-[14px] font-semibold
+              data-testid="admin-tab-listings"
+            >
+              {t('admin.listings')}
+            </TabsTrigger>
+            <TabsTrigger
+              value="transactions"
+              className="
+              rounded-full px-4 py-2 text-[12px] font-semibold
               text-text-brand transition-colors
               data-[state=active]:bg-primary-brand data-[state=active]:text-white data-[state=active]:shadow-none
             "
-            data-testid="admin-tab-transactions"
-          >
-            {t('admin.transactions')}
-          </TabsTrigger>
-          <TabsTrigger
-            value="system"
-            className="
-              rounded-full px-4 py-2 text-[14px] font-semibold
+              data-testid="admin-tab-transactions"
+            >
+              {t('admin.transactions')}
+            </TabsTrigger>
+            <TabsTrigger
+              value="system"
+              className="
+              rounded-full px-4 py-2 text-[12px] font-semibold
               text-text-brand transition-colors
               data-[state=active]:bg-primary-brand data-[state=active]:text-white data-[state=active]:shadow-none
             "
-            data-testid="admin-tab-system"
-          >
-            {t('admin.system')}
-          </TabsTrigger>
-          <TabsTrigger
-            value="campaigns"
-            className="
-              rounded-full px-4 py-2 text-[14px] font-semibold
+              data-testid="admin-tab-system"
+            >
+              {t('admin.system')}
+            </TabsTrigger>
+            <TabsTrigger
+              value="campaigns"
+              className="
+              rounded-full px-4 py-2 text-[12px] font-semibold
               text-text-brand transition-colors
               data-[state=active]:bg-primary-brand data-[state=active]:text-white data-[state=active]:shadow-none
             "
-            data-testid="admin-tab-campaigns"
-          >
-            {t('campaigns.admin.queueTitle', { defaultValue: 'Campaign Queue' })}
-          </TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="overview" className="mt-6"><OverviewSection /></TabsContent>
-        <TabsContent value="providers" className="mt-6"><ProvidersSection /></TabsContent>
-        <TabsContent value="trends" className="mt-6"><TrendScoutSection /></TabsContent>
-        <TabsContent value="users" className="mt-6"><UsersSection /></TabsContent>
-        <TabsContent value="listings" className="mt-6"><ListingsSection /></TabsContent>
-        <TabsContent value="transactions" className="mt-6"><TransactionsSection /></TabsContent>
-        <TabsContent value="system" className="mt-6"><SystemSection /></TabsContent>
-        <TabsContent value="campaigns" className="mt-6"><CampaignQueueTab /></TabsContent>
-      </Tabs>
-
+              data-testid="admin-tab-campaigns"
+            >
+              {t('campaigns.admin.queueTitle', { defaultValue: 'Campaign Queue' })}
+            </TabsTrigger>
+          </TabsList>
+          <TabsContent value="overview" className=""><OverviewSection /></TabsContent>
+          <TabsContent value="providers" className=""><ProvidersSection /></TabsContent>
+          <TabsContent value="trends" className=""><TrendScoutSection /></TabsContent>
+          <TabsContent value="users" className=""><UsersSection /></TabsContent>
+          <TabsContent value="listings" className=""><ListingsSection /></TabsContent>
+          <TabsContent value="transactions" className=""><TransactionsSection /></TabsContent>
+          <TabsContent value="system" className=""><SystemSection /></TabsContent>
+          <TabsContent value="campaigns" className=""><CampaignQueueTab /></TabsContent>
+        </Tabs>
       </section>
     </>
   );
@@ -285,24 +283,30 @@ function OverviewSection() {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-end">
-        <Button variant="outline" onClick={refresh} className="rounded-xl" data-testid="admin-overview-refresh">
-          <RefreshCcw className="h-4 w-4 me-2" /> {t('stylist.refreshScout', { defaultValue: 'Refresh' })}
-        </Button>
-      </div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4" data-testid="admin-overview-grid">
-        {cards.map((c) => (
-          <Card key={c.label} className="rounded-[calc(var(--radius)+6px)] shadow-editorial" data-testid={c.testid}>
-            <CardContent className="p-5">
-              <div className="flex items-center justify-between">
-                <div className="caps-label text-muted-foreground">{c.label}</div>
-                <c.icon className="h-4 w-4 text-muted-foreground" />
-              </div>
-              <div className="font-display text-3xl mt-2">{c.value}</div>
-              <div className="text-xs text-muted-foreground mt-1">{c.sub}</div>
-            </CardContent>
-          </Card>
-        ))}
+      <div className='bg-white border border-border shadow-sm p-5 rounded-[12px]'>
+        <div className="flex justify-end mb-4">
+          <Button variant="outline" onClick={refresh} className="rounded-xl" data-testid="admin-overview-refresh">
+            <RefreshCcw className="h-4 w-4" /> {t('stylist.refreshScout', { defaultValue: 'Refresh' })}
+          </Button>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4" data-testid="admin-overview-grid">
+          {cards.map((c) => (
+            <Card key={c.label} className="rounded-[12px] shadow-sm border border-border bg-white hover:border-primary-brand hover:bg-primary-shadow" data-testid={c.testid}>
+              <CardContent className="p-3">
+                <div className="flex items-start justify-between">
+                  <div className=''>
+                    <div className="text-[12px] text-text-brand font-semibold">{c.label}</div>
+                    <div className="font-bold text-[25px] text-dark-brand">{c.value}</div>
+                    <div className="text-[14px] text-text-brand font-semibold">{c.sub}</div>
+                  </div>
+                  <div className=''>
+                    <c.icon className="h-10 w-10 p-3 rounded-full text-primary-brand bg-primary-shadow" />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
       </div>
       <ProvidersInline summary={data.providers || []} />
     </div>
@@ -313,17 +317,15 @@ function ProvidersInline({ summary }) {
   const { t } = useTranslation();
   if (!summary?.length) {
     return (
-      <Card className="rounded-[calc(var(--radius)+6px)]">
-        <CardContent className="p-6 text-sm text-muted-foreground">
-          {t('pages.admin.no_provider_activity_yet_trigger')}
-        </CardContent>
-      </Card>
+      <div className=''>
+        <p className='text-text-brand text-center text-[14px] font-semibold'>{t('pages.admin.no_provider_activity_yet_trigger')}</p>
+      </div>
     );
   }
   return (
-    <Card className="rounded-[calc(var(--radius)+6px)] shadow-editorial">
+    <Card className="bg-white border border-border shadow-sm rounded-[12px]">
       <CardContent className="p-5">
-        <h3 className="font-display text-xl mb-3">Provider activity (last 200 calls)</h3>
+        <h3 className="font-bold text-dark-brand text-[16px] mb-3">Provider activity (last 200 calls)</h3>
         <ProviderTable rows={summary} />
       </CardContent>
     </Card>
@@ -333,40 +335,58 @@ function ProvidersInline({ summary }) {
 function ProviderTable({ rows }) {
   const { t } = useTranslation();
   return (
-    <div className="overflow-visible">
+    <div className="rounded-[12px] border border-border overflow-hidden overflow-x-auto">
       <Table data-testid="admin-providers-table" wrapperClassName="overflow-visible">
         <TableHeader>
-          <TableRow>
-            <TableHead className="sticky top-16 bg-background/95 backdrop-blur z-10">{t('pages.admin.provider')}</TableHead>
-            <TableHead className="sticky top-16 bg-background/95 backdrop-blur z-10 text-end">{t('pages.admin.calls')}</TableHead>
-            <TableHead className="sticky top-16 bg-background/95 backdrop-blur z-10 text-end">{t('pages.admin.errors')}</TableHead>
-            <TableHead className="sticky top-16 bg-background/95 backdrop-blur z-10 text-end">{t('pages.admin.error_rate')}</TableHead>
-            <TableHead className="sticky top-16 bg-background/95 backdrop-blur z-10 text-end">{t('pages.admin.avg_ms', { defaultValue: 'avg ms' })}</TableHead>
-            <TableHead className="sticky top-16 bg-background/95 backdrop-blur z-10 text-end">{t('pages.admin.p95_ms', { defaultValue: 'p95 ms' })}</TableHead>
-            <TableHead className="sticky top-16 bg-background/95 backdrop-blur z-10">{t('pages.admin.last')}</TableHead>
+          <TableRow className="bg-primary-shadow border-b border-border hover:bg-primary-shadow">
+            <TableHead className="sticky top-16 bg-primary-shadow backdrop-blur z-10 text-[12px] font-bold uppercase tracking-wide text-text-brand">
+              {t('pages.admin.provider')}
+            </TableHead>
+            <TableHead className="sticky top-16 bg-primary-shadow backdrop-blur z-10 text-end text-[12px] font-bold uppercase tracking-wide text-text-brand">
+              {t('pages.admin.calls')}
+            </TableHead>
+            <TableHead className="sticky top-16 bg-primary-shadow backdrop-blur z-10 text-end text-[12px] font-bold uppercase tracking-wide text-text-brand">
+              {t('pages.admin.errors')}
+            </TableHead>
+            <TableHead className="sticky top-16 bg-primary-shadow backdrop-blur z-10 text-end text-[12px] font-bold uppercase tracking-wide text-text-brand">
+              {t('pages.admin.error_rate')}
+            </TableHead>
+            <TableHead className="sticky top-16 bg-primary-shadow backdrop-blur z-10 text-end text-[12px] font-bold uppercase tracking-wide text-text-brand">
+              {t('pages.admin.avg_ms', { defaultValue: 'avg ms' })}
+            </TableHead>
+            <TableHead className="sticky top-16 bg-primary-shadow backdrop-blur z-10 text-end text-[12px] font-bold uppercase tracking-wide text-text-brand">
+              {t('pages.admin.p95_ms', { defaultValue: 'p95 ms' })}
+            </TableHead>
+            <TableHead className="sticky top-16 bg-primary-shadow backdrop-blur z-10 text-[12px] font-bold uppercase tracking-wide text-text-brand">
+              {t('pages.admin.last')}
+            </TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {rows.map((p) => (
-            <TableRow key={p.provider} data-testid="admin-providers-row">
-              <TableCell className="font-mono text-xs">{p.provider}</TableCell>
-              <TableCell className="text-end">{fmtNum(p.total)}</TableCell>
-              <TableCell className="text-end">{fmtNum(p.fail)}</TableCell>
-              <TableCell className="text-end">
+            <TableRow
+              key={p.provider}
+              className="border-b border-border last:border-0 hover:bg-black/[0.015] transition-colors align-middle"
+              data-testid="admin-providers-row"
+            >
+              <TableCell className="font-mono text-xs px-4 py-4">{p.provider}</TableCell>
+              <TableCell className="text-end px-4 py-4 text-[12px] font-semibold">{fmtNum(p.total)}</TableCell>
+              <TableCell className="text-end px-4 py-4 text-[12px] font-semibold">{fmtNum(p.fail)}</TableCell>
+              <TableCell className="text-end px-4 py-4">
                 <Badge variant="outline" className={`text-[11px] ${PROVIDER_TONE[tone(p.error_rate)]}`}>
                   {(p.error_rate * 100).toFixed(1)}%
                 </Badge>
               </TableCell>
-              <TableCell className="text-end">{fmtNum(p.avg_ms)}</TableCell>
-              <TableCell className="text-end">{fmtNum(p.p95_ms)}</TableCell>
-              <TableCell className="text-xs">
-                <div className="flex items-center gap-1">
+              <TableCell className="text-end px-4 py-4 text-[12px] font-semibold">{fmtNum(p.avg_ms)}</TableCell>
+              <TableCell className="text-end px-4 py-4 text-[12px] font-semibold">{fmtNum(p.p95_ms)}</TableCell>
+              <TableCell className="text-xs px-4 py-4">
+                <div className="flex items-center gap-1.5">
                   {p.last_ok ? (
-                    <CheckCircle2 className="h-3 w-3 text-emerald-700" />
+                    <CheckCircle2 className="h-3.5 w-3.5 text-emerald-700" />
                   ) : (
-                    <AlertTriangle className="h-3 w-3 text-rose-700" />
+                    <AlertTriangle className="h-3.5 w-3.5 text-rose-700" />
                   )}
-                  <span className="truncate max-w-[260px]" title={p.last_error || ''}>
+                  <span className="truncate max-w-[260px] font-semibold text-text-brand" title={p.last_error || ''}>
                     {p.last_ok ? 'ok' : (p.last_error || 'error')}
                   </span>
                 </div>
@@ -409,7 +429,7 @@ function ProvidersSection() {
           {summary === null ? (
             <Skeleton className="h-32 w-full" />
           ) : summary.length === 0 ? (
-            <p className="text-sm text-muted-foreground">{t('pages.admin.no_calls_recorded_yet')}</p>
+            <p className="text-[12px] text-text-brand">{t('pages.admin.no_calls_recorded_yet')}</p>
           ) : (
             <ProviderTable rows={summary} />
           )}
@@ -423,7 +443,7 @@ function ProvidersSection() {
               <KeyRound className="h-5 w-5" />
             </div>
             <div className="flex-1 min-w-0">
-              <div className="caps-label text-muted-foreground">{t('pages.admin.gemini_api_key', { defaultValue: 'Gemini API Key' })}</div>
+              <div className="caps-label text-text-brand">{t('pages.admin.gemini_api_key', { defaultValue: 'Gemini API Key' })}</div>
               <h3 className="font-display text-xl mt-1">{t('pages.admin.gemini_key_usage', { defaultValue: 'Gemini API Status' })}</h3>
               {usage === null ? (
                 <Skeleton className="h-5 w-64 mt-2" />
@@ -432,7 +452,7 @@ function ProvidersSection() {
                   {JSON.stringify(usage.usage, null, 2)}
                 </pre>
               ) : (
-                <p className="text-sm text-muted-foreground mt-2">
+                <p className="text-[12px] text-text-brand mt-2">
                   {usage.reason || 'Live usage not available.'}{' '}
                   {usage.manage_url && (
                     <a className="underline" href={usage.manage_url} target="_blank" rel="noreferrer">
@@ -490,7 +510,7 @@ function TrendScoutSection() {
         <Skeleton className="h-40 w-full rounded-[calc(var(--radius)+6px)]" />
       ) : items.length === 0 ? (
         <Card className="rounded-[calc(var(--radius)+6px)]">
-          <CardContent className="p-6 text-sm text-muted-foreground">
+          <CardContent className="p-6 text-[12px] text-text-brand">
             {t('pages.admin.no_trend_reports_yet_hit')}
           </CardContent>
         </Card>
@@ -501,11 +521,11 @@ function TrendScoutSection() {
               <CardContent className="p-5">
                 <div className="flex items-center justify-between">
                   <Badge variant="outline" className="text-[11px]">{t.bucket_label || t.bucket}</Badge>
-                  <span className="caps-label text-muted-foreground">{t.date}</span>
+                  <span className="caps-label text-text-brand">{t.date}</span>
                 </div>
                 <h3 className="font-display text-lg mt-2 leading-tight">{t.headline}</h3>
-                <p className="text-sm text-muted-foreground mt-2">{t.body}</p>
-                <div className="text-[11px] text-muted-foreground mt-3 font-mono">{t.model}</div>
+                <p className="text-[12px] text-text-brand mt-2">{t.body}</p>
+                <div className="text-[11px] text-text-brand mt-3 font-mono">{t.model}</div>
               </CardContent>
             </Card>
           ))}
@@ -545,117 +565,147 @@ function UsersSection() {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center gap-2">
-        <div className="relative flex-1 max-w-md">
-          <Search className="h-4 w-4 absolute start-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            placeholder={t('pages.admin.search_by_email_or_display')}
-            value={q}
-            onChange={(e) => setQ(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && refresh()}
-            className="ps-9 rounded-xl"
-            data-testid="admin-users-search"
-          />
-        </div>
-        <Button onClick={() => refresh()} variant="outline" className="rounded-xl" data-testid="admin-users-search-btn">
-          {t('common.search', { defaultValue: 'Search' })}
-        </Button>
-        <span className="text-xs text-muted-foreground ms-auto">{t('pages.admin.total_count', { count: total, defaultValue: '{{count}} total' })}</span>
-      </div>
-      <Card className="rounded-[calc(var(--radius)+6px)] shadow-editorial">
-        <CardContent className="p-0">
-          <div className="overflow-visible">
+      <Card className="bg-white border border-border shadow-sm rounded-[12px]">
+        <CardContent className="p-5">
+          <div className="flex items-center gap-2 mb-4">
+            <div className="relative flex-1 max-w-md">
+              <Search className="h-4 w-4 absolute start-3 top-[15px] text-text-brand" />
+              <Input
+                placeholder={t('pages.admin.search_by_email_or_display')}
+                value={q}
+                onChange={(e) => setQ(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && refresh()}
+                className="ps-9 mb-0"
+                data-testid="admin-users-search"
+              />
+            </div>
+            <Button onClick={() => refresh()} className="rounded-xl" data-testid="admin-users-search-btn">
+              {t('common.search', { defaultValue: 'Search' })}
+            </Button>
+            <span className="text-[14px] text-dark-brand ms-auto font-semibold">{t('pages.admin.total_count', { count: total, defaultValue: '{{count}} total' })}</span>
+          </div>
+          <div className="rounded-[12px] border border-border overflow-hidden overflow-x-auto">
             <Table data-testid="admin-users-table" wrapperClassName="overflow-visible">
               <TableHeader>
-                <TableRow>
-                  <TableHead className="sticky top-16 bg-background/95 backdrop-blur z-10">{t('auth.email', { defaultValue: 'Email' })}</TableHead>
-                  <TableHead className="sticky top-16 bg-background/95 backdrop-blur z-10">{t('auth.displayName', { defaultValue: 'Display name' })}</TableHead>
-                  <TableHead className="sticky top-16 bg-background/95 backdrop-blur z-10">{t('pages.admin.roles')}</TableHead>
-                  <TableHead className="sticky top-16 bg-background/95 backdrop-blur z-10">{t('pages.admin.model', { defaultValue: 'Model' })}</TableHead>
-                  <TableHead className="sticky top-16 bg-background/95 backdrop-blur z-10">{t('pages.admin.subscription_plan', { defaultValue: 'Plan' })}</TableHead>
-                  <TableHead className="sticky top-16 bg-background/95 backdrop-blur z-10">{t('pages.admin.subscription_status', { defaultValue: 'Status' })}</TableHead>
-                  <TableHead className="sticky top-16 bg-background/95 backdrop-blur z-10 text-end">{t('pages.admin.total_requests', { defaultValue: 'Requests' })}</TableHead>
-                  <TableHead className="sticky top-16 bg-background/95 backdrop-blur z-10 text-end">{t('pages.admin.daily_requests', { defaultValue: 'Req/Day' })}</TableHead>
-                  <TableHead className="sticky top-16 bg-background/95 backdrop-blur z-10 text-end">{t('pages.admin.dressapp_fee', { defaultValue: 'DressApp fee' })}</TableHead>
-                  <TableHead className="sticky top-16 bg-background/95 backdrop-blur z-10 text-end">{t('pages.admin.billing_history', { defaultValue: 'Billing History' })}</TableHead>
-                  <TableHead className="sticky top-16 bg-background/95 backdrop-blur z-10 text-end">{t('nav.closet', { defaultValue: 'Closet' })}</TableHead>
-                  <TableHead className="sticky top-16 bg-background/95 backdrop-blur z-10 text-end">{t('admin.listings', { defaultValue: 'Listings' })}</TableHead>
-                  <TableHead className="sticky top-16 bg-background/95 backdrop-blur z-10">{t('pages.admin.calendar')}</TableHead>
-                  <TableHead className="sticky top-16 bg-background/95 backdrop-blur z-10">{t('pages.admin.created')}</TableHead>
-                  <TableHead className="sticky top-16 bg-background/95 backdrop-blur z-10"></TableHead>
+                <TableRow className="bg-primary-shadow border-b border-border hover:bg-primary-shadow">
+                  <TableHead className="whitespace-nowrap px-4 py-3 text-[11px] font-bold uppercase tracking-wide text-text-brand">
+                    {t('auth.email', { defaultValue: 'Email' })}
+                  </TableHead>
+                  <TableHead className="whitespace-nowrap px-4 py-3 text-[11px] font-bold uppercase tracking-wide text-text-brand">
+                    {t('auth.displayName', { defaultValue: 'Display name' })}
+                  </TableHead>
+                  <TableHead className="whitespace-nowrap px-4 py-3 text-[11px] font-bold uppercase tracking-wide text-text-brand">
+                    {t('pages.admin.roles')}
+                  </TableHead>
+                  <TableHead className="whitespace-nowrap px-4 py-3 text-[11px] font-bold uppercase tracking-wide text-text-brand">
+                    {t('pages.admin.model', { defaultValue: 'Model' })}
+                  </TableHead>
+                  <TableHead className="whitespace-nowrap px-4 py-3 text-[11px] font-bold uppercase tracking-wide text-text-brand">
+                    {t('pages.admin.subscription_plan', { defaultValue: 'Plan' })}
+                  </TableHead>
+                  <TableHead className="whitespace-nowrap px-4 py-3 text-[11px] font-bold uppercase tracking-wide text-text-brand">
+                    {t('pages.admin.subscription_status', { defaultValue: 'Status' })}
+                  </TableHead>
+                  <TableHead className="whitespace-nowrap px-4 py-3 text-end text-[11px] font-bold uppercase tracking-wide text-text-brand">
+                    {t('pages.admin.total_requests', { defaultValue: 'Requests' })}
+                  </TableHead>
+                  <TableHead className="whitespace-nowrap px-4 py-3 text-end text-[11px] font-bold uppercase tracking-wide text-text-brand">
+                    {t('pages.admin.daily_requests', { defaultValue: 'Req/Day' })}
+                  </TableHead>
+                  <TableHead className="whitespace-nowrap px-4 py-3 text-end text-[11px] font-bold uppercase tracking-wide text-text-brand">
+                    {t('pages.admin.dressapp_fee', { defaultValue: 'DressApp fee' })}
+                  </TableHead>
+                  <TableHead className="whitespace-nowrap px-4 py-3 text-end text-[11px] font-bold uppercase tracking-wide text-text-brand">
+                    {t('pages.admin.billing_history', { defaultValue: 'Billing' })}
+                  </TableHead>
+                  <TableHead className="whitespace-nowrap px-4 py-3 text-end text-[11px] font-bold uppercase tracking-wide text-text-brand">
+                    {t('nav.closet', { defaultValue: 'Closet' })}
+                  </TableHead>
+                  <TableHead className="whitespace-nowrap px-4 py-3 text-end text-[11px] font-bold uppercase tracking-wide text-text-brand">
+                    {t('admin.listings', { defaultValue: 'Listings' })}
+                  </TableHead>
+                  <TableHead className="whitespace-nowrap px-4 py-3 text-[11px] font-bold uppercase tracking-wide text-text-brand">
+                    {t('pages.admin.calendar')}
+                  </TableHead>
+                  <TableHead className="whitespace-nowrap px-4 py-3 text-[11px] font-bold uppercase tracking-wide text-text-brand">
+                    {t('pages.admin.created')}
+                  </TableHead>
+                  <TableHead className="whitespace-nowrap px-4 py-3"></TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {items === null ? (
-                  <TableRow><TableCell colSpan={15}><Skeleton className="h-8 w-full" /></TableCell></TableRow>
+                  <TableRow><TableCell colSpan={15} className="px-4 py-4"><Skeleton className="h-8 w-full" /></TableCell></TableRow>
                 ) : items.length === 0 ? (
-                  <TableRow><TableCell colSpan={15} className="text-center text-sm text-muted-foreground py-6">{t('pages.admin.no_users_match')}</TableCell></TableRow>
+                  <TableRow><TableCell colSpan={15} className="text-center text-[12px] text-text-brand py-6">{t('pages.admin.no_users_match')}</TableCell></TableRow>
                 ) : items.map((u) => {
                   const isAdmin = (u.roles || []).includes('admin');
                   const sub = u.subscription || {};
                   const planName = sub.is_active ? (sub.tier || 'free') : 'free';
                   const isActive = sub.is_active;
                   const isCancelled = !!sub.cancelled_at;
-
-                  let statusColor = 'bg-slate-50 text-slate-850 border-slate-200 dark:bg-slate-900/50 dark:text-slate-300 dark:border-slate-800';
+                  let statusColor = 'bg-slate-50 text-text-brand border-border dark:bg-slate-900/50 dark:text-slate-300 dark:border-slate-800';
                   let statusText = t('pages.admin.inactive', { defaultValue: 'Inactive' });
                   if (isActive) {
                     if (isCancelled) {
                       statusColor = 'bg-amber-50 text-amber-800 border-amber-200 dark:bg-amber-950/20 dark:text-amber-400 dark:border-amber-900/50';
                       statusText = t('pages.admin.cancelled', { defaultValue: 'Cancelled' });
                     } else {
-                      statusColor = 'bg-emerald-50 text-emerald-800 border-emerald-200 dark:bg-emerald-950/20 dark:text-emerald-400 dark:border-emerald-900/50';
+                      statusColor = 'bg-primary-shadow text-primary-brand border-primary-brand dark:bg-emerald-950/20 dark:text-emerald-400 dark:border-emerald-900/50';
                       statusText = t('pages.admin.active', { defaultValue: 'Active' });
                     }
                   }
 
                   return (
-                    <TableRow key={u.id} data-testid="admin-users-row">
-                      <TableCell className="text-sm">{u.email}</TableCell>
-                      <TableCell className="text-sm">{u.display_name}</TableCell>
-                      <TableCell>
+                    <TableRow
+                      key={u.id}
+                      className="border-b border-border font-semibold last:border-0 hover:bg-black/[0.02] transition-colors align-middle"
+                      data-testid="admin-users-row"
+                    >
+                      <TableCell className="whitespace-nowrap text-text-brand text-[12px] px-4 py-3 max-w-[220px] truncate" title={u.email}>{u.email}</TableCell>
+                      <TableCell className="whitespace-nowrap text-text-brand text-[12px] px-4 py-3">{u.display_name}</TableCell>
+                      <TableCell className="whitespace-nowrap px-4 py-3">
                         {(u.roles || []).map((r) => (
                           <Badge key={r} variant="outline" className="text-[11px] me-1">{r}</Badge>
                         ))}
                       </TableCell>
-                      <TableCell className="text-sm font-mono text-muted-foreground">{u.selected_model || '—'}</TableCell>
-                      <TableCell className="text-sm capitalize font-semibold">
+                      <TableCell className="whitespace-nowrap text-[12px] text-text-brand px-4 py-3">{u.selected_model || '—'}</TableCell>
+                      <TableCell className="whitespace-nowrap text-[12px] text-primary-brand px-4 py-3">
                         {t('pricing.tier.' + planName, { defaultValue: planName })}
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="whitespace-nowrap px-4 py-3">
                         <Badge variant="outline" className={`text-[11px] ${statusColor}`}>
                           {statusText}
                         </Badge>
                       </TableCell>
-                      <TableCell className="text-end text-sm">{fmtNum(u.total_requests)}</TableCell>
-                      <TableCell className="text-end text-sm">{fmtNum(u.daily_requests)}</TableCell>
-                      <TableCell className="text-end text-sm font-medium text-emerald-600 dark:text-emerald-400">
+                      <TableCell className="whitespace-nowrap text-text-brand text-[12px] px-4 py-3">{fmtNum(u.total_requests)}</TableCell>
+                      <TableCell className="whitespace-nowrap text-text-brand text-[12px] px-4 py-3">{fmtNum(u.daily_requests)}</TableCell>
+                      <TableCell className="whitespace-nowrap text-primary-brand text-[12px] px-4 py-3">
                         ${(u.dressapp_fee || 0).toFixed(2)}
                       </TableCell>
-                      <TableCell className="text-end text-sm font-medium">
+                      <TableCell className="whitespace-nowrap text-text-brand text-[12px] font-medium px-4 py-3">
                         ${(u.billing_history_sum || 0).toFixed(2)}
                       </TableCell>
-                      <TableCell className="text-end text-sm">{fmtNum(u.closet_count)}</TableCell>
-                      <TableCell className="text-end text-sm">{fmtNum(u.listing_count)}</TableCell>
-                      <TableCell>
+                      <TableCell className="whitespace-nowrap text-text-brand text-[12px] px-4 py-3">{fmtNum(u.closet_count)}</TableCell>
+                      <TableCell className="whitespace-nowrap text-text-brand text-[12px] px-4 py-3">{fmtNum(u.listing_count)}</TableCell>
+                      <TableCell className="whitespace-nowrap px-4 py-3">
                         {u.calendar_connected ? (
                           <Badge variant="outline" className="bg-emerald-50 text-emerald-800 border-emerald-200 text-[11px]">{t('pages.admin.connected', { defaultValue: 'connected' })}</Badge>
                         ) : (
                           <Badge variant="outline" className="text-[11px]">{t('pages.admin.no', { defaultValue: 'no' })}</Badge>
                         )}
                       </TableCell>
-                      <TableCell className="text-xs text-muted-foreground">
+                      <TableCell className="whitespace-nowrap text-text-brand text-[12px] px-4 py-3">
                         {u.created_at ? new Date(u.created_at).toLocaleDateString() : '—'}
                       </TableCell>
-                      <TableCell className="text-end">
+                      <TableCell className="whitespace-nowrap px-4 py-3">
                         <Button
                           size="sm"
-                          variant="outline"
-                          className="rounded-lg text-xs"
+                          className="!gap-0.5"
                           onClick={() => togglePromotion(u)}
                           data-testid="admin-user-toggle-admin"
                         >
-                          {isAdmin ? <ShieldOff className="h-3 w-3 me-1" /> : <ShieldCheck className="h-3 w-3 me-1" />}
+                          {isAdmin ? <ShieldOff className="h-3 w-3" /> : <ShieldCheck className="h-3 w-3 me-1" />}
                           {isAdmin ? t('pages.admin.demote', { defaultValue: 'Demote' }) : t('pages.admin.promote', { defaultValue: 'Promote' })}
                         </Button>
                       </TableCell>
@@ -732,7 +782,7 @@ function ListingsSection() {
                 {items === null ? (
                   <TableRow><TableCell colSpan={7}><Skeleton className="h-8 w-full" /></TableCell></TableRow>
                 ) : items.length === 0 ? (
-                  <TableRow><TableCell colSpan={7} className="text-center text-sm text-muted-foreground py-6">{t('pages.admin.no_listings')}</TableCell></TableRow>
+                  <TableRow><TableCell colSpan={7} className="text-center text-[12px] text-text-brand py-6">{t('pages.admin.no_listings')}</TableCell></TableRow>
                 ) : items.map((l) => (
                   <TableRow key={l.id} data-testid="admin-listings-row">
                     <TableCell className="text-xs font-mono">{(l.id || '').slice(0, 8)}…</TableCell>
@@ -740,7 +790,7 @@ function ListingsSection() {
                     <TableCell className="text-end">{fmtCents(l.list_price_cents, l.currency)}</TableCell>
                     <TableCell><Badge variant="outline" className="capitalize text-[11px]">{l.status}</Badge></TableCell>
                     <TableCell><Badge variant="outline" className="text-[11px]">{l.source_tag || '—'}</Badge></TableCell>
-                    <TableCell className="text-xs text-muted-foreground">
+                    <TableCell className="text-xs text-text-brand">
                       {l.created_at ? new Date(l.created_at).toLocaleDateString() : '—'}
                     </TableCell>
                     <TableCell className="text-end">
@@ -828,7 +878,7 @@ function TransactionsSection() {
         ].map((c) => (
           <Card key={c.id} className="rounded-[calc(var(--radius)+6px)]" data-testid={`admin-tx-${c.id}`}>
             <CardContent className="p-4">
-              <div className="caps-label text-muted-foreground">{c.label}</div>
+              <div className="caps-label text-text-brand">{c.label}</div>
               <div className="font-display text-xl mt-1">{c.value}</div>
             </CardContent>
           </Card>
@@ -853,7 +903,7 @@ function TransactionsSection() {
                 {items === null ? (
                   <TableRow><TableCell colSpan={7}><Skeleton className="h-8 w-full" /></TableCell></TableRow>
                 ) : items.length === 0 ? (
-                  <TableRow><TableCell colSpan={7} className="text-center text-sm text-muted-foreground py-6">{t('pages.admin.no_transactions')}</TableCell></TableRow>
+                  <TableRow><TableCell colSpan={7} className="text-center text-[12px] text-text-brand py-6">{t('pages.admin.no_transactions')}</TableCell></TableRow>
                 ) : items.map((t) => {
                   const f = t.financial || {};
                   return (
@@ -864,7 +914,7 @@ function TransactionsSection() {
                       <TableCell className="text-end">{fmtCents(f.platform_fee_cents, t.currency)}</TableCell>
                       <TableCell className="text-end">{fmtCents(f.stripe_fee_cents, t.currency)}</TableCell>
                       <TableCell className="text-end">{fmtCents(f.seller_net_cents, t.currency)}</TableCell>
-                      <TableCell className="text-xs text-muted-foreground">
+                      <TableCell className="text-xs text-text-brand">
                         {t.created_at ? new Date(t.created_at).toLocaleString() : '—'}
                       </TableCell>
                     </TableRow>
@@ -902,10 +952,10 @@ function SystemSection() {
           <h3 className="font-display text-xl mb-3 flex items-center gap-2">
             <Settings className="h-4 w-4" /> {t('pages.admin.ai_config', { defaultValue: 'AI configuration' })}
           </h3>
-          <dl className="text-sm space-y-2">
+          <dl className="text-[12px] space-y-2">
             {Object.entries(data.ai || {}).map(([k, v]) => (
               <div key={k} className="flex justify-between gap-4">
-                <dt className="text-muted-foreground">{k}</dt>
+                <dt className="text-text-brand">{k}</dt>
                 <dd className="font-mono text-xs text-end break-all">{String(v)}</dd>
               </div>
             ))}
@@ -917,7 +967,7 @@ function SystemSection() {
           <h3 className="font-display text-xl mb-3 flex items-center gap-2">
             <KeyRound className="h-4 w-4" /> {t('pages.admin.api_keys_present', { defaultValue: 'API keys present' })}
           </h3>
-          <ul className="text-sm space-y-2">
+          <ul className="text-[12px] space-y-2">
             {Object.entries(data.keys_present || {}).map(([k, ok]) => (
               <li key={k} className="flex items-center justify-between">
                 <span className="font-mono text-xs">{k}</span>
@@ -938,7 +988,7 @@ function SystemSection() {
           <h3 className="font-display text-xl mb-3 flex items-center gap-2">
             <Activity className="h-4 w-4" /> {t('home.trendScout', { defaultValue: 'Trend-Scout' })}
           </h3>
-          <div className="text-sm flex flex-wrap gap-x-8 gap-y-2">
+          <div className="text-[12px] flex flex-wrap gap-x-8 gap-y-2">
             <div>{t('pages.admin.enabled')} <Badge variant="outline" className="ms-1 text-[11px]">{String(data.trend_scout?.enabled)}</Badge></div>
             <div>{t('pages.admin.daily_utc')} <span className="font-mono">{data.trend_scout?.schedule_utc}</span></div>
             <div>{t('pages.admin.dev_bypass')} <Badge variant="outline" className="ms-1 text-[11px]">{String(data.dev?.allow_dev_bypass)}</Badge></div>
@@ -1026,7 +1076,7 @@ function CampaignQueueTab() {
                 {items === null ? (
                   <TableRow><TableCell colSpan={7}><Skeleton className="h-8 w-full" /></TableCell></TableRow>
                 ) : items.length === 0 ? (
-                  <TableRow><TableCell colSpan={7} className="text-center text-sm text-muted-foreground py-6">{t('campaigns.admin.empty', { defaultValue: 'No campaigns found' })}</TableCell></TableRow>
+                  <TableRow><TableCell colSpan={7} className="text-center text-[12px] text-text-brand py-6">{t('campaigns.admin.empty', { defaultValue: 'No campaigns found' })}</TableCell></TableRow>
                 ) : items.map((c) => (
                   <TableRow key={c.id} data-testid="admin-campaigns-row">
                     <TableCell>
@@ -1037,13 +1087,13 @@ function CampaignQueueTab() {
                       )}
                     </TableCell>
                     <TableCell>
-                      <div className="font-medium text-sm">{c.title}</div>
-                      <div className="text-xs text-muted-foreground">{c.business_name}</div>
+                      <div className="font-medium text-[12px]">{c.title}</div>
+                      <div className="text-xs text-text-brand">{c.business_name}</div>
                     </TableCell>
-                    <TableCell className="text-sm">{c.location_name || '—'}</TableCell>
+                    <TableCell className="text-[12px]">{c.location_name || '—'}</TableCell>
                     <TableCell><Badge variant="outline" className="text-[11px]">{c.category}</Badge></TableCell>
                     <TableCell><Badge variant="outline" className="capitalize text-[11px]">{c.status}</Badge></TableCell>
-                    <TableCell className="text-xs text-muted-foreground">
+                    <TableCell className="text-xs text-text-brand">
                       {c.created_at ? new Date(c.created_at).toLocaleDateString() : '—'}
                     </TableCell>
                     <TableCell className="text-end">
@@ -1101,10 +1151,10 @@ function CampaignQueueTab() {
               )}
               <div>
                 <h3 className="font-display text-lg">{previewItem.title}</h3>
-                <p className="text-sm text-muted-foreground">{previewItem.business_name}</p>
+                <p className="text-[12px] text-text-brand">{previewItem.business_name}</p>
               </div>
-              <p className="text-sm">{previewItem.description}</p>
-              <div className="grid grid-cols-2 gap-2 text-sm">
+              <p className="text-[12px]">{previewItem.description}</p>
+              <div className="grid grid-cols-2 gap-2 text-[12px]">
                 <div><strong>{t('campaigns.admin.location', { defaultValue: 'Location' })}:</strong> {previewItem.location_name || '—'}</div>
                 <div><strong>{t('campaigns.admin.category', { defaultValue: 'Category' })}:</strong> {previewItem.category}</div>
                 <div><strong>{t('campaigns.admin.website', { defaultValue: 'Website' })}:</strong> {previewItem.website_url || '—'}</div>

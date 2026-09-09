@@ -9,9 +9,8 @@ export function ExploreBackButton({ to = '/stylist' }) {
 
   return (
     <Button
-      variant="outline"
       onClick={() => navigate(to)}
-      className="rounded-full shadow-none border-none bg-transparent hover:!bg-transparent hover:text-primary-brand flex items-center gap-1.5 transition-all active:scale-95 px-0 py-0 font-semibold text-xs text-dark-brand mb-3"
+      className="rounded-full shadow-none border-none bg-transparent hover:!bg-transparent hover:text-primary-brand flex items-center gap-1.5 px-0 py-0 !font-bold !text-[14px] text-dark-brand mb-5"
       data-testid="back-to-explore"
     >
       <ArrowLeft className="h-4 w-4" />
