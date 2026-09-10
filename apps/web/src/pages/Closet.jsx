@@ -2315,7 +2315,7 @@ function ItemCardInner({ item, isSelected, showCheckbox, score }) {
         }`}
     >
       {/* IMAGE / MEDIA */}
-      <div className="relative h-[280px] w-full overflow-hidden bg-white">
+      <div className="relative h-[280px] w-full overflow-hidden bg-[#ddd]">
         {(() => {
           const thumbUrl = bestImageUrl(item);
           const polishing = isCleanImagePending(item);

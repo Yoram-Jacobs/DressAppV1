@@ -58,6 +58,8 @@ import market2 from "../assets/img/market2.jpg";
 import market3 from "../assets/img/market3.jpg";
 import market4 from "../assets/img/market4.jpg";
 import editor from "../assets/img/editor.jpg";
+// top imports me add karo (temporary placeholder — apna real screenshot aane par change kar lena)
+import shoppingAssistantPreview from "../assets/img/market1.jpg";
 // Fallback cards used only if the Trend-Scout endpoint fails or returns empty.
 // Shape mirrors the real API (``label``, ``headline``, ``summary``) so the
 // renderer below can read ONE consistent set of fields. The actual strings
@@ -477,7 +479,7 @@ export default function Home() {
       titleDefault: "Capture Clothes",
       descriptionKey: "home.howItWorks.steps.capture.description",
       descriptionDefault:
-        "Snap a quick photo of your actual garments. Works beautifully with all lightings and backgrounds.",
+        "Snap a quick photo of your actual garments. Works best with good lighting and contrasted backgrounds.",
     },
     {
       id: "analysis",
@@ -517,55 +519,79 @@ export default function Home() {
     },
   ];
   const CLOSET_GARMENTS = [
-  {
-    id: "blazer",
-    image: closet1,
-    altKey: "home.closet.garments.blazer.alt",
-    altDefault: "Navy blazer",
-    categoryKey: "home.closet.garments.blazer.category",
-    categoryDefault: "Outerwear",
-    nameKey: "home.closet.garments.blazer.name",
-    nameDefault: "Navy Tech Blazer",
-    metaKey: "home.closet.garments.blazer.meta",
-    metaDefault: "No. 014 — Waterproof",
-  },
-  {
-    id: "sweater",
-    image: closet2,
-    altKey: "home.closet.garments.sweater.alt",
-    altDefault: "Grey knit sweater",
-    categoryKey: "home.closet.garments.sweater.category",
-    categoryDefault: "Knitwear",
-    nameKey: "home.closet.garments.sweater.name",
-    nameDefault: "Merino Crewneck",
-    metaKey: "home.closet.garments.sweater.meta",
-    metaDefault: "No. 027 — Ash Grey",
-  },
-  {
-    id: "shirt",
-    image: closet3,
-    altKey: "home.closet.garments.shirt.alt",
-    altDefault: "White dress shirt",
-    categoryKey: "home.closet.garments.shirt.category",
-    categoryDefault: "Top Layer",
-    nameKey: "home.closet.garments.shirt.name",
-    nameDefault: "Cotton Dress Shirt",
-    metaKey: "home.closet.garments.shirt.meta",
-    metaDefault: "No. 041 — Chalk White",
-  },
+    {
+      id: "blazer",
+      image: closet1,
+      altKey: "home.closet.garments.blazer.alt",
+      altDefault: "Navy blazer",
+      categoryKey: "home.closet.garments.blazer.category",
+      categoryDefault: "Outerwear",
+      nameKey: "home.closet.garments.blazer.name",
+      nameDefault: "Navy Tech Blazer",
+      metaKey: "home.closet.garments.blazer.meta",
+      metaDefault: "No. 014 — Waterproof",
+    },
+    {
+      id: "sweater",
+      image: closet2,
+      altKey: "home.closet.garments.sweater.alt",
+      altDefault: "Grey knit sweater",
+      categoryKey: "home.closet.garments.sweater.category",
+      categoryDefault: "Knitwear",
+      nameKey: "home.closet.garments.sweater.name",
+      nameDefault: "Merino Crewneck",
+      metaKey: "home.closet.garments.sweater.meta",
+      metaDefault: "No. 027 — Ash Grey",
+    },
+    {
+      id: "shirt",
+      image: closet3,
+      altKey: "home.closet.garments.shirt.alt",
+      altDefault: "White dress shirt",
+      categoryKey: "home.closet.garments.shirt.category",
+      categoryDefault: "Top Layer",
+      nameKey: "home.closet.garments.shirt.name",
+      nameDefault: "Cotton Dress Shirt",
+      metaKey: "home.closet.garments.shirt.meta",
+      metaDefault: "No. 041 — Chalk White",
+    },
+  ];
+
+  const RECENTLY_ADDED_THUMBS = [
+    { id: "sneakers", image: added1, altKey: "home.closet.recent.sneakers", altDefault: "Sneakers" },
+    { id: "jeans", image: added2, altKey: "home.closet.recent.jeans", altDefault: "Denim jeans" },
+    { id: "bag", image: added3, altKey: "home.closet.recent.bag", altDefault: "Leather bag" },
+    { id: "scarf", image: added4, altKey: "home.closet.recent.scarf", altDefault: "Scarf" },
+  ];
+const EXTENSION_TABS = [
+  { id: "deals", labelKey: "home.shoppingAssistant.tabs.deals", labelDefault: "Deals" },
+  { id: "wishlist", labelKey: "home.shoppingAssistant.tabs.wishlist", labelDefault: "Wishlist" },
+  { id: "compare", labelKey: "home.shoppingAssistant.tabs.compare", labelDefault: "Compare" },
+  { id: "rewards", labelKey: "home.shoppingAssistant.tabs.rewards", labelDefault: "Rewards" },
 ];
 
-const RECENTLY_ADDED_THUMBS = [
-  { id: "sneakers", image: added1, altKey: "home.closet.recent.sneakers", altDefault: "Sneakers" },
-  { id: "jeans", image: added2, altKey: "home.closet.recent.jeans", altDefault: "Denim jeans" },
-  { id: "bag", image: added3, altKey: "home.closet.recent.bag", altDefault: "Leather bag" },
-  { id: "scarf", image: added4, altKey: "home.closet.recent.scarf", altDefault: "Scarf" },
+const SMART_FEATURES = [
+  { id: "priceAlerts", icon: "bi bi-bell", labelKey: "home.shoppingAssistant.features.priceAlerts", labelDefault: "Price Alerts", active: true },
+  { id: "autoCoupon", icon: "bi bi-ticket-perforated", labelKey: "home.shoppingAssistant.features.autoCoupon", labelDefault: "Auto Coupon" },
+  { id: "priceCompare", icon: "bi bi-bar-chart", labelKey: "home.shoppingAssistant.features.priceCompare", labelDefault: "Price Compare" },
+  { id: "wishlistSync", icon: "bi bi-heart", labelKey: "home.shoppingAssistant.features.wishlistSync", labelDefault: "Wishlist Sync" },
 ];
 
-// The "+18" badge — wire this to a real remaining-count if you have one
-// (e.g. totalRecentCount - RECENTLY_ADDED_THUMBS.length); kept as a named
-// constant so it isn't a bare magic number in the JSX.
-const RECENTLY_ADDED_MORE_COUNT = 18;
+const BROWSING_MODES = [
+  { id: "silent", labelKey: "home.shoppingAssistant.modes.silent", labelDefault: "Silent" },
+  { id: "popup", labelKey: "home.shoppingAssistant.modes.popup", labelDefault: "Popup" },
+  { id: "fullCompare", labelKey: "home.shoppingAssistant.modes.fullCompare", labelDefault: "Full Compare" },
+];
+
+const SAVINGS_PERCENT = 34;
+
+// component state
+const [activeExtensionTab, setActiveExtensionTab] = useState(EXTENSION_TABS[0].id);
+const [activeBrowsingMode, setActiveBrowsingMode] = useState(BROWSING_MODES[1].id);
+  // The "+18" badge — wire this to a real remaining-count if you have one
+  // (e.g. totalRecentCount - RECENTLY_ADDED_THUMBS.length); kept as a named
+  // constant so it isn't a bare magic number in the JSX.
+  const RECENTLY_ADDED_MORE_COUNT = 18;
 
   const displayClosetGarments = useMemo(() => {
     if (!closet.items || closet.items.length === 0) return CLOSET_GARMENTS;
@@ -1858,14 +1884,14 @@ const RECENTLY_ADDED_MORE_COUNT = 18;
         </div>
       </section>
       {/* marketplace-section-end */}
-      {/* ai-fashion-editor-section-start*/}
+      {/* shopping-assistant-extension-section-start */}
       <section
-        id="ai-editor"
+        id="shopping-assistant"
         className="w-full overflow-hidden bg-white px-[40px] py-[80px] max-[991px]:px-[20px] max-[991px]:py-[50px]"
       >
         <div className="w-full">
           <div className="grid grid-cols-1 items-center gap-x-8 gap-y-8 md:grid-cols-12">
-            {/* Editor - Right Side */}
+            {/* Extension Preview - Right Side */}
             <div className="md:col-span-7 md:order-2">
               <motion.div
                 initial={{ opacity: 0, x: 40 }}
@@ -1874,66 +1900,65 @@ const RECENTLY_ADDED_MORE_COUNT = 18;
                 transition={{ duration: 0.65, delay: 0.15, ease: "easeOut" }}
                 className="relative overflow-hidden rounded-[18px] border border-black/[0.06] bg-white shadow-[var(--primary-shadow)] transition-smooth shadow-[0_20px_45px_rgba(23,20,15,0.12)]"
               >
-                {/* Editor Topbar */}
+                {/* Browser Topbar */}
                 <div className="flex items-center justify-between gap-4 border-b border-black/[0.06] px-5 py-4 max-[575px]:flex-col max-[575px]:items-start">
                   <div>
                     <h5 className="m-0 flex items-center text-[14px] font-black text-[var(--dark-color)]">
-                      <i className="bi bi-magic me-2 text-[var(--primary-color)]" />
-                      {t("home.aiEditor.title", {
-                        defaultValue: "AI Styled Fashion Editor",
+                      <i className="bi bi-puzzle me-2 text-[var(--primary-color)]" />
+                      {t("home.shoppingAssistant.title", {
+                        defaultValue: "DressApp Shopping Assistant",
                       })}
                     </h5>
 
                     <p className="mt-1 mb-0 text-[11px] font-medium text-[var(--text-color)]">
-                      {t("home.aiEditor.renderingLivePreview", {
-                        defaultValue: "Rendering live preview",
+                      {t("home.shoppingAssistant.subtitle", {
+                        defaultValue: "Works on every store you browse",
                       })}
                     </p>
                   </div>
 
-                  {/* Export */}
+                  {/* CTA */}
                   <button
                     type="button"
                     className="inline-flex items-center rounded-full border border-black/[0.08] bg-white px-4 py-2 text-[11px] font-bold text-[var(--dark-color)] transition-smooth hover:-translate-y-[1px] hover:border-[var(--primary-color)] hover:text-[var(--primary-color)]"
                   >
-                    <i className="bi bi-download me-2" />
-                    {t("home.aiEditor.exportLook", {
-                      defaultValue: "Export Look",
+                    <i className="bi bi-google me-2" />
+                    {t("home.shoppingAssistant.addToChrome", {
+                      defaultValue: "Add to Chrome",
                     })}
                   </button>
                 </div>
 
-                {/* Editor Body */}
+                {/* Extension Body */}
                 <div className="grid grid-cols-1 gap-0 md:grid-cols-[1.35fr_0.65fr]">
-                  {/* Canvas */}
-                  <div className="relative min-h-[450px] overflow-hidden bg-[#f2eee8] max-[767px]:min-h-[400px]">
+                  {/* Browser Canvas */}
+                  <div className="relative h-[450px] overflow-hidden bg-[#f2eee8] max-[767px]:min-h-[400px]">
                     <img
-                      src={editor}
-                      alt={t("home.aiEditor.previewAlt", {
-                        defaultValue: "AI styled outfit preview",
+                      src={shoppingAssistantPreview}
+                      alt={t("home.shoppingAssistant.previewAlt", {
+                        defaultValue: "Shopping assistant extension preview",
                       })}
-                      className="block h-full min-h-[500px] w-full object-cover object-center max-[767px]:min-h-[400px]"
+                      className="block h-full  w-full object-cover object-center"
                     />
 
-                    {/* AI Match Badge */}
+                    {/* Review Status Badge */}
                     <span className="absolute start-4 top-4 inline-flex items-center gap-1.5 rounded-full border border-white/50 bg-white/90 px-3 py-1.5 text-[10px] font-black text-[var(--primary-color)] shadow-[0_8px_20px_rgba(23,20,15,0.12)] backdrop-blur-sm">
-                      <i className="bi bi-stars" />
-                      {t("home.aiEditor.aiMatch", {
-                        percent: AI_MATCH_PERCENT,
-                        defaultValue: "AI Match {{percent}}%",
+                      <i className="bi bi-hourglass-split" />
+                      {t("home.shoppingAssistant.reviewBadge", {
+                        defaultValue: "Pending Chrome Web Store Review",
                       })}
                     </span>
                   </div>
 
-                  {/* Editor Tools */}
+                  {/* Extension Panel */}
                   <div className="flex flex-col bg-white p-5">
                     {/* Tabs */}
                     <div className="mb-6 flex items-center gap-1 overflow-x-auto border-b border-black/[0.06]">
-                      {EDITOR_TABS.map((tab) => (
+                      {EXTENSION_TABS.map((tab) => (
                         <span
                           key={tab.id}
                           className={
-                            tab.id === activeEditorTab
+                            tab.id === activeExtensionTab
                               ? "whitespace-nowrap border-b-2 border-[var(--primary-color)] px-3 pb-2.5 text-[11px] font-black text-[var(--primary-color)]"
                               : "whitespace-nowrap px-3 pb-2.5 text-[11px] font-semibold text-[var(--text-color)] transition-smooth hover:text-[var(--primary-color)]"
                           }
@@ -1943,44 +1968,48 @@ const RECENTLY_ADDED_MORE_COUNT = 18;
                       ))}
                     </div>
 
-                    {/* Fabric Tone */}
+                    {/* Smart Features */}
                     <div className="mb-6">
                       <span className="mb-3 block text-[11px] font-black uppercase tracking-[0.08em] text-[var(--dark-color)]">
-                        {t("home.aiEditor.fabricTone", {
-                          defaultValue: "Fabric Tone",
+                        {t("home.shoppingAssistant.smartFeatures", {
+                          defaultValue: "Smart Features",
                         })}
                       </span>
 
                       <div className="flex items-center gap-2.5">
-                        {FABRIC_TONES.map((tone) => (
+                        {SMART_FEATURES.map((feature) => (
                           <span
-                            key={tone.hex}
-                            aria-label={t(tone.labelKey, {
-                              defaultValue: tone.labelDefault,
+                            key={feature.id}
+                            aria-label={t(feature.labelKey, {
+                              defaultValue: feature.labelDefault,
                             })}
-                            style={{ backgroundColor: tone.hex }}
+                            title={t(feature.labelKey, {
+                              defaultValue: feature.labelDefault,
+                            })}
                             className={
-                              tone.active
-                                ? "h-8 w-8 cursor-pointer rounded-full border-[3px] border-white shadow-[0_0_0_1px_var(--primary-color)] transition-smooth hover:scale-110"
-                                : "h-8 w-8 cursor-pointer rounded-full border-[3px] border-white shadow-[0_0_0_1px_rgba(0,0,0,0.08)] transition-smooth hover:scale-110"
+                              feature.active
+                                ? "flex h-8 w-8 items-center justify-center rounded-full border-[3px] border-white bg-[var(--primary-color)] text-white shadow-[0_0_0_1px_var(--primary-color)] transition-smooth hover:scale-110"
+                                : "flex h-8 w-8 items-center justify-center rounded-full border-[3px] border-white bg-[#e8e8e5] text-[var(--dark-color)] shadow-[0_0_0_1px_rgba(0,0,0,0.08)] transition-smooth hover:scale-110"
                             }
-                          />
+                          >
+                            <i className={feature.icon} />
+                          </span>
                         ))}
                       </div>
                     </div>
 
-                    {/* Style Intensity */}
+                    {/* Savings Found */}
                     <div className="mb-6">
                       <div className="mb-3 flex items-center justify-between">
                         <span className="text-[11px] font-black uppercase tracking-[0.08em] text-[var(--dark-color)]">
-                          {t("home.aiEditor.styleIntensity", {
-                            defaultValue: "Style Intensity",
+                          {t("home.shoppingAssistant.savingsFound", {
+                            defaultValue: "Avg. Savings Found",
                           })}
                         </span>
 
                         <span className="text-[10px] font-semibold text-[var(--text-color)]">
-                          {t("home.aiEditor.percentValue", {
-                            percent: STYLE_INTENSITY_PERCENT,
+                          {t("home.shoppingAssistant.percentValue", {
+                            percent: SAVINGS_PERCENT,
                             defaultValue: "{{percent}}%",
                           })}
                         </span>
@@ -1989,50 +2018,48 @@ const RECENTLY_ADDED_MORE_COUNT = 18;
                       <div className="relative h-[5px] w-full rounded-full bg-[#e8e8e5]">
                         <div
                           className="absolute left-0 top-0 h-full rounded-full bg-[var(--primary-color)]"
-                          style={{ width: `${STYLE_INTENSITY_PERCENT}%` }}
+                          style={{ width: `${SAVINGS_PERCENT}%` }}
                         />
 
                         <span
                           className="absolute top-1/2 h-4 w-4 -translate-x-1/2 -translate-y-1/2 rounded-full border-[3px] border-white bg-[var(--primary-color)] shadow-[0_2px_8px_rgba(0,0,0,0.2)]"
-                          style={{ left: `${STYLE_INTENSITY_PERCENT}%` }}
+                          style={{ left: `${SAVINGS_PERCENT}%` }}
                         />
                       </div>
                     </div>
 
-                    {/* Silhouette */}
+                    {/* Browsing Mode */}
                     <div className="mb-6">
                       <span className="mb-3 block text-[11px] font-black uppercase tracking-[0.08em] text-[var(--dark-color)]">
-                        {t("home.aiEditor.silhouetteFit", {
-                          defaultValue: "Silhouette Fit",
+                        {t("home.shoppingAssistant.browsingMode", {
+                          defaultValue: "Browsing Mode",
                         })}
                       </span>
 
                       <div className="flex flex-wrap gap-2">
-                        {SILHOUETTE_OPTIONS.map((option) => (
+                        {BROWSING_MODES.map((mode) => (
                           <span
-                            key={option.id}
+                            key={mode.id}
                             className={
-                              option.id === activeSilhouette
+                              mode.id === activeBrowsingMode
                                 ? "cursor-pointer rounded-full border border-[var(--primary-color)] bg-[var(--primary-color)] px-3 py-1.5 text-[10px] font-bold text-white"
                                 : "cursor-pointer rounded-full border border-black/[0.08] bg-white px-3 py-1.5 text-[10px] font-semibold text-[var(--text-color)] transition-smooth hover:border-[var(--primary-color)] hover:text-[var(--primary-color)]"
                             }
                           >
-                            {t(option.labelKey, {
-                              defaultValue: option.labelDefault,
-                            })}
+                            {t(mode.labelKey, { defaultValue: mode.labelDefault })}
                           </span>
                         ))}
                       </div>
                     </div>
 
-                    {/* Regenerate */}
+                    {/* Sync */}
                     <button
                       type="button"
                       className="mt-auto flex w-full items-center justify-center rounded-[50px] bg-[var(--primary-color)] px-5 py-3.5 text-[13px] font-black text-white shadow-[var(--primary-shadow)] transition-smooth hover:-translate-y-[2px] hover:bg-[var(--primary-hover)] hover:shadow-[0_8px_24px_rgba(31,92,69,0.25)]"
                     >
-                      <i className="bi bi-stars me-2" />
-                      {t("home.aiEditor.regenerate", {
-                        defaultValue: "Regenerate with AI",
+                      <i className="bi bi-arrow-repeat me-2" />
+                      {t("home.shoppingAssistant.syncNow", {
+                        defaultValue: "Sync Wishlist Now",
                       })}
                     </button>
                   </div>
@@ -2052,8 +2079,8 @@ const RECENTLY_ADDED_MORE_COUNT = 18;
                   className="mb-4 inline-flex items-center gap-2 rounded-full border border-[#d7e1de] bg-primary-shadow px-[15px] py-[5px] text-[12px] font-bold uppercase tracking-[1.5px] text-primary-brand"
                 >
                   <span className="h-[7px] w-[7px] rounded-full bg-primary-brand" />
-                  {t("home.aiEditor.tag", {
-                    defaultValue: "Visual Styling Studio",
+                  {t("home.shoppingAssistant.tag", {
+                    defaultValue: "Chrome Extension",
                   })}
                 </motion.span>
 
@@ -2064,8 +2091,8 @@ const RECENTLY_ADDED_MORE_COUNT = 18;
                   transition={{ duration: 0.65, delay: 0.15, ease: "easeOut" }}
                   className="mb-3 text-[20px] font-extrabold leading-[40px] tracking-[0.5px] text-black md:text-[30px]"
                 >
-                  {t("home.aiEditor.heading", {
-                    defaultValue: "Your AI Styled Fashion Editor",
+                  {t("home.shoppingAssistant.heading", {
+                    defaultValue: "Your Smart Shopping Assistant",
                   })}
                 </motion.h2>
 
@@ -2076,9 +2103,9 @@ const RECENTLY_ADDED_MORE_COUNT = 18;
                   transition={{ duration: 0.65, delay: 0.3, ease: "easeOut" }}
                   className="mx-auto max-w-[620px] text-[16px] leading-[26px] font-semibold text-text-brand mb-5"
                 >
-                  {t("home.aiEditor.description1", {
+                  {t("home.shoppingAssistant.description1", {
                     defaultValue:
-                      "Drag, swap, and recolor real garments from your closet on a live model canvas. The editor understands fit, fabric, and colour theory, so every combination it suggests already looks intentional.",
+                      "Browse any store and let the DressApp extension quietly track prices, spot better deals, and surface coupons before you check out — no extra tabs, no copy-pasting codes.",
                   })}
                 </motion.p>
 
@@ -2089,9 +2116,9 @@ const RECENTLY_ADDED_MORE_COUNT = 18;
                   transition={{ duration: 0.65, delay: 0.4, ease: "easeOut" }}
                   className="mx-auto max-w-[620px] text-[16px] leading-[26px] font-semibold text-text-brand mb-5"
                 >
-                  {t("home.aiEditor.description2", {
+                  {t("home.shoppingAssistant.description2", {
                     defaultValue:
-                      "Nudge the style intensity slider for a bolder edit, lock in a silhouette, and let the AI regenerate accessories and layering in real time — no design experience required.",
+                      "Save items to your DressApp wishlist from any website, get price-drop alerts, and compare across stores instantly — all synced back to your account automatically.",
                   })}
                 </motion.p>
 
@@ -2101,388 +2128,395 @@ const RECENTLY_ADDED_MORE_COUNT = 18;
                   whileInView={{ opacity: 1, x: 0 }}
                   viewport={{ once: false, amount: 0.3 }}
                   transition={{ duration: 0.65, delay: 0.5, ease: "easeOut" }}
+                  className="flex flex-wrap items-center gap-3"
                 >
-                  <Link
-                    to="/stylist"
-                    className="inline-flex items-center justify-center rounded-[50px] bg-[var(--primary-color)] px-[30px] py-[18px] text-[14px] font-bold leading-none text-white no-underline shadow-[var(--primary-shadow)] transition-smooth hover:-translate-y-[2px] hover:bg-[var(--primary-hover)] hover:text-white hover:shadow-[0_8px_24px_rgba(31,92,69,0.25)]"
-                  >
-                    <i className="bi bi-magic me-2" />
-                    {t("home.aiEditor.cta", {
-                      defaultValue: "Open Fashion Editor",
-                    })}
-                  </Link>
-                </motion.div>
-              </div>
+
+                 <a href="#"
+                  className="inline-flex items-center justify-center rounded-[50px] bg-[var(--primary-color)] px-[30px] py-[18px] text-[14px] font-bold leading-none text-white no-underline shadow-[var(--primary-shadow)] transition-smooth hover:-translate-y-[2px] hover:bg-[var(--primary-hover)] hover:text-white hover:shadow-[0_8px_24px_rgba(31,92,69,0.25)]"
+            >
+                  <i className="bi bi-google me-2" />
+                  {t("home.shoppingAssistant.cta", {
+                    defaultValue: "Add to Chrome",
+                  })}
+                </a>
+
+                <span className="text-[12px] font-semibold text-[var(--text-color)]">
+                  {t("home.shoppingAssistant.ctaNote", {
+                    defaultValue: "Currently under Chrome Web Store review",
+                  })}
+                </span>
+              </motion.div>
             </div>
           </div>
         </div>
-      </section>
-      {/* ai-fashion-editor-section-end */}
-      {/* experts-section-start */}
-      <section
-        id="experts"
-        className="w-full overflow-hidden bg-[var(--accent-beige)] px-[40px] py-[80px] max-[991px]:px-[20px] max-[991px]:py-[50px]"
+      </div>
+    </section >
+      {/* shopping-assistant-extension-section-end */ }
+  {/* experts-section-start */ }
+  <section
+    id="experts"
+    className="w-full overflow-hidden bg-[var(--accent-beige)] px-[40px] py-[80px] max-[991px]:px-[20px] max-[991px]:py-[50px]"
+  >
+    <div className="w-full">
+      {/* Section Heading */}
+      <div className="mb-12">
+        {/* Tag */}
+        <motion.span
+          initial={{ opacity: 0, y: -10 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: false, amount: 0.3 }}
+          transition={{ duration: 0.6, delay: 0, ease: "easeOut" }}
+          className="mb-4 inline-flex items-center gap-2 rounded-full border border-[#d7e1de] bg-primary-shadow px-[15px] py-[5px] text-[12px] font-bold uppercase tracking-[1.5px] text-primary-brand"
+        >
+          <span className="h-[7px] w-[7px] rounded-full bg-primary-brand" />
+          {t("home.experts.tag", { defaultValue: "Meet The Specialists" })}
+        </motion.span>
+
+        <Link to="/experts" className="block no-underline">
+          <motion.h2
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: false, amount: 0.3 }}
+            transition={{ duration: 0.65, delay: 0.15, ease: "easeOut" }}
+            className="mb-3 text-[20px] font-extrabold leading-[40px] tracking-[0.5px] text-black md:text-[30px]"
+          >
+            {t("home.experts.title", {
+              defaultValue: "Talk To A Real Style Expert",
+            })}
+          </motion.h2>
+        </Link>
+
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: false, amount: 0.3 }}
+          transition={{ duration: 0.65, delay: 0.3, ease: "easeOut" }}
+          className="flex items-center justify-between gap-8 max-[767px]:flex-col max-[767px]:items-start"
+        >
+          <p className="max-w-[620px] text-[16px] leading-[26px] font-semibold text-text-brand">
+            {t("home.experts.description", {
+              defaultValue:
+                "Book a 1:1 session with a certified DressApp stylist whenever the AI needs a human, editorial finishing touch.",
+            })}
+          </p>
+
+          <Link
+            to="/experts"
+            className="inline-flex shrink-0 items-center justify-center rounded-[50px] bg-[var(--primary-color)] px-[30px] py-[15px] text-[14px] font-bold leading-[24px] text-white no-underline shadow-[var(--primary-shadow)] transition-smooth hover:-translate-y-[2px] hover:bg-[var(--primary-hover)] hover:text-white hover:shadow-[0_8px_24px_rgba(31,92,69,0.25)]"
+          >
+            {t("home.experts.viewAll", {
+              defaultValue: "View All Experts",
+            })}
+            <i className="fa-solid fa-arrow-right ms-2 rtl:rotate-180" />
+          </Link>
+        </motion.div>
+      </div>
+
+      {/* Experts Grid */}
+      <motion.div
+        initial={{ opacity: 0, y: 40 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: false, amount: 0.2 }}
+        transition={{ duration: 0.7, delay: 0.2, ease: "easeOut" }}
+        className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4"
       >
-        <div className="w-full">
-          {/* Section Heading */}
-          <div className="mb-12">
-            {/* Tag */}
-            <motion.span
-              initial={{ opacity: 0, y: -10 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: false, amount: 0.3 }}
-              transition={{ duration: 0.6, delay: 0, ease: "easeOut" }}
-              className="mb-4 inline-flex items-center gap-2 rounded-full border border-[#d7e1de] bg-primary-shadow px-[15px] py-[5px] text-[12px] font-bold uppercase tracking-[1.5px] text-primary-brand"
-            >
-              <span className="h-[7px] w-[7px] rounded-full bg-primary-brand" />
-              {t("home.experts.tag", { defaultValue: "Meet The Specialists" })}
-            </motion.span>
+        {EXPERTS.map((expert, i) => (
+          <motion.div
+            key={expert.id}
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: false, amount: 0.3 }}
+            transition={{ duration: 0.5, delay: i * 0.1, ease: "easeOut" }}
+          >
+            <div className="group h-full rounded-[18px] border border-black/[0.06] bg-white p-6 text-center shadow-[0_15px_35px_-18px_rgba(23,20,15,0.3)] transition-smooth hover:-translate-y-[5px] hover:shadow-[0_20px_45px_rgba(23,20,15,0.12)]">
+              {/* Avatar */}
+              <div className="relative mx-auto mb-5 h-[105px] w-[105px]">
+                <img
+                  src={expert.image}
+                  alt={expert.name}
+                  className="h-full w-full rounded-full object-cover ring-4 ring-[var(--primary-shadow)]"
+                />
 
-            <Link to="/experts" className="block no-underline">
-              <motion.h2
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: false, amount: 0.3 }}
-                transition={{ duration: 0.65, delay: 0.15, ease: "easeOut" }}
-                className="mb-3 text-[20px] font-extrabold leading-[40px] tracking-[0.5px] text-black md:text-[30px]"
-              >
-                {t("home.experts.title", {
-                  defaultValue: "Talk To A Real Style Expert",
-                })}
-              </motion.h2>
-            </Link>
+                <span className="absolute bottom-0 end-0 flex h-7 w-7 items-center justify-center rounded-full border-2 border-white bg-[var(--primary-color)] text-white shadow-[0_4px_10px_rgba(0,0,0,0.15)]">
+                  <i className="bi bi-patch-check-fill text-[13px]" />
+                </span>
+              </div>
 
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: false, amount: 0.3 }}
-              transition={{ duration: 0.65, delay: 0.3, ease: "easeOut" }}
-              className="flex items-center justify-between gap-8 max-[767px]:flex-col max-[767px]:items-start"
-            >
-              <p className="max-w-[620px] text-[16px] leading-[26px] font-semibold text-text-brand">
-                {t("home.experts.description", {
-                  defaultValue:
-                    "Book a 1:1 session with a certified DressApp stylist whenever the AI needs a human, editorial finishing touch.",
-                })}
+              <h5 className="m-0 mb-2 text-[17px] font-black text-[var(--dark-color)]">
+                {expert.name}
+              </h5>
+
+              <span className="inline-flex rounded-full bg-[var(--primary-shadow)] px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.05em] text-[var(--primary-color)]">
+                {t(expert.roleKey, { defaultValue: expert.roleDefault })}
+              </span>
+
+              {/* Rating */}
+              <div className="mt-4 flex items-center justify-center gap-1.5 text-[13px] font-bold text-[var(--dark-color)]">
+                <i className="bi bi-star-fill text-[#d8a84e]" />
+                <span>{expert.rating}</span>
+                <span className="font-medium text-[var(--text-color)]">
+                  {t("home.experts.sessionsCount", {
+                    count: expert.sessions,
+                    defaultValue: "({{count}} sessions)",
+                  })}
+                </span>
+              </div>
+
+              <p className="my-4 text-[13px] font-medium leading-[22px] text-[var(--text-color)]">
+                {t(expert.bioKey, { defaultValue: expert.bioDefault })}
               </p>
 
               <Link
                 to="/experts"
-                className="inline-flex shrink-0 items-center justify-center rounded-[50px] bg-[var(--primary-color)] px-[30px] py-[15px] text-[14px] font-bold leading-[24px] text-white no-underline shadow-[var(--primary-shadow)] transition-smooth hover:-translate-y-[2px] hover:bg-[var(--primary-hover)] hover:text-white hover:shadow-[0_8px_24px_rgba(31,92,69,0.25)]"
+                className="inline-flex items-center justify-center gap-2 rounded-[50px] border border-[var(--primary-color)] bg-white px-5 py-2.5 text-[12px] font-bold text-[var(--primary-color)] no-underline transition-smooth hover:-translate-y-[2px] hover:bg-[var(--primary-color)] hover:text-white"
               >
-                {t("home.experts.viewAll", {
-                  defaultValue: "View All Experts",
+                {t("home.experts.bookSession", {
+                  defaultValue: "Book Session",
                 })}
-                <i className="fa-solid fa-arrow-right ms-2 rtl:rotate-180" />
+                <i className="bi bi-arrow-right rtl:rotate-180" />
               </Link>
-            </motion.div>
-          </div>
-
-          {/* Experts Grid */}
-          <motion.div
-            initial={{ opacity: 0, y: 40 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: false, amount: 0.2 }}
-            transition={{ duration: 0.7, delay: 0.2, ease: "easeOut" }}
-            className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4"
-          >
-            {EXPERTS.map((expert, i) => (
-              <motion.div
-                key={expert.id}
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: false, amount: 0.3 }}
-                transition={{ duration: 0.5, delay: i * 0.1, ease: "easeOut" }}
-              >
-                <div className="group h-full rounded-[18px] border border-black/[0.06] bg-white p-6 text-center shadow-[0_15px_35px_-18px_rgba(23,20,15,0.3)] transition-smooth hover:-translate-y-[5px] hover:shadow-[0_20px_45px_rgba(23,20,15,0.12)]">
-                  {/* Avatar */}
-                  <div className="relative mx-auto mb-5 h-[105px] w-[105px]">
-                    <img
-                      src={expert.image}
-                      alt={expert.name}
-                      className="h-full w-full rounded-full object-cover ring-4 ring-[var(--primary-shadow)]"
-                    />
-
-                    <span className="absolute bottom-0 end-0 flex h-7 w-7 items-center justify-center rounded-full border-2 border-white bg-[var(--primary-color)] text-white shadow-[0_4px_10px_rgba(0,0,0,0.15)]">
-                      <i className="bi bi-patch-check-fill text-[13px]" />
-                    </span>
-                  </div>
-
-                  <h5 className="m-0 mb-2 text-[17px] font-black text-[var(--dark-color)]">
-                    {expert.name}
-                  </h5>
-
-                  <span className="inline-flex rounded-full bg-[var(--primary-shadow)] px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.05em] text-[var(--primary-color)]">
-                    {t(expert.roleKey, { defaultValue: expert.roleDefault })}
-                  </span>
-
-                  {/* Rating */}
-                  <div className="mt-4 flex items-center justify-center gap-1.5 text-[13px] font-bold text-[var(--dark-color)]">
-                    <i className="bi bi-star-fill text-[#d8a84e]" />
-                    <span>{expert.rating}</span>
-                    <span className="font-medium text-[var(--text-color)]">
-                      {t("home.experts.sessionsCount", {
-                        count: expert.sessions,
-                        defaultValue: "({{count}} sessions)",
-                      })}
-                    </span>
-                  </div>
-
-                  <p className="my-4 text-[13px] font-medium leading-[22px] text-[var(--text-color)]">
-                    {t(expert.bioKey, { defaultValue: expert.bioDefault })}
-                  </p>
-
-                  <Link
-                    to="/experts"
-                    className="inline-flex items-center justify-center gap-2 rounded-[50px] border border-[var(--primary-color)] bg-white px-5 py-2.5 text-[12px] font-bold text-[var(--primary-color)] no-underline transition-smooth hover:-translate-y-[2px] hover:bg-[var(--primary-color)] hover:text-white"
-                  >
-                    {t("home.experts.bookSession", {
-                      defaultValue: "Book Session",
-                    })}
-                    <i className="bi bi-arrow-right rtl:rotate-180" />
-                  </Link>
-                </div>
-              </motion.div>
-            ))}
+            </div>
           </motion.div>
-        </div>
-      </section>
-      {/* experts-section-end */}
-      {/* trend-scout-section-start */}
-      <section
-        className="relative overflow-hidden bg-white px-[40px] py-[80px]"
-        id="trend-scout"
-      >
-        <div className="w-full">
-          {/* Section Heading */}
-          <div className="mb-12">
-            {/* Tag */}
-            <motion.span
-              initial={{ opacity: 0, y: -10 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: false, amount: 0.3 }}
-              transition={{ duration: 0.6, delay: 0, ease: "easeOut" }}
-              className="mb-4 inline-flex items-center gap-2 rounded-full border border-[#d7e1de] bg-primary-shadow px-[15px] py-[5px] text-[12px] font-bold uppercase tracking-[1.5px] text-primary-brand"
-            >
-              <span className="h-[7px] w-[7px] rounded-full bg-primary-brand" />
-              {t("home.trendScoutSection.tag", {
-                defaultValue: "Fashion Intelligence",
-              })}
-            </motion.span>
+        ))}
+      </motion.div>
+    </div>
+  </section>
+  {/* experts-section-end */ }
+  {/* trend-scout-section-start */ }
+  <section
+    className="relative overflow-hidden bg-white px-[40px] py-[80px]"
+    id="trend-scout"
+  >
+    <div className="w-full">
+      {/* Section Heading */}
+      <div className="mb-12">
+        {/* Tag */}
+        <motion.span
+          initial={{ opacity: 0, y: -10 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: false, amount: 0.3 }}
+          transition={{ duration: 0.6, delay: 0, ease: "easeOut" }}
+          className="mb-4 inline-flex items-center gap-2 rounded-full border border-[#d7e1de] bg-primary-shadow px-[15px] py-[5px] text-[12px] font-bold uppercase tracking-[1.5px] text-primary-brand"
+        >
+          <span className="h-[7px] w-[7px] rounded-full bg-primary-brand" />
+          {t("home.trendScoutSection.tag", {
+            defaultValue: "Fashion Intelligence",
+          })}
+        </motion.span>
 
-            {/* Heading + View More */}
-            <Link to="/trends" className="">
-              <motion.h2
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: false, amount: 0.3 }}
-                transition={{ duration: 0.65, delay: 0.15, ease: "easeOut" }}
-                className="mb-3 text-[20px] font-extrabold leading-[40px] tracking-[0.5px] hover:underline hover:text-primary-brand text-black md:text-[30px]"
-              >
-                {t("home.trendScout", { defaultValue: "Trend-Scout" })}
-              </motion.h2>
-            </Link>
+        {/* Heading + View More */}
+        <Link to="/trends" className="">
+          <motion.h2
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: false, amount: 0.3 }}
+            transition={{ duration: 0.65, delay: 0.15, ease: "easeOut" }}
+            className="mb-3 text-[20px] font-extrabold leading-[40px] tracking-[0.5px] hover:underline hover:text-primary-brand text-black md:text-[30px]"
+          >
+            {t("home.trendScout", { defaultValue: "Trend-Scout" })}
+          </motion.h2>
+        </Link>
 
-            <div className="flex items-end justify-between gap-8">
-              <motion.p
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: false, amount: 0.3 }}
-                transition={{ duration: 0.65, delay: 0.3, ease: "easeOut" }}
-                className="max-w-[620px] text-[16px] leading-[26px] font-semibold text-text-brand"
-              >
-                {t("home.trendScoutSection.description", {
-                  defaultValue:
-                    "Get styled ahead of the global curve. Discover real-time stylistic shifts curated by computational trend models.",
-                })}
-              </motion.p>
+        <div className="flex items-end justify-between gap-8">
+          <motion.p
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: false, amount: 0.3 }}
+            transition={{ duration: 0.65, delay: 0.3, ease: "easeOut" }}
+            className="max-w-[620px] text-[16px] leading-[26px] font-semibold text-text-brand"
+          >
+            {t("home.trendScoutSection.description", {
+              defaultValue:
+                "Get styled ahead of the global curve. Discover real-time stylistic shifts curated by computational trend models.",
+            })}
+          </motion.p>
 
-              {/* View More */}
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: false, amount: 0.3 }}
-                transition={{ duration: 0.65, delay: 0.45, ease: "easeOut" }}
-                className="flex items-center gap-2"
-              >
-                <div className="text-[12px] font-semibold text-text-brand">
-                  {trendDate
-                    ? t("home.dailyEditOn", { date: trendDate })
-                    : t("home.dailyEdit")}
-                </div>
-                {/* Admin-only force-refresh button. Hidden for regular users
+          {/* View More */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: false, amount: 0.3 }}
+            transition={{ duration: 0.65, delay: 0.45, ease: "easeOut" }}
+            className="flex items-center gap-2"
+          >
+            <div className="text-[12px] font-semibold text-text-brand">
+              {trendDate
+                ? t("home.dailyEditOn", { date: trendDate })
+                : t("home.dailyEdit")}
+            </div>
+            {/* Admin-only force-refresh button. Hidden for regular users
                 — the daily 07:00 UTC cron + the auto-refresh on read in
                 ``latest_trend_cards`` keep the feed fresh without manual
                 intervention; this is just a triage / "I want it now"
                 lever for the team. */}
-                {isAdmin ? (
-                  <Button
-                    size="icon"
-                    variant="ghost"
-                    onClick={refreshTrends}
-                    disabled={refreshing}
-                    aria-label={t("home.refreshTrends", {
-                      defaultValue: "Refresh trends",
-                    })}
-                    title={t("home.refreshTrends", {
-                      defaultValue: "Refresh trends",
-                    })}
-                    className="h-8 w-8 rounded-full text-primary-brand hover:text-dark-brand"
-                    data-testid="home-trends-refresh-btn"
-                  >
-                    <RefreshCw
-                      className={`h-4 w-4 ${refreshing ? "animate-spin" : ""}`}
-                    />
-                  </Button>
-                ) : null}
-              </motion.div>
-            </div>
-          </div>
-
-          {/* Swiper */}
-          <motion.div
-            initial={{ opacity: 0, y: 40 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: false, amount: 0.2 }}
-            transition={{ duration: 0.7, delay: 0.2, ease: "easeOut" }}
-            className="trend-swiper relative !overflow-visible pb-2.5"
-          >
-            <Swiper
-              modules={[Navigation, Autoplay]}
-              slidesPerView={1.15}
-              spaceBetween={15}
-              loop={false}
-              speed={800}
-              autoplay={{
-                delay: 2500,
-                disableOnInteraction: false,
-                pauseOnMouseEnter: true,
-              }}
-              breakpoints={{
-                576: { slidesPerView: 2, spaceBetween: 15 },
-                992: { slidesPerView: 3, spaceBetween: 15 },
-                1200: { slidesPerView: 4, spaceBetween: 15 },
-              }}
-              onBeforeInit={(swiper) => {
-                swiper.params.navigation.prevEl = trendPrevRef.current;
-                swiper.params.navigation.nextEl = trendNextRef.current;
-              }}
-              navigation={{ prevEl: null, nextEl: null }}
-            >
-              {trends === null
-                ? Array.from({ length: 4 }).map((_, i) => (
-                  <SwiperSlide key={i} className="!h-auto">
-                    <Skeleton className="h-full min-h-[300px] w-full rounded-xl" />
-                  </SwiperSlide>
-                ))
-                : (trends.length > 0 ? trends : FALLBACK_TRENDS).map(
-                  (card, i) => {
-                    const prettyBucket = (bucket) =>
-                      (bucket || "")
-                        .replace(/[-_]+/g, " ")
-                        .replace(/\b\w/g, (char) => char.toUpperCase());
-
-                    const localisedBucket = card.bucket
-                      ? t(`trends.bucket.${card.bucket}`, {
-                        defaultValue: "",
-                      })
-                      : "";
-
-                    const chip =
-                      localisedBucket ||
-                      card.label ||
-                      prettyBucket(card.bucket) ||
-                      card.tag;
-
-                    const headline = card.headline || card.title;
-                    const body = card.summary || card.body || card.blurb;
-                    const sourceUrl = card.source_url;
-                    const image =
-                      card.image_url ||
-                      "https://i.pinimg.com/736x/17/50/e9/1750e9027cf70bc488293df0f91daa1d.jpg";
-
-                    return (
-                      <SwiperSlide key={card.id || i} className="!h-auto">
-                        <motion.div
-                          initial={{ opacity: 0, y: 30 }}
-                          whileInView={{ opacity: 1, y: 0 }}
-                          viewport={{ once: false, amount: 0.3 }}
-                          transition={{
-                            duration: 0.5,
-                            delay: i * 0.1,
-                            ease: "easeOut",
-                          }}
-                          className="group relative flex aspect-square flex-col justify-end overflow-hidden rounded-xl bg-cover bg-top p-5 transition-all duration-300 ease-out hover:-translate-y-2 hover:shadow-[0_20px_45px_rgba(23,20,15,0.12)]"
-                          style={{ backgroundImage: `url(${image})` }}
-                        >
-                          <div className="pointer-events-none absolute inset-0 z-[1] bg-gradient-to-t from-black via-black/0 to-transparent transition-all duration-300 group-hover:from-black group-hover:via-black/30" />
-                          <div className="relative z-[2]">
-                            <span className="mb-2.5 inline-block rounded-full bg-black px-2 py-1 text-xs font-extrabold tracking-[0.5px] text-white">
-                              {chip}
-                            </span>
-                            <h3 className="mb-0 text-[16px] font-extrabold leading-[26px] text-white">
-                              {headline}
-                            </h3>
-                            {body && (
-                              <p className="mb-0 text-[14px] leading-[24px] text-white">
-                                {body}
-                              </p>
-                            )}
-                            {sourceUrl && (
-                              <a
-                                href={sourceUrl}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="mt-2.5 inline-flex items-center gap-1.5 text-[0.85rem] font-medium text-white no-underline opacity-80 transition-all duration-300 group-hover:gap-3 group-hover:opacity-100"
-                              >
-                                {t("home.trendReadSource", {
-                                  defaultValue: "Read Editorial",
-                                })}
-                                <i className="bi bi-arrow-right rtl:rotate-180" />
-                              </a>
-                            )}
-                          </div>
-                        </motion.div>
-                      </SwiperSlide>
-                    );
-                  },
-                )}
-            </Swiper>
-
-            {/* Navigation ONLY when MORE THAN 4 cards */}
-            {trends &&
-              (trends.length > 0 ? trends.length : FALLBACK_TRENDS.length) >
-              4 && (
-                <>
-                  <button
-                    ref={trendPrevRef}
-                    type="button"
-                    className="trend-swiper-prev !absolute !start-0 !top-1/2 !z-20 !m-0 !flex !h-11 !w-11 !-translate-y-1/2 !items-center !justify-center !rounded-full !border-0 !bg-[#1F6F6B] !text-white !shadow-md md:!-start-4"
-                    aria-label={t("home.trendScoutSection.prevAria", {
-                      defaultValue: "Previous trend",
-                    })}
-                  >
-                    <i className="bi bi-chevron-left rtl:rotate-180 text-sm" />
-                  </button>
-                  <button
-                    ref={trendNextRef}
-                    type="button"
-                    className="trend-swiper-next !absolute !end-0 !top-1/2 !z-20 !m-0 !flex !h-11 !w-11 !-translate-y-1/2 !items-center !justify-center !rounded-full !border-0 !bg-[#1F6F6B] !text-white !shadow-md md:!-end-4"
-                    aria-label={t("home.trendScoutSection.nextAria", {
-                      defaultValue: "Next trend",
-                    })}
-                  >
-                    <i className="bi bi-chevron-right rtl:rotate-180 text-sm" />
-                  </button>
-                </>
-              )}
+            {isAdmin ? (
+              <Button
+                size="icon"
+                variant="ghost"
+                onClick={refreshTrends}
+                disabled={refreshing}
+                aria-label={t("home.refreshTrends", {
+                  defaultValue: "Refresh trends",
+                })}
+                title={t("home.refreshTrends", {
+                  defaultValue: "Refresh trends",
+                })}
+                className="h-8 w-8 rounded-full text-primary-brand hover:text-dark-brand"
+                data-testid="home-trends-refresh-btn"
+              >
+                <RefreshCw
+                  className={`h-4 w-4 ${refreshing ? "animate-spin" : ""}`}
+                />
+              </Button>
+            ) : null}
           </motion.div>
         </div>
-      </section>
-      {/* trend-scout-section-end */}
-      <div className="">
-        <AdTicker placement="home-footer" className="-mx-4 sm:-mx-6 lg:-mx-8" />
       </div>
+
+      {/* Swiper */}
+      <motion.div
+        initial={{ opacity: 0, y: 40 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: false, amount: 0.2 }}
+        transition={{ duration: 0.7, delay: 0.2, ease: "easeOut" }}
+        className="trend-swiper relative !overflow-visible pb-2.5"
+      >
+        <Swiper
+          modules={[Navigation, Autoplay]}
+          slidesPerView={1.15}
+          spaceBetween={15}
+          loop={false}
+          speed={800}
+          autoplay={{
+            delay: 2500,
+            disableOnInteraction: false,
+            pauseOnMouseEnter: true,
+          }}
+          breakpoints={{
+            576: { slidesPerView: 2, spaceBetween: 15 },
+            992: { slidesPerView: 3, spaceBetween: 15 },
+            1200: { slidesPerView: 4, spaceBetween: 15 },
+          }}
+          onBeforeInit={(swiper) => {
+            swiper.params.navigation.prevEl = trendPrevRef.current;
+            swiper.params.navigation.nextEl = trendNextRef.current;
+          }}
+          navigation={{ prevEl: null, nextEl: null }}
+        >
+          {trends === null
+            ? Array.from({ length: 4 }).map((_, i) => (
+              <SwiperSlide key={i} className="!h-auto">
+                <Skeleton className="h-full min-h-[300px] w-full rounded-xl" />
+              </SwiperSlide>
+            ))
+            : (trends.length > 0 ? trends : FALLBACK_TRENDS).map(
+              (card, i) => {
+                const prettyBucket = (bucket) =>
+                  (bucket || "")
+                    .replace(/[-_]+/g, " ")
+                    .replace(/\b\w/g, (char) => char.toUpperCase());
+
+                const localisedBucket = card.bucket
+                  ? t(`trends.bucket.${card.bucket}`, {
+                    defaultValue: "",
+                  })
+                  : "";
+
+                const chip =
+                  localisedBucket ||
+                  card.label ||
+                  prettyBucket(card.bucket) ||
+                  card.tag;
+
+                const headline = card.headline || card.title;
+                const body = card.summary || card.body || card.blurb;
+                const sourceUrl = card.source_url;
+                const image =
+                  card.image_url ||
+                  "https://i.pinimg.com/736x/17/50/e9/1750e9027cf70bc488293df0f91daa1d.jpg";
+
+                return (
+                  <SwiperSlide key={card.id || i} className="!h-auto">
+                    <motion.div
+                      initial={{ opacity: 0, y: 30 }}
+                      whileInView={{ opacity: 1, y: 0 }}
+                      viewport={{ once: false, amount: 0.3 }}
+                      transition={{
+                        duration: 0.5,
+                        delay: i * 0.1,
+                        ease: "easeOut",
+                      }}
+                      className="group relative flex aspect-square flex-col justify-end overflow-hidden rounded-xl bg-cover bg-top p-5 transition-all duration-300 ease-out hover:-translate-y-2 hover:shadow-[0_20px_45px_rgba(23,20,15,0.12)]"
+                      style={{ backgroundImage: `url(${image})` }}
+                    >
+                      <div className="pointer-events-none absolute inset-0 z-[1] bg-gradient-to-t from-black via-black/0 to-transparent transition-all duration-300 group-hover:from-black group-hover:via-black/30" />
+                      <div className="relative z-[2]">
+                        <span className="mb-2.5 inline-block rounded-full bg-black px-2 py-1 text-xs font-extrabold tracking-[0.5px] text-white">
+                          {chip}
+                        </span>
+                        <h3 className="mb-0 text-[16px] font-extrabold leading-[26px] text-white">
+                          {headline}
+                        </h3>
+                        {body && (
+                          <p className="mb-0 text-[14px] leading-[24px] text-white">
+                            {body}
+                          </p>
+                        )}
+                        {sourceUrl && (
+                          <a
+                            href={sourceUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="mt-2.5 inline-flex items-center gap-1.5 text-[0.85rem] font-medium text-white no-underline opacity-80 transition-all duration-300 group-hover:gap-3 group-hover:opacity-100"
+                          >
+                            {t("home.trendReadSource", {
+                              defaultValue: "Read Editorial",
+                            })}
+                            <i className="bi bi-arrow-right rtl:rotate-180" />
+                          </a>
+                        )}
+                      </div>
+                    </motion.div>
+                  </SwiperSlide>
+                );
+              },
+            )}
+        </Swiper>
+
+        {/* Navigation ONLY when MORE THAN 4 cards */}
+        {trends &&
+          (trends.length > 0 ? trends.length : FALLBACK_TRENDS.length) >
+          4 && (
+            <>
+              <button
+                ref={trendPrevRef}
+                type="button"
+                className="trend-swiper-prev !absolute !start-0 !top-1/2 !z-20 !m-0 !flex !h-11 !w-11 !-translate-y-1/2 !items-center !justify-center !rounded-full !border-0 !bg-[#1F6F6B] !text-white !shadow-md md:!-start-4"
+                aria-label={t("home.trendScoutSection.prevAria", {
+                  defaultValue: "Previous trend",
+                })}
+              >
+                <i className="bi bi-chevron-left rtl:rotate-180 text-sm" />
+              </button>
+              <button
+                ref={trendNextRef}
+                type="button"
+                className="trend-swiper-next !absolute !end-0 !top-1/2 !z-20 !m-0 !flex !h-11 !w-11 !-translate-y-1/2 !items-center !justify-center !rounded-full !border-0 !bg-[#1F6F6B] !text-white !shadow-md md:!-end-4"
+                aria-label={t("home.trendScoutSection.nextAria", {
+                  defaultValue: "Next trend",
+                })}
+              >
+                <i className="bi bi-chevron-right rtl:rotate-180 text-sm" />
+              </button>
+            </>
+          )}
+      </motion.div>
+    </div>
+  </section>
+  {/* trend-scout-section-end */ }
+  <div className="">
+    <AdTicker placement="home-footer" className="-mx-4 sm:-mx-6 lg:-mx-8" />
+  </div>
     </>
   );
 }

@@ -123,7 +123,7 @@ export function CampaignFeed() {
         </div>
       ) : items.length === 0 ? (
         <div
-          className="text-center py-16 text-muted-foreground"
+          className="text-center py-16"
           data-testid="campaign-feed-empty"
         >
           <div className="relative flex items-center justify-center mb-5">
@@ -141,7 +141,7 @@ export function CampaignFeed() {
           </div>
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-4 gap-4">
           {items.map((c) => (
             <CampaignCard key={c.id} campaign={c} />
           ))}
@@ -152,7 +152,7 @@ export function CampaignFeed() {
 
       {/* Loading spinner for subsequent pages */}
       {loading && !initialLoad && (
-        <div className="text-center py-4 text-muted-foreground text-sm">
+        <div className="text-center py-4 text-text-brand text-sm">
           {t('common.loading')}…
         </div>
       )}

@@ -46,13 +46,13 @@ export function CampaignCard({ campaign, className }) {
     <Link to={`/campaigns/${id}`} data-testid={`campaign-card-${id}`}>
       <Card
         className={cn(
-          'rounded-[calc(var(--radius)+6px)] shadow-editorial h-full flex flex-col group',
-          'hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 cursor-pointer',
+          'rounded-[12px] border border-border shadow-sm h-full flex flex-col group',
+          'hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 cursor-pointer',
           className
         )}
       >
         {/* Cover image */}
-        <div className="relative w-full aspect-video overflow-hidden rounded-t-[calc(var(--radius)+6px)] bg-secondary">
+        <div className="relative w-full aspect-video overflow-hidden bg-accent-beige">
           {cover_image_url ? (
             <img
               src={cover_image_url}
@@ -61,7 +61,7 @@ export function CampaignCard({ campaign, className }) {
               className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-300"
             />
           ) : (
-            <div className="h-full w-full flex items-center justify-center text-muted-foreground">
+            <div className="h-full w-full flex items-center justify-center text-text-brand">
               <Tag className="h-10 w-10 opacity-30" />
             </div>
           )}
@@ -85,23 +85,19 @@ export function CampaignCard({ campaign, className }) {
             </div>
           )}
         </div>
-
         <CardContent className="p-4 flex-1 flex flex-col gap-2">
           {/* Business */}
-          <p className="caps-label text-muted-foreground text-[10px]">{business_name}</p>
-
+          <p className="caps-label text-text-brand text-[10px]">{business_name}</p>
           {/* Title */}
-          <h3 className="font-display text-base leading-tight line-clamp-2">{title}</h3>
-
+          <h3 className="text-base font-bold text-dark-brand line-clamp-2">{title}</h3>
           {/* Short description */}
           {short_description && (
-            <p className="text-xs text-muted-foreground line-clamp-2">{short_description}</p>
+            <p className="text-xs text-text-brand line-clamp-2">{short_description}</p>
           )}
-
           <div className="mt-auto pt-2 flex items-center justify-between gap-2 flex-wrap">
             {/* Location */}
             {locationStr && (
-              <span className="inline-flex items-center gap-1 text-[10px] text-muted-foreground">
+              <span className="inline-flex items-center gap-1 text-[10px] text-text-brand">
                 <MapPin className="h-3 w-3" />
                 {locationStr}
               </span>
@@ -111,7 +107,7 @@ export function CampaignCard({ campaign, className }) {
             {daysLeft !== null && (
               <span className={cn(
                 'inline-flex items-center gap-1 text-[10px] font-medium',
-                daysLeft <= 3 ? 'text-destructive' : 'text-muted-foreground'
+                daysLeft <= 3 ? 'text-destructive' : 'text-text-brand'
               )}>
                 <Clock className="h-3 w-3" />
                 {daysLeft === 0

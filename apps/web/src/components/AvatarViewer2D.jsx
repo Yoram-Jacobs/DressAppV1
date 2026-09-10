@@ -183,14 +183,9 @@ export default function AvatarViewer2D({ shapeParams = {}, measurements: provide
   };
 
   return (
-    <div className="relative w-full h-full bg-gradient-to-b from-secondary/30 via-secondary/15 to-background overflow-hidden flex items-center justify-center p-0 shadow-inner group">
-      {/* Dynamic Background Sparkle */}
-      <div className="absolute inset-0 opacity-15 pointer-events-none bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-accent/30 via-transparent to-transparent" />
-      
+    <div className="relative w-full h-full overflow-hidden flex items-center justify-center p-0 shadow-inner group">
       {/* 2D Dynamic Bezier SVG Avatar or Real Body Photo Container */}
-      <div 
-        className="relative h-full aspect-[1/2] flex items-center justify-center transition-all duration-500"
-      >
+      <div className="relative h-full aspect-[1/2] flex items-center justify-center transition-all duration-500">
         {activeBodyPhotoUrl ? (
           <div className="relative w-full h-full flex items-center justify-center">
             <img

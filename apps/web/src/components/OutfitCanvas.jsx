@@ -61,7 +61,7 @@ function CandidateImage({ src, alt, className }) {
     return (
       <div
         className={cn(
-          'flex items-center justify-center bg-secondary text-muted-foreground',
+          'flex items-center justify-center bg-secondary text-text-brand',
           className,
         )}
       >
@@ -95,7 +95,7 @@ function SlotCard({ slot, candidate, onOpen }) {
         )}
       >
         {empty ? (
-          <div className="flex h-full w-full items-center justify-center text-xs text-muted-foreground">
+          <div className="flex h-full w-full items-center justify-center text-xs text-text-brand">
             <span className="opacity-70">{label}</span>
           </div>
         ) : (
@@ -108,7 +108,7 @@ function SlotCard({ slot, candidate, onOpen }) {
           <Badge variant="outline" className="absolute top-1 start-1 text-[10px] px-1 py-0 border-amber-500 text-amber-600 dark:text-amber-400">{t('common.gap', { defaultValue: 'gap' })}</Badge>
         )}
       </div>
-      <div className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">{label}</div>
+      <div className="text-[11px] font-medium uppercase tracking-wide text-text-brand">{label}</div>
       {!empty && candidate.title && (
         <div className="text-xs leading-tight line-clamp-2 text-foreground/90 px-1">{candidate.title}</div>
       )}
@@ -125,7 +125,7 @@ function RejectedRow({ reject, candidate }) {
       <CandidateImage src={candidate.image_data_url} alt={candidate.title || ''} className="h-12 w-12 rounded-md flex-shrink-0" />
       <div className="min-w-0 flex-1">
         <div className="text-xs font-medium truncate">{candidate.title || 'Garment'}</div>
-        <div className="text-[11px] text-muted-foreground">
+        <div className="text-[11px] text-text-brand">
           <span className="text-amber-600 dark:text-amber-400">{REJECT_LABELS[reject.reason] || reject.reason}</span>
           {reject.detail && ` — ${reject.detail}`}
         </div>
@@ -169,12 +169,12 @@ function ProfessionalCard({ pro }) {
         {pro.avatar_url ? (
           <img src={pro.avatar_url} alt="" className="h-full w-full object-cover" />
         ) : (
-          <div className="flex h-full w-full items-center justify-center"><UserRound className="h-6 w-6 text-muted-foreground" /></div>
+          <div className="flex h-full w-full items-center justify-center"><UserRound className="h-6 w-6 text-text-brand" /></div>
         )}
       </div>
       <div className="min-w-0 flex-1">
         <div className="text-sm font-semibold truncate">{pro.display_name}</div>
-        <div className="text-xs text-muted-foreground">
+        <div className="text-xs text-text-brand">
           {[pro.profession, pro.location].filter(Boolean).join(' · ') || 'Fashion pro'}
         </div>
         <div className="text-xs mt-1 text-foreground/80">{pro.why_suggested}</div>
@@ -240,7 +240,7 @@ export function OutfitCanvasPreview({ canvas, onExpand }) {
         ))}
       </div>
       <div className="flex items-center justify-between gap-2 pt-1">
-        <div className="text-xs text-muted-foreground">
+        <div className="text-xs text-text-brand">
           {filled} selected · {gaps > 0 && <span className="text-amber-600 dark:text-amber-400">{gaps} gap{gaps !== 1 ? 's' : ''}</span>}
           {market.length > 0 && <span className="ms-2">· {market.length} marketplace match{market.length !== 1 ? 'es' : ''}</span>}
         </div>
@@ -302,7 +302,7 @@ export function OutfitCanvasFull({ canvas, onClose, embedded = false, sessionId 
             </div>
           )}
           {canvas.brief && (
-            <p className="text-xs text-muted-foreground mt-1">{t('components.outfitCanvas.brief')} <span className="italic">{canvas.brief}</span></p>
+            <p className="text-xs text-text-brand mt-1">{t('components.outfitCanvas.brief')} <span className="italic">{canvas.brief}</span></p>
           )}
         </div>
         <div className="flex items-center gap-1.5 flex-shrink-0">
@@ -329,7 +329,7 @@ export function OutfitCanvasFull({ canvas, onClose, embedded = false, sessionId 
 
       {/* Selected slots */}
       <div>
-        <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2">{t('components.outfitCanvas.the_look')}</div>
+        <div className="text-xs font-semibold uppercase tracking-wide text-text-brand mb-2">{t('components.outfitCanvas.the_look')}</div>
         <div className="flex gap-2 overflow-x-auto pb-2 -mx-1 px-1">
           {slots.map((slot, i) => (
             <SlotCard
@@ -345,7 +345,7 @@ export function OutfitCanvasFull({ canvas, onClose, embedded = false, sessionId 
       {/* Rejected */}
       {rejected.length > 0 && (
         <div>
-          <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2">
+          <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-text-brand mb-2">
             <AlertTriangle className="h-3.5 w-3.5" />
             Rejected ({rejected.length})
           </div>
@@ -360,7 +360,7 @@ export function OutfitCanvasFull({ canvas, onClose, embedded = false, sessionId 
       {/* Marketplace strip */}
       {market.length > 0 && (
         <div>
-          <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2">
+          <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-text-brand mb-2">
             <ShoppingBag className="h-3.5 w-3.5" />
             Marketplace matches ({market.length})
           </div>
@@ -373,7 +373,7 @@ export function OutfitCanvasFull({ canvas, onClose, embedded = false, sessionId 
       {/* Professional referral */}
       {pro && (
         <div>
-          <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2">{t('stylist.proHelp', { defaultValue: 'A pro can help' })}</div>
+          <div className="text-xs font-semibold uppercase tracking-wide text-text-brand mb-2">{t('stylist.proHelp', { defaultValue: 'A pro can help' })}</div>
           <ProfessionalCard pro={pro} />
         </div>
       )}
