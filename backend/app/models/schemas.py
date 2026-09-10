@@ -188,6 +188,10 @@ class User(BaseDoc):
     scheduler_settings: dict[str, Any] | None = None
     web_push_subscriptions: list[dict] = Field(default_factory=list)
 
+    # --- AI Configuration & Models ---
+    ai_configuration: dict[str, Any] = Field(default_factory=dict)
+    trial_info: dict[str, Any] | None = None
+
     # --- Phase 4P: AI Credits System - Credit Buckets (replaces simple ai_credits)
     # List of credit buckets. Each bucket has an amount, type (free/paid),
     # creation date, and expiry (None for paid/never-expiring credits).

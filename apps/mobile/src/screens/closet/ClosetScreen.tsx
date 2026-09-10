@@ -93,7 +93,7 @@ export function ClosetScreen() {
   const { colors, isDark } = useTheme();
   const isRtl = I18nManager.isRTL;
 
-  const { items, loading, prewarm, removeMany, deleteManyItems } = useClosetStore({ prewarm: true });
+  const { items, loading, isLoaded, error, prewarm, refresh, removeMany, deleteManyItems } = useClosetStore({ prewarm: true });
   const [refreshing, setRefreshing] = useState(false);
 
   // Real-time polling for pending background reconstructions (Nano Banana) & clean cutouts
@@ -868,7 +868,7 @@ export function ClosetScreen() {
             {t('closet.superTitle', { defaultValue: 'DIGITAL WARDROBE' })}
           </Text>
           <Text style={[styles.mainTitle, { color: colors.foreground }]}>
-            {t('closet.title', { defaultValue: 'My Closet' })} ({items.length})
+            {t('closet.title', { defaultValue: 'My Closet' })}{isLoaded ? ` (${items.length})` : ''}
           </Text>
         </View>
 
@@ -1078,10 +1078,30 @@ export function ClosetScreen() {
       </View>
 
       {/* ── Garment Grid / List ──────────────────────────────────────── */}
-      {loading ? (
+      {(loading || (!isLoaded && items.length === 0)) ? (
         <LoadingVideo message={t('closet.loadingWardrobe', { defaultValue: 'Loading your wardrobe…' })} />
       ) : semanticLoading ? (
         <LoadingVideo message={t('closet.searchingSemantic', { defaultValue: 'FashionCLIP semantic searching…' })} />
+      ) : error && items.length === 0 ? (
+        <View style={styles.emptyBox}>
+          <Lucide.AlertCircle size={48} color={colors.destructive || '#ef4444'} />
+          <Text style={[styles.emptyTitle, { color: colors.foreground }]}>
+            {t('closet.syncErrorTitle', { defaultValue: 'Could not load wardrobe' })}
+          </Text>
+          <Text style={[styles.emptySub, { color: colors.mutedFg }]}>
+            {error || t('closet.syncErrorSub', { defaultValue: 'Check your connection and try again.' })}
+          </Text>
+          <TouchableOpacity
+            style={[styles.retryBtn, { backgroundColor: colors.primary }]}
+            onPress={() => refresh({ force: true })}
+            testID="closet-retry-button"
+          >
+            <Lucide.RefreshCw size={16} color={colors.primaryFg} />
+            <Text style={[styles.retryBtnText, { color: colors.primaryFg }]}>
+              {t('common.retry', { defaultValue: 'Retry' })}
+            </Text>
+          </TouchableOpacity>
+        </View>
       ) : displayItems.length === 0 ? (
         <View style={styles.emptyBox}>
           <Lucide.Shirt size={48} color={colors.mutedFg} />
@@ -1089,8 +1109,39 @@ export function ClosetScreen() {
             {t('closet.noItemsFound', { defaultValue: 'No items in this view' })}
           </Text>
           <Text style={[styles.emptySub, { color: colors.mutedFg }]}>
-            {t('closet.noItemsSub', { defaultValue: 'Try changing filters or tap + to add clothes.' })}
+            {items.length === 0
+              ? t('closet.emptySub', { defaultValue: 'Your closet is currently empty. Tap + to add clothes.' })
+              : t('closet.noItemsSub', { defaultValue: 'Try changing filters or search terms.' })}
           </Text>
+          {items.length === 0 ? (
+            <TouchableOpacity
+              style={[styles.retryBtn, { backgroundColor: colors.primary }]}
+              onPress={() => navigation.navigate('ClosetAdd')}
+              testID="closet-empty-add-button"
+            >
+              <Lucide.Plus size={16} color="#FACC15" />
+              <Text style={[styles.retryBtnText, { color: colors.primaryFg }]}>
+                {t('closet.addItem', { defaultValue: 'Add Item' })}
+              </Text>
+            </TouchableOpacity>
+          ) : (
+            <TouchableOpacity
+              style={[styles.retryBtn, { backgroundColor: colors.secondary }]}
+              onPress={() => {
+                setActiveCategory('all');
+                setActiveSource('all');
+                setActiveSeason('all');
+                setSearchQuery('');
+                setSemanticResults(null);
+              }}
+              testID="closet-reset-filters-button"
+            >
+              <Lucide.RotateCcw size={15} color={colors.foreground} />
+              <Text style={[styles.retryBtnText, { color: colors.foreground }]}>
+                {t('closet.resetFilters', { defaultValue: 'Reset Filters' })}
+              </Text>
+            </TouchableOpacity>
+          )}
         </View>
       ) : (
         <View
@@ -1522,6 +1573,19 @@ const styles = StyleSheet.create({
     fontFamily: fonts.body,
     fontSize: fontSizes.xs,
     textAlign: 'center',
+  },
+  retryBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing[2],
+    paddingHorizontal: spacing[4],
+    paddingVertical: spacing[2.5],
+    borderRadius: radii.xl,
+    marginTop: spacing[3],
+  },
+  retryBtnText: {
+    fontFamily: fonts.bodyBold,
+    fontSize: fontSizes.sm,
   },
   modalBackdrop: {
     flex: 1,
