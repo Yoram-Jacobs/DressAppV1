@@ -21,8 +21,15 @@
  * Returning ``null`` is allowed; the content script then falls back to
  * a viewport screenshot (when permitted) before giving up.
  */
-const HINT_KEYWORDS = ['size', 'sizing', 'chest', 'bust', 'waist', 'hip', 'hips', 'inseam', 'shoulders', 'shoulder', 'sleeve', 'length', 'bottom'];
-const STRONG_KEYWORDS = ['size guide', 'size chart', 'sizing chart', 'size table', 'jacket size', 'measurement chart'];
+const HINT_KEYWORDS = [
+  'size', 'sizing', 'chest', 'bust', 'waist', 'hip', 'hips',
+  'inseam', 'shoulders', 'shoulder', 'sleeve', 'length', 'bottom',
+  'foot', 'foot length', 'insole', 'heel', 'toe', 'shoe', 'shoes', 'footwear',
+];
+const STRONG_KEYWORDS = [
+  'size guide', 'size chart', 'sizing chart', 'size table', 'jacket size',
+  'measurement chart', 'shoe size', 'shoe size guide', 'footwear size', 'shoe size chart',
+];
 const GALLERY_HINTS = /(gallery|carousel|thumb|hero|slick|swiper|pdp-images|product-images|main-image|primary-image|image-list)/i;
 
 export function detectChart(_doc = document) {
@@ -179,9 +186,19 @@ export function detectGarmentType(_doc = document) {
     _doc.querySelector('h1')?.innerText,
     _doc.title,
   ].filter(Boolean).join(' ').toLowerCase();
-  const dict = ['shirt','t-shirt','tshirt','blouse','dress','skirt','pants','trousers','jeans','shorts','jacket','coat','hoodie','sweater','jumper','suit','blazer','cardigan','swimwear','bra','underwear','briefs','bralette','socks','leggings','tights','tank','top'];
+  const dict = [
+    'sneakers', 'sneaker', 'boots', 'boot', 'sandals', 'sandal', 'loafers', 'loafer',
+    'heels', 'heel', 'flats', 'flat', 'slippers', 'slipper', 'pumps', 'pump',
+    'clogs', 'clog', 'shoes', 'shoe', 'footwear',
+    't-shirt', 'tshirt', 'shirt', 'blouse', 'dress', 'skirt', 'pants', 'trousers',
+    'jeans', 'shorts', 'jacket', 'coat', 'hoodie', 'sweater', 'jumper', 'suit',
+    'blazer', 'cardigan', 'swimwear', 'bra', 'underwear', 'briefs', 'bralette',
+    'socks', 'leggings', 'tights', 'tank', 'top'
+  ];
   for (const word of dict) {
-    if (sources.includes(word)) return word;
+    // Check with word boundaries when possible so short words like 'top' don't false-match 'laptop'
+    const re = new RegExp(`(^|[^a-z0-9])${word}([^a-z0-9]|$)`, 'i');
+    if (re.test(sources)) return word;
   }
   return null;
 }

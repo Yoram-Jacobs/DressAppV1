@@ -2,8 +2,8 @@
   "manifest_version": 3,
   "name": "DressApp Shopping Assistant",
   "short_name": "DressApp",
-  "description": "Real-time size recommendations on Zara, ASOS, Shein, H&M, Amazon, AliExpress and more — powered by your DressApp measurements.",
-  "version": "0.1.0",
+  "description": "Real-time clothing size recommendations on major fashion and retail stores — powered by your DressApp body measurements.",
+  "version": "0.1.3",
   "action": {
     "default_title": "DressApp Shopping Assistant",
     "default_popup": "src/popup/index.html",

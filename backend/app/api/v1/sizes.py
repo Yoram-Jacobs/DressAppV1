@@ -156,26 +156,41 @@ WHAT TO DO
    - The units (cm, in, or both).
    - The size labels in the first column (S/M/L/EU 38/...).
    - The numeric value(s) in each cell. Cells may hold a single number (a garment dimension) OR a range like "86-90" (a body-measurement bracket).
-2. The user's measurements have been **pre-expanded server-side** so every common chart-column synonym is already populated. For example ``chest`` and ``bust`` carry the same value; ``shoulder``, ``shoulders`` and ``shoulder_width`` carry the same value; ``hip``, ``hips``, ``bottom`` and ``bottom_hem`` carry the same value. Do a case-insensitive substring match between each chart column header and the JSON keys to find the user's value for that column. **NEVER** answer "measurements were not provided" if any column header matches any JSON key.
-3. For each row, check whether every relevant user measurement fits — but apply the right rule for the **kind** of measurement:
+2. The user's measurements have been **pre-expanded server-side** so every common chart-column synonym is already populated. For example ``chest`` and ``bust`` carry the same value; ``shoulder``, ``shoulders`` and ``shoulder_width`` carry the same value; ``foot_length`` and ``insole`` carry the same value. Do a case-insensitive substring match between each chart column header and the JSON keys to find the user's value for that column. **NEVER** answer "measurements were not provided" if any column header matches any JSON key.
+3. For each row, check whether relevant user measurements fit — applying garment-category rules:
 
-   * **CIRCUMFERENCE columns** (Bust / Chest / Waist / Hip / Bottom / Shoulder Width / Neck / Thigh) — the garment must be at least as wide as the user.
+   * **UPPER-BODY GARMENTS** (shirts, tops, t-shirts, blouses, sweaters, hoodies, jackets, coats, blazers, bras):
+       - Size is determined primarily by **CHEST / BUST** and **SHOULDERS** (and sleeve / torso length if listed).
+       - **NEVER evaluate or constrain an upper-body garment by HIP, HIPS, or BOTTOM**. Even if the user's hip circumference is wider than their chest, recommend the size that fits their chest/shoulders.
+
+   * **FOOTWEAR / SHOE GARMENTS** (shoes, sneakers, boots, sandals, loafers, heels, flats, slippers):
+       - Size is determined EXCLUSIVELY by **FOOT LENGTH** (in cm/inches) or standard **SHOE SIZE** (e.g. EU 41 / US 8.5).
+       - User foot length must fit the row length (e.g. foot length <= insole / shoe length, with ~0.5–1.0 cm comfort toe room).
+       - **STRICTLY IGNORE chest, bust, waist, hips, and shoulders on footwear charts**.
+
+   * **LOWER-BODY GARMENTS** (pants, trousers, jeans, shorts, skirts):
+       - Match against **WAIST**, **HIP**, and **INSEAM**. Chest and shoulders are ignored.
+
+   * **FULL-BODY GARMENTS** (dresses, jumpsuits, suits):
+       - Check chest, waist, and hip. Pick the smallest size accommodating all relevant dimensions.
+
+   * **CIRCUMFERENCE columns** (Bust / Chest / Waist / Hip / Neck / Thigh) — the garment must be at least as wide as the user.
        - Range cell "lo-hi": user value must satisfy ``lo <= v <= hi``.
        - Single-number cell (a garment dimension): user value must be ``<=`` the cell value.
    * **LENGTH columns** (Length / Body Length / Sleeve Length / Inseam / Outseam / Total Length) — the user value is treated as their **full-size MAX** (full-arm length, full-leg length, full-torso length). A garment that is **shorter** than this max is perfectly fine — it just means the garment is short-sleeved / cropped / mini-length / etc. So:
        - Range cell "lo-hi": user value must satisfy ``v >= lo`` only (no upper bound — short garments are fine).
        - Single-number cell: the garment's value must be ``<=`` the user's value (i.e. the garment is not LONGER than the user's body part). If the garment is dramatically shorter (e.g. 19 cm sleeve vs user's 46 cm full-arm length), it's a deliberately short-sleeved garment, **NOT** a misfit and **NOT** an anomaly. Note this in ``reasoning`` ("this is a short-sleeve top") but do not flag it.
 
-   Pick the SMALLEST size where every relevant CIRCUMFERENCE column fits.
+   Pick the SMALLEST size where every relevant column for that garment category fits.
 
-4. **Tie-break: when the user's value is within 0.5 cm of the upper bound of the chosen size, pick the next size UP** (loose is wearable, tight is not). Surface the smaller size as an alternative with `fit: "snug"`. Tie-breaking applies to circumferences only — length-column tiebreaks favour the user's reach (longer is fine, shorter is also fine).
+4. **Tie-break: when the user's value is within 0.5 cm of the upper bound of the chosen size, pick the next size UP** (loose is wearable, tight is not). Surface the smaller size as an alternative with `fit: "snug"`. Tie-breaking applies to circumferences and footwear; length-column tiebreaks favour the user's reach (longer is fine, shorter is also fine).
 5. If the chart is in inches, convert mentally (1 in = 2.54 cm) and report units accordingly.
 
 ANOMALY DETECTION (always run before picking the size)
 --------------------------------------------------------
 Users sometimes mistype their measurements. Before applying the body-circumference rule, compare each provided body **circumference** value to the corresponding chart column's range:
 
-- **ONLY check circumference columns** (chest, bust, waist, hip, shoulders, neck, thigh). Length columns (sleeve, inseam, outseam, length) ARE NEVER ANOMALY-FLAGGED for being "too high" — the user's stored sleeve / inseam / outseam represent their full-body MAX (full arm / full leg / full torso length) and are *expected* to exceed any short-sleeve, cropped, or mini garment. Only flag a length value if it is implausibly **low** (e.g. ``sleeve: 2 cm`` — clearly a typo).
+- **ONLY check circumference columns** (chest, bust, waist, hip, shoulders, neck, thigh). Length columns and foot length are NEVER ANOMALY-FLAGGED for being "too high". Only flag a length or foot length value if it is implausibly **low** (e.g. ``foot_length: 2 cm`` or ``sleeve: 2 cm`` — clearly a typo).
 - For circumferences: trigger a flag in EITHER of these cases:
     (a) the user's value exceeds the chart's column **maximum** AT ALL (even a small margin) — no size in this chart can actually accommodate them, so the value is suspect; OR
     (b) the user's value is below the chart's column minimum by more than **15%** (clearly far smaller than any size offered).
@@ -184,7 +199,7 @@ Users sometimes mistype their measurements. Before applying the body-circumferen
     2. **Drop that column from ``matched_columns``**.
     3. **Append a short, friendly warning to ``warnings``** in this exact shape:
        ``"Your <field> (<value> cm) looks higher/lower than expected for this kind of garment. Please re-measure — DressApp ignored it for this recommendation."``
-- If, after skipping anomalies, you still have at least one usable body circumference, use it. Otherwise fall through to the CLOTHING-SIZE FALLBACK rule.
+- If, after skipping anomalies, you still have at least one usable dimension, use it. Otherwise fall through to the CLOTHING-SIZE FALLBACK rule.
 - ``height`` and ``weight`` are never anomaly-checked against the chart (they're not garment dimensions).
 
 Examples of what this rule catches:
@@ -196,6 +211,7 @@ Examples that are NOT anomalies and must NEVER be flagged:
 * User stored ``sleeve: 65 cm`` (a real full-arm length); the chart shows ``Sleeve Length: 19 cm`` (a short-sleeve T-shirt). The garment is just short-sleeved — pick the size based on bust/shoulder, mention "short-sleeve" in the reasoning. **No warning.**
 * User stored ``inseam: 80 cm``; the chart shows ``Inseam: 25 cm`` (shorts). It's just shorts. **No warning.**
 * User stored ``outseam: 110 cm``; the chart shows ``Length: 60 cm`` (a mini dress). It's a short garment. **No warning.**
+* User stored ``foot_length: 26 cm`` for a shoe chart. **No warning.**
 
 CLOTHING-SIZE FALLBACK (apply when body circumferences are missing)
 ---------------------------------------------------------------------
@@ -203,7 +219,7 @@ If the user has NO usable body circumferences for the columns shown (e.g. only `
 
 - ``shirt_size`` is authoritative for tops / shirts / jackets / dresses (where the chart shows Bust / Chest / Shoulder / Sleeve / Length). If the chart's first column lists labels like S, M, L, XL — pick the row whose label matches ``shirt_size`` (case-insensitive). If the chart uses EU/numeric labels (38, 40, 50, 52...), translate the user's letter size using the standard mapping: XS≈34/44, S≈36/46, M≈38/48, L≈40/50, XL≈42/52, XXL≈44/54, XXXL≈46/56. Adjust by ±1 if the store is known to run small/large.
 - ``pants_size`` is authoritative for trousers / shorts / jeans / skirts (where the chart shows Waist / Hip / Inseam). Match the numeric value or letter against the size column.
-- ``shoe_size`` is authoritative for footwear charts.
+- ``shoe_size`` (or ``foot_length``) is authoritative for footwear charts. Match numeric size (EU/US/UK) or cm foot length against the chart.
 - ``height`` and ``weight`` alone are NEVER sufficient — but if combined with ``shirt_size`` or ``pants_size`` they confirm the choice. If ONLY ``height``/``weight`` are present, you may still produce a low-confidence (≤0.4) recommendation by mapping height to a size band (e.g., 170-178cm + average build → M).
 
 When using the clothing-size fallback, set ``confidence`` between 0.55 and 0.80 (lower than a real measurement match), set ``matched_columns`` to ``["shirt_size"]`` (or pants/shoe), and explain in ``reasoning`` that the recommendation is based on the user's usual size, suggesting they add body measurements for a tighter fit.
@@ -243,8 +259,9 @@ _MEASUREMENT_ALIASES: dict[str, tuple[str, ...]] = {
     "chest":      ("chest", "bust", "bust_size", "chest_circumference"),
     "bust":       ("bust", "chest", "bust_size", "chest_circumference"),
     "waist":      ("waist", "waist_circumference", "natural_waist"),
-    "hip":        ("hip", "hips", "bottom", "bottom_hem", "hip_circumference"),
-    "hips":       ("hips", "hip", "bottom", "bottom_hem", "hip_circumference"),
+    "hip":        ("hip", "hips", "hip_circumference"),
+    "hips":       ("hips", "hip", "hip_circumference"),
+    "foot_length": ("foot_length", "foot", "foot_len", "foot_length_cm", "insole", "insole_length", "heel_to_toe", "heel_toe", "footwear_length"),
     "shoulder":   ("shoulder", "shoulders", "shoulder_width", "across_shoulder"),
     "shoulders":  ("shoulders", "shoulder", "shoulder_width", "across_shoulder"),
     "sleeve":     ("sleeve", "sleeve_length", "sleeves"),
@@ -311,17 +328,23 @@ def _build_user_prompt(
     # identical, but the model wouldn't risk the inference.
     expanded = _expand_measurement_aliases(measurements)
 
-    # Split body circumferences from clothing-size fallbacks so the
-    # model can tell which signal to trust. ``shirt_size`` etc. are
-    # the right answer when the user has no tape-measure data.
+    # Split body circumferences, footwear dimensions, and clothing sizes.
     _CLOTHING_SIZE_KEYS = {
         "shirt_size", "pants_size", "shoe_size",
-        "shirts_size", "pant_size", "trouser_size",
+        "shirts_size", "pant_size", "trouser_size", "shoes_size", "footwear_size",
+    }
+    _FOOTWEAR_KEYS = {
+        "foot_length", "foot", "foot_len", "foot_length_cm", "insole",
+        "insole_length", "heel_to_toe", "heel_toe", "footwear_length",
     }
     _CONTEXT_ONLY_KEYS = {"height", "weight", "body_height", "stature", "body_weight"}
+
     body_dims = {
         k: v for k, v in expanded.items()
-        if k not in _CLOTHING_SIZE_KEYS and k not in _CONTEXT_ONLY_KEYS
+        if k not in _CLOTHING_SIZE_KEYS and k not in _CONTEXT_ONLY_KEYS and k not in _FOOTWEAR_KEYS
+    }
+    footwear_dims = {
+        k: v for k, v in expanded.items() if k in _FOOTWEAR_KEYS
     }
     clothing_sizes = {
         k: v for k, v in expanded.items() if k in _CLOTHING_SIZE_KEYS
@@ -331,23 +354,27 @@ def _build_user_prompt(
     }
 
     body_dims_str = json.dumps(body_dims, ensure_ascii=False)
+    footwear_dims_str = json.dumps(footwear_dims, ensure_ascii=False)
     clothing_sizes_str = json.dumps(clothing_sizes, ensure_ascii=False)
     context_dims_str = json.dumps(context_dims, ensure_ascii=False)
 
     parts: list[str] = [
-        f"USER BODY CIRCUMFERENCES (cm, JSON — every chart-column synonym is pre-expanded):\n{body_dims_str}",
+        f"USER BODY CIRCUMFERENCES (cm, JSON — chart-column synonyms pre-expanded):\n{body_dims_str}",
+        f"USER FOOTWEAR DIMENSIONS (cm, JSON):\n{footwear_dims_str}",
         f"USER CLOTHING SIZES THEY NORMALLY BUY:\n{clothing_sizes_str}",
         f"USER HEIGHT / WEIGHT CONTEXT:\n{context_dims_str}",
         (
             "IMPORTANT:\n"
-            "- BODY CIRCUMFERENCES already include every common synonym "
-            "(``chest`` = ``bust``; ``shoulder`` = ``shoulder_width``; "
-            "``hip`` = ``bottom``). Case-insensitive substring is enough.\n"
+            "- For UPPER-BODY garments (shirts, tops, t-shirts, jackets, hoodies, coats, sweaters, bras): "
+            "recommend based on CHEST / BUST and SHOULDERS. NEVER use HIP / HIPS to oversize or constrain upper-body garments!\n"
+            "- For FOOTWEAR / SHOES: recommend based EXCLUSIVELY on FOOTWEAR DIMENSIONS (foot_length) or shoe_size. "
+            "Do NOT check torso/body measurements against shoe charts!\n"
+            "- For LOWER-BODY garments (pants, jeans, shorts, skirts): recommend based on WAIST, HIP, and INSEAM.\n"
             "- If BODY CIRCUMFERENCES is empty `{}` but CLOTHING SIZES has "
-            "``shirt_size``/``pants_size``, USE THAT as the primary signal "
+            "``shirt_size``/``pants_size``/``shoe_size``, USE THAT as the primary signal "
             "(see CLOTHING-SIZE FALLBACK in your system prompt).\n"
             "- Do **NOT** reply that 'measurements were not provided' if "
-            "any of the three sections above contain at least one key. "
+            "any of the sections above contain at least one key. "
             "Always emit a best-effort recommendation."
         ),
     ]
@@ -388,12 +415,20 @@ def _build_user_text_only_prompt(
     expanded = _expand_measurement_aliases(measurements)
     _CLOTHING_SIZE_KEYS = {
         "shirt_size", "pants_size", "shoe_size",
-        "shirts_size", "pant_size", "trouser_size",
+        "shirts_size", "pant_size", "trouser_size", "shoes_size", "footwear_size",
+    }
+    _FOOTWEAR_KEYS = {
+        "foot_length", "foot", "foot_len", "foot_length_cm", "insole",
+        "insole_length", "heel_to_toe", "heel_toe", "footwear_length",
     }
     _CONTEXT_ONLY_KEYS = {"height", "weight", "body_height", "stature", "body_weight"}
+
     body_dims = {
         k: v for k, v in expanded.items()
-        if k not in _CLOTHING_SIZE_KEYS and k not in _CONTEXT_ONLY_KEYS
+        if k not in _CLOTHING_SIZE_KEYS and k not in _CONTEXT_ONLY_KEYS and k not in _FOOTWEAR_KEYS
+    }
+    footwear_dims = {
+        k: v for k, v in expanded.items() if k in _FOOTWEAR_KEYS
     }
     clothing_sizes = {
         k: v for k, v in expanded.items() if k in _CLOTHING_SIZE_KEYS
@@ -403,22 +438,26 @@ def _build_user_text_only_prompt(
     }
 
     body_dims_str = json.dumps(body_dims, ensure_ascii=False)
+    footwear_dims_str = json.dumps(footwear_dims, ensure_ascii=False)
     clothing_sizes_str = json.dumps(clothing_sizes, ensure_ascii=False)
     context_dims_str = json.dumps(context_dims, ensure_ascii=False)
 
     parts: list[str] = [
-        f"USER BODY CIRCUMFERENCES (cm, JSON — every chart-column synonym is pre-expanded):\n{body_dims_str}",
+        f"USER BODY CIRCUMFERENCES (cm, JSON — chart-column synonyms pre-expanded):\n{body_dims_str}",
+        f"USER FOOTWEAR DIMENSIONS (cm, JSON):\n{footwear_dims_str}",
         f"USER CLOTHING SIZES THEY NORMALLY BUY:\n{clothing_sizes_str}",
         f"USER HEIGHT / WEIGHT CONTEXT:\n{context_dims_str}",
         (
             "IMPORTANT:\n"
-            "- BODY CIRCUMFERENCES already include every common synonym "
-            "(``chest`` = ``bust``; ``shoulder`` = ``shoulder_width``; "
-            "``hip`` = ``bottom``). Case-insensitive substring is enough.\n"
+            "- For UPPER-BODY garments (shirts, tops, t-shirts, jackets, hoodies, coats, sweaters, bras): "
+            "recommend based on CHEST / BUST and SHOULDERS. NEVER use HIP / HIPS to oversize or constrain upper-body garments!\n"
+            "- For FOOTWEAR / SHOES: recommend based EXCLUSIVELY on FOOTWEAR DIMENSIONS (foot_length) or shoe_size. "
+            "Do NOT check torso/body measurements against shoe charts!\n"
+            "- For LOWER-BODY garments (pants, jeans, shorts, skirts): recommend based on WAIST, HIP, and INSEAM.\n"
             "- If BODY CIRCUMFERENCES is empty `{}` but CLOTHING SIZES has "
-            "``shirt_size``/``pants_size``, USE THAT as the primary signal.\n"
+            "``shirt_size``/``pants_size``/``shoe_size``, USE THAT as the primary signal.\n"
             "- Do **NOT** reply that 'measurements were not provided' if "
-            "any of the three sections above contain at least one key. "
+            "any of the sections above contain at least one key. "
             "Always emit a best-effort recommendation."
         ),
     ]
@@ -550,40 +589,80 @@ def _normalise(parsed: dict[str, Any], *, source: str, elapsed_ms: int,
 
 # --------------------------- numeric fallback ------------------------
 _RANGE_RE = re.compile(
-    r"(?P<lo>\d{2,3}(?:[.,]\d)?)\s*[-–—~/]\s*(?P<hi>\d{2,3}(?:[.,]\d)?)",
+    r"(?P<lo>\d{1,3}(?:[.,]\d)?)\s*[-–—~/]\s*(?P<hi>\d{1,3}(?:[.,]\d)?)",
 )
-_SINGLE_NUM_RE = re.compile(r"\b(\d{2,3}(?:[.,]\d)?)\b")
-_MEASUREMENT_FIELDS = (
-    "chest", "bust", "waist", "hips", "hip",
-    "shoulder", "shoulders", "inseam", "sleeve", "length", "bottom",
-)
+_SINGLE_NUM_RE = re.compile(r"\b(\d{1,3}(?:[.,]\d)?)\b")
+
+_UPPER_BODY_TYPES = {
+    "shirt", "t-shirt", "tshirt", "blouse", "top", "jacket", "coat",
+    "hoodie", "sweater", "jumper", "suit", "blazer", "cardigan",
+    "tank", "vest", "bra", "bralette",
+}
+_LOWER_BODY_TYPES = {
+    "pants", "trousers", "jeans", "shorts", "skirt", "leggings",
+    "tights", "briefs", "underwear",
+}
+_FOOTWEAR_TYPES = {
+    "shoe", "shoes", "sneaker", "sneakers", "boot", "boots", "sandal",
+    "sandals", "footwear", "loafer", "loafers", "heel", "heels",
+    "flat", "flats", "slipper", "slippers", "pump", "pumps", "clog", "clogs",
+}
+_FULL_BODY_TYPES = {"dress", "jumpsuit", "romper", "swimwear"}
 
 
-def _heuristic_match(*, chart_text: str,
-                     measurements: dict[str, Any]) -> dict[str, Any] | None:
-    """Last-resort: regex match against the chart text. Mirrors the
-    LLM's bigger-on-tie tie-breaking rule."""
+def _detect_category(garment_type: str | None, chart_text: str) -> str:
+    if garment_type:
+        gt = garment_type.lower().strip()
+        for w in _FOOTWEAR_TYPES:
+            if re.search(r"\b" + re.escape(w) + r"\b", gt):
+                return "footwear"
+        for w in _UPPER_BODY_TYPES:
+            if re.search(r"\b" + re.escape(w) + r"\b", gt):
+                return "upper"
+        for w in _LOWER_BODY_TYPES:
+            if re.search(r"\b" + re.escape(w) + r"\b", gt):
+                return "lower"
+        for w in _FULL_BODY_TYPES:
+            if re.search(r"\b" + re.escape(w) + r"\b", gt):
+                return "full"
+
+    tl = chart_text.lower()
+    has_foot = any(w in tl for w in ("foot", "insole", "heel to toe", "shoe", "footwear"))
+    has_upper = any(w in tl for w in ("chest", "bust", "shoulder", "sleeve"))
+    has_lower = any(w in tl for w in ("waist", "hip", "hips", "inseam", "thigh"))
+
+    if has_foot and not has_upper and not has_lower:
+        return "footwear"
+    if has_upper and not has_lower:
+        return "upper"
+    if has_lower and not has_upper:
+        return "lower"
+    if has_upper and has_lower:
+        return "full"
+    return "upper" if has_upper else ("footwear" if has_foot else "unknown")
+
+
+def _heuristic_match(
+    *,
+    chart_text: str,
+    measurements: dict[str, Any],
+    garment_type: str | None = None,
+) -> dict[str, Any] | None:
+    """Last-resort: regex match against the chart text. Evaluates
+    measurements strictly relevant to the garment category (e.g. chest
+    for upper-body tops, foot length for shoes, waist/hip for pants)."""
     if not chart_text or not measurements:
         return None
 
-    user_vals: dict[str, float] = {}
-    for k, v in measurements.items():
-        if not isinstance(v, (int, float)):
-            continue
-        kl = str(k).lower()
-        for f in _MEASUREMENT_FIELDS:
-            if f in kl:
-                user_vals[f] = float(v)
-                break
-    if not user_vals:
-        return None
+    category = _detect_category(garment_type, chart_text)
 
-    label_re = re.compile(r"^\s*([A-Za-z0-9./-]{1,8})\b")
+    label_re = re.compile(r"^\s*([A-Za-z0-9./-]{1,12})\b")
     HEADER_TOKENS = {
-        "size", "us", "uk", "eu", "cm", "in", "inches", "centimeters",
+        "size", "us", "uk", "eu", "cm", "in", "inches", "centimeters", "jp", "cn",
     }
     headers: list[str] | None = None
     rows: list[dict[str, Any]] = []
+
     for ln in chart_text.splitlines():
         ln = ln.strip()
         if not ln:
@@ -596,7 +675,10 @@ def _heuristic_match(*, chart_text: str,
             ]
             kw_hits = sum(
                 1 for t in tokens
-                if any(k in t for k in _MEASUREMENT_FIELDS)
+                if any(k in t for k in (
+                    "chest", "bust", "waist", "hip", "hips", "shoulder",
+                    "inseam", "sleeve", "length", "foot", "insole",
+                ))
                 or t in HEADER_TOKENS
             )
             if kw_hits >= 2 and headers is None:
@@ -626,11 +708,9 @@ def _heuristic_match(*, chart_text: str,
                 except ValueError:
                     continue
         if ranges:
-            rows.append({"label": label, "ranges": ranges})
+            rows.append({"label": label, "ranges": ranges, "raw": ln})
     if not rows:
         return None
-
-    matched_field = max(user_vals, key=user_vals.get)
 
     ncols = max(len(r["ranges"]) for r in rows)
     columns: list[list[tuple[float, float]]] = [[] for _ in range(ncols)]
@@ -639,18 +719,147 @@ def _heuristic_match(*, chart_text: str,
             if j < ncols:
                 columns[j].append(rng)
 
+    # -------------------------------------------------------------
+    # 1. FOOTWEAR SIZING
+    # -------------------------------------------------------------
+    if category == "footwear":
+        foot_len_raw = (
+            measurements.get("foot_length")
+            or measurements.get("foot_len")
+            or measurements.get("foot")
+            or measurements.get("foot_length_cm")
+        )
+        foot_len = float(foot_len_raw) if foot_len_raw and isinstance(foot_len_raw, (int, float, str)) and str(foot_len_raw).replace(".", "", 1).isdigit() else None
+        shoe_sz = str(measurements.get("shoe_size") or "").strip().upper()
+
+        if not foot_len and not shoe_sz:
+            return None
+
+        # Try matching foot length in cm column (typically values between 18 and 34 cm)
+        foot_col = -1
+        if headers:
+            for j, h in enumerate(headers):
+                if any(k in h.lower() for k in ("foot", "insole", "cm", "heel", "length")):
+                    foot_col = j
+                    break
+        if foot_col < 0 or foot_col >= ncols:
+            for j in range(ncols):
+                col_maxes = [hi for r in rows if j < len(r["ranges"]) for _, hi in [r["ranges"][j]]]
+                if col_maxes and all(18.0 <= v <= 34.0 for v in col_maxes):
+                    foot_col = j
+                    break
+
+        if foot_len and foot_col >= 0:
+            chosen_i = None
+            # Find the best row where foot length fits the bracket [lo, hi]
+            for i, r in enumerate(rows):
+                if foot_col < len(r["ranges"]):
+                    lo, hi = r["ranges"][foot_col]
+                    if lo <= foot_len <= hi:
+                        chosen_i = i
+                        break
+                    elif foot_len <= hi:
+                        chosen_i = i
+                        break
+            if chosen_i is None:
+                chosen_i = len(rows) - 1
+
+            chosen = rows[chosen_i]
+            smaller_alt = rows[chosen_i - 1] if chosen_i > 0 else None
+            larger_alt = rows[chosen_i + 1] if chosen_i + 1 < len(rows) else None
+            alts = []
+            if smaller_alt:
+                alts.append({"size": smaller_alt["label"].upper(), "fit": "snug"})
+            if larger_alt:
+                alts.append({"size": larger_alt["label"].upper(), "fit": "loose"})
+
+            reason = f"Heuristic match: your foot length ({foot_len:g} cm) fits size {chosen['label'].upper()}."
+            return {
+                "recommended_size": chosen["label"].upper(),
+                "confidence": 0.65,
+                "garment_type": "shoes",
+                "size_chart_units": "cm",
+                "matched_columns": ["foot_length"],
+                "reasoning": reason,
+                "alternatives": alts,
+            }
+
+        if shoe_sz:
+            for r in rows:
+                if (
+                    r["label"].upper() == shoe_sz
+                    or shoe_sz in r["label"].upper()
+                    or re.search(r"\b" + re.escape(shoe_sz) + r"\b", r["raw"].upper())
+                ):
+                    return {
+                        "recommended_size": r["label"].upper(),
+                        "confidence": 0.60,
+                        "garment_type": "shoes",
+                        "size_chart_units": "cm",
+                        "matched_columns": ["shoe_size"],
+                        "reasoning": f"Heuristic match: size {r['label'].upper()} matches your standard shoe size ({shoe_sz}).",
+                        "alternatives": [],
+                    }
+        return None
+
+    # -------------------------------------------------------------
+    # 2. APPAREL SIZING (Upper-Body, Lower-Body, Full-Body)
+    # -------------------------------------------------------------
+    # Filter user measurements by category so irrelevant parts NEVER constrain fit.
+    if category == "upper":
+        ALLOWED_FIELDS = ("chest", "bust", "shoulder", "shoulders", "sleeve", "length", "neck")
+        FALLBACK_SIZE_KEY = "shirt_size"
+    elif category == "lower":
+        ALLOWED_FIELDS = ("waist", "hip", "hips", "inseam", "outseam", "thigh")
+        FALLBACK_SIZE_KEY = "pants_size"
+    else:  # full or unknown
+        ALLOWED_FIELDS = ("chest", "bust", "waist", "hip", "hips", "shoulder", "shoulders", "length", "inseam")
+        FALLBACK_SIZE_KEY = "shirt_size"
+
+    user_vals: dict[str, float] = {}
+    for k, v in measurements.items():
+        if not isinstance(v, (int, float)):
+            continue
+        kl = str(k).lower().strip()
+        for f in ALLOWED_FIELDS:
+            if f == kl or (f in kl and "length" not in kl and "size" not in kl):
+                user_vals[f] = float(v)
+                break
+
+    # Fallback to clothing size if no body tape measurements
+    if not user_vals:
+        usual_size = str(measurements.get(FALLBACK_SIZE_KEY) or "").strip().upper()
+        if usual_size:
+            for r in rows:
+                if (
+                    r["label"].upper() == usual_size
+                    or usual_size in r["label"].upper()
+                    or re.search(r"\b" + re.escape(usual_size) + r"\b", r["raw"].upper())
+                ):
+                    return {
+                        "recommended_size": r["label"].upper(),
+                        "confidence": 0.55,
+                        "garment_type": garment_type or ("shirt" if category == "upper" else "pants"),
+                        "size_chart_units": "cm",
+                        "matched_columns": [FALLBACK_SIZE_KEY],
+                        "reasoning": f"Heuristic match: size {r['label'].upper()} matches your usual size ({usual_size}).",
+                        "alternatives": [],
+                    }
+        return None
+
     _FIELD_SYNONYMS: dict[str, tuple[str, ...]] = {
         "chest":     ("chest", "bust"),
         "bust":      ("bust", "chest"),
         "waist":     ("waist",),
-        "hip":       ("hip", "hips", "bottom", "bottom hem"),
-        "hips":      ("hip", "hips", "bottom", "bottom hem"),
-        "shoulder":  ("shoulder", "shoulders"),
-        "shoulders": ("shoulder", "shoulders"),
+        "hip":       ("hip", "hips"),
+        "hips":      ("hip", "hips"),
+        "shoulder":  ("shoulder", "shoulders", "across shoulder"),
+        "shoulders": ("shoulder", "shoulders", "across shoulder"),
         "inseam":    ("inseam", "inside leg"),
         "sleeve":    ("sleeve", "sleeve length"),
         "length":    ("length", "back length", "body length"),
-        "height":    ("height",),
+        "thigh":     ("thigh",),
+        "neck":      ("neck",),
     }
 
     def _header_index_for(field: str) -> int:
@@ -688,36 +897,51 @@ def _heuristic_match(*, chart_text: str,
                 col_max = max(hi for _, hi in ranges)
                 if col_max >= v:
                     return idx
-        rank = _FIELD_RANK.get(field.lower(), 1)
-        if rank >= len(col_ranks):
-            rank = len(col_ranks) - 1
-        candidate = col_ranks[rank]
-        ranges = columns[candidate]
-        if ranges and max(hi for _, hi in ranges) >= v:
-            return candidate
-        for j, rng_list in enumerate(columns):
-            if not rng_list:
-                continue
-            col_max = max(hi for _, hi in rng_list)
-            if col_max >= v:
-                return j
-        return candidate
+        if not headers:  # Only do rank fallback when there were no headers
+            rank = _FIELD_RANK.get(field.lower(), 1)
+            if rank >= len(col_ranks):
+                rank = len(col_ranks) - 1
+            candidate = col_ranks[rank]
+            ranges = columns[candidate]
+            if ranges and max(hi for _, hi in ranges) >= v:
+                return candidate
+            for j, rng_list in enumerate(columns):
+                if rng_list and max(hi for _, hi in rng_list) >= v:
+                    return j
+        return -1
 
     field_to_col: dict[str, int] = {
         f: _assign_column(f, v) for f, v in user_vals.items()
     }
 
+    # Pick the primary anchor field appropriately
+    if category == "upper":
+        primary_field = next((f for f in ("chest", "bust", "shoulders", "shoulder") if f in user_vals), next(iter(user_vals)))
+    elif category == "lower":
+        primary_field = next((f for f in ("waist", "hip", "hips") if f in user_vals), next(iter(user_vals)))
+    else:
+        primary_field = next((f for f in ("chest", "bust", "waist", "hip") if f in user_vals), next(iter(user_vals)))
+
+    # If primary field could not map to a column and we have columns, pick candidate column for primary field
+    if field_to_col.get(primary_field, -1) < 0 and ncols > 0:
+        for j, rng_list in enumerate(columns):
+            if rng_list and max(hi for _, hi in rng_list) >= user_vals[primary_field]:
+                field_to_col[primary_field] = j
+                break
+
     TIE_BUFFER_CM = 0.5
 
     def _row_accommodates(row: dict[str, Any]) -> bool:
+        checked_any = False
         for f, v in user_vals.items():
             j = field_to_col.get(f, -1)
             if j < 0 or j >= len(row["ranges"]):
                 continue
+            checked_any = True
             _, hi = row["ranges"][j]
             if v > hi:
                 return False
-        return True
+        return checked_any
 
     def _row_is_tight(row: dict[str, Any]) -> bool:
         for f, v in user_vals.items():
@@ -744,20 +968,19 @@ def _heuristic_match(*, chart_text: str,
         chosen_i += 1
         bumped = True
 
-    user_max = user_vals[matched_field]
-
+    user_anchor_val = user_vals[primary_field]
     chosen = rows[chosen_i]
     smaller_alt = rows[chosen_i - 1] if chosen_i > 0 else None
 
     if bumped:
         reason = (
-            f"Heuristic match: your {matched_field} ({user_max:g} cm) is right "
+            f"Heuristic match: your {primary_field} ({user_anchor_val:g} cm) is right "
             f"at the upper edge of the smaller size, so DressApp recommends "
             f"the slightly bigger size {chosen['label'].upper()}."
         )
     else:
         reason = (
-            f"Heuristic match: your {matched_field} ({user_max:g} cm) fits "
+            f"Heuristic match: your {primary_field} ({user_anchor_val:g} cm) fits "
             f"the {chosen['label'].upper()} row."
         )
 
@@ -768,12 +991,16 @@ def _heuristic_match(*, chart_text: str,
             "fit": "snug",
         })
 
+    matched_cols = [f for f, j in field_to_col.items() if j >= 0]
+    if not matched_cols:
+        matched_cols = [primary_field]
+
     return {
         "recommended_size": chosen["label"].upper(),
         "confidence": 0.55,
-        "garment_type": "unknown",
+        "garment_type": garment_type or ("shirt" if category == "upper" else ("pants" if category == "lower" else "unknown")),
         "size_chart_units": "cm",
-        "matched_columns": [matched_field],
+        "matched_columns": matched_cols,
         "reasoning": reason,
         "alternatives": alternatives,
     }
@@ -890,7 +1117,9 @@ async def analyze_chart(
             candidate_texts.append(t)
     for cand in candidate_texts:
         decided = _heuristic_match(
-            chart_text=cand, measurements=measurements,
+            chart_text=cand,
+            measurements=measurements,
+            garment_type=payload.garment_type,
         )
         if decided is not None:
             parsed = decided

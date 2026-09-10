@@ -1442,10 +1442,11 @@ export default function ItemDetail() {
   const preferredImage = showingOriginal
     ? (
         (mergedItem.clean_image_url && mergedItem.clean_image_url !== mergedItem.reconstructed_image_url ? mergedItem.clean_image_url : null) ||
-        mergedItem.image_variants?.original ||
         mergedItem.image_variants?.webp?.large ||
+        mergedItem.image_variants?.webp?.medium ||
         mergedItem.cutout_url ||
         mergedItem.segmented_image_url ||
+        mergedItem.image_variants?.original ||
         bestImageUrl(mergedItem, { skipReconstruction: true }) ||
         mergedItem.clean_image_url ||
         mergedItem.original_image_url

@@ -1,6 +1,7 @@
 import unittest
 import asyncio
 from unittest.mock import AsyncMock, patch, MagicMock
+import app.services.background_matting
 from app.models.schemas import GarmentAnalysis
 from app.services.reconstruction import (
     should_reconstruct,
@@ -40,9 +41,9 @@ class TestQualityChecker(unittest.TestCase):
         self.assertIn("needs_reconstruction", SYSTEM_PROMPT)
 
     def test_should_reconstruct_quality_checker(self):
-        """Verify should_reconstruct respects Gemini's visual assessment."""
+        """Verify should_reconstruct respects Gemini's visual assessment and handles footwear/tiny crops."""
         with patch("app.config.settings.ENABLE_RECONSTRUCTION", True):
-            # 1. Complete item -> no reconstruction
+            # 1. Complete item (full frame) -> no reconstruction
             complete_analysis = {
                 "title": "Clean T-Shirt",
                 "category": "Top",
@@ -75,6 +76,30 @@ class TestQualityChecker(unittest.TestCase):
             self.assertTrue(needs)
             self.assertIn("quality_checker:needs_reconstruction", reasons)
             self.assertTrue(any("Only toe caps visible" in r for r in reasons))
+
+            # 4. Footwear sub-crop in outfit shot (< 25% frame) -> overrides "complete" to True
+            shoes_analysis = {
+                "title": "Running Sneakers with Pink Accents",
+                "category": "Footwear",
+                "sub_category": "Sneakers",
+                "image_quality_status": "complete",
+            }
+            # Bbox: 100px x 200px = 20,000 / 1,000,000 = 2% of frame
+            needs, reasons = should_reconstruct(shoes_analysis, [800, 400, 900, 600])
+            self.assertTrue(needs)
+            self.assertIn("quality_checker:footwear_crop_needs_reconstruction", reasons)
+
+            # 5. Large clean bottom crop in outfit shot (not touching edge, > 5% frame) -> False
+            bottom_analysis = {
+                "title": "Heather Grey Sweatpants",
+                "category": "Bottom",
+                "sub_category": "Sweatpants",
+                "image_quality_status": "complete",
+            }
+            # Bbox: 400px x 300px = 120,000 / 1,000,000 = 12% of frame, center [450, 350, 850, 650]
+            needs, reasons = should_reconstruct(bottom_analysis, [450, 350, 850, 650])
+            self.assertFalse(needs)
+            self.assertIn("quality_checker:complete", reasons)
 
     def test_build_reconstruction_prompt(self):
         """Verify _build_reconstruction_prompt uses LLM prompt if available, fallback otherwise."""

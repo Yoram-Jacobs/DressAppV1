@@ -62,6 +62,20 @@ def _norm_category(raw: str | None) -> str:
     return (raw or "").strip().lower()
 
 
+def _is_footwear(analysis: dict[str, Any]) -> bool:
+    category = _norm_category(analysis.get("category"))
+    sub_category = _norm_category(analysis.get("sub_category"))
+    item_type = _norm_category(analysis.get("item_type"))
+    title = _norm_category(analysis.get("title"))
+    if category in ("shoes", "footwear"):
+        return True
+    footwear_keywords = ("shoe", "sneaker", "boot", "sandal", "heel", "loafer", "trainer", "footwear", "slipper")
+    for text in (category, sub_category, item_type, title):
+        if any(kw in text for kw in footwear_keywords):
+            return True
+    return False
+
+
 def should_reconstruct(
     analysis: dict[str, Any],
     bbox_norm: list[int] | None,
@@ -71,6 +85,8 @@ def should_reconstruct(
 
     Uses Gemini's visual Quality Checker (``image_quality_status``) as the primary
     decision maker, falling back to geometric bbox heuristics if unpopulated.
+    Sub-crops of footwear (< 25% frame) and tiny crops (< 5% frame) always require
+    reconstruction regardless of reported completeness to fix pixelation.
 
     Args:
         analysis: the GarmentAnalysis JSON produced by The Eyes
@@ -91,6 +107,20 @@ def should_reconstruct(
     if not _settings.ENABLE_RECONSTRUCTION:
         return False, reasons
 
+    # Parse bbox geometry if provided
+    area_frac = None
+    ymin, xmin, ymax, xmax = None, None, None, None
+    aspect = None
+    if bbox_norm and len(bbox_norm) == 4:
+        try:
+            ymin, xmin, ymax, xmax = [int(v) for v in bbox_norm]
+            width = max(1, xmax - xmin)
+            height = max(1, ymax - ymin)
+            area_frac = (width * height) / (1000.0 * 1000.0)
+            aspect = height / float(width)
+        except (TypeError, ValueError):
+            pass
+
     # 1. Primary: Visual Quality Checker assessment from Gemini / The Eyes
     quality_status = analysis.get("image_quality_status")
     if quality_status:
@@ -102,35 +132,28 @@ def should_reconstruct(
             reason_txt = analysis.get("image_quality_reason") or "needs_reconstruction"
             return True, ["quality_checker:needs_reconstruction", f"reason:{reason_txt}"]
         if q_norm == "complete":
-            # Safety check: if the bounding box touches an image boundary on a sub-crop (area_frac < 0.85),
+            # Safety check 1: footwear sub-crops (< 25% of frame) in multi-garment/outfit photos
+            # are heavily pixelated and occluded by feet/legs; reconstruct them into studio product shots.
+            if area_frac is not None and _is_footwear(analysis) and area_frac < 0.25:
+                return True, ["quality_checker:footwear_crop_needs_reconstruction", f"area_frac:{area_frac:.3f}"]
+
+            # Safety check 2: any tiny garment crop (< 5% of frame) lacks resolution and needs reconstruction.
+            if area_frac is not None and area_frac < 0.05:
+                return True, ["quality_checker:tiny_crop_needs_reconstruction", f"area_frac:{area_frac:.3f}"]
+
+            # Safety check 3: if the bounding box touches an image boundary on a sub-crop (area_frac < 0.85),
             # the crop is physically cut off by the camera frame, so override to needs_completion.
-            if bbox_norm and len(bbox_norm) == 4:
-                try:
-                    ymin, xmin, ymax, xmax = [int(v) for v in bbox_norm]
-                    area_frac = (max(1, xmax - xmin) * max(1, ymax - ymin)) / (1000.0 * 1000.0)
-                    if area_frac < 0.85 and (
-                        ymin <= _EDGE_TOUCH_MARGIN or xmin <= _EDGE_TOUCH_MARGIN or 
-                        ymax >= 1000 - _EDGE_TOUCH_MARGIN or xmax >= 1000 - _EDGE_TOUCH_MARGIN
-                    ):
-                        return True, ["quality_checker:edge_touch_completion", "reason:Frame boundary cut off"]
-                except (TypeError, ValueError):
-                    pass
+            if area_frac is not None and area_frac < 0.85 and (
+                ymin <= _EDGE_TOUCH_MARGIN or xmin <= _EDGE_TOUCH_MARGIN or 
+                ymax >= 1000 - _EDGE_TOUCH_MARGIN or xmax >= 1000 - _EDGE_TOUCH_MARGIN
+            ):
+                return True, ["quality_checker:edge_touch_completion", "reason:Frame boundary cut off"]
             return False, ["quality_checker:complete"]
 
     # 2. Fallback: Geometric BBox heuristics (when quality checker is absent / legacy)
-    if not bbox_norm or len(bbox_norm) != 4:
+    if area_frac is None or ymin is None:
         return False, reasons
 
-    try:
-        ymin, xmin, ymax, xmax = [int(v) for v in bbox_norm]
-    except (TypeError, ValueError):
-        return False, reasons
-
-    width = max(1, xmax - xmin)
-    height = max(1, ymax - ymin)
-    area = width * height
-    area_frac = area / (1000.0 * 1000.0)
-    aspect = height / float(width)
     category = _norm_category(analysis.get("category"))
 
     # Rule 1: a near-full-frame bbox means the user uploaded an already
@@ -150,16 +173,20 @@ def should_reconstruct(
         reasons.append("edge_touch_right")
 
     # Rule 3: aspect-ratio mismatch against the expected category prior.
-    if category in _CATEGORY_ASPECT_MIN:
+    if aspect is not None and category in _CATEGORY_ASPECT_MIN:
         min_aspect = _CATEGORY_ASPECT_MIN[category]
         # Only flag dresses/outerwear/bottoms when they came back too
         # wide; being TALLER than the prior is always fine.
         if category in _LARGE_CATEGORIES and aspect < min_aspect * 0.85:
             reasons.append(f"aspect_mismatch_{category}")
 
-    # Rule 4: tiny crop of a large-category garment.
+    # Rule 4: tiny crop of a large-category garment, tiny crop of any garment, or footwear subcrop
     if category in _LARGE_CATEGORIES and area_frac < _SMALL_CROP_THRESHOLD:
         reasons.append("undersized_crop")
+    elif area_frac < 0.05:
+        reasons.append("undersized_crop")
+    elif _is_footwear(analysis) and area_frac < 0.25:
+        reasons.append("footwear_crop_reconstruction")
 
     return (len(reasons) > 0), reasons
 
