@@ -68,9 +68,12 @@ async def process_image_pipeline(
         # 1. Compute BlurHash
         bh_str = _compute_blurhash(variant_img.copy())
         
-        # 2. Upload Original (as fallback)
-        orig_ext = "png" if img.mode in ("RGBA", "LA") else "jpeg"
-        orig_url = await UploadManager.upload_bytes(raw_bytes, original_mime, orig_ext)
+        # 2. Upload Original / Garment Crop (as fallback)
+        target_bytes = crop_bytes or raw_bytes
+        target_img = variant_img
+        target_mime = "image/png" if target_img.mode in ("RGBA", "LA") else original_mime
+        orig_ext = "png" if target_img.mode in ("RGBA", "LA") else "jpeg"
+        orig_url = await UploadManager.upload_bytes(target_bytes, target_mime, orig_ext)
         
         # Dictionary to store variant URLs
         variants = {
@@ -103,21 +106,29 @@ async def process_image_pipeline(
             except Exception as e:
                 logger.warning(f"Failed to generate AVIF for {size_name}: {e}")
                 
-        # 4. Update MongoDB Document — store CDN variant URLs and strip all
-        # inline base64 fields.  Fields listed in $unset are removed from
-        # the document entirely; existing items that already have these
-        # fields as data-URLs will be cleaned up the first time their item
-        # passes through the encoder pipeline (i.e. on any re-analyze call).
+        # 4. Update MongoDB Document — store CDN variant URLs and remove inline base64 placeholders.
+        # CRITICAL: clean_image_url and reconstructed_image_url are primary garment display fields
+        # and MUST NEVER be $unset. If clean_image_url is missing or is an inline data URL,
+        # update it to the CDN webp/original URL.
         db = get_db()
+        update_set = {"image_variants": variants}
+
+        try:
+            existing_doc = await db.closet_items.find_one({"id": item_id, "user_id": user_id}, {"clean_image_url": 1})
+            current_clean = existing_doc.get("clean_image_url") if existing_doc else None
+            if not current_clean or (isinstance(current_clean, str) and current_clean.startswith("data:image/")):
+                if variants.get("webp", {}).get("large"):
+                    update_set["clean_image_url"] = variants["webp"]["large"]
+                elif orig_url:
+                    update_set["clean_image_url"] = orig_url
+        except Exception as check_exc:
+            logger.warning(f"Failed checking existing clean_image_url for {item_id}: {check_exc}")
+
         await db.closet_items.update_one(
             {"id": item_id, "user_id": user_id},
             {
-                "$set": {"image_variants": variants},
+                "$set": update_set,
                 "$unset": {
-                    # Belt-and-braces cleanup for items created before this
-                    # change that may still carry these fields from older builds.
-                    "clean_image_url": "",
-                    "reconstructed_image_url": "",
                     "placeholder_data_url": "",
                 },
             }

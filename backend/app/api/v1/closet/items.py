@@ -404,7 +404,7 @@ async def create_item(
         background_tasks.add_task(
             _run_background_reconstruction,
             doc["id"],
-            raw_bytes,
+            raw_for_bg or raw_bytes,
             recon_analysis,
             payload.reconstruction_reasons,
         )

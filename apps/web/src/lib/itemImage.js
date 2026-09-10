@@ -88,10 +88,12 @@ export function bestImageUrl(item, opts = {}) {
     if (viewMode === 'original' || opts.skipReconstruction) {
       if (item.clean_image_url && item.clean_image_url !== reconUrl) {
         resolved = item.clean_image_url;
-      } else if (item.image_variants?.original) {
-        resolved = item.image_variants.original;
       } else if (item.image_variants?.webp?.large) {
         resolved = item.image_variants.webp.large;
+      } else if (item.image_variants?.webp?.medium) {
+        resolved = item.image_variants.webp.medium;
+      } else if (item.image_variants?.original) {
+        resolved = item.image_variants.original;
       } else if (item.cutout_url && item.cutout_url !== reconUrl) {
         resolved = item.cutout_url;
       } else if (item.segmented_image_url && item.segmented_image_url !== reconUrl) {

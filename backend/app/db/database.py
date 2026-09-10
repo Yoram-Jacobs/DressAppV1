@@ -279,13 +279,27 @@ async def ensure_indexes() -> None:
             clean = item.get("clean_image_url")
             recon = item.get("reconstructed_image_url")
 
+            # If clean_image_url is missing (e.g. wiped by previous encoder pipeline $unset), restore it
+            if not clean:
+                variants = item.get("image_variants") or {}
+                orig_candidate = (
+                    (variants.get("webp") or {}).get("large")
+                    or (variants.get("webp") or {}).get("medium")
+                    or variants.get("original")
+                    or item.get("cutout_url")
+                    or item.get("segmented_image_url")
+                )
+                if orig_candidate:
+                    clean = orig_candidate
+                    update_fields["clean_image_url"] = clean
+
             # Check if clean_image_url was overwritten with reconstructed_image_url
             if recon and clean and clean == recon:
                 variants = item.get("image_variants") or {}
                 orig_candidate = (
-                    variants.get("original")
-                    or (variants.get("webp") or {}).get("large")
+                    (variants.get("webp") or {}).get("large")
                     or (variants.get("webp") or {}).get("medium")
+                    or variants.get("original")
                     or item.get("cutout_url")
                     or item.get("segmented_image_url")
                 )
