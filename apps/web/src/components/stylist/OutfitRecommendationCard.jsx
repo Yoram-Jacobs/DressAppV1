@@ -126,7 +126,7 @@ export function OutfitRecommendationCard({ rec, index, sessionId, onItemClick, o
   return (
     <div
       className={cn(
-        'relative overflow-hidden rounded-[12px] bg-white border border-[#ededed] shadow-none hover:shadow-[0_4px_6px_-1px_rgb(0_0_0_/_0.1),0_2px_4px_-2px_rgb(0_0_0_/_0.1)]',
+        'relative overflow-hidden bg-white rounded-[12px] border border-border shadow-sm hover:shadow-md',
         draggable && 'cursor-grab select-none active:cursor-grabbing'
       )}
       data-testid={`outfit-recommendation-${index}`}

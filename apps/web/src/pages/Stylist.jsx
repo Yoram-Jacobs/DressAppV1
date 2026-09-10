@@ -1992,7 +1992,7 @@ export default function Stylist() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <div className="md:col-span-1">
             {/* Large Avatar Viewer */}
-            <div className="relative w-full h-full bg-[#1f5c450a] rounded-xl overflow-hidden border border-[#ededed] aspect-[4/5]">
+            <div className="relative w-full h-full bg-[#ddd] rounded-[12px] overflow-hidden border border-border aspect-[4/5]">
               <AvatarViewer
                 shapeParams={user?.avatar_shape_params || {}}
                 sex={user?.sex || 'female'}
@@ -2268,11 +2268,11 @@ export default function Stylist() {
           </div>
         </div>
       </section>
-      <section className='p-10 bg-[var(--accent-beige)]'>
+      <section className='px-[40px] py-[40px] bg-[var(--accent-beige)]'>
         <div className='w-full'>
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
             <div className={cn("h-full hidden lg:block lg:col-span-3", (sidebarCollapsed || activeTab !== 'chat') && "!hidden")}>
-              <aside className={cn("hidden lg:flex h-full w-full bg-white rounded-[20px] shadow-[0_12px_36px_rgba(20,30,25,0.06)] overflow-hidden transition-all duration-300", (sidebarCollapsed || activeTab !== 'chat') && "!hidden")}
+              <aside className={cn("hidden lg:flex h-full w-full bg-white rounded-[12px] border border-border shadow-sm hover:shadow-md overflow-hidden transition-all duration-300", (sidebarCollapsed || activeTab !== 'chat') && "!hidden")}
                 data-testid="stylist-conversation-sidebar">
                 <ConversationSidebar
                   sessions={sessions}
@@ -2306,26 +2306,26 @@ export default function Stylist() {
                   <TabsContent value="chat">{chatColumn}</TabsContent>
                   <TabsContent ref={shuffleScrollRef} value="shuffle">
                     <DressMeShuffler onSaveSuccess={handleSaveOutfitSuccess} onOpenCalendar={() => setCalendarModalOpen(true)} />
-                    <section className='bg-white p-5 mt-10 shadow-[0_12px_36px_rgba(20,30,25,0.06)] rounded-[20px]'>
+                    <section className='bg-white p-5 mt-5 shadow-sm border border-border rounded-[12px]'>
                       <div className="w-full">
                         {selectedOutfitForDetail ? (
                           renderOutfitDetailPane()
                         ) : (
                           /* Outfit Thumbnail Grid View */
                           <>
-                            <h3 className="text-xl mb-5 font-bold text-[var(--dark-color)]">
+                            <h3 className="text-[20px] mb-5 font-bold text-[var(--dark-color)]">
                               {t('components.outfitCanvas.outfit_canvas', { defaultValue: 'Saved Outfits' })}
                             </h3>
                             {outfitsLoading ? (
                               <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-4 w-full">
                                 {[1, 2, 3, 4, 5].map((i) => (
-                                  <div key={i} className="aspect-[4/5] rounded-xl border border-[var(--border)] animate-pulse bg-muted/40" />
+                                  <div key={i} className="aspect-[4/5] rounded-xl border border-border animate-pulse bg-muted/40" />
                                 ))}
                               </div>
                             ) : outfits.length === 0 ? (
-                              <Card className="w-full rounded-2xl border border-dashed border-[var(--border)] py-16 text-center">
+                              <Card className="w-full rounded-[12px] border border-dashed border-border py-16 text-center">
                                 <CardContent className="flex flex-col gap-4">
-                                  <Sparkles className="h-12 w-12 text-[var(--muted-foreground)]/60 mx-auto" />
+                                  <Sparkles className="h-12 w-12 text-primary-brand mx-auto" />
                                   <h2 className="text-xl font-extrabold text-[var(--dark-color)] mb-2">
                                     {t('common.noResults', { defaultValue: 'No outfits saved yet' })}
                                   </h2>
@@ -2349,16 +2349,16 @@ export default function Stylist() {
                                       setSelectedOutfitForDetail(o);
                                       setIsEditingOutfit(false);
                                     }}
-                                    className="relative overflow-hidden rounded-xl bg-white border border-[#ededed] shadow-none hover:shadow-[0_4px_6px_-1px_rgb(0_0_0/0.1),0_2px_4px_-2px_rgb(0_0_0/0.1)] transition-shadow cursor-pointer"
+                                    className="relative overflow-hidden rounded-[12px] bg-white border border-border shadow-sm hover:shadow-md transition-smooth cursor-pointer"
                                   >
-                                    <div className="relative w-full aspect-[4/5] bg-[var(--accent-beige)] overflow-hidden shrink-0">
+                                    <div className="relative w-full aspect-[4/5] bg-[#ddd] overflow-hidden shrink-0">
                                       <AvatarViewer
                                         shapeParams={user?.avatar_shape_params || {}}
                                         sex={user?.sex || 'female'}
                                         outfitItems={getOutfitPiecesMap(o)}
                                       />
                                     </div>
-                                    <div className="p-2.5">
+                                    <div className="p-2">
                                       <p className="text-xs text-center font-bold text-[#666] leading-[22px]">{getOutfitName(o.name)}</p>
                                     </div>
                                   </Card>
@@ -2567,7 +2567,7 @@ export default function Stylist() {
                                             <div className="min-w-0 flex-1">
                                               <h6 className="text-[12px] font-bold text-dark-brand truncate">{labelForRole(g.role, t)}</h6>
                                               <p className="text-[10px] text-text-brand font-semibold truncate">
-                                               {g.name || g.title || cItem?.title || 'Garment'}
+                                                {g.name || g.title || cItem?.title || 'Garment'}
                                               </p>
                                             </div>
                                           </div>
@@ -2663,7 +2663,7 @@ export default function Stylist() {
                                     </span>
 
                                     {/* Outfit Thumbnail */}
-                                    <div className="w-full flex-grow aspect-[4/5] mt-0.5 rounded-[12px] overflow-hidden relative flex items-center justify-center bg-accent-beige border border-dashed border-border">
+                                    <div className="w-full flex-grow aspect-[4/5] rounded-[12px] overflow-hidden relative flex items-center justify-center bg-accent-beige">
                                       {dayOutfit ? (
                                         <div className="absolute inset-0 scale-[0.95]">
                                           <AvatarViewer
@@ -2871,16 +2871,13 @@ export default function Stylist() {
           </Dialog>
           {/* Outfit Selector Dialog */}
           <Dialog open={schedulingDate !== null} onOpenChange={(open) => { if (!open) setSchedulingDate(null); }}>
-            <DialogContent className="sm:max-w-[425px] max-h-[90vh] overflow-y-auto" data-testid="stylist-schedule-dialog">
-              <DialogHeader>
-                <DialogTitle>
-                  {t('calendar.scheduleTitle', { defaultValue: 'Schedule Outfit' })}
-                </DialogTitle>
-                <div className="text-xs text-text-brand">
-                  {schedulingDate && formatMonthDay(new Date(schedulingDate), t)}
-                </div>
-              </DialogHeader>
-
+            <DialogContent className="!max-w-3xl max-h-[90vh] overflow-y-auto" data-testid="stylist-schedule-dialog">
+              <DialogTitle>
+                {t('calendar.scheduleTitle', { defaultValue: 'Schedule Outfit' })}
+              </DialogTitle>
+              <div className="text-[14px] font-semibold text-text-brand">
+                {schedulingDate && formatMonthDay(new Date(schedulingDate), t)}
+              </div>
               {/* If there's an outfit scheduled for the active date, show a quick removal card */}
               {schedulingDate && (() => {
                 const dayOutfit = outfits.find(o => o.usage?.date === schedulingDate);
@@ -2918,12 +2915,12 @@ export default function Stylist() {
 
               {/* AI Daily Suggestions */}
               {dailyRecommendations.length > 0 && (
-                <div className="space-y-3 mb-6 pb-6 border-b border-border">
+                <div className="space-y-3 mb-3">
                   <h4 className="text-xs font-semibold text-primary-brand flex items-center gap-1.5 uppercase">
                     <Sparkles className="h-3.5 w-3.5 text-primary-brand" />
                     {t('calendar.dailyAISuggestions', { defaultValue: 'AI Daily Suggestions' })}
                   </h4>
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-3 gap-3">
                     {dailyRecommendations.map((rec, idx) => (
                       <div
                         key={`daily-rec-${idx}`}
@@ -2935,16 +2932,16 @@ export default function Stylist() {
                           }
                           setSchedulingDate(null);
                         }}
-                        className="flex flex-col items-center p-2 rounded-xl border border-primary-brand/30 bg-primary-shadow hover:border-primary-brand cursor-pointer text-center group transition-all relative overflow-hidden"
+                        className="flex flex-col items-center rounded-[12px] border border-border hover:border-primary-brand cursor-pointer text-center group transition-all relative overflow-hidden"
                       >
-                        <div className="w-full aspect-[4/5] bg-secondary/5 rounded-lg overflow-hidden relative shrink-0">
+                        <div className="w-full aspect-[4/5] bg-accent-beige overflow-hidden relative shrink-0">
                           <AvatarViewer
                             shapeParams={user?.avatar_shape_params || {}}
                             sex={user?.sex || 'female'}
                             outfitItems={getRecommendationPiecesMap(rec, closetItems)}
                           />
                         </div>
-                        <div className="text-[11px] font-semibold truncate text-text-brand mt-2 w-full px-1">
+                        <div className="p-2 text-[12px] font-semibold truncate text-text-brand w-full">
                           {rec.name}
                         </div>
                       </div>
@@ -2952,25 +2949,24 @@ export default function Stylist() {
                   </div>
                 </div>
               )}
-
               {/* List of saved outfits */}
               <div className="space-y-3">
-                <h4 className="text-xs font-semibold text-text-brand uppercase">
+                <h4 className="text-xs font-semibold text-text-brand">
                   {t('calendar.selectSavedOutfit', { defaultValue: 'Select Saved Outfit' })}
                 </h4>
                 {outfitsLoading ? (
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-3 gap-3">
                     {[1, 2, 3, 4].map(i => (
-                      <div key={i} className="aspect-[4/5] rounded-xl animate-pulse bg-muted/40 border border-border" />
+                      <div key={i} className="aspect-[4/5] animate-pulse bg-muted/40 border border-border" />
                     ))}
                   </div>
                 ) : outfits.length === 0 ? (
-                  <div className="text-center py-6 text-xs text-text-brand border border-dashed border-border/60 rounded-xl">
+                  <div className="text-center py-6 text-xs text-text-brand border border-dashed border-border rounded-xl">
                     {t('outfits.noSavedOutfitsDesc', { defaultValue: 'No outfits saved yet' })}
                   </div>
                 ) : (
-                  <div className="max-h-[50vh] overflow-y-auto pe-1 scrollbar-thin">
-                    <div className="grid grid-cols-2 gap-3">
+                  <div className="h-[50vh] overflow-y-auto pe-1 mb-[40px] scrollbar-thin">
+                    <div className="grid grid-cols-3 gap-3">
                       {outfits.map((o) => {
                         const isAlreadyScheduled = o.usage?.date === schedulingDate;
                         return (
@@ -2982,11 +2978,11 @@ export default function Stylist() {
                               }
                             }}
                             className={cn(
-                              "flex flex-col items-center p-2 rounded-[12px] border bg-card hover:border-primary-brand hover:bg-secondary/5 cursor-pointer text-center group transition-all relative overflow-hidden",
+                              "flex flex-col items-center rounded-[12px] border border-border hover:border-primary-brand cursor-pointer text-center group transition-all relative overflow-hidden",
                               isAlreadyScheduled ? "border-primary-brand bg-primary-shadow cursor-default hover:border-primary-brand hover:bg-primary-shadow" : "border-border"
                             )}
                           >
-                            <div className="w-full aspect-[4/5] bg-secondary/5 rounded-[12px] overflow-hidden relative shrink-0">
+                            <div className="w-full aspect-[4/5] bg-accent-beige overflow-hidden relative shrink-0">
                               <AvatarViewer shapeParams={user?.avatar_shape_params || {}} sex={user?.sex || 'female'} outfitItems={getOutfitPiecesMap(o)} />
                               {isAlreadyScheduled && (
                                 <div className="absolute inset-0 bg-background/60 flex items-center justify-center">
@@ -2996,7 +2992,7 @@ export default function Stylist() {
                                 </div>
                               )}
                             </div>
-                            <div className="text-[12px] font-semibold truncate text-text-brand mt-2 w-full px-1">
+                            <div className="p-2 text-[12px] font-semibold truncate text-text-brand w-full">
                               {getOutfitName(o.name)}
                             </div>
                           </div>

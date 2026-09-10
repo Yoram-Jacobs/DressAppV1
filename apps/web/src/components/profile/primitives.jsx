@@ -38,12 +38,12 @@ export function PhotoSlot({ label, value, onChange, testid }) {
 
   return (
     <div
-      className="rounded-2xl border border-border p-3 bg-secondary/40"
+      className="rounded-[12px] border border-border p-3 bg-primary-shadow"
       data-testid={`profile-photo-${testid}`}
     >
-      <div className="caps-label text-muted-foreground mb-2">{label}</div>
+      <div className="text-[12px] font-semibold text-text-brand mb-2">{label}</div>
       <div className="flex items-center gap-3">
-        <div className="relative h-20 w-20 rounded-xl overflow-hidden bg-background border border-border shrink-0">
+        <div className="relative h-20 w-20 rounded-[8px] overflow-hidden bg-accent-beige border border-border shrink-0">
           {resolvedValue ? (
             <img
               src={resolvedValue}
@@ -51,7 +51,7 @@ export function PhotoSlot({ label, value, onChange, testid }) {
               className="h-full w-full object-cover"
             />
           ) : (
-            <div className="h-full w-full flex items-center justify-center text-muted-foreground">
+            <div className="h-full w-full flex items-center justify-center text-text-brand">
               <ImgIcon className="h-5 w-5 opacity-60" />
             </div>
           )}
@@ -60,40 +60,40 @@ export function PhotoSlot({ label, value, onChange, testid }) {
           <Button
             size="sm"
             variant="outline"
-            className="rounded-lg whitespace-nowrap"
+            className="!gap-1 whitespace-nowrap"
             disabled={busy}
             onClick={() => cameraRef.current?.click()}
             data-testid={`profile-photo-${testid}-camera-btn`}
           >
             {busy ? (
-              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+              <Loader2 className="!h-3.5 !w-3.5 animate-spin" />
             ) : (
               <>
-                <Camera className="h-3.5 w-3.5 me-1" /> {t('profile.takePhoto')}
+                <Camera className="!h-3.5 !w-3.5" /> {t('profile.takePhoto')}
               </>
             )}
           </Button>
           <Button
             size="sm"
             variant="outline"
-            className="rounded-lg whitespace-nowrap"
+            className="!gap-1 whitespace-nowrap"
             disabled={busy}
             onClick={() => inputRef.current?.click()}
             data-testid={`profile-photo-${testid}-upload-btn`}
           >
-            <ImgIcon className="h-3.5 w-3.5 me-1" />
+            <ImgIcon className="!h-3.5 !w-3.5" />
             {value ? t('profile.replacePhoto') : t('profile.uploadPhoto')}
           </Button>
           {value && (
             <Button
               size="sm"
-              variant="ghost"
-              className="rounded-lg text-rose-700"
+              variant="destructive"
+              className="!gap-1"
               disabled={busy}
               onClick={() => onChange(null)}
               data-testid={`profile-photo-${testid}-remove-btn`}
             >
-              <Trash2 className="h-3.5 w-3.5 me-1" />
+              <Trash2 className="!h-3.5 !w-3.5" />
               {t('profile.removePhoto')}
             </Button>
           )}
@@ -137,8 +137,7 @@ export function MeasurementNumField({ field, label, value, onChange, testId, isA
         <span className="flex items-center gap-1.5">
           {label}
           {isAi && (
-            <Badge variant="outline" className="text-[9px] bg-purple-50 text-purple-700 dark:bg-purple-950/40 dark:text-purple-300 border-purple-200/50 py-0 px-1 rounded flex items-center gap-0.5 normal-case font-normal">
-              <Sparkles className="h-2.5 w-2.5 text-purple-600 dark:text-purple-400" />
+            <Badge variant="outline" className="text-[10px] bg-purple-50 text-purple-700 dark:bg-purple-950/40 dark:text-purple-300 border-purple-200/50 py-1 px-2 rounded-full flex items-center gap-0.5 normal-case font-semibold">
               AI
             </Badge>
           )}
@@ -152,7 +151,6 @@ export function MeasurementNumField({ field, label, value, onChange, testId, isA
           autoComplete="off"
           value={predicting ? '...' : (value ?? '')}
           onChange={(e) => onChange(field, e.target.value)}
-          className={`rounded-xl bg-card transition-all duration-300 ${isAi ? 'border-purple-200/60 focus-visible:ring-purple-400 focus-visible:border-purple-400 dark:border-purple-900/40' : ''}`}
           data-testid={testId}
           disabled={predicting}
         />
@@ -173,7 +171,6 @@ export function MeasurementTextField({ field, label, value, onChange, testId }) 
         autoComplete="off"
         value={value ?? ''}
         onChange={(e) => onChange(field, e.target.value)}
-        className="rounded-xl bg-card"
         data-testid={testId}
       />
     </Field>

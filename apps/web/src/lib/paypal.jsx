@@ -103,7 +103,7 @@ export function PayPalCheckoutButton({
   onError,
   amountLabel = 'Pay with PayPal',
   disabled = false,
-  className = '',
+  className = 'w-full',
   testId = 'paypal-checkout-button',
 }) {
   const config = usePayPal();

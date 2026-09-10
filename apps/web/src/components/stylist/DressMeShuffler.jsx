@@ -505,7 +505,7 @@ export default function DressMeShuffler({ onSaveSuccess, onOpenCalendar }) {
       <div className="flex flex-col items-start bg-primary-shadow p-[18px] rounded-[12px] border border-border w-full">
         <div className="flex items-center gap-2 mb-3.5">
           {rowIcons[roleKey]}
-          <span className="text-[12.5px] uppercase tracking-[0.06em] text-[#1f2b23] font-extrabold">{label}</span>
+          <span className="text-[12px] text-dark-brand font-extrabold">{label}</span>
         </div>
         <div className="w-full relative px-10">
           <Carousel
