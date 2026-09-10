@@ -2,7 +2,6 @@ import { Outlet, Navigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { TopNav } from '@/components/TopNav';
-import { Footer } from "@/components/Footer";
 import { BottomTabs } from '@/components/BottomTabs';
 import { LanguageSync } from '@/components/LanguageSync';
 import { LocationBanner } from '@/components/LocationBanner';
@@ -189,7 +188,6 @@ export const AppLayout = () => {
       <main id="main-content" tabIndex={-1} className="flex-1 pb-safe-tabs md:pb-10">
         <Outlet />
       </main>
-      <Footer />
       <BottomTabs />
 
       {/* Onboarding Migration Question Modal — desktop only */}
@@ -227,3 +225,4 @@ export const AppLayout = () => {
     </div>
   );
 };
+

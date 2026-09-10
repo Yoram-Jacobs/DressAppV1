@@ -22,8 +22,17 @@ import {
   Send,
   Sparkles,
   Check,
-  Instagram,
 } from 'lucide-react';
+
+function InstagramIcon(props) {
+  return (
+    <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <rect width="20" height="20" x="2" y="2" rx="5" ry="5" />
+      <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
+      <line x1="17.5" x2="17.51" y1="6.5" y2="6.5" />
+    </svg>
+  );
+}
 
 export default function ShareOutfitModal({ open, onOpenChange, outfit, sessionId }) {
   const { t } = useTranslation();
@@ -329,7 +338,7 @@ export default function ShareOutfitModal({ open, onOpenChange, outfit, sessionId
             variant="outline"
             className="rounded-xl gap-2 font-medium text-xs py-5"
           >
-            {rendering ? <Loader2 className="h-4 w-4 animate-spin" /> : <Instagram className="h-4 w-4" />}
+            {rendering ? <Loader2 className="h-4 w-4 animate-spin" /> : <InstagramIcon className="h-4 w-4" />}
             Instagram
           </Button>
 

@@ -1,7 +1,7 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { AccordionItem, AccordionTrigger, AccordionContent } from '@/components/ui/accordion';
-import { Sparkles, Chrome, Bookmark, Info } from 'lucide-react';
+import { Sparkles, Globe, Bookmark, Info } from 'lucide-react';
 
 export function ShoppingAssistant() {
   const { t } = useTranslation();
@@ -31,7 +31,7 @@ export function ShoppingAssistant() {
         {/* Part 1: Chrome Extension Store Placeholder */}
         <div className="space-y-2 rounded-xl border bg-card p-4">
           <div className="flex items-center gap-2">
-            <Chrome className="h-5 w-5 text-primary" />
+            <Globe className="h-5 w-5 text-primary" />
             <h4 className="font-semibold text-sm">{t('profile.chromeStoreTitle', { defaultValue: 'Chrome Web Store Extension' })}</h4>
           </div>
           <p className="text-xs text-muted-foreground">

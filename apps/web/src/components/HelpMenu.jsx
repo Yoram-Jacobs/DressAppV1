@@ -4,7 +4,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { 
   BookOpen, Info, ShieldAlert, Sparkles, User, BarChart4, 
   MapPin, Phone, HelpCircle, AlertTriangle, Layers, Wallet, 
-  ShoppingBag, Search, ClipboardList, Camera, Mic, Grid, TrendingUp, UserRound, Loader2, Bell, Chrome, Megaphone
+  ShoppingBag, Search, ClipboardList, Camera, Mic, Grid, TrendingUp, UserRound, Loader2, Bell, Globe, Megaphone
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/lib/auth';
@@ -29,7 +29,7 @@ export default function HelpMenu() {
     { id: 'dress-up', label: t('help.planner_title'), icon: Layers, wiki: 'outfit_planner' },
     { id: 'suitcase', label: t('help.suitcase_title'), icon: MapPin, wiki: 'suitcase_packing' },
     { id: 'marketplace', label: t('help.market_title'), icon: ShoppingBag, wiki: 'marketplace_listing' },
-    { id: 'shopping-assistant', label: t('help.shopping_assistant_title'), icon: Chrome, wiki: 'chrome_extension' },
+    { id: 'shopping-assistant', label: t('help.shopping_assistant_title'), icon: Globe, wiki: 'chrome_extension' },
     { id: 'import-wardrobe', label: t('help.import_wardrobe_title'), icon: Search, wiki: 'import_wardrobe' },
     { id: 'trend-scout', label: t('help.trend_scout_title'), icon: TrendingUp, wiki: 'trend_scout' },
     { id: 'experts', label: t('help.experts_title'), icon: UserRound, wiki: 'experts_registry' },
@@ -585,7 +585,7 @@ export default function HelpMenu() {
             {activeTab === 'shopping-assistant' && (
               <div className="space-y-4">
                 <h2 className="text-2xl font-bold flex items-center gap-2 border-b pb-2 text-primary">
-                  <Chrome className="h-6 w-6" /> {t('help.shopping_assistant_title')}
+                  <Globe className="h-6 w-6" /> {t('help.shopping_assistant_title')}
                 </h2>
                 <p className="text-muted-foreground">{t('help.shopping_assistant_p1')}</p>
                 <div className="space-y-3">
