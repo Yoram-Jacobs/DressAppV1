@@ -5,18 +5,20 @@ import { Shirt, Sparkles, Store, User, Camera } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/lib/auth';
 import { resolveMediaUrl } from '@/lib/itemImage';
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 
 const BottomTabAvatar = ({ user, isActive, label }) => {
   const [imgFailed, setImgFailed] = useState(false);
   const rawUrl = user?.face_photo_url || user?.avatar_url;
   const photoUrl = resolveMediaUrl(rawUrl);
 
-  const prevUrlRef = useState(rawUrl);
-  if (prevUrlRef[0] !== rawUrl) {
-    prevUrlRef[1](rawUrl);
-    if (imgFailed) setImgFailed(false);
-  }
+  const prevUrlRef = useRef(rawUrl);
+  useEffect(() => {
+    if (prevUrlRef.current !== rawUrl) {
+      prevUrlRef.current = rawUrl;
+      setImgFailed(false);
+    }
+  }, [rawUrl]);
 
   if (photoUrl && !imgFailed) {
     return (

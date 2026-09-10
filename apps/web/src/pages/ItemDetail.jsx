@@ -674,6 +674,11 @@ export default function ItemDetail() {
   const load = async () => {
     try {
       const data = await api.getItem(id);
+      if (!data) {
+        toast.error(t('itemDetail.notFound'));
+        nav('/closet', { replace: true });
+        return;
+      }
       setItem(data);
       setForm(toFormState(data, user));
       if (data?.preferred_image_view) {
@@ -1729,18 +1734,16 @@ export default function ItemDetail() {
                   <button
                     type="button"
                     onClick={() => {
-                      setShowingOriginal((s) => {
-                        const next = !s;
-                        const pref = next ? 'clean' : 'reconstructed';
-                        setStoredViewPreference(next ? 'original' : 'repaired');
-                        if (item?.id) {
-                          api.patchItem(item.id, { preferred_image_view: pref }).catch(() => { });
-                          closetStore.upsert({ id: item.id, preferred_image_view: pref });
-                          setItem((prev) => (prev ? { ...prev, preferred_image_view: pref } : prev));
-                          setForm((prev) => (prev ? { ...prev, preferred_image_view: pref } : prev));
-                        }
-                        return next;
-                      });
+                      const next = !showingOriginal;
+                      setShowingOriginal(next);
+                      const pref = next ? 'clean' : 'reconstructed';
+                      setStoredViewPreference(next ? 'original' : 'repaired');
+                      if (item?.id) {
+                        api.patchItem(item.id, { preferred_image_view: pref }).catch(() => { });
+                        closetStore.upsert({ id: item.id, preferred_image_view: pref });
+                        setItem((prev) => (prev ? { ...prev, preferred_image_view: pref } : prev));
+                        setForm((prev) => (prev ? { ...prev, preferred_image_view: pref } : prev));
+                      }
                     }}
                     className="absolute top-3 end-3 inline-flex items-center gap-1.5 rounded-full bg-background/90 backdrop-blur border border-border px-2.5 py-1 text-[11px] font-medium hover:bg-secondary transition-colors"
                     data-testid="item-detail-toggle-reconstruction"

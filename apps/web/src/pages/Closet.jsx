@@ -766,8 +766,18 @@ export default function Closet() {
         // Apply upserts EVEN IF the effect was cancelled while we
         // awaited \u2014 the data is fresh; dropping it would force the
         // next mount to refetch unnecessarily.
-        results.forEach((it) => {
-          if (it && it.id) closetStore.upsert(it);
+        results.forEach((it, idx) => {
+          if (it && it.id) {
+            closetStore.upsert(it);
+          } else {
+            const missingId = stillPending[idx];
+            if (missingId) {
+              const live = (closetStore.getSnapshot().items || []).find((x) => x && x.id === missingId);
+              if (live) {
+                closetStore.upsert({ ...live, clean_image_status: 'failed', group_analysis_status: 'failed' });
+              }
+            }
+          }
         });
       } catch {
         /* swallow \u2014 polling is best-effort */

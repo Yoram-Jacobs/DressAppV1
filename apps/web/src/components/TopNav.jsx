@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Link, NavLink, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
@@ -21,11 +21,13 @@ const NavAvatar = ({ user, initials, className = "h-full w-full", imgClassName =
   const photoUrl = resolveMediaUrl(rawUrl);
 
   // Reset failure state whenever the user's photo URL changes
-  const prevUrlRef = useState(rawUrl);
-  if (prevUrlRef[0] !== rawUrl) {
-    prevUrlRef[1](rawUrl);
-    if (imgFailed) setImgFailed(false);
-  }
+  const prevUrlRef = useRef(rawUrl);
+  useEffect(() => {
+    if (prevUrlRef.current !== rawUrl) {
+      prevUrlRef.current = rawUrl;
+      setImgFailed(false);
+    }
+  }, [rawUrl]);
 
   if (photoUrl && !imgFailed) {
     return (
