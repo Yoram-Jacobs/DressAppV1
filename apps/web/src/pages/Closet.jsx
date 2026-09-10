@@ -1,6 +1,6 @@
 /* global setTimeout, clearTimeout */
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation, Trans } from 'react-i18next';
 import {
   Plus, Search, Trash2, CheckCircle2, Circle, X, CheckSquare,
@@ -1593,6 +1593,7 @@ export default function Closet() {
 /* -------------------- shared card body -------------------- */
 function ItemCardInner({ item, isSelected, showCheckbox, score }) {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const groupItems = useMemo(() => {
     if (!item.group_id) return [];
     const allItems = (closetStore.getSnapshot().items || []).filter(Boolean);
@@ -1797,14 +1798,19 @@ function ItemCardInner({ item, isSelected, showCheckbox, score }) {
             hasn't yet refined the listing's price / mode / description.
             One tap takes them to the edit-listing form. */}
         {item.auto_listing_needs_completion && item.auto_listing_id && (
-          <Link
-            to={`/marketplace/listing/${item.auto_listing_id}/edit`}
+          <button
+            type="button"
             data-testid="closet-item-complete-listing-cta"
-            className="mt-2 flex items-center justify-center gap-1.5 text-[11px] uppercase tracking-wider font-semibold py-1.5 rounded-md bg-[hsl(var(--accent))]/12 text-[hsl(var(--accent))] hover:bg-[hsl(var(--accent))]/20 transition-colors"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              navigate(`/marketplace/listing/${item.auto_listing_id}/edit`);
+            }}
+            className="w-full mt-2 flex items-center justify-center gap-1.5 text-[11px] uppercase tracking-wider font-semibold py-1.5 rounded-md bg-[hsl(var(--accent))]/12 text-[hsl(var(--accent))] hover:bg-[hsl(var(--accent))]/20 transition-colors cursor-pointer"
           >
             <Sparkles className="h-3 w-3" />
             {t('closet.completeListingCta', { defaultValue: 'Complete listing' })}
-          </Link>
+          </button>
         )}
       </CardContent>
     </Card>
