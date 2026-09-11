@@ -1150,35 +1150,13 @@ async def analyze_chart(
     last_error: str | None = None
 
     # ---------------------------------------------------------------
-    # Step 1 — heuristic regex first (free, deterministic, instant).
-    # Only fires when the caller forwarded structured chart text and
-    # the user has measurements. Skipped silently otherwise.
+    # Step 1 — Gemini 2.5 Flash vision OCR + sizing in one shot.
+    # The screenshot/crop is the absolute source of truth! If a screenshot
+    # is provided, we MUST prioritize Vision over text heuristics because
+    # DOM text extraction often picks up unrelated product specs or body
+    # text (e.g. random sizes on the page).
     # ---------------------------------------------------------------
-    candidate_texts: list[str] = []
-    for t in (chart_text, chart_text_html, chart_text_innertext):
-        if t and t not in candidate_texts:
-            candidate_texts.append(t)
-    for cand in candidate_texts:
-        decided = _heuristic_match(
-            chart_text=cand,
-            measurements=measurements,
-            garment_type=payload.garment_type,
-        )
-        if decided is not None:
-            parsed = decided
-            source = "heuristic"
-            log.info(
-                "size-chart resolved by heuristic in %d ms",
-                int((time.time() - t0) * 1000),
-            )
-            break
-
-    # ---------------------------------------------------------------
-    # Step 2 — Gemini 2.5 Flash vision OCR + sizing in one shot.
-    # The screenshot is the source of truth. Gemini reads the chart,
-    # matches the user's measurements, and emits the JSON answer.
-    # ---------------------------------------------------------------
-    if parsed is None and payload.chart_screenshot_b64:
+    if payload.chart_screenshot_b64:
         user_prompt = _build_user_prompt(
             measurements=measurements,
             garment_type=payload.garment_type,
@@ -1235,6 +1213,30 @@ async def analyze_chart(
                 extra={"provider": "gemini", "op": "size-chart"},
             )
             log.info("Gemini vision call failed: %s", exc)
+
+    # ---------------------------------------------------------------
+    # Step 2 — heuristic regex fallback (free, deterministic, instant).
+    # Only fires if Gemini vision wasn't available or didn't return a match.
+    # ---------------------------------------------------------------
+    if parsed is None:
+        candidate_texts: list[str] = []
+        for t in (chart_text, chart_text_html, chart_text_innertext):
+            if t and t not in candidate_texts:
+                candidate_texts.append(t)
+        for cand in candidate_texts:
+            decided = _heuristic_match(
+                chart_text=cand,
+                measurements=measurements,
+                garment_type=payload.garment_type,
+            )
+            if decided is not None:
+                parsed = decided
+                source = "heuristic"
+                log.info(
+                    "size-chart resolved by heuristic in %d ms",
+                    int((time.time() - t0) * 1000),
+                )
+                break
 
     # ---------------------------------------------------------------
     # Step 2.5 — Gemini 2.5 Flash text completion fallback.

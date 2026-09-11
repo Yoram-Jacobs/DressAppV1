@@ -774,8 +774,8 @@ async function cropAndAnalyze(rect, targetEl = null) {
 
     await _sendForAnalysis({
       chart_screenshot_b64: cropped,
-      chart_html: fallbackHtml,
-      chart_text: fallbackText,
+      chart_html: cropped ? null : fallbackHtml,
+      chart_text: cropped ? null : fallbackText,
       garment_type: generic.detectGarmentType(document),
     });
   } catch (e) {
