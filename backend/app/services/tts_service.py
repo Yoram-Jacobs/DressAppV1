@@ -49,7 +49,7 @@ class GeminiTTSService:
                 }
             }
             resp = await client._client.aio.models.generate_content(
-                model="gemini-2.5-flash",
+                model="gemini-3.5-flash",
                 contents=f"Read this text aloud: {text}",
                 config=config,
             )
