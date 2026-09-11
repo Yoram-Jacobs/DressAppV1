@@ -63,76 +63,90 @@ export function detectChartImage(_doc = document) {
   const scored = imgs.map((img) => ({ img, score: _scoreChartImage(img) }));
   scored.sort((a, b) => b.score - a.score);
   const top = scored[0];
-  return top && top.score >= 6 ? top.img : null;
+  // Must achieve at least 15 points (positive evidence + visibility)
+  return top && top.score >= 15 ? top.img : null;
 }
 
 function _scoreChartImage(img) {
-  let score = 0;
-
   // --- bail-out conditions -------------------------------------------
   const r = img.getBoundingClientRect();
   const area = Math.max(0, r.width) * Math.max(0, r.height);
-  if (area < 30_000) return -1;            // too small to be a chart
-  if (r.width < 160 || r.height < 120) return -1;
+  if (area < 25_000) return -1;            // too small to be a chart
+  if (r.width < 140 || r.height < 100) return -1;
   const aspect = r.width / r.height;
-  if (aspect < 0.4 || aspect > 4.0) return -1; // banners / vertical strips
+  if (aspect < 0.25 || aspect > 5.0) return -1; // allow standard chart shapes
+
+  let positiveEvidence = 0;
 
   // --- positive signals ----------------------------------------------
   const alt = (img.alt || '').toLowerCase();
-  const aria = (img.getAttribute('aria-label') || '').toLowerCase();
+  const aria = (img.getAttribute('aria-label') || img.getAttribute('title') || '').toLowerCase();
   const meta = `${alt} ${aria}`;
-  if (STRONG_KEYWORDS.some((k) => meta.includes(k))) score += 30;
-  HINT_KEYWORDS.forEach((k) => { if (meta.includes(k)) score += 2; });
+  if (STRONG_KEYWORDS.some((k) => meta.includes(k))) positiveEvidence += 30;
+  HINT_KEYWORDS.forEach((k) => { if (meta.includes(k)) positiveEvidence += 2; });
 
-  const src = (img.currentSrc || img.src || '').toLowerCase();
-  if (/(size|sizing|chart|measure)/.test(src)) score += 8;
+  const src = (img.currentSrc || img.src || img.dataset?.src || img.getAttribute('data-src') || '').toLowerCase();
+  if (/(size|sizing|chart|measure|guide)/.test(src)) positiveEvidence += 10;
 
-  // Boost for being inside an open modal / size-guide-named container.
-  if (img.closest('[role="dialog"], [aria-modal="true"], dialog[open]')) score += 14;
-  if (img.closest('[class*=size-guide i], [class*=sizeGuide], [class*=size-chart i], [id*=size-guide i], [id*=sizeChart i]')) score += 18;
+  // Boost for being inside a size-guide-named container
+  if (img.closest('[class*=size-guide i], [class*=sizeGuide], [class*=size-chart i], [id*=size-guide i], [id*=sizeChart i]')) {
+    positiveEvidence += 25;
+  }
 
-  // Boost for being inside the visible Description / Specifications
-  // tab — the most common home for chart-as-image listings.
-  const descScope = img.closest('[id*=description i], [class*=description i], [id*=detail i], [class*=detail i], [role="tabpanel"]');
-  if (descScope && _isVisible(descScope) && _intersectsViewport(descScope)) score += 10;
-
-  // Surrounding text containing measurement keywords (cheap, very
-  // effective on stores that publish chart-as-image but DO put the
-  // word "size chart" in a heading near it).
-  const ctx = _nearbyText(img, 1200).toLowerCase();
+  // Surrounding text containing measurement keywords
+  const ctx = _nearbyText(img, 1500).toLowerCase();
+  if (STRONG_KEYWORDS.some((k) => ctx.includes(k))) positiveEvidence += 20;
   let kwHits = 0;
   HINT_KEYWORDS.forEach((k) => { if (ctx.includes(k)) kwHits += 1; });
-  score += Math.min(kwHits * 1.5, 9);
-  if (STRONG_KEYWORDS.some((k) => ctx.includes(k))) score += 12;
+  positiveEvidence += Math.min(kwHits * 2, 12);
 
-  // Visible & in-viewport bonus (the user clicks the FAB while looking
-  // at the chart, so it's almost always on screen).
-  if (_intersectsViewport(img)) score += 6;
+  // CRITICAL GUARDRAIL: An image MUST have positive textual/semantic evidence
+  // that it is actually a size chart! Without positive evidence, it is an
+  // ordinary product photo, car product, banner, or icon. Reject immediately!
+  if (positiveEvidence <= 0) return -1;
 
-  // Penalise images that are obviously product photos.
-  if (img.closest('a[href]')) score -= 4;
-  if (img.closest('button')) score -= 4;
+  let score = positiveEvidence;
+
+  // Boost for being inside an open modal / dialog
+  if (img.closest('[role="dialog"], [aria-modal="true"], dialog[open], [class*="modal" i], [class*="layer" i], [class*="drawer" i]')) {
+    score += 10;
+  }
+
+  // Boost for being inside the visible Description / Specifications tab
+  const descScope = img.closest('[id*=description i], [class*=description i], [id*=detail i], [class*=detail i], [role="tabpanel"]');
+  if (descScope && _isVisible(descScope)) score += 8;
+
+  // Visible & in-viewport bonus
+  if (_intersectsViewport(img)) score += 4;
+
+  // Penalise images that are obviously product photo thumbnails or buttons
+  if (img.closest('a[href]')) score -= 6;
+  if (img.closest('button')) score -= 8;
   let cur = img;
   for (let i = 0; i < 6 && cur; i += 1) {
     const cls = `${cur.className || ''} ${cur.id || ''}`;
-    if (typeof cls === 'string' && GALLERY_HINTS.test(cls)) { score -= 14; break; }
+    if (typeof cls === 'string' && GALLERY_HINTS.test(cls)) { score -= 18; break; }
     cur = cur.parentElement;
   }
 
-  // Finally, a faint preference for larger images so that, all else
-  // equal, we pick the bigger candidate.
   score += Math.min(area / 200_000, 4);
   return score;
 }
 
 function _nearbyText(el, maxChars) {
-  // Pull text from the nearest "container" ancestor — a heading, a
-  // figcaption, or an enclosing div with a manageable text payload.
   let cur = el.parentElement;
   let collected = '';
-  for (let i = 0; i < 4 && cur; i += 1) {
+  // Climb up to 8 ancestor levels to reach description headers in modern component trees
+  for (let i = 0; i < 8 && cur && cur !== document.body; i += 1) {
     const t = (cur.innerText || '').slice(0, maxChars);
     if (t.length > collected.length) collected = t;
+    // Also check immediate previous sibling elements (e.g. <h3>SIZE CHART</h3><img>)
+    let sib = cur.previousElementSibling;
+    while (sib) {
+      const sibText = (sib.innerText || '').slice(0, 300);
+      if (sibText) collected += ' ' + sibText;
+      sib = sib.previousElementSibling;
+    }
     if (collected.length >= maxChars) break;
     cur = cur.parentElement;
   }

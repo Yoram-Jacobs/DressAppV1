@@ -189,9 +189,20 @@ async function _captureViewportWithPermission() {
 // ---------------------------------------------------------------------
 function findVisibleScopes() {
   const scopes = [];
+  // 1. Modals, dialogs, drawers, and overlay popups
   document.querySelectorAll(
-    '[role="dialog"], [aria-modal="true"], dialog[open], [class*=modal i][class*=open i], [class*=Modal i]:not([aria-hidden="true"])'
+    '[role="dialog"], [aria-modal="true"], dialog[open], ' +
+    '[class*=modal i], [class*=popup i], [class*=drawer i], [id*=modal i], [id*=popup i], ' +
+    '[class*=layer i], [class*=overlay i], [class*=comet-v2 i], [class*=bundle i], [class*=quickview i]'
   ).forEach((el) => { if (_isVisible(el)) scopes.push(el); });
+
+  // If an active modal / dialog is open on the page, the user is focused on it.
+  // ONLY return the modal scopes so background feed products are NEVER touched.
+  if (scopes.length > 0) {
+    return Array.from(new Set(scopes));
+  }
+
+  // 2. Tab panels and description sections on standard product pages
   document.querySelectorAll(
     '[role="tabpanel"]:not([hidden]):not([aria-hidden="true"]), [class*=tab-panel i]:not([aria-hidden="true"])'
   ).forEach((el) => { if (_isVisible(el) && _intersectsViewport(el)) scopes.push(el); });
@@ -216,9 +227,15 @@ function _intersectsViewport(el) {
 
 function findInScopes(detector) {
   const scopes = findVisibleScopes();
-  for (const s of scopes) {
-    const found = detector(s);
-    if (found) return found;
+  if (scopes.length > 0) {
+    for (const s of scopes) {
+      const found = detector(s);
+      if (found) return found;
+    }
+    // A modal or focused section is open!
+    // Never fall back to document root because doing so scans background elements
+    // from other products on the page (e.g. bundle deals / feed items).
+    return null;
   }
   return detector(document) || null;
 }
@@ -255,19 +272,42 @@ async function onAnalyze(ev) {
       return;
     }
 
-    // Snapshot-only flow: per product direction we no longer ship
-    // raw HTML to the backend. If we detected a chart element, take
-    // a viewport screenshot tightly cropped to its bounding rect.
-    // If we detected a chart image, encode it directly. The backend
-    // then OCRs + sizes via Gemini 2.5 Flash in one shot.
-    let chart_screenshot_b64 = null;
+    // If we detected a chart image or element on screen, tightly crop its CSS rect
+    // from the viewport screenshot. This eliminates CORS/tainted-canvas problems with
+    // CDN images (e.g. AliExpress ae01.alicdn.com) and sends the clean bounded region.
     if (chartImg) {
-      chart_screenshot_b64 = await imageToB64Jpeg(chartImg);
+      try {
+        const r = chartImg.getBoundingClientRect();
+        const rect = {
+          x: Math.max(0, Math.floor(r.left)),
+          y: Math.max(0, Math.floor(r.top)),
+          w: Math.ceil(r.width),
+          h: Math.ceil(r.height),
+        };
+        if (rect.w >= 32 && rect.h >= 32) {
+          await cropAndAnalyze(rect, chartImg);
+          return;
+        }
+      } catch { /* fall through to direct b64 / viewport */ }
+
+      let chart_screenshot_b64 = await imageToB64Jpeg(chartImg);
       if (!chart_screenshot_b64) {
         const cap = await _captureViewportWithPermission();
         chart_screenshot_b64 = typeof cap === 'string' ? cap : null;
       }
-    } else if (chartEl) {
+      if (!chart_screenshot_b64) {
+        dismissOverlay();
+        enterCropMode({ reason: 'auto-no-image' });
+        return;
+      }
+      await _sendForAnalysis({
+        chart_screenshot_b64,
+        garment_type: generic.detectGarmentType(document),
+      });
+      return;
+    }
+
+    if (chartEl) {
       // Try to capture the chart element's CSS rect as a tight crop.
       try {
         const r = chartEl.getBoundingClientRect();
@@ -278,14 +318,10 @@ async function onAnalyze(ev) {
           h: Math.ceil(r.height),
         };
         if (rect.w >= 32 && rect.h >= 32) {
-          // Reuse the manual-crop pipeline so behavior is identical.
           await cropAndAnalyze(rect, chartEl);
           return;
         }
-      } catch {
-        /* fall through to manual crop */
-      }
-      // Element rect unavailable — fall back to manual crop UX.
+      } catch { /* fall through to manual crop */ }
       dismissOverlay();
       enterCropMode({ reason: 'auto-no-rect' });
       return;

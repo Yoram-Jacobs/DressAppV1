@@ -242,10 +242,14 @@ Return ONLY this JSON object. No prose, no markdown, no backticks.
   "warnings": ["Your shoulders (75 cm) looks higher than expected ...", ...]
 }
 
-ONLY return ``recommended_size: null`` if BOTH of these are true:
-  (a) the image really doesn't contain a usable size chart (only product photos, occluded, blurry), AND
-  (b) the user has no usable size signal at all (no body circumferences AND no shirt/pants/shoe size).
-In every other case you MUST return a best-effort size with appropriate confidence.
+CRITICAL RULE ON NON-CHART IMAGES:
+If the image does NOT contain a clothing size chart or measurement table (for example: it is only a product photo, packaging, advertisement, non-clothing object, car part, scenery, or an unreadable image):
+- You MUST return ``recommended_size: null``. Do NOT guess or recommend a size from the user's profile clothing sizes when the image has no size chart!
+- Set ``confidence: 0.0``.
+- Set ``warnings: ["The provided image does not contain a clothing size chart. Please use the crop tool to select the size chart."]``.
+- In ``reasoning``, state clearly that no clothing size chart was found in the image.
+
+The CLOTHING-SIZE FALLBACK is ONLY for when a clothing size chart IS clearly present in the image (e.g. listing sizes like S, M, L or 31, 32, 33) but lacks numerical body circumferences.
 """
 
 
