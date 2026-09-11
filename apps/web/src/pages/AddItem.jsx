@@ -89,6 +89,7 @@ import {
 import { toast } from "sonner";
 import { useRememberedDirectory } from "@/hooks/useRememberedDirectory";
 import ClosetBanner from "../assets/img/inner6.webp";
+import { PageHeroBanner } from '@/components/ui/PageHeroBanner';
 /* -------------------- constants -------------------- */
 const CATEGORY_OPTIONS = [
   "Top",
@@ -2976,23 +2977,7 @@ export default function AddItem() {
   return (
     <>
       {/* banner-start */}
-      <section
-        className="
-        relative isolate overflow-hidden
-        bg-cover bg-center bg-no-repeat
-      "
-        style={{
-          backgroundImage: `url(${ClosetBanner})`,
-        }}
-      >
-        {/* Dark gradient overlay */}
-        <div
-          className="
-          absolute inset-0 -z-0
-          bg-[linear-gradient(90deg,#080b09_0%,#101612_43%,rgba(16,22,18,0.48)_67%,rgba(16,22,18,0.08)_100%)]
-        "
-        />
-
+      <PageHeroBanner image={ClosetBanner}>
         <div className="relative z-10 w-full">
           <div
             className="
@@ -3040,7 +3025,7 @@ export default function AddItem() {
             </div>
           </div>
         </div>
-      </section>
+      </PageHeroBanner>
       <section className="w-full overflow-hidden bg-[var(--accent-beige)] px-[40px] py-[80px] max-[991px]:px-[5px] max-[991px]:py-[40px]">
         {/* stepper-component */}
         <Stepper cards={cards} saving={saving} bgBatch={bgBatch} />

@@ -90,6 +90,7 @@ import {
 } from '@/lib/speech';
 import { Layers, Footprints, Tag } from 'lucide-react';
 import ClosetBanner from "../assets/img/inner6.webp";
+import { PageHeroBanner } from '@/components/ui/PageHeroBanner';
 // role → icon mapping 
 const roleIcon = (role) => {
   const key = (role || '').toLowerCase();
@@ -1620,7 +1621,7 @@ export default function Stylist() {
                             key={i}
                             src={src}
                             alt=""
-                            className="h-20 w-20 rounded-[10px] object-cover border border-black/[0.08]"
+                            className="h-20 w-20 rounded-[10px] object-cover border border-border"
                           />
                         ))}
                       </div>
@@ -1950,7 +1951,6 @@ export default function Stylist() {
             </button>
           </div>
         </div>
-
         <div className="relative flex items-center gap-2 border border-[#ccc] bg-white rounded-full p-2 transition-all focus-within:border-[var(--primary-color)] focus-within:shadow-[0_0_0_3px_rgba(31,92,69,0.15)]">
           <Textarea value={text} onChange={(e) => setText(e.target.value)} rows={1} placeholder={t('stylist.composerPlaceholder', { defaultValue: 'Type your message...' })}
             className="flex-1 min-h-9 max-h-40 border-0 mb-0 bg-transparent resize-none p-1.5 text-sm shadow-none focus-visible:outline-none focus-visible:shadow-none" data-testid="stylist-composer-textarea" />
@@ -2380,23 +2380,7 @@ export default function Stylist() {
   return (
     <>
       {/* banner-start */}
-      <section
-        className="
-          relative isolate overflow-hidden
-          bg-cover bg-center bg-no-repeat
-        "
-        style={{
-          backgroundImage: `url(${ClosetBanner})`,
-        }}
-      >
-        {/* Dark gradient overlay */}
-        <div
-          className="
-            absolute inset-0 -z-0
-            bg-[linear-gradient(90deg,#080b09_0%,#101612_43%,rgba(16,22,18,0.48)_67%,rgba(16,22,18,0.08)_100%)]
-          "
-        />
-
+      <PageHeroBanner image={ClosetBanner}>
         <div className="relative z-10 w-full">
           <div
             className="
@@ -2439,7 +2423,7 @@ export default function Stylist() {
             </div>
           </div>
         </div>
-      </section>
+      </PageHeroBanner>
       <section className='px-[40px] py-[40px] bg-[var(--accent-beige)]'>
         <div className='w-full'>
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">

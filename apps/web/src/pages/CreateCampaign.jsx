@@ -45,6 +45,7 @@ import { campaignApi } from "@/lib/api";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import PricingBanner from "../assets/img/inner6.webp";
+import { PageHeroBanner } from '@/components/ui/PageHeroBanner';
 const FASHION_CATEGORIES = [
   "Boutique",
   "Tailor",
@@ -408,23 +409,7 @@ export default function CreateCampaign() {
   return (
     <>
       {/* Banner Section */}
-      <section
-        className="
-          relative isolate overflow-hidden
-          bg-cover bg-center bg-no-repeat
-        "
-        style={{
-          backgroundImage: `url(${PricingBanner})`,
-        }}
-      >
-        {/* Dark gradient overlay */}
-        <div
-          className="
-            absolute inset-0 -z-0
-            bg-[linear-gradient(90deg,#080b09_0%,#101612_43%,rgba(16,22,18,0.48)_67%,rgba(16,22,18,0.08)_100%)]
-          "
-        />
-
+      <PageHeroBanner image={PricingBanner}>
         <div className="relative z-10 w-full">
           <div
             className="
@@ -467,7 +452,7 @@ export default function CreateCampaign() {
             </div>
           </div>
         </div>
-      </section>
+      </PageHeroBanner>
       <section className="px-[40px] py-[40px] bg-accent-beige">
         <button
           onClick={() => nav(-1)}

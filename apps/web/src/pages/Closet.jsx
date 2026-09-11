@@ -74,6 +74,7 @@ import { toast } from "sonner";
 import { ScrollToTop } from "@/components/ScrollToTop";
 import closet4 from "../assets/img/closet4.webp";
 import ClosetBanner from "../assets/img/inner6.webp";
+import { PageHeroBanner } from '@/components/ui/PageHeroBanner';
 const CATEGORIES = [
   "all",
   "top",
@@ -987,23 +988,7 @@ export default function Closet() {
   return (
     <>
       {/* closet banner */}
-      <section
-        className="
-    relative isolate overflow-hidden
-    bg-cover bg-center bg-no-repeat
-  "
-        style={{
-          backgroundImage: `url(${ClosetBanner})`,
-        }}
-      >
-        {/* Dark gradient overlay */}
-        <div
-          className="
-      absolute inset-0 -z-0
-      bg-[linear-gradient(90deg,#080b09_0%,#101612_43%,rgba(16,22,18,0.48)_67%,rgba(16,22,18,0.08)_100%)]
-    "
-        />
-
+      <PageHeroBanner image={ClosetBanner}>
         <div className="relative z-10 w-full">
           <div
             className="
@@ -1128,7 +1113,7 @@ export default function Closet() {
             </div>
           </div>
         </div>
-      </section>
+      </PageHeroBanner>
       <section className="w-full overflow-hidden bg-[var(--accent-beige)] px-[40px] py-[80px] max-[991px]:px-[5px] max-[991px]:py-[40px] pb-safe-tabs">
         {/* Phase Z2.3 + Z2.6 — two ambient progress chips, side-by-side.
               ``HashRepairChip`` ticks during the duplicate-detector
@@ -1345,7 +1330,7 @@ export default function Closet() {
           </div>
         </div>
         {/* Always render the floater, but change contents based on selectMode */}
-        <div className="fixed top-[45%] end-0 z-40 bg-white p-3 rounded-tl-full rounded-bl-full flex flex-wrap items-center gap-2 shadow-lg max-[575px]:bottom-3 max-[575px]:end-3 max-[575px]:px-2">
+        <div className="fixed top-[45%] end-0 z-40 bg-white p-3 rounded-tl-full rounded-bl-full flex flex-wrap items-center gap-2 shadow-lg">
           {!selectMode ? (
             <>
               <Button
@@ -1602,6 +1587,7 @@ export default function Closet() {
                         items-center
                         justify-center
                         rounded-full
+                        gap-1
                         bg-[var(--primary-color)]
                         px-5 py-3.5
                         text-[14px]
@@ -1616,7 +1602,7 @@ export default function Closet() {
                         hover:text-white
                       "
                     >
-                      <Plus className="h-4 w-4 me-2" />
+                      <Plus className="h-4 w-4" />
                       {t("closet.addItem", {
                         defaultValue: "Add Item",
                       })}
@@ -1624,6 +1610,24 @@ export default function Closet() {
 
                     <Button
                       type="button"
+                      className="
+                          h-auto
+                          rounded-full
+                          border
+                          border-border
+                          bg-white
+                          px-5 py-3.5
+                          text-[14px]
+                          font-semibold
+                          text-[var(--dark-color)]
+                          shadow-none
+                          transition-all
+                          duration-300
+                          hover:-translate-y-0.5
+                          hover:bg-white
+                          hover:text-[var(--primary-color)]
+                          hover:shadow-[var(--shadow-medium)]
+                      "
                       onClick={() => {
                         if ('ontouchstart' in window) {
                           toast.info(t('profile.mobileDesktopGuide', { defaultValue: 'Wardrobe import is available on the desktop version of DressApp. Please open your account on a desktop browser to continue.' }), { duration: 8000 });
@@ -1631,27 +1635,9 @@ export default function Closet() {
                           setIsMigrationModalOpen(true);
                         }
                       }}
-                      className="
-                        inline-flex
-                        items-center
-                        justify-center
-                        rounded-full
-                        bg-[var(--primary-color)]
-                        px-5 py-3.5
-                        text-[14px]
-                        font-bold
-                        leading-none
-                        text-white
-                        shadow-[var(--primary-shadow)]
-                        transition-all duration-300
-                        hover:-translate-y-[2px]
-                        hover:bg-[var(--primary-hover)]
-                        hover:text-white
-                        h-auto
-                      "
                       data-testid="closet-empty-import-wardrobe-button"
                     >
-                      <Shirt className="h-4 w-4 me-2" />
+                      <Shirt className="h-4 w-4" />
                       <span>{t('profile.importWardrobePill', { defaultValue: 'Import Wardrobe' })}</span>
                     </Button>
                   </div>
@@ -1688,11 +1674,10 @@ export default function Closet() {
                   aria-label={t("closet.view2Cols", { defaultValue: "2 columns" })}
                   title={t("closet.view2Cols", { defaultValue: "2 columns" })}
                   data-testid="closet-view-2cols"
-                  className={`inline-flex h-8 w-8 items-center justify-center rounded-md text-xs transition-colors ${
-                    viewMode === "grid"
+                  className={`inline-flex h-8 w-8 items-center justify-center rounded-md text-xs transition-colors ${viewMode === "grid"
                       ? "bg-primary-brand text-white shadow-xs"
                       : "text-text-brand hover:text-text-brand hover:bg-primary-shadow"
-                  }`}
+                    }`}
                 >
                   <LayoutGrid className="h-4 w-4" />
                 </button>
@@ -1703,11 +1688,10 @@ export default function Closet() {
                   aria-label={t("closet.view3Cols", { defaultValue: "3 columns" })}
                   title={t("closet.view3Cols", { defaultValue: "3 columns" })}
                   data-testid="closet-view-3cols"
-                  className={`inline-flex h-8 w-8 items-center justify-center rounded-md text-xs transition-colors ${
-                    viewMode === "compact"
+                  className={`inline-flex h-8 w-8 items-center justify-center rounded-md text-xs transition-colors ${viewMode === "compact"
                       ? "bg-primary-brand text-white shadow-xs"
                       : "text-text-brand hover:text-text-brand hover:bg-primary-shadow"
-                  }`}
+                    }`}
                 >
                   <Grid className="h-4 w-4" />
                 </button>
@@ -1718,11 +1702,10 @@ export default function Closet() {
                   aria-label={t("closet.viewList", { defaultValue: "List view" })}
                   title={t("closet.viewList", { defaultValue: "List view" })}
                   data-testid="closet-view-list"
-                  className={`inline-flex h-8 w-8 items-center justify-center rounded-md text-xs transition-colors ${
-                    viewMode === "list"
-                       ? "bg-primary-brand text-white shadow-xs"
+                  className={`inline-flex h-8 w-8 items-center justify-center rounded-md text-xs transition-colors ${viewMode === "list"
+                      ? "bg-primary-brand text-white shadow-xs"
                       : "text-text-brand hover:text-text-brand hover:bg-primary-shadow"
-                  }`}
+                    }`}
                 >
                   <List className="h-4 w-4" />
                 </button>
@@ -1730,31 +1713,30 @@ export default function Closet() {
             </div>
 
             <div
-              className={`grid w-full ${
-                viewMode === "compact"
+              className={`grid w-full ${viewMode === "compact"
                   ? "grid-cols-3 gap-2.5 sm:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6"
                   : viewMode === "list"
-                  ? "grid-cols-1 gap-3 max-w-2xl mx-auto"
-                  : "grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5"
-              }`}
+                    ? "grid-cols-1 gap-3 max-w-2xl mx-auto"
+                    : "grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5"
+                }`}
               data-testid="closet-grid"
             >
-            {items.map((it) => {
-              const isSelected = selected.has(it.id);
+              {items.map((it) => {
+                const isSelected = selected.has(it.id);
 
-              if (selectMode) {
-                return (
-                  <button
-                    key={it.id}
-                    type="button"
-                    onClick={(e) => onCardClick(e, it)}
-                    aria-pressed={isSelected}
-                    aria-label={`${isSelected ? "Deselect" : "Select"} ${it.title || "item"
-                      }`}
-                    data-testid="closet-item-card"
-                    data-selected={isSelected}
-                    onContextMenu={(e) => e.preventDefault()}
-                    className={`
+                if (selectMode) {
+                  return (
+                    <button
+                      key={it.id}
+                      type="button"
+                      onClick={(e) => onCardClick(e, it)}
+                      aria-pressed={isSelected}
+                      aria-label={`${isSelected ? "Deselect" : "Select"} ${it.title || "item"
+                        }`}
+                      data-testid="closet-item-card"
+                      data-selected={isSelected}
+                      onContextMenu={(e) => e.preventDefault()}
+                      className={`
               relative block w-full cursor-pointer
               overflow-hidden rounded-[12px]
               border bg-white p-0 text-left
@@ -1763,34 +1745,34 @@ export default function Closet() {
               focus:outline-none
 
               ${isSelected
-                        ? `
+                          ? `
                     border-primary-brand
                   `
-                        : `
+                          : `
                     hover:border-gray-300
                   `
-                      }
+                        }
             `}
-                    style={{
-                      WebkitTouchCallout: "none",
-                      touchAction: isTouchDragging ? "none" : "pan-y",
-                    }}
-                  >
-                    <ItemCardInner
-                      item={it}
-                      isSelected={isSelected}
-                      showCheckbox
-                      score={it._score}
-                    />
-                  </button>
-                );
-              }
+                      style={{
+                        WebkitTouchCallout: "none",
+                        touchAction: isTouchDragging ? "none" : "pan-y",
+                      }}
+                    >
+                      <ItemCardInner
+                        item={it}
+                        isSelected={isSelected}
+                        showCheckbox
+                        score={it._score}
+                      />
+                    </button>
+                  );
+                }
 
-              return (
-                <Link
-                  key={it.id}
-                  to={`/closet/${it.id}`}
-                  className={`h-full
+                return (
+                  <Link
+                    key={it.id}
+                    to={`/closet/${it.id}`}
+                    className={`h-full
                       relative block w-full
                       overflow-hidden rounded-[12px]
                       bg-white
@@ -1802,34 +1784,34 @@ export default function Closet() {
                     ${draggedId === it.id ? "scale-[0.98] opacity-50" : ""}
 
                     ${dragOverId === it.id
-                      ? `
+                        ? `
                           border-[hsl(var(--accent))]
                           ring-2 ring-[hsl(var(--accent))]/20
                         `
-                      : ""
-                    }
+                        : ""
+                      }
                   `}
-                  style={{
-                    WebkitTouchCallout: "none",
-                    touchAction: isTouchDragging ? "none" : "pan-y",
-                  }}
-                  data-testid="closet-item-card"
-                  data-item-id={it.id}
-                  draggable
-                  onDragStart={(e) => handleDragStart(e, it.id)}
-                  onDragEnd={handleDragEnd}
-                  onDragOver={(e) => handleDragOver(e, it.id)}
-                  onDragLeave={(e) => handleDragLeave(e, it.id)}
-                  onDrop={(e) => handleDrop(e, it.id)}
-                  onTouchStart={(e) => handleTouchStart(e, it.id)}
-                  onTouchMove={handleTouchMove}
-                  onTouchEnd={handleTouchEnd}
-                  onContextMenu={(e) => e.preventDefault()}
-                >
-                  <ItemCardInner item={it} score={it._score} />
-                </Link>
-              );
-            })}
+                    style={{
+                      WebkitTouchCallout: "none",
+                      touchAction: isTouchDragging ? "none" : "pan-y",
+                    }}
+                    data-testid="closet-item-card"
+                    data-item-id={it.id}
+                    draggable
+                    onDragStart={(e) => handleDragStart(e, it.id)}
+                    onDragEnd={handleDragEnd}
+                    onDragOver={(e) => handleDragOver(e, it.id)}
+                    onDragLeave={(e) => handleDragLeave(e, it.id)}
+                    onDrop={(e) => handleDrop(e, it.id)}
+                    onTouchStart={(e) => handleTouchStart(e, it.id)}
+                    onTouchMove={handleTouchMove}
+                    onTouchEnd={handleTouchEnd}
+                    onContextMenu={(e) => e.preventDefault()}
+                  >
+                    <ItemCardInner item={it} score={it._score} />
+                  </Link>
+                );
+              })}
             </div>
           </div>
         )}
@@ -2267,10 +2249,10 @@ export default function Closet() {
           isOpen={isMigrationModalOpen}
           onClose={() => {
             setIsMigrationModalOpen(false);
-            store.prewarm({ force: true }).catch(() => {});
+            store.prewarm({ force: true }).catch(() => { });
           }}
           onFlagUpdated={() => {
-            store.prewarm({ force: true }).catch(() => {});
+            store.prewarm({ force: true }).catch(() => { });
           }}
         />
       </section>

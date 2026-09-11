@@ -237,7 +237,7 @@
         "capture": {
           "alt": "capture cloth",
           "title": "Capture Clothes",
-          "description": "Snap a quick photo of your actual garments. Works beautifully with all lightings and backgrounds."
+          "description": "Snap a quick photo of your actual garments. Works best with good lighting and contrasted backgrounds"
         },
         "analysis": {
           "alt": "attribute analysis",
@@ -308,18 +308,28 @@
         "outfitPlanner": "Outfit Planner",
         "dailySuggestion": "Daily Suggestion"
       },
-      "recs": {
-        "blazer": {
-          "category": "Outerwear",
-          "title": "Navy Tech Blazer (Waterproof)",
-          "description": "Matches formal meetings, repels light drizzle."
-        },
-        "shirt": {
-          "category": "Top Layer",
-          "title": "Organic Cotton White Dress Shirt",
-          "description": "Crisp, clean, professional base styling."
-        }
+     "recs": {
+      "blazer": {
+        "category": "Outerwear",
+        "title": "Navy Tech Blazer (Waterproof)",
+        "description": "Matches formal meetings, repels light drizzle."
       },
+      "shirt": {
+        "category": "Top Layer",
+        "title": "Organic Cotton White Dress Shirt",
+        "description": "Crisp, clean, professional base styling."
+      },
+      "trousers": {
+        "category": "Bottom Layer",
+        "title": "Charcoal Tailored Trousers",
+        "description": "Sharp tapered fit, pairs cleanly with the blazer."
+      },
+      "shoes": {
+        "category": "Footwear",
+        "title": "Black Leather Oxford Shoes",
+        "description": "Polished finish, business-meeting appropriate."
+      }
+    },
       "chips": {
         "dailySuggestion": "Daily Suggestion",
         "planEventOutfit": "Plan Event Outfit",

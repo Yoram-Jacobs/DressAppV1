@@ -83,15 +83,15 @@ function SlotCard({ slot, candidate, onOpen }) {
       onClick={onOpen}
       data-testid={`outfit-slot-${slot.role}`}
       className={cn(
-        'group relative flex flex-col items-center gap-1 rounded-2xl p-2',
-        'border border-border bg-card hover:border-[hsl(var(--accent))]/60',
+        'group relative flex flex-col items-center gap-1 rounded-[12px] p-2',
+        'border border-border bg-accent-beige hover:border-primary-brand',
         'transition-colors min-w-[96px] w-[96px] sm:w-[120px]',
       )}
     >
       <div
         className={cn(
-          'relative w-full aspect-[3/4] rounded-xl overflow-hidden',
-          empty ? 'border-2 border-dashed border-border bg-secondary/40' : '',
+          'relative w-full aspect-[3/4] rounded-[12px] overflow-hidden',
+          empty ? 'border border-border bg-primary-shadow' : '',
         )}
       >
         {empty ? (
@@ -105,12 +105,12 @@ function SlotCard({ slot, candidate, onOpen }) {
           <Badge variant="secondary" className="absolute top-1 start-1 text-[10px] px-1 py-0">{t('common.closet', { defaultValue: 'closet' })}</Badge>
         )}
         {empty && (
-          <Badge variant="outline" className="absolute top-1 start-1 text-[10px] px-1 py-0 border-amber-500 text-amber-600 dark:text-amber-400">{t('common.gap', { defaultValue: 'gap' })}</Badge>
+          <Badge variant="outline" className="absolute top-1 start-1 text-[9px] pt-0 px-2 bg-amber-900 text-white">{t('common.gap', { defaultValue: 'gap' })}</Badge>
         )}
       </div>
-      <div className="text-[11px] font-medium uppercase tracking-wide text-text-brand">{label}</div>
+      <div className="text-[10px] font-semibold text-primary-brand">{label}</div>
       {!empty && candidate.title && (
-        <div className="text-xs leading-tight line-clamp-2 text-foreground/90 px-1">{candidate.title}</div>
+        <div className="text-[12px] line-clamp-2 text-dark-brand font-bold">{candidate.title}</div>
       )}
     </button>
   );
@@ -217,11 +217,11 @@ export function OutfitCanvasPreview({ canvas, onExpand }) {
   }, [canvas.slots, candidatesById]);
 
   return (
-    <div className="rounded-2xl border border-border bg-card p-3 space-y-2" data-testid="outfit-canvas-preview">
+    <div className="rounded-[12px] border border-border bg-white p-3 space-y-2" data-testid="outfit-canvas-preview">
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-2 min-w-0">
-          <Sparkles className="h-4 w-4 text-[hsl(var(--accent))] shrink-0" />
-          <span className="text-sm font-medium truncate">{canvas.summary || 'Your outfit'}</span>
+          <Sparkles className="h-4 w-4 text-primary-brand shrink-0" />
+          <span className="text-[12px] font-bold truncate">{canvas.summary || 'Your outfit'}</span>
         </div>
         {outfitColors.length >= 2 && (
           <div className="shrink-0">
@@ -240,11 +240,11 @@ export function OutfitCanvasPreview({ canvas, onExpand }) {
         ))}
       </div>
       <div className="flex items-center justify-between gap-2 pt-1">
-        <div className="text-xs text-text-brand">
+        <div className="text-[12px] font-semibold text-text-brand">
           {filled} selected · {gaps > 0 && <span className="text-amber-600 dark:text-amber-400">{gaps} gap{gaps !== 1 ? 's' : ''}</span>}
           {market.length > 0 && <span className="ms-2">· {market.length} marketplace match{market.length !== 1 ? 'es' : ''}</span>}
         </div>
-        <Button onClick={onExpand} size="sm" variant="secondary" data-testid="outfit-canvas-expand-btn">
+        <Button onClick={onExpand} size="sm" data-testid="outfit-canvas-expand-btn">
           View full outfit
         </Button>
       </div>
@@ -291,18 +291,18 @@ export function OutfitCanvasFull({ canvas, onClose, embedded = false, sessionId 
       {/* Header */}
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <div className="flex items-center gap-2 text-[hsl(var(--accent))]">
-            <Sparkles className="h-4 w-4" />
-            <span className="text-xs font-semibold uppercase tracking-wide">{t('nav.outfits')}</span>
+          <div className="flex items-center gap-2 mb-3">
+            <Sparkles className="h-4 w-4 text-primary-brand" />
+            <span className="text-[20px] text-dark-brand font-bold">{t('nav.outfits')}</span>
           </div>
-          <h2 className="text-lg font-semibold mt-1 leading-snug">{canvas.summary || 'Your outfit'}</h2>
+          <h2 className="text-[14px] font-semibold text-text-brand">{canvas.summary || 'Your outfit'}</h2>
           {outfitColors.length >= 2 && (
             <div className="mt-1.5 mb-1">
               <HarmonyBadge colors={outfitColors} />
             </div>
           )}
           {canvas.brief && (
-            <p className="text-xs text-text-brand mt-1">{t('components.outfitCanvas.brief')} <span className="italic">{canvas.brief}</span></p>
+            <p className="text-[12px] text-text-brand font-semibold mt-1">{t('components.outfitCanvas.brief')} <span className="italic">{canvas.brief}</span></p>
           )}
         </div>
         <div className="flex items-center gap-1.5 flex-shrink-0">
@@ -313,7 +313,7 @@ export function OutfitCanvasFull({ canvas, onClose, embedded = false, sessionId 
             aria-label={t('stylist.shareOutfit', { defaultValue: 'Share Outfit' })}
             data-testid="outfit-canvas-share-btn"
           >
-            <Share2 className="h-4 w-4" />
+            <Share2 className="!h-3 !w-3" />
           </Button>
           {onClose && (
             <Button variant="ghost" size="icon" onClick={onClose} aria-label={t('common.close', { defaultValue: 'Close' })} data-testid="outfit-canvas-close">
@@ -324,12 +324,12 @@ export function OutfitCanvasFull({ canvas, onClose, embedded = false, sessionId 
       </div>
 
       {canvas.detailed_rationale && (
-        <p className="text-sm text-foreground/80 leading-relaxed">{canvas.detailed_rationale}</p>
+        <p className="text-[14px] text-text-brand font-semibold">{canvas.detailed_rationale}</p>
       )}
 
       {/* Selected slots */}
       <div>
-        <div className="text-xs font-semibold uppercase tracking-wide text-text-brand mb-2">{t('components.outfitCanvas.the_look')}</div>
+        <div className="text-[14px] font-semibold text-text-brand mb-2">{t('components.outfitCanvas.the_look')}</div>
         <div className="flex gap-2 overflow-x-auto pb-2 -mx-1 px-1">
           {slots.map((slot, i) => (
             <SlotCard
@@ -345,8 +345,8 @@ export function OutfitCanvasFull({ canvas, onClose, embedded = false, sessionId 
       {/* Rejected */}
       {rejected.length > 0 && (
         <div>
-          <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-text-brand mb-2">
-            <AlertTriangle className="h-3.5 w-3.5" />
+          <div className="flex items-center gap-2 text-[14px] font-semibold text-text-brand mb-2">
+            <AlertTriangle className="!h-4 !w-4 text-destructive" />
             Rejected ({rejected.length})
           </div>
           <div className="grid sm:grid-cols-2 gap-2">
@@ -360,8 +360,8 @@ export function OutfitCanvasFull({ canvas, onClose, embedded = false, sessionId 
       {/* Marketplace strip */}
       {market.length > 0 && (
         <div>
-          <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-text-brand mb-2">
-            <ShoppingBag className="h-3.5 w-3.5" />
+          <div className="flex items-center gap-2 text-[14px] font-semibold text-text-brand mb-2">
+            <ShoppingBag className="!h-4 !w-4 text-yellow-brand" />
             Marketplace matches ({market.length})
           </div>
           <div className="flex gap-2 overflow-x-auto pb-2 -mx-1 px-1">
@@ -373,7 +373,7 @@ export function OutfitCanvasFull({ canvas, onClose, embedded = false, sessionId 
       {/* Professional referral */}
       {pro && (
         <div>
-          <div className="text-xs font-semibold uppercase tracking-wide text-text-brand mb-2">{t('stylist.proHelp', { defaultValue: 'A pro can help' })}</div>
+          <div className="flex items-center gap-2 text-[14px] font-semibold text-text-brand mb-2">{t('stylist.proHelp', { defaultValue: 'A pro can help' })}</div>
           <ProfessionalCard pro={pro} />
         </div>
       )}
@@ -403,7 +403,7 @@ export function OutfitCanvasMessage({ canvas, sessionId = null }) {
           data-testid="outfit-canvas-modal"
         >
           <div
-            className="bg-background border border-border rounded-2xl max-w-2xl w-full max-h-[88vh] overflow-y-auto shadow-xl"
+            className="bg-background border border-border rounded-[12px] max-w-2xl w-full max-h-[88vh] overflow-y-auto shadow-xl"
             onClick={(e) => e.stopPropagation()}
           >
             <OutfitCanvasFull canvas={canvas} onClose={() => setOpen(false)} sessionId={sessionId} />

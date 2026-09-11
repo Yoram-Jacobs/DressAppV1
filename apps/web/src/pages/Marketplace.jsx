@@ -31,6 +31,7 @@ import { useCachedList } from "@/lib/createCachedStore";
 import { toast } from "sonner";
 import market5 from "@/assets/img/market5.webp";
 import ClosetBanner from "../assets/img/inner6.webp";
+import { PageHeroBanner } from '@/components/ui/PageHeroBanner';
 const fmt = (cents, cur = "USD") =>
   new Intl.NumberFormat("en-US", { style: "currency", currency: cur }).format(
     (cents || 0) / 100,
@@ -229,20 +230,7 @@ export default function Marketplace() {
   return (
     <>
       {/* banner-start */}
-      <section
-        className="
-            relative isolate overflow-hidden
-            bg-cover bg-center bg-no-repeat"
-        style={{
-          backgroundImage: `url(${ClosetBanner})`,
-        }}
-      >
-        {/* Dark gradient overlay */}
-        <div
-          className="
-              absolute inset-0 -z-0
-              bg-[linear-gradient(90deg,#080b09_0%,#101612_43%,rgba(16,22,18,0.48)_67%,rgba(16,22,18,0.08)_100%)]"
-        />
+      <PageHeroBanner image={ClosetBanner}>
         <div className="relative z-10 w-full">
           <div
             className="
@@ -298,7 +286,7 @@ export default function Marketplace() {
             </div>
           </div>
         </div>
-      </section>
+      </PageHeroBanner>
       <section className="px-[40px] py-[40px] bg-[var(--accent-beige)]">
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList

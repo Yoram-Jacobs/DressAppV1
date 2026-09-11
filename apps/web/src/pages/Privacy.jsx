@@ -4,6 +4,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { parseMarkdown } from '@/lib/parseMarkdown';
 import { useLegalPage } from '@/lib/useLegalPage';
 import PrivacyBanner from '../assets/img/inner6.webp';
+import { PageHeroBanner } from '@/components/ui/PageHeroBanner';
 export default function Privacy() {
   const { t, i18n } = useTranslation();
   const { content, loading } = useLegalPage({
@@ -32,23 +33,7 @@ export default function Privacy() {
       </Helmet>
 
       {/* Banner Section */}
-      <section
-        className="
-          relative isolate overflow-hidden
-          bg-cover bg-center bg-no-repeat
-        "
-        style={{
-          backgroundImage: `url(${PrivacyBanner})`,
-        }}
-      >
-        {/* Dark gradient overlay */}
-        <div
-          className="
-            absolute inset-0 -z-0
-            bg-[linear-gradient(90deg,#080b09_0%,#101612_43%,rgba(16,22,18,0.48)_67%,rgba(16,22,18,0.08)_100%)]
-          "
-        />
-
+      <PageHeroBanner image={PrivacyBanner}>
         <div className="relative z-10 w-full">
           <div
             className="
@@ -93,7 +78,7 @@ export default function Privacy() {
             </div>
           </div>
         </div>
-      </section>
+      </PageHeroBanner>
 
       {/* Content Section */}
       <div className="px-[40px] py-[40px] bg-[var(--accent-beige)]">

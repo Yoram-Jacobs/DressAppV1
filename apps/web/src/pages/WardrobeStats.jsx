@@ -14,6 +14,7 @@ import { labelForColor, canonicalColorKey, labelForMaterial, labelForSubCategory
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { bestImageUrl } from '@/lib/itemImage';
 import PrivacyBanner from '../assets/img/inner6.webp';
+import { PageHeroBanner } from '@/components/ui/PageHeroBanner';
 const COLOR_HEX_MAP = {
   white: '#f8fafc',
   black: '#18181b',
@@ -403,23 +404,7 @@ export default function WardrobeStats() {
   return (
     <>
       {/* Banner Section */}
-      <section
-        className="
-              relative isolate overflow-hidden
-              bg-cover bg-center bg-no-repeat
-            "
-        style={{
-          backgroundImage: `url(${PrivacyBanner})`,
-        }}
-      >
-        {/* Dark gradient overlay */}
-        <div
-          className="
-                absolute inset-0 -z-0
-                bg-[linear-gradient(90deg,#080b09_0%,#101612_43%,rgba(16,22,18,0.48)_67%,rgba(16,22,18,0.08)_100%)]
-              "
-        />
-
+      <PageHeroBanner image={PrivacyBanner}>
         <div className="relative z-10 w-full">
           <div
             className="
@@ -463,7 +448,7 @@ export default function WardrobeStats() {
             </div>
           </div>
         </div>
-      </section>
+      </PageHeroBanner>
       <section className="bg-accent-beige px-[40px] py-[40px] max-[767px]:px-5 max-[767px]:py-10" data-testid="wardrobe-stats-page">
         <ExploreBackButton />
         <Tabs defaultValue="overview" className="w-full mt-2">

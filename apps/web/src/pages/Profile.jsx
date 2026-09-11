@@ -26,6 +26,7 @@ import { useClosetStore } from '@/lib/useClosetStore';
 import OnboardingMigrationModal from '@/components/OnboardingMigrationModal';
 import { SchedulerSettings, AIConfiguration, SubscriptionSettings, ShoppingAssistant } from '@/components/profile/index.js';
 import PricingBanner from '../assets/img/inner6.webp';
+import { PageHeroBanner } from '@/components/ui/PageHeroBanner';
 export default function Profile() {
   const { t, i18n } = useTranslation();
   const { user, updateUserLocal, logout } = useAuth();
@@ -132,23 +133,7 @@ export default function Profile() {
   return (
     <>
       {/* Banner Section */}
-      <section
-        className="
-              relative isolate overflow-hidden
-              bg-cover bg-center bg-no-repeat
-            "
-        style={{
-          backgroundImage: `url(${PricingBanner})`,
-        }}
-      >
-        {/* Dark gradient overlay */}
-        <div
-          className="
-                absolute inset-0 -z-0
-                bg-[linear-gradient(90deg,#080b09_0%,#101612_43%,rgba(16,22,18,0.48)_67%,rgba(16,22,18,0.08)_100%)]
-              "
-        />
-
+      <PageHeroBanner image={PricingBanner}>
         <div className="relative z-10 w-full">
           <div
             className="
@@ -205,7 +190,7 @@ export default function Profile() {
             </div>
           </div>
         </div>
-      </section>
+      </PageHeroBanner>
       <section className="bg-accent-beige px-[40px] py-[40px] max-[767px]:px-5 max-[767px]:py-10">
         <div className='bg-white rounded-[12px] p-4 shadow-sm border border-border mb-5'>
           <h3 className="text-[16px] text-dark-brand font-bold mb-4">{t('profile.exploreTitle', { defaultValue: 'Explore DressApp' })}</h3>

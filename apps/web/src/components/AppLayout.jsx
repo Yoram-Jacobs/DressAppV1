@@ -17,7 +17,7 @@ import { api } from '@/lib/api';
 import OnboardingMigrationModal from '@/components/OnboardingMigrationModal';
 import LoginClosetReminderModal from '@/components/LoginClosetReminderModal';
 import { useClosetStore } from '@/lib/useClosetStore';
-
+import { Footer } from '@/components/Footer';
 function urlBase64ToUint8Array(base64String) {
   const padding = '='.repeat((4 - base64String.length % 4) % 4);
   const base64 = (base64String + padding)
@@ -140,7 +140,7 @@ export const AppLayout = () => {
           if (sub) {
             await registerSub(sub);
           } else if (
-            Notification.permission === 'granted' || 
+            Notification.permission === 'granted' ||
             (user?.scheduler_settings?.enabled && Notification.permission === 'default')
           ) {
             if (Notification.permission === 'default') {
@@ -171,7 +171,7 @@ export const AppLayout = () => {
   if (loading) {
     return (
       <div className="min-h-[100dvh] flex items-center justify-center">
-        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+        <Loader2 className="h-6 w-6 animate-spin text-text-brand" />
       </div>
     );
   }
@@ -185,11 +185,11 @@ export const AppLayout = () => {
       <LanguageSync />
       <TopNav />
       <LocationBanner />
-      <main id="main-content" tabIndex={-1} className="flex-1 pb-safe-tabs md:pb-10">
+      <main id="main-content" tabIndex={-1} className="flex-1">
         <Outlet />
       </main>
       <BottomTabs />
-
+      <Footer />
       {/* Onboarding Migration Question Modal — desktop only */}
       {showOnboardingMigration && !('ontouchstart' in window) && (
         <OnboardingMigrationModal
@@ -216,8 +216,8 @@ export const AppLayout = () => {
         onClick={scrollToTop}
         aria-label="Back to top"
         className={`fixed bottom-[50px] end-[30px] z-[999] flex h-12 w-12 cursor-pointer items-center justify-center rounded-full border-none bg-[var(--primary-color)] text-white shadow-[var(--shadow-medium)] transition-smooth hover:bg-[var(--primary-hover)] hover:-translate-y-1 ${show
-            ? "visible translate-y-0 opacity-100"
-            : "invisible translate-y-[15px] opacity-0"
+          ? "visible translate-y-0 opacity-100"
+          : "invisible translate-y-[15px] opacity-0"
           }`}
       >
         <ArrowUp size={20} strokeWidth={2.5} />

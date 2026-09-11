@@ -36,6 +36,7 @@ import { bestImageUrl } from '@/lib/itemImage';
 import { useAuth } from '@/lib/auth';
 import { PayPalCheckoutButton } from '@/lib/paypal';
 import PricingBanner from '../assets/img/inner6.webp';
+import { PageHeroBanner } from '@/components/ui/PageHeroBanner';
 
 const fmt = (cents, cur = 'USD') =>
   new Intl.NumberFormat('en-US', { style: 'currency', currency: cur }).format((cents || 0) / 100);
@@ -130,23 +131,7 @@ export default function ListingDetail() {
   return (
     <>
       {/* Banner Section */}
-      <section
-        className="
-              relative isolate overflow-hidden
-              bg-cover bg-center bg-no-repeat
-            "
-        style={{
-          backgroundImage: `url(${PricingBanner})`,
-        }}
-      >
-        {/* Dark gradient overlay */}
-        <div
-          className="
-                absolute inset-0 -z-0
-                bg-[linear-gradient(90deg,#080b09_0%,#101612_43%,rgba(16,22,18,0.48)_67%,rgba(16,22,18,0.08)_100%)]
-              "
-        />
-
+      <PageHeroBanner image={PricingBanner}>
         <div className="relative z-10 w-full">
           <div
             className="
@@ -189,7 +174,7 @@ export default function ListingDetail() {
             </div>
           </div>
         </div>
-      </section>
+      </PageHeroBanner>
       <section className="px-[40px] py-[40px] bg-accent-beige">
         <button onClick={() => nav(-1)} className="inline-flex items-center text-[14px] font-bold text-dark-brand mb-5 hover:text-primary-brand">
           <ArrowLeft className="h-4 w-4 me-1 rtl:rotate-180" /> {t('common.back')}

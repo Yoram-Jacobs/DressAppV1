@@ -96,6 +96,7 @@ import { useAuth } from '@/lib/auth';
 import { isSTTSupported, createRecognition } from '@/lib/speech';
 import { deriveSizeFromPreferences } from '@/lib/size_preferences';
 import ItemDetailBanner from "../assets/img/inner6.webp";
+import { PageHeroBanner } from '@/components/ui/PageHeroBanner';
 
 /* -------------------- enum option lists (kept in-file to avoid a cross-page coupling) -------------------- */
 const CATEGORY_OPTIONS = [
@@ -1452,23 +1453,7 @@ export default function ItemDetail() {
   return (
     <>
       {/* banner-start */}
-      <section
-        className="
-        relative isolate overflow-hidden
-        bg-cover bg-center bg-no-repeat
-      "
-        style={{
-          backgroundImage: `url(${ItemDetailBanner})`,
-        }}
-      >
-        {/* Dark gradient overlay */}
-        <div
-          className="
-          absolute inset-0 -z-0
-          bg-[linear-gradient(90deg,#080b09_0%,#101612_43%,rgba(16,22,18,0.48)_67%,rgba(16,22,18,0.08)_100%)]
-        "
-        />
-
+      <PageHeroBanner image={ItemDetailBanner}>
         <div className="relative z-10 w-full">
           <div
             className="
@@ -1515,7 +1500,7 @@ export default function ItemDetail() {
             </div>
           </div>
         </div>
-      </section>
+      </PageHeroBanner>
       {/* banner-end */}
       <section className="bg-[var(--accent-beige)] px-[40px] py-[80px] max-[991px]:px-[5px] max-[991px]:py-[40px]">
         {/* Floating Action Bar */}

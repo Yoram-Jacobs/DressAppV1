@@ -21,6 +21,7 @@ import { useLocalStorageSync } from '@/lib/useLocalStorageSync';
 import { CampaignFeed } from '@/components/CampaignFeed';
 import noexpert from "../assets/img/noexpert.svg";
 import expertsBannerImg from "../assets/img/inner6.webp";
+import { PageHeroBanner } from '@/components/ui/PageHeroBanner';
 
 /**
  * Experts directory — public-facing list of self-certified fashion pros.
@@ -114,16 +115,7 @@ export default function ExpertsDirectory() {
   return (
     <>
       {/* banner-start */}
-      <section
-        className="relative isolate overflow-hidden bg-cover bg-center bg-no-repeat"
-        style={{ backgroundImage: `url(${expertsBannerImg})` }}
-      >
-        <div
-          className="
-            absolute inset-0 -z-0
-            bg-[linear-gradient(90deg,#080b09_0%,#101612_43%,rgba(16,22,18,0.48)_67%,rgba(16,22,18,0.08)_100%)]
-          "
-        />
+      <PageHeroBanner image={expertsBannerImg}>
         <div className="relative z-10 w-full">
           <div
             className="
@@ -154,7 +146,7 @@ export default function ExpertsDirectory() {
             </div>
           </div>
         </div>
-      </section>
+      </PageHeroBanner>
       <section className="bg-[var(--accent-beige)] px-[40px] py-[40px] max-[991px]:px-[5px] max-[991px]:py-10">
         <div className="w-full">
           {/* tabs */}

@@ -568,7 +568,7 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
     if (win) {
       win.opener = window;
     }
-    
+
     toast.info(t('migration.popupOpened', { appName, defaultValue: `Opened ${appName} tab. Log in, go to your closet, then click the "DressApp Agent" bookmarklet.` }));
     onClose();
   };
@@ -579,23 +579,15 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-w-md w-full bg-background border-border rounded-2xl shadow-xl flex flex-col max-h-[90vh] overflow-hidden p-6 gap-4 animate-in fade-in zoom-in-95 duration-200">
-        
+      <DialogContent className="max-w-md w-full bg-white border-border rounded-[12px] flex flex-col max-h-[90vh] overflow-hidden p-6 gap-4 animate-in fade-in zoom-in-95 duration-200">
         {/* STEP 1: INITIAL CONTEXT QUESTION */}
         {step === 'ask' && (
           <div className="space-y-4 text-center shrink-0">
-            <DialogHeader>
-              <div className="mx-auto w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-2 animate-bounce">
-                <Shirt className="w-6 h-6 text-primary" />
-              </div>
-              <DialogTitle className="text-lg md:text-xl font-bold font-display text-foreground text-center">
-                {t('migration.welcomeTitle', { defaultValue: 'New to DressApp?' })}
-              </DialogTitle>
-              <DialogDescription className="text-xs text-muted-foreground text-center">
-                {t('migration.welcomeSub', { defaultValue: 'Would you like to import your wardrobe details and clothes from another platform?' })}
-              </DialogDescription>
-            </DialogHeader>
-
+            <div className="mx-auto w-12 h-12 rounded-full bg-primary-shadow flex items-center justify-center mb-2 animate-bounce">
+              <Shirt className="w-6 h-6 text-primary-brand" />
+            </div>
+            <DialogTitle>{t('migration.welcomeTitle', { defaultValue: 'New to DressApp?' })}</DialogTitle>
+            <DialogDescription>{t('migration.welcomeSub', { defaultValue: 'Would you like to import your wardrobe details and clothes from another platform?' })}</DialogDescription>
             <div className="grid grid-cols-2 gap-3 pt-2">
               <Button
                 type="button"
@@ -619,19 +611,13 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
             </div>
           </div>
         )}
-
         {/* STEP 2: SEARCH PLATFORM & LOGIN PRESETS */}
         {step === 'app_search' && (
           <form onSubmit={handleGoToWebLogin} className="space-y-4 text-left flex flex-col overflow-hidden shrink-0">
-            <DialogHeader className="shrink-0">
-              <DialogTitle className="text-base md:text-lg font-bold font-display text-foreground">
-                {t('migration.selectAppTitle', { defaultValue: 'Select Previous Platform' })}
-              </DialogTitle>
-              <DialogDescription className="text-xs text-muted-foreground">
-                {t('migration.selectAppSub', { defaultValue: 'Pick an application to import your wardrobe structure, items list, and layouts.' })}
-              </DialogDescription>
-            </DialogHeader>
-
+            <DialogTitle>{t('migration.selectAppTitle', { defaultValue: 'Select Previous Platform' })}</DialogTitle>
+            <DialogDescription>
+              {t('migration.selectAppSub', { defaultValue: 'Pick an application to import your wardrobe structure, items list, and layouts.' })}
+            </DialogDescription>
             <div className="flex-1 overflow-y-auto space-y-3 pr-1 max-h-[300px]">
               {/* Presets List */}
               <div className="grid grid-cols-1 gap-2">
@@ -640,34 +626,32 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
                     key={app.name}
                     type="button"
                     onClick={() => handleSelectPreset(app)}
-                    className={`flex items-center justify-between p-3 rounded-xl border transition-all text-left ${
-                      appName === app.name
-                        ? 'border-primary bg-primary/5 text-primary'
-                        : 'border-border bg-card text-card-foreground hover:bg-accent/40'
-                    }`}
+                    className={`flex items-center justify-between p-3 rounded-[12px] border transition-all text-left ${appName === app.name
+                      ? 'border-primary-brand bg-primary-shadow'
+                      : 'border-border hover:border-primary-brand hover:bg-primary-shadow'
+                      }`}
                   >
                     <div className="flex items-center gap-3">
                       <span className="text-lg">{app.icon}</span>
                       <div>
-                        <span className="font-bold text-sm block text-foreground">{app.name}</span>
-                        <span className="text-[10px] text-muted-foreground block">{app.domain}</span>
+                        <span className="font-bold text-[14px] block text-dark-brand">{app.name}</span>
+                        <span className="text-[12px] text-text-brand font-semibold block">{app.domain}</span>
                       </div>
                     </div>
-                    <span className="text-[10px] bg-muted px-2.5 py-1 rounded-full font-mono font-bold text-foreground">
+                    <span className="text-[10px] bg-yellow-shadow px-2.5 py-1 rounded-full font-bold text-dark-brand">
                       ~{app.defaultItems} items
                     </span>
                   </button>
                 ))}
               </div>
-
               {/* App Name Input */}
               <div className="space-y-3 pt-1">
                 <div>
-                  <Label htmlFor="appNameInput" className="text-xs font-semibold">
+                  <Label htmlFor="appNameInput">
                     {t('migration.appNameLabel', { defaultValue: 'Previous App Name / Platform *' })}
                   </Label>
                   <div className="relative mt-1">
-                    <Search className="w-4 h-4 absolute left-3 top-3 text-muted-foreground" />
+                    <Search className="w-4 h-4 absolute left-3 top-3 text-text-brand" />
                     <Input
                       id="appNameInput"
                       placeholder={t('migration.searchAppPlaceholder', { defaultValue: 'e.g. Acloset, Stylebook, Whering, Smartli, BeautyAI' })}
@@ -678,7 +662,7 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
                         setAppDomain(d);
                         setCustomLoginUrl(`https://${d}`);
                       }}
-                      className="rounded-xl pl-9 text-sm h-10"
+                      className="pl-9"
                       required
                       data-testid="migration-form-appname-input"
                     />
@@ -686,20 +670,17 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
                 </div>
               </div>
             </div>
-
-            <div className="flex items-center justify-end gap-2 pt-2 border-t border-border/50 shrink-0">
+            <div className="flex items-center justify-end gap-2 shrink-0">
               <Button
                 type="button"
                 variant="outline"
                 onClick={handleCancelForm}
-                className="rounded-xl h-10"
                 data-testid="migration-form-cancel-btn"
               >
                 {t('common.cancel', { defaultValue: 'Cancel' })}
               </Button>
               <Button
                 type="submit"
-                className="rounded-xl h-10 bg-primary text-primary-foreground font-medium flex items-center gap-1.5"
                 data-testid="migration-form-login-btn"
               >
                 <ExternalLink className="w-4 h-4" />
@@ -708,93 +689,82 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
             </div>
           </form>
         )}
-
         {/* STEP 3: SCREENSHOT-SCROLLER & GARMENTVISION AI PIPELINE */}
         {step === 'web_login' && (
           <div className="flex flex-col h-full space-y-3 overflow-hidden">
-            <DialogHeader className="border-b border-border pb-2.5 shrink-0">
-              <DialogTitle className="text-base md:text-lg font-bold font-display flex items-center gap-2 truncate">
-                <Sparkles className="w-4 h-4 text-primary shrink-0 animate-pulse" />
-                {t('migration.screenshotPipelineTitle', { defaultValue: 'Wardrobe Migration Agent' })}
-              </DialogTitle>
-              <DialogDescription className="text-xs text-muted-foreground truncate">
-                {t('migration.screenshotPipelineSub', { defaultValue: 'Agentic closet importer powered by Gemini 2.5 Flash.' })}
-              </DialogDescription>
-            </DialogHeader>
-
+            <DialogTitle className="flex items-center gap-2">
+              <Sparkles className="w-4 h-4 text-primary-brand shrink-0 animate-pulse" />
+              {t('migration.screenshotPipelineTitle', { defaultValue: 'Wardrobe Migration Agent' })}
+            </DialogTitle>
+            <DialogDescription>
+              {t('migration.screenshotPipelineSub', { defaultValue: 'Agentic closet importer powered by Gemini 2.5 Flash.' })}
+            </DialogDescription>
             {/* Content area */}
-            <div className="flex-1 relative bg-muted/20 rounded-xl border border-border overflow-y-auto p-4 min-h-[200px]">
-              <div className="flex flex-col text-left space-y-4 py-2">
-                <div className="flex items-center gap-2 border-b border-border pb-2 shrink-0">
-                  <Globe className="w-5 h-5 text-primary" />
-                  <h3 className="text-sm font-bold text-foreground">
+            <div className="flex-1 relative bg-primary-shadow rounded-[12px] border border-border overflow-y-auto p-3 h-[200px]">
+              <div className="flex flex-col text-left space-y-2 py-2">
+                <div className="flex items-center gap-2 shrink-0">
+                  <Globe className="!w-4 !h-4 text-primary-brand" />
+                  <h3 className="text-[14px] font-bold text-dark-brand">
                     {t('migration.connectToAppTitle', { appName, defaultValue: `Connect to ${appName}` })}
                   </h3>
                 </div>
-
-                  <div className="space-y-3 text-xs text-muted-foreground">
-                  <p>
-                    {('ontouchstart' in window)
-                      ? t('migration.bookmarkletInstallInstructionsMobile', { defaultValue: `Tap the button below to copy the bookmarklet script, then create a new bookmark and paste it as the URL:` })
-                      : t('migration.bookmarkletInstallInstructions', { appName, defaultValue: `Drag the agent bookmarklet button below to your browser Bookmarks Bar (Ctrl+Shift+B to show the bar):` })}
-                  </p>
-                  
-                  <div className="flex flex-col items-center justify-center p-3 bg-card border border-border rounded-xl gap-2">
-                    <button
-                      type="button"
-                      ref={!('ontouchstart' in window) ? bookmarkletRef : undefined}
-                      draggable={!('ontouchstart' in window)}
-                      onClick={(e) => {
-                        e.preventDefault();
-                        if (!harvesterBookmarkletCode) return;
-                        if ('ontouchstart' in window) {
-                          const ta = document.createElement('textarea');
-                          ta.value = harvesterBookmarkletCode;
-                          ta.setAttribute('readonly', '');
-                          ta.style.cssText = 'position:fixed;left:0;top:0;opacity:0;';
-                          document.body.appendChild(ta);
-                          ta.focus();
-                          ta.select();
-                          try {
-                            document.execCommand('copy');
-                            toast.success(t('migration.bookmarkletCopied', { defaultValue: 'Bookmarklet copied! Now create a new bookmark and paste it as the URL.' }), { duration: 6000 });
-                          } catch (err) {
-                            toast.error(t('migration.copyFailed', { defaultValue: 'Copy failed. Please try again.' }));
-                          } finally {
-                            document.body.removeChild(ta);
-                          }
-                        } else {
-                          toast.info(t('migration.bookmarkletClickTip', { defaultValue: 'Drag this button to your bookmarks bar. Do not click it directly!' }));
+                <p className='text-text-brand text-[12px] font-semibold'>
+                  {('ontouchstart' in window)
+                    ? t('migration.bookmarkletInstallInstructionsMobile', { defaultValue: `Tap the button below to copy the bookmarklet script, then create a new bookmark and paste it as the URL:` })
+                    : t('migration.bookmarkletInstallInstructions', { appName, defaultValue: `Drag the agent bookmarklet button below to your browser Bookmarks Bar (Ctrl+Shift+B to show the bar):` })}
+                </p>
+                <div className="flex flex-col items-center justify-center p-3 bg-white border border-border rounded-[12px] gap-2">
+                  <button
+                    type="button"
+                    ref={!('ontouchstart' in window) ? bookmarkletRef : undefined}
+                    draggable={!('ontouchstart' in window)}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      if (!harvesterBookmarkletCode) return;
+                      if ('ontouchstart' in window) {
+                        const ta = document.createElement('textarea');
+                        ta.value = harvesterBookmarkletCode;
+                        ta.setAttribute('readonly', '');
+                        ta.style.cssText = 'position:fixed;left:0;top:0;opacity:0;';
+                        document.body.appendChild(ta);
+                        ta.focus();
+                        ta.select();
+                        try {
+                          document.execCommand('copy');
+                          toast.success(t('migration.bookmarkletCopied', { defaultValue: 'Bookmarklet copied! Now create a new bookmark and paste it as the URL.' }), { duration: 6000 });
+                        } catch (err) {
+                          toast.error(t('migration.copyFailed', { defaultValue: 'Copy failed. Please try again.' }));
+                        } finally {
+                          document.body.removeChild(ta);
                         }
-                      }}
-                      className="px-4 py-2 bg-primary text-primary-foreground font-bold rounded-lg shadow-sm hover:opacity-90 flex items-center gap-1.5"
-                    >
-                      <span className="text-base leading-none">👗</span>
-                      {t('migration.bookmarkletBtn', { defaultValue: 'DressApp Agent' })}
-                    </button>
-                    <span className="text-[10px] text-muted-foreground">
-                      {('ontouchstart' in window)
-                        ? t('migration.bookmarkletMobileSaveTip', { defaultValue: 'Tap to copy → Open ⋮ menu → Bookmarks → + → paste as URL' })
-                        : t('migration.dragTip', { defaultValue: 'Drag this button to your browser Bookmarks Bar' })}
-                    </span>
-                  </div>
-
-                  <p>
-                    {t('migration.bookmarkletUsageInstructions', { appName, defaultValue: `After installing, click "Import wardrobe" below to initialize. Log in to Whering, go to your closet page, then click the "DressApp Agent" bookmarklet.` })}
-                  </p>
-                  <div className="mt-2.5 p-3 bg-amber-500/10 text-amber-600 rounded-xl border border-amber-500/20 text-[11px] leading-normal font-medium space-y-1">
-                    <div>{t('migration.tabSleepAlert', { defaultValue: 'Tab Sleep Alert: Do not switch tabs inside the competitor window while importing (Chrome will sleep/throttle the scroller).' })}</div>
-                    <div>{t('migration.proTip', { defaultValue: 'Pro-Tip: Drag the competitor tab out of your browser window into its own window to keep it running in focus while you multitask!' })}</div>
-                  </div>
+                      } else {
+                        toast.info(t('migration.bookmarkletClickTip', { defaultValue: 'Drag this button to your bookmarks bar. Do not click it directly!' }));
+                      }
+                    }}
+                    className="px-4 py-2 text-[12px] bg-primary-brand text-white font-semibold rounded-full shadow-sm hover:opacity-90"
+                  >
+                    {t('migration.bookmarkletBtn', { defaultValue: 'DressApp Agent' })}
+                  </button>
+                  <span className="text-[10px] text-text-brand font-semibold">
+                    {('ontouchstart' in window)
+                      ? t('migration.bookmarkletMobileSaveTip', { defaultValue: 'Tap to copy → Open ⋮ menu → Bookmarks → + → paste as URL' })
+                      : t('migration.dragTip', { defaultValue: 'Drag this button to your browser Bookmarks Bar' })}
+                  </span>
+                </div>
+                <p className='text-text-brand text-[12px] font-semibold'>
+                  {t('migration.bookmarkletUsageInstructions', { appName, defaultValue: `After installing, click "Import wardrobe" below to initialize. Log in to Whering, go to your closet page, then click the "DressApp Agent" bookmarklet.` })}
+                </p>
+                <div className="mt-2.5 p-3 bg-amber-500/10 text-amber-600 rounded-[12px] border border-amber-500/20 text-[11px] leading-normal font-medium space-y-1">
+                  <div>{t('migration.tabSleepAlert', { defaultValue: 'Tab Sleep Alert: Do not switch tabs inside the competitor window while importing (Chrome will sleep/throttle the scroller).' })}</div>
+                  <div>{t('migration.proTip', { defaultValue: 'Pro-Tip: Drag the competitor tab out of your browser window into its own window to keep it running in focus while you multitask!' })}</div>
                 </div>
               </div>
             </div>
-
             {/* Actions */}
-            <div className="bg-card border border-border rounded-xl p-3 flex items-center justify-between shrink-0 gap-2">
-              <div className="flex items-center gap-2">
-                <Shirt className="w-4 h-4 text-primary shrink-0" />
-                <span className="text-xs font-semibold text-muted-foreground">
+            <div className="bg-white border border-border rounded-[12px] p-3 flex items-center justify-between shrink-0 gap-2">
+              <div className="flex items-center gap-1">
+                <Shirt className="w-4 h-4 text-primary-brand shrink-0" />
+                <span className="text-[12px] font-semibold text-text-brand">
                   {t('migration.garmentVisionReady', { defaultValue: 'Agentic Ingestion Ready' })}
                 </span>
               </div>
@@ -802,7 +772,7 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
               <Button
                 type="button"
                 onClick={handleOpenPopupWindow}
-                className="rounded-xl h-8 px-4 bg-primary text-primary-foreground font-bold text-xs inline-flex items-center justify-center gap-1 shadow-sm hover:opacity-95"
+                className="!gap-1 hover:opacity-95"
                 data-testid="migration-weblogin-proceed-btn"
               >
                 <span>
@@ -811,18 +781,17 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
                 <ArrowRight className="w-3.5 h-3.5" />
               </Button>
             </div>
-
             {/* Bottom Navigation */}
-            <div className="flex items-center justify-between pt-1.5 border-t border-border shrink-0">
+            <div className="flex items-center justify-between shrink-0">
               <Button
                 type="button"
                 variant="outline"
                 onClick={() => setStep('app_search')}
-                className="rounded-xl h-8 text-xs"
+                className=""
               >
                 {t('common.back', { defaultValue: 'Back' })}
               </Button>
-              <span className="text-[10px] text-muted-foreground">
+              <span className="text-[10px] text-text-brand font-semibold">
                 {t('migration.mattingNotice', { defaultValue: 'All assets matting is handled by GarmentVision.' })}
               </span>
             </div>

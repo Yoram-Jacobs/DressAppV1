@@ -193,7 +193,7 @@
         "capture": {
           "alt": "capturar tela",
           "title": "Capturar ropa",
-          "description": "Toma una foto rápida de tus prendas reales. Funciona maravillosamente con todas las iluminaciones y fondos."
+          "description": "Toma una foto rápida de tus prendas reales. Funciona mejor con buena iluminación y fondos con contraste."
         },
         "analysis": {
           "alt": "análisis de atributos",

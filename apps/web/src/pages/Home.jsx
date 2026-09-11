@@ -33,6 +33,7 @@ import { Navigation, Autoplay, EffectFade } from "swiper/modules";
 import "swiper/css";
 import "swiper/css/navigation";
 import "swiper/css/effect-fade";
+import { labelForCategory, labelForColor } from "@/lib/taxonomy";
 import slide1 from "../assets/img/slide1.webp";
 import slide2 from "../assets/img/slide2.webp";
 import slide3 from "../assets/img/slide3.webp";
@@ -443,7 +444,7 @@ export default function Home() {
   const STYLIST_PREVIEW_RECOMMENDATIONS = [
     {
       id: "blazer",
-      image: closet1,
+      image: closet1, // ⚠️ verify: yeh actually ek navy blazer ki clean studio photo honi chahiye
       categoryKey: "home.stylistPreview.recs.blazer.category",
       categoryDefault: "Outerwear",
       titleKey: "home.stylistPreview.recs.blazer.title",
@@ -453,13 +454,33 @@ export default function Home() {
     },
     {
       id: "shirt",
-      image: closet2,
+      image: closet2, // ⚠️ verify: yeh actually ek white dress shirt ki clean studio photo honi chahiye
       categoryKey: "home.stylistPreview.recs.shirt.category",
       categoryDefault: "Top Layer",
       titleKey: "home.stylistPreview.recs.shirt.title",
       titleDefault: "Organic Cotton White Dress Shirt",
       descriptionKey: "home.stylistPreview.recs.shirt.description",
       descriptionDefault: "Crisp, clean, professional base styling.",
+    },
+    {
+      id: "trousers",
+      image: closet3, // ⚠️ verify: yeh actually ek tailored trouser ki clean studio photo honi chahiye
+      categoryKey: "home.stylistPreview.recs.trousers.category",
+      categoryDefault: "Bottom Layer",
+      titleKey: "home.stylistPreview.recs.trousers.title",
+      titleDefault: "Charcoal Tailored Trousers",
+      descriptionKey: "home.stylistPreview.recs.trousers.description",
+      descriptionDefault: "Sharp tapered fit, pairs cleanly with the blazer.",
+    },
+    {
+      id: "shoes",
+      image: closet1, // ⚠️ naya asset chahiye: black leather oxford shoes, clean studio shot
+      categoryKey: "home.stylistPreview.recs.shoes.category",
+      categoryDefault: "Footwear",
+      titleKey: "home.stylistPreview.recs.shoes.title",
+      titleDefault: "Black Leather Oxford Shoes",
+      descriptionKey: "home.stylistPreview.recs.shoes.description",
+      descriptionDefault: "Polished finish, business-meeting appropriate.",
     },
   ];
 
@@ -479,7 +500,7 @@ export default function Home() {
       titleDefault: "Capture Clothes",
       descriptionKey: "home.howItWorks.steps.capture.description",
       descriptionDefault:
-        "Snap a quick photo of your actual garments. Works best with good lighting and contrasted backgrounds.",
+        "Snap a quick photo of your actual garments. Works best with good lighting and contrasted backgrounds",
     },
     {
       id: "analysis",
@@ -563,31 +584,31 @@ export default function Home() {
     { id: "bag", image: added3, altKey: "home.closet.recent.bag", altDefault: "Leather bag" },
     { id: "scarf", image: added4, altKey: "home.closet.recent.scarf", altDefault: "Scarf" },
   ];
-const EXTENSION_TABS = [
-  { id: "deals", labelKey: "home.shoppingAssistant.tabs.deals", labelDefault: "Deals" },
-  { id: "wishlist", labelKey: "home.shoppingAssistant.tabs.wishlist", labelDefault: "Wishlist" },
-  { id: "compare", labelKey: "home.shoppingAssistant.tabs.compare", labelDefault: "Compare" },
-  { id: "rewards", labelKey: "home.shoppingAssistant.tabs.rewards", labelDefault: "Rewards" },
-];
+  const EXTENSION_TABS = [
+    { id: "deals", labelKey: "home.shoppingAssistant.tabs.deals", labelDefault: "Deals" },
+    { id: "wishlist", labelKey: "home.shoppingAssistant.tabs.wishlist", labelDefault: "Wishlist" },
+    { id: "compare", labelKey: "home.shoppingAssistant.tabs.compare", labelDefault: "Compare" },
+    { id: "rewards", labelKey: "home.shoppingAssistant.tabs.rewards", labelDefault: "Rewards" },
+  ];
 
-const SMART_FEATURES = [
-  { id: "priceAlerts", icon: "bi bi-bell", labelKey: "home.shoppingAssistant.features.priceAlerts", labelDefault: "Price Alerts", active: true },
-  { id: "autoCoupon", icon: "bi bi-ticket-perforated", labelKey: "home.shoppingAssistant.features.autoCoupon", labelDefault: "Auto Coupon" },
-  { id: "priceCompare", icon: "bi bi-bar-chart", labelKey: "home.shoppingAssistant.features.priceCompare", labelDefault: "Price Compare" },
-  { id: "wishlistSync", icon: "bi bi-heart", labelKey: "home.shoppingAssistant.features.wishlistSync", labelDefault: "Wishlist Sync" },
-];
+  const SMART_FEATURES = [
+    { id: "priceAlerts", icon: "bi bi-bell", labelKey: "home.shoppingAssistant.features.priceAlerts", labelDefault: "Price Alerts", active: true },
+    { id: "autoCoupon", icon: "bi bi-ticket-perforated", labelKey: "home.shoppingAssistant.features.autoCoupon", labelDefault: "Auto Coupon" },
+    { id: "priceCompare", icon: "bi bi-bar-chart", labelKey: "home.shoppingAssistant.features.priceCompare", labelDefault: "Price Compare" },
+    { id: "wishlistSync", icon: "bi bi-heart", labelKey: "home.shoppingAssistant.features.wishlistSync", labelDefault: "Wishlist Sync" },
+  ];
 
-const BROWSING_MODES = [
-  { id: "silent", labelKey: "home.shoppingAssistant.modes.silent", labelDefault: "Silent" },
-  { id: "popup", labelKey: "home.shoppingAssistant.modes.popup", labelDefault: "Popup" },
-  { id: "fullCompare", labelKey: "home.shoppingAssistant.modes.fullCompare", labelDefault: "Full Compare" },
-];
+  const BROWSING_MODES = [
+    { id: "silent", labelKey: "home.shoppingAssistant.modes.silent", labelDefault: "Silent" },
+    { id: "popup", labelKey: "home.shoppingAssistant.modes.popup", labelDefault: "Popup" },
+    { id: "fullCompare", labelKey: "home.shoppingAssistant.modes.fullCompare", labelDefault: "Full Compare" },
+  ];
 
-const SAVINGS_PERCENT = 34;
+  const SAVINGS_PERCENT = 34;
 
-// component state
-const [activeExtensionTab, setActiveExtensionTab] = useState(EXTENSION_TABS[0].id);
-const [activeBrowsingMode, setActiveBrowsingMode] = useState(BROWSING_MODES[1].id);
+  // component state
+  const [activeExtensionTab, setActiveExtensionTab] = useState(EXTENSION_TABS[0].id);
+  const [activeBrowsingMode, setActiveBrowsingMode] = useState(BROWSING_MODES[1].id);
   // The "+18" badge — wire this to a real remaining-count if you have one
   // (e.g. totalRecentCount - RECENTLY_ADDED_THUMBS.length); kept as a named
   // constant so it isn't a bare magic number in the JSX.
@@ -596,23 +617,37 @@ const [activeBrowsingMode, setActiveBrowsingMode] = useState(BROWSING_MODES[1].i
   const displayClosetGarments = useMemo(() => {
     if (!closet.items || closet.items.length === 0) return CLOSET_GARMENTS;
     return closet.items.slice(0, 3).map((item, idx) => {
-      const fallbackImg = CLOSET_GARMENTS[idx % CLOSET_GARMENTS.length].image;
-      const resolvedImg = bestImageUrl(item) || item.clean_image_url || item.image_url || fallbackImg;
+      const fallback = CLOSET_GARMENTS[idx % CLOSET_GARMENTS.length];
+      const resolvedImg =
+        bestImageUrl(item) || item.clean_image_url || item.image_url || fallback.image;
+
+      const categoryText =
+        labelForCategory(item.category, t) ||
+        item.category ||
+        item.sub_category ||
+        fallback.categoryDefault;
+
+      const nameText = item.title || item.name || item.brand || fallback.nameDefault;
+
+      const metaParts = [
+        item.color ? labelForColor(item.color, t) : null,
+        item.season || null,
+      ].filter(Boolean);
+      const metaText =
+        metaParts.length > 0 ? metaParts.join(" · ") : fallback.metaDefault;
+
       return {
         id: item.id || `closet-${idx}`,
         image: resolvedImg,
-        fallbackImage: fallbackImg,
-        altKey: "home.closet.garments.shirt.alt",
-        altDefault: item.name || item.category || "Closet item",
-        categoryKey: "home.closet.garments.shirt.category",
-        categoryDefault: item.category || item.subcategory || "Wardrobe",
-        nameKey: "home.closet.garments.shirt.name",
-        nameDefault: item.name || item.brand || "Wardrobe Item",
-        metaKey: "home.closet.garments.shirt.meta",
-        metaDefault: item.color ? `${item.color}${item.season ? ' · ' + item.season : ''}` : `No. 00${idx + 1}`,
+        fallbackImage: fallback.image,
+        isDynamic: true,
+        altText: nameText,
+        categoryText,
+        nameText,
+        metaText,
       };
     });
-  }, [closet.items]);
+  }, [closet.items, t]);
 
   const displayRecentlyAdded = useMemo(() => {
     if (!closet.items || closet.items.length === 0) return RECENTLY_ADDED_THUMBS;
@@ -630,6 +665,16 @@ const [activeBrowsingMode, setActiveBrowsingMode] = useState(BROWSING_MODES[1].i
   }, [closet.items]);
 
   const recentlyAddedMoreCount = Math.max(0, (closet.total || closet.items?.length || 0) - displayRecentlyAdded.length);
+  const BUCKET_VISUALS = {
+    "ss26-runway": { Icon: Crown, tone: "bg-amber-500/10 text-amber-600" },
+    street: { Icon: Footprints, tone: "bg-slate-500/10 text-slate-700" },
+    sustainability: { Icon: Leaf, tone: "bg-emerald-500/10 text-emerald-600" },
+    influencers: { Icon: Users, tone: "bg-rose-500/10 text-rose-600" },
+    second_hand: { Icon: Recycle, tone: "bg-amber-700/10 text-amber-700" },
+    recycling: { Icon: Recycle, tone: "bg-teal-500/10 text-teal-600" },
+    news_flash: { Icon: Newspaper, tone: "bg-indigo-500/10 text-indigo-600" },
+  };
+  const DEFAULT_BUCKET_VISUAL = { Icon: Sparkles, tone: "bg-secondary/60 text-foreground" };
   return (
     <>
       {/* Home-banner-start */}
@@ -1300,29 +1345,31 @@ const [activeBrowsingMode, setActiveBrowsingMode] = useState(BROWSING_MODES[1].i
                               e.target.src = garment.fallbackImage;
                             }
                           }}
-                          alt={t(garment.altKey, {
-                            defaultValue: garment.altDefault,
-                          })}
+                          alt={
+                            garment.isDynamic
+                              ? garment.altText
+                              : t(garment.altKey, { defaultValue: garment.altDefault })
+                          }
                           className="block h-full w-full object-cover"
                         />
                       </div>
                       <div className="relative mt-[22px] w-[88%] rounded-[8px] border border-[#e5e5e5] bg-white px-[14px] pb-3 pt-[10px] text-left shadow-[0_12px_22px_-14px_rgba(23,20,15,0.25)] max-[991px]:px-[10px] max-[991px]:pb-[10px] max-[991px]:pt-2">
                         <span className="absolute left-1/2 top-[-22px] h-[22px] w-px -translate-x-1/2 bg-[repeating-linear-gradient(to_bottom,var(--dark-color)_0,var(--dark-color)_3px,transparent_3px,transparent_6px)]" />
                         <span className="absolute left-1/2 top-[-3px] h-[6px] w-[6px] -translate-x-1/2 rounded-full bg-[var(--primary-color)]" />
-                        <span className="mb-[3px] block text-[0.62rem] font-bold uppercase tracking-[0.08em] text-[var(--primary-color)]">
-                          {t(garment.categoryKey, {
-                            defaultValue: garment.categoryDefault,
-                          })}
+                        <span className="mb-[3px] block text-[10px] font-bold uppercase tracking-[0.08em] text-[var(--primary-color)]">
+                          {garment.isDynamic
+                            ? garment.categoryText
+                            : t(garment.categoryKey, { defaultValue: garment.categoryDefault })}
                         </span>
-                        <span className="block text-[0.92rem] font-bold leading-[1.3] text-[var(--dark-color)] max-[991px]:text-[0.8rem]">
-                          {t(garment.nameKey, {
-                            defaultValue: garment.nameDefault,
-                          })}
+                        <span className="block text-[14px] font-bold leading-[1.3] text-[var(--dark-color)] max-[991px]:text-[0.8rem] truncate">
+                          {garment.isDynamic
+                            ? garment.nameText
+                            : t(garment.nameKey, { defaultValue: garment.nameDefault })}
                         </span>
-                        <span className="mt-1 block text-[0.65rem] text-[var(--text-color)]">
-                          {t(garment.metaKey, {
-                            defaultValue: garment.metaDefault,
-                          })}
+                        <span className="mt-1 block text-[12px] text-[var(--text-color)] font-semibold">
+                          {garment.isDynamic
+                            ? garment.metaText
+                            : t(garment.metaKey, { defaultValue: garment.metaDefault })}
                         </span>
                       </div>
                     </div>
@@ -1470,28 +1517,19 @@ const [activeBrowsingMode, setActiveBrowsingMode] = useState(BROWSING_MODES[1].i
                       <div className="h-[62px] w-[62px] shrink-0 overflow-hidden rounded-[9px] bg-[#f1f5f4]">
                         <img
                           src={rec.image}
-                          alt={t(rec.titleKey, {
-                            defaultValue: rec.titleDefault,
-                          })}
+                          alt={t(rec.titleKey, { defaultValue: rec.titleDefault })}
                           className="h-full w-full object-cover"
                         />
                       </div>
-
                       <div className="min-w-0">
                         <span className="mb-1 block text-[10px] font-bold uppercase tracking-[0.12em] text-[var(--primary-color)]">
-                          {t(rec.categoryKey, {
-                            defaultValue: rec.categoryDefault,
-                          })}
+                          {t(rec.categoryKey, { defaultValue: rec.categoryDefault })}
                         </span>
-
                         <h6 className="m-0 text-[13px] font-bold leading-[1.35] text-[var(--dark-color)]">
                           {t(rec.titleKey, { defaultValue: rec.titleDefault })}
                         </h6>
-
                         <p className="mt-1 mb-0 text-[11px] leading-[1.4] text-[var(--text-color)]">
-                          {t(rec.descriptionKey, {
-                            defaultValue: rec.descriptionDefault,
-                          })}
+                          {t(rec.descriptionKey, { defaultValue: rec.descriptionDefault })}
                         </p>
                       </div>
                     </div>
@@ -2131,392 +2169,411 @@ const [activeBrowsingMode, setActiveBrowsingMode] = useState(BROWSING_MODES[1].i
                   className="flex flex-wrap items-center gap-3"
                 >
 
-                 <a href="#"
-                  className="inline-flex items-center justify-center rounded-[50px] bg-[var(--primary-color)] px-[30px] py-[18px] text-[14px] font-bold leading-none text-white no-underline shadow-[var(--primary-shadow)] transition-smooth hover:-translate-y-[2px] hover:bg-[var(--primary-hover)] hover:text-white hover:shadow-[0_8px_24px_rgba(31,92,69,0.25)]"
-            >
-                  <i className="bi bi-google me-2" />
-                  {t("home.shoppingAssistant.cta", {
-                    defaultValue: "Add to Chrome",
-                  })}
-                </a>
+                  <a href="#"
+                    className="inline-flex items-center justify-center rounded-[50px] bg-[var(--primary-color)] px-[30px] py-[18px] text-[14px] font-bold leading-none text-white no-underline shadow-[var(--primary-shadow)] transition-smooth hover:-translate-y-[2px] hover:bg-[var(--primary-hover)] hover:text-white hover:shadow-[0_8px_24px_rgba(31,92,69,0.25)]"
+                  >
+                    <i className="bi bi-google me-2" />
+                    {t("home.shoppingAssistant.cta", {
+                      defaultValue: "Add to Chrome",
+                    })}
+                  </a>
 
-                <span className="text-[12px] font-semibold text-[var(--text-color)]">
-                  {t("home.shoppingAssistant.ctaNote", {
-                    defaultValue: "Currently under Chrome Web Store review",
-                  })}
-                </span>
-              </motion.div>
+                  <span className="text-[12px] font-semibold text-[var(--text-color)]">
+                    {t("home.shoppingAssistant.ctaNote", {
+                      defaultValue: "Currently under Chrome Web Store review",
+                    })}
+                  </span>
+                </motion.div>
+              </div>
             </div>
           </div>
         </div>
-      </div>
-    </section >
-      {/* shopping-assistant-extension-section-end */ }
-  {/* experts-section-start */ }
-  <section
-    id="experts"
-    className="w-full overflow-hidden bg-[var(--accent-beige)] px-[40px] py-[80px] max-[991px]:px-[20px] max-[991px]:py-[50px]"
-  >
-    <div className="w-full">
-      {/* Section Heading */}
-      <div className="mb-12">
-        {/* Tag */}
-        <motion.span
-          initial={{ opacity: 0, y: -10 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: false, amount: 0.3 }}
-          transition={{ duration: 0.6, delay: 0, ease: "easeOut" }}
-          className="mb-4 inline-flex items-center gap-2 rounded-full border border-[#d7e1de] bg-primary-shadow px-[15px] py-[5px] text-[12px] font-bold uppercase tracking-[1.5px] text-primary-brand"
-        >
-          <span className="h-[7px] w-[7px] rounded-full bg-primary-brand" />
-          {t("home.experts.tag", { defaultValue: "Meet The Specialists" })}
-        </motion.span>
-
-        <Link to="/experts" className="block no-underline">
-          <motion.h2
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: false, amount: 0.3 }}
-            transition={{ duration: 0.65, delay: 0.15, ease: "easeOut" }}
-            className="mb-3 text-[20px] font-extrabold leading-[40px] tracking-[0.5px] text-black md:text-[30px]"
-          >
-            {t("home.experts.title", {
-              defaultValue: "Talk To A Real Style Expert",
-            })}
-          </motion.h2>
-        </Link>
-
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: false, amount: 0.3 }}
-          transition={{ duration: 0.65, delay: 0.3, ease: "easeOut" }}
-          className="flex items-center justify-between gap-8 max-[767px]:flex-col max-[767px]:items-start"
-        >
-          <p className="max-w-[620px] text-[16px] leading-[26px] font-semibold text-text-brand">
-            {t("home.experts.description", {
-              defaultValue:
-                "Book a 1:1 session with a certified DressApp stylist whenever the AI needs a human, editorial finishing touch.",
-            })}
-          </p>
-
-          <Link
-            to="/experts"
-            className="inline-flex shrink-0 items-center justify-center rounded-[50px] bg-[var(--primary-color)] px-[30px] py-[15px] text-[14px] font-bold leading-[24px] text-white no-underline shadow-[var(--primary-shadow)] transition-smooth hover:-translate-y-[2px] hover:bg-[var(--primary-hover)] hover:text-white hover:shadow-[0_8px_24px_rgba(31,92,69,0.25)]"
-          >
-            {t("home.experts.viewAll", {
-              defaultValue: "View All Experts",
-            })}
-            <i className="fa-solid fa-arrow-right ms-2 rtl:rotate-180" />
-          </Link>
-        </motion.div>
-      </div>
-
-      {/* Experts Grid */}
-      <motion.div
-        initial={{ opacity: 0, y: 40 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: false, amount: 0.2 }}
-        transition={{ duration: 0.7, delay: 0.2, ease: "easeOut" }}
-        className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4"
+      </section >
+      {/* shopping-assistant-extension-section-end */}
+      {/* experts-section-start */}
+      <section
+        id="experts"
+        className="w-full overflow-hidden bg-[var(--accent-beige)] px-[40px] py-[80px] max-[991px]:px-[20px] max-[991px]:py-[50px]"
       >
-        {EXPERTS.map((expert, i) => (
-          <motion.div
-            key={expert.id}
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: false, amount: 0.3 }}
-            transition={{ duration: 0.5, delay: i * 0.1, ease: "easeOut" }}
-          >
-            <div className="group h-full rounded-[18px] border border-black/[0.06] bg-white p-6 text-center shadow-[0_15px_35px_-18px_rgba(23,20,15,0.3)] transition-smooth hover:-translate-y-[5px] hover:shadow-[0_20px_45px_rgba(23,20,15,0.12)]">
-              {/* Avatar */}
-              <div className="relative mx-auto mb-5 h-[105px] w-[105px]">
-                <img
-                  src={expert.image}
-                  alt={expert.name}
-                  className="h-full w-full rounded-full object-cover ring-4 ring-[var(--primary-shadow)]"
-                />
+        <div className="w-full">
+          {/* Section Heading */}
+          <div className="mb-12">
+            {/* Tag */}
+            <motion.span
+              initial={{ opacity: 0, y: -10 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: false, amount: 0.3 }}
+              transition={{ duration: 0.6, delay: 0, ease: "easeOut" }}
+              className="mb-4 inline-flex items-center gap-2 rounded-full border border-[#d7e1de] bg-primary-shadow px-[15px] py-[5px] text-[12px] font-bold uppercase tracking-[1.5px] text-primary-brand"
+            >
+              <span className="h-[7px] w-[7px] rounded-full bg-primary-brand" />
+              {t("home.experts.tag", { defaultValue: "Meet The Specialists" })}
+            </motion.span>
 
-                <span className="absolute bottom-0 end-0 flex h-7 w-7 items-center justify-center rounded-full border-2 border-white bg-[var(--primary-color)] text-white shadow-[0_4px_10px_rgba(0,0,0,0.15)]">
-                  <i className="bi bi-patch-check-fill text-[13px]" />
-                </span>
-              </div>
+            <Link to="/experts" className="block no-underline">
+              <motion.h2
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: false, amount: 0.3 }}
+                transition={{ duration: 0.65, delay: 0.15, ease: "easeOut" }}
+                className="mb-3 text-[20px] font-extrabold leading-[40px] tracking-[0.5px] text-black md:text-[30px]"
+              >
+                {t("home.experts.title", {
+                  defaultValue: "Talk To A Real Style Expert",
+                })}
+              </motion.h2>
+            </Link>
 
-              <h5 className="m-0 mb-2 text-[17px] font-black text-[var(--dark-color)]">
-                {expert.name}
-              </h5>
-
-              <span className="inline-flex rounded-full bg-[var(--primary-shadow)] px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.05em] text-[var(--primary-color)]">
-                {t(expert.roleKey, { defaultValue: expert.roleDefault })}
-              </span>
-
-              {/* Rating */}
-              <div className="mt-4 flex items-center justify-center gap-1.5 text-[13px] font-bold text-[var(--dark-color)]">
-                <i className="bi bi-star-fill text-[#d8a84e]" />
-                <span>{expert.rating}</span>
-                <span className="font-medium text-[var(--text-color)]">
-                  {t("home.experts.sessionsCount", {
-                    count: expert.sessions,
-                    defaultValue: "({{count}} sessions)",
-                  })}
-                </span>
-              </div>
-
-              <p className="my-4 text-[13px] font-medium leading-[22px] text-[var(--text-color)]">
-                {t(expert.bioKey, { defaultValue: expert.bioDefault })}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: false, amount: 0.3 }}
+              transition={{ duration: 0.65, delay: 0.3, ease: "easeOut" }}
+              className="flex items-center justify-between gap-8 max-[767px]:flex-col max-[767px]:items-start"
+            >
+              <p className="max-w-[620px] text-[16px] leading-[26px] font-semibold text-text-brand">
+                {t("home.experts.description", {
+                  defaultValue:
+                    "Book a 1:1 session with a certified DressApp stylist whenever the AI needs a human, editorial finishing touch.",
+                })}
               </p>
 
               <Link
                 to="/experts"
-                className="inline-flex items-center justify-center gap-2 rounded-[50px] border border-[var(--primary-color)] bg-white px-5 py-2.5 text-[12px] font-bold text-[var(--primary-color)] no-underline transition-smooth hover:-translate-y-[2px] hover:bg-[var(--primary-color)] hover:text-white"
+                className="inline-flex shrink-0 items-center justify-center rounded-[50px] bg-[var(--primary-color)] px-[30px] py-[15px] text-[14px] font-bold leading-[24px] text-white no-underline shadow-[var(--primary-shadow)] transition-smooth hover:-translate-y-[2px] hover:bg-[var(--primary-hover)] hover:text-white hover:shadow-[0_8px_24px_rgba(31,92,69,0.25)]"
               >
-                {t("home.experts.bookSession", {
-                  defaultValue: "Book Session",
+                {t("home.experts.viewAll", {
+                  defaultValue: "View All Experts",
                 })}
-                <i className="bi bi-arrow-right rtl:rotate-180" />
+                <i className="fa-solid fa-arrow-right ms-2 rtl:rotate-180" />
               </Link>
-            </div>
-          </motion.div>
-        ))}
-      </motion.div>
-    </div>
-  </section>
-  {/* experts-section-end */ }
-  {/* trend-scout-section-start */ }
-  <section
-    className="relative overflow-hidden bg-white px-[40px] py-[80px]"
-    id="trend-scout"
-  >
-    <div className="w-full">
-      {/* Section Heading */}
-      <div className="mb-12">
-        {/* Tag */}
-        <motion.span
-          initial={{ opacity: 0, y: -10 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: false, amount: 0.3 }}
-          transition={{ duration: 0.6, delay: 0, ease: "easeOut" }}
-          className="mb-4 inline-flex items-center gap-2 rounded-full border border-[#d7e1de] bg-primary-shadow px-[15px] py-[5px] text-[12px] font-bold uppercase tracking-[1.5px] text-primary-brand"
-        >
-          <span className="h-[7px] w-[7px] rounded-full bg-primary-brand" />
-          {t("home.trendScoutSection.tag", {
-            defaultValue: "Fashion Intelligence",
-          })}
-        </motion.span>
+            </motion.div>
+          </div>
 
-        {/* Heading + View More */}
-        <Link to="/trends" className="">
-          <motion.h2
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: false, amount: 0.3 }}
-            transition={{ duration: 0.65, delay: 0.15, ease: "easeOut" }}
-            className="mb-3 text-[20px] font-extrabold leading-[40px] tracking-[0.5px] hover:underline hover:text-primary-brand text-black md:text-[30px]"
-          >
-            {t("home.trendScout", { defaultValue: "Trend-Scout" })}
-          </motion.h2>
-        </Link>
-
-        <div className="flex items-end justify-between gap-8">
-          <motion.p
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: false, amount: 0.3 }}
-            transition={{ duration: 0.65, delay: 0.3, ease: "easeOut" }}
-            className="max-w-[620px] text-[16px] leading-[26px] font-semibold text-text-brand"
-          >
-            {t("home.trendScoutSection.description", {
-              defaultValue:
-                "Get styled ahead of the global curve. Discover real-time stylistic shifts curated by computational trend models.",
-            })}
-          </motion.p>
-
-          {/* View More */}
+          {/* Experts Grid */}
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 40 }}
             whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: false, amount: 0.3 }}
-            transition={{ duration: 0.65, delay: 0.45, ease: "easeOut" }}
-            className="flex items-center gap-2"
+            viewport={{ once: false, amount: 0.2 }}
+            transition={{ duration: 0.7, delay: 0.2, ease: "easeOut" }}
+            className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4"
           >
-            <div className="text-[12px] font-semibold text-text-brand">
-              {trendDate
-                ? t("home.dailyEditOn", { date: trendDate })
-                : t("home.dailyEdit")}
-            </div>
-            {/* Admin-only force-refresh button. Hidden for regular users
+            {EXPERTS.map((expert, i) => (
+              <motion.div
+                key={expert.id}
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: false, amount: 0.3 }}
+                transition={{ duration: 0.5, delay: i * 0.1, ease: "easeOut" }}
+              >
+                <div className="group h-full rounded-[18px] border border-black/[0.06] bg-white p-6 text-center shadow-[0_15px_35px_-18px_rgba(23,20,15,0.3)] transition-smooth hover:-translate-y-[5px] hover:shadow-[0_20px_45px_rgba(23,20,15,0.12)]">
+                  {/* Avatar */}
+                  <div className="relative mx-auto mb-5 h-[105px] w-[105px]">
+                    <img
+                      src={expert.image}
+                      alt={expert.name}
+                      className="h-full w-full rounded-full object-cover ring-4 ring-[var(--primary-shadow)]"
+                    />
+
+                    <span className="absolute bottom-0 end-0 flex h-7 w-7 items-center justify-center rounded-full border-2 border-white bg-[var(--primary-color)] text-white shadow-[0_4px_10px_rgba(0,0,0,0.15)]">
+                      <i className="bi bi-patch-check-fill text-[13px]" />
+                    </span>
+                  </div>
+
+                  <h5 className="m-0 mb-2 text-[17px] font-black text-[var(--dark-color)]">
+                    {expert.name}
+                  </h5>
+
+                  <span className="inline-flex rounded-full bg-[var(--primary-shadow)] px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.05em] text-[var(--primary-color)]">
+                    {t(expert.roleKey, { defaultValue: expert.roleDefault })}
+                  </span>
+
+                  {/* Rating */}
+                  <div className="mt-4 flex items-center justify-center gap-1.5 text-[13px] font-bold text-[var(--dark-color)]">
+                    <i className="bi bi-star-fill text-[#d8a84e]" />
+                    <span>{expert.rating}</span>
+                    <span className="font-medium text-[var(--text-color)]">
+                      {t("home.experts.sessionsCount", {
+                        count: expert.sessions,
+                        defaultValue: "({{count}} sessions)",
+                      })}
+                    </span>
+                  </div>
+
+                  <p className="my-4 text-[13px] font-medium leading-[22px] text-[var(--text-color)]">
+                    {t(expert.bioKey, { defaultValue: expert.bioDefault })}
+                  </p>
+
+                  <Link
+                    to="/experts"
+                    className="inline-flex items-center justify-center gap-2 rounded-[50px] border border-[var(--primary-color)] bg-white px-5 py-2.5 text-[12px] font-bold text-[var(--primary-color)] no-underline transition-smooth hover:-translate-y-[2px] hover:bg-[var(--primary-color)] hover:text-white"
+                  >
+                    {t("home.experts.bookSession", {
+                      defaultValue: "Book Session",
+                    })}
+                    <i className="bi bi-arrow-right rtl:rotate-180" />
+                  </Link>
+                </div>
+              </motion.div>
+            ))}
+          </motion.div>
+        </div>
+      </section>
+      {/* experts-section-end */}
+      {/* trend-scout-section-start */}
+      <section
+        className="relative overflow-hidden bg-white px-[40px] py-[80px]"
+        id="trend-scout"
+      >
+        <div className="w-full">
+          {/* Section Heading */}
+          <div className="mb-12">
+            {/* Tag */}
+            <motion.span
+              initial={{ opacity: 0, y: -10 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: false, amount: 0.3 }}
+              transition={{ duration: 0.6, delay: 0, ease: "easeOut" }}
+              className="mb-4 inline-flex items-center gap-2 rounded-full border border-[#d7e1de] bg-primary-shadow px-[15px] py-[5px] text-[12px] font-bold uppercase tracking-[1.5px] text-primary-brand"
+            >
+              <span className="h-[7px] w-[7px] rounded-full bg-primary-brand" />
+              {t("home.trendScoutSection.tag", {
+                defaultValue: "Fashion Intelligence",
+              })}
+            </motion.span>
+
+            {/* Heading + View More */}
+            <Link to="/trends" className="">
+              <motion.h2
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: false, amount: 0.3 }}
+                transition={{ duration: 0.65, delay: 0.15, ease: "easeOut" }}
+                className="mb-3 text-[20px] font-extrabold leading-[40px] tracking-[0.5px] hover:underline hover:text-primary-brand text-black md:text-[30px]"
+              >
+                {t("home.trendScout", { defaultValue: "Trend-Scout" })}
+              </motion.h2>
+            </Link>
+
+            <div className="flex items-end justify-between gap-8">
+              <motion.p
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: false, amount: 0.3 }}
+                transition={{ duration: 0.65, delay: 0.3, ease: "easeOut" }}
+                className="max-w-[620px] text-[16px] leading-[26px] font-semibold text-text-brand"
+              >
+                {t("home.trendScoutSection.description", {
+                  defaultValue:
+                    "Get styled ahead of the global curve. Discover real-time stylistic shifts curated by computational trend models.",
+                })}
+              </motion.p>
+
+              {/* View More */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: false, amount: 0.3 }}
+                transition={{ duration: 0.65, delay: 0.45, ease: "easeOut" }}
+                className="flex items-center gap-2"
+              >
+                <div className="text-[12px] font-semibold text-text-brand">
+                  {trendDate
+                    ? t("home.dailyEditOn", { date: trendDate })
+                    : t("home.dailyEdit")}
+                </div>
+                {/* Admin-only force-refresh button. Hidden for regular users
                 — the daily 07:00 UTC cron + the auto-refresh on read in
                 ``latest_trend_cards`` keep the feed fresh without manual
                 intervention; this is just a triage / "I want it now"
                 lever for the team. */}
-            {isAdmin ? (
-              <Button
-                size="icon"
-                variant="ghost"
-                onClick={refreshTrends}
-                disabled={refreshing}
-                aria-label={t("home.refreshTrends", {
-                  defaultValue: "Refresh trends",
+                {isAdmin ? (
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    onClick={refreshTrends}
+                    disabled={refreshing}
+                    aria-label={t("home.refreshTrends", {
+                      defaultValue: "Refresh trends",
+                    })}
+                    title={t("home.refreshTrends", {
+                      defaultValue: "Refresh trends",
+                    })}
+                    className="h-8 w-8 rounded-full text-primary-brand hover:text-dark-brand"
+                    data-testid="home-trends-refresh-btn"
+                  >
+                    <RefreshCw
+                      className={`h-4 w-4 ${refreshing ? "animate-spin" : ""}`}
+                    />
+                  </Button>
+                ) : null}
+              </motion.div>
+            </div>
+          </div>
+          {/* Swiper */}
+          <motion.div
+            initial={{ opacity: 0, y: 40 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: false, amount: 0.2 }}
+            transition={{ duration: 0.7, delay: 0.2, ease: "easeOut" }}
+            className="trend-swiper relative !overflow-visible"
+          >
+            <Swiper
+              className="mb-[10px]"
+              modules={[Navigation, Autoplay]}
+              slidesPerView={1.15}
+              spaceBetween={15}
+              loop={false}
+              speed={800}
+              autoplay={{
+                delay: 2500,
+                disableOnInteraction: false,
+                pauseOnMouseEnter: true,
+              }}
+              breakpoints={{
+                576: { slidesPerView: 2, spaceBetween: 15 },
+                992: { slidesPerView: 3, spaceBetween: 15 },
+                1200: { slidesPerView: 4, spaceBetween: 15 },
+              }}
+              onBeforeInit={(swiper) => {
+                swiper.params.navigation.prevEl = trendPrevRef.current;
+                swiper.params.navigation.nextEl = trendNextRef.current;
+              }}
+              navigation={{ prevEl: null, nextEl: null }}
+            >
+              {trends === null
+                ? Array.from({ length: 4 }).map((_, i) => (
+                  <SwiperSlide key={i} className="!h-auto">
+                    <Skeleton className="h-full min-h-[300px] w-full rounded-xl" />
+                  </SwiperSlide>
+                ))
+                : (trends.length > 0 ? trends : FALLBACK_TRENDS).map((card, i) => {
+                  const prettyBucket = (bucket) =>
+                    (bucket || "")
+                      .replace(/[-_]+/g, " ")
+                      .replace(/\b\w/g, (char) => char.toUpperCase());
+
+                  const localisedBucket = card.bucket
+                    ? t(`trends.bucket.${card.bucket}`, { defaultValue: "" })
+                    : "";
+
+                  const chip =
+                    localisedBucket || card.label || prettyBucket(card.bucket) || card.tag;
+
+                  const headline = card.headline || card.title;
+                  const body = card.summary || card.body || card.blurb;
+                  const sourceUrl = card.source_url;
+                  const image =
+                    card.image_url ||
+                    "https://i.pinimg.com/736x/17/50/e9/1750e9027cf70bc488293df0f91daa1d.jpg";
+
+                  const visual = BUCKET_VISUALS[card.bucket] || DEFAULT_BUCKET_VISUAL;
+                  const VisualIcon = visual.Icon;
+
+                  return (
+                    <SwiperSlide key={card.id || i} className="!h-auto">
+                      <motion.div
+                        initial={{ opacity: 0, y: 30 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        viewport={{ once: false, amount: 0.3 }}
+                        transition={{ duration: 0.5, delay: i * 0.1, ease: "easeOut" }}
+                        className="group h-full overflow-hidden rounded-[12px] border border-border bg-accent-beige shadow-sm transition-all duration-300 ease-out hover:-translate-y-2 hover:shadow-lg"
+                      >
+                        {/* Image */}
+                        <div className="relative aspect-[16/10] w-full overflow-hidden bg-[#ddd]">
+                          <img
+                            src={image}
+                            alt={headline}
+                            loading="lazy"
+                            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                          />
+                        </div>
+
+                        {/* Meta row */}
+                        <div className="flex items-center justify-between p-3 border-b border-border bg-white">
+                          <div className="flex min-w-0 items-center gap-2">
+                            <span className={`inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full ${visual.tone}`}>
+                              <VisualIcon className="h-3.5 w-3.5" aria-hidden="true" />
+                            </span>
+                            {chip ? (
+                              <span className="truncate text-[11px] font-bold uppercase tracking-wider text-text-brand">
+                                {chip}
+                              </span>
+                            ) : null}
+                          </div>
+                          {card.gender && (
+                            <span className="shrink-0 rounded-full bg-primary-brand px-2 py-0.5 text-[9px] font-semibold uppercase text-white">
+                              {card.gender === "male"
+                                ? t("trends.men", { defaultValue: "Men" })
+                                : t("trends.women", { defaultValue: "Women" })}
+                            </span>
+                          )}
+                        </div>
+
+                        {/* Content */}
+                        <div className="p-3">
+                          <h3 className="mb-0 text-[14px] font-bold leading-snug text-dark-brand">
+                            {headline}
+                          </h3>
+                          {body && (
+                            <p className="mb-0 mt-2 line-clamp-4 text-[12px] font-semibold leading-relaxed text-text-brand">
+                              {body}
+                            </p>
+                          )}
+                          {sourceUrl && (
+
+                            <a href={sourceUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="mt-2 inline-flex items-center gap-1.5 text-[12px] font-semibold text-primary-brand hover:underline"
+                            >
+                              <ExternalLink className="h-4 w-4 shrink-0" aria-hidden="true" />
+                              <span className="truncate">
+                                {t("home.trendReadSource", { defaultValue: "Read source" })}
+                              </span>
+                            </a>
+                          )}
+                        </div>
+                      </motion.div>
+                    </SwiperSlide>
+                  );
                 })}
-                title={t("home.refreshTrends", {
-                  defaultValue: "Refresh trends",
-                })}
-                className="h-8 w-8 rounded-full text-primary-brand hover:text-dark-brand"
-                data-testid="home-trends-refresh-btn"
-              >
-                <RefreshCw
-                  className={`h-4 w-4 ${refreshing ? "animate-spin" : ""}`}
-                />
-              </Button>
-            ) : null}
+            </Swiper>
+
+            {/* Navigation ONLY when MORE THAN 4 cards */}
+            {trends &&
+              (trends.length > 0 ? trends.length : FALLBACK_TRENDS.length) >
+              4 && (
+                <>
+                  <button
+                    ref={trendPrevRef}
+                    type="button"
+                    className="trend-swiper-prev !absolute !start-0 !top-1/2 !z-20 !m-0 !flex !h-11 !w-11 !-translate-y-1/2 !items-center !justify-center !rounded-full !border-0 !bg-[#1F6F6B] !text-white !shadow-md md:!-start-4"
+                    aria-label={t("home.trendScoutSection.prevAria", {
+                      defaultValue: "Previous trend",
+                    })}
+                  >
+                    <i className="bi bi-chevron-left rtl:rotate-180 text-sm" />
+                  </button>
+                  <button
+                    ref={trendNextRef}
+                    type="button"
+                    className="trend-swiper-next !absolute !end-0 !top-1/2 !z-20 !m-0 !flex !h-11 !w-11 !-translate-y-1/2 !items-center !justify-center !rounded-full !border-0 !bg-[#1F6F6B] !text-white !shadow-md md:!-end-4"
+                    aria-label={t("home.trendScoutSection.nextAria", {
+                      defaultValue: "Next trend",
+                    })}
+                  >
+                    <i className="bi bi-chevron-right rtl:rotate-180 text-sm" />
+                  </button>
+                </>
+              )}
           </motion.div>
         </div>
+      </section>
+      {/* trend-scout-section-end */}
+      <div className="">
+        <AdTicker placement="home-footer" className="-mx-4 sm:-mx-6 lg:-mx-8" />
       </div>
-
-      {/* Swiper */}
-      <motion.div
-        initial={{ opacity: 0, y: 40 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: false, amount: 0.2 }}
-        transition={{ duration: 0.7, delay: 0.2, ease: "easeOut" }}
-        className="trend-swiper relative !overflow-visible pb-2.5"
-      >
-        <Swiper
-          modules={[Navigation, Autoplay]}
-          slidesPerView={1.15}
-          spaceBetween={15}
-          loop={false}
-          speed={800}
-          autoplay={{
-            delay: 2500,
-            disableOnInteraction: false,
-            pauseOnMouseEnter: true,
-          }}
-          breakpoints={{
-            576: { slidesPerView: 2, spaceBetween: 15 },
-            992: { slidesPerView: 3, spaceBetween: 15 },
-            1200: { slidesPerView: 4, spaceBetween: 15 },
-          }}
-          onBeforeInit={(swiper) => {
-            swiper.params.navigation.prevEl = trendPrevRef.current;
-            swiper.params.navigation.nextEl = trendNextRef.current;
-          }}
-          navigation={{ prevEl: null, nextEl: null }}
-        >
-          {trends === null
-            ? Array.from({ length: 4 }).map((_, i) => (
-              <SwiperSlide key={i} className="!h-auto">
-                <Skeleton className="h-full min-h-[300px] w-full rounded-xl" />
-              </SwiperSlide>
-            ))
-            : (trends.length > 0 ? trends : FALLBACK_TRENDS).map(
-              (card, i) => {
-                const prettyBucket = (bucket) =>
-                  (bucket || "")
-                    .replace(/[-_]+/g, " ")
-                    .replace(/\b\w/g, (char) => char.toUpperCase());
-
-                const localisedBucket = card.bucket
-                  ? t(`trends.bucket.${card.bucket}`, {
-                    defaultValue: "",
-                  })
-                  : "";
-
-                const chip =
-                  localisedBucket ||
-                  card.label ||
-                  prettyBucket(card.bucket) ||
-                  card.tag;
-
-                const headline = card.headline || card.title;
-                const body = card.summary || card.body || card.blurb;
-                const sourceUrl = card.source_url;
-                const image =
-                  card.image_url ||
-                  "https://i.pinimg.com/736x/17/50/e9/1750e9027cf70bc488293df0f91daa1d.jpg";
-
-                return (
-                  <SwiperSlide key={card.id || i} className="!h-auto">
-                    <motion.div
-                      initial={{ opacity: 0, y: 30 }}
-                      whileInView={{ opacity: 1, y: 0 }}
-                      viewport={{ once: false, amount: 0.3 }}
-                      transition={{
-                        duration: 0.5,
-                        delay: i * 0.1,
-                        ease: "easeOut",
-                      }}
-                      className="group relative flex aspect-square flex-col justify-end overflow-hidden rounded-xl bg-cover bg-top p-5 transition-all duration-300 ease-out hover:-translate-y-2 hover:shadow-[0_20px_45px_rgba(23,20,15,0.12)]"
-                      style={{ backgroundImage: `url(${image})` }}
-                    >
-                      <div className="pointer-events-none absolute inset-0 z-[1] bg-gradient-to-t from-black via-black/0 to-transparent transition-all duration-300 group-hover:from-black group-hover:via-black/30" />
-                      <div className="relative z-[2]">
-                        <span className="mb-2.5 inline-block rounded-full bg-black px-2 py-1 text-xs font-extrabold tracking-[0.5px] text-white">
-                          {chip}
-                        </span>
-                        <h3 className="mb-0 text-[16px] font-extrabold leading-[26px] text-white">
-                          {headline}
-                        </h3>
-                        {body && (
-                          <p className="mb-0 text-[14px] leading-[24px] text-white">
-                            {body}
-                          </p>
-                        )}
-                        {sourceUrl && (
-                          <a
-                            href={sourceUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="mt-2.5 inline-flex items-center gap-1.5 text-[0.85rem] font-medium text-white no-underline opacity-80 transition-all duration-300 group-hover:gap-3 group-hover:opacity-100"
-                          >
-                            {t("home.trendReadSource", {
-                              defaultValue: "Read Editorial",
-                            })}
-                            <i className="bi bi-arrow-right rtl:rotate-180" />
-                          </a>
-                        )}
-                      </div>
-                    </motion.div>
-                  </SwiperSlide>
-                );
-              },
-            )}
-        </Swiper>
-
-        {/* Navigation ONLY when MORE THAN 4 cards */}
-        {trends &&
-          (trends.length > 0 ? trends.length : FALLBACK_TRENDS.length) >
-          4 && (
-            <>
-              <button
-                ref={trendPrevRef}
-                type="button"
-                className="trend-swiper-prev !absolute !start-0 !top-1/2 !z-20 !m-0 !flex !h-11 !w-11 !-translate-y-1/2 !items-center !justify-center !rounded-full !border-0 !bg-[#1F6F6B] !text-white !shadow-md md:!-start-4"
-                aria-label={t("home.trendScoutSection.prevAria", {
-                  defaultValue: "Previous trend",
-                })}
-              >
-                <i className="bi bi-chevron-left rtl:rotate-180 text-sm" />
-              </button>
-              <button
-                ref={trendNextRef}
-                type="button"
-                className="trend-swiper-next !absolute !end-0 !top-1/2 !z-20 !m-0 !flex !h-11 !w-11 !-translate-y-1/2 !items-center !justify-center !rounded-full !border-0 !bg-[#1F6F6B] !text-white !shadow-md md:!-end-4"
-                aria-label={t("home.trendScoutSection.nextAria", {
-                  defaultValue: "Next trend",
-                })}
-              >
-                <i className="bi bi-chevron-right rtl:rotate-180 text-sm" />
-              </button>
-            </>
-          )}
-      </motion.div>
-    </div>
-  </section>
-  {/* trend-scout-section-end */ }
-  <div className="">
-    <AdTicker placement="home-footer" className="-mx-4 sm:-mx-6 lg:-mx-8" />
-  </div>
     </>
   );
 }

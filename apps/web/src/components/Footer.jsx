@@ -8,7 +8,7 @@ export const Footer = () => {
     <footer className="bg-black text-white">
       <div className="w-full px-[40px] pt-[80px] pb-[20px]">
         {/* Footer Main */}
-        <div className="grid grid-cols-1 gap-10 md:grid-cols-2 lg:grid-cols-12 lg:gap-8">
+        <div className="grid grid-cols-1 gap-10 md:grid-cols-2 lg:grid-cols-12 lg:gap-8 items-center">
           {/* Brand / Description */}
           <div className="lg:col-span-3">
             <div className="flex flex-col">
@@ -70,10 +70,9 @@ export const Footer = () => {
               </div>
             </div>
           </div>
-
           {/* Company */}
           <div className="lg:col-span-2">
-            <h5 className="mb-5 text-sm text-white">
+            <h5 className="mb-5 text-sm text-white font-bold">
               {t("footer.company", {
                 defaultValue: "Company",
               })}
@@ -125,10 +124,9 @@ export const Footer = () => {
               </li>
             </ul>
           </div>
-
           {/* Features */}
           <div className="lg:col-span-2">
-            <h5 className="mb-5 text-sm text-white">
+            <h5 className="mb-5 text-sm text-white font-bold">
               {t("footer.features", {
                 defaultValue: "Features",
               })}
@@ -180,10 +178,9 @@ export const Footer = () => {
               </li>
             </ul>
           </div>
-
           {/* Marketplace */}
           <div className="lg:col-span-2">
-            <h5 className="mb-5 text-sm text-white">
+            <h5 className="mb-5 text-sm text-white font-bold">
               {t("footer.marketplace", {
                 defaultValue: "Marketplace",
               })}
@@ -235,10 +232,9 @@ export const Footer = () => {
               </li>
             </ul>
           </div>
-
           {/* Support */}
           <div className="lg:col-span-3">
-            <h5 className="mb-5 text-sm text-white">
+            <h5 className="mb-5 text-sm text-white font-bold">
               {t("footer.support", {
                 defaultValue: "Support",
               })}
@@ -291,7 +287,6 @@ export const Footer = () => {
             </ul>
           </div>
         </div>
-
         {/* Footer Bottom */}
         <div className="mt-[80px] flex flex-col gap-4 border-t border-white/10 pt-[20px] md:flex-row md:items-center md:justify-between">
           <p className="m-0 text-xs leading-6 text-white/50">

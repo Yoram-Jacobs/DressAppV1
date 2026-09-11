@@ -72,6 +72,8 @@ import {
 } from "@/components/ui/select";
 import { SuitcaseErrorBoundary } from "@/components/SuitcaseErrorBoundary";
 import ClosetBanner from "../assets/img/inner6.webp";
+import { PageHeroBanner } from '@/components/ui/PageHeroBanner';
+
 // Helper to find a closet item matching an outfit item (by ID or fallback title match)
 function findClosetMatch(item, closetItems) {
   if (!item) return null;
@@ -248,7 +250,7 @@ function Suitcase() {
   const [selectedArchives, setSelectedArchives] = useState([]);
   const [selectedArchiveId, setSelectedArchiveId] = useState(null);
   const [activeArchive, setActiveArchive] = useState(null);
-
+  const nav = useNavigate();
   const handleDeleteArchives = async () => {
     if (selectedArchives.length === 0) return;
     try {
@@ -1220,20 +1222,7 @@ function Suitcase() {
   return (
     <>
       {/* banner-start */}
-      <section
-        className="
-                relative isolate overflow-hidden
-                bg-cover bg-center bg-no-repeat"
-        style={{
-          backgroundImage: `url(${ClosetBanner})`,
-        }}
-      >
-        {/* Dark gradient overlay */}
-        <div
-          className="
-                  absolute inset-0 -z-0
-                  bg-[linear-gradient(90deg,#080b09_0%,#101612_43%,rgba(16,22,18,0.48)_67%,rgba(16,22,18,0.08)_100%)]"
-        />
+      <PageHeroBanner image={ClosetBanner}>
         <div className="relative z-10 w-full">
           <div
             className="
@@ -1255,7 +1244,9 @@ function Suitcase() {
                         max-[480px]:text-[35px]
                       "
               >
-                Pack Smart Travel Confidently.
+                {t("suitcase.headerTitle", {
+                  defaultValue: "DressApp's Suitcase",
+                })}
               </h1>
 
               {/* Description */}
@@ -1279,73 +1270,14 @@ function Suitcase() {
             </div>
           </div>
         </div>
-      </section>
+      </PageHeroBanner>
       <section className="px-[40px] py-[40px] bg-[var(--accent-beige)]">
-        <div className="flex items-center justify-between">
-          <div className="">
-            <h2 className="font-extrabold text-[var(--dark-color)] text-[30px] tracking-[0.5px] mb-0">
-              {t("suitcase.headerTitle", {
-                defaultValue: "DressApp's Suitcase",
-              })}
-            </h2>
-          </div>
-          <div className="">
-            {activeTab === "suitcase" && viewState !== "gathering" && (
-              <Button
-                variant="destructive"
-                className="rounded-xl flex items-center gap-2"
-                onClick={handleUnpack}
-              >
-                <RefreshCw className="h-4 w-4" />
-                <span>
-                  {t("suitcase.resetTrip", { defaultValue: "Reset" })}
-                </span>
-              </Button>
-            )}
-            {activeTab === "archive" &&
-              archives &&
-              archives.length > 0 &&
-              (isSelectionMode ? (
-                <>
-                  <Button
-                    variant="ghost"
-                    className="rounded-xl flex items-center gap-2"
-                    onClick={() => {
-                      setIsSelectionMode(false);
-                      setSelectedArchives([]);
-                    }}
-                  >
-                    <X className="h-4 w-4" />
-                    <span>
-                      {t("common.cancel", { defaultValue: "Cancel" })}
-                    </span>
-                  </Button>
-                  <Button
-                    variant="destructive"
-                    className="rounded-xl flex items-center gap-2"
-                    onClick={handleDeleteArchives}
-                    disabled={selectedArchives.length === 0 || archiveLoading}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                    <span>
-                      {t("common.delete", { defaultValue: "Delete" })}{" "}
-                      {selectedArchives.length > 0 &&
-                        `(${selectedArchives.length})`}
-                    </span>
-                  </Button>
-                </>
-              ) : (
-                <Button
-                  variant="outline"
-                  className="rounded-xl flex items-center gap-2"
-                  onClick={() => setIsSelectionMode(true)}
-                >
-                  <CheckSquare className="h-4 w-4" />
-                  <span>{t("common.select", { defaultValue: "Select" })}</span>
-                </Button>
-              ))}
-          </div>
-        </div>
+        <button
+          onClick={() => nav(-1)}
+          className="inline-flex items-center text-[14px] font-bold text-dark-brand mb-5 hover:text-primary-brand">
+          <ArrowLeft className="h-4 w-4 me-1 rtl:rotate-180" />{" "}
+          {t("common.back")}
+        </button>
         <Tabs
           value={activeTab}
           onValueChange={(val) => {
@@ -1357,20 +1289,78 @@ function Suitcase() {
           }}
           className="w-full"
         >
-          <TabsList className="inline-flex items-center gap-1 p-[5px] bg-white rounded-full my-5">
-            <TabsTrigger
-              value="suitcase"
-              className="group inline-flex items-center gap-[7px] px-5 py-[10px] rounded-full text-[12px] font-semibold text-[var(--text-color)] bg-transparent border-none transition-all duration-300 cursor-pointer whitespace-nowrap hover:text-[var(--primary-color)] hover:bg-[var(--primary-shadow)] data-[state=active]:!bg-[var(--primary-color)] data-[state=active]:!text-white"
-            >
-              {t("suitcase.tabTrip", { defaultValue: "Active Trip" })}
-            </TabsTrigger>
-            <TabsTrigger
-              value="archive"
-              className="group inline-flex items-center gap-[7px] px-5 py-[10px] rounded-full text-[12px] font-semibold text-[var(--text-color)] bg-transparent border-none transition-all duration-300 cursor-pointer whitespace-nowrap hover:text-[var(--primary-color)] hover:bg-[var(--primary-shadow)] data-[state=active]:!bg-[var(--primary-color)] data-[state=active]:!text-white"
-            >
-              {t("suitcase.tabArchive", { defaultValue: "Traveling Archive" })}
-            </TabsTrigger>
-          </TabsList>
+          <div className="flex items-center justify-between mb-5">
+            <TabsList className="inline-flex items-center gap-1 p-[5px] bg-white rounded-full">
+              <TabsTrigger
+                value="suitcase"
+                className="group inline-flex items-center gap-[7px] px-5 py-[10px] rounded-full text-[12px] font-semibold text-[var(--text-color)] bg-transparent border-none transition-all duration-300 cursor-pointer whitespace-nowrap hover:text-[var(--primary-color)] hover:bg-[var(--primary-shadow)] data-[state=active]:!bg-[var(--primary-color)] data-[state=active]:!text-white"
+              >
+                {t("suitcase.tabTrip", { defaultValue: "Active Trip" })}
+              </TabsTrigger>
+              <TabsTrigger
+                value="archive"
+                className="group inline-flex items-center gap-[7px] px-5 py-[10px] rounded-full text-[12px] font-semibold text-[var(--text-color)] bg-transparent border-none transition-all duration-300 cursor-pointer whitespace-nowrap hover:text-[var(--primary-color)] hover:bg-[var(--primary-shadow)] data-[state=active]:!bg-[var(--primary-color)] data-[state=active]:!text-white"
+              >
+                {t("suitcase.tabArchive", { defaultValue: "Traveling Archive" })}
+              </TabsTrigger>
+            </TabsList>
+            <div className="">
+              {activeTab === "suitcase" && viewState !== "gathering" && (
+                <Button
+                  variant="destructive"
+                  className="rounded-xl flex items-center gap-1"
+                  onClick={handleUnpack}
+                >
+                  <RefreshCw className="h-4 w-4" />
+                  <span>
+                    {t("suitcase.resetTrip", { defaultValue: "Reset" })}
+                  </span>
+                </Button>
+              )}
+              {activeTab === "archive" &&
+                archives &&
+                archives.length > 0 &&
+                (isSelectionMode ? (
+                  <div className="flex gap-3">
+                    <Button
+                      variant="outline"
+                      className="rounded-xl flex items-center gap-1"
+                      onClick={() => {
+                        setIsSelectionMode(false);
+                        setSelectedArchives([]);
+                      }}
+                    >
+                      <X className="h-4 w-4" />
+                      <span>
+                        {t("common.cancel", { defaultValue: "Cancel" })}
+                      </span>
+                    </Button>
+                    <Button
+                      variant="destructive"
+                      className="rounded-xl flex items-center gap-1"
+                      onClick={handleDeleteArchives}
+                      disabled={selectedArchives.length === 0 || archiveLoading}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                      <span>
+                        {t("common.delete", { defaultValue: "Delete" })}{" "}
+                        {selectedArchives.length > 0 &&
+                          `(${selectedArchives.length})`}
+                      </span>
+                    </Button>
+                  </div>
+                ) : (
+                  <Button
+                    variant="outline"
+                    className="rounded-xl flex items-center gap-1"
+                    onClick={() => setIsSelectionMode(true)}
+                  >
+                    <CheckSquare className="h-4 w-4" />
+                    <span>{t("common.select", { defaultValue: "Select" })}</span>
+                  </Button>
+                ))}
+            </div>
+          </div>
           <TabsContent value="suitcase">
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-3">
               {/* Left Column: View State conditionally */}
@@ -1378,10 +1368,10 @@ function Suitcase() {
                 {/* GATHERING INFORMATION VIEW */}
                 {viewState === "gathering" && (
                   <div className="space-y-6 animate-in fade-in-50 duration-300">
-                    <Card className="rounded-[12px] border border-border bg-white overflow-hidden">
-                      <CardContent className="p-6">
+                    <Card className="rounded-[12px] border border-border bg-white overflow-hidden shadow-sm">
+                      <CardContent className="p-5">
                         <div className="">
-                          <h6 className="text-[16px] font-bold text-dark-brand">
+                          <h6 className="text-[16px] font-bold text-dark-brand mb-1">
                             <i className="fa-solid fa-suitcase-rolling text-primary-brand mr-2"></i>
                             {t("suitcase.planNewTrip", {
                               defaultValue: "Plan a New Trip",
@@ -1420,7 +1410,7 @@ function Suitcase() {
                               })}
                             </label>
                             <Select value={purpose} onValueChange={setPurpose}>
-                              <SelectTrigger className="w-full h-11 rounded-lg">
+                              <SelectTrigger>
                                 <SelectValue />
                               </SelectTrigger>
                               <SelectContent>
@@ -1569,7 +1559,7 @@ function Suitcase() {
                 {/* PACKING REVIEW AND REFINEMENT VIEW */}
                 {viewState === "reviewing" && packingData && (
                   <div className="space-y-6 animate-in fade-in-50 duration-300">
-                    <Card className="rounded-[12px] border border-border bg-white overflow-hidden">
+                    <Card className="rounded-[12px] border border-border bg-white shadow-sm overflow-hidden">
                       <CardContent className="p-5">
                         {/* Modesty or Danger alerts */}
                         {(packingData.danger_zones_info ||
@@ -1727,7 +1717,6 @@ function Suitcase() {
                               </div>
                             </AccordionContent>
                           </AccordionItem>
-
                           {/* Packing List Checklist */}
                           <AccordionItem
                             value="checklist"
@@ -1814,7 +1803,7 @@ function Suitcase() {
                                                         closetMatch,
                                                       )}
                                                       alt={closetMatch.title}
-                                                      className="h-9 w-9 rounded-lg object-cover shrink-0 cursor-pointer hover:opacity-80 transition-opacity"
+                                                      className="h-9 w-9 rounded-full border border-border bg-white object-cover shrink-0 cursor-pointer hover:opacity-80 transition-opacity"
                                                       onClick={() =>
                                                         navigate(
                                                           `/closet/${closetMatch.id}`,
@@ -1822,7 +1811,7 @@ function Suitcase() {
                                                       }
                                                     />
                                                   ) : (
-                                                    <div className="h-9 w-9 rounded-lg bg-muted flex items-center justify-center shrink-0">
+                                                    <div className="h-9 w-9 rounded-full border border-border bg-muted flex items-center justify-center shrink-0">
                                                       <ShoppingBag className="h-4 w-4 text-text-brand" />
                                                     </div>
                                                   )}
@@ -1835,7 +1824,7 @@ function Suitcase() {
                                                         )}
                                                       </h6>
                                                       {closetMatch && (
-                                                        <Badge className="bg-yellow-brand text-[10px] text-primary-brand py-[0px] hover:text-white">
+                                                        <Badge className="bg-yellow-brand text-[10px] text-primary-brand py-[0px]">
                                                           {t(
                                                             "suitcase.inClosetBadge",
                                                             {
@@ -1950,7 +1939,6 @@ function Suitcase() {
                               </Card>
                             </AccordionContent>
                           </AccordionItem>
-
                           {/* Local Shopping Advisor */}
                           {Array.isArray(packingData?.local_fashion_stores) &&
                             packingData.local_fashion_stores.length > 0 && (
@@ -2008,18 +1996,17 @@ function Suitcase() {
                                 </AccordionContent>
                               </AccordionItem>
                             )}
-
                           {/* Gaps: Missing Clothing Items */}
                           {Array.isArray(packingData?.missing_items) &&
                             packingData.missing_items.length > 0 && (
                               <AccordionItem
                                 value="gaps"
-                                className="border border-border rounded-2xl bg-card shadow-sm px-6 py-2"
+                                className="border border-border rounded-[12px] bg-white px-[12px]"
                               >
-                                <AccordionTrigger className="hover:no-underline py-4">
+                                <AccordionTrigger className="hover:no-underline">
                                   <div className="flex items-center gap-2">
-                                    <ShoppingBag className="h-5 w-5 text-red-500" />
-                                    <span className="text-lg font-display font-semibold text-dark-brand">
+                                    <ShoppingBag className="h-4 w-4 text-red-500" />
+                                    <span className="text-[14px] font-bold text-dark-brand">
                                       {t("suitcase.gapsHeader", {
                                         defaultValue:
                                           "Gaps: Missing Clothing Items",
@@ -2027,30 +2014,28 @@ function Suitcase() {
                                     </span>
                                   </div>
                                 </AccordionTrigger>
-                                <AccordionContent className="pt-2 pb-6 text-dark-brand">
-                                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <AccordionContent>
+                                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                                     {(Array.isArray(packingData?.missing_items)
                                       ? packingData.missing_items
                                       : []
                                     ).map((m, idx) => (
                                       <div
                                         key={idx}
-                                        className="flex items-start gap-3 p-3 rounded-xl bg-red-50/20 border border-red-100"
+                                        className="flex flex-col p-3 items-start gap-1 rounded-[12px] bg-white border border-border"
                                       >
                                         <Badge
                                           variant="destructive"
-                                          className="uppercase text-[9px] mt-0.5"
+                                          className="uppercase text-[9px]"
                                         >
                                           {labelForRole(m.role, t)}
                                         </Badge>
-                                        <div>
-                                          <p className="text-sm font-medium text-red-900 dark:text-red-300">
-                                            {m.description}
-                                          </p>
-                                          <p className="text-xs text-text-brand">
-                                            {m.reason_needed}
-                                          </p>
-                                        </div>
+                                        <h4 className="text-[14px] font-semibold text-dark-brand">
+                                          {m.description}
+                                        </h4>
+                                        <p className="text-[12px] text-text-brand font-semibold">
+                                          {m.reason_needed}
+                                        </p>
                                       </div>
                                     ))}
                                   </div>
@@ -2058,7 +2043,6 @@ function Suitcase() {
                               </AccordionItem>
                             )}
                         </Accordion>
-
                         {/* Action buttons */}
                         <div className="flex gap-4 mt-5">
                           <Button
@@ -2121,9 +2105,9 @@ function Suitcase() {
                 )}
                 {/* ACTIVE TRIP WORKSPACE */}
                 {viewState === "active" && activeSuitcase && (
-                  <div className="space-y-8 animate-in fade-in-50 duration-300">
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                      <Card className="rounded-2xl border border-border shadow-sm bg-card">
+                  <div className="space-y-4 animate-in fade-in-50 duration-300">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <Card className="rounded-[12px] border border-border bg-white shadow-sm overflow-hidden">
                         <CardContent className="p-4 flex items-center gap-4">
                           <div className="h-12 w-12 bg-[hsl(var(--accent))]/10 rounded-full flex items-center justify-center shrink-0">
                             <MapPin className="h-6 w-6 text-[hsl(var(--accent))]" />
@@ -2140,7 +2124,7 @@ function Suitcase() {
                           </div>
                         </CardContent>
                       </Card>
-                      <Card className="rounded-2xl border border-border shadow-sm bg-card">
+                      <Card className="rounded-[12px] border border-border bg-white shadow-sm overflow-hidden">
                         <CardContent className="p-4 flex items-center gap-4">
                           <div className="h-12 w-12 bg-amber-500/10 rounded-full flex items-center justify-center shrink-0">
                             <Calendar className="h-6 w-6 text-amber-500" />
@@ -2157,7 +2141,7 @@ function Suitcase() {
                           </div>
                         </CardContent>
                       </Card>
-                      <Card className="rounded-2xl border border-border shadow-sm bg-card">
+                      <Card className="rounded-[12px] border border-border bg-white shadow-sm overflow-hidden">
                         <CardContent className="p-4 flex items-center gap-4">
                           <div className="h-12 w-12 bg-emerald-500/10 rounded-full flex items-center justify-center shrink-0">
                             <Briefcase className="h-6 w-6 text-emerald-500" />
@@ -2178,171 +2162,174 @@ function Suitcase() {
                         </CardContent>
                       </Card>
                     </div>
-
-                    {/* Danger alert if any */}
-                    {activeSuitcase.missing_notes && (
-                      <div className="rounded-2xl border border-amber-200 dark:border-amber-950/50 bg-amber-50/55 dark:bg-amber-950/10 p-4 flex gap-3 items-start">
-                        <AlertTriangle className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
-                        <div className="space-y-0.5">
-                          <h4 className="font-semibold text-amber-900 dark:text-amber-300 text-sm">
-                            {t("suitcase.safetyNotesHeader", {
-                              defaultValue:
-                                "Travel Modesty / Safety Advisor Notes",
-                            })}
-                          </h4>
-                          <p className="text-xs text-amber-800 dark:text-amber-400 font-medium leading-relaxed">
-                            {activeSuitcase.missing_notes}
-                          </p>
-                        </div>
-                      </div>
-                    )}
-
-                    <Accordion type="multiple" className="w-full space-y-4">
-                      {/* Proposed Daily Outfits / My Travel Outfits */}
-                      <AccordionItem
-                        value="outfits"
-                        className="border border-border rounded-2xl bg-card shadow-sm px-6 py-2"
-                      >
-                        <AccordionTrigger className="hover:no-underline py-4">
-                          <div className="flex items-center gap-2">
-                            <Calendar className="h-5 w-5 text-[hsl(var(--accent))]" />
-                            <span className="text-lg font-display font-semibold text-dark-brand">
-                              {t("suitcase.myTravelOutfits", {
-                                defaultValue: "My Travel Outfits",
-                              })}
-                            </span>
-                          </div>
-                        </AccordionTrigger>
-                        <AccordionContent className="pt-2 pb-6 text-dark-brand">
-                          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                            {(Array.isArray(activeSuitcase?.outfits)
-                              ? activeSuitcase.outfits
-                              : []
-                            )
-                              .filter(Boolean)
-                              .map((outfit, idx) => (
-                                <Card
-                                  key={idx}
-                                  className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden flex flex-col"
-                                >
-                                  <CardHeader className="bg-muted/10 pb-2 border-b border-border">
-                                    <div className="flex justify-between items-center">
-                                      <Badge className="bg-primary/10 text-primary hover:bg-primary/20 rounded-md py-0.5 text-[10px]">
-                                        {outfit.time_to_wear}
-                                      </Badge>
-                                      <span className="text-[10px] font-semibold text-text-brand">
-                                        {outfit.date}
-                                      </span>
-                                    </div>
-                                    <CardTitle className="text-sm mt-1.5 font-display">
-                                      {outfit.outfit_name}
-                                    </CardTitle>
-                                    <CardDescription className="text-[10px] flex items-center gap-1">
-                                      <MapPin className="h-2.5 w-2.5 text-text-brand" />
-                                      {outfit.location}
-                                    </CardDescription>
-                                  </CardHeader>
-                                  <OutfitCanvas
-                                    outfit={outfit}
-                                    onClick={() => setFullscreenOutfit(outfit)}
-                                    t={t}
-                                  />
-                                  <CardContent className="pt-3 space-y-2 flex-1">
-                                    {(Array.isArray(outfit?.items)
-                                      ? outfit.items
-                                      : []
-                                    )
-                                      .filter(Boolean)
-                                      .map((item, itemIdx) => {
-                                        const matchItem = findClosetMatch(
-                                          item,
-                                          closet.items,
-                                        );
-                                        return (
-                                          <div
-                                            key={itemIdx}
-                                            className="flex items-center gap-2 p-1.5 rounded-lg bg-secondary/20 border border-border/40"
-                                          >
-                                            {bestImageUrl(matchItem) ? (
-                                              <img
-                                                src={bestImageUrl(matchItem)}
-                                                alt={matchItem.title}
-                                                className="h-7 w-7 rounded-md object-cover shrink-0"
-                                              />
-                                            ) : (
-                                              <div className="h-7 w-7 rounded-md bg-muted flex items-center justify-center shrink-0">
-                                                <ShoppingBag className="h-3 w-3 text-text-brand" />
-                                              </div>
-                                            )}
-                                            <div className="min-w-0 flex-1">
-                                              <p className="text-[9px] uppercase font-semibold text-text-brand leading-none">
-                                                {labelForRole(item.role, t)}
-                                              </p>
-                                              <p className="text-xs font-medium truncate">
-                                                {item.description}
-                                              </p>
-                                            </div>
-                                          </div>
-                                        );
-                                      })}
-                                  </CardContent>
-                                </Card>
-                              ))}
-                          </div>
-                        </AccordionContent>
-                      </AccordionItem>
-
-                      {/* Packing List Checklist */}
-                      <AccordionItem
-                        value="checklist"
-                        className="border border-border rounded-2xl bg-card shadow-sm px-6 py-2"
-                      >
-                        <AccordionTrigger className="hover:no-underline py-4">
-                          <div className="flex items-center justify-between w-full pe-4">
-                            <div className="flex items-center gap-2">
-                              <Luggage className="h-5 w-5 text-[hsl(var(--accent))]" />
-                              <span className="text-lg font-display font-semibold text-dark-brand">
-                                {t("suitcase.packingListChecklist", {
-                                  defaultValue: "Packing List Checklist",
+                    <Card className="rounded-[12px] border border-border bg-white shadow-sm overflow-hidden">
+                      <CardContent className="p-5">
+                        {/* Danger alert if any */}
+                        {activeSuitcase.missing_notes && (
+                          <div className="rounded-[12px] mb-[15px] border border-red-200 dark:border-red-950/50 bg-red-50/55 dark:bg-red-950/10 p-3 flex flex-col md:flex-row gap-3 items-start">
+                            <AlertTriangle className="h-6 w-6 text-red-500 shrink-0" />
+                            <div className="space-y-1">
+                              <h3 className="text-[12px] font-semibold text-red-500 dark:text-red-300 text-base">
+                                {t("suitcase.safetyNotesHeader", {
+                                  defaultValue:
+                                    "Travel Modesty / Safety Advisor Notes",
                                 })}
-                              </span>
+                              </h3>
+                              <p className="text-[12px] text-red-500 dark:text-red-400 leading-relaxed font-semibold">
+                                {activeSuitcase.missing_notes}
+                              </p>
                             </div>
-                            <Badge
-                              variant="outline"
-                              className="text-xs bg-muted/50 border-muted-foreground/30"
-                            >
-                              {t("suitcase.itemsCount", {
-                                count:
-                                  activeSuitcase?.packing_list?.length || 0,
-                                defaultValue: "{{count}} Items",
-                              })}
-                            </Badge>
                           </div>
-                        </AccordionTrigger>
-                        <AccordionContent className="pt-2 pb-6 text-dark-brand">
-                          <div className="flex justify-end mb-4">
-                            <Button
-                              size="sm"
-                              onClick={() =>
-                                navigate("/closet/add?from=suitcase")
-                              }
-                              className="rounded-xl flex items-center gap-1 bg-[hsl(var(--accent))] text-white"
-                            >
-                              <Plus className="h-3 w-3" />
-                              {t("suitcase.addPurchase", {
-                                defaultValue: "Add Purchase",
-                              })}
-                            </Button>
-                          </div>
-                          <Card className="rounded-2xl border border-border shadow-sm overflow-hidden">
-                            <CardContent className="p-4 space-y-6">
+                        )}
+                        <Accordion type="multiple" className="w-full space-y-4">
+                          {/* Proposed Daily Outfits / My Travel Outfits */}
+                          <AccordionItem
+                            value="outfits"
+                            className="border border-border rounded-[12px] bg-primary-shadow px-[12px]"
+                          >
+                            <AccordionTrigger className="hover:no-underline">
+                              <div className="flex items-center gap-2">
+                                <Calendar className="h-4 w-4 text-primary-brand" />
+                                <span className="text-[14px] font-bold text-primary-brand">
+                                  {t("suitcase.myTravelOutfits", {
+                                    defaultValue: "My Travel Outfits",
+                                  })}
+                                </span>
+                              </div>
+                            </AccordionTrigger>
+                            <AccordionContent>
+                              <div className="grid grid-cols-2 gap-3">
+                                {(Array.isArray(activeSuitcase?.outfits)
+                                  ? activeSuitcase.outfits
+                                  : []
+                                )
+                                  .filter(Boolean)
+                                  .map((outfit, idx) => (
+                                    <Card
+                                      key={idx}
+                                      className="rounded-[12px] border border-border overflow-hidden flex flex-col bg-white"
+                                    >
+                                      <CardHeader className="p-3 border-b border-border">
+                                        <div className="flex justify-between items-center">
+                                          <h6 className="text-[14px] font-bold text-dark-brand">
+                                            {outfit.outfit_name}
+                                          </h6>
+                                          <Badge className="bg-primary-brand text-white rounded-lg">
+                                            {outfit.time_to_wear}
+                                          </Badge>
+                                        </div>
+                                        <div className="flex gap-3 items-center">
+                                          <p className="flex text-[12px] font-semibold text-text-brand items-center">
+                                            <MapPin className="h-4 w-4 text-text-brand mr-1" />
+                                            {outfit.location}
+                                          </p>
+                                          <span className="text-[12px] font-semibold text-text-brand block">
+                                            {outfit.date}
+                                          </span>
+                                        </div>
+                                      </CardHeader>
+                                      <OutfitCanvas
+                                        outfit={outfit}
+                                        onClick={() => setFullscreenOutfit(outfit)}
+                                        t={t}
+                                      />
+                                      <CardContent>
+                                        <div className="">
+                                          {(Array.isArray(outfit?.items)
+                                            ? outfit.items
+                                            : []
+                                          )
+                                            .filter(Boolean)
+                                            .map((item, itemIdx) => {
+                                              const matchItem = findClosetMatch(
+                                                item,
+                                                closet.items,
+                                              );
+                                              return (
+                                                <div
+                                                  key={itemIdx}
+                                                  className="flex items-center justify-between border-b border-border p-3 gap-1"
+                                                >
+                                                  <div className="flex items-center gap-2">
+                                                    {bestImageUrl(matchItem) ? (
+                                                      <img
+                                                        src={bestImageUrl(matchItem)}
+                                                        alt={matchItem.title}
+                                                        className="h-9 w-9 rounded-lg object-cover shrink-0"
+                                                      />
+                                                    ) : (
+                                                      <div className="h-9 w-9 rounded-lg bg-muted flex items-center justify-center shrink-0">
+                                                        <ShoppingBag className="h-4 w-4 text-text-brand" />
+                                                      </div>
+                                                    )}
+                                                    <div className="">
+                                                      <h6 className="text-[12px] text-dark-brand font-bold">
+                                                        {labelForRole(item.role, t)}
+                                                      </h6>
+                                                      <p className="text-[12px] text-text-brand font-medium">
+                                                        {item.description}
+                                                      </p>
+                                                    </div>
+                                                  </div>
+                                                </div>
+                                              );
+                                            })}
+                                        </div>
+                                      </CardContent>
+                                    </Card>
+                                  ))}
+                              </div>
+                            </AccordionContent>
+                          </AccordionItem>
+                          {/* Packing List Checklist */}
+                          <AccordionItem
+                            value="checklist"
+                            className="border border-border rounded-[12px] bg-primary-shadow px-[12px]"
+                          >
+                            <AccordionTrigger className="hover:no-underline">
+                              <div className="flex items-center justify-between w-full pe-4">
+                                <div className="flex items-center gap-2">
+                                  <Luggage className="h-4 w-4 text-primary-brand" />
+                                  <span className="text-[14px] font-bold text-primary-brand">
+                                    {t("suitcase.packingListChecklist", {
+                                      defaultValue: "Packing List Checklist",
+                                    })}
+                                  </span>
+                                </div>
+                                <Badge
+                                  variant="outline"
+                                  className="text-xs bg-muted/50 border-muted-foreground/30"
+                                >
+                                  {t("suitcase.itemsCount", {
+                                    count:
+                                      activeSuitcase?.packing_list?.length || 0,
+                                    defaultValue: "{{count}} Items",
+                                  })}
+                                </Badge>
+                              </div>
+                            </AccordionTrigger>
+                            <AccordionContent>
+                              <div className="my-3">
+                                <Button
+                                  size="sm"
+                                  onClick={() =>
+                                    navigate("/closet/add?from=suitcase")
+                                  }
+                                  className="!gap-1"
+                                >
+                                  <Plus className="h-3 w-3" />
+                                  {t("suitcase.addPurchase", {
+                                    defaultValue: "Add Purchase",
+                                  })}
+                                </Button>
+                              </div>
                               {CATEGORY_ORDER.map((catCode) => {
                                 const items = groupedActiveList[catCode];
                                 if (!items || items.length === 0) return null;
                                 return (
                                   <div key={catCode} className="space-y-2">
-                                    <div className="flex justify-between items-center pb-1 border-b border-border/40 mb-2">
-                                      <h3 className="text-xs font-semibold uppercase text-text-brand">
+                                    <div className="flex justify-between items-center pb-1 border-b border-border mb-2">
+                                      <h3 className="text-[14px] font-bold text-dark-brand">
                                         {labelForCategory(catCode, t)}
                                       </h3>
                                       <Button
@@ -2352,7 +2339,7 @@ function Suitcase() {
                                           setDialogFilterCategory(catCode);
                                           setClosetDialogOpen(true);
                                         }}
-                                        className="h-6 px-1.5 text-[10px] text-primary rounded-lg flex items-center gap-1 hover:bg-primary/5 font-semibold"
+                                        className="text-[12px] px-0 text-primary-brand flex items-center gap-1 font-semibold"
                                       >
                                         <Plus className="h-3 w-3" />
                                         {t("suitcase.addFromClosetBtn", {
@@ -2379,10 +2366,10 @@ function Suitcase() {
                                                     item.checked,
                                                   )
                                                 }
-                                                className="text-primary-brand focus:outline-none shrink-0"
+                                                className="focus:outline-none shrink-0"
                                               >
                                                 {item.checked ? (
-                                                  <CheckSquare className="h-5 w-5 fill-primary-brand" />
+                                                  <CheckSquare className="h-5 w-5 text-primary-brand" />
                                                 ) : (
                                                   <Square className="h-5 w-5 text-text-brand" />
                                                 )}
@@ -2394,7 +2381,7 @@ function Suitcase() {
                                                     closetMatch,
                                                   )}
                                                   alt={closetMatch.title}
-                                                  className="h-9 w-9 rounded-lg object-cover shrink-0 cursor-pointer hover:opacity-80 transition-opacity"
+                                                  className="h-9 w-9 rounded-full border border-border bg-white object-cover shrink-0 cursor-pointer hover:opacity-80 transition-opacity"
                                                   onClick={() =>
                                                     navigate(
                                                       `/closet/${closetMatch.id}`,
@@ -2402,7 +2389,7 @@ function Suitcase() {
                                                   }
                                                 />
                                               ) : (
-                                                <div className="h-9 w-9 rounded-lg bg-muted flex items-center justify-center shrink-0">
+                                                <div className="h-9 w-9 rounded-full border border-border  bg-muted flex items-center justify-center shrink-0">
                                                   <ShoppingBag className="h-4 w-4 text-text-brand" />
                                                 </div>
                                               )}
@@ -2418,13 +2405,13 @@ function Suitcase() {
                                                   }
                                                 >
                                                   <p
-                                                    className={`text-sm font-medium truncate ${item.checked ? "line-through text-text-brand" : ""}`}
+                                                    className={`text-[12px] font-semibold text-text-brand truncate ${item.checked ? "line-through text-text-brand" : ""}`}
                                                   >
                                                     {item.title}
                                                   </p>
                                                 </div>
                                                 {item.recommendation_source && (
-                                                  <p className="text-[10px] text-amber-600 font-medium truncate">
+                                                  <p className="text-[12px] font-semibold text-primary-brand truncate">
                                                     {t(
                                                       "suitcase.recommendedLabel",
                                                       {
@@ -2440,7 +2427,7 @@ function Suitcase() {
                                             </div>
                                             <div className="flex items-center gap-2">
                                               {item.checked ? (
-                                                <Badge className="hidden md:inline-flex bg-emerald-100 text-emerald-800 hover:bg-emerald-200 rounded-md shrink-0">
+                                                <Badge className="hidden md:inline-flex bg-primary-brand text-white text-[10px] py-[0px] shrink-0">
                                                   {t("suitcase.packedBadge", {
                                                     defaultValue: "Packed",
                                                   })}
@@ -2448,7 +2435,7 @@ function Suitcase() {
                                               ) : (
                                                 <Badge
                                                   variant="outline"
-                                                  className="hidden md:inline-flex text-text-brand rounded-md shrink-0"
+                                                  className="hidden md:inline-flex bg-yellow-brand text-[10px] text-primary-brand py-[0px]"
                                                 >
                                                   {t("suitcase.inClosetBadge", {
                                                     defaultValue: "In Closet",
@@ -2463,9 +2450,9 @@ function Suitcase() {
                                                     item.id,
                                                   )
                                                 }
-                                                className="text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/20 rounded-lg h-8 w-8 shrink-0"
+                                                className="text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/20 rounded-lg"
                                               >
-                                                <Trash2 className="h-3.5 w-3.5" />
+                                                <Trash2 className="h-4 w-4" />
                                               </Button>
                                             </div>
                                           </div>
@@ -2475,118 +2462,114 @@ function Suitcase() {
                                   </div>
                                 );
                               })}
-                            </CardContent>
-                          </Card>
-                        </AccordionContent>
-                      </AccordionItem>
-
-                      {/* Local Shopping Advisor */}
-                      {Array.isArray(activeSuitcase?.local_fashion_stores) &&
-                        activeSuitcase.local_fashion_stores.length > 0 && (
-                          <AccordionItem
-                            value="advisor"
-                            className="border border-amber-200 dark:border-amber-950/50 rounded-2xl bg-amber-50/10 shadow-sm px-6 py-2"
-                          >
-                            <AccordionTrigger className="hover:no-underline py-4">
-                              <div className="flex items-center gap-2">
-                                <Store className="h-5 w-5 text-amber-600" />
-                                <span className="text-lg font-display font-semibold text-amber-900 dark:text-amber-300">
-                                  {t("suitcase.localAdvisorHeader", {
-                                    defaultValue:
-                                      "Local Shopping Advisor (Top 3)",
-                                  })}
-                                </span>
-                              </div>
-                            </AccordionTrigger>
-                            <AccordionContent className="pt-2 pb-6 text-dark-brand">
-                              <div className="text-xs text-text-brand mb-4 font-medium">
-                                {t("suitcase.localAdvisorDesc", {
-                                  defaultValue:
-                                    "Missing items? Buy them locally in the destination area.",
-                                })}
-                              </div>
-                              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                {(Array.isArray(
-                                  activeSuitcase?.local_fashion_stores,
-                                )
-                                  ? activeSuitcase.local_fashion_stores
-                                  : []
-                                )
-                                  .slice(0, 3)
-                                  .map((store, idx) => (
-                                    <a
-                                      key={idx}
-                                      href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(store.name + " " + store.address_or_area)}`}
-                                      target="_blank"
-                                      rel="noopener noreferrer"
-                                      className="block p-4 bg-card border border-border rounded-xl space-y-1 hover:border-amber-400 hover:shadow-md transition-all"
-                                    >
-                                      <h4 className="text-sm font-semibold text-primary hover:underline flex items-center gap-1.5">
-                                        {store.name}
-                                        <MapPin className="h-3 w-3 text-amber-600" />
-                                      </h4>
-                                      <p className="text-xs text-text-brand">
-                                        {store.address_or_area}
-                                      </p>
-                                      <p className="text-xs italic text-amber-700 mt-1">
-                                        {store.why}
-                                      </p>
-                                    </a>
-                                  ))}
-                              </div>
                             </AccordionContent>
                           </AccordionItem>
-                        )}
-
-                      {/* Gaps: Missing Clothing Items */}
-                      {Array.isArray(activeSuitcase?.missing_items) &&
-                        activeSuitcase.missing_items.length > 0 && (
-                          <AccordionItem
-                            value="gaps"
-                            className="border border-border rounded-2xl bg-card shadow-sm px-6 py-2"
-                          >
-                            <AccordionTrigger className="hover:no-underline py-4">
-                              <div className="flex items-center gap-2">
-                                <ShoppingBag className="h-5 w-5 text-red-500" />
-                                <span className="text-lg font-display font-semibold text-dark-brand">
-                                  {t("suitcase.gapsHeader", {
-                                    defaultValue:
-                                      "Gaps: Missing Clothing Items",
-                                  })}
-                                </span>
-                              </div>
-                            </AccordionTrigger>
-                            <AccordionContent className="pt-2 pb-6 text-dark-brand">
-                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                {(Array.isArray(activeSuitcase?.missing_items)
-                                  ? activeSuitcase.missing_items
-                                  : []
-                                ).map((m, idx) => (
-                                  <div
-                                    key={idx}
-                                    className="flex items-start gap-3 p-3 rounded-xl bg-red-50/20 border border-red-100"
-                                  >
-                                    <Badge
-                                      variant="destructive"
-                                      className="uppercase text-[9px] mt-0.5"
-                                    >
-                                      {labelForRole(m.role, t)}
-                                    </Badge>
-                                    <div>
-                                      <p className="text-sm font-medium text-red-900 dark:text-red-300">
-                                        {m.description}
-                                      </p>
-                                      <p className="text-xs text-text-brand">
-                                        {m.reason_needed}
-                                      </p>
-                                    </div>
+                          {/* Local Shopping Advisor */}
+                          {Array.isArray(activeSuitcase?.local_fashion_stores) &&
+                            activeSuitcase.local_fashion_stores.length > 0 && (
+                              <AccordionItem
+                                value="advisor"
+                                className="border border-yellow-border rounded-[12px] bg-yellow-shadow px-[12px]"
+                              >
+                                <AccordionTrigger className="hover:no-underline">
+                                  <div className="flex items-center gap-2">
+                                    <Store className="h-4 w-4 text-primary-brand" />
+                                    <span className="text-[14px] font-bold text-primary-brand">
+                                      {t("suitcase.localAdvisorHeader", {
+                                        defaultValue:
+                                          "Local Shopping Advisor (Top 3)",
+                                      })}
+                                    </span>
                                   </div>
-                                ))}
-                              </div>
-                            </AccordionContent>
-                          </AccordionItem>
-                        )}
-                    </Accordion>
+                                </AccordionTrigger>
+                                <AccordionContent>
+                                  <div className="text-[12px] font-bold text-text-brand mb-4">
+                                    {t("suitcase.localAdvisorDesc", {
+                                      defaultValue:
+                                        "Missing items? Buy them locally in the destination area.",
+                                    })}
+                                  </div>
+                                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                                    {(Array.isArray(
+                                      activeSuitcase?.local_fashion_stores,
+                                    )
+                                      ? activeSuitcase.local_fashion_stores
+                                      : []
+                                    )
+                                      .slice(0, 3)
+                                      .map((store, idx) => (
+                                        <a
+                                          key={idx}
+                                          href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(store.name + " " + store.address_or_area)}`}
+                                          target="_blank"
+                                          rel="noopener noreferrer"
+                                          className="block bg-white p-5 rounded-[12px] space-y-1"
+                                        >
+                                          <h4 className="text-[14px] font-semibold text-text-brand hover:underline flex items-center gap-1">
+                                            <MapPin className="h-3 w-3 text-primary-brand" />
+                                            {store.name}
+                                          </h4>
+                                          <p className="text-[12px] text-primary-brand font-semibold">
+                                            {store.address_or_area}
+                                          </p>
+                                          <p className="text-[12px] text-text-brand font-semibold italic">
+                                            {store.why}
+                                          </p>
+                                        </a>
+                                      ))}
+                                  </div>
+                                </AccordionContent>
+                              </AccordionItem>
+                            )}
+                          {/* Gaps: Missing Clothing Items */}
+                          {Array.isArray(activeSuitcase?.missing_items) &&
+                            activeSuitcase.missing_items.length > 0 && (
+                              <AccordionItem
+                                value="gaps"
+                                className="border border-border rounded-[12px] bg-white px-[12px]"
+                              >
+                                <AccordionTrigger className="hover:no-underline">
+                                  <div className="flex items-center gap-2">
+                                    <ShoppingBag className="h-4 w-4 text-red-500" />
+                                    <span className="text-[14px] font-bold text-dark-brand">
+                                      {t("suitcase.gapsHeader", {
+                                        defaultValue:
+                                          "Gaps: Missing Clothing Items",
+                                      })}
+                                    </span>
+                                  </div>
+                                </AccordionTrigger>
+                                <AccordionContent>
+                                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                    {(Array.isArray(activeSuitcase?.missing_items)
+                                      ? activeSuitcase.missing_items
+                                      : []
+                                    ).map((m, idx) => (
+                                      <div
+                                        key={idx}
+                                        className="flex flex-col p-3 items-start gap-1 rounded-[12px] bg-white border border-border"
+                                      >
+                                        <Badge
+                                          variant="destructive"
+                                          className="uppercase text-[9px]"
+                                        >
+                                          {labelForRole(m.role, t)}
+                                        </Badge>
+                                        <h4 className="text-[14px] font-semibold text-dark-brand">
+                                          {m.description}
+                                        </h4>
+                                        <p className="text-[12px] text-text-brand font-semibold">
+                                          {m.reason_needed}
+                                        </p>
+                                      </div>
+                                    ))}
+                                  </div>
+                                </AccordionContent>
+                              </AccordionItem>
+                            )}
+                        </Accordion>
+                      </CardContent>
+                    </Card>
                   </div>
                 )}
               </div>
@@ -2616,14 +2599,14 @@ function Suitcase() {
                         <div
                           key={index}
                           className={`flex ${msg.role === "user"
-                              ? "justify-end"
-                              : "justify-start"
+                            ? "justify-end"
+                            : "justify-start"
                             }`}
                         >
                           <div
                             className={`max-w-[85%] px-[15px] py-[5px] text-[12px] leading-relaxed font-bold mb-[15px] ${msg.role === "user"
-                                ? "bg-primary-brand text-white rounded-tl-[30px] rounded-tr-[30px] rounded-br-[0px] rounded-bl-[30px]"
-                                : "bg-accent-beige text-text-brand rounded-tl-[30px] rounded-tr-[30px] rounded-br-[30px] rounded-bl-[0px]"
+                              ? "bg-primary-brand text-white rounded-tl-[30px] rounded-tr-[30px] rounded-br-[0px] rounded-bl-[30px]"
+                              : "bg-accent-beige text-text-brand rounded-tl-[30px] rounded-tr-[30px] rounded-br-[30px] rounded-bl-[0px]"
                               }`}
                           >
                             {(() => {
@@ -2693,15 +2676,13 @@ function Suitcase() {
               </div>
             </div>
           </TabsContent>
-
           <TabsContent value="archive" className="space-y-6">
-            <h2 className="text-xl font-display font-semibold flex items-center gap-2">
-              <Archive className="h-5 w-5 text-primary" />
+            <h2 className="text-[16px] text-dark-brand font-bold flex items-center gap-2">
+              <Archive className="!h-5 !w-5 text-primary-brand" />
               {t("suitcase.tripPackingArchives", {
                 defaultValue: "Trip Packing Archives",
               })}
             </h2>
-
             {archiveLoading ? (
               <div className="flex justify-center py-10">
                 <Loader2 className="h-8 w-8 animate-spin text-[hsl(var(--accent))]" />
@@ -2714,7 +2695,7 @@ function Suitcase() {
                 })}
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {(Array.isArray(archives) ? archives : []).map((arch, idx) => {
                   const isSelected = selectedArchives.includes(arch.id);
                   return (
@@ -2731,9 +2712,9 @@ function Suitcase() {
                           setSelectedArchive(arch);
                         }
                       }}
-                      className={`relative rounded-2xl border bg-card shadow-sm transition-all cursor-pointer overflow-hidden ${isSelected
-                          ? "border-primary-brand ring-1 ring-primary-brand"
-                          : "border-border hover:scale-[1.01] hover:border-primary/30"
+                      className={`relative rounded-[12px] border bg-white shadow-sm transition-all cursor-pointer overflow-hidden ${isSelected
+                        ? "border-primary-brand"
+                        : "border-border hover:scale-[1.01] hover:border-primary-brand"
                         }`}
                     >
                       {isSelectionMode && (
@@ -2741,16 +2722,16 @@ function Suitcase() {
                           {isSelected ? (
                             <CheckSquare className="h-5 w-5" />
                           ) : (
-                            <Square className="h-5 w-5 text-text-brand/50" />
+                            <Square className="h-5 w-5 text-text-brand" />
                           )}
                         </div>
                       )}
-                      <CardHeader className="bg-muted/10 pb-3 border-b border-border">
-                        <CardTitle className="text-base font-display flex items-center gap-2 pe-6">
+                      <CardHeader className="p-5 pb-0">
+                        <CardTitle className="text-[14px] font-bold text-dark-brand flex items-center gap-2 mb-1">
                           <MapPin className="h-4 w-4 text-primary-brand" />
                           {arch.destination}
                         </CardTitle>
-                        <CardDescription className="text-xs">
+                        <CardDescription className="text-[12px] font-semibold text-text-brand">
                           {t("suitcase.tripDates", {
                             dep:
                               arch?.departure_time &&
@@ -2766,8 +2747,8 @@ function Suitcase() {
                           })}
                         </CardDescription>
                       </CardHeader>
-                      <CardContent className="pt-3">
-                        <p className="text-xs text-text-brand font-medium capitalize">
+                      <CardContent className="p-5">
+                        <p className="text-[12px] text-text-brand font-semibold capitalize">
                           {t("suitcase.purposeLabel", {
                             defaultValue: "Purpose",
                           })}
@@ -2781,7 +2762,7 @@ function Suitcase() {
                           })}
                           : {arch.preferred_style}
                         </p>
-                        <p className="text-xs text-text-brand mt-2 truncate">
+                        <p className="text-[12px] text-text-brand font-semibold mt-2 truncate">
                           {arch.notes ||
                             t("suitcase.archiveNoNotes", {
                               defaultValue: "No notes.",
@@ -2795,7 +2776,6 @@ function Suitcase() {
             )}
           </TabsContent>
         </Tabs>
-
         {/* GPS SIMULATOR DIALOG */}
         <Dialog open={showSimModal} onOpenChange={setShowSimModal}>
           <DialogContent className="rounded-2xl max-w-md">
@@ -2848,7 +2828,6 @@ function Suitcase() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
-
         {/* ARCHIVE DETAIL MODAL */}
         <Dialog
           open={!!selectedArchive}
@@ -2857,38 +2836,36 @@ function Suitcase() {
           }}
         >
           {selectedArchive && (
-            <DialogContent className="rounded-2xl max-w-2xl max-h-[85vh] overflow-y-auto">
-              <DialogHeader>
-                <DialogTitle>
-                  {t("suitcase.archiveDetailsHeader", {
-                    destination: selectedArchive.destination,
-                    defaultValue: "Archive details: {{destination}}",
-                  })}
-                </DialogTitle>
-                <DialogDescription>
-                  {t("suitcase.tripDates", {
-                    dep:
-                      selectedArchive?.departure_time &&
-                        typeof selectedArchive.departure_time === "string"
-                        ? selectedArchive.departure_time.split("T")[0]
-                        : "",
-                    ret:
-                      selectedArchive?.return_time &&
-                        typeof selectedArchive.return_time === "string"
-                        ? selectedArchive.return_time.split("T")[0]
-                        : "",
-                    defaultValue: "Trip dates: {{dep}} to {{ret}}",
-                  })}
-                </DialogDescription>
-              </DialogHeader>
-              <div className="space-y-4 py-3">
+            <DialogContent className="rounded-[12px] !max-w-5xl max-h-[85vh] overflow-y-auto">
+              <DialogTitle>
+                {t("suitcase.archiveDetailsHeader", {
+                  destination: selectedArchive.destination,
+                  defaultValue: "Archive details: {{destination}}",
+                })}
+              </DialogTitle>
+              <DialogDescription>
+                {t("suitcase.tripDates", {
+                  dep:
+                    selectedArchive?.departure_time &&
+                      typeof selectedArchive.departure_time === "string"
+                      ? selectedArchive.departure_time.split("T")[0]
+                      : "",
+                  ret:
+                    selectedArchive?.return_time &&
+                      typeof selectedArchive.return_time === "string"
+                      ? selectedArchive.return_time.split("T")[0]
+                      : "",
+                  defaultValue: "Trip dates: {{dep}} to {{ret}}",
+                })}
+              </DialogDescription>
+              <div className="space-y-3">
                 <div>
-                  <h4 className="text-sm font-semibold uppercase text-text-brand mb-1">
+                  <h4 className="text-[14px] font-bold text-dark-brand">
                     {t("suitcase.tripDetailsHeader", {
                       defaultValue: "Trip Details",
                     })}
                   </h4>
-                  <p className="text-sm">
+                  <p className="text-[12px] font-semibold text-text-brand">
                     {t("suitcase.purposeLabel", { defaultValue: "Purpose" })}:{" "}
                     <span className="font-semibold capitalize">
                       {t(`suitcase.purpose_${selectedArchive.purpose}`, {
@@ -2905,7 +2882,7 @@ function Suitcase() {
                     </span>
                   </p>
                   {selectedArchive.notes && (
-                    <p className="text-xs text-text-brand mt-1 italic">
+                    <p className="text-[12px] font-semibold text-text-brand italic">
                       {t("suitcase.archiveNotesLabel", {
                         notes: selectedArchive.notes,
                         defaultValue: "Notes: {{notes}}",
@@ -2915,12 +2892,12 @@ function Suitcase() {
                 </div>
 
                 <div>
-                  <h4 className="text-sm font-semibold uppercase text-text-brand mb-2">
+                  <h4 className="text-[14px] font-bold text-dark-brand mb-2">
                     {t("suitcase.savedOutfitsHeader", {
                       defaultValue: "Saved Outfits",
                     })}
                   </h4>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                     {(Array.isArray(selectedArchive?.outfits)
                       ? selectedArchive.outfits
                       : []
@@ -2929,16 +2906,16 @@ function Suitcase() {
                       .map((outfit, idx) => (
                         <div
                           key={idx}
-                          className="p-3 bg-secondary/35 rounded-xl border border-border space-y-1"
+                          className="p-3 bg-accent-beige rounded-[12px] border border-border space-y-1"
                         >
                           <div className="flex justify-between items-center text-[10px] text-text-brand">
                             <span className="font-semibold">{outfit.date}</span>
-                            <span>{outfit.time_to_wear}</span>
+                            <span className="font-semibold">{outfit.time_to_wear}</span>
                           </div>
-                          <h5 className="text-sm font-semibold">
+                          <h5 className="text-[12px] font-bold text-dark-bold">
                             {outfit.outfit_name}
                           </h5>
-                          <ul className="text-xs space-y-0.5 text-text-brand mt-1.5 list-disc list-inside">
+                          <ul className="text-[12px] space-y-0.5 text-text-brand font-semibold mt-1.5 list-disc list-inside">
                             {(Array.isArray(outfit?.items) ? outfit.items : [])
                               .filter(Boolean)
                               .map((it, itIdx) => (
@@ -2951,27 +2928,26 @@ function Suitcase() {
                       ))}
                   </div>
                 </div>
-
                 <div>
-                  <h4 className="text-sm font-semibold uppercase text-text-brand mb-2">
+                  <h4 className="text-[14px] font-bold text-dark-brand mb-2">
                     {t("suitcase.archivedChecklistHeader", {
                       defaultValue: "Archived Packing Checklist",
                     })}
                   </h4>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                     {(Array.isArray(selectedArchive?.packing_list)
                       ? selectedArchive.packing_list
                       : []
                     ).map((it, idx) => (
                       <div
                         key={idx}
-                        className="flex items-center gap-2 text-xs p-1.5 bg-card border border-border rounded-lg"
+                        className="flex items-center gap-2 text-xs p-1.5 bg-white border border-border rounded-full"
                       >
-                        <div className="h-2 w-2 rounded-full bg-emerald-500 shrink-0" />
-                        <span className="truncate">{it.title}</span>
+                        <div className="h-2 w-2 rounded-full bg-primary-brand shrink-0" />
+                        <span className="text-[10px] font-semibold text-text-brand truncate">{it.title}</span>
                         <Badge
                           variant="outline"
-                          className="text-[8px] uppercase ms-auto shrink-0"
+                          className="text-[8px] font-bold text-dark-brand uppercase ms-auto shrink-0"
                         >
                           {labelForCategory(it.category, t)}
                         </Badge>
@@ -2991,7 +2967,6 @@ function Suitcase() {
             </DialogContent>
           )}
         </Dialog>
-
         {/* Full screen outfit view */}
         <Dialog
           open={!!fullscreenOutfit}
@@ -3153,7 +3128,6 @@ function Suitcase() {
             )}
           </DialogContent>
         </Dialog>
-
         {/* ADD FROM CLOSET DIALOG */}
         <AddFromClosetDialog
           open={closetDialogOpen}
@@ -3275,8 +3249,8 @@ function AddFromClosetDialog({
                   key={item.id}
                   onClick={() => onSelect(item)}
                   className={`group relative cursor-pointer border border-border bg-card rounded-[12px] overflow-hidden shadow-sm transition-all ${alreadyPackedIds.has(item.id)
-                      ? "opacity-55 pointer-events-none"
-                      : "hover:border-primary-brand"
+                    ? "opacity-55 pointer-events-none"
+                    : "hover:border-primary-brand"
                     }`}
                 >
                   <div className="aspect-square bg-accent-beige relative flex items-center justify-center overflow-hidden">

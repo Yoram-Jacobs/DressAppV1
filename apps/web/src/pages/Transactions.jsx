@@ -43,6 +43,7 @@ import { transactionsStore } from '@/lib/marketplaceStore';
 import { useCachedList } from '@/lib/createCachedStore';
 import { toast } from 'sonner';
 import PrivacyBanner from '../assets/img/inner6.webp';
+import { PageHeroBanner } from '@/components/ui/PageHeroBanner';
 import ReceiptIllustration from '../assets/img/receipt.png';
 
 
@@ -150,23 +151,7 @@ export default function Transactions() {
   return (
     <div data-testid="transactions-page">
       {/* Banner Section */}
-      <section
-        className="
-          relative isolate overflow-hidden
-          bg-cover bg-center bg-no-repeat
-        "
-        style={{
-          backgroundImage: `url(${PrivacyBanner})`,
-        }}
-      >
-        {/* Dark gradient overlay */}
-        <div
-          className="
-            absolute inset-0 -z-0
-            bg-[linear-gradient(90deg,#080b09_0%,#101612_43%,rgba(16,22,18,0.48)_67%,rgba(16,22,18,0.08)_100%)]
-          "
-        />
-
+      <PageHeroBanner image={PrivacyBanner}>
         <div className="relative z-10 w-full">
           <div
             className="
@@ -209,7 +194,7 @@ export default function Transactions() {
             </div>
           </div>
         </div>
-      </section>
+      </PageHeroBanner>
       <section className="bg-accent-beige px-[40px] py-[40px] max-[767px]:px-5 max-[767px]:py-10">
         <Tabs value={activeKind} onValueChange={setActiveKind} className="w-full">
           {/* Segmented pill tabs — matches the Camera & Upload / Digital Import control */}
