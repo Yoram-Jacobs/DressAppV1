@@ -23,7 +23,7 @@ async function handleCaptureVisibleTab(sender) {
   try {
     const windowId = sender?.tab?.windowId;
     const dataUrl = await chrome.tabs.captureVisibleTab(
-      windowId,
+      windowId ?? null,
       { format: 'jpeg', quality: 70 },
     );
     if (typeof dataUrl !== 'string') {
@@ -32,6 +32,17 @@ async function handleCaptureVisibleTab(sender) {
     const i = dataUrl.indexOf(',');
     return { ok: true, image_b64: i >= 0 ? dataUrl.slice(i + 1) : dataUrl };
   } catch (e) {
+    try {
+      const dataUrl = await chrome.tabs.captureVisibleTab(
+        null,
+        { format: 'jpeg', quality: 70 },
+      );
+      if (typeof dataUrl === 'string') {
+        const i = dataUrl.indexOf(',');
+        return { ok: true, image_b64: i >= 0 ? dataUrl.slice(i + 1) : dataUrl };
+      }
+    } catch (_) {}
+
     const msg = e?.message || 'captureVisibleTab failed';
     return {
       ok: false,
@@ -40,6 +51,31 @@ async function handleCaptureVisibleTab(sender) {
         /<all_urls>|activeTab|cannot access|no host permission|MAY_BE_REMOTELY_HOSTED/i
           .test(msg),
     };
+  }
+}
+
+async function handleFetchImageB64(msg) {
+  const url = msg?.url;
+  if (!url || typeof url !== 'string') {
+    return { ok: false, error: 'no url provided' };
+  }
+  try {
+    const resp = await fetch(url);
+    if (!resp.ok) {
+      return { ok: false, error: `HTTP ${resp.status} fetching image` };
+    }
+    const blob = await resp.blob();
+    const buffer = await blob.arrayBuffer();
+    let binary = '';
+    const bytes = new Uint8Array(buffer);
+    const len = bytes.byteLength;
+    for (let i = 0; i < len; i++) {
+      binary += String.fromCharCode(bytes[i]);
+    }
+    const b64 = btoa(binary);
+    return { ok: true, image_b64: b64 };
+  } catch (e) {
+    return { ok: false, error: e?.message || 'failed to fetch image' };
   }
 }
 
@@ -73,6 +109,7 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
     [messages.FETCH_ME]:            () => widgetCore.handleFetchMe(chromeStorage),
     [messages.ANALYZE_CHART]:       () => widgetCore.handleAnalyze(chromeStorage, msg.payload),
     [messages.CAPTURE_VISIBLE_TAB]: () => handleCaptureVisibleTab(sender),
+    [messages.FETCH_IMAGE_B64]:     () => handleFetchImageB64(msg),
     [messages.SEND_SCREENSHOTS_TO_DRESSAPP]: () => handleSendScreenshotsToDressApp(msg),
   };
   const handler = handlers[msg?.type];

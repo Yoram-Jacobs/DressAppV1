@@ -100,8 +100,15 @@ function showFab() {
 // Image -> base64 helpers
 // ---------------------------------------------------------------------
 async function imageToB64Jpeg(img) {
-  const src = img.currentSrc || img.src;
+  const src = img.currentSrc || img.src || img.dataset?.src || img.getAttribute('data-src');
   if (!src) return null;
+  // First try background service worker fetch to bypass page CORS restrictions (e.g. alicdn, shein, cdn)
+  try {
+    const bgRes = await sendToBackground({ type: messages.FETCH_IMAGE_B64, url: src });
+    if (bgRes?.ok && bgRes.image_b64) {
+      return bgRes.image_b64;
+    }
+  } catch (_) { /* fallback to fetch / canvas */ }
   try {
     const resp = await fetch(src, { credentials: 'omit', cache: 'force-cache' });
     if (resp.ok) {
@@ -272,10 +279,22 @@ async function onAnalyze(ev) {
       return;
     }
 
-    // If we detected a chart image or element on screen, tightly crop its CSS rect
-    // from the viewport screenshot. This eliminates CORS/tainted-canvas problems with
-    // CDN images (e.g. AliExpress ae01.alicdn.com) and sends the clean bounded region.
+    // If we detected a chart image or element on screen, send its image directly (via background service worker)
+    // or tightly crop its CSS rect from the viewport screenshot.
     if (chartImg) {
+      try {
+        let chart_screenshot_b64 = await imageToB64Jpeg(chartImg);
+        if (chart_screenshot_b64) {
+          await _sendForAnalysis({
+            chart_screenshot_b64,
+            garment_type: generic.detectGarmentType(document),
+          });
+          return;
+        }
+      } catch (e) {
+        log('imageToB64Jpeg direct failed', e);
+      }
+
       try {
         const r = chartImg.getBoundingClientRect();
         const rect = {
@@ -288,22 +307,10 @@ async function onAnalyze(ev) {
           await cropAndAnalyze(rect, chartImg);
           return;
         }
-      } catch { /* fall through to direct b64 / viewport */ }
+      } catch { /* fall through to manual crop */ }
 
-      let chart_screenshot_b64 = await imageToB64Jpeg(chartImg);
-      if (!chart_screenshot_b64) {
-        const cap = await _captureViewportWithPermission();
-        chart_screenshot_b64 = typeof cap === 'string' ? cap : null;
-      }
-      if (!chart_screenshot_b64) {
-        dismissOverlay();
-        enterCropMode({ reason: 'auto-no-image' });
-        return;
-      }
-      await _sendForAnalysis({
-        chart_screenshot_b64,
-        garment_type: generic.detectGarmentType(document),
-      });
+      dismissOverlay();
+      enterCropMode({ reason: 'auto-no-image' });
       return;
     }
 
@@ -735,7 +742,7 @@ async function cropAndAnalyze(rect, targetEl = null) {
       }
     }
 
-    if (!cropped && !fallbackHtml && !fallbackText) {
+    if (!cropped && (!fallbackText || !fallbackText.trim())) {
       // Surface the actual underlying error so we can debug what's
       // blocking captureVisibleTab. Three known causes:
       //   1. Extension was reloaded → orphaned content script (stale_context).
