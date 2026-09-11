@@ -154,6 +154,7 @@ function _intersectsViewport(el) {
 
 export function detectAnchor(_doc = document) {
   const candidates = [
+    // Direct size controls & pickers
     'select[name*=size i]',
     'select[id*=size i]',
     '[data-testid*=size i]',
@@ -167,16 +168,62 @@ export function detectAnchor(_doc = document) {
     'label[for*=size i]',
     'button[aria-label*="size" i]',
     'button[aria-haspopup="dialog"][aria-label*=size i]',
+
+    // Shein & fast fashion containers
+    '[class*="product-intro__size"]',
+    '[class*="goods-size"]',
+    '[class*="size-list"]',
+    '[class*="spec-list"]',
+    '[class*="she-btn-group"]',
+    '[data-attr-name="Size" i]',
+    '[data-attr-name="size" i]',
+    '[class*="sizeRadio" i]',
+    '[class*="size-radio" i]',
+
+    // ASOS & Zara & H&M specific selectors
+    '[data-testid="size-selector"]',
+    '[data-testid="select-size"]',
+    'select[data-id="sizeSelect"]',
+    '[data-qa-action="size-selector"]',
+    '[data-qa-action="size-list"]',
+    '.product-size-selector',
+    '[data-elid="size-selector"]',
+
+    // Amazon
+    '#native_dropdown_selected_size_name',
+    '#inline-twister-row-size_name',
+    '#dropdown_selected_size_name',
+    '#tp-inline-twister-dim-container-size_name',
   ];
+
   for (const sel of candidates) {
     const el = _doc.querySelector(sel);
     if (el && _isVisible(el)) return el;
   }
+
+  // Text-based fallback: look for size headings or labels
   const all = _doc.querySelectorAll('label, h2, h3, span, div');
   for (const el of all) {
     const txt = (el.innerText || '').trim().toLowerCase();
     if (/^size\b/.test(txt) && txt.length < 24 && _isVisible(el)) return el;
   }
+
+  // Safety fallback: if no explicit size selector was found, attach near Add to Cart / Bag button
+  const cartCandidates = [
+    'button[id*="add-to-cart" i]',
+    'button[class*="add-to-cart" i]',
+    'button[class*="btn-add-to-bag" i]',
+    '[data-testid*="add-to-bag" i]',
+    '[data-testid*="add-to-cart" i]',
+    'button[name="add-to-cart" i]',
+    'button[id*="addToCart" i]',
+    '#add-to-cart-button',
+  ];
+  for (const sel of cartCandidates) {
+    const el = _doc.querySelector(sel);
+    if (el && _isVisible(el)) return el;
+  }
+
   return null;
 }
 
@@ -186,12 +233,33 @@ export function detectGarmentType(_doc = document) {
     _doc.querySelector('h1')?.innerText,
     _doc.title,
   ].filter(Boolean).join(' ').toLowerCase();
+
+  // Multi-piece sets & full-body garments should match with highest priority
+  const setKeywords = [
+    'matching outfit', 'matching-outfit', 'outfit set', 'outfit', 'outfits',
+    '2-pieces', '2 pieces', '2-piece', '2 piece', 'two-piece', 'two piece',
+    'pants set', 'skirt set', 'short set', 'shorts set',
+    'tracksuit', 'sweatsuit', 'co-ord', 'coord', 'jumpsuit', 'romper', 'overall', 'overalls',
+    'suit set', 'suit', 'suits'
+  ];
+  for (const phrase of setKeywords) {
+    const re = new RegExp(`(^|[^a-z0-9])${phrase}([^a-z0-9]|$)`, 'i');
+    if (re.test(sources)) return phrase;
+  }
+
+  // If the product title mentions both an upper piece and a lower piece (e.g. "shirt and trousers", "top & pants")
+  const hasUpperMention = /(?:^|[^a-z0-9])(?:shirt|t-shirt|tshirt|top|blouse|jacket|coat|hoodie|sweater|blazer|cardigan|tank|vest)(?:[^a-z0-9]|$)/i.test(sources);
+  const hasLowerMention = /(?:^|[^a-z0-9])(?:pants|trousers|jeans|shorts|skirt|leggings|sweatpants|bottom|bottoms)(?:[^a-z0-9]|$)/i.test(sources);
+  if (hasUpperMention && hasLowerMention) {
+    return 'two-piece set';
+  }
+
   const dict = [
     'sneakers', 'sneaker', 'boots', 'boot', 'sandals', 'sandal', 'loafers', 'loafer',
     'heels', 'heel', 'flats', 'flat', 'slippers', 'slipper', 'pumps', 'pump',
     'clogs', 'clog', 'shoes', 'shoe', 'footwear',
     't-shirt', 'tshirt', 'shirt', 'blouse', 'dress', 'skirt', 'pants', 'trousers',
-    'jeans', 'shorts', 'jacket', 'coat', 'hoodie', 'sweater', 'jumper', 'suit',
+    'jeans', 'shorts', 'jacket', 'coat', 'hoodie', 'sweater', 'jumper',
     'blazer', 'cardigan', 'swimwear', 'bra', 'underwear', 'briefs', 'bralette',
     'socks', 'leggings', 'tights', 'tank', 'top'
   ];

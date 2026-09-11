@@ -50,7 +50,7 @@ function createAnchorButton() {
 
 function mountAnchorButton() {
   if (!isTopFrame) return false;
-  const anchor = generic.detectAnchor(document);
+  const anchor = adapter.detectAnchor?.(document) || generic.detectAnchor(document);
   if (!anchor) return false;
   if (anchor.hasAttribute(ANCHOR_MOUNTED_ATTR)) return true;
   anchor.setAttribute(ANCHOR_MOUNTED_ATTR, '1');
@@ -842,6 +842,17 @@ window.addEventListener('message', async (e) => {
 const observer = new MutationObserver(scheduleMount);
 observer.observe(document.documentElement, { subtree: true, childList: true });
 void scheduleMount();
+
+// Support dynamic SPA transitions (e.g. user navigating between products on Shein, Zara, ASOS)
+window.addEventListener('popstate', scheduleMount);
+window.addEventListener('hashchange', scheduleMount);
+let _lastUrl = location.href;
+setInterval(() => {
+  if (location.href !== _lastUrl) {
+    _lastUrl = location.href;
+    scheduleMount();
+  }
+}, 1000);
 
 document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape' && !_cropActive) {

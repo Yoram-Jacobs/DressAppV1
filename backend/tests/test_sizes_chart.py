@@ -6,6 +6,8 @@ Verifies:
 2. Footwear (shoes, sneakers, boots) use foot_length (cm) and shoe_size,
    and NEVER evaluate torso circumferences (chest, waist, hip).
 3. Lower-body garments (pants, jeans, skirts) evaluate waist and hip.
+4. Full-body garments, sets, suits, jumpsuits, and overalls evaluate BOTH top and bottom,
+   recommending the safe bounding size so neither top nor bottom is too small.
 """
 
 from app.api.v1.sizes import (
@@ -38,11 +40,19 @@ def test_detect_category():
     assert _detect_category("jeans", "") == "lower"
     assert _detect_category("skirt", "") == "lower"
     assert _detect_category("dress", "") == "full"
+    assert _detect_category("jumpsuit", "") == "full"
+    assert _detect_category("suit", "") == "full"
+    assert _detect_category("2-pieces", "") == "full"
+    assert _detect_category("2 piece outfit", "") == "full"
+    assert _detect_category("pants set", "") == "full"
 
-    # From chart text fallback when garment_type is missing/generic
+    # From chart text fallback when garment_type is missing or generic
     assert _detect_category(None, "Size | Insole Length (cm) | Foot Length\n38 | 24.5 | 24.0") == "footwear"
     assert _detect_category(None, "Size | Chest (cm) | Shoulder (cm)\nS | 92 | 42") == "upper"
     assert _detect_category(None, "Size | Waist (cm) | Hip (cm) | Inseam\n30 | 76 | 96 | 80") == "lower"
+    assert _detect_category(None, "Size | Bust | Waist Size | Hip Size | Inseam\n1XL | 126 | 83 | 124 | 71") == "full"
+    # Even if garment_type was given as shirt, chart with both upper and lower columns detects as full/set
+    assert _detect_category("shirt", "Size | Shoulder | Bust | Waist Size | Hip Size | Top Length | Inseam\n1XL | 52 | 126 | 83 | 124 | 80 | 71") == "full"
 
 
 def test_upper_body_sizing_ignores_hip():
@@ -123,3 +133,46 @@ def test_lower_body_sizing_evaluates_waist_and_hip():
     assert result is not None
     assert result["recommended_size"] == "M"
     assert "waist" in result["matched_columns"] or "hip" in result["matched_columns"]
+
+
+def test_two_piece_set_evaluates_top_and_bottom_bounding_size():
+    """Shein 2-piece outfit test:
+    User has Chest=91.8 (fits 1XL chest 126), Waist=84 (1XL waist 83 is too small!).
+    Must recommend 2XL (waist 89 >= 84) so the pants are not too small!
+    """
+    shein_chart = """
+    Size | Shoulder | Bust | Waist Size | Hip Size | Length | Top Length | Inseam | Sleeve Length
+    1XL  | 52       | 126  | 83         | 124      | 103    | 80         | 71     | 65
+    2XL  | 54       | 134  | 89         | 130      | 104.5  | 81.5       | 72.5   | 66
+    3XL  | 56       | 142  | 95         | 136      | 106    | 83         | 74     | 67
+    4XL  | 58       | 150  | 101        | 142      | 107.5  | 84.5       | 75.5   | 68
+    5XL  | 60       | 158  | 107        | 148      | 109    | 86         | 77     | 69
+    6XL  | 62       | 166  | 113        | 154      | 110.5  | 87.5       | 78.5   | 70
+    """
+    user_measurements = {
+        "chest": 91.8,
+        "shoulder": 48.0,
+        "waist": 84.0,  # 84 cm exceeds 1XL (83 cm), fits 2XL (89 cm)
+        "hip": 98.0,
+    }
+
+    result = _heuristic_match(
+        chart_text=shein_chart,
+        measurements=user_measurements,
+        garment_type="2-pieces outfit set",
+    )
+    assert result is not None
+    # 1XL must NOT be recommended because waist 83 < 84!
+    assert result["recommended_size"] == "2XL"
+    assert "chest" in result["matched_columns"] or "bust" in result["matched_columns"]
+    assert "waist" in result["matched_columns"]
+    assert "accommodates both your top" in result["reasoning"] or "fits" in result["reasoning"]
+
+
+if __name__ == "__main__":
+    for name, func in list(globals().items()):
+        if name.startswith("test_") and callable(func):
+            print(f"Running {name}...")
+            func()
+            print(f"PASS: {name}")
+    print("\nAll tests passed successfully!")

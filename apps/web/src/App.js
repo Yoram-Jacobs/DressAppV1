@@ -7,6 +7,7 @@ import { AuthProvider } from '@/lib/auth';
 import { LocationProvider } from '@/lib/location';
 import { PayPalProvider } from '@/lib/paypal';
 import { AppLayout } from '@/components/AppLayout';
+import { PublicLegalLayout } from '@/components/PublicLegalLayout';
 import { PublicOnly } from '@/components/PublicOnly';
 import { PageLoadingFallback } from '@/components/ui/PageLoadingFallback';
 import { WorkProgressFloater } from '@/components/WorkProgressFloater';
@@ -143,12 +144,16 @@ function App() {
                       <Route path="/ads" element={<AdsManager />} />
                       <Route path="/me" element={<Profile />} />
                       <Route path="/delete-account" element={<DeleteAccount />} />
-                      <Route path="/privacy" element={<Privacy />} />
-                      <Route path="/terms" element={<TermsOfService />} />
                       <Route path="/me/stats" element={<WardrobeStats />} />
                       <Route path="/trends" element={<TrendScout />} />
                       <Route path="/avatar" element={<AvatarPage />} />
                       <Route path="/pricing" element={<Pricing />} />
+                    </Route>
+                    
+                    {/* Public legal routes (Privacy Policy & Terms) accessible without login */}
+                    <Route element={<PublicLegalLayout />}>
+                      <Route path="/privacy" element={<Privacy />} />
+                      <Route path="/terms" element={<TermsOfService />} />
                     </Route>
                     
                     {/* Fallback route */}

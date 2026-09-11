@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DressApp — Privacy Policy</title>
+  <meta name="description" content="DressApp Privacy Policy — How we collect, use, and protect your personal data, wardrobe photos, and body measurements." />
+  <link rel="icon" href="/favicon.ico" />
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background-color: #FAFAF8;
+      color: #18181B;
+      line-height: 1.6;
+    }
+    header {
+      background: #FFFFFF;
+      border-bottom: 1px solid #E4E4E7;
+      padding: 16px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+    .brand {
+      font-size: 20px;
+      font-weight: 800;
+      color: #18181B;
+      text-decoration: none;
+    }
+    .brand span { color: #1F6F6B; }
+    .container {
+      max-width: 860px;
+      margin: 40px auto;
+      background: #FFFFFF;
+      padding: 48px;
+      border-radius: 16px;
+      border: 1px solid #E4E4E7;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.04);
+    }
+    h1 { font-size: 32px; font-weight: 800; margin-bottom: 16px; color: #1F6F6B; }
+    h2 { font-size: 22px; font-weight: 700; margin-top: 32px; margin-bottom: 12px; border-bottom: 1px solid #E4E4E7; padding-bottom: 8px; }
+    h3 { font-size: 17px; font-weight: 600; margin-top: 20px; margin-bottom: 8px; }
+    p { margin-bottom: 14px; font-size: 15px; color: #27272A; }
+    li { margin-left: 24px; margin-bottom: 6px; font-size: 15px; }
+    hr { border: none; border-top: 1px solid #E4E4E7; margin: 28px 0; }
+    code { background: #f4f4f5; padding: 2px 6px; border-radius: 4px; font-size: 13px; }
+    .legal-table { width: 100%; border-collapse: collapse; margin: 20px 0; font-size: 14px; }
+    .legal-table th, .legal-table td { border: 1px solid #E4E4E7; padding: 10px 12px; text-align: left; }
+    .legal-table th { background: #f8fafc; font-weight: 600; }
+    footer { text-align: center; padding: 32px; color: #71717A; font-size: 13px; }
+    @media (max-width: 640px) {
+      .container { margin: 16px; padding: 24px; }
+      h1 { font-size: 24px; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <a href="/" class="brand">Dress<span>App</span></a>
+    <a href="/" style="color: #1F6F6B; text-decoration: none; font-weight: 600; font-size: 14px;">&larr; Return to DressApp</a>
+  </header>
+  <main class="container">
+    <h1>DressApp Privacy Policy</h1>
+    <p><strong>Effective Date:</strong> July 27, 2026</p>
+    <p><strong>Last Updated:</strong> July 27, 2026</p>
+    <p>This Privacy Policy describes how DressApp ("we," "our," or "us") collects, uses, stores, shares, and protects your personal data when you use our digital wardrobe and outfit-styling application.</p>
+    <p>Please read this policy carefully. By using DressApp, you consent to the data practices described herein. If you do not agree, you may not use the application.</p>
+    <hr />
+    <h2>1. Information We Collect</h2>
+    <h3>1.1 Account & Profile Information</h3>
+    <p>When you create an account or connect via social login, we collect:</p>
+    <li><strong>Email address</strong> — used for account identification, authentication, and transactional communications.</li>
+    <li><strong>Password</strong> — stored as a cryptographic hash; we never store plaintext passwords.</li>
+    <li><strong>Display name</strong> — your chosen public name within the app.</li>
+    <li><strong>First name and last name</strong> — populated from Google OAuth profile or entered manually; editable at any time.</li>
+    <li><strong>Phone number</strong> — optional; used for account recovery and notifications.</li>
+    <li><strong>Date of birth</strong> — optional; used for age-appropriate content filtering.</li>
+    <li><strong>Sex</strong> — optional; used for body measurement and avatar recommendations.</li>
+    <li><strong>Personal status</strong> — optional (single, married, divorced, widowed).</li>
+    <li><strong>Address</strong> — optional; structured as {line1, line2, city, region, country, postal_code}.</li>
+    <li><strong>Locale and preferred language</strong> — used to localize the app experience.</li>
+    <li><strong>Preferred voice</strong> — used for AI stylist voice output.</li>
+    <li><strong>Avatar and profile photos</strong> — face photo and body photo, stored as base64 data URLs in MongoDB (capped at ~500 KB each client-side).</li>
+    <li><strong>Body measurements</strong> — height, weight, bust, waist, hips, and other measurements used for avatar generation and garment fit recommendations.</li>
+    <li><strong>Hair profile</strong> — length, type, color, and style (optional).</li>
+    <li><strong>Home location</strong> — city, country, and coordinates (lat/lng), used for weather-based outfit suggestions and campaign targeting.</li>
+    <li><strong>Style profile and cultural context</strong> — your style preferences and cultural background used for personalized recommendations.</li>
+    <h3>1.2 Wardrobe & Media Data</h3>
+    <p>DressApp is a digital closet application. The following data is core to the app's functionality:</p>
+    <li><strong>Wardrobe photos</strong> — images you upload of your clothing items. These are processed in-browser for background removal (matting) and then stored as data URLs in MongoDB.</li>
+    <li><strong>Garment metadata</strong> — category (Top, Bottom, Footwear, Outerwear, Dress, Accessory), brand, color, size, season, tradition, dress code, gender, and sub-category tags.</li>
+    <li><strong>Outfit data</strong> — saved outfit combinations linking multiple wardrobe items together.</li>
+    <li><strong>Marketplace listings</strong> — if you sell or swap items, listing details including photos, price, and shipping information.</li>
+    <li><strong>Suitcase/packing data</strong> — trip packing lists with items, quantities, and purpose tags (e.g., "Tracking / Outdoors").</li>
+    <h3>1.3 Device Permissions</h3>
+    <p>DressApp requests the following device permissions:</p>
+    <li><strong>Camera</strong> — to capture photos of clothing items directly within the app.</li>
+    <li><strong>Photo library / file system access</strong> — to select existing photos for upload.</li>
+    <li><strong>Geolocation</strong> — coarse location access to fetch weather data for outfit recommendations. You can deny or revoke this permission at any time.</li>
+    <li><strong>Notifications</strong> — optional push notifications for campaign updates and stylist suggestions.</li>
+    <h3>1.4 AI & Machine Learning Processing</h3>
+    <p>DressApp uses on-device and server-side AI for the following purposes:</p>
+    <li><strong>Background removal (matting)</strong> — your uploaded garment photos are processed through the `rembg` / u2netp pipeline to extract clean cutouts. This processing occurs server-side.</li>
+    <li><strong>Body prediction</strong> — the SegFormer model estimates body measurements from full-body outfit photos.</li>
+    <li><strong>Garment classification</strong> — CLIP-based classification tags items with categories, colors, and brands.</li>
+    <li><strong>Stylist recommendations</strong> — Google Gemini API processes your wardrobe data to generate outfit suggestions and styling advice.</li>
+    <li><strong>Avatar generation</strong> — 3D avatar shape parameters are calculated from body measurements for virtual try-on.</li>
+    <p><strong>Important:</strong> User-uploaded photos are <strong>not</strong> used to train any machine learning models. They are processed solely to provide the app's core features and are not shared with model training pipelines.</p>
+    <h3>1.5 Usage Data & Analytics</h3>
+    <p>We collect aggregate, anonymized usage data to improve the app:</p>
+    <li>App activity and feature usage patterns.</li>
+    <li>Item interaction data (views, edits, deletions).</li>
+    <li>Device identifiers (IP address, OS version, browser type).</li>
+    <li>Campaign analytics (ad impressions, clicks, views) — these are tied to campaign IDs, not to individual user identities.</li>
+    <p>We do <strong>not</strong> use third-party analytics SDKs (no Mixpanel, Firebase Analytics, Amplitude, Sentry, LogRocket, or similar). All analytics are handled internally.</p>
+    <h3>1.6 Payment Data</h3>
+    <p>If you use DressApp's marketplace or subscription features, we collect:</p>
+    <li><strong>Stripe</strong> — Stripe account ID, subscription ID, and payment intent IDs. Actual payment card numbers are never stored on our servers; they are handled directly by Stripe.</li>
+    <li><strong>PayPal</strong> — PayPal receiver email and order/capture IDs.</li>
+    <li><strong>Apple Pay / Google Play</strong> — payment tokens handled by the respective platform SDKs; we do not store card details.</li>
+    <h3>1.7 Third-Party Authentication Data</h3>
+    <li><strong>Google OAuth</strong> — when you sign in with Google, we receive and store an encrypted OAuth token (`google_oauth` field) used to access your Google profile (name, email, avatar) and, optionally, Google Calendar and People API for scheduling and contact features.</li>
+    <hr />
+    <h2>2. How We Use Your Data</h2>
+    <p>We use your data for the following purposes:</p>
+    <table class="legal-table">
+    <thead><tr><th>Purpose</th><th>Legal Basis (GDPR)</th><th>Data Types</th></tr></thead>
+    <tbody>
+    <tr><td>Provide core app features (wardrobe organization, outfit creation, avatar generation)</td><td>Contractual necessity</td><td>Wardrobe photos, metadata, body measurements</td></tr>
+    <tr><td>Process background removal and garment matting</td><td>Contractual necessity</td><td>Uploaded garment photos</td></tr>
+    <tr><td>Generate AI stylist recommendations</td><td>Legitimate interest</td><td>Wardrobe metadata, style profile</td></tr>
+    <tr><td>Fetch weather data for outfit suggestions</td><td>Consent (location permission)</td><td>Home location (coarse)</td></tr>
+    <tr><td>Authenticate and manage user accounts</td><td>Contractual necessity</td><td>Email, password hash, OAuth tokens</td></tr>
+    <tr><td>Send transactional emails (account confirmations, password resets, deletion confirmations)</td><td>Contractual necessity</td><td>Email address</td></tr>
+    <tr><td>Process marketplace payments</td><td>Contractual necessity</td><td>Stripe/PayPal tokens, billing info</td></tr>
+    <tr><td>Detect and prevent fraud / abuse</td><td>Legitimate interest</td><td>IP address, device identifiers</td></tr>
+    <tr><td>Improve app functionality (aggregate analytics)</td><td>Legitimate interest</td><td>Anonymized usage data</td></tr>
+    <tr><td>Comply with legal obligations</td><td>Legal obligation</td><td>All data as required by law</td></tr>
+    </tbody>
+    </table>
+    <hr />
+    <h2>3. Data Storage & Security</h2>
+    <h3>3.1 Storage</h3>
+    <li><strong>Database:</strong> MongoDB Atlas (cloud-hosted, M0 free tier or paid tier depending on deployment).</li>
+    <li><strong>Images:</strong> Wardrobe photos are stored as base64-encoded data URLs within MongoDB documents. Each image is capped at ~500 KB client-side before upload.</li>
+    <li><strong>Model cache:</strong> AI model weights (SegFormer, u2netp) are cached on persistent Docker volumes on the production server to avoid re-downloading on every request.</li>
+    <li><strong>No external blob store</strong> is used for images at this time; all image data resides in MongoDB.</li>
+    <h3>3.2 Security</h3>
+    <li>All data in transit is encrypted via <strong>HTTPS/TLS 1.3</strong>.</li>
+    <li>Passwords are stored as <strong>bcrypt hashes</strong> — never in plaintext.</li>
+    <li>Google OAuth tokens are stored encrypted at rest.</li>
+    <li>Payment data (Stripe/PayPal tokens) is never stored in plaintext on our servers; we store only reference IDs.</li>
+    <li>MongoDB Atlas provides <strong>encryption at rest</strong> and <strong>encryption in transit</strong> by default.</li>
+    <li>Access to the database is restricted to the backend application via connection string credentials.</li>
+    <h3>3.3 Data Retention</h3>
+    <li>Your data is retained for as long as your account is active.</li>
+    <li>Upon account deletion (see Section 5), all personal data is permanently removed from MongoDB within 30 days.</li>
+    <li>Aggregated, anonymized analytics data may be retained indefinitely and cannot be linked back to individual users.</li>
+    <hr />
+    <h2>4. Data Sharing & Third Parties</h2>
+    <p>We share your data with the following third parties only as described below:</p>
+    <table class="legal-table">
+    <thead><tr><th>Third Party</th><th>Data Shared</th><th>Purpose</th></tr></thead>
+    <tbody>
+    <tr><td>**MongoDB Atlas**</td><td>All user data and wardrobe images</td><td>Cloud database hosting</td></tr>
+    <tr><td>**Google (OAuth)**</td><td>Email, name, profile photo</td><td>Authentication and profile creation</td></tr>
+    <tr><td>**Google Calendar API**</td><td>Calendar event data (if connected)</td><td>Stylist scheduling features</td></tr>
+    <tr><td>**Google People API**</td><td>Contact data (if connected)</td><td>Social features</td></tr>
+    <tr><td>**Google Gemini API**</td><td>Wardrobe metadata and item descriptions</td><td>AI stylist recommendations</td></tr>
+    <tr><td>**Stripe**</td><td>Payment tokens, billing info</td><td>Payment processing</td></tr>
+    <tr><td>**PayPal**</td><td>Payment tokens, billing info</td><td>Payment processing</td></tr>
+    <tr><td>**Resend / SendGrid**</td><td>Email address and name</td><td>Transactional email delivery</td></tr>
+    </tbody>
+    </table>
+    <p><strong>We do NOT sell your personal data or wardrobe photos to third-party brokers, advertisers, or data aggregators.</strong></p>
+    <hr />
+    <h2>5. Your Rights & Account Deletion</h2>
+    <p>Under GDPR (EU/EEA), CCPA (California), and other applicable privacy laws, you have the following rights:</p>
+    <h3>5.1 Access & Export</h3>
+    <p>You can request a copy of all personal data we hold about you by contacting us (see Section 6). We will provide a JSON export of your account data, including wardrobe items, outfits, and profile information.</p>
+    <h3>5.2 Correction</h3>
+    <p>You can update or correct your profile information at any time through the app's Settings page. Fields you can edit include: display name, first/last name, phone, date of birth, address, body measurements, home location, and style preferences.</p>
+    <h3>5.3 Erasure (Right to Be Forgotten)</h3>
+    <p>You can delete your account and all associated data at any time:</p>
+    <li><strong>In-app:</strong> Navigate to Settings → Account → Delete Account.</li>
+    <li><strong>API:</strong> Send a `POST` request to `/api/v1/users/me/delete` (authenticated).</li>
+    <p>Account deletion triggers a <strong>cascade delete</strong> across all collections:</p>
+    <li>User document</li>
+    <li>All closet items (wardrobe photos and metadata)</li>
+    <li>All outfits</li>
+    <li>All marketplace listings</li>
+    <li>All suitcases and packing lists</li>
+    <li>All stylist sessions and messages</li>
+    <li>All credit topups and transaction records</li>
+    <li>All embeddings (AI-generated data)</li>
+    <li>All web push subscriptions</li>
+    <p>A deletion confirmation email is sent to your registered email address.</p>
+    <h3>5.4 Data Portability</h3>
+    <p>You can request your data in a structured, machine-readable format (JSON) at any time. Contact us using the details in Section 6.</p>
+    <h3>5.5 Withdraw Consent</h3>
+    <p>You can withdraw consent for location access, camera access, and marketing communications at any time through your device settings or the app's Settings page. Withdrawing consent may limit certain app features (e.g., weather-based outfit suggestions).</p>
+    <h3>5.6 Right to Object (LGPD Art. 18, GDPR Art. 21)</h3>
+    <p>Under LGPD (Brazil) and GDPR (EU/EEA), you have the right to object to the processing of your personal data for specific purposes, including:</p>
+    <li>Processing based on legitimate interest</li>
+    <li>Direct marketing</li>
+    <li>Profiling and automated decision-making (including AI-based stylist recommendations)</li>
+    <p>To object, contact us using the details in Section 6.</p>
+    <h3>5.7 Cross-Border Data Transfers</h3>
+    <p>DressApp is an international application. Your data may be transferred to and processed in countries other than your country of residence, including Israel and the United States. We ensure that all transfers are governed by appropriate safeguards, including Standard Contractual Clauses (SCCs) where required by applicable law.</p>
+    <hr />
+    <h2>6. Contact Information</h2>
+    <p>For privacy-related inquiries, data access requests, deletion requests, or to report a privacy concern, contact us at:</p>
+    <p><strong>Email:</strong> dev@dressapp.co</p>
+    <p><strong>Address:</strong> DressApp, 11 Hanoter St, 8442711 Be'er-Sheva, Israel</p>
+    <p>We will respond to all valid requests within 30 days, as required by applicable privacy laws including GDPR, CCPA, LGPD, PIPEDA, and other international data protection regulations.</p>
+    <p>For Data Subject Access Requests (DSARs), please include your account email address and a description of the data you wish to access or modify.</p>
+    <hr />
+    <h2>7. Children's Privacy</h2>
+    <p>DressApp is not intended for children under the age of 16 (or the applicable age of digital consent in your jurisdiction, whichever is higher). We do not knowingly collect personal data from anyone under this age. If we become aware that a minor has provided us with personal data, we will take steps to delete it promptly.</p>
+    <p>If you are a parent or legal guardian and believe your child has provided us with personal data, please contact us at dev@dressapp.co and we will take immediate action.</p>
+    <hr />
+    <h2>8. International Compliance</h2>
+    <p>DressApp is designed to operate in all countries. This Privacy Policy is drafted to comply with the following international data protection frameworks:</p>
+    <table class="legal-table">
+    <thead><tr><th>Framework</th><th>Jurisdiction</th><th>Key Provisions Covered</th></tr></thead>
+    <tbody>
+    <tr><td>**GDPR**</td><td>EU/EEA</td><td>Lawful basis, data subject rights, DPO contact, international transfers, breach notification</td></tr>
+    <tr><td>**CCPA/CPRA**</td><td>California, USA</td><td>Right to know, delete, opt-out of sale, non-discrimination</td></tr>
+    <tr><td>**LGPD**</td><td>Brazil</td><td>Lawful basis, data subject rights, DPO, international transfers, consent</td></tr>
+    <tr><td>**PIPEDA**</td><td>Canada</td><td>Consent, access, correction, accountability, breach notification</td></tr>
+    <tr><td>**POPIA**</td><td>South Africa</td><td>Lawful processing, data subject rights, cross-border transfer</td></tr>
+    <tr><td>**PDPA**</td><td>Thailand</td><td>Consent, data subject rights, international transfer</td></tr>
+    <tr><td>**PDPL**</td><td>Saudi Arabia</td><td>Lawful basis, data subject rights, international transfer</td></tr>
+    </tbody>
+    </table>
+    <p>Where a specific jurisdiction's law requires additional rights or protections beyond what is described in this policy, those additional rights apply.</p>
+    <hr />
+    <h2>9. Changes to This Privacy Policy</h2>
+    <p>We may update this Privacy Policy from time to time. We will notify you of material changes by:</p>
+    <li>Posting the updated policy on this page with a revised "Effective Date."</li>
+    <li>Sending an email notification to your registered email address for significant changes.</li>
+    <li>Displaying an in-app notice the next time you open the app.</li>
+    <p>We encourage you to review this policy periodically.</p>
+    <hr />
+    <h2>10. Effective Date & Governing Law</h2>
+    <p>This Privacy Policy is effective as of <strong>July 27, 2026</strong>.</p>
+    <p>DressApp is an international application operating across all countries. This policy is governed by the principles of the <strong>General Data Protection Regulation (GDPR)</strong> — EU/EEA, the <strong>California Consumer Privacy Act (CCPA)</strong> — United States, the <strong>Lei Geral de Proteção de Dados (LGPD)</strong> — Brazil, the <strong>Personal Information Protection and Electronic Documents Act (PIPEDA)</strong> — Canada, and other applicable international data protection laws. In the event of any conflict between these frameworks, the most protective standard for the user shall apply.</p>
+    <hr />
+    <h2>10. App Store Compliance</h2>
+    <p>This Privacy Policy is publicly hosted at:</p>
+    <p><strong>https://dressapp.co/privacy</strong></p>
+    <p>It is referenced in:</p>
+    <li><strong>Apple App Store Connect</strong> — App Privacy section</li>
+    <li><strong>Google Play Console</strong> — Data Safety section</li>
+    <li><strong>In-app Settings</strong> — a direct link is available in the Settings menu</li>
+    <li><strong>Onboarding flow</strong> — a privacy notice is shown during first-time account setup</li>
+    <hr />
+    <p>*DressApp respects your privacy and is committed to transparent data practices. If you have any questions about this policy or how we handle your data, please contact us at dev@dressapp.co.*</p>
+  </main>
+  <footer>
+    &copy; 2026 DressApp. All rights reserved.
+  </footer>
+</body>
+</html>

@@ -171,8 +171,11 @@ WHAT TO DO
    * **LOWER-BODY GARMENTS** (pants, trousers, jeans, shorts, skirts):
        - Match against **WAIST**, **HIP**, and **INSEAM**. Chest and shoulders are ignored.
 
-   * **FULL-BODY GARMENTS** (dresses, jumpsuits, suits):
-       - Check chest, waist, and hip. Pick the smallest size accommodating all relevant dimensions.
+   * **TWO-PIECE SETS, SUITS, FULL-BODY OUTFITS, JUMPSUITS, OVERALLS, DRESSES**:
+       - When the garment is a two-piece set (e.g. shirt + pants set, suit, tracksuit), a jumpsuit, overalls, or dress, or when the chart contains BOTH upper-body headers (Bust/Chest/Shoulder/Top Length/Sleeve) AND lower-body headers (Waist/Hip/Inseam/Pants Length):
+       - You MUST evaluate **BOTH the upper-body dimensions (Chest/Bust/Shoulder) AND the lower-body dimensions (Waist/Hip)**.
+       - A single size is purchased for the set/outfit. Therefore, the recommended size MUST comfortably fit BOTH the top and bottom pieces (i.e. bounding size). If the user fits size 1XL on chest but their waist requires size 2XL because 1XL pants waist is too small, you MUST recommend 2XL so the pants are not too small. Explain in ``reasoning`` that 2XL accommodates both pieces (e.g. top and bottom).
+       - In ``matched_columns``, include the relevant columns evaluated from both pieces (e.g. ``["chest", "shoulder", "waist", "hip"]``).
 
    * **CIRCUMFERENCE columns** (Bust / Chest / Waist / Hip / Neck / Thigh) — the garment must be at least as wide as the user.
        - Range cell "lo-hi": user value must satisfy ``lo <= v <= hi``.
@@ -364,12 +367,13 @@ def _build_user_prompt(
         f"USER CLOTHING SIZES THEY NORMALLY BUY:\n{clothing_sizes_str}",
         f"USER HEIGHT / WEIGHT CONTEXT:\n{context_dims_str}",
         (
-            "IMPORTANT:\n"
             "- For UPPER-BODY garments (shirts, tops, t-shirts, jackets, hoodies, coats, sweaters, bras): "
             "recommend based on CHEST / BUST and SHOULDERS. NEVER use HIP / HIPS to oversize or constrain upper-body garments!\n"
             "- For FOOTWEAR / SHOES: recommend based EXCLUSIVELY on FOOTWEAR DIMENSIONS (foot_length) or shoe_size. "
             "Do NOT check torso/body measurements against shoe charts!\n"
             "- For LOWER-BODY garments (pants, jeans, shorts, skirts): recommend based on WAIST, HIP, and INSEAM.\n"
+            "- For TWO-PIECE SETS, SUITS, MULTI-PIECE OUTFITS, DRESSES, JUMPSUITS, OVERALLS, or charts with BOTH upper and lower sizing columns: "
+            "recommend the bounding size that fits BOTH the top (Chest/Bust/Shoulder) AND the bottom (Waist/Hip/Inseam). If 1XL chest fits but 1XL waist is too small, recommend 2XL so the pants fit!\n"
             "- If BODY CIRCUMFERENCES is empty `{}` but CLOTHING SIZES has "
             "``shirt_size``/``pants_size``/``shoe_size``, USE THAT as the primary signal "
             "(see CLOTHING-SIZE FALLBACK in your system prompt).\n"
@@ -454,6 +458,8 @@ def _build_user_text_only_prompt(
             "- For FOOTWEAR / SHOES: recommend based EXCLUSIVELY on FOOTWEAR DIMENSIONS (foot_length) or shoe_size. "
             "Do NOT check torso/body measurements against shoe charts!\n"
             "- For LOWER-BODY garments (pants, jeans, shorts, skirts): recommend based on WAIST, HIP, and INSEAM.\n"
+            "- For TWO-PIECE SETS, SUITS, MULTI-PIECE OUTFITS, DRESSES, JUMPSUITS, OVERALLS, or charts with BOTH upper and lower sizing columns: "
+            "recommend the bounding size that fits BOTH the top (Chest/Bust/Shoulder) AND the bottom (Waist/Hip/Inseam). If 1XL chest fits but 1XL waist is too small, recommend 2XL so the pants fit!\n"
             "- If BODY CIRCUMFERENCES is empty `{}` but CLOTHING SIZES has "
             "``shirt_size``/``pants_size``/``shoe_size``, USE THAT as the primary signal.\n"
             "- Do **NOT** reply that 'measurements were not provided' if "
@@ -595,7 +601,7 @@ _SINGLE_NUM_RE = re.compile(r"\b(\d{1,3}(?:[.,]\d)?)\b")
 
 _UPPER_BODY_TYPES = {
     "shirt", "t-shirt", "tshirt", "blouse", "top", "jacket", "coat",
-    "hoodie", "sweater", "jumper", "suit", "blazer", "cardigan",
+    "hoodie", "sweater", "jumper", "blazer", "cardigan",
     "tank", "vest", "bra", "bralette",
 }
 _LOWER_BODY_TYPES = {
@@ -607,12 +613,34 @@ _FOOTWEAR_TYPES = {
     "sandals", "footwear", "loafer", "loafers", "heel", "heels",
     "flat", "flats", "slipper", "slippers", "pump", "pumps", "clog", "clogs",
 }
-_FULL_BODY_TYPES = {"dress", "jumpsuit", "romper", "swimwear"}
+_FULL_BODY_TYPES = {
+    "dress", "jumpsuit", "romper", "swimwear", "overall", "overalls",
+    "suit", "suits", "set", "sets", "outfit", "outfits", "tracksuit", "sweatsuit",
+    "co-ord", "coord", "2-piece", "2-pieces", "two-piece", "two piece",
+    "matching outfit", "matching set", "matching-outfit",
+}
 
 
 def _detect_category(garment_type: str | None, chart_text: str) -> str:
+    tl = chart_text.lower()
+    has_foot = any(w in tl for w in ("foot", "insole", "heel to toe", "shoe", "footwear"))
+    has_upper = any(w in tl for w in ("chest", "bust", "shoulder", "sleeve", "top length"))
+    has_lower = any(w in tl for w in ("waist", "hip", "hips", "inseam", "thigh", "pants length"))
+
+    # If the chart clearly contains BOTH upper and lower body measurement headers/columns,
+    # it is definitely a full-body outfit / two-piece set, regardless of a partial title hint.
+    if has_upper and has_lower:
+        return "full"
+
     if garment_type:
         gt = garment_type.lower().strip()
+        for w in _FULL_BODY_TYPES:
+            if re.search(r"\b" + re.escape(w) + r"\b", gt):
+                return "full"
+        has_gt_upper = any(re.search(r"\b" + re.escape(w) + r"\b", gt) for w in _UPPER_BODY_TYPES)
+        has_gt_lower = any(re.search(r"\b" + re.escape(w) + r"\b", gt) for w in _LOWER_BODY_TYPES)
+        if has_gt_upper and has_gt_lower:
+            return "full"
         for w in _FOOTWEAR_TYPES:
             if re.search(r"\b" + re.escape(w) + r"\b", gt):
                 return "footwear"
@@ -622,14 +650,6 @@ def _detect_category(garment_type: str | None, chart_text: str) -> str:
         for w in _LOWER_BODY_TYPES:
             if re.search(r"\b" + re.escape(w) + r"\b", gt):
                 return "lower"
-        for w in _FULL_BODY_TYPES:
-            if re.search(r"\b" + re.escape(w) + r"\b", gt):
-                return "full"
-
-    tl = chart_text.lower()
-    has_foot = any(w in tl for w in ("foot", "insole", "heel to toe", "shoe", "footwear"))
-    has_upper = any(w in tl for w in ("chest", "bust", "shoulder", "sleeve"))
-    has_lower = any(w in tl for w in ("waist", "hip", "hips", "inseam", "thigh"))
 
     if has_foot and not has_upper and not has_lower:
         return "footwear"
@@ -637,8 +657,6 @@ def _detect_category(garment_type: str | None, chart_text: str) -> str:
         return "upper"
     if has_lower and not has_upper:
         return "lower"
-    if has_upper and has_lower:
-        return "full"
     return "upper" if has_upper else ("footwear" if has_foot else "unknown")
 
 
@@ -972,7 +990,26 @@ def _heuristic_match(
     chosen = rows[chosen_i]
     smaller_alt = rows[chosen_i - 1] if chosen_i > 0 else None
 
-    if bumped:
+    # For full-body/sets, check if multiple dimensions constrained the size
+    if category == "full":
+        upper_f = next((f for f in ("chest", "bust", "shoulders", "shoulder") if f in user_vals and field_to_col.get(f, -1) >= 0), None)
+        lower_f = next((f for f in ("waist", "hip", "hips") if f in user_vals and field_to_col.get(f, -1) >= 0), None)
+        if upper_f and lower_f:
+            reason = (
+                f"Heuristic match: size {chosen['label'].upper()} comfortably accommodates both your "
+                f"top ({upper_f} {user_vals[upper_f]:g} cm) and bottom ({lower_f} {user_vals[lower_f]:g} cm)."
+            )
+        elif bumped:
+            reason = (
+                f"Heuristic match: your {primary_field} ({user_anchor_val:g} cm) is right "
+                f"at the upper edge of the smaller size, so DressApp recommends "
+                f"the slightly bigger size {chosen['label'].upper()}."
+            )
+        else:
+            reason = (
+                f"Heuristic match: your measurements fit the {chosen['label'].upper()} row."
+            )
+    elif bumped:
         reason = (
             f"Heuristic match: your {primary_field} ({user_anchor_val:g} cm) is right "
             f"at the upper edge of the smaller size, so DressApp recommends "
@@ -995,10 +1032,12 @@ def _heuristic_match(
     if not matched_cols:
         matched_cols = [primary_field]
 
+    garment_out_type = garment_type or ("suit/set" if category == "full" else ("shirt" if category == "upper" else ("pants" if category == "lower" else "unknown")))
+
     return {
         "recommended_size": chosen["label"].upper(),
         "confidence": 0.55,
-        "garment_type": garment_type or ("shirt" if category == "upper" else ("pants" if category == "lower" else "unknown")),
+        "garment_type": garment_out_type,
         "size_chart_units": "cm",
         "matched_columns": matched_cols,
         "reasoning": reason,
