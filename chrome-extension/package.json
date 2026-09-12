@@ -1,6 +1,6 @@
 {
   "name": "dressapp-chrome-extension",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "description": "DressApp shopping assistant — real-time clothing-size recommendations from your DressApp profile.",
   "private": true,
   "type": "module",

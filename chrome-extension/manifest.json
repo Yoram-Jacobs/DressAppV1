@@ -3,7 +3,7 @@
   "name": "DressApp Shopping Assistant",
   "short_name": "DressApp",
   "description": "Real-time clothing size recommendations on major fashion and retail stores — powered by your DressApp body measurements.",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "action": {
     "default_title": "DressApp Shopping Assistant",
     "default_popup": "src/popup/index.html",
@@ -69,8 +69,6 @@
     "tabs"
   ],
   "host_permissions": [
-    "https://*/*",
-    "http://*/*",
     "https://*.zara.com/*",
     "https://*.asos.com/*",
     "https://*.shein.com/*",
