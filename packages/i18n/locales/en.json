@@ -318,6 +318,16 @@
           "category": "Top Layer",
           "title": "Organic Cotton White Dress Shirt",
           "description": "Crisp, clean, professional base styling."
+        },
+        "trousers": {
+          "category": "Bottom Layer",
+          "title": "Charcoal Tailored Trousers",
+          "description": "Sharp tapered fit, pairs cleanly with the blazer."
+        },
+        "shoes": {
+          "category": "Shoes",
+          "title": "Black Leather Oxford Shoes",
+          "description": "Polished finish, business-meeting appropriate."
         }
       },
       "chips": {
@@ -349,6 +359,64 @@
       "prevAria": "Previous marketplace slide",
       "nextAria": "Next marketplace slide",
       "feeNotice": "Transparent 7% platform fee after payment processing. Zero hidden charges."
+    },
+    "shoppingAssistant": {
+      "title": "DressApp Shopping Assistant",
+      "subtitle": "Get your right size on any store's size chart",
+      "addToChrome": "Add to Chrome",
+      "mockTab": "Half-Zip Sweatshirt",
+      "mockUrl": "anyfashionstore.com/product/half-zip-sweatshirt",
+      "connectedBadge": "Connected to DressApp",
+      "sizeGuide": {
+        "title": "Size Guide",
+        "unit": "CM",
+        "recommendedTitle": "DressApp recommends size XS",
+        "recommendedBody": "Heuristic match: your hips (92.7 cm) fit the XS row.",
+        "matchedOn": "Matched on: hips · via estimate"
+      },
+      "stats": {
+        "sizesMatched": "Sizes matched",
+        "storesSupported": "Stores supported",
+        "matchAccuracy": "Match accuracy"
+      },
+      "reviewBadge": "Pending Chrome Web Store Review",
+      "worksOn": "Works on every major fashion & retail store",
+      "tag": "Chrome Extension",
+      "heading": "Never Guess Your Size Again",
+      "description1": "The DressApp Shopping Assistant reads the size chart on any fashion retailer's product page and matches it against your saved body measurements — right there on the page.",
+      "steps": {
+        "open": {
+          "title": "Open the item's Size Guide",
+          "description": "Browse any store as usual and open the product's size chart popup."
+        },
+        "connect": {
+          "title": "Connect to DressApp",
+          "description": "Click the DressApp icon and sign in once — it stays connected after that."
+        },
+        "match": {
+          "title": "Get your instant size match",
+          "description": "DressApp compares the chart to your measurements and highlights your row."
+        }
+      },
+      "cta": "Add to Chrome",
+      "ctaNote": "Currently under Chrome Web Store review",
+      "tabs": {
+        "deals": "Deals",
+        "wishlist": "Wishlist",
+        "compare": "Compare",
+        "rewards": "Rewards"
+      },
+      "features": {
+        "priceAlerts": "Price Alerts",
+        "autoCoupon": "Auto Coupon",
+        "priceCompare": "Price Compare",
+        "wishlistSync": "Wishlist Sync"
+      },
+      "modes": {
+        "silent": "Silent",
+        "popup": "Popup",
+        "fullCompare": "Full Compare"
+      }
     },
     "aiEditor": {
       "title": "AI Styled Fashion Editor",

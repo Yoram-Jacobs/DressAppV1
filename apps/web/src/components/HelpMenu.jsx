@@ -428,7 +428,7 @@ export default function HelpMenu() {
     >
       <div className="flex flex-col md:flex-row gap-4">
         {/* Sidebar Navigation */}
-        <div className="w-full md:w-1/3">
+        <div className="w-full md:w-1/3 max-[480px]:hidden">
           <div className="border-r border-border md:pr-4">
             <div>
               <h6 className="text-base font-extrabold text-foreground mb-2.5">
@@ -475,11 +475,11 @@ export default function HelpMenu() {
         {/* Content Area */}
         <div className="w-full md:w-2/3">
           {/* Mobile quick tabs selection dropdown */}
-          <div className="md:hidden p-3 border-b border-border bg-secondary/15">
+          <div className="md:hidden border-b border-border py-5 my-5">
             <select
               value={activeTab}
               onChange={(e) => setActiveTab(e.target.value)}
-              className="w-full bg-background border border-input rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+              className="w-full border border-border rounded-[12px] h-11 px-5 py-2 text-[12px] font-semibold focus:outline-none focus:ring-0 focus:ring-offset-0"
             >
               {SECTIONS.map((sec) => (
                 <option key={sec.id} value={sec.id}>

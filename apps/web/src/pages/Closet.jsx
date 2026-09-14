@@ -993,9 +993,9 @@ export default function Closet() {
           <div
             className="
         px-10 py-20
-        max-[991px]:px-[35px] max-[991px]:py-[45px]
-        max-[767px]:px-5 max-[767px]:py-[38px]
-        max-[480px]:px-4 max-[480px]:py-8
+         max-[991px]:px-[15px] max-[991px]:py-[30px]
+            max-[767px]:px-[15px] max-[767px]:py-[30px]
+            max-[480px]:px-[15px] max-[480px]:py-[30px]
       "
           >
             <div className="max-w-[520px]">
@@ -1008,8 +1008,9 @@ export default function Closet() {
             font-bold
             tracking-normal
             text-white
-            max-[767px]:text-[42px]
-            max-[480px]:text-[35px]
+           max-[767px]:text-[30px]
+                max-[480px]:text-[20px]
+                max-[480px]:leading-[30px]
           "
                 >
                   {t("closet.title")}
@@ -1114,7 +1115,9 @@ export default function Closet() {
           </div>
         </div>
       </PageHeroBanner>
-      <section className="w-full overflow-hidden bg-[var(--accent-beige)] px-[40px] py-[80px] max-[991px]:px-[5px] max-[991px]:py-[40px] pb-safe-tabs">
+      <section className="w-full overflow-hidden bg-[var(--accent-beige)] px-[40px] py-[80px] max-[991px]:px-[15px] max-[991px]:py-[30px]
+            max-[767px]:px-[15px] max-[767px]:py-[30px]
+            max-[480px]:px-[15px] max-[480px]:py-[30px] pb-safe-tabs">
         {/* Phase Z2.3 + Z2.6 — two ambient progress chips, side-by-side.
               ``HashRepairChip`` ticks during the duplicate-detector
               tune-up (fires first after prewarm). ``ThumbRepairChip``
@@ -1675,8 +1678,8 @@ export default function Closet() {
                   title={t("closet.view2Cols", { defaultValue: "2 columns" })}
                   data-testid="closet-view-2cols"
                   className={`inline-flex h-8 w-8 items-center justify-center rounded-md text-xs transition-colors ${viewMode === "grid"
-                      ? "bg-primary-brand text-white shadow-xs"
-                      : "text-text-brand hover:text-text-brand hover:bg-primary-shadow"
+                    ? "bg-primary-brand text-white shadow-xs"
+                    : "text-text-brand hover:text-text-brand hover:bg-primary-shadow"
                     }`}
                 >
                   <LayoutGrid className="h-4 w-4" />
@@ -1689,8 +1692,8 @@ export default function Closet() {
                   title={t("closet.view3Cols", { defaultValue: "3 columns" })}
                   data-testid="closet-view-3cols"
                   className={`inline-flex h-8 w-8 items-center justify-center rounded-md text-xs transition-colors ${viewMode === "compact"
-                      ? "bg-primary-brand text-white shadow-xs"
-                      : "text-text-brand hover:text-text-brand hover:bg-primary-shadow"
+                    ? "bg-primary-brand text-white shadow-xs"
+                    : "text-text-brand hover:text-text-brand hover:bg-primary-shadow"
                     }`}
                 >
                   <Grid className="h-4 w-4" />
@@ -1703,8 +1706,8 @@ export default function Closet() {
                   title={t("closet.viewList", { defaultValue: "List view" })}
                   data-testid="closet-view-list"
                   className={`inline-flex h-8 w-8 items-center justify-center rounded-md text-xs transition-colors ${viewMode === "list"
-                      ? "bg-primary-brand text-white shadow-xs"
-                      : "text-text-brand hover:text-text-brand hover:bg-primary-shadow"
+                    ? "bg-primary-brand text-white shadow-xs"
+                    : "text-text-brand hover:text-text-brand hover:bg-primary-shadow"
                     }`}
                 >
                   <List className="h-4 w-4" />
@@ -1714,10 +1717,10 @@ export default function Closet() {
 
             <div
               className={`grid w-full ${viewMode === "compact"
-                  ? "grid-cols-3 gap-2.5 sm:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6"
-                  : viewMode === "list"
-                    ? "grid-cols-1 gap-3 max-w-2xl mx-auto"
-                    : "grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5"
+                ? "grid-cols-3 gap-2.5 sm:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6"
+                : viewMode === "list"
+                  ? "grid-cols-1 gap-3 max-w-2xl mx-auto"
+                  : "grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5"
                 }`}
               data-testid="closet-grid"
             >

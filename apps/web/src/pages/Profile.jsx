@@ -138,9 +138,9 @@ export default function Profile() {
           <div
             className="
                   px-10 py-20
-                  max-[991px]:px-[35px] max-[991px]:py-[45px]
-                  max-[767px]:px-5 max-[767px]:py-[38px]
-                  max-[480px]:px-4 max-[480px]:py-8
+                 max-[991px]:px-[15px] max-[991px]:py-[30px]
+            max-[767px]:px-[15px] max-[767px]:py-[30px]
+            max-[480px]:px-[15px] max-[480px]:py-[30px]
                 "
           >
             <div className="max-w-[520px]">
@@ -153,8 +153,9 @@ export default function Profile() {
                       font-bold
                       tracking-normal
                       text-white
-                      max-[767px]:text-[42px]
-                      max-[480px]:text-[35px]
+                      max-[480px]:text-[20px]
+                      max-[480px]:leading-[30px]
+                      max-[480px]:mb-3
                     "
               >
                 {t('profile.title')}
@@ -191,7 +192,8 @@ export default function Profile() {
           </div>
         </div>
       </PageHeroBanner>
-      <section className="bg-accent-beige px-[40px] py-[40px] max-[767px]:px-5 max-[767px]:py-10">
+      <section className="bg-accent-beige px-[40px] py-[40px] max-[991px]:px-[15px] max-[991px]:py-[30px] max-[767px]:px-[15px] max-[767px]:py-[30px] 
+        max-[480px]:px-[15px] max-[480px]:py-[30px]">
         <div className='bg-white rounded-[12px] p-4 shadow-sm border border-border mb-5'>
           <h3 className="text-[16px] text-dark-brand font-bold mb-4">{t('profile.exploreTitle', { defaultValue: 'Explore DressApp' })}</h3>
           <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 items-center">

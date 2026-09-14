@@ -136,9 +136,9 @@ export default function ListingDetail() {
           <div
             className="
                   px-10 py-20
-                  max-[991px]:px-[35px] max-[991px]:py-[45px]
-                  max-[767px]:px-5 max-[767px]:py-[38px]
-                  max-[480px]:px-4 max-[480px]:py-8
+                  max-[991px]:px-[15px] max-[991px]:py-[30px]
+            max-[767px]:px-[15px] max-[767px]:py-[30px]
+            max-[480px]:px-[15px] max-[480px]:py-[30px]
                 "
           >
             <div className="max-w-[520px]">
@@ -150,8 +150,10 @@ export default function ListingDetail() {
                       font-bold
                       tracking-normal
                       text-white
-                      max-[767px]:text-[42px]
-                      max-[480px]:text-[35px]
+                      max-[767px]:text-[30px]
+                max-[480px]:text-[20px]
+                max-[480px]:leading-[30px]
+                max-[480px]:mb-3
                     "
               >
                 {t('listing.title', { defaultValue: 'Listing Details' })}
@@ -175,7 +177,9 @@ export default function ListingDetail() {
           </div>
         </div>
       </PageHeroBanner>
-      <section className="px-[40px] py-[40px] bg-accent-beige">
+      <section className="px-[40px] py-[40px] bg-accent-beige max-[991px]:px-[15px] max-[991px]:py-[30px]
+            max-[767px]:px-[15px] max-[767px]:py-[30px]
+            max-[480px]:px-[15px] max-[480px]:py-[30px]">
         <button onClick={() => nav(-1)} className="inline-flex items-center text-[14px] font-bold text-dark-brand mb-5 hover:text-primary-brand">
           <ArrowLeft className="h-4 w-4 me-1 rtl:rotate-180" /> {t('common.back')}
         </button>
@@ -191,7 +195,7 @@ export default function ListingDetail() {
             <div className="md:col-span-6">
               <div className="flex items-start justify-between gap-3">
                 <div>
-                  <h1 className="text-[20px] font-bold text-dark-brand" data-testid="listing-detail-title">{listing.title}</h1>
+                  <h1 className="text-[20px] font-bold text-dark-brand max-[480px]:text-[16px]" data-testid="listing-detail-title">{listing.title}</h1>
                   <div className="text-xs text-primary-brand mt-1 font-bold">
                     <Eye className="inline h-3.5 w-3.5 me-1" />{t('market.viewsCount', { count: listing.views || 0 })}
                   </div>

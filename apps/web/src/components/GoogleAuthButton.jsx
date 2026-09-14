@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { api } from '@/lib/api';
+import { cn } from '@/lib/utils';
 
 /**
  * Google "G" mark — official 4-colour glyph rendered as inline SVG so we
@@ -40,6 +41,7 @@ export const GoogleAuthButton = ({
   label,
   testId = 'google-auth-button',
   disabled = false,
+  className,
 }) => {
   const [busy, setBusy] = useState(false);
 
@@ -86,7 +88,7 @@ export const GoogleAuthButton = ({
       type="button"
       onClick={onClick}
       disabled={busy || disabled}
-      className=""
+      className={cn('w-full min-h-11', className)}
       data-testid={testId}
     >
       {busy ? (

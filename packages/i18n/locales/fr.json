@@ -274,6 +274,16 @@
           "category": "Couche supérieure",
           "title": "Chemise habillée blanche en coton biologique",
           "description": "Coiffage de base net, propre et professionnel."
+        },
+        "trousers": {
+          "category": "Couche inférieure",
+          "title": "Pantalon tailleur anthracite",
+          "description": "Coupe fuselée nette, s'accorde avec le blazer."
+        },
+        "shoes": {
+          "category": "Chaussures",
+          "title": "Oxford en cuir noir",
+          "description": "Finition cirée, adaptées à une réunion d'affaires."
         }
       },
       "chips": {
@@ -305,6 +315,64 @@
       "prevAria": "Diapositive précédente du marché",
       "nextAria": "Diapositive suivante sur le marché",
       "feeNotice": "Frais de plateforme transparents de 7 % après le traitement du paiement. Zéro frais cachés."
+    },
+    "shoppingAssistant": {
+      "title": "Assistant shopping DressApp",
+      "subtitle": "Trouvez votre bonne taille sur le guide de n'importe quel magasin",
+      "addToChrome": "Ajouter à Chrome",
+      "mockTab": "Sweat à demi-zip",
+      "mockUrl": "anyfashionstore.com/product/half-zip-sweatshirt",
+      "connectedBadge": "Connecté à DressApp",
+      "sizeGuide": {
+        "title": "Guide des tailles",
+        "unit": "CM",
+        "recommendedTitle": "DressApp recommande la taille XS",
+        "recommendedBody": "Correspondance heuristique : votre tour de hanches (92,7 cm) correspond à la ligne XS.",
+        "matchedOn": "Correspondance sur : hanches · par estimation"
+      },
+      "stats": {
+        "sizesMatched": "Tailles associées",
+        "storesSupported": "Boutiques prises en charge",
+        "matchAccuracy": "Précision de correspondance"
+      },
+      "reviewBadge": "En attente de validation Chrome Web Store",
+      "worksOn": "Fonctionne sur toutes les grandes enseignes de mode et de retail",
+      "tag": "Extension Chrome",
+      "heading": "Ne devinez plus jamais votre taille",
+      "description1": "L'assistant shopping DressApp lit le guide des tailles sur la page produit de n'importe quel détaillant de mode et le compare à vos mensurations enregistrées — directement sur la page.",
+      "steps": {
+        "open": {
+          "title": "Ouvrez le guide des tailles de l'article",
+          "description": "Parcourez n'importe quelle boutique comme d'habitude et ouvrez le tableau des tailles du produit."
+        },
+        "connect": {
+          "title": "Connectez-vous à DressApp",
+          "description": "Cliquez sur l'icône DressApp et connectez-vous une fois — la connexion reste active ensuite."
+        },
+        "match": {
+          "title": "Obtenez votre taille instantanément",
+          "description": "DressApp compare le tableau à vos mensurations et met votre ligne en évidence."
+        }
+      },
+      "cta": "Ajouter à Chrome",
+      "ctaNote": "Actuellement en cours d'examen sur le Chrome Web Store",
+      "tabs": {
+        "deals": "Offres",
+        "wishlist": "Liste d'envies",
+        "compare": "Comparer",
+        "rewards": "Récompenses"
+      },
+      "features": {
+        "priceAlerts": "Alertes prix",
+        "autoCoupon": "Coupon automatique",
+        "priceCompare": "Comparaison des prix",
+        "wishlistSync": "Synchroniser la liste d'envies"
+      },
+      "modes": {
+        "silent": "Silencieux",
+        "popup": "Fenêtre contextuelle",
+        "fullCompare": "Comparaison complète"
+      }
     },
     "aiEditor": {
       "title": "Éditeur de mode style IA",

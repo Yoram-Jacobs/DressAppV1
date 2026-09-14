@@ -235,7 +235,7 @@ export function DeveloperPanel({ user }) {
                 {" · "}env default: {status?.env_default || "—"}
               </div>
             </div>
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 flex-wrap">
               <span
                 className={`text-[11px] uppercase font-semibold tracking-wide ${isGemma ? "text-text-brand" : "text-dark-brand"}`}
               >

@@ -507,7 +507,7 @@ export default function DressMeShuffler({ onSaveSuccess, onOpenCalendar }) {
           {rowIcons[roleKey]}
           <span className="text-[12px] text-dark-brand font-extrabold">{label}</span>
         </div>
-        <div className="w-full relative px-10">
+        <div className="w-full relative px-10 max-[480px]:px-0">
           <Carousel
             setApi={setApi}
             opts={{ align: 'center', loop: true, watchDrag: !isSpinning, dragFree: true, direction: i18n.dir() }}
@@ -613,7 +613,7 @@ export default function DressMeShuffler({ onSaveSuccess, onOpenCalendar }) {
             <Sparkles className="!h-3.5 !w-3.5 text-[var(--primary-color)]" />
             <span>{t('stylist.personalStylist', { defaultValue: 'Personal Stylist' })}</span>
           </div>
-          <h2 className="text-xl font-extrabold text-[var(--dark-color)] mt-2.5 mb-1">
+          <h2 className="text-xl font-extrabold text-[var(--dark-color)] mt-2.5 mb-1 max-[480px]:text-[16px]">
             {t('stylist.planYourOutfit', { defaultValue: 'Plan Your Outfit' })}
           </h2>
           <p className="mb-5 text-sm text-[var(--text-color)] leading-[22px] font-semibold">
@@ -791,20 +791,20 @@ export default function DressMeShuffler({ onSaveSuccess, onOpenCalendar }) {
       <div className="md:col-span-3">
         {/* ============ RIGHT PANEL: Builder ============ */}
         <div className="bg-white rounded-[20px] shadow-[0_12px_36px_rgba(20,30,25,0.06)] p-5 flex flex-col">
-          <div className="flex items-start justify-between gap-4">
+          <div className="flex items-start justify-between gap-4 flex-wrap max-[480px]:gap-2">
             <div>
               <div className="flex items-center gap-1.5 text-xs font-bold text-[var(--primary-color)]">
                 <Sparkles className="!h-3.5 !w-3.5 text-[var(--primary-color)]" />
                 <span>{t('stylist.aiOutfitBuilder', { defaultValue: 'AI Outfit Builder' })}</span>
               </div>
-              <h2 className="text-xl font-extrabold text-[var(--dark-color)] mt-2.5 mb-1">
+              <h2 className="text-xl font-extrabold text-[var(--dark-color)] mt-2.5 mb-1 max-[480px]:text-[16px]">
                 {t('stylist.createTodaysLook', { defaultValue: "Create today's look" })}
               </h2>
-              <p className="mb-5 text-sm text-[var(--text-color)] leading-[22px] font-semibold">
+              <p className="mb-5 text-sm text-[var(--text-color)] leading-[22px] font-semibold max-[480px]:mb-2">
                 {t('stylist.swipeOrLetAi', { defaultValue: 'Swipe through your wardrobe or let AI select an outfit.' })}
               </p>
             </div>
-            <div className="flex items-center gap-1.5 border border-[#ece7de] rounded-xl px-3.5 py-2 text-[12.5px] font-bold text-[#1a1a1a] bg-white whitespace-nowrap">
+            <div className="flex items-center gap-1.5 max-[480px]:mb-5 border border-[#ece7de] rounded-xl px-3.5 py-2 text-[12.5px] font-bold text-[#1a1a1a] bg-white whitespace-nowrap">
               <ShoppingBag className="!h-3.5 !w-3.5" />
               <span>{t('stylist.itemsCount', { defaultValue: `${items.length} items`, count: items.length })}</span>
             </div>

@@ -235,9 +235,9 @@ export default function Marketplace() {
           <div
             className="
                 px-10 py-20
-                max-[991px]:px-[35px] max-[991px]:py-[45px]
-                max-[767px]:px-5 max-[767px]:py-[38px]
-                max-[480px]:px-4 max-[480px]:py-8"
+                max-[991px]:px-[15px] max-[991px]:py-[30px]
+            max-[767px]:px-[15px] max-[767px]:py-[30px]
+            max-[480px]:px-[15px] max-[480px]:py-[30px]"
           >
             <div className="max-w-[520px]">
               {/* Title */}
@@ -248,8 +248,10 @@ export default function Marketplace() {
                     font-bold
                     tracking-normal
                     text-white
-                    max-[767px]:text-[42px]
-                    max-[480px]:text-[35px]
+                     max-[767px]:text-[30px]
+                max-[480px]:text-[20px]
+                max-[480px]:leading-[30px]
+                max-[480px]:mb-3
                   "
               >
                 {t("market.title")}-{t("market.hero")}
@@ -287,11 +289,13 @@ export default function Marketplace() {
           </div>
         </div>
       </PageHeroBanner>
-      <section className="px-[40px] py-[40px] bg-[var(--accent-beige)]">
+      <section className="px-[40px] py-[40px] bg-[var(--accent-beige)] max-[991px]:px-[15px] max-[991px]:py-[30px]
+            max-[767px]:px-[15px] max-[767px]:py-[30px]
+            max-[480px]:px-[15px] max-[480px]:py-[30px]">
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList
             data-testid="marketplace-tabs"
-            className="inline-flex items-center gap-1 p-[5px] bg-white rounded-full my-5"
+            className="inline-flex items-center gap-1 p-[5px] bg-white rounded-full my-5 flex-wrap max-[480px]:rounded-[12px] max-[480px]:mt-0"
           >
             <TabsTrigger
               value="browse"
@@ -792,7 +796,7 @@ function MyListings() {
         </div>
       ) : (
         <div
-          className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4"
+          className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4"
           data-testid="market-my-listings-grid"
         >
           {items.map((l) => (

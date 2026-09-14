@@ -302,6 +302,16 @@
           "category": "שכבה עליונה",
           "title": "חולצה מכופתרת כותנה אורגנית",
           "description": "בסיס מוקפד, נקי ומקצועי."
+        },
+        "trousers": {
+          "category": "שכבה תחתונה",
+          "title": "מכנסיים מחויטים בגוון פחם",
+          "description": "גזרה מחודדת, משתלבים נקי עם הבלייזר."
+        },
+        "shoes": {
+          "category": "נעליים",
+          "title": "נעלי אוקספורד מעור שחור",
+          "description": "גימור מלוטש, מתאים לפגישה עסקית."
         }
       },
       "chips": {
@@ -333,6 +343,64 @@
       "prevAria": "שקופית קודמת בשוק",
       "nextAria": "שקופית הבאה בשוק",
       "feeNotice": "עמלת פלטפורמה שקופה של 7% לאחר ניכוי עמלות סליקה. ללא חיובים נסתרים."
+    },
+    "shoppingAssistant": {
+      "title": "עוזר הקניות של DressApp",
+      "subtitle": "קבלו את המידה הנכונה בטבלת המידות של כל חנות",
+      "addToChrome": "הוספה ל-Chrome",
+      "mockTab": "סווטשירט עם רוכסן חצי",
+      "mockUrl": "anyfashionstore.com/product/half-zip-sweatshirt",
+      "connectedBadge": "מחובר ל-DressApp",
+      "sizeGuide": {
+        "title": "מדריך מידות",
+        "unit": "ס״מ",
+        "recommendedTitle": "DressApp ממליץ על מידה XS",
+        "recommendedBody": "התאמה משוערת: היקף הירכיים (92.7 ס״מ) מתאים לשורת XS.",
+        "matchedOn": "ההתאמה לפי: ירכיים · לפי הערכה"
+      },
+      "stats": {
+        "sizesMatched": "מידות שהותאמו",
+        "storesSupported": "חנויות נתמכות",
+        "matchAccuracy": "דיוק ההתאמה"
+      },
+      "reviewBadge": "ממתין לביקורת ב-Chrome Web Store",
+      "worksOn": "עובד בכל חנויות האופנה והקמעונאות המובילות",
+      "tag": "תוסף Chrome",
+      "heading": "אל תנחשו יותר את המידה",
+      "description1": "עוזר הקניות של DressApp קורא את טבלת המידות בדף המוצר של כל קמעונאי אופנה ומתאים אותה למדידות הגוף השמורות שלכם — ישירות בדף.",
+      "steps": {
+        "open": {
+          "title": "פתחו את מדריך המידות של הפריט",
+          "description": "גלושו בכל חנות כרגיל ופתחו את חלונית טבלת המידות של המוצר."
+        },
+        "connect": {
+          "title": "התחברו ל-DressApp",
+          "description": "לחצו על סמל DressApp והתחברו פעם אחת — החיבור נשמר לאחר מכן."
+        },
+        "match": {
+          "title": "קבלו התאמת מידה מיידית",
+          "description": "DressApp משווה את הטבלה למדידות שלכם ומדגיש את השורה שלכם."
+        }
+      },
+      "cta": "הוספה ל-Chrome",
+      "ctaNote": "כרגע בבדיקת Chrome Web Store",
+      "tabs": {
+        "deals": "מבצעים",
+        "wishlist": "רשימת משאלות",
+        "compare": "השוואה",
+        "rewards": "הטבות"
+      },
+      "features": {
+        "priceAlerts": "התראות מחיר",
+        "autoCoupon": "קופון אוטומטי",
+        "priceCompare": "השוואת מחירים",
+        "wishlistSync": "סנכרון רשימת משאלות"
+      },
+      "modes": {
+        "silent": "שקט",
+        "popup": "חלון קופץ",
+        "fullCompare": "השוואה מלאה"
+      }
     },
     "aiEditor": {
       "title": "עורך אופנה מבוסס AI",

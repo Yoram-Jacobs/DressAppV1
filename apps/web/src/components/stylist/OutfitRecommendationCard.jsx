@@ -159,7 +159,7 @@ export function OutfitRecommendationCard({ rec, index, sessionId, onItemClick, o
             {rec.why}
           </p>
         ) : null}
-        <div className="flex items-center justify-between mt-[15px]">
+        <div className="flex items-center justify-between mt-[15px] flex-wrap gap-3">
           {onSave ? (
             <Button
               size="sm"

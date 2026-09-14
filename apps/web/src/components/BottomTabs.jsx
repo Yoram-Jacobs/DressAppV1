@@ -65,8 +65,8 @@ export const BottomTabs = () => {
               cn(
                 'flex-1 flex flex-col items-center justify-center rounded-lg px-1 py-1 min-h-[52px]',
                 isActive
-                  ? 'text-[hsl(var(--accent))] font-medium'
-                  : 'text-muted-foreground hover:text-foreground'
+                  ? 'text-primary-brand font-semibold'
+                  : 'text-text-brand hover:text-dark-brand'
               )
             }
           >
@@ -80,7 +80,7 @@ export const BottomTabs = () => {
                 {isActive && (
                   <motion.span
                     layoutId="active-tab-underline"
-                    className="h-[2px] w-5 bg-[hsl(var(--accent))] rounded-full"
+                    className="h-[2px] w-5 bg-primary-brand rounded-full"
                   />
                 )}
               </motion.span>
@@ -99,8 +99,8 @@ export const BottomTabs = () => {
               cn(
                 'flex-1 flex flex-col items-center justify-center rounded-lg px-1 py-1 min-h-[52px]',
                 isActive
-                  ? 'text-[hsl(var(--accent))] font-medium'
-                  : 'text-muted-foreground hover:text-foreground'
+                  ? 'text-primary-brand font-semibold'
+                  : 'text-text-brand hover:text-dark-brand'
               )
             }
           >
@@ -114,7 +114,7 @@ export const BottomTabs = () => {
                 {isActive && (
                   <motion.span
                     layoutId="active-tab-underline"
-                    className="h-[2px] w-5 bg-[hsl(var(--accent))] rounded-full"
+                    className="h-[2px] w-5 bg-primary-brand rounded-full"
                   />
                 )}
               </motion.span>
@@ -151,8 +151,8 @@ export const BottomTabs = () => {
               cn(
                 'flex-1 flex flex-col items-center justify-center rounded-lg px-1 py-1 min-h-[52px]',
                 isActive
-                  ? 'text-[hsl(var(--accent))] font-medium'
-                  : 'text-muted-foreground hover:text-foreground'
+                  ? 'text-primary-brand font-semibold'
+                  : 'text-text-brand hover:text-dark-brand'
               )
             }
           >
@@ -166,7 +166,7 @@ export const BottomTabs = () => {
                 {isActive && (
                   <motion.span
                     layoutId="active-tab-underline"
-                    className="h-[2px] w-5 bg-[hsl(var(--accent))] rounded-full"
+                    className="h-[2px] w-5 bg-primary-brand rounded-full"
                   />
                 )}
               </motion.span>
@@ -185,8 +185,8 @@ export const BottomTabs = () => {
               cn(
                 'flex-1 flex flex-col items-center justify-center rounded-lg px-1 py-1 min-h-[52px]',
                 isActive
-                  ? 'text-[hsl(var(--accent))] font-medium'
-                  : 'text-muted-foreground hover:text-foreground'
+                  ? 'text-primary-brand font-semibold'
+                  : 'text-text-brand hover:text-dark-brand'
               )
             }
           >
@@ -200,7 +200,7 @@ export const BottomTabs = () => {
                 {isActive && (
                   <motion.span
                     layoutId="active-tab-underline"
-                    className="h-[2px] w-5 bg-[hsl(var(--accent))] rounded-full"
+                    className="h-[2px] w-5 bg-primary-brand rounded-full"
                   />
                 )}
               </motion.span>

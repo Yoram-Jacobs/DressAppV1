@@ -120,16 +120,18 @@ export default function ExpertsDirectory() {
           <div
             className="
               px-10 py-20
-              max-[991px]:px-[35px] max-[991px]:py-[45px]
-              max-[767px]:px-5 max-[767px]:py-[38px]
-              max-[480px]:px-4 max-[480px]:py-8
+               max-[991px]:px-[15px] max-[991px]:py-[30px]
+            max-[767px]:px-[15px] max-[767px]:py-[30px]
+            max-[480px]:px-[15px] max-[480px]:py-[30px]
             "
           >
             <div className="max-w-[520px]">
               <h1
                 className="
                   m-0 mb-0 text-[40px] leading-[40px] font-bold tracking-normal text-white
-                  max-[767px]:text-[42px] max-[480px]:text-[35px]
+                   max-[767px]:text-[30px]
+                max-[480px]:text-[20px]
+                max-[480px]:leading-[30px]
                 "
                 data-testid="experts-title"
               >
@@ -147,7 +149,9 @@ export default function ExpertsDirectory() {
           </div>
         </div>
       </PageHeroBanner>
-      <section className="bg-[var(--accent-beige)] px-[40px] py-[40px] max-[991px]:px-[5px] max-[991px]:py-10">
+      <section className="bg-[var(--accent-beige)] px-[40px] py-[40px]  max-[991px]:px-[15px] max-[991px]:py-[30px]
+            max-[767px]:px-[15px] max-[767px]:py-[30px]
+            max-[480px]:px-[15px] max-[480px]:py-[30px]">
         <div className="w-full">
           {/* tabs */}
           <div
@@ -368,7 +372,7 @@ export default function ExpertsDirectory() {
           {activeTab === 'campaigns' && (
             <>
               {viewerIsPro && (
-                <div className="flex justify-end gap-2.5 mb-4 flex-wrap">
+                <div className="flex justify-end gap-2.5 mb-4 flex-wrap max-[480px]:justify-start">
                   <Link
                     to="/campaigns/mine"
                     data-testid="experts-campaigns-manage-btn"
@@ -481,7 +485,7 @@ function ExpertCard({ expert }) {
           <p className="text-sm leading-relaxed text-[var(--text-color)] mb-5 min-h-[44px]">{biz.description}</p>
         )}
 
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-2 max-[480px]:flex-col">
           {biz.website && (
             
              <a href={biz.website}

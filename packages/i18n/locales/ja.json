@@ -274,6 +274,16 @@
           "category": "トップス",
           "title": "オーガニックコットン ホワイト ドレス シャツ",
           "description": "鮮明でクリーンなプロフェッショナルなベーススタイリング。"
+        },
+        "trousers": {
+          "category": "ボトムス",
+          "title": "チャコールのテーラードパンツ",
+          "description": "シャープなテーパード、ブレザーと清潔に合う。"
+        },
+        "shoes": {
+          "category": "シューズ",
+          "title": "ブラックレザーのオックスフォード",
+          "description": "磨き上げた仕上げ、ビジネスミーティング向け。"
         }
       },
       "chips": {
@@ -305,6 +315,64 @@
       "prevAria": "前のマーケットプレイスのスライド",
       "nextAria": "次のマーケットプレイスのスライド",
       "feeNotice": "支払い処理後のプラットフォーム手数料は 7% です。隠れた料金はゼロです。"
+    },
+    "shoppingAssistant": {
+      "title": "DressApp ショッピングアシスタント",
+      "subtitle": "どの店舗のサイズ表でも最適なサイズがわかります",
+      "addToChrome": "Chrome に追加",
+      "mockTab": "ハーフジップスウェット",
+      "mockUrl": "anyfashionstore.com/product/half-zip-sweatshirt",
+      "connectedBadge": "DressApp に接続済み",
+      "sizeGuide": {
+        "title": "サイズガイド",
+        "unit": "cm",
+        "recommendedTitle": "DressApp のおすすめサイズは XS",
+        "recommendedBody": "ヒューリスティック照合：ヒップ（92.7 cm）が XS の行に適合します。",
+        "matchedOn": "照合：ヒップ · 推定"
+      },
+      "stats": {
+        "sizesMatched": "照合したサイズ",
+        "storesSupported": "対応ストア",
+        "matchAccuracy": "照合精度"
+      },
+      "reviewBadge": "Chrome ウェブストア審査待ち",
+      "worksOn": "主要ファッション・小売ストアで利用できます",
+      "tag": "Chrome 拡張機能",
+      "heading": "もうサイズで迷わない",
+      "description1": "DressApp ショッピングアシスタントは、ファッション小売店の商品ページにあるサイズ表を読み取り、保存済みのボディサイズと照合します。その場で完了します。",
+      "steps": {
+        "open": {
+          "title": "アイテムのサイズガイドを開く",
+          "description": "いつものように店舗を見て、商品のサイズ表ポップアップを開きます。"
+        },
+        "connect": {
+          "title": "DressApp に接続",
+          "description": "DressApp アイコンをクリックして一度サインインすれば、その後は接続が維持されます。"
+        },
+        "match": {
+          "title": "すぐにサイズ照合を取得",
+          "description": "DressApp がサイズ表とあなたの採寸を比較し、該当行をハイライトします。"
+        }
+      },
+      "cta": "Chrome に追加",
+      "ctaNote": "現在 Chrome ウェブストアで審査中です",
+      "tabs": {
+        "deals": "お得情報",
+        "wishlist": "ウィッシュリスト",
+        "compare": "比較",
+        "rewards": "特典"
+      },
+      "features": {
+        "priceAlerts": "価格アラート",
+        "autoCoupon": "自動クーポン",
+        "priceCompare": "価格比較",
+        "wishlistSync": "ウィッシュリスト同期"
+      },
+      "modes": {
+        "silent": "サイレント",
+        "popup": "ポップアップ",
+        "fullCompare": "フル比較"
+      }
     },
     "aiEditor": {
       "title": "AI スタイルのファッション エディター",

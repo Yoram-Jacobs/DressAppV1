@@ -274,6 +274,16 @@
           "category": "Capa superior",
           "title": "Camisa de vestir blanca de algodón orgánico",
           "description": "Estilo base nítido, limpio y profesional."
+        },
+        "trousers": {
+          "category": "Capa inferior",
+          "title": "Pantalón sastre carbón",
+          "description": "Corte afilado, combina con el blazer."
+        },
+        "shoes": {
+          "category": "Zapatos",
+          "title": "Oxford de cuero negro",
+          "description": "Acabado pulido, apropiado para una reunión de negocios."
         }
       },
       "chips": {
@@ -305,6 +315,64 @@
       "prevAria": "Diapositiva anterior del mercado",
       "nextAria": "Siguiente diapositiva del mercado",
       "feeNotice": "Tarifa de plataforma transparente del 7% después del procesamiento del pago. Cero cargos ocultos."
+    },
+    "shoppingAssistant": {
+      "title": "Asistente de compras de DressApp",
+      "subtitle": "Obtén tu talla correcta en la tabla de cualquier tienda",
+      "addToChrome": "Añadir a Chrome",
+      "mockTab": "Sudadera con media cremallera",
+      "mockUrl": "anyfashionstore.com/product/half-zip-sweatshirt",
+      "connectedBadge": "Conectado a DressApp",
+      "sizeGuide": {
+        "title": "Guía de tallas",
+        "unit": "CM",
+        "recommendedTitle": "DressApp recomienda la talla XS",
+        "recommendedBody": "Coincidencia heurística: tu cadera (92,7 cm) encaja en la fila XS.",
+        "matchedOn": "Coincidencia en: cadera · por estimación"
+      },
+      "stats": {
+        "sizesMatched": "Tallas emparejadas",
+        "storesSupported": "Tiendas compatibles",
+        "matchAccuracy": "Precisión de coincidencia"
+      },
+      "reviewBadge": "Pendiente de revisión en Chrome Web Store",
+      "worksOn": "Funciona en las principales tiendas de moda y retail",
+      "tag": "Extensión de Chrome",
+      "heading": "No vuelvas a adivinar tu talla",
+      "description1": "El Asistente de compras de DressApp lee la tabla de tallas en la ficha de cualquier minorista de moda y la compara con tus medidas corporales guardadas, ahí mismo en la página.",
+      "steps": {
+        "open": {
+          "title": "Abre la guía de tallas del artículo",
+          "description": "Navega por cualquier tienda como siempre y abre el recuadro de la tabla de tallas."
+        },
+        "connect": {
+          "title": "Conéctate a DressApp",
+          "description": "Haz clic en el icono de DressApp e inicia sesión una vez; después permanece conectado."
+        },
+        "match": {
+          "title": "Obtén tu talla al instante",
+          "description": "DressApp compara la tabla con tus medidas y resalta tu fila."
+        }
+      },
+      "cta": "Añadir a Chrome",
+      "ctaNote": "Actualmente en revisión de Chrome Web Store",
+      "tabs": {
+        "deals": "Ofertas",
+        "wishlist": "Lista de deseos",
+        "compare": "Comparar",
+        "rewards": "Recompensas"
+      },
+      "features": {
+        "priceAlerts": "Alertas de precio",
+        "autoCoupon": "Cupón automático",
+        "priceCompare": "Comparar precios",
+        "wishlistSync": "Sincronizar lista de deseos"
+      },
+      "modes": {
+        "silent": "Silencioso",
+        "popup": "Ventana emergente",
+        "fullCompare": "Comparación completa"
+      }
     },
     "aiEditor": {
       "title": "Editor de moda con estilo AI",

@@ -156,9 +156,9 @@ export default function Transactions() {
           <div
             className="
               px-10 py-20
-              max-[991px]:px-[35px] max-[991px]:py-[45px]
-              max-[767px]:px-5 max-[767px]:py-[38px]
-              max-[480px]:px-4 max-[480px]:py-8
+              max-[991px]:px-[15px] max-[991px]:py-[30px]
+            max-[767px]:px-[15px] max-[767px]:py-[30px]
+            max-[480px]:px-[15px] max-[480px]:py-[30px]
             "
           >
             <div className="max-w-[520px]">
@@ -170,8 +170,10 @@ export default function Transactions() {
                   font-bold
                   tracking-normal
                   text-white
-                  max-[767px]:text-[42px]
-                  max-[480px]:text-[35px]
+                  max-[767px]:text-[30px]
+                max-[480px]:text-[20px]
+                max-[480px]:leading-[30px]
+                max-[480px]:mb-3
                 "
               >
                 {t('transactions.bannerTitle', { defaultValue: 'Your Transactions' })}
@@ -195,15 +197,16 @@ export default function Transactions() {
           </div>
         </div>
       </PageHeroBanner>
-      <section className="bg-accent-beige px-[40px] py-[40px] max-[767px]:px-5 max-[767px]:py-10">
+      <section className="bg-accent-beige px-[40px] py-[40px] max-[991px]:px-[15px] max-[991px]:py-[30px]
+            max-[767px]:px-[15px] max-[767px]:py-[30px]
+            max-[480px]:px-[15px] max-[480px]:py-[30px]">
         <Tabs value={activeKind} onValueChange={setActiveKind} className="w-full">
           {/* Segmented pill tabs — matches the Camera & Upload / Digital Import control */}
-          <div className="flex items-end justify-between mb-5">
+          <div className="flex items-end justify-between mb-5 flex-wrap gap-5">
             <TabsList
               className="
         inline-flex flex-wrap h-auto w-fit
-        bg-white rounded-full p-1.5 gap-1
-        border border-border/40 shadow-sm
+        rounded-full gap-3
       "
               data-testid="transactions-kind-tabs"
             >
@@ -212,13 +215,15 @@ export default function Transactions() {
                   key={tab.value}
                   value={tab.value}
                   className="
-            gap-2 group flex gap-0.5 items-center rounded-full px-4 py-2
+            group flex gap-2 items-center rounded-full px-4 py-2
             text-[14px] font-semibold
-            text-text-brand
+            text-text-brand bg-white 
             transition-colors
+            border border-border
+            shadow-sm
             data-[state=active]:bg-primary-brand
             data-[state=active]:text-white
-            data-[state=active]:shadow-none
+            data-[state=active]:border-none
           "
                   data-testid={`transactions-tab-${tab.value}`}
                 >

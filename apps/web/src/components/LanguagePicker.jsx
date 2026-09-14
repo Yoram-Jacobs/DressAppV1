@@ -83,7 +83,7 @@ export const LanguagePicker = ({
           aria-label={t('language.change', { defaultValue: 'Change language' })}
           data-testid={`language-picker-trigger${testIdSuffix ? '-' + testIdSuffix : ''}`}
         >
-          <Globe className="!h-[30px] !w-[30px]" />
+          <Globe className="!h-[30px] !w-[30px] max-[480px]:!h-[16px] max-[480px]:!w-[16px]" />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent

@@ -6,7 +6,7 @@ export const Footer = () => {
 
   return (
     <footer className="bg-black text-white">
-      <div className="w-full px-[40px] pt-[80px] pb-[20px]">
+      <div className="w-full px-[40px] pt-[80px] pb-[20px] max-[480px]:px-[15px] max-[480px]:pt-[30px] max-[480px]:pb-[80px]">
         {/* Footer Main */}
         <div className="grid grid-cols-1 gap-10 md:grid-cols-2 lg:grid-cols-12 lg:gap-8 items-center">
           {/* Brand / Description */}
@@ -288,7 +288,7 @@ export const Footer = () => {
           </div>
         </div>
         {/* Footer Bottom */}
-        <div className="mt-[80px] flex flex-col gap-4 border-t border-white/10 pt-[20px] md:flex-row md:items-center md:justify-between">
+        <div className="mt-[80px] flex flex-col gap-4 border-t border-white/10 pt-[20px] md:flex-row md:items-center md:justify-between max-[480px]:mt-[15px] max-[480px]:mb-[15px]">
           <p className="m-0 text-xs leading-6 text-white/50">
             © {currentYear} DressApp Inc.{" "}
             {t("footer.rights", {

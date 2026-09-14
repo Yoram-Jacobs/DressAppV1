@@ -2982,9 +2982,9 @@ export default function AddItem() {
           <div
             className="
             px-10 py-20
-            max-[991px]:px-[35px] max-[991px]:py-[45px]
-            max-[767px]:px-5 max-[767px]:py-[38px]
-            max-[480px]:px-4 max-[480px]:py-8
+            max-[991px]:px-[15px] max-[991px]:py-[30px]
+            max-[767px]:px-[15px] max-[767px]:py-[30px]
+            max-[480px]:px-[15px] max-[480px]:py-[30px]
           "
           >
             <div className="max-w-[520px]">
@@ -2997,8 +2997,10 @@ export default function AddItem() {
                 font-bold
                 tracking-normal
                 text-white
-                max-[767px]:text-[42px]
-                max-[480px]:text-[35px]
+               max-[767px]:text-[30px]
+                max-[480px]:text-[20px]
+                max-[480px]:leading-[30px]
+                max-[480px]:mb-3
               "
               >
                 {t("addItem.title", { defaultValue: "Upload & auto-fill" })}
@@ -3026,7 +3028,9 @@ export default function AddItem() {
           </div>
         </div>
       </PageHeroBanner>
-      <section className="w-full overflow-hidden bg-[var(--accent-beige)] px-[40px] py-[80px] max-[991px]:px-[5px] max-[991px]:py-[40px]">
+      <section className="w-full overflow-hidden bg-[var(--accent-beige)] px-[40px] py-[80px] max-[991px]:px-[15px] max-[991px]:py-[30px]
+            max-[767px]:px-[15px] max-[767px]:py-[30px]
+            max-[480px]:px-[15px] max-[480px]:py-[30px]">
         {/* stepper-component */}
         <Stepper cards={cards} saving={saving} bgBatch={bgBatch} />
         <div className="" data-testid="add-item-page">
@@ -3364,7 +3368,7 @@ export default function AddItem() {
                 className="mt-0 focus-visible:ring-0 focus-visible:ring-offset-0"
               >
                 <div
-                  className="w-full border-2 border-dashed border-border rounded-[12px] p-10 sm:p-12 bg-white flex flex-col items-center text-center cursor-pointer hover:bg-card/85 transition-colors"
+                  className="w-full border-2 border-dashed border-border rounded-[12px] p-10 max-[480px]:p-5 bg-white flex flex-col items-center text-center cursor-pointer hover:bg-card/85 transition-colors"
                   data-testid="add-item-dropzone"
                   onClick={pickFilesWithMemory}
                   onDragOver={(e) => e.preventDefault()}
@@ -3376,7 +3380,7 @@ export default function AddItem() {
                   <div className="h-14 w-14 rounded-full bg-accent-beige flex items-center justify-center mb-3">
                     <Eye className="h-6 w-6 text-primary-brand" />
                   </div>
-                  <h6 className="text-[20px] text-dark-brand font-bold">
+                  <h6 className="text-[20px] text-dark-brand font-bold max-[480px]:text-[16px]">
                     {t("addItem.dropzoneTitle", {
                       defaultValue: "Let the eyes see your pieces",
                     })}
@@ -3492,7 +3496,7 @@ export default function AddItem() {
 
                   {/* Bottom badge + subtitle section — redesigned */}
                   <div
-                    className="mt-5 flex items-center justify-center gap-2 max-w-md mx-auto rounded-full border border-[hsl(var(--border))] bg-accent-beige px-4 py-2"
+                    className="mt-5 flex items-center justify-center gap-2 max-w-md mx-auto rounded-full border border-border flex-wrap bg-accent-beige px-4 py-2"
                     onClick={(e) => e.stopPropagation()}
                   >
                     <Badge
@@ -3512,7 +3516,7 @@ export default function AddItem() {
                 className="mt-0 focus-visible:ring-0 focus-visible:ring-offset-0"
               >
                 <div
-                  className="w-full border-2 border-dashed border-border rounded-[12px] p-10 sm:p-12 bg-white flex flex-col items-center text-center cursor-pointer hover:bg-card/85 transition-colors"
+                  className="w-full border-2 border-dashed border-border rounded-[12px] p-10 max-[480px]:p-5 bg-white flex flex-col items-center text-center cursor-pointer hover:bg-card/85 transition-colors"
                   data-testid="add-item-digital-import-pane"
                 >
                   {!(
@@ -3524,7 +3528,7 @@ export default function AddItem() {
                       <div className="h-14 w-14 rounded-full bg-accent-beige flex items-center justify-center mb-3">
                         <Sparkles className="h-6 w-6 text-primary-brand" />
                       </div>
-                      <h6 className="text-[20px] text-dark-brand font-bold">
+                      <h6 className="text-[20px] text-dark-brand font-bold max-[480px]:text-[16px]">
                         {t("addItem.import.title", {
                           defaultValue: "Digital Receipt & Email Import",
                         })}
@@ -4320,7 +4324,7 @@ export default function AddItem() {
                     )}
                   </div>
                 </div>
-                <div className="flex items-center gap-2 justify-end">
+                <div className="flex items-center gap-2 justify-end flex-wrap">
                   <Button
                     type="button"
                     size="sm"

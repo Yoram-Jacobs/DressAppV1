@@ -69,7 +69,7 @@ export const LocationCard = () => {
             <MapPin className="h-5 w-5" />
           </div>
           <div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
               <span className="text-[13px] font-bold block text-dark-brand">
                 {t("location.title", { defaultValue: "Location" })}
               </span>

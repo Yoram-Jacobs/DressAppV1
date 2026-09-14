@@ -309,7 +309,7 @@ function Shell({ title, tone, children }) {
         <CardContent className="p-6 text-center">
           <div className={`mb-4 flex items-center justify-center gap-1 ${accent}`}>
             <Icon className="h-5 w-5" />
-            <h1 className="text-[20px] text-dark-brand font-bold">{title}</h1>
+            <h1 className="text-[20px] text-dark-brand font-bold max-[480px]:text-[16px]">{title}</h1>
           </div>
           {children}
         </CardContent>

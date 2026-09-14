@@ -1227,9 +1227,9 @@ function Suitcase() {
           <div
             className="
                     px-10 py-20
-                    max-[991px]:px-[35px] max-[991px]:py-[45px]
-                    max-[767px]:px-5 max-[767px]:py-[38px]
-                    max-[480px]:px-4 max-[480px]:py-8"
+                    max-[991px]:px-[15px] max-[991px]:py-[30px]
+            max-[767px]:px-[15px] max-[767px]:py-[30px]
+            max-[480px]:px-[15px] max-[480px]:py-[30px]"
           >
             <div className="max-w-[520px]">
               {/* Title */}
@@ -1240,8 +1240,10 @@ function Suitcase() {
                         font-bold
                         tracking-normal
                         text-white
-                        max-[767px]:text-[42px]
-                        max-[480px]:text-[35px]
+                        max-[767px]:text-[30px]
+                max-[480px]:text-[20px]
+                max-[480px]:leading-[30px]
+                max-[480px]:mb-3
                       "
               >
                 {t("suitcase.headerTitle", {
@@ -1271,7 +1273,9 @@ function Suitcase() {
           </div>
         </div>
       </PageHeroBanner>
-      <section className="px-[40px] py-[40px] bg-[var(--accent-beige)]">
+      <section className="px-[40px] py-[40px] bg-[var(--accent-beige)]  max-[991px]:px-[15px] max-[991px]:py-[30px]
+            max-[767px]:px-[15px] max-[767px]:py-[30px]
+            max-[480px]:px-[15px] max-[480px]:py-[30px]">
         <button
           onClick={() => nav(-1)}
           className="inline-flex items-center text-[14px] font-bold text-dark-brand mb-5 hover:text-primary-brand">
@@ -1289,7 +1293,7 @@ function Suitcase() {
           }}
           className="w-full"
         >
-          <div className="flex items-center justify-between mb-5">
+          <div className="flex items-center justify-between mb-5 flex-wrap gap-2">
             <TabsList className="inline-flex items-center gap-1 p-[5px] bg-white rounded-full">
               <TabsTrigger
                 value="suitcase"
@@ -1597,7 +1601,7 @@ function Suitcase() {
                               </div>
                             </AccordionTrigger>
                             <AccordionContent>
-                              <div className="grid grid-cols-2 gap-3">
+                              <div className="grid grid-cols-2 gap-3 max-[480px]:grid-cols-1">
                                 {(Array.isArray(packingData?.outfits)
                                   ? packingData.outfits
                                   : []
@@ -1723,7 +1727,7 @@ function Suitcase() {
                             className="border border-border rounded-[12px] bg-primary-shadow px-[12px]"
                           >
                             <AccordionTrigger className="hover:no-underline">
-                              <div className="flex items-center justify-between w-full pe-4">
+                              <div className="flex items-center justify-between w-full pe-4 flex-wrap gap-2">
                                 <div className="flex items-center gap-2">
                                   <Luggage className="h-4 w-4 text-primary-brand" />
                                   <span className="text-[14px] font-bold text-primary-brand">
@@ -2198,7 +2202,7 @@ function Suitcase() {
                               </div>
                             </AccordionTrigger>
                             <AccordionContent>
-                              <div className="grid grid-cols-2 gap-3">
+                              <div className="grid grid-cols-2 gap-3 max-[480px]:grid-cols-1">
                                 {(Array.isArray(activeSuitcase?.outfits)
                                   ? activeSuitcase.outfits
                                   : []
@@ -2287,7 +2291,7 @@ function Suitcase() {
                             className="border border-border rounded-[12px] bg-primary-shadow px-[12px]"
                           >
                             <AccordionTrigger className="hover:no-underline">
-                              <div className="flex items-center justify-between w-full pe-4">
+                              <div className="flex items-center justify-between w-full pe-4 flex-wrap gap-2">
                                 <div className="flex items-center gap-2">
                                   <Luggage className="h-4 w-4 text-primary-brand" />
                                   <span className="text-[14px] font-bold text-primary-brand">

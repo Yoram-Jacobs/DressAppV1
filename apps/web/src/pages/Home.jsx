@@ -15,6 +15,9 @@ import {
   Recycle,
   Newspaper,
 } from "lucide-react";
+import {
+  Ruler, Link2, CheckCircle2, ShieldCheck, MousePointerClick,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -33,7 +36,7 @@ import { Navigation, Autoplay, EffectFade } from "swiper/modules";
 import "swiper/css";
 import "swiper/css/navigation";
 import "swiper/css/effect-fade";
-import { labelForCategory, labelForColor } from "@/lib/taxonomy";
+import { labelForCategory, labelForColor, labelForSeason, labelForSubCategory } from "@/lib/taxonomy";
 import slide1 from "../assets/img/slide1.webp";
 import slide2 from "../assets/img/slide2.webp";
 import slide3 from "../assets/img/slide3.webp";
@@ -46,6 +49,10 @@ import Effect from "../assets/img/effect.png";
 import closet1 from "../assets/img/closet1.jpg";
 import closet2 from "../assets/img/closet2.jpg";
 import closet3 from "../assets/img/closet3.jpg";
+import stylistNavyBlazer from "../assets/img/stylist-navy-blazer.jpg";
+import stylistWhiteShirt from "../assets/img/stylist-white-shirt.jpg";
+import stylistCharcoalTrousers from "../assets/img/stylist-charcoal-trousers.jpg";
+import stylistOxfordShoes from "../assets/img/stylist-oxford-shoes.jpg";
 import added1 from "../assets/img/added1.jpg";
 import added2 from "../assets/img/added2.jpg";
 import added3 from "../assets/img/added3.jpg";
@@ -94,6 +101,17 @@ const BUCKET_VISUALS = {
   news_flash: { Icon: Newspaper, tone: "bg-secondary/60" },
 };
 const DEFAULT_BUCKET_VISUAL = { Icon: Sparkles, tone: "bg-secondary/60" };
+
+const translateSeasonList = (value, t) => {
+  if (!value) return "";
+  return String(value)
+    .split(/[,/|]+/)
+    .map((part) => part.trim())
+    .filter(Boolean)
+    .map((code) => labelForSeason(code, t))
+    .filter(Boolean)
+    .join(", ");
+};
 
 export default function Home() {
   const { t, i18n } = useTranslation();
@@ -444,7 +462,7 @@ export default function Home() {
   const STYLIST_PREVIEW_RECOMMENDATIONS = [
     {
       id: "blazer",
-      image: closet1, // ⚠️ verify: yeh actually ek navy blazer ki clean studio photo honi chahiye
+      image: stylistNavyBlazer,
       categoryKey: "home.stylistPreview.recs.blazer.category",
       categoryDefault: "Outerwear",
       titleKey: "home.stylistPreview.recs.blazer.title",
@@ -454,7 +472,7 @@ export default function Home() {
     },
     {
       id: "shirt",
-      image: closet2, // ⚠️ verify: yeh actually ek white dress shirt ki clean studio photo honi chahiye
+      image: stylistWhiteShirt,
       categoryKey: "home.stylistPreview.recs.shirt.category",
       categoryDefault: "Top Layer",
       titleKey: "home.stylistPreview.recs.shirt.title",
@@ -464,7 +482,7 @@ export default function Home() {
     },
     {
       id: "trousers",
-      image: closet3, // ⚠️ verify: yeh actually ek tailored trouser ki clean studio photo honi chahiye
+      image: stylistCharcoalTrousers,
       categoryKey: "home.stylistPreview.recs.trousers.category",
       categoryDefault: "Bottom Layer",
       titleKey: "home.stylistPreview.recs.trousers.title",
@@ -474,9 +492,9 @@ export default function Home() {
     },
     {
       id: "shoes",
-      image: closet1, // ⚠️ naya asset chahiye: black leather oxford shoes, clean studio shot
+      image: stylistOxfordShoes,
       categoryKey: "home.stylistPreview.recs.shoes.category",
-      categoryDefault: "Footwear",
+      categoryDefault: "Shoes",
       titleKey: "home.stylistPreview.recs.shoes.title",
       titleDefault: "Black Leather Oxford Shoes",
       descriptionKey: "home.stylistPreview.recs.shoes.description",
@@ -623,25 +641,31 @@ export default function Home() {
 
       const categoryText =
         labelForCategory(item.category, t) ||
-        item.category ||
-        item.sub_category ||
-        fallback.categoryDefault;
+        t(fallback.categoryKey, { defaultValue: fallback.categoryDefault });
 
-      const nameText = item.title || item.name || item.brand || fallback.nameDefault;
+      const subLabel = item.sub_category ? labelForSubCategory(item.sub_category, t) : "";
+      const nameText =
+        (subLabel && subLabel !== String(item.sub_category).trim() ? subLabel : "") ||
+        item.title ||
+        item.name ||
+        item.brand ||
+        t(fallback.nameKey, { defaultValue: fallback.nameDefault });
 
       const metaParts = [
         item.color ? labelForColor(item.color, t) : null,
-        item.season || null,
+        translateSeasonList(item.season, t) || null,
       ].filter(Boolean);
       const metaText =
-        metaParts.length > 0 ? metaParts.join(" · ") : fallback.metaDefault;
+        metaParts.length > 0
+          ? metaParts.join(" · ")
+          : t(fallback.metaKey, { defaultValue: fallback.metaDefault });
 
       return {
         id: item.id || `closet-${idx}`,
         image: resolvedImg,
         fallbackImage: fallback.image,
         isDynamic: true,
-        altText: nameText,
+        altText: item.title || item.name || nameText,
         categoryText,
         nameText,
         metaText,
@@ -658,11 +682,11 @@ export default function Home() {
         id: item.id || `thumb-${idx}`,
         image: resolvedImg,
         fallbackImage: fallbackImg,
-        altKey: "home.closet.recent.sneakers",
-        altDefault: item.name || "Recent item",
+        isDynamic: true,
+        altText: item.title || item.name || item.brand || t("home.closet.recentlyAdded"),
       };
     });
-  }, [closet.items]);
+  }, [closet.items, t]);
 
   const recentlyAddedMoreCount = Math.max(0, (closet.total || closet.items?.length || 0) - displayRecentlyAdded.length);
   const BUCKET_VISUALS = {
@@ -929,7 +953,7 @@ export default function Home() {
             flex
             max-w-[calc(100%-24px)]
             items-center
-            gap-3
+            gap-2
             rounded-sm
             border
             border-white/15
@@ -1005,7 +1029,6 @@ export default function Home() {
                 defaultValue: "AI Styled Look",
               })}
             </div>
-
             {/* ================= SLIDER DOTS ================= */}
             <div
               className="
@@ -1021,6 +1044,7 @@ export default function Home() {
             sm:end-7
             sm:start-auto
             sm:translate-x-0
+            max-[480px]:hidden
           "
               aria-label={t("home.fashionBannerSlider", {
                 defaultValue: "Fashion banner slider",
@@ -1048,7 +1072,6 @@ export default function Home() {
                 />
               ))}
             </div>
-
             {/* ================= EDITORIAL META ================= */}
             <div
               className="
@@ -1061,6 +1084,7 @@ export default function Home() {
             sm:text-end
             text-white
             sm:end-5
+            max-[480px]:hidden
           "
             >
               <span className="mb-1 block font-sans text-[9px] font-semibold uppercase tracking-[0.08em] text-white/65 sm:text-[10px]">
@@ -1075,7 +1099,6 @@ export default function Home() {
                 })}
               </strong>
             </div>
-
             {/* ================= TODAY'S OUTFIT ================= */}
             <div
               className="
@@ -1143,7 +1166,8 @@ export default function Home() {
       {/* how-it-works-section-start */}
       <section
         id="how-it-works"
-        className="w-full px-[40px] py-[80px] bg-white"
+        className="w-full px-[40px] py-[80px] bg-white max-[991px]:px-[15px] max-[991px]:py-[30px] max-[767px]:px-[15px] max-[767px]:py-[30px] 
+        max-[480px]:px-[15px] max-[480px]:py-[30px]"
       >
         <div className="w-full">
           {/* Section Heading */}
@@ -1163,7 +1187,7 @@ export default function Home() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: false, amount: 0.3 }}
               transition={{ duration: 0.65, delay: 0.15, ease: "easeOut" }}
-              className="mb-3 text-[20px] font-extrabold leading-[40px] tracking-[0.5px] text-black md:text-[30px]"
+              className="mb-3 text-[30px] font-extrabold leading-[40px] tracking-[0.5px] text-black max-[480px]:text-[20px] max-[480px]:leading-[30px]"
             >
               {t("home.howItWorks.heading", {
                 defaultValue: "Revolutionizing Wardrobe Management",
@@ -1174,7 +1198,7 @@ export default function Home() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: false, amount: 0.3 }}
               transition={{ duration: 0.65, delay: 0.3, ease: "easeOut" }}
-              className="mx-auto max-w-[620px] text-[16px] leading-[26px] font-semibold text-text-brand"
+              className="mx-auto max-w-[620px] text-[16px] leading-[26px] font-semibold text-text-brand max-[480px]:text-[14px] max-[480px]:leading-[24px]"
             >
               {t("home.howItWorks.description", {
                 defaultValue:
@@ -1234,7 +1258,8 @@ export default function Home() {
       {/* closet-section-start */}
       <section
         id="closet"
-        className="w-full overflow-hidden bg-[var(--accent-beige)] px-[40px] py-[80px] max-[991px]:px-[5px] max-[991px]:py-[40px]"
+        className="w-full overflow-hidden bg-[var(--accent-beige)] px-[40px] py-[80px] max-[991px]:px-[15px] max-[991px]:py-[30px] max-[767px]:px-[15px] max-[767px]:py-[30px] 
+        max-[480px]:px-[15px] max-[480px]:py-[30px]"
       >
         <div className="w-full">
           <div className="grid grid-cols-1 items-center gap-x-3 md:grid-cols-12">
@@ -1258,7 +1283,7 @@ export default function Home() {
                   whileInView={{ opacity: 1, x: 0 }}
                   viewport={{ once: false, amount: 0.3 }}
                   transition={{ duration: 0.65, delay: 0.15, ease: "easeOut" }}
-                  className="mb-3 text-[20px] font-extrabold leading-[40px] tracking-[0.5px] text-black md:text-[30px]"
+                  className="mb-3 text-[30px] font-extrabold leading-[40px] tracking-[0.5px] text-black max-[480px]:text-[20px] max-[480px]:leading-[30px]"
                 >
                   {t("home.closet.heading", {
                     defaultValue: "Every Piece Finds Its Place",
@@ -1270,7 +1295,7 @@ export default function Home() {
                   whileInView={{ opacity: 1, x: 0 }}
                   viewport={{ once: false, amount: 0.3 }}
                   transition={{ duration: 0.65, delay: 0.3, ease: "easeOut" }}
-                  className="mx-auto max-w-[620px] text-[16px] leading-[26px] font-semibold text-text-brand  mb-5"
+                  className="mx-auto max-w-[620px] text-[16px] leading-[26px] font-semibold text-text-brand  mb-5 max-[480px]:text-[14px] max-[480px]:leading-[24px]"
                 >
                   {t("home.closet.description1", {
                     defaultValue:
@@ -1283,7 +1308,7 @@ export default function Home() {
                   whileInView={{ opacity: 1, x: 0 }}
                   viewport={{ once: false, amount: 0.3 }}
                   transition={{ duration: 0.65, delay: 0.4, ease: "easeOut" }}
-                  className="mx-auto max-w-[620px] text-[16px] leading-[26px] font-semibold text-text-brand mb-5"
+                  className="mx-auto max-w-[620px] text-[16px] leading-[26px] font-semibold text-text-brand mb-5 max-[480px]:text-[14px] max-[480px]:leading-[24px]"
                 >
                   {t("home.closet.description2", {
                     defaultValue:
@@ -1399,7 +1424,11 @@ export default function Home() {
                               e.target.src = thumb.fallbackImage;
                             }
                           }}
-                          alt={t(thumb.altKey, { defaultValue: thumb.altDefault })}
+                          alt={
+                            thumb.isDynamic
+                              ? thumb.altText
+                              : t(thumb.altKey, { defaultValue: thumb.altDefault })
+                          }
                           className="block h-full w-full object-cover"
                         />
                       </div>
@@ -1420,7 +1449,8 @@ export default function Home() {
       {/* stylist-section-start */}
       <section
         id="stylist"
-        className="w-full overflow-hidden bg-white px-[40px] py-[80px] max-[991px]:px-[20px] max-[991px]:py-[50px]"
+        className="w-full overflow-hidden bg-white px-[40px] py-[80px] max-[991px]:px-[15px] max-[991px]:py-[30px] max-[767px]:px-[15px] max-[767px]:py-[30px] 
+        max-[480px]:px-[15px] max-[480px]:py-[30px]"
       >
         <div className="w-full">
           <div className="grid grid-cols-1 items-center gap-x-8 gap-y-8 md:grid-cols-2">
@@ -1431,7 +1461,7 @@ export default function Home() {
                 whileInView={{ opacity: 1, x: 0 }}
                 viewport={{ once: false, amount: 0.3 }}
                 transition={{ duration: 0.65, delay: 0.15, ease: "easeOut" }}
-                className="relative overflow-hidden rounded-[18px] border border-black/[0.06] bg-white p-5 shadow-[var(--primary-shadow)] transition-smooth shadow-[0_20px_45px_rgba(23,20,15,0.12)]"
+                className="relative overflow-hidden rounded-[18px] border border-border bg-white p-5 shadow-[var(--primary-shadow)] transition-smooth shadow-[0_20px_45px_rgba(23,20,15,0.12)]"
               >
                 {/* Chat Topbar */}
                 <div className="mb-5">
@@ -1512,13 +1542,13 @@ export default function Home() {
                   {STYLIST_PREVIEW_RECOMMENDATIONS.map((rec) => (
                     <div
                       key={rec.id}
-                      className="flex items-center gap-3 rounded-[12px] border border-black/[0.06] bg-white p-3 transition-smooth shadow-sm"
+                      className="flex items-center gap-3 rounded-[12px] border border-border bg-white p-3 transition-smooth shadow-sm"
                     >
                       <div className="h-[62px] w-[62px] shrink-0 overflow-hidden rounded-[9px] bg-[#f1f5f4]">
                         <img
                           src={rec.image}
                           alt={t(rec.titleKey, { defaultValue: rec.titleDefault })}
-                          className="h-full w-full object-cover"
+                          className="h-full w-full object-contain p-1"
                         />
                       </div>
                       <div className="min-w-0">
@@ -1616,7 +1646,7 @@ export default function Home() {
                   whileInView={{ opacity: 1, x: 0 }}
                   viewport={{ once: false, amount: 0.3 }}
                   transition={{ duration: 0.65, delay: 0.15, ease: "easeOut" }}
-                  className="mb-3 text-[20px] font-extrabold leading-[40px] tracking-[0.5px] text-black md:text-[30px]"
+                  className="mb-3 text-[30px] font-extrabold leading-[40px] tracking-[0.5px] text-black max-[480px]:text-[20px] max-[480px]:leading-[30px]"
                 >
                   {t("home.stylist.heading", {
                     defaultValue: "The AI Stylist That Understands Life",
@@ -1628,7 +1658,7 @@ export default function Home() {
                   whileInView={{ opacity: 1, x: 0 }}
                   viewport={{ once: false, amount: 0.3 }}
                   transition={{ duration: 0.65, delay: 0.3, ease: "easeOut" }}
-                  className="mx-auto max-w-[620px] text-[16px] leading-[26px] font-semibold text-text-brand mb-5"
+                  className="mx-auto max-w-[620px] text-[16px] leading-[26px] font-semibold text-text-brand mb-5 max-[480px]:text-[14px] max-[480px]:leading-[24px]"
                 >
                   {t("home.stylist.description1", {
                     defaultValue:
@@ -1641,7 +1671,7 @@ export default function Home() {
                   whileInView={{ opacity: 1, x: 0 }}
                   viewport={{ once: false, amount: 0.3 }}
                   transition={{ duration: 0.65, delay: 0.4, ease: "easeOut" }}
-                  className="mx-auto max-w-[620px] text-[16px] leading-[26px] font-semibold text-text-brand mb-5"
+                  className="mx-auto max-w-[620px] text-[16px] leading-[26px] font-semibold text-text-brand mb-5 max-[480px]:text-[14px] max-[480px]:leading-[24px]"
                 >
                   {t("home.stylist.description2", {
                     defaultValue:
@@ -1673,11 +1703,12 @@ export default function Home() {
       {/* marketplace-section-start */}
       <section
         id="marketplace"
-        className="w-full overflow-hidden bg-[var(--accent-beige)] px-[40px] py-[80px] max-[991px]:px-[20px] max-[991px]:py-[50px]"
+        className="w-full overflow-hidden bg-[var(--accent-beige)] px-[40px] py-[80px] max-[991px]:px-[15px] max-[991px]:py-[30px] max-[767px]:px-[15px] max-[767px]:py-[30px] 
+        max-[480px]:px-[15px] max-[480px]:py-[30px]"
       >
         <div className="w-full">
           {/* Section Heading */}
-          <div className="mb-8">
+          <div className="mb-8 max-[480px]:mb-5">
             <motion.span
               initial={{ opacity: 0, y: -10 }}
               whileInView={{ opacity: 1, y: 0 }}
@@ -1696,7 +1727,7 @@ export default function Home() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: false, amount: 0.3 }}
               transition={{ duration: 0.65, delay: 0.15, ease: "easeOut" }}
-              className="mb-0 text-[20px] font-extrabold leading-[40px] tracking-[0.5px] text-black md:text-[30px]"
+              className="mb-0 text-[30px] font-extrabold leading-[40px] tracking-[0.5px] text-black max-[480px]:text-[20px] max-[480px]:leading-[30px]"
             >
               {t("home.marketplace.heading", {
                 defaultValue: "Circular Wardrobe Marketplace",
@@ -1708,9 +1739,9 @@ export default function Home() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: false, amount: 0.3 }}
               transition={{ duration: 0.65, delay: 0.3, ease: "easeOut" }}
-              className="flex items-center justify-between gap-8 max-[991px]:flex-col max-[991px]:items-start"
+              className="flex items-center justify-between gap-8 max-[991px]:flex-col max-[991px]:items-start max-[480px]:gap-5"
             >
-              <p className="max-w-[620px] text-[16px] leading-[26px] font-semibold text-text-brand mb-0">
+              <p className="max-w-[620px] text-[16px] leading-[26px] font-semibold text-text-brand mb-0 max-[480px]:text-[14px] max-[480px]:leading-[24px]">
                 {t("home.marketplace.description", {
                   defaultValue:
                     "Buy, sell, or donate. Our integrated marketplace allows you to monetize under-utilized garments natively from your digital closet.",
@@ -1780,7 +1811,7 @@ export default function Home() {
           >
             <Swiper
               modules={[Navigation, Autoplay]}
-              slidesPerView={1.15}
+              slidesPerView={1}
               spaceBetween={15}
               loop={true}
               speed={800}
@@ -1790,7 +1821,7 @@ export default function Home() {
                 pauseOnMouseEnter: true,
               }}
               breakpoints={{
-                576: { slidesPerView: 2, spaceBetween: 15 },
+                576: { slidesPerView: 1, spaceBetween: 15 },
                 992: { slidesPerView: 3, spaceBetween: 15 },
                 1200: { slidesPerView: 4, spaceBetween: 15 },
               }}
@@ -1811,7 +1842,7 @@ export default function Home() {
                       delay: (i % 4) * 0.1,
                       ease: "easeOut",
                     }}
-                    className="group overflow-hidden rounded-[12px] border border-black/[0.06] my-[20px] bg-white transition-smooth hover:-translate-y-[5px] hover:shadow-md"
+                    className="group overflow-hidden rounded-[12px] border border-border my-[20px] bg-white transition-smooth hover:-translate-y-[5px] hover:shadow-md"
                   >
                     {/* Image */}
                     <Link to={item.link || "/market"} className="relative block aspect-[4/3] w-full overflow-hidden bg-white">
@@ -1882,7 +1913,7 @@ export default function Home() {
             <button
               ref={marketPrevRef}
               type="button"
-              className="market-swiper-prev !absolute !start-2 !top-1/2 !z-20 !m-0 !flex !h-10 !w-10 !-translate-y-1/2 !items-center !justify-center !rounded-full !border !border-black/10 !bg-primary-brand !text-[var(--dark-color)] !shadow-[0_8px_20px_rgba(23,20,15,0.15)] transition-smooth hover:!bg-dark-brand hover:!text-white"
+              className="market-swiper-prev !absolute !start-2 !top-1/2 !z-20 !m-0 !flex !h-10 !w-10 !-translate-y-1/2 !items-center !justify-center !rounded-full !border !border-black/10 !bg-primary-brand !text-white !shadow-[0_8px_20px_rgba(23,20,15,0.15)] transition-smooth hover:!bg-dark-brand"
               aria-label={t("home.marketplace.prevAria", {
                 defaultValue: "Previous marketplace slide",
               })}
@@ -1894,7 +1925,7 @@ export default function Home() {
             <button
               ref={marketNextRef}
               type="button"
-              className="market-swiper-next !absolute !end-2 !top-1/2 !z-20 !m-0 !flex !h-10 !w-10 !-translate-y-1/2 !items-center !justify-center !rounded-full !border !border-black/10 !bg-primary-brand !text-[var(--dark-color)] !shadow-[0_8px_20px_rgba(23,20,15,0.15)] transition-smooth hover:!bg-dark-brand hover:!text-white"
+              className="market-swiper-next !absolute !end-2 !top-1/2 !z-20 !m-0 !flex !h-10 !w-10 !-translate-y-1/2 !items-center !justify-center !rounded-full !border !border-black/10 !bg-primary-brand !text-white !shadow-[0_8px_20px_rgba(23,20,15,0.15)] transition-smooth hover:!bg-dark-brand"
               aria-label={t("home.marketplace.nextAria", {
                 defaultValue: "Next marketplace slide",
               })}
@@ -1909,7 +1940,7 @@ export default function Home() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: false, amount: 0.3 }}
             transition={{ duration: 0.6, delay: 0.1, ease: "easeOut" }}
-            className="mt-12 flex justify-center"
+            className="mt-12 flex justify-center max-[480px]:mt-5"
           >
             <p className="m-0 inline-flex items-center gap-2 rounded-full bg-[var(--dark-color)] px-4 py-2 text-[12px] font-medium text-white">
               <i className="bi bi-info-circle text-[var(--primary-color)]" />
@@ -1925,7 +1956,8 @@ export default function Home() {
       {/* shopping-assistant-extension-section-start */}
       <section
         id="shopping-assistant"
-        className="w-full overflow-hidden bg-white px-[40px] py-[80px] max-[991px]:px-[20px] max-[991px]:py-[50px]"
+        className="w-full overflow-hidden bg-white px-[40px] py-[80px] max-[991px]:px-[15px] max-[991px]:py-[30px] max-[767px]:px-[15px] max-[767px]:py-[30px] 
+        max-[480px]:px-[15px] max-[480px]:py-[30px]"
       >
         <div className="w-full">
           <div className="grid grid-cols-1 items-center gap-x-8 gap-y-8 md:grid-cols-12">
@@ -1936,29 +1968,31 @@ export default function Home() {
                 whileInView={{ opacity: 1, x: 0 }}
                 viewport={{ once: false, amount: 0.3 }}
                 transition={{ duration: 0.65, delay: 0.15, ease: "easeOut" }}
-                className="relative overflow-hidden rounded-[18px] border border-black/[0.06] bg-white shadow-[var(--primary-shadow)] transition-smooth shadow-[0_20px_45px_rgba(23,20,15,0.12)]"
+                className="relative overflow-hidden rounded-[12px] border border-border bg-white shadow-lg transition-smooth"
               >
                 {/* Browser Topbar */}
-                <div className="flex items-center justify-between gap-4 border-b border-black/[0.06] px-5 py-4 max-[575px]:flex-col max-[575px]:items-start">
-                  <div>
-                    <h5 className="m-0 flex items-center text-[14px] font-black text-[var(--dark-color)]">
-                      <i className="bi bi-puzzle me-2 text-[var(--primary-color)]" />
-                      {t("home.shoppingAssistant.title", {
-                        defaultValue: "DressApp Shopping Assistant",
-                      })}
-                    </h5>
-
-                    <p className="mt-1 mb-0 text-[11px] font-medium text-[var(--text-color)]">
-                      {t("home.shoppingAssistant.subtitle", {
-                        defaultValue: "Works on every store you browse",
-                      })}
-                    </p>
+                <div className="flex items-center justify-between gap-4 border-b border-border px-5 py-4 max-[575px]:flex-col max-[575px]:items-start">
+                  <div className="flex items-center gap-3">
+                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px] bg-[var(--primary-color)] text-white">
+                      <i className="bi bi-puzzle text-[15px]" />
+                    </span>
+                    <div>
+                      <h5 className="m-0 text-[14px] font-black text-[var(--dark-color)]">
+                        {t("home.shoppingAssistant.title", {
+                          defaultValue: "DressApp Shopping Assistant",
+                        })}
+                      </h5>
+                      <p className="mt-0.5 mb-0 text-[11px] font-medium text-[var(--text-color)]">
+                        {t("home.shoppingAssistant.subtitle", {
+                          defaultValue: "Get your right size on any store's size chart",
+                        })}
+                      </p>
+                    </div>
                   </div>
 
-                  {/* CTA */}
                   <button
                     type="button"
-                    className="inline-flex items-center rounded-full border border-black/[0.08] bg-white px-4 py-2 text-[11px] font-bold text-[var(--dark-color)] transition-smooth hover:-translate-y-[1px] hover:border-[var(--primary-color)] hover:text-[var(--primary-color)]"
+                    className="inline-flex shrink-0 items-center rounded-full border border-black/[0.08] bg-white px-4 py-2 text-[11px] font-bold text-[var(--dark-color)] transition-smooth hover:-translate-y-[1px] hover:border-[var(--primary-color)] hover:text-[var(--primary-color)]"
                   >
                     <i className="bi bi-google me-2" />
                     {t("home.shoppingAssistant.addToChrome", {
@@ -1966,149 +2000,151 @@ export default function Home() {
                     })}
                   </button>
                 </div>
-
-                {/* Extension Body */}
-                <div className="grid grid-cols-1 gap-0 md:grid-cols-[1.35fr_0.65fr]">
-                  {/* Browser Canvas */}
-                  <div className="relative h-[450px] overflow-hidden bg-[#f2eee8] max-[767px]:min-h-[400px]">
-                    <img
-                      src={shoppingAssistantPreview}
-                      alt={t("home.shoppingAssistant.previewAlt", {
-                        defaultValue: "Shopping assistant extension preview",
-                      })}
-                      className="block h-full  w-full object-cover object-center"
-                    />
-
-                    {/* Review Status Badge */}
-                    <span className="absolute start-4 top-4 inline-flex items-center gap-1.5 rounded-full border border-white/50 bg-white/90 px-3 py-1.5 text-[10px] font-black text-[var(--primary-color)] shadow-[0_8px_20px_rgba(23,20,15,0.12)] backdrop-blur-sm">
-                      <i className="bi bi-hourglass-split" />
-                      {t("home.shoppingAssistant.reviewBadge", {
-                        defaultValue: "Pending Chrome Web Store Review",
-                      })}
-                    </span>
+                {/* Mock Browser Canvas */}
+                <div className="relative bg-[#f4f0ea] px-5 py-6 max-[575px]:px-3">
+                  {/* Fake Chrome tab + address bar */}
+                  <div className="mb-4 overflow-hidden rounded-[10px] border border-border bg-white shadow-sm">
+                    <div className="flex items-center gap-2 border-b border-black/[0.05] bg-[#ebebe8] px-3 py-2">
+                      <span className="flex gap-1.5">
+                        <span className="h-2.5 w-2.5 rounded-full bg-[#f0a5a5]" />
+                        <span className="h-2.5 w-2.5 rounded-full bg-[#f0d5a5]" />
+                        <span className="h-2.5 w-2.5 rounded-full bg-[#a5d6a7]" />
+                      </span>
+                      <span className="ms-3 flex items-center gap-1.5 rounded-t-[6px] bg-white px-3 py-1 text-[10px] font-semibold text-[var(--text-color)] shadow-sm">
+                        <i className="bi bi-bag-fill text-[9px] text-[#8a8f8a]" />
+                        {t("home.shoppingAssistant.mockTab", {
+                          defaultValue: "Half-Zip Sweatshirt",
+                        })}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between gap-2 px-3 py-2">
+                      <span className="flex min-w-0 items-center gap-2 text-[11px] text-[var(--text-color)]">
+                        <i className="bi bi-lock-fill text-[9px] text-[#8a8f8a]" />
+                        <span className="truncate font-semibold">
+                          {t("home.shoppingAssistant.mockUrl", {
+                            defaultValue: "anyfashionstore.com/product/half-zip-sweatshirt",
+                          })}
+                        </span>
+                      </span>
+                      <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-[var(--primary-color)]/25 bg-primary-shadow px-2.5 py-1 text-[10px] font-black text-[var(--primary-color)]">
+                        <CheckCircle2 className="h-3 w-3" />
+                        {t("home.shoppingAssistant.connectedBadge", {
+                          defaultValue: "Connected to DressApp",
+                        })}
+                      </span>
+                    </div>
                   </div>
 
-                  {/* Extension Panel */}
-                  <div className="flex flex-col bg-white p-5">
-                    {/* Tabs */}
-                    <div className="mb-6 flex items-center gap-1 overflow-x-auto border-b border-black/[0.06]">
-                      {EXTENSION_TABS.map((tab) => (
-                        <span
-                          key={tab.id}
-                          className={
-                            tab.id === activeExtensionTab
-                              ? "whitespace-nowrap border-b-2 border-[var(--primary-color)] px-3 pb-2.5 text-[11px] font-black text-[var(--primary-color)]"
-                              : "whitespace-nowrap px-3 pb-2.5 text-[11px] font-semibold text-[var(--text-color)] transition-smooth hover:text-[var(--primary-color)]"
-                          }
-                        >
-                          {t(tab.labelKey, { defaultValue: tab.labelDefault })}
-                        </span>
-                      ))}
-                    </div>
-
-                    {/* Smart Features */}
-                    <div className="mb-6">
-                      <span className="mb-3 block text-[11px] font-black uppercase tracking-[0.08em] text-[var(--dark-color)]">
-                        {t("home.shoppingAssistant.smartFeatures", {
-                          defaultValue: "Smart Features",
+                  {/* Size Guide card */}
+                  <div className="relative rounded-[14px] border border-border bg-white p-4 shadow-[0_15px_35px_-18px_rgba(23,20,15,0.3)]">
+                    <div className="mb-3 flex items-center justify-between">
+                      <span className="flex items-center gap-2 text-[13px] font-black text-[var(--dark-color)]">
+                        <Ruler className="h-4 w-4 text-[var(--primary-color)]" />
+                        {t("home.shoppingAssistant.sizeGuide.title", {
+                          defaultValue: "Size Guide",
                         })}
                       </span>
+                      <span className="text-[10px] font-bold text-[var(--text-color)]">
+                        {t("home.shoppingAssistant.sizeGuide.unit", {
+                          defaultValue: "CM",
+                        })}
+                      </span>
+                    </div>
 
-                      <div className="flex items-center gap-2.5">
-                        {SMART_FEATURES.map((feature) => (
-                          <span
-                            key={feature.id}
-                            aria-label={t(feature.labelKey, {
-                              defaultValue: feature.labelDefault,
-                            })}
-                            title={t(feature.labelKey, {
-                              defaultValue: feature.labelDefault,
-                            })}
-                            className={
-                              feature.active
-                                ? "flex h-8 w-8 items-center justify-center rounded-full border-[3px] border-white bg-[var(--primary-color)] text-white shadow-[0_0_0_1px_var(--primary-color)] transition-smooth hover:scale-110"
-                                : "flex h-8 w-8 items-center justify-center rounded-full border-[3px] border-white bg-[#e8e8e5] text-[var(--dark-color)] shadow-[0_0_0_1px_rgba(0,0,0,0.08)] transition-smooth hover:scale-110"
-                            }
+                    {/* Mini size table */}
+                    <div className="overflow-hidden rounded-[8px] border border-border">
+                      <div className="grid grid-cols-4 bg-accent-beige text-[10px] font-bold text-[var(--dark-color)]">
+                        {["XS", "S", "M", "L"].map((s) => (
+                          <div key={s} className="px-2 py-1.5 text-center">{s}</div>
+                        ))}
+                      </div>
+                      <div className="grid grid-cols-4 text-[10px] text-[var(--text-color)]">
+                        {["58", "59.5", "61", "62.8"].map((v, i) => (
+                          <div
+                            key={v}
+                            className={`relative px-2 py-1.5 text-center ${i === 0
+                                ? "bg-[var(--primary-shadow)] font-black text-[var(--primary-color)]"
+                                : ""
+                              }`}
                           >
-                            <i className={feature.icon} />
-                          </span>
+                            {i === 0 && (
+                              <motion.span
+                                initial={{ opacity: 0.5 }}
+                                animate={{ opacity: [0.5, 0.15, 0.5] }}
+                                transition={{ duration: 1.8, repeat: Infinity, ease: "easeInOut" }}
+                                className="absolute inset-0 rounded-[4px] bg-[var(--primary-color)]/10"
+                              />
+                            )}
+                            <span className="relative">{v}</span>
+                          </div>
                         ))}
                       </div>
                     </div>
 
-                    {/* Savings Found */}
-                    <div className="mb-6">
-                      <div className="mb-3 flex items-center justify-between">
-                        <span className="text-[11px] font-black uppercase tracking-[0.08em] text-[var(--dark-color)]">
-                          {t("home.shoppingAssistant.savingsFound", {
-                            defaultValue: "Avg. Savings Found",
-                          })}
-                        </span>
-
-                        <span className="text-[10px] font-semibold text-[var(--text-color)]">
-                          {t("home.shoppingAssistant.percentValue", {
-                            percent: SAVINGS_PERCENT,
-                            defaultValue: "{{percent}}%",
-                          })}
-                        </span>
-                      </div>
-
-                      <div className="relative h-[5px] w-full rounded-full bg-[#e8e8e5]">
-                        <div
-                          className="absolute left-0 top-0 h-full rounded-full bg-[var(--primary-color)]"
-                          style={{ width: `${SAVINGS_PERCENT}%` }}
-                        />
-
-                        <span
-                          className="absolute top-1/2 h-4 w-4 -translate-x-1/2 -translate-y-1/2 rounded-full border-[3px] border-white bg-[var(--primary-color)] shadow-[0_2px_8px_rgba(0,0,0,0.2)]"
-                          style={{ left: `${SAVINGS_PERCENT}%` }}
-                        />
-                      </div>
-                    </div>
-
-                    {/* Browsing Mode */}
-                    <div className="mb-6">
-                      <span className="mb-3 block text-[11px] font-black uppercase tracking-[0.08em] text-[var(--dark-color)]">
-                        {t("home.shoppingAssistant.browsingMode", {
-                          defaultValue: "Browsing Mode",
-                        })}
-                      </span>
-
-                      <div className="flex flex-wrap gap-2">
-                        {BROWSING_MODES.map((mode) => (
-                          <span
-                            key={mode.id}
-                            className={
-                              mode.id === activeBrowsingMode
-                                ? "cursor-pointer rounded-full border border-[var(--primary-color)] bg-[var(--primary-color)] px-3 py-1.5 text-[10px] font-bold text-white"
-                                : "cursor-pointer rounded-full border border-black/[0.08] bg-white px-3 py-1.5 text-[10px] font-semibold text-[var(--text-color)] transition-smooth hover:border-[var(--primary-color)] hover:text-[var(--primary-color)]"
-                            }
-                          >
-                            {t(mode.labelKey, { defaultValue: mode.labelDefault })}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-
-                    {/* Sync */}
-                    <button
-                      type="button"
-                      className="mt-auto flex w-full items-center justify-center rounded-[50px] bg-[var(--primary-color)] px-5 py-3.5 text-[13px] font-black text-white shadow-[var(--primary-shadow)] transition-smooth hover:-translate-y-[2px] hover:bg-[var(--primary-hover)] hover:shadow-[0_8px_24px_rgba(31,92,69,0.25)]"
+                    {/* Recommendation popup */}
+                    <motion.div
+                      initial={{ opacity: 0, y: 10 }}
+                      whileInView={{ opacity: 1, y: 0 }}
+                      viewport={{ once: false, amount: 0.4 }}
+                      transition={{ duration: 0.5, delay: 0.3, ease: "easeOut" }}
+                      className="mt-4 rounded-[12px] border border-[var(--primary-color)]/25 bg-primary-shadow p-3"
                     >
-                      <i className="bi bi-arrow-repeat me-2" />
-                      {t("home.shoppingAssistant.syncNow", {
-                        defaultValue: "Sync Wishlist Now",
-                      })}
-                    </button>
+                      <div className="mb-1.5 flex items-center gap-2">
+                        <ShieldCheck className="h-4 w-4 shrink-0 text-[var(--primary-color)]" />
+                        <span className="text-[12px] font-black text-[var(--dark-color)]">
+                          {t("home.shoppingAssistant.sizeGuide.recommendedTitle", {
+                            defaultValue: "DressApp recommends size XS",
+                          })}
+                        </span>
+                      </div>
+                      <p className="m-0 pl-6 text-[11px] leading-[1.5] text-[var(--text-color)]">
+                        {t("home.shoppingAssistant.sizeGuide.recommendedBody", {
+                          defaultValue:
+                            "Heuristic match: your hips (92.7 cm) fit the XS row.",
+                        })}
+                      </p>
+                      <p className="m-0 mt-1 pl-6 text-[10px] font-black uppercase tracking-wide text-[var(--primary-color)]">
+                        {t("home.shoppingAssistant.sizeGuide.matchedOn", {
+                          defaultValue: "Matched on: hips · via estimate",
+                        })}
+                      </p>
+                    </motion.div>
                   </div>
+                </div>
+                {/* Trust Stats Strip */}
+                <div className="grid grid-cols-3 divide-x divide-black/[0.06] border-t border-border bg-white">
+                  {[
+                    { value: "1M+", labelKey: "home.shoppingAssistant.stats.sizesMatched", labelDefault: "Sizes matched" },
+                    { value: "500+", labelKey: "home.shoppingAssistant.stats.storesSupported", labelDefault: "Stores supported" },
+                    { value: "94%", labelKey: "home.shoppingAssistant.stats.matchAccuracy", labelDefault: "Match accuracy" },
+                  ].map((stat) => (
+                    <div key={stat.labelDefault} className="px-3 py-3.5 text-center">
+                      <div className="text-[16px] font-black text-[var(--primary-color)]">{stat.value}</div>
+                      <div className="mt-0.5 text-[10px] font-semibold text-[var(--text-color)]">
+                        {t(stat.labelKey, { defaultValue: stat.labelDefault })}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                {/* Review Status Footer */}
+                <div className="flex items-center justify-between gap-3 border-t border-border bg-white px-5 py-3 max-[575px]:flex-col max-[575px]:items-start">
+                  <span className="inline-flex items-center gap-1.5 rounded-full border border-black/[0.08] bg-white px-3 py-1.5 text-[10px] font-black text-[var(--primary-color)]">
+                    <i className="bi bi-hourglass-split" />
+                    {t("home.shoppingAssistant.reviewBadge", {
+                      defaultValue: "Pending Chrome Web Store Review",
+                    })}
+                  </span>
+                  <span className="text-[11px] font-semibold text-[var(--text-color)]">
+                    {t("home.shoppingAssistant.worksOn", {
+                      defaultValue: "Works on every major fashion & retail store",
+                    })}
+                  </span>
                 </div>
               </motion.div>
             </div>
-
             {/* Left Side Content */}
             <div className="md:col-span-5 md:order-1">
-              <div className="max-w-[540px]">
-                {/* Section Tag */}
+              <div className="">
                 <motion.span
                   initial={{ opacity: 0, x: -40 }}
                   whileInView={{ opacity: 1, x: 0 }}
@@ -2127,10 +2163,10 @@ export default function Home() {
                   whileInView={{ opacity: 1, x: 0 }}
                   viewport={{ once: false, amount: 0.3 }}
                   transition={{ duration: 0.65, delay: 0.15, ease: "easeOut" }}
-                  className="mb-3 text-[20px] font-extrabold leading-[40px] tracking-[0.5px] text-black md:text-[30px]"
+                  className="mb-3 text-[30px] font-extrabold leading-[40px] tracking-[0.5px] text-black max-[480px]:text-[20px] max-[480px]:leading-[30px]"
                 >
                   {t("home.shoppingAssistant.heading", {
-                    defaultValue: "Your Smart Shopping Assistant",
+                    defaultValue: "Never Guess Your Size Again",
                   })}
                 </motion.h2>
 
@@ -2139,26 +2175,69 @@ export default function Home() {
                   whileInView={{ opacity: 1, x: 0 }}
                   viewport={{ once: false, amount: 0.3 }}
                   transition={{ duration: 0.65, delay: 0.3, ease: "easeOut" }}
-                  className="mx-auto max-w-[620px] text-[16px] leading-[26px] font-semibold text-text-brand mb-5"
+                  className="text-[16px] leading-[26px] font-semibold text-text-brand mb-6 max-[480px]:text-[14px] max-[480px]:leading-[24px]"
                 >
                   {t("home.shoppingAssistant.description1", {
                     defaultValue:
-                      "Browse any store and let the DressApp extension quietly track prices, spot better deals, and surface coupons before you check out — no extra tabs, no copy-pasting codes.",
+                      "The DressApp Shopping Assistant reads the size chart on any fashion retailer's product page and matches it against your saved body measurements — right there on the page.",
                   })}
                 </motion.p>
 
-                <motion.p
+                {/* How it works steps */}
+                <motion.div
                   initial={{ opacity: 0, x: -40 }}
                   whileInView={{ opacity: 1, x: 0 }}
                   viewport={{ once: false, amount: 0.3 }}
                   transition={{ duration: 0.65, delay: 0.4, ease: "easeOut" }}
-                  className="mx-auto max-w-[620px] text-[16px] leading-[26px] font-semibold text-text-brand mb-5"
+                  className="mb-7 flex flex-col gap-0"
                 >
-                  {t("home.shoppingAssistant.description2", {
-                    defaultValue:
-                      "Save items to your DressApp wishlist from any website, get price-drop alerts, and compare across stores instantly — all synced back to your account automatically.",
-                  })}
-                </motion.p>
+                  {[
+                    {
+                      icon: MousePointerClick,
+                      titleKey: "home.shoppingAssistant.steps.open.title",
+                      titleDefault: "Open the item's Size Guide",
+                      descKey: "home.shoppingAssistant.steps.open.description",
+                      descDefault:
+                        "Browse any store as usual and open the product's size chart popup.",
+                    },
+                    {
+                      icon: Link2,
+                      titleKey: "home.shoppingAssistant.steps.connect.title",
+                      titleDefault: "Connect to DressApp",
+                      descKey: "home.shoppingAssistant.steps.connect.description",
+                      descDefault:
+                        "Click the DressApp icon and sign in once — it stays connected after that.",
+                    },
+                    {
+                      icon: Ruler,
+                      titleKey: "home.shoppingAssistant.steps.match.title",
+                      titleDefault: "Get your instant size match",
+                      descKey: "home.shoppingAssistant.steps.match.description",
+                      descDefault:
+                        "DressApp compares the chart to your measurements and highlights your row.",
+                    },
+                  ].map((step, i, arr) => (
+                    <div key={step.titleDefault} className="relative flex gap-4 pb-6 last:pb-0">
+                      {/* Connector line */}
+                      {i < arr.length - 1 && (
+                        <span className="absolute left-[19px] top-[40px] h-[calc(100%-32px)] w-px bg-[var(--primary-color)]/15" />
+                      )}
+                      <span className="relative z-[1] flex h-10 w-10 shrink-0 items-center justify-center rounded-full border-2 border-[var(--primary-color)]/15 bg-primary-shadow text-[var(--primary-color)]">
+                        <step.icon className="h-4 w-4" />
+                      </span>
+                      <div>
+                        <div className="mb-0.5 flex items-center gap-2">
+                          <h6 className="m-0 text-[14px] font-bold text-[var(--dark-color)]">
+                            {t(step.titleKey, { defaultValue: step.titleDefault })}
+                          </h6>
+                        </div>
+                        <p className="m-0 text-[12.5px] leading-[1.5] text-[var(--text-color)]">
+                          {t(step.descKey, { defaultValue: step.descDefault })}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </motion.div>
 
                 {/* CTA */}
                 <motion.div
@@ -2169,7 +2248,7 @@ export default function Home() {
                   className="flex flex-wrap items-center gap-3"
                 >
 
-                  <a href="#"
+                  <a href="https://chromewebstore.google.com/detail/dressapp-shopping-assista/jdhaijhhipacplnjlhmnjaljhfmeoidp"
                     className="inline-flex items-center justify-center rounded-[50px] bg-[var(--primary-color)] px-[30px] py-[18px] text-[14px] font-bold leading-none text-white no-underline shadow-[var(--primary-shadow)] transition-smooth hover:-translate-y-[2px] hover:bg-[var(--primary-hover)] hover:text-white hover:shadow-[0_8px_24px_rgba(31,92,69,0.25)]"
                   >
                     <i className="bi bi-google me-2" />
@@ -2188,16 +2267,17 @@ export default function Home() {
             </div>
           </div>
         </div>
-      </section >
+      </section>
       {/* shopping-assistant-extension-section-end */}
       {/* experts-section-start */}
       <section
         id="experts"
-        className="w-full overflow-hidden bg-[var(--accent-beige)] px-[40px] py-[80px] max-[991px]:px-[20px] max-[991px]:py-[50px]"
+        className="w-full overflow-hidden bg-[var(--accent-beige)] px-[40px] py-[80px] max-[991px]:px-[15px] max-[991px]:py-[30px] max-[767px]:px-[15px] max-[767px]:py-[30px] 
+        max-[480px]:px-[15px] max-[480px]:py-[30px]"
       >
         <div className="w-full">
           {/* Section Heading */}
-          <div className="mb-12">
+          <div className="mb-12 max-[480px]:mb-5">
             {/* Tag */}
             <motion.span
               initial={{ opacity: 0, y: -10 }}
@@ -2216,7 +2296,7 @@ export default function Home() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: false, amount: 0.3 }}
                 transition={{ duration: 0.65, delay: 0.15, ease: "easeOut" }}
-                className="mb-3 text-[20px] font-extrabold leading-[40px] tracking-[0.5px] text-black md:text-[30px]"
+                className="mb-3 text-[30px] font-extrabold leading-[40px] tracking-[0.5px] text-black max-[480px]:text-[20px] max-[480px]:leading-[30px]"
               >
                 {t("home.experts.title", {
                   defaultValue: "Talk To A Real Style Expert",
@@ -2229,9 +2309,9 @@ export default function Home() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: false, amount: 0.3 }}
               transition={{ duration: 0.65, delay: 0.3, ease: "easeOut" }}
-              className="flex items-center justify-between gap-8 max-[767px]:flex-col max-[767px]:items-start"
+              className="flex items-center justify-between gap-8 max-[767px]:flex-col max-[767px]:items-start max-[480px]:gap-4"
             >
-              <p className="max-w-[620px] text-[16px] leading-[26px] font-semibold text-text-brand">
+              <p className="max-w-[620px] text-[16px] leading-[26px] font-semibold text-text-brand max-[480px]:text-[14px] max-[480px]:leading-[24px]">
                 {t("home.experts.description", {
                   defaultValue:
                     "Book a 1:1 session with a certified DressApp stylist whenever the AI needs a human, editorial finishing touch.",
@@ -2266,7 +2346,7 @@ export default function Home() {
                 viewport={{ once: false, amount: 0.3 }}
                 transition={{ duration: 0.5, delay: i * 0.1, ease: "easeOut" }}
               >
-                <div className="group h-full rounded-[18px] border border-black/[0.06] bg-white p-6 text-center shadow-[0_15px_35px_-18px_rgba(23,20,15,0.3)] transition-smooth hover:-translate-y-[5px] hover:shadow-[0_20px_45px_rgba(23,20,15,0.12)]">
+                <div className="group h-full rounded-[18px] border border-border bg-white p-6 text-center shadow-[0_15px_35px_-18px_rgba(23,20,15,0.3)] transition-smooth hover:-translate-y-[5px] hover:shadow-[0_20px_45px_rgba(23,20,15,0.12)]">
                   {/* Avatar */}
                   <div className="relative mx-auto mb-5 h-[105px] w-[105px]">
                     <img
@@ -2322,12 +2402,13 @@ export default function Home() {
       {/* experts-section-end */}
       {/* trend-scout-section-start */}
       <section
-        className="relative overflow-hidden bg-white px-[40px] py-[80px]"
+        className="relative overflow-hidden bg-white px-[40px] py-[80px] max-[991px]:px-[15px] max-[991px]:py-[30px] max-[767px]:px-[15px] max-[767px]:py-[30px] 
+        max-[480px]:px-[15px] max-[480px]:py-[30px]"
         id="trend-scout"
       >
         <div className="w-full">
           {/* Section Heading */}
-          <div className="mb-12">
+          <div className="mb-12 max-[480px]:mb-5">
             {/* Tag */}
             <motion.span
               initial={{ opacity: 0, y: -10 }}
@@ -2349,19 +2430,19 @@ export default function Home() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: false, amount: 0.3 }}
                 transition={{ duration: 0.65, delay: 0.15, ease: "easeOut" }}
-                className="mb-3 text-[20px] font-extrabold leading-[40px] tracking-[0.5px] hover:underline hover:text-primary-brand text-black md:text-[30px]"
+                className="mb-3 text-[30px] font-extrabold leading-[40px] tracking-[0.5px] hover:underline hover:text-primary-brand text-black max-[480px]:text-[20px] max-[480px]:leading-[30px]"
               >
                 {t("home.trendScout", { defaultValue: "Trend-Scout" })}
               </motion.h2>
             </Link>
 
-            <div className="flex items-end justify-between gap-8">
+            <div className="flex items-end justify-between gap-8 max-[480px]:flex-col max-[480px]:items-start max-[480px]:gap-3">
               <motion.p
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: false, amount: 0.3 }}
                 transition={{ duration: 0.65, delay: 0.3, ease: "easeOut" }}
-                className="max-w-[620px] text-[16px] leading-[26px] font-semibold text-text-brand"
+                className="max-w-[620px] text-[16px] leading-[26px] font-semibold text-text-brand max-[480px]:text-[14px] max-[480px]:leading-[24px]"
               >
                 {t("home.trendScoutSection.description", {
                   defaultValue:
@@ -2421,7 +2502,7 @@ export default function Home() {
             <Swiper
               className="mb-[10px]"
               modules={[Navigation, Autoplay]}
-              slidesPerView={1.15}
+              slidesPerView={1}
               spaceBetween={15}
               loop={false}
               speed={800}
@@ -2431,7 +2512,7 @@ export default function Home() {
                 pauseOnMouseEnter: true,
               }}
               breakpoints={{
-                576: { slidesPerView: 2, spaceBetween: 15 },
+                576: { slidesPerView: 1, spaceBetween: 15 },
                 992: { slidesPerView: 3, spaceBetween: 15 },
                 1200: { slidesPerView: 4, spaceBetween: 15 },
               }}

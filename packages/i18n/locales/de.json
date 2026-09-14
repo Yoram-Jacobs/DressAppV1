@@ -274,6 +274,16 @@
           "category": "Oberschicht",
           "title": "Weißes Hemd aus Bio-Baumwolle",
           "description": "Klares, sauberes, professionelles Basis-Styling."
+        },
+        "trousers": {
+          "category": "Unterschicht",
+          "title": "Anthrazitfarbene Maßhosen",
+          "description": "Scharfer Tapered-Fit, passt klar zum Blazer."
+        },
+        "shoes": {
+          "category": "Schuhe",
+          "title": "Schwarze Leder-Oxfords",
+          "description": "Poliertes Finish, passend für das Business-Meeting."
         }
       },
       "chips": {
@@ -305,6 +315,64 @@
       "prevAria": "Vorherige Marktplatzfolie",
       "nextAria": "Nächste Marktplatzfolie",
       "feeNotice": "Transparente Plattformgebühr von 7 % nach Zahlungsabwicklung. Keine versteckten Kosten."
+    },
+    "shoppingAssistant": {
+      "title": "DressApp Shopping-Assistent",
+      "subtitle": "Die richtige Größe in der Größentabelle jedes Shops",
+      "addToChrome": "Zu Chrome hinzufügen",
+      "mockTab": "Troyer-Sweatshirt",
+      "mockUrl": "anyfashionstore.com/product/half-zip-sweatshirt",
+      "connectedBadge": "Mit DressApp verbunden",
+      "sizeGuide": {
+        "title": "Größentabelle",
+        "unit": "CM",
+        "recommendedTitle": "DressApp empfiehlt Größe XS",
+        "recommendedBody": "Heuristische Übereinstimmung: Ihre Hüfte (92,7 cm) passt zur XS-Zeile.",
+        "matchedOn": "Abgleich über: Hüfte · per Schätzung"
+      },
+      "stats": {
+        "sizesMatched": "Zugeordnete Größen",
+        "storesSupported": "Unterstützte Shops",
+        "matchAccuracy": "Treffergenauigkeit"
+      },
+      "reviewBadge": "Wartet auf Chrome-Web-Store-Prüfung",
+      "worksOn": "Funktioniert in allen großen Mode- und Retail-Shops",
+      "tag": "Chrome-Erweiterung",
+      "heading": "Raten Sie nie wieder Ihre Größe",
+      "description1": "Der DressApp Shopping-Assistent liest die Größentabelle auf der Produktseite jedes Modehändlers und gleicht sie mit Ihren gespeicherten Körpermaßen ab — direkt auf der Seite.",
+      "steps": {
+        "open": {
+          "title": "Öffnen Sie die Größentabelle des Artikels",
+          "description": "Stöbern Sie wie gewohnt und öffnen Sie das Größentabellen-Popup des Produkts."
+        },
+        "connect": {
+          "title": "Mit DressApp verbinden",
+          "description": "Klicken Sie auf das DressApp-Symbol und melden Sie sich einmal an — danach bleibt die Verbindung bestehen."
+        },
+        "match": {
+          "title": "Sofortige Größenempfehlung erhalten",
+          "description": "DressApp vergleicht die Tabelle mit Ihren Maßen und hebt Ihre Zeile hervor."
+        }
+      },
+      "cta": "Zu Chrome hinzufügen",
+      "ctaNote": "Derzeit in Prüfung im Chrome Web Store",
+      "tabs": {
+        "deals": "Angebote",
+        "wishlist": "Wunschliste",
+        "compare": "Vergleichen",
+        "rewards": "Prämien"
+      },
+      "features": {
+        "priceAlerts": "Preisalarme",
+        "autoCoupon": "Auto-Gutschein",
+        "priceCompare": "Preisvergleich",
+        "wishlistSync": "Wunschliste synchronisieren"
+      },
+      "modes": {
+        "silent": "Lautlos",
+        "popup": "Popup",
+        "fullCompare": "Vollständiger Vergleich"
+      }
     },
     "aiEditor": {
       "title": "KI-gestylter Moderedakteur",

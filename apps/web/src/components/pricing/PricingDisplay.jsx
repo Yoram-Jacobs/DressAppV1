@@ -141,8 +141,8 @@ export function PricingDisplay({
   return (
     <div id="tiers" className="space-y-4">
       {/* Header section with toggle */}
-      <div className="relative p-4 bg-white rounded-full w-fit">
-        <div className="flex items-center gap-3">
+      <div className="relative p-4 bg-white rounded-full w-fit max-[480px]:rounded-[12px]">
+        <div className="flex items-center gap-3 flex-wrap">
           <span className={`text-xs font-semibold ${!isAnnual ? 'text-primary' : 'text-text-brand'}`}>
             {t('pricing.monthlyBilling', { defaultValue: 'Monthly' })}
           </span>
@@ -198,7 +198,7 @@ export function PricingDisplay({
                   </div>
                 )}
                 <CardHeader className="bg-yellow-shadow p-5">
-                  <CardTitle className="text-[20px] font-bold text-primary-brand">
+                  <CardTitle className="text-[20px] font-bold text-primary-brand max-[480px]:text-[16px]">
                     {t('pricing.tier.' + tier.name.toLowerCase(), { defaultValue: tier.name })}
                   </CardTitle>
                   <CardDescription className="text-[14px] font-semibold text-text-brand italic">
@@ -262,7 +262,7 @@ export function PricingDisplay({
           rounded bordered wrapper, bg-primary-shadow header row, subtle row
           hover, and status-style badges for included/excluded features. */}
       <section className="bg-white p-5 rounded-[12px] shadow-sm border border-border" data-testid="pricing-compare-section">
-        <h2 className="text-[20px] font-bold text-dark-brand mb-6 flex items-center gap-2">
+        <h2 className="text-[20px] font-bold text-dark-brand mb-6 flex items-center gap-2 max-[480px]:text-[16px]">
           <Sliders className="!h-4 !w-4 text-primary-brand" />
           {t('pricing.featureComparisonHeader', { defaultValue: 'Compare Plan Features' })}
         </h2>

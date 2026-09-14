@@ -219,9 +219,9 @@ export default function TrendScout() {
           <div
             className="
                   px-10 py-20
-                  max-[991px]:px-[35px] max-[991px]:py-[45px]
-                  max-[767px]:px-5 max-[767px]:py-[38px]
-                  max-[480px]:px-4 max-[480px]:py-8
+                   max-[991px]:px-[15px] max-[991px]:py-[30px]
+            max-[767px]:px-[15px] max-[767px]:py-[30px]
+            max-[480px]:px-[15px] max-[480px]:py-[30px]
                 "
           >
             <div className="max-w-[520px]">
@@ -242,8 +242,9 @@ export default function TrendScout() {
                       font-bold
                       tracking-normal
                       text-white
-                      max-[767px]:text-[42px]
-                      max-[480px]:text-[35px]
+                       max-[767px]:text-[30px]
+                max-[480px]:text-[20px]
+                max-[480px]:leading-[30px]
                     "
               >
                 {t('trends.title', { defaultValue: 'Fashion Trends & Insights' })}
@@ -267,11 +268,13 @@ export default function TrendScout() {
           </div>
         </div>
       </PageHeroBanner>
-      <section className="px-[40px] py-[40px] bg-accent-beige" data-testid="trend-scout-page">
+      <section className="px-[40px] py-[40px] bg-accent-beige max-[991px]:px-[15px] max-[991px]:py-[30px]
+            max-[767px]:px-[15px] max-[767px]:py-[30px]
+            max-[480px]:px-[15px] max-[480px]:py-[30px]" data-testid="trend-scout-page">
         <ExploreBackButton />
         {/* Gender Toggle & Refresh button */}
-        <div className="flex items-center gap-3 justify-between mb-5">
-          <div className="inline-flex rounded-full bg-white p-1 border border-border">
+        <div className="flex items-center gap-3 justify-between mb-5 flex-wrap">
+          <div className="inline-flex rounded-full bg-white p-1 border border-border flex-wrap">
             <button
               type="button"
               onClick={() => handleGenderSwitch('female')}
@@ -320,7 +323,7 @@ export default function TrendScout() {
           </div>
         </div>
         {/* Category Tabs */}
-        <div className="flex items-center gap-2 overflow-x-auto pb-1 mb-8 no-scrollbar">
+        <div className="flex items-center gap-2 overflow-x-auto pb-2 mb-8 no-scrollbar">
           {BUCKET_KEYS.map((catKey) => {
             const isActiveTab = activeCategory === catKey;
             const visual = BUCKET_VISUALS[catKey] || DEFAULT_BUCKET_VISUAL;

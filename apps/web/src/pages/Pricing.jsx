@@ -150,9 +150,9 @@ export default function Pricing() {
           <div
             className="
               px-10 py-20
-              max-[991px]:px-[35px] max-[991px]:py-[45px]
-              max-[767px]:px-5 max-[767px]:py-[38px]
-              max-[480px]:px-4 max-[480px]:py-8
+              max-[991px]:px-[15px] max-[991px]:py-[30px]
+            max-[767px]:px-[15px] max-[767px]:py-[30px]
+            max-[480px]:px-[15px] max-[480px]:py-[30px]
             "
           >
             <div className="max-w-[520px]">
@@ -168,8 +168,10 @@ export default function Pricing() {
                   font-bold
                   tracking-normal
                   text-white
-                  max-[767px]:text-[42px]
-                  max-[480px]:text-[35px]
+                  max-[767px]:text-[30px]
+                max-[480px]:text-[20px]
+                max-[480px]:leading-[30px]
+                max-[480px]:mb-3
                 "
               >
                       {t('pricing.title', { defaultValue: 'Membership Pricing Plans' })}
@@ -193,7 +195,9 @@ export default function Pricing() {
           </div>
         </div>
       </PageHeroBanner>
-      <section className="px-[40px] py-[40px] bg-accent-beige">
+      <section className="px-[40px] py-[40px] bg-accent-beige  max-[991px]:px-[15px] max-[991px]:py-[30px]
+            max-[767px]:px-[15px] max-[767px]:py-[30px]
+            max-[480px]:px-[15px] max-[480px]:py-[30px]">
         {/* Rest of the page content wrapped with side padding */}
           {/* Pricing and tier display selection */}
           <PricingDisplay

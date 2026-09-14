@@ -82,7 +82,7 @@ export function parseMarkdown(mdText) {
 
     if (line.startsWith('# ')) {
       flushList(idx);
-      elements.push(<h1 key={`h1-${idx}`} className="text-[20px] font-bold text-primary-brand mb-3 pb-3 border-b border-border">{parseInline(line.slice(2))}</h1>);
+      elements.push(<h1 key={`h1-${idx}`} className="text-[20px] font-bold text-primary-brand mb-3 pb-3 border-b border-border max-[480px]:text-[16px]">{parseInline(line.slice(2))}</h1>);
       continue;
     }
     if (line.startsWith('## ')) {

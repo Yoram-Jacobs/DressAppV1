@@ -312,7 +312,7 @@ export function HarmonyBadge({ colors }) {
       <button
         onClick={() => setExpanded((v) => !v)}
         className={cn(
-          'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold',
+          'inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold flex-wrap',
           'border active:scale-[0.98]',
           cfg.bg, cfg.border, cfg.text
         )}

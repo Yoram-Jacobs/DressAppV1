@@ -33,36 +33,33 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-[100dvh] grid md:grid-cols-[3fr_2fr] relative bg-accent-beige">
-      {/* Floating language "bulb" — fixed to the top-end so guests can
-          flip the UI to their language *before* signing in. ``z-30`` so
-          it stays above both the form and the image on every layout. */}
-      <div className="absolute top-4 end-4 z-30">
+    <div className="relative grid min-h-[100dvh] grid-rows-[auto_1fr] overflow-x-hidden bg-accent-beige md:grid-rows-none md:grid-cols-[3fr_2fr]">
+      {/* Floating language "bulb" — top-end so guests can flip language
+          before signing in. Stays above image + form on every breakpoint. */}
+      <div className="absolute top-[max(0.75rem,env(safe-area-inset-top))] end-3 z-30 sm:end-4">
         <LanguagePicker
           className="rounded-full bg-card/80 backdrop-blur-sm border-border shadow-sm hover:bg-card"
           testIdSuffix="login"
         />
       </div>
 
-      {/* Editorial image panel — LEFT, and wider (3fr vs 2fr) */}
-      <div className="order-1 relative hidden md:block">
+      {/* Editorial image — compact hero on mobile, full-height column on md+ */}
+      <div className="relative order-1 h-[38vh] max-h-[280px] min-h-[176px] md:h-full md:max-h-none md:min-h-0">
         <figure className="relative h-full w-full overflow-hidden">
           <img
             src={loginimg}
             alt={t("pages.login.editorial_street_style")}
-            className="absolute inset-0 h-full w-full object-cover"
+            className="absolute inset-0 h-full w-full object-cover object-[center_28%] md:object-center"
           />
 
-          {/* Subtle scrim so the logo card stays legible over the image */}
-          <div className="pointer-events-none absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-black/60 via-black/10 to-transparent" />
+          <div className="pointer-events-none absolute inset-x-0 bottom-0 h-28 bg-gradient-to-t from-black/60 via-black/10 to-transparent md:h-40" />
 
-          {/* Logo card — overlaps the bottom edge of the image */}
-          <div className="absolute inset-x-6 bottom-6">
-            <div className="rounded-[12px] bg-white shadow-editorial p-5 w-fit">
-              <h6 className="text-[16px] text-primary-brand font-bold mb-[10px]">
+          <div className="absolute inset-x-3 bottom-3 sm:inset-x-4 sm:bottom-4 md:inset-x-6 md:bottom-6">
+            <div className="w-full rounded-[12px] bg-white p-3.5 shadow-editorial sm:w-fit sm:p-5">
+              <h6 className="mb-1.5 text-[14px] font-bold text-primary-brand sm:mb-[10px] sm:text-[16px]">
                 {t("auth.tagline")}
               </h6>
-              <p className="text-[14px] text-text-brand max-w-md font-semibold italic">
+              <p className="max-w-md text-[12px] font-semibold italic leading-snug text-text-brand sm:text-[14px]">
                 {t("auth.editorial")}
               </p>
             </div>
@@ -70,51 +67,50 @@ export default function Login() {
         </figure>
       </div>
 
-      {/* Form panel — RIGHT */}
-      {/* <div className="caps-label text-muted-foreground mt-1">
-            {t("auth.signIn")}
-          </div> */}
-      <div className="order-2 flex flex-col justify-center md:p-10">
-        <div className="mb-5">
-          <BrandLogo size="lg" testId="brand-logo" />
-        </div>
-        <h1 className="text-[16px] text-dark-brand font-extrabold mb-1">
-          {t("auth.welcomeBack")}
-        </h1>
-        <p className="text-[14px] text-text-brand font-bold mb-5">
-          {t("auth.signInSub")}
-        </p>
+      <div className="order-2 flex flex-col justify-center px-5 py-6 pb-[calc(env(safe-area-inset-bottom)+1.5rem)] sm:px-8 sm:py-8 md:p-10">
+        <div className="mx-auto w-full max-w-md min-w-0 md:mx-0">
+          <div className="mb-4 sm:mb-5">
+            <BrandLogo size="lg" testId="brand-logo" className="max-[380px]:[&_span]:text-2xl" />
+          </div>
+          <h1 className="mb-1 text-[16px] font-extrabold text-dark-brand">
+            {t("auth.welcomeBack")}
+          </h1>
+          <p className="mb-5 text-[14px] font-bold text-text-brand">
+            {t("auth.signInSub")}
+          </p>
 
-        <div className="space-y-3 mb-6" data-testid="google-signin-block">
-          <GoogleAuthButton
-            withCalendar={withCalendar}
-            next="/home"
-            label={t("auth.continueWithGoogle")}
-            testId="login-google-button"
-          />
-          <label
-            className="flex items-center gap-2 text-[12px] text-text-brand font-semibold cursor-pointer select-none"
-            data-testid="login-with-calendar-row"
-          >
-            <Checkbox
-              checked={withCalendar}
-              onCheckedChange={(v) => setWithCalendar(Boolean(v))}
-              data-testid="login-with-calendar-checkbox"
+          <div className="mb-4 space-y-3 sm:mb-6" data-testid="google-signin-block">
+            <GoogleAuthButton
+              withCalendar={withCalendar}
+              next="/home"
+              label={t("auth.continueWithGoogle")}
+              testId="login-google-button"
+              className="w-full min-h-11"
             />
-            <span>{t("auth.alsoConnectCalendar")}</span>
-          </label>
-        </div>
+            <label
+              className="flex min-h-11 cursor-pointer select-none items-center gap-2 text-[12px] font-semibold text-text-brand"
+              data-testid="login-with-calendar-row"
+            >
+              <Checkbox
+                checked={withCalendar}
+                onCheckedChange={(v) => setWithCalendar(Boolean(v))}
+                data-testid="login-with-calendar-checkbox"
+              />
+              <span className="leading-snug">{t("auth.alsoConnectCalendar")}</span>
+            </label>
+          </div>
 
-        <Button
-          type="button"
-          variant="ghost"
-          onClick={dev}
-          disabled={busy}
-          className="w-full rounded-xl mt-4 text-muted-foreground hover:text-foreground"
-          data-testid="login-dev-bypass-button"
-        >
-          <Sparkles className="h-4 w-4 me-2" /> {t("auth.continueAsDev")}
-        </Button>
+          <Button
+            type="button"
+            variant="ghost"
+            onClick={dev}
+            disabled={busy}
+            className="mt-2 min-h-11 w-full whitespace-normal rounded-xl text-muted-foreground hover:text-foreground"
+            data-testid="login-dev-bypass-button"
+          >
+            <Sparkles className="h-4 w-4 me-2 shrink-0" /> {t("auth.continueAsDev")}
+          </Button>
+        </div>
       </div>
     </div>
   );

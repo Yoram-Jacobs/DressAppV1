@@ -274,6 +274,16 @@
           "category": "Camada superior",
           "title": "Camisa social branca de algodão orgânico",
           "description": "Estilo de base nítido, limpo e profissional."
+        },
+        "trousers": {
+          "category": "Camada inferior",
+          "title": "Calça alfaiataria carvão",
+          "description": "Caimento afunilado, combina com o blazer."
+        },
+        "shoes": {
+          "category": "Sapatos",
+          "title": "Oxford de couro preto",
+          "description": "Acabamento polido, adequado para reunião de negócios."
         }
       },
       "chips": {
@@ -305,6 +315,64 @@
       "prevAria": "Slide anterior do mercado",
       "nextAria": "Próximo slide do mercado",
       "feeNotice": "Taxa de plataforma transparente de 7% após processamento do pagamento. Zero cobranças ocultas."
+    },
+    "shoppingAssistant": {
+      "title": "Assistente de compras DressApp",
+      "subtitle": "Encontre o tamanho certo na tabela de qualquer loja",
+      "addToChrome": "Adicionar ao Chrome",
+      "mockTab": "Moletom com zíper meio",
+      "mockUrl": "anyfashionstore.com/product/half-zip-sweatshirt",
+      "connectedBadge": "Conectado ao DressApp",
+      "sizeGuide": {
+        "title": "Guia de tamanhos",
+        "unit": "CM",
+        "recommendedTitle": "O DressApp recomenda o tamanho XS",
+        "recommendedBody": "Correspondência heurística: seu quadril (92,7 cm) se encaixa na linha XS.",
+        "matchedOn": "Correspondência em: quadril · por estimativa"
+      },
+      "stats": {
+        "sizesMatched": "Tamanhos correspondidos",
+        "storesSupported": "Lojas compatíveis",
+        "matchAccuracy": "Precisão da correspondência"
+      },
+      "reviewBadge": "Pendente de análise na Chrome Web Store",
+      "worksOn": "Funciona em todas as grandes lojas de moda e varejo",
+      "tag": "Extensão do Chrome",
+      "heading": "Nunca mais chute o seu tamanho",
+      "description1": "O Assistente de compras DressApp lê a tabela de tamanhos na página do produto de qualquer varejista de moda e a compara com as suas medidas corporais salvas — ali mesmo na página.",
+      "steps": {
+        "open": {
+          "title": "Abra o guia de tamanhos do item",
+          "description": "Navegue em qualquer loja normalmente e abra o popup da tabela de tamanhos."
+        },
+        "connect": {
+          "title": "Conecte-se ao DressApp",
+          "description": "Clique no ícone do DressApp e entre uma vez — a conexão permanece depois disso."
+        },
+        "match": {
+          "title": "Receba o tamanho na hora",
+          "description": "O DressApp compara a tabela com as suas medidas e destaca a sua linha."
+        }
+      },
+      "cta": "Adicionar ao Chrome",
+      "ctaNote": "Atualmente em análise na Chrome Web Store",
+      "tabs": {
+        "deals": "Ofertas",
+        "wishlist": "Lista de desejos",
+        "compare": "Comparar",
+        "rewards": "Recompensas"
+      },
+      "features": {
+        "priceAlerts": "Alertas de preço",
+        "autoCoupon": "Cupom automático",
+        "priceCompare": "Comparar preços",
+        "wishlistSync": "Sincronizar lista de desejos"
+      },
+      "modes": {
+        "silent": "Silencioso",
+        "popup": "Popup",
+        "fullCompare": "Comparação completa"
+      }
     },
     "aiEditor": {
       "title": "Editor de moda com estilo AI",

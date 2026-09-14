@@ -274,6 +274,16 @@
           "category": "ऊपरी परत",
           "title": "ऑर्गेनिक कॉटन सफेद ड्रेस शर्ट",
           "description": "कुरकुरा, साफ, पेशेवर आधार स्टाइल।"
+        },
+        "trousers": {
+          "category": "निचली परत",
+          "title": "चारकोल टेलर्ड ट्राउज़र",
+          "description": "तीखी टेपर्ड फिट, ब्लेज़र के साथ साफ़ मेल।"
+        },
+        "shoes": {
+          "category": "जूते",
+          "title": "काले लेदर ऑक्सफ़र्ड",
+          "description": "पॉलिश फ़िनिश, बिज़नेस मीटिंग के लिए उपयुक्त।"
         }
       },
       "chips": {
@@ -305,6 +315,64 @@
       "prevAria": "पिछली बाज़ार स्लाइड",
       "nextAria": "अगली बाज़ार स्लाइड",
       "feeNotice": "भुगतान प्रसंस्करण के बाद पारदर्शी 7% प्लेटफ़ॉर्म शुल्क। शून्य छिपा हुआ शुल्क."
+    },
+    "shoppingAssistant": {
+      "title": "DressApp शॉपिंग असिस्टेंट",
+      "subtitle": "किसी भी स्टोर के साइज़ चार्ट पर अपना सही साइज़ पाएँ",
+      "addToChrome": "Chrome में जोड़ें",
+      "mockTab": "हाफ-ज़िप स्वेटशर्ट",
+      "mockUrl": "anyfashionstore.com/product/half-zip-sweatshirt",
+      "connectedBadge": "DressApp से जुड़ा हुआ",
+      "sizeGuide": {
+        "title": "साइज़ गाइड",
+        "unit": "सेमी",
+        "recommendedTitle": "DressApp XS साइज़ सुझाता है",
+        "recommendedBody": "अनुमानित मिलान: आपकी हिप्स (92.7 सेमी) XS पंक्ति में फिट होती हैं।",
+        "matchedOn": "मिलान: हिप्स · अनुमान से"
+      },
+      "stats": {
+        "sizesMatched": "मिलाए गए साइज़",
+        "storesSupported": "समर्थित स्टोर",
+        "matchAccuracy": "मिलान सटीकता"
+      },
+      "reviewBadge": "Chrome Web Store समीक्षा लंबित",
+      "worksOn": "हर प्रमुख फैशन और रिटेल स्टोर पर काम करता है",
+      "tag": "Chrome एक्सटेंशन",
+      "heading": "अब साइज़ का अंदाज़ा लगाने की ज़रूरत नहीं",
+      "description1": "DressApp शॉपिंग असिस्टेंट किसी भी फैशन रिटेलर के प्रोडक्ट पेज पर साइज़ चार्ट पढ़ता है और उसे आपकी सहेजी हुई बॉडी माप से मिलाता है — उसी पेज पर।",
+      "steps": {
+        "open": {
+          "title": "आइटम की साइज़ गाइड खोलें",
+          "description": "किसी भी स्टोर को सामान्य तरीके से ब्राउज़ करें और प्रोडक्ट का साइज़ चार्ट पॉपअप खोलें।"
+        },
+        "connect": {
+          "title": "DressApp से कनेक्ट करें",
+          "description": "DressApp आइकन पर क्लिक करें और एक बार साइन इन करें — उसके बाद यह जुड़ा रहता है।"
+        },
+        "match": {
+          "title": "तुरंत अपना साइज़ मिलान पाएँ",
+          "description": "DressApp चार्ट की तुलना आपकी माप से करता है और आपकी पंक्ति हाइलाइट करता है।"
+        }
+      },
+      "cta": "Chrome में जोड़ें",
+      "ctaNote": "फ़िलहाल Chrome Web Store समीक्षा में है",
+      "tabs": {
+        "deals": "ऑफ़र",
+        "wishlist": "विशलिस्ट",
+        "compare": "तुलना",
+        "rewards": "रिवॉर्ड"
+      },
+      "features": {
+        "priceAlerts": "कीमत अलर्ट",
+        "autoCoupon": "ऑटो कूपन",
+        "priceCompare": "कीमत तुलना",
+        "wishlistSync": "विशलिस्ट सिंक"
+      },
+      "modes": {
+        "silent": "साइलेंट",
+        "popup": "पॉपअप",
+        "fullCompare": "पूर्ण तुलना"
+      }
     },
     "aiEditor": {
       "title": "एआई स्टाइल फैशन संपादक",

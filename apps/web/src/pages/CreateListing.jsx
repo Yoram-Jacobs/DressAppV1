@@ -211,9 +211,9 @@ export default function CreateListing() {
           <div
             className="
                   px-10 py-20
-                  max-[991px]:px-[35px] max-[991px]:py-[45px]
-                  max-[767px]:px-5 max-[767px]:py-[38px]
-                  max-[480px]:px-4 max-[480px]:py-8
+                   max-[991px]:px-[15px] max-[991px]:py-[30px]
+            max-[767px]:px-[15px] max-[767px]:py-[30px]
+            max-[480px]:px-[15px] max-[480px]:py-[30px]
                 "
           >
             <div className="max-w-[520px]">
@@ -226,8 +226,10 @@ export default function CreateListing() {
                       font-bold
                       tracking-normal
                       text-white
-                      max-[767px]:text-[42px]
-                      max-[480px]:text-[35px]
+                      max-[767px]:text-[30px]
+                max-[480px]:text-[20px]
+                max-[480px]:leading-[30px]
+                max-[480px]:mb-3
                     "
               >
                 {t('createListing.title')}
@@ -252,7 +254,9 @@ export default function CreateListing() {
           </div>
         </div>
       </PageHeroBanner>
-      <section className="bg-accent-beige px-[40px] py-[40px] max-[767px]:px-5 max-[767px]:py-10">
+      <section className="bg-accent-beige px-[40px] py-[40px]  max-[991px]:px-[15px] max-[991px]:py-[30px]
+            max-[767px]:px-[15px] max-[767px]:py-[30px]
+            max-[480px]:px-[15px] max-[480px]:py-[30px]">
         <button onClick={() => nav(-1)} className="inline-flex items-center text-[14px] font-bold text-dark-brand mb-5 hover:text-primary-brand">
           <ArrowLeft className="h-4 w-4 me-1 rtl:rotate-180" /> {t('common.back')}
         </button>
@@ -382,7 +386,7 @@ export default function CreateListing() {
                   community-first ethos so the default (0) feels
                   intentional, not lazy. */}
                 <div className="border border-border p-3 bg-primary-shadow rounded-[12px]" data-testid="listing-shipping-block">
-                  <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center justify-between mb-3 flex-wrap gap-3">
                     <Label className="mb-0" htmlFor="listing-shipping-input">
                       Shipping fee (optional)
                     </Label>

@@ -274,6 +274,16 @@
           "category": "Bovenste laag",
           "title": "Biologisch katoenen wit overhemd",
           "description": "Heldere, zuivere, professionele basisstyling."
+        },
+        "trousers": {
+          "category": "Onderlaag",
+          "title": "Antraciet getailleerde broek",
+          "description": "Strakke tapered pasvorm, past bij de blazer."
+        },
+        "shoes": {
+          "category": "Schoenen",
+          "title": "Zwarte leren oxfords",
+          "description": "Gepoetste afwerking, geschikt voor een zakenmeeting."
         }
       },
       "chips": {
@@ -305,6 +315,64 @@
       "prevAria": "Vorige marktdia",
       "nextAria": "Volgende marktdia",
       "feeNotice": "Transparante platformkosten van 7% na verwerking van de betaling. Geen verborgen kosten."
+    },
+    "shoppingAssistant": {
+      "title": "DressApp winkelassistent",
+      "subtitle": "Vind je juiste maat in de maattabel van elke winkel",
+      "addToChrome": "Toevoegen aan Chrome",
+      "mockTab": "Sweater met halve rits",
+      "mockUrl": "anyfashionstore.com/product/half-zip-sweatshirt",
+      "connectedBadge": "Verbonden met DressApp",
+      "sizeGuide": {
+        "title": "Maattabel",
+        "unit": "CM",
+        "recommendedTitle": "DressApp raadt maat XS aan",
+        "recommendedBody": "Heuristische match: je heupen (92,7 cm) passen bij de XS-rij.",
+        "matchedOn": "Match op: heupen · via schatting"
+      },
+      "stats": {
+        "sizesMatched": "Gevonden maten",
+        "storesSupported": "Ondersteunde winkels",
+        "matchAccuracy": "Nauwkeurigheid van de match"
+      },
+      "reviewBadge": "In afwachting van Chrome Web Store-beoordeling",
+      "worksOn": "Werkt in alle grote mode- en retailwinkels",
+      "tag": "Chrome-extensie",
+      "heading": "Raad je maat nooit meer",
+      "description1": "De DressApp winkelassistent leest de maattabel op de productpagina van elke modewinkel en vergelijkt die met je opgeslagen lichaamsmaten — direct op de pagina.",
+      "steps": {
+        "open": {
+          "title": "Open de maattabel van het item",
+          "description": "Blader zoals gewoonlijk door een winkel en open de maattabel-popup van het product."
+        },
+        "connect": {
+          "title": "Verbind met DressApp",
+          "description": "Klik op het DressApp-pictogram en log één keer in — daarna blijft de verbinding actief."
+        },
+        "match": {
+          "title": "Krijg direct je maatmatch",
+          "description": "DressApp vergelijkt de tabel met je maten en markeert jouw rij."
+        }
+      },
+      "cta": "Toevoegen aan Chrome",
+      "ctaNote": "Momenteel in beoordeling bij de Chrome Web Store",
+      "tabs": {
+        "deals": "Deals",
+        "wishlist": "Verlanglijst",
+        "compare": "Vergelijken",
+        "rewards": "Beloningen"
+      },
+      "features": {
+        "priceAlerts": "Prijsalerts",
+        "autoCoupon": "Automatische coupon",
+        "priceCompare": "Prijzen vergelijken",
+        "wishlistSync": "Verlanglijst synchroniseren"
+      },
+      "modes": {
+        "silent": "Stil",
+        "popup": "Popup",
+        "fullCompare": "Volledige vergelijking"
+      }
     },
     "aiEditor": {
       "title": "AI-stijl mode-editor",

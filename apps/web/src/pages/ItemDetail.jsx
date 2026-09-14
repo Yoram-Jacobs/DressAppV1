@@ -1458,9 +1458,9 @@ export default function ItemDetail() {
           <div
             className="
             px-10 py-20
-            max-[991px]:px-[35px] max-[991px]:py-[45px]
-            max-[767px]:px-5 max-[767px]:py-[38px]
-            max-[480px]:px-4 max-[480px]:py-8
+            max-[991px]:px-[15px] max-[991px]:py-[30px]
+            max-[767px]:px-[15px] max-[767px]:py-[30px]
+            max-[480px]:px-[15px] max-[480px]:py-[30px]
           "
           >
             <div className="max-w-[520px]">
@@ -1472,8 +1472,10 @@ export default function ItemDetail() {
                 font-bold
                 tracking-normal
                 text-white
-                max-[767px]:text-[42px]
-                max-[480px]:text-[35px]
+                max-[767px]:text-[30px]
+                max-[480px]:text-[20px]
+                max-[480px]:leading-[30px]
+                max-[480px]:mb-3
               "
               >
                 {t("itemDetail.banner.title", { defaultValue: "Review & refine" })}
@@ -1502,7 +1504,14 @@ export default function ItemDetail() {
         </div>
       </PageHeroBanner>
       {/* banner-end */}
-      <section className="bg-[var(--accent-beige)] px-[40px] py-[80px] max-[991px]:px-[5px] max-[991px]:py-[40px]">
+      <section className="bg-[var(--accent-beige)] px-[40px] py-[40px] max-[991px]:px-[15px] max-[991px]:py-[30px] max-[767px]:px-[15px] max-[767px]:py-[30px] 
+        max-[480px]:px-[15px] max-[480px]:py-[30px]">
+        <button
+          onClick={() => nav(-1)}
+          className="inline-flex items-center text-[14px] font-bold text-dark-brand mb-5 hover:text-primary-brand">
+          <ArrowLeft className="h-4 w-4 me-1 rtl:rotate-180" />{" "}
+          {t("common.back")}
+        </button>
         {/* Floating Action Bar */}
         <div className="fixed bottom-28 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 px-2.5 py-1.5 rounded-full border border-border bg-white backdrop-blur-lg shadow-xl md:bottom-8 max-w-[calc(100vw-2rem)] shrink-0 animate-[slideUp_0.2s_ease-out]">
           <Button
@@ -2103,7 +2112,7 @@ export default function ItemDetail() {
                 {/* Conversational Message Thread */}
                 {reanalyzeChatHistory.length > 0 && (
                   <div
-                    className="h-[970px] overflow-y-auto space-y-2 p-3 rounded-[12px] bg-primary-shadow border border-border text-xs"
+                    className="h-[600px] overflow-y-auto space-y-2 p-3 rounded-[12px] bg-primary-shadow border border-border text-xs max-[480px]:h-[300px]"
                     data-testid="item-reanalyze-chat-thread"
                   >
                     {reanalyzeChatHistory.map((msg, idx) => (
@@ -2291,7 +2300,7 @@ export default function ItemDetail() {
                   </div>
                 )}
                 {/* 1-Click Full Re-analyse fallback */}
-                <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center justify-between gap-2 max-[480px]:flex-col">
                   <Button
                     onClick={onReanalyze}
                     disabled={analyzing || reanalyzeChatBusy}

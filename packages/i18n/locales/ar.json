@@ -274,6 +274,16 @@
           "category": "الطبقة العلوية",
           "title": "قميص أبيض من القطن العضوي",
           "description": "تصميم أساسي واضح ونظيف واحترافي."
+        },
+        "trousers": {
+          "category": "الطبقة السفلية",
+          "title": "بنطال مفصل باللون الفحمي",
+          "description": "قصة مدببة أنيقة، تتناسق مع البليزر."
+        },
+        "shoes": {
+          "category": "أحذية",
+          "title": "حذاء أكسفورد جلد أسود",
+          "description": "لمسة نهائية لامعة، مناسب لاجتماع العمل."
         }
       },
       "chips": {
@@ -305,6 +315,64 @@
       "prevAria": "شريحة السوق السابقة",
       "nextAria": "شريحة السوق التالية",
       "feeNotice": "رسوم منصة شفافة بنسبة 7% بعد معالجة الدفع. بدون أي رسوم خفية."
+    },
+    "shoppingAssistant": {
+      "title": "مساعد التسوق من DressApp",
+      "subtitle": "احصل على مقاسك الصحيح من جدول المقاسات في أي متجر",
+      "addToChrome": "إضافة إلى Chrome",
+      "mockTab": "سويت شيرت بنصف سحّاب",
+      "mockUrl": "anyfashionstore.com/product/half-zip-sweatshirt",
+      "connectedBadge": "متصل بـ DressApp",
+      "sizeGuide": {
+        "title": "دليل المقاسات",
+        "unit": "سم",
+        "recommendedTitle": "DressApp يوصي بالمقاس XS",
+        "recommendedBody": "مطابقة تقريبية: محيط الورك (92.7 سم) يناسب صف XS.",
+        "matchedOn": "المطابقة على: الوركين · عبر تقدير"
+      },
+      "stats": {
+        "sizesMatched": "مقاسات تمت مطابقتها",
+        "storesSupported": "متاجر مدعومة",
+        "matchAccuracy": "دقة المطابقة"
+      },
+      "reviewBadge": "قيد مراجعة متجر Chrome الإلكتروني",
+      "worksOn": "يعمل على جميع متاجر الأزياء والتجزئة الرئيسية",
+      "tag": "إضافة Chrome",
+      "heading": "لا تخمّن مقاسك بعد اليوم",
+      "description1": "يقرأ مساعد التسوق من DressApp جدول المقاسات في صفحة منتج أي بائع أزياء ويطابقه مع قياسات جسمك المحفوظة — مباشرة على الصفحة.",
+      "steps": {
+        "open": {
+          "title": "افتح دليل مقاسات القطعة",
+          "description": "تصفّح أي متجر كالمعتاد وافتح نافذة جدول مقاسات المنتج."
+        },
+        "connect": {
+          "title": "اتصل بـ DressApp",
+          "description": "انقر أيقونة DressApp وسجّل الدخول مرة واحدة — يبقى متصلًا بعد ذلك."
+        },
+        "match": {
+          "title": "احصل على مطابقة المقاس فورًا",
+          "description": "يقارن DressApp الجدول بقياساتك ويبرز الصف المناسب لك."
+        }
+      },
+      "cta": "إضافة إلى Chrome",
+      "ctaNote": "حاليًا قيد مراجعة متجر Chrome الإلكتروني",
+      "tabs": {
+        "deals": "عروض",
+        "wishlist": "قائمة الأمنيات",
+        "compare": "مقارنة",
+        "rewards": "مكافآت"
+      },
+      "features": {
+        "priceAlerts": "تنبيهات الأسعار",
+        "autoCoupon": "قسيمة تلقائية",
+        "priceCompare": "مقارنة الأسعار",
+        "wishlistSync": "مزامنة قائمة الأمنيات"
+      },
+      "modes": {
+        "silent": "صامت",
+        "popup": "نافذة منبثقة",
+        "fullCompare": "مقارنة كاملة"
+      }
     },
     "aiEditor": {
       "title": "محرر الأزياء بالذكاء الاصطناعي",

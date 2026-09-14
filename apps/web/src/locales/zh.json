@@ -274,6 +274,16 @@
           "category": "顶层",
           "title": "有机棉白色正装衬衫",
           "description": "清爽、干净、专业的基础造型。"
+        },
+        "trousers": {
+          "category": "下层",
+          "title": "炭灰色定制西裤",
+          "description": "利落锥形版型，与西装外套干净搭配。"
+        },
+        "shoes": {
+          "category": "鞋履",
+          "title": "黑色皮革牛津鞋",
+          "description": "抛光表面，适合商务会议。"
         }
       },
       "chips": {
@@ -305,6 +315,64 @@
       "prevAria": "上一张市场幻灯片",
       "nextAria": "下一张市场幻灯片",
       "feeNotice": "支付处理后仅收取透明的 7% 平台费。绝无隐藏收费。"
+    },
+    "shoppingAssistant": {
+      "title": "DressApp 购物助手",
+      "subtitle": "在任意店铺尺码表上匹配你的正确尺码",
+      "addToChrome": "添加至 Chrome",
+      "mockTab": "半拉链卫衣",
+      "mockUrl": "anyfashionstore.com/product/half-zip-sweatshirt",
+      "connectedBadge": "已连接 DressApp",
+      "sizeGuide": {
+        "title": "尺码指南",
+        "unit": "厘米",
+        "recommendedTitle": "DressApp 推荐尺码 XS",
+        "recommendedBody": "启发式匹配：你的臀围（92.7 厘米）适合 XS 行。",
+        "matchedOn": "匹配依据：臀围 · 估算"
+      },
+      "stats": {
+        "sizesMatched": "已匹配尺码",
+        "storesSupported": "支持的店铺",
+        "matchAccuracy": "匹配准确率"
+      },
+      "reviewBadge": "正在等待 Chrome 网上应用店审核",
+      "worksOn": "适用于各大时尚与零售店铺",
+      "tag": "Chrome 扩展",
+      "heading": "再也不用猜尺码",
+      "description1": "DressApp 购物助手会读取任意时尚零售商商品页上的尺码表，并与你已保存的身材数据比对——就在当前页面完成。",
+      "steps": {
+        "open": {
+          "title": "打开单品尺码指南",
+          "description": "照常浏览任意店铺，并打开商品的尺码表弹窗。"
+        },
+        "connect": {
+          "title": "连接 DressApp",
+          "description": "点击 DressApp 图标并登录一次——之后会保持连接。"
+        },
+        "match": {
+          "title": "立即获得尺码匹配",
+          "description": "DressApp 将尺码表与你的测量数据比对，并高亮显示对应行。"
+        }
+      },
+      "cta": "添加至 Chrome",
+      "ctaNote": "目前正在 Chrome 网上应用店审核中",
+      "tabs": {
+        "deals": "优惠",
+        "wishlist": "心愿单",
+        "compare": "对比",
+        "rewards": "奖励"
+      },
+      "features": {
+        "priceAlerts": "价格提醒",
+        "autoCoupon": "自动优惠券",
+        "priceCompare": "比价",
+        "wishlistSync": "同步心愿单"
+      },
+      "modes": {
+        "silent": "静默",
+        "popup": "弹窗",
+        "fullCompare": "完整对比"
+      }
     },
     "aiEditor": {
       "title": "AI 智能时尚编辑器",

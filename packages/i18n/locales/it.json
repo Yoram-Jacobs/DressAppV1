@@ -274,6 +274,16 @@
           "category": "Strato superiore",
           "title": "Camicia bianca in cotone biologico",
           "description": "Styling di base fresco, pulito e professionale."
+        },
+        "trousers": {
+          "category": "Strato inferiore",
+          "title": "Pantaloni sartoriali antracite",
+          "description": "Vestibilità affusolata, si abbina al blazer."
+        },
+        "shoes": {
+          "category": "Scarpe",
+          "title": "Oxford in pelle nera",
+          "description": "Finitura lucida, adatte a una riunione di lavoro."
         }
       },
       "chips": {
@@ -305,6 +315,64 @@
       "prevAria": "Diapositiva del mercato precedente",
       "nextAria": "Prossima diapositiva del mercato",
       "feeNotice": "Commissione di piattaforma trasparente del 7% dopo l'elaborazione del pagamento. Zero costi nascosti."
+    },
+    "shoppingAssistant": {
+      "title": "Assistente shopping DressApp",
+      "subtitle": "Trova la taglia giusta nella tabella di qualsiasi negozio",
+      "addToChrome": "Aggiungi a Chrome",
+      "mockTab": "Felpa con mezza zip",
+      "mockUrl": "anyfashionstore.com/product/half-zip-sweatshirt",
+      "connectedBadge": "Connesso a DressApp",
+      "sizeGuide": {
+        "title": "Guida alle taglie",
+        "unit": "CM",
+        "recommendedTitle": "DressApp consiglia la taglia XS",
+        "recommendedBody": "Corrispondenza euristica: i tuoi fianchi (92,7 cm) rientrano nella riga XS.",
+        "matchedOn": "Corrispondenza su: fianchi · tramite stima"
+      },
+      "stats": {
+        "sizesMatched": "Taglie abbinate",
+        "storesSupported": "Negozi supportati",
+        "matchAccuracy": "Accuratezza dell'abbinamento"
+      },
+      "reviewBadge": "In attesa di revisione sul Chrome Web Store",
+      "worksOn": "Funziona su tutti i principali negozi di moda e retail",
+      "tag": "Estensione Chrome",
+      "heading": "Non indovinare più la tua taglia",
+      "description1": "L'Assistente shopping DressApp legge la tabella delle taglie nella pagina prodotto di qualsiasi rivenditore di moda e la confronta con le tue misure corporee salvate — direttamente sulla pagina.",
+      "steps": {
+        "open": {
+          "title": "Apri la guida alle taglie dell'articolo",
+          "description": "Naviga in qualsiasi negozio come al solito e apri il popup della tabella delle taglie."
+        },
+        "connect": {
+          "title": "Connettiti a DressApp",
+          "description": "Fai clic sull'icona DressApp e accedi una sola volta: resta connesso anche dopo."
+        },
+        "match": {
+          "title": "Ottieni subito la taglia",
+          "description": "DressApp confronta la tabella con le tue misure ed evidenzia la tua riga."
+        }
+      },
+      "cta": "Aggiungi a Chrome",
+      "ctaNote": "Attualmente in revisione sul Chrome Web Store",
+      "tabs": {
+        "deals": "Offerte",
+        "wishlist": "Lista dei desideri",
+        "compare": "Confronta",
+        "rewards": "Premi"
+      },
+      "features": {
+        "priceAlerts": "Avvisi prezzo",
+        "autoCoupon": "Coupon automatico",
+        "priceCompare": "Confronta prezzi",
+        "wishlistSync": "Sincronizza lista dei desideri"
+      },
+      "modes": {
+        "silent": "Silenzioso",
+        "popup": "Popup",
+        "fullCompare": "Confronto completo"
+      }
     },
     "aiEditor": {
       "title": "Editor di moda in stile AI",

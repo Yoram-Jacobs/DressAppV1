@@ -1926,7 +1926,7 @@ export default function Stylist() {
               {t('stylist.composeOutfitMode', { defaultValue: 'Compose Outfit Mode' })}
             </Badge>
           )}
-          <div className="ml-auto">
+          <div className="">
             <button
               type="button"
               onClick={() => {
@@ -2385,9 +2385,9 @@ export default function Stylist() {
           <div
             className="
               px-10 py-20
-              max-[991px]:px-[35px] max-[991px]:py-[45px]
-              max-[767px]:px-5 max-[767px]:py-[38px]
-              max-[480px]:px-4 max-[480px]:py-8
+               max-[991px]:px-[15px] max-[991px]:py-[30px]
+            max-[767px]:px-[15px] max-[767px]:py-[30px]
+            max-[480px]:px-[15px] max-[480px]:py-[30px]
             "
           >
             <div className="max-w-[520px]">
@@ -2399,8 +2399,10 @@ export default function Stylist() {
                   font-bold
                   tracking-normal
                   text-white
-                  max-[767px]:text-[42px]
-                  max-[480px]:text-[35px]
+                  max-[767px]:text-[30px]
+                max-[480px]:text-[20px]
+                max-[480px]:leading-[30px]
+                max-[480px]:mb-3
                 "
               >
                 {t('stylist.heroTitle', { defaultValue: 'Your Personal AI Stylist' })}
@@ -2424,7 +2426,9 @@ export default function Stylist() {
           </div>
         </div>
       </PageHeroBanner>
-      <section className='px-[40px] py-[40px] bg-[var(--accent-beige)]'>
+      <section className='px-[40px] py-[40px] bg-[var(--accent-beige)] max-[991px]:px-[15px] max-[991px]:py-[30px]
+            max-[767px]:px-[15px] max-[767px]:py-[30px]
+            max-[480px]:px-[15px] max-[480px]:py-[30px]'>
         <div className='w-full'>
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
             <div className={cn("h-full hidden lg:block lg:col-span-3", (sidebarCollapsed || activeTab !== 'chat') && "!hidden")}>
@@ -2443,8 +2447,8 @@ export default function Stylist() {
             <div className={cn("h-full min-w-0", (sidebarCollapsed || activeTab !== 'chat') ? "lg:col-span-12" : "lg:col-span-9")}>
               <main className="min-w-0 h-full flex flex-col overflow-hidden">
                 <Tabs value={activeTab} onValueChange={setActiveTab} dir={i18n.dir()} className="w-full min-w-0 h-full flex flex-col overflow-hidden">
-                  <div className="inline-flex items-center gap-1 p-[5px] bg-white rounded-full shadow-[0_8px_24px_rgba(20,30,25,0.06)] mb-4 w-fit max-w-full max-sm:w-full max-sm:justify-between">
-                    <TabsList className="flex items-center gap-1 bg-transparent p-0 h-auto max-sm:w-full max-sm:justify-between">
+                  <div className="inline-flex items-center gap-1 p-[5px] bg-white rounded-full shadow-[0_8px_24px_rgba(20,30,25,0.06)] mb-4 w-fit max-[480px]:rounded-[12px]">
+                    <TabsList className="flex items-center gap-1 bg-transparent p-0 h-auto flex-wrap max-[480px]:items-start">
                       <TabsTrigger value="chat" className="group inline-flex items-center gap-[7px] px-5 py-[11px] rounded-full text-[13px] font-bold text-[var(--text-color)] bg-transparent border-none shadow-none transition-all whitespace-nowrap hover:text-[var(--primary-color)] hover:bg-[var(--primary-shadow)] data-[state=active]:bg-[var(--primary-color)] data-[state=active]:text-white max-sm:flex-1 max-sm:justify-center max-sm:px-2.5 max-sm:py-2.5 max-sm:text-[11.5px]">
                         <MessageSquare className="h-[15px] w-[15px] text-[var(--primary-color)] shrink-0 transition-all group-data-[state=active]:text-white" />
                         {t('stylist.chatPanel')}
@@ -2617,12 +2621,12 @@ export default function Stylist() {
                             <Card className="border border-border rounded-[12px] shadow-editorial overflow-hidden bg-white w-full shrink-0 mb-6">
                               <CardContent className="p-4 md:p-5">
                                 <div className="flex items-center justify-between gap-4 flex-wrap pb-3">
-                                  <div className="flex items-center gap-3">
+                                  <div className="flex items-center gap-3 flex-wrap">
                                     <div className="p-2.5 bg-primary-shadow text-primary-brand rounded-full shrink-0">
                                       <Sparkles className="h-5 w-5" />
                                     </div>
                                     <div className="text-start">
-                                      <div className="flex items-center gap-2">
+                                      <div className="flex items-center gap-2 flex-wrap">
                                         <h3 className="text-[14px] font-bold text-dark-brand">
                                           {todayOutfit
                                             ? t('calendar.todayOutfit', { defaultValue: "Today's Scheduled Outfit" })

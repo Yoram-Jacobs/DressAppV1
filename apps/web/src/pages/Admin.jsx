@@ -66,9 +66,9 @@ export default function Admin() {
           <div
             className="
                   px-10 py-20
-                  max-[991px]:px-[35px] max-[991px]:py-[45px]
-                  max-[767px]:px-5 max-[767px]:py-[38px]
-                  max-[480px]:px-4 max-[480px]:py-8
+                   max-[991px]:px-[15px] max-[991px]:py-[30px]
+            max-[767px]:px-[15px] max-[767px]:py-[30px]
+            max-[480px]:px-[15px] max-[480px]:py-[30px]
                 "
           >
             <div className="max-w-[520px]">
@@ -80,8 +80,9 @@ export default function Admin() {
                       font-bold
                       tracking-normal
                       text-white
-                      max-[767px]:text-[42px]
-                      max-[480px]:text-[35px]
+                      max-[767px]:text-[30px]
+                max-[480px]:text-[20px]
+                max-[480px]:leading-[30px]
                     "
               >
                 {t('admin.title')}
@@ -105,14 +106,16 @@ export default function Admin() {
           </div>
         </div>
       </PageHeroBanner>
-      <section className="bg-accent-beige px-[40px] py-[40px] max-[767px]:px-5 max-[767px]:py-10" data-testid="admin-page">
+      <section className="bg-accent-beige px-[40px] py-[40px] max-[991px]:px-[15px] max-[991px]:py-[30px]
+            max-[767px]:px-[15px] max-[767px]:py-[30px]
+            max-[480px]:px-[15px] max-[480px]:py-[30px]" data-testid="admin-page">
         <ExploreBackButton />
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList
             className="
             inline-flex flex-wrap h-auto w-fit
             bg-white rounded-full p-1.5 gap-1
-            border border-border/40 shadow-sm mb-5
+            border border-border shadow-sm mb-5 max-[480px]:rounded-[12px]
           "
             data-testid="admin-tabs"
           >
@@ -716,7 +719,7 @@ function ListingsSection() {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2 flex-wrap">
         {['', 'active', 'paused', 'sold', 'removed'].map((s) => (
           <Button
             key={s || 'all'}
@@ -840,7 +843,7 @@ function TransactionsSection() {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2 flex-wrap">
         {['', 'pending', 'paid', 'cancelled', 'refunded'].map((s) => (
           <Button
             key={s || 'all'}

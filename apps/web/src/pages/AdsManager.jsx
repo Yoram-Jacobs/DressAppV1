@@ -196,9 +196,9 @@ export default function AdsManager() {
           <div
             className="
                       px-10 py-20
-                      max-[991px]:px-[35px] max-[991px]:py-[45px]
-                      max-[767px]:px-5 max-[767px]:py-[38px]
-                      max-[480px]:px-4 max-[480px]:py-8
+                       max-[991px]:px-[15px] max-[991px]:py-[30px]
+            max-[767px]:px-[15px] max-[767px]:py-[30px]
+            max-[480px]:px-[15px] max-[480px]:py-[30px]
                     "
           >
             <div className="max-w-[520px]">
@@ -210,8 +210,10 @@ export default function AdsManager() {
                           font-bold
                           tracking-normal
                           text-white
-                          max-[767px]:text-[42px]
-                          max-[480px]:text-[35px]
+                          max-[767px]:text-[30px]
+                max-[480px]:text-[20px]
+                max-[480px]:leading-[30px]
+                max-[480px]:mb-3
                         "
               >
                 {t('ads.title')}
@@ -241,7 +243,9 @@ export default function AdsManager() {
           </div>
         </div>
       </PageHeroBanner>
-      <section className="bg-accent-beige px-[40px] py-[40px] max-[767px]:px-5 max-[767px]:py-10">
+      <section className="bg-accent-beige px-[40px] py-[40px]  max-[991px]:px-[15px] max-[991px]:py-[30px]
+            max-[767px]:px-[15px] max-[767px]:py-[30px]
+            max-[480px]:px-[15px] max-[480px]:py-[30px]">
         {items === null ? (
           <div className="flex items-center justify-center py-20 text-primary-brand">
             <Loader2 className="h-6 w-6 animate-spin" />
@@ -551,7 +555,7 @@ function CreditBalanceCard() {
         className="bg-white rounded-[12px] shadow-sm border border-border"
         data-testid="credit-balance-card"
       >
-        <CardContent className="p-5 flex items-center gap-4 flex-wrap">
+        <CardContent className="p-5 flex items-center gap-4 flex-wrap max-[480px]:flex-col max-[480px]:items-start">
           <div className="h-12 w-12 rounded-full bg-primary-shadow text-primary-brand inline-flex items-center justify-center shrink-0">
             <Wallet className="h-5 w-5" />
           </div>
