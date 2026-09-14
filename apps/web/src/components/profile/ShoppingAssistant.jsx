@@ -1,7 +1,7 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { AccordionItem, AccordionTrigger, AccordionContent } from '@/components/ui/accordion';
-import { Sparkles, Globe, Bookmark, Info } from 'lucide-react';
+import { Sparkles, Globe, Bookmark, Info, ExternalLink } from 'lucide-react';
 
 export function ShoppingAssistant() {
   const { t } = useTranslation();
@@ -28,19 +28,31 @@ export function ShoppingAssistant() {
       </AccordionTrigger>
       <AccordionContent className="px-5 pb-5 pt-3 border-t border-border/40 bg-secondary/5 space-y-5 text-start">
         
-        {/* Part 1: Chrome Extension Store Placeholder */}
-        <div className="space-y-2 rounded-xl border bg-card p-4">
-          <div className="flex items-center gap-2">
-            <Globe className="h-5 w-5 text-primary" />
-            <h4 className="font-semibold text-sm">{t('profile.chromeStoreTitle', { defaultValue: 'Chrome Web Store Extension' })}</h4>
+        {/* Part 1: Chrome Extension Store */}
+        <div className="space-y-3 rounded-xl border bg-card p-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Globe className="h-5 w-5 text-primary" />
+              <h4 className="font-semibold text-sm">{t('profile.chromeStoreTitle', { defaultValue: 'Chrome Web Store Extension' })}</h4>
+            </div>
+            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-medium bg-emerald-500/10 text-emerald-600 border border-emerald-500/20">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+              {t('profile.chromeStoreAvailable', { defaultValue: 'Available on Chrome Web Store' })}
+            </span>
           </div>
           <p className="text-xs text-muted-foreground">
             {t('profile.chromeStoreDesc', { defaultValue: 'Get the official browser extension for automatic sizing on supported online stores.' })}
           </p>
           <div className="pt-1">
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-medium bg-muted text-muted-foreground border">
-              {t('profile.chromeStoreComingSoon', { defaultValue: 'Coming Soon to the Chrome Web Store' })}
-            </span>
+            <a
+              href="https://chromewebstore.google.com/detail/dressapp-shopping-assista/jdhaijhhipacplnjlhmnjaljhfmeoidp"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground shadow hover:bg-primary/90 transition-colors"
+            >
+              <ExternalLink className="h-3.5 w-3.5" />
+              {t('profile.chromeStoreInstall', { defaultValue: 'Add to Chrome' })}
+            </a>
           </div>
         </div>
 

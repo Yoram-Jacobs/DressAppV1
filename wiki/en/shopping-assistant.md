@@ -18,10 +18,10 @@ Both options scan size charts on retail websites, compare them with your saved b
 ## Option A: Chrome Extension (Recommended)
 
 ### Installation
-1. Visit [dressapp.co/extension/connect](https://dressapp.co/extension/connect)
-2. Click **"Connect to DressApp"** to link your account
-3. The extension installs automatically in Chrome
-4. Look for the DressApp icon in your browser toolbar
+1. Install the official extension directly from the [Chrome Web Store](https://chromewebstore.google.com/detail/dressapp-shopping-assista/jdhaijhhipacplnjlhmnjaljhfmeoidp)
+2. Click **"Add to Chrome"**
+3. Open the extension popup from your browser toolbar and click **"Connect to DressApp"** to link your account
+4. You are all set! Sizing recommendations will now appear automatically on supported shopping sites.
 
 ### How to Use
 1. **Visit any supported store** (SHEIN, AliExpress, Zara, Asos, H&M, etc.)
