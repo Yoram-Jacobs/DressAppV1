@@ -5599,11 +5599,6 @@ function buildCreatePayload(card, inSuitcase = false) {
     tags: f.tags || [],
     image_base64: asBase64 || undefined,
     crop_base64: card.cropBase64 || undefined,
-    clean_image_url:
-      card.cleanImageUrl ||
-      (card.mime === "image/png" && asBase64
-        ? (asBase64.startsWith("data:") ? asBase64 : `data:image/png;base64,${asBase64}`)
-        : undefined),
     image_mime: asBase64
       ? card.mime || card.file?.type || "image/jpeg"
       : undefined,
