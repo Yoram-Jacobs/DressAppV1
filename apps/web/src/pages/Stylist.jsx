@@ -77,6 +77,8 @@ import { api } from '@/lib/api';
 import { toast } from 'sonner';
 import { useAuth } from '@/lib/auth';
 import { useOutfitStore } from '@/lib/useOutfitStore';
+import { useLocation as useAppLocation } from '@/lib/location';
+import { useDailySuggestionsStore } from '@/lib/dailySuggestionsStore';
 import {
   prewarmStylist,
   loadStylistMessages,
