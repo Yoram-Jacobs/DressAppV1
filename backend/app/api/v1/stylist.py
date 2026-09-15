@@ -153,7 +153,7 @@ async def stylist_endpoint(
         ],
     }
 
-    await append_message(
+    user_msg_doc = await append_message(
         session_id=session["id"],
         role="user",
         input_modality=(
@@ -328,6 +328,23 @@ async def stylist_endpoint(
         latency_ms=advice.get("latency_ms") or {},
     )
 
+    # If audio was transcribed inside get_styling_advice, persist transcript to user message
+    voice_transcript = advice.get("transcript")
+    if not text and voice_transcript:
+        try:
+            from app.db.database import get_db
+            db = get_db()
+            await db.stylist_messages.update_one(
+                {"id": user_msg_doc["id"]},
+                {"$set": {"transcript": voice_transcript}},
+            )
+            await db.stylist_sessions.update_one(
+                {"id": session["id"]},
+                {"$set": {"snippet": str(voice_transcript)[:140]}},
+            )
+        except Exception as exc:  # noqa: BLE001
+            logger.warning("Failed to update user message transcript: %s", exc)
+
     # Generate session title if it doesn't have a descriptive one and we have user text/transcript
     final_text = (text or advice.get("transcript") or "").strip()
     current_title = session.get("title")
@@ -368,11 +385,10 @@ async def stylist_history(
 ) -> dict[str, Any]:
     """Return full message history for a specific session (defaults to the
     user's most recent active session)."""
+    session: dict | None = None
     if session_id:
         session = await get_session(session_id, user["id"])
-        if not session:
-            raise HTTPException(404, "Session not found")
-    else:
+    if not session:
         session = await get_or_create_active_session(user["id"])
     msgs = await full_history(session["id"], limit=limit)
     return {

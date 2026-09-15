@@ -224,16 +224,17 @@ export function ConversationSidebar({
     });
   };
 
-  // Filter & Group logic: exclude empty 0-turn sessions
+  // Filter & Group logic: show all non-empty sessions, always preserving active session
   const validSessions = useMemo(() => {
     return (sessions || []).filter((s) => {
+      if (s.id === activeId) return true;
       const hasTurns = (s.turns && s.turns > 0);
       const hasSnippet = !!(s.snippet && s.snippet.trim().length > 0);
       const hasCustomTitle = !!customTitles[s.id];
-      const hasRealTitle = s.title && !['Untitled chat', 'שיחה ללא שם', 'New conversation', 'Style advice'].includes(s.title);
+      const hasRealTitle = s.title && !['Untitled chat', 'שיחה ללא שם', 'New conversation'].includes(s.title);
       return hasTurns || hasSnippet || hasCustomTitle || hasRealTitle;
     });
-  }, [sessions, customTitles]);
+  }, [sessions, customTitles, activeId]);
 
   const activeSessions = useMemo(() => {
     return validSessions.filter((s) => !archivedIds.includes(s.id));

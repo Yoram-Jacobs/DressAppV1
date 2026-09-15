@@ -647,8 +647,9 @@ export function StylistChatView({ onSelectOutfitForTryOn }: StylistChatViewProps
       }
 
       const res = await api.stylist(formData);
-      if (res?.session?.id) {
+      if (res?.session) {
         setSessionId(res.session.id);
+        setSessions((prev) => [res.session, ...prev.filter((s) => s.id !== res.session.id)]);
       }
 
       const advice = res?.advice || res;
@@ -767,8 +768,9 @@ export function StylistChatView({ onSelectOutfitForTryOn }: StylistChatViewProps
       ]);
 
       const res = await api.stylist(formData);
-      if (res?.session?.id) {
+      if (res?.session) {
         setSessionId(res.session.id);
+        setSessions((prev) => [res.session, ...prev.filter((s) => s.id !== res.session.id)]);
       }
 
       const advice = res?.advice || res;

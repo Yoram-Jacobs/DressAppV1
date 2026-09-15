@@ -77,9 +77,14 @@ import { api } from '@/lib/api';
 import { toast } from 'sonner';
 import { useAuth } from '@/lib/auth';
 import { useOutfitStore } from '@/lib/useOutfitStore';
-import { useLocation as useAppLocation } from '@/lib/location';
-import { prewarmStylist, loadStylistMessages } from '@/lib/stylistStore';
-import { useDailySuggestionsStore } from '@/lib/dailySuggestionsStore';
+import {
+  prewarmStylist,
+  loadStylistMessages,
+  setStylistActiveSession,
+  setStylistMessages,
+  setStylistSessions,
+  addStylistMessage,
+} from '@/lib/stylistStore';
 import {
   isSTTSupported,
   isTTSSupported,
@@ -991,14 +996,16 @@ export default function Stylist() {
     (async () => {
       setSessionsLoading(true);
       try {
-        const snap = await prewarmStylist();
+        const snap = await prewarmStylist({ force: true });
         if (cancelled) return;
         const rows = snap?.sessions || [];
         setSessions(rows);
+        setStylistSessions(rows);
         if (rows.length > 0) {
           const activeId = snap.activeSessionId || rows[0].id;
           setActiveSessionId(activeId);
-          const msgs = await loadStylistMessages(activeId);
+          setStylistActiveSession(activeId);
+          const msgs = await loadStylistMessages(activeId, { force: true });
           if (!cancelled) setMessages(msgs || []);
         }
       } catch (err) {
@@ -1026,18 +1033,20 @@ export default function Stylist() {
     const snap = await prewarmStylist({ force: true });
     const rows = snap?.sessions || [];
     setSessions(rows);
+    setStylistSessions(rows);
     return rows;
-  }, []);
+  }, [setSessions]);
 
   const loadMessagesFor = useCallback(async (sessionId) => {
+    if (!sessionId) return;
     setMessagesLoading(true);
     try {
-      const msgs = await loadStylistMessages(sessionId);
+      const msgs = await loadStylistMessages(sessionId, { force: true });
       setMessages(msgs || []);
     } finally {
       setMessagesLoading(false);
     }
-  }, []);
+  }, [setMessages]);
 
   useEffect(() => {
     if (threadRef.current) {
@@ -1052,6 +1061,7 @@ export default function Stylist() {
       return;
     }
     setActiveSessionId(id);
+    setStylistActiveSession(id);
     setSidebarOpen(false);
     await loadMessagesFor(id);
   };
@@ -1060,13 +1070,15 @@ export default function Stylist() {
     try {
       const fresh = await api.stylistCreateSession();
       setActiveSessionId(fresh.id);
+      setStylistActiveSession(fresh.id);
       setMessages([]);
+      setStylistMessages(fresh.id, []);
       setText('');
       setImageFile(null);
       setSidebarOpen(false);
-      // Optimistically prepend the new session to the sidebar so the user
-      // sees it immediately; the real snapshot will reconcile on next load.
-      setSessions((prev) => [fresh, ...(prev || [])]);
+      const updated = [fresh, ...(sessions || []).filter(s => s.id !== fresh.id)];
+      setSessions(updated);
+      setStylistSessions(updated);
     } catch (err) {
       toast.error(err?.response?.data?.detail || t('stylist.errorAdvice'));
     }
@@ -1075,18 +1087,23 @@ export default function Stylist() {
   const handleDeleteSession = async (id) => {
     try {
       await api.stylistDeleteSession(id);
-      const remaining = sessions.filter((s) => s.id !== id);
+      const remaining = (sessions || []).filter((s) => s.id !== id);
       setSessions(remaining);
+      setStylistSessions(remaining);
       if (id === activeSessionId) {
         if (remaining.length > 0) {
           setActiveSessionId(remaining[0].id);
+          setStylistActiveSession(remaining[0].id);
           await loadMessagesFor(remaining[0].id);
         } else {
           // Auto-create a fresh empty session so the composer stays usable.
           const fresh = await api.stylistCreateSession();
           setSessions([fresh]);
+          setStylistSessions([fresh]);
           setActiveSessionId(fresh.id);
+          setStylistActiveSession(fresh.id);
           setMessages([]);
+          setStylistMessages(fresh.id, []);
         }
       }
     } catch (err) {
@@ -1430,16 +1447,20 @@ export default function Stylist() {
         const res = await api.composeOutfit(body);
         const canvas = res?.canvas;
         const newId = `a-${Date.now()}`;
-        setMessages((m) => [
-          ...m,
-          {
-            id: newId,
-            role: 'assistant',
-            transcript: canvas?.summary || t('stylist.composeOutfitDone'),
-            outfit_canvas: canvas,
-          },
-        ]);
-        if (res?.session_id) setActiveSessionId(res.session_id);
+        const assistantMsg = {
+          id: newId,
+          role: 'assistant',
+          transcript: canvas?.summary || t('stylist.composeOutfitDone'),
+          outfit_canvas: canvas,
+        };
+        setMessages((m) => [...m, assistantMsg]);
+        if (res?.session_id) {
+          const sId = res.session_id;
+          setActiveSessionId(sId);
+          setStylistActiveSession(sId);
+          addStylistMessage(sId, optimistic);
+          addStylistMessage(sId, assistantMsg);
+        }
       } catch (err) {
         toast.error(err?.response?.data?.detail || t('stylist.composeOutfitFailed'));
       } finally {
@@ -1483,24 +1504,25 @@ export default function Stylist() {
       const advice = res.advice;
       const audioUrl = base64ToUrl(advice.tts_audio_base64);
       const newId = `a-${Date.now()}`;
-      setMessages((m) => [
-        ...m,
-        {
-          id: newId,
-          role: 'assistant',
-          transcript: advice.reasoning_summary,
-          payload: advice,
-          audioUrl,
-          spokenText: advice.spoken_reply || advice.reasoning_summary || '',
-        },
-      ]);
-      // Update the active session meta (title + snippet + id) in the sidebar.
+      const assistantMsg = {
+        id: newId,
+        role: 'assistant',
+        transcript: advice.reasoning_summary,
+        payload: advice,
+        audioUrl,
+        spokenText: advice.spoken_reply || advice.reasoning_summary || '',
+      };
+      setMessages((m) => [...m, assistantMsg]);
+      // Update the active session meta (title + snippet + id) in the sidebar and store.
       if (res.session) {
-        setActiveSessionId(res.session.id);
-        setSessions((prev) => {
-          const without = (prev || []).filter((s) => s.id !== res.session.id);
-          return [res.session, ...without];
-        });
+        const sId = res.session.id;
+        setActiveSessionId(sId);
+        setStylistActiveSession(sId);
+        const updatedSessions = [res.session, ...(sessions || []).filter((s) => s.id !== sId)];
+        setSessions(updatedSessions);
+        setStylistSessions(updatedSessions);
+        addStylistMessage(sId, optimistic);
+        addStylistMessage(sId, assistantMsg);
       }
       if (ttsSupportedRef.current && !audioUrl) {
         const spoken = advice.spoken_reply || advice.reasoning_summary || '';

@@ -57,8 +57,35 @@ export const stylistStore = {
       _set({ loading: true, error: null });
       try {
         const { sessions } = await api.stylistSessions();
-        const rows = sessions || [];
+        let rows = sessions || [];
         let activeId = _state.activeSessionId;
+
+        // If no sessions returned from list, query history to load/create the default active session
+        if (rows.length === 0) {
+          try {
+            const h = await api.stylistHistory(null, 200);
+            if (h?.session) {
+              rows = [h.session];
+              activeId = h.session_id || h.session.id;
+              const hydrated = (h.messages || []).map((m) => ({
+                id: m.id,
+                role: m.role,
+                transcript: m.transcript,
+                payload: m.assistant_payload,
+                outfit_canvas: m.assistant_payload?.outfit_canvas || null,
+              }));
+              _set({
+                messagesBySession: {
+                  ..._state.messagesBySession,
+                  [activeId]: hydrated,
+                },
+              });
+            }
+          } catch (e) {
+            console.debug('[stylistStore] history fallback failed:', e);
+          }
+        }
+
         if (rows.length > 0 && (!activeId || !rows.some(s => s.id === activeId))) {
           activeId = rows[0].id;
         }
@@ -86,7 +113,7 @@ export const stylistStore = {
 
   async loadMessages(sessionId, { force = false } = {}) {
     if (!sessionId) return [];
-    if (!force && _state.messagesBySession[sessionId]) {
+    if (!force && _state.messagesBySession[sessionId]?.length > 0) {
       return _state.messagesBySession[sessionId];
     }
     if (!force && _inflightMessages.has(sessionId)) {
@@ -113,7 +140,7 @@ export const stylistStore = {
         return hydrated;
       } catch (err) {
         console.debug('[stylistStore] loadMessages failed:', err);
-        return [];
+        return _state.messagesBySession[sessionId] || [];
       } finally {
         _inflightMessages.delete(sessionId);
       }

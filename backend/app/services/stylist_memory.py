@@ -41,43 +41,39 @@ async def create_session(user_id: str, title: str | None = None) -> dict[str, An
 
 
 async def list_sessions(user_id: str, limit: int = 50) -> list[dict[str, Any]]:
-    """Newest-first list of the user's sessions for the conversation sidebar.
-    Excludes and cleans up empty/0-turn sessions so users never see untitled empty chats."""
+    """Newest-first list of the user's sessions for the conversation sidebar."""
     db = get_db()
-    # Clean up empty sessions with 0 turns and no messages
-    try:
-        await db.stylist_sessions.delete_many({
-            "user_id": user_id,
-            "turns": {"$in": [0, None]},
-            "snippet": {"$in": [None, ""]},
-            "title": {"$in": [None, "", "Untitled chat", "שיחה ללא שם", "New conversation"]},
-        })
-    except Exception:
-        pass
-
     rows = await repos.find_many(
         db.stylist_sessions,
-        {
-            "user_id": user_id,
-            "archived": {"$ne": True},
-            "$or": [
-                {"turns": {"$gt": 0}},
-                {"snippet": {"$nin": [None, ""]}},
-                {"title": {"$nin": [None, "", "Untitled chat", "שיחה ללא שם", "New conversation"]}},
-            ],
-        },
-        sort=[("last_active_at", -1)],
+        {"user_id": user_id, "archived": {"$ne": True}},
+        sort=[("last_active_at", -1), ("created_at", -1)],
         limit=limit,
     )
     return rows
 
 
 async def get_session(session_id: str, user_id: str) -> dict[str, Any] | None:
-    """Fetch a session by id with ownership enforcement."""
+    """Fetch a session by id with ownership enforcement, recovering if messages exist."""
     db = get_db()
-    return await repos.find_one(
+    sess = await repos.find_one(
         db.stylist_sessions, {"id": session_id, "user_id": user_id}
     )
+    if sess:
+        return sess
+    # If the session document is missing but messages exist for it, restore the session
+    first_msg = await db.stylist_messages.find_one({"session_id": session_id})
+    if first_msg:
+        count = await db.stylist_messages.count_documents({"session_id": session_id})
+        new_sess = StylistSession(
+            id=session_id,
+            user_id=user_id,
+            turns=count,
+            title="Style advice",
+            snippet=(first_msg.get("transcript") or "Style advice")[:140],
+        ).model_dump()
+        await repos.insert(db.stylist_sessions, new_sess)
+        return new_sess
+    return None
 
 
 async def update_session(
@@ -164,15 +160,24 @@ async def append_message(
     )
     doc = msg.model_dump()
     await repos.insert(db.stylist_messages, doc)
-    # bump session counters + snippet (only for user turns so the sidebar
-    # preview is meaningful).
+    # bump session counters + snippet (so the sidebar preview is always populated).
+    now_iso = datetime.now(timezone.utc).isoformat()
     session_patch: dict[str, Any] = {
-        "last_active_at": datetime.now(timezone.utc).isoformat(),
-        "updated_at": datetime.now(timezone.utc).isoformat(),
+        "last_active_at": now_iso,
+        "updated_at": now_iso,
     }
-    if role == "user" and transcript:
-        # Truncate to a manageable preview length for the sidebar.
-        session_patch["snippet"] = transcript.strip()[:140]
+    if role == "user":
+        if transcript and transcript.strip():
+            session_patch["snippet"] = transcript.strip()[:140]
+        elif image_refs or (context and context.get("image_count")):
+            session_patch["snippet"] = "📷 Image"
+        elif input_modality == "voice":
+            session_patch["snippet"] = "🎤 Voice note"
+    elif role == "assistant" and transcript and transcript.strip():
+        sess = await db.stylist_sessions.find_one({"id": session_id})
+        if sess and not sess.get("snippet"):
+            session_patch["snippet"] = transcript.strip()[:140]
+
     await db.stylist_sessions.update_one(
         {"id": session_id},
         {"$inc": {"turns": 1}, "$set": session_patch},
