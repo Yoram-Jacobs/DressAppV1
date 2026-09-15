@@ -332,7 +332,7 @@ export default function Marketplace() {
                   </div>
 
                   <div className="mb-4">
-                    <label className="block text-[11px] font-extrabold uppercase tracking-[0.05em] text-[#9a9a94] mb-2">
+                    <label className="text-[14px] font-semibold mb-[8px] text-text-brand block">
                       {t("market.sourceFilter", { defaultValue: t("market.source", { defaultValue: "Source" }) })}
                     </label>
                     <Select
@@ -342,7 +342,7 @@ export default function Marketplace() {
                       }
                     >
                       <SelectTrigger
-                        className="w-full h-11 rounded-xl border border-[#ccc] bg-white shadow-none text-sm text-[#666] mb-0"
+                        className=""
                         data-testid="market-source-select"
                       >
                         <SelectValue />
@@ -364,7 +364,7 @@ export default function Marketplace() {
                   </div>
 
                   <div className="mb-4">
-                    <label className="block text-[11px] font-extrabold uppercase tracking-[0.05em] text-[#9a9a94] mb-2">
+                    <label className="text-[14px] font-semibold mb-[8px] text-text-brand block">
                       {t("market.categoryFilter", { defaultValue: t("market.category", { defaultValue: "Category" }) })}
                     </label>
                     <Select
@@ -374,7 +374,7 @@ export default function Marketplace() {
                       }
                     >
                       <SelectTrigger
-                        className="w-full h-11 rounded-xl border border-[#ccc] bg-white shadow-none text-sm text-[#666] mb-0"
+                        className=""
                         data-testid="market-category-select"
                       >
                         <SelectValue />
@@ -390,7 +390,7 @@ export default function Marketplace() {
                   </div>
 
                   <div className="mb-0">
-                    <label className="block text-[11px] font-extrabold uppercase tracking-[0.05em] text-[#9a9a94] mb-2">
+                    <label className="text-[14px] font-semibold mb-[8px] text-text-brand block">
                       {t("market.distance", { defaultValue: "Distance" })}
                     </label>
                     {loc?.coords ? (
@@ -401,7 +401,7 @@ export default function Marketplace() {
                         }
                       >
                         <SelectTrigger
-                          className="w-full h-11 rounded-xl border border-[#ccc] bg-white shadow-none text-sm text-[#666] mb-0"
+                          className=""
                           data-testid="market-radius-select"
                         >
                           <MapPin className="h-3.5 w-3.5 me-1 text-[hsl(var(--accent))]" />

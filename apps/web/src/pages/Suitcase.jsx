@@ -1884,9 +1884,9 @@ function Suitcase() {
                                           })}
                                         </div>
                                         {suggestions.length > 0 && (
-                                          <div className="mt-4 p-3 bg-muted/30 border border-dashed border-border rounded-xl">
+                                          <div className="mt-4 p-3 bg-white border border-border rounded-[12px]">
                                             <p className="text-xs font-semibold text-text-brand mb-2 flex items-center gap-1.5">
-                                              <Sparkles className="h-3 w-3 text-[hsl(var(--accent))]" />
+                                              <Sparkles className="h-3 w-3 text-primary-brand" />
                                               {t(
                                                 "suitcase.suggestedReplacements",
                                                 {
@@ -1899,7 +1899,7 @@ function Suitcase() {
                                               {suggestions.map((sugItem) => (
                                                 <div
                                                   key={sugItem.id}
-                                                  className="flex items-center gap-2 p-2 bg-card border border-border rounded-xl shrink-0 max-w-[200px]"
+                                                  className="flex items-center gap-2 p-2 bg-accent-beige border border-border rounded-[12px] shrink-0 max-w-[200px]"
                                                 >
                                                   {bestImageUrl(sugItem) ? (
                                                     <img
@@ -1907,10 +1907,10 @@ function Suitcase() {
                                                         sugItem,
                                                       )}
                                                       alt={sugItem.title}
-                                                      className="h-8 w-8 rounded-lg object-cover shrink-0"
+                                                      className="h-8 w-8 rounded-full bg-white border border-border object-cover shrink-0"
                                                     />
                                                   ) : (
-                                                    <div className="h-8 w-8 rounded-lg bg-muted flex items-center justify-center shrink-0">
+                                                    <div className="h-8 w-8 rounded-full bg-white border border-border flex items-center justify-center shrink-0">
                                                       <ShoppingBag className="h-3.5 w-3.5 text-text-brand" />
                                                     </div>
                                                   )}
@@ -1922,7 +1922,7 @@ function Suitcase() {
                                                   <Button
                                                     size="icon"
                                                     variant="ghost"
-                                                    className="h-7 w-7 rounded-lg text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 shrink-0"
+                                                    className="h-7 w-7 rounded-full bg-primary-shadow text-primary-brand shrink-0"
                                                     onClick={() =>
                                                       handleAddFromCloset(
                                                         sugItem,

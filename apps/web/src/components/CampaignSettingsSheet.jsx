@@ -16,6 +16,7 @@ import {
   SheetContent,
   SheetHeader,
   SheetTitle,
+  SheetDescription,
 } from '@/components/ui/sheet';
 import {
   Dialog,
@@ -175,31 +176,31 @@ export function CampaignSettingsSheet({ open, onOpenChange, campaign, onUpdated 
   return (
     <>
       <Sheet open={open} onOpenChange={onOpenChange}>
-        <SheetContent className="sm:max-w-md">
-          <SheetHeader className="mb-6">
-            <SheetTitle className="flex items-center gap-2 font-display text-xl">
-              <Settings className="h-5 w-5" />
-              {t('campaigns.settings.title')}
-            </SheetTitle>
-            <p className="text-sm text-muted-foreground">{campaign.title}</p>
+        <SheetContent className="sm:max-w-md p-0">
+          <SheetHeader className="p-5 border-b border-border">
+            <div className="flex items-center gap-2">
+              <Settings className="h-5 w-5 text-primary-brand" />
+              <SheetTitle>{t('campaigns.settings.title')}</SheetTitle>
+            </div>
+            <SheetDescription>
+              {campaign.title}
+            </SheetDescription>
           </SheetHeader>
-
-          <div className="space-y-6 overflow-y-auto max-h-[calc(100vh-10rem)] pb-4">
+          <div className="p-5 space-y-5 max-h-[80vh] overflow-y-auto">
             {/* --- Extend --- */}
             {canExtend && (
               <section data-testid="campaign-settings-extend">
-                <div className="flex items-center gap-2 mb-3">
-                  <CalendarRange className="h-4 w-4 text-[hsl(var(--accent))]" />
-                  <h3 className="font-semibold text-sm">{t('campaigns.settings.extend')}</h3>
+                <div className="flex items-center gap-2 mb-2">
+                  <CalendarRange className="h-4 w-4 text-primary-brand" />
+                  <h3 className="font-bold text-[14px] text-dark-brand">{t('campaigns.settings.extend')}</h3>
                 </div>
-                <p className="text-xs text-muted-foreground mb-3">
+                <p className="text-[12px] font-semibold text-text-brand mb-2">
                   {t('campaigns.billing.feePerDay')} · {t('campaigns.settings.extendAutoApproved')}
                 </p>
-
                 {!extendOrder ? (
                   <div className="space-y-3">
                     <div>
-                      <Label htmlFor="new-end-date" className="text-xs">
+                      <Label htmlFor="new-end-date">
                         {t('campaigns.settings.newEndDate')}
                       </Label>
                       <Input
@@ -208,27 +209,27 @@ export function CampaignSettingsSheet({ open, onOpenChange, campaign, onUpdated 
                         value={newEndDate}
                         onChange={(e) => setNewEndDate(e.target.value)}
                         min={campaign.end_date || new Date().toISOString().split('T')[0]}
-                        className="mt-1"
+                        className=""
                         data-testid="extend-new-end-date"
                       />
                     </div>
                     {extraDays > 0 && (
-                      <div className="rounded-lg bg-muted/50 p-3 text-sm">
-                        <div className="flex items-center gap-1 text-[hsl(var(--accent))] font-semibold">
+                      <div className="rounded-[12px] bg-primary-shadow p-3 text-sm">
+                        <div className="flex items-center gap-1 text-primary-brand font-semibold">
                           <DollarSign className="h-3.5 w-3.5" />
                           {t('campaigns.settings.extendFeePreview', {
                             fee: `$${extraFeeDollars}`,
                             days: extraDays,
                           })}
                         </div>
-                        <p className="text-xs text-muted-foreground mt-1">
+                        <p className="text-xs text-text-brand mt-1">
                           {t('campaigns.billing.feeNote')}
                         </p>
                       </div>
                     )}
                     <Button
                       size="sm"
-                      className="w-full rounded-xl"
+                      className="w-full"
                       onClick={handleExtendCreate}
                       disabled={!newEndDate || extraDays <= 0 || extendLoading}
                       data-testid="extend-submit-btn"
@@ -249,7 +250,7 @@ export function CampaignSettingsSheet({ open, onOpenChange, campaign, onUpdated 
                           ${(extendOrder.extra_fee_cents / 100).toFixed(2)}
                         </span>
                       </p>
-                      <p className="text-xs text-muted-foreground mt-0.5">
+                      <p className="text-xs text-text-brand mt-0.5">
                         +{extendOrder.extra_days} {t('campaigns.settings.days')}
                       </p>
                     </div>
@@ -275,23 +276,21 @@ export function CampaignSettingsSheet({ open, onOpenChange, campaign, onUpdated 
                 )}
               </section>
             )}
-
             {canExtend && <Separator />}
-
             {/* --- Pause / Resume --- */}
             {(isActive || isPaused) && (
               <section data-testid="campaign-settings-pause">
-                <div className="flex items-center gap-2 mb-3">
+                <div className="flex items-center gap-2 mb-2">
                   {isActive ? (
                     <Pause className="h-4 w-4 text-orange-500" />
                   ) : (
-                    <Play className="h-4 w-4 text-green-500" />
+                    <Play className="h-4 w-4 text-primary-brand" />
                   )}
-                  <h3 className="font-semibold text-sm">
+                  <h3 className="font-bold text-[14px] text-dark-brand">
                     {isActive ? t('campaigns.settings.pause') : t('campaigns.settings.resume')}
                   </h3>
                 </div>
-                <p className="text-xs text-muted-foreground mb-3">
+                <p className="text-[12px] font-semibold text-text-brand mb-2">
                   {isActive
                     ? t('campaigns.settings.pauseNote')
                     : t('campaigns.settings.resumeNote')}
@@ -300,13 +299,13 @@ export function CampaignSettingsSheet({ open, onOpenChange, campaign, onUpdated 
                   <Button
                     variant="outline"
                     size="sm"
-                    className="w-full rounded-xl border-orange-300 text-orange-600 hover:bg-orange-50"
+                    className="w-full border-yellow-border text-primary-brand bg-yellow-brand"
                     onClick={handlePause}
                     disabled={pauseLoading}
                     data-testid="pause-campaign-btn"
                   >
                     {pauseLoading && <Loader2 className="h-3.5 w-3.5 me-1 animate-spin" />}
-                    <Pause className="h-3.5 w-3.5 me-1" />
+                    <Pause className="h-3.5 w-3.5" />
                     {t('campaigns.settings.pause')}
                   </Button>
                 ) : (
@@ -317,29 +316,27 @@ export function CampaignSettingsSheet({ open, onOpenChange, campaign, onUpdated 
                     disabled={pauseLoading}
                     data-testid="resume-campaign-btn"
                   >
-                    {pauseLoading && <Loader2 className="h-3.5 w-3.5 me-1 animate-spin" />}
+                    {pauseLoading && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
                     <Play className="h-3.5 w-3.5 me-1" />
                     {t('campaigns.settings.resume')}
                   </Button>
                 )}
               </section>
             )}
-
             {(isActive || isPaused) && canDelete && <Separator />}
-
             {/* --- Delete --- */}
             {canDelete && (
               <section data-testid="campaign-settings-delete">
-                <div className="flex items-center gap-2 mb-3">
+                <div className="flex items-center gap-2 mb-2">
                   <Trash2 className="h-4 w-4 text-destructive" />
-                  <h3 className="font-semibold text-sm text-destructive">
+                  <h3 className="font-bold text-[14px] text-dark-brand">
                     {t('campaigns.settings.delete')}
                   </h3>
                 </div>
                 {isActive && (
-                  <div className="flex items-start gap-2 rounded-lg bg-destructive/5 border border-destructive/20 p-3 mb-3">
+                  <div className="flex items-start gap-2 rounded-[12px] bg-destructive/5 border border-destructive/20 p-3 mb-3">
                     <AlertTriangle className="h-4 w-4 text-destructive shrink-0 mt-0.5" />
-                    <p className="text-xs text-destructive">{t('campaigns.settings.deleteWarning')}</p>
+                    <p className="text-xs text-text-brand">{t('campaigns.settings.deleteWarning')}</p>
                   </div>
                 )}
                 <Button
@@ -357,7 +354,6 @@ export function CampaignSettingsSheet({ open, onOpenChange, campaign, onUpdated 
           </div>
         </SheetContent>
       </Sheet>
-
       {/* Delete confirmation dialog */}
       <Dialog open={deleteOpen} onOpenChange={setDeleteOpen}>
         <DialogContent data-testid="delete-campaign-dialog">
