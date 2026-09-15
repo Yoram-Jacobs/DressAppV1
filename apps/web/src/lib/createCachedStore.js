@@ -246,7 +246,6 @@ export function useCachedList(store, filters, { revalidateOnMount = true } = {})
   // Lazy revalidate. We can't useEffect here because that'd require
   // a stable filter object per call — instead we just fire-and-forget
   // the ensure() call. Stale-while-revalidate semantics: returns
-  // cached data immediately and quietly refreshes in the background.
   if (revalidateOnMount && (!entry || !fresh)) {
     // Don't await — render with whatever we already have.
     store.ensure(filters).catch(() => {});

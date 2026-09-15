@@ -57,29 +57,26 @@ export function ProfileDetailsCard() {
   const googleConnected = !!user?.google_connected;
 
   return (
-    <Card
-      className="rounded-[calc(var(--radius)+6px)] shadow-editorial"
-      data-testid="profile-details-card"
-    >
-      <CardContent className="p-6 space-y-4">
-        <div className="flex items-center justify-between gap-2 flex-wrap">
-          <div>
-            <div className="caps-label text-muted-foreground">
+    <Card className="rounded-[12px] border border-border bg-white shadow-sm h-full" data-testid="profile-details-card">
+      <CardContent className="p-5 space-y-4">
+        <div className='flex items-center justify-between'>
+          <div className=''>
+            <div className="text-[12px] text-text-brand font-semibold">
               {t('profile.sections.identity')}
             </div>
-            <h3 className="font-display text-xl mt-0.5">{t('profile.title')}</h3>
+            <h3 className="font-bold text-[14px] text-dark-brand">{t('profile.title')}</h3>
           </div>
           <div className="flex items-center gap-2">
             <Button
               onClick={save}
               disabled={busy || saveBusy}
-              className="rounded-full px-4 text-xs font-semibold shadow-sm"
+              className="!gap-1"
               data-testid="profile-details-header-save-btn"
             >
               {busy || saveBusy ? (
                 <Loader2 className="h-3.5 w-3.5 animate-spin me-1.5" />
               ) : (
-                <Save className="h-3.5 w-3.5 me-1.5" />
+                <Save className="h-3.5 w-3.5" />
               )}
               {t('profile.saveProfile', { defaultValue: 'Save profile' })}
             </Button>
@@ -87,7 +84,7 @@ export function ProfileDetailsCard() {
               <Button
                 variant="outline"
                 size="sm"
-                className="h-8 text-xs gap-1.5 rounded-full border-[hsl(var(--accent)/40)] hover:bg-[hsl(var(--accent)/5)]"
+                className="h-8 text-xs !gap-1 rounded-full border-[hsl(var(--accent)/40)] hover:bg-[hsl(var(--accent)/5)]"
                 onClick={syncGoogleProfile}
                 disabled={syncingGoogle}
               >
@@ -102,16 +99,15 @@ export function ProfileDetailsCard() {
             {autofilledFromGoogle && (
               <Badge
                 variant="outline"
-                className="text-[11px] bg-card rounded-full"
+                className="!gap-1 text-[11px] bg-card rounded-full"
                 data-testid="profile-google-autofill-badge"
               >
-                <Sparkles className="h-3 w-3 me-1 text-[hsl(var(--accent))]" />
+                <Sparkles className="h-3 w-3 text-[hsl(var(--accent))]" />
                 {t('profile.autofilledFromGoogle')}
               </Badge>
             )}
           </div>
         </div>
-
         <Accordion type="multiple" defaultValue={['identity']} className="w-full space-y-4">
           <IdentitySection form={form} setField={setField} t={t} user={user} />
           <ContactSection
@@ -153,26 +149,7 @@ export function ProfileDetailsCard() {
           <PayoutsSection form={form} setField={setField} t={t} />
           <CampaignNotificationsSection form={form} setCampaignPref={setCampaignPref} t={t} />
         </Accordion>
-
-        <div className="flex justify-end pt-2">
-          <Button
-            onClick={save}
-            disabled={busy || saveBusy}
-            size="lg"
-            className="rounded-xl px-6 font-semibold shadow-editorial"
-            data-testid="profile-details-save-btn"
-          >
-            {busy || saveBusy ? (
-              <Loader2 className="h-4 w-4 animate-spin me-2" />
-            ) : (
-              <>
-                <Save className="h-4 w-4 me-2" /> {t('profile.saveProfile', { defaultValue: 'Save profile' })}
-              </>
-            )}
-          </Button>
-        </div>
-
-        <div className="flex justify-center items-center gap-1 pt-2">
+        {/* <div className="flex justify-center items-center gap-1 pt-2">
           <Button
             variant="link"
             size="sm"
@@ -192,7 +169,7 @@ export function ProfileDetailsCard() {
           >
             {t('profile.termsOfService', { defaultValue: 'Terms of Service' })}
           </Button>
-        </div>
+        </div> */}
       </CardContent>
     </Card>
   );

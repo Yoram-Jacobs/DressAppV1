@@ -503,7 +503,7 @@ export function ClosetAddScreen() {
         return {
           id: `${tempCardId}_${idx}`,
           previewUrl: validReconUrl || cropUrl,
-          base64: cleanB64,
+          base64: cropB64,
           cropBase64: cropB64,
           originalCropUrl: cropUrl,
           reconstructedUrl: validReconUrl,
@@ -1004,7 +1004,12 @@ export function ClosetAddScreen() {
           tags: Array.isArray(fields.tags) && fields.tags.length > 0 ? fields.tags : undefined,
           cultural_tags: Array.isArray(fields.cultural_tags) && fields.cultural_tags.length > 0 ? fields.cultural_tags : undefined,
           image_base64: card.cropBase64 || card.base64 || undefined,
-          image_mime: 'image/jpeg',
+          crop_base64: card.cropBase64 || undefined,
+          clean_image_url:
+            card.cropBase64 && (card.previewUrl?.startsWith('data:image/png') || card.originalCropUrl?.startsWith('data:image/png'))
+              ? (card.cropBase64.startsWith('data:') ? card.cropBase64 : `data:image/png;base64,${card.cropBase64}`)
+              : undefined,
+          image_mime: (card.cropBase64 && (card.previewUrl?.startsWith('data:image/png') || card.originalCropUrl?.startsWith('data:image/png'))) ? 'image/png' : 'image/jpeg',
           reconstructed_image_b64: card.useReconstructed && (card.reconstructedB64 || card.reconstructedUrl)
             ? (card.reconstructedB64 || card.reconstructedUrl)
             : undefined,

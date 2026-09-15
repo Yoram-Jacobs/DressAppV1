@@ -167,26 +167,23 @@ export function MeasurementsSection({
   );
 
   return (
-    <AccordionItem value="measurements" className="border border-border/80 rounded-2xl bg-card overflow-hidden shadow-sm hover:shadow-[0_4px_20px_-4px_rgba(0,0,0,0.08)] transition-all duration-300">
-      <AccordionTrigger
-        className="hover:no-underline px-5 py-4 focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-none"
-        data-testid="profile-accordion-measurements"
-      >
+    <AccordionItem value="measurements" className="p-3 border border-border rounded-[12px] bg-white overflow-hidden shadow-sm hover:shadow-[0_4px_20px_-4px_rgba(0,0,0,0.08)] hover:border-primary-brand hover:bg-primary-shadow transition-all duration-300">
+      <AccordionTrigger className="hover:no-underline focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-none py-0">
         <div className="flex items-center gap-4 text-start">
-          <div className="p-2.5 rounded-xl bg-[hsl(142_71%_93%)] text-[hsl(142_71%_35%)] dark:bg-[hsl(142_30%_15%)] dark:text-[hsl(142_71%_55%)] shrink-0 transition-transform duration-200">
+           <div className="p-2.5 rounded-xl bg-[hsl(142_71%_93%)] text-[hsl(142_71%_35%)] dark:bg-[hsl(142_30%_15%)] dark:text-[hsl(142_71%_55%)] shrink-0 transition-transform duration-200">
             <Ruler className="h-5 w-5" />
           </div>
           <div>
-            <span className="text-sm font-semibold tracking-wide block text-foreground uppercase">
+            <span className="text-[13px] font-bold block text-dark-brand">
               {t('profile.sections.measurements')}
             </span>
-            <span className="text-[10px] text-muted-foreground font-normal block mt-0.5 normal-case truncate max-w-[200px]">
+            <span className="text-[11px] text-text-brand font-semibold block normal-case">
               {t('profile.sections.measurementsDesc', { defaultValue: 'Garment sizing fits (height, chest, waist, and inseams)' })}
             </span>
           </div>
         </div>
       </AccordionTrigger>
-      <AccordionContent className="px-5 pb-5 pt-3 border-t border-border/40 bg-secondary/5">
+      <AccordionContent className="border-t border-border space-y-3 pt-4 pb-0 mt-3">
         <div className="space-y-4">
           {effectivePredicting && (
             <div className="flex items-center gap-2 text-xs text-purple-700 dark:text-purple-300 animate-pulse bg-purple-500/5 px-3 py-1.5 rounded-xl border border-purple-500/10">
@@ -204,8 +201,8 @@ export function MeasurementsSection({
 
           {showCalculatedAndOther && (
             <>
-              <div className="border-t border-border/40 my-2 pt-2">
-                <span className="text-[10px] uppercase font-semibold text-muted-foreground tracking-wider flex items-center gap-1.5">
+              <div className="">
+                <span className="text-[12px] font-semibold text-text-brand flex items-center gap-1.5">
                   <Sparkles className="h-3.5 w-3.5 text-purple-600 dark:text-purple-400" />
                   {t('profile.measurements.calculatedSection', { defaultValue: 'Calculated Body Dimensions (AI Generated)' })}
                 </span>
@@ -218,9 +215,8 @@ export function MeasurementsSection({
                 {num('inseam', t('profile.measurements.inseam'), 'len', true)}
                 {num('outseam', t('profile.measurements.outseam'), 'len', true)}
               </div>
-
-              <div className="border-t border-border/40 my-2 pt-2">
-                <span className="text-[10px] uppercase font-semibold text-muted-foreground tracking-wider">
+              <div className="">
+                <span className="text-[12px] font-semibold text-text-brand">
                   {t('profile.measurements.sizesSection', { defaultValue: 'Garment & Footwear Sizes' })}
                 </span>
               </div>

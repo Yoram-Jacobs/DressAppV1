@@ -4,34 +4,31 @@ import { useTranslation } from 'react-i18next';
 import { api } from '@/lib/api';
 import { toast } from 'sonner';
 import { useAuth } from '@/lib/auth';
-import { Loader2, AlertTriangle } from 'lucide-react';
+import { Loader2, AlertTriangle,Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-
 import { QuotaMonitor } from '@/components/pricing/QuotaMonitor';
 import { PricingDisplay } from '@/components/pricing/PricingDisplay';
-
+import PricingBanner from '../assets/img/inner6.webp';
+import { PageHeroBanner } from '@/components/ui/PageHeroBanner';
 export default function Pricing() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
   const { user } = useAuth();
-  
   const [pricingData, setPricingData] = useState(null);
   const [quotaStatus, setQuotaStatus] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isAnnual, setIsAnnual] = useState(false);
-
   const [subBusy, setSubBusy] = useState(false);
   const [searchParams, setSearchParams] = useSearchParams();
-
   // Fetch comprehensive pricing information and quota status on mount
   useEffect(() => {
     const fetchPricingData = async () => {
       try {
         const pricingRes = await api.getPricingInfo();
         setPricingData(pricingRes);
-        
+
         const quotaRes = await api.getQuotaStatus();
         setQuotaStatus(quotaRes);
       } catch (err) {
@@ -41,7 +38,6 @@ export default function Pricing() {
         setLoading(false);
       }
     };
-
     fetchPricingData();
   }, []);
 
@@ -125,8 +121,8 @@ export default function Pricing() {
   if (loading) {
     return (
       <div className="min-h-[60vh] flex flex-col items-center justify-center gap-4">
-        <Loader2 className="h-8 w-8 animate-spin text-[hsl(var(--accent))]" />
-        <p className="text-sm text-muted-foreground animate-pulse">
+        <Loader2 className="h-8 w-8 animate-spin text-primary-brand" />
+        <p className="text-sm text-text-brand animate-pulse">
           {t('common.loading', { defaultValue: 'Loading pricing plans...' })}
         </p>
       </div>
@@ -145,40 +141,79 @@ export default function Pricing() {
       </div>
     );
   }
-
   const currentPlanName = pricingData?.pricing_plan?.plan_type || 'free';
-
   return (
-    <div className="relative min-h-screen pb-[calc(env(safe-area-inset-bottom)+88px)] px-4 sm:px-6 max-w-6xl mx-auto overflow-hidden space-y-12">
-      {/* Visual background wash */}
-      <div 
-        className="absolute top-0 inset-x-0 h-[600px] pointer-events-none opacity-50 dark:opacity-20"
-        style={{
-          backgroundImage: `
-            radial-gradient(900px circle at 15% 10%, rgba(31,111,107,0.14), transparent 55%),
-            radial-gradient(700px circle at 85% 5%, rgba(232,96,60,0.10), transparent 50%)
-          `
-        }}
-      />
-
-      {/* Noise overlay on hero section */}
-      <div className="absolute top-0 inset-x-0 h-[300px] pointer-events-none opacity-[0.04] bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-neutral-900 to-transparent" />
-
-      {/* Pricing and tier display selection */}
-      <PricingDisplay
-        pricingData={pricingData}
-        currentPlanName={currentPlanName}
-        isAnnual={isAnnual}
-        setIsAnnual={setIsAnnual}
-        subBusy={subBusy}
-        handleUpgrade={handleUpgrade}
-      />
-
-      {/* Quota status, warnings, and daily limits monitor */}
-      <QuotaMonitor
-        quotaStatus={quotaStatus}
-        pricingData={pricingData}
-      />
-    </div>
+    <>
+      {/* Banner Section */}
+      <PageHeroBanner image={PricingBanner}>
+        <div className="relative z-10 w-full">
+          <div
+            className="
+              px-10 py-20
+              max-[991px]:px-[15px] max-[991px]:py-[30px]
+            max-[767px]:px-[15px] max-[767px]:py-[30px]
+            max-[480px]:px-[15px] max-[480px]:py-[30px]
+            "
+          >
+            <div className="max-w-[520px]">
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-semibold tracking-wider uppercase bg-accent/10 text-accent border border-accent/25 mb-4">
+          <Sparkles className="h-3 w-3 animate-pulse" />
+          {t('pricing.membershipTitle', { defaultValue: 'DressApp Club' })}
+        </span>
+              {/* Title */}
+              <h1
+                className="
+                  m-0 mb-0
+                  text-[40px] leading-[40px]
+                  font-bold
+                  tracking-normal
+                  text-white
+                  max-[767px]:text-[30px]
+                max-[480px]:text-[20px]
+                max-[480px]:leading-[30px]
+                max-[480px]:mb-3
+                "
+              >
+                      {t('pricing.title', { defaultValue: 'Membership Pricing Plans' })}
+              </h1>
+              {/* Description */}
+              <p
+                className="
+                  my-5
+                  max-w-[450px]
+                  text-[14px]
+                  leading-6
+                  tracking-[0.5px]
+                  text-white/60
+                  max-[767px]:max-w-full
+                  max-[767px]:mt-[15px]
+                "
+              >
+                 {t('pricing.subtitle', { defaultValue: 'Choose the plan that fits your style. Upgrade, downgrade, or cancel at any time.' })}
+              </p>
+            </div>
+          </div>
+        </div>
+      </PageHeroBanner>
+      <section className="px-[40px] py-[40px] bg-accent-beige  max-[991px]:px-[15px] max-[991px]:py-[30px]
+            max-[767px]:px-[15px] max-[767px]:py-[30px]
+            max-[480px]:px-[15px] max-[480px]:py-[30px]">
+        {/* Rest of the page content wrapped with side padding */}
+          {/* Pricing and tier display selection */}
+          <PricingDisplay
+            pricingData={pricingData}
+            currentPlanName={currentPlanName}
+            isAnnual={isAnnual}
+            setIsAnnual={setIsAnnual}
+            subBusy={subBusy}
+            handleUpgrade={handleUpgrade}
+          />
+          {/* Quota status, warnings, and daily limits monitor */}
+          <QuotaMonitor
+            quotaStatus={quotaStatus}
+            pricingData={pricingData}
+          />
+      </section>
+    </>
   );
 }

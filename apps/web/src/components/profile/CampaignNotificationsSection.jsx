@@ -16,26 +16,23 @@ import { Field } from './primitives.jsx';
 
 export function CampaignNotificationsSection({ form, setCampaignPref, t }) {
   return (
-    <AccordionItem value="campaigns" className="border border-border/80 rounded-2xl bg-card overflow-hidden shadow-sm hover:shadow-[0_4px_20px_-4px_rgba(0,0,0,0.08)] transition-all duration-300">
-      <AccordionTrigger
-        className="hover:no-underline px-5 py-4 focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-none"
-        data-testid="profile-accordion-campaigns"
-      >
+    <AccordionItem value="campaigns" className="p-3 border border-border rounded-[12px] bg-white overflow-hidden shadow-sm hover:shadow-[0_4px_20px_-4px_rgba(0,0,0,0.08)] hover:border-primary-brand hover:bg-primary-shadow transition-all duration-300">
+      <AccordionTrigger className="hover:no-underline focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-none py-0">
         <div className="flex items-center gap-4 text-start">
           <div className="p-2.5 rounded-xl bg-[hsl(340_80%_93%)] text-[hsl(340_80%_50%)] dark:bg-[hsl(340_30%_18%)] dark:text-[hsl(340_80%_70%)] shrink-0 transition-transform duration-200">
             <Bell className="h-5 w-5" />
           </div>
-          <div className="flex-1 min-w-0">
-            <span className="text-sm font-semibold tracking-wide block text-foreground uppercase">
+          <div>
+            <span className="text-[13px] font-bold block text-dark-brand">
               {t('campaigns.notifications.sectionTitle')}
             </span>
-            <span className="text-[10px] text-muted-foreground font-normal block mt-0.5 normal-case truncate max-w-[200px]">
+            <span className="text-[11px] text-text-brand font-semibold block normal-case">
               {t('campaigns.notifications.sectionSubtitle')}
             </span>
           </div>
         </div>
       </AccordionTrigger>
-      <AccordionContent className="px-5 pb-5 pt-3 border-t border-border/40 bg-secondary/5">
+      <AccordionContent className="border-t border-border space-y-3 pt-4 pb-0 mt-3">
         <div className="space-y-4" data-testid="campaign-notif-section">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Field label={t('campaigns.notifications.frequencyLabel', { defaultValue: 'Frequency' })}>
@@ -43,7 +40,7 @@ export function CampaignNotificationsSection({ form, setCampaignPref, t }) {
                 value={form.scheduler_settings.campaign_notification_prefs.notification_frequency}
                 onValueChange={(v) => setCampaignPref('notification_frequency', v)}
               >
-                <SelectTrigger className="rounded-xl bg-card">
+                <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -58,7 +55,7 @@ export function CampaignNotificationsSection({ form, setCampaignPref, t }) {
                 value={String(form.scheduler_settings.campaign_notification_prefs.max_campaign_distance_km)}
                 onValueChange={(v) => setCampaignPref('max_campaign_distance_km', Number(v))}
               >
-                <SelectTrigger className="rounded-xl bg-card">
+                <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -81,14 +78,14 @@ export function CampaignNotificationsSection({ form, setCampaignPref, t }) {
               ['luxury_promos', 'luxuryPromos'],
               ['personal_stylist', 'personalstylist']
             ].map(([key, i18nKey]) => (
-              <div key={key} className="flex items-start gap-3 rounded-xl border border-border p-3 bg-card shadow-sm">
+              <div key={key} className="flex items-start gap-3 rounded-[12px] border border-border p-3 bg-white">
                 <Switch
                   checked={form.scheduler_settings.campaign_notification_prefs[key]}
                   onCheckedChange={(v) => setCampaignPref(key, !!v)}
                   data-testid={'campaign-toggle-' + key}
                 />
                 <div className="flex-1 mt-0.5">
-                  <div className="font-medium text-sm">
+                  <div className="font-semibold text-[12px] text-text-brand">
                     {t('campaigns.notifications.' + i18nKey)}
                   </div>
                 </div>

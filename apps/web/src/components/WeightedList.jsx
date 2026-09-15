@@ -43,14 +43,14 @@ export function WeightedList({
   return (
     <div>
       <div className="flex items-center justify-between">
-        <Label className="caps-label text-muted-foreground">{heading}</Label>
+        <Label>{heading}</Label>
         <span
-          className={`text-[10px] font-mono ${
+          className={`text-[10px] font-bold ${
             sum === 100
-              ? 'text-emerald-700'
+              ? 'text-primary-brand'
               : sum > 100
               ? 'text-rose-700'
-              : 'text-muted-foreground'
+              : 'text-text-brand'
           }`}
         >
           {sum}%
@@ -62,10 +62,10 @@ export function WeightedList({
             <Input
               id={`${testid}-name-${i}`}
               value={it.name || ''}
+              className="mb-0"
               onChange={(e) => update(i, { name: e.target.value })}
               placeholder={placeholder}
               disabled={disabled}
-              className="flex-1 rounded-xl h-9"
               data-testid={`${testid}-name-${i}`}
               aria-label={`${heading} item name ${i + 1}`}
             />
@@ -74,6 +74,7 @@ export function WeightedList({
               type="number"
               min="0"
               max="100"
+              className="w-30 mb-0"
               value={it.pct ?? ''}
               onChange={(e) =>
                 update(i, {
@@ -83,36 +84,34 @@ export function WeightedList({
                       : Math.max(0, Math.min(100, Number(e.target.value))),
                 })
               }
-              className="w-16 rounded-xl h-9 text-end"
               disabled={disabled}
               data-testid={`${testid}-pct-${i}`}
               aria-label={`${heading} item percentage ${i + 1}`}
             />
-            <span className="text-xs text-muted-foreground">%</span>
+            <span className="text-xs text-text-brand">%</span>
             <button
               type="button"
               onClick={() => remove(i)}
               disabled={disabled}
-              className="h-9 w-9 rounded-full flex items-center justify-center hover:bg-secondary"
+              className="flex items-center justify-center"
               aria-label={t('addItem.removeEntryAria', {
                 label: it.name || heading,
               })}
               data-testid={`${testid}-remove-${i}`}
             >
-              <Trash2 className="h-3.5 w-3.5" />
+              <Trash2 className="h-3.5 w-3.5 text-[#ef4444] hover:text-dark-brand" />
             </button>
           </div>
         ))}
         <Button
           type="button"
-          variant="ghost"
           size="sm"
+          className="!gap-0"
           onClick={add}
           disabled={disabled}
-          className="text-xs h-8 rounded-lg"
           data-testid={`${testid}-add`}
         >
-          <Plus className="h-3 w-3 me-1" /> {t('addItem.addAction')}
+          <Plus className="h-3 w-3 text-white" />{t('addItem.addAction')}
         </Button>
       </div>
     </div>

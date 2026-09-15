@@ -171,11 +171,8 @@ WHAT TO DO
    * **LOWER-BODY GARMENTS** (pants, trousers, jeans, shorts, skirts):
        - Match against **WAIST**, **HIP**, and **INSEAM**. Chest and shoulders are ignored.
 
-   * **TWO-PIECE SETS, SUITS, FULL-BODY OUTFITS, JUMPSUITS, OVERALLS, DRESSES**:
-       - When the garment is a two-piece set (e.g. shirt + pants set, suit, tracksuit), a jumpsuit, overalls, or dress, or when the chart contains BOTH upper-body headers (Bust/Chest/Shoulder/Top Length/Sleeve) AND lower-body headers (Waist/Hip/Inseam/Pants Length):
-       - You MUST evaluate **BOTH the upper-body dimensions (Chest/Bust/Shoulder) AND the lower-body dimensions (Waist/Hip)**.
-       - A single size is purchased for the set/outfit. Therefore, the recommended size MUST comfortably fit BOTH the top and bottom pieces (i.e. bounding size). If the user fits size 1XL on chest but their waist requires size 2XL because 1XL pants waist is too small, you MUST recommend 2XL so the pants are not too small. Explain in ``reasoning`` that 2XL accommodates both pieces (e.g. top and bottom).
-       - In ``matched_columns``, include the relevant columns evaluated from both pieces (e.g. ``["chest", "shoulder", "waist", "hip"]``).
+   * **FULL-BODY GARMENTS** (dresses, jumpsuits, suits):
+       - Check chest, waist, and hip. Pick the smallest size accommodating all relevant dimensions.
 
    * **CIRCUMFERENCE columns** (Bust / Chest / Waist / Hip / Neck / Thigh) — the garment must be at least as wide as the user.
        - Range cell "lo-hi": user value must satisfy ``lo <= v <= hi``.
@@ -371,13 +368,12 @@ def _build_user_prompt(
         f"USER CLOTHING SIZES THEY NORMALLY BUY:\n{clothing_sizes_str}",
         f"USER HEIGHT / WEIGHT CONTEXT:\n{context_dims_str}",
         (
+            "IMPORTANT:\n"
             "- For UPPER-BODY garments (shirts, tops, t-shirts, jackets, hoodies, coats, sweaters, bras): "
             "recommend based on CHEST / BUST and SHOULDERS. NEVER use HIP / HIPS to oversize or constrain upper-body garments!\n"
             "- For FOOTWEAR / SHOES: recommend based EXCLUSIVELY on FOOTWEAR DIMENSIONS (foot_length) or shoe_size. "
             "Do NOT check torso/body measurements against shoe charts!\n"
             "- For LOWER-BODY garments (pants, jeans, shorts, skirts): recommend based on WAIST, HIP, and INSEAM.\n"
-            "- For TWO-PIECE SETS, SUITS, MULTI-PIECE OUTFITS, DRESSES, JUMPSUITS, OVERALLS, or charts with BOTH upper and lower sizing columns: "
-            "recommend the bounding size that fits BOTH the top (Chest/Bust/Shoulder) AND the bottom (Waist/Hip/Inseam). If 1XL chest fits but 1XL waist is too small, recommend 2XL so the pants fit!\n"
             "- If BODY CIRCUMFERENCES is empty `{}` but CLOTHING SIZES has "
             "``shirt_size``/``pants_size``/``shoe_size``, USE THAT as the primary signal "
             "(see CLOTHING-SIZE FALLBACK in your system prompt).\n"
@@ -462,8 +458,6 @@ def _build_user_text_only_prompt(
             "- For FOOTWEAR / SHOES: recommend based EXCLUSIVELY on FOOTWEAR DIMENSIONS (foot_length) or shoe_size. "
             "Do NOT check torso/body measurements against shoe charts!\n"
             "- For LOWER-BODY garments (pants, jeans, shorts, skirts): recommend based on WAIST, HIP, and INSEAM.\n"
-            "- For TWO-PIECE SETS, SUITS, MULTI-PIECE OUTFITS, DRESSES, JUMPSUITS, OVERALLS, or charts with BOTH upper and lower sizing columns: "
-            "recommend the bounding size that fits BOTH the top (Chest/Bust/Shoulder) AND the bottom (Waist/Hip/Inseam). If 1XL chest fits but 1XL waist is too small, recommend 2XL so the pants fit!\n"
             "- If BODY CIRCUMFERENCES is empty `{}` but CLOTHING SIZES has "
             "``shirt_size``/``pants_size``/``shoe_size``, USE THAT as the primary signal.\n"
             "- Do **NOT** reply that 'measurements were not provided' if "
@@ -605,7 +599,7 @@ _SINGLE_NUM_RE = re.compile(r"\b(\d{1,3}(?:[.,]\d)?)\b")
 
 _UPPER_BODY_TYPES = {
     "shirt", "t-shirt", "tshirt", "blouse", "top", "jacket", "coat",
-    "hoodie", "sweater", "jumper", "blazer", "cardigan",
+    "hoodie", "sweater", "jumper", "suit", "blazer", "cardigan",
     "tank", "vest", "bra", "bralette",
 }
 _LOWER_BODY_TYPES = {
@@ -617,34 +611,12 @@ _FOOTWEAR_TYPES = {
     "sandals", "footwear", "loafer", "loafers", "heel", "heels",
     "flat", "flats", "slipper", "slippers", "pump", "pumps", "clog", "clogs",
 }
-_FULL_BODY_TYPES = {
-    "dress", "jumpsuit", "romper", "swimwear", "overall", "overalls",
-    "suit", "suits", "set", "sets", "outfit", "outfits", "tracksuit", "sweatsuit",
-    "co-ord", "coord", "2-piece", "2-pieces", "two-piece", "two piece",
-    "matching outfit", "matching set", "matching-outfit",
-}
+_FULL_BODY_TYPES = {"dress", "jumpsuit", "romper", "swimwear"}
 
 
 def _detect_category(garment_type: str | None, chart_text: str) -> str:
-    tl = chart_text.lower()
-    has_foot = any(w in tl for w in ("foot", "insole", "heel to toe", "shoe", "footwear"))
-    has_upper = any(w in tl for w in ("chest", "bust", "shoulder", "sleeve", "top length"))
-    has_lower = any(w in tl for w in ("waist", "hip", "hips", "inseam", "thigh", "pants length"))
-
-    # If the chart clearly contains BOTH upper and lower body measurement headers/columns,
-    # it is definitely a full-body outfit / two-piece set, regardless of a partial title hint.
-    if has_upper and has_lower:
-        return "full"
-
     if garment_type:
         gt = garment_type.lower().strip()
-        for w in _FULL_BODY_TYPES:
-            if re.search(r"\b" + re.escape(w) + r"\b", gt):
-                return "full"
-        has_gt_upper = any(re.search(r"\b" + re.escape(w) + r"\b", gt) for w in _UPPER_BODY_TYPES)
-        has_gt_lower = any(re.search(r"\b" + re.escape(w) + r"\b", gt) for w in _LOWER_BODY_TYPES)
-        if has_gt_upper and has_gt_lower:
-            return "full"
         for w in _FOOTWEAR_TYPES:
             if re.search(r"\b" + re.escape(w) + r"\b", gt):
                 return "footwear"
@@ -654,6 +626,14 @@ def _detect_category(garment_type: str | None, chart_text: str) -> str:
         for w in _LOWER_BODY_TYPES:
             if re.search(r"\b" + re.escape(w) + r"\b", gt):
                 return "lower"
+        for w in _FULL_BODY_TYPES:
+            if re.search(r"\b" + re.escape(w) + r"\b", gt):
+                return "full"
+
+    tl = chart_text.lower()
+    has_foot = any(w in tl for w in ("foot", "insole", "heel to toe", "shoe", "footwear"))
+    has_upper = any(w in tl for w in ("chest", "bust", "shoulder", "sleeve"))
+    has_lower = any(w in tl for w in ("waist", "hip", "hips", "inseam", "thigh"))
 
     if has_foot and not has_upper and not has_lower:
         return "footwear"
@@ -661,6 +641,8 @@ def _detect_category(garment_type: str | None, chart_text: str) -> str:
         return "upper"
     if has_lower and not has_upper:
         return "lower"
+    if has_upper and has_lower:
+        return "full"
     return "upper" if has_upper else ("footwear" if has_foot else "unknown")
 
 
@@ -1036,12 +1018,10 @@ def _heuristic_match(
     if not matched_cols:
         matched_cols = [primary_field]
 
-    garment_out_type = garment_type or ("suit/set" if category == "full" else ("shirt" if category == "upper" else ("pants" if category == "lower" else "unknown")))
-
     return {
         "recommended_size": chosen["label"].upper(),
         "confidence": 0.55,
-        "garment_type": garment_out_type,
+        "garment_type": garment_type or ("shirt" if category == "upper" else ("pants" if category == "lower" else "unknown")),
         "size_chart_units": "cm",
         "matched_columns": matched_cols,
         "reasoning": reason,
@@ -1156,7 +1136,31 @@ async def analyze_chart(
     # DOM text extraction often picks up unrelated product specs or body
     # text (e.g. random sizes on the page).
     # ---------------------------------------------------------------
-    if payload.chart_screenshot_b64:
+    candidate_texts: list[str] = []
+    for t in (chart_text, chart_text_html, chart_text_innertext):
+        if t and t not in candidate_texts:
+            candidate_texts.append(t)
+    for cand in candidate_texts:
+        decided = _heuristic_match(
+            chart_text=cand,
+            measurements=measurements,
+            garment_type=payload.garment_type,
+        )
+        if decided is not None:
+            parsed = decided
+            source = "heuristic"
+            log.info(
+                "size-chart resolved by heuristic in %d ms",
+                int((time.time() - t0) * 1000),
+            )
+            break
+
+    # ---------------------------------------------------------------
+    # Step 2 — Gemini 2.5 Flash vision OCR + sizing in one shot.
+    # The screenshot is the source of truth. Gemini reads the chart,
+    # matches the user's measurements, and emits the JSON answer.
+    # ---------------------------------------------------------------
+    if parsed is None and payload.chart_screenshot_b64:
         user_prompt = _build_user_prompt(
             measurements=measurements,
             garment_type=payload.garment_type,
@@ -1475,21 +1479,18 @@ class PredictMeasurementsOut(BaseModel):
     response_model=PredictMeasurementsOut,
     summary="Predict body measurements from core biometrics",
 )
+@router.post(
+    "/predict_measurements",
+    response_model=PredictMeasurementsOut,
+    include_in_schema=False,
+)
 async def predict_measurements(payload: PredictMeasurementsIn):
     """Predict 6 body measurements from 4 core inputs + gender.
 
     Uses a GradientBoostingRegressor trained on the public-domain
-    ANSUR II dataset (~6 000 subjects).  Stateless, no auth required —
+    ANSUR II dataset (~6 000 subjects). Stateless, no auth required —
     can be called during onboarding before the user has an account.
     """
-    try:
-        from app.services.body_predictor import get_predictor
-    except ImportError:
-        raise HTTPException(
-            status_code=501,
-            detail="ML prediction model not available (scikit-learn not installed).",
-        )
-
     g_str = (payload.gender or "female").lower()
     if g_str not in ("male", "female"):
         g_str = "female"
@@ -1499,8 +1500,11 @@ async def predict_measurements(payload: PredictMeasurementsIn):
     wa = payload.waist if (payload.waist and payload.waist > 0) else 80.0
     fl = payload.foot_length if (payload.foot_length and payload.foot_length > 0) else 26.0
 
-    predictor = get_predictor()
+    result = None
+    predictor = None
     try:
+        from app.services.body_predictor import get_predictor
+        predictor = get_predictor()
         result = predictor.predict(
             height_cm=h,
             weight_kg=w,
@@ -1508,17 +1512,15 @@ async def predict_measurements(payload: PredictMeasurementsIn):
             foot_length_cm=fl,
             gender=g_str,
         )
-    except FileNotFoundError as exc:
-        raise HTTPException(status_code=503, detail=str(exc))
     except Exception as exc:
-        # Fallback response if prediction fails
+        log.warning("ML body predictor unavailable or failed, using anthropometric formula: %s", exc)
         result = {
-            "shoulders": round(h * 0.23, 1),
-            "chest": round(wa * 1.15, 1),
-            "hip": round(wa * 1.2, 1),
+            "shoulders": round(h * 0.235, 1) if g_str == "male" else round(h * 0.22, 1),
+            "chest": round(wa * 1.18 + (w - 70) * 0.2, 1) if g_str == "male" else round(wa * 1.12 + (w - 60) * 0.2, 1),
+            "hip": round(wa * 1.15 + (w - 70) * 0.15, 1) if g_str == "male" else round(wa * 1.28 + (w - 60) * 0.25, 1),
             "sleeve": round(h * 0.35, 1),
             "inseam": round(h * 0.45, 1),
-            "outseam": round(h * 0.6, 1),
+            "outseam": round(h * 0.60, 1),
         }
 
     # Calculate recommended sizes and measurements dict
@@ -1545,7 +1547,7 @@ async def predict_measurements(payload: PredictMeasurementsIn):
 
     return PredictMeasurementsOut(
         **result,
-        model_version=getattr(predictor, "model_version", "v1.0-fallback"),
+        model_version=getattr(predictor, "model_version", "v1.0-fallback") if predictor else "v1.0-fallback",
         measurements=measurements_dict,
         recommended_sizes=rec_sizes,
     )

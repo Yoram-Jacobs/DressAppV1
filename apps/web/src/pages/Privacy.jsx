@@ -3,7 +3,8 @@ import { Helmet } from 'react-helmet-async';
 import { Card, CardContent } from '@/components/ui/card';
 import { parseMarkdown } from '@/lib/parseMarkdown';
 import { useLegalPage } from '@/lib/useLegalPage';
-
+import PrivacyBanner from '../assets/img/inner6.webp';
+import { PageHeroBanner } from '@/components/ui/PageHeroBanner';
 export default function Privacy() {
   const { t, i18n } = useTranslation();
   const { content, loading } = useLegalPage({
@@ -30,21 +31,75 @@ export default function Privacy() {
         <link rel="canonical" href={canonicalUrl} />
         <meta property="og:url" content={canonicalUrl} />
       </Helmet>
-      <div className="container mx-auto max-w-3xl px-4 py-8">
-        <Card className="rounded-[calc(var(--radius)+6px)] shadow-editorial">
-          <CardContent className="p-6 md:p-10">
+
+      {/* Banner Section */}
+      <PageHeroBanner image={PrivacyBanner}>
+        <div className="relative z-10 w-full">
+          <div
+            className="
+              px-10 py-20
+               max-[991px]:px-[15px] max-[991px]:py-[30px]
+            max-[767px]:px-[15px] max-[767px]:py-[30px]
+            max-[480px]:px-[15px] max-[480px]:py-[30px]
+            "
+          >
+            <div className="max-w-[520px]">
+              {/* Title */}
+              <h1
+                className="
+                  m-0 mb-0
+                  text-[40px] leading-[40px]
+                  font-bold
+                  tracking-normal
+                  text-white
+                  max-[767px]:text-[30px]
+                max-[480px]:text-[20px]
+                max-[480px]:leading-[30px]
+                max-[480px]:mb-3
+                "
+              >
+                {t('privacy.bannerTitle', { defaultValue: 'Privacy Policy' })}
+              </h1>
+              {/* Description */}
+              <p
+                className="
+                  my-5
+                  max-w-[450px]
+                  text-[14px]
+                  leading-6
+                  tracking-[0.5px]
+                  text-white/60
+                  max-[767px]:max-w-full
+                  max-[767px]:mt-[15px]
+                "
+              >
+                {t('privacy.bannerDescription', {
+                  defaultValue: 'Your trust matters to us. Learn how DressApp collects, uses, and protects your personal data.',
+                })}
+              </p>
+            </div>
+          </div>
+        </div>
+      </PageHeroBanner>
+
+      {/* Content Section */}
+      <div className="px-[40px] py-[40px] bg-[var(--accent-beige)]  max-[991px]:px-[15px] max-[991px]:py-[30px]
+            max-[767px]:px-[15px] max-[767px]:py-[30px]
+            max-[480px]:px-[15px] max-[480px]:py-[30px]">
+        <Card className="bg-white rounded-[20px] shadow-[0_0_20px_rgba(0,0,0,0.05)]">
+          <CardContent className="p-5">
             {loading && (
               <div className="flex justify-center py-12">
                 <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
               </div>
             )}
             {!loading && content && (
-              <div className="space-y-1">
+              <div className="space-y-2">
                 {parseMarkdown(content)}
               </div>
             )}
             {!loading && !content && (
-              <p className="text-sm text-muted-foreground text-center py-12">
+              <p className="text-sm text-dark-brand text-center py-12">
                 {t('privacy.loadError', { defaultValue: 'Privacy policy could not be loaded. Please try again later.' })}
               </p>
             )}

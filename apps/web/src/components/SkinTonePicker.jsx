@@ -33,19 +33,19 @@ export default function SkinTonePicker({ value = '#9CA3AF', onChange, className 
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-2 p-2 rounded-xl bg-card border border-border hover:bg-accent/50 transition-colors shadow-sm focus:outline-none focus:ring-2 focus:ring-ring"
+        className="flex items-center gap-2 p-1 rounded-full bg-white border border-border transition-colors shadow-sm focus:outline-none"
         aria-label="Select Skin Tone"
       >
         <span
-          className="w-7 h-7 rounded-lg border border-black/10 dark:border-white/20 shadow-inner flex items-center justify-center shrink-0 transition-transform active:scale-95"
+          className="w-6 h-6 rounded-full border border-border dark:border-white/20 shadow-inner flex items-center justify-center shrink-0 transition-transform active:scale-95"
           style={{ backgroundColor: activeColor }}
         />
-        <ChevronDown className={`w-4 h-4 text-muted-foreground transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
+        <ChevronDown className={`w-4 h-4 text-text-brand transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
       </button>
 
       {/* Dropdown Menu - No text, strictly color squares */}
       {isOpen && (
-        <div className="absolute end-0 mt-2 z-50 p-2.5 bg-card/95 backdrop-blur-md rounded-2xl border border-border shadow-xl grid grid-cols-4 gap-2.5 min-w-[170px] animate-in fade-in zoom-in-95 duration-150">
+        <div className="absolute end-0 mt-2 z-50 p-2.5 bg-white backdrop-blur-md rounded-[12px] border border-border grid grid-cols-4 gap-2.5 min-w-[170px] animate-in fade-in zoom-in-95 duration-150">
           {SKIN_TONE_PALETTE.map((item) => {
             const isSelected = activeColor.toLowerCase() === item.color.toLowerCase();
             return (
@@ -58,13 +58,13 @@ export default function SkinTonePicker({ value = '#9CA3AF', onChange, className 
                 }}
                 className={`group relative w-8 h-8 rounded-lg border transition-all flex items-center justify-center ${
                   isSelected 
-                    ? 'ring-2 ring-primary ring-offset-2 ring-offset-background border-transparent scale-105' 
-                    : 'border-black/10 dark:border-white/20 hover:scale-105 hover:shadow-md'
+                    ? 'ring-2 ring-primary-brand ring-offset-2 ring-offset-background border-transparent scale-105' 
+                    : 'border-border dark:border-white/20 hover:scale-105 hover:shadow-md'
                 }`}
                 style={{ backgroundColor: item.color }}
               >
                 {isSelected && (
-                  <Check className={`w-4 h-4 ${['#fdf0ea', '#f5d0a9'].includes(item.color.toLowerCase()) ? 'text-black/80' : 'text-white'}`} />
+                  <Check className={`w-4 h-4 ${['#fdf0ea', '#f5d0a9'].includes(item.color.toLowerCase()) ? 'text-black/80' : 'text-primary-brand'}`} />
                 )}
               </button>
             );

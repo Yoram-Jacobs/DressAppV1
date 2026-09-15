@@ -247,33 +247,12 @@ export function detectGarmentType(_doc = document) {
     _doc.querySelector('h1')?.innerText,
     _doc.title,
   ].filter(Boolean).join(' ').toLowerCase();
-
-  // Multi-piece sets & full-body garments should match with highest priority
-  const setKeywords = [
-    'matching outfit', 'matching-outfit', 'outfit set', 'outfit', 'outfits',
-    '2-pieces', '2 pieces', '2-piece', '2 piece', 'two-piece', 'two piece',
-    'pants set', 'skirt set', 'short set', 'shorts set',
-    'tracksuit', 'sweatsuit', 'co-ord', 'coord', 'jumpsuit', 'romper', 'overall', 'overalls',
-    'suit set', 'suit', 'suits'
-  ];
-  for (const phrase of setKeywords) {
-    const re = new RegExp(`(^|[^a-z0-9])${phrase}([^a-z0-9]|$)`, 'i');
-    if (re.test(sources)) return phrase;
-  }
-
-  // If the product title mentions both an upper piece and a lower piece (e.g. "shirt and trousers", "top & pants")
-  const hasUpperMention = /(?:^|[^a-z0-9])(?:shirt|t-shirt|tshirt|top|blouse|jacket|coat|hoodie|sweater|blazer|cardigan|tank|vest)(?:[^a-z0-9]|$)/i.test(sources);
-  const hasLowerMention = /(?:^|[^a-z0-9])(?:pants|trousers|jeans|shorts|skirt|leggings|sweatpants|bottom|bottoms)(?:[^a-z0-9]|$)/i.test(sources);
-  if (hasUpperMention && hasLowerMention) {
-    return 'two-piece set';
-  }
-
   const dict = [
     'sneakers', 'sneaker', 'boots', 'boot', 'sandals', 'sandal', 'loafers', 'loafer',
     'heels', 'heel', 'flats', 'flat', 'slippers', 'slipper', 'pumps', 'pump',
     'clogs', 'clog', 'shoes', 'shoe', 'footwear',
     't-shirt', 'tshirt', 'shirt', 'blouse', 'dress', 'skirt', 'pants', 'trousers',
-    'jeans', 'shorts', 'jacket', 'coat', 'hoodie', 'sweater', 'jumper',
+    'jeans', 'shorts', 'jacket', 'coat', 'hoodie', 'sweater', 'jumper', 'suit',
     'blazer', 'cardigan', 'swimwear', 'bra', 'underwear', 'briefs', 'bralette',
     'socks', 'leggings', 'tights', 'tank', 'top'
   ];

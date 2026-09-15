@@ -1,9 +1,19 @@
 import axios from 'axios';
 
-const rawBackendUrl = (process.env.REACT_APP_BACKEND_URL || '').trim();
-const BACKEND_URL = (rawBackendUrl && !rawBackendUrl.endsWith('://') && rawBackendUrl !== 'https://' && rawBackendUrl !== 'http://')
-  ? rawBackendUrl.replace(/\/+$/, '')
-  : '';
+export const getBackendUrl = () => {
+  const raw = (process.env.REACT_APP_BACKEND_URL || '').trim();
+  if (typeof window !== 'undefined' && window.location?.hostname) {
+    const isLocal = ['localhost', '127.0.0.1', '0.0.0.0', '::1'].includes(window.location.hostname);
+    if (!isLocal && (raw.includes('localhost') || raw.includes('127.0.0.1'))) {
+      return '';
+    }
+  }
+  return (raw && !raw.endsWith('://') && raw !== 'https://' && raw !== 'http://')
+    ? raw.replace(/\/+$/, '')
+    : '';
+};
+
+export const BACKEND_URL = getBackendUrl();
 export const API_BASE = `${BACKEND_URL}/api/v1`;
 
 const STORAGE_TOKEN = 'dressapp.token';

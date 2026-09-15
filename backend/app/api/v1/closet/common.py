@@ -97,7 +97,7 @@ logger.info(
 
 
 class CreateItemIn(BaseModel):
-    model_config = ConfigDict(extra="forbid")
+    model_config = ConfigDict(extra="ignore")
     source: Source = "Private"
     # Descriptive
     name: str | None = None
@@ -136,6 +136,8 @@ class CreateItemIn(BaseModel):
     original_image_url: str | None = None
     image_base64: str | None = None
     crop_base64: str | None = None
+    clean_image_url: str | None = None
+    clean_image_status: str | None = None
     image_mime: str = "image/jpeg"
     # Phase Q — Wardrobe Reconstructor (optional; set by /analyze response)
     reconstructed_image_b64: str | None = None
@@ -217,7 +219,7 @@ class CreateItemIn(BaseModel):
 
 
 class UpdateItemIn(BaseModel):
-    model_config = ConfigDict(extra="forbid")
+    model_config = ConfigDict(extra="ignore")
     source: Source | None = None
     # Grouping
     group_id: str | None = None

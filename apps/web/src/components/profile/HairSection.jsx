@@ -9,33 +9,30 @@ const HAIR_TYPE = ['straight', 'wavy', 'curly', 'coily'];
 
 export function HairSection({ form, setNested, t }) {
   return (
-    <AccordionItem value="hair" className="border border-border/80 rounded-2xl bg-card overflow-hidden shadow-sm hover:shadow-[0_4px_20px_-4px_rgba(0,0,0,0.08)] transition-all duration-300">
-      <AccordionTrigger
-        className="hover:no-underline px-5 py-4 focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-none"
-        data-testid="profile-accordion-hair"
-      >
+    <AccordionItem value="hair" className="p-3 border border-border rounded-[12px] bg-white overflow-hidden shadow-sm hover:shadow-[0_4px_20px_-4px_rgba(0,0,0,0.08)] hover:border-primary-brand hover:bg-primary-shadow transition-all duration-300">
+      <AccordionTrigger className="hover:no-underline focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-none py-0">
         <div className="flex items-center gap-4 text-start">
           <div className="p-2.5 rounded-xl bg-[hsl(38_90%_92%)] text-[hsl(38_90%_45%)] dark:bg-[hsl(38_30%_18%)] dark:text-[hsl(38_90%_65%)] shrink-0 transition-transform duration-200">
             <Scissors className="h-5 w-5" />
           </div>
           <div>
-            <span className="text-sm font-semibold tracking-wide block text-foreground uppercase">
+            <span className="text-[13px] font-bold block text-dark-brand">
               {t('profile.sections.hair')}
             </span>
-            <span className="text-[10px] text-muted-foreground font-normal block mt-0.5 normal-case truncate max-w-[200px]">
+            <span className="text-[11px] text-text-brand font-semibold block normal-case">
               {t('profile.sections.hairDesc', { defaultValue: 'Hair length, type, style, and color properties' })}
             </span>
           </div>
         </div>
       </AccordionTrigger>
-      <AccordionContent className="px-5 pb-5 pt-3 border-t border-border/40 bg-secondary/5">
+      <AccordionContent className="border-t border-border space-y-3 pt-4 pb-0 mt-3">
         <div className="grid grid-cols-2 gap-3">
           <Field label={t('profile.hairFields.length')}>
             <Select
               value={form.hair.length || ''}
               onValueChange={(v) => setNested('hair', 'length', v)}
             >
-              <SelectTrigger className="rounded-xl bg-card" data-testid="profile-hair-length">
+              <SelectTrigger data-testid="profile-hair-length">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -52,7 +49,7 @@ export function HairSection({ form, setNested, t }) {
               value={form.hair.type || ''}
               onValueChange={(v) => setNested('hair', 'type', v)}
             >
-              <SelectTrigger className="rounded-xl bg-card" data-testid="profile-hair-type">
+              <SelectTrigger data-testid="profile-hair-type">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -68,7 +65,6 @@ export function HairSection({ form, setNested, t }) {
             <Input
               value={form.hair.color}
               onChange={(e) => setNested('hair', 'color', e.target.value)}
-              className="rounded-xl bg-card"
               data-testid="profile-hair-color"
             />
           </Field>
@@ -76,7 +72,6 @@ export function HairSection({ form, setNested, t }) {
             <Input
               value={form.hair.style}
               onChange={(e) => setNested('hair', 'style', e.target.value)}
-              className="rounded-xl bg-card"
               data-testid="profile-hair-style"
             />
           </Field>

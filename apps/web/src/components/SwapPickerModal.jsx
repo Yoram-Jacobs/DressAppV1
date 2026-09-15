@@ -85,20 +85,15 @@ export function SwapPickerModal({
         className="max-w-3xl"
         data-testid="swap-picker-modal"
       >
-        <DialogHeader>
-          <DialogTitle className="font-display text-2xl">
-            {t('components.swapPickerModal.offer_an_item_in_exchange')}
-          </DialogTitle>
-          <DialogDescription>
-            Pick one item from your closet to swap for{' '}
-            <span className="font-medium text-foreground">
-              {listingTitle || 'this listing'}
-            </span>
-            {t('components.swapPickerModal.the_lister_will_be_emailed')}
-          </DialogDescription>
-        </DialogHeader>
-
-        <ScrollArea className="max-h-[55vh] pe-2 -me-2">
+        <DialogTitle>{t('components.swapPickerModal.offer_an_item_in_exchange')}</DialogTitle>
+        <DialogDescription>
+          Pick one item from your closet to swap for{' '}
+          <span className="font-medium text-foreground">
+            {listingTitle || 'this listing'}
+          </span>
+          {t('components.swapPickerModal.the_lister_will_be_emailed')}
+        </DialogDescription>
+        <div className="h-[55vh] overflow-y-auto pe-2 -me-2">
           {loading ? (
             <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
               {Array.from({ length: 6 }).map((_, i) => (
@@ -110,7 +105,7 @@ export function SwapPickerModal({
             </div>
           ) : items.length === 0 ? (
             <div
-              className="py-12 text-center text-sm text-muted-foreground flex flex-col items-center gap-3"
+              className="py-12 text-center text-sm text-text-brand flex flex-col items-center gap-3"
               data-testid="swap-picker-empty"
             >
               <ShirtIcon className="h-10 w-10 opacity-40" />
@@ -130,41 +125,41 @@ export function SwapPickerModal({
                     type="button"
                     onClick={() => setSelected(isSelected ? null : it.id)}
                     className={[
-                      'group relative rounded-[calc(var(--radius)+4px)] overflow-hidden',
+                      'group relative rounded-[12px] overflow-hidden',
                       'border transition-shadow text-start',
-                      'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--accent))]',
+                      'focus-visible:outline-none',
                       isSelected
-                        ? 'border-[hsl(var(--accent))] shadow-editorial-md ring-2 ring-[hsl(var(--accent))]'
-                        : 'border-border hover:shadow-editorial',
+                        ? 'border-primary-brand shadow-sm'
+                        : 'border-border hover:shadow-md',
                     ].join(' ')}
                     data-testid={`swap-picker-item-${it.id}`}
                     data-selected={isSelected ? 'true' : 'false'}
                   >
-                    <AspectRatio ratio={3 / 4} className="bg-secondary">
+                    <AspectRatio ratio={3 / 4} className="bg-accent-beige">
                       {img ? (
                         <img
                           src={img}
                           alt={it.title}
-                          className="w-full h-full object-cover"
+                          className="w-full h-full object-contain"
                         />
                       ) : (
-                        <div className="w-full h-full flex items-center justify-center text-muted-foreground caps-label">
+                        <div className="w-full h-full flex items-center justify-center text-text-brand caps-label">
                           {t('itemDetail.noImage', { defaultValue: 'No image' })}
                         </div>
                       )}
                       {isSelected && (
-                        <div className="absolute top-2 end-2 rounded-full bg-background/95 text-[hsl(var(--accent))] p-1 shadow">
+                        <div className="absolute top-2 end-2 rounded-full bg-primary-shadow text-primary-brand p-1 shadow">
                           <CheckCircle2 className="h-5 w-5" />
                         </div>
                       )}
                     </AspectRatio>
                     <div className="p-2">
-                      <div className="font-medium text-sm truncate">
+                      <div className="font-bold text-dark-brand text-[12px] truncate">
                         {it.title}
                       </div>
                       <div className="flex items-center gap-1.5 mt-1">
                         {it.brand && (
-                          <span className="text-xs text-muted-foreground truncate">
+                          <span className="text-[10px] font-semibold text-text-brand truncate">
                             {it.brand}
                           </span>
                         )}
@@ -180,8 +175,7 @@ export function SwapPickerModal({
               })}
             </div>
           )}
-        </ScrollArea>
-
+        </div>
         <DialogFooter className="mt-4">
           <Button
             variant="ghost"

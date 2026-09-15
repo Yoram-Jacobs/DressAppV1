@@ -4,11 +4,47 @@ import { useTranslation } from 'react-i18next';
 import { Shirt, Sparkles, Store, User, Camera } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/lib/auth';
+import { resolveMediaUrl } from '@/lib/itemImage';
+import { useState, useRef, useEffect } from 'react';
+
+const BottomTabAvatar = ({ user, isActive, label }) => {
+  const [imgFailed, setImgFailed] = useState(false);
+  const rawUrl = user?.face_photo_url || user?.avatar_url;
+  const photoUrl = resolveMediaUrl(rawUrl);
+
+  const prevUrlRef = useRef(rawUrl);
+  useEffect(() => {
+    if (prevUrlRef.current !== rawUrl) {
+      prevUrlRef.current = rawUrl;
+      setImgFailed(false);
+    }
+  }, [rawUrl]);
+
+  if (photoUrl && !imgFailed) {
+    return (
+      <img
+        src={photoUrl}
+        alt={label}
+        onError={() => setImgFailed(true)}
+        className={cn('h-5 w-5 rounded-full object-cover border border-border/80', isActive && 'ring-2 ring-[hsl(var(--accent))]')}
+      />
+    );
+  }
+
+  return <User className={cn('h-5 w-5', isActive && 'stroke-[2.2]')} />;
+};
 
 export const BottomTabs = () => {
   const { t } = useTranslation();
   const { user } = useAuth();
-  const userPhoto = user?.face_photo_url || user?.avatar_url;
+
+  const handleTabClick = (path) => {
+    if (window.location.pathname === path) {
+      window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
+      const mainEl = document.getElementById('main-content');
+      if (mainEl) mainEl.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
 
   return (
     <nav
@@ -22,14 +58,15 @@ export const BottomTabs = () => {
         <li className="flex">
           <NavLink
             to="/closet"
+            onClick={() => handleTabClick('/closet')}
             data-testid="bottom-tab-closet"
             aria-label={t('nav.closet')}
             className={({ isActive }) =>
               cn(
                 'flex-1 flex flex-col items-center justify-center rounded-lg px-1 py-1 min-h-[52px]',
                 isActive
-                  ? 'text-[hsl(var(--accent))] font-medium'
-                  : 'text-muted-foreground hover:text-foreground'
+                  ? 'text-primary-brand font-semibold'
+                  : 'text-text-brand hover:text-dark-brand'
               )
             }
           >
@@ -43,7 +80,7 @@ export const BottomTabs = () => {
                 {isActive && (
                   <motion.span
                     layoutId="active-tab-underline"
-                    className="h-[2px] w-5 bg-[hsl(var(--accent))] rounded-full"
+                    className="h-[2px] w-5 bg-primary-brand rounded-full"
                   />
                 )}
               </motion.span>
@@ -55,14 +92,15 @@ export const BottomTabs = () => {
         <li className="flex">
           <NavLink
             to="/stylist"
+            onClick={() => handleTabClick('/stylist')}
             data-testid="bottom-tab-stylist"
             aria-label={t('nav.stylist')}
             className={({ isActive }) =>
               cn(
                 'flex-1 flex flex-col items-center justify-center rounded-lg px-1 py-1 min-h-[52px]',
                 isActive
-                  ? 'text-[hsl(var(--accent))] font-medium'
-                  : 'text-muted-foreground hover:text-foreground'
+                  ? 'text-primary-brand font-semibold'
+                  : 'text-text-brand hover:text-dark-brand'
               )
             }
           >
@@ -76,7 +114,7 @@ export const BottomTabs = () => {
                 {isActive && (
                   <motion.span
                     layoutId="active-tab-underline"
-                    className="h-[2px] w-5 bg-[hsl(var(--accent))] rounded-full"
+                    className="h-[2px] w-5 bg-primary-brand rounded-full"
                   />
                 )}
               </motion.span>
@@ -106,14 +144,15 @@ export const BottomTabs = () => {
         <li className="flex">
           <NavLink
             to="/market"
+            onClick={() => handleTabClick('/market')}
             data-testid="bottom-tab-market"
             aria-label={t('nav.market')}
             className={({ isActive }) =>
               cn(
                 'flex-1 flex flex-col items-center justify-center rounded-lg px-1 py-1 min-h-[52px]',
                 isActive
-                  ? 'text-[hsl(var(--accent))] font-medium'
-                  : 'text-muted-foreground hover:text-foreground'
+                  ? 'text-primary-brand font-semibold'
+                  : 'text-text-brand hover:text-dark-brand'
               )
             }
           >
@@ -127,7 +166,7 @@ export const BottomTabs = () => {
                 {isActive && (
                   <motion.span
                     layoutId="active-tab-underline"
-                    className="h-[2px] w-5 bg-[hsl(var(--accent))] rounded-full"
+                    className="h-[2px] w-5 bg-primary-brand rounded-full"
                   />
                 )}
               </motion.span>
@@ -139,14 +178,15 @@ export const BottomTabs = () => {
         <li className="flex">
           <NavLink
             to="/me"
+            onClick={() => handleTabClick('/me')}
             data-testid="bottom-tab-me"
             aria-label={t('nav.me')}
             className={({ isActive }) =>
               cn(
                 'flex-1 flex flex-col items-center justify-center rounded-lg px-1 py-1 min-h-[52px]',
                 isActive
-                  ? 'text-[hsl(var(--accent))] font-medium'
-                  : 'text-muted-foreground hover:text-foreground'
+                  ? 'text-primary-brand font-semibold'
+                  : 'text-text-brand hover:text-dark-brand'
               )
             }
           >
@@ -155,20 +195,12 @@ export const BottomTabs = () => {
                 whileTap={{ scale: 0.92 }}
                 className="flex flex-col items-center gap-0.5"
               >
-                {userPhoto ? (
-                  <img
-                    src={userPhoto}
-                    alt={t('nav.me')}
-                    className={cn('h-5 w-5 rounded-full object-cover border border-border/80', isActive && 'ring-2 ring-[hsl(var(--accent))]')}
-                  />
-                ) : (
-                  <User className={cn('h-5 w-5', isActive && 'stroke-[2.2]')} />
-                )}
+                <BottomTabAvatar user={user} isActive={isActive} label={t('nav.me')} />
                 <span className="text-[10px] tracking-wide">{t('nav.me')}</span>
                 {isActive && (
                   <motion.span
                     layoutId="active-tab-underline"
-                    className="h-[2px] w-5 bg-[hsl(var(--accent))] rounded-full"
+                    className="h-[2px] w-5 bg-primary-brand rounded-full"
                   />
                 )}
               </motion.span>

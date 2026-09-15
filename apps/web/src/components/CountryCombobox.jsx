@@ -90,7 +90,7 @@ export function CountryCombobox({
           aria-expanded={open}
           disabled={disabled}
           className={cn(
-            'w-full justify-between rounded-xl font-normal',
+            'w-full justify-between px-[12px] py-[6px] h-11 rounded-[8px] font-normal',
             !value && 'text-muted-foreground',
           )}
           data-testid={testid}
@@ -131,18 +131,18 @@ export function CountryCombobox({
                     onSelect={() => select(c)}
                     data-testid={`country-option-${c.code}`}
                   >
-                    <span className="me-2 text-base leading-none">
+                    <span className="text-[10px] leading-none">
                       {flagEmoji(c.code)}
                     </span>
                     <span className="truncate">{c.localName}</span>
                     {c.localName !== c.name && (
-                      <span className="ms-2 text-xs text-muted-foreground truncate">
+                      <span className="ms-2 text-[12px] text-text-brand font-semibold truncate">
                         {c.name}
                       </span>
                     )}
                     <Check
                       className={cn(
-                        'ms-auto h-4 w-4',
+                        'ms-auto text-primary-brand h-4 w-4',
                         resolved?.code === c.code ? 'opacity-100' : 'opacity-0',
                       )}
                     />

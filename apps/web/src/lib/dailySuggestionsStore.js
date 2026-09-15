@@ -77,14 +77,21 @@ export const dailySuggestionsStore = {
     }
   },
 
-  async act(action, proposalId) {
+  async act(action, proposalId, date) {
     if (api.actOnDailyProposal) {
-      const updated = await api.actOnDailyProposal(action, proposalId);
+      const updated = await api.actOnDailyProposal(action, proposalId, date);
       if (updated) {
-        _set({
-          proposals: [updated],
-          dailyProposal: updated,
-        });
+        if (action === 'wear') {
+          _set({
+            proposals: [updated],
+            dailyProposal: updated,
+          });
+        } else {
+          _set({
+            proposals: _state.proposals.map(p => (p.id === updated.id ? updated : p)),
+            dailyProposal: updated,
+          });
+        }
       }
       return updated;
     }
@@ -94,8 +101,9 @@ export const dailySuggestionsStore = {
     if (api.generateDailyProposal) {
       const proposal = await api.generateDailyProposal(force);
       if (proposal) {
+        const nextProposals = [...(_state.proposals || []).filter(p => p.id !== proposal.id), proposal];
         _set({
-          proposals: [proposal],
+          proposals: nextProposals,
           dailyProposal: proposal,
         });
       }
@@ -137,6 +145,9 @@ export const setProposalsDailySuggestions = dailySuggestionsStore.setProposals.b
 export const setNotificationsDailySuggestions = dailySuggestionsStore.setNotifications.bind(dailySuggestionsStore);
 export const setCalendarEventsDailySuggestions = dailySuggestionsStore.setCalendarEvents.bind(dailySuggestionsStore);
 
+export const actDailyProposal = dailySuggestionsStore.act.bind(dailySuggestionsStore);
+export const generateDailyProposal = dailySuggestionsStore.generate.bind(dailySuggestionsStore);
+
 export function useDailySuggestionsStore() {
   const snap = useSyncExternalStore(_subscribe, _getSnapshot, _getSnapshot);
 
@@ -146,5 +157,7 @@ export function useDailySuggestionsStore() {
     setProposals: setProposalsDailySuggestions,
     setNotifications: setNotificationsDailySuggestions,
     setCalendarEvents: setCalendarEventsDailySuggestions,
+    act: actDailyProposal,
+    generate: generateDailyProposal,
   };
 }

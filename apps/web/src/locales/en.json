@@ -83,7 +83,19 @@
     "photoLibraryPermissionDesc": "Photo library access is needed to select an image.",
     "name": "Name",
     "import": "Import",
-    "ok": "OK"
+    "ok": "OK",
+    "somethingWentWrong": "Something went wrong",
+    "errorTryAgain": "An unexpected rendering error occurred. Please refresh or retry.",
+    "dismiss": "Dismiss",
+    "closet": "closet",
+    "gap": "gap",
+    "pleaseLogin": "Please log in first",
+    "items": "Items",
+    "warning": "Warning",
+    "backToHome": "Back to Home",
+    "enabled": "Enabled",
+    "unenabled": "Unenabled",
+    "select": "Select"
   },
   "auth": {
     "welcomeBack": "Welcome back",
@@ -200,7 +212,274 @@
       "y2k": "Y2K",
       "classic_business": "Classic Business",
       "athleisure": "Athleisure"
-    }
+    },
+    "eyebrow": "AI wardrobe assistant for everyday styling",
+    "fashionSlideAlt": "Fashion slide {{number}}",
+    "weatherIconAlt": "Weather",
+    "tomorrow": "Tomorrow",
+    "weatherSummary": "18°C · Light Rain",
+    "aiReadyOutfit": "AI Ready Outfit",
+    "aiStyledLook": "AI Styled Look",
+    "fashionBannerSlider": "Fashion banner slider",
+    "showSlide": "Show slide {{number}}",
+    "fashionEditorPreview": "Fashion Editor Preview",
+    "capsuleLooks": "Capsule looks curated for your day",
+    "todaySuggestion": "Today's Suggestion",
+    "calenderesult": "98% Match",
+    "outfitPreviewAlt": "Today's outfit",
+    "nordicAutumnLayer": "Nordic Autumn Layer",
+    "navyBlazerKnit": "Navy Blazer + Knit Sweater",
+    "howItWorks": {
+      "tag": "Seamless Process",
+      "heading": "Revolutionizing Wardrobe Management",
+      "description": "Getting beautifully dressed is now a four-step modern workflow managed by advanced Artificial Intelligence.",
+      "steps": {
+        "capture": {
+          "alt": "capture cloth",
+          "title": "Capture Clothes",
+          "description": "Snap a quick photo of your actual garments. Works best with good lighting and contrasted backgrounds"
+        },
+        "analysis": {
+          "alt": "attribute analysis",
+          "title": "AI Attribute Analysis",
+          "description": "Our vision models detect colors, pattern, fabrics, cuts, and categories instantly and automatically."
+        },
+        "closet": {
+          "alt": "smart closet",
+          "title": "Build Smart Closet",
+          "description": "Your clothing catalogs itself elegantly into categorization systems like Zara/COS online designs."
+        },
+        "styled": {
+          "alt": "daily style",
+          "title": "Get Styled Daily",
+          "description": "Receive daily styled outfits contextualized to your precise geolocation weather and calendar meetings."
+        }
+      }
+    },
+    "closet": {
+      "tag": "Your Digital Wardrobe",
+      "heading": "Every Piece Finds Its Place",
+      "description1": "Photograph anything you own — DressApp reads the fabric, the cut, the colour, and files it away like a stylist would: tagged, catalogued, ready to be pulled the moment you need it.",
+      "description2": "No more forgotten drawers. Search by keyword, or just describe a feeling — \"something warm for a rainy Monday\" — and the right piece finds its way back to you.",
+      "cta": "Start Building Your Closet",
+      "recentlyAdded": "Recently added",
+      "garments": {
+        "blazer": {
+          "alt": "Navy blazer",
+          "category": "Outerwear",
+          "name": "Navy Tech Blazer",
+          "meta": "No. 014 — Waterproof"
+        },
+        "sweater": {
+          "alt": "Grey knit sweater",
+          "category": "Knitwear",
+          "name": "Merino Crewneck",
+          "meta": "No. 027 — Ash Grey"
+        },
+        "shirt": {
+          "alt": "White dress shirt",
+          "category": "Top Layer",
+          "name": "Cotton Dress Shirt",
+          "meta": "No. 041 — Chalk White"
+        }
+      },
+      "recent": {
+        "sneakers": "Sneakers",
+        "jeans": "Denim jeans",
+        "bag": "Leather bag",
+        "scarf": "Scarf"
+      }
+    },
+    "stylistPreview": {
+      "brandName": "DressApp AI Personal Stylist",
+      "activeStatus": "Active & Ready to Consult",
+      "userMessage": "“What should I wear tomorrow?”",
+      "aiMessagePrefix": "“Tomorrow is forecast for",
+      "aiMessageWeather": "18°C with light morning rain",
+      "aiMessageCalendarLead": "and your calendar notes a",
+      "aiMessageMeeting": "10 AM Business Meeting",
+      "aiMessageSuffix": ". I recommend structuring a clean professional look built with technical weather protection.”",
+      "addImageAria": "Add image",
+      "inputPlaceholder": "Tell your stylist what you need…",
+      "micAria": "Use microphone",
+      "sendAria": "Send message",
+      "tabs": {
+        "chat": "Chat",
+        "outfitPlanner": "Outfit Planner",
+        "dailySuggestion": "Daily Suggestion"
+      },
+     "recs": {
+      "blazer": {
+        "category": "Outerwear",
+        "title": "Navy Tech Blazer (Waterproof)",
+        "description": "Matches formal meetings, repels light drizzle."
+      },
+      "shirt": {
+        "category": "Top Layer",
+        "title": "Organic Cotton White Dress Shirt",
+        "description": "Crisp, clean, professional base styling."
+      },
+      "trousers": {
+        "category": "Bottom Layer",
+        "title": "Charcoal Tailored Trousers",
+        "description": "Sharp tapered fit, pairs cleanly with the blazer."
+      },
+      "shoes": {
+        "category": "Shoes",
+        "title": "Black Leather Oxford Shoes",
+        "description": "Polished finish, business-meeting appropriate."
+      }
+    },
+      "chips": {
+        "dailySuggestion": "Daily Suggestion",
+        "planEventOutfit": "Plan Event Outfit",
+        "trendScout": "Trend-Scout"
+      }
+    },
+    "stylist": {
+      "tag": "Empathetic Design Intelligence",
+      "heading": "The AI Stylist That Understands Life",
+      "description1": "Your fashion choices shouldn't exist in a vacuum. DressApp connects directly to your calendar feeds and precise localized weather forecasts to design optimal outfits every day.",
+      "description2": "Never step out under-dressed for high stakes business sessions or unprepared for sudden rainfall. It feels like having a world-class sartorial advisor living in your phone, with complete access to what you own.",
+      "cta": "Ask the stylist"
+    },
+    "marketplace": {
+      "tag": "Zero Waste Initiative",
+      "heading": "Circular Wardrobe Marketplace",
+      "description": "Buy, sell, or donate. Our integrated marketplace allows you to monetize under-utilized garments natively from your digital closet.",
+      "activeListings": "Active listings",
+      "buySwap": "Buy, swap",
+      "orDonate": "or donate",
+      "explore": "Explore Marketplace",
+      "conditionLine": "Condition: {{condition}}",
+      "locationLine": "Located in {{location}}",
+      "buy": "Buy",
+      "swap": "Swap",
+      "donate": "Donate",
+      "prevAria": "Previous marketplace slide",
+      "nextAria": "Next marketplace slide",
+      "feeNotice": "Transparent 7% platform fee after payment processing. Zero hidden charges."
+    },
+    "shoppingAssistant": {
+      "title": "DressApp Shopping Assistant",
+      "subtitle": "Get your right size on any store's size chart",
+      "addToChrome": "Add to Chrome",
+      "mockTab": "Half-Zip Sweatshirt",
+      "mockUrl": "anyfashionstore.com/product/half-zip-sweatshirt",
+      "connectedBadge": "Connected to DressApp",
+      "sizeGuide": {
+        "title": "Size Guide",
+        "unit": "CM",
+        "recommendedTitle": "DressApp recommends size XS",
+        "recommendedBody": "Heuristic match: your hips (92.7 cm) fit the XS row.",
+        "matchedOn": "Matched on: hips · via estimate"
+      },
+      "stats": {
+        "sizesMatched": "Sizes matched",
+        "storesSupported": "Stores supported",
+        "matchAccuracy": "Match accuracy"
+      },
+      "reviewBadge": "Pending Chrome Web Store Review",
+      "worksOn": "Works on every major fashion & retail store",
+      "tag": "Chrome Extension",
+      "heading": "Never Guess Your Size Again",
+      "description1": "The DressApp Shopping Assistant reads the size chart on any fashion retailer's product page and matches it against your saved body measurements — right there on the page.",
+      "steps": {
+        "open": {
+          "title": "Open the item's Size Guide",
+          "description": "Browse any store as usual and open the product's size chart popup."
+        },
+        "connect": {
+          "title": "Connect to DressApp",
+          "description": "Click the DressApp icon and sign in once — it stays connected after that."
+        },
+        "match": {
+          "title": "Get your instant size match",
+          "description": "DressApp compares the chart to your measurements and highlights your row."
+        }
+      },
+      "cta": "Add to Chrome",
+      "ctaNote": "Currently under Chrome Web Store review",
+      "tabs": {
+        "deals": "Deals",
+        "wishlist": "Wishlist",
+        "compare": "Compare",
+        "rewards": "Rewards"
+      },
+      "features": {
+        "priceAlerts": "Price Alerts",
+        "autoCoupon": "Auto Coupon",
+        "priceCompare": "Price Compare",
+        "wishlistSync": "Wishlist Sync"
+      },
+      "modes": {
+        "silent": "Silent",
+        "popup": "Popup",
+        "fullCompare": "Full Compare"
+      }
+    },
+    "aiEditor": {
+      "title": "AI Styled Fashion Editor",
+      "renderingLivePreview": "Rendering live preview",
+      "exportLook": "Export Look",
+      "previewAlt": "AI styled outfit preview",
+      "aiMatch": "AI Match {{percent}}%",
+      "fabricTone": "Fabric Tone",
+      "styleIntensity": "Style Intensity",
+      "percentValue": "{{percent}}%",
+      "silhouetteFit": "Silhouette Fit",
+      "regenerate": "Regenerate with AI",
+      "tag": "Visual Styling Studio",
+      "heading": "Your AI Styled Fashion Editor",
+      "description1": "Drag, swap, and recolor real garments from your closet on a live model canvas. The editor understands fit, fabric, and colour theory, so every combination it suggests already looks intentional.",
+      "description2": "Nudge the style intensity slider for a bolder edit, lock in a silhouette, and let the AI regenerate accessories and layering in real time — no design experience required.",
+      "cta": "Open Fashion Editor",
+      "tabs": {
+        "top": "Top",
+        "bottom": "Bottom",
+        "shoes": "Shoes",
+        "accessory": "Accessory"
+      },
+      "tones": {
+        "forest": "Forest green",
+        "charcoal": "Charcoal",
+        "camel": "Camel",
+        "slate": "Slate blue",
+        "ivory": "Ivory"
+      },
+      "silhouettes": {
+        "slim": "Slim",
+        "relaxed": "Relaxed",
+        "oversized": "Oversized"
+      }
+    },
+    "experts": {
+      "tag": "Meet The Specialists",
+      "title": "Talk To A Real Style Expert",
+      "description": "Book a 1:1 session with a certified DressApp stylist whenever the AI needs a human, editorial finishing touch.",
+      "viewAll": "View All Experts",
+      "sessionsCount": "({{count}} sessions)",
+      "bookSession": "Book Session",
+      "roles": {
+        "seniorFashionStylist": "Senior Fashion Stylist",
+        "menswearConsultant": "Menswear Consultant",
+        "sustainableFashionAdvisor": "Sustainable Fashion Advisor",
+        "occasionWearExpert": "Occasion Wear Expert"
+      },
+      "bios": {
+        "ameliaNovak": "Editorial-ready looks for high-stakes professional settings.",
+        "marcusLee": "Sharp, modern tailoring advice for the everyday gentleman.",
+        "sofiaReyes": "Building a conscious wardrobe without compromising on style.",
+        "priyaSharma": "Show-stopping looks for weddings, galas, and celebrations."
+      }
+    },
+    "trendScoutSection": {
+      "tag": "Fashion Intelligence",
+      "description": "Get styled ahead of the global curve. Discover real-time stylistic shifts curated by computational trend models.",
+      "prevAria": "Previous trend",
+      "nextAria": "Next trend"
+    },
+    "trendReadAt": "Read at {{source}}"
   },
   "closet": {
     "selectedCount": "{{count}} selected",
@@ -300,7 +579,18 @@
     "deleteSelectedConfirm": "Are you sure you want to delete {{count}} item(s)?",
     "batchDeleteFailed": "Some items could not be deleted. Please try again.",
     "anchorItems": "Selected Anchor Pieces",
-    "loadingWardrobe": "Loading your wardrobe…"
+    "loadingWardrobe": "Loading your wardrobe…",
+    "heroSubtitle": "Organize your wardrobe, explore every piece and create better outfits effortlessly.",
+    "autoCategory": "Auto-categorize with AI",
+    "detectDetails": "Detect colors and patterns",
+    "smartSuggestions": "Smart outfit suggestions",
+    "itemsCount": "{{count}} items",
+    "viewModeLabel": "Grid density",
+    "view2Cols": "2 columns",
+    "view3Cols": "3 columns",
+    "viewList": "List view",
+    "dpp": "DPP",
+    "saveFailuresTitle": "These items couldn\\u2019t be saved to your closet. Please try uploading them again."
   },
   "addItem": {
     "namePlaceholder": "e.g. Vintage Denim Jacket",
@@ -527,7 +817,11 @@
       "fabric": "Fabric & Composition",
       "market": "Wardrobe Intent & Pricing"
     },
-    "noReadyCards": "No completed cards to save."
+    "noReadyCards": "No completed cards to save.",
+    "uploadFailed": "Failed to process image. Please try again.",
+    "savedOptimistic": "Add to closet",
+    "currencyPlaceholder": "USD",
+    "sourceTagPlaceholder": "own"
   },
   "itemDetail": {
     "reanalyze": {
@@ -778,6 +1072,8 @@
     "addAllSuggested": "Add suggested (+{{count}})"
   },
   "stylist": {
+    "heroTitle": "Your Personal AI Stylist",
+    "heroDescription": "Get personalized outfit recommendations, style advice, and fashion inspiration tailored to your wardrobe, occasion, and local weather.",
     "colorMatching": "Color Matching",
     "patternMatching": "Pattern Matching",
     "bodyFitting": "Body Fitting",
@@ -964,7 +1260,51 @@
     "hidden": "Hidden",
     "selectGarmentSlot": "Select {{role}}",
     "realPhoto": "Real Photo",
-    "mannequin": "Mannequin"
+    "mannequin": "Mannequin",
+    "proHelp": "A pro can help",
+    "moreActions": "More actions",
+    "markRead": "Mark As Read",
+    "markUnread": "Mark As Unread",
+    "rename": "Rename",
+    "unpin": "Unpin",
+    "pin": "Pin",
+    "unarchive": "Unarchive",
+    "archive": "Archive",
+    "renamePrompt": "Rename conversation:",
+    "pinned": "Pinned",
+    "archivedChats": "Archived Chats",
+    "today": "Today",
+    "yesterday": "Yesterday",
+    "earlier": "Earlier",
+    "aiPlannerSuccess": "AI Scouting Complete! 1 Credit charged.",
+    "quotaExhausted": "Quota Exhausted. Please check your credit balance or input your own API Key.",
+    "failedScout": "Failed to Scout: ensure you have enough items in closet.",
+    "personalStylist": "Personal Stylist",
+    "planYourOutfit": "Plan Your Outfit",
+    "planYourOutfitDesc": "Choose your schedule, style and preferred tag.",
+    "moreEvents": "+{{count}} more events",
+    "outfitPreferences": "Outfit Preferences",
+    "selectStyle": "Select Style",
+    "aiOutfitBuilder": "AI Outfit Builder",
+    "createTodaysLook": "Create today's look",
+    "swipeOrLetAi": "Swipe through your wardrobe or let AI select an outfit.",
+    "itemsCount": "{{count}} items",
+    "triggerScheduledRequest": "Get tomorrow's scheduled outfit proposals",
+    "rejectionMarketplaceOffer": "You have rejected \"{{title}}\" 3 times. Share it in the Marketplace to free up space?",
+    "voiceError": "Voice recognition failed. Please try again.",
+    "micError": "Microphone access failed. Please check your browser microphone permissions.",
+    "examplesLabel": "Examples",
+    "marketplaceLabel": "Marketplace",
+    "preferencesApplied": "Stop Speaking",
+    "todaySuggestionTitle": "Today's Style Suggestion",
+    "todaySuggestionSubtitle": "Personalized look curated for your day.",
+    "viewOutfitDetails": "View Details",
+    "suggestionRefreshed": "Refreshed today’s suggestion!",
+    "refreshSuggestion": "New Look",
+    "previousLook": "Previous Look",
+    "lookCounter": "Look {{current}} of {{total}}",
+    "tryOnAvatar": "View Look",
+    "wearToday": "Wear Today"
   },
   "outfitCompletion": {
     "cta": "Complete the outfit",
@@ -1020,6 +1360,13 @@
     "description": "Description",
     "priceLabel": "Price",
     "status": "Status",
+    "statusActive": "Active",
+    "statusReserved": "Reserved",
+    "statusDraft": "Draft",
+    "statusCompleted": "Completed",
+    "statusCancelled": "Cancelled",
+    "myListingsCount": "{{count}} listings",
+    "myListingsCount_one": "1 listing",
     "viewsCount": "{{count}} views",
     "feeBreakdown": "Fee breakdown",
     "listPrice": "List price",
@@ -1097,7 +1444,21 @@
     "buyerProtection": "Protected by DressApp Community Standard",
     "rentalPriceDay": "Daily tariff",
     "confirmRemoveListing": "Remove \"{{title}}\" from the marketplace? Your closet item stays — only the listing is removed.",
-    "sourceRetail": "Retail"
+    "sourceRetail": "Retail",
+    "source": "Source",
+    "category": "Category",
+    "distance": "Radius",
+    "sellOnly": "Sell Only",
+    "sellSwap": "Sell & Swap",
+    "active": "Active",
+    "retail": "Retail",
+    "item": "Wardrobe Item",
+    "heroSubtitle": "Discover pre-loved fashion, list your wardrobe, or connect with nearby buyers and sellers. Shop smarter, earn from your closet, and embrace sustainable style—all in one marketplace.",
+    "filters": "Filters",
+    "syncNoCandidates": "Nothing to sync — no closet items have a marketplace intent set.",
+    "syncAlreadyDone": "Already synced — every candidate is on the marketplace.",
+    "syncDone": "Synced {{candidates}} item(s): {{created}} listed, {{skipped}} already on marketplace{{detail}}",
+    "syncSomeFailed": "{{count}} item(s) couldn't be listed: {{detail}}"
   },
   "createListing": {
     "title": "Create a listing",
@@ -1130,7 +1491,8 @@
     "feePreview": "Fee preview",
     "youReceive": "You receive",
     "feeFootnote": "7% is calculated after payment processing fees (2.9% + $0.30).",
-    "shippingFee": "Shipping fee (optional)"
+    "shippingFee": "Shipping fee (optional)",
+    "modeRent": "Rent"
   },
   "transactions": {
     "title": "Your transactions",
@@ -1170,7 +1532,14 @@
     "mockSuccess": "Mock payment approved successfully! Your transaction has been confirmed.",
     "cancelled": "Payment Cancelled",
     "mockFailed": "Failed to complete mock webhook transaction.",
-    "cancelledDesc": "Transaction was not completed."
+    "cancelledDesc": "Transaction was not completed.",
+    "emptyBuyerSub": "Items you purchase will show up here.",
+    "emptySellerSub": "Items you sell will show up here.",
+    "listingCol": "Listing",
+    "statusCol": "Status",
+    "dateCol": "Date",
+    "amountCol": "Amount",
+    "bannerTitle": "Your Transactions"
   },
   "profile": {
     "handlePlaceholder": "@yourhandle",
@@ -1242,8 +1611,8 @@
     "languageUpdated": "Language updated",
     "inviteFriends": "Invite Friends",
     "inviteSubject": "Join me on DressApp",
-    "inviteBody": "I'm using DressApp to manage my wardrobe with an AI stylist. Join me here:",
-    "inviteCopied": "Invite link copied",
+    "inviteBody": "Share your personal referral link to invite friends. You both receive bonus AI credits!",
+    "inviteCopied": "Invite link copied to clipboard!",
     "inviteDesc": "Share DressApp with your friends and family",
     "settingsTitle": "System Preferences",
     "sections": {
@@ -1514,7 +1883,7 @@
     "importWardrobeTitle": "Import Wardrobe From Other Apps",
     "importWardrobeDesc": "Migrate your existing catalog seamlessly from Whering, Acloset, Stylebook, and other digital wardrobe apps.",
     "supportedPlatforms": "Supported Wardrobe Platforms",
-    "inviteShareMessage": "I",
+    "inviteShareMessage": "I'm using DressApp to organize my closet and style outfits with AI! Join here:",
     "shareFailed": "Failed to share invite link.",
     "inviteTitle": "Invite Friends & Stylists",
     "shareLink": "Share Invite Link",
@@ -1578,8 +1947,28 @@
       "subscription": "Subscription",
       "more": "More"
     },
-    "chromeStoreInstall": "Add to Chrome",
-    "chromeStoreAvailable": "Available on Chrome Web Store"
+    "inviteWebTab": "Web Link",
+    "invitePlayStoreTab": "Google Play Link",
+    "shareGooglePlay": "Share Google Play Link",
+    "invitePlayStoreMessage": "I'm using DressApp to organize my closet and style outfits with AI! Get it on Google Play:",
+    "pushNotSupported": "Push notifications are not supported on this device/browser.",
+    "pushPermissionDenied": "Notification permission was not granted by your browser.",
+    "failedToInitiatePayment": "Failed to initiate subscription payment.",
+    "errorCreatingSubscription": "Error creating subscription",
+    "cancelConfirm": "Are you sure you want to cancel your subscription? You will lose premium features.",
+    "cancelSuccess": "Subscription cancelled successfully.",
+    "cancelFailed": "Failed to cancel subscription.",
+    "captureSuccess": "Subscription activated successfully! Welcome to DressApp Pro.",
+    "captureFailed": "Error activating subscription.",
+    "checkoutCancelled": "Subscription checkout cancelled.",
+    "planTitle": "DressApp {{tier}} ({{plan}})",
+    "professionalPlanBenefits": "You have unlimited closet slots, unlimited daily requests, full marketplace access, and active ad campaign management.",
+    "managerPlanBenefits": "You have unlimited closet slots, unlimited daily requests, and full marketplace access.",
+    "selectYourPlan": "Select your plan",
+    "selectYourPlanDesc": "Choose a monthly or annual subscription tier.",
+    "viewTiers": "View Plans",
+    "deleteExplanation1": "Deleting your account is permanent. Once completed, your circular wardrobe, personal stylist message threads, and listings will be completely wiped from our servers.",
+    "deleteExplanation2": "This action is irreversible and the data cannot be restored."
   },
   "admin": {
     "title": "Admin",
@@ -1667,7 +2056,18 @@
     },
     "viewCalendar": "View Calendar",
     "connectedSuccess": "Google Calendar connected!",
-    "disconnectedSuccess": "Google Calendar disconnected."
+    "disconnectedSuccess": "Google Calendar disconnected.",
+    "todayOutfit": "Today's Scheduled Outfit",
+    "scheduled": "Scheduled",
+    "prevMonthAria": "Previous month",
+    "nextMonthAria": "Next month",
+    "prevDayAria": "Previous day",
+    "nextDayAria": "Next day",
+    "manage": "Manage",
+    "schedule": "Schedule",
+    "scheduleTitle": "Schedule Outfit",
+    "dailyAISuggestions": "AI Daily Suggestions",
+    "selectSavedOutfit": "Select Saved Outfit"
   },
   "seo": {
     "defaultTitle": "DressApp — Your closet, elevated",
@@ -1743,7 +2143,10 @@
       "accessories": "Accessories",
       "accessory": "Accessory",
       "underwear": "Underwear",
-      "dress": "Dress"
+      "dress": "Dress",
+      "headwear": "Headwear",
+      "glasses": "Glasses",
+      "belt": "Belt"
     },
     "dress_code": {
       "casual": "Casual",
@@ -1779,7 +2182,9 @@
       "bad": "Bad",
       "fair": "Fair",
       "good": "Good",
-      "excellent": "Excellent"
+      "excellent": "Excellent",
+      "new": "New",
+      "like_new": "Like new"
     },
     "quality": {
       "budget": "Budget",
@@ -1904,7 +2309,8 @@
       "belts": "Belts",
       "gloves": "Gloves",
       "scarves_and_wraps": "Scarves & Wraps",
-      "hosiery_and_socks": "Hosiery & Socks"
+      "hosiery_and_socks": "Hosiery & Socks",
+      "bag": "Bag"
     },
     "item_type": {
       "oxford_shirt": "Oxford shirt",
@@ -2117,7 +2523,8 @@
       "country": "Country",
       "region": "City or region",
       "search": "Search by name or business",
-      "clear": "Clear filters"
+      "clear": "Clear filters",
+      "title": "Filters"
     },
     "emptyTitle": "No experts yet",
     "emptyBody": "Try widening your filters, or come back soon — new professionals are joining every week.",
@@ -2162,8 +2569,10 @@
       "barber": "Barber",
       "hair_stylist": "Hair Stylist",
       "ai_fashion": "AI for Fashion",
-      "ai_for_fashion": "AI for Fashion"
-    }
+      "ai_for_fashion": "AI for Fashion",
+      "dressapp": "DressApp"
+    },
+    "tabBar": "Expert Directory tabs"
   },
   "ads": {
     "title": "My ad campaigns",
@@ -2216,7 +2625,8 @@
     "campaignCreated": "Campaign created",
     "campaignSaved": "Campaign updated",
     "campaignDeleted": "Campaign deleted",
-    "saveFailed": "Could not save campaign"
+    "saveFailed": "Could not save campaign",
+    "errorMissingFields": "Missing required fields"
   },
   "ticker": {
     "label": "Sponsored in your region",
@@ -2392,7 +2802,9 @@
       "status_denied_title": "Declined",
       "status_invalid_body": "This link is no longer active. Head back to the marketplace to explore more listings or check your transactions.",
       "status_invalid_title": "Link expired or already used",
-      "status_pending_title": "Pending"
+      "status_pending_title": "Pending",
+      "status_accepted_body": "Thanks — the other party has been notified. Check your email for shipping details and tap \"Confirm receipt\" once the item arrives.",
+      "status_pending_body": "We're waiting on the other party to accept or decline. We'll email you as soon as they do."
     },
     "admin": {
       "all_providers": "All providers",
@@ -2464,7 +2876,24 @@
       "inactive": "Inactive",
       "cancelled": "Cancelled",
       "total_requests": "Requests",
-      "daily_requests": "Req/Day"
+      "daily_requests": "Req/Day",
+      "total_count": "{{count}} total",
+      "avg_ms": "avg ms",
+      "p95_ms": "p95 ms",
+      "running": "Running...",
+      "force_run_now": "Force run now",
+      "connected": "connected",
+      "no": "no",
+      "demote": "Demote",
+      "promote": "Promote",
+      "pause": "Pause",
+      "activate": "Activate",
+      "remove": "Remove",
+      "gross_paid": "Gross (paid)",
+      "ai_config": "AI configuration",
+      "api_keys_present": "API keys present",
+      "set": "set",
+      "missing": "missing"
     },
     "closet": {
       "back_to_full_closet": "Back to full closet",
@@ -2512,7 +2941,13 @@
         "failed": "Failed",
         "disputed": "Disputed"
       },
-      "could_not_confirm_receipt": "Could not confirm receipt."
+      "could_not_confirm_receipt": "Could not confirm receipt.",
+      "type": "Type",
+      "status_label": "Status",
+      "date": "Date",
+      "details": "Details",
+      "action": "Action",
+      "rental": "Rental"
     },
     "listingDetail": {
       "claim_this_donation": "Claim this donation",
@@ -2572,7 +3007,20 @@
       "hip": "Hip Circumference",
       "arm_length": "Arm Length",
       "inseam": "Inseam (Leg Length)",
-      "info_note": "Body measurements calibrate virtual garment try-on physics and size recommendations across the app."
+      "info_note": "Body measurements calibrate virtual garment try-on physics and size recommendations across the app.",
+      "photo_uploaded_success": "Full-body photo updated!",
+      "photo_removed": "Full-body photo removed",
+      "save_measurements": "Save Profile",
+      "real_body_photo_title": "Real Body Figure",
+      "mannequin_preview": "Anatomical Mannequin",
+      "real_photo_desc": "Your real full-body photo backdrop for styling.",
+      "mannequin_description": "Cubic Bezier curves calculated dynamically from body dimensions.",
+      "full_body_photo": "Full body figure",
+      "body_measurements": "Body Profile & Controls",
+      "adjust_sliders_tip": "Upload a full-body photo or adjust measurements to morph your 2D avatar.",
+      "full_body_photo_label": "Full-Body Photo",
+      "skin_tone_color": "Skin Tone Color",
+      "gender_baseline": "Gender Model"
     }
   },
   "trends": {
@@ -2604,7 +3052,42 @@
     "scout": "Global Fashion Intelligence",
     "trendScout": "Trend Scout",
     "noTrendsFound": "No stories available",
-    "empty": "No trends loaded yet."
+    "empty": "No trends loaded yet.",
+    "loadSettingsError": "Failed to load personalization settings",
+    "socialConnected": "Connected to {{name}}",
+    "connectError": "Failed to connect account",
+    "socialDisconnected": "Account disconnected",
+    "disconnectError": "Failed to disconnect account",
+    "settingsSaved": "Personalization settings saved",
+    "feedRefreshedSuccess": "Trend Scout refreshed for your style & platforms!",
+    "refreshFailed": "Scout refresh encountered an error",
+    "saveFailed": "Could not save settings",
+    "settingsTitle": "Trend Scout Personalization",
+    "settingsDesc": "Connect social accounts and personalize your style filter.",
+    "loadingSettings": "Analyzing closet profile...",
+    "closetIntelligence": "Wardrobe Analysis",
+    "itemsAnalyzed": "items",
+    "leadDressCode": "Lead Dress Code",
+    "leadClosetStyle": "Closet Style",
+    "customActive": "Active Override",
+    "customStyleField": "Style Preference",
+    "stylePlaceholder": "e.g., Vintage, Quiet Luxury, Streetwear...",
+    "styleFieldHint": "Enter any style or aesthetic to override your closet baseline and guide web discovery.",
+    "active": "active",
+    "socialDesc": "Trend Scout prioritizes fashion creators, hashtags, and viral aesthetics from your connected platforms.",
+    "connected": "Connected",
+    "platformActive": "Active in Trend Scout",
+    "platformInactive": "Muted",
+    "enabled": "Active",
+    "enable": "Enable",
+    "disconnect": "Disconnect account",
+    "connectAccount": "Connect",
+    "connectModalTitle": "Connect",
+    "handlePlaceholder": "Enter @username or profile handle",
+    "saveAndRefreshInstant": "Save & Instant Refresh",
+    "lockedTitle": "Trend Scout is Premium",
+    "lockedDesc": "Trend Scout is only available on Manager or Professional plans. Upgrade your plan to get daily curated style feeds, sustainability news, and runway highlights.",
+    "personalizationSettings": "Personalization & Social Feeds"
   },
   "item": {
     "polishingPhoto": "Polishing photo…",
@@ -2615,7 +3098,9 @@
     "reshootError": "Could not restore photo. Please try again.",
     "wearsCount": "{{count}} wear",
     "wearsCount_plural": "{{count}} wears",
-    "timesWorn": "Worn {{count}} times"
+    "timesWorn": "Worn {{count}} times",
+    "wearsCount_one": "{{count}} wear",
+    "wearsCount_other": "{{count}} wears"
   },
   "outfits": {
     "viewDescription": "View outfits you have composed and scheduled. Your AI Stylist ensures you utilize all closet assets and warns you of previous occasion repetitions.",
@@ -2654,7 +3139,16 @@
     "noOutfits": "No Saved Outfits Yet",
     "emptyDesc": "Ask the AI Stylist to generate new looks or compose them from your closet items.",
     "openStylist": "Open AI Stylist",
-    "defaultLookName": "DressApp Look"
+    "defaultLookName": "DressApp Look",
+    "rescheduledSuccess": "Outfit rescheduled!",
+    "failedReschedule": "Failed to reschedule outfit.",
+    "editSuccess": "Outfit updated successfully!",
+    "editFailed": "Failed to update outfit.",
+    "unscheduledSuccess": "Outfit removed from calendar.",
+    "failedUnschedule": "Failed to unschedule outfit.",
+    "editName": "Outfit Name",
+    "editDescription": "Description",
+    "metricsTabLabel": "Metrics"
   },
   "stats": {
     "category": "DressApp Unpacked",
@@ -2691,7 +3185,8 @@
     "cpwTrend": "Cost per Wear trend",
     "intake": "How items were added",
     "receipt": "From receipts",
-    "manual": "Added manually"
+    "manual": "Added manually",
+    "avgCpw": "Avg Cost/Wear"
   },
   "attachmentPicker": {
     "closetTab": "From Closet",
@@ -2704,7 +3199,12 @@
     "searchPlaceholder": "Search closet…",
     "subtitle": "Upload new photos or pick from your closet.",
     "title": "Add attachments",
-    "uploadTab": "Upload"
+    "uploadTab": "Upload",
+    "overLimit": "Too many attachments — max {{max}} per turn.",
+    "upTo": "Up to {{n}} per turn",
+    "tooMany": "{{n}} over limit ({{max}})",
+    "selected": "{{n}} selected",
+    "attachN": "Attach {{n}}"
   },
   "floater": {
     "done": "All done",
@@ -2713,7 +3213,10 @@
     "analyzingPhotos": "Analysing {{count}} photo",
     "polishing": "Polishing {{n}}/{{m}} photos",
     "polishingMore_one": "Polishing {{count}} photo",
-    "polishingMore_other": "Polishing {{count}} photos"
+    "polishingMore_other": "Polishing {{count}} photos",
+    "batchDoneTitle": "You have news in your closet",
+    "batchDoneDescription": "{{n}} of {{m}} freshly-polished item(s) ready to view",
+    "batchDoneCta": "Open closet"
   },
   "sandbox": {
     "canvas": "Outfit Canvas",
@@ -2862,7 +3365,28 @@
     "startTrip": "Start trip",
     "packForMe": "Pack for me with AI",
     "packingList": "Packing list",
-    "emptyList": "No items packed yet.\\nTap "
+    "emptyList": "No items packed yet.\\nTap ",
+    "errorTitle": "Suitcase Data Error",
+    "errorBody": "We encountered a critical error while loading your suitcase. The AI stylist may have generated an incompatible plan structure.",
+    "resetBtn": "Reset Suitcase & Restart",
+    "noImages": "No images available",
+    "viewFullScreen": "View Try-On",
+    "archivesDeleted": "Archives deleted successfully.",
+    "archiveDeleteError": "Failed to delete archives.",
+    "activeRefined": "Suitcase outfits & packing list updated!",
+    "activeRefineError": "Failed to update outfits.",
+    "askRefineGuidance": "What would you like to refine in your packing list?",
+    "itemAddedFromCloset": "Item added from Closet!",
+    "loadingSuitcase": "Loading your suitcase...",
+    "suggestedReplacements": "Suggested replacements from your closet:",
+    "refineButton": "Refine",
+    "outfitPieces": "Outfit Pieces",
+    "stylistNotes": "Stylist Notes",
+    "addFromClosetHeader": "Add Garment from Closet",
+    "addFromClosetDesc": "Choose a garment from your closet to pack in your suitcase.",
+    "searchClosetPlaceholder": "Search by title, color, brand...",
+    "allCategories": "All",
+    "noClosetItemsFound": "No items match your filters."
   },
   "scanning": {
     "bounds": "Detecting Garment Bounds...",
@@ -3236,7 +3760,8 @@
     "trend_personalization_title": "Personalization & Social Feeds (⚙️)",
     "trend_personalization_desc": "Customize style aesthetics (Quiet Luxury, Vintage, Streetwear, Old Money, Minimalist, Y2K), connect social accounts, and view your automated closet profile.",
     "trend_gender_title": "Gender Targeting & Live Refresh",
-    "trend_gender_desc": "Toggle effortlessly between Women's and Men's fashion, read verified articles on Vogue/GQ, and tap Refresh (🔄) for instant real-time updates."
+    "trend_gender_desc": "Toggle effortlessly between Women's and Men's fashion, read verified articles on Vogue/GQ, and tap Refresh (🔄) for instant real-time updates.",
+    "tableOfContents": "Table of Contents"
   },
   "campaigns": {
     "status": {
@@ -3418,7 +3943,9 @@
       "captureId": "Capture ID",
       "payerEmail": "Payer PayPal Email",
       "extensions": "Extension Transactions",
-      "pausePeriods": "Paused History"
+      "pausePeriods": "Paused History",
+      "checkoutTitle": "Campaign Payment",
+      "checkoutDesc": "Please complete the payment for your campaign fee."
     },
     "settings": {
       "title": "Campaign Settings",
@@ -3492,7 +4019,24 @@
       "rejectReason": "Rejection Reason",
       "rejectReasonPlaceholder": "Explain why this campaign was rejected...",
       "rejectConfirm": "Confirm Rejection",
-      "previewTitle": "Campaign Preview"
+      "previewTitle": "Campaign Preview",
+      "loadFailed": "Failed to load campaigns",
+      "approved": "Campaign approved",
+      "rejected": "Campaign rejected",
+      "details": "Details",
+      "location": "Location",
+      "category": "Category",
+      "status": "Status",
+      "submitted": "Submitted",
+      "empty": "No campaigns found",
+      "preview": "Preview",
+      "approve": "Approve",
+      "reject": "Reject",
+      "rejectTitle": "Reject Campaign",
+      "rejectDesc": "Please provide a reason for rejecting this campaign.",
+      "reasonPlaceholder": "Reason...",
+      "confirmReject": "Reject",
+      "website": "Website"
     },
     "adsManagerTitle": "Ads & Promotions",
     "overview": "Advertiser Performance",
@@ -3679,7 +4223,10 @@
     "section4": "4. Limitation of Liability",
     "section4_body": "In no event shall DressApp be liable for any indirect, incidental, special, consequential, or punitive damages...",
     "section5": "5. Governing Law",
-    "section5_body": "These terms shall be governed and construed in accordance with the laws of your jurisdiction..."
+    "section5_body": "These terms shall be governed and construed in accordance with the laws of your jurisdiction...",
+    "bannerTitle": "Terms of Service",
+    "bannerDescription": "Please read these terms carefully before using DressApp. They outline the rules and conditions for using our services.",
+    "loadError": "Terms of Service could not be loaded. Please try again later."
   },
   "privacy": {
     "title": "Privacy Policy",
@@ -3717,7 +4264,9 @@
     "section4": "4. Your Rights",
     "section4_body": "You have the right to access, correct, or delete your personal data...",
     "section5": "5. Contact",
-    "section5_body": "If you have any questions about this Privacy Policy, please contact us at support@dressapp.co"
+    "section5_body": "If you have any questions about this Privacy Policy, please contact us at support@dressapp.co",
+    "bannerTitle": "Privacy Policy",
+    "bannerDescription": "Your trust matters to us. Learn how DressApp collects, uses, and protects your personal data."
   },
   "pricing": {
     "title": "Membership Pricing Plans",
@@ -3994,5 +4543,29 @@
     "snowy": "Snowy",
     "windy": "Windy",
     "clear": "Clear"
+  },
+  "footer": {
+    "description": "The next-generation autonomous wardrobe catalog system utilizing predictive AI algorithms for optimal styling and high-end carbon consciousness.",
+    "company": "Company",
+    "aboutUs": "About Us",
+    "sustainabilityReport": "Wardrobe Insights",
+    "features": "Features",
+    "digitalCloset": "Digital Closet",
+    "aiStylistChat": "AI Stylist Chat",
+    "trendScout": "Trend Scout",
+    "travelCapsule": "Travel Capsule",
+    "marketplace": "Marketplace",
+    "buySell": "Buy & Sell",
+    "directSwaps": "Direct Swaps",
+    "donationsTracker": "Campaigns & Offers",
+    "zeroWastePolicy": "Ad Placement Hub",
+    "support": "Support",
+    "dppApiSpecs": "Browser Extension Bridge",
+    "privacyPolicy": "Privacy Policy",
+    "termsOfUse": "Terms of Use",
+    "rights": "All rights reserved. Designed to luxurious ecological specifications."
+  },
+  "scanner": {
+    "tabFile": "Upload image"
   }
 }

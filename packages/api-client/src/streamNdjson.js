@@ -15,16 +15,24 @@
  * @param {string|null} options.token Bearer token
  * @returns {Promise<object|null>}
  */
+import { API_BASE as singletonApiBase, tokenStore } from './_singleton.js';
+
 export async function streamNdjson(path, {
   method = 'POST',
   params,
   body,
   onLine,
   signal,
-  apiBase = '',
-  token = null,
+  apiBase,
+  token,
 } = {}) {
-  const url = new URL(`${apiBase}${path}`, typeof window !== 'undefined' ? window.location.origin : 'http://localhost');
+  const effectiveApiBase = apiBase !== undefined ? apiBase : singletonApiBase;
+  const effectiveToken = token !== undefined ? token : (tokenStore?.get?.() || null);
+  const target = `${effectiveApiBase}${path}`;
+  const base = (typeof window !== 'undefined' && window.location?.origin)
+    ? window.location.origin
+    : 'http://localhost';
+  const url = new URL(target, target.startsWith('http://') || target.startsWith('https://') ? undefined : base);
   if (params && typeof params === 'object') {
     Object.entries(params).forEach(([k, v]) => {
       if (v !== undefined && v !== null) url.searchParams.set(k, String(v));
@@ -32,7 +40,7 @@ export async function streamNdjson(path, {
   }
 
   const headers = { Accept: 'text/event-stream, application/x-ndjson' };
-  if (token) headers.Authorization = `Bearer ${token}`;
+  if (effectiveToken) headers.Authorization = `Bearer ${effectiveToken}`;
   if (body !== undefined) headers['Content-Type'] = 'application/json';
 
   const resp = await fetch(url.toString(), {

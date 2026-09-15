@@ -334,6 +334,12 @@ def _looks_already_cropped(detections: list[dict[str, Any]]) -> bool:
         y1, x1, y2, x2 = bbox
         return max(0, (x2 - x1)) * max(0, (y2 - y1))
 
+    significant = [d for d in detections if _area(d["bbox"]) >= frame_area * 0.03]
+    if len(significant) > 1:
+        # Multiple significant items detected across the frame — this is an outfit
+        # or multi-piece shot that needs individual garment crops.
+        return False
+
     has_human = False
     has_head = any(d.get("has_human_head", False) for d in detections)
     garment_kinds = {

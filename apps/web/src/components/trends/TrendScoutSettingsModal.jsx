@@ -22,6 +22,7 @@ import {
   Link2,
   Unlink,
   Layers,
+  Zap,
 } from 'lucide-react';
 
 const SUGGESTED_STYLES = [
@@ -174,17 +175,17 @@ export function TrendScoutSettingsModal({ open, onOpenChange, onRefreshTriggered
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg w-full max-h-[90vh] overflow-y-auto rounded-2xl p-6">
+      <DialogContent className="!max-w-4xl w-full max-h-[90vh] overflow-y-auto rounded-[12px] p-5">
         <DialogHeader>
           <div className="flex items-center gap-2">
-            <div className="p-2 rounded-xl bg-brand/10 text-brand">
+            <div className="p-2 rounded-full bg-primary-shadow text-primary-brand">
               <Sparkles className="h-5 w-5" />
             </div>
             <div>
-              <DialogTitle className="text-xl font-bold text-foreground">
+              <DialogTitle className="mb-1">
                 {t('trends.settingsTitle', { defaultValue: 'Trend Scout Personalization' })}
               </DialogTitle>
-              <DialogDescription className="text-xs text-muted-foreground mt-0.5">
+              <DialogDescription>
                 {t('trends.settingsDesc', { defaultValue: 'Connect social accounts and personalize your style filter.' })}
               </DialogDescription>
             </div>
@@ -193,51 +194,50 @@ export function TrendScoutSettingsModal({ open, onOpenChange, onRefreshTriggered
 
         {loading ? (
           <div className="flex flex-col items-center justify-center py-12 gap-3">
-            <Loader2 className="h-8 w-8 animate-spin text-brand" />
-            <p className="text-xs text-muted-foreground">
+            <Loader2 className="h-8 w-8 animate-spin text-primary-brand" />
+            <p className="text-xs text-primary-brand">
               {t('trends.loadingSettings', { defaultValue: 'Analyzing closet profile...' })}
             </p>
           </div>
         ) : (
           <div className="space-y-6 pt-2">
             {/* Closet Intelligence Card */}
-            <div className="p-3.5 rounded-xl border border-border/70 bg-secondary/30 space-y-2">
-              <div className="flex items-center justify-between text-xs font-semibold text-foreground">
-                <span className="flex items-center gap-1.5">
-                  <Shirt className="h-4 w-4 text-brand" />
+            <div className="p-3 rounded-[12px] border border-border bg-primary-shadow space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="flex items-center gap-1.5 text-[12px] font-semibold text-dark-brand">
+                  <Shirt className="h-4 w-4 text-primary-brand" />
                   {t('trends.closetIntelligence', { defaultValue: 'Wardrobe Analysis' })}
                 </span>
-                <span className="text-[11px] text-muted-foreground">
+                <span className="text-[12px] text-primary-brand font-semibold">
                   {closetProfile?.item_count || 0} {t('trends.itemsAnalyzed', { defaultValue: 'items' })}
                 </span>
               </div>
               <div className="flex flex-wrap gap-2 pt-1">
-                <Badge variant="outline" className="text-xs border-brand/40 bg-brand/5 text-brand px-2.5 py-0.5 rounded-full">
-                  👔 {t('trends.leadDressCode', { defaultValue: 'Lead Dress Code' })}: <strong className="ms-1">{closetProfile?.lead_dress_code || 'Casual'}</strong>
+                <Badge variant="outline" className="text-xs border border-primary-brand bg-white text-primary-brand px-2 py-0.5 rounded-full inline-flex items-center gap-1">
+                  <span>{t('trends.leadDressCode', { defaultValue: 'Lead Dress Code' })}: <strong className="ms-1">{closetProfile?.lead_dress_code || 'Casual'}</strong></span>
                 </Badge>
-                <Badge variant="outline" className="text-xs border-indigo-400/40 bg-indigo-500/5 text-indigo-600 dark:text-indigo-400 px-2.5 py-0.5 rounded-full">
-                  ✨ {t('trends.leadClosetStyle', { defaultValue: 'Closet Style' })}: <strong className="ms-1">{closetProfile?.lead_closet_style || 'Classic'}</strong>
+                <Badge variant="outline" className="text-xs border border-primary-brand bg-white text-primary-brand px-2 py-0.5 rounded-full inline-flex items-center gap-1">
+                  <span>{t('trends.leadClosetStyle', { defaultValue: 'Closet Style' })}: <strong className="ms-1">{closetProfile?.lead_closet_style || 'Classic'}</strong></span>
                 </Badge>
                 {closetProfile?.effective_style && closetProfile?.effective_style !== closetProfile?.lead_closet_style && (
-                  <Badge variant="outline" className="text-xs border-amber-500/40 bg-amber-500/10 text-amber-600 dark:text-amber-400 px-2.5 py-0.5 rounded-full">
-                    ⚡ {t('trends.customActive', { defaultValue: 'Active Override' })}: <strong className="ms-1">{closetProfile.effective_style}</strong>
+                  <Badge variant="outline" className="text-xs border border-primary-brand bg-white ttext-primary-brand px-2 py-0.5 rounded-full inline-flex items-center gap-1">
+                    <span>{t('trends.customActive', { defaultValue: 'Active Override' })}: <strong className="ms-1">{closetProfile.effective_style}</strong></span>
                   </Badge>
                 )}
               </div>
             </div>
-
             {/* Custom Style Input Section */}
             <div className="space-y-2.5">
               <div className="flex items-center justify-between">
-                <label className="text-sm font-semibold text-foreground flex items-center gap-1.5">
-                  <Layers className="h-4 w-4 text-brand" />
+                <label className="text-sm font-semibold text-dark-brand flex items-center gap-1.5">
+                  <Layers className="h-4 w-4 text-primary-brand" />
                   {t('trends.customStyleField', { defaultValue: 'Style Preference' })}
                 </label>
                 {customStyle && (
                   <button
                     type="button"
                     onClick={() => setCustomStyle('')}
-                    className="text-[11px] text-muted-foreground hover:text-foreground underline"
+                    className="text-[12px] font-bold text-primary-brand hover:text-dark-brand"
                   >
                     {t('common.clear', { defaultValue: 'Reset to closet' })}
                   </button>
@@ -247,9 +247,9 @@ export function TrendScoutSettingsModal({ open, onOpenChange, onRefreshTriggered
                 value={customStyle}
                 onChange={(e) => setCustomStyle(e.target.value)}
                 placeholder={t('trends.stylePlaceholder', { defaultValue: 'e.g., Vintage, Quiet Luxury, Streetwear...' })}
-                className="rounded-xl h-10 text-sm"
+                className=""
               />
-              <p className="text-[11px] text-muted-foreground">
+              <p className="text-[11px] text-text-brand font-semibold">
                 {t('trends.styleFieldHint', { defaultValue: 'Enter any style or aesthetic to override your closet baseline and guide web discovery.' })}
               </p>
               {/* Preset Chips */}
@@ -262,10 +262,10 @@ export function TrendScoutSettingsModal({ open, onOpenChange, onRefreshTriggered
                       key={style.id}
                       type="button"
                       onClick={() => setCustomStyle(localizedLabel)}
-                      className={`text-xs px-2.5 py-1 rounded-lg border transition-all ${
+                      className={`text-xs px-2.5 py-1 rounded-lg font-semibold border transition-all ${
                         isSelected
-                          ? 'border-brand bg-brand text-primary-foreground font-semibold shadow-xs'
-                          : 'border-border bg-card text-muted-foreground hover:border-brand/40 hover:text-foreground'
+                          ? 'border-primary-brand bg-primary-brand text-white'
+                          : 'border-border bg-white text-text-brand'
                       }`}
                     >
                       {localizedLabel}
@@ -274,53 +274,50 @@ export function TrendScoutSettingsModal({ open, onOpenChange, onRefreshTriggered
                 })}
               </div>
             </div>
-
             {/* Social Media Accounts Section */}
             <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <label className="text-sm font-semibold text-foreground flex items-center gap-1.5">
-                  <Share2 className="h-4 w-4 text-brand" />
+                <label className="text-sm font-semibold text-dark-brand flex items-center gap-1.5">
+                  <Share2 className="h-4 w-4 text-primary-brand" />
                   {t('trends.socialAccounts', { defaultValue: 'Social Media Feeds' })}
                 </label>
-                <span className="text-[11px] text-muted-foreground">
+                <span className="text-[12px] font-bold text-primary-brand">
                   {socialPlatforms.filter((p) => p.active).length} / {socialPlatforms.length} {t('trends.active', { defaultValue: 'active' })}
                 </span>
               </div>
-              <p className="text-[11px] text-muted-foreground -mt-1">
+              <p className="text-[11px] text-text-brand font-semibold">
                 {t('trends.socialDesc', { defaultValue: 'Trend Scout prioritizes fashion creators, hashtags, and viral aesthetics from your connected platforms.' })}
               </p>
-
               <div className="space-y-2">
                 {socialPlatforms.map((platform) => {
                   const icon = PLATFORM_ICONS[platform.id] || '🌐';
                   return (
                     <div
                       key={platform.id}
-                      className={`flex items-center justify-between p-3 rounded-xl border transition-all ${
+                      className={`flex items-center justify-between p-3 rounded-[12px] border transition-all ${
                         platform.active
-                          ? 'border-brand/30 bg-brand/5'
-                          : 'border-border/70 bg-card'
+                          ? 'border-primary-brand bg-primary-shadow'
+                          : 'border-border bg-white'
                       }`}
                     >
                       <div className="flex items-center gap-3">
                         <span className="text-xl select-none">{icon}</span>
                         <div>
                           <div className="flex items-center gap-2">
-                            <span className="text-sm font-medium text-foreground">{platform.name}</span>
+                            <span className="text-sm font-medium text-dark-brand">{platform.name}</span>
                             {platform.connected && (
                               <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-4 rounded-md">
                                 {platform.username ? `@${platform.username}` : t('trends.connected', { defaultValue: 'Connected' })}
                               </Badge>
                             )}
                           </div>
-                          <span className="text-[11px] text-muted-foreground block">
+                          <span className="text-[11px] text-primary-brand block">
                             {platform.active
                               ? t('trends.platformActive', { defaultValue: 'Active in Trend Scout' })
                               : t('trends.platformInactive', { defaultValue: 'Muted' })}
                           </span>
                         </div>
                       </div>
-
                       <div className="flex items-center gap-2">
                         {platform.connected ? (
                           <div className="flex items-center gap-1.5">
@@ -328,7 +325,7 @@ export function TrendScoutSettingsModal({ open, onOpenChange, onRefreshTriggered
                               size="sm"
                               variant={platform.active ? 'default' : 'outline'}
                               onClick={() => handleTogglePlatform(platform.id)}
-                              className="h-8 px-2.5 text-xs rounded-lg gap-1"
+                              className="h-8 px-2.5 gap-1"
                             >
                               {platform.active ? (
                                 <>
@@ -343,7 +340,7 @@ export function TrendScoutSettingsModal({ open, onOpenChange, onRefreshTriggered
                               size="sm"
                               variant="ghost"
                               onClick={() => handleDisconnect(platform.id)}
-                              className="h-8 w-8 p-0 text-muted-foreground hover:text-destructive rounded-lg"
+                              className="h-8 px-2.5 gap-1 bg-destructive"
                               title={t('trends.disconnect', { defaultValue: 'Disconnect account' })}
                             >
                               <Unlink className="h-3.5 w-3.5" />
@@ -354,7 +351,7 @@ export function TrendScoutSettingsModal({ open, onOpenChange, onRefreshTriggered
                             size="sm"
                             variant="outline"
                             onClick={() => handleOpenConnect(platform)}
-                            className="h-8 px-2.5 text-xs rounded-lg gap-1 border-dashed hover:border-brand"
+                            className="h-8 px-2.5 gap-1"
                           >
                             <Link2 className="h-3 w-3" />
                             {t('trends.connectAccount', { defaultValue: 'Connect' })}
@@ -369,25 +366,25 @@ export function TrendScoutSettingsModal({ open, onOpenChange, onRefreshTriggered
 
             {/* Quick Connect Dialog/Inline Form */}
             {connectingPlatform && (
-              <div className="p-3.5 rounded-xl border border-brand/40 bg-brand/5 space-y-2">
-                <div className="flex items-center justify-between text-xs font-semibold text-foreground">
+              <div className="p-3 rounded-[12px] border border-border bg-primary-shadow space-y-2">
+                <div className="flex items-center justify-between text-xs font-semibold text-dark-brand">
                   <span>{t('trends.connectModalTitle', { defaultValue: 'Connect' })} {connectingPlatform.name}</span>
                   <button
                     type="button"
                     onClick={() => setConnectingPlatform(null)}
-                    className="text-muted-foreground hover:text-foreground text-xs"
+                    className="text-primary-brand hover:text-dark-brand text-xs"
                   >
                     ✕
                   </button>
                 </div>
-                <div className="flex gap-2">
+                <div className="flex items-center gap-2">
                   <Input
                     value={handleInput}
                     onChange={(e) => setHandleInput(e.target.value)}
                     placeholder={t('trends.handlePlaceholder', { defaultValue: 'Enter @username or profile handle' })}
-                    className="h-8 text-xs rounded-lg"
+                    className="mb-0"
                   />
-                  <Button size="sm" onClick={handleSaveConnect} className="h-8 px-3 text-xs rounded-lg">
+                  <Button size="sm" onClick={handleSaveConnect} className="">
                     {t('common.save', { defaultValue: 'Save' })}
                   </Button>
                 </div>
@@ -395,7 +392,7 @@ export function TrendScoutSettingsModal({ open, onOpenChange, onRefreshTriggered
             )}
 
             {/* Actions: Save & Instant Refresh */}
-            <div className="flex flex-col sm:flex-row gap-2 pt-2 border-t border-border">
+            <div className="flex flex-col sm:flex-row gap-2 pt-2">
               <Button
                 variant="outline"
                 onClick={() => handleSaveSettings(false)}

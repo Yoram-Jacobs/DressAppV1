@@ -33,7 +33,7 @@ export function QuotaMonitor({ quotaStatus, pricingData }) {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* Quota Status Alert Banner */}
       {!quotaStatus.can_proceed && (
         <motion.div 
@@ -58,27 +58,25 @@ export function QuotaMonitor({ quotaStatus, pricingData }) {
           )}
         </motion.div>
       )}
-
       {/* Usage Statistics */}
       {isFree && (
         <section data-testid="pricing-usage-section">
-          <h2 className="text-xl sm:text-2xl font-display tracking-tight text-primary mb-6 flex items-center gap-2">
-            <TrendingUp className="h-5 w-5 text-accent" />
+          <Card className="rounded-[12px] border border-border bg-white shadow-sm p-5">
+          <h2 className="text-[20px] font-bold text-dark-brand mb-6 flex items-center gap-2">
+            <TrendingUp className="!h-4 !w-4 text-primary-brand" />
             {t('pricing.usageStatsHeader', { defaultValue: 'Daily Processing Limits' })}
           </h2>
-
-          <Card className="rounded-[calc(var(--radius)+6px)] border-border bg-card shadow-[var(--shadow-sm)] p-6">
             <div className="space-y-4">
-              <div className="flex justify-between items-baseline mb-2 text-xs font-body font-semibold">
-                <span className="text-muted-foreground">{t('pricing.dailyUsed', { defaultValue: 'Daily limit used' })}</span>
-                <span className="text-primary">{dailyUsed} / 10 requests</span>
+              <div className="flex justify-between items-baseline mb-2 text-xs font-semibold">
+                <span className="text-text-brand">{t('pricing.dailyUsed', { defaultValue: 'Daily limit used' })}</span>
+                <span className="text-primary-brand">{dailyUsed} / 10 requests</span>
               </div>
               <Progress 
                 value={Math.min(100, (dailyUsed / 10) * 100)} 
                 className="h-2 rounded-full"
-                indicatorClassName="bg-[hsl(var(--accent))]"
+                indicatorClassName="bg-primary-brand"
               />
-              <p className="text-[11px] text-muted-foreground">
+              <p className="text-[11px] text-text-brand font-semibold">
                 {t('pricing.freeUsageNotice', { defaultValue: 'As a member of the Free tier, you can perform up to 10 AI operations per day. Upgrade to Manager or Professional for unlimited access.' })}
               </p>
             </div>

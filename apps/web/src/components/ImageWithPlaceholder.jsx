@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { resolveMediaUrl } from '@/lib/itemImage';
 
 /**
  * Reusable progressive image loading component with an instant low-res blurred placeholder.
@@ -8,21 +9,28 @@ export default function ImageWithPlaceholder({ src, placeholder, alt, className 
   const [isLoaded, setIsLoaded] = useState(false);
   const [highResSrc, setHighResSrc] = useState(null);
 
+  const resolvedSrc = resolveMediaUrl(src);
+  const resolvedPlaceholder = resolveMediaUrl(placeholder);
+
   useEffect(() => {
     // Reset loaded state when source changes
     setIsLoaded(false);
     setHighResSrc(null);
 
-    if (!src) return;
+    if (!resolvedSrc) return;
 
     // Preload the high-resolution image in memory
     const img = new Image();
-    img.src = src;
+    img.src = resolvedSrc;
     img.onload = () => {
-      setHighResSrc(src);
+      setHighResSrc(resolvedSrc);
       setIsLoaded(true);
     };
-  }, [src]);
+    img.onerror = () => {
+      // In case of error, mark loaded so spinner doesn't loop forever
+      setIsLoaded(true);
+    };
+  }, [resolvedSrc]);
 
   return (
     <div className={`relative overflow-hidden ${className}`} {...props}>

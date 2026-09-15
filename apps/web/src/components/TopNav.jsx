@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Link, NavLink, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
@@ -6,12 +6,47 @@ import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem,
   DropdownMenuSeparator, DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Home, Shirt, Sparkles, Store, LogOut, Settings, Receipt, Shield, UserRound, Megaphone, HelpCircle, CreditCard } from 'lucide-react';
+import { Home, Shirt, Sparkles, Store, LogOut, Settings, Receipt, Shield, UserRound, Megaphone, CircleHelp as HelpCircle, CreditCard } from 'lucide-react';
 import { useAuth } from '@/lib/auth';
 import { cn } from '@/lib/utils';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { BrandLogo } from '@/components/BrandLogo';
 import HelpMenu from '@/components/HelpMenu';
+import { LanguagePicker } from '@/components/LanguagePicker';
+import { resolveMediaUrl } from '@/lib/itemImage';
+
+const NavAvatar = ({ user, initials, className = "h-full w-full", imgClassName = "h-full w-full rounded-full object-cover", testId }) => {
+  const [imgFailed, setImgFailed] = useState(false);
+  const rawUrl = user?.face_photo_url || user?.avatar_url;
+  const photoUrl = resolveMediaUrl(rawUrl);
+
+  // Reset failure state whenever the user's photo URL changes
+  const prevUrlRef = useRef(rawUrl);
+  useEffect(() => {
+    if (prevUrlRef.current !== rawUrl) {
+      prevUrlRef.current = rawUrl;
+      setImgFailed(false);
+    }
+  }, [rawUrl]);
+
+  if (photoUrl && !imgFailed) {
+    return (
+      <img
+        src={photoUrl}
+        alt={user?.display_name || 'User'}
+        onError={() => setImgFailed(true)}
+        className={imgClassName}
+        data-testid={testId}
+      />
+    );
+  }
+
+  return (
+    <span className={cn("inline-flex items-center justify-center rounded-full bg-[hsl(var(--accent))] font-medium text-white", className)}>
+      {initials}
+    </span>
+  );
+};
 
 export const TopNav = () => {
   const { t } = useTranslation();
@@ -33,122 +68,213 @@ export const TopNav = () => {
   return (
     <header
       data-testid="top-nav"
-      className="sticky top-0 z-30 bg-background/85 backdrop-blur border-b border-border"
+      className="sticky top-0 z-40 w-full bg-white/95 backdrop-blur-md border-b border-border shadow-xs"
     >
       {/* Desktop Header */}
-      <div className="hidden md:flex mx-auto max-w-6xl px-6 h-16 items-center gap-8">
-        <Link to="/home" data-testid="brand-logo" aria-label={t('brand')}>
+      <div className="hidden md:flex px-[40px] py-3 h-18 items-center justify-between gap-6">
+        <Link
+          to="/home"
+          data-testid="brand-logo"
+          aria-label={t('brand')}
+          className="shrink-0"
+        >
           <BrandLogo size="md" testId="brand-logo-mark" />
         </Link>
+
+        {/* Navigation Links */}
         <nav aria-label={t('nav.primary')} className="flex items-center gap-1">
           {LINKS.map(({ to, icon: Icon, key, label }) => (
             <NavLink
               key={to}
               to={to}
+              onClick={() => {
+                if (window.location.pathname === to) {
+                  window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
+                  const mainEl = document.getElementById('main-content');
+                  if (mainEl) mainEl.scrollTo({ top: 0, behavior: 'smooth' });
+                }
+              }}
               data-testid={`topnav-link-${key}`}
               className={({ isActive }) =>
                 cn(
-                  'inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm',
+                  'inline-flex items-center gap-2 px-3.5 py-2 rounded-full text-sm font-semibold transition-all duration-200',
                   isActive
-                    ? 'text-foreground bg-secondary'
-                    : 'text-muted-foreground hover:text-foreground hover:bg-secondary/60'
+                    ? 'text-[var(--primary-color)] bg-[var(--primary-color)]/10'
+                    : 'text-foreground/75 hover:text-[var(--primary-color)] hover:bg-secondary/60'
                 )
               }
             >
-              <Icon className="h-4 w-4" />
-              {label}
+              <Icon className="h-4 w-4 shrink-0" />
+              <span>{label}</span>
             </NavLink>
           ))}
         </nav>
-        <div className="ms-auto flex items-center gap-2">
+
+        {/* Right Actions */}
+        <div className="flex items-center gap-3 shrink-0">
+          <LanguagePicker testIdSuffix="home" />
+
+          {/* Help */}
           <Button
             variant="ghost"
             size="icon"
-            className="rounded-full h-10 w-10 p-0 text-muted-foreground hover:text-foreground hover:bg-secondary/60"
+            className="rounded-full h-10 w-10 text-dark-brand hover:text-primary-brand hover:bg-priamry-shadow transition-colors"
             onClick={() => setHelpOpen(true)}
             data-testid="topnav-help-button"
             aria-label="Open Help Menu"
           >
-            <HelpCircle className="h-5 w-5" />
+            <HelpCircle className="!h-[30px] !w-[30px]" />
           </Button>
+
+          {/* User Dropdown */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" aria-label={t('nav.openUserMenu')} className="rounded-full h-10 w-10 p-0 overflow-hidden" data-testid="topnav-avatar-button">
-                {(user?.face_photo_url || user?.avatar_url) ? (
-                  <img
-                    src={user.face_photo_url || user.avatar_url}
-                    alt={user?.display_name || 'User'}
-                    className="h-9 w-9 rounded-full object-cover border border-border/80 shadow-sm"
-                  />
-                ) : (
-                  <span className="h-9 w-9 inline-flex items-center justify-center rounded-full bg-[hsl(var(--accent))] text-[hsl(var(--accent-foreground))] font-medium">
-                    {initials}
-                  </span>
-                )}
+              <Button
+                variant="ghost"
+                aria-label={t('nav.openUserMenu')}
+                className="h-[35px] w-[35px] overflow-hidden rounded-full p-0 border border-border focus-visible:ring-2 focus-visible:ring-[var(--primary-color)]"
+                data-testid="topnav-avatar-button"
+              >
+                <NavAvatar user={user} initials={initials} testId="topnav-avatar-img" />
               </Button>
             </DropdownMenuTrigger>
+
             <DropdownMenuContent align="end" className="w-56">
-              <div className="px-2 py-2 text-sm flex items-center gap-3">
-                {(user?.face_photo_url || user?.avatar_url) ? (
-                  <img
-                    src={user.face_photo_url || user.avatar_url}
-                    alt={user?.display_name || 'User'}
-                    className="h-9 w-9 rounded-full object-cover border border-border/80 shadow-sm shrink-0"
-                  />
-                ) : (
-                  <span className="h-9 w-9 inline-flex items-center justify-center rounded-full bg-[hsl(var(--accent))] text-[hsl(var(--accent-foreground))] font-medium shrink-0">
-                    {initials}
-                  </span>
-                )}
+              {/* User Info */}
+              <div className="flex items-center gap-3 px-3 py-2.5 text-sm">
+                <div className="h-9 w-9 shrink-0 overflow-hidden rounded-full border border-border">
+                  <NavAvatar user={user} initials={initials} className="h-9 w-9" imgClassName="h-9 w-9 rounded-full object-cover" />
+                </div>
                 <div className="min-w-0 flex-1">
-                  <div className="font-medium truncate">{user?.display_name || t('nav.guest')}</div>
-                  <div className="text-xs text-muted-foreground truncate">{user?.email}</div>
+                  <div className="truncate text-sm font-bold text-foreground">
+                    {user?.display_name || t('nav.guest')}
+                  </div>
+                  <div className="truncate text-xs text-text-brand">
+                    {user?.email}
+                  </div>
                 </div>
               </div>
+
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => nav('/transactions')} data-testid="topnav-menu-transactions">
-                <Receipt className="h-4 w-4 me-2" /> {t('nav.transactions')}
+
+              <DropdownMenuItem
+                onClick={() => nav('/transactions')}
+                data-testid="topnav-menu-transactions"
+              >
+                <Receipt className="h-4 w-4" />
+                {t('nav.transactions')}
               </DropdownMenuItem>
+
               {isPro && (
-                <DropdownMenuItem onClick={() => nav('/ads')} data-testid="topnav-menu-ads">
-                  <Megaphone className="h-4 w-4 me-2" /> {t('nav.ads')}
+                <DropdownMenuItem
+                  onClick={() => nav('/ads')}
+                  data-testid="topnav-menu-ads"
+                >
+                  <Megaphone className="h-4 w-4" />
+                  {t('nav.ads')}
                 </DropdownMenuItem>
               )}
-              {(user.roles || []).includes('admin') && (
-                <DropdownMenuItem onClick={() => nav('/admin')} data-testid="topnav-menu-admin">
-                  <Shield className="h-4 w-4 me-2" /> {t('nav.admin')}
+
+              {(user?.roles || []).includes('admin') && (
+                <DropdownMenuItem
+                  onClick={() => nav('/admin')}
+                  data-testid="topnav-menu-admin"
+                >
+                  <Shield className="h-4 w-4" />
+                  {t('nav.admin')}
                 </DropdownMenuItem>
               )}
-              <DropdownMenuItem onClick={() => nav('/me')} data-testid="topnav-menu-settings">
-                <Settings className="h-4 w-4 me-2" /> {t('nav.settings')}
+
+              <DropdownMenuItem
+                onClick={() => nav('/me')}
+                data-testid="topnav-menu-settings"
+              >
+                <Settings className="h-4 w-4" />
+                {t('nav.settings')}
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => { logout(); nav('/login'); }} data-testid="topnav-menu-logout">
-                <LogOut className="h-4 w-4 me-2" /> {t('nav.signOut')}
+
+              <DropdownMenuSeparator />
+
+              <DropdownMenuItem
+                onClick={() => {
+                  logout();
+                  nav('/login');
+                }}
+                data-testid="topnav-menu-logout"
+              >
+                <LogOut className="h-4 w-4 text-destructive" />
+                <span className="text-destructive">{t('nav.signOut')}</span>
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
       </div>
 
-      {/* Mobile Header */}
+      {/* Mobile Header (< md) */}
       <div className="flex md:hidden h-14 items-center justify-between px-4">
-        <Link to="/home" data-testid="mobile-brand-logo" aria-label={t('brand')}>
+        <Link
+          to="/home"
+          data-testid="mobile-brand-logo"
+          aria-label={t('brand')}
+        >
           <BrandLogo size="sm" testId="mobile-brand-logo-mark" />
         </Link>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="rounded-full h-10 w-10 p-0 text-muted-foreground hover:text-foreground hover:bg-secondary/60"
-          onClick={() => setHelpOpen(true)}
-          data-testid="mobile-help-button"
-          aria-label="Open Help Menu"
-        >
-          <HelpCircle className="h-5 w-5" />
-        </Button>
+
+        <div className="flex items-center gap-2">
+          <LanguagePicker testIdSuffix="mobile" />
+
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-9 w-9 rounded-full p-0 text-dark-brand hover:text-primary-brand hover:bg-priamry-shadow"
+            onClick={() => setHelpOpen(true)}
+            data-testid="mobile-help-button"
+            aria-label="Open Help Menu"
+          >
+            <HelpCircle className="h-5 w-5" />
+          </Button>
+
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="ghost"
+                aria-label={t('nav.openUserMenu')}
+                className="h-8 w-8 overflow-hidden rounded-full p-0 border border-border"
+                data-testid="mobile-avatar-button"
+              >
+                <NavAvatar user={user} initials={initials} className="text-xs" imgClassName="h-full w-full rounded-full object-cover" testId="mobile-avatar-img" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-52">
+              <div className="px-3 py-2 text-xs">
+                <div className="font-bold truncate">{user?.display_name || t('nav.guest')}</div>
+                <div className="text-text-brand truncate">{user?.email}</div>
+              </div>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => nav('/me')}>
+                <Settings className="h-4 w-4" />
+                {t('nav.settings')}
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => nav('/transactions')}>
+                <Receipt className="h-4 w-4" />
+                {t('nav.transactions')}
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => { logout(); nav('/login'); }}>
+                <LogOut className="h-4 w-4text-destructive" />
+                <span className="text-destructive">{t('nav.signOut')}</span>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
       </div>
 
-      <Dialog open={helpOpen} onOpenChange={setHelpOpen}>
-        <DialogContent className="max-w-4xl h-[85vh] flex flex-col p-0 overflow-hidden">
+      {/* Help Modal */}
+      <Dialog
+        open={helpOpen}
+        onOpenChange={setHelpOpen}
+      >
+        <DialogContent className="rounded-[12px] !max-w-6xl max-h-[85vh] overflow-y-auto p-5">
           <HelpMenu />
         </DialogContent>
       </Dialog>

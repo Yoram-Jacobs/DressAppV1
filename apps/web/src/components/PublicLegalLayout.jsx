@@ -1,45 +1,43 @@
 import { Outlet, Link } from 'react-router-dom';
-import { Sparkles, ArrowLeft } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { BrandLogo } from '@/components/BrandLogo';
+import { LanguagePicker } from '@/components/LanguagePicker';
+import { LanguageSync } from '@/components/LanguageSync';
+import { Footer } from '@/components/Footer';
+import { useAuth } from '@/lib/auth';
+import { Button } from '@/components/ui/button';
 
-export function PublicLegalLayout() {
+export const PublicLegalLayout = () => {
   const { t } = useTranslation();
+  const { user } = useAuth();
 
   return (
-    <div className="min-h-screen bg-background text-foreground flex flex-col">
-      <header className="border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-40">
-        <div className="container mx-auto flex h-14 max-w-4xl items-center justify-between px-4">
-          <Link to="/" className="flex items-center gap-2 text-sm font-semibold tracking-tight hover:opacity-80 transition-opacity">
-            <Sparkles className="h-4 w-4 text-primary" />
-            <span>DressApp</span>
+    <div className="page-shell flex min-h-screen flex-col bg-background text-foreground">
+      <LanguageSync />
+      <header className="sticky top-0 z-40 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+        <div className="mx-auto flex h-14 max-w-7xl items-center justify-between px-4 sm:px-6">
+          <Link to={user ? "/home" : "/"} aria-label="DressApp">
+            <BrandLogo size="sm" />
           </Link>
-          <Link
-            to="/"
-            className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
-          >
-            <ArrowLeft className="h-3.5 w-3.5" />
-            <span>{t('common.backToApp', { defaultValue: 'Back to App' })}</span>
-          </Link>
+          <div className="flex items-center gap-3">
+            <LanguagePicker />
+            {user ? (
+              <Button variant="outline" size="sm" asChild>
+                <Link to="/home">{t('nav.home', { defaultValue: 'Home' })}</Link>
+              </Button>
+            ) : (
+              <Button size="sm" asChild>
+                <Link to="/login">{t('nav.signIn', { defaultValue: 'Sign In' })}</Link>
+              </Button>
+            )}
+          </div>
         </div>
       </header>
-
-      <main className="flex-1 py-8">
+      <main id="main-content" className="flex-1" tabIndex={-1}>
         <Outlet />
       </main>
-
-      <footer className="border-t border-border/40 py-6 text-center text-xs text-muted-foreground">
-        <div className="container mx-auto flex flex-wrap items-center justify-center gap-4 px-4">
-          <Link to="/privacy" className="hover:underline">
-            {t('privacy.title', { defaultValue: 'Privacy Policy' })}
-          </Link>
-          <span>•</span>
-          <Link to="/terms" className="hover:underline">
-            {t('terms.title', { defaultValue: 'Terms of Service' })}
-          </Link>
-          <span>•</span>
-          <span>&copy; {new Date().getFullYear()} DressApp</span>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
-}
+};
+export default PublicLegalLayout;

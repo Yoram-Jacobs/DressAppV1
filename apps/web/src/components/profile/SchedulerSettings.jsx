@@ -38,7 +38,7 @@ const WEEKDAYS = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'satur
 export function SchedulerSettings() {
   const { t, i18n } = useTranslation();
   const { user, updateUserLocal } = useAuth();
-  
+
   const [enabled, setEnabled] = useState(user?.scheduler_settings?.enabled || false);
   const [frequency, setFrequency] = useState(user?.scheduler_settings?.frequency || 'everyday');
   const [weekday, setWeekday] = useState(user?.scheduler_settings?.weekday || 'monday');
@@ -142,41 +142,40 @@ export function SchedulerSettings() {
   return (
     <AccordionItem
       value="scheduler"
-      className="border border-border/80 rounded-2xl bg-card overflow-hidden shadow-sm hover:shadow-[0_4px_20px_-4px_rgba(0,0,0,0.08)] transition-all duration-300"
+      className="p-3 border border-border rounded-[12px] bg-white overflow-hidden shadow-sm hover:shadow-[0_4px_20px_-4px_rgba(0,0,0,0.08)] hover:border-primary-brand hover:bg-primary-shadow transition-all duration-300"
       id="scheduler-settings-section"
     >
-      <AccordionTrigger className="hover:no-underline px-5 py-4 focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-none">
+      <AccordionTrigger className="hover:no-underline focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-none py-0">
         <div className="flex items-center gap-4 text-start">
           <div className="p-2.5 rounded-xl bg-[hsl(343_85%_96%)] text-[hsl(343_85%_58%)] dark:bg-[hsl(343_30%_18%)] dark:text-[hsl(343_85%_72%)] shrink-0 transition-transform duration-200">
             <Bell className="h-5 w-5" />
           </div>
           <div>
-            <span className="text-sm font-semibold tracking-wide block text-foreground uppercase">
+            <span className="text-[13px] font-bold block text-dark-brand">
               {t('profile.schedulerPushReminders', { defaultValue: 'Scheduler & Push' })}
             </span>
-            <span className="text-[10px] text-muted-foreground font-normal block mt-0.5 normal-case">
+            <span className="text-[11px] text-text-brand font-semibold block normal-case">
               {t('profile.schedulerDesc', { defaultValue: 'Daily outfit proposals, push alerts, and scheduling options' })}
             </span>
           </div>
         </div>
       </AccordionTrigger>
-      <AccordionContent className="px-5 pb-5 pt-3 border-t border-border/40 bg-secondary/5 space-y-4">
-        <div className="flex items-center justify-between gap-3 p-3 bg-card rounded-xl border border-border/70 shadow-sm text-start">
+      <AccordionContent className="border-t border-border space-y-3 pt-4 pb-0 mt-3">
+        <div className="flex items-center justify-between gap-3 p-3 bg-yellow-shadow rounded-[12px] border border-border shadow-sm text-start">
           <div className="space-y-1">
-            <div className="font-semibold text-sm">{t('profile.enableSchedulerProposals', { defaultValue: 'Enable Scheduler Proposals' })}</div>
-            <div className="text-xs text-muted-foreground text-start">{t('profile.receivePushReminders', { defaultValue: 'Receive customized daily outfit proposals.' })}</div>
+            <div className="font-semibold text-[14px] text-dark-brand">{t('profile.enableSchedulerProposals', { defaultValue: 'Enable Scheduler Proposals' })}</div>
+            <div className="text-[12px] text-text-brand font-semibold text-start">{t('profile.receivePushReminders', { defaultValue: 'Receive customized daily outfit proposals.' })}</div>
           </div>
           <Switch checked={enabled} onCheckedChange={setEnabled} data-testid="scheduler-enabled-switch" />
         </div>
-
         {enabled && (
-          <div className="space-y-4 pt-2 text-start">
+          <div className="space-y-3 text-start">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="space-y-1.5">
+              <div className="">
                 <Label htmlFor="s-freq">{t('profile.notificationFrequency', { defaultValue: 'Frequency' })}</Label>
                 <Select value={frequency} onValueChange={setFrequency}>
-                  <SelectTrigger id="s-freq" className="rounded-xl bg-card"><SelectValue /></SelectTrigger>
-                  <SelectContent className="rounded-xl">
+                  <SelectTrigger id="s-freq"><SelectValue /></SelectTrigger>
+                  <SelectContent>
                     <SelectItem value="everyday">{t('profile.everyday', { defaultValue: 'Everyday' })}</SelectItem>
                     <SelectItem value="every_other_day">{t('profile.everyOtherDay', { defaultValue: 'Every Other Day' })}</SelectItem>
                     <SelectItem value="twice_a_week">{t('profile.twiceAWeek', { defaultValue: 'Twice a Week' })}</SelectItem>
@@ -184,13 +183,12 @@ export function SchedulerSettings() {
                   </SelectContent>
                 </Select>
               </div>
-
               {frequency === 'on_weekday' && (
-                <div className="space-y-1.5">
+                <div className="">
                   <Label htmlFor="s-day">{t('profile.chooseDay', { defaultValue: 'Choose Day' })}</Label>
                   <Select value={weekday} onValueChange={setWeekday}>
-                    <SelectTrigger id="s-day" className="rounded-xl bg-card"><SelectValue /></SelectTrigger>
-                    <SelectContent className="rounded-xl">
+                    <SelectTrigger id="s-day"><SelectValue /></SelectTrigger>
+                    <SelectContent>
                       {WEEKDAYS.map((day) => (
                         <SelectItem key={day} value={day}>
                           {getWeekdayName(day, i18n.language)}
@@ -200,19 +198,17 @@ export function SchedulerSettings() {
                   </Select>
                 </div>
               )}
-
-              <div className="space-y-1.5">
+              <div className="">
                 <Label htmlFor="s-time">{t('profile.notificationTime', { defaultValue: 'Notification Time' })}</Label>
-                <Input id="s-time" type="time" value={time} onChange={(e) => setTime(e.target.value)} className="rounded-xl bg-card" />
+                <Input id="s-time" type="time" value={time} onChange={(e) => setTime(e.target.value)}/>
               </div>
             </div>
-
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="space-y-1.5">
+              <div className="">
                 <Label htmlFor="s-style">{t('profile.styleDressFor', { defaultValue: 'Style / Dress For' })}</Label>
                 <Select value={styleOption} onValueChange={setStyleOption}>
-                  <SelectTrigger id="s-style" className="rounded-xl bg-card"><SelectValue /></SelectTrigger>
-                  <SelectContent className="rounded-xl">
+                  <SelectTrigger id="s-style"><SelectValue /></SelectTrigger>
+                  <SelectContent>
                     <SelectItem value="casual">{labelForDressCode('casual', t)}</SelectItem>
                     <SelectItem value="smart-casual">{labelForDressCode('smart-casual', t)}</SelectItem>
                     <SelectItem value="formal">{labelForDressCode('formal', t)}</SelectItem>
@@ -221,41 +217,36 @@ export function SchedulerSettings() {
                   </SelectContent>
                 </Select>
               </div>
-
               {styleOption === 'custom' && (
-                <div className="space-y-1.5">
+                <div className="">
                   <Label htmlFor="s-custom-style">{t('profile.dressForDemands', { defaultValue: 'Dress For Demands' })}</Label>
-                  <Input 
-                    id="s-custom-style" 
-                    value={customStyle} 
-                    onChange={(e) => setCustomStyle(e.target.value)} 
-                    placeholder={t('profile.customStylePlaceholder', { defaultValue: 'e.g. Gym, Hiking, Church' })} 
-                    className="rounded-xl bg-card" 
+                  <Input
+                    id="s-custom-style"
+                    value={customStyle}
+                    onChange={(e) => setCustomStyle(e.target.value)}
+                    placeholder={t('profile.customStylePlaceholder', { defaultValue: 'e.g. Gym, Hiking, Church' })}
                   />
                 </div>
               )}
             </div>
           </div>
         )}
-
         {pushSupported && (
-          <div className="flex items-center justify-between gap-3 p-3 bg-card rounded-xl border border-border/70 shadow-sm text-start">
+          <div className="flex items-center justify-between gap-3 p-3 bg-yellow-shadow rounded-[12px] border border-border shadow-sm text-start">
             <div className="space-y-1">
-              <div className="font-semibold text-sm">{t('profile.browserPushAlerts', { defaultValue: 'Push Alerts' })}</div>
-              <div className="text-xs text-muted-foreground text-start">{t('profile.receiveDirectBrowserAlerts', { defaultValue: 'Receive alerts on this device.' })}</div>
+              <div className="font-semibold text-[14px] text-dark-brand">{t('profile.browserPushAlerts', { defaultValue: 'Push Alerts' })}</div>
+              <div className="text-[12px] text-text-brand font-semibold text-start">{t('profile.receiveDirectBrowserAlerts', { defaultValue: 'Receive alerts on this device.' })}</div>
             </div>
             <Switch checked={pushEnabled} onCheckedChange={handlePushToggle} disabled={busy} />
           </div>
         )}
-
-        <div className="text-xs text-muted-foreground p-3 bg-secondary/20 rounded-xl border border-dashed border-border/80 text-start">
+        <div className="text-[12px] text-text-brand p-3 bg-white rounded-full border border-primary-brand text-start">
           {t('profile.phoneWarning', { defaultValue: '* Configure phone number under CONTACT to receive push alerts.' })}
         </div>
-
-        <div className="flex justify-end pt-2">
-          <Button 
-            onClick={save} 
-            disabled={busy} 
+        <div className="flex justify-end">
+          <Button
+            onClick={save}
+            disabled={busy}
             className={`rounded-xl transition-all duration-300 ${saved ? 'bg-emerald-600 hover:bg-emerald-700 text-white' : ''}`}
             data-testid="scheduler-save-button"
           >

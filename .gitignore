@@ -111,3 +111,8 @@ backend/.venv*/
 *.bin
 *.gguf
 
+# Runtime Uploads & Test Artifacts
+backend/static/uploads/
+mobile_screen.png
+
+

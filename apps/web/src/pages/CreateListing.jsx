@@ -10,7 +10,9 @@ import { Card, CardContent } from '@/components/ui/card';
 import { toast } from 'sonner';
 import { Loader2, ArrowLeft } from 'lucide-react';
 import { api } from '@/lib/api';
-
+import { bestImageUrl } from '@/lib/itemImage';
+import PricingBanner from '../assets/img/inner6.webp';
+import { PageHeroBanner } from '@/components/ui/PageHeroBanner';
 const fmt = (cents, cur = 'USD') =>
   new Intl.NumberFormat('en-US', { style: 'currency', currency: cur }).format((cents || 0) / 100);
 
@@ -62,6 +64,30 @@ function deriveCondition(item) {
   return null;
 }
 
+function LinkedItemThumb({ item, fallbackText }) {
+  const [hasError, setHasError] = useState(false);
+  const src = !hasError ? bestImageUrl(item) : null;
+
+  if (src) {
+    return (
+      <img
+        src={src}
+        alt={item?.title || 'Closet item'}
+        onError={() => setHasError(true)}
+        className="h-full w-full object-cover"
+        data-testid="listing-linked-item-thumb"
+      />
+    );
+  }
+
+  return (
+    <div className="flex h-full w-full flex-col items-center justify-center text-text-brand gap-1 p-1">
+      <i className="fa-solid fa-image text-[12px]"></i>
+      <span className="text-[9px] text-text-brand line-clamp-1 text-center">{fallbackText}</span>
+    </div>
+  );
+}
+
 export default function CreateListing() {
   const { t } = useTranslation();
   const nav = useNavigate();
@@ -93,7 +119,7 @@ export default function CreateListing() {
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
-    api.listCloset({ limit: 2000 }).then((r) => setCloset(r.items || [])).catch(() => {});
+    api.listCloset({ limit: 2000 }).then((r) => setCloset(r.items || [])).catch(() => { });
   }, []);
 
   // ---------- derive listing fields from the linked closet item ----------
@@ -178,213 +204,241 @@ export default function CreateListing() {
   };
 
   return (
-    <div className="container-px max-w-3xl mx-auto pt-4 md:pt-10">
-      <button onClick={() => nav(-1)} className="inline-flex items-center text-sm text-muted-foreground mb-4">
-        <ArrowLeft className="h-4 w-4 me-1 rtl:rotate-180" /> {t('common.back')}
-      </button>
-      <h1 className="font-display text-3xl md:text-4xl">{t('createListing.title')}</h1>
-      <p className="text-sm text-muted-foreground mt-1">{t('createListing.feeSubtitle')}</p>
+    <>
+      {/* Banner Section */}
+      <PageHeroBanner image={PricingBanner}>
+        <div className="relative z-10 w-full">
+          <div
+            className="
+                  px-10 py-20
+                   max-[991px]:px-[15px] max-[991px]:py-[30px]
+            max-[767px]:px-[15px] max-[767px]:py-[30px]
+            max-[480px]:px-[15px] max-[480px]:py-[30px]
+                "
+          >
+            <div className="max-w-[520px]">
+              {/* <span>{t('profile.accountLabel')}</span> */}
+              {/* Title */}
+              <h1
+                className="
+                      m-0 mb-0
+                      text-[40px] leading-[40px]
+                      font-bold
+                      tracking-normal
+                      text-white
+                      max-[767px]:text-[30px]
+                max-[480px]:text-[20px]
+                max-[480px]:leading-[30px]
+                max-[480px]:mb-3
+                    "
+              >
+                {t('createListing.title')}
+              </h1>
+              {/* Description */}
+              <p
+                className="
+                      my-5
+                      max-w-[450px]
+                      text-[14px]
+                      leading-6
+                      tracking-[0.5px]
+                      text-white/60
+                      max-[767px]:max-w-full
+                      max-[767px]:mt-[15px]
+                    "
+              >
+                {t('createListing.feeSubtitle')}
+              </p>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
-        <Card className="md:col-span-2 rounded-[calc(var(--radius)+6px)] shadow-editorial">
-          <CardContent className="p-6">
-            <form onSubmit={submit} className="space-y-5" data-testid="create-listing-form">
-              <div>
-                <Label>{t('createListing.linkItem')}</Label>
-                <Select value={form.closet_item_id || 'none'} onValueChange={(v) => setForm({ ...form, closet_item_id: v === 'none' ? '' : v })}>
-                  <SelectTrigger className="rounded-xl" data-testid="listing-closet-select"><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="none">{t('createListing.linkNone')}</SelectItem>
-                    {closet.map((c) => <SelectItem key={c.id} value={c.id}>{c.title}</SelectItem>)}
-                  </SelectContent>
-                </Select>
-                {/* Visual confirmation of the linked closet item.
+            </div>
+          </div>
+        </div>
+      </PageHeroBanner>
+      <section className="bg-accent-beige px-[40px] py-[40px]  max-[991px]:px-[15px] max-[991px]:py-[30px]
+            max-[767px]:px-[15px] max-[767px]:py-[30px]
+            max-[480px]:px-[15px] max-[480px]:py-[30px]">
+        <button onClick={() => nav(-1)} className="inline-flex items-center text-[14px] font-bold text-dark-brand mb-5 hover:text-primary-brand">
+          <ArrowLeft className="h-4 w-4 me-1 rtl:rotate-180" /> {t('common.back')}
+        </button>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <Card className="md:col-span-2 rounded-[12px] bg-white border border-border shadow-sm">
+            <CardContent className="p-5">
+              <form onSubmit={submit} className="space-y-4" data-testid="create-listing-form">
+                <div>
+                  <Label>{t('createListing.linkItem')}</Label>
+                  <Select value={form.closet_item_id || 'none'} onValueChange={(v) => setForm({ ...form, closet_item_id: v === 'none' ? '' : v })}>
+                    <SelectTrigger data-testid="listing-closet-select"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">{t('createListing.linkNone')}</SelectItem>
+                      {closet.map((c) => <SelectItem key={c.id} value={c.id}>{c.title}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                  {/* Visual confirmation of the linked closet item.
                     Uses the reconstructed/clean image / cached thumbnail. */}
-                {(() => {
-                  const linkedItem = closet.find((c) => c.id === form.closet_item_id);
-                  if (!linkedItem) return null;
-                  const thumb =
-                    linkedItem.reconstruct_image_url ||
-                    linkedItem.reconstructed_image_url ||
-                    linkedItem.clean_image_url ||
-                    linkedItem.thumbnail_data_url ||
-                    linkedItem.cutout_url ||
-                    linkedItem.image_url ||
-                    linkedItem.segmented_image_url ||
-                    linkedItem.original_image_url;
+                  {(() => {
+                    const linkedItem = closet.find((c) => c.id === form.closet_item_id);
+                    if (!linkedItem) return null;
 
-                  return (
-                    <div
-                      className="mt-3 flex items-center gap-3 rounded-xl border border-border p-2"
-                      data-testid="listing-linked-item-preview"
-                    >
-                      <div className="h-16 w-16 flex-shrink-0 overflow-hidden rounded-lg bg-muted">
-                        {thumb ? (
-                          <img
-                            src={thumb}
-                            alt={linkedItem.title || 'Closet item'}
-                            className="h-full w-full object-cover"
-                            data-testid="listing-linked-item-thumb"
-                          />
-                        ) : (
-                          <div className="flex h-full w-full items-center justify-center text-[10px] text-muted-foreground">
-                            {t('createListing.linkNone')}
-                          </div>
-                        )}
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <div
-                          className="truncate text-sm font-medium"
-                          data-testid="listing-linked-item-title"
-                        >
-                          {linkedItem.title || linkedItem.name || '—'}
+                    return (
+                      <div
+                        className="mt-3 flex items-center gap-3 rounded-[12px] border border-border p-3 bg-primary-shadow"
+                        data-testid="listing-linked-item-preview"
+                      >
+                        <div className="h-16 w-16 flex-shrink-0 overflow-hidden rounded-[12px] bg-accent-beige border border-border flex items-center justify-center">
+                          <LinkedItemThumb item={linkedItem} fallbackText={t('createListing.linkNone')} />
                         </div>
-                        {linkedItem.category && (
-                          <div className="truncate text-xs text-muted-foreground">
-                            {linkedItem.category}
-                            {linkedItem.size ? ` · ${linkedItem.size}` : ''}
+                        <div className="min-w-0 flex-1">
+                          <div
+                            className="truncate text-[14px] font-bold"
+                            data-testid="listing-linked-item-title"
+                          >
+                            {linkedItem.title || linkedItem.name || '—'}
                           </div>
-                        )}
+                          {linkedItem.category && (
+                            <div className="truncate text-[12px] text-text-brand font-semibold">
+                              {linkedItem.category}
+                              {linkedItem.size ? ` · ${linkedItem.size}` : ''}
+                            </div>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  );
-                })()}
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label>{t('createListing.source')}</Label>
-                  <Select value={form.source} onValueChange={(v) => setForm({ ...form, source: v })}>
-                    <SelectTrigger className="rounded-xl" data-testid="listing-source-select"><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Shared">{t('createListing.sourceShared')}</SelectItem>
-                      <SelectItem value="Retail">{t('createListing.sourceRetail')}</SelectItem>
-                    </SelectContent>
-                  </Select>
+                    );
+                  })()}
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label>{t('createListing.source')}</Label>
+                    <Select value={form.source} onValueChange={(v) => setForm({ ...form, source: v })}>
+                      <SelectTrigger data-testid="listing-source-select"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Shared">{t('createListing.sourceShared')}</SelectItem>
+                        <SelectItem value="Retail">{t('createListing.sourceRetail')}</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label>{t('createListing.mode')}</Label>
+                    <Select value={form.mode} onValueChange={(v) => setForm({ ...form, mode: v })}>
+                      <SelectTrigger data-testid="listing-mode-select"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="sell">{t('createListing.modeSell')}</SelectItem>
+                        <SelectItem value="rent">{t('createListing.modeRent', { defaultValue: 'Rent' })}</SelectItem>
+                        <SelectItem value="swap">{t('createListing.modeSwap')}</SelectItem>
+                        <SelectItem value="donate">{t('createListing.modeDonate')}</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
                 <div>
-                  <Label>{t('createListing.mode')}</Label>
-                  <Select value={form.mode} onValueChange={(v) => setForm({ ...form, mode: v })}>
-                    <SelectTrigger className="rounded-xl" data-testid="listing-mode-select"><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="sell">{t('createListing.modeSell')}</SelectItem>
-                      <SelectItem value="rent">{t('createListing.modeRent', { defaultValue: 'Rent' })}</SelectItem>
-                      <SelectItem value="swap">{t('createListing.modeSwap')}</SelectItem>
-                      <SelectItem value="donate">{t('createListing.modeDonate')}</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-              <div>
-                <Label>{t('createListing.titleField')}</Label>
-                <Input required value={form.title}
-                  onChange={(e) => setForm({ ...form, title: e.target.value })}
-                  className="rounded-xl" data-testid="listing-title-input" />
-              </div>
-              <div>
-                <Label>{t('createListing.descriptionField')}</Label>
-                <Textarea value={form.description}
-                  onChange={(e) => setForm({ ...form, description: e.target.value })}
-                  rows={3} className="rounded-xl" data-testid="listing-description-input" />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label>{t('createListing.sizeField')}</Label>
-                  <Input value={form.size} onChange={(e) => setForm({ ...form, size: e.target.value })}
-                    className="rounded-xl" data-testid="listing-size-input" />
+                  <Label>{t('createListing.titleField')}</Label>
+                  <Input required value={form.title}
+                    onChange={(e) => setForm({ ...form, title: e.target.value })}
+                    data-testid="listing-title-input" />
                 </div>
                 <div>
-                  <Label>{t('createListing.conditionField')}</Label>
-                  <Select value={form.condition} onValueChange={(v) => setForm({ ...form, condition: v })}>
-                    <SelectTrigger className="rounded-xl" data-testid="listing-condition-select"><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="new">{t('createListing.cond_new')}</SelectItem>
-                      <SelectItem value="like_new">{t('createListing.cond_like_new')}</SelectItem>
-                      <SelectItem value="good">{t('createListing.cond_good')}</SelectItem>
-                      <SelectItem value="fair">{t('createListing.cond_fair')}</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <Label>{t('createListing.descriptionField')}</Label>
+                  <Textarea value={form.description}
+                    onChange={(e) => setForm({ ...form, description: e.target.value })}
+                    rows={3} data-testid="listing-description-input" />
                 </div>
-              </div>
-              <div>
-                <Label>{t('createListing.priceUsd')}</Label>
-                <Input
-                  type="text"
-                  inputMode="decimal"
-                  autoComplete="off"
-                  value={form.list_price_input}
-                  onChange={(e) => {
-                    const raw = e.target.value;
-                    if (raw && !/^\d*([.,]\d{0,2})?$/.test(raw)) return;
-                    const normalised = raw.replace(',', '.');
-                    const cents =
-                      normalised && !isNaN(parseFloat(normalised))
-                        ? Math.max(0, Math.round(parseFloat(normalised) * 100))
-                        : 0;
-                    setForm({ ...form, list_price_input: raw, list_price_cents: cents });
-                  }}
-                  placeholder="0.00"
-                  className="rounded-xl"
-                  data-testid="listing-price-input"
-                />
-              </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label>{t('createListing.sizeField')}</Label>
+                    <Input value={form.size} onChange={(e) => setForm({ ...form, size: e.target.value })}
+                    data-testid="listing-size-input" />
+                  </div>
+                  <div>
+                    <Label>{t('createListing.conditionField')}</Label>
+                    <Select value={form.condition} onValueChange={(v) => setForm({ ...form, condition: v })}>
+                      <SelectTrigger data-testid="listing-condition-select"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="new">{t('createListing.cond_new')}</SelectItem>
+                        <SelectItem value="like_new">{t('createListing.cond_like_new')}</SelectItem>
+                        <SelectItem value="good">{t('createListing.cond_good')}</SelectItem>
+                        <SelectItem value="fair">{t('createListing.cond_fair')}</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                <div>
+                  <Label>{t('createListing.priceUsd')}</Label>
+                  <Input
+                    type="text"
+                    inputMode="decimal"
+                    autoComplete="off"
+                    value={form.list_price_input}
+                    onChange={(e) => {
+                      const raw = e.target.value;
+                      if (raw && !/^\d*([.,]\d{0,2})?$/.test(raw)) return;
+                      const normalised = raw.replace(',', '.');
+                      const cents =
+                        normalised && !isNaN(parseFloat(normalised))
+                          ? Math.max(0, Math.round(parseFloat(normalised) * 100))
+                          : 0;
+                      setForm({ ...form, list_price_input: raw, list_price_cents: cents });
+                    }}
+                    placeholder="0.00"
+                    data-testid="listing-price-input"
+                  />
+                </div>
 
-              {/* Wave 3 — optional shipping fee. We lead with the
+                {/* Wave 3 — optional shipping fee. We lead with the
                   community-first ethos so the default (0) feels
                   intentional, not lazy. */}
-              <div data-testid="listing-shipping-block">
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="listing-shipping-input">
-                    Shipping fee (optional)
-                  </Label>
-                  <span className="text-[11px] text-[hsl(var(--accent))]">
-                    {t('pages.createListing.prefer_local_pickup')}
-                  </span>
+                <div className="border border-border p-3 bg-primary-shadow rounded-[12px]" data-testid="listing-shipping-block">
+                  <div className="flex items-center justify-between mb-3 flex-wrap gap-3">
+                    <Label className="mb-0" htmlFor="listing-shipping-input">
+                      Shipping fee (optional)
+                    </Label>
+                    <span className="text-[12px] text-primary-brand font-semibold">
+                      {t('pages.createListing.prefer_local_pickup')}
+                    </span>
+                  </div>
+                  <Input
+                    id="listing-shipping-input"
+                    type="text"
+                    inputMode="decimal"
+                    autoComplete="off"
+                    value={form.shipping_fee_input}
+                    onChange={(e) => {
+                      const raw = e.target.value;
+                      if (raw && !/^\d*([.,]\d{0,2})?$/.test(raw)) return;
+                      const normalised = raw.replace(',', '.');
+                      const cents =
+                        normalised && !isNaN(parseFloat(normalised))
+                          ? Math.max(0, Math.round(parseFloat(normalised) * 100))
+                          : 0;
+                      setForm({ ...form, shipping_fee_input: raw, shipping_fee_cents: cents });
+                    }}
+                    placeholder="0.00"
+                    data-testid="listing-shipping-input"
+                    className="mb-0"
+                  />
+                  <p className="text-[12px] text-text-brand mt-1.5 font-semibold italic">
+                    {t('pages.createListing.leave_at')} <strong>0</strong> {t('pages.createListing.to_encourage_neighbours_to_meet')}
+                  </p>
                 </div>
-                <Input
-                  id="listing-shipping-input"
-                  type="text"
-                  inputMode="decimal"
-                  autoComplete="off"
-                  value={form.shipping_fee_input}
-                  onChange={(e) => {
-                    const raw = e.target.value;
-                    if (raw && !/^\d*([.,]\d{0,2})?$/.test(raw)) return;
-                    const normalised = raw.replace(',', '.');
-                    const cents =
-                      normalised && !isNaN(parseFloat(normalised))
-                        ? Math.max(0, Math.round(parseFloat(normalised) * 100))
-                        : 0;
-                    setForm({ ...form, shipping_fee_input: raw, shipping_fee_cents: cents });
-                  }}
-                  placeholder="0.00"
-                  className="rounded-xl"
-                  data-testid="listing-shipping-input"
-                />
-                <p className="text-[11px] text-muted-foreground mt-1.5 leading-relaxed">
-                  {t('pages.createListing.leave_at')} <strong>0</strong> {t('pages.createListing.to_encourage_neighbours_to_meet')}
-                </p>
-              </div>
-              <Button type="submit" disabled={busy || !form.title} className="w-full rounded-xl" data-testid="listing-publish-button">
-                {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : t('createListing.publish')}
-              </Button>
-            </form>
-          </CardContent>
-        </Card>
-
-        <Card className="rounded-[calc(var(--radius)+6px)] shadow-editorial h-fit" data-testid="marketplace-fee-breakdown">
-          <CardContent className="p-5">
-            <div className="caps-label text-muted-foreground">{t('createListing.feePreview')}</div>
-            <div className="font-display text-2xl mt-1" data-testid="fee-gross">{fmt(preview?.gross_cents || form.list_price_cents)}</div>
-            <dl className="mt-4 text-sm space-y-2">
-              <div className="flex justify-between"><dt className="text-muted-foreground">{t('createListing.priceUsd')}</dt><dd>{fmt(preview?.gross_cents || form.list_price_cents)}</dd></div>
-              <div className="flex justify-between"><dt className="text-muted-foreground">{t('market.processingFee')}</dt><dd>− {fmt(preview?.stripe_fee_cents || 0)}</dd></div>
-              <div className="flex justify-between"><dt className="text-muted-foreground">{t('transactions.platform7')}</dt><dd>− {fmt(preview?.platform_fee_cents || 0)}</dd></div>
-              <div className="flex justify-between font-medium border-t border-border pt-2"><dt>{t('createListing.youReceive')}</dt><dd data-testid="fee-seller-net">{fmt(preview?.seller_net_cents || 0)}</dd></div>
-            </dl>
-            <p className="text-[11px] text-muted-foreground mt-3">{t('createListing.feeFootnote')}</p>
-          </CardContent>
-        </Card>
-      </div>
-    </div>
+                <Button type="submit" disabled={busy || !form.title} className="w-full" data-testid="listing-publish-button">
+                  {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : t('createListing.publish')}
+                </Button>
+              </form>
+            </CardContent>
+          </Card>
+          <Card className="rounded-[12px] bg-white border border-border shadow-sm h-fit" data-testid="marketplace-fee-breakdown">
+            <CardContent className="p-5">
+              <div className="text-[12px] text-primary-brand font-bold">{t('createListing.feePreview')}</div>
+              <div className="text-[25px] text-dark-brand font-extrabold my-2" data-testid="fee-gross">{fmt(preview?.gross_cents || form.list_price_cents)}</div>
+              <dl className="mt-1 text-[12px] space-y-2 font-semibold">
+                <div className="flex justify-between"><dt className="text-text-brand font-semibold">{t('createListing.priceUsd')}</dt><dd>{fmt(preview?.gross_cents || form.list_price_cents)}</dd></div>
+                <div className="flex justify-between"><dt className="text-text-brand font-semibold">{t('market.processingFee')}</dt><dd>− {fmt(preview?.stripe_fee_cents || 0)}</dd></div>
+                <div className="flex justify-between"><dt className="text-text-brand font-semibold">{t('transactions.platform7')}</dt><dd>− {fmt(preview?.platform_fee_cents || 0)}</dd></div>
+                <div className="flex justify-between font-semibold border-t border-border pt-2"><dt>{t('createListing.youReceive')}</dt><dd data-testid="fee-seller-net">{fmt(preview?.seller_net_cents || 0)}</dd></div>
+              </dl>
+              <p className="text-[12px] text-text-brand mt-3 font-semibold">{t('createListing.feeFootnote')}</p>
+            </CardContent>
+          </Card>
+        </div>
+      </section>
+    </>
   );
 }

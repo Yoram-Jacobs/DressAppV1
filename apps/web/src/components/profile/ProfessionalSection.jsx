@@ -8,18 +8,15 @@ import { Field } from './primitives.jsx';
 
 export function ProfessionalSection({ form, setField, t }) {
   return (
-    <AccordionItem value="professional" className="border border-border/80 rounded-2xl bg-card overflow-hidden shadow-sm hover:shadow-[0_4px_20px_-4px_rgba(0,0,0,0.08)] transition-all duration-300">
-      <AccordionTrigger
-        className="hover:no-underline px-5 py-4 focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-none"
-        data-testid="profile-accordion-professional"
-      >
+    <AccordionItem value="professional" className="p-3 border border-border rounded-[12px] bg-white overflow-hidden shadow-sm hover:shadow-[0_4px_20px_-4px_rgba(0,0,0,0.08)] hover:border-primary-brand hover:bg-primary-shadow transition-all duration-300">
+      <AccordionTrigger className="hover:no-underline focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-none py-0">
         <div className="flex items-center gap-4 text-start">
           <div className="p-2.5 rounded-xl bg-[hsl(220_80%_93%)] text-[hsl(220_80%_50%)] dark:bg-[hsl(220_30%_18%)] dark:text-[hsl(220_80%_70%)] shrink-0 transition-transform duration-200">
             <Briefcase className="h-5 w-5" />
           </div>
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
-              <span className="text-sm font-semibold tracking-wide block text-foreground uppercase">
+              <span className="text-[13px] font-bold block text-dark-brand">
                 {t('profile.professional.sectionTitle')}
               </span>
               {form.professional.is_professional && (
@@ -31,15 +28,15 @@ export function ProfessionalSection({ form, setField, t }) {
                 </Badge>
               )}
             </div>
-            <span className="text-[10px] text-muted-foreground font-normal block mt-0.5 normal-case truncate max-w-[200px]">
+            <span className="text-[11px] text-text-brand font-semibold block normal-case">
               {t('profile.professional.sectionDesc', { defaultValue: 'Business approval credentials and professional directory listings' })}
             </span>
           </div>
         </div>
       </AccordionTrigger>
-      <AccordionContent className="px-5 pb-5 pt-3 border-t border-border/40 bg-secondary/5">
+      <AccordionContent className="border-t border-border space-y-3 pt-4 pb-0 mt-3">
         <div className="space-y-4">
-          <div className="flex items-start gap-3 rounded-xl border border-border p-3 bg-card shadow-sm">
+          <div className="flex items-center gap-3 rounded-[12px] border border-border p-3 bg-yellow-shadow">
             <Switch
               checked={form.professional.is_professional}
               onCheckedChange={(v) =>
@@ -51,10 +48,10 @@ export function ProfessionalSection({ form, setField, t }) {
               data-testid="profile-professional-toggle"
             />
             <div className="flex-1">
-              <div className="font-medium text-sm">
+              <div className="font-bold text-[12px] text-dark-brand">
                 {t('profile.professional.checkboxLabel')}
               </div>
-              <div className="text-xs text-muted-foreground mt-0.5">
+              <div className="text-[12px] font-semibold text-text-brand">
                 {t('profile.professional.checkboxHint')}
               </div>
             </div>
@@ -83,7 +80,6 @@ export function ProfessionalSection({ form, setField, t }) {
                     placeholder={t(
                       'profile.professional.professionPlaceholder',
                     )}
-                    className="rounded-xl bg-card"
                     data-testid="profile-professional-profession"
                   />
                 </Field>
@@ -99,7 +95,6 @@ export function ProfessionalSection({ form, setField, t }) {
                         },
                       })
                     }
-                    className="rounded-xl bg-card"
                     data-testid="profile-professional-business-name"
                   />
                 </Field>
@@ -115,7 +110,6 @@ export function ProfessionalSection({ form, setField, t }) {
                         },
                       })
                     }
-                    className="rounded-xl bg-card"
                     data-testid="profile-professional-business-address"
                   />
                 </Field>
@@ -132,7 +126,6 @@ export function ProfessionalSection({ form, setField, t }) {
                         },
                       })
                     }
-                    className="rounded-xl bg-card"
                     data-testid="profile-professional-business-phone"
                   />
                 </Field>
@@ -149,7 +142,6 @@ export function ProfessionalSection({ form, setField, t }) {
                         },
                       })
                     }
-                    className="rounded-xl bg-card"
                     data-testid="profile-professional-business-email"
                   />
                 </Field>
@@ -167,7 +159,6 @@ export function ProfessionalSection({ form, setField, t }) {
                         },
                       })
                     }
-                    className="rounded-xl bg-card"
                     data-testid="profile-professional-business-website"
                   />
                 </Field>
@@ -185,12 +176,11 @@ export function ProfessionalSection({ form, setField, t }) {
                       },
                     })
                   }
-                  className="rounded-xl bg-card"
                   data-testid="profile-professional-business-description"
                 />
               </Field>
-              <div className="text-xs text-muted-foreground">
-                <Sparkles className="inline h-3 w-3 me-1 text-[hsl(var(--accent))]" />
+              <div className="text-[12px] font-semibold italic text-text-brand">
+                <Sparkles className="inline h-3 w-3 me-1 text-primary-brand" />
                 {t('profile.professional.visibilityNote')}
               </div>
             </>

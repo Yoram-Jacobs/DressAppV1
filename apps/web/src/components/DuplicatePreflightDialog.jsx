@@ -41,11 +41,7 @@ import { labelForItemType, labelForColor } from "@/lib/taxonomy";
  * Defaults: every match starts as "skip" (safer — the user has to
  * actively press the red ⭐ to add a known duplicate).
  */
-export default function DuplicatePreflightDialog({
-  matches,
-  open,
-  onResolve,
-}) {
+export default function DuplicatePreflightDialog({ matches, open, onResolve }) {
   const { t } = useTranslation();
   const [decisions, setDecisions] = useState({});
 
@@ -108,7 +104,6 @@ export default function DuplicatePreflightDialog({
             })}
           </DialogDescription>
         </DialogHeader>
-
         <ScrollArea className="max-h-[55vh] pe-3">
           <div
             className="flex flex-col gap-3"
@@ -120,71 +115,74 @@ export default function DuplicatePreflightDialog({
               return (
                 <div
                   key={m.matchKey}
-                  className="flex items-stretch gap-3 rounded-lg border bg-muted/30 p-3"
+                  className="rounded-[12px] p-3 border border-border bg-primary-shadow"
                   data-testid={`duplicate-preflight-row-${shortKey}`}
                 >
                   {/* Existing closet thumbnail */}
-                  <div className="flex shrink-0 flex-col items-center gap-1">
-                    <div className="h-20 w-20 overflow-hidden rounded-md border bg-background">
-                      {m.existing?.thumbnail_data_url ? (
-                        <img
-                          src={m.existing.thumbnail_data_url}
-                          alt={m.existing.title}
-                          className="h-full w-full object-cover"
-                          loading="lazy"
-                        />
-                      ) : (
-                        <div className="flex h-full w-full items-center justify-center text-[10px] text-muted-foreground">
-                          {t("addItem.preflight.noThumb", {
-                            defaultValue: "no preview",
-                          })}
-                        </div>
-                      )}
+                  <div className="flex items-center justify-center gap-3 text-center mb-3">
+                    <div className="border border-border bg-accent-beige rounded-[12px]">
+                      <div className="h-20 w-20 overflow-hidden rounded-tl-[12px] rounded-tr-[12px]">
+                        {m.existing?.thumbnail_data_url ? (
+                          <img
+                            src={m.existing.thumbnail_data_url}
+                            alt={m.existing.title}
+                            className="h-full w-full object-cover"
+                            loading="lazy"
+                          />
+                        ) : (
+                          <div className="flex h-full w-full items-center justify-center text-[10px] text-text-brand">
+                            {t("addItem.preflight.noThumb", {
+                              defaultValue: "no preview",
+                            })}
+                          </div>
+                        )}
+                      </div>
+                      <span className="text-[10px] text-text-brand font-semibold d-block px-1 py-1">
+                        {t("addItem.preflight.existing", {
+                          defaultValue: "in closet",
+                        })}
+                      </span>
                     </div>
-                    <span className="text-[10px] text-muted-foreground">
-                      {t("addItem.preflight.existing", {
-                        defaultValue: "in closet",
-                      })}
-                    </span>
-                  </div>
-
-                  {/* New upload thumbnail (data URL, free, no fetch) */}
-                  <div className="flex shrink-0 flex-col items-center gap-1">
-                    <div className="h-20 w-20 overflow-hidden rounded-md border bg-background">
-                      {m.previewUrl ? (
-                        <img
-                          src={m.previewUrl}
-                          alt={m.filename || "upload"}
-                          className="h-full w-full object-cover"
-                          loading="lazy"
-                        />
-                      ) : (
-                        <div className="flex h-full w-full items-center justify-center text-[10px] text-muted-foreground">
-                          {m.filename || "upload"}
-                        </div>
-                      )}
+                    {/* New upload thumbnail (data URL, free, no fetch) */}
+                    <div className="border border-border bg-accent-beige rounded-[12px] text-center">
+                      <div className="h-20 w-20 overflow-hidden rounded-tl-[12px] rounded-tr-[12px]">
+                        {m.previewUrl ? (
+                          <img
+                            src={m.previewUrl}
+                            alt={m.filename || "upload"}
+                            className="h-full w-full object-cover"
+                            loading="lazy"
+                          />
+                        ) : (
+                          <div className="flex h-full w-full items-center justify-center text-[10px] text-text-brand">
+                            {m.filename || "upload"}
+                          </div>
+                        )}
+                      </div>
+                      <span className="text-[10px] text-text-brand font-semibold d-block px-1 py-1">
+                        {t("addItem.preflight.incoming", {
+                          defaultValue: "new upload",
+                        })}
+                      </span>
                     </div>
-                    <span className="text-[10px] text-muted-foreground">
-                      {t("addItem.preflight.incoming", {
-                        defaultValue: "new upload",
-                      })}
-                    </span>
                   </div>
-
                   {/* Meta + per-row controls */}
-                  <div className="flex min-w-0 flex-1 flex-col">
-                    <div className="truncate text-sm font-medium">
+                  <div className="flex min-w-0 items-center flex-col">
+                    <div className="truncate text-sm font-bold text-dark-brand">
                       {m.existing?.title ||
                         t("addItem.preflight.untitled", {
                           defaultValue: "Existing item",
                         })}
                     </div>
-                    <div className="truncate text-xs text-muted-foreground">
-                      {[labelForItemType(m.existing?.item_type, t), labelForColor(m.existing?.color, t)]
+                    <div className="truncate text-xs text-text-brand font-semibold">
+                      {[
+                        labelForItemType(m.existing?.item_type, t),
+                        labelForColor(m.existing?.color, t),
+                      ]
                         .filter(Boolean)
                         .join(" · ")}
                     </div>
-                    <div className="mt-1 truncate text-xs text-muted-foreground">
+                    <div className="truncate text-xs text-text-brand mb-3 font-semibold">
                       {m.filename ||
                         t("addItem.preflight.unnamedFile", {
                           defaultValue: "Untitled file",
@@ -193,8 +191,7 @@ export default function DuplicatePreflightDialog({
                         ? ` · ${(m.size_bytes / (1024 * 1024)).toFixed(2)} MB`
                         : ""}
                     </div>
-
-                    <div className="mt-auto flex items-center justify-end gap-2 pt-2">
+                    <div className="flex items-center justify-center gap-2">
                       <Button
                         type="button"
                         variant={decision === "skip" ? "default" : "outline"}
@@ -202,7 +199,7 @@ export default function DuplicatePreflightDialog({
                         onClick={() => handleRow(m.matchKey, "skip")}
                         data-testid={`duplicate-preflight-skip-${shortKey}`}
                       >
-                        <X className="me-1 h-3.5 w-3.5" />
+                        <X className="h-3.5 w-3.5" />
                         {t("addItem.preflight.rowSkip", {
                           defaultValue: "Skip",
                         })}
@@ -214,17 +211,16 @@ export default function DuplicatePreflightDialog({
                         onClick={() => handleRow(m.matchKey, "add")}
                         className={
                           decision === "add"
-                            ? "bg-rose-600 text-white hover:bg-rose-600/90"
-                            : ""
+                            ? ""
+                            : "hover:!text-rose-900"
                         }
                         data-testid={`duplicate-preflight-add-${shortKey}`}
                       >
                         <Star
-                          className={`me-1 h-3.5 w-3.5 ${
-                            decision === "add"
-                              ? "fill-white"
-                              : "fill-rose-500 text-rose-500"
-                          }`}
+                          className={`h-3.5 w-3.5 ${decision === "add"
+                              ? "fill-white text-white"
+                              : "fill-rose-900 text-rose-900"
+                            }`}
                         />
                         {t("addItem.preflight.rowAdd", {
                           defaultValue: "Add anyway",
@@ -237,9 +233,8 @@ export default function DuplicatePreflightDialog({
             })}
           </div>
         </ScrollArea>
-
-        <DialogFooter className="flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-          <span className="text-xs text-muted-foreground">
+        <DialogFooter className="flex !flex-col justify-center items-center gap-2 sm:!space-x-0">
+          <span className="text-xs font-semibold text-text-brand">
             {t("addItem.preflight.summary", {
               willAdd,
               willSkip: total - willAdd,
@@ -264,9 +259,9 @@ export default function DuplicatePreflightDialog({
               size="sm"
               onClick={addAll}
               data-testid="duplicate-preflight-add-all"
-              className="border-rose-200 text-rose-700 hover:bg-rose-50 dark:border-rose-900 dark:text-rose-400 dark:hover:bg-rose-950"
+              className="group border-rose-900 text-rose-900 hover:!bg-rose-900 hover:!text-white dark:border-rose-900 dark:text-rose-400 dark:hover:bg-rose-950"
             >
-              <Star className="me-1 h-3.5 w-3.5 fill-rose-500 text-rose-500" />
+              <Star className="h-3.5 w-3.5 fill-rose-900 text-rose-900 group-hover:fill-white group-hover:text-white" />
               {t("addItem.preflight.addAll", {
                 defaultValue: "Add all anyway",
               })}

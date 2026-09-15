@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { api } from '@/lib/api';
+import { cn } from '@/lib/utils';
 
 /**
  * Google "G" mark — official 4-colour glyph rendered as inline SVG so we
@@ -40,17 +41,16 @@ export const GoogleAuthButton = ({
   label,
   testId = 'google-auth-button',
   disabled = false,
+  className,
 }) => {
   const [busy, setBusy] = useState(false);
 
   const onClick = async () => {
     setBusy(true);
-    const refId = typeof window !== 'undefined' ? localStorage.getItem('dressapp_ref_id') : null;
     try {
       const res = await api.googleLoginStart({
         withCalendar,
         next,
-        ref: refId,
       });
       if (res?.authorization_url) {
         window.location.assign(res.authorization_url);
@@ -62,7 +62,6 @@ export const GoogleAuthButton = ({
         const qs = new URLSearchParams();
         if (withCalendar) qs.set('with_calendar', 'true');
         if (next) qs.set('next', next);
-        if (refId) qs.set('ref', refId);
         const qStr = qs.toString();
         const fRes = await fetch(`/api/v1/auth/google/login/start${qStr ? `?${qStr}` : ''}`, {
           method: 'GET',
@@ -87,16 +86,15 @@ export const GoogleAuthButton = ({
   return (
     <Button
       type="button"
-      variant="outline"
       onClick={onClick}
       disabled={busy || disabled}
-      className="w-full rounded-xl border-border bg-background hover:bg-accent/5"
+      className={cn('w-full min-h-11', className)}
       data-testid={testId}
     >
       {busy ? (
         <Loader2 className="h-4 w-4 me-2 animate-spin" />
       ) : (
-        <GoogleGlyph className="h-4 w-4 me-2" />
+        <GoogleGlyph className="h-4 w-4"/>
       )}
       {label}
     </Button>

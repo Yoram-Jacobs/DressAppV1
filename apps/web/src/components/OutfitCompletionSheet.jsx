@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import { useTranslation } from 'react-i18next';
+import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Sparkles,
   ShoppingBag,
@@ -11,27 +11,27 @@ import {
   CloudSun,
   ArrowUp,
   ArrowDown,
-} from 'lucide-react';
-import { Link } from 'react-router-dom';
+} from "lucide-react";
+import { Link } from "react-router-dom";
 import {
   Sheet,
   SheetContent,
   SheetHeader,
   SheetTitle,
   SheetDescription,
-} from '@/components/ui/sheet';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Switch } from '@/components/ui/switch';
-import { Input } from '@/components/ui/input';
-import { api } from '@/lib/api';
-import { toast } from 'sonner';
-import { useAuth } from '@/lib/auth';
-import { isTTSSupported, speak, cancelSpeak } from '@/lib/speech';
-import { ItemFloater } from '@/components/stylist/ItemFloater';
-import { bestImageUrl } from '@/lib/itemImage';
-import { closetStore } from '@/lib/closetStore';
+} from "@/components/ui/sheet";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Switch } from "@/components/ui/switch";
+import { Input } from "@/components/ui/input";
+import { api } from "@/lib/api";
+import { toast } from "sonner";
+import { useAuth } from "@/lib/auth";
+import { isTTSSupported, speak, cancelSpeak } from "@/lib/speech";
+import { ItemFloater } from "@/components/stylist/ItemFloater";
+import { bestImageUrl } from "@/lib/itemImage";
+import { closetStore } from "@/lib/closetStore";
 
 /**
  * Outfit Completion bottom sheet.
@@ -41,13 +41,19 @@ import { closetStore } from '@/lib/closetStore';
  * renders them alongside a Stylist-generated rationale. Optionally
  * extends the search to active marketplace listings.
  */
-function ItemThumb({ item, showScore = false, scoreLabel = null, linkTo = null, onClick = null }) {
+function ItemThumb({
+  item,
+  showScore = false,
+  scoreLabel = null,
+  linkTo = null,
+  onClick = null,
+}) {
   const src = bestImageUrl(item);
-  const title = item?.title || item?.name || item?.category || 'Item';
+  const title = item?.title || item?.name || item?.category || "Item";
   const cat = item?.category;
   const inner = (
     <div className="group">
-      <div className="aspect-square rounded-xl overflow-hidden bg-secondary border border-border relative">
+      <div className="aspect-square rounded-tl-[12px] rounded-tr-[12px] overflow-hidden bg-accent-beige relative">
         {src ? (
           <img
             src={src}
@@ -56,7 +62,7 @@ function ItemThumb({ item, showScore = false, scoreLabel = null, linkTo = null, 
           />
         ) : (
           <div className="h-full w-full flex items-center justify-center text-muted-foreground text-xs">
-            {cat || '—'}
+            {cat || "—"}
           </div>
         )}
         {showScore && scoreLabel != null && (
@@ -68,8 +74,12 @@ function ItemThumb({ item, showScore = false, scoreLabel = null, linkTo = null, 
           </Badge>
         )}
       </div>
-      <div className="mt-1.5 text-xs font-medium truncate">{title}</div>
-      {cat && <div className="text-[10px] caps-label text-muted-foreground">{cat}</div>}
+      <div className="p-2">
+        <h6 className="text-[12px] text-dark-brand font-bold truncate">{title}</h6>
+        {cat && (
+          <p className="text-[12px] text-text-brand font-semibold">{cat}</p>
+        )}
+      </div>
     </div>
   );
   // Phase S3: onClick wins over linkTo so we can open the floater
@@ -81,7 +91,7 @@ function ItemThumb({ item, showScore = false, scoreLabel = null, linkTo = null, 
         type="button"
         onClick={onClick}
         className="block text-start w-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--accent))] rounded-xl"
-        data-testid={`item-thumb-button-${item?.id || 'unknown'}`}
+        data-testid={`item-thumb-button-${item?.id || "unknown"}`}
       >
         {inner}
       </button>
@@ -97,13 +107,18 @@ function ItemThumb({ item, showScore = false, scoreLabel = null, linkTo = null, 
   return inner;
 }
 
-export function OutfitCompletionSheet({ open, onOpenChange, anchorIds = [], anchorsHint = [] }) {
+export function OutfitCompletionSheet({
+  open,
+  onOpenChange,
+  anchorIds = [],
+  anchorsHint = [],
+}) {
   const { t } = useTranslation();
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState(null);
   const [includeMarketplace, setIncludeMarketplace] = useState(false);
-  const [occasion, setOccasion] = useState('');
+  const [occasion, setOccasion] = useState("");
   const [speaking, setSpeaking] = useState(false);
   // Phase S3: ItemFloater state for closet thumbnails inside this sheet.
   const [floaterItemId, setFloaterItemId] = useState(null);
@@ -112,37 +127,42 @@ export function OutfitCompletionSheet({ open, onOpenChange, anchorIds = [], anch
   // reshuffle priority without leaving Closet.
   const [orderedAnchors, setOrderedAnchors] = useState([]);
 
-  const allClosetItems = (closetStore.getSnapshot().items || []).filter(Boolean);
+  const allClosetItems = (closetStore.getSnapshot().items || []).filter(
+    Boolean,
+  );
   const getGroupItems = (item) => {
     if (!item || !item.group_id) return [item];
-    return allClosetItems.filter(it => it && it.group_id === item.group_id);
+    return allClosetItems.filter((it) => it && it.group_id === item.group_id);
   };
   const isSet = (item) => {
     if (!item) return false;
     const gItems = getGroupItems(item);
     if (gItems.length <= 1) return false;
     const normCategory = (cat) => {
-      const s = String(cat || '').trim().toLowerCase().replace(/\s+/g, '_');
-      if (s === 'top' || s === 'tops') return 'top';
-      if (s === 'bottom' || s === 'bottoms') return 'bottom';
-      if (s === 'footwear' || s === 'shoes') return 'footwear';
-      if (s === 'accessory' || s === 'accessories') return 'accessories';
+      const s = String(cat || "")
+        .trim()
+        .toLowerCase()
+        .replace(/\s+/g, "_");
+      if (s === "top" || s === "tops") return "top";
+      if (s === "bottom" || s === "bottoms") return "bottom";
+      if (s === "footwear" || s === "shoes") return "footwear";
+      if (s === "accessory" || s === "accessories") return "accessories";
       return s;
     };
-    const categories = new Set(gItems.map(it => normCategory(it.category)));
+    const categories = new Set(gItems.map((it) => normCategory(it.category)));
     return categories.size > 1;
   };
 
   const ttsSupported = isTTSSupported();
-  const userLang = (user?.preferred_language || 'en').toLowerCase();
+  const userLang = (user?.preferred_language || "en").toLowerCase();
 
   // Re-seed the order every time the caller passes a new anchor set.
   // We key off the joined ids so drifting React re-renders don't wipe
   // the user's manual reorder while the sheet stays open.
   useEffect(() => {
     if (!open) return;
-    const hintIds = anchorsHint.map((a) => a.id).join('|');
-    const currentIds = orderedAnchors.map((a) => a.id).join('|');
+    const hintIds = anchorsHint.map((a) => a.id).join("|");
+    const currentIds = orderedAnchors.map((a) => a.id).join("|");
     if (hintIds !== currentIds) {
       setOrderedAnchors(anchorsHint);
       setResult(null);
@@ -161,7 +181,9 @@ export function OutfitCompletionSheet({ open, onOpenChange, anchorIds = [], anch
   };
 
   const runCompletion = async () => {
-    const ids = (orderedAnchors.length ? orderedAnchors.map((a) => a.id) : anchorIds);
+    const ids = orderedAnchors.length
+      ? orderedAnchors.map((a) => a.id)
+      : anchorIds;
     if (!ids.length) return;
     setLoading(true);
     setResult(null);
@@ -173,11 +195,15 @@ export function OutfitCompletionSheet({ open, onOpenChange, anchorIds = [], anch
         limit: 6,
       });
       setResult(data);
-      if (!data.rationale && !data.closet_suggestions?.length && !data.market_suggestions?.length) {
-        toast.message(t('outfitCompletion.empty'));
+      if (
+        !data.rationale &&
+        !data.closet_suggestions?.length &&
+        !data.market_suggestions?.length
+      ) {
+        toast.message(t("outfitCompletion.empty"));
       }
     } catch (err) {
-      toast.error(err?.response?.data?.detail || t('outfitCompletion.error'));
+      toast.error(err?.response?.data?.detail || t("outfitCompletion.error"));
     } finally {
       setLoading(false);
     }
@@ -210,35 +236,31 @@ export function OutfitCompletionSheet({ open, onOpenChange, anchorIds = [], anch
   return (
     <>
       <Sheet open={open} onOpenChange={handleOpenChange}>
-      <SheetContent
-        side="right"
-        className="w-full sm:max-w-xl lg:max-w-2xl overflow-hidden p-0 flex flex-col"
-        data-testid="outfit-completion-sheet"
-      >
-        <SheetHeader className="p-5 border-b border-border">
-          <div className="flex items-center gap-2">
-            <Sparkles className="h-5 w-5 text-[hsl(var(--accent))]" />
-            <SheetTitle className="font-display text-2xl">
-              {t('outfitCompletion.title')}
-            </SheetTitle>
-          </div>
-          <SheetDescription>
-            {t('outfitCompletion.subtitle', { count: anchorIds.length })}
-          </SheetDescription>
-        </SheetHeader>
-
-        <ScrollArea className="flex-1">
-          <div className="p-5 space-y-5">
+        <SheetContent
+          side="right"
+          className="w-full sm:max-w-xl lg:max-w-2xl p-0 flex flex-col"
+          data-testid="outfit-completion-sheet"
+        >
+          <SheetHeader className="p-5 border-b border-border">
+            <div className="flex items-center gap-2">
+              <Sparkles className="h-5 w-5 text-primary-brand" />
+              <SheetTitle>{t("outfitCompletion.title")}</SheetTitle>
+            </div>
+            <SheetDescription>
+              {t("outfitCompletion.subtitle", { count: anchorIds.length })}
+            </SheetDescription>
+          </SheetHeader>
+          <div className="p-5 space-y-5 max-h-[80vh] overflow-y-auto">
             {/* Anchors preview (order-aware — first anchor has highest weight) */}
             {orderedAnchors.length > 0 && (
-              <div>
+              <>
                 <div className="flex items-baseline justify-between mb-2">
-                  <div className="caps-label text-muted-foreground">
-                    {t('outfitCompletion.anchorsLabel')}
+                  <div className="text-[12px] font-semibold text-text-brand">
+                    {t("outfitCompletion.anchorsLabel")}
                   </div>
                   {orderedAnchors.length > 1 && (
-                    <div className="caps-label text-[10px] text-muted-foreground">
-                      {t('outfitCompletion.priorityHint')}
+                    <div className="text-[12px] text-text-brand font-semibold italic">
+                      {t("outfitCompletion.priorityHint")}
                     </div>
                   )}
                 </div>
@@ -249,55 +271,59 @@ export function OutfitCompletionSheet({ open, onOpenChange, anchorIds = [], anch
                   {orderedAnchors.map((a, idx) => {
                     const itemIsSet = isSet(a);
                     return (
-                      <div key={a.id} className="relative flex flex-col">
-                        <div className="relative">
-                          <ItemThumb item={a} />
-                          {/* Priority pill */}
-                          <div
-                            className="absolute top-2 start-2 h-5 min-w-[20px] px-1.5 rounded-full bg-[hsl(var(--accent))] text-[hsl(var(--accent-foreground))] text-[10px] font-semibold flex items-center justify-center"
-                            aria-label={t('outfitCompletion.priorityLabel', { n: idx + 1 })}
-                            data-testid={`outfit-completion-anchor-priority-${idx}`}
-                          >
-                            {idx + 1}
-                          </div>
-                          {/* Remove button */}
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setOrderedAnchors((prev) => prev.filter((_, i) => i !== idx));
-                            }}
-                            aria-label={t('common.remove', { defaultValue: 'Remove' })}
-                            className="absolute -top-1.5 -end-1.5 h-5 w-5 rounded-full bg-destructive text-destructive-foreground hover:bg-destructive/90 flex items-center justify-center shadow-sm z-30 transition-transform hover:scale-110"
-                            data-testid={`outfit-completion-anchor-remove-${idx}`}
-                          >
-                            <X className="h-3 w-3" strokeWidth={3} />
-                          </button>
-                          {/* Reorder controls (only when >1 anchors) */}
-                          {orderedAnchors.length > 1 && (
-                            <div className="absolute top-2 end-2 flex flex-col gap-1">
-                              <button
-                                type="button"
-                                onClick={() => moveAnchor(idx, -1)}
-                                disabled={idx === 0}
-                                aria-label={t('outfitCompletion.moveUp')}
-                                data-testid={`outfit-completion-anchor-up-${idx}`}
-                                className="h-6 w-6 rounded-full bg-background/90 border border-border backdrop-blur flex items-center justify-center disabled:opacity-40 hover:bg-secondary transition-colors"
-                              >
-                                <ArrowUp className="h-3 w-3" />
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => moveAnchor(idx, 1)}
-                                disabled={idx === orderedAnchors.length - 1}
-                                aria-label={t('outfitCompletion.moveDown')}
-                                data-testid={`outfit-completion-anchor-down-${idx}`}
-                                className="h-6 w-6 rounded-full bg-background/90 border border-border backdrop-blur flex items-center justify-center disabled:opacity-40 hover:bg-secondary transition-colors"
-                              >
-                                <ArrowDown className="h-3 w-3" />
-                              </button>
-                            </div>
-                          )}
+                      <div key={a.id} className="relative flex flex-col border-dashed border border-accent-beige rounded-[12px]">
+                        <ItemThumb item={a} />
+                        {/* Priority pill */}
+                        <div
+                          className="absolute top-2 start-2 h-5 min-w-[20px] px-1.5 rounded-full bg-primary-brand text-white text-[10px] font-semibold flex items-center justify-center"
+                          aria-label={t("outfitCompletion.priorityLabel", {
+                            n: idx + 1,
+                          })}
+                          data-testid={`outfit-completion-anchor-priority-${idx}`}
+                        >
+                          {idx + 1}
                         </div>
+                        {/* Remove button */}
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setOrderedAnchors((prev) =>
+                              prev.filter((_, i) => i !== idx),
+                            );
+                          }}
+                          aria-label={t("common.remove", {
+                            defaultValue: "Remove",
+                          })}
+                          className="absolute -top-1.5 -end-1.5 h-5 w-5 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center shadow-sm z-30"
+                          data-testid={`outfit-completion-anchor-remove-${idx}`}
+                        >
+                          <X className="h-3 w-3" strokeWidth={3} />
+                        </button>
+                        {/* Reorder controls (only when >1 anchors) */}
+                        {orderedAnchors.length > 1 && (
+                          <div className="absolute top-2 end-2 flex flex-col gap-1">
+                            <button
+                              type="button"
+                              onClick={() => moveAnchor(idx, -1)}
+                              disabled={idx === 0}
+                              aria-label={t("outfitCompletion.moveUp")}
+                              data-testid={`outfit-completion-anchor-up-${idx}`}
+                              className="h-6 w-6 rounded-full bg-white border border-border backdrop-blur flex items-center justify-center disabled:opacity-40 hover:bg-secondary transition-colors"
+                            >
+                              <ArrowUp className="h-3 w-3" />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => moveAnchor(idx, 1)}
+                              disabled={idx === orderedAnchors.length - 1}
+                              aria-label={t("outfitCompletion.moveDown")}
+                              data-testid={`outfit-completion-anchor-down-${idx}`}
+                              className="h-6 w-6 rounded-full bg-white border border-border backdrop-blur flex items-center justify-center disabled:opacity-40 hover:bg-secondary transition-colors"
+                            >
+                              <ArrowDown className="h-3 w-3" />
+                            </button>
+                          </div>
+                        )}
                         {/* Divide set button */}
                         {itemIsSet && (
                           <Button
@@ -308,8 +334,14 @@ export function OutfitCompletionSheet({ open, onOpenChange, anchorIds = [], anch
                               const gItems = getGroupItems(a);
                               setOrderedAnchors((prev) => {
                                 const next = [...prev];
-                                const existingIds = new Set(next.filter(item => item && item.id !== a.id).map(item => item.id));
-                                const uniqueGItems = gItems.filter(item => item && !existingIds.has(item.id));
+                                const existingIds = new Set(
+                                  next
+                                    .filter((item) => item && item.id !== a.id)
+                                    .map((item) => item.id),
+                                );
+                                const uniqueGItems = gItems.filter(
+                                  (item) => item && !existingIds.has(item.id),
+                                );
                                 next.splice(idx, 1, ...uniqueGItems);
                                 return next;
                               });
@@ -318,25 +350,26 @@ export function OutfitCompletionSheet({ open, onOpenChange, anchorIds = [], anch
                             data-testid={`outfit-completion-anchor-divide-${idx}`}
                           >
                             <Sparkles className="h-2.5 w-2.5" />
-                            {t('closet.divideSet', { defaultValue: 'Divide Set' })}
+                            {t("closet.divideSet", {
+                              defaultValue: "Divide Set",
+                            })}
                           </Button>
                         )}
                       </div>
                     );
                   })}
                 </div>
-              </div>
+              </>
             )}
-
             {/* Controls */}
-            <div className="rounded-2xl border border-border bg-secondary/40 p-4 space-y-3">
+            <div className="rounded-[12px] border border-border bg-primary-shadow p-3 space-y-3">
               <div className="flex items-center justify-between gap-3">
                 <label
                   htmlFor="oc-marketplace"
-                  className="text-sm inline-flex items-center gap-2 cursor-pointer"
+                  className="text-[14px] inline-flex items-center gap-2 cursor-pointer text-text-brand font-semibold"
                 >
-                  <ShoppingBag className="h-4 w-4" />
-                  {t('outfitCompletion.includeMarketplace')}
+                  <ShoppingBag className="h-4 w-4 text-primary-brand" />
+                  {t("outfitCompletion.includeMarketplace")}
                 </label>
                 <Switch
                   id="oc-marketplace"
@@ -348,42 +381,45 @@ export function OutfitCompletionSheet({ open, onOpenChange, anchorIds = [], anch
               <Input
                 value={occasion}
                 onChange={(e) => setOccasion(e.target.value)}
-                placeholder={t('outfitCompletion.occasionPlaceholder')}
-                className="rounded-xl"
+                placeholder={t("outfitCompletion.occasionPlaceholder")}
                 data-testid="outfit-completion-occasion-input"
               />
               <Button
                 onClick={runCompletion}
                 disabled={loading || anchorIds.length === 0}
-                className="w-full rounded-xl"
+                className="w-full"
                 data-testid="outfit-completion-run-button"
               >
                 {loading ? (
                   <>
                     <Loader2 className="h-4 w-4 me-2 animate-spin" />
-                    {t('outfitCompletion.thinking')}
+                    {t("outfitCompletion.thinking")}
                   </>
                 ) : (
                   <>
-                    <Sparkles className="h-4 w-4 me-2" />
-                    {t('outfitCompletion.cta')}
+                    <Sparkles className="h-4 w-4" />
+                    {t("outfitCompletion.cta")}
                   </>
                 )}
               </Button>
             </div>
-
             {loading && (
-              <div className="space-y-3" data-testid="outfit-completion-loading">
+              <div
+                className="space-y-3"
+                data-testid="outfit-completion-loading"
+              >
                 <div className="h-4 rounded shimmer w-3/4" />
                 <div className="h-4 rounded shimmer w-1/2" />
                 <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">
                   {Array.from({ length: 6 }).map((_, i) => (
-                    <div key={`skeleton-${i}`} className="aspect-square rounded-xl shimmer" />
+                    <div
+                      key={`skeleton-${i}`}
+                      className="aspect-square rounded-xl shimmer"
+                    />
                   ))}
                 </div>
               </div>
             )}
-
             {result && !loading && (
               <div className="space-y-5" data-testid="outfit-completion-result">
                 {result.weather_summary && (
@@ -393,9 +429,11 @@ export function OutfitCompletionSheet({ open, onOpenChange, anchorIds = [], anch
                   >
                     <CloudSun className="h-3.5 w-3.5 text-[hsl(var(--accent))]" />
                     <span className="caps-label text-muted-foreground">
-                      {t('stylist.weatherAware')}
+                      {t("stylist.weatherAware")}
                     </span>
-                    <span className="font-medium">{result.weather_summary}</span>
+                    <span className="font-medium">
+                      {result.weather_summary}
+                    </span>
                   </div>
                 )}
                 {/* Rationale */}
@@ -403,7 +441,7 @@ export function OutfitCompletionSheet({ open, onOpenChange, anchorIds = [], anch
                   <div className="rounded-2xl border border-border bg-card p-4">
                     <div className="flex items-start justify-between gap-3 mb-2">
                       <div className="caps-label text-[hsl(var(--accent))]">
-                        {t('outfitCompletion.rationaleLabel')}
+                        {t("outfitCompletion.rationaleLabel")}
                       </div>
                       {ttsSupported && (
                         <Button
@@ -413,7 +451,9 @@ export function OutfitCompletionSheet({ open, onOpenChange, anchorIds = [], anch
                           className="h-7 rounded-full"
                           data-testid="outfit-completion-speak-button"
                           aria-label={
-                            speaking ? t('stylist.stopSpeaking') : t('stylist.playReply')
+                            speaking
+                              ? t("stylist.stopSpeaking")
+                              : t("stylist.playReply")
                           }
                         >
                           {speaking ? (
@@ -424,7 +464,9 @@ export function OutfitCompletionSheet({ open, onOpenChange, anchorIds = [], anch
                         </Button>
                       )}
                     </div>
-                    <p className="text-sm whitespace-pre-wrap">{result.rationale}</p>
+                    <p className="text-sm whitespace-pre-wrap">
+                      {result.rationale}
+                    </p>
                     {result.do_dont?.length > 0 && (
                       <ul className="text-xs text-muted-foreground list-disc ps-5 mt-3 space-y-0.5">
                         {result.do_dont.map((d, i) => (
@@ -440,19 +482,27 @@ export function OutfitCompletionSheet({ open, onOpenChange, anchorIds = [], anch
                   <div className="space-y-3">
                     {result.outfit_recommendations.map((rec, i) => (
                       <div
-                        key={rec.id || `rec-${i}-${rec.name || 'outfit'}`}
+                        key={rec.id || `rec-${i}-${rec.name || "outfit"}`}
                         className="rounded-2xl border border-border bg-secondary/60 p-4"
                       >
                         <div className="caps-label text-[hsl(var(--accent))]">
-                          {t('stylist.outfitN', { n: i + 1 })}
+                          {t("stylist.outfitN", { n: i + 1 })}
                         </div>
-                        <div className="font-display text-base mt-1">{rec.name}</div>
+                        <div className="font-display text-base mt-1">
+                          {rec.name}
+                        </div>
                         <ul className="text-xs text-muted-foreground list-disc ps-5 mt-2 space-y-0.5">
                           {(rec.items || []).map((it, j) => (
-                            <li key={`${rec.id || i}-item-${j}-${it.role || ''}`}>{it.description || it.role}</li>
+                            <li
+                              key={`${rec.id || i}-item-${j}-${it.role || ""}`}
+                            >
+                              {it.description || it.role}
+                            </li>
                           ))}
                         </ul>
-                        {rec.why && <p className="text-xs mt-2 italic">{rec.why}</p>}
+                        {rec.why && (
+                          <p className="text-xs mt-2 italic">{rec.why}</p>
+                        )}
                       </div>
                     ))}
                   </div>
@@ -462,7 +512,7 @@ export function OutfitCompletionSheet({ open, onOpenChange, anchorIds = [], anch
                 {result.closet_suggestions?.length > 0 ? (
                   <div>
                     <div className="caps-label text-muted-foreground mb-2">
-                      {t('outfitCompletion.fromClosetLabel')}
+                      {t("outfitCompletion.fromClosetLabel")}
                     </div>
                     <div
                       className="grid grid-cols-3 sm:grid-cols-4 gap-3"
@@ -481,7 +531,7 @@ export function OutfitCompletionSheet({ open, onOpenChange, anchorIds = [], anch
                   </div>
                 ) : (
                   <div className="text-sm text-muted-foreground italic">
-                    {t('outfitCompletion.noClosetSuggestions')}
+                    {t("outfitCompletion.noClosetSuggestions")}
                   </div>
                 )}
 
@@ -490,7 +540,7 @@ export function OutfitCompletionSheet({ open, onOpenChange, anchorIds = [], anch
                   <div>
                     <div className="caps-label text-muted-foreground mb-2 inline-flex items-center gap-1.5">
                       <ShoppingBag className="h-3.5 w-3.5" />
-                      {t('outfitCompletion.fromMarketplaceLabel')}
+                      {t("outfitCompletion.fromMarketplaceLabel")}
                     </div>
                     <div
                       className="grid grid-cols-3 sm:grid-cols-4 gap-3"
@@ -518,26 +568,23 @@ export function OutfitCompletionSheet({ open, onOpenChange, anchorIds = [], anch
                     data-testid="outfit-completion-no-embeddings-hint"
                   >
                     <ExternalLink className="h-3.5 w-3.5 inline me-1" />
-                    {t('outfitCompletion.embeddingsMissingHint')}
+                    {t("outfitCompletion.embeddingsMissingHint")}
                   </div>
                 )}
               </div>
             )}
           </div>
-        </ScrollArea>
-
-        <div className="border-t border-border p-4 flex justify-end gap-2 bg-background">
-          <Button
-            variant="ghost"
-            onClick={() => handleOpenChange(false)}
-            data-testid="outfit-completion-close-button"
-          >
-            <X className="h-4 w-4 me-2" />
-            {t('common.close')}
-          </Button>
-        </div>
-      </SheetContent>
-    </Sheet>
+          <div className="flex justify-end gap-2 p-5 border-t border-border">
+            <Button
+              onClick={() => handleOpenChange(false)}
+              data-testid="outfit-completion-close-button"
+            >
+              <X className="h-4 w-4" />
+              {t("common.close")}
+            </Button>
+          </div>
+        </SheetContent>
+      </Sheet>
       {/* Phase S3: item floater renders via portal — sits over the
           completion sheet so users can preview a closet match without
           leaving the rationale view. */}

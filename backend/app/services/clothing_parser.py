@@ -137,10 +137,19 @@ def _load_model() -> None:
     with _model_lock:
         if _model is not None:
             return
-        from transformers import (
-            SegformerForSemanticSegmentation,
-            SegformerImageProcessor,
-        )
+        try:
+            import torch  # noqa: F401
+            from transformers import (
+                SegformerForSemanticSegmentation,
+                SegformerImageProcessor,
+            )
+        except (ImportError, Exception) as err:
+            logger.warning(
+                "clothing_parser: SegFormer / PyTorch dependencies unavailable (%s). "
+                "Local inference will be skipped.",
+                err,
+            )
+            raise RuntimeError(f"SegFormer dependencies unavailable: {err}") from err
 
         model_id = settings.CLOTHING_PARSER_MODEL
         t0 = time.time()
@@ -179,9 +188,8 @@ def _resize_for_inference(pil: Image.Image) -> Image.Image:
 
 def _run_inference(pil_full: Image.Image) -> np.ndarray:
     """Return a class-id mask at the FULL original resolution with minimal memory usage."""
-    import torch
-
     _load_model()
+    import torch
     pil_small = _resize_for_inference(pil_full)
     inputs = _processor(images=pil_small, return_tensors="pt")
     with torch.no_grad():
@@ -924,8 +932,11 @@ async def parse_garments(image_bytes: bytes) -> list[dict[str, Any]]:
     try:
         class_mask = await asyncio.to_thread(_run_inference, img)
         ok = True
+    except RuntimeError as exc:
+        logger.info("clothing_parser: local inference skipped: %s", exc)
+        return []
     except Exception as exc:  # noqa: BLE001
-        logger.exception("clothing_parser: local inference failed: %s", exc)
+        logger.warning("clothing_parser: local inference failed: %s", exc)
         provider_activity.record(
             "clothing_parser",
             ok=False,

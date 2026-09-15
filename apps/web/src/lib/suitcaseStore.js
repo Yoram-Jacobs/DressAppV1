@@ -2,8 +2,28 @@ import { api } from '@/lib/api';
 
 const FRESH_MS = 5 * 60 * 1000; // 5 minutes
 
-const defaultWelcomeMessage = (t) => [
-  { role: 'assistant', text: t ? t('suitcase.welcomeChat', { defaultValue: 'Hello! I am your Suitcase Assistant. Where are we traveling, and what is the plan? You can use the inputs above or simply chat with me.' }) : 'Hello! I am your Suitcase Assistant. Where are we traveling, and what is the plan? You can use the inputs above or simply chat with me.' }
+export const KNOWN_WELCOME_MESSAGES = new Set([
+  'Hello! I am your Suitcase Assistant. Where are we traveling, and what is the plan? You can use the inputs above or simply chat with me.',
+  'שלום! אני עוזר המזוודה שלך. לאן נוסעים ומה התוכנית? תוכל להשתמש בשדות למעלה או פשוט לדבר איתי.',
+  'مرحباً! أنا مساعد حقيبة السفر الخاص بك. إلى أين نسافر وما هي الخطة؟ يمكنك استخدام المدخلات أعلاه أو التحدث معي مباشرة.',
+  '¡Hola! Soy su Asistente de Maleta. ¿A dónde viajamos y cuál es el plan? Puede usar las entradas de arriba o simplemente chatear conmigo.',
+  'Bonjour ! Je suis votre assistant valise. Où voyageons-nous et quel est le programme ? Vous pouvez utiliser les champs ci-dessus ou simplement discuter avec moi.',
+  'Hallo! Ich bin Ihr Koffer-Assistent. Wohin reisen wir und was ist der Plan? Sie können die Eingabefelder oben nutzen oder einfach mit mir chatten.',
+  'Ciao! Sono il tuo Assistente Valigia. Dove stiamo viaggiando e qual è il piano? Puoi usare i campi sopra o semplicemente chattare con me.',
+  'Olá! Sou o seu Assistente de Mala. Para onde vamos viajar e qual é o plano? Pode utilizar as entradas acima ou simplesmente falar comigo.',
+  'Привет! Я ваш помощник по сборам. Куда мы едем и какие планы? Вы можете использовать поля ввода выше или просто пообщаться со мной.',
+  '您好！我是您的行李箱助手。我们去哪里旅行，计划是什么？您可以使用上方的输入框或直接与我聊天。',
+  'こんにちは！私はあなたのスーツケースアシスタントです。旅行先はどこで、どのような予定ですか？上の入力欄を使用するか、直接私とチャットしてください。',
+  'नमस्ते! मैं आपका सूटकेस सहायक हूँ। हम कहाँ यात्रा कर रहे हैं, और क्या योजना है? आप ऊपर दिए गए इनपुट का उपयोग कर सकते हैं या बस मेरे साथ चैट कर सकते हैं।',
+  'Hallo! Ik ben jouw Kofferassistent. Waar gaan we heen en wat is het plan? U kunt de bovenstaande gegevens gebruiken of gewoon met mij chatten.',
+]);
+
+export const defaultWelcomeMessage = (t) => [
+  {
+    role: 'assistant',
+    isWelcome: true,
+    text: t ? t('suitcase.welcomeChat', { defaultValue: 'Hello! I am your Suitcase Assistant. Where are we traveling, and what is the plan? You can use the inputs above or simply chat with me.' }) : 'Hello! I am your Suitcase Assistant. Where are we traveling, and what is the plan? You can use the inputs above or simply chat with me.'
+  }
 ];
 
 const LOCAL_STORAGE_KEY = 'dressapp_suitcase_store_state';
@@ -26,6 +46,12 @@ function loadState() {
     const raw = localStorage.getItem(LOCAL_STORAGE_KEY);
     if (raw) {
       const parsed = JSON.parse(raw);
+      if (parsed.messages && parsed.messages.length === 1) {
+        const m = parsed.messages[0];
+        if (m.role === 'assistant' && (m.isWelcome || KNOWN_WELCOME_MESSAGES.has((m.text || '').trim()))) {
+          m.isWelcome = true;
+        }
+      }
       return {
         ..._defaultState,
         ...parsed,
@@ -112,8 +138,17 @@ export const suitcaseStore = {
       return _state;
     }
     
-    // Initialize messages with translated welcome if empty
-    const initialMessages = _state.messages.length === 0 ? defaultWelcomeMessage(t) : _state.messages;
+    // Initialize messages with translated welcome if empty or if only a welcome message exists
+    let initialMessages = _state.messages;
+    if (!initialMessages || initialMessages.length === 0) {
+      initialMessages = defaultWelcomeMessage(t);
+    } else if (
+      initialMessages.length === 1 &&
+      initialMessages[0].role === 'assistant' &&
+      (initialMessages[0].isWelcome || KNOWN_WELCOME_MESSAGES.has((initialMessages[0].text || '').trim()))
+    ) {
+      initialMessages = defaultWelcomeMessage(t);
+    }
     _set({ messages: initialMessages, loading: true, archiveLoading: true, error: null });
     try {
       const [activeRes, archiveRes] = await Promise.all([
@@ -124,9 +159,12 @@ export const suitcaseStore = {
       const activeSuitcase = activeRes.active ? activeRes.suitcase : null;
       const viewState = activeRes.active ? (activeRes.suitcase.status || 'active') : 'gathering';
       const archives = archiveRes || [];
-      const messages = activeSuitcase && activeSuitcase.messages && activeSuitcase.messages.length > 0 
-        ? activeSuitcase.messages 
+      const rawMessages = activeSuitcase && activeSuitcase.messages && activeSuitcase.messages.length > 0
+        ? activeSuitcase.messages
         : defaultWelcomeMessage(t);
+      const messages = (rawMessages.length === 1 && rawMessages[0].role === 'assistant' && (rawMessages[0].isWelcome || KNOWN_WELCOME_MESSAGES.has((rawMessages[0].text || '').trim())))
+        ? defaultWelcomeMessage(t)
+        : rawMessages;
 
       let packingData = null;
       if (activeSuitcase) {
