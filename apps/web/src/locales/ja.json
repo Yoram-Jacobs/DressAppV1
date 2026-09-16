@@ -290,14 +290,19 @@
         "dailySuggestion": "毎日の提案",
         "planEventOutfit": "イベントの服装を計画する",
         "trendScout": "トレンドスカウト"
-      }
+      },
+      "avatarOutfitAlt": "おすすめのビジネスコーデを着たアバター",
+      "avatarOutfitLabel": "アバターのルック"
     },
     "stylist": {
       "tag": "共感的なデザインインテリジェンス",
       "heading": "人生を理解するAIスタイリスト",
       "description1": "あなたのファッションの選択は、孤立して存在するべきではありません。 DressApp は、カレンダー フィードと正確な地域の天気予報に直接接続して、毎日最適な服装をデザインします。",
       "description2": "一か八かのビジネスセッションや突然の雨への準備ができていない場合は、絶対に服を着ないで外出しないでください。まるで世界クラスのファッションアドバイザーがあなたの携帯電話の中にいて、自分の所有物に完全にアクセスできるような気分になります。",
-      "cta": "スタイリストに聞く"
+      "cta": "スタイリストに聞く",
+      "conciergeTitle": "毎日のワードローブコンシェルジュ",
+      "conciergeDescription": "パーソナライズされたコーデ提案をロック画面に直接お届け。地域の天気予報、カレンダー予定、スマートなクローゼットローテーションを反映し、スタイルを新鮮に保ちつつあまり着ていないアイテムも活用。通知をタップすればアバターでルックを確認し、一週間をかんたんに計画できます。",
+      "scheduledOutfitsCta": "スケジュール済みコーデ"
     },
     "marketplace": {
       "tag": "廃棄物ゼロへの取り組み",
@@ -319,27 +324,9 @@
     "shoppingAssistant": {
       "title": "DressApp ショッピングアシスタント",
       "subtitle": "どの店舗のサイズ表でも最適なサイズがわかります",
-      "addToChrome": "Chrome に追加",
-      "mockTab": "ハーフジップスウェット",
-      "mockUrl": "anyfashionstore.com/product/half-zip-sweatshirt",
-      "connectedBadge": "DressApp に接続済み",
-      "sizeGuide": {
-        "title": "サイズガイド",
-        "unit": "cm",
-        "recommendedTitle": "DressApp のおすすめサイズは XS",
-        "recommendedBody": "ヒューリスティック照合：ヒップ（92.7 cm）が XS の行に適合します。",
-        "matchedOn": "照合：ヒップ · 推定"
-      },
-      "stats": {
-        "sizesMatched": "照合したサイズ",
-        "storesSupported": "対応ストア",
-        "matchAccuracy": "照合精度"
-      },
-      "reviewBadge": "Chrome ウェブストア審査待ち",
-      "worksOn": "主要ファッション・小売ストアで利用できます",
       "tag": "Chrome 拡張機能",
       "heading": "もうサイズで迷わない",
-      "description1": "DressApp ショッピングアシスタントは、ファッション小売店の商品ページにあるサイズ表を読み取り、保存済みのボディサイズと照合します。その場で完了します。",
+      "description1": "DressApp ショッピングアシスタントは、対応パートナーストアの商品ページにあるサイズ表を読み取り、保存済みのボディサイズと照合します。その場で完了します。",
       "steps": {
         "open": {
           "title": "アイテムのサイズガイドを開く",
@@ -351,27 +338,25 @@
         },
         "match": {
           "title": "すぐにサイズ照合を取得",
-          "description": "DressApp がサイズ表とあなたの採寸を比較し、該当行をハイライトします。"
+          "description": "DressApp がサイズ表とあなたのボディ採寸を比較し、最適なサイズを推奨します。"
         }
       },
       "cta": "Chrome に追加",
-      "ctaNote": "現在 Chrome ウェブストアで審査中です",
-      "tabs": {
-        "deals": "お得情報",
-        "wishlist": "ウィッシュリスト",
-        "compare": "比較",
-        "rewards": "特典"
-      },
-      "features": {
-        "priceAlerts": "価格アラート",
-        "autoCoupon": "自動クーポン",
-        "priceCompare": "価格比較",
-        "wishlistSync": "ウィッシュリスト同期"
-      },
-      "modes": {
-        "silent": "サイレント",
-        "popup": "ポップアップ",
-        "fullCompare": "フル比較"
+      "previewAlt": "商品ページでサイズを推奨する DressApp ショッピングアシスタント",
+      "storesNote": "現在、主要な国際ストア約 10 店舗に対応しています。未掲載の場合はリクエストしてください。Google が許可すれば追加できます。",
+      "addStore": {
+        "button": "自分のストアを追加",
+        "title": "ストア追加リクエスト",
+        "description": "DressApp ショッピングアシスタントに追加したいストアを教えてください。確認のうえ、Google が許可すれば追加します。",
+        "storeName": "オンラインストア名",
+        "storeNamePlaceholder": "例: Zara",
+        "storeUrl": "Web アドレス",
+        "storeUrlPlaceholder": "https://www.example.com",
+        "send": "送信",
+        "needFields": "ストア名と Web アドレスを入力してください。",
+        "emailSubject": "DressApp ショッピングアシスタントのストア追加リクエスト",
+        "emailBody": "ストア名: {{name}}\nWeb アドレス: {{url}}",
+        "sent": "メールアプリが開き、DressApp へこのリクエストを送信できます。"
       }
     },
     "aiEditor": {

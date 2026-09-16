@@ -50,63 +50,74 @@ export function LocationBanner() {
   };
 
   return (
-    <AnimatePresence initial={false}>
-      {visible ? (
-        <motion.div
-          initial={{ opacity: 0, y: -8 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -8 }}
-          className="container-px max-w-6xl mx-auto mt-3"
-          data-testid="location-banner"
-        >
-          <div className="relative rounded-2xl border border-[hsl(var(--accent))]/40 bg-[hsl(var(--accent))]/5 p-3 md:p-4 flex items-start gap-3">
-            <span className="h-9 w-9 rounded-full bg-[hsl(var(--accent))]/20 flex items-center justify-center shrink-0">
-              <MapPin className="h-4 w-4 text-[hsl(var(--accent))]" />
-            </span>
-            <div className="flex-1 min-w-0">
-              <div className="font-display text-base md:text-lg">
-                {t('location.title')}
-              </div>
-              <p className="text-xs md:text-sm text-muted-foreground mt-1 max-w-2xl">
-                {t('location.rationale')}
-              </p>
-              <div className="flex items-center gap-2 mt-3">
-                <Button
-                  size="sm"
-                  onClick={handleAllow}
-                  disabled={busy}
-                  className="rounded-xl"
-                  data-testid="location-banner-allow-btn"
-                >
-                  {busy ? (
-                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                  ) : (
-                    t('location.allow')
-                  )}
-                </Button>
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  onClick={handleDismiss}
-                  className="rounded-xl"
-                  data-testid="location-banner-dismiss-btn"
-                >
-                  {t('location.notNow')}
-                </Button>
-              </div>
-            </div>
-            <button
-              type="button"
-              onClick={handleDismiss}
-              aria-label={t('common.close')}
-              className="h-7 w-7 rounded-full hover:bg-background/70 flex items-center justify-center"
-              data-testid="location-banner-close-btn"
-            >
-              <X className="h-4 w-4" />
-            </button>
+  <AnimatePresence initial={false}>
+  {visible ? (
+    <motion.div
+      initial={{ opacity: 0, y: -8 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -8 }}
+      className="absolute top-[64px]
+        p-[56px]
+        -translate-x-1/2
+        z-[9]
+        w-[calc(100%-2rem)]
+        max-w-[790px]
+        max-[480px]:p-[20px]  max-[480px]:w-full"
+      data-testid="location-banner"
+    >
+      <div className="relative rounded-[12px] border border-border bg-white p-3 md:p-4 flex items-start gap-3 shadow-md">
+        <span className="h-9 w-9 rounded-full bg-primary-shadow flex items-center justify-center shrink-0">
+          <MapPin className="h-4 w-4 text-primary-brand" />
+        </span>
+
+        <div className="flex-1 min-w-0">
+          <div className="font-bold text-[14px] text-dark-brand">
+            {t('location.title')}
           </div>
-        </motion.div>
-      ) : null}
-    </AnimatePresence>
+
+          <p className="font-semibold text-[12px] text-text-brand">
+            {t('location.rationale')}
+          </p>
+
+          <div className="flex items-center gap-2 mt-3">
+            <Button
+              size="sm"
+              onClick={handleAllow}
+              disabled={busy}
+              className="rounded-xl"
+              data-testid="location-banner-allow-btn"
+            >
+              {busy ? (
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+              ) : (
+                t('location.allow')
+              )}
+            </Button>
+
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={handleDismiss}
+              className=""
+              data-testid="location-banner-dismiss-btn"
+            >
+              {t('location.notNow')}
+            </Button>
+          </div>
+        </div>
+
+        <button
+          type="button"
+          onClick={handleDismiss}
+          aria-label={t('common.close')}
+          className="h-7 w-7 rounded-full bg-primary-shadow flex items-center justify-center"
+          data-testid="location-banner-close-btn"
+        >
+          <X className="h-4 w-4 text-primary-brand hover:text-dark-brand" />
+        </button>
+      </div>
+    </motion.div>
+  ) : null}
+</AnimatePresence>
   );
 }

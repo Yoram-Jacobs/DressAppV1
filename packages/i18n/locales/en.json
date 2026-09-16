@@ -261,7 +261,7 @@
       "heading": "Every Piece Finds Its Place",
       "description1": "Photograph anything you own — DressApp reads the fabric, the cut, the colour, and files it away like a stylist would: tagged, catalogued, ready to be pulled the moment you need it.",
       "description2": "No more forgotten drawers. Search by keyword, or just describe a feeling — \"something warm for a rainy Monday\" — and the right piece finds its way back to you.",
-      "cta": "Start Building Your Closet",
+      "cta": "Migrate your Wardrobe",
       "recentlyAdded": "Recently added",
       "garments": {
         "blazer": {
@@ -334,14 +334,19 @@
         "dailySuggestion": "Daily Suggestion",
         "planEventOutfit": "Plan Event Outfit",
         "trendScout": "Trend-Scout"
-      }
+      },
+      "avatarOutfitAlt": "Avatar wearing the recommended business outfit",
+      "avatarOutfitLabel": "Look on avatar"
     },
     "stylist": {
       "tag": "Empathetic Design Intelligence",
       "heading": "The AI Stylist That Understands Life",
       "description1": "Your fashion choices shouldn't exist in a vacuum. DressApp connects directly to your calendar feeds and precise localized weather forecasts to design optimal outfits every day.",
       "description2": "Never step out under-dressed for high stakes business sessions or unprepared for sudden rainfall. It feels like having a world-class sartorial advisor living in your phone, with complete access to what you own.",
-      "cta": "Ask the stylist"
+      "cta": "Ask the stylist",
+      "conciergeTitle": "Your Daily Wardrobe Concierge",
+      "conciergeDescription": "Get personalized outfit recommendations delivered straight to your lock screen. Factored by local forecasts, your calendar events, and smart closet rotation to keep your style fresh and underused items in rotation. Tap the alert to preview the look on your avatar and plan your week effortlessly.",
+      "scheduledOutfitsCta": "Scheduled Outfits"
     },
     "marketplace": {
       "tag": "Zero Waste Initiative",
@@ -363,27 +368,9 @@
     "shoppingAssistant": {
       "title": "DressApp Shopping Assistant",
       "subtitle": "Get your right size on any store's size chart",
-      "addToChrome": "Add to Chrome",
-      "mockTab": "Half-Zip Sweatshirt",
-      "mockUrl": "anyfashionstore.com/product/half-zip-sweatshirt",
-      "connectedBadge": "Connected to DressApp",
-      "sizeGuide": {
-        "title": "Size Guide",
-        "unit": "CM",
-        "recommendedTitle": "DressApp recommends size XS",
-        "recommendedBody": "Heuristic match: your hips (92.7 cm) fit the XS row.",
-        "matchedOn": "Matched on: hips · via estimate"
-      },
-      "stats": {
-        "sizesMatched": "Sizes matched",
-        "storesSupported": "Stores supported",
-        "matchAccuracy": "Match accuracy"
-      },
-      "reviewBadge": "Pending Chrome Web Store Review",
-      "worksOn": "Works on every major fashion & retail store",
       "tag": "Chrome Extension",
       "heading": "Never Guess Your Size Again",
-      "description1": "The DressApp Shopping Assistant reads the size chart on any fashion retailer's product page and matches it against your saved body measurements — right there on the page.",
+      "description1": "The DressApp Shopping Assistant reads the size chart on supported partner stores and matches it against your saved body measurements — right there on the page.",
       "steps": {
         "open": {
           "title": "Open the item's Size Guide",
@@ -395,27 +382,25 @@
         },
         "match": {
           "title": "Get your instant size match",
-          "description": "DressApp compares the chart to your measurements and highlights your row."
+          "description": "DressApp compares the chart to your body measurements and recommends the right size for you."
         }
       },
       "cta": "Add to Chrome",
-      "ctaNote": "Currently under Chrome Web Store review",
-      "tabs": {
-        "deals": "Deals",
-        "wishlist": "Wishlist",
-        "compare": "Compare",
-        "rewards": "Rewards"
-      },
-      "features": {
-        "priceAlerts": "Price Alerts",
-        "autoCoupon": "Auto Coupon",
-        "priceCompare": "Price Compare",
-        "wishlistSync": "Wishlist Sync"
-      },
-      "modes": {
-        "silent": "Silent",
-        "popup": "Popup",
-        "fullCompare": "Full Compare"
+      "previewAlt": "DressApp Shopping Assistant recommending a size on a product page",
+      "storesNote": "Currently supports about 10 major international stores. Request yours if it is not listed yet — more can be added if Google allows.",
+      "addStore": {
+        "button": "Add my Store",
+        "title": "Request a store",
+        "description": "Tell us a store you would like added to the DressApp Shopping Assistant. We will review it and add it if Google allows.",
+        "storeName": "Online store name",
+        "storeNamePlaceholder": "e.g. Zara",
+        "storeUrl": "Web address",
+        "storeUrlPlaceholder": "https://www.example.com",
+        "send": "Send",
+        "needFields": "Please enter the store name and web address.",
+        "emailSubject": "Store request for DressApp Shopping Assistant",
+        "emailBody": "Store name: {{name}}\nWeb address: {{url}}",
+        "sent": "Your email app will open so you can send this request to DressApp."
       }
     },
     "aiEditor": {

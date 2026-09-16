@@ -217,7 +217,7 @@
       "heading": "Chaque pièce trouve sa place",
       "description1": "Photographiez tout ce que vous possédez : DressApp lit le tissu, la coupe, la couleur et les classe comme le ferait un styliste : étiqueté, catalogué, prêt à être retiré dès que vous en avez besoin.",
       "description2": "Fini les tiroirs oubliés. Recherchez par mot-clé ou décrivez simplement une sensation – « quelque chose de chaud pour un lundi pluvieux » – et la bonne pièce vous reviendra.",
-      "cta": "Commencez à construire votre placard",
+      "cta": "Migrez votre garde-robe",
       "recentlyAdded": "Récemment ajouté",
       "garments": {
         "blazer": {
@@ -290,14 +290,19 @@
         "dailySuggestion": "Suggestions quotidiennes",
         "planEventOutfit": "Planifier une tenue d'événement",
         "trendScout": "Tendance-Scout"
-      }
+      },
+      "avatarOutfitAlt": "Avatar portant la tenue professionnelle recommandée",
+      "avatarOutfitLabel": "Look sur l'avatar"
     },
     "stylist": {
       "tag": "Intelligence de conception empathique",
       "heading": "Le styliste IA qui comprend la vie",
       "description1": "Vos choix de mode ne devraient pas exister en vase clos. DressApp se connecte directement aux flux de votre calendrier et aux prévisions météorologiques localisées précises pour concevoir des tenues optimales chaque jour.",
       "description2": "Ne sortez jamais sous-habillé pour des séances d'affaires à enjeux élevés ou sans préparation en cas de pluie soudaine. C'est comme avoir un conseiller vestimentaire de classe mondiale vivant dans votre téléphone, avec un accès complet à ce que vous possédez.",
-      "cta": "Demandez au styliste"
+      "cta": "Demandez au styliste",
+      "conciergeTitle": "Votre concierge quotidien de garde-robe",
+      "conciergeDescription": "Recevez des recommandations de tenues personnalisées directement sur votre écran de verrouillage. Elles tiennent compte des prévisions locales, de votre agenda et d'une rotation intelligente de la garde-robe pour garder votre style frais et remettre en circulation les pièces peu portées. Touchez l'alerte pour prévisualiser le look sur votre avatar et planifier votre semaine sans effort.",
+      "scheduledOutfitsCta": "Tenues planifiées"
     },
     "marketplace": {
       "tag": "Initiative Zéro Déchet",
@@ -319,27 +324,9 @@
     "shoppingAssistant": {
       "title": "Assistant shopping DressApp",
       "subtitle": "Trouvez votre bonne taille sur le guide de n'importe quel magasin",
-      "addToChrome": "Ajouter à Chrome",
-      "mockTab": "Sweat à demi-zip",
-      "mockUrl": "anyfashionstore.com/product/half-zip-sweatshirt",
-      "connectedBadge": "Connecté à DressApp",
-      "sizeGuide": {
-        "title": "Guide des tailles",
-        "unit": "CM",
-        "recommendedTitle": "DressApp recommande la taille XS",
-        "recommendedBody": "Correspondance heuristique : votre tour de hanches (92,7 cm) correspond à la ligne XS.",
-        "matchedOn": "Correspondance sur : hanches · par estimation"
-      },
-      "stats": {
-        "sizesMatched": "Tailles associées",
-        "storesSupported": "Boutiques prises en charge",
-        "matchAccuracy": "Précision de correspondance"
-      },
-      "reviewBadge": "En attente de validation Chrome Web Store",
-      "worksOn": "Fonctionne sur toutes les grandes enseignes de mode et de retail",
       "tag": "Extension Chrome",
       "heading": "Ne devinez plus jamais votre taille",
-      "description1": "L'assistant shopping DressApp lit le guide des tailles sur la page produit de n'importe quel détaillant de mode et le compare à vos mensurations enregistrées — directement sur la page.",
+      "description1": "L'assistant shopping DressApp lit le guide des tailles sur les boutiques partenaires prises en charge et le compare à vos mensurations enregistrées — directement sur la page.",
       "steps": {
         "open": {
           "title": "Ouvrez le guide des tailles de l'article",
@@ -351,27 +338,25 @@
         },
         "match": {
           "title": "Obtenez votre taille instantanément",
-          "description": "DressApp compare le tableau à vos mensurations et met votre ligne en évidence."
+          "description": "DressApp compare le tableau à vos mensurations et recommande la bonne taille."
         }
       },
       "cta": "Ajouter à Chrome",
-      "ctaNote": "Actuellement en cours d'examen sur le Chrome Web Store",
-      "tabs": {
-        "deals": "Offres",
-        "wishlist": "Liste d'envies",
-        "compare": "Comparer",
-        "rewards": "Récompenses"
-      },
-      "features": {
-        "priceAlerts": "Alertes prix",
-        "autoCoupon": "Coupon automatique",
-        "priceCompare": "Comparaison des prix",
-        "wishlistSync": "Synchroniser la liste d'envies"
-      },
-      "modes": {
-        "silent": "Silencieux",
-        "popup": "Fenêtre contextuelle",
-        "fullCompare": "Comparaison complète"
+      "previewAlt": "L'assistant shopping DressApp recommande une taille sur une page produit",
+      "storesNote": "Prend actuellement en charge environ 10 grandes boutiques internationales. Demandez la vôtre si elle n'est pas encore listée — d'autres pourront être ajoutées si Google le permet.",
+      "addStore": {
+        "button": "Ajouter ma boutique",
+        "title": "Demander une boutique",
+        "description": "Indiquez une boutique que vous souhaitez ajouter à l'assistant shopping DressApp. Nous l'examinerons et l'ajouterons si Google le permet.",
+        "storeName": "Nom de la boutique en ligne",
+        "storeNamePlaceholder": "ex. Zara",
+        "storeUrl": "Adresse web",
+        "storeUrlPlaceholder": "https://www.example.com",
+        "send": "Envoyer",
+        "needFields": "Veuillez saisir le nom de la boutique et l'adresse web.",
+        "emailSubject": "Demande de boutique pour l'assistant shopping DressApp",
+        "emailBody": "Nom de la boutique : {{name}}\nAdresse web : {{url}}",
+        "sent": "Votre application e-mail s'ouvrira pour envoyer cette demande à DressApp."
       }
     },
     "aiEditor": {

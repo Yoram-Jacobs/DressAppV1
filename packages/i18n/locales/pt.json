@@ -217,7 +217,7 @@
       "heading": "Cada peça encontra seu lugar",
       "description1": "Fotografe tudo o que você possui - o DressApp lê o tecido, o corte, a cor e os arquiva como um estilista faria: etiquetado, catalogado, pronto para ser puxado no momento que você precisar.",
       "description2": "Chega de gavetas esquecidas. Pesquise por palavra-chave ou apenas descreva um sentimento - \"algo quente para uma segunda-feira chuvosa\" - e a peça certa chegará até você.",
-      "cta": "Comece a construir seu armário",
+      "cta": "Migre seu guarda-roupa",
       "recentlyAdded": "Adicionado recentemente",
       "garments": {
         "blazer": {
@@ -290,14 +290,19 @@
         "dailySuggestion": "Sugestão Diária",
         "planEventOutfit": "Planejar roupa para evento",
         "trendScout": "Escoteiro de tendências"
-      }
+      },
+      "avatarOutfitAlt": "Avatar vestindo o look de negócios recomendado",
+      "avatarOutfitLabel": "Look no avatar"
     },
     "stylist": {
       "tag": "Inteligência de Design Empática",
       "heading": "O estilista de IA que entende a vida",
       "description1": "Suas escolhas de moda não deveriam existir no vácuo. DressApp se conecta diretamente aos feeds do seu calendário e às previsões meteorológicas precisas e localizadas para criar roupas ideais todos os dias.",
       "description2": "Nunca saia mal vestido para sessões de negócios de alto risco ou despreparado para chuvas repentinas. É como ter um consultor de alfaiataria de classe mundial morando no seu telefone, com acesso total ao que você possui.",
-      "cta": "Pergunte ao estilista"
+      "cta": "Pergunte ao estilista",
+      "conciergeTitle": "Seu concierge diário do guarda-roupa",
+      "conciergeDescription": "Receba recomendações de looks personalizadas direto na tela de bloqueio. Com base na previsão local, nos eventos da agenda e na rotação inteligente do guarda-roupa para manter o estilo fresco e as peças pouco usadas em circulação. Toque no alerta para pré-visualizar o look no avatar e planejar a semana sem esforço.",
+      "scheduledOutfitsCta": "Looks agendados"
     },
     "marketplace": {
       "tag": "Iniciativa Desperdício Zero",
@@ -319,27 +324,9 @@
     "shoppingAssistant": {
       "title": "Assistente de compras DressApp",
       "subtitle": "Encontre o tamanho certo na tabela de qualquer loja",
-      "addToChrome": "Adicionar ao Chrome",
-      "mockTab": "Moletom com zíper meio",
-      "mockUrl": "anyfashionstore.com/product/half-zip-sweatshirt",
-      "connectedBadge": "Conectado ao DressApp",
-      "sizeGuide": {
-        "title": "Guia de tamanhos",
-        "unit": "CM",
-        "recommendedTitle": "O DressApp recomenda o tamanho XS",
-        "recommendedBody": "Correspondência heurística: seu quadril (92,7 cm) se encaixa na linha XS.",
-        "matchedOn": "Correspondência em: quadril · por estimativa"
-      },
-      "stats": {
-        "sizesMatched": "Tamanhos correspondidos",
-        "storesSupported": "Lojas compatíveis",
-        "matchAccuracy": "Precisão da correspondência"
-      },
-      "reviewBadge": "Pendente de análise na Chrome Web Store",
-      "worksOn": "Funciona em todas as grandes lojas de moda e varejo",
       "tag": "Extensão do Chrome",
       "heading": "Nunca mais chute o seu tamanho",
-      "description1": "O Assistente de compras DressApp lê a tabela de tamanhos na página do produto de qualquer varejista de moda e a compara com as suas medidas corporais salvas — ali mesmo na página.",
+      "description1": "O Assistente de compras DressApp lê a tabela de tamanhos em lojas parceiras compatíveis e a compara com as suas medidas corporais salvas — ali mesmo na página.",
       "steps": {
         "open": {
           "title": "Abra o guia de tamanhos do item",
@@ -351,27 +338,25 @@
         },
         "match": {
           "title": "Receba o tamanho na hora",
-          "description": "O DressApp compara a tabela com as suas medidas e destaca a sua linha."
+          "description": "O DressApp compara a tabela com as suas medidas corporais e recomenda o tamanho certo."
         }
       },
       "cta": "Adicionar ao Chrome",
-      "ctaNote": "Atualmente em análise na Chrome Web Store",
-      "tabs": {
-        "deals": "Ofertas",
-        "wishlist": "Lista de desejos",
-        "compare": "Comparar",
-        "rewards": "Recompensas"
-      },
-      "features": {
-        "priceAlerts": "Alertas de preço",
-        "autoCoupon": "Cupom automático",
-        "priceCompare": "Comparar preços",
-        "wishlistSync": "Sincronizar lista de desejos"
-      },
-      "modes": {
-        "silent": "Silencioso",
-        "popup": "Popup",
-        "fullCompare": "Comparação completa"
+      "previewAlt": "O Assistente de compras DressApp recomenda um tamanho em uma página de produto",
+      "storesNote": "Atualmente oferece suporte a cerca de 10 grandes lojas internacionais. Solicite a sua se ainda não estiver na lista — mais podem ser adicionadas se o Google permitir.",
+      "addStore": {
+        "button": "Adicionar minha loja",
+        "title": "Solicitar uma loja",
+        "description": "Conte-nos uma loja que você gostaria de adicionar ao Assistente de compras DressApp. Vamos analisar e adicionar se o Google permitir.",
+        "storeName": "Nome da loja online",
+        "storeNamePlaceholder": "ex. Zara",
+        "storeUrl": "Endereço da web",
+        "storeUrlPlaceholder": "https://www.example.com",
+        "send": "Enviar",
+        "needFields": "Informe o nome da loja e o endereço da web.",
+        "emailSubject": "Pedido de loja para o Assistente de compras DressApp",
+        "emailBody": "Nome da loja: {{name}}\nEndereço da web: {{url}}",
+        "sent": "Seu app de e-mail abrirá para você enviar este pedido ao DressApp."
       }
     },
     "aiEditor": {
