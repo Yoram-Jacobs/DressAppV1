@@ -389,7 +389,7 @@ class Settings:
     # result to accept the matting (advisory verifier — rembg is
     # deterministic so false rejections are rare; 0.65 is a safe floor).
     MATTING_FAITHFULNESS_THRESHOLD: float = float(
-        os.environ.get("MATTING_FAITHFULNESS_THRESHOLD", "0.65")
+        os.environ.get("MATTING_FAITHFULNESS_THRESHOLD", "0.55")
     )
     # Auto-matte every crop during `analyze` so the per-item cards show
     # clean cutouts instead of bbox rectangles with background bleeding.
