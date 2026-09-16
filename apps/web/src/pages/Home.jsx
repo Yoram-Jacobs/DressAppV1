@@ -64,8 +64,8 @@ import stylistNavyBlazer from "../assets/img/stylist-navy-blazer.jpg";
 import stylistWhiteShirt from "../assets/img/stylist-white-shirt.jpg";
 import stylistCharcoalTrousers from "../assets/img/stylist-charcoal-trousers.jpg";
 import stylistOxfordShoes from "../assets/img/stylist-oxford-shoes.jpg";
-import stylistAvatarOutfit from "../assets/img/stylist-avatar-outfit.png";
 import shoppingAssistantPreview from "../assets/img/shopping-assistant-preview.png";
+import AvatarViewer from "@/components/AvatarViewer";
 import added1 from "../assets/img/added1.jpg";
 import added2 from "../assets/img/added2.jpg";
 import added3 from "../assets/img/added3.jpg";
@@ -113,6 +113,50 @@ const BUCKET_VISUALS = {
 };
 const DEFAULT_BUCKET_VISUAL = { Icon: Sparkles, tone: "bg-secondary/60" };
 
+const normalizeClosetCategory = (value) =>
+  String(value || "")
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, "_");
+
+const hasAvatarCutout = (item) =>
+  !!(
+    item &&
+    (item.reconstructed_image_url ||
+      item.reconstruct_image_url ||
+      item.clean_image_url ||
+      item.cutout_url ||
+      item.segmented_image_url)
+  );
+
+const pickClosetItemForRole = (items, categories) => {
+  const wanted = new Set(categories.map(normalizeClosetCategory));
+  const matches = (items || []).filter((item) =>
+    wanted.has(normalizeClosetCategory(item?.category))
+  );
+  if (!matches.length) return null;
+  return matches.find(hasAvatarCutout) || matches[0];
+};
+
+const toAvatarOutfitPiece = (item) => {
+  if (!item) return null;
+  return {
+    id: item.id,
+    closet_item_id: item.id,
+    category: item.category,
+    name: item.title || item.name,
+    title: item.title || item.name,
+    image_url: bestImageUrl(item) || item.image_url,
+    clean_image_url: item.clean_image_url,
+    cutout_url: item.cutout_url,
+    segmented_image_url: item.segmented_image_url,
+    reconstructed_image_url: item.reconstructed_image_url || item.reconstruct_image_url,
+    original_image_url: item.original_image_url,
+    thumbnail_data_url: item.thumbnail_data_url,
+    image_variants: item.image_variants,
+  };
+};
+
 const translateSeasonList = (value, t) => {
   if (!value) return "";
   return String(value)
@@ -127,7 +171,7 @@ const translateSeasonList = (value, t) => {
 export default function Home() {
   const { t, i18n } = useTranslation();
   const { user } = useAuth();
-  const closet = useClosetStore();
+  const closet = useClosetStore({ prewarm: true });
   const loc = useAppLocation();
   const isAdmin = (user?.roles || []).includes("admin");
   const trendStore = useTrendScoutStore();
@@ -135,7 +179,7 @@ export default function Home() {
   const [refreshing, setRefreshing] = useState(false);
   // Wardrobe migration modal state
   const [isMigrationModalOpen, setIsMigrationModalOpen] = useState(false);
-  const store = useClosetStore();
+  const store = closet;
   // Localised fallback cards — rebuilt whenever the active language
   // changes so a mid-session language switch immediately re-renders
   // the cards in the new locale. Bucket slugs match the BUCKETS list
@@ -520,6 +564,75 @@ export default function Home() {
     { id: "event", icon: "bi-calendar-event", labelKey: "home.stylistPreview.chips.planEventOutfit", labelDefault: "Plan Event Outfit" },
     { id: "trend", icon: "bi-graph-up", labelKey: "home.stylistPreview.chips.trendScout", labelDefault: "Trend-Scout" },
   ];
+
+  // Prefer live closet cutouts (same pipeline as /stylist). Opaque marketing
+  // JPGs are list-only fallbacks — never layered on the avatar.
+  const stylistPreviewSlots = useMemo(() => {
+    const items = closet.items || [];
+    const slots = [
+      {
+        role: "outerwear",
+        categories: ["outerwear"],
+        fallback: STYLIST_PREVIEW_RECOMMENDATIONS[0],
+      },
+      {
+        role: "top",
+        categories: ["top", "tops"],
+        fallback: STYLIST_PREVIEW_RECOMMENDATIONS[1],
+      },
+      {
+        role: "bottom",
+        categories: ["bottom", "bottoms"],
+        fallback: STYLIST_PREVIEW_RECOMMENDATIONS[2],
+      },
+      {
+        role: "shoes",
+        categories: ["shoes", "footwear"],
+        fallback: STYLIST_PREVIEW_RECOMMENDATIONS[3],
+      },
+    ];
+
+    return slots.map(({ role, categories, fallback }) => {
+      const item = pickClosetItemForRole(items, categories);
+      if (item) {
+        const img = bestImageUrl(item) || item.clean_image_url || item.image_url;
+        return {
+          id: item.id || role,
+          role,
+          isDynamic: true,
+          image: img,
+          categoryText: labelForCategory(item.category, t) || fallback.categoryDefault,
+          titleText: item.title || item.name || item.brand || fallback.titleDefault,
+          descriptionText:
+            item.brand ||
+            t(fallback.descriptionKey, { defaultValue: fallback.descriptionDefault }),
+          avatarPiece: hasAvatarCutout(item) ? toAvatarOutfitPiece(item) : null,
+        };
+      }
+      return {
+        id: fallback.id,
+        role,
+        isDynamic: false,
+        image: fallback.image,
+        categoryKey: fallback.categoryKey,
+        categoryDefault: fallback.categoryDefault,
+        titleKey: fallback.titleKey,
+        titleDefault: fallback.titleDefault,
+        descriptionKey: fallback.descriptionKey,
+        descriptionDefault: fallback.descriptionDefault,
+        avatarPiece: null,
+      };
+    });
+  }, [closet.items, t]);
+
+  const stylistPreviewOutfitItems = useMemo(() => {
+    const map = {};
+    stylistPreviewSlots.forEach((slot) => {
+      if (slot.avatarPiece) map[slot.role] = slot.avatarPiece;
+    });
+    return map;
+  }, [stylistPreviewSlots]);
+
   const HOW_IT_WORKS_STEPS = [
     {
       id: "capture",
@@ -1582,10 +1695,10 @@ export default function Home() {
                       ". I recommend structuring a clean professional look built with technical weather protection.”",
                   })}
                 </div>
-                {/* Recommendations + avatar outfit preview */}
-                <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-[minmax(0,1fr)_minmax(140px,42%)] sm:items-stretch">
+                {/* Recommendations + dynamic avatar (closet cutouts, same as /stylist) */}
+                <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-[minmax(0,1fr)_minmax(150px,42%)] sm:items-stretch">
                   <div className="flex flex-col gap-3 min-w-0">
-                    {STYLIST_PREVIEW_RECOMMENDATIONS.map((rec) => (
+                    {stylistPreviewSlots.map((rec) => (
                       <div
                         key={rec.id}
                         className="flex items-center gap-3 rounded-[12px] border border-border bg-white p-3 transition-smooth shadow-sm"
@@ -1593,19 +1706,29 @@ export default function Home() {
                         <div className="h-[62px] w-[62px] shrink-0 overflow-hidden rounded-[9px] bg-[#f1f5f4]">
                           <img
                             src={rec.image}
-                            alt={t(rec.titleKey, { defaultValue: rec.titleDefault })}
+                            alt={
+                              rec.isDynamic
+                                ? rec.titleText
+                                : t(rec.titleKey, { defaultValue: rec.titleDefault })
+                            }
                             className="h-full w-full object-contain p-1"
                           />
                         </div>
                         <div className="min-w-0">
                           <span className="mb-1 block text-[10px] font-bold uppercase tracking-[0.12em] text-[var(--primary-color)]">
-                            {t(rec.categoryKey, { defaultValue: rec.categoryDefault })}
+                            {rec.isDynamic
+                              ? rec.categoryText
+                              : t(rec.categoryKey, { defaultValue: rec.categoryDefault })}
                           </span>
-                          <h6 className="m-0 text-[13px] font-bold leading-[1.35] text-[var(--dark-color)]">
-                            {t(rec.titleKey, { defaultValue: rec.titleDefault })}
+                          <h6 className="m-0 truncate text-[13px] font-bold leading-[1.35] text-[var(--dark-color)]">
+                            {rec.isDynamic
+                              ? rec.titleText
+                              : t(rec.titleKey, { defaultValue: rec.titleDefault })}
                           </h6>
-                          <p className="mt-1 mb-0 text-[11px] leading-[1.4] text-[var(--text-color)]">
-                            {t(rec.descriptionKey, { defaultValue: rec.descriptionDefault })}
+                          <p className="mt-1 mb-0 truncate text-[11px] leading-[1.4] text-[var(--text-color)]">
+                            {rec.isDynamic
+                              ? rec.descriptionText
+                              : t(rec.descriptionKey, { defaultValue: rec.descriptionDefault })}
                           </p>
                         </div>
                       </div>
@@ -1613,17 +1736,19 @@ export default function Home() {
                   </div>
 
                   <div
-                    className="relative overflow-hidden rounded-[14px] border border-border bg-accent-beige shadow-sm h-[470px]"
+                    className="relative w-full overflow-hidden rounded-[14px] border border-border bg-[#ddd] shadow-sm aspect-[4/5] min-h-[260px]"
                     data-testid="home-stylist-avatar-outfit"
                   >
-                    <img
-                      src={stylistAvatarOutfit}
-                      alt={t("home.stylistPreview.avatarOutfitAlt", {
-                        defaultValue: "Avatar wearing the recommended business outfit",
-                      })}
-                      className="absolute inset-0 h-full w-full object-cover object-[center_top]"
-                    />
-                    <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/45 via-black/10 to-transparent px-3 pb-3 pt-10">
+                    <div className="absolute inset-0">
+                      <AvatarViewer
+                        shapeParams={user?.avatar_shape_params || {}}
+                        sex={user?.sex || "female"}
+                        skinColor={user?.skin_tone}
+                        bodyPhotoUrl={user?.body_photo_url}
+                        outfitItems={stylistPreviewOutfitItems}
+                      />
+                    </div>
+                    <div className="pointer-events-none absolute inset-x-0 bottom-0 z-[5] bg-gradient-to-t from-black/45 via-black/10 to-transparent px-3 pb-3 pt-10">
                       <span className="inline-flex rounded-full bg-white/95 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.08em] text-[var(--primary-color)]">
                         {t("home.stylistPreview.avatarOutfitLabel", {
                           defaultValue: "Look on avatar",
