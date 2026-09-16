@@ -1151,12 +1151,19 @@ export default function AddItem() {
         res = await api.parseReceipt(formData);
       } catch (parseErr) {
         toast.dismiss(loadingId);
+        const isTimeout =
+          parseErr?.code === "ECONNABORTED" ||
+          parseErr?.message?.toLowerCase().includes("timeout");
         toast.error(
           parseErr?.response?.data?.detail ||
-          t("addItem.import.error", {
-            defaultValue:
-              "Could not parse receipt. Please verify formatting and try again.",
-          }),
+          (isTimeout
+            ? t("addItem.import.timeout", {
+                defaultValue: "Receipt parsing timed out. Please try again or crop a smaller section.",
+              })
+            : t("addItem.import.error", {
+                defaultValue:
+                  "Could not parse receipt. Please verify formatting and try again.",
+              })),
         );
         return;
       }

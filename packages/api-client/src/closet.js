@@ -424,7 +424,7 @@ export const closet = {
     client
       .post('/closet/parse-receipt', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
-        timeout: 60000,
+        timeout: 120000,
       })
       .then((r) => r.data),
   extractPdfText: (formData) =>

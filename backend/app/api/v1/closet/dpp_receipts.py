@@ -431,15 +431,15 @@ async def parse_receipt(
             model=user_model,
         )
         
-        # Clean any code fences
+        import re
         cleaned_text = response_text.strip()
-        if cleaned_text.startswith("```"):
-            lines = cleaned_text.splitlines()
-            if lines[0].startswith("```"):
-                lines = lines[1:]
-            if lines and lines[-1].startswith("```"):
-                lines = lines[:-1]
-            cleaned_text = "\n".join(lines).strip()
+        if "```" in cleaned_text:
+            cleaned_text = re.sub(r"^```(?:json)?\s*", "", cleaned_text, flags=re.MULTILINE)
+            cleaned_text = re.sub(r"\s*```$", "", cleaned_text, flags=re.MULTILINE).strip()
+        s = cleaned_text.find("{")
+        e = cleaned_text.rfind("}")
+        if s != -1 and e != -1:
+            cleaned_text = cleaned_text[s : e + 1]
             
         return json.loads(cleaned_text)
 
@@ -465,60 +465,14 @@ async def parse_receipt(
                 return None
             
             _, crop_bytes, crop_mime = raw_crops[0]
-            
-            # Apply the full garment vision background matting pipeline (SegFormer + rembg + alpha intersection)
-            from app.services import background_matting
-            from app.services import clothing_parser as _cp
-            from app.config import settings
-            
-            category = best_det.get("label") or best_det.get("kind")
-            seg_mask = None
-            human_mask = None
-            if settings.USE_LOCAL_CLOTHING_PARSER:
-                try:
-                    garments = await _cp.parse_garments(crop_bytes)
-                    seg_mask, human_mask = _pick_segformer_mask_for_category(garments, category)
-                except Exception as exc:
-                    logger.info("Background matte SegFormer skipped in visual receipt parse: %s", exc)
-                    
-            try:
-                bg_res = await background_matting.remove_background(crop_bytes)
-                result_png = bg_res.get("image_png") if isinstance(bg_res, dict) else None
-                if result_png:
-                    if seg_mask is not None:
-                        try:
-                            refined = _cp.apply_alpha_intersection(
-                                result_png,
-                                seg_mask,
-                                category=category,
-                                human_mask=human_mask,
-                                is_padded_canvas=True,
-                            )
-                            if refined:
-                                result_png = refined
-                        except Exception as exc:
-                            logger.info("Background matte alpha intersection skipped in visual receipt parse: %s", exc)
-                    
-                    crop_bytes = result_png
-                    crop_mime = "image/png"
-            except Exception as bg_err:
-                logger.warning("Background removal failed on receipt visual crop: %s", bg_err)
-
-            user_lang = user.get("preferred_language") or "en"
-            analysis_raw = await vision_service.analyze(
-                crop_bytes,
-                language=user_lang,
-            )
-            analysis_clean = _safe_analysis(analysis_raw)
             crop_b64 = base64.b64encode(crop_bytes).decode("ascii")
             
             return {
-                "visual_analysis": analysis_clean,
                 "image_base64": crop_b64,
                 "image_mime": crop_mime or "image/jpeg",
             }
         except Exception as exc:
-            logger.warning("Receipt image item detection/analysis failed: %r", exc)
+            logger.warning("Receipt image item detection failed: %r", exc)
             return None
 
     try:
