@@ -533,7 +533,7 @@ export default function ItemDetail() {
   const [cleanBackgroundProgress, setCleanBackgroundProgress] = useState(0);
   const [dictating, setDictating] = useState(false);
   const [dictationInterim, setDictationInterim] = useState('');
-  const [showingOriginal, setShowingOriginal] = useState(() => getStoredViewPreference() === 'original');
+  const [showingOriginal, setShowingOriginal] = useState(false);
 
   // Phase V6 — photo add/replace state
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
@@ -684,6 +684,9 @@ export default function ItemDetail() {
       setForm(toFormState(data, user));
       if (data?.preferred_image_view) {
         setShowingOriginal(data.preferred_image_view === 'clean' || data.preferred_image_view === 'original');
+      } else {
+        const hasRecon = Boolean(data.reconstructed_image_url || data.reconstruct_image_url);
+        setShowingOriginal(!hasRecon);
       }
     } catch (err) {
       const is404 = err?.response?.status === 404;
@@ -1732,10 +1735,9 @@ export default function ItemDetail() {
                       const next = !showingOriginal;
                       setShowingOriginal(next);
                       const pref = next ? 'clean' : 'reconstructed';
-                      setStoredViewPreference(next ? 'original' : 'repaired');
                       if (item?.id) {
                         api.patchItem(item.id, { preferred_image_view: pref }).catch(() => { });
-                        closetStore.upsert({ id: item.id, preferred_image_view: pref });
+                        closetStore.upsert({ id: item.id, preferred_image_view: pref, thumbnail_data_url: null });
                         setItem((prev) => (prev ? { ...prev, preferred_image_view: pref } : prev));
                         setForm((prev) => (prev ? { ...prev, preferred_image_view: pref } : prev));
                       }

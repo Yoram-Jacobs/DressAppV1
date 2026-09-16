@@ -22,6 +22,7 @@ import uuid
 from datetime import datetime, timezone
 
 import aiofiles
+import base64
 
 logger = logging.getLogger(__name__)
 
@@ -148,3 +149,21 @@ class UploadManager:
         if _r2_configured() and settings.R2_PUBLIC_URL:
             return f"{settings.R2_PUBLIC_URL.rstrip('/')}/{key}"
         return f"/static/uploads/{key}"
+
+    @staticmethod
+    async def upload_data_url(data_url: str) -> str:
+        """If data_url is a data:image/... URI, decode and upload it as a static file.
+        Otherwise, return data_url unchanged.
+        """
+        if not isinstance(data_url, str) or not data_url.startswith("data:image/"):
+            return data_url
+        try:
+            header, b64_data = data_url.split(",", 1)
+            mime = header.split(";")[0].replace("data:", "").strip()
+            ext = "png" if "png" in mime else "webp" if "webp" in mime else "jpeg"
+            raw_bytes = base64.b64decode(b64_data)
+            return await UploadManager.upload_bytes(raw_bytes, mime, ext)
+        except Exception as exc:
+            logger.warning("UploadManager.upload_data_url failed: %s", exc)
+            return data_url
+

@@ -197,6 +197,15 @@ async def _generate_and_save_daily_proposal(
         return norm_category(i.get("category"))
 
     def _best_img(i: dict) -> str | None:
+        pref = i.get("preferred_image_view")
+        if pref in ("clean", "original"):
+            return (
+                i.get("clean_image_url")
+                or i.get("reconstructed_image_url")
+                or i.get("image_url")
+                or i.get("thumbnail_url")
+                or i.get("thumbnail_data_url")
+            )
         return (
             i.get("reconstructed_image_url")
             or i.get("clean_image_url")

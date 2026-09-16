@@ -346,8 +346,11 @@ export const closetStore = {
           const flipsToReady = it.clean_image_status === 'ready' && prev.clean_image_status !== 'ready';
           const gainedCleanImage = typeof it.clean_image_url === 'string' && it.clean_image_url && it.clean_image_url !== prev.clean_image_url;
           const gainedReconstruction = typeof it.reconstructed_image_url === 'string' && it.reconstructed_image_url && it.reconstructed_image_url !== prev.reconstructed_image_url;
+          const changedPreferredView = it.preferred_image_view && it.preferred_image_view !== prev.preferred_image_view;
           
-          if (!it.thumbnail_data_url && prev.thumbnail_data_url) {
+          if (changedPreferredView) {
+            merged.thumbnail_data_url = null;
+          } else if (!it.thumbnail_data_url && prev.thumbnail_data_url) {
             const invalidating = flipsToReady || gainedCleanImage || gainedReconstruction;
             if (!invalidating) {
               merged.thumbnail_data_url = prev.thumbnail_data_url;
@@ -404,8 +407,12 @@ export const closetStore = {
         typeof item.reconstructed_image_url === 'string'
         && item.reconstructed_image_url
         && item.reconstructed_image_url !== prev.reconstructed_image_url;
+      const changedPreferredView =
+        item.preferred_image_view && item.preferred_image_view !== prev.preferred_image_view;
       const merged = { ...prev, ...item };
-      if (!item.thumbnail_data_url && prev.thumbnail_data_url) {
+      if (changedPreferredView) {
+        merged.thumbnail_data_url = null;
+      } else if (!item.thumbnail_data_url && prev.thumbnail_data_url) {
         const invalidating = flipsToReady || gainedCleanImage || gainedReconstruction;
         if (!invalidating) {
           merged.thumbnail_data_url = prev.thumbnail_data_url;

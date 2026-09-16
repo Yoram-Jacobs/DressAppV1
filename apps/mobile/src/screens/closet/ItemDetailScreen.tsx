@@ -72,7 +72,6 @@ import { marketplaceStore } from '@mobile/lib/stores/marketplaceStore';
 import { closetRepo } from '@mobile/lib/repositories/closetRepository';
 import { useUserStore } from '@mobile/lib/stores';
 import { deriveSizeFromPreferences } from '@mobile/lib/size_preferences';
-import { setMobileViewPreference } from '@mobile/lib/imageUtils';
 import { TaxonomySelectModal } from '@mobile/components/TaxonomySelectModal';
 import { WeightedList, WeightedItem } from '@mobile/components/WeightedList';
 import { DppPanel } from '@mobile/components/DppPanel';
@@ -348,6 +347,8 @@ export function ItemDetailScreen() {
         setOriginalForm(parsed);
         if (cached.preferred_image_view) {
           setViewingCutout(cached.preferred_image_view !== 'clean' && cached.preferred_image_view !== 'original');
+        } else {
+          setViewingCutout(Boolean(cached.reconstructed_image_url || (cached as any).reconstruct_image_url));
         }
       }
 
@@ -376,6 +377,8 @@ export function ItemDetailScreen() {
         setOriginalForm(parsed);
         if (data.preferred_image_view) {
           setViewingCutout(data.preferred_image_view !== 'clean' && data.preferred_image_view !== 'original');
+        } else {
+          setViewingCutout(Boolean(data.reconstructed_image_url || data.reconstruct_image_url));
         }
       }
     } catch (e: any) {
@@ -618,11 +621,10 @@ export function ItemDetailScreen() {
   const handleToggleView = (showCutout: boolean) => {
     setViewingCutout(showCutout);
     const pref = showCutout ? 'reconstructed' : 'clean';
-    setMobileViewPreference(showCutout ? 'repaired' : 'original');
     if (itemId) {
       api.patchItem(itemId, { preferred_image_view: pref }).catch(() => {});
-      closetStore.upsert({ id: itemId, preferred_image_view: pref } as any);
-      closetRepo.upsert({ id: itemId, preferred_image_view: pref } as any);
+      closetStore.upsert({ id: itemId, preferred_image_view: pref, thumbnail_data_url: undefined } as any);
+      closetRepo.upsert({ id: itemId, preferred_image_view: pref, thumbnail_data_url: undefined } as any);
       setForm((prev) => ({ ...prev, preferred_image_view: pref } as any));
       setItem((prev: any) => (prev ? { ...prev, preferred_image_view: pref } : prev));
     }

@@ -181,6 +181,7 @@ export default function CreateListing() {
       };
       const linked = closet.find((c) => c.id === form.closet_item_id);
       const chosenImg =
+        bestImageUrl(linked) ||
         linked?.reconstruct_image_url ||
         linked?.reconstructed_image_url ||
         linked?.clean_image_url ||

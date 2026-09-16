@@ -307,14 +307,31 @@ async def ensure_indexes() -> None:
                     clean = orig_candidate
                     update_fields["clean_image_url"] = clean
 
+            from app.services.upload_manager import UploadManager
             if clean and isinstance(clean, str) and clean.startswith("data:image/"):
-                norm_clean = fit_image_data_url_to_card(clean)
-                if norm_clean and norm_clean != clean:
+                norm_clean = fit_image_data_url_to_card(clean) or clean
+                up_clean = await UploadManager.upload_data_url(norm_clean)
+                if up_clean and not up_clean.startswith("data:"):
+                    clean = up_clean
+                    update_fields["clean_image_url"] = up_clean
+                elif norm_clean != clean:
                     update_fields["clean_image_url"] = norm_clean
+
             if recon and isinstance(recon, str) and recon.startswith("data:image/"):
-                norm_recon = fit_image_data_url_to_card(recon)
-                if norm_recon and norm_recon != recon:
+                norm_recon = fit_image_data_url_to_card(recon) or recon
+                up_recon = await UploadManager.upload_data_url(norm_recon)
+                if up_recon and not up_recon.startswith("data:"):
+                    recon = up_recon
+                    update_fields["reconstructed_image_url"] = up_recon
+                elif norm_recon != recon:
                     update_fields["reconstructed_image_url"] = norm_recon
+
+            if not item.get("preferred_image_view"):
+                update_fields["preferred_image_view"] = "reconstructed" if recon else "clean"
+
+            thumb = item.get("thumbnail_data_url")
+            if thumb and isinstance(thumb, str) and thumb.startswith("data:image/") and len(thumb) > 15000:
+                update_fields["thumbnail_data_url"] = None
 
             if update_fields:
                 query = {"id": item["id"]} if item.get("id") else {"_id": item["_id"]}

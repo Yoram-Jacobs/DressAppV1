@@ -260,17 +260,30 @@ async def create_item(
         except Exception:  # noqa: BLE001
             pass
 
-    # Phase Q — persist the reconstructed image (data URL) when supplied.
+    # Phase Q — persist the reconstructed image (data URL or uploaded file) when supplied.
     if payload.reconstructed_image_b64:
         if payload.reconstructed_image_b64.startswith("data:"):
             doc["reconstructed_image_url"] = payload.reconstructed_image_b64
         else:
             mime = (payload.reconstruction_metadata or {}).get("mime_type", "image/png")
+            doc["reconstructed_image_url"] = f"data:{mime};base64,{payload.reconstructed_image_b64}"
+
     # Normalize all image data URLs (deskew upright + 0.90 safety margin on 900x1200 canvas)
+    # and upload to static storage via UploadManager to prevent response bloat and popping.
     from app.services.vision.image import fit_image_data_url_to_card
+    from app.services.upload_manager import UploadManager
     for img_key in ("clean_image_url", "reconstructed_image_url", "segmented_image_url", "cutout_url"):
         if doc.get(img_key) and isinstance(doc[img_key], str) and doc[img_key].startswith("data:image/"):
-            doc[img_key] = fit_image_data_url_to_card(doc[img_key]) or doc[img_key]
+            fitted = fit_image_data_url_to_card(doc[img_key]) or doc[img_key]
+            doc[img_key] = await UploadManager.upload_data_url(fitted)
+
+    if payload.preferred_image_view:
+        doc["preferred_image_view"] = payload.preferred_image_view
+    elif doc.get("reconstructed_image_url"):
+        doc["preferred_image_view"] = "reconstructed"
+    elif doc.get("clean_image_url"):
+        doc["preferred_image_view"] = "clean"
+
 
     # Phase R (July 2026) — receipt-import provenance persistence.
     # Store receipt flags before any background task is queued so the
@@ -737,7 +750,9 @@ async def list_items(
                     # Strip huge data-URL from list response
                     it.pop("thumbnail_data_url", None)
             if isinstance(it.get("reconstructed_image_url"), str) and len(it["reconstructed_image_url"]) > 15000 and it["reconstructed_image_url"].startswith("data:"):
-                # Avoid returning full-size data URLs in list response
+                # If we must strip a huge data URL from list response, ensure thumbnail_data_url retains it if it's the chosen display image
+                if not it.get("thumbnail_data_url") and best_display_img == it.get("reconstructed_image_url"):
+                    it["thumbnail_data_url"] = it["reconstructed_image_url"]
                 it.pop("reconstructed_image_url", None)
             if isinstance(it.get("clean_image_url"), str) and len(it["clean_image_url"]) > 15000 and it["clean_image_url"].startswith("data:"):
                 it.pop("clean_image_url", None)
@@ -810,10 +825,14 @@ async def update_item(
         elif patch["reconstructed_image_url"]:
             patch["reconstructed_image_url"] = compress_image_url_or_b64(patch["reconstructed_image_url"], max_dim=1024, quality=75)
             from app.services.vision.image import fit_image_data_url_to_card
-            patch["reconstructed_image_url"] = fit_image_data_url_to_card(patch["reconstructed_image_url"])
+            from app.services.upload_manager import UploadManager
+            fitted = fit_image_data_url_to_card(patch["reconstructed_image_url"]) or patch["reconstructed_image_url"]
+            patch["reconstructed_image_url"] = await UploadManager.upload_data_url(fitted)
     if "clean_image_url" in patch and patch["clean_image_url"]:
         from app.services.vision.image import fit_image_data_url_to_card
-        patch["clean_image_url"] = fit_image_data_url_to_card(patch["clean_image_url"]) or patch["clean_image_url"]
+        from app.services.upload_manager import UploadManager
+        fitted = fit_image_data_url_to_card(patch["clean_image_url"]) or patch["clean_image_url"]
+        patch["clean_image_url"] = await UploadManager.upload_data_url(fitted)
     # The `clear_reconstruction` flag is a command, not a value we persist.
     # Pop it + translate into explicit null-sets on the related columns.
     if patch.pop("clear_reconstruction", False):
@@ -829,13 +848,13 @@ async def update_item(
     # honour both entry points.
     prior = await db.closet_items.find_one(
         {"id": item_id, "user_id": user["id"]},
-        {"_id": 0, "source": 1, "marketplace_intent": 1},
+        {"_id": 0, "source": 1, "marketplace_intent": 1, "preferred_image_view": 1},
     )
 
-    # If the patch explicitly provides a new reconstructed_image_url (e.g. from
-    # "Clean background" save), we must invalidate the thumbnail so it doesn't mask it.
+    # If the patch explicitly provides a new reconstructed_image_url or changes
+    # preferred_image_view, we must invalidate the thumbnail so it doesn't mask it.
     unset_doc = {}
-    if "reconstructed_image_url" in patch and patch["reconstructed_image_url"]:
+    if ("reconstructed_image_url" in patch and patch["reconstructed_image_url"]) or ("preferred_image_view" in patch):
         unset_doc = {"thumbnail_data_url": ""}
 
     if unset_doc:

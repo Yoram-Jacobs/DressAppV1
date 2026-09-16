@@ -46,16 +46,20 @@ export function getItemImageUrl(
     ? (itemPref === 'clean' || itemPref === 'original' ? 'original' : 'repaired')
     : undefined;
 
-  const effectiveMode = opts.viewMode || itemMode || (opts.useStoredPreference !== false ? getMobileViewPreference() : 'repaired');
+  const effectiveMode =
+    opts.viewMode ||
+    itemMode ||
+    (opts.useStoredPreference ? getMobileViewPreference() : 'repaired');
 
   let raw: string | undefined = undefined;
 
   if (effectiveMode === 'original') {
     // Show clean_image_url on 'Original crop'
     raw =
-      item.clean_image_url ||
+      (item.clean_image_url && item.clean_image_url !== item.reconstructed_image_url ? item.clean_image_url : null) ||
       item.cutout_url ||
       item.segmented_image_url ||
+      item.clean_image_url ||
       (Array.isArray(item.images) && item.images[0]) ||
       item.original_image_url ||
       item.image_url ||

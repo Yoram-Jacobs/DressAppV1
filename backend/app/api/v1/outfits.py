@@ -157,8 +157,8 @@ async def save_outfit(
                 primary_img = item.get("reconstructed_image_url") or item.get("clean_image_url")
 
             best_img = (
-                g_dict.get("image_url")
-                or primary_img
+                primary_img
+                or g_dict.get("image_url")
                 or item.get("cutout_url")
                 or webp_large
                 or item.get("thumbnail_data_url")

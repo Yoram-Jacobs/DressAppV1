@@ -289,7 +289,12 @@ export const closetRepo = {
       let nextItems: ClosetItem[];
       if (idx >= 0) {
         const prevItem = items[idx];
-        const merged = { ...prevItem, ...item };
+        const changedPreferred = item.preferred_image_view && item.preferred_image_view !== prevItem.preferred_image_view;
+        const merged = {
+          ...prevItem,
+          ...item,
+          ...(changedPreferred ? { thumbnail_data_url: undefined } : {}),
+        };
         nextItems = [...items];
         nextItems[idx] = merged;
       } else {
@@ -304,8 +309,14 @@ export const closetRepo = {
 
     // 1. Snapshot previous item for rollback
     const prevItem = _state.items.find((x) => x.id === patch.id);
+    const changedPreferred = patch.preferred_image_view && prevItem && patch.preferred_image_view !== prevItem.preferred_image_view;
     const optimisticUpdated: ClosetItem = prevItem
-      ? { ...prevItem, ...patch, updated_at: new Date().toISOString() }
+      ? {
+          ...prevItem,
+          ...patch,
+          ...(changedPreferred ? { thumbnail_data_url: undefined } : {}),
+          updated_at: new Date().toISOString()
+        }
       : ({ ...patch, updated_at: new Date().toISOString() } as ClosetItem);
 
     // 2. Optimistic local update
