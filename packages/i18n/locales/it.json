@@ -836,7 +836,7 @@
       "success": "Analisi aggiornata",
       "error": "Analisi non riuscita. Riprova.",
       "disclaimer": "Vengono sovrascritti solo i campi compilati automaticamente. Le modifiche manuali sono preservate.",
-      "promptPlaceholder": "Chiedi a The Eyes: 'Rimuovi le scarpe', 'Completa il buco', 'Rimuovi le borchie'…",
+      "promptPlaceholder": "Chiedi a The Eyes: 'Riempi buchi e aperture', 'Ricostruisci il capo', 'Allinea verticalmente'…",
       "send": "Invia",
       "promptStarters": "Suggerimenti rapidi",
       "promptRemoveShoes": "Rimuovi le scarpe",
@@ -850,7 +850,11 @@
       "nanoBananaGenerating": "Nano Banana sta generando pixel…",
       "applied": "Applicato",
       "refreshedAttributes": "Attributi aggiornati",
-      "eyesBadge": "Gli occhi"
+      "eyesBadge": "Gli occhi",
+      "promptFillHoles": "Riempi buchi e aperture",
+      "promptReconstruct": "Ricostruisci il capo",
+      "promptAlignVertically": "Allinea verticalmente",
+      "promptIsolate": "Isola il capo"
     },
     "tabs": {
       "details": "Dettagli",
@@ -1221,7 +1225,7 @@
     "todayProposal": "PROPOSTA DI OGGI",
     "garmentsInLook": "Capi in questo look",
     "wearAndSave": "Indossa e salva look",
-    "tryOnAvatar": "Prova sull’avatar",
+    "tryOnAvatar": "Visualizza look",
     "outfitCanvas": "Tela degli outfit",
     "outfitCanvasSub": "Blocca i capi preferiti e mescola il resto",
     "rollShuffle": "Mescola / Randomizza",
@@ -1303,7 +1307,6 @@
     "refreshSuggestion": "Nuovo look",
     "previousLook": "Look precedente",
     "lookCounter": "Look {{current}} di {{total}}",
-    "tryOnAvatar": "Visualizza look",
     "wearToday": "Indossa oggi"
   },
   "outfitCompletion": {

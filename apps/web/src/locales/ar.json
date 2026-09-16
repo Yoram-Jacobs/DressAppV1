@@ -836,7 +836,7 @@
       "success": "تم تحديث التحليل",
       "error": "فشل التحليل. يرجى المحاولة مرة أخرى.",
       "disclaimer": "يتم استبدال الحقول التلقائية فقط. تظل تعديلاتك اليدوية محفوظة.",
-      "promptPlaceholder": "اسأل The Eyes: 'إزالة الحذاء'، 'إكمال الثقب مكان اليد'، 'إزالة المسامير'…",
+      "promptPlaceholder": "اسأل The Eyes: 'ملء الثقوب والفراغات'، 'إعادة بناء قطعة الملابس'، 'محاذاة عمودية'…",
       "send": "إرسال",
       "promptStarters": "اقتراحات سريعة",
       "promptRemoveShoes": "إزالة الحذاء",
@@ -850,7 +850,11 @@
       "nanoBananaGenerating": "Nano Banana يقوم بتوليد الصورة…",
       "applied": "تم التطبيق",
       "refreshedAttributes": "تم تحديث الخصائص",
-      "eyesBadge": "العيون"
+      "eyesBadge": "العيون",
+      "promptFillHoles": "ملء الثقوب والفراغات",
+      "promptReconstruct": "إعادة بناء قطعة الملابس",
+      "promptAlignVertically": "محاذاة عمودية",
+      "promptIsolate": "عزل قطعة الملابس"
     },
     "tabs": {
       "details": "تفاصيل",
@@ -1221,7 +1225,7 @@
     "todayProposal": "اقتراح اليوم",
     "garmentsInLook": "قطع هذا المظهر",
     "wearAndSave": "ارتداء وحفظ الإطلالة",
-    "tryOnAvatar": "تجربة على الأفاتار",
+    "tryOnAvatar": "عرض الإطلالة",
     "outfitCanvas": "لوحة تنسيق الملابس",
     "outfitCanvasSub": "قم بتثبيت القطع المفضلة وتبديل الباقي عشوائياً",
     "rollShuffle": "تدوير / تبديل عشوائي",
@@ -1303,7 +1307,6 @@
     "refreshSuggestion": "إطلالة جديدة",
     "previousLook": "الإطلالة السابقة",
     "lookCounter": "إطلالة {{current}} من {{total}}",
-    "tryOnAvatar": "عرض الإطلالة",
     "wearToday": "ارتداء اليوم"
   },
   "outfitCompletion": {

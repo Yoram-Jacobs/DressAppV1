@@ -836,7 +836,7 @@
       "success": "Analyse actualisée",
       "error": "Échec de l'analyse. Veuillez réessayer.",
       "disclaimer": "Seuls les champs remplis automatiquement sont écrasés. Vos modifications manuelles sont conservées.",
-      "promptPlaceholder": "Demandez à The Eyes : 'Retirer les chaussures', 'Combler le trou', 'Retirer les clous'…",
+      "promptPlaceholder": "Demandez à The Eyes : 'Combler les trous et ouvertures', 'Reconstituer le vêtement', 'Aligner verticalement'…",
       "send": "Envoyer",
       "promptStarters": "Suggestions rapides",
       "promptRemoveShoes": "Retirer les chaussures",
@@ -850,7 +850,11 @@
       "nanoBananaGenerating": "Nano Banana génère les pixels…",
       "applied": "Appliqué",
       "refreshedAttributes": "Attributs actualisés",
-      "eyesBadge": "Les yeux"
+      "eyesBadge": "Les yeux",
+      "promptFillHoles": "Combler les trous et ouvertures",
+      "promptReconstruct": "Reconstituer le vêtement",
+      "promptAlignVertically": "Aligner verticalement",
+      "promptIsolate": "Isoler le vêtement"
     },
     "tabs": {
       "details": "Détails",
@@ -1221,7 +1225,7 @@
     "todayProposal": "PROPOSITION D'AUJOURD'HUI",
     "garmentsInLook": "Vêtements de cette tenue",
     "wearAndSave": "Porter et enregistrer",
-    "tryOnAvatar": "Essayer sur l’avatar",
+    "tryOnAvatar": "Voir le look",
     "outfitCanvas": "Toile de style",
     "outfitCanvasSub": "Verrouillez vos pièces favorites et mélangez le reste",
     "rollShuffle": "Lancer / Aléatoire",
@@ -1303,7 +1307,6 @@
     "refreshSuggestion": "Nouveau look",
     "previousLook": "Look précédent",
     "lookCounter": "Look {{current}} sur {{total}}",
-    "tryOnAvatar": "Voir le look",
     "wearToday": "Porter aujourd'hui"
   },
   "outfitCompletion": {

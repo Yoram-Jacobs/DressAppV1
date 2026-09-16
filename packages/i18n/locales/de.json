@@ -836,7 +836,7 @@
       "success": "Analyse aktualisiert",
       "error": "Analyse fehlgeschlagen. Bitte erneut versuchen.",
       "disclaimer": "Nur automatisch ausgefüllte Felder werden überschrieben. Ihre manuellen Eingaben bleiben erhalten.",
-      "promptPlaceholder": "Frag The Eyes: 'Schuhe entfernen', 'Loch füllen', 'Nieten entfernen'…",
+      "promptPlaceholder": "The Eyes fragen: 'Löcher und Lücken füllen', 'Kleidungsstück rekonstruieren', 'Vertikal ausrichten'…",
       "send": "Senden",
       "promptStarters": "Schnell-Prompts",
       "promptRemoveShoes": "Schuhe entfernen",
@@ -850,7 +850,11 @@
       "nanoBananaGenerating": "Nano Banana generiert Pixel…",
       "applied": "Angewendet",
       "refreshedAttributes": "Attribute aktualisiert",
-      "eyesBadge": "Die Augen"
+      "eyesBadge": "Die Augen",
+      "promptFillHoles": "Löcher und Lücken füllen",
+      "promptReconstruct": "Kleidungsstück rekonstruieren",
+      "promptAlignVertically": "Vertikal ausrichten",
+      "promptIsolate": "Kleidungsstück freistellen"
     },
     "tabs": {
       "details": "Details",
@@ -1221,7 +1225,7 @@
     "todayProposal": "HEUTIGER VORSCHLAG",
     "garmentsInLook": "Kleidungsstücke in diesem Look",
     "wearAndSave": "Anziehen & Look speichern",
-    "tryOnAvatar": "Auf Avatar anprobieren",
+    "tryOnAvatar": "Look ansehen",
     "outfitCanvas": "Outfit-Leinwand",
     "outfitCanvasSub": "Lieblingsteile sperren und den Rest mischen",
     "rollShuffle": "Würfeln / Mischen",
@@ -1303,7 +1307,6 @@
     "refreshSuggestion": "Neuer Look",
     "previousLook": "Vorheriger Look",
     "lookCounter": "Look {{current}} von {{total}}",
-    "tryOnAvatar": "Look ansehen",
     "wearToday": "Heute tragen"
   },
   "outfitCompletion": {

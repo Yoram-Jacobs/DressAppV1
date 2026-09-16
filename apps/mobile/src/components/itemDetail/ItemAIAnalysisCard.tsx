@@ -307,34 +307,45 @@ export function ItemAIAnalysisCard({
         <View style={[styles.startersGrid, { flexDirection: isRtl ? 'row-reverse' : 'row' }]}>
           <TouchableOpacity
             style={[styles.starterChip, { backgroundColor: colors.secondary, borderColor: colors.border }]}
-            onPress={() => handleSend(t('itemDetail.reanalyze.promptRemoveShoes', { defaultValue: 'Remove the shoes' }))}
+            onPress={() => handleSend(t('itemDetail.reanalyze.promptFillHoles', { defaultValue: 'Fill holes and gaps' }))}
             disabled={chatBusy || analyzing}
             activeOpacity={0.7}
           >
             <Text style={[styles.starterChipText, { color: colors.foreground }]}>
-              🪄 {t('itemDetail.reanalyze.promptRemoveShoes', { defaultValue: 'Remove the shoes' })}
+              🧵 {t('itemDetail.reanalyze.promptFillHoles', { defaultValue: 'Fill holes and gaps' })}
             </Text>
           </TouchableOpacity>
 
           <TouchableOpacity
             style={[styles.starterChip, { backgroundColor: colors.secondary, borderColor: colors.border }]}
-            onPress={() => handleSend(t('itemDetail.reanalyze.promptCompleteHole', { defaultValue: 'Complete the hole where the hand was' }))}
+            onPress={() => handleSend(t('itemDetail.reanalyze.promptReconstruct', { defaultValue: 'Reconstruct the garment' }))}
             disabled={chatBusy || analyzing}
             activeOpacity={0.7}
           >
             <Text style={[styles.starterChipText, { color: colors.foreground }]}>
-              ✂️ {t('itemDetail.reanalyze.promptCompleteHole', { defaultValue: 'Complete hole' })}
+              🪄 {t('itemDetail.reanalyze.promptReconstruct', { defaultValue: 'Reconstruct garment' })}
             </Text>
           </TouchableOpacity>
 
           <TouchableOpacity
             style={[styles.starterChip, { backgroundColor: colors.secondary, borderColor: colors.border }]}
-            onPress={() => handleSend(t('itemDetail.reanalyze.promptFixMaterials', { defaultValue: 'Refine fabric and color palette' }))}
+            onPress={() => handleSend(t('itemDetail.reanalyze.promptAlignVertically', { defaultValue: 'Align vertically' }))}
             disabled={chatBusy || analyzing}
             activeOpacity={0.7}
           >
             <Text style={[styles.starterChipText, { color: colors.foreground }]}>
-              🔍 {t('itemDetail.reanalyze.promptFixMaterials', { defaultValue: 'Refine fabrics' })}
+              📐 {t('itemDetail.reanalyze.promptAlignVertically', { defaultValue: 'Align vertically' })}
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.starterChip, { backgroundColor: colors.secondary, borderColor: colors.border }]}
+            onPress={() => handleSend(t('itemDetail.reanalyze.promptIsolate', { defaultValue: 'Isolate the garment' }))}
+            disabled={chatBusy || analyzing}
+            activeOpacity={0.7}
+          >
+            <Text style={[styles.starterChipText, { color: colors.foreground }]}>
+              ✂️ {t('itemDetail.reanalyze.promptIsolate', { defaultValue: 'Isolate garment' })}
             </Text>
           </TouchableOpacity>
         </View>
@@ -360,7 +371,7 @@ export function ItemAIAnalysisCard({
             },
           ]}
           placeholder={t('itemDetail.reanalyze.promptPlaceholder', {
-            defaultValue: 'Ask The Eyes: Remove shoes, Complete hole, Fix colors…',
+            defaultValue: 'Ask The Eyes: Fill holes and gaps, Reconstruct garment, Align vertically…',
           })}
           placeholderTextColor={colors.mutedFg}
           value={promptInput}

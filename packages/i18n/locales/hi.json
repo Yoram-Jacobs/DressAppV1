@@ -836,7 +836,7 @@
       "success": "विश्लेषण ताज़ा किया गया",
       "error": "विश्लेषण विफल रहा। कृपया पुन: प्रयास करें।",
       "disclaimer": "केवल स्वतः भरे गए फ़ील्ड बदले जाते हैं। आपके मैन्युअल संपादन सुरक्षित रहते हैं।",
-      "promptPlaceholder": "The Eyes से पूछें: 'जूते हटाएं', 'छेद भरें जहां हाथ था', 'स्टड हटाएं'…",
+      "promptPlaceholder": "The Eyes से पूछें: 'छेद और अंतराल भरें', 'कपड़े का पुनर्निर्माण करें', 'लंबवत संरेखित करें'…",
       "send": "भेजें",
       "promptStarters": "त्वरित सुझाव",
       "promptRemoveShoes": "जूते हटाएं",
@@ -850,7 +850,11 @@
       "nanoBananaGenerating": "Nano Banana पिक्सल तैयार कर रहा है…",
       "applied": "लागू किया गया",
       "refreshedAttributes": "विशेषताएं ताज़ा की गईं",
-      "eyesBadge": "आंखें"
+      "eyesBadge": "आंखें",
+      "promptFillHoles": "छेद और अंतराल भरें",
+      "promptReconstruct": "कपड़े का पुनर्निर्माण करें",
+      "promptAlignVertically": "लंबवत संरेखित करें",
+      "promptIsolate": "कपड़े को अलग करें"
     },
     "tabs": {
       "details": "विवरण",
@@ -1221,7 +1225,7 @@
     "todayProposal": "आज का सुझाव",
     "garmentsInLook": "इस लुक के परिधान",
     "wearAndSave": "पहनें और लुक सहेजें",
-    "tryOnAvatar": "अवतार पर आज़माएं",
+    "tryOnAvatar": "लुक देखें",
     "outfitCanvas": "आउटफ़िट कैनवास",
     "outfitCanvasSub": "पसंदीदा आइटम लॉक करें और बाकी को शफ़ल करें",
     "rollShuffle": "रोल / शफ़ल",
@@ -1303,7 +1307,6 @@
     "refreshSuggestion": "नया लुक",
     "previousLook": "पिछला लुक",
     "lookCounter": "लुक {{current}} / {{total}}",
-    "tryOnAvatar": "लुक देखें",
     "wearToday": "आज पहनें"
   },
   "outfitCompletion": {

@@ -836,7 +836,7 @@
       "success": "Analysis refreshed",
       "error": "Analysis failed. Please try again.",
       "disclaimer": "Only auto-filled fields are overwritten. Your manual edits to size, price, notes, and intent are preserved.",
-      "promptPlaceholder": "Ask The Eyes: 'Remove shoes', 'Complete hole where hand was', 'Remove studs'…",
+      "promptPlaceholder": "Ask The Eyes: 'Fill holes and gaps', 'Reconstruct the garment', 'Align vertically'…",
       "send": "Send",
       "promptStarters": "Quick prompts",
       "promptRemoveShoes": "Remove the shoes",
@@ -850,7 +850,11 @@
       "nanoBananaGenerating": "Nano Banana is generating pixels…",
       "applied": "Applied",
       "refreshedAttributes": "Refreshed attributes",
-      "eyesBadge": "The Eyes"
+      "eyesBadge": "The Eyes",
+      "promptFillHoles": "Fill holes and gaps",
+      "promptReconstruct": "Reconstruct the garment",
+      "promptAlignVertically": "Align vertically",
+      "promptIsolate": "Isolate the garment"
     },
     "tabs": {
       "details": "Details",
@@ -1221,7 +1225,7 @@
     "todayProposal": "TODAY'S PROPOSAL",
     "garmentsInLook": "Garments in this Look",
     "wearAndSave": "Wear & Save Look",
-    "tryOnAvatar": "Try On Avatar",
+    "tryOnAvatar": "View Look",
     "outfitCanvas": "Outfit Canvas",
     "outfitCanvasSub": "Lock items you love & shuffle the rest",
     "rollShuffle": "Roll / Shuffle",
@@ -1303,7 +1307,6 @@
     "refreshSuggestion": "New Look",
     "previousLook": "Previous Look",
     "lookCounter": "Look {{current}} of {{total}}",
-    "tryOnAvatar": "View Look",
     "wearToday": "Wear Today"
   },
   "outfitCompletion": {

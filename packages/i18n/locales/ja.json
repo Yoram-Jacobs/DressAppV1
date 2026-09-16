@@ -836,7 +836,7 @@
       "success": "分析を更新しました",
       "error": "分析に失敗しました。もう一度お試しください。",
       "disclaimer": "自動入力されたフィールドのみが上書きされます。手動で入力した内容は保持されます。",
-      "promptPlaceholder": "The Eyesに指示: 「靴を削除」「手の部分を補完」「スタッズを削除」…",
+      "promptPlaceholder": "The Eyesに指示: 「穴や隙間を補完」、「衣類を再構築」、「垂直に整列」…",
       "send": "送信",
       "promptStarters": "クイック指示",
       "promptRemoveShoes": "靴を削除",
@@ -850,7 +850,11 @@
       "nanoBananaGenerating": "Nano Banana がピクセルを生成中…",
       "applied": "適用済み",
       "refreshedAttributes": "属性を更新しました",
-      "eyesBadge": "目"
+      "eyesBadge": "目",
+      "promptFillHoles": "穴や隙間を補完",
+      "promptReconstruct": "衣類を再構築",
+      "promptAlignVertically": "垂直に整列",
+      "promptIsolate": "衣類を切り抜き・分離"
     },
     "tabs": {
       "details": "詳細",
@@ -1221,7 +1225,7 @@
     "todayProposal": "本日の提案コーデ",
     "garmentsInLook": "このコーデのアイテム",
     "wearAndSave": "着用してコーデを保存",
-    "tryOnAvatar": "アバターで試着",
+    "tryOnAvatar": "ルックを見る",
     "outfitCanvas": "コーデキャンバス",
     "outfitCanvasSub": "お気に入りをロックして残りをシャッフル",
     "rollShuffle": "シャッフル / ランダム",
@@ -1303,7 +1307,6 @@
     "refreshSuggestion": "別のルック",
     "previousLook": "前のルック",
     "lookCounter": "ルック {{current}} / {{total}}",
-    "tryOnAvatar": "ルックを見る",
     "wearToday": "今日着る"
   },
   "outfitCompletion": {

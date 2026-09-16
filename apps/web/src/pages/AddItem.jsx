@@ -1146,7 +1146,24 @@ export default function AddItem() {
         formData.append("url", importUrl);
       }
 
-      const res = await api.parseReceipt(formData);
+      let res;
+      try {
+        res = await api.parseReceipt(formData);
+      } catch (parseErr) {
+        toast.dismiss(loadingId);
+        toast.error(
+          parseErr?.response?.data?.detail ||
+          t("addItem.import.error", {
+            defaultValue:
+              "Could not parse receipt. Please verify formatting and try again.",
+          }),
+        );
+        return;
+      }
+
+      if (!res) {
+        throw new Error("No response from receipt parser");
+      }
 
       const brand = res.brand || "Generic";
       const item_type = res.item_type || "Garment";
@@ -1264,9 +1281,21 @@ export default function AddItem() {
         receipt_locked_fields: receiptLockedFields,
       };
 
-      const created = await api.createItem(payload);
-      if (created?.item) {
-        closetStore.upsert(created.item);
+      let created;
+      try {
+        created = await api.createItem(payload);
+        if (created?.item) {
+          closetStore.upsert(created.item);
+        }
+      } catch (saveErr) {
+        toast.dismiss(loadingId);
+        toast.error(
+          saveErr?.response?.data?.detail ||
+          t("addItem.import.saveFailed", {
+            defaultValue: "Failed to save item to closet.",
+          }),
+        );
+        return;
       }
 
       toast.dismiss(loadingId);
@@ -1288,6 +1317,7 @@ export default function AddItem() {
       toast.dismiss(loadingId);
       toast.error(
         err?.response?.data?.detail ||
+        err?.message ||
         t("addItem.import.error", {
           defaultValue:
             "Could not parse receipt. Please verify formatting and try again.",

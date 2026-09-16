@@ -836,7 +836,7 @@
       "success": "Analyse vernieuwd",
       "error": "Analyse mislukt. Probeer het opnieuw.",
       "disclaimer": "Alleen automatisch ingevulde velden worden overschreven. Handmatige wijzigingen blijven behouden.",
-      "promptPlaceholder": "Vraag The Eyes: 'Verwijder schoenen', 'Vul opening waar hand was', 'Verwijder studs'…",
+      "promptPlaceholder": "Vraag The Eyes: 'Gaten en openingen opvullen', 'Kledingstuk reconstrueren', 'Verticaal uitlijnen'…",
       "send": "Versturen",
       "promptStarters": "Snelle suggesties",
       "promptRemoveShoes": "Verwijder de schoenen",
@@ -850,7 +850,11 @@
       "nanoBananaGenerating": "Nano Banana genereert pixels…",
       "applied": "Toegepast",
       "refreshedAttributes": "Attributen vernieuwd",
-      "eyesBadge": "De ogen"
+      "eyesBadge": "De ogen",
+      "promptFillHoles": "Gaten en openingen opvullen",
+      "promptReconstruct": "Kledingstuk reconstrueren",
+      "promptAlignVertically": "Verticaal uitlijnen",
+      "promptIsolate": "Kledingstuk isoleren"
     },
     "tabs": {
       "details": "Details",
@@ -1221,7 +1225,7 @@
     "todayProposal": "VOORSTEL VAN VANDAAG",
     "garmentsInLook": "Kledingstukken in deze look",
     "wearAndSave": "Dragen & Look opslaan",
-    "tryOnAvatar": "Passen op avatar",
+    "tryOnAvatar": "Bekijk look",
     "outfitCanvas": "Outfit-canvas",
     "outfitCanvasSub": "Vergrendel favorieten en hussel de rest",
     "rollShuffle": "Husselen / Schudden",
@@ -1303,7 +1307,6 @@
     "refreshSuggestion": "Nieuwe look",
     "previousLook": "Vorige look",
     "lookCounter": "Look {{current}} van {{total}}",
-    "tryOnAvatar": "Bekijk look",
     "wearToday": "Vandaag dragen"
   },
   "outfitCompletion": {

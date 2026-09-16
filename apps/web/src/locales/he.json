@@ -848,7 +848,7 @@
       "success": "הניתוח רוענן",
       "error": "הניתוח נכשל. אנא נסה שוב.",
       "disclaimer": "רק שדות שמולאו אוטומטית מוחלפים. עריכות ידניות נשמרות.",
-      "promptPlaceholder": "שאל את The Eyes: 'הסר את הנעליים', 'השלם את החור איפה שהייתה היד'…",
+      "promptPlaceholder": "שאל את The Eyes: 'מלא חורים ורווחים', 'שחזר את הבגד', 'יישר אנכית'…",
       "send": "שלח",
       "promptStarters": "הצעות מהירות",
       "promptRemoveShoes": "הסר את הנעליים",
@@ -862,7 +862,11 @@
       "nanoBananaGenerating": "Nano Banana מייצר פיקסלים…",
       "applied": "הוחל",
       "refreshedAttributes": "מאפיינים עודכנו",
-      "eyesBadge": "העיניים"
+      "eyesBadge": "העיניים",
+      "promptFillHoles": "מלא חורים ורווחים",
+      "promptReconstruct": "שחזר את הבגד",
+      "promptAlignVertically": "יישר אנכית",
+      "promptIsolate": "בודד את הבגד"
     },
     "tabs": {
       "details": "פרטים",
@@ -1261,7 +1265,7 @@
     "selectGarmentSlot": "בחר {{role}}",
     "todayProposal": "הצעת היום",
     "tryOn": "מדוד",
-    "tryOnAvatar": "מדוד על האוואטר",
+    "tryOnAvatar": "הצג לוק",
     "welcomeMsg": "שלום! אני הסטייליסט האישי שלך ב-AI. שאל אותי מה ללבוש, בקש הצעות לאירוע או תאר את סגנון הלבוש שתרצה!",
     "addGarmentsFirst": "הוסף פריטים לקנבס התלבושות תחילה.",
     "plannedCanvasLook": "מראה מתוכנן מקנבס",
@@ -1319,7 +1323,6 @@
     "refreshSuggestion": "לוק חדש",
     "previousLook": "לוק קודם",
     "lookCounter": "לוק {{current}} מתוך {{total}}",
-    "tryOnAvatar": "הצג לוק",
     "wearToday": "ללבוש היום"
   },
   "outfitCompletion": {

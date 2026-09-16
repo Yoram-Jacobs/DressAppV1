@@ -836,7 +836,7 @@
       "success": "Анализ обновлен",
       "error": "Ошибка анализа. Попробуйте снова.",
       "disclaimer": "Перезаписываются только автозаполненные поля. Ручные изменения сохраняются.",
-      "promptPlaceholder": "Спросите The Eyes: 'Убрать обувь', 'Дорисовать фрагмент', 'Убрать заклепки'…",
+      "promptPlaceholder": "Спросите The Eyes: 'Заполнить дыры и пробелы', 'Восстановить вещь', 'Выровнять по вертикали'…",
       "send": "Отправить",
       "promptStarters": "Быстрые подсказки",
       "promptRemoveShoes": "Убрать обувь",
@@ -850,7 +850,11 @@
       "nanoBananaGenerating": "Nano Banana генерирует пиксели…",
       "applied": "Применено",
       "refreshedAttributes": "Атрибуты обновлены",
-      "eyesBadge": "Глаза"
+      "eyesBadge": "Глаза",
+      "promptFillHoles": "Заполнить дыры и пробелы",
+      "promptReconstruct": "Восстановить вещь",
+      "promptAlignVertically": "Выровнять по вертикали",
+      "promptIsolate": "Изолировать вещь"
     },
     "tabs": {
       "details": "Детали",
@@ -1221,7 +1225,7 @@
     "todayProposal": "ОБРАЗ НА СЕГОДНЯ",
     "garmentsInLook": "Вещи в этом образе",
     "wearAndSave": "Надеть и сохранить образ",
-    "tryOnAvatar": "Примерить на аватаре",
+    "tryOnAvatar": "Посмотреть образ",
     "outfitCanvas": "Холст образов",
     "outfitCanvasSub": "Закрепите любимые вещи и перемешайте остальные",
     "rollShuffle": "Бросить кубик / Перемешать",
@@ -1303,7 +1307,6 @@
     "refreshSuggestion": "Новый образ",
     "previousLook": "Предыдущий образ",
     "lookCounter": "Образ {{current}} из {{total}}",
-    "tryOnAvatar": "Посмотреть образ",
     "wearToday": "Надеть сегодня"
   },
   "outfitCompletion": {

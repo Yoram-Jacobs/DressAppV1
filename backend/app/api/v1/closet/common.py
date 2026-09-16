@@ -142,6 +142,8 @@ class CreateItemIn(BaseModel):
     # Phase Q — Wardrobe Reconstructor (optional; set by /analyze response)
     reconstructed_image_b64: str | None = None
     reconstruction_metadata: dict[str, Any] | None = None
+    # View preference ('clean' vs 'reconstructed')
+    preferred_image_view: str | None = None
     # Purchase history (optional)
     purchase_price_cents: int | None = None
     purchase_currency: str = "USD"

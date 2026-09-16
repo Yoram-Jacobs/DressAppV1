@@ -836,7 +836,7 @@
       "success": "分析已刷新",
       "error": "分析失败，请重试。",
       "disclaimer": "仅覆盖自动填充的字段。您手动编辑的内容将予以保留。",
-      "promptPlaceholder": "向 The Eyes 提问：'移除鞋子'、'补齐手部缺失'、'移除金属铆钉'…",
+      "promptPlaceholder": "询问 The Eyes：“填补破洞与缺口”、“重建衣物”、“垂直对齐”…",
       "send": "发送",
       "promptStarters": "快捷提示",
       "promptRemoveShoes": "移除鞋子",
@@ -850,7 +850,11 @@
       "nanoBananaGenerating": "Nano Banana 正在生成像素…",
       "applied": "已应用",
       "refreshedAttributes": "属性已刷新",
-      "eyesBadge": "眼睛"
+      "eyesBadge": "眼睛",
+      "promptFillHoles": "填补破洞与缺口",
+      "promptReconstruct": "重建衣物",
+      "promptAlignVertically": "垂直对齐",
+      "promptIsolate": "抠出并隔离衣物"
     },
     "tabs": {
       "details": "详情",
@@ -1221,7 +1225,7 @@
     "todayProposal": "今日推荐搭配",
     "garmentsInLook": "本套搭配包含单品",
     "wearAndSave": "穿戴并保存穿搭",
-    "tryOnAvatar": "在虚拟形象上试穿",
+    "tryOnAvatar": "查看穿搭",
     "outfitCanvas": "穿搭画布",
     "outfitCanvasSub": "锁定喜欢的单品，随机搭配其他",
     "rollShuffle": "摇一摇 / 随机搭配",
@@ -1303,7 +1307,6 @@
     "refreshSuggestion": "换一套",
     "previousLook": "上一套",
     "lookCounter": "第 {{current}} / {{total}} 套",
-    "tryOnAvatar": "查看穿搭",
     "wearToday": "今日穿着"
   },
   "outfitCompletion": {

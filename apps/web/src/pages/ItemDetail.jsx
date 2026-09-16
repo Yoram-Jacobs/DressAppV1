@@ -2208,35 +2208,35 @@ export default function ItemDetail() {
                   <div className="flex flex-wrap gap-1.5" data-testid="item-reanalyze-prompt-chips">
                     <button
                       type="button"
-                      onClick={() => onSendReanalyzePrompt(t('itemDetail.reanalyze.promptRemoveShoes'))}
+                      onClick={() => onSendReanalyzePrompt(t('itemDetail.reanalyze.promptFillHoles'))}
                       disabled={reanalyzeChatBusy || analyzing}
                       className="text-[11px] px-2.5 py-1 font-semibold rounded-lg bg-white text-primary-brand hover:bg-primary-brand hover:text-white  transition-colors border border-primary-brand disabled:opacity-50"
                     >
-                      {t('itemDetail.reanalyze.promptRemoveShoes')}
+                      {t('itemDetail.reanalyze.promptFillHoles')}
                     </button>
                     <button
                       type="button"
-                      onClick={() => onSendReanalyzePrompt(t('itemDetail.reanalyze.promptCompleteHole'))}
+                      onClick={() => onSendReanalyzePrompt(t('itemDetail.reanalyze.promptReconstruct'))}
                       disabled={reanalyzeChatBusy || analyzing}
                       className="text-[11px] px-2.5 py-1 font-semibold rounded-lg bg-white text-primary-brand hover:bg-primary-brand hover:text-white  transition-colors border border-primary-brand disabled:opacity-50"
                     >
-                      {t('itemDetail.reanalyze.promptCompleteHole')}
+                      {t('itemDetail.reanalyze.promptReconstruct')}
                     </button>
                     <button
                       type="button"
-                      onClick={() => onSendReanalyzePrompt(t('itemDetail.reanalyze.promptRemoveStuds'))}
+                      onClick={() => onSendReanalyzePrompt(t('itemDetail.reanalyze.promptAlignVertically'))}
                       disabled={reanalyzeChatBusy || analyzing}
                       className="text-[11px] px-2.5 py-1 font-semibold rounded-lg bg-white text-primary-brand hover:bg-primary-brand hover:text-white  transition-colors border border-primary-brand disabled:opacity-50"
                     >
-                      {t('itemDetail.reanalyze.promptRemoveStuds')}
+                      {t('itemDetail.reanalyze.promptAlignVertically')}
                     </button>
                     <button
                       type="button"
-                      onClick={() => onSendReanalyzePrompt(t('itemDetail.reanalyze.promptFixMaterials'))}
+                      onClick={() => onSendReanalyzePrompt(t('itemDetail.reanalyze.promptIsolate'))}
                       disabled={reanalyzeChatBusy || analyzing}
                       className="text-[11px] px-2.5 py-1 font-semibold rounded-lg bg-white text-primary-brand hover:bg-primary-brand hover:text-white  transition-colors border border-primary-brand disabled:opacity-50"
                     >
-                      {t('itemDetail.reanalyze.promptFixMaterials')}
+                      {t('itemDetail.reanalyze.promptIsolate')}
                     </button>
                   </div>
                 </div>

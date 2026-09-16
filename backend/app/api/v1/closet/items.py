@@ -69,6 +69,8 @@ from app.api.v1.closet.common import (
     logger,
 )
 
+reanalyze_group_helper = closet_service.reanalyze_group_helper
+
 router = APIRouter(prefix="/closet", tags=["closet"])
 
 @router.post("", status_code=201)
@@ -277,8 +279,9 @@ async def create_item(
             fitted = fit_image_data_url_to_card(doc[img_key]) or doc[img_key]
             doc[img_key] = await UploadManager.upload_data_url(fitted)
 
-    if payload.preferred_image_view:
-        doc["preferred_image_view"] = payload.preferred_image_view
+    pref_view = getattr(payload, "preferred_image_view", None)
+    if pref_view:
+        doc["preferred_image_view"] = pref_view
     elif doc.get("reconstructed_image_url"):
         doc["preferred_image_view"] = "reconstructed"
     elif doc.get("clean_image_url"):

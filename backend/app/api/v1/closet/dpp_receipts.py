@@ -69,6 +69,8 @@ from app.api.v1.closet.common import (
     logger,
 )
 
+_safe_analysis = closet_service.safe_analysis
+
 router = APIRouter()
 
 # -------------------------------------------------------------------
