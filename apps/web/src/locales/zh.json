@@ -290,14 +290,19 @@
         "dailySuggestion": "每日建议",
         "planEventOutfit": "计划活动服装",
         "trendScout": "趋势侦察"
-      }
+      },
+      "avatarOutfitAlt": "身着推荐商务造型的虚拟形象",
+      "avatarOutfitLabel": "虚拟形象上的造型"
     },
     "stylist": {
       "tag": "懂你所需的智能美学",
       "heading": "懂生活的 AI 造型师",
       "description1": "时尚选择不应脱离现实。DressApp 直连您的日历日程与本地天气预报，每天为您量身设计最佳造型。",
       "description2": "告别重要会议上的着装欠妥，不再为突遇降雨手足无措。就像一位精通您全部衣橱的世界级着装顾问，常驻在您的手机之中。",
-      "cta": "询问造型师"
+      "cta": "询问造型师",
+      "conciergeTitle": "你的每日衣橱管家",
+      "conciergeDescription": "把个性化穿搭推荐直接送到锁屏。结合本地天气预报、日历日程和智能衣橱轮换，让风格保持新鲜，也让闲置单品重新上场。点开提醒即可在虚拟形象上预览造型，轻松规划一周。",
+      "scheduledOutfitsCta": "已排程穿搭"
     },
     "marketplace": {
       "tag": "零浪费时尚倡议",
@@ -319,27 +324,9 @@
     "shoppingAssistant": {
       "title": "DressApp 购物助手",
       "subtitle": "在任意店铺尺码表上匹配你的正确尺码",
-      "addToChrome": "添加至 Chrome",
-      "mockTab": "半拉链卫衣",
-      "mockUrl": "anyfashionstore.com/product/half-zip-sweatshirt",
-      "connectedBadge": "已连接 DressApp",
-      "sizeGuide": {
-        "title": "尺码指南",
-        "unit": "厘米",
-        "recommendedTitle": "DressApp 推荐尺码 XS",
-        "recommendedBody": "启发式匹配：你的臀围（92.7 厘米）适合 XS 行。",
-        "matchedOn": "匹配依据：臀围 · 估算"
-      },
-      "stats": {
-        "sizesMatched": "已匹配尺码",
-        "storesSupported": "支持的店铺",
-        "matchAccuracy": "匹配准确率"
-      },
-      "reviewBadge": "正在等待 Chrome 网上应用店审核",
-      "worksOn": "适用于各大时尚与零售店铺",
       "tag": "Chrome 扩展",
       "heading": "再也不用猜尺码",
-      "description1": "DressApp 购物助手会读取任意时尚零售商商品页上的尺码表，并与你已保存的身材数据比对——就在当前页面完成。",
+      "description1": "DressApp 购物助手会读取受支持合作店铺商品页上的尺码表，并与你已保存的身材数据比对——就在当前页面完成。",
       "steps": {
         "open": {
           "title": "打开单品尺码指南",
@@ -351,27 +338,25 @@
         },
         "match": {
           "title": "立即获得尺码匹配",
-          "description": "DressApp 将尺码表与你的测量数据比对，并高亮显示对应行。"
+          "description": "DressApp 将尺码表与你的身材测量数据比对，并为你推荐合适尺码。"
         }
       },
       "cta": "添加至 Chrome",
-      "ctaNote": "目前正在 Chrome 网上应用店审核中",
-      "tabs": {
-        "deals": "优惠",
-        "wishlist": "心愿单",
-        "compare": "对比",
-        "rewards": "奖励"
-      },
-      "features": {
-        "priceAlerts": "价格提醒",
-        "autoCoupon": "自动优惠券",
-        "priceCompare": "比价",
-        "wishlistSync": "同步心愿单"
-      },
-      "modes": {
-        "silent": "静默",
-        "popup": "弹窗",
-        "fullCompare": "完整对比"
+      "previewAlt": "DressApp 购物助手在商品页推荐尺码",
+      "storesNote": "目前支持约 10 家主要国际店铺。若尚未列入，可申请你的店铺——若 Google 允许，我们会继续增加。",
+      "addStore": {
+        "button": "添加我的店铺",
+        "title": "申请添加店铺",
+        "description": "告诉我们你希望加入 DressApp 购物助手的店铺。我们会审核，并在 Google 允许时添加。",
+        "storeName": "网店名称",
+        "storeNamePlaceholder": "例如 Zara",
+        "storeUrl": "网址",
+        "storeUrlPlaceholder": "https://www.example.com",
+        "send": "发送",
+        "needFields": "请填写店铺名称和网址。",
+        "emailSubject": "DressApp 购物助手店铺申请",
+        "emailBody": "店铺名称：{{name}}\n网址：{{url}}",
+        "sent": "将打开你的邮件应用，以便向 DressApp 发送此申请。"
       }
     },
     "aiEditor": {
@@ -1221,7 +1206,7 @@
     "todayProposal": "今日推荐搭配",
     "garmentsInLook": "本套搭配包含单品",
     "wearAndSave": "穿戴并保存穿搭",
-    "tryOnAvatar": "在虚拟形象上试穿",
+    "tryOnAvatar": "查看穿搭",
     "outfitCanvas": "穿搭画布",
     "outfitCanvasSub": "锁定喜欢的单品，随机搭配其他",
     "rollShuffle": "摇一摇 / 随机搭配",
@@ -1303,7 +1288,6 @@
     "refreshSuggestion": "换一套",
     "previousLook": "上一套",
     "lookCounter": "第 {{current}} / {{total}} 套",
-    "tryOnAvatar": "查看穿搭",
     "wearToday": "今日穿着"
   },
   "outfitCompletion": {

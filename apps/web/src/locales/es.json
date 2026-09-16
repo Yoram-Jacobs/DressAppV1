@@ -290,14 +290,19 @@
         "dailySuggestion": "Sugerencia diaria",
         "planEventOutfit": "Planificar vestimenta para eventos",
         "trendScout": "Explorador de tendencias"
-      }
+      },
+      "avatarOutfitAlt": "Avatar con el outfit de negocios recomendado",
+      "avatarOutfitLabel": "Look en el avatar"
     },
     "stylist": {
       "tag": "Inteligencia de diseño empático",
       "heading": "El estilista de IA que entiende la vida",
       "description1": "Tus elecciones de moda no deberían existir en el vacío. DressApp se conecta directamente a las fuentes de tu calendario y a pronósticos meteorológicos localizados precisos para diseñar atuendos óptimos todos los días.",
       "description2": "Nunca salga mal vestido a sesiones de negocios de alto riesgo o sin estar preparado para una lluvia repentina. Se siente como tener un asesor de moda de primer nivel viviendo en su teléfono, con acceso completo a lo que posee.",
-      "cta": "Pregúntale al estilista"
+      "cta": "Pregúntale al estilista",
+      "conciergeTitle": "Tu conserje diario del armario",
+      "conciergeDescription": "Recibe recomendaciones de outfits personalizadas directamente en la pantalla de bloqueo. Basadas en el pronóstico local, tus eventos del calendario y una rotación inteligente del armario para mantener tu estilo fresco y las prendas poco usadas en circulación. Toca la alerta para previsualizar el look en tu avatar y planificar la semana sin esfuerzo.",
+      "scheduledOutfitsCta": "Outfits programados"
     },
     "marketplace": {
       "tag": "Iniciativa Residuo Cero",
@@ -319,27 +324,9 @@
     "shoppingAssistant": {
       "title": "Asistente de compras de DressApp",
       "subtitle": "Obtén tu talla correcta en la tabla de cualquier tienda",
-      "addToChrome": "Añadir a Chrome",
-      "mockTab": "Sudadera con media cremallera",
-      "mockUrl": "anyfashionstore.com/product/half-zip-sweatshirt",
-      "connectedBadge": "Conectado a DressApp",
-      "sizeGuide": {
-        "title": "Guía de tallas",
-        "unit": "CM",
-        "recommendedTitle": "DressApp recomienda la talla XS",
-        "recommendedBody": "Coincidencia heurística: tu cadera (92,7 cm) encaja en la fila XS.",
-        "matchedOn": "Coincidencia en: cadera · por estimación"
-      },
-      "stats": {
-        "sizesMatched": "Tallas emparejadas",
-        "storesSupported": "Tiendas compatibles",
-        "matchAccuracy": "Precisión de coincidencia"
-      },
-      "reviewBadge": "Pendiente de revisión en Chrome Web Store",
-      "worksOn": "Funciona en las principales tiendas de moda y retail",
       "tag": "Extensión de Chrome",
       "heading": "No vuelvas a adivinar tu talla",
-      "description1": "El Asistente de compras de DressApp lee la tabla de tallas en la ficha de cualquier minorista de moda y la compara con tus medidas corporales guardadas, ahí mismo en la página.",
+      "description1": "El Asistente de compras de DressApp lee la tabla de tallas en tiendas asociadas compatibles y la compara con tus medidas corporales guardadas, ahí mismo en la página.",
       "steps": {
         "open": {
           "title": "Abre la guía de tallas del artículo",
@@ -351,27 +338,25 @@
         },
         "match": {
           "title": "Obtén tu talla al instante",
-          "description": "DressApp compara la tabla con tus medidas y resalta tu fila."
+          "description": "DressApp compara la tabla con tus medidas corporales y recomienda la talla correcta."
         }
       },
       "cta": "Añadir a Chrome",
-      "ctaNote": "Actualmente en revisión de Chrome Web Store",
-      "tabs": {
-        "deals": "Ofertas",
-        "wishlist": "Lista de deseos",
-        "compare": "Comparar",
-        "rewards": "Recompensas"
-      },
-      "features": {
-        "priceAlerts": "Alertas de precio",
-        "autoCoupon": "Cupón automático",
-        "priceCompare": "Comparar precios",
-        "wishlistSync": "Sincronizar lista de deseos"
-      },
-      "modes": {
-        "silent": "Silencioso",
-        "popup": "Ventana emergente",
-        "fullCompare": "Comparación completa"
+      "previewAlt": "El Asistente de compras de DressApp recomienda una talla en una página de producto",
+      "storesNote": "Actualmente admite unas 10 tiendas internacionales importantes. Solicita la tuya si aún no está en la lista; se pueden añadir más si Google lo permite.",
+      "addStore": {
+        "button": "Añadir mi tienda",
+        "title": "Solicitar una tienda",
+        "description": "Indícanos una tienda que te gustaría añadir al Asistente de compras de DressApp. La revisaremos y la añadiremos si Google lo permite.",
+        "storeName": "Nombre de la tienda online",
+        "storeNamePlaceholder": "p. ej. Zara",
+        "storeUrl": "Dirección web",
+        "storeUrlPlaceholder": "https://www.example.com",
+        "send": "Enviar",
+        "needFields": "Introduce el nombre de la tienda y la dirección web.",
+        "emailSubject": "Solicitud de tienda para el Asistente de compras DressApp",
+        "emailBody": "Nombre de la tienda: {{name}}\nDirección web: {{url}}",
+        "sent": "Se abrirá tu app de correo para enviar esta solicitud a DressApp."
       }
     },
     "aiEditor": {
@@ -1221,7 +1206,7 @@
     "todayProposal": "PROPUESTA DE HOY",
     "garmentsInLook": "Prendas en este look",
     "wearAndSave": "Vestir y guardar look",
-    "tryOnAvatar": "Probar en el avatar",
+    "tryOnAvatar": "Ver look",
     "outfitCanvas": "Lienzo de atuendos",
     "outfitCanvasSub": "Bloquea las prendas que te gusten y mezcla el resto",
     "rollShuffle": "Tirar / Mezclar",
@@ -1303,7 +1288,6 @@
     "refreshSuggestion": "Nuevo look",
     "previousLook": "Look anterior",
     "lookCounter": "Look {{current}} de {{total}}",
-    "tryOnAvatar": "Ver look",
     "wearToday": "Usar hoy"
   },
   "outfitCompletion": {
