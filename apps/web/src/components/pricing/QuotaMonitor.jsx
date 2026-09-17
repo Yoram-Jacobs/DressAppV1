@@ -33,7 +33,7 @@ export function QuotaMonitor({ quotaStatus, pricingData }) {
   }
 
   return (
-    <div className="space-y-4">
+    <div className="mt-4">
       {/* Quota Status Alert Banner */}
       {!quotaStatus.can_proceed && (
         <motion.div 

@@ -28,6 +28,7 @@ import {
   GripVertical,
   ArrowLeft,
   Share2,
+  ShirtIcon, 
   Key, Shirt, CalendarCheck2, CalendarPlus
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';

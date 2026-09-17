@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState, useRef } from "react";
 import { Link } from "react-router-dom";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { useTranslation } from "react-i18next";
 import {
   Sparkles,
@@ -16,7 +16,7 @@ import {
   Newspaper,
 } from "lucide-react";
 import {
-  Ruler, Link2, MousePointerClick, Store,
+  Ruler, Link2, MousePointerClick, Store, Download,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -64,7 +64,11 @@ import stylistNavyBlazer from "../assets/img/stylist-navy-blazer.jpg";
 import stylistWhiteShirt from "../assets/img/stylist-white-shirt.jpg";
 import stylistCharcoalTrousers from "../assets/img/stylist-charcoal-trousers.jpg";
 import stylistOxfordShoes from "../assets/img/stylist-oxford-shoes.jpg";
-import shoppingAssistantPreview from "../assets/img/shopping-assistant-preview.png";
+import shoppingAssistantPreview from "../assets/img/shopping-assistant-preview.png"; // ab isko rehne do ya hata do, use nahi ho raha
+import stepOpenImg from "../assets/img/connect.png";
+import stepConnectImg from "../assets/img/guide.png";
+import stepMatchBaseImg from "../assets/img/given.png";
+import stepInstallImg from "../assets/img/start.png";
 import AvatarViewer from "@/components/AvatarViewer";
 import added1 from "../assets/img/added1.jpg";
 import added2 from "../assets/img/added2.jpg";
@@ -730,6 +734,7 @@ export default function Home() {
   ];
   const STORE_REQUEST_EMAIL = "dev@dressapp.co";
   const [addStoreOpen, setAddStoreOpen] = useState(false);
+  const [assistantStep, setAssistantStep] = useState(0);
   const [storeName, setStoreName] = useState("");
   const [storeUrl, setStoreUrl] = useState("");
 
@@ -836,6 +841,52 @@ export default function Home() {
     news_flash: { Icon: Newspaper, tone: "bg-indigo-500/10 text-indigo-600" },
   };
   const DEFAULT_BUCKET_VISUAL = { Icon: Sparkles, tone: "bg-secondary/60 text-foreground" };
+  const SHOPPING_ASSISTANT_STEPS = [
+    {
+      id: "install",
+      icon: Download,
+      titleKey: "home.shoppingAssistant.steps.install.title",
+      titleDefault: "Install the extension",
+      descKey: "home.shoppingAssistant.steps.install.description",
+      descDefault: "Search \"DressApp Shopping Assistant\" on the Chrome Web Store and add it — takes 10 seconds.",
+      url: "chromewebstore.google.com/detail/dressapp-shopping-assistant",
+      image: stepInstallImg,
+      // no popup here
+    },
+    {
+      id: "connect",
+      icon: Link2,
+      titleKey: "home.shoppingAssistant.steps.connect.title",
+      titleDefault: "Connect to DressApp",
+      descKey: "home.shoppingAssistant.steps.connect.description",
+      descDefault: "Click the DressApp icon and sign in once — it stays connected after that.",
+      url: "chromewebstore.google.com/detail/dressapp-shopping-assistant",
+      image: stepConnectImg,
+      // no popup here — the "connect" screenshot already has its own card baked in
+    },
+    {
+      id: "open",
+      icon: MousePointerClick,
+      titleKey: "home.shoppingAssistant.steps.open.title",
+      titleDefault: "Open the item's Size Guide",
+      descKey: "home.shoppingAssistant.steps.open.description",
+      descDefault: "Browse any store as usual and open the product's size chart popup.",
+      url: "amazon.com/haloumoning-girls-athletic-tee",
+      image: stepOpenImg,
+      // no popup here
+    },
+    
+    {
+      id: "match",
+      icon: Ruler,
+      titleKey: "home.shoppingAssistant.steps.match.title",
+      titleDefault: "Get your instant size match",
+      descKey: "home.shoppingAssistant.steps.match.description",
+      descDefault: "DressApp compares the chart to your body measurements and recommends the right size for you.",
+      url: "amazon.com/haloumoning-girls-athletic-tee",
+      image: stepMatchBaseImg,
+    },
+  ];
   return (
     <>
       {/* Home-banner-start */}
@@ -2167,16 +2218,67 @@ export default function Home() {
                 whileInView={{ opacity: 1, x: 0 }}
                 viewport={{ once: false, amount: 0.3 }}
                 transition={{ duration: 0.65, delay: 0.15, ease: "easeOut" }}
-                className="relative overflow-hidden rounded-[12px] border border-border bg-[#f4f0ea] shadow-lg"
+                className="relative"
                 data-testid="shopping-assistant-preview"
               >
-                <img
-                  src={shoppingAssistantPreview}
-                  alt={t("home.shoppingAssistant.previewAlt", {
-                    defaultValue: "DressApp Shopping Assistant recommending a size on a product page",
-                  })}
-                  className="block h-auto w-full object-cover object-center"
-                />
+                <div className="pointer-events-none absolute -inset-6 -z-10 rounded-[32px] bg-[radial-gradient(60%_60%_at_70%_20%,rgba(31,92,69,0.14),transparent_70%)]" />
+
+                <div className="overflow-hidden rounded-[12px] border border-border bg-white shadow-lg">
+                  {/* Browser chrome */}
+                  <div className="flex items-center gap-2 border-b border-border bg-[#f4f0ea] px-4 py-3">
+                    <span className="h-2.5 w-2.5 rounded-full bg-[#e6675c]" />
+                    <span className="h-2.5 w-2.5 rounded-full bg-[#e8b84b]" />
+                    <span className="h-2.5 w-2.5 rounded-full bg-[#5fb97b]" />
+                    <div className="ms-3 flex h-6 flex-1 items-center overflow-hidden rounded-full bg-white px-3 text-[10px] font-medium text-[#8a8a8a]">
+                      <AnimatePresence mode="wait">
+                        <motion.span
+                          key={SHOPPING_ASSISTANT_STEPS[assistantStep].url}
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          exit={{ opacity: 0 }}
+                          transition={{ duration: 0.2 }}
+                          className="truncate"
+                        >
+                          {SHOPPING_ASSISTANT_STEPS[assistantStep].url}
+                        </motion.span>
+                      </AnimatePresence>
+                    </div>
+                  </div>
+
+                  {/* Real screenshot, crossfades per step */}
+                  <div className="relative h-[530px] w-full overflow-hidden bg-[#f7f4ee]">
+                    <AnimatePresence mode="wait">
+                      <motion.img
+                        key={SHOPPING_ASSISTANT_STEPS[assistantStep].id}
+                        src={SHOPPING_ASSISTANT_STEPS[assistantStep].image}
+                        alt={t(SHOPPING_ASSISTANT_STEPS[assistantStep].titleKey, {
+                          defaultValue: SHOPPING_ASSISTANT_STEPS[assistantStep].titleDefault,
+                        })}
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        transition={{ duration: 0.35, ease: "easeOut" }}
+                        className="absolute inset-0 h-full w-full object-cover object-top"
+                      />
+                    </AnimatePresence>
+
+                    {/* Real match-result card, reveals only on step 3 */}
+                    {/* <AnimatePresence>
+                      {SHOPPING_ASSISTANT_STEPS[assistantStep].popup && (
+                        <motion.img
+                          key="popup"
+                          src={SHOPPING_ASSISTANT_STEPS[assistantStep].popup}
+                          alt="DressApp size match result"
+                          initial={{ opacity: 0, y: 12, scale: 0.97 }}
+                          animate={{ opacity: 1, y: 0, scale: 1 }}
+                          exit={{ opacity: 0, y: 12, scale: 0.97 }}
+                          transition={{ duration: 0.4, ease: "easeOut", delay: 0.15 }}
+                          className="absolute bottom-3 right-3 w-[62%] max-w-[320px] rounded-[10px] shadow-[0_18px_35px_-14px_rgba(23,20,15,0.4)] sm:bottom-4 sm:right-4"
+                        />
+                      )}
+                    </AnimatePresence> */}
+                  </div>
+                </div>
               </motion.div>
             </div>
             {/* Left Side Content */}
@@ -2220,7 +2322,7 @@ export default function Home() {
                   })}
                 </motion.p>
 
-                {/* How it works steps */}
+                {/* How it works steps — clickable, syncs with the screenshot on the right */}
                 <motion.div
                   initial={{ opacity: 0, x: -40 }}
                   whileInView={{ opacity: 1, x: 0 }}
@@ -2228,52 +2330,41 @@ export default function Home() {
                   transition={{ duration: 0.65, delay: 0.4, ease: "easeOut" }}
                   className="mb-7 flex flex-col gap-0"
                 >
-                  {[
-                    {
-                      icon: MousePointerClick,
-                      titleKey: "home.shoppingAssistant.steps.open.title",
-                      titleDefault: "Open the item's Size Guide",
-                      descKey: "home.shoppingAssistant.steps.open.description",
-                      descDefault:
-                        "Browse any store as usual and open the product's size chart popup.",
-                    },
-                    {
-                      icon: Link2,
-                      titleKey: "home.shoppingAssistant.steps.connect.title",
-                      titleDefault: "Connect to DressApp",
-                      descKey: "home.shoppingAssistant.steps.connect.description",
-                      descDefault:
-                        "Click the DressApp icon and sign in once — it stays connected after that.",
-                    },
-                    {
-                      icon: Ruler,
-                      titleKey: "home.shoppingAssistant.steps.match.title",
-                      titleDefault: "Get your instant size match",
-                      descKey: "home.shoppingAssistant.steps.match.description",
-                      descDefault:
-                        "DressApp compares the chart to your body measurements and recommends the right size for you.",
-                    },
-                  ].map((step, i, arr) => (
-                    <div key={step.titleDefault} className="relative flex gap-4 pb-6 last:pb-0">
-                      {/* Connector line */}
-                      {i < arr.length - 1 && (
-                        <span className="absolute start-[19px] top-[40px] h-[calc(100%-32px)] w-px bg-[var(--primary-color)]/15" />
-                      )}
-                      <span className="relative z-[1] flex h-10 w-10 shrink-0 items-center justify-center rounded-full border-2 border-[var(--primary-color)]/15 bg-primary-shadow text-[var(--primary-color)]">
-                        <step.icon className="h-4 w-4" />
-                      </span>
-                      <div>
-                        <div className="mb-0.5 flex items-center gap-2">
-                          <h6 className="m-0 text-[14px] font-bold text-[var(--dark-color)]">
+                  {SHOPPING_ASSISTANT_STEPS.map((step, i, arr) => {
+                    const isActive = i === assistantStep;
+                    return (
+                      <button
+                        key={step.id}
+                        type="button"
+                        onClick={() => setAssistantStep(i)}
+                        className="relative flex w-full gap-4 pb-6 text-left last:pb-0 group"
+                      >
+                        {i < arr.length - 1 && (
+                          <span className="absolute start-[19px] top-[40px] h-[calc(100%-32px)] w-px bg-[var(--primary-color)]/15" />
+                        )}
+                        <span
+                          className={`relative z-[1] flex h-10 w-10 shrink-0 items-center justify-center rounded-full border group-hover:bg-primary-brand group-hover:text-white transition-smooth 
+                            ${isActive
+                              ? "border-primary-brand bg-[var(--primary-color)] text-white"
+                              : "border-border bg-primary-shadow text-primary-brand"
+                            }`}
+                        >
+                          <step.icon className="h-4 w-4" />
+                        </span>
+                        <div>
+                          <h6
+                            className={`m-0 mb-0.5 text-[14px] font-bold group-hover:text-primary-brand  ${isActive ? "text-[var(--primary-color)]" : "text-[var(--dark-color)]"
+                              }`}
+                          >
                             {t(step.titleKey, { defaultValue: step.titleDefault })}
                           </h6>
+                          <p className="m-0 text-[12.5px] leading-[1.5] text-[var(--text-color)]">
+                            {t(step.descKey, { defaultValue: step.descDefault })}
+                          </p>
                         </div>
-                        <p className="m-0 text-[12.5px] leading-[1.5] text-[var(--text-color)]">
-                          {t(step.descKey, { defaultValue: step.descDefault })}
-                        </p>
-                      </div>
-                    </div>
-                  ))}
+                      </button>
+                    );
+                  })}
                 </motion.div>
 
                 {/* CTA */}
@@ -2288,7 +2379,7 @@ export default function Home() {
                     href="https://chromewebstore.google.com/detail/dressapp-shopping-assista/jdhaijhhipacplnjlhmnjaljhfmeoidp"
                     className="inline-flex min-h-11 items-center justify-center rounded-[50px] bg-[var(--primary-color)] px-[30px] py-[18px] text-[14px] font-bold leading-none text-white no-underline shadow-[var(--primary-shadow)] transition-smooth hover:-translate-y-[2px] hover:bg-[var(--primary-hover)] hover:text-white hover:shadow-[0_8px_24px_rgba(31,92,69,0.25)]"
                   >
-                    <i className="bi bi-google" />
+                    <i className="bi bi-google me-2" />
                     {t("home.shoppingAssistant.cta", {
                       defaultValue: "Add to Chrome",
                     })}
@@ -2298,7 +2389,26 @@ export default function Home() {
                     type="button"
                     variant="outline"
                     onClick={() => setAddStoreOpen(true)}
-                    className="min-h-11 rounded-[50px] px-[30px] py-[18px] text-[14px] font-bold"
+                    className="
+                          h-auto
+                          rounded-full
+                          border
+                          border-black/10
+                          bg-white
+                          px-7
+                          py-3.5
+                          font-sans
+                          text-sm
+                          font-semibold
+                          text-[var(--dark-color)]
+                          shadow-none
+                          transition-all
+                          duration-300
+                          hover:-translate-y-0.5
+                          hover:bg-white
+                          hover:text-[var(--primary-color)]
+                          hover:shadow-[var(--shadow-medium)]
+                    "
                     data-testid="shopping-assistant-add-store"
                   >
                     <Store className="h-4 w-4" />

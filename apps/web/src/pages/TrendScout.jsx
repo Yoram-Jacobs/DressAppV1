@@ -188,27 +188,31 @@ export default function TrendScout() {
   }, [allCards, selectedGender, activeCategory]);
   if (isBlocked) {
     return (
-      <div className="container-px max-w-2xl mx-auto pt-16 pb-24 text-center">
-        <div className="p-8 rounded-3xl border border-border bg-card shadow-lg space-y-6 flex flex-col items-center">
-          <div className="p-4 rounded-2xl bg-amber-500/10 text-amber-500">
-            <Crown className="h-10 w-10" />
+      <>
+        <section className="bg-accent-beige h-[100vh] flex justify-center items-center px-[40px] py-[40px]  max-[991px]:px-[15px] max-[991px]:py-[30px]
+            max-[767px]:px-[15px] max-[767px]:py-[30px]
+            max-[480px]:px-[15px] max-[480px]:py-[30px]">
+          <div className="bg-white rounded-[12px] border border-border shadow-sm p-5 space-y-3 flex flex-col items-center text-center">
+            <div className="p-4 rounded-full bg-amber-500/10 text-amber-500">
+              <Crown className="h-10 w-10" />
+            </div>
+            <h2 className="font-bold text-[20px] text-dark-brand">
+              {t('trends.lockedTitle', { defaultValue: 'Trend Scout is Premium' })}
+            </h2>
+            <p className="text-[14px] font-semibold text-text-brand max-w-sm">
+              {t('trends.lockedDesc', { defaultValue: 'Trend Scout is only available on Manager or Professional plans. Upgrade your plan to get daily curated style feeds, sustainability news, and runway highlights.' })}
+            </p>
+            <div className="flex gap-4 w-full justify-center">
+              <ExploreBackButton />
+              <Link to="/pricing">
+                <Button className="">
+                  {t('pricing.upgradeLinkBtn', { defaultValue: 'Upgrade Plan' })}
+                </Button>
+              </Link>
+            </div>
           </div>
-          <h2 className="font-display text-2xl font-bold text-foreground">
-            {t('trends.lockedTitle', { defaultValue: 'Trend Scout is Premium' })}
-          </h2>
-          <p className="text-sm text-text-brand max-w-sm">
-            {t('trends.lockedDesc', { defaultValue: 'Trend Scout is only available on Manager or Professional plans. Upgrade your plan to get daily curated style feeds, sustainability news, and runway highlights.' })}
-          </p>
-          <div className="flex gap-4 w-full justify-center">
-            <ExploreBackButton />
-            <Link to="/pricing">
-              <Button className="rounded-xl px-6 bg-primary text-primary-foreground hover:translate-y-[-1px] transition-all">
-                {t('pricing.upgradeLinkBtn', { defaultValue: 'Upgrade Plan' })}
-              </Button>
-            </Link>
-          </div>
-        </div>
-      </div>
+        </section>
+      </>
     );
   }
   return (
@@ -279,8 +283,8 @@ export default function TrendScout() {
               type="button"
               onClick={() => handleGenderSwitch('female')}
               className={`flex items-center gap-1.5 px-6 py-3 rounded-full text-[12px] font-semibold transition-all ${selectedGender === 'female'
-                  ? 'bg-primary-brand text-white shadow-sm'
-                  : 'bg-transparent text-text-brand hover:text-primary-brand'
+                ? 'bg-primary-brand text-white shadow-sm'
+                : 'bg-transparent text-text-brand hover:text-primary-brand'
                 }`}
             >
               {t('trends.womensFashion', { defaultValue: "Women's Fashion" })}
@@ -289,8 +293,8 @@ export default function TrendScout() {
               type="button"
               onClick={() => handleGenderSwitch('male')}
               className={`flex items-center gap-1.5 px-6 py-3 rounded-full text-[12px] font-semibold transition-all ${selectedGender === 'male'
-                  ? 'bg-primary-brand text-white shadow-sm'
-                  : 'bg-transparent text-text-brand hover:text-primary-brand'
+                ? 'bg-primary-brand text-white shadow-sm'
+                : 'bg-transparent text-text-brand hover:text-primary-brand'
                 }`}
             >
               {t('trends.mensFashion', { defaultValue: "Men's Fashion" })}
