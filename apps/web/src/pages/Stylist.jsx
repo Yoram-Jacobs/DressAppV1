@@ -2084,28 +2084,6 @@ export default function Stylist() {
           <div className="flex items-center gap-2 flex-wrap">
             {isDaily ? (
               <>
-                {proposals && proposals.length > 1 && (
-                  <>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      disabled={idx <= 0}
-                      onClick={() => {
-                        const prevProp = proposals[idx - 1];
-                        if (prevProp) {
-                          setSelectedOutfitForDetail(proposalToOutfit(prevProp, todayDateStr));
-                        }
-                      }}
-                      className="rounded-full h-auto text-xs font-semibold inline-flex items-center gap-1.5 px-4 py-[5px] leading-[22px] !shadow-none border border-[#666] hover:!border-[var(--primary-color)] hover:!text-[var(--primary-color)] disabled:opacity-40"
-                    >
-                      <ArrowLeft className="h-3.5 w-3.5 rtl:rotate-180" />
-                      <span>{t('stylist.previousLook', { defaultValue: 'Previous Look' })}</span>
-                    </Button>
-                    <Badge variant="outline" className="text-xs font-bold text-[var(--dark-color)] border-[#ccc] px-3 py-1 bg-[#fafafa]">
-                      {t('stylist.lookCounter', { defaultValue: 'Look {{current}} of {{total}}', current: idx + 1, total: totalLooks })}
-                    </Badge>
-                  </>
-                )}
                 <Button
                   size="sm"
                   variant="outline"

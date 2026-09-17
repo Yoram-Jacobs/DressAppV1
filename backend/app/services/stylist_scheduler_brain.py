@@ -683,20 +683,21 @@ async def generate_scheduled_proposals(
     user: dict[str, Any],
     style_dress_for: str | None = None,
     weather: dict[str, Any] | None = None,
-    calendar_events: list[dict[str, Any]] | None = None
+    calendar_events: list[dict[str, Any]] | None = None,
+    exclude_item_ids: set[str] | list[str] | None = None,
 ) -> dict[str, Any]:
-    """Generate 3 scheduled outfit proposals using the rotation prioritized items."""
+    """Generate 1 scheduled outfit proposal using the rotation prioritized items."""
     user = dict(user)
     user.pop("_id", None)
     user_id = user["id"]
 
-    # If weather is not provided, try to fetch it first so we can use it to filter the candidate closet
-    if weather is None:
+    # If weather was not passed in, attempt to fetch it directly
+    if not weather:
         try:
             from app.services.weather_service import weather_service
-            home = user.get("home_location") or {}
-            lat = home.get("lat")
-            lng = home.get("lng")
+            loc = user.get("location") or user.get("home_location") or {}
+            lat = loc.get("latitude") or loc.get("lat")
+            lng = loc.get("longitude") or loc.get("lng") or loc.get("lon")
             lang = user.get("preferred_language") or "en"
             if lat is not None and lng is not None and weather_service is not None:
                 weather = await weather_service.fetch(float(lat), float(lng), lang=lang)
@@ -711,7 +712,13 @@ async def generate_scheduled_proposals(
         weather=weather
     )
     
-    # Slim down closet items to prevent sending massive base64 image strings and embeddings to the LLM
+    # If exclude_item_ids passed (e.g. from previous daily proposals today), prioritize fresh items
+    if exclude_item_ids:
+        exclude_set = set(exclude_item_ids)
+        fresh_closet = [x for x in raw_closet if x["id"] not in exclude_set]
+        used_closet = [x for x in raw_closet if x["id"] in exclude_set]
+        raw_closet = fresh_closet + used_closet
+
     # Slim down closet items to prevent sending massive base64 image strings and embeddings to the LLM
     prioritized_closet = [
         {
@@ -778,7 +785,7 @@ async def generate_scheduled_proposals(
         f"you constantly keep up with current local fashion and social trends. Your ability to tailor a perfect outfit for an event and weather from the customer's own garments, "
         f"following the customer's restrictions and orders, is well known and admired.\n\n"
         f"GOAL:\n"
-        f"Generate EXACTLY 3 complete, distinct, and coordinated full-body outfit recommendations for {target_day_name} ({target_date_str}) from the user's Closet items below, "
+        f"Generate EXACTLY 1 complete, distinct, and coordinated full-body outfit recommendation for {target_day_name} ({target_date_str}) from the user's Closet items below, "
         f"following Fashion and Social Rules and Restrictions.\n\n"
         f"CONTEXT & APPLIED FILTERS:\n"
         f"- Target Occasion / Style Preference: '{style_display}'\n"
@@ -789,10 +796,9 @@ async def generate_scheduled_proposals(
         f"   - Always follow timeless fashion harmony rules (color theory, texture/material pairing, proportional silhouette, pattern clash prevention) and respect any local social, modest, or religious restrictions.\n"
         f"2. APPLIED TAG FILTERS & PREFERENCES:\n"
         f"   - If the closet items list below contains garments with the tag '{style_prompt}' or matching tags/synonyms ({', '.join(syns_list) if syns_list else style_prompt}), prioritize selecting those items. Only when no matching tags are found or to complete the outfit (e.g. if there are no shoes with that tag), select other items matching the intent/style of the preference.\n"
-        f"3. ROTATION & DIVERSITY (NO REPEATS ACROSS OUTFITS):\n"
+        f"3. ROTATION & DIVERSITY:\n"
         f"   - Rotate items within categories: make every item count and get used.\n"
-        f"   - The 3 generated outfits MUST be 3 DISTINCT, UNIQUE looks with NO DUPLICATE TOPS, NO DUPLICATE BOTTOMS, and NO DUPLICATE SHOES across the 3 recommendations whenever multiple options are available in the closet.\n"
-        f"   - Do NOT repeat the same shirt, pants, or shoes across Outfit 1, 2, and 3!\n"
+        f"   - Select a fresh, cohesive combination suited for the day.\n"
         f"4. NEVER MIX CATEGORIES (STRICT ANATOMICAL ROLES):\n"
         f"   - A garment's 'role' MUST strictly match its anatomical category:\n"
         f"     • Category 'Top' / 'Tops' / 'Shirts' MUST have role: 'top'.\n"
@@ -834,7 +840,7 @@ async def generate_scheduled_proposals(
         f"    }}>,\n"
         f"    \"why\": string,\n"
         f"    \"confidence\": number\n"
-        f"  }}>\n"
+        f"  }}> // Curate exactly 1 outfit recommendation\n"
         f"}}"
     )
 
@@ -854,8 +860,8 @@ async def generate_scheduled_proposals(
         user_preferences_block=prefs_block,
     )
 
-    # Extract proposals
-    proposals = res_json.get("outfit_recommendations") or []
+    # Extract proposals and limit to 1 daily outfit
+    proposals = (res_json.get("outfit_recommendations") or [])[:1]
     
     # Resolve any truncated IDs returned by the LLM back to the full UUIDs in raw_closet
     valid_ids = {x["id"] for x in raw_closet}
@@ -889,9 +895,12 @@ async def generate_scheduled_proposals(
         # Guarantee complete outfit (Top + Bottom + Shoes or Dress + Shoes)
         _ensure_complete_outfit(prop, raw_closet)
     
+    # Enforce exactly 1 curated proposal in return payload
+    res_json["outfit_recommendations"] = proposals[:1]
+
     # Track suggested items to update last_suggested_at
     suggested_ids = []
-    for prop in proposals:
+    for prop in proposals[:1]:
         for item in prop.get("items", []):
             cid = item.get("closet_item_id")
             if cid:

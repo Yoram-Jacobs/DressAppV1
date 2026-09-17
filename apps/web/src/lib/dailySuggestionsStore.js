@@ -101,9 +101,8 @@ export const dailySuggestionsStore = {
     if (api.generateDailyProposal) {
       const proposal = await api.generateDailyProposal(force);
       if (proposal) {
-        const nextProposals = [...(_state.proposals || []).filter(p => p.id !== proposal.id), proposal];
         _set({
-          proposals: nextProposals,
+          proposals: [proposal],
           dailyProposal: proposal,
         });
       }

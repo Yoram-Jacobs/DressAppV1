@@ -444,17 +444,17 @@ def _generate_fallback_advice(
                 if shoe_id:
                     used_shoe_ids.add(shoe_id)
                 recs.append(o)
-                if len(recs) >= 3:
+                if len(recs) >= 1:
                     break
 
-    # Pass 2: If less than 3 distinct outfits found, relax uniqueness
-    if len(recs) < 3:
+    # Pass 2: If no distinct outfit found, take first available combo
+    if len(recs) < 1:
         for o in all_outfits:
             item_ids = tuple(sorted([item["closet_item_id"] for item in o["items"] if item.get("closet_item_id")]))
             if item_ids and item_ids not in seen_combos:
                 seen_combos.add(item_ids)
                 recs.append(o)
-                if len(recs) >= 3:
+                if len(recs) >= 1:
                     break
 
     for r in recs:
@@ -650,25 +650,20 @@ async def check_scheduler_triggers() -> None:
                         logger.info("No proposals generated for user %s, skipping", user_id)
                         continue
 
-                    # Build notification body
-                    outfit_count = len(proposals)
+                    # Build notification body for single curated outfit
                     style_label = style_option.title() if style_option else "Daily"
-                    
-                    title = f"Your {style_label} Outfit Proposals"
                     day_word = "tomorrow" if is_next_day else "today"
-                    body_lines = [f"Here are {outfit_count} outfit(s) curated for you {day_word}:"]
+                    title = f"Your {style_label} Outfit Proposal"
                     
-                    for i, prop in enumerate(proposals[:3], 1):
-                        outfit_name = prop.get("name", f"Outfit {i}")
-                        items = prop.get("items", [])
-                        item_names = [it.get("title", it.get("role", "")) for it in items[:3]]
-                        body_lines.append(f"{i}. {outfit_name} — {', '.join(item_names)}")
-                    
-                    body = "\n".join(body_lines)
+                    prop = proposals[0]
+                    outfit_name = prop.get("name", "Daily Look")
+                    items = prop.get("items", [])
+                    item_names = [it.get("title") or it.get("name") or it.get("role", "") for it in items[:3]]
+                    body = f"Here is your {style_label} outfit curated for you {day_word}:\n{outfit_name} — {', '.join(filter(None, item_names))}"
 
                     # Serialize lightweight proposal objects (no heavy image base64 strings)
                     lightweight_proposals = []
-                    for prop in proposals[:3]:
+                    for prop in proposals[:1]:
                         p_copy = {
                             "name": prop.get("name"),
                             "reasoning": prop.get("reasoning"),

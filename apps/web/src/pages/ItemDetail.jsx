@@ -2114,7 +2114,7 @@ export default function ItemDetail() {
                 {/* Conversational Message Thread */}
                 {reanalyzeChatHistory.length > 0 && (
                   <div
-                    className="h-[600px] overflow-y-auto space-y-2 p-3 rounded-[12px] bg-primary-shadow border border-border text-xs max-[480px]:h-[300px]"
+                    className="max-h-[380px] overflow-y-auto space-y-2 p-3 rounded-[12px] bg-primary-shadow border border-border text-xs max-[480px]:max-h-[280px] transition-all"
                     data-testid="item-reanalyze-chat-thread"
                   >
                     {reanalyzeChatHistory.map((msg, idx) => (

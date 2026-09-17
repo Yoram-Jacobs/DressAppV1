@@ -61,7 +61,7 @@ async def get_daily_proposal(user: dict = Depends(get_current_user)) -> dict[str
     
     # Return worn proposal first if already chosen
     worn_doc = await db.daily_proposals.find_one(
-        {"user_id": user["id"], "date": today_str, "worn": True},
+        {"user_id": user["id"], "date": today_str, "worn": True, "replaced": {"$ne": True}},
         {"_id": 0},
     )
     if worn_doc and len(worn_doc.get("items") or []) > 0:
@@ -178,6 +178,13 @@ async def _generate_and_save_daily_proposal(
         if existing and len(existing.get("items") or []) > 0:
             return existing
             
+    if force:
+        # On 'New Look', mark previous proposals for today as replaced and unwear them
+        await db.daily_proposals.update_many(
+            {"user_id": user["id"], "date": date_str},
+            {"$set": {"worn": False, "replaced": True, "dismissed": True}},
+        )
+
     # Gather items already used in today's proposals to avoid repeats on "New Look"
     past_proposals_cursor = db.daily_proposals.find({"user_id": user["id"], "date": date_str})
     past_proposals = [doc async for doc in past_proposals_cursor]
@@ -214,7 +221,7 @@ async def _generate_and_save_daily_proposal(
             or i.get("thumbnail_data_url")
         )
 
-    # 1. Try AI-powered recommendation first
+    # 1. Try AI-powered recommendation first (curates 1 daily outfit)
     selected_items: list[dict[str, Any]] = []
     proposal_title = "Look of the Day"
     proposal_desc = "Curated based on your style profile, weather conditions, and closet harmony."
@@ -222,21 +229,14 @@ async def _generate_and_save_daily_proposal(
 
     ai_generated = False
     try:
-        scheduler_res = await generate_scheduled_proposals(user, style_dress_for=effective_occasion)
+        scheduler_res = await generate_scheduled_proposals(
+            user,
+            style_dress_for=effective_occasion,
+            exclude_item_ids=past_item_ids,
+        )
         recs = scheduler_res.get("outfit_recommendations") or []
         if recs:
-            # Score each recommendation by novelty (fewest overlapping items with past_item_ids)
-            def _rec_novelty_score(r: dict) -> int:
-                r_items = r.get("items") or []
-                novel = sum(1 for it in r_items if (it.get("closet_item_id") or it.get("id")) not in past_item_ids)
-                return novel
-
-            sorted_recs = sorted(recs, key=_rec_novelty_score, reverse=True)
-            # Pick from the top candidates with highest novel items
-            top_novelty = _rec_novelty_score(sorted_recs[0])
-            top_candidates = [r for r in sorted_recs if _rec_novelty_score(r) == top_novelty]
-            chosen_rec = random.choice(top_candidates)
-
+            chosen_rec = recs[0]
             proposal_title = chosen_rec.get("name") or proposal_title
             proposal_desc = chosen_rec.get("why") or proposal_desc
             confidence = chosen_rec.get("confidence")
