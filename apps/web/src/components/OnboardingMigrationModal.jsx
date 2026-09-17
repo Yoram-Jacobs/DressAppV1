@@ -718,18 +718,6 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
                     ref={bookmarkletRef}
                     href={harvesterBookmarkletCode}
                     title={`👗 ${t('migration.bookmarkletBtn', { defaultValue: 'DressApp Agent' })}`}
-                    draggable={true}
-                    onDragStart={(e) => {
-                      const title = `👗 ${t('migration.bookmarkletBtn', { defaultValue: 'DressApp Agent' })}`;
-                      if (e.dataTransfer) {
-                        try {
-                          e.dataTransfer.setData('text/uri-list', harvesterBookmarkletCode);
-                          e.dataTransfer.setData('text/plain', title);
-                          e.dataTransfer.setData('text/html', `<a href="${harvesterBookmarkletCode}">${title}</a>`);
-                          e.dataTransfer.effectAllowed = 'copyLink';
-                        } catch (_) {}
-                      }
-                    }}
                     onClick={(e) => {
                       e.preventDefault();
                       if (!harvesterBookmarkletCode) return;

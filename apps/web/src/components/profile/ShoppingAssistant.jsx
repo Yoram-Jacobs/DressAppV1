@@ -71,19 +71,6 @@ export function ShoppingAssistant() {
                   }
                 }}
                 title={`👗 ${t('profile.bookmarkletBtn', { defaultValue: 'DressApp Assistant' })}`}
-                draggable={true}
-                onDragStart={(e) => {
-                  const title = `👗 ${t('profile.bookmarkletBtn', { defaultValue: 'DressApp Assistant' })}`;
-                  const code = "javascript:(function(){if(!document.getElementById('dressapp-mobile-styles')){var s=document.createElement('script');s.src='https://dressapp.co/widget/dressapp-mobile-floater.js?t='+Date.now();document.body.appendChild(s);}})();";
-                  if (e.dataTransfer) {
-                    try {
-                      e.dataTransfer.setData('text/uri-list', code);
-                      e.dataTransfer.setData('text/plain', title);
-                      e.dataTransfer.setData('text/html', `<a href="${code}">${title}</a>`);
-                      e.dataTransfer.effectAllowed = 'copyLink';
-                    } catch (_) {}
-                  }
-                }}
                 className="inline-flex items-center gap-1.5 rounded-full bg-primary-brand px-4 py-2 text-[12px] font-semibold text-white shadow hover:bg-primary-hover transition-colors cursor-grab active:cursor-grabbing select-none"
                 onClick={(e) => {
                   e.preventDefault();
