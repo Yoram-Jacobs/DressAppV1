@@ -63,12 +63,14 @@ class WeatherService:
             "city": current.get("name"),
             "country": _safe_get(current, ["sys", "country"]),
             "forecast_next_24h": _summarize_forecast(forecast.get("list", [])[:8]),
+            "tomorrow": _extract_tomorrow_forecast(forecast.get("list", [])),
         }
         logger.info(
-            "Weather fetched city=%s temp=%s cond=%s",
+            "Weather fetched city=%s temp=%s cond=%s tomorrow=%s",
             summary["city"],
             summary["temp_c"],
             summary["condition"],
+            summary.get("tomorrow"),
         )
         return summary
 
@@ -95,6 +97,46 @@ def _summarize_forecast(entries: list[dict[str, Any]]) -> list[dict[str, Any]]:
             }
         )
     return out
+
+
+def _extract_tomorrow_forecast(entries: list[dict[str, Any]]) -> dict[str, Any] | None:
+    if not entries:
+        return None
+    from datetime import datetime, timezone, timedelta
+    now_utc = datetime.now(timezone.utc)
+    tomorrow_date_str = (now_utc + timedelta(days=1)).strftime("%Y-%m-%d")
+    
+    tomorrow_entries = [e for e in entries if str(e.get("dt_txt", "")).startswith(tomorrow_date_str)]
+    if not tomorrow_entries:
+        tomorrow_entries = entries[8:16] if len(entries) >= 16 else entries[4:]
+        
+    if not tomorrow_entries:
+        return None
+        
+    midday_entry = next(
+        (e for e in tomorrow_entries if "12:00" in str(e.get("dt_txt", "")) or "15:00" in str(e.get("dt_txt", ""))),
+        tomorrow_entries[len(tomorrow_entries) // 2],
+    )
+    
+    temps = [float(e.get("main", {}).get("temp")) for e in tomorrow_entries if _safe_get(e, ["main", "temp"]) is not None]
+    max_temp = round(max(temps)) if temps else round(float(_safe_get(midday_entry, ["main", "temp"]) or 20))
+    min_temp = round(min(temps)) if temps else round(float(_safe_get(midday_entry, ["main", "temp"]) or 15))
+    avg_temp = round(sum(temps) / len(temps)) if temps else round(float(_safe_get(midday_entry, ["main", "temp"]) or 18))
+    
+    weather_obj = _safe_get(midday_entry, ["weather", 0]) or {}
+    condition = weather_obj.get("main") or "Clear"
+    description = weather_obj.get("description") or condition
+    icon = weather_obj.get("icon") or "01d"
+    
+    return {
+        "temp_c": round(float(_safe_get(midday_entry, ["main", "temp"]) or avg_temp)),
+        "temp_max_c": max_temp,
+        "temp_min_c": min_temp,
+        "condition": condition,
+        "description": description.title() if description else "Clear Sky",
+        "icon": icon,
+        "date": tomorrow_date_str,
+    }
 
 
 weather_service = WeatherService() if settings.OPENWEATHER_API_KEY else None

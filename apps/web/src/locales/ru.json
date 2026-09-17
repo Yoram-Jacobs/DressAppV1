@@ -464,7 +464,14 @@
       "y2k": "Y2K",
       "classic_business": "Классический Бизнес",
       "athleisure": "Спортивный отдых"
-    }
+    },
+    "match": "Совпадение",
+    "getStarted": "Начать",
+    "upgrade": "Улучшить",
+    "addItemsToClosetTitle": "Добавьте вещи в ваш гардероб",
+    "addItemsToClosetSub": "Загрузите одежду, чтобы получать ежедневные образы от ИИ",
+    "upgradePlanTitle": "Обновите тарифный план",
+    "upgradePlanSub": "Откройте ежедневные персонализированные образы от ИИ"
   },
   "closet": {
     "selectedCount": "{{count}} выбрано",

@@ -464,7 +464,14 @@
       "y2k": "Y2K",
       "classic_business": "Klassiek zakendoen",
       "athleisure": "Athleisure"
-    }
+    },
+    "match": "Match",
+    "getStarted": "Aan de slag",
+    "upgrade": "Upgraden",
+    "addItemsToClosetTitle": "Voeg kleding toe aan je kledingkast",
+    "addItemsToClosetSub": "Upload kleding om dagelijks AI-outfits te ontvangen",
+    "upgradePlanTitle": "Upgrade je abonnement",
+    "upgradePlanSub": "Ontgrendel dagelijkse gepersonaliseerde AI-outfits"
   },
   "closet": {
     "selectedCount": "{{count}} geselecteerd",

@@ -464,7 +464,14 @@
       "y2k": "Y2K",
       "classic_business": "クラシック ビジネス",
       "athleisure": "アスレジャー"
-    }
+    },
+    "match": "マッチ",
+    "getStarted": "はじめる",
+    "upgrade": "アップグレード",
+    "addItemsToClosetTitle": "クローゼットにアイテムを追加",
+    "addItemsToClosetSub": "服をアップロードして毎日のAIコーディネートを取得",
+    "upgradePlanTitle": "プランをアップグレード",
+    "upgradePlanSub": "パーソナライズされた毎日のAIコーデをアンロック"
   },
   "closet": {
     "selectedCount": "{{count}}件選択中",

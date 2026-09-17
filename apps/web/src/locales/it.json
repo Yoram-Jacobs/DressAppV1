@@ -464,7 +464,14 @@
       "y2k": "Y2K",
       "classic_business": "Affari classici",
       "athleisure": "Athleisure"
-    }
+    },
+    "match": "Affinità",
+    "getStarted": "Inizia",
+    "upgrade": "Aggiorna",
+    "addItemsToClosetTitle": "Aggiungi capi al tuo guardaroba",
+    "addItemsToClosetSub": "Carica i tuoi capi per ricevere outfit giornalieri con l'IA",
+    "upgradePlanTitle": "Passa al piano superiore",
+    "upgradePlanSub": "Sblocca outfit giornalieri personalizzati con IA"
   },
   "closet": {
     "selectedCount": "{{count}} selezionati",

@@ -464,7 +464,14 @@
       "y2k": "Y2K",
       "classic_business": "क्लासिक बिजनेस",
       "athleisure": "Athleisure"
-    }
+    },
+    "match": "मैच",
+    "getStarted": "शुरू करें",
+    "upgrade": "अपग्रेड करें",
+    "addItemsToClosetTitle": "अपनी अलमारी में कपड़े जोड़ें",
+    "addItemsToClosetSub": "दैनिक AI आउटफिट पाने के लिए कपड़े अपलोड करें",
+    "upgradePlanTitle": "अपना प्लान अपग्रेड करें",
+    "upgradePlanSub": "दैनिक व्यक्तिगत AI आउटफिट अनलॉक करें"
   },
   "closet": {
     "selectedCount": "{{count}} चयनित",

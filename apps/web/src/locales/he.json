@@ -476,7 +476,14 @@
       "nextAria": "טרנד הבא"
     },
     "trendReadAt": "קרא ב-{{source}}",
-    "navyBlazerKnit": "בלייזר נייבי + סוודר סרוג"
+    "navyBlazerKnit": "בלייזר נייבי + סוודר סרוג",
+    "match": "התאמה",
+    "getStarted": "התחל עכשיו",
+    "upgrade": "שדרג",
+    "addItemsToClosetTitle": "הוסף פריטים לארון שלך",
+    "addItemsToClosetSub": "העלה בגדים כדי לקבל תלבושות יומיות מבוססות AI",
+    "upgradePlanTitle": "שדרג את המסלול שלך",
+    "upgradePlanSub": "פתח הצעות תלבושת יומיות מותאמות אישית"
   },
   "closet": {
     "selectedCount": "{{count}} נבחרו",

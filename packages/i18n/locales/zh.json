@@ -464,7 +464,14 @@
       "y2k": "Y2K",
       "classic_business": "经典商务",
       "athleisure": "运动休闲"
-    }
+    },
+    "match": "契合度",
+    "getStarted": "立即开始",
+    "upgrade": "升级方案",
+    "addItemsToClosetTitle": "添加服饰至您的衣橱",
+    "addItemsToClosetSub": "上传衣服以获取每日 AI 穿搭推荐",
+    "upgradePlanTitle": "升级您的订阅方案",
+    "upgradePlanSub": "解锁每日专属个性化 AI 造型推荐"
   },
   "closet": {
     "selectedCount": "已选择 {{count}} 件",

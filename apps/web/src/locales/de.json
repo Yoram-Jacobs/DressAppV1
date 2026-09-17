@@ -464,7 +464,14 @@
       "y2k": "Y2K",
       "classic_business": "Klassisches Geschäft",
       "athleisure": "Sport"
-    }
+    },
+    "match": "Passend",
+    "getStarted": "Loslegen",
+    "upgrade": "Upgrade",
+    "addItemsToClosetTitle": "Füge Kleidung zu deinem Kleiderschrank hinzu",
+    "addItemsToClosetSub": "Lade Kleidung hoch, um tägliche KI-Outfits zu erhalten",
+    "upgradePlanTitle": "Upgrade deinen Tarif",
+    "upgradePlanSub": "Schalte personalisierte tägliche KI-Outfits frei"
   },
   "closet": {
     "selectedCount": "{{count}} ausgewählt",

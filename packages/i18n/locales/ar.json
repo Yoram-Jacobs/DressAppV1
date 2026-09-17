@@ -464,7 +464,14 @@
       "y2k": "Y2K",
       "classic_business": "الأعمال الكلاسيكية",
       "athleisure": "رياضة"
-    }
+    },
+    "match": "تطابق",
+    "getStarted": "ابدأ الآن",
+    "upgrade": "ترقية",
+    "addItemsToClosetTitle": "أضف قطعاً إلى خزانتك",
+    "addItemsToClosetSub": "ارفع الملابس للحصول على اقتراحات أزياء يومية بالذكاء الاصطناعي",
+    "upgradePlanTitle": "قم بترقية خطتك",
+    "upgradePlanSub": "احصل على تنسيقات أزياء يومية مخصصة بالذكاء الاصطناعي"
   },
   "closet": {
     "selectedCount": "{{count}} محدد",

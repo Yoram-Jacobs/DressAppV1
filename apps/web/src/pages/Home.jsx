@@ -34,6 +34,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/lib/auth";
 import { useClosetStore } from "@/lib/useClosetStore";
+import { useDailySuggestionsStore } from "@/lib/dailySuggestionsStore";
 import { useLocation as useAppLocation } from "@/lib/location";
 import { useTrendScoutStore } from "@/lib/trendScoutStore";
 import { api } from "@/lib/api";
@@ -292,6 +293,93 @@ export default function Home() {
       return { closet: closetCount, market: prev?.market ?? 0 };
     });
   }, [closet.total, closet.items?.length]);
+
+  const dailyStore = useDailySuggestionsStore();
+  const [weatherData, setWeatherData] = useState(null);
+  const [weatherLoading, setWeatherLoading] = useState(false);
+
+  useEffect(() => {
+    if (user) {
+      dailyStore.prewarm().catch(() => {});
+    }
+  }, [user?.id]);
+
+  const userLat = loc?.coords?.latitude ?? (user?.home_location?.lat || user?.home_location?.latitude || null);
+  const userLng = loc?.coords?.longitude ?? (user?.home_location?.lng || user?.home_location?.lon || user?.home_location?.longitude || null);
+
+  useEffect(() => {
+    let cancelled = false;
+    async function fetchHeroWeather() {
+      setWeatherLoading(true);
+      try {
+        const params = { lang: language };
+        if (userLat != null && userLng != null) {
+          params.lat = userLat;
+          params.lng = userLng;
+        }
+        const data = await api.getWeather(params);
+        if (!cancelled && data) {
+          setWeatherData(data);
+        }
+      } catch (err) {
+        console.warn("Could not fetch tomorrow weather:", err);
+      } finally {
+        if (!cancelled) setWeatherLoading(false);
+      }
+    }
+    fetchHeroWeather();
+    return () => {
+      cancelled = true;
+    };
+  }, [userLat, userLng, language]);
+
+  const tomorrowWeather = weatherData?.tomorrow;
+  const weatherCity = weatherData?.city || loc?.city || "";
+  const weatherTemp = tomorrowWeather?.temp_c != null ? `${tomorrowWeather.temp_c}°C` : (weatherData?.temp_c != null ? `${weatherData.temp_c}°C` : "18°C");
+  const weatherCond = tomorrowWeather?.description || tomorrowWeather?.condition || weatherData?.description || t("home.weatherSummary", { defaultValue: "18°C · Light Rain" });
+  const weatherIcon = tomorrowWeather?.icon ? `https://openweathermap.org/img/wn/${tomorrowWeather.icon}@2x.png` : cloudyImg;
+
+  const totalGarments = closet.total || (closet.items?.length ?? 0);
+  const isClosetEmpty = totalGarments === 0;
+
+  const sub = user?.subscription || {};
+  const isActiveSub = sub.is_active || false;
+  const planType = sub.plan_type || sub.tier || "free";
+  const isFreeTier = !user || !isActiveSub || planType === "free";
+
+  const dailyProposal = dailyStore?.dailyProposal || (dailyStore?.proposals && dailyStore.proposals[0]) || null;
+  const garmentsSummary = dailyProposal?.items?.length
+    ? dailyProposal.items.map((i) => i.name || i.title || labelForCategory(i.category, t)).filter(Boolean).slice(0, 2).join(" + ")
+    : null;
+
+  let suggestionTitle = "";
+  let suggestionSub = "";
+  let suggestionBadge = "";
+  let suggestionLink = "/stylist";
+  let suggestionImg = Calender;
+
+  if (isClosetEmpty) {
+    suggestionBadge = t("home.getStarted", { defaultValue: "Get Started" });
+    suggestionTitle = t("home.addItemsToClosetTitle", { defaultValue: "Add Items to your Closet" });
+    suggestionSub = t("home.addItemsToClosetSub", { defaultValue: "Upload clothes to get daily AI outfits" });
+    suggestionLink = "/closet/add";
+    suggestionImg = Closet;
+  } else if (isFreeTier) {
+    suggestionBadge = t("home.upgrade", { defaultValue: "Upgrade" });
+    suggestionTitle = t("home.upgradePlanTitle", { defaultValue: "Upgrade your Plan" });
+    suggestionSub = t("home.upgradePlanSub", { defaultValue: "Unlock daily personalized AI outfits" });
+    suggestionLink = "/pricing";
+    suggestionImg = Effect;
+  } else {
+    const score = dailyProposal?.harmony_score || dailyProposal?.style_score || 98;
+    suggestionBadge = `${score}% ${t("home.match", { defaultValue: "Match" })}`;
+    suggestionTitle = dailyProposal?.title || t("home.nordicAutumnLayer", { defaultValue: "Nordic Autumn Layer" });
+    suggestionSub = garmentsSummary || dailyProposal?.description || t("home.navyBlazerKnit", { defaultValue: "Navy Blazer + Knit Sweater" });
+    suggestionLink = "/stylist";
+    const firstItem = dailyProposal?.items?.[0];
+    const firstItemImg = firstItem ? (bestImageUrl(firstItem) || resolveMediaUrl(firstItem)) : null;
+    suggestionImg = firstItemImg || Calender;
+  }
 
   const firstName = (user?.display_name || user?.email || "").split(/\s|@/)[0];
   // hero-banner-slider
@@ -1132,7 +1220,8 @@ export default function Home() {
     "
             />
             {/* ================= WEATHER CARD ================= */}
-            <div
+            <Link
+              to="/stylist"
               className="
             absolute
             start-3
@@ -1150,18 +1239,22 @@ export default function Home() {
             text-white
             shadow-lg
             backdrop-blur-xl
+            transition-all
+            duration-200
+            hover:bg-black/35
             sm:start-5
             sm:top-5
             sm:p-4
           "
             >
-              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl">
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-white/10 p-1">
                 <img
-                  src={cloudyImg}
-                  alt={t("home.weatherIconAlt", {
-                    defaultValue: "Weather",
-                  })}
+                  src={weatherIcon}
+                  alt={weatherCond}
                   className="h-9 w-auto object-contain"
+                  onError={(e) => {
+                    e.currentTarget.src = cloudyImg;
+                  }}
                 />
               </div>
 
@@ -1170,12 +1263,11 @@ export default function Home() {
                   {t("home.tomorrow", {
                     defaultValue: "Tomorrow",
                   })}
+                  {weatherCity ? ` · ${weatherCity}` : ""}
                 </div>
 
                 <div className="font-sans text-[11px] font-semibold text-white/90 sm:text-xs">
-                  {t("home.weatherSummary", {
-                    defaultValue: "18°C · Light Rain",
-                  })}
+                  {tomorrowWeather?.temp_c != null ? `${weatherTemp} · ${weatherCond}` : weatherCond}
                 </div>
 
                 <div className="font-sans text-[10px] text-white/65 sm:text-[11px]">
@@ -1184,7 +1276,7 @@ export default function Home() {
                   })}
                 </div>
               </div>
-            </div>
+            </Link>
 
             {/* ================= AI LOOK LABEL ================= */}
             <div
@@ -1287,8 +1379,9 @@ export default function Home() {
                 })}
               </strong>
             </div>
-            {/* ================= TODAY'S OUTFIT ================= */}
-            <div
+            {/* ================= TODAY'S OUTFIT / SUGGESTION ================= */}
+            <Link
+              to={suggestionLink}
               className="
             absolute
             bottom-3
@@ -1303,6 +1396,9 @@ export default function Home() {
             text-white
             shadow-lg
             backdrop-blur-xl
+            transition-all
+            duration-200
+            hover:bg-black/35
             sm:bottom-5
             sm:start-5
             sm:p-4
@@ -1316,38 +1412,33 @@ export default function Home() {
                 </span>
 
                 <span className="rounded-full bg-white/20 px-2 py-1 font-sans text-[9px] font-bold text-white">
-                  {t("home.calenderesult", {
-                    defaultValue: "  98% Match",
-                  })}
+                  {suggestionBadge}
                 </span>
               </div>
 
               <div className="flex items-center gap-2.5">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-xl sm:h-11 sm:w-11">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-white/10 p-1 sm:h-11 sm:w-11">
                   <img
-                    src={Calender}
-                    alt={t("home.outfitPreviewAlt", {
-                      defaultValue: "Today's outfit",
-                    })}
+                    src={suggestionImg}
+                    alt={suggestionTitle}
                     className="h-8 w-auto object-contain sm:h-9"
+                    onError={(e) => {
+                      e.currentTarget.src = Calender;
+                    }}
                   />
                 </div>
 
                 <div className="min-w-0">
                   <h6 className="m-0 truncate font-sans text-[10px] font-bold text-white/90 sm:text-[11px]">
-                    {t("home.nordicAutumnLayer", {
-                      defaultValue: "Nordic Autumn Layer",
-                    })}
+                    {suggestionTitle}
                   </h6>
 
                   <p className="m-0 truncate font-sans text-[9px] leading-4 text-white/65 sm:text-[10px]">
-                    {t("home.navyBlazerKnit", {
-                      defaultValue: "Navy Blazer + Knit Sweater",
-                    })}
+                    {suggestionSub}
                   </p>
                 </div>
               </div>
-            </div>
+            </Link>
           </div>
         </div>
       </section>

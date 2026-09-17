@@ -464,7 +464,14 @@
       "y2k": "Y2K",
       "classic_business": "Negócios Clássicos",
       "athleisure": "Atletismo"
-    }
+    },
+    "match": "Combinação",
+    "getStarted": "Começar",
+    "upgrade": "Fazer Upgrade",
+    "addItemsToClosetTitle": "Adicione peças ao seu guarda-roupa",
+    "addItemsToClosetSub": "Carregue roupas para receber looks diários com IA",
+    "upgradePlanTitle": "Melhore o seu plano",
+    "upgradePlanSub": "Desbloqueie looks diários personalizados com IA"
   },
   "closet": {
     "selectedCount": "{{count}} selecionados",

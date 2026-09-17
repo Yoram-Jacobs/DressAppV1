@@ -464,7 +464,14 @@
       "prevAria": "Previous trend",
       "nextAria": "Next trend"
     },
-    "trendReadAt": "Read at {{source}}"
+    "trendReadAt": "Read at {{source}}",
+    "match": "Match",
+    "getStarted": "Get Started",
+    "upgrade": "Upgrade",
+    "addItemsToClosetTitle": "Add Items to your Closet",
+    "addItemsToClosetSub": "Upload clothes to get daily AI outfits",
+    "upgradePlanTitle": "Upgrade your Plan",
+    "upgradePlanSub": "Unlock daily personalized AI outfits"
   },
   "closet": {
     "selectedCount": "{{count}} selected",
