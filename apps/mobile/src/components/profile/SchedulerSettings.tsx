@@ -107,12 +107,16 @@ export function SchedulerSettings({
   }, [closetItems]);
 
   const addTag = (tagToAdd?: string) => {
-    const clean = String(tagToAdd || tagDraft).trim();
-    if (!clean) return;
-    if (!selectedTags.some((t) => t.toLowerCase() === clean.toLowerCase())) {
-      const updated = [...selectedTags, clean];
-      setCustomStyle(updated.join(', '));
-    }
+    const raw = String(tagToAdd || tagDraft).trim();
+    if (!raw) return;
+    const pieces = raw.split(',').map((s) => s.trim()).filter(Boolean);
+    const next = [...selectedTags];
+    pieces.forEach((p) => {
+      if (!next.some((t) => t.toLowerCase() === p.toLowerCase())) {
+        next.push(p);
+      }
+    });
+    setCustomStyle(next.join(', '));
     setTagDraft('');
   };
 

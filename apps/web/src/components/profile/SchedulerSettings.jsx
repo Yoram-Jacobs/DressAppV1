@@ -57,6 +57,27 @@ export function SchedulerSettings() {
   });
   const [tagDraft, setTagDraft] = useState('');
 
+  // Sync state whenever user.scheduler_settings updates/loads
+  useEffect(() => {
+    if (!user?.scheduler_settings) return;
+    const sched = user.scheduler_settings;
+    if (sched.enabled !== undefined) setEnabled(Boolean(sched.enabled));
+    if (sched.frequency) setFrequency(sched.frequency);
+    if (sched.weekday) setWeekday(sched.weekday);
+    if (sched.time) setTime(sched.time);
+    if (sched.style_option) setStyleOption(sched.style_option);
+    if (sched.custom_style !== undefined) setCustomStyle(sched.custom_style || '');
+
+    const fromSched = sched.selected_tags;
+    if (Array.isArray(fromSched) && fromSched.length > 0) {
+      setSelectedTags(fromSched);
+    } else if (sched.style_option === 'tags' && sched.custom_style) {
+      setSelectedTags(sched.custom_style.split(',').map(s => s.trim()).filter(Boolean));
+    } else if (sched.style_option === 'tags' && Array.isArray(fromSched) && fromSched.length === 0) {
+      setSelectedTags([]);
+    }
+  }, [user?.scheduler_settings]);
+
   const { items: closetItems } = useClosetStore({ prewarm: true });
   const availableClosetTags = React.useMemo(() => {
     const tagsSet = new Set();
@@ -74,11 +95,18 @@ export function SchedulerSettings() {
   }, [closetItems]);
 
   const addTag = (tagToAdd) => {
-    const clean = String(tagToAdd || tagDraft).trim();
-    if (!clean) return;
-    if (!selectedTags.some(t => t.toLowerCase() === clean.toLowerCase())) {
-      setSelectedTags(prev => [...prev, clean]);
-    }
+    const raw = String(tagToAdd || tagDraft).trim();
+    if (!raw) return;
+    const pieces = raw.split(',').map(s => s.trim()).filter(Boolean);
+    setSelectedTags(prev => {
+      const next = [...prev];
+      pieces.forEach(p => {
+        if (!next.some(t => t.toLowerCase() === p.toLowerCase())) {
+          next.push(p);
+        }
+      });
+      return next;
+    });
     setTagDraft('');
   };
 
@@ -154,7 +182,20 @@ export function SchedulerSettings() {
     setBusy(true);
     setSaved(false);
     try {
-      const tagsStr = selectedTags.join(', ');
+      // If user typed in tagDraft without hitting Enter or +, capture it now
+      let currentTags = [...selectedTags];
+      if (styleOption === 'tags' && tagDraft.trim()) {
+        const drafts = tagDraft.split(',').map(s => s.trim()).filter(Boolean);
+        drafts.forEach(d => {
+          if (!currentTags.some(t => t.toLowerCase() === d.toLowerCase())) {
+            currentTags.push(d);
+          }
+        });
+        setSelectedTags(currentTags);
+        setTagDraft('');
+      }
+
+      const tagsStr = currentTags.join(', ');
       const effectiveCustom = styleOption === 'tags' ? tagsStr : customStyle;
       const effectiveDressFor = styleOption === 'custom' ? customStyle : styleOption === 'tags' ? tagsStr : styleOption;
 
@@ -167,7 +208,7 @@ export function SchedulerSettings() {
           time,
           style_option: styleOption,
           custom_style: effectiveCustom,
-          selected_tags: selectedTags,
+          selected_tags: styleOption === 'tags' ? currentTags : (Array.isArray(user?.scheduler_settings?.selected_tags) ? user.scheduler_settings.selected_tags : []),
           style_dress_for: effectiveDressFor,
           timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC',
         },

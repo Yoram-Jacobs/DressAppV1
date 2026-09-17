@@ -322,6 +322,7 @@ export function ProfileScreen() {
         if (sched.frequency) setSchedulerFrequency(sched.frequency);
         if (sched.style_option) setSchedulerStyleOption(sched.style_option);
         if (sched.custom_style) setSchedulerCustomStyle(sched.custom_style);
+        else if (Array.isArray(sched.selected_tags) && sched.selected_tags.length > 0) setSchedulerCustomStyle(sched.selected_tags.join(', '));
         if (sched.weather_sync !== undefined) setWeatherSync(sched.weather_sync);
         if (sched.calendar_sync !== undefined) setCalendarSync(sched.calendar_sync);
 
@@ -573,6 +574,7 @@ export function ProfileScreen() {
           frequency: schedulerFrequency,
           style_option: schedulerStyleOption,
           custom_style: schedulerCustomStyle,
+          selected_tags: schedulerStyleOption === 'tags' ? (schedulerCustomStyle || '').split(',').map((s: string) => s.trim()).filter(Boolean) : [],
           style_dress_for: schedulerStyleOption === 'custom' || schedulerStyleOption === 'tags' ? schedulerCustomStyle : schedulerStyleOption,
           weather_sync: weatherSync,
           calendar_sync: calendarSync,

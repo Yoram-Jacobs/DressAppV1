@@ -861,7 +861,7 @@ async def check_scheduler_triggers() -> None:
 
                 style_option = sched.get("style_dress_for")
                 if not style_option or style_option in ("custom", "tags"):
-                    style_option = sched.get("custom_style") or sched.get("style_option") or "casual"
+                    style_option = sched.get("custom_style") or (", ".join(sched.get("selected_tags")) if isinstance(sched.get("selected_tags"), list) and sched.get("selected_tags") else None) or sched.get("style_option") or "casual"
                 if style_option in ("custom", "tags"):
                     style_option = "casual"
                 

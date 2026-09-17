@@ -41,14 +41,19 @@ class ProposalGenerateIn(BaseModel):
 def _resolve_effective_style(user: dict, occasion: str | None = None) -> str:
     sched = user.get("scheduler_settings") or {}
     style_option = sched.get("style_option") or sched.get("style")
-    if style_option in ("custom", "tags") and sched.get("custom_style"):
-        return sched.get("custom_style").strip()
+    if style_option in ("custom", "tags"):
+        if sched.get("custom_style"):
+            return sched.get("custom_style").strip()
+        if isinstance(sched.get("selected_tags"), list) and sched.get("selected_tags"):
+            return ", ".join(sched.get("selected_tags")).strip()
     if sched.get("custom_style") and style_option not in ("casual", "formal", "sport", "smart_casual"):
         return sched.get("custom_style").strip()
     if sched.get("style_dress_for") and sched.get("style_dress_for") not in ("daily", "default"):
         return sched.get("style_dress_for").strip()
     if sched.get("custom_style"):
         return sched.get("custom_style").strip()
+    if isinstance(sched.get("selected_tags"), list) and sched.get("selected_tags"):
+        return ", ".join(sched.get("selected_tags")).strip()
     if occasion and occasion != "daily":
         return occasion.strip()
     return sched.get("style_dress_for") or "casual"
