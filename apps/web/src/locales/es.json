@@ -569,13 +569,14 @@
     "autoCategory": "Categorizar automáticamente con IA",
     "detectDetails": "Detectar colores y patrones.",
     "smartSuggestions": "Sugerencias de vestimenta inteligente",
-    "itemsCount": "{{count}} artículos",
+    "itemsCount": "{{count}} prendas",
     "viewModeLabel": "Densidad de cuadrícula",
     "view2Cols": "2 columnas",
     "view3Cols": "3 columnas",
     "viewList": "Vista de lista",
     "dpp": "DPP",
-    "saveFailuresTitle": "Estos artículos no se pudieron guardar en tu armario. Intente cargarlos nuevamente."
+    "saveFailuresTitle": "Estos artículos no se pudieron guardar en tu armario. Intente cargarlos nuevamente.",
+    "garmentsCount": "{{count}} prendas"
   },
   "addItem": {
     "namePlaceholder": "ej. Cazadora vaquera vintage",

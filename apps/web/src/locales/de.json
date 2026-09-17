@@ -569,13 +569,14 @@
     "autoCategory": "Mit KI automatisch kategorisieren",
     "detectDetails": "Erkennen Sie Farben und Muster",
     "smartSuggestions": "Clevere Outfit-Vorschläge",
-    "itemsCount": "{{count}} Artikel",
+    "itemsCount": "{{count}} Kleidungsstücke",
     "viewModeLabel": "Rasterdichte",
     "view2Cols": "2 Spalten",
     "view3Cols": "3 Spalten",
     "viewList": "Listenansicht",
     "dpp": "DPP",
-    "saveFailuresTitle": "Diese Artikel konnten nicht in Ihrem Kleiderschrank gespeichert werden. Bitte versuchen Sie erneut, sie hochzuladen."
+    "saveFailuresTitle": "Diese Artikel konnten nicht in Ihrem Kleiderschrank gespeichert werden. Bitte versuchen Sie erneut, sie hochzuladen.",
+    "garmentsCount": "{{count}} Kleidungsstücke"
   },
   "addItem": {
     "namePlaceholder": "z. B. Vintage-Jeansjacke",

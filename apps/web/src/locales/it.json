@@ -569,13 +569,14 @@
     "autoCategory": "Classificazione automatica con l'intelligenza artificiale",
     "detectDetails": "Rileva colori e motivi",
     "smartSuggestions": "Suggerimenti per outfit intelligenti",
-    "itemsCount": "{{count}} elementi",
+    "itemsCount": "{{count}} capi",
     "viewModeLabel": "Densità griglia",
     "view2Cols": "2 colonne",
     "view3Cols": "3 colonne",
     "viewList": "Vista elenco",
     "dpp": "DPP",
-    "saveFailuresTitle": "Impossibile salvare questi elementi nel tuo armadio. Prova a caricarli di nuovo."
+    "saveFailuresTitle": "Impossibile salvare questi elementi nel tuo armadio. Prova a caricarli di nuovo.",
+    "garmentsCount": "{{count}} capi"
   },
   "addItem": {
     "namePlaceholder": "es. Giacca di jeans vintage",

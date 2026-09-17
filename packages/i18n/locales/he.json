@@ -581,13 +581,14 @@
     "autoCategory": "סיווג אוטומטי בעזרת AI",
     "detectDetails": "זיהוי צבעים ודוגמאות",
     "smartSuggestions": "הצעות לבוש חכמות",
-    "itemsCount": "{{count}} פריטים",
+    "itemsCount": "{{count}} בגדים",
     "viewModeLabel": "צפיפות תצוגה",
     "view2Cols": "2 עמודות",
     "view3Cols": "3 עמודות",
     "viewList": "תצוגת רשימה",
     "dpp": "DPP",
-    "saveFailuresTitle": "לא ניתן היה לשמור פריטים אלה בארון שלך. אנא נסה להעלותם שוב."
+    "saveFailuresTitle": "לא ניתן היה לשמור פריטים אלה בארון שלך. אנא נסה להעלותם שוב.",
+    "garmentsCount": "{{count}} בגדים"
   },
   "addItem": {
     "namePlaceholder": "לדוגמה: ז'קט ג'ינס וינטג'",

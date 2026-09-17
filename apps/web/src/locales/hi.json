@@ -569,13 +569,14 @@
     "autoCategory": "एआई के साथ ऑटो-वर्गीकृत करें",
     "detectDetails": "रंग और पैटर्न का पता लगाएं",
     "smartSuggestions": "स्मार्ट पोशाक सुझाव",
-    "itemsCount": "{{count}} आइटम",
+    "itemsCount": "{{count}} परिधान",
     "viewModeLabel": "ग्रिड घनत्व",
     "view2Cols": "2 कॉलम",
     "view3Cols": "3 कॉलम",
     "viewList": "लिस्ट व्यू",
     "dpp": "DPP",
-    "saveFailuresTitle": "ये आइटम आपकी अलमारी में सहेजे नहीं जा सके. कृपया उन्हें दोबारा अपलोड करने का प्रयास करें."
+    "saveFailuresTitle": "ये आइटम आपकी अलमारी में सहेजे नहीं जा सके. कृपया उन्हें दोबारा अपलोड करने का प्रयास करें.",
+    "garmentsCount": "{{count}} परिधान"
   },
   "addItem": {
     "namePlaceholder": "उदा. विंटेज डेनिम जैकेट",

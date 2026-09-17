@@ -1161,6 +1161,16 @@ export function ClosetScreen() {
             renderItem={renderItem}
             numColumns={numColumns}
             contentContainerStyle={styles.listContent}
+            ListHeaderComponent={
+              <View style={styles.countRow}>
+                <Text style={[styles.countText, { color: colors.foreground }]}>
+                  {t('closet.garmentsCount', {
+                    count: displayItems.length,
+                    defaultValue: `${displayItems.length} garments`,
+                  })}
+                </Text>
+              </View>
+            }
             showsVerticalScrollIndicator={false}
             columnWrapperStyle={numColumns > 1 ? { gap: spacing[2], marginBottom: spacing[2] } : undefined}
             onScroll={handleScroll}
@@ -1458,6 +1468,14 @@ const styles = StyleSheet.create({
   listContent: {
     padding: spacing[4],
     paddingBottom: spacing[12],
+  },
+  countRow: {
+    paddingBottom: spacing[3],
+  },
+  countText: {
+    fontFamily: fonts.bodyBold,
+    fontSize: fontSizes.sm,
+    lineHeight: 18,
   },
   gridCard: {
     borderRadius: radii.xl,

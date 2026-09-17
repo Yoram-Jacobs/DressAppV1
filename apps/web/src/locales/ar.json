@@ -569,13 +569,14 @@
     "autoCategory": "التصنيف التلقائي باستخدام الذكاء الاصطناعي",
     "detectDetails": "كشف الألوان والأنماط",
     "smartSuggestions": "اقتراحات الزي الذكي",
-    "itemsCount": "{{count}} العناصر",
+    "itemsCount": "{{count}} قطعة ملابس",
     "viewModeLabel": "كثافة الشبكة",
     "view2Cols": "عمودان",
     "view3Cols": "3 أعمدة",
     "viewList": "عرض القائمة",
     "dpp": "DPP",
-    "saveFailuresTitle": "لا يمكن حفظ هذه العناصر في خزانتك. يرجى محاولة تحميلها مرة أخرى."
+    "saveFailuresTitle": "لا يمكن حفظ هذه العناصر في خزانتك. يرجى محاولة تحميلها مرة أخرى.",
+    "garmentsCount": "{{count}} قطعة ملابس"
   },
   "addItem": {
     "namePlaceholder": "مثال: سترة جينز كلاسيكية",

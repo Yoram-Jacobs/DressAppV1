@@ -569,13 +569,14 @@
     "autoCategory": "使用 AI 自动分类",
     "detectDetails": "检测颜色和图案",
     "smartSuggestions": "智能着装建议",
-    "itemsCount": "{{count}} 项目",
+    "itemsCount": "{{count}} 件服装",
     "viewModeLabel": "网格密度",
     "view2Cols": "2 列",
     "view3Cols": "3 列",
     "viewList": "列表视图",
     "dpp": "DPP",
-    "saveFailuresTitle": "这些物品无法保存到您的衣柜中。请尝试重新上传。"
+    "saveFailuresTitle": "这些物品无法保存到您的衣柜中。请尝试重新上传。",
+    "garmentsCount": "{{count}} 件服装"
   },
   "addItem": {
     "namePlaceholder": "例如：复古牛仔外套",

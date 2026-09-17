@@ -569,13 +569,14 @@
     "autoCategory": "Categorizar automaticamente com IA",
     "detectDetails": "Detectar cores e padrões",
     "smartSuggestions": "Sugestões de roupas inteligentes",
-    "itemsCount": "{{count}} itens",
+    "itemsCount": "{{count}} peças de roupa",
     "viewModeLabel": "Densidade da grade",
     "view2Cols": "2 colunas",
     "view3Cols": "3 colunas",
     "viewList": "Exibição em lista",
     "dpp": "DPP",
-    "saveFailuresTitle": "Não foi possível salvar esses itens em seu armário. Por favor, tente enviá-los novamente."
+    "saveFailuresTitle": "Não foi possível salvar esses itens em seu armário. Por favor, tente enviá-los novamente.",
+    "garmentsCount": "{{count}} peças de roupa"
   },
   "addItem": {
     "namePlaceholder": "ex.: Jaqueta jeans vintage",

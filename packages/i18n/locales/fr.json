@@ -569,13 +569,14 @@
     "autoCategory": "Catégorisation automatique avec l'IA",
     "detectDetails": "Détecter les couleurs et les motifs",
     "smartSuggestions": "Suggestions de tenues intelligentes",
-    "itemsCount": "{{count}} articles",
+    "itemsCount": "{{count}} vêtements",
     "viewModeLabel": "Densité de grille",
     "view2Cols": "2 colonnes",
     "view3Cols": "3 colonnes",
     "viewList": "Vue en liste",
     "dpp": "DPP",
-    "saveFailuresTitle": "Ces éléments n'ont pas pu être enregistrés dans votre garde-robe. Veuillez réessayer de les télécharger."
+    "saveFailuresTitle": "Ces éléments n'ont pas pu être enregistrés dans votre garde-robe. Veuillez réessayer de les télécharger.",
+    "garmentsCount": "{{count}} vêtements"
   },
   "addItem": {
     "namePlaceholder": "ex. Veste en jean vintage",

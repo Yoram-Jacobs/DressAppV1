@@ -569,13 +569,14 @@
     "autoCategory": "AIで自動分類",
     "detectDetails": "色とパターンを検出する",
     "smartSuggestions": "賢い服装の提案",
-    "itemsCount": "{{count}} アイテム",
+    "itemsCount": "{{count}} 着の衣服",
     "viewModeLabel": "グリッド表示",
     "view2Cols": "2列",
     "view3Cols": "3列",
     "viewList": "リスト表示",
     "dpp": "DPP",
-    "saveFailuresTitle": "これらのアイテムはクローゼットに保存できませんでした。もう一度アップロードしてみてください。"
+    "saveFailuresTitle": "これらのアイテムはクローゼットに保存できませんでした。もう一度アップロードしてみてください。",
+    "garmentsCount": "{{count}} 着の衣服"
   },
   "addItem": {
     "namePlaceholder": "例：ヴィンテージデニムジャケット",

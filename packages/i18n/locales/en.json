@@ -569,13 +569,14 @@
     "autoCategory": "Auto-categorize with AI",
     "detectDetails": "Detect colors and patterns",
     "smartSuggestions": "Smart outfit suggestions",
-    "itemsCount": "{{count}} items",
+    "itemsCount": "{{count}} garments",
     "viewModeLabel": "Grid density",
     "view2Cols": "2 columns",
     "view3Cols": "3 columns",
     "viewList": "List view",
     "dpp": "DPP",
-    "saveFailuresTitle": "These items couldn\\u2019t be saved to your closet. Please try uploading them again."
+    "saveFailuresTitle": "These items couldn\\u2019t be saved to your closet. Please try uploading them again.",
+    "garmentsCount": "{{count}} garments"
   },
   "addItem": {
     "namePlaceholder": "e.g. Vintage Denim Jacket",

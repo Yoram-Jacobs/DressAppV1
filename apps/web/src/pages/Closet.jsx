@@ -1657,9 +1657,9 @@ export default function Closet() {
               data-testid="closet-view-mode-bar"
             >
               <span className="text-[16px] font-bold text-dark-brand">
-                {t("closet.itemsCount", {
+                {t("closet.garmentsCount", {
                   count: items.length,
-                  defaultValue: "{{count}} items",
+                  defaultValue: "{{count}} garments",
                 })}
               </span>
               <div

@@ -569,13 +569,14 @@
     "autoCategory": "Automatisch categoriseren met AI",
     "detectDetails": "Detecteer kleuren en patronen",
     "smartSuggestions": "Slimme outfitsuggesties",
-    "itemsCount": "{{count}} artikelen",
+    "itemsCount": "{{count}} kledingstukken",
     "viewModeLabel": "Rasterdichtheid",
     "view2Cols": "2 kolommen",
     "view3Cols": "3 kolommen",
     "viewList": "Lijstweergave",
     "dpp": "DPP",
-    "saveFailuresTitle": "Deze items kunnen niet in je kast worden opgeslagen. Probeer ze opnieuw te uploaden."
+    "saveFailuresTitle": "Deze items kunnen niet in je kast worden opgeslagen. Probeer ze opnieuw te uploaden.",
+    "garmentsCount": "{{count}} kledingstukken"
   },
   "addItem": {
     "namePlaceholder": "bijv. Vintage spijkerjas",
