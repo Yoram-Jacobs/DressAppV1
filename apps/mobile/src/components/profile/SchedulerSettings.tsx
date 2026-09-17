@@ -258,7 +258,18 @@ export function SchedulerSettings({
                 { backgroundColor: colors.secondary, color: colors.foreground, borderColor: colors.border, flex: 1 },
               ]}
               value={tagDraft}
-              onChangeText={setTagDraft}
+              onChangeText={(val) => {
+                if (val.includes(',')) {
+                  addTag(val);
+                } else {
+                  setTagDraft(val);
+                }
+              }}
+              onBlur={() => {
+                if (tagDraft.trim().length > 0) {
+                  addTag();
+                }
+              }}
               onSubmitEditing={() => addTag()}
               placeholder={t('profile.tagsPlaceholder', { defaultValue: 'Type a tag and press Enter (e.g. Work, Summer, Solid)' })}
               placeholderTextColor={colors.mutedFg}

@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/lib/auth';
@@ -45,6 +46,19 @@ export function ProfileDetailsCard() {
   const { syncingGoogle, syncGoogleProfile } = useGoogleSync(form, setForm, t);
 
   const { save, busy: saveBusy } = useSaveProfile(form, isDirty, baselineRef, t);
+
+  useEffect(() => {
+    const handleSaveFull = (e) => {
+      if (isDirty) {
+        const p = save();
+        if (e?.detail?.promises && Array.isArray(e.detail.promises)) {
+          e.detail.promises.push(p);
+        }
+      }
+    };
+    window.addEventListener('dressapp:save-full-profile', handleSaveFull);
+    return () => window.removeEventListener('dressapp:save-full-profile', handleSaveFull);
+  }, [save, isDirty]);
 
   const isFemale = form.sex === 'female';
   const wUnit = form.units.weight === 'lb' ? 'lb' : 'kg';

@@ -48,8 +48,7 @@ export function useSaveProfile(form, isDirty, baselineRef, t) {
           dress_conservativeness: form.dress_conservativeness,
         },
         scheduler_settings: {
-          ...user?.scheduler_settings,
-          campaign_notification_prefs: form.scheduler_settings.campaign_notification_prefs,
+          campaign_notification_prefs: form.scheduler_settings?.campaign_notification_prefs,
         },
       };
       const updated = await api.patchMe(payload);

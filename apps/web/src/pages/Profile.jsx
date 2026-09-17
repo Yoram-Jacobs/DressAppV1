@@ -118,6 +118,11 @@ export default function Profile() {
     e?.preventDefault();
     setBusy(true);
     try {
+      const promises = [];
+      window.dispatchEvent(new CustomEvent('dressapp:save-full-profile', { detail: { promises } }));
+      if (promises.length > 0) {
+        await Promise.allSettled(promises);
+      }
       const body = {
         preferred_language: form.preferred_language,
         preferred_voice_id: form.preferred_voice_id,

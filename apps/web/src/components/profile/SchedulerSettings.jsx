@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/lib/auth';
 import { api } from '@/lib/api';
@@ -57,10 +57,19 @@ export function SchedulerSettings() {
   });
   const [tagDraft, setTagDraft] = useState('');
 
+  const isDirtyRef = useRef(false);
+  const lastSavedJsonRef = useRef('');
+
   // Sync state whenever user.scheduler_settings updates/loads
   useEffect(() => {
     if (!user?.scheduler_settings) return;
     const sched = user.scheduler_settings;
+    const schedJson = JSON.stringify(sched);
+    // If local unsaved changes exist and this is not a response to our own save, preserve local edits
+    if (isDirtyRef.current && lastSavedJsonRef.current && schedJson !== lastSavedJsonRef.current) {
+      return;
+    }
+    lastSavedJsonRef.current = schedJson;
     if (sched.enabled !== undefined) setEnabled(Boolean(sched.enabled));
     if (sched.frequency) setFrequency(sched.frequency);
     if (sched.weekday) setWeekday(sched.weekday);
@@ -76,6 +85,7 @@ export function SchedulerSettings() {
     } else if (sched.style_option === 'tags' && Array.isArray(fromSched) && fromSched.length === 0) {
       setSelectedTags([]);
     }
+    isDirtyRef.current = false;
   }, [user?.scheduler_settings]);
 
   const { items: closetItems } = useClosetStore({ prewarm: true });
@@ -105,13 +115,18 @@ export function SchedulerSettings() {
           next.push(p);
         }
       });
+      isDirtyRef.current = true;
       return next;
     });
     setTagDraft('');
   };
 
   const removeTag = (tagToRemove) => {
-    setSelectedTags(prev => prev.filter(t => t.toLowerCase() !== tagToRemove.toLowerCase()));
+    setSelectedTags(prev => {
+      const next = prev.filter(t => t.toLowerCase() !== tagToRemove.toLowerCase());
+      isDirtyRef.current = true;
+      return next;
+    });
   };
   const [pushSupported, setPushSupported] = useState(false);
   const [pushEnabled, setPushEnabled] = useState(false);
@@ -178,14 +193,17 @@ export function SchedulerSettings() {
     }
   };
 
-  const save = async () => {
+  const save = useCallback(async (overrides = {}) => {
     setBusy(true);
     setSaved(false);
     try {
+      let currentTags = overrides.selectedTags !== undefined ? overrides.selectedTags : [...selectedTags];
+      const draft = overrides.tagDraft !== undefined ? overrides.tagDraft : tagDraft;
+      const currentStyleOption = overrides.styleOption !== undefined ? overrides.styleOption : styleOption;
+
       // If user typed in tagDraft without hitting Enter or +, capture it now
-      let currentTags = [...selectedTags];
-      if (styleOption === 'tags' && tagDraft.trim()) {
-        const drafts = tagDraft.split(',').map(s => s.trim()).filter(Boolean);
+      if (currentStyleOption === 'tags' && draft && draft.trim()) {
+        const drafts = draft.split(',').map(s => s.trim()).filter(Boolean);
         drafts.forEach(d => {
           if (!currentTags.some(t => t.toLowerCase() === d.toLowerCase())) {
             currentTags.push(d);
@@ -196,34 +214,55 @@ export function SchedulerSettings() {
       }
 
       const tagsStr = currentTags.join(', ');
-      const effectiveCustom = styleOption === 'tags' ? tagsStr : customStyle;
-      const effectiveDressFor = styleOption === 'custom' ? customStyle : styleOption === 'tags' ? tagsStr : styleOption;
+      const effectiveCustom = currentStyleOption === 'tags' ? tagsStr : (overrides.customStyle !== undefined ? overrides.customStyle : customStyle);
+      const effectiveDressFor = currentStyleOption === 'custom' ? effectiveCustom : currentStyleOption === 'tags' ? tagsStr : currentStyleOption;
+
+      const schedPayload = {
+        ...(user?.scheduler_settings || {}),
+        enabled: overrides.enabled !== undefined ? overrides.enabled : enabled,
+        frequency: overrides.frequency !== undefined ? overrides.frequency : frequency,
+        weekday: overrides.weekday !== undefined ? overrides.weekday : weekday,
+        time: overrides.time !== undefined ? overrides.time : time,
+        style_option: currentStyleOption,
+        custom_style: effectiveCustom,
+        selected_tags: currentStyleOption === 'tags' ? currentTags : (Array.isArray(user?.scheduler_settings?.selected_tags) ? user.scheduler_settings.selected_tags : []),
+        style_dress_for: effectiveDressFor,
+        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC',
+      };
 
       const updated = await api.patchMe({
-        scheduler_settings: {
-          ...(user?.scheduler_settings || {}),
-          enabled,
-          frequency,
-          weekday,
-          time,
-          style_option: styleOption,
-          custom_style: effectiveCustom,
-          selected_tags: styleOption === 'tags' ? currentTags : (Array.isArray(user?.scheduler_settings?.selected_tags) ? user.scheduler_settings.selected_tags : []),
-          style_dress_for: effectiveDressFor,
-          timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC',
-        },
+        scheduler_settings: schedPayload,
       });
+      lastSavedJsonRef.current = JSON.stringify(updated.scheduler_settings || schedPayload);
+      isDirtyRef.current = false;
       updateUserLocal(updated);
       setSaved(true);
       setTimeout(() => setSaved(false), 2000);
-      toast.success(t('profile.aiStylistSchedulerSettingsUpdated', { defaultValue: 'AI Stylist Scheduler settings updated.' }));
+      if (!overrides?.silent) {
+        toast.success(t('profile.aiStylistSchedulerSettingsUpdated', { defaultValue: 'AI Stylist Scheduler settings updated.' }));
+      }
+      return updated;
     } catch (err) {
       console.error('[SchedulerSettings] save error:', err);
       toast.error(err?.response?.data?.detail || err?.message || t('common.error', { defaultValue: 'Failed to save changes.' }));
     } finally {
       setBusy(false);
     }
-  };
+  }, [user, enabled, frequency, weekday, time, styleOption, customStyle, selectedTags, tagDraft, updateUserLocal, t]);
+
+  useEffect(() => {
+    const handleSaveFull = (e) => {
+      const isDirty = isDirtyRef.current || Boolean(tagDraft.trim());
+      if (isDirty) {
+        const p = save({ silent: true });
+        if (e?.detail?.promises && Array.isArray(e.detail.promises)) {
+          e.detail.promises.push(p);
+        }
+      }
+    };
+    window.addEventListener('dressapp:save-full-profile', handleSaveFull);
+    return () => window.removeEventListener('dressapp:save-full-profile', handleSaveFull);
+  }, [save, tagDraft]);
 
   return (
     <AccordionItem
@@ -252,14 +291,27 @@ export function SchedulerSettings() {
             <div className="font-semibold text-[14px] text-dark-brand">{t('profile.enableSchedulerProposals', { defaultValue: 'Enable Scheduler Proposals' })}</div>
             <div className="text-[12px] text-text-brand font-semibold text-start">{t('profile.receivePushReminders', { defaultValue: 'Receive customized daily outfit proposals.' })}</div>
           </div>
-          <Switch checked={enabled} onCheckedChange={setEnabled} data-testid="scheduler-enabled-switch" />
+          <Switch
+            checked={enabled}
+            onCheckedChange={(val) => {
+              isDirtyRef.current = true;
+              setEnabled(val);
+            }}
+            data-testid="scheduler-enabled-switch"
+          />
         </div>
         {enabled && (
           <div className="space-y-3 text-start">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="">
                 <Label htmlFor="s-freq">{t('profile.notificationFrequency', { defaultValue: 'Frequency' })}</Label>
-                <Select value={frequency} onValueChange={setFrequency}>
+                <Select
+                  value={frequency}
+                  onValueChange={(val) => {
+                    isDirtyRef.current = true;
+                    setFrequency(val);
+                  }}
+                >
                   <SelectTrigger id="s-freq"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="everyday">{t('profile.everyday', { defaultValue: 'Everyday' })}</SelectItem>
@@ -272,7 +324,13 @@ export function SchedulerSettings() {
               {frequency === 'on_weekday' && (
                 <div className="">
                   <Label htmlFor="s-day">{t('profile.chooseDay', { defaultValue: 'Choose Day' })}</Label>
-                  <Select value={weekday} onValueChange={setWeekday}>
+                  <Select
+                    value={weekday}
+                    onValueChange={(val) => {
+                      isDirtyRef.current = true;
+                      setWeekday(val);
+                    }}
+                  >
                     <SelectTrigger id="s-day"><SelectValue /></SelectTrigger>
                     <SelectContent>
                       {WEEKDAYS.map((day) => (
@@ -286,13 +344,27 @@ export function SchedulerSettings() {
               )}
               <div className="">
                 <Label htmlFor="s-time">{t('profile.notificationTime', { defaultValue: 'Notification Time' })}</Label>
-                <Input id="s-time" type="time" value={time} onChange={(e) => setTime(e.target.value)}/>
+                <Input
+                  id="s-time"
+                  type="time"
+                  value={time}
+                  onChange={(e) => {
+                    isDirtyRef.current = true;
+                    setTime(e.target.value);
+                  }}
+                />
               </div>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="">
                 <Label htmlFor="s-style">{t('profile.styleDressFor', { defaultValue: 'Style / Dress For' })}</Label>
-                <Select value={styleOption} onValueChange={setStyleOption}>
+                <Select
+                  value={styleOption}
+                  onValueChange={(val) => {
+                    isDirtyRef.current = true;
+                    setStyleOption(val);
+                  }}
+                >
                   <SelectTrigger id="s-style"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="casual">{labelForDressCode('casual', t)}</SelectItem>
@@ -310,7 +382,10 @@ export function SchedulerSettings() {
                   <Input
                     id="s-custom-style"
                     value={customStyle}
-                    onChange={(e) => setCustomStyle(e.target.value)}
+                    onChange={(e) => {
+                      isDirtyRef.current = true;
+                      setCustomStyle(e.target.value);
+                    }}
                     placeholder={t('profile.customStylePlaceholder', { defaultValue: 'e.g. Gym, Hiking, Church' })}
                   />
                 </div>
@@ -322,7 +397,20 @@ export function SchedulerSettings() {
                     <Input
                       id="s-tag-input"
                       value={tagDraft}
-                      onChange={(e) => setTagDraft(e.target.value)}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        isDirtyRef.current = true;
+                        if (val.includes(',')) {
+                          addTag(val);
+                        } else {
+                          setTagDraft(val);
+                        }
+                      }}
+                      onBlur={() => {
+                        if (tagDraft.trim()) {
+                          addTag();
+                        }
+                      }}
                       onKeyDown={(e) => {
                         if (e.key === 'Enter') {
                           e.preventDefault();
@@ -391,6 +479,26 @@ export function SchedulerSettings() {
                       </div>
                     </div>
                   )}
+
+                  {/* Quick Save button directly in tags filter */}
+                  <div className="flex justify-end pt-1">
+                    <Button
+                      type="button"
+                      size="sm"
+                      onClick={() => save()}
+                      disabled={busy}
+                      className={`rounded-lg h-8 px-3 text-xs transition-all duration-300 ${saved ? 'bg-emerald-600 hover:bg-emerald-700 text-white' : ''}`}
+                      data-testid="scheduler-save-tags-btn"
+                    >
+                      {busy ? (
+                        <Loader2 className="h-3.5 w-3.5 animate-spin me-1.5" />
+                      ) : saved ? (
+                        t('common.saved', { defaultValue: 'Saved!' })
+                      ) : (
+                        t('common.save', { defaultValue: 'Save' })
+                      )}
+                    </Button>
+                  </div>
                 </div>
               )}
             </div>
