@@ -323,7 +323,7 @@ export function ItemAIAnalysisCard({
             activeOpacity={0.7}
           >
             <Text style={[styles.starterChipText, { color: colors.foreground }]}>
-              🪄 {t('itemDetail.reanalyze.promptReconstruct', { defaultValue: 'Reconstruct garment' })}
+              🪄 {t('itemDetail.reanalyze.promptReconstruct', { defaultValue: 'Reconstruct the garment' })}
             </Text>
           </TouchableOpacity>
 
@@ -345,7 +345,7 @@ export function ItemAIAnalysisCard({
             activeOpacity={0.7}
           >
             <Text style={[styles.starterChipText, { color: colors.foreground }]}>
-              ✂️ {t('itemDetail.reanalyze.promptIsolate', { defaultValue: 'Isolate garment' })}
+              ✂️ {t('itemDetail.reanalyze.promptIsolate', { defaultValue: 'Isolate the garment' })}
             </Text>
           </TouchableOpacity>
         </View>

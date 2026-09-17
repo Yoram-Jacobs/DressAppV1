@@ -2103,10 +2103,10 @@ export default function ItemDetail() {
                 </div>
                 <div>
                   <span className="text-[14px] font-bold block text-dark-brand uppercase">
-                    {t('itemDetail.reanalyze.label')}
+                    {t('itemDetail.reanalyze.label', { defaultValue: 'Re-analyse photo' })}
                   </span>
                   <span className="text-[12px] text-text-brand font-semibold block mt-0.5 normal-case">
-                    {t('itemDetail.reanalyze.subtitle')}
+                    {t('itemDetail.reanalyze.subtitle', { defaultValue: 'Chat with The Eyes to remove unwanted objects, complete cutoffs, or refine garment details using Nano Banana.' })}
                   </span>
                 </div>
               </div>
@@ -2133,7 +2133,7 @@ export default function ItemDetail() {
                               </Badge>
                               {msg.action_taken === 'image_edit' && (
                                 <Badge variant="secondary" className="text-[10px] px-1.5 bg-amber-100 text-amber-800 dark:bg-amber-950/50 dark:text-amber-300">
-                                  {t('itemDetail.reanalyze.nanoBananaBadge')}
+                                  {t('itemDetail.reanalyze.nanoBananaBadge', { defaultValue: 'Nano Banana Generated' })}
                                 </Badge>
                               )}
                               {msg.action_taken === 'metadata_update' && (
@@ -2176,7 +2176,7 @@ export default function ItemDetail() {
                                     ) : (
                                       <>
                                         <Sparkles className="!h-3.5 !w-3.5" />
-                                        {t('itemDetail.reanalyze.applyImage')}
+                                        {t('itemDetail.reanalyze.applyImage', { defaultValue: 'Apply as garment photo' })}
                                       </>
                                     )}
                                   </Button>
@@ -2203,40 +2203,40 @@ export default function ItemDetail() {
                 {/* Quick Prompt Starters / Chips */}
                 <div className="space-y-3">
                   <span className="text-[11px] uppercase font-bold text-text-brand tracking-wider block">
-                    {t('itemDetail.reanalyze.promptStarters')}
+                    {t('itemDetail.reanalyze.promptStarters', { defaultValue: 'Quick prompts' })}
                   </span>
                   <div className="flex flex-wrap gap-1.5" data-testid="item-reanalyze-prompt-chips">
                     <button
                       type="button"
-                      onClick={() => onSendReanalyzePrompt(t('itemDetail.reanalyze.promptFillHoles'))}
+                      onClick={() => onSendReanalyzePrompt(t('itemDetail.reanalyze.promptFillHoles', { defaultValue: 'Fill holes and gaps' }))}
                       disabled={reanalyzeChatBusy || analyzing}
                       className="text-[11px] px-2.5 py-1 font-semibold rounded-lg bg-white text-primary-brand hover:bg-primary-brand hover:text-white  transition-colors border border-primary-brand disabled:opacity-50"
                     >
-                      {t('itemDetail.reanalyze.promptFillHoles')}
+                      {t('itemDetail.reanalyze.promptFillHoles', { defaultValue: 'Fill holes and gaps' })}
                     </button>
                     <button
                       type="button"
-                      onClick={() => onSendReanalyzePrompt(t('itemDetail.reanalyze.promptReconstruct'))}
+                      onClick={() => onSendReanalyzePrompt(t('itemDetail.reanalyze.promptReconstruct', { defaultValue: 'Reconstruct the garment' }))}
                       disabled={reanalyzeChatBusy || analyzing}
                       className="text-[11px] px-2.5 py-1 font-semibold rounded-lg bg-white text-primary-brand hover:bg-primary-brand hover:text-white  transition-colors border border-primary-brand disabled:opacity-50"
                     >
-                      {t('itemDetail.reanalyze.promptReconstruct')}
+                      {t('itemDetail.reanalyze.promptReconstruct', { defaultValue: 'Reconstruct the garment' })}
                     </button>
                     <button
                       type="button"
-                      onClick={() => onSendReanalyzePrompt(t('itemDetail.reanalyze.promptAlignVertically'))}
+                      onClick={() => onSendReanalyzePrompt(t('itemDetail.reanalyze.promptAlignVertically', { defaultValue: 'Align vertically' }))}
                       disabled={reanalyzeChatBusy || analyzing}
                       className="text-[11px] px-2.5 py-1 font-semibold rounded-lg bg-white text-primary-brand hover:bg-primary-brand hover:text-white  transition-colors border border-primary-brand disabled:opacity-50"
                     >
-                      {t('itemDetail.reanalyze.promptAlignVertically')}
+                      {t('itemDetail.reanalyze.promptAlignVertically', { defaultValue: 'Align vertically' })}
                     </button>
                     <button
                       type="button"
-                      onClick={() => onSendReanalyzePrompt(t('itemDetail.reanalyze.promptIsolate'))}
+                      onClick={() => onSendReanalyzePrompt(t('itemDetail.reanalyze.promptIsolate', { defaultValue: 'Isolate the garment' }))}
                       disabled={reanalyzeChatBusy || analyzing}
                       className="text-[11px] px-2.5 py-1 font-semibold rounded-lg bg-white text-primary-brand hover:bg-primary-brand hover:text-white  transition-colors border border-primary-brand disabled:opacity-50"
                     >
-                      {t('itemDetail.reanalyze.promptIsolate')}
+                      {t('itemDetail.reanalyze.promptIsolate', { defaultValue: 'Isolate the garment' })}
                     </button>
                   </div>
                 </div>
@@ -2251,7 +2251,7 @@ export default function ItemDetail() {
                         onSendReanalyzePrompt();
                       }
                     }}
-                    placeholder={t('itemDetail.reanalyze.promptPlaceholder')}
+                    placeholder={t('itemDetail.reanalyze.promptPlaceholder', { defaultValue: "Ask The Eyes: 'Fill holes and gaps', 'Reconstruct the garment', 'Align vertically'…" })}
                     disabled={reanalyzeChatBusy || analyzing}
                     className="border-0 !shadow-none focus:!shadow-none mb-0"
                     data-testid="item-reanalyze-prompt-input"
@@ -2295,7 +2295,7 @@ export default function ItemDetail() {
                     <div className="flex items-center justify-between">
                       <span className="flex items-center gap-1 text-[12px] text-text-brand font-semibold">
                         <Loader2 className="h-3 w-3 animate-spin text-primary" />
-                        {t('itemDetail.reanalyze.eyesThinking')}
+                        {t('itemDetail.reanalyze.eyesThinking', { defaultValue: 'The Eyes is analyzing…' })}
                       </span>
                       <span className="text-[12px] tabular-nums text-text-brand font-bold">{Math.round(reanalyzeChatProgress)}%</span>
                     </div>
@@ -2313,17 +2313,17 @@ export default function ItemDetail() {
                     {analyzing ? (
                       <>
                         <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                        {t('itemDetail.reanalyze.running')}
+                        {t('itemDetail.reanalyze.running', { defaultValue: 'Analysing…' })}
                       </>
                     ) : (
                       <>
                         <RefreshCw className="h-3.5 w-3.5" />
-                        {t('itemDetail.reanalyze.quickReanalyze')}
+                        {t('itemDetail.reanalyze.quickReanalyze', { defaultValue: '1-Click Full Re-analyse' })}
                       </>
                     )}
                   </Button>
                   <p className="text-[10px] text-text-brand font-semibold italic text-end">
-                    {t('itemDetail.reanalyze.disclaimer')}
+                    {t('itemDetail.reanalyze.disclaimer', { defaultValue: 'Only auto-filled fields are overwritten. Your manual edits to size, price, notes, and intent are preserved.' })}
                   </p>
                 </div>
                 {analyzing && (
