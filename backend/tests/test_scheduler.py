@@ -183,3 +183,65 @@ def test_generate_fallback_advice_overall_and_suit_with_accessories():
     assert roles_biz.get("accessory") == "watch1"
 
 
+def test_localized_scheduler_notification():
+    from app.services.scheduler import get_localized_scheduler_notification
+
+    # 1. English
+    title_en, body_en = get_localized_scheduler_notification(
+        lang="en",
+        style_option="casual",
+        is_next_day=True,
+        outfit_name="Summer Vibe",
+        item_names=["Linen Shirt", "Chino Shorts", "White Sneakers"]
+    )
+    assert title_en == "Your Casual Outfit Proposal"
+    assert "Here is your Casual outfit curated for you tomorrow:" in body_en
+    assert "Summer Vibe — Linen Shirt, Chino Shorts, White Sneakers" in body_en
+
+    # 2. Hebrew
+    title_he, body_he = get_localized_scheduler_notification(
+        lang="he",
+        style_option="casual",
+        is_next_day=True,
+        outfit_name="מראה קיצי קליל",
+        item_names=["חולצת פשתן", "מכנסיים קצרים", "סניקרס לבנות"]
+    )
+    assert title_he == "הצעת הלבוש שלך: יומיומי"
+    assert "הנה הצעת הלבוש שנבחרה עבורך למחר בסגנון יומיומי:" in body_he
+    assert "מראה קיצי קליל — חולצת פשתן, מכנסיים קצרים, סניקרס לבנות" in body_he
+
+    # 3. Spanish
+    title_es, body_es = get_localized_scheduler_notification(
+        lang="es",
+        style_option="formal",
+        is_next_day=False,
+        outfit_name="Traje Elegante",
+        item_names=["Camisa Blanca", "Pantalón Negro", "Zapatos Oxford"]
+    )
+    assert title_es == "Tu propuesta de outfit: Formal"
+    assert "Aquí tienes tu outfit Formal seleccionado para hoy:" in body_es
+
+    # 4. Arabic
+    title_ar, body_ar = get_localized_scheduler_notification(
+        lang="ar",
+        style_option="sport",
+        is_next_day=True,
+        outfit_name="طقم رياضي",
+        item_names=["تيشيرت رياضي", "بنطال ركض", "حذاء جري"]
+    )
+    assert title_ar == "مقترح إطلالتك: رياضي"
+    assert "إليك مقترح إطلالتك للغد بأسلوب رياضي:" in body_ar
+
+    # 5. French
+    title_fr, body_fr = get_localized_scheduler_notification(
+        lang="fr",
+        style_option="smart_casual",
+        is_next_day=True,
+        outfit_name="Look Chic",
+        item_names=["Polo", "Jean", "Mocassins"]
+    )
+    assert title_fr == "Votre proposition de tenue : Smart Casual"
+    assert "Voici votre tenue Smart Casual sélectionnée pour demain :" in body_fr
+
+
+

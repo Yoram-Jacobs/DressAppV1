@@ -86,12 +86,31 @@ async def send_push_notification(user_id: str, title: str, body: str, payload: d
             web_push_body = first_line
             if ":" in web_push_body:
                 clean_body = web_push_body.rstrip(":")
-                if any("\u0590" <= c <= "\u05ff" for c in clean_body):
-                    web_push_body = clean_body + " · לחץ לצפייה בהצעות."
-                elif any("\u0600" <= c <= "\u06ff" for c in clean_body):
-                    web_push_body = clean_body + " · اضغط לעرض المقترحات."
-                else:
-                    web_push_body = clean_body + " · Tap to view recommendations."
+                user_lang = ((user or {}).get("preferred_language") or "en").lower().split("-")[0]
+                cta_map = {
+                    "en": "Tap to view recommendation.",
+                    "he": "לחץ לצפייה בהצעה.",
+                    "ar": "اضغط لعرض المقترح.",
+                    "es": "Toca para ver la propuesta.",
+                    "fr": "Appuyez pour voir la sélection.",
+                    "de": "Tippen, um das Outfit zu sehen.",
+                    "it": "Tocca per vedere la proposta.",
+                    "pt": "Toque para ver o look.",
+                    "ru": "Нажмите, чтобы посмотреть образ.",
+                    "zh": "点击查看穿搭。",
+                    "ja": "タップして提案を見る。",
+                    "hi": "सुझाव देखने के लिए टैप करें।",
+                    "nl": "Tik om het voorstel te bekijken.",
+                }
+                cta = cta_map.get(user_lang)
+                if not cta:
+                    if any("\u0590" <= c <= "\u05ff" for c in clean_body):
+                        cta = cta_map["he"]
+                    elif any("\u0600" <= c <= "\u06ff" for c in clean_body):
+                        cta = cta_map["ar"]
+                    else:
+                        cta = cta_map["en"]
+                web_push_body = f"{clean_body} · {cta}"
 
     # Write VAPID private key to a temp file if it's PEM format (starts with ---)
     # or contains newlines, because pywebpush from_string expects DER format.

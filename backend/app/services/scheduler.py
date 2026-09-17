@@ -529,6 +529,272 @@ def _get_target_weather(weather_ctx: dict[str, Any] | None, is_next_day: bool) -
     return weather_ctx
 
 
+LOCALIZED_NOTIFICATIONS: dict[str, dict[str, Any]] = {
+    "en": {
+        "title": "Your {style} Outfit Proposal",
+        "body": "Here is your {style} outfit curated for you {day}:\n{name} — {items}",
+        "today": "today",
+        "tomorrow": "tomorrow",
+        "styles": {
+            "casual": "Casual",
+            "formal": "Formal",
+            "sport": "Sport",
+            "smart_casual": "Smart Casual",
+            "business": "Business",
+            "bohemian": "Bohemian",
+            "minimalist": "Minimalist",
+            "streetwear": "Streetwear",
+            "vintage": "Vintage",
+            "default": "Daily",
+        },
+    },
+    "he": {
+        "title": "הצעת הלבוש שלך: {style}",
+        "body": "הנה הצעת הלבוש שנבחרה עבורך {day} בסגנון {style}:\n{name} — {items}",
+        "today": "להיום",
+        "tomorrow": "למחר",
+        "styles": {
+            "casual": "יומיומי",
+            "formal": "רשמי",
+            "sport": "ספורטיבי",
+            "smart_casual": "סמארט קז'ואל",
+            "business": "עסקי",
+            "bohemian": "בוהמייני",
+            "minimalist": "מינימליסטי",
+            "streetwear": "אופנת רחוב",
+            "vintage": "וינטג'",
+            "default": "יומי",
+        },
+    },
+    "ar": {
+        "title": "مقترح إطلالتك: {style}",
+        "body": "إليك مقترح إطلالتك {day} بأسلوب {style}:\n{name} — {items}",
+        "today": "اليوم",
+        "tomorrow": "للغد",
+        "styles": {
+            "casual": "كاجوال",
+            "formal": "رسمي",
+            "sport": "رياضي",
+            "smart_casual": "سمارت كاجوال",
+            "business": "عملي",
+            "bohemian": "بوهيمي",
+            "minimalist": "بسيط",
+            "streetwear": "ستريت وير",
+            "vintage": "فينتاج",
+            "default": "اليومي",
+        },
+    },
+    "es": {
+        "title": "Tu propuesta de outfit: {style}",
+        "body": "Aquí tienes tu outfit {style} seleccionado {day}:\n{name} — {items}",
+        "today": "para hoy",
+        "tomorrow": "para mañana",
+        "styles": {
+            "casual": "Casual",
+            "formal": "Formal",
+            "sport": "Deportivo",
+            "smart_casual": "Smart Casual",
+            "business": "Negocios",
+            "bohemian": "Bohemio",
+            "minimalist": "Minimalista",
+            "streetwear": "Streetwear",
+            "vintage": "Vintage",
+            "default": "Diario",
+        },
+    },
+    "fr": {
+        "title": "Votre proposition de tenue : {style}",
+        "body": "Voici votre tenue {style} sélectionnée {day} :\n{name} — {items}",
+        "today": "pour aujourd'hui",
+        "tomorrow": "pour demain",
+        "styles": {
+            "casual": "Décontracté",
+            "formal": "Formel",
+            "sport": "Sport",
+            "smart_casual": "Smart Casual",
+            "business": "Affaires",
+            "bohemian": "Bohème",
+            "minimalist": "Minimaliste",
+            "streetwear": "Streetwear",
+            "vintage": "Vintage",
+            "default": "Quotidien",
+        },
+    },
+    "de": {
+        "title": "Dein Outfit-Vorschlag: {style}",
+        "body": "Hier ist dein {style}-Outfit {day}:\n{name} — {items}",
+        "today": "für heute",
+        "tomorrow": "für morgen",
+        "styles": {
+            "casual": "Lässig",
+            "formal": "Formal",
+            "sport": "Sportlich",
+            "smart_casual": "Smart Casual",
+            "business": "Business",
+            "bohemian": "Boho",
+            "minimalist": "Minimalistisch",
+            "streetwear": "Streetwear",
+            "vintage": "Vintage",
+            "default": "Täglich",
+        },
+    },
+    "it": {
+        "title": "La tua proposta di outfit: {style}",
+        "body": "Ecco il tuo outfit {style} selezionato {day}:\n{name} — {items}",
+        "today": "per oggi",
+        "tomorrow": "per domani",
+        "styles": {
+            "casual": "Casual",
+            "formal": "Formale",
+            "sport": "Sportivo",
+            "smart_casual": "Smart Casual",
+            "business": "Business",
+            "bohemian": "Boho",
+            "minimalist": "Minimalista",
+            "streetwear": "Streetwear",
+            "vintage": "Vintage",
+            "default": "Giornaliero",
+        },
+    },
+    "pt": {
+        "title": "A sua proposta de look: {style}",
+        "body": "Aqui está o seu look {style} selecionado {day}:\n{name} — {items}",
+        "today": "para hoje",
+        "tomorrow": "para amanhã",
+        "styles": {
+            "casual": "Casual",
+            "formal": "Formal",
+            "sport": "Esportivo",
+            "smart_casual": "Smart Casual",
+            "business": "Negócios",
+            "bohemian": "Boêmio",
+            "minimalist": "Minimalista",
+            "streetwear": "Streetwear",
+            "vintage": "Vintage",
+            "default": "Diário",
+        },
+    },
+    "ru": {
+        "title": "Ваш образ на выбор: {style}",
+        "body": "Ваш {style} образ {day}:\n{name} — {items}",
+        "today": "на сегодня",
+        "tomorrow": "на завтра",
+        "styles": {
+            "casual": "повседневный",
+            "formal": "формальный",
+            "sport": "спортивный",
+            "smart_casual": "смарт-кэжуал",
+            "business": "деловой",
+            "bohemian": "бохо",
+            "minimalist": "минималистичный",
+            "streetwear": "уличный",
+            "vintage": "винтажный",
+            "default": "ежедневный",
+        },
+    },
+    "zh": {
+        "title": "您的穿搭建议：{style}",
+        "body": "为您定制的{day}{style}穿搭已准备就绪：\n{name} — {items}",
+        "today": "今天",
+        "tomorrow": "明天",
+        "styles": {
+            "casual": "休闲",
+            "formal": "正装",
+            "sport": "运动",
+            "smart_casual": "商务休闲",
+            "business": "商务",
+            "bohemian": "波西米亚",
+            "minimalist": "极简",
+            "streetwear": "街头",
+            "vintage": "复古",
+            "default": "日常",
+        },
+    },
+    "ja": {
+        "title": "コーディネートのご提案：{style}",
+        "body": "{day}の{style}コーディネートをご提案します：\n{name} — {items}",
+        "today": "今日",
+        "tomorrow": "明日",
+        "styles": {
+            "casual": "カジュアル",
+            "formal": "フォーマル",
+            "sport": "スポーツ",
+            "smart_casual": "スマートカジュアル",
+            "business": "ビジネス",
+            "bohemian": "ボヘミアン",
+            "minimalist": "ミニマル",
+            "streetwear": "ストリートウェア",
+            "vintage": "ヴィンテージ",
+            "default": "デイリー",
+        },
+    },
+    "hi": {
+        "title": "आपका आउटफिट सुझाव: {style}",
+        "body": "आपके लिए {day} का {style} आउटफिट:\n{name} — {items}",
+        "today": "आज",
+        "tomorrow": "कल",
+        "styles": {
+            "casual": "कैज़ुअल",
+            "formal": "औपचारिक",
+            "sport": "स्पोर्ट",
+            "smart_casual": "स्मार्ट कैज़ुअल",
+            "business": "बिजनेस",
+            "bohemian": "बोहेमियन",
+            "minimalist": "मिनिमलिस्ट",
+            "streetwear": "स्ट्रीटवियर",
+            "vintage": "विंटेज",
+            "default": "दैनिक",
+        },
+    },
+    "nl": {
+        "title": "Jouw outfitvoorstel: {style}",
+        "body": "Hier is jouw {style} outfit {day}:\n{name} — {items}",
+        "today": "voor vandaag",
+        "tomorrow": "voor morgen",
+        "styles": {
+            "casual": "Casual",
+            "formal": "Formeel",
+            "sport": "Sportief",
+            "smart_casual": "Smart Casual",
+            "business": "Zakelijk",
+            "bohemian": "Boheems",
+            "minimalist": "Minimalistisch",
+            "streetwear": "Streetwear",
+            "vintage": "Vintage",
+            "default": "Dagelijks",
+        },
+    },
+}
+
+
+def get_localized_scheduler_notification(
+    lang: str | None,
+    style_option: str | None,
+    is_next_day: bool,
+    outfit_name: str,
+    item_names: list[str],
+) -> tuple[str, str]:
+    normalized_lang = (lang or "en").lower().split("-")[0]
+    loc = LOCALIZED_NOTIFICATIONS.get(normalized_lang) or LOCALIZED_NOTIFICATIONS["en"]
+
+    style_key = (style_option or "default").lower().strip().replace(" ", "_")
+    style_label = loc["styles"].get(style_key)
+    if not style_label:
+        style_label = style_option.title() if style_option else loc["styles"]["default"]
+
+    day_label = loc["tomorrow"] if is_next_day else loc["today"]
+    items_str = ", ".join(filter(None, item_names))
+
+    title = loc["title"].format(style=style_label)
+    body = loc["body"].format(
+        style=style_label,
+        day=day_label,
+        name=outfit_name,
+        items=items_str,
+    )
+    return title, body
+
+
 async def check_scheduler_triggers() -> None:
     """Scan user scheduler preferences and trigger push notifications with outfit proposals."""
     try:
@@ -650,16 +916,20 @@ async def check_scheduler_triggers() -> None:
                         logger.info("No proposals generated for user %s, skipping", user_id)
                         continue
 
-                    # Build notification body for single curated outfit
-                    style_label = style_option.title() if style_option else "Daily"
-                    day_word = "tomorrow" if is_next_day else "today"
-                    title = f"Your {style_label} Outfit Proposal"
-                    
+                    # Build localized notification title and body for single curated outfit
+                    user_lang = user.get("preferred_language") or "en"
                     prop = proposals[0]
-                    outfit_name = prop.get("name", "Daily Look")
+                    outfit_name = prop.get("name") or "Daily Look"
                     items = prop.get("items", [])
                     item_names = [it.get("title") or it.get("name") or it.get("role", "") for it in items[:3]]
-                    body = f"Here is your {style_label} outfit curated for you {day_word}:\n{outfit_name} — {', '.join(filter(None, item_names))}"
+
+                    title, body = get_localized_scheduler_notification(
+                        lang=user_lang,
+                        style_option=style_option,
+                        is_next_day=is_next_day,
+                        outfit_name=outfit_name,
+                        item_names=item_names,
+                    )
 
                     # Serialize lightweight proposal objects (no heavy image base64 strings)
                     lightweight_proposals = []
