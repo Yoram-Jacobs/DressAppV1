@@ -1304,7 +1304,11 @@
     "refreshSuggestion": "Nuevo look",
     "previousLook": "Look anterior",
     "lookCounter": "Look {{current}} de {{total}}",
-    "wearToday": "Usar hoy"
+    "wearToday": "Usar hoy",
+    "tomorrowSuggestionTitle": "Sugerencia de estilo para mañana",
+    "tomorrowSuggestionSubtitle": "Seleccionado para mañana según tu perfil de estilo, el pronóstico del tiempo y tu calendario.",
+    "tomorrowSuggestionRefreshed": "¡Sugerencia de mañana actualizada!",
+    "wearTomorrow": "Usar mañana"
   },
   "outfitCompletion": {
     "cta": "Completar el look",
@@ -2073,7 +2077,9 @@
     "schedule": "Cronograma",
     "scheduleTitle": "Agendar vestimenta",
     "dailyAISuggestions": "Sugerencias diarias de IA",
-    "selectSavedOutfit": "Seleccionar atuendo guardado"
+    "selectSavedOutfit": "Seleccionar atuendo guardado",
+    "tomorrowOutfit": "Look programado para mañana",
+    "scheduledTomorrowSuccess": "¡Guardado como look programado para mañana!"
   },
   "seo": {
     "defaultTitle": "DressApp — Tu armario, elevado",
@@ -3561,7 +3567,7 @@
     "scheduler_push_step3": "Active **Habilitar alertas matutinas** y seleccione su hora de notificación preferida.",
     "scheduler_push_step4": "Vincula tu **Google Calendar** para permitir que el programador revise tu programación diaria de eventos.",
     "scheduler_push_step5": "El sistema realiza un seguimiento de las previsiones meteorológicas y selecciona un look diario personalizado, con la opción de generar un Nuevo Look en cualquier momento.",
-    "scheduler_push_step6": "Toca la alerta push para ver el look en tu avatar, toca Vestir Hoy o genera un Nuevo Look.",
+    "scheduler_push_step6": "Toca la alerta push para ver el look en tu avatar, toca Usar mañana o genera un Nuevo Look.",
     "expert_campaigns_title": "Mis Campañas (Experto)",
     "expert_campaigns_help_title": "Gestión de tus Campañas",
     "expert_campaigns_help_p1": "Rastrea y actualiza tus promociones comerciales desde tus ajustes de Experto:",

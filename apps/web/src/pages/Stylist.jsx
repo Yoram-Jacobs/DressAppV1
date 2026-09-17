@@ -379,7 +379,7 @@ export default function Stylist() {
   const proposalToOutfit = useCallback((prop, dateStr) => {
     if (!prop) return null;
     const rawItems = prop.items || prop.garments || [];
-    const targetDate = dateStr || prop.date || formatLocalDate(new Date());
+    const targetDate = prop?.date || prop?.usage?.date || dateStr || formatLocalDate(new Date());
     return {
       id: prop.id || `prop_${Date.now()}`,
       isDailyProposal: true,
@@ -486,13 +486,13 @@ export default function Stylist() {
         if (todayOutfit) {
           setSelectedOutfitForDetail(todayOutfit);
         } else if (dailyProposal && (dailyProposal.items || []).length > 0) {
-          setSelectedOutfitForDetail(proposalToOutfit(dailyProposal, todayDateStr));
+          setSelectedOutfitForDetail(proposalToOutfit(dailyProposal, dailyProposal.date || todayDateStr));
         } else if (proposals && proposals.length > 0 && (proposals[0].items || []).length > 0) {
-          setSelectedOutfitForDetail(proposalToOutfit(proposals[0], todayDateStr));
+          setSelectedOutfitForDetail(proposalToOutfit(proposals[0], proposals[0].date || todayDateStr));
         } else {
           generateDailyProposalAction(false).then(prop => {
             if (prop && (prop.items || []).length > 0) {
-              setSelectedOutfitForDetail(proposalToOutfit(prop, todayDateStr));
+              setSelectedOutfitForDetail(proposalToOutfit(prop, prop?.date || todayDateStr));
             }
           }).catch(() => { });
         }
@@ -2072,6 +2072,8 @@ export default function Stylist() {
 
     const isDaily = Boolean(selectedOutfitForDetail.isDailyProposal);
     const todayDateStr = formatLocalDate(new Date());
+    const outfitDateStr = selectedOutfitForDetail?.usage?.date || selectedOutfitForDetail?.date || selectedOutfitForDetail?.proposal_raw?.date || todayDateStr;
+    const isTomorrow = outfitDateStr > todayDateStr || Boolean(selectedOutfitForDetail?.proposal_raw?.is_tomorrow || selectedOutfitForDetail?.is_tomorrow);
     const currentLookIndex = (proposals || []).findIndex(p => p.id === (selectedOutfitForDetail.proposal_raw?.id || selectedOutfitForDetail.id));
     const idx = currentLookIndex >= 0 ? currentLookIndex : Math.max(0, (proposals?.length || 1) - 1);
     const totalLooks = Math.max(1, proposals?.length || 1);
@@ -2101,10 +2103,14 @@ export default function Stylist() {
                   onClick={async () => {
                     setGeneratingDaily(true);
                     try {
-                      const newProp = await generateDailyProposalAction(true);
+                      const newProp = await generateDailyProposalAction(true, 'daily', outfitDateStr);
                       if (newProp) {
-                        setSelectedOutfitForDetail(proposalToOutfit(newProp, todayDateStr));
-                        toast.success(t('stylist.suggestionRefreshed', { defaultValue: 'Refreshed today’s suggestion!' }));
+                        setSelectedOutfitForDetail(proposalToOutfit(newProp, outfitDateStr));
+                        toast.success(
+                          isTomorrow
+                            ? t('stylist.tomorrowSuggestionRefreshed', { defaultValue: 'Refreshed tomorrow’s suggestion!' })
+                            : t('stylist.suggestionRefreshed', { defaultValue: 'Refreshed today’s suggestion!' })
+                        );
                       }
                     } catch {
                       toast.error(t('common.error', { defaultValue: 'Failed to refresh' }));
@@ -2125,7 +2131,11 @@ export default function Stylist() {
                   className="rounded-full h-auto text-xs font-semibold inline-flex items-center gap-1.5 px-5 py-[5px] leading-[22px] text-white !bg-[var(--primary-color)] hover:!bg-[var(--dark-color)] !shadow-none"
                 >
                   <CalendarPlus className="!h-3.5 !w-3.5" />
-                  <span>{t('stylist.wearToday', { defaultValue: 'Wear Today' })}</span>
+                  <span>
+                    {isTomorrow
+                      ? t('stylist.wearTomorrow', { defaultValue: 'Wear Tomorrow' })
+                      : t('stylist.wearToday', { defaultValue: 'Wear Today' })}
+                  </span>
                 </Button>
                 <Button
                   variant="outline"

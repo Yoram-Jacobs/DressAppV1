@@ -1304,7 +1304,11 @@
     "refreshSuggestion": "Nieuwe look",
     "previousLook": "Vorige look",
     "lookCounter": "Look {{current}} van {{total}}",
-    "wearToday": "Vandaag dragen"
+    "wearToday": "Vandaag dragen",
+    "tomorrowSuggestionTitle": "Stijlsuggestie voor morgen",
+    "tomorrowSuggestionSubtitle": "Samengesteld voor morgen op basis van je stijlprofiel, weersvoorspelling en agenda.",
+    "tomorrowSuggestionRefreshed": "Suggestie voor morgen vernieuwd!",
+    "wearTomorrow": "Morgen dragen"
   },
   "outfitCompletion": {
     "cta": "Maak de outfit compleet",
@@ -2073,7 +2077,9 @@
     "schedule": "Schema",
     "scheduleTitle": "Schema outfit",
     "dailyAISuggestions": "AI dagelijkse suggesties",
-    "selectSavedOutfit": "Selecteer Opgeslagen outfit"
+    "selectSavedOutfit": "Selecteer Opgeslagen outfit",
+    "tomorrowOutfit": "Geplande outfit voor morgen",
+    "scheduledTomorrowSuccess": "Opgeslagen als geplande outfit voor morgen!"
   },
   "seo": {
     "defaultTitle": "DressApp — Jouw kast, verhoogd",
@@ -3568,7 +3574,7 @@
     "scheduler_push_step3": "Schakel **Ochtendwaarschuwingen inschakelen** in en selecteer de gewenste meldingstijd.",
     "scheduler_push_step4": "Koppel uw **Google Agenda** zodat de planner uw dagelijkse evenementenschema kan controleren.",
     "scheduler_push_step5": "Het systeem volgt de weersvoorspelling en stelt een gepersonaliseerde dagelijkse outfit samen, met de optie om op elk moment een Nieuwe Look te genereren.",
-    "scheduler_push_step6": "Tik op de pushmelding om de look op je avatar te bekijken, tik op Vandaag Dragen of stel een Nieuwe Look samen.",
+    "scheduler_push_step6": "Tik op de pushmelding om de look op je avatar te bekijken, tik op Morgen dragen of stel een Nieuwe Look samen.",
     "expert_campaigns_title": "Mijn Campagnes (Expert)",
     "expert_campaigns_help_title": "Uw campagnes beheren",
     "expert_campaigns_help_p1": "Volg en update uw bedrijfspromoties via uw Expert-instellingen:",

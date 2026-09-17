@@ -3565,7 +3565,7 @@
     "scheduler_push_step3": "Toggle **Enable Morning Alerts** and select your preferred notification time.",
     "scheduler_push_step4": "Link your **Google Calendar** to let the scheduler check your daily event schedule.",
     "scheduler_push_step5": "The system tracks weather forecasts and curates a personalized daily outfit, with the option to refresh a New Look anytime.",
-    "scheduler_push_step6": "Tap the push alert to view the look on your avatar, tap Wear Today, or curate a New Look.",
+    "scheduler_push_step6": "Tap the push alert to view the look on your avatar, tap Wear Tomorrow, or curate a New Look.",
     "campaigns_help_title": "Local Fashion Campaigns",
     "campaigns_help_p1": "Find exclusive sales, stylist events, and local fashion offers in your area:",
     "campaigns_feed_help_title": "Local Offers Feed",

@@ -1304,7 +1304,11 @@
     "refreshSuggestion": "Neuer Look",
     "previousLook": "Vorheriger Look",
     "lookCounter": "Look {{current}} von {{total}}",
-    "wearToday": "Heute tragen"
+    "wearToday": "Heute tragen",
+    "tomorrowSuggestionTitle": "Stilvorschlag für morgen",
+    "tomorrowSuggestionSubtitle": "Für morgen kuratiert basierend auf Ihrem Stilprofil, der Wettervorhersage und Terminen.",
+    "tomorrowSuggestionRefreshed": "Vorschlag für morgen aktualisiert!",
+    "wearTomorrow": "Morgen tragen"
   },
   "outfitCompletion": {
     "cta": "Outfit vervollständigen",
@@ -2073,7 +2077,9 @@
     "schedule": "Zeitplan",
     "scheduleTitle": "Outfit planen",
     "dailyAISuggestions": "KI-Tägliche Vorschläge",
-    "selectSavedOutfit": "Wählen Sie „Gespeichertes Outfit“."
+    "selectSavedOutfit": "Wählen Sie „Gespeichertes Outfit“.",
+    "tomorrowOutfit": "Geplantes Outfit für morgen",
+    "scheduledTomorrowSuccess": "Als geplantes Outfit für morgen gespeichert!"
   },
   "seo": {
     "defaultTitle": "DressApp — Deine Garderobe, veredelt",
@@ -3561,7 +3567,7 @@
     "scheduler_push_step3": "Aktivieren Sie **Morgenwarnungen aktivieren** und wählen Sie Ihre bevorzugte Benachrichtigungszeit aus.",
     "scheduler_push_step4": "Verknüpfen Sie Ihren **Google Kalender**, damit der Planer Ihren täglichen Veranstaltungsplan überprüfen kann.",
     "scheduler_push_step5": "Das System verfolgt Wettervorhersagen und stellt ein personalisiertes Tagesoutfit zusammen, mit der Option, jederzeit einen neuen Look zu generieren.",
-    "scheduler_push_step6": "Tippen Sie auf die Push-Benachrichtigung, um den Look auf Ihrem Avatar anzuzeigen, auf Heute tragen zu tippen oder einen Neuen Look zu erstellen.",
+    "scheduler_push_step6": "Tippen Sie auf die Push-Benachrichtigung, um den Look auf Ihrem Avatar anzuzeigen, auf Morgen tragen zu tippen oder einen Neuen Look zu erstellen.",
     "expert_campaigns_title": "Meine Kampagnen (Experte)",
     "expert_campaigns_help_title": "Verwaltung Ihrer Kampagnen",
     "expert_campaigns_help_p1": "Verfolgen und aktualisieren Sie Ihre geschäftlichen Aktionen in Ihren Experten-Einstellungen:",

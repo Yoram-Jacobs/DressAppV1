@@ -1304,7 +1304,11 @@
     "refreshSuggestion": "नया लुक",
     "previousLook": "पिछला लुक",
     "lookCounter": "लुक {{current}} / {{total}}",
-    "wearToday": "आज पहनें"
+    "wearToday": "आज पहनें",
+    "tomorrowSuggestionTitle": "कल के लिए स्टाइल सुझाव",
+    "tomorrowSuggestionSubtitle": "आपकी स्टाइल प्रोफाइल, मौसम के पूर्वानुमान और कैलेंडर के आधार पर कल के लिए तैयार किया गया।",
+    "tomorrowSuggestionRefreshed": "कल का सुझाव रीफ्रेश हो गया!",
+    "wearTomorrow": "कल पहनें"
   },
   "outfitCompletion": {
     "cta": "आउटफ़िट पूरा करें",
@@ -2073,7 +2077,9 @@
     "schedule": "अनुसूची",
     "scheduleTitle": "शेड्यूल आउटफिट",
     "dailyAISuggestions": "एआई दैनिक सुझाव",
-    "selectSavedOutfit": "सहेजे गए आउटफिट का चयन करें"
+    "selectSavedOutfit": "सहेजे गए आउटफिट का चयन करें",
+    "tomorrowOutfit": "कल का शेड्यूल किया गया आउटफिट",
+    "scheduledTomorrowSuccess": "कल के शेड्यूल किए गए आउटफिट के रूप में सहेजा गया!"
   },
   "seo": {
     "defaultTitle": "DressApp — आपकी अलमारी, उन्नत",
@@ -3568,7 +3574,7 @@
     "scheduler_push_step3": "**सुबह अलर्ट सक्षम करें** टॉगल करें और अपना पसंदीदा अधिसूचना समय चुनें।",
     "scheduler_push_step4": "शेड्यूलर को आपके दैनिक ईवेंट शेड्यूल की जांच करने देने के लिए अपने **Google कैलेंडर** को लिंक करें।",
     "scheduler_push_step5": "सिस्टम मौसम के पूर्वानुमान को ट्रैक करता है और एक व्यक्तिगत दैनिक पोशाक तैयार करता है, जिसे कभी भी 'नया लुक' के साथ बदला जा सकता है।",
-    "scheduler_push_step6": "अपने अवतार पर लुक देखने के लिए पुश अलर्ट पर टैप करें, 'आज पहनें' पर टैप करें या 'नया लुक' बनाएं।",
+    "scheduler_push_step6": "अपने अवतार पर लुक देखने के लिए पुश अलर्ट पर टैप करें, 'कल पहनें' पर टैप करें या 'नया लुक' बनाएं।",
     "expert_campaigns_title": "मेरे अभियान (विशेषज्ञ)",
     "expert_campaigns_help_title": "अपने अभियानों का प्रबंधन",
     "expert_campaigns_help_p1": "अपने विशेषज्ञ सेटिंग्स से अपने व्यावसायिक प्रचारों को ट्रैक और अपडेट करें:",

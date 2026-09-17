@@ -1304,7 +1304,11 @@
     "refreshSuggestion": "Nuovo look",
     "previousLook": "Look precedente",
     "lookCounter": "Look {{current}} di {{total}}",
-    "wearToday": "Indossa oggi"
+    "wearToday": "Indossa oggi",
+    "tomorrowSuggestionTitle": "Suggerimento di stile per domani",
+    "tomorrowSuggestionSubtitle": "Creato per domani in base al tuo profilo di stile, alle previsioni meteo e agli impegni.",
+    "tomorrowSuggestionRefreshed": "Suggerimento per domani aggiornato!",
+    "wearTomorrow": "Indossa domani"
   },
   "outfitCompletion": {
     "cta": "Completa l'outfit",
@@ -2073,7 +2077,9 @@
     "schedule": "Programma",
     "scheduleTitle": "Pianifica l'outfit",
     "dailyAISuggestions": "Suggerimenti giornalieri dell'IA",
-    "selectSavedOutfit": "Seleziona outfit salvato"
+    "selectSavedOutfit": "Seleziona outfit salvato",
+    "tomorrowOutfit": "Outfit programmato per domani",
+    "scheduledTomorrowSuccess": "Salvato come outfit programmato per domani!"
   },
   "seo": {
     "defaultTitle": "DressApp — Il tuo armadio, elevato",
@@ -3568,7 +3574,7 @@
     "scheduler_push_step3": "Attiva **Abilita avvisi mattutini** e seleziona l'orario di notifica preferito.",
     "scheduler_push_step4": "Collega il tuo **Google Calendar** per consentire allo scheduler di controllare il programma degli eventi giornalieri.",
     "scheduler_push_step5": "Il sistema monitora le previsioni meteo e seleziona un outfit giornaliero personalizzato, con la possibilità di generare un Nuovo Look in qualsiasi momento.",
-    "scheduler_push_step6": "Tocca la notifica push per visualizzare il look sul tuo avatar, tocca Indossa Oggi o crea un Nuovo Look.",
+    "scheduler_push_step6": "Tocca la notifica push per visualizzare il look sul tuo avatar, tocca Indossa domani o crea un Nuovo Look.",
     "expert_campaigns_title": "Le mie campagne (Esperto)",
     "expert_campaigns_help_title": "Gestione delle tue Campagne",
     "expert_campaigns_help_p1": "Traccia e aggiorna le tue promozioni aziendali dalle tue impostazioni da Esperto:",

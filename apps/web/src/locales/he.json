@@ -1320,7 +1320,11 @@
     "refreshSuggestion": "לוק חדש",
     "previousLook": "לוק קודם",
     "lookCounter": "לוק {{current}} מתוך {{total}}",
-    "wearToday": "ללבוש היום"
+    "wearToday": "ללבוש היום",
+    "tomorrowSuggestionTitle": "הצעת הסטייל למחר",
+    "tomorrowSuggestionSubtitle": "נאצר במיוחד למחר על סמך פרופיל הסטייל שלך, תחזית מזג האוויר ולוח הזמנים.",
+    "tomorrowSuggestionRefreshed": "הצעת המחר רועננה בהצלחה!",
+    "wearTomorrow": "ללבוש מחר"
   },
   "outfitCompletion": {
     "cta": "השלם את הלוק",
@@ -2107,7 +2111,9 @@
     "schedule": "תזמן",
     "scheduleTitle": "תזמון לוק",
     "dailyAISuggestions": "הצעות יומיות ב-AI",
-    "selectSavedOutfit": "בחר לוק שמור"
+    "selectSavedOutfit": "בחר לוק שמור",
+    "tomorrowOutfit": "הלוק המתוזמן למחר",
+    "scheduledTomorrowSuccess": "נשמר כלוק המתוזמן למחר!"
   },
   "seo": {
     "defaultTitle": "DressApp — הארון שלך, מוגבה",
@@ -3640,7 +3646,7 @@
     "scheduler_push_step3": "החלף את המצב **הפעל התראות בוקר** ובחר את זמן ההתראה המועדף עליך.",
     "scheduler_push_step4": "קשר את **יומן Google** שלך כדי לאפשר למתזמן לבדוק את לוח הזמנים של האירועים היומי שלך.",
     "scheduler_push_step5": "המערכת עוקבת אחר תחזיות מזג האוויר ובוחרת עבורך לוק יומי מותאם אישית, עם אפשרות לרענן לוק חדש בכל עת.",
-    "scheduler_push_step6": "הקש על התראת הפוש כדי לצפות בלוק על גבי האווטאר שלך, הקש על לבש היום או צור לוק חדש.",
+    "scheduler_push_step6": "הקש על התראת הפוש כדי לצפות בלוק על גבי האווטאר שלך, הקש על ללבוש מחר או צור לוק חדש.",
     "expert_campaigns_title": "הקמפיינים שלי (מומחה)",
     "expert_campaigns_help_title": "ניהול הקמפיינים שלכם",
     "expert_campaigns_help_p1": "עקבו ועדכנו את הקידומים העסקיים שלכם דרך הגדרות המומחה:",

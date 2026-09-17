@@ -1304,7 +1304,11 @@
     "refreshSuggestion": "إطلالة جديدة",
     "previousLook": "الإطلالة السابقة",
     "lookCounter": "إطلالة {{current}} من {{total}}",
-    "wearToday": "ارتداء اليوم"
+    "wearToday": "ارتداء اليوم",
+    "tomorrowSuggestionTitle": "اقتراح الأناقة للغد",
+    "tomorrowSuggestionSubtitle": "تم تنسيقه خصيصاً للغد بناءً على أسلوبك وتوقعات الطقس وجدول مواعيدك.",
+    "tomorrowSuggestionRefreshed": "تم تحديث اقتراح الغد بنجاح!",
+    "wearTomorrow": "ارتداء غداً"
   },
   "outfitCompletion": {
     "cta": "أكمل الإطلالة",
@@ -2073,7 +2077,9 @@
     "schedule": "جدول",
     "scheduleTitle": "جدول الزي",
     "dailyAISuggestions": "اقتراحات يومية لمنظمة العفو الدولية",
-    "selectSavedOutfit": "حدد الزي المحفوظ"
+    "selectSavedOutfit": "حدد الزي المحفوظ",
+    "tomorrowOutfit": "الزي المجدول للغد",
+    "scheduledTomorrowSuccess": "تم الحفظ كزي مجدول للغد!"
   },
   "seo": {
     "defaultTitle": "DressApp — خزانتك، بأسلوب راقٍ",
@@ -3565,7 +3571,7 @@
     "scheduler_push_step3": "قم بتبديل **تمكين التنبيهات الصباحية** وحدد وقت الإشعارات المفضل لديك.",
     "scheduler_push_step4": "قم بربط **تقويم Google** الخاص بك للسماح للمجدول بالتحقق من جدول الأحداث اليومي.",
     "scheduler_push_step5": "يتتبع النظام توقعات الطقס وينسق زيًا يوميًا مخصصًا، مع إمكانية تحديث مظهر جديد في أي وقت.",
-    "scheduler_push_step6": "اضغط على إشعار التنبيه لعرض الزي على صورتك الرمزية، واضغط على ارتداء اليوم، أو اختر مظهرًا جديدًا.",
+    "scheduler_push_step6": "اضغط على إشعار التنبيه لعرض الزي على صورتك الرمزية، واضغط على ارتداء غداً، أو اختر مظهراً جديداً.",
     "expert_campaigns_title": "حملاتي (للخبراء)",
     "expert_campaigns_help_title": "إدارة حملاتك",
     "expert_campaigns_help_p1": "تتبع وحدث عروضك الترويجية من إعدادات الخبراء:",

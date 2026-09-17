@@ -1304,7 +1304,11 @@
     "refreshSuggestion": "换一套",
     "previousLook": "上一套",
     "lookCounter": "第 {{current}} / {{total}} 套",
-    "wearToday": "今日穿着"
+    "wearToday": "今日穿着",
+    "tomorrowSuggestionTitle": "明日风格灵感",
+    "tomorrowSuggestionSubtitle": "根据您的个人风格、明日天气预报及日程安排精心搭配。",
+    "tomorrowSuggestionRefreshed": "已刷新明日穿搭建议！",
+    "wearTomorrow": "明日穿着"
   },
   "outfitCompletion": {
     "cta": "完成搭配",
@@ -2073,7 +2077,9 @@
     "schedule": "日程",
     "scheduleTitle": "安排服装",
     "dailyAISuggestions": "AI每日建议",
-    "selectSavedOutfit": "选择已保存的服装"
+    "selectSavedOutfit": "选择已保存的服装",
+    "tomorrowOutfit": "明日已安排的穿搭",
+    "scheduledTomorrowSuccess": "已保存为明日穿搭！"
   },
   "seo": {
     "defaultTitle": "DressApp — 您的衣橱，升级体验",
@@ -3568,7 +3574,7 @@
     "scheduler_push_step3": "切换**启用早晨提醒**并选择您的首选通知时间。",
     "scheduler_push_step4": "链接您的 **Google 日历**，让调度程序检查您的每日活动日程。",
     "scheduler_push_step5": "系统跟踪天气预报并为您定制专属日常穿搭，可随时刷新换一套全新造型。",
-    "scheduler_push_step6": "点击推送通知在您的虚拟化身上预览穿搭，点击“今天穿这套”，或换一套新造型。",
+    "scheduler_push_step6": "点击推送通知在您的虚拟化身上预览穿搭，点击“明日穿着”，或换一套新造型。",
     "expert_campaigns_title": "我的活动 (专家)",
     "expert_campaigns_help_title": "管理您的活动",
     "expert_campaigns_help_p1": "在您的专家设置中跟踪和更新您的业务促销：",
