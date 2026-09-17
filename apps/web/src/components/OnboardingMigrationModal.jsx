@@ -717,13 +717,14 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
                   <a
                     ref={bookmarkletRef}
                     href={harvesterBookmarkletCode}
-                    title="DressApp Agent"
+                    title="👗 DressApp Agent"
                     draggable={true}
                     onDragStart={(e) => {
                       if (e.dataTransfer) {
                         try {
                           e.dataTransfer.setData('text/uri-list', harvesterBookmarkletCode);
                           e.dataTransfer.setData('text/plain', harvesterBookmarkletCode);
+                          e.dataTransfer.setData('text/html', `<a href="${harvesterBookmarkletCode}">👗 DressApp Agent</a>`);
                         } catch (_) {}
                       }
                     }}
@@ -750,9 +751,10 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
                         toast.info(t('migration.bookmarkletClickTip', { defaultValue: 'Drag this button to your bookmarks bar. Do not click it directly!' }));
                       }
                     }}
-                    className="inline-flex items-center justify-center px-5 py-2.5 text-[12px] bg-primary-brand text-white font-semibold rounded-full shadow-sm hover:opacity-90 cursor-grab active:cursor-grabbing select-none transition-all duration-200"
+                    className="inline-flex items-center gap-1.5 justify-center px-5 py-2.5 text-[12px] bg-primary-brand text-white font-semibold rounded-full shadow-sm hover:opacity-90 cursor-grab active:cursor-grabbing select-none transition-all duration-200"
                   >
-                    {t('migration.bookmarkletBtn', { defaultValue: 'DressApp Agent' })}
+                    <span>👗</span>
+                    <span>{t('migration.bookmarkletBtn', { defaultValue: 'DressApp Agent' })}</span>
                   </a>
                   <span className="text-[10px] text-text-brand font-semibold">
                     {('ontouchstart' in window)

@@ -70,14 +70,15 @@ export function ShoppingAssistant() {
                     el.setAttribute('href', "javascript:(function(){if(!document.getElementById('dressapp-mobile-styles')){var s=document.createElement('script');s.src='https://dressapp.co/widget/dressapp-mobile-floater.js?t='+Date.now();document.body.appendChild(s);}})();");
                   }
                 }}
-                title="DressApp Shopping Assistant"
-                className="inline-flex rounded-full bg-primary-brand px-4 py-2 text-[12px] font-semibold text-white shadow hover:bg-primary-hover transition-colors cursor-grab"
+                title="👗 DressApp Assistant"
+                className="inline-flex items-center gap-1.5 rounded-full bg-primary-brand px-4 py-2 text-[12px] font-semibold text-white shadow hover:bg-primary-hover transition-colors cursor-grab"
                 onClick={(e) => {
                   e.preventDefault();
                   toast.info(t('profile.bookmarkletInstruction', { defaultValue: "To use: Drag this button to your bookmarks bar. Click it on any store product page to get size recommendations." }));
                 }}
               >
-                {t('profile.bookmarkletBtn', { defaultValue: 'DressApp Assistant' })}
+                <span>👗</span>
+                <span>{t('profile.bookmarkletBtn', { defaultValue: 'DressApp Assistant' })}</span>
               </a>
               <span className="text-[12px] font-semibold text-text-brand italic">
                 {t('profile.bookmarkletInstruction', { defaultValue: "To use: Drag this button to your bookmarks bar. Click it on any store product page to get size recommendations." })}
