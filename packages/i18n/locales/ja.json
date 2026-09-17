@@ -960,7 +960,7 @@
       "condition": "コンディション",
       "qualityTier": "品質",
       "repairAdvice": "修理アドバイス",
-      "priceCents": "価格(¢)",
+      "priceCents": "価格",
       "currency": "通貨",
       "intent": "用途",
       "formality": "フォーマル度",

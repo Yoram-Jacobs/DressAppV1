@@ -960,7 +960,7 @@
       "condition": "Condição",
       "qualityTier": "Qualidade",
       "repairAdvice": "Conselhos de reparação",
-      "priceCents": "Preço (¢)",
+      "priceCents": "Preço",
       "currency": "Moeda",
       "intent": "Intenção",
       "formality": "Formalidade",

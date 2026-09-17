@@ -960,7 +960,7 @@
       "condition": "新旧程度",
       "qualityTier": "品质",
       "repairAdvice": "修补建议",
-      "priceCents": "价格(¢)",
+      "priceCents": "价格",
       "currency": "货币",
       "intent": "用途",
       "formality": "正式程度",

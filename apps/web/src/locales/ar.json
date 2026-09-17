@@ -960,7 +960,7 @@
       "condition": "الوضع",
       "qualityTier": "الجودة",
       "repairAdvice": "نصائح الإصلاح",
-      "priceCents": "السعر (¢)",
+      "priceCents": "السعر",
       "currency": "العملة",
       "intent": "الغرض",
       "formality": "الرسمية",

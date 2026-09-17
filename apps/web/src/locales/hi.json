@@ -960,7 +960,7 @@
       "condition": "स्थिति",
       "qualityTier": "गुणवत्ता",
       "repairAdvice": "मरम्मत सलाह",
-      "priceCents": "कीमत (¢)",
+      "priceCents": "कीमत",
       "currency": "मुद्रा",
       "intent": "इरादा",
       "formality": "औपचारिकता",

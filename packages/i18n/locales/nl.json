@@ -969,7 +969,7 @@
       "condition": "Voorwaarde",
       "qualityTier": "Kwaliteit",
       "repairAdvice": "Reparatie advies",
-      "priceCents": "Prijs (¢)",
+      "priceCents": "Prijs",
       "currency": "Munteenheid",
       "intent": "Intentie",
       "formality": "Formaliteit",

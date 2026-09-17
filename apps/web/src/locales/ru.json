@@ -960,7 +960,7 @@
       "condition": "Кондиция",
       "qualityTier": "Качество",
       "repairAdvice": "Рекомендации по ремонту",
-      "priceCents": "Цена (¢)",
+      "priceCents": "Цена",
       "currency": "Валюта",
       "intent": "Намерение",
       "formality": "Формальность",

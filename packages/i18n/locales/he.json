@@ -970,7 +970,7 @@
       "condition": "מצב שימוש",
       "qualityTier": "דירוג איכות",
       "repairAdvice": "המלצת תיקון",
-      "priceCents": "מחיר (סנט)",
+      "priceCents": "מחיר",
       "currency": "מטבע",
       "intent": "כוונה",
       "formality": "רמת רשמיות",
