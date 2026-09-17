@@ -70,15 +70,28 @@ export function ShoppingAssistant() {
                     el.setAttribute('href', "javascript:(function(){if(!document.getElementById('dressapp-mobile-styles')){var s=document.createElement('script');s.src='https://dressapp.co/widget/dressapp-mobile-floater.js?t='+Date.now();document.body.appendChild(s);}})();");
                   }
                 }}
-                title="👗 DressApp Assistant"
-                className="inline-flex items-center gap-1.5 rounded-full bg-primary-brand px-4 py-2 text-[12px] font-semibold text-white shadow hover:bg-primary-hover transition-colors cursor-grab"
+                title={`👗 ${t('profile.bookmarkletBtn', { defaultValue: 'DressApp Assistant' })}`}
+                draggable={true}
+                onDragStart={(e) => {
+                  const title = `👗 ${t('profile.bookmarkletBtn', { defaultValue: 'DressApp Assistant' })}`;
+                  const code = "javascript:(function(){if(!document.getElementById('dressapp-mobile-styles')){var s=document.createElement('script');s.src='https://dressapp.co/widget/dressapp-mobile-floater.js?t='+Date.now();document.body.appendChild(s);}})();";
+                  if (e.dataTransfer) {
+                    try {
+                      e.dataTransfer.setData('text/uri-list', code);
+                      e.dataTransfer.setData('text/plain', title);
+                      e.dataTransfer.setData('text/html', `<a href="${code}">${title}</a>`);
+                      e.dataTransfer.effectAllowed = 'copyLink';
+                    } catch (_) {}
+                  }
+                }}
+                className="inline-flex items-center gap-1.5 rounded-full bg-primary-brand px-4 py-2 text-[12px] font-semibold text-white shadow hover:bg-primary-hover transition-colors cursor-grab active:cursor-grabbing select-none"
                 onClick={(e) => {
                   e.preventDefault();
                   toast.info(t('profile.bookmarkletInstruction', { defaultValue: "To use: Drag this button to your bookmarks bar. Click it on any store product page to get size recommendations." }));
                 }}
               >
-                <span>👗</span>
-                <span>{t('profile.bookmarkletBtn', { defaultValue: 'DressApp Assistant' })}</span>
+                <span className="pointer-events-none">👗</span>
+                <span className="pointer-events-none">{t('profile.bookmarkletBtn', { defaultValue: 'DressApp Assistant' })}</span>
               </a>
               <span className="text-[12px] font-semibold text-text-brand italic">
                 {t('profile.bookmarkletInstruction', { defaultValue: "To use: Drag this button to your bookmarks bar. Click it on any store product page to get size recommendations." })}

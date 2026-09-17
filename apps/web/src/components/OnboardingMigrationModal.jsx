@@ -717,14 +717,16 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
                   <a
                     ref={bookmarkletRef}
                     href={harvesterBookmarkletCode}
-                    title="👗 DressApp Agent"
+                    title={`👗 ${t('migration.bookmarkletBtn', { defaultValue: 'DressApp Agent' })}`}
                     draggable={true}
                     onDragStart={(e) => {
+                      const title = `👗 ${t('migration.bookmarkletBtn', { defaultValue: 'DressApp Agent' })}`;
                       if (e.dataTransfer) {
                         try {
                           e.dataTransfer.setData('text/uri-list', harvesterBookmarkletCode);
-                          e.dataTransfer.setData('text/plain', harvesterBookmarkletCode);
-                          e.dataTransfer.setData('text/html', `<a href="${harvesterBookmarkletCode}">👗 DressApp Agent</a>`);
+                          e.dataTransfer.setData('text/plain', title);
+                          e.dataTransfer.setData('text/html', `<a href="${harvesterBookmarkletCode}">${title}</a>`);
+                          e.dataTransfer.effectAllowed = 'copyLink';
                         } catch (_) {}
                       }
                     }}
@@ -753,8 +755,8 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
                     }}
                     className="inline-flex items-center gap-1.5 justify-center px-5 py-2.5 text-[12px] bg-primary-brand text-white font-semibold rounded-full shadow-sm hover:opacity-90 cursor-grab active:cursor-grabbing select-none transition-all duration-200"
                   >
-                    <span>👗</span>
-                    <span>{t('migration.bookmarkletBtn', { defaultValue: 'DressApp Agent' })}</span>
+                    <span className="pointer-events-none">👗</span>
+                    <span className="pointer-events-none">{t('migration.bookmarkletBtn', { defaultValue: 'DressApp Agent' })}</span>
                   </a>
                   <span className="text-[10px] text-text-brand font-semibold">
                     {('ontouchstart' in window)
