@@ -16,6 +16,7 @@ import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
 import { isRtl } from '@/lib/i18n';
 import { api } from '@/lib/api';
+import { closetStore } from '@/lib/closetStore';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 
 // Synchronously loaded core routes for zero-latency initial load
@@ -52,29 +53,83 @@ const Privacy = lazy(() => import('@/pages/Privacy'));
 const TermsOfService = lazy(() => import('@/pages/TermsOfService'));
 const Pricing = lazy(() => import('@/pages/Pricing'));
 
-/** Global listener for migration postMessage events from the bookmarklet popup. */
+/** Global listener for migration events from the bookmarklet or cross-tab BroadcastChannel. */
 function MigrationMessageListener() {
   const navigate = useNavigate();
   const { t } = useTranslation();
 
   useEffect(() => {
-    const collectedCards = [];
+    let unuploadedCards = [];
 
-    const handleMessage = (event) => {
-      const msg = event.data;
+    const handlePayload = async (msg) => {
       if (!msg || !msg.type) return;
 
       if (msg.type === 'DRESSAPP_MIGRATION_STREAM') {
         const { cards } = msg;
         if (cards && cards.length > 0) {
-          collectedCards.push(...cards);
+          unuploadedCards.push(...cards);
         }
         return;
       }
+
+      if (msg.type === 'DRESSAPP_MIGRATION_COMPLETE') {
+        const total = msg.total_cards || unuploadedCards.length || 0;
+        // If cards were delivered via postMessage / BroadcastChannel fallback
+        if (unuploadedCards.length > 0) {
+          try {
+            await api.saveMigrationCrops({
+              app_name: msg.app_name || 'Imported Closet',
+              cards: unuploadedCards,
+            });
+          } catch (e) {
+            console.warn('[MigrationMessageListener] Fallback save crops error:', e);
+          }
+          unuploadedCards = [];
+        }
+
+        // Prewarm closet store to fetch new items immediately
+        try {
+          if (closetStore?.prewarm) {
+            await closetStore.prewarm({ force: true });
+          }
+        } catch (_) {}
+
+        toast.success(
+          t('migration.allImportedSuccess', {
+            count: total,
+            defaultValue: `Successfully imported ${total} wardrobe items to DressApp!`,
+          }),
+          {
+            action: {
+              label: t('migration.okToCloset', { defaultValue: 'Open Closet' }),
+              onClick: () => navigate('/closet'),
+            },
+            duration: 8000,
+          }
+        );
+      }
     };
 
-    window.addEventListener('message', handleMessage);
-    return () => window.removeEventListener('message', handleMessage);
+    const handleWindowMessage = (event) => {
+      handlePayload(event.data);
+    };
+
+    window.addEventListener('message', handleWindowMessage);
+
+    let bc;
+    try {
+      bc = new BroadcastChannel('dressapp_migration');
+      bc.onmessage = (event) => {
+        handlePayload(event.data);
+      };
+    } catch (_) {}
+
+    return () => {
+      window.removeEventListener('message', handleWindowMessage);
+      if (bc) {
+        bc.close();
+      }
+    };
   }, [navigate, t]);
 
   return null;

@@ -50,6 +50,7 @@ from app.services.image_compression import (
     compress_image_url_or_b64,
 )
 from app.services import closet_service
+from app.services.sync_service import broadcast_sync_event
 from app.api.v1.closet.common import (
     _active_background_tasks,
     _track_task,
@@ -70,6 +71,8 @@ from app.api.v1.closet.common import (
 )
 
 router = APIRouter()
+
+_safe_analysis = closet_service.safe_analysis
 
 # ─── DB-backed migration: save crops + Stylist re-analyze ──────────────
 
@@ -182,6 +185,11 @@ async def _run_reanalyze_items(
         "total": len(items),
         "items": all_items,
     }
+    if imported > 0 and user.get("id"):
+        try:
+            await broadcast_sync_event(user["id"], "closet_updated", {"reanalyzed": imported, "total": len(items)})
+        except Exception:
+            pass
     await asyncio.sleep(60)
     _migration_status.pop(job_id, None)
 
@@ -240,12 +248,14 @@ async def save_migration_crops(
             title=card.get("title") or "Imported garment",
             category="Top",
             brand=payload.app_name,
+            clean_image_status="ready",
         )
         doc = item.model_dump()
         # For imported items the crop is the only available image.
         # Store it as clean_image_url (the primary display field) so the
         # item renders immediately in the closet without waiting for rembg.
         doc["clean_image_url"] = crop_data_url
+        doc["clean_image_status"] = "ready"
 
         # Compute phash for future dedup
         try:
@@ -262,6 +272,13 @@ async def save_migration_crops(
         await repos.insert(db.closet_items, doc)
         item_ids.append(doc["id"])
         saved += 1
+
+    # Broadcast real-time closet sync so open client views refresh immediately
+    if saved > 0 and user.get("id"):
+        try:
+            await broadcast_sync_event(user["id"], "closet_updated", {"saved_count": saved})
+        except Exception as exc:
+            logger.warning("[migration] Failed to broadcast closet_updated event: %s", exc)
 
     # ── Atomically kick off the Stylist re-analyze worker ──
     # This avoids a race condition where the client closes between

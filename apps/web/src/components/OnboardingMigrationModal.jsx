@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
-import { api } from '@/lib/api';
+import { api, tokenStore } from '@/lib/api';
 import {
   Loader2,
   ArrowRight,
@@ -47,7 +47,37 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
 
   // Use URL-encoded bookmarklet to prevent syntax and drag issues across all browsers
   const harvesterBookmarkletCode = useMemo(() => {
+    const authToken = tokenStore?.get?.() || '';
+    const apiBase = (typeof window !== 'undefined' && window.location?.origin)
+      ? `${window.location.origin}/api/v1`
+      : 'https://dressapp.co/api/v1';
+
     const rawJS = `(async () => {
+      const AUTH_TOKEN = ${JSON.stringify(authToken)};
+      const API_BASE = ${JSON.stringify(apiBase)};
+      const APP_NAME = ${JSON.stringify(appName)};
+
+      const uploadBatch = async (cardsToUpload) => {
+        if (!cardsToUpload || cardsToUpload.length === 0) return 0;
+        try {
+          const resp = await fetch(API_BASE + '/closet/migration/save-crops', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              ...(AUTH_TOKEN ? { 'Authorization': 'Bearer ' + AUTH_TOKEN } : {}),
+            },
+            body: JSON.stringify({
+              app_name: APP_NAME || document.title || 'Competitor App',
+              cards: cardsToUpload.map(c => ({ crop_base64: c.crop_base64, title: c.title || '' })),
+            }),
+          });
+          const json = await resp.json();
+          return json?.items_saved || cardsToUpload.length;
+        } catch (err) {
+          console.warn('[DressApp Agent] Batch upload error:', err);
+          return 0;
+        }
+      };
       // Clean up Chrome extension widgets that conflict with migration
       document.querySelectorAll('.dressapp-importer-widget, #dressapp-fab, .dressapp-fab, .dressapp-anchor-btn').forEach(el => el.remove());
       document.querySelectorAll('[data-testid="dressapp-fab"], [data-testid="dressapp-anchor-btn"]').forEach(el => el.remove());
@@ -278,6 +308,7 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
         // PHASE 1: Scan-All-First — autonomous scroll + crop loop
         // ======================================================================
         const harvestedCards = [];
+        let uploadedCount = 0;
         let noChangeCount = 0;
         let reachedBottom = false;
 
@@ -328,7 +359,7 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
                 variance = Math.sqrt(variance / (n * 3));
                 if (variance < 2) return null;
               }
-      } catch {}
+            } catch {}
 
             if (rect.width > rect.height * 5 || rect.height > rect.width * 5) return null;
 
@@ -360,9 +391,24 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
             const b64 = cropCardFromStream(rect);
             if (b64) {
               harvestedCards.push({ crop_base64: b64, cx, cy });
-              if (harvestedCards.length % 15 === 0 && window.opener) {
-                window.opener.postMessage({ type: 'DRESSAPP_MIGRATION_STREAM', cards: harvestedCards.slice(-15).map(c => ({ crop_base64: c.crop_base64 })) }, '*');
-              }
+            }
+          }
+
+          // Upload stream batches directly to DressApp DB
+          if (harvestedCards.length - uploadedCount >= 15) {
+            const batch = harvestedCards.slice(uploadedCount, uploadedCount + 15);
+            uploadedCount += 15;
+            o.style.display = 'block';
+            st.innerText = 'Uploading to DressApp... (' + uploadedCount + '/' + harvestedCards.length + ' cards)';
+            await uploadBatch(batch);
+            try {
+              const bc = new BroadcastChannel('dressapp_migration');
+              bc.postMessage({ type: 'DRESSAPP_MIGRATION_STREAM', cards: batch.map(c => ({ crop_base64: c.crop_base64 })), app_name: APP_NAME });
+            } catch (_) {}
+            if (window.opener) {
+              try {
+                window.opener.postMessage({ type: 'DRESSAPP_MIGRATION_STREAM', cards: batch.map(c => ({ crop_base64: c.crop_base64 })), app_name: APP_NAME }, '*');
+              } catch (_) {}
             }
           }
 
@@ -490,30 +536,44 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
         video.remove();
 
         // ======================================================================
-        // PHASE 1 COMPLETE — Stream remaining cards + signal done
+        // PHASE 1 COMPLETE — Upload remaining cards + signal done
         // ======================================================================
         const totalCaptured = harvestedCards.length;
-        st.innerText = 'Scan complete! ' + totalCaptured + ' cards captured. Sending to DressApp...';
+        if (uploadedCount < totalCaptured) {
+          const remaining = harvestedCards.slice(uploadedCount);
+          o.style.display = 'block';
+          st.innerText = 'Saving remaining ' + remaining.length + ' items to DressApp...';
+          await uploadBatch(remaining);
+          uploadedCount = totalCaptured;
+        }
 
-        if (window.opener) {
-          const remainder = totalCaptured % 15;
-          if (remainder > 0) {
-            window.opener.postMessage({ type: 'DRESSAPP_MIGRATION_STREAM', cards: harvestedCards.slice(-remainder).map(c => ({ crop_base64: c.crop_base64 })) }, '*');
-          }
-          window.opener.postMessage({
+        try {
+          const bc = new BroadcastChannel('dressapp_migration');
+          bc.postMessage({
             type: 'DRESSAPP_MIGRATION_COMPLETE',
             total_cards: totalCaptured,
-            app_name: document.title || 'Competitor App'
-          }, '*');
+            app_name: APP_NAME || document.title || 'Competitor App'
+          });
+        } catch (_) {}
+
+        if (window.opener) {
+          try {
+            window.opener.postMessage({
+              type: 'DRESSAPP_MIGRATION_COMPLETE',
+              total_cards: totalCaptured,
+              app_name: APP_NAME || document.title || 'Competitor App'
+            }, '*');
+          } catch (_) {}
         }
         harvestedCards.length = 0;
 
         // Show green completion badge
-        o.innerHTML = '<div style="font-weight:bold;margin-bottom:8px;font-size:14px;color:#f1f5f9;">👗 DressApp Agent</div><div style="color:#10b981;font-weight:bold;font-size:13px;margin-top:8px;margin-bottom:4px;">✓ Scan Complete!</div><div style="color:#cbd5e1;font-size:11px;line-height:1.4;">' + totalCaptured + ' cards captured and sent to DressApp for processing.<br>You can now safely close this window and return to DressApp.</div>';
+        o.style.display = 'block';
+        o.innerHTML = '<div style="font-weight:bold;margin-bottom:8px;font-size:14px;color:#f1f5f9;">👗 DressApp Agent</div><div style="color:#10b981;font-weight:bold;font-size:13px;margin-top:8px;margin-bottom:4px;">✓ ' + totalCaptured + ' Items Saved to Closet!</div><div style="color:#cbd5e1;font-size:11px;line-height:1.4;">All items were uploaded directly to your DressApp closet database.<br><br><b>You can now switch back to DressApp to view your closet!</b></div>';
       };
     })();`;
     return 'javascript:' + encodeURIComponent(rawJS);
-  }, []);
+  }, [appName]);
 
   const bookmarkletRef = useRef(null);
 
