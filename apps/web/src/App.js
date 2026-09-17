@@ -59,33 +59,11 @@ function MigrationMessageListener() {
   const { t } = useTranslation();
 
   useEffect(() => {
-    let unuploadedCards = [];
-
     const handlePayload = async (msg) => {
       if (!msg || !msg.type) return;
 
-      if (msg.type === 'DRESSAPP_MIGRATION_STREAM') {
-        const { cards } = msg;
-        if (cards && cards.length > 0) {
-          unuploadedCards.push(...cards);
-        }
-        return;
-      }
-
       if (msg.type === 'DRESSAPP_MIGRATION_COMPLETE') {
-        const total = msg.total_cards || unuploadedCards.length || 0;
-        // If cards were delivered via postMessage / BroadcastChannel fallback
-        if (unuploadedCards.length > 0) {
-          try {
-            await api.saveMigrationCrops({
-              app_name: msg.app_name || 'Imported Closet',
-              cards: unuploadedCards,
-            });
-          } catch (e) {
-            console.warn('[MigrationMessageListener] Fallback save crops error:', e);
-          }
-          unuploadedCards = [];
-        }
+        const total = msg.total_cards || 0;
 
         // Prewarm closet store to fetch new items immediately
         try {

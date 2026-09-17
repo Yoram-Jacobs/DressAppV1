@@ -269,6 +269,16 @@ async def save_migration_crops(
         except Exception:
             pass
 
+        # Check if an identical crop image or phash already exists for this user
+        query_conditions = [{"user_id": user["id"], "clean_image_url": crop_data_url}]
+        if doc.get("source_phash"):
+            query_conditions.append({"user_id": user["id"], "source_phash": doc["source_phash"]})
+
+        existing = await repos.find_one(db.closet_items, {"$or": query_conditions})
+        if existing:
+            skipped += 1
+            continue
+
         await repos.insert(db.closet_items, doc)
         item_ids.append(doc["id"])
         saved += 1
