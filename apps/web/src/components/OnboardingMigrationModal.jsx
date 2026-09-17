@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { isRtl } from '@/lib/i18n';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -26,7 +27,7 @@ const PRESET_APPS = [
 ];
 
 export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdated }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const location = useLocation();
 
   // Kill modal (not process) when user navigates to Closet page from another route
@@ -45,6 +46,29 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
   const [customLoginUrl, setCustomLoginUrl] = useState('https://app.whering.co.uk/login');
   const [busy, setBusy] = useState(false);
 
+  const isCurrentRtl = isRtl(i18n.language || 'en');
+
+  const agentMsgs = useMemo(() => ({
+    title: t('migration.agentTitle', { defaultValue: 'DressApp Agent' }),
+    chooseTabInstruction: t('migration.agentChooseTab', { defaultValue: 'Choose <b>THIS TAB</b> in the sharing prompt to start.' }),
+    shareAndStart: t('migration.agentShareAndStart', { defaultValue: 'Share & Start Agent' }),
+    requestingStream: t('migration.agentRequestingStream', { defaultValue: 'Requesting stream...' }),
+    permissionDenied: t('migration.agentPermissionDenied', { defaultValue: 'Permission denied: {{error}}' }),
+    selectTabError: t('migration.agentSelectTabError', { defaultValue: 'Error: You must select <b>THIS TAB</b> in the sharing prompt. Window or Screen share is not supported as coordinates will not align. Please reload page & try again.' }),
+    connectingStream: t('migration.agentConnectingStream', { defaultValue: 'Connecting stream...' }),
+    scanningCloset: t('migration.agentScanningCloset', { defaultValue: 'Scanning closet page...' }),
+    uploading: t('migration.agentUploading', { defaultValue: 'Uploading to DressApp... ({{uploaded}}/{{total}} cards)' }),
+    scanningCount: t('migration.agentScanningCount', { defaultValue: 'Scanning... {{count}} cards found' }),
+    waitingLazy: t('migration.agentWaitingLazy', { defaultValue: 'Waiting for lazy images... {{count}} cards' }),
+    newImagesLoaded: t('migration.agentNewImagesLoaded', { defaultValue: 'New images loaded ({{visible}} cards visible)... {{total}} captured' }),
+    noNewImages: t('migration.agentNoNewImages', { defaultValue: 'No new images (attempt {{attempt}}/3)... {{count}} cards' }),
+    savingRemaining: t('migration.agentSavingRemaining', { defaultValue: 'Saving remaining {{count}} items to DressApp...' }),
+    savedSuccess: t('migration.agentSavedSuccess', { defaultValue: '✓ {{count}} Items Saved to Closet!' }),
+    completionNotice: t('migration.agentCompletionNotice', { defaultValue: 'All items were uploaded directly to your DressApp closet database.<br><br><b>You can now switch back to DressApp to view your closet!</b>' }),
+    dir: isCurrentRtl ? 'rtl' : 'ltr',
+    align: isCurrentRtl ? 'right' : 'left',
+  }), [t, isCurrentRtl]);
+
   // Use URL-encoded bookmarklet to prevent syntax and drag issues across all browsers
   const harvesterBookmarkletCode = useMemo(() => {
     const authToken = tokenStore?.get?.() || '';
@@ -56,6 +80,7 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
       const AUTH_TOKEN = ${JSON.stringify(authToken)};
       const API_BASE = ${JSON.stringify(apiBase)};
       const APP_NAME = ${JSON.stringify(appName)};
+      const MSGS = ${JSON.stringify(agentMsgs)};
 
       const uploadBatch = async (cardsToUpload) => {
         if (!cardsToUpload || cardsToUpload.length === 0) return 0;
@@ -96,8 +121,8 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
 
       const o = document.createElement('div');
       o.id = 'dressapp-importer-widget';
-      o.style.cssText = 'position:fixed;top:20px;left:20px;z-index:999999;background:rgba(15,23,42,0.95);color:white;padding:16px;border-radius:12px;font-family:sans-serif;font-size:13px;box-shadow:0 10px 25px rgba(0,0,0,0.3);width:280px;line-height:1.4;border:1px solid rgba(255,255,255,0.1);';
-      o.innerHTML = '<div style="font-weight:bold;margin-bottom:8px;font-size:14px;color:#f1f5f9;"><span class="da-pulse-badge">👗</span> DressApp Agent</div><div id="da-status" style="color:#94a3b8;font-size:11px;"><div style="margin-bottom:8px;color:#cbd5e1;">Choose <b>THIS TAB</b> in the sharing prompt to start.</div><button id="da-start-btn" style="background:#6366f1;color:white;border:none;padding:8px 12px;border-radius:6px;cursor:pointer;font-weight:bold;font-size:11px;width:100%;">Share & Start Agent</button></div>';
+      o.style.cssText = 'position:fixed;top:20px;' + (MSGS.dir === 'rtl' ? 'right:20px;' : 'left:20px;') + 'z-index:999999;background:rgba(15,23,42,0.95);color:white;padding:16px;border-radius:12px;font-family:sans-serif;font-size:13px;box-shadow:0 10px 25px rgba(0,0,0,0.3);width:280px;line-height:1.4;border:1px solid rgba(255,255,255,0.1);direction:' + MSGS.dir + ';text-align:' + MSGS.align + ';';
+      o.innerHTML = '<div style="font-weight:bold;margin-bottom:8px;font-size:14px;color:#f1f5f9;"><span class="da-pulse-badge">👗</span> ' + MSGS.title + '</div><div id="da-status" style="color:#94a3b8;font-size:11px;"><div style="margin-bottom:8px;color:#cbd5e1;">' + MSGS.chooseTabInstruction + '</div><button id="da-start-btn" style="background:#6366f1;color:white;border:none;padding:8px 12px;border-radius:6px;cursor:pointer;font-weight:bold;font-size:11px;width:100%;">' + MSGS.shareAndStart + '</button></div>';
       document.body.appendChild(o);
 
       const st = document.getElementById('da-status');
@@ -105,15 +130,15 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
 
       btn.onclick = async () => {
         btn.disabled = true;
-        btn.innerText = 'Requesting stream...';
+        btn.innerText = MSGS.requestingStream;
         let stream;
         try {
           stream = await navigator.mediaDevices.getDisplayMedia({ video: { displaySurface: 'browser' }, preferCurrentTab: true });
         } catch (e) {
           try {
             stream = await navigator.mediaDevices.getDisplayMedia({ video: true, preferCurrentTab: true });
-    } catch (e2) {
-            st.innerHTML = '<span style="color:#f87171;">Permission denied: ' + (e2?.message || e?.message || 'unknown') + '</span>';
+          } catch (e2) {
+            st.innerHTML = '<span style="color:#f87171;">' + (MSGS.permissionDenied.replace('{{error}}', (e2?.message || e?.message || 'unknown'))) + '</span>';
             setTimeout(() => o.remove(), 4000);
             return;
           }
@@ -122,12 +147,12 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
         const track = stream.getVideoTracks()[0];
         const settings = track ? track.getSettings() : {};
         if (settings.displaySurface && settings.displaySurface !== 'browser') {
-          st.innerHTML = '<span style="color:#f87171;">Error: You must select <b>THIS TAB</b> in the sharing prompt. Window or Screen share is not supported as coordinates will not align. Please reload page & try again.</span>';
+          st.innerHTML = '<span style="color:#f87171;">' + MSGS.selectTabError + '</span>';
           if (track) track.stop();
           return;
         }
 
-        st.innerText = 'Connecting stream...';
+        st.innerText = MSGS.connectingStream;
         const video = document.createElement('video');
         video.style.cssText = 'position:absolute;left:-9999px;top:-9999px;width:100px;height:100px;opacity:0.01;pointer-events:none;z-index:-1;';
         video.srcObject = stream;
@@ -369,7 +394,7 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
           }
         };
 
-        st.innerText = 'Scanning closet page...';
+        st.innerText = MSGS.scanningCloset;
 
         while (!reachedBottom) {
           // Hide widget for clean capture
@@ -399,7 +424,7 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
             const batch = harvestedCards.slice(uploadedCount, uploadedCount + 15);
             uploadedCount += 15;
             o.style.display = 'block';
-            st.innerText = 'Uploading to DressApp... (' + uploadedCount + '/' + harvestedCards.length + ' cards)';
+            st.innerText = MSGS.uploading.replace('{{uploaded}}', uploadedCount).replace('{{total}}', harvestedCards.length);
             await uploadBatch(batch);
             try {
               const bc = new BroadcastChannel('dressapp_migration');
@@ -413,7 +438,7 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
           }
 
           o.style.display = 'block';
-          st.innerText = 'Scanning... ' + harvestedCards.length + ' cards found';
+          st.innerText = MSGS.scanningCount.replace('{{count}}', harvestedCards.length);
 
           const prevRectCount = cardRects.length;
           const s1 = getScrollState();
@@ -475,7 +500,7 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
           }
 
           // Adaptive wait for lazy images
-          st.innerText = 'Waiting for lazy images... ' + harvestedCards.length + ' cards';
+          st.innerText = MSGS.waitingLazy.replace('{{count}}', harvestedCards.length);
           const pollStart = Date.now();
           const POLL_TIMEOUT = 12000;
           const POLL_INTERVAL = 600;
@@ -485,7 +510,7 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
             const freshRects = getVisibleGarmentRects();
             if (freshRects.length > prevRectCount) {
               newRectsFound = true;
-              st.innerText = 'New images loaded (' + freshRects.length + ' cards visible)... ' + harvestedCards.length + ' captured';
+              st.innerText = MSGS.newImagesLoaded.replace('{{visible}}', freshRects.length).replace('{{total}}', harvestedCards.length);
               break;
             }
           }
@@ -502,7 +527,7 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
             if (noChangeCount >= 3) {
               break;
             }
-            st.innerText = 'No new images (attempt ' + noChangeCount + '/3)... ' + harvestedCards.length + ' cards';
+            st.innerText = MSGS.noNewImages.replace('{{attempt}}', noChangeCount).replace('{{count}}', harvestedCards.length);
             const retryTarget = actualScrollPos + 200;
             if (scrollEl && scrollEl !== window) scrollEl.scrollTop = retryTarget;
             window.scrollTo(0, retryTarget);
@@ -542,7 +567,7 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
         if (uploadedCount < totalCaptured) {
           const remaining = harvestedCards.slice(uploadedCount);
           o.style.display = 'block';
-          st.innerText = 'Saving remaining ' + remaining.length + ' items to DressApp...';
+          st.innerText = MSGS.savingRemaining.replace('{{count}}', remaining.length);
           await uploadBatch(remaining);
           uploadedCount = totalCaptured;
         }
@@ -569,11 +594,11 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
 
         // Show green completion badge
         o.style.display = 'block';
-        o.innerHTML = '<div style="font-weight:bold;margin-bottom:8px;font-size:14px;color:#f1f5f9;">👗 DressApp Agent</div><div style="color:#10b981;font-weight:bold;font-size:13px;margin-top:8px;margin-bottom:4px;">✓ ' + totalCaptured + ' Items Saved to Closet!</div><div style="color:#cbd5e1;font-size:11px;line-height:1.4;">All items were uploaded directly to your DressApp closet database.<br><br><b>You can now switch back to DressApp to view your closet!</b></div>';
+        o.innerHTML = '<div style="font-weight:bold;margin-bottom:8px;font-size:14px;color:#f1f5f9;"><span class="da-pulse-badge">👗</span> ' + MSGS.title + '</div><div style="color:#10b981;font-weight:bold;font-size:13px;margin-top:8px;margin-bottom:4px;">' + MSGS.savedSuccess.replace('{{count}}', totalCaptured) + '</div><div style="color:#cbd5e1;font-size:11px;line-height:1.4;">' + MSGS.completionNotice + '</div>';
       };
     })();`;
     return 'javascript:' + encodeURIComponent(rawJS);
-  }, [appName]);
+  }, [appName, agentMsgs]);
 
   const bookmarkletRef = useRef(null);
 
@@ -666,14 +691,14 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
                 data-testid="migration-ask-yes-btn"
               >
                 <span>{t('migration.yesImportBtn', { defaultValue: 'Yes, Import Closet' })}</span>
-                <ArrowRight className="w-4 h-4" />
+                <ArrowRight className="w-4 h-4 rtl:rotate-180" />
               </Button>
             </div>
           </div>
         )}
         {/* STEP 2: SEARCH PLATFORM & LOGIN PRESETS */}
         {step === 'app_search' && (
-          <form onSubmit={handleGoToWebLogin} className="space-y-4 text-left flex flex-col overflow-hidden shrink-0">
+          <form onSubmit={handleGoToWebLogin} className="space-y-4 text-start flex flex-col overflow-hidden shrink-0">
             <DialogTitle>{t('migration.selectAppTitle', { defaultValue: 'Select Previous Platform' })}</DialogTitle>
             <DialogDescription>
               {t('migration.selectAppSub', { defaultValue: 'Pick an application to import your wardrobe structure, items list, and layouts.' })}
@@ -686,7 +711,7 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
                     key={app.name}
                     type="button"
                     onClick={() => handleSelectPreset(app)}
-                    className={`flex items-center justify-between p-3 rounded-[12px] border transition-all text-left ${appName === app.name
+                    className={`flex items-center justify-between p-3 rounded-[12px] border transition-all text-start ${appName === app.name
                       ? 'border-primary-brand bg-primary-shadow'
                       : 'border-border hover:border-primary-brand hover:bg-primary-shadow'
                       }`}
@@ -711,7 +736,7 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
                     {t('migration.appNameLabel', { defaultValue: 'Previous App Name / Platform *' })}
                   </Label>
                   <div className="relative mt-1">
-                    <Search className="w-4 h-4 absolute left-3 top-3 text-text-brand" />
+                    <Search className="w-4 h-4 absolute left-3 rtl:left-auto rtl:right-3 top-3 text-text-brand" />
                     <Input
                       id="appNameInput"
                       placeholder={t('migration.searchAppPlaceholder', { defaultValue: 'e.g. Acloset, Stylebook, Whering, Smartli, BeautyAI' })}
@@ -722,7 +747,7 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
                         setAppDomain(d);
                         setCustomLoginUrl(`https://${d}`);
                       }}
-                      className="pl-9"
+                      className="pl-9 rtl:pl-3 rtl:pr-9"
                       required
                       data-testid="migration-form-appname-input"
                     />
@@ -761,7 +786,7 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
             </DialogDescription>
             {/* Content area */}
             <div className="flex-1 relative bg-primary-shadow rounded-[12px] border border-border overflow-y-auto p-3 h-[200px]">
-              <div className="flex flex-col text-left space-y-2 py-2">
+              <div className="flex flex-col text-start space-y-2 py-2">
                 <div className="flex items-center gap-2 shrink-0">
                   <Globe className="!w-4 !h-4 text-primary-brand" />
                   <h3 className="text-[14px] font-bold text-dark-brand">
@@ -839,7 +864,7 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
                 <span>
                   {t('migration.importWardrobeBtn', { defaultValue: 'Import wardrobe' })}
                 </span>
-                <ArrowRight className="w-3.5 h-3.5" />
+                <ArrowRight className="w-3.5 h-3.5 rtl:rotate-180" />
               </Button>
             </div>
             {/* Bottom Navigation */}
