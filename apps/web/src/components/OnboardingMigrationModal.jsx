@@ -771,7 +771,7 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
                 <p className='text-text-brand text-[12px] font-semibold'>
                   {('ontouchstart' in window)
                     ? t('migration.bookmarkletInstallInstructionsMobile', { defaultValue: `Tap the button below to copy the bookmarklet script, then create a new bookmark and paste it as the URL:` })
-                    : t('migration.bookmarkletInstallInstructions', { appName, defaultValue: `Drag the DressApp Agent bookmarklet below to your Chrome Bookmarks Bar, then log in to ${appName} and navigate to your closet page.` })}
+                    : t('migration.bookmarkletInstallInstructions', { appName, defaultValue: `Drag the DressApp Agent bookmarklet below to your browser's Bookmarks Bar, then log in to ${appName} and navigate to your closet page.` })}
                 </p>
                 <div className="flex flex-col items-center justify-center p-3 bg-white border border-border rounded-[12px] gap-2">
                   <a
@@ -809,14 +809,14 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
                   <span className="text-[10px] text-text-brand font-semibold">
                     {('ontouchstart' in window)
                       ? t('migration.bookmarkletMobileSaveTip', { defaultValue: 'Tap to copy → Open ⋮ menu → Bookmarks → + → paste as URL' })
-                      : t('migration.dragTip', { defaultValue: 'Drag this to your Chrome Bookmarks Bar' })}
+                      : t('migration.dragTip', { defaultValue: 'Drag this to your Bookmarks Bar' })}
                   </span>
                 </div>
                 <p className='text-text-brand text-[12px] font-semibold'>
                   {t('migration.bookmarkletUsageInstructions', { appName, defaultValue: `After installing, click "Import wardrobe" below to initialize. Log in to Whering, go to your closet page, then click the "DressApp Agent" bookmarklet.` })}
                 </p>
                 <div className="mt-2.5 p-3 bg-amber-500/10 text-amber-600 rounded-[12px] border border-amber-500/20 text-[11px] leading-normal font-medium space-y-1">
-                  <div>{t('migration.tabSleepAlert', { defaultValue: 'Tab Sleep Alert: Do not switch tabs inside the competitor window while importing (Chrome will sleep/throttle the scroller).' })}</div>
+                  <div>{t('migration.tabSleepAlert', { defaultValue: 'Tab Sleep Alert: Do not switch tabs inside the competitor window while importing (Browsers may sleep or throttle the background scroller).' })}</div>
                   <div>{t('migration.proTip', { defaultValue: 'Pro-Tip: Drag the competitor tab out of your browser window into its own window to keep it running in focus while you multitask!' })}</div>
                 </div>
               </div>
