@@ -192,11 +192,12 @@ export function HelpModal() {
             </Text>
             <View style={styles.stepsContainer}>
               {[
-                t('help.scheduler_push_step1', { defaultValue: 'Enable push notifications in your device settings.' }),
-                t('help.scheduler_push_step2', { defaultValue: 'Choose your preferred delivery time in Profile settings.' }),
-                t('help.scheduler_push_step3', { defaultValue: 'Optionally link your Google Calendar for occasion-aware recommendations.' }),
-                t('help.scheduler_push_step4', { defaultValue: 'Tap the morning notification to open your 3 curated outfit proposals.' }),
-                t('help.scheduler_push_step5', { defaultValue: 'Inspect the weather harmony score and tap to schedule your favorite look.' }),
+                t('help.scheduler_push_step1', { defaultValue: 'Navigate to your Profile settings.' }),
+                t('help.scheduler_push_step2', { defaultValue: 'Go to the Scheduler & Push section and toggle Enable Morning Alerts.' }),
+                t('help.scheduler_push_step3', { defaultValue: 'Select your preferred notification time and style preference.' }),
+                t('help.scheduler_push_step4', { defaultValue: 'Optionally link your Google Calendar for event-aware recommendations.' }),
+                t('help.scheduler_push_step5', { defaultValue: 'The system tracks weather forecasts and curates a personalized daily outfit, with the option to refresh a New Look anytime.' }),
+                t('help.scheduler_push_step6', { defaultValue: 'Tap the push alert to view the look on your avatar, tap Wear Today, or curate a New Look.' }),
               ].map((step, idx) => (
                 <View key={idx} style={[styles.stepCard, { backgroundColor: colors.secondary, borderColor: colors.border }]}>
                   <View style={[styles.stepBadge, { backgroundColor: colors.primary }]}>

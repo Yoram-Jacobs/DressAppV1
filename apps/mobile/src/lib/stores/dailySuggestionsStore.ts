@@ -12,13 +12,19 @@ import { useSyncExternalStore } from 'react';
 export interface DailyOutfitSuggestion {
   id: string;
   date: string;
-  title: string;
+  title?: string;
+  name?: string;
   description?: string;
   weather_summary?: string;
   temperature?: number;
   items: any[];
+  garments?: any[];
   harmony_score?: number;
+  matching_grade?: number;
   reasoning?: string;
+  worn?: boolean;
+  liked?: boolean;
+  dismissed?: boolean;
 }
 
 interface DailySuggestionsState {
@@ -123,10 +129,39 @@ export const dailySuggestionsStore = {
     }
   },
 
-  async act(action: string, proposalId?: string): Promise<any> {
+  async generate(force = true): Promise<DailyOutfitSuggestion | null> {
+    setState((prev) => ({ ...prev, loading: true, error: null }));
+    try {
+      let data: any = null;
+      if ((api as any).generateDailyProposal) {
+        data = await (api as any).generateDailyProposal(force);
+      } else {
+        data = await api.plannerScout({ occasion: 'daily' });
+      }
+      if (data) {
+        setState((prev) => ({
+          ...prev,
+          suggestion: data,
+          loading: false,
+          lastFetch: Date.now(),
+          error: null,
+        }));
+      }
+      return data;
+    } catch (err: any) {
+      setState((prev) => ({
+        ...prev,
+        loading: false,
+        error: err?.message || 'Failed to generate new look',
+      }));
+      return null;
+    }
+  },
+
+  async act(action: string, proposalId?: string, date?: string): Promise<any> {
     if ((api as any).actOnDailyProposal) {
       try {
-        const res = await (api as any).actOnDailyProposal(action, proposalId);
+        const res = await (api as any).actOnDailyProposal(action, proposalId, date);
         if (res) {
           setState((prev) => ({
             ...prev,
@@ -160,6 +195,8 @@ export function useDailySuggestionsStore() {
   return {
     ...state,
     prewarm: dailySuggestionsStore.prewarm.bind(dailySuggestionsStore),
+    generate: dailySuggestionsStore.generate.bind(dailySuggestionsStore),
+    act: dailySuggestionsStore.act.bind(dailySuggestionsStore),
     reset: dailySuggestionsStore.reset.bind(dailySuggestionsStore),
   };
 }

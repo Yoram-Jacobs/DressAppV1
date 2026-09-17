@@ -102,5 +102,5 @@ export { emitAuthChange } from './authEvents';
 export {
   auth, users, closet, listings, transactions, stylist, outfits,
   suitcase, trends, professionals, promotions, pricing, share, avatar,
-  calendar, misc, campaignApi,
+  calendar, misc, campaignApi, sync, syncManager,
 } from '@dressapp/api-client';

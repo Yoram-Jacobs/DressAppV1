@@ -469,7 +469,7 @@ export function StylistChatView({ onSelectOutfitForTryOn }: StylistChatViewProps
     const userMsg: ChatMessage = {
       id: optimisticId,
       role: 'user',
-      content: t('stylist.triggerScheduledRequest', { defaultValue: "Get tomorrow's scheduled outfit proposals" }),
+      content: t('stylist.triggerScheduledRequest', { defaultValue: "Get tomorrow's scheduled outfit proposal" }),
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
     };
     setMessages((prev) => [...prev, userMsg]);
@@ -498,7 +498,7 @@ export function StylistChatView({ onSelectOutfitForTryOn }: StylistChatViewProps
       console.warn('Daily proposal error:', err);
       Alert.alert(
         t('common.error', { defaultValue: 'Error' }),
-        err?.response?.data?.detail || t('stylist.proposalFailed', { defaultValue: 'Failed to generate daily proposals.' })
+        err?.response?.data?.detail || t('stylist.proposalFailed', { defaultValue: 'Failed to generate daily proposal.' })
       );
       setMessages((prev) => prev.filter((x) => x.id !== optimisticId));
     } finally {

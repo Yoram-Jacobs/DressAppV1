@@ -18,6 +18,8 @@ import {
   TouchableOpacity,
   StyleSheet,
   I18nManager,
+  ActivityIndicator,
+  Alert,
 } from 'react-native';
 import { Image } from 'expo-image';
 import { useTranslation } from 'react-i18next';
@@ -26,9 +28,10 @@ import * as Lucide from 'lucide-react-native';
 
 import { useTheme } from '@mobile/theme';
 import { fonts, fontSizes, spacing, radii } from '@mobile/theme/tokens';
-import { useClosetStore, useUserStore, useOutfitStore } from '@mobile/lib/stores';
+import { useClosetStore, useUserStore, useOutfitStore, useDailySuggestionsStore, outfitStore } from '@mobile/lib/stores';
 import { labelForDressCode } from '@mobile/lib/taxonomy';
 import { getItemImageUrl, resolveImageUrl } from '@mobile/lib/imageUtils';
+import { api } from '@mobile/lib/api';
 
 interface DailySuggestionViewProps {
   onTryOn?: (outfit: any) => void;
@@ -447,8 +450,20 @@ export function DailySuggestionView({ onTryOn }: DailySuggestionViewProps) {
   const { items: closetItems } = useClosetStore({ prewarm: true });
   const { user } = useUserStore();
   const { items: outfits } = useOutfitStore({ prewarm: true });
+  const {
+    suggestion: dailyProposal,
+    loading: dailyLoading,
+    generate: generateDaily,
+    act: actDaily,
+    prewarm: prewarmDaily,
+  } = useDailySuggestionsStore();
 
+  const [generatingDaily, setGeneratingDaily] = useState(false);
   const [currentCalendarMonth, setCurrentCalendarMonth] = useState<Date>(new Date());
+
+  useEffect(() => {
+    prewarmDaily().catch(() => {});
+  }, [prewarmDaily]);
 
   // Format month name header
   const monthHeader = useMemo(() => {
@@ -479,6 +494,80 @@ export function DailySuggestionView({ onTryOn }: DailySuggestionViewProps) {
     },
     [outfits]
   );
+
+  const todayOutfit = useMemo(() => getOutfitForDate(todayStr), [getOutfitForDate, todayStr]);
+
+  const activeProposal = useMemo(() => {
+    if (
+      dailyProposal &&
+      ((dailyProposal.items && dailyProposal.items.length > 0) ||
+        (dailyProposal.garments && dailyProposal.garments.length > 0))
+    ) {
+      return dailyProposal;
+    }
+    return null;
+  }, [dailyProposal]);
+
+  const handleNewLook = async () => {
+    if (generatingDaily) return;
+    setGeneratingDaily(true);
+    try {
+      const newProp = await generateDaily(true);
+      if (newProp) {
+        Alert.alert(
+          t('stylist.title', { defaultValue: 'Your Stylist' }),
+          t('stylist.suggestionRefreshed', { defaultValue: 'Refreshed today’s suggestion!' })
+        );
+      }
+    } catch (err: any) {
+      Alert.alert(
+        t('common.error', { defaultValue: 'Error' }),
+        t('common.failedToLoad', { defaultValue: 'Failed to refresh look.' })
+      );
+    } finally {
+      setGeneratingDaily(false);
+    }
+  };
+
+  const handleWearProposal = async () => {
+    if (!activeProposal) return;
+    try {
+      const rawItems = activeProposal.items || activeProposal.garments || [];
+      const savedOutfitBody = {
+        name: activeProposal.name || activeProposal.title || 'Look of the Day',
+        description: activeProposal.description || 'Daily style suggestion',
+        source_workflow: 'scheduled',
+        prompt: (user?.scheduler_settings as any)?.style_dress_for || user?.scheduler_settings?.style_option || 'casual',
+        garments: rawItems.map((it: any) => {
+          const cid = it.closet_item_id || it.id;
+          const ci = closetItems.find((c: any) => c && (c.id === cid || c._id === cid));
+          return {
+            closet_item_id: cid,
+            role: it.role || it.category || 'item',
+            title: it.name || it.title || it.description || ci?.title || ci?.name || 'Garment',
+            image_url: getItemImageUrl(ci) || it.image_url || it.clean_image_url || '',
+          };
+        }),
+        usage: {
+          date: todayStr,
+          time: '08:00',
+        },
+        is_fallback: false,
+      };
+
+      const saved = await api.saveOutfit(savedOutfitBody);
+      if (saved) {
+        outfitStore.upsert(saved);
+      }
+      await actDaily('wear', activeProposal.id, todayStr);
+      Alert.alert(
+        t('stylist.title', { defaultValue: 'Your Stylist' }),
+        t('stylist.wearTodaySuccess', { defaultValue: 'Scheduled look for today!' })
+      );
+    } catch (err: any) {
+      console.warn('Failed to wear daily proposal:', err);
+    }
+  };
 
   // ── Render Monthly Calendar View ──────────────────────────────────────────
   const schedulerEnabled = user?.scheduler_settings?.enabled ?? true;
@@ -546,6 +635,200 @@ export function DailySuggestionView({ onTryOn }: DailySuggestionViewProps) {
           </Text>
         </TouchableOpacity>
       </View>
+
+      {/* 1.5 Today's Style Suggestion / Scheduled Outfit Card */}
+      {(todayOutfit || activeProposal || dailyLoading) && (
+        <View style={[styles.todayCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
+          {/* Header Row */}
+          <View style={styles.todayCardHeader}>
+            <View style={styles.todayHeaderLeft}>
+              <View style={[styles.sparkleCircle, { backgroundColor: 'rgba(31, 111, 107, 0.12)' }]}>
+                <Lucide.Sparkles size={18} color={colors.accent} />
+              </View>
+              <View style={styles.todayTitleCol}>
+                <View style={styles.todayTitleBadgeRow}>
+                  <Text style={[styles.todayTitleText, { color: colors.foreground }]}>
+                    {todayOutfit
+                      ? t('calendar.todayOutfit', { defaultValue: "Today's Scheduled Outfit" })
+                      : t('stylist.todaySuggestionTitle', { defaultValue: "Today's Style Suggestion" })}
+                  </Text>
+                  <View style={[styles.dateBadge, { borderColor: colors.border, backgroundColor: colors.background }]}>
+                    <Text style={[styles.dateBadgeText, { color: colors.mutedFg }]}>
+                      {new Date().toLocaleDateString(i18n.language || 'en', { month: 'short', day: 'numeric' })}
+                    </Text>
+                  </View>
+                  {(todayOutfit || activeProposal?.worn) && (
+                    <View style={styles.scheduledBadge}>
+                      <Text style={styles.scheduledBadgeText}>
+                        {t('calendar.scheduled', { defaultValue: 'Scheduled' })}
+                      </Text>
+                    </View>
+                  )}
+                </View>
+                <Text style={[styles.todaySubtitleText, { color: colors.mutedFg }]} numberOfLines={2}>
+                  {todayOutfit
+                    ? (todayOutfit.description || todayOutfit.name)
+                    : (activeProposal?.description || t('stylist.todaySuggestionSubtitle', { defaultValue: 'Curated based on your style profile, weather conditions, and closet harmony.' }))}
+                </Text>
+              </View>
+            </View>
+          </View>
+
+          {/* Loading state when fetching initially */}
+          {dailyLoading && !activeProposal && !todayOutfit ? (
+            <View style={styles.loadingBox}>
+              <ActivityIndicator size="small" color={colors.accent} />
+              <Text style={[styles.loadingText, { color: colors.mutedFg }]}>
+                {t('stylist.curatingDailyLook', { defaultValue: 'Curating your look for today...' })}
+              </Text>
+            </View>
+          ) : (
+            <>
+              {/* Garments Thumbnail Strip */}
+              {(() => {
+                const itemsToRender = todayOutfit?.garments || todayOutfit?.items || activeProposal?.items || activeProposal?.garments || [];
+                if (itemsToRender.length === 0) return null;
+                return (
+                  <ScrollView
+                    horizontal
+                    showsHorizontalScrollIndicator={false}
+                    contentContainerStyle={styles.garmentsRow}
+                  >
+                    {itemsToRender.map((g: any, idx: number) => {
+                      const cid = g.closet_item_id || g.id;
+                      const cItem = closetItems.find((it: any) => it && (it.id === cid || it._id === cid));
+                      const rawUrl =
+                        (cItem && getItemImageUrl(cItem)) ||
+                        cItem?.reconstructed_image_url ||
+                        cItem?.clean_image_url ||
+                        g.image_url ||
+                        g.clean_image_url ||
+                        cItem?.image_url;
+                      const img = resolveImageUrl(rawUrl);
+
+                      return (
+                        <TouchableOpacity
+                          key={idx}
+                          style={[styles.garmentThumbCard, { borderColor: colors.border, backgroundColor: colors.background }]}
+                          onPress={() => {
+                            if (onTryOn) {
+                              onTryOn(todayOutfit || activeProposal);
+                            }
+                          }}
+                          activeOpacity={0.8}
+                        >
+                          <View style={styles.garmentThumbWrap}>
+                            {img ? (
+                              <Image source={{ uri: img }} style={styles.garmentImg} contentFit="contain" />
+                            ) : (
+                              <Lucide.Shirt size={20} color={colors.mutedFg} />
+                            )}
+                          </View>
+                          <Text style={[styles.garmentTitle, { color: colors.foreground }]} numberOfLines={1}>
+                            {g.name || g.title || cItem?.name || cItem?.title || g.role || 'Item'}
+                          </Text>
+                        </TouchableOpacity>
+                      );
+                    })}
+                  </ScrollView>
+                );
+              })()}
+
+              {/* Action Buttons Row */}
+              <View style={styles.todayActionsRow}>
+                {/* Try On / View on Avatar */}
+                <TouchableOpacity
+                  style={[styles.actionBtn, { backgroundColor: colors.secondary, borderColor: colors.border }]}
+                  onPress={() => {
+                    if (onTryOn) {
+                      onTryOn(todayOutfit || activeProposal);
+                    }
+                  }}
+                  activeOpacity={0.8}
+                >
+                  <Lucide.Shirt size={14} color={colors.foreground} />
+                  <Text style={[styles.actionBtnText, { color: colors.foreground }]}>
+                    {t('stylist.tryOnAvatar', { defaultValue: 'Try On' })}
+                  </Text>
+                </TouchableOpacity>
+
+                {/* New Look Button */}
+                <TouchableOpacity
+                  style={[styles.actionBtn, { backgroundColor: colors.secondary, borderColor: colors.border }]}
+                  onPress={handleNewLook}
+                  disabled={generatingDaily}
+                  activeOpacity={0.8}
+                >
+                  {generatingDaily ? (
+                    <ActivityIndicator size="small" color={colors.foreground} />
+                  ) : (
+                    <Lucide.RefreshCw size={14} color={colors.foreground} />
+                  )}
+                  <Text style={[styles.actionBtnText, { color: colors.foreground }]}>
+                    {generatingDaily
+                      ? t('common.loading', { defaultValue: 'Loading...' })
+                      : t('stylist.refreshSuggestion', { defaultValue: 'New Look' })}
+                  </Text>
+                </TouchableOpacity>
+
+                {/* Wear Today Button (if not already scheduled) */}
+                {!todayOutfit && activeProposal && (
+                  <TouchableOpacity
+                    style={[styles.actionBtnPrimary, { backgroundColor: colors.accent }]}
+                    onPress={handleWearProposal}
+                    activeOpacity={0.8}
+                  >
+                    <Lucide.CalendarCheck size={14} color="#FFF" />
+                    <Text style={styles.actionBtnPrimaryText}>
+                      {t('stylist.wearToday', { defaultValue: 'Wear Today' })}
+                    </Text>
+                  </TouchableOpacity>
+                )}
+              </View>
+            </>
+          )}
+        </View>
+      )}
+
+      {/* Fallback empty curate button if no outfit and not loading */}
+      {!todayOutfit && !activeProposal && !dailyLoading && (
+        <View style={[styles.todayCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
+          <View style={styles.todayCardHeader}>
+            <View style={styles.todayHeaderLeft}>
+              <View style={[styles.sparkleCircle, { backgroundColor: 'rgba(31, 111, 107, 0.12)' }]}>
+                <Lucide.Sparkles size={18} color={colors.accent} />
+              </View>
+              <View style={styles.todayTitleCol}>
+                <Text style={[styles.todayTitleText, { color: colors.foreground }]}>
+                  {t('stylist.todaySuggestionTitle', { defaultValue: "Today's Style Suggestion" })}
+                </Text>
+                <Text style={[styles.todaySubtitleText, { color: colors.mutedFg }]}>
+                  {t('stylist.todaySuggestionSubtitle', { defaultValue: 'Curated based on your style profile, weather conditions, and closet harmony.' })}
+                </Text>
+              </View>
+            </View>
+          </View>
+          <View style={styles.todayActionsRow}>
+            <TouchableOpacity
+              style={[styles.actionBtnPrimary, { backgroundColor: colors.accent }]}
+              onPress={handleNewLook}
+              disabled={generatingDaily}
+              activeOpacity={0.8}
+            >
+              {generatingDaily ? (
+                <ActivityIndicator size="small" color="#FFF" />
+              ) : (
+                <Lucide.Sparkles size={14} color="#FFF" />
+              )}
+              <Text style={styles.actionBtnPrimaryText}>
+                {generatingDaily
+                  ? t('common.loading', { defaultValue: 'Loading...' })
+                  : t('stylist.curateTodayLook', { defaultValue: 'Curate Today’s Look' })}
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      )}
 
       {/* 2. Monthly Scheduled Outfits Calendar Card */}
       <View style={[styles.calendarCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
@@ -724,6 +1007,147 @@ const styles = StyleSheet.create({
   editSchedulerBtnText: {
     fontFamily: fonts.bodyBold,
     fontSize: fontSizes.xs,
+  },
+  // ── Today's Suggestion Card ───────────────────────────────────────────────
+  todayCard: {
+    padding: spacing.md,
+    borderRadius: radii.xl,
+    borderWidth: 1,
+    gap: spacing.sm,
+  },
+  todayCardHeader: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
+    gap: spacing.sm,
+  },
+  todayHeaderLeft: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: spacing.sm,
+    flex: 1,
+  },
+  sparkleCircle: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  todayTitleCol: {
+    flex: 1,
+  },
+  todayTitleBadgeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flexWrap: 'wrap',
+    gap: 6,
+  },
+  todayTitleText: {
+    fontFamily: fonts.displayBold,
+    fontSize: fontSizes.sm,
+  },
+  dateBadge: {
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: radii.full,
+    borderWidth: 1,
+  },
+  dateBadgeText: {
+    fontFamily: fonts.bodyMedium,
+    fontSize: 10,
+  },
+  scheduledBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: radii.full,
+    backgroundColor: '#059669',
+  },
+  scheduledBadgeText: {
+    fontFamily: fonts.bodyBold,
+    fontSize: 10,
+    color: '#FFFFFF',
+  },
+  todaySubtitleText: {
+    fontFamily: fonts.body,
+    fontSize: fontSizes.xs,
+    marginTop: 3,
+    lineHeight: 16,
+  },
+  loadingBox: {
+    paddingVertical: spacing.md,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  loadingText: {
+    fontFamily: fonts.bodyMedium,
+    fontSize: fontSizes.xs,
+    marginTop: 6,
+  },
+  garmentsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    paddingVertical: spacing.xs,
+  },
+  garmentThumbCard: {
+    alignItems: 'center',
+    width: 72,
+    padding: 6,
+    borderRadius: radii.lg,
+    borderWidth: 1,
+  },
+  garmentThumbWrap: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: 'rgba(0,0,0,0.03)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    overflow: 'hidden',
+    marginBottom: 4,
+  },
+  garmentImg: {
+    width: 44,
+    height: 44,
+  },
+  garmentTitle: {
+    fontFamily: fonts.bodyMedium,
+    fontSize: 9,
+    textAlign: 'center',
+  },
+  todayActionsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    flexWrap: 'wrap',
+    marginTop: 2,
+  },
+  actionBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 6,
+    borderRadius: radii.lg,
+    borderWidth: 1,
+  },
+  actionBtnText: {
+    fontFamily: fonts.bodyBold,
+    fontSize: fontSizes.xs,
+  },
+  actionBtnPrimary: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    paddingHorizontal: spacing.md,
+    paddingVertical: 6,
+    borderRadius: radii.lg,
+  },
+  actionBtnPrimaryText: {
+    fontFamily: fonts.bodyBold,
+    fontSize: fontSizes.xs,
+    color: '#FFFFFF',
   },
   // ── Monthly Calendar ──────────────────────────────────────────────────────
   calendarCard: {
