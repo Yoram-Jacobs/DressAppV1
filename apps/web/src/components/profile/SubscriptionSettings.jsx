@@ -167,23 +167,23 @@ export function SubscriptionSettings() {
             <div className="flex flex-col gap-4 pt-1">
               <Link
                 to="/pricing#tiers"
-                className="flex-1 flex items-center justify-between p-4 rounded-xl border border-border bg-card hover:bg-secondary/10 transition-colors group"
+                className="flex-1 flex items-center justify-between p-3 rounded-[12px] border border-border bg-white transition-colors group"
               >
                 <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-lg bg-primary/5 text-primary group-hover:bg-primary group-hover:text-white transition-colors">
+                  <div className="p-2 rounded-lg bg-primary-shadow text-primary-brand transition-colors">
                     <Crown className="h-5 w-5" />
                   </div>
                   <div className="text-start">
                     <span className="font-semibold text-sm block text-dark-brand">
                       {t('profile.selectYourPlan', { defaultValue: 'Select your plan' })}
                     </span>
-                    <span className="text-xs text-text-brand block mt-0.5">
+                    <span className="text-xs text-text-brand block mt-0.5 text-semibold">
                       {t('profile.selectYourPlanDesc', { defaultValue: 'Choose a monthly or annual subscription tier.' })}
                     </span>
                   </div>
                 </div>
-                <span className="text-xs font-semibold text-brand flex items-center gap-1 whitespace-nowrap">
-                  {t('profile.viewTiers', { defaultValue: 'View Plans' })} &rarr;
+                <span className="text-xs font-semibold text-primary-brand flex items-center gap-1 whitespace-nowrap">
+                  {t('profile.viewTiers', { defaultValue: 'View Plans' })}
                 </span>
               </Link>
             </div>

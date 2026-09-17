@@ -82,22 +82,19 @@ export default function AuthCallback() {
   }, [nav, refresh, t]);
 
   return (
-    <div
-      className="min-h-[100dvh] flex items-center justify-center p-6 hero-wash-light noise"
-      data-testid="auth-callback-page"
-    >
-      <Card className="w-full max-w-md rounded-[calc(var(--radius)+6px)] shadow-editorial">
-        <CardContent className="p-8 text-center">
+    <div className="flex min-h-[100svh] items-center justify-center bg-accent-beige p-6" data-testid="auth-callback-page">
+      <Card className="w-full max-w-md rounded-2xl bg-card shadow-md">
+        <CardContent className="p-6 text-center">
           {!error ? (
             <>
               <Loader2
-                className="h-8 w-8 mx-auto mb-4 animate-spin text-[hsl(var(--accent))]"
+                className="h-8 w-8 mx-auto mb-4 animate-spin text-primary-brand"
                 data-testid="auth-callback-spinner"
               />
-              <h1 className="font-display text-2xl mb-2">
+              <h1 className="text-[20px] text-dark-brand font-bold max-[480px]:text-[16px]">
                 {t('auth.finishingSignIn')}
               </h1>
-              <p className="text-sm text-muted-foreground">
+              <p className="text-[14px] font-semibold text-text-brand">
                 {t('auth.finishingSignInSub')}
               </p>
             </>
@@ -107,18 +104,19 @@ export default function AuthCallback() {
                 className="h-8 w-8 mx-auto mb-4 text-destructive"
                 data-testid="auth-callback-error-icon"
               />
-              <h1 className="font-display text-2xl mb-2">
+              <h1 className="text-[20px] text-dark-brand font-bold max-[480px]:text-[16px]">
                 {t('auth.signInFailed')}
               </h1>
               <p
-                className="text-sm text-muted-foreground mb-6 break-all"
+                className="text-[14px] font-semibold text-text-brand break-all mb-2"
                 data-testid="auth-callback-error-message"
               >
                 {error}
               </p>
               <Button
+                size="sm"
                 onClick={() => nav('/login', { replace: true })}
-                className="rounded-xl"
+                className=""
                 data-testid="auth-callback-back-to-login"
               >
                 {t('auth.backToLogin')}

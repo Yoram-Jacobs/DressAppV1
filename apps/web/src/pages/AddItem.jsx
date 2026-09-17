@@ -3496,7 +3496,7 @@ export default function AddItem() {
 
                   {/* Bottom badge + subtitle section — redesigned */}
                   <div
-                    className="mt-5 flex items-center justify-center gap-2 max-w-md mx-auto rounded-full border border-border flex-wrap bg-accent-beige px-4 py-2"
+                    className="mt-5 flex items-center justify-center gap-2 max-w-md mx-auto rounded-full border border-border bg-accent-beige px-4 py-2 max-[480px]:flex-wrap"
                     onClick={(e) => e.stopPropagation()}
                   >
                     <Badge
@@ -3613,7 +3613,6 @@ export default function AddItem() {
                             disabled={isExtracting}
                           />
                         )}
-
                         {importMode === "file" && (
                           <div
                             onClick={() =>
@@ -3671,7 +3670,6 @@ export default function AddItem() {
                             </div>
                           </div>
                         )}
-
                         {importMode === "url" && (
                           <Input
                             type="url"
@@ -3763,7 +3761,6 @@ export default function AddItem() {
                       </div>
                     </div>
                   )}
-
                   {!importFile && (
                     <div className="flex justify-center w-full">
                       <Button
@@ -3813,7 +3810,6 @@ export default function AddItem() {
                       </Button>
                     </div>
                   )}
-
                   {/* Extracted Ingestion List */}
                   {extractedItems.length > 0 && (
                     <div className="w-full flex flex-col mt-8 border-t border-border/40 pt-6 text-left">

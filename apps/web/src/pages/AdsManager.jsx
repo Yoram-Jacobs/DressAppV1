@@ -170,22 +170,26 @@ export default function AdsManager() {
 
   if (!isPro) {
     return (
-      <div className="container-px max-w-3xl mx-auto pt-10">
-        <Card className="rounded-[calc(var(--radius)+6px)] shadow-editorial" data-testid="ads-gated">
-          <CardContent className="p-8 text-center">
-            <AlertTriangle className="h-8 w-8 mx-auto text-amber-600" />
-            <h1 className="font-display text-2xl mt-3">{t('ads.title')}</h1>
-            <p className="text-muted-foreground mt-2 max-w-md mx-auto">
-              {t('ads.onlyProfessionals')}
-            </p>
-            <div className="mt-5">
-              <Button asChild className="rounded-xl" data-testid="ads-go-profile">
-                <Link to="/me">{t('nav.settings')} →</Link>
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+      <>
+        <section className="bg-accent-beige h-[100vh] flex justify-center items-center px-[40px] py-[40px]  max-[991px]:px-[15px] max-[991px]:py-[30px]
+            max-[767px]:px-[15px] max-[767px]:py-[30px]
+            max-[480px]:px-[15px] max-[480px]:py-[30px]">
+          <Card className="bg-white rounded-[12px] border border-border shadow-sm" data-testid="ads-gated">
+            <CardContent className="p-8 text-center">
+              <AlertTriangle className="h-8 w-8 mx-auto text-destructive mb-4" />
+              <h1 className="text-[20px] font-bold text-dark-brand">{t('ads.title')}</h1>
+              <p className="text-[14px] font-semibold text-text-brand max-w-md mx-auto">
+                {t('ads.onlyProfessionals')}
+              </p>
+              <div className="mt-4">
+                <Button asChild  data-testid="ads-go-profile">
+                  <Link to="/me">{t('nav.settings')}</Link>
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </section>
+      </>
     );
   }
   return (

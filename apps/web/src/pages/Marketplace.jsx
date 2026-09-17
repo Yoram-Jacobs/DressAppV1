@@ -788,11 +788,11 @@ function MyListings() {
         </button>
       </div>
       {items.length === 0 ? (
-        <div className="py-16 text-center text-[#7d827a]">
-          <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-[#f4f4ef] flex items-center justify-center text-2xl text-[#b5b5ae]">
-            <i className="fa-solid fa-shirt"></i>
+        <div className="p-16 text-center bg-white rounded-[12px] shadow-sm border border-border">
+          <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-primary-shadow flex items-center justify-center text-2xl">
+            <i className="fa-solid fa-shirt text-primary-brand"></i>
           </div>
-          <h2 className="text-lg font-bold text-dark-brand">{t("market.noMyListings")}</h2>
+          <h2 className="text-[16px] font-bold text-dark-brand">{t("market.noMyListings")}</h2>
         </div>
       ) : (
         <div
@@ -886,10 +886,10 @@ function InlineTransactions() {
           {t("market.loading")}
         </div>
       ) : items.length === 0 ? (
-        <div className="market-tx-empty">
+        <div className="text-center p-16">
           <svg
             viewBox="0 0 200 160"
-            className="market-tx-empty-illustration"
+            className="w-[150px] h-auto mx-auto mb-[14px] block"
             xmlns="http://www.w3.org/2000/svg"
           >
             <ellipse
@@ -969,8 +969,8 @@ function InlineTransactions() {
               fill="none"
             />
           </svg>
-          <h2>{t("market.noTx")}</h2>
-          <p>
+          <h2 className='text-[16px] font-bold text-[var(--dark-color)] mb-[6px]'>{t("market.noTx")}</h2>
+          <p className='text-[14px] font-semibold text-[var(--text-color)] max-w-[320px] mx-auto'>
             {tab === "buyer"
               ? t("transactions.emptyBuyerSub", {
                 defaultValue: "Items you purchase will show up here.",
