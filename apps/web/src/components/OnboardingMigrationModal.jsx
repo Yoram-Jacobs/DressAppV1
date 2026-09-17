@@ -714,10 +714,19 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
                     : t('migration.bookmarkletInstallInstructions', { appName, defaultValue: `Drag the DressApp Agent bookmarklet below to your Chrome Bookmarks Bar, then log in to ${appName} and navigate to your closet page.` })}
                 </p>
                 <div className="flex flex-col items-center justify-center p-3 bg-white border border-border rounded-[12px] gap-2">
-                  <button
-                    type="button"
-                    ref={!('ontouchstart' in window) ? bookmarkletRef : undefined}
-                    draggable={!('ontouchstart' in window)}
+                  <a
+                    ref={bookmarkletRef}
+                    href={harvesterBookmarkletCode}
+                    title="DressApp Agent"
+                    draggable={true}
+                    onDragStart={(e) => {
+                      if (e.dataTransfer) {
+                        try {
+                          e.dataTransfer.setData('text/uri-list', harvesterBookmarkletCode);
+                          e.dataTransfer.setData('text/plain', harvesterBookmarkletCode);
+                        } catch (_) {}
+                      }
+                    }}
                     onClick={(e) => {
                       e.preventDefault();
                       if (!harvesterBookmarkletCode) return;
@@ -741,10 +750,10 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
                         toast.info(t('migration.bookmarkletClickTip', { defaultValue: 'Drag this button to your bookmarks bar. Do not click it directly!' }));
                       }
                     }}
-                    className="px-4 py-2 text-[12px] bg-primary-brand text-white font-semibold rounded-full shadow-sm hover:opacity-90"
+                    className="inline-flex items-center justify-center px-5 py-2.5 text-[12px] bg-primary-brand text-white font-semibold rounded-full shadow-sm hover:opacity-90 cursor-grab active:cursor-grabbing select-none transition-all duration-200"
                   >
                     {t('migration.bookmarkletBtn', { defaultValue: 'DressApp Agent' })}
-                  </button>
+                  </a>
                   <span className="text-[10px] text-text-brand font-semibold">
                     {('ontouchstart' in window)
                       ? t('migration.bookmarkletMobileSaveTip', { defaultValue: 'Tap to copy → Open ⋮ menu → Bookmarks → + → paste as URL' })
