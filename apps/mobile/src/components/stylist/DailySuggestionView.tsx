@@ -831,10 +831,14 @@ export function DailySuggestionView({ onTryOn }: DailySuggestionViewProps) {
               </View>
               <View style={styles.todayTitleCol}>
                 <Text style={[styles.todayTitleText, { color: colors.foreground }]}>
-                  {t('stylist.todaySuggestionTitle', { defaultValue: "Today's Style Suggestion" })}
+                  {isTomorrow
+                    ? t('stylist.tomorrowSuggestionTitle', { defaultValue: "Tomorrow's Style Suggestion" })
+                    : t('stylist.todaySuggestionTitle', { defaultValue: "Today's Style Suggestion" })}
                 </Text>
                 <Text style={[styles.todaySubtitleText, { color: colors.mutedFg }]}>
-                  {t('stylist.todaySuggestionSubtitle', { defaultValue: 'Curated based on your style profile, weather conditions, and closet harmony.' })}
+                  {isTomorrow
+                    ? t('stylist.tomorrowSuggestionSubtitle', { defaultValue: 'Curated for tomorrow based on your style profile, forecasted weather, and calendar events.' })
+                    : t('stylist.todaySuggestionSubtitle', { defaultValue: 'Curated based on your style profile, weather conditions, and closet harmony.' })}
                 </Text>
               </View>
             </View>
@@ -854,6 +858,8 @@ export function DailySuggestionView({ onTryOn }: DailySuggestionViewProps) {
               <Text style={styles.actionBtnPrimaryText}>
                 {generatingDaily
                   ? t('common.loading', { defaultValue: 'Loading...' })
+                  : isTomorrow
+                  ? t('stylist.curateTomorrowLook', { defaultValue: 'Curate Tomorrow’s Look' })
                   : t('stylist.curateTodayLook', { defaultValue: 'Curate Today’s Look' })}
               </Text>
             </TouchableOpacity>

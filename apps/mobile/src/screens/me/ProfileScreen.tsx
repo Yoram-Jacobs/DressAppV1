@@ -189,6 +189,7 @@ export function ProfileScreen() {
   const [schedulerFrequency, setSchedulerFrequency] = useState('everyday');
   const [schedulerStyleOption, setSchedulerStyleOption] = useState('casual');
   const [schedulerCustomStyle, setSchedulerCustomStyle] = useState('');
+  const [schedulerSelectedTags, setSchedulerSelectedTags] = useState<string[]>([]);
   const [weatherSync, setWeatherSync] = useState(true);
   const [calendarSync, setCalendarSync] = useState(false);
 
@@ -321,8 +322,16 @@ export function ProfileScreen() {
         else if (u.morning_notification_time) setMorningTime(u.morning_notification_time);
         if (sched.frequency) setSchedulerFrequency(sched.frequency);
         if (sched.style_option) setSchedulerStyleOption(sched.style_option);
-        if (sched.custom_style) setSchedulerCustomStyle(sched.custom_style);
-        else if (Array.isArray(sched.selected_tags) && sched.selected_tags.length > 0) setSchedulerCustomStyle(sched.selected_tags.join(', '));
+        if (sched.style_option === 'tags' && Array.isArray(sched.selected_tags) && sched.selected_tags.length > 0) {
+          setSchedulerCustomStyle(sched.selected_tags.join(', '));
+        } else if (sched.custom_style) {
+          setSchedulerCustomStyle(sched.custom_style);
+        } else if (Array.isArray(sched.selected_tags) && sched.selected_tags.length > 0) {
+          setSchedulerCustomStyle(sched.selected_tags.join(', '));
+        }
+        if (Array.isArray(sched.selected_tags)) {
+          setSchedulerSelectedTags(sched.selected_tags);
+        }
         if (sched.weather_sync !== undefined) setWeatherSync(sched.weather_sync);
         if (sched.calendar_sync !== undefined) setCalendarSync(sched.calendar_sync);
 
@@ -574,7 +583,9 @@ export function ProfileScreen() {
           frequency: schedulerFrequency,
           style_option: schedulerStyleOption,
           custom_style: schedulerCustomStyle,
-          selected_tags: schedulerStyleOption === 'tags' ? (schedulerCustomStyle || '').split(',').map((s: string) => s.trim()).filter(Boolean) : [],
+          selected_tags: schedulerStyleOption === 'tags'
+            ? (schedulerCustomStyle || '').split(',').map((s: string) => s.trim()).filter(Boolean)
+            : schedulerSelectedTags,
           style_dress_for: schedulerStyleOption === 'custom' || schedulerStyleOption === 'tags' ? schedulerCustomStyle : schedulerStyleOption,
           weather_sync: weatherSync,
           calendar_sync: calendarSync,
@@ -623,6 +634,25 @@ export function ProfileScreen() {
           setSkinTone(res.skin_tone || '#E0AC69');
         }
         if (res.ai_configuration?.custom_keys) setCustomKeys(res.ai_configuration.custom_keys);
+        if (res.scheduler_settings) {
+          const s = res.scheduler_settings;
+          if (s.enabled !== undefined) setSchedulerEnabled(Boolean(s.enabled));
+          if (s.time) setMorningTime(s.time);
+          if (s.frequency) setSchedulerFrequency(s.frequency);
+          if (s.style_option) setSchedulerStyleOption(s.style_option);
+          if (s.style_option === 'tags' && Array.isArray(s.selected_tags) && s.selected_tags.length > 0) {
+            setSchedulerCustomStyle(s.selected_tags.join(', '));
+          } else if (s.custom_style !== undefined) {
+            setSchedulerCustomStyle(s.custom_style);
+          } else if (Array.isArray(s.selected_tags) && s.selected_tags.length > 0) {
+            setSchedulerCustomStyle(s.selected_tags.join(', '));
+          }
+          if (Array.isArray(s.selected_tags)) {
+            setSchedulerSelectedTags(s.selected_tags);
+          }
+          if (s.weather_sync !== undefined) setWeatherSync(Boolean(s.weather_sync));
+          if (s.calendar_sync !== undefined) setCalendarSync(Boolean(s.calendar_sync));
+        }
       }
       Alert.alert(
         t('common.success', { defaultValue: 'Success' }),

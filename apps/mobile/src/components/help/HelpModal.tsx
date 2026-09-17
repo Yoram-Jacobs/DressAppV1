@@ -197,7 +197,7 @@ export function HelpModal() {
                 t('help.scheduler_push_step3', { defaultValue: 'Select your preferred notification time and style preference.' }),
                 t('help.scheduler_push_step4', { defaultValue: 'Optionally link your Google Calendar for event-aware recommendations.' }),
                 t('help.scheduler_push_step5', { defaultValue: 'The system tracks weather forecasts and curates a personalized daily outfit, with the option to refresh a New Look anytime.' }),
-                t('help.scheduler_push_step6', { defaultValue: 'Tap the push alert to view the look on your avatar, tap Wear Today, or curate a New Look.' }),
+                t('help.scheduler_push_step6', { defaultValue: 'Tap the push alert to view the look on your avatar, tap Wear Tomorrow, or curate a New Look.' }),
               ].map((step, idx) => (
                 <View key={idx} style={[styles.stepCard, { backgroundColor: colors.secondary, borderColor: colors.border }]}>
                   <View style={[styles.stepBadge, { backgroundColor: colors.primary }]}>
