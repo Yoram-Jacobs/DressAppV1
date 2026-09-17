@@ -697,7 +697,7 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
               {t('migration.screenshotPipelineTitle', { defaultValue: 'Wardrobe Migration Agent' })}
             </DialogTitle>
             <DialogDescription>
-              {t('migration.screenshotPipelineSub', { defaultValue: 'Agentic closet importer powered by Gemini 2.5 Flash.' })}
+              {t('migration.screenshotPipelineSub', { defaultValue: "DressApp will capture garment cards from your competitor's wardrobe via screen capture." })}
             </DialogDescription>
             {/* Content area */}
             <div className="flex-1 relative bg-primary-shadow rounded-[12px] border border-border overflow-y-auto p-3 h-[200px]">
@@ -711,7 +711,7 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
                 <p className='text-text-brand text-[12px] font-semibold'>
                   {('ontouchstart' in window)
                     ? t('migration.bookmarkletInstallInstructionsMobile', { defaultValue: `Tap the button below to copy the bookmarklet script, then create a new bookmark and paste it as the URL:` })
-                    : t('migration.bookmarkletInstallInstructions', { appName, defaultValue: `Drag the agent bookmarklet button below to your browser Bookmarks Bar (Ctrl+Shift+B to show the bar):` })}
+                    : t('migration.bookmarkletInstallInstructions', { appName, defaultValue: `Drag the DressApp Agent bookmarklet below to your Chrome Bookmarks Bar, then log in to ${appName} and navigate to your closet page.` })}
                 </p>
                 <div className="flex flex-col items-center justify-center p-3 bg-white border border-border rounded-[12px] gap-2">
                   <button
@@ -748,7 +748,7 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
                   <span className="text-[10px] text-text-brand font-semibold">
                     {('ontouchstart' in window)
                       ? t('migration.bookmarkletMobileSaveTip', { defaultValue: 'Tap to copy → Open ⋮ menu → Bookmarks → + → paste as URL' })
-                      : t('migration.dragTip', { defaultValue: 'Drag this button to your browser Bookmarks Bar' })}
+                      : t('migration.dragTip', { defaultValue: 'Drag this to your Chrome Bookmarks Bar' })}
                   </span>
                 </div>
                 <p className='text-text-brand text-[12px] font-semibold'>
