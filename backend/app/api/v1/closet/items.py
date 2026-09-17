@@ -766,19 +766,20 @@ async def list_items(
                     it.pop(img_key, None)
             if isinstance(it.get("image_url"), str) and it["image_url"].startswith("data:"):
                 it["image_url"] = it["thumbnail_data_url"]
-    total = await repos.count(db.closet_items, query)
+    total = await repos.count(db.closet_items, {"user_id": user["id"]}) if not (source or category or search or marketplace_intent or updated_after) else await repos.count(db.closet_items, query)
+    total_all = await repos.count(db.closet_items, {"user_id": user["id"]})
     # Surface the response shape in logs so deployment/cache issues are
     # immediately diagnosable. If a user reports "I have 311 items but
     # see only 100", we can grep this line to confirm whether the
     # backend ACTUALLY returned 100 (cap somewhere upstream) vs
     # returned 311 (frontend / browser cache problem).
     logger.info(
-        "GET /closet user=%s returning items=%d total=%d limit=%d skip=%d "
+        "GET /closet user=%s returning items=%d total=%d total_all=%d limit=%d skip=%d "
         "filters={source=%s category=%s search=%s}",
-        user["id"], len(items), total, limit, skip,
+        user["id"], len(items), total, total_all, limit, skip,
         source or "-", category or "-", search or "-",
     )
-    return {"items": items, "total": total, "limit": limit, "skip": skip}
+    return {"items": items, "total": total, "total_all": total_all, "limit": limit, "skip": skip}
 
 
 # ─────────────────────────────────────────────────────────────────────
