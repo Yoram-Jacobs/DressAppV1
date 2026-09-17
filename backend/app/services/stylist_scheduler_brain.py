@@ -86,19 +86,33 @@ def calculate_garment_style_score(item: dict, style_dress_for: str | None) -> in
     
     score = 0
     
-    # 1. Expand synonyms for prompt_lower
-    syns = set(SYNONYMS.get(prompt_lower, [prompt_lower]))
+    # 1. Expand synonyms for prompt_lower and individual tag tokens
+    # When user provides multiple tags (e.g. "Work, Summer, Solid" or "עבודה, קיץ"),
+    # split by commas and evaluate each tag token as well as the full prompt.
+    tokens = [t.strip() for t in prompt_lower.replace(";", ",").split(",") if t.strip()]
+    if not tokens:
+        tokens = [prompt_lower]
+
+    syns = set()
+    for tok in tokens:
+        syns.add(tok)
+        syns.update(SYNONYMS.get(tok, []))
     syns.add(prompt_lower)
+    syns.update(SYNONYMS.get(prompt_lower, []))
     
-    # Direct tag or custom tag match (Massive priority boost)
-    for t in tags + custom_tags:
-        if t in syns or any(s in t for s in syns if len(s) >= 2) or prompt_lower in t:
-            score += 60
+    # Direct tag or custom tag match (Massive priority boost per matched tag)
+    for tok in tokens:
+        tok_syns = set(SYNONYMS.get(tok, [tok]))
+        tok_syns.add(tok)
+        for t in tags + custom_tags:
+            if t in tok_syns or any(s in t for s in tok_syns if len(s) >= 2) or tok in t:
+                score += 60
+                break  # count boost once per user token
             
     # Text / Title / Description match
     for s in syns:
         if len(s) >= 2 and s in all_text:
-            score += 35
+            score += 25
             
     # Formality / Occasion analysis
     is_formal_or_smart = any(w in prompt_lower for w in (
@@ -248,9 +262,15 @@ async def get_rotation_prioritized_closet(
     # Check if there is at least one exact case-insensitive tag or synonym match in the user's closet
     has_exact_tag_match = False
     if style_dress_for:
-        style_clean = style_dress_for.strip().lower()
-        syns = set(SYNONYMS.get(style_clean, [style_clean]))
-        syns.add(style_clean)
+        tokens = [t.strip().lower() for t in style_dress_for.replace(";", ",").split(",") if t.strip()]
+        if not tokens:
+            tokens = [style_dress_for.strip().lower()]
+        syns = set()
+        for tok in tokens:
+            syns.add(tok)
+            syns.update(SYNONYMS.get(tok, []))
+        syns.add(style_dress_for.strip().lower())
+        syns.update(SYNONYMS.get(style_dress_for.strip().lower(), []))
         for it in items:
             it_tags = [str(t).lower().strip() for t in (it.get("tags") or []) if t]
             it_custom = [str(t).lower().strip() for t in (it.get("custom_tags") or []) if t]
@@ -685,24 +705,65 @@ async def generate_scheduled_proposals(
     weather: dict[str, Any] | None = None,
     calendar_events: list[dict[str, Any]] | None = None,
     exclude_item_ids: set[str] | list[str] | None = None,
+    target_date: datetime | str | None = None,
 ) -> dict[str, Any]:
     """Generate 1 scheduled outfit proposal using the rotation prioritized items."""
     user = dict(user)
     user.pop("_id", None)
     user_id = user["id"]
 
-    # If weather was not passed in, attempt to fetch it directly
+    # Determine target day and date for the outfit selection
+    user_timezone = (user.get("scheduler_settings") or {}).get("timezone") or "UTC"
+    try:
+        from zoneinfo import ZoneInfo
+        local_now = datetime.now(timezone.utc).astimezone(ZoneInfo(user_timezone))
+    except Exception:
+        local_now = datetime.now(timezone.utc)
+
+    # By default, scheduled daily outfit suggestions are ALWAYS for tomorrow, giving users time
+    # to prepare, change, iron, or mend their garments in advance.
+    if isinstance(target_date, str):
+        try:
+            target_date_obj = datetime.strptime(target_date, "%Y-%m-%d")
+        except Exception:
+            target_date_obj = local_now + timedelta(days=1)
+    elif isinstance(target_date, datetime):
+        target_date_obj = target_date
+    else:
+        target_date_obj = local_now + timedelta(days=1)
+
+    target_day_name = target_date_obj.strftime("%A")
+    target_date_str = target_date_obj.strftime("%Y-%m-%d")
+    is_tomorrow = target_date_str > local_now.strftime("%Y-%m-%d")
+
+    # If weather was not passed in, attempt to fetch it directly for the target day
     if not weather:
         try:
-            from app.services.weather_service import weather_service
+            from app.services.weather_service import weather_service, get_target_weather
             loc = user.get("location") or user.get("home_location") or {}
             lat = loc.get("latitude") or loc.get("lat")
             lng = loc.get("longitude") or loc.get("lng") or loc.get("lon")
             lang = user.get("preferred_language") or "en"
             if lat is not None and lng is not None and weather_service is not None:
-                weather = await weather_service.fetch(float(lat), float(lng), lang=lang)
+                raw_weather = await weather_service.fetch(float(lat), float(lng), lang=lang)
+                weather = get_target_weather(raw_weather, is_next_day=is_tomorrow)
         except Exception as w_exc:
             logger.warning("Failed to fetch weather inside scheduler brain for user %s: %s", user_id, w_exc)
+
+    # If calendar events were not passed in, attempt to fetch for the target day
+    if calendar_events is None:
+        try:
+            from app.services.calendar_service import calendar_service
+            from zoneinfo import ZoneInfo
+            local_start = datetime(target_date_obj.year, target_date_obj.month, target_date_obj.day, 0, 0, 0, tzinfo=ZoneInfo(user_timezone))
+            local_end = datetime(target_date_obj.year, target_date_obj.month, target_date_obj.day, 23, 59, 59, tzinfo=ZoneInfo(user_timezone))
+            calendar_events = await calendar_service.get_events_for_user(
+                user,
+                time_min=local_start.astimezone(timezone.utc),
+                time_max=local_end.astimezone(timezone.utc)
+            )
+        except Exception as cal_exc:
+            logger.warning("Failed to fetch calendar events in scheduler brain: %s", cal_exc)
 
     # Fetch closet items prioritized by tag restriction and weather/season matching
     raw_closet = await get_rotation_prioritized_closet(
@@ -743,37 +804,56 @@ async def generate_scheduled_proposals(
         for item in prioritized_closet
     )
 
-    # Determine target day and date for the outfit selection
-    user_timezone = (user.get("scheduler_settings") or {}).get("timezone") or "UTC"
-    try:
-        from zoneinfo import ZoneInfo
-        local_now = datetime.now(timezone.utc).astimezone(ZoneInfo(user_timezone))
-    except Exception:
-        local_now = datetime.now(timezone.utc)
-    is_next_day = local_now.hour >= 12
-    target_date = local_now + timedelta(days=1) if is_next_day else local_now
-    target_day_name = target_date.strftime("%A")
-    target_date_str = target_date.strftime("%Y-%m-%d")
-
     style_prompt = style_dress_for or "casual/daily dress"
-    syns_list = SYNONYMS.get(style_prompt.strip().lower(), [])
+    tokens = [t.strip() for t in style_prompt.replace(";", ",").split(",") if t.strip()]
+    if not tokens:
+        tokens = [style_prompt.strip()]
+
+    all_syns = set()
+    for tok in tokens:
+        all_syns.add(tok)
+        all_syns.update(SYNONYMS.get(tok.lower(), []))
+    all_syns.update(SYNONYMS.get(style_prompt.strip().lower(), []))
+    syns_list = sorted([s for s in all_syns if s.lower() not in [t.lower() for t in tokens]])
     if syns_list:
-        syns_hint = f" (Keywords/Tags: {', '.join(syns_list)})"
+        syns_hint = f" (Keywords/Tags/Synonyms: {', '.join(syns_list[:10])})"
     else:
         syns_hint = ""
     style_display = f"{style_prompt}{syns_hint}"
+
+    is_multi_tag = len(tokens) > 1
+    tag_list_str = ", ".join(f"'{t}'" for t in tokens)
+    syns_hint_str = f" or matching synonyms ({', '.join(syns_list[:8])})" if syns_list else ""
+
+    if is_multi_tag:
+        tag_vibe_rule = (
+            f"   - MULTI-TAG VIBE SYNTHESIS & HARMONY:\n"
+            f"     • The user explicitly specified multiple style tags: {tag_list_str}.\n"
+            f"     • Your recommendation's overall aesthetic vibe, harmony, and title MUST synthesize ALL requested tags together (e.g., if tags are 'Work', 'Summer', 'Solid', the style vibe is 'Solid summer work outfit').\n"
+            f"     • Strongly prioritize closet items matching {tag_list_str}{syns_hint_str}. An item matching multiple requested tags has the highest priority.\n"
+            f"     • Directly reflect this combined vibe in the outfit 'name' and explain how each selected garment embodies this combined aesthetic in the 'why' rationale.\n"
+        )
+    else:
+        tag_vibe_rule = (
+            f"   - STYLE VIBE & TAG PRIORITY:\n"
+            f"     • Target style tag/preference: '{style_prompt}'.\n"
+            f"     • If the closet items list below contains garments with the tag '{style_prompt}'{syns_hint_str}, strongly prioritize selecting those items.\n"
+            f"     • Ensure the outfit's aesthetic vibe, title ('name'), and 'why' rationale directly embody and reflect this style preference.\n"
+        )
     
+    day_prefix = "tomorrow, " if is_tomorrow else ""
+    day_label = f"tomorrow ({target_day_name})" if is_tomorrow else target_day_name
     weather_info = ""
     if weather:
         temp = weather.get("temp_c")
         cond = weather.get("condition") or weather.get("description")
-        weather_info = f"Weather forecast for {target_day_name}: {temp}°C, {cond}." if temp is not None else f"Weather condition: {cond}."
+        weather_info = f"Weather forecast for {day_label}: {temp}°C, {cond}." if temp is not None else f"Weather condition for {day_label}: {cond}."
 
     calendar_info = ""
     if calendar_events:
         event_titles = [f"'{e.get('summary') or e.get('title') or 'Event'}'" for e in calendar_events if (e.get('summary') or e.get('title'))]
         if event_titles:
-            calendar_info = f"Scheduled calendar events for {target_day_name}: {', '.join(event_titles)}."
+            calendar_info = f"Scheduled calendar events for {day_label}: {', '.join(event_titles)}."
 
     weather_line = f"- {weather_info}\n" if weather_info else ""
     calendar_line = f"- {calendar_info}\n" if calendar_info else ""
@@ -785,7 +865,7 @@ async def generate_scheduled_proposals(
         f"you constantly keep up with current local fashion and social trends. Your ability to tailor a perfect outfit for an event and weather from the customer's own garments, "
         f"following the customer's restrictions and orders, is well known and admired.\n\n"
         f"GOAL:\n"
-        f"Generate EXACTLY 1 complete, distinct, and coordinated full-body outfit recommendation for {target_day_name} ({target_date_str}) from the user's Closet items below, "
+        f"Generate EXACTLY 1 complete, distinct, and coordinated full-body outfit recommendation for {day_prefix}{target_day_name} ({target_date_str}) from the user's Closet items below, "
         f"following Fashion and Social Rules and Restrictions.\n\n"
         f"CONTEXT & APPLIED FILTERS:\n"
         f"- Target Occasion / Style Preference: '{style_display}'\n"
@@ -794,8 +874,9 @@ async def generate_scheduled_proposals(
         f"STRICT STYLING RULES & RESTRICTIONS:\n"
         f"1. FASHION & SOCIAL/RELIGIOUS RESTRICTIONS:\n"
         f"   - Always follow timeless fashion harmony rules (color theory, texture/material pairing, proportional silhouette, pattern clash prevention) and respect any local social, modest, or religious restrictions.\n"
-        f"2. APPLIED TAG FILTERS & PREFERENCES:\n"
-        f"   - If the closet items list below contains garments with the tag '{style_prompt}' or matching tags/synonyms ({', '.join(syns_list) if syns_list else style_prompt}), prioritize selecting those items. Only when no matching tags are found or to complete the outfit (e.g. if there are no shoes with that tag), select other items matching the intent/style of the preference.\n"
+        f"2. APPLIED TAG FILTERS & STYLE VIBE:\n"
+        f"{tag_vibe_rule}"
+        f"   - Only when no matching tags are found for a category or to complete the full-body outfit (e.g. if there are no shoes with the tag), select complementary items that harmonize with the requested style vibe.\n"
         f"3. ROTATION & DIVERSITY:\n"
         f"   - Rotate items within categories: make every item count and get used.\n"
         f"   - Select a fresh, cohesive combination suited for the day.\n"
@@ -832,13 +913,13 @@ async def generate_scheduled_proposals(
         f"{{\n"
         f"  \"reasoning_summary\": string,\n"
         f"  \"outfit_recommendations\": Array<{{\n"
-        f"    \"name\": string, // 3-6 words. Generates a highly descriptive, appealing, and creative style title (e.g., 'Casual Blue & White Summer Hangout', 'Classic Charcoal Streetwear', 'Sporty Emerald Workout') describing the vibe, season, and color combination. Avoid generic titles like 'The Look' or 'Outfit 1'.\n"
+        f"    \"name\": string, // 3-6 words. Generates a highly descriptive, appealing, and creative style title (e.g., 'Casual Blue & White Summer Hangout', 'Classic Charcoal Streetwear', 'Solid Summer Work Outfit') describing the combined vibe, season, and color combination that reflects the requested style and tags. Avoid generic titles like 'The Look' or 'Outfit 1'.\n"
         f"    \"items\": Array<{{\n"
         f"      \"role\": \"top\"|\"bottom\"|\"outerwear\"|\"shoes\"|\"accessory\"|\"dress\",\n"
         f"      \"description\": string, // Use the item's title/description from the list.\n"
         f"      \"closet_item_id\": string // MUST be a valid ID from the closet list above. Cannot be null.\n"
         f"    }}>,\n"
-        f"    \"why\": string,\n"
+        f"    \"why\": string, // Detailed explanation of why this outfit was curated, specifically highlighting how the requested tags/style ('{style_prompt}') and weather/calendar events are reflected in the selected pieces.\n"
         f"    \"confidence\": number\n"
         f"  }}> // Curate exactly 1 outfit recommendation\n"
         f"}}"

@@ -97,9 +97,10 @@ export const dailySuggestionsStore = {
     }
   },
 
-  async generate(force = true) {
+  async generate(force = true, occasion = 'daily', date = null) {
     if (api.generateDailyProposal) {
-      const proposal = await api.generateDailyProposal(force);
+      const targetDate = date || _state.dailyProposal?.date;
+      const proposal = await api.generateDailyProposal(force, occasion, targetDate);
       if (proposal) {
         _set({
           proposals: [proposal],

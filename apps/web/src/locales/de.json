@@ -1966,7 +1966,11 @@
     "apiKeyInvalidNotice": "Die Validierung des API-Schlüssels ist fehlgeschlagen. Bitte überprüfen Sie Ihren Schlüssel von Google AI Studio.",
     "testKey": "Testschlüssel",
     "apiKeyRequiredTitle": "API-Schlüssel erforderlich",
-    "apiKeyRequiredMessage": "Bitte geben Sie in Ihrem Profil -> AI-Konfiguration einen gültigen Google Gemini-API-Schlüssel ein, um den AI Stylist zu verwenden."
+    "apiKeyRequiredMessage": "Bitte geben Sie in Ihrem Profil -> AI-Konfiguration einen gültigen Google Gemini-API-Schlüssel ein, um den AI Stylist zu verwenden.",
+    "selectOrWriteTags": "Tags auswählen oder eingeben",
+    "tagsPlaceholder": "Tag eingeben und Enter drücken (z.B. Arbeit, Sommer, Unifarben)",
+    "availableTags": "Aus deinem Kleiderschrank:",
+    "noTagsFound": "Keine Tags gefunden. Oben tippen zum Hinzufügen."
   },
   "admin": {
     "title": "Admin",
@@ -2153,7 +2157,8 @@
       "formal": "Formell",
       "athletic": "Sportlich",
       "loungewear": "Freizeitkleidung",
-      "all": "Alle Stile"
+      "all": "Alle Stile",
+      "tags": "Tags"
     },
     "gender": {
       "men": "Herren",

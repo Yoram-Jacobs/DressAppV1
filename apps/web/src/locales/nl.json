@@ -1966,7 +1966,11 @@
     "apiKeyInvalidNotice": "Validatie van API-sleutel mislukt. Controleer uw sleutel van Google AI Studio.",
     "testKey": "Testsleutel",
     "apiKeyRequiredTitle": "API-sleutel vereist",
-    "apiKeyRequiredMessage": "Voer een geldige Google Gemini API-sleutel in uw profiel -> AI-configuratie in om de AI Stylist te gebruiken."
+    "apiKeyRequiredMessage": "Voer een geldige Google Gemini API-sleutel in uw profiel -> AI-configuratie in om de AI Stylist te gebruiken.",
+    "selectOrWriteTags": "Tags selecteren of typen",
+    "tagsPlaceholder": "Typ een tag en druk op Enter (bijv. Werk, Zomer, Effen)",
+    "availableTags": "Uit je kledingkast:",
+    "noTagsFound": "Geen tags gevonden. Typ hierboven om toe te voegen."
   },
   "admin": {
     "title": "Beheerder",
@@ -2153,7 +2157,8 @@
       "formal": "Formeel",
       "athletic": "Atletisch",
       "loungewear": "Loungekleding",
-      "all": "Alle stijlen"
+      "all": "Alle stijlen",
+      "tags": "Tags"
     },
     "gender": {
       "men": "Heren",

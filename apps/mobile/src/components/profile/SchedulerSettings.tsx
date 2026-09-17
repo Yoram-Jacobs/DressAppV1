@@ -12,7 +12,7 @@
  *   - Framed borders selection feedback throughout
  */
 
-import React from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   View,
   Text,
@@ -25,6 +25,7 @@ import { useTranslation } from 'react-i18next';
 import * as Lucide from 'lucide-react-native';
 import { useTheme } from '@mobile/theme';
 import { fonts, fontSizes, spacing, radii } from '@mobile/theme/tokens';
+import { useClosetStore } from '@mobile/lib/stores';
 
 const FREQUENCIES = [
   { id: 'everyday', label: 'Everyday' },
@@ -38,6 +39,7 @@ const STYLES = [
   { id: 'formal', label: 'Formal' },
   { id: 'business', label: 'Business' },
   { id: 'sporty', label: 'Sporty' },
+  { id: 'tags', label: 'Tags' },
   { id: 'night_out', label: 'Night Out' },
   { id: 'custom', label: 'Custom' },
 ];
@@ -77,6 +79,47 @@ export function SchedulerSettings({
 }: SchedulerProps) {
   const { t } = useTranslation();
   const { colors, isDark } = useTheme();
+
+  const { items: closetItems } = useClosetStore({ prewarm: true });
+  const [tagDraft, setTagDraft] = useState('');
+
+  const selectedTags = useMemo(() => {
+    if (styleOption !== 'tags') return [];
+    return (customStyle || '')
+      .split(',')
+      .map((s) => s.trim())
+      .filter(Boolean);
+  }, [styleOption, customStyle]);
+
+  const availableClosetTags = useMemo(() => {
+    const tagsSet = new Set<string>();
+    (closetItems || []).forEach((it: any) => {
+      (it?.tags || []).forEach((t: any) => {
+        const tr = String(t || '').trim();
+        if (tr) tagsSet.add(tr);
+      });
+      (it?.custom_tags || []).forEach((t: any) => {
+        const tr = String(t || '').trim();
+        if (tr) tagsSet.add(tr);
+      });
+    });
+    return Array.from(tagsSet).sort((a, b) => a.localeCompare(b));
+  }, [closetItems]);
+
+  const addTag = (tagToAdd?: string) => {
+    const clean = String(tagToAdd || tagDraft).trim();
+    if (!clean) return;
+    if (!selectedTags.some((t) => t.toLowerCase() === clean.toLowerCase())) {
+      const updated = [...selectedTags, clean];
+      setCustomStyle(updated.join(', '));
+    }
+    setTagDraft('');
+  };
+
+  const removeTag = (tagToRemove: string) => {
+    const updated = selectedTags.filter((t) => t.toLowerCase() !== tagToRemove.toLowerCase());
+    setCustomStyle(updated.join(', '));
+  };
 
   return (
     <View style={styles.container}>
@@ -198,19 +241,119 @@ export function SchedulerSettings({
         </View>
       </View>
 
+      {/* Tags Selector UI */}
+      {styleOption === 'tags' && (
+        <View style={styles.field}>
+          <Text style={[styles.label, { color: colors.foreground }]}>
+            {t('profile.selectOrWriteTags', { defaultValue: 'Select or write tags' })}
+          </Text>
+          <View style={{ flexDirection: 'row', gap: spacing.xs, alignItems: 'center' }}>
+            <TextInput
+              style={[
+                styles.input,
+                { backgroundColor: colors.secondary, color: colors.foreground, borderColor: colors.border, flex: 1 },
+              ]}
+              value={tagDraft}
+              onChangeText={setTagDraft}
+              onSubmitEditing={() => addTag()}
+              placeholder={t('profile.tagsPlaceholder', { defaultValue: 'Type a tag and press Enter (e.g. Work, Summer, Solid)' })}
+              placeholderTextColor={colors.mutedFg}
+              returnKeyType="done"
+            />
+            {tagDraft.trim().length > 0 && (
+              <TouchableOpacity
+                onPress={() => addTag()}
+                style={{
+                  backgroundColor: colors.accent,
+                  paddingHorizontal: spacing.sm,
+                  paddingVertical: spacing.xs + 3,
+                  borderRadius: radii.md,
+                }}
+              >
+                <Lucide.Plus size={16} color="#FFFFFF" />
+              </TouchableOpacity>
+            )}
+          </View>
+
+          {/* Selected Tags */}
+          {selectedTags.length > 0 && (
+            <View style={[styles.chipsContainer, { marginTop: spacing.xs }]}>
+              {selectedTags.map((tag) => (
+                <View
+                  key={tag}
+                  style={[
+                    styles.chip,
+                    {
+                      backgroundColor: 'rgba(31, 111, 107, 0.16)',
+                      borderColor: colors.accent,
+                      borderWidth: 1,
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      gap: 4,
+                    },
+                  ]}
+                >
+                  <Text style={[styles.chipText, { color: colors.foreground, fontFamily: fonts.bodyBold }]}>
+                    {tag}
+                  </Text>
+                  <TouchableOpacity onPress={() => removeTag(tag)}>
+                    <Lucide.X size={12} color={colors.mutedFg} />
+                  </TouchableOpacity>
+                </View>
+              ))}
+            </View>
+          )}
+
+          {/* Available Closet Tags */}
+          {availableClosetTags.filter((t) => !selectedTags.some((st) => st.toLowerCase() === t.toLowerCase())).length > 0 && (
+            <View style={{ marginTop: spacing.xs + 2 }}>
+              <Text style={{ fontSize: 11, color: colors.mutedFg, marginBottom: 4, fontFamily: fonts.bodyMedium }}>
+                {t('profile.availableTags', { defaultValue: 'From your closet:' })}
+              </Text>
+              <View style={styles.chipsContainer}>
+                {availableClosetTags
+                  .filter((t) => !selectedTags.some((st) => st.toLowerCase() === t.toLowerCase()))
+                  .map((tag) => (
+                    <TouchableOpacity
+                      key={tag}
+                      onPress={() => addTag(tag)}
+                      style={[
+                        styles.chip,
+                        {
+                          backgroundColor: colors.secondary,
+                          borderColor: colors.border,
+                          borderWidth: 1,
+                          flexDirection: 'row',
+                          alignItems: 'center',
+                          gap: 2,
+                        },
+                      ]}
+                    >
+                      <Lucide.Plus size={10} color={colors.mutedFg} />
+                      <Text style={[styles.chipText, { color: colors.mutedFg }]}>{tag}</Text>
+                    </TouchableOpacity>
+                  ))}
+              </View>
+            </View>
+          )}
+        </View>
+      )}
+
       {/* Dress For Demands (Costume) Field */}
-      <View style={styles.field}>
-        <Text style={[styles.label, { color: colors.foreground }]}>
-          {t('profile.dressForDemands', { defaultValue: 'Dress For Demands (Custom Occasion / Costume)' })}
-        </Text>
-        <TextInput
-          style={[styles.input, { backgroundColor: colors.secondary, color: colors.foreground, borderColor: colors.border }]}
-          value={customStyle}
-          onChangeText={setCustomStyle}
-          placeholder={t('profile.dressForDemandsPlaceholder', { defaultValue: 'e.g. Rainy day client presentation, Creative pitch, Wedding guest' })}
-          placeholderTextColor={colors.mutedFg}
-        />
-      </View>
+      {styleOption === 'custom' && (
+        <View style={styles.field}>
+          <Text style={[styles.label, { color: colors.foreground }]}>
+            {t('profile.dressForDemands', { defaultValue: 'Dress For Demands (Custom Occasion / Costume)' })}
+          </Text>
+          <TextInput
+            style={[styles.input, { backgroundColor: colors.secondary, color: colors.foreground, borderColor: colors.border }]}
+            value={customStyle}
+            onChangeText={setCustomStyle}
+            placeholder={t('profile.dressForDemandsPlaceholder', { defaultValue: 'e.g. Rainy day client presentation, Creative pitch, Wedding guest' })}
+            placeholderTextColor={colors.mutedFg}
+          />
+        </View>
+      )}
 
       {/* Environment & Sync Toggles */}
       <View style={styles.togglesList}>

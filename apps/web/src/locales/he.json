@@ -1759,6 +1759,10 @@
     "styleDressFor": "סגנון לבוש עבור",
     "dressForDemands": "דרישות סגנון לבוש",
     "customStylePlaceholder": "למשל: חדר כושר, טיול, משרד",
+    "selectOrWriteTags": "בחר או הקלד תגיות",
+    "tagsPlaceholder": "הקלד תגית ולחץ Enter (למשל: עבודה, קיץ, חלק)",
+    "availableTags": "מהארון שלך:",
+    "noTagsFound": "לא נמצאו תגיות בארון. הקלד למעלה כדי להוסיף.",
     "browserPushAlerts": "התראות פוש בדפדפן (Web Push)",
     "receiveDirectBrowserAlerts": "קבלת התראות ישירות על מכשיר זה.",
     "phoneWarningStart": "* ודא שמספר הטלפון שלך מוגדר תחת סעיף ",
@@ -2189,6 +2193,7 @@
       "formal": "רשמי",
       "athletic": "אתלטי",
       "loungewear": "בית",
+      "tags": "תגיות",
       "all": "כל הסגנונות"
     },
     "gender": {

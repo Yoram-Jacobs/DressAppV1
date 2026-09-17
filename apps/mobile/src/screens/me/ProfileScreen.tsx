@@ -573,6 +573,7 @@ export function ProfileScreen() {
           frequency: schedulerFrequency,
           style_option: schedulerStyleOption,
           custom_style: schedulerCustomStyle,
+          style_dress_for: schedulerStyleOption === 'custom' || schedulerStyleOption === 'tags' ? schedulerCustomStyle : schedulerStyleOption,
           weather_sync: weatherSync,
           calendar_sync: calendarSync,
           campaign_notification_prefs: {

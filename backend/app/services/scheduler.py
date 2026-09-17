@@ -189,11 +189,13 @@ def _generate_fallback_advice(
     # Check if there is at least one exact case-insensitive tag match in the user's closet
     has_exact_tag_match = False
     if style_dress_for:
-        style_clean = style_dress_for.strip().lower()
+        tokens = [t.strip().lower() for t in style_dress_for.replace(";", ",").split(",") if t.strip()]
+        if not tokens:
+            tokens = [style_dress_for.strip().lower()]
         for it in clean_items:
-            it_tags = [t.lower() for t in (it.get("tags") or [])]
-            it_custom = [t.lower() for t in (it.get("custom_tags") or [])]
-            if style_clean in it_tags or style_clean in it_custom:
+            it_tags = [str(t).lower() for t in (it.get("tags") or [])]
+            it_custom = [str(t).lower() for t in (it.get("custom_tags") or [])]
+            if any(tok in it_tags or tok in it_custom or any(tok in t for t in it_tags + it_custom) for tok in tokens):
                 has_exact_tag_match = True
                 break
 
@@ -321,10 +323,11 @@ def _generate_fallback_advice(
 
                 top_title = top.get("title") or top.get("name") or "Top"
                 bottom_title = bottom.get("title") or bottom.get("name") or "Bottom"
+                vibe_label = style_dress_for.strip() if style_dress_for else "Daily Casual"
                 all_outfits.append({
-                    "name": f"Outfit with {top_title} and {bottom_title}",
+                    "name": f"{vibe_label} Outfit: {top_title} & {bottom_title}",
                     "items": items,
-                    "why": f"Recommended based on {style_dress_for or 'casual'} style preference",
+                    "why": f"Recommended based on {vibe_label} style preference",
                     "confidence": min(0.95, 0.7 + score / 100),
                     "_score": score,
                     "_top_id": top.get("id"),
@@ -404,10 +407,11 @@ def _generate_fallback_advice(
                 })
 
             dress_title = dress.get("title") or dress.get("name") or "Outfit"
+            vibe_label = style_dress_for.strip() if style_dress_for else "Daily Casual"
             all_outfits.append({
-                "name": f"Outfit with {dress_title}",
+                "name": f"{vibe_label} Look: {dress_title}",
                 "items": items,
-                "why": f"Recommended based on {style_dress_for or 'casual'} style preference",
+                "why": f"Recommended based on {vibe_label} style preference",
                 "confidence": min(0.95, 0.7 + score / 100),
                 "_score": score,
                 "_top_id": dress.get("id"),
@@ -495,38 +499,10 @@ def _generate_fallback_advice(
     }
 
 
-def _get_target_weather(weather_ctx: dict[str, Any] | None, is_next_day: bool) -> dict[str, Any] | None:
-    if not weather_ctx:
-        return None
-    if not is_next_day:
-        return weather_ctx
-    
-    forecasts = weather_ctx.get("forecast_next_24h") or []
-    if not forecasts:
-        return weather_ctx
-    
-    target_entry = None
-    for f in forecasts:
-        at_str = f.get("at") or ""
-        if "12:00:00" in at_str or "09:00:00" in at_str or "15:00:00" in at_str:
-            target_entry = f
-            break
-            
-    if not target_entry and forecasts:
-        target_entry = forecasts[-1]
-        
-    if target_entry:
-        return {
-            "temp_c": target_entry.get("temp_c"),
-            "feels_like_c": target_entry.get("temp_c"),
-            "humidity": weather_ctx.get("humidity"),
-            "condition": target_entry.get("condition"),
-            "description": f"Forecasted {target_entry.get('condition')}",
-            "wind_speed": weather_ctx.get("wind_speed"),
-            "city": weather_ctx.get("city"),
-            "country": weather_ctx.get("country"),
-        }
-    return weather_ctx
+def _get_target_weather(weather_ctx: dict[str, Any] | None, is_next_day: bool = True) -> dict[str, Any] | None:
+    from app.services.weather_service import get_target_weather
+    return get_target_weather(weather_ctx, is_next_day=is_next_day)
+
 
 
 LOCALIZED_NOTIFICATIONS: dict[str, dict[str, Any]] = {
@@ -843,9 +819,10 @@ async def check_scheduler_triggers() -> None:
                 if sched.get("push_enabled") is False:
                     continue
 
-                # Determine if we are scheduling for today or the next day
-                is_next_day = local_now.hour >= 12
-                target_date = local_now + timedelta(days=1) if is_next_day else local_now
+                # Target date is ALWAYS tomorrow for scheduled daily outfit proposals
+                # This gives users adequate time to inspect, prepare, change, iron, or mend their outfits the day before.
+                is_next_day = True
+                target_date = local_now + timedelta(days=1)
                 target_date_str = target_date.strftime("%Y-%m-%d")
 
                 # Fetch weather (soft-fail)
@@ -861,10 +838,10 @@ async def check_scheduler_triggers() -> None:
                 except Exception as w_exc:
                     logger.warning("Failed to fetch weather for user %s: %s", user_id, w_exc)
 
-                # Get weather for the target date
-                target_weather = _get_target_weather(weather_ctx, is_next_day)
+                # Get weather for the target date (tomorrow)
+                target_weather = _get_target_weather(weather_ctx, is_next_day=True)
 
-                # Fetch calendar events for the target date
+                # Fetch calendar events for the target date (tomorrow)
                 calendar_events = []
                 try:
                     from app.services.calendar_service import calendar_service
@@ -883,9 +860,9 @@ async def check_scheduler_triggers() -> None:
                     logger.warning("Failed to fetch calendar events for user %s on %s: %s", user_id, target_date_str, cal_exc)
 
                 style_option = sched.get("style_dress_for")
-                if not style_option or style_option == "custom":
+                if not style_option or style_option in ("custom", "tags"):
                     style_option = sched.get("custom_style") or sched.get("style_option") or "casual"
-                if style_option == "custom":
+                if style_option in ("custom", "tags"):
                     style_option = "casual"
                 
                 # Sanitize user dict to prevent ObjectId JSON serialization errors
@@ -899,7 +876,8 @@ async def check_scheduler_triggers() -> None:
                             user_clean, 
                             style_option, 
                             weather=target_weather,
-                            calendar_events=calendar_events
+                            calendar_events=calendar_events,
+                            target_date=target_date,
                         )
                         proposals = proposals_result.get("outfit_recommendations") or []
                         if not proposals:
@@ -916,7 +894,7 @@ async def check_scheduler_triggers() -> None:
                         logger.info("No proposals generated for user %s, skipping", user_id)
                         continue
 
-                    # Build localized notification title and body for single curated outfit
+                    # Build localized notification title and body for single curated outfit (always for tomorrow)
                     user_lang = user.get("preferred_language") or "en"
                     prop = proposals[0]
                     outfit_name = prop.get("name") or "Daily Look"
@@ -926,10 +904,47 @@ async def check_scheduler_triggers() -> None:
                     title, body = get_localized_scheduler_notification(
                         lang=user_lang,
                         style_option=style_option,
-                        is_next_day=is_next_day,
+                        is_next_day=True,
                         outfit_name=outfit_name,
                         item_names=item_names,
                     )
+
+                    # Persist curated proposal to daily_proposals collection for tomorrow (target_date_str)
+                    try:
+                        import uuid
+                        await db.daily_proposals.update_many(
+                            {"user_id": user_id, "date": target_date_str},
+                            {"$set": {"replaced": True, "dismissed": True}},
+                        )
+                        prop_doc = {
+                            "id": f"prop_{uuid.uuid4().hex[:12]}",
+                            "user_id": user_id,
+                            "date": target_date_str,
+                            "title": outfit_name,
+                            "description": prop.get("why") or "Curated based on your style profile, tomorrow's weather conditions, and closet harmony.",
+                            "weather_summary": (target_weather.get("description") if target_weather else "Mild & Pleasant"),
+                            "temperature": (target_weather.get("temp_c") if target_weather else 22),
+                            "items": [
+                                {
+                                    "id": it.get("closet_item_id") or it.get("id"),
+                                    "closet_item_id": it.get("closet_item_id") or it.get("id"),
+                                    "role": it.get("role") or it.get("category") or "item",
+                                    "name": it.get("title") or it.get("name") or it.get("description") or "Garment",
+                                    "category": it.get("category") or it.get("role"),
+                                    "image_url": it.get("clean_image_url") or it.get("image_url") or it.get("thumbnail_data_url"),
+                                }
+                                for it in items
+                            ],
+                            "harmony_score": min(99, max(80, int(prop.get("confidence", 0.95) * 100))),
+                            "worn": False,
+                            "liked": False,
+                            "dismissed": False,
+                            "created_at": datetime.now(timezone.utc).isoformat(),
+                            "updated_at": datetime.now(timezone.utc).isoformat(),
+                        }
+                        await db.daily_proposals.insert_one(prop_doc)
+                    except Exception as p_save_err:
+                        logger.warning("Failed to save scheduled daily proposal to db: %s", p_save_err)
 
                     # Serialize lightweight proposal objects (no heavy image base64 strings)
                     lightweight_proposals = []
@@ -964,8 +979,6 @@ async def check_scheduler_triggers() -> None:
                         "proposals": lightweight_proposals
                     }
                     await send_push_notification(user_id, title, body, payload)
-
-                    
                     logger.info("Sent scheduled notification to user %s for %s", user_id, target_date_str)
 
                 except Exception as trigger_exc:

@@ -9,8 +9,10 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { AccordionItem, AccordionTrigger, AccordionContent } from '@/components/ui/accordion';
-import { Bell, Loader2 } from 'lucide-react';
+import { Bell, Loader2, X, Plus } from 'lucide-react';
 import { labelForDressCode } from '@/lib/taxonomy';
+import { useClosetStore } from '@/lib/useClosetStore';
+import { Badge } from '@/components/ui/badge';
 
 function urlBase64ToUint8Array(base64String) {
   const padding = '='.repeat((4 - base64String.length % 4) % 4);
@@ -45,6 +47,44 @@ export function SchedulerSettings() {
   const [time, setTime] = useState(user?.scheduler_settings?.time || '07:00');
   const [styleOption, setStyleOption] = useState(user?.scheduler_settings?.style_option || 'casual');
   const [customStyle, setCustomStyle] = useState(user?.scheduler_settings?.custom_style || '');
+  const [selectedTags, setSelectedTags] = useState(() => {
+    const fromSched = user?.scheduler_settings?.selected_tags;
+    if (Array.isArray(fromSched) && fromSched.length > 0) return fromSched;
+    if (user?.scheduler_settings?.style_option === 'tags' && user?.scheduler_settings?.custom_style) {
+      return user.scheduler_settings.custom_style.split(',').map(s => s.trim()).filter(Boolean);
+    }
+    return [];
+  });
+  const [tagDraft, setTagDraft] = useState('');
+
+  const { items: closetItems } = useClosetStore({ prewarm: true });
+  const availableClosetTags = React.useMemo(() => {
+    const tagsSet = new Set();
+    (closetItems || []).forEach(it => {
+      (it?.tags || []).forEach(t => {
+        const tr = String(t || '').trim();
+        if (tr) tagsSet.add(tr);
+      });
+      (it?.custom_tags || []).forEach(t => {
+        const tr = String(t || '').trim();
+        if (tr) tagsSet.add(tr);
+      });
+    });
+    return Array.from(tagsSet).sort((a, b) => a.localeCompare(b));
+  }, [closetItems]);
+
+  const addTag = (tagToAdd) => {
+    const clean = String(tagToAdd || tagDraft).trim();
+    if (!clean) return;
+    if (!selectedTags.some(t => t.toLowerCase() === clean.toLowerCase())) {
+      setSelectedTags(prev => [...prev, clean]);
+    }
+    setTagDraft('');
+  };
+
+  const removeTag = (tagToRemove) => {
+    setSelectedTags(prev => prev.filter(t => t.toLowerCase() !== tagToRemove.toLowerCase()));
+  };
   const [pushSupported, setPushSupported] = useState(false);
   const [pushEnabled, setPushEnabled] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -114,6 +154,10 @@ export function SchedulerSettings() {
     setBusy(true);
     setSaved(false);
     try {
+      const tagsStr = selectedTags.join(', ');
+      const effectiveCustom = styleOption === 'tags' ? tagsStr : customStyle;
+      const effectiveDressFor = styleOption === 'custom' ? customStyle : styleOption === 'tags' ? tagsStr : styleOption;
+
       const updated = await api.patchMe({
         scheduler_settings: {
           ...(user?.scheduler_settings || {}),
@@ -122,8 +166,9 @@ export function SchedulerSettings() {
           weekday,
           time,
           style_option: styleOption,
-          custom_style: customStyle,
-          style_dress_for: styleOption === 'custom' ? customStyle : styleOption,
+          custom_style: effectiveCustom,
+          selected_tags: selectedTags,
+          style_dress_for: effectiveDressFor,
           timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC',
         },
       });
@@ -213,6 +258,7 @@ export function SchedulerSettings() {
                     <SelectItem value="smart-casual">{labelForDressCode('smart-casual', t)}</SelectItem>
                     <SelectItem value="formal">{labelForDressCode('formal', t)}</SelectItem>
                     <SelectItem value="athletic">{labelForDressCode('athletic', t)}</SelectItem>
+                    <SelectItem value="tags">{labelForDressCode('tags', t)}</SelectItem>
                     <SelectItem value="custom">{t('credits.custom', { defaultValue: 'Custom' })}</SelectItem>
                   </SelectContent>
                 </Select>
@@ -226,6 +272,84 @@ export function SchedulerSettings() {
                     onChange={(e) => setCustomStyle(e.target.value)}
                     placeholder={t('profile.customStylePlaceholder', { defaultValue: 'e.g. Gym, Hiking, Church' })}
                   />
+                </div>
+              )}
+              {styleOption === 'tags' && (
+                <div className="space-y-2">
+                  <Label htmlFor="s-tag-input">{t('profile.selectOrWriteTags', { defaultValue: 'Select or write tags' })}</Label>
+                  <div className="flex gap-2">
+                    <Input
+                      id="s-tag-input"
+                      value={tagDraft}
+                      onChange={(e) => setTagDraft(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          addTag();
+                        }
+                      }}
+                      placeholder={t('profile.tagsPlaceholder', { defaultValue: 'Type a tag and press Enter (e.g. Work, Summer, Solid)' })}
+                      data-testid="scheduler-tag-input"
+                    />
+                    {tagDraft.trim() && (
+                      <Button
+                        type="button"
+                        size="sm"
+                        onClick={() => addTag()}
+                        className="rounded-lg px-3"
+                        data-testid="scheduler-add-tag-btn"
+                      >
+                        <Plus className="h-4 w-4" />
+                      </Button>
+                    )}
+                  </div>
+
+                  {/* Selected Tags Badges */}
+                  {selectedTags.length > 0 && (
+                    <div className="flex flex-wrap gap-1.5 pt-1">
+                      {selectedTags.map((tag) => (
+                        <Badge
+                          key={tag}
+                          variant="secondary"
+                          className="px-2.5 py-1 rounded-full text-xs font-medium inline-flex items-center gap-1.5 bg-primary-brand/15 text-primary-brand border border-primary-brand/30"
+                        >
+                          <span>{tag}</span>
+                          <button
+                            type="button"
+                            onClick={() => removeTag(tag)}
+                            className="hover:text-destructive hover:scale-110 transition-transform"
+                            aria-label={`Remove ${tag}`}
+                          >
+                            <X className="h-3 w-3" />
+                          </button>
+                        </Badge>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Available Closet Tags Chips */}
+                  {availableClosetTags.filter(t => !selectedTags.some(st => st.toLowerCase() === t.toLowerCase())).length > 0 && (
+                    <div className="pt-2">
+                      <div className="text-[11px] text-text-brand font-medium mb-1.5">
+                        {t('profile.availableTags', { defaultValue: 'From your closet:' })}
+                      </div>
+                      <div className="flex flex-wrap gap-1 max-h-24 overflow-y-auto pr-1">
+                        {availableClosetTags
+                          .filter(t => !selectedTags.some(st => st.toLowerCase() === t.toLowerCase()))
+                          .map((tag) => (
+                            <button
+                              key={tag}
+                              type="button"
+                              onClick={() => addTag(tag)}
+                              className="px-2 py-0.5 rounded-md text-[11px] font-medium bg-secondary/10 hover:bg-primary-brand/20 hover:text-primary-brand text-muted-foreground border border-border/80 transition-colors inline-flex items-center gap-1"
+                            >
+                              <Plus className="h-2.5 w-2.5 opacity-60" />
+                              {tag}
+                            </button>
+                          ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
             </div>

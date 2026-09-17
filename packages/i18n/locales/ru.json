@@ -1966,7 +1966,11 @@
     "apiKeyInvalidNotice": "Проверка ключа API не удалась. Пожалуйста, проверьте свой ключ в Google AI Studio.",
     "testKey": "Тестовый ключ",
     "apiKeyRequiredTitle": "Требуется ключ API",
-    "apiKeyRequiredMessage": "Пожалуйста, введите действительный ключ API Google Gemini в своем профиле -> Конфигурация AI, чтобы использовать AI Stylist."
+    "apiKeyRequiredMessage": "Пожалуйста, введите действительный ключ API Google Gemini в своем профиле -> Конфигурация AI, чтобы использовать AI Stylist.",
+    "selectOrWriteTags": "Выберите или введите теги",
+    "tagsPlaceholder": "Введите тег и нажмите Enter (напр.: Работа, Лето, Однотонный)",
+    "availableTags": "Из вашего гардероба:",
+    "noTagsFound": "Теги не найдены. Введите выше для добавления."
   },
   "admin": {
     "title": "Админ",
@@ -2153,7 +2157,8 @@
       "formal": "Формальный",
       "athletic": "Спортивный",
       "loungewear": "Домашняя одежда",
-      "all": "Все стили"
+      "all": "Все стили",
+      "tags": "Теги"
     },
     "gender": {
       "men": "Мужское",

@@ -1966,7 +1966,11 @@
     "apiKeyInvalidNotice": "API 密钥验证失败。请从 Google AI Studio 检查您的密钥。",
     "testKey": "测试键",
     "apiKeyRequiredTitle": "需要 API 密钥",
-    "apiKeyRequiredMessage": "请在您的个人资料 -> AI 配置中输入有效的 Google Gemini API 密钥，以使用 AI 造型师。"
+    "apiKeyRequiredMessage": "请在您的个人资料 -> AI 配置中输入有效的 Google Gemini API 密钥，以使用 AI 造型师。",
+    "selectOrWriteTags": "选择或输入标签",
+    "tagsPlaceholder": "输入标签并按回车（例如：工作、夏季、纯色）",
+    "availableTags": "来自您的衣橱：",
+    "noTagsFound": "未找到衣橱标签。请在上方输入添加。"
   },
   "admin": {
     "title": "管理",
@@ -2153,7 +2157,8 @@
       "formal": "正式",
       "athletic": "运动",
       "loungewear": "居家服",
-      "all": "所有风格"
+      "all": "所有风格",
+      "tags": "标签"
     },
     "gender": {
       "men": "男士",

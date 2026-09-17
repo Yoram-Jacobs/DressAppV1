@@ -139,4 +139,56 @@ def _extract_tomorrow_forecast(entries: list[dict[str, Any]]) -> dict[str, Any] 
     }
 
 
+def get_target_weather(weather_summary: dict[str, Any] | None, is_next_day: bool = True) -> dict[str, Any] | None:
+    """Resolve target weather, extracting tomorrow's forecast when is_next_day=True."""
+    if not weather_summary:
+        return None
+    if not is_next_day:
+        return weather_summary
+
+    tom = weather_summary.get("tomorrow")
+    if isinstance(tom, dict) and tom.get("temp_c") is not None:
+        return {
+            "temp_c": tom.get("temp_c"),
+            "feels_like_c": tom.get("temp_c"),
+            "humidity": weather_summary.get("humidity"),
+            "condition": tom.get("condition"),
+            "description": tom.get("description") or f"Forecasted {tom.get('condition')}",
+            "temp_min_c": tom.get("temp_min_c"),
+            "temp_max_c": tom.get("temp_max_c"),
+            "wind_speed": weather_summary.get("wind_speed"),
+            "city": weather_summary.get("city"),
+            "country": weather_summary.get("country"),
+        }
+
+    forecasts = weather_summary.get("forecast_next_24h") or []
+    if not forecasts:
+        return weather_summary
+
+    target_entry = None
+    for f in forecasts:
+        at_str = f.get("at") or ""
+        if "12:00:00" in at_str or "09:00:00" in at_str or "15:00:00" in at_str:
+            target_entry = f
+            break
+
+    if not target_entry and forecasts:
+        target_entry = forecasts[-1]
+
+    if target_entry:
+        return {
+            "temp_c": target_entry.get("temp_c"),
+            "feels_like_c": target_entry.get("temp_c"),
+            "humidity": weather_summary.get("humidity"),
+            "condition": target_entry.get("condition"),
+            "description": f"Forecasted {target_entry.get('condition')}",
+            "wind_speed": weather_summary.get("wind_speed"),
+            "city": weather_summary.get("city"),
+            "country": weather_summary.get("country"),
+        }
+
+    return weather_summary
+
+
 weather_service = WeatherService() if settings.OPENWEATHER_API_KEY else None
+

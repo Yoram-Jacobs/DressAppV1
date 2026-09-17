@@ -1966,7 +1966,11 @@
     "apiKeyInvalidNotice": "API キーの検証に失敗しました。 Google AI Studio からキーを確認してください。",
     "testKey": "テストキー",
     "apiKeyRequiredTitle": "APIキーが必要です",
-    "apiKeyRequiredMessage": "AI スタイリストを使用するには、[プロフィール] -> [AI 設定] に有効な Google Gemini API キーを入力してください。"
+    "apiKeyRequiredMessage": "AI スタイリストを使用するには、[プロフィール] -> [AI 設定] に有効な Google Gemini API キーを入力してください。",
+    "selectOrWriteTags": "タグを選択または入力",
+    "tagsPlaceholder": "タグを入力してEnterを押してください（例：仕事、夏、無地）",
+    "availableTags": "あなたのクローゼットから:",
+    "noTagsFound": "タグが見つかりません。上に入力して追加してください。"
   },
   "admin": {
     "title": "管理",
@@ -2153,7 +2157,8 @@
       "formal": "フォーマル",
       "athletic": "アスレチック",
       "loungewear": "ラウンジウェア",
-      "all": "すべてのスタイル"
+      "all": "すべてのスタイル",
+      "tags": "タグ"
     },
     "gender": {
       "men": "メンズ",

@@ -35,12 +35,13 @@ class ProposalGenerateIn(BaseModel):
     model_config = ConfigDict(extra="ignore")
     occasion: str = "daily"
     force: bool = False
+    date: str | None = None
 
 
 def _resolve_effective_style(user: dict, occasion: str | None = None) -> str:
     sched = user.get("scheduler_settings") or {}
     style_option = sched.get("style_option") or sched.get("style")
-    if style_option == "custom" and sched.get("custom_style"):
+    if style_option in ("custom", "tags") and sched.get("custom_style"):
         return sched.get("custom_style").strip()
     if sched.get("custom_style") and style_option not in ("casual", "formal", "sport", "smart_casual"):
         return sched.get("custom_style").strip()
@@ -54,31 +55,61 @@ def _resolve_effective_style(user: dict, occasion: str | None = None) -> str:
 
 
 @router.get("/daily-proposal")
-async def get_daily_proposal(user: dict = Depends(get_current_user)) -> dict[str, Any]:
-    """Get today's shared daily outfit proposal for the user across all devices."""
-    db = get_db()
-    today_str = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+async def get_daily_proposal(
+    date: str | None = None,
+    user: dict = Depends(get_current_user)
+) -> dict[str, Any]:
+    """Get the active scheduled daily outfit proposal for the user across all devices.
     
-    # Return worn proposal first if already chosen
-    worn_doc = await db.daily_proposals.find_one(
-        {"user_id": user["id"], "date": today_str, "worn": True, "replaced": {"$ne": True}},
-        {"_id": 0},
-    )
-    if worn_doc and len(worn_doc.get("items") or []) > 0:
-        return worn_doc
+    If date is explicitly requested, returns the proposal for that date.
+    Otherwise checks tomorrow's proposal first (the upcoming scheduled look to prepare for),
+    then today's proposal, or generates for tomorrow.
+    """
+    db = get_db()
+    sched = user.get("scheduler_settings") or {}
+    user_tz = sched.get("timezone") or "UTC"
+    try:
+        from zoneinfo import ZoneInfo
+        from datetime import timedelta
+        local_now = datetime.now(timezone.utc).astimezone(ZoneInfo(user_tz))
+    except Exception:
+        from datetime import timedelta
+        local_now = datetime.now(timezone.utc)
 
-    # Otherwise return the most recent active proposal for today
-    doc = await db.daily_proposals.find_one(
+    today_str = local_now.strftime("%Y-%m-%d")
+    tomorrow_str = (local_now + timedelta(days=1)).strftime("%Y-%m-%d")
+
+    # 1. If explicit date passed, return proposal for that date
+    if date:
+        doc = await db.daily_proposals.find_one(
+            {"user_id": user["id"], "date": date, "dismissed": {"$ne": True}},
+            {"_id": 0},
+            sort=[("worn", -1), ("created_at", -1)],
+        )
+        if doc and len(doc.get("items") or []) > 0:
+            return doc
+        return await _generate_and_save_daily_proposal(user, date, force=False)
+
+    # 2. Check tomorrow's proposal first (pushed the day before for advance prep)
+    tom_doc = await db.daily_proposals.find_one(
+        {"user_id": user["id"], "date": tomorrow_str, "dismissed": {"$ne": True}},
+        {"_id": 0},
+        sort=[("worn", -1), ("created_at", -1)],
+    )
+    if tom_doc and len(tom_doc.get("items") or []) > 0:
+        return tom_doc
+
+    # 3. Check today's proposal (e.g. prepared yesterday for today)
+    today_doc = await db.daily_proposals.find_one(
         {"user_id": user["id"], "date": today_str, "dismissed": {"$ne": True}},
         {"_id": 0},
-        sort=[("created_at", -1)],
+        sort=[("worn", -1), ("created_at", -1)],
     )
-    
-    if doc and len(doc.get("items") or []) > 0:
-        return doc
-        
-    # If not found, attempt to generate proposal
-    return await _generate_and_save_daily_proposal(user, today_str, force=False)
+    if today_doc and len(today_doc.get("items") or []) > 0:
+        return today_doc
+
+    # 4. If neither exists, generate for tomorrow
+    return await _generate_and_save_daily_proposal(user, tomorrow_str, force=False)
 
 
 @router.post("/daily-proposal/generate")
@@ -86,9 +117,21 @@ async def generate_daily_proposal(
     body: ProposalGenerateIn,
     user: dict = Depends(get_current_user),
 ) -> dict[str, Any]:
-    """Generate or regenerate today's daily proposal."""
-    today_str = datetime.now(timezone.utc).strftime("%Y-%m-%d")
-    res = await _generate_and_save_daily_proposal(user, today_str, force=body.force, occasion=body.occasion)
+    """Generate or regenerate daily proposal for tomorrow (or specified date)."""
+    sched = user.get("scheduler_settings") or {}
+    user_tz = sched.get("timezone") or "UTC"
+    try:
+        from zoneinfo import ZoneInfo
+        from datetime import timedelta
+        local_now = datetime.now(timezone.utc).astimezone(ZoneInfo(user_tz))
+    except Exception:
+        from datetime import timedelta
+        local_now = datetime.now(timezone.utc)
+
+    tomorrow_str = (local_now + timedelta(days=1)).strftime("%Y-%m-%d")
+    target_date = body.date or tomorrow_str
+
+    res = await _generate_and_save_daily_proposal(user, target_date, force=body.force, occasion=body.occasion)
     await broadcast_sync_event(user["id"], "daily_suggestions_updated", {"proposal_id": res.get("id")})
     return res
 
@@ -233,6 +276,7 @@ async def _generate_and_save_daily_proposal(
             user,
             style_dress_for=effective_occasion,
             exclude_item_ids=past_item_ids,
+            target_date=date_str,
         )
         recs = scheduler_res.get("outfit_recommendations") or []
         if recs:

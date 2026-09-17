@@ -1295,12 +1295,16 @@
     "preferencesApplied": "Stop Speaking",
     "todaySuggestionTitle": "Today's Style Suggestion",
     "todaySuggestionSubtitle": "Personalized look curated for your day.",
+    "tomorrowSuggestionTitle": "Tomorrow's Style Suggestion",
+    "tomorrowSuggestionSubtitle": "Curated for tomorrow based on your style profile, forecasted weather, and calendar events.",
     "viewOutfitDetails": "View Details",
     "suggestionRefreshed": "Refreshed today’s suggestion!",
+    "tomorrowSuggestionRefreshed": "Refreshed tomorrow’s suggestion!",
     "refreshSuggestion": "New Look",
     "previousLook": "Previous Look",
     "lookCounter": "Look {{current}} of {{total}}",
-    "wearToday": "Wear Today"
+    "wearToday": "Wear Today",
+    "wearTomorrow": "Wear Tomorrow"
   },
   "outfitCompletion": {
     "cta": "Complete the outfit",
@@ -1764,6 +1768,10 @@
     "styleDressFor": "Style / Dress For",
     "dressForDemands": "Dress For Demands",
     "customStylePlaceholder": "e.g. Gym, Hiking, Church",
+    "selectOrWriteTags": "Select or write tags",
+    "tagsPlaceholder": "Type a tag and press Enter (e.g. Work, Summer, Solid)",
+    "availableTags": "From your closet:",
+    "noTagsFound": "No closet tags found. Type above to add.",
     "browserPushAlerts": "Push Alerts",
     "receiveDirectBrowserAlerts": "Receive alerts on this device.",
     "phoneWarningStart": "* Configure phone number under ",
@@ -2054,7 +2062,9 @@
     "connectedSuccess": "Google Calendar connected!",
     "disconnectedSuccess": "Google Calendar disconnected.",
     "todayOutfit": "Today's Scheduled Outfit",
+    "tomorrowOutfit": "Tomorrow's Scheduled Outfit",
     "scheduled": "Scheduled",
+    "scheduledTomorrowSuccess": "Saved as tomorrow’s scheduled outfit!",
     "prevMonthAria": "Previous month",
     "nextMonthAria": "Next month",
     "prevDayAria": "Previous day",
@@ -2151,6 +2161,7 @@
       "formal": "Formal",
       "athletic": "Athletic",
       "loungewear": "Loungewear",
+      "tags": "Tags",
       "all": "All Styles"
     },
     "gender": {

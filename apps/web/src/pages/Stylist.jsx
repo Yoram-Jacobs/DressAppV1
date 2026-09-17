@@ -234,6 +234,9 @@ const getFrequencyLabel = (freq, weekday, lang, t) => {
 
 const getStyleLabel = (styleOpt, customStyle, t) => {
   if (!styleOpt) return '';
+  if (styleOpt === 'tags') {
+    return customStyle || labelForDressCode('tags', t);
+  }
   if (styleOpt === 'custom') {
     return customStyle || t('credits.custom', { defaultValue: 'Custom' });
   }
@@ -406,10 +409,12 @@ export default function Stylist() {
 
   const handleWearDailyProposal = useCallback(async (prop) => {
     const todayDateStr = formatLocalDate(new Date());
+    const targetDateStr = prop?.date || prop?.usage?.date || prop?.proposal_raw?.date || todayDateStr;
+    const isTomorrow = targetDateStr > todayDateStr;
     const rawItems = prop.items || prop.garments || [];
     const body = {
-      name: prop.name || prop.title || 'Look of the Day',
-      description: prop.description || 'Daily style suggestion',
+      name: prop.name || prop.title || (isTomorrow ? "Tomorrow's Look" : 'Look of the Day'),
+      description: prop.description || (isTomorrow ? 'Tomorrow style suggestion' : 'Daily style suggestion'),
       source_workflow: 'scheduled',
       prompt: prop.prompt || user?.scheduler_settings?.style_dress_for || 'casual',
       garments: rawItems.map(it => {
@@ -423,7 +428,7 @@ export default function Stylist() {
         };
       }),
       usage: {
-        date: todayDateStr,
+        date: targetDateStr,
         time: '08:00',
       },
       is_fallback: false,
@@ -436,11 +441,15 @@ export default function Stylist() {
       
       const propId = prop.id || prop.proposal_raw?.id;
       if (propId && actDailyProposal) {
-        await actDailyProposal('wear', propId, todayDateStr);
+        await actDailyProposal('wear', propId, targetDateStr);
       }
       
       setSelectedOutfitForDetail(savedOutfit);
-      toast.success(t('stylist.outfitSaved', { defaultValue: 'Saved as today’s scheduled outfit!' }));
+      toast.success(
+        isTomorrow
+          ? t('calendar.scheduledTomorrowSuccess', { defaultValue: 'Saved as tomorrow’s scheduled outfit!' })
+          : t('stylist.outfitSaved', { defaultValue: 'Saved as today’s scheduled outfit!' })
+      );
     } catch (err) {
       console.error("Wear daily proposal error:", err);
       toast.error(err?.response?.data?.detail || t('stylist.saveFailed', { defaultValue: 'Failed to schedule outfit.' }));
@@ -2601,24 +2610,40 @@ export default function Stylist() {
                             </Button>
                           </CardContent>
                         </Card>
-                        {/* 1.5 Today's Style Suggestion / Outfit Card */}
+                        {/* 1.5 Today's / Tomorrow's Style Suggestion / Outfit Card */}
                         {(() => {
-                          const todayDateStr = formatLocalDate(new Date());
+                          const todayDate = new Date();
+                          const todayDateStr = formatLocalDate(todayDate);
+                          const tomorrowDate = new Date(todayDate);
+                          tomorrowDate.setDate(tomorrowDate.getDate() + 1);
+                          const tomorrowDateStr = formatLocalDate(tomorrowDate);
+
                           const todayOutfit = (outfits || []).find(o => o.usage?.date === todayDateStr);
+                          const tomorrowOutfit = (outfits || []).find(o => o.usage?.date === tomorrowDateStr);
+
                           const todayNotifRecs = (notifications || []).filter(n => {
                             try {
                               const p = n.payload || {};
-                              if (p.target_date) return p.target_date === todayDateStr;
+                              if (p.target_date) return p.target_date === todayDateStr || p.target_date === tomorrowDateStr;
                               const nd = new Date(n.created_at);
-                              return `${nd.getFullYear()}-${String(nd.getMonth() + 1).padStart(2, '0')}-${String(nd.getDate()).padStart(2, '0')}` === todayDateStr;
+                              const ndStr = `${nd.getFullYear()}-${String(nd.getMonth() + 1).padStart(2, '0')}-${String(nd.getDate()).padStart(2, '0')}`;
+                              return ndStr === todayDateStr || ndStr === tomorrowDateStr;
                             } catch {
                               return false;
                             }
                           }).flatMap(n => (n.payload?.proposals || n.payload?.outfit_recommendations || []));
 
-                          const activeProposal = (dailyProposal && dailyProposal.date === todayDateStr && (dailyProposal.items || []).length > 0) ? dailyProposal : null;
-                          const hasTodayContent = todayOutfit || activeProposal || todayNotifRecs.length > 0;
-                          if (!hasTodayContent) return null;
+                          // Active proposal matches either today or tomorrow
+                          const activeProposal = (dailyProposal && (dailyProposal.date === todayDateStr || dailyProposal.date === tomorrowDateStr) && (dailyProposal.items || []).length > 0) ? dailyProposal : null;
+
+                          // If the active proposal or context is tomorrow's proposal and we don't have a scheduled todayOutfit, highlight tomorrow!
+                          const isTomorrow = (activeProposal?.date === tomorrowDateStr) && !todayOutfit;
+                          const targetDateStr = isTomorrow ? tomorrowDateStr : todayDateStr;
+                          const targetDateObj = isTomorrow ? tomorrowDate : todayDate;
+                          const currentOutfit = isTomorrow ? tomorrowOutfit : todayOutfit;
+
+                          const hasContent = currentOutfit || todayOutfit || activeProposal || todayNotifRecs.length > 0;
+                          if (!hasContent) return null;
 
                           return (
                             <Card className="border border-border rounded-[12px] shadow-editorial overflow-hidden bg-white w-full shrink-0 mb-6">
@@ -2631,35 +2656,41 @@ export default function Stylist() {
                                     <div className="text-start">
                                       <div className="flex items-center gap-2 flex-wrap">
                                         <h3 className="text-[14px] font-bold text-dark-brand">
-                                          {todayOutfit
-                                            ? t('calendar.todayOutfit', { defaultValue: "Today's Scheduled Outfit" })
-                                            : t('stylist.todaySuggestionTitle', { defaultValue: "Today's Style Suggestion" })}
+                                          {currentOutfit
+                                            ? (isTomorrow
+                                                ? t('calendar.tomorrowOutfit', { defaultValue: "Tomorrow's Scheduled Outfit" })
+                                                : t('calendar.todayOutfit', { defaultValue: "Today's Scheduled Outfit" }))
+                                            : (isTomorrow
+                                                ? t('stylist.tomorrowSuggestionTitle', { defaultValue: "Tomorrow's Style Suggestion" })
+                                                : t('stylist.todaySuggestionTitle', { defaultValue: "Today's Style Suggestion" }))}
                                         </h3>
                                         <Badge variant="outline" className="text-[10px] font-semibold text-primary-brand border-primary-brand bg-white">
-                                          {new Date().toLocaleDateString(i18n.language || 'en', { month: 'short', day: 'numeric', year: 'numeric' })}
+                                          {targetDateObj.toLocaleDateString(i18n.language || 'en', { month: 'short', day: 'numeric', year: 'numeric' })}
                                         </Badge>
-                                        {todayOutfit && (
+                                        {currentOutfit && (
                                           <Badge className="text-[10px] font-semibold bg-emerald-600 text-white border-none">
                                             {t('calendar.scheduled', { defaultValue: 'Scheduled' })}
                                           </Badge>
                                         )}
                                       </div>
                                       <p className="text-xs text-text-brand mt-0.5">
-                                        {todayOutfit
-                                          ? (todayOutfit.description || getOutfitName(todayOutfit.name))
+                                        {currentOutfit
+                                          ? (currentOutfit.description || getOutfitName(currentOutfit.name))
                                           : ((activeProposal?.description && !activeProposal.description.includes('Curated based on your style profile'))
                                             ? activeProposal.description
-                                            : t('stylist.todaySuggestionSubtitle', { defaultValue: 'Curated based on your style profile, weather conditions, and closet harmony.' }))}
+                                            : (isTomorrow
+                                                ? t('stylist.tomorrowSuggestionSubtitle', { defaultValue: 'Curated for tomorrow based on your style profile, forecasted weather, and calendar events.' })
+                                                : t('stylist.todaySuggestionSubtitle', { defaultValue: 'Curated based on your style profile, weather conditions, and closet harmony.' })))}
                                       </p>
                                     </div>
                                   </div>
                                    <div className="flex items-center gap-2 flex-wrap">
-                                     {todayOutfit ? (
+                                     {currentOutfit ? (
                                         <Button
                                           size="sm"
                                           onClick={() => {
                                             setUserDismissedDetail(false);
-                                            setSelectedOutfitForDetail(todayOutfit);
+                                            setSelectedOutfitForDetail(currentOutfit);
                                           }}
                                           className="rounded-xl flex items-center gap-1.5 shadow-sm text-xs !bg-primary-brand text-white"
                                         >
@@ -2674,7 +2705,7 @@ export default function Stylist() {
                                               variant="outline"
                                               onClick={() => {
                                                 setUserDismissedDetail(false);
-                                                setSelectedOutfitForDetail(proposalToOutfit(activeProposal, todayDateStr));
+                                                setSelectedOutfitForDetail(proposalToOutfit(activeProposal, targetDateStr));
                                               }}
                                               className="rounded-xl flex items-center gap-1.5 shadow-sm text-xs border-primary-brand text-primary-brand hover:bg-primary-shadow"
                                             >
@@ -2689,11 +2720,15 @@ export default function Stylist() {
                                             onClick={async () => {
                                               setGeneratingDaily(true);
                                               try {
-                                                const newProp = await generateDailyProposalAction(true);
+                                                const newProp = await generateDailyProposalAction(true, 'daily', targetDateStr);
                                                 if (newProp && selectedOutfitForDetail?.isDailyProposal) {
-                                                  setSelectedOutfitForDetail(proposalToOutfit(newProp, todayDateStr));
+                                                  setSelectedOutfitForDetail(proposalToOutfit(newProp, targetDateStr));
                                                 }
-                                                toast.success(t('stylist.suggestionRefreshed', { defaultValue: 'Refreshed today’s suggestion!' }));
+                                                toast.success(
+                                                  isTomorrow
+                                                    ? t('stylist.tomorrowSuggestionRefreshed', { defaultValue: 'Refreshed tomorrow’s suggestion!' })
+                                                    : t('stylist.suggestionRefreshed', { defaultValue: 'Refreshed today’s suggestion!' })
+                                                );
                                               } catch {
                                                 toast.error(t('common.error', { defaultValue: 'Failed to refresh' }));
                                               } finally {
@@ -2714,7 +2749,11 @@ export default function Stylist() {
                                               className="rounded-xl flex items-center gap-1.5 shadow-sm text-xs !bg-primary-brand text-white"
                                             >
                                               <CalendarPlus className="!h-3.5 !w-3.5" />
-                                              <span>{t('stylist.wearToday', { defaultValue: 'Wear Today' })}</span>
+                                              <span>
+                                                {isTomorrow
+                                                  ? t('stylist.wearTomorrow', { defaultValue: 'Wear Tomorrow' })
+                                                  : t('stylist.wearToday', { defaultValue: 'Wear Today' })}
+                                              </span>
                                             </Button>
                                           )}
                                         </>
@@ -2723,7 +2762,7 @@ export default function Stylist() {
                                   </div>
                                 {/* Garments Preview row */}
                                 {(() => {
-                                  const itemsToRender = todayOutfit?.garments || activeProposal?.items || (todayNotifRecs[0]?.items) || [];
+                                  const itemsToRender = currentOutfit?.garments || activeProposal?.items || (todayNotifRecs[0]?.items) || [];
                                   if (itemsToRender.length === 0) return null;
                                   return (
                                     <div className="flex gap-2 overflow-x-auto flex-nowrap pb-3">
@@ -2736,10 +2775,10 @@ export default function Stylist() {
                                             key={idx}
                                             onClick={() => {
                                               setUserDismissedDetail(false);
-                                              if (todayOutfit) {
-                                                setSelectedOutfitForDetail(todayOutfit);
+                                              if (currentOutfit) {
+                                                setSelectedOutfitForDetail(currentOutfit);
                                               } else if (activeProposal) {
-                                                setSelectedOutfitForDetail(proposalToOutfit(activeProposal, todayDateStr));
+                                                setSelectedOutfitForDetail(proposalToOutfit(activeProposal, targetDateStr));
                                               }
                                             }}
                                             className="flex items-center gap-2 p-2 rounded-[12px] border border-border hover:border-primary-brand hover:bg-primary-shadow cursor-pointer transition-colors"
@@ -2762,7 +2801,7 @@ export default function Stylist() {
                                       })}
                                     </div>
                                   );
-                                })()}
+                                 })()}
                               </CardContent>
                             </Card>
                           );

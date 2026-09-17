@@ -129,12 +129,13 @@ export const dailySuggestionsStore = {
     }
   },
 
-  async generate(force = true): Promise<DailyOutfitSuggestion | null> {
+  async generate(force = true, occasion = 'daily', date?: string): Promise<DailyOutfitSuggestion | null> {
     setState((prev) => ({ ...prev, loading: true, error: null }));
     try {
+      const targetDate = date || _state.suggestion?.date;
       let data: any = null;
       if ((api as any).generateDailyProposal) {
-        data = await (api as any).generateDailyProposal(force);
+        data = await (api as any).generateDailyProposal(force, occasion, targetDate);
       } else {
         data = await api.plannerScout({ occasion: 'daily' });
       }

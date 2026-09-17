@@ -1966,7 +1966,11 @@
     "apiKeyInvalidNotice": "فشل التحقق من صحة مفتاح API. يرجى التحقق من المفتاح الخاص بك من Google AI Studio.",
     "testKey": "مفتاح الاختبار",
     "apiKeyRequiredTitle": "مفتاح API مطلوب",
-    "apiKeyRequiredMessage": "يرجى إدخال مفتاح Google Gemini API صالح في ملفك الشخصي -> تكوين الذكاء الاصطناعي لاستخدام AI Stylist."
+    "apiKeyRequiredMessage": "يرجى إدخال مفتاح Google Gemini API صالح في ملفك الشخصي -> تكوين الذكاء الاصطناعي لاستخدام AI Stylist.",
+    "selectOrWriteTags": "اختر أو اكتب الوسوم",
+    "tagsPlaceholder": "اكتب وسماً واضغط Enter (مثل: عمل، صيف، سادة)",
+    "availableTags": "من خزانتك:",
+    "noTagsFound": "لا توجد وسوم في الخزانة. اكتب أعلاه للإضافة."
   },
   "admin": {
     "title": "الإدارة",
@@ -2153,7 +2157,8 @@
       "formal": "رسمي",
       "athletic": "رياضي",
       "loungewear": "منزلي",
-      "all": "جميع الأنماط"
+      "all": "جميع الأنماط",
+      "tags": "وسوم"
     },
     "gender": {
       "men": "رجال",

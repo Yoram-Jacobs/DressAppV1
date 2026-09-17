@@ -23,10 +23,11 @@ export const sync = {
   /**
    * Unified Daily Proposal endpoints.
    */
-  getDailyProposal: () => client.get('/stylist/daily-proposal').then((r) => r.data),
+  getDailyProposal: (date = null) =>
+    client.get('/stylist/daily-proposal', { params: date ? { date } : {} }).then((r) => r.data),
 
-  generateDailyProposal: (force = false) =>
-    client.post('/stylist/daily-proposal/generate', { force }).then((r) => r.data),
+  generateDailyProposal: (force = false, occasion = 'daily', date = null) =>
+    client.post('/stylist/daily-proposal/generate', { force, occasion, date }).then((r) => r.data),
 
   actOnDailyProposal: (action, proposalId = null, date = null) =>
     client.post('/stylist/daily-proposal/action', { action, proposal_id: proposalId, date }).then((r) => r.data),

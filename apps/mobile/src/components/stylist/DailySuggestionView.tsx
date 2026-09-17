@@ -435,6 +435,9 @@ const getFrequencyLabel = (freq: string | undefined, weekday: string | undefined
 
 const getStyleLabel = (styleOpt: string | undefined, customStyle: string | undefined, t: any): string => {
   if (!styleOpt) return '';
+  if (styleOpt === 'tags') {
+    return customStyle || labelForDressCode('tags', t);
+  }
   if (styleOpt === 'custom') {
     return customStyle || t('credits.custom', { defaultValue: 'Custom' });
   }
@@ -495,8 +498,6 @@ export function DailySuggestionView({ onTryOn }: DailySuggestionViewProps) {
     [outfits]
   );
 
-  const todayOutfit = useMemo(() => getOutfitForDate(todayStr), [getOutfitForDate, todayStr]);
-
   const activeProposal = useMemo(() => {
     if (
       dailyProposal &&
@@ -508,15 +509,32 @@ export function DailySuggestionView({ onTryOn }: DailySuggestionViewProps) {
     return null;
   }, [dailyProposal]);
 
+  const proposalDate = activeProposal?.date || todayStr;
+  const isTomorrow = proposalDate > todayStr;
+  const targetOutfit = useMemo(() => getOutfitForDate(proposalDate), [getOutfitForDate, proposalDate]);
+
+  const formattedProposalDate = useMemo(() => {
+    try {
+      if (proposalDate) {
+        const [y, m, d] = proposalDate.split('-');
+        const dateObj = new Date(parseInt(y, 10), parseInt(m, 10) - 1, parseInt(d, 10));
+        return dateObj.toLocaleDateString(i18n.language || 'en', { month: 'short', day: 'numeric' });
+      }
+    } catch {}
+    return new Date().toLocaleDateString(i18n.language || 'en', { month: 'short', day: 'numeric' });
+  }, [proposalDate, i18n.language]);
+
   const handleNewLook = async () => {
     if (generatingDaily) return;
     setGeneratingDaily(true);
     try {
-      const newProp = await generateDaily(true);
+      const newProp = await generateDaily(true, 'daily', proposalDate);
       if (newProp) {
         Alert.alert(
           t('stylist.title', { defaultValue: 'Your Stylist' }),
-          t('stylist.suggestionRefreshed', { defaultValue: 'Refreshed today’s suggestion!' })
+          isTomorrow
+            ? t('stylist.tomorrowSuggestionRefreshed', { defaultValue: 'Refreshed tomorrow’s suggestion!' })
+            : t('stylist.suggestionRefreshed', { defaultValue: 'Refreshed today’s suggestion!' })
         );
       }
     } catch (err: any) {
@@ -532,10 +550,11 @@ export function DailySuggestionView({ onTryOn }: DailySuggestionViewProps) {
   const handleWearProposal = async () => {
     if (!activeProposal) return;
     try {
+      const targetDate = activeProposal.date || todayStr;
       const rawItems = activeProposal.items || activeProposal.garments || [];
       const savedOutfitBody = {
-        name: activeProposal.name || activeProposal.title || 'Look of the Day',
-        description: activeProposal.description || 'Daily style suggestion',
+        name: activeProposal.name || activeProposal.title || (isTomorrow ? "Tomorrow's Look" : "Look of the Day"),
+        description: activeProposal.description || (isTomorrow ? "Tomorrow's style suggestion" : "Daily style suggestion"),
         source_workflow: 'scheduled',
         prompt: (user?.scheduler_settings as any)?.style_dress_for || user?.scheduler_settings?.style_option || 'casual',
         garments: rawItems.map((it: any) => {
@@ -549,7 +568,7 @@ export function DailySuggestionView({ onTryOn }: DailySuggestionViewProps) {
           };
         }),
         usage: {
-          date: todayStr,
+          date: targetDate,
           time: '08:00',
         },
         is_fallback: false,
@@ -559,10 +578,12 @@ export function DailySuggestionView({ onTryOn }: DailySuggestionViewProps) {
       if (saved) {
         outfitStore.upsert(saved);
       }
-      await actDaily('wear', activeProposal.id, todayStr);
+      await actDaily('wear', activeProposal.id, targetDate);
       Alert.alert(
         t('stylist.title', { defaultValue: 'Your Stylist' }),
-        t('stylist.wearTodaySuccess', { defaultValue: 'Scheduled look for today!' })
+        isTomorrow
+          ? t('stylist.wearTomorrowSuccess', { defaultValue: 'Scheduled look for tomorrow!' })
+          : t('stylist.wearTodaySuccess', { defaultValue: 'Scheduled look for today!' })
       );
     } catch (err: any) {
       console.warn('Failed to wear daily proposal:', err);
@@ -636,8 +657,8 @@ export function DailySuggestionView({ onTryOn }: DailySuggestionViewProps) {
         </TouchableOpacity>
       </View>
 
-      {/* 1.5 Today's Style Suggestion / Scheduled Outfit Card */}
-      {(todayOutfit || activeProposal || dailyLoading) && (
+      {/* 1.5 Today's / Tomorrow's Style Suggestion / Scheduled Outfit Card */}
+      {(targetOutfit || activeProposal || dailyLoading) && (
         <View style={[styles.todayCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
           {/* Header Row */}
           <View style={styles.todayCardHeader}>
@@ -648,16 +669,20 @@ export function DailySuggestionView({ onTryOn }: DailySuggestionViewProps) {
               <View style={styles.todayTitleCol}>
                 <View style={styles.todayTitleBadgeRow}>
                   <Text style={[styles.todayTitleText, { color: colors.foreground }]}>
-                    {todayOutfit
-                      ? t('calendar.todayOutfit', { defaultValue: "Today's Scheduled Outfit" })
-                      : t('stylist.todaySuggestionTitle', { defaultValue: "Today's Style Suggestion" })}
+                    {targetOutfit
+                      ? (isTomorrow
+                          ? t('calendar.tomorrowOutfit', { defaultValue: "Tomorrow's Scheduled Outfit" })
+                          : t('calendar.todayOutfit', { defaultValue: "Today's Scheduled Outfit" }))
+                      : (isTomorrow
+                          ? t('stylist.tomorrowSuggestionTitle', { defaultValue: "Tomorrow's Style Suggestion" })
+                          : t('stylist.todaySuggestionTitle', { defaultValue: "Today's Style Suggestion" }))}
                   </Text>
                   <View style={[styles.dateBadge, { borderColor: colors.border, backgroundColor: colors.background }]}>
                     <Text style={[styles.dateBadgeText, { color: colors.mutedFg }]}>
-                      {new Date().toLocaleDateString(i18n.language || 'en', { month: 'short', day: 'numeric' })}
+                      {formattedProposalDate}
                     </Text>
                   </View>
-                  {(todayOutfit || activeProposal?.worn) && (
+                  {(targetOutfit || activeProposal?.worn) && (
                     <View style={styles.scheduledBadge}>
                       <Text style={styles.scheduledBadgeText}>
                         {t('calendar.scheduled', { defaultValue: 'Scheduled' })}
@@ -666,27 +691,31 @@ export function DailySuggestionView({ onTryOn }: DailySuggestionViewProps) {
                   )}
                 </View>
                 <Text style={[styles.todaySubtitleText, { color: colors.mutedFg }]} numberOfLines={2}>
-                  {todayOutfit
-                    ? (todayOutfit.description || todayOutfit.name)
-                    : (activeProposal?.description || t('stylist.todaySuggestionSubtitle', { defaultValue: 'Curated based on your style profile, weather conditions, and closet harmony.' }))}
+                  {targetOutfit
+                    ? (targetOutfit.description || targetOutfit.name)
+                    : (activeProposal?.description || (isTomorrow
+                        ? t('stylist.tomorrowSuggestionSubtitle', { defaultValue: "Curated based on your style profile, tomorrow's weather conditions, and closet harmony." })
+                        : t('stylist.todaySuggestionSubtitle', { defaultValue: 'Curated based on your style profile, weather conditions, and closet harmony.' })))}
                 </Text>
               </View>
             </View>
           </View>
 
           {/* Loading state when fetching initially */}
-          {dailyLoading && !activeProposal && !todayOutfit ? (
+          {dailyLoading && !activeProposal && !targetOutfit ? (
             <View style={styles.loadingBox}>
               <ActivityIndicator size="small" color={colors.accent} />
               <Text style={[styles.loadingText, { color: colors.mutedFg }]}>
-                {t('stylist.curatingDailyLook', { defaultValue: 'Curating your look for today...' })}
+                {isTomorrow
+                  ? t('stylist.curatingTomorrowLook', { defaultValue: 'Curating your look for tomorrow...' })
+                  : t('stylist.curatingDailyLook', { defaultValue: 'Curating your look for today...' })}
               </Text>
             </View>
           ) : (
             <>
               {/* Garments Thumbnail Strip */}
               {(() => {
-                const itemsToRender = todayOutfit?.garments || todayOutfit?.items || activeProposal?.items || activeProposal?.garments || [];
+                const itemsToRender = targetOutfit?.garments || targetOutfit?.items || activeProposal?.items || activeProposal?.garments || [];
                 if (itemsToRender.length === 0) return null;
                 return (
                   <ScrollView
@@ -712,7 +741,7 @@ export function DailySuggestionView({ onTryOn }: DailySuggestionViewProps) {
                           style={[styles.garmentThumbCard, { borderColor: colors.border, backgroundColor: colors.background }]}
                           onPress={() => {
                             if (onTryOn) {
-                              onTryOn(todayOutfit || activeProposal);
+                              onTryOn(targetOutfit || activeProposal);
                             }
                           }}
                           activeOpacity={0.8}
@@ -741,7 +770,7 @@ export function DailySuggestionView({ onTryOn }: DailySuggestionViewProps) {
                   style={[styles.actionBtn, { backgroundColor: colors.secondary, borderColor: colors.border }]}
                   onPress={() => {
                     if (onTryOn) {
-                      onTryOn(todayOutfit || activeProposal);
+                      onTryOn(targetOutfit || activeProposal);
                     }
                   }}
                   activeOpacity={0.8}
@@ -771,8 +800,8 @@ export function DailySuggestionView({ onTryOn }: DailySuggestionViewProps) {
                   </Text>
                 </TouchableOpacity>
 
-                {/* Wear Today Button (if not already scheduled) */}
-                {!todayOutfit && activeProposal && (
+                {/* Wear Today / Tomorrow Button (if not already scheduled) */}
+                {!targetOutfit && activeProposal && (
                   <TouchableOpacity
                     style={[styles.actionBtnPrimary, { backgroundColor: colors.accent }]}
                     onPress={handleWearProposal}
@@ -780,7 +809,9 @@ export function DailySuggestionView({ onTryOn }: DailySuggestionViewProps) {
                   >
                     <Lucide.CalendarCheck size={14} color="#FFF" />
                     <Text style={styles.actionBtnPrimaryText}>
-                      {t('stylist.wearToday', { defaultValue: 'Wear Today' })}
+                      {isTomorrow
+                        ? t('stylist.wearTomorrow', { defaultValue: 'Wear Tomorrow' })
+                        : t('stylist.wearToday', { defaultValue: 'Wear Today' })}
                     </Text>
                   </TouchableOpacity>
                 )}
@@ -791,7 +822,7 @@ export function DailySuggestionView({ onTryOn }: DailySuggestionViewProps) {
       )}
 
       {/* Fallback empty curate button if no outfit and not loading */}
-      {!todayOutfit && !activeProposal && !dailyLoading && (
+      {!targetOutfit && !activeProposal && !dailyLoading && (
         <View style={[styles.todayCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
           <View style={styles.todayCardHeader}>
             <View style={styles.todayHeaderLeft}>

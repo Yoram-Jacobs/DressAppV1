@@ -1966,7 +1966,11 @@
     "apiKeyInvalidNotice": "Falha na validação da chave de API. Verifique sua chave do Google AI Studio.",
     "testKey": "Chave de teste",
     "apiKeyRequiredTitle": "Chave de API necessária",
-    "apiKeyRequiredMessage": "Insira uma chave de API válida do Google Gemini em seu perfil -> Configuração de IA para usar o AI Stylist."
+    "apiKeyRequiredMessage": "Insira uma chave de API válida do Google Gemini em seu perfil -> Configuração de IA para usar o AI Stylist.",
+    "selectOrWriteTags": "Selecionar ou digitar tags",
+    "tagsPlaceholder": "Digite uma tag e pressione Enter (ex: Trabalho, Verão, Liso)",
+    "availableTags": "Do seu guarda-roupa:",
+    "noTagsFound": "Nenhuma tag encontrada. Digite acima para adicionar."
   },
   "admin": {
     "title": "Administrador",
@@ -2153,7 +2157,8 @@
       "formal": "Formal",
       "athletic": "Esportivo",
       "loungewear": "Roupa de descanso",
-      "all": "Todos os estilos"
+      "all": "Todos os estilos",
+      "tags": "Tags"
     },
     "gender": {
       "men": "Masculino",
