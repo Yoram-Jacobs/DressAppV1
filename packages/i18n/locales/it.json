@@ -1066,7 +1066,11 @@
     "ungroupFailed": "Impossibile rimuovere il capo dal gruppo.",
     "groupViewsTitle": "Indumenti e visualizzazioni raggruppati",
     "cover": "Copertina",
-    "originalCrop": "Raccolto originale"
+    "originalCrop": "Raccolto originale",
+    "banner": {
+      "title": "Revisiona e perfeziona",
+      "subtitle": "Perfeziona ogni dettaglio rilevato da 'The Eyes': modifica la foto, regola gli attributi e prepara questo capo per il tuo guardaroba o il marketplace."
+    }
   },
   "stylist": {
     "heroTitle": "Il tuo personal stylist AI",

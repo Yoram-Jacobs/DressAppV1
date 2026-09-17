@@ -1066,7 +1066,11 @@
     "ungroupFailed": "从分组中移除衣物失败。",
     "groupViewsTitle": "分组服装和视图",
     "cover": "覆盖",
-    "originalCrop": "原始作物"
+    "originalCrop": "原始作物",
+    "banner": {
+      "title": "检查与优化",
+      "subtitle": "微调 'The Eyes' 识别出的所有细节——修正照片、调整属性，让这件服饰随时可以加入您的衣橱或发布到集市。"
+    }
   },
   "stylist": {
     "heroTitle": "您的专属AI造型师",

@@ -1079,7 +1079,11 @@
     "suggestionsApplied": "הצעות ה-AI הוחלו על הטופס.",
     "original": "מקורי",
     "originalCrop": "חיתוך מקורי",
-    "addAllSuggested": "הוסף הצעות (+{{count}})"
+    "addAllSuggested": "הוסף הצעות (+{{count}})",
+    "banner": {
+      "title": "בדיקה ודיוק",
+      "subtitle": "דייק כל פרט ש'The Eyes' זיהה — תקן את התמונה, התאם מאפיינים, והכן את הפריט הזה לארון או לשוק."
+    }
   },
   "stylist": {
     "heroTitle": "הסטייליסט האישי שלך מבוסס AI",

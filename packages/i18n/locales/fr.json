@@ -1066,7 +1066,11 @@
     "ungroupFailed": "Échec du retrait du vêtement du groupe.",
     "groupViewsTitle": "Vêtements et vues groupés",
     "cover": "Couverture",
-    "originalCrop": "Récolte originale"
+    "originalCrop": "Récolte originale",
+    "banner": {
+      "title": "Vérifier et affiner",
+      "subtitle": "Ajustez chaque détail détecté par 'The Eyes' — retouchez la photo, modifiez les attributs et préparez cette pièce pour votre garde-robe ou la marketplace."
+    }
   },
   "stylist": {
     "heroTitle": "Votre styliste personnel IA",

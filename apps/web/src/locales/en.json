@@ -1066,7 +1066,11 @@
     "suggestionsApplied": "AI suggestions applied to form.",
     "original": "Original",
     "originalCrop": "Original crop",
-    "addAllSuggested": "Add suggested (+{{count}})"
+    "addAllSuggested": "Add suggested (+{{count}})",
+    "banner": {
+      "title": "Review & refine",
+      "subtitle": "Fine-tune every detail The Eyes picked up — fix the photo, adjust attributes, and get this piece ready for your closet or the marketplace."
+    }
   },
   "stylist": {
     "heroTitle": "Your Personal AI Stylist",

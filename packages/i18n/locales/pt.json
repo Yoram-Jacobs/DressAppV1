@@ -1066,7 +1066,11 @@
     "ungroupFailed": "Falha ao remover peça do grupo.",
     "groupViewsTitle": "Roupas e visualizações agrupadas",
     "cover": "Cobrir",
-    "originalCrop": "Colheita original"
+    "originalCrop": "Colheita original",
+    "banner": {
+      "title": "Revisar e aprimorar",
+      "subtitle": "Ajuste todos os detalhes identificados pelo 'The Eyes' — corrija a foto, adapte os atributos e prepare esta peça para o seu guarda-roupa ou marketplace."
+    }
   },
   "stylist": {
     "heroTitle": "Seu estilista pessoal com IA",

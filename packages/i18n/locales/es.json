@@ -1066,7 +1066,11 @@
     "ungroupFailed": "Error al eliminar la prenda del grupo.",
     "groupViewsTitle": "Prendas agrupadas y vistas",
     "cover": "Cubrir",
-    "originalCrop": "Cultivo original"
+    "originalCrop": "Cultivo original",
+    "banner": {
+      "title": "Revisar y perfeccionar",
+      "subtitle": "Ajusta cada detalle que 'The Eyes' detectó: retoca la foto, afina los atributos y prepara esta prenda para tu armario o el mercado."
+    }
   },
   "stylist": {
     "heroTitle": "Tu estilista personal con IA",

@@ -1066,7 +1066,11 @@
     "ungroupFailed": "Kleidungsstück konnte nicht aus der Gruppe entfernt werden.",
     "groupViewsTitle": "Gruppierte Kleidungsstücke und Ansichten",
     "cover": "Abdeckung",
-    "originalCrop": "Ursprüngliche Ernte"
+    "originalCrop": "Ursprüngliche Ernte",
+    "banner": {
+      "title": "Überprüfen & verfeinern",
+      "subtitle": "Passe jedes Detail an, das 'The Eyes' erkannt hat – bearbeite das Foto, korrigiere Attribute und mache dieses Teil bereit für deinen Kleiderschrank oder den Marktplatz."
+    }
   },
   "stylist": {
     "heroTitle": "Dein persönlicher KI-Stylist",

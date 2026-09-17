@@ -1066,7 +1066,11 @@
     "ungroupFailed": "Kan kledingstuk niet uit groep verwijderen.",
     "groupViewsTitle": "Gegroepeerde kleding en weergaven",
     "cover": "Omslag",
-    "originalCrop": "Oorspronkelijke oogst"
+    "originalCrop": "Oorspronkelijke oogst",
+    "banner": {
+      "title": "Controleren & verfijnen",
+      "subtitle": "Verfijn elk detail dat 'The Eyes' heeft gedetecteerd — bewerk de foto, pas kenmerken aan en maak dit kledingstuk klaar voor je kledingkast of de marktplaats."
+    }
   },
   "stylist": {
     "heroTitle": "Je persoonlijke AI-stylist",

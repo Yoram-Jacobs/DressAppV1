@@ -1066,7 +1066,11 @@
     "ungroupFailed": "グループからのアイテム削除に失敗しました。",
     "groupViewsTitle": "グループ化された衣服とビュー",
     "cover": "カバー",
-    "originalCrop": "オリジナル作物"
+    "originalCrop": "オリジナル作物",
+    "banner": {
+      "title": "確認と微調整",
+      "subtitle": "「The Eyes」が検出した詳細を調整 — 写真を修正し、属性を整えて、クローゼットやマーケットプレイスに登録する準備を整えましょう。"
+    }
   },
   "stylist": {
     "heroTitle": "あなた専属のAIスタイリスト",
