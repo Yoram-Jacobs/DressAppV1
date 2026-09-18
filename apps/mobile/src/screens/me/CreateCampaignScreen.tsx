@@ -30,9 +30,11 @@ import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import * as WebBrowser from 'expo-web-browser';
+import * as Lucide from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '@mobile/theme';
 import { fonts, fontSizes, spacing, radii } from '@mobile/theme/tokens';
+import { useTierLimits } from '@mobile/hooks/useTierLimits';
 import { api } from '@mobile/lib/api';
 
 const schema = z.object({
@@ -50,6 +52,7 @@ export function CreateCampaignScreen() {
   const { t } = useTranslation();
   const navigation = useNavigation();
   const { colors } = useTheme();
+  const { canCreateCampaign } = useTierLimits();
   const [step, setStep] = useState<'form' | 'submitting' | 'payment'>('form');
 
   const { control, handleSubmit, formState: { errors } } = useForm<Form>({
@@ -100,6 +103,30 @@ export function CreateCampaignScreen() {
   };
 
   const s = makeStyles(colors);
+
+  if (!canCreateCampaign) {
+    return (
+      <SafeAreaView style={[s.root, s.center, { paddingHorizontal: spacing[6] }]} edges={['bottom']}>
+        <View style={{ width: 72, height: 72, borderRadius: radii.full, backgroundColor: colors.secondary, alignItems: 'center', justifyContent: 'center', marginBottom: spacing[4] }}>
+          <Lucide.Megaphone size={36} color={colors.primary} />
+        </View>
+        <Text style={[s.sectionLabel, { fontSize: fontSizes.xl, textAlign: 'center', marginBottom: spacing[2] }]}>
+          {t('common.upgradeToUsePro', { feature: t('common.features.campaigns') })}
+        </Text>
+        <Text style={{ fontFamily: fonts.body, fontSize: fontSizes.sm, color: colors.mutedFg, textAlign: 'center', lineHeight: 20, marginBottom: spacing[6], maxWidth: 320 }}>
+          {t('campaigns.upgradePrompt', {
+            defaultValue: 'Creating advertisement campaigns is an exclusive feature for Professional tier members.',
+          })}
+        </Text>
+        <TouchableOpacity
+          style={[s.submitBtn, { paddingHorizontal: spacing[6] }]}
+          onPress={() => (navigation as any).navigate('Pricing')}
+        >
+          <Text style={s.submitBtnText}>{t('nav.pricing', { defaultValue: 'View Plans & Upgrade' })}</Text>
+        </TouchableOpacity>
+      </SafeAreaView>
+    );
+  }
 
   if (step === 'submitting' || step === 'payment') {
     return (

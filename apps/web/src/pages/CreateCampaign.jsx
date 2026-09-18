@@ -41,6 +41,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useAuth } from "@/lib/auth";
+import { useTierLimits } from "@/hooks/useTierLimits";
 import { campaignApi } from "@/lib/api";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -137,6 +138,7 @@ export default function CreateCampaign() {
   const { t } = useTranslation();
   const nav = useNavigate();
   const { user } = useAuth();
+  const { canCreateCampaign } = useTierLimits();
   const [searchParams] = useSearchParams();
   const editId = searchParams.get("edit");
   const [step, setStep] = useState(0);
@@ -465,6 +467,28 @@ export default function CreateCampaign() {
           {t("common.back")}
         </button>
 
+        {!canCreateCampaign ? (
+          <Card className="rounded-[16px] border border-border bg-white shadow-sm py-16 text-center max-w-xl mx-auto my-8">
+            <CardContent className="space-y-4">
+              <div className="mx-auto w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary-brand">
+                <Tag className="h-6 w-6" />
+              </div>
+              <h2 className="text-[22px] text-dark-brand font-bold">
+                {t('common.upgradeToUsePro', { feature: t('common.features.campaigns') })}
+              </h2>
+              <p className="text-[14px] text-text-brand max-w-md mx-auto">
+                {t('campaigns.upgradePrompt', { defaultValue: 'Creating advertisement campaigns is an exclusive feature for Professional tier members.' })}
+              </p>
+              <Button
+                onClick={() => nav('/pricing')}
+                className="rounded-full px-6 py-2.5 font-semibold"
+              >
+                {t('nav.pricing', { defaultValue: 'View Plans & Upgrade' })}
+              </Button>
+            </CardContent>
+          </Card>
+        ) : (
+          <>
         {/* Step indicator */}
         <div className="flex items-center gap-1.5 mb-5 overflow-x-auto pb-2">
           {STEPS.map((s, i) => {
@@ -1111,6 +1135,8 @@ export default function CreateCampaign() {
             )}
           </div>
         </div>
+        </>
+        )}
       </section>
 
       {/* PayPal Required Dialog */}

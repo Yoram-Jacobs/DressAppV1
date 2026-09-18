@@ -101,7 +101,17 @@
     "enabled": "מופעל",
     "unenabled": "מושבת",
     "select": "בחר",
-    "items": "פריטים"
+    "items": "פריטים",
+    "upgradeToUse": "שדרג את המסלול שלך כדי להשתמש ב-{{feature}}",
+    "upgradeToUsePro": "שדרג למסלול Professional כדי להשתמש ב-{{feature}}",
+    "features": {
+      "trendScout": "Trend Scout",
+      "scheduler": "תזמון והתראות פוש",
+      "migration": "ייבוא ארון בגדים",
+      "campaigns": "קמפיינים ופרסום",
+      "moreClosetSlots": "עוד מקומות בארון",
+      "moreAiActions": "עוד פעולות AI יומיות"
+    }
   },
   "auth": {
     "welcomeBack": "ברוך שובך",

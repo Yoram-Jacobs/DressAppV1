@@ -95,7 +95,17 @@
     "backToHome": "Zurück nach Hause",
     "enabled": "Ermöglicht",
     "unenabled": "Nicht aktiviert",
-    "select": "Wählen"
+    "select": "Wählen",
+    "upgradeToUse": "Upgrade deinen Tarif, um {{feature}} zu nutzen",
+    "upgradeToUsePro": "Upgrade auf Professional, um {{feature}} zu nutzen",
+    "features": {
+      "trendScout": "Trend Scout",
+      "scheduler": "Zeitplan & Push-Benachrichtigungen",
+      "migration": "Garderoben-Migration",
+      "campaigns": "Werbekampagnen",
+      "moreClosetSlots": "mehr Kleiderschrank-Plätze",
+      "moreAiActions": "mehr tägliche KI-Aktionen"
+    }
   },
   "auth": {
     "welcomeBack": "Willkommen zurück",

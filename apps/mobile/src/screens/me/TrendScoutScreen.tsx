@@ -33,6 +33,7 @@ import * as Lucide from 'lucide-react-native';
 import { useTheme } from '@mobile/theme';
 import { fonts, fontSizes, spacing, radii, shadows } from '@mobile/theme/tokens';
 import { useTrendScoutStore, useUserStore } from '@mobile/lib/stores';
+import { useTierLimits } from '@mobile/hooks/useTierLimits';
 import { api } from '@mobile/lib/api';
 import { toCountryCode } from '@mobile/lib/country';
 import { ScrollToTopFloater } from '@mobile/components/common/ScrollToTopFloater';
@@ -130,6 +131,8 @@ export function TrendScoutScreen() {
   const navigation = useNavigation<any>();
 
   const { user } = useUserStore();
+  const { canAccessTrendScout } = useTierLimits();
+  const isPaying = canAccessTrendScout;
   const userSex = (user?.sex || user?.gender || 'female').toLowerCase();
   const [selectedGender, setSelectedGender] = useState<'male' | 'female'>(userSex === 'male' ? 'male' : 'female');
   const [refreshing, setRefreshing] = useState(false);
@@ -188,9 +191,6 @@ export function TrendScoutScreen() {
 
   const { cards: items, loading, prewarm } = useTrendScoutStore({ prewarm: false });
 
-  const userTier = ((user?.subscription?.is_active && user?.subscription?.tier) || user?.subscription_tier || 'free').toLowerCase();
-  const isPaying = (user?.subscription?.is_active && userTier !== 'free') || userTier === 'manager' || userTier === 'professional' || userTier === 'pro';
-
   const handleGenderSwitch = useCallback(async (newGender: 'male' | 'female') => {
     if (newGender === selectedGender) return;
     setSelectedGender(newGender);
@@ -227,8 +227,9 @@ export function TrendScoutScreen() {
   }, [prewarm, language, country, selectedGender, refreshing]);
 
   useEffect(() => {
+    if (!canAccessTrendScout) return;
     prewarm({ language, country, gender: selectedGender });
-  }, [selectedGender, prewarm, language, country]);
+  }, [selectedGender, prewarm, language, country, canAccessTrendScout]);
 
   const filteredItems = items.filter((it) => {
     if (it.gender && it.gender !== selectedGender) return false;
@@ -347,6 +348,31 @@ export function TrendScoutScreen() {
         <View style={{ width: 36 }} />
       </View>
 
+      {!canAccessTrendScout ? (
+        <View style={styles.lockedContainer}>
+          <View style={[styles.lockedIconCircle, { backgroundColor: colors.secondary }]}>
+            <Lucide.Sparkles size={40} color={colors.primary} />
+          </View>
+          <Text style={[styles.lockedTitle, { color: colors.foreground }]}>
+            {t('common.upgradeToUse', { feature: t('common.features.trendScout') })}
+          </Text>
+          <Text style={[styles.lockedDesc, { color: colors.mutedFg }]}>
+            {t('trends.upgradePrompt', {
+              defaultValue:
+                'Upgrade your subscription to unlock daily AI-curated fashion trends, runway reviews, and sustainable style intelligence.',
+            })}
+          </Text>
+          <TouchableOpacity
+            style={[styles.upgradeBtn, { backgroundColor: colors.primary, marginTop: spacing[5], paddingHorizontal: spacing[6] }]}
+            onPress={() => navigation.navigate('Pricing')}
+          >
+            <Text style={[styles.upgradeBtnText, { color: colors.primaryFg }]}>
+              {t('nav.pricing', { defaultValue: 'View Plans & Upgrade' })}
+            </Text>
+          </TouchableOpacity>
+        </View>
+      ) : (
+        <>
       {/* ── Gender Toggle & Refresh Bar ─────────────────────────────── */}
       <View style={[styles.genderBar, { borderBottomColor: colors.border }]}>
         <View style={[styles.genderPillsContainer, { backgroundColor: colors.secondary, borderColor: colors.border }]}>
@@ -533,6 +559,8 @@ export function TrendScoutScreen() {
         selectedGender={selectedGender}
         country={country}
       />
+      </>
+      )}
     </SafeAreaView>
   );
 }
@@ -541,6 +569,34 @@ export function TrendScoutScreen() {
 const styles = StyleSheet.create({
   root: {
     flex: 1,
+  },
+  lockedContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: spacing[6],
+    paddingBottom: spacing[12],
+  },
+  lockedIconCircle: {
+    width: 72,
+    height: 72,
+    borderRadius: radii.full,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: spacing[4],
+  },
+  lockedTitle: {
+    fontFamily: fonts.displayBold,
+    fontSize: fontSizes.xl,
+    textAlign: 'center',
+    marginBottom: spacing[2],
+  },
+  lockedDesc: {
+    fontFamily: fonts.body,
+    fontSize: fontSizes.sm,
+    textAlign: 'center',
+    lineHeight: 20,
+    maxWidth: 320,
   },
   topBar: {
     flexDirection: 'row',

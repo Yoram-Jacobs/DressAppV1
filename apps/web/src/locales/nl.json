@@ -95,7 +95,17 @@
     "backToHome": "Terug naar Thuis",
     "enabled": "Ingeschakeld",
     "unenabled": "Niet ingeschakeld",
-    "select": "Selecteer"
+    "select": "Selecteer",
+    "upgradeToUse": "Upgrade je abonnement om {{feature}} te gebruiken",
+    "upgradeToUsePro": "Upgrade naar Professional om {{feature}} te gebruiken",
+    "features": {
+      "trendScout": "Trend Scout",
+      "scheduler": "Planning & pushmeldingen",
+      "migration": "Kledingkast-migratie",
+      "campaigns": "Advertentiecampagnes",
+      "moreClosetSlots": "meer kledingkastplekken",
+      "moreAiActions": "meer dagelijkse AI-acties"
+    }
   },
   "auth": {
     "welcomeBack": "Welkom terug",

@@ -95,7 +95,17 @@
     "backToHome": "De volta para casa",
     "enabled": "Habilitado",
     "unenabled": "Desativado",
-    "select": "Selecione"
+    "select": "Selecione",
+    "upgradeToUse": "Atualize seu plano para usar {{feature}}",
+    "upgradeToUsePro": "Atualize para Professional para usar {{feature}}",
+    "features": {
+      "trendScout": "Trend Scout",
+      "scheduler": "Agendamento e notificações push",
+      "migration": "Migração de guarda-roupa",
+      "campaigns": "Campanhas publicitárias",
+      "moreClosetSlots": "mais espaço no guarda-roupa",
+      "moreAiActions": "mais ações diárias de IA"
+    }
   },
   "auth": {
     "welcomeBack": "Bem-vindo de volta",

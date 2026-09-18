@@ -186,6 +186,27 @@ async def update_me(
             patch["cultural_context"], dict
         ) else patch["cultural_context"].model_dump()
 
+    # Free tier has no Schedule & push notifications
+    if "scheduler_settings" in patch and patch["scheduler_settings"] is not None:
+        sched_val = patch["scheduler_settings"]
+        sched_dict = sched_val if isinstance(sched_val, dict) else (getattr(sched_val, "model_dump", lambda: {})() or {})
+        if sched_dict.get("enabled") is True or sched_dict.get("push_enabled") is True:
+            sub = user.get("subscription") or {}
+            is_active = sub.get("is_active", False)
+            plan_type = sub.get("plan_type", "free")
+            tier = sub.get("tier", "free")
+            user_tier = "free"
+            if is_active and plan_type != "free":
+                if tier in ["pro", "manager"]:
+                    user_tier = "manager"
+                elif tier in ["business", "professional"]:
+                    user_tier = "professional"
+            if user_tier == "free":
+                raise HTTPException(
+                    status_code=403,
+                    detail="Schedule & push notifications are only available on Manager or Professional tiers. Please upgrade your plan."
+                )
+
     # Embedded-document fields that must MERGE (not replace) so a
     # partial PATCH cannot wipe values the frontend wasn't aware of.
     _MERGEABLE_DICT_FIELDS = (
@@ -384,6 +405,21 @@ async def update_me(
     for photo_field in ("avatar_url", "face_photo_url", "body_photo_url"):
         val = patch.get(photo_field)
         if val and isinstance(val, str) and val.startswith("data:image"):
+            # Avoid charging twice if avatar_url and face_photo_url have the exact same payload
+            if photo_field == "face_photo_url" and patch.get("avatar_url") == val and "avatar_url" in set_ops:
+                set_ops["face_photo_url"] = set_ops["avatar_url"]
+                continue
+            if photo_field == "avatar_url" and patch.get("face_photo_url") == val and "face_photo_url" in set_ops:
+                set_ops["avatar_url"] = set_ops["face_photo_url"]
+                continue
+
+            from app.services.billing_service import deduct_user_credits
+            if not await deduct_user_credits(db, user, cost=1):
+                raise HTTPException(
+                    status_code=402,
+                    detail="Daily AI operation limit of 10 requests reached. Please upgrade to continue."
+                )
+
             try:
                 header, b64_str = val.split(",", 1)
                 img_bytes = base64.b64decode(b64_str)
@@ -396,6 +432,8 @@ async def update_me(
                     set_ops["avatar_url"] = uploaded_url
                 elif photo_field == "avatar_url" and "face_photo_url" not in patch:
                     set_ops["face_photo_url"] = uploaded_url
+            except HTTPException:
+                raise
             except Exception as photo_exc:
                 logger.warning("Failed to process/upload %s for user %s: %s", photo_field, user["id"], photo_exc)
 

@@ -88,6 +88,7 @@ import {
 } from "@/lib/taxonomy";
 import { toast } from "sonner";
 import { useRememberedDirectory } from "@/hooks/useRememberedDirectory";
+import { useTierLimits } from "@/hooks/useTierLimits";
 import ClosetBanner from "../assets/img/inner6.webp";
 import { PageHeroBanner } from '@/components/ui/PageHeroBanner';
 /* -------------------- constants -------------------- */
@@ -454,6 +455,7 @@ export default function AddItem() {
   const nav = useNavigate();
   const location = useLocation();
   const { user } = useAuth();
+  const { maxClosetSlots, isFree } = useTierLimits();
   const [searchParams, setSearchParams] = useSearchParams();
   const isSuitcase = searchParams.get("from") === "suitcase";
   const [cards, setCards] = useState([]); // [{id,file,previewUrl,base64,status,progress,fields,error,dppData?}]
@@ -571,6 +573,15 @@ export default function AddItem() {
 
   const handleUrlUpload = async (url) => {
     if (!url || !url.trim()) return;
+    if (isFree && (closetItems?.length || 0) >= maxClosetSlots) {
+      toast.error(
+        t("common.upgradeToUse", {
+          feature: t("common.features.moreClosetSlots"),
+          defaultValue: "Upgrade your plan to use more closet slots",
+        }),
+      );
+      return;
+    }
     setIsUrlLoading(true);
     const loadingId = toast.loading(
       t("addItem.urlImporting", {
@@ -1540,6 +1551,15 @@ export default function AddItem() {
   };
 
   const handleFiles = async (fileList) => {
+    if (isFree && (closetItems?.length || 0) >= maxClosetSlots) {
+      toast.error(
+        t("common.upgradeToUse", {
+          feature: t("common.features.moreClosetSlots"),
+          defaultValue: "Upgrade your plan to use more closet slots",
+        }),
+      );
+      return;
+    }
     const rawList = Array.from(fileList || []);
     const files = rawList.filter((f) => {
       const type = f.type || "";

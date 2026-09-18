@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/lib/auth';
+import { useTierLimits } from '@/hooks/useTierLimits';
 import { api } from '@/lib/api';
 import { toast } from 'sonner';
 import { Switch } from '@/components/ui/switch';
@@ -40,6 +42,8 @@ const WEEKDAYS = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'satur
 export function SchedulerSettings() {
   const { t, i18n } = useTranslation();
   const { user, updateUserLocal } = useAuth();
+  const navigate = useNavigate();
+  const { canAccessScheduler } = useTierLimits();
 
   const [enabled, setEnabled] = useState(user?.scheduler_settings?.enabled || false);
   const [frequency, setFrequency] = useState(user?.scheduler_settings?.frequency || 'everyday');
@@ -146,6 +150,10 @@ export function SchedulerSettings() {
 
   const handlePushToggle = async (checked) => {
     if (busy) return;
+    if (checked && !canAccessScheduler) {
+      toast.error(t('common.upgradeToUse', { feature: t('common.features.scheduler') }));
+      return;
+    }
     setBusy(true);
     try {
       if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
@@ -167,33 +175,37 @@ export function SchedulerSettings() {
           if (!res?.public_key) {
             throw new Error('VAPID public key unavailable on server');
           }
-          const pubKey = urlBase64ToUint8Array(res.public_key);
           sub = await reg.pushManager.subscribe({
             userVisibleOnly: true,
-            applicationServerKey: pubKey,
+            applicationServerKey: urlBase64ToUint8Array(res.public_key),
           });
         }
         await api.subscribeWebPush(sub.toJSON());
         setPushEnabled(true);
-        toast.success(t('profile.browserPushNotificationsSuccessfullyEnabled', { defaultValue: 'Browser push notifications successfully enabled.' }));
+        toast.success(t('profile.pushSubscribed', { defaultValue: 'Push notifications enabled.' }));
       } else {
         const sub = await reg.pushManager.getSubscription();
         if (sub) {
-          await sub.unsubscribe();
           await api.unsubscribeWebPush(sub.endpoint);
+          await sub.unsubscribe();
         }
         setPushEnabled(false);
-        toast.success(t('profile.browserPushNotificationsDisabled', { defaultValue: 'Browser push notifications disabled.' }));
+        toast.success(t('profile.pushUnsubscribed', { defaultValue: 'Push notifications disabled.' }));
       }
     } catch (err) {
-      console.error('[handlePushToggle] error:', err);
-      toast.error(err?.response?.data?.detail || err?.message || t('profile.failedToTogglePushNotifications', { defaultValue: 'Failed to toggle push notifications.' }));
+      console.error('[SchedulerSettings] push error:', err);
+      toast.error(err?.message || t('profile.pushError', { defaultValue: 'Failed to update push notification settings.' }));
     } finally {
       setBusy(false);
     }
   };
 
   const save = useCallback(async (overrides = {}) => {
+    const targetEnabled = overrides.enabled !== undefined ? overrides.enabled : enabled;
+    if (targetEnabled && !canAccessScheduler) {
+      toast.error(t('common.upgradeToUse', { feature: t('common.features.scheduler') }));
+      return;
+    }
     setBusy(true);
     setSaved(false);
     try {
@@ -286,6 +298,24 @@ export function SchedulerSettings() {
         </div>
       </AccordionTrigger>
       <AccordionContent className="border-t border-border space-y-3 pt-4 pb-0 mt-3">
+        {!canAccessScheduler ? (
+          <div className="p-4 bg-yellow-shadow rounded-[12px] border border-border shadow-sm text-start space-y-3">
+            <div className="font-semibold text-[14px] text-dark-brand">
+              {t('common.upgradeToUse', { feature: t('common.features.scheduler') })}
+            </div>
+            <div className="text-[12px] text-text-brand">
+              {t('profile.schedulerUpgradeDesc', { defaultValue: 'Daily outfit proposals and push alerts require a Manager or Professional subscription.' })}
+            </div>
+            <Button
+              size="sm"
+              onClick={() => navigate('/pricing')}
+              className="rounded-full"
+            >
+              {t('nav.pricing', { defaultValue: 'View Plans & Upgrade' })}
+            </Button>
+          </div>
+        ) : (
+          <>
         <div className="flex items-center justify-between gap-3 p-3 bg-yellow-shadow rounded-[12px] border border-border shadow-sm text-start">
           <div className="space-y-1">
             <div className="font-semibold text-[14px] text-dark-brand">{t('profile.enableSchedulerProposals', { defaultValue: 'Enable Scheduler Proposals' })}</div>
@@ -532,6 +562,8 @@ export function SchedulerSettings() {
             )}
           </Button>
         </div>
+        </>
+        )}
       </AccordionContent>
     </AccordionItem>
   );

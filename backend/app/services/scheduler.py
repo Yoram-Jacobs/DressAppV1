@@ -790,6 +790,20 @@ async def check_scheduler_triggers() -> None:
                 if not user_id:
                     continue
 
+                # Free tier has no Schedule & push notifications
+                sub = user.get("subscription") or {}
+                is_active = sub.get("is_active", False)
+                plan_type = sub.get("plan_type", "free")
+                tier = sub.get("tier", "free")
+                user_tier = "free"
+                if is_active and plan_type != "free":
+                    if tier in ["pro", "manager"]:
+                        user_tier = "manager"
+                    elif tier in ["business", "professional"]:
+                        user_tier = "professional"
+                if user_tier == "free":
+                    continue
+
                 sched = user.get("scheduler_settings") or {}
 
                 # Convert current UTC time to user's local time based on their timezone

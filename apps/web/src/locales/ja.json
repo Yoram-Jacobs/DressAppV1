@@ -95,7 +95,17 @@
     "backToHome": "ホームに戻る",
     "enabled": "有効",
     "unenabled": "無効",
-    "select": "選択"
+    "select": "選択",
+    "upgradeToUse": "{{feature}}を使用するにはプランをアップグレードしてください",
+    "upgradeToUsePro": "{{feature}}を使用するにはProfessionalプランにアップグレードしてください",
+    "features": {
+      "trendScout": "Trend Scout",
+      "scheduler": "スケジュール＆プッシュ通知",
+      "migration": "ワードローブの移行",
+      "campaigns": "広告キャンペーン",
+      "moreClosetSlots": "クローゼット枠の追加",
+      "moreAiActions": "毎日のAI利用回数の追加"
+    }
   },
   "auth": {
     "welcomeBack": "おかえりなさい",

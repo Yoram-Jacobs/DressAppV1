@@ -95,7 +95,17 @@
     "backToHome": "Back to Home",
     "enabled": "Enabled",
     "unenabled": "Unenabled",
-    "select": "Select"
+    "select": "Select",
+    "upgradeToUse": "Upgrade your plan to use {{feature}}",
+    "upgradeToUsePro": "Upgrade to Professional to use {{feature}}",
+    "features": {
+      "trendScout": "Trend Scout",
+      "scheduler": "Schedule & push notifications",
+      "migration": "Wardrobe migration",
+      "campaigns": "Ad campaigns",
+      "moreClosetSlots": "more closet slots",
+      "moreAiActions": "more daily AI actions"
+    }
   },
   "auth": {
     "welcomeBack": "Welcome back",

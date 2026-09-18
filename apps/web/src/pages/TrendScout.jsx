@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { useTierLimits } from "@/hooks/useTierLimits";
 import { motion } from "framer-motion";
 import {
   Sparkles,
@@ -124,12 +125,9 @@ export default function TrendScout() {
     (user?.address?.country_code || user?.home_location?.country_code || loc?.countryCode || 'IL')
       .toString()
       .toUpperCase();
-  const sub = user?.subscription || {};
-  const isActive = sub.is_active || false;
-  const planType = sub.plan_type || 'free';
-  const tier = sub.tier || 'free';
-  const userTier = (isActive && planType !== 'free') ? tier : 'free';
-  const isBlocked = userTier === 'free';
+  const navigate = useNavigate();
+  const { canAccessTrendScout } = useTierLimits();
+  const isBlocked = !canAccessTrendScout;
   // Resolve trends from global store
   const allCards = trendStore.cards || [];
   useEffect(() => {
@@ -276,6 +274,29 @@ export default function TrendScout() {
             max-[767px]:px-[15px] max-[767px]:py-[30px]
             max-[480px]:px-[15px] max-[480px]:py-[30px]" data-testid="trend-scout-page">
         <ExploreBackButton />
+
+        {isBlocked ? (
+          <Card className="rounded-[16px] border border-border bg-white shadow-sm py-16 text-center max-w-xl mx-auto my-8">
+            <CardContent className="space-y-4">
+              <div className="mx-auto w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary-brand">
+                <Sparkles className="h-6 w-6" />
+              </div>
+              <h2 className="text-[22px] text-dark-brand font-bold">
+                {t('common.upgradeToUse', { feature: t('common.features.trendScout') })}
+              </h2>
+              <p className="text-[14px] text-text-brand max-w-md mx-auto">
+                {t('trends.upgradePrompt', { defaultValue: 'Upgrade your subscription to unlock daily AI-curated fashion trends, runway reviews, and sustainable style intelligence.' })}
+              </p>
+              <Button
+                onClick={() => navigate('/pricing')}
+                className="rounded-full px-6 py-2.5 font-semibold"
+              >
+                {t('nav.pricing', { defaultValue: 'View Plans & Upgrade' })}
+              </Button>
+            </CardContent>
+          </Card>
+        ) : (
+          <>
         {/* Gender Toggle & Refresh button */}
         <div className="flex items-center gap-3 justify-between mb-5 flex-wrap">
           <div className="inline-flex rounded-full bg-white p-1 border border-border flex-wrap">
@@ -474,6 +495,8 @@ export default function TrendScout() {
           selectedGender={selectedGender}
           country={country}
         />
+        </>
+        )}
       </section>
     </>
   );

@@ -58,9 +58,9 @@ export function SubscriptionSettings({
   const planType = subscription?.plan_type || 'monthly';
 
   // Closet capacity limits
-  const maxBonus = 150; // 50 base + 150 bonus = 200 max
+  const maxBonus = 100; // 50 base + up to 100 bonus = 150 max
   const effectiveBonus = Math.min(closetBonus, maxBonus);
-  const maxCapacity = 50 + effectiveBonus;
+  const maxCapacity = Math.min(150, 50 + effectiveBonus);
   const capacityPct = Math.min(100, Math.round((closetCount / maxCapacity) * 100));
   const isCapacityFull = closetCount >= maxCapacity;
 
@@ -249,8 +249,9 @@ export function SubscriptionSettings({
               <View style={styles.warningBox}>
                 <Lucide.AlertCircle size={14} color="#EF4444" />
                 <Text style={styles.warningText}>
-                  {t('profile.closetLimitWarning', {
-                    defaultValue: 'You have reached your free closet capacity limit. Upgrade to add more garments.',
+                  {t('common.upgradeToUse', {
+                    feature: t('common.features.moreClosetSlots', { defaultValue: 'more closet slots' }),
+                    defaultValue: 'Upgrade your plan to use more closet slots',
                   })}
                 </Text>
               </View>
@@ -295,7 +296,7 @@ export function SubscriptionSettings({
                 </Text>
                 <Text style={[styles.referralDesc, { color: colors.mutedFg }]}>
                   {t('profile.referralDesc', {
-                    defaultValue: 'Get +10 bonus closet slots for every friend who joins via your invite link (up to 200 items max).',
+                    defaultValue: 'Get +10 bonus closet slots for every friend who joins via your invite link (up to 150 items max).',
                   })}
                 </Text>
               </View>

@@ -195,6 +195,26 @@ async def _run_reanalyze_items(
 
 
 
+def check_migration_access(user: dict) -> None:
+    sub = user.get("subscription") or {}
+    is_active = sub.get("is_active", False)
+    plan_type = sub.get("plan_type", "free")
+    tier = sub.get("tier", "free")
+    
+    user_tier = "free"
+    if is_active and plan_type != "free":
+        if tier in ["pro", "manager"]:
+            user_tier = "manager"
+        elif tier in ["business", "professional"]:
+            user_tier = "professional"
+            
+    if user_tier == "free":
+        raise HTTPException(
+            status_code=403,
+            detail="Wardrobe migration is only available on Manager or Professional tiers. Please upgrade your plan."
+        )
+
+
 class MigrationSaveCropsIn(BaseModel):
     app_name: str = "Competitor App"
     cards: list[dict[str, Any]] = Field(default_factory=list)
@@ -205,7 +225,8 @@ async def save_migration_crops(
     payload: MigrationSaveCropsIn,
     user: dict = Depends(get_current_user),
 ) -> dict[str, Any]:
-    """Save bookmarklet-captured garment crops directly to the closet DB.
+    """Save bookmarklet-captured garment crops directly to the closet DB."""
+    check_migration_access(user)
 
     Each card must have a ``crop_base64`` field (raw base64 JPEG).
     Items are saved with ``brand=<app_name>`` so the re-analyze worker
@@ -335,11 +356,9 @@ async def reanalyze_by_brand(
     user: dict = Depends(get_current_user),
 ) -> dict[str, Any]:
     """Standalone re-analyze endpoint (for manual re-triggering).
-
-    Queries closet_items where ``brand == app_name`` for the user,
-    then processes each through The Eyes (Gemini) one by one.
     Returns a job_id for polling via /migration/status/{job_id}.
     """
+    check_migration_access(user)
     vision_service = get_garment_vision_service(user=user)
     if vision_service is None:
         raise HTTPException(503, "Garment analyzer not configured")
