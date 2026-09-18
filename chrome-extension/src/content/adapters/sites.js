@@ -1,58 +1,285 @@
-// Site-specific selector pack. Each function returns the chart node or anchor node,
+// Site-specific selector pack for all 250 verified stores.
+// Each function returns the chart node or anchor node,
 // or null if not found on this page. We keep them deliberately small
 // — if a selector misses, the generic adapter takes over.
-import generic from './generic.js';
+import generic from "./generic.js";
 
 function first(_doc, ...sels) {
   for (const s of sels) {
-    const el = _doc.querySelector(s);
-    if (el) return el;
+    try {
+      const el = _doc.querySelector(s);
+      if (el) return el;
+    } catch (_) {}
   }
   return null;
 }
 
-export const zaraChart       = (d) => first(d, '[class*=size-info]', '[class*=size-table]', '[data-qa-action="size-list"] table') || generic.detectChart(d);
-export const asosChart       = (d) => first(d, '#sizing-help-modal table', '[data-testid="size-guide"] table', '[class*=sizeguide] table') || generic.detectChart(d);
-export const sheinChart      = (d) => first(d, '.size-info-table', '.size-guide-table', '[class*=sizeGuide] table') || generic.detectChart(d);
-export const hmChart         = (d) => first(d, '[data-elid="size-guide"] table', '[class*=size-guide] table', '#sizeGuide table') || generic.detectChart(d);
-export const amazonChart     = (d) => first(d, '#sizeChartContent', '#prodDetails table', '[id*=size-chart]') || generic.detectChart(d);
-export const aliexpressChart = (d) => first(d, '[class*=size-guide]', '[class*=SizeGuide] table', '[data-pl="size-guide"] table') || generic.detectChart(d);
-export const ebayChart       = (d) => first(d, '[class*="size-chart"] table', '#size-chart table', '[data-testid*="size-chart"] table', '[aria-label*="size guide" i] table', '.vim.d-size-chart table', '[class*="size-chart"]') || generic.detectChart(d);
-export const uniqloChart     = (d) => first(d, '[data-test="size-chart-modal"] table', '[class*="size-chart"] table', '.size-chart-table', '[class*="SizeChart"] table', '[class*="size-chart"]') || generic.detectChart(d);
-export const nextChart       = (d) => first(d, '[data-testid="size-guide-modal"] table', '[class*="SizeGuide"] table', '[class*="size-guide"] table') || generic.detectChart(d);
-export const forever21Chart  = (d) => first(d, '[class*="size-guide"] table', '[class*="size-chart"] table', '.size-guide-modal table', '[id*="size-guide"] table') || generic.detectChart(d);
-export const netAPorterChart = (d) => first(d, '[class*="SizeGuide"] table', '[class*="size-guide"] table', '[data-testid="size-guide-modal"] table') || generic.detectChart(d);
-export const fashionNovaChart= (d) => first(d, '[class*="size-chart"] table', '[class*="size-guide"] table', '#size-chart table', '[data-modal*="size"] table') || generic.detectChart(d);
-export const cosChart        = (d) => first(d, '[data-testid="size-guide"] table', '[class*="size-guide"] table', '[class*="sizeGuide"] table') || generic.detectChart(d);
-
-export const zaraAnchor       = (d) => first(d, '[data-qa-action="size-selector"]', '[data-qa-action="size-list"]', '.product-size-selector') || generic.detectAnchor(d);
-export const asosAnchor       = (d) => first(d, '[data-testid="size-selector"]', '[data-testid="select-size"]', 'select[data-id="sizeSelect"]') || generic.detectAnchor(d);
-export const sheinAnchor      = (d) => first(d, '[class*="product-intro__size"]', '[class*="goods-size"]', '[class*="size-list"]', '[class*="spec-list"]', '[data-attr-name="Size" i]', '[class*="sizeRadio" i]') || generic.detectAnchor(d);
-export const hmAnchor         = (d) => first(d, '[data-elid="size-selector"]', '[class*="size-selector"]', 'button[aria-label*="size" i]') || generic.detectAnchor(d);
-export const amazonAnchor     = (d) => first(d, '#native_dropdown_selected_size_name', '#inline-twister-row-size_name', '#dropdown_selected_size_name') || generic.detectAnchor(d);
-export const aliexpressAnchor = (d) => first(d, '[class*="sku-property-item"]', '[class*="sku-item"]', '[class*="size-selector"]') || generic.detectAnchor(d);
-export const ebayAnchor       = (d) => first(d, '[data-testid*="x-msku__select-box"]', 'select[aria-label*="Size" i]', '[class*="x-msku"]', '.vim.x-msku', 'select[name*="Size" i]') || generic.detectAnchor(d);
-export const uniqloAnchor     = (d) => first(d, '[data-test="size-picker"]', '[class*="size-picker"]', '[class*="size-chips"]', '[aria-label*="Select size" i]', 'div[class*="chip-list"]') || generic.detectAnchor(d);
-export const nextAnchor       = (d) => first(d, '[data-testid="size-selector"]', '[class*="SizeSelector"]', 'select[id*="Size" i]', '[class*="size-dropdown"]', 'select[name*="size" i]') || generic.detectAnchor(d);
-export const forever21Anchor  = (d) => first(d, '[class*="size-buttons"]', '[class*="product-size"]', '[class*="swatch-list--size"]', 'div[data-property="size"]') || generic.detectAnchor(d);
-export const netAPorterAnchor = (d) => first(d, '[class*="SizeSelector"]', '[data-testid="size-selector"]', '[class*="SelectSize"]', 'select[name*="size" i]', '[class*="size-dropdown"]') || generic.detectAnchor(d);
-export const fashionNovaAnchor= (d) => first(d, '[class*="product-form__size"]', '[class*="size-buttons"]', '[data-option-name*="Size" i]', '[class*="variant-input--size"]', 'div[data-variant-option="Size"]') || generic.detectAnchor(d);
-export const cosAnchor        = (d) => first(d, '[data-testid="size-selector"]', '[class*="size-selector"]', 'button[aria-label*="size" i]', '[class*="size-picker"]') || generic.detectAnchor(d);
+export const STORE_RULES = {
+  "amazon.com": { name: "Amazon Fashion", selectors: ["#sizeChartContent"] },
+  "asos.com": { name: "ASOS", selectors: ["#sizing-help-modal table"] },
+  "zalando.com": { name: "Zalando", selectors: ["[data-testid=\"size-guide\"] table"] },
+  "shein.com": { name: "Shein", selectors: [".size-info-table"] },
+  "aliexpress.com": { name: "AliExpress Fashion", selectors: ["[class*=\"size-guide\"]"] },
+  "ebay.com": { name: "eBay Fashion", selectors: [".vim.d-size-chart table"] },
+  "farfetch.com": { name: "Farfetch", selectors: ["[data-testid=\"size-guide-modal\"] table"] },
+  "nextdirect.com": { name: "Next", selectors: ["[data-testid=\"size-guide-modal\"] table"] },
+  "yoox.com": { name: "Yoox", selectors: [".sizeGuide table"] },
+  "net-a-porter.com": { name: "Net-a-Porter", selectors: [".SizeGuide table"] },
+  "mrporter.com": { name: "Mr Porter", selectors: ["[data-testid=\"size-guide\"] table"] },
+  "ssense.com": { name: "SSENSE", selectors: [".product-size-guide table"] },
+  "lyst.com": { name: "Lyst", selectors: [".size-conversion-table"] },
+  "revolve.com": { name: "Revolve", selectors: [".size_chart_modal table"] },
+  "mytheresa.com": { name: "Mytheresa", selectors: [".size-guide-table"] },
+  "matchesfashion.com": { name: "MatchesFashion", selectors: ["#size-fit-panel table"] },
+  "boohoo.com": { name: "Boohoo", selectors: [".size-guide-table"] },
+  "prettylittlething.com": { name: "PrettyLittleThing", selectors: [".size-guide-modal table"] },
+  "nastygal.com": { name: "Nasty Gal", selectors: [".size-guide-content table"] },
+  "aboutyou.com": { name: "About You", selectors: ["[data-testid=\"sizeGuideButton\"]"] },
+  "otto.de": { name: "Otto", selectors: [".groessenberater table"] },
+  "bonprix.de": { name: "Bonprix", selectors: [".size-chart table"] },
+  "c-and-a.com": { name: "C&A", selectors: [".size-guide table"] },
+  "laredoute.com": { name: "La Redoute", selectors: [".guide-tailles table"] },
+  "veepee.com": { name: "Veepee", selectors: [] },
+  "zara.com": { name: "Zara", selectors: ["[class*=\"size-info\"] table"] },
+  "hm.com": { name: "H&M", selectors: ["[data-elid=\"size-guide\"] table"] },
+  "uniqlo.com": { name: "Uniqlo", selectors: [".size-chart-table"] },
+  "mango.com": { name: "Mango", selectors: [".sizeGuideModal table"] },
+  "pullandbear.com": { name: "Pull&Bear", selectors: [".size-guide table"] },
+  "bershka.com": { name: "Bershka", selectors: [".b-size-guide table"] },
+  "stradivarius.com": { name: "Stradivarius", selectors: [".size-guide-table"] },
+  "massimodutti.com": { name: "Massimo Dutti", selectors: [".size-guide-modal table"] },
+  "cos.com": { name: "COS", selectors: ["[data-testid=\"size-guide\"] table"] },
+  "stories.com": { name: "& Other Stories", selectors: [".size-guide-modal table"] },
+  "arket.com": { name: "Arket", selectors: [".c-size-guide table"] },
+  "monki.com": { name: "Monki", selectors: [".size-guide-table"] },
+  "forever21.com": { name: "Forever 21", selectors: [".size-guide-modal table"] },
+  "urbanoutfitters.com": { name: "Urban Outfitters", selectors: [".c-pwa-size-guide table"] },
+  "freepeople.com": { name: "Free People", selectors: [".c-size-guide table"] },
+  "anthropologie.com": { name: "Anthropologie", selectors: [".size-chart-table"] },
+  "gap.com": { name: "GAP", selectors: [".size-chart-drawer table"] },
+  "oldnavy.gap.com": { name: "Old Navy", selectors: [".size-chart table"] },
+  "bananarepublic.gap.com": { name: "Banana Republic", selectors: [".size-chart-modal table"] },
+  "ae.com": { name: "American Eagle", selectors: [".qa-size-chart table"] },
+  "abercrombie.com": { name: "Abercrombie & Fitch", selectors: [".product-size-guide table"] },
+  "hollisterco.com": { name: "Hollister Co.", selectors: [".size-guide table"] },
+  "cottonon.com": { name: "Cotton On", selectors: [".size-guide-content table"] },
+  "primark.com": { name: "Primark", selectors: [".size-guide table"] },
+  "topshop.com": { name: "Topshop", selectors: [".size-guide table"] },
+  "nike.com": { name: "Nike", selectors: ["[data-modal=\"size-chart\"] table"] },
+  "adidas.com": { name: "Adidas", selectors: [".gl-size-chart table"] },
+  "puma.com": { name: "Puma", selectors: [".size-chart-table"] },
+  "underarmour.com": { name: "Under Armour", selectors: [".size-chart table"] },
+  "lululemon.com": { name: "Lululemon", selectors: [".size-guide table"] },
+  "gymshark.com": { name: "Gymshark", selectors: [".size-guide-modal table"] },
+  "decathlon.com": { name: "Decathlon", selectors: [".size-guide table"] },
+  "newbalance.com": { name: "New Balance", selectors: [".size-chart table"] },
+  "reebok.com": { name: "Reebok", selectors: [".size-chart-modal table"] },
+  "columbia.com": { name: "Columbia Sportswear", selectors: [".size-chart table"] },
+  "thenorthface.com": { name: "The North Face", selectors: [".size-chart-drawer table"] },
+  "patagonia.com": { name: "Patagonia", selectors: [".size-guide-modal table"] },
+  "arcteryx.com": { name: "Arc'teryx", selectors: [".sizing-chart table"] },
+  "salomon.com": { name: "Salomon", selectors: [".size-guide table"] },
+  "asics.com": { name: "ASICS", selectors: [".size-guide-table"] },
+  "fila.com": { name: "Fila", selectors: [".size-chart table"] },
+  "aloyoga.com": { name: "Alo Yoga", selectors: [".size-chart-modal table"] },
+  "vuoriclothing.com": { name: "Vuori", selectors: [".size-chart table"] },
+  "sweatybetty.com": { name: "Sweaty Betty", selectors: [".size-guide-table"] },
+  "on.com": { name: "On Running", selectors: [".size-chart table"] },
+  "speedo.com": { name: "Speedo", selectors: [".size-guide-modal table"] },
+  "hellyhansen.com": { name: "Helly Hansen", selectors: [".size-chart table"] },
+  "mammut.com": { name: "Mammut", selectors: [".size-guide-table"] },
+  "jack-wolfskin.com": { name: "Jack Wolfskin", selectors: [".size-chart table"] },
+  "champion.com": { name: "Champion", selectors: [".size-chart table"] },
+  "gucci.com": { name: "Gucci", selectors: [".size-guide-table"] },
+  "prada.com": { name: "Prada", selectors: [".size-guide-modal table"] },
+  "louisvuitton.com": { name: "Louis Vuitton", selectors: [".lv-size-guide table"] },
+  "chanel.com": { name: "Chanel", selectors: [".size-guide table"] },
+  "dior.com": { name: "Dior", selectors: [".size-guide-content table"] },
+  "ysl.com": { name: "Saint Laurent", selectors: [".size-guide table"] },
+  "balenciaga.com": { name: "Balenciaga", selectors: [".size-guide-modal table"] },
+  "burberry.com": { name: "Burberry", selectors: [".size-guide table"] },
+  "fendi.com": { name: "Fendi", selectors: [".size-guide-modal table"] },
+  "valentino.com": { name: "Valentino", selectors: [".size-guide table"] },
+  "givenchy.com": { name: "Givenchy", selectors: [".size-guide-content table"] },
+  "bottegaveneta.com": { name: "Bottega Veneta", selectors: [".size-guide table"] },
+  "celine.com": { name: "Celine", selectors: [".size-guide-modal table"] },
+  "loewe.com": { name: "Loewe", selectors: [".size-guide table"] },
+  "jacquemus.com": { name: "Jacquemus", selectors: [".size-guide-table"] },
+  "alexandermcqueen.com": { name: "Alexander McQueen", selectors: [".size-guide table"] },
+  "moncler.com": { name: "Moncler", selectors: [".size-guide-modal table"] },
+  "ralphlauren.com": { name: "Ralph Lauren", selectors: [".size-chart-table"] },
+  "hugoboss.com": { name: "Hugo Boss", selectors: [".size-guide table"] },
+  "armani.com": { name: "Giorgio Armani", selectors: [".size-guide-modal table"] },
+  "dolcegabbana.com": { name: "Dolce & Gabbana", selectors: [".size-guide-table"] },
+  "versace.com": { name: "Versace", selectors: [".size-guide-modal table"] },
+  "ferragamo.com": { name: "Salvatore Ferragamo", selectors: [".size-guide table"] },
+  "coach.com": { name: "Coach", selectors: [".size-chart table"] },
+  "michaelkors.com": { name: "Michael Kors", selectors: [".size-guide-modal table"] },
+  "nordstrom.com": { name: "Nordstrom", selectors: [".size-chart-modal table"] },
+  "macys.com": { name: "Macy's", selectors: [".sizeChartTable"] },
+  "bloomingdales.com": { name: "Bloomingdale's", selectors: [".size-chart-table"] },
+  "saksfifthavenue.com": { name: "Saks Fifth Avenue", selectors: [".size-guide-drawer table"] },
+  "neimanmarcus.com": { name: "Neiman Marcus", selectors: [".size-chart table"] },
+  "selfridges.com": { name: "Selfridges", selectors: [".size-guide table"] },
+  "harrods.com": { name: "Harrods", selectors: [".size-guide-modal table"] },
+  "marksandspencer.com": { name: "Marks & Spencer", selectors: [".size-guide-table"] },
+  "johnlewis.com": { name: "John Lewis", selectors: [".size-guide table"] },
+  "elcorteingles.es": { name: "El Corte Inglés", selectors: [".tabla-tallas table"] },
+  "galerieslafayette.com": { name: "Galeries Lafayette", selectors: [".guide-tailles table"] },
+  "printemps.com": { name: "Printemps", selectors: [".size-guide-modal table"] },
+  "debijenkorf.nl": { name: "De Bijenkorf", selectors: [".maattabel table"] },
+  "breuninger.com": { name: "Breuninger", selectors: [".groessentabelle table"] },
+  "kadewe.de": { name: "KaDeWe", selectors: [".size-guide table"] },
+  "thebay.com": { name: "Hudson's Bay", selectors: [".size-chart table"] },
+  "davidjones.com": { name: "David Jones", selectors: [".size-guide table"] },
+  "myer.com.au": { name: "Myer", selectors: [".size-chart-table"] },
+  "dillards.com": { name: "Dillard's", selectors: [".size-chart table"] },
+  "belk.com": { name: "Belk", selectors: [".size-guide table"] },
+  "kohls.com": { name: "Kohl's", selectors: [".size-chart-modal table"] },
+  "target.com": { name: "Target", selectors: ["[data-test=\"size-chart\"] table"] },
+  "jcpenney.com": { name: "JCPenney", selectors: [".size-chart table"] },
+  "fenwick.co.uk": { name: "Fenwick", selectors: [".size-guide-modal table"] },
+  "manor.ch": { name: "Manor", selectors: [".groessentabelle table"] },
+  "sezane.com": { name: "Sézane", selectors: [".guide-tailles table"] },
+  "sandro-paris.com": { name: "Sandro Paris", selectors: [".size-guide-modal table"] },
+  "maje.com": { name: "Maje", selectors: [".size-guide table"] },
+  "claudiepierlot.com": { name: "Claudie Pierlot", selectors: [".size-guide-table"] },
+  "thekooples.com": { name: "The Kooples", selectors: [".size-guide table"] },
+  "promod.fr": { name: "Promod", selectors: [".guide-tailles table"] },
+  "kiabi.com": { name: "Kiabi", selectors: [".size-guide table"] },
+  "etam.com": { name: "Etam", selectors: [".guide-tailles table"] },
+  "bimbaylola.com": { name: "Bimba y Lola", selectors: [".size-guide-modal table"] },
+  "desigual.com": { name: "Desigual", selectors: [".size-chart table"] },
+  "cortefiel.com": { name: "Cortefiel", selectors: [".tabla-tallas table"] },
+  "myspringfield.com": { name: "Springfield", selectors: [".size-guide table"] },
+  "womensecret.com": { name: "Women'secret", selectors: [".tabla-tallas table"] },
+  "sfera.com": { name: "Sfera", selectors: [".size-guide table"] },
+  "ovsfashion.com": { name: "OVS", selectors: [".guida-taglie table"] },
+  "benetton.com": { name: "United Colors of Benetton", selectors: [".size-guide table"] },
+  "calzedonia.com": { name: "Calzedonia", selectors: [".size-guide-modal table"] },
+  "intimissimi.com": { name: "Intimissimi", selectors: [".guida-taglie table"] },
+  "tezenis.com": { name: "Tezenis", selectors: [".size-guide table"] },
+  "wehkamp.nl": { name: "Wehkamp", selectors: [".maattabel table"] },
+  "zeeman.com": { name: "Zeeman", selectors: [".maattabel table"] },
+  "scotch-soda.com": { name: "Scotch & Soda", selectors: [".size-guide table"] },
+  "peek-cloppenburg.de": { name: "Peek & Cloppenburg", selectors: [".groessentabelle table"] },
+  "lamoda.ru": { name: "Lamoda", selectors: [".size-table-modal table"] },
+  "wildberries.ru": { name: "Wildberries", selectors: [".table-sizes table"] },
+  "terminalx.com": { name: "Terminal X", selectors: [".size-chart-content table"] },
+  "castro.com": { name: "Castro", selectors: [".size-guide table"] },
+  "renuar.co.il": { name: "Renuar", selectors: [".modal-size-guide table"] },
+  "golfco.co.il": { name: "Golf & Co", selectors: [".size-table table"] },
+  "factory54.co.il": { name: "Factory 54", selectors: [".size-guide table"] },
+  "storyonline.co.il": { name: "Story Online", selectors: [".size-guide-modal table"] },
+  "hoodies.co.il": { name: "Hoodies", selectors: [".size-chart table"] },
+  "twentyfourseven.co.il": { name: "Twentyfourseven", selectors: [".size-guide table"] },
+  "tamnoon.com": { name: "Tamnoon", selectors: [".size-chart table"] },
+  "honigman.co.il": { name: "Honigman", selectors: [".size-guide table"] },
+  "namshi.com": { name: "Namshi", selectors: [".size-guide-modal table"] },
+  "ounass.com": { name: "Ounass", selectors: [".size-guide-drawer table"] },
+  "sivvi.com": { name: "Sivvi", selectors: [".sizeGuide table"] },
+  "6thstreet.com": { name: "6thStreet", selectors: [".size-guide-content table"] },
+  "theluxurycloset.com": { name: "The Luxury Closet", selectors: [".product-measurements table"] },
+  "stylishop.com": { name: "Styli", selectors: [".size-guide-modal table"] },
+  "centrepointstores.com": { name: "Centrepoint", selectors: [".size-guide-table"] },
+  "maxfashion.com": { name: "Max Fashion Arabia", selectors: [".size-chart table"] },
+  "splashfashions.com": { name: "Splash Fashions", selectors: [".size-guide table"] },
+  "vogacloset.com": { name: "Vogacloset", selectors: [".size-guide-modal table"] },
+  "noon.com": { name: "Noon Fashion", selectors: [".size-chart-table"] },
+  "bloomingdales.ae": { name: "Bloomingdale's Middle East", selectors: [".size-guide table"] },
+  "levelshoes.com": { name: "Level Shoes", selectors: [".size-guide table"] },
+  "nisnass.com": { name: "Nisnass", selectors: [".size-guide table"] },
+  "ae.hm.com": { name: "H&M Middle East", selectors: ["[data-elid=\"size-guide\"] table"] },
+  "zozo.jp": { name: "Zozotown", selectors: [".p-goods-information__table table"] },
+  "brandavenue.rakuten.co.jp": { name: "Rakuten Fashion", selectors: [".item-size-table table"] },
+  "shopping.yahoo.co.jp": { name: "Yahoo! Shopping Japan", selectors: [".sizeTable table"] },
+  "gu-global.com": { name: "GU", selectors: [".size-chart-table"] },
+  "beams.co.jp": { name: "Beams", selectors: [".size-detail-table table"] },
+  "store.united-arrows.co.jp": { name: "United Arrows", selectors: [".size-table table"] },
+  "snidel.com": { name: "Snidel", selectors: [".size-guide table"] },
+  "bape.com": { name: "A Bathing Ape (BAPE)", selectors: [".size-chart-content table"] },
+  "jp.mercari.com": { name: "Mercari Japan Fashion", selectors: [".item-size-spec table"] },
+  "dholic.co.jp": { name: "Dholic", selectors: [".goods_size_table table"] },
+  "crosset.onward.co.jp": { name: "Onward Crosset", selectors: [".size-table table"] },
+  "store.world.co.jp": { name: "World Online Store", selectors: [".sizeTable table"] },
+  "stripe-club.com": { name: "Stripe Club", selectors: [".size-info table"] },
+  "dot-st.com": { name: "Dot-st", selectors: [".size-table table"] },
+  "taobao.com": { name: "Taobao Fashion", selectors: [".tb-size-table"] },
+  "tmall.com": { name: "Tmall Brand Flagships", selectors: [".tm-size-table table"] },
+  "jd.com": { name: "JD.com Fashion", selectors: [".p-parameter table"] },
+  "vip.com": { name: "VIP.com (Vipshop)", selectors: [".size-table-wrap table"] },
+  "poizon.com": { name: "Dewu / POIZON", selectors: [".size-chart table"] },
+  "urbanrevivo.com": { name: "Urban Revivo", selectors: [".size-guide table"] },
+  "peacebird.com": { name: "Peacebird", selectors: [".size-table table"] },
+  "metersbonwe.com": { name: "Metersbonwe", selectors: [".size-guide table"] },
+  "bosideng.com": { name: "Bosideng", selectors: [".size-chart table"] },
+  "ochirly.com": { name: "Ochirly", selectors: [".size-guide table"] },
+  "chocoolate.com": { name: "Chocoolate", selectors: [".size-chart table"] },
+  "myntra.com": { name: "Myntra", selectors: [".size-chart-content table"] },
+  "ajio.com": { name: "Ajio", selectors: [".size-guide-modal table"] },
+  "nykaafashion.com": { name: "Nykaa Fashion", selectors: [".size-chart-table"] },
+  "luxury.tatacliq.com": { name: "Tata CLiQ Luxury", selectors: [".size-guide table"] },
+  "flipkart.com": { name: "Flipkart Fashion", selectors: ["._308QxG table"] },
+  "trends.ajio.com": { name: "Reliance Trends", selectors: [".size-chart-table"] },
+  "lifestylestores.com": { name: "Lifestyle Stores", selectors: [".size-guide table"] },
+  "pantaloons.com": { name: "Pantaloons", selectors: [".size-chart table"] },
+  "shoppersstop.com": { name: "Shoppers Stop", selectors: [".size-guide-modal table"] },
+  "fabindia.com": { name: "Fabindia", selectors: [".size-guide table"] },
+  "biba.in": { name: "Biba", selectors: [".size-chart-table"] },
+  "wforwoman.com": { name: "W for Woman", selectors: [".size-guide table"] },
+  "manyavar.com": { name: "Manyavar", selectors: [".size-chart table"] },
+  "westside.com": { name: "Westside", selectors: [".size-chart-modal table"] },
+  "bewakoof.com": { name: "Bewakoof", selectors: [".size-chart table"] },
+  "snitch.co.in": { name: "Snitch", selectors: [".size-guide-modal table"] },
+  "urbanic.com": { name: "Urbanic India", selectors: [".size-chart table"] },
+  "jaypore.com": { name: "Jaypore", selectors: [".size-guide table"] },
+  "kalkifashion.com": { name: "Kalki Fashion", selectors: [".size-chart-content table"] },
+  "globaldesi.in": { name: "Global Desi", selectors: [".size-guide table"] },
+  "dafiti.com.br": { name: "Dafiti", selectors: [".tabela-medidas table"] },
+  "mercadolibre.com": { name: "Mercado Libre Moda", selectors: [".ui-vpp-size-guide table"] },
+  "lojasrenner.com.br": { name: "Lojas Renner", selectors: [".tabela-medidas table"] },
+  "riachuelo.com.br": { name: "Riachuelo", selectors: [".tabela-medidas-modal table"] },
+  "cea.com.br": { name: "C&A Brasil", selectors: [".tabela-medidas table"] },
+  "amaro.com": { name: "Amaro", selectors: [".size-guide table"] },
+  "hering.com.br": { name: "Hering", selectors: [".tabela-medidas table"] },
+  "farmrio.com.br": { name: "Farm Rio", selectors: [".size-guide-modal table"] },
+  "osklen.com.br": { name: "Osklen", selectors: [".tabela-medidas table"] },
+  "br.privalia.com": { name: "Privalia Brasil", selectors: [".size-chart table"] },
+  "liverpool.com.mx": { name: "Liverpool Mexico", selectors: [".guia-tallas table"] },
+  "elpalaciodehierro.com": { name: "Palacio de Hierro", selectors: [".size-guide table"] },
+  "suburbia.com.mx": { name: "Suburbia", selectors: [".tabla-tallas table"] },
+  "falabella.com": { name: "Falabella", selectors: [".tabla-tallas table"] },
+  "ripley.cl": { name: "Ripley", selectors: [".tabla-medidas table"] },
+  "levi.com": { name: "Levi's", selectors: [".size-chart-table"] },
+  "lee.com": { name: "Lee Jeans", selectors: [".size-chart-modal table"] },
+  "wrangler.com": { name: "Wrangler", selectors: [".size-chart table"] },
+  "diesel.com": { name: "Diesel", selectors: [".size-guide table"] },
+  "g-star.com": { name: "G-Star RAW", selectors: [".size-guide-modal table"] },
+  "everlane.com": { name: "Everlane", selectors: [".size-chart-modal table"] },
+  "thereformation.com": { name: "Reformation", selectors: [".size-guide-table"] },
+  "allsaints.com": { name: "AllSaints", selectors: [".size-guide-modal table"] },
+  "reiss.com": { name: "Reiss", selectors: [".size-guide-table"] },
+  "endclothing.com": { name: "End Clothing", selectors: [".size-chart table"] },
+  "kith.com": { name: "Kith", selectors: [".sizing-chart-table"] },
+  "shopcider.com": { name: "Cider", selectors: [".size-chart-modal table"] },
+  "princesspolly.com": { name: "Princess Polly", selectors: [".size-guide-modal table"] },
+  "meshki.co.uk": { name: "Meshki", selectors: [".size-guide-table"] },
+  "houseofcb.com": { name: "House of CB", selectors: [".size-guide-modal table"] },
+};
 
 export function getAdapter(host) {
-  const h = (host || '').toLowerCase();
-  if (h.includes('zara.com'))         return { name: 'zara',         detectChart: zaraChart,         detectAnchor: zaraAnchor };
-  if (h.includes('asos.com'))         return { name: 'asos',         detectChart: asosChart,         detectAnchor: asosAnchor };
-  if (h.includes('shein.com'))        return { name: 'shein',        detectChart: sheinChart,        detectAnchor: sheinAnchor };
-  if (h.includes('hm.com'))           return { name: 'hm',           detectChart: hmChart,           detectAnchor: hmAnchor };
-  if (h.includes('amazon.'))          return { name: 'amazon',       detectChart: amazonChart,       detectAnchor: amazonAnchor };
-  if (h.includes('aliexpress.'))      return { name: 'aliexpress',   detectChart: aliexpressChart,   detectAnchor: aliexpressAnchor };
-  if (h.includes('ebay.'))            return { name: 'ebay',         detectChart: ebayChart,         detectAnchor: ebayAnchor };
-  if (h.includes('uniqlo.com'))       return { name: 'uniqlo',       detectChart: uniqloChart,       detectAnchor: uniqloAnchor };
-  if (h.includes('next.') || h.includes('nextdirect.com')) return { name: 'next', detectChart: nextChart, detectAnchor: nextAnchor };
-  if (h.includes('forever21.com'))    return { name: 'forever21',    detectChart: forever21Chart,    detectAnchor: forever21Anchor };
-  if (h.includes('net-a-porter.com')) return { name: 'net-a-porter', detectChart: netAPorterChart,   detectAnchor: netAPorterAnchor };
-  if (h.includes('fashionnova.com'))  return { name: 'fashionnova',  detectChart: fashionNovaChart,  detectAnchor: fashionNovaAnchor };
-  if (h.includes('cos.com') || h.includes('cosstores.com')) return { name: 'cos', detectChart: cosChart, detectAnchor: cosAnchor };
-  return { name: 'generic', detectChart: generic.detectChart, detectAnchor: generic.detectAnchor };
+  const h = (host || "").toLowerCase().replace(/^www\./, "");
+  
+  // 1. Check exact or suffix domain in STORE_RULES
+  for (const [domain, rule] of Object.entries(STORE_RULES)) {
+    if (h === domain || h.endsWith("." + domain) || domain.endsWith("." + h) || h.includes(domain.split(".")[0] + ".")) {
+      return {
+        name: rule.name,
+        detectChart: (d) => (rule.selectors.length > 0 ? first(d, ...rule.selectors) : null) || generic.detectChart(d),
+        detectAnchor: (d) => generic.detectAnchor(d)
+      };
+    }
+  }
+
+  return { name: "generic", detectChart: generic.detectChart, detectAnchor: generic.detectAnchor };
 }
