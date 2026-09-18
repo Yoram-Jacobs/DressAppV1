@@ -225,13 +225,13 @@ async def save_migration_crops(
     payload: MigrationSaveCropsIn,
     user: dict = Depends(get_current_user),
 ) -> dict[str, Any]:
-    """Save bookmarklet-captured garment crops directly to the closet DB."""
-    check_migration_access(user)
+    """Save bookmarklet-captured garment crops directly to the closet DB.
 
     Each card must have a ``crop_base64`` field (raw base64 JPEG).
     Items are saved with ``brand=<app_name>`` so the re-analyze worker
     can later find and enrich them via The Eyes / Stylist.
     """
+    check_migration_access(user)
     db = get_db()
     from app.models.schemas import ClosetItem
     saved = 0
