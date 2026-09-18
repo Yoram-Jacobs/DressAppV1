@@ -143,9 +143,9 @@ export function ItemFloater({ itemId, onClose, fromOutfits }) {
       )}
     >
       {/* Header */}
-      <header className="flex items-center justify-between px-4 py-3 border-b border-border shrink-0">
+      <header className="flex items-center justify-between p-3 border-b border-border shrink-0">
         <h3
-          className="font-display text-sm truncate pe-2"
+          className="font-bold text-dark-brand text-[16px] truncate "
           data-testid="item-floater-title"
         >
           {item?.name || (
@@ -156,7 +156,7 @@ export function ItemFloater({ itemId, onClose, fromOutfits }) {
           ref={closeBtnRef}
           variant="ghost"
           size="icon"
-          className="h-8 w-8 shrink-0"
+          className="h-8 w-8 shrink-0 bg-primary-shadow text-primary-brand"
           onClick={onClose}
           data-testid="item-floater-close"
           aria-label={t('common.close', { defaultValue: 'Close' })}
@@ -164,11 +164,10 @@ export function ItemFloater({ itemId, onClose, fromOutfits }) {
           <X className="h-4 w-4" />
         </Button>
       </header>
-
       {/* Body — scrollable */}
       <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4">
         {/* Image */}
-        <div className="aspect-square w-full rounded-lg overflow-hidden bg-background border border-border">
+        <div className="aspect-square w-full rounded-[12px] overflow-hidden bg-[#ddd] border border-border">
           {heroImage ? (
             <img
               src={heroImage}
@@ -188,7 +187,6 @@ export function ItemFloater({ itemId, onClose, fromOutfits }) {
             <Skeleton className="h-full w-full" />
           )}
         </div>
-
         {/* Error state */}
         {error ? (
           <div
@@ -198,16 +196,15 @@ export function ItemFloater({ itemId, onClose, fromOutfits }) {
             {error}
           </div>
         ) : null}
-
         {/* Metadata stack */}
         {item ? (
-          <div className="space-y-3">
+          <div className="space-y-2">
             {/* Category + sub-category */}
             <div className="flex flex-wrap items-center gap-1.5">
               {item.category ? (
                 <Badge
                   variant="secondary"
-                  className="text-[10px] uppercase tracking-wide"
+                  className="text-[10px] tracking-wide"
                   data-testid="item-floater-category"
                 >
                   <Tag className="h-3 w-3 me-1" />
@@ -235,39 +232,39 @@ export function ItemFloater({ itemId, onClose, fromOutfits }) {
 
             {/* Color */}
             {item.color ? (
-              <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                <Palette className="h-3.5 w-3.5" />
+              <div className="flex items-center gap-2 text-[12px] font-bold text-text-brand">
+                <Palette className="h-4 w-4" />
                 <span data-testid="item-floater-color">{labelForColor(item.color, t)}</span>
               </div>
             ) : null}
 
             {/* Brand */}
             {item.brand ? (
-              <div className="text-xs text-muted-foreground">
-                <span className="caps-label">
+              <div className="">
+                <span className="text-[12px] font-bold text-dark-brand">
                   {t('addItem.brand', { defaultValue: 'Brand' })}:
                 </span>{' '}
-                <span className="text-foreground">{item.brand}</span>
+                <span className="text-[12px] font-semibold text-text-brand">{item.brand}</span>
               </div>
             ) : null}
 
             {/* Material / Pattern */}
             {(item.material || item.pattern) ? (
-              <div className="text-xs text-muted-foreground space-y-1">
+              <div className="">
                 {item.material ? (
                   <div>
-                    <span className="caps-label">
+                    <span className="text-[12px] font-bold text-dark-brand">
                       {t('addItem.material', { defaultValue: 'Material' })}:
                     </span>{' '}
-                    <span className="text-foreground">{item.material}</span>
+                    <span className="text-[12px] font-semibold text-text-brand">{item.material}</span>
                   </div>
                 ) : null}
                 {item.pattern ? (
                   <div>
-                    <span className="caps-label">
+                    <span className="text-[12px] font-bold text-dark-brand">
                       {t('addItem.pattern', { defaultValue: 'Pattern' })}:
                     </span>{' '}
-                    <span className="text-foreground">{labelForPattern(item.pattern, t)}</span>
+                    <span className="text-[12px] font-semibold text-text-brand">{labelForPattern(item.pattern, t)}</span>
                   </div>
                 ) : null}
               </div>
@@ -291,16 +288,15 @@ export function ItemFloater({ itemId, onClose, fromOutfits }) {
           </div>
         ) : null}
       </div>
-
       {/* Footer CTA */}
-      <footer className="px-4 py-3 border-t border-border shrink-0">
+      <footer className="p-3">
         <Button
           className="w-full"
           onClick={onViewDetails}
           disabled={!item}
           data-testid="item-floater-view-details"
         >
-          <ExternalLink className="h-4 w-4 me-2" />
+          <ExternalLink className="!h-3 !w-3" />
           {t('stylist.floater.viewDetails', { defaultValue: 'View full details' })}
         </Button>
       </footer>

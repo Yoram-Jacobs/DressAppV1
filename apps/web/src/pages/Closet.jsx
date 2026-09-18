@@ -1058,13 +1058,11 @@ export default function Closet() {
                 })}
               </p>
 
-              {/* Buttons */}
-              <div className="flex items-center gap-2">
-                {/* Add item */}
-                <Link
-                  to="/closet/add"
-                  data-testid="closet-empty-add-button"
-                  className="
+              {/* suitcase-Buttons */}
+              <Link
+                to="/suitcase"
+                data-testid="closet-suitcase-link"
+                className="
               inline-flex
               items-center
               justify-center
@@ -1072,7 +1070,7 @@ export default function Closet() {
               bg-[var(--primary-color)]
               px-5 py-3.5
               text-[14px]
-              font-bold
+              font-semibold
               leading-none
               text-white
               no-underline
@@ -1082,35 +1080,12 @@ export default function Closet() {
               hover:bg-[var(--primary-hover)]
               hover:text-white
             "
-                >
-                  <i className="fa-solid fa-plus me-2" />
-                  {t("closet.addItem")}
-                </Link>
-
-                {/* Suitcase */}
-                <Link
-                  to="/suitcase"
-                  data-testid="closet-suitcase-link"
-                  title={t("suitcase.title", {
-                    defaultValue: "Suitcase",
-                  })}
-                  className="
-              flex
-              h-10 w-10
-              shrink-0
-              items-center justify-center
-              rounded-full
-              border border-[#666]
-              text-white/60
-              no-underline
-              transition-all duration-300
-              hover:border-[var(--primary-color)]
-              hover:text-[var(--primary-color)]
-            "
-                >
-                  <Luggage className="h-5 w-5" />
-                </Link>
-              </div>
+              >
+                <Luggage className="h-4 w-4 me-1" />
+                {t("suitcase.title", {
+                  defaultValue: "Suitcase",
+                })}
+              </Link>
             </div>
           </div>
         </div>

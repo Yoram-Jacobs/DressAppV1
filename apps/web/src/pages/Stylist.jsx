@@ -368,14 +368,12 @@ export default function Stylist() {
   const [calendarModalOpen, setCalendarModalOpen] = useStoreState(stylistUIStore, 'calendarModalOpen');
   const [schedulingDate, setSchedulingDate] = useStoreState(stylistUIStore, 'schedulingDate');
   const [currentCalendarMonth, setCurrentCalendarMonth] = useStoreState(stylistUIStore, 'currentCalendarMonth');
-
   const { items: closetItems } = useClosetStore({ prewarm: true });
   const [isEditingOutfit, setIsEditingOutfit] = useStoreState(stylistUIStore, 'isEditingOutfit');
   const [editOutfitName, setEditOutfitName] = useStoreState(stylistUIStore, 'editOutfitName');
   const [editOutfitDescription, setEditOutfitDescription] = useStoreState(stylistUIStore, 'editOutfitDescription');
   const { notifications: cachedNotifications, dailyProposal, proposals, generate: generateDailyProposalAction, prewarm: prewarmDaily, act: actDailyProposal } = useDailySuggestionsStore();
   const [generatingDaily, setGeneratingDaily] = useState(false);
-
   const proposalToOutfit = useCallback((prop, dateStr) => {
     if (!prop) return null;
     const rawItems = prop.items || prop.garments || [];

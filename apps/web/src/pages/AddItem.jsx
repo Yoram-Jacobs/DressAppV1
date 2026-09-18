@@ -1158,12 +1158,12 @@ export default function AddItem() {
           parseErr?.response?.data?.detail ||
           (isTimeout
             ? t("addItem.import.timeout", {
-                defaultValue: "Receipt parsing timed out. Please try again or crop a smaller section.",
-              })
+              defaultValue: "Receipt parsing timed out. Please try again or crop a smaller section.",
+            })
             : t("addItem.import.error", {
-                defaultValue:
-                  "Could not parse receipt. Please verify formatting and try again.",
-              })),
+              defaultValue:
+                "Could not parse receipt. Please verify formatting and try again.",
+            })),
         );
         return;
       }
@@ -3068,6 +3068,13 @@ export default function AddItem() {
       <section className="w-full overflow-hidden bg-[var(--accent-beige)] px-[40px] py-[80px] max-[991px]:px-[15px] max-[991px]:py-[30px]
             max-[767px]:px-[15px] max-[767px]:py-[30px]
             max-[480px]:px-[15px] max-[480px]:py-[30px]">
+        {/* go-back-button */}
+        <button
+          onClick={() => nav(-1)}
+          className="inline-flex items-center text-[14px] font-bold text-dark-brand mb-5 hover:text-primary-brand">
+          <ArrowLeft className="h-4 w-4 me-1 rtl:rotate-180" />{" "}
+          {t("common.back")}
+        </button>
         {/* stepper-component */}
         <Stepper cards={cards} saving={saving} bgBatch={bgBatch} />
         <div className="" data-testid="add-item-page">
@@ -3380,7 +3387,7 @@ export default function AddItem() {
                 <TabsList className="inline-flex mb-10 items-center gap-1 rounded-full bg-white p-[5px]">
                   <TabsTrigger
                     value="upload"
-                    className="group flex items-center gap-[7px] rounded-full px-[20px] py-[10px] text-[12px] font-bold text-text-brand bg-transparent border-0 transition-all duration-200 whitespace-nowrap hover:text-primary-brand hover:bg-primary-shadow data-[state=active]:bg-primary-brand data-[state=active]:text-white"
+                    className="group flex items-center gap-[7px] rounded-full px-[20px] py-[12px] text-[12px] font-bold text-text-brand bg-transparent border-0 transition-all duration-200 whitespace-nowrap hover:text-primary-brand hover:bg-primary-shadow data-[state=active]:bg-primary-brand data-[state=active]:text-white"
                     data-testid="add-item-tab-upload"
                   >
                     <Camera className="h-4 w-4" />
@@ -3390,7 +3397,7 @@ export default function AddItem() {
                   </TabsTrigger>
                   <TabsTrigger
                     value="import"
-                    className="group flex items-center gap-[7px] rounded-full px-[20px] py-[10px] text-[12px] font-bold text-text-brand bg-transparent border-0 transition-all duration-200 whitespace-nowrap hover:text-primary-brand hover:bg-primary-shadow data-[state=active]:bg-primary-brand data-[state=active]:text-white"
+                    className="group flex items-center gap-[7px] rounded-full px-[20px] py-[12px] text-[12px] font-bold text-text-brand bg-transparent border-0 transition-all duration-200 whitespace-nowrap hover:text-primary-brand hover:bg-primary-shadow data-[state=active]:bg-primary-brand data-[state=active]:text-white"
                     data-testid="add-item-tab-import"
                   >
                     <Sparkles className="h-4 w-4" />
