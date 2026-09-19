@@ -649,7 +649,8 @@
     "viewList": "תצוגת רשימה",
     "dpp": "DPP",
     "saveFailuresTitle": "לא ניתן היה לשמור פריטים אלה בארון שלך. אנא נסה להעלותם שוב.",
-    "garmentsCount": "{{count}} בגדים"
+    "garmentsCount": "{{count}} בגדים",
+    "views": "תצוגות"
   },
   "addItem": {
     "namePlaceholder": "לדוגמה: ז'קט ג'ינס וינטג'",
@@ -1137,7 +1138,10 @@
     "banner": {
       "title": "בדיקה ודיוק",
       "subtitle": "דייק כל פרט ש'The Eyes' זיהה — תקן את התמונה, התאם מאפיינים, והכן את הפריט הזה לארון או לשוק."
-    }
+    },
+    "takePhoto": "צילום תמונה",
+    "replacePhoto": "החלפת תמונה",
+    "useProfileShoeSize": "מהפרופיל: {{size}}"
   },
   "stylist": {
     "heroTitle": "הסטייליסט האישי שלך מבוסס AI",
@@ -2066,7 +2070,17 @@
     "selectYourPlanDesc": "בחר מסלול מנוי חודשי או שנתי.",
     "viewTiers": "צפה בתוכניות",
     "deleteExplanation1": "מחיקת החשבון הינה לצמיתות. לאחר המחיקה, המלתחה המעגלית, היסטוריית השיחות עם הסטייליסט והמודעות שלך יימחקו לחלוטין מהשרתים.",
-    "deleteExplanation2": "פעולה זו היא בלתי הפיכה ולא ניתן יהיה לשחזר את הנתונים."
+    "deleteExplanation2": "פעולה זו היא בלתי הפיכה ולא ניתן יהיה לשחזר את הנתונים.",
+    "subtitle": "ניהול פרופיל הסגנון האישי, מידות הגוף, אווטאר המדידה והגדרות ה-AI.",
+    "tiers": {
+      "free": "חינם",
+      "manage": "מנהל",
+      "manager": "מנהל",
+      "professional": "מקצועי",
+      "club": "קלאב",
+      "pro": "פרו",
+      "business": "עסקי"
+    }
   },
   "admin": {
     "title": "ניהול",
@@ -2344,7 +2358,8 @@
       "outerwear": "מעיל",
       "shoes": "נעליים",
       "accessory": "אביזר",
-      "dress": "שמלה"
+      "dress": "שמלה",
+      "other": "אחר"
     },
     "sub_category": {
       "boots": "מגפיים",
@@ -3513,7 +3528,34 @@
     "addFromClosetDesc": "בחר בגד מהארון לאריזה במזוודה.",
     "searchClosetPlaceholder": "חפש לפי שם, צבע, מותג...",
     "allCategories": "הכל",
-    "noClosetItemsFound": "לא נמצאו פריטים התואמים את הסינון."
+    "noClosetItemsFound": "לא נמצאו פריטים התואמים את הסינון.",
+    "planTrip": "תכנון אריזה לנסיעה",
+    "destinationLabel": "יעד",
+    "durationLabel": "משך הנסיעה (ימים)",
+    "durationDays": "{{count}} ימים",
+    "vacation": "🏖️ חופשה ופנאי",
+    "business": "💼 עסקים ופגישות",
+    "cityBreak": "🏙️ חופשה עירונית",
+    "event": "🥂 אירוע רשמי / חתונה",
+    "active": "🏔️ טיולים וספורט",
+    "assistantChat": "עוזר אריזה למזוודה",
+    "askPlaceholder": "שאל לעצת אריזה…",
+    "chatFallback": "עדכנתי את הצעות רשימת האריזה שלך בהתאם.",
+    "chatContactError": "שגיאה ביצירת קשר עם עוזר המזוודה. אנא נסה שוב.",
+    "generateListError": "יצירת רשימת האריזה נכשלה.",
+    "time_all_day": "כל היום",
+    "time_morning": "בוקר",
+    "time_afternoon": "אחר הצהריים",
+    "time_evening": "ערב",
+    "time_dinner": "ארוחת ערב",
+    "time_night": "לילה",
+    "time_casual": "יומיומי",
+    "time_formal": "רשמי",
+    "noMissingItems": "הכל מוכן! כל הפריטים הדרושים נמצאים בארון שלך לנסיעה זו.",
+    "noMissingItemsTitle": "אין פריטים חסרים",
+    "missingItemsCount": "{{count}} פריטים חסרים",
+    "purposeDisplay": "מטרה",
+    "archiveMissingItemsHeader": "פריטים חסרים לנסיעה"
   },
   "scanning": {
     "bounds": "זיהוי גבולות בגד...",

@@ -32,6 +32,7 @@ import { DailySuggestionView } from '@mobile/components/stylist/DailySuggestionV
 import { OutfitPlannerView, PlannerSlotItem } from '@mobile/components/stylist/OutfitPlannerView';
 import { VirtualTryOnView, TryOnItem } from '@mobile/components/stylist/VirtualTryOnView';
 import { HelpFloater } from '@mobile/components/help';
+import { PageHeroBanner } from '@mobile/components/common';
 import { resolveImageUrl } from '@mobile/lib/imageUtils';
 
 type StylistTab = 'chat' | 'daily' | 'planner' | 'tryon';
@@ -164,30 +165,40 @@ export function StylistScreen() {
 
   return (
     <SafeAreaView style={[styles.root, { backgroundColor: colors.background }]} edges={['top']}>
-      {/* Top Header */}
-      <View style={[styles.header, { borderBottomColor: colors.border }]}>
-        <View>
-          <Text style={[styles.superTitle, { color: colors.accent }]}>
-            {t('stylist.superTitle', { defaultValue: 'AI STYLIST & ATELIER' })}
-          </Text>
-          <Text style={[styles.headerTitle, { color: colors.foreground }]}>
-            {t('stylist.title', { defaultValue: 'Your Stylist' })}
-          </Text>
-        </View>
+      {/* ── Editorial Hero Banner ───────────────────────────────────── */}
+      <PageHeroBanner
+        image={require('@mobile/assets/img/inner6.webp')}
+        minHeight={160}
+      >
+        <View style={styles.bannerHeader}>
+          <View style={styles.bannerTopRow}>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.bannerTitle} numberOfLines={1}>
+                {t('stylist.heroTitle', { defaultValue: 'Your Personal AI Stylist' })}
+              </Text>
+            </View>
 
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs }}>
-          <HelpFloater screenTopic={activeTab === 'planner' ? 'dress-up' : activeTab === 'daily' ? 'scheduler-push' : 'ai-stylist'} />
-          <TouchableOpacity
-            style={[styles.savedOutfitsBtn, { backgroundColor: colors.secondary, borderColor: colors.border }]}
-            onPress={() => navigation.navigate('Outfits')}
-          >
-            <Lucide.BookmarkCheck size={14} color={colors.foreground} />
-            <Text style={[styles.savedOutfitsBtnText, { color: colors.foreground }]}>
-              {t('stylist.savedOutfits', { defaultValue: 'Saved Outfits' })}
-            </Text>
-          </TouchableOpacity>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs }}>
+              <HelpFloater screenTopic={activeTab === 'planner' ? 'dress-up' : activeTab === 'daily' ? 'scheduler-push' : 'ai-stylist'} />
+              <TouchableOpacity
+                style={styles.savedOutfitsBtn}
+                onPress={() => navigation.navigate('Outfits')}
+              >
+                <Lucide.BookmarkCheck size={14} color="#FFFFFF" />
+                <Text style={styles.savedOutfitsBtnText}>
+                  {t('stylist.savedOutfits', { defaultValue: 'Saved Outfits' })}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+
+          <Text style={styles.bannerSubtitle} numberOfLines={2}>
+            {t('stylist.heroDescription', {
+              defaultValue: 'Get personalized outfit recommendations, style advice, and fashion inspiration tailored to your wardrobe.',
+            })}
+          </Text>
         </View>
-      </View>
+      </PageHeroBanner>
 
       {/* Tabs Navigation Bar */}
       <View style={[styles.tabsRow, { borderBottomColor: colors.border, backgroundColor: colors.background }]}>
@@ -201,13 +212,9 @@ export function StylistScreen() {
                 style={[
                   styles.tabChip,
                   {
-                    backgroundColor: isSelected
-                      ? isDark
-                        ? 'rgba(35, 139, 130, 0.22)'
-                        : 'rgba(31, 111, 107, 0.12)'
-                      : colors.secondary,
-                    borderColor: isSelected ? colors.accent : colors.border,
-                    borderWidth: isSelected ? 2 : 1,
+                    backgroundColor: isSelected ? '#1F5C45' : colors.card,
+                    borderColor: isSelected ? '#1F5C45' : colors.border,
+                    borderWidth: 1,
                   },
                 ]}
                 onPress={() => {
@@ -218,12 +225,12 @@ export function StylistScreen() {
                 }}
                 activeOpacity={0.8}
               >
-                <Icon size={14} color={isSelected ? colors.accent : colors.mutedFg} />
+                <Icon size={14} color={isSelected ? '#FFFFFF' : colors.mutedFg} />
                 <Text
                   style={[
                     styles.tabChipText,
                     {
-                      color: isSelected ? colors.foreground : colors.mutedFg,
+                      color: isSelected ? '#FFFFFF' : colors.foreground,
                       fontFamily: isSelected ? fonts.bodyBold : fonts.bodyMedium,
                     },
                   ]}
@@ -286,36 +293,45 @@ const styles = StyleSheet.create({
   root: {
     flex: 1,
   },
-  header: {
+  bannerHeader: {
+    paddingHorizontal: spacing.md,
+    paddingTop: spacing.xs,
+    paddingBottom: spacing.md,
+  },
+  bannerTopRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: spacing.md,
-    paddingTop: spacing.xs,
-    paddingBottom: spacing.sm,
-    borderBottomWidth: 1,
+    gap: spacing.sm,
   },
-  superTitle: {
-    fontFamily: fonts.bodyBold,
-    fontSize: 9,
-    letterSpacing: 1.2,
-  },
-  headerTitle: {
+  bannerTitle: {
     fontFamily: fonts.displayBold,
-    fontSize: fontSizes.xl,
+    fontSize: 22,
+    fontWeight: '700',
+    color: '#FFFFFF',
+  },
+  bannerSubtitle: {
+    fontFamily: fonts.body,
+    fontSize: 12,
+    lineHeight: 18,
+    color: 'rgba(255, 255, 255, 0.7)',
+    marginTop: 4,
   },
   savedOutfitsBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 5,
-    paddingHorizontal: 11,
+    paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: radii.full,
     borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.3)',
+    backgroundColor: 'rgba(255, 255, 255, 0.15)',
   },
   savedOutfitsBtnText: {
     fontFamily: fonts.bodyBold,
     fontSize: fontSizes.xs - 1,
+    color: '#FFFFFF',
   },
   tabsRow: {
     borderBottomWidth: 1,

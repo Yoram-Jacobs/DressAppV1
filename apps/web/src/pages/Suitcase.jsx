@@ -6,18 +6,13 @@ import {
   Luggage,
   MapPin,
   Calendar,
-  Compass,
   ShoppingBag,
   Store,
-  CircleHelp as HelpCircle,
   Send,
-  Check,
   Trash2,
   ArrowLeft,
   RefreshCw,
   Archive,
-  Bell,
-  ShieldAlert,
   Sparkles,
   Wand2,
   X,
@@ -26,6 +21,7 @@ import {
   Loader2,
   CheckSquare,
   Square,
+  CheckCircle2,
 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -140,6 +136,63 @@ function getGroupedCategory(category) {
   return "other";
 }
 
+export function formatTimeToWear(time, t) {
+  if (!time) return "";
+  const key = String(time).toLowerCase().trim().replace(/[\s-]+/g, "_");
+  return t(`suitcase.time_${key}`, { defaultValue: time.replace(/_/g, " ") });
+}
+
+export function extractMissingItems(data) {
+  if (!data) return [];
+  const explicit = Array.isArray(data.missing_items) ? data.missing_items.filter(Boolean) : [];
+  if (explicit.length > 0) return explicit;
+
+  const derived = [];
+  const seen = new Set();
+
+  if (Array.isArray(data.outfits)) {
+    data.outfits.filter(Boolean).forEach((outfit) => {
+      if (Array.isArray(outfit.items)) {
+        outfit.items.filter(Boolean).forEach((item) => {
+          if (item.status === "missing") {
+            const desc = (item.description || "").trim();
+            const key = desc.toLowerCase() || (item.role || "item").toLowerCase();
+            if (key && !seen.has(key)) {
+              seen.add(key);
+              const outfitTitle = outfit.outfit_name || "Outfit";
+              const dateInfo = outfit.date ? ` (${outfit.date})` : "";
+              derived.push({
+                role: item.role || "accessory",
+                description: desc || item.role || "Missing garment",
+                reason_needed: `${outfitTitle}${dateInfo}`,
+              });
+            }
+          }
+        });
+      }
+    });
+  }
+
+  if (Array.isArray(data.packing_list)) {
+    data.packing_list.filter(Boolean).forEach((item) => {
+      if (item.is_missing) {
+        const title = (item.title || "").trim();
+        const key = title.toLowerCase();
+        if (key && !seen.has(key)) {
+          seen.add(key);
+          derived.push({
+            role: item.category || "accessory",
+            description: title.replace(/^Missing item:\s*/i, ""),
+            reason_needed: item.recommendation_source || "",
+          });
+        }
+      }
+    });
+  }
+
+  return derived;
+}
+
 // Outfit Canvas try-on Try-on Canvas builder
 function OutfitCanvas({
   outfit,
@@ -224,7 +277,6 @@ function Suitcase() {
     packingData,
     messages,
     archives,
-    loading: storeLoading,
     archiveLoading,
     updateViewState: setViewState,
     updateActiveSuitcase: setActiveSuitcase,
@@ -248,8 +300,6 @@ function Suitcase() {
   const [activeTab, setActiveTab] = useState("suitcase");
   const [isSelectionMode, setIsSelectionMode] = useState(false);
   const [selectedArchives, setSelectedArchives] = useState([]);
-  const [selectedArchiveId, setSelectedArchiveId] = useState(null);
-  const [activeArchive, setActiveArchive] = useState(null);
   const nav = useNavigate();
   const handleDeleteArchives = async () => {
     if (selectedArchives.length === 0) return;
@@ -320,7 +370,6 @@ function Suitcase() {
 
   // Reviewing/Packing generation state
   const [packingLoading, setPackingLoading] = useState(false);
-  const [refining, setRefining] = useState(false);
 
   // Closet item selectors for adding/replacing garments
   const [closetDialogOpen, setClosetDialogOpen] = useState(false);
@@ -375,6 +424,21 @@ function Suitcase() {
     });
     return groups;
   }, [activeSuitcase]);
+
+  const reviewingMissingItems = useMemo(
+    () => extractMissingItems(packingData),
+    [packingData]
+  );
+
+  const activeMissingItems = useMemo(
+    () => extractMissingItems(activeSuitcase),
+    [activeSuitcase]
+  );
+
+  const archiveMissingItems = useMemo(
+    () => extractMissingItems(selectedArchive),
+    [selectedArchive]
+  );
 
   // Load active suitcase
   useEffect(() => {
@@ -565,6 +629,7 @@ function Suitcase() {
         return_time: returnTime,
         notes,
         message: userMsg,
+        language: (i18n.language || "en").split("-")[0],
       });
 
       // Update fields if returned
@@ -640,6 +705,7 @@ function Suitcase() {
               notes: `${overrides.notes || ""}\nFeedback modification: ${userMsg}`,
               current_outfits: activeSuitcase?.outfits || [],
               current_packing_list: activeSuitcase?.packing_list || [],
+              language: (i18n.language || "en").split("-")[0],
             });
 
             const saveRes = await api.approveSuitcase({
@@ -767,6 +833,7 @@ function Suitcase() {
         departure_time: formattedDeparture,
         return_time: formattedReturn,
         notes: n,
+        language: (i18n.language || "en").split("-")[0],
       });
       setPackingData(res);
       setViewState("reviewing");
@@ -901,6 +968,7 @@ function Suitcase() {
         notes: newNotes,
         current_outfits: packingData?.outfits || [],
         current_packing_list: packingData?.packing_list || [],
+        language: (i18n.language || "en").split("-")[0],
       });
       setNotes(newNotes);
       setPackingData(res);
@@ -1618,7 +1686,7 @@ function Suitcase() {
                                             {outfit.outfit_name}
                                           </h6>
                                           <Badge className="bg-primary-brand text-white rounded-lg">
-                                            {outfit.time_to_wear}
+                                            {formatTimeToWear(outfit.time_to_wear, t)}
                                           </Badge>
                                         </div>
                                         <div className="flex gap-3 items-center">
@@ -2001,51 +2069,71 @@ function Suitcase() {
                               </AccordionItem>
                             )}
                           {/* Gaps: Missing Clothing Items */}
-                          {Array.isArray(packingData?.missing_items) &&
-                            packingData.missing_items.length > 0 && (
-                              <AccordionItem
-                                value="gaps"
-                                className="border border-border rounded-[12px] bg-white px-[12px]"
-                              >
-                                <AccordionTrigger className="hover:no-underline">
-                                  <div className="flex items-center gap-2">
-                                    <ShoppingBag className="h-4 w-4 text-red-500" />
-                                    <span className="text-[14px] font-bold text-dark-brand">
-                                      {t("suitcase.gapsHeader", {
-                                        defaultValue:
-                                          "Gaps: Missing Clothing Items",
-                                      })}
-                                    </span>
-                                  </div>
-                                </AccordionTrigger>
-                                <AccordionContent>
-                                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                    {(Array.isArray(packingData?.missing_items)
-                                      ? packingData.missing_items
-                                      : []
-                                    ).map((m, idx) => (
-                                      <div
-                                        key={idx}
-                                        className="flex flex-col p-3 items-start gap-1 rounded-[12px] bg-white border border-border"
+                          <AccordionItem
+                            value="gaps"
+                            className="border border-border rounded-[12px] bg-white px-[12px]"
+                          >
+                            <AccordionTrigger className="hover:no-underline">
+                              <div className="flex items-center gap-2">
+                                <ShoppingBag className={`h-4 w-4 ${reviewingMissingItems.length > 0 ? "text-red-500" : "text-emerald-500"}`} />
+                                <span className="text-[14px] font-bold text-dark-brand">
+                                  {t("suitcase.gapsHeader", {
+                                    defaultValue:
+                                      "Gaps: Missing Clothing Items",
+                                  })}
+                                </span>
+                                {reviewingMissingItems.length > 0 ? (
+                                  <Badge variant="destructive" className="text-[10px] py-0 px-2">
+                                    {t("suitcase.missingItemsCount", {
+                                      count: reviewingMissingItems.length,
+                                      defaultValue: `${reviewingMissingItems.length} missing`,
+                                    })}
+                                  </Badge>
+                                ) : (
+                                  <Badge variant="outline" className="text-[10px] py-0 px-2 text-emerald-600 border-emerald-300 bg-emerald-50">
+                                    0
+                                  </Badge>
+                                )}
+                              </div>
+                            </AccordionTrigger>
+                            <AccordionContent>
+                              {reviewingMissingItems.length > 0 ? (
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                  {reviewingMissingItems.map((m, idx) => (
+                                    <div
+                                      key={idx}
+                                      className="flex flex-col p-3 items-start gap-1 rounded-[12px] bg-white border border-border"
+                                    >
+                                      <Badge
+                                        variant="destructive"
+                                        className="uppercase text-[9px]"
                                       >
-                                        <Badge
-                                          variant="destructive"
-                                          className="uppercase text-[9px]"
-                                        >
-                                          {labelForRole(m.role, t)}
-                                        </Badge>
-                                        <h4 className="text-[14px] font-semibold text-dark-brand">
-                                          {m.description}
-                                        </h4>
+                                        {labelForRole(m.role, t)}
+                                      </Badge>
+                                      <h4 className="text-[14px] font-semibold text-dark-brand">
+                                        {m.description}
+                                      </h4>
+                                      {m.reason_needed && (
                                         <p className="text-[12px] text-text-brand font-semibold">
                                           {m.reason_needed}
                                         </p>
-                                      </div>
-                                    ))}
-                                  </div>
-                                </AccordionContent>
-                              </AccordionItem>
-                            )}
+                                      )}
+                                    </div>
+                                  ))}
+                                </div>
+                              ) : (
+                                <div className="flex flex-col items-center justify-center p-4 text-center rounded-[12px] bg-emerald-50/50 border border-emerald-100">
+                                  <CheckCircle2 className="h-6 w-6 text-emerald-500 mb-1" />
+                                  <p className="text-[13px] font-bold text-emerald-900">
+                                    {t("suitcase.noMissingItemsTitle", { defaultValue: "Wardrobe Complete" })}
+                                  </p>
+                                  <p className="text-[12px] text-emerald-700 max-w-sm mt-0.5">
+                                    {t("suitcase.noMissingItems", { defaultValue: "You have all clothing items in your closet for this trip! No gaps were identified." })}
+                                  </p>
+                                </div>
+                              )}
+                            </AccordionContent>
+                          </AccordionItem>
                         </Accordion>
                         {/* Action buttons */}
                         <div className="flex gap-4 mt-5">
@@ -2219,7 +2307,7 @@ function Suitcase() {
                                             {outfit.outfit_name}
                                           </h6>
                                           <Badge className="bg-primary-brand text-white rounded-lg">
-                                            {outfit.time_to_wear}
+                                            {formatTimeToWear(outfit.time_to_wear, t)}
                                           </Badge>
                                         </div>
                                         <div className="flex gap-3 items-center">
@@ -2526,51 +2614,71 @@ function Suitcase() {
                               </AccordionItem>
                             )}
                           {/* Gaps: Missing Clothing Items */}
-                          {Array.isArray(activeSuitcase?.missing_items) &&
-                            activeSuitcase.missing_items.length > 0 && (
-                              <AccordionItem
-                                value="gaps"
-                                className="border border-border rounded-[12px] bg-white px-[12px]"
-                              >
-                                <AccordionTrigger className="hover:no-underline">
-                                  <div className="flex items-center gap-2">
-                                    <ShoppingBag className="h-4 w-4 text-red-500" />
-                                    <span className="text-[14px] font-bold text-dark-brand">
-                                      {t("suitcase.gapsHeader", {
-                                        defaultValue:
-                                          "Gaps: Missing Clothing Items",
-                                      })}
-                                    </span>
-                                  </div>
-                                </AccordionTrigger>
-                                <AccordionContent>
-                                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                    {(Array.isArray(activeSuitcase?.missing_items)
-                                      ? activeSuitcase.missing_items
-                                      : []
-                                    ).map((m, idx) => (
-                                      <div
-                                        key={idx}
-                                        className="flex flex-col p-3 items-start gap-1 rounded-[12px] bg-white border border-border"
+                          <AccordionItem
+                            value="gaps"
+                            className="border border-border rounded-[12px] bg-white px-[12px]"
+                          >
+                            <AccordionTrigger className="hover:no-underline">
+                              <div className="flex items-center gap-2">
+                                <ShoppingBag className={`h-4 w-4 ${activeMissingItems.length > 0 ? "text-red-500" : "text-emerald-500"}`} />
+                                <span className="text-[14px] font-bold text-dark-brand">
+                                  {t("suitcase.gapsHeader", {
+                                    defaultValue:
+                                      "Gaps: Missing Clothing Items",
+                                  })}
+                                </span>
+                                {activeMissingItems.length > 0 ? (
+                                  <Badge variant="destructive" className="text-[10px] py-0 px-2">
+                                    {t("suitcase.missingItemsCount", {
+                                      count: activeMissingItems.length,
+                                      defaultValue: `${activeMissingItems.length} missing`,
+                                    })}
+                                  </Badge>
+                                ) : (
+                                  <Badge variant="outline" className="text-[10px] py-0 px-2 text-emerald-600 border-emerald-300 bg-emerald-50">
+                                    0
+                                  </Badge>
+                                )}
+                              </div>
+                            </AccordionTrigger>
+                            <AccordionContent>
+                              {activeMissingItems.length > 0 ? (
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                  {activeMissingItems.map((m, idx) => (
+                                    <div
+                                      key={idx}
+                                      className="flex flex-col p-3 items-start gap-1 rounded-[12px] bg-white border border-border"
+                                    >
+                                      <Badge
+                                        variant="destructive"
+                                        className="uppercase text-[9px]"
                                       >
-                                        <Badge
-                                          variant="destructive"
-                                          className="uppercase text-[9px]"
-                                        >
-                                          {labelForRole(m.role, t)}
-                                        </Badge>
-                                        <h4 className="text-[14px] font-semibold text-dark-brand">
-                                          {m.description}
-                                        </h4>
+                                        {labelForRole(m.role, t)}
+                                      </Badge>
+                                      <h4 className="text-[14px] font-semibold text-dark-brand">
+                                        {m.description}
+                                      </h4>
+                                      {m.reason_needed && (
                                         <p className="text-[12px] text-text-brand font-semibold">
                                           {m.reason_needed}
                                         </p>
-                                      </div>
-                                    ))}
-                                  </div>
-                                </AccordionContent>
-                              </AccordionItem>
-                            )}
+                                      )}
+                                    </div>
+                                  ))}
+                                </div>
+                              ) : (
+                                <div className="flex flex-col items-center justify-center p-4 text-center rounded-[12px] bg-emerald-50/50 border border-emerald-100">
+                                  <CheckCircle2 className="h-6 w-6 text-emerald-500 mb-1" />
+                                  <p className="text-[13px] font-bold text-emerald-900">
+                                    {t("suitcase.noMissingItemsTitle", { defaultValue: "Wardrobe Complete" })}
+                                  </p>
+                                  <p className="text-[12px] text-emerald-700 max-w-sm mt-0.5">
+                                    {t("suitcase.noMissingItems", { defaultValue: "You have all clothing items in your closet for this trip! No gaps were identified." })}
+                                  </p>
+                                </div>
+                              )}
+                            </AccordionContent>
+                          </AccordionItem>
                         </Accordion>
                       </CardContent>
                     </Card>
@@ -2753,7 +2861,7 @@ function Suitcase() {
                       </CardHeader>
                       <CardContent className="p-5">
                         <p className="text-[12px] text-text-brand font-semibold capitalize">
-                          {t("suitcase.purposeLabel", {
+                          {t("suitcase.purposeDisplay", {
                             defaultValue: "Purpose",
                           })}
                           :{" "}
@@ -2870,7 +2978,7 @@ function Suitcase() {
                     })}
                   </h4>
                   <p className="text-[12px] font-semibold text-text-brand">
-                    {t("suitcase.purposeLabel", { defaultValue: "Purpose" })}:{" "}
+                    {t("suitcase.purposeDisplay", { defaultValue: "Purpose" })}:{" "}
                     <span className="font-semibold capitalize">
                       {t(`suitcase.purpose_${selectedArchive.purpose}`, {
                         defaultValue: selectedArchive.purpose,
@@ -2914,7 +3022,7 @@ function Suitcase() {
                         >
                           <div className="flex justify-between items-center text-[10px] text-text-brand">
                             <span className="font-semibold">{outfit.date}</span>
-                            <span className="font-semibold">{outfit.time_to_wear}</span>
+                            <span className="font-semibold">{formatTimeToWear(outfit.time_to_wear, t)}</span>
                           </div>
                           <h5 className="text-[12px] font-bold text-dark-bold">
                             {outfit.outfit_name}
@@ -2932,6 +3040,42 @@ function Suitcase() {
                       ))}
                   </div>
                 </div>
+
+                {archiveMissingItems.length > 0 && (
+                  <div>
+                    <h4 className="text-[14px] font-bold text-dark-brand mb-2 flex items-center gap-1.5">
+                      <ShoppingBag className="h-4 w-4 text-red-500" />
+                      <span>
+                        {t("suitcase.archiveMissingItemsHeader", {
+                          defaultValue: "Missing Clothing Items (Gaps)",
+                        })}
+                      </span>
+                      <Badge variant="destructive" className="text-[10px] py-0 px-2">
+                        {archiveMissingItems.length}
+                      </Badge>
+                    </h4>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      {archiveMissingItems.map((m, idx) => (
+                        <div
+                          key={idx}
+                          className="flex flex-col p-3 items-start gap-1 rounded-[12px] bg-white border border-border"
+                        >
+                          <Badge variant="destructive" className="uppercase text-[9px]">
+                            {labelForRole(m.role, t)}
+                          </Badge>
+                          <h5 className="text-[12px] font-semibold text-dark-brand">
+                            {m.description}
+                          </h5>
+                          {m.reason_needed && (
+                            <p className="text-[11px] text-text-brand font-semibold">
+                              {m.reason_needed}
+                            </p>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
                 <div>
                   <h4 className="text-[14px] font-bold text-dark-brand mb-2">
                     {t("suitcase.archivedChecklistHeader", {
@@ -2982,7 +3126,7 @@ function Suitcase() {
                 <DialogHeader>
                   <div className="flex gap-2 items-start">
                     <DialogTitle>{fullscreenOutfit.outfit_name}</DialogTitle>
-                    <Badge>{fullscreenOutfit.time_to_wear}</Badge>
+                    <Badge>{formatTimeToWear(fullscreenOutfit.time_to_wear, t)}</Badge>
                   </div>
                   <DialogDescription className="flex items-center gap-1">
                     <MapPin className="h-4 w-4 text-primary-brand" />

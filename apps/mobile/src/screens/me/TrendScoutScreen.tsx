@@ -38,6 +38,7 @@ import { api } from '@mobile/lib/api';
 import { toCountryCode } from '@mobile/lib/country';
 import { ScrollToTopFloater } from '@mobile/components/common/ScrollToTopFloater';
 import { TrendScoutSettingsModal } from '@mobile/components/trends/TrendScoutSettingsModal';
+import { PageHeroBanner } from '@mobile/components/common';
 
 interface TrendItem {
   id?: string;
@@ -332,21 +333,49 @@ export function TrendScoutScreen() {
 
   return (
     <SafeAreaView style={[styles.root, { backgroundColor: colors.background }]} edges={['top']}>
-      {/* ── Top Bar ─────────────────────────────────────────────────── */}
-      <View style={[styles.topBar, { borderBottomColor: colors.border }]}>
-        <TouchableOpacity
-          onPress={handleBack}
-          style={styles.backBtn}
-          accessibilityLabel="Back"
-          hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
-        >
-          <BackIcon size={20} color={colors.foreground} />
-        </TouchableOpacity>
-        <Text style={[styles.topTitle, { color: colors.foreground }]}>
-          {t('trends.title', { defaultValue: 'Trend Scout' })}
-        </Text>
-        <View style={{ width: 36 }} />
-      </View>
+      {/* ── Editorial Hero Banner ───────────────────────────────────── */}
+      <PageHeroBanner
+        image={require('@mobile/assets/img/inner6.webp')}
+        minHeight={160}
+      >
+        <View style={styles.bannerHeader}>
+          {/* Eyebrow: Trend Scout + Location Anchor Badge */}
+          <View style={styles.bannerEyebrowRow}>
+            <Text style={styles.bannerEyebrowText}>
+              {t('home.trendScout', { defaultValue: 'TREND SCOUT' })}
+            </Text>
+            <View style={styles.bannerAnchorBadge}>
+              <Lucide.MapPin size={10} color="#FAD459" />
+              <Text style={styles.bannerAnchorText}>
+                {country === 'IL' ? t('trends.israelAnchor', { defaultValue: 'Israel 🇮🇱' }) : country}
+              </Text>
+            </View>
+          </View>
+
+          {/* Top Row: Back button + Title */}
+          <View style={styles.bannerTopRow}>
+            <TouchableOpacity
+              onPress={handleBack}
+              style={styles.bannerBackBtn}
+              accessibilityLabel="Back"
+            >
+              <BackIcon size={18} color="#FFFFFF" />
+            </TouchableOpacity>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.bannerTitle} numberOfLines={1}>
+                {t('trends.title', { defaultValue: 'Fashion Trends & Insights' })}
+              </Text>
+            </View>
+          </View>
+
+          {/* Subtitle */}
+          <Text style={styles.bannerSubtitle} numberOfLines={2}>
+            {t('trends.subtitle', {
+              defaultValue: 'Browse curated style aesthetics, sustainability news, and runway reviews tailored to your ecosystem.',
+            })}
+          </Text>
+        </View>
+      </PageHeroBanner>
 
       {!canAccessTrendScout ? (
         <View style={styles.lockedContainer}>
@@ -598,24 +627,65 @@ const styles = StyleSheet.create({
     lineHeight: 20,
     maxWidth: 320,
   },
-  topBar: {
+  bannerHeader: {
+    paddingHorizontal: spacing[4],
+    paddingTop: spacing[1],
+    paddingBottom: spacing[3],
+  },
+  bannerEyebrowRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: spacing[4],
-    paddingVertical: spacing[3],
-    borderBottomWidth: 1,
+    gap: spacing[2],
+    marginBottom: 6,
   },
-  backBtn: {
+  bannerEyebrowText: {
+    fontFamily: fonts.bodyBold,
+    fontSize: 10,
+    letterSpacing: 1.2,
+    color: '#FFFFFF',
+    textTransform: 'uppercase',
+  },
+  bannerAnchorBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: radii.full,
+    borderWidth: 1,
+    borderColor: '#FAD459',
+    backgroundColor: 'rgba(250, 212, 89, 0.15)',
+  },
+  bannerAnchorText: {
+    fontFamily: fonts.bodyBold,
+    fontSize: 9,
+    color: '#FAD459',
+  },
+  bannerTopRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing[2],
+  },
+  bannerBackBtn: {
     width: 36,
     height: 36,
     borderRadius: radii.full,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  topTitle: {
+  bannerTitle: {
     fontFamily: fonts.displayBold,
-    fontSize: fontSizes.lg,
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#FFFFFF',
+  },
+  bannerSubtitle: {
+    fontFamily: fonts.body,
+    fontSize: 12,
+    lineHeight: 18,
+    color: 'rgba(255, 255, 255, 0.7)',
+    marginTop: 4,
   },
   genderBar: {
     flexDirection: 'row',
@@ -630,7 +700,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     padding: 3,
-    borderRadius: radii.xl,
+    borderRadius: radii.full,
     borderWidth: 1,
   },
   genderPill: {
@@ -638,7 +708,7 @@ const styles = StyleSheet.create({
     paddingVertical: spacing[2],
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: radii.lg,
+    borderRadius: radii.full,
     borderWidth: 1,
     borderColor: 'transparent',
   },

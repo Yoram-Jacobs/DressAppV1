@@ -1,25 +1,23 @@
 """DressApp Suitcase API Routes — Traveling AI solution."""
 from __future__ import annotations
 
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timezone
 import json
 import logging
 import os
 import uuid
-from typing import Any, Literal
+from typing import Any
 
-from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query
-from pydantic import BaseModel, Field
+from fastapi import APIRouter, Depends, Query
+from pydantic import BaseModel
 
 from app.db.database import get_db
-from app.models.schemas import ClosetItem, Suitcase, SuitcaseArchive
 from app.services.auth import get_current_user
 from app.services.gemini_client import GeminiClient
 from app.services.weather_service import weather_service
 from app.services.calendar_service import calendar_service
 from app.services.push_service import send_push_notification
 from app.services.marketplace_search import suggest_for_gaps
-from app.services import repos
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/suitcase", tags=["suitcase"])
@@ -63,13 +61,15 @@ def find_closet_match(item: dict, closet_items: list[dict]) -> dict | None:
 
 class SuitcasePackIn(BaseModel):
     destinations: str
-    purpose: str
-    preferred_style: str
-    departure_time: str  # ISO8601
-    return_time: str     # ISO8601
+    purpose: str = "vacation"
+    preferred_style: str = "casual chic"
+    departure_time: str | None = None  # ISO8601
+    return_time: str | None = None     # ISO8601
+    duration_days: int | None = None
     notes: str | None = None
     current_outfits: list[dict[str, Any]] | None = None
     current_packing_list: list[dict[str, Any]] | None = None
+    language: str | None = None
 
 
 class SuitcaseApproveIn(BaseModel):
@@ -113,7 +113,9 @@ class SuitcaseChatIn(BaseModel):
     departure_time: str | None = None
     return_time: str | None = None
     notes: str | None = None
-    message: str
+    message: str | None = None
+    query: str | None = None
+    language: str | None = None
 
 
 def strip_base64_images(val: Any) -> Any:
@@ -197,8 +199,11 @@ async def suitcase_chat(
         except Exception as e:
             logger.warning("Failed to retrieve calendar events in chat: %s", e)
 
+    target_lang = (body.language or user.get("preferred_language") or "en").lower().split("-")[0]
+    user_msg = body.message or body.query or ""
     prompt = (
         "You are DressApp's Suitcase Chat Assistant. The user is planning a trip and gathering details.\n"
+        f"Language Instruction: The user's interface language is '{target_lang}'. Your 'reply' message MUST be written in language '{target_lang}' (e.g. Hebrew if 'he', Arabic if 'ar', French if 'fr', etc.).\n"
         "Your task is to analyze the user's message, extract updates to the travel fields, and output a friendly response.\n"
         "You also have visibility into the user's scheduled calendar events/activities during their trip. Use this information to reply intelligently if the user asks about outfits, planning, activities, or the calendar.\n\n"
         "Current fields:\n"
@@ -210,7 +215,7 @@ async def suitcase_chat(
         f"Notes: {body.notes or 'None'}\n"
         f"Scheduled Calendar Events: {json.dumps(events) if events else 'None'}\n\n"
         "User message:\n"
-        f"'{body.message}'\n\n"
+        f"'{user_msg}'\n\n"
         "Respond ONLY with a JSON object in this format (no markdown formatting, no prose outside JSON):\n"
         "{\n"
         '  "destinations": string | null,\n'
@@ -394,6 +399,14 @@ async def pack_suitcase(
     db = get_db()
     
     # 1. Gather travel duration details
+    now_utc = datetime.now(timezone.utc)
+    from datetime import timedelta
+    if not body.departure_time:
+        body.departure_time = now_utc.isoformat()
+    if not body.return_time:
+        days = body.duration_days or 5
+        body.return_time = (now_utc + timedelta(days=days)).isoformat()
+
     try:
         dep_dt = datetime.fromisoformat(body.departure_time.replace("Z", "+00:00"))
         ret_dt = datetime.fromisoformat(body.return_time.replace("Z", "+00:00"))
@@ -468,8 +481,14 @@ async def pack_suitcase(
     from app.services.user_preferences import render_user_preferences
     prefs_block, _ = render_user_preferences(user)
 
+    target_lang = (body.language or user.get("preferred_language") or "en").lower().split("-")[0]
+
     system_prompt = (
         "You are DressApp’s Traveling AI Stylist. You specialize in building smart packing plans.\n"
+        f"Language Instruction: The user's interface language is '{target_lang}'. "
+        f"All human-facing descriptions, outfit names, reasoning, missing item explanations, and store recommendations ('why') "
+        f"MUST be generated in language '{target_lang}' (e.g. Hebrew if 'he', Arabic if 'ar', French if 'fr', German if 'de', Spanish if 'es', etc.). "
+        f"Keep technical enum keys exactly as specified in the schema (e.g. roles like 'top', 'bottom', 'outerwear', 'shoes', 'accessory', 'dress'; time_to_wear like 'morning', 'afternoon', 'evening', 'all_day'; status like 'closet', 'missing').\n\n"
         "Your goals are:\n"
         "1. Select appropriate clothing from the user's Closet honoring weather, duration, scheduled calendar events/activities during the trip. You MUST translate and understand calendar event titles if they are in another language (e.g. Hebrew like 'יום טרקים' = trekking day, 'ארוחת ערב חגיגית' = festive/gala dinner) and design outfits specifically for each day's scheduled activities (e.g., activewear/comfortable athletic shoes for active/trekking days, formalwear/dressy clothes for festive dinners/gala events, or comfortable travel outfits for flight days), while respecting cultural conventions, and strictly adhering to the user's personal style preferences, aesthetic, and outfit-generation rules.\n"
         "2. Minimize the load: select versatile garments that can be recombined into different outfits (e.g. reuse jeans, shirts, jackets across multiple days).\n"
@@ -583,6 +602,26 @@ async def pack_suitcase(
             else:
                 item["closet_item_id"] = None
                 item["status"] = "missing"
+
+    # Extract missing items from outfits if Gemini omitted them from analysis["missing_items"]
+    seen_missing_keys = {
+        (m.get("description") or m.get("role") or "").lower().strip()
+        for m in missing_items
+    }
+    for outfit in outfits:
+        for item in outfit.get("items") or []:
+            if item.get("status") == "missing":
+                desc = (item.get("description") or "").strip()
+                key = desc.lower() if desc else (item.get("role") or "missing").lower()
+                if key and key not in seen_missing_keys:
+                    seen_missing_keys.add(key)
+                    outfit_title = outfit.get("outfit_name") or "Outfit"
+                    date_info = f" ({outfit.get('date')})" if outfit.get("date") else ""
+                    missing_items.append({
+                        "role": item.get("role") or "accessory",
+                        "description": desc or item.get("role") or "Missing garment",
+                        "reason_needed": f"{outfit_title}{date_info}"
+                    })
 
     # Fetch Marketplace recommendations for missing slots
     if missing_items:

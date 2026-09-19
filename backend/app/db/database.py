@@ -35,9 +35,11 @@ def get_db() -> AsyncIOMotorDatabase:
 async def ensure_indexes() -> None:
     """Create every index DressApp expects. Safe to call at every startup."""
     db = get_db()
+    await db.users.create_index("id", unique=True, sparse=True)
     await db.users.create_index("email", unique=True)
     await db.users.create_index("stripe_account_id", sparse=True)
 
+    await db.closet_items.create_index("id", unique=True, sparse=True)
     await db.closet_items.create_index(
         [("user_id", 1), ("source", 1), ("category", 1)]
     )
@@ -49,10 +51,18 @@ async def ensure_indexes() -> None:
         [("user_id", 1), ("created_at", -1)],
         name="user_id_1_created_at_-1",
     )
+    # Incremental sync index for ?updated_after= queries
+    await db.closet_items.create_index(
+        [("user_id", 1), ("updated_at", -1)],
+        name="user_id_1_updated_at_-1",
+    )
     await db.closet_items.create_index(
         [("title", "text"), ("brand", "text"), ("tags", "text")]
     )
 
+    await db.listings.create_index("id", unique=True, sparse=True)
+    await db.listings.create_index("closet_item_id", sparse=True)
+    await db.listings.create_index([("status", 1), ("created_at", -1)])
     await db.listings.create_index([("source", 1), ("status", 1), ("category", 1)])
     await db.listings.create_index([("seller_id", 1), ("status", 1)])
     await db.listings.create_index([("location", "2dsphere")], sparse=True)
@@ -103,7 +113,7 @@ async def ensure_indexes() -> None:
     except Exception:  # noqa: BLE001
         pass
     await db.trend_reports.create_index(
-        [("bucket", 1), ("date", 1), ("language", 1), ("country_code", 1)], unique=True, sparse=True
+        [("bucket", 1), ("date", 1), ("language", 1), ("country_code", 1), ("gender", 1)], unique=True, sparse=True
     )
     await db.trend_reports.create_index(
         [("origin_id", 1), ("language", 1), ("country_code", 1)],
@@ -163,8 +173,26 @@ async def ensure_indexes() -> None:
     )
     await db.paypal_events.create_index([("id", 1)], unique=True)
 
-    # --- AI Stylist Scheduler (Phase Scheduler) ---
+    # --- Outfits & Sharing ---
+    await db.outfits.create_index("id", unique=True, sparse=True)
     await db.outfits.create_index([("user_id", 1), ("created_at", -1)])
+    await db.shared_outfits.create_index("id", unique=True, sparse=True)
+    await db.shared_outfits.create_index([("outfit_id", 1)], sparse=True)
+
+    # --- Suitcases ---
+    await db.suitcases.create_index("id", unique=True, sparse=True)
+    await db.suitcases.create_index([("user_id", 1), ("created_at", -1)])
+    await db.suitcase_archives.create_index("id", unique=True, sparse=True)
+    await db.suitcase_archives.create_index([("user_id", 1), ("created_at", -1)])
+
+    # --- Daily Proposals & Migration Sessions ---
+    await db.daily_proposals.create_index("id", unique=True, sparse=True)
+    await db.daily_proposals.create_index([("user_id", 1), ("date", -1)])
+    await db.migration_sessions.create_index("id", unique=True, sparse=True)
+    await db.migration_sessions.create_index([("user_id", 1), ("created_at", -1)])
+    await db.campaign_notifications.create_index([("user_id", 1), ("created_at", -1)])
+
+    # --- Simulated Notifications ---
     await db.simulated_notifications.create_index([("user_id", 1), ("created_at", -1)])
     # TTL: automatically expire simulated notifications after 30 days to bound storage
     await db.simulated_notifications.create_index(

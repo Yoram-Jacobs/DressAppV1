@@ -637,7 +637,8 @@
     "viewList": "列表视图",
     "dpp": "DPP",
     "saveFailuresTitle": "这些物品无法保存到您的衣柜中。请尝试重新上传。",
-    "garmentsCount": "{{count}} 件服装"
+    "garmentsCount": "{{count}} 件服装",
+    "views": "视图"
   },
   "addItem": {
     "namePlaceholder": "例如：复古牛仔外套",
@@ -1124,7 +1125,10 @@
     "banner": {
       "title": "检查与优化",
       "subtitle": "微调 'The Eyes' 识别出的所有细节——修正照片、调整属性，让这件服饰随时可以加入您的衣橱或发布到集市。"
-    }
+    },
+    "takePhoto": "拍摄照片",
+    "replacePhoto": "替换照片",
+    "useProfileShoeSize": "来自个人资料：{{size}}"
   },
   "stylist": {
     "heroTitle": "您的专属AI造型师",
@@ -2032,7 +2036,17 @@
     "selectOrWriteTags": "选择或输入标签",
     "tagsPlaceholder": "输入标签并按回车（例如：工作、夏季、纯色）",
     "availableTags": "来自您的衣橱：",
-    "noTagsFound": "未找到衣橱标签。请在上方输入添加。"
+    "noTagsFound": "未找到衣橱标签。请在上方输入添加。",
+    "subtitle": "管理您的个人风格资料、身材尺寸、虚拟试衣形象以及AI设置。",
+    "tiers": {
+      "free": "免费",
+      "manage": "经理",
+      "manager": "经理",
+      "professional": "专业",
+      "club": "俱乐部",
+      "pro": "专业",
+      "business": "企业"
+    }
   },
   "admin": {
     "title": "管理",
@@ -2311,7 +2325,8 @@
       "outerwear": "外套",
       "shoes": "鞋履",
       "accessory": "配饰",
-      "dress": "连衣裙"
+      "dress": "连衣裙",
+      "other": "其他"
     },
     "sub_category": {
       "boots": "靴子",
@@ -3460,7 +3475,34 @@
     "addFromClosetDesc": "从衣柜中选择一件衣服放入手提箱中。",
     "searchClosetPlaceholder": "按名称、颜色、品牌搜索...",
     "allCategories": "全部",
-    "noClosetItemsFound": "没有项目符合您的过滤条件。"
+    "noClosetItemsFound": "没有项目符合您的过滤条件。",
+    "planTrip": "规划旅行行李打包",
+    "destinationLabel": "目的地",
+    "durationLabel": "旅行天数（天）",
+    "durationDays": "{{count}}天",
+    "vacation": "🏖️ 度假休闲",
+    "business": "💼 商务会议",
+    "cityBreak": "🏙️ 城市微旅行",
+    "event": "🥂 正式活动 / 婚礼",
+    "active": "🏔️ 徒步与户外",
+    "assistantChat": "行李打包助手",
+    "askPlaceholder": "咨询行李建议…",
+    "chatFallback": "我已经相应更新了您的行李建议清单。",
+    "chatContactError": "连接行李箱助手失败，请重试。",
+    "generateListError": "无法生成行李清单。",
+    "time_all_day": "全天",
+    "time_morning": "早晨",
+    "time_afternoon": "下午",
+    "time_evening": "晚上",
+    "time_dinner": "晚餐",
+    "time_night": "夜间",
+    "time_casual": "休闲",
+    "time_formal": "正式",
+    "noMissingItems": "一切准备就绪！本次旅行所需的所有衣物都在您的衣橱中。",
+    "noMissingItemsTitle": "没有缺失衣物",
+    "missingItemsCount": "{{count}} 件缺失物品",
+    "purposeDisplay": "目的",
+    "archiveMissingItemsHeader": "旅行缺失物品"
   },
   "scanning": {
     "bounds": "检测服装边界...",

@@ -56,13 +56,13 @@ export const LanguagePicker = ({
       try { await i18n.changeLanguage(code); } catch { /* ignore */ }
       // 2) Persist locally for the next page load (works for guests too).
       try { localStorage.setItem('dressapp.lang', code); } catch { /* ignore */ }
-      // 3) Mirror to the user's profile if signed in. We fire-and-forget
-      //    here — the picker is meant to feel like a quick toggle, not a
-      //    "save profile" action. Errors are silent.
+      // 3) Mirror to the user's profile if signed in. We optimistically update
+      //    local auth state immediately, then persist in background.
       if (user) {
+        updateUserLocal({ preferred_language: code });
         try {
           const updated = await api.patchMe({ preferred_language: code });
-          updateUserLocal(updated);
+          if (updated) updateUserLocal(updated);
         } catch { /* ignore — we'll just resync next session */ }
       }
     } finally {

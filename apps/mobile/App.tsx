@@ -14,6 +14,14 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { Provider as PaperProvider } from 'react-native-paper';
 import {
   useFonts,
+  PlusJakartaSans_400Regular,
+  PlusJakartaSans_500Medium,
+  PlusJakartaSans_500Medium_Italic,
+  PlusJakartaSans_600SemiBold,
+  PlusJakartaSans_700Bold,
+  PlusJakartaSans_800ExtraBold,
+} from '@expo-google-fonts/plus-jakarta-sans';
+import {
   PlayfairDisplay_400Regular,
   PlayfairDisplay_400Regular_Italic,
   PlayfairDisplay_700Bold,
@@ -38,10 +46,10 @@ import {
   Cairo_700Bold,
 } from '@expo-google-fonts/cairo';
 
+import { I18nextProvider } from 'react-i18next';
 import { ThemeProvider, useTheme } from './src/theme';
 import { RootNavigator } from './src/navigation/RootNavigator';
-import { hydrateLanguage } from './src/lib/i18n';
-import './src/lib/i18n';
+import i18n, { hydrateLanguage } from './src/lib/i18n';
 import './src/global.css';
 
 function AppContent() {
@@ -59,6 +67,12 @@ function AppContent() {
 
 export default function App() {
   const [fontsLoaded, fontError] = useFonts({
+    PlusJakartaSans_400Regular,
+    PlusJakartaSans_500Medium,
+    PlusJakartaSans_500Medium_Italic,
+    PlusJakartaSans_600SemiBold,
+    PlusJakartaSans_700Bold,
+    PlusJakartaSans_800ExtraBold,
     PlayfairDisplay_400Regular,
     PlayfairDisplay_400Regular_Italic,
     PlayfairDisplay_700Bold,
@@ -88,17 +102,19 @@ export default function App() {
   if ((!fontsLoaded && !fontError) || !langHydrated) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#2d8f7f" />
+        <ActivityIndicator size="large" color="#1F5C45" />
       </View>
     );
   }
 
   return (
-    <SafeAreaProvider>
-      <ThemeProvider>
-        <AppContent />
-      </ThemeProvider>
-    </SafeAreaProvider>
+    <I18nextProvider i18n={i18n}>
+      <SafeAreaProvider>
+        <ThemeProvider>
+          <AppContent />
+        </ThemeProvider>
+      </SafeAreaProvider>
+    </I18nextProvider>
   );
 }
 

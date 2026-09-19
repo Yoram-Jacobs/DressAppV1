@@ -276,7 +276,7 @@ export function AvatarScreen() {
     if (navigation.canGoBack()) {
       navigation.goBack();
     } else {
-      navigation.navigate('MeTab');
+      navigation.navigate('MeTab', { screen: 'Profile' } as any);
     }
   };
 

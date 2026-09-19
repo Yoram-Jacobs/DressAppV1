@@ -13,6 +13,7 @@
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { createI18n, SUPPORTED_LANGUAGES, RTL_LANGUAGES, isRtl } from '@dressapp/i18n';
+import { initReactI18next } from 'react-i18next';
 import { applyRtl } from './rtl';
 
 const LANG_KEY = 'dressapp.lang';
@@ -23,6 +24,9 @@ const i18n = createI18n({
     AsyncStorage.setItem(LANG_KEY, lang).catch(console.warn);
   },
 });
+
+// Bind mobile app's local react-i18next instance to i18n to eliminate NO_I18NEXT_INSTANCE warning
+i18n.use(initReactI18next);
 
 // After boot: restore the persisted language and apply RTL if needed.
 // This runs once during app startup (called from App.tsx).

@@ -163,8 +163,10 @@ export const suitcaseStore = {
       return _state;
     }
 
-    const initialMessages =
-      _state.messages.length === 0 ? defaultWelcomeMessage(t) : _state.messages;
+    const isSingleWelcome =
+      _state.messages.length === 0 ||
+      (_state.messages.length === 1 && _state.messages[0].role === 'assistant');
+    const initialMessages = isSingleWelcome ? defaultWelcomeMessage(t) : _state.messages;
     _set({ messages: initialMessages, loading: true, archiveLoading: true, error: null });
 
     try {

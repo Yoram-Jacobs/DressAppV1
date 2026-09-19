@@ -593,7 +593,8 @@
     "viewList": "List view",
     "dpp": "DPP",
     "saveFailuresTitle": "These items couldn\\u2019t be saved to your closet. Please try uploading them again.",
-    "garmentsCount": "{{count}} garments"
+    "garmentsCount": "{{count}} garments",
+    "views": "views"
   },
   "addItem": {
     "namePlaceholder": "e.g. Vintage Denim Jacket",
@@ -1080,7 +1081,10 @@
     "banner": {
       "title": "Review & refine",
       "subtitle": "Fine-tune every detail The Eyes picked up — fix the photo, adjust attributes, and get this piece ready for your closet or the marketplace."
-    }
+    },
+    "takePhoto": "Take photo",
+    "replacePhoto": "Replace photo",
+    "useProfileShoeSize": "From profile: {{size}}"
   },
   "stylist": {
     "heroTitle": "Your Personal AI Stylist",
@@ -1960,6 +1964,8 @@
     "signOutConfirm": "Are you sure you want to sign out of DressApp?",
     "importWardrobe": "Import Wardrobe",
     "chooseLanguage": "Select Language",
+    "planLabel": "{{tier}} Plan",
+    "creditsLabel": "{{credits}} Credits",
     "groups": {
       "identity": "Identity",
       "subscription": "Subscription",
@@ -1986,7 +1992,17 @@
     "selectYourPlanDesc": "Choose a monthly or annual subscription tier.",
     "viewTiers": "View Plans",
     "deleteExplanation1": "Deleting your account is permanent. Once completed, your circular wardrobe, personal stylist message threads, and listings will be completely wiped from our servers.",
-    "deleteExplanation2": "This action is irreversible and the data cannot be restored."
+    "deleteExplanation2": "This action is irreversible and the data cannot be restored.",
+    "subtitle": "Manage your personal style profile, body measurements, virtual fitting avatar, and AI settings.",
+    "tiers": {
+      "free": "Free",
+      "manage": "Manager",
+      "manager": "Manager",
+      "professional": "Professional",
+      "club": "Club",
+      "pro": "Pro",
+      "business": "Business"
+    }
   },
   "admin": {
     "title": "Admin",
@@ -2258,7 +2274,8 @@
       "outerwear": "Outerwear",
       "shoes": "Shoes",
       "accessory": "Accessory",
-      "dress": "Dress"
+      "dress": "Dress",
+      "other": "Other"
     },
     "sub_category": {
       "boots": "Boots",
@@ -3407,7 +3424,34 @@
     "addFromClosetDesc": "Choose a garment from your closet to pack in your suitcase.",
     "searchClosetPlaceholder": "Search by title, color, brand...",
     "allCategories": "All",
-    "noClosetItemsFound": "No items match your filters."
+    "noClosetItemsFound": "No items match your filters.",
+    "planTrip": "Plan Your Travel Packing",
+    "destinationLabel": "DESTINATION",
+    "durationLabel": "TRIP LENGTH (DAYS)",
+    "durationDays": "{{count}}d",
+    "vacation": "🏖️ Vacation / Leisure",
+    "business": "💼 Business & Meetings",
+    "cityBreak": "🏙️ City Break",
+    "event": "🥂 Formal / Wedding",
+    "active": "🏔️ Hiking & Active",
+    "assistantChat": "Suitcase Packing Assistant",
+    "askPlaceholder": "Ask packing advice…",
+    "chatFallback": "I have updated your packing list suggestions accordingly.",
+    "chatContactError": "Error contacting Suitcase Assistant. Please try again.",
+    "generateListError": "Failed to generate packing list.",
+    "time_all_day": "All Day",
+    "time_morning": "Morning",
+    "time_afternoon": "Afternoon",
+    "time_evening": "Evening",
+    "time_dinner": "Dinner",
+    "time_night": "Night",
+    "time_casual": "Casual",
+    "time_formal": "Formal",
+    "noMissingItems": "All set! You have all necessary items in your closet for this trip.",
+    "noMissingItemsTitle": "No Missing Items",
+    "missingItemsCount": "{{count}} Missing Item(s)",
+    "purposeDisplay": "Purpose",
+    "archiveMissingItemsHeader": "Trip Missing Items"
   },
   "scanning": {
     "bounds": "Detecting Garment Bounds...",

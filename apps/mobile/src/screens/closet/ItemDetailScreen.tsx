@@ -77,6 +77,7 @@ import { WeightedList, WeightedItem } from '@mobile/components/WeightedList';
 import { DppPanel } from '@mobile/components/DppPanel';
 import { ItemAIAnalysisCard, ReanalyzeChatTurn } from '@mobile/components/itemDetail/ItemAIAnalysisCard';
 import { ItemOutfitPairings, PairedOutfit } from '@mobile/components/itemDetail/ItemOutfitPairings';
+import { PageHeroBanner } from '@mobile/components/common';
 
 const STATE_OPTIONS = ['new', 'used'] as const;
 const ALL_CURRENCY_OPTIONS = ['ILS', 'USD', 'EUR', 'GBP', 'CAD', 'AUD', 'JPY', 'INR', 'CHF', 'AED', 'SAR'];
@@ -947,22 +948,45 @@ export function ItemDetailScreen() {
 
   return (
     <SafeAreaView style={[styles.root, { backgroundColor: colors.background }]} edges={['top']}>
-      {/* ── Top Header Bar ────────────────────────────────────────────── */}
-      <View style={[styles.topBar, { borderBottomColor: colors.border }]}>
-        <TouchableOpacity onPress={handleBack} style={styles.backBtn} activeOpacity={0.7}>
-          <Lucide.ArrowLeft size={20} color={colors.foreground} />
-        </TouchableOpacity>
-        <Text style={[styles.topTitle, { color: colors.foreground }]} numberOfLines={1}>
-          {form.title || form.name || t('itemDetail.title', { defaultValue: 'Item Details' })}
-        </Text>
-        <TouchableOpacity onPress={handleSave} disabled={saving} style={[styles.topSaveBtn, { backgroundColor: colors.accent }]} activeOpacity={0.8}>
-          {saving ? (
-            <ActivityIndicator size="small" color="#fff" />
-          ) : (
-            <Text style={styles.topSaveBtnText}>{t('common.save', { defaultValue: 'Save' })}</Text>
-          )}
-        </TouchableOpacity>
-      </View>
+      {/* ── Editorial Hero Banner ───────────────────────────────────── */}
+      <PageHeroBanner
+        image={require('@mobile/assets/img/inner6.webp')}
+        minHeight={155}
+      >
+        <View style={styles.bannerHeader}>
+          <View style={styles.bannerTopRow}>
+            <TouchableOpacity onPress={handleBack} style={styles.bannerBackBtn} activeOpacity={0.7}>
+              <Lucide.ArrowLeft size={18} color="#FFFFFF" />
+            </TouchableOpacity>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.bannerTitle} numberOfLines={1}>
+                {form.title || form.name || t('itemDetail.banner.title', { defaultValue: 'Review & refine' })}
+              </Text>
+            </View>
+            <TouchableOpacity
+              onPress={handleSave}
+              disabled={saving}
+              style={styles.bannerSaveBtn}
+              activeOpacity={0.85}
+            >
+              {saving ? (
+                <ActivityIndicator size="small" color="#fff" />
+              ) : (
+                <>
+                  <Lucide.Check size={14} color="#FFFFFF" />
+                  <Text style={styles.bannerSaveBtnText}>{t('common.save', { defaultValue: 'Save' })}</Text>
+                </>
+              )}
+            </TouchableOpacity>
+          </View>
+
+          <Text style={styles.bannerSubtitle} numberOfLines={2}>
+            {t('itemDetail.banner.subtitle', {
+              defaultValue: 'Fine-tune every detail The Eyes picked up — fix the photo, adjust attributes, and get this piece ready.',
+            })}
+          </Text>
+        </View>
+      </PageHeroBanner>
 
       <KeyboardAvoidingView
         style={{ flex: 1 }}
@@ -1013,12 +1037,16 @@ export function ItemDetailScreen() {
           <View style={styles.heroActionOverlay}>
             <TouchableOpacity style={[styles.heroActionBtn, { backgroundColor: colors.card, borderColor: colors.border }]} onPress={handleTakePhoto}>
               <Lucide.Camera size={13} color={colors.foreground} />
-              <Text style={[styles.heroActionText, { color: colors.foreground }]}>{t('itemDetail.takePhoto', { defaultValue: 'Take photo' })}</Text>
+              <Text style={[styles.heroActionText, { color: colors.foreground }]}>
+                {t('itemDetail.takePhoto', { defaultValue: t('itemDetail.photo.takeLabel', { defaultValue: 'Take photo' }) })}
+              </Text>
             </TouchableOpacity>
 
             <TouchableOpacity style={[styles.heroActionBtn, { backgroundColor: colors.card, borderColor: colors.border }]} onPress={handleReplacePhoto}>
               <Lucide.Image size={13} color={colors.foreground} />
-              <Text style={[styles.heroActionText, { color: colors.foreground }]}>{t('itemDetail.replacePhoto', { defaultValue: 'Replace photo' })}</Text>
+              <Text style={[styles.heroActionText, { color: colors.foreground }]}>
+                {t('itemDetail.replacePhoto', { defaultValue: t('itemDetail.photo.replaceLabel', { defaultValue: 'Replace photo' }) })}
+              </Text>
             </TouchableOpacity>
 
             {!hasReconstruction && (
@@ -2086,32 +2114,58 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  topBar: {
+  bannerHeader: {
+    paddingHorizontal: spacing.md,
+    paddingTop: spacing.xs,
+    paddingBottom: spacing.md,
+  },
+  bannerTopRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    borderBottomWidth: 1,
+    gap: spacing.sm,
   },
-  backBtn: {
-    padding: spacing.xs,
-  },
-  topTitle: {
-    flex: 1,
-    fontFamily: fonts.displayBold,
-    fontSize: fontSizes.base,
-    marginHorizontal: spacing.sm,
-  },
-  topSaveBtn: {
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.xs + 2,
+  bannerBackBtn: {
+    width: 36,
+    height: 36,
     borderRadius: radii.full,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  topSaveBtnText: {
+  bannerTitle: {
+    fontFamily: fonts.displayBold,
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#FFFFFF',
+  },
+  bannerSaveBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    backgroundColor: '#1F5C45',
+    paddingHorizontal: 14,
+    paddingVertical: 7,
+    borderRadius: radii.full,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.3)',
+    shadowColor: '#1F5C45',
+    shadowOpacity: 0.3,
+    shadowOffset: { width: 0, height: 2 },
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  bannerSaveBtnText: {
     color: '#FFF',
     fontFamily: fonts.bodyBold,
     fontSize: fontSizes.xs,
+    fontWeight: '600',
+  },
+  bannerSubtitle: {
+    fontFamily: fonts.body,
+    fontSize: 12,
+    lineHeight: 18,
+    color: 'rgba(255, 255, 255, 0.7)',
+    marginTop: 4,
   },
   scroll: {
     padding: spacing.md,
@@ -2449,7 +2503,7 @@ const styles = StyleSheet.create({
   listForSaleBtn: {
     flex: 1,
     height: 44,
-    borderRadius: radii.lg,
+    borderRadius: radii.full,
     borderWidth: 1,
     flexDirection: 'row',
     alignItems: 'center',
@@ -2463,7 +2517,7 @@ const styles = StyleSheet.create({
   deleteCardBtn: {
     flex: 1,
     height: 44,
-    borderRadius: radii.lg,
+    borderRadius: radii.full,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',

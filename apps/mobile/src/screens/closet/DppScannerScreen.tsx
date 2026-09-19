@@ -203,7 +203,7 @@ function makeStyles(c: ReturnType<typeof import('@mobile/theme').useTheme>['colo
     },
     processingRow: { flexDirection: 'row', alignItems: 'center', gap: spacing[2], marginBottom: spacing[3] },
     processingText: { fontFamily: fonts.body, fontSize: fontSizes.sm, color: '#fff' },
-    cancelBtn: { backgroundColor: 'rgba(255,255,255,0.2)', paddingHorizontal: spacing[6], paddingVertical: spacing[3], borderRadius: radii.xl, borderWidth: 1, borderColor: 'rgba(255,255,255,0.4)' },
+    cancelBtn: { backgroundColor: 'rgba(255,255,255,0.2)', paddingHorizontal: spacing[6], paddingVertical: spacing[3], borderRadius: radii.full, borderWidth: 1, borderColor: 'rgba(255,255,255,0.4)' },
     cancelBtnText: { fontFamily: fonts.bodyMedium, fontSize: fontSizes.base, color: '#fff' },
   });
 }

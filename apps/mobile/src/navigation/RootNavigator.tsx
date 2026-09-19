@@ -73,7 +73,7 @@ export function RootNavigator() {
   if (isLoading) {
     return (
       <View style={styles.loading}>
-        <ActivityIndicator size="large" color="#2F7972" />
+        <ActivityIndicator size="large" color="#1F5C45" />
         <Text style={styles.loadingText}>
           {t('common.loadingDressApp', { defaultValue: 'Loading DressApp…' })}
         </Text>

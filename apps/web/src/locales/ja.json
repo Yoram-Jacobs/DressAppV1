@@ -593,7 +593,8 @@
     "viewList": "リスト表示",
     "dpp": "DPP",
     "saveFailuresTitle": "これらのアイテムはクローゼットに保存できませんでした。もう一度アップロードしてみてください。",
-    "garmentsCount": "{{count}} 着の衣服"
+    "garmentsCount": "{{count}} 着の衣服",
+    "views": "ビュー"
   },
   "addItem": {
     "namePlaceholder": "例：ヴィンテージデニムジャケット",
@@ -1080,7 +1081,10 @@
     "banner": {
       "title": "確認と微調整",
       "subtitle": "「The Eyes」が検出した詳細を調整 — 写真を修正し、属性を整えて、クローゼットやマーケットプレイスに登録する準備を整えましょう。"
-    }
+    },
+    "takePhoto": "写真を撮影",
+    "replacePhoto": "写真を置き換え",
+    "useProfileShoeSize": "プロフィールより: {{size}}"
   },
   "stylist": {
     "heroTitle": "あなた専属のAIスタイリスト",
@@ -1988,7 +1992,17 @@
     "selectOrWriteTags": "タグを選択または入力",
     "tagsPlaceholder": "タグを入力してEnterを押してください（例：仕事、夏、無地）",
     "availableTags": "あなたのクローゼットから:",
-    "noTagsFound": "タグが見つかりません。上に入力して追加してください。"
+    "noTagsFound": "タグが見つかりません。上に入力して追加してください。",
+    "subtitle": "個人のスタイルプロファイル、身体サイズ、バーチャル試着アバター、AI設定を管理します。",
+    "tiers": {
+      "free": "無料",
+      "manage": "マネージャー",
+      "manager": "マネージャー",
+      "professional": "プロフェッショナル",
+      "club": "クラブ",
+      "pro": "プロ",
+      "business": "ビジネス"
+    }
   },
   "admin": {
     "title": "管理",
@@ -2267,7 +2281,8 @@
       "outerwear": "アウター",
       "shoes": "シューズ",
       "accessory": "アクセサリー",
-      "dress": "ドレス"
+      "dress": "ドレス",
+      "other": "その他"
     },
     "sub_category": {
       "boots": "ブーツ",
@@ -3416,7 +3431,34 @@
     "addFromClosetDesc": "クローゼットから衣類を選んでスーツケースに詰めます。",
     "searchClosetPlaceholder": "タイトル、カラー、ブランドで検索...",
     "allCategories": "全て",
-    "noClosetItemsFound": "フィルターに一致する項目はありません。"
+    "noClosetItemsFound": "フィルターに一致する項目はありません。",
+    "planTrip": "旅行の荷造りを計画",
+    "destinationLabel": "目的地",
+    "durationLabel": "旅行日数（日）",
+    "durationDays": "{{count}}日",
+    "vacation": "🏖️ バケーション・レジャー",
+    "business": "💼 ビジネス・ミーティング",
+    "cityBreak": "🏙️ シティブレイク",
+    "event": "🥂 フォーマル・結婚式",
+    "active": "🏔️ ハイキング・アクティブ",
+    "assistantChat": "スーツケースパッキングアシスタント",
+    "askPlaceholder": "荷造りのアドバイスを聞く…",
+    "chatFallback": "荷造りリストの提案を更新しました。",
+    "chatContactError": "スーツケースアシスタントへの接続エラーです。もう一度お試しください。",
+    "generateListError": "荷造りリストの生成に失敗しました。",
+    "time_all_day": "終日",
+    "time_morning": "朝",
+    "time_afternoon": "昼",
+    "time_evening": "夕方・夜",
+    "time_dinner": "ディナー",
+    "time_night": "深夜",
+    "time_casual": "カジュアル",
+    "time_formal": "フォーマル",
+    "noMissingItems": "準備完了！この旅行に必要なすべてのアイテムがクローゼットに揃っています。",
+    "noMissingItemsTitle": "不足アイテムなし",
+    "missingItemsCount": "{{count}} 個の不足アイテム",
+    "purposeDisplay": "目的",
+    "archiveMissingItemsHeader": "旅行の不足アイテム"
   },
   "scanning": {
     "bounds": "衣服の境界を検出しています...",

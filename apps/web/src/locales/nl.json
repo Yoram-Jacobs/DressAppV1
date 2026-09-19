@@ -593,7 +593,8 @@
     "viewList": "Lijstweergave",
     "dpp": "DPP",
     "saveFailuresTitle": "Deze items kunnen niet in je kast worden opgeslagen. Probeer ze opnieuw te uploaden.",
-    "garmentsCount": "{{count}} kledingstukken"
+    "garmentsCount": "{{count}} kledingstukken",
+    "views": "weergaven"
   },
   "addItem": {
     "namePlaceholder": "bijv. Vintage spijkerjas",
@@ -1080,7 +1081,10 @@
     "banner": {
       "title": "Controleren & verfijnen",
       "subtitle": "Verfijn elk detail dat 'The Eyes' heeft gedetecteerd — bewerk de foto, pas kenmerken aan en maak dit kledingstuk klaar voor je kledingkast of de marktplaats."
-    }
+    },
+    "takePhoto": "Maak een foto",
+    "replacePhoto": "Vervang foto",
+    "useProfileShoeSize": "Uit profiel: {{size}}"
   },
   "stylist": {
     "heroTitle": "Je persoonlijke AI-stylist",
@@ -1988,7 +1992,17 @@
     "selectOrWriteTags": "Tags selecteren of typen",
     "tagsPlaceholder": "Typ een tag en druk op Enter (bijv. Werk, Zomer, Effen)",
     "availableTags": "Uit je kledingkast:",
-    "noTagsFound": "Geen tags gevonden. Typ hierboven om toe te voegen."
+    "noTagsFound": "Geen tags gevonden. Typ hierboven om toe te voegen.",
+    "subtitle": "Beheer je persoonlijke stijlprofiel, lichaamsafmetingen, virtuele paspop-avatar en AI-instellingen.",
+    "tiers": {
+      "free": "Gratis",
+      "manage": "Manager",
+      "manager": "Manager",
+      "professional": "Professional",
+      "club": "Club",
+      "pro": "Pro",
+      "business": "Zakelijk"
+    }
   },
   "admin": {
     "title": "Beheerder",
@@ -2267,7 +2281,8 @@
       "outerwear": "Bovenkleding",
       "shoes": "Schoenen",
       "accessory": "Accessoire",
-      "dress": "Jurk"
+      "dress": "Jurk",
+      "other": "Overig"
     },
     "sub_category": {
       "boots": "Laarzen",
@@ -3416,7 +3431,34 @@
     "addFromClosetDesc": "Kies een kledingstuk uit je kast om in je koffer te stoppen.",
     "searchClosetPlaceholder": "Zoek op titel, kleur, merk...",
     "allCategories": "Alle",
-    "noClosetItemsFound": "Er zijn geen artikelen die overeenkomen met uw filters."
+    "noClosetItemsFound": "Er zijn geen artikelen die overeenkomen met uw filters.",
+    "planTrip": "Reisbagage plannen",
+    "destinationLabel": "BESTEMMING",
+    "durationLabel": "REISDUUR (DAGEN)",
+    "durationDays": "{{count}} dagen",
+    "vacation": "🏖️ Vakantie en vrije tijd",
+    "business": "💼 Zakelijk en vergaderingen",
+    "cityBreak": "🏙️ Stedentrip",
+    "event": "🥂 Formeel / Bruiloft",
+    "active": "🏔️ Wandelen en actief",
+    "assistantChat": "Kofferpakassistent",
+    "askPlaceholder": "Vraag om inpakadvies…",
+    "chatFallback": "Ik heb uw inpaklijstsuggesties dienovereenkomstig bijgewerkt.",
+    "chatContactError": "Fout bij contact met de Kofferassistent. Probeer het opnieuw.",
+    "generateListError": "Kan geen inpaklijst genereren.",
+    "time_all_day": "De hele dag",
+    "time_morning": "Ochtend",
+    "time_afternoon": "Middag",
+    "time_evening": "Avond",
+    "time_dinner": "Diner",
+    "time_night": "Nacht",
+    "time_casual": "Casual",
+    "time_formal": "Formeel",
+    "noMissingItems": "Alles gereed! Je hebt alle benodigde kledingstukken in je kledingkast voor deze reis.",
+    "noMissingItemsTitle": "Geen ontbrekende items",
+    "missingItemsCount": "{{count}} ontbrekend(e) item(s)",
+    "purposeDisplay": "Doel",
+    "archiveMissingItemsHeader": "Ontbrekende items voor de reis"
   },
   "scanning": {
     "bounds": "Kledinggrenzen detecteren...",

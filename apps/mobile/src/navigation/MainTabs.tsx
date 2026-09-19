@@ -130,6 +130,7 @@ export function MainTabs() {
     <Tab.Navigator
       screenOptions={{
         headerShown: false,
+        popToTopOnBlur: true,
         tabBarHideOnKeyboard: true,
         tabBarActiveTintColor: colors.accent,
         tabBarInactiveTintColor: colors.mutedFg,
@@ -200,7 +201,15 @@ export function MainTabs() {
         options={{
           tabBarLabel: t('nav.me', { defaultValue: 'Me' }),
           tabBarIcon: ({ focused, color }) => tabIcon('me', focused, color, facePhotoUrl),
+          popToTopOnBlur: true,
         }}
+        listeners={({ navigation }) => ({
+          tabPress: () => {
+            navigation.navigate('MeTab', {
+              screen: 'Profile',
+            });
+          },
+        })}
       />
     </Tab.Navigator>
   );

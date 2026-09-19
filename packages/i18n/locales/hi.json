@@ -637,7 +637,8 @@
     "viewList": "लिस्ट व्यू",
     "dpp": "DPP",
     "saveFailuresTitle": "ये आइटम आपकी अलमारी में सहेजे नहीं जा सके. कृपया उन्हें दोबारा अपलोड करने का प्रयास करें.",
-    "garmentsCount": "{{count}} परिधान"
+    "garmentsCount": "{{count}} परिधान",
+    "views": "दृश्य"
   },
   "addItem": {
     "namePlaceholder": "उदा. विंटेज डेनिम जैकेट",
@@ -1124,7 +1125,10 @@
     "banner": {
       "title": "समीक्षा और सुधार",
       "subtitle": "The Eyes द्वारा पहचाने गए हर विवरण को सटीक बनाएं — फ़ोटो ठीक करें, विशेषताओं को समायोजित करें, और इस कपड़े को अपनी अलमारी या बाज़ार के लिए तैयार करें।"
-    }
+    },
+    "takePhoto": "फ़ोटो लें",
+    "replacePhoto": "फ़ोटो बदलें",
+    "useProfileShoeSize": "प्रोफ़ाइल से: {{size}}"
   },
   "stylist": {
     "heroTitle": "आपका व्यक्तिगत AI स्टाइलिस्ट",
@@ -2032,7 +2036,17 @@
     "selectOrWriteTags": "टैग चुनें या लिखें",
     "tagsPlaceholder": "टैग टाइप करें और Enter दबाएं (जैसे: कार्य, गर्मी, सादा)",
     "availableTags": "आपकी अलमारी से:",
-    "noTagsFound": "कोई टैग नहीं मिला। जोड़ने के लिए ऊपर लिखें।"
+    "noTagsFound": "कोई टैग नहीं मिला। जोड़ने के लिए ऊपर लिखें।",
+    "subtitle": "अपनी व्यक्तिगत शैली प्रोफ़ाइल, शारीरिक माप, वर्चुअल फिटिंग अवतार और एआई सेटिंग्स प्रबंधित करें।",
+    "tiers": {
+      "free": "निःशुल्क",
+      "manage": "प्रबंधक",
+      "manager": "प्रबंधक",
+      "professional": "पेशेवर",
+      "club": "क्लब",
+      "pro": "प्रो",
+      "business": "व्यावसायिक"
+    }
   },
   "admin": {
     "title": "व्यवस्थापक",
@@ -2311,7 +2325,8 @@
       "outerwear": "बाहरी कपड़े",
       "shoes": "जूते",
       "accessory": "एक्सेसरी",
-      "dress": "ड्रेस"
+      "dress": "ड्रेस",
+      "other": "अन्य"
     },
     "sub_category": {
       "boots": "बूट",
@@ -3460,7 +3475,34 @@
     "addFromClosetDesc": "अपने सूटकेस में पैक करने के लिए अपनी अलमारी से एक कपड़ा चुनें।",
     "searchClosetPlaceholder": "शीर्षक, रंग, ब्रांड के आधार पर खोजें...",
     "allCategories": "सभी",
-    "noClosetItemsFound": "कोई भी आइटम आपके फ़िल्टर से मेल नहीं खाता."
+    "noClosetItemsFound": "कोई भी आइटम आपके फ़िल्टर से मेल नहीं खाता.",
+    "planTrip": "यात्रा पैकिंग की योजना बनाएं",
+    "destinationLabel": "गंतव्य",
+    "durationLabel": "यात्रा अवधि (दिन)",
+    "durationDays": "{{count}} दिन",
+    "vacation": "🏖️ छुट्टियां और विश्राम",
+    "business": "💼 व्यापार और बैठकें",
+    "cityBreak": "🏙️ सिटी ब्रेक",
+    "event": "🥂 औपचारिक / शादी",
+    "active": "🏔️ हाइकिंग और खेलकूद",
+    "assistantChat": "सूटकेस पैकिंग सहायक",
+    "askPlaceholder": "पैकिंग सलाह पूछें…",
+    "chatFallback": "मैंने आपकी पैकिंग सूची के सुझावों को तदनुसार अपडेट कर दिया है।",
+    "chatContactError": "सूटकेस सहायक से संपर्क करने में त्रुटि। कृपया पुनः प्रयास करें।",
+    "generateListError": "पैकिंग सूची तैयार करने में विफल।",
+    "time_all_day": "पूरा दिन",
+    "time_morning": "सुबह",
+    "time_afternoon": "दोपहर",
+    "time_evening": "शाम",
+    "time_dinner": "रात का भोजन",
+    "time_night": "रात",
+    "time_casual": "अनौपचारिक",
+    "time_formal": "औपचारिक",
+    "noMissingItems": "सब कुछ तैयार है! इस यात्रा के लिए आवश्यक सभी कपड़े आपकी अलमारी में उपलब्ध हैं।",
+    "noMissingItemsTitle": "कोई कमी नहीं",
+    "missingItemsCount": "{{count}} गायब वस्तुएँ",
+    "purposeDisplay": "उद्देश्य",
+    "archiveMissingItemsHeader": "यात्रा की गायब वस्तुएँ"
   },
   "scanning": {
     "bounds": "परिधान सीमा का पता लगाया जा रहा है...",

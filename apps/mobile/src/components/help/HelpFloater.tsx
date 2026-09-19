@@ -1,5 +1,5 @@
 import React from 'react';
-import { TouchableOpacity, StyleSheet } from 'react-native';
+import { TouchableOpacity, StyleSheet, StyleProp, ViewStyle } from 'react-native';
 import * as Lucide from 'lucide-react-native';
 import { useNavigationState } from '@react-navigation/native';
 
@@ -9,9 +9,11 @@ import { useHelpStore } from '@mobile/lib/stores/helpStore';
 
 interface HelpFloaterProps {
   screenTopic?: string;
+  style?: StyleProp<ViewStyle>;
+  color?: string;
 }
 
-export function HelpFloater({ screenTopic }: HelpFloaterProps) {
+export function HelpFloater({ screenTopic, style, color }: HelpFloaterProps) {
   const { colors } = useTheme();
   const { openHelp } = useHelpStore();
 
@@ -33,13 +35,14 @@ export function HelpFloater({ screenTopic }: HelpFloaterProps) {
           backgroundColor: colors.secondary,
           borderColor: colors.border,
         },
+        style,
       ]}
       onPress={handlePress}
       activeOpacity={0.8}
       accessibilityRole="button"
       accessibilityLabel="Open Help Menu"
     >
-      <Lucide.HelpCircle size={18} color={colors.foreground} />
+      <Lucide.HelpCircle size={18} color={color || colors.foreground} />
     </TouchableOpacity>
   );
 }

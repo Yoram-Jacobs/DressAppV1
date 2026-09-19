@@ -637,7 +637,8 @@
     "viewList": "Listenansicht",
     "dpp": "DPP",
     "saveFailuresTitle": "Diese Artikel konnten nicht in Ihrem Kleiderschrank gespeichert werden. Bitte versuchen Sie erneut, sie hochzuladen.",
-    "garmentsCount": "{{count}} Kleidungsstücke"
+    "garmentsCount": "{{count}} Kleidungsstücke",
+    "views": "Ansichten"
   },
   "addItem": {
     "namePlaceholder": "z. B. Vintage-Jeansjacke",
@@ -1124,7 +1125,10 @@
     "banner": {
       "title": "Überprüfen & verfeinern",
       "subtitle": "Passe jedes Detail an, das 'The Eyes' erkannt hat – bearbeite das Foto, korrigiere Attribute und mache dieses Teil bereit für deinen Kleiderschrank oder den Marktplatz."
-    }
+    },
+    "takePhoto": "Foto aufnehmen",
+    "replacePhoto": "Foto ersetzen",
+    "useProfileShoeSize": "Aus dem Profil: {{size}}"
   },
   "stylist": {
     "heroTitle": "Dein persönlicher KI-Stylist",
@@ -2032,7 +2036,17 @@
     "selectOrWriteTags": "Tags auswählen oder eingeben",
     "tagsPlaceholder": "Tag eingeben und Enter drücken (z.B. Arbeit, Sommer, Unifarben)",
     "availableTags": "Aus deinem Kleiderschrank:",
-    "noTagsFound": "Keine Tags gefunden. Oben tippen zum Hinzufügen."
+    "noTagsFound": "Keine Tags gefunden. Oben tippen zum Hinzufügen.",
+    "subtitle": "Verwalten Sie Ihr persönliches Stilprofil, Körpermaße, Ihren virtuellen Anprobe-Avatar und KI-Einstellungen.",
+    "tiers": {
+      "free": "Kostenlos",
+      "manage": "Manager",
+      "manager": "Manager",
+      "professional": "Professional",
+      "club": "Club",
+      "pro": "Pro",
+      "business": "Business"
+    }
   },
   "admin": {
     "title": "Admin",
@@ -2304,7 +2318,8 @@
       "outerwear": "Outdoor-Bekleidung",
       "shoes": "Schuhe",
       "accessory": "Accessoire",
-      "dress": "Kleid"
+      "dress": "Kleid",
+      "other": "Sonstiges"
     },
     "sub_category": {
       "boots": "Stiefel",
@@ -3453,7 +3468,34 @@
     "addFromClosetDesc": "Wählen Sie ein Kleidungsstück aus Ihrem Kleiderschrank aus, das Sie in Ihren Koffer packen möchten.",
     "searchClosetPlaceholder": "Suche nach Titel, Farbe, Marke...",
     "allCategories": "Alle",
-    "noClosetItemsFound": "Keine Artikel entsprechen Ihren Filtern."
+    "noClosetItemsFound": "Keine Artikel entsprechen Ihren Filtern.",
+    "planTrip": "Reisegepäck planen",
+    "destinationLabel": "REISEZIEL",
+    "durationLabel": "REISEDAUER (TAGE)",
+    "durationDays": "{{count}} Tage",
+    "vacation": "🏖️ Urlaub & Freizeit",
+    "business": "💼 Geschäftlich & Meetings",
+    "cityBreak": "🏙️ Städtetrip",
+    "event": "🥂 Festlich / Hochzeit",
+    "active": "🏔️ Wandern & Aktiv",
+    "assistantChat": "Kofferpack-Assistent",
+    "askPlaceholder": "Fragen Sie nach Packtipps…",
+    "chatFallback": "Ich habe die Vorschläge für Ihre Packliste entsprechend aktualisiert.",
+    "chatContactError": "Fehler beim Kontaktieren des Koffer-Assistenten. Bitte versuchen Sie es erneut.",
+    "generateListError": "Fehler beim Erstellen der Packliste.",
+    "time_all_day": "Ganztägig",
+    "time_morning": "Morgen",
+    "time_afternoon": "Nachmittag",
+    "time_evening": "Abend",
+    "time_dinner": "Abendessen",
+    "time_night": "Nacht",
+    "time_casual": "Lässig",
+    "time_formal": "Formell",
+    "noMissingItems": "Alles bereit! Alle benötigten Kleidungsstücke sind für diese Reise in Ihrem Kleiderschrank vorhanden.",
+    "noMissingItemsTitle": "Keine fehlenden Artikel",
+    "missingItemsCount": "{{count}} fehlende(r) Artikel",
+    "purposeDisplay": "Zweck",
+    "archiveMissingItemsHeader": "Fehlende Reiseartikel"
   },
   "scanning": {
     "bounds": "Kleidungsgrenzen erkennen...",

@@ -637,7 +637,8 @@
     "viewList": "عرض القائمة",
     "dpp": "DPP",
     "saveFailuresTitle": "لا يمكن حفظ هذه العناصر في خزانتك. يرجى محاولة تحميلها مرة أخرى.",
-    "garmentsCount": "{{count}} قطعة ملابس"
+    "garmentsCount": "{{count}} قطعة ملابس",
+    "views": "تنسيقات"
   },
   "addItem": {
     "namePlaceholder": "مثال: سترة جينز كلاسيكية",
@@ -1124,7 +1125,10 @@
     "banner": {
       "title": "مراجعة وتحسين",
       "subtitle": "قم بضبط كل التفاصيل التي التقطتها 'The Eyes' — عدّل الصورة، واضبط الخصائص، وجهّז هذه القطعة لخزانتك أو للسوق."
-    }
+    },
+    "takePhoto": "التقاط صورة",
+    "replacePhoto": "استبدال الصورة",
+    "useProfileShoeSize": "من الملف الشخصي: {{size}}"
   },
   "stylist": {
     "heroTitle": "منسق الأزياء الشخصي بالذكاء الاصطناعي",
@@ -2032,7 +2036,17 @@
     "selectOrWriteTags": "اختر أو اكتب الوسوم",
     "tagsPlaceholder": "اكتب وسماً واضغط Enter (مثل: عمل، صيف، سادة)",
     "availableTags": "من خزانتك:",
-    "noTagsFound": "لا توجد وسوم في الخزانة. اكتب أعلاه للإضافة."
+    "noTagsFound": "لا توجد وسوم في الخزانة. اكتب أعلاه للإضافة.",
+    "subtitle": "إدارة ملف أسلوبك الشخصي وقياسات الجسم والصورة الرمزية وإعدادات الذكاء الاصطناعي.",
+    "tiers": {
+      "free": "مجاني",
+      "manage": "مدير",
+      "manager": "مدير",
+      "professional": "احترافي",
+      "club": "كلوب",
+      "pro": "برو",
+      "business": "أعمال"
+    }
   },
   "admin": {
     "title": "الإدارة",
@@ -2304,7 +2318,8 @@
       "outerwear": "ملابس خارجية",
       "shoes": "أحذية",
       "accessory": "إكسسوار",
-      "dress": "فستان"
+      "dress": "فستان",
+      "other": "أخرى"
     },
     "sub_category": {
       "boots": "أحذية برقبة (بوات)",
@@ -3457,7 +3472,34 @@
     "addFromClosetDesc": "اختر قطعة ملابس من خزانتك لتضعها في حقيبتك.",
     "searchClosetPlaceholder": "البحث حسب العنوان واللون والعلامة التجارية...",
     "allCategories": "الجميع",
-    "noClosetItemsFound": "لا توجد عناصر تتطابق مع عوامل التصفية الخاصة بك."
+    "noClosetItemsFound": "لا توجد عناصر تتطابق مع عوامل التصفية الخاصة بك.",
+    "planTrip": "تخطيط حزم أمتعة السفر",
+    "destinationLabel": "الوجهة",
+    "durationLabel": "مدة الرحلة (أيام)",
+    "durationDays": "{{count}} أيام",
+    "vacation": "🏖️ عطلة وترفيه",
+    "business": "💼 أعمال واجتماعات",
+    "cityBreak": "🏙️ جولة في المدينة",
+    "event": "🥂 مناسبة رسمية / زفاف",
+    "active": "🏔️ مسارات ونشاطات",
+    "assistantChat": "مساعد حزم الحقائب",
+    "askPlaceholder": "اطلب نصيحة بشأن الحزم…",
+    "chatFallback": "لقد قمت بتحديث اقتراحات قائمة الحزم وفقاً لذلك.",
+    "chatContactError": "حدث خطأ أثناء الاتصال بمساعد الحقيبة. يرجى المحاولة مرة أخرى.",
+    "generateListError": "فشل إنشاء قائمة الحزم.",
+    "time_all_day": "طوال اليوم",
+    "time_morning": "صباحاً",
+    "time_afternoon": "بعد الظهر",
+    "time_evening": "مساءً",
+    "time_dinner": "عشاء",
+    "time_night": "ليلاً",
+    "time_casual": "غير رسمي",
+    "time_formal": "رسمي",
+    "noMissingItems": "كل شيء جاهز! جميع العناصر الضرورية متوفرة في خزانتك لهذه الرحلة.",
+    "noMissingItemsTitle": "لا توجد عناصر مفقودة",
+    "missingItemsCount": "{{count}} عنصر مفقود",
+    "purposeDisplay": "الغرض",
+    "archiveMissingItemsHeader": "العناصر المفقودة للرحلة"
   },
   "scanning": {
     "bounds": "الكشف عن حدود الملابس...",

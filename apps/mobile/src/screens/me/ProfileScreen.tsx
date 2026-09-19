@@ -48,13 +48,14 @@ import * as Lucide from 'lucide-react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useTheme } from '@mobile/theme';
 import { fonts, fontSizes, spacing, radii } from '@mobile/theme/tokens';
-import { api, tokenStore, emitAuthChange } from '@mobile/lib/api';
+import { api, client, tokenStore, emitAuthChange } from '@mobile/lib/api';
 import { resolveImageUrl } from '@mobile/lib/imageUtils';
 import { userStore } from '@mobile/lib/stores';
 import { closetStore, closetRepo } from '@mobile/lib/stores/closetStore';
 import { applyRtl } from '@mobile/lib/rtl';
 import { HelpFloater } from '@mobile/components/help';
 import { ScrollToTopFloater } from '@mobile/components/common/ScrollToTopFloater';
+import { PageHeroBanner } from '@mobile/components/common';
 import { useTierLimits } from '@mobile/hooks/useTierLimits';
 import type { MeStackParamList } from '@mobile/navigation/types';
 
@@ -106,7 +107,7 @@ export function ProfileScreen() {
   const [userId, setUserId] = useState<string>('');
   const [langModalOpen, setLangModalOpen] = useState(false);
 
-  const isRtl = I18nManager.isRTL;
+  const isRtl = I18nManager.isRTL || i18n.language === 'he' || i18n.language === 'ar';
 
   // Active accordion section
   const [expandedSection, setExpandedSection] = useState<string | null>(null);
@@ -224,7 +225,8 @@ export function ProfileScreen() {
 
   // Subscription State
   const [tierName, setTierName] = useState('Free');
-  const [credits, setCredits] = useState(1000);
+  const [credits, setCredits] = useState(10);
+  const [dailyCredits, setDailyCredits] = useState(10);
   const [subscription, setSubscription] = useState<any>(null);
   const [closetCount, setClosetCount] = useState<number>(0);
   const [closetBonus, setClosetBonus] = useState<number>(0);
@@ -369,7 +371,42 @@ export function ProfileScreen() {
           ? sub.tier
           : (u.subscription_tier || 'Free');
         setTierName(effectiveTier);
-        setCredits(u.credits ?? u.ai_configuration?.current_credits ?? 1000);
+
+        const isFree = !effectiveTier || effectiveTier.toLowerCase() === 'free';
+        let remainingDaily = 10;
+        if (isFree) {
+          if (u.daily_credits_remaining !== undefined && u.daily_credits_remaining !== null) {
+            remainingDaily = Number(u.daily_credits_remaining);
+          } else if (u.daily_credits !== undefined && u.daily_credits !== null) {
+            remainingDaily = Number(u.daily_credits);
+          } else {
+            const dailyUsed = u.ai_configuration?.ai_daily_used 
+              ?? u.ai_daily_used 
+              ?? u.ai_configuration?.daily_request_count 
+              ?? u.daily_usage 
+              ?? 0;
+            remainingDaily = 10 - Number(dailyUsed);
+          }
+          remainingDaily = Math.min(10, Math.max(0, Math.round(remainingDaily)));
+          setDailyCredits(remainingDaily);
+          setCredits(remainingDaily);
+
+          // Check live balance from API if available
+          try {
+            const balRes: any = await (client as any).get('/api/v1/ai-credits/balance');
+            if (balRes?.data) {
+              const used = balRes.data.daily_usage ?? balRes.data.daily_used ?? 0;
+              const liveRemaining = Math.min(10, Math.max(0, 10 - Number(used)));
+              setDailyCredits(liveRemaining);
+              setCredits(liveRemaining);
+            }
+          } catch {
+            // Keep fallback calculation from u
+          }
+        } else {
+          setCredits(u.credits ?? u.ai_configuration?.current_credits ?? 0);
+        }
+
         setClosetBonus(u.closet_capacity_bonus || 0);
 
         // Instant zero-latency wardrobe count from closetRepo
@@ -716,47 +753,69 @@ export function ProfileScreen() {
 
   return (
     <SafeAreaView style={[styles.root, { backgroundColor: colors.background }]} edges={['top']}>
-      {/* Header */}
-      <View style={[styles.header, { borderBottomColor: colors.border }]}>
-        <View style={styles.headerLeft}>
-          <Text style={[styles.headerSuper, { color: colors.accent }]}>
-            {t('profile.accountLabel', { defaultValue: 'ACCOUNT & PREFERENCES' })}
-          </Text>
-          <Text style={[styles.headerTitle, { color: colors.foreground }]}>
-            {t('profile.title', { defaultValue: 'Profile' })}
+      {/* ── Editorial Hero Banner ───────────────────────────────────── */}
+      <PageHeroBanner
+        image={require('@mobile/assets/img/inner6.webp')}
+        minHeight={160}
+      >
+        <View style={styles.bannerHeader}>
+          <View style={styles.bannerTopRow}>
+            <View style={{ flex: 1 }}>
+              <Text
+                style={[
+                  styles.bannerTitle,
+                  isRtl && { textAlign: 'right', writingDirection: 'rtl' },
+                ]}
+                numberOfLines={1}
+              >
+                {t('profile.title', { defaultValue: 'Profile' })}
+              </Text>
+            </View>
+
+            <View style={styles.bannerActions}>
+              <HelpFloater screenTopic="profile-matters" />
+              <TouchableOpacity
+                style={styles.bannerThemeBtn}
+                onPress={toggle}
+                accessibilityLabel="Toggle Theme"
+              >
+                {isDark ? (
+                  <Lucide.Sun size={17} color="#FAD459" />
+                ) : (
+                  <Lucide.Moon size={17} color="#FFFFFF" />
+                )}
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.bannerSaveBtn}
+                onPress={handleSaveAll}
+                disabled={saving}
+              >
+                {saving ? (
+                  <ActivityIndicator size="small" color="#FFF" />
+                ) : (
+                  <>
+                    <Lucide.Save size={14} color="#FFF" />
+                    <Text style={styles.bannerSaveBtnText}>{t('common.save', { defaultValue: 'Save' })}</Text>
+                  </>
+                )}
+              </TouchableOpacity>
+            </View>
+          </View>
+
+          <Text
+            style={[
+              styles.bannerSubtitle,
+              isRtl && { textAlign: 'right', writingDirection: 'rtl' },
+            ]}
+            numberOfLines={2}
+          >
+            {t('profile.subtitle', {
+              defaultValue: 'Manage your personal style profile, body measurements, virtual fitting avatar, and AI settings.',
+            })}
           </Text>
         </View>
-
-        <View style={styles.headerActions}>
-          <HelpFloater screenTopic="profile-matters" />
-          <TouchableOpacity
-            style={[styles.themeToggleBtn, { backgroundColor: colors.secondary, borderColor: colors.border }]}
-            onPress={toggle}
-            accessibilityLabel="Toggle Theme"
-          >
-            {isDark ? (
-              <Lucide.Sun size={17} color="#FBBF24" />
-            ) : (
-              <Lucide.Moon size={17} color={colors.foreground} />
-            )}
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[styles.saveHeaderBtn, { backgroundColor: colors.accent }]}
-            onPress={handleSaveAll}
-            disabled={saving}
-          >
-            {saving ? (
-              <ActivityIndicator size="small" color="#FFF" />
-            ) : (
-              <>
-                <Lucide.Save size={15} color="#FFF" />
-                <Text style={styles.saveHeaderBtnText}>{t('common.save', { defaultValue: 'Save' })}</Text>
-              </>
-            )}
-          </TouchableOpacity>
-        </View>
-      </View>
+      </PageHeroBanner>
 
       <ScrollView
         ref={scrollViewRef}
@@ -794,47 +853,85 @@ export function ProfileScreen() {
               )}
 
               <View style={styles.pillsRow}>
-                <View
-                  style={[
-                    styles.tierPill,
-                    {
-                      backgroundColor: subscription?.is_active && tierName.toLowerCase() !== 'free'
-                        ? 'rgba(234, 179, 8, 0.15)'
-                        : colors.secondary,
-                      borderColor: subscription?.is_active && tierName.toLowerCase() !== 'free'
-                        ? '#EAB308'
-                        : colors.border,
-                    },
-                  ]}
-                >
-                  <Lucide.Crown
-                    size={12}
-                    color={subscription?.is_active && tierName.toLowerCase() !== 'free' ? '#EAB308' : colors.accent}
-                  />
-                  <Text
-                    style={[
-                      styles.tierPillText,
-                      {
-                        color: subscription?.is_active && tierName.toLowerCase() !== 'free'
-                          ? '#EAB308'
-                          : colors.foreground,
-                        fontFamily: fonts.bodyBold,
-                      },
-                    ]}
-                  >
-                    {t('profile.planLabel', {
-                      defaultValue: '{{tier}} Plan',
-                      tier: tierName ? tierName.charAt(0).toUpperCase() + tierName.slice(1) : 'Free',
-                    })}
-                  </Text>
-                </View>
+                {(() => {
+                  const isFreeTier = !tierName || tierName.toLowerCase() === 'free';
+                  const isPaidTier = !isFreeTier;
+                  const tierKey = (() => {
+                    if (isFreeTier) return 'free';
+                    const lower = tierName.toLowerCase();
+                    if (lower === 'manage' || lower === 'manager') return 'manager';
+                    if (lower === 'pro') return 'pro';
+                    if (lower === 'club') return 'club';
+                    if (lower === 'professional') return 'professional';
+                    if (lower === 'business') return 'business';
+                    return lower;
+                  })();
 
-                <View style={[styles.creditsPill, { backgroundColor: colors.secondary, borderColor: colors.border }]}>
-                  <Lucide.Sparkles size={12} color={colors.accent} />
-                  <Text style={[styles.creditsPillText, { color: colors.foreground }]}>
-                    {t('profile.creditsLabel', { defaultValue: '{{credits}} Credits', credits })}
-                  </Text>
-                </View>
+                  const fallbackTier = isFreeTier
+                    ? 'Free'
+                    : tierName.charAt(0).toUpperCase() + tierName.slice(1);
+
+                  const localizedTier = t(`profile.tiers.${tierKey}`, {
+                    defaultValue: fallbackTier,
+                  });
+
+                  const planLabel = t('profile.planLabel', {
+                    tier: localizedTier,
+                    defaultValue: `${localizedTier} Plan`,
+                  }).replace(/\{\{\s*tier\s*\}\}/g, localizedTier);
+
+                  const creditsDisplay = dailyCredits;
+                  const creditsLabel = t('profile.creditsLabel', {
+                    credits: creditsDisplay,
+                    defaultValue: `${creditsDisplay} Credits`,
+                  }).replace(/\{\{\s*credits\s*\}\}/g, String(creditsDisplay));
+
+                  return (
+                    <>
+                      <View
+                        style={[
+                          styles.tierPill,
+                          {
+                            backgroundColor: isPaidTier
+                              ? 'rgba(234, 179, 8, 0.15)'
+                              : colors.secondary,
+                            borderColor: isPaidTier
+                              ? '#EAB308'
+                              : colors.border,
+                          },
+                        ]}
+                      >
+                        <Lucide.Crown
+                          size={12}
+                          color={isPaidTier ? '#EAB308' : colors.accent}
+                        />
+                        <Text
+                          style={[
+                            styles.tierPillText,
+                            {
+                              color: isPaidTier
+                                ? '#EAB308'
+                                : colors.foreground,
+                              fontFamily: fonts.bodyBold,
+                              writingDirection: isRtl ? 'rtl' : 'ltr',
+                            },
+                          ]}
+                        >
+                          {planLabel}
+                        </Text>
+                      </View>
+
+                      {isFreeTier && (
+                        <View style={[styles.creditsPill, { backgroundColor: colors.secondary, borderColor: colors.border }]}>
+                          <Lucide.Sparkles size={12} color={colors.accent} />
+                          <Text style={[styles.creditsPillText, { color: colors.foreground, writingDirection: isRtl ? 'rtl' : 'ltr' }]}>
+                            {creditsLabel}
+                          </Text>
+                        </View>
+                      )}
+                    </>
+                  );
+                })()}
               </View>
             </View>
           </View>
@@ -1299,7 +1396,11 @@ export function ProfileScreen() {
                             {subscription?.is_active && tierName.toLowerCase() !== 'free'
                               ? t('profile.subActiveSummary', {
                                   defaultValue: 'Active: {{plan}} plan (Expires: {{date}})',
-                                  plan: (subscription?.tier || tierName).toUpperCase(),
+                                  plan: (() => {
+                                    const raw = subscription?.tier || tierName;
+                                    const lk = raw.toLowerCase() === 'manage' ? 'manager' : raw.toLowerCase();
+                                    return t(`profile.tiers.${lk}`, { defaultValue: raw.toUpperCase() });
+                                  })(),
                                   date: subscription?.expires_at ? new Date(subscription.expires_at).toLocaleDateString() : '',
                                 })
                               : t('profile.subFreeSummary', {
@@ -1741,51 +1842,64 @@ const styles = StyleSheet.create({
   root: {
     flex: 1,
   },
-  header: {
+  bannerHeader: {
+    paddingHorizontal: spacing.md,
+    paddingTop: spacing.xs,
+    paddingBottom: spacing.md,
+  },
+  bannerTopRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.md,
-    borderBottomWidth: 1,
+    gap: spacing.sm,
   },
-  headerLeft: {
-    gap: 2,
+  bannerTitle: {
+    fontFamily: fonts.displayBold,
+    fontSize: 22,
+    fontWeight: '700',
+    color: '#FFFFFF',
   },
-  headerSuper: {
-    fontFamily: fonts.bodyBold,
-    fontSize: 10.5,
-    letterSpacing: 1.2,
+  bannerSubtitle: {
+    fontFamily: fonts.body,
+    fontSize: 12,
+    lineHeight: 18,
+    color: 'rgba(255, 255, 255, 0.7)',
+    marginTop: 4,
   },
-  headerTitle: {
-    fontFamily: fonts.display,
-    fontSize: fontSizes['2xl'],
-  },
-  headerActions: {
+  bannerActions: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.sm,
   },
-  themeToggleBtn: {
+  bannerThemeBtn: {
     width: 36,
     height: 36,
-    borderRadius: 18,
-    borderWidth: 1,
+    borderRadius: radii.full,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  saveHeaderBtn: {
+  bannerSaveBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 5,
-    paddingHorizontal: spacing.md,
+    gap: 6,
+    backgroundColor: '#1F5C45',
+    paddingHorizontal: 14,
     paddingVertical: 7,
     borderRadius: radii.full,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.3)',
+    shadowColor: '#1F5C45',
+    shadowOpacity: 0.3,
+    shadowOffset: { width: 0, height: 2 },
+    shadowRadius: 4,
+    elevation: 3,
   },
-  saveHeaderBtnText: {
+  bannerSaveBtnText: {
     color: '#FFF',
     fontFamily: fonts.bodyBold,
     fontSize: fontSizes.xs,
+    fontWeight: '600',
   },
   scrollContent: {
     padding: spacing.md,

@@ -50,6 +50,7 @@ import { RichSelectionFloater } from '@mobile/components/closet/RichSelectionFlo
 import { HelpFloater } from '@mobile/components/help';
 import { LoadingVideo } from '@mobile/components/common/LoadingVideo';
 import { ScrollToTopFloater } from '@mobile/components/common/ScrollToTopFloater';
+import { PageHeroBanner } from '@mobile/components/common';
 import { labelForCategory, labelForIntent, labelForColor, getTaxonomyMismatches } from '@mobile/lib/taxonomy';
 import { getItemImageUrl } from '@mobile/lib/imageUtils';
 import type { ClosetStackParamList } from '@mobile/navigation/types';
@@ -860,46 +861,76 @@ export function ClosetScreen() {
   };
 
   return (
-    <SafeAreaView style={[styles.root, { backgroundColor: colors.background }]} edges={['top']}>
-      {/* ── Top Bar ─────────────────────────────────────────────────── */}
-      <View style={[styles.topBar, { borderBottomColor: colors.border }]}>
-        <View>
-          <Text style={[styles.superTitle, { color: colors.accent }]}>
-            {t('closet.superTitle', { defaultValue: 'DIGITAL WARDROBE' })}
+    <SafeAreaView style={[styles.root, { backgroundColor: colors.background }]} edges={[]}>
+      {/* ── Editorial Hero Banner ───────────────────────────────────── */}
+      <PageHeroBanner
+        image={require('@mobile/assets/img/inner6.webp')}
+        minHeight={170}
+      >
+        <View style={styles.bannerHeader}>
+          {/* Top Row: Title + Item Count + Actions */}
+          <View style={styles.bannerTopRow}>
+            <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+              <Text style={styles.bannerTitle} numberOfLines={1}>
+                {t('closet.title', { defaultValue: 'My Closet' })}
+              </Text>
+              <View style={styles.bannerCountBadge}>
+                <Text style={styles.bannerCountText}>
+                  {isLoaded ? items.length : 0} {t('common.items', { defaultValue: 'Items' })}
+                </Text>
+              </View>
+            </View>
+
+            {/* Quick Actions */}
+            <View style={styles.bannerActions}>
+              <HelpFloater screenTopic="closet-page" style={styles.bannerIconBtn} color="#FFFFFF" />
+              <TouchableOpacity
+                style={styles.bannerIconBtn}
+                onPress={() => navigation.navigate('DppScanner')}
+                accessibilityLabel={t('dpp.scanQR', { defaultValue: 'Scan DPP QR' })}
+              >
+                <Lucide.QrCode size={18} color="#FFFFFF" />
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[
+                  styles.bannerIconBtn,
+                  selectMode && { backgroundColor: '#FAD459' },
+                ]}
+                onPress={() => {
+                  setSelectMode(!selectMode);
+                  if (selectMode) setSelectedIds(new Set());
+                }}
+              >
+                <Lucide.CheckSquare
+                  size={18}
+                  color={selectMode ? '#000000' : '#FFFFFF'}
+                />
+              </TouchableOpacity>
+            </View>
+          </View>
+
+          {/* Subtitle */}
+          <Text style={styles.bannerSubtitle} numberOfLines={2}>
+            {t('closet.heroSubtitle', {
+              defaultValue: 'Organize your wardrobe, explore every piece and create better outfits effortlessly.',
+            })}
           </Text>
-          <Text style={[styles.mainTitle, { color: colors.foreground }]}>
-            {t('closet.title', { defaultValue: 'My Closet' })}{isLoaded ? ` (${items.length})` : ''}
-          </Text>
+
+          {/* Suitcase shortcut button */}
+          <View style={{ flexDirection: 'row', marginTop: 10 }}>
+            <TouchableOpacity
+              style={styles.suitcaseBtn}
+              onPress={() => (navigation as any).navigate('Suitcase')}
+              activeOpacity={0.85}
+            >
+              <Lucide.Luggage size={14} color="#FFFFFF" />
+              <Text style={styles.suitcaseBtnText}>
+                {t('suitcase.title', { defaultValue: 'Suitcase' })}
+              </Text>
+            </TouchableOpacity>
+          </View>
         </View>
-
-        <View style={styles.topActions}>
-          <HelpFloater screenTopic="closet-page" />
-
-          <TouchableOpacity
-            style={[styles.iconBtn, { backgroundColor: colors.secondary }]}
-            onPress={() => navigation.navigate('DppScanner')}
-            accessibilityLabel={t('dpp.scanQR', { defaultValue: 'Scan DPP QR' })}
-          >
-            <Lucide.QrCode size={18} color={colors.foreground} />
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[
-              styles.iconBtn,
-              { backgroundColor: selectMode ? colors.primary : colors.secondary },
-            ]}
-            onPress={() => {
-              setSelectMode(!selectMode);
-              if (selectMode) setSelectedIds(new Set());
-            }}
-          >
-            <Lucide.CheckSquare
-              size={18}
-              color={selectMode ? colors.primaryFg : colors.foreground}
-            />
-          </TouchableOpacity>
-        </View>
-      </View>
+      </PageHeroBanner>
 
       {/* ── Search & Semantic Toggle Bar ─────────────────────────────── */}
       <View style={styles.searchSection}>
@@ -1104,7 +1135,11 @@ export function ClosetScreen() {
         </View>
       ) : displayItems.length === 0 ? (
         <View style={styles.emptyBox}>
-          <Lucide.Shirt size={48} color={colors.mutedFg} />
+          <Image
+            source={require('@mobile/assets/img/closet4.webp')}
+            style={{ width: 140, height: 140, borderRadius: 20, marginBottom: 12 }}
+            contentFit="cover"
+          />
           <Text style={[styles.emptyTitle, { color: colors.foreground }]}>
             {t('closet.noItemsFound', { defaultValue: 'No items in this view' })}
           </Text>
@@ -1115,18 +1150,18 @@ export function ClosetScreen() {
           </Text>
           {items.length === 0 ? (
             <TouchableOpacity
-              style={[styles.retryBtn, { backgroundColor: colors.primary }]}
+              style={[styles.retryBtn, { backgroundColor: colors.primary, borderRadius: radii.full }]}
               onPress={() => navigation.navigate('ClosetAdd')}
               testID="closet-empty-add-button"
             >
-              <Lucide.Plus size={16} color="#FACC15" />
-              <Text style={[styles.retryBtnText, { color: colors.primaryFg }]}>
+              <Lucide.Plus size={16} color="#FAD459" />
+              <Text style={[styles.retryBtnText, { color: colors.primaryFg, fontWeight: '700' }]}>
                 {t('closet.addItem', { defaultValue: 'Add Item' })}
               </Text>
             </TouchableOpacity>
           ) : (
             <TouchableOpacity
-              style={[styles.retryBtn, { backgroundColor: colors.secondary }]}
+              style={[styles.retryBtn, { backgroundColor: colors.secondary, borderRadius: radii.full }]}
               onPress={() => {
                 setActiveCategory('all');
                 setActiveSource('all');
@@ -1691,5 +1726,78 @@ const styles = StyleSheet.create({
     width: '100%',
     height: '100%',
     borderRadius: radii.xl - 2,
+  },
+  bannerHeader: {
+    paddingHorizontal: spacing[4],
+    paddingTop: spacing[1],
+    paddingBottom: spacing[3],
+  },
+  bannerTopRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: spacing[2],
+  },
+  bannerTitle: {
+    fontFamily: fonts.displayBold,
+    fontSize: 22,
+    color: '#FFFFFF',
+    fontWeight: '700',
+  },
+  bannerCountBadge: {
+    paddingHorizontal: 10,
+    paddingVertical: 3,
+    borderRadius: radii.full,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.4)',
+    backgroundColor: 'rgba(0,0,0,0.25)',
+  },
+  bannerCountText: {
+    fontFamily: fonts.bodyBold,
+    fontSize: 11,
+    color: '#FFFFFF',
+    fontWeight: '700',
+  },
+  bannerActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing[2],
+  },
+  bannerIconBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: radii.full,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  bannerSubtitle: {
+    fontFamily: fonts.body,
+    fontSize: 12,
+    lineHeight: 18,
+    color: 'rgba(255,255,255,0.7)',
+    marginTop: 4,
+  },
+  suitcaseBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: '#1F5C45',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: radii.full,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.2)',
+    shadowColor: '#1F5C45',
+    shadowOpacity: 0.3,
+    shadowOffset: { width: 0, height: 2 },
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  suitcaseBtnText: {
+    fontFamily: fonts.bodyBold,
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#FFFFFF',
   },
 });

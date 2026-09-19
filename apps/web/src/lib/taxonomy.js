@@ -117,8 +117,17 @@ export const labelForSource = (code, t) => {
 
 export const labelForRole = (code, t) => {
   if (!code) return '';
-  const key = `taxonomy.role.${code}`;
-  return fallback(t, key, code);
+  const normalized = slug(code);
+  const aliasMap = {
+    footwear: 'shoes',
+    shoe: 'shoes',
+    accessories: 'accessory',
+    full_body: 'dress',
+    one_piece: 'dress',
+  };
+  const finalRole = aliasMap[normalized] || normalized;
+  const key = `taxonomy.role.${finalRole}`;
+  return fallback(t, key, fallback(t, `taxonomy.categories.${finalRole}`, code));
 };
 
 const CANONICAL_COLORS = {

@@ -1,73 +1,20 @@
 from __future__ import annotations
 
-import asyncio
 import base64
 import json
 import logging
-import os
-import uuid
-from datetime import datetime, timezone
-from typing import Any, Literal
+from typing import Any
 
-import httpx
-from bson import ObjectId
-from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query, Request, Response, UploadFile, File, Form
-from fastapi.responses import StreamingResponse
+from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, ConfigDict, Field
-from pymongo import ReturnDocument
 
 from app.db.database import get_db
-from app.config import settings
-from app.models.schemas import (
-    ClosetItem,
-    DressCode,
-    FinancialMetadata,
-    Formality,
-    GarmentAnalysis,
-    GarmentCondition,
-    GarmentGender,
-    GarmentQuality,
-    GarmentState,
-    Listing,
-    MarketplaceIntent,
-    RetailMetadata,
-    Source,
-    WeightedTag,
-)
 from app.services import repos
-from app.services.auth import (
-    get_current_user,
-    resolve_user_gemini_api_key,
-    resolve_user_gemini_model,
-)
-from app.services.fees import compute_fees
-from app.services.vision import garment_vision_service, get_garment_vision_service
+from app.services.auth import get_current_user
 from app.services.fashion_clip import fashion_clip_service
-from app.services.gemini_image_service import gemini_image_service, get_gemini_image_service
-from app.services.image_compression import (
-    compress_b64_image,
-    compress_image_bytes,
-    compress_image_url_or_b64,
-)
 from app.services import closet_service
-from app.api.v1.closet.common import (
-    _active_background_tasks,
-    _track_task,
-    _ANALYZE_CONCURRENCY,
-    _ANALYZE_LOCK,
-    _get_item_image_url,
-    _pick_segformer_mask_for_category,
-    _bytes_from_data_url,
-    _ensure_min_resolution,
-    _read_image_bytes_from_url,
-    _maybe_retry_stale_matte,
-    _run_background_matte,
-    _run_background_matte_and_analyze,
-    _run_background_reconstruction,
-    CreateItemIn,
-    UpdateItemIn,
-    logger,
-)
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
@@ -108,10 +55,16 @@ async def search_closet(
         raise HTTPException(400, "Empty query.")
 
     db = get_db()
+    _SLIM_SEARCH_PROJECTION = {
+        "clip_embedding": 1, "title": 1, "name": 1, "category": 1, "sub_category": 1,
+        "brand": 1, "color": 1, "clean_image_url": 1, "reconstructed_image_url": 1,
+        "thumbnail_data_url": 1, "created_at": 1, "id": 1, "group_id": 1, "group_role": 1,
+    }
     # Pull only items that have a stored embedding (others cannot be scored).
     candidates = await repos.find_many(
         db.closet_items,
         {"user_id": user["id"], "clip_embedding": {"$exists": True, "$ne": None}, "group_role": {"$ne": "member"}},
+        projection=_SLIM_SEARCH_PROJECTION,
         sort=[("created_at", -1)],
         limit=2000,
     )
@@ -245,6 +198,7 @@ async def complete_outfit(
                 "clip_embedding": {"$exists": True, "$ne": None},
                 "group_role": {"$ne": "member"},
             },
+            projection=_SLIM_SEARCH_PROJECTION,
             sort=[("created_at", -1)],
             limit=2000,
         )
@@ -445,7 +399,10 @@ async def get_sustainability_stats(
     """Calculate sustainability metrics (F5)."""
     db = get_db()
     
-    items_cursor = db.closet_items.find({"user_id": user["id"]})
+    items_cursor = db.closet_items.find(
+        {"user_id": user["id"]},
+        {"_id": 0, "wear_count": 1, "from_receipt": 1, "dpp_data": 1, "price_cents": 1}
+    )
     items = []
     async for item in items_cursor:
         items.append(item)

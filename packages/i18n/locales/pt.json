@@ -637,7 +637,8 @@
     "viewList": "Exibição em lista",
     "dpp": "DPP",
     "saveFailuresTitle": "Não foi possível salvar esses itens em seu armário. Por favor, tente enviá-los novamente.",
-    "garmentsCount": "{{count}} peças de roupa"
+    "garmentsCount": "{{count}} peças de roupa",
+    "views": "vistas"
   },
   "addItem": {
     "namePlaceholder": "ex.: Jaqueta jeans vintage",
@@ -1124,7 +1125,10 @@
     "banner": {
       "title": "Revisar e aprimorar",
       "subtitle": "Ajuste todos os detalhes identificados pelo 'The Eyes' — corrija a foto, adapte os atributos e prepare esta peça para o seu guarda-roupa ou marketplace."
-    }
+    },
+    "takePhoto": "Tirar foto",
+    "replacePhoto": "Substituir foto",
+    "useProfileShoeSize": "Do perfil: {{size}}"
   },
   "stylist": {
     "heroTitle": "Seu estilista pessoal com IA",
@@ -2032,7 +2036,17 @@
     "selectOrWriteTags": "Selecionar ou digitar tags",
     "tagsPlaceholder": "Digite uma tag e pressione Enter (ex: Trabalho, Verão, Liso)",
     "availableTags": "Do seu guarda-roupa:",
-    "noTagsFound": "Nenhuma tag encontrada. Digite acima para adicionar."
+    "noTagsFound": "Nenhuma tag encontrada. Digite acima para adicionar.",
+    "subtitle": "Gerencie seu perfil de estilo pessoal, medidas corporais, avatar de prova virtual e configurações de IA.",
+    "tiers": {
+      "free": "Gratuito",
+      "manage": "Manager",
+      "manager": "Manager",
+      "professional": "Profissional",
+      "club": "Club",
+      "pro": "Pro",
+      "business": "Empresarial"
+    }
   },
   "admin": {
     "title": "Administrador",
@@ -2311,7 +2325,8 @@
       "outerwear": "Agasalho",
       "shoes": "Sapatos",
       "accessory": "Acessório",
-      "dress": "Vestido"
+      "dress": "Vestido",
+      "other": "Outro"
     },
     "sub_category": {
       "boots": "Botas",
@@ -3460,7 +3475,34 @@
     "addFromClosetDesc": "Escolha uma peça de roupa do seu armário para colocar na mala.",
     "searchClosetPlaceholder": "Pesquise por título, cor, marca...",
     "allCategories": "Todos",
-    "noClosetItemsFound": "Nenhum item corresponde aos seus filtros."
+    "noClosetItemsFound": "Nenhum item corresponde aos seus filtros.",
+    "planTrip": "Planear a bagagem de viagem",
+    "destinationLabel": "DESTINO",
+    "durationLabel": "DURAÇÃO DA VIAGEM (DIAS)",
+    "durationDays": "{{count}} dias",
+    "vacation": "🏖️ Férias e lazer",
+    "business": "💼 Negócios e reuniões",
+    "cityBreak": "🏙️ Escapada urbana",
+    "event": "🥂 Formal / Casamento",
+    "active": "🏔️ Caminhadas e desporto",
+    "assistantChat": "Assistente de arrumação de malas",
+    "askPlaceholder": "Peça conselhos sobre a mala…",
+    "chatFallback": "Atualizei as sugestões da lista de bagagem em conformidade.",
+    "chatContactError": "Erro ao contactar o Assistente de Mala. Por favor, tente novamente.",
+    "generateListError": "Falha ao gerar a lista de bagagem.",
+    "time_all_day": "Dia todo",
+    "time_morning": "Manhã",
+    "time_afternoon": "Tarde",
+    "time_evening": "Noite",
+    "time_dinner": "Jantar",
+    "time_night": "Noite",
+    "time_casual": "Casual",
+    "time_formal": "Formal",
+    "noMissingItems": "Tudo pronto! Você tem todas as peças necessárias no seu armário para esta viagem.",
+    "noMissingItemsTitle": "Nenhum item em falta",
+    "missingItemsCount": "{{count}} item(ns) em falta",
+    "purposeDisplay": "Objetivo",
+    "archiveMissingItemsHeader": "Itens em falta na viagem"
   },
   "scanning": {
     "bounds": "Detectando Limites de Vestuário...",

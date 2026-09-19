@@ -10,6 +10,7 @@ import { ClosetAddScreen } from '@mobile/screens/closet/ClosetAddScreen';
 import { DppScannerScreen } from '@mobile/screens/closet/DppScannerScreen';
 import { AvatarScreen } from '@mobile/screens/closet/AvatarScreen';
 import { SharedOutfitScreen } from '@mobile/screens/closet/SharedOutfitScreen';
+import { SuitcaseScreen } from '@mobile/screens/me/SuitcaseScreen';
 
 const Stack = createNativeStackNavigator<ClosetStackParamList>();
 
@@ -23,6 +24,7 @@ export function ClosetStack() {
       <Stack.Screen name="DppScanner" component={DppScannerScreen} options={{ presentation: 'fullScreenModal' }} />
       <Stack.Screen name="Avatar" component={AvatarScreen} />
       <Stack.Screen name="SharedOutfit" component={SharedOutfitScreen} />
+      <Stack.Screen name="Suitcase" component={SuitcaseScreen} />
     </Stack.Navigator>
   );
 }

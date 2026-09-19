@@ -22,6 +22,7 @@ export type ClosetStackParamList = {
   DppScanner: undefined;
   Avatar: undefined;
   SharedOutfit: { outfitId: string };
+  Suitcase: undefined;
 };
 
 // ── Stylist Stack ─────────────────────────────────────────────────────────

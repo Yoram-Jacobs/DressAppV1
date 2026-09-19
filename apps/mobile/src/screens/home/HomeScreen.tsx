@@ -194,12 +194,17 @@ export default function HomeScreen() {
             </TouchableOpacity>
           </Animated.View>
 
-          <Text style={s.todayLabel}>
-            {t('home.todayLabel', { defaultValue: 'TODAY' })}
-          </Text>
+          {/* Eyebrow */}
+          <View style={s.eyebrowRow}>
+            <Lucide.Sparkles size={14} color={colors.primary} />
+            <Text style={[s.eyebrowText, { color: colors.primary }]}>
+              {t('home.eyebrow', { defaultValue: 'AI wardrobe assistant for everyday styling' })}
+            </Text>
+          </View>
+
           <Text style={s.greeting} testID="home-greeting">
-            {t('home.greeting', { defaultValue: 'Good morning,' })}{'\n'}
-            {displayName}.
+            {t('home.greeting', { defaultValue: 'Good morning,' })}{' '}
+            <Text style={{ color: colors.primary }}>{displayName}</Text>
           </Text>
           <Text style={s.stylistWarm}>
             {t('home.stylistWarmed', {
@@ -211,7 +216,7 @@ export default function HomeScreen() {
           <View style={s.ctaRow}>
             <TouchableOpacity
               testID="home-ask-stylist-cta"
-              style={[s.ctaBtn, s.ctaBtnPrimary, { backgroundColor: colors.accent }]}
+              style={[s.ctaBtn, s.ctaBtnPrimary, { backgroundColor: colors.primary }]}
               activeOpacity={0.85}
               onPress={() => navigation.navigate('StylistTab', { screen: 'Stylist' })}
             >
@@ -436,7 +441,7 @@ const makeStyles = (colors: ReturnType<typeof useTheme>['colors']) =>
     },
     hero: {
       backgroundColor: colors.sand,
-      borderRadius: radii.xl,
+      borderRadius: radii['2xl'],
       marginHorizontal: spacing[4],
       marginTop: spacing[1],
       marginBottom: spacing[4],
@@ -455,24 +460,28 @@ const makeStyles = (colors: ReturnType<typeof useTheme>['colors']) =>
     pulsingAddBtn: {
       flexDirection: 'row',
       alignItems: 'center',
-      gap: 4,
-      paddingHorizontal: spacing[3],
+      gap: 5,
+      paddingHorizontal: spacing[3.5],
       paddingVertical: spacing[2],
-      borderRadius: radii.lg,
-      ...shadows.sm,
+      borderRadius: radii.full,
+      ...shadows.md,
     },
     pulsingAddBtnText: {
       color: '#FACC15',
       fontFamily: fonts.bodyBold,
       fontSize: fontSizes.xs,
     },
-    todayLabel: {
+    eyebrowRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+      marginBottom: spacing[2],
+    },
+    eyebrowText: {
       fontFamily: fonts.bodyBold,
       fontSize: fontSizes.xs,
-      color: colors.mutedFg,
       letterSpacing: 1.5,
       textTransform: 'uppercase',
-      marginBottom: spacing[2],
     },
     greeting: {
       fontFamily: fonts.displayBold,
@@ -499,11 +508,13 @@ const makeStyles = (colors: ReturnType<typeof useTheme>['colors']) =>
       flexDirection: 'row',
       alignItems: 'center',
       gap: 6,
-      paddingHorizontal: spacing[4],
-      paddingVertical: spacing[2.5],
-      borderRadius: radii.lg,
+      paddingHorizontal: spacing[5],
+      paddingVertical: spacing[3],
+      borderRadius: radii.full,
     },
-    ctaBtnPrimary: {},
+    ctaBtnPrimary: {
+      ...shadows.sm,
+    },
     ctaBtnPrimaryLabel: {
       fontFamily: fonts.bodyBold,
       fontSize: fontSizes.xs,

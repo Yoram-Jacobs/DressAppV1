@@ -1492,6 +1492,11 @@
   resolved "https://registry.npmjs.org/@expo-google-fonts/playfair-display/-/playfair-display-0.4.2.tgz"
   integrity sha512-mWhBV59RUjSS3aYpytUb7UyHHTnXcHh7epAn7gq+M4XAEh5PuMKUrP8eiUfkJLb6UwHZCi7EhQpUzxHu5OL96w==
 
+"@expo-google-fonts/plus-jakarta-sans@^0.4.2":
+  version "0.4.2"
+  resolved "https://registry.yarnpkg.com/@expo-google-fonts/plus-jakarta-sans/-/plus-jakarta-sans-0.4.2.tgz#95d6640ecb3aa76c534fb4ef3490ec7b230c3b60"
+  integrity sha512-6LYVmVGwjQvH+uzzWlVc9+oMj4lkNQ41aymVDjO+x8aFk8kCye20wOyLomYMZaMezA++Uf1mZRCw3W3Fy/hxEA==
+
 "@expo/cli@^57.0.22":
   version "57.0.22"
   resolved "https://registry.yarnpkg.com/@expo/cli/-/cli-57.0.22.tgz#18b9c27f3ac1c3d90b38abbf0687f2b3862eee33"
@@ -13704,7 +13709,7 @@ requires-port@^1.0.0:
 
 reselect@5.1.1, reselect@5.2.0, reselect@^4.1.7, reselect@^5.1.0, reselect@^5.1.1:
   version "5.1.1"
-  resolved "https://registry.npmjs.org/reselect/-/reselect-5.1.1.tgz#c766b1eb5d558291e5e550298adb0becc24bb72e"
+  resolved "https://registry.yarnpkg.com/reselect/-/reselect-5.1.1.tgz#c766b1eb5d558291e5e550298adb0becc24bb72e"
   integrity sha512-K/BG6eIky/SBpzfHZv/dd+9JBFiS4SWV7FIujVyJRux6e45+73RaUHXLmIR1f7WOMaQ0U1km6qwklRQxpJJY0w==
 
 resolve-cwd@^3.0.0:

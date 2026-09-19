@@ -24,6 +24,7 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
+import { Image } from 'expo-image';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Button } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -174,12 +175,29 @@ export default function LoginScreen() {
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
+          {/* ── Editorial Image Hero ───────────────────────────────── */}
+          <View style={s.heroContainer}>
+            <Image
+              source={require('@mobile/assets/img/loginimg.webp')}
+              style={s.heroImage}
+              contentFit="cover"
+            />
+            <View style={s.heroOverlay} />
+            <View style={s.taglineCard}>
+              <Text style={s.taglineTitle}>
+                {t('auth.tagline', { defaultValue: 'Your AI wardrobe' })}
+              </Text>
+              <Text style={s.taglineSubtitle} numberOfLines={2}>
+                {t('auth.editorial', { defaultValue: 'Effortless style powered by artificial intelligence.' })}
+              </Text>
+            </View>
+          </View>
+
           {/* ── Brand header ─────────────────────────────────────────── */}
           <View style={s.brandBlock}>
             <Text style={s.brandName} accessibilityRole="header">
               DressApp
             </Text>
-            <Text style={s.tagline}>{t('auth.tagline', { defaultValue: 'Your AI wardrobe' })}</Text>
           </View>
 
           {/* ── Card ─────────────────────────────────────────────────── */}
@@ -190,7 +208,7 @@ export default function LoginScreen() {
             {/* Google button */}
             <Button
               testID="login-google-button"
-              mode="outlined"
+              mode="contained"
               icon={() => (
                 <Text style={s.googleGlyph}>{GOOGLE_LABEL}</Text>
               )}
@@ -222,9 +240,6 @@ export default function LoginScreen() {
               {t('auth.noAccount', { defaultValue: "Don't have an account? Register" })}
             </Button>
           </View>
-
-          {/* ── Editorial footnote ───────────────────────────────────── */}
-          <Text style={s.editorial}>{t('auth.editorial', { defaultValue: '' })}</Text>
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
@@ -243,80 +258,126 @@ const makeStyles = (colors: ReturnType<typeof useTheme>['colors']) =>
     },
     scroll: {
       flexGrow: 1,
+      paddingHorizontal: spacing[5],
+      paddingVertical: spacing[6],
       justifyContent: 'center',
-      paddingHorizontal: spacing[6],
-      paddingVertical: spacing[10],
+    },
+
+    // Hero image
+    heroContainer: {
+      width: '100%',
+      height: 190,
+      borderRadius: radii.xl,
+      overflow: 'hidden',
+      marginBottom: spacing[5],
+      position: 'relative',
+      ...shadows.md,
+    },
+    heroImage: {
+      width: '100%',
+      height: '100%',
+    },
+    heroOverlay: {
+      ...StyleSheet.absoluteFill,
+      backgroundColor: 'rgba(0,0,0,0.25)',
+    },
+    taglineCard: {
+      position: 'absolute',
+      bottom: 12,
+      left: 12,
+      right: 12,
+      backgroundColor: 'rgba(255, 255, 255, 0.92)',
+      borderRadius: radii.lg,
+      paddingHorizontal: 14,
+      paddingVertical: 10,
+      shadowColor: '#000',
+      shadowOpacity: 0.1,
+      shadowOffset: { width: 0, height: 2 },
+      shadowRadius: 4,
+      elevation: 3,
+    },
+    taglineTitle: {
+      fontFamily: fonts.bodyBold,
+      fontSize: 13,
+      fontWeight: '700',
+      color: '#1F5C45',
+      marginBottom: 2,
+    },
+    taglineSubtitle: {
+      fontFamily: fonts.bodyMedium,
+      fontSize: 11,
+      fontStyle: 'italic',
+      color: '#666666',
+      lineHeight: 15,
     },
 
     // Brand block
     brandBlock: {
       alignItems: 'center',
-      marginBottom: spacing[8],
+      marginBottom: spacing[4],
     },
     brandName: {
       fontFamily: fonts.displayBold,
-      fontSize: fontSizes['4xl'],
-      color: colors.foreground,
-      letterSpacing: -1,
-    },
-    tagline: {
-      fontFamily: fonts.body,
-      fontSize: fontSizes.sm,
-      color: colors.mutedFg,
-      marginTop: spacing[1],
-      textTransform: 'uppercase',
-      letterSpacing: 1.2,
+      fontSize: fontSizes['3xl'],
+      color: '#1F5C45',
+      fontWeight: '800',
+      letterSpacing: -0.5,
     },
 
     // Card
     card: {
       backgroundColor: colors.card,
       borderRadius: radii.xl,
-      padding: spacing[7],
+      padding: spacing[6],
       borderWidth: 1,
       borderColor: colors.border,
       ...shadows.md,
     },
     heading: {
       fontFamily: fonts.displayBold,
-      fontSize: fontSizes['3xl'],
+      fontSize: fontSizes['2xl'],
+      fontWeight: '700',
       color: colors.foreground,
-      lineHeight: fontSizes['3xl'] * 1.05,
-      marginBottom: spacing[2],
+      marginBottom: spacing[1],
     },
     sub: {
       fontFamily: fonts.body,
-      fontSize: fontSizes.sm,
+      fontSize: fontSizes.xs,
       color: colors.mutedFg,
-      marginBottom: spacing[6],
+      marginBottom: spacing[5],
     },
 
     // Google button
     googleBtn: {
-      borderRadius: radii.md,
-      borderColor: colors.border,
-      borderWidth: 1,
+      borderRadius: radii.full,
+      backgroundColor: '#1F5C45',
+      shadowColor: '#1F5C45',
+      shadowOpacity: 0.25,
+      shadowOffset: { width: 0, height: 2 },
+      shadowRadius: 4,
+      elevation: 2,
     },
     googleBtnContent: {
       height: 48,
       flexDirection: 'row-reverse',
     },
     googleBtnLabel: {
-      fontFamily: fonts.bodySemiBold,
-      fontSize: fontSizes.base,
-      color: colors.foreground,
+      fontFamily: fonts.bodyBold,
+      fontSize: fontSizes.sm,
+      fontWeight: '700',
+      color: '#FFFFFF',
     },
     googleGlyph: {
       fontFamily: fonts.bodySemiBold,
       fontSize: fontSizes.base,
-      color: '#4285F4',
+      color: '#FAD459',
     },
 
     // Divider
     dividerRow: {
       flexDirection: 'row',
       alignItems: 'center',
-      marginVertical: spacing[5],
+      marginVertical: spacing[4],
       gap: spacing[3],
     },
     dividerLine: {
@@ -335,20 +396,11 @@ const makeStyles = (colors: ReturnType<typeof useTheme>['colors']) =>
     // Ghost / text buttons
     ghostBtn: {
       marginTop: spacing[1],
+      borderRadius: radii.full,
     },
     ghostLabel: {
-      fontFamily: fonts.body,
-      fontSize: fontSizes.sm,
-      color: colors.accent,
-    },
-
-    // Editorial footnote
-    editorial: {
-      fontFamily: fonts.body,
+      fontFamily: fonts.bodySemiBold,
       fontSize: fontSizes.xs,
-      color: colors.mutedFg,
-      textAlign: 'center',
-      marginTop: spacing[8],
-      paddingHorizontal: spacing[4],
+      color: '#1F5C45',
     },
   });

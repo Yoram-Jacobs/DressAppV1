@@ -153,14 +153,34 @@ async def list_users(
         async for row in db.token_usage.aggregate(pipeline_daily):
             daily_counts[row["_id"]] = row["count"]
 
+        # Batch closet counts aggregate (replaces N+1 count_documents)
+        closet_counts = {}
+        async for row in db.closet_items.aggregate([
+            {"$match": {"user_id": {"$in": user_ids}}},
+            {"$group": {"_id": "$user_id", "count": {"$sum": 1}}}
+        ]):
+            closet_counts[row["_id"]] = row["count"]
+
+        # Batch listing counts aggregate (replaces N+1 count_documents)
+        listing_counts = {}
+        async for row in db.listings.aggregate([
+            {"$match": {"seller_id": {"$in": user_ids}}},
+            {"$group": {"_id": "$seller_id", "count": {"$sum": 1}}}
+        ]):
+            listing_counts[row["_id"]] = row["count"]
+
+        # Batch captured topups sum aggregate (replaces N+1 credit_topups scan)
+        topup_sums = {}
+        async for row in db.credit_topups.aggregate([
+            {"$match": {"user_id": {"$in": user_ids}, "status": "captured"}},
+            {"$group": {"_id": "$user_id", "total_cents": {"$sum": "$amount_cents"}}}
+        ]):
+            topup_sums[row["_id"]] = row["total_cents"]
+
     for doc in user_docs:
-        # add lightweight per-user counts
-        doc["closet_count"] = await db.closet_items.count_documents(
-            {"user_id": doc["id"]}
-        )
-        doc["listing_count"] = await db.listings.count_documents(
-            {"seller_id": doc["id"]}
-        )
+        uid = doc["id"]
+        doc["closet_count"] = closet_counts.get(uid, 0)
+        doc["listing_count"] = listing_counts.get(uid, 0)
         doc["calendar_connected"] = bool(
             (doc.get("google_calendar_tokens") or {}).get("refresh_token")
         )
@@ -174,15 +194,12 @@ async def list_users(
         doc["credits_used"] = ai_config.get("credits_used_this_month", 0)
         doc["dressapp_fee"] = doc["credits_used"] * 0.005
 
-        # Calculate Billing History (overall payment sum of captured topups)
-        total_payment_cents = 0
-        async for t_doc in db.credit_topups.find({"user_id": doc["id"], "status": "captured"}):
-            total_payment_cents += t_doc.get("amount_cents", 0)
-        doc["billing_history_sum"] = total_payment_cents / 100.0
+        # Billing History sum
+        doc["billing_history_sum"] = (topup_sums.get(uid, 0)) / 100.0
 
         # Add total_requests and daily_requests
-        doc["total_requests"] = total_counts.get(doc["id"], 0)
-        doc["daily_requests"] = daily_counts.get(doc["id"], 0)
+        doc["total_requests"] = total_counts.get(uid, 0)
+        doc["daily_requests"] = daily_counts.get(uid, 0)
 
         items.append(doc)
     return {"items": items, "total": total, "skip": skip, "limit": limit}

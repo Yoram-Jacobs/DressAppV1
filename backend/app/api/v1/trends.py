@@ -7,15 +7,14 @@ from typing import Any
 
 import httpx
 from fastapi import APIRouter, Depends, HTTPException, Query, Header, Response
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
 from app.db.database import get_db
-from app.services.auth import get_current_user, get_current_user_optional, require_admin
+from app.services.auth import get_current_user, require_admin
 from app.services.trend_scout import (
     BUCKETS,
     fashion_scout_feed,
     latest_trend_cards,
-    rank_cards_for_user,
     run_trend_scout,
     _country_codes,
     get_user_trend_scout_settings,

@@ -54,6 +54,7 @@ import { ScanningPipelineOverlay } from '@mobile/components/ScanningPipelineOver
 import { WeightedList, WeightedItem } from '@mobile/components/WeightedList';
 import { TaxonomySelectModal } from '@mobile/components/TaxonomySelectModal';
 import { DuplicatePreflightDialog } from '@mobile/components/DuplicatePreflightDialog';
+import { PageHeroBanner } from '@mobile/components/common';
 import {
   findDuplicatesInCloset,
   computeSha256,
@@ -1124,34 +1125,49 @@ export function ClosetAddScreen() {
 
   return (
     <SafeAreaView style={[styles.root, { backgroundColor: colors.background }]} edges={['top']}>
-      {/* ── TOP HEADER ───────────────────────────────────────────────── */}
-      <View style={[styles.topHeader, { borderBottomColor: colors.border }]}>
-        <TouchableOpacity onPress={handleBack} style={styles.headerBtn}>
-          <Lucide.ArrowLeft size={20} color={colors.foreground} />
-        </TouchableOpacity>
+      {/* ── Editorial Hero Banner ───────────────────────────────────── */}
+      <PageHeroBanner
+        image={require('@mobile/assets/img/inner6.webp')}
+        minHeight={155}
+      >
+        <View style={styles.bannerHeader}>
+          <View style={styles.bannerTopRow}>
+            <TouchableOpacity onPress={handleBack} style={styles.bannerBackBtn}>
+              <Lucide.ArrowLeft size={18} color="#FFFFFF" />
+            </TouchableOpacity>
 
-        <Text style={[styles.headerTitle, { color: colors.foreground }]}>
-          {t('closet.addItem', { defaultValue: 'Add Item' })}
-        </Text>
-
-        {totalCards > 0 ? (
-          <TouchableOpacity
-            onPress={handleSaveAll}
-            disabled={isSaving || readyCount === 0}
-            style={[styles.saveHeaderBtn, { backgroundColor: colors.accent, opacity: readyCount === 0 ? 0.5 : 1 }]}
-          >
-            {isSaving ? (
-              <ActivityIndicator size="small" color="#FFF" />
-            ) : (
-              <Text style={styles.saveHeaderBtnText}>
-                {t('common.save', { defaultValue: 'Save' })} {totalCards > 1 ? `(${readyCount})` : ''}
+            <View style={{ flex: 1 }}>
+              <Text style={styles.bannerTitle} numberOfLines={1}>
+                {t('closet.addItem', { defaultValue: 'Add Item' })}
               </Text>
+            </View>
+
+            {totalCards > 0 ? (
+              <TouchableOpacity
+                onPress={handleSaveAll}
+                disabled={isSaving || readyCount === 0}
+                style={[styles.bannerSaveBtn, { opacity: readyCount === 0 ? 0.5 : 1 }]}
+              >
+                {isSaving ? (
+                  <ActivityIndicator size="small" color="#FFF" />
+                ) : (
+                  <Text style={styles.bannerSaveBtnText}>
+                    {t('common.save', { defaultValue: 'Save' })} {totalCards > 1 ? `(${readyCount})` : ''}
+                  </Text>
+                )}
+              </TouchableOpacity>
+            ) : (
+              <View style={{ width: 36 }} />
             )}
-          </TouchableOpacity>
-        ) : (
-          <View style={{ width: 40 }} />
-        )}
-      </View>
+          </View>
+
+          <Text style={styles.bannerSubtitle} numberOfLines={2}>
+            {t('addItem.heroSubtitle', {
+              defaultValue: 'Snap a photo or import a document — our AI detects, crops, and catalogs every detail into your closet.',
+            })}
+          </Text>
+        </View>
+      </PageHeroBanner>
 
       {/* ── STEPPER BAR ─────────────────────────────────────────────── */}
       <View style={[styles.stepperContainer, { borderBottomColor: colors.border }]}>
@@ -2065,30 +2081,55 @@ const styles = StyleSheet.create({
   root: {
     flex: 1,
   },
-  topHeader: {
+  bannerHeader: {
+    paddingHorizontal: spacing.md,
+    paddingTop: spacing.xs,
+    paddingBottom: spacing.md,
+  },
+  bannerTopRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    borderBottomWidth: 1,
+    gap: spacing.sm,
   },
-  headerBtn: {
-    padding: 6,
+  bannerBackBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: radii.full,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  headerTitle: {
+  bannerTitle: {
     fontFamily: fonts.displayBold,
-    fontSize: fontSizes.lg,
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#FFFFFF',
   },
-  saveHeaderBtn: {
+  bannerSaveBtn: {
     paddingHorizontal: 16,
     paddingVertical: 7,
     borderRadius: radii.full,
+    backgroundColor: '#1F5C45',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.3)',
+    shadowColor: '#1F5C45',
+    shadowOpacity: 0.3,
+    shadowOffset: { width: 0, height: 2 },
+    shadowRadius: 4,
+    elevation: 3,
   },
-  saveHeaderBtnText: {
+  bannerSaveBtnText: {
     color: '#FFF',
     fontFamily: fonts.bodyBold,
     fontSize: fontSizes.xs,
+    fontWeight: '600',
+  },
+  bannerSubtitle: {
+    fontFamily: fonts.body,
+    fontSize: 12,
+    lineHeight: 18,
+    color: 'rgba(255, 255, 255, 0.7)',
+    marginTop: 4,
   },
   stepperContainer: {
     borderBottomWidth: 1,
@@ -2194,7 +2235,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 8,
     paddingVertical: 13,
-    borderRadius: radii.lg,
+    borderRadius: radii.full,
   },
   primaryActionBtnText: {
     color: '#FFF',
@@ -2207,7 +2248,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 8,
     paddingVertical: 12,
-    borderRadius: radii.lg,
+    borderRadius: radii.full,
     borderWidth: 1,
   },
   secondaryActionBtnText: {

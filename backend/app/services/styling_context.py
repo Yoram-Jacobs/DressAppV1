@@ -1,4 +1,4 @@
-﻿"""backend/app/services/styling_context.py
+"""backend/app/services/styling_context.py
 
 Deep module: AI Stylist Context Synthesis Engine.
 

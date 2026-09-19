@@ -637,7 +637,8 @@
     "viewList": "Vista elenco",
     "dpp": "DPP",
     "saveFailuresTitle": "Impossibile salvare questi elementi nel tuo armadio. Prova a caricarli di nuovo.",
-    "garmentsCount": "{{count}} capi"
+    "garmentsCount": "{{count}} capi",
+    "views": "viste"
   },
   "addItem": {
     "namePlaceholder": "es. Giacca di jeans vintage",
@@ -1124,7 +1125,10 @@
     "banner": {
       "title": "Revisiona e perfeziona",
       "subtitle": "Perfeziona ogni dettaglio rilevato da 'The Eyes': modifica la foto, regola gli attributi e prepara questo capo per il tuo guardaroba o il marketplace."
-    }
+    },
+    "takePhoto": "Scatta foto",
+    "replacePhoto": "Sostituisci foto",
+    "useProfileShoeSize": "Dal profilo: {{size}}"
   },
   "stylist": {
     "heroTitle": "Il tuo personal stylist AI",
@@ -2032,7 +2036,17 @@
     "selectOrWriteTags": "Seleziona o scrivi tag",
     "tagsPlaceholder": "Scrivi un tag e premi Invio (es. Lavoro, Estate, Tinta unita)",
     "availableTags": "Dal tuo guardaroba:",
-    "noTagsFound": "Nessun tag trovato. Scrivi sopra per aggiungerne."
+    "noTagsFound": "Nessun tag trovato. Scrivi sopra per aggiungerne.",
+    "subtitle": "Gestisci il tuo profilo di stile personale, le misure del corpo, l'avatar per il camerino virtuale e le impostazioni IA.",
+    "tiers": {
+      "free": "Gratuito",
+      "manage": "Manager",
+      "manager": "Manager",
+      "professional": "Professionale",
+      "club": "Club",
+      "pro": "Pro",
+      "business": "Business"
+    }
   },
   "admin": {
     "title": "Amministratore",
@@ -2311,7 +2325,8 @@
       "outerwear": "Capospalla",
       "shoes": "Scarpe",
       "accessory": "Accessorio",
-      "dress": "Abito"
+      "dress": "Abito",
+      "other": "Altro"
     },
     "sub_category": {
       "boots": "Stivali",
@@ -3460,7 +3475,34 @@
     "addFromClosetDesc": "Scegli un capo dal tuo armadio da mettere in valigia.",
     "searchClosetPlaceholder": "Cerca per titolo, colore, marca...",
     "allCategories": "Tutto",
-    "noClosetItemsFound": "Nessun articolo corrisponde ai tuoi filtri."
+    "noClosetItemsFound": "Nessun articolo corrisponde ai tuoi filtri.",
+    "planTrip": "Pianifica i tuoi bagagli da viaggio",
+    "destinationLabel": "DESTINAZIONE",
+    "durationLabel": "DURATA DEL VIAGGIO (GIORNI)",
+    "durationDays": "{{count}} giorni",
+    "vacation": "🏖️ Vacanza e tempo libero",
+    "business": "💼 Affari e riunioni",
+    "cityBreak": "🏙️ Fuga in città",
+    "event": "🥂 Formale / Matrimonio",
+    "active": "🏔️ Escursionismo e sport",
+    "assistantChat": "Assistente per la valigia",
+    "askPlaceholder": "Chiedi consigli per la valigia…",
+    "chatFallback": "Ho aggiornato i suggerimenti della lista bagagli di conseguenza.",
+    "chatContactError": "Errore durante il contatto con l'Assistente Valigia. Riprova.",
+    "generateListError": "Impossibile generare la lista di preparazione.",
+    "time_all_day": "Tutto il giorno",
+    "time_morning": "Mattina",
+    "time_afternoon": "Pomeriggio",
+    "time_evening": "Sera",
+    "time_dinner": "Cena",
+    "time_night": "Notte",
+    "time_casual": "Casual",
+    "time_formal": "Formale",
+    "noMissingItems": "Tutto pronto! Nel tuo guardaroba ci sono tutti i capi necessari per questo viaggio.",
+    "noMissingItemsTitle": "Nessun articolo mancante",
+    "missingItemsCount": "{{count}} articolo/i mancante/i",
+    "purposeDisplay": "Scopo",
+    "archiveMissingItemsHeader": "Articoli mancanti del viaggio"
   },
   "scanning": {
     "bounds": "Rilevamento dei limiti degli indumenti...",

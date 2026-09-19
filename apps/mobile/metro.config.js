@@ -69,6 +69,7 @@ config.resolver.sourceExts = [
 // Everything else resolves through normal hierarchical lookup + nodeModulesPaths.
 config.resolver.extraNodeModules = {
   'llama.rn': LLAMA_STUB,
+  'react-i18next': path.resolve(projectRoot, 'node_modules/react-i18next'),
 };
 
 const finalConfig = withNativewind(config, {

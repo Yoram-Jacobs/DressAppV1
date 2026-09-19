@@ -16,11 +16,27 @@ export const LanguageSync = () => {
   const { user } = useAuth();
   const { i18n } = useTranslation();
 
-  // If the logged-in user has a preferred_language saved in the DB, adopt it.
+  // If the logged-in user has a preferred_language saved in the DB, adopt it
+  // on initial session mount unless a local preference has been explicitly chosen.
   useEffect(() => {
     const rawLang = user?.preferred_language;
     const lang = typeof rawLang === 'string' ? rawLang.toLowerCase() : rawLang;
     const current = (i18n.language || 'en').split('-')[0].toLowerCase();
+
+    let storedLang = null;
+    try {
+      storedLang = localStorage.getItem('dressapp.lang');
+      if (storedLang) storedLang = storedLang.toLowerCase();
+    } catch { /* ignore */ }
+
+    // If local storage has an active preference that matches current i18n, honor it
+    if (storedLang && SUPPORTED_CODES.has(storedLang)) {
+      if (current !== storedLang) {
+        i18n.changeLanguage(storedLang);
+      }
+      return;
+    }
+
     if (lang && SUPPORTED_CODES.has(lang) && current !== lang) {
       i18n.changeLanguage(lang);
       try { localStorage.setItem('dressapp.lang', lang); } catch { /* ignore */ }

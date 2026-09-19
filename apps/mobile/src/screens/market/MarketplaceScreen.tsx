@@ -37,6 +37,7 @@ import { labelForCategory, labelForIntent, labelForCondition } from '@mobile/lib
 import { getItemImageUrl, resolveImageUrl } from '@mobile/lib/imageUtils';
 import { HelpFloater } from '@mobile/components/help';
 import { ScrollToTopFloater } from '@mobile/components/common/ScrollToTopFloater';
+import { PageHeroBanner } from '@mobile/components/common';
 import type { MarketStackParamList } from '@mobile/navigation/types';
 
 type MarketNavProp = NativeStackNavigationProp<MarketStackParamList, 'Marketplace'>;
@@ -292,58 +293,68 @@ export function MarketplaceScreen() {
 
   return (
     <SafeAreaView style={[s.root, { backgroundColor: colors.background }]} edges={['top']}>
-      {/* Top Header */}
-      <View style={[s.header, { borderBottomColor: colors.border }]}>
-        <View>
-          <Text style={[s.preTitle, { color: colors.mutedFg }]}>
-            {t('market.title', { defaultValue: 'Marketplace' })}
-          </Text>
-          <Text style={[s.headerTitle, { color: colors.foreground }]}>
-            {t('market.hero', { defaultValue: 'Swap & Shop' })}
-          </Text>
-        </View>
+      {/* ── Editorial Hero Banner ───────────────────────────────────── */}
+      <PageHeroBanner
+        image={require('@mobile/assets/img/inner6.webp')}
+        minHeight={165}
+      >
+        <View style={s.bannerHeader}>
+          <View style={s.bannerTopRow}>
+            <View style={{ flex: 1 }}>
+              <Text style={s.bannerTitle} numberOfLines={1}>
+                {t('market.title', { defaultValue: 'Marketplace' })} - {t('market.hero', { defaultValue: 'Swap & Shop' })}
+              </Text>
+            </View>
 
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs }}>
-          <HelpFloater screenTopic="marketplace" />
-          <TouchableOpacity
-            style={[s.createBtn, { backgroundColor: colors.primary }]}
-            onPress={() => navigation.navigate('CreateListing')}
-            activeOpacity={0.8}
-          >
-            <Lucide.Plus size={16} color="#FFF" />
-            <Text style={s.createBtnText}>{t('market.sell', { defaultValue: 'List Item' })}</Text>
-          </TouchableOpacity>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs }}>
+              <HelpFloater screenTopic="marketplace" />
+              <TouchableOpacity
+                style={s.bannerCreateBtn}
+                onPress={() => navigation.navigate('CreateListing')}
+                activeOpacity={0.85}
+              >
+                <Lucide.Plus size={15} color="#FFF" />
+                <Text style={s.bannerCreateBtnText}>{t('market.sell', { defaultValue: 'List Item' })}</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+
+          <Text style={s.bannerSubtitle} numberOfLines={2}>
+            {t('market.heroSubtitle', {
+              defaultValue: 'Discover pre-loved fashion, list your wardrobe, or connect with nearby buyers and sellers.',
+            })}
+          </Text>
         </View>
-      </View>
+      </PageHeroBanner>
 
       {/* Main Tabs (Browse / My Listings / Transactions) */}
       <View style={[s.mainTabs, { backgroundColor: colors.card, borderBottomColor: colors.border }]}>
         <TouchableOpacity
-          style={[s.mainTabBtn, activeMainTab === 'browse' && { borderBottomColor: colors.primary, borderBottomWidth: 2 }]}
+          style={[s.mainTabPill, activeMainTab === 'browse' && s.mainTabPillActive]}
           onPress={() => setActiveMainTab('browse')}
         >
-          <Lucide.Store size={16} color={activeMainTab === 'browse' ? colors.primary : colors.mutedFg} />
-          <Text style={[s.mainTabLabel, { color: activeMainTab === 'browse' ? colors.primary : colors.mutedFg }]}>
+          <Lucide.Store size={15} color={activeMainTab === 'browse' ? '#FFFFFF' : colors.mutedFg} />
+          <Text style={[s.mainTabLabel, { color: activeMainTab === 'browse' ? '#FFFFFF' : colors.mutedFg }]}>
             {t('market.browse', { defaultValue: 'Browse' })}
           </Text>
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={[s.mainTabBtn, activeMainTab === 'my_listings' && { borderBottomColor: colors.primary, borderBottomWidth: 2 }]}
+          style={[s.mainTabPill, activeMainTab === 'my_listings' && s.mainTabPillActive]}
           onPress={() => setActiveMainTab('my_listings')}
         >
-          <Lucide.Tag size={16} color={activeMainTab === 'my_listings' ? colors.primary : colors.mutedFg} />
-          <Text style={[s.mainTabLabel, { color: activeMainTab === 'my_listings' ? colors.primary : colors.mutedFg }]}>
+          <Lucide.Tag size={15} color={activeMainTab === 'my_listings' ? '#FFFFFF' : colors.mutedFg} />
+          <Text style={[s.mainTabLabel, { color: activeMainTab === 'my_listings' ? '#FFFFFF' : colors.mutedFg }]}>
             {t('market.myListings', { defaultValue: 'My Listings' })}
           </Text>
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={[s.mainTabBtn, activeMainTab === 'transactions' && { borderBottomColor: colors.primary, borderBottomWidth: 2 }]}
+          style={[s.mainTabPill, activeMainTab === 'transactions' && s.mainTabPillActive]}
           onPress={() => setActiveMainTab('transactions')}
         >
-          <Lucide.Receipt size={16} color={activeMainTab === 'transactions' ? colors.primary : colors.mutedFg} />
-          <Text style={[s.mainTabLabel, { color: activeMainTab === 'transactions' ? colors.primary : colors.mutedFg }]}>
+          <Lucide.Receipt size={15} color={activeMainTab === 'transactions' ? '#FFFFFF' : colors.mutedFg} />
+          <Text style={[s.mainTabLabel, { color: activeMainTab === 'transactions' ? '#FFFFFF' : colors.mutedFg }]}>
             {t('market.orders', { defaultValue: 'Orders' })}
           </Text>
         </TouchableOpacity>
@@ -556,53 +567,90 @@ function makeStyles(c: any) {
   return StyleSheet.create({
     root: { flex: 1 },
     center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-    header: {
+    bannerHeader: {
+      paddingHorizontal: spacing[4],
+      paddingTop: spacing[1],
+      paddingBottom: spacing[3],
+    },
+    bannerTopRow: {
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'space-between',
-      paddingHorizontal: spacing[4],
-      paddingVertical: spacing[3],
-      borderBottomWidth: 1,
+      gap: spacing[2],
     },
-    preTitle: {
-      fontFamily: fonts.bodyMedium,
-      fontSize: fontSizes.xs,
-      textTransform: 'uppercase',
-      letterSpacing: 0.5,
-    },
-    headerTitle: {
-      fontFamily: fonts.display,
-      fontSize: fontSizes['2xl'],
+    bannerTitle: {
+      fontFamily: fonts.displayBold,
+      fontSize: 20,
+      color: '#FFFFFF',
       fontWeight: '700',
+    },
+    bannerSubtitle: {
+      fontFamily: fonts.body,
+      fontSize: 12,
+      lineHeight: 18,
+      color: 'rgba(255, 255, 255, 0.7)',
+      marginTop: 4,
+    },
+    bannerCreateBtn: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 5,
+      backgroundColor: '#1F5C45',
+      paddingHorizontal: 14,
+      paddingVertical: 7,
+      borderRadius: radii.full,
+      borderWidth: 1,
+      borderColor: 'rgba(255, 255, 255, 0.25)',
+      shadowColor: '#1F5C45',
+      shadowOpacity: 0.3,
+      shadowOffset: { width: 0, height: 2 },
+      shadowRadius: 4,
+      elevation: 3,
+    },
+    bannerCreateBtnText: {
+      color: '#FFFFFF',
+      fontFamily: fonts.bodyBold,
+      fontSize: 12,
+      fontWeight: '600',
     },
     createBtn: {
       flexDirection: 'row',
       alignItems: 'center',
       gap: 6,
-      paddingHorizontal: spacing[3],
-      paddingVertical: spacing[2],
+      paddingHorizontal: spacing[4],
+      paddingVertical: spacing[2.5],
       borderRadius: radii.full,
     },
     createBtnText: {
-      fontFamily: fonts.bodySemiBold,
+      fontFamily: fonts.bodyBold,
       fontSize: fontSizes.sm,
       color: '#FFF',
     },
     mainTabs: {
       flexDirection: 'row',
+      paddingHorizontal: spacing[4],
+      paddingVertical: spacing[2],
+      gap: spacing[2],
       borderBottomWidth: 1,
     },
-    mainTabBtn: {
+    mainTabPill: {
       flex: 1,
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'center',
       gap: 6,
-      paddingVertical: spacing[3],
+      paddingVertical: spacing[2],
+      borderRadius: radii.full,
+      borderWidth: 1,
+      borderColor: 'transparent',
+    },
+    mainTabPillActive: {
+      backgroundColor: '#1F5C45',
+      borderColor: '#1F5C45',
     },
     mainTabLabel: {
-      fontFamily: fonts.bodyMedium,
-      fontSize: fontSizes.sm,
+      fontFamily: fonts.bodyBold,
+      fontSize: fontSizes.xs,
     },
     searchRow: {
       paddingHorizontal: spacing[4],

@@ -24,6 +24,7 @@ import {
   Alert,
   RefreshControl,
   I18nManager,
+  BackHandler,
 } from 'react-native';
 import { Image } from 'expo-image';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -37,6 +38,7 @@ import { api } from '@mobile/lib/api';
 import { useSuitcaseStore, suitcaseStore, SuitcaseItem } from '@mobile/lib/stores/suitcaseStore';
 import { useClosetStore } from '@mobile/lib/stores/closetStore';
 import { ScrollToTopFloater } from '@mobile/components/common/ScrollToTopFloater';
+import { PageHeroBanner } from '@mobile/components/common';
 
 const PURPOSES = [
   { id: 'vacation', labelKey: 'suitcase.vacation', fallback: '🏖️ Vacation / Leisure' },
@@ -49,7 +51,8 @@ const PURPOSES = [
 const DURATIONS = [3, 5, 7, 10, 14] as const;
 
 export function SuitcaseScreen() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const isRtl = I18nManager.isRTL || i18n.language === 'he' || i18n.language === 'ar';
   const { colors } = useTheme();
   const navigation = useNavigation();
   const suitcaseState = useSuitcaseStore();
@@ -78,6 +81,32 @@ export function SuitcaseScreen() {
     }
   };
 
+  const handleBack = useCallback(() => {
+    try {
+      if (navigation.canGoBack()) {
+        navigation.goBack();
+      } else {
+        (navigation as any).navigate('Profile');
+      }
+    } catch {
+      try {
+        (navigation as any).navigate('Profile');
+      } catch {
+        // no-op
+      }
+    }
+  }, [navigation]);
+
+  useEffect(() => {
+    const sub = BackHandler.addEventListener('hardwareBackPress', () => {
+      handleBack();
+      return true;
+    });
+    return () => {
+      sub.remove();
+    };
+  }, [handleBack]);
+
   useEffect(() => {
     suitcaseStore.prewarm({ t });
   }, [t]);
@@ -90,27 +119,43 @@ export function SuitcaseScreen() {
 
   const handleGeneratePackingList = async () => {
     if (!destination.trim()) {
-      Alert.alert(t('common.error', { defaultValue: 'Error' }), t('suitcase.destRequired', { defaultValue: 'Please enter a destination.' }));
+      Alert.alert(
+        t('common.error', { defaultValue: 'Error' }),
+        t('suitcase.destRequired', { defaultValue: 'Please enter a destination.' })
+      );
       return;
     }
 
     setLoading(true);
     try {
+      const now = new Date();
+      const depTime = now.toISOString();
+      const retDate = new Date(now.getTime() + selectedDuration * 24 * 60 * 60 * 1000);
+      const retTime = retDate.toISOString();
+
       const res = await (api as any).packSuitcase?.({
         destinations: destination,
         purpose: selectedPurpose,
+        preferred_style: 'casual chic',
+        departure_time: depTime,
+        return_time: retTime,
         duration_days: selectedDuration,
       });
 
       if (res) {
-        const rawList = res.items || res.packing_list || [];
+        const rawList = res.packing_list || res.items || [];
         const items: SuitcaseItem[] = rawList.map((it: any, idx: number) => ({
           id: it.id || `pack_${idx}`,
-          name: it.name || it.item_name || 'Garment',
+          name: it.title || it.name || it.item_name || 'Garment',
           category: it.category || 'Tops',
           count: it.count || 1,
-          packed: false,
-          image_url: it.image_url,
+          packed: Boolean(it.checked || it.packed),
+          image_url:
+            it.image_url ||
+            it.thumbnail_data_url ||
+            it.clean_image_url ||
+            it.reconstructed_image_url ||
+            it.original_image_url,
         }));
 
         suitcaseStore.updateActiveSuitcase({
@@ -119,22 +164,62 @@ export function SuitcaseScreen() {
           purpose: selectedPurpose,
           status: 'active',
           packing_list: items,
-          missing_notes: res.weather?.advice,
+          missing_notes: res.weather?.advice || res.cultural_guidelines || res.danger_zones_info,
         });
+
+        // Also persist/approve to backend so web and database stay synchronized
+        try {
+          await (api as any).approveSuitcase?.({
+            destinations: destination,
+            purpose: selectedPurpose,
+            preferred_style: 'casual chic',
+            departure_time: depTime,
+            return_time: retTime,
+            outfits: res.outfits || [],
+            packing_list: res.packing_list || items,
+            missing_notes: res.danger_zones_info || res.cultural_guidelines || '',
+            local_fashion_stores: res.local_fashion_stores || [],
+            missing_items: res.missing_items || [],
+          });
+        } catch {
+          // Non-blocking auto-approval
+        }
       }
     } catch (e: any) {
-      Alert.alert(t('common.error', { defaultValue: 'Error' }), e?.message || 'Failed to generate packing list.');
+      const errorMsg =
+        e?.response?.data?.detail?.[0]?.msg ||
+        e?.response?.data?.detail ||
+        e?.response?.data?.message ||
+        e?.message ||
+        t('suitcase.generateListError', { defaultValue: 'Failed to generate packing list.' });
+      Alert.alert(
+        t('common.error', { defaultValue: 'Error' }),
+        typeof errorMsg === 'string' ? errorMsg : JSON.stringify(errorMsg)
+      );
     } finally {
       setLoading(false);
     }
   };
 
-  const handleTogglePack = (idx: number) => {
+  const handleTogglePack = async (idx: number) => {
     const active = suitcaseState.activeSuitcase;
     if (!active?.packing_list) return;
     const updated = [...active.packing_list];
-    updated[idx] = { ...updated[idx], packed: !updated[idx].packed };
+    const newPacked = !updated[idx].packed;
+    updated[idx] = { ...updated[idx], packed: newPacked };
     suitcaseStore.updateActiveSuitcase({ ...active, packing_list: updated });
+
+    const itemId = updated[idx].id;
+    if (itemId) {
+      try {
+        await (api as any).updateSuitcaseItemPackStatus?.({
+          packed_ids: newPacked ? [itemId] : [],
+          unpacked_ids: !newPacked ? [itemId] : [],
+        });
+      } catch {
+        // Non-blocking sync
+      }
+    }
   };
 
   const handleSendChat = async () => {
@@ -147,23 +232,46 @@ export function SuitcaseScreen() {
     suitcaseStore.updateMessages([...currentMsgs, { role: 'user', text: msg }]);
 
     try {
+      const now = new Date();
+      const depTime = now.toISOString();
+      const retDate = new Date(now.getTime() + selectedDuration * 24 * 60 * 60 * 1000);
+      const retTime = retDate.toISOString();
+
       const res = await (api as any).suitcaseChat?.({
-        query: msg,
-        destination,
-        days: selectedDuration,
+        message: msg,
+        destinations: destination,
+        purpose: selectedPurpose,
+        preferred_style: 'casual chic',
+        departure_time: depTime,
+        return_time: retTime,
       });
 
-      const reply = res?.reply || res?.text || t('suitcase.chatFallback', { defaultValue: 'I have updated your packing list suggestions accordingly.' });
+      const reply =
+        res?.reply ||
+        res?.text ||
+        t('suitcase.chatFallback', {
+          defaultValue: 'I have updated your packing list suggestions accordingly.',
+        });
       suitcaseStore.updateMessages([
         ...currentMsgs,
         { role: 'user', text: msg },
         { role: 'assistant', text: reply },
       ]);
-    } catch {
+    } catch (e: any) {
+      const errorMsg =
+        e?.response?.data?.detail?.[0]?.msg ||
+        e?.response?.data?.detail ||
+        e?.response?.data?.message ||
+        t('suitcase.chatContactError', {
+          defaultValue: 'Error contacting Suitcase Assistant. Please try again.',
+        });
       suitcaseStore.updateMessages([
         ...currentMsgs,
         { role: 'user', text: msg },
-        { role: 'assistant', text: 'Error contacting Suitcase Assistant. Please try again.' },
+        {
+          role: 'assistant',
+          text: typeof errorMsg === 'string' ? errorMsg : JSON.stringify(errorMsg),
+        },
       ]);
     } finally {
       setChatting(false);
@@ -177,16 +285,40 @@ export function SuitcaseScreen() {
 
   return (
     <SafeAreaView style={[styles.root, { backgroundColor: colors.background }]} edges={['top']}>
-      {/* ── Top Bar ─────────────────────────────────────────────────── */}
-      <View style={[styles.topBar, { borderBottomColor: colors.border }]}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
-          <Lucide.ArrowLeft size={20} color={colors.foreground} />
-        </TouchableOpacity>
-        <Text style={[styles.topTitle, { color: colors.foreground }]}>
-          {t('suitcase.title', { defaultValue: 'Suitcase & Travel' })}
-        </Text>
-        <View style={{ width: 36 }} />
-      </View>
+      {/* ── Editorial Hero Banner ───────────────────────────────────── */}
+      <PageHeroBanner
+        image={require('@mobile/assets/img/inner6.webp')}
+        minHeight={150}
+      >
+        <View style={styles.bannerHeader}>
+          <View style={styles.bannerTopRow}>
+            <TouchableOpacity onPress={handleBack} style={styles.bannerBackBtn}>
+              <Lucide.ArrowLeft
+                size={18}
+                color="#FFFFFF"
+                style={isRtl ? { transform: [{ scaleX: -1 }] } : undefined}
+              />
+            </TouchableOpacity>
+            <View style={{ flex: 1 }}>
+              <Text
+                style={[styles.bannerTitle, { textAlign: isRtl ? 'right' : 'left' }]}
+                numberOfLines={1}
+              >
+                {t('suitcase.headerTitle', { defaultValue: "DressApp's Suitcase" })}
+              </Text>
+            </View>
+          </View>
+
+          <Text
+            style={[styles.bannerSubtitle, { textAlign: isRtl ? 'right' : 'left' }]}
+            numberOfLines={2}
+          >
+            {t('suitcase.subtitleText', {
+              defaultValue: 'Traveling AI modular planner and safety advisor.',
+            })}
+          </Text>
+        </View>
+      </PageHeroBanner>
 
       <ScrollView
         ref={scrollViewRef}
@@ -200,19 +332,22 @@ export function SuitcaseScreen() {
         <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
           <View style={styles.cardHeaderRow}>
             <Lucide.Luggage size={20} color={colors.accent} />
-            <Text style={[styles.cardTitle, { color: colors.foreground }]}>
+            <Text style={[styles.cardTitle, { color: colors.foreground, textAlign: isRtl ? 'right' : 'left' }]}>
               {t('suitcase.planTrip', { defaultValue: 'Plan Your Travel Packing' })}
             </Text>
           </View>
 
           {/* Destination */}
-          <Text style={[styles.inputLabel, { color: colors.mutedFg }]}>
+          <Text style={[styles.inputLabel, { color: colors.mutedFg, textAlign: isRtl ? 'right' : 'left' }]}>
             {t('suitcase.destinationLabel', { defaultValue: 'DESTINATION' })}
           </Text>
           <View style={[styles.inputRow, { backgroundColor: colors.secondary, borderColor: colors.border }]}>
             <Lucide.MapPin size={16} color={colors.accent} />
             <TextInput
-              style={[styles.textInput, { color: colors.foreground }]}
+              style={[
+                styles.textInput,
+                { color: colors.foreground, textAlign: isRtl ? 'right' : 'left' },
+              ]}
               value={destination}
               onChangeText={setDestination}
               placeholder={t('suitcase.destPlaceholder', { defaultValue: 'e.g. Rome, Tokyo, New York' })}
@@ -221,7 +356,7 @@ export function SuitcaseScreen() {
           </View>
 
           {/* Duration Days */}
-          <Text style={[styles.inputLabel, { color: colors.mutedFg }]}>
+          <Text style={[styles.inputLabel, { color: colors.mutedFg, textAlign: isRtl ? 'right' : 'left' }]}>
             {t('suitcase.durationLabel', { defaultValue: 'TRIP LENGTH (DAYS)' })}
           </Text>
           <View style={styles.durationRow}>
@@ -238,19 +373,21 @@ export function SuitcaseScreen() {
                 onPress={() => setSelectedDuration(d)}
               >
                 <Text
+                  numberOfLines={1}
+                  adjustsFontSizeToFit
                   style={[
                     styles.durationText,
                     { color: selectedDuration === d ? colors.primaryFg : colors.foreground },
                   ]}
                 >
-                  {d}d
+                  {t('suitcase.durationDays', { count: d, defaultValue: `${d}d` })}
                 </Text>
               </TouchableOpacity>
             ))}
           </View>
 
           {/* Purpose */}
-          <Text style={[styles.inputLabel, { color: colors.mutedFg }]}>
+          <Text style={[styles.inputLabel, { color: colors.mutedFg, textAlign: isRtl ? 'right' : 'left' }]}>
             {t('suitcase.purposeLabel', { defaultValue: 'OCCASION / PURPOSE' })}
           </Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.purposeScroll}>
@@ -302,7 +439,7 @@ export function SuitcaseScreen() {
           <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
             <View style={styles.cardHeaderRow}>
               <Lucide.CheckSquare size={20} color={colors.accent} />
-              <Text style={[styles.cardTitle, { color: colors.foreground }]}>
+              <Text style={[styles.cardTitle, { color: colors.foreground, textAlign: isRtl ? 'right' : 'left' }]}>
                 {t('suitcase.packingList', { defaultValue: 'Luggage Checklist' })} ({packedCount}/{totalCount})
               </Text>
             </View>
@@ -343,6 +480,7 @@ export function SuitcaseScreen() {
                       styles.checkName,
                       {
                         color: item.packed ? colors.mutedFg : colors.foreground,
+                        textAlign: isRtl ? 'right' : 'left',
                         textDecorationLine: item.packed ? 'line-through' : 'none',
                       },
                     ]}
@@ -363,37 +501,50 @@ export function SuitcaseScreen() {
         <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
           <View style={styles.cardHeaderRow}>
             <Lucide.MessageSquare size={20} color={colors.accent} />
-            <Text style={[styles.cardTitle, { color: colors.foreground }]}>
+            <Text style={[styles.cardTitle, { color: colors.foreground, textAlign: isRtl ? 'right' : 'left' }]}>
               {t('suitcase.assistantChat', { defaultValue: 'Suitcase Packing Assistant' })}
             </Text>
           </View>
 
           <View style={styles.chatBox}>
-            {suitcaseState.messages.map((msg, i) => (
-              <View
-                key={i}
-                style={[
-                  styles.chatBubble,
-                  msg.role === 'user'
-                    ? [styles.userBubble, { backgroundColor: colors.primary }]
-                    : [styles.assistantBubble, { backgroundColor: colors.secondary }],
-                ]}
-              >
-                <Text
+            {suitcaseState.messages.map((msg, i) => {
+              const isWelcome = i === 0 && msg.role === 'assistant';
+              return (
+                <View
+                  key={i}
                   style={[
-                    styles.chatText,
-                    { color: msg.role === 'user' ? colors.primaryFg : colors.foreground },
+                    styles.chatBubble,
+                    msg.role === 'user'
+                      ? [styles.userBubble, { backgroundColor: colors.primary }]
+                      : [styles.assistantBubble, { backgroundColor: colors.secondary }],
                   ]}
                 >
-                  {msg.text}
-                </Text>
-              </View>
-            ))}
+                  <Text
+                    style={[
+                      styles.chatText,
+                      {
+                        color: msg.role === 'user' ? colors.primaryFg : colors.foreground,
+                        textAlign: isRtl ? 'right' : 'left',
+                      },
+                    ]}
+                  >
+                    {isWelcome ? t('suitcase.welcomeChat', { defaultValue: msg.text }) : msg.text}
+                  </Text>
+                </View>
+              );
+            })}
           </View>
 
           <View style={styles.chatInputRow}>
             <TextInput
-              style={[styles.chatInput, { backgroundColor: colors.secondary, color: colors.foreground }]}
+              style={[
+                styles.chatInput,
+                {
+                  backgroundColor: colors.secondary,
+                  color: colors.foreground,
+                  textAlign: isRtl ? 'right' : 'left',
+                },
+              ]}
               value={chatInput}
               onChangeText={setChatInput}
               placeholder={t('suitcase.askPlaceholder', { defaultValue: 'Ask packing advice…' })}
@@ -408,7 +559,11 @@ export function SuitcaseScreen() {
               {chatting ? (
                 <ActivityIndicator size="small" color="#fff" />
               ) : (
-                <Lucide.Send size={16} color="#fff" />
+                <Lucide.Send
+                  size={16}
+                  color="#fff"
+                  style={isRtl ? { transform: [{ scaleX: -1 }] } : undefined}
+                />
               )}
             </TouchableOpacity>
           </View>
@@ -428,24 +583,36 @@ const styles = StyleSheet.create({
   root: {
     flex: 1,
   },
-  topBar: {
+  bannerHeader: {
+    paddingHorizontal: spacing[4],
+    paddingTop: spacing[1],
+    paddingBottom: spacing[3],
+  },
+  bannerTopRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: spacing[4],
-    paddingVertical: spacing[3],
-    borderBottomWidth: 1,
+    gap: spacing[2],
   },
-  backBtn: {
+  bannerBackBtn: {
     width: 36,
     height: 36,
     borderRadius: radii.full,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  topTitle: {
+  bannerTitle: {
     fontFamily: fonts.displayBold,
-    fontSize: fontSizes.lg,
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#FFFFFF',
+  },
+  bannerSubtitle: {
+    fontFamily: fonts.body,
+    fontSize: 12,
+    lineHeight: 18,
+    color: 'rgba(255, 255, 255, 0.7)',
+    marginTop: 4,
   },
   scroll: {
     padding: spacing[4],
@@ -495,7 +662,7 @@ const styles = StyleSheet.create({
   durationBtn: {
     flex: 1,
     height: 36,
-    borderRadius: radii.md,
+    borderRadius: radii.full,
     borderWidth: 1,
     alignItems: 'center',
     justifyContent: 'center',
@@ -529,7 +696,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 6,
     height: 46,
-    borderRadius: radii.xl,
+    borderRadius: radii.full,
     marginTop: spacing[2],
   },
   packBtnText: {

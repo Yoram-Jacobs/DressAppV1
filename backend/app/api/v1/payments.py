@@ -25,8 +25,6 @@ from app.config import settings
 from app.db.database import get_db
 from app.models.schemas import (
     CreditTopup,
-    PayPalPointer,
-    Transaction,
     TransactionFinancial,
     UserCredits,
 )

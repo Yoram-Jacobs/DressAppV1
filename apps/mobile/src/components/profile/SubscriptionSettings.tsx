@@ -48,9 +48,10 @@ export function SubscriptionSettings({
   const [copied, setCopied] = useState(false);
 
   const isActive = Boolean(subscription?.is_active);
-  const effectiveTier = (isActive && subscription?.tier && subscription.tier !== 'free')
+  const rawTier = (isActive && subscription?.tier && subscription.tier !== 'free')
     ? subscription.tier.toLowerCase()
     : (tierName ? tierName.toLowerCase() : 'free');
+  const effectiveTier = rawTier === 'manage' ? 'manager' : rawTier;
 
   const isPro = effectiveTier === 'professional';
   const isManager = effectiveTier === 'manager';
@@ -148,7 +149,11 @@ export function SubscriptionSettings({
                 <Lucide.Crown size={16} color="#EAB308" />
               </View>
               <Text style={[styles.planMainTitle, { color: colors.foreground }]}>
-                {`DressApp ${effectiveTier.toUpperCase()} (${planType.toUpperCase()})`}
+                {t('profile.planTitle', {
+                  tier: t(`profile.tiers.${effectiveTier}`, { defaultValue: effectiveTier.toUpperCase() }),
+                  plan: planType.toUpperCase(),
+                  defaultValue: `DressApp ${effectiveTier.toUpperCase()} (${planType.toUpperCase()})`,
+                })}
               </Text>
             </View>
             <View style={styles.activeBadge}>
