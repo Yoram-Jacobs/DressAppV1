@@ -49,6 +49,7 @@ import { useTheme } from '@mobile/theme';
 import { fonts, fontSizes, spacing, radii, shadows } from '@mobile/theme/tokens';
 import { api } from '@mobile/lib/api';
 import { closetStore, useClosetStore } from '@mobile/lib/stores/closetStore';
+import { useTierLimits } from '@mobile/hooks/useTierLimits';
 import { ScanningPipelineOverlay } from '@mobile/components/ScanningPipelineOverlay';
 import { WeightedList, WeightedItem } from '@mobile/components/WeightedList';
 import { TaxonomySelectModal } from '@mobile/components/TaxonomySelectModal';
@@ -152,7 +153,20 @@ export function ClosetAddScreen() {
   const navigation = useNavigation<ClosetAddNavProp>();
   const route = useRoute<ClosetAddRouteProp>();
   const { colors, isDark } = useTheme();
-  const { prewarm } = useClosetStore();
+  const { isFree, maxClosetSlots, showUpgradeAlert } = useTierLimits();
+  const { items: closetItems, prewarm } = useClosetStore();
+
+  const checkClosetSlotLimit = () => {
+    if (isFree && (closetItems?.length || 0) >= maxClosetSlots) {
+      showUpgradeAlert(
+        t('common.features.moreClosetSlots', { defaultValue: 'more closet slots' }),
+        false,
+        () => navigation.navigate('Pricing' as any)
+      );
+      return false;
+    }
+    return true;
+  };
 
   const isRtl = I18nManager.isRTL;
   const startOnCamera = route.params?.source === 'camera';
@@ -206,7 +220,9 @@ export function ClosetAddScreen() {
 
   useEffect(() => {
     if (route.params?.source === 'camera') {
-      handleTakePhoto();
+      if (checkClosetSlotLimit()) {
+        handleTakePhoto();
+      }
       navigation.setParams({ source: undefined });
     }
   }, [route.params?.source]);
@@ -704,6 +720,7 @@ export function ClosetAddScreen() {
 
   // ── INGESTION HANDLERS ────────────────────────────────────────────────────
   const handleTakePhoto = async () => {
+    if (!checkClosetSlotLimit()) return;
     try {
       const perm = await ImagePicker.requestCameraPermissionsAsync();
       if (!perm.granted) {
@@ -739,6 +756,7 @@ export function ClosetAddScreen() {
   };
 
   const handlePickFromGallery = async () => {
+    if (!checkClosetSlotLimit()) return;
     try {
       const res = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ['images'],
@@ -761,6 +779,7 @@ export function ClosetAddScreen() {
   };
 
   const handleCaptureCamera = async () => {
+    if (!checkClosetSlotLimit()) return;
     if (!cameraRef.current) return;
     try {
       const photo = await cameraRef.current.takePictureAsync({
@@ -776,6 +795,7 @@ export function ClosetAddScreen() {
   };
 
   const handlePickImportFile = async () => {
+    if (!checkClosetSlotLimit()) return;
     try {
       const result = await DocumentPicker.getDocumentAsync({
         type: [
@@ -810,6 +830,7 @@ export function ClosetAddScreen() {
   };
 
   const handleDigitalExtract = async () => {
+    if (!checkClosetSlotLimit()) return;
     setIsExtractingDigital(true);
     try {
       const formData = new FormData();
@@ -1288,7 +1309,9 @@ export function ClosetAddScreen() {
 
                         <TouchableOpacity
                           style={[styles.secondaryActionBtn, { backgroundColor: colors.secondary, borderColor: colors.border }]}
-                          onPress={() => setUrlModalVisible(true)}
+                          onPress={() => {
+                            if (checkClosetSlotLimit()) setUrlModalVisible(true);
+                          }}
                         >
                           <Lucide.Link2 size={18} color={colors.foreground} />
                           <Text style={[styles.secondaryActionBtnText, { color: colors.foreground }]}>
@@ -1298,7 +1321,10 @@ export function ClosetAddScreen() {
 
                         <TouchableOpacity
                           style={[styles.secondaryActionBtn, { backgroundColor: colors.secondary, borderColor: colors.border }]}
-                          onPress={() => (navigation as any).navigate('DppScanner')}
+                          onPress={() => {
+                            if (!checkClosetSlotLimit()) return;
+                            (navigation as any).navigate('DppScanner');
+                          }}
                         >
                           <Lucide.QrCode size={18} color={colors.foreground} />
                           <Text style={[styles.secondaryActionBtnText, { color: colors.foreground }]}>
@@ -1927,6 +1953,7 @@ export function ClosetAddScreen() {
                 style={[styles.modalSubmitBtn, { backgroundColor: colors.accent }]}
                 onPress={() => {
                   if (urlInputValue.trim()) {
+                    if (!checkClosetSlotLimit()) return;
                     setUrlModalVisible(false);
                     analyzeSingleImage('', urlInputValue.trim());
                     setUrlInputValue('');

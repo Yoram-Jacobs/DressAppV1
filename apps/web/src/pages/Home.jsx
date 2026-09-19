@@ -34,6 +34,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/lib/auth";
+import { useTierLimits } from "@/hooks/useTierLimits";
 import { useClosetStore } from "@/lib/useClosetStore";
 import { useDailySuggestionsStore } from "@/lib/dailySuggestionsStore";
 import { useLocation as useAppLocation } from "@/lib/location";
@@ -177,6 +178,7 @@ const translateSeasonList = (value, t) => {
 export default function Home() {
   const { t, i18n } = useTranslation();
   const { user } = useAuth();
+  const { canAccessMigration } = useTierLimits();
   const closet = useClosetStore({ prewarm: true });
   const loc = useAppLocation();
   const isAdmin = (user?.roles || []).includes("admin");
@@ -1638,6 +1640,10 @@ export default function Home() {
                     type="button"
                     className="mt-2 inline-flex items-center justify-center rounded-[50px] border-none bg-[var(--primary-color)] px-[30px] py-[20px] text-[14px] font-bold leading-none text-[var(--white)] transition-smooth hover:-translate-y-[2px] hover:bg-[var(--primary-hover)] hover:text-[var(--white)] hover:shadow-[0_8px_24px_rgba(31,92,69,0.25)]"
                     onClick={() => {
+                      if (!canAccessMigration) {
+                        toast.error(t('common.upgradeToUse', { feature: t('common.features.migration') }));
+                        return;
+                      }
                       if ("ontouchstart" in window) {
                         toast.info(
                           t("profile.mobileDesktopGuide", {

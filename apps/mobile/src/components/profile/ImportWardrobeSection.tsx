@@ -17,10 +17,11 @@ import {
   Alert,
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
+import { useNavigation } from '@react-navigation/native';
 import * as Lucide from 'lucide-react-native';
-
 import { useTheme } from '@mobile/theme';
 import { fonts, fontSizes, spacing, radii } from '@mobile/theme/tokens';
+import { useTierLimits } from '@mobile/hooks/useTierLimits';
 
 const PRESET_APPS = [
   { name: 'Whering', icon: '👗', items: '95+ items' },
@@ -32,8 +33,14 @@ const PRESET_APPS = [
 export function ImportWardrobeSection() {
   const { t } = useTranslation();
   const { colors, isDark } = useTheme();
+  const navigation = useNavigation<any>();
+  const { canAccessMigration, showUpgradeAlert } = useTierLimits();
 
   const handleStartImport = (appName: string) => {
+    if (!canAccessMigration) {
+      showUpgradeAlert(t('common.features.migration'), false, () => navigation.navigate('Pricing'));
+      return;
+    }
     Alert.alert(
       t('profile.importFromApp', { defaultValue: 'Import from {{app}}', app: appName }),
       t('profile.importFromAppDesc', {
@@ -45,6 +52,27 @@ export function ImportWardrobeSection() {
 
   return (
     <View style={styles.container}>
+      {!canAccessMigration && (
+        <View style={[styles.upgradeBanner, { backgroundColor: colors.secondary, borderColor: colors.border }]}>
+          <Lucide.Sparkles size={20} color={colors.primary} />
+          <View style={{ flex: 1, gap: 2 }}>
+            <Text style={[styles.upgradeBannerTitle, { color: colors.foreground }]}>
+              {t('common.upgradeToUse', { feature: t('common.features.migration') })}
+            </Text>
+            <Text style={[styles.upgradeBannerDesc, { color: colors.mutedFg }]}>
+              {t('migration.upgradePrompt', { defaultValue: 'Wardrobe migration from other apps is available on Manager and Professional plans.' })}
+            </Text>
+          </View>
+          <TouchableOpacity
+            style={[styles.upgradeBannerBtn, { backgroundColor: colors.primary }]}
+            onPress={() => navigation.navigate('Pricing')}
+          >
+            <Text style={[styles.upgradeBannerBtnText, { color: colors.primaryFg }]}>
+              {t('common.upgrade', { defaultValue: 'Upgrade' })}
+            </Text>
+          </TouchableOpacity>
+        </View>
+      )}
       <View
         style={[
           styles.infoBox,
@@ -158,5 +186,32 @@ const styles = StyleSheet.create({
   appItems: {
     fontFamily: fonts.body,
     fontSize: 10.5,
+  },
+  upgradeBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: spacing.md,
+    borderRadius: radii.lg,
+    borderWidth: 1,
+    gap: spacing.sm,
+    marginBottom: spacing.xs,
+  },
+  upgradeBannerTitle: {
+    fontFamily: fonts.bodyBold,
+    fontSize: fontSizes.xs,
+  },
+  upgradeBannerDesc: {
+    fontFamily: fonts.body,
+    fontSize: 11,
+    lineHeight: 14,
+  },
+  upgradeBannerBtn: {
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 6,
+    borderRadius: radii.full,
+  },
+  upgradeBannerBtnText: {
+    fontFamily: fonts.bodyBold,
+    fontSize: 11,
   },
 });

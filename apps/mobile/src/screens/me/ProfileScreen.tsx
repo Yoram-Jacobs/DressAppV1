@@ -55,6 +55,7 @@ import { closetStore, closetRepo } from '@mobile/lib/stores/closetStore';
 import { applyRtl } from '@mobile/lib/rtl';
 import { HelpFloater } from '@mobile/components/help';
 import { ScrollToTopFloater } from '@mobile/components/common/ScrollToTopFloater';
+import { useTierLimits } from '@mobile/hooks/useTierLimits';
 import type { MeStackParamList } from '@mobile/navigation/types';
 
 import {
@@ -98,6 +99,7 @@ export function ProfileScreen() {
   const { t, i18n } = useTranslation();
   const navigation = useNavigation<MeNavProp>();
   const { colors, isDark, toggle } = useTheme();
+  const { canAccessScheduler, showUpgradeAlert } = useTierLimits();
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -510,6 +512,14 @@ export function ProfileScreen() {
   };
 
   const handleSaveAll = async () => {
+    if (schedulerEnabled && !canAccessScheduler) {
+      showUpgradeAlert(
+        t('common.features.scheduler', { defaultValue: 'Schedule & push notifications' }),
+        false,
+        () => navigation.navigate('Pricing' as any)
+      );
+      return;
+    }
     setSaving(true);
     try {
       const payload: any = {
@@ -578,7 +588,7 @@ export function ProfileScreen() {
         },
         preferred_voice_id: preferredVoiceId,
         scheduler_settings: {
-          enabled: schedulerEnabled,
+          enabled: canAccessScheduler ? schedulerEnabled : false,
           time: morningTime,
           frequency: schedulerFrequency,
           style_option: schedulerStyleOption,
@@ -1295,7 +1305,7 @@ export function ProfileScreen() {
                               : t('profile.subFreeSummary', {
                                   defaultValue: 'Free Plan: {{count}} / {{capacity}} items used',
                                   count: closetCount,
-                                  capacity: 50 + Math.min(closetBonus, 150),
+                                  capacity: Math.min(150, 50 + closetBonus),
                                 })}
                           </Text>
                         </View>

@@ -95,7 +95,17 @@
     "backToHome": "Volver a Inicio",
     "enabled": "Activado",
     "unenabled": "No habilitado",
-    "select": "Seleccionar"
+    "select": "Seleccionar",
+    "upgradeToUse": "Actualiza tu plan para usar {{feature}}",
+    "upgradeToUsePro": "Actualiza a Professional para usar {{feature}}",
+    "features": {
+      "trendScout": "Trend Scout",
+      "scheduler": "Programación y notificaciones push",
+      "migration": "Migración de armario",
+      "campaigns": "Campañas publicitarias",
+      "moreClosetSlots": "más espacio en el armario",
+      "moreAiActions": "más acciones diarias de IA"
+    }
   },
   "auth": {
     "welcomeBack": "Bienvenido de nuevo",

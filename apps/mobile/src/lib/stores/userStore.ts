@@ -56,13 +56,15 @@ export interface UserProfile {
 export function getUserTier(user: UserProfile | null | undefined): string {
   if (!user) return 'free';
   const sub = user.subscription;
+  let raw = 'free';
   if (sub && sub.is_active && sub.tier && sub.tier !== 'free') {
-    return sub.tier.toLowerCase();
+    raw = sub.tier.toLowerCase();
+  } else if (user.subscription_tier && user.subscription_tier !== 'free') {
+    raw = user.subscription_tier.toLowerCase();
   }
-  if (user.subscription_tier && user.subscription_tier !== 'free') {
-    return user.subscription_tier.toLowerCase();
-  }
-  return 'free';
+  if (raw === 'pro' || raw === 'manager') return 'manager';
+  if (raw === 'business' || raw === 'professional') return 'professional';
+  return raw;
 }
 
 export function isUserPaid(user: UserProfile | null | undefined): boolean {

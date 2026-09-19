@@ -95,7 +95,17 @@
     "backToHome": "Вернуться домой",
     "enabled": "Включено",
     "unenabled": "Неактивно",
-    "select": "Выбирать"
+    "select": "Выбирать",
+    "upgradeToUse": "Обновите тариф, чтобы использовать {{feature}}",
+    "upgradeToUsePro": "Перейдите на тариф Professional, чтобы использовать {{feature}}",
+    "features": {
+      "trendScout": "Trend Scout",
+      "scheduler": "Расписание и push-уведомления",
+      "migration": "Миграция гардероба",
+      "campaigns": "Рекламные кампании",
+      "moreClosetSlots": "больше слотов гардероба",
+      "moreAiActions": "больше ежедневных действий ИИ"
+    }
   },
   "auth": {
     "welcomeBack": "С возвращением",

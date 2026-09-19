@@ -95,7 +95,17 @@
     "backToHome": "返回首页",
     "enabled": "启用",
     "unenabled": "未启用",
-    "select": "选择"
+    "select": "选择",
+    "upgradeToUse": "升级您的计划以使用{{feature}}",
+    "upgradeToUsePro": "升级至 Professional 计划以使用{{feature}}",
+    "features": {
+      "trendScout": "Trend Scout",
+      "scheduler": "日程规划与推送通知",
+      "migration": "衣橱迁移",
+      "campaigns": "广告活动",
+      "moreClosetSlots": "更多衣橱容量",
+      "moreAiActions": "更多每日 AI 操作"
+    }
   },
   "auth": {
     "welcomeBack": "欢迎回来",

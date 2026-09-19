@@ -95,7 +95,17 @@
     "backToHome": "العودة إلى المنزل",
     "enabled": "ممكّن",
     "unenabled": "غير ممكّن",
-    "select": "يختار"
+    "select": "يختار",
+    "upgradeToUse": "قم بترقية خطتك لاستخدام {{feature}}",
+    "upgradeToUsePro": "قم بالترقية إلى Professional لاستخدام {{feature}}",
+    "features": {
+      "trendScout": "Trend Scout",
+      "scheduler": "الجدولة والإشعارات الفورية",
+      "migration": "نقل خزانة الملابس",
+      "campaigns": "الحملات الإعلانية",
+      "moreClosetSlots": "مساحة إضافية في الخزانة",
+      "moreAiActions": "المزيد من عمليات AI اليومية"
+    }
   },
   "auth": {
     "welcomeBack": "مرحبًا بعودتك",

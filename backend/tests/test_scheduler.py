@@ -13,6 +13,11 @@ async def test_check_scheduler_triggers_processes_user_without_push():
     mock_user = {
         "id": "test_user_no_push",
         "email": "test_no_push@example.com",
+        "subscription": {
+            "is_active": True,
+            "plan_type": "monthly",
+            "tier": "manager"
+        },
         "scheduler_settings": {
             "enabled": True,
             "time": "08:00",
@@ -93,6 +98,46 @@ async def test_check_scheduler_triggers_skips_disabled_user():
             mock_db.users.find.assert_called_once_with({
                 "scheduler_settings.enabled": True
             })
+            mock_send_push.assert_not_called()
+
+
+@pytest.mark.anyio
+async def test_check_scheduler_triggers_skips_free_tier_user():
+    mock_db = MagicMock()
+    mock_users_cursor = MagicMock()
+    mock_user = {
+        "id": "test_user_free",
+        "email": "free@example.com",
+        "subscription": {
+            "is_active": False,
+            "plan_type": "free",
+            "tier": "free"
+        },
+        "scheduler_settings": {
+            "enabled": True,
+            "time": "08:00",
+            "frequency": "everyday",
+            "style_option": "casual",
+            "timezone": "UTC"
+        },
+        "web_push_subscriptions": []
+    }
+
+    async def mock_user_iter(*args, **kwargs):
+        yield mock_user
+
+    mock_users_cursor.__aiter__ = mock_user_iter
+    mock_db.users.find.return_value = mock_users_cursor
+
+    with patch("app.services.scheduler.get_db", return_value=mock_db), \
+         patch("app.services.scheduler.send_push_notification", new_callable=AsyncMock) as mock_send_push:
+
+        fake_now = datetime(2026, 8, 7, 8, 0, tzinfo=timezone.utc)
+        with patch("app.services.scheduler.datetime") as mock_datetime:
+            mock_datetime.now.return_value = fake_now
+
+            await check_scheduler_triggers()
+
             mock_send_push.assert_not_called()
 
 

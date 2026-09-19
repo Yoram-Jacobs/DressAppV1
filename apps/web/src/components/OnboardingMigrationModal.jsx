@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { useTierLimits } from '@/hooks/useTierLimits';
 import { isRtl } from '@/lib/i18n';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -29,6 +30,8 @@ const PRESET_APPS = [
 export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdated }) {
   const { t, i18n } = useTranslation();
   const location = useLocation();
+  const navigate = useNavigate();
+  const { canAccessMigration } = useTierLimits();
 
   // Kill modal (not process) when user navigates to Closet page from another route
   const prevPathRef = useRef(location.pathname);
@@ -665,6 +668,40 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="max-w-md w-full bg-white border-border rounded-[12px] flex flex-col max-h-[90vh] overflow-hidden p-6 gap-4 animate-in fade-in zoom-in-95 duration-200">
+        {!canAccessMigration ? (
+          <div className="space-y-4 text-center shrink-0 py-4">
+            <div className="mx-auto w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-2">
+              <Sparkles className="w-6 h-6 text-primary-brand" />
+            </div>
+            <DialogTitle className="text-xl font-bold text-dark-brand">
+              {t('common.upgradeToUse', { feature: t('common.features.migration') })}
+            </DialogTitle>
+            <DialogDescription className="text-sm text-text-brand">
+              {t('migration.upgradePrompt', { defaultValue: 'Wardrobe migration from other apps is available on Manager and Professional plans.' })}
+            </DialogDescription>
+            <div className="flex flex-col sm:flex-row gap-3 pt-4 justify-center">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={onClose}
+                className="rounded-xl h-10 font-semibold"
+              >
+                {t('common.close', { defaultValue: 'Close' })}
+              </Button>
+              <Button
+                type="button"
+                onClick={() => {
+                  onClose();
+                  navigate('/pricing');
+                }}
+                className="rounded-xl h-10 font-semibold"
+              >
+                {t('nav.pricing', { defaultValue: 'View Plans & Upgrade' })}
+              </Button>
+            </div>
+          </div>
+        ) : (
+          <>
         {/* STEP 1: INITIAL CONTEXT QUESTION */}
         {step === 'ask' && (
           <div className="space-y-4 text-center shrink-0">
@@ -882,6 +919,8 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
               </span>
             </div>
           </div>
+        )}
+        </>
         )}
       </DialogContent>
     </Dialog>

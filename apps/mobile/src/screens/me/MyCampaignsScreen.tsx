@@ -28,6 +28,7 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '@mobile/theme';
 import { fonts, fontSizes, spacing, radii } from '@mobile/theme/tokens';
+import { useTierLimits } from '@mobile/hooks/useTierLimits';
 import { api } from '@mobile/lib/api';
 import type { MeStackParamList } from '@mobile/navigation/types';
 
@@ -57,6 +58,7 @@ export function MyCampaignsScreen() {
   const { t } = useTranslation();
   const navigation = useNavigation<MeNavProp>();
   const { colors } = useTheme();
+  const { canCreateCampaign, showUpgradeAlert } = useTierLimits();
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -142,7 +144,18 @@ export function MyCampaignsScreen() {
     <SafeAreaView style={s.root} edges={['top']}>
       <View style={[s.header, { flexDirection: isRtl ? 'row-reverse' : 'row' }]}>
         <Text style={s.headerTitle}>{t('campaigns.my', { defaultValue: 'My Campaigns' })}</Text>
-        <TouchableOpacity style={s.newBtn} onPress={() => navigation.navigate('CreateCampaign')}>
+        <TouchableOpacity
+          style={s.newBtn}
+          onPress={() => {
+            if (!canCreateCampaign) {
+              showUpgradeAlert(t('common.features.campaigns'), true, () => {
+                navigation.navigate('Pricing' as any);
+              });
+              return;
+            }
+            navigation.navigate('CreateCampaign');
+          }}
+        >
           <Text style={s.newBtnText}>＋ {t('campaigns.new', { defaultValue: 'New' })}</Text>
         </TouchableOpacity>
       </View>

@@ -1,6 +1,6 @@
 {
   "name": "dressapp-chrome-extension",
-  "version": "0.1.3",
+  "version": "0.2.0",
   "description": "DressApp shopping assistant — real-time clothing-size recommendations from your DressApp profile.",
   "private": true,
   "type": "module",
@@ -9,7 +9,8 @@
     "build": "vite build",
     "build:mobile": "vite build -c vite.mobile.config.js",
     "preview": "vite preview",
-    "lint": "echo 'lint runs from repo root via main eslint config'"
+    "lint": "echo 'lint runs from repo root via main eslint config'",
+    "package": "vite build && powershell -Command \"Compress-Archive -Path dist/* -DestinationPath dist/dressapp-shopping-assistant.zip -Force\""
   },
   "dependencies": {
     "i18next": "^26.0.6",

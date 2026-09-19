@@ -22,10 +22,12 @@ import {
   StyleSheet,
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
+import { useNavigation } from '@react-navigation/native';
 import * as Lucide from 'lucide-react-native';
 import { useTheme } from '@mobile/theme';
 import { fonts, fontSizes, spacing, radii } from '@mobile/theme/tokens';
 import { useClosetStore } from '@mobile/lib/stores';
+import { useTierLimits } from '@mobile/hooks/useTierLimits';
 
 const FREQUENCIES = [
   { id: 'everyday', label: 'Everyday' },
@@ -79,6 +81,8 @@ export function SchedulerSettings({
 }: SchedulerProps) {
   const { t } = useTranslation();
   const { colors, isDark } = useTheme();
+  const navigation = useNavigation<any>();
+  const { canAccessScheduler, showUpgradeAlert } = useTierLimits();
 
   const { items: closetItems } = useClosetStore({ prewarm: true });
   const [tagDraft, setTagDraft] = useState('');
@@ -127,6 +131,28 @@ export function SchedulerSettings({
 
   return (
     <View style={styles.container}>
+      {!canAccessScheduler && (
+        <View style={[styles.upgradeBanner, { backgroundColor: colors.secondary, borderColor: colors.border }]}>
+          <Lucide.Sparkles size={20} color={colors.primary} />
+          <View style={styles.upgradeBannerTextCol}>
+            <Text style={[styles.upgradeBannerTitle, { color: colors.foreground }]}>
+              {t('common.upgradeToUse', { feature: t('common.features.scheduler') })}
+            </Text>
+            <Text style={[styles.upgradeBannerDesc, { color: colors.mutedFg }]}>
+              {t('profile.schedulerUpgradeDesc', { defaultValue: 'Daily outfit proposals and push alerts require a Manager or Professional subscription.' })}
+            </Text>
+          </View>
+          <TouchableOpacity
+            style={[styles.upgradeBannerBtn, { backgroundColor: colors.primary }]}
+            onPress={() => navigation.navigate('Pricing')}
+          >
+            <Text style={[styles.upgradeBannerBtnText, { color: colors.primaryFg }]}>
+              {t('common.upgrade', { defaultValue: 'Upgrade' })}
+            </Text>
+          </TouchableOpacity>
+        </View>
+      )}
+
       {/* Daily Outfit Alert Master Switch */}
       <View style={[styles.switchRow, { backgroundColor: colors.secondary, borderColor: colors.border }]}>
         <View style={styles.switchTextCol}>
@@ -139,7 +165,13 @@ export function SchedulerSettings({
         </View>
         <Switch
           value={enabled}
-          onValueChange={setEnabled}
+          onValueChange={(val) => {
+            if (val && !canAccessScheduler) {
+              showUpgradeAlert(t('common.features.scheduler'), false, () => navigation.navigate('Pricing'));
+              return;
+            }
+            setEnabled(val);
+          }}
           trackColor={{ false: colors.border, true: colors.accent }}
         />
       </View>
@@ -489,5 +521,36 @@ const styles = StyleSheet.create({
   toggleSub: {
     fontFamily: fonts.body,
     fontSize: 10,
+  },
+  upgradeBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: spacing.md,
+    borderRadius: radii.lg,
+    borderWidth: 1,
+    gap: spacing.sm,
+    marginBottom: spacing.sm,
+  },
+  upgradeBannerTextCol: {
+    flex: 1,
+    gap: 2,
+  },
+  upgradeBannerTitle: {
+    fontFamily: fonts.bodyBold,
+    fontSize: fontSizes.xs,
+  },
+  upgradeBannerDesc: {
+    fontFamily: fonts.body,
+    fontSize: 11,
+    lineHeight: 14,
+  },
+  upgradeBannerBtn: {
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 6,
+    borderRadius: radii.full,
+  },
+  upgradeBannerBtnText: {
+    fontFamily: fonts.bodyBold,
+    fontSize: 11,
   },
 });

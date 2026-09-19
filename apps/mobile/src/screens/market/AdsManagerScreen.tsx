@@ -36,6 +36,7 @@ import * as Lucide from 'lucide-react-native';
 
 import { useTheme } from '@mobile/theme';
 import { fonts, fontSizes, spacing, radii } from '@mobile/theme/tokens';
+import { useTierLimits } from '@mobile/hooks/useTierLimits';
 import { api, client } from '@mobile/lib/api';
 
 export interface AdCampaign {
@@ -63,6 +64,7 @@ export function AdsManagerScreen() {
   const { t } = useTranslation();
   const { colors } = useTheme();
   const navigation = useNavigation();
+  const { canCreateCampaign, showUpgradeAlert } = useTierLimits();
 
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -220,7 +222,15 @@ export function AdsManagerScreen() {
 
         <TouchableOpacity
           style={[styles.createBtn, { backgroundColor: colors.primary }]}
-          onPress={() => setModalVisible(true)}
+          onPress={() => {
+            if (!canCreateCampaign) {
+              showUpgradeAlert(t('common.features.campaigns'), true, () => {
+                navigation.navigate('Pricing' as never);
+              });
+              return;
+            }
+            setModalVisible(true);
+          }}
         >
           <Lucide.Plus size={15} color="#FFF" />
           <Text style={styles.createBtnText}>{t('common.create', { defaultValue: 'New Ad' })}</Text>
