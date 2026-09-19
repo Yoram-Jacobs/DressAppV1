@@ -30,6 +30,8 @@ const POLL_INTERVAL_MS = 3000;
 // a wedged BackgroundTask from keeping the poller alive forever.
 const ITEM_POLL_TIMEOUT_MS = 5 * 60 * 1000; // 5 minutes
 
+const _timedOutIds = new Set();
+
 const _listeners = new Set();
 let _state = {
   analyzeJobs: {},
@@ -88,6 +90,7 @@ async function _pollOnce() {
     for (const id of timedOut) {
       next.delete(id);
       delete nextStartedAt[id];
+      _timedOutIds.add(id);
       _syncClosetPolishTerminal(id, 'failed');
     }
     _set({
@@ -119,6 +122,7 @@ async function _pollOnce() {
       // and per-card badge don't spin forever on phantom ids.
       nextSet.delete(id);
       delete nextStartedAt[id];
+      _timedOutIds.add(id);
       _syncClosetPolishTerminal(id, 'failed');
       newlyCompleted += 1;
       continue;
@@ -130,7 +134,8 @@ async function _pollOnce() {
       closetStore.upsert(item);
     } catch { /* swallow */ }
     // "ready" / "failed" / null all mean "no longer in flight".
-    const isCleanPending = item.clean_image_status === 'pending';
+    // Also if clean_image_url is already present, it is not pending.
+    const isCleanPending = item.clean_image_status === 'pending' && !item.clean_image_url;
     const isGroupPending = item.group_analysis_status === 'pending';
     const isReconPending = !!(item.reconstruction_metadata?.deferred && !item.reconstructed_image_url);
     if (!isCleanPending && !isGroupPending && !isReconPending) {
@@ -260,6 +265,7 @@ export const workStore = {
     const now = Date.now();
     let added = 0;
     for (const id of ids) {
+      if (_timedOutIds.has(id)) continue;
       if (!nextSet.has(id)) {
         nextSet.add(id);
         nextStartedAt[id] = now;
@@ -301,6 +307,7 @@ export const workStore = {
       clearInterval(_pollerHandle);
       _pollerHandle = null;
     }
+    _timedOutIds.clear();
     _state = {
       analyzeJobs: {},
       polishPendingIds: new Set(),

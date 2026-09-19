@@ -191,9 +191,25 @@ async def maybe_retry_stale_matte(
     item: Dict[str, Any],
     background_tasks: BackgroundTasks,
 ) -> None:
-    if item.get("clean_image_status") != "pending" or item.get("clean_image_url"):
+    if item.get("clean_image_status") != "pending":
         return
-    updated_raw = item.get("updated_at")
+
+    item_id = item.get("id")
+    if not item_id:
+        return
+    db = get_db()
+
+    # Case 1: The clean image is already generated and present!
+    # Auto-heal the document to 'ready' so clients stop polling.
+    if item.get("clean_image_url"):
+        item["clean_image_status"] = "ready"
+        await db.closet_items.update_one(
+            {"id": item_id},
+            {"$set": {"clean_image_status": "ready"}},
+        )
+        return
+
+    updated_raw = item.get("updated_at") or item.get("created_at")
     if not updated_raw:
         return
     try:
@@ -205,6 +221,21 @@ async def maybe_retry_stale_matte(
     age_s = (datetime.now(timezone.utc) - updated_at).total_seconds()
     if age_s < _STALE_MATTE_RETRY_SECONDS:
         return
+
+    # Case 2: Wedged background task older than 10 minutes (600s).
+    # Mark 'failed' in MongoDB so neither frontend nor backend spins indefinitely.
+    if age_s > 600:
+        item["clean_image_status"] = "failed"
+        await db.closet_items.update_one(
+            {"id": item_id},
+            {"$set": {"clean_image_status": "failed"}},
+        )
+        logger.info(
+            "Marked permanently stale matte for item %s as failed (age %.0fs)",
+            item_id, age_s,
+        )
+        return
+
     last_retry_raw = item.get("matte_last_retry_at")
     if last_retry_raw:
         try:
@@ -219,10 +250,13 @@ async def maybe_retry_stale_matte(
             pass
     raw_bytes = bytes_from_data_url(item.get("original_image_url"))
     if not raw_bytes:
+        item["clean_image_status"] = "failed"
+        await db.closet_items.update_one(
+            {"id": item_id},
+            {"$set": {"clean_image_status": "failed"}},
+        )
         return
-    item_id = item["id"]
     now_iso = datetime.now(timezone.utc).isoformat()
-    db = get_db()
     await db.closet_items.update_one(
         {"id": item_id},
         {"$set": {"matte_last_retry_at": now_iso}},

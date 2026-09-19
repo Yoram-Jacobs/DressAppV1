@@ -680,124 +680,33 @@ export default function Closet() {
   //      ``POLL_MAX_ATTEMPTS`` after which we fire one final
   //      ``incrementalSync()`` and give up.
   // ──────────────────────────────────────────────────────────────────
-  const pollAttemptRef = useRef(0);
-  const pollSignatureRef = useRef("");
+  // Phase O.6 / Patch M20 — Background matte (cutout) synchronization.
+  // When an item is added without immediate segmentation, it is saved
+  // with clean_image_status="pending". We register recent pending items
+  // with workStore, which manages single-instance background polling
+  // across pages and updates closetStore in place.
+  // ──────────────────────────────────────────────────────────────────
   useEffect(() => {
+    const now = Date.now();
+    const MAX_POLL_AGE_MS = 15 * 60 * 1000; // 15 minutes
     const pendingIds = (store.items || [])
-      .filter((it) => it && it.clean_image_status === "pending")
+      .filter((it) => {
+        if (!it || it.clean_image_status !== "pending") return false;
+        if (it.clean_image_url) return false;
+        const ts = it.updated_at || it.created_at;
+        if (ts) {
+          const age = now - new Date(ts).getTime();
+          if (age > MAX_POLL_AGE_MS) return false;
+        }
+        return true;
+      })
       .map((it) => it.id);
-    if (pendingIds.length === 0) {
-      pollAttemptRef.current = 0;
-      pollSignatureRef.current = "";
-      return undefined;
-    }
 
-    // Patch M20 (May 2026) — also register these pending items with
-    // the global ``workStore`` so the cross-page floater
-    // (``WorkProgressFloater``) and the completion toast
-    // (``WorkBatchDoneToast``) cover items the user inherits on a
-    // fresh visit to /closet (e.g. previous-session items whose
-    // BackgroundTask was still running when the user closed the tab).
-    // ``registerPolishItems`` is idempotent — re-registering an
-    // already-tracked id is a no-op.
+    if (pendingIds.length === 0) return;
     workStore.registerPolishItems(pendingIds);
-
-    // Backoff schedule (ms). After we exhaust the array, polling
-    // continues at the final entry (18 s) up to POLL_MAX_ATTEMPTS.
-    const POLL_STEPS_MS = [3000, 4000, 6000, 9000, 12000, 18000];
-    const POLL_MAX_ATTEMPTS = 30; // ~5 minutes wall clock at the tail.
-
-    // Reset per-pass counter ONLY when the pending-id SET changes
-    // (new items appeared / set shrank). We don't reset on every
-    // items mutation \u2014 upsert-from-poll changes items[] but not the
-    // pending set, and resetting there would defeat the backoff.
-    const pendingSignature = pendingIds.slice().sort().join(",");
-    if (pollSignatureRef.current !== pendingSignature) {
-      pollSignatureRef.current = pendingSignature;
-      pollAttemptRef.current = 0;
-    }
-
-    let cancelled = false;
-    let timer;
-
-    const scheduleNext = () => {
-      const idx = Math.min(pollAttemptRef.current, POLL_STEPS_MS.length - 1);
-      timer = setTimeout(tick, POLL_STEPS_MS[idx]);
-    };
-
-    const tick = async () => {
-      if (cancelled) return;
-
-      // Read the LIVE store snapshot, not the stale closure. ``store``
-      // captured at effect-mount can be many ticks behind by the time
-      // this runs (settle() finishing, parallel incremental sync, etc.).
-      const liveItems = (closetStore.getSnapshot().items || []).filter(Boolean);
-      const stillPending = pendingIds.filter((id) =>
-        liveItems.find(
-          (it) => it && it.id === id && it.clean_image_status === "pending",
-        ),
-      );
-      if (stillPending.length === 0) {
-        pollAttemptRef.current = 0;
-        return; // all matched items resolved \u2014 stop the loop
-      }
-
-      // Hard cap: after POLL_MAX_ATTEMPTS, fire one last incremental
-      // sync (the last items-list-level chance to pull the latest)
-      // and give up. Prevents runaway polling if the backend
-      // BackgroundTask genuinely failed without writing a terminal
-      // status.
-      if (pollAttemptRef.current >= POLL_MAX_ATTEMPTS) {
-        // eslint-disable-next-line no-console
-        console.info(
-          "closet poll giving up after %d attempts (%d still pending)",
-          POLL_MAX_ATTEMPTS,
-          stillPending.length,
-        );
-        closetStore.incrementalSync().catch(() => {
-          /* best-effort */
-        });
-        return;
-      }
-
-      try {
-        const results = await Promise.all(
-          stillPending.map((id) => api.getItem(id).catch(() => null)),
-        );
-        // Apply upserts EVEN IF the effect was cancelled while we
-        // awaited \u2014 the data is fresh; dropping it would force the
-        // next mount to refetch unnecessarily.
-        results.forEach((it, idx) => {
-          if (it && it.id) {
-            closetStore.upsert(it);
-          } else {
-            const missingId = stillPending[idx];
-            if (missingId) {
-              const live = (closetStore.getSnapshot().items || []).find((x) => x && x.id === missingId);
-              if (live) {
-                closetStore.upsert({ ...live, clean_image_status: 'failed', group_analysis_status: 'failed' });
-              }
-            }
-          }
-        });
-      } catch {
-        /* swallow \u2014 polling is best-effort */
-      }
-
-      if (cancelled) return;
-      pollAttemptRef.current += 1;
-      scheduleNext();
-    };
-
-    scheduleNext();
-    return () => {
-      cancelled = true;
-      clearTimeout(timer);
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     (store.items || [])
-      .filter((it) => it && it.clean_image_status === "pending")
+      .filter((it) => it && it.clean_image_status === "pending" && !it.clean_image_url)
       .map((it) => it.id)
       .sort()
       .join(","),
