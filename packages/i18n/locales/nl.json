@@ -3502,7 +3502,13 @@
     "noMissingItemsTitle": "Geen ontbrekende items",
     "missingItemsCount": "{{count}} ontbrekend(e) item(s)",
     "purposeDisplay": "Doel",
-    "archiveMissingItemsHeader": "Ontbrekende items voor de reis"
+    "archiveMissingItemsHeader": "Ontbrekende items voor de reis",
+    "marketplaceSuggestion": "Marktplaats-suggestie",
+    "localStore": "Lokale winkel",
+    "localShoppingAdvice": "Lokaal winkeladvies",
+    "missingItemPrefix": "Ontbrekend item:",
+    "missingGarment": "Ontbrekend kledingstuk",
+    "defaultOutfitName": "Outfit"
   },
   "scanning": {
     "bounds": "Kledinggrenzen detecteren...",

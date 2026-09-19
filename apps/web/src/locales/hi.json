@@ -3458,7 +3458,13 @@
     "noMissingItemsTitle": "कोई कमी नहीं",
     "missingItemsCount": "{{count}} गायब वस्तुएँ",
     "purposeDisplay": "उद्देश्य",
-    "archiveMissingItemsHeader": "यात्रा की गायब वस्तुएँ"
+    "archiveMissingItemsHeader": "यात्रा की गायब वस्तुएँ",
+    "marketplaceSuggestion": "मार्केटप्लेस सुझाव",
+    "localStore": "स्थानीय स्टोर",
+    "localShoppingAdvice": "स्थानीय खरीदारी सलाह",
+    "missingItemPrefix": "लापता वस्तु:",
+    "missingGarment": "लापता परिधान",
+    "defaultOutfitName": "पहनावा"
   },
   "scanning": {
     "bounds": "परिधान सीमा का पता लगाया जा रहा है...",

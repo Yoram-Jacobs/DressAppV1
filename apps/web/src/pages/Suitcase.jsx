@@ -142,10 +142,70 @@ export function formatTimeToWear(time, t) {
   return t(`suitcase.time_${key}`, { defaultValue: time.replace(/_/g, " ") });
 }
 
+export function formatRecommendationSource(source, t) {
+  if (!source) return "";
+  const trimmed = String(source).trim();
+  if (/^marketplace\s*suggestion$/i.test(trimmed)) {
+    return t("suitcase.marketplaceSuggestion", { defaultValue: "Marketplace Suggestion" });
+  }
+  if (/^local\s*shopping\s*advice$/i.test(trimmed)) {
+    return t("suitcase.localShoppingAdvice", { defaultValue: "Local Shopping Advice" });
+  }
+  const localStoreMatch = trimmed.match(/^local\s*store(?:\s*:\s*(.*))?$/i);
+  if (localStoreMatch) {
+    const storeName = localStoreMatch[1]?.trim();
+    const prefix = t("suitcase.localStore", { defaultValue: "Local Store" });
+    return storeName ? `${prefix}: ${storeName}` : prefix;
+  }
+  return trimmed;
+}
+
+export function formatReasonNeeded(reason, t) {
+  if (!reason) return "";
+  const trimmed = String(reason).trim();
+  const recFormatted = formatRecommendationSource(trimmed, t);
+  if (recFormatted !== trimmed) {
+    return recFormatted;
+  }
+  const outfitMatch = trimmed.match(/^outfit(\s*\(.*\))?$/i);
+  if (outfitMatch) {
+    const defaultOutfit = t("suitcase.defaultOutfitName", { defaultValue: "Outfit" });
+    return `${defaultOutfit}${outfitMatch[1] || ""}`;
+  }
+  return trimmed;
+}
+
+export function formatChecklistItemTitle(title, isMissing, t) {
+  if (!title) return "";
+  const clean = String(title).replace(/^(?:missing\s*item\s*:\s*|פריט\s*חסר\s*:\s*)/i, "").trim();
+  if (isMissing || /^(?:missing\s*item\s*:|פריט\s*חסר\s*:)/i.test(String(title))) {
+    const prefix = t("suitcase.missingItemPrefix", { defaultValue: "Missing item:" });
+    return `${prefix} ${clean}`;
+  }
+  return clean;
+}
+
+export function formatMissingItemDescription(description, t) {
+  if (!description) return t("suitcase.missingGarment", { defaultValue: "Missing garment" });
+  const clean = String(description).replace(/^(?:missing\s*item\s*:\s*|פריט\s*חסר\s*:\s*)/i, "").trim();
+  if (/^missing\s*garment$/i.test(clean)) {
+    return t("suitcase.missingGarment", { defaultValue: "Missing garment" });
+  }
+  return clean;
+}
+
 export function extractMissingItems(data) {
   if (!data) return [];
+  const cleanDesc = (desc) =>
+    String(desc || "").replace(/^(?:missing\s*item\s*:\s*|פריט\s*חסר\s*:\s*)/i, "").trim();
+
   const explicit = Array.isArray(data.missing_items) ? data.missing_items.filter(Boolean) : [];
-  if (explicit.length > 0) return explicit;
+  if (explicit.length > 0) {
+    return explicit.map((it) => ({
+      ...it,
+      description: cleanDesc(it.description),
+    }));
+  }
 
   const derived = [];
   const seen = new Set();
@@ -155,7 +215,7 @@ export function extractMissingItems(data) {
       if (Array.isArray(outfit.items)) {
         outfit.items.filter(Boolean).forEach((item) => {
           if (item.status === "missing") {
-            const desc = (item.description || "").trim();
+            const desc = cleanDesc(item.description);
             const key = desc.toLowerCase() || (item.role || "item").toLowerCase();
             if (key && !seen.has(key)) {
               seen.add(key);
@@ -177,12 +237,13 @@ export function extractMissingItems(data) {
     data.packing_list.filter(Boolean).forEach((item) => {
       if (item.is_missing) {
         const title = (item.title || "").trim();
-        const key = title.toLowerCase();
+        const desc = cleanDesc(title);
+        const key = desc.toLowerCase();
         if (key && !seen.has(key)) {
           seen.add(key);
           derived.push({
             role: item.category || "accessory",
-            description: title.replace(/^Missing item:\s*/i, ""),
+            description: desc || item.category || "Missing garment",
             reason_needed: item.recommendation_source || "",
           });
         }
@@ -1917,7 +1978,7 @@ function Suitcase() {
                                                       }
                                                     >
                                                       <p className="text-[12px] font-semibold text-text-brand">
-                                                        {item.title}
+                                                        {formatChecklistItemTitle(item.title, item.is_missing, t)}
                                                       </p>
                                                     </div>
                                                     {item.recommendation_source && (
@@ -1926,7 +1987,7 @@ function Suitcase() {
                                                           "suitcase.recommendedLabel",
                                                           {
                                                             source:
-                                                              item.recommendation_source,
+                                                              formatRecommendationSource(item.recommendation_source, t),
                                                             defaultValue:
                                                               "Recommended: {{source}}",
                                                           },
@@ -2111,11 +2172,11 @@ function Suitcase() {
                                         {labelForRole(m.role, t)}
                                       </Badge>
                                       <h4 className="text-[14px] font-semibold text-dark-brand">
-                                        {m.description}
+                                        {formatMissingItemDescription(m.description, t)}
                                       </h4>
                                       {m.reason_needed && (
                                         <p className="text-[12px] text-text-brand font-semibold">
-                                          {m.reason_needed}
+                                          {formatReasonNeeded(m.reason_needed, t)}
                                         </p>
                                       )}
                                     </div>
@@ -2499,7 +2560,7 @@ function Suitcase() {
                                                   <p
                                                     className={`text-[12px] font-semibold text-text-brand truncate ${item.checked ? "line-through text-text-brand" : ""}`}
                                                   >
-                                                    {item.title}
+                                                    {formatChecklistItemTitle(item.title, item.is_missing, t)}
                                                   </p>
                                                 </div>
                                                 {item.recommendation_source && (
@@ -2508,7 +2569,7 @@ function Suitcase() {
                                                       "suitcase.recommendedLabel",
                                                       {
                                                         source:
-                                                          item.recommendation_source,
+                                                          formatRecommendationSource(item.recommendation_source, t),
                                                         defaultValue:
                                                           "Recommended: {{source}}",
                                                       },
@@ -2656,11 +2717,11 @@ function Suitcase() {
                                         {labelForRole(m.role, t)}
                                       </Badge>
                                       <h4 className="text-[14px] font-semibold text-dark-brand">
-                                        {m.description}
+                                        {formatMissingItemDescription(m.description, t)}
                                       </h4>
                                       {m.reason_needed && (
                                         <p className="text-[12px] text-text-brand font-semibold">
-                                          {m.reason_needed}
+                                          {formatReasonNeeded(m.reason_needed, t)}
                                         </p>
                                       )}
                                     </div>
@@ -3064,11 +3125,11 @@ function Suitcase() {
                             {labelForRole(m.role, t)}
                           </Badge>
                           <h5 className="text-[12px] font-semibold text-dark-brand">
-                            {m.description}
+                            {formatMissingItemDescription(m.description, t)}
                           </h5>
                           {m.reason_needed && (
                             <p className="text-[11px] text-text-brand font-semibold">
-                              {m.reason_needed}
+                              {formatReasonNeeded(m.reason_needed, t)}
                             </p>
                           )}
                         </div>
@@ -3092,7 +3153,9 @@ function Suitcase() {
                         className="flex items-center gap-2 text-xs p-1.5 bg-white border border-border rounded-full"
                       >
                         <div className="h-2 w-2 rounded-full bg-primary-brand shrink-0" />
-                        <span className="text-[10px] font-semibold text-text-brand truncate">{it.title}</span>
+                        <span className="text-[10px] font-semibold text-text-brand truncate">
+                          {formatChecklistItemTitle(it.title, it.is_missing, t)}
+                        </span>
                         <Badge
                           variant="outline"
                           className="text-[8px] font-bold text-dark-brand uppercase ms-auto shrink-0"

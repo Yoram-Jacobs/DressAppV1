@@ -3451,7 +3451,13 @@
     "noMissingItemsTitle": "Keine fehlenden Artikel",
     "missingItemsCount": "{{count}} fehlende(r) Artikel",
     "purposeDisplay": "Zweck",
-    "archiveMissingItemsHeader": "Fehlende Reiseartikel"
+    "archiveMissingItemsHeader": "Fehlende Reiseartikel",
+    "marketplaceSuggestion": "Marktplatz-Vorschlag",
+    "localStore": "Lokales Geschäft",
+    "localShoppingAdvice": "Lokale Einkaufsberatung",
+    "missingItemPrefix": "Fehlender Artikel:",
+    "missingGarment": "Fehlendes Kleidungsstück",
+    "defaultOutfitName": "Outfit"
   },
   "scanning": {
     "bounds": "Kleidungsgrenzen erkennen...",

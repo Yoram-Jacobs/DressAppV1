@@ -3555,7 +3555,13 @@
     "noMissingItemsTitle": "אין פריטים חסרים",
     "missingItemsCount": "{{count}} פריטים חסרים",
     "purposeDisplay": "מטרה",
-    "archiveMissingItemsHeader": "פריטים חסרים לנסיעה"
+    "archiveMissingItemsHeader": "פריטים חסרים לנסיעה",
+    "marketplaceSuggestion": "הצעת מרקטפלייס",
+    "localStore": "חנות מקומית",
+    "localShoppingAdvice": "ייעוץ קניות מקומי",
+    "missingItemPrefix": "פריט חסר:",
+    "missingGarment": "פריט לבוש חסר",
+    "defaultOutfitName": "אאוטפיט"
   },
   "scanning": {
     "bounds": "זיהוי גבולות בגד...",

@@ -3499,7 +3499,13 @@
     "noMissingItemsTitle": "لا توجد عناصر مفقودة",
     "missingItemsCount": "{{count}} عنصر مفقود",
     "purposeDisplay": "الغرض",
-    "archiveMissingItemsHeader": "العناصر المفقودة للرحلة"
+    "archiveMissingItemsHeader": "العناصر المفقودة للرحلة",
+    "marketplaceSuggestion": "اقتراح من السوق",
+    "localStore": "متجر محلي",
+    "localShoppingAdvice": "نصائح تسوق محلية",
+    "missingItemPrefix": "عنصر مفقود:",
+    "missingGarment": "قطعة ملابس مفقودة",
+    "defaultOutfitName": "طقم ملابس"
   },
   "scanning": {
     "bounds": "الكشف عن حدود الملابس...",

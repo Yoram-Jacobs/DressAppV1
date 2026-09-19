@@ -3502,7 +3502,13 @@
     "noMissingItemsTitle": "Nenhum item em falta",
     "missingItemsCount": "{{count}} item(ns) em falta",
     "purposeDisplay": "Objetivo",
-    "archiveMissingItemsHeader": "Itens em falta na viagem"
+    "archiveMissingItemsHeader": "Itens em falta na viagem",
+    "marketplaceSuggestion": "Sugestão do marketplace",
+    "localStore": "Loja local",
+    "localShoppingAdvice": "Conselhos de compras locais",
+    "missingItemPrefix": "Item em falta:",
+    "missingGarment": "Peça de roupa em falta",
+    "defaultOutfitName": "Look"
   },
   "scanning": {
     "bounds": "Detectando Limites de Vestuário...",

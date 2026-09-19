@@ -3502,7 +3502,13 @@
     "noMissingItemsTitle": "Nessun articolo mancante",
     "missingItemsCount": "{{count}} articolo/i mancante/i",
     "purposeDisplay": "Scopo",
-    "archiveMissingItemsHeader": "Articoli mancanti del viaggio"
+    "archiveMissingItemsHeader": "Articoli mancanti del viaggio",
+    "marketplaceSuggestion": "Suggerimento dal marketplace",
+    "localStore": "Negozio locale",
+    "localShoppingAdvice": "Consigli per lo shopping locale",
+    "missingItemPrefix": "Articolo mancante:",
+    "missingGarment": "Capo mancante",
+    "defaultOutfitName": "Completo"
   },
   "scanning": {
     "bounds": "Rilevamento dei limiti degli indumenti...",

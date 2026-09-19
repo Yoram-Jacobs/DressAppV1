@@ -3502,7 +3502,13 @@
     "noMissingItemsTitle": "没有缺失衣物",
     "missingItemsCount": "{{count}} 件缺失物品",
     "purposeDisplay": "目的",
-    "archiveMissingItemsHeader": "旅行缺失物品"
+    "archiveMissingItemsHeader": "旅行缺失物品",
+    "marketplaceSuggestion": "集市推荐",
+    "localStore": "当地商店",
+    "localShoppingAdvice": "当地购物建议",
+    "missingItemPrefix": "缺少物品：",
+    "missingGarment": "缺少衣物",
+    "defaultOutfitName": "穿搭"
   },
   "scanning": {
     "bounds": "检测服装边界...",

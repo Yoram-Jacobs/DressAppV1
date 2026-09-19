@@ -3451,7 +3451,13 @@
     "noMissingItemsTitle": "No Missing Items",
     "missingItemsCount": "{{count}} Missing Item(s)",
     "purposeDisplay": "Purpose",
-    "archiveMissingItemsHeader": "Trip Missing Items"
+    "archiveMissingItemsHeader": "Trip Missing Items",
+    "marketplaceSuggestion": "Marketplace Suggestion",
+    "localStore": "Local Store",
+    "localShoppingAdvice": "Local Shopping Advice",
+    "missingItemPrefix": "Missing item:",
+    "missingGarment": "Missing garment",
+    "defaultOutfitName": "Outfit"
   },
   "scanning": {
     "bounds": "Detecting Garment Bounds...",

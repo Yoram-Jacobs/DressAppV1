@@ -3451,7 +3451,13 @@
     "noMissingItemsTitle": "Sin prendas faltantes",
     "missingItemsCount": "{{count}} prenda(s) faltante(s)",
     "purposeDisplay": "Propósito",
-    "archiveMissingItemsHeader": "Prendas faltantes del viaje"
+    "archiveMissingItemsHeader": "Prendas faltantes del viaje",
+    "marketplaceSuggestion": "Sugerencia del marketplace",
+    "localStore": "Tienda local",
+    "localShoppingAdvice": "Consejos de compras locales",
+    "missingItemPrefix": "Artículo faltante:",
+    "missingGarment": "Prenda faltante",
+    "defaultOutfitName": "Conjunto"
   },
   "scanning": {
     "bounds": "Detección de límites de prendas...",

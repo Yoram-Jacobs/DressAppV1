@@ -3458,7 +3458,13 @@
     "noMissingItemsTitle": "不足アイテムなし",
     "missingItemsCount": "{{count}} 個の不足アイテム",
     "purposeDisplay": "目的",
-    "archiveMissingItemsHeader": "旅行の不足アイテム"
+    "archiveMissingItemsHeader": "旅行の不足アイテム",
+    "marketplaceSuggestion": "マーケットプレイスの提案",
+    "localStore": "地元の店舗",
+    "localShoppingAdvice": "ローカルショッピングのアドバイス",
+    "missingItemPrefix": "不足しているアイテム：",
+    "missingGarment": "不足している衣服",
+    "defaultOutfitName": "コーディネート"
   },
   "scanning": {
     "bounds": "衣服の境界を検出しています...",

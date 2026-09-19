@@ -5,6 +5,7 @@ from datetime import datetime, timezone
 import json
 import logging
 import os
+import re
 import uuid
 from typing import Any
 
@@ -18,6 +19,7 @@ from app.services.weather_service import weather_service
 from app.services.calendar_service import calendar_service
 from app.services.push_service import send_push_notification
 from app.services.marketplace_search import suggest_for_gaps
+from app.services.i18n import LANG_NAMES
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/suitcase", tags=["suitcase"])
@@ -37,6 +39,25 @@ def get_safety_knowledge() -> str:
     except Exception as e:
         logger.error("Failed to read safety knowledge file: %s", e)
     return ""
+
+
+def get_suitcase_language_directive(code: str | None) -> str:
+    code = (code or "en").lower().split("-")[0]
+    name = LANG_NAMES.get(code, "English")
+    return (
+        f"\n\nCRITICAL LANGUAGE DIRECTIVE: The user's interface language is {name} ('{code}').\n"
+        f"You MUST generate ALL human-facing text in natural, idiomatic {name} ('{code}'). This strictly applies to:\n"
+        f"- All outfit names ('outfits[].outfit_name')\n"
+        f"- All outfit reasoning ('outfits[].reasoning')\n"
+        f"- All item descriptions ('outfits[].items[].description')\n"
+        f"- All missing item descriptions ('missing_items[].description')\n"
+        f"- All missing item reasons ('missing_items[].reason_needed')\n"
+        f"- Cultural guidelines ('cultural_guidelines')\n"
+        f"- Danger zone warnings ('danger_zones_info')\n"
+        f"- Local fashion store recommendations rationale ('local_fashion_stores[].why')\n"
+        f"Even if user closet items or destination names are in English, DO NOT write explanations, reasons, or descriptions in English. Write them in {name}.\n"
+        f"Keep ONLY technical schema keys and enum values in English ('top', 'bottom', 'outerwear', 'shoes', 'accessory', 'dress', 'morning', 'afternoon', 'evening', 'all_day', 'closet', 'missing')."
+    )
 
 
 def find_closet_match(item: dict, closet_items: list[dict]) -> dict | None:
@@ -200,10 +221,11 @@ async def suitcase_chat(
             logger.warning("Failed to retrieve calendar events in chat: %s", e)
 
     target_lang = (body.language or user.get("preferred_language") or "en").lower().split("-")[0]
+    lang_name = LANG_NAMES.get(target_lang, "English")
     user_msg = body.message or body.query or ""
     prompt = (
         "You are DressApp's Suitcase Chat Assistant. The user is planning a trip and gathering details.\n"
-        f"Language Instruction: The user's interface language is '{target_lang}'. Your 'reply' message MUST be written in language '{target_lang}' (e.g. Hebrew if 'he', Arabic if 'ar', French if 'fr', etc.).\n"
+        f"Language Instruction: The user's interface language is '{target_lang}' ({lang_name}). Your 'reply' message MUST be written in natural, idiomatic {lang_name} ('{target_lang}').\n"
         "Your task is to analyze the user's message, extract updates to the travel fields, and output a friendly response.\n"
         "You also have visibility into the user's scheduled calendar events/activities during their trip. Use this information to reply intelligently if the user asks about outfits, planning, activities, or the calendar.\n\n"
         "Current fields:\n"
@@ -482,13 +504,11 @@ async def pack_suitcase(
     prefs_block, _ = render_user_preferences(user)
 
     target_lang = (body.language or user.get("preferred_language") or "en").lower().split("-")[0]
+    lang_directive = get_suitcase_language_directive(target_lang)
 
     system_prompt = (
         "You are DressApp’s Traveling AI Stylist. You specialize in building smart packing plans.\n"
-        f"Language Instruction: The user's interface language is '{target_lang}'. "
-        f"All human-facing descriptions, outfit names, reasoning, missing item explanations, and store recommendations ('why') "
-        f"MUST be generated in language '{target_lang}' (e.g. Hebrew if 'he', Arabic if 'ar', French if 'fr', German if 'de', Spanish if 'es', etc.). "
-        f"Keep technical enum keys exactly as specified in the schema (e.g. roles like 'top', 'bottom', 'outerwear', 'shoes', 'accessory', 'dress'; time_to_wear like 'morning', 'afternoon', 'evening', 'all_day'; status like 'closet', 'missing').\n\n"
+        f"{lang_directive}\n\n"
         "Your goals are:\n"
         "1. Select appropriate clothing from the user's Closet honoring weather, duration, scheduled calendar events/activities during the trip. You MUST translate and understand calendar event titles if they are in another language (e.g. Hebrew like 'יום טרקים' = trekking day, 'ארוחת ערב חגיגית' = festive/gala dinner) and design outfits specifically for each day's scheduled activities (e.g., activewear/comfortable athletic shoes for active/trekking days, formalwear/dressy clothes for festive dinners/gala events, or comfortable travel outfits for flight days), while respecting cultural conventions, and strictly adhering to the user's personal style preferences, aesthetic, and outfit-generation rules.\n"
         "2. Minimize the load: select versatile garments that can be recombined into different outfits (e.g. reuse jeans, shirts, jackets across multiple days).\n"
@@ -551,6 +571,7 @@ async def pack_suitcase(
         f"User's Closet Items:\n"
         f"{json.dumps([{ 'id': it.get('id'), 'title': it.get('title'), 'category': it.get('category'), 'sub_category': it.get('sub_category'), 'color': it.get('color'), 'brand': it.get('brand'), 'material': it.get('material') } for it in closet_items])}"
     )
+    user_brief_parts.append(lang_directive)
     user_brief = "\n".join(user_brief_parts)
 
     analysis_str = await generate_text(
@@ -650,9 +671,12 @@ async def pack_suitcase(
             elif stores:
                 rec_source = f"Local Store: {stores[0].get('name')}"
 
+            clean_desc = (m.get("description") or role).strip()
+            clean_desc = re.sub(r'^(?:missing\s*item\s*:\s*|פריט\s*חסר\s*:\s*)', '', clean_desc, flags=re.IGNORECASE).strip()
+
             packing_list.append({
                 "id": f"missing-{role}-{str(uuid.uuid4())[:8]}",
-                "title": f"Missing item: {m.get('description') or role}",
+                "title": clean_desc,
                 "category": role,
                 "checked": False,
                 "is_missing": True,

@@ -3504,7 +3504,13 @@
     "noMissingItemsTitle": "Нет недостающих вещей",
     "missingItemsCount": "{{count}} недостающих вещей",
     "purposeDisplay": "Цель",
-    "archiveMissingItemsHeader": "Недостающие вещи поездки"
+    "archiveMissingItemsHeader": "Недостающие вещи поездки",
+    "marketplaceSuggestion": "Предложение с маркетплейса",
+    "localStore": "Местный магазин",
+    "localShoppingAdvice": "Местные советы по покупкам",
+    "missingItemPrefix": "Недостающий предмет:",
+    "missingGarment": "Недостающий предмет одежды",
+    "defaultOutfitName": "Наряд"
   },
   "scanning": {
     "bounds": "Обнаружение границ одежды...",
