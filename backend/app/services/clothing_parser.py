@@ -189,6 +189,7 @@ def _resize_for_inference(pil: Image.Image) -> Image.Image:
 def _run_inference(pil_full: Image.Image) -> np.ndarray:
     """Return a class-id mask at the FULL original resolution with minimal memory usage."""
     _load_model()
+    import gc
     import torch
     pil_small = _resize_for_inference(pil_full)
     inputs = _processor(images=pil_small, return_tensors="pt")
@@ -200,11 +201,16 @@ def _run_inference(pil_full: Image.Image) -> np.ndarray:
     # to a single 2D integer class mask BEFORE resizing. This avoids allocating gigabytes
     # of intermediate float32 tensors on high-resolution camera images.
     small_pred = logits.argmax(dim=1).squeeze(0).cpu().numpy().astype(np.uint8)  # (H', W')
+    del inputs, outputs, logits
 
     # Scale single-channel integer mask to original image size with nearest-neighbor
     mask_img = Image.fromarray(small_pred)
     full_mask_img = mask_img.resize((pil_full.size[0], pil_full.size[1]), Image.NEAREST)
     pred = np.array(full_mask_img, dtype=np.uint8)
+    del mask_img, full_mask_img, small_pred
+    if pil_small is not pil_full:
+        del pil_small
+    gc.collect()
     return pred
 
 

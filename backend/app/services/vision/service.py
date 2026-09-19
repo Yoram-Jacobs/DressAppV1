@@ -2182,16 +2182,20 @@ class GarmentVisionService:
                 return idx, []
 
         # 1. Detect on all photos sequentially to avoid OOM on large batches
+        import gc
         results = []
         for i, b in enumerate(images_bytes_list):
             res = await _detect_and_crop(i, b)
             results.append(res)
+            gc.collect()
 
         # Flatten crops and keep track of image indices
         flat_crops: list[tuple[int, dict[str, Any], bytes, str]] = []
         for idx, crops in results:
             for det, c_bytes, c_mime in crops:
                 flat_crops.append((idx, det, c_bytes, c_mime))
+        del results
+        gc.collect()
 
         if not flat_crops:
             yield {

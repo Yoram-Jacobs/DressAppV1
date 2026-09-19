@@ -1891,58 +1891,60 @@ export default function AddItem() {
     });
 
     const requestLang = (i18n.language || "").split("-")[0] || "en";
-    const b64List = [];
-    for (const fp of fingerprints) {
-      if (fp._b64) {
-        b64List.push(fp._b64);
-      } else if (fp.imgUrl) {
-        b64List.push(fp.imgUrl);
-      } else if (fp.file) {
-        b64List.push(await fileToBase64(fp.file));
-      } else {
-        b64List.push("");
+    let savedTotal = 0;
+    let failedTotal = 0;
+    let pendingDuplicatesTotal = 0;
+    let lastErrorMsg = null;
+
+    for (let i = 0; i < fingerprints.length; i++) {
+      const fp = fingerprints[i];
+      let b64 = "";
+      try {
+        if (fp._b64) {
+          b64 = fp._b64;
+        } else if (fp.imgUrl) {
+          b64 = fp.imgUrl;
+        } else if (fp.file) {
+          b64 = await fileToBase64(fp.file);
+        }
+      } catch (readErr) {
+        console.warn(`[handleBatchBackground] Error reading photo ${i}:`, readErr);
       }
-    }
 
-    let detectMetas = [];
-    let totalItemsExpected = 0;
-    const savePromises = [];
+      if (!b64) {
+        failedTotal += 1;
+        setBgBatch((b) => (b ? { ...b, failed: failedTotal, processed: i + 1 } : null));
+        continue;
+      }
 
-    const handleDetect = (frame) => {
-      // detect frame gives us total items across all images
-      const metas = frame.items_meta || [];
-      detectMetas = metas;
-      totalItemsExpected = metas.length;
-      console.log(
-        `[handleBatchBackground] detect: ${metas.length} items detected across ${new Set(metas.map((m) => m.image_index)).size} images`,
-      );
-      // We can bump processed to something to show it started
-      setBgBatch((b) => (b ? { ...b, processed: 1 } : null));
-    };
+      const sourceMeta = {
+        sourceSha256: fp.sha256 || null,
+        sourcePhash: fp.phash || null,
+        sourceColorSig: fp.color_sig || null,
+        sourceFilename: fp.file?.name || fp.filename || null,
+        sourceSizeBytes:
+          typeof fp.file?.size === "number"
+            ? fp.file.size
+            : typeof fp.size_bytes === "number"
+              ? fp.size_bytes
+              : null,
+      };
 
-    const handleItem = (frame) => {
-      console.log(
-        `[handleBatchBackground] item frame: index=${frame.index}, image_index=${frame.image_index}, has_analysis=${!!frame.analysis}`,
-      );
-      const p = (async () => {
-        const meta = detectMetas[frame.index] || {};
-        const idx = meta.image_index ?? frame.image_index ?? 0;
-        const fp = fingerprints[idx];
-        const sourceMeta = {
-          sourceSha256: fp.sha256 || null,
-          sourcePhash: fp.phash || null,
-          sourceColorSig: fp.color_sig || null,
-          sourceFilename: fp.file?.name || null,
-          sourceSizeBytes:
-            typeof fp.file?.size === "number" ? fp.file.size : null,
-        };
+      let photoDetectMetas = [];
+      let photoItemSaved = false;
 
+      const handleDetect = (frame) => {
+        photoDetectMetas = frame.items_meta || [];
+      };
+
+      const handleItem = async (frame) => {
+        const meta = photoDetectMetas[frame.index] || photoDetectMetas[0] || {};
         const analysis = frame.analysis || {};
-        const cropB64 = meta.crop_base64 || b64List[idx];
+        const cropB64 = meta.crop_base64 || b64;
         const mime = meta.crop_mime || fp.file?.type || "image/jpeg";
 
         const cardLike = {
-          base64: b64List[idx],
+          base64: b64,
           cropBase64: meta.crop_base64 || undefined,
           mime,
           file: null,
@@ -1967,14 +1969,10 @@ export default function AddItem() {
             pendingBatchSave: true,
           };
           setCards((prev) => [...prev, dupCard]);
+          pendingDuplicatesTotal += 1;
+          photoItemSaved = true;
           setBgBatch((b) =>
-            b
-              ? {
-                ...b,
-                pendingDuplicates: (b.pendingDuplicates || 0) + 1,
-                processed: b.processed + 1,
-              }
-              : b,
+            b ? { ...b, pendingDuplicates: pendingDuplicatesTotal } : null,
           );
           return;
         }
@@ -1985,115 +1983,116 @@ export default function AddItem() {
           );
           if (created && created.id) {
             try {
-              const { closetStore } = await import("@/lib/closetStore");
               closetStore.upsert(created);
             } catch {
               /* ignore */
             }
+            savedTotal += 1;
+            photoItemSaved = true;
+            setBgBatch((b) => (b ? { ...b, saved: savedTotal } : null));
           }
-          setBgBatch((b) =>
-            b ? { ...b, saved: b.saved + 1, processed: b.processed + 1 } : null,
-          );
-        } catch (_) {
-          setBgBatch((b) =>
-            b
-              ? { ...b, failed: b.failed + 1, processed: b.processed + 1 }
-              : null,
-          );
+        } catch (createErr) {
+          console.error(`[handleBatchBackground] createItem failed for photo ${i}:`, createErr);
+          const detailMsg =
+            createErr?.response?.data?.detail?.message ||
+            createErr?.response?.data?.detail ||
+            createErr?.message;
+          if (detailMsg) lastErrorMsg = detailMsg;
         }
-      })();
-      savePromises.push(p);
-      return p;
-    };
+      };
 
-    const handleItemSkip = (frame) => {
-      console.log(
-        `[handleBatchBackground] item_skip: index=${frame.index}, reason=${frame.reason}`,
-      );
-      setBgBatch((b) => (b ? { ...b, processed: b.processed + 1 } : null));
-    };
+      const handleItemSkip = (frame) => {
+        console.log(
+          `[handleBatchBackground] item_skip: photo=${i}, index=${frame.index}, reason=${frame.reason}`,
+        );
+      };
+
+      try {
+        await api.analyzeItemImage(
+          { images_base64: [b64], language: requestLang },
+          {
+            onDetect: handleDetect,
+            onItem: handleItem,
+            onItemSkip: handleItemSkip,
+          },
+        );
+      } catch (err) {
+        console.warn(`[handleBatchBackground] analyzeItemImage failed for photo ${i}:`, err);
+        const detailMsg =
+          err?.response?.data?.detail?.message ||
+          err?.response?.data?.detail ||
+          err?.message;
+        if (detailMsg) lastErrorMsg = detailMsg;
+      }
+
+      if (!photoItemSaved) {
+        failedTotal += 1;
+        setBgBatch((b) => (b ? { ...b, failed: failedTotal } : null));
+      }
+
+      setBgBatch((b) => (b ? { ...b, processed: i + 1 } : null));
+    }
 
     try {
-      await api.analyzeItemImage(
-        { images_base64: b64List, language: requestLang },
-        {
-          onDetect: handleDetect,
-          onItem: handleItem,
-          onItemSkip: handleItemSkip,
-        },
+      await closetStore.prewarm({ force: true });
+    } catch (_) {
+      /* ignore */
+    }
+
+    console.log(
+      `[handleBatchBackground] ALL DONE: saved=${savedTotal}, failed=${failedTotal}, pendingDuplicates=${pendingDuplicatesTotal}, skippedDups=${skippedDuplicates}`,
+    );
+
+    const dupTrailer = skippedDuplicates
+      ? " " +
+      t("addItem.bgUpload.skippedDupSuffix", {
+        count: skippedDuplicates,
+        defaultValue: "(skipped {{count}} already in closet)",
+      })
+      : "";
+
+    if (lastErrorMsg && failedTotal > 0 && savedTotal === 0 && !pendingDuplicatesTotal) {
+      toast.error(lastErrorMsg);
+    } else if (pendingDuplicatesTotal) {
+      toast.message(
+        t("addItem.bgUpload.duplicatesPending", {
+          saved: savedTotal,
+          pending: pendingDuplicatesTotal,
+          defaultValue:
+            "Saved {{saved}} new items · {{pending}} look like duplicates — review them below.",
+        }) + dupTrailer,
       );
-    } catch (err) {
-      // Stream failed. Try to save all remaining as fallbacks?
-      // For now just error out gracefully
-      console.error("[handleBatchBackground] analyzeItemImage failed:", err);
-      const msg = err?.response?.data?.detail || err?.response?.data?._error || err?.message;
-      if (msg) toast.error(msg);
-      setBgBatch((b) =>
-        b ? { ...b, failed: b.failed + (b.total - b.processed) } : null,
+    } else if (savedTotal && !failedTotal) {
+      toast.success(
+        t("addItem.bgUpload.done", {
+          count: savedTotal,
+          defaultValue:
+            "Saved {{count}} items. Edit any misfits in your closet.",
+        }) + dupTrailer,
+      );
+    } else if (savedTotal && failedTotal) {
+      toast.message(
+        t("addItem.bgUpload.partial", {
+          saved: savedTotal,
+          failed: failedTotal,
+          defaultValue: "Saved {{saved}} · {{failed}} failed",
+        }) + dupTrailer,
+      );
+    } else if (!savedTotal && !pendingDuplicatesTotal && !skippedDuplicates) {
+      toast.error(
+        lastErrorMsg ||
+        t("addItem.bgUpload.failed", {
+          defaultValue: "Could not save any items. Please try again.",
+        }),
       );
     }
 
-    await Promise.all(savePromises);
-    console.log("[handleBatchBackground] All save promises resolved");
-
-    // Final checks and navigation
-    setBgBatch((b) => {
-      const saved = b?.saved ?? 0;
-      const failed = b?.failed ?? 0;
-      const analyzeFailed = b?.analyzeFailed ?? 0;
-      const pendingDuplicates = b?.pendingDuplicates ?? 0;
-      const skippedDups = b?.skippedDuplicates ?? 0;
-      console.log(
-        `[handleBatchBackground] DONE: saved=${saved}, failed=${failed}, analyzeFailed=${analyzeFailed}, pendingDuplicates=${pendingDuplicates}, skippedDups=${skippedDups}`,
-      );
-
-      const dupTrailer = skippedDups
-        ? " " +
-        t("addItem.bgUpload.skippedDupSuffix", {
-          count: skippedDups,
-          defaultValue: "(skipped {{count}} already in closet)",
-        })
-        : "";
-
-      if (pendingDuplicates) {
-        toast.message(
-          t("addItem.bgUpload.duplicatesPending", {
-            saved,
-            pending: pendingDuplicates,
-            defaultValue:
-              "Saved {{saved}} new items · {{pending}} look like duplicates — review them below.",
-          }) + dupTrailer,
-        );
-      } else if (saved && !failed) {
-        toast.success(
-          t("addItem.bgUpload.done", {
-            count: saved,
-            defaultValue:
-              "Saved {{count}} items. Edit any misfits in your closet.",
-          }) + dupTrailer,
-        );
-      } else if (saved && failed) {
-        toast.message(
-          t("addItem.bgUpload.partial", {
-            saved,
-            failed,
-            defaultValue: "Saved {{saved}} · {{failed}} failed",
-          }) + dupTrailer,
-        );
-      } else if (!saved && !pendingDuplicates && !skippedDups) {
-        toast.error(
-          t("addItem.bgUpload.failed", {
-            defaultValue: "Could not save any items. Please try again.",
-          }),
-        );
+    setTimeout(() => {
+      if (savedTotal && !pendingDuplicatesTotal) {
+        nav(isSuitcase ? "/suitcase" : "/closet");
       }
-
-      setTimeout(() => {
-        if (saved && !pendingDuplicates)
-          nav(isSuitcase ? "/suitcase" : "/closet");
-      }, 1200);
-      return null;
-    });
+      setBgBatch(null);
+    }, 1200);
   }
 
   const analyzeCards = async (cardsList) => {
