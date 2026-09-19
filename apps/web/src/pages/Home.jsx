@@ -15,6 +15,17 @@ import {
   Recycle,
   Newspaper,
   Plus,
+  ShieldCheck,
+  Wand2,
+  Eye,
+  CheckCircle2,
+  Copy,
+  Layers,
+  Zap,
+  Lock,
+  RadioTower,
+  XCircle,
+  Check,
 } from "lucide-react";
 import {
   Ruler, Link2, MousePointerClick, Store, Download,
@@ -43,6 +54,7 @@ import { api } from "@/lib/api";
 import { bestImageUrl, resolveMediaUrl } from "@/lib/itemImage";
 import { AdTicker } from "@/components/AdTicker";
 import { LanguagePicker } from "@/components/LanguagePicker";
+import MigrationStepShowcase from "@/components//MigrationStepShowcase";
 import OnboardingMigrationModal from "@/components/OnboardingMigrationModal";
 import { toast } from "sonner";
 import { Swiper, SwiperSlide } from "swiper/react";
@@ -303,7 +315,7 @@ export default function Home() {
 
   useEffect(() => {
     if (user) {
-      dailyStore.prewarm().catch(() => {});
+      dailyStore.prewarm().catch(() => { });
     }
   }, [user?.id]);
 
@@ -966,7 +978,7 @@ export default function Home() {
       image: stepOpenImg,
       // no popup here
     },
-    
+
     {
       id: "match",
       icon: Ruler,
@@ -978,6 +990,30 @@ export default function Home() {
       image: stepMatchBaseImg,
     },
   ];
+  const MIGRATION_STEPS_COUNT = 3;
+  const STEP_DURATION_MS = 4800;
+  const [migrationStep, setMigrationStep] = useState(0);
+  const [migrationProgress, setMigrationProgress] = useState(0);
+  const [scanCount, setScanCount] = useState(5);
+
+  useEffect(() => {
+    setMigrationProgress(0);
+    const startedAt = Date.now();
+    const tick = setInterval(() => {
+      const pct = Math.min(100, ((Date.now() - startedAt) / STEP_DURATION_MS) * 100);
+      setMigrationProgress(pct);
+      if (pct >= 100) setMigrationStep((s) => (s + 1) % MIGRATION_STEPS_COUNT);
+    }, 40);
+    return () => clearInterval(tick);
+  }, [migrationStep]);
+
+  useEffect(() => {
+    if (migrationStep !== 1) { setScanCount(5); return; }
+    const id = setInterval(() => {
+      setScanCount((c) => (c >= 96 ? 12 : c + Math.ceil(Math.random() * 9)));
+    }, 260);
+    return () => clearInterval(id);
+  }, [migrationStep]);
   return (
     <>
       {/* Home-banner-start */}
@@ -1518,7 +1554,7 @@ export default function Home() {
                     {t(step.titleKey, { defaultValue: step.titleDefault })}
                   </h4>
 
-                  <p className="relative z-[1] m-0 max-w-[350px] text-[14px] leading-[1.7] text-[#68706e]">
+                  <p className="relative z-[1] m-0 text-[14px] leading-[1.7] text-[#68706e]">
                     {t(step.descriptionKey, {
                       defaultValue: step.descriptionDefault,
                     })}
@@ -1604,64 +1640,39 @@ export default function Home() {
                   whileInView={{ opacity: 1, x: 0 }}
                   viewport={{ once: false, amount: 0.3 }}
                   transition={{ duration: 0.65, delay: 0.5, ease: "easeOut" }}
+                  className="flex flex-wrap items-center gap-3 mt-4"
                 >
-                   <Button
-                  asChild
-                  data-testid="home-ask-stylist-cta"
-                  className="
-          h-auto
-          rounded-full
-          border-0
-          bg-[var(--primary-color)]
-          px-7
-          py-3.5
-          font-sans
-          text-sm
-          font-medium
-          text-white
-          shadow-none
-          transition-all
-          duration-300
-          hover:-translate-y-0.5
-          hover:bg-[var(--primary-hover)]
-          hover:text-white
-          hover:shadow-[0_10px_30px_rgba(31,92,69,0.22)]
-        "
-                >
-                  <Link
-                    to="/closet/add"
-                    className="inline-flex items-center justify-center gap-2"
+                  <Button
+                    asChild
+                    data-testid="home-ask-stylist-cta"
+                    className="
+                      h-auto
+                      rounded-full
+                      border-0
+                      bg-[var(--primary-color)]
+                      px-7
+                      py-3.5
+                      font-sans
+                      text-sm
+                      font-medium
+                      text-white
+                      shadow-none
+                      transition-all
+                      duration-300
+                      hover:-translate-y-0.5
+                      hover:bg-[var(--primary-hover)]
+                      hover:text-white
+                      hover:shadow-[0_10px_30px_rgba(31,92,69,0.22)]
+                    "
                   >
-                    <Plus className="h-4 w-4" />
-                    {t('closet.addItem', { defaultValue: 'Add item' })}
-                  </Link>
-                </Button>
-                  {/* <button
-                    type="button"
-                    className="mt-2 inline-flex items-center justify-center rounded-[50px] border-none bg-[var(--primary-color)] px-[30px] py-[20px] text-[14px] font-bold leading-none text-[var(--white)] transition-smooth hover:-translate-y-[2px] hover:bg-[var(--primary-hover)] hover:text-[var(--white)] hover:shadow-[0_8px_24px_rgba(31,92,69,0.25)]"
-                    onClick={() => {
-                      if (!canAccessMigration) {
-                        toast.error(t('common.upgradeToUse', { feature: t('common.features.migration') }));
-                        return;
-                      }
-                      if ("ontouchstart" in window) {
-                        toast.info(
-                          t("profile.mobileDesktopGuide", {
-                            defaultValue:
-                              "Wardrobe import is available on the desktop version of DressApp. Please open your account on a desktop browser to continue.",
-                          }),
-                          { duration: 8000 }
-                        );
-                      } else {
-                        setIsMigrationModalOpen(true);
-                      }
-                    }}
-                  >
-                    {t("home.closet.cta", {
-                      defaultValue: "Migrate your Wardrobe",
-                    })}
-                    <i className="fa-solid fa-arrow-right ms-2 rtl:rotate-180" />
-                  </button> */}
+                    <Link
+                      to="/closet/add"
+                      className="inline-flex items-center justify-center gap-2"
+                    >
+                      <Plus className="h-4 w-4" />
+                      {t('closet.addItem', { defaultValue: 'Add item' })}
+                    </Link>
+                  </Button>
                 </motion.div>
               </div>
             </div>
@@ -1787,6 +1798,295 @@ export default function Home() {
         />
       </section>
       {/* closet-section-end */}
+      {/* migration-section-start */}
+      <MigrationStepShowcase t={t} setIsMigrationModalOpen={setIsMigrationModalOpen} />
+      {/* migration-section-end */}
+      {/* shopping-assistant-extension-section-start */}
+      <section
+        id="shopping-assistant"
+        className="w-full overflow-hidden bg-accent-beige px-[40px] py-[80px] max-[991px]:px-[15px] max-[991px]:py-[30px] max-[767px]:px-[15px] max-[767px]:py-[30px] 
+        max-[480px]:px-[15px] max-[480px]:py-[30px]"
+      >
+        <div className="w-full">
+          <div className="grid grid-cols-1 items-center gap-x-8 gap-y-8 md:grid-cols-12">
+            {/* Real extension preview — product page + DressApp FAB / size card */}
+            <div className="md:col-span-7 md:order-2">
+              <motion.div
+                initial={{ opacity: 0, x: 40 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: false, amount: 0.3 }}
+                transition={{ duration: 0.65, delay: 0.15, ease: "easeOut" }}
+                className="relative"
+                data-testid="shopping-assistant-preview"
+              >
+                <div className="pointer-events-none absolute -inset-6 -z-10 rounded-[32px] bg-[radial-gradient(60%_60%_at_70%_20%,rgba(31,92,69,0.14),transparent_70%)]" />
+
+                <div className="overflow-hidden rounded-[12px] border border-border bg-white shadow-lg">
+                  {/* Browser chrome */}
+                  <div className="flex items-center gap-2 border-b border-border bg-[#f4f0ea] px-4 py-3">
+                    <span className="h-2.5 w-2.5 rounded-full bg-[#e6675c]" />
+                    <span className="h-2.5 w-2.5 rounded-full bg-[#e8b84b]" />
+                    <span className="h-2.5 w-2.5 rounded-full bg-[#5fb97b]" />
+                    <div className="ms-3 flex h-6 flex-1 items-center overflow-hidden rounded-full bg-white px-3 text-[10px] font-medium text-[#8a8a8a]">
+                      <AnimatePresence mode="wait">
+                        <motion.span
+                          key={SHOPPING_ASSISTANT_STEPS[assistantStep].url}
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          exit={{ opacity: 0 }}
+                          transition={{ duration: 0.2 }}
+                          className="truncate"
+                        >
+                          {SHOPPING_ASSISTANT_STEPS[assistantStep].url}
+                        </motion.span>
+                      </AnimatePresence>
+                    </div>
+                  </div>
+
+                  {/* Real screenshot, crossfades per step */}
+                  <div className="relative h-[530px] w-full overflow-hidden bg-[#f7f4ee]">
+                    <AnimatePresence mode="wait">
+                      <motion.img
+                        key={SHOPPING_ASSISTANT_STEPS[assistantStep].id}
+                        src={SHOPPING_ASSISTANT_STEPS[assistantStep].image}
+                        alt={t(SHOPPING_ASSISTANT_STEPS[assistantStep].titleKey, {
+                          defaultValue: SHOPPING_ASSISTANT_STEPS[assistantStep].titleDefault,
+                        })}
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        transition={{ duration: 0.35, ease: "easeOut" }}
+                        className="absolute inset-0 h-full w-full object-cover object-top"
+                      />
+                    </AnimatePresence>
+
+                    {/* Real match-result card, reveals only on step 3 */}
+                    {/* <AnimatePresence>
+                      {SHOPPING_ASSISTANT_STEPS[assistantStep].popup && (
+                        <motion.img
+                          key="popup"
+                          src={SHOPPING_ASSISTANT_STEPS[assistantStep].popup}
+                          alt="DressApp size match result"
+                          initial={{ opacity: 0, y: 12, scale: 0.97 }}
+                          animate={{ opacity: 1, y: 0, scale: 1 }}
+                          exit={{ opacity: 0, y: 12, scale: 0.97 }}
+                          transition={{ duration: 0.4, ease: "easeOut", delay: 0.15 }}
+                          className="absolute bottom-3 right-3 w-[62%] max-w-[320px] rounded-[10px] shadow-[0_18px_35px_-14px_rgba(23,20,15,0.4)] sm:bottom-4 sm:right-4"
+                        />
+                      )}
+                    </AnimatePresence> */}
+                  </div>
+                </div>
+              </motion.div>
+            </div>
+            {/* Left Side Content */}
+            <div className="md:col-span-5 md:order-1">
+              <div className="">
+                <motion.span
+                  initial={{ opacity: 0, x: -40 }}
+                  whileInView={{ opacity: 1, x: 0 }}
+                  viewport={{ once: false, amount: 0.3 }}
+                  transition={{ duration: 0.6, delay: 0, ease: "easeOut" }}
+                  className="mb-4 inline-flex items-center gap-2 rounded-full border border-[#d7e1de] bg-primary-shadow px-[15px] py-[5px] text-[12px] font-bold uppercase tracking-[1.5px] text-primary-brand"
+                >
+                  <span className="h-[7px] w-[7px] rounded-full bg-primary-brand" />
+                  {t("home.shoppingAssistant.tag", {
+                    defaultValue: "Chrome Extension",
+                  })}
+                </motion.span>
+
+                <motion.h2
+                  initial={{ opacity: 0, x: -40 }}
+                  whileInView={{ opacity: 1, x: 0 }}
+                  viewport={{ once: false, amount: 0.3 }}
+                  transition={{ duration: 0.65, delay: 0.15, ease: "easeOut" }}
+                  className="mb-3 text-[30px] font-extrabold leading-[40px] tracking-[0.5px] text-black max-[480px]:text-[20px] max-[480px]:leading-[30px]"
+                >
+                  {t("home.shoppingAssistant.heading", {
+                    defaultValue: "Never Guess Your Size Again",
+                  })}
+                </motion.h2>
+
+                <motion.p
+                  initial={{ opacity: 0, x: -40 }}
+                  whileInView={{ opacity: 1, x: 0 }}
+                  viewport={{ once: false, amount: 0.3 }}
+                  transition={{ duration: 0.65, delay: 0.3, ease: "easeOut" }}
+                  className="text-[16px] leading-[26px] font-semibold text-text-brand mb-6 max-[480px]:text-[14px] max-[480px]:leading-[24px]"
+                >
+                  {t("home.shoppingAssistant.description1", {
+                    defaultValue:
+                      "The DressApp Shopping Assistant reads the size chart on supported partner stores and matches it against your saved body measurements — right there on the page.",
+                  })}
+                </motion.p>
+
+                {/* How it works steps — clickable, syncs with the screenshot on the right */}
+                <motion.div
+                  initial={{ opacity: 0, x: -40 }}
+                  whileInView={{ opacity: 1, x: 0 }}
+                  viewport={{ once: false, amount: 0.3 }}
+                  transition={{ duration: 0.65, delay: 0.4, ease: "easeOut" }}
+                  className="mb-7 flex flex-col gap-0"
+                >
+                  {SHOPPING_ASSISTANT_STEPS.map((step, i, arr) => {
+                    const isActive = i === assistantStep;
+                    return (
+                      <button
+                        key={step.id}
+                        type="button"
+                        onClick={() => setAssistantStep(i)}
+                        className="relative flex w-full gap-4 pb-6 text-left last:pb-0 group"
+                      >
+                        {i < arr.length - 1 && (
+                          <span className="absolute start-[19px] top-[40px] h-[calc(100%-32px)] w-px bg-[var(--primary-color)]/15" />
+                        )}
+                        <span
+                          className={`relative z-[1] flex h-10 w-10 shrink-0 items-center justify-center rounded-full border group-hover:bg-primary-brand group-hover:text-white transition-smooth 
+                            ${isActive
+                              ? "border-primary-brand bg-[var(--primary-color)] text-white"
+                              : "border-border bg-primary-shadow text-primary-brand"
+                            }`}
+                        >
+                          <step.icon className="h-4 w-4" />
+                        </span>
+                        <div>
+                          <h6
+                            className={`m-0 mb-0.5 text-[14px] font-bold group-hover:text-primary-brand  ${isActive ? "text-[var(--primary-color)]" : "text-[var(--dark-color)]"
+                              }`}
+                          >
+                            {t(step.titleKey, { defaultValue: step.titleDefault })}
+                          </h6>
+                          <p className="m-0 text-[12.5px] leading-[1.5] text-[var(--text-color)]">
+                            {t(step.descKey, { defaultValue: step.descDefault })}
+                          </p>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </motion.div>
+
+                {/* CTA */}
+                <motion.div
+                  initial={{ opacity: 0, x: -40 }}
+                  whileInView={{ opacity: 1, x: 0 }}
+                  viewport={{ once: false, amount: 0.3 }}
+                  transition={{ duration: 0.65, delay: 0.5, ease: "easeOut" }}
+                  className="flex flex-wrap items-center gap-3"
+                >
+                  <a
+                    href="https://chromewebstore.google.com/detail/dressapp-shopping-assista/jdhaijhhipacplnjlhmnjaljhfmeoidp"
+                    className="inline-flex min-h-11 items-center justify-center rounded-[50px] bg-[var(--primary-color)] px-[30px] py-[18px] text-[14px] font-bold leading-none text-white no-underline shadow-[var(--primary-shadow)] transition-smooth hover:-translate-y-[2px] hover:bg-[var(--primary-hover)] hover:text-white hover:shadow-[0_8px_24px_rgba(31,92,69,0.25)]"
+                  >
+                    <i className="bi bi-google me-2" />
+                    {t("home.shoppingAssistant.cta", {
+                      defaultValue: "Add to Chrome",
+                    })}
+                  </a>
+
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setAddStoreOpen(true)}
+                    className="
+                          h-auto
+                          rounded-full
+                          border
+                          border-black/10
+                          bg-white
+                          px-7
+                          py-3.5
+                          font-sans
+                          text-sm
+                          font-semibold
+                          text-[var(--dark-color)]
+                          shadow-none
+                          transition-all
+                          duration-300
+                          hover:-translate-y-0.5
+                          hover:bg-white
+                          hover:text-[var(--primary-color)]
+                          hover:shadow-[var(--shadow-medium)]
+                    "
+                    data-testid="shopping-assistant-add-store"
+                  >
+                    <Store className="h-4 w-4" />
+                    {t("home.shoppingAssistant.addStore.button", {
+                      defaultValue: "Add my Store",
+                    })}
+                  </Button>
+                </motion.div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+      <Dialog open={addStoreOpen} onOpenChange={setAddStoreOpen}>
+        <DialogContent className="max-w-md" data-testid="shopping-assistant-add-store-dialog">
+          <DialogHeader>
+            <DialogTitle>
+              {t("home.shoppingAssistant.addStore.title", {
+                defaultValue: "Request a store",
+              })}
+            </DialogTitle>
+            <DialogDescription>
+              {t("home.shoppingAssistant.addStore.description", {
+                defaultValue:
+                  "Tell us a store you would like added to the DressApp Shopping Assistant. We will review it and add it if Google allows.",
+              })}
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={submitStoreRequest} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="store-request-name">
+                {t("home.shoppingAssistant.addStore.storeName", {
+                  defaultValue: "Online store name",
+                })}
+              </Label>
+              <Input
+                id="store-request-name"
+                value={storeName}
+                onChange={(e) => setStoreName(e.target.value)}
+                placeholder={t("home.shoppingAssistant.addStore.storeNamePlaceholder", {
+                  defaultValue: "e.g. Zara",
+                })}
+                autoComplete="organization"
+                required
+                data-testid="shopping-assistant-store-name"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="store-request-url">
+                {t("home.shoppingAssistant.addStore.storeUrl", {
+                  defaultValue: "Web address",
+                })}
+              </Label>
+              <Input
+                id="store-request-url"
+                type="url"
+                inputMode="url"
+                value={storeUrl}
+                onChange={(e) => setStoreUrl(e.target.value)}
+                placeholder={t("home.shoppingAssistant.addStore.storeUrlPlaceholder", {
+                  defaultValue: "https://www.example.com",
+                })}
+                autoComplete="url"
+                required
+                data-testid="shopping-assistant-store-url"
+              />
+            </div>
+            <DialogFooter className="pt-2">
+              <Button
+                type="submit"
+                className="min-h-11 rounded-xl"
+                data-testid="shopping-assistant-store-send"
+              >
+                {t("home.shoppingAssistant.addStore.send", { defaultValue: "Send" })}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+      {/* shopping-assistant-extension-section-end */}
       {/* stylist-section-start */}
       <section
         id="stylist"
@@ -2332,423 +2632,6 @@ export default function Home() {
         </div>
       </section>
       {/* marketplace-section-end */}
-      {/* shopping-assistant-extension-section-start */}
-      <section
-        id="shopping-assistant"
-        className="w-full overflow-hidden bg-white px-[40px] py-[80px] max-[991px]:px-[15px] max-[991px]:py-[30px] max-[767px]:px-[15px] max-[767px]:py-[30px] 
-        max-[480px]:px-[15px] max-[480px]:py-[30px]"
-      >
-        <div className="w-full">
-          <div className="grid grid-cols-1 items-center gap-x-8 gap-y-8 md:grid-cols-12">
-            {/* Real extension preview — product page + DressApp FAB / size card */}
-            <div className="md:col-span-7 md:order-2">
-              <motion.div
-                initial={{ opacity: 0, x: 40 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                viewport={{ once: false, amount: 0.3 }}
-                transition={{ duration: 0.65, delay: 0.15, ease: "easeOut" }}
-                className="relative"
-                data-testid="shopping-assistant-preview"
-              >
-                <div className="pointer-events-none absolute -inset-6 -z-10 rounded-[32px] bg-[radial-gradient(60%_60%_at_70%_20%,rgba(31,92,69,0.14),transparent_70%)]" />
-
-                <div className="overflow-hidden rounded-[12px] border border-border bg-white shadow-lg">
-                  {/* Browser chrome */}
-                  <div className="flex items-center gap-2 border-b border-border bg-[#f4f0ea] px-4 py-3">
-                    <span className="h-2.5 w-2.5 rounded-full bg-[#e6675c]" />
-                    <span className="h-2.5 w-2.5 rounded-full bg-[#e8b84b]" />
-                    <span className="h-2.5 w-2.5 rounded-full bg-[#5fb97b]" />
-                    <div className="ms-3 flex h-6 flex-1 items-center overflow-hidden rounded-full bg-white px-3 text-[10px] font-medium text-[#8a8a8a]">
-                      <AnimatePresence mode="wait">
-                        <motion.span
-                          key={SHOPPING_ASSISTANT_STEPS[assistantStep].url}
-                          initial={{ opacity: 0 }}
-                          animate={{ opacity: 1 }}
-                          exit={{ opacity: 0 }}
-                          transition={{ duration: 0.2 }}
-                          className="truncate"
-                        >
-                          {SHOPPING_ASSISTANT_STEPS[assistantStep].url}
-                        </motion.span>
-                      </AnimatePresence>
-                    </div>
-                  </div>
-
-                  {/* Real screenshot, crossfades per step */}
-                  <div className="relative h-[530px] w-full overflow-hidden bg-[#f7f4ee]">
-                    <AnimatePresence mode="wait">
-                      <motion.img
-                        key={SHOPPING_ASSISTANT_STEPS[assistantStep].id}
-                        src={SHOPPING_ASSISTANT_STEPS[assistantStep].image}
-                        alt={t(SHOPPING_ASSISTANT_STEPS[assistantStep].titleKey, {
-                          defaultValue: SHOPPING_ASSISTANT_STEPS[assistantStep].titleDefault,
-                        })}
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        transition={{ duration: 0.35, ease: "easeOut" }}
-                        className="absolute inset-0 h-full w-full object-cover object-top"
-                      />
-                    </AnimatePresence>
-
-                    {/* Real match-result card, reveals only on step 3 */}
-                    {/* <AnimatePresence>
-                      {SHOPPING_ASSISTANT_STEPS[assistantStep].popup && (
-                        <motion.img
-                          key="popup"
-                          src={SHOPPING_ASSISTANT_STEPS[assistantStep].popup}
-                          alt="DressApp size match result"
-                          initial={{ opacity: 0, y: 12, scale: 0.97 }}
-                          animate={{ opacity: 1, y: 0, scale: 1 }}
-                          exit={{ opacity: 0, y: 12, scale: 0.97 }}
-                          transition={{ duration: 0.4, ease: "easeOut", delay: 0.15 }}
-                          className="absolute bottom-3 right-3 w-[62%] max-w-[320px] rounded-[10px] shadow-[0_18px_35px_-14px_rgba(23,20,15,0.4)] sm:bottom-4 sm:right-4"
-                        />
-                      )}
-                    </AnimatePresence> */}
-                  </div>
-                </div>
-              </motion.div>
-            </div>
-            {/* Left Side Content */}
-            <div className="md:col-span-5 md:order-1">
-              <div className="">
-                <motion.span
-                  initial={{ opacity: 0, x: -40 }}
-                  whileInView={{ opacity: 1, x: 0 }}
-                  viewport={{ once: false, amount: 0.3 }}
-                  transition={{ duration: 0.6, delay: 0, ease: "easeOut" }}
-                  className="mb-4 inline-flex items-center gap-2 rounded-full border border-[#d7e1de] bg-primary-shadow px-[15px] py-[5px] text-[12px] font-bold uppercase tracking-[1.5px] text-primary-brand"
-                >
-                  <span className="h-[7px] w-[7px] rounded-full bg-primary-brand" />
-                  {t("home.shoppingAssistant.tag", {
-                    defaultValue: "Chrome Extension",
-                  })}
-                </motion.span>
-
-                <motion.h2
-                  initial={{ opacity: 0, x: -40 }}
-                  whileInView={{ opacity: 1, x: 0 }}
-                  viewport={{ once: false, amount: 0.3 }}
-                  transition={{ duration: 0.65, delay: 0.15, ease: "easeOut" }}
-                  className="mb-3 text-[30px] font-extrabold leading-[40px] tracking-[0.5px] text-black max-[480px]:text-[20px] max-[480px]:leading-[30px]"
-                >
-                  {t("home.shoppingAssistant.heading", {
-                    defaultValue: "Never Guess Your Size Again",
-                  })}
-                </motion.h2>
-
-                <motion.p
-                  initial={{ opacity: 0, x: -40 }}
-                  whileInView={{ opacity: 1, x: 0 }}
-                  viewport={{ once: false, amount: 0.3 }}
-                  transition={{ duration: 0.65, delay: 0.3, ease: "easeOut" }}
-                  className="text-[16px] leading-[26px] font-semibold text-text-brand mb-6 max-[480px]:text-[14px] max-[480px]:leading-[24px]"
-                >
-                  {t("home.shoppingAssistant.description1", {
-                    defaultValue:
-                      "The DressApp Shopping Assistant reads the size chart on supported partner stores and matches it against your saved body measurements — right there on the page.",
-                  })}
-                </motion.p>
-
-                {/* How it works steps — clickable, syncs with the screenshot on the right */}
-                <motion.div
-                  initial={{ opacity: 0, x: -40 }}
-                  whileInView={{ opacity: 1, x: 0 }}
-                  viewport={{ once: false, amount: 0.3 }}
-                  transition={{ duration: 0.65, delay: 0.4, ease: "easeOut" }}
-                  className="mb-7 flex flex-col gap-0"
-                >
-                  {SHOPPING_ASSISTANT_STEPS.map((step, i, arr) => {
-                    const isActive = i === assistantStep;
-                    return (
-                      <button
-                        key={step.id}
-                        type="button"
-                        onClick={() => setAssistantStep(i)}
-                        className="relative flex w-full gap-4 pb-6 text-left last:pb-0 group"
-                      >
-                        {i < arr.length - 1 && (
-                          <span className="absolute start-[19px] top-[40px] h-[calc(100%-32px)] w-px bg-[var(--primary-color)]/15" />
-                        )}
-                        <span
-                          className={`relative z-[1] flex h-10 w-10 shrink-0 items-center justify-center rounded-full border group-hover:bg-primary-brand group-hover:text-white transition-smooth 
-                            ${isActive
-                              ? "border-primary-brand bg-[var(--primary-color)] text-white"
-                              : "border-border bg-primary-shadow text-primary-brand"
-                            }`}
-                        >
-                          <step.icon className="h-4 w-4" />
-                        </span>
-                        <div>
-                          <h6
-                            className={`m-0 mb-0.5 text-[14px] font-bold group-hover:text-primary-brand  ${isActive ? "text-[var(--primary-color)]" : "text-[var(--dark-color)]"
-                              }`}
-                          >
-                            {t(step.titleKey, { defaultValue: step.titleDefault })}
-                          </h6>
-                          <p className="m-0 text-[12.5px] leading-[1.5] text-[var(--text-color)]">
-                            {t(step.descKey, { defaultValue: step.descDefault })}
-                          </p>
-                        </div>
-                      </button>
-                    );
-                  })}
-                </motion.div>
-
-                {/* CTA */}
-                <motion.div
-                  initial={{ opacity: 0, x: -40 }}
-                  whileInView={{ opacity: 1, x: 0 }}
-                  viewport={{ once: false, amount: 0.3 }}
-                  transition={{ duration: 0.65, delay: 0.5, ease: "easeOut" }}
-                  className="flex flex-wrap items-center gap-3"
-                >
-                  <a
-                    href="https://chromewebstore.google.com/detail/dressapp-shopping-assista/jdhaijhhipacplnjlhmnjaljhfmeoidp"
-                    className="inline-flex min-h-11 items-center justify-center rounded-[50px] bg-[var(--primary-color)] px-[30px] py-[18px] text-[14px] font-bold leading-none text-white no-underline shadow-[var(--primary-shadow)] transition-smooth hover:-translate-y-[2px] hover:bg-[var(--primary-hover)] hover:text-white hover:shadow-[0_8px_24px_rgba(31,92,69,0.25)]"
-                  >
-                    <i className="bi bi-google me-2" />
-                    {t("home.shoppingAssistant.cta", {
-                      defaultValue: "Add to Chrome",
-                    })}
-                  </a>
-
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => setAddStoreOpen(true)}
-                    className="
-                          h-auto
-                          rounded-full
-                          border
-                          border-black/10
-                          bg-white
-                          px-7
-                          py-3.5
-                          font-sans
-                          text-sm
-                          font-semibold
-                          text-[var(--dark-color)]
-                          shadow-none
-                          transition-all
-                          duration-300
-                          hover:-translate-y-0.5
-                          hover:bg-white
-                          hover:text-[var(--primary-color)]
-                          hover:shadow-[var(--shadow-medium)]
-                    "
-                    data-testid="shopping-assistant-add-store"
-                  >
-                    <Store className="h-4 w-4" />
-                    {t("home.shoppingAssistant.addStore.button", {
-                      defaultValue: "Add my Store",
-                    })}
-                  </Button>
-                </motion.div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-      <Dialog open={addStoreOpen} onOpenChange={setAddStoreOpen}>
-        <DialogContent className="max-w-md" data-testid="shopping-assistant-add-store-dialog">
-          <DialogHeader>
-            <DialogTitle>
-              {t("home.shoppingAssistant.addStore.title", {
-                defaultValue: "Request a store",
-              })}
-            </DialogTitle>
-            <DialogDescription>
-              {t("home.shoppingAssistant.addStore.description", {
-                defaultValue:
-                  "Tell us a store you would like added to the DressApp Shopping Assistant. We will review it and add it if Google allows.",
-              })}
-            </DialogDescription>
-          </DialogHeader>
-          <form onSubmit={submitStoreRequest} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="store-request-name">
-                {t("home.shoppingAssistant.addStore.storeName", {
-                  defaultValue: "Online store name",
-                })}
-              </Label>
-              <Input
-                id="store-request-name"
-                value={storeName}
-                onChange={(e) => setStoreName(e.target.value)}
-                placeholder={t("home.shoppingAssistant.addStore.storeNamePlaceholder", {
-                  defaultValue: "e.g. Zara",
-                })}
-                autoComplete="organization"
-                required
-                data-testid="shopping-assistant-store-name"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="store-request-url">
-                {t("home.shoppingAssistant.addStore.storeUrl", {
-                  defaultValue: "Web address",
-                })}
-              </Label>
-              <Input
-                id="store-request-url"
-                type="url"
-                inputMode="url"
-                value={storeUrl}
-                onChange={(e) => setStoreUrl(e.target.value)}
-                placeholder={t("home.shoppingAssistant.addStore.storeUrlPlaceholder", {
-                  defaultValue: "https://www.example.com",
-                })}
-                autoComplete="url"
-                required
-                data-testid="shopping-assistant-store-url"
-              />
-            </div>
-            <DialogFooter className="pt-2">
-              <Button
-                type="submit"
-                className="min-h-11 rounded-xl"
-                data-testid="shopping-assistant-store-send"
-              >
-                {t("home.shoppingAssistant.addStore.send", { defaultValue: "Send" })}
-              </Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
-      {/* shopping-assistant-extension-section-end */}
-      {/* experts-section-start */}
-      <section
-        id="experts"
-        className="w-full overflow-hidden bg-[var(--accent-beige)] px-[40px] py-[80px] max-[991px]:px-[15px] max-[991px]:py-[30px] max-[767px]:px-[15px] max-[767px]:py-[30px] 
-        max-[480px]:px-[15px] max-[480px]:py-[30px]"
-      >
-        <div className="w-full">
-          {/* Section Heading */}
-          <div className="mb-12 max-[480px]:mb-5">
-            {/* Tag */}
-            <motion.span
-              initial={{ opacity: 0, y: -10 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: false, amount: 0.3 }}
-              transition={{ duration: 0.6, delay: 0, ease: "easeOut" }}
-              className="mb-4 inline-flex items-center gap-2 rounded-full border border-[#d7e1de] bg-primary-shadow px-[15px] py-[5px] text-[12px] font-bold uppercase tracking-[1.5px] text-primary-brand"
-            >
-              <span className="h-[7px] w-[7px] rounded-full bg-primary-brand" />
-              {t("home.experts.tag", { defaultValue: "Meet The Specialists" })}
-            </motion.span>
-
-            <Link to="/experts" className="block no-underline">
-              <motion.h2
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: false, amount: 0.3 }}
-                transition={{ duration: 0.65, delay: 0.15, ease: "easeOut" }}
-                className="mb-3 text-[30px] font-extrabold leading-[40px] tracking-[0.5px] text-black max-[480px]:text-[20px] max-[480px]:leading-[30px]"
-              >
-                {t("home.experts.title", {
-                  defaultValue: "Talk To A Real Style Expert",
-                })}
-              </motion.h2>
-            </Link>
-
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: false, amount: 0.3 }}
-              transition={{ duration: 0.65, delay: 0.3, ease: "easeOut" }}
-              className="flex items-center justify-between gap-8 max-[767px]:flex-col max-[767px]:items-start max-[480px]:gap-4"
-            >
-              <p className="max-w-[620px] text-[16px] leading-[26px] font-semibold text-text-brand max-[480px]:text-[14px] max-[480px]:leading-[24px]">
-                {t("home.experts.description", {
-                  defaultValue:
-                    "Book a 1:1 session with a certified DressApp stylist whenever the AI needs a human, editorial finishing touch.",
-                })}
-              </p>
-
-              <Link
-                to="/experts"
-                className="inline-flex shrink-0 items-center justify-center rounded-[50px] bg-[var(--primary-color)] px-[30px] py-[15px] text-[14px] font-bold leading-[24px] text-white no-underline shadow-[var(--primary-shadow)] transition-smooth hover:-translate-y-[2px] hover:bg-[var(--primary-hover)] hover:text-white hover:shadow-[0_8px_24px_rgba(31,92,69,0.25)]"
-              >
-                {t("home.experts.viewAll", {
-                  defaultValue: "View All Experts",
-                })}
-                <i className="fa-solid fa-arrow-right ms-2 rtl:rotate-180" />
-              </Link>
-            </motion.div>
-          </div>
-
-          {/* Experts Grid */}
-          <motion.div
-            initial={{ opacity: 0, y: 40 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: false, amount: 0.2 }}
-            transition={{ duration: 0.7, delay: 0.2, ease: "easeOut" }}
-            className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4"
-          >
-            {EXPERTS.map((expert, i) => (
-              <motion.div
-                key={expert.id}
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: false, amount: 0.3 }}
-                transition={{ duration: 0.5, delay: i * 0.1, ease: "easeOut" }}
-              >
-                <div className="group h-full rounded-[18px] border border-border bg-white p-6 text-center shadow-[0_15px_35px_-18px_rgba(23,20,15,0.3)] transition-smooth hover:-translate-y-[5px] hover:shadow-[0_20px_45px_rgba(23,20,15,0.12)]">
-                  {/* Avatar */}
-                  <div className="relative mx-auto mb-5 h-[105px] w-[105px]">
-                    <img
-                      src={expert.image}
-                      alt={expert.name}
-                      className="h-full w-full rounded-full object-cover ring-4 ring-[var(--primary-shadow)]"
-                    />
-
-                    <span className="absolute bottom-0 end-0 flex h-7 w-7 items-center justify-center rounded-full border-2 border-white bg-[var(--primary-color)] text-white shadow-[0_4px_10px_rgba(0,0,0,0.15)]">
-                      <i className="bi bi-patch-check-fill text-[13px]" />
-                    </span>
-                  </div>
-
-                  <h5 className="m-0 mb-2 text-[17px] font-black text-[var(--dark-color)]">
-                    {expert.name}
-                  </h5>
-
-                  <span className="inline-flex rounded-full bg-[var(--primary-shadow)] px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.05em] text-[var(--primary-color)]">
-                    {t(expert.roleKey, { defaultValue: expert.roleDefault })}
-                  </span>
-
-                  {/* Rating */}
-                  <div className="mt-4 flex items-center justify-center gap-1.5 text-[13px] font-bold text-[var(--dark-color)]">
-                    <i className="bi bi-star-fill text-[#d8a84e]" />
-                    <span>{expert.rating}</span>
-                    <span className="font-medium text-[var(--text-color)]">
-                      {t("home.experts.sessionsCount", {
-                        count: expert.sessions,
-                        defaultValue: "({{count}} sessions)",
-                      })}
-                    </span>
-                  </div>
-
-                  <p className="my-4 text-[13px] font-medium leading-[22px] text-[var(--text-color)]">
-                    {t(expert.bioKey, { defaultValue: expert.bioDefault })}
-                  </p>
-
-                  <Link
-                    to="/experts"
-                    className="inline-flex items-center justify-center gap-2 rounded-[50px] border border-[var(--primary-color)] bg-white px-5 py-2.5 text-[12px] font-bold text-[var(--primary-color)] no-underline transition-smooth hover:-translate-y-[2px] hover:bg-[var(--primary-color)] hover:text-white"
-                  >
-                    {t("home.experts.bookSession", {
-                      defaultValue: "Book Session",
-                    })}
-                    <i className="bi bi-arrow-right rtl:rotate-180" />
-                  </Link>
-                </div>
-              </motion.div>
-            ))}
-          </motion.div>
-        </div>
-      </section>
-      {/* experts-section-end */}
       {/* trend-scout-section-start */}
       <section
         className="relative overflow-hidden bg-white px-[40px] py-[80px] max-[991px]:px-[15px] max-[991px]:py-[30px] max-[767px]:px-[15px] max-[767px]:py-[30px] 
@@ -3001,6 +2884,137 @@ export default function Home() {
         </div>
       </section>
       {/* trend-scout-section-end */}
+      {/* experts-section-start */}
+      <section
+        id="experts"
+        className="w-full overflow-hidden bg-[var(--accent-beige)] px-[40px] py-[80px] max-[991px]:px-[15px] max-[991px]:py-[30px] max-[767px]:px-[15px] max-[767px]:py-[30px] 
+        max-[480px]:px-[15px] max-[480px]:py-[30px]"
+      >
+        <div className="w-full">
+          {/* Section Heading */}
+          <div className="mb-12 max-[480px]:mb-5">
+            {/* Tag */}
+            <motion.span
+              initial={{ opacity: 0, y: -10 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: false, amount: 0.3 }}
+              transition={{ duration: 0.6, delay: 0, ease: "easeOut" }}
+              className="mb-4 inline-flex items-center gap-2 rounded-full border border-[#d7e1de] bg-primary-shadow px-[15px] py-[5px] text-[12px] font-bold uppercase tracking-[1.5px] text-primary-brand"
+            >
+              <span className="h-[7px] w-[7px] rounded-full bg-primary-brand" />
+              {t("home.experts.tag", { defaultValue: "Meet The Specialists" })}
+            </motion.span>
+
+            <Link to="/experts" className="block no-underline">
+              <motion.h2
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: false, amount: 0.3 }}
+                transition={{ duration: 0.65, delay: 0.15, ease: "easeOut" }}
+                className="mb-3 text-[30px] font-extrabold leading-[40px] tracking-[0.5px] text-black max-[480px]:text-[20px] max-[480px]:leading-[30px]"
+              >
+                {t("home.experts.title", {
+                  defaultValue: "Talk To A Real Style Expert",
+                })}
+              </motion.h2>
+            </Link>
+
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: false, amount: 0.3 }}
+              transition={{ duration: 0.65, delay: 0.3, ease: "easeOut" }}
+              className="flex items-center justify-between gap-8 max-[767px]:flex-col max-[767px]:items-start max-[480px]:gap-4"
+            >
+              <p className="max-w-[620px] text-[16px] leading-[26px] font-semibold text-text-brand max-[480px]:text-[14px] max-[480px]:leading-[24px]">
+                {t("home.experts.description", {
+                  defaultValue:
+                    "Book a 1:1 session with a certified DressApp stylist whenever the AI needs a human, editorial finishing touch.",
+                })}
+              </p>
+
+              <Link
+                to="/experts"
+                className="inline-flex shrink-0 items-center justify-center rounded-[50px] bg-[var(--primary-color)] px-[30px] py-[15px] text-[14px] font-bold leading-[24px] text-white no-underline shadow-[var(--primary-shadow)] transition-smooth hover:-translate-y-[2px] hover:bg-[var(--primary-hover)] hover:text-white hover:shadow-[0_8px_24px_rgba(31,92,69,0.25)]"
+              >
+                {t("home.experts.viewAll", {
+                  defaultValue: "View All Experts",
+                })}
+                <i className="fa-solid fa-arrow-right ms-2 rtl:rotate-180" />
+              </Link>
+            </motion.div>
+          </div>
+
+          {/* Experts Grid */}
+          <motion.div
+            initial={{ opacity: 0, y: 40 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: false, amount: 0.2 }}
+            transition={{ duration: 0.7, delay: 0.2, ease: "easeOut" }}
+            className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4"
+          >
+            {EXPERTS.map((expert, i) => (
+              <motion.div
+                key={expert.id}
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: false, amount: 0.3 }}
+                transition={{ duration: 0.5, delay: i * 0.1, ease: "easeOut" }}
+              >
+                <div className="group h-full rounded-[18px] border border-border bg-white p-6 text-center shadow-[0_15px_35px_-18px_rgba(23,20,15,0.3)] transition-smooth hover:-translate-y-[5px] hover:shadow-[0_20px_45px_rgba(23,20,15,0.12)]">
+                  {/* Avatar */}
+                  <div className="relative mx-auto mb-5 h-[105px] w-[105px]">
+                    <img
+                      src={expert.image}
+                      alt={expert.name}
+                      className="h-full w-full rounded-full object-cover ring-4 ring-[var(--primary-shadow)]"
+                    />
+
+                    <span className="absolute bottom-0 end-0 flex h-7 w-7 items-center justify-center rounded-full border-2 border-white bg-[var(--primary-color)] text-white shadow-[0_4px_10px_rgba(0,0,0,0.15)]">
+                      <i className="bi bi-patch-check-fill text-[13px]" />
+                    </span>
+                  </div>
+
+                  <h5 className="m-0 mb-2 text-[17px] font-black text-[var(--dark-color)]">
+                    {expert.name}
+                  </h5>
+
+                  <span className="inline-flex rounded-full bg-[var(--primary-shadow)] px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.05em] text-[var(--primary-color)]">
+                    {t(expert.roleKey, { defaultValue: expert.roleDefault })}
+                  </span>
+
+                  {/* Rating */}
+                  <div className="mt-4 flex items-center justify-center gap-1.5 text-[13px] font-bold text-[var(--dark-color)]">
+                    <i className="bi bi-star-fill text-[#d8a84e]" />
+                    <span>{expert.rating}</span>
+                    <span className="font-medium text-[var(--text-color)]">
+                      {t("home.experts.sessionsCount", {
+                        count: expert.sessions,
+                        defaultValue: "({{count}} sessions)",
+                      })}
+                    </span>
+                  </div>
+
+                  <p className="my-4 text-[13px] font-medium leading-[22px] text-[var(--text-color)]">
+                    {t(expert.bioKey, { defaultValue: expert.bioDefault })}
+                  </p>
+
+                  <Link
+                    to="/experts"
+                    className="inline-flex items-center justify-center gap-2 rounded-[50px] border border-[var(--primary-color)] bg-white px-5 py-2.5 text-[12px] font-bold text-[var(--primary-color)] no-underline transition-smooth hover:-translate-y-[2px] hover:bg-[var(--primary-color)] hover:text-white"
+                  >
+                    {t("home.experts.bookSession", {
+                      defaultValue: "Book Session",
+                    })}
+                    <i className="bi bi-arrow-right rtl:rotate-180" />
+                  </Link>
+                </div>
+              </motion.div>
+            ))}
+          </motion.div>
+        </div>
+      </section>
+      {/* experts-section-end */}
       <div className="">
         <AdTicker placement="home-footer" className="-mx-4 sm:-mx-6 lg:-mx-8" />
       </div>
