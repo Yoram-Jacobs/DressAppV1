@@ -1088,6 +1088,21 @@ function Suitcase() {
     });
   };
 
+  // Toggle item packed status in reviewed checklist
+  const handleToggleReviewedItem = (itemId, currentChecked) => {
+    if (!packingData || !Array.isArray(packingData.packing_list)) return;
+    const updatedPackingList = packingData.packing_list
+      .filter(Boolean)
+      .map((p) => {
+        if (p.id === itemId) return { ...p, checked: !currentChecked };
+        return p;
+      });
+    setPackingData({
+      ...packingData,
+      packing_list: updatedPackingList,
+    });
+  };
+
   const handleAddFromCloset = (item) => {
     const isEditingActive = viewState === "active";
     if (isEditingActive) {
@@ -1929,7 +1944,24 @@ function Suitcase() {
                                                 key={item.id}
                                                 className="flex items-center justify-between py-3 border-b border-border last:border-b-0"
                                               >
-                                                <div className="flex items-center gap-3">
+                                                <div className="flex items-center gap-3 min-w-0 flex-1">
+                                                  <button
+                                                    type="button"
+                                                    onClick={() =>
+                                                      handleToggleReviewedItem(
+                                                        item.id,
+                                                        item.checked,
+                                                      )
+                                                    }
+                                                    className="focus:outline-none shrink-0"
+                                                    aria-label="Toggle item"
+                                                  >
+                                                    {item.checked ? (
+                                                      <CheckSquare className="h-5 w-5 text-primary-brand" />
+                                                    ) : (
+                                                      <Square className="h-5 w-5 text-text-brand" />
+                                                    )}
+                                                  </button>
                                                   {bestImageUrl(closetMatch) ? (
                                                     <img
                                                       src={bestImageUrl(
@@ -1948,7 +1980,7 @@ function Suitcase() {
                                                       <ShoppingBag className="h-4 w-4 text-text-brand" />
                                                     </div>
                                                   )}
-                                                  <div className="flex flex-col">
+                                                  <div className="flex flex-col min-w-0 flex-1">
                                                     <div className="flex items-center gap-1">
                                                       <h6 className="text-[12px] font-bold text-text-brand">
                                                         {labelForCategory(
@@ -1977,12 +2009,14 @@ function Suitcase() {
                                                         )
                                                       }
                                                     >
-                                                      <p className="text-[12px] font-semibold text-text-brand">
+                                                      <p
+                                                        className={`text-[12px] font-semibold text-text-brand truncate ${item.checked ? "line-through text-text-brand" : ""}`}
+                                                      >
                                                         {formatChecklistItemTitle(item.title, item.is_missing, t)}
                                                       </p>
                                                     </div>
                                                     {item.recommendation_source && (
-                                                      <p className="text-[12px] font-semibold text-primary-brand">
+                                                      <p className="text-[12px] font-semibold text-primary-brand truncate">
                                                         {t(
                                                           "suitcase.recommendedLabel",
                                                           {
@@ -1996,18 +2030,27 @@ function Suitcase() {
                                                     )}
                                                   </div>
                                                 </div>
-                                                <Button
-                                                  variant="ghost"
-                                                  size="icon"
-                                                  onClick={() =>
-                                                    handleDeleteReviewedItem(
-                                                      item.id,
-                                                    )
-                                                  }
-                                                  className="text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/20 rounded-lg"
-                                                >
-                                                  <Trash2 className="h-4 w-4" />
-                                                </Button>
+                                                <div className="flex items-center gap-2">
+                                                  {item.checked ? (
+                                                    <Badge className="hidden md:inline-flex bg-primary-brand text-white text-[10px] py-[0px] shrink-0">
+                                                      {t("suitcase.packedBadge", {
+                                                        defaultValue: "Packed",
+                                                      })}
+                                                    </Badge>
+                                                  ) : null}
+                                                  <Button
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    onClick={() =>
+                                                      handleDeleteReviewedItem(
+                                                        item.id,
+                                                      )
+                                                    }
+                                                    className="text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/20 rounded-lg shrink-0"
+                                                  >
+                                                    <Trash2 className="h-4 w-4" />
+                                                  </Button>
+                                                </div>
                                               </div>
                                             );
                                           })}
