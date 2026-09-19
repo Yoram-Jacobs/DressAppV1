@@ -53,6 +53,7 @@ import { ScrollToTopFloater } from '@mobile/components/common/ScrollToTopFloater
 import { PageHeroBanner } from '@mobile/components/common';
 import { labelForCategory, labelForIntent, labelForColor, getTaxonomyMismatches } from '@mobile/lib/taxonomy';
 import { getItemImageUrl } from '@mobile/lib/imageUtils';
+import { useScreenScrollRestoration, resetScreenScroll } from '@mobile/hooks/useScreenScrollRestoration';
 import type { ClosetStackParamList } from '@mobile/navigation/types';
 
 type ClosetNavProp = NativeStackNavigationProp<ClosetStackParamList, 'Closet'>;
@@ -99,12 +100,19 @@ export function ClosetScreen() {
 
   // Real-time polling for pending background reconstructions (Nano Banana) & clean cutouts
   useEffect(() => {
-    const pendingItems = (items || []).filter(
-      (it: any) =>
-        it &&
-        (it.clean_image_status === 'pending' ||
-          (it.reconstruction_metadata?.deferred && !it.reconstructed_image_url))
-    );
+    const now = Date.now();
+    const pendingItems = (items || []).filter((it: any) => {
+      if (!it) return false;
+      const isReconstructionPending =
+        it.reconstruction_metadata?.deferred && !it.reconstructed_image_url;
+      const isCutoutPending =
+        it.clean_image_status === 'pending' && !it.clean_image_url;
+      if (!isReconstructionPending && !isCutoutPending) return false;
+      // Discard stale pending requests older than 15 minutes to prevent infinite heartbeat polling
+      const createdTime = it.created_at ? new Date(it.created_at).getTime() : 0;
+      if (createdTime > 0 && now - createdTime > 15 * 60 * 1000) return false;
+      return true;
+    });
     if (pendingItems.length === 0) return;
 
     const interval = setInterval(async () => {
@@ -177,6 +185,8 @@ export function ClosetScreen() {
   const draggedIdRef = useRef<string | null>(null);
   const dragOverIdRef = useRef<string | null>(null);
   const flatListRef = useRef<FlatList>(null);
+  const { onScroll: onRestorationScroll, scrollToTop: restorationScrollToTop } =
+    useScreenScrollRestoration('Closet', flatListRef);
   const flatListContainerRef = useRef<View>(null);
   const flatListLayoutRef = useRef<{ pageX: number; pageY: number; width: number; height: number } | null>(null);
   const scrollOffsetRef = useRef(0);
@@ -226,6 +236,7 @@ export function ClosetScreen() {
   };
 
   const handleScroll = (e: any) => {
+    onRestorationScroll(e);
     const y = e.nativeEvent.contentOffset.y;
     scrollOffsetRef.current = y;
     if (y > 250 && !showScrollTop) {
@@ -1243,7 +1254,7 @@ export function ClosetScreen() {
       {/* ── Fast Scroll To Top Floater ─────────────────────────────── */}
       <ScrollToTopFloater
         visible={showScrollTop && !selectMode}
-        onPress={() => flatListRef.current?.scrollToOffset({ offset: 0, animated: true })}
+        onPress={() => restorationScrollToTop()}
       />
 
       {/* ── Batch Tagging Modal ────────────────────────────────────────── */}

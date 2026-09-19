@@ -37,6 +37,7 @@ import { labelForCategory, labelForIntent, labelForCondition } from '@mobile/lib
 import { getItemImageUrl, resolveImageUrl } from '@mobile/lib/imageUtils';
 import { HelpFloater } from '@mobile/components/help';
 import { ScrollToTopFloater } from '@mobile/components/common/ScrollToTopFloater';
+import { useScreenScrollRestoration } from '@mobile/hooks/useScreenScrollRestoration';
 import { PageHeroBanner } from '@mobile/components/common';
 import type { MarketStackParamList } from '@mobile/navigation/types';
 
@@ -88,8 +89,10 @@ export function MarketplaceScreen() {
   const [searchQuery, setSearchQuery] = useState('');
   const [refreshing, setRefreshing] = useState(false);
 
-  // Fast Scroll to Top floater state
+  // Fast Scroll to Top floater state & scroll restoration
   const flatListRef = useRef<FlatList>(null);
+  const { onScroll: onRestorationScroll, scrollToTop: restorationScrollToTop } =
+    useScreenScrollRestoration('Marketplace', flatListRef);
   const [showScrollTop, setShowScrollTop] = useState(false);
 
   // Horizontal chips refs for RTL auto-alignment
@@ -99,6 +102,7 @@ export function MarketplaceScreen() {
   const hasScrolledCatRef = useRef(false);
 
   const handleScroll = (e: any) => {
+    onRestorationScroll(e);
     const y = e?.nativeEvent?.contentOffset?.y ?? 0;
     if (y > 250 && !showScrollTop) {
       setShowScrollTop(true);
@@ -557,7 +561,7 @@ export function MarketplaceScreen() {
       {/* ── Fast Scroll To Top Floater ─────────────────────────────── */}
       <ScrollToTopFloater
         visible={showScrollTop}
-        onPress={() => flatListRef.current?.scrollToOffset({ offset: 0, animated: true })}
+        onPress={() => restorationScrollToTop()}
       />
     </SafeAreaView>
   );

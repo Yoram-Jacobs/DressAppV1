@@ -41,6 +41,7 @@ import { LanguagePicker } from '@mobile/components/LanguagePicker';
 import { HelpFloater } from '@mobile/components/help';
 import { AdTicker } from '@mobile/components/AdTicker';
 import { ScrollToTopFloater } from '@mobile/components/common/ScrollToTopFloater';
+import { useScreenScrollRestoration } from '@mobile/hooks/useScreenScrollRestoration';
 import type { MainTabsParamList, ClosetStackParamList } from '@mobile/navigation/types';
 
 type HomeNavProp = CompositeNavigationProp<
@@ -136,11 +137,14 @@ export default function HomeScreen() {
 
   const s = makeStyles(colors);
 
-  // Fast Scroll to Top floater state
+  // Fast Scroll to Top floater state & scroll restoration
   const scrollViewRef = useRef<ScrollView>(null);
+  const { onScroll: onRestorationScroll, scrollToTop: restorationScrollToTop } =
+    useScreenScrollRestoration('Home', scrollViewRef);
   const [showScrollTop, setShowScrollTop] = useState(false);
 
   const handleScroll = (e: any) => {
+    onRestorationScroll(e);
     const y = e?.nativeEvent?.contentOffset?.y ?? 0;
     if (y > 250 && !showScrollTop) {
       setShowScrollTop(true);
@@ -407,7 +411,7 @@ export default function HomeScreen() {
       {/* ── Fast Scroll To Top Floater ─────────────────────────────── */}
       <ScrollToTopFloater
         visible={showScrollTop}
-        onPress={() => scrollViewRef.current?.scrollTo({ y: 0, animated: true })}
+        onPress={() => restorationScrollToTop()}
       />
     </SafeAreaView>
   );

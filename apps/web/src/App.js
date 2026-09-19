@@ -18,6 +18,7 @@ import { isRtl } from '@/lib/i18n';
 import { api } from '@/lib/api';
 import { closetStore } from '@/lib/closetStore';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
+import { ScrollRestoration } from '@/components/ScrollRestoration';
 
 // Synchronously loaded core routes for zero-latency initial load
 import Login from '@/pages/Login';
@@ -138,6 +139,7 @@ function OutfitsRedirect() {
 function App() {
   return (
     <BrowserRouter>
+      <ScrollRestoration />
       <ReferralParamListener />
       <HelmetProvider>
         <AuthProvider>

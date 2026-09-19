@@ -55,6 +55,7 @@ import { closetStore, closetRepo } from '@mobile/lib/stores/closetStore';
 import { applyRtl } from '@mobile/lib/rtl';
 import { HelpFloater } from '@mobile/components/help';
 import { ScrollToTopFloater } from '@mobile/components/common/ScrollToTopFloater';
+import { useScreenScrollRestoration } from '@mobile/hooks/useScreenScrollRestoration';
 import { PageHeroBanner } from '@mobile/components/common';
 import { useTierLimits } from '@mobile/hooks/useTierLimits';
 import type { MeStackParamList } from '@mobile/navigation/types';
@@ -112,11 +113,14 @@ export function ProfileScreen() {
   // Active accordion section
   const [expandedSection, setExpandedSection] = useState<string | null>(null);
 
-  // Fast Scroll to Top floater state
+  // Fast Scroll to Top floater state & scroll restoration
   const scrollViewRef = useRef<ScrollView>(null);
+  const { onScroll: onRestorationScroll, scrollToTop: restorationScrollToTop } =
+    useScreenScrollRestoration('Profile', scrollViewRef);
   const [showScrollTop, setShowScrollTop] = useState(false);
 
   const handleScroll = (e: any) => {
+    onRestorationScroll(e);
     const y = e?.nativeEvent?.contentOffset?.y ?? 0;
     if (y > 250 && !showScrollTop) {
       setShowScrollTop(true);
@@ -1832,7 +1836,7 @@ export function ProfileScreen() {
       {/* ── Fast Scroll To Top Floater ─────────────────────────────── */}
       <ScrollToTopFloater
         visible={showScrollTop}
-        onPress={() => scrollViewRef.current?.scrollTo({ y: 0, animated: true })}
+        onPress={() => restorationScrollToTop()}
       />
     </SafeAreaView>
   );

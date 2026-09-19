@@ -27,6 +27,7 @@ import { ClosetStack } from './stacks/ClosetStack';
 import { StylistStack } from './stacks/StylistStack';
 import { MarketStack } from './stacks/MarketStack';
 import { MeStack } from './stacks/MeStack';
+import { resetScreenScroll } from '@mobile/hooks/useScreenScrollRestoration';
 
 // Icons via react-native-paper
 import { Icon } from 'react-native-paper';
@@ -130,7 +131,6 @@ export function MainTabs() {
     <Tab.Navigator
       screenOptions={{
         headerShown: false,
-        popToTopOnBlur: true,
         tabBarHideOnKeyboard: true,
         tabBarActiveTintColor: colors.accent,
         tabBarInactiveTintColor: colors.mutedFg,
@@ -165,6 +165,13 @@ export function MainTabs() {
           tabBarLabel: t('nav.closet', { defaultValue: 'Closet' }),
           tabBarIcon: ({ focused, color }) => tabIcon('hanger', focused, color),
         }}
+        listeners={({ navigation }) => ({
+          tabPress: () => {
+            if (navigation.isFocused()) {
+              resetScreenScroll('Closet');
+            }
+          },
+        })}
       />
       <Tab.Screen
         name="StylistTab"
@@ -194,6 +201,13 @@ export function MainTabs() {
           tabBarLabel: t('nav.market', { defaultValue: 'Market' }),
           tabBarIcon: ({ focused, color }) => tabIcon('market', focused, color),
         }}
+        listeners={({ navigation }) => ({
+          tabPress: () => {
+            if (navigation.isFocused()) {
+              resetScreenScroll('Marketplace');
+            }
+          },
+        })}
       />
       <Tab.Screen
         name="MeTab"
@@ -201,13 +215,15 @@ export function MainTabs() {
         options={{
           tabBarLabel: t('nav.me', { defaultValue: 'Me' }),
           tabBarIcon: ({ focused, color }) => tabIcon('me', focused, color, facePhotoUrl),
-          popToTopOnBlur: true,
         }}
         listeners={({ navigation }) => ({
           tabPress: () => {
-            navigation.navigate('MeTab', {
-              screen: 'Profile',
-            });
+            if (navigation.isFocused()) {
+              resetScreenScroll('Profile');
+              navigation.navigate('MeTab', {
+                screen: 'Profile',
+              });
+            }
           },
         })}
       />

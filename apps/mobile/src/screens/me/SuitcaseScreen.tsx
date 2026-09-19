@@ -38,6 +38,7 @@ import { api } from '@mobile/lib/api';
 import { useSuitcaseStore, suitcaseStore, SuitcaseItem } from '@mobile/lib/stores/suitcaseStore';
 import { useClosetStore } from '@mobile/lib/stores/closetStore';
 import { ScrollToTopFloater } from '@mobile/components/common/ScrollToTopFloater';
+import { useScreenScrollRestoration } from '@mobile/hooks/useScreenScrollRestoration';
 import { PageHeroBanner } from '@mobile/components/common';
 
 const PURPOSES = [
@@ -68,11 +69,14 @@ export function SuitcaseScreen() {
   const [chatInput, setChatInput] = useState('');
   const [chatting, setChatting] = useState(false);
 
-  // Fast Scroll to Top floater state
+  // Fast Scroll to Top floater state & scroll restoration
   const scrollViewRef = useRef<ScrollView>(null);
+  const { onScroll: onRestorationScroll, scrollToTop: restorationScrollToTop } =
+    useScreenScrollRestoration('Suitcase', scrollViewRef);
   const [showScrollTop, setShowScrollTop] = useState(false);
 
   const handleScroll = (e: any) => {
+    onRestorationScroll(e);
     const y = e?.nativeEvent?.contentOffset?.y ?? 0;
     if (y > 250 && !showScrollTop) {
       setShowScrollTop(true);
@@ -573,7 +577,7 @@ export function SuitcaseScreen() {
       {/* ── Fast Scroll To Top Floater ─────────────────────────────── */}
       <ScrollToTopFloater
         visible={showScrollTop}
-        onPress={() => scrollViewRef.current?.scrollTo({ y: 0, animated: true })}
+        onPress={() => restorationScrollToTop()}
       />
     </SafeAreaView>
   );

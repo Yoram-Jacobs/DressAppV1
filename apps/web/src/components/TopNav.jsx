@@ -14,6 +14,7 @@ import { BrandLogo } from '@/components/BrandLogo';
 import HelpMenu from '@/components/HelpMenu';
 import { LanguagePicker } from '@/components/LanguagePicker';
 import { resolveMediaUrl } from '@/lib/itemImage';
+import { resetRouteScrollPosition } from '@/components/ScrollRestoration';
 
 const NavAvatar = ({ user, initials, className = "h-full w-full", imgClassName = "h-full w-full rounded-full object-cover", testId }) => {
   const [imgFailed, setImgFailed] = useState(false);
@@ -89,6 +90,7 @@ export const TopNav = () => {
               to={to}
               onClick={() => {
                 if (window.location.pathname === to) {
+                  resetRouteScrollPosition(to);
                   window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
                   const mainEl = document.getElementById('main-content');
                   if (mainEl) mainEl.scrollTo({ top: 0, behavior: 'smooth' });

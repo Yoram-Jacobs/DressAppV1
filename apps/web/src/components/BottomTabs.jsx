@@ -6,6 +6,7 @@ import { cn } from '@/lib/utils';
 import { useAuth } from '@/lib/auth';
 import { resolveMediaUrl } from '@/lib/itemImage';
 import { useState, useRef, useEffect } from 'react';
+import { resetRouteScrollPosition } from '@/components/ScrollRestoration';
 
 const BottomTabAvatar = ({ user, isActive, label }) => {
   const [imgFailed, setImgFailed] = useState(false);
@@ -40,6 +41,7 @@ export const BottomTabs = () => {
 
   const handleTabClick = (path) => {
     if (window.location.pathname === path) {
+      resetRouteScrollPosition(path);
       window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
       const mainEl = document.getElementById('main-content');
       if (mainEl) mainEl.scrollTo({ top: 0, behavior: 'smooth' });

@@ -37,6 +37,7 @@ import { useTierLimits } from '@mobile/hooks/useTierLimits';
 import { api } from '@mobile/lib/api';
 import { toCountryCode } from '@mobile/lib/country';
 import { ScrollToTopFloater } from '@mobile/components/common/ScrollToTopFloater';
+import { useScreenScrollRestoration } from '@mobile/hooks/useScreenScrollRestoration';
 import { TrendScoutSettingsModal } from '@mobile/components/trends/TrendScoutSettingsModal';
 import { PageHeroBanner } from '@mobile/components/common';
 
@@ -140,11 +141,14 @@ export function TrendScoutScreen() {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [activeBucket, setActiveBucket] = useState<string>('all');
 
-  // Fast Scroll to Top floater state
+  // Fast Scroll to Top floater state & scroll restoration
   const flatListRef = useRef<FlatList>(null);
+  const { onScroll: onRestorationScroll, scrollToTop: restorationScrollToTop } =
+    useScreenScrollRestoration('TrendScout', flatListRef);
   const [showScrollTop, setShowScrollTop] = useState(false);
 
   const handleScroll = (e: any) => {
+    onRestorationScroll(e);
     const y = e?.nativeEvent?.contentOffset?.y ?? 0;
     if (y > 250 && !showScrollTop) {
       setShowScrollTop(true);
@@ -575,7 +579,7 @@ export function TrendScoutScreen() {
       {/* ── Fast Scroll To Top Floater ─────────────────────────────── */}
       <ScrollToTopFloater
         visible={showScrollTop}
-        onPress={() => flatListRef.current?.scrollToOffset({ offset: 0, animated: true })}
+        onPress={() => restorationScrollToTop()}
       />
 
       {/* ── Trend Scout Personalization Settings Modal ─────────────── */}
