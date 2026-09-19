@@ -14,6 +14,7 @@ import {
   Users,
   Recycle,
   Newspaper,
+  Plus,
 } from "lucide-react";
 import {
   Ruler, Link2, MousePointerClick, Store, Download,
@@ -1602,7 +1603,38 @@ export default function Home() {
                   viewport={{ once: false, amount: 0.3 }}
                   transition={{ duration: 0.65, delay: 0.5, ease: "easeOut" }}
                 >
-                  <button
+                   <Button
+                  asChild
+                  data-testid="home-ask-stylist-cta"
+                  className="
+          h-auto
+          rounded-full
+          border-0
+          bg-[var(--primary-color)]
+          px-7
+          py-3.5
+          font-sans
+          text-sm
+          font-medium
+          text-white
+          shadow-none
+          transition-all
+          duration-300
+          hover:-translate-y-0.5
+          hover:bg-[var(--primary-hover)]
+          hover:text-white
+          hover:shadow-[0_10px_30px_rgba(31,92,69,0.22)]
+        "
+                >
+                  <Link
+                    to="/closet/add"
+                    className="inline-flex items-center justify-center gap-2"
+                  >
+                    <Plus className="h-4 w-4" />
+                    {t('closet.addItem', { defaultValue: 'Add item' })}
+                  </Link>
+                </Button>
+                  {/* <button
                     type="button"
                     className="mt-2 inline-flex items-center justify-center rounded-[50px] border-none bg-[var(--primary-color)] px-[30px] py-[20px] text-[14px] font-bold leading-none text-[var(--white)] transition-smooth hover:-translate-y-[2px] hover:bg-[var(--primary-hover)] hover:text-[var(--white)] hover:shadow-[0_8px_24px_rgba(31,92,69,0.25)]"
                     onClick={() => {
@@ -1623,7 +1655,7 @@ export default function Home() {
                       defaultValue: "Migrate your Wardrobe",
                     })}
                     <i className="fa-solid fa-arrow-right ms-2 rtl:rotate-180" />
-                  </button>
+                  </button> */}
                 </motion.div>
               </div>
             </div>

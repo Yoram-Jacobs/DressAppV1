@@ -34,8 +34,8 @@ function FeatureFlag({ included }) {
     <Badge
       variant="outline"
       className={`text-[11px] gap-1 w-fit mx-auto ${included
-          ? 'bg-emerald-100 text-emerald-900 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-900'
-          : 'bg-rose-100 text-rose-900 border-rose-200'
+        ? 'bg-emerald-100 text-emerald-900 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-900'
+        : 'bg-rose-100 text-rose-900 border-rose-200'
         }`}
     >
       {included ? (
@@ -130,6 +130,13 @@ export function PricingDisplay({
       type: 'flag',
     },
     {
+      label: t('pricing.features.wardrobeMigration', { defaultValue: 'Wardrobe Migration' }),
+      free: false,
+      manager: true,
+      professional: true,
+      type: 'flag',
+    },
+    {
       label: t('pricing.features.campaigns', { defaultValue: 'Ad Campaigns creation' }),
       free: false,
       manager: false,
@@ -184,8 +191,8 @@ export function PricingDisplay({
             >
               <Card
                 className={`relative flex flex-col h-full rounded-[20px] shadow-sm overflow-hidden transition-all duration-200 border bg-white ${isPro
-                    ? 'border-primary-brand z-10'
-                    : 'border-border'
+                  ? 'border-primary-brand z-10'
+                  : 'border-border'
                   }`}
                 data-testid={`tier-card-${tier.name.toLowerCase()}`}
               >

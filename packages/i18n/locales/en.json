@@ -4355,7 +4355,8 @@
       "unlimitedOps": "Unlimited daily requests",
       "marketplaceAccess": "Marketplace selling & renting",
       "schedulerAccess": "Scheduler & push notifications",
-      "campaignsAccess": "Ad Campaigns included"
+      "campaignsAccess": "Ad Campaigns included",
+      "wardrobeMigration": "Wardrobe Migration"
     },
     "supportTiers": {
       "community": "Community Support",
