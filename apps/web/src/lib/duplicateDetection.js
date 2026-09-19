@@ -122,13 +122,20 @@ export function colorDistance(a, b) {
 export function isDuplicateMatch({
   shaA, shaB, phashA, phashB, colorA, colorB,
   hammingThreshold = HAMMING_THRESHOLD,
+  hammingThresholdStrict = HAMMING_THRESHOLD_STRICT,
+  colorThreshold = COLOR_THRESHOLD,
 } = {}) {
   // Pass 1 — exact byte match.
   if (shaA && shaB && shaA === shaB) return true;
   // Pass 2 — shape similarity is the prerequisite; without phashes
   // we can't say anything about visual similarity.
   if (!phashA || !phashB) return false;
-  return hammingDistance(phashA, phashB) <= hammingThreshold;
+  const dist = hammingDistance(phashA, phashB);
+  if (colorA && colorB) {
+    return dist <= hammingThreshold && colorDistance(colorA, colorB) <= colorThreshold;
+  }
+  // At least one side lacks colour signature — require strict Hamming threshold (≤ 2)
+  return dist <= Math.min(2, hammingThresholdStrict);
 }
 
 /**

@@ -1572,14 +1572,40 @@ export default function AddItem() {
     });
     if (!files.length) return;
 
+    // BG_THRESHOLD: above this we skip the per-card editor and run
+    // the auto-save batch path. Anything above 5 is clearly a "dump
+    // my whole wardrobe" moment.
+    const BG_THRESHOLD = 5;
+    const isBatch = files.length > BG_THRESHOLD;
+
+    if (isBatch) {
+      setBgBatch({
+        total: files.length,
+        processed: 0,
+        saved: 0,
+        failed: 0,
+        fallbackSaves: 0,
+        skippedDuplicates: 0,
+        pendingDuplicates: 0,
+        analyzeFailed: 0,
+        preparing: true,
+      });
+    }
+
     // ----------------------------------------------------------------
     // Phase Z3 — pre-flight duplicate detection (client-side).
     // ----------------------------------------------------------------
     const fingerprints = [];
-    for (const rawF of files) {
+    for (let i = 0; i < files.length; i++) {
+      const rawF = files[i];
       try {
         const b64 = await fileToBase64(rawF);
-        if (!b64) continue;
+        if (!b64) {
+          if (isBatch) {
+            setBgBatch((b) => (b ? { ...b, processed: i + 1 } : null));
+          }
+          continue;
+        }
 
         // Convert base64 to Blob synchronously to bypass CSP connection blocks on data URLs
         let blob;
@@ -1594,8 +1620,8 @@ export default function AddItem() {
           ) {
             const slice = byteCharacters.slice(offset, offset + sliceSize);
             const byteNumbers = new Array(slice.length);
-            for (let i = 0; i < slice.length; i++) {
-              byteNumbers[i] = slice.charCodeAt(i);
+            for (let j = 0; j < slice.length; j++) {
+              byteNumbers[j] = slice.charCodeAt(j);
             }
             const byteArray = new Uint8Array(byteNumbers);
             byteArrays.push(byteArray);
@@ -1645,9 +1671,13 @@ export default function AddItem() {
           err,
         );
       }
+      if (isBatch) {
+        setBgBatch((b) => (b ? { ...b, processed: i + 1 } : null));
+      }
     }
 
     if (!fingerprints.length) {
+      if (isBatch) setBgBatch(null);
       toast.error(
         t("addItem.uploadFailed", {
           defaultValue: "Failed to process image. Please try again.",
@@ -1668,29 +1698,13 @@ export default function AddItem() {
           size_bytes: fp.size_bytes,
         }));
       if (fpForLookup.length) {
-        // Phase Z3 — duplicate detection runs CLIENT-SIDE against the
-        // already-cached closet snapshot. Eliminates a 300–1500 ms
-        // round-trip per upload batch. Logic is a 1:1 port of the
-        // backend's ``is_duplicate_match``; trade-off (Q1a): legacy
-        // closet items without ``source_phash`` are silently skipped
-        // and rely on the backend's post-save guard. See
-        // ``lib/duplicateDetection.js`` for the porting notes.
         const closetItems = closetStore.getSnapshot().items || [];
         const res = findDuplicatesInCloset(fpForLookup, closetItems);
         matches = Array.isArray(res?.matches) ? res.matches : [];
       }
     } catch (err) {
-      // Pre-flight is purely advisory — never block the upload on a
-      // local lookup error. Treat as "no duplicates found" and let
-      // the post-analysis duplicate detector still catch obvious hits.
       matches = [];
     }
-
-    // BG_THRESHOLD: above this we skip the per-card editor and run
-    // the auto-save batch path. Anything above 5 is clearly a "dump
-    // my whole wardrobe" moment.
-    const BG_THRESHOLD = 5;
-    const isBatch = files.length > BG_THRESHOLD;
 
     // No duplicates → straight through.
     if (!matches.length) {
@@ -1698,41 +1712,32 @@ export default function AddItem() {
       return continueInteractive(fingerprints, /* duplicateAcks */ {});
     }
 
-    // BATCH path (>5 photos): silently drop duplicates per the user's
-    // chosen behaviour (option 2B). Track the count so the final
-    // toast can mention them.
+    // BATCH path (>5 photos): in bulk upload, only filter out EXACT file re-uploads
+    // (same SHA-256 byte digest) so different items with similar silhouettes are never dropped.
     if (isBatch) {
-      // Filter out closet duplicates and also deduplicate intra-batch items sequentially.
       const dupShas = new Set();
-      const dupPhashes = new Set();
       matches.forEach((m) => {
-        if (m.existing?.id && !m.existing.id.startsWith("batch-")) {
-          if (m.sha256) dupShas.add(m.sha256);
-          if (m.phash) dupPhashes.add(m.phash);
+        if (m.existing?.id && !m.existing.id.startsWith("batch-") && m.sha256) {
+          dupShas.add(m.sha256);
         }
       });
 
       const seenShas = new Set();
-      const seenPhashes = new Set();
       const survivors = [];
       for (const fp of fingerprints) {
-        const isClosetDup =
-          (fp.sha256 && dupShas.has(fp.sha256)) ||
-          (fp.phash && dupPhashes.has(fp.phash));
+        const isClosetDup = fp.sha256 && dupShas.has(fp.sha256);
         if (isClosetDup) continue;
 
-        const isBatchDup =
-          (fp.sha256 && seenShas.has(fp.sha256)) ||
-          (fp.phash && seenPhashes.has(fp.phash));
+        const isBatchDup = fp.sha256 && seenShas.has(fp.sha256);
         if (isBatchDup) continue;
 
         if (fp.sha256) seenShas.add(fp.sha256);
-        if (fp.phash) seenPhashes.add(fp.phash);
         survivors.push(fp);
       }
 
       const skipped = fingerprints.length - survivors.length;
       if (!survivors.length) {
+        setBgBatch(null);
         toast.message(
           t("addItem.preflight.allDuplicatesSkippedBatch", {
             count: skipped,
@@ -1888,6 +1893,7 @@ export default function AddItem() {
       skippedDuplicates,
       pendingDuplicates: 0,
       analyzeFailed: 0,
+      preparing: false,
     });
 
     const requestLang = (i18n.language || "").split("-")[0] || "en";
@@ -1932,73 +1938,78 @@ export default function AddItem() {
 
       let photoDetectMetas = [];
       let photoItemSaved = false;
+      const savePromises = [];
 
       const handleDetect = (frame) => {
         photoDetectMetas = frame.items_meta || [];
       };
 
-      const handleItem = async (frame) => {
-        const meta = photoDetectMetas[frame.index] || photoDetectMetas[0] || {};
-        const analysis = frame.analysis || {};
-        const cropB64 = meta.crop_base64 || b64;
-        const mime = meta.crop_mime || fp.file?.type || "image/jpeg";
+      const handleItem = (frame) => {
+        const p = (async () => {
+          const meta = photoDetectMetas[frame.index] || photoDetectMetas[0] || {};
+          const analysis = frame.analysis || {};
+          const cropB64 = meta.crop_base64 || b64;
+          const mime = meta.crop_mime || fp.file?.type || "image/jpeg";
 
-        const cardLike = {
-          base64: b64,
-          cropBase64: meta.crop_base64 || undefined,
-          mime,
-          file: null,
-          fields: hydrate(analysis, user),
-          useReconstructed: false,
-          deferMatte: !!meta.defer_matte,
-          ...sourceMeta,
-        };
-
-        if (frame.potential_duplicate) {
-          const dupCard = {
-            id: `bgdup-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
-            file: null,
+          const cardLike = {
+            base64: b64,
+            cropBase64: meta.crop_base64 || undefined,
             mime,
-            previewUrl: `data:${mime};base64,${cropB64}`,
-            base64: cropB64,
-            originalCropUrl: `data:${mime};base64,${cropB64}`,
-            status: "ready",
-            progress: 100,
-            fields: cardLike.fields,
-            potentialDuplicate: frame.potential_duplicate,
-            pendingBatchSave: true,
+            file: null,
+            fields: hydrate(analysis, user),
+            useReconstructed: false,
+            deferMatte: !!meta.defer_matte,
+            ...sourceMeta,
           };
-          setCards((prev) => [...prev, dupCard]);
-          pendingDuplicatesTotal += 1;
-          photoItemSaved = true;
-          setBgBatch((b) =>
-            b ? { ...b, pendingDuplicates: pendingDuplicatesTotal } : null,
-          );
-          return;
-        }
 
-        try {
-          const created = await api.createItem(
-            buildCreatePayload(cardLike, isSuitcase),
-          );
-          if (created && created.id) {
-            try {
-              closetStore.upsert(created);
-            } catch {
-              /* ignore */
-            }
-            savedTotal += 1;
+          if (frame.potential_duplicate) {
+            const dupCard = {
+              id: `bgdup-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+              file: null,
+              mime,
+              previewUrl: `data:${mime};base64,${cropB64}`,
+              base64: cropB64,
+              originalCropUrl: `data:${mime};base64,${cropB64}`,
+              status: "ready",
+              progress: 100,
+              fields: cardLike.fields,
+              potentialDuplicate: frame.potential_duplicate,
+              pendingBatchSave: true,
+            };
+            setCards((prev) => [...prev, dupCard]);
+            pendingDuplicatesTotal += 1;
             photoItemSaved = true;
-            setBgBatch((b) => (b ? { ...b, saved: savedTotal } : null));
+            setBgBatch((b) =>
+              b ? { ...b, pendingDuplicates: pendingDuplicatesTotal } : null,
+            );
+            return;
           }
-        } catch (createErr) {
-          console.error(`[handleBatchBackground] createItem failed for photo ${i}:`, createErr);
-          const detailMsg =
-            createErr?.response?.data?.detail?.message ||
-            createErr?.response?.data?.detail ||
-            createErr?.message;
-          if (detailMsg) lastErrorMsg = detailMsg;
-        }
+
+          try {
+            const created = await api.createItem(
+              buildCreatePayload(cardLike, isSuitcase),
+            );
+            if (created && created.id) {
+              try {
+                closetStore.upsert(created);
+              } catch {
+                /* ignore */
+              }
+              savedTotal += 1;
+              photoItemSaved = true;
+              setBgBatch((b) => (b ? { ...b, saved: savedTotal } : null));
+            }
+          } catch (createErr) {
+            console.error(`[handleBatchBackground] createItem failed for photo ${i}:`, createErr);
+            const detailMsg =
+              createErr?.response?.data?.detail?.message ||
+              createErr?.response?.data?.detail ||
+              createErr?.message;
+            if (detailMsg) lastErrorMsg = detailMsg;
+          }
+        })();
+        savePromises.push(p);
+        return p;
       };
 
       const handleItemSkip = (frame) => {
@@ -2024,6 +2035,9 @@ export default function AddItem() {
           err?.message;
         if (detailMsg) lastErrorMsg = detailMsg;
       }
+
+      // Ensure all item creation promises finish before checking save status
+      await Promise.all(savePromises);
 
       if (!photoItemSaved) {
         failedTotal += 1;
@@ -2092,7 +2106,7 @@ export default function AddItem() {
         nav(isSuitcase ? "/suitcase" : "/closet");
       }
       setBgBatch(null);
-    }, 1200);
+    }, 1500);
   }
 
   const analyzeCards = async (cardsList) => {
@@ -3367,11 +3381,15 @@ export default function AddItem() {
                     {bgBatch.processed} / {bgBatch.total}
                   </span>
                   <span>
-                    {t("addItem.bgUpload.savedFailed", {
-                      saved: bgBatch.saved,
-                      failed: bgBatch.failed,
-                      defaultValue: `saved ${bgBatch.saved} · failed ${bgBatch.failed}`,
-                    })}
+                    {bgBatch.preparing
+                      ? t("addItem.bgUpload.preparing", {
+                          defaultValue: "Preparing photos...",
+                        })
+                      : t("addItem.bgUpload.savedFailed", {
+                          saved: bgBatch.saved,
+                          failed: bgBatch.failed,
+                          defaultValue: `saved ${bgBatch.saved} · failed ${bgBatch.failed}`,
+                        })}
                   </span>
                 </div>
                 <Progress

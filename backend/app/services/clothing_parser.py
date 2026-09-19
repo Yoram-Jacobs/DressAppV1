@@ -118,8 +118,9 @@ def _min_area_frac_for(category: str | None) -> float:
     return _MIN_AREA_FRAC_PER_CATEGORY.get(category, _MIN_AREA_FRAC_DEFAULT)
 
 
-# Max edge of the input fed to the model — keeps CPU latency predictable.
-_MAX_INPUT_EDGE = 1024
+# Max edge of the input fed to the model — 512 matches SegFormer's native resolution
+# and keeps CPU memory under 300MB (1024 explodes quadratic attention to multiple GBs).
+_MAX_INPUT_EDGE = 512
 
 _HTTP_TIMEOUT = httpx.Timeout(60.0, connect=15.0)
 
@@ -905,8 +906,8 @@ async def parse_garments(image_bytes: bytes) -> list[dict[str, Any]]:
         logger.warning("clothing_parser: bad image bytes: %s", exc)
         return []
     orig_W, orig_H = img.size
-    if max(orig_W, orig_H) > 1024:
-        scale = 1024.0 / max(orig_W, orig_H)
+    if max(orig_W, orig_H) > 512:
+        scale = 512.0 / max(orig_W, orig_H)
         img = img.resize((max(1, int(orig_W * scale)), max(1, int(orig_H * scale))), Image.BILINEAR)
     W, H = img.size
 

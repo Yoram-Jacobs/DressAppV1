@@ -150,21 +150,21 @@ export const closet = {
             switch (frame.type) {
               case 'detect':
                 detectMeta = frame;
-                callbacks.onDetect?.(frame);
+                await callbacks.onDetect?.(frame);
                 break;
               case 'item':
                 emittedItems[frame.index] = frame;
-                callbacks.onItem?.(frame);
+                await callbacks.onItem?.(frame);
                 break;
               case 'item_skip':
-                callbacks.onItemSkip?.(frame);
+                await callbacks.onItemSkip?.(frame);
                 break;
               case 'field':
-                callbacks.onField?.(frame);
+                await callbacks.onField?.(frame);
                 break;
               case 'done':
                 doneCount = frame.count || 0;
-                callbacks.onDone?.(frame);
+                await callbacks.onDone?.(frame);
                 break;
               case 'error': {
                 const err = new Error(frame.message || 'Analyze failed');
@@ -217,20 +217,21 @@ export const closet = {
               throw err;
             }
             if (data.items_meta) {
-              callbacks.onDetect?.({ type: 'detect', items_meta: data.items_meta });
+              await callbacks.onDetect?.({ type: 'detect', items_meta: data.items_meta });
             }
             if (Array.isArray(data.items)) {
-              data.items.forEach((it, idx) => {
-                callbacks.onItem?.({
+              for (let idx = 0; idx < data.items.length; idx++) {
+                const it = data.items[idx];
+                await callbacks.onItem?.({
                   type: 'item',
                   index: idx,
                   item: it,
                   analysis: it,
                   fields: it,
                 });
-              });
+              }
             } else if (data.analysis) {
-              callbacks.onItem?.({
+              await callbacks.onItem?.({
                 type: 'item',
                 index: 0,
                 item: data.analysis,
@@ -238,7 +239,7 @@ export const closet = {
                 fields: data.analysis,
               });
             }
-            callbacks.onDone?.(data);
+            await callbacks.onDone?.(data);
             return data;
           });
       }
