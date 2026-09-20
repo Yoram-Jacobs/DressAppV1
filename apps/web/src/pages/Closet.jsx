@@ -26,7 +26,10 @@ import {
   Grid,
   List,
   Shirt,
+  SearchX,
+  RotateCcw,
 } from 'lucide-react';
+import { getSearchNeedles } from "@/lib/fashionSynonyms";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -124,10 +127,8 @@ function _matchesSource(item, requested) {
 }
 
 function _matchesSearch(item, q) {
-  if (!q) return true;
-  let needle = q.trim().toLowerCase();
-  if (needle.startsWith("#")) needle = needle.slice(1).trim();
-  if (!needle) return true;
+  const needles = getSearchNeedles(q);
+  if (needles.length === 0) return true;
   // Match any substring across user-visible fields and tags.
   const tagsStr = Array.isArray(item?.tags) ? item.tags.join(" ") : (item?.tags || "");
   const customTagsStr = Array.isArray(item?.custom_tags) ? item.custom_tags.join(" ") : (item?.custom_tags || "");
@@ -148,7 +149,7 @@ function _matchesSearch(item, q) {
     .filter(Boolean)
     .join(" ")
     .toLowerCase();
-  return haystack.includes(needle);
+  return needles.some((needle) => haystack.includes(needle));
 }
 
 const INITIAL_FILTERS = { category: "all", source: "all", search: "" };
@@ -803,6 +804,7 @@ export default function Closet() {
   };
 
   const empty = !loading && items.length === 0;
+  const hasItemsInCloset = (store.items || []).length > 0 || (store.total || 0) > 0;
 
   // ------- selection helpers -------
   const enterSelect = () => {
@@ -1411,19 +1413,78 @@ export default function Closet() {
         )}
         {empty && (
           <div className="w-full">
-            <div
-              className="flex w-full items-center justify-center rounded-[12px] mt-[20px] bg-white px-4 py-10 sm:py-12 md:py-14"
-              data-testid="closet-empty-state"
-            >
-              <div className="flex w-full max-w-4xl flex-col items-center text-center">
-                {/* Image */}
-                <div className="mb-4 flex justify-center">
-                  <img
-                    src={closet4}
-                    alt={t("pages.closet.flat_lay_empty_state")}
-                    className="h-auto w-[220px] object-contain sm:w-[250px] md:w-[280px]"
-                  />
+            {hasItemsInCloset ? (
+              <div
+                className="flex w-full items-center justify-center rounded-[16px] mt-[20px] bg-white border border-border/60 shadow-sm px-4 py-12 text-center"
+                data-testid="closet-no-results-state"
+              >
+                <div className="flex w-full max-w-md flex-col items-center">
+                  <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-secondary/80 text-muted-foreground">
+                    <SearchX className="h-7 w-7 text-text-muted" />
+                  </div>
+                  <h2 className="mb-2 text-[18px] font-bold text-dark-brand">
+                    {t("closet.noItemsFound", {
+                      defaultValue: "No items found in this view",
+                    })}
+                  </h2>
+                  <p className="mb-6 text-[14px] leading-relaxed text-text-muted font-normal">
+                    {t("closet.noItemsSub", {
+                      defaultValue: "Try changing filters or search terms.",
+                    })}
+                  </p>
+                  <div className="flex flex-wrap items-center justify-center gap-3">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="rounded-full px-5 py-2.5 font-semibold text-text-brand hover:bg-secondary flex items-center gap-2"
+                      onClick={() => {
+                        setFilters(INITIAL_FILTERS);
+                        setSemanticActive(false);
+                      }}
+                    >
+                      <RotateCcw className="h-4 w-4" />
+                      <span>{t("closet.resetFilters", { defaultValue: "Reset Filters & Search" })}</span>
+                    </Button>
+                    <Link
+                      to="/closet/add"
+                      className="
+                        inline-flex
+                        items-center
+                        justify-center
+                        rounded-full
+                        gap-1.5
+                        bg-[var(--primary-color)]
+                        px-5 py-2.5
+                        text-[14px]
+                        font-bold
+                        text-white
+                        no-underline
+                        shadow-[var(--primary-shadow)]
+                        hover:bg-[var(--primary-hover)]
+                        hover:text-white
+                        transition-all
+                      "
+                    >
+                      <Plus className="h-4 w-4" />
+                      <span>{t("closet.addItem", { defaultValue: "Add Item" })}</span>
+                    </Link>
+                  </div>
                 </div>
+              </div>
+            ) : (
+              <div
+                className="flex w-full items-center justify-center rounded-[12px] mt-[20px] bg-white px-4 py-10 sm:py-12 md:py-14"
+                data-testid="closet-empty-state"
+              >
+                <div className="flex w-full max-w-4xl flex-col items-center text-center">
+                  {/* Image */}
+                  <div className="mb-4 flex justify-center">
+                    <img
+                      src={closet4}
+                      alt={t("pages.closet.flat_lay_empty_state")}
+                      className="h-auto w-[220px] object-contain sm:w-[250px] md:w-[280px]"
+                    />
+                  </div>
                 {/* Content */}
                 <div className="flex w-full flex-col items-center">
                   {/* Heading */}
@@ -1538,6 +1599,7 @@ export default function Closet() {
                 </div>
               </div>
             </div>
+            )}
           </div>
         )}
         {!loading && items.length > 0 && (

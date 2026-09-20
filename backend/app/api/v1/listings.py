@@ -23,6 +23,7 @@ from app.models.schemas import (
 from app.services import repos
 from app.services.auth import get_current_user, get_current_user_optional
 from app.services.fashion_clip import fashion_clip_service
+from app.services.fashion_synonyms import get_search_needles
 from app.services.fees import compute_fees
 import math
 import re
@@ -398,12 +399,9 @@ async def browse_listings(
     if seller_id:
         query["seller_id"] = seller_id
     if search:
-        s_clean = search.strip()
-        if s_clean.startswith("#"):
-            s_clean = s_clean[1:].strip()
-        if s_clean:
-            import re
-            rgx = re.escape(s_clean)
+        needles = get_search_needles(search)
+        if needles:
+            rgx = "|".join(re.escape(n) for n in needles)
             query["$or"] = [
                 {"title": {"$regex": rgx, "$options": "i"}},
                 {"description": {"$regex": rgx, "$options": "i"}},
@@ -529,12 +527,9 @@ async def browse_listings_stream(
     if seller_id:
         query["seller_id"] = seller_id
     if search:
-        s_clean = search.strip()
-        if s_clean.startswith("#"):
-            s_clean = s_clean[1:].strip()
-        if s_clean:
-            import re
-            rgx = re.escape(s_clean)
+        needles = get_search_needles(search)
+        if needles:
+            rgx = "|".join(re.escape(n) for n in needles)
             query["$or"] = [
                 {"title": {"$regex": rgx, "$options": "i"}},
                 {"description": {"$regex": rgx, "$options": "i"}},

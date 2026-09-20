@@ -35,6 +35,7 @@ import { fonts, fontSizes, spacing, radii } from '@mobile/theme/tokens';
 import { useMarketplaceStore, ListingItem, TransactionItem } from '@mobile/lib/stores/marketplaceStore';
 import { labelForCategory, labelForIntent, labelForCondition } from '@mobile/lib/taxonomy';
 import { getItemImageUrl, resolveImageUrl } from '@mobile/lib/imageUtils';
+import { getSearchNeedles } from '@mobile/lib/fashionSynonyms';
 import { HelpFloater } from '@mobile/components/help';
 import { ScrollToTopFloater } from '@mobile/components/common/ScrollToTopFloater';
 import { useScreenScrollRestoration } from '@mobile/hooks/useScreenScrollRestoration';
@@ -180,17 +181,25 @@ export function MarketplaceScreen() {
 
     // Filter by Search text
     if (searchQuery.trim()) {
-      let q = searchQuery.toLowerCase().trim();
-      if (q.startsWith('#')) q = q.slice(1).trim();
-      list = list.filter(
-        (it: any) =>
-          it.title?.toLowerCase().includes(q) ||
-          it.brand?.toLowerCase().includes(q) ||
-          it.category?.toLowerCase().includes(q) ||
-          it.description?.toLowerCase().includes(q) ||
-          (Array.isArray(it.tags) && it.tags.some((tg: string) => String(tg).toLowerCase().includes(q))) ||
-          (Array.isArray(it.cultural_tags) && it.cultural_tags.some((ctg: string) => String(ctg).toLowerCase().includes(q)))
-      );
+      const needles = getSearchNeedles(searchQuery);
+      if (needles.length > 0) {
+        list = list.filter((it: any) => {
+          const tagsStr = Array.isArray(it.tags) ? it.tags.join(' ') : (it.tags || '');
+          const culturalTagsStr = Array.isArray(it.cultural_tags) ? it.cultural_tags.join(' ') : (it.cultural_tags || '');
+          const haystack = [
+            it.title,
+            it.brand,
+            it.category,
+            it.description,
+            tagsStr,
+            culturalTagsStr,
+          ]
+            .filter(Boolean)
+            .join(' ')
+            .toLowerCase();
+          return needles.some((n) => haystack.includes(n));
+        });
+      }
     }
     return list;
   }, [browseItems, activeIntent, activeCategory, searchQuery]);

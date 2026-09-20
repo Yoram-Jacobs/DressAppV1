@@ -17,6 +17,7 @@ import { StreamingProgressChip } from '@/components/StreamingProgressChip';
 import { api } from '@/lib/api';
 import { bestImageUrl } from '@/lib/itemImage';
 import { labelForCategory, labelForSource, labelForIntent, labelForCondition } from '@/lib/taxonomy';
+import { getSearchNeedles } from '@/lib/fashionSynonyms';
 
 import { useLocation as useAppLocation } from '@/lib/location';
 import { useAuth } from '@/lib/auth';
@@ -192,9 +193,8 @@ export default function Marketplace() {
   // Filter items by search keyword and tags client-side for zero-latency response
   const displayItems = useMemo(() => {
     if (!filters.search || !filters.search.trim()) return items || [];
-    let q = filters.search.trim().toLowerCase();
-    if (q.startsWith("#")) q = q.slice(1).trim();
-    if (!q) return items || [];
+    const needles = getSearchNeedles(filters.search);
+    if (needles.length === 0) return items || [];
     return (items || []).filter((it) => {
       const tagsStr = Array.isArray(it?.tags) ? it.tags.join(" ") : (it?.tags || "");
       const culturalTagsStr = Array.isArray(it?.cultural_tags) ? it.cultural_tags.join(" ") : (it?.cultural_tags || "");
@@ -209,7 +209,7 @@ export default function Marketplace() {
         .filter(Boolean)
         .join(" ")
         .toLowerCase();
-      return haystack.includes(q);
+      return needles.some((n) => haystack.includes(n));
     });
   }, [items, filters.search]);
 

@@ -53,6 +53,7 @@ import { ScrollToTopFloater } from '@mobile/components/common/ScrollToTopFloater
 import { PageHeroBanner } from '@mobile/components/common';
 import { labelForCategory, labelForIntent, labelForColor, getTaxonomyMismatches } from '@mobile/lib/taxonomy';
 import { getItemImageUrl } from '@mobile/lib/imageUtils';
+import { getSearchNeedles } from '@mobile/lib/fashionSynonyms';
 import { useScreenScrollRestoration, resetScreenScroll } from '@mobile/hooks/useScreenScrollRestoration';
 import type { ClosetStackParamList } from '@mobile/navigation/types';
 
@@ -500,28 +501,29 @@ export function ClosetScreen() {
 
         // Search query (keyword mode)
         if (searchMode === 'keyword' && searchQuery.trim()) {
-          let q = searchQuery.trim().toLowerCase();
-          if (q.startsWith('#')) q = q.slice(1).trim();
-          const tagsStr = Array.isArray(it.tags) ? it.tags.join(' ') : (it.tags || '');
-          const customTagsStr = Array.isArray(it.custom_tags) ? it.custom_tags.join(' ') : (it.custom_tags || '');
-          const culturalTagsStr = Array.isArray(it.cultural_tags) ? it.cultural_tags.join(' ') : (it.cultural_tags || '');
-          const haystack = [
-            it.name,
-            it.title,
-            it.brand,
-            it.category,
-            it.sub_category,
-            it.color,
-            it.material,
-            it.dress_code,
-            tagsStr,
-            customTagsStr,
-            culturalTagsStr,
-          ]
-            .filter(Boolean)
-            .join(' ')
-            .toLowerCase();
-          if (!haystack.includes(q)) return false;
+          const needles = getSearchNeedles(searchQuery);
+          if (needles.length > 0) {
+            const tagsStr = Array.isArray(it.tags) ? it.tags.join(' ') : (it.tags || '');
+            const customTagsStr = Array.isArray(it.custom_tags) ? it.custom_tags.join(' ') : (it.custom_tags || '');
+            const culturalTagsStr = Array.isArray(it.cultural_tags) ? it.cultural_tags.join(' ') : (it.cultural_tags || '');
+            const haystack = [
+              it.name,
+              it.title,
+              it.brand,
+              it.category,
+              it.sub_category,
+              it.color,
+              it.material,
+              it.dress_code,
+              tagsStr,
+              customTagsStr,
+              culturalTagsStr,
+            ]
+              .filter(Boolean)
+              .join(' ')
+              .toLowerCase();
+            if (!needles.some((n) => haystack.includes(n))) return false;
+          }
         }
 
         return true;
@@ -1181,7 +1183,9 @@ export function ClosetScreen() {
             contentFit="cover"
           />
           <Text style={[styles.emptyTitle, { color: colors.foreground }]}>
-            {t('closet.noItemsFound', { defaultValue: 'No items in this view' })}
+            {items.length === 0
+              ? t('closet.emptyTitle', { defaultValue: 'Your closet is empty' })
+              : t('closet.noItemsFound', { defaultValue: 'No items in this view' })}
           </Text>
           <Text style={[styles.emptySub, { color: colors.mutedFg }]}>
             {items.length === 0
