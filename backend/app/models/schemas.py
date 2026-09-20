@@ -457,8 +457,12 @@ class Listing(BaseDoc):
     title: str
     description: str | None = None
     category: str
+    brand: str | None = None
+    color: str | None = None
     size: str | None = None
     condition: Condition = "good"
+    tags: list[str] = Field(default_factory=list)
+    cultural_tags: list[str] = Field(default_factory=list)
     images: list[str] = Field(default_factory=list)
     clean_image_url: str | None = None
     reconstructed_image_url: str | None = None

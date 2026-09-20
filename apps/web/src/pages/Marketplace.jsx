@@ -5,12 +5,13 @@ import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
 import { AspectRatio } from '@/components/ui/aspect-ratio';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { SourceTagBadge } from '@/components/SourceTagBadge';
-import { Plus, MapPin, CheckCircle2, Clock, XCircle, Package, Receipt } from 'lucide-react';
+import { Plus, MapPin, CheckCircle2, Clock, XCircle, Package, Receipt, Search, X } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { StreamingProgressChip } from '@/components/StreamingProgressChip';
 import { api } from '@/lib/api';
@@ -92,7 +93,7 @@ const CATEGORIES = [
 ];
 const RADIUS_OPTIONS = ["any", "5", "25", "50", "200"];
 
-const INITIAL_FILTERS = { source: "all", category: "all", radius: "any" };
+const INITIAL_FILTERS = { source: "all", category: "all", radius: "any", search: "" };
 
 function MarketplaceItemImage({ item, t }) {
   const [hasError, setHasError] = useState(false);
@@ -150,6 +151,11 @@ export default function Marketplace() {
       params.mode = _INTENT_TO_MODE[filters.source];
     }
     if (filters.category !== "all") params.category = filters.category;
+    if (filters.search && filters.search.trim()) {
+      let s = filters.search.trim();
+      if (s.startsWith("#")) s = s.slice(1).trim();
+      if (s) params.search = s;
+    }
     if (loc?.coords?.lat != null && loc?.coords?.lng != null) {
       params.lat = loc.coords.lat;
       params.lng = loc.coords.lng;
@@ -161,6 +167,7 @@ export default function Marketplace() {
     filters.source,
     filters.category,
     filters.radius,
+    filters.search,
     loc?.coords?.lat,
     loc?.coords?.lng,
   ]);
@@ -181,6 +188,30 @@ export default function Marketplace() {
   // is in flight without blanking the grid; we don't render a spinner
   // for it today but the value is exposed for future polish.
   void refreshing;
+
+  // Filter items by search keyword and tags client-side for zero-latency response
+  const displayItems = useMemo(() => {
+    if (!filters.search || !filters.search.trim()) return items || [];
+    let q = filters.search.trim().toLowerCase();
+    if (q.startsWith("#")) q = q.slice(1).trim();
+    if (!q) return items || [];
+    return (items || []).filter((it) => {
+      const tagsStr = Array.isArray(it?.tags) ? it.tags.join(" ") : (it?.tags || "");
+      const culturalTagsStr = Array.isArray(it?.cultural_tags) ? it.cultural_tags.join(" ") : (it?.cultural_tags || "");
+      const haystack = [
+        it?.title,
+        it?.brand,
+        it?.category,
+        it?.description,
+        tagsStr,
+        culturalTagsStr,
+      ]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase();
+      return haystack.includes(q);
+    });
+  }, [items, filters.search]);
 
   // Phase Z2.4 — progressive browse via NDJSON stream. Items appear
   // as the server emits them, instead of all-at-once at the end of
@@ -333,6 +364,34 @@ export default function Marketplace() {
 
                   <div className="mb-4">
                     <label className="text-[14px] font-semibold mb-[8px] text-text-brand block">
+                      {t("market.search", { defaultValue: "Search & Tags" })}
+                    </label>
+                    <div className="relative">
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted h-4 w-4" />
+                      <Input
+                        value={filters.search}
+                        onChange={(e) =>
+                          setFilters((f) => ({ ...f, search: e.target.value }))
+                        }
+                        placeholder={t("market.searchPlaceholder", {
+                          defaultValue: "Search title, brand, #tags...",
+                        })}
+                        className="pl-9 pr-8 h-9 text-xs"
+                      />
+                      {filters.search ? (
+                        <button
+                          type="button"
+                          onClick={() => setFilters((f) => ({ ...f, search: "" }))}
+                          className="absolute right-2.5 top-1/2 -translate-y-1/2 text-text-muted hover:text-text-primary p-0.5"
+                        >
+                          <X className="h-3.5 w-3.5" />
+                        </button>
+                      ) : null}
+                    </div>
+                  </div>
+
+                  <div className="mb-4">
+                    <label className="text-[14px] font-semibold mb-[8px] text-text-brand block">
                       {t("market.sourceFilter", { defaultValue: t("market.source", { defaultValue: "Source" }) })}
                     </label>
                     <Select
@@ -431,7 +490,8 @@ export default function Marketplace() {
 
                   {(filters.source !== "all" ||
                     filters.category !== "all" ||
-                    filters.radius !== "any") && (
+                    filters.radius !== "any" ||
+                    Boolean(filters.search)) && (
                       <button
                         type="button"
                         className="w-full mt-[18px] p-[10px] border border-dashed border-[rgba(31,92,69,0.35)] bg-transparent rounded-xl text-[var(--primary-color)] text-xs font-extrabold cursor-pointer transition-all duration-300 hover:bg-[var(--primary-shadow)]"
@@ -445,12 +505,12 @@ export default function Marketplace() {
                 </div>
               </div>
               <div className="min-w-0">
-                {!loading && items.length > 0 && (
+                {!loading && displayItems.length > 0 && (
                   <div
                     className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-4 gap-y-4"
                     data-testid="marketplace-grid"
                   >
-                    {items.map((l) => (
+                    {displayItems.map((l) => (
                       <div key={l.id}>
                         <Link
                           to={`/market/${l.id}`}
@@ -488,6 +548,31 @@ export default function Marketplace() {
                               <h4 className="text-sm font-bold leading-5 mb-[5px] text-black line-clamp-1">
                                 {l.title}
                               </h4>
+                              {((Array.isArray(l.tags) && l.tags.length > 0) || (Array.isArray(l.cultural_tags) && l.cultural_tags.length > 0)) && (
+                                <div className="flex flex-wrap gap-1 mt-1 mb-2">
+                                  {(l.tags || []).slice(0, 3).map((tag, idx) => (
+                                    <span
+                                      key={`tag-${idx}`}
+                                      className="inline-flex items-center text-[9px] px-1.5 py-0.5 rounded-full bg-stone-100 text-stone-600 font-medium"
+                                    >
+                                      #{tag}
+                                    </span>
+                                  ))}
+                                  {(l.cultural_tags || []).slice(0, 2).map((ctag, idx) => (
+                                    <span
+                                      key={`ctag-${idx}`}
+                                      className="inline-flex items-center text-[9px] px-1.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 font-medium"
+                                    >
+                                      #{ctag}
+                                    </span>
+                                  ))}
+                                  {((l.tags?.length || 0) + (l.cultural_tags?.length || 0) > 5) && (
+                                    <span className="text-[9px] text-stone-400 self-center">
+                                      +{((l.tags?.length || 0) + (l.cultural_tags?.length || 0)) - 5}
+                                    </span>
+                                  )}
+                                </div>
+                              )}
                               <div className="flex items-center justify-between mb-0">
                                 <span className="text-[18px] font-black text-[var(--primary-color)] tracking-[-0.3px]">
                                   {fmt(
@@ -528,7 +613,7 @@ export default function Marketplace() {
                   </div>
                 )}
                 {(loading ||
-                  (browseProgress.running && items.length === 0)) && (
+                  (browseProgress.running && displayItems.length === 0)) && (
                     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                       {Array.from({ length: 8 }).map((_, i) => (
                         <div key={i}>
@@ -537,7 +622,7 @@ export default function Marketplace() {
                       ))}
                     </div>
                   )}
-                {!loading && !browseProgress.running && items.length === 0 && (
+                {!loading && !browseProgress.running && displayItems.length === 0 && (
                   <div
                     className="border-0 rounded-xl bg-white shadow-[0_12px_35px_rgba(27,45,35,0.06)]"
                     data-testid="marketplace-empty-state"

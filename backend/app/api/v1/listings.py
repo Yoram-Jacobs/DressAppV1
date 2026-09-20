@@ -167,6 +167,8 @@ class CreateListingIn(BaseModel):
     ships_to: list[str] = Field(default_factory=list)
     list_price_cents: int = Field(ge=0)
     currency: str = "USD"
+    tags: list[str] = Field(default_factory=list)
+    cultural_tags: list[str] = Field(default_factory=list)
     # Wave 3 — optional shipping fee attached to this listing. 0 means
     # "free / local pickup only". Capped nowhere on the backend;
     # product copy nudges users toward 0 for donations.
@@ -180,6 +182,8 @@ class UpdateListingIn(BaseModel):
     category: str | None = None
     size: str | None = None
     condition: Condition | None = None
+    tags: list[str] | None = None
+    cultural_tags: list[str] | None = None
     images: list[str] | None = None
     location: dict[str, Any] | None = None
     ships_to: list[str] | None = None
@@ -313,6 +317,18 @@ async def create_listing(
     reconstructed_img = (closet_item or {}).get("reconstructed_image_url") if closet_item else None
     thumb_img = (closet_item or {}).get("thumbnail_data_url") if closet_item else (images[0] if images else None)
 
+    tags = list(payload.tags or [])
+    cultural_tags = list(payload.cultural_tags or [])
+    brand = None
+    color = None
+    if closet_item:
+        if not tags and closet_item.get("tags"):
+            tags = list(closet_item.get("tags") or [])
+        if not cultural_tags and closet_item.get("cultural_tags"):
+            cultural_tags = list(closet_item.get("cultural_tags") or [])
+        brand = closet_item.get("brand")
+        color = closet_item.get("color")
+
     listing = Listing(
         closet_item_id=payload.closet_item_id,
         seller_id=user["id"],
@@ -321,8 +337,12 @@ async def create_listing(
         title=payload.title,
         description=payload.description,
         category=payload.category,
+        brand=brand,
+        color=color,
         size=payload.size,
         condition=payload.condition,
+        tags=tags,
+        cultural_tags=cultural_tags,
         images=images,
         clean_image_url=clean_img,
         reconstructed_image_url=reconstructed_img,
@@ -355,6 +375,7 @@ async def browse_listings(
     category: str | None = Query(default=None),
     mode: ListingMode | None = Query(default=None),
     seller_id: str | None = Query(default=None),
+    search: str | None = Query(default=None),
     min_price_cents: int | None = Query(default=None, ge=0),
     max_price_cents: int | None = Query(default=None, ge=0),
     status: ListingStatus = Query(default="active"),
@@ -376,6 +397,21 @@ async def browse_listings(
         query["mode"] = mode
     if seller_id:
         query["seller_id"] = seller_id
+    if search:
+        s_clean = search.strip()
+        if s_clean.startswith("#"):
+            s_clean = s_clean[1:].strip()
+        if s_clean:
+            import re
+            rgx = re.escape(s_clean)
+            query["$or"] = [
+                {"title": {"$regex": rgx, "$options": "i"}},
+                {"description": {"$regex": rgx, "$options": "i"}},
+                {"brand": {"$regex": rgx, "$options": "i"}},
+                {"category": {"$regex": rgx, "$options": "i"}},
+                {"tags": {"$regex": rgx, "$options": "i"}},
+                {"cultural_tags": {"$regex": rgx, "$options": "i"}},
+            ]
     if min_price_cents is not None:
         query.setdefault("financial_metadata.list_price_cents", {})["$gte"] = (
             min_price_cents
@@ -435,6 +471,7 @@ async def browse_listings_stream(
     category: str | None = Query(default=None),
     mode: ListingMode | None = Query(default=None),
     seller_id: str | None = Query(default=None),
+    search: str | None = Query(default=None),
     min_price_cents: int | None = Query(default=None, ge=0),
     max_price_cents: int | None = Query(default=None, ge=0),
     status: ListingStatus = Query(default="active"),
@@ -491,6 +528,21 @@ async def browse_listings_stream(
         query["mode"] = mode
     if seller_id:
         query["seller_id"] = seller_id
+    if search:
+        s_clean = search.strip()
+        if s_clean.startswith("#"):
+            s_clean = s_clean[1:].strip()
+        if s_clean:
+            import re
+            rgx = re.escape(s_clean)
+            query["$or"] = [
+                {"title": {"$regex": rgx, "$options": "i"}},
+                {"description": {"$regex": rgx, "$options": "i"}},
+                {"brand": {"$regex": rgx, "$options": "i"}},
+                {"category": {"$regex": rgx, "$options": "i"}},
+                {"tags": {"$regex": rgx, "$options": "i"}},
+                {"cultural_tags": {"$regex": rgx, "$options": "i"}},
+            ]
     if min_price_cents is not None:
         query.setdefault("financial_metadata.list_price_cents", {})["$gte"] = (
             min_price_cents

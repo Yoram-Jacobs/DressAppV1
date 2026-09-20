@@ -47,6 +47,7 @@ export interface ClosetItem {
   formality?: string;
   cultural_tags?: string[];
   tags?: string[];
+  custom_tags?: string[];
   notes?: string;
   image_url?: string;
   thumbnail_data_url?: string;

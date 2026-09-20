@@ -41,22 +41,29 @@ class ProposalGenerateIn(BaseModel):
 def _resolve_effective_style(user: dict, occasion: str | None = None) -> str:
     sched = user.get("scheduler_settings") or {}
     style_option = sched.get("style_option") or sched.get("style")
-    if style_option in ("custom", "tags"):
+    if style_option == "tags":
+        selected_tags = sched.get("selected_tags")
+        if isinstance(selected_tags, list) and selected_tags:
+            return ", ".join(str(t) for t in selected_tags if t).strip()
         if sched.get("custom_style"):
             return sched.get("custom_style").strip()
-        if isinstance(sched.get("selected_tags"), list) and sched.get("selected_tags"):
-            return ", ".join(sched.get("selected_tags")).strip()
-    if sched.get("custom_style") and style_option not in ("casual", "formal", "sport", "smart_casual"):
-        return sched.get("custom_style").strip()
-    if sched.get("style_dress_for") and sched.get("style_dress_for") not in ("daily", "default"):
+        return "casual"
+    elif style_option == "custom":
+        if sched.get("custom_style"):
+            return sched.get("custom_style").strip()
+        if sched.get("style_dress_for") and sched.get("style_dress_for") not in ("custom", "tags", "daily", "default"):
+            return sched.get("style_dress_for").strip()
+        return "casual"
+
+    if sched.get("style_dress_for") and sched.get("style_dress_for") not in ("daily", "default", "custom", "tags"):
         return sched.get("style_dress_for").strip()
+    if isinstance(sched.get("selected_tags"), list) and sched.get("selected_tags"):
+        return ", ".join(str(t) for t in sched.get("selected_tags") if t).strip()
     if sched.get("custom_style"):
         return sched.get("custom_style").strip()
-    if isinstance(sched.get("selected_tags"), list) and sched.get("selected_tags"):
-        return ", ".join(sched.get("selected_tags")).strip()
     if occasion and occasion != "daily":
         return occasion.strip()
-    return sched.get("style_dress_for") or "casual"
+    return "casual"
 
 
 @router.get("/daily-proposal")

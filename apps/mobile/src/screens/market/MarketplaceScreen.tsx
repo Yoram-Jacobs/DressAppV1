@@ -180,13 +180,16 @@ export function MarketplaceScreen() {
 
     // Filter by Search text
     if (searchQuery.trim()) {
-      const q = searchQuery.toLowerCase().trim();
+      let q = searchQuery.toLowerCase().trim();
+      if (q.startsWith('#')) q = q.slice(1).trim();
       list = list.filter(
-        (it) =>
+        (it: any) =>
           it.title?.toLowerCase().includes(q) ||
           it.brand?.toLowerCase().includes(q) ||
           it.category?.toLowerCase().includes(q) ||
-          it.description?.toLowerCase().includes(q)
+          it.description?.toLowerCase().includes(q) ||
+          (Array.isArray(it.tags) && it.tags.some((tg: string) => String(tg).toLowerCase().includes(q))) ||
+          (Array.isArray(it.cultural_tags) && it.cultural_tags.some((ctg: string) => String(ctg).toLowerCase().includes(q)))
       );
     }
     return list;
@@ -269,6 +272,18 @@ export function MarketplaceScreen() {
           </View>
 
           <Text style={[s.priceText, { color: colors.primary }]}>{priceTag}</Text>
+          {Array.isArray(item.tags) && item.tags.length > 0 ? (
+            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 3, marginTop: 4 }}>
+              {item.tags.slice(0, 2).map((tg: string, idx: number) => (
+                <View key={idx} style={{ backgroundColor: colors.secondary, paddingHorizontal: 4, paddingVertical: 1, borderRadius: 4 }}>
+                  <Text style={{ fontSize: 8, color: colors.mutedFg, fontFamily: fonts.body }}>#{tg}</Text>
+                </View>
+              ))}
+              {item.tags.length > 2 ? (
+                <Text style={{ fontSize: 8, color: colors.mutedFg, alignSelf: 'center' }}>+{item.tags.length - 2}</Text>
+              ) : null}
+            </View>
+          ) : null}
         </View>
       </TouchableOpacity>
     );

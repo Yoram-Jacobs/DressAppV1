@@ -76,13 +76,15 @@ def calculate_garment_style_score(item: dict, style_dress_for: str | None) -> in
     prompt_lower = style_dress_for.strip().lower()
     tags = [str(t).lower().strip() for t in (item.get("tags") or []) if t]
     custom_tags = [str(t).lower().strip() for t in (item.get("custom_tags") or []) if t]
+    cultural_tags = [str(t).lower().strip() for t in (item.get("cultural_tags") or []) if t]
+    brand = str(item.get("brand") or "").lower()
     title = str(item.get("title") or item.get("name") or "").lower()
     sub_cat = str(item.get("sub_category") or item.get("item_type") or "").lower()
     cat = norm_category(item.get("category"))
     dress_code = str(item.get("dress_code") or "").lower()
     material = str(item.get("material") or "").lower()
     description = str(item.get("description") or "").lower()
-    all_text = f"{title} {sub_cat} {cat} {dress_code} {material} {description} {' '.join(tags)} {' '.join(custom_tags)}"
+    all_text = f"{title} {brand} {sub_cat} {cat} {dress_code} {material} {description} {' '.join(tags)} {' '.join(custom_tags)} {' '.join(cultural_tags)}"
     
     score = 0
     
@@ -104,7 +106,7 @@ def calculate_garment_style_score(item: dict, style_dress_for: str | None) -> in
     for tok in tokens:
         tok_syns = set(SYNONYMS.get(tok, [tok]))
         tok_syns.add(tok)
-        for t in tags + custom_tags:
+        for t in tags + custom_tags + cultural_tags:
             if t in tok_syns or any(s in t for s in tok_syns if len(s) >= 2) or tok in t:
                 score += 60
                 break  # count boost once per user token

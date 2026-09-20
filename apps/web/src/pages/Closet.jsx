@@ -125,10 +125,13 @@ function _matchesSource(item, requested) {
 
 function _matchesSearch(item, q) {
   if (!q) return true;
-  const needle = q.trim().toLowerCase();
+  let needle = q.trim().toLowerCase();
+  if (needle.startsWith("#")) needle = needle.slice(1).trim();
   if (!needle) return true;
-  // Mirror backend $text loosely: match any substring across the
-  // user-visible string fields. Cheap on a 300-item closet.
+  // Match any substring across user-visible fields and tags.
+  const tagsStr = Array.isArray(item?.tags) ? item.tags.join(" ") : (item?.tags || "");
+  const customTagsStr = Array.isArray(item?.custom_tags) ? item.custom_tags.join(" ") : (item?.custom_tags || "");
+  const culturalTagsStr = Array.isArray(item?.cultural_tags) ? item.cultural_tags.join(" ") : (item?.cultural_tags || "");
   const haystack = [
     item?.title,
     item?.name,
@@ -137,6 +140,10 @@ function _matchesSearch(item, q) {
     item?.color,
     item?.brand,
     item?.material,
+    item?.dress_code,
+    tagsStr,
+    customTagsStr,
+    culturalTagsStr,
   ]
     .filter(Boolean)
     .join(" ")
@@ -2384,6 +2391,24 @@ function ItemCardInner({ item, isSelected, showCheckbox, score }) {
             </span>
           )}
         </div>
+        {/* TAG CHIPS */}
+        {Array.isArray(item.tags) && item.tags.length > 0 && (
+          <div className="mt-2 flex flex-wrap gap-1" data-testid="closet-item-tags">
+            {item.tags.slice(0, 3).map((tg, idx) => (
+              <span
+                key={idx}
+                className="inline-flex items-center rounded-md bg-stone-100 px-1.5 py-0.5 text-[10px] font-medium text-stone-600"
+              >
+                #{tg}
+              </span>
+            ))}
+            {item.tags.length > 3 && (
+              <span className="text-[10px] text-stone-400 font-medium self-center">
+                +{item.tags.length - 3}
+              </span>
+            )}
+          </div>
+        )}
         {/* COMPLETE LISTING */}
         {item.auto_listing_needs_completion && item.auto_listing_id && (
           <button

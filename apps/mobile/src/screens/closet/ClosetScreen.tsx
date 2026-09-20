@@ -500,7 +500,11 @@ export function ClosetScreen() {
 
         // Search query (keyword mode)
         if (searchMode === 'keyword' && searchQuery.trim()) {
-          const q = searchQuery.trim().toLowerCase();
+          let q = searchQuery.trim().toLowerCase();
+          if (q.startsWith('#')) q = q.slice(1).trim();
+          const tagsStr = Array.isArray(it.tags) ? it.tags.join(' ') : (it.tags || '');
+          const customTagsStr = Array.isArray(it.custom_tags) ? it.custom_tags.join(' ') : (it.custom_tags || '');
+          const culturalTagsStr = Array.isArray(it.cultural_tags) ? it.cultural_tags.join(' ') : (it.cultural_tags || '');
           const haystack = [
             it.name,
             it.title,
@@ -509,6 +513,10 @@ export function ClosetScreen() {
             it.sub_category,
             it.color,
             it.material,
+            it.dress_code,
+            tagsStr,
+            customTagsStr,
+            culturalTagsStr,
           ]
             .filter(Boolean)
             .join(' ')
@@ -762,6 +770,15 @@ export function ClosetScreen() {
             <Text style={[styles.listSub, { color: colors.mutedFg }]}>
               {[item.brand, item.category].filter(Boolean).join(' · ')}
             </Text>
+            {Array.isArray(item.tags) && item.tags.length > 0 ? (
+              <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 4, marginTop: 4 }}>
+                {item.tags.slice(0, 3).map((tg, idx) => (
+                  <View key={idx} style={{ backgroundColor: colors.secondary, paddingHorizontal: 5, paddingVertical: 1, borderRadius: 4 }}>
+                    <Text style={{ fontSize: 9, color: colors.mutedFg, fontFamily: fonts.body }}>#{tg}</Text>
+                  </View>
+                ))}
+              </View>
+            ) : null}
           </View>
 
           {selectMode ? (
@@ -866,6 +883,18 @@ export function ClosetScreen() {
           <Text style={[styles.gridSub, { color: colors.mutedFg }]} numberOfLines={1}>
             {item.brand || item.category || 'Piece'}
           </Text>
+          {Array.isArray(item.tags) && item.tags.length > 0 ? (
+            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 3, marginTop: 3 }}>
+              {item.tags.slice(0, 2).map((tg, idx) => (
+                <View key={idx} style={{ backgroundColor: colors.secondary, paddingHorizontal: 4, paddingVertical: 1, borderRadius: 4 }}>
+                  <Text style={{ fontSize: 8, color: colors.mutedFg, fontFamily: fonts.body }}>#{tg}</Text>
+                </View>
+              ))}
+              {item.tags.length > 2 ? (
+                <Text style={{ fontSize: 8, color: colors.mutedFg, alignSelf: 'center' }}>+{item.tags.length - 2}</Text>
+              ) : null}
+            </View>
+          ) : null}
         </View>
       </TouchableOpacity>
     );

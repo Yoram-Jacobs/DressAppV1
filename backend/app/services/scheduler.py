@@ -195,7 +195,9 @@ def _generate_fallback_advice(
         for it in clean_items:
             it_tags = [str(t).lower() for t in (it.get("tags") or [])]
             it_custom = [str(t).lower() for t in (it.get("custom_tags") or [])]
-            if any(tok in it_tags or tok in it_custom or any(tok in t for t in it_tags + it_custom) for tok in tokens):
+            it_cultural = [str(t).lower() for t in (it.get("cultural_tags") or [])]
+            combined = it_tags + it_custom + it_cultural
+            if any(tok in combined or any(tok in t for t in combined) for tok in tokens):
                 has_exact_tag_match = True
                 break
 
@@ -873,10 +875,21 @@ async def check_scheduler_triggers() -> None:
                 except Exception as cal_exc:
                     logger.warning("Failed to fetch calendar events for user %s on %s: %s", user_id, target_date_str, cal_exc)
 
-                style_option = sched.get("style_dress_for")
+                sched_style_option = sched.get("style_option") or sched.get("style")
+                if sched_style_option == "tags":
+                    selected_tags = sched.get("selected_tags")
+                    if isinstance(selected_tags, list) and selected_tags:
+                        style_option = ", ".join(str(t) for t in selected_tags if t).strip()
+                    elif sched.get("custom_style"):
+                        style_option = sched.get("custom_style").strip()
+                    else:
+                        style_option = "casual"
+                elif sched_style_option == "custom":
+                    style_option = (sched.get("custom_style") or sched.get("style_dress_for") or "casual").strip()
+                else:
+                    style_option = (sched.get("style_dress_for") or sched_style_option or "casual").strip()
+
                 if not style_option or style_option in ("custom", "tags"):
-                    style_option = sched.get("custom_style") or (", ".join(sched.get("selected_tags")) if isinstance(sched.get("selected_tags"), list) and sched.get("selected_tags") else None) or sched.get("style_option") or "casual"
-                if style_option in ("custom", "tags"):
                     style_option = "casual"
                 
                 # Sanitize user dict to prevent ObjectId JSON serialization errors
