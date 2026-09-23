@@ -48,7 +48,12 @@ export const dailySuggestionsStore = {
     _set({ loading: true, error: null });
     try {
       const [dailyPropRes, calStatus, notifRes, calEventsRes] = await Promise.allSettled([
-        api.getDailyProposal ? api.getDailyProposal() : Promise.resolve(null),
+        api.getDailyProposal
+          ? api.getDailyProposal().catch((err) => {
+              if (err?.response?.status === 403) return null;
+              throw err;
+            })
+          : Promise.resolve(null),
         api.calendarStatus ? api.calendarStatus() : Promise.resolve({ connected: false }),
         api.listSimulatedNotifications ? api.listSimulatedNotifications() : Promise.resolve({ notifications: [] }),
         api.calendarUpcoming ? api.calendarUpcoming(24) : Promise.resolve({ events: [] }),

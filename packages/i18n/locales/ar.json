@@ -1366,7 +1366,8 @@
     "tomorrowSuggestionTitle": "اقتراح الأناقة للغد",
     "tomorrowSuggestionSubtitle": "تم تنسيقه خصيصاً للغد بناءً على أسلوبك وتوقعات الطقس وجدول مواعيدك.",
     "tomorrowSuggestionRefreshed": "تم تحديث اقتراح الغد بنجاح!",
-    "wearTomorrow": "ارتداء غداً"
+    "wearTomorrow": "ارتداء غداً",
+    "upgradeForDailySuggestionsDesc": "قم بالترقية إلى باقة المدير أو الاحترافية لفتح الاقتراحات اليومية."
   },
   "outfitCompletion": {
     "cta": "أكمل الإطلالة",

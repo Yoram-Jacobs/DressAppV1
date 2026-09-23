@@ -34,6 +34,7 @@ import { VirtualTryOnView, TryOnItem } from '@mobile/components/stylist/VirtualT
 import { HelpFloater } from '@mobile/components/help';
 import { PageHeroBanner } from '@mobile/components/common';
 import { resolveImageUrl } from '@mobile/lib/imageUtils';
+import { useTierLimits } from '@mobile/hooks/useTierLimits';
 
 type StylistTab = 'chat' | 'daily' | 'planner' | 'tryon';
 
@@ -42,6 +43,7 @@ export function StylistScreen() {
   const { colors, isDark } = useTheme();
   const navigation = useNavigation<NativeStackNavigationProp<StylistStackParamList, 'Stylist'>>();
   const route = useRoute<any>();
+  const { canAccessScheduler } = useTierLimits();
 
   const [activeTab, setActiveTab] = useState<StylistTab>(route.params?.tab || 'chat');
   const [previousTab, setPreviousTab] = useState<StylistTab>('daily');
@@ -237,6 +239,9 @@ export function StylistScreen() {
                 >
                   {tab.label}
                 </Text>
+                {tab.id === 'daily' && !canAccessScheduler && (
+                  <Lucide.Crown size={12} color={isSelected ? '#fef08a' : '#f59e0b'} style={{ marginStart: 4 }} />
+                )}
               </TouchableOpacity>
             );
           })}

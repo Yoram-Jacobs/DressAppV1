@@ -1322,7 +1322,8 @@
     "tomorrowSuggestionTitle": "Stilvorschlag für morgen",
     "tomorrowSuggestionSubtitle": "Für morgen kuratiert basierend auf Ihrem Stilprofil, der Wettervorhersage und Terminen.",
     "tomorrowSuggestionRefreshed": "Vorschlag für morgen aktualisiert!",
-    "wearTomorrow": "Morgen tragen"
+    "wearTomorrow": "Morgen tragen",
+    "upgradeForDailySuggestionsDesc": "Führen Sie ein Upgrade auf den Manager- oder Professional-Tarif durch, um tägliche Vorschläge freizuschalten."
   },
   "outfitCompletion": {
     "cta": "Outfit vervollständigen",

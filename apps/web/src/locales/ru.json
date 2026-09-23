@@ -1322,7 +1322,8 @@
     "tomorrowSuggestionTitle": "Рекомендация стиля на завтра",
     "tomorrowSuggestionSubtitle": "Подобрано на завтра с учетом вашего стиля, прогноза погоды и календаря.",
     "tomorrowSuggestionRefreshed": "Рекомендация на завтра обновлена!",
-    "wearTomorrow": "Надеть завтра"
+    "wearTomorrow": "Надеть завтра",
+    "upgradeForDailySuggestionsDesc": "Перейдите на план Manager или Professional, чтобы разблокировать ежедневные предложения."
   },
   "outfitCompletion": {
     "cta": "Завершить образ",

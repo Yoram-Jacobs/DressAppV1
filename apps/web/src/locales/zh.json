@@ -1322,7 +1322,8 @@
     "tomorrowSuggestionTitle": "明日风格灵感",
     "tomorrowSuggestionSubtitle": "根据您的个人风格、明日天气预报及日程安排精心搭配。",
     "tomorrowSuggestionRefreshed": "已刷新明日穿搭建议！",
-    "wearTomorrow": "明日穿着"
+    "wearTomorrow": "明日穿着",
+    "upgradeForDailySuggestionsDesc": "升级到经理或专业版计划以解锁每日穿搭建议。"
   },
   "outfitCompletion": {
     "cta": "完成搭配",

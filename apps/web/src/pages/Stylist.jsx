@@ -29,7 +29,7 @@ import {
   ArrowLeft,
   Share2,
   ShirtIcon, 
-  Key, Shirt, CalendarCheck2, CalendarPlus
+  Key, Shirt, CalendarCheck2, CalendarPlus, Crown
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
@@ -62,6 +62,7 @@ import { closetStore } from '@/lib/closetStore';
 import { bestImageUrl, resolveMediaUrl } from '@/lib/itemImage';
 import { useLocalStorageSync } from '@/lib/useLocalStorageSync';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { useTierLimits } from '@/hooks/useTierLimits';
 import { WaveformAudioPlayer } from '@/components/WaveformAudioPlayer';
 import { ConversationSidebar } from '@/components/stylist/ConversationSidebar';
 import { OutfitCanvasMessage } from '@/components/OutfitCanvas';
@@ -372,6 +373,7 @@ export default function Stylist() {
   const [isEditingOutfit, setIsEditingOutfit] = useStoreState(stylistUIStore, 'isEditingOutfit');
   const [editOutfitName, setEditOutfitName] = useStoreState(stylistUIStore, 'editOutfitName');
   const [editOutfitDescription, setEditOutfitDescription] = useStoreState(stylistUIStore, 'editOutfitDescription');
+  const { canAccessScheduler } = useTierLimits();
   const { notifications: cachedNotifications, dailyProposal, proposals, generate: generateDailyProposalAction, prewarm: prewarmDaily, act: actDailyProposal } = useDailySuggestionsStore();
   const [generatingDaily, setGeneratingDaily] = useState(false);
   const proposalToOutfit = useCallback((prop, dateStr) => {
@@ -478,6 +480,10 @@ export default function Stylist() {
 
   useEffect(() => {
     if (activeTab === 'match') {
+      if (!canAccessScheduler) {
+        setSelectedOutfitForDetail(null);
+        return;
+      }
       if (!selectedOutfitForDetail && !userDismissedDetail) {
         const todayDateStr = formatLocalDate(new Date());
         const todayOutfit = (outfits || []).find(o => o.usage?.date === todayDateStr);
@@ -498,7 +504,7 @@ export default function Stylist() {
     } else {
       setUserDismissedDetail(false);
     }
-  }, [activeTab, selectedOutfitForDetail, userDismissedDetail, outfits, dailyProposal, proposals, proposalToOutfit, generateDailyProposalAction, setSelectedOutfitForDetail]);
+  }, [activeTab, canAccessScheduler, selectedOutfitForDetail, userDismissedDetail, outfits, dailyProposal, proposals, proposalToOutfit, generateDailyProposalAction, setSelectedOutfitForDetail]);
 
   useEffect(() => {
     if (location.state?.selectedOutfitId && outfits.length > 0) {
@@ -2480,6 +2486,9 @@ export default function Stylist() {
                       <TabsTrigger value="match" className="group inline-flex items-center gap-[7px] px-5 py-[11px] rounded-full text-[13px] font-bold text-[var(--text-color)] bg-transparent border-none shadow-none transition-all whitespace-nowrap hover:text-[var(--primary-color)] hover:bg-[var(--primary-shadow)] data-[state=active]:bg-[var(--primary-color)] data-[state=active]:text-white max-sm:flex-1 max-sm:justify-center max-sm:px-2.5 max-sm:py-2.5 max-sm:text-[11.5px]">
                         <CalendarCheck2 className="h-[15px] w-[15px] text-[var(--primary-color)] shrink-0 transition-all group-data-[state=active]:text-white" />
                         {t('stylist.dailySuggestion')}
+                        {!canAccessScheduler && (
+                          <Crown className="h-3.5 w-3.5 text-amber-500 ms-1 shrink-0" />
+                        )}
                       </TabsTrigger>
                     </TabsList>
                   </div>
@@ -2551,7 +2560,27 @@ export default function Stylist() {
                     </section>
                   </TabsContent>
                   <TabsContent value="match">
-                    {selectedOutfitForDetail ? (
+                    {!canAccessScheduler ? (
+                      <div className="bg-white rounded-[16px] border border-border shadow-sm p-8 sm:p-12 my-6 flex flex-col items-center text-center space-y-4 max-w-xl mx-auto">
+                        <div className="p-4 rounded-full bg-amber-500/10 text-amber-500">
+                          <Crown className="h-10 w-10" />
+                        </div>
+                        <h2 className="font-bold text-[22px] text-dark-brand">
+                          {t('stylist.dailySuggestion', { defaultValue: 'Daily Suggestions' })}
+                        </h2>
+                        <p className="text-[14px] font-semibold text-text-brand max-w-md leading-relaxed">
+                          {t('stylist.upgradeForDailySuggestionsDesc', { defaultValue: 'Upgrade to Manager or Professional to unlock Daily Suggestions.' })}
+                        </p>
+                        <div className="pt-2">
+                          <Button
+                            onClick={() => navigate('/pricing')}
+                            className="rounded-full px-6 py-2.5 font-bold"
+                          >
+                            {t('nav.pricing', { defaultValue: 'View Plans & Upgrade' })}
+                          </Button>
+                        </div>
+                      </div>
+                    ) : selectedOutfitForDetail ? (
                       renderOutfitDetailPane()
                     ) : (
                       <>

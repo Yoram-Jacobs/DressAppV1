@@ -1322,7 +1322,8 @@
     "tomorrowSuggestionTitle": "कल के लिए स्टाइल सुझाव",
     "tomorrowSuggestionSubtitle": "आपकी स्टाइल प्रोफाइल, मौसम के पूर्वानुमान और कैलेंडर के आधार पर कल के लिए तैयार किया गया।",
     "tomorrowSuggestionRefreshed": "कल का सुझाव रीफ्रेश हो गया!",
-    "wearTomorrow": "कल पहनें"
+    "wearTomorrow": "कल पहनें",
+    "upgradeForDailySuggestionsDesc": "दैनिक सुझाव अनलॉक करने के लिए मैनेजर या प्रोफेशनल प्लान में अपग्रेड करें।"
   },
   "outfitCompletion": {
     "cta": "आउटफ़िट पूरा करें",

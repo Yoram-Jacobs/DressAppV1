@@ -83,6 +83,48 @@ def _is_tags_style(user: dict) -> tuple[bool, list[str]]:
 
 
 
+def check_scheduler_access(user: dict) -> None:
+    """Enforce that daily outfit proposals require an active Manager or Professional subscription/trial."""
+    sub = user.get("subscription") or {}
+    is_active = sub.get("is_active", False)
+    plan_type = (sub.get("plan_type") or "free").lower()
+    tier = (sub.get("tier") or "free").lower()
+
+    # 1. Check active trial in trial_info
+    trial = user.get("trial_info") or {}
+    if trial.get("is_active") and trial.get("expires_at"):
+        try:
+            exp = datetime.fromisoformat(trial["expires_at"].replace("Z", "+00:00"))
+            if exp > datetime.now(timezone.utc):
+                return
+        except Exception:
+            pass
+
+    # 2. Check active subscription
+    if is_active and plan_type != "free":
+        expires_at_str = sub.get("expires_at")
+        if expires_at_str:
+            try:
+                exp = datetime.fromisoformat(expires_at_str.replace("Z", "+00:00"))
+                if exp <= datetime.now(timezone.utc):
+                    raise HTTPException(
+                        status_code=403,
+                        detail="Daily outfit proposals require a Manager or Professional subscription."
+                    )
+            except HTTPException:
+                raise
+            except Exception:
+                pass
+
+        if tier in ["pro", "manager", "business", "professional"] or plan_type in ["pro", "manager", "business", "professional"]:
+            return
+
+    raise HTTPException(
+        status_code=403,
+        detail="Daily outfit proposals require a Manager or Professional subscription."
+    )
+
+
 @router.get("/daily-proposal")
 async def get_daily_proposal(
     date: str | None = None,
@@ -94,6 +136,7 @@ async def get_daily_proposal(
     Otherwise checks tomorrow's proposal first (the upcoming scheduled look to prepare for),
     then today's proposal, or generates for tomorrow.
     """
+    check_scheduler_access(user)
     db = get_db()
     sched = user.get("scheduler_settings") or {}
     user_tz = sched.get("timezone") or "UTC"
@@ -147,6 +190,7 @@ async def generate_daily_proposal(
     user: dict = Depends(get_current_user),
 ) -> dict[str, Any]:
     """Generate or regenerate daily proposal for tomorrow (or specified date)."""
+    check_scheduler_access(user)
     sched = user.get("scheduler_settings") or {}
     user_tz = sched.get("timezone") or "UTC"
     try:
@@ -171,6 +215,7 @@ async def act_on_daily_proposal(
     user: dict = Depends(get_current_user),
 ) -> dict[str, Any]:
     """Record an action on today's proposal (worn, liked, dismissed) and sync across all devices."""
+    check_scheduler_access(user)
     db = get_db()
     today_str = body.date or datetime.now(timezone.utc).strftime("%Y-%m-%d")
     

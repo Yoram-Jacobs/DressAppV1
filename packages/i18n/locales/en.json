@@ -1366,7 +1366,8 @@
     "previousLook": "Previous Look",
     "lookCounter": "Look {{current}} of {{total}}",
     "wearToday": "Wear Today",
-    "wearTomorrow": "Wear Tomorrow"
+    "wearTomorrow": "Wear Tomorrow",
+    "upgradeForDailySuggestionsDesc": "Upgrade to Manager or Professional to unlock Daily Suggestions."
   },
   "outfitCompletion": {
     "cta": "Complete the outfit",

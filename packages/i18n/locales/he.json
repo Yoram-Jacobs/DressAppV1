@@ -1382,7 +1382,8 @@
     "tomorrowSuggestionTitle": "הצעת הסטייל למחר",
     "tomorrowSuggestionSubtitle": "נאצר במיוחד למחר על סמך פרופיל הסטייל שלך, תחזית מזג האוויר ולוח הזמנים.",
     "tomorrowSuggestionRefreshed": "הצעת המחר רועננה בהצלחה!",
-    "wearTomorrow": "ללבוש מחר"
+    "wearTomorrow": "ללבוש מחר",
+    "upgradeForDailySuggestionsDesc": "שדרגו לחבילת מנהל (Manager) או מקצועי (Professional) כדי לפתוח הצעות לבוש יומיות."
   },
   "outfitCompletion": {
     "cta": "השלם את הלוק",

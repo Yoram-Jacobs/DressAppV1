@@ -1366,7 +1366,8 @@
     "tomorrowSuggestionTitle": "Stijlsuggestie voor morgen",
     "tomorrowSuggestionSubtitle": "Samengesteld voor morgen op basis van je stijlprofiel, weersvoorspelling en agenda.",
     "tomorrowSuggestionRefreshed": "Suggestie voor morgen vernieuwd!",
-    "wearTomorrow": "Morgen dragen"
+    "wearTomorrow": "Morgen dragen",
+    "upgradeForDailySuggestionsDesc": "Upgrade naar het Manager- of Professional-abonnement om dagelijkse suggesties te ontgrendelen."
   },
   "outfitCompletion": {
     "cta": "Maak de outfit compleet",

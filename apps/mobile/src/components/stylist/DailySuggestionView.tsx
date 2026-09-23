@@ -32,6 +32,7 @@ import { useClosetStore, useUserStore, useOutfitStore, useDailySuggestionsStore,
 import { labelForDressCode } from '@mobile/lib/taxonomy';
 import { getItemImageUrl, resolveImageUrl } from '@mobile/lib/imageUtils';
 import { api } from '@mobile/lib/api';
+import { useTierLimits } from '@mobile/hooks/useTierLimits';
 
 interface DailySuggestionViewProps {
   onTryOn?: (outfit: any) => void;
@@ -461,12 +462,14 @@ export function DailySuggestionView({ onTryOn }: DailySuggestionViewProps) {
     prewarm: prewarmDaily,
   } = useDailySuggestionsStore();
 
+  const { canAccessScheduler } = useTierLimits();
   const [generatingDaily, setGeneratingDaily] = useState(false);
   const [currentCalendarMonth, setCurrentCalendarMonth] = useState<Date>(new Date());
 
   useEffect(() => {
+    if (!canAccessScheduler) return;
     prewarmDaily().catch(() => {});
-  }, [prewarmDaily]);
+  }, [canAccessScheduler, prewarmDaily]);
 
   // Format month name header
   const monthHeader = useMemo(() => {
@@ -589,6 +592,32 @@ export function DailySuggestionView({ onTryOn }: DailySuggestionViewProps) {
       console.warn('Failed to wear daily proposal:', err);
     }
   };
+
+  if (!canAccessScheduler) {
+    return (
+      <View style={styles.lockedContainer}>
+        <View style={[styles.lockedCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
+          <View style={[styles.lockedIconCircle, { backgroundColor: 'rgba(245, 158, 11, 0.12)' }]}>
+            <Lucide.Crown size={32} color="#f59e0b" />
+          </View>
+          <Text style={[styles.lockedTitle, { color: colors.foreground }]}>
+            {t('stylist.dailySuggestion', { defaultValue: 'Daily Suggestions' })}
+          </Text>
+          <Text style={[styles.lockedDesc, { color: colors.mutedFg }]}>
+            {t('stylist.upgradeForDailySuggestionsDesc', { defaultValue: 'Upgrade to Manager or Professional to unlock Daily Suggestions.' })}
+          </Text>
+          <TouchableOpacity
+            style={[styles.lockedUpgradeBtn, { backgroundColor: colors.primary }]}
+            onPress={() => navigation.navigate('Pricing')}
+          >
+            <Text style={[styles.lockedUpgradeBtnText, { color: colors.primaryFg }]}>
+              {t('common.upgrade', { defaultValue: 'Upgrade' })}
+            </Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    );
+  }
 
   // ── Render Monthly Calendar View ──────────────────────────────────────────
   const schedulerEnabled = user?.scheduler_settings?.enabled ?? true;
@@ -1267,6 +1296,52 @@ const styles = StyleSheet.create({
     width: '100%',
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  lockedContainer: {
+    padding: spacing.lg,
+    alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: 350,
+  },
+  lockedCard: {
+    width: '100%',
+    maxWidth: 420,
+    borderRadius: radii.xl,
+    borderWidth: 1,
+    padding: spacing.xl,
+    alignItems: 'center',
+    gap: spacing.md,
+  },
+  lockedIconCircle: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: spacing.xs,
+  },
+  lockedTitle: {
+    fontFamily: fonts.displayBold,
+    fontSize: fontSizes.lg,
+    textAlign: 'center',
+  },
+  lockedDesc: {
+    fontFamily: fonts.bodyMedium,
+    fontSize: fontSizes.sm,
+    textAlign: 'center',
+    lineHeight: 20,
+  },
+  lockedUpgradeBtn: {
+    marginTop: spacing.sm,
+    paddingHorizontal: spacing.xl,
+    paddingVertical: spacing.md,
+    borderRadius: radii.full,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  lockedUpgradeBtnText: {
+    fontFamily: fonts.bodyBold,
+    fontSize: fontSizes.sm,
   },
 });
 

@@ -1322,7 +1322,8 @@
     "tomorrowSuggestionTitle": "明日のスタイル提案",
     "tomorrowSuggestionSubtitle": "あなたのスタイル、明日の天気予報、予定に合わせてコーディネートしました。",
     "tomorrowSuggestionRefreshed": "明日の提案を更新しました！",
-    "wearTomorrow": "明日着る"
+    "wearTomorrow": "明日着る",
+    "upgradeForDailySuggestionsDesc": "毎日の提案を利用するには、マネージャーまたはプロフェッショナルプランにアップグレードしてください。"
   },
   "outfitCompletion": {
     "cta": "コーデを完成",
