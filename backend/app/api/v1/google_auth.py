@@ -734,29 +734,9 @@ async def _handle_login_callback(
         if not access_token:
             return _smart_error_redirect(origin, "no_access_token", state_data)
 
-        # Log granted scopes for diagnostics — helps identify if People API
-        # scopes were silently skipped by Google (restricted scope issue).
+        # Log granted scopes for diagnostics
         granted_scopes = (tokens.get("scope") or "").split()
-        people_scopes_needed = [
-            "https://www.googleapis.com/auth/user.birthday.read",
-            "https://www.googleapis.com/auth/user.phonenumbers.read",
-            "https://www.googleapis.com/auth/user.addresses.read",
-            "https://www.googleapis.com/auth/user.gender.read",
-        ]
-        missing = [s for s in people_scopes_needed if s not in granted_scopes]
-        if missing:
-            logger.warning(
-                "google sign-in: People API scopes NOT granted — missing=%s granted=%s. "
-                "Demographics will not be auto-filled. Verify the OAuth consent screen "
-                "is published in Google Cloud Console.",
-                missing,
-                granted_scopes,
-            )
-        else:
-            logger.info(
-                "google sign-in: all People API scopes granted — scopes=%s",
-                granted_scopes,
-            )
+        logger.info("google sign-in: granted scopes=%s", granted_scopes)
 
         # 2) Fetch userinfo (email is the join key).
         try:
@@ -767,24 +747,22 @@ async def _handle_login_callback(
 
         email = (userinfo.get("email") or "").lower()
 
-        # Fetch extended profile (optional/non-blocking)
+        # Fetch extended profile if People API scopes were granted (incremental/optional)
         extended_profile = {}
-        try:
-            extended_profile = await calendar_service.fetch_people_profile(access_token)
-            if not extended_profile:
-                # People API returned empty — likely missing scopes. Log the
-                # granted scopes so the admin can diagnose from logs.
-                granted = (tokens.get("scope") or "").split()
-                logger.warning(
-                    "google sign-in: People API returned empty for user email=%s — "
-                    "granted_scopes=%s. If user.birthday.read / user.gender.read / "
-                    "user.phonenumbers.read / user.addresses.read are not in the list, "
-                    "the OAuth consent screen needs to be verified in Google Cloud Console.",
-                    email,
-                    granted,
-                )
-        except Exception as e:
-            logger.warning("Google sign-in People API fetch failed: %s", e)
+        has_people_scopes = any(
+            s in granted_scopes
+            for s in [
+                "https://www.googleapis.com/auth/user.birthday.read",
+                "https://www.googleapis.com/auth/user.phonenumbers.read",
+                "https://www.googleapis.com/auth/user.addresses.read",
+                "https://www.googleapis.com/auth/user.gender.read",
+            ]
+        )
+        if has_people_scopes:
+            try:
+                extended_profile = await calendar_service.fetch_people_profile(access_token)
+            except Exception as e:
+                logger.warning("Google sign-in People API fetch failed: %s", e)
         if not email:
             return _smart_error_redirect(origin, "no_email", state_data)
         if not userinfo.get("verified_email", True):

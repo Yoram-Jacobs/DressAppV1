@@ -42,20 +42,18 @@ SCOPES = [
     "email",
     "profile",
     "https://www.googleapis.com/auth/calendar.events.readonly",
-    "https://www.googleapis.com/auth/user.birthday.read",
-    "https://www.googleapis.com/auth/user.phonenumbers.read",
-    "https://www.googleapis.com/auth/user.addresses.read",
-    "https://www.googleapis.com/auth/user.gender.read",
 ]
 
-# Lean scope set used by the new "Sign in with Google" flow when the user
-# does NOT tick the "Also connect my calendar" checkbox. Keeping calendar
-# off this set makes the consent screen friendlier and avoids surprising
-# users with calendar access on a plain login.
+# Minimal identity scopes for Sign In / Sign Up with Google.
+# Adheres to Google's principle of least privilege and incremental authorization.
 LOGIN_SCOPES = [
     "openid",
     "email",
     "profile",
+]
+
+# Optional extended demographics scopes (requested incrementally only if user syncs Google profile)
+PEOPLE_SCOPES = [
     "https://www.googleapis.com/auth/user.birthday.read",
     "https://www.googleapis.com/auth/user.phonenumbers.read",
     "https://www.googleapis.com/auth/user.addresses.read",
