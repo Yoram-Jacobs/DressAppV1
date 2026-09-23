@@ -4513,7 +4513,9 @@
     "actionFailed": "Операция не удалась.",
     "confirmBuyCreditsTitle": "Покупка кредитов ИИ",
     "headerTitle": "Цены и членство",
-    "loadingPlans": "Загрузка тарифных планов..."
+    "loadingPlans": "Загрузка тарифных планов...",
+    "included": "Включено",
+    "notIncluded": "Не включено"
   },
   "avatar": {
     "savedSuccess": "Аватар и визуальный профиль сохранены!",

@@ -4504,7 +4504,9 @@
     "actionFailed": "L'opération a échoué.",
     "confirmBuyCreditsTitle": "Acheter des crédits IA",
     "headerTitle": "Tarifs et adhésion",
-    "loadingPlans": "Chargement des plans tarifaires..."
+    "loadingPlans": "Chargement des plans tarifaires...",
+    "included": "Inclus",
+    "notIncluded": "Non inclus"
   },
   "avatar": {
     "savedSuccess": "Avatar et profil visuel enregistrés !",

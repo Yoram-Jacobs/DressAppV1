@@ -4502,7 +4502,9 @@
     "actionFailed": "Operation failed.",
     "confirmBuyCreditsTitle": "Purchase AI Credits",
     "headerTitle": "Pricing & Membership",
-    "loadingPlans": "Loading pricing plans..."
+    "loadingPlans": "Loading pricing plans...",
+    "included": "Included",
+    "notIncluded": "Not included"
   },
   "avatar": {
     "savedSuccess": "Avatar & visual profile saved!",

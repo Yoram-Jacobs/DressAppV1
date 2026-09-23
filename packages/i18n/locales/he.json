@@ -4635,7 +4635,9 @@
     "actionFailed": "הפעולה נכשלה.",
     "confirmBuyCreditsTitle": "קנה קרדיטים של AI",
     "headerTitle": "תמחור וחברות",
-    "loadingPlans": "טוען תוכניות תמחור..."
+    "loadingPlans": "טוען תוכניות תמחור...",
+    "included": "כלול",
+    "notIncluded": "לא כלול"
   },
   "avatar": {
     "savedSuccess": "אווטאר ופרופיל חזותי נשמר!",

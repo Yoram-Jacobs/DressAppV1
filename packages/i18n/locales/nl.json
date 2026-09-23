@@ -4563,7 +4563,9 @@
     "actionFailed": "Operatie mislukt.",
     "confirmBuyCreditsTitle": "Koop AI-credits",
     "headerTitle": "Prijzen en lidmaatschap",
-    "loadingPlans": "Tariefplannen laden..."
+    "loadingPlans": "Tariefplannen laden...",
+    "included": "Inbegrepen",
+    "notIncluded": "Niet inbegrepen"
   },
   "avatar": {
     "savedSuccess": "Avatar en visueel profiel opgeslagen!",

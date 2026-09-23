@@ -4512,7 +4512,9 @@
     "actionFailed": "操作が失敗しました。",
     "confirmBuyCreditsTitle": "AI クレジットを購入する",
     "headerTitle": "価格とメンバーシップ",
-    "loadingPlans": "料金プランを読み込んでいます..."
+    "loadingPlans": "料金プランを読み込んでいます...",
+    "included": "含まれる",
+    "notIncluded": "含まれない"
   },
   "avatar": {
     "savedSuccess": "アバターとビジュアルプロフィールを保存しました!",

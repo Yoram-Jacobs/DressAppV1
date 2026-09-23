@@ -4556,7 +4556,9 @@
     "actionFailed": "Operazione fallita.",
     "confirmBuyCreditsTitle": "Acquista crediti AI",
     "headerTitle": "Prezzi e abbonamento",
-    "loadingPlans": "Caricamento dei piani tariffari..."
+    "loadingPlans": "Caricamento dei piani tariffari...",
+    "included": "Incluso",
+    "notIncluded": "Non incluso"
   },
   "avatar": {
     "savedSuccess": "Avatar e profilo visivo salvati!",

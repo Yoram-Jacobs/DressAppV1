@@ -4556,7 +4556,9 @@
     "actionFailed": "La operación falló.",
     "confirmBuyCreditsTitle": "Comprar créditos de IA",
     "headerTitle": "Precios y membresía",
-    "loadingPlans": "Cargando planes de precios..."
+    "loadingPlans": "Cargando planes de precios...",
+    "included": "Incluido",
+    "notIncluded": "No incluido"
   },
   "avatar": {
     "savedSuccess": "¡Avatar y perfil visual guardados!",

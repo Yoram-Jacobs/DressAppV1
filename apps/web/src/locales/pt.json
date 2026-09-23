@@ -4511,7 +4511,9 @@
     "actionFailed": "A operação falhou.",
     "confirmBuyCreditsTitle": "Compre créditos de IA",
     "headerTitle": "Preços e assinatura",
-    "loadingPlans": "Carregando planos de preços..."
+    "loadingPlans": "Carregando planos de preços...",
+    "included": "Incluído",
+    "notIncluded": "Não incluído"
   },
   "avatar": {
     "savedSuccess": "Avatar e perfil visual salvos!",

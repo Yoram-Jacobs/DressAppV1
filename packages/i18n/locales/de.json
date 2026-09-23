@@ -4549,7 +4549,9 @@
     "actionFailed": "Der Vorgang ist fehlgeschlagen.",
     "confirmBuyCreditsTitle": "Kaufen Sie KI-Credits",
     "headerTitle": "Preise und Mitgliedschaft",
-    "loadingPlans": "Preispläne werden geladen..."
+    "loadingPlans": "Preispläne werden geladen...",
+    "included": "Inbegriffen",
+    "notIncluded": "Nicht inbegriffen"
   },
   "avatar": {
     "savedSuccess": "Avatar und visuelles Profil gespeichert!",

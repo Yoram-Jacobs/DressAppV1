@@ -4556,7 +4556,9 @@
     "actionFailed": "操作失败。",
     "confirmBuyCreditsTitle": "购买人工智能积分",
     "headerTitle": "定价和会员资格",
-    "loadingPlans": "正在加载定价计划..."
+    "loadingPlans": "正在加载定价计划...",
+    "included": "已包含",
+    "notIncluded": "未包含"
   },
   "avatar": {
     "savedSuccess": "头像和视觉配置文件已保存！",

@@ -4556,7 +4556,9 @@
     "actionFailed": "प्रचालन विफल रहा।",
     "confirmBuyCreditsTitle": "एआई क्रेडिट खरीदें",
     "headerTitle": "मूल्य निर्धारण और सदस्यता",
-    "loadingPlans": "मूल्य निर्धारण योजनाएं लोड हो रही हैं..."
+    "loadingPlans": "मूल्य निर्धारण योजनाएं लोड हो रही हैं...",
+    "included": "शामिल है",
+    "notIncluded": "शामिल नहीं है"
   },
   "avatar": {
     "savedSuccess": "अवतार और दृश्य प्रोफ़ाइल सहेजी गई!",

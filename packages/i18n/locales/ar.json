@@ -4553,7 +4553,9 @@
     "actionFailed": "فشلت العملية.",
     "confirmBuyCreditsTitle": "شراء اعتمادات الذكاء الاصطناعي",
     "headerTitle": "التسعير والعضوية",
-    "loadingPlans": "جارٍ تحميل خطط الأسعار..."
+    "loadingPlans": "جارٍ تحميل خطط الأسعار...",
+    "included": "مشمول",
+    "notIncluded": "غير مشمول"
   },
   "avatar": {
     "savedSuccess": "تم حفظ الصورة الرمزية والملف الشخصي المرئي!",
