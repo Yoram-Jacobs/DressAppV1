@@ -16,8 +16,10 @@ from app.services.sync_service import broadcast_sync_event
 from app.services.stylist_scheduler_brain import (
     calculate_garment_style_score,
     generate_scheduled_proposals,
+    item_has_any_tag,
     norm_category,
 )
+
 
 logger = logging.getLogger("dressapp.daily_proposals")
 
@@ -64,6 +66,21 @@ def _resolve_effective_style(user: dict, occasion: str | None = None) -> str:
     if occasion and occasion != "daily":
         return occasion.strip()
     return "casual"
+
+
+def _is_tags_style(user: dict) -> tuple[bool, list[str]]:
+    sched = user.get("scheduler_settings") or {}
+    style_option = sched.get("style_option") or sched.get("style")
+    if style_option == "tags":
+        selected_tags = sched.get("selected_tags")
+        if isinstance(selected_tags, list) and selected_tags:
+            return True, [str(t).strip() for t in selected_tags if t and str(t).strip()]
+        if sched.get("custom_style"):
+            tags = [t.strip() for t in str(sched.get("custom_style")).replace(";", ",").split(",") if t.strip()]
+            return True, tags
+        return True, []
+    return False, []
+
 
 
 @router.get("/daily-proposal")
@@ -276,6 +293,8 @@ async def _generate_and_save_daily_proposal(
             or i.get("thumbnail_data_url")
         )
 
+    is_tags_mode, filter_tags = _is_tags_style(user)
+
     # 1. Try AI-powered recommendation first (curates 1 daily outfit)
     selected_items: list[dict[str, Any]] = []
     proposal_title = "Look of the Day"
@@ -289,6 +308,8 @@ async def _generate_and_save_daily_proposal(
             style_dress_for=effective_occasion,
             exclude_item_ids=past_item_ids,
             target_date=date_str,
+            filter_tags=filter_tags,
+            is_tags_filter=is_tags_mode,
         )
         recs = scheduler_res.get("outfit_recommendations") or []
         if recs:
@@ -328,11 +349,28 @@ async def _generate_and_save_daily_proposal(
         outerwear = [i for i in items if _cat(i) == "outerwear"]
         accessories = [i for i in items if _cat(i) == "accessory"]
 
+        if is_tags_mode and filter_tags:
+            tagged_tops = [i for i in tops if item_has_any_tag(i, filter_tags)]
+            if tagged_tops:
+                tops = tagged_tops
+            tagged_bottoms = [i for i in bottoms if item_has_any_tag(i, filter_tags)]
+            if tagged_bottoms:
+                bottoms = tagged_bottoms
+            tagged_shoes = [i for i in shoes if item_has_any_tag(i, filter_tags)]
+            if tagged_shoes:
+                shoes = tagged_shoes
+            tagged_dresses = [i for i in dresses if item_has_any_tag(i, filter_tags)]
+            dresses = tagged_dresses
+            tagged_outerwear = [i for i in outerwear if item_has_any_tag(i, filter_tags)]
+            outerwear = tagged_outerwear
+            tagged_accessories = [i for i in accessories if item_has_any_tag(i, filter_tags)]
+            accessories = tagged_accessories
+
         # Sort each bucket: unused today first, then matching custom style tag, then lowest wear count, with random jitter
         def _fallback_sort_key(item: dict) -> tuple:
             iid = item.get("id")
             already_used = 1 if (iid in past_item_ids) else 0
-            style_score = calculate_garment_style_score(item, effective_occasion)
+            style_score = calculate_garment_style_score(item, effective_occasion, is_tags_mode=is_tags_mode)
             wear_count = item.get("wear_count") or 0
             jitter = random.random()
             return (already_used, -style_score, wear_count, jitter)
@@ -418,13 +456,19 @@ async def _generate_and_save_daily_proposal(
         color_names = [i.get("color") for i in items if i.get("id") in [x["id"] for x in selected_items] and i.get("color")]
         style_adjectives = ["Effortless", "Crisp", "Polished", "Modern", "Refined", "Relaxed", "Vibrant", "Chic", "Smart"]
         adj = random.choice(style_adjectives)
-        if effective_occasion and effective_occasion not in ("casual", "daily", "default"):
+        if is_tags_mode and filter_tags:
+            tag_label = ", ".join(filter_tags)
+            proposal_title = f"{adj} {tag_label} Outfit"
+            proposal_desc = f"Curated strictly from your closet items tagged '{tag_label}'."
+        elif effective_occasion and effective_occasion not in ("casual", "daily", "default"):
             proposal_title = f"{adj} {effective_occasion.title()} Look"
+            proposal_desc = f"Curated based on your '{effective_occasion}' preference, weather conditions, and closet harmony."
         elif color_names:
             proposal_title = f"{adj} {color_names[0].title()} Look"
+            proposal_desc = "Curated based on your style profile, weather conditions, and closet harmony."
         else:
             proposal_title = f"{adj} Everyday Look"
-        proposal_desc = f"Curated based on your '{effective_occasion}' preference, weather conditions, and closet harmony."
+            proposal_desc = "Curated based on your style profile, weather conditions, and closet harmony."
         proposal_harmony = random.randint(88, 97) if len(selected_items) >= 2 else 85
         
     proposal = {

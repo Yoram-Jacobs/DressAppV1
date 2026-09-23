@@ -69,7 +69,7 @@ def norm_category(cat: Any) -> str:
     return "accessory"
 
 
-def calculate_garment_style_score(item: dict, style_dress_for: str | None) -> int:
+def calculate_garment_style_score(item: dict, style_dress_for: str | None, is_tags_mode: bool = False) -> int:
     if not style_dress_for:
         return 0
         
@@ -108,15 +108,19 @@ def calculate_garment_style_score(item: dict, style_dress_for: str | None) -> in
         tok_syns.add(tok)
         for t in tags + custom_tags + cultural_tags:
             if t in tok_syns or any(s in t for s in tok_syns if len(s) >= 2) or tok in t:
-                score += 60
+                score += 100 if is_tags_mode else 60
                 break  # count boost once per user token
             
     # Text / Title / Description match
     for s in syns:
         if len(s) >= 2 and s in all_text:
             score += 25
+
+    # If in tags mode, direct tag match is the primary filter criteria without imposing formal office assumptions!
+    if is_tags_mode:
+        return score
             
-    # Formality / Occasion analysis
+    # Formality / Occasion analysis (used only for custom/style modes, not raw tag filtering)
     is_formal_or_smart = any(w in prompt_lower for w in (
         "elegant", "smart casual", "smart-casual", "business", "formal", "party", "birthday", 
         "dinner", "restaurant", "wedding", "cocktail", "celebration", "date night", "asian food",
@@ -203,20 +207,41 @@ def matches_season_func(item: dict, target_season: str | None) -> bool:
             
     return False
 
+def _item_has_any_tag(item: dict, target_tags: list[str]) -> bool:
+    if not target_tags:
+        return True
+    it_tags = [str(t).lower().strip() for t in (item.get("tags") or []) if t]
+    it_custom = [str(t).lower().strip() for t in (item.get("custom_tags") or []) if t]
+    it_cultural = [str(t).lower().strip() for t in (item.get("cultural_tags") or []) if t]
+    combined = it_tags + it_custom + it_cultural
+    for tgt in target_tags:
+        tgt_clean = tgt.strip().lower()
+        if not tgt_clean:
+            continue
+        if any(tgt_clean == t or tgt_clean in t or t in tgt_clean for t in combined):
+            return True
+        tgt_syns = SYNONYMS.get(tgt_clean, [])
+        if any(s in combined for s in tgt_syns):
+            return True
+    return False
+
+item_has_any_tag = _item_has_any_tag
+
+
+
 async def get_rotation_prioritized_closet(
     user_id: str,
     limit: int = 40,
     style_dress_for: str | None = None,
-    weather: dict[str, Any] | None = None
+    weather: dict[str, Any] | None = None,
+    filter_tags: list[str] | None = None,
+    is_tags_filter: bool = False,
 ) -> list[dict[str, Any]]:
     """Fetch closet items prioritized for rotation, matching tag restrictions and weather/season.
 
     Filters out duplicates (`is_duplicate=True`) and partitions items into category buckets.
-    Prioritizes items matching the style/tag and target weather season first, then sorts
-    by rotation parameters:
-    1. Items never suggested or suggested longest ago (`last_suggested_at` null, then ascending).
-    2. Items never worn or worn longest ago (`last_worn_at` null, then ascending).
-    3. Wear count ascending (`wear_count` ascending).
+    When is_tags_filter=True, strictly filters items possessing filter_tags for categories where
+    tagged items exist, using untagged items only for missing essential categories (e.g. shoes).
     """
     db = get_db()
     cursor = db.closet_items.find(
@@ -260,6 +285,10 @@ async def get_rotation_prioritized_closet(
                 if len(all_cats) > 1:
                     final_items.extend(g_members)
         items = final_items
+
+    # If is_tags_filter and filter_tags not passed, derive from style_dress_for
+    if is_tags_filter and not filter_tags and style_dress_for:
+        filter_tags = [t.strip() for t in style_dress_for.replace(";", ",").split(",") if t.strip()]
 
     # Check if there is at least one exact case-insensitive tag or synonym match in the user's closet
     has_exact_tag_match = False
@@ -305,7 +334,7 @@ async def get_rotation_prioritized_closet(
 
     # Rotation sort key: matches criteria first, then un-suggested/un-worn, oldest suggested, lowest wear
     def sort_key(item: dict[str, Any]) -> tuple:
-        style_score = calculate_garment_style_score(item, style_dress_for)
+        style_score = calculate_garment_style_score(item, style_dress_for, is_tags_mode=is_tags_filter)
         matches_season = matches_season_func(item, target_season)
         season_score = 10 if matches_season else 0
         
@@ -337,22 +366,58 @@ async def get_rotation_prioritized_closet(
             cat_key = "accessory"
         buckets[cat_key].append(item)
 
+    # When in strict tag filtering mode:
+    # 1. For categories where the user HAS tagged items, restrict strictly to tagged items!
+    # 2. For non-essential categories (outerwear, dress, accessory) with NO tagged items, clear the bucket
+    #    so that unrequested blazers, dresses, etc. are NOT injected into casual/work looks.
+    # 3. For essential categories (top, bottom, shoes) with NO tagged items, allow untagged items as
+    #    neutral full-body outfit complements.
+    if is_tags_filter and filter_tags:
+        for cat_key in list(buckets.keys()):
+            cat_items = buckets[cat_key]
+            tagged_items = [it for it in cat_items if _item_has_any_tag(it, filter_tags)]
+            if tagged_items:
+                buckets[cat_key] = tagged_items
+            else:
+                if cat_key in ("outerwear", "dress", "accessory"):
+                    buckets[cat_key] = []
+                else:
+                    buckets[cat_key] = cat_items
+
     # Sort each bucket by rotation key
     for cat_key in buckets:
         buckets[cat_key].sort(key=sort_key)
 
     # Target distribution ratios for a balanced candidate pool
-    target_ratios = {
-        "top": 0.35,
-        "bottom": 0.35,
-        "shoes": 0.20,
-        "dress": 0.04,
-        "outerwear": 0.04,
-        "accessory": 0.02,
-    }
+    if is_tags_filter:
+        target_ratios = {
+            "top": 0.45,
+            "bottom": 0.45,
+            "shoes": 0.10,
+            "dress": 0.0,
+            "outerwear": 0.0 if not buckets["outerwear"] else 0.1,
+            "accessory": 0.0 if not buckets["accessory"] else 0.05,
+        }
+        min_quotas = {
+            "top": 4 if buckets["top"] else 0,
+            "bottom": 4 if buckets["bottom"] else 0,
+            "shoes": 2 if buckets["shoes"] else 0,
+            "dress": 1 if buckets["dress"] else 0,
+            "outerwear": 1 if buckets["outerwear"] else 0,
+            "accessory": 1 if buckets["accessory"] else 0,
+        }
+    else:
+        target_ratios = {
+            "top": 0.35,
+            "bottom": 0.35,
+            "shoes": 0.20,
+            "dress": 0.04,
+            "outerwear": 0.04,
+            "accessory": 0.02,
+        }
+        min_quotas = {"top": 4, "bottom": 4, "shoes": 4, "dress": 1, "outerwear": 1, "accessory": 1}
 
-    min_quotas = {"top": 4, "bottom": 4, "shoes": 4, "dress": 1, "outerwear": 1, "accessory": 1}
-    quotas = {cat: max(min_quotas.get(cat, 1), int(limit * ratio)) for cat, ratio in target_ratios.items()}
+    quotas = {cat: max(min_quotas.get(cat, 0), int(limit * ratio)) for cat, ratio in target_ratios.items()}
 
     # Selected items list
     selected_ids = set()
@@ -708,14 +773,29 @@ async def generate_scheduled_proposals(
     calendar_events: list[dict[str, Any]] | None = None,
     exclude_item_ids: set[str] | list[str] | None = None,
     target_date: datetime | str | None = None,
+    filter_tags: list[str] | None = None,
+    is_tags_filter: bool = False,
 ) -> dict[str, Any]:
     """Generate 1 scheduled outfit proposal using the rotation prioritized items."""
     user = dict(user)
     user.pop("_id", None)
     user_id = user["id"]
 
+    # Determine if tag filtering mode is active from user scheduler settings if not passed
+    sched_settings = user.get("scheduler_settings") or {}
+    if not is_tags_filter and sched_settings.get("style_option") == "tags":
+        is_tags_filter = True
+    if is_tags_filter and not filter_tags:
+        selected = sched_settings.get("selected_tags")
+        if isinstance(selected, list) and selected:
+            filter_tags = [str(t).strip() for t in selected if t and str(t).strip()]
+        elif sched_settings.get("custom_style"):
+            filter_tags = [t.strip() for t in str(sched_settings.get("custom_style")).replace(";", ",").split(",") if t.strip()]
+        elif style_dress_for:
+            filter_tags = [t.strip() for t in style_dress_for.replace(";", ",").split(",") if t.strip()]
+
     # Determine target day and date for the outfit selection
-    user_timezone = (user.get("scheduler_settings") or {}).get("timezone") or "UTC"
+    user_timezone = sched_settings.get("timezone") or "UTC"
     try:
         from zoneinfo import ZoneInfo
         local_now = datetime.now(timezone.utc).astimezone(ZoneInfo(user_timezone))
@@ -772,7 +852,9 @@ async def generate_scheduled_proposals(
         user_id,
         limit=40,
         style_dress_for=style_dress_for,
-        weather=weather
+        weather=weather,
+        filter_tags=filter_tags,
+        is_tags_filter=is_tags_filter,
     )
     
     # If exclude_item_ids passed (e.g. from previous daily proposals today), prioritize fresh items
@@ -827,7 +909,17 @@ async def generate_scheduled_proposals(
     tag_list_str = ", ".join(f"'{t}'" for t in tokens)
     syns_hint_str = f" or matching synonyms ({', '.join(syns_list[:8])})" if syns_list else ""
 
-    if is_multi_tag:
+    if is_tags_filter:
+        tag_vibe_rule = (
+            f"   - STRICT TAG FILTER MODE ({tag_list_str}):\n"
+            f"     • The user has chosen the 'Tags' style option and strictly filtered their wardrobe by tag(s): {tag_list_str}.\n"
+            f"     • CURATE EXCLUSIVELY FROM THE USER'S TAGGED GARMENTS: Select the outfit strictly from the items listed below that possess the tag(s) {tag_list_str}.\n"
+            f"     • DO NOT assume or project office, corporate meeting, or formal workwear requirements onto the user just because a tag is named 'work' or 'עבודה'. The user's work garments reflect their actual profession (e.g. electrician, technician, tradesperson, active work, or everyday functional wear).\n"
+            f"     • Respect the real nature and functional cut of the tagged pieces (e.g., utility trousers, cargo pants, work t-shirts, practical workwear).\n"
+            f"     • Do NOT inject formal dress shirts, blazers, or suits unless such garments are explicitly among the user's tagged items for this tag.\n"
+            f"     • In the outfit 'name' and 'why' explanation, describe the authentic look and practical utility of these tagged items rather than inventing office/corporate scenarios.\n"
+        )
+    elif is_multi_tag:
         tag_vibe_rule = (
             f"   - MULTI-TAG VIBE SYNTHESIS & HARMONY:\n"
             f"     • The user explicitly specified multiple style tags: {tag_list_str}.\n"
@@ -859,6 +951,11 @@ async def generate_scheduled_proposals(
 
     weather_line = f"- {weather_info}\n" if weather_info else ""
     calendar_line = f"- {calendar_info}\n" if calendar_info else ""
+    context_style_line = (
+        f"- Target Wardrobe Tag Filter: '{style_display}' (Strict Tag Mode: curate outfit from garments tagged {tag_list_str})\n"
+        if is_tags_filter
+        else f"- Target Occasion / Style Preference: '{style_display}'\n"
+    )
 
     prompt = (
         f"PERSONA & EXPERTISE:\n"
@@ -870,7 +967,7 @@ async def generate_scheduled_proposals(
         f"Generate EXACTLY 1 complete, distinct, and coordinated full-body outfit recommendation for {day_prefix}{target_day_name} ({target_date_str}) from the user's Closet items below, "
         f"following Fashion and Social Rules and Restrictions.\n\n"
         f"CONTEXT & APPLIED FILTERS:\n"
-        f"- Target Occasion / Style Preference: '{style_display}'\n"
+        f"{context_style_line}"
         f"{weather_line}"
         f"{calendar_line}\n"
         f"STRICT STYLING RULES & RESTRICTIONS:\n"
@@ -878,7 +975,7 @@ async def generate_scheduled_proposals(
         f"   - Always follow timeless fashion harmony rules (color theory, texture/material pairing, proportional silhouette, pattern clash prevention) and respect any local social, modest, or religious restrictions.\n"
         f"2. APPLIED TAG FILTERS & STYLE VIBE:\n"
         f"{tag_vibe_rule}"
-        f"   - Only when no matching tags are found for a category or to complete the full-body outfit (e.g. if there are no shoes with the tag), select complementary items that harmonize with the requested style vibe.\n"
+        f"   - Only when no matching tags are found for an essential category or to complete the full-body outfit (e.g. if there are no shoes with the tag), select neutral complementary items from the closet inventory below to complete the full-body outfit.\n"
         f"3. ROTATION & DIVERSITY:\n"
         f"   - Rotate items within categories: make every item count and get used.\n"
         f"   - Select a fresh, cohesive combination suited for the day.\n"
@@ -921,7 +1018,7 @@ async def generate_scheduled_proposals(
         f"      \"description\": string, // Use the item's title/description from the list.\n"
         f"      \"closet_item_id\": string // MUST be a valid ID from the closet list above. Cannot be null.\n"
         f"    }}>,\n"
-        f"    \"why\": string, // Detailed explanation of why this outfit was curated, specifically highlighting how the requested tags/style ('{style_prompt}') and weather/calendar events are reflected in the selected pieces.\n"
+        f"    \"why\": string, // Detailed explanation of why this outfit was curated, specifically highlighting how the requested {('tag(s) ' + tag_list_str) if is_tags_filter else ('tags/style (' + style_prompt + ')')} and weather/calendar events are reflected in the selected pieces.\n"
         f"    \"confidence\": number\n"
         f"  }}> // Curate exactly 1 outfit recommendation\n"
         f"}}"

@@ -148,7 +148,9 @@ async def _cleanup_expired_trials_job() -> None:
 def _generate_fallback_advice(
     closet_items: list[dict[str, Any]], 
     style_dress_for: str | None = None,
-    weather_ctx: dict[str, Any] | None = None
+    weather_ctx: dict[str, Any] | None = None,
+    filter_tags: list[str] | None = None,
+    is_tags_filter: bool = False,
 ) -> dict[str, Any]:
     """Generate outfit recommendations based on closet items and user preferences, with strict category validation."""
     if not closet_items:
@@ -157,7 +159,13 @@ def _generate_fallback_advice(
             "outfit_recommendations": []
         }
 
-    from app.services.stylist_scheduler_brain import norm_category, matches_style_func, matches_season_func
+    from app.services.stylist_scheduler_brain import (
+        norm_category,
+        matches_style_func,
+        matches_season_func,
+        item_has_any_tag,
+        calculate_garment_style_score,
+    )
 
     clean_items = []
     for it in closet_items:
@@ -186,6 +194,25 @@ def _generate_fallback_advice(
     outerwear = [it for it in clean_items if norm_category(it.get("category")) == "outerwear"]
     accessories = [it for it in clean_items if norm_category(it.get("category")) == "accessory"]
 
+    # When in strict tag filtering mode:
+    if is_tags_filter and filter_tags:
+        tagged_tops = [it for it in tops if item_has_any_tag(it, filter_tags)]
+        if tagged_tops:
+            tops = tagged_tops
+        tagged_bottoms = [it for it in bottoms if item_has_any_tag(it, filter_tags)]
+        if tagged_bottoms:
+            bottoms = tagged_bottoms
+        tagged_shoes = [it for it in shoes if item_has_any_tag(it, filter_tags)]
+        if tagged_shoes:
+            shoes = tagged_shoes
+        # Non-essential categories cleared if no tagged items exist
+        tagged_dresses = [it for it in dresses if item_has_any_tag(it, filter_tags)]
+        dresses = tagged_dresses
+        tagged_outerwear = [it for it in outerwear if item_has_any_tag(it, filter_tags)]
+        outerwear = tagged_outerwear
+        tagged_accessories = [it for it in accessories if item_has_any_tag(it, filter_tags)]
+        accessories = tagged_accessories
+
     # Check if there is at least one exact case-insensitive tag match in the user's closet
     has_exact_tag_match = False
     if style_dress_for:
@@ -202,13 +229,12 @@ def _generate_fallback_advice(
                 break
 
     # Score item helper
-    from app.services.stylist_scheduler_brain import calculate_garment_style_score
-
     def score_item(it: dict) -> int:
-        score = calculate_garment_style_score(it, style_dress_for)
+        score = calculate_garment_style_score(it, style_dress_for, is_tags_mode=is_tags_filter)
         if matches_season_func(it, target_season):
             score += 10
         return score
+
 
     # Sort each bucket by score descending
     tops.sort(key=score_item, reverse=True)
@@ -876,14 +902,19 @@ async def check_scheduler_triggers() -> None:
                     logger.warning("Failed to fetch calendar events for user %s on %s: %s", user_id, target_date_str, cal_exc)
 
                 sched_style_option = sched.get("style_option") or sched.get("style")
-                if sched_style_option == "tags":
+                is_tags_filter = (sched_style_option == "tags")
+                filter_tags = None
+                if is_tags_filter:
                     selected_tags = sched.get("selected_tags")
                     if isinstance(selected_tags, list) and selected_tags:
-                        style_option = ", ".join(str(t) for t in selected_tags if t).strip()
+                        filter_tags = [str(t).strip() for t in selected_tags if t and str(t).strip()]
+                        style_option = ", ".join(filter_tags)
                     elif sched.get("custom_style"):
+                        filter_tags = [t.strip() for t in str(sched.get("custom_style")).replace(";", ",").split(",") if t.strip()]
                         style_option = sched.get("custom_style").strip()
                     else:
                         style_option = "casual"
+                        is_tags_filter = False
                 elif sched_style_option == "custom":
                     style_option = (sched.get("custom_style") or sched.get("style_dress_for") or "casual").strip()
                 else:
@@ -905,6 +936,8 @@ async def check_scheduler_triggers() -> None:
                             weather=target_weather,
                             calendar_events=calendar_events,
                             target_date=target_date,
+                            filter_tags=filter_tags,
+                            is_tags_filter=is_tags_filter,
                         )
                         proposals = proposals_result.get("outfit_recommendations") or []
                         if not proposals:
@@ -914,7 +947,13 @@ async def check_scheduler_triggers() -> None:
                         # Fallback to local rule-based scheduler
                         cursor_items = db.closet_items.find({"user_id": user_id})
                         closet_items = [d async for d in cursor_items]
-                        fallback_result = _generate_fallback_advice(closet_items, style_option, weather_ctx=target_weather)
+                        fallback_result = _generate_fallback_advice(
+                            closet_items,
+                            style_option,
+                            weather_ctx=target_weather,
+                            filter_tags=filter_tags,
+                            is_tags_filter=is_tags_filter,
+                        )
                         proposals = fallback_result.get("outfit_recommendations") or []
 
                     if not proposals:
