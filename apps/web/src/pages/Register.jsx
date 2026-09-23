@@ -34,8 +34,8 @@ export default function Register() {
       <div className="order-2 flex flex-col justify-center px-5 py-6 pb-[calc(env(safe-area-inset-bottom)+1.5rem)] sm:px-8 sm:py-8 md:p-10">
         <div className="mx-auto w-full max-w-md min-w-0 md:mx-0">
           {/* Tagline & Editorial block at the top of the right pane */}
-          <div className="mb-6 rounded-[12px] bg-white p-3.5 shadow-editorial sm:p-5">
-            <h6 className="mb-1.5 text-[14px] font-bold text-primary-brand sm:mb-[10px] sm:text-[16px]">
+          <div className="mb-6 sm:mb-8">
+            <h6 className="mb-1 text-[15px] font-bold text-primary-brand sm:text-[17px]">
               {t('auth.tagline')}
             </h6>
             <p className="text-[12px] font-semibold italic leading-snug text-text-brand sm:text-[14px]">

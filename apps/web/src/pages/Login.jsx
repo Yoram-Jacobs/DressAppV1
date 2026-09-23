@@ -51,28 +51,25 @@ export default function Login() {
             alt={t("pages.login.editorial_street_style")}
             className="absolute inset-0 h-full w-full object-cover object-[center_28%] md:object-center"
           />
-
-          <div className="pointer-events-none absolute inset-x-0 bottom-0 h-28 bg-gradient-to-t from-black/60 via-black/10 to-transparent md:h-40" />
-
-          <div className="absolute inset-x-3 bottom-3 sm:inset-x-4 sm:bottom-4 md:inset-x-6 md:bottom-6">
-            <div className="w-full rounded-[12px] bg-white p-3.5 shadow-editorial sm:w-fit sm:p-5">
-              <h6 className="mb-1.5 text-[14px] font-bold text-primary-brand sm:mb-[10px] sm:text-[16px]">
-                {t("auth.tagline")}
-              </h6>
-              <p className="max-w-md text-[12px] font-semibold italic leading-snug text-text-brand sm:text-[14px]">
-                {t("auth.editorial")}
-              </p>
-            </div>
-          </div>
         </figure>
       </div>
 
       <div className="order-2 flex flex-col justify-center px-5 py-6 pb-[calc(env(safe-area-inset-bottom)+1.5rem)] sm:px-8 sm:py-8 md:p-10">
         <div className="mx-auto w-full max-w-md min-w-0 md:mx-0">
+          {/* Tagline & Editorial header without background */}
+          <div className="mb-6 sm:mb-8">
+            <h6 className="mb-1 text-[15px] font-bold text-primary-brand sm:text-[17px]">
+              {t("auth.tagline")}
+            </h6>
+            <p className="text-[12px] font-semibold italic leading-snug text-text-brand sm:text-[14px]">
+              {t("auth.editorial")}
+            </p>
+          </div>
+
           <div className="mb-4 sm:mb-5">
             <BrandLogo size="lg" testId="brand-logo" className="max-[380px]:[&_span]:text-2xl" />
           </div>
-          <h1 className="mb-1 text-[16px] font-extrabold text-dark-brand">
+          <h1 className="mb-1 text-[16px] font-extrabold text-dark-brand sm:text-2xl">
             {t("auth.welcomeBack")}
           </h1>
           <p className="mb-5 text-[14px] font-bold text-text-brand">
