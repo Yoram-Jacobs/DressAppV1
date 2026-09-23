@@ -23,7 +23,7 @@ from app.models.schemas import AiCreditPurchase, User, CreditBucket, CreditType
 from app.models.credit import prune_expired_buckets
 
 from app.services import paypal_client
-from app.services.auth import get_current_user
+from app.services.auth import get_current_user, get_current_user_optional
 from app.services.pricing import get_user_ai_balance, apply_credit_rollover as apply_daily_allocation
 from app.services.token_meter import TokenMeter
 from app.config import settings
@@ -79,38 +79,42 @@ def _require_configured() -> None:
 
 
 @pricing_router.get("/info")
-async def get_pricing_info(user: dict = Depends(get_current_user)) -> Dict[str, Any]:
-    """Get comprehensive pricing and credit information."""
+async def get_pricing_info(user: dict | None = Depends(get_current_user_optional)) -> Dict[str, Any]:
+    """Get comprehensive pricing and credit information (publicly accessible)."""
     try:
-        db = get_db()
-        user_record = await db.users.find_one({"id": user["id"]})
-        
-        if not user_record:
-            raise HTTPException(status.HTTP_404_NOT_FOUND, detail="User not found")
-        
-        u_model = User.parse_obj(user_record)
-        summary = u_model.get_credit_usage_summary()
-        
-        sub = user_record.get("subscription") or {}
-        is_active = sub.get("is_active", False)
-        plan_type = sub.get("plan_type", "free")
-        tier = sub.get("tier", "free")
-        
         user_tier = "free"
-        if is_active and plan_type != "free":
-            if tier in ["pro", "manager"]:
-                user_tier = "manager"
-            elif tier in ["business", "professional"]:
-                user_tier = "professional"
+        ai_provider = "google_ai"
+        ai_model = "gemini-3.5-flash"
+        ai_daily_used = 0
+        user_id = None
+
+        if user and "id" in user:
+            user_id = user["id"]
+            db = get_db()
+            user_record = await db.users.find_one({"id": user["id"]})
+            if user_record:
+                sub = user_record.get("subscription") or {}
+                is_active = sub.get("is_active", False)
+                plan_type = sub.get("plan_type", "free")
+                tier = sub.get("tier", "free")
+                if is_active and plan_type != "free":
+                    if tier in ["pro", "manager"]:
+                        user_tier = "manager"
+                    elif tier in ["business", "professional"]:
+                        user_tier = "professional"
+                ai_cfg = user_record.get("ai_configuration", {})
+                ai_provider = ai_cfg.get("selected_provider", "google_ai")
+                ai_model = ai_cfg.get("selected_model", "gemini-3.5-flash")
+                ai_daily_used = ai_cfg.get("daily_request_count", 0)
 
         return {
             "success": True,
-            "user_id": user["id"],
+            "user_id": user_id,
             "pricing_plan": {
                 "plan_type": user_tier,
                 "ai_provider_mode": "custom_keys",
-                "ai_provider": user_record.get("ai_configuration", {}).get("selected_provider", "google_ai"),
-                "ai_model": user_record.get("ai_configuration", {}).get("selected_model", "gemini-3.5-flash"),
+                "ai_provider": ai_provider,
+                "ai_model": ai_model,
             },
             "credits": {
                 "total_credits": 0,
@@ -120,7 +124,7 @@ async def get_pricing_info(user: dict = Depends(get_current_user)) -> Dict[str, 
                 "ai_credits_used_this_month": 0,
                 "ai_monthly_limit": 0,
                 "ai_daily_limit": 10 if user_tier == "free" else 999999,
-                "ai_daily_used": user_record.get("ai_configuration", {}).get("daily_request_count", 0),
+                "ai_daily_used": ai_daily_used,
                 "ai_monthly_used": 0,
             },
             "credit_packs": [],

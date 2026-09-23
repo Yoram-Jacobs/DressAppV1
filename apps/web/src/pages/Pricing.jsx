@@ -29,8 +29,14 @@ export default function Pricing() {
         const pricingRes = await api.getPricingInfo();
         setPricingData(pricingRes);
 
-        const quotaRes = await api.getQuotaStatus();
-        setQuotaStatus(quotaRes);
+        if (user) {
+          try {
+            const quotaRes = await api.getQuotaStatus();
+            setQuotaStatus(quotaRes || {});
+          } catch (_) {
+            /* quota status is optional */
+          }
+        }
       } catch (err) {
         console.error('Failed to fetch pricing data:', err);
         setError(t('pricing.loadError', { defaultValue: 'Failed to load pricing information. Please try again later.' }));
@@ -39,7 +45,7 @@ export default function Pricing() {
       }
     };
     fetchPricingData();
-  }, []);
+  }, [user, t]);
 
   // Scroll to hash-anchor if present on page load
   useEffect(() => {
@@ -55,19 +61,20 @@ export default function Pricing() {
     }
   }, [location.hash, pricingData]);
 
-  // Set up polling interval for quota updates
+  // Set up polling interval for quota updates (logged-in users only)
   useEffect(() => {
+    if (!user) return;
     const interval = setInterval(async () => {
       try {
         const quotaRes = await api.getQuotaStatus();
-        setQuotaStatus(quotaRes);
+        setQuotaStatus(quotaRes || {});
       } catch (err) {
         console.warn('Failed to refresh quota status:', err);
       }
     }, 30000);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [user]);
 
   useEffect(() => {
     const subStatus = searchParams.get('sub_status');
@@ -77,25 +84,29 @@ export default function Pricing() {
         setSubBusy(true);
         try {
           await api.captureSubscription(token);
-          toast.success('Subscription activated successfully!');
+          toast.success(t('pricing.subscriptionActivated', { defaultValue: 'Subscription activated successfully!' }));
           searchParams.delete('sub_status');
           searchParams.delete('token');
           setSearchParams(searchParams);
         } catch (err) {
-          toast.error('Error activating subscription.');
+          toast.error(t('pricing.subscriptionActivateError', { defaultValue: 'Error activating subscription.' }));
         } finally {
           setSubBusy(false);
         }
       };
       capture();
     } else if (subStatus === 'cancel') {
-      toast.info('Subscription checkout cancelled.');
+      toast.info(t('pricing.subscriptionCancelled', { defaultValue: 'Subscription checkout cancelled.' }));
       searchParams.delete('sub_status');
       setSearchParams(searchParams);
     }
-  }, [searchParams, setSearchParams]);
+  }, [searchParams, setSearchParams, t]);
 
   const handleUpgrade = async (tierName) => {
+    if (!user) {
+      navigate('/login');
+      return;
+    }
     if (subBusy) return;
     setSubBusy(true);
     try {
@@ -109,10 +120,10 @@ export default function Pricing() {
       if (res.approve_url) {
         window.location.href = res.approve_url;
       } else {
-        toast.error('Failed to initiate subscription payment.');
+        toast.error(t('pricing.paymentInitFailed', { defaultValue: 'Failed to initiate subscription payment.' }));
       }
     } catch (err) {
-      toast.error(err?.response?.data?.detail?.message || 'Error creating subscription');
+      toast.error(err?.response?.data?.detail?.message || err?.response?.data?.detail || t('pricing.subscriptionError', { defaultValue: 'Error creating subscription' }));
     } finally {
       setSubBusy(false);
     }
@@ -208,11 +219,13 @@ export default function Pricing() {
             subBusy={subBusy}
             handleUpgrade={handleUpgrade}
           />
-          {/* Quota status, warnings, and daily limits monitor */}
-          <QuotaMonitor
-            quotaStatus={quotaStatus}
-            pricingData={pricingData}
-          />
+          {/* Quota status, warnings, and daily limits monitor (authenticated users only) */}
+          {user && (
+            <QuotaMonitor
+              quotaStatus={quotaStatus}
+              pricingData={pricingData}
+            />
+          )}
       </section>
     </>
   );
