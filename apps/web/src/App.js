@@ -9,6 +9,7 @@ import { PayPalProvider } from '@/lib/paypal';
 import { AppLayout } from '@/components/AppLayout';
 import { PublicLegalLayout } from '@/components/PublicLegalLayout';
 import { PublicOnly } from '@/components/PublicOnly';
+import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { PageLoadingFallback } from '@/components/ui/PageLoadingFallback';
 import { WorkProgressFloater } from '@/components/WorkProgressFloater';
 import { WorkBatchDoneToast } from '@/components/WorkBatchDoneToast';
@@ -158,31 +159,36 @@ function App() {
                     
                     {/* Main application routes wrapped in AppLayout */}
                     <Route element={<AppLayout />}>
-                      <Route path="/" element={<Navigate to="/home" replace />} />
+                      {/* Public routes visible without login */}
+                      <Route path="/" element={<Home />} />
                       <Route path="/home" element={<Home />} />
-                      <Route path="/closet" element={<Closet />} />
-                      <Route path="/suitcase" element={<Suitcase />} />
-                      <Route path="/closet/add" element={<AddItem />} />
-                      <Route path="/closet/:id" element={<ItemDetail />} />
-                      <Route path="/stylist" element={<Stylist />} />
-                      <Route path="/outfits" element={<OutfitsRedirect />} />
-                      <Route path="/market" element={<Marketplace />} />
-                      <Route path="/market/create" element={<CreateListing />} />
-                      <Route path="/market/:id" element={<ListingDetail />} />
-                      <Route path="/transactions" element={<Transactions />} />
-                      <Route path="/transactions/:id/landing" element={<TransactionLanding />} />
-                      <Route path="/admin" element={<Admin />} />
-                      <Route path="/experts" element={<ExpertsDirectory />} />
-                      <Route path="/campaigns/create" element={<CreateCampaign />} />
-                      <Route path="/campaigns/mine" element={<MyCampaigns />} />
-                      <Route path="/campaigns/:id" element={<CampaignDetail />} />
-                      <Route path="/ads" element={<AdsManager />} />
-                      <Route path="/me" element={<Profile />} />
-                      <Route path="/delete-account" element={<DeleteAccount />} />
-                      <Route path="/me/stats" element={<WardrobeStats />} />
-                      <Route path="/trends" element={<TrendScout />} />
-                      <Route path="/avatar" element={<AvatarPage />} />
                       <Route path="/pricing" element={<Pricing />} />
+                      <Route path="/experts" element={<ExpertsDirectory />} />
+                      <Route path="/trends" element={<TrendScout />} />
+                      <Route path="/market" element={<Marketplace />} />
+                      <Route path="/market/:id" element={<ListingDetail />} />
+                      <Route path="/transactions/:id/landing" element={<TransactionLanding />} />
+
+                      {/* Protected routes requiring authentication */}
+                      <Route element={<ProtectedRoute />}>
+                        <Route path="/closet" element={<Closet />} />
+                        <Route path="/suitcase" element={<Suitcase />} />
+                        <Route path="/closet/add" element={<AddItem />} />
+                        <Route path="/closet/:id" element={<ItemDetail />} />
+                        <Route path="/stylist" element={<Stylist />} />
+                        <Route path="/outfits" element={<OutfitsRedirect />} />
+                        <Route path="/market/create" element={<CreateListing />} />
+                        <Route path="/transactions" element={<Transactions />} />
+                        <Route path="/admin" element={<Admin />} />
+                        <Route path="/campaigns/create" element={<CreateCampaign />} />
+                        <Route path="/campaigns/mine" element={<MyCampaigns />} />
+                        <Route path="/campaigns/:id" element={<CampaignDetail />} />
+                        <Route path="/ads" element={<AdsManager />} />
+                        <Route path="/me" element={<Profile />} />
+                        <Route path="/delete-account" element={<DeleteAccount />} />
+                        <Route path="/me/stats" element={<WardrobeStats />} />
+                        <Route path="/avatar" element={<AvatarPage />} />
+                      </Route>
                     </Route>
                     
                     {/* Public legal routes (Privacy Policy & Terms) accessible without login */}

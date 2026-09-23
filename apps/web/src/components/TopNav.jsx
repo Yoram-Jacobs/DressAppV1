@@ -128,87 +128,111 @@ export const TopNav = () => {
             <HelpCircle className="!h-[30px] !w-[30px]" />
           </Button>
 
-          {/* User Dropdown */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
+          {/* User Dropdown / Auth Actions */}
+          {user ? (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  aria-label={t('nav.openUserMenu')}
+                  className="h-[35px] w-[35px] overflow-hidden rounded-full p-0 border border-border focus-visible:ring-2 focus-visible:ring-[var(--primary-color)]"
+                  data-testid="topnav-avatar-button"
+                >
+                  <NavAvatar user={user} initials={initials} testId="topnav-avatar-img" />
+                </Button>
+              </DropdownMenuTrigger>
+
+              <DropdownMenuContent align="end" className="w-56">
+                {/* User Info */}
+                <div className="flex items-center gap-3 px-3 py-2.5 text-sm">
+                  <div className="h-9 w-9 shrink-0 overflow-hidden rounded-full border border-border">
+                    <NavAvatar user={user} initials={initials} className="h-9 w-9" imgClassName="h-9 w-9 rounded-full object-cover" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="truncate text-sm font-bold text-foreground">
+                      {user?.display_name || t('nav.guest')}
+                    </div>
+                    <div className="truncate text-xs text-text-brand">
+                      {user?.email}
+                    </div>
+                  </div>
+                </div>
+
+                <DropdownMenuSeparator />
+
+                <DropdownMenuItem
+                  onClick={() => nav('/transactions')}
+                  data-testid="topnav-menu-transactions"
+                >
+                  <Receipt className="h-4 w-4" />
+                  {t('nav.transactions')}
+                </DropdownMenuItem>
+
+                {isPro && (
+                  <DropdownMenuItem
+                    onClick={() => nav('/ads')}
+                    data-testid="topnav-menu-ads"
+                  >
+                    <Megaphone className="h-4 w-4" />
+                    {t('nav.ads')}
+                  </DropdownMenuItem>
+                )}
+
+                {(user?.roles || []).includes('admin') && (
+                  <DropdownMenuItem
+                    onClick={() => nav('/admin')}
+                    data-testid="topnav-menu-admin"
+                  >
+                    <Shield className="h-4 w-4" />
+                    {t('nav.admin')}
+                  </DropdownMenuItem>
+                )}
+
+                <DropdownMenuItem
+                  onClick={() => nav('/me')}
+                  data-testid="topnav-menu-settings"
+                >
+                  <Settings className="h-4 w-4" />
+                  {t('nav.settings')}
+                </DropdownMenuItem>
+
+                <DropdownMenuSeparator />
+
+                <DropdownMenuItem
+                  onClick={() => {
+                    logout();
+                    nav('/login');
+                  }}
+                  data-testid="topnav-menu-logout"
+                >
+                  <LogOut className="h-4 w-4 text-destructive" />
+                  <span className="text-destructive">{t('nav.signOut')}</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          ) : (
+            <div className="flex items-center gap-2">
               <Button
                 variant="ghost"
-                aria-label={t('nav.openUserMenu')}
-                className="h-[35px] w-[35px] overflow-hidden rounded-full p-0 border border-border focus-visible:ring-2 focus-visible:ring-[var(--primary-color)]"
-                data-testid="topnav-avatar-button"
+                size="sm"
+                asChild
+                className="text-sm font-semibold text-foreground/80 hover:text-[var(--primary-color)]"
               >
-                <NavAvatar user={user} initials={initials} testId="topnav-avatar-img" />
+                <Link to="/login" data-testid="topnav-login-button">
+                  {t('auth.signIn', { defaultValue: 'Sign in' })}
+                </Link>
               </Button>
-            </DropdownMenuTrigger>
-
-            <DropdownMenuContent align="end" className="w-56">
-              {/* User Info */}
-              <div className="flex items-center gap-3 px-3 py-2.5 text-sm">
-                <div className="h-9 w-9 shrink-0 overflow-hidden rounded-full border border-border">
-                  <NavAvatar user={user} initials={initials} className="h-9 w-9" imgClassName="h-9 w-9 rounded-full object-cover" />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <div className="truncate text-sm font-bold text-foreground">
-                    {user?.display_name || t('nav.guest')}
-                  </div>
-                  <div className="truncate text-xs text-text-brand">
-                    {user?.email}
-                  </div>
-                </div>
-              </div>
-
-              <DropdownMenuSeparator />
-
-              <DropdownMenuItem
-                onClick={() => nav('/transactions')}
-                data-testid="topnav-menu-transactions"
+              <Button
+                size="sm"
+                asChild
+                className="bg-[var(--primary-color)] text-white hover:bg-[var(--primary-hover)] rounded-full px-4 text-sm font-semibold shadow-xs transition-smooth hover:-translate-y-0.5"
               >
-                <Receipt className="h-4 w-4" />
-                {t('nav.transactions')}
-              </DropdownMenuItem>
-
-              {isPro && (
-                <DropdownMenuItem
-                  onClick={() => nav('/ads')}
-                  data-testid="topnav-menu-ads"
-                >
-                  <Megaphone className="h-4 w-4" />
-                  {t('nav.ads')}
-                </DropdownMenuItem>
-              )}
-
-              {(user?.roles || []).includes('admin') && (
-                <DropdownMenuItem
-                  onClick={() => nav('/admin')}
-                  data-testid="topnav-menu-admin"
-                >
-                  <Shield className="h-4 w-4" />
-                  {t('nav.admin')}
-                </DropdownMenuItem>
-              )}
-
-              <DropdownMenuItem
-                onClick={() => nav('/me')}
-                data-testid="topnav-menu-settings"
-              >
-                <Settings className="h-4 w-4" />
-                {t('nav.settings')}
-              </DropdownMenuItem>
-
-              <DropdownMenuSeparator />
-
-              <DropdownMenuItem
-                onClick={() => {
-                  logout();
-                  nav('/login');
-                }}
-                data-testid="topnav-menu-logout"
-              >
-                <LogOut className="h-4 w-4 text-destructive" />
-                <span className="text-destructive">{t('nav.signOut')}</span>
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+                <Link to="/register" data-testid="topnav-register-button">
+                  {t('auth.createAccount', { defaultValue: 'Get Started' })}
+                </Link>
+              </Button>
+            </div>
+          )}
         </div>
       </div>
 
@@ -236,38 +260,50 @@ export const TopNav = () => {
             <HelpCircle className="h-5 w-5" />
           </Button>
 
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="ghost"
-                aria-label={t('nav.openUserMenu')}
-                className="h-8 w-8 overflow-hidden rounded-full p-0 border border-border"
-                data-testid="mobile-avatar-button"
-              >
-                <NavAvatar user={user} initials={initials} className="text-xs" imgClassName="h-full w-full rounded-full object-cover" testId="mobile-avatar-img" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-52">
-              <div className="px-3 py-2 text-xs">
-                <div className="font-bold truncate">{user?.display_name || t('nav.guest')}</div>
-                <div className="text-text-brand truncate">{user?.email}</div>
-              </div>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => nav('/me')}>
-                <Settings className="h-4 w-4" />
-                {t('nav.settings')}
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => nav('/transactions')}>
-                <Receipt className="h-4 w-4" />
-                {t('nav.transactions')}
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => { logout(); nav('/login'); }}>
-                <LogOut className="h-4 w-4text-destructive" />
-                <span className="text-destructive">{t('nav.signOut')}</span>
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          {user ? (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  aria-label={t('nav.openUserMenu')}
+                  className="h-8 w-8 overflow-hidden rounded-full p-0 border border-border"
+                  data-testid="mobile-avatar-button"
+                >
+                  <NavAvatar user={user} initials={initials} className="text-xs" imgClassName="h-full w-full rounded-full object-cover" testId="mobile-avatar-img" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-52">
+                <div className="px-3 py-2 text-xs">
+                  <div className="font-bold truncate">{user?.display_name || t('nav.guest')}</div>
+                  <div className="text-text-brand truncate">{user?.email}</div>
+                </div>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => nav('/me')}>
+                  <Settings className="h-4 w-4" />
+                  {t('nav.settings')}
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => nav('/transactions')}>
+                  <Receipt className="h-4 w-4" />
+                  {t('nav.transactions')}
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => { logout(); nav('/login'); }}>
+                  <LogOut className="h-4 w-4 text-destructive" />
+                  <span className="text-destructive">{t('nav.signOut')}</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          ) : (
+            <Button
+              size="sm"
+              asChild
+              className="bg-[var(--primary-color)] text-white hover:bg-[var(--primary-hover)] rounded-full px-3 h-8 text-xs font-semibold"
+            >
+              <Link to="/login" data-testid="mobile-login-button">
+                {t('auth.signIn', { defaultValue: 'Sign in' })}
+              </Link>
+            </Button>
+          )}
         </div>
       </div>
 

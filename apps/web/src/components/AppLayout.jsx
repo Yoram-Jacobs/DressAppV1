@@ -175,7 +175,6 @@ export const AppLayout = () => {
       </div>
     );
   }
-  if (!user) return <Navigate to="/login" replace />;
 
   const showOnboardingMigration = isLoaded && !closetError && user && !user.migration_flag && !hasClosetItems;
   const showLoginReminder = isLoaded && !closetError && user && user.migration_flag && !hasClosetItems && !dismissedLoginReminder && !showOnboardingMigration;
