@@ -269,7 +269,7 @@ async def _generate_and_save_daily_proposal(
                 past_item_ids.add(it["closet_item_id"])
 
     # Fetch user's closet items
-    cursor = db.closet_items.find({"user_id": user["id"], "is_duplicate": {"$ne": True}}).limit(100)
+    cursor = db.closet_items.find({"user_id": user["id"], "is_duplicate": {"$ne": True}})
     items = [doc async for doc in cursor]
 
     def _cat(i: dict) -> str:
@@ -321,8 +321,15 @@ async def _generate_and_save_daily_proposal(
                 proposal_harmony = min(99, max(80, int(confidence * 100)))
 
             item_map = {item["id"]: item for item in items}
+            cids = [it.get("closet_item_id") for it in chosen_rec.get("items", []) if it.get("closet_item_id")]
+            missing_cids = [c for c in cids if c not in item_map]
+            if missing_cids:
+                missing_docs = [d async for d in db.closet_items.find({"id": {"$in": missing_cids}})]
+                for d in missing_docs:
+                    item_map[d["id"]] = d
+
             for it in chosen_rec.get("items", []):
-                cid = it.get("closet_item_id")
+                cid = it.get("closet_item_id") or it.get("id")
                 closet_doc = item_map.get(cid)
                 if closet_doc:
                     selected_items.append({
@@ -332,6 +339,15 @@ async def _generate_and_save_daily_proposal(
                         "name": closet_doc.get("title") or closet_doc.get("name") or it.get("description") or "Garment",
                         "category": closet_doc.get("category"),
                         "image_url": _best_img(closet_doc),
+                    })
+                elif it.get("image_url") or it.get("clean_image_url"):
+                    selected_items.append({
+                        "id": cid,
+                        "closet_item_id": cid,
+                        "role": it.get("role") or "item",
+                        "name": it.get("title") or it.get("name") or it.get("description") or "Garment",
+                        "category": it.get("category") or "Item",
+                        "image_url": it.get("clean_image_url") or it.get("image_url"),
                     })
             if len(selected_items) >= 2:
                 ai_generated = True
