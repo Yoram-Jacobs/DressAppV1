@@ -16,7 +16,7 @@ import {
   calendar, misc, streamNdjson, sync, syncManager,
 } from '@dressapp/api-client';
 
-import { getBackendUrl } from './client.js';
+import { getBackendUrl, isPublicPath } from './client.js';
 
 const STORAGE_TOKEN = 'dressapp.token';
 const STORAGE_USER  = 'dressapp.user';
@@ -30,7 +30,7 @@ const { client, API_BASE, tokenStore, userStore } = createApiClient({
   clearUser: () => { try { localStorage.removeItem(STORAGE_USER); } catch { /* ignore */ } },
   onUnauthorized: () => {
     try {
-      if (!window.location.pathname.startsWith('/login')) {
+      if (!isPublicPath(window.location.pathname)) {
         window.location.href = '/login';
       }
     } catch { /* ignore */ }

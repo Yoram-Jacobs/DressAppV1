@@ -33,7 +33,7 @@ export function AuthProvider({ children }) {
   }, []);
 
   useEffect(() => {
-    if (tokenStore.get() && !userStore.get()) {
+    if (tokenStore.get()) {
       refresh().finally(() => setLoading(false));
     } else {
       setLoading(false);

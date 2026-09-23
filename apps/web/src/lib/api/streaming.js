@@ -1,4 +1,4 @@
-import { client, API_BASE, tokenStore } from './client.js';
+import { client, API_BASE, tokenStore, isPublicPath } from './client.js';
 
 /**
  * streamNdjson — open an `application/x-ndjson` POST stream from the
@@ -47,7 +47,7 @@ export async function streamNdjson(path, {
 
   if (resp.status === 401) {
     tokenStore.clear();
-    if (!window.location.pathname.startsWith('/login')) {
+    if (!isPublicPath(window.location.pathname)) {
       window.location.href = '/login';
     }
     throw new Error(`stream 401`);

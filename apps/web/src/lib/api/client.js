@@ -44,12 +44,42 @@ client.interceptors.request.use((cfg) => {
   return cfg;
 });
 
+export const isPublicPath = (pathname = (typeof window !== 'undefined' ? window.location?.pathname : '')) => {
+  if (!pathname) return true;
+  const publicExact = [
+    '/',
+    '/home',
+    '/login',
+    '/register',
+    '/privacy',
+    '/terms',
+    '/pricing',
+    '/experts',
+    '/trends',
+    '/market',
+    '/extension/connect',
+    '/auth/callback',
+  ];
+  if (publicExact.includes(pathname)) return true;
+  if (
+    pathname.startsWith('/privacy') ||
+    pathname.startsWith('/terms') ||
+    pathname.startsWith('/market/') ||
+    pathname.startsWith('/shared') ||
+    pathname.startsWith('/campaigns/') ||
+    pathname.startsWith('/transactions/')
+  ) {
+    return true;
+  }
+  return false;
+};
+
 client.interceptors.response.use(
   (r) => r,
   (err) => {
     if (err?.response?.status === 401) {
       tokenStore.clear();
-      if (!window.location.pathname.startsWith('/login')) {
+      if (!isPublicPath(window.location.pathname)) {
         window.location.href = '/login';
       }
     }
