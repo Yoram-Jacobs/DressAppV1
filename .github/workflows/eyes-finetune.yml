@@ -1,0 +1,325 @@
+name: Weekly Eyes Fine-Tuning CI/CD
+
+on:
+  schedule:
+    # 02:00 UTC every Sunday
+    - cron: '0 2 * * 0'
+  workflow_dispatch:
+    inputs:
+      base_model:
+        description: 'Base Gemma-4 Model Identifier'
+        required: true
+        default: 'google/gemma-4-e4b-it'
+        type: choice
+        options:
+          - 'google/gemma-4-e4b-it'
+          - 'google/gemma-4-e2b-it'
+      num_epochs:
+        description: 'Number of Training Epochs'
+        required: false
+        default: '3'
+      batch_size:
+        description: 'Per-Device Training Batch Size'
+        required: false
+        default: '2'
+      learning_rate:
+        description: 'Peak Learning Rate'
+        required: false
+        default: '2e-4'
+      compute_backend:
+        description: 'Compute Backend for Training'
+        required: true
+        default: 'modal'
+        type: choice
+        options:
+          - 'modal'
+          - 'local'
+          - 'cpu_dry_run'
+      dry_run:
+        description: 'Execute complete smoke-test dry-run (no GPU cost)'
+        required: false
+        type: boolean
+        default: false
+      push_to_hub:
+        description: 'Publish verified checkpoint to Hugging Face Hub'
+        required: false
+        type: boolean
+        default: true
+      deploy_vps:
+        description: 'Stage passing adapter / GGUF to production Hetzner VPS'
+        required: false
+        type: boolean
+        default: true
+
+permissions:
+  contents: write
+  packages: write
+  issues: write
+
+env:
+  HF_REPO: 'Yoram-Jacobs/dressapp-eyes-gguf'
+  PYTHON_VERSION: '3.11'
+
+jobs:
+  # -------------------------------------------------------------------------
+  # Job 1: Dataset Packaging & Normalization
+  # -------------------------------------------------------------------------
+  prepare-dataset:
+    name: Prepare Multimodal SFT Dataset
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          lfs: true
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
+          cache-dependency-path: 'inference-server/eyes/training/requirements-train.txt'
+
+      - name: Install Training Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r inference-server/eyes/training/requirements-train.txt
+
+      - name: Ingest Annotations & Compile SFT Splits
+        run: |
+          python inference-server/eyes/training/prepare_dataset.py \
+            --images-dir inference-server/eyes/test_images \
+            --garments-dir inference-server/eyes/Garments \
+            --output-dir build/dataset
+
+      - name: Upload Processed Dataset Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: eyes-sft-dataset
+          path: build/dataset/
+          retention-days: 7
+
+  # -------------------------------------------------------------------------
+  # Job 2: Headless QLoRA Training & Strict Quality/Regression Gate
+  # -------------------------------------------------------------------------
+  train-and-evaluate:
+    name: Headless QLoRA Training & Regression Gate
+    needs: prepare-dataset
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install Training & Evaluation Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r inference-server/eyes/training/requirements-train.txt
+
+      - name: Download Processed Dataset
+        uses: actions/download-artifact@v4
+        with:
+          name: eyes-sft-dataset
+          path: build/dataset/
+
+      - name: Execute Headless Training
+        env:
+          MODAL_TOKEN_ID: ${{ secrets.MODAL_API_TOKEN_ID || secrets.MODAL_TOKEN_ID }}
+          MODAL_TOKEN_SECRET: ${{ secrets.MODAL_API_TOKEN_SECRET || secrets.MODAL_TOKEN_SECRET }}
+          HF_TOKEN: ${{ secrets.EYES_HF_TOKEN || secrets.HF_TOKEN || secrets.HF_WRITE }}
+        run: |
+          COMPUTE_BACKEND="${{ inputs.compute_backend || 'modal' }}"
+          IS_DRY_RUN="${{ inputs.dry_run || 'false' }}"
+
+          EXTRA_ARGS=""
+          if [ "$IS_DRY_RUN" = "true" ] || [ "$COMPUTE_BACKEND" = "cpu_dry_run" ]; then
+            EXTRA_ARGS="--dry-run"
+          fi
+
+          python inference-server/eyes/training/train_eyes_lora.py \
+            --dataset build/dataset/train.jsonl \
+            --base-model "${{ inputs.base_model || 'google/gemma-4-e4b-it' }}" \
+            --epochs "${{ inputs.num_epochs || 3 }}" \
+            --batch-size "${{ inputs.batch_size || 2 }}" \
+            --lr "${{ inputs.learning_rate || '2e-4' }}" \
+            --backend "$COMPUTE_BACKEND" \
+            --output-dir build/adapter \
+            $EXTRA_ARGS
+
+      - name: Run Quality & Regression Gate
+        run: |
+          python inference-server/eyes/training/evaluate_eyes.py \
+            --val-dataset build/dataset/val.jsonl \
+            --adapter-dir build/adapter \
+            --min-schema-acc 1.0 \
+            --min-category-acc 0.95 \
+            --min-shoes-acc 1.0 \
+            --metrics-out build/metrics.json
+
+      - name: Upload Adapter & Metrics Artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: eyes-adapter-and-metrics
+          path: |
+            build/adapter/
+            build/metrics.json
+          retention-days: 14
+
+  # -------------------------------------------------------------------------
+  # Job 3: Merge, GGUF Quantization & Hugging Face Publishing
+  # -------------------------------------------------------------------------
+  quantize-and-publish:
+    name: Quantize GGUF & Publish Checkpoint
+    needs: train-and-evaluate
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install Tooling Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r inference-server/eyes/training/requirements-train.txt
+
+      - name: Download Adapter & Metrics
+        uses: actions/download-artifact@v4
+        with:
+          name: eyes-adapter-and-metrics
+          path: build/
+
+      - name: Export Quantized GGUFs
+        run: |
+          IS_DRY_RUN="${{ inputs.dry_run || 'false' }}"
+          EXTRA_ARGS=""
+          if [ "$IS_DRY_RUN" = "true" ]; then
+            EXTRA_ARGS="--dry-run"
+          fi
+
+          python inference-server/eyes/training/export_gguf.py \
+            --adapter-dir build/adapter \
+            --output-dir build/gguf \
+            --base-model "${{ inputs.base_model || 'google/gemma-4-e4b-it' }}" \
+            --quants "Q4_K_M,Q3_K_M" \
+            $EXTRA_ARGS
+
+      - name: Publish to Hugging Face Hub
+        if: (inputs.push_to_hub != false)
+        env:
+          HF_TOKEN: ${{ secrets.EYES_HF_TOKEN || secrets.HF_TOKEN || secrets.HF_WRITE }}
+        run: |
+          RELEASE_TAG="weekly-$(date +'%Y-%m-%d')"
+          IS_DRY_RUN="${{ inputs.dry_run || 'false' }}"
+          EXTRA_ARGS=""
+          if [ "$IS_DRY_RUN" = "true" ] || [ -z "$HF_TOKEN" ]; then
+            EXTRA_ARGS="--dry-run"
+          fi
+
+          python inference-server/eyes/training/publish_model.py \
+            --model-dir build/gguf \
+            --repo-id "${{ env.HF_REPO }}" \
+            --tag-name "$RELEASE_TAG" \
+            --metrics-path build/metrics.json \
+            --base-model "${{ inputs.base_model || 'google/gemma-4-e4b-it' }}" \
+            $EXTRA_ARGS
+
+      - name: Create GitHub Release
+        if: (inputs.push_to_hub != false) && (inputs.dry_run != true)
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: weekly-${{ github.run_id }}
+          name: "DressApp Eyes Checkpoint (Run #${{ github.run_number }})"
+          body_path: build/gguf/README.md
+          files: |
+            build/gguf/*.json
+            build/metrics.json
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload Final Release Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: eyes-release-gguf
+          path: build/gguf/
+          retention-days: 30
+
+  # -------------------------------------------------------------------------
+  # Job 4: Production VPS Staging & Automated Live Hot-Reload Hook
+  # -------------------------------------------------------------------------
+  stage-to-vps:
+    name: Production VPS Staging
+    needs: quantize-and-publish
+    if: (inputs.deploy_vps != false) && (inputs.dry_run != true)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download Adapter & GGUF Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: eyes-release-gguf
+          path: build/gguf/
+
+      - name: Download LoRA Adapter
+        uses: actions/download-artifact@v4
+        with:
+          name: eyes-adapter-and-metrics
+          path: build/
+
+      - name: Setup SSH Key
+        if: env.VPS_SSH_KEY != ''
+        env:
+          VPS_SSH_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          VPS_HOST: ${{ secrets.VPS_HOST || '178.105.144.142' }}
+        run: |
+          mkdir -p ~/.ssh
+          echo "$VPS_SSH_KEY" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H "$VPS_HOST" >> ~/.ssh/known_hosts
+
+      - name: Deploy Checkpoint to Production VPS
+        if: env.VPS_SSH_KEY != ''
+        env:
+          VPS_HOST: ${{ secrets.VPS_HOST || '178.105.144.142' }}
+        run: |
+          echo "Syncing verified adapter to Hetzner VPS (/srv/AI-Stylist/eyes_v4_adapter)..."
+          ssh root@$VPS_HOST "mkdir -p /srv/AI-Stylist/eyes_v4_adapter /srv/AI-Stylist/eyes_gguf"
+          scp -r build/adapter/* root@$VPS_HOST:/srv/AI-Stylist/eyes_v4_adapter/
+          scp -r build/gguf/*.gguf root@$VPS_HOST:/srv/AI-Stylist/eyes_gguf/ || true
+          echo "Restarting eyes container on VPS..."
+          ssh root@$VPS_HOST "cd /srv/AI-Stylist/deploy && docker compose restart eyes"
+
+  # -------------------------------------------------------------------------
+  # Job 5: Pipeline Status & Metric Summary
+  # -------------------------------------------------------------------------
+  pipeline-summary:
+    name: CI/CD Pipeline Summary
+    needs: [prepare-dataset, train-and-evaluate, quantize-and-publish, stage-to-vps]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Compile Workflow Step Summary
+        run: |
+          echo "## DressApp Eyes Fine-Tuning Pipeline Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- **Base Model:** \`${{ inputs.base_model || 'google/gemma-4-e4b-it' }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **Trigger:** \`${{ github.event_name }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **Compute Backend:** \`${{ inputs.compute_backend || 'modal' }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **Dry Run:** \`${{ inputs.dry_run || 'false' }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **Dataset Status:** \`${{ needs.prepare-dataset.result }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **Training & Gate Status:** \`${{ needs.train-and-evaluate.result }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **Quantization & Publish Status:** \`${{ needs.quantize-and-publish.result }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **Production VPS Staging:** \`${{ needs.stage-to-vps.result }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          if [ "${{ needs.train-and-evaluate.result }}" = "success" ]; then
+            echo "✅ **All Regression Gates Passed.** Model certified and deployed." >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ **Regression Gate or Training Failed.** Production environment untouched." >> $GITHUB_STEP_SUMMARY
+          fi
