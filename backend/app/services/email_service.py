@@ -62,6 +62,8 @@ async def _send(
     subject: str,
     html: str,
     *,
+    text: str | None = None,
+    from_sender: str | None = None,
     reply_to: str | None = None,
     attachments: list | None = None,
 ) -> dict[str, Any]:
@@ -72,11 +74,13 @@ async def _send(
     if not recipients:
         return {"error": "no recipients"}
     params: dict[str, Any] = {
-        "from": f"{_BRAND_NAME} <{_SENDER}>",
+        "from": from_sender or f"{_BRAND_NAME} <{_SENDER}>",
         "to": recipients,
         "subject": subject,
         "html": html,
     }
+    if text:
+        params["text"] = text
     if reply_to:
         params["reply_to"] = reply_to
     if attachments:
@@ -772,3 +776,62 @@ async def send_campaign_billing_invoice(
 </table>
 """
     return await _send(to, t_data["subject"], _wrap(body_html, preheader=t_data["subject"]), attachments=attachments)
+
+
+async def send_store_request_email(
+    *,
+    user_name: str,
+    user_email: str,
+    store_name: str,
+    store_site: str,
+) -> dict[str, Any]:
+    """Admin alert sent to dev@dressapp.co when a user suggests a store for the Shopping Assistant."""
+    clean_store_name = store_name.strip()
+    clean_store_site = store_site.strip()
+    clean_user_name = user_name.strip() or "A DressApp user"
+    clean_user_email = user_email.strip() or "dev@dressapp.co"
+
+    subject = "Add my store"
+    plain_text = (
+        f"{clean_user_name} suggests adding {clean_store_name} to the Shopping Assistant Chrome extension.\n"
+        f"{clean_store_site}  \n"
+        f"---\n"
+    )
+
+    escaped_user_name = clean_user_name.replace("<", "&lt;").replace(">", "&gt;")
+    escaped_user_email = clean_user_email.replace("<", "&lt;").replace(">", "&gt;")
+    escaped_store_name = clean_store_name.replace("<", "&lt;").replace(">", "&gt;")
+    escaped_store_site = clean_store_site.replace("<", "&lt;").replace(">", "&gt;")
+
+    body_html = f"""\
+<h1 style="margin:0 0 14px;font-size:22px;color:#1F6F6B;">🛍️ Add my store request</h1>
+<p style="font-size:15px;line-height:1.6;margin-bottom:16px;">
+  <strong>{escaped_user_name}</strong> suggests adding <strong>{escaped_store_name}</strong> to the Shopping Assistant Chrome extension.
+</p>
+<table role="presentation" cellpadding="0" cellspacing="0" style="border:1px solid #eee;border-radius:10px;padding:16px;width:100%;background:#fafafa;font-size:14px;line-height:1.6;margin-bottom:16px;">
+  <tr>
+    <td style="color:#666;width:120px;padding-bottom:6px;">Store Name:</td>
+    <td style="font-weight:600;padding-bottom:6px;">{escaped_store_name}</td>
+  </tr>
+  <tr>
+    <td style="color:#666;padding-bottom:6px;">Website:</td>
+    <td style="padding-bottom:6px;"><a href="{clean_store_site}" style="color:#1F6F6B;text-decoration:underline;" target="_blank">{escaped_store_site}</a></td>
+  </tr>
+  <tr>
+    <td style="color:#666;">Suggested by:</td>
+    <td>{escaped_user_name} &lt;<a href="mailto:{clean_user_email}" style="color:#1F6F6B;">{escaped_user_email}</a>&gt;</td>
+  </tr>
+</table>
+<hr style="border:none;border-top:1px solid #eee;margin:18px 0;" />
+<p style="font-size:12px;color:#888;margin:0;">
+  Sent automatically from DressApp Shopping Assistant. Reply directly to this email to contact the user.
+</p>
+"""
+    return await _send(
+        to="dev@dressapp.co",
+        subject=subject,
+        html=_wrap(body_html, preheader=f"New store suggestion: {clean_store_name} by {clean_user_name}"),
+        text=plain_text,
+        from_sender=f"{clean_user_name} via DressApp <{_SENDER}>",
+        reply_to=clean_user_email,
+    )

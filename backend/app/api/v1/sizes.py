@@ -59,11 +59,11 @@ import time
 import uuid
 from typing import Any
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, Field
 
 from app.config import settings
-from app.services.auth import get_current_user
+from app.services.auth import get_current_user, get_current_user_optional, AuthenticatedUser
 from app.services import provider_activity
 
 # Gemini 2.5 Flash — the closet pipeline's universal vision model.
@@ -1550,4 +1550,95 @@ async def predict_measurements(payload: PredictMeasurementsIn):
         model_version=getattr(predictor, "model_version", "v1.0-fallback") if predictor else "v1.0-fallback",
         measurements=measurements_dict,
         recommended_sizes=rec_sizes,
+    )
+
+
+class StoreRequestIn(BaseModel):
+    """Payload to suggest a missing online store/marketplace."""
+
+    store_name: str = Field(..., min_length=1, max_length=200, description="Online store name, e.g. Zara")
+    store_site: str = Field(..., min_length=1, max_length=500, description="Online store website address")
+    user_name: str | None = Field(default=None, max_length=200, description="User name")
+    user_email: str | None = Field(default=None, max_length=320, description="User email")
+
+
+class StoreRequestOut(BaseModel):
+    success: bool
+    message: str
+    request_id: str | None = None
+
+
+@router.post(
+    "/request-store",
+    response_model=StoreRequestOut,
+    summary="Request a missing online store for the Shopping Assistant Chrome extension",
+)
+@router.post(
+    "/request_store",
+    response_model=StoreRequestOut,
+    include_in_schema=False,
+)
+async def request_store(
+    payload: StoreRequestIn,
+    user: AuthenticatedUser | None = Depends(get_current_user_optional),
+):
+    clean_store_name = payload.store_name.strip()
+    clean_store_site = payload.store_site.strip()
+    if not clean_store_name or not clean_store_site:
+        raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, "Store name and website address are required")
+
+    if not (clean_store_site.startswith("http://") or clean_store_site.startswith("https://")):
+        clean_store_site = f"https://{clean_store_site}"
+
+    # Resolve user identity (authenticated session takes priority)
+    resolved_email = (
+        (user.email if user else None)
+        or (payload.user_email.strip() if payload.user_email else None)
+        or "guest@dressapp.co"
+    )
+    resolved_name = (
+        (user.display_name or getattr(user, "name", None) or (user.email.split("@")[0] if user.email else None) if user else None)
+        or (payload.user_name.strip() if payload.user_name else None)
+        or "A DressApp user"
+    )
+    user_id = user.id if user else None
+
+    # Persist in database
+    doc_id = str(uuid.uuid4())
+    from datetime import datetime, timezone
+    from app.db.database import get_db
+
+    record = {
+        "id": doc_id,
+        "store_name": clean_store_name,
+        "store_site": clean_store_site,
+        "user_name": resolved_name,
+        "user_email": resolved_email,
+        "user_id": user_id,
+        "status": "pending",
+        "created_at": datetime.now(timezone.utc).isoformat(),
+    }
+    try:
+        db = get_db()
+        await db.store_requests.insert_one(record)
+    except Exception as exc:
+        log.warning("Could not persist store_request to mongo: %s", exc)
+
+    # Dispatch email
+    try:
+        from app.services.email_service import send_store_request_email
+
+        await send_store_request_email(
+            user_name=resolved_name,
+            user_email=resolved_email,
+            store_name=clean_store_name,
+            store_site=clean_store_site,
+        )
+    except Exception as exc:
+        log.error("Failed to dispatch store request email: %s", exc)
+
+    return StoreRequestOut(
+        success=True,
+        message="Store request sent successfully",
+        request_id=doc_id,
     )
