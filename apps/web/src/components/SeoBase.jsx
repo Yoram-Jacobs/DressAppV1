@@ -2,13 +2,14 @@ import { Helmet } from 'react-helmet-async';
 import { useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 
-const SITE_URL = 'https://ai-stylist-api.preview.emergentagent.com';
+const SITE_URL = 'https://dressapp.co';
 const BRAND = 'DressApp';
 
 // Static path → i18n route key. Dynamic /closet/<id> and /market/<id> paths
 // are handled by the ``startsWith`` checks below. Keys live under
 // ``seo.routes.<key>.{title,description}`` in every locale JSON.
 const ROUTE_KEYS = {
+  '/':                'home',
   '/login':           'login',
   '/register':        'register',
   '/home':            'home',
@@ -20,7 +21,11 @@ const ROUTE_KEYS = {
   '/transactions':    'transactions',
   '/admin':           'admin',
   '/me':              'me',
+  '/pricing':         'pricing',
+  '/experts':         'experts',
   '/trends':          'trends',
+  '/suitcase':        'suitcase',
+  '/avatar':          'avatar',
   '/privacy':         'privacy',
   '/terms':           'terms',
 };

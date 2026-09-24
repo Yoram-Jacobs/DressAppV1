@@ -4,5 +4,9 @@ Allow: /
 Disallow: /admin
 Disallow: /me
 Disallow: /api
+Disallow: /auth/callback
+Disallow: /delete-account
+Disallow: /transactions
+Disallow: /extension/connect
 
-Sitemap: https://ai-stylist-api.preview.emergentagent.com/sitemap.xml
+Sitemap: https://dressapp.co/sitemap.xml
