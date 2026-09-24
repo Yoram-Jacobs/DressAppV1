@@ -32,38 +32,51 @@ export interface AIProvider {
   name: string;
   defaultModel: string;
   models: string[];
+  requiresApiKey?: boolean;
 }
 
 export const AI_PROVIDERS: AIProvider[] = [
+  {
+    id: 'dressapp',
+    name: 'DressApp',
+    defaultModel: 'Eyes v1',
+    models: ['Eyes v1'],
+    requiresApiKey: false,
+  },
   {
     id: 'google_ai',
     name: 'Google Gemini',
     defaultModel: 'gemini-3.5-flash',
     models: ['gemini-3.5-flash', 'gemini-3.5-pro'],
+    requiresApiKey: true,
   },
   {
     id: 'openai',
     name: 'OpenAI ChatGPT',
     defaultModel: 'gpt-4o-mini',
     models: ['gpt-4o-mini', 'gpt-4o'],
+    requiresApiKey: true,
   },
   {
     id: 'anthropic',
     name: 'Anthropic Claude',
     defaultModel: 'claude-3-5-haiku',
     models: ['claude-3-5-haiku', 'claude-3-5-sonnet'],
+    requiresApiKey: true,
   },
   {
     id: 'deepseek',
     name: 'DeepSeek',
     defaultModel: 'deepseek-chat',
     models: ['deepseek-chat', 'deepseek-coder'],
+    requiresApiKey: true,
   },
   {
     id: 'qwen',
     name: 'Alibaba Qwen',
     defaultModel: 'qwen-plus',
     models: ['qwen-plus', 'qwen-max'],
+    requiresApiKey: true,
   },
 ];
 
@@ -372,30 +385,68 @@ export function AIConfiguration({
         </View>
       </View>
 
-      {/* Custom API Key Button */}
-      <View style={[styles.keyCard, { backgroundColor: colors.secondary, borderColor: colors.border }]}>
-        <View style={styles.keyInfo}>
-          <Lucide.Key size={18} color={hasKey ? colors.accent : colors.mutedFg} />
-          <View style={styles.keyTextWrap}>
-            <Text style={[styles.keyTitle, { color: colors.foreground }]}>
-              {t('profile.bringYourOwnKey', { defaultValue: 'Bring Your Own API Key' })}
-            </Text>
-            <Text style={[styles.keySub, { color: colors.mutedFg }]}>
-              {hasKey
-                ? t('profile.customKeyConfigured', { defaultValue: 'Custom key active for this provider.' })
-                : t('profile.usingServerDefaults', { defaultValue: 'Using shared system credits.' })}
+      {/* Custom API Key Button or Built-in Badge */}
+      {activeProvider.requiresApiKey === false ? (
+        <View
+          style={[
+            styles.keyCard,
+            {
+              backgroundColor: isDark ? 'rgba(35, 139, 130, 0.15)' : 'rgba(31, 111, 107, 0.08)',
+              borderColor: colors.accent,
+            },
+          ]}
+        >
+          <View style={styles.keyInfo}>
+            <Lucide.Sparkles size={18} color={colors.accent} />
+            <View style={styles.keyTextWrap}>
+              <Text style={[styles.keyTitle, { color: colors.foreground }]}>
+                {t('profile.dressappEyesTitle', { defaultValue: 'DressApp Eyes Engine' })}
+              </Text>
+              <Text style={[styles.keySub, { color: colors.mutedFg }]}>
+                {t('profile.dressappEyesMobileDesc', {
+                  defaultValue: 'Self-hosted Gemma 4-E4B Eyes model on DressApp infrastructure. Built-in & free — no API key needed.',
+                })}
+              </Text>
+            </View>
+          </View>
+          <View
+            style={{
+              paddingHorizontal: 10,
+              paddingVertical: 4,
+              borderRadius: radii.full,
+              backgroundColor: colors.accent,
+            }}
+          >
+            <Text style={{ color: '#fff', fontSize: 11, fontFamily: fonts.bodyBold }}>
+              {t('profile.includedBadge', { defaultValue: 'Included' })}
             </Text>
           </View>
         </View>
-        <TouchableOpacity
-          style={[styles.keyBtn, { borderColor: colors.accent }]}
-          onPress={() => setModalVisible(true)}
-        >
-          <Text style={[styles.keyBtnText, { color: colors.accent }]}>
-            {hasKey ? t('common.edit', { defaultValue: 'Edit Key' }) : t('common.addKey', { defaultValue: '+ Add Key' })}
-          </Text>
-        </TouchableOpacity>
-      </View>
+      ) : (
+        <View style={[styles.keyCard, { backgroundColor: colors.secondary, borderColor: colors.border }]}>
+          <View style={styles.keyInfo}>
+            <Lucide.Key size={18} color={hasKey ? colors.accent : colors.mutedFg} />
+            <View style={styles.keyTextWrap}>
+              <Text style={[styles.keyTitle, { color: colors.foreground }]}>
+                {t('profile.bringYourOwnKey', { defaultValue: 'Bring Your Own API Key' })}
+              </Text>
+              <Text style={[styles.keySub, { color: colors.mutedFg }]}>
+                {hasKey
+                  ? t('profile.customKeyConfigured', { defaultValue: 'Custom key active for this provider.' })
+                  : t('profile.usingServerDefaults', { defaultValue: 'Using shared system credits.' })}
+              </Text>
+            </View>
+          </View>
+          <TouchableOpacity
+            style={[styles.keyBtn, { borderColor: colors.accent }]}
+            onPress={() => setModalVisible(true)}
+          >
+            <Text style={[styles.keyBtnText, { color: colors.accent }]}>
+              {hasKey ? t('common.edit', { defaultValue: 'Edit Key' }) : t('common.addKey', { defaultValue: '+ Add Key' })}
+            </Text>
+          </TouchableOpacity>
+        </View>
+      )}
 
       {/* TTS Voice Selector */}
       <View style={styles.field}>

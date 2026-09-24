@@ -51,7 +51,7 @@ import { sync, syncManager } from './sync.js';
  * This function simply assembles the spread for backward compatibility.
  */
 export function buildApi() {
-  return {
+  const merged = {
     ...auth,
     ...users,
     ...closet,
@@ -72,6 +72,10 @@ export function buildApi() {
     ...campaignApi,
     ...sync,
   };
+  merged.outfits = outfits;
+  merged.closet = closet;
+  merged.stylist = stylist;
+  return merged;
 }
 
 // ============================================================

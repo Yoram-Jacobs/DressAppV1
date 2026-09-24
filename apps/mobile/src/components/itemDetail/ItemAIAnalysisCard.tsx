@@ -33,6 +33,7 @@ export interface ReanalyzeChatTurn {
   action_taken?: 'metadata_update' | 'image_edit' | 'none' | string;
   image_url?: string;
   updated_fields?: Record<string, any>;
+  model_used?: string;
   error?: boolean;
 }
 
@@ -179,7 +180,7 @@ export function ItemAIAnalysisCard({
                     {turn.action_taken === 'image_edit' && (
                       <View style={[styles.badgePill, { backgroundColor: isDark ? '#451a03' : '#fef3c7' }]}>
                         <Text style={[styles.badgeText, { color: '#d97706' }]}>
-                          {t('itemDetail.reanalyze.nanoBananaBadge', { defaultValue: 'Nano Banana' })}
+                          {turn.model_used || t('itemDetail.reanalyze.nanoBananaBadge', { defaultValue: 'Nano Banana' })}
                         </Text>
                       </View>
                     )}

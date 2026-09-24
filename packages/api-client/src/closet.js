@@ -239,10 +239,17 @@ export const closet = {
                 detectMeta = frame;
                 callbacks.onDetect?.(frame);
                 break;
-              case 'item':
-                emittedItems[frame.index] = frame;
-                callbacks.onItem?.(frame);
+              case 'item': {
+                const itemMeta = detectMeta?.items_meta?.[frame.index] || {};
+                const enrichedFrame = {
+                  ...frame,
+                  crop_base64: frame.crop_base64 || itemMeta.crop_base64,
+                  crop_mime: frame.crop_mime || itemMeta.crop_mime,
+                };
+                emittedItems[frame.index] = enrichedFrame;
+                callbacks.onItem?.(enrichedFrame);
                 break;
+              }
               case 'item_skip':
                 callbacks.onItemSkip?.(frame);
                 break;
@@ -267,7 +274,14 @@ export const closet = {
             }
           }
         }
-        const items = emittedItems.filter(Boolean);
+        const items = emittedItems.filter(Boolean).map((it, idx) => {
+          const itemMeta = detectMeta?.items_meta?.[it.index ?? idx] || {};
+          return {
+            ...it,
+            crop_base64: it.crop_base64 || itemMeta.crop_base64,
+            crop_mime: it.crop_mime || itemMeta.crop_mime,
+          };
+        });
         return {
           items,
           count: doneCount || items.length,

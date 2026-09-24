@@ -718,7 +718,7 @@ async def run_reanalyze_items(
 
 def slim_item(it: Dict[str, Any]) -> Dict[str, Any]:
     """Strip the 512-float embedding + other heavy fields from an item."""
-    return {k: v for k, v in it.items() if k not in ("clip_embedding",)}
+    return {k: v for k, v in it.items() if k not in ("clip_embedding", "_id")}
 
 def anchor_summary(anchor: Dict[str, Any]) -> Dict[str, Any]:
     """Compact anchor description used for stylist prompting."""

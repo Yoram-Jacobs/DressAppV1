@@ -8,15 +8,23 @@ from typing import Any
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, ConfigDict, Field
 
+from app.config import settings
 from app.db.database import get_db
 from app.services import repos
 from app.services.auth import get_current_user
 from app.services.fashion_clip import fashion_clip_service
 from app.services import closet_service
+from app.services.stylist_scheduler_brain import norm_category
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter()
+
+_SLIM_SEARCH_PROJECTION = {
+    "clip_embedding": 1, "title": 1, "name": 1, "category": 1, "sub_category": 1,
+    "brand": 1, "color": 1, "clean_image_url": 1, "reconstructed_image_url": 1,
+    "thumbnail_data_url": 1, "created_at": 1, "id": 1, "group_id": 1, "group_role": 1,
+}
 
 
 class SearchIn(BaseModel):
@@ -55,11 +63,6 @@ async def search_closet(
         raise HTTPException(400, "Empty query.")
 
     db = get_db()
-    _SLIM_SEARCH_PROJECTION = {
-        "clip_embedding": 1, "title": 1, "name": 1, "category": 1, "sub_category": 1,
-        "brand": 1, "color": 1, "clean_image_url": 1, "reconstructed_image_url": 1,
-        "thumbnail_data_url": 1, "created_at": 1, "id": 1, "group_id": 1, "group_role": 1,
-    }
     # Pull only items that have a stored embedding (others cannot be scored).
     candidates = await repos.find_many(
         db.closet_items,
@@ -91,12 +94,13 @@ async def search_closet(
 
 
 class CompleteOutfitIn(BaseModel):
-    model_config = ConfigDict(extra="forbid")
+    model_config = ConfigDict(extra="ignore")
     item_ids: list[str] = Field(min_length=1, max_length=8)
     include_marketplace: bool = False
     occasion: str | None = None
     limit: int = Field(default=6, ge=1, le=12)
     min_score: float = Field(default=0.10, ge=0.0, le=1.0)
+    provider: str | None = None
     # When True (default) the server builds an order-weighted centroid:
     # the 1st anchor in `item_ids` gets the heaviest weight, the last
     # gets the lightest (linear decay, normalised to sum=1). Set False
@@ -110,6 +114,133 @@ class CompleteOutfitIn(BaseModel):
 
 _slim_item = closet_service.slim_item
 _anchor_summary = closet_service.anchor_summary
+
+
+async def _complete_outfit_with_gemma(
+    *,
+    anchors: list[dict[str, Any]],
+    closet_candidates: list[dict[str, Any]],
+    market_candidates: list[dict[str, Any]],
+    occasion: str | None = None,
+    weather_summary: str | None = None,
+    language: str = "en",
+) -> dict[str, Any]:
+    """Complete the outfit using self-hosted Gemma-4 model on the Eyes inference server."""
+    from app.services.vision.llm import _call_gemma_space, _extract_json, _LANG_NAMES
+
+    lang_name = _LANG_NAMES.get(language.lower(), "English")
+    sys_prompt = (
+        "You are The Stylist — DressApp's expert fashion stylist and personal dresser.\n"
+        "Your goal is to complete a stylish, cohesive outfit starting from the user's ANCHOR pieces, "
+        "selecting complementary items from CLOSET_CANDIDATES (preferred) or MARKET_CANDIDATES.\n\n"
+        "MANDATORY COMPLETE LOOK RULES:\n"
+        "Every single outfit recommendation MUST be a COMPLETE, wearable head-to-toe ensemble. It MUST contain:\n"
+        "1. Primary complementary garment(s): if anchor is a top, include a complementary bottom (pants, jeans, skirt, shorts); if anchor is bottom, include a top; if anchor is dress, include layering.\n"
+        "2. SHOES / FOOTWEAR (role: 'shoes'): MANDATORY. Every outfit MUST include footwear (sneakers, boots, loafers, sandals, heels, flats). Pick the most complementary shoes from CLOSET_CANDIDATES whenever available, copying their exact closet_item_id. If none match, describe the ideal shoes with closet_item_id: null.\n"
+        "3. ACCESSORY (role: 'accessory' or 'belt'): MANDATORY. Every outfit MUST include at least one accessory (bag, belt, sunglasses, hat, watch, scarf, or jewelry) to elevate the look. Pick from CLOSET_CANDIDATES with its closet_item_id, or describe the ideal piece with closet_item_id: null.\n"
+        "4. Optional OUTERWEAR / LAYER (role: 'outerwear'): If appropriate for the occasion or weather (jacket, blazer, coat, cardigan).\n\n"
+        "CRITICAL: NEVER omit shoes or accessories! Every outfit recommendation MUST include both a 'shoes' item and an 'accessory' item!\n\n"
+        "Styling Principles:\n"
+        "- Cohesion: Combine colors, textures, and silhouettes gracefully.\n"
+        f"- Target Occasion: {occasion or 'casual / everyday chic'}\n"
+        + (f"- Weather Context: {weather_summary}\n" if weather_summary else "")
+        + f"- Language: Return all descriptive text in fluent {lang_name}.\n\n"
+        "Return ONLY a valid JSON object matching this schema:\n"
+        "{\n"
+        '  "reasoning_summary": "1-2 sentences explaining why the completed outfit works.",\n'
+        '  "outfit_recommendations": [\n'
+        "    {\n"
+        '      "name": "3-5 word creative outfit title",\n'
+        '      "items": [\n'
+        '        {"role": "top"|"bottom"|"outerwear"|"shoes"|"accessory"|"dress"|"belt", "description": "piece description", "closet_item_id": "id or null"}\n'
+        "      ],\n"
+        '      "why": "2-3 sentences explaining the styling choices.",\n'
+        '      "confidence": 0.95\n'
+        "    }\n"
+        "  ],\n"
+        '  "do_dont": ["Do ...", "Don\'t ..."],\n'
+        '  "spoken_reply": "Warm 1-2 sentence spoken summary for voice narration."\n'
+        "}"
+    )
+
+    anchors_brief = [
+        {"id": a.get("id"), "name": a.get("title") or a.get("name"), "category": a.get("category"), "color": a.get("color")}
+        for a in anchors
+    ]
+    closet_brief = [
+        {"id": c.get("id") or c.get("closet_item_id"), "name": c.get("title") or c.get("name"), "category": c.get("category"), "slot": c.get("norm_cat") or c.get("category"), "color": c.get("color")}
+        for c in closet_candidates
+    ]
+    market_brief = [
+        {"id": m.get("id") or m.get("listing_id"), "name": m.get("title") or m.get("name"), "category": m.get("category")}
+        for m in market_candidates
+    ]
+
+    user_text = (
+        f"Complete this outfit starting with these ANCHOR item(s):\n"
+        f"{json.dumps(anchors_brief, ensure_ascii=False)}\n\n"
+        f"Available CLOSET CANDIDATES to choose from:\n"
+        f"{json.dumps(closet_brief, ensure_ascii=False)}\n\n"
+        f"Available MARKETPLACE CANDIDATES:\n"
+        f"{json.dumps(market_brief, ensure_ascii=False)}\n\n"
+        f"Occasion: {occasion or 'casual / everyday'}"
+    )
+
+    gemma_schema = {
+        "type": "object",
+        "properties": {
+            "reasoning_summary": {"type": "string"},
+            "outfit_recommendations": {
+                "type": "array",
+                "items": {
+                    "type": "object",
+                    "properties": {
+                        "name": {"type": "string"},
+                        "items": {
+                            "type": "array",
+                            "items": {
+                                "type": "object",
+                                "properties": {
+                                    "role": {"type": "string"},
+                                    "description": {"type": "string"},
+                                    "closet_item_id": {"type": ["string", "null"]},
+                                },
+                                "required": ["role", "description"],
+                            },
+                        },
+                        "why": {"type": "string"},
+                        "confidence": {"type": "number"},
+                    },
+                    "required": ["name", "items", "why"],
+                },
+            },
+            "do_dont": {
+                "type": "array",
+                "items": {"type": "string"},
+            },
+            "spoken_reply": {"type": "string"},
+        },
+        "required": ["reasoning_summary", "outfit_recommendations"],
+    }
+
+    raw = await _call_gemma_space(
+        system_prompt=sys_prompt,
+        user_text=user_text,
+        image_b64_jpeg=None,
+        max_tokens=450,
+        temperature=0.2,
+        timeout=45.0,
+        json_schema=gemma_schema,
+    )
+    parsed = _extract_json(raw)
+    if isinstance(parsed, dict) and parsed.get("outfit_recommendations"):
+        dd = parsed.get("do_dont")
+        if isinstance(dd, dict):
+            parsed["do_dont"] = [f"Do: {dd.get('do', '')}", f"Don't: {dd.get('dont', '')}"]
+        return parsed
+    return {}
+
+
 @router.post("/complete-outfit")
 async def complete_outfit(
     payload: CompleteOutfitIn,
@@ -187,8 +318,17 @@ async def complete_outfit(
             if norm > 0:
                 centroid = [x / norm for x in mean]
 
-    # ------- 3. Score closet candidates -------
-    closet_suggestions: list[dict[str, Any]] = []
+    # ------- 3. Score closet candidates with category stratification -------
+    anchor_norm_cats = {norm_category(a.get("category")) for a in anchors if a.get("category")}
+    buckets: dict[str, list[dict[str, Any]]] = {
+        "bottom": [],
+        "shoes": [],
+        "accessory": [],
+        "outerwear": [],
+        "dress": [],
+        "top": [],
+    }
+
     if centroid is not None:
         candidates = await repos.find_many(
             db.closet_items,
@@ -202,24 +342,84 @@ async def complete_outfit(
             sort=[("created_at", -1)],
             limit=2000,
         )
-        scored: list[dict[str, Any]] = []
         for c in candidates:
             vec = c.get("clip_embedding")
             if not isinstance(vec, list) or not vec:
                 continue
-            # Diversity: skip same-category-as-any-anchor items so we
-            # actually COMPLETE the look (don't suggest another top
-            # when the anchor is already a top).
-            if c.get("category") in anchor_categories:
+            nc = norm_category(c.get("category"))
+            # Diversity: skip same-category-as-any-anchor items unless accessory
+            if nc in anchor_norm_cats and nc not in ("accessory",):
                 continue
             score = fashion_clip_service.cosine(centroid, vec)
             if score < payload.min_score:
                 continue
             slim = _slim_item(c)
             slim["_score"] = round(score, 4)
-            scored.append(slim)
-        scored.sort(key=lambda r: r["_score"], reverse=True)
-        closet_suggestions = scored[: payload.limit]
+            slim["norm_cat"] = nc
+            buckets.setdefault(nc, []).append(slim)
+
+        for k in buckets:
+            buckets[k].sort(key=lambda r: r["_score"], reverse=True)
+
+    # Fallback: ensure shoes, accessories, and complementary garments exist even if embeddings were missing or low
+    existing_ids = set(payload.item_ids) | {
+        it["id"] for b in buckets.values() for it in b
+    }
+    needed_cats = ["shoes", "accessory"]
+    if "top" in anchor_norm_cats:
+        needed_cats.append("bottom")
+    elif "bottom" in anchor_norm_cats:
+        needed_cats.append("top")
+    else:
+        needed_cats.extend(["bottom", "top"])
+
+    for req_cat in needed_cats:
+        if len(buckets.get(req_cat, [])) < 3:
+            fb_docs = await repos.find_many(
+                db.closet_items,
+                {
+                    "user_id": user["id"],
+                    "id": {"$nin": list(existing_ids)},
+                    "group_role": {"$ne": "member"},
+                },
+                projection=_SLIM_SEARCH_PROJECTION,
+                sort=[("created_at", -1)],
+                limit=150,
+            )
+            for fb in fb_docs:
+                fnc = norm_category(fb.get("category"))
+                if fnc == req_cat and fb["id"] not in existing_ids:
+                    slim = _slim_item(fb)
+                    slim["_score"] = 0.5
+                    slim["norm_cat"] = fnc
+                    buckets.setdefault(fnc, []).append(slim)
+                    existing_ids.add(fb["id"])
+                    if len(buckets[fnc]) >= 4:
+                        break
+
+    # Assemble stratified candidates list:
+    stratified_closet: list[dict[str, Any]] = []
+    if "top" in anchor_norm_cats:
+        stratified_closet.extend(buckets.get("bottom", [])[:4])
+    elif "bottom" in anchor_norm_cats:
+        stratified_closet.extend(buckets.get("top", [])[:4])
+    elif "dress" in anchor_norm_cats:
+        pass
+    else:
+        stratified_closet.extend(buckets.get("bottom", [])[:3])
+        stratified_closet.extend(buckets.get("top", [])[:3])
+
+    if "shoes" not in anchor_norm_cats:
+        stratified_closet.extend(buckets.get("shoes", [])[:4])
+    stratified_closet.extend(buckets.get("accessory", [])[:4])
+    if "outerwear" not in anchor_norm_cats:
+        stratified_closet.extend(buckets.get("outerwear", [])[:2])
+
+    if not stratified_closet:
+        for b in buckets.values():
+            stratified_closet.extend(b[:2])
+
+    closet_suggestions = stratified_closet
 
     # ------- 4. Marketplace suggestions (opt-in) -------
     market_suggestions: list[dict[str, Any]] = []
@@ -300,84 +500,209 @@ async def complete_outfit(
         except Exception as exc:  # noqa: BLE001
             logger.warning("Complete-outfit weather fetch failed: %s", exc)
 
-    # ------- 6. Stylist rationale (Gemini) -------
+    # ------- 6. Stylist rationale (Gemma / Gemini) -------
     from app.services.gemini_stylist import get_gemini_stylist_service
 
     rationale = ""
     outfit_recommendations: list[dict[str, Any]] = []
     do_dont: list[str] = []
     spoken_reply = ""
-    stylist_service = get_gemini_stylist_service(user=user)
-    if stylist_service is not None:
-        try:
-            anchors_pretty = [_anchor_summary(a) for a in anchors]
-            closet_short = [
-                {
-                    "closet_item_id": s["id"],
-                    "title": s.get("title") or s.get("name"),
-                    "category": s.get("category"),
-                    "color": s.get("color"),
-                    "material": s.get("material"),
-                    "score": s["_score"],
-                }
-                for s in closet_suggestions
-            ]
-            market_short = [
-                {
-                    "listing_id": lg["id"],
-                    "title": lg.get("title"),
-                    "category": lg.get("category"),
-                    "price_cents": (lg.get("financial_metadata") or {}).get(
-                        "list_price_cents"
-                    ),
-                    "score": lg["_score"],
-                }
-                for lg in market_suggestions
-            ]
-            weather_line = (
-                f"\nWEATHER: {weather_summary_text}"
-                if weather_summary_text
-                else ""
-            )
-            request_text = (
-                "Complete this outfit using the user's ANCHOR pieces as the "
-                "starting point. The anchors are listed in priority order "
-                "(first = most important). Choose complementary items from "
-                "the CLOSET_CANDIDATES first (preferred); only reach into "
-                "MARKET_CANDIDATES if a key complementary category is "
-                "missing. Return ONE or TWO outfit recommendations. In "
-                "`why`, explain the reasoning in 1-2 sentences. If weather "
-                "context is provided AND the occasion sounds outdoor, "
-                "prioritise weather-appropriate layers/footwear and call "
-                "that out in the rationale.\n\n"
-                f"OCCASION: {payload.occasion or 'unspecified (casual by default)'}"
-                f"{weather_line}\n\n"
-                f"ANCHORS (priority order): "
-                f"{json.dumps(anchors_pretty, ensure_ascii=False)}\n\n"
-                f"CLOSET_CANDIDATES: {json.dumps(closet_short, ensure_ascii=False)}\n\n"
-                f"MARKET_CANDIDATES: {json.dumps(market_short, ensure_ascii=False)}"
-            )
-            user_profile = {
-                "preferred_language": user.get("preferred_language", "en"),
-                "style_profile": user.get("style_profile"),
-            }
-            advice = await stylist_service.advise(
-                session_id=f"complete-outfit:{user['id']}",
-                user_text=request_text,
-                image_base64=None,
-                weather=weather_ctx,
-                user_profile=user_profile,
-                closet_summary=closet_short + [{"is_anchor": True, **a} for a in anchors_pretty],
-            )
-            rationale = advice.get("reasoning_summary", "") or ""
-            outfit_recommendations = advice.get("outfit_recommendations", []) or []
-            do_dont = advice.get("do_dont", []) or []
-            spoken_reply = advice.get("spoken_reply", "") or ""
-        except Exception as exc:  # noqa: BLE001
-            logger.warning("Complete-outfit stylist call failed: %s", exc)
-            # Soft-fail: the ranked suggestions are still useful without rationale.
 
-    return {
+    # Determine provider preference
+    preferred_provider = (payload.provider or "").lower()
+    if not preferred_provider:
+        # Default to gemma if EYES_PROVIDER is gemma or if self-hosted EYES Space URL is configured
+        preferred_provider = "gemma" if (getattr(settings, "EYES_PROVIDER", "") or "").lower() == "gemma" or settings.EYES_GEMMA_SPACE_URL else "gemini"
+
+    user_lang = user.get("preferred_language") or "en"
+
+    # Try Gemma first if preferred and configured
+    if preferred_provider == "gemma" and settings.EYES_GEMMA_SPACE_URL:
+        try:
+            gemma_res = await _complete_outfit_with_gemma(
+                anchors=anchors,
+                closet_candidates=closet_suggestions,
+                market_candidates=market_suggestions,
+                occasion=payload.occasion,
+                weather_summary=weather_summary_text,
+                language=user_lang,
+            )
+            if gemma_res and gemma_res.get("outfit_recommendations"):
+                rationale = gemma_res.get("reasoning_summary", "") or ""
+                outfit_recommendations = gemma_res.get("outfit_recommendations", []) or []
+                do_dont = gemma_res.get("do_dont", []) or []
+                spoken_reply = gemma_res.get("spoken_reply", "") or ""
+        except Exception as exc:  # noqa: BLE001
+            logger.warning("Complete-outfit Gemma call failed: %s", exc)
+
+    # Fallback to Gemini if Gemma wasn't preferred or produced no recommendations
+    if not outfit_recommendations:
+        stylist_service = get_gemini_stylist_service(user=user)
+        if stylist_service is not None:
+            try:
+                anchors_pretty = [_anchor_summary(a) for a in anchors]
+                closet_short = [
+                    {
+                        "closet_item_id": s["id"],
+                        "title": s.get("title") or s.get("name"),
+                        "category": s.get("category"),
+                        "color": s.get("color"),
+                        "material": s.get("material"),
+                        "score": s.get("_score", 0.0),
+                    }
+                    for s in closet_suggestions
+                ]
+                market_short = [
+                    {
+                        "listing_id": lg["id"],
+                        "title": lg.get("title"),
+                        "category": lg.get("category"),
+                        "price_cents": (lg.get("financial_metadata") or {}).get(
+                            "list_price_cents"
+                        ),
+                        "score": lg.get("_score", 0.0),
+                    }
+                    for lg in market_suggestions
+                ]
+                weather_line = (
+                    f"\nWEATHER: {weather_summary_text}"
+                    if weather_summary_text
+                    else ""
+                )
+                request_text = (
+                    "Complete this outfit using the user's ANCHOR pieces as the starting point. "
+                    "The anchors are listed in priority order (first = most important).\n\n"
+                    "MANDATORY COMPLETE LOOK RULES:\n"
+                    "Every outfit recommendation MUST be a complete, wearable head-to-toe look and MUST contain:\n"
+                    "1. Primary complementary garments: if anchor is a top, include complementary bottom (pants, jeans, skirt); if anchor is bottom, include a top; if anchor is dress, include layering.\n"
+                    "2. SHOES / FOOTWEAR (role: 'shoes'): MANDATORY. Every outfit MUST include footwear (sneakers, boots, loafers, sandals, heels). Pick from CLOSET_CANDIDATES with its exact closet_item_id.\n"
+                    "3. ACCESSORY (role: 'accessory' or 'belt'): MANDATORY. Every outfit MUST include at least one accessory (bag, belt, sunglasses, hat, watch, scarf, or jewelry) to elevate the look. Pick from CLOSET_CANDIDATES with its exact closet_item_id.\n"
+                    "4. Optional layering/outerwear (role: 'outerwear') if appropriate for the occasion or weather.\n\n"
+                    "CRITICAL: Always select matching pieces from CLOSET_CANDIDATES first and copy their exact closet_item_id. "
+                    "Never omit shoes or accessories from any recommendation. Return ONE or TWO outfit recommendations. "
+                    "In `why`, explain the styling reasoning in 1-2 sentences. If weather context is provided AND the occasion sounds outdoor, "
+                    "prioritise weather-appropriate layers/footwear and call that out in the rationale.\n\n"
+                    f"OCCASION: {payload.occasion or 'unspecified (casual by default)'}"
+                    f"{weather_line}\n\n"
+                    f"ANCHORS (priority order): "
+                    f"{json.dumps(anchors_pretty, ensure_ascii=False)}\n\n"
+                    f"CLOSET_CANDIDATES: {json.dumps(closet_short, ensure_ascii=False)}\n\n"
+                    f"MARKET_CANDIDATES: {json.dumps(market_short, ensure_ascii=False)}"
+                )
+                user_profile = {
+                    "preferred_language": user_lang,
+                    "style_profile": user.get("style_profile"),
+                }
+                advice = await stylist_service.advise(
+                    session_id=f"complete-outfit:{user['id']}",
+                    user_text=request_text,
+                    image_base64=None,
+                    weather=weather_ctx,
+                    user_profile=user_profile,
+                    closet_summary=closet_short + [{"is_anchor": True, **a} for a in anchors_pretty],
+                )
+                rationale = advice.get("reasoning_summary", "") or ""
+                outfit_recommendations = advice.get("outfit_recommendations", []) or []
+                do_dont = advice.get("do_dont", []) or []
+                spoken_reply = advice.get("spoken_reply", "") or ""
+
+            except Exception as exc:  # noqa: BLE001
+                logger.warning("Complete-outfit Gemini stylist call failed: %s", exc)
+
+    if outfit_recommendations:
+        # Safety net: ensure each recommendation has footwear and accessory, and resolve IDs
+        for rec in outfit_recommendations:
+            rec_items = rec.get("items") or []
+            roles_present = {norm_category(it.get("role") or it.get("category")) for it in rec_items}
+
+            # Guarantee Shoes
+            if "shoes" not in roles_present and "shoes" not in anchor_norm_cats:
+                shoe_pool = buckets.get("shoes", [])
+                if shoe_pool:
+                    best_shoe = shoe_pool[0]
+                    rec_items.append({
+                        "role": "shoes",
+                        "description": best_shoe.get("title") or best_shoe.get("name") or "Shoes",
+                        "closet_item_id": best_shoe.get("id"),
+                    })
+                    roles_present.add("shoes")
+
+            # Guarantee Accessory
+            if "accessory" not in roles_present:
+                acc_pool = buckets.get("accessory", [])
+                if acc_pool:
+                    best_acc = acc_pool[0]
+                    rec_items.append({
+                        "role": "accessory",
+                        "description": best_acc.get("title") or best_acc.get("name") or "Accessory",
+                        "closet_item_id": best_acc.get("id"),
+                    })
+                    roles_present.add("accessory")
+
+            # Resolve missing closet_item_id where possible
+            for it in rec_items:
+                if not it.get("closet_item_id"):
+                    it_norm = norm_category(it.get("role") or it.get("category"))
+                    cand_pool = buckets.get(it_norm, [])
+                    if cand_pool:
+                        it_desc = (it.get("description") or it.get("title") or "").lower()
+                        matched = next((c for c in cand_pool if (c.get("title") or "").lower() in it_desc or it_desc in (c.get("title") or "").lower()), cand_pool[0])
+                        it["closet_item_id"] = matched.get("id")
+
+            rec["items"] = rec_items
+
+        used_closet_ids = set()
+        used_descriptions = set()
+        for rec in outfit_recommendations:
+            for it in rec.get("items", []):
+                if it.get("closet_item_id"):
+                    used_closet_ids.add(it["closet_item_id"])
+                if it.get("description"):
+                    used_descriptions.add(it["description"].strip().lower())
+                if it.get("title"):
+                    used_descriptions.add(it["title"].strip().lower())
+        filtered_suggestions = [
+            s for s in closet_suggestions
+            if s.get("id") in used_closet_ids
+            or any(d in (s.get("title") or s.get("name") or "").lower() or (s.get("title") or s.get("name") or "").lower() in d for d in used_descriptions)
+        ]
+        found_ids = {s.get("id") for s in filtered_suggestions}
+        for uid in used_closet_ids:
+            if uid not in found_ids:
+                extra = await repos.find_one(db.closet_items, {"id": uid, "user_id": user["id"]})
+                if extra:
+                    filtered_suggestions.append(_slim_item(extra))
+                    found_ids.add(uid)
+        if filtered_suggestions:
+            closet_suggestions = filtered_suggestions
+
+        if market_suggestions:
+            filtered_market = [
+                m for m in market_suggestions
+                if any(d in (m.get("title") or m.get("name") or "").lower() or (m.get("title") or m.get("name") or "").lower() in d for d in used_descriptions)
+            ]
+            if filtered_market:
+                market_suggestions = filtered_market
+
+    # Synthesized fallback rationale if neither model succeeded
+    if not rationale and (closet_suggestions or market_suggestions):
+        anchor_names = ", ".join(a.get("title") or a.get("name") or "piece" for a in anchors)
+        rationale = f"Curated outfit suggestions based on your {anchor_names} for {payload.occasion or 'everyday wear'}."
+
+    def _sanitize(obj: Any) -> Any:
+        try:
+            from bson import ObjectId
+            if isinstance(obj, ObjectId):
+                return str(obj)
+        except ImportError:
+            pass
+        if isinstance(obj, dict):
+            return {k: _sanitize(v) for k, v in obj.items() if k != "_id"}
+        if isinstance(obj, list):
+            return [_sanitize(x) for x in obj]
+        return obj
+
+    return _sanitize({
         "anchors": [_slim_item(a) for a in anchors],
         "closet_suggestions": closet_suggestions,
         "market_suggestions": market_suggestions,
@@ -387,7 +712,7 @@ async def complete_outfit(
         "spoken_reply": spoken_reply,
         "has_embeddings": centroid is not None,
         "weather_summary": weather_summary_text,
-    }
+    })
 
 
 # ------------------------- Phase Q: Wardrobe Reconstructor -------------------------

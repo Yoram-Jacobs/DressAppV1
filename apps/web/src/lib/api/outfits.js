@@ -1,8 +1,9 @@
-﻿import { client } from './client.js';
+import { client } from './client.js';
 
 export const outfits = {
   // --- AI Stylist Scheduler (Phase Scheduler) ---
   listSavedOutfits: () => client.get('/outfits').then((r) => r.data),
+  searchSavedOutfits: (q) => client.get('/outfits/search', { params: { q } }).then((r) => r.data),
   saveOutfit: (body) => client.post('/outfits', body).then((r) => r.data),
   updateSavedOutfit: (id, body) => client.patch(`/outfits/${id}`, body).then((r) => r.data),
   deleteSavedOutfit: (id) => client.delete(`/outfits/${id}`).then((r) => r.data),

@@ -232,3 +232,57 @@ def resolve_user_gemini_model(user: dict[str, Any] | None = None) -> str:
                 return "gemini-3.5-flash"
             return selected
     return default_model
+
+
+def resolve_user_custom_key(user: dict[str, Any] | None, provider: str) -> str | None:
+    """Resolve a custom decrypted API key for a given provider, or None."""
+    if not user or not isinstance(user, dict):
+        return None
+    ai_config = user.get("ai_configuration") or {}
+    custom_keys = ai_config.get("custom_keys") or {}
+    candidate = custom_keys.get(provider)
+    if candidate and isinstance(candidate, str) and candidate.strip():
+        return decrypt_api_key(candidate)
+    return None
+
+
+def resolve_user_ai_provider(user: dict[str, Any] | None) -> str:
+    """Resolve the selected provider for a user, defaulting to 'dressapp'."""
+    if user and isinstance(user, dict):
+        ai_config = user.get("ai_configuration") or {}
+        provider = ai_config.get("selected_provider")
+        if provider and isinstance(provider, str) and provider.strip():
+            return provider.strip().lower()
+    return "dressapp"
+
+
+def resolve_user_ai_model(user: dict[str, Any] | None) -> str:
+    """Resolve the active model for a user, defaulting to 'Eyes v1'."""
+    if user and isinstance(user, dict):
+        ai_config = user.get("ai_configuration") or {}
+        selected = ai_config.get("selected_model")
+        if selected and isinstance(selected, str) and selected.strip():
+            return selected.strip()
+    return "Eyes v1"
+
+
+def resolve_user_custom_gemini_api_key(user: dict[str, Any] | None = None) -> str | None:
+    """Resolve ONLY user-provided Google Gemini custom key (without server fallback)."""
+    if user and isinstance(user, dict):
+        ai_config = user.get("ai_configuration") or {}
+        custom_keys = ai_config.get("custom_keys") or {}
+        api_keys = ai_config.get("api_keys") or {}
+        candidate = (
+            custom_keys.get("google_ai")
+            or custom_keys.get("gemini")
+            or api_keys.get("google_ai")
+            or api_keys.get("gemini")
+            or ai_config.get("google_ai_key")
+            or ai_config.get("api_key")
+        )
+        if candidate and isinstance(candidate, str) and candidate.strip():
+            decrypted = decrypt_api_key(candidate)
+            if decrypted:
+                return decrypted
+    return None
+

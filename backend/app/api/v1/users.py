@@ -131,8 +131,10 @@ async def get_me(user: dict = Depends(get_current_user)) -> dict[str, Any]:
         safe["subscription_tier"] = "free"
 
     # Mask API keys to keep them secured
-    if "ai_configuration" in safe:
+    if "ai_configuration" in safe and isinstance(safe["ai_configuration"], dict):
         ai_config = dict(safe["ai_configuration"])
+        ai_config.setdefault("selected_provider", "dressapp")
+        ai_config.setdefault("selected_model", "Eyes v1")
         if "custom_keys" in ai_config:
             custom_keys = dict(ai_config["custom_keys"])
             for key_name in list(custom_keys.keys()):
@@ -142,6 +144,15 @@ async def get_me(user: dict = Depends(get_current_user)) -> dict[str, Any]:
                     custom_keys[key_name] = False
             ai_config["custom_keys"] = custom_keys
         safe["ai_configuration"] = ai_config
+    elif "ai_configuration" not in safe or not safe["ai_configuration"]:
+        safe["ai_configuration"] = {
+            "provider_mode": "dressapp",
+            "selected_provider": "dressapp",
+            "selected_model": "Eyes v1",
+            "custom_keys": {},
+            "current_credits": 1000,
+            "credits_used_this_month": 0,
+        }
         
     return safe
 
@@ -316,8 +327,8 @@ async def update_me(
         set_ops["ai_configuration"] = {
             "provider_mode": provider_mode,
             "custom_keys": merged_keys,
-            "selected_provider": ai_config.get("selected_provider") or existing_config.get("selected_provider") or "google_ai",
-            "selected_model": ai_config.get("selected_model") or existing_config.get("selected_model") or "gemini-3.5-flash",
+            "selected_provider": ai_config.get("selected_provider") or existing_config.get("selected_provider") or "dressapp",
+            "selected_model": ai_config.get("selected_model") or existing_config.get("selected_model") or "Eyes v1",
             "current_credits": ai_config.get("current_credits", existing_config.get("current_credits", 1000)),
             "credits_used_this_month": ai_config.get("credits_used_this_month", existing_config.get("credits_used_this_month", 0))
         }

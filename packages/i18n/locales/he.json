@@ -1383,7 +1383,25 @@
     "tomorrowSuggestionSubtitle": "נאצר במיוחד למחר על סמך פרופיל הסטייל שלך, תחזית מזג האוויר ולוח הזמנים.",
     "tomorrowSuggestionRefreshed": "הצעת המחר רועננה בהצלחה!",
     "wearTomorrow": "ללבוש מחר",
-    "upgradeForDailySuggestionsDesc": "שדרגו לחבילת מנהל (Manager) או מקצועי (Professional) כדי לפתוח הצעות לבוש יומיות."
+    "upgradeForDailySuggestionsDesc": "שדרגו לחבילת מנהל (Manager) או מקצועי (Professional) כדי לפתוח הצעות לבוש יומיות.",
+    "calendar": {
+      "searchPlaceholder": "חיפוש וייב: \"ברביקיו בקיץ\", \"קניות בקניון\", \"פגישת עסקים\", \"חולצת טי שחורה\", \"ג'ינס משופשף\"...",
+      "quickVibes": "וייבים:",
+      "resultsCount": "נמצאו {{count}} מתוך {{total}} אאוטפיטים",
+      "noSearchMatches": "אין אאוטפיטים התואמים לווייב זה",
+      "noSearchMatchesDesc": "לא מצאנו אאוטפיטים שמורים התואמים ל-\"{{query}}\". נסה וייב אחר, פריט אחר, או נקה את החיפוש.",
+      "clearSearch": "נקה חיפוש",
+      "vibes": {
+        "black_t_shirt": "חולצת טי שחורה",
+        "business_meeting": "פגישת עסקים",
+        "summer_barbecue": "ברביקיו בקיץ",
+        "mall_shopping": "קניות בקניון",
+        "rainy_day": "יום גשום",
+        "stone_washed_jeans": "ג'ינס משופשף",
+        "colorful_summer": "קיץ צבעוני",
+        "casual_chic": "קז'ואל שיק"
+      }
+    }
   },
   "outfitCompletion": {
     "cta": "השלם את הלוק",
@@ -1403,7 +1421,16 @@
     "noClosetSuggestions": "לא נמצאו פריטים משלימים בארון. נסה להפעיל חיפוש בשוק או להוסיף עוד פריטים לארון.",
     "embeddingsMissingHint": "לחלק מהפריטים שנבחרו חסר וקטור דמיון. העלאה מחדש תשפר את איכות ההמלצות.",
     "empty": "לא התקבלו המלצות. נסה לבחור פריטים אחרים או להפעיל את השוק.",
-    "error": "השלמת הלוק נכשלה. נסה שוב."
+    "error": "השלמת הלוק נכשלה. נסה שוב.",
+    "tryOnAvatar": "מדידה על דמות",
+    "saveOutfit": "שמור את האאוטפיט",
+    "saveOutfitTitle": "שמירת אאוטפיט",
+    "saveOutfitDesc": "שמור מראה מומלץ זה עם שם תיאורי כדי לגשת אליו בכל עת בקנבס האאוטפיט שלך.",
+    "includedPieces": "פריטים כלולים",
+    "savedSuccess": "האאוטפיט \"{{name}}\" נשמר בקנבס האאוטפיט שלך!",
+    "alreadySaved": "האאוטפיט כבר נשמר",
+    "outfitName": "שם האאוטפיט",
+    "notes": "הערות סטייליסט / אירוע"
   },
   "market": {
     "atzmaiGateway": "סליקת עצמאי שכיר ו-Bit",

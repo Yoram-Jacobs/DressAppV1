@@ -1367,7 +1367,25 @@
     "tomorrowSuggestionSubtitle": "あなたのスタイル、明日の天気予報、予定に合わせてコーディネートしました。",
     "tomorrowSuggestionRefreshed": "明日の提案を更新しました！",
     "wearTomorrow": "明日着る",
-    "upgradeForDailySuggestionsDesc": "毎日の提案を利用するには、マネージャーまたはプロフェッショナルプランにアップグレードしてください。"
+    "upgradeForDailySuggestionsDesc": "毎日の提案を利用するには、マネージャーまたはプロフェッショナルプランにアップグレードしてください。",
+    "calendar": {
+      "searchPlaceholder": "スタイル検索：「夏のバーベキュー」、「モールでお買い物」、「ビジネスミーティング」、「黒のTシャツ」、「ケミカルウォッシュジーンズ」など...",
+      "quickVibes": "スタイル：",
+      "resultsCount": "全{{total}}件中 {{count}}件のコーデが見つかりました",
+      "noSearchMatches": "このスタイルに一致するコーデはありません",
+      "noSearchMatchesDesc": "「{{query}}」に一致する保存済みコーデが見つかりませんでした。別のスタイルやアイテムを試すか、検索をクリアしてください。",
+      "clearSearch": "検索をクリア",
+      "vibes": {
+        "black_t_shirt": "黒Tシャツ",
+        "business_meeting": "ビジネスミーティング",
+        "summer_barbecue": "夏のバーベキュー",
+        "mall_shopping": "モールでお買い物",
+        "rainy_day": "雨の日",
+        "stone_washed_jeans": "ウォッシュドジーンズ",
+        "colorful_summer": "カラフルな夏",
+        "casual_chic": "カジュアルシック"
+      }
+    }
   },
   "outfitCompletion": {
     "cta": "コーデを完成",
@@ -1387,7 +1405,16 @@
     "noClosetSuggestions": "クローゼットに補完アイテムが見つかりませんでした。マーケットプレイスを有効にするか、アイテムを追加してください。",
     "embeddingsMissingHint": "一部の選択アイテムには類似度ベクトルがまだありません。再アップロードで提案精度が向上します。",
     "empty": "提案が得られませんでした。別のアンカーを選ぶか、マーケットプレイスを切り替えてください。",
-    "error": "コーデ完成に失敗しました。もう一度お試しください。"
+    "error": "コーデ完成に失敗しました。もう一度お試しください。",
+    "tryOnAvatar": "アバターで試着",
+    "saveOutfit": "コーデを保存",
+    "saveOutfitTitle": "コーデの保存",
+    "saveOutfitDesc": "このおすすめのコーディネートに分かりやすい名前を付けて保存し、いつでもコーデキャンバスで確認できます。",
+    "includedPieces": "含まれるアイテム",
+    "savedSuccess": "コーデ「{{name}}」がコーデキャンバスに保存されました！",
+    "alreadySaved": "このコーデは既に保存されています",
+    "outfitName": "コーデ名",
+    "notes": "スタイリストのメモ / 場面"
   },
   "market": {
     "atzmaiGateway": "Atzmai Sachir 決済ゲートウェイ",

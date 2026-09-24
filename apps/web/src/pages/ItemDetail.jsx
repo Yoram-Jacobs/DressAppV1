@@ -1222,6 +1222,7 @@ export default function ItemDetail() {
         action_taken: res.action_taken,
         image_url: res.image_url,
         updated_fields: res.updated_fields,
+        model_used: res.model_used,
       };
 
       setReanalyzeChatHistory((prev) => [...prev, assistantTurn]);
@@ -2133,7 +2134,7 @@ export default function ItemDetail() {
                               </Badge>
                               {msg.action_taken === 'image_edit' && (
                                 <Badge variant="secondary" className="text-[10px] px-1.5 bg-amber-100 text-amber-800 dark:bg-amber-950/50 dark:text-amber-300">
-                                  {t('itemDetail.reanalyze.nanoBananaBadge', { defaultValue: 'Nano Banana Generated' })}
+                                  {msg.model_used || t('itemDetail.reanalyze.nanoBananaBadge', { defaultValue: 'Nano Banana Generated' })}
                                 </Badge>
                               )}
                               {msg.action_taken === 'metadata_update' && (

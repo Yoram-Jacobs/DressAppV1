@@ -17,7 +17,6 @@ import { CalendarConnect } from '@/components/CalendarConnect';
 import { LocationCard } from '@/components/LocationCard';
 import { InviteFriendsButton } from '@/components/InviteFriendsButton';
 import { ProfileDetailsCard } from '@/components/ProfileDetailsCard';
-import { DeveloperPanel } from '@/components/DeveloperPanel';
 import { SUPPORTED_LANGUAGES } from '@/lib/i18n';
 import { labelForDressCode } from '@/lib/taxonomy';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from '@/components/ui/dialog';
@@ -332,9 +331,6 @@ export default function Profile() {
                   >
                     {t('profile.deleteAccountLink', { defaultValue: 'Delete my Account' })}
                   </Link>
-                </div>
-                <div className="mt-6">
-                  <DeveloperPanel user={user} />
                 </div>
               </CardContent>
             </Card>

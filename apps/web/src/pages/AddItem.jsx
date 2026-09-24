@@ -85,6 +85,9 @@ import {
   labelForQuality,
   labelForIntent,
   labelForItemType,
+  labelForColor,
+  labelForSubCategory,
+  canonicalSubCategoryKey,
 } from "@/lib/taxonomy";
 import { toast } from "sonner";
 import { useRememberedDirectory } from "@/hooks/useRememberedDirectory";
@@ -329,7 +332,7 @@ const blankFields = () => ({
  * Footwear→shoe_size, etc. The user can still type any size they
  * want; this only fills the field instead of leaving it empty.
  */
-const hydrate = (a, user) => {
+const hydrate = (a, user, t, i18n) => {
   const out = {
     ...blankFields(),
     ...Object.fromEntries(
@@ -339,6 +342,39 @@ const hydrate = (a, user) => {
   if (user && (!out.size || String(out.size).trim() === "")) {
     const pref = deriveSizeFromPreferences(user, out);
     if (pref) out.size = pref;
+  }
+  if (t && i18n) {
+    const lang = (i18n.language || 'en').split('-')[0].toLowerCase();
+    const isEn = lang === 'en';
+    if (!isEn) {
+      if (Array.isArray(out.colors) && out.colors.length > 0) {
+        out.colors = out.colors.map((c) => {
+          const rawName = typeof c === 'string' ? c : c?.name || '';
+          const localized = labelForColor(rawName, t);
+          return typeof c === 'string' ? localized : { ...c, name: localized || rawName };
+        });
+      }
+      const rawTitle = (out.title || out.name || '').trim();
+      const hasTargetScript = (lang === 'he' || lang === 'iw')
+        ? /[\u0590-\u05FF]/.test(rawTitle)
+        : (lang === 'ar')
+        ? /[\u0600-\u06FF]/.test(rawTitle)
+        : false;
+
+      if (!hasTargetScript) {
+        const subCatRaw = out.sub_category || out.item_type || out.label || '';
+        const subCatKey = canonicalSubCategoryKey(subCatRaw) || String(subCatRaw).toLowerCase().replace(/\s+/g, '_');
+        const localizedSub = labelForSubCategory(subCatKey, t);
+        const primaryColor = (typeof out.colors?.[0] === 'string' ? out.colors[0] : out.colors?.[0]?.name) || '';
+        const parts = [];
+        if (localizedSub) parts.push(localizedSub);
+        if (primaryColor && !localizedSub.includes(primaryColor)) parts.push(primaryColor);
+        if (parts.length > 0) {
+          out.title = parts.join(' ');
+          out.name = parts.join(' ');
+        }
+      }
+    }
   }
   return out;
 };
@@ -703,7 +739,7 @@ export default function AddItem() {
       base64: hasImage ? first.crop_base64 : null,
       status: "ready",
       progress: 100,
-      fields: hydrate(analysis, user),
+      fields: hydrate(analysis, user, t, i18n),
       error: null,
       label: first.label || analysis.item_type || null,
       dppData,
@@ -1956,7 +1992,7 @@ export default function AddItem() {
             cropBase64: meta.crop_base64 || undefined,
             mime,
             file: null,
-            fields: hydrate(analysis, user),
+            fields: hydrate(analysis, user, t, i18n),
             useReconstructed: false,
             deferMatte: !!meta.defer_matte,
             ...sourceMeta,
@@ -2257,7 +2293,7 @@ export default function AddItem() {
                 ...c,
                 status: "ready",
                 progress: 100,
-                fields: hydrate(frame.analysis || {}, user),
+                fields: hydrate(frame.analysis || {}, user, t, i18n),
                 label: frame.label || frame.analysis?.item_type || c.label,
                 potentialDuplicate: frame.potential_duplicate || null,
                 fromOnePass: !!frame.one_pass,
@@ -2537,7 +2573,7 @@ export default function AddItem() {
                 ...c,
                 status: "ready",
                 progress: 100,
-                fields: hydrate(frame.analysis || {}, user),
+                fields: hydrate(frame.analysis || {}, user, t, i18n),
                 label: frame.label || c.label,
                 potentialDuplicate: frame.potential_duplicate || null,
                 fromOnePass: !!frame.one_pass,

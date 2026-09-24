@@ -29,7 +29,8 @@ import {
   ArrowLeft,
   Share2,
   ShirtIcon, 
-  Key, Shirt, CalendarCheck2, CalendarPlus, Crown
+  Key, Shirt, CalendarCheck2, CalendarPlus, Crown,
+  Search
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
@@ -257,6 +258,17 @@ const getWeekdayShortName = (dayIndex, locale) => {
   return new Intl.DateTimeFormat(locale || 'en', { weekday: 'short' }).format(date);
 };
 
+const QUICK_VIBE_ITEMS = [
+  { id: 'black_t_shirt', query: 'Black T-shirt' },
+  { id: 'business_meeting', query: 'Business meeting' },
+  { id: 'summer_barbecue', query: 'Summer barbecue' },
+  { id: 'mall_shopping', query: 'Mall shopping' },
+  { id: 'rainy_day', query: 'Rainy day' },
+  { id: 'stone_washed_jeans', query: 'Stone-washed jeans' },
+  { id: 'colorful_summer', query: 'Colorful summer' },
+  { id: 'casual_chic', query: 'Casual chic' },
+];
+
 const getDaysInMonth = (date) => {
   const year = date.getFullYear();
   const month = date.getMonth();
@@ -373,6 +385,242 @@ export default function Stylist() {
   const [isEditingOutfit, setIsEditingOutfit] = useStoreState(stylistUIStore, 'isEditingOutfit');
   const [editOutfitName, setEditOutfitName] = useStoreState(stylistUIStore, 'editOutfitName');
   const [editOutfitDescription, setEditOutfitDescription] = useStoreState(stylistUIStore, 'editOutfitDescription');
+  const [canvasSearchQuery, setCanvasSearchQuery] = useState('');
+
+  // Vibe & keyword search filter for Outfit Canvas
+  const filteredCanvasOutfits = useMemo(() => {
+    if (!canvasSearchQuery || !canvasSearchQuery.trim()) return outfits || [];
+
+    const rawQ = canvasSearchQuery.trim().toLowerCase();
+    const q = rawQ.replace(/[-_]/g, ' ');
+    const searchTokens = q.split(/[\s,]+/).filter((t) => t.length > 0);
+
+    const COLOR_MAP = {
+      black: ['black', 'nero', 'onyx', 'charcoal', 'שחור', 'שחורה', 'שחורים', 'שחורות'],
+      white: ['white', 'ivory', 'cream', 'לבן', 'לבנה', 'לבנים', 'לבנות'],
+      blue: ['blue', 'navy', 'indigo', 'כחול', 'כחולה', 'כחולים', 'כחולות', 'תכלת'],
+      red: ['red', 'crimson', 'burgundy', 'maroon', 'אדום', 'אדומה', 'בורדו'],
+      green: ['green', 'olive', 'emerald', 'sage', 'ירוק', 'ירוקה', 'זית'],
+      brown: ['brown', 'camel', 'tan', 'khaki', 'חום', 'חומה', 'בז\'', 'בז'],
+      grey: ['grey', 'gray', 'slate', 'ash', 'אפור', 'אפורה', 'אפורים'],
+      yellow: ['yellow', 'mustard', 'צהוב', 'צהובה'],
+      pink: ['pink', 'rose', 'ורוד', 'ורודה'],
+    };
+
+    const GARMENT_TYPES = {
+      tshirt: ['t shirt', 'tshirt', 'tee', 'טי שירט', 'טי-שירט', 'חולצת טי', 'טישירט', 'חולצה קצרה'],
+      shirt: ['shirt', 'button down', 'buttondown', 'collared', 'blouse', 'חולצה מכופתרת', 'מכופתרת', 'חולצה'],
+      jeans: ['jeans', 'denim', "ג'ינס", "ג'ינסים", 'ג’ינס', 'גנס'],
+      pants: ['pants', 'trousers', 'slacks', 'chinos', 'מכנסיים', 'מכנס'],
+      shorts: ['shorts', 'ברמודה', 'מכנסיים קצרים', 'מכנס קצר'],
+      sneakers: ['sneakers', 'sneaker', 'סניקרס', 'נעלי ספורט'],
+      boots: ['boots', 'boot', 'מגפיים', 'מגפונים', 'מגף'],
+      shoes: ['shoes', 'shoe', 'loafers', 'oxfords', 'נעליים', 'נעלי', 'מוקסינים'],
+      jacket: ['jacket', 'coat', 'blazer', 'trench', 'מעיל', "ג'קט", 'ז\'קט', 'בלייזר'],
+      dress: ['dress', 'שמלה', 'שמלת'],
+      skirt: ['skirt', 'חצאית'],
+    };
+
+    let targetColor = null;
+    for (const [colName, colWords] of Object.entries(COLOR_MAP)) {
+      if (colWords.some((w) => q.includes(w))) {
+        targetColor = colName;
+        break;
+      }
+    }
+
+    let targetGarmentType = null;
+    for (const [garmentKey, garmentWords] of Object.entries(GARMENT_TYPES)) {
+      if (garmentWords.some((w) => q.includes(w))) {
+        targetGarmentType = garmentKey;
+        break;
+      }
+    }
+
+    const isStonewashed = ['stone wash', 'stonewash', 'washed', 'משופשף', 'שטיפת אבן'].some((w) => q.includes(w));
+    const isBusinessMeetingQuery = [
+      'business', 'meeting', 'office', 'corporate', 'formal meeting',
+      'עסקים', 'פגישת עסקים', 'פגישה עסקית', 'משרד', 'פורמלי'
+    ].some((w) => q.includes(w));
+
+    const isSummerBbqQuery = [
+      'barbecue', 'bbq', 'grill', 'picnic', 'ברביקיו', 'על האש', 'פיקניק'
+    ].some((w) => q.includes(w));
+
+    const isMallShoppingQuery = [
+      'mall', 'shopping', 'קניון', 'קניות'
+    ].some((w) => q.includes(w));
+
+    const isRainyDayQuery = [
+      'rain', 'rainy', 'wet', 'גשם', 'גשום', 'יום גשום'
+    ].some((w) => q.includes(w));
+
+    const isColorfulSummerQuery = [
+      'colorful summer', 'colorful', 'bright summer', 'קיץ צבעוני', 'צבעוני'
+    ].some((w) => q.includes(w));
+
+    return (outfits || []).filter((o) => {
+      const name = (o.name || '').toLowerCase();
+      const desc = (o.description || o.prompt || '').toLowerCase();
+      const event = (o.usage?.event_name || '').toLowerCase();
+      const location = (o.usage?.location || '').toLowerCase();
+      const combinedMeta = `${name} ${desc} ${event} ${location}`;
+
+      const garments = Array.isArray(o.garments) && o.garments.length > 0
+        ? o.garments
+        : (Array.isArray(o.items) ? o.items : []);
+
+      const richGarments = garments.map((g) => {
+        const cid = g.closet_item_id || g.id;
+        const ci = (closetItems || []).find((c) => c && (c.id === cid || c._id === cid)) || {};
+        const title = (g.title || g.name || ci.title || ci.name || '').toLowerCase();
+        const role = (g.role || ci.category || '').toLowerCase();
+        const category = (ci.category || '').toLowerCase();
+        const subCategory = (ci.sub_category || '').toLowerCase();
+        const color = (ci.color || '').toLowerCase();
+        const colors = Array.isArray(ci.colors) ? ci.colors.map((c) => String(c?.name || c).toLowerCase()) : [];
+        const material = (ci.material || '').toLowerCase();
+        const fabrics = Array.isArray(ci.fabric_materials) ? ci.fabric_materials.map((m) => String(m?.name || m).toLowerCase()) : [];
+        const tags = Array.isArray(ci.tags) ? ci.tags.map((t) => String(t).toLowerCase()) : [];
+
+        const allItemText = [title, role, category, subCategory, color, ...colors, material, ...fabrics, ...tags].join(' ');
+
+        return {
+          title,
+          role,
+          category,
+          subCategory,
+          color,
+          colors,
+          material,
+          fabrics,
+          tags,
+          allItemText,
+        };
+      });
+
+      // 1. Specific Color + Garment check (e.g. "Black T-shirt")
+      if (targetColor && targetGarmentType) {
+        const colorWords = COLOR_MAP[targetColor] || [targetColor];
+        const garmentWords = GARMENT_TYPES[targetGarmentType] || [targetGarmentType];
+
+        const hasMatchingPiece = richGarments.some((rg) => {
+          const matchesColor = colorWords.some((cw) => rg.allItemText.includes(cw));
+          const matchesGarment = garmentWords.some((gw) => rg.allItemText.includes(gw));
+          return matchesColor && matchesGarment;
+        });
+
+        if (!hasMatchingPiece) return false;
+
+        if (isStonewashed) {
+          const hasStonewashed = richGarments.some((rg) =>
+            ['stone', 'wash', 'washed', 'משופשף'].some((w) => rg.allItemText.includes(w))
+          );
+          if (!hasStonewashed) return false;
+        }
+
+        return true;
+      }
+
+      // 2. Stone-washed jeans query
+      if (isStonewashed && (q.includes('jean') || q.includes('ג\'ינס') || q.includes('denim'))) {
+        return richGarments.some((rg) => {
+          const isJeans = ['jeans', 'denim', "ג'ינס"].some((w) => rg.allItemText.includes(w));
+          const isWashed = ['stone', 'wash', 'washed', 'משופשף'].some((w) => rg.allItemText.includes(w));
+          return isJeans && isWashed;
+        });
+      }
+
+      // 3. Business Meeting: dress code and restrictions
+      if (isBusinessMeetingQuery) {
+        // Disqualifiers (Casual items forbidden in business meetings)
+        const hasDisqualifier = richGarments.some((rg) => {
+          const t = rg.allItemText;
+          return (
+            t.includes('shorts') || t.includes('מכנסיים קצרים') || t.includes('ברמודה') ||
+            t.includes('sweatpants') || t.includes('joggers') || t.includes('טרנינג') ||
+            t.includes('hoodie') || t.includes('קפוצ\'ון') ||
+            t.includes('flip flop') || t.includes('flip-flop') || t.includes('slides') || t.includes('כפכפים') ||
+            t.includes('ripped') || t.includes('distressed') || t.includes('קרוע') ||
+            t.includes('tank top') || t.includes('גופייה')
+          );
+        });
+        if (hasDisqualifier) return false;
+
+        const isExplicitBusiness = ['business', 'meeting', 'office', 'corporate', 'formal', 'עסקים', 'פגישה', 'משרד'].some((w) => combinedMeta.includes(w));
+        const hasBusinessPieces = richGarments.some((rg) => {
+          const t = rg.allItemText;
+          return (
+            t.includes('blazer') || t.includes('suit') || t.includes('בלייזר') || t.includes('מקטורן') || t.includes('חליפה') ||
+            t.includes('button down') || t.includes('button-down') || t.includes('collared') || t.includes('dress shirt') || t.includes('מכופתרת') ||
+            t.includes('trousers') || t.includes('slacks') || t.includes('tailored') || t.includes('מחויט') || t.includes('pencil skirt') ||
+            t.includes('loafers') || t.includes('oxford') || t.includes('heels') || t.includes('מוקסינים') || t.includes('עקבים')
+          );
+        });
+
+        const isOnlyCasualTeeAndJeans = richGarments.every((rg) => {
+          const t = rg.allItemText;
+          return t.includes('t-shirt') || t.includes('tee') || t.includes('jeans') || t.includes('sneakers');
+        });
+        if (isOnlyCasualTeeAndJeans && !isExplicitBusiness) return false;
+
+        return isExplicitBusiness || hasBusinessPieces;
+      }
+
+      // 4. Summer Barbecue query
+      if (isSummerBbqQuery) {
+        const hasWinterOrSuit = richGarments.some((rg) => {
+          const t = rg.allItemText;
+          return t.includes('puffer') || t.includes('heavy coat') || t.includes('wool') || t.includes('suit') || t.includes('tuxedo');
+        });
+        if (hasWinterOrSuit) return false;
+
+        const isExplicitBbq = ['barbecue', 'bbq', 'grill', 'picnic', 'ברביקיו', 'על האש'].some((w) => combinedMeta.includes(w));
+        const isCasualSummer = combinedMeta.includes('summer') || richGarments.some((rg) => {
+          const t = rg.allItemText;
+          return t.includes('shorts') || t.includes('tee') || t.includes('t-shirt') || t.includes('linen') || t.includes('sandals');
+        });
+        return isExplicitBbq || isCasualSummer;
+      }
+
+      // 5. Mall Shopping query
+      if (isMallShoppingQuery) {
+        const isExplicitMall = ['mall', 'shopping', 'קניון', 'קניות'].some((w) => combinedMeta.includes(w));
+        const hasCasualComfort = richGarments.some((rg) => {
+          const t = rg.allItemText;
+          return t.includes('sneakers') || t.includes('casual') || t.includes('jeans') || t.includes('tote') || t.includes('walk');
+        });
+        return isExplicitMall || hasCasualComfort;
+      }
+
+      // 6. Rainy Day query
+      if (isRainyDayQuery) {
+        const isExplicitRain = ['rain', 'rainy', 'wet', 'גשם', 'גשום'].some((w) => combinedMeta.includes(w));
+        const hasRainLayers = richGarments.some((rg) => {
+          const t = rg.allItemText;
+          return t.includes('coat') || t.includes('trench') || t.includes('jacket') || t.includes('boots') || t.includes('waterproof') || t.includes('מעיל');
+        });
+        return isExplicitRain || hasRainLayers;
+      }
+
+      // 7. Colorful Summer query
+      if (isColorfulSummerQuery) {
+        const hasVibrantColor = richGarments.some((rg) => {
+          const t = rg.allItemText;
+          return ['red', 'blue', 'green', 'yellow', 'pink', 'orange', 'purple', 'colorful', 'floral', 'print', 'צבעוני', 'אדום', 'ירוק', 'צהוב', 'ורוד'].some((c) => t.includes(c));
+        });
+        const hasSummerPiece = combinedMeta.includes('summer') || richGarments.some((rg) => {
+          const t = rg.allItemText;
+          return t.includes('short') || t.includes('tee') || t.includes('t-shirt') || t.includes('linen') || t.includes('dress') || t.includes('sandals');
+        });
+        return hasVibrantColor && hasSummerPiece;
+      }
+
+      // 8. General search: ALL search terms must match across the outfit (strict AND logic)
+      const allText = `${combinedMeta} ${richGarments.map((rg) => rg.allItemText).join(' ')}`;
+      return searchTokens.every((token) => allText.includes(token));
+    });
+  }, [outfits, canvasSearchQuery, closetItems]);
   const { canAccessScheduler } = useTierLimits();
   const { notifications: cachedNotifications, dailyProposal, proposals, generate: generateDailyProposalAction, prewarm: prewarmDaily, act: actDailyProposal } = useDailySuggestionsStore();
   const [generatingDaily, setGeneratingDaily] = useState(false);
@@ -2502,9 +2750,81 @@ export default function Stylist() {
                         ) : (
                           /* Outfit Thumbnail Grid View */
                           <>
-                            <h3 className="text-[20px] mb-5 font-bold text-[var(--dark-color)]">
-                              {t('components.outfitCanvas.outfit_canvas', { defaultValue: 'Saved Outfits' })}
-                            </h3>
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
+                              <h3 className="text-[20px] font-bold text-[var(--dark-color)]">
+                                {t('stylist.calendar.outfit_canvas', { defaultValue: 'Saved Outfits' })}
+                              </h3>
+                              {outfits.length > 0 && (
+                                <Badge variant="secondary" className="w-fit text-xs font-semibold px-2.5 py-0.5 rounded-full">
+                                  {canvasSearchQuery
+                                    ? t('stylist.calendar.resultsCount', {
+                                        count: filteredCanvasOutfits.length,
+                                        total: outfits.length,
+                                        defaultValue: `Found ${filteredCanvasOutfits.length} of ${outfits.length} outfits`
+                                      })
+                                    : `${outfits.length} outfits`}
+                                </Badge>
+                              )}
+                            </div>
+
+                            {/* Vibe Search Bar (if outfits exist) */}
+                            {outfits.length > 0 && (
+                              <div className="mb-5 space-y-2.5">
+                                <div className="relative flex items-center">
+                                  <Search className="absolute start-3.5 h-4 w-4 text-muted-foreground pointer-events-none" />
+                                  <Input
+                                    type="text"
+                                    value={canvasSearchQuery}
+                                    onChange={(e) => setCanvasSearchQuery(e.target.value)}
+                                    placeholder={t('stylist.calendar.searchPlaceholder', {
+                                      defaultValue: 'Vibe search: "Summer barbecue", "Mall shopping", "Business meeting", "Black T-shirt", "Stone-washed jeans"...'
+                                    })}
+                                    className="ps-10 pe-10 h-10 rounded-xl bg-secondary/30 border-border text-xs sm:text-sm placeholder:text-muted-foreground/70 focus-visible:ring-1 focus-visible:ring-primary-brand"
+                                    data-testid="outfit-canvas-search-input"
+                                  />
+                                  {canvasSearchQuery && (
+                                    <button
+                                      type="button"
+                                      onClick={() => setCanvasSearchQuery('')}
+                                      className="absolute end-3 p-1 rounded-full text-muted-foreground hover:text-foreground hover:bg-muted transition-colors cursor-pointer"
+                                      aria-label={t('stylist.calendar.clearSearch', { defaultValue: 'Clear search' })}
+                                    >
+                                      <X className="h-4 w-4" />
+                                    </button>
+                                  )}
+                                </div>
+
+                                {/* Quick Vibe Chips */}
+                                <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none text-xs">
+                                  <span className="text-muted-foreground font-semibold shrink-0 flex items-center gap-1 me-1">
+                                    <Sparkles className="h-3 w-3 text-primary-brand" />
+                                    {t('stylist.calendar.quickVibes', { defaultValue: 'Vibes:' })}
+                                  </span>
+                                  {QUICK_VIBE_ITEMS.map((vibe) => {
+                                    const localizedLabel = t(`stylist.calendar.vibes.${vibe.id}`, { defaultValue: vibe.query });
+                                    const isSelected =
+                                      canvasSearchQuery.toLowerCase() === vibe.query.toLowerCase() ||
+                                      canvasSearchQuery.toLowerCase() === localizedLabel.toLowerCase();
+                                    return (
+                                      <button
+                                        key={vibe.id}
+                                        type="button"
+                                        onClick={() => setCanvasSearchQuery((prev) => isSelected ? '' : localizedLabel)}
+                                        className={cn(
+                                          "shrink-0 px-2.5 py-1 rounded-full border text-xs font-medium transition-colors cursor-pointer",
+                                          isSelected
+                                            ? "bg-primary-brand text-white border-primary-brand shadow-xs"
+                                            : "bg-background border-border text-text-brand hover:border-primary-brand/50 hover:bg-secondary/50"
+                                        )}
+                                      >
+                                        {localizedLabel}
+                                      </button>
+                                    );
+                                  })}
+                                </div>
+                              </div>
+                            )}
+
                             {outfitsLoading ? (
                               <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-4 w-full">
                                 {[1, 2, 3, 4, 5].map((i) => (
@@ -2525,9 +2845,27 @@ export default function Stylist() {
                                   </p>
                                 </CardContent>
                               </Card>
+                            ) : filteredCanvasOutfits.length === 0 ? (
+                              <Card className="w-full rounded-[12px] border border-dashed border-border py-12 text-center">
+                                <CardContent className="flex flex-col items-center gap-3">
+                                  <Search className="h-10 w-10 text-muted-foreground/60" />
+                                  <h3 className="text-base font-bold text-dark-brand">
+                                    {t('stylist.calendar.noSearchMatches', { defaultValue: 'No outfits match this vibe' })}
+                                  </h3>
+                                  <p className="text-xs text-muted-foreground max-w-sm">
+                                    {t('stylist.calendar.noSearchMatchesDesc', {
+                                      query: canvasSearchQuery,
+                                      defaultValue: `We couldn't find any saved outfits matching "${canvasSearchQuery}". Try another vibe, garment, or clear the search.`
+                                    })}
+                                  </p>
+                                  <Button variant="outline" size="sm" onClick={() => setCanvasSearchQuery('')} className="rounded-xl mt-1">
+                                    {t('stylist.calendar.clearSearch', { defaultValue: 'Clear search' })}
+                                  </Button>
+                                </CardContent>
+                              </Card>
                             ) : (
                               <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-4 w-full">
-                                {outfits.map((o) => (
+                                {filteredCanvasOutfits.map((o) => (
                                   <Card
                                     key={o.id}
                                     draggable="true"

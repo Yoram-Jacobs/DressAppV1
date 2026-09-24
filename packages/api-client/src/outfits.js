@@ -3,6 +3,7 @@ import { client } from './_singleton.js';
 export const outfits = {
   // --- AI Stylist Scheduler (Phase Scheduler) ---
   listSavedOutfits: () => client.get('/outfits').then((r) => r.data),
+  searchSavedOutfits: (q) => client.get('/outfits/search', { params: { q } }).then((r) => r.data),
   saveOutfit: (body) => {
     const rawGarments = body.garments || (body.item_ids || []).map((id) => ({
       closet_item_id: id,

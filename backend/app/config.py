@@ -181,7 +181,7 @@ class Settings:
     #     GARMENT_VISION_PROVIDER=hf
     #     GARMENT_VISION_MODEL=<hf-repo-or-endpoint-url>
     GARMENT_VISION_PROVIDER: str = os.environ.get(
-        "GARMENT_VISION_PROVIDER", "gemini"
+        "GARMENT_VISION_PROVIDER", os.environ.get("EYES_PROVIDER", "gemini")
     )
     GARMENT_VISION_MODEL: str = os.environ.get(
         "GARMENT_VISION_MODEL", "gemini-3.5-flash"
@@ -240,7 +240,12 @@ class Settings:
     # vision is added). Match the timeout to the worst case and let the
     # circuit breaker fall back to Gemini instead of stalling AddItem.
     EYES_GEMMA_TIMEOUT_S: float = float(
-        os.environ.get("EYES_GEMMA_TIMEOUT_S", "60") or "60"
+        os.environ.get("EYES_GEMMA_TIMEOUT_S", "120") or "120"
+    )
+    # When True, Gemma runs all attribute groups in a single unified inference pass (~25-30s)
+    # avoiding repeating 5 expensive multimodal image prefill steps (~102s).
+    EYES_GEMMA_SINGLE_PASS: bool = (
+        os.environ.get("EYES_GEMMA_SINGLE_PASS", "true").lower() in ("true", "1", "yes")
     )
     # --- Phase O.6 — Single-pass Eyes (RETIRED May 2026) ---
     # The experimental "one Eyes call per upload" path was retired
@@ -419,6 +424,9 @@ class Settings:
     BACKGROUND_MATTING_MAX_EDGE: int = int(
         os.environ.get("BACKGROUND_MATTING_MAX_EDGE", "1024")
     )
+    BACKGROUND_MATTING_ALPHA_MATTING: bool = (
+        os.environ.get("BACKGROUND_MATTING_ALPHA_MATTING", "false").lower() in ("true", "1", "yes")
+    )
 
     # Patch 8 (May 2026) — defer rembg matting to a FastAPI BackgroundTask
     # on the **legacy** multi-crop /analyze path. The pre-Phase-O.6
@@ -511,12 +519,12 @@ class Settings:
         os.environ.get("USE_CLOTHING_PARSER", "true").lower() == "true"
     )
 
-    # Cold-start model warmup. Off by default on single-pod VPS to keep RAM headroom under 2GB.
+    # Cold-start model warmup. Enabled by default on non-lightweight deploys so first AddItem is fast.
     WARMUP_MODELS_ON_STARTUP: bool = (
         not _LIGHTWEIGHT_DEPLOY
         and os.environ.get(
             "WARMUP_MODELS_ON_STARTUP",
-            "false",
+            "true",
         ).lower()
         == "true"
     )

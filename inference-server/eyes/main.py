@@ -58,8 +58,8 @@ log = logging.getLogger("dressapp-eyes")
 # ---- Config (env, with defaults set in Dockerfile) ------------------
 MODEL_DIR = Path(os.environ.get("EYES_MODEL_DIR", "/models"))
 MODEL_REPO = os.environ.get("EYES_MODEL_REPO", "Yoram-Jacobs/dressapp-eyes-gguf")
-MODEL_FILE = os.environ.get("EYES_MODEL_FILE", "gemma-4-e2b-it.Q4_K_M-002.gguf")
-MMPROJ_FILE = os.environ.get("EYES_MMPROJ_FILE")
+MODEL_FILE = os.environ.get("EYES_MODEL_FILE", "gemma-4-E4B-it-Q3_K_M.gguf")
+MMPROJ_FILE = os.environ.get("EYES_MMPROJ_FILE", "mmproj-BF16.gguf")
 HF_TOKEN = os.environ.get("EYES_HF_TOKEN")
 API_TOKEN = os.environ.get("EYES_API_TOKEN")
 
@@ -251,10 +251,11 @@ def _build_llama_argv(model_path: Path, mmproj_path: Path | None) -> list[str]:
         "--jinja",
         "--reasoning-budget", "0",
         "--chat-template-kwargs", '{"enable_thinking": false}',
-        "-fa", "auto",
-        "-sps", "0.5",
+        "-fa", "off",
+        "-sps", "0.0",
         "--media-path", "/",
-        "--cache-prompt",
+        "--no-cache-prompt",
+        "--parallel", "1",
     ]
     if mmproj_path is not None:
         argv += ["--mmproj", str(mmproj_path)]
@@ -318,7 +319,7 @@ async def lifespan(_app: FastAPI):
         start_new_session=True,
     )
 
-    client = httpx.AsyncClient(timeout=httpx.Timeout(120.0, connect=5.0))
+    client = httpx.AsyncClient(timeout=httpx.Timeout(300.0, connect=10.0))
     try:
         await _wait_for_llama_ready(client)
     except Exception:
@@ -574,7 +575,7 @@ async def predict(req: PredictIn) -> PredictOut:
             r = await client.post(
                 f"{LLAMA_BASE_URL}/v1/chat/completions",
                 json=payload,
-                timeout=httpx.Timeout(120.0, connect=5.0),
+                timeout=httpx.Timeout(300.0, connect=10.0),
             )
         except httpx.HTTPError as exc:
             log.exception("llama-server request failed")
@@ -606,6 +607,24 @@ async def predict(req: PredictIn) -> PredictOut:
     content = msg.get("content") or ""
     if not content:
         content = msg.get("reasoning_content") or ""
+
+    # Strip conversational prefixes/preambles if present (e.g., "Here is the clothing item:")
+    cleaned_str = str(content).strip()
+    first_brace = cleaned_str.find("{")
+    first_bracket = cleaned_str.find("[")
+    first_json = -1
+    if first_brace != -1 and first_bracket != -1:
+        first_json = min(first_brace, first_bracket)
+    elif first_brace != -1:
+        first_json = first_brace
+    elif first_bracket != -1:
+        first_json = first_bracket
+
+    if first_json > 0:
+        preamble = cleaned_str[:first_json].strip()
+        if any(preamble.lower().startswith(p) for p in ("here is", "here are", "certainly", "in this photo", "i see", "below is", "the clothing")):
+            cleaned_str = cleaned_str[first_json:].strip()
+            content = cleaned_str
     has_image = bool(req.image_b64)
     if not has_image and req.messages:
         for m in req.messages:

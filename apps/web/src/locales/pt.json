@@ -203,7 +203,7 @@
         "capture": {
           "alt": "pano de captura",
           "title": "Capturar roupas",
-          "description": "Tire uma foto rápida de suas roupas reais. Funciona lindamente com todas as iluminações e fundos."
+          "description": "Tire uma foto rápida das suas peças de roupa reais. Funciona melhor com boa iluminação e fundos com contraste."
         },
         "analysis": {
           "alt": "análise de atributos",
@@ -227,7 +227,7 @@
       "heading": "Cada peça encontra seu lugar",
       "description1": "Fotografe tudo o que você possui - o DressApp lê o tecido, o corte, a cor e os arquiva como um estilista faria: etiquetado, catalogado, pronto para ser puxado no momento que você precisar.",
       "description2": "Chega de gavetas esquecidas. Pesquise por palavra-chave ou apenas descreva um sentimento - \"algo quente para uma segunda-feira chuvosa\" - e a peça certa chegará até você.",
-      "cta": "Comece a construir seu armário",
+      "cta": "Migre seu guarda-roupa",
       "recentlyAdded": "Adicionado recentemente",
       "garments": {
         "blazer": {
@@ -368,6 +368,50 @@
         "emailBody": "Nome da loja: {{name}}\nEndereço da web: {{url}}",
         "sent": "Seu app de e-mail abrirá para você enviar este pedido ao DressApp."
       }
+    },
+    "migration": {
+      "eyebrow": "MIGRAÇÃO DE GUARDA-ROUPA COM IA: UMA PRIMEIRA NO SETOR",
+      "proBadge": "EXCLUSIVO PRO E MANAGER",
+      "title": "Migre seu guarda-roupa em segundos",
+      "subtitle": "Importe roupas facilmente do Whering, Acloset, Stylebook e mais. Nosso agente de IA remove duplicatas do seu closet, preenche automaticamente todos os detalhes de cada peça e escaneia apps concorrentes ao vivo na tela.",
+      "strip1": "Zero peças duplicadas",
+      "strip2": "Todos os detalhes preenchidos automaticamente",
+      "strip3": "100% visível durante o processo",
+      "step1Title": "Conecte seu antigo app de guarda-roupa",
+      "step1Desc": "Escolha Whering, Acloset, Stylebook e mais.",
+      "step2Title": "Veja o agente de IA escanear ao vivo",
+      "step2Desc": "Cada peça é lida, marcada e deduplicada na tela.",
+      "step3Title": "Seu closet chega totalmente organizado",
+      "step3Desc": "Categoria, cor, tecido e estação — pronto.",
+      "modalTitle": "Importar seu guarda-roupa existente?",
+      "modalDesc": "Já tem um guarda-roupa digital em outro app? Podemos trazer suas roupas para você não precisar começar do zero.",
+      "modalSkip": "Não, começar do zero",
+      "modalGo": "Sim, importar meu guarda-roupa",
+      "liveStatus": "Aba do concorrente — Ao vivo",
+      "agentStatus": "Agente DressApp ativo",
+      "agentWidgetTitle": "Agente DressApp",
+      "agentWidgetSubtitle": "Escaneando closet…",
+      "cardsFound": "peças encontradas",
+      "dupeLabel": "Duplicata — ignorada",
+      "visibilityNote": "O guarda-roupa do concorrente permanece visível na sua própria tela o tempo todo — você pode acompanhar cada peça sendo escaneada.",
+      "dressappTarget": "Seu closet DressApp",
+      "detailCardsFilled": "100% dos cartões de detalhe preenchidos",
+      "summaryNotice": "Nenhuma duplicata importada. Todos os atributos das peças foram preenchidos automaticamente.",
+      "testRun": "Testar importação ao vivo",
+      "supportsApps": "Importar de:",
+      "privateLabel": "Privado",
+      "wearsCount": "{{count}} usos",
+      "step2ItemBlazer": "Blazer azul-marinho",
+      "step2ItemShirt": "Camisa branca",
+      "step2ItemJeans": "Calça jeans",
+      "closetCard1Type": "Superior · Azul-marinho",
+      "closetCard1Name": "Blazer técnico azul-marinho",
+      "closetCard2Type": "Superior · Branco",
+      "closetCard2Name": "Camisa de algodão orgânico",
+      "closetCard3Type": "Inferior · Grafite",
+      "closetCard3Name": "Calça jeans reta",
+      "closetCard4Type": "Superior · Preto",
+      "closetCard4Name": "Polo com detalhe verde-limão"
     },
     "aiEditor": {
       "title": "Editor de moda com estilo AI",
@@ -1323,7 +1367,25 @@
     "tomorrowSuggestionSubtitle": "Curada para amanhã com base no seu perfil de estilo, previsão do tempo e agenda.",
     "tomorrowSuggestionRefreshed": "Sugestão para amanhã atualizada!",
     "wearTomorrow": "Vestir amanhã",
-    "upgradeForDailySuggestionsDesc": "Atualize para o plano Manager ou Professional para desbloquear as sugestões diárias."
+    "upgradeForDailySuggestionsDesc": "Atualize para o plano Manager ou Professional para desbloquear as sugestões diárias.",
+    "calendar": {
+      "searchPlaceholder": "Busca de estilo: \"Churrasco de verão\", \"Compras no shopping\", \"Reunião de negócios\", \"Camiseta preta\", \"Jeans delavê\"...",
+      "quickVibes": "Estilos:",
+      "resultsCount": "{{count}} de {{total}} looks encontrados",
+      "noSearchMatches": "Nenhum look combina com este estilo",
+      "noSearchMatchesDesc": "Não encontramos nenhum look salvo correspondente a \"{{query}}\". Tente outro estilo, peça ou limpe a pesquisa.",
+      "clearSearch": "Limpar pesquisa",
+      "vibes": {
+        "black_t_shirt": "Camiseta preta",
+        "business_meeting": "Reunião de negócios",
+        "summer_barbecue": "Churrasco de verão",
+        "mall_shopping": "Compras no shopping",
+        "rainy_day": "Dia de chuva",
+        "stone_washed_jeans": "Jeans delavê",
+        "colorful_summer": "Verão colorido",
+        "casual_chic": "Casual chique"
+      }
+    }
   },
   "outfitCompletion": {
     "cta": "Completar o look",
@@ -1343,7 +1405,16 @@
     "noClosetSuggestions": "Nenhuma peça complementar encontrada no seu guarda-roupa. Ative o marketplace ou adicione mais peças.",
     "embeddingsMissingHint": "Algumas das peças selecionadas ainda não têm vetores de similaridade. Reenviar melhora a qualidade das sugestões.",
     "empty": "Nenhuma sugestão retornada. Tente outras peças-base ou ative o marketplace.",
-    "error": "Falha ao completar o look. Tente novamente."
+    "error": "Falha ao completar o look. Tente novamente.",
+    "tryOnAvatar": "Experimentar no avatar",
+    "saveOutfit": "Salvar look",
+    "saveOutfitTitle": "Salvar look",
+    "saveOutfitDesc": "Salve este visual recomendado com um nome descritivo para acessá-lo a qualquer momento no seu Canvas de Looks.",
+    "includedPieces": "Peças inclusas",
+    "savedSuccess": "Look \"{{name}}\" salvo no seu Canvas de Looks!",
+    "alreadySaved": "Look já salvo",
+    "outfitName": "Nome do look",
+    "notes": "Notas do estilista / Ocasião"
   },
   "market": {
     "atzmaiGateway": "Gateway de pagamento Atzmai Sachir",
@@ -4425,7 +4496,8 @@
       "unlimitedOps": "Solicitações diárias ilimitadas",
       "marketplaceAccess": "Venda e aluguel no Marketplace",
       "schedulerAccess": "Agendador e notificações push",
-      "campaignsAccess": "Campanhas de anúncios incluídas"
+      "campaignsAccess": "Campanhas de anúncios incluídas",
+      "wardrobeMigration": "Migração do guarda-roupa"
     },
     "supportTiers": {
       "community": "Suporte da comunidade",

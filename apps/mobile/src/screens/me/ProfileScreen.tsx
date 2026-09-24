@@ -185,8 +185,8 @@ export function ProfileScreen() {
   const [preferredDressCode, setPreferredDressCode] = useState('Smart Casual');
 
   // AI Config State
-  const [selectedProvider, setSelectedProvider] = useState('google_ai');
-  const [selectedModel, setSelectedModel] = useState('gemini-3.5-flash');
+  const [selectedProvider, setSelectedProvider] = useState('dressapp');
+  const [selectedModel, setSelectedModel] = useState('Eyes v1');
   const [preferredVoiceId, setPreferredVoiceId] = useState('aura-2-thalia-en');
   const [customKeys, setCustomKeys] = useState<Record<string, boolean>>({});
 
@@ -310,7 +310,7 @@ export function ProfileScreen() {
         if (u.style_profile?.preferred_dress_code) setPreferredDressCode(u.style_profile.preferred_dress_code);
 
         // AI Config
-        if (u.ai_configuration?.selected_provider) setSelectedProvider(u.ai_configuration.selected_provider);
+        setSelectedProvider(u.ai_configuration?.selected_provider || 'dressapp');
         if (u.ai_configuration?.selected_model) {
           const m = u.ai_configuration.selected_model;
           setSelectedModel(
@@ -318,6 +318,8 @@ export function ProfileScreen() {
               ? 'gemini-3.5-flash'
               : m
           );
+        } else {
+          setSelectedModel(u.ai_configuration?.selected_provider === 'google_ai' ? 'gemini-3.5-flash' : 'Eyes v1');
         }
         if (u.preferred_voice_id) setPreferredVoiceId(u.preferred_voice_id);
         if (u.ai_configuration?.custom_keys) setCustomKeys(u.ai_configuration.custom_keys);

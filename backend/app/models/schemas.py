@@ -104,6 +104,20 @@ from app.models.credit import (
 
 
 
+EYES_DEFAULT_MODEL = "Eyes v1"
+
+
+def default_ai_configuration() -> dict[str, Any]:
+    return {
+        "provider_mode": "dressapp",
+        "selected_provider": "dressapp",
+        "selected_model": EYES_DEFAULT_MODEL,
+        "custom_keys": {},
+        "current_credits": 1000,
+        "credits_used_this_month": 0,
+    }
+
+
 class User(BaseDoc):
     email: EmailStr
     password_hash: str | None = None
@@ -189,7 +203,7 @@ class User(BaseDoc):
     web_push_subscriptions: list[dict] = Field(default_factory=list)
 
     # --- AI Configuration & Models ---
-    ai_configuration: dict[str, Any] = Field(default_factory=dict)
+    ai_configuration: dict[str, Any] = Field(default_factory=default_ai_configuration)
     trial_info: dict[str, Any] | None = None
 
     # --- Phase 4P: AI Credits System - Credit Buckets (replaces simple ai_credits)

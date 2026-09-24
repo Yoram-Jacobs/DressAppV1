@@ -110,8 +110,9 @@ COPY main.py ./main.py
 # --- Runtime defaults -----------------------------------------------
 ENV EYES_MODEL_DIR=/models \
     EYES_MODEL_REPO=Yoram-Jacobs/dressapp-eyes-gguf \
-    EYES_MODEL_FILE=gemma-4-e2b-it.Q4_K_M-002.gguf \
-    LLAMA_THREADS=2 \
+    EYES_MODEL_FILE=gemma-4-E4B-it-Q3_K_M.gguf \
+    EYES_MMPROJ_FILE=mmproj-BF16.gguf \
+    LLAMA_THREADS=4 \
     LLAMA_CTX_SIZE=4096 \
     LLAMA_N_BATCH=256 \
     LLAMA_INTERNAL_PORT=8080 \

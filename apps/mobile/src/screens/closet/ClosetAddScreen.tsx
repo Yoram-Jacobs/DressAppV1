@@ -48,6 +48,7 @@ import * as Lucide from 'lucide-react-native';
 import { useTheme } from '@mobile/theme';
 import { fonts, fontSizes, spacing, radii, shadows } from '@mobile/theme/tokens';
 import { api } from '@mobile/lib/api';
+import { edgeAi } from '@mobile/lib/edgeAiService';
 import { closetStore, useClosetStore } from '@mobile/lib/stores/closetStore';
 import { useTierLimits } from '@mobile/hooks/useTierLimits';
 import { ScanningPipelineOverlay } from '@mobile/components/ScanningPipelineOverlay';
@@ -335,12 +336,9 @@ export function ClosetAddScreen() {
 
     try {
       const requestLang = (i18n.language || 'en').split('-')[0].toLowerCase();
-      const res = await api.analyzeItemImage(
-        {
-          image_base64: cleanB64,
-          multi: true,
-          language: requestLang,
-        },
+      const res = await edgeAi.analyzeGarment(
+        cleanB64,
+        requestLang,
         {
           onDetect: () => {
             setCards((prev) =>
@@ -355,7 +353,28 @@ export function ClosetAddScreen() {
         }
       );
 
-      const detectedItems = Array.isArray(res?.items) && res.items.length > 0 ? res.items : [res?.item || res];
+
+      let detectedItems: any[] = [];
+      if (Array.isArray(res?.items) && res.items.length > 0) {
+        detectedItems = res.items;
+      } else if (res?.item && (res.item.crop_base64 || res.item.analysis || res.item.category)) {
+        detectedItems = [res.item];
+      } else if (Array.isArray(res?.detect?.items_meta) && res.detect.items_meta.length > 0) {
+        // Fallback to cutout detections if analysis frames didn't emit full item objects
+        detectedItems = res.detect.items_meta.map((meta: any) => ({
+          crop_base64: meta.crop_base64,
+          crop_mime: meta.crop_mime,
+          label: meta.label,
+          kind: meta.kind,
+          bbox: meta.bbox,
+          analysis: {
+            sub_category: meta.label || meta.kind,
+            category: meta.kind || 'Top',
+          },
+        }));
+      } else if (res?.crop_base64) {
+        detectedItems = [res];
+      }
 
       if (!detectedItems || detectedItems.length === 0 || !detectedItems[0]) {
         throw new Error(t('addItem.analyzeFailed', { defaultValue: 'Could not detect garment details.' }));
@@ -364,9 +383,11 @@ export function ClosetAddScreen() {
       // If multi-item SegFormer detected multiple pieces, generate individual cards for each
       const newCards: GarmentCard[] = detectedItems.map((item: any, idx: number) => {
         const analysis = item.analysis || item || {};
-        const cropB64 = item.crop_base64 || item.image_base64 || analysis.crop_base64 || cleanB64;
-        const cropUrl = item.crop_base64
-          ? `data:${item.crop_mime || 'image/jpeg'};base64,${item.crop_base64}`
+        const meta = res?.detect?.items_meta?.[item.index ?? idx] || {};
+        const cropB64 = item.crop_base64 || analysis.crop_base64 || meta.crop_base64 || item.image_base64 || cleanB64;
+        const cropMime = item.crop_mime || analysis.crop_mime || meta.crop_mime || (cropB64.startsWith('iVBORw') ? 'image/png' : 'image/jpeg');
+        const cropUrl = (item.crop_base64 || analysis.crop_base64 || meta.crop_base64)
+          ? `data:${cropMime};base64,${item.crop_base64 || analysis.crop_base64 || meta.crop_base64}`
           : targetPreview;
 
         const catName = analysis.category || item.category || 'Top';
@@ -388,7 +409,8 @@ export function ClosetAddScreen() {
         const fullTextBlob = `${itemName} ${subCatName} ${detectedCaption} ${(Array.isArray(analysis.tags) ? analysis.tags : []).join(' ')}`.toLowerCase();
 
         // 2. Label derivation (pill derives from sub_category)
-        const cardLabel = subCatName || analysis.item_type || analysis.label || (item.label && item.label !== 'garment' ? item.label : '') || catName;
+        const rawLabel = subCatName || analysis.item_type || analysis.label || (item.label && item.label !== 'garment' ? item.label : '') || catName;
+        const cardLabel = labelForSubCategory(rawLabel, t) || labelForCategory(rawLabel, t) || rawLabel;
 
         // 3. Size derivation (fallback to body measurements if not analyzed from photo)
         const fallbackSize = deriveSizeFromPreferences(currentUser, { category: catName, sub_category: subCatName, item_type: subCatName });

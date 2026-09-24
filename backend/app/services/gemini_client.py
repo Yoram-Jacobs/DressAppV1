@@ -353,19 +353,20 @@ class GeminiClient:
 
 # ---------------------------------------------------------------------- helpers
 def _normalise_model(model: str) -> str:
-    """Strip provider prefixes the legacy ``litellm`` path required.
-
-    Old code passed ``"gemini/gemini-2.5-flash"`` so litellm would route
-    through Google's GenAI API. The native SDK only wants the bare
-    model id (``"gemini-3.5-flash-lite"``).
+    """Strip provider prefixes the legacy ``litellm`` path required,
+    and map non-Gemini aliases (e.g. 'Eyes v1', 'gemma') to the default Gemini model.
     """
     if not model:
         return DEFAULT_TEXT_MODEL
-    if model.startswith("gemini/"):
-        return model.split("/", 1)[1]
-    if model.startswith("google/"):
-        return model.split("/", 1)[1]
-    return model
+    clean = model.strip()
+    if clean.startswith("gemini/"):
+        clean = clean.split("/", 1)[1]
+    elif clean.startswith("google/"):
+        clean = clean.split("/", 1)[1]
+    # If the model name is not a valid Gemini model identifier (e.g. 'Eyes v1', 'gemma')
+    if not clean.lower().startswith("gemini") and not clean.lower().startswith("models/"):
+        return DEFAULT_VISION_MODEL
+    return clean
 
 
 def _coerce_text(resp: Any) -> str:

@@ -43,6 +43,9 @@ const { client, API_BASE, tokenStore, userStore } = createApiClient({
 // (preserves `import { api } from '@/lib/api'` across 46+ files)
 // ============================================================
 export const api = buildApi();
+api.outfits = outfits;
+api.closet = closet;
+api.stylist = stylist;
 
 // ============================================================
 // Individual adapters (for focused imports)

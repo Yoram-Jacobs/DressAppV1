@@ -2,7 +2,7 @@ from __future__ import annotations
 from __future__ import annotations
 from .llm import EYES_JSON_SCHEMA, _call_gemma_space, _build_system_prompt, _language_directive, _user_prompt, _extract_json, DETECT_SYSTEM_PROMPT, _scan_complete_json_objects, _build_batch_prompts, GROUP_ANALYZE_SYSTEM_PROMPT, _LANG_NAMES, call_gemma_space_stream_attributes
 from .image import _shrink_for_vision, _crop_to_bbox, _PHANTOM_DROP_PCT, _solid_alpha_coverage, _fit_crop_to_card, _apply_fast_matte
-from .geometry import _nms_detections, _is_unidentifiable, _looks_already_cropped
+from .geometry import _nms_detections, _is_unidentifiable, _looks_already_cropped, _iou_norm, _containment
 from .validation import _coerce_single_garment, _coerce_enums, _enforce_segformer_category
 
 import asyncio
@@ -54,17 +54,31 @@ logger = logging.getLogger(__name__)
 
 
 class GarmentVisionService:
-    def __init__(self, api_key: str | None = None, model: str | None = None) -> None:
+    def __init__(
+        self,
+        api_key: str | None = None,
+        model: str | None = None,
+        provider: str | None = None,
+    ) -> None:
         # We tolerate a missing EMERGENT_LLM_KEY if HF is configured for
         # both analysis AND detection. In practice we keep Gemini Flash
         # for detection, so both keys are typically required.
-        self.model = model or settings.GARMENT_VISION_MODEL or "gemini-3.5-flash"
-        self.provider = settings.GARMENT_VISION_PROVIDER
+        self.provider = provider or settings.GARMENT_VISION_PROVIDER or "gemini"
+        if self.provider == "gemini":
+            self.model = model if (model and model.lower().startswith("gemini")) else "gemini-3.5-flash"
+        else:
+            self.model = model or settings.GARMENT_VISION_MODEL or "Eyes v1"
         # Detection stays on Gemini Flash for Phase A.
         self.detect_provider = settings.GARMENT_VISION_DETECT_PROVIDER
-        self.detect_model = model or settings.GARMENT_VISION_DETECT_MODEL or "gemini-3.5-flash"
+        self.detect_model = (
+            model if (model and model.lower().startswith("gemini"))
+            else (settings.GARMENT_VISION_DETECT_MODEL or "gemini-3.5-flash")
+        )
         # Per-crop analyser (multi-item pipeline).
-        self.crop_model = model or settings.GARMENT_VISION_CROP_MODEL or "gemini-3.5-flash"
+        self.crop_model = (
+            model if (model and model.lower().startswith("gemini"))
+            else (settings.GARMENT_VISION_CROP_MODEL or "gemini-3.5-flash")
+        )
         self.max_items = settings.GARMENT_VISION_MAX_ITEMS
         # Gemini chat key — explicit parameter, else direct GEMINI_API_KEY from .env.
         self.api_key = api_key or settings.gemini_chat_key
@@ -137,6 +151,7 @@ class GarmentVisionService:
             {
                 "label": p["label"].lower().replace("-", "_"),
                 "kind": p["category"],
+                "category": p["category"],
                 "bbox": p["bbox"],
                 "score": p["score"],
                 # Preserve full-res mask so analyze_outfit can build
@@ -150,10 +165,12 @@ class GarmentVisionService:
                 # legs can't leak into the final matte. May be None
                 # if the parser couldn't build the human mask.
                 "_human_mask_full": p.get("_human_mask_full"),
+                "has_human_head": p.get("has_human_head", False),
                 "source": "clothing_parser",
             }
             for p in parser_items
         ]
+
 
     async def _detect_via_gemini(
         self, image_bytes: bytes,
@@ -229,16 +246,75 @@ class GarmentVisionService:
             )
         return clean
 
-    async def detect_items(self, image_bytes: bytes) -> list[dict[str, Any]]:
+    async def detect_items(
+        self, image_bytes: bytes, *, count_hint: int | None = None,
+    ) -> list[dict[str, Any]]:
         """Return a list of ``{label, kind, bbox}`` entries.
 
-        Phase V: try the commercial-safe clothing parser first
-        (sayeed99/segformer_b3_clothes, MIT). If it returns at least one
-        garment we use those — they're pixel-accurate per-class and split
-        outfits reliably. Otherwise fall back to the Gemini bbox detector
-        and apply non-maximum suppression to collapse overlapping boxes.
+        Tries the commercial-safe clothing parser first (sayeed99/segformer_b3_clothes).
+        If SegFormer returns detections, we keep its pixel-accurate per-class masks.
+        When Gatekeeper or detection hints at missed garments/accessories (e.g. bags,
+        sunglasses, jewelry that SegFormer's 18 classes miss or under-detect), we query
+        the Gemini bbox detector and merge any non-overlapping candidate items.
         """
         parser_hits = await self._detect_via_clothing_parser(image_bytes)
+        gemini_hits: list[dict[str, Any]] = []
+
+        should_query_gemini = (not parser_hits) or (
+            count_hint is not None and count_hint > len(parser_hits)
+        )
+        if should_query_gemini:
+            try:
+                gemini_hits = await self._detect_via_gemini(image_bytes)
+            except Exception as exc:  # noqa: BLE001
+                logger.info("detect_items: Gemini detection fallback skipped: %s", exc)
+
+        if parser_hits and gemini_hits:
+            merged = list(parser_hits)
+            for gd in gemini_hits:
+                g_bbox = gd.get("bbox")
+                g_kind = (gd.get("kind") or "garment").lower()
+                covered = False
+                for sh in parser_hits:
+                    s_bbox = sh.get("bbox")
+                    s_kind = (sh.get("kind") or "garment").lower()
+                    iou = _iou_norm(g_bbox, s_bbox)
+                    contain = _containment(g_bbox, s_bbox)
+                    # If high IoU or high containment with matching garment kind, it's already covered
+                    if iou >= 0.40 or (
+                        contain >= 0.70
+                        and (
+                            s_kind == g_kind
+                            or (
+                                s_kind in {"dress", "top", "bottom"}
+                                and g_kind in {"dress", "top", "bottom"}
+                            )
+                        )
+                    ):
+                        covered = True
+                        break
+                if not covered:
+                    merged.append({
+                        "label": gd.get("label") or "garment",
+                        "kind": gd.get("kind") or "garment",
+                        "category": gd.get("kind") or "garment",
+                        "bbox": g_bbox,
+                        "score": 0.90,
+                        "mask": None,
+                        "_human_mask_full": parser_hits[0].get("_human_mask_full"),
+                        "has_human_head": parser_hits[0].get("has_human_head", False),
+                        "source": "gemini",
+                    })
+            before = len(merged)
+            clean = _nms_detections(merged)
+            logger.info(
+                "detect_items OK model=segformer+gemini count=%d (nms removed %d) labels=%s",
+                len(clean),
+                before - len(clean),
+                [c["label"] for c in clean][:8],
+            )
+            return clean
+
         if parser_hits:
             before = len(parser_hits)
             clean = _nms_detections(parser_hits)
@@ -250,12 +326,10 @@ class GarmentVisionService:
             )
             return clean
 
-        clean = await self._detect_via_gemini(image_bytes)
-        # Non-maximum suppression: collapse overlapping detections that
-        # describe the same physical item (IoU >= 0.35 OR one box nested
-        # inside the other with compatible kind).
-        before = len(clean)
-        clean = _nms_detections(clean)
+        if not gemini_hits:
+            gemini_hits = await self._detect_via_gemini(image_bytes)
+        before = len(gemini_hits)
+        clean = _nms_detections(gemini_hits)
         logger.info(
             "detect_items OK model=%s count=%d (nms removed %d) labels=%s",
             self.detect_model,
@@ -264,6 +338,7 @@ class GarmentVisionService:
             [c["label"] for c in clean][:8],
         )
         return clean
+
 
     async def analyze(
         self,
@@ -339,6 +414,9 @@ class GarmentVisionService:
         if provider:
             resolved = provider.strip().lower()
             routing_source = "explicit"
+        elif self.provider:
+            resolved = self.provider.strip().lower()
+            routing_source = "instance"
         else:
             resolved = (await eyes_override.get_active_provider()).lower()
             routing_source = "toggle"
@@ -350,7 +428,7 @@ class GarmentVisionService:
         fallback_reason: str | None = None
 
         # 2) Gemma path (toggle says gemma AND a Space URL is configured).
-        if resolved == "gemma" and settings.EYES_GEMMA_SPACE_URL:
+        if resolved in ("gemma", "dressapp") and settings.EYES_GEMMA_SPACE_URL:
             t0 = time.perf_counter()
             try:
                 raw = await _call_gemma_space(
@@ -856,14 +934,36 @@ class GarmentVisionService:
                 for other in useful:
                     if other is det:
                         continue
-                    k1 = (det.get("kind") or "").strip().lower()
-                    k2 = (other.get("kind") or "").strip().lower()
-                    if k1 != k2 and other.get("mask") is not None:
-                        # Ignore tiny hallucinated other garments (area < 3% of frame)
+                    det_kind = (det.get("kind") or det.get("label") or "").lower()
+                    other_kind = (other.get("kind") or other.get("label") or "").lower()
+                    # Layering rule: Accessories / bags are worn ON TOP of torso/leg garments.
+                    # Never subtract the underlying dress/top/bottom from an accessory/bag!
+                    if any(k in det_kind for k in ("accessory", "bag", "belt", "headwear", "scarf", "jewelry")) and any(k in other_kind for k in ("top", "outerwear", "dress", "fullbody", "bottom")):
+                        continue
+                    if other.get("mask") is not None:
+                        m = other["mask"]
+                        if m.shape != (img_size[1], img_size[0]):
+                            from PIL import Image as _PIL
+                            m_full = _np.array(
+                                _PIL.fromarray((m * 255).astype(_np.uint8), mode="L").resize(
+                                    img_size, _PIL.NEAREST
+                                )
+                            )
+                            other_masks.append((m_full > 127).astype(_np.uint8))
+                        else:
+                            other_masks.append(m)
+                    elif other.get("bbox") is not None:
+                        # For Gemini-detected items without SegFormer masks (e.g. bags, accessories),
+                        # build a binary mask from their bbox so adjacent garments don't incorporate them
                         oy1, ox1, oy2, ox2 = other["bbox"]
-                        other_area = max(0, oy2 - oy1) * max(0, ox2 - ox1)
-                        if other_area >= 1000 * 1000 * 0.03:
-                            other_masks.append(other["mask"])
+                        py1 = max(0, min(img_size[1], int(oy1 / 1000.0 * img_size[1])))
+                        px1 = max(0, min(img_size[0], int(ox1 / 1000.0 * img_size[0])))
+                        py2 = max(0, min(img_size[1], int(oy2 / 1000.0 * img_size[1])))
+                        px2 = max(0, min(img_size[0], int(ox2 / 1000.0 * img_size[0])))
+                        if py2 > py1 and px2 > px1:
+                            bmask = _np.zeros((img_size[1], img_size[0]), dtype=_np.uint8)
+                            bmask[py1:py2, px1:px2] = 1
+                            other_masks.append(bmask)
                 if other_masks:
                     combined_other = other_masks[0]
                     for m in other_masks[1:]:
@@ -935,7 +1035,11 @@ class GarmentVisionService:
             human_mask_bbox = det.get("_human_mask_bbox")
             other_mask_bbox = det.get("_other_mask_bbox")
             is_single = det.get("is_single_item", False)
-            if seg_mask_bbox is not None and not is_single:
+            if not is_single and (
+                seg_mask_bbox is not None
+                or human_mask_bbox is not None
+                or other_mask_bbox is not None
+            ):
                 try:
                     refined = _cp.apply_alpha_intersection(
                         matted,
@@ -946,6 +1050,7 @@ class GarmentVisionService:
                     )
                     if refined:
                         matted = refined
+
                 except Exception as exc:  # noqa: BLE001
                     logger.info(
                         "alpha intersection skipped for %s: %s",
@@ -964,12 +1069,13 @@ class GarmentVisionService:
             cov = _solid_alpha_coverage(matted)
             if cov is not None and cov < _PHANTOM_DROP_PCT:
                 logger.info(
-                    "_matte_crops: dropping near-empty matte for %s — "
-                    "solid-alpha = %.1f%% < %.0f%% threshold",
+                    "_matte_crops: near-empty matte for %s (%.1f%% < %.0f%%) — "
+                    "falling back to RGB crop instead of dropping item",
                     det.get("label"),
                     cov * 100.0,
                     _PHANTOM_DROP_PCT * 100.0,
                 )
+                matted_crops.append((det, cbytes, mime))
                 continue
 
             matted_crops.append((det, matted, "image/png"))
@@ -1658,6 +1764,8 @@ class GarmentVisionService:
         *,
         max_items: int | None = None,
         language: str | None = None,
+        cutout_only: bool = False,
+        **kwargs: Any,
     ) -> "AsyncIterator[dict[str, Any]]":
         """Patch M19 — Streaming end-to-end variant of :meth:`analyze_outfit`.
 
@@ -1835,6 +1943,10 @@ class GarmentVisionService:
                 "defer_matte": d.get("defer_matte", False),
             })
         yield {"type": "detect", "count": len(crops), "items_meta": items_meta}
+        if cutout_only:
+            logger.info("analyze_outfit_stream: cutout_only is True — returning after detect frame")
+            yield {"type": "done", "count": len(crops)}
+            return
 
         # Stream-analyse the crops via batched Gemini stream.
         crops_bytes = [b for _, b, _ in crops]
@@ -2088,6 +2200,8 @@ class GarmentVisionService:
         *,
         max_items: int | None = None,
         language: str | None = None,
+        cutout_only: bool = False,
+        **kwargs: Any,
     ) -> "AsyncIterator[dict[str, Any]]":
         """Streaming end-to-end variant that accepts multiple photos.
         
@@ -2113,7 +2227,7 @@ class GarmentVisionService:
                     return idx, []
                 
                 logger.info("Gatekeeper: photo %d has %d garment(s) — running SegFormer detect_items", idx, count)
-                detections = await self.detect_items(img_bytes)
+                detections = await self.detect_items(img_bytes, count_hint=count)
                 if not detections and count == 1:
                     detections = [{"bbox": [0, 0, 1000, 1000], "kind": "garment", "label": "garment"}]
             except Exception as exc:
@@ -2121,7 +2235,9 @@ class GarmentVisionService:
                 return idx, []
 
             try:
-                if _looks_already_cropped(detections):
+                # Only single-garment images can ever be considered already cropped.
+                # Never collapse multi-item photos into a single whole-image cutout!
+                if count <= 1 and len(detections) <= 1 and _looks_already_cropped(detections):
                     if detections:
                         best_det = max(
                             detections,
@@ -2136,8 +2252,10 @@ class GarmentVisionService:
                     det = {
                         "label": best_det.get("label") or "garment",
                         "kind": best_det.get("kind") or "garment",
+                        "category": best_det.get("category") or best_det.get("kind") or "garment",
                         "bbox": best_det.get("bbox", [0, 0, 1000, 1000]),
                         "defer_matte": False,
+                        "is_single_item": True,
                     }
                     if settings.AUTO_MATTE_CROPS:
                         matted = await self._whole_image_matte(img_bytes)
@@ -2151,8 +2269,10 @@ class GarmentVisionService:
                     det = {
                         "label": "garment",
                         "kind": "garment",
+                        "category": "garment",
                         "bbox": [0, 0, 1000, 1000],
                         "defer_matte": False,
+                        "is_single_item": True,
                     }
                     if settings.AUTO_MATTE_CROPS:
                         matted = await self._whole_image_matte(img_bytes)
@@ -2160,23 +2280,22 @@ class GarmentVisionService:
                             return idx, [(det, matted, "image/png")]
                     return idx, [(det, img_bytes, "image/jpeg")]
 
+                if count <= 1 or len(useful) <= 1:
+                    for d in useful:
+                        d["is_single_item"] = True
+
                 raw_crops = await asyncio.to_thread(self._bbox_crop_useful, img_bytes, useful)
-                fast_crops = await asyncio.to_thread(_apply_fast_matte, raw_crops)
-                
-                final_crops = []
-                for det, cbytes, mime in fast_crops:
+                if settings.AUTO_MATTE_CROPS:
+                    final_crops = await self._matte_crops(raw_crops)
+                else:
+                    final_crops = raw_crops
+
+                for det, cbytes, mime in final_crops:
                     det["defer_matte"] = False
-                    if mime != "image/png" and settings.AUTO_MATTE_CROPS:
-                        try:
-                            from app.services import background_matting
-                            matted = await background_matting.matte_crop(cbytes)
-                            if matted:
-                                cbytes = matted
-                                mime = "image/png"
-                        except Exception as exc:
-                            logger.info("rembg crop matte failed: %s", exc)
-                    final_crops.append((det, cbytes, mime))
+                    if count <= 1 or len(final_crops) <= 1:
+                        det["is_single_item"] = True
                 return idx, final_crops
+
             except Exception as exc:
                 logger.warning("analyze_outfits_stream: crop/matte failed for idx %d: %s", idx, repr(exc)[:160])
                 return idx, []
@@ -2194,6 +2313,8 @@ class GarmentVisionService:
         for idx, crops in results:
             for det, c_bytes, c_mime in crops:
                 flat_crops.append((idx, det, c_bytes, c_mime))
+        if len(flat_crops) == 1:
+            flat_crops[0][1]["is_single_item"] = True
         del results
         gc.collect()
 
@@ -2222,6 +2343,10 @@ class GarmentVisionService:
                 "defer_matte": d.get("defer_matte", False),
             })
         yield {"type": "detect", "count": len(flat_crops), "items_meta": items_meta}
+        if cutout_only:
+            logger.info("analyze_outfits_stream: cutout_only is True — returning after detect frame")
+            yield {"type": "done", "count": len(flat_crops)}
+            return
 
         from app.config import settings as _settings
         from app.services import eyes_override as _eyes_override
@@ -2235,10 +2360,11 @@ class GarmentVisionService:
 
             # Resolve provider so we can choose the right crop strategy.
             active_provider = (
-                await _eyes_override.get_active_provider()
+                self.provider if self.provider in ("gemma", "gemini", "dressapp")
+                else await _eyes_override.get_active_provider()
             ).lower()
 
-            if active_provider == "gemma" and settings.EYES_GEMMA_SPACE_URL:
+            if active_provider in ("gemma", "dressapp") and settings.EYES_GEMMA_SPACE_URL:
                 # ── Patch M23: Gemma per-attribute sequential path ────────
                 # On CPU, a single 2400-token call takes 82-111 s and hits
                 # the Caddy idle-timeout.  Instead we send 5 focused
@@ -2252,24 +2378,48 @@ class GarmentVisionService:
 
                     import uuid
                     request_id = str(uuid.uuid4())
-                    async for grp_name, grp_fields, partial in call_gemma_space_stream_attributes(
-                        image_b64_jpeg=b64,
-                        language=language,
-                        segformer_label=det.get("label"),
-                        segformer_category=det.get("category"),
-                        request_id=request_id,
-                        id_slot=slot_idx,
-                        is_single_item=det.get("is_single_item", False),
-                    ):
-                        assembled.update(partial)
-                        if partial:  # only emit if the group produced data
-                            yield {
-                                "type": "field",
-                                "index": slot_idx,
-                                "image_index": image_idx,
-                                "group": grp_name,
-                                "fields": partial,
-                            }
+                    gemma_failed = False
+                    try:
+                        async for grp_name, grp_fields, partial in call_gemma_space_stream_attributes(
+                            image_b64_jpeg=b64,
+                            language=language,
+                            segformer_label=det.get("label"),
+                            segformer_category=det.get("category"),
+                            request_id=request_id,
+                            id_slot=slot_idx,
+                            is_single_item=det.get("is_single_item", False),
+                        ):
+                            assembled.update(partial)
+                            if partial:  # only emit if the group produced data
+                                yield {
+                                    "type": "field",
+                                    "index": slot_idx,
+                                    "image_index": image_idx,
+                                    "group": grp_name,
+                                    "fields": partial,
+                                }
+                    except Exception as gemma_exc:
+                        logger.warning("Gemma stream failed for slot %d: %s", slot_idx, repr(gemma_exc)[:160])
+                        gemma_failed = True
+
+                    # Fallback to Gemini if Gemma failed or yielded empty/insufficient attributes
+                    if gemma_failed or not assembled.get("category") or (not assembled.get("sub_category") and not assembled.get("item_type")):
+                        logger.warning(
+                            "Gemma returned incomplete attributes for slot %d (keys=%s). Falling back to Gemini.",
+                            slot_idx, list(assembled.keys()),
+                        )
+                        try:
+                            gem_analysis = await self.analyze(
+                                c_bytes, language=language, think=False, provider="gemini"
+                            )
+                            if isinstance(gem_analysis, dict) and gem_analysis:
+                                assembled = gem_analysis
+                                logger.info(
+                                    "Gemini fallback succeeded for slot %d: category=%s sub_category=%s",
+                                    slot_idx, assembled.get("category"), assembled.get("sub_category"),
+                                )
+                        except Exception as gem_exc:
+                            logger.error("Gemini fallback also failed for slot %d: %s", slot_idx, gem_exc)
 
                     # Normalise / coerce the fully-assembled dict.
                     analysis = _coerce_single_garment(assembled)
@@ -2278,8 +2428,8 @@ class GarmentVisionService:
                     if not analysis.get("title"):
                         analysis["title"] = "Unnamed garment"
                     analysis = _coerce_enums(analysis)
-                    analysis["provider_used"] = "gemma"
-                    analysis["model_used"] = "gemma-4-e2b-q4_k_m"
+                    analysis["provider_used"] = assembled.get("provider_used", "gemma")
+                    analysis["model_used"] = assembled.get("model_used", "gemma-4-e2b-q4_k_m")
 
                     # Record activity for the admin dashboard panel
                     provider_activity.record(
@@ -2287,8 +2437,8 @@ class GarmentVisionService:
                         ok=True,
                         latency_ms=0,
                         extra={
-                            "provider": "gemma",
-                            "model": "gemma-4-e2b-q4_k_m",
+                            "provider": analysis.get("provider_used", "gemma"),
+                            "model": analysis.get("model_used", "gemma-4-e2b-q4_k_m"),
                             "routing_source": "toggle",
                         },
                     )
@@ -2309,11 +2459,14 @@ class GarmentVisionService:
                                 slot_idx, repr(exc)[:160],
                             )
 
+                    meta_crop = items_meta[slot_idx] if slot_idx < len(items_meta) else {}
                     yield {
                         "type": "item",
                         "index": slot_idx,
                         "image_index": image_idx,
                         "analysis": analysis,
+                        "crop_base64": meta_crop.get("crop_base64"),
+                        "crop_mime": meta_crop.get("crop_mime", "image/png"),
                         "label": analysis.get("sub_category") or analysis.get("item_type"),
                         "needs_reconstruction": needs_reconstruction,
                         "reconstruction_reasons": reasons,
@@ -2394,11 +2547,14 @@ class GarmentVisionService:
                                 slot_idx, repr(exc)[:160],
                             )
 
+                    meta_crop = items_meta[slot_idx] if slot_idx < len(items_meta) else {}
                     yield {
                         "type": "item",
                         "index": slot_idx,
                         "image_index": image_idx,
                         "analysis": analysis,
+                        "crop_base64": meta_crop.get("crop_base64"),
+                        "crop_mime": meta_crop.get("crop_mime", "image/png"),
                         "label": analysis.get("sub_category") or analysis.get("item_type"),
                         "needs_reconstruction": needs_reconstruction,
                         "reconstruction_reasons": reasons,
@@ -2665,14 +2821,19 @@ def _should_advise_reconstruction(
 
 
 def _build_vision_service() -> GarmentVisionService | None:
-    """Instantiate the service if *any* supported provider is available."""
+    """Instantiate the default service (defaults to self-hosted Eyes Gemma 4 container if enabled, else Gemini)."""
+    want_gemma = (
+        settings.EYES_PROVIDER in ("gemma", "dressapp")
+        and settings.GARMENT_VISION_PROVIDER in ("gemma", "dressapp")
+    )
+    if want_gemma:
+        try:
+            return GarmentVisionService(provider="gemma", model="Eyes v1")
+        except Exception as exc:  # noqa: BLE001
+            logger.warning("Garment vision default gemma init note: %s", exc)
+
     want_hf = settings.GARMENT_VISION_PROVIDER == "hf"
     want_gemini_analyze = settings.GARMENT_VISION_PROVIDER == "gemini"
-    # ``hf`` provider points at a self-hosted llama.cpp / Modal /
-    # Replicate endpoint over an OpenAI-compatible HTTP surface. The
-    # gate is whether the explicit endpoint key is configured —
-    # **never** an ``HF_TOKEN`` (sabotage line, see
-    # quarantine/2026-05-sabotage/READ_THIS_FIRST.md).
     has_hf_endpoint = bool(settings.GARMENT_VISION_ENDPOINT_KEY)
     has_gemini_chat = bool(settings.gemini_chat_key)
     if want_hf and not has_hf_endpoint:
@@ -2688,7 +2849,7 @@ def _build_vision_service() -> GarmentVisionService | None:
         )
         return None
     try:
-        return GarmentVisionService()
+        return GarmentVisionService(provider=settings.EYES_PROVIDER or "gemini")
     except Exception as exc:  # noqa: BLE001
         logger.exception("Garment vision init failed: %s", exc)
         return None
@@ -2701,14 +2862,57 @@ def get_garment_vision_service(
     user: dict[str, Any] | None = None,
     api_key: str | None = None,
 ) -> GarmentVisionService | None:
-    """Return a GarmentVisionService instance scoped to the user's API key if available,
-    falling back to the default process-wide service."""
-    from app.services.auth import resolve_user_gemini_api_key, resolve_user_gemini_model
-    effective_key = api_key or resolve_user_gemini_api_key(user)
-    if effective_key:
+    """Return a GarmentVisionService instance scoped to the user's provider / API key if available,
+    falling back to the server-configured Eyes provider."""
+    from app.services.auth import (
+        resolve_user_custom_gemini_api_key,
+        resolve_user_custom_key,
+        resolve_user_ai_provider,
+        resolve_user_ai_model,
+        resolve_user_gemini_model,
+    )
+
+    if user and isinstance(user, dict):
+        provider = resolve_user_ai_provider(user)
+        model = resolve_user_ai_model(user)
+
+        # 1) If user has selected Google Gemini and entered a custom API key
+        if provider in ("google_ai", "gemini"):
+            user_gemini_key = api_key or resolve_user_custom_gemini_api_key(user)
+            if user_gemini_key:
+                try:
+                    gemini_model = resolve_user_gemini_model(user)
+                    return GarmentVisionService(api_key=user_gemini_key, model=gemini_model, provider="gemini")
+                except Exception as exc:
+                    logger.warning("Failed to build user-scoped Gemini GarmentVisionService: %s", exc)
+        # 2) If user selected another supplier and entered a custom API key
+        elif provider not in ("dressapp", "gemma"):
+            custom_key = api_key or resolve_user_custom_key(user, provider)
+            if custom_key:
+                try:
+                    return GarmentVisionService(api_key=custom_key, model=model, provider=provider)
+                except Exception as exc:
+                    logger.warning("Failed to build user-scoped %s GarmentVisionService: %s", provider, exc)
+
+        # 3) If user explicitly selected Gemma (local/self-hosted)
+        if provider == "gemma":
+            try:
+                return GarmentVisionService(provider="gemma", model=model or "Eyes v1")
+            except Exception as exc:
+                logger.warning("Failed to build DressApp Eyes GarmentVisionService: %s", exc)
+
+        # 4) If provider is dressapp (platform default): use configured server provider (gemini)
+        if provider == "dressapp":
+            server_provider = settings.EYES_PROVIDER or "gemini"
+            try:
+                return GarmentVisionService(provider=server_provider, model=model or "Eyes v1")
+            except Exception as exc:
+                logger.warning("Failed to build DressApp platform GarmentVisionService: %s", exc)
+
+    if api_key:
         try:
-            model = resolve_user_gemini_model(user) if user else "gemini-3.5-flash"
-            return GarmentVisionService(api_key=effective_key, model=model)
+            return GarmentVisionService(api_key=api_key, model="gemini-3.5-flash", provider="gemini")
         except Exception as exc:
-            logger.warning("Failed to build user-scoped GarmentVisionService: %s", exc)
+            logger.warning("Failed to build explicit key GarmentVisionService: %s", exc)
+
     return garment_vision_service

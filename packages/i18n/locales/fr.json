@@ -1367,7 +1367,25 @@
     "tomorrowSuggestionSubtitle": "Sélectionnée pour demain selon votre profil de style, les prévisions météo et votre agenda.",
     "tomorrowSuggestionRefreshed": "Suggestion pour demain actualisée !",
     "wearTomorrow": "Porter demain",
-    "upgradeForDailySuggestionsDesc": "Passez au forfait Manager ou Professional pour débloquer les suggestions quotidiennes."
+    "upgradeForDailySuggestionsDesc": "Passez au forfait Manager ou Professional pour débloquer les suggestions quotidiennes.",
+    "calendar": {
+      "searchPlaceholder": "Recherche d'ambiance : « Barbecue d'été », « Shopping au centre commercial », « Réunion professionnelle », « T-shirt noir », « Jean délavé »...",
+      "quickVibes": "Ambiances :",
+      "resultsCount": "{{count}} tenues trouvées sur {{total}}",
+      "noSearchMatches": "Aucune tenue ne correspond à cette ambiance",
+      "noSearchMatchesDesc": "Nous n'avons trouvé aucune tenue enregistrée correspondant à « {{query}} ». Essayez une autre ambiance, un autre vêtement ou effacez la recherche.",
+      "clearSearch": "Effacer la recherche",
+      "vibes": {
+        "black_t_shirt": "T-shirt noir",
+        "business_meeting": "Réunion pro",
+        "summer_barbecue": "Barbecue d'été",
+        "mall_shopping": "Shopping au centre commercial",
+        "rainy_day": "Jour de pluie",
+        "stone_washed_jeans": "Jean délavé",
+        "colorful_summer": "Été coloré",
+        "casual_chic": "Casual chic"
+      }
+    }
   },
   "outfitCompletion": {
     "cta": "Compléter la tenue",
@@ -1387,7 +1405,16 @@
     "noClosetSuggestions": "Aucune pièce complémentaire trouvée dans votre garde-robe. Activez la marketplace ou ajoutez d'autres pièces.",
     "embeddingsMissingHint": "Certaines pièces sélectionnées n'ont pas encore de vecteurs de similarité. Les réimporter améliorera la qualité des suggestions.",
     "empty": "Aucune suggestion n'a été retournée. Essayez d'autres pièces ou activez la marketplace.",
-    "error": "La finalisation de la tenue a échoué. Veuillez réessayer."
+    "error": "La finalisation de la tenue a échoué. Veuillez réessayer.",
+    "tryOnAvatar": "Essayer sur l'avatar",
+    "saveOutfit": "Enregistrer la tenue",
+    "saveOutfitTitle": "Enregistrer la tenue",
+    "saveOutfitDesc": "Enregistrez ce look recommandé avec un nom descriptif pour y accéder à tout moment dans votre Canevas de tenues.",
+    "includedPieces": "Pièces incluses",
+    "savedSuccess": "Tenue « {{name}} » enregistrée dans votre Canevas de tenues !",
+    "alreadySaved": "Tenue déjà enregistrée",
+    "outfitName": "Nom de la tenue",
+    "notes": "Notes du styliste / Occasion"
   },
   "market": {
     "atzmaiGateway": "Passerelle de paiement Atzmai Sachir",

@@ -1367,7 +1367,25 @@
     "tomorrowSuggestionSubtitle": "Samengesteld voor morgen op basis van je stijlprofiel, weersvoorspelling en agenda.",
     "tomorrowSuggestionRefreshed": "Suggestie voor morgen vernieuwd!",
     "wearTomorrow": "Morgen dragen",
-    "upgradeForDailySuggestionsDesc": "Upgrade naar het Manager- of Professional-abonnement om dagelijkse suggesties te ontgrendelen."
+    "upgradeForDailySuggestionsDesc": "Upgrade naar het Manager- of Professional-abonnement om dagelijkse suggesties te ontgrendelen.",
+    "calendar": {
+      "searchPlaceholder": "Vibe-zoekopdracht: \"Zomerbarbecue\", \"Winkelen in het winkelcentrum\", \"Zakelijke bijeenkomst\", \"Zwart T-shirt\", \"Stone-washed jeans\"...",
+      "quickVibes": "Vibes:",
+      "resultsCount": "{{count}} van {{total}} outfits gevonden",
+      "noSearchMatches": "Geen outfits gevonden voor deze vibe",
+      "noSearchMatchesDesc": "We konden geen opgeslagen outfits vinden die overeenkomen met \"{{query}}\". Probeer een andere vibe, een ander kledingstuk of wis de zoekopdracht.",
+      "clearSearch": "Zoekopdracht wissen",
+      "vibes": {
+        "black_t_shirt": "Zwart T-shirt",
+        "business_meeting": "Zakelijke meeting",
+        "summer_barbecue": "Zomerbarbecue",
+        "mall_shopping": "Shoppen in winkelcentrum",
+        "rainy_day": "Regenachtige dag",
+        "stone_washed_jeans": "Stone-washed jeans",
+        "colorful_summer": "Kleurrijke zomer",
+        "casual_chic": "Casual chic"
+      }
+    }
   },
   "outfitCompletion": {
     "cta": "Maak de outfit compleet",
@@ -1387,7 +1405,16 @@
     "noClosetSuggestions": "Geen aanvullende items gevonden in je kast. Probeer de marktplaats in te schakelen of voeg meer stukken toe aan je kast.",
     "embeddingsMissingHint": "Sommige van je geselecteerde stukken hebben nog geen insluitingen. Als u ze opnieuw uploadt, wordt de kwaliteit van de suggesties verbeterd.",
     "empty": "Er kwamen geen suggesties terug. Probeer verschillende ankers te kiezen of de marktplaats te wisselen.",
-    "error": "Voltooiing van outfit is mislukt. Probeer het opnieuw."
+    "error": "Voltooiing van outfit is mislukt. Probeer het opnieuw.",
+    "tryOnAvatar": "Passen op avatar",
+    "saveOutfit": "Outfit opslaan",
+    "saveOutfitTitle": "Outfit opslaan",
+    "saveOutfitDesc": "Sla deze aanbevolen look op met een beschrijvende naam om deze op elk gewenst moment in je Outfit Canvas te openen.",
+    "includedPieces": "Inbegrepen kledingstukken",
+    "savedSuccess": "Outfit \"{{name}}\" opgeslagen in je Outfit Canvas!",
+    "alreadySaved": "Outfit al opgeslagen",
+    "outfitName": "Outfitnaam",
+    "notes": "Stylist-notities / Gelegenheid"
   },
   "market": {
     "atzmaiGateway": "Atzmai Sachir Betaalportal",

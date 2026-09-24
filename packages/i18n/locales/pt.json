@@ -1367,7 +1367,25 @@
     "tomorrowSuggestionSubtitle": "Curada para amanhã com base no seu perfil de estilo, previsão do tempo e agenda.",
     "tomorrowSuggestionRefreshed": "Sugestão para amanhã atualizada!",
     "wearTomorrow": "Vestir amanhã",
-    "upgradeForDailySuggestionsDesc": "Atualize para o plano Manager ou Professional para desbloquear as sugestões diárias."
+    "upgradeForDailySuggestionsDesc": "Atualize para o plano Manager ou Professional para desbloquear as sugestões diárias.",
+    "calendar": {
+      "searchPlaceholder": "Busca de estilo: \"Churrasco de verão\", \"Compras no shopping\", \"Reunião de negócios\", \"Camiseta preta\", \"Jeans delavê\"...",
+      "quickVibes": "Estilos:",
+      "resultsCount": "{{count}} de {{total}} looks encontrados",
+      "noSearchMatches": "Nenhum look combina com este estilo",
+      "noSearchMatchesDesc": "Não encontramos nenhum look salvo correspondente a \"{{query}}\". Tente outro estilo, peça ou limpe a pesquisa.",
+      "clearSearch": "Limpar pesquisa",
+      "vibes": {
+        "black_t_shirt": "Camiseta preta",
+        "business_meeting": "Reunião de negócios",
+        "summer_barbecue": "Churrasco de verão",
+        "mall_shopping": "Compras no shopping",
+        "rainy_day": "Dia de chuva",
+        "stone_washed_jeans": "Jeans delavê",
+        "colorful_summer": "Verão colorido",
+        "casual_chic": "Casual chique"
+      }
+    }
   },
   "outfitCompletion": {
     "cta": "Completar o look",
@@ -1387,7 +1405,16 @@
     "noClosetSuggestions": "Nenhuma peça complementar encontrada no seu guarda-roupa. Ative o marketplace ou adicione mais peças.",
     "embeddingsMissingHint": "Algumas das peças selecionadas ainda não têm vetores de similaridade. Reenviar melhora a qualidade das sugestões.",
     "empty": "Nenhuma sugestão retornada. Tente outras peças-base ou ative o marketplace.",
-    "error": "Falha ao completar o look. Tente novamente."
+    "error": "Falha ao completar o look. Tente novamente.",
+    "tryOnAvatar": "Experimentar no avatar",
+    "saveOutfit": "Salvar look",
+    "saveOutfitTitle": "Salvar look",
+    "saveOutfitDesc": "Salve este visual recomendado com um nome descritivo para acessá-lo a qualquer momento no seu Canvas de Looks.",
+    "includedPieces": "Peças inclusas",
+    "savedSuccess": "Look \"{{name}}\" salvo no seu Canvas de Looks!",
+    "alreadySaved": "Look já salvo",
+    "outfitName": "Nome do look",
+    "notes": "Notas do estilista / Ocasião"
   },
   "market": {
     "atzmaiGateway": "Gateway de pagamento Atzmai Sachir",

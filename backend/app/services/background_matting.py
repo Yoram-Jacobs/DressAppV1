@@ -103,6 +103,10 @@ def _rembg_remove(image_bytes: bytes) -> bytes | None:
         #    this, rembg sees the rotated content while the user sees the
         #    correctly-oriented result, producing a cutout that doesn't
         #    align with the visible garment.
+        # Check whether heavy PyMatting (closed-form Laplacian linear solver) is requested.
+        # Defaults to False on CPU to keep matting under 2s (alpha_matting=True takes ~40s on CPU).
+        use_alpha_matting = bool(getattr(settings, "BACKGROUND_MATTING_ALPHA_MATTING", False))
+
         try:
             from PIL import ImageOps
 
@@ -110,15 +114,14 @@ def _rembg_remove(image_bytes: bytes) -> bytes | None:
             original = ImageOps.exif_transpose(original).convert("RGB")
         except Exception:  # noqa: BLE001
             # Not a decodable image — let rembg attempt anyway.
-            out = remove(
-                image_bytes,
-                session=sess,
-                post_process_mask=True,
-                alpha_matting=True,
-                alpha_matting_foreground_threshold=240,
-                alpha_matting_background_threshold=10,
-                alpha_matting_erode_size=10,
-            )
+            rembg_kwargs = {"session": sess, "post_process_mask": True, "alpha_matting": use_alpha_matting}
+            if use_alpha_matting:
+                rembg_kwargs.update({
+                    "alpha_matting_foreground_threshold": 240,
+                    "alpha_matting_background_threshold": 10,
+                    "alpha_matting_erode_size": 10,
+                })
+            out = remove(image_bytes, **rembg_kwargs)
             return out or None
 
         # 2) Build a downscaled copy for rembg if needed.
@@ -140,15 +143,14 @@ def _rembg_remove(image_bytes: bytes) -> bytes | None:
             inference_bytes = image_bytes
 
         # 3) Run rembg — yields PNG with alpha at the inference resolution.
-        out = remove(
-            inference_bytes,
-            session=sess,
-            post_process_mask=True,
-            alpha_matting=True,
-            alpha_matting_foreground_threshold=240,
-            alpha_matting_background_threshold=10,
-            alpha_matting_erode_size=10,
-        )
+        rembg_kwargs = {"session": sess, "post_process_mask": True, "alpha_matting": use_alpha_matting}
+        if use_alpha_matting:
+            rembg_kwargs.update({
+                "alpha_matting_foreground_threshold": 240,
+                "alpha_matting_background_threshold": 10,
+                "alpha_matting_erode_size": 10,
+            })
+        out = remove(inference_bytes, **rembg_kwargs)
         if not out:
             return None
 

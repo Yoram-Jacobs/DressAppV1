@@ -1367,7 +1367,25 @@
     "tomorrowSuggestionSubtitle": "Seleccionado para mañana según tu perfil de estilo, el pronóstico del tiempo y tu calendario.",
     "tomorrowSuggestionRefreshed": "¡Sugerencia de mañana actualizada!",
     "wearTomorrow": "Usar mañana",
-    "upgradeForDailySuggestionsDesc": "Actualiza al plan Manager o Professional para desbloquear las sugerencias diarias."
+    "upgradeForDailySuggestionsDesc": "Actualiza al plan Manager o Professional para desbloquear las sugerencias diarias.",
+    "calendar": {
+      "searchPlaceholder": "Búsqueda por estilo: \"Barbacoa de verano\", \"Compras en el centro comercial\", \"Reunión de negocios\", \"Camiseta negra\", \"Vaqueros lavados a la piedra\"...",
+      "quickVibes": "Estilos:",
+      "resultsCount": "{{count}} de {{total}} atuendos encontrados",
+      "noSearchMatches": "Ningún atuendo coincide con este estilo",
+      "noSearchMatchesDesc": "No pudimos encontrar atuendos guardados que coincidan con \"{{query}}\". Prueba con otro estilo, prenda o borra la búsqueda.",
+      "clearSearch": "Borrar búsqueda",
+      "vibes": {
+        "black_t_shirt": "Camiseta negra",
+        "business_meeting": "Reunión de negocios",
+        "summer_barbecue": "Barbacoa de verano",
+        "mall_shopping": "Compras en el centro comercial",
+        "rainy_day": "Día lluvioso",
+        "stone_washed_jeans": "Vaqueros desgastados",
+        "colorful_summer": "Verano colorido",
+        "casual_chic": "Casual chic"
+      }
+    }
   },
   "outfitCompletion": {
     "cta": "Completar el look",
@@ -1387,7 +1405,16 @@
     "noClosetSuggestions": "No se encontraron piezas complementarias en tu armario. Activa el marketplace o añade más prendas.",
     "embeddingsMissingHint": "Algunas de tus piezas aún no tienen vectores de similitud. Vuelve a subirlas para mejorar la calidad de las sugerencias.",
     "empty": "No se obtuvieron sugerencias. Prueba con otras prendas base o activa el marketplace.",
-    "error": "Falló la finalización del look. Inténtalo de nuevo."
+    "error": "Falló la finalización del look. Inténtalo de nuevo.",
+    "tryOnAvatar": "Probar en avatar",
+    "saveOutfit": "Guardar el atuendo",
+    "saveOutfitTitle": "Guardar atuendo",
+    "saveOutfitDesc": "Guarda este look recomendado con un nombre descriptivo para acceder a él en cualquier momento en tu Lienzo de atuendos.",
+    "includedPieces": "Piezas incluidas",
+    "savedSuccess": "¡Atuendo \"{{name}}\" guardado en tu Lienzo de atuendos!",
+    "alreadySaved": "Atuendo ya guardado",
+    "outfitName": "Nombre del atuendo",
+    "notes": "Notas del estilista / Ocasión"
   },
   "market": {
     "atzmaiGateway": "Pasarela de pago Atzmai Sachir",

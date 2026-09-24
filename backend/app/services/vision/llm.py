@@ -6,6 +6,7 @@ import json
 import re
 from typing import Any
 from app.config import settings
+from .validation import _coerce_single_garment, _coerce_enums
 
 
 
@@ -13,7 +14,7 @@ async def _call_gemma_space(
     *,
     system_prompt: str,
     user_text: str,
-    image_b64_jpeg: str,
+    image_b64_jpeg: str | None = None,
     max_tokens: int = 2400,
     temperature: float = 0.1,
     timeout: float | None = None,
@@ -21,46 +22,27 @@ async def _call_gemma_space(
     think: bool = False,
     id_slot: int | None = None,
 ) -> str:
-    """Phase O.3 — call the self-hosted Gemma-4 E2B HF Space.
+    """Phase O.3 — call the self-hosted Gemma-4 E2B/E4B HF Space.
 
     The Space exposes a FastAPI ``/predict`` endpoint that wraps
-    llama-cpp-python / llama-server.
-
-    Optional payload knobs (the proxy ignores unknown fields, so older
-    builds remain compatible):
-
-    * ``json_schema``  — when given, the proxy is expected to forward
-      it to llama-server as ``response_format={"type":"json_schema",
-      "json_schema":{...}}`` to grammar-constrain the output.
-    * ``think``        — when False (default for the closet AddItem
-      flow), the proxy should pass
-      ``--chat-template-kwargs {"enable_thinking": false}`` /
-      ``--reasoning-budget 0`` to llama-server (the current
-      ``dressapp-eyes`` container already launches with these defaults).
-      When True, callers wanting the model to "think" before
-      answering (e.g. Brain experiments) can flip it on per request.
-
-    Failures here are surfaced as ``RuntimeError`` so the outer
-    routing can swap to the Gemini fallback. That keeps AddItem
-    working even when the Space is sleeping or 5xxing.
+    llama-cpp-python / llama-server. Supports both multimodal vision
+    and pure text completions (outfit stylist, recommendations).
     """
     space_url = (settings.EYES_GEMMA_SPACE_URL or "").rstrip("/")
     if not space_url:
         raise RuntimeError("EYES_GEMMA_SPACE_URL not configured.")
 
     # Build OpenAI-compatible messages with multimodal format
-    # Gemma-4 expects image_url content part according to the eyes container
     messages = []
     
     # System message
     messages.append({"role": "system", "content": system_prompt})
     
-    # User message with image and text (OpenAI multimodal format)
-    # Image must precede text for optimal attention mapping
-    user_content = [
-        {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{image_b64_jpeg}"}},
-        {"type": "text", "text": user_text}
-    ]
+    # User message with optional image and text
+    user_content = []
+    if image_b64_jpeg:
+        user_content.append({"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{image_b64_jpeg}"}})
+    user_content.append({"type": "text", "text": user_text})
     messages.append({"role": "user", "content": user_content})
     
     # Build the payload in OpenAI-compatible format for the eyes proxy
@@ -161,11 +143,15 @@ SYSTEM_PROMPT = (
     "is used to auto-fill an Add-Item form that a user will review, so be "
     "confident but never invent sensitive claims (e.g. do not guess a "
     "specific brand unless clearly visible; leave brand blank otherwise).\n\n"
+    "CRITICAL FORMAT RULE — ZERO CONVERSATIONAL FILLER:\n"
+    "Never begin your response with conversational introductions or preambles such as "
+    "'Here is the clothing item:', 'Here is the analysis:', 'Certainly!', 'In this photo I see', or any greeting. "
+    "Your response MUST start immediately with the first JSON character '{' or '[' and end immediately with '}' or ']'. "
+    "Never wrap the result in extra commentary or markdown backticks.\n\n"
     "Return ONLY a JSON value with one of two shapes:\n"
     "  \u2022 a single JSON object when one garment is visible, or\n"
     "  \u2022 a JSON array of such objects when multiple garments are visible, or\n"
-    "  \u2022 a 'No Garments detected' message\n"
-    " Never wrap the result in extra commentary or markdown.\n"
+    "  \u2022 a 'No Garments detected' message\n\n"
     "Each garment object has the following shape (all keys optional except "
     "`title`):\n"
     "{\n"
@@ -218,7 +204,14 @@ SYSTEM_PROMPT = (
     "  5. FIELD RULES:\n"
     "     • pattern: If the garment has printed text, slogans, artwork, graphics, typography, or illustrations, set pattern=\"graphic\". Only use \"solid\" if there is no graphic or pattern.\n"
     "     • season: If the piece is versatile and wearable year-round (e.g. standard t-shirt, jeans, hoodie, sneakers), return [\"all\"]. Only restrict to specific seasons if clearly weather-bound (e.g. heavy winter down parka, summer swimwear).\n"
-    "     • gender: Default to \"unisex\" for standard t-shirts, hoodies, and casual pieces unless tailored explicitly for men or women."
+    "     • gender: Default to \"unisex\" for standard t-shirts, hoodies, and casual pieces unless tailored explicitly for men or women.\n"
+    "  6. CANONICAL TAXONOMY RULES (STRICTLY BANNED SYNONYMS):\n"
+    "     Always use standard DressApp taxonomy terms; never use regional, colloquial, or dialectal synonyms:\n"
+    "     • Knitwear: ALWAYS use 'Sweater' or 'Cardigan'. NEVER use 'jumper', 'jersey', 'pullover', or 'knit'.\n"
+    "     • Legwear: ALWAYS use 'Pants', 'Jeans', 'Shorts', or 'Leggings'. NEVER use 'trousers', 'slacks', or 'dungarees'.\n"
+    "     • Tops: ALWAYS use 'Shirt', 'T-Shirt', 'Blouse', 'Tank Top', or 'Hoodie'. NEVER use 'vest' for tank tops, 'chemise', or 'singlet'.\n"
+    "     • Outerwear: ALWAYS use 'Jacket', 'Coat', or 'Blazer'. NEVER use 'mackintosh', 'anorak', 'windcheater', or 'overcoat'.\n"
+    "     • Footwear: ALWAYS use 'Sneakers', 'Boots', 'Loafers', 'Sandals', or 'Flats'. NEVER use 'trainers', 'tennis shoes', or 'plimsolls'."
 )
 
 
@@ -641,10 +634,11 @@ DETECT_SYSTEM_PROMPT = (
     "both a \"shirt\" box and a \"sleeve\" box for the same shirt).\n"
     "- If you are uncertain whether two regions are the same garment, "
     "merge them into a single box that covers both.\n"
-    "- A pair (shoes, earrings, gloves) counts as ONE item \u2014 use a "
-    "single box that contains both pieces.\n"
-    "- Do NOT include a full-frame box covering the whole outfit \u2014 "
-    "only individual items.\n\n"
+    "- Footwear & Pairs: A pair (boots, shoes, sneakers, earrings, gloves) counts as ONE item — "
+    "use a single bounding box that encloses BOTH boots/shoes in the pair (even if one is diagonally behind or partially occluded).\n"
+    "- Bags and purses: Return the bounding box around the BAG/PURSE BODY itself. "
+    "Do NOT extend the box up along long shoulder straps to the shoulder/neck, so the crop cleanly captures the handbag.\n"
+    "- Do NOT include a full-frame box covering the whole outfit — only individual items.\n\n"
     "For each item, return a tight bounding box in normalized coordinates "
     "on a 0\u20131000 scale (where 0 is top/left and 1000 is bottom/right), "
     "using Gemini's standard ``[ymin, xmin, ymax, xmax]`` order.\n\n"
@@ -1132,11 +1126,167 @@ async def call_gemma_space_stream_attributes(
     # 45 s is generous for 280 tokens at 35 ms/token (~10 s generation
     # + ~30 s image prefill overhead worst-case on a cold CPU).
     tpg: float = timeout_per_group or max(
-        45.0, float(settings.EYES_GEMMA_TIMEOUT_S) / 3.0
+        60.0, float(settings.EYES_GEMMA_TIMEOUT_S) / 2.0
     )
 
     lang_code = (language or "en").lower()
     lang_name = _LANG_NAMES.get(lang_code, lang_code) if lang_code != "en" else None
+
+    # ── Fast path: Unified single pass (~24s vs 102s sequential) ──
+    # When enabled, avoids re-encoding the multimodal image 5 times on CPU.
+    single_pass = getattr(settings, "EYES_GEMMA_SINGLE_PASS", True)
+    if single_pass:
+        all_field_names: list[str] = []
+        for _, fnames, _, _ in ATTRIBUTE_GROUPS:
+            all_field_names.extend(fnames)
+
+        first_part = "You are The Eyes — DressApp's visual garment analyst. Your job is to describe the garment in the photo in exhaustive, merchandisable detail for an Add-Item form. Be confident, concise, and never invent brand names or details that are not visible.\n"
+        if request_id:
+            first_part = f"Request ID: {request_id}\n\n" + first_part
+
+        sys_parts = [
+            first_part,
+            "Style Rules:\n"
+            "- CONFIDENCE: Do not hedge (do not use 'seems', 'appears', 'looks like', 'probably'). State observations directly.\n"
+            "- VOICE: Thoughtful, professional editor. No markdown, emojis, or sales pitch.\n"
+            "- UNIQUE NAME: 'name' must be 3-5 unique, specific, descriptive fashion words (e.g. 'Cognac Leather Slouch Knee-High Boots', 'Minimalist Black Sleeveless Trench Dress', 'Olive Tan Leather Waist Belt', 'Double-Breasted Wool Long Coat'). NEVER output only the subcategory name or generic words!\n"
+            "- ITEM TYPE: 'item_type' must be the specific garment cut or style (e.g. 'Double-Breasted Coat', 'Tailored Coat', 'Trench Coat', 'Knee-High Boots', 'Waist Belt', 'Crossbody Bag'). NEVER leave blank.\n"
+            "- OUTERWEAR VS DRESS: Long garments with structured lapels, double-breasted buttons, tailored trench cuts, heavy wool, or coats/jackets MUST be classified as Category: 'Outerwear' (sub_category: 'Coats', item_type: e.g. 'Double-Breasted Coat' or 'Tailored Coat'). They are NOT dresses! Only indoor single-piece dresses or gowns belong in Category: 'Full Body' (sub_category: 'Dresses').\n"
+            "- FOOTWEAR: For footwear, always use plural nouns ('Boots', 'Knee-High Boots', 'Loafers', 'Sneakers') and describe both boots/shoes in the pair. If shafts rise up the leg, label as 'Knee-High Boots' or 'Tall Boots'. NEVER output singular 'Boot' or 'Shoe'.\n"
+            "- GENDER: If worn by a female model or styled for women (e.g. dress, women's heeled boots, women's handbag, waist belt), set gender to 'women'. Do NOT lazily classify as 'unisex'.\n"
+            "- RICH COLORS: Use precise, high-fashion color nuances (e.g. 'Cognac', 'Tan', 'Espresso', 'Chestnut', 'Camel', 'Olive-Tan', 'Charcoal', 'Jet Black', 'Gold') rather than basic flat colors ('Brown', 'Black').\n"
+            "- MATERIALS: Visually inspect texture, grain, and structure to infer primary composition (e.g. 'Leather', 'Cotton', 'Wool', 'Silk', 'Denim'). NEVER output 'Unknown'.\n"
+            "- SEASON: Every item MUST include a populated 'season' array with at least 1 valid value ('spring', 'summer', 'fall', 'winter', or 'all'). E.g., heavy wool coats or boots are ['fall', 'winter']; leather belts, bags, and versatile basics are ['all']; lightweight summer dresses are ['spring', 'summer']. NEVER return an empty list or null.\n"
+            "- CAPTION: Provide an elegant, 1-2 sentence editorial caption describing the garment's silhouette, styling versatility, craftsmanship, and prominent design details. NEVER leave empty or null.\n"
+            "- BOTTOMS & SHORTS: For shorts, skirts, or pants, identify the specific cut, rise, and silhouette (e.g. 'High-Rise Distressed Denim Shorts', 'Tailored Pleated Bermuda Shorts', 'Relaxed Cargo Shorts', 'Drawstring Linen Shorts'). Note the rise, pocket style, hem treatment (cuffed, raw, frayed), and silhouette. NEVER output generic 'Shorts' or 'Pants' alone!\n"
+            "- TOPS & SHIRTS: For tops, specify the neckline (crewneck, V-neck, scoop, collar), sleeve length (short-sleeve, sleeveless, long-sleeve), and fit (oversized, slim-fit, boxy, cropped).\n"
+            "- TERMINOLOGY: Use standard global fashion terms (e.g. 'Sweater' instead of 'Jumper', 'Pants' or 'Trousers', 'Sneakers'). Strictly output raw JSON with NO conversational prefixes (never say 'Here is the clothing item:' or any conversational introduction)."
+        ]
+
+        if segformer_category and not is_single_item:
+            mapped_cat = None
+            if segformer_category == "top":
+                mapped_cat = "Top or Outerwear"
+            elif segformer_category == "bottom":
+                mapped_cat = "Bottom"
+            elif segformer_category == "dress":
+                mapped_cat = "Outerwear (Coat / Trench) or Full Body (Dress)"
+            elif segformer_category == "footwear":
+                mapped_cat = "Footwear"
+            elif segformer_category in ("headwear", "accessory", "bag"):
+                mapped_cat = "Accessories"
+
+            if mapped_cat:
+                sys_parts.append(
+                    f"- CATEGORY HINT: Semantic segmentation suggested Category: '{mapped_cat}' (SegFormer label: '{segformer_label}'). "
+                    "Visually verify the garment: if it has coat lapels, double-breasted buttons, or overcoat structure, classify it as Category: 'Outerwear' (sub_category: 'Coats'). If it is a standalone dress, classify it as Category: 'Full Body' (sub_category: 'Dresses')."
+                )
+
+        if lang_code in ("he", "iw"):
+            sys_parts.append(
+                "- LANGUAGE: OUTPUT LANGUAGE = Hebrew (עברית). Every free-text field "
+                "(`name`, `title`, `caption`, `tags`, `sub_category`, `item_type`, "
+                "`colors[*].name`, `fabric_materials[*].name`) MUST be written in fluent, "
+                "idiomatic modern Hebrew (e.g. מכנסיים קצרים, ג'ינס, כותנה, כחול כהה). "
+                "JSON keys and enum tokens stay in English."
+            )
+        elif lang_name:
+            sys_parts.append(f"- LANGUAGE: All free-text values must be written in fluent {lang_name}.")
+
+        sys_parts.append("Return ONLY the JSON object. No markdown, no commentary.")
+        system_prompt = "\n".join(sys_parts)
+
+        lang_suffix = " Respond in Hebrew (עברית) for all free-text fields." if lang_code in ("he", "iw") else (f" Respond in {lang_name} for all free-text fields." if lang_name else "")
+        user_text = f"Analyse this garment photo and return JSON for the following fields: {', '.join(all_field_names)}.{lang_suffix}"
+        if request_id:
+            user_text = f"Analyse this garment photo (Request ID: {request_id}) and return JSON for the following fields: {', '.join(all_field_names)}.{lang_suffix}"
+
+        import copy
+        properties = {}
+        is_coarse_seg = (segformer_label or "").lower().strip() in ("upper-clothes", "upper_clothes", "lower-clothes", "lower_clothes", "garment", "clothing", "item")
+        for name in all_field_names:
+            if name in _GARMENT_OBJECT_SCHEMA["properties"]:
+                prop = copy.deepcopy(_GARMENT_OBJECT_SCHEMA["properties"][name])
+                if name == "category" and segformer_category and not is_single_item and not is_coarse_seg:
+                    if segformer_category == "top":
+                        prop["enum"] = ["Top", "Outerwear"]
+                    elif segformer_category == "bottom":
+                        prop["enum"] = ["Bottom"]
+                    elif segformer_category == "dress":
+                        prop["enum"] = ["Outerwear", "Full Body"]
+                    elif segformer_category == "footwear":
+                        prop["enum"] = ["Footwear"]
+                    elif segformer_category in ("headwear", "accessory", "bag"):
+                        prop["enum"] = ["Accessories"]
+
+                if isinstance(prop, dict):
+                    p_type = prop.get("type")
+                    if p_type == "string" and "maxLength" not in prop and "enum" not in prop:
+                        prop["maxLength"] = 16 if name == "size" else 36
+                    elif isinstance(p_type, list) and "string" in p_type and "maxLength" not in prop:
+                        prop["maxLength"] = 16 if name == "size" else 36
+
+                    if name == "caption":
+                        prop["minLength"] = 10
+                        prop["maxLength"] = 240
+
+                    if p_type == "array" and "items" in prop:
+                        if name == "season":
+                            prop["minItems"] = 1
+                            prop["maxItems"] = 4
+                        elif name == "colors":
+                            prop["maxItems"] = 4
+                        elif name == "fabric_materials":
+                            prop["maxItems"] = 3
+                        elif name == "tags":
+                            prop["maxItems"] = 6
+
+                        items_schema = prop["items"]
+                        if isinstance(items_schema, dict):
+                            i_type = items_schema.get("type")
+                            if i_type == "string" and "maxLength" not in items_schema:
+                                items_schema["maxLength"] = 24
+                            elif i_type == "object" and "properties" in items_schema:
+                                for sub_p_name, sub_p in items_schema["properties"].items():
+                                    if isinstance(sub_p, dict) and sub_p.get("type") == "string":
+                                        sub_p["maxLength"] = 24
+
+                properties[name] = prop
+
+        full_schema = {
+            "type": "object",
+            "properties": properties,
+            "required": [
+                "name", "title", "category", "sub_category", "item_type",
+                "colors", "pattern", "gender", "fabric_materials", "season", "caption"
+            ],
+            "additionalProperties": False,
+        }
+
+        try:
+            timeout_single = max(180.0, float(settings.EYES_GEMMA_TIMEOUT_S))
+            raw = await _call_gemma_space(
+                system_prompt=system_prompt,
+                user_text=user_text,
+                image_b64_jpeg=image_b64_jpeg,
+                max_tokens=700,
+                temperature=0.0,
+                timeout=timeout_single,
+                json_schema=full_schema,
+                id_slot=id_slot,
+            )
+            parsed = _extract_json(raw)
+            if isinstance(parsed, list) and parsed:
+                parsed = parsed[0]
+            if isinstance(parsed, dict) and len(parsed) >= 3:
+                parsed = _coerce_single_garment(parsed)
+                parsed = _coerce_enums(parsed)
+                for group_name, field_names, _, _ in ATTRIBUTE_GROUPS:
+                    filtered = {k: v for k, v in parsed.items() if k in field_names}
+                    yield group_name, field_names, filtered
+                return
+        except Exception as exc:  # noqa: BLE001
+            logger.warning("Gemma single-pass failed (%s); falling back to sequential groups", exc)
 
     for group_name, field_names, max_tokens, sys_snippet in ATTRIBUTE_GROUPS:
         # Build stitched system prompt: Header + Style Rules (Common & Identical across groups to hit cache)
@@ -1148,7 +1298,17 @@ async def call_gemma_space_stream_attributes(
             first_part,
             "Style Rules:\n"
             "- CONFIDENCE: Do not hedge (do not use 'seems', 'appears', 'looks like', 'probably'). State observations directly.\n"
-            "- VOICE: Thoughtful, professional editor. No markdown, emojis, or sales pitch."
+            "- VOICE: Thoughtful, professional editor. No markdown, emojis, or sales pitch.\n"
+            "- UNIQUE NAME: 'name' must be 3-5 unique, specific, descriptive fashion words (e.g. 'Cognac Leather Slouch Knee-High Boots', 'Minimalist Black Sleeveless Trench Dress', 'Olive Tan Leather Waist Belt', 'Double-Breasted Wool Long Coat'). NEVER output only the subcategory name or generic words!\n"
+            "- ITEM TYPE: 'item_type' must be the specific garment cut or style (e.g. 'Double-Breasted Coat', 'Tailored Coat', 'Trench Coat', 'Knee-High Boots', 'Waist Belt', 'Crossbody Bag'). NEVER leave blank.\n"
+            "- OUTERWEAR VS DRESS: Long garments with structured lapels, double-breasted buttons, tailored trench cuts, heavy wool, or coats/jackets MUST be classified as Category: 'Outerwear' (sub_category: 'Coats', item_type: e.g. 'Double-Breasted Coat' or 'Tailored Coat'). They are NOT dresses! Only indoor single-piece dresses or gowns belong in Category: 'Full Body' (sub_category: 'Dresses').\n"
+            "- FOOTWEAR: For footwear, always use plural nouns ('Boots', 'Knee-High Boots', 'Loafers', 'Sneakers') and describe both boots/shoes in the pair. If shafts rise up the leg, label as 'Knee-High Boots' or 'Tall Boots'. NEVER output singular 'Boot' or 'Shoe'.\n"
+            "- GENDER: If worn by a female model or styled for women (e.g. dress, women's heeled boots, women's handbag, waist belt), set gender to 'women'. Do NOT lazily classify as 'unisex'.\n"
+            "- RICH COLORS: Use precise, high-fashion color nuances (e.g. 'Cognac', 'Tan', 'Espresso', 'Chestnut', 'Camel', 'Olive-Tan', 'Charcoal', 'Jet Black', 'Gold') rather than basic flat colors ('Brown', 'Black').\n"
+            "- MATERIALS: Visually inspect texture, grain, and structure to infer primary composition (e.g. 'Leather', 'Cotton', 'Wool', 'Silk', 'Denim'). NEVER output 'Unknown'.\n"
+            "- SEASON: Every item MUST include a populated 'season' array with at least 1 valid value ('spring', 'summer', 'fall', 'winter', or 'all'). E.g., heavy wool coats or boots are ['fall', 'winter']; leather belts, bags, and versatile basics are ['all']; lightweight summer dresses are ['spring', 'summer']. NEVER return an empty list or null.\n"
+            "- CAPTION: Provide an elegant, 1-2 sentence editorial caption describing the garment's silhouette, styling versatility, craftsmanship, and prominent design details. NEVER leave empty or null.\n"
+            "- TERMINOLOGY: Use standard global fashion terms (e.g. 'Sweater' instead of 'Jumper', 'Pants' or 'Trousers', 'Sneakers'). Strictly output raw JSON with NO conversational prefixes (never say 'Here is the clothing item:' or any conversational introduction)."
         ]
         
         # Inject category restriction based on SegFormer detection (ONLY if NOT is_single_item)
@@ -1159,16 +1319,16 @@ async def call_gemma_space_stream_attributes(
             elif segformer_category == "bottom":
                 mapped_cat = "Bottom"
             elif segformer_category == "dress":
-                mapped_cat = "Full Body (Dress)"
+                mapped_cat = "Outerwear (Coat / Trench) or Full Body (Dress)"
             elif segformer_category == "footwear":
                 mapped_cat = "Footwear"
-            elif segformer_category in ("headwear", "accessory"):
+            elif segformer_category in ("headwear", "accessory", "bag"):
                 mapped_cat = "Accessories"
             
             if mapped_cat:
                 sys_parts.append(
-                    f"- CATEGORY RESTRICTION: The garment in the photo has been pre-classified as Category: '{mapped_cat}' (SegFormer label: '{segformer_label}'). "
-                    f"You MUST classify this garment under Category: '{mapped_cat}' and describe subcategory and item types that strictly belong to this category (e.g., do not describe pants, shorts, or skirts if the category is Top)."
+                    f"- CATEGORY HINT: Semantic segmentation suggested Category: '{mapped_cat}' (SegFormer label: '{segformer_label}'). "
+                    "Visually verify the garment: if it has coat lapels, double-breasted buttons, or overcoat structure, classify it as Category: 'Outerwear' (sub_category: 'Coats'). If it is a standalone dress, classify it as Category: 'Full Body' (sub_category: 'Dresses')."
                 )
 
         # Add target language rule if applicable
@@ -1190,17 +1350,18 @@ async def call_gemma_space_stream_attributes(
             if name in _GARMENT_OBJECT_SCHEMA["properties"]:
                 prop = copy.deepcopy(_GARMENT_OBJECT_SCHEMA["properties"][name])
                 
-                # Constrain category enum based on SegFormer pre-classification (ONLY if NOT is_single_item)
-                if name == "category" and segformer_category and not is_single_item:
+                # Constrain category enum based on SegFormer pre-classification (ONLY if NOT is_single_item and NOT coarse label)
+                is_coarse_seg = (segformer_label or "").lower().strip() in ("upper-clothes", "upper_clothes", "lower-clothes", "lower_clothes", "garment", "clothing", "item")
+                if name == "category" and segformer_category and not is_single_item and not is_coarse_seg:
                     if segformer_category == "top":
                         prop["enum"] = ["Top", "Outerwear"]
                     elif segformer_category == "bottom":
                         prop["enum"] = ["Bottom"]
                     elif segformer_category == "dress":
-                        prop["enum"] = ["Full Body"]
+                        prop["enum"] = ["Outerwear", "Full Body"]
                     elif segformer_category == "footwear":
                         prop["enum"] = ["Footwear"]
-                    elif segformer_category in ("headwear", "accessory"):
+                    elif segformer_category in ("headwear", "accessory", "bag"):
                         prop["enum"] = ["Accessories"]
 
                 # Enforce maxLength on string fields to prevent repetition loops
@@ -1210,10 +1371,15 @@ async def call_gemma_space_stream_attributes(
                         prop["maxLength"] = 16 if name == "size" else 36
                     elif isinstance(p_type, list) and "string" in p_type and "maxLength" not in prop:
                         prop["maxLength"] = 16 if name == "size" else 36
+
+                    if name == "caption":
+                        prop["minLength"] = 10
+                        prop["maxLength"] = 240
                     
                     # Nested array properties (colors, fabric_materials, tags, season)
                     if p_type == "array" and "items" in prop:
                         if name == "season":
+                            prop["minItems"] = 1
                             prop["maxItems"] = 4
                         elif name == "colors":
                             prop["maxItems"] = 4
@@ -1258,6 +1424,9 @@ async def call_gemma_space_stream_attributes(
                 group_name,
                 repr(exc)[:200],
             )
+            err_msg = str(exc)
+            if any(k in err_msg for k in ("502", "503", "504", "All connection attempts failed", "ConnectError", "Connection refused")):
+                raise
             yield group_name, field_names, {}
             continue
 

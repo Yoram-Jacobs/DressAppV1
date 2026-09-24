@@ -203,7 +203,7 @@
         "capture": {
           "alt": "doek vangen",
           "title": "Kleding vastleggen",
-          "description": "Maak snel een foto van uw werkelijke kledingstukken. Werkt prachtig met alle verlichting en achtergronden."
+          "description": "Maak snel een foto van je echte kledingstukken. Het werkt het beste bij goede verlichting en een contrasterende achtergrond."
         },
         "analysis": {
           "alt": "attribuutanalyse",
@@ -227,7 +227,7 @@
       "heading": "Elk stuk vindt zijn plaats",
       "description1": "Fotografeer alles wat je bezit: DressApp leest de stof, de snit, de kleur en archiveert het zoals een stylist dat zou doen: getagd, gecatalogiseerd, klaar om te worden opgehaald op het moment dat je het nodig hebt.",
       "description2": "Geen vergeten lades meer. Zoek op trefwoord, of beschrijf gewoon een gevoel – ‘iets warms voor een regenachtige maandag’ – en het juiste stuk vindt de weg naar jou terug.",
-      "cta": "Begin met het bouwen van je kast",
+      "cta": "Migreer je garderobe",
       "recentlyAdded": "Recent toegevoegd",
       "garments": {
         "blazer": {
@@ -368,6 +368,50 @@
         "emailBody": "Winkelnaam: {{name}}\nWebadres: {{url}}",
         "sent": "Je e-mailapp opent zodat je dit verzoek naar DressApp kunt sturen."
       }
+    },
+    "migration": {
+      "eyebrow": "EERSTE IN DE SECTOR: AI GARDEROBEMIGRATIE",
+      "proBadge": "EXCLUSIEF VOOR PRO & MANAGER",
+      "title": "Migreer je garderobe in enkele seconden",
+      "subtitle": "Importeer kleding moeiteloos vanuit Whering, Acloset, Stylebook en meer. Onze AI-agent verwijdert dubbele items uit je kast, vult automatisch alle itemdetails in en scant concurrerende apps live op je scherm.",
+      "strip1": "Geen dubbele items",
+      "strip2": "Elk detail automatisch ingevuld",
+      "strip3": "100% zichtbaar tijdens het proces",
+      "step1Title": "Verbind je oude garderobe-app",
+      "step1Desc": "Kies Whering, Acloset, Stylebook en meer.",
+      "step2Title": "Bekijk hoe de AI-agent live scant",
+      "step2Desc": "Elk item wordt live gelezen, getagd en gededupliceerd.",
+      "step3Title": "Je kast komt volledig getagd binnen",
+      "step3Desc": "Categorie, kleur, stof & seizoen — klaar.",
+      "modalTitle": "Bestaande garderobe importeren?",
+      "modalDesc": "Heb je al een digitale garderobe in een andere app? We kunnen je kleding overzetten zodat je niet opnieuw hoeft te beginnen.",
+      "modalSkip": "Nee, opnieuw beginnen",
+      "modalGo": "Ja, importeer mijn garderobe",
+      "liveStatus": "Tabblad concurrent — Live",
+      "agentStatus": "DressApp-agent actief",
+      "agentWidgetTitle": "DressApp-agent",
+      "agentWidgetSubtitle": "Kast wordt gescand…",
+      "cardsFound": "items gevonden",
+      "dupeLabel": "Duplicaat — overgeslagen",
+      "visibilityNote": "De garderobe van de concurrent blijft de hele tijd zichtbaar op je eigen scherm — je kunt zien hoe elk item wordt gescand.",
+      "dressappTarget": "Jouw DressApp-kast",
+      "detailCardsFilled": "100% van de detailkaarten ingevuld",
+      "summaryNotice": "Geen duplicaten geïmporteerd. Alle itemkenmerken automatisch ingevuld.",
+      "testRun": "Live import proberen",
+      "supportsApps": "Importeren vanuit:",
+      "privateLabel": "Privé",
+      "wearsCount": "{{count}} keer gedragen",
+      "step2ItemBlazer": "Marineblauwe blazer",
+      "step2ItemShirt": "Wit overhemd",
+      "step2ItemJeans": "Spijkerbroek",
+      "closetCard1Type": "Bovenkleding · Marineblauw",
+      "closetCard1Name": "Marineblauwe tech-blazer",
+      "closetCard2Type": "Bovenkleding · Wit",
+      "closetCard2Name": "Biologisch katoenen overhemd",
+      "closetCard3Type": "Onderkleding · Antraciet",
+      "closetCard3Name": "Rechte spijkerbroek",
+      "closetCard4Type": "Bovenkleding · Zwart",
+      "closetCard4Name": "Polo met limoenaccent"
     },
     "aiEditor": {
       "title": "AI-stijl mode-editor",
@@ -1323,7 +1367,25 @@
     "tomorrowSuggestionSubtitle": "Samengesteld voor morgen op basis van je stijlprofiel, weersvoorspelling en agenda.",
     "tomorrowSuggestionRefreshed": "Suggestie voor morgen vernieuwd!",
     "wearTomorrow": "Morgen dragen",
-    "upgradeForDailySuggestionsDesc": "Upgrade naar het Manager- of Professional-abonnement om dagelijkse suggesties te ontgrendelen."
+    "upgradeForDailySuggestionsDesc": "Upgrade naar het Manager- of Professional-abonnement om dagelijkse suggesties te ontgrendelen.",
+    "calendar": {
+      "searchPlaceholder": "Vibe-zoekopdracht: \"Zomerbarbecue\", \"Winkelen in het winkelcentrum\", \"Zakelijke bijeenkomst\", \"Zwart T-shirt\", \"Stone-washed jeans\"...",
+      "quickVibes": "Vibes:",
+      "resultsCount": "{{count}} van {{total}} outfits gevonden",
+      "noSearchMatches": "Geen outfits gevonden voor deze vibe",
+      "noSearchMatchesDesc": "We konden geen opgeslagen outfits vinden die overeenkomen met \"{{query}}\". Probeer een andere vibe, een ander kledingstuk of wis de zoekopdracht.",
+      "clearSearch": "Zoekopdracht wissen",
+      "vibes": {
+        "black_t_shirt": "Zwart T-shirt",
+        "business_meeting": "Zakelijke meeting",
+        "summer_barbecue": "Zomerbarbecue",
+        "mall_shopping": "Shoppen in winkelcentrum",
+        "rainy_day": "Regenachtige dag",
+        "stone_washed_jeans": "Stone-washed jeans",
+        "colorful_summer": "Kleurrijke zomer",
+        "casual_chic": "Casual chic"
+      }
+    }
   },
   "outfitCompletion": {
     "cta": "Maak de outfit compleet",
@@ -1343,7 +1405,16 @@
     "noClosetSuggestions": "Geen aanvullende items gevonden in je kast. Probeer de marktplaats in te schakelen of voeg meer stukken toe aan je kast.",
     "embeddingsMissingHint": "Sommige van je geselecteerde stukken hebben nog geen insluitingen. Als u ze opnieuw uploadt, wordt de kwaliteit van de suggesties verbeterd.",
     "empty": "Er kwamen geen suggesties terug. Probeer verschillende ankers te kiezen of de marktplaats te wisselen.",
-    "error": "Voltooiing van outfit is mislukt. Probeer het opnieuw."
+    "error": "Voltooiing van outfit is mislukt. Probeer het opnieuw.",
+    "tryOnAvatar": "Passen op avatar",
+    "saveOutfit": "Outfit opslaan",
+    "saveOutfitTitle": "Outfit opslaan",
+    "saveOutfitDesc": "Sla deze aanbevolen look op met een beschrijvende naam om deze op elk gewenst moment in je Outfit Canvas te openen.",
+    "includedPieces": "Inbegrepen kledingstukken",
+    "savedSuccess": "Outfit \"{{name}}\" opgeslagen in je Outfit Canvas!",
+    "alreadySaved": "Outfit al opgeslagen",
+    "outfitName": "Outfitnaam",
+    "notes": "Stylist-notities / Gelegenheid"
   },
   "market": {
     "atzmaiGateway": "Atzmai Sachir Betaalportal",
@@ -4432,7 +4503,8 @@
       "unlimitedOps": "Onbeperkt aantal dagelijkse aanvragen",
       "marketplaceAccess": "Verkopen en verhuren op de marketplace",
       "schedulerAccess": "Planner en pushmeldingen",
-      "campaignsAccess": "Advertentiecampagnes inbegrepen"
+      "campaignsAccess": "Advertentiecampagnes inbegrepen",
+      "wardrobeMigration": "Garderobemigratie"
     },
     "supportTiers": {
       "community": "Community-support",

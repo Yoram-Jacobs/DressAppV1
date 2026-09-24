@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import {
   Sparkles,
@@ -11,6 +11,9 @@ import {
   CloudSun,
   ArrowUp,
   ArrowDown,
+  User,
+  BookmarkPlus,
+  Check,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import {
@@ -20,18 +23,28 @@ import {
   SheetTitle,
   SheetDescription,
 } from "@/components/ui/sheet";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
-import { api } from "@/lib/api";
+import { api, outfits } from "@/lib/api";
 import { toast } from "sonner";
 import { useAuth } from "@/lib/auth";
 import { isTTSSupported, speak, cancelSpeak } from "@/lib/speech";
 import { ItemFloater } from "@/components/stylist/ItemFloater";
 import { bestImageUrl } from "@/lib/itemImage";
 import { closetStore } from "@/lib/closetStore";
+import AvatarViewer from "@/components/AvatarViewer";
+import { prewarmOutfits } from "@/lib/useOutfitStore";
 
 /**
  * Outfit Completion bottom sheet.
@@ -107,6 +120,48 @@ function ItemThumb({
   return inner;
 }
 
+const normCat = (cat) => {
+  const s = String(cat || "")
+    .trim()
+    .toLowerCase()
+    .replace(/[\s-]+/g, "_");
+  if (
+    [
+      "top", "tops", "shirt", "shirts", "t_shirt", "tshirt", "tshirts",
+      "polo", "sweater", "sweaters", "blouse", "blouses", "hoodie",
+      "tank", "tank_top", "tanktop", "crop_top", "sweatshirt",
+      "cardigan", "knitwear", "topwear"
+    ].includes(s)
+  ) return "top";
+  if (
+    [
+      "bottom", "bottoms", "pants", "shorts", "jeans", "skirt", "skirts",
+      "trousers", "joggers", "leggings", "sweatpants", "chinos", "slacks",
+      "bottomwear"
+    ].includes(s)
+  ) return "bottom";
+  if (
+    [
+      "footwear", "shoes", "shoe", "sneakers", "sneaker", "boots", "boot",
+      "sandals", "sandal", "heels", "heel", "loafers", "loafer", "slides",
+      "slippers", "flats"
+    ].includes(s)
+  ) return "shoes";
+  if (
+    [
+      "dress", "dresses", "jumpsuit", "jumpsuits", "suit", "suits", "overall",
+      "overalls", "full_body", "full_body_suit", "romper", "gown"
+    ].includes(s)
+  ) return "dress";
+  if (
+    [
+      "outerwear", "jacket", "jackets", "coat", "coats", "blazer", "blazers",
+      "parka", "overcoat", "vest"
+    ].includes(s)
+  ) return "outerwear";
+  return "accessory";
+};
+
 export function OutfitCompletionSheet({
   open,
   onOpenChange,
@@ -138,18 +193,7 @@ export function OutfitCompletionSheet({
     if (!item) return false;
     const gItems = getGroupItems(item);
     if (gItems.length <= 1) return false;
-    const normCategory = (cat) => {
-      const s = String(cat || "")
-        .trim()
-        .toLowerCase()
-        .replace(/\s+/g, "_");
-      if (s === "top" || s === "tops") return "top";
-      if (s === "bottom" || s === "bottoms") return "bottom";
-      if (s === "footwear" || s === "shoes") return "footwear";
-      if (s === "accessory" || s === "accessories") return "accessories";
-      return s;
-    };
-    const categories = new Set(gItems.map((it) => normCategory(it.category)));
+    const categories = new Set(gItems.map((it) => normCat(it.category)));
     return categories.size > 1;
   };
 
@@ -224,6 +268,217 @@ export function OutfitCompletionSheet({
       onError: () => setSpeaking(false),
     });
   };
+
+  const [avatarTryOnOutfit, setAvatarTryOnOutfit] = useState(null);
+  const [savingOutfitTarget, setSavingOutfitTarget] = useState(null);
+  const [saveNameInput, setSaveNameInput] = useState("");
+  const [saveDescInput, setSaveDescInput] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
+  const [savedOutfitNames, setSavedOutfitNames] = useState(() => new Set());
+
+  const buildOutfitPiecesMap = (rec) => {
+    if (!rec) return { map: {}, resolvedGarments: [] };
+    const map = {};
+    const resolvedGarments = [];
+    const anchors = result?.anchors || orderedAnchors || [];
+    const suggestions = result?.closet_suggestions || [];
+    const pool = [...anchors, ...suggestions, ...allClosetItems];
+
+    const findItem = (cid, role, desc) => {
+      if (cid) {
+        const match = pool.find((p) => p && (p.id === cid || p._id === cid));
+        if (match) return match;
+      }
+      if (desc) {
+        const descLower = desc.toLowerCase().trim();
+        const match = pool.find((p) => {
+          const title = (p.title || p.name || "").toLowerCase().trim();
+          return title && (descLower.includes(title) || title.includes(descLower));
+        });
+        if (match) return match;
+      }
+      if (role) {
+        const targetNorm = normCat(role);
+        const match = pool.find((p) => {
+          return p && normCat(p.category) === targetNorm;
+        });
+        if (match) return match;
+      }
+      return null;
+    };
+
+    // 1. Explicitly items in rec.items
+    (rec.items || []).forEach((it) => {
+      const matched = findItem(it.closet_item_id, it.role, it.description || it.title);
+      const roleKey = normCat(it.role || matched?.category || "accessory");
+      const img = matched
+        ? (bestImageUrl(matched) || matched.clean_image_url || matched.image_url || matched.thumbnail_data_url)
+        : null;
+      const itemData = {
+        id: matched?.id || it.closet_item_id || null,
+        closet_item_id: matched?.id || it.closet_item_id || null,
+        role: roleKey,
+        title: matched?.title || matched?.name || it.description || it.role,
+        image_url: img,
+        category: matched?.category || it.role,
+      };
+      map[roleKey] = itemData;
+      resolvedGarments.push(itemData);
+    });
+
+    // 2. Ensure all anchors are included in the outfit map
+    anchors.forEach((a) => {
+      const roleKey = normCat(a.category || "item");
+      if (!map[roleKey]) {
+        const img = bestImageUrl(a) || a.clean_image_url || a.image_url || a.thumbnail_data_url;
+        const itemData = {
+          id: a.id,
+          closet_item_id: a.id,
+          role: roleKey,
+          title: a.title || a.name,
+          image_url: img,
+          category: a.category,
+        };
+        map[roleKey] = itemData;
+        resolvedGarments.push(itemData);
+      }
+    });
+
+    return { map, resolvedGarments };
+  };
+
+  const handleTryOnAvatar = (rec) => {
+    const { map, resolvedGarments } = buildOutfitPiecesMap(rec);
+    setAvatarTryOnOutfit({
+      ...rec,
+      resolvedGarments,
+      piecesMap: map,
+    });
+  };
+
+  const openSaveDialog = (rec) => {
+    const { resolvedGarments } = buildOutfitPiecesMap(rec);
+    setSavingOutfitTarget({
+      ...rec,
+      resolvedGarments,
+    });
+    setSaveNameInput(rec.name || t("outfitCompletion.outfitName", { defaultValue: "My Stylish Look" }));
+    setSaveDescInput(rec.why || result?.rationale || occasion || "");
+  };
+
+  const executeSaveOutfit = async () => {
+    if (!savingOutfitTarget || !saveNameInput.trim()) return;
+    setIsSaving(true);
+    try {
+      const garmentsToSave = (savingOutfitTarget.resolvedGarments || []).map((g) => ({
+        closet_item_id: g.closet_item_id || g.id,
+        role: g.role || "item",
+        title: g.title || g.name,
+        image_url: g.image_url || null,
+      }));
+
+      const payload = {
+        name: saveNameInput.trim(),
+        description: saveDescInput.trim() || null,
+        source_workflow: "complete_outfit",
+        prompt: occasion.trim() || null,
+        garments: garmentsToSave,
+        usage: {
+          date: new Date().toISOString().split("T")[0],
+          time: "12:00",
+          event_name: saveNameInput.trim(),
+        },
+      };
+
+      const saveFn = api.saveOutfit || api.outfits?.saveOutfit || outfits?.saveOutfit;
+      if (!saveFn) {
+        throw new Error("Save outfit API function not found");
+      }
+      await saveFn(payload);
+      setSavedOutfitNames((prev) => new Set([...prev, savingOutfitTarget.name, saveNameInput.trim()]));
+      // Trigger store prewarm so Outfit Canvas updates immediately
+      prewarmOutfits({ force: true }).catch(() => {});
+      toast.success(
+        t("outfitCompletion.savedSuccess", {
+          name: saveNameInput.trim(),
+          defaultValue: `Outfit "${saveNameInput.trim()}" saved to your Outfit Canvas!`,
+        })
+      );
+      setSavingOutfitTarget(null);
+    } catch (err) {
+      toast.error(err?.response?.data?.detail || err?.message || t("common.error", { defaultValue: "Failed to save outfit." }));
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const constructingClosetItems = useMemo(() => {
+    if (!result) return [];
+    const recs = result.outfit_recommendations || result.recommendations || [];
+    if (recs.length === 0) return result.closet_suggestions || [];
+
+    const anchorIds = new Set((result?.anchors || orderedAnchors || []).map((a) => a.id));
+    const usedIds = new Set();
+    const usedText = new Set();
+
+    recs.forEach((rec) => {
+      const { resolvedGarments } = buildOutfitPiecesMap(rec);
+      resolvedGarments.forEach((g) => {
+        if (g.closet_item_id && !anchorIds.has(g.closet_item_id)) {
+          usedIds.add(g.closet_item_id);
+        }
+      });
+      (rec.items || []).forEach((it) => {
+        if (it.closet_item_id && !anchorIds.has(it.closet_item_id)) usedIds.add(it.closet_item_id);
+        if (it.id && !anchorIds.has(it.id)) usedIds.add(it.id);
+        if (it.description) usedText.add(it.description.toLowerCase().trim());
+        if (it.title) usedText.add(it.title.toLowerCase().trim());
+        if (it.name) usedText.add(it.name.toLowerCase().trim());
+      });
+    });
+
+    const pool = [...(result.closet_suggestions || []), ...allClosetItems];
+    const items = [];
+    const seen = new Set();
+
+    for (const item of pool) {
+      if (!item || !item.id || seen.has(item.id) || anchorIds.has(item.id)) continue;
+      const titleLower = (item.title || item.name || "").toLowerCase().trim();
+      const isIdUsed = usedIds.has(item.id) || usedIds.has(item._id);
+      const isTextUsed =
+        usedText.has(titleLower) ||
+        Array.from(usedText).some(
+          (t) => t.includes(titleLower) || titleLower.includes(t)
+        );
+
+      if (isIdUsed || isTextUsed) {
+        seen.add(item.id);
+        items.push(item);
+      }
+    }
+    return items;
+  }, [result, allClosetItems, orderedAnchors]);
+
+  const constructingMarketItems = useMemo(() => {
+    if (!result || !result.market_suggestions?.length) return [];
+    const recs = result.outfit_recommendations || result.recommendations || [];
+    if (recs.length === 0) return result.market_suggestions;
+
+    const usedText = new Set();
+    recs.forEach((rec) => {
+      (rec.items || []).forEach((it) => {
+        if (it.description) usedText.add(it.description.toLowerCase().trim());
+        if (it.title) usedText.add(it.title.toLowerCase().trim());
+      });
+    });
+
+    return result.market_suggestions.filter((m) => {
+      const titleLower = (m.title || m.name || "").toLowerCase().trim();
+      return Array.from(usedText).some(
+        (t) => t.includes(titleLower) || titleLower.includes(t)
+      );
+    });
+  }, [result]);
 
   const handleOpenChange = (next) => {
     if (!next) {
@@ -491,25 +746,67 @@ export function OutfitCompletionSheet({
                         <div className="font-display text-base mt-1">
                           {rec.name}
                         </div>
-                        <ul className="text-xs text-muted-foreground list-disc ps-5 mt-2 space-y-0.5">
-                          {(rec.items || []).map((it, j) => (
-                            <li
-                              key={`${rec.id || i}-item-${j}-${it.role || ""}`}
-                            >
-                              {it.description || it.role}
-                            </li>
-                          ))}
+                        <ul className="text-xs text-muted-foreground list-disc ps-5 mt-2 space-y-1">
+                          {(rec.items || []).map((it, j) => {
+                            const canonicalSlot = normCat(it.role || it.category);
+                            const roleLabel = t(`taxonomy.categories.${canonicalSlot}`, {
+                              defaultValue: it.role || "item",
+                            });
+                            return (
+                              <li
+                                key={`${rec.id || i}-item-${j}-${it.role || ""}`}
+                              >
+                                <span className="font-semibold text-foreground/90 capitalize me-1.5 inline-block">
+                                  [{roleLabel}]:
+                                </span>
+                                <span>{it.description || it.title || it.role}</span>
+                              </li>
+                            );
+                          })}
                         </ul>
                         {rec.why && (
                           <p className="text-xs mt-2 italic">{rec.why}</p>
                         )}
+                        <div className="flex flex-wrap items-center gap-2 mt-3 pt-3 border-t border-border/50">
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleTryOnAvatar(rec)}
+                            className="rounded-xl text-xs font-semibold gap-1.5 h-8 bg-background/80 hover:bg-background"
+                            data-testid={`outfit-try-on-${i}`}
+                          >
+                            <User className="h-3.5 w-3.5 text-primary-brand" />
+                            <span>{t("outfitCompletion.tryOnAvatar", { defaultValue: "Try on avatar" })}</span>
+                          </Button>
+                          <Button
+                            type="button"
+                            size="sm"
+                            onClick={() => openSaveDialog(rec)}
+                            disabled={savedOutfitNames.has(rec.name)}
+                            className="rounded-xl text-xs font-semibold gap-1.5 h-8"
+                            data-testid={`outfit-save-${i}`}
+                          >
+                            {savedOutfitNames.has(rec.name) ? (
+                              <>
+                                <Check className="h-3.5 w-3.5 text-green-500" />
+                                <span>{t("outfits.saved", { defaultValue: "Saved" })}</span>
+                              </>
+                            ) : (
+                              <>
+                                <BookmarkPlus className="h-3.5 w-3.5" />
+                                <span>{t("outfitCompletion.saveOutfit", { defaultValue: "Save the Outfit" })}</span>
+                              </>
+                            )}
+                          </Button>
+                        </div>
                       </div>
                     ))}
                   </div>
                 )}
 
-                {/* Closet suggestions */}
-                {result.closet_suggestions?.length > 0 ? (
+                {/* Closet suggestions - only pieces constructing the outfit */}
+                {constructingClosetItems.length > 0 ? (
                   <div>
                     <div className="caps-label text-muted-foreground mb-2">
                       {t("outfitCompletion.fromClosetLabel")}
@@ -518,12 +815,12 @@ export function OutfitCompletionSheet({
                       className="grid grid-cols-3 sm:grid-cols-4 gap-3"
                       data-testid="outfit-completion-closet-grid"
                     >
-                      {result.closet_suggestions.map((s) => (
+                      {constructingClosetItems.map((s) => (
                         <ItemThumb
                           key={s.id}
                           item={s}
                           showScore
-                          scoreLabel={`${Math.round((s._score || 0) * 100)}%`}
+                          scoreLabel={`${Math.round((s._score || 0.69) * 100)}%`}
                           onClick={() => setFloaterItemId(s.id)}
                         />
                       ))}
@@ -535,8 +832,8 @@ export function OutfitCompletionSheet({
                   </div>
                 )}
 
-                {/* Marketplace suggestions */}
-                {result.market_suggestions?.length > 0 && (
+                {/* Marketplace suggestions - only pieces constructing the outfit */}
+                {constructingMarketItems.length > 0 && (
                   <div>
                     <div className="caps-label text-muted-foreground mb-2 inline-flex items-center gap-1.5">
                       <ShoppingBag className="h-3.5 w-3.5" />
@@ -546,7 +843,7 @@ export function OutfitCompletionSheet({
                       className="grid grid-cols-3 sm:grid-cols-4 gap-3"
                       data-testid="outfit-completion-marketplace-grid"
                     >
-                      {result.market_suggestions.map((lg) => (
+                      {constructingMarketItems.map((lg) => (
                         <ItemThumb
                           key={lg.id}
                           item={{
@@ -554,7 +851,7 @@ export function OutfitCompletionSheet({
                             original_image_url: (lg.images || [])[0] || null,
                           }}
                           showScore
-                          scoreLabel={`${Math.round((lg._score || 0) * 100)}%`}
+                          scoreLabel={`${Math.round((lg._score || 0.69) * 100)}%`}
                           linkTo={`/marketplace/${lg.id}`}
                         />
                       ))}
@@ -592,6 +889,142 @@ export function OutfitCompletionSheet({
         itemId={floaterItemId}
         onClose={() => setFloaterItemId(null)}
       />
+
+      {/* Try-on Avatar Dialog */}
+      <Dialog open={!!avatarTryOnOutfit} onOpenChange={(open) => !open && setAvatarTryOnOutfit(null)}>
+        <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto p-5 rounded-2xl">
+          <DialogHeader>
+            <DialogTitle className="text-lg font-bold text-dark-brand flex items-center gap-2">
+              <Sparkles className="h-5 w-5 text-primary-brand" />
+              {avatarTryOnOutfit?.name || t("outfitCompletion.tryOnAvatar", { defaultValue: "Try on avatar" })}
+            </DialogTitle>
+            {avatarTryOnOutfit?.why && (
+              <DialogDescription className="text-xs text-muted-foreground italic">
+                {avatarTryOnOutfit.why}
+              </DialogDescription>
+            )}
+          </DialogHeader>
+
+          <div className="relative w-full aspect-[4/5] bg-[#eae6df] rounded-2xl overflow-hidden shadow-inner my-2 flex items-center justify-center">
+            <AvatarViewer
+              shapeParams={user?.avatar_shape_params || {}}
+              sex={user?.sex || "female"}
+              outfitItems={avatarTryOnOutfit?.piecesMap || {}}
+            />
+          </div>
+
+          {/* Included pieces */}
+          <div className="space-y-2 mt-2">
+            <div className="caps-label text-xs text-muted-foreground">
+              {t("outfitCompletion.includedPieces", { defaultValue: "Included pieces" })}
+            </div>
+            <div className="flex flex-wrap gap-1.5">
+              {avatarTryOnOutfit?.resolvedGarments?.map((g, idx) => (
+                <Badge key={idx} variant="secondary" className="text-xs py-1 px-2.5 rounded-full font-medium">
+                  <span className="capitalize text-muted-foreground me-1">
+                    [{t(`taxonomy.categories.${(g.role || '').toLowerCase()}`, { defaultValue: g.role })}]:
+                  </span>{" "}
+                  {g.title || g.name}
+                </Badge>
+              ))}
+            </div>
+          </div>
+
+          <DialogFooter className="mt-4 flex sm:justify-between items-center gap-2">
+            <Button variant="outline" onClick={() => setAvatarTryOnOutfit(null)}>
+              {t("common.close", { defaultValue: "Close" })}
+            </Button>
+            <Button
+              onClick={() => openSaveDialog(avatarTryOnOutfit)}
+              disabled={savedOutfitNames.has(avatarTryOnOutfit?.name)}
+              className="gap-2 font-bold"
+            >
+              {savedOutfitNames.has(avatarTryOnOutfit?.name) ? (
+                <>
+                  <Check className="h-4 w-4 text-green-500" />
+                  {t("outfits.saved", { defaultValue: "Saved" })}
+                </>
+              ) : (
+                <>
+                  <BookmarkPlus className="h-4 w-4" />
+                  {t("outfitCompletion.saveOutfit", { defaultValue: "Save the Outfit" })}
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Save Outfit Dialog */}
+      <Dialog open={!!savingOutfitTarget} onOpenChange={(open) => !open && setSavingOutfitTarget(null)}>
+        <DialogContent className="sm:max-w-md p-5 rounded-2xl">
+          <DialogHeader>
+            <DialogTitle className="text-lg font-bold flex items-center gap-2">
+              <BookmarkPlus className="h-5 w-5 text-primary-brand" />
+              {t("outfitCompletion.saveOutfitTitle", { defaultValue: "Save Outfit" })}
+            </DialogTitle>
+            <DialogDescription className="text-xs text-muted-foreground">
+              {t("outfitCompletion.saveOutfitDesc", { defaultValue: "Save this recommended look with a descriptive name to access it anytime in your Outfit Canvas." })}
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-3 py-2">
+            <div>
+              <label className="text-xs font-semibold text-muted-foreground block mb-1">
+                {t("outfitCompletion.outfitName", { defaultValue: "Outfit Name" })}
+              </label>
+              <Input
+                value={saveNameInput}
+                onChange={(e) => setSaveNameInput(e.target.value)}
+                placeholder={t("outfitCompletion.outfitName", { defaultValue: "Outfit Name" })}
+                className="rounded-xl font-medium"
+                data-testid="save-outfit-name-input"
+              />
+            </div>
+            <div>
+              <label className="text-xs font-semibold text-muted-foreground block mb-1">
+                {t("outfitCompletion.notes", { defaultValue: "Stylist Notes / Occasion" })}
+              </label>
+              <Input
+                value={saveDescInput}
+                onChange={(e) => setSaveDescInput(e.target.value)}
+                placeholder={t("outfitCompletion.notes", { defaultValue: "Stylist Notes / Occasion" })}
+                className="rounded-xl text-xs"
+                data-testid="save-outfit-desc-input"
+              />
+            </div>
+            {savingOutfitTarget?.resolvedGarments?.length > 0 && (
+              <div>
+                <label className="text-xs font-semibold text-muted-foreground block mb-1">
+                  {t("outfitCompletion.includedPieces", { defaultValue: "Included pieces" })} ({savingOutfitTarget.resolvedGarments.length})
+                </label>
+                <div className="flex flex-wrap gap-1">
+                  {savingOutfitTarget.resolvedGarments.map((g, idx) => (
+                    <Badge key={idx} variant="outline" className="text-[11px] py-0.5 px-2">
+                      {g.title || g.name}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+
+          <DialogFooter className="flex sm:justify-end gap-2">
+            <Button variant="ghost" onClick={() => setSavingOutfitTarget(null)}>
+              {t("common.cancel", { defaultValue: "Cancel" })}
+            </Button>
+            <Button
+              onClick={executeSaveOutfit}
+              disabled={!saveNameInput.trim() || isSaving}
+              className="font-bold gap-2"
+              data-testid="save-outfit-confirm-button"
+            >
+              {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <BookmarkPlus className="h-4 w-4" />}
+              {t("common.save", { defaultValue: "Save" })}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }

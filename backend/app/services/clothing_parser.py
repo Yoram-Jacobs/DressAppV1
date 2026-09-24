@@ -34,7 +34,7 @@ from typing import Any
 
 import httpx
 import numpy as np
-from PIL import Image
+from PIL import Image, ImageFilter
 
 from app.config import settings
 from app.services import provider_activity
@@ -1192,8 +1192,6 @@ def crop_with_mask(
     # aliased boundary without dissolving thin straps. Skip when Pillow
     # is not available with the filter (extremely rare).
     try:
-        from PIL import ImageFilter
-
         alpha_im = Image.fromarray(mask_crop, mode="L").filter(
             ImageFilter.GaussianBlur(radius=1.2)
         )
@@ -1275,7 +1273,7 @@ def slice_mask_to_bbox(
 
 def apply_alpha_intersection(
     matted_png_bytes: bytes,
-    seg_mask_bbox: np.ndarray,
+    seg_mask_bbox: np.ndarray | None = None,
     *,
     category: str | None = None,
     human_mask: np.ndarray | None = None,
@@ -1283,100 +1281,9 @@ def apply_alpha_intersection(
     other_mask: np.ndarray | None = None,
 ) -> bytes | None:
     """Refine a rembg-matted PNG by AND-ing its alpha with a SegFormer mask.
-
-    Why: rembg gives crisp, accurate edges around the foreground but treats
-    the entire foreground as one object. On a multi-garment outfit photo
-    rembg might preserve both shirt + pants in a single crop. The
-    SegFormer mask says which pixels belong specifically to the targeted
-    garment class, so intersecting the two yields a clean cutout of just
-    the targeted item.
-
-    Human-mask subtraction (optional, recommended)
-    ----------------------------------------------
-    When ``human_mask`` is provided (binary uint8, same H×W as the
-    crop OR full-res — automatically resized), pixels marked as the
-    wearer's BODY (Face / Hair / Left-arm / Right-arm / Left-leg /
-    Right-leg from SegFormer's ATR classes) are subtracted from the
-    DILATED garment soft-mask BEFORE the rembg intersection. This
-    closes a structural leak: rembg's person-shaped foreground keeps
-    every skin pixel, and the dilation pass (which legitimately grows
-    the garment mask outward to recover puffy sleeves / shoe halos)
-    grows it into adjacent face / neck / arm / leg regions. Without
-    explicit skin subtraction, a shirt card inherits the model's
-    neck and chin, a skirt card inherits the upper thighs, etc.
-    The subtraction is applied AFTER dilation so dilation can still
-    recover legitimate garment halo on the non-skin side; only
-    pixels that are BOTH (dilated-garment) AND (skin) get wiped.
-
-    Patch 12f (May 2026) — DILATE the SegFormer mask before blending.
-    Earlier behaviour used a strict ``min(rembg, gaussian_blur(mask))``,
-    which deleted any pixel SegFormer didn't mark — even pixels rembg
-    correctly identified as foreground. Two visible failure modes:
-      * A billowy-cuff blouse: SegFormer's ``Upper-clothes`` mask covers
-        the body but misses the puffy sleeve halo → sleeve pixels rembg
-        kept get wiped → fragmented "torn fabric" thumbnail.
-      * Burgundy sneakers on cobblestones: SegFormer's ``Shoes`` mask is
-        patchy because shoe-vs-pavement contrast is low → real shoe
-        pixels get wiped → smudgy blob thumbnail.
-    Dilating the mask by ``DILATE_PCT`` of the crop's short edge (clamped
-    to a sensible min/max) gives the intersection enough slack to admit
-    rembg's correct foreground pixels in the halo region — while still
-    relying on rembg's verdict as the upper bound, so background junk
-    that rembg correctly rejects stays rejected.
-
-    Patch 12i (May 2026) — per-category dilation budget. The flat 2.5%
-    of Patch 12f was tuned for free-edge garments (footwear, hats —
-    where the SegFormer mask is often patchy and there is no adjacent
-    garment to leak into). On tight torso crops where a blouse and a
-    skirt share the waistline, 2.5% (= 25 px on a 1000 px crop)
-    extended each garment's mask 25 px into the other's region. With
-    rembg keeping both garments as foreground, the blouse cutout
-    inherited a 25 px rim of skirt fabric at its bottom edge (and vice
-    versa). Visible as a coloured strip in the closet thumbnail.
-
-    The fix splits the budget by ``category``:
-
-    +----------------+---------+--------------------------------------+
-    | Category       | DilPct  | Reason                               |
-    +================+=========+======================================+
-    | top / Top      | 1.5 %   | shares waistline with bottom/dress;  |
-    |                |         | reduced from 2.5 % to stop skirt     |
-    |                |         | bleed at the hem. Still recovers     |
-    |                |         | most puffy sleeves on 800-1500 px    |
-    |                |         | crops (1.5 % = 12-22 px).            |
-    +----------------+---------+--------------------------------------+
-    | bottom / Bottom| 1.5 %   | symmetric — shares waistline with    |
-    |                |         | top/dress.                           |
-    +----------------+---------+--------------------------------------+
-    | dress /        | 1.8 %   | top edge tight (neckline near        |
-    | full body      |         | jacket lapels); bottom edge free     |
-    |                |         | (hem). Slightly looser than          |
-    |                |         | top/bottom to preserve flowing       |
-    |                |         | skirt shapes.                        |
-    +----------------+---------+--------------------------------------+
-    | accessory      | 1.5 %   | belts share waistline; scarves       |
-    |                |         | share neckline; bags hang free but   |
-    |                |         | err on tight to avoid bleed.         |
-    +----------------+---------+--------------------------------------+
-    | outerwear      | 2.0 %   | jackets/coats over t-shirts: collar  |
-    |                |         | shares neckline with top, hem        |
-    |                |         | usually free. Middle ground.         |
-    +----------------+---------+--------------------------------------+
-    | footwear       | 2.5 %   | UNCHANGED — patchy mask coverage on  |
-    |                |         | low-contrast shoes, no               |
-    |                |         | adjacent-garment risk.               |
-    +----------------+---------+--------------------------------------+
-    | headwear       | 2.5 %   | UNCHANGED — hats have free top edge  |
-    |                |         | and the hair/brim transition needs   |
-    |                |         | the wider halo.                      |
-    +----------------+---------+--------------------------------------+
-    | <unknown>      | 2.5 %   | backward compat — callers that don't |
-    |                |         | pass ``category`` get the Patch 12f  |
-    |                |         | budget.                              |
-    +----------------+---------+--------------------------------------+
-
-    Returns refined PNG bytes, or ``None`` on failure (caller should keep
-    the rembg-only output).
+    
+    If seg_mask_bbox is None, still subtracts human_mask and other_mask to
+    isolate non-SegFormer detections (e.g. Gemini-detected bags/accessories).
     """
     try:
         im = Image.open(io.BytesIO(matted_png_bytes)).convert("RGBA")
@@ -1384,79 +1291,54 @@ def apply_alpha_intersection(
         return None
     arr = np.array(im)
     Hc, Wc = arr.shape[:2]
-    # Resize the mask to match the matted PNG (rembg sometimes pads/resizes).
-    if seg_mask_bbox.shape != (Hc, Wc):
-        try:
-            mask_resized = np.array(
-                Image.fromarray(
-                    (seg_mask_bbox * 255).astype(np.uint8), mode="L"
-                ).resize((Wc, Hc), Image.NEAREST)
-            )
-        except Exception:  # noqa: BLE001
-            return None
-    else:
-        mask_resized = (seg_mask_bbox * 255).astype(np.uint8)
 
-    # Patch 12g (May 2026) — SegFormer mask "confidence" check.
-    # When SegFormer is unconfident about a garment (low-contrast
-    # accessories on busy backgrounds: burgundy sneakers on
-    # cobblestone, dark belt on dark trousers, thin sunglasses
-    # frames in a head crop), the returned mask is patchy — a sparse
-    # constellation of pixels rather than a solid blob. Intersecting
-    # rembg's clean alpha with a patchy mask wipes out the bulk of
-    # the garment and leaves a smeared, fragmented thumbnail. The
-    # dilation step (Patch 12f) widens halos but cannot rescue a
-    # mask whose CORE is missing.
-    #
-    # Heuristic: if the SegFormer mask covers less than
-    # ``_MIN_MASK_CONFIDENCE`` of the bbox area, we treat it as
-    # unreliable and bail out — the caller keeps rembg's untouched
-    # output, which on a tight per-garment crop is usually correct
-    # on its own. 40% is the empirical sweet spot from the May 2026
-    # closet tests:
-    #   * Sunglasses / belts / bags / hats → 50–80% mask coverage
-    #     of their bbox when SegFormer succeeds → SAFE.
-    #   * Burgundy sneakers / dark belts on dark trousers / glossy
-    #     leather shoes → 10–30% coverage (patchy speckle) → BAIL.
-    #   * Tops / bottoms / dresses → 60–95% coverage → SAFE.
-    # This is intentionally per-bbox (not per-frame) because
-    # ``apply_alpha_intersection`` is called with a per-garment crop;
-    # the bbox IS the crop.
-    _MIN_MASK_CONFIDENCE = 0.40
-    try:
-        mask_coverage = float((mask_resized > 127).mean())
-    except Exception:  # noqa: BLE001
-        mask_coverage = 1.0  # if mean() fails, don't gatekeep — let dilation try.
-    if mask_coverage < _MIN_MASK_CONFIDENCE and not is_padded_canvas:
-        logger.info(
-            "apply_alpha_intersection: SegFormer mask too patchy "
-            "(%.1f%% coverage < %.0f%% threshold) — falling back to "
-            "rembg-only output (crop %dx%d).",
-            mask_coverage * 100.0,
-            _MIN_MASK_CONFIDENCE * 100.0,
-            Wc, Hc,
-        )
-        return None
-
-    # Patch 12i — per-category dilation budget. See docstring table.
+    # Patch 12i — per-category dilation budget.
     _dilate_pct = _resolve_dilate_pct_for_category(category)
     _DILATE_MIN_PX = 1
     _DILATE_MAX_PX = 64
     dilate_px = max(_DILATE_MIN_PX, min(_DILATE_MAX_PX, int(_dilate_pct * min(Hc, Wc))))
-    try:
-        from PIL import ImageFilter
 
-        mask_im = Image.fromarray(mask_resized, mode="L")
-        # MaxFilter is morphological dilation on grayscale. Window size
-        # must be odd, equal to ``2*dilate_px + 1``.
-        if dilate_px > 0:
-            mask_im = mask_im.filter(ImageFilter.MaxFilter(2 * dilate_px + 1))
-        # Soften the dilated edge a touch so the intersection inherits
-        # rembg's anti-aliasing rather than re-introducing stair-step pixels.
-        mask_im = mask_im.filter(ImageFilter.GaussianBlur(radius=2.0))
-        soft_mask = np.array(mask_im)
-    except Exception:  # noqa: BLE001
-        soft_mask = mask_resized
+    soft_mask = None
+    if seg_mask_bbox is not None:
+        # Resize the mask to match the matted PNG (rembg sometimes pads/resizes).
+        if seg_mask_bbox.shape != (Hc, Wc):
+            try:
+                mask_resized = np.array(
+                    Image.fromarray(
+                        (seg_mask_bbox * 255).astype(np.uint8), mode="L"
+                    ).resize((Wc, Hc), Image.NEAREST)
+                )
+            except Exception:  # noqa: BLE001
+                return None
+        else:
+            mask_resized = (seg_mask_bbox * 255).astype(np.uint8)
+
+        # Patch 12g (May 2026) — SegFormer mask "confidence" check.
+        _MIN_MASK_CONFIDENCE = 0.40
+        try:
+            mask_coverage = float((mask_resized > 127).mean())
+        except Exception:  # noqa: BLE001
+            mask_coverage = 1.0
+        if mask_coverage < _MIN_MASK_CONFIDENCE and not is_padded_canvas:
+            logger.info(
+                "apply_alpha_intersection: SegFormer mask too patchy "
+                "(%.1f%% coverage < %.0f%% threshold) — falling back to "
+                "rembg-only output (crop %dx%d).",
+                mask_coverage * 100.0,
+                _MIN_MASK_CONFIDENCE * 100.0,
+                Wc, Hc,
+            )
+            return None
+
+        try:
+            mask_im = Image.fromarray(mask_resized, mode="L")
+            if dilate_px > 0:
+                mask_im = mask_im.filter(ImageFilter.MaxFilter(2 * dilate_px + 1))
+            mask_im = mask_im.filter(ImageFilter.GaussianBlur(radius=2.0))
+            soft_mask = np.array(mask_im)
+        except Exception:  # noqa: BLE001
+            soft_mask = mask_resized
+
 
     # Geometric head-exclusion for torso garments.
     #
@@ -1518,8 +1400,6 @@ def apply_alpha_intersection(
     # 2. Subtract human mask (if present)
     if human_mask is not None:
         try:
-            from PIL import ImageFilter as _IF
-
             if human_mask.shape != (Hc, Wc):
                 human_resized = np.array(
                     Image.fromarray(
@@ -1537,7 +1417,7 @@ def apply_alpha_intersection(
             if skin_dilate_px > 0:
                 human_im = Image.fromarray(human_resized, mode="L")
                 human_im = human_im.filter(
-                    _IF.MaxFilter(2 * skin_dilate_px + 1)
+                    ImageFilter.MaxFilter(2 * skin_dilate_px + 1)
                 )
                 human_resized = np.array(human_im)
             
@@ -1548,8 +1428,38 @@ def apply_alpha_intersection(
                 repr(exc)[:120],
             )
 
+    # 2b. Human skin chrominance filter for torso/body garments.
+    # SegFormer ATR-18 often misses skin pixels (hands/wrists on hip, collarbones,
+    # cleavage, necks) and classifies them as background or clothes. If human_mask
+    # is present and this is a body garment, detect and excise bare skin.
+    norm_cat = (category or "").lower().replace(" ", "").replace("-", "")
+    if human_mask is not None and norm_cat in {"top", "outerwear", "dress", "fullbody", "bottom"}:
+        try:
+            r = arr[:, :, 0].astype(float)
+            g = arr[:, :, 1].astype(float)
+            b = arr[:, :, 2].astype(float)
+            cr = 128.0 + 0.5 * r - 0.418688 * g - 0.081312 * b
+            cb = 128.0 - 0.168736 * r - 0.331264 * g + 0.5 * b
+            is_skin = (
+                (cr >= 133.0) & (cr <= 173.0) &
+                (cb >= 77.0) & (cb <= 127.0) &
+                (r > g) & (g > b) &
+                ((r - g) >= 12.0) &
+                (new_alpha > 30)
+            )
+            if is_skin.any():
+                skin_im = Image.fromarray((is_skin * 255).astype(np.uint8), mode="L")
+                skin_im = skin_im.filter(ImageFilter.MaxFilter(3))
+                is_skin_dilated = np.array(skin_im) > 127
+                new_alpha = np.where(is_skin_dilated, np.uint8(0), new_alpha).astype(np.uint8)
+        except Exception as exc:  # noqa: BLE001
+            logger.info(
+                "apply_alpha_intersection: skin-chrominance subtraction failed: %s",
+                repr(exc)[:120],
+            )
+
     # 3. Apply geometric head exclusion
-    if category and category.lower().replace(" ", "") in {
+    if seg_mask_bbox is not None and category and category.lower().replace(" ", "") in {
         "top", "outerwear", "dress", "fullbody",
     }:
         try:
@@ -1568,13 +1478,15 @@ def apply_alpha_intersection(
             )
 
     # 4. Intersect with the dilated soft mask of the target garment to crop out other garments
-    try:
-        new_alpha = np.minimum(new_alpha, soft_mask).astype(np.uint8)
-    except Exception as exc:  # noqa: BLE001
-        logger.info(
-            "apply_alpha_intersection: soft-mask intersection failed: %s",
-            repr(exc)[:120],
-        )
+    if soft_mask is not None:
+        try:
+            new_alpha = np.minimum(new_alpha, soft_mask).astype(np.uint8)
+        except Exception as exc:  # noqa: BLE001
+            logger.info(
+                "apply_alpha_intersection: soft-mask intersection failed: %s",
+                repr(exc)[:120],
+            )
+
 
     # Patch 12j (May 2026) — phantom guard. If the subtraction wiped out
     # > 95% of the solid alpha, the refined image is empty. Bail out and let

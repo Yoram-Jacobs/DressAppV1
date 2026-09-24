@@ -1367,7 +1367,25 @@
     "tomorrowSuggestionSubtitle": "根据您的个人风格、明日天气预报及日程安排精心搭配。",
     "tomorrowSuggestionRefreshed": "已刷新明日穿搭建议！",
     "wearTomorrow": "明日穿着",
-    "upgradeForDailySuggestionsDesc": "升级到经理或专业版计划以解锁每日穿搭建议。"
+    "upgradeForDailySuggestionsDesc": "升级到经理或专业版计划以解锁每日穿搭建议。",
+    "calendar": {
+      "searchPlaceholder": "风格搜索：“夏日烧烤聚会”、“商场购物”、“商务会议”、“黑色T恤”、“磨白牛仔裤”...",
+      "quickVibes": "风格标签：",
+      "resultsCount": "找到 {{count}} / {{total}} 套搭配",
+      "noSearchMatches": "没有符合该风格的搭配",
+      "noSearchMatchesDesc": "未找到与 “{{query}}” 匹配的保存穿搭。请尝试其他风格、单品或清空搜索。",
+      "clearSearch": "清空搜索",
+      "vibes": {
+        "black_t_shirt": "黑色T恤",
+        "business_meeting": "商务会议",
+        "summer_barbecue": "夏日烧烤",
+        "mall_shopping": "商场购物",
+        "rainy_day": "雨天穿搭",
+        "stone_washed_jeans": "磨白牛仔裤",
+        "colorful_summer": "缤纷夏日",
+        "casual_chic": "休闲时髦"
+      }
+    }
   },
   "outfitCompletion": {
     "cta": "完成搭配",
@@ -1387,7 +1405,16 @@
     "noClosetSuggestions": "衣橱中未找到互补单品。请启用市场搜索,或向衣橱添加更多单品。",
     "embeddingsMissingHint": "部分已选单品尚无相似度向量。重新上传将提升建议质量。",
     "empty": "未返回任何建议。请尝试其他基础单品,或切换市场搜索。",
-    "error": "完成搭配失败。请重试。"
+    "error": "完成搭配失败。请重试。",
+    "tryOnAvatar": "在模特身上试穿",
+    "saveOutfit": "保存穿搭",
+    "saveOutfitTitle": "保存搭配",
+    "saveOutfitDesc": "为这套推荐搭配保存一个生动的名称，以便随时在穿搭画布中查看。",
+    "includedPieces": "包含的单品",
+    "savedSuccess": "穿搭 “{{name}}” 已保存到您的穿搭画布！",
+    "alreadySaved": "穿搭已保存",
+    "outfitName": "穿搭名称",
+    "notes": "造型师备注 / 场合"
   },
   "market": {
     "atzmaiGateway": "Atzmai Sachir 支付网关",

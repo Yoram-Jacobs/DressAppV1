@@ -9,14 +9,21 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { AccordionItem, AccordionTrigger, AccordionContent } from '@/components/ui/accordion';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from '@/components/ui/dialog';
-import { Loader2, Key, CreditCard as Coins, Info, ExternalLink } from 'lucide-react';
+import { Loader2, Key, CreditCard as Coins, Info, ExternalLink, Sparkles } from 'lucide-react';
 
 const PROVIDERS = [
-  { id: 'google_ai', name: 'Google Gemini', defaultModel: 'gemini-3.5-flash', models: ['gemini-3.5-flash', 'gemini-3.5-pro'] },
-  { id: 'openai', name: 'OpenAI ChatGPT', defaultModel: 'gpt-4o-mini', models: ['gpt-4o-mini', 'gpt-4o'] },
-  { id: 'anthropic', name: 'Anthropic Claude', defaultModel: 'claude-3-5-haiku', models: ['claude-3-5-haiku', 'claude-3-5-sonnet'] },
-  { id: 'deepseek', name: 'DeepSeek', defaultModel: 'deepseek-chat', models: ['deepseek-chat', 'deepseek-coder'] },
-  { id: 'qwen', name: 'Alibaba Qwen', defaultModel: 'qwen-plus', models: ['qwen-plus', 'qwen-max'] }
+  {
+    id: 'dressapp',
+    name: 'DressApp',
+    defaultModel: 'Eyes v1',
+    models: ['Eyes v1'],
+    requiresApiKey: false,
+  },
+  { id: 'google_ai', name: 'Google Gemini', defaultModel: 'gemini-3.5-flash', models: ['gemini-3.5-flash', 'gemini-3.5-pro'], requiresApiKey: true },
+  { id: 'openai', name: 'OpenAI ChatGPT', defaultModel: 'gpt-4o-mini', models: ['gpt-4o-mini', 'gpt-4o'], requiresApiKey: true },
+  { id: 'anthropic', name: 'Anthropic Claude', defaultModel: 'claude-3-5-haiku', models: ['claude-3-5-haiku', 'claude-3-5-sonnet'], requiresApiKey: true },
+  { id: 'deepseek', name: 'DeepSeek', defaultModel: 'deepseek-chat', models: ['deepseek-chat', 'deepseek-coder'], requiresApiKey: true },
+  { id: 'qwen', name: 'Alibaba Qwen', defaultModel: 'qwen-plus', models: ['qwen-plus', 'qwen-max'], requiresApiKey: true }
 ];
 
 export function AIConfiguration() {
@@ -25,11 +32,11 @@ export function AIConfiguration() {
   const isRtl = i18n.dir() === 'rtl';
   
   const [providerMode, setProviderMode] = useState('custom_keys');
-  const [activeProviderId, setActiveProviderId] = useState(user?.ai_configuration?.selected_provider || 'google_ai');
+  const [activeProviderId, setActiveProviderId] = useState(user?.ai_configuration?.selected_provider || 'dressapp');
   const initialModel = user?.ai_configuration?.selected_model;
   const normalizedInitialModel = (initialModel === 'gemini-2.5-flash' || initialModel === 'gemini-3.5-flash-lite')
     ? 'gemini-3.5-flash'
-    : (initialModel || 'gemini-3.5-flash');
+    : (initialModel || (user?.ai_configuration?.selected_provider === 'google_ai' ? 'gemini-3.5-flash' : 'Eyes v1'));
   const [activeModel, setActiveModel] = useState(normalizedInitialModel);
   const [apiKeyInput, setApiKeyInput] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -57,16 +64,17 @@ export function AIConfiguration() {
     setBusy(true);
     try {
       const currentConfig = user?.ai_configuration || {};
-      const newProviderId = providerId || currentConfig.selected_provider || 'google_ai';
+      const newProviderId = providerId || currentConfig.selected_provider || 'dressapp';
       const rawModel = currentConfig.selected_model;
       const normalizedCurrentModel = (rawModel === 'gemini-2.5-flash' || rawModel === 'gemini-3.5-flash-lite')
         ? 'gemini-3.5-flash'
-        : (rawModel || 'gemini-3.5-flash');
-      const newModelVal = modelVal || (providerId ? (PROVIDERS.find(p => p.id === providerId)?.defaultModel || 'gemini-3.5-flash') : normalizedCurrentModel);
+        : (rawModel || (newProviderId === 'dressapp' ? 'Eyes v1' : 'gemini-3.5-flash'));
+      const targetDefaultModel = PROVIDERS.find(p => p.id === newProviderId)?.defaultModel || 'Eyes v1';
+      const newModelVal = modelVal || (providerId ? targetDefaultModel : normalizedCurrentModel);
       
       const payload = {
         ai_configuration: {
-          provider_mode: 'custom_keys',
+          provider_mode: newProviderId === 'dressapp' ? 'dressapp' : 'custom_keys',
           selected_provider: newProviderId,
           selected_model: newModelVal,
           custom_keys: {}
@@ -200,87 +208,105 @@ export function AIConfiguration() {
             </Select>
           </div>
         </div>
-        <div className="p-3 rounded-[12px] border border-border bg-yellow-shadow shadow-sm text-start">
-          <div className="flex items-center justify-between">
-            <span className="text-[14px] font-semibold text-dark-brand flex items-center gap-2">
-              {t('profile.aiConfig.providerKeyLabel', { defaultValue: '{{providerName}} Key:', providerName: activeProvider.name })}
-              {hasSelectedProviderKey ? (
-                <span className="inline-flex items-center gap-1 text-[10px] text-emerald-600 dark:text-emerald-400 font-medium">
+        {activeProvider.requiresApiKey === false ? (
+          <div className="p-3 rounded-[12px] border border-border bg-emerald-50/50 dark:bg-emerald-950/20 shadow-sm text-start">
+            <div className="flex items-center justify-between">
+              <span className="text-[14px] font-semibold text-dark-brand flex items-center gap-2">
+                <Sparkles className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+                {t('profile.aiConfig.dressappEyesTitle', { defaultValue: 'DressApp Eyes Engine' })}
+                <span className="inline-flex items-center gap-1 text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-900/40">
                   <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                  {t('profile.aiConfig.statusActive', { defaultValue: 'Active' })}
+                  {t('profile.aiConfig.statusIncluded', { defaultValue: 'Included / Free' })}
                 </span>
-              ) : (
-                <span className="inline-flex items-center gap-1 text-[10px] text-rose-500 font-medium">
-                  <span className="h-1.5 w-1.5 rounded-full bg-rose-500" />
-                  {t('profile.aiConfig.statusInactive', { defaultValue: 'Inactive' })}
-                </span>
-              )}
-            </span>
-            <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-              <DialogTrigger asChild>
-                <Button className="text-[10px] h-6 px-3">
-                  {hasSelectedProviderKey 
-                    ? t('common.edit', { defaultValue: 'Edit' }) 
-                    : t('profile.aiConfig.connectKey', { defaultValue: 'Connect Key' })}
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="rounded-2xl max-w-md bg-card border border-border shadow-lg">
-                <DialogHeader>
-                  <DialogTitle className="text-base font-bold flex items-center gap-2">
-                    <Key className="h-4 w-4 text-primary" />
-                    {t('profile.aiConfig.modelSelectorTitleProvider', { defaultValue: 'Connect {{providerName}} Key', providerName: activeProvider.name })}
-                  </DialogTitle>
-                  <DialogDescription className="text-xs text-text-brand">
-                    {t('profile.aiConfig.setupInstructions', { defaultValue: 'Setting up your custom API key is easy! Follow these steps:' })}
-                  </DialogDescription>
-                </DialogHeader>
-                
-                <div className="space-y-4 py-2">
-                  <div className="text-xs space-y-2 text-dark-brand/90 bg-secondary/25 p-3.5 rounded-xl border border-border/40">
-                    <p>{steps.step1}</p>
-                    <p>{steps.step2}</p>
-                    <p>{steps.step3}</p>
-                  </div>
-
-                  <div className="flex justify-end">
-                    <a 
-                      href={steps.link} 
-                      target="_blank" 
-                      rel="noreferrer"
-                      className="text-xs font-semibold text-primary hover:underline flex items-center gap-1"
-                    >
-                      {t('profile.aiConfig.getKeyBtn', { defaultValue: 'Get API Key' })}
-                      <ExternalLink className="h-3 w-3" />
-                    </a>
-                  </div>
-
-                  <div className="space-y-1.5">
-                    <Label className="text-xs font-semibold">{t('profile.aiConfig.apiKeyLabel', { defaultValue: 'API Key' })}</Label>
-                    <Input 
-                      type="password"
-                      value={apiKeyInput}
-                      onChange={(e) => setApiKeyInput(e.target.value)}
-                      placeholder={t('profile.aiConfig.keyPlaceholder', { defaultValue: 'Paste your API key here...' })}
-                      className="rounded-xl text-xs h-9 bg-card"
-                    />
-                  </div>
-                  
-                  <Button 
-                    className="w-full rounded-xl text-xs h-9 font-semibold"
-                    onClick={() => handleSaveConfig(providerMode, apiKeyInput, activeProviderId)}
-                    disabled={busy || !apiKeyInput}
-                  >
-                    {busy && <Loader2 className="h-3 w-3 animate-spin mr-1.5" />}
-                    {t('profile.aiConfig.saveBtn', { defaultValue: 'Save Configuration' })}
-                  </Button>
-                </div>
-              </DialogContent>
-            </Dialog>
+              </span>
+            </div>
+            <p className="text-[12px] text-text-brand font-semibold mt-1">
+              {t('profile.aiConfig.dressappEyesDesc', { defaultValue: 'Default self-hosted Gemma 4-E4B Eyes model on DressApp infrastructure. No external API key required.' })}
+            </p>
           </div>
-          <p className="text-[12px] text-text-brand font-semibold italic">
-            {t('profile.aiConfig.setupInstructions', { defaultValue: 'Configure your own developer key to run queries directly against your own account quota.' })}
-          </p>
-        </div>
+        ) : (
+          <div className="p-3 rounded-[12px] border border-border bg-yellow-shadow shadow-sm text-start">
+            <div className="flex items-center justify-between">
+              <span className="text-[14px] font-semibold text-dark-brand flex items-center gap-2">
+                {t('profile.aiConfig.providerKeyLabel', { defaultValue: '{{providerName}} Key:', providerName: activeProvider.name })}
+                {hasSelectedProviderKey ? (
+                  <span className="inline-flex items-center gap-1 text-[10px] text-emerald-600 dark:text-emerald-400 font-medium">
+                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                    {t('profile.aiConfig.statusActive', { defaultValue: 'Active' })}
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center gap-1 text-[10px] text-rose-500 font-medium">
+                    <span className="h-1.5 w-1.5 rounded-full bg-rose-500" />
+                    {t('profile.aiConfig.statusInactive', { defaultValue: 'Inactive' })}
+                  </span>
+                )}
+              </span>
+              <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+                <DialogTrigger asChild>
+                  <Button className="text-[10px] h-6 px-3">
+                    {hasSelectedProviderKey 
+                      ? t('common.edit', { defaultValue: 'Edit' }) 
+                      : t('profile.aiConfig.connectKey', { defaultValue: 'Connect Key' })}
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="rounded-2xl max-w-md bg-card border border-border shadow-lg">
+                  <DialogHeader>
+                    <DialogTitle className="text-base font-bold flex items-center gap-2">
+                      <Key className="h-4 w-4 text-primary" />
+                      {t('profile.aiConfig.modelSelectorTitleProvider', { defaultValue: 'Connect {{providerName}} Key', providerName: activeProvider.name })}
+                    </DialogTitle>
+                    <DialogDescription className="text-xs text-text-brand">
+                      {t('profile.aiConfig.setupInstructions', { defaultValue: 'Setting up your custom API key is easy! Follow these steps:' })}
+                    </DialogDescription>
+                  </DialogHeader>
+                  
+                  <div className="space-y-4 py-2">
+                    <div className="text-xs space-y-2 text-dark-brand/90 bg-secondary/25 p-3.5 rounded-xl border border-border/40">
+                      <p>{steps.step1}</p>
+                      <p>{steps.step2}</p>
+                      <p>{steps.step3}</p>
+                    </div>
+
+                    <div className="flex justify-end">
+                      <a 
+                        href={steps.link} 
+                        target="_blank" 
+                        rel="noreferrer"
+                        className="text-xs font-semibold text-primary hover:underline flex items-center gap-1"
+                      >
+                        {t('profile.aiConfig.getKeyBtn', { defaultValue: 'Get API Key' })}
+                        <ExternalLink className="h-3 w-3" />
+                      </a>
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <Label className="text-xs font-semibold">{t('profile.aiConfig.apiKeyLabel', { defaultValue: 'API Key' })}</Label>
+                      <Input 
+                        type="password"
+                        value={apiKeyInput}
+                        onChange={(e) => setApiKeyInput(e.target.value)}
+                        placeholder={t('profile.aiConfig.keyPlaceholder', { defaultValue: 'Paste your API key here...' })}
+                        className="rounded-xl text-xs h-9 bg-card"
+                      />
+                    </div>
+                    
+                    <Button 
+                      className="w-full rounded-xl text-xs h-9 font-semibold"
+                      onClick={() => handleSaveConfig(providerMode, apiKeyInput, activeProviderId)}
+                      disabled={busy || !apiKeyInput}
+                    >
+                      {busy && <Loader2 className="h-3 w-3 animate-spin mr-1.5" />}
+                      {t('profile.aiConfig.saveBtn', { defaultValue: 'Save Configuration' })}
+                    </Button>
+                  </div>
+                </DialogContent>
+              </Dialog>
+            </div>
+            <p className="text-[12px] text-text-brand font-semibold italic">
+              {t('profile.aiConfig.setupInstructions', { defaultValue: 'Configure your own developer key to run queries directly against your own account quota.' })}
+            </p>
+          </div>
+        )}
       </AccordionContent>
     </AccordionItem>
   );

@@ -203,7 +203,7 @@
         "capture": {
           "alt": "捕获布",
           "title": "拍摄衣物",
-          "description": "快速拍摄您的真实衣物。完美适用于各种光线与背景。"
+          "description": "快速拍摄一张实际衣物的照片。在光线良好且背景具有明显对比度的情况下效果最佳。"
         },
         "analysis": {
           "alt": "属性分析",
@@ -227,7 +227,7 @@
       "heading": "每件作品都找到了自己的位置",
       "description1": "拍下您的任意衣物——DressApp 会像造型师一样读取面料、版型与颜色，并将其贴签建档，随取随用。",
       "description2": "不再有被遗忘的抽屉。通过关键词搜索，或者只是描述一种感觉——“在下雨的星期一，有一些温暖的东西”——然后正确的作品就会回到你身边。",
-      "cta": "开始打造您的衣橱",
+      "cta": "迁移您的衣橱",
       "recentlyAdded": "最近添加",
       "garments": {
         "blazer": {
@@ -368,6 +368,50 @@
         "emailBody": "店铺名称：{{name}}\n网址：{{url}}",
         "sent": "将打开你的邮件应用，以便向 DressApp 发送此申请。"
       }
+    },
+    "migration": {
+      "eyebrow": "业界首创 AI 衣橱迁移",
+      "proBadge": "PRO 与 MANAGER 专享",
+      "title": "几秒钟迁移你的衣橱",
+      "subtitle": "轻松从 Whering、Acloset、Stylebook 等应用导入衣物。我们的 AI 代理会自动去除衣橱中的重复单品，自动填写每件单品的所有详情，并在屏幕上实时扫描竞品应用。",
+      "strip1": "零重复单品",
+      "strip2": "每项细节自动填写",
+      "strip3": "运行过程 100% 可见",
+      "step1Title": "连接你的旧衣橱应用",
+      "step1Desc": "选择 Whering、Acloset、Stylebook 等。",
+      "step2Title": "实时观看 AI 代理扫描",
+      "step2Desc": "每张卡片都会在屏幕上被读取、打标签并去重。",
+      "step3Title": "你的衣橱到位，标签齐全",
+      "step3Desc": "类别、颜色、材质与季节——全部搞定。",
+      "modalTitle": "要导入你现有的衣橱吗？",
+      "modalDesc": "已经在其他应用中拥有数字衣橱？我们可以帮你迁移衣物，无需从头开始。",
+      "modalSkip": "不用了，从零开始",
+      "modalGo": "是的，导入我的衣橱",
+      "liveStatus": "竞品标签页 — 实时",
+      "agentStatus": "DressApp 代理运行中",
+      "agentWidgetTitle": "DressApp 代理",
+      "agentWidgetSubtitle": "正在扫描衣橱…",
+      "cardsFound": "件已识别",
+      "dupeLabel": "重复项 — 已跳过",
+      "visibilityNote": "整个过程中，竞品衣橱会一直显示在你自己的屏幕上——你可以亲眼看到每件单品被扫描。",
+      "dressappTarget": "你的 DressApp 衣橱",
+      "detailCardsFilled": "100% 的详情卡片已填写",
+      "summaryNotice": "未导入任何重复项。所有单品属性均已自动填写。",
+      "testRun": "试用实时导入",
+      "supportsApps": "导入来源：",
+      "privateLabel": "私密",
+      "wearsCount": "已穿 {{count}} 次",
+      "step2ItemBlazer": "海军蓝西装外套",
+      "step2ItemShirt": "白色衬衫",
+      "step2ItemJeans": "牛仔裤",
+      "closetCard1Type": "上装 · 海军蓝",
+      "closetCard1Name": "海军蓝科技西装外套",
+      "closetCard2Type": "上装 · 白色",
+      "closetCard2Name": "有机棉衬衫",
+      "closetCard3Type": "下装 · 炭灰色",
+      "closetCard3Name": "直筒牛仔裤",
+      "closetCard4Type": "上装 · 黑色",
+      "closetCard4Name": "青柠拼色 Polo 衫"
     },
     "aiEditor": {
       "title": "AI 智能时尚编辑器",
@@ -1323,7 +1367,25 @@
     "tomorrowSuggestionSubtitle": "根据您的个人风格、明日天气预报及日程安排精心搭配。",
     "tomorrowSuggestionRefreshed": "已刷新明日穿搭建议！",
     "wearTomorrow": "明日穿着",
-    "upgradeForDailySuggestionsDesc": "升级到经理或专业版计划以解锁每日穿搭建议。"
+    "upgradeForDailySuggestionsDesc": "升级到经理或专业版计划以解锁每日穿搭建议。",
+    "calendar": {
+      "searchPlaceholder": "风格搜索：“夏日烧烤聚会”、“商场购物”、“商务会议”、“黑色T恤”、“磨白牛仔裤”...",
+      "quickVibes": "风格标签：",
+      "resultsCount": "找到 {{count}} / {{total}} 套搭配",
+      "noSearchMatches": "没有符合该风格的搭配",
+      "noSearchMatchesDesc": "未找到与 “{{query}}” 匹配的保存穿搭。请尝试其他风格、单品或清空搜索。",
+      "clearSearch": "清空搜索",
+      "vibes": {
+        "black_t_shirt": "黑色T恤",
+        "business_meeting": "商务会议",
+        "summer_barbecue": "夏日烧烤",
+        "mall_shopping": "商场购物",
+        "rainy_day": "雨天穿搭",
+        "stone_washed_jeans": "磨白牛仔裤",
+        "colorful_summer": "缤纷夏日",
+        "casual_chic": "休闲时髦"
+      }
+    }
   },
   "outfitCompletion": {
     "cta": "完成搭配",
@@ -1343,7 +1405,16 @@
     "noClosetSuggestions": "衣橱中未找到互补单品。请启用市场搜索,或向衣橱添加更多单品。",
     "embeddingsMissingHint": "部分已选单品尚无相似度向量。重新上传将提升建议质量。",
     "empty": "未返回任何建议。请尝试其他基础单品,或切换市场搜索。",
-    "error": "完成搭配失败。请重试。"
+    "error": "完成搭配失败。请重试。",
+    "tryOnAvatar": "在模特身上试穿",
+    "saveOutfit": "保存穿搭",
+    "saveOutfitTitle": "保存搭配",
+    "saveOutfitDesc": "为这套推荐搭配保存一个生动的名称，以便随时在穿搭画布中查看。",
+    "includedPieces": "包含的单品",
+    "savedSuccess": "穿搭 “{{name}}” 已保存到您的穿搭画布！",
+    "alreadySaved": "穿搭已保存",
+    "outfitName": "穿搭名称",
+    "notes": "造型师备注 / 场合"
   },
   "market": {
     "atzmaiGateway": "Atzmai Sachir 支付网关",
@@ -4425,7 +4496,8 @@
       "unlimitedOps": "无限每日请求",
       "marketplaceAccess": "市场出售与租赁",
       "schedulerAccess": "日程安排器与推送通知",
-      "campaignsAccess": "包含广告活动"
+      "campaignsAccess": "包含广告活动",
+      "wardrobeMigration": "衣橱迁移"
     },
     "supportTiers": {
       "community": "社区支持",

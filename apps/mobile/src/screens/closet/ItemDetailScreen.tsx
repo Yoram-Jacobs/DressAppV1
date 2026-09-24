@@ -564,6 +564,7 @@ export function ItemDetailScreen() {
         action_taken: res?.action_taken,
         image_url: res?.image_url,
         updated_fields: res?.updated_fields,
+        model_used: res?.model_used,
       };
 
       setReanalyzeChatHistory((prev) => [...prev, assistantTurn]);

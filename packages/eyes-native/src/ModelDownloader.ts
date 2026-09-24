@@ -16,7 +16,10 @@
  */
 
 import * as FileSystem from 'expo-file-system';
+import { NativeModules, Platform } from 'react-native';
 import { EventEmitter } from './EventEmitter';
+
+const { GarmentVision } = NativeModules;
 
 // ── Model config ─────────────────────────────────────────────────────────────
 
@@ -28,8 +31,7 @@ export interface EyesModelConfig {
 }
 
 export const DEFAULT_MODEL_CONFIG: EyesModelConfig = {
-  // Mirrors inference-server/eyes/main.py :: MODEL_REPO / MODEL_FILE / MMPROJ_FILE
-  baseUrl: 'https://huggingface.co/Yoram-Jacobs/Eyes-v1/resolve/main/',
+  baseUrl: 'https://huggingface.co/Yoram-Jacobs/Eyes-Clean/resolve/main/',
   mainModel:  { filename: 'gemma-4-e2b-it.Q4_K_M-002.gguf' },
   mmprojModel: { filename: 'gemma-4-e2b-it.BF16-mmproj.gguf' },
 };
@@ -66,8 +68,14 @@ async function ensureModelDir(): Promise<void> {
 }
 
 async function fileExists(path: string): Promise<boolean> {
-  const info = await FileSystem.getInfoAsync(path);
-  return info.exists;
+  if (!path) return false;
+  try {
+    const formatted = path.startsWith('/') ? `file://${path}` : path;
+    const info = await FileSystem.getInfoAsync(formatted);
+    return Boolean(info.exists && (info.size === undefined || info.size > 0));
+  } catch {
+    return false;
+  }
 }
 
 // ── ModelDownloader ───────────────────────────────────────────────────────────
@@ -76,14 +84,36 @@ export class ModelDownloader {
   private readonly cfg: EyesModelConfig;
   private readonly emitter = new EventEmitter<DownloadProgress>();
   private _aborted = false;
+  private _resolvedMainPath: string | null = null;
+  private _resolvedMmprojPath: string | null = null;
 
   constructor(cfg: EyesModelConfig = DEFAULT_MODEL_CONFIG) {
     this.cfg = cfg;
   }
 
+  private async findExistingPath(filename: string): Promise<string | null> {
+    const candidates = [
+      `file:///storage/emulated/0/Android/data/com.project.dressapp/files/eyes-models/${filename}`,
+      `/storage/emulated/0/Android/data/com.project.dressapp/files/eyes-models/${filename}`,
+      `${FileSystem.documentDirectory}eyes-models/${filename}`,
+      `${FileSystem.cacheDirectory}eyes-models/${filename}`,
+    ];
+    for (const cand of candidates) {
+      if (await fileExists(cand)) {
+        return cand.replace(/^file:\/\//, '');
+      }
+    }
+    return null;
+  }
+
   /** Absolute paths for consumers (llama.rn needs these). */
-  get mainModelPath(): string  { return modelPath(this.cfg.mainModel.filename);   }
-  get mmprojPath(): string     { return modelPath(this.cfg.mmprojModel.filename); }
+  get mainModelPath(): string {
+    return this._resolvedMainPath || modelPath(this.cfg.mainModel.filename).replace(/^file:\/\//, '');
+  }
+
+  get mmprojPath(): string {
+    return this._resolvedMmprojPath || modelPath(this.cfg.mmprojModel.filename).replace(/^file:\/\//, '');
+  }
 
   onProgress(fn: ProgressListener): () => void {
     return this.emitter.on(fn);
@@ -91,10 +121,33 @@ export class ModelDownloader {
 
   /** True if both files are already present on-device. */
   async isComplete(): Promise<boolean> {
-    return (
-      (await fileExists(this.mainModelPath)) &&
-      (await fileExists(this.mmprojPath))
-    );
+    // 1. Try native GarmentVision module on Android
+    if (Platform.OS === 'android' && GarmentVision && typeof GarmentVision.getEyesModelPaths === 'function') {
+      try {
+        const paths = await GarmentVision.getEyesModelPaths();
+        if (paths?.isReady && paths.mainModelPath && paths.mmprojPath) {
+          this._resolvedMainPath = paths.mainModelPath;
+          this._resolvedMmprojPath = paths.mmprojPath;
+          return true;
+        }
+      } catch (e) {
+        console.warn('[ModelDownloader] GarmentVision.getEyesModelPaths check failed:', e);
+      }
+    }
+
+    // 2. Check candidate filesystem paths
+    const candidateMain = await this.findExistingPath(this.cfg.mainModel.filename);
+    const candidateMmproj = await this.findExistingPath(this.cfg.mmprojModel.filename);
+    if (candidateMain && candidateMmproj) {
+      this._resolvedMainPath = candidateMain;
+      this._resolvedMmprojPath = candidateMmproj;
+      return true;
+    }
+
+    // 3. Fallback to standard paths
+    const mainOk = await fileExists(this.mainModelPath);
+    const mmprojOk = await fileExists(this.mmprojPath);
+    return mainOk && mmprojOk;
   }
 
   /** Cancel an in-progress download (no-op if not downloading). */

@@ -71,7 +71,7 @@ _BBOX_PAD_TRBL_BY_CATEGORY: dict[str, tuple[float, float, float, float]] = {
     "fullbody":   (0.03, 0.03, 0.03, 0.03),
     "full body":  (0.03, 0.03, 0.03, 0.03),
     "outerwear":  (0.03, 0.03, -0.015, 0.03),
-    "footwear":   (-0.01, 0.03, 0.03, 0.03),
+    "footwear":   (0.01, 0.08, 0.05, 0.08),
     "headwear":   (0.04, 0.04, 0.01, 0.04),
     "accessory":  (0.03, 0.03, 0.03, 0.03),
     "accessories": (0.03, 0.03, 0.03, 0.03),
@@ -210,11 +210,30 @@ def _containment(a: list[int], b: list[int]) -> float:
 _SIMILAR_KINDS = {
     "garment": {"garment", "outerwear"},
     "outerwear": {"outerwear", "garment"},
-    "footwear": {"footwear"},
+    "footwear": {"footwear", "shoes", "boots", "sneakers"},
     "bag": {"bag"},
     "accessory": {"accessory", "jewelry"},
     "jewelry": {"jewelry", "accessory"},
 }
+
+_ACCESSORY_KINDS = {
+    "accessory", "accessories", "jewelry", "bag", "belt", "scarf", "sunglasses",
+    "footwear", "shoes", "sneakers", "boots", "headwear", "hat",
+}
+
+
+def _detect_human_presence(items: list[dict[str, Any]]) -> bool:
+    """Return True if a human wearer or model is detected in the image."""
+    for d in items:
+        if d.get("has_human_head"):
+            return True
+        hm = d.get("_human_mask_full")
+        if hm is not None and hm.sum() >= 5000:
+            return True
+        lbl = (d.get("label") or "").lower()
+        if any(h in lbl for h in ("person", "model", "woman", "man", "human", "face", "hair")):
+            return True
+    return False
 
 
 def _same_thing(a: dict[str, Any], b: dict[str, Any], has_human: bool = False) -> bool:
@@ -222,19 +241,25 @@ def _same_thing(a: dict[str, Any], b: dict[str, Any], has_human: bool = False) -
     bbox_a, bbox_b = a.get("bbox"), b.get("bbox")
     if not (isinstance(bbox_a, list) and isinstance(bbox_b, list)):
         return False
-    iou = _iou_norm(bbox_a, bbox_b)
-    contain = _containment(bbox_a, bbox_b)
     kind_a = (a.get("kind") or "garment").lower()
     kind_b = (b.get("kind") or "garment").lower()
+    lbl_a = (a.get("label") or "").lower()
+    lbl_b = (b.get("label") or "").lower()
+
+    # Never collapse an accessory / footwear / headwear into a garment (or vice-versa).
+    # Belts, bags, scarves, shoes legitimately overlap or sit inside garments.
+    is_acc_a = kind_a in _ACCESSORY_KINDS or lbl_a in _ACCESSORY_KINDS
+    is_acc_b = kind_b in _ACCESSORY_KINDS or lbl_b in _ACCESSORY_KINDS
+    if is_acc_a != is_acc_b:
+        return False
+
+    iou = _iou_norm(bbox_a, bbox_b)
+    contain = _containment(bbox_a, bbox_b)
     compatible_kind = kind_b in _SIMILAR_KINDS.get(kind_a, {kind_a})
     # Strong overlap -> duplicate, regardless of kind.
     if iou >= _NMS_IOU_THRESHOLD:
         return True
     # One clearly nested inside the other -> duplicate.
-    # We require compatible kinds only when there's an actual human wearer
-    # (to preserve nested accessories like belts on pants).
-    # In flat lays or single-item contexts (no human), nested items are
-    # always duplicate hallucinations of the same physical item.
     if contain >= 0.8:
         if compatible_kind or not has_human:
             return True
@@ -251,21 +276,7 @@ def _nms_detections(items: list[dict[str, Any]]) -> list[dict[str, Any]]:
         y1, x1, y2, x2 = it["bbox"]
         return max(0, (x2 - x1)) * max(0, (y2 - y1))
 
-    # Determine if a wearer is present
-    frame_area = 1000 * 1000
-    has_head = any(d.get("has_human_head", False) for d in items)
-    garment_kinds = {
-        d.get("kind", "garment").lower()
-        for d in items
-        if _area(d) >= frame_area * 0.03
-    }
-    has_human = False
-    if has_head or len(garment_kinds) > 1:
-        for d in items:
-            hm = d.get("_human_mask_full")
-            if hm is not None and hm.sum() >= 30000:
-                has_human = True
-                break
+    has_human = _detect_human_presence(items)
 
     # Sort by area DESC so the dominant (larger) box wins.
     sorted_items = sorted(items, key=_area, reverse=True)
@@ -288,7 +299,7 @@ def _is_unidentifiable(analysis: dict[str, Any] | None) -> bool:
        "unknown", "cannot identify", "not visible").
     2. Caption contains a give-up phrase or starts with the LLM's
        boilerplate refusal pattern ("the item in this photo is not...").
-    3. Both ``item_type`` *and* ``sub_category`` are empty/missing \u2014
+    3. Both ``item_type`` *and* ``sub_category`` are empty/missing —
        a sign the LLM gave up on classifying the garment.
     """
     if not analysis:
@@ -328,49 +339,38 @@ def _looks_already_cropped(detections: list[dict[str, Any]]) -> bool:
     """
     if not detections:
         return True  # nothing detectable — safer to analyse whole frame
+
+    # If a human wearer/model is present, this is an on-model outfit photo
+    # and must NEVER be treated as an already-cropped single-item flat lay.
+    if _detect_human_presence(detections):
+        return False
+
     frame_area = 1000 * 1000
 
     def _area(bbox: list[int]) -> int:
         y1, x1, y2, x2 = bbox
         return max(0, (x2 - x1)) * max(0, (y2 - y1))
 
-    significant = [d for d in detections if _area(d["bbox"]) >= frame_area * 0.03]
-    if len(significant) > 1:
-        # Multiple significant items detected across the frame — this is an outfit
-        # or multi-piece shot that needs individual garment crops.
+    # If multiple distinct garment/accessory items exist, it's a multi-item flat lay.
+    kinds = {(d.get("category") or d.get("kind") or "garment").lower() for d in detections}
+    if len(detections) > 1 and len(kinds) > 1:
         return False
 
-    has_human = False
-    has_head = any(d.get("has_human_head", False) for d in detections)
-    garment_kinds = {
-        (d.get("category") or d.get("kind") or "garment").lower()
-        for d in detections
-        if _area(d["bbox"]) >= frame_area * 0.03
-    }
-    if has_head or len(garment_kinds) > 1:
-        for d in detections:
-            hm = d.get("_human_mask_full")
-            if hm is not None and hm.sum() >= 30000:
-                has_human = True
-                break
-
-    if not has_human and len(garment_kinds) <= 1:
-        return True
+    significant = [d for d in detections if _area(d["bbox"]) >= frame_area * 0.01]
+    if len(significant) > 1:
+        return False
 
     areas = [_area(d["bbox"]) for d in detections]
     largest_area = max(areas) if areas else 0
 
     # Signal 0: single category detection covering >= single-item threshold
-    if len(garment_kinds) <= 1 and largest_area >= frame_area * _SINGLE_ITEM_AREA_FRAC:
+    if len(kinds) <= 1 and largest_area >= frame_area * _SINGLE_ITEM_AREA_FRAC:
         return True
 
-    # Signal 1: one dominant detection (only triggers when nothing crossed
-    # the threshold above — kept for the ``len == 1`` corner cases).
+    # Signal 1: one dominant detection
     if len(detections) == 1:
         if largest_area >= frame_area * _SINGLE_ITEM_AREA_FRAC:
             return True
-        # A single tiny detection on a clean-looking frame also hints at
-        # an over-zealous sub-part crop.
         if largest_area <= frame_area * 0.25:
             return True
         return False
@@ -389,8 +389,8 @@ def _looks_already_cropped(detections: list[dict[str, Any]]) -> bool:
 
     # Signal 2: several detections of the same kind, all clustered inside
     # a small area (collar / sleeve / hem hallucinations).
-    kinds = {(d.get("category") or d.get("kind") or "garment").lower() for d in detections}
     if len(kinds) > 1:
         return False
     return union <= frame_area * _SUBPART_UNION_FRAC
+
 

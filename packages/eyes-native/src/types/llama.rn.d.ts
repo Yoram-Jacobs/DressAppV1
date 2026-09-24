@@ -26,6 +26,14 @@ declare module 'llama.rn' {
     top_p?: number;
     top_k?: number;
     stop?: string[];
+    enable_thinking?: boolean;
+    reasoning_format?: 'none' | 'auto' | 'deepseek';
+    force_pure_content?: boolean;
+    response_format?: {
+      type: 'text' | 'json_object' | 'json_schema';
+      json_schema?: { schema: object };
+      schema?: object;
+    };
   }
 
   export interface LlamaCompletionResult {
@@ -48,6 +56,15 @@ declare module 'llama.rn' {
     embedding(text: string): Promise<{ embedding: number[] }>;
     release(): Promise<void>;
     stopCompletion(): Promise<void>;
+    initMultimodal(params: {
+      path: string;
+      use_gpu?: boolean;
+      image_min_tokens?: number;
+      image_max_tokens?: number;
+    }): Promise<boolean>;
+    isMultimodalEnabled(): Promise<boolean>;
+    getMultimodalSupport(): Promise<{ vision: boolean; audio: boolean }>;
+    releaseMultimodal(): Promise<void>;
   }
 
   export interface LlamaContextParams {

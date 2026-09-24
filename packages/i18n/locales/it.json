@@ -1367,7 +1367,25 @@
     "tomorrowSuggestionSubtitle": "Creato per domani in base al tuo profilo di stile, alle previsioni meteo e agli impegni.",
     "tomorrowSuggestionRefreshed": "Suggerimento per domani aggiornato!",
     "wearTomorrow": "Indossa domani",
-    "upgradeForDailySuggestionsDesc": "Esegui l'upgrade al piano Manager o Professional per sbloccare i suggerimenti giornalieri."
+    "upgradeForDailySuggestionsDesc": "Esegui l'upgrade al piano Manager o Professional per sbloccare i suggerimenti giornalieri.",
+    "calendar": {
+      "searchPlaceholder": "Cerca stile: \"Barbecue estivo\", \"Shopping al centro commerciale\", \"Riunione di lavoro\", \"T-shirt nera\", \"Jeans stone-washed\"...",
+      "quickVibes": "Vibes:",
+      "resultsCount": "Trovati {{count}} di {{total}} outfit",
+      "noSearchMatches": "Nessun outfit corrisponde a questo stile",
+      "noSearchMatchesDesc": "Non abbiamo trovato outfit salvati corrispondenti a \"{{query}}\". Prova un altro stile, un altro capo o cancella la ricerca.",
+      "clearSearch": "Cancella ricerca",
+      "vibes": {
+        "black_t_shirt": "T-shirt nera",
+        "business_meeting": "Riunione di lavoro",
+        "summer_barbecue": "Barbecue estivo",
+        "mall_shopping": "Shopping al centro commerciale",
+        "rainy_day": "Giorno di pioggia",
+        "stone_washed_jeans": "Jeans stone-washed",
+        "colorful_summer": "Estate colorata",
+        "casual_chic": "Casual chic"
+      }
+    }
   },
   "outfitCompletion": {
     "cta": "Completa l'outfit",
@@ -1387,7 +1405,16 @@
     "noClosetSuggestions": "Nessun capo complementare trovato nel guardaroba. Attiva il marketplace o aggiungi altri pezzi.",
     "embeddingsMissingHint": "Alcuni dei capi selezionati non hanno ancora i vettori di similarità. Ricaricandoli migliorerai la qualità dei suggerimenti.",
     "empty": "Nessun suggerimento ottenuto. Prova con altri capi o attiva il marketplace.",
-    "error": "Completamento dell'outfit fallito. Riprova."
+    "error": "Completamento dell'outfit fallito. Riprova.",
+    "tryOnAvatar": "Prova sull'avatar",
+    "saveOutfit": "Salva l'outfit",
+    "saveOutfitTitle": "Salva outfit",
+    "saveOutfitDesc": "Salva questo look consigliato con un nome descrittivo per accedervi in qualsiasi momento nel tuo Canvas degli outfit.",
+    "includedPieces": "Capi inclusi",
+    "savedSuccess": "Outfit \"{{name}}\" salvato nel tuo Canvas degli outfit!",
+    "alreadySaved": "Outfit già salvato",
+    "outfitName": "Nome dell'outfit",
+    "notes": "Note dello stylist / Occasione"
   },
   "market": {
     "atzmaiGateway": "Gateway di pagamento Atzmai Sachir",

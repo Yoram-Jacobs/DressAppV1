@@ -1367,7 +1367,25 @@
     "tomorrowSuggestionSubtitle": "Für morgen kuratiert basierend auf Ihrem Stilprofil, der Wettervorhersage und Terminen.",
     "tomorrowSuggestionRefreshed": "Vorschlag für morgen aktualisiert!",
     "wearTomorrow": "Morgen tragen",
-    "upgradeForDailySuggestionsDesc": "Führen Sie ein Upgrade auf den Manager- oder Professional-Tarif durch, um tägliche Vorschläge freizuschalten."
+    "upgradeForDailySuggestionsDesc": "Führen Sie ein Upgrade auf den Manager- oder Professional-Tarif durch, um tägliche Vorschläge freizuschalten.",
+    "calendar": {
+      "searchPlaceholder": "Vibe-Suche: „Sommer-Grillparty“, „Shopping in der Mall“, „Geschäftstreffen“, „Schwarzes T-Shirt“, „Stone-washed Jeans“...",
+      "quickVibes": "Vibes:",
+      "resultsCount": "{{count}} von {{total}} Outfits gefunden",
+      "noSearchMatches": "Keine Outfits passen zu diesem Vibe",
+      "noSearchMatchesDesc": "Wir konnten keine gespeicherten Outfits finden, die zu „{{query}}“ passen. Versuche einen anderen Vibe, ein anderes Kleidungsstück oder setze die Suche zurück.",
+      "clearSearch": "Suche löschen",
+      "vibes": {
+        "black_t_shirt": "Schwarzes T-Shirt",
+        "business_meeting": "Geschäftstreffen",
+        "summer_barbecue": "Sommer-Grillparty",
+        "mall_shopping": "Mall-Shopping",
+        "rainy_day": "Regnerischer Tag",
+        "stone_washed_jeans": "Stone-washed Jeans",
+        "colorful_summer": "Farbenfroher Sommer",
+        "casual_chic": "Casual Chic"
+      }
+    }
   },
   "outfitCompletion": {
     "cta": "Outfit vervollständigen",
@@ -1387,7 +1405,16 @@
     "noClosetSuggestions": "Keine ergänzenden Teile in deinem Kleiderschrank gefunden. Aktiviere den Marketplace oder füge weitere Teile hinzu.",
     "embeddingsMissingHint": "Einige der ausgewählten Teile haben noch keine Ähnlichkeitsvektoren. Erneutes Hochladen verbessert die Vorschlagsqualität.",
     "empty": "Keine Vorschläge erhalten. Probiere andere Ankerteile oder aktiviere den Marketplace.",
-    "error": "Outfit-Vervollständigung fehlgeschlagen. Bitte erneut versuchen."
+    "error": "Outfit-Vervollständigung fehlgeschlagen. Bitte erneut versuchen.",
+    "tryOnAvatar": "Auf Avatar anprobieren",
+    "saveOutfit": "Outfit speichern",
+    "saveOutfitTitle": "Outfit speichern",
+    "saveOutfitDesc": "Speichere diesen empfohlenen Look mit einem aussagekräftigen Namen, um jederzeit im Outfit-Canvas darauf zuzugreifen.",
+    "includedPieces": "Enthaltene Teile",
+    "savedSuccess": "Outfit „{{name}}“ wurde in deinem Outfit-Canvas gespeichert!",
+    "alreadySaved": "Outfit bereits gespeichert",
+    "outfitName": "Outfit-Name",
+    "notes": "Stylist-Notizen / Anlass"
   },
   "market": {
     "atzmaiGateway": "Atzmai Sachir Zahlungsportal",

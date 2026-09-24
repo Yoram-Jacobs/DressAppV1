@@ -1367,7 +1367,25 @@
     "lookCounter": "Look {{current}} of {{total}}",
     "wearToday": "Wear Today",
     "wearTomorrow": "Wear Tomorrow",
-    "upgradeForDailySuggestionsDesc": "Upgrade to Manager or Professional to unlock Daily Suggestions."
+    "upgradeForDailySuggestionsDesc": "Upgrade to Manager or Professional to unlock Daily Suggestions.",
+    "calendar": {
+      "searchPlaceholder": "Vibe search: \"Summer barbecue\", \"Mall shopping\", \"Business meeting\", \"Black T-shirt\", \"Stone-washed jeans\"...",
+      "quickVibes": "Vibes:",
+      "resultsCount": "Found {{count}} of {{total}} outfits",
+      "noSearchMatches": "No outfits match this vibe",
+      "noSearchMatchesDesc": "We couldn't find any saved outfits matching \"{{query}}\". Try another vibe, garment, or clear the search.",
+      "clearSearch": "Clear search",
+      "vibes": {
+        "black_t_shirt": "Black T-shirt",
+        "business_meeting": "Business meeting",
+        "summer_barbecue": "Summer barbecue",
+        "mall_shopping": "Mall shopping",
+        "rainy_day": "Rainy day",
+        "stone_washed_jeans": "Stone-washed jeans",
+        "colorful_summer": "Colorful summer",
+        "casual_chic": "Casual chic"
+      }
+    }
   },
   "outfitCompletion": {
     "cta": "Complete the outfit",
@@ -1387,7 +1405,16 @@
     "noClosetSuggestions": "No complementary items found in your closet. Try enabling the marketplace, or add more pieces to your closet.",
     "embeddingsMissingHint": "Some of your selected pieces don't have embeddings yet. Re-uploading them will improve suggestion quality.",
     "empty": "No suggestions came back. Try picking different anchors or toggling the marketplace.",
-    "error": "Outfit completion failed. Please try again."
+    "error": "Outfit completion failed. Please try again.",
+    "tryOnAvatar": "Try on avatar",
+    "saveOutfit": "Save the Outfit",
+    "saveOutfitTitle": "Save Outfit",
+    "saveOutfitDesc": "Save this recommended look with a descriptive name to access it anytime in your Outfit Canvas.",
+    "includedPieces": "Included pieces",
+    "savedSuccess": "Outfit \"{{name}}\" saved to your Outfit Canvas!",
+    "alreadySaved": "Outfit already saved",
+    "outfitName": "Outfit Name",
+    "notes": "Stylist Notes / Occasion"
   },
   "market": {
     "atzmaiGateway": "Atzmai Sachir Payment Gateway",
@@ -2849,7 +2876,13 @@
       "brief": "Brief:",
       "outfit_canvas": "Outfit canvas",
       "the_look": "The look",
-      "view_profile": "View profile →"
+      "view_profile": "View profile →",
+      "searchPlaceholder": "Vibe search: \"Summer barbecue\", \"Mall shopping\", \"Business meeting\", \"Black T-shirt\", \"Stone-washed jeans\"...",
+      "quickVibes": "Vibes:",
+      "resultsCount": "Found {{count}} of {{total}} outfits",
+      "noSearchMatches": "No outfits match this vibe",
+      "noSearchMatchesDesc": "We couldn't find any saved outfits matching \"{{query}}\". Try another vibe, garment, or clear the search.",
+      "clearSearch": "Clear search"
     },
     "profileDetailsCard": {
       "eg_marketing_manager_student_barista": "e.g. Marketing manager, Student, Barista",

@@ -107,7 +107,14 @@ export const labelForCategory = (code?: string, t?: TFunction): string => {
 export const labelForSubCategory = (code?: string, t?: TFunction): string => {
   if (!code) return '';
   if (!t) return code;
-  return fallback(t, `taxonomy.subcategories.${slug(code)}`, code);
+  const s = slug(code);
+  const fromSub = fallback(t, `taxonomy.subcategories.${s}`, '');
+  if (fromSub && fromSub !== s) return fromSub;
+  const fromSingular = fallback(t, `taxonomy.sub_category.${s}`, '');
+  if (fromSingular && fromSingular !== s) return fromSingular;
+  const fromItemType = fallback(t, `taxonomy.item_type.${s}`, '');
+  if (fromItemType && fromItemType !== s) return fromItemType;
+  return code;
 };
 
 export const labelForSeason = (code?: string, t?: TFunction): string => {
@@ -169,10 +176,17 @@ export const labelForIntent = (code?: string, t?: TFunction): string => {
 export const labelForColor = (code?: string, t?: TFunction): string => {
   if (!code) return '';
   if (!t) return code;
-  const colorSlug = slug(code);
-  const keySingular = `taxonomy.color.${colorSlug}`;
+  let colorSlug = slug(code);
+  if (colorSlug === 'navy_blue' || colorSlug === 'dark_blue') colorSlug = 'navy';
+  else if (colorSlug === 'light_blue' || colorSlug === 'sky_blue') colorSlug = 'blue';
+  else if (colorSlug === 'off_white') colorSlug = 'cream';
   const keyPlural = `taxonomy.colors.${colorSlug}`;
-  return fallback(t, keySingular, fallback(t, keyPlural, code));
+  const keySingular = `taxonomy.color.${colorSlug}`;
+  const fromPlural = fallback(t, keyPlural, '');
+  if (fromPlural && fromPlural !== colorSlug) return fromPlural;
+  const fromSingular = fallback(t, keySingular, '');
+  if (fromSingular && fromSingular !== colorSlug) return fromSingular;
+  return code;
 };
 
 export const labelForGender = (code?: string, t?: TFunction): string => {

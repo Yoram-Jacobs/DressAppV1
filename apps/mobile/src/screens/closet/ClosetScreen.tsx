@@ -770,7 +770,7 @@ export function ClosetScreen() {
               {item.title || item.name || 'Garment'}
             </Text>
             <Text style={[styles.listSub, { color: colors.mutedFg }]}>
-              {[item.brand, item.category].filter(Boolean).join(' · ')}
+              {[item.brand, labelForCategory(item.category, t)].filter(Boolean).join(' · ')}
             </Text>
             {Array.isArray(item.tags) && item.tags.length > 0 ? (
               <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 4, marginTop: 4 }}>
@@ -883,7 +883,7 @@ export function ClosetScreen() {
             {item.title || item.name || 'Garment'}
           </Text>
           <Text style={[styles.gridSub, { color: colors.mutedFg }]} numberOfLines={1}>
-            {item.brand || item.category || 'Piece'}
+            {item.brand || labelForCategory(item.category, t) || t('closet.unnamedItem', { defaultValue: 'Piece' })}
           </Text>
           {Array.isArray(item.tags) && item.tags.length > 0 ? (
             <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 3, marginTop: 3 }}>

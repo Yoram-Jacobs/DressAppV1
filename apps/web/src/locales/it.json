@@ -203,7 +203,7 @@
         "capture": {
           "alt": "catturare il panno",
           "title": "Cattura vestiti",
-          "description": "Scatta una foto veloce dei tuoi capi reali. Funziona magnificamente con tutte le luci e gli sfondi."
+          "description": "Scatta una foto veloce dei tuoi capi reali. Funziona meglio con una buona illuminazione e sfondi a contrasto."
         },
         "analysis": {
           "alt": "analisi degli attributi",
@@ -227,7 +227,7 @@
       "heading": "Ogni pezzo trova il suo posto",
       "description1": "Fotografa tutto ciò che possiedi: DressApp legge il tessuto, il taglio, il colore e lo archivia come farebbe uno stilista: etichettato, catalogato, pronto per essere ritirato nel momento in cui ne hai bisogno.",
       "description2": "Niente più cassetti dimenticati. Cerca per parola chiave o descrivi semplicemente una sensazione - \"qualcosa di caldo per un lunedì piovoso\" - e il pezzo giusto tornerà da te.",
-      "cta": "Inizia a costruire il tuo armadio",
+      "cta": "Migra il tuo guardaroba",
       "recentlyAdded": "Aggiunto di recente",
       "garments": {
         "blazer": {
@@ -368,6 +368,50 @@
         "emailBody": "Nome negozio: {{name}}\nIndirizzo web: {{url}}",
         "sent": "Si aprirà l'app email per inviare questa richiesta a DressApp."
       }
+    },
+    "migration": {
+      "eyebrow": "MIGRAZIONE ARMADIO IA: UNA PRIMA ASSOLUTA NEL SETTORE",
+      "proBadge": "ESCLUSIVA PRO E MANAGER",
+      "title": "Migra il tuo armadio in pochi secondi",
+      "subtitle": "Importa i vestiti senza sforzo da Whering, Acloset, Stylebook e altro ancora. Il nostro agente IA elimina i duplicati nel tuo armadio, compila automaticamente tutti i dettagli dei capi e scansiona le app concorrenti dal vivo sullo schermo.",
+      "strip1": "Zero capi duplicati",
+      "strip2": "Ogni dettaglio compilato automaticamente",
+      "strip3": "100% visibile durante l'operazione",
+      "step1Title": "Collega la tua vecchia app dell'armadio",
+      "step1Desc": "Scegli Whering, Acloset, Stylebook e altro.",
+      "step2Title": "Guarda l'agente IA scansionare dal vivo",
+      "step2Desc": "Ogni capo viene letto, etichettato e deduplicato sullo schermo.",
+      "step3Title": "Il tuo armadio arriva completamente etichettato",
+      "step3Desc": "Categoria, colore, tessuto e stagione — fatto.",
+      "modalTitle": "Importare il tuo armadio esistente?",
+      "modalDesc": "Hai già un armadio digitale su un'altra app? Possiamo trasferire i tuoi vestiti così non devi ricominciare da zero.",
+      "modalSkip": "No, ricomincia da zero",
+      "modalGo": "Sì, importa il mio armadio",
+      "liveStatus": "Scheda concorrente — In diretta",
+      "agentStatus": "Agente DressApp attivo",
+      "agentWidgetTitle": "Agente DressApp",
+      "agentWidgetSubtitle": "Scansione dell'armadio…",
+      "cardsFound": "capi trovati",
+      "dupeLabel": "Duplicato — saltato",
+      "visibilityNote": "L'armadio del concorrente resta visibile sul tuo schermo per tutta la durata del processo — puoi osservare la scansione di ogni capo.",
+      "dressappTarget": "Il tuo armadio DressApp",
+      "detailCardsFilled": "100% delle schede dettagliate compilate",
+      "summaryNotice": "Nessun duplicato importato. Tutti gli attributi dei capi sono stati compilati automaticamente.",
+      "testRun": "Prova l'importazione dal vivo",
+      "supportsApps": "Importa da:",
+      "privateLabel": "Privato",
+      "wearsCount": "{{count}} utilizzi",
+      "step2ItemBlazer": "Blazer blu navy",
+      "step2ItemShirt": "Camicia bianca",
+      "step2ItemJeans": "Jeans",
+      "closetCard1Type": "Top · Blu navy",
+      "closetCard1Name": "Blazer tecnico blu navy",
+      "closetCard2Type": "Top · Bianco",
+      "closetCard2Name": "Camicia in cotone biologico",
+      "closetCard3Type": "Bottom · Antracite",
+      "closetCard3Name": "Jeans dritti",
+      "closetCard4Type": "Top · Nero",
+      "closetCard4Name": "Polo con dettaglio verde lime"
     },
     "aiEditor": {
       "title": "Editor di moda in stile AI",
@@ -593,7 +637,8 @@
     "viewList": "Vista elenco",
     "dpp": "DPP",
     "saveFailuresTitle": "Impossibile salvare questi elementi nel tuo armadio. Prova a caricarli di nuovo.",
-    "garmentsCount": "{{count}} capi"
+    "garmentsCount": "{{count}} capi",
+    "views": "viste"
   },
   "addItem": {
     "namePlaceholder": "es. Giacca di jeans vintage",
@@ -1080,7 +1125,10 @@
     "banner": {
       "title": "Revisiona e perfeziona",
       "subtitle": "Perfeziona ogni dettaglio rilevato da 'The Eyes': modifica la foto, regola gli attributi e prepara questo capo per il tuo guardaroba o il marketplace."
-    }
+    },
+    "takePhoto": "Scatta foto",
+    "replacePhoto": "Sostituisci foto",
+    "useProfileShoeSize": "Dal profilo: {{size}}"
   },
   "stylist": {
     "heroTitle": "Il tuo personal stylist AI",
@@ -1319,7 +1367,25 @@
     "tomorrowSuggestionSubtitle": "Creato per domani in base al tuo profilo di stile, alle previsioni meteo e agli impegni.",
     "tomorrowSuggestionRefreshed": "Suggerimento per domani aggiornato!",
     "wearTomorrow": "Indossa domani",
-    "upgradeForDailySuggestionsDesc": "Esegui l'upgrade al piano Manager o Professional per sbloccare i suggerimenti giornalieri."
+    "upgradeForDailySuggestionsDesc": "Esegui l'upgrade al piano Manager o Professional per sbloccare i suggerimenti giornalieri.",
+    "calendar": {
+      "searchPlaceholder": "Cerca stile: \"Barbecue estivo\", \"Shopping al centro commerciale\", \"Riunione di lavoro\", \"T-shirt nera\", \"Jeans stone-washed\"...",
+      "quickVibes": "Vibes:",
+      "resultsCount": "Trovati {{count}} di {{total}} outfit",
+      "noSearchMatches": "Nessun outfit corrisponde a questo stile",
+      "noSearchMatchesDesc": "Non abbiamo trovato outfit salvati corrispondenti a \"{{query}}\". Prova un altro stile, un altro capo o cancella la ricerca.",
+      "clearSearch": "Cancella ricerca",
+      "vibes": {
+        "black_t_shirt": "T-shirt nera",
+        "business_meeting": "Riunione di lavoro",
+        "summer_barbecue": "Barbecue estivo",
+        "mall_shopping": "Shopping al centro commerciale",
+        "rainy_day": "Giorno di pioggia",
+        "stone_washed_jeans": "Jeans stone-washed",
+        "colorful_summer": "Estate colorata",
+        "casual_chic": "Casual chic"
+      }
+    }
   },
   "outfitCompletion": {
     "cta": "Completa l'outfit",
@@ -1339,7 +1405,16 @@
     "noClosetSuggestions": "Nessun capo complementare trovato nel guardaroba. Attiva il marketplace o aggiungi altri pezzi.",
     "embeddingsMissingHint": "Alcuni dei capi selezionati non hanno ancora i vettori di similarità. Ricaricandoli migliorerai la qualità dei suggerimenti.",
     "empty": "Nessun suggerimento ottenuto. Prova con altri capi o attiva il marketplace.",
-    "error": "Completamento dell'outfit fallito. Riprova."
+    "error": "Completamento dell'outfit fallito. Riprova.",
+    "tryOnAvatar": "Prova sull'avatar",
+    "saveOutfit": "Salva l'outfit",
+    "saveOutfitTitle": "Salva outfit",
+    "saveOutfitDesc": "Salva questo look consigliato con un nome descrittivo per accedervi in qualsiasi momento nel tuo Canvas degli outfit.",
+    "includedPieces": "Capi inclusi",
+    "savedSuccess": "Outfit \"{{name}}\" salvato nel tuo Canvas degli outfit!",
+    "alreadySaved": "Outfit già salvato",
+    "outfitName": "Nome dell'outfit",
+    "notes": "Note dello stylist / Occasione"
   },
   "market": {
     "atzmaiGateway": "Gateway di pagamento Atzmai Sachir",
@@ -1989,7 +2064,17 @@
     "selectOrWriteTags": "Seleziona o scrivi tag",
     "tagsPlaceholder": "Scrivi un tag e premi Invio (es. Lavoro, Estate, Tinta unita)",
     "availableTags": "Dal tuo guardaroba:",
-    "noTagsFound": "Nessun tag trovato. Scrivi sopra per aggiungerne."
+    "noTagsFound": "Nessun tag trovato. Scrivi sopra per aggiungerne.",
+    "subtitle": "Gestisci il tuo profilo di stile personale, le misure del corpo, l'avatar per il camerino virtuale e le impostazioni IA.",
+    "tiers": {
+      "free": "Gratuito",
+      "manage": "Manager",
+      "manager": "Manager",
+      "professional": "Professionale",
+      "club": "Club",
+      "pro": "Pro",
+      "business": "Business"
+    }
   },
   "admin": {
     "title": "Amministratore",
@@ -4411,7 +4496,8 @@
       "unlimitedOps": "Richieste giornaliere illimitate",
       "marketplaceAccess": "Vendita e noleggio sul marketplace",
       "schedulerAccess": "Programmatore e notifiche push",
-      "campaignsAccess": "Campagne pubblicitarie incluse"
+      "campaignsAccess": "Campagne pubblicitarie incluse",
+      "wardrobeMigration": "Migrazione del guardaroba"
     },
     "supportTiers": {
       "community": "Supporto community",

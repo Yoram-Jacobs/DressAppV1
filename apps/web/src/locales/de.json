@@ -203,7 +203,7 @@
         "capture": {
           "alt": "Tuch einfangen",
           "title": "Erfassen Sie Kleidung",
-          "description": "Machen Sie schnell ein Foto Ihrer tatsächlichen Kleidungsstücke. Funktioniert wunderbar mit allen Beleuchtungen und Hintergründen."
+          "description": "Mache schnell ein Foto von deinen tatsächlichen Kleidungsstücken. Am besten funktioniert es bei guter Beleuchtung und kontrastreichen Hintergründen."
         },
         "analysis": {
           "alt": "Attributanalyse",
@@ -227,7 +227,7 @@
       "heading": "Jedes Stück findet seinen Platz",
       "description1": "Fotografieren Sie alles, was Sie besitzen – DressApp liest den Stoff, den Schnitt, die Farbe und archiviert es wie ein Stylist: markiert, katalogisiert und bereit zum Ausziehen, sobald Sie es brauchen.",
       "description2": "Keine vergessenen Schubladen mehr. Suchen Sie nach einem Schlüsselwort oder beschreiben Sie einfach ein Gefühl – „etwas Warmes für einen verregneten Montag“ – und das richtige Stück findet den Weg zu Ihnen zurück.",
-      "cta": "Beginnen Sie mit dem Aufbau Ihres Kleiderschranks",
+      "cta": "Migriere deine Garderobe",
       "recentlyAdded": "Kürzlich hinzugefügt",
       "garments": {
         "blazer": {
@@ -368,6 +368,50 @@
         "emailBody": "Shop-Name: {{name}}\nWebadresse: {{url}}",
         "sent": "Ihre E-Mail-App öffnet sich, damit Sie diese Anfrage an DressApp senden können."
       }
+    },
+    "migration": {
+      "eyebrow": "BRANCHENWEIT ERSTE KI-GARDEROBENMIGRATION",
+      "proBadge": "NUR FÜR PRO & MANAGER",
+      "title": "Migriere deine Garderobe in Sekunden",
+      "subtitle": "Importiere Kleidung nahtlos aus Whering, Acloset, Stylebook und mehr. Unser KI-Agent dedupliziert deinen Kleiderschrank, füllt alle Artikeldetails automatisch aus und scannt Konkurrenz-Apps live auf dem Bildschirm.",
+      "strip1": "Keine doppelten Artikel",
+      "strip2": "Jedes Detail automatisch ausgefüllt",
+      "strip3": "100 % sichtbar während des Vorgangs",
+      "step1Title": "Verbinde deine alte Garderoben-App",
+      "step1Desc": "Wähle Whering, Acloset, Stylebook und mehr.",
+      "step2Title": "Sieh zu, wie der KI-Agent live scannt",
+      "step2Desc": "Jede Karte wird live erfasst, getaggt und dedupliziert.",
+      "step3Title": "Dein Kleiderschrank kommt vollständig getaggt an",
+      "step3Desc": "Kategorie, Farbe, Material & Saison — erledigt.",
+      "modalTitle": "Bestehende Garderobe importieren?",
+      "modalDesc": "Hast du bereits eine digitale Garderobe in einer anderen App? Wir können deine Kleidung übertragen, damit du nicht von vorn anfangen musst.",
+      "modalSkip": "Nein, neu anfangen",
+      "modalGo": "Ja, meine Garderobe importieren",
+      "liveStatus": "Konkurrenz-Tab — Live",
+      "agentStatus": "DressApp-Agent aktiv",
+      "agentWidgetTitle": "DressApp-Agent",
+      "agentWidgetSubtitle": "Kleiderschrank wird gescannt…",
+      "cardsFound": "Karten gefunden",
+      "dupeLabel": "Duplikat — übersprungen",
+      "visibilityNote": "Deine Konkurrenz-Garderobe bleibt die ganze Zeit auf deinem eigenen Bildschirm sichtbar — du kannst zusehen, wie jede Karte gescannt wird.",
+      "dressappTarget": "Dein DressApp-Kleiderschrank",
+      "detailCardsFilled": "100 % der Detailkarten ausgefüllt",
+      "summaryNotice": "Keine Duplikate importiert. Alle Artikelattribute automatisch ausgefüllt.",
+      "testRun": "Live-Import testen",
+      "supportsApps": "Import von:",
+      "privateLabel": "Privat",
+      "wearsCount": "{{count}} Mal getragen",
+      "step2ItemBlazer": "Marineblauer Blazer",
+      "step2ItemShirt": "Weißes Hemd",
+      "step2ItemJeans": "Jeans",
+      "closetCard1Type": "Oberteil · Marineblau",
+      "closetCard1Name": "Marineblauer Tech-Blazer",
+      "closetCard2Type": "Oberteil · Weiß",
+      "closetCard2Name": "Bio-Baumwollhemd",
+      "closetCard3Type": "Unterteil · Anthrazit",
+      "closetCard3Name": "Gerade geschnittene Jeans",
+      "closetCard4Type": "Oberteil · Schwarz",
+      "closetCard4Name": "Poloshirt mit Lindgrün-Akzent"
     },
     "aiEditor": {
       "title": "KI-gestylter Moderedakteur",
@@ -1323,7 +1367,25 @@
     "tomorrowSuggestionSubtitle": "Für morgen kuratiert basierend auf Ihrem Stilprofil, der Wettervorhersage und Terminen.",
     "tomorrowSuggestionRefreshed": "Vorschlag für morgen aktualisiert!",
     "wearTomorrow": "Morgen tragen",
-    "upgradeForDailySuggestionsDesc": "Führen Sie ein Upgrade auf den Manager- oder Professional-Tarif durch, um tägliche Vorschläge freizuschalten."
+    "upgradeForDailySuggestionsDesc": "Führen Sie ein Upgrade auf den Manager- oder Professional-Tarif durch, um tägliche Vorschläge freizuschalten.",
+    "calendar": {
+      "searchPlaceholder": "Vibe-Suche: „Sommer-Grillparty“, „Shopping in der Mall“, „Geschäftstreffen“, „Schwarzes T-Shirt“, „Stone-washed Jeans“...",
+      "quickVibes": "Vibes:",
+      "resultsCount": "{{count}} von {{total}} Outfits gefunden",
+      "noSearchMatches": "Keine Outfits passen zu diesem Vibe",
+      "noSearchMatchesDesc": "Wir konnten keine gespeicherten Outfits finden, die zu „{{query}}“ passen. Versuche einen anderen Vibe, ein anderes Kleidungsstück oder setze die Suche zurück.",
+      "clearSearch": "Suche löschen",
+      "vibes": {
+        "black_t_shirt": "Schwarzes T-Shirt",
+        "business_meeting": "Geschäftstreffen",
+        "summer_barbecue": "Sommer-Grillparty",
+        "mall_shopping": "Mall-Shopping",
+        "rainy_day": "Regnerischer Tag",
+        "stone_washed_jeans": "Stone-washed Jeans",
+        "colorful_summer": "Farbenfroher Sommer",
+        "casual_chic": "Casual Chic"
+      }
+    }
   },
   "outfitCompletion": {
     "cta": "Outfit vervollständigen",
@@ -1343,7 +1405,16 @@
     "noClosetSuggestions": "Keine ergänzenden Teile in deinem Kleiderschrank gefunden. Aktiviere den Marketplace oder füge weitere Teile hinzu.",
     "embeddingsMissingHint": "Einige der ausgewählten Teile haben noch keine Ähnlichkeitsvektoren. Erneutes Hochladen verbessert die Vorschlagsqualität.",
     "empty": "Keine Vorschläge erhalten. Probiere andere Ankerteile oder aktiviere den Marketplace.",
-    "error": "Outfit-Vervollständigung fehlgeschlagen. Bitte erneut versuchen."
+    "error": "Outfit-Vervollständigung fehlgeschlagen. Bitte erneut versuchen.",
+    "tryOnAvatar": "Auf Avatar anprobieren",
+    "saveOutfit": "Outfit speichern",
+    "saveOutfitTitle": "Outfit speichern",
+    "saveOutfitDesc": "Speichere diesen empfohlenen Look mit einem aussagekräftigen Namen, um jederzeit im Outfit-Canvas darauf zuzugreifen.",
+    "includedPieces": "Enthaltene Teile",
+    "savedSuccess": "Outfit „{{name}}“ wurde in deinem Outfit-Canvas gespeichert!",
+    "alreadySaved": "Outfit bereits gespeichert",
+    "outfitName": "Outfit-Name",
+    "notes": "Stylist-Notizen / Anlass"
   },
   "market": {
     "atzmaiGateway": "Atzmai Sachir Zahlungsportal",
@@ -4418,7 +4489,8 @@
       "unlimitedOps": "Unbegrenzte tägliche Anfragen",
       "marketplaceAccess": "Marktplatz-Zugang (Verkaufen & Vermieten)",
       "schedulerAccess": "Terminplaner & Push-Benachrichtigungen",
-      "campaignsAccess": "Werbekampagnen inklusive"
+      "campaignsAccess": "Werbekampagnen inklusive",
+      "wardrobeMigration": "Kleiderschrank-Migration"
     },
     "supportTiers": {
       "community": "Community-Support",

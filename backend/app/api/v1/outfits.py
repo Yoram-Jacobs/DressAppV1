@@ -30,8 +30,8 @@ class GarmentItemIn(BaseModel):
 
 
 class OutfitUsageIn(BaseModel):
-    date: str
-    time: str
+    date: str | None = None
+    time: str | None = None
     location: str | None = None
     event_name: str | None = None
 
@@ -39,10 +39,10 @@ class OutfitUsageIn(BaseModel):
 class SaveOutfitIn(BaseModel):
     name: str
     description: str | None = None
-    source_workflow: str  # "scheduled" | "event"
+    source_workflow: str = "custom"  # "scheduled" | "event" | "complete_outfit" | "outfit_canvas"
     prompt: str | None = None
     garments: list[GarmentItemIn]
-    usage: OutfitUsageIn
+    usage: OutfitUsageIn | None = None
     is_fallback: bool | None = None
     write_to_calendar: bool = False
 
@@ -100,6 +100,40 @@ async def list_saved_outfits(
         rows = [r for r in rows if len(r.get("garments", [])) > 0]
 
     return {"outfits": [_safe_doc(r) for r in rows]}
+
+
+@router.get("/search")
+async def search_saved_outfits(
+    q: str,
+    user: dict = Depends(get_current_user),
+    limit: int = 50,
+) -> dict[str, Any]:
+    """Vibe search over user's saved outfits by query (occasion, vibe, garment, color, or notes)."""
+    db = get_db()
+    if not q or not q.strip():
+        cursor = db.outfits.find({"user_id": user["id"]}).sort([("created_at", -1)]).limit(limit)
+        rows = [doc async for doc in cursor]
+        return {"outfits": [_safe_doc(r) for r in rows], "query": ""}
+
+    query_str = q.strip()
+    words = [w for w in re.split(r"[\s,]+", query_str) if len(w) > 1]
+    regex_pattern = "|".join(re.escape(w) for w in words) if words else re.escape(query_str)
+
+    mongo_filter = {
+        "user_id": user["id"],
+        "$or": [
+            {"name": {"$regex": regex_pattern, "$options": "i"}},
+            {"description": {"$regex": regex_pattern, "$options": "i"}},
+            {"prompt": {"$regex": regex_pattern, "$options": "i"}},
+            {"garments.title": {"$regex": regex_pattern, "$options": "i"}},
+            {"garments.role": {"$regex": regex_pattern, "$options": "i"}},
+            {"usage.event_name": {"$regex": regex_pattern, "$options": "i"}},
+            {"usage.location": {"$regex": regex_pattern, "$options": "i"}},
+        ],
+    }
+    cursor = db.outfits.find(mongo_filter).sort([("created_at", -1)]).limit(limit)
+    rows = [doc async for doc in cursor]
+    return {"outfits": [_safe_doc(r) for r in rows], "query": query_str}
 
 
 @router.post("", status_code=201)
@@ -170,17 +204,24 @@ async def save_outfit(
             g_dict["clean_image_url"] = best_img
         garments.append(g_dict)
 
+    worn_date = (payload.usage.date if payload.usage and payload.usage.date else now.split("T")[0])
+    usage_dict = payload.usage.model_dump() if payload.usage else {
+        "date": worn_date,
+        "time": "12:00",
+        "location": None,
+        "event_name": payload.name,
+    }
     use_count = 1 if (payload.usage and payload.usage.date) else 0
     doc = {
         "id": outfit_id,
         "user_id": user["id"],
         "name": payload.name,
         "description": payload.description,
-        "source_workflow": payload.source_workflow,
+        "source_workflow": payload.source_workflow or "custom",
         "prompt": payload.prompt,
         "garments": garments,
         "items": garments,
-        "usage": payload.usage.model_dump(),
+        "usage": usage_dict,
         "use_count": use_count,
         "created_at": now,
         "updated_at": now,
@@ -194,7 +235,6 @@ async def save_outfit(
     closet_item_ids = [g.closet_item_id for g in payload.garments if g.closet_item_id]
     if closet_item_ids:
         # Update last_worn_at to usage date (or current date as fallback)
-        worn_date = payload.usage.date or now.split("T")[0]
         await db.closet_items.update_many(
             {"id": {"$in": closet_item_ids}, "user_id": user["id"]},
             {

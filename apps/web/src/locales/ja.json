@@ -203,7 +203,7 @@
         "capture": {
           "alt": "キャプチャクロス",
           "title": "キャプチャー服",
-          "description": "実際の衣服の写真を簡単に撮ります。あらゆる照明や背景と美しく調和します。"
+          "description": "実際の衣類を簡単に撮影してください。明るい照明とコントラストのある背景で撮影すると、よりきれいに仕上がります。"
         },
         "analysis": {
           "alt": "属性分析",
@@ -227,7 +227,7 @@
       "heading": "すべてのピースがその場所を見つける",
       "description1": "あなたが所有するものなら何でも写真に撮ってください — DressApp は、生地、カット、色を読み取り、スタイリストが行うようにファイルに保管します。タグ付けされ、カタログ化され、必要なときにすぐに取り出すことができます。",
       "description2": "引き出しを忘れてしまうことはもうありません。キーワードで検索するか、単に「雨の月曜日に温かいもの」などの感情を説明すると、適切な作品が見つかります。",
-      "cta": "クローゼットの構築を始めましょう",
+      "cta": "ワードローブを移行",
       "recentlyAdded": "最近追加された",
       "garments": {
         "blazer": {
@@ -368,6 +368,50 @@
         "emailBody": "ストア名: {{name}}\nWeb アドレス: {{url}}",
         "sent": "メールアプリが開き、DressApp へこのリクエストを送信できます。"
       }
+    },
+    "migration": {
+      "eyebrow": "業界初のAIワードローブ移行",
+      "proBadge": "PRO・マネージャー限定",
+      "title": "数秒でワードローブを移行",
+      "subtitle": "Whering、Acloset、Stylebookなどからシームレスに服をインポート。AIエージェントがクローゼットの重複を自動で削除し、すべてのアイテム詳細を自動入力、競合アプリを画面上でライブスキャンします。",
+      "strip1": "重複アイテムゼロ",
+      "strip2": "すべての詳細を自動入力",
+      "strip3": "実行中は100%可視化",
+      "step1Title": "以前のワードローブアプリを接続",
+      "step1Desc": "Whering、Acloset、Stylebookなどから選択。",
+      "step2Title": "AIエージェントのライブスキャンを見る",
+      "step2Desc": "画面上ですべてのアイテムを読み取り、タグ付けし、重複を除去。",
+      "step3Title": "タグ付け済みのクローゼットが完成",
+      "step3Desc": "カテゴリー、色、素材、季節 — すべて完了。",
+      "modalTitle": "既存のワードローブをインポートしますか？",
+      "modalDesc": "他のアプリにすでにデジタルワードローブをお持ちですか？ゼロから始める必要がないよう、服を移行できます。",
+      "modalSkip": "いいえ、最初から始める",
+      "modalGo": "はい、ワードローブをインポートする",
+      "liveStatus": "競合タブ — ライブ",
+      "agentStatus": "DressAppエージェント稼働中",
+      "agentWidgetTitle": "DressAppエージェント",
+      "agentWidgetSubtitle": "クローゼットをスキャン中…",
+      "cardsFound": "件のアイテムを検出",
+      "dupeLabel": "重複 — スキップ済み",
+      "visibilityNote": "競合のワードローブは処理中ずっとあなたの画面に表示されたままです — 各アイテムがスキャンされる様子を確認できます。",
+      "dressappTarget": "あなたのDressAppクローゼット",
+      "detailCardsFilled": "詳細カードの100%が入力済み",
+      "summaryNotice": "重複はインポートされていません。すべてのアイテム属性が自動入力されました。",
+      "testRun": "ライブインポートを試す",
+      "supportsApps": "インポート元：",
+      "privateLabel": "非公開",
+      "wearsCount": "着用 {{count}} 回",
+      "step2ItemBlazer": "ネイビーブレザー",
+      "step2ItemShirt": "白いシャツ",
+      "step2ItemJeans": "デニムパンツ",
+      "closetCard1Type": "トップス・ネイビー",
+      "closetCard1Name": "ネイビーテックブレザー",
+      "closetCard2Type": "トップス・ホワイト",
+      "closetCard2Name": "オーガニックコットンシャツ",
+      "closetCard3Type": "ボトムス・チャコール",
+      "closetCard3Name": "ストレートデニムパンツ",
+      "closetCard4Type": "トップス・ブラック",
+      "closetCard4Name": "ライムアクセントポロシャツ"
     },
     "aiEditor": {
       "title": "AI スタイルのファッション エディター",
@@ -1323,7 +1367,25 @@
     "tomorrowSuggestionSubtitle": "あなたのスタイル、明日の天気予報、予定に合わせてコーディネートしました。",
     "tomorrowSuggestionRefreshed": "明日の提案を更新しました！",
     "wearTomorrow": "明日着る",
-    "upgradeForDailySuggestionsDesc": "毎日の提案を利用するには、マネージャーまたはプロフェッショナルプランにアップグレードしてください。"
+    "upgradeForDailySuggestionsDesc": "毎日の提案を利用するには、マネージャーまたはプロフェッショナルプランにアップグレードしてください。",
+    "calendar": {
+      "searchPlaceholder": "スタイル検索：「夏のバーベキュー」、「モールでお買い物」、「ビジネスミーティング」、「黒のTシャツ」、「ケミカルウォッシュジーンズ」など...",
+      "quickVibes": "スタイル：",
+      "resultsCount": "全{{total}}件中 {{count}}件のコーデが見つかりました",
+      "noSearchMatches": "このスタイルに一致するコーデはありません",
+      "noSearchMatchesDesc": "「{{query}}」に一致する保存済みコーデが見つかりませんでした。別のスタイルやアイテムを試すか、検索をクリアしてください。",
+      "clearSearch": "検索をクリア",
+      "vibes": {
+        "black_t_shirt": "黒Tシャツ",
+        "business_meeting": "ビジネスミーティング",
+        "summer_barbecue": "夏のバーベキュー",
+        "mall_shopping": "モールでお買い物",
+        "rainy_day": "雨の日",
+        "stone_washed_jeans": "ウォッシュドジーンズ",
+        "colorful_summer": "カラフルな夏",
+        "casual_chic": "カジュアルシック"
+      }
+    }
   },
   "outfitCompletion": {
     "cta": "コーデを完成",
@@ -1343,7 +1405,16 @@
     "noClosetSuggestions": "クローゼットに補完アイテムが見つかりませんでした。マーケットプレイスを有効にするか、アイテムを追加してください。",
     "embeddingsMissingHint": "一部の選択アイテムには類似度ベクトルがまだありません。再アップロードで提案精度が向上します。",
     "empty": "提案が得られませんでした。別のアンカーを選ぶか、マーケットプレイスを切り替えてください。",
-    "error": "コーデ完成に失敗しました。もう一度お試しください。"
+    "error": "コーデ完成に失敗しました。もう一度お試しください。",
+    "tryOnAvatar": "アバターで試着",
+    "saveOutfit": "コーデを保存",
+    "saveOutfitTitle": "コーデの保存",
+    "saveOutfitDesc": "このおすすめのコーディネートに分かりやすい名前を付けて保存し、いつでもコーデキャンバスで確認できます。",
+    "includedPieces": "含まれるアイテム",
+    "savedSuccess": "コーデ「{{name}}」がコーデキャンバスに保存されました！",
+    "alreadySaved": "このコーデは既に保存されています",
+    "outfitName": "コーデ名",
+    "notes": "スタイリストのメモ / 場面"
   },
   "market": {
     "atzmaiGateway": "Atzmai Sachir 決済ゲートウェイ",
@@ -4426,7 +4497,8 @@
       "unlimitedOps": "1日のリクエスト無制限",
       "marketplaceAccess": "マーケットプレイスでの販売・レンタル",
       "schedulerAccess": "スケジューラー・プッシュ通知",
-      "campaignsAccess": "広告キャンペーン機能"
+      "campaignsAccess": "広告キャンペーン機能",
+      "wardrobeMigration": "ワードローブの移行"
     },
     "supportTiers": {
       "community": "コミュニティサポート",

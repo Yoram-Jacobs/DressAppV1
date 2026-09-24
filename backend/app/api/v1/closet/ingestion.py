@@ -379,8 +379,10 @@ class AnalyzeIn(BaseModel):
     # currently looking at, even when their saved profile language is
     # stale. When omitted the handler falls back to the profile, then
     # ``"en"``. Enum/category values stay canonical English regardless
-    # \u2014 the frontend i18n layer translates those for display.
     language: str | None = None
+    # When True, only perform segmentation, matting, and crop centering,
+    # returning items_meta with crop_base64 cutouts and zero Gemini calls / token cost.
+    cutout_only: bool = False
 
 
 _apply_defaults = closet_service._apply_defaults
@@ -475,15 +477,17 @@ async def analyze_item_image(
     if not raw_list:
         raise HTTPException(400, "Could not load image bytes")
 
-    cost = len(raw_list)
+    cost = len(raw_list) if not payload.cutout_only else 0
     # Deduct credits for the AI model calls
     from app.db.database import get_db
     from app.services.billing_service import deduct_user_credits
     db = get_db()
-    if not await deduct_user_credits(db, user, cost=cost):
+    if cost > 0 and not await deduct_user_credits(db, user, cost=cost):
         raise HTTPException(status_code=402, detail="Insufficient credits or quota limit reached")
 
     async def try_refund():
+        if cost <= 0:
+            return
         try:
             latest_usage = await db.token_usage.find_one(
                 {"user_id": user["id"]},
@@ -543,7 +547,7 @@ async def analyze_item_image(
 
             try:
                 streamer = active_vision.analyze_outfits_stream(
-                    raw_list, language=user_lang,
+                    raw_list, language=user_lang, cutout_only=payload.cutout_only,
                 )
 
                 items_meta: list[dict[str, Any]] = []
@@ -652,7 +656,7 @@ async def analyze_item_image(
             items_out: list[dict[str, Any]] = []
             items_meta: list[dict[str, Any]] = []
             streamer = active_vision.analyze_outfits_stream(
-                raw_list, language=user_lang,
+                raw_list, language=user_lang, cutout_only=payload.cutout_only,
             )
             from app.services.vision import _is_unidentifiable
 
@@ -660,6 +664,24 @@ async def analyze_item_image(
                 ftype = frame.get("type")
                 if ftype == "detect":
                     items_meta = frame.get("items_meta") or []
+                    if payload.cutout_only:
+                        for meta in items_meta:
+                            items_out.append(
+                                {
+                                    "label": meta.get("label"),
+                                    "kind": meta.get("kind"),
+                                    "bbox": meta.get("bbox"),
+                                    "crop_base64": meta.get("crop_base64"),
+                                    "crop_mime": meta.get("crop_mime", "image/png"),
+                                    "analysis": {},
+                                    "potential_duplicate": None,
+                                    "reconstruction_advised": False,
+                                    "one_pass": False,
+                                    "defer_matte": meta.get("defer_matte", False),
+                                    "needs_reconstruction": False,
+                                    "reconstruction_reasons": [],
+                                }
+                            )
                 elif ftype == "item":
                     idx = frame.get("index", -1)
                     meta = (
@@ -2004,6 +2026,7 @@ async def chat_analyse_item(
     # Build preview item in memory (do not overwrite DB until user clicks Save)
     updated_item = {**item, **updated_doc}
 
+    model_name = updated_doc.get("reconstruction_metadata", {}).get("model")
     return {
         "reply": reply,
         "action_taken": action,
@@ -2011,6 +2034,7 @@ async def chat_analyse_item(
         "clean_image_url": clean_image_url_out,
         "updated_fields": updated_doc if updated_doc else None,
         "item": updated_item,
+        "model_used": model_name,
     }
 
 

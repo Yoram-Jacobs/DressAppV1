@@ -203,7 +203,7 @@
         "capture": {
           "alt": "tissu de capture",
           "title": "Capturer des vêtements",
-          "description": "Prenez une photo rapide de vos vêtements réels. Fonctionne à merveille avec tous les éclairages et arrière-plans."
+          "description": "Prenez rapidement une photo de vos vêtements réels. Pour de meilleurs résultats, utilisez un bon éclairage et des arrière-plans contrastés."
         },
         "analysis": {
           "alt": "analyse d'attribut",
@@ -227,7 +227,7 @@
       "heading": "Chaque pièce trouve sa place",
       "description1": "Photographiez tout ce que vous possédez : DressApp lit le tissu, la coupe, la couleur et les classe comme le ferait un styliste : étiqueté, catalogué, prêt à être retiré dès que vous en avez besoin.",
       "description2": "Fini les tiroirs oubliés. Recherchez par mot-clé ou décrivez simplement une sensation – « quelque chose de chaud pour un lundi pluvieux » – et la bonne pièce vous reviendra.",
-      "cta": "Commencez à construire votre placard",
+      "cta": "Migrez votre garde-robe",
       "recentlyAdded": "Récemment ajouté",
       "garments": {
         "blazer": {
@@ -368,6 +368,50 @@
         "emailBody": "Nom de la boutique : {{name}}\nAdresse web : {{url}}",
         "sent": "Votre application e-mail s'ouvrira pour envoyer cette demande à DressApp."
       }
+    },
+    "migration": {
+      "eyebrow": "MIGRATION DE GARDE-ROBE PAR IA, UNE PREMIÈRE DANS LE SECTEUR",
+      "proBadge": "EXCLUSIF PRO ET MANAGER",
+      "title": "Migrez votre garde-robe en quelques secondes",
+      "subtitle": "Importez vos vêtements en toute simplicité depuis Whering, Acloset, Stylebook et plus encore. Notre agent IA élimine les doublons de votre garde-robe, renseigne automatiquement tous les détails de chaque article et scanne les applications concurrentes en direct à l'écran.",
+      "strip1": "Zéro article en double",
+      "strip2": "Chaque détail renseigné automatiquement",
+      "strip3": "100 % visible pendant le processus",
+      "step1Title": "Connectez votre ancienne application de garde-robe",
+      "step1Desc": "Choisissez Whering, Acloset, Stylebook et plus.",
+      "step2Title": "Regardez l'agent IA scanner en direct",
+      "step2Desc": "Chaque article est lu, étiqueté et dédupliqué à l'écran.",
+      "step3Title": "Votre garde-robe arrive entièrement étiquetée",
+      "step3Desc": "Catégorie, couleur, matière et saison — terminé.",
+      "modalTitle": "Importer votre garde-robe existante ?",
+      "modalDesc": "Vous avez déjà une garde-robe numérique sur une autre application ? Nous pouvons transférer vos vêtements pour vous éviter de tout recommencer.",
+      "modalSkip": "Non, recommencer à zéro",
+      "modalGo": "Oui, importer ma garde-robe",
+      "liveStatus": "Onglet concurrent — En direct",
+      "agentStatus": "Agent DressApp actif",
+      "agentWidgetTitle": "Agent DressApp",
+      "agentWidgetSubtitle": "Analyse de la garde-robe…",
+      "cardsFound": "articles trouvés",
+      "dupeLabel": "Doublon — ignoré",
+      "visibilityNote": "La garde-robe concurrente reste visible sur votre propre écran pendant toute la durée du processus — vous pouvez suivre le scan de chaque article.",
+      "dressappTarget": "Votre garde-robe DressApp",
+      "detailCardsFilled": "100 % des fiches détaillées renseignées",
+      "summaryNotice": "Aucun doublon importé. Tous les attributs des articles ont été renseignés automatiquement.",
+      "testRun": "Essayer l'import en direct",
+      "supportsApps": "Importer depuis :",
+      "privateLabel": "Privé",
+      "wearsCount": "{{count}} port(s)",
+      "step2ItemBlazer": "Blazer bleu marine",
+      "step2ItemShirt": "Chemise blanche",
+      "step2ItemJeans": "Jean",
+      "closetCard1Type": "Haut · Bleu marine",
+      "closetCard1Name": "Blazer technique bleu marine",
+      "closetCard2Type": "Haut · Blanc",
+      "closetCard2Name": "Chemise en coton bio",
+      "closetCard3Type": "Bas · Anthracite",
+      "closetCard3Name": "Jean droit",
+      "closetCard4Type": "Haut · Noir",
+      "closetCard4Name": "Polo à liseré vert citron"
     },
     "aiEditor": {
       "title": "Éditeur de mode style IA",
@@ -1323,7 +1367,25 @@
     "tomorrowSuggestionSubtitle": "Sélectionnée pour demain selon votre profil de style, les prévisions météo et votre agenda.",
     "tomorrowSuggestionRefreshed": "Suggestion pour demain actualisée !",
     "wearTomorrow": "Porter demain",
-    "upgradeForDailySuggestionsDesc": "Passez au forfait Manager ou Professional pour débloquer les suggestions quotidiennes."
+    "upgradeForDailySuggestionsDesc": "Passez au forfait Manager ou Professional pour débloquer les suggestions quotidiennes.",
+    "calendar": {
+      "searchPlaceholder": "Recherche d'ambiance : « Barbecue d'été », « Shopping au centre commercial », « Réunion professionnelle », « T-shirt noir », « Jean délavé »...",
+      "quickVibes": "Ambiances :",
+      "resultsCount": "{{count}} tenues trouvées sur {{total}}",
+      "noSearchMatches": "Aucune tenue ne correspond à cette ambiance",
+      "noSearchMatchesDesc": "Nous n'avons trouvé aucune tenue enregistrée correspondant à « {{query}} ». Essayez une autre ambiance, un autre vêtement ou effacez la recherche.",
+      "clearSearch": "Effacer la recherche",
+      "vibes": {
+        "black_t_shirt": "T-shirt noir",
+        "business_meeting": "Réunion pro",
+        "summer_barbecue": "Barbecue d'été",
+        "mall_shopping": "Shopping au centre commercial",
+        "rainy_day": "Jour de pluie",
+        "stone_washed_jeans": "Jean délavé",
+        "colorful_summer": "Été coloré",
+        "casual_chic": "Casual chic"
+      }
+    }
   },
   "outfitCompletion": {
     "cta": "Compléter la tenue",
@@ -1343,7 +1405,16 @@
     "noClosetSuggestions": "Aucune pièce complémentaire trouvée dans votre garde-robe. Activez la marketplace ou ajoutez d'autres pièces.",
     "embeddingsMissingHint": "Certaines pièces sélectionnées n'ont pas encore de vecteurs de similarité. Les réimporter améliorera la qualité des suggestions.",
     "empty": "Aucune suggestion n'a été retournée. Essayez d'autres pièces ou activez la marketplace.",
-    "error": "La finalisation de la tenue a échoué. Veuillez réessayer."
+    "error": "La finalisation de la tenue a échoué. Veuillez réessayer.",
+    "tryOnAvatar": "Essayer sur l'avatar",
+    "saveOutfit": "Enregistrer la tenue",
+    "saveOutfitTitle": "Enregistrer la tenue",
+    "saveOutfitDesc": "Enregistrez ce look recommandé avec un nom descriptif pour y accéder à tout moment dans votre Canevas de tenues.",
+    "includedPieces": "Pièces incluses",
+    "savedSuccess": "Tenue « {{name}} » enregistrée dans votre Canevas de tenues !",
+    "alreadySaved": "Tenue déjà enregistrée",
+    "outfitName": "Nom de la tenue",
+    "notes": "Notes du styliste / Occasion"
   },
   "market": {
     "atzmaiGateway": "Passerelle de paiement Atzmai Sachir",
@@ -4418,7 +4489,8 @@
       "unlimitedOps": "Requêtes quotidiennes illimitées",
       "marketplaceAccess": "Vente et location sur la marketplace",
       "schedulerAccess": "Planificateur et notifications push",
-      "campaignsAccess": "Campagnes publicitaires incluses"
+      "campaignsAccess": "Campagnes publicitaires incluses",
+      "wardrobeMigration": "Migration de garde-robe"
     },
     "supportTiers": {
       "community": "Support communauté",
