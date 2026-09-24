@@ -390,8 +390,10 @@ async def create_item(
     # without paying the ~20-40 s Gemini image-gen cost per crop. Queue
     # the actual generation as a fire-and-forget BackgroundTask now —
     # the saved item gets its ``reconstructed_image_url`` patched in
-    # seconds-to-minutes later. Mirrors ``needs_bg_matte`` above.
-    if payload.needs_reconstruction and raw_bytes:
+    # seconds-to-minutes later. Nano Banana is restricted to users with their own Gemini key.
+    from app.services.auth import resolve_user_custom_gemini_api_key
+    custom_gemini_key = resolve_user_custom_gemini_api_key(user)
+    if payload.needs_reconstruction and raw_bytes and custom_gemini_key:
         if not doc.get("reconstruction_metadata") or not isinstance(doc.get("reconstruction_metadata"), dict):
             doc["reconstruction_metadata"] = {"deferred": True, "status": "pending"}
         else:

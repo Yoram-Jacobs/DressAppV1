@@ -114,6 +114,77 @@ class GeminiStylistService:
         self.provider = settings.DEFAULT_STYLIST_PROVIDER
         self._client = GeminiClient(api_key=self.api_key)
 
+async def prepare_stylist_prompt(
+    *,
+    session_id: str | None = None,
+    user_text: str | None = None,
+    image_base64: str | None = None,
+    weather: dict[str, Any] | None = None,
+    calendar_events: list[dict[str, Any]] | None = None,
+    cultural_rules: list[dict[str, Any]] | None = None,
+    user_profile: dict[str, Any] | None = None,
+    closet_summary: list[dict[str, Any]] | None = None,
+    user_preferences_block: str | None = None,
+) -> tuple[str, str]:
+    """Build the system and user prompt strings for the stylist brain."""
+    user_text = await parse_urls_and_context(user_text, session_id=session_id)
+    sys_msg = SYSTEM_PROMPT
+    if image_base64:
+        sys_msg = sys_msg + _IMAGE_CONTEXT_ADDENDUM
+        logger.info("gemini-stylist: image addendum applied session=%s", session_id)
+    sys_msg = sys_msg + _language_directive(
+        (user_profile or {}).get("preferred_language")
+    )
+    if user_preferences_block:
+        sys_msg = sys_msg + "\n\n" + user_preferences_block.strip() + "\n"
+    safe_profile = {}
+    if user_profile:
+        safe_profile = {
+            "name": user_profile.get("display_name") or user_profile.get("name"),
+            "preferred_language": user_profile.get("preferred_language"),
+            "sex": user_profile.get("sex"),
+            "age_group": user_profile.get("age_group"),
+            "body_measurements": user_profile.get("body_measurements"),
+            "style_preferences": user_profile.get("style_preferences"),
+            "modesty_level": user_profile.get("modesty_level"),
+        }
+    context_block = {
+        "weather": weather,
+        "calendar_events": calendar_events or [],
+        "cultural_rules": cultural_rules or [],
+        "user_profile": safe_profile,
+        "closet_summary": closet_summary or [],
+    }
+    lang_code = ((user_profile or {}).get("preferred_language") or "en").lower()
+    lang_name = _LANG_NAMES.get(lang_code, "English")
+    lang_preamble = (
+        f"**OUTPUT LANGUAGE = {lang_name} ({lang_code}).** Every "
+        f"free-text field (`reasoning_summary`, each recommendation's "
+        f"`name`/`why`, every item `description`, every `do_dont` "
+        f"entry, every `shopping_suggestions` entry, and the final "
+        f"`spoken_reply`) MUST be written in fluent, idiomatic "
+        f"{lang_name}. JSON keys and enum tokens stay in English.\n\n"
+    )
+    prompt_text = (
+        f"{lang_preamble}"
+        f"USER_REQUEST:\n{user_text}\n\n"
+        f"CONTEXT:\n{json.dumps(context_block, ensure_ascii=False, indent=2, default=str)}\n\n"
+        "Return the JSON object now."
+    )
+    return sys_msg, prompt_text
+
+
+class GeminiStylistService:
+    def __init__(self, api_key: str | None = None, model: str | None = None):
+        self.api_key = api_key or settings.GEMINI_API_KEY
+        if not self.api_key:
+            raise RuntimeError(
+                "No Gemini API key available. Set GEMINI_API_KEY or provide user API key."
+            )
+        self.model = model or settings.DEFAULT_STYLIST_MODEL or "gemini-3.5-flash"
+        self.provider = settings.DEFAULT_STYLIST_PROVIDER
+        self._client = GeminiClient(api_key=self.api_key)
+
     async def advise(
         self,
         session_id: str,
@@ -127,67 +198,16 @@ class GeminiStylistService:
         closet_summary: list[dict[str, Any]] | None = None,
         user_preferences_block: str | None = None,
     ) -> dict[str, Any]:
-        # Prepend the URL parser context block to the user request.
-        user_text = await parse_urls_and_context(user_text, session_id=session_id)
-
-        # Phase S: prepend the rendered user-preference block (sex, age,
-        # body, region, modesty, style aesthetics, avoid list...) directly
-        # to the system message so EVERY recommendation respects them.
-        # Falls through gracefully when no preferences are available.
-        sys_msg = SYSTEM_PROMPT
-        # Phase S1: when an image is attached, splice in the image-aware
-        # addendum BEFORE the language directive so the directive (which
-        # forces output language) stays last and "wins" if there's any
-        # conflict between blocks. This is the fix for the user-reported
-        # bug "stylist totally ignores the uploaded photo" — Gemini was
-        # receiving the bytes but had no instruction to look at them.
-        if image_base64:
-            sys_msg = sys_msg + _IMAGE_CONTEXT_ADDENDUM
-            logger.info(
-                "gemini-stylist: image addendum applied session=%s",
-                session_id,
-            )
-        sys_msg = sys_msg + _language_directive(
-            (user_profile or {}).get("preferred_language")
-        )
-        if user_preferences_block:
-            sys_msg = sys_msg + "\n\n" + user_preferences_block.strip() + "\n"
-        safe_profile = {}
-        if user_profile:
-            safe_profile = {
-                "name": user_profile.get("display_name") or user_profile.get("name"),
-                "preferred_language": user_profile.get("preferred_language"),
-                "sex": user_profile.get("sex"),
-                "age_group": user_profile.get("age_group"),
-                "body_measurements": user_profile.get("body_measurements"),
-                "style_preferences": user_profile.get("style_preferences"),
-                "modesty_level": user_profile.get("modesty_level"),
-            }
-        context_block = {
-            "weather": weather,
-            "calendar_events": calendar_events or [],
-            "cultural_rules": cultural_rules or [],
-            "user_profile": safe_profile,
-            "closet_summary": closet_summary or [],
-        }
-        lang_code = ((user_profile or {}).get("preferred_language") or "en").lower()
-        lang_name = _LANG_NAMES.get(lang_code, "English")
-        # Inject the directive directly into the user message as well — Gemini
-        # respects inline imperative clauses far more reliably than the system
-        # prompt alone when it has to return JSON.
-        lang_preamble = (
-            f"**OUTPUT LANGUAGE = {lang_name} ({lang_code}).** Every "
-            f"free-text field (`reasoning_summary`, each recommendation's "
-            f"`name`/`why`, every item `description`, every `do_dont` "
-            f"entry, every `shopping_suggestions` entry, and the final "
-            f"`spoken_reply`) MUST be written in fluent, idiomatic "
-            f"{lang_name}. JSON keys and enum tokens stay in English.\n\n"
-        )
-        prompt_text = (
-            f"{lang_preamble}"
-            f"USER_REQUEST:\n{user_text}\n\n"
-            f"CONTEXT:\n{json.dumps(context_block, ensure_ascii=False, indent=2, default=str)}\n\n"
-            "Return the JSON object now."
+        sys_msg, prompt_text = await prepare_stylist_prompt(
+            session_id=session_id,
+            user_text=user_text,
+            image_base64=image_base64,
+            weather=weather,
+            calendar_events=calendar_events,
+            cultural_rules=cultural_rules,
+            user_profile=user_profile,
+            closet_summary=closet_summary,
+            user_preferences_block=user_preferences_block,
         )
 
         # Build the user-parts list: text first, optional image second.

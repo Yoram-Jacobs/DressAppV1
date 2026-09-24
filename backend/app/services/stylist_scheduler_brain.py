@@ -750,21 +750,11 @@ def _ensure_complete_outfit(prop: dict[str, Any], raw_closet: list[dict[str, Any
 
 
 def _get_scheduler_stylist_service(user: dict[str, Any]):
-    api_key_resolved = None
-    ai_config = user.get("ai_configuration") or {}
-    provider_mode = ai_config.get("provider_mode", "standard")
-    if provider_mode in ["standard", "custom_keys"]:
-        encrypted_key = (ai_config.get("custom_keys") or {}).get("google_ai")
-        if encrypted_key:
-            from app.services.auth import decrypt_api_key
-            api_key_resolved = decrypt_api_key(encrypted_key)
+    from app.services.auth import resolve_user_custom_gemini_api_key
+    from app.services.stylist_brain import stylist_brain_service
 
-    from app.services.gemini_stylist import GeminiStylistService, gemini_stylist_service
-    if api_key_resolved:
-        return GeminiStylistService(api_key=api_key_resolved)
-    if gemini_stylist_service is not None:
-        return gemini_stylist_service
-    raise RuntimeError("No Gemini API key configured for stylist service")
+    api_key_resolved = resolve_user_custom_gemini_api_key(user)
+    return stylist_brain_service(api_key=api_key_resolved)
 
 async def generate_scheduled_proposals(
     user: dict[str, Any],

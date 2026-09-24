@@ -44,6 +44,14 @@ class SocialDisconnectPayload(BaseModel):
 
 
 def check_trend_scout_access(user: dict) -> None:
+    from app.services.auth import user_has_custom_api_key
+
+    if not user_has_custom_api_key(user):
+        raise HTTPException(
+            status_code=403,
+            detail="Trend Scout is available exclusively for users with their own custom AI supplier API key. Please configure your API key in Profile -> AI Configuration.",
+        )
+
     sub = user.get("subscription") or {}
     is_active = sub.get("is_active", False)
     plan_type = sub.get("plan_type", "free")
@@ -199,6 +207,7 @@ async def run_trend_scout_now_dev(
     """
     if not user:
         raise HTTPException(401, "auth required")
+    check_trend_scout_access(user)
     client_type = "mobile" if x_device_type == "mobile" else "desktop"
     if not gender:
         user_sex = (user.get("sex") or user.get("gender") or "female").lower()

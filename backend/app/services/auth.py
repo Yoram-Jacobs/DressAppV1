@@ -286,3 +286,19 @@ def resolve_user_custom_gemini_api_key(user: dict[str, Any] | None = None) -> st
                 return decrypted
     return None
 
+
+def user_has_custom_api_key(user: dict[str, Any] | None = None) -> bool:
+    """Return True if the user has configured any active custom third-party API key."""
+    if not user or not isinstance(user, dict):
+        return False
+    ai_config = user.get("ai_configuration") or {}
+    custom_keys = ai_config.get("custom_keys") or {}
+    api_keys = ai_config.get("api_keys") or {}
+    merged = {**custom_keys, **api_keys}
+    for val in merged.values():
+        if isinstance(val, str) and val.strip():
+            return True
+    if ai_config.get("google_ai_key") or ai_config.get("api_key"):
+        return True
+    return False
+

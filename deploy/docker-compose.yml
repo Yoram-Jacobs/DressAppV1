@@ -72,7 +72,6 @@ services:
       dockerfile: Dockerfile
     image: dressapp-eyes:latest
     container_name: dressapp-eyes
-    profiles: ["disabled"]
     restart: unless-stopped
     environment:
       EYES_MODEL_FILE: ${EYES_MODEL_FILE:-gemma-4-E4B-it-Q3_K_M.gguf}

@@ -825,6 +825,15 @@ async def polish_crop(
     This is called by the client to complete or reconstruct a bad, distorted,
     or low-resolution image using Gemini Nano Banana.
     """
+    from app.services.auth import resolve_user_custom_gemini_api_key
+
+    custom_gemini_key = resolve_user_custom_gemini_api_key(user)
+    if not custom_gemini_key:
+        raise HTTPException(
+            status_code=403,
+            detail="Nano Banana image reconstruction and completion requires a custom Google Gemini API key. Please configure your API key in Profile -> AI Configuration.",
+        )
+
     try:
         # Strip data URL prefix if present
         b64_data = payload.image_base64
@@ -836,13 +845,15 @@ async def polish_crop(
 
     from app.services.reconstruction import reconstruct
 
-    # Call the Nano Banana reconstructor
+    # Call the Nano Banana reconstructor with the user's custom key
     try:
         out = await reconstruct(
             raw_bytes,
             {"category": payload.category or "garment"},
             reasons=["polish_crop"],
             validate=False,
+            api_key=custom_gemini_key,
+            user=user,
         )
         if out and out.get("image_b64"):
             mime = out.get("mime_type", "image/png")
@@ -1738,6 +1749,20 @@ def _get_localized_closet_msg(msg_type: str, lang: str, user_msg: str = "") -> s
             "ja": "現在このサーバーでは画像編集を利用できません。",
             "hi": "इस सर्वर पर वर्तमान में छवि संपादन उपलब्ध नहीं है।",
         },
+        "image_edit_key_required": {
+            "he": "עריכת תמונות ושחזור Nano Banana זמינים באופן בלעדי למשתמשים שהזינו מפתח Google Gemini אישי בהגדרות הפרופיל.",
+            "ar": "تعديل الصور وإعادة بناء Nano Banana متاح حصرياً للمستخدمين الذين قاموا بتعيين مفتاح Google Gemini خاص بهم في إعدادات الملف الشخصي.",
+            "en": "Nano Banana image editing and reconstruction is available exclusively for users who configure their own custom Google Gemini API key in Profile -> AI Configuration.",
+            "es": "La edición de imágenes Nano Banana está disponible exclusivamente para usuarios con su propia clave API de Google Gemini en Configuración de perfil.",
+            "fr": "L'édition et la reconstruction d'images Nano Banana sont exclusivement réservées aux utilisateurs ayant configuré leur propre clé Google Gemini dans leur profil.",
+            "de": "Nano Banana Bildbearbeitung und -rekonstruktion ist ausschließlich für Nutzer verfügbar, die ihren eigenen Google Gemini API-Schlüssel im Profil hinterlegen.",
+            "it": "La modifica e ricostruzione delle immagini Nano Banana è disponibile esclusivamente per gli utenti con una chiave API Google Gemini personalizzata nel profilo.",
+            "pt": "A edição e reconstrução de imagens Nano Banana está disponível exclusivamente para usuários com sua própria chave de API Google Gemini no perfil.",
+            "ru": "Редактирование и реконструкция изображений Nano Banana доступны исключительно для пользователей с собственным API-ключом Google Gemini в профиле.",
+            "zh": "Nano Banana 图像编辑与重建仅对在个人资料中配置了自定义 Google Gemini API 密钥的用户开放。",
+            "ja": "Nano Bananaの画像編集・復元機能は、プロフィールで独自のGoogle Gemini APIキーを設定したユーザー限定です。",
+            "hi": "Nano Banana छवि संपादन केवल उन उपयोगकर्ताओं के लिए उपलब्ध है जो प्रोफ़ाइल में अपनी कस्टम Google Gemini API कुंजी जोड़ते हैं।",
+        },
         "default_chat_reply": {
             "he": "הבנתי. עדכן אותי אם תרצה שאערוך את התמונה או אעדכן את פרטי הפריט.",
             "ar": "مفهوم. أخبرني إذا كنت ترغب في تعديل الصورة أو تحديث تفاصيل القطعة.",
@@ -1954,63 +1979,62 @@ async def chat_analyse_item(
     updated_doc: dict[str, Any] = {}
 
     if action == "image_edit":
-        import sys
-        _closet_mod = sys.modules.get("app.api.v1.closet")
-        _active_gemini_service = getattr(_closet_mod, "gemini_image_service", gemini_image_service) if _closet_mod else gemini_image_service
-        img_service = (
-            get_gemini_image_service(user=user, api_key=user_api_key)
-            if (user_api_key and user_api_key != settings.GEMINI_API_KEY)
-            else _active_gemini_service
-        )
-        if img_service is None:
-            reply = _get_localized_closet_msg("image_edit_unavailable", user_lang)
+        from app.services.auth import resolve_user_custom_gemini_api_key
+        custom_gemini_key = resolve_user_custom_gemini_api_key(user)
+        if not custom_gemini_key:
+            reply = _get_localized_closet_msg("image_edit_key_required", user_lang)
             action = "clarification"
         else:
-            try:
-                from app.services.billing_service import deduct_user_credits
-                await deduct_user_credits(db, user, cost=1)
-
-                edit_prompt = decision.get("image_edit_prompt") or user_msg
-                edit_res = await img_service.edit(
-                    raw,
-                    edit_prompt,
-                    garment_metadata={
-                        "title": item.get("title"),
-                        "category": item.get("category"),
-                        "color": item.get("color"),
-                        "material": item.get("material"),
-                        "pattern": item.get("pattern"),
-                        "brand": item.get("brand"),
-                    },
-                )
-                mime = edit_res.get("mime_type", "image/png")
-                image_url_out = f"data:{mime};base64,{edit_res['image_b64']}"
-
-                # Unbind generated garment from background (transparent clean cutout)
-                from app.services.garment_visuals import GarmentVisuals
-                clean_image_url_out = await GarmentVisuals.ensure_transparent_cutout(edit_res["image_b64"])
-
-                # Update in-memory reconstructed_image_url & clean_image_url
-                # Always prefer the transparent clean cutout so clothes layer perfectly without background boxes
-                from app.services.vision.image import fit_image_data_url_to_card
-                final_img = fit_image_data_url_to_card(clean_image_url_out or image_url_out)
-                updated_doc["reconstructed_image_url"] = final_img
-                # Do NOT overwrite clean_image_url (preserving the original cutout)
-                image_url_out = final_img
-                updated_doc["reconstruction_metadata"] = {
-                    "method": "nano_banana_chat",
-                    "prompt": edit_prompt,
-                    "model": edit_res.get("model_used"),
-                    "updated_at": datetime.now(timezone.utc).isoformat(),
-                }
-            except Exception as edit_exc:
-                logger.warning("Nano Banana chat edit failed: %s", edit_exc)
-                exc_str = str(edit_exc).lower()
-                if "spending cap" in exc_str or "resource_exhausted" in exc_str or "quota" in exc_str or "429" in exc_str:
-                    reply = _get_localized_closet_msg("image_edit_quota_exceeded", user_lang)
-                else:
-                    reply = _get_localized_closet_msg("image_edit_failed", user_lang, user_msg=user_msg)
+            img_service = get_gemini_image_service(user=user, api_key=custom_gemini_key)
+            if img_service is None:
+                reply = _get_localized_closet_msg("image_edit_unavailable", user_lang)
                 action = "clarification"
+            else:
+                try:
+                    from app.services.billing_service import deduct_user_credits
+                    await deduct_user_credits(db, user, cost=1)
+
+                    edit_prompt = decision.get("image_edit_prompt") or user_msg
+                    edit_res = await img_service.edit(
+                        raw,
+                        edit_prompt,
+                        garment_metadata={
+                            "title": item.get("title"),
+                            "category": item.get("category"),
+                            "color": item.get("color"),
+                            "material": item.get("material"),
+                            "pattern": item.get("pattern"),
+                            "brand": item.get("brand"),
+                        },
+                    )
+                    mime = edit_res.get("mime_type", "image/png")
+                    image_url_out = f"data:{mime};base64,{edit_res['image_b64']}"
+
+                    # Unbind generated garment from background (transparent clean cutout)
+                    from app.services.garment_visuals import GarmentVisuals
+                    clean_image_url_out = await GarmentVisuals.ensure_transparent_cutout(edit_res["image_b64"])
+
+                    # Update in-memory reconstructed_image_url & clean_image_url
+                    # Always prefer the transparent clean cutout so clothes layer perfectly without background boxes
+                    from app.services.vision.image import fit_image_data_url_to_card
+                    final_img = fit_image_data_url_to_card(clean_image_url_out or image_url_out)
+                    updated_doc["reconstructed_image_url"] = final_img
+                    # Do NOT overwrite clean_image_url (preserving the original cutout)
+                    image_url_out = final_img
+                    updated_doc["reconstruction_metadata"] = {
+                        "method": "nano_banana_chat",
+                        "prompt": edit_prompt,
+                        "model": edit_res.get("model_used"),
+                        "updated_at": datetime.now(timezone.utc).isoformat(),
+                    }
+                except Exception as edit_exc:
+                    logger.warning("Nano Banana chat edit failed: %s", edit_exc)
+                    exc_str = str(edit_exc).lower()
+                    if "spending cap" in exc_str or "resource_exhausted" in exc_str or "quota" in exc_str or "429" in exc_str:
+                        reply = _get_localized_closet_msg("image_edit_quota_exceeded", user_lang)
+                    else:
+                        reply = _get_localized_closet_msg("image_edit_failed", user_lang, user_msg=user_msg)
+                    action = "clarification"
 
     elif action == "metadata_update":
         meta_updates = decision.get("metadata_updates") or {}
@@ -2057,6 +2081,14 @@ async def repair_item_image(
     Banana is unavailable.
     """
     from app.services.reconstruction import reconstruct
+    from app.services.auth import resolve_user_custom_gemini_api_key
+
+    custom_gemini_key = resolve_user_custom_gemini_api_key(user)
+    if not custom_gemini_key:
+        raise HTTPException(
+            status_code=403,
+            detail="Nano Banana image reconstruction is available exclusively for users with their own custom Google Gemini API key. Please configure your API key in Profile -> AI Configuration.",
+        )
 
     db = get_db()
     item = await repos.find_one(
@@ -2104,6 +2136,8 @@ async def repair_item_image(
         analysis,
         reasons=["manual_repair"] + (["with_hint"] if payload.user_hint else []),
         validate=not payload.force,
+        api_key=custom_gemini_key,
+        user=user,
     )
     if out is None:
         raise HTTPException(
@@ -2181,6 +2215,15 @@ async def edit_item_image(
     Stores the variant (as a data URL) in `variants[]` so the client can
     preview it alongside the original.
     """
+    from app.services.auth import resolve_user_custom_gemini_api_key
+
+    custom_gemini_key = resolve_user_custom_gemini_api_key(user)
+    if not custom_gemini_key:
+        raise HTTPException(
+            status_code=403,
+            detail="Nano Banana image editing is available exclusively for users with their own custom Google Gemini API key. Please configure your API key in Profile -> AI Configuration.",
+        )
+
     db = get_db()
     item = await repos.find_one(
         db.closet_items, {"id": item_id, "user_id": user["id"]}
@@ -2193,12 +2236,8 @@ async def edit_item_image(
     source_bytes = await _read_image_bytes_from_url(source_url)
     if not source_bytes:
         raise HTTPException(400, "Failed to retrieve source image bytes")
-    img_service = get_gemini_image_service(user=user)
+    img_service = get_gemini_image_service(user=user, api_key=custom_gemini_key)
     if img_service is None:
-        # Nano Banana (gemini-3.1-flash-lite-image) requires a direct
-        # GEMINI_API_KEY. The legacy HF FLUX fallback was retired in May
-        # 2026, so when the direct key is absent we surface a clean 503
-        # instead of silently degrading.
         raise HTTPException(503, "Image generation service not configured")
     try:
         from app.services.billing_service import deduct_user_credits

@@ -358,11 +358,9 @@ async def _compose_with_llm(
     )
 
     try:
-        from app.services.gemini_stylist import GeminiStylistService
-        svc = GeminiStylistService(api_key=api_key) if api_key else gemini_stylist_service
-        if svc is None:
-            raise RuntimeError("Gemini stylist service unavailable")
-        out = await svc.advise(
+        from app.services.stylist_brain import stylist_brain_service
+        brain = stylist_brain_service(api_key=api_key)
+        out = await brain.advise(
             session_id=f"compose-{uuid.uuid4().hex[:8]}",
             user_text=instruction,
             image_base64=None,

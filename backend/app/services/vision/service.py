@@ -482,48 +482,93 @@ class GarmentVisionService:
 
         # 3) Gemini path (toggle says gemini, OR Gemma path failed and
         #    cascaded down here, OR gemma was selected but no Space URL
+        # 3) Gemini path (toggle says gemini, OR Gemma path failed and
+        #    cascaded down here, OR gemma was selected but no Space URL
         #    is configured on this pod).
         if raw is None:
             if not self.api_key:
-                raise RuntimeError(
-                    "Gemini Eyes path requires GEMINI_API_KEY to be set "
-                    "(see /app/backend/.env)."
-                )
-            gemini_model = model or self.model
-            gem = self._get_gemini()
-            t0 = time.perf_counter()
-            ok = False
-            last_err: str | None = None
-            try:
-                raw = await gem.vision(
-                    system=system_prompt,
-                    user_parts=[user_text] + shrunk_list,
-                    model=gemini_model,
-                    temperature=0.1,
-                    response_mime_type="application/json",
-                )
-                ok = True
-            except Exception as exc:  # noqa: BLE001
-                last_err = repr(exc)
-                raise
-            finally:
-                extra: dict[str, Any] = {
-                    "provider": "gemini",
-                    "model": gemini_model,
-                    "routing_source": routing_source,
-                }
-                if used_fallback:
-                    extra["fallback_from"] = "gemma"
-                    extra["fallback_reason"] = fallback_reason
-                provider_activity.record(
-                    "garment-vision",
-                    ok=ok,
-                    latency_ms=int((time.perf_counter() - t0) * 1000),
-                    error=last_err,
-                    extra=extra,
-                )
-            used_provider = "gemini"
-            used_model = gemini_model
+                if settings.EYES_GEMMA_SPACE_URL and used_provider != "gemma":
+                    logger.info("No Gemini API key provided; falling back to platform Gemma Eyes")
+                    raw = await _call_gemma_space(
+                        system_prompt=system_prompt,
+                        user_text=user_text,
+                        image_b64_jpeg=b64,
+                        max_tokens=2400,
+                        timeout=settings.EYES_GEMMA_TIMEOUT_S,
+                        json_schema=EYES_JSON_SCHEMA,
+                        think=think,
+                    )
+                    used_provider = "gemma"
+                    used_model = "gemma-4-e2b-q4_k_m"
+                else:
+                    raise RuntimeError(
+                        "Gemini Eyes path requires GEMINI_API_KEY to be set "
+                        "(see /app/backend/.env)."
+                    )
+            else:
+                gemini_model = model or self.model
+                gem = self._get_gemini()
+                t0 = time.perf_counter()
+                ok = False
+                last_err: str | None = None
+                try:
+                    raw = await gem.vision(
+                        system=system_prompt,
+                        user_parts=[user_text] + shrunk_list,
+                        model=gemini_model,
+                        temperature=0.1,
+                        response_mime_type="application/json",
+                    )
+                    ok = True
+                except Exception as exc:  # noqa: BLE001
+                    last_err = repr(exc)
+                    exc_str = str(exc).lower()
+                    is_quota = (
+                        "resource_exhausted" in exc_str
+                        or "429" in exc_str
+                        or "quota" in exc_str
+                        or "spending cap" in exc_str
+                    )
+                    if is_quota and settings.EYES_GEMMA_SPACE_URL:
+                        logger.warning(
+                            "Custom provider hit quota / 429 (%s); falling back to platform Gemma Eyes",
+                            repr(exc)[:200],
+                        )
+                        raw = await _call_gemma_space(
+                            system_prompt=system_prompt,
+                            user_text=user_text,
+                            image_b64_jpeg=b64,
+                            max_tokens=2400,
+                            timeout=settings.EYES_GEMMA_TIMEOUT_S,
+                            json_schema=EYES_JSON_SCHEMA,
+                            think=think,
+                        )
+                        used_provider = "gemma"
+                        used_model = "gemma-4-e2b-q4_k_m"
+                        used_fallback = True
+                        fallback_reason = repr(exc)[:200]
+                        ok = True
+                    else:
+                        raise
+                finally:
+                    extra: dict[str, Any] = {
+                        "provider": used_provider,
+                        "model": used_model,
+                        "routing_source": routing_source,
+                    }
+                    if used_fallback:
+                        extra["fallback_from"] = "gemini" if used_provider == "gemma" else "gemma"
+                        extra["fallback_reason"] = fallback_reason
+                    provider_activity.record(
+                        "garment-vision",
+                        ok=ok,
+                        latency_ms=int((time.perf_counter() - t0) * 1000),
+                        error=last_err if not ok else None,
+                        extra=extra,
+                    )
+                if not used_fallback:
+                    used_provider = "gemini"
+                    used_model = gemini_model
 
         # 4) Parse + sanitise. Eyes v3 (Gemma 4) may return a JSON array
         #    when the crop contains multiple garments; collapse to first.
@@ -2509,10 +2554,28 @@ class GarmentVisionService:
                             return slot_idx, analysis
                         except Exception as exc:  # noqa: BLE001
                             err_str = str(exc)
+                            is_quota = (
+                                "RESOURCE_EXHAUSTED" in err_str
+                                or "429" in err_str
+                                or "quota" in err_str.lower()
+                                or "spending cap" in err_str.lower()
+                            )
+                            if is_quota and settings.EYES_GEMMA_SPACE_URL:
+                                logger.warning(
+                                    "Stream crop analysis hit quota on slot %d (%s); falling back to Gemma Eyes",
+                                    slot_idx, repr(exc)[:160],
+                                )
+                                try:
+                                    fallback_analysis = await self.analyze(
+                                        c_bytes, language=language, think=False, provider="gemma"
+                                    )
+                                    if isinstance(fallback_analysis, dict):
+                                        return slot_idx, fallback_analysis
+                                except Exception as fallback_exc:
+                                    logger.error("Gemma fallback also failed for slot %d: %s", slot_idx, fallback_exc)
                             if (
                                 "API_KEY_SERVICE_BLOCKED" in err_str
                                 or "PERMISSION_DENIED" in err_str
-                                or "RESOURCE_EXHAUSTED" in err_str
                                 or "API_KEY_INVALID" in err_str
                             ):
                                 raise
@@ -2849,7 +2912,7 @@ def _build_vision_service() -> GarmentVisionService | None:
         )
         return None
     try:
-        return GarmentVisionService(provider=settings.EYES_PROVIDER or "gemini")
+        return GarmentVisionService(provider=settings.EYES_PROVIDER or "gemma")
     except Exception as exc:  # noqa: BLE001
         logger.exception("Garment vision init failed: %s", exc)
         return None
@@ -2903,7 +2966,7 @@ def get_garment_vision_service(
 
         # 4) If provider is dressapp (platform default): use configured server provider (gemini)
         if provider == "dressapp":
-            server_provider = settings.EYES_PROVIDER or "gemini"
+            server_provider = settings.EYES_PROVIDER or "gemma"
             try:
                 return GarmentVisionService(provider=server_provider, model=model or "Eyes v1")
             except Exception as exc:

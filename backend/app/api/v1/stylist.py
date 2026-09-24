@@ -170,16 +170,10 @@ async def stylist_endpoint(
         context={"lat": lat, "lng": lng, "include_calendar": include_calendar},
     )
 
-    # Resolve user's API key and model
-    from app.services.auth import resolve_user_gemini_api_key, resolve_user_gemini_model
-    api_key_resolved = resolve_user_gemini_api_key(user)
-    user_model = resolve_user_gemini_model(user)
-
-    if not api_key_resolved:
-        raise HTTPException(
-            status_code=400,
-            detail="A valid Google Gemini API key is required. Please set your key in Profile -> AI Configuration.",
-        )
+    # Resolve user's API key and model if a custom key was configured
+    from app.services.auth import resolve_user_custom_gemini_api_key, resolve_user_gemini_model
+    api_key_resolved = resolve_user_custom_gemini_api_key(user)
+    user_model = resolve_user_gemini_model(user) if api_key_resolved else None
 
     # Phase S — render user preferences once (cheap, ~1ms) so we can
     # both inject them into the LLM prompt AND echo the applied keys.
@@ -458,15 +452,9 @@ async def compose_outfit_endpoint(
     from app.services.user_preferences import render_user_preferences
     prefs_block, applied_prefs = render_user_preferences(user)
 
-    # Resolve user's API key
-    from app.services.auth import resolve_user_gemini_api_key
-    api_key_resolved = resolve_user_gemini_api_key(user)
-
-    if not api_key_resolved:
-        raise HTTPException(
-            status_code=400,
-            detail="A valid Google Gemini API key is required. Please set your key in Profile -> AI Configuration.",
-        )
+    # Resolve user's API key if custom key is configured
+    from app.services.auth import resolve_user_custom_gemini_api_key
+    api_key_resolved = resolve_user_custom_gemini_api_key(user)
 
     try:
         canvas = await outfit_composer.compose_outfit(
@@ -696,16 +684,11 @@ async def planner_scout_endpoint(
             for g in lst
         ]
 
-    # Resolve user's API key and model
-    from app.services.auth import resolve_user_gemini_api_key, resolve_user_gemini_model
-    api_key_resolved = resolve_user_gemini_api_key(user)
-    user_model = resolve_user_gemini_model(user)
-
-    if not api_key_resolved:
-        raise HTTPException(
-            status_code=400,
-            detail="A valid Google Gemini API key is required. Please set your key in Profile -> AI Configuration.",
-        )
+    # Resolve user's API key and model if a custom key was configured
+    from app.services.auth import resolve_user_custom_gemini_api_key, resolve_user_gemini_model
+    from app.services.stylist_brain import stylist_brain_service
+    api_key_resolved = resolve_user_custom_gemini_api_key(user)
+    user_model = resolve_user_gemini_model(user) if api_key_resolved else None
 
     prompt = (
         f"You are the AI Stylist for DressApp.\n"
@@ -728,12 +711,8 @@ async def planner_scout_endpoint(
         f"}}"
     )
 
-    from app.services.gemini_stylist import GeminiStylistService, gemini_stylist_service
-    svc = GeminiStylistService(api_key=api_key_resolved, model=user_model) if api_key_resolved else gemini_stylist_service
-    if svc is None:
-        raise RuntimeError("Stylist service unavailable")
-
-    res_json = await svc.advise(
+    brain = stylist_brain_service(api_key=api_key_resolved, model=user_model)
+    res_json = await brain.advise(
         session_id=f"planner-scout-{uuid.uuid4().hex[:8]}",
         user_text=prompt,
         image_base64=None,

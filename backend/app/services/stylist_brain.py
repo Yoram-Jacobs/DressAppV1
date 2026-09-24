@@ -57,6 +57,61 @@ class StylistBrain(Protocol):
 
 
 # -----------------------------------------------------------------
+# -----------------------------------------------------------------
+# Gemma provider — on-prem Eyes fine-tuned Gemma-4 E4B
+# -----------------------------------------------------------------
+class GemmaStylistBrain:
+    """Stylist Brain implementation backed by on-prem Eyes / Gemma-4 E4B."""
+
+    provider_name = "gemma"
+
+    def __init__(self, model: str | None = None) -> None:
+        self.model = model or settings.DEFAULT_STYLIST_MODEL or "gemma-4-E4B-it-Q3_K_M.gguf"
+
+    async def advise(
+        self,
+        *,
+        session_id: str,
+        user_text: str,
+        image_base64: str | None = None,
+        image_mime: str = "image/jpeg",
+        weather: dict[str, Any] | None = None,
+        calendar_events: list[dict[str, Any]] | None = None,
+        cultural_rules: list[dict[str, Any]] | None = None,
+        user_profile: dict[str, Any] | None = None,
+        closet_summary: list[dict[str, Any]] | None = None,
+        user_preferences_block: str | None = None,
+    ) -> dict[str, Any]:
+        from app.services.gemini_stylist import prepare_stylist_prompt, _parse_json
+        from app.services.vision.llm import _call_gemma_space
+        from app.services import provider_activity
+
+        sys_msg, prompt_text = await prepare_stylist_prompt(
+            session_id=session_id,
+            user_text=user_text,
+            image_base64=image_base64,
+            weather=weather,
+            calendar_events=calendar_events,
+            cultural_rules=cultural_rules,
+            user_profile=user_profile,
+            closet_summary=closet_summary,
+            user_preferences_block=user_preferences_block,
+        )
+
+        with provider_activity.Track(
+            "gemma-stylist", {"model": self.model, "has_image": bool(image_base64)}
+        ):
+            raw = await _call_gemma_space(
+                system_prompt=sys_msg,
+                user_text=prompt_text,
+                image_b64_jpeg=image_base64,
+                max_tokens=3000,
+                temperature=0.3,
+            )
+        return _parse_json(raw)
+
+
+# -----------------------------------------------------------------
 # Gemini provider — thin adapter so the legacy service satisfies the
 # same Protocol as any future provider
 # -----------------------------------------------------------------
@@ -81,15 +136,10 @@ class GeminiStylistBrain:
 
 
 # -----------------------------------------------------------------
-# Fallback chain — try primary, fall back on RuntimeError / Timeout
+# Fallback chain — try primary, fall back on RuntimeError / Timeout / Quota
 # -----------------------------------------------------------------
 class FallbackBrain:
-    """Wraps a ``primary`` brain, falling back to ``fallback`` on error.
-
-    Designed to be conservative: only retryable transport/infrastructure
-    errors trigger the fallback path; Pydantic / parse errors upstream
-    would still surface so we don't mask genuine contract bugs.
-    """
+    """Wraps a ``primary`` brain, falling back to ``fallback`` on error or quota exhaustion."""
 
     def __init__(self, primary: StylistBrain, fallback: StylistBrain) -> None:
         self.primary = primary
@@ -101,14 +151,26 @@ class FallbackBrain:
     async def advise(self, **kwargs: Any) -> dict[str, Any]:
         try:
             return await self.primary.advise(**kwargs)
-        except (RuntimeError, TimeoutError) as exc:
-            logger.warning(
-                "stylist primary provider %s failed (%s); falling back to %s",
-                self.primary.provider_name,
-                repr(exc)[:200],
-                self.fallback.provider_name,
+        except Exception as exc:
+            exc_str = str(exc).lower()
+            is_quota_or_transient = (
+                isinstance(exc, (RuntimeError, TimeoutError))
+                or "resource_exhausted" in exc_str
+                or "429" in exc_str
+                or "quota" in exc_str
+                or "spending cap" in exc_str
+                or "temporarily unavailable" in exc_str
+                or "deadline exceeded" in exc_str
             )
-            return await self.fallback.advise(**kwargs)
+            if is_quota_or_transient:
+                logger.warning(
+                    "stylist primary provider %s failed (%s); falling back to %s",
+                    self.primary.provider_name,
+                    repr(exc)[:200],
+                    self.fallback.provider_name,
+                )
+                return await self.fallback.advise(**kwargs)
+            raise
 
 
 # -----------------------------------------------------------------
@@ -118,6 +180,8 @@ def _make_provider(name: str) -> StylistBrain | None:
     """Instantiate a concrete brain by name; return None if the
     environment isn't configured to support it."""
     try:
+        if name in ("gemma", "eyes", "dressapp"):
+            return GemmaStylistBrain()
         if name == "gemini":
             if gemini_stylist_service is None:
                 logger.info("gemini requested but no Gemini key configured")
@@ -125,39 +189,20 @@ def _make_provider(name: str) -> StylistBrain | None:
             return GeminiStylistBrain()
         if name in ("", "none"):
             return None
-        # Legacy values like "qwen" used to map to a DashScope brain
-        # that was retired in May 2026. We accept them silently and
-        # fall through to the env-default ``gemini`` path so a stale
-        # ``.env`` doesn't 503 the stylist endpoint.
         logger.warning(
             "Unknown / retired STYLIST_PROVIDER value: %r — falling "
-            "through to env default", name,
+            "through to gemma default", name,
         )
-        return None
+        return GemmaStylistBrain()
     except Exception as exc:  # noqa: BLE001
-        # A provider init error should NOT crash the whole backend
-        # boot — we'd rather log and let the factory fall through to
-        # a backup provider.
         logger.exception("Failed to instantiate provider %s: %s", name, exc)
         return None
 
 
 def build_stylist_brain() -> StylistBrain:
-    """Resolve the brain stack based on current settings.
-
-    Order of resolution:
-      1. Primary = ``STYLIST_PROVIDER`` (default ``"gemini"``).
-      2. Fallback = ``STYLIST_FALLBACK`` (default ``"gemini"``) — only
-         attached when the primary is NOT the same provider. Today
-         that means fallback is a no-op; it's retained so a future
-         Gemma provider can land here with Gemini as its safety net.
-      3. If the primary can't be instantiated, the fallback becomes
-         the primary so /api/v1/stylist still works.
-      4. If neither provider is available, raises ``RuntimeError`` so
-         the ``/stylist`` endpoint can surface a clean 503.
-    """
-    primary_name = settings.STYLIST_PROVIDER.lower().strip() or "gemini"
-    fallback_name = settings.STYLIST_FALLBACK.lower().strip()
+    """Resolve the brain stack based on current settings."""
+    primary_name = settings.STYLIST_PROVIDER.lower().strip() or "gemma"
+    fallback_name = settings.STYLIST_FALLBACK.lower().strip() or "gemini"
 
     primary = _make_provider(primary_name)
     fallback = (
@@ -168,8 +213,7 @@ def build_stylist_brain() -> StylistBrain:
 
     if primary is None and fallback is None:
         raise RuntimeError(
-            "No stylist brain provider is configured. Set "
-            "STYLIST_PROVIDER=gemini and provide GEMINI_API_KEY."
+            "No stylist brain provider is configured. Check STYLIST_PROVIDER or EYES_GEMMA_SPACE_URL."
         )
     if primary is None:
         logger.warning(
@@ -197,8 +241,10 @@ _service: StylistBrain | None = None
 
 
 def stylist_brain_service(api_key: str | None = None, model: str | None = None) -> StylistBrain:
-    if api_key or model:
-        return GeminiStylistBrain(api_key=api_key, model=model)
+    if api_key or (model and model not in ("Eyes v1", "gemma", "gemma-4-E4B-it-Q3_K_M.gguf")):
+        primary = GeminiStylistBrain(api_key=api_key, model=model)
+        # Always equip user BYOK brains with on-prem Gemma fallback for quota exhaustion
+        return FallbackBrain(primary=primary, fallback=GemmaStylistBrain())
     global _service
     if _service is None:
         _service = build_stylist_brain()
@@ -209,3 +255,4 @@ def reset_stylist_brain_service() -> None:
     """Clear the cached singleton. Exposed for tests + ``/admin`` hot-reload."""
     global _service
     _service = None
+

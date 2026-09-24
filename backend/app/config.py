@@ -111,20 +111,15 @@ class Settings:
         or os.environ.get("GOOGLE_API_KEY")  # accept the canonical google-genai name too
         or None
     )
-    DEFAULT_STYLIST_MODEL: str = os.environ.get("DEFAULT_STYLIST_MODEL", "gemini-3.5-flash")
-    DEFAULT_STYLIST_PROVIDER: str = os.environ.get("DEFAULT_STYLIST_PROVIDER", "gemini")
+    DEFAULT_STYLIST_MODEL: str = os.environ.get("DEFAULT_STYLIST_MODEL", "gemma-4-E4B-it-Q3_K_M.gguf")
+    DEFAULT_STYLIST_PROVIDER: str = os.environ.get("DEFAULT_STYLIST_PROVIDER", "gemma")
 
     # --- Phase O: Stylist brain provider ---
     # STYLIST_PROVIDER picks the primary LLM that backs /api/v1/stylist.
-    # As of May 2026 the only supported value is ``gemini`` — earlier
-    # waves shipped a Qwen-VL (DashScope) path that was retired (see
-    # docs/WASTED_WORK_REPORT.md §2.2). The ``gemma`` slot is reserved
-    # for a future fine-tuned Gemma4-E4B on-prem path; it isn't wired
-    # yet. ``STYLIST_FALLBACK`` (if set) points at a secondary provider
-    # that ``stylist_brain`` will try when the primary errors. ``""`` /
-    # ``"none"`` disables fallback entirely.
+    # In production, the default is the fine-tuned Gemma4-E4B on-prem Eyes container.
+    # ``STYLIST_FALLBACK`` points at Gemini as safety net when Gemma is unavailable.
     STYLIST_PROVIDER: str = (
-        os.environ.get("STYLIST_PROVIDER", "gemini").lower().strip()
+        os.environ.get("STYLIST_PROVIDER", "gemma").lower().strip()
     )
     STYLIST_FALLBACK: str = (
         os.environ.get("STYLIST_FALLBACK", "gemini").lower().strip()
@@ -181,10 +176,10 @@ class Settings:
     #     GARMENT_VISION_PROVIDER=hf
     #     GARMENT_VISION_MODEL=<hf-repo-or-endpoint-url>
     GARMENT_VISION_PROVIDER: str = os.environ.get(
-        "GARMENT_VISION_PROVIDER", os.environ.get("EYES_PROVIDER", "gemini")
+        "GARMENT_VISION_PROVIDER", os.environ.get("EYES_PROVIDER", "gemma")
     )
     GARMENT_VISION_MODEL: str = os.environ.get(
-        "GARMENT_VISION_MODEL", "gemini-3.5-flash"
+        "GARMENT_VISION_MODEL", "Eyes v1"
     )
     # When set, the HF path hits this OpenAI-compatible endpoint URL
     # instead of going through HF Inference Providers routing. Use this
