@@ -73,6 +73,8 @@ export interface ChatMessage {
   outfits?: StylistOutfitCard[];
   shopping_suggestions?: string[];
   do_dont?: string[];
+  provider_fallback?: any;
+  fallback_from_quota?: boolean;
 }
 
 interface StylistChatViewProps {
@@ -676,6 +678,8 @@ export function StylistChatView({ onSelectOutfitForTryOn }: StylistChatViewProps
         outfits: hydrateOutfits(outfitRecs),
         shopping_suggestions: advice?.shopping_suggestions || [],
         do_dont: advice?.do_dont || [],
+        provider_fallback: advice?.provider_fallback,
+        fallback_from_quota: !!(advice?.fallback_from_quota || advice?.provider_fallback?.quota_exhausted),
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       };
 
@@ -925,6 +929,16 @@ export function StylistChatView({ onSelectOutfitForTryOn }: StylistChatViewProps
                     : [styles.assistantBubble, { backgroundColor: colors.card, borderColor: colors.border }],
                 ]}
               >
+                {!isUser && msg.fallback_from_quota && (
+                  <View style={styles.fallbackNoticeWrap}>
+                    <Lucide.Info size={13} color="#D97706" style={{ marginTop: 1 }} />
+                    <Text style={styles.fallbackNoticeText}>
+                      {t('stylist.fallbackQuotaBanner', {
+                        defaultValue: 'Custom API key quota was exceeded. Request fulfilled seamlessly using DressApp on-prem Eyes AI (Gemma-4-E4B).',
+                      })}
+                    </Text>
+                  </View>
+                )}
                 <Text
                   style={[
                     styles.messageText,
@@ -2134,5 +2148,24 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  fallbackNoticeWrap: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: spacing.xs,
+    backgroundColor: 'rgba(245, 158, 11, 0.12)',
+    borderColor: 'rgba(245, 158, 11, 0.25)',
+    borderWidth: 1,
+    borderRadius: radii.sm,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
+    marginBottom: spacing.xs,
+  },
+  fallbackNoticeText: {
+    fontFamily: fonts.medium,
+    fontSize: fontSizes.xs,
+    color: '#B45309',
+    flex: 1,
+    lineHeight: 16,
   },
 });

@@ -30,7 +30,7 @@ import {
   Share2,
   ShirtIcon, 
   Key, Shirt, CalendarCheck2, CalendarPlus, Crown,
-  Search
+  Search, Info
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
@@ -313,19 +313,9 @@ export default function Stylist() {
   const shuffleScrollRef = useRef(null);
   const todayRef = useRef(null);
   const isAiConfigValid = () => {
-    if (!user) return true;
-    const config = user.ai_configuration;
-    if (!config) return false;
-    const mode = config.provider_mode || 'standard';
-    if (mode === 'on_device') return true;
-    if (mode === 'standard') {
-      return !!config.custom_keys?.google_ai;
-    }
-    if (mode === 'custom_keys') {
-      const activeProvider = config.selected_provider || 'google_ai';
-      return !!config.custom_keys?.[activeProvider];
-    }
-    return false;
+    // DressApp Free Tier and non-BYOK users rely on the built-in fine-tuned Gemma-4-E4B model.
+    // The server handles provider resolution and graceful fallback automatically.
+    return true;
   };
   useEffect(() => {
     if (location.state?.tab) {
@@ -1910,6 +1900,16 @@ export default function Stylist() {
                             className="h-20 w-20 rounded-[10px] object-cover border border-border"
                           />
                         ))}
+                      </div>
+                    )}
+                    {m.role === 'assistant' && (m.payload?.fallback_from_quota || m.payload?.provider_fallback?.quota_exhausted) && (
+                      <div className="mb-2.5 p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-900 text-xs flex items-center gap-2 font-medium" data-testid="stylist-fallback-quota-banner">
+                        <Info className="h-4 w-4 shrink-0 text-amber-600" />
+                        <span>
+                          {t('stylist.fallbackQuotaBanner', {
+                            defaultValue: 'Custom API key quota was exceeded. Request fulfilled seamlessly using DressApp on-prem AI (Gemma-4-E4B).'
+                          })}
+                        </span>
                       </div>
                     )}
                     {m.transcript && (

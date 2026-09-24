@@ -311,6 +311,8 @@ async def stylist_endpoint(
                 "segmented_image_url",
                 "infilled_image_url",
                 "spoken_reply",
+                "provider_fallback",
+                "fallback_from_quota",
                 # Phase S enrichment
                 "marketplace_suggestions",
                 "fashion_scout_picks",

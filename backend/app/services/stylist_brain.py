@@ -169,7 +169,22 @@ class FallbackBrain:
                     repr(exc)[:200],
                     self.fallback.provider_name,
                 )
-                return await self.fallback.advise(**kwargs)
+                res = await self.fallback.advise(**kwargs)
+                if isinstance(res, dict):
+                    is_quota = bool(
+                        "429" in exc_str
+                        or "quota" in exc_str
+                        or "resource_exhausted" in exc_str
+                        or "spending cap" in exc_str
+                    )
+                    res["provider_fallback"] = {
+                        "from": self.primary.provider_name,
+                        "to": self.fallback.provider_name,
+                        "reason": repr(exc)[:200],
+                        "quota_exhausted": is_quota,
+                    }
+                    res["fallback_from_quota"] = is_quota
+                return res
             raise
 
 

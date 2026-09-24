@@ -178,6 +178,10 @@ async def get_styling_advice(
     result["spoken_reply"] = advice.get("spoken_reply") or advice.get(
         "reasoning_summary", ""
     )
+    if "provider_fallback" in advice:
+        result["provider_fallback"] = advice["provider_fallback"]
+    if "fallback_from_quota" in advice:
+        result["fallback_from_quota"] = advice["fallback_from_quota"]
 
     # --- 5. Gemini Native TTS
     if synthesize_tts and result["spoken_reply"]:

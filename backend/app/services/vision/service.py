@@ -581,11 +581,16 @@ class GarmentVisionService:
         parsed["provider_used"] = used_provider
         parsed["model_used"] = used_model
         if used_fallback:
+            is_quota_fb = bool(
+                fallback_reason and any(q in fallback_reason.lower() for q in ("429", "quota", "resource_exhausted", "spending cap"))
+            )
             parsed["provider_fallback"] = {
-                "from": "gemma",
-                "to": "gemini",
+                "from": "gemini" if used_provider == "gemma" else "gemma",
+                "to": used_provider,
                 "reason": fallback_reason,
+                "quota_exhausted": is_quota_fb,
             }
+            parsed["fallback_from_quota"] = is_quota_fb
         parsed["raw"] = {"preview": (raw or "")[:500]}
         logger.info(
             "The Eyes OK provider=%s model=%s routing=%s fallback=%s "
@@ -2570,6 +2575,13 @@ class GarmentVisionService:
                                         c_bytes, language=language, think=False, provider="gemma"
                                     )
                                     if isinstance(fallback_analysis, dict):
+                                        fallback_analysis["provider_fallback"] = {
+                                            "from": "gemini",
+                                            "to": "gemma",
+                                            "reason": repr(exc)[:160],
+                                            "quota_exhausted": True,
+                                        }
+                                        fallback_analysis["fallback_from_quota"] = True
                                         return slot_idx, fallback_analysis
                                 except Exception as fallback_exc:
                                     logger.error("Gemma fallback also failed for slot %d: %s", slot_idx, fallback_exc)
