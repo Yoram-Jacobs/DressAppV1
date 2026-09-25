@@ -447,7 +447,11 @@ def _user_prompt(code: str | None) -> str:
     base = (
         "Analyse this photograph. If one garment is visible return a single "
         "JSON object; if multiple garments are visible return a JSON array "
-        "of such objects. No commentary."
+        "of such objects. No commentary. "
+        "Crucial rules: (1) item_type and sub_category MUST be distinct (e.g. sub_category='T-Shirt', item_type='Short-Sleeve T-Shirt' or 'Crew-Neck T-Shirt'). "
+        "(2) Use fine-grained colors (e.g. 'Light Blue', 'Sky Blue', 'Navy', 'Olive Green', not generic 'Blue'/'Green'). "
+        "(3) If fabric has micro-dots, eyelets, perforations, honeycomb, waffle, or subtle texture, set pattern='geometric', NEVER 'solid'. "
+        "(4) Fitted tops, scoop necks, curved cuts, or cap sleeves MUST be gender='women', never 'unisex'."
     )
     code = (code or "en").lower()
     if code == "en":
@@ -464,6 +468,8 @@ def _user_prompt(code: str | None) -> str:
             "diacritics, Yiddish ligatures, or transliteration characters from other scripts. "
             "Taxonomy rules for Hebrew: `sub_category` and `item_type` MUST be distinct (e.g. sub_category='חולצות טי', item_type='חולצת טי שרוול קצר'). "
             "Colors MUST be specific (e.g. 'תכלת' / 'כחול בהיר' for light blue, 'כחול שמיים' for sky blue, 'כחול כהה' for navy, 'טורקיז', 'מנטה', 'בורדו'). "
+            "Pattern rule: inspect fabric for micro-dots, eyelets, perforations, honeycomb, waffles, or subtle geometric weaves/textures — if present, set pattern='geometric' (or 'polka_dot'). "
+            "Gender rule: cap sleeves, flutter sleeves, scoop neck, or feminine cuts MUST be gender='women', NOT 'unisex'. "
             "JSON keys and enum tokens (`category`, `gender`, `dress_code`, "
             "`season`, `pattern`, `state`, `condition`, `quality`) stay in English.\n\n"
         )
