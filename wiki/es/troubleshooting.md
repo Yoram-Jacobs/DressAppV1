@@ -13,8 +13,8 @@ Encuentre respuestas rápidas sobre acceso a la cámara, velocidad de procesamie
 1. **La cámara no se activa**:
    - Abra la configuración de su dispositivo o navegador, busque **DressApp** y asegúrese de que el permiso de **Cámara** esté en "Permitir". Recargue la página.
 2. **Mensaje "Capacidad del armario alcanzada"**:
-   - Las cuentas gratuitas almacenan hasta **150 prendas**.
-   - Puede invitar a amigos para obtener **+10 espacios adicionales** por cada registro (hasta 1.000 prendas), eliminar ropa que no use o pulsar en **Mejorar a Pro** ($4.99/mes) para almacenamiento ilimitado.
+   - Las cuentas gratuitas almacenan hasta **50 prendas** como base.
+   - Puedes invitar amigos para obtener **+10 espacios adicionales** por cada registro (hasta un máximo de 150 prendas), eliminar ropa que no uses o pulsar en **Mejorar a Pro** ($4.99/mes) para almacenamiento ilimitado.
 3. **El dictado por voz o el audio no responden**:
    - Verifique que los permisos de micrófono estén permitidos en su navegador.
    - Asegúrese de que el volumen de su dispositivo no esté silenciado ni en modo "No molestar".

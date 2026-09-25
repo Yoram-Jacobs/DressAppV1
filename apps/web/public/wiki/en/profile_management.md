@@ -115,10 +115,10 @@ Manages system-level settings, subscriptions, and AI integrations:
   - *Custom API Keys Mode (BYOK)*: Connect your own Google Gemini API key (or other supported providers) to unlock advanced capabilities like Trend Scout fashion news feeds and Nano Banana photo reconstruction.
   - *Automated Quota Fallback Protection*: If your custom API key runs out of quota (`429` / `RESOURCE_EXHAUSTED`), DressApp automatically reroutes your request to the built-in Gemma engine with a visible notification banner, ensuring your styling conversation is never interrupted.
 - **Subscription & Closet Limits**:
-  - View current account tier (**Free**: 150-item limit vs **Manager** or **Professional**: Unlimited items).
+  - View current account tier (**Free**: 50-item limit vs **Manager** or **Professional**: Unlimited items).
   - Access the **Pricing page** (`/pricing` or click on your plan card) to view the tier comparison table, select a plan, and subscribe.
   - Upgrade via PayPal Subscriptions REST API (Manager: $4.99/month; Professional: $9.99/month) or the Atzmai Gateway for local ILS transactions.
-  - Copy **Referral Link**: Grants +10 closet capacity slots for each friend who registers (up to 1,000 items max).
+  - Copy **Referral Link**: Grants +10 closet capacity slots for each friend who registers (up to 150 items max).
 - **Scheduler & Push Reminders**:
   - Toggle morning outfit proposal notifications.
   - Set frequency (*Everyday*, *Every Other Day*, *Twice a Week*, *On Weekday*), time (e.g., *07:00*), and dress-code style demands (*Casual*, *Formal*, *Athletic*, *Custom*).
@@ -155,6 +155,6 @@ Manages system-level settings, subscriptions, and AI integrations:
 ---
 
 ## Limitations
-- Free tier account space is capped at 150 items baseline unless expanded via referral bonus (+10 slots per invite up to 1,000 items max) or upgrading to the Manager or Professional tier.
+- Free tier account space is capped at 50 items baseline unless expanded via referral bonus (+10 slots per invite up to 150 items max) or upgrading to the Manager or Professional tier.
 - Trend Scout fashion channels and Nano Banana generative image repair require a personal Google Gemini API key.
 - Custom API key mode will gracefully fall back to the built-in Gemma engine if the external provider runs out of quota.

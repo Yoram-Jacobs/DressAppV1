@@ -227,12 +227,12 @@ Never buy the wrong size online again!
 Understand your plan and manage your AI styling credits:
 
 1. **Monetization Tiers**:
-   - **Free Tier ($0/month)**: Stores up to **150 closet garments** with full access to basic styling and marketplace features. Includes **10 free daily AI credits** (which refresh every 24 hours and have a 30-day lifespan).
+   - **Free Tier ($0/month)**: Stores up to **50 closet garments** baseline (expandable up to 150 via referral bonuses) with full access to basic styling and marketplace features. Includes **10 free daily AI credits** (which refresh every 24 hours and have a 30-day lifespan).
    - **Pro Plan ($4.99/month or $29.99/year)**: Upgrades you to **unlimited closet storage**, priority image processing, and 50 initial bonus credits. Comes with a 14-day free trial.
    - **Business / Expert Plan ($29/month)**: Designed for professional stylists and local tailors, including directory listings and client booking tools.
 2. **Viral Referral Bonus**:
    - On the free plan, invite friends using your unique referral link found under **Profile -> Invite Friends**.
-   - Every friend who signs up gives you **+10 bonus closet slots** for free (up to 1,000 items)!
+   - Every friend who signs up gives you **+10 bonus closet slots** for free (up to 150 items max)!
 3. **Prepaid Credit Packs (Paid Credits Never Expire)**:
    - Need extra AI credits for heavy styling or photo inpainting? Purchase packs anytime:
      - **10 credits**: $1.99 (or 10.00 ILS)
@@ -266,7 +266,7 @@ If your account has administrative permissions:
 
 - **"Using Platform Stylist (Quota Fallback)" Notice**: If you entered your own Google Gemini API key and it runs out of requests or hits a rate limit, DressApp automatically answers using our built-in engine so your chat never crashes! You can check your quota at Google AI Studio or continue styling with the built-in engine.
 - **"API Key Required" Message on Trend Scout or Nano Banana**: Trend Scout and Nano Banana image editing require a free Google Gemini API key. Go to **Profile -> AI Configuration** to enter your key.
-- **"Closet Limit Reached (150 Items)"**: Free accounts hold up to 150 items. You can invite friends to gain +10 free slots per signup, or tap **Upgrade to Pro** ($4.99/mo) for unlimited storage.
+- **"Closet Limit Reached"**: Free accounts hold 50 items baseline (up to 150 with referrals). You can invite friends to gain +10 free slots per signup, or tap **Upgrade to Pro** ($4.99/mo) for unlimited storage.
 - **Microphone or Voice Typing Not Responding**: Ensure microphone permissions are enabled in your browser or device settings. In Chrome, click the lock icon in the address bar to check permissions.
 - **Background Removal Quality**: For the crispest cutout, lay clothes flat against a contrasting surface (like a plain bedsheet, wood floor, or light wall) with good lighting.
 - **Wardrobe Import Stalling?** Competitor wardrobe import works best on desktop computers in Google Chrome. Ensure the competitor closet page is scrolled so items are visible.
@@ -276,7 +276,7 @@ If your account has administrative permissions:
 
 ## 5. Helpful Limitations to Keep in Mind
 
-- **Free Tier Capacity**: Baseline storage is 150 garments. To store more, invite friends or activate a Pro subscription.
+- **Free Tier Capacity**: Baseline storage is 50 garments (up to 150 items with referrals). To store more, invite friends or activate a Pro subscription.
 - **Daily Free Credits**: The 10 daily free AI credits expire after 30 days if unused. Purchased credit packs never expire.
 - **Desktop Requirement for Bookmarklet**: The competitor wardrobe migration bookmarklet requires desktop browser bookmark capabilities and cannot run inside mobile phone browsers.
 - **Receipt OCR Quality**: When taking photos of physical paper receipts, ensure the text is well-lit, flat, and legible for optimal brand and price extraction.

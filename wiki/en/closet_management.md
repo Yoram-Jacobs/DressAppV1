@@ -28,4 +28,4 @@ A beautifully organized closet grid that loads instantly, letting you find, filt
 - **Accidental grouping**: If you grouped two items by mistake, open the item details and tap **Ungroup** to separate them back into individual pieces.
 
 ## Limitations
-- Free tier accounts can store up to 150 garments. To store more, invite friends (+10 slots per signup) or upgrade to Pro for unlimited storage.
+- Free tier accounts can store 50 garments baseline (expandable up to 150 items by inviting friends, +10 slots per signup) or upgrade to Pro for unlimited storage.

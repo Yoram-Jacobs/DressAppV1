@@ -114,11 +114,11 @@ Verwaltet Einstellungen auf Systemebene, Abonnements und KI-Integrationen:
   - *Standard-Modus (Integriertes Plattform-Modell)*: Verwendet das selbst gehostete, feinabgestimmte **Gemma-4-E4B**-Modell von DressApp. Völlig kostenlos, erfordert keine API-Schlüssel und beinhaltet täglich 10 Styling-Credits.
   - *Eigener API-Schlüssel-Modus (BYOK)*: Verbinden Sie Ihren persönlichen Google Gemini API-Schlüssel (oder andere unterstützte Anbieter), um erweiterte Funktionen wie Trend Scout Newsfeeds und Nano Banana Bildrekonstruktion freizuschalten.
   - *Automatischer Quoten-Fallback*: Wenn Ihr persönlicher API-Schlüssel das Kontingent überschreitet (`429` / `RESOURCE_EXHAUSTED`), leitet DressApp die Anfrage automatisch und unterbrechungsfrei an die interne Gemma-Engine weiter – inklusive Hinweismeldung im Chat.
-- **Abonnement & Kleiderschrank-Limits**:
-  - Zeigen Sie die aktuelle Kontostufe an (**Free**: Limit von 150 Kleidungsstücken vs. **Manager** oder **Professional**: Unbegrenzte Artikel).
+- **Abonnement & Kleiderschranklimits**:
+  - Zeigen Sie die aktuelle Kontostufe an (**Free**: Limit von 50 Kleidungsstücken vs. **Manager** oder **Professional**: Unbegrenzte Artikel).
   - Rufen Sie die **Preisseite** auf (`/pricing` oder klicken Sie auf Ihre Plankarte), um die Stufenvergleichstabelle anzuzeigen, einen Plan auszuwählen und ihn zu abonnieren.
   - Upgrade über die PayPal Subscriptions REST API (Manager: 4,99 $/Monat; Professional: 9,99 $/Monat) oder das Atzmai-Gateway für lokale ILS-Transaktionen.
-  - Kopieren Sie den **Empfehlungslink**: Gewährt +10 zusätzliche Kapazitätsplätze im Kleiderschrank für jeden registrierten Freund (bis zu maximal 1.000 Artikel).
+  - Kopieren Sie den **Empfehlungslink**: Gewährt +10 zusätzliche Kapazitätsplätze im Kleiderschrank für jeden registrierten Freund (bis zu maximal 150 Artikel).
 - **Planer & Push-Erinnerungen**:
   - Schalten Sie morgendliche Outfit-Vorschlagsbenachrichtigungen ein/aus.
   - Stellen Sie Häufigkeit (*Täglich*, *Alle zwei Tage*, *Zweimal pro Woche*, *An Wochentagen*), Uhrzeit (z. B. *07:00*) und Anforderungen an den Dresscode (*Casual*, *Formal*, *Athletic*, *Custom*) ein.
@@ -155,6 +155,6 @@ Verwaltet Einstellungen auf Systemebene, Abonnements und KI-Integrationen:
 ---
 
 ## Einschränkungen
-- Kostenlose Konten sind auf 150 Kleidungsstücke limitiert, erweiterbar durch Einladungsboni (+10 Plätze pro Einladung bis maximal 1.000 Artikel) oder ein Upgrade auf Manager bzw. Professional.
+- Der Speicherplatz für Free-Konten ist auf 50 Kleidungsstücke als Basis begrenzt, es sei denn, er wird durch Empfehlungsboni erweitert (+10 Plätze pro Einladung bis maximal 150 Artikel) oder durch ein Upgrade auf die Manager- oder Professional-Stufe.
 - Trend Scout Fashion-Feeds und generative Nano Banana Bildreparatur erfordern einen persönlichen Google Gemini API-Schlüssel.
 - Bei Nutzung eines eigenen API-Schlüssels greift bei Quotenüberschreitungen automatisch die integrierte Gemma-Engine.

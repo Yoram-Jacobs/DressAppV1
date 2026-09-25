@@ -12,9 +12,9 @@ Trouvez rapidement des solutions pour l'accès à la caméra, la vitesse de trai
 ## Instructions étape par étape
 1. **La caméra ne s'allume pas**:
    - Ouvrez les paramètres de votre navigateur ou appareil, trouvez **DressApp** et assurez-vous que l'autorisation **Caméra** est activée. Actualisez la page.
-2. **Message « Capacité du dressing atteinte »**:
-   - Les comptes gratuits peuvent stocker jusqu'à **150 vêtements**.
-   - Vous pouvez parrainer des amis pour gagner **+10 emplacements supplémentaires** par inscription (jusqu'à 1 000 articles), supprimer des vêtements inutilisés ou passer à la formule **Pro** (4,99 $/mois) pour un stockage illimité.
+2. **Message « Capacité du dressing atteinte »** :
+   - Les comptes gratuits peuvent stocker jusqu'à **50 vêtements** de base.
+   - Vous pouvez inviter des amis pour obtenir **+10 places supplémentaires** par inscription (jusqu'à 150 articles au maximum), supprimer des vêtements inutilisés ou cliquer sur **Passer à Pro** (4,99 $/mois) pour un stockage illimité.
 3. **Le micro ou la lecture audio ne répond pas**:
    - Vérifiez que les autorisations du microphone sont accordées dans les paramètres du navigateur.
    - Assurez-vous que le volume de votre appareil n'est pas coupé ou en mode « Ne pas déranger ».

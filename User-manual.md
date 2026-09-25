@@ -174,7 +174,7 @@ The Profile page serves as the core control panel for DressApp. Configuration fi
 
 11. **Invite Friends (Share payload API)**
     - **Why does it matter?**: It provides a viral loop for free closet expansion.
-    - **Subsystem Dependencies**: Appends the referrer's MongoDB ID to the URL. New registrations dynamically query this ID and atomically increment the referrer's `closet_capacity_bonus` by +10 slots, modifying the limit guards in `closet.py`. Free tier capacity is capped at 150 items baseline, but can expand up to a maximum limit of 1000 items through referral credits.
+    - **Subsystem Dependencies**: Appends the referrer's MongoDB ID to the URL. New registrations dynamically query this ID and atomically increment the referrer's `closet_capacity_bonus` by +10 slots, modifying the limit guards in `closet.py`. Free tier capacity is capped at 50 items baseline, but can expand up to a maximum limit of 150 items through referral credits (+10 slots per referral).
 
 
 ---
@@ -756,7 +756,7 @@ System liveness validation, financial bookkeeping, and user account management.
 Integration with PayPal Subscriptions and Atzmai APIs for subscription management, credit purchases, and automated bookkeeping.
 
 1. **PayPal Pro Subscription (Closet Capacity)**:
-   - Upgrades free accounts (150-item ceiling) to unlimited closet storage via the PayPal Subscriptions REST API.
+   - Upgrades free accounts (50–150 item ceiling) to unlimited closet storage via the PayPal Subscriptions REST API.
    - Monthly and annual tiers with automatic recurring billing and instant webhooks updating user roles.
 2. **Pre-Paid AI Credit Bucket Management**:
    - **Daily Free Credits**: 10 free credits granted every 24 hours with a strict 30-day expiration window.
@@ -780,14 +780,14 @@ Integration with PayPal Subscriptions and Atzmai APIs for subscription managemen
 - **DPP Verified Badge**: Scanning valid passports displays the green information card with sustainability details.
 - **Avatar Outerwear**: Outerwear displays correctly layered over tops on the 2D avatar canvas without clipping headwear/shoes.
 - **Voice Response**: Virtual Stylist text outputs play spoken audio automatically with a visible waveform indicator.
-- **Subscriptions**: Activating Pro immediately removes the 150-item limit warning.
+- **Subscriptions**: Activating Pro immediately removes the closet limit warning.
 
 ---
 
 ## 5. Troubleshooting
 
 ### HTTP 402 Payment Required
-- **Problem**: Ingestion blocked. You have reached the maximum baseline limit of 150 closet items.
+- **Problem**: Ingestion blocked. You have reached the capacity limit (50 items baseline, up to 150 with referral slots).
 - **Solution**: Go to Profile -> Subscription and upgrade to Pro, or share your invite link to get +10 slots per registration.
 
 ### SSRF Blocked / DNS Error on DPP

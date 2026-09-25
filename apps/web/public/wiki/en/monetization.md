@@ -3,7 +3,7 @@
 Understand your account limits, upgrade your closet space, and manage your AI styling credits.
 
 ## Overview
-DressApp offers a generous free tier alongside premium options for wardrobe lovers and professional stylists. You can store up to 150 items for free, expand capacity by inviting friends, upgrade to unlimited closet storage with Pro, or purchase prepaid credit packs that never expire.
+DressApp offers a generous free tier alongside premium options for wardrobe lovers and professional stylists. You can store up to 50 items for free baseline (expandable up to 150 items via referral bonuses), upgrade to unlimited closet storage with Pro, or purchase prepaid credit packs that never expire.
 
 ## Prerequisites
 - A verified DressApp account.
@@ -11,12 +11,12 @@ DressApp offers a generous free tier alongside premium options for wardrobe love
 
 ## Step-by-Step Instructions
 1. **Understand Your Free Tier**:
-   - Every free account can store up to **150 garments**.
+   - Every free account starts with **50 garments** baseline.
    - You receive **10 complimentary AI credits every 24 hours** to chat with your Stylist, plan outfits, or inpaint photos. Daily free credits have a 30-day lifespan.
 2. **Expand Your Closet for Free (Invite Friends)**:
    - Go to **Profile** &rarr; **Invite Friends**.
    - Copy your unique invitation link and share it with friends.
-   - For every friend who signs up, you get **+10 extra closet slots** added permanently to your account (up to 1,000 items)!
+   - For every friend who signs up, you get **+10 extra closet slots** added permanently to your account (up to 150 items max)!
 3. **Upgrade to Pro ($4.99/month or $29.99/year)**:
    - Tap **Upgrade to Pro** under Profile & Limits.
    - Enjoy **unlimited closet space**, priority image processing, and 50 initial bonus credits.
@@ -35,9 +35,9 @@ DressApp offers a generous free tier alongside premium options for wardrobe love
 Instant activation of additional closet slots or AI credits, with real-time updates to your profile badges and receipt confirmation sent to your email.
 
 ## Troubleshooting
-- **"Closet Limit Reached" Warning**: You have reached the 150-item ceiling. Either delete unused clothes, share your invite link for free slots, or upgrade to Pro for unlimited storage.
+- **"Closet Limit Reached" Warning**: You have reached the capacity limit (50 items baseline, up to 150 with referral slots). Either delete unused clothes, share your invite link for free slots, or upgrade to Pro for unlimited storage.
 - **Credits balance not showing immediately**: Refresh your Profile page; paid credits update within a few seconds after payment confirmation.
 
 ## Limitations
 - Daily free credits expire after 30 days if unused, whereas purchased paid credits never expire.
-- Referral bonuses apply to verified new user registrations up to a maximum ceiling of 1,000 garments.
+- Referral bonuses apply to verified new user registrations up to a maximum ceiling of 150 garments.

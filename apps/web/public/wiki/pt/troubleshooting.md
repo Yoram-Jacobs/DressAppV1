@@ -12,9 +12,9 @@ Encontre orientações sobre acesso à câmera, tempo de processamento de fotos,
 ## Instruções Passo a Passo
 1. **A câmera não liga**:
    - Abra as configurações do seu navegador ou dispositivo, localize o **DressApp** e garanta que a permissão de **Câmera** esteja como "Permitir". Atualize a página.
-2. **Mensagem "Capacidade do guarda-roupa atingida"**:
-   - Contas gratuitas guardam até **150 peças de roupa**.
-   - Você pode convidar amigos para ganhar **+10 espaços extras** por cadastro (até 1.000 peças), excluir roupas não usadas ou tocar em **Assinar o Pro** ($4.99/mês) para armazenamento ilimitado.
+2. **Mensagem "Capacidade do armário atingida"**:
+   - Contas gratuitas guardam até **50 peças de roupa** como base.
+   - Você pode convidar amigos para ganhar **+10 vagas extras** por cadastro (até o limite de 150 peças), excluir roupas não usadas ou tocar em **Assinar Pro** ($4.99/mês) para armazenamento ilimitado.
 3. **Digitação por voz ou áudio não funcionam**:
    - Verifique se as permissões de microfone foram autorizadas no navegador.
    - Certifique-se de que o volume do seu aparelho não esteja no mudo ou no modo "Não perturbe".

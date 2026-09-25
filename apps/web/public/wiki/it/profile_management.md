@@ -114,11 +114,11 @@ Gestisce le impostazioni a livello di sistema, gli abbonamenti e le integrazioni
   - *Modalità Standard (Motore integrato della piattaforma)*: Utilizza il modello **Gemma-4-E4B** proprietario di DressApp, ottimizzato e ospitato localmente. Totalmente gratuito, non richiede chiavi API e include 10 crediti di styling giornalieri.
   - *Modalità Chiave API Personale (BYOK)*: Collega la tua chiave Google Gemini API personale (o altri provider compatibili) per sbloccare funzioni avanzate come le notizie Trend Scout e la riparazione fotografica Nano Banana.
   - *Protezione con Fallback Automatico per Quota Esaurita*: Se la tua chiave personale supera la quota consentita (`429` / `RESOURCE_EXHAUSTED`), DressApp reindirizza istantaneamente la richiesta al motore locale Gemma mostrando un banner chiaro, evitando qualsiasi interruzione della chat.
-- **Abbonamento & Limiti del guardaroba**:
-  - Visualizza il livello di abbonamento corrente (**Free**: limite di 50 articoli vs **Manager** o **Professional**: articoli illimitati).
-  - Accedi alla **pagina dei prezzi** (`/pricing` o fai clic sulla scheda del piano) per visualizzare la tabella comparativa dei livelli, selezionare un piano e abbonarti.
-  - Esegui l'upgrade tramite le API REST di PayPal Subscriptions (Manager: $4.99/mese; Professional: $9.99/mese) o il gateway Atzmai per transazioni locali in ILS.
-  - Copia il **link di referral**: Concede +10 slot di capacità del guardaroba extra per ogni amico che si registra (fino a un massimo di 1,000 articoli).
+- **Abbonamento e limiti del guardaroba**:
+  - Visualizza il livello di account corrente (**Free**: limite di 50 capi vs **Manager** o **Professional**: capi illimitati).
+  - Accedi alla **pagina dei prezzi** (`/pricing` o fai clic sulla scheda del piano) per visualizzare la tabella comparativa, selezionare un piano e abbonarti.
+  - Effettua l'upgrade tramite l'API REST di PayPal Subscriptions (Manager: $4.99/mese; Professional: $9.99/mese) o il gateway Atzmai per transazioni locali in ILS.
+  - Copia **link d'invito**: Concede +10 spazi extra nel guardaroba per ogni amico registrato (fino a un massimo di 150 capi).
 - **Pianificatore & Promemoria push**:
   - Attiva/disattiva le notifiche mattutine sulle proposte di outfit.
   - Imposta la frequenza (*Tutti i giorni*, *A giorni alterni*, *Due volte a settimana*, *Nei giorni feriali*), l'ora (ad esempio, *07:00*) e le richieste di stile di codice di abbigliamento (*Casual*, *Formal*, *Athletic*, *Custom*).
@@ -155,6 +155,6 @@ Gestisce le impostazioni a livello di sistema, gli abbonamenti e le integrazioni
 ---
 
 ## Limitazioni
-- Lo spazio dell'account gratuito è limitato a 150 capi di base, estendibile con i bonus d'invito (+10 slot per iscritto fino a un massimo di 1.000 capi) o passando al piano Manager o Professional.
+- Lo spazio dell'account gratuito è limitato a 50 capi di base, estendibile con i bonus d'invito (+10 slot per iscritto fino a un massimo di 150 capi) o passando al piano Manager o Professional.
 - I canali di Trend Scout e la ricostruzione generativa Nano Banana richiedono una chiave personale Google Gemini API.
 - La modalità con chiave personale passa automaticamente al motore integrato Gemma in caso di esaurimento della quota esterna.
