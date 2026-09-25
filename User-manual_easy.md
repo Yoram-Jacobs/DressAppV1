@@ -27,6 +27,7 @@ DressApp turns your physical closet into an intelligent digital wardrobe right o
    - **Camera**: Allows you to take photos of your clothes and scan DPP QR codes on tags.
    - **Microphone**: Allows you to talk to your AI Stylist hands-free.
    - **Location**: Allows DressApp to check your local temperature and weather for accurate outfit styling.
+3. **Zero Technical Setup Required**: You do NOT need to configure any API keys or technical accounts to start styling! Every account comes ready-to-use with DressApp's built-in AI Stylist and 10 free daily styling credits.
 
 ---
 
@@ -100,7 +101,8 @@ Need advice on what to wear for a meeting, a date, or unpredictable weather? You
    - *"I have an important business presentation at 2 PM. What looks best?"*
 3. The AI Stylist checks your local weather, your Google Calendar schedule, your saved style preferences, and your closet inventory.
 4. The stylist responds with personalized outfit proposals and speaks the answer back to you in a warm, natural voice.
-5. Tap **Play reply** anytime to hear the advice spoken again.
+5. **Built-in Model & Safe Quota Fallback**: The stylist runs on DressApp's fast built-in AI engine with zero setup. If you ever connect your own Google Gemini key and it runs out of daily requests or hits a rate limit, don't worry—DressApp automatically switches to our built-in assistant and shows a friendly notice (*"Using Platform Stylist"*), so your conversation never fails!
+6. Tap **Play reply** anytime to hear the advice spoken again.
 
 ---
 
@@ -185,6 +187,7 @@ Stay ahead of global fashion trends without spending a fortune on new clothes:
    - See a trend you love? Tap **Style with My Closet** on any trend card!
    - The AI Stylist immediately searches your existing closet for matching colors, silhouettes, and fabrics to recreate that trend using clothes you already own.
 5. **Clean & Safe Reading**: Every trend is rigorously filtered to eliminate shopping carts, ads, and paid sponsor walls, keeping your inspiration pure and creative.
+6. **Connecting Your Free API Key**: Because Trend Scout performs live web searches and article synthesis, it requires connecting a free personal Google Gemini API key under **Profile > AI Configuration**.
 
 
 ---
@@ -261,6 +264,8 @@ If your account has administrative permissions:
 
 ## 4. Quick Troubleshooting & Tips
 
+- **"Using Platform Stylist (Quota Fallback)" Notice**: If you entered your own Google Gemini API key and it runs out of requests or hits a rate limit, DressApp automatically answers using our built-in engine so your chat never crashes! You can check your quota at Google AI Studio or continue styling with the built-in engine.
+- **"API Key Required" Message on Trend Scout or Nano Banana**: Trend Scout and Nano Banana image editing require a free Google Gemini API key. Go to **Profile -> AI Configuration** to enter your key.
 - **"Closet Limit Reached (150 Items)"**: Free accounts hold up to 150 items. You can invite friends to gain +10 free slots per signup, or tap **Upgrade to Pro** ($4.99/mo) for unlimited storage.
 - **Microphone or Voice Typing Not Responding**: Ensure microphone permissions are enabled in your browser or device settings. In Chrome, click the lock icon in the address bar to check permissions.
 - **Background Removal Quality**: For the crispest cutout, lay clothes flat against a contrasting surface (like a plain bedsheet, wood floor, or light wall) with good lighting.

@@ -1385,7 +1385,11 @@
         "colorful_summer": "缤纷夏日",
         "casual_chic": "休闲时髦"
       }
-    }
+    },
+    "fallbackQuotaBanner": "自定义 API 密钥配额已用尽。已使用 DressApp 本地 AI（Gemma-4-E4B）无缝完成请求。",
+    "fallbackQuotaExhausted": "(回退。配额已用尽)",
+    "fallbackLabel": "(回退)",
+    "fallbackDescriptionPattern": "适合您喜爱的{{style}}风格及当地天气的均衡日常穿搭。"
   },
   "outfitCompletion": {
     "cta": "完成搭配",

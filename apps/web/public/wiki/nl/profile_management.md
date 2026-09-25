@@ -111,13 +111,14 @@ Als u zich bij Google heeft aangemeld voordat DressApp toegang vroeg tot uw **Pe
 Beheert instellingen op systeemniveau, abonnements- en AI-integraties:
 
 - **AI-configuratie**:
-  - *Standaardmodus*: Maakt gebruik van door het systeem beheerde Gemini Flash 2.x-eindpunten.
-  - *Aangepaste API-sleutelsmodus*: Verbind aangepaste Google Gemini-, Anthropic-, OpenAI- of DeepSeek-API-sleutels via een geleide installatie-modal.
+  - *Standaardmodus (Ingebouwd platformmodel)*: Maakt gebruik van DressApp's zelf gehoste, gefinetunede **Gemma-4-E4B**-model. Volledig gratis, vereist geen API-sleutels en bevat dagelijks 10 stylingcredits.
+  - *Eigen API-sleutelmodus (BYOK)*: Koppel uw eigen Google Gemini API-sleutel (of andere ondersteunde providers) om geavanceerde functies zoals Trend Scout en Nano Banana fotoreconstructie te ontgrendelen.
+  - *Automatische quotum-fallbackbeveiliging*: Als uw persoonlijke API-sleutel de limiet overschrijdt (`429` / `RESOURCE_EXHAUSTED`), schakelt DressApp het verzoek automatisch en zonder onderbreking door naar de ingebouwde Gemma-engine, inclusief informatieve banner in de chat.
 - **Abonnement & kledingkastlimieten**:
-  - Bekijk het huidige accountniveau (**Free**: limiet van 50 items versus **Manager** of **Professional**: onbeperkte items).
+  - Bekijk het huidige accountniveau (**Free**: limiet van 150 items versus **Manager** of **Professional**: onbeperkte items).
   - Ga naar de **tarievenpagina** (`/pricing` of klik op uw abonnementkaart) om de tabel voor niveauvergelijking te bekijken, een abonnement te selecteren en u aan te melden.
   - Upgrade via PayPal Subscriptions REST API (Manager: $4.99/maand; Professional: $9.99/maand) of de Atzmai Gateway voor lokale ILS-transacties.
-  - Kopieer **verwijzingslink**: Geeft +10 kledingkastcapaciteitsplaatsen voor elke vriend die zich registreert (tot maximaal 200 items).
+  - Kopieer **verwijzingslink**: Geeft +10 kledingkastcapaciteitsplaatsen voor elke vriend die zich registreert (tot maximaal 1.000 items).
 - **Planner & Push-herinneringen**:
   - Schakel ochtendoutfitvoorstellen in/uit.
   - Stel de frequentie in (*Elke dag*, *Om de dag*, *Twee keer per week*, *Op weekdagen*), tijd (bijv. *07:00*) en dresscode-stijleisen (*Casual*, *Formal*, *Athletic*, *Custom*).
@@ -154,5 +155,6 @@ Beheert instellingen op systeemniveau, abonnements- en AI-integraties:
 ---
 
 ## Beperkingen
-- De accountruimte voor het gratis niveau is beperkt tot 50 items, tenzij deze wordt uitgebreid via een verwijzingsbonus (+10 plaatsen per uitnodiging tot maximaal 200 items) of door te upgraden naar het niveau Manager of Professional.
-- De modus voor aangepaste API-sleutels vereist geldige sleutels met resterend quotum van de respectieve provider.
+- Gratis accounts hebben een basislimiet van 150 kledingstukken, uitbreidbaar via vriendenuitnodigingen (+10 slots per registratie tot maximaal 1.000 items) of een upgrade naar Manager of Professional.
+- Trend Scout modekanalen en Nano Banana fotoreparatie vereisen een persoonlijke Google Gemini API-sleutel.
+- De modus voor eigen API-sleutels schakelt naadloos over naar de ingebouwde Gemma-engine wanneer de externe quota zijn verbruikt.

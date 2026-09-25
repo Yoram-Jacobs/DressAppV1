@@ -1,34 +1,39 @@
-# Fehlerbehebung & Praktische Hilfe
+# Fehlerbehebung & hilfreiche Lösungen
 
-Schnelle und einfache Lösungen für häufige Fragen, Berechtigungen und Limits.
+Schnelle und einfache Antworten auf häufige Fragen, Berechtigungen, Kontolimits und KI-Schlüssel.
 
-## Überblick
-Hier finden Sie unkomplizierte Antworten zur Kamera, Verarbeitungsgeschwindigkeit, Schranklimits und Spracheinstellungen.
+## Übersicht
+Hier finden Sie schnelle Lösungen für Kamerazugriff, Bildverarbeitungszeiten, Kleiderschranklimits, Audioeinstellungen und KI-Hinweise für ein reibungsloses Styling-Erlebnis.
 
 ## Voraussetzungen
 - Eine aktive Internetverbindung.
-- Ein moderner Webbrowser (Google Chrome, Apple Safari) oder die DressApp Mobile-App.
+- Ein moderner Webbrowser (Google Chrome oder Apple Safari empfohlen) oder die DressApp Mobile App.
 
-## Schritt für Schritt
-1. **Kamera startet nicht**:
-   - Öffnen Sie Ihre Browser- oder Geräteeinstellungen, wählen Sie **DressApp** und setzen Sie die **Kamera**-Berechtigung auf "Zulassen". Seite neu laden.
-2. **Meldung "Maximale Kapazität erreicht"**:
-   - Kostenlose Konten speichern bis zu **150 Teile**.
-   - Laden Sie Freunde ein für **+10 Gratis-Plätze** (bis zu 1.000 Teile) oder wechseln Sie zu **Pro** für unbegrenzte Kapazität.
-3. **Spracheingabe funktioniert nicht**:
-   - Mikrofon-Berechtigung im Browser überprüfen.
-   - Prüfen Sie, ob Ihr Gerät nicht stummgeschaltet ist.
-4. **Bildverarbeitung dauert kurz**:
-   - Bei mehreren Kleidungsstücken auf einem Foto schneidet die KI jedes Teil einzeln frei. Sie können die App währenddessen normal weiternutzen!
-5. **Google Kalender verknüpfen**:
-   - Unter **Profil** &rarr; **Google Kalender** auf **Verbinden** tippen.
+## Schritt-für-Schritt-Anleitung
+1. **Kamera schaltet sich nicht ein**:
+   - Öffnen Sie Ihre Browser- oder Geräteeinstellungen, suchen Sie nach **DressApp** und stellen Sie sicher, dass der **Kamerazugriff** auf "Erlauben" steht. Laden Sie die Seite neu.
+2. **Meldung "Kleiderschrank-Kapazität erreicht"**:
+   - Kostenlose Konten speichern bis zu **150 Kleidungsstücke**.
+   - Sie können Freunde einladen und **+10 kostenlose Plätze** pro Registrierung erhalten (bis zu 1.000 Artikel), ungetragene Kleidung löschen oder auf **Pro upgraden** (4,99 $/Monat) für unbegrenzten Speicherplatz.
+3. **Spracheingabe oder Sprachwiedergabe reagiert nicht**:
+   - Prüfen Sie, ob der Zugriff auf das Mikrofon in Ihren Browsereinstellungen gestattet ist.
+   - Stellen Sie sicher, dass Ihr Lautsprecher nicht stummgeschaltet oder im "Nicht stören"-Modus ist.
+4. **Bilder brauchen Zeit zur Verarbeitung**:
+   - Fotos mit mehreren Kleidungsstücken benötigen einen kurzen Moment, während die KI Hintergründe entfernt, Schnittränder prüft und Mode-Tags extrahiert. Dies geschieht im Hintergrund.
+5. **Hinweis "Plattform-Stylist verwendet (Quota Fallback)"**:
+   - Wenn Sie einen persönlichen Google Gemini API-Schlüssel hinterlegt haben und dieser die Ratenbegrenzung (`429 Too Many Requests`) oder das Kontingent erreicht, fängt DressApp dies automatisch ab und beantwortet die Anfrage über unser lokales Gemma-4-E4B-Modell. Ihre Anfrage wird nie mit einem Fehler abbrechen! Sie können Ihr Kontingent im Google AI Studio prüfen oder weiter die integrierte KI nutzen.
+6. **Meldung "API-Schlüssel erforderlich (403)" bei Trend Scout oder Nano Banana**:
+   - Trend Scout und Nano Banana Bildreparaturen erfordern einen persönlichen Google Gemini API-Schlüssel. Sie erhalten einen kostenlosen Schlüssel im [Google AI Studio](https://aistudio.google.com/) und können ihn unter **Profil** (`/me`) &rarr; **KI-Konfiguration** eintragen.
+7. **Google Kalender verbinden**:
+   - Gehen Sie auf **Profil** &rarr; **Google Kalender** und tippen Sie auf **Verbinden**, damit der Stylist anstehende Termine berücksichtigen kann.
 
 ## Erwartete Ergebnisse
-Schnelle Problemlösung, damit Ihr Kleiderschrank reibungslos funktioniert.
+Schnelle Behebung typischer Fragen, damit Ihr digitaler Kleiderschrank einwandfrei funktioniert.
 
 ## Fehlerbehebung
-- **Problem besteht weiterhin?** Einmal ab- und wieder anmelden oder Browser-Cache leeren.
-- **RTL-Sprachen**: Hebräisch und Arabisch spiegeln sich automatisch von rechts nach links.
+- **Problem besteht weiterhin?** Melden Sie sich ab und wieder an oder leeren Sie Ihren Browser-Cache.
+- **RTL-Sprachanzeige**: Auf Hebräisch und Arabisch spiegelt sich die Benutzeroberfläche für eine natürliche Lesbarkeit automatisch nach rechts.
 
 ## Einschränkungen
-- Der Kleiderschrank-Import aus anderen Apps erfordert einen Computer-Browser.
+- Der Import von Konkurrenz-Apps erfordert einen Desktop-Browser und funktioniert nicht auf Mobiltelefonen.
+- Trend Scout und Nano Banana erfordern einen persönlichen Google Gemini API-Schlüssel.

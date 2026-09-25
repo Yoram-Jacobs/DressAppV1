@@ -66,7 +66,7 @@ quantization / memory / latency decisions assume this exact host.
 | Container | Source | Internal port | Role |
 | --- | --- | --- | --- |
 | `dressapp-backend` | [`backend/`](backend/) via [`deploy/Dockerfile.backend`](deploy/Dockerfile.backend) | (behind ingress) | FastAPI app — closet, marketplace, stylist, payments |
-| `dressapp-eyes` | [`inference-server/eyes/`](inference-server/eyes/) via [`inference-server/eyes/Dockerfile`](inference-server/eyes/Dockerfile) | `7860` | Self-hosted vision + audio inference server (Gemma-4 E2B + Eyes LoRA). **NOTE: Placed behind `profiles: ["disabled"]` on the Hetzner CPU server to conserve resources since the GGUF model is designed for edge deployment.** |
+| `dressapp-eyes` | [`inference-server/eyes/`](inference-server/eyes/) via [`inference-server/eyes/Dockerfile`](inference-server/eyes/Dockerfile) | `7860` | Live on-prem inference server (`llama-server` + FastAPI proxy) running fine-tuned `gemma-4-E4B-it-Q3_K_M.gguf` (~2.85 GB RAM). Platform default for Free Tier & background cron jobs, and transparent safety fallback on BYOK quota exhaustion (`429`/`RESOURCE_EXHAUSTED`). |
 | `dressapp-frontend` | [`apps/web/`](apps/web/) via [`deploy/Dockerfile.frontend`](deploy/Dockerfile.frontend) | `3000` | React 19 SPA served by Nginx |
 | `caddy` | [`deploy/Caddyfile`](deploy/Caddyfile) | `80`, `443` | Reverse proxy terminating TLS via Let's Encrypt |
 
@@ -94,6 +94,19 @@ on the VPS — never in the repo.
 > Google's `generativelanguage` endpoint using `GEMINI_API_KEY`. The
 > legacy `EMERGENT_LLM_KEY` has been deprecated and fully replaced by the
 > direct `GEMINI_API_KEY` check on the admin dashboard.
+
+### Multi-Tier AI Routing & Quota Fallback (Locked Production Rules)
+
+1. **Free Tier / Zero-BYOK Core**:
+   - Free Tier users and accounts with no configured custom API keys route by default to the on-prem `dressapp-eyes` container running fine-tuned `gemma-4-E4B-it-Q3_K_M.gguf` on port 7860.
+   - Provides full interactive AI Stylist advice, outfit pairing, and garment vision attribute analysis at zero variable cloud API cost.
+2. **Autonomous Background Cron Jobs**:
+   - Automated scheduled background tasks (e.g. daily morning styling proposals, wardrobe re-indexing, push notifications) execute via on-prem Gemma-4-E4B when running without an interactive user session or when the user has no custom keys.
+3. **Transparent Quota Fallback**:
+   - If a user's custom third-party key encounters quota exhaustion (`429`, `RESOURCE_EXHAUSTED`, `spending cap`, `deadline exceeded`), `FallbackBrain` (`backend/app/services/stylist_brain.py`) and `GarmentVisionService` catch the exception and immediately route the query to on-prem Gemma-4-E4B.
+   - The response includes `provider_fallback: "gemma"` and `fallback_from_quota: True`, displaying an informational banner in the UI (`stylist.fallbackQuotaBanner`) without interrupting the user or failing with a 500 error.
+4. **Strict Cost Protection Perimeter (Tier Gating)**:
+   - High-cost generative cloud endpoints (**Trend Scout** and **Nano Banana** photo reconstruction/inpainting) strictly require validated user-supplied API keys (HTTP 403 / clarify prompt for users without custom keys).
 
 > **🛑 Auth surface — `HF_TOKEN` / `EYES_HF_TOKEN` are NOT part of
 > DressApp.** Any reference to either in the live tree is a deprecated/forbidden

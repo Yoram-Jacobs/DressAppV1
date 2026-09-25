@@ -66,10 +66,10 @@ DressApp is an AI-powered fashion editor and digital wardrobe platform that turn
         │              │              │
         ▼              ▼              ▼
 ┌──────────────┐ ┌─────────────┐ ┌─────────────────────────────────────────┐
-│MongoDB Atlas │ │Inference    │ │External Cloud Services                  │
-│M10 Cluster   │ │Server (opt) │ ├─────────────────────────────────────────┤
-│(Users, Items,│ │Gemma-4 E2B  │ │• Google Gemini API (gemini-2.5-flash)   │
-│Listings,     │ │/ BiRefNet   │ │• Deepgram Speech API (STT/TTS)          │
+│MongoDB Atlas │ │dressapp-eyes│ │External Cloud Services (BYOK)           │
+│M10 Cluster   │ │Container    │ ├─────────────────────────────────────────┤
+│(Users, Items,│ │Gemma-4 E4B  │ │• Google Gemini API (BYOK / Nano Banana) │
+│Listings,     │ │llama-server │ │• Deepgram Speech API (STT/TTS)          │
 │Vector Embed) │ │(:7860)      │ │• OpenWeatherMap & Google Calendar APIs  │
 └──────────────┘ └─────────────┘ │• PayPal Subscriptions & Orders REST API │
                                  └─────────────────────────────────────────┘
@@ -127,13 +127,18 @@ When an image is ingested via camera, file upload, or external URL:
 1. **Analysis & Bounding Boxes**: The request is routed to `backend/app/services/clothing_parser.py`, which utilizes HuggingFace `SegFormer-b2-clothes` running locally on CPU. The parser segments multi-garment photos into distinct items (tops, bottoms, outerwear, shoes, accessories).
 2. **Background Matting**: Handled by `backend/app/services/background_matting.py` using `rembg` (U2-Net). Non-clothing background pixels are keyed out into a transparent PNG (`clean_image_url`).
 3. **Deep Module `GarmentVisuals`** (`backend/app/services/garment_visuals.py`): Enforces the Transparency Invariant across all operations. Ensures thumbnails and layered crops have zero bounding-box artifacts when composited onto canvases or 2D avatars.
-4. **Nano Banana Inpainting**: If the user requests corrections via the interactive chat prompt (*"remove the belt"*, *"complete the sleeve where the hand was"*), the image is sent to `gemini-3.1-flash-lite-image` via `gemini_image_service.py` to perform photorealistic inpainting.
+4. **Garment Attribute Analysis & Vision Routing**: Analyzes cropped garments via `GarmentVisionService`. Defaults to on-premises `dressapp-eyes` running fine-tuned `gemma-4-E4B-it-Q3_K_M.gguf`. For users with custom API keys, queries external vision models with transparent fallback to on-prem Gemma upon `429` / `RESOURCE_EXHAUSTED` quota limits.
+5. **Nano Banana Inpainting**: If the user requests corrections via the interactive chat prompt (*"remove the belt"*, *"complete the sleeve where the hand was"*), the image is sent to `gemini-3.1-flash-lite-image` via `gemini_image_service.py` to perform photorealistic inpainting. This high-cost generative feature strictly requires a user-supplied BYOK key.
 
 ### 4.2 Conversational AI Stylist & Speech Pipeline
 
 The stylist provides contextually-grounded outfit suggestions:
 - **`StylingContext`** (`backend/app/services/styling_context.py`): Synthesizes user preferences, body sizing, wardrobe inventory, localized weather conditions (via OpenWeatherMap), and Google Calendar events into an optimized prompt.
-- **LLM Reasoning**: Driven by direct Google AI Studio API (`GEMINI_API_KEY`) targeting `gemini-2.5-flash` or `gemini-2.5-pro` using the native `google-genai` SDK.
+- **Multi-Tier LLM Routing (`stylist_brain.py`)**:
+  - **Free Tier / Zero-BYOK**: Evaluated via `GemmaStylistBrain` running against the on-prem `dressapp-eyes` container (:7860). Delivers full conversational styling and outfit assembly without third-party API keys or external costs.
+  - **Custom BYOK Models**: Users with configured Google Gemini keys route to `GeminiStylistBrain` (`gemini-2.5-flash`, `gemini-2.5-pro`) wrapped in `FallbackBrain`.
+  - **Automatic Quota Fallback**: If a custom BYOK key triggers rate limits (`429`), `RESOURCE_EXHAUSTED`, or billing caps, `FallbackBrain` intercepts the exception and seamlessly falls back to on-prem Gemma-4-E4B, annotating `provider_fallback="gemma"` and `fallback_from_quota=True` so the frontend displays a transparent status banner without failing.
+  - **Autonomous Background Cron Jobs**: Daily wardrobe re-indexing and scheduled morning outfit proposals run via `GemmaStylistBrain`.
 - **Audio Routing**:
   - *Speech-to-Text (STT)*: Routes microphone audio between Deepgram Aura STT, direct Gemini audio transcription, and client-side browser Web Speech Recognition.
   - *Text-to-Speech (TTS)*: Generates spoken responses using native Gemini Audio voice profiles (`puck`, `aoede`, `charon`), falling back to Deepgram TTS, local Piper ONNX, or browser `speechSynthesis`.
@@ -155,6 +160,7 @@ The billing engine in `backend/app/services/pricing.py` and `backend/app/models/
 
 ### 4.5 Trends-Scout Autonomous Fashion Intelligence Pipeline
 
+- **Access Gating**: Strictly requires a user-supplied custom AI supplier API key (`user_has_custom_api_key(user)`). Zero-BYOK users receive HTTP 403 to prevent unmetered web crawling and cloud synthesis costs.
 - **Dual Gender Intelligence**: Curates 7 independent channels separately for Men's and Women's fashion ecosystems (`local`, `runway`, `street`, `sustainability`, `influencers`, `vintage`, `maintenance_repairs`).
 - **Discovery & Crawling Engine** (`backend/app/services/trend_scout.py`): Scheduled cron sweeps (monthly on the 1st at midnight UTC, daily at 07:00 UTC) scrape authoritative publications via `httpx` + `BeautifulSoup`, extracting OpenGraph metadata and inline anchors.
 - **Strict Heuristic & Quality Shield (`_verify_trend_card`)**: Validates HTTP 200 responses, rejects commercial checkout links (`/cart`, `/buy`, Shopify/WooCommerce), filters paywalls/login gates, identifies soft-404 strings across languages, and verifies high-resolution OpenGraph hero imagery.
@@ -169,27 +175,28 @@ The billing engine in `backend/app/services/pricing.py` and `backend/app/models/
 The production application is deployed on a Hetzner Cloud CPX32 VPS (4 AMD vCPUs, 8 GB RAM, Ubuntu 24.04 LTS) at `dressapp.co`:
 
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│                      Hetzner CPX32 Host                         │
-│                                                                 │
-│  ┌─────────────────┐   ┌──────────────────┐   ┌──────────────┐  │
-│  │ dressapp-caddy  │   │ dressapp-backend │   │dressapp-     │  │
-│  │ Ports 80, 443   │──▶│ Internal :8001   │   │frontend      │  │
-│  │ (Caddy 2 Alpine)│   │ (FastAPI + ML)   │   │Internal :3000│  │
-│  └────────┬────────┘   └────────┬─────────┘   └──────┬───────┘  │
-│           │                     │                    │          │
-│           └─────────────────────┴────────────────────┘          │
-│                       Bridge Network: "dress"                   │
-└─────────────────────────────────┬───────────────────────────────┘
-                                  │ TLS
-                                  ▼
-                    ┌───────────────────────────┐
-                    │ MongoDB Atlas M10 Cluster │
-                    │ (Hosted Cloud Database)   │
-                    └───────────────────────────┘
+┌────────────────────────────────────────────────────────────────────────────────────────┐
+│                                 Hetzner CPX32 Host                                     │
+│                                                                                        │
+│  ┌─────────────────┐   ┌──────────────────┐   ┌──────────────┐   ┌──────────────────┐  │
+│  │ dressapp-caddy  │   │ dressapp-backend │   │dressapp-     │   │ dressapp-eyes    │  │
+│  │ Ports 80, 443   │──▶│ Internal :8001   │──▶│frontend      │   │ Internal :7860   │  │
+│  │ (Caddy 2 Alpine)│   │ (FastAPI + ML)   │   │Internal :3000│   │ (Gemma-4 E4B)    │  │
+│  └────────┬────────┘   └────────┬─────────┘   └──────┬───────┘   └────────┬─────────┘  │
+│           │                     │                    │                    │            │
+│           └─────────────────────┴────────────────────┴────────────────────┘            │
+│                               Bridge Network: "dress"                                  │
+└───────────────────────────────────────────┬────────────────────────────────────────────┘
+                                            │ TLS
+                                            ▼
+                              ┌───────────────────────────┐
+                              │ MongoDB Atlas M10 Cluster │
+                              │ (Hosted Cloud Database)   │
+                              └───────────────────────────┘
 ```
 
 - **Reverse Proxy**: Caddy 2 terminates TLS with automatic Let's Encrypt certificates, proxying `/api/*` to `dressapp-backend:8001` and static requests to `dressapp-frontend:3000`.
 - **Backend Service**: Runs `backend/server.py` via Uvicorn. Model weights for SegFormer and U2-Net persist across container restarts in named Docker volumes (`model-cache`, `rembg-cache`).
-- **Frontend Service**: Static SPA bundle served by Nginx with client-side routing fallback (`try_files $uri /index.html`).
+- **Eyes Inference Service**: Dedicated `dressapp-eyes` container running `llama-server` on port 7860 with fine-tuned `gemma-4-E4B-it-Q3_K_M.gguf` + `mmproj-BF16.gguf` (~2.85 GB RAM), authenticated via `EYES_API_TOKEN`.
+- **Frontend Service**: Static React 19 SPA bundle served by Nginx with client-side routing fallback (`try_files $uri /index.html`).
 - **Database**: External MongoDB Atlas M10 cluster (10 GB storage, automated daily snapshots, Atlas Vector Search).

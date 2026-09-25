@@ -111,13 +111,14 @@ Se você fez login com o Google antes de o DressApp solicitar acesso aos detalhe
 Gerencia configurações no nível do sistema, assinaturas e integrações de IA:
 
 - **Configuração de IA**:
-  - *Modo Padrão*: Usa endpoints do Gemini Flash 2.x gerenciados pelo sistema.
-  - *Modo de Chaves de API Personalizadas*: Conecte chaves de API personalizadas do Google Gemini, Anthropic, OpenAI ou DeepSeek através de um modal de configuração guiado.
+  - *Modo Padrão (Motor nativo da plataforma)*: Utiliza o modelo **Gemma-4-E4B** auto-hospedado e ajustado do DressApp. Totalmente gratuito, não requer configuração de chaves de API e oferece 10 créditos diários de estilo.
+  - *Modo Chave de API Própria (BYOK)*: Conecte sua chave da Google Gemini API (ou outros provedores) para liberar recursos avançados como o radar Trend Scout e a restauração de fotos Nano Banana.
+  - *Proteção com Fallback Automático por Cota (Quota Fallback)*: Se sua chave de API esgotar a cota (`429` / `RESOURCE_EXHAUSTED`), o DressApp redireciona automaticamente o pedido para o motor interno Gemma com um banner explicativo, mantendo a conversa ativa sem erros.
 - **Assinatura & Limites do Guarda-Roupa**:
-  - Visualize o nível de conta atual (**Free**: limite de 50 itens versus **Manager** ou **Professional**: itens ilimitados).
+  - Visualize o nível de conta atual (**Free**: limite de 150 peças versus **Manager** ou **Professional**: itens ilimitados).
   - Acesse a **página de preços** (`/pricing` ou clique no cartão do seu plano) para ver a tabela de comparação de níveis, selecionar um plano e se inscrever.
   - Atualize através da API REST de PayPal Subscriptions (Manager: $4.99/mês; Professional: $9.99/mês) ou gateway Atzmai para transações locais em ILS.
-  - Copiar **link de indicação**: Concede +10 vagas de capacidade de guarda-roupa para cada amigo que se registrar (até 200 itens no máximo).
+  - Copiar **link de indicação**: Concede +10 vagas de capacidade de guarda-roupa para cada amigo que se registrar (até 1.000 peças no máximo).
 - **Planejador & Recordações Push (Push-Erinnerungen)**:
   - Ative/desative notificações diárias de propostas de roupas pela manhã.
   - Defina a frequência (*Todos os dias*, *Dia sim, dia não*, *Duas vezes por semana*, *Nos dias úteis*), horário (por exemplo, *07:00*) e demandas de estilo de código de vestimenta (*Casual*, *Formal*, *Athletic*, *Custom*).
@@ -154,5 +155,6 @@ Gerencia configurações no nível do sistema, assinaturas e integrações de IA
 ---
 
 ## Limitações
-- O espaço da conta do nível gratuito é limitado a 50 itens, a menos que seja expandido via bônus de indicação (+10 vagas por convite até o limite máximo de 200 itens) ou atualizando para o nível Manager ou Professional.
-- O modo de chave de API personalizada requer chaves válidas com cota restante do respectivo provedor.
+- O espaço na conta gratuita é limitado a 150 peças, expansível através de convites (+10 vagas por amigo até 1.000 peças) ou assinatura dos planos Manager ou Professional.
+- Os canais do Trend Scout e o reparo generativo de fotos Nano Banana requerem chave Google Gemini API fornecida pelo usuário.
+- O modo de chave própria alterna de maneira transparente para o motor nativo Gemma se a cota do provedor externo for excedida.

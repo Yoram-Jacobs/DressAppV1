@@ -1385,7 +1385,11 @@
         "colorful_summer": "カラフルな夏",
         "casual_chic": "カジュアルシック"
       }
-    }
+    },
+    "fallbackQuotaBanner": "カスタムAPIキーの利用上限（クォータ）を超過しました。DressAppのオンプレミスAI（Gemma-4-E4B）を使用してスムーズに応答を生成しました。",
+    "fallbackQuotaExhausted": "(代替。クォータ超過)",
+    "fallbackLabel": "(代替)",
+    "fallbackDescriptionPattern": "お好みの{{style}}スタイルと現地の天気に合わせたバランスの取れたデイリーコーディネート。"
   },
   "outfitCompletion": {
     "cta": "コーデを完成",

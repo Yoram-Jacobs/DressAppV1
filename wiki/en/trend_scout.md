@@ -13,6 +13,7 @@ Organized into **7 curated channels**, Trend Scout personalizes style stories to
 
 ## 2. Prerequisites
 To get the most out of Trend Scout, ensure you have:
+- **Custom AI Supplier API Key (BYOK)**: Trend Scout requires a personal AI supplier API key (such as Google Gemini, obtainable for free via [Google AI Studio](https://aistudio.google.com/)) configured under **Profile > AI Configuration** to power live article crawling and synthesis.
 - **An Active Plan**: Trend Scout is available on the **Manager** ($4.99/mo) and **Professional** ($9.99/mo) plans. Free accounts can view a preview and upgrade at any time.
 - **Digitized Wardrobe Items**: At least 5 to 10 garments in your digital closet so the AI Stylist can provide accurate "Style with My Closet" outfit proposals.
 - **Location Access**: Allows Trend Scout to anchor local news, regional boutique highlights, and domestic fashion events to your city and country.
@@ -68,6 +69,10 @@ Filter stories by selecting the category tabs along the top of your feed:
 
 ## 5. Troubleshooting
 
+### My feed says "Trend Scout requires a custom API key (403)"
+- **Cause**: You have not yet added a personal Google Gemini API key to your account.
+- **Solution**: Open **Profile > AI Configuration**, switch to Custom Key Mode, and enter your free key from [Google AI Studio](https://aistudio.google.com/).
+
 ### My feed says "Trend Scout is Premium"
 - **Cause**: Your account is currently on the Free tier.
 - **Solution**: Tap **Upgrade Plan** to subscribe to the Manager plan ($4.99/mo) or Professional plan ($9.99/mo).
@@ -87,6 +92,7 @@ Filter stories by selecting the category tabs along the top of your feed:
 ---
 
 ## 6. Limitations
+- **Custom API Key Required**: Trend Scout is available exclusively for users with their own custom AI supplier API key (Google Gemini).
 - **Editorial Focus**: Trend Scout is designed for pure fashion inspiration and education. It deliberately filters out aggressive shopping advertisements, affiliate pop-ups, and commercial sales carts.
 - **Closet Matching**: The AI can only style trends using items you have digitized. The more clothes you scan into your closet, the more creative your trend outfit proposals will be!
 - **Offline Mode**: While previously viewed cards and guides are cached, live crawling and reading external source articles require an active internet connection.

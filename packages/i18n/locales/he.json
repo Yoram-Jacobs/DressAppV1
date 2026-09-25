@@ -1283,9 +1283,9 @@
     "keyRequiredTitle": "נדרש מפתח API",
     "keyRequiredDesc": "כדי להשתמש בסטייליסט ה-AI, אנא הגדר את מפתח Gemini API שלך בדף ההגדרות. Google AI Studio מציעה מכסה חינמית לשימוש אישי.",
     "goToSettings": "הגדר בהגדרות",
-    "fallbackQuotaExhausted": "(חלופי. המכסה אזלה)",
+    "fallbackQuotaExhausted": "(חלופי. המכסה מוצתה)",
     "fallbackLabel": "(חלופי)",
-    "fallbackDescriptionPattern": "לוק יומי מאוזן המתאים לסגנון ה-{{style}} המועדף עליך ולמזג האוויר המקומי.",
+    "fallbackDescriptionPattern": "תלבושת יומית מאוזנת המותאמת לסגנון ה-{{style}} המועדף עליך ולמזג האוויר המקומי.",
     "todayEvents": "לוז יומי",
     "calendarSyncOn": "מסנכרן אירועי יומן",
     "calendarSyncOff": "הפעל כדי לבדוק אירועים",
@@ -1401,7 +1401,8 @@
         "colorful_summer": "קיץ צבעוני",
         "casual_chic": "קז'ואל שיק"
       }
-    }
+    },
+    "fallbackQuotaBanner": "מכסת מפתח ה-API האישי מוצתה. הבקשה מולאה בצורה חלקה באמצעות מודל ה-AI המובנה של DressApp ‏(Gemma-4-E4B)."
   },
   "outfitCompletion": {
     "cta": "השלם את הלוק",

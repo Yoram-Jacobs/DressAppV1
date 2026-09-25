@@ -1,92 +1,76 @@
-# Éclaireur de Tendances et Inspiration Personnelle (Trend Scout)
+# Trend Scout & Inspiration Stylistique
 
-Découvrez les tendances mondiales quotidiennes, le radar de style local et recréez les looks phares instantanément avec les vêtements de votre propre garde-robe.
+Découvrez quotidiennement les tendances mondiales de la mode, le radar de style local et recréez les looks phares avec vos propres vêtements.
 
 ---
 
 ## 1. Vue d'ensemble
-Trend Scout est votre radar quotidien d'intelligence mode dans DressApp. Chaque matin, il rassemble les derniers rapports de mode, les comptes-rendus de défilés, les innovations textiles durables et les tendances streetwear des publications les plus prestigieuses au monde.
+Trend Scout est votre radar quotidien de veille mode dans DressApp. Chaque matin, il compile les défilés haute couture, les innovations textiles durables et le streetwear issus des plus grands magazines internationaux.
 
-Organisé en **7 canaux thématiques**, Trend Scout personnalise les actualités en fonction de votre profil et de votre localisation. Grâce à la fonctionnalité signature en 1 clic **"Créer avec ma Garde-robe"**, notre Styliste IA analyse les caractéristiques esthétiques de chaque tendance (palette de couleurs, silhouette, textures) et met en avant les vêtements correspondants déjà présents dans votre dressing numérique—vous permettant de porter les tendances du moment sans rien acheter de nouveau !
+Réparti en **7 canaux thématiques**, Trend Scout personnalise le contenu selon votre profil et votre zone géographique. Grâce à la fonction en 1 clic **« Créer avec mon dressing » (Style with My Closet)**, le styliste IA analyse l'esthétique d'une tendance et sélectionne des pièces correspondantes déjà présentes dans votre garde-robe !
 
 ---
 
 ## 2. Prérequis
-Pour profiter pleinement de Trend Scout, assurez-vous de disposer de :
-- **Un abonnement actif** : Disponible avec les forfaits **Manager** (4,99 $/mois) et **Professional** (9,99 $/mois). Les comptes gratuits peuvent consulter un aperçu et mettre à niveau leur formule à tout moment.
-- **Des vêtements numérisés** : Au moins 5 à 10 vêtements dans votre dressing numérique pour que le Styliste IA vous propose des tenues pertinentes.
-- **Accès à la géolocalisation** : Permet à Trend Scout d'adapter les actualités régionales, les créateurs locaux et les événements mode à votre ville et votre pays.
-- **Paramètres du profil** : Renseigner vos préférences esthétiques et votre style de vie garantit un fil d'actualités aligné sur vos goûts.
+- **Clé API d'IA personnelle (BYOK)** : Trend Scout nécessite une clé Google Gemini API personnelle (disponible gratuitement sur [Google AI Studio](https://aistudio.google.com/)) configurée sous **Profil > Configuration de l'IA**.
+- **Abonnement actif** : Disponible pour les forfaits **Manager** (4,99 $/mois) et **Professional** (9,99 $/mois). Un aperçu est disponible sur les comptes gratuits.
+- **Vêtements numérisés** : Au moins 5 à 10 articles dans votre dressing.
+- **Autorisation de localisation** : Pour afficher les actualités et événements de votre ville.
+- **Profil démographique** : Spécifiez votre style et préférences dans vos paramètres.
 
 ---
 
-## 3. Instructions Étape par Étape
+## 3. Instructions étape par étape
 
 ### Étape 1 : Ouvrir Trend Scout
-1. Depuis la navigation principale, cliquez ou appuyez sur **Trend Scout** (icône de tendance 📈 dans le menu ou la barre Styliste).
-2. La page s'ouvre sur votre flux Daily Edit personnalisé ancré dans votre pays.
+1. Dans le menu principal, cliquez sur **Trend Scout** (icône de tendance 📈).
+2. Votre flux personnalisé s'affiche, adapté à votre pays.
 
-### Étape 2 : Parcourir les 7 Canaux Thématiques
-Filtrez les articles à l'aide des onglets situés en haut du flux :
-- 📍 **Actualités Locales (Local News)** : Événements régionaux, lancements de créateurs locaux et boutiques de votre région.
-- 👑 **Défilés (Runway)** : Analyses Haute Couture, défilés saisonniers et tendances des grands créateurs.
-- 👟 **Street Style** : Mode urbaine du quotidien, culture sneakers et looks décontractés modernes.
-- 🌿 **Éco-responsabilité (Sustainability)** : Mode circulaire, textiles écologiques, zéro déchet et entretien responsable.
-- ✨ **Influenceurs & Icônes (Influencers & Icons)** : Tendances virales des réseaux, tapis rouges et looks de créateurs de contenu.
-- ♻️ **Vintage & Archives (Vintage / Archival)** : Friperies, denim rétro et pièces d'archives intemporelles.
-- 🔧 **Entretien & Réparations (Care & Repairs)** : Guides pratiques pour prolonger la vie de vos vêtements et restaurer vos souliers.
+### Étape 2 : Parcourir les 7 canaux
+Filtrez les actualités via les onglets :
+- 📍 **Actualités locales** : Événements créateurs et boutiques régionales.
+- 👑 **Défilés (Runway)** : Fashion weeks et haute couture.
+- 👟 **Street Style** : Tendencias urbaines et sneakers.
+- 🌿 **Éco-responsabilité** : Textiles durables et mode circulaire.
+- ✨ **Influenceurs & Icônes** : Looks du tapis rouge et créateurs.
+- ♻️ **Vintage & Archives** : Seconde main et pièces patrimoniales.
+- 🔧 **Soin & Réparations** : Guides d'entretien et rénovation textile.
 
-### Étape 3 : Basculer entre Mode Femme et Mode Homme
-- Alternez facilement entre **Mode Femme** et **Mode Homme** à tout moment grâce au sélecteur en en-tête.
-- Le flux filtre dynamiquement les articles et recalcule les propositions selon votre choix.
+### Étape 3 : Alterner mode femme et homme
+- Basculez à tout moment entre **Mode Femme** et **Mode Homme** via le sélecteur d'en-tête.
 
-### Étape 4 : En 1 Clic : "Créer avec ma Garde-robe"
-1. Lorsqu'une tendance vous séduit, observez sa carte.
-2. Cliquez sur le bouton **"Créer avec ma Garde-robe"**.
-3. Le Styliste IA s'ouvre instantanément avec les paramètres de la tendance et sélectionne dans votre dressing les pièces idéales.
-4. Prévisualisez la tenue sur votre avatar 2D et enregistrez-la dans votre Journal de Style !
+### Étape 4 : « Créer avec mon dressing » en 1 clic
+1. Sur une carte de tendance, cliquez sur **Créer avec mon dressing**.
+2. Le styliste IA s'ouvre et propose des vêtements de votre dressing qui imitent le look.
+3. Visualisez la tenue sur votre mannequin et enregistrez-la dans votre journal.
 
-### Étape 5 : Personnalisation et Réseaux Sociaux (⚙️ Paramètres)
-1. Cliquez sur l'icône des **Paramètres (engrenage ⚙️)** dans l'en-tête de Trend Scout.
-2. **Esthétiques de style** : Choisissez parmi 10 étiquettes (*Quiet Luxury*, *Vintage*, *Minimalist*, *Streetwear*, *Old Money*, *Boho & Casual*, *Cyberpunk*, *Y2K*, *Classic Business*, *Athleisure*) ou ajoutez votre propre style.
-3. **Plateformes connectées** : Liez vos comptes Instagram, Pinterest, TikTok, Facebook, Threads ou X.
-4. **Profil du dressing** : Consultez l'analyse automatique des couleurs et des coupes de votre garde-robe.
-5. Cliquez sur **Enregistrer et actualiser**.
+### Étape 5 : Personnaliser vos préférences (Paramètres ⚙️)
+1. Cliquez sur l'**engrenage ⚙️** dans l'en-tête.
+2. Choisissez vos styles favoris (*Quiet Luxury*, *Minimaliste*, etc.) et cliquez sur **Enregistrer & Actualiser**.
 
-### Étape 6 : Lire les Articles Complets et Actualisation en Direct
-- Appuyez sur **"Lire sur [Publication]"** pour consulter l'article d'origine sur Vogue, GQ, Elle ou Hypebeast.
-- Besoin des toutes dernières actualités ? Cliquez sur le bouton **Actualiser (🔄)** pour lancer une recherche en direct.
+### Étape 6 : Lire l'article complet
+- Cliquez sur **« Lire sur [Magazine] »** pour consulter l'article d'origine sur Vogue, GQ ou Elle.
 
 ---
 
-## 4. Résultats Attendus
-- Un fil éditorial digne d'un magazine avec des visuels haute définition, des badges thématiques et des dates de publication.
-- Des cartes de tendances en parfaite harmonie avec vos goûts et votre région.
-- Des propositions immédiates pour porter les tendances avec vos propres vêtements.
+## 4. Résultats attendus
+- Un flux éditorial digne d'un magazine de mode avec des photos haute définition.
+- Des suggestions instantanées pour porter les tendances avec vos vêtements existants.
 
 ---
 
 ## 5. Dépannage
 
-### Message : "Trend Scout est réservé aux membres Premium"
-- **Cause** : Votre compte utilise actuellement l'offre gratuite.
-- **Solution** : Appuyez sur **Changer de forfait** pour souscrire au plan Manager (4,99 $/mois) ou Professional (9,99 $/mois).
+### Message « Trend Scout nécessite une clé API personnalisée (403) »
+- **Cause** : Aucune clé Google Gemini API n'a été ajoutée à votre profil.
+- **Solution** : Rendez-vous dans **Profil > Configuration de l'IA**, passez en mode Clé Personnalisée et saisissez votre clé obtenue sur [Google AI Studio](https://aistudio.google.com/).
 
-### Les actualités locales ne correspondent pas à mon pays
-- **Cause** : La géolocalisation est désactivée ou le pays n'est pas renseigné dans votre profil.
-- **Solution** : Vérifiez les autorisations de localisation ou indiquez votre pays dans **Profil > Paramètres > Géolocalisation**.
-
-### Les articles ne correspondent pas à mon style ou mon genre
-- **Cause** : Le bouton est positionné sur le genre opposé ou vos étiquettes de style sont vides.
-- **Solution** : Changez le sélecteur Femme/Homme en haut ou configurez vos préférences dans **Paramètres ⚙️**.
-
-### Les cartes ne s'actualisent pas
-- **Cause** : Problème de connexion ou données en cache.
-- **Solution** : Cliquez sur **Actualiser (🔄)** ou glissez vers le bas sur mobile.
+### Message « Trend Scout est une fonction Premium »
+- **Solution** : Cliquez sur **Mettre à niveau** pour souscrire au forfait Manager ou Professional.
 
 ---
 
 ## 6. Limites
-- **Ligne Éditoriale** : Dédié à l'inspiration et à la culture mode, Trend Scout filtre rigoureusement les publicités d'achat agressives.
-- **Compatibilité Garde-robe** : Le Styliste IA ne peut composer qu'avec les pièces déjà numérisées dans votre dressing.
-- **Mode Hors-ligne** : Les cartes déjà consultées restent accessibles, mais la mise à jour en direct requiert une connexion internet.
+- **Clé API obligatoire** : Réservé aux utilisateurs disposant de leur propre clé Google Gemini API.
+- **Orientation éditoriale** : Aucun bandeau publicitaire ni lien d'affiliation intempestif.
+- **Assortiment au dressing** : Les suggestions dépendent uniquement des pièces numérisées dans votre compte.

@@ -1,42 +1,43 @@
-# Kleding Digitaliseren en Toevoegen
+# Kleding toevoegen & digitaliseren
 
-Digitaliseer uw fysieke garderobe in enkele seconden met behulp van multimodale AI-scanning, slimme achtergrondverwijdering en automatische beeldreconstructie.
+Digitaliseer uw fysieke kledingkast in enkele seconden met multimodale AI-scans, slimme achtergrondverwijdering en automatische beeldvoltooiing.
 
 ## Overzicht
-Voeg kleding toe via live camera-opnames, meervoudige galerij-uploads, Digital Product Passport (DPP) QR-tags of digitale bonnen (factuur-OCR). De ingebouwde AI verwijdert automatisch achtergronden, tagt modekenmerken, beoordeelt de volledigheid van de uitsnede en reconstrueert bedekte of afgesneden kledingstukken.
+Voeg kledingstukken toe via live camerafoto's, meervoudige uploads vanuit uw galerij, Digital Product Passport (DPP) QR-tags of digitale aankoopbewijzen (factuur-OCR). De ingebouwde on-premises AI verwijdert achtergronden automatisch, labelt meer dan 20 modekenmerken en bereidt schone studio-uitsneden voor zonder dat u een API-sleutel nodig heeft.
 
 ## Vereisten
-- Duidelijke, goed verlichte foto's van kledingstukken (spiegelselfies, foto's ten voeten uit of flat-lays).
-- Cameratoegang voor het scannen van fysieke items en QR-codes.
-- Digitale bonnen of factuurscreenshots (PDF / PNG / JPEG) voor online aankopen.
+- Duidelijke, goed belichte foto's van kledingstukken (spiegelselfies, full-body foto's of flat lays).
+- Cameratoegang voor het scannen van items en QR-codes.
+- Digitale bonnen of factuurscreenshots (PDF / PNG / JPEG) van e-commerce aankopen.
+- *(Optioneel)* Een persoonlijke Google Gemini API-sleutel als u gebruik wilt maken van Nano Banana's generatieve fotoreconstructie.
 
-## Stap voor Stap
+## Stapsgewijze instructies
 
-1. **Interactieve Upload & Opname**:
-   - Tik op **Item Toevoegen** &rarr; kies **Foto Maken** of upload een of meerdere outfitfoto's vanaf uw apparaat.
-   - De ingebouwde duplicaatdetectie controleert direct of u hetzelfde kledingstuk al eerder hebt geüpload.
-2. **AI-segmentatie & Detectie van Meerdere Items**:
-   - Het beeldmodel isoleert afzonderlijke kledingstukken (jassen, tops, rokken, broeken, schoenen, accessoires) in één enkele scan.
-3. **AI-kwaliteitscontroleur & Automatisch Beeldherstel**:
-   - Gemini's visuele kwaliteitscontroleur inspecteert elk uitgesneden item:
-     - **Compleet**: Intacte, onbelemmerde kledingstukken worden direct vrijgemaakt.
-     - **Beeldaanvulling**: Als een item ontbrekende zijcontouren, bedekkingen (door tassen/armen) of afgesneden zomen/kragen heeft, voert de AI automatisch outpainting uit en vult de ontbrekende stof aan.
-     - **Volledige Studio-reconstructie**: Zwaar afgesneden items (zoals schoenen waarvan alleen de neus zichtbaar is) worden volledig opnieuw gegenereerd tot studiowaardige catalogusfoto's.
-4. **Automatische Metadata-tagging**:
-   - De AI extraheert meer dan 20 modekenmerken (kleuren, stofsamenstelling, subcategorie, dresscode, merk en staat).
-5. **Digitale Bonnen & DPP-tags**:
-   - Schakel over naar het tabblad **Digitale Import** om orderbevestigingsmails of facturen te analyseren en aankoopprijzen en geverifieerde maten vast te leggen.
-   - Tik op **Scan QR (DPP)** op het label om toeleveringsketengegevens en onderhoudsinstructies van het Europees Digitaal Productpaspoort te importeren.
-6. **Opslaan in Kledingkast**:
-   - Tik op **Opslaan**. Kledingstukken verschijnen direct in uw kledingkast-grid, terwijl generatieve beeldaanvullingen naadloos op de achtergrond worden afgerond.
+1. **Interactief uploaden & vastleggen**:
+   - Tik op **Item toevoegen** &rarr; kies **Foto maken** of upload één of meerdere foto's vanaf uw apparaat.
+   - De ingebouwde duplicaatdetectie controleert direct of u hetzelfde kledingstuk al eerder heeft toegevoegd.
+2. **AI-segmentatie & Meervoudige detectie**:
+   - Het visuele model isoleert afzonderlijke kledingstukken (jassen, tops, rokken, broeken, schoenen, accessoires) in één enkele scan.
+3. **AI-uitsnijding & Schone studiofoto's**:
+   - De ingebouwde beeldverwerking wist automatisch achtergronden en levert scherpe, transparante PNG-afbeeldingen voor alle accounts.
+4. **Automatische kenmerk-tagging**:
+   - De lokale AI herkent meer dan 20 modeparameters (kleuren, stofsamenstelling, subcategorie, dresscode, merk en conditie).
+5. **Geavanceerde generatieve fotoreparatie (Nano Banana)**:
+   - Voor gebruikers met een eigen Google Gemini API-sleutel analyseert Nano Banana afgesneden of overlappende delen (tassen, handen) en vult ontbrekende kleding automatisch aan tot een complete studiofoto.
+6. **Digitale aankoopbewijzen & DPP-tags**:
+   - Schakel over naar **Digitale import** om facturen te verwerken en aankoopprijzen en maten vast te leggen.
+   - Tik op **Scan QR (DPP)** op het waslabel om gegevens over toeleveringsketens en wasvoorschriften van het Europees Digitaal Productpaspoort in te laden.
+7. **Opslaan in uw kledingkast**:
+   - Tik op **Opslaan**. Uw kledingstukken verschijnen direct in uw kledingkastoverzicht.
 
-## Verwachte Resultaten
-Elk kledingstuk verschijnt in uw digitale garderobe als een gecentreerde, schone foto van studiokwaliteit met volledig geïndexeerde zoekkenmerken en uitgebreide taxonomietags.
+## Verwachte resultaten
+Elk kledingstuk wordt opgeslagen als een gecentreerde, professionele studiofoto met volledige zoekkenmerken en rijke categorietags.
 
 ## Probleemoplossing
-- **Afgesneden / Onvolledige Kledingstukken**: De AI detecteert afgesneden randen automatisch en reconstrueert ze; u kunt ook op **Foto Repareren** tikken op de detailkaart van een item om handmatig een studio-hergeneratie te starten.
-- **Verlichting & Contrast**: Fotografeer donkere kledingstukken tegen een contrasterende lichte achtergrond voor het beste resultaat.
-- **Fouten in Bon-OCR**: Gebruik het interactieve selectiekader op de factuurafbeelding om handmatig individuele productregels aan te wijzen.
+- **Afgesneden kleding op de foto**: Plaats het kledingstuk gecentreerd tegen een contrasterende achtergrond. Met een ingestelde API-sleutel kan Nano Banana ontbrekende kragen of zomen automatisch reconstrueren.
+- **Belichting & Contrast**: Zorg bij donkere kledingstukken voor een lichte, contrasterende achtergrond.
+- **Onjuiste factuurherkenning**: Gebruik de interactieve kaderselectie op de factuurafbeelding om handmatig de juiste productregels aan te wijzen.
 
 ## Beperkingen
-- Batch-uploads in hoge resolutie (>5 items) worden verwerkt via asynchrone achtergrondwachtrijen om responsieve prestaties zonder browser-time-outs te garanderen.
+- Grote batch-uploads (>5 items) worden verwerkt via een asynchrone achtergrondwachtrij om vertragingen in uw browser te voorkomen.
+- Voor de fotorealistische fotoreparatie met Nano Banana is een persoonlijke Google Gemini API-sleutel vereist.

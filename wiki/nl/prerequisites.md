@@ -1,27 +1,31 @@
-# Vereisten en installatiehandleiding
+# Vereisten en configuratiehandleiding
 
-Voordat u in DressApp duikt, moet u ervoor zorgen dat uw systeem is ingesteld om alle AI-functies en -services te gebruiken.
+Zorg ervoor dat uw systeem correct is ingesteld voordat u DressApp gaat gebruiken, zodat u optimaal profiteert van alle styling- en AI-functies.
 
 ## Overzicht
-Dit document behandelt de hardwarevereisten, browsermachtigingen en API-sleutelinstellingen die nodig zijn om de app soepel te laten werken.
+Dit document beschrijft de hardwarevereisten, browsertoestemmingen en AI-configuratieopties die nodig zijn om DressApp soepel te laten werken. DressApp is ontworpen om direct uit de doos te werken zonder externe API-sleutels, met optionele integraties voor geavanceerde gebruikers.
 
 ## Vereisten
-- Een moderne smartphone, tablet of pc.
-- Microfoonrechten (voor verzoeken om stemstijlen).
-- Locatietoestemming (voor lokale weersbewuste styling).
-- Een Gemini API-sleutel. Krijg deze gratis op [Google AI Studio](https://aistudio.google.com/).
+- Een moderne smartphone, tablet of pc (iOS, Android, macOS, Windows, Linux).
+- Cameratoestemming ingeschakeld (voor het fotograferen van kleding en scannen van DPP-tags).
+- Microfoontoestemming ingeschakeld (voor handsfree gesproken stylingverzoeken).
+- Locatietoestemming (voor weersafhankelijke outfitvoorstellen).
+- *(Optioneel)* Een gratis Google Gemini API-sleutel als u geavanceerde functies wilt gebruiken zoals Trend Scout-nieuwsfeeds, Nano Banana fotoreparatie of uw eigen cloudquota. Gratis accounts hebben GEEN API-sleutel nodig om DressApp te gebruiken.
 
-## Stap voor stap
-1. **Machtigingen toestaan**: accepteer cameraprompts bij het uploaden van items, en locatieprompts voor weerupdates.
-2. **Gemini API-installatie**: Ga naar uw profiel en voer een gratis Gemini API-sleutel van Google AI Studio in als u platformlimieten wilt omzeilen.
-3. **Kalender koppelen**: schakel Google Agenda-synchronisatie in voor een evenementbewuste outfitplanning.
+## Stapsgewijze instructies
+1. **Toestemmingen verlenen**: Accepteer de browser- of app-meldingen voor camera, microfoon en locatie voor live weerupdates.
+2. **Direct beginnen met stylen (Gratis niveau)**: Uw account is direct uitgerust met DressApp's ingebouwde on-premise AI (fijnafgestemd Gemma-4-E4B) en 10 gratis dagelijkse stylingcredits zonder dat configuratie nodig is.
+3. **Optionele eigen API-sleutel (BYOK)**: Om Trend Scout of Nano Banana fotobewerking te ontgrendelen, gaat u naar **Profiel** (/me) &rarr; **AI-configuratie** en vult u uw gratis sleutel van [Google AI Studio](https://aistudio.google.com/) in.
+4. **Google Agenda koppelen**: Koppel uw Google Agenda in uw profiel zodat de stylist rekening houdt met uw vergaderingen en geplande activiteiten.
 
 ## Verwachte resultaten
-U profiteert van naadloze stemherkenning, geautomatiseerde lokale weerwaarschuwingen en gelokaliseerde agendasynchronisatie.
+U geniet van een naadloze kledingdigitalisering, automatische transparante achtergrondverwijdering, gesproken stylingadvies, lokale weerberichten en kalendersynchrone outfitvoorstellen.
 
-## Problemen oplossen
-- **Geen locatieweer**: controleer of locatieservices zijn uitgeschakeld in uw besturingssysteem of browserinstellingen.
-- **Microfoonproblemen**: zorg ervoor dat andere actieve apps de microfooningang niet vergrendelen.
+## Probleemoplossing
+- **Geen lokaal weer beschikbaar**: Controleer of locatieservices zijn ingeschakeld in uw browser- of systeeminstellingen.
+- **Microfoonproblemen**: Zorg ervoor dat DressApp toegang heeft tot de microfoon en dat geen andere app de ingang blokkeert.
+- **Heb ik een API-sleutel nodig?**: Nee! Gratis gebruikers kunnen kleding digitaliseren, hun kledingkast beheren en met de stylist praten zonder externe sleutels in te voeren.
 
 ## Beperkingen
-- Lokale stemtranscriptie werkt het beste in Chromium-gebaseerde browsers.
+- Lokale spraakherkenning werkt het best in Chromium-browsers (Chrome, Edge) en Safari.
+- Trend Scout-feeds en Nano Banana fotoreparatie vereisen een persoonlijke Google Gemini API-sleutel.

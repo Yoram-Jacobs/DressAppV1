@@ -1385,7 +1385,11 @@
         "colorful_summer": "صيف مفعم بالألوان",
         "casual_chic": "كاجوال أنيق"
       }
-    }
+    },
+    "fallbackQuotaBanner": "تم تجاوز حصة مفتاح API المخصص. تمت معالجة الطلب بسلاسة باستخدام الذكاء الاصطناعي المدمج في DressApp ‏(Gemma-4-E4B).",
+    "fallbackQuotaExhausted": "(احتياطي. نفدت الحصة)",
+    "fallbackLabel": "(احتياطي)",
+    "fallbackDescriptionPattern": "إطلالة يومية متوازنة تناسب أسلوبك المفضل {{style}} وحالة الطقس المحلية."
   },
   "outfitCompletion": {
     "cta": "أكمل الإطلالة",

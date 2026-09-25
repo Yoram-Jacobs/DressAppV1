@@ -1385,7 +1385,11 @@
         "colorful_summer": "Яркое лето",
         "casual_chic": "Кэжуал шик"
       }
-    }
+    },
+    "fallbackQuotaBanner": "Квота вашего пользовательского API-ключа исчерпана. Запрос успешно выполнен с помощью встроенного локального ИИ DressApp (Gemma-4-E4B).",
+    "fallbackQuotaExhausted": "(Резерв. Квота исчерпана)",
+    "fallbackLabel": "(Резерв)",
+    "fallbackDescriptionPattern": "Сбалансированный повседневный образ, соответствующий вашему стилю {{style}} и погоде."
   },
   "outfitCompletion": {
     "cta": "Завершить образ",

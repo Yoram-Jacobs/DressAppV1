@@ -1,27 +1,31 @@
 # Prerequisiti e guida all'installazione
 
-Prima di immergerti in DressApp, assicurati che il tuo sistema sia configurato per utilizzare tutte le funzionalità e i servizi AI.
+Prima di iniziare con DressApp, assicurati che il tuo sistema sia configurato per sfruttare tutte le funzionalità e i servizi di styling intelligente.
 
 ## Panoramica
-Questo documento copre i requisiti hardware, le autorizzazioni del browser e le configurazioni della chiave API necessarie per eseguire l'app senza problemi.
+Questo documento illustra i requisiti hardware, le autorizzazioni del browser e le opzioni di configurazione dell'IA necessarie per eseguire DressApp in modo ottimale. DressApp è progettato per funzionare immediatamente senza richiedere alcuna chiave API esterna, offrendo al contempo integrazioni opzionali per gli utenti avanzati.
 
 ## Prerequisiti
-- Uno smartphone, tablet o PC moderno.
-- Autorizzazioni microfono (per richieste di styling vocale).
-- Autorizzazione alla posizione (per uno stile locale sensibile alle condizioni meteorologiche).
-- Una chiave API Gemini. Ottienila gratuitamente su [Google AI Studio](https://aistudio.google.com/).
+- Uno smartphone, tablet o PC moderno (iOS, Android, macOS, Windows, Linux).
+- Autorizzazione fotocamera abilitata (per fotografare abiti e scansionare codici DPP).
+- Autorizzazione microfono abilitata (per richieste di styling vocale a mani libere).
+- Autorizzazione posizione (per consigli di stile basati sul meteo locale).
+- *(Facoltativo)* Una chiave API Google Gemini gratuita se desideri utilizzare funzionalità avanzate come i canali Trend Scout, il ritocco fotografico Nano Banana o le tue quote cloud personali. Gli account gratuiti NON necessitano di alcuna chiave API per utilizzare DressApp.
 
-## Passo dopo passo
-1. **Consenti autorizzazioni**: accetta i suggerimenti della fotocamera durante il caricamento di elementi e i suggerimenti sulla posizione per gli aggiornamenti meteo.
-2. **Configurazione API Gemini**: vai al tuo profilo e inserisci una chiave API Gemini gratuita da Google AI Studio se desideri bypassare i limiti della piattaforma.
-3. **Collega calendario**: attiva la sincronizzazione di Google Calendar per pianificare l'outfit in base agli eventi.
+## Istruzioni passo passo
+1. **Concedi le autorizzazioni**: Accetta le richieste per fotocamera, microfono e posizione per gli aggiornamenti meteo in tempo reale.
+2. **Inizia subito con lo styling (Piano Gratuito)**: Il tuo account è dotato del motore di IA locale di DressApp (Gemma-4-E4B ottimizzato) e di 10 crediti di styling giornalieri gratuiti senza alcuna configurazione tecnica.
+3. **Chiave API personalizzata facoltativa (BYOK)**: Per sbloccare Trend Scout e la ricostruzione fotografica Nano Banana, apri **Profilo** (/me) &rarr; **Configurazione IA** e inserisci la tua chiave gratuita da [Google AI Studio](https://aistudio.google.com/).
+4. **Collega Google Calendar**: Connetti il tuo Google Calendar nel profilo per permettere allo stylist di conoscere riunioni ed eventi programmati.
 
 ## Risultati attesi
-Potrai usufruire del riconoscimento vocale senza interruzioni, degli avvisi meteorologici locali automatizzati e della sincronizzazione del calendario localizzato.
+Digitalizzazione istantanea degli abiti, scontorno trasparente automatico, consigli vocali, notifiche meteo e outfit coordinati con la tua agenda.
 
 ## Risoluzione dei problemi
-- **Nessuna posizione meteo**: controlla se i servizi di localizzazione sono disabilitati nelle impostazioni del tuo sistema operativo o del browser.
-- **Problemi con il microfono**: assicurati che altre app attive non blocchino l'ingresso del microfono.
+- **Meteo locale non visibile**: Verifica che i servizi di geolocalizzazione siano abilitati nel browser o nelle impostazioni di sistema.
+- **Problemi con il microfono**: Assicurati che DressApp disponga dei permessi del microfono e che un'altra app non lo stia occupando.
+- **È necessaria una chiave API?**: No! Gli utenti del piano gratuito possono digitalizzare i propri abiti, gestire l'armadio e conversare con lo stylist senza inserire chiavi esterne.
 
 ## Limitazioni
-- La trascrizione vocale locale funziona meglio sui browser basati su Chromium.
+- La trascrizione vocale funziona al meglio sui browser basati su Chromium (Chrome, Edge) e Safari.
+- I feed di Trend Scout e la riparazione immagini Nano Banana richiedono una chiave personale di Google Gemini API.

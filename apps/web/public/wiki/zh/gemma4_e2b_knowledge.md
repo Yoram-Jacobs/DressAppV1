@@ -1,57 +1,21 @@
-# Gemma 4 E2B — Agent Knowledge & Inference Guide
+# Gemma 4 E4B / E2B — Agent 认知体系与推理指南
 
-**Target Audience:** Future AI Agents, Maintainers, and ML Engineers working on the DressApp Eyes vision pipeline.
-**Date:** May 2026
+**目标受众：** 负责 DressApp Eyes 视觉与造型流水线的未来 AI 智能体、维护人员及算法工程师。  
+**日期：** 2026年9月  
+**状态：** 生产环境在线 (`gemma-4-E4B-it-Q3_K_M.gguf` + `mmproj-BF16.gguf`)
 
-This document preserves the concrete logic, architectural quirks, and inference rules required for successfully staging and benchmarking the `google/gemma-4-E2B-it` model with a LoRA adapter in the DressApp ecosystem. 
+本文档记录 DressApp 体系中定制微调的 `gemma-4-E4B-it` 模型架构规格、推断规则与生产路由逻辑。
 
 ---
 
-## 1. Architectural Facts
-- **Model Profile:** E2B stands for *Effective 2 Billion* parameters (5.1B total). It leverages Per-Layer Embeddings (PLE) to radically reduce memory footprint, making it the only viable variant for DressApp's CPU-only Hetzner VPS environment.
-- **Context Window:** Up to 128K tokens.
-- **Native Multimodality:** Supports Text, Image, and Audio inputs. Outputs Text.
-- **Attention Mechanism:** Hybrid local sliding-window and global attention.
+## 1. 核心架构事实
+- **模型特征：** Google Gemma-4-E4B 是有效参数为 40 亿（总计约 45 亿）的多模态图文语言模型，采用逐层嵌入（PLE）技术。生产环境量化为 `Q3_K_M`（磁盘占用约 2.7 GB，常驻内存约 2.85 GB），可在无显卡的 Hetzner CPX32 VPS（4 核 AMD vCPU）纯 CPU 环境下高效运行。
+- **上下文窗口：** 最高支持 128K tokens（在 `dressapp-eyes` 容器中固定分配 4,096 tokens 以保证极致低延迟与内存安全）。
+- **多模态输入：** 通过 `mmproj-BF16.gguf` 原生支持图片、音频与文本联合输入。
+- **生产服务架构：** 在 `dressapp-eyes` 容器内部的 7860 端口运行 `llama-server`，外层由 FastAPI 鉴权保护（`EYES_API_TOKEN`）。
 
-## 2. Dependencies & Tooling (Critical)
-Gemma 4 is a fundamentally new family (released March-April 2026), NOT a revision of Gemma-3. Loading it incorrectly corrupts the multimodal projection tensors.
-- **Transformers Version:** `transformers >= 4.57.1` (or `5.5.0+` depending on local release naming). You **must** use `AutoProcessor` and `AutoModelForMultimodalLM`. Never hand-roll `Gemma4*ForConditionalGeneration`.
-- **Quantization:** Use `optimum-quanto` for CPU inference (int4 quantization). `bitsandbytes` is highly unstable/unsupported for pure x86 CPU deployments.
-- **LoRA Adapter:** Use `peft` to attach the trained LoRA adapter to the base model. The base text-decoder layers are wrapped with rank-16 adapters, while the vision/audio towers remain frozen.
-
-## 3. Prompting & Inference Rules
-
-### Modality Ordering
-For optimal attention mapping and zero-shot performance, **Image/Audio tokens must always precede text** within the message content structure.
-```python
-# Correct payload structure for the AutoProcessor:
-messages = [
-    {"role": "user", "content": [
-        {"type": "image"},
-        {"type": "text", "text": "Analyze this outfit..."}
-    ]}
-]
-```
-
-### Visual Token Budgets
-Gemma 4 does not treat all images equally. You control visual resolution via a `vision_token_budget` (sometimes named `image_token_budget` or `num_image_tokens` depending on the `transformers` version branch).
-- Allowed budgets: `70`, `140`, `280`, `560`, `1120`.
-- **DressApp Specifics:** Because garment boundary detection and detail extraction require high precision, always force the `AutoProcessor` budget to **1120** (maximum detail).
-
-### Thinking Mode (Reasoning)
-Gemma-4 natively supports CoT (Chain-of-Thought) reasoning.
-- **Activation:** To enable thinking, insert the `<|think|>` token at the very beginning of the system prompt.
-- **Output Channel Format:** When reasoning, the model emits tags:
-  `<|channel>thought\n[Internal reasoning]<channel|>[Final answer]`
-- **Disabling:** If strict JSON is required and latency is paramount (as in our `EYES_ONE_PASS` pipeline), omit the `<|think|>` token to force direct emission.
-- **History Rule:** In multi-turn chats, strip the reasoning (`<|channel>thought...<channel|>`) from history. Only feed the `[Final answer]` back into the context buffer.
-
-### Sampling Best Practices
-Do not use standard LLM temperature defaults. Google's explicit standard for Gemma-4 sampling is:
-- `temperature = 1.0`
-- `top_p = 0.95`
-- `top_k = 64`
-
-## 4. Production Environment Notes
-- Auth for gated models (`HF_TOKEN`) is NOT shipped with the DressApp runtime. The container relies on pre-downloaded weights and merged adapters (`/adapter:ro`) mounted locally.
-- Keep the `EYES_ONE_PASS=true` flag logic in mind: it bypasses legacy SegFormer clipping by relying entirely on Gemma-4's native coordinate output (`response_format=json_schema`).
+## 2. 生产角色与多层级智能路由
+1. **免费用户核心引擎**：为免费版用户及未配置私有 API 密钥的用户提供交互式穿搭问答与衣物属性智能提取。
+2. **后台定时任务（Cron）**：无需产生商业云端 API 账单即可每日自动执行衣橱索引重塑与早间穿搭推荐。
+3. **配额耗尽智能兜底（Quota Fallback）**：自动捕获第三方供应商（Google Gemini）的超额报错（`429`）与 `RESOURCE_EXHAUSTED`，平滑将请求切换至本地 Gemma 模型，绝不向用户抛出异常或中断会话。
+4. **权限分界线**：高消耗的云端生成式能力（Trend Scout 资讯雷达与 Nano Banana 图像修补）严格要求用户提供个人密钥。

@@ -70,6 +70,12 @@ Represents user accounts, authentication data, styling profile, body sizing, and
     "expires_at": "2026-09-04T12:00:00Z",
     "scopes": ["https://www.googleapis.com/auth/calendar.readonly"]
   },
+  "ai_config": {
+    "mode": "standard",
+    "provider": "gemini",
+    "custom_gemini_api_key": null,
+    "model": "gemini-2.5-flash"
+  },
   "stripe_account_id": "acct_1N...",
   "stripe_onboarding_complete": true,
   "roles": ["user"],
@@ -266,6 +272,8 @@ Persistent conversation memory maintaining multi-turn styling interactions and g
     "occasion": "business",
     "rationale": "Matches meeting dress code and handles mild outdoor transit."
   },
+  "provider_fallback": "gemma",
+  "fallback_from_quota": false,
   "created_at": "2026-09-03T10:30:00Z"
 }
 ```

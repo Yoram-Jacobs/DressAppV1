@@ -1,42 +1,43 @@
-# Numériser et Ajouter des Vêtements
+# Numérisation & Ajout de Vêtements
 
-Numérisez votre garde-robe physique en quelques secondes grâce au scan IA multimodal, au détourage intelligent et à la reconstruction automatique d'image.
+Numérisez votre garde-robe physique en quelques secondes grâce au scan IA multimodal, au détourage intelligent et à la reconstruction d'image automatique.
 
-## Aperçu
-Ajoutez des vêtements à l'aide de prises de vue en direct, de téléversements multiples depuis votre galerie, de QR codes de Passeport Numérique de Produit (DPP) ou de reçus numériques (OCR de facture). L'IA intégrée détoure automatiquement l'arrière-plan, étiquette les attributs de mode, évalue la complétude du cadrage et reconstruit les vêtements masqués ou coupés.
+## Vue d'ensemble
+Ajoutez vos vêtements via l'appareil photo en direct, l'importation multiple depuis la galerie, les codes QR du Passeport Numérique des Produits (DPP) ou vos factures numériques (OCR). L'IA locale intégrée détourage automatiquement les arrière-plans, extrait plus de 20 attributs de mode et prépare des clichés de studio sans nécessiter de clé API.
 
 ## Prérequis
-- Photos nettes et bien éclairées de vos vêtements (selfies miroir, photos de tenue en pied ou flat-lays).
-- Accès à la caméra pour scanner les articles physiques et les QR codes.
-- Reçus numériques ou captures d'écran de factures (PDF / PNG / JPEG) pour vos achats e-commerce.
+- Photos claires et bien éclairées de vos vêtements (selfies miroir, photos en pied ou vêtements à plat).
+- Autorisation d'accès à l'appareil photo pour scanner les articles et les codes QR.
+- Reçus numériques ou captures d'écran de factures (PDF / PNG / JPEG) pour vos achats en ligne.
+- *(Facultatif)* Une clé personnelle Google Gemini API si vous souhaitez utiliser la retouche photo générative Nano Banana.
 
-## Étape par Étape
+## Instructions étape par étape
 
-1. **Téléversement & Prise de Vue Interactifs** :
-   - Appuyez sur **Ajouter un article** &rarr; choisissez **Prendre une photo** ou téléversez une ou plusieurs photos de tenue depuis votre appareil.
-   - La détection de doublons intégrée vérifie instantanément si vous avez déjà téléversé le même vêtement.
-2. **Segmentation IA & Détection Multi-Articles** :
-   - Le modèle de vision isole chaque vêtement distinct (vestes, hauts, jupes, pantalons, chaussures, accessoires) en une seule passe.
-3. **Contrôle Qualité IA & Réparation Automatique d'Image** :
-   - Le Contrôleur de Qualité visuel de Gemini inspecte chaque élément détouré :
-     - **Complet** : Les vêtements intacts et sans obstacle sont détourés directement.
-     - **Complétion d'Image** : Si un article a des contours manquants, des zones masquées (par un sac ou un bras) ou des ourlets/cols coupés, l'IA effectue un outpainting automatique pour recréer le tissu manquant.
-     - **Reconstruction Studio Complète** : Les articles très tronqués (comme des chaussures dont seul le bout est visible) sont entièrement reconstruits en photos de catalogue de qualité studio.
-4. **Étiquetage Automatique des Métadonnées** :
-   - L'IA extrait plus de 20 attributs de mode (couleurs, composition textile, sous-catégorie, code vestimentaire, marque et état).
-5. **Reçus Numériques & Tags DPP** :
-   - Passez à l'onglet **Import Numérique** pour analyser les e-mails de confirmation de commande ou les factures, en verrouillant le prix d'achat et les tailles vérifiées.
-   - Appuyez sur **Scanner QR (DPP)** sur l'étiquette pour importer les informations de traçabilité et les conseils d'entretien du Passeport Numérique Européen.
-6. **Enregistrer dans le Dressing** :
-   - Appuyez sur **Enregistrer**. Les articles apparaissent immédiatement dans la grille de votre dressing, tandis que les complétions génératives se finalisent harmonieusement en arrière-plan.
+1. **Prise de vue & Importation interactive** :
+   - Cliquez sur **Ajouter un article** &rarr; choisissez **Prendre une photo** ou sélectionnez une ou plusieurs images sur votre appareil.
+   - La détection de doublons intégrée vérifie instantanément si vous avez déjà ajouté ce vêtement.
+2. **Segmentation IA & Détection multi-articles** :
+   - Le modèle de vision isole chaque pièce distincte (vestes, hauts, jupes, pantalons, chaussures, accessoires) en une seule étape.
+3. **Détourage IA & Clichés Studio Professionnels** :
+   - Le moteur de traitement intégré supprime automatiquement les arrière-plans pour créer des images PNG transparentes et nettes pour tous les comptes.
+4. **Extraction automatique des métadonnées** :
+   - L'IA locale extrait plus de 20 critères de mode (couleurs, composition des tissus, sous-catégorie, code vestimentaire, marque et état).
+5. **Restauration photo générative avancée (Nano Banana)** :
+   - Pour les utilisateurs disposant d'une clé personnelle Google Gemini API, Nano Banana analyse les parties masquées ou tronquées (sacs, mains, bords de cadre) et reconstruit le tissu manquant.
+6. **Reçus numériques & Balises DPP** :
+   - Passez à **Import Numérique** pour analyser vos confirmations de commande et enregistrer le prix d'achat et les tailles exactes.
+   - Cliquez sur **Scanner QR (DPP)** sur l'étiquette pour charger les données de traçabilité européenne et les conseils d'entretien.
+7. **Enregistrer dans le dressing** :
+   - Cliquez sur **Enregistrer**. Les articles apparaissent instantanément dans votre dressing.
 
-## Résultats Attendus
-Chaque vêtement s'affiche dans votre garde-robe numérique sous forme d'une photographie centrée, nette et de qualité studio, dotée d'attributs de recherche indexés et d'une taxonomie riche.
+## Résultats attendus
+Chaque pièce apparaît sous la forme d'un cliché de studio centré et net, doté d'attributs de recherche précis et d'un étiquetage complet.
 
-## Résolution des Problèmes
-- **Vêtements Coupés / Partiels sur les Photos** : L'IA détecte automatiquement les limites rognées et les reconstruit ; vous pouvez également appuyer sur **Réparer la photo** sur la fiche détaillée d'un article pour déclencher manuellement une régénération studio.
-- **Éclairage & Contraste** : Pour des résultats optimaux avec des vêtements sombres, photographiez-les sur un fond clair et contrasté.
-- **Écarts d'OCR sur les Reçus** : Utilisez le sélecteur de zone interactif sur l'image du reçu pour désigner manuellement les lignes de produits correspondantes.
+## Dépannage
+- **Vêtements tronqués sur la photo** : Centrez bien le vêtement sur un fond contrasté. Si vous avez configuré une clé API, Nano Banana peut reconstruire automatiquement les cols ou les ourlets coupés.
+- **Éclairage & Contraste** : Pour les vêtements sombres, privilégiez un arrière-plan clair et lumineux.
+- **Erreurs de lecture de facture** : Utilisez le sélecteur interactif sur la photo de la facture pour désigner manuellement les lignes de produits.
 
 ## Limites
-- Les téléversements groupés haute résolution (>5 articles) sont traités via des files d'attente asynchrones en arrière-plan pour garantir une fluidité parfaite sans expiration de session dans le navigateur.
+- Les imports groupés volumineux (>5 articles) sont traités en tâche de fond pour garantir la réactivité de l'interface.
+- La retouche photo générative Nano Banana nécessite une clé personnelle Google Gemini API fournie par l'utilisateur.

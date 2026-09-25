@@ -45,7 +45,10 @@ DressApp turns a closet of physical clothes into a structured, quarriable wardro
 
 **Voice / Audio** — Deepgram (STT/TTS fallback), Gemini 2.5 Flash native modulations (prebuilt voice configs puck/aoede/charon), Web Speech API browser integration, and local Piper ONNX support.
 
-**LLM** — Direct `GEMINI_API_KEY`. Default stylist model: Gemini Flash 2.x. Image generation: Gemini 2.5 Flash Image.
+**LLM / Inference Engine** — Multi-tier architecture:
+* **On-premises Default & Fallback**: Self-hosted `dressapp-eyes` container running fine-tuned **Gemma-4-E4B** (`gemma-4-E4B-it-Q3_K_M.gguf` via `llama-server` on port 7860) serving Free Tier users, zero-BYOK accounts, and autonomous background cron jobs.
+* **Transparent Quota Fallback**: Gracefully catches third-party API exhaustion (`429`, `RESOURCE_EXHAUSTED`, spending caps) and falls back to on-prem Gemma without downtime or hard errors.
+* **Commercial Cloud (BYOK)**: User-provided Google Gemini API keys (`gemini-2.5-flash`, etc.) for advanced custom styling, and required for high-cost generation (Trend Scout daily feeds, Nano Banana photorealistic inpainting).
 
 **External APIs** — OpenWeather · PayPal Live · Google OAuth + Google Calendar · HuggingFace Inference API
 
@@ -69,13 +72,14 @@ DressApp turns a closet of physical clothes into a structured, quarriable wardro
    ┌─────────▼┐    ┌──▼─────────────────┐
    │ FastAPI  │    │ Nginx (static SPA) │
    │  :8001   │    │  React build       │
-   └────┬─────┘    └────────────────────┘
+   └────┬─────┴────┴────────────────────┘
         │
         ├─ MongoDB Atlas (users, closet, listings, trends, …)
         ├─ Vision pipeline: local SegFormer + rembg + Fashion-CLIP
+        ├─ On-prem Eyes (:7860): llama-server + Gemma-4-E4B (Free Tier & Quota Fallback)
         ├─ Deepgram & Gemini Audio (STT/TTS over HTTPS)
         ├─ OpenWeather, PayPal Live, Google OAuth/Calendar
-        └─ Direct GEMINI_API_KEY → text + image generation
+        └─ Cloud Gemini API (BYOK user keys, Nano Banana, Trend Scout)
 ```
 
 ### In-depth documentation
@@ -196,10 +200,11 @@ python -m scripts.seed_demo   # idempotent — re-running upserts
 
 ## Production deployment
 
-3-container Docker Compose stack on any 4 GB+ VPS (e.g. Hetzner, running on `dressapp.co`):
+4-container Docker Compose stack on Hetzner Cloud CPX32 VPS (4 AMD vCPUs, 8 GB RAM, running on `dressapp.co`):
 
 - `backend` — FastAPI + local SegFormer + rembg + Fashion-CLIP (~1.5 GB RAM at idle)
-- `frontend` — Nginx serving the built SPA
+- `eyes` — Self-hosted inference server (`llama-server` + FastAPI proxy) running fine-tuned `gemma-4-E4B-it-Q3_K_M.gguf` on port 7860 (~2.85 GB RAM)
+- `frontend` — Nginx serving the built React 19 SPA
 - `caddy` — TLS termination, automatic Let's Encrypt, HTTP→HTTPS redirect
 
 `deploy/Dockerfile.backend` installs `requirements.txt` **and** `requirements-ml.txt` so torch / transformers / rembg are all present. `app/config.py` auto-detects them and turns `USE_LOCAL_CLOTHING_PARSER` and `AUTO_MATTE_CROPS` to `true`.

@@ -1,29 +1,33 @@
-# Estilista Pessoal com Inteligência Artificial
+# Estilista conversacional com Inteligência Artificial
 
-Converse com um estilista inteligente que conhece seu guarda-roupa, a previsão do tempo e sua rotina diária.
+Converse com um estilista pessoal inteligente que conhece seu guarda-roupa, a previsão do tempo e sua rotina diária.
 
 ## Visão Geral
-O AI Stylist é seu consultor de moda pessoal no aplicativo. Você pode conversar digitando ou falando em voz alta como se estivesse conversando com um amigo. Ele consulta a previsão do tempo local, dá uma olhada nos seus compromissos do Google Agenda e sugere looks completos e estilosos montados com as roupas que você já possui.
+O Estilista IA é o seu consultor de moda pessoal no DressApp. Você pode conversar com ele digitando ou falando naturalmente como com um amigo. O estilista verifica o clima local, consulta seus eventos do Google Agenda e sugere looks completos e sofisticados usando exclusivamente roupas que você já possui.
+
+O motor de estilo do DressApp é alimentado pelo modelo local refinado **Gemma-4-E4B**, disponível para todos os usuários do plano gratuito sem necessidade de configurar nenhuma chave de API. Para quem prefere usar uma chave própria do Google Gemini, o DressApp oferece o recurso de **Contingência Automática de Cota (Quota Fallback)**: caso sua chave exceda os limites de requisições ou esgote a cota, o sistema redireciona a consulta imediatamente para o modelo local Gemma com um banner informativo, garantindo que sua conversa nunca seja interrompida por erros.
 
 ## Pré-requisitos
-- Pelo menos uma blusa/camisa, uma calça/saia e um par de sapatos no seu closet.
-- Permissão de microfone ativada para falar por voz.
-- (Opcional) Google Agenda conectado para recomendações adequadas aos seus eventos.
+- Pelo menos uma peça superior, uma inferior e um par de sapatos cadastrados no guarda-roupa.
+- Permissão de microfone ativada para pedidos de estilo por voz com mãos livres.
+- *(Opcional)* Google Agenda conectado para sugestões adaptadas aos seus compromissos.
+- *(Opcional)* Chave de API pessoal do Google Gemini para usar sua própria cota na nuvem.
 
-## Passo a Passo
-1. **Abrir o Estilista**: Toque na aba **AI Stylist** no menu inferior.
-2. **Falar ou Digitar**: Toque no **ícone do microfone** e peça uma sugestão (ex.: *"O que vestir para um almoço em um dia chuvoso?"* ou *"Sugira um visual elegante"*).
-3. **Ouvir o Conselho Falado**: O estilista responde com voz natural e exibe as roupas combinadas. Toque em **Ouvir resposta** para escutar novamente.
-4. **Usar a Ferramenta Shuffle**: Quer uma surpresa criativa? Toque em **Shuffle** para girar seu guarda-roupa e descobrir combinações inéditas!
-5. **Salvar no Diário**: Toque em **Salvar Look** para agendar a combinação no seu calendário.
+## Instruções Passo a Passo
+1. **Abrir o Estilista**: Toque na aba **AI Stylist** na barra de navegação inferior.
+2. **Fale ou Digite**: Toque no **ícone do microfone** e pergunte o que vestir (ex.: *"O que devo vestir para um almoço em um dia de chuva?"* ou *"Sugira um look elegante para o trabalho"*).
+3. **Ouça a Resposta por Voz**: O estilista responde com conselhos personalizados e exibe cartões de roupas combinadas. Toque em **Reproduzir resposta** para ouvir o áudio novamente a qualquer momento.
+4. **Ferramenta Shuffle**: Quer inspiração espontânea? Toque na aba **Shuffle** para girar seu guarda-roupa e descobrir combinações inéditas!
+5. **Salvar no Diário**: Toque em **Salvar no Diário** para agendar o look no seu calendário de estilo.
 
 ## Resultados Esperados
-Sugestões de looks sob medida para o clima e sua agenda, acompanhadas de explicações claras sobre por que as peças combinam.
+Sugestões de looks personalizadas e adaptadas ao clima na tela, com explicações faladas sobre o porquê das peças combinarem. Se sua chave de API atingir a cota, um banner avisará que o motor local atendeu o pedido perfeitamente.
 
 ## Solução de Problemas
-- **Microfone não capta**: Verifique as permissões de microfone nas configurações do seu navegador ou aparelho.
-- **Sugestões repetidas**: Registre o que você veste no calendário para que o estilista priorize peças ainda não usadas.
+- **Microfone não captura a voz**: Verifique as permissões do seu navegador ou dispositivo para garantir o acesso ao microfone.
+- **O estilista repete looks com frequência**: Registre seus looks usados no calendário para que o estilista priorize peças não vestidas recentemente.
+- **Aviso "Usando Estilista da Plataforma (Quota Fallback)"**: Aparece quando sua chave pessoal do Gemini atinge o limite. Sua solicitação foi concluída com sucesso pela nossa IA interna.
 
 ## Limitações
-- O estilista sugere apenas peças já cadastradas no seu guarda-roupa digital.
-- Cada interação consome 1 crédito de IA (usuários gratuitos ganham 10 créditos diários grátis).
+- O estilista trabalha estritamente com as roupas já cadastradas no seu guarda-roupa digital.
+- Usuários do plano gratuito recebem 10 créditos diários de estilo que são repostos a cada 24 horas.

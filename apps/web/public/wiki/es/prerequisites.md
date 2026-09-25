@@ -1,27 +1,31 @@
 # Requisitos previos y guía de configuración
 
-Antes de sumergirse en DressApp, asegúrese de que su sistema esté configurado para utilizar todas las funciones y servicios de IA.
+Antes de comenzar con DressApp, asegúrese de que su dispositivo esté configurado para aprovechar todas las funciones de estilismo e inteligencia artificial.
 
 ## Descripción general
-Este documento cubre los requisitos de hardware, los permisos del navegador y las configuraciones de clave API necesarias para ejecutar la aplicación sin problemas.
+Este documento detalla los requisitos de hardware, permisos del navegador y opciones de configuración de IA necesarios para disfrutar de DressApp sin interrupciones. DressApp está diseñado para funcionar de inmediato sin requerir claves de API externas, ofreciendo además integraciones avanzadas opcionales.
 
 ## Requisitos previos
-- Un teléfono inteligente, tableta o PC moderno.
-- Permisos de micrófono (para solicitudes de estilo de voz).
-- Permiso de ubicación (para un estilo que tenga en cuenta el clima local).
-- Una clave API de Gemini. Consíguela gratis en [Google AI Studio](https://aistudio.google.com/).
+- Un teléfono inteligente, tableta o computadora moderna (iOS, Android, macOS, Windows, Linux).
+- Permiso de cámara habilitado (para fotografiar prendas y escanear códigos DPP).
+- Permiso de micrófono habilitado (para solicitudes de estilismo por voz con manos libres).
+- Permiso de ubicación (para recomendaciones adaptadas al clima local).
+- *(Opcional)* Una clave de API de Google Gemini gratuita si desea utilizar herramientas avanzadas como los canales de noticias de Trend Scout, reconstrucción fotográfica Nano Banana o cuotas personalizadas en la nube. Las cuentas gratuitas NO necesitan ninguna clave de API para usar DressApp.
 
-## Paso a paso
-1. **Permitir permisos**: acepte indicaciones de la cámara al cargar elementos y indicaciones de ubicación para actualizaciones meteorológicas.
-2. **Configuración de la API de Gemini**: vaya a su perfil e ingrese una clave de API de Gemini gratuita de Google AI Studio si desea evitar los límites de la plataforma.
-3. **Vincular calendario**: habilite la sincronización de Google Calendar para obtener una planificación de vestimenta teniendo en cuenta los eventos.
+## Instrucciones paso a paso
+1. **Conceder permisos**: Acepte los avisos de la cámara al capturar prendas, del micrófono para hablar con el estilista y de ubicación para recibir el clima en tiempo real.
+2. **Comience a vestir de inmediato (Nivel gratuito)**: Su cuenta incluye el motor de IA local de DressApp (Gemma-4-E4B optimizado) y 10 créditos diarios de estilismo de cortesía sin necesidad de configuración previa.
+3. **Clave de API personalizada opcional (BYOK)**: Si desea activar la inteligencia de moda de Trend Scout o la reparación fotográfica de Nano Banana, vaya a **Perfil** (/me) &rarr; **Configuración de IA** e ingrese su clave gratuita de [Google AI Studio](https://aistudio.google.com/).
+4. **Vincular Google Calendar**: Conecte su cuenta de Google Calendar en su perfil para que el estilista conozca sus reuniones, cenas y entrenamientos programados.
 
 ## Resultados esperados
-Disfrutará de un reconocimiento de voz perfecto, alertas meteorológicas locales automatizadas y sincronización de calendario localizado.
+Disfrutará de digitalización instantánea de prendas, recorte transparente automático, asesoramiento por voz en tiempo real, alertas climáticas y propuestas de atuendos sincronizadas con su agenda.
 
 ## Solución de problemas
-- **Sin ubicación y clima**: verifique si los servicios de ubicación están deshabilitados en la configuración de su sistema operativo o navegador.
-- **Problemas con el micrófono**: asegúrese de que otras aplicaciones activas no bloqueen la entrada del micrófono.
+- **No aparece el clima local**: Verifique si los servicios de ubicación están desactivados en su navegador o sistema operativo.
+- **Problemas con el micrófono**: Asegúrese de que DressApp tenga permiso para acceder al micrófono y que otra aplicación no lo esté bloqueando.
+- **¿Necesito una clave de API?**: ¡No! Los usuarios del plan gratuito pueden digitalizar su ropa, organizar su armario y consultar al estilista sin ingresar ninguna clave externa.
 
 ## Limitaciones
-- La transcripción de voz local funciona mejor en navegadores basados en Chromium.
+- El reconocimiento de voz local funciona de manera óptima en navegadores basados en Chromium (Chrome, Edge) y Safari.
+- Trend Scout y la reconstrucción fotográfica de Nano Banana requieren una clave personal de Google Gemini API.

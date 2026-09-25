@@ -21,24 +21,25 @@ DressApp is an AI-driven personal wardrobe manager, styling advisor, and circula
   - **Web**: React 19 single-page application utilizing `useSyncExternalStore` custom stores (`stylistStore`, `dailySuggestionsStore`, `useOutfitStore`, `useClosetStore`, `useSuitcaseStore`), Tailwind CSS, Shadcn/UI primitives, and `react-i18next` supporting 13 localized languages.
   - **Mobile**: Expo SDK 53 / React Native 0.79 with React Navigation Native Stack, NativeWind styling, and offline SWR caching via `MobileClosetRepository`.
 - **State & Network Optimization**: In-flight request deduplication, 15-minute store caching, and `visibilitychange` tab revalidation yielding zero background GET requests when idle.
-- **Local Machine Learning & Sizing**: CPU-local U2-Net (`rembg`) background matting, SegFormer-b2 clothing parsing, Fashion-CLIP embeddings, and ANSUR II physical body measurement regression model (`body_predictor.py`). Optionally routes to self-hosted GPU containers (SegFormer-b3 + BiRefNet) or Gemma-4 E2B LoRA containers for edge operations.
+- **Local Machine Learning & Sizing**: CPU-local U2-Net (`rembg`) background matting, SegFormer-b2 clothing parsing, Fashion-CLIP embeddings, and ANSUR II physical body measurement regression model (`body_predictor.py`). Includes the dedicated on-premise `dressapp-eyes` container running fine-tuned `gemma-4-E4B-it-Q3_K_M.gguf` via `llama-server` on port 7860 (~2.85 GB RAM) for Free Tier styling and automated quota fallback.
 - **Conversational STT/TTS**: Real-time client-side Web Speech recognition fallback, multimodal server-side Gemini 2.5 Flash modulations, and on-device offline Piper/Sherpa-ONNX engines.
 - **External Integration Services**: OpenWeatherMap API for weather fetching, Google Calendar OAuth for daily schedule exports, OpenStreetMap (Nominatim) address autocomplete, and PayPal Subscriptions/Checkout REST APIs.
-- **Production Host**: Hetzner Cloud CPX32 VPS (4 AMD vCPUs, 8 GB RAM) at `dressapp.co`, running a 3-container Docker Compose stack with Caddy 2 automated TLS reverse proxying.
+- **Production Host**: Hetzner Cloud CPX32 VPS (4 AMD vCPUs, 8 GB RAM) at `dressapp.co`, running a 4-container Docker Compose stack (`backend`, `eyes`, `frontend`, `caddy`) with Caddy 2 automated TLS reverse proxying.
 
 ---
 
 ## 2. Prerequisites
 
 ### Host Environment Requirements
-- **Hardware**: Minimum 4 GB RAM VPS (e.g., Hetzner VPS hosting the production `dressapp.co`).
-- **Dependencies**: Docker & Docker Compose stack (including backend, frontend, and Caddy TLS termination).
-- **Environment Variables**: API keys configuration (`GEMINI_API_KEY`, `DEEPGRAM_API_KEY`, `OPENWEATHER_API_KEY`, `PAYPAL_LIVE_CLIENT_ID/SECRET`, and Google Calendar OAuth tokens).
+- **Hardware**: Minimum 8 GB RAM VPS (e.g., Hetzner CPX32 hosting the production `dressapp.co`).
+- **Dependencies**: Docker & Docker Compose stack (including backend, eyes inference server, frontend, and Caddy TLS termination).
+- **Environment Variables**: API keys configuration (`GEMINI_API_KEY`, `EYES_API_TOKEN`, `DEEPGRAM_API_KEY`, `OPENWEATHER_API_KEY`, `PAYPAL_LIVE_CLIENT_ID/SECRET`, and Google Calendar OAuth tokens).
 
 ### User App Requirements
 - **Web Browser**: Google Chrome or Apple Safari (required for full voice feature compatibility).
-- **Permissions**: Grant Camera permission (for clothing snapshots and QR scans) and Microphone permission (for voice conversation).
-- **Network**: Active connection for LLM processing, with IndexedDB caching providing offline catalog browsing.
+- **Permissions**: Grant Camera permission (for clothing snapshots and QR scans), Microphone permission (for voice styling), and Location permission (for local weather styling).
+- **Zero API Key Requirement for Free Tier**: Free accounts work immediately out of the box using DressApp's built-in on-premises Gemma-4-E4B model and 10 daily complimentary credits. No external API key is needed.
+- **Optional BYOK Keys**: A personal Google Gemini API key is optional, unlocking Trend Scout daily feeds, Nano Banana generative photo reconstruction, and personal cloud quotas.
 
 ---
 
@@ -106,13 +107,16 @@ INGESTION PARADIGMS: Photography, EU Product Passports, and Digital Commerce Rec
 Describe styling dilemmas and receive hands-free spoken outfit advice.
 
 1. Navigate to the **AI Stylist** screen.
-2. Click the microphone icon `[Microphone]` in the chat input bar.
+2. Click the microphone icon `[Microphone]` in the chat input bar or type your styling question directly.
 3. Speak your request (e.g., "What top matches my beige trousers for a rainy outdoor lunch?").
 4. If Web Speech is supported, your voice transcribes live in the input box. If not, the app records a WebM file and uploads it.
-5. The backend routes the voice query to the local Gemma4 container (falling back to Gemini 2.5 Flash transcription if offline).
-6. The stylist processes your wardrobe history, local weather forecasts, and calendar events to formulate a styling proposal.
-7. The stylist speaks the response using preselected voice profiles (`puck`, `aoede`, or `charon`).
-8. Tap **Play reply** (or **Replay** in Hebrew mode) on the card to replay the voice audio.
+5. **Multi-Tier Brain Resolution**:
+   - **Free Tier / Zero-BYOK**: The backend processes your request using the self-hosted, fine-tuned **Gemma-4-E4B** engine running on-premises in `dressapp-eyes`. It evaluates your wardrobe inventory, local weather, and calendar context with zero cloud API costs.
+   - **Custom BYOK Keys**: If you provided a personal Google Gemini API key, your request is processed via your selected model (`gemini-2.5-flash`, etc.).
+   - **Transparent Quota Fallback**: If your personal key runs out of daily quota or triggers rate limits (`429` / `RESOURCE_EXHAUSTED`), the backend intercepts the failure and seamlessly reroutes the query to on-premises Gemma-4-E4B. An informative banner (*"Using Platform Stylist (Quota Fallback)"*) appears above the assistant's reply so you know your session was protected without crashing.
+6. The stylist presents head-to-toe matching outfit cards with detailed styling rationales.
+7. Spoken audio advice plays automatically using preselected voice profiles (`puck`, `aoede`, or `charon`).
+8. Tap **Play reply** (or **Replay** in RTL mode) on the card to replay the voice audio anytime.
 
 ---
 
@@ -144,12 +148,13 @@ The Profile page serves as the core control panel for DressApp. Configuration fi
    - **Why does it matter?**: It tailors default recommendations and scores content algorithms.
    - **Subsystem Dependencies**: The sex selection directly affects the ranking logic of daily Trend Scout cards. If a news card category mismatches the user's sex, the algorithm applies a -2.0 score penalty, demoting it in the feed.
 
-6. **AI Configuration (SaaS keys, edge mode, credits)**
-   - **Why does it matter?**: It determines billing routing, operational performance, and network offline status.
-   - **Subsystem Dependencies**: Routes text/audio generation queries. Standard setups consume DressApp system credits. Standard accounts operate on a prepaid credit bucket system (`CreditBucket` model with free vs paid credit lists). Daily tasks check and consume credits from the oldest free buckets first (expiring in 30 days) before moving to paid credit buckets (which never expire). Standard free users are replenished with 10 free credits daily (daily reset check). Trial plans include:
-     - **Pro (Manager) Trial**: 14 days duration with 50 initial free credits.
-     - **Business (Professional) Trial**: 30 days duration with 300 initial free credits and active Campaign slots.
-     If system credits are exhausted, the app enters an async pause-and-resume wait state (up to 60s) checking for top-up events. Inputting personal API keys (Google AI Studio, Anthropic, OpenAI) redirects charges to the user's developer billing accounts. Selecting edge local mode routes queries to the offline Gemma container.
+6. **AI Configuration (Platform Default vs BYOK Keys, Quota Fallback, Credits)**
+   - **Why does it matter?**: It controls LLM brain routing, billing tiers, and feature gating.
+   - **Subsystem Dependencies**:
+     - **Built-in Standard Mode (Platform Default)**: Evaluates requests using the on-premises fine-tuned **Gemma-4-E4B** engine running in `dressapp-eyes` on port 7860. Free Tier users and accounts without custom API keys operate in this mode at zero cost. Standard free users receive 10 complimentary daily credits with a 30-day lifespan.
+     - **Custom API Key Mode (BYOK)**: Entering a personal Google Gemini API key (from Google AI Studio) unlocks cloud models (`gemini-2.5-flash`, etc.) and enables restricted high-cost features (**Trend Scout** daily fashion radar and **Nano Banana** generative photo inpainting).
+     - **Automated Quota Fallback**: If a custom BYOK key triggers rate limits (`429`), `RESOURCE_EXHAUSTED`, or spending cap errors, `FallbackBrain` immediately redirects the request to on-premises Gemma-4-E4B, rendering a non-blocking notification banner (`stylist.fallbackQuotaBanner`) without interrupting the styling conversation.
+     - **Trial Plans**: Manager trial (14 days, 50 free credits) and Professional trial (30 days, 300 free credits). If credits are exhausted, the app enters an async pause-and-resume wait state (up to 60s) checking for top-up events.
 
 7. **Scheduler & Push (Frequency, daily alarm, style focus)**
    - **Why does it matter?**: It manages automatic daily style pushes.
@@ -793,13 +798,17 @@ Integration with PayPal Subscriptions and Atzmai APIs for subscription managemen
 - **Problem**: Capture/scan viewport displays an 'X' error screen, or voice typing fails.
 - **Solution**: Open browser permissions, enable Camera and Microphone access for the domain, and reload.
 
-### Stylist Chat Failure / Rate Limits
-- **Problem**: Chat shows errors or freezes.
-- **Solution**: The server catches Gemini `429` rate limits and falls back to a rule-based closet selection algorithm. Verify your internet connection.
+### Stylist Chat Quota Fallback ("Using Platform Stylist")
+- **Problem**: A banner appears above the Stylist's answer: *"Using Platform Stylist (Quota Fallback)"*.
+- **Explanation & Solution**: Your custom Google Gemini API key has exceeded its rate limit (`429 Too Many Requests`) or exhausted its daily quota. Rather than failing or returning a 500 error, DressApp's `FallbackBrain` seamlessly rerouted your request to the on-premise Gemma-4-E4B engine. You can check your quota balance in Google AI Studio or continue conversing with the built-in model.
+
+### HTTP 403 Forbidden on Trend Scout or Nano Banana
+- **Problem**: Opening Trend Scout or requesting Nano Banana photo repair returns a 403 error stating an API key is required.
+- **Solution**: These two high-cost generative features require a personal Google Gemini API key. Free Tier accounts can obtain a free key at [Google AI Studio](https://aistudio.google.com/) and paste it under **Profile > AI Configuration**.
 
 ### Out of Memory (OOM) VPS Spikes
 - **Problem**: CPU/RAM peaks during upload processes.
-- **Solution**: Ingestion utilizes sequential queue locks for batches >5 items. Ensure the server has at least 4 GB RAM.
+- **Solution**: Ingestion utilizes sequential queue locks for batches >5 items. Ensure the server has at least 8 GB RAM (CPX32 configuration) to host `llama-server` alongside the FastAPI backend and SegFormer workers.
 
 ---
 

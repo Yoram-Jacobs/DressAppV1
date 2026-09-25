@@ -1385,7 +1385,11 @@
         "colorful_summer": "रंग-बिरंगी गर्मी",
         "casual_chic": "कैजुअल चिक"
       }
-    }
+    },
+    "fallbackQuotaBanner": "कस्टम API कुंजी कोटा समाप्त हो गया। ड्रेसऐप के इन-बिल्ट ऑन-प्रेम AI (Gemma-4-E4B) का उपयोग करके अनुरोध सहजता से पूरा किया गया।",
+    "fallbackQuotaExhausted": "(वैकल्पिक. कोटा समाप्त)",
+    "fallbackLabel": "(वैकल्पिक)",
+    "fallbackDescriptionPattern": "आपकी पसंदीदा {{style}} शैली और स्थानीय मौसम के अनुकूल एक संतुलित दैनिक पोशाक।"
   },
   "outfitCompletion": {
     "cta": "आउटफ़िट पूरा करें",

@@ -1385,7 +1385,11 @@
         "colorful_summer": "Farbenfroher Sommer",
         "casual_chic": "Casual Chic"
       }
-    }
+    },
+    "fallbackQuotaBanner": "Das Kontingent Ihres benutzerdefinierten API-Schlüssels wurde überschritten. Die Anfrage wurde nahtlos über die lokale DressApp-KI (Gemma-4-E4B) beantwortet.",
+    "fallbackQuotaExhausted": "(Ersatz. Kontingent erschöpft)",
+    "fallbackLabel": "(Ersatz)",
+    "fallbackDescriptionPattern": "Ein ausgewogenes Alltagsoutfit, passend zu Ihrem bevorzugten {{style}}-Stil und dem lokalen Wetter."
   },
   "outfitCompletion": {
     "cta": "Outfit vervollständigen",

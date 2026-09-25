@@ -3,7 +3,7 @@
 Quick, easy solutions for common questions, permissions, and app limits.
 
 ## Overview
-Find fast answers for camera access, upload speed questions, closet limit ceilings, and audio settings so you can get back to styling effortlessly.
+Find fast answers for camera access, upload speed questions, closet limit ceilings, audio settings, and AI key notices so you can get back to styling effortlessly.
 
 ## Prerequisites
 - An active internet connection.
@@ -20,7 +20,11 @@ Find fast answers for camera access, upload speed questions, closet limit ceilin
    - Check that your phone or computer volume is turned up and not muted or in "Do Not Disturb" mode.
 4. **Photos Taking Time to Process**:
    - Multi-item outfits take a few moments as the AI cuts out backgrounds, inspects image completeness, and extracts clothing tags. Items process smoothly one-by-one; you can continue browsing the app while they finish!
-5. **Connecting Google Calendar**:
+5. **"Using Platform Stylist (Quota Fallback)" Notice**:
+   - If you entered a personal Google Gemini API key and it ran out of quota or hit a `429 Too Many Requests` rate limit, DressApp automatically catches this and completes your styling request using our built-in on-premises Gemma-4-E4B model. Your styling request will never crash or fail with an error! You can check your key quota in Google AI Studio or continue using the built-in model.
+6. **"API Key Required" when opening Trend Scout or Nano Banana Repair**:
+   - Trend Scout daily fashion news and Nano Banana generative photo editing are advanced tools that require a personal Google Gemini API key. You can get a free key at [Google AI Studio](https://aistudio.google.com/) and enter it in **Profile** (`/me`) &rarr; **AI Configuration**.
+7. **Connecting Google Calendar**:
    - Go to **Profile** &rarr; **Google Calendar** and tap **Connect**. Authorize calendar permissions so the Stylist can check your daily events.
 
 ## Expected Results
@@ -32,3 +36,4 @@ Fast resolution of common issues so your digital wardrobe runs smoothly.
 
 ## Limitations
 - Digital wardrobe imports from competitor apps require a desktop browser and cannot be started from mobile phones.
+- Trend Scout fashion intelligence and Nano Banana image editing require a user-supplied Google Gemini API key.

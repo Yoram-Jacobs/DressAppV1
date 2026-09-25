@@ -111,13 +111,14 @@ Si inició sesión con Google antes de que DressApp solicitara acceso a los deta
 Administra configuraciones a nivel de sistema, suscripciones e integraciones de IA:
 
 - **Configuración de IA**:
-  - *Modo estándar*: Utiliza puntos finales de Gemini Flash 2.x administrados por el sistema.
-  - *Modo de claves de API personalizadas*: Conecte claves de API personalizadas de Google Gemini, Anthropic, OpenAI o DeepSeek a través de un modal guiado.
+  - *Modo Estándar (Motor integrado en la plataforma)*: Utiliza el modelo **Gemma-4-E4B** autoalojado y optimizado de DressApp. Totalmente gratuito, no requiere claves API e incluye 10 créditos diarios de estilismo.
+  - *Modo Clave API Propia (BYOK)*: Conecta tu clave personal de Google Gemini API (u otros proveedores compatibles) para desbloquear funciones avanzadas como el radar de moda Trend Scout y la reconstrucción fotográfica Nano Banana.
+  - *Protección con Respaldo Automático por Cuota (Quota Fallback)*: Si tu clave API personal agota su cuota (`429` / `RESOURCE_EXHAUSTED`), DressApp redirige automáticamente la solicitud al motor local Gemma con un banner informativo, asegurando que tu conversación nunca se interrumpa.
 - **Suscripción y límites del armario**:
-  - Ver el nivel de cuenta actual (**Free**: límite de 50 elementos frente a **Manager** o **Professional**: elementos ilimitados).
+  - Ver el nivel de cuenta actual (**Free**: límite de 150 elementos frente a **Manager** o **Professional**: elementos ilimitados).
   - Acceder a la **página de precios** (`/pricing` o haga clic en la tarjeta de su plan) para ver la tabla de comparación de niveles, seleccionar un plan y suscribirse.
   - Actualizar a través de la API REST de PayPal Subscriptions (Manager: $4.99/mes; Professional: $9.99/mes) o la pasarela Atzmai para transacciones locales en ILS.
-  - Copiar **enlace de recomendación**: Otorga +10 espacios de capacidad de armario por cada amigo que se registre (hasta un máximo de 200 elementos).
+  - Copiar **enlace de recomendación**: Otorga +10 espacios de capacidad de armario por cada amigo que se registre (hasta un máximo de 1,000 elementos).
 - **Planer & Push-Erinnerungen (Planificador y recordatorios push)**:
   - Activar/desactivar las notificaciones diarias de propuestas de conjuntos por la mañana.
   - Establecer frecuencia (*Todos los días*, *Día por medio*, *Dos veces por semana*, *En días laborables*), hora (p. ej., *07:00*) y demandas de estilo de código de vestir (*Casual*, *Formal*, *Athletic*, *Custom*).
@@ -154,5 +155,6 @@ Administra configuraciones a nivel de sistema, suscripciones e integraciones de 
 ---
 
 ## Limitaciones
-- El espacio de cuenta de nivel gratuito está limitado a 50 elementos a menos que se amplíe mediante bonos de recomendación (+10 espacios por invitación hasta un máximo de 200 elementos) o actualizando al nivel Manager o Professional.
-- El modo de clave de API personalizada requiere claves válidas con cuota restante del proveedor respectivo.
+- El espacio de la cuenta gratuita está limitado a 150 prendas de base, ampliable mediante invitaciones (+10 espacios por registro hasta un máximo de 1.000 prendas) o mejorando al plan Manager o Professional.
+- Los canales de Trend Scout y la reparación generativa Nano Banana requieren una clave personal de Google Gemini API.
+- El modo de clave propia cambiará de forma transparente al motor interno Gemma si el proveedor externo agota su cuota.

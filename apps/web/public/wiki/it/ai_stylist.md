@@ -1,29 +1,33 @@
-# Stylist Personale con Intelligenza Artificiale
+# Stylist conversazionale con intelligenza artificiale
 
-Confrontati con uno stylist personale intelligente che conosce il tuo armadio, il meteo e i tuoi impegni quotidiani.
+Interagisci con uno stylist personale intelligente che conosce il tuo guardaroba, le previsioni meteo e i tuoi impegni giornalieri.
 
 ## Panoramica
-L'AI Stylist è il tuo consulente di moda sempre a portata di mano. Puoi chattare con lui scrivendo o parlando a voce alta come con un amico. Lo stylist consulta il meteo locale, dà un'occhiata agli eventi di Google Calendar e ti suggerisce outfit completi ed eleganti creati direttamente con i vestiti che già possiedi.
+L'AI Stylist è il tuo assistente di moda in DressApp. Puoi dialogare scrivendo o parlando a voce in modo del tutto naturale. Lo stylist analizza il meteo locale, consulta i tuoi eventi di Google Calendar e suggerisce completi eleganti composti direttamente dai vestiti presenti nel tuo armadio.
+
+Il motore di styling di DressApp è alimentato dal modello locale ottimizzato **Gemma-4-E4B**, disponibile immediatamente per tutti gli utenti gratuiti senza richiedere alcuna chiave API. Per gli utenti che configurano una chiave personale Google Gemini, DressApp include il **Quota Fallback automatico**: se la tua chiave esaurisce la quota giornaliera o supera i limiti di richieste, il sistema instrada la domanda al modello locale Gemma con un avviso informativo, garantendo che la sessione non si interrompa mai.
 
 ## Prerequisiti
-- Almeno una maglia, un pantalone/gonna e un paio di scarpe nel tuo armadio.
-- Permesso del microfono attivato se desideri usare i comandi vocali.
-- (Opzionale) Google Calendar collegato per suggerimenti su misura per i tuoi appuntamenti.
+- Almeno un capo superiore, uno inferiore e un paio di scarpe nel tuo armadio.
+- Permesso del microfono abilitato per le richieste vocali a mani libere.
+- *(Facoltativo)* Connessione a Google Calendar per suggerimenti coordinati con la tua agenda.
+- *(Facoltativo)* Chiave Google Gemini API personale per utilizzare le tue quote cloud.
 
-## Istruzioni dettagliate
+## Istruzioni passo passo
 1. **Apri lo Stylist**: Tocca la scheda **AI Stylist** nella barra di navigazione inferiore.
-2. **Parla o scrivi**: Tocca l'**icona del microfono** e chiedi un consiglio (es. *"Cosa posso indossare per un pranzo di lavoro con la pioggia?"* o *"Consigliami un look chic"*).
-3. **Ascolta la risposta**: Lo stylist risponde con voce naturale e mostra le schede dei capi abbinati. Tocca **Riascolta** per riascoltare il consiglio.
-4. **Usa lo strumento Shuffle**: Cerchi una combinazione sorprendente? Tocca **Shuffle** per rimescolare il guardaroba e scoprire accostamenti nuovi!
-5. **Salva i preferiti**: Tocca **Salva nel diario** per programmare il look sul tuo calendario.
+2. **Parla o scrivi**: Tocca l'**icona del microfono** e chiedi cosa indossare (es.: *"Cosa posso indossare per un pranzo di lavoro all'aperto con la pioggia?"* o *"Suggerisci un look formale ma moderno"*).
+3. **Ascolta i consigli vocali**: Lo stylist risponde a voce e mostra le schede degli outfit abbinati. Tocca **Riproduci risposta** per riascoltare l'audio.
+4. **Funzione Shuffle**: Vuoi scoprire nuove combinazioni? Tocca la scheda **Shuffle** per rimescolare i tuoi capi e trovare abbinamenti a cui non avevi pensato!
+5. **Salva nel diario**: Tocca **Salva nel diario** per pianificare l'outfit sul tuo calendario personale.
 
 ## Risultati attesi
-Suggerimenti di abbigliamento su misura per il meteo e la tua giornata, con spiegazioni chiare del perché i capi stanno bene insieme.
+Outfit personalizzati e adatti al clima con spiegazioni vocali. Se la tua chiave API personale termina la quota, un banner ti avvertirà che l'IA on-premise di DressApp ha completato la richiesta senza interruzioni.
 
 ## Risoluzione dei problemi
-- **Il microfono non registra**: Controlla di aver concesso i permessi per il microfono nelle impostazioni del dispositivo o del browser.
-- **Outfit ripetitivi**: Registra i vestiti che indossi nel calendario affinché lo stylist dia priorità ai capi meno usati.
+- **Il microfono non rileva le parole**: Controlla i permessi del browser per assicurarti che DressApp possa accedere al microfono.
+- **Lo stylist suggerisce troppi outfit ripetitivi**: Registra i tuoi outfit quotidiani nel calendario per far sapere allo stylist cosa hai indossato di recente.
+- **Avviso "Utilizzo dello Stylist della Piattaforma (Quota Fallback)"**: Appare quando la tua chiave Gemini personale supera i limiti. La richiesta è stata completata con successo dall'IA interna.
 
 ## Limitazioni
-- Lo stylist attinge esclusivamente ai vestiti presenti nel tuo armadio digitale.
-- Ogni richiesta consuma 1 credito AI (gli account gratuiti ricevono 10 crediti in omaggio ogni giorno).
+- Lo stylist consiglia solo capi già presenti e fotografati nel tuo armadio digitale.
+- Gli utenti del piano gratuito ricevono 10 crediti di styling giornalieri gratuiti rinnovati ogni 24 ore.

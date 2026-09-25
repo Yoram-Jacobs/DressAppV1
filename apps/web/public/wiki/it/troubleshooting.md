@@ -1,34 +1,39 @@
-# Risoluzione dei Problemi e Suggerimenti
+# Risoluzione dei problemi e soluzioni utili
 
-Soluzioni rapide e chiare per domande frequenti, permessi e limiti dell'app.
+Risposte rapide e semplici a domande frequenti, permessi, limiti dell'armadio e avvisi sull'IA.
 
 ## Panoramica
-Trova risposte immediate su fotocamera, velocità di caricamento, limiti dell'armadio e impostazioni audio.
+Trova soluzioni rapide per l'accesso alla fotocamera, i tempi di caricamento, la capacità massima dell'armadio, le impostazioni audio e le notifiche di fallback dell'IA.
 
 ## Prerequisiti
-- Una connessione internet attiva.
-- Un browser moderno (Google Chrome o Apple Safari) o l'app mobile DressApp.
+- Una connessione Internet attiva.
+- Un browser web moderno (si consiglia Google Chrome o Safari) o l'app mobile DressApp.
 
-## Istruzioni dettagliate
+## Istruzioni passo passo
 1. **La fotocamera non si accende**:
-   - Apri le impostazioni del browser, trova **DressApp** e imposta la **Fotocamera** su "Consenti". Ricarica la pagina.
-2. **Messaggio "Capacità Massima Raggiunta"**:
-   - Gli account gratuiti conservano fino a **150 capi**.
-   - Invita amici per ottenere **+10 posti gratis** a registrazione (fino a 1.000 capi) o passa a **Pro** per spazio illimitato.
-3. **Microfono o voce non funzionanti**:
-   - Controlla i permessi del microfono nel browser.
-   - Verifica che il volume del dispositivo non sia disattivato.
-4. **L'elaborazione delle foto richiede un momento**:
-   - L'AI separa accuratamente ogni singolo capo presente nella foto. Puoi continuare a usare l'app mentre il processo termina in background!
-5. **Collegare Google Calendar**:
-   - Vai su **Profilo** &rarr; **Google Calendar** e tocca **Connetti**.
+   - Apri le impostazioni del browser o del dispositivo, cerca **DressApp** e assicurati che il permesso **Fotocamera** sia impostato su "Consenti". Ricarica la pagina.
+2. **Messaggio "Capacità dell'armadio raggiunta"**:
+   - Gli account gratuiti possono memorizzare fino a **150 capi d'abbigliamento**.
+   - Puoi invitare amici per ottenere **+10 spazi bonus** per ogni registrazione (fino a 1.000 capi), eliminare vestiti inutilizzati o passare a **Pro** ($4.99/mese) per spazio illimitato.
+3. **Digitazione vocale o audio non rispondono**:
+   - Verifica che i permessi del microfono siano concessi nel browser.
+   - Assicurati che il volume del dispositivo non sia disattivato o in modalità "Non disturbare".
+4. **Le foto impiegano tempo per l'elaborazione**:
+   - Gli scatti con più capi richiedono qualche secondo per lo scontorno trasparente, l'analisi dei bordi e l'estrazione delle caratteristiche di moda. L'elaborazione avviene in background.
+5. **Avviso "Utilizzo dello Stylist della Piattaforma (Quota Fallback)"**:
+   - Se hai inserito una chiave API personale Google Gemini e questa ha esaurito la quota o superato i limiti di frequenza (`429 Too Many Requests`), DressApp reindirizza automaticamente la richiesta al modello locale Gemma-4-E4B. Il tuo consulto di stile non fallirà mai! Puoi verificare la tua quota su Google AI Studio o proseguire con l'IA interna.
+6. **Messaggio "Chiave API richiesta (403)" su Trend Scout o Nano Banana**:
+   - I canali moda di Trend Scout e il ritocco fotografico Nano Banana richiedono una chiave personale di Google Gemini API. Puoi ottenerne una gratis su [Google AI Studio](https://aistudio.google.com/) e inserirla in **Profilo** (`/me`) &rarr; **Configurazione IA**.
+7. **Collegamento a Google Calendar**:
+   - Vai su **Profilo** &rarr; **Google Calendar** e tocca **Connetti** per autorizzare la sincronizzazione dei tuoi impegni.
 
 ## Risultati attesi
-Risoluzione rapida dei dubbi più comuni per una gestione senza intoppi del tuo guardaroba.
+Risoluzione rapida di ogni dubbio per utilizzare il guardaroba digitale senza pensieri.
 
 ## Risoluzione dei problemi
-- **Problema persistente?** Effettua il logout e rientra, oppure svuota la cache del browser.
-- **Visualizzazione RTL**: In ebraico e arabo l'interfaccia si orienta automaticamente da destra verso sinistra.
+- **Il problema persiste?** Effettua il logout e accedi nuovamente, oppure cancella la cronologia/cache del browser.
+- **Visualizzazione lingue RTL**: In ebraico e arabo, il testo e i menu si invertono automaticamente a destra.
 
 ## Limitazioni
-- L'importazione di capi da altre app richiede un browser per computer.
+- L'importazione da app concorrenti richiede un browser desktop e non è supportata su dispositivi mobili.
+- Trend Scout e il ritocco immagini con Nano Banana richiedono una chiave personale Google Gemini API.

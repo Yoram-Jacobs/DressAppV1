@@ -1,42 +1,43 @@
-# Kleidung aufnehmen und hinzufügen
+# Kleidung erfassen & hinzufügen
 
-Digitalisieren Sie Ihre physische Garderobe in Sekundenschnelle mit multimodaler KI-Erkennung, intelligenter Hintergrundentfernung und automatischer Bildrekonstruktion.
+Digitalisieren Sie Ihren Kleiderschrank in Sekundenschnelle mit multimodaler KI-Erkennung, automatischer Hintergrundentfernung und intelligenter Bildvervollständigung.
 
 ## Übersicht
-Erfassen Sie Kleidung über Live-Kameraaufnahmen, Galerie-Uploads mehrerer Bilder, QR-Codes digitaler Produktpässe (DPP) oder digitale Belege (Rechnungs-OCR). Die integrierte KI schneidet Hintergründe automatisch frei, versieht Kleidungsstücke mit Modeattributen, bewertet die Vollständigkeit des Zuschnitts und rekonstruiert verdeckte oder abgeschnittene Artikel.
+Erfassen Sie Kleidungsstücke per Live-Kamerafoto, Galerie-Mehrfachupload, Digital Product Passport (DPP) QR-Codes oder digitalen Rechnungen (OCR). Die integrierte On-Premises-KI entfernt Hintergründe automatisch, extrahiert über 20 Modemerkmale und erstellt saubere Studiofreisteller – ganz ohne API-Schlüssel.
 
 ## Voraussetzungen
-- Klare, gut beleuchtete Fotos von Kleidungsstücken (Spiegelselfies, Ganzkörper-Outfitfotos oder Flat-Lays).
-- Kamerazugriff zum Scannen physischer Artikel und QR-Codes.
-- Digitale Quittungen oder Rechnungs-Screenshots (PDF / PNG / JPEG) für Online-Käufe.
+- Klare, gut beleuchtete Fotos der Kleidungsstücke (Spiegelselfies, Ganzkörperfotos oder Flat-Lays).
+- Kamerazugriff für das Scannen von Gegenständen und QR-Codes.
+- Digitale Rechnungen oder Screenshots (PDF / PNG / JPEG) von Online-Käufen.
+- *(Optional)* Ein persönlicher Google Gemini API-Schlüssel, wenn Sie die generative Bildrekonstruktion mit Nano Banana nutzen möchten.
 
-## Schritt für Schritt
+## Schritt-für-Schritt-Anleitung
 
 1. **Interaktiver Upload & Aufnahme**:
-   - Tippen Sie auf **Artikel hinzufügen** &rarr; wählen Sie **Foto aufnehmen** oder laden Sie ein oder mehrere Outfit-Fotos von Ihrem Gerät hoch.
-   - Die integrierte Duplikaterkennung prüft sofort, ob Sie dasselbe Kleidungsstück bereits hochgeladen haben.
-2. **KI-Segmentierung & Multi-Item-Erkennung**:
-   - Das Vision-Modell isoliert verschiedene Kleidungsstücke (Jacken, Oberteile, Röcke, Hosen, Schuhe, Accessoires) in einem einzigen Durchlauf.
-3. **KI-Qualitätsprüfung & Automatische Bildreparatur**:
-   - Der visuelle Qualitätsprüfer von Gemini inspiziert jeden zugeschnittenen Artikel:
-     - **Vollständig**: Intakte, unverdeckte Kleidungsstücke werden direkt freigestellt.
-     - **Bildvervollständigung**: Weist ein Artikel fehlende Seitenkonturen, Verdeckungen (durch Taschen/Arme) oder abgeschnittene Säume/Kragen auf, führt die KI automatisch ein Outpainting durch und ergänzt den fehlenden Stoff.
-     - **Vollständige Studio-Rekonstruktion**: Stark abgeschnittene Artikel (wie Schuhe, bei denen nur die Kappe sichtbar ist) werden vollständig in makellose Studio-Katalogfotos umgewandelt.
-4. **Automatisches Metadaten-Tagging**:
-   - Die KI extrahiert über 20 Modeattribute (Farben, Stoffzusammensetzung, Unterkategorie, Dresscode, Marke und Zustand).
-5. **Digitale Belege & DPP-Tags**:
-   - Wechseln Sie zu **Digitaler Import**, um Bestellbestätigungs-E-Mails oder Rechnungen zu analysieren und Kaufpreise sowie verifizierte Größen zu hinterlegen.
-   - Tippen Sie auf **QR scannen (DPP)** auf dem Etikett, um Lieferketteninformationen und Pflegehinweise des EU-Produktpasses zu importieren.
-6. **Im Kleiderschrank speichern**:
-   - Tippen Sie auf **Speichern**. Artikel erscheinen sofort im Kleiderschrank-Grid, während generative Vervollständigungen nahtlos im Hintergrund finalisiert werden.
+   - Tippen Sie auf **Artikel hinzufügen** &rarr; wählen Sie **Foto aufnehmen** oder laden Sie Fotos von Ihrem Gerät hoch.
+   - Die integrierte Duplikaterkennung prüft sofort, ob der Artikel bereits vorhanden ist.
+2. **KI-Segmentierung & Mehrfachartikel-Erkennung**:
+   - Das Vision-Modell erkennt und isoliert verschiedene Kleidungsstücke (Jacken, Oberteile, Röcke, Hosen, Schuhe, Accessoires) in einem Durchgang.
+3. **KI-Freistellung & Studioqualität**:
+   - Die Bildverarbeitung schneidet Hintergründe automatisch aus und generiert gestochen scharfe, transparente PNG-Bilder für alle Konten.
+4. **Automatische Attribut-Erkennung**:
+   - Die lokale KI extrahiert über 20 Modemerkmale (Farben, Materialzusammensetzung, Unterkategorie, Dresscode, Marke und Zustand).
+5. **Erweiterte generative Fotoreparatur (Nano Banana)**:
+   - Für Benutzer mit persönlichem Google Gemini API-Schlüssel analysiert Nano Banana verdeckte oder abgeschnittene Bereiche (Taschen, Hände, Bildränder) und rekonstruiert fehlende Stoffpartien zu vollständigen Studioaufnahmen.
+6. **Digitale Belege & DPP-Tags**:
+   - Wechseln Sie zu **Digitaler Import**, um Bestellbestätigungen oder Rechnungen einzulesen und Kaufpreis sowie Größen zu speichern.
+   - Scannen Sie den **QR-Code (DPP)** auf dem Pflegeetikett für EU-Lieferkettendaten und Pflegeanleitungen.
+7. **Im Kleiderschrank speichern**:
+   - Tippen Sie auf **Speichern**. Die Artikel erscheinen sofort in Ihrer Kleiderschrank-Übersicht.
 
 ## Erwartete Ergebnisse
-Jedes Kleidungsstück erscheint in Ihrer digitalen Garderobe als zentriertes, sauberes Foto in Studioqualität mit vollständig indizierten Suchattributen und umfassenden Taxonomie-Tags.
+Jedes Kleidungsstück erscheint als zentriertes, professionell freigestelltes Studiofoto mit vollständigen Suchattributen und detaillierten Tags.
 
 ## Fehlerbehebung
-- **Abgeschnittene / Unvollständige Kleidungsstücke**: Die KI erkennt Bildkantenabschnitte automatisch und rekonstruiert sie; Sie können auch auf jeder Artikeldetailkarte auf **Foto reparieren** tippen, um eine manuelle Studio-Neugenerierung auszulösen.
-- **Beleuchtung & Kontrast**: Für beste Ergebnisse bei dunklen Kleidungsstücken fotografieren Sie diese vor kontrastierenden Hintergründen.
-- **Fehlerhafte Quittungs-OCR**: Verwenden Sie die interaktive Box-Auswahl auf Quittungsbildern, um einzelne Produktzeilen manuell festzulegen.
+- **Abgeschnittene Kleidungsstücke**: Platzieren Sie das Kleidungsstück mittig vor einem kontrastierenden Hintergrund. Mit konfiguriertem API-Schlüssel kann Nano Banana abgeschnittene Säume oder Kragen automatisch rekonstruieren.
+- **Beleuchtung & Kontrast**: Für dunkle Kleidung empfiehlt sich ein heller, kontrastreicher Hintergrund.
+- **Fehlerhafte Rechnungserkennung**: Nutzen Sie die interaktive Box-Auswahl auf dem Rechnungsbild, um Produktzeilen manuell zuzuweisen.
 
 ## Einschränkungen
-- Hochauflösende Stapel-Uploads (>5 Artikel) werden über asynchrone Hintergrundwarteschlangen verarbeitet, um eine reaktionsschnelle Leistung ohne Browser-Timeouts zu gewährleisten.
+- Größere Stapel-Uploads (>5 Artikel) werden im Hintergrund verarbeitet, um eine flüssige Bedienung ohne Browser-Timeouts zu gewährleisten.
+- Die fotorealistische Rekonstruktion mit Nano Banana erfordert einen benutzerdefinierten Google Gemini API-Schlüssel.

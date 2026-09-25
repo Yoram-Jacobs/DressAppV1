@@ -1385,7 +1385,11 @@
         "colorful_summer": "Estate colorata",
         "casual_chic": "Casual chic"
       }
-    }
+    },
+    "fallbackQuotaBanner": "La quota della chiave API personalizzata è stata superata. La richiesta è stata completata senza problemi utilizzando l'IA on-premise di DressApp (Gemma-4-E4B).",
+    "fallbackQuotaExhausted": "(Fallback. Quota esaurita)",
+    "fallbackLabel": "(Fallback)",
+    "fallbackDescriptionPattern": "Un outfit quotidiano bilanciato che si adatta al tuo stile {{style}} preferito e al meteo locale."
   },
   "outfitCompletion": {
     "cta": "Completa l'outfit",

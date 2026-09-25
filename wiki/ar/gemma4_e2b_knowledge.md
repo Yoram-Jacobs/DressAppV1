@@ -1,57 +1,31 @@
-# Gemma 4 E2B — Agent Knowledge & Inference Guide
+# Gemma 4 E4B / E2B — دليل المعرفة والاستدلال للوكلاء
 
-**Target Audience:** Future AI Agents, Maintainers, and ML Engineers working on the DressApp Eyes vision pipeline.
-**Date:** May 2026
+**الجمهور المستهدف:** وكلاء الذكاء الاصطناعي، والمطورون، ومهندسو تعلم الآلة العاملون على منصة DressApp Eyes.  
+**التاريخ:** سبتمبر 2026  
+**الحالة:** نشط في بيئة الإنتاج (`gemma-4-E4B-it-Q3_K_M.gguf` + `mmproj-BF16.gguf`)
 
-This document preserves the concrete logic, architectural quirks, and inference rules required for successfully staging and benchmarking the `google/gemma-4-E2B-it` model with a LoRA adapter in the DressApp ecosystem. 
+توثق هذه الوثيقة المنطق الفعلي والمواصفات المعمارية وقواعد الاستدلال لنموذج `gemma-4-E4B-it` في منظومة DressApp.
 
 ---
 
-## 1. Architectural Facts
-- **Model Profile:** E2B stands for *Effective 2 Billion* parameters (5.1B total). It leverages Per-Layer Embeddings (PLE) to radically reduce memory footprint, making it the only viable variant for DressApp's CPU-only Hetzner VPS environment.
-- **Context Window:** Up to 128K tokens.
-- **Native Multimodality:** Supports Text, Image, and Audio inputs. Outputs Text.
-- **Attention Mechanism:** Hybrid local sliding-window and global attention.
+## 1. الحقائق المعمارية
+- **ملف النموذج:** Google Gemma-4-E4B هو نموذج رؤية ولغة متعدد الوسائط بحجم 4 مليارات معامل فعال (~4.5B إجمالي) يعتمد على Per-Layer Embeddings (PLE). تم تكميمه إلى `Q3_K_M` (~2.7 جيجابايت تخزين، ~2.85 جيجابايت في الذاكرة العشوائية)، مما يمنحه أداءً فائقاً على خوادم Hetzner CPX32 (معالجات AMD vCPU رباعية النواة بدون GPU).
+- **نافذة السياق:** تصل إلى 128 ألف رمز (مضبوطة على 4096 رمزاً في `dressapp-eyes` لسرعة المعالجة).
+- **المدخلات:** دعم أصلي للصور والصوت والنصوص عبر `mmproj-BF16.gguf`.
+- **خادم الإنتاج:** يشغل `llama-server` على المنفذ 7860 داخل حاوية `dressapp-eyes`، ومحمي برمز وصول FastAPI (`EYES_API_TOKEN`).
 
-## 2. Dependencies & Tooling (Critical)
-Gemma 4 is a fundamentally new family (released March-April 2026), NOT a revision of Gemma-3. Loading it incorrectly corrupts the multimodal projection tensors.
-- **Transformers Version:** `transformers >= 4.57.1` (or `5.5.0+` depending on local release naming). You **must** use `AutoProcessor` and `AutoModelForMultimodalLM`. Never hand-roll `Gemma4*ForConditionalGeneration`.
-- **Quantization:** Use `optimum-quanto` for CPU inference (int4 quantization). `bitsandbytes` is highly unstable/unsupported for pure x86 CPU deployments.
-- **LoRA Adapter:** Use `peft` to attach the trained LoRA adapter to the base model. The base text-decoder layers are wrapped with rank-16 adapters, while the vision/audio towers remain frozen.
+## 2. الأدوار في الإنتاج والتوجيه متعدد المستويات
+1. **نواة الفئة المجانية**: تشغيل التنسيق التفاعلي واستخراج خصائص الملابس للمستخدمين المجانيين وبدون مفاتيح API.
+2. **المهام المجدولة (Cron)**: تنفيذ الفهرسة اليومية للملابس واقتراحات الصباح دون تكاليف تجارية.
+3. **التحويل الاحتياطي عند نفاد الحصة (Quota Fallback)**: معالجة أخطاء نفاد الحصص (`429`) أو `RESOURCE_EXHAUSTED` من المزودين الخارجيين وتمرير الطلبات تلقائياً لمحرك Gemma المدمج دون توقف أو إظهار أخطاء للمستخدم.
+4. **حدود المستويات**: تتطلب الميزات التوليدية المتقدمة (مثل Trend Scout وNano Banana) مفاتيح خاصة يزودها المستخدم.
 
-## 3. Prompting & Inference Rules
-
-### Modality Ordering
-For optimal attention mapping and zero-shot performance, **Image/Audio tokens must always precede text** within the message content structure.
-```python
-# Correct payload structure for the AutoProcessor:
-messages = [
-    {"role": "user", "content": [
-        {"type": "image"},
-        {"type": "text", "text": "Analyze this outfit..."}
-    ]}
-]
-```
-
-### Visual Token Budgets
-Gemma 4 does not treat all images equally. You control visual resolution via a `vision_token_budget` (sometimes named `image_token_budget` or `num_image_tokens` depending on the `transformers` version branch).
-- Allowed budgets: `70`, `140`, `280`, `560`, `1120`.
-- **DressApp Specifics:** Because garment boundary detection and detail extraction require high precision, always force the `AutoProcessor` budget to **1120** (maximum detail).
-
-### Thinking Mode (Reasoning)
-Gemma-4 natively supports CoT (Chain-of-Thought) reasoning.
-- **Activation:** To enable thinking, insert the `<|think|>` token at the very beginning of the system prompt.
-- **Output Channel Format:** When reasoning, the model emits tags:
-  `<|channel>thought\n[Internal reasoning]<channel|>[Final answer]`
-- **Disabling:** If strict JSON is required and latency is paramount (as in our `EYES_ONE_PASS` pipeline), omit the `<|think|>` token to force direct emission.
-- **History Rule:** In multi-turn chats, strip the reasoning (`<|channel>thought...<channel|>`) from history. Only feed the `[Final answer]` back into the context buffer.
-
-### Sampling Best Practices
-Do not use standard LLM temperature defaults. Google's explicit standard for Gemma-4 sampling is:
-- `temperature = 1.0`
-- `top_p = 0.95`
-- `top_k = 64`
-
-## 4. Production Environment Notes
-- Auth for gated models (`HF_TOKEN`) is NOT shipped with the DressApp runtime. The container relies on pre-downloaded weights and merged adapters (`/adapter:ro`) mounted locally.
-- Keep the `EYES_ONE_PASS=true` flag logic in mind: it bypasses legacy SegFormer clipping by relying entirely on Gemma-4's native coordinate output (`response_format=json_schema`).
+## 3. قواعد الاستدلال والتوليد
+- **وضع التفكير (Thinking Mode)**: يدعم سلسلة التفكير، ويتم كبحه في مسارات استخراج بيانات JSON لضمان تكامل المخرجات.
+- **معاملات التوليد**:
+  - `temperature = 0.3` (لمخرجات JSON الدقيقة).
+  - `max_tokens = 3000`.
+- **معدل الأداء الفعلي (Hetzner CPX32)**:
+  - معالجة المدخلات: ~32 رمزاً في الثانية.
+  - توليد الإجابات: ~16.5 رمزاً في الثانية.
+  - استهلاك الذاكرة: ~2.85 جيجابايت من أصل 8 جيجابايت.

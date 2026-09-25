@@ -1385,7 +1385,11 @@
         "colorful_summer": "Colorful summer",
         "casual_chic": "Casual chic"
       }
-    }
+    },
+    "fallbackQuotaBanner": "Custom API key quota was exceeded. Request fulfilled seamlessly using DressApp on-prem AI (Gemma-4-E4B).",
+    "fallbackQuotaExhausted": "(Fallback. Quota exhausted)",
+    "fallbackLabel": "(Fallback)",
+    "fallbackDescriptionPattern": "A balanced daily outfit matching your preferred {{style}} style and local weather."
   },
   "outfitCompletion": {
     "cta": "Complete the outfit",
