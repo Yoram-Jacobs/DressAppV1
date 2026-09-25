@@ -351,15 +351,34 @@ const hydrate = (a, user, t, i18n) => {
   if (!subRaw || subRaw.toLowerCase() === 'top' || subRaw.toLowerCase() === 'tops' || subRaw.toLowerCase() === catLower) {
     subRaw = (out.gender === 'women') ? 'blouses' : 'tailored_shirts';
   }
-  if (!itemRaw || itemRaw.toLowerCase() === 'top' || itemRaw.toLowerCase() === 'tops' || itemRaw.toLowerCase() === catLower) {
-    itemRaw = subRaw;
+  const subCanonical = canonicalSubCategoryKey(subRaw);
+  if (!itemRaw || itemRaw.toLowerCase() === 'top' || itemRaw.toLowerCase() === 'tops' || itemRaw.toLowerCase() === catLower || itemRaw === subRaw || canonicalSubCategoryKey(itemRaw) === subCanonical) {
+    if (subCanonical === 't_shirts' || /t[-_ ]?shirt|tee|חולצת טי|חולצות טי/i.test(subRaw)) {
+      itemRaw = 'short_sleeve_t_shirt';
+    } else if (subCanonical === 'tailored_shirts' || /shirt|מכופתרת/i.test(subRaw)) {
+      itemRaw = 'button_down_shirt';
+    } else if (subCanonical === 'blouses' || /blouse|בלוזה/i.test(subRaw)) {
+      itemRaw = 'cap_sleeve_blouse';
+    } else if (subCanonical === 'jeans' || /jeans|ג׳ינס|גינס/i.test(subRaw)) {
+      itemRaw = 'straight_jeans';
+    } else if (subCanonical === 'coats' || /coat|מעיל/i.test(subRaw)) {
+      itemRaw = 'trench_coat';
+    } else if (subCanonical === 'jackets' || /jacket|ג׳קט/i.test(subRaw)) {
+      itemRaw = 'denim_jacket';
+    } else if (subCanonical === 'trousers' || /pants|trousers|מכנס/i.test(subRaw)) {
+      itemRaw = 'chinos';
+    } else if (subCanonical === 'knitwear' || /sweater|סוודר|סריג/i.test(subRaw)) {
+      itemRaw = 'crew_neck_sweater';
+    } else {
+      itemRaw = subRaw;
+    }
   }
 
   // 2. Fallback pattern: if model returned solid/empty but text indicates geometric/stripes/etc.
   let curPattern = String(out.pattern || '').trim().toLowerCase();
   if (!curPattern || curPattern === 'solid') {
     const fullPatternBlob = `${out.name} ${out.title} ${out.caption} ${(Array.isArray(out.tags) ? out.tags : []).join(' ')}`.toLowerCase();
-    if (/geometric|גיאומטרי|weave|textured|מרקם/.test(fullPatternBlob)) {
+    if (/geometric|גיאומטרי|weave|textured|מרקם|טקסטורה|נקודות|עיגולים|מחורר|dots|eyelet|perforated|waffle|jacquard|pique|subtle/.test(fullPatternBlob)) {
       out.pattern = 'geometric';
     } else if (/strip|striped|stripe|פסים/.test(fullPatternBlob)) {
       out.pattern = 'striped';
@@ -386,8 +405,13 @@ const hydrate = (a, user, t, i18n) => {
 
   // 4. Fallback gender: feminine sleeve / cut detection
   if (!out.gender || out.gender === 'unisex') {
-    const femBlob = `${subRaw} ${itemRaw} ${out.name} ${out.title} ${out.caption}`.toLowerCase();
-    if (/cap[- ]sleeve|flutter|blouse|sweetheart|peplum|ruffle|בלוזה|שמלה|חצאית/.test(femBlob)) {
+    const isFemUser = user?.sex === 'female' || user?.gender === 'female' || user?.gender === 'women';
+    const femBlob = `${subRaw} ${itemRaw} ${out.name} ${out.title} ${out.caption} ${(Array.isArray(out.tags) ? out.tags : []).join(' ')}`.toLowerCase();
+    const isFemSleeveOrCut = /cap[- ]sleeve|flutter|blouse|sweetheart|peplum|ruffle|scoop|curved|בלוזה|שמלה|חצאית|גופיי|קצרצר|שרוול קצר|עדינ/.test(femBlob);
+    const sizeUpper = String(out.size || '').trim().toUpperCase();
+    const isFemSize = ['XS', 'S', 'XXS', '34', '36', '38'].includes(sizeUpper);
+    const isFemTop = catLower === 'top' && (isFemUser || isFemSleeveOrCut || isFemSize || /תכלת|כחול בהיר|light blue|baby blue/.test(femBlob));
+    if (isFemUser || isFemSleeveOrCut || isFemTop) {
       out.gender = 'women';
     }
   }
@@ -423,21 +447,49 @@ const hydrate = (a, user, t, i18n) => {
         out.sub_category = subRaw;
       }
 
-      const itemKey = canonicalSubCategoryKey(itemRaw);
-      if (itemKey && itemKey !== 'other') {
-        const localizedItem = labelForSubCategory(itemKey, t);
-        if (localizedItem && localizedItem !== itemKey) out.item_type = localizedItem;
-        else out.item_type = itemRaw;
+      // Localize item_type using labelForItemType first, fallback to labelForSubCategory
+      const localizedItem = labelForItemType(itemRaw, t);
+      if (localizedItem && localizedItem !== itemRaw) {
+        out.item_type = localizedItem;
       } else {
-        const itemTypeLabel = labelForItemType(itemRaw, t);
-        out.item_type = itemTypeLabel || itemRaw;
+        const itemKey = canonicalSubCategoryKey(itemRaw);
+        if (itemKey && itemKey !== 'other') {
+          const fallbackSub = labelForSubCategory(itemKey, t);
+          out.item_type = fallbackSub && fallbackSub !== itemKey ? fallbackSub : itemRaw;
+        } else {
+          out.item_type = itemRaw;
+        }
+      }
+
+      // Hard check: ensure sub_category and item_type are NEVER visually identical
+      if (String(out.item_type).trim().toLowerCase() === String(out.sub_category).trim().toLowerCase()) {
+        const subK = canonicalSubCategoryKey(subRaw);
+        if (subK === 't_shirts' || /חולצת טי|חולצות טי|t[-_ ]?shirt/i.test(out.sub_category)) {
+          out.item_type = t('taxonomy.item_type.short_sleeve_t_shirt', { defaultValue: 'חולצת טי שרוול קצר' });
+        } else if (subK === 'tailored_shirts' || /מכופתרת|shirt/i.test(out.sub_category)) {
+          out.item_type = t('taxonomy.item_type.button_down_shirt', { defaultValue: 'חולצה מכופתרת' });
+        } else if (subK === 'blouses' || /בלוזה|blouse/i.test(out.sub_category)) {
+          out.item_type = t('taxonomy.item_type.cap_sleeve_blouse', { defaultValue: 'בלוזת שרוול קצרצר' });
+        } else {
+          out.item_type = `${out.sub_category} ${t('taxonomy.season.summer', { defaultValue: 'קצר' })}`;
+        }
       }
 
       if (Array.isArray(out.colors) && out.colors.length > 0) {
+        const fullColorBlob = `${out.name} ${out.title} ${out.caption} ${(Array.isArray(out.tags) ? out.tags : []).join(' ')}`.toLowerCase();
         out.colors = out.colors.map((c) => {
-          const rawName = typeof c === 'string' ? c : c?.name || '';
+          let rawName = typeof c === 'string' ? c : c?.name || '';
+          const rawLower = String(rawName).trim().toLowerCase();
+          if (rawLower === 'blue' || rawName === 'כחול') {
+            if (/light[- ]blue|sky[- ]blue|baby[- ]blue|cyan|turquoise|תכלת|כחול בהיר|שמיים/.test(fullColorBlob)) {
+              rawName = 'light_blue';
+            }
+          } else if (rawLower === 'green' || rawName === 'ירוק') {
+            if (/olive|זית/.test(fullColorBlob)) rawName = 'olive';
+            else if (/mint|sage|מנטה/.test(fullColorBlob)) rawName = 'mint';
+          }
           const localized = labelForColor(rawName, t);
-          return typeof c === 'string' ? localized : { ...c, name: localized || rawName };
+          return typeof c === 'string' ? (localized || rawName) : { ...c, name: localized || rawName };
         });
       }
       const rawTitle = (out.title || out.name || '').trim();

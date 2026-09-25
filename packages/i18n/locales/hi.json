@@ -2479,7 +2479,10 @@
       "low_tops": "लो-टॉप्स",
       "tote_bag": "टोट बैग",
       "crossbody_bag": "क्रॉसबॉडी बैग",
-      "clutch": "क्लच"
+      "clutch": "क्लच",
+      "short_sleeve_t_shirt": "हाफ स्लीव टी-शर्ट",
+      "cap_sleeve_top": "कैप स्लीव टॉप",
+      "cap_sleeve_blouse": "कैप स्लीव ब्लाउज"
     },
     "color": {
       "black": "काला",
@@ -2499,7 +2502,20 @@
       "yellow": "पीला",
       "orange": "नारंगी",
       "gold": "सुनहरा",
-      "silver": "चांदी / सिल्वर"
+      "silver": "चांदी / सिल्वर",
+      "light_blue": "हल्का नीला",
+      "sky_blue": "आसमानी नीला",
+      "baby_blue": "बेबी ब्लू",
+      "cyan": "स्यान",
+      "turquoise": "फ़िरोज़ा",
+      "teal": "टील",
+      "indigo": "इंडिगो",
+      "mint": "मिंट",
+      "coral": "मूंगा",
+      "peach": "आड़ू",
+      "lavender": "लैवेंडर",
+      "charcoal": "चारकोल",
+      "light_grey": "हल्का धूसर"
     },
     "material": {
       "acrylic": "ऐक्रेलिक",

@@ -2479,7 +2479,10 @@
       "low_tops": "Tênis cano baixo",
       "tote_bag": "Bolsa tote",
       "crossbody_bag": "Bolsa transversal",
-      "clutch": "Clutch (bolsa de mão)"
+      "clutch": "Clutch (bolsa de mão)",
+      "short_sleeve_t_shirt": "Camiseta de manga curta",
+      "cap_sleeve_top": "Top de manga japonesa",
+      "cap_sleeve_blouse": "Blusa de manga japonesa"
     },
     "color": {
       "black": "Preto",
@@ -2499,7 +2502,20 @@
       "yellow": "Amarelo",
       "orange": "Laranja",
       "gold": "Dourado",
-      "silver": "Prateado"
+      "silver": "Prateado",
+      "light_blue": "Azul claro",
+      "sky_blue": "Azul celeste",
+      "baby_blue": "Azul bebê",
+      "cyan": "Ciano",
+      "turquoise": "Turquesa",
+      "teal": "Verde-azulado",
+      "indigo": "Índigo",
+      "mint": "Menta",
+      "coral": "Coral",
+      "peach": "Pêssego",
+      "lavender": "Lavanda",
+      "charcoal": "Cinza-chumbo",
+      "light_grey": "Cinza-claro"
     },
     "material": {
       "acrylic": "Acrílico",

@@ -77,6 +77,39 @@ def _coerce_single_garment(
         res["item_type"] = res.get("sub_category") or "Shirt"
         itype_lower = (res["item_type"] or "").strip().lower()
 
+    # Guarantee item_type and sub_category are distinct and specific
+    if itype_lower == sub_lower:
+        full_text_itype = f"{res.get('name', '')} {res.get('title', '')} {res.get('caption', '')}".lower()
+        is_summer = any(s in res.get("season", []) for s in ("summer", "spring")) or any(w in full_text_itype for w in ("short", "cap", "summer", "קצר", "קיץ"))
+        if any(w in sub_lower for w in ("t-shirt", "t_shirt", "tshirt", "tee", "טי")):
+            if is_summer or any(w in full_text_itype for w in ("cap", "flutter", "short")):
+                res["item_type"] = "Short-Sleeve T-Shirt"
+            elif any(w in full_text_itype for w in ("long", "ארוך")):
+                res["item_type"] = "Long-Sleeve T-Shirt"
+            else:
+                res["item_type"] = "Short-Sleeve T-Shirt"
+        elif any(w in sub_lower for w in ("shirt", "מכופתרת")):
+            res["item_type"] = "Short-Sleeve Shirt" if is_summer else "Button-Down Shirt"
+        elif any(w in sub_lower for w in ("blouse", "בלוזה")):
+            res["item_type"] = "Cap-Sleeve Blouse" if is_summer else "Casual Blouse"
+        elif any(w in sub_lower for w in ("jeans", "ג'ינס", "גינס")):
+            res["item_type"] = "Straight Jeans"
+        elif any(w in sub_lower for w in ("pants", "trousers", "מכנסי")):
+            res["item_type"] = "Tailored Trousers"
+        elif any(w in sub_lower for w in ("coat", "מעיל")):
+            res["item_type"] = "Tailored Coat"
+        elif any(w in sub_lower for w in ("jacket", "ג'קט")):
+            res["item_type"] = "Casual Jacket"
+        elif any(w in sub_lower for w in ("sweater", "סוודר", "סריג")):
+            res["item_type"] = "Crew-Neck Sweater"
+        elif any(w in sub_lower for w in ("skirt", "חצאית")):
+            res["item_type"] = "A-Line Skirt"
+        elif any(w in sub_lower for w in ("dress", "שמלה")):
+            res["item_type"] = "Midi Dress"
+        else:
+            res["item_type"] = f"Short-Sleeve {res['sub_category']}" if is_summer else f"Classic {res['sub_category']}"
+        itype_lower = (res["item_type"] or "").strip().lower()
+
     # Footwear pluralization
     if cat_lower == "footwear" or sub_lower in {"boot", "shoe", "sneaker", "heel", "loafer", "sandal", "pump"}:
         plural_map = {
@@ -108,10 +141,15 @@ def _coerce_single_garment(
             "dress", "skirt", "blouse", "heels", "pumps", "knee-high boots",
             "shoulder bag", "handbag", "tote bag", "clutch", "cap sleeve",
             "cap-sleeve", "flutter sleeve", "peplum", "sweetheart", "ruffle",
+            "scoop neck", "boat neck", "curved hem", "fitted", "light blue",
+            "baby blue", "pastel", "תכלת", "עדינה", "נשים",
             "בלוזה", "שמלה", "חצאית", "גופיית", "עקבים"
         }
         full_text_fem = f"{sub_lower} {itype_lower} {res.get('name', '')} {res.get('title', '')} {res.get('caption', '')}".lower()
-        if cat_lower in {"full body", "dress"} or any(c in full_text_fem for c in fem_cues):
+        size_upper = str(res.get("size") or "").strip().upper()
+        is_fem_size = size_upper in {"XS", "S", "XXS", "34", "36", "38"}
+        is_fem_top = cat_lower == "top" and (is_fem_size or any(c in full_text_fem for c in ("cap", "flutter", "scoop", "light blue", "תכלת", "עדינ", "קצרצר")))
+        if cat_lower in {"full body", "dress"} or is_fem_top or any(c in full_text_fem for c in fem_cues):
             res["gender"] = "women"
 
     # Unique name guarantee: ensure name is not just the subcategory name
@@ -184,7 +222,7 @@ def _coerce_single_garment(
     pat_str = (res.get("pattern") or "").strip().lower()
     if not pat_str or pat_str == "solid":
         full_pat_text = f"{res.get('name', '')} {res.get('title', '')} {res.get('caption', '')} {' '.join(res.get('tags') or [])}".lower()
-        if any(w in full_pat_text for w in ("geometric", "geometry", "texture", "textured", "weave", "waffle", "jacquard", "גיאומטרי", "מרקם")):
+        if any(w in full_pat_text for w in ("geometric", "geometry", "texture", "textured", "weave", "waffle", "jacquard", "pique", "dot", "dots", "polka", "eyelet", "perforated", "mesh", "ribbed", "subtle", "גיאומטרי", "מרקם", "טקסטורה", "נקודות", "עיגולים", "מחורר", "דוגמה")):
             res["pattern"] = "geometric"
         elif any(w in full_pat_text for w in ("stripe", "striped", "פסים")):
             res["pattern"] = "striped"
@@ -192,6 +230,23 @@ def _coerce_single_garment(
             res["pattern"] = "plaid"
         elif any(w in full_pat_text for w in ("floral", "flower", "פרח")):
             res["pattern"] = "floral"
+
+    # Color refinement: upgrade generic "blue" / "כחול" to specific fine-grained shade if hinted
+    colors = res.get("colors")
+    if isinstance(colors, list) and colors:
+        full_color_text = f"{res.get('name', '')} {res.get('title', '')} {res.get('caption', '')} {' '.join(res.get('tags') or [])}".lower()
+        for c in colors:
+            if isinstance(c, dict):
+                c_name = str(c.get("name", "")).strip().lower()
+                is_he = any("\u0590" <= ch <= "\u05ea" for ch in full_color_text)
+                if c_name in {"blue", "כחול"}:
+                    if any(w in full_color_text for w in ("light blue", "sky blue", "baby blue", "cyan", "turquoise", "תכלת", "כחול בהיר", "שמיים")):
+                        c["name"] = "תכלת" if is_he else "Light Blue"
+                elif c_name in {"green", "ירוק"}:
+                    if any(w in full_color_text for w in ("olive", "זית")):
+                        c["name"] = "ירוק זית" if is_he else "Olive Green"
+                    elif any(w in full_color_text for w in ("mint", "sage", "מנטה")):
+                        c["name"] = "מנטה" if is_he else "Mint Green"
 
     # Price estimation guarantee: provide realistic fallback if omitted or 0
     p = res.get("price_cents")

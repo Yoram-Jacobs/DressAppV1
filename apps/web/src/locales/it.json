@@ -2479,7 +2479,10 @@
       "low_tops": "Sneakers basse",
       "tote_bag": "Borsa tote",
       "crossbody_bag": "Borsa a tracolla",
-      "clutch": "Clutch (borsa da sera)"
+      "clutch": "Clutch (borsa da sera)",
+      "short_sleeve_t_shirt": "T-shirt a maniche corte",
+      "cap_sleeve_top": "Top con maniche ad aletta",
+      "cap_sleeve_blouse": "Camicetta con maniche ad aletta"
     },
     "color": {
       "black": "Nero",
@@ -2499,7 +2502,20 @@
       "yellow": "Giallo",
       "orange": "Arancione",
       "gold": "Oro",
-      "silver": "Argento"
+      "silver": "Argento",
+      "light_blue": "Azzurro",
+      "sky_blue": "Blu cielo",
+      "baby_blue": "Blu pastello",
+      "cyan": "Ciano",
+      "turquoise": "Turchese",
+      "teal": "Verde petrolio",
+      "indigo": "Indaco",
+      "mint": "Menta",
+      "coral": "Corallo",
+      "peach": "Pesca",
+      "lavender": "Lavanda",
+      "charcoal": "Antracite",
+      "light_grey": "Grigio chiaro"
     },
     "material": {
       "acrylic": "Acrilico",

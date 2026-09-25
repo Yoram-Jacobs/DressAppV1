@@ -2472,7 +2472,10 @@
       "low_tops": "Low-Tops",
       "tote_bag": "Shopper",
       "crossbody_bag": "Umhängetasche",
-      "clutch": "Clutch / Abendtasche"
+      "clutch": "Clutch / Abendtasche",
+      "short_sleeve_t_shirt": "Kurzarm-T-Shirt",
+      "cap_sleeve_top": "Top mit Flügelärmeln",
+      "cap_sleeve_blouse": "Bluse mit Flügelärmeln"
     },
     "color": {
       "black": "Schwarz",
@@ -2492,7 +2495,20 @@
       "yellow": "Gelb",
       "orange": "Orange",
       "gold": "Gold",
-      "silver": "Silber"
+      "silver": "Silber",
+      "light_blue": "Hellblau",
+      "sky_blue": "Himmelblau",
+      "baby_blue": "Babyblau",
+      "cyan": "Cyan",
+      "turquoise": "Türkis",
+      "teal": "Petrol",
+      "indigo": "Indigo",
+      "mint": "Mint",
+      "coral": "Koralle",
+      "peach": "Pfirsich",
+      "lavender": "Lavendel",
+      "charcoal": "Anthrazit",
+      "light_grey": "Hellgrau"
     },
     "material": {
       "acrylic": "Acryl",

@@ -2479,7 +2479,10 @@
       "low_tops": "低帮鞋",
       "tote_bag": "托特包",
       "crossbody_bag": "斜挎包",
-      "clutch": "手拿包"
+      "clutch": "手拿包",
+      "short_sleeve_t_shirt": "短袖T恤",
+      "cap_sleeve_top": "盖肩袖上衣",
+      "cap_sleeve_blouse": "盖肩袖衬衫"
     },
     "color": {
       "black": "黑色",
@@ -2499,7 +2502,20 @@
       "yellow": "黄色",
       "orange": "橙色",
       "gold": "金色",
-      "silver": "银色"
+      "silver": "银色",
+      "light_blue": "浅蓝色",
+      "sky_blue": "天蓝色",
+      "baby_blue": "婴儿蓝",
+      "cyan": "青色",
+      "turquoise": "绿松石色",
+      "teal": "蓝绿色",
+      "indigo": "靛蓝",
+      "mint": "薄荷绿",
+      "coral": "珊瑚色",
+      "peach": "桃色",
+      "lavender": "薰衣草色",
+      "charcoal": "炭灰色",
+      "light_grey": "浅灰色"
     },
     "material": {
       "acrylic": "腈纶",

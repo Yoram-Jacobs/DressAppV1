@@ -2479,7 +2479,10 @@
       "low_tops": "Lage toppen",
       "tote_bag": "Draagtas",
       "crossbody_bag": "Crossbodytas",
-      "clutch": "Koppeling"
+      "clutch": "Koppeling",
+      "short_sleeve_t_shirt": "T-shirt met korte mouwen",
+      "cap_sleeve_top": "Top met kapmouwtjes",
+      "cap_sleeve_blouse": "Blouse met kapmouwtjes"
     },
     "color": {
       "black": "Zwart",
@@ -2499,7 +2502,20 @@
       "yellow": "Geel",
       "orange": "Oranje",
       "gold": "Goud",
-      "silver": "Zilver"
+      "silver": "Zilver",
+      "light_blue": "Lichtblauw",
+      "sky_blue": "Hemelsblauw",
+      "baby_blue": "Babyblauw",
+      "cyan": "Cyaan",
+      "turquoise": "Turkoois",
+      "teal": "Teal",
+      "indigo": "Indigo",
+      "mint": "Munt",
+      "coral": "Koraal",
+      "peach": "Perzik",
+      "lavender": "Lavendel",
+      "charcoal": "Antraciet",
+      "light_grey": "Lichtgrijs"
     },
     "material": {
       "acrylic": "Acryl",

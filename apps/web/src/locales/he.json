@@ -2509,7 +2509,10 @@
       "low_tops": "נעליים נמוכות",
       "tote_bag": "תיק טוט",
       "crossbody_bag": "תיק צד",
-      "clutch": "קלאץ׳"
+      "clutch": "קלאץ׳",
+      "short_sleeve_t_shirt": "חולצת טי שרוול קצר",
+      "cap_sleeve_top": "חולצת שרוול קצרצר",
+      "cap_sleeve_blouse": "בלוזת שרוול קצרצר"
     },
     "color": {
       "black": "שחור",
@@ -2529,7 +2532,20 @@
       "yellow": "צהוב",
       "orange": "כתום",
       "gold": "זהב",
-      "silver": "כסף"
+      "silver": "כסף",
+      "light_blue": "תכלת",
+      "sky_blue": "כחול שמיים",
+      "baby_blue": "תכלת בהיר",
+      "cyan": "ציאן",
+      "turquoise": "טורקיז",
+      "teal": "טורקיז כהה",
+      "indigo": "אינדיגו",
+      "mint": "מנטה",
+      "coral": "קורל",
+      "peach": "אפרסק",
+      "lavender": "לבנדר",
+      "charcoal": "אפור פחם",
+      "light_grey": "אפור בהיר"
     },
     "material": {
       "acrylic": "אקריליק",

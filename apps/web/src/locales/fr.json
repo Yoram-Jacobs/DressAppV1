@@ -2472,7 +2472,10 @@
       "low_tops": "Bas-hauts",
       "tote_bag": "Sac fourre-tout",
       "crossbody_bag": "Sac bandoulière",
-      "clutch": "Embrayage"
+      "clutch": "Embrayage",
+      "short_sleeve_t_shirt": "T-shirt à manches courtes",
+      "cap_sleeve_top": "Haut à mancherons",
+      "cap_sleeve_blouse": "Blouse à mancherons"
     },
     "color": {
       "black": "Noir",
@@ -2492,7 +2495,20 @@
       "yellow": "Jaune",
       "orange": "Orange",
       "gold": "Doré",
-      "silver": "Argenté"
+      "silver": "Argenté",
+      "light_blue": "Bleu clair",
+      "sky_blue": "Bleu ciel",
+      "baby_blue": "Bleu pastel",
+      "cyan": "Cyan",
+      "turquoise": "Turquoise",
+      "teal": "Sarcelle",
+      "indigo": "Indigo",
+      "mint": "Menthe",
+      "coral": "Corail",
+      "peach": "Pêche",
+      "lavender": "Lavande",
+      "charcoal": "Anthracite",
+      "light_grey": "Gris clair"
     },
     "material": {
       "acrylic": "Acrylique",

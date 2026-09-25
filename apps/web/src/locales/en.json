@@ -2472,7 +2472,10 @@
       "low_tops": "Low-tops",
       "tote_bag": "Tote bag",
       "crossbody_bag": "Crossbody bag",
-      "clutch": "Clutch"
+      "clutch": "Clutch",
+      "short_sleeve_t_shirt": "Short-sleeve T-shirt",
+      "cap_sleeve_top": "Cap-sleeve top",
+      "cap_sleeve_blouse": "Cap-sleeve blouse"
     },
     "color": {
       "black": "Black",
@@ -2492,7 +2495,20 @@
       "yellow": "Yellow",
       "orange": "Orange",
       "gold": "Gold",
-      "silver": "Silver"
+      "silver": "Silver",
+      "light_blue": "Light Blue",
+      "sky_blue": "Sky Blue",
+      "baby_blue": "Baby Blue",
+      "cyan": "Cyan",
+      "turquoise": "Turquoise",
+      "teal": "Teal",
+      "indigo": "Indigo",
+      "mint": "Mint",
+      "coral": "Coral",
+      "peach": "Peach",
+      "lavender": "Lavender",
+      "charcoal": "Charcoal",
+      "light_grey": "Light Grey"
     },
     "material": {
       "acrylic": "Acrylic",

@@ -2479,7 +2479,10 @@
       "low_tops": "ロートップ",
       "tote_bag": "トートバッグ",
       "crossbody_bag": "クロスボディバッグ",
-      "clutch": "クラッチバッグ"
+      "clutch": "クラッチバッグ",
+      "short_sleeve_t_shirt": "半袖Tシャツ",
+      "cap_sleeve_top": "キャップスリーブトップス",
+      "cap_sleeve_blouse": "キャップスリーブブラウス"
     },
     "color": {
       "black": "ブラック",
@@ -2499,7 +2502,20 @@
       "yellow": "イエロー",
       "orange": "オレンジ",
       "gold": "ゴールド",
-      "silver": "シルバー"
+      "silver": "シルバー",
+      "light_blue": "ライトブルー",
+      "sky_blue": "スカイブルー",
+      "baby_blue": "ベビーブルー",
+      "cyan": "シアン",
+      "turquoise": "ターコイズ",
+      "teal": "ティール",
+      "indigo": "インディゴ",
+      "mint": "ミント",
+      "coral": "コーラル",
+      "peach": "ピーチ",
+      "lavender": "ラベンダー",
+      "charcoal": "チャコール",
+      "light_grey": "ライトグレー"
     },
     "material": {
       "acrylic": "アクリル",

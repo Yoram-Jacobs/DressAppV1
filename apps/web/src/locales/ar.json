@@ -2472,7 +2472,10 @@
       "low_tops": "أحذية رياضية منخفضة",
       "tote_bag": "حقيبة حمل",
       "crossbody_bag": "حقيبة كروس بودي",
-      "clutch": "حقيبة كلاتش"
+      "clutch": "حقيبة كلاتش",
+      "short_sleeve_t_shirt": "تي شيرت بأكمام قصيرة",
+      "cap_sleeve_top": "قميص بأكمام قصيرة جداً",
+      "cap_sleeve_blouse": "بلوزة بأكمام قصيرة جداً"
     },
     "color": {
       "black": "أسود",
@@ -2492,7 +2495,20 @@
       "yellow": "أصفر",
       "orange": "برتقالي",
       "gold": "ذهبي",
-      "silver": "فضي"
+      "silver": "فضي",
+      "light_blue": "أزرق فاتح",
+      "sky_blue": "أزرق سماوي",
+      "baby_blue": "أزرق طفولي",
+      "cyan": "سماوي",
+      "turquoise": "فيروزي",
+      "teal": "أزرق مخضر",
+      "indigo": "نيلي",
+      "mint": "نعناعي",
+      "coral": "مرجاني",
+      "peach": "خوخي",
+      "lavender": "خزامى",
+      "charcoal": "فحمي",
+      "light_grey": "رمادي فاتح"
     },
     "material": {
       "acrylic": "أكريليك",

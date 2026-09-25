@@ -2472,7 +2472,10 @@
       "low_tops": "Zapatillas bajas",
       "tote_bag": "Bolso tote",
       "crossbody_bag": "Bolso bandolera",
-      "clutch": "Cartera de mano"
+      "clutch": "Cartera de mano",
+      "short_sleeve_t_shirt": "Camiseta de manga corta",
+      "cap_sleeve_top": "Top de manga casquillo",
+      "cap_sleeve_blouse": "Blusa de manga casquillo"
     },
     "color": {
       "black": "Negro",
@@ -2492,7 +2495,20 @@
       "yellow": "Amarillo",
       "orange": "Naranja",
       "gold": "Dorado",
-      "silver": "Plateado"
+      "silver": "Plateado",
+      "light_blue": "Azul claro",
+      "sky_blue": "Azul cielo",
+      "baby_blue": "Azul bebé",
+      "cyan": "Cian",
+      "turquoise": "Turquesa",
+      "teal": "Verde azulado",
+      "indigo": "Índigo",
+      "mint": "Menta",
+      "coral": "Coral",
+      "peach": "Melocotón",
+      "lavender": "Lavanda",
+      "charcoal": "Gris marengo",
+      "light_grey": "Gris claro"
     },
     "material": {
       "acrylic": "Acrílico",
