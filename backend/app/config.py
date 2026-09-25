@@ -172,7 +172,7 @@ class Settings:
     RUNPOD_MAX_CONCURRENCY: int = int(os.environ.get("RUNPOD_MAX_CONCURRENCY", "4"))
     RUNPOD_MAX_RETRIES: int = int(os.environ.get("RUNPOD_MAX_RETRIES", "3"))
     RUNPOD_RUNSYNC_TIMEOUT: int = int(os.environ.get("RUNPOD_RUNSYNC_TIMEOUT", "25"))
-    RUNPOD_POLL_TIMEOUT: int = int(os.environ.get("RUNPOD_POLL_TIMEOUT", "120"))
+    RUNPOD_POLL_TIMEOUT: int = int(os.environ.get("RUNPOD_POLL_TIMEOUT", "360"))
     IMAGE_GENERATION_ENABLE_FALLBACK: bool = os.environ.get(
         "IMAGE_GENERATION_ENABLE_FALLBACK", "true"
     ).lower() in ("true", "1", "yes")
