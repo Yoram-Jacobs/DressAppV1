@@ -152,6 +152,38 @@ def _coerce_single_garment(
         if cat_lower in {"full body", "dress"} or is_fem_top or any(c in full_text_fem for c in fem_cues):
             res["gender"] = "women"
 
+    # Color refinement: upgrade generic "blue" / "כחול" to specific fine-grained shade if hinted
+    full_color_text = f"{res.get('name', '')} {res.get('title', '')} {res.get('caption', '')} {' '.join(res.get('tags') or [])}".lower()
+    is_he = any("\u0590" <= ch <= "\u05ea" for ch in full_color_text)
+
+    # Refine string color if present
+    c_str = str(res.get("color") or "").strip().lower()
+    if c_str in {"blue", "כחול"}:
+        if any(w in full_color_text for w in ("light blue", "sky blue", "baby blue", "cyan", "turquoise", "תכלת", "כחול בהיר", "שמיים")):
+            res["color"] = "תכלת" if is_he else "Light Blue"
+    elif c_str in {"green", "ירוק"}:
+        if any(w in full_color_text for w in ("olive", "זית")):
+            res["color"] = "ירוק זית" if is_he else "Olive Green"
+        elif any(w in full_color_text for w in ("mint", "sage", "מנטה")):
+            res["color"] = "מנטה" if is_he else "Mint Green"
+
+    colors = res.get("colors")
+    if isinstance(colors, list) and colors:
+        for c in colors:
+            if isinstance(c, dict):
+                c_name = str(c.get("name", "")).strip().lower()
+                if c_name in {"blue", "כחול"}:
+                    if any(w in full_color_text for w in ("light blue", "sky blue", "baby blue", "cyan", "turquoise", "תכלת", "כחול בהיר", "שמיים")):
+                        c["name"] = "תכלת" if is_he else "Light Blue"
+                        c["hex"] = "#7dd3fc"
+                elif c_name in {"green", "ירוק"}:
+                    if any(w in full_color_text for w in ("olive", "זית")):
+                        c["name"] = "ירוק זית" if is_he else "Olive Green"
+                        c["hex"] = "#808000"
+                    elif any(w in full_color_text for w in ("mint", "sage", "מנטה")):
+                        c["name"] = "מנטה" if is_he else "Mint Green"
+                        c["hex"] = "#6ee7b7"
+
     # Unique name guarantee: ensure name is not just the subcategory name
     name_str = (res.get("name") or "").strip()
     sub_str = (res.get("sub_category") or "").strip()
@@ -160,6 +192,8 @@ def _coerce_single_garment(
         colors = res.get("colors")
         if isinstance(colors, list) and colors and isinstance(colors[0], dict):
             color_name = colors[0].get("name", "")
+        elif res.get("color"):
+            color_name = str(res.get("color"))
         mat_name = ""
         mats = res.get("fabric_materials")
         if isinstance(mats, list) and mats and isinstance(mats[0], dict):
@@ -231,22 +265,6 @@ def _coerce_single_garment(
         elif any(w in full_pat_text for w in ("floral", "flower", "פרח")):
             res["pattern"] = "floral"
 
-    # Color refinement: upgrade generic "blue" / "כחול" to specific fine-grained shade if hinted
-    colors = res.get("colors")
-    if isinstance(colors, list) and colors:
-        full_color_text = f"{res.get('name', '')} {res.get('title', '')} {res.get('caption', '')} {' '.join(res.get('tags') or [])}".lower()
-        for c in colors:
-            if isinstance(c, dict):
-                c_name = str(c.get("name", "")).strip().lower()
-                is_he = any("\u0590" <= ch <= "\u05ea" for ch in full_color_text)
-                if c_name in {"blue", "כחול"}:
-                    if any(w in full_color_text for w in ("light blue", "sky blue", "baby blue", "cyan", "turquoise", "תכלת", "כחול בהיר", "שמיים")):
-                        c["name"] = "תכלת" if is_he else "Light Blue"
-                elif c_name in {"green", "ירוק"}:
-                    if any(w in full_color_text for w in ("olive", "זית")):
-                        c["name"] = "ירוק זית" if is_he else "Olive Green"
-                    elif any(w in full_color_text for w in ("mint", "sage", "מנטה")):
-                        c["name"] = "מנטה" if is_he else "Mint Green"
 
     # Price estimation guarantee: provide realistic fallback if omitted or 0
     p = res.get("price_cents")
