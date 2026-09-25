@@ -33,15 +33,51 @@ def _coerce_single_garment(
     else:
         return {}
 
-    # Guarantee item_type is never blank
-    if not res.get("item_type") and res.get("sub_category"):
-        res["item_type"] = res["sub_category"]
-    elif not res.get("item_type") and res.get("name"):
-        res["item_type"] = res["name"]
-
-    # Footwear pluralization
     cat_lower = (res.get("category") or "").strip().lower()
     sub_lower = (res.get("sub_category") or "").strip().lower()
+    full_text = f"{res.get('item_type', '')} {res.get('name', '')} {res.get('title', '')} {res.get('caption', '')}".lower()
+
+    # Subcategory collision prevention: NEVER allow sub_category to be identical to category or generic "Top"/"Tops"/"Bottom"/"Bottoms"
+    if sub_lower in {"top", "tops", "bottom", "bottoms", "outerwear", "full body", "footwear", "accessories", "clothing", "garment", ""} or sub_lower == cat_lower:
+        if cat_lower == "top":
+            if any(w in full_text for w in ("blouse", "בלוזה", "cap-sleeve", "cap sleeve", "flutter")):
+                res["sub_category"] = "Blouse"
+            elif any(w in full_text for w in ("tee", "t-shirt", "tshirt", "טי")):
+                res["sub_category"] = "T-Shirt"
+            elif any(w in full_text for w in ("sweater", "cardigan", "knit", "סריג", "סוודר")):
+                res["sub_category"] = "Sweater"
+            elif any(w in full_text for w in ("tank", "camisole", "גופיי")):
+                res["sub_category"] = "Tank Top"
+            elif any(w in full_text for w in ("hoodie", "sweatshirt", "קפוצ")):
+                res["sub_category"] = "Hoodie"
+            else:
+                res["sub_category"] = "Blouse" if res.get("gender") == "women" else "Shirt"
+        elif cat_lower == "bottom":
+            if any(w in full_text for w in ("jean", "denim", "גינס")):
+                res["sub_category"] = "Jeans"
+            elif any(w in full_text for w in ("short", "שורט", "קצר")):
+                res["sub_category"] = "Shorts"
+            elif any(w in full_text for w in ("skirt", "חצאית")):
+                res["sub_category"] = "Skirt"
+            elif any(w in full_text for w in ("legging", "טייץ")):
+                res["sub_category"] = "Leggings"
+            else:
+                res["sub_category"] = "Pants"
+        elif cat_lower == "outerwear":
+            res["sub_category"] = "Coats" if any(w in full_text for w in ("coat", "מעיל", "parka")) else "Jackets"
+        elif cat_lower in ("full body", "dress"):
+            res["sub_category"] = "Dresses"
+        elif cat_lower == "footwear":
+            res["sub_category"] = "Sneakers"
+        sub_lower = (res["sub_category"] or "").strip().lower()
+
+    # Guarantee item_type is never blank or equal to category
+    itype_lower = (res.get("item_type") or "").strip().lower()
+    if not res.get("item_type") or itype_lower in {"top", "tops", "bottom", "bottoms", "outerwear", "full body", "footwear", "accessories", "clothing", "garment", ""} or itype_lower == cat_lower:
+        res["item_type"] = res.get("sub_category") or "Shirt"
+        itype_lower = (res["item_type"] or "").strip().lower()
+
+    # Footwear pluralization
     if cat_lower == "footwear" or sub_lower in {"boot", "shoe", "sneaker", "heel", "loafer", "sandal", "pump"}:
         plural_map = {
             "boot": "Boots",
@@ -60,7 +96,6 @@ def _coerce_single_garment(
         elif res.get("sub_category") and not res["sub_category"].endswith("s"):
             res["sub_category"] = res["sub_category"] + "s"
 
-        itype_lower = (res.get("item_type") or "").strip().lower()
         if itype_lower in plural_map:
             res["item_type"] = plural_map[itype_lower]
         elif res.get("item_type") and not res["item_type"].endswith("s"):
@@ -69,8 +104,14 @@ def _coerce_single_garment(
     # Gender inference fallback (don't leave women's pieces as unisex)
     g_val = (res.get("gender") or "").strip().lower()
     if g_val in {"unisex", "", None}:
-        fem_cues = {"dress", "skirt", "blouse", "heels", "pumps", "knee-high boots", "shoulder bag", "handbag", "tote bag", "clutch"}
-        if cat_lower in {"full body", "dress"} or any(c in sub_lower for c in fem_cues) or any(c in (res.get("item_type") or "").lower() for c in fem_cues):
+        fem_cues = {
+            "dress", "skirt", "blouse", "heels", "pumps", "knee-high boots",
+            "shoulder bag", "handbag", "tote bag", "clutch", "cap sleeve",
+            "cap-sleeve", "flutter sleeve", "peplum", "sweetheart", "ruffle",
+            "בלוזה", "שמלה", "חצאית", "גופיית", "עקבים"
+        }
+        full_text_fem = f"{sub_lower} {itype_lower} {res.get('name', '')} {res.get('title', '')} {res.get('caption', '')}".lower()
+        if cat_lower in {"full body", "dress"} or any(c in full_text_fem for c in fem_cues):
             res["gender"] = "women"
 
     # Unique name guarantee: ensure name is not just the subcategory name
@@ -138,6 +179,34 @@ def _coerce_single_garment(
             res["caption"] = f"An elegant {name_val.lower()} that adds functional sophistication to any ensemble."
         else:
             res["caption"] = f"A versatile {name_val.lower()} designed with thoughtful proportions and clean detailing."
+
+    # Pattern fallback: if model returned solid/empty, check text for subtle geometric, striped, or floral patterns
+    pat_str = (res.get("pattern") or "").strip().lower()
+    if not pat_str or pat_str == "solid":
+        full_pat_text = f"{res.get('name', '')} {res.get('title', '')} {res.get('caption', '')} {' '.join(res.get('tags') or [])}".lower()
+        if any(w in full_pat_text for w in ("geometric", "geometry", "texture", "textured", "weave", "waffle", "jacquard", "גיאומטרי", "מרקם")):
+            res["pattern"] = "geometric"
+        elif any(w in full_pat_text for w in ("stripe", "striped", "פסים")):
+            res["pattern"] = "striped"
+        elif any(w in full_pat_text for w in ("plaid", "check", "checker", "משובץ")):
+            res["pattern"] = "plaid"
+        elif any(w in full_pat_text for w in ("floral", "flower", "פרח")):
+            res["pattern"] = "floral"
+
+    # Price estimation guarantee: provide realistic fallback if omitted or 0
+    p = res.get("price_cents")
+    if p is None or p <= 0:
+        base_prices = {
+            "top": 2500,
+            "bottom": 4500,
+            "outerwear": 9500,
+            "full body": 6500,
+            "footwear": 6000,
+            "accessories": 2500,
+            "underwear": 1500,
+        }
+        mult = {"budget": 0.6, "mid": 1.0, "premium": 2.2, "luxury": 5.0}.get(res.get("quality"), 1.0)
+        res["price_cents"] = int(base_prices.get(cat_lower, 3000) * mult)
 
     return res
 
@@ -216,18 +285,18 @@ def _coerce_seasons(parsed: dict[str, Any]) -> None:
         if tok in allowed and tok not in seasons:
             seasons.append(tok)
 
-    if not seasons:
-        cat_lower = (parsed.get("category") or "").strip().lower()
-        sub_lower = (parsed.get("sub_category") or "").strip().lower()
-        itype = (parsed.get("item_type") or "").strip().lower()
-        txt = f"{cat_lower} {sub_lower} {itype} {parsed.get('name', '')}".lower()
-        if any(w in txt for w in ("coat", "jacket", "outerwear", "boot", "wool", "sweater", "scarf", "parka", "overcoat")):
+    cat_lower = (parsed.get("category") or "").strip().lower()
+    sub_lower = (parsed.get("sub_category") or "").strip().lower()
+    itype = (parsed.get("item_type") or "").strip().lower()
+    txt = f"{cat_lower} {sub_lower} {itype} {parsed.get('name', '')} {parsed.get('title', '')} {parsed.get('caption', '')}".lower()
+
+    # Short-sleeve, cap-sleeve, or lightweight tops must be summer wear, NEVER "all"
+    if not seasons or seasons == ["all"]:
+        if any(w in txt for w in ("short sleeve", "short-sleeve", "cap sleeve", "cap-sleeve", "sleeveless", "tank", "swim", "sandal", "linen", "shorts", "sundress", "blouse", "בלוזה", "קיץ", "קצר")):
+            seasons = ["summer"]
+        elif any(w in txt for w in ("coat", "jacket", "outerwear", "boot", "wool", "sweater", "cardigan", "scarf", "parka", "overcoat", "puffer", "down", "fleece", "חורף", "מעיל", "סוודר")):
             seasons = ["fall", "winter"]
-        elif any(w in txt for w in ("swim", "sandal", "linen", "shorts", "tank", "sundress")):
-            seasons = ["spring", "summer"]
-        elif any(w in txt for w in ("belt", "bag", "accessory", "accessories", "jewelry", "watch", "handbag", "shoulder bag")):
-            seasons = ["all"]
-        else:
+        elif not seasons:
             seasons = ["all"]
 
     parsed["season"] = seasons
@@ -263,11 +332,9 @@ def _normalise_dress_code(raw: str | None) -> str | None:
 def _coerce_enums(parsed: dict[str, Any]) -> dict[str, Any]:
     """Best-effort coercion of AI-returned enum values.
 
-    * Unknown / empty values are dropped rather than kept, so Pydantic's
-      optional-enum fields stay valid (None instead of an unknown literal).
-    * ``state`` is the main hazard: the model sometimes echoes the
-      ``condition`` value there. We default to ``used``; the user can
-      flip to ``new`` in the form.
+    * Unknown / empty values are defaulted to sensible fallbacks rather than
+      dropped, so the user never sees empty dashes ("—").
+    * ``state`` defaults to ``used``; the user can flip to ``new`` in the form.
     """
     _coerce_enum_field(
         parsed, "gender", _VALID_GENDER, aliases=_GENDER_ALIASES,
@@ -275,20 +342,18 @@ def _coerce_enums(parsed: dict[str, Any]) -> dict[str, Any]:
     parsed["dress_code"] = (
         _normalise_dress_code(parsed.get("dress_code"))
         if _normalise_dress_code(parsed.get("dress_code")) in _VALID_DRESS_CODE
-        else None
+        else "casual"
     )
     _coerce_enum_field(
-        parsed, "condition", _VALID_CONDITION, aliases=_CONDITION_ALIASES,
+        parsed, "condition", _VALID_CONDITION, aliases=_CONDITION_ALIASES, default="good"
     )
-    # ``state`` has a sensible default unlike the other enums — the form
-    # can round-trip "used" without surprising the user.
     s = _norm_str(parsed.get("state"))
     parsed["state"] = s if s in _VALID_STATE else "used"
     _coerce_enum_field(
-        parsed, "quality", _VALID_QUALITY, aliases=_QUALITY_ALIASES,
+        parsed, "quality", _VALID_QUALITY, aliases=_QUALITY_ALIASES, default="mid"
     )
     _coerce_enum_field(
-        parsed, "pattern", _VALID_PATTERN, aliases=_PATTERN_ALIASES,
+        parsed, "pattern", _VALID_PATTERN, aliases=_PATTERN_ALIASES, default="solid"
     )
     _coerce_seasons(parsed)
     return parsed

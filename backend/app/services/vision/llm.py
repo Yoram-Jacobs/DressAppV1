@@ -151,27 +151,32 @@ SYSTEM_PROMPT = (
     '  "title": string,                    // Short item title\n'
     '  "caption": string,                  // 1 confident editorial sentence, max 240 chars. Never hedge.\n'
     '  "category": "Top"|"Bottom"|"Outerwear"|"Full Body"|"Footwear"|"Accessories"|"Underwear",\n'
-    '  "sub_category": string,             // specific type (e.g. "T-Shirt", "Blazer", "Jeans", "Sneakers")\n'
-    '  "item_type": string,\n'
+    '  "sub_category": string,             // specific cut (e.g. "Blouse", "Shirt", "T-Shirt", "Blazer", "Jeans", "Sneakers")\n'
+    '  "item_type": string,                // specific type (e.g. "Cap-Sleeve Blouse", "Tailored Coat", "Knee-High Boots")\n'
     '  "brand": string|null,               // visible brand name or null\n'
     '  "gender": "men"|"women"|"unisex"|"kids",\n'
     '  "dress_code": "casual"|"smart-casual"|"business"|"formal"|"athletic"|"loungewear",\n'
     '  "season": string[],                 // ["spring","summer","fall","winter","all"]\n'
     '  "colors": [{"name": string, "pct": integer}],\n'
     '  "fabric_materials": [{"name": string, "pct": integer}],\n'
-    '  "pattern": "solid"|"striped"|"plaid"|"floral"|"graphic"|"geometric"|"animal_print"|"abstract",\n'
+    '  "pattern": "solid"|"striped"|"plaid"|"floral"|"geometric"|"animal_print"|"abstract"|"graphic",\n'
     '  "state": "new"|"used",\n'
     '  "condition": "bad"|"fair"|"good"|"excellent",\n'
     '  "quality": "budget"|"mid"|"premium"|"luxury",\n'
     '  "size": string|null,\n'
+    '  "price_cents": integer,             // estimated resale value in USD cents (e.g. 2500 for $25.00)\n'
     '  "tags": string[]                    // 3-8 searchable keywords\n'
     "}\n\n"
-    "Taxonomy Rules (BANNED SYNONYMS):\n"
-    "• Knitwear: ALWAYS 'Sweater' or 'Cardigan' (NEVER 'jumper', 'jersey', 'pullover').\n"
-    "• Legwear: ALWAYS 'Pants', 'Jeans', 'Shorts', 'Leggings' (NEVER 'trousers', 'slacks').\n"
-    "• Tops: ALWAYS 'Shirt', 'T-Shirt', 'Blouse', 'Tank Top', 'Hoodie' (NEVER 'vest' for tank tops).\n"
-    "• Outerwear: ALWAYS 'Jacket', 'Coat', 'Blazer' (NEVER 'mackintosh', 'anorak', 'windcheater').\n"
-    "• Footwear: ALWAYS 'Sneakers', 'Boots', 'Loafers', 'Sandals', 'Flats' (NEVER 'trainers', 'plimsolls')."
+    "Taxonomy & Extraction Rules:\n"
+    "• Subcategory: NEVER output generic 'Top', 'Tops', 'Bottom', 'Clothing', or category name as sub_category or item_type! Choose specific cut: for Tops ALWAYS use 'Blouse', 'Shirt', 'T-Shirt', 'Tank Top', 'Sweater', 'Hoodie', 'Polo'. For Bottoms: 'Jeans', 'Pants', 'Shorts', 'Skirt'.\n"
+    "• Gender: Cap sleeves, flutter sleeves, puff shoulders, sweetheart/scoop necklines, peplum hems, or feminine blouse cuts MUST be 'women', NOT 'unisex'. Tailored men's cuts are 'men'. Only neutral straight-cut crewneck tees are 'unisex'.\n"
+    "• Dress Code: ALWAYS populate ('casual', 'smart-casual', 'business', 'formal', 'athletic', 'loungewear').\n"
+    "• Season: Infer from sleeves & fabric. Short sleeves, cap sleeves, sleeveless, linen, light cotton MUST be ['summer'] or ['spring', 'summer']. Heavy wool, down, knitwear MUST be ['fall', 'winter']. Only seasonless basics (e.g. jeans) can be ['all']. NEVER use 'all' for short-sleeve tops.\n"
+    "• Pattern: Inspect fabric weave & texture closely. Look for subtle micro-prints, textures, or geometric motifs (select 'geometric', 'striped', etc.). Select 'solid' ONLY if 100% devoid of pattern or texture.\n"
+    "• Condition & Quality: ALWAYS classify condition ('good', 'excellent', 'fair', 'bad') and quality ('mid', 'premium', 'budget', 'luxury'). Standard items are condition='good', quality='mid'.\n"
+    "• State: ALWAYS classify ('new', 'used').\n"
+    "• Price: ALWAYS estimate resale value in USD cents as an integer (e.g. 2500 for $25 blouse, 3500 for $35 shirt, 4500 for $45 jeans, 9500 for $95 jacket).\n"
+    "• Banned Synonyms: Sweater/Cardigan (not jumper/pullover), Pants/Jeans (not trousers/slacks), Shirt/T-Shirt/Blouse (not vest), Jacket/Coat/Blazer (not anorak), Sneakers/Boots/Loafers (not trainers)."
 )
 
 
@@ -260,7 +265,11 @@ def _build_system_prompt(*, one_pass: bool) -> str:
 # ─────────────────────────────────────────────────────────────────────
 _GARMENT_OBJECT_SCHEMA: dict[str, Any] = {
     "type": "object",
-    "required": ["title"],
+    "required": [
+        "title", "name", "category", "sub_category", "item_type",
+        "gender", "dress_code", "season", "colors", "fabric_materials",
+        "pattern", "state", "condition", "quality", "price_cents", "caption",
+    ],
     "additionalProperties": False,
     "properties": {
         "name": {"type": "string"},
@@ -1100,23 +1109,9 @@ async def call_gemma_space_stream_attributes(
         for _, fnames, _, _ in ATTRIBUTE_GROUPS:
             all_field_names.extend(fnames)
 
-        # Pruned high-density prompt: ~150 tokens vs ~800 tokens previously.
-        # System prompt prefix is kept 100% constant across requests (no dynamic ID)
-        # to maximize llama-server KV prompt-caching hit rate.
-        sys_parts = [
-            "You are The Eyes — DressApp visual garment analyst. Output raw JSON for this Add-Item form.\n"
-            "RULES:\n"
-            "- NO THINKING: Do NOT generate internal monologue or <think> tags. Start immediately with '{' and end with '}'.\n"
-            "- NAME: 3-5 specific fashion words (e.g. 'Cognac Leather Knee-High Boots', 'Olive Linen Cargo Shorts').\n"
-            "- ITEM TYPE: Specific garment cut (e.g. 'Tailored Coat', 'Knee-High Boots'). Never blank.\n"
-            "- OUTERWEAR VS DRESS: Structured coats/jackets are 'Outerwear' (sub_category: 'Coats'), NOT 'Full Body'. Only standalone dresses are 'Full Body'.\n"
-            "- FOOTWEAR: Use plural nouns ('Boots', 'Sneakers', 'Loafers'). Never singular.\n"
-            "- GENDER: Set 'women' or 'men' if styled specifically for that gender; avoid default 'unisex'.\n"
-            "- SEASON: Populated array with >=1 valid season ('spring', 'summer', 'fall', 'winter', 'all').\n"
-            "- CAPTION: 1-2 sentence concise editorial styling description.\n"
-            "- TAXONOMY: 'Sweater' (not 'jumper'), 'Pants'/'Jeans' (not 'trousers'), 'Sneakers' (not 'trainers')."
-        ]
-
+        # Use authoritative Gemini SYSTEM_PROMPT (exact prompt used by Gemini Flash)
+        # Suffix with SegFormer category hint if available
+        sys_parts = [_build_system_prompt(one_pass=False)]
         if segformer_category and not is_single_item:
             mapped_cat = None
             if segformer_category == "top":
@@ -1131,23 +1126,10 @@ async def call_gemma_space_stream_attributes(
                 mapped_cat = "Accessories"
 
             if mapped_cat:
-                sys_parts.append(f"- CATEGORY HINT: Segmentation suggests '{mapped_cat}'.")
+                sys_parts.append(f"\nSEGMENTATION HINT: SegFormer suggests '{mapped_cat}'.")
 
-        if lang_code in ("he", "iw"):
-            sys_parts.append(
-                "- LANGUAGE: OUTPUT LANGUAGE = Hebrew (עברית). Free-text fields "
-                "(`name`, `title`, `caption`, `tags`, `sub_category`, `item_type`, colors, materials) "
-                "must be fluent modern Hebrew. Keys and enum tokens stay in English."
-            )
-        elif lang_name:
-            sys_parts.append(f"- LANGUAGE: Free-text values must be written in fluent {lang_name}.")
-
-        sys_parts.append("Return ONLY the JSON object.")
         system_prompt = "\n".join(sys_parts)
-
-        lang_suffix = " in Hebrew (עברית)" if lang_code in ("he", "iw") else (f" in {lang_name}" if lang_name else "")
-        req_suffix = f" (id: {request_id})" if request_id else ""
-        user_text = f"Analyse this garment photo and return the JSON attributes{lang_suffix}.{req_suffix}"
+        user_text = _user_prompt(language)
 
         import copy
         properties = {}
@@ -1166,6 +1148,11 @@ async def call_gemma_space_stream_attributes(
                         prop["enum"] = ["Footwear"]
                     elif segformer_category in ("headwear", "accessory", "bag"):
                         prop["enum"] = ["Accessories"]
+
+                if name == "price_cents":
+                    prop["type"] = "integer"
+                    prop["minimum"] = 100
+                    prop["maximum"] = 500000
 
                 if isinstance(prop, dict):
                     p_type = prop.get("type")
@@ -1206,7 +1193,9 @@ async def call_gemma_space_stream_attributes(
             "properties": properties,
             "required": [
                 "name", "title", "category", "sub_category", "item_type",
-                "colors", "pattern", "gender", "fabric_materials", "season", "caption"
+                "colors", "pattern", "gender", "dress_code", "season",
+                "fabric_materials", "state", "condition", "quality",
+                "price_cents", "caption",
             ],
             "additionalProperties": False,
         }

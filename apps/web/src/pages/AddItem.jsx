@@ -343,10 +343,96 @@ const hydrate = (a, user, t, i18n) => {
     const pref = deriveSizeFromPreferences(user, out);
     if (pref) out.size = pref;
   }
+  // 1. Sanity check: Subcategory and Item Type cannot be identical to Category or generic "Top"/"Tops"
+  const catLower = String(out.category || '').trim().toLowerCase();
+  let subRaw = String(out.sub_category || '').trim();
+  let itemRaw = String(out.item_type || '').trim();
+
+  if (!subRaw || subRaw.toLowerCase() === 'top' || subRaw.toLowerCase() === 'tops' || subRaw.toLowerCase() === catLower) {
+    subRaw = (out.gender === 'women') ? 'blouses' : 'tailored_shirts';
+  }
+  if (!itemRaw || itemRaw.toLowerCase() === 'top' || itemRaw.toLowerCase() === 'tops' || itemRaw.toLowerCase() === catLower) {
+    itemRaw = subRaw;
+  }
+
+  // 2. Fallback pattern: if model returned solid/empty but text indicates geometric/stripes/etc.
+  let curPattern = String(out.pattern || '').trim().toLowerCase();
+  if (!curPattern || curPattern === 'solid') {
+    const fullPatternBlob = `${out.name} ${out.title} ${out.caption} ${(Array.isArray(out.tags) ? out.tags : []).join(' ')}`.toLowerCase();
+    if (/geometric|גיאומטרי|weave|textured|מרקם/.test(fullPatternBlob)) {
+      out.pattern = 'geometric';
+    } else if (/strip|striped|stripe|פסים/.test(fullPatternBlob)) {
+      out.pattern = 'striped';
+    } else if (/plaid|check|משובץ/.test(fullPatternBlob)) {
+      out.pattern = 'plaid';
+    } else if (/floral|flower|פרח/.test(fullPatternBlob)) {
+      out.pattern = 'floral';
+    }
+  }
+
+  // 3. Fallback price: ensure realistic estimate if 0 or missing
+  if (!out.price_cents || Number(out.price_cents) === 0) {
+    const basePrices = {
+      Top: 2500,
+      Bottom: 4500,
+      Outerwear: 9500,
+      'Full Body': 6500,
+      Footwear: 6000,
+      Accessories: 2500,
+      Underwear: 1500,
+    };
+    out.price_cents = basePrices[out.category] || 2500;
+  }
+
+  // 4. Fallback gender: feminine sleeve / cut detection
+  if (!out.gender || out.gender === 'unisex') {
+    const femBlob = `${subRaw} ${itemRaw} ${out.name} ${out.title} ${out.caption}`.toLowerCase();
+    if (/cap[- ]sleeve|flutter|blouse|sweetheart|peplum|ruffle|בלוזה|שמלה|חצאית/.test(femBlob)) {
+      out.gender = 'women';
+    }
+  }
+
+  // 5. Fallback season: short sleeves / light fabrics are summer, not all
+  const seasons = Array.isArray(out.season) ? out.season : (out.season ? [out.season] : []);
+  if (seasons.length === 0 || (seasons.length === 1 && seasons[0] === 'all')) {
+    const seaBlob = `${subRaw} ${itemRaw} ${out.name} ${out.title} ${out.caption}`.toLowerCase();
+    if (/short[- ]sleeve|cap[- ]sleeve|sleeveless|linen|cotton|summer|קיץ|קצר/.test(seaBlob)) {
+      out.season = ['summer'];
+    } else if (/coat|jacket|outerwear|wool|sweater|winter|חורף|מעיל/.test(seaBlob)) {
+      out.season = ['fall', 'winter'];
+    }
+  }
+
+  // 6. Fallback dress code & condition & quality & state
+  if (!out.dress_code) out.dress_code = 'casual';
+  if (!out.condition) out.condition = 'good';
+  if (!out.quality) out.quality = 'mid';
+  if (!out.state) out.state = 'used';
+
   if (t && i18n) {
     const lang = (i18n.language || 'en').split('-')[0].toLowerCase();
     const isEn = lang === 'en';
     if (!isEn) {
+      // Localize sub_category and item_type into Hebrew / active language
+      const subKey = canonicalSubCategoryKey(subRaw);
+      if (subKey && subKey !== 'other') {
+        const localizedSub = labelForSubCategory(subKey, t);
+        if (localizedSub && localizedSub !== subKey) out.sub_category = localizedSub;
+        else out.sub_category = subRaw;
+      } else {
+        out.sub_category = subRaw;
+      }
+
+      const itemKey = canonicalSubCategoryKey(itemRaw);
+      if (itemKey && itemKey !== 'other') {
+        const localizedItem = labelForSubCategory(itemKey, t);
+        if (localizedItem && localizedItem !== itemKey) out.item_type = localizedItem;
+        else out.item_type = itemRaw;
+      } else {
+        const itemTypeLabel = labelForItemType(itemRaw, t);
+        out.item_type = itemTypeLabel || itemRaw;
+      }
+
       if (Array.isArray(out.colors) && out.colors.length > 0) {
         out.colors = out.colors.map((c) => {
           const rawName = typeof c === 'string' ? c : c?.name || '';
@@ -374,7 +460,13 @@ const hydrate = (a, user, t, i18n) => {
           out.name = parts.join(' ');
         }
       }
+    } else {
+      out.sub_category = subRaw;
+      out.item_type = itemRaw;
     }
+  } else {
+    out.sub_category = subRaw;
+    out.item_type = itemRaw;
   }
   return out;
 };
