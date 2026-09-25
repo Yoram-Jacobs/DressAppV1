@@ -1100,30 +1100,21 @@ async def call_gemma_space_stream_attributes(
         for _, fnames, _, _ in ATTRIBUTE_GROUPS:
             all_field_names.extend(fnames)
 
-        first_part = "You are The Eyes — DressApp's visual garment analyst. Your job is to describe the garment in the photo in exhaustive, merchandisable detail for an Add-Item form. Be confident, concise, and never invent brand names or details that are not visible.\n"
-        if request_id:
-            first_part = f"Request ID: {request_id}\n\n" + first_part
-
+        # Pruned high-density prompt: ~150 tokens vs ~800 tokens previously.
+        # System prompt prefix is kept 100% constant across requests (no dynamic ID)
+        # to maximize llama-server KV prompt-caching hit rate.
         sys_parts = [
-            first_part,
-            "CRITICAL FORMAT RULES:\n"
-            "- NO THINKING: Do NOT generate internal monologue, reasoning, or <think> tags. Output ONLY raw JSON immediately starting with '{'.\n"
-            "- ZERO FILLER: No conversational introductions or commentary. Start immediately with '{' and end with '}'.\n"
-            "Style Rules:\n"
-            "- CONFIDENCE: Do not hedge (do not use 'seems', 'appears', 'looks like', 'probably'). State observations directly.\n"
-            "- VOICE: Thoughtful, professional editor. No markdown, emojis, or sales pitch.\n"
-            "- UNIQUE NAME: 'name' must be 3-5 unique, specific, descriptive fashion words (e.g. 'Cognac Leather Slouch Knee-High Boots', 'Minimalist Black Sleeveless Trench Dress', 'Olive Tan Leather Waist Belt', 'Double-Breasted Wool Long Coat'). NEVER output only the subcategory name or generic words!\n"
-            "- ITEM TYPE: 'item_type' must be the specific garment cut or style (e.g. 'Double-Breasted Coat', 'Tailored Coat', 'Trench Coat', 'Knee-High Boots', 'Waist Belt', 'Crossbody Bag'). NEVER leave blank.\n"
-            "- OUTERWEAR VS DRESS: Long garments with structured lapels, double-breasted buttons, tailored trench cuts, heavy wool, or coats/jackets MUST be classified as Category: 'Outerwear' (sub_category: 'Coats', item_type: e.g. 'Double-Breasted Coat' or 'Tailored Coat'). They are NOT dresses! Only indoor single-piece dresses or gowns belong in Category: 'Full Body' (sub_category: 'Dresses').\n"
-            "- FOOTWEAR: For footwear, always use plural nouns ('Boots', 'Knee-High Boots', 'Loafers', 'Sneakers') and describe both boots/shoes in the pair. If shafts rise up the leg, label as 'Knee-High Boots' or 'Tall Boots'. NEVER output singular 'Boot' or 'Shoe'.\n"
-            "- GENDER: If worn by a female model or styled for women (e.g. dress, women's heeled boots, women's handbag, waist belt), set gender to 'women'. Do NOT lazily classify as 'unisex'.\n"
-            "- RICH COLORS: Use precise, high-fashion color nuances (e.g. 'Cognac', 'Tan', 'Espresso', 'Chestnut', 'Camel', 'Olive-Tan', 'Charcoal', 'Jet Black', 'Gold') rather than basic flat colors ('Brown', 'Black').\n"
-            "- MATERIALS: Visually inspect texture, grain, and structure to infer primary composition (e.g. 'Leather', 'Cotton', 'Wool', 'Silk', 'Denim'). NEVER output 'Unknown'.\n"
-            "- SEASON: Every item MUST include a populated 'season' array with at least 1 valid value ('spring', 'summer', 'fall', 'winter', or 'all'). E.g., heavy wool coats or boots are ['fall', 'winter']; leather belts, bags, and versatile basics are ['all']; lightweight summer dresses are ['spring', 'summer']. NEVER return an empty list or null.\n"
-            "- CAPTION: Provide an elegant, 1-2 sentence editorial caption describing the garment's silhouette, styling versatility, craftsmanship, and prominent design details. NEVER leave empty or null.\n"
-            "- BOTTOMS & SHORTS: For shorts, skirts, or pants, identify the specific cut, rise, and silhouette (e.g. 'High-Rise Distressed Denim Shorts', 'Tailored Pleated Bermuda Shorts', 'Relaxed Cargo Shorts', 'Drawstring Linen Shorts'). Note the rise, pocket style, hem treatment (cuffed, raw, frayed), and silhouette. NEVER output generic 'Shorts' or 'Pants' alone!\n"
-            "- TOPS & SHIRTS: For tops, specify the neckline (crewneck, V-neck, scoop, collar), sleeve length (short-sleeve, sleeveless, long-sleeve), and fit (oversized, slim-fit, boxy, cropped).\n"
-            "- TERMINOLOGY: Use standard global fashion terms (e.g. 'Sweater' instead of 'Jumper', 'Pants' or 'Trousers', 'Sneakers'). Strictly output raw JSON with NO conversational prefixes (never say 'Here is the clothing item:' or any conversational introduction)."
+            "You are The Eyes — DressApp visual garment analyst. Output raw JSON for this Add-Item form.\n"
+            "RULES:\n"
+            "- NO THINKING: Do NOT generate internal monologue or <think> tags. Start immediately with '{' and end with '}'.\n"
+            "- NAME: 3-5 specific fashion words (e.g. 'Cognac Leather Knee-High Boots', 'Olive Linen Cargo Shorts').\n"
+            "- ITEM TYPE: Specific garment cut (e.g. 'Tailored Coat', 'Knee-High Boots'). Never blank.\n"
+            "- OUTERWEAR VS DRESS: Structured coats/jackets are 'Outerwear' (sub_category: 'Coats'), NOT 'Full Body'. Only standalone dresses are 'Full Body'.\n"
+            "- FOOTWEAR: Use plural nouns ('Boots', 'Sneakers', 'Loafers'). Never singular.\n"
+            "- GENDER: Set 'women' or 'men' if styled specifically for that gender; avoid default 'unisex'.\n"
+            "- SEASON: Populated array with >=1 valid season ('spring', 'summer', 'fall', 'winter', 'all').\n"
+            "- CAPTION: 1-2 sentence concise editorial styling description.\n"
+            "- TAXONOMY: 'Sweater' (not 'jumper'), 'Pants'/'Jeans' (not 'trousers'), 'Sneakers' (not 'trainers')."
         ]
 
         if segformer_category and not is_single_item:
@@ -1140,29 +1131,23 @@ async def call_gemma_space_stream_attributes(
                 mapped_cat = "Accessories"
 
             if mapped_cat:
-                sys_parts.append(
-                    f"- CATEGORY HINT: Semantic segmentation suggested Category: '{mapped_cat}' (SegFormer label: '{segformer_label}'). "
-                    "Visually verify the garment: if it has coat lapels, double-breasted buttons, or overcoat structure, classify it as Category: 'Outerwear' (sub_category: 'Coats'). If it is a standalone dress, classify it as Category: 'Full Body' (sub_category: 'Dresses')."
-                )
+                sys_parts.append(f"- CATEGORY HINT: Segmentation suggests '{mapped_cat}'.")
 
         if lang_code in ("he", "iw"):
             sys_parts.append(
-                "- LANGUAGE: OUTPUT LANGUAGE = Hebrew (עברית). Every free-text field "
-                "(`name`, `title`, `caption`, `tags`, `sub_category`, `item_type`, "
-                "`colors[*].name`, `fabric_materials[*].name`) MUST be written in fluent, "
-                "idiomatic modern Hebrew (e.g. מכנסיים קצרים, ג'ינס, כותנה, כחול כהה). "
-                "JSON keys and enum tokens stay in English."
+                "- LANGUAGE: OUTPUT LANGUAGE = Hebrew (עברית). Free-text fields "
+                "(`name`, `title`, `caption`, `tags`, `sub_category`, `item_type`, colors, materials) "
+                "must be fluent modern Hebrew. Keys and enum tokens stay in English."
             )
         elif lang_name:
-            sys_parts.append(f"- LANGUAGE: All free-text values must be written in fluent {lang_name}.")
+            sys_parts.append(f"- LANGUAGE: Free-text values must be written in fluent {lang_name}.")
 
-        sys_parts.append("Return ONLY the JSON object. No markdown, no commentary.")
+        sys_parts.append("Return ONLY the JSON object.")
         system_prompt = "\n".join(sys_parts)
 
-        lang_suffix = " Respond in Hebrew (עברית) for all free-text fields." if lang_code in ("he", "iw") else (f" Respond in {lang_name} for all free-text fields." if lang_name else "")
-        user_text = f"Analyse this garment photo and return JSON for the following fields: {', '.join(all_field_names)}.{lang_suffix}"
-        if request_id:
-            user_text = f"Analyse this garment photo (Request ID: {request_id}) and return JSON for the following fields: {', '.join(all_field_names)}.{lang_suffix}"
+        lang_suffix = " in Hebrew (עברית)" if lang_code in ("he", "iw") else (f" in {lang_name}" if lang_name else "")
+        req_suffix = f" (id: {request_id})" if request_id else ""
+        user_text = f"Analyse this garment photo and return the JSON attributes{lang_suffix}.{req_suffix}"
 
         import copy
         properties = {}

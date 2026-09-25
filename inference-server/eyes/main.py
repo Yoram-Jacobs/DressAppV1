@@ -254,7 +254,7 @@ def _build_llama_argv(model_path: Path, mmproj_path: Path | None) -> list[str]:
         "-fa", "off",
         "-sps", "0.0",
         "--media-path", "/",
-        "--no-cache-prompt",
+        "--cache-prompt",
         "--parallel", "1",
     ]
     if mmproj_path is not None:

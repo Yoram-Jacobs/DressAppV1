@@ -41,8 +41,8 @@ def _apply_fast_matte(crops: list[tuple[dict[str, Any], bytes, str]]) -> list[tu
     return out
 
 
-def _shrink_for_vision(image_bytes: bytes, *, max_side: int = 512, q: int = 82) -> bytes:
-    """Keep the API payload light; 512px yields <= 258 vision projector tokens."""
+def _shrink_for_vision(image_bytes: bytes, *, max_side: int = 384, q: int = 80) -> bytes:
+    """Keep the API payload light; 384px yields <= 256 vision projector tokens."""
     try:
         img = Image.open(io.BytesIO(image_bytes))
         has_alpha = (
