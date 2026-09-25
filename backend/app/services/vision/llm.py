@@ -172,7 +172,7 @@ SYSTEM_PROMPT = (
     "• Item Type vs Subcategory: item_type and sub_category MUST NEVER be identical! sub_category is the broad classification (e.g. 'T-Shirt', 'Shirt', 'Jeans', 'Coat'), while item_type MUST be the specific cut or style (e.g. 'Short-Sleeve T-Shirt', 'Crew-Neck T-Shirt', 'V-Neck T-Shirt', 'Cap-Sleeve Top', 'Oversized Tee', 'Button-Down Shirt', 'Skinny Jeans', 'Trench Coat'). Never output the same string for both.\n"
     "• Gender: Cap sleeves, flutter sleeves, puff shoulders, sweetheart/scoop/curved necklines, fitted silhouettes, or feminine tops MUST be 'women', NOT 'unisex'. 'unisex' is strictly reserved for boxy, oversized, neutral heavy straight-cut tees. When in doubt on tops and tees with short or cap sleeves, ALWAYS choose 'women'.\n"
     "• Colors: Use PRECISE, fine-grained fashion color names! DO NOT output generic 'Blue', 'Red', 'Green' when a distinct shade is visible. Use specific shades such as 'Light Blue', 'Sky Blue', 'Baby Blue', 'Navy', 'Cyan', 'Turquoise', 'Teal', 'Indigo', 'Mint Green', 'Olive', 'Sage', 'Burgundy', 'Coral', 'Peach', 'Lavender', 'Lilac', 'Cream', 'Beige', 'Charcoal', 'Off-White'. If output language is Hebrew, use precise Hebrew color names: 'תכלת' or 'כחול בהיר' for light/sky/baby blue, 'כחול כהה' for navy, 'טורקיז' for turquoise, 'מנטה' for mint, 'בורדו' for burgundy.\n"
-    "• Pattern: Look VERY CLOSELY at the fabric surface. If there are any micro-dots, eyelets, perforations, honeycomb, waffles, jacquard, embossed textures, or subtle geometric weaves/textures, output 'geometric' (or 'striped'/'plaid'/'floral'), NEVER 'solid'! 'solid' is STRICTLY for completely flat, smooth, untextured fabrics with zero texture or print.\n"
+    "• Pattern: Look VERY CLOSELY at the fabric surface. If there is ANY subtle repeating texture, heathered grain, eyelets, micro-dots, perforations, honeycomb, waffles, jacquard, embossed textures, or subtle geometric weaves/textures, output 'geometric' (or 'striped'/'plaid'/'floral'), NEVER 'solid'! 'solid' is STRICTLY for completely flat, mirror-smooth, untextured fabrics with zero texture or weave pattern.\n"
     "• Dress Code: ALWAYS populate ('casual', 'smart-casual', 'business', 'formal', 'athletic', 'loungewear').\n"
     "• Season: Infer from sleeves & fabric. Short sleeves, cap sleeves, sleeveless, linen, light cotton MUST be ['summer'] or ['spring', 'summer']. Heavy wool, down, knitwear MUST be ['fall', 'winter']. Only seasonless basics (e.g. jeans) can be ['all']. NEVER use 'all' for short-sleeve tops.\n"
     "• Condition & Quality: ALWAYS classify condition ('good', 'excellent', 'fair', 'bad') and quality ('mid', 'premium', 'budget', 'luxury'). Standard items are condition='good', quality='mid'.\n"
@@ -333,9 +333,9 @@ _GARMENT_OBJECT_SCHEMA: dict[str, Any] = {
         "pattern": {
             "type": "string",
             "enum": [
-                "solid", "striped", "plaid", "floral", "herringbone",
-                "polka", "polka_dot", "paisley", "geometric", "animal_print",
-                "graphic", "tie_dye", "abstract",
+                "geometric", "striped", "plaid", "floral", "herringbone",
+                "polka", "polka_dot", "paisley", "animal_print",
+                "graphic", "tie_dye", "abstract", "solid",
             ],
         },
         "state": {"type": "string", "enum": ["new", "used"]},
@@ -450,7 +450,7 @@ def _user_prompt(code: str | None) -> str:
         "of such objects. No commentary. "
         "Crucial rules: (1) item_type and sub_category MUST be distinct (e.g. sub_category='T-Shirt', item_type='Short-Sleeve T-Shirt' or 'Crew-Neck T-Shirt'). "
         "(2) Use fine-grained colors (e.g. 'Light Blue', 'Sky Blue', 'Navy', 'Olive Green', not generic 'Blue'/'Green'). "
-        "(3) If fabric has micro-dots, eyelets, perforations, honeycomb, waffle, or subtle texture, set pattern='geometric', NEVER 'solid'. "
+        "(3) If fabric has ANY micro-dots, eyelets, perforations, honeycomb, waffle, heathering, or subtle texture/weave, set pattern='geometric', NEVER 'solid'. "
         "(4) Fitted tops, scoop necks, curved cuts, or cap sleeves MUST be gender='women', never 'unisex'."
     )
     code = (code or "en").lower()
@@ -468,7 +468,7 @@ def _user_prompt(code: str | None) -> str:
             "diacritics, Yiddish ligatures, or transliteration characters from other scripts. "
             "Taxonomy rules for Hebrew: `sub_category` and `item_type` MUST be distinct (e.g. sub_category='חולצות טי', item_type='חולצת טי שרוול קצר'). "
             "Colors MUST be specific (e.g. 'תכלת' / 'כחול בהיר' for light blue, 'כחול שמיים' for sky blue, 'כחול כהה' for navy, 'טורקיז', 'מנטה', 'בורדו'). "
-            "Pattern rule: inspect fabric for micro-dots, eyelets, perforations, honeycomb, waffles, or subtle geometric weaves/textures — if present, set pattern='geometric' (or 'polka_dot'). "
+            "Pattern rule: inspect fabric for ANY micro-dots, eyelets, perforations, honeycomb, waffles, or subtle geometric weaves/textures — if present, ALWAYS set pattern='geometric', NEVER 'solid'. "
             "Gender rule: cap sleeves, flutter sleeves, scoop neck, or feminine cuts MUST be gender='women', NOT 'unisex'. "
             "JSON keys and enum tokens (`category`, `gender`, `dress_code`, "
             "`season`, `pattern`, `state`, `condition`, `quality`) stay in English.\n\n"
