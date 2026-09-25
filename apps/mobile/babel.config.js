@@ -23,7 +23,6 @@ module.exports = function (api) {
           '@dressapp/api-client': '../../packages/api-client/src/index.js',
           '@dressapp/i18n': '../../packages/i18n/src/index.js',
           '@dressapp/types': '../../packages/types/src/index.js',
-          '@dressapp/eyes-native': '../../packages/eyes-native/src/index.ts',
         },
       }],
     ],

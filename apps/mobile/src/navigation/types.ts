@@ -67,7 +67,6 @@ export type MeStackParamList = {
   Campaigns: undefined;
   CreateCampaign: undefined;
   CampaignDetail: { campaignId: string };
-  EyesDownload: undefined;
   Admin: undefined;
   ExtensionConnect: undefined;
   AdsManager: undefined;

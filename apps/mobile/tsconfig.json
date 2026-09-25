@@ -23,9 +23,6 @@
       "@dressapp/types": [
         "../../packages/types/src/index.js"
       ],
-      "@dressapp/eyes-native": [
-        "../../packages/eyes-native/src/index.ts"
-      ],
       "lucide-react-native": [
         "../../node_modules/lucide-react-native"
       ],

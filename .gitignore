@@ -114,5 +114,9 @@ backend/.venv*/
 # Runtime Uploads & Test Artifacts
 backend/static/uploads/
 mobile_screen.png
+scratch/
+.opencode/
+Eyes-GGUF/
+Eyes-v1/
 
 

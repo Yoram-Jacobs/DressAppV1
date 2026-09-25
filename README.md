@@ -103,7 +103,6 @@ DressApp turns a closet of physical clothes into a structured, quarriable wardro
 │
 ├── packages/
 │   ├── api-client/              # Shared isomorphic REST & streaming NDJSON client
-│   ├── eyes-native/             # Native vision processing bindings for mobile
 │   ├── i18n/                    # Canonical translation catalogs across 13 locales
 │   └── types/                   # Shared TypeScript definitions for domain models
 │

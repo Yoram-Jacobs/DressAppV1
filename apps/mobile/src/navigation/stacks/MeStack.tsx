@@ -21,7 +21,6 @@ import { StylistScreen } from '@mobile/screens/stylist/StylistScreen';
 import { MyCampaignsScreen } from '@mobile/screens/me/MyCampaignsScreen';
 import { CreateCampaignScreen } from '@mobile/screens/me/CreateCampaignScreen';
 import { CampaignDetailScreen } from '@mobile/screens/me/CampaignDetailScreen';
-import { EyesDownloadScreen } from '@mobile/screens/settings/EyesDownloadScreen';
 import { AdminScreen } from '@mobile/screens/me/AdminScreen';
 import { ExtensionConnectScreen } from '@mobile/screens/me/ExtensionConnectScreen';
 import { AdsManagerScreen } from '@mobile/screens/market/AdsManagerScreen';
@@ -51,7 +50,6 @@ export function MeStack() {
       <Stack.Screen name="Campaigns" component={MyCampaignsScreen} />
       <Stack.Screen name="CreateCampaign" component={CreateCampaignScreen} options={{ presentation: 'modal' }} />
       <Stack.Screen name="CampaignDetail" component={CampaignDetailScreen} />
-      <Stack.Screen name="EyesDownload" component={EyesDownloadScreen} />
       <Stack.Screen name="Admin" component={AdminScreen} />
       <Stack.Screen name="ExtensionConnect" component={ExtensionConnectScreen} />
       <Stack.Screen name="AdsManager" component={AdsManagerScreen} />

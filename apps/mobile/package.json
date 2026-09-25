@@ -15,7 +15,6 @@
   },
   "dependencies": {
     "@dressapp/api-client": "*",
-    "@dressapp/eyes-native": "*",
     "@dressapp/i18n": "*",
     "@dressapp/types": "*",
     "@expo-google-fonts/manrope": "^0.4.2",

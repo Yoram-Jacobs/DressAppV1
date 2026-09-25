@@ -2162,7 +2162,7 @@ const styles = StyleSheet.create({
     marginBottom: spacing.xs,
   },
   fallbackNoticeText: {
-    fontFamily: fonts.medium,
+    fontFamily: fonts.bodyMedium,
     fontSize: fontSizes.xs,
     color: '#B45309',
     flex: 1,

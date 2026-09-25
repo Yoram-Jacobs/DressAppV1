@@ -15,7 +15,7 @@ DressApp is an AI-driven personal wardrobe manager, styling advisor, and circula
 - **Cost-Per-Wear (CPW) Analytics**: Insights into wardrobe capitalization value, utilization rates, and usage optimization.
 
 ### Technology Architecture
-- **Monorepo Structure**: Turborepo workspace linking applications (`apps/web`, `apps/mobile`, `apps/android-twa`) and shared libraries (`packages/api-client`, `packages/eyes-native`, `packages/i18n`, `packages/types`).
+- **Monorepo Structure**: Turborepo workspace linking applications (`apps/web`, `apps/mobile`, `apps/android-twa`) and shared libraries (`packages/api-client`, `packages/i18n`, `packages/types`).
 - **Backend Edge**: Python 3.11 with FastAPI, using asynchronous Motor drivers connected to a hosted MongoDB Atlas M10 cluster.
 - **Frontend SPA & Mobile**:
   - **Web**: React 19 single-page application utilizing `useSyncExternalStore` custom stores (`stylistStore`, `dailySuggestionsStore`, `useOutfitStore`, `useClosetStore`, `useSuitcaseStore`), Tailwind CSS, Shadcn/UI primitives, and `react-i18next` supporting 13 localized languages.

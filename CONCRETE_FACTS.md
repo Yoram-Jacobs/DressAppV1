@@ -182,7 +182,7 @@ docker compose up -d --force-recreate eyes
 | [`backend/app/services/background_matting.py`](backend/app/services/background_matting.py) | Local U2-Net transparent alpha background matting |
 | [`apps/web/`](apps/web/) | React 19 SPA (source for the `dressapp-frontend` container) |
 | [`apps/mobile/`](apps/mobile/) | Expo 53 / React Native 0.79 cross-platform mobile application |
-| [`packages/`](packages/) | Turborepo shared isomorphic packages (`api-client`, `eyes-native`, `i18n`, `types`) |
+| [`packages/`](packages/) | Turborepo shared isomorphic packages (`api-client`, `i18n`, `types`) |
 | [`inference-server/eyes/`](inference-server/eyes/) | Source of the `dressapp-eyes` container |
 | [`inference-server/eyes/README.md`](inference-server/eyes/README.md) | Eyes container architecture, endpoints, and deployment notes |
 | [`inference-server/eyes/test_images/`](inference-server/eyes/test_images/) | **Canonical real-photograph test dataset** — 30 outfit JPGs (`0001.jpg`…`0030.jpg`) with companion `.json` ground-truth labels. Use this for backend SegFormer / rembg / matte diagnostics, Eyes benchmark runs, frontend bulk-upload tests. Do NOT delete or mutate. |

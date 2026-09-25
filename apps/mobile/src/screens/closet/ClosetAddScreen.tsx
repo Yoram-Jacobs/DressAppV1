@@ -48,7 +48,6 @@ import * as Lucide from 'lucide-react-native';
 import { useTheme } from '@mobile/theme';
 import { fonts, fontSizes, spacing, radii, shadows } from '@mobile/theme/tokens';
 import { api } from '@mobile/lib/api';
-import { edgeAi } from '@mobile/lib/edgeAiService';
 import { closetStore, useClosetStore } from '@mobile/lib/stores/closetStore';
 import { useTierLimits } from '@mobile/hooks/useTierLimits';
 import { ScanningPipelineOverlay } from '@mobile/components/ScanningPipelineOverlay';
@@ -336,9 +335,31 @@ export function ClosetAddScreen() {
 
     try {
       const requestLang = (i18n.language || 'en').split('-')[0].toLowerCase();
-      const res = await edgeAi.analyzeGarment(
-        cleanB64,
-        requestLang,
+      // Client-side compression before transmission (~150KB - 200KB)
+      let sendB64 = cleanB64;
+      try {
+        const uri = cleanB64.startsWith('data:')
+          ? cleanB64
+          : `data:image/jpeg;base64,${cleanB64}`;
+        const comp = await ImageManipulator.manipulateAsync(
+          uri,
+          [{ resize: { width: 1200 } }],
+          { compress: 0.75, format: ImageManipulator.SaveFormat.JPEG, base64: true }
+        );
+        if (comp.base64) {
+          sendB64 = comp.base64;
+        }
+      } catch (compErr) {
+        console.warn('[ClosetAddScreen] Image pre-compression failed, using original base64:', compErr);
+      }
+
+      const res: any = await (api as any).analyzeItemImage(
+        {
+          image_base64: sendB64,
+          multi: true,
+          language: requestLang,
+          cutout_only: false,
+        },
         {
           onDetect: () => {
             setCards((prev) =>

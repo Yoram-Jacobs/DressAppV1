@@ -7,8 +7,6 @@
  * - Yarn workspaces hoists ALL dependencies to root node_modules/.
  *   apps/mobile/node_modules/ is essentially empty (only .bin/).
  *   Therefore, nodeModulesPaths must list root node_modules.
- * - llama.rn is stubbed via extraNodeModules for EAS builds where
- *   the native NDK package is not installed.
  * - watchFolders includes packages/ so Metro can resolve @dressapp/*
  *   workspace packages. node_modules is NOT watched — Metro resolves
  *   it through nodeModulesPaths.
@@ -34,8 +32,6 @@ function normalizePath(p) {
 
 const projectRoot = normalizePath(__dirname);
 const workspaceRoot = normalizePath(path.resolve(projectRoot, '../..'));
-
-const LLAMA_STUB = path.resolve(projectRoot, 'stubs/llama-stub.js');
 
 const config = getDefaultConfig(projectRoot);
 
@@ -65,10 +61,8 @@ config.resolver.sourceExts = [
   'cjs',
 ];
 
-// llama.rn stub — the only extraNodeModules entry needed.
-// Everything else resolves through normal hierarchical lookup + nodeModulesPaths.
+// Extra module resolution for monorepo hoisted packages
 config.resolver.extraNodeModules = {
-  'llama.rn': LLAMA_STUB,
   'react-i18next': path.resolve(projectRoot, 'node_modules/react-i18next'),
 };
 
