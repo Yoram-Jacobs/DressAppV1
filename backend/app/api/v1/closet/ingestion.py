@@ -50,6 +50,7 @@ from app.services.image_compression import (
     compress_image_url_or_b64,
 )
 from app.services import closet_service
+from app.services.image_generation.factory import get_image_provider
 from app.api.v1.closet.common import (
     _active_background_tasks,
     _track_task,
@@ -1981,60 +1982,66 @@ async def chat_analyse_item(
     if action == "image_edit":
         from app.services.auth import resolve_user_custom_gemini_api_key
         custom_gemini_key = resolve_user_custom_gemini_api_key(user)
-        if not custom_gemini_key:
+        try:
+            img_provider = get_image_provider(user_custom_gemini_key=custom_gemini_key)
+        except Exception as prov_err:
+            logger.warning("No image generation provider available: %s", prov_err)
+            img_provider = None
+
+        if img_provider is None:
             reply = _get_localized_closet_msg("image_edit_key_required", user_lang)
             action = "clarification"
         else:
-            img_service = get_gemini_image_service(user=user, api_key=custom_gemini_key)
-            if img_service is None:
-                reply = _get_localized_closet_msg("image_edit_unavailable", user_lang)
+            try:
+                from app.services.billing_service import deduct_user_credits
+                await deduct_user_credits(db, user, cost=1)
+
+                edit_prompt = decision.get("image_edit_prompt") or user_msg
+                edit_res = await img_provider.edit_image(
+                    image_bytes=raw,
+                    prompt=edit_prompt,
+                    strength=0.45,
+                    garment_metadata={
+                        "title": item.get("title"),
+                        "category": item.get("category"),
+                        "color": item.get("color"),
+                        "material": item.get("material"),
+                        "pattern": item.get("pattern"),
+                        "brand": item.get("brand"),
+                    },
+                )
+                import base64
+                res_b64 = base64.b64encode(edit_res.image_bytes).decode("ascii")
+                mime = edit_res.mime_type
+                image_url_out = f"data:{mime};base64,{res_b64}"
+
+                # Unbind generated garment from background (transparent clean cutout)
+                from app.services.garment_visuals import GarmentVisuals
+                clean_image_url_out = await GarmentVisuals.ensure_transparent_cutout(res_b64)
+
+                # Update in-memory reconstructed_image_url & clean_image_url
+                # Always prefer the transparent clean cutout so clothes layer perfectly without background boxes
+                from app.services.vision.image import fit_image_data_url_to_card
+                final_img = fit_image_data_url_to_card(clean_image_url_out or image_url_out)
+                updated_doc["reconstructed_image_url"] = final_img
+                # Do NOT overwrite clean_image_url (preserving the original cutout)
+                image_url_out = final_img
+                updated_doc["reconstruction_metadata"] = {
+                    "method": f"{edit_res.provider}_chat",
+                    "prompt": edit_prompt,
+                    "model": edit_res.model_name,
+                    "provider": edit_res.provider,
+                    "latency_ms": edit_res.latency_ms,
+                    "updated_at": datetime.now(timezone.utc).isoformat(),
+                }
+            except Exception as edit_exc:
+                logger.warning("Image edit failed in chat_analyse: %s", edit_exc)
+                exc_str = str(edit_exc).lower()
+                if "spending cap" in exc_str or "resource_exhausted" in exc_str or "quota" in exc_str or "429" in exc_str:
+                    reply = _get_localized_closet_msg("image_edit_quota_exceeded", user_lang)
+                else:
+                    reply = _get_localized_closet_msg("image_edit_failed", user_lang, user_msg=user_msg)
                 action = "clarification"
-            else:
-                try:
-                    from app.services.billing_service import deduct_user_credits
-                    await deduct_user_credits(db, user, cost=1)
-
-                    edit_prompt = decision.get("image_edit_prompt") or user_msg
-                    edit_res = await img_service.edit(
-                        raw,
-                        edit_prompt,
-                        garment_metadata={
-                            "title": item.get("title"),
-                            "category": item.get("category"),
-                            "color": item.get("color"),
-                            "material": item.get("material"),
-                            "pattern": item.get("pattern"),
-                            "brand": item.get("brand"),
-                        },
-                    )
-                    mime = edit_res.get("mime_type", "image/png")
-                    image_url_out = f"data:{mime};base64,{edit_res['image_b64']}"
-
-                    # Unbind generated garment from background (transparent clean cutout)
-                    from app.services.garment_visuals import GarmentVisuals
-                    clean_image_url_out = await GarmentVisuals.ensure_transparent_cutout(edit_res["image_b64"])
-
-                    # Update in-memory reconstructed_image_url & clean_image_url
-                    # Always prefer the transparent clean cutout so clothes layer perfectly without background boxes
-                    from app.services.vision.image import fit_image_data_url_to_card
-                    final_img = fit_image_data_url_to_card(clean_image_url_out or image_url_out)
-                    updated_doc["reconstructed_image_url"] = final_img
-                    # Do NOT overwrite clean_image_url (preserving the original cutout)
-                    image_url_out = final_img
-                    updated_doc["reconstruction_metadata"] = {
-                        "method": "nano_banana_chat",
-                        "prompt": edit_prompt,
-                        "model": edit_res.get("model_used"),
-                        "updated_at": datetime.now(timezone.utc).isoformat(),
-                    }
-                except Exception as edit_exc:
-                    logger.warning("Nano Banana chat edit failed: %s", edit_exc)
-                    exc_str = str(edit_exc).lower()
-                    if "spending cap" in exc_str or "resource_exhausted" in exc_str or "quota" in exc_str or "429" in exc_str:
-                        reply = _get_localized_closet_msg("image_edit_quota_exceeded", user_lang)
-                    else:
-                        reply = _get_localized_closet_msg("image_edit_failed", user_lang, user_msg=user_msg)
-                    action = "clarification"
 
     elif action == "metadata_update":
         meta_updates = decision.get("metadata_updates") or {}
@@ -2084,10 +2091,15 @@ async def repair_item_image(
     from app.services.auth import resolve_user_custom_gemini_api_key
 
     custom_gemini_key = resolve_user_custom_gemini_api_key(user)
-    if not custom_gemini_key:
+    try:
+        prov = get_image_provider(user_custom_gemini_key=custom_gemini_key)
+    except Exception:
+        prov = None
+
+    if prov is None and not custom_gemini_key:
         raise HTTPException(
             status_code=403,
-            detail="Nano Banana image reconstruction is available exclusively for users with their own custom Google Gemini API key. Please configure your API key in Profile -> AI Configuration.",
+            detail="Image reconstruction is temporarily unavailable. Please configure an image provider or custom API key in Profile.",
         )
 
     db = get_db()
@@ -2218,10 +2230,15 @@ async def edit_item_image(
     from app.services.auth import resolve_user_custom_gemini_api_key
 
     custom_gemini_key = resolve_user_custom_gemini_api_key(user)
-    if not custom_gemini_key:
+    try:
+        img_provider = get_image_provider(user_custom_gemini_key=custom_gemini_key)
+    except Exception:
+        img_provider = None
+
+    if img_provider is None and not custom_gemini_key:
         raise HTTPException(
             status_code=403,
-            detail="Nano Banana image editing is available exclusively for users with their own custom Google Gemini API key. Please configure your API key in Profile -> AI Configuration.",
+            detail="Image editing is temporarily unavailable. Please configure an image provider or custom API key in Profile.",
         )
 
     db = get_db()
@@ -2236,15 +2253,14 @@ async def edit_item_image(
     source_bytes = await _read_image_bytes_from_url(source_url)
     if not source_bytes:
         raise HTTPException(400, "Failed to retrieve source image bytes")
-    img_service = get_gemini_image_service(user=user, api_key=custom_gemini_key)
-    if img_service is None:
+    if img_provider is None:
         raise HTTPException(503, "Image generation service not configured")
     try:
         from app.services.billing_service import deduct_user_credits
         if not await deduct_user_credits(db, user, cost=1):
             raise HTTPException(status_code=402, detail="Insufficient credits or quota limit reached")
 
-        edit = await img_service.edit(
+        edit_res = await img_provider.edit_image(
             source_bytes,
             prompt,
             garment_metadata={
@@ -2256,8 +2272,16 @@ async def edit_item_image(
                 "brand": item.get("brand"),
             },
         )
+        import base64
+        res_b64 = base64.b64encode(edit_res.image_bytes).decode("ascii")
+        edit = {
+            "image_b64": res_b64,
+            "mime_type": edit_res.mime_type,
+            "model_used": edit_res.model_name,
+            "provider": edit_res.provider,
+        }
     except Exception as exc:  # noqa: BLE001
-        logger.warning("Nano Banana image edit failed for item %s: %s", item_id, exc)
+        logger.warning("Image edit failed for item %s: %s", item_id, exc)
         raise HTTPException(
             503,
             "Image generation is temporarily unavailable. Please try again shortly.",

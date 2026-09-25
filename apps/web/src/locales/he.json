@@ -888,7 +888,7 @@
       "previewReady": "תצוגה מקדימה מוכנה בצ'אט.",
       "imageApplied": "הוחל כתמונת הבגד! לחצו על שמור כדי לאשר.",
       "label": "ניתוח תמונה מחדש",
-      "subtitle": "שוחח עם The Eyes כדי להסיר אובייקטים לא רצויים, להשלים חיתוכים או לדייק פרטי פריט בעזרת Nano Banana.",
+      "subtitle": "שוחח עם The Eyes כדי להסיר אובייקטים לא רצויים, להשלים חיתוכים או לדייק פרטי פריט בעזרת AI Reconstructor.",
       "cta": "נתח",
       "quickReanalyze": "ניתוח מחדש מלא בלחיצה אחת",
       "running": "מנתח…",
@@ -914,7 +914,10 @@
       "promptFillHoles": "מלא חורים ורווחים",
       "promptReconstruct": "שחזר את הבגד",
       "promptAlignVertically": "יישר אנכית",
-      "promptIsolate": "בודד את הבגד"
+      "promptIsolate": "בודד את הבגד",
+      "aiGeneratedBadge": "שוחזר ע״י AI",
+      "fluxKleinBadge": "נוצר ע״י FLUX.2 Klein",
+      "aiGenerating": "ה-AI מייצר פיקסלים…"
     },
     "tabs": {
       "details": "פרטים",

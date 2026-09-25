@@ -876,7 +876,7 @@
       "previewReady": "Vorschau im Chat bereit.",
       "imageApplied": "Als Kleidungsfoto angewendet! Klicken Sie auf Speichern.",
       "label": "Foto neu analysieren",
-      "subtitle": "Chatten Sie mit The Eyes, um störende Objekte zu entfernen, Zuschnitte zu vervollständigen oder Kleidungsdetails mit Nano Banana zu verfeinern.",
+      "subtitle": "Chatten Sie mit The Eyes, um unerwünschte Objekte zu entfernen, abgeschnittene Bereiche zu vervollständigen oder Kleidungsdetails mit AI Reconstructor zu verfeinern.",
       "cta": "Analysieren",
       "quickReanalyze": "1-Klick Vollständige Neuanalyse",
       "running": "Analysiere…",
@@ -902,7 +902,10 @@
       "promptFillHoles": "Löcher und Lücken füllen",
       "promptReconstruct": "Kleidungsstück rekonstruieren",
       "promptAlignVertically": "Vertikal ausrichten",
-      "promptIsolate": "Kleidungsstück freistellen"
+      "promptIsolate": "Kleidungsstück freistellen",
+      "aiGeneratedBadge": "KI-rekonstruiert",
+      "fluxKleinBadge": "Mit FLUX.2 Klein generiert",
+      "aiGenerating": "KI generiert Pixel…"
     },
     "tabs": {
       "details": "Details",

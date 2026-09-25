@@ -876,7 +876,7 @@
       "previewReady": "预览已在聊天中就绪。",
       "imageApplied": "已应用为衣物照片！请点击保存。",
       "label": "重新分析照片",
-      "subtitle": "与 The Eyes 对话以移除多余物体、补齐裁剪缺失或使用 Nano Banana 细化衣物细节。",
+      "subtitle": "与 The Eyes 对话，使用 AI Reconstructor 移除多余物体、补全裁剪部分或优化服饰细节。",
       "cta": "分析",
       "quickReanalyze": "一键全量重新分析",
       "running": "正在分析…",
@@ -902,7 +902,10 @@
       "promptFillHoles": "填补破洞与缺口",
       "promptReconstruct": "重建衣物",
       "promptAlignVertically": "垂直对齐",
-      "promptIsolate": "抠出并隔离衣物"
+      "promptIsolate": "抠出并隔离衣物",
+      "aiGeneratedBadge": "AI重构完成",
+      "fluxKleinBadge": "由 FLUX.2 Klein 生成",
+      "aiGenerating": "AI正在生成像素…"
     },
     "tabs": {
       "details": "详情",

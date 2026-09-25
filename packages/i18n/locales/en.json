@@ -876,7 +876,7 @@
       "previewReady": "Preview ready in chat.",
       "imageApplied": "Applied to garment photo! Click Save to keep changes.",
       "label": "Re-analyse photo",
-      "subtitle": "Chat with The Eyes to remove unwanted objects, complete cutoffs, or refine garment details using Nano Banana.",
+      "subtitle": "Chat with The Eyes to remove unwanted objects, complete cutoffs, or refine garment details using AI Reconstructor.",
       "cta": "Analyse",
       "quickReanalyze": "1-Click Full Re-analyse",
       "running": "Analysing…",
@@ -902,7 +902,10 @@
       "promptFillHoles": "Fill holes and gaps",
       "promptReconstruct": "Reconstruct the garment",
       "promptAlignVertically": "Align vertically",
-      "promptIsolate": "Isolate the garment"
+      "promptIsolate": "Isolate the garment",
+      "aiGeneratedBadge": "AI Reconstructed",
+      "fluxKleinBadge": "FLUX.2 Klein Generated",
+      "aiGenerating": "AI is generating pixels…"
     },
     "tabs": {
       "details": "Details",

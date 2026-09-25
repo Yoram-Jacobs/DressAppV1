@@ -161,6 +161,22 @@ class Settings:
         "GEMINI_IMAGE_MODEL", "gemini-3.1-flash-lite-image"
     )
 
+    # --- Image Generation Provider (FLUX.2 Klein 4B / RunPod) ---
+    IMAGE_GENERATION_PROVIDER: str = os.environ.get(
+        "IMAGE_GENERATION_PROVIDER", "runpod"
+    )
+    RUNPOD_API_KEY: str | None = os.environ.get("RUNPOD_API_KEY") or None
+    RUNPOD_FLUX_ENDPOINT_ID: str | None = os.environ.get("RUNPOD_FLUX_ENDPOINT_ID") or None
+    RUNPOD_FLUX_MODEL: str = os.environ.get("RUNPOD_FLUX_MODEL", "flux.2-klein-4b")
+    RUNPOD_TIMEOUT_SECONDS: int = int(os.environ.get("RUNPOD_TIMEOUT_SECONDS", "60"))
+    RUNPOD_MAX_CONCURRENCY: int = int(os.environ.get("RUNPOD_MAX_CONCURRENCY", "4"))
+    RUNPOD_MAX_RETRIES: int = int(os.environ.get("RUNPOD_MAX_RETRIES", "3"))
+    RUNPOD_RUNSYNC_TIMEOUT: int = int(os.environ.get("RUNPOD_RUNSYNC_TIMEOUT", "25"))
+    RUNPOD_POLL_TIMEOUT: int = int(os.environ.get("RUNPOD_POLL_TIMEOUT", "120"))
+    IMAGE_GENERATION_ENABLE_FALLBACK: bool = os.environ.get(
+        "IMAGE_GENERATION_ENABLE_FALLBACK", "true"
+    ).lower() in ("true", "1", "yes")
+
     # --- The Eyes (garment vision analyzer) ---
     # Phase A wiring: a clean provider dispatch is built so the Eyes can
     # route to either Gemini or a Gemma-family model on HuggingFace.

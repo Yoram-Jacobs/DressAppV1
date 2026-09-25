@@ -876,7 +876,7 @@
       "previewReady": "Voorbeeld klaar in chat.",
       "imageApplied": "Toegepast als kledingfoto! Klik op Opslaan.",
       "label": "Foto opnieuw analyseren",
-      "subtitle": "Chat met The Eyes om ongewenste objecten te verwijderen, uitsnedes aan te vullen of kledingdetails te verfijnen met Nano Banana.",
+      "subtitle": "Chat met The Eyes om ongewenste objecten te verwijderen, afgesneden delen aan te vullen of kledingdetails te verfijnen met AI Reconstructor.",
       "cta": "Analyseren",
       "quickReanalyze": "1-Klik Volledige Heranalyse",
       "running": "Analyseren…",
@@ -902,7 +902,10 @@
       "promptFillHoles": "Gaten en openingen opvullen",
       "promptReconstruct": "Kledingstuk reconstrueren",
       "promptAlignVertically": "Verticaal uitlijnen",
-      "promptIsolate": "Kledingstuk isoleren"
+      "promptIsolate": "Kledingstuk isoleren",
+      "aiGeneratedBadge": "AI-gereconstrueerd",
+      "fluxKleinBadge": "Gegenereerd door FLUX.2 Klein",
+      "aiGenerating": "AI genereert pixels…"
     },
     "tabs": {
       "details": "Details",

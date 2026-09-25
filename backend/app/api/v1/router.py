@@ -28,6 +28,7 @@ from app.api.v1 import (
     sync,
     daily_proposals,
     weather,
+    image_generation,
 )
 
 api_v1_router = APIRouter(prefix="/v1")
@@ -67,3 +68,4 @@ api_v1_router.include_router(atzmai.router)
 api_v1_router.include_router(sync.router)
 api_v1_router.include_router(daily_proposals.router)
 api_v1_router.include_router(weather.router)
+api_v1_router.include_router(image_generation.router)

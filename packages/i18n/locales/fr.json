@@ -876,7 +876,7 @@
       "previewReady": "Aperçu prêt dans le chat.",
       "imageApplied": "Appliqué comme photo du vêtement ! Cliquez sur Enregistrer.",
       "label": "Réanalyser la photo",
-      "subtitle": "Discutez avec The Eyes pour retirer des objets indésirables, compléter les découpes ou affiner les détails avec Nano Banana.",
+      "subtitle": "Discutez avec The Eyes pour supprimer des objets indésirables, compléter des parties coupées ou affiner les détails du vêtement avec AI Reconstructor.",
       "cta": "Analyser",
       "quickReanalyze": "Réanalyse complète en 1 clic",
       "running": "Analyse en cours…",
@@ -902,7 +902,10 @@
       "promptFillHoles": "Combler les trous et ouvertures",
       "promptReconstruct": "Reconstituer le vêtement",
       "promptAlignVertically": "Aligner verticalement",
-      "promptIsolate": "Isoler le vêtement"
+      "promptIsolate": "Isoler le vêtement",
+      "aiGeneratedBadge": "Reconstruit par l'IA",
+      "fluxKleinBadge": "Généré par FLUX.2 Klein",
+      "aiGenerating": "L'IA génère les pixels…"
     },
     "tabs": {
       "details": "Détails",

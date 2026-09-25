@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 from fastapi.testclient import TestClient
 
 from app.services.auth import get_current_user
+from app.services.image_generation.base import ImageGenerationResult
 from server import app
 
 client = TestClient(app)
@@ -55,7 +56,7 @@ async def test_chat_analyse_image_edit_success(mock_user):
              patch("app.api.v1.closet._read_image_bytes_from_url", new_callable=AsyncMock) as mock_read_bytes, \
              patch("app.services.gemini_client.GeminiClient") as MockGeminiClient, \
              patch("app.services.billing_service.deduct_user_credits", new_callable=AsyncMock) as mock_billing, \
-             patch("app.api.v1.closet.gemini_image_service") as mock_img_srv:
+             patch("app.api.v1.closet.ingestion.get_image_provider") as mock_get_provider:
 
             mock_find.return_value = mock_item
             mock_read_bytes.return_value = fake_png
@@ -71,13 +72,16 @@ async def test_chat_analyse_image_edit_success(mock_user):
             )
             MockGeminiClient.return_value = mock_gemini_instance
 
-            mock_img_srv.edit = AsyncMock(
-                return_value={
-                    "image_b64": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==",
-                    "mime_type": "image/png",
-                    "model_used": "gemini-3.1-flash-lite-image",
-                }
+            mock_provider = MagicMock()
+            mock_provider.edit_image = AsyncMock(
+                return_value=ImageGenerationResult(
+                    image_bytes=fake_png,
+                    mime_type="image/png",
+                    provider="runpod",
+                    model_name="flux.2-klein-4b",
+                )
             )
+            mock_get_provider.return_value = mock_provider
 
             response = client.post(
                 "/api/v1/closet/item_123/chat-analyse",
@@ -201,7 +205,7 @@ async def test_chat_analyse_hebrew_image_edit(mock_user):
              patch("app.api.v1.closet._read_image_bytes_from_url", new_callable=AsyncMock) as mock_read_bytes, \
              patch("app.services.gemini_client.GeminiClient") as MockGeminiClient, \
              patch("app.services.billing_service.deduct_user_credits", new_callable=AsyncMock) as mock_billing, \
-             patch("app.api.v1.closet.gemini_image_service") as mock_img_srv:
+             patch("app.api.v1.closet.ingestion.get_image_provider") as mock_get_provider:
 
             mock_find.return_value = mock_item
             mock_read_bytes.return_value = fake_png
@@ -217,13 +221,16 @@ async def test_chat_analyse_hebrew_image_edit(mock_user):
             )
             MockGeminiClient.return_value = mock_gemini_instance
 
-            mock_img_srv.edit = AsyncMock(
-                return_value={
-                    "image_b64": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==",
-                    "mime_type": "image/png",
-                    "model_used": "gemini-3.1-flash-lite-image",
-                }
+            mock_provider = MagicMock()
+            mock_provider.edit_image = AsyncMock(
+                return_value=ImageGenerationResult(
+                    image_bytes=fake_png,
+                    mime_type="image/png",
+                    provider="runpod",
+                    model_name="flux.2-klein-4b",
+                )
             )
+            mock_get_provider.return_value = mock_provider
 
             response = client.post(
                 "/api/v1/closet/item_he_123/chat-analyse",

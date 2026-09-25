@@ -27,6 +27,7 @@ import logging
 from typing import Any
 
 from app.services.gemini_image_service import gemini_image_service, get_gemini_image_service
+from app.services.image_generation.factory import get_image_provider
 
 logger = logging.getLogger(__name__)
 
@@ -237,15 +238,15 @@ async def reconstruct(
     Routes between image completion (edit) and full reconstruction (generate)
     based on the Quality Checker status.
     """
-    # Reconstruction runs on Nano Banana (`gemini-3.1-flash-lite-image`).
-    # Uses user-provided Gemini API key if available, falling back to system key.
-    if user or api_key:
-        image_service = get_gemini_image_service(user=user, api_key=api_key) or gemini_image_service
-    else:
-        image_service = gemini_image_service
-    if image_service is None:
+    # Provider resolution (FLUX.2 Klein 4B on RunPod with Gemini Nano Banana fallback)
+    try:
+        provider = get_image_provider(user_custom_gemini_key=api_key)
+    except Exception as prov_err:
+        logger.warning("No image generation provider available for reconstruct: %s", prov_err)
+        provider = None
+
+    if provider is None:
         return None
-    using = "nano-banana"
     
     # Pre-matte the image to remove people/legs/hands and prevent safety blocks
     try:
@@ -269,17 +270,18 @@ async def reconstruct(
     prompt = _build_reconstruction_prompt(analysis)
     quality_status = (analysis.get("image_quality_status") or "").strip().lower()
 
+    out_result = None
     # Route: Full reconstruction from scratch vs inpainting completion
     if quality_status in ("needs_reconstruction", "reconstruction", "full_reconstruction"):
         try:
-            out = await image_service.generate(prompt)
+            out_result = await provider.generate_image(prompt)
         except Exception as gen_exc:
             logger.warning(
                 "Full reconstruction generate failed, attempting image edit fallback: %s",
                 repr(gen_exc)[:200],
             )
             try:
-                out = await image_service.edit(
+                out_result = await provider.edit_image(
                     crop_bytes,
                     prompt,
                     garment_metadata={
@@ -298,7 +300,7 @@ async def reconstruct(
     else:
         # Default or "needs_completion": inpaint/outpaint missing edges/collars/sleeves
         try:
-            out = await image_service.edit(
+            out_result = await provider.edit_image(
                 crop_bytes,
                 prompt,
                 garment_metadata={
@@ -313,18 +315,20 @@ async def reconstruct(
             )
         except Exception as exc:  # noqa: BLE001
             logger.warning(
-                "Reconstruction edit failed (engine=%s), falling back to text-to-image generation: %s",
-                using,
+                "Reconstruction edit failed, falling back to text-to-image generation: %s",
                 repr(exc)[:200],
             )
             try:
-                out = await image_service.generate(prompt)
+                out_result = await provider.generate_image(prompt)
             except Exception as gen_exc:
                 logger.error("Reconstruction fallback text-to-image generation also failed: %s", repr(gen_exc))
                 return None
-    image_b64 = out.get("image_b64")
-    if not image_b64:
+
+    if not out_result or not out_result.image_bytes:
         return None
+
+    import base64 as _b64
+    image_b64 = _b64.b64encode(out_result.image_bytes).decode("ascii")
 
     validated = True
     rejected_reason: str | None = None
@@ -373,19 +377,19 @@ async def reconstruct(
             # Ensure reconstructed image_b64 is set to the transparent background-free PNG
             image_b64 = clean_image_b64
         else:
-            gen_fitted_bytes, _ = _fit_crop_to_card(gen_raw, crop_mime=out.get("mime_type", "image/png"))
+            gen_fitted_bytes, _ = _fit_crop_to_card(gen_raw, crop_mime=out_result.mime_type)
             image_b64 = _b64.b64encode(gen_fitted_bytes).decode("ascii")
     except Exception as unbind_exc:
         logger.warning("Unbinding reconstructed garment from background failed: %s", repr(unbind_exc))
 
     return {
         "image_b64": image_b64,
-        "mime_type": out.get("mime_type", "image/png"),
+        "mime_type": out_result.mime_type,
         "clean_image_b64": clean_image_b64,
         "clean_image_url": clean_image_url,
         "prompt": prompt,
-        "model": out.get("model_used"),
-        "engine": using,
+        "model": out_result.model_name,
+        "engine": out_result.provider,
         "reasons": reasons or [],
         "validated": validated,
         "rejected_reason": rejected_reason,

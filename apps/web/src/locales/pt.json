@@ -876,7 +876,7 @@
       "previewReady": "Pré-visualização pronta no chat.",
       "imageApplied": "Aplicado como foto da peça! Clique em Salvar.",
       "label": "Reanalisar foto",
-      "subtitle": "Converse com The Eyes para remover objetos indesejados, completar recortes ou refinar detalhes da peça com Nano Banana.",
+      "subtitle": "Converse com The Eyes para remover objetos indesejados, completar partes cortadas ou refinar detalhes da roupa usando o AI Reconstructor.",
       "cta": "Analisar",
       "quickReanalyze": "Reanálise completa em 1 clique",
       "running": "Analisando…",
@@ -902,7 +902,10 @@
       "promptFillHoles": "Preencher furos e aberturas",
       "promptReconstruct": "Reconstruir a peça",
       "promptAlignVertically": "Alinhar verticalmente",
-      "promptIsolate": "Isolar a peça"
+      "promptIsolate": "Isolar a peça",
+      "aiGeneratedBadge": "Reconstruído por IA",
+      "fluxKleinBadge": "Gerado por FLUX.2 Klein",
+      "aiGenerating": "A IA está gerando pixels…"
     },
     "tabs": {
       "details": "Detalhes",

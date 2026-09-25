@@ -123,7 +123,7 @@ export function ItemAIAnalysisCard({
 
       <Text style={[styles.desc, { color: colors.mutedFg, textAlign: isRtl ? 'right' : 'left' }]}>
         {t('itemDetail.reanalyze.subtitle', {
-          defaultValue: 'Chat with The Eyes to remove unwanted objects, complete cutoffs, or refine garment details using Nano Banana.',
+          defaultValue: 'Chat with The Eyes to remove unwanted objects, complete cutoffs, or refine garment details using AI Reconstructor.',
         })}
       </Text>
 
@@ -180,7 +180,7 @@ export function ItemAIAnalysisCard({
                     {turn.action_taken === 'image_edit' && (
                       <View style={[styles.badgePill, { backgroundColor: isDark ? '#451a03' : '#fef3c7' }]}>
                         <Text style={[styles.badgeText, { color: '#d97706' }]}>
-                          {turn.model_used || t('itemDetail.reanalyze.nanoBananaBadge', { defaultValue: 'Nano Banana' })}
+                          {turn.model_used || t('itemDetail.reanalyze.aiGeneratedBadge', { defaultValue: 'AI Reconstructed' })}
                         </Text>
                       </View>
                     )}

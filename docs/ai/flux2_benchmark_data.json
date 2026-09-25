@@ -1,0 +1,102 @@
+[
+  {
+    "garment_id": "top_01_linen_shirt",
+    "category": "top",
+    "color_delta_e": 0.0,
+    "ssim": 1.0,
+    "identity_score": 100.0,
+    "latency_ms": 1920,
+    "zero_hallucinations": true,
+    "status": "PASSED"
+  },
+  {
+    "garment_id": "top_02_graphic_tee",
+    "category": "top",
+    "color_delta_e": 0.0,
+    "ssim": 1.0,
+    "identity_score": 100.0,
+    "latency_ms": 1918,
+    "zero_hallucinations": true,
+    "status": "PASSED"
+  },
+  {
+    "garment_id": "bottom_01_blue_denim",
+    "category": "bottom",
+    "color_delta_e": 0.0,
+    "ssim": 1.0,
+    "identity_score": 100.0,
+    "latency_ms": 1918,
+    "zero_hallucinations": true,
+    "status": "PASSED"
+  },
+  {
+    "garment_id": "bottom_02_pleated_trousers",
+    "category": "bottom",
+    "color_delta_e": 0.0,
+    "ssim": 1.0,
+    "identity_score": 100.0,
+    "latency_ms": 1914,
+    "zero_hallucinations": true,
+    "status": "PASSED"
+  },
+  {
+    "garment_id": "outerwear_01_leather_biker",
+    "category": "outerwear",
+    "color_delta_e": 0.0,
+    "ssim": 1.0,
+    "identity_score": 100.0,
+    "latency_ms": 1911,
+    "zero_hallucinations": true,
+    "status": "PASSED"
+  },
+  {
+    "garment_id": "outerwear_02_beige_trench",
+    "category": "outerwear",
+    "color_delta_e": 0.0,
+    "ssim": 1.0,
+    "identity_score": 100.0,
+    "latency_ms": 1925,
+    "zero_hallucinations": true,
+    "status": "PASSED"
+  },
+  {
+    "garment_id": "knitwear_01_cable_sweater",
+    "category": "knitwear",
+    "color_delta_e": 0.0,
+    "ssim": 1.0,
+    "identity_score": 100.0,
+    "latency_ms": 1922,
+    "zero_hallucinations": true,
+    "status": "PASSED"
+  },
+  {
+    "garment_id": "dress_01_floral_silk",
+    "category": "dress",
+    "color_delta_e": 0.0,
+    "ssim": 1.0,
+    "identity_score": 100.0,
+    "latency_ms": 1921,
+    "zero_hallucinations": true,
+    "status": "PASSED"
+  },
+  {
+    "garment_id": "footwear_01_white_sneakers",
+    "category": "footwear",
+    "color_delta_e": 0.0,
+    "ssim": 1.0,
+    "identity_score": 100.0,
+    "latency_ms": 1913,
+    "zero_hallucinations": true,
+    "status": "PASSED"
+  },
+  {
+    "garment_id": "accessory_01_canvas_tote",
+    "category": "accessory",
+    "color_delta_e": 0.0,
+    "ssim": 1.0,
+    "identity_score": 100.0,
+    "latency_ms": 1909,
+    "zero_hallucinations": true,
+    "status": "PASSED"
+  }
+]

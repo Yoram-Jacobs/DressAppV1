@@ -876,7 +876,7 @@
       "previewReady": "Anteprima pronta in chat.",
       "imageApplied": "Applicato come foto del capo! Clicca su Salva.",
       "label": "Rianalizza foto",
-      "subtitle": "Chatta con The Eyes per rimuovere elementi indesiderati, completare ritagli o perfezionare i dettagli con Nano Banana.",
+      "subtitle": "Chatta con The Eyes per rimuovere oggetti indesiderati, completare parti tagliate o perfezionare i dettagli del capo con AI Reconstructor.",
       "cta": "Analizza",
       "quickReanalyze": "Rianalisi completa in 1 clic",
       "running": "Analisi in corso…",
@@ -902,7 +902,10 @@
       "promptFillHoles": "Riempi buchi e aperture",
       "promptReconstruct": "Ricostruisci il capo",
       "promptAlignVertically": "Allinea verticalmente",
-      "promptIsolate": "Isola il capo"
+      "promptIsolate": "Isola il capo",
+      "aiGeneratedBadge": "Ricostruito con IA",
+      "fluxKleinBadge": "Generato con FLUX.2 Klein",
+      "aiGenerating": "L'IA sta generando pixel…"
     },
     "tabs": {
       "details": "Dettagli",

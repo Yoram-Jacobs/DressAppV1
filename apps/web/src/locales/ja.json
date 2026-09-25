@@ -876,7 +876,7 @@
       "previewReady": "チャットにプレビューが準備できました。",
       "imageApplied": "服の写真として適用されました！保存をクリックしてください。",
       "label": "写真の再分析",
-      "subtitle": "The Eyes とチャットして不要なオブジェクトの削除、欠損部の補完、Nano Banana を使ったアイテム詳細の調整が行えます。",
+      "subtitle": "The Eyes とチャットして、不要なオブジェクトの削除、欠けた部分の補完、または AI Reconstructor を使用した服の詳細の調整を行います。",
       "cta": "分析する",
       "quickReanalyze": "1クリック完全再分析",
       "running": "分析中…",
@@ -902,7 +902,10 @@
       "promptFillHoles": "穴や隙間を補完",
       "promptReconstruct": "衣類を再構築",
       "promptAlignVertically": "垂直に整列",
-      "promptIsolate": "衣類を切り抜き・分離"
+      "promptIsolate": "衣類を切り抜き・分離",
+      "aiGeneratedBadge": "AI再構築済み",
+      "fluxKleinBadge": "FLUX.2 Klein で生成",
+      "aiGenerating": "AIがピクセルを生成中…"
     },
     "tabs": {
       "details": "詳細",
