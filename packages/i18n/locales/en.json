@@ -2776,7 +2776,9 @@
     "currency": "Currency",
     "toppedUp": "Ad credits added — thanks!",
     "paypalDisclosure": "Secure checkout powered by PayPal. You'll approve the payment in PayPal's window, then we top up your balance instantly.",
-    "insufficientFunds": "Insufficient ad credits — your campaign was paused automatically. Top up to resume."
+    "insufficientFunds": "Insufficient ad credits — your campaign was paused automatically. Top up to resume.",
+    "exhausted_free": "You've used your free AI reconstructions! Upgrade to Manager for automated access or purchase a credit pack.",
+    "exhausted_paid": "You've used your AI reconstructions! Purchase a credit pack to continue."
   },
   "dpp": {
     "nav": {
@@ -4606,7 +4608,18 @@
     "headerTitle": "Pricing & Membership",
     "loadingPlans": "Loading pricing plans...",
     "included": "Included",
-    "notIncluded": "Not included"
+    "notIncluded": "Not included",
+    "freeCreditsOnboarding": "5 free AI reconstructions",
+    "monthlyCreditsDesc": "100 AI credits / month (not cumulative)",
+    "creditPacksTitle": "Credit Packs",
+    "creditPacksSubtitle": "Purchase credit packs for on-demand AI reconstructions. Paid credits never expire.",
+    "pack10": "10 Credits — $3",
+    "pack50": "50 Credits — $12",
+    "pack100": "100 Credits — $20",
+    "bestValue": "Best Value",
+    "buyPack": "Buy {{count}} Credits",
+    "purchasePackSuccess": "Successfully purchased {{count}} credits!",
+    "purchasePackError": "Failed to purchase credit pack."
   },
   "avatar": {
     "savedSuccess": "Avatar & visual profile saved!",

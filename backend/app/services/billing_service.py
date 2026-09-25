@@ -6,6 +6,8 @@ from app.services.credit_manager import (
     add_paid_credits as _add,
     get_user_credit_summary as _summary,
     refund_user_credits as _refund,
+    get_user_tier,
+    get_credit_exhaustion_info,
 )
 
 async def deduct_user_credits(

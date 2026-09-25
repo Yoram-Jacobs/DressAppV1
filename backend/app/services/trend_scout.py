@@ -2080,7 +2080,7 @@ async def _translate_card(
         f"{country_clause}\n"
         "Return ONLY a valid JSON object with keys: headline, body, tag, source_name, source_url, image_url, video_url."
     )
-    client = GeminiClient(api_key=settings.GEMINI_API_KEY)
+    from app.services.llm_gateway import call_main_llm
     payload_text = json.dumps(
         {
             "headline": card.get("headline"),
@@ -2094,10 +2094,12 @@ async def _translate_card(
         ensure_ascii=False,
     )
     try:
-        raw = await client.text(
-            system=system_prompt,
+        raw = await call_main_llm(
+            system_prompt=system_prompt,
             user_text=payload_text,
-            model="gemini-3.5-flash-lite",
+            max_tokens=600,
+            temperature=0.2,
+            fallback_model="gemini-3.5-flash-lite",
             response_mime_type="application/json",
         )
     except Exception as exc:

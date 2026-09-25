@@ -2790,7 +2790,9 @@
     "currency": "通貨",
     "toppedUp": "広告クレジットを追加しました—ありがとうございます!",
     "paypalDisclosure": "安全な決済はPayPalを使用しています。PayPalのウィンドウで支払いを承認すると、すぐに残高がチャージされます。",
-    "insufficientFunds": "広告クレジットが不足しています—キャンペーンは自動的に一時停止されました。チャージして再開してください。"
+    "insufficientFunds": "広告クレジットが不足しています—キャンペーンは自動的に一時停止されました。チャージして再開してください。",
+    "exhausted_free": "無料のAI再構築を使い切りました！自動アクセスを利用するにはManagerにアップグレードするか、クレジットパックをご購入ください。",
+    "exhausted_paid": "AI再構築を使い切りました！続けるにはクレジットパックをご購入ください。"
   },
   "dpp": {
     "nav": {
@@ -4610,7 +4612,18 @@
     "headerTitle": "価格とメンバーシップ",
     "loadingPlans": "料金プランを読み込んでいます...",
     "included": "含まれる",
-    "notIncluded": "含まれない"
+    "notIncluded": "含まれない",
+    "freeCreditsOnboarding": "5回の無料AI再構築",
+    "monthlyCreditsDesc": "月100 AIクレジット（繰り越しなし）",
+    "creditPacksTitle": "クレジットパック",
+    "creditPacksSubtitle": "必要な時にAI再構築を利用できるクレジットパックを購入。購入したクレジットは無期限です。",
+    "pack10": "10クレジット — $3",
+    "pack50": "50クレジット — $12",
+    "pack100": "100クレジット — $20",
+    "bestValue": "一番お得",
+    "buyPack": "{{count}}クレジットを購入",
+    "purchasePackSuccess": "{{count}}クレジットを購入しました！",
+    "purchasePackError": "クレジットパックの購入に失敗しました。"
   },
   "avatar": {
     "savedSuccess": "アバターとビジュアルプロフィールを保存しました!",

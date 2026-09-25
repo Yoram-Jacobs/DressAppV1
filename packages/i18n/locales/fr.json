@@ -2783,7 +2783,9 @@
     "currency": "Devise",
     "toppedUp": "Crédits publicitaires ajoutés — merci !",
     "paypalDisclosure": "Paiement sécurisé par PayPal. Vous approuverez le paiement dans la fenêtre PayPal, puis nous créditerons votre solde instantanément.",
-    "insufficientFunds": "Crédits publicitaires insuffisants — votre campagne a été automatiquement mise en pause. Rechargez pour reprendre."
+    "insufficientFunds": "Crédits publicitaires insuffisants — votre campagne a été automatiquement mise en pause. Rechargez pour reprendre.",
+    "exhausted_free": "Vous avez utilisé vos reconstructions IA gratuites ! Passez à Manager pour un accès automatisé ou achetez un pack de crédits.",
+    "exhausted_paid": "Vous avez utilisé vos reconstructions IA ! Achetez un pack de crédits pour continuer."
   },
   "dpp": {
     "nav": {
@@ -4602,7 +4604,18 @@
     "headerTitle": "Tarifs et adhésion",
     "loadingPlans": "Chargement des plans tarifaires...",
     "included": "Inclus",
-    "notIncluded": "Non inclus"
+    "notIncluded": "Non inclus",
+    "freeCreditsOnboarding": "5 reconstructions IA gratuites",
+    "monthlyCreditsDesc": "100 crédits IA / mois (non cumulables)",
+    "creditPacksTitle": "Packs de crédits",
+    "creditPacksSubtitle": "Achetez des packs de crédits pour des reconstructions IA à la demande. Les crédits achetés n'expirent jamais.",
+    "pack10": "10 crédits — 3 $",
+    "pack50": "50 crédits — 12 $",
+    "pack100": "100 crédits — 20 $",
+    "bestValue": "Meilleure valeur",
+    "buyPack": "Acheter {{count}} crédits",
+    "purchasePackSuccess": "{{count}} crédits achetés avec succès !",
+    "purchasePackError": "Échec de l'achat du pack de crédits."
   },
   "avatar": {
     "savedSuccess": "Avatar et profil visuel enregistrés !",

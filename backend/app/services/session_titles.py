@@ -56,12 +56,15 @@ async def generate_session_title(text: str, language: str = "en", api_key: str |
         "Return ONLY the plain title text without quotes, punctuation, markdown, emoji, or prefixes like 'Title:' or 'Topic:'. "
         "Keep it under 35 characters."
     )
-    client = GeminiClient(api_key=active_key)
+    from app.services.llm_gateway import call_main_llm
     try:
-        raw = await client.text(
-            system=system_msg,
+        raw = await call_main_llm(
+            system_prompt=system_msg,
             user_text=text[:300],
-            model="gemini-3.5-flash",
+            max_tokens=60,
+            temperature=0.3,
+            fallback_model="gemini-3.5-flash",
+            api_key=active_key,
         )
     except Exception as exc:  # noqa: BLE001
         logger.warning("Session title generation failed: %s", exc)

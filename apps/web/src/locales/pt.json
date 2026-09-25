@@ -2790,7 +2790,9 @@
     "currency": "Moeda",
     "toppedUp": "Créditos publicitários adicionados — obrigado!",
     "paypalDisclosure": "Pagamento seguro através do PayPal. Você aprovará o pagamento na janela do PayPal e recarregaremos o seu saldo instantaneamente.",
-    "insufficientFunds": "Créditos publicitários insuficientes — a sua campanha foi pausada automaticamente. Recarregue para retomar."
+    "insufficientFunds": "Créditos publicitários insuficientes — a sua campanha foi pausada automaticamente. Recarregue para retomar.",
+    "exhausted_free": "Você utilizou suas reconstruções gratuitas de IA! Faça upgrade para Manager para acesso automatizado ou compre um pacote de créditos.",
+    "exhausted_paid": "Você utilizou suas reconstruções de IA! Compre um pacote de créditos para continuar."
   },
   "dpp": {
     "nav": {
@@ -4609,7 +4611,18 @@
     "headerTitle": "Preços e assinatura",
     "loadingPlans": "Carregando planos de preços...",
     "included": "Incluído",
-    "notIncluded": "Não incluído"
+    "notIncluded": "Não incluído",
+    "freeCreditsOnboarding": "5 reconstruções gratuitas de IA",
+    "monthlyCreditsDesc": "100 créditos de IA / mês (não cumulativos)",
+    "creditPacksTitle": "Pacotes de créditos",
+    "creditPacksSubtitle": "Compre pacotes de créditos para reconstruções por IA sob demanda. Os créditos pagos nunca expiram.",
+    "pack10": "10 créditos — $3",
+    "pack50": "50 créditos — $12",
+    "pack100": "100 créditos — $20",
+    "bestValue": "Melhor custo-benefício",
+    "buyPack": "Comprar {{count}} créditos",
+    "purchasePackSuccess": "{{count}} créditos comprados com sucesso!",
+    "purchasePackError": "Falha ao comprar pacote de créditos."
   },
   "avatar": {
     "savedSuccess": "Avatar e perfil visual salvos!",

@@ -187,12 +187,12 @@ async def _handle_payout_item_event(evt: dict[str, Any]) -> None:
 # ------------------------------------------------------------------
 # Credits
 # ------------------------------------------------------------------
-_PACK_PRICES = {"10": 1000, "25": 2500, "50": 5000}
+_PACK_PRICES = {"10": 300, "50": 1200, "100": 2000}
 
 
 class TopupIn(BaseModel):
     model_config = ConfigDict(extra="forbid")
-    pack: Literal["10", "25", "50", "custom"]
+    pack: Literal["10", "50", "100", "custom"]
     custom_amount_cents: int | None = Field(default=None, ge=0, le=100000)
     currency: str = "USD"
 
@@ -257,10 +257,6 @@ async def topup_history(
 async def create_topup(
     payload: TopupIn, user: dict = Depends(get_current_user)
 ) -> dict[str, Any]:
-    raise HTTPException(
-        status_code=400,
-        detail="Prepaid credit packs are no longer supported. Please upgrade to Manager or Professional tier for unlimited operations."
-    )
     currency = payload.currency.upper()
     if payload.pack == "custom":
         amount_cents = int(payload.custom_amount_cents or 0)
@@ -291,7 +287,7 @@ async def create_topup(
             amount_cents=amount_cents,
             currency=currency,
             reference_id=f"topup:{topup.id}",
-            description=f"DressApp ad credit top-up ({currency} {amount_cents/100:.2f})",
+            description=f"DressApp AI credit pack top-up ({currency} {amount_cents/100:.2f})",
             custom_id=topup.id,
         )
     except paypal_client.PayPalError as exc:
@@ -305,10 +301,6 @@ async def create_topup(
 async def capture_topup(
     topup_id: str, user: dict = Depends(get_current_user)
 ) -> dict[str, Any]:
-    raise HTTPException(
-        status_code=400,
-        detail="Prepaid credit packs are no longer supported. Please upgrade to Manager or Professional tier for unlimited operations."
-    )
     topup = await db.credit_topups.find_one(
         {"id": topup_id, "user_id": user["id"]}, {"_id": 0}
     )
@@ -372,10 +364,17 @@ async def capture_topup(
             upsert=True,
         )
 
-        # Update user's profile credits and reset monthly usage fee counter
-        credits_purchased = int(int(topup["amount_cents"]) * 2)  # $0.005 per credit
+        # Update user's profile credits and credit bucket with purchased paid credits
+        pack_key = topup.get("pack")
+        if pack_key in ("10", "50", "100"):
+            credits_purchased = int(pack_key)
+        else:
+            credits_purchased = max(1, int(topup["amount_cents"]) // 20)
+        from app.services.credit_manager import add_paid_credits
+        await add_paid_credits(user["id"], credits_purchased)
+
         ai_config = user.get("ai_configuration") or {}
-        existing_credits = int(ai_config.get("current_credits", 1000))
+        existing_credits = int(ai_config.get("current_credits", 0))
         await db.users.update_one(
             {"id": user["id"]},
             {
@@ -696,10 +695,10 @@ async def create_subscription_order(
     if not tier:
         tier = "manager"
 
-    # Pricing setup
+    # Pricing setup ($10/mo & $100/yr for Manager, $15/mo & $150/yr for Professional)
     prices = {
-        "manager": {"monthly": 5.00, "yearly": 50.00},
-        "professional": {"monthly": 10.00, "yearly": 100.00}
+        "manager": {"monthly": 10.00, "yearly": 100.00},
+        "professional": {"monthly": 15.00, "yearly": 150.00}
     }
     amount = prices.get(tier, prices["manager"])[payload.plan_type]
 
@@ -791,6 +790,7 @@ async def capture_subscription(
         "paypal_subscription_id": None,
         "atzmai_subscription_id": subscription_id,
         "expires_at": expires_at,
+        "last_credit_cycle_start": _now_iso(),
         "cancelled_at": None,
     }
     
@@ -803,8 +803,12 @@ async def capture_subscription(
             }
         },
     )
-    
+
+    # Immediately provision the 100 non-cumulative monthly AI credits
+    from app.services.credit_manager import ensure_monthly_subscription_credits
     user_record = await db.users.find_one({"id": user["id"]})
+    if user_record:
+        await ensure_monthly_subscription_credits(user_record, db)
     if user_record:
         try:
             from app.api.v1.atzmai import trigger_success_email

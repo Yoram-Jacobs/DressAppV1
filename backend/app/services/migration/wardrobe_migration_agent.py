@@ -143,13 +143,15 @@ class WardrobeMigrationAgent:
                     "required": ["garments", "should_scroll"],
                 }
 
-                # Call Gemini 2.5 Flash using direct vision wrapper
-                response_text = await self.client.vision(
-                    user_parts=[jpeg_bytes],
-                    system=system_prompt,
-                    model="gemini-3.5-flash",
+                from app.services.llm_gateway import call_main_llm
+                b64_img = base64.b64encode(jpeg_bytes).decode("ascii")
+                response_text = await call_main_llm(
+                    user_text="Analyze the wardrobe viewport and return garment bounding boxes and should_scroll in JSON format.",
+                    system_prompt=system_prompt,
+                    image_b64_jpeg=b64_img,
+                    json_schema=response_schema,
                     response_mime_type="application/json",
-                    response_schema=response_schema,
+                    fallback_model="gemini-3.5-flash",
                 )
 
                 result = json.loads(response_text)
@@ -305,12 +307,15 @@ class WardrobeMigrationAgent:
         is_model_fit_pic = False
 
         try:
-            class_resp = await self.client.vision(
-                user_parts=[crop_bytes],
-                system=class_prompt,
-                model="gemini-3.5-flash",
+            from app.services.llm_gateway import call_main_llm
+            b64_crop = base64.b64encode(crop_bytes).decode("ascii")
+            class_resp = await call_main_llm(
+                user_text="Classify this cropped garment item according to the category schema.",
+                system_prompt=class_prompt,
+                image_b64_jpeg=b64_crop,
+                json_schema=class_schema,
                 response_mime_type="application/json",
-                response_schema=class_schema,
+                fallback_model="gemini-3.5-flash",
             )
             class_result = json.loads(class_resp)
             category = class_result.get("category", "Top")
@@ -470,12 +475,15 @@ class WardrobeMigrationAgent:
                 "required": ["pattern", "material", "style", "dress_code", "gender", "season", "item_type", "sub_category"]
             }
 
-            class_resp = await self.client.vision(
-                user_parts=[crop_bytes],
-                system=stylist_prompt,
-                model="gemini-3.5-flash",
+            from app.services.llm_gateway import call_main_llm
+            b64_crop = base64.b64encode(crop_bytes).decode("ascii")
+            class_resp = await call_main_llm(
+                user_text="Extract the fashion styling attributes for this garment according to the schema.",
+                system_prompt=stylist_prompt,
+                image_b64_jpeg=b64_crop,
+                json_schema=stylist_schema,
                 response_mime_type="application/json",
-                response_schema=stylist_schema,
+                fallback_model="gemini-3.5-flash",
             )
             stylist_result = json.loads(class_resp)
 

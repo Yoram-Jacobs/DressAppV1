@@ -40,7 +40,7 @@ _CREDIT_PACKS = {"10": 10, "25": 25, "50": 50, "100": 100}  # Updated to match m
 
 class AiCreditPurchaseIn(BaseModel):
     model_config = ConfigDict(extra="forbid")
-    pack: Literal["10", "25", "50", "100"]
+    pack: Literal["10", "50", "100"]
     currency: str = "USD"
 
 
@@ -83,9 +83,12 @@ async def get_pricing_info(user: dict | None = Depends(get_current_user_optional
     """Get comprehensive pricing and credit information (publicly accessible)."""
     try:
         user_tier = "free"
-        ai_provider = "google_ai"
-        ai_model = "gemini-3.5-flash"
+        ai_provider = "dressapp_eyes"
+        ai_model = "gemma-4-E4B"
         ai_daily_used = 0
+        total_credits = 0
+        free_credits = 0
+        paid_credits = 0
         user_id = None
 
         if user and "id" in user:
@@ -93,18 +96,21 @@ async def get_pricing_info(user: dict | None = Depends(get_current_user_optional
             db = get_db()
             user_record = await db.users.find_one({"id": user["id"]})
             if user_record:
-                sub = user_record.get("subscription") or {}
-                is_active = sub.get("is_active", False)
-                plan_type = sub.get("plan_type", "free")
-                tier = sub.get("tier", "free")
-                if is_active and plan_type != "free":
-                    if tier in ["pro", "manager"]:
-                        user_tier = "manager"
-                    elif tier in ["business", "professional"]:
-                        user_tier = "professional"
+                from app.services.credit_manager import get_user_tier, ensure_monthly_subscription_credits
+                user_tier = get_user_tier(user_record)
+                user_record = await ensure_monthly_subscription_credits(user_record, db)
+                u_model = User.parse_obj(user_record)
+                total_credits = u_model.total_credits
+                now_str = _now_iso()
+                free_credits = sum(
+                    b.get("amount", 0) for b in user_record.get("credit_buckets", [])
+                    if b.get("type") == "free" and (not b.get("expires_at") or b.get("expires_at") > now_str)
+                )
+                paid_credits = sum(
+                    b.get("amount", 0) for b in user_record.get("credit_buckets", [])
+                    if b.get("type") == "paid"
+                )
                 ai_cfg = user_record.get("ai_configuration", {})
-                ai_provider = ai_cfg.get("selected_provider", "google_ai")
-                ai_model = ai_cfg.get("selected_model", "gemini-3.5-flash")
                 ai_daily_used = ai_cfg.get("daily_request_count", 0)
 
         return {
@@ -112,27 +118,32 @@ async def get_pricing_info(user: dict | None = Depends(get_current_user_optional
             "user_id": user_id,
             "pricing_plan": {
                 "plan_type": user_tier,
-                "ai_provider_mode": "custom_keys",
+                "ai_provider_mode": "standard",
                 "ai_provider": ai_provider,
                 "ai_model": ai_model,
             },
             "credits": {
-                "total_credits": 0,
-                "free_credits_available": 0,
+                "total_credits": total_credits,
+                "free_credits_available": free_credits,
                 "free_credits_expired": 0,
-                "paid_credits": 0,
+                "paid_credits": paid_credits,
                 "ai_credits_used_this_month": 0,
-                "ai_monthly_limit": 0,
+                "ai_monthly_limit": 100 if user_tier in ["manager", "professional"] else 0,
                 "ai_daily_limit": 10 if user_tier == "free" else 999999,
                 "ai_daily_used": ai_daily_used,
                 "ai_monthly_used": 0,
             },
-            "credit_packs": [],
+            "credit_packs": [
+                {"pack": "10", "credits": 10, "price_cents": 300, "price_usd": 3.0},
+                {"pack": "50", "credits": 50, "price_cents": 1200, "price_usd": 12.0},
+                {"pack": "100", "credits": 100, "price_cents": 2000, "price_usd": 20.0},
+            ],
             "pricing_tiers": [
                 {
                     "name": "Free",
                     "price": 0,
                     "features": [
+                        "5 onboarding credits",
                         "Up to 50 closet items",
                         "Up to 10 requests per day",
                         "Community support"
@@ -140,8 +151,9 @@ async def get_pricing_info(user: dict | None = Depends(get_current_user_optional
                 },
                 {
                     "name": "Manager",
-                    "price": 500,  # $5.00
+                    "price": 1000,  # $10.00 / month ($100/yr)
                     "features": [
+                        "100 AI credits / month (not cumulative)",
                         "Unlimited closet items",
                         "Unlimited daily requests",
                         "Marketplace selling & renting",
@@ -152,8 +164,9 @@ async def get_pricing_info(user: dict | None = Depends(get_current_user_optional
                 },
                 {
                     "name": "Professional",
-                    "price": 1000,  # $10.00
+                    "price": 1500,  # $15.00 / month ($150/yr)
                     "features": [
+                        "100 AI credits / month (not cumulative)",
                         "Unlimited closet items",
                         "Unlimited daily requests",
                         "Marketplace selling & renting",
@@ -213,15 +226,71 @@ async def get_balance(
     }
 
 
+_CREDIT_PACKS = {"10": 10, "50": 50, "100": 100}
+_CREDIT_PACK_PRICES_CENTS = {"10": 300, "50": 1200, "100": 2000}
+
+
 @ai_credits_router.post("/purchase")
 async def create_purchase(
     payload: AiCreditPurchaseIn,
     user: dict = Depends(get_current_user),
 ) -> Dict[str, Any]:
-    raise HTTPException(
-        status_code=status.HTTP_400_BAD_REQUEST,
-        detail="Prepaid AI credit packs are no longer supported. Please upgrade to Manager or Professional tier for unlimited AI operations."
-    )
+    """Create PayPal order for purchasing AI credit packs (10 for $3, 50 for $12, 100 for $20)."""
+    import uuid
+    from app.services import paypal_client
+
+    currency = payload.currency.upper()
+    pack = payload.pack
+    amount_cents = _CREDIT_PACK_PRICES_CENTS.get(pack, 300)
+    credits_amount = _CREDIT_PACKS.get(pack, 10)
+
+    purchase_id = f"ai_pur_{uuid.uuid4().hex[:16]}"
+    description = f"DressApp AI Credit Pack ({credits_amount} credits)"
+
+    db = get_db()
+    approve_url = f"{settings.APP_PUBLIC_URL}/pricing?credit_status=success&token={purchase_id}"
+    order_id = f"mock_{purchase_id}"
+
+    if paypal_client.is_configured() and not settings.PAYPAL_MOCK_MODE:
+        try:
+            order = await paypal_client.create_order(
+                amount_cents=amount_cents,
+                currency=currency,
+                reference_id=f"aipack:{purchase_id}",
+                description=description,
+                custom_id=purchase_id,
+            )
+            order_id = order["id"]
+            for link in order.get("links", []):
+                if link.get("rel") == "approve":
+                    approve_url = link.get("href")
+                    break
+        except Exception as exc:
+            logger.error("PayPal create order failed for credit pack: %s", exc)
+            raise HTTPException(status.HTTP_502_BAD_GATEWAY, detail=f"PayPal error: {exc}")
+
+    doc = {
+        "id": purchase_id,
+        "user_id": user["id"],
+        "pack": pack,
+        "credits": credits_amount,
+        "amount_cents": amount_cents,
+        "currency": currency,
+        "paypal_order_id": order_id,
+        "status": "pending",
+        "created_at": _now_iso(),
+        "updated_at": _now_iso(),
+    }
+    await db.ai_credit_purchases.insert_one(doc)
+
+    return {
+        "success": True,
+        "purchase_id": purchase_id,
+        "order_id": order_id,
+        "approve_url": approve_url,
+        "credits": credits_amount,
+        "amount_cents": amount_cents,
+    }
 
 
 @ai_credits_router.post("/purchase/{purchase_id}/capture")
@@ -229,10 +298,38 @@ async def capture_purchase(
     purchase_id: str,
     user: dict = Depends(get_current_user),
 ) -> Dict[str, Any]:
-    raise HTTPException(
-        status_code=status.HTTP_400_BAD_REQUEST,
-        detail="Prepaid AI credit packs are no longer supported. Please upgrade to Manager or Professional tier for unlimited AI operations."
+    """Capture payment and provision paid credits that never expire."""
+    db = get_db()
+    purchase = await db.ai_credit_purchases.find_one({"id": purchase_id, "user_id": user["id"]})
+    if not purchase:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Purchase transaction not found")
+
+    if purchase.get("status") == "captured":
+        return {"success": True, "already_captured": True, "credits_added": purchase["credits"]}
+
+    order_id = purchase.get("paypal_order_id")
+    if paypal_client.is_configured() and not settings.PAYPAL_MOCK_MODE and order_id and not order_id.startswith("mock_"):
+        try:
+            await paypal_client.capture_order(order_id)
+        except Exception as exc:
+            logger.error("PayPal capture error for credit pack %s: %s", purchase_id, exc)
+            raise HTTPException(status.HTTP_502_BAD_GATEWAY, detail=f"PayPal capture failed: {exc}")
+
+    credits_to_add = int(purchase["credits"])
+    from app.services.credit_manager import add_paid_credits
+    await add_paid_credits(user["id"], credits_to_add)
+
+    await db.ai_credit_purchases.update_one(
+        {"id": purchase_id},
+        {"$set": {"status": "captured", "captured_at": _now_iso(), "updated_at": _now_iso()}}
     )
+
+    return {
+        "success": True,
+        "purchase_id": purchase_id,
+        "credits_added": credits_to_add,
+        "message": f"Successfully added {credits_to_add} AI credits to your account!",
+    }
 
 
 @ai_credits_router.get("/history")

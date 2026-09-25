@@ -2790,7 +2790,9 @@
     "currency": "货币",
     "toppedUp": "广告积分已充值——感谢!",
     "paypalDisclosure": "安全支付由PayPal提供。您将在PayPal窗口中确认付款,随后我们会即时充值您的余额。",
-    "insufficientFunds": "广告积分不足——您的活动已自动暂停。请充值后恢复。"
+    "insufficientFunds": "广告积分不足——您的活动已自动暂停。请充值后恢复。",
+    "exhausted_free": "您的免费AI重构次数已用尽！升级至Manager以获得自动访问权限，或购买积分包。",
+    "exhausted_paid": "您的AI重构次数已用尽！购买积分包以继续使用。"
   },
   "dpp": {
     "nav": {
@@ -4609,7 +4611,18 @@
     "headerTitle": "定价和会员资格",
     "loadingPlans": "正在加载定价计划...",
     "included": "已包含",
-    "notIncluded": "未包含"
+    "notIncluded": "未包含",
+    "freeCreditsOnboarding": "5次免费AI重构",
+    "monthlyCreditsDesc": "每月100点AI积分（不累积）",
+    "creditPacksTitle": "积分包",
+    "creditPacksSubtitle": "购买积分包按需进行AI重构。已购买积分永不过期。",
+    "pack10": "10积分 — $3",
+    "pack50": "50积分 — $12",
+    "pack100": "100积分 — $20",
+    "bestValue": "最划算",
+    "buyPack": "购买 {{count}} 点积分",
+    "purchasePackSuccess": "成功购买 {{count}} 点积分！",
+    "purchasePackError": "购买积分包失败。"
   },
   "avatar": {
     "savedSuccess": "头像和视觉配置文件已保存！",

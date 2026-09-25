@@ -89,7 +89,6 @@ def get_credit_thresholds() -> Dict[str, Any]:
 
 class CreditPack(str, Enum):
     TEN = "10"
-    TWENTY_FIVE = "25"
     FIFTY = "50"
     HUNDRED = "100"
 
@@ -104,29 +103,22 @@ CREDIT_PACK_PRICES: Dict[str, CreditPackPrice] = {
     CreditPack.TEN: CreditPackPrice(
         pack=CreditPack.TEN,
         credits_amount=10,
-        price_cents=199,
-        discounted_price_cents=199,
-        savings_cents=0
-    ),
-    CreditPack.TWENTY_FIVE: CreditPackPrice(
-        pack=CreditPack.TWENTY_FIVE,
-        credits_amount=25,
-        price_cents=399,
-        discounted_price_cents=399,
+        price_cents=300,
+        discounted_price_cents=300,
         savings_cents=0
     ),
     CreditPack.FIFTY: CreditPackPrice(
         pack=CreditPack.FIFTY,
         credits_amount=50,
-        price_cents=799,
-        discounted_price_cents=799,
+        price_cents=1200,
+        discounted_price_cents=1200,
         savings_cents=0
     ),
     CreditPack.HUNDRED: CreditPackPrice(
         pack=CreditPack.HUNDRED,
         credits_amount=100,
-        price_cents=1599,
-        discounted_price_cents=1599,
+        price_cents=2000,
+        discounted_price_cents=2000,
         savings_cents=0
     ),
 }
@@ -500,6 +492,92 @@ async def check_and_increment_daily_request(db: Any, user_id: str) -> bool:
     return True
 
 
+def get_user_tier(user_record: dict) -> str:
+    """Returns 'free', 'manager', or 'professional' based on active subscription."""
+    sub = user_record.get("subscription") or {}
+    is_active = sub.get("is_active", False)
+    plan_type = sub.get("plan_type", "free")
+    tier = (sub.get("tier") or "free").lower()
+    if is_active and plan_type != "free":
+        if tier in ["pro", "manager"]:
+            return "manager"
+        elif tier in ["business", "professional"]:
+            return "professional"
+    return "free"
+
+
+def get_credit_exhaustion_info(user_or_tier: dict | str) -> dict[str, str]:
+    """Returns the exact localized code, i18n_key, and default message for credit exhaustion."""
+    tier = user_or_tier if isinstance(user_or_tier, str) else get_user_tier(user_or_tier)
+    if tier in ["manager", "professional"]:
+        return {
+            "code": "credits_exhausted_paid",
+            "i18n_key": "credits.exhausted_paid",
+            "message": "You've used your AI reconstructions! Purchase a credit pack to continue.",
+        }
+    return {
+        "code": "credits_exhausted_free",
+        "i18n_key": "credits.exhausted_free",
+        "message": "You've used your free AI reconstructions! Upgrade to Manager for automated access or purchase a credit pack.",
+    }
+
+
+async def ensure_monthly_subscription_credits(user_record: dict, db: Any) -> dict:
+    """Ensure Manager and Professional subscribers receive 100 non-cumulative AI credits each billing month."""
+    user_id = user_record.get("id")
+    tier = get_user_tier(user_record)
+    if tier not in ["manager", "professional"]:
+        return user_record
+
+    sub = user_record.get("subscription") or {}
+    last_cycle = sub.get("last_credit_cycle_start")
+    now = datetime.now(timezone.utc)
+    
+    needs_reset = False
+    if not last_cycle:
+        needs_reset = True
+    else:
+        try:
+            last_dt = datetime.fromisoformat(last_cycle.replace("Z", "+00:00"))
+            if (now - last_dt) >= timedelta(days=30):
+                needs_reset = True
+        except Exception:
+            needs_reset = True
+
+    if needs_reset:
+        # Non-cumulative: retain paid packs, discard remaining subscription credits, grant fresh 100
+        buckets = user_record.get("credit_buckets") or []
+        kept_buckets = [
+            b for b in buckets
+            if b.get("type") == "paid" or b.get("description") != "Monthly subscription credits"
+        ]
+        
+        new_sub_bucket = {
+            "amount": 100,
+            "type": "free",
+            "created_at": now.isoformat(),
+            "expires_at": (now + timedelta(days=30)).isoformat(),
+            "description": "Monthly subscription credits",
+        }
+        kept_buckets.append(new_sub_bucket)
+        
+        sub["last_credit_cycle_start"] = now.isoformat()
+        await db.users.update_one(
+            {"id": user_id},
+            {
+                "$set": {
+                    "credit_buckets": kept_buckets,
+                    "subscription.last_credit_cycle_start": now.isoformat(),
+                }
+            }
+        )
+        user_record["credit_buckets"] = kept_buckets
+        user_record["subscription"] = sub
+        logger.info("Provisioned 100 non-cumulative monthly credits to %s subscriber %s", tier, user_id)
+
+    return user_record
+
+
 async def deduct_user_credits(
     db_connection: Any,
     user: dict,
@@ -513,9 +591,50 @@ async def deduct_user_credits(
         if not user_id:
             return False
         db = db_connection if db_connection is not None else get_db()
-        return await check_and_increment_daily_request(db, user_id)
+        user_record = await db.users.find_one({"id": user_id})
+        if not user_record:
+            return False
+
+        # Ensure subscription credits are active/refreshed
+        user_record = await ensure_monthly_subscription_credits(user_record, db)
+        user_record = await migrate_legacy_credits_if_needed(user_record, db)
+
+        u_model = User.parse_obj(user_record)
+        req_int = max(1, int(round(cost)))
+        if u_model.total_credits < req_int:
+            if not wait_if_exhausted:
+                return False
+            got_enough = await handle_credit_exhaustion(
+                operation=operation or "ai_operation",
+                user_id=user_id,
+                required_credits=req_int,
+            )
+            if not got_enough:
+                return False
+            user_record = await db.users.find_one({"id": user_id})
+            u_model = User.parse_obj(user_record)
+            if u_model.total_credits < req_int:
+                return False
+
+        success, spent_details = u_model.spend_credits(req_int, operation or "ai_operation")
+        if not success:
+            return False
+
+        clean_buckets = [b.dict() for b in prune_expired_buckets(u_model.credit_buckets)]
+        await db.users.update_one(
+            {"id": user_id},
+            {"$set": {"credit_buckets": clean_buckets}}
+        )
+
+        meter = TokenMeter(user_id, operation or "ai_operation")
+        meter.input_tokens = 0
+        meter.output_tokens = 0
+        meter.credits_consumed = req_int
+        meter.credit_type_used = "free" if any(d.get("type") == "free" for d in spent_details) else "paid"
+        await meter._save_token_usage(0, 0)
+        return True
     except Exception as e:
-        logger.error(f"Error checking/deducting user daily request: {str(e)}")
+        logger.error(f"Error checking/deducting user credits: {str(e)}")
         return False
 
 

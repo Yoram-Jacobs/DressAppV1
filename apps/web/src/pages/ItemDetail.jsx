@@ -1216,9 +1216,18 @@ export default function ItemDetail() {
         toast.success(t('itemDetail.reanalyze.success') + " · Press Save to keep changes.");
       }
 
+      if (res?.requires_credits && res?.exhaustion_key) {
+        const localizedExhaustion = t(res.exhaustion_key, { defaultValue: res.reply });
+        toast.error(localizedExhaustion);
+      }
+
+      const replyContent = res?.exhaustion_key
+        ? t(res.exhaustion_key, { defaultValue: res.reply })
+        : (res.reply || t('itemDetail.reanalyze.success'));
+
       const assistantTurn = {
         role: 'assistant',
-        content: res.reply || t('itemDetail.reanalyze.success'),
+        content: replyContent,
         action_taken: res.action_taken,
         image_url: res.image_url,
         updated_fields: res.updated_fields,
@@ -1231,7 +1240,9 @@ export default function ItemDetail() {
         toast.success(t('itemDetail.reanalyze.nanoBananaBadge') + "! Preview ready in chat.");
       }
     } catch (err) {
-      const errMsg = err?.response?.data?.detail || t('itemDetail.reanalyze.error');
+      const exhaustionKey = err?.response?.headers?.['x-credit-exhaustion-key'] || err?.response?.data?.exhaustion_key;
+      const rawMsg = err?.response?.data?.detail || t('itemDetail.reanalyze.error');
+      const errMsg = exhaustionKey ? t(exhaustionKey, { defaultValue: rawMsg }) : rawMsg;
       toast.error(errMsg);
       setReanalyzeChatHistory((prev) => [
         ...prev,
@@ -1325,12 +1336,14 @@ export default function ItemDetail() {
         );
       }
     } catch (err) {
-      toast.error(
-        err?.response?.data?.detail
-        || t('item.reshootError', {
-          defaultValue: 'Could not restore photo. Please try again.',
-        }),
-      );
+      const exhaustionKey = err?.response?.headers?.['x-credit-exhaustion-key'] || err?.response?.data?.exhaustion_key;
+      const rawDetail = err?.response?.data?.detail;
+      const finalMsg = exhaustionKey
+        ? t(exhaustionKey, { defaultValue: rawDetail })
+        : (rawDetail || t('item.reshootError', {
+            defaultValue: 'Could not restore photo. Please try again.',
+          }));
+      toast.error(finalMsg);
     } finally {
       setReshootingPhoto(false);
     }

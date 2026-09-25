@@ -841,8 +841,8 @@ async def _handle_login_callback(
                 address=extended_profile.get("address"),
                 sex=extended_profile.get("sex"),
             )
-            # Provision 10 free credits (expiring in 30 days) on signup as per pricing spec
-            new_user.add_credit_bucket(amount=10, credit_type="free", days_until_expiry=30)
+            # Provision 5 onboarding credits (expiring in 30 days) on signup as per pricing spec
+            new_user.add_credit_bucket(amount=5, credit_type="free", days_until_expiry=30)
             user_doc = new_user.model_dump()
 
             # Process referral if present

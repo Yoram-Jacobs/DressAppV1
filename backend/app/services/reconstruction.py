@@ -238,9 +238,9 @@ async def reconstruct(
     Routes between image completion (edit) and full reconstruction (generate)
     based on the Quality Checker status.
     """
-    # Provider resolution (FLUX.2 Klein 4B on RunPod with Gemini Nano Banana fallback)
+    # Provider resolution: Gemini Nano Banana server-side image-to-image/inpainting
     try:
-        provider = get_image_provider(user_custom_gemini_key=api_key)
+        provider = get_image_provider(user_custom_gemini_key=api_key, provider_override="gemini")
     except Exception as prov_err:
         logger.warning("No image generation provider available for reconstruct: %s", prov_err)
         provider = None

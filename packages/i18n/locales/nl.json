@@ -2783,7 +2783,9 @@
     "currency": "Munteenheid",
     "toppedUp": "Advertentietegoeden toegevoegd — bedankt!",
     "paypalDisclosure": "Veilig afrekenen mogelijk gemaakt door PayPal. U keurt de betaling goed in het PayPal-venster, waarna wij uw saldo onmiddellijk aanvullen.",
-    "insufficientFunds": "Onvoldoende advertentietegoed: uw campagne is automatisch onderbroken. Vul bij om te hervatten."
+    "insufficientFunds": "Onvoldoende advertentietegoed: uw campagne is automatisch onderbroken. Vul bij om te hervatten.",
+    "exhausted_free": "Je hebt je gratis AI-reconstructies gebruikt! Upgrade naar Manager voor geautomatiseerde toegang of koop een creditpakket.",
+    "exhausted_paid": "Je hebt je AI-reconstructies gebruikt! Koop een creditpakket om door te gaan."
   },
   "dpp": {
     "nav": {
@@ -4616,7 +4618,18 @@
     "headerTitle": "Prijzen en lidmaatschap",
     "loadingPlans": "Tariefplannen laden...",
     "included": "Inbegrepen",
-    "notIncluded": "Niet inbegrepen"
+    "notIncluded": "Niet inbegrepen",
+    "freeCreditsOnboarding": "5 gratis AI-reconstructies",
+    "monthlyCreditsDesc": "100 AI-credits / maand (niet cumulatief)",
+    "creditPacksTitle": "Creditpakketten",
+    "creditPacksSubtitle": "Koop creditpakketten voor on-demand AI-reconstructies. Betaalde credits verlopen nooit.",
+    "pack10": "10 credits — $3",
+    "pack50": "50 credits — $12",
+    "pack100": "100 credits — $20",
+    "bestValue": "Voordeligste keuze",
+    "buyPack": "Koop {{count}} credits",
+    "purchasePackSuccess": "{{count}} credits succesvol gekocht!",
+    "purchasePackError": "Kan creditpakket niet kopen."
   },
   "avatar": {
     "savedSuccess": "Avatar en visueel profiel opgeslagen!",

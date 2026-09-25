@@ -229,39 +229,26 @@ class GeminiStylistService:
                 )
 
         logger.info(
-            "Gemini stylist call session=%s model=%s has_image=%s",
+            "Stylist call session=%s has_image=%s via main LLM (Eyes Gemma4-E4B)",
             session_id,
-            self.model,
             bool(image_base64),
         )
         from app.services import provider_activity
+        from app.services.llm_gateway import call_main_llm
 
         with provider_activity.Track(
-            "gemini-stylist", {"model": self.model, "has_image": bool(image_base64)}
+            "stylist-main-llm", {"model": self.model, "has_image": bool(image_base64)}
         ):
-            try:
-                raw = await self._client.vision(
-                    system=sys_msg,
-                    user_parts=user_parts,
-                    model=self.model,
-                    response_mime_type="application/json",
-                )
-            except Exception as exc:
-                if settings.GEMINI_API_KEY and settings.GEMINI_API_KEY != self.api_key:
-                    logger.warning("Gemini stylist call failed (%s), attempting fallback with system key and default model", exc)
-                    try:
-                        fallback_client = GeminiClient(api_key=settings.GEMINI_API_KEY)
-                        raw = await fallback_client.vision(
-                            system=sys_msg,
-                            user_parts=user_parts,
-                            model=DEFAULT_VISION_MODEL,
-                            response_mime_type="application/json",
-                        )
-                    except Exception as fallback_exc:
-                        logger.error("Fallback Gemini stylist call failed: %s", fallback_exc)
-                        raise exc from fallback_exc
-                else:
-                    raise exc
+            raw = await call_main_llm(
+                user_text=prompt_text,
+                system_prompt=sys_msg,
+                image_b64_jpeg=image_base64,
+                max_tokens=4096,
+                temperature=0.2,
+                response_mime_type="application/json",
+                fallback_model=self.model,
+                api_key=self.api_key,
+            )
         return _parse_json(raw)
 
 

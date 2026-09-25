@@ -166,35 +166,17 @@ async def generate_text(
     api_key: str | None = None,
     model: str = "gemini-3.5-flash",
 ) -> str:
-    from app.services import eyes_override
-    from app.services.vision.llm import _call_gemma_space
-    from app.config import settings
+    from app.services.llm_gateway import call_main_llm
 
-    provider = (await eyes_override.get_active_provider()).lower()
-    if provider == "gemma" and settings.EYES_GEMMA_SPACE_URL:
-        try:
-            logger.info("Routing text request to Gemma Space")
-            return await _call_gemma_space(
-                system_prompt=system or "",
-                user_text=user_text,
-                image_b64_jpeg="",
-                max_tokens=max_tokens or 2048,
-                temperature=temperature or 0.1,
-                json_schema=response_schema,
-            )
-        except Exception as exc:
-            logger.warning("Gemma Space call failed; falling back to Gemini. Error: %s", exc)
-
-    logger.info("Routing text request to Gemini Client (model=%s)", model)
-    client = GeminiClient(api_key=api_key)
-    return await client.text(
+    return await call_main_llm(
         user_text=user_text,
-        system=system,
-        model=model,
-        temperature=temperature,
-        max_tokens=max_tokens,
+        system_prompt=system,
+        json_schema=response_schema,
         response_mime_type=response_mime_type,
-        response_schema=response_schema,
+        max_tokens=max_tokens or 2048,
+        temperature=temperature or 0.1,
+        fallback_model=model,
+        api_key=api_key,
     )
 
 

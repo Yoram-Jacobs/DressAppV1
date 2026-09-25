@@ -2814,7 +2814,9 @@
     "currency": "מטבע",
     "toppedUp": "הקרדיטים נוספו — תודה!",
     "paypalDisclosure": "תשלום מאובטח ב-PayPal. תאשר בחלון של PayPal, והיתרה תיטען מיד.",
-    "insufficientFunds": "אין מספיק קרדיט — הקמפיין הושהה אוטומטית. טען כדי להמשיך."
+    "insufficientFunds": "אין מספיק קרדיט — הקמפיין הושהה אוטומטית. טען כדי להמשיך.",
+    "exhausted_free": "ניצלת את שחזורי ה-AI החינמיים שלך! שדרג ל-Manager לקבלת גישה אוטומטית או רכוש חבילת קרדיטים.",
+    "exhausted_paid": "ניצלת את שחזורי ה-AI שלך! רכוש חבילת קרדיטים כדי להמשיך."
   },
   "language": {
     "change": "שנה שפה",
@@ -4685,7 +4687,18 @@
     "headerTitle": "תמחור וחברות",
     "loadingPlans": "טוען תוכניות תמחור...",
     "included": "כלול",
-    "notIncluded": "לא כלול"
+    "notIncluded": "לא כלול",
+    "freeCreditsOnboarding": "5 שחזורי AI חינם",
+    "monthlyCreditsDesc": "100 קרדיטי AI בחודש (לא מצטבר)",
+    "creditPacksTitle": "חבילות קרדיטים",
+    "creditPacksSubtitle": "רכוש חבילות קרדיטים לשחזורי AI לפי דרישה. קרדיטים שנרכשו אינם פגים לעולם.",
+    "pack10": "10 קרדיטים — 3$",
+    "pack50": "50 קרדיטים — 12$",
+    "pack100": "100 קרדיטים — 20$",
+    "bestValue": "המשתלם ביותר",
+    "buyPack": "רכוש {{count}} קרדיטים",
+    "purchasePackSuccess": "רכשת בהצלחה {{count}} קרדיטים!",
+    "purchasePackError": "שגיאה ברכישת חבילת קרדיטים."
   },
   "avatar": {
     "savedSuccess": "אווטאר ופרופיל חזותי נשמר!",

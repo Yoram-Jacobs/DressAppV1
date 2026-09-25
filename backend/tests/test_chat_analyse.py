@@ -54,7 +54,7 @@ async def test_chat_analyse_image_edit_success(mock_user):
 
         with patch("app.services.repos.find_one", new_callable=AsyncMock) as mock_find, \
              patch("app.api.v1.closet._read_image_bytes_from_url", new_callable=AsyncMock) as mock_read_bytes, \
-             patch("app.services.gemini_client.GeminiClient") as MockGeminiClient, \
+             patch("app.services.llm_gateway.call_main_llm", new_callable=AsyncMock) as mock_llm, \
              patch("app.services.billing_service.deduct_user_credits", new_callable=AsyncMock) as mock_billing, \
              patch("app.api.v1.closet.ingestion.get_image_provider") as mock_get_provider:
 
@@ -62,15 +62,11 @@ async def test_chat_analyse_image_edit_success(mock_user):
             mock_read_bytes.return_value = fake_png
             mock_billing.return_value = True
 
-            mock_gemini_instance = MagicMock()
-            mock_gemini_instance.vision = AsyncMock(
-                return_value=json.dumps({
-                    "action": "image_edit",
-                    "reply": "I'm removing the shoes and cleaning up the trousers crop.",
-                    "image_edit_prompt": "Full clean burgundy trousers isolated on white studio background without shoes",
-                })
-            )
-            MockGeminiClient.return_value = mock_gemini_instance
+            mock_llm.return_value = json.dumps({
+                "action": "image_edit",
+                "reply": "I'm removing the shoes and cleaning up the trousers crop.",
+                "image_edit_prompt": "Full clean burgundy trousers isolated on white studio background without shoes",
+            })
 
             mock_provider = MagicMock()
             mock_provider.edit_image = AsyncMock(
@@ -114,23 +110,19 @@ async def test_chat_analyse_metadata_update(mock_user):
 
         with patch("app.services.repos.find_one", new_callable=AsyncMock) as mock_find, \
              patch("app.api.v1.closet._read_image_bytes_from_url", new_callable=AsyncMock) as mock_read_bytes, \
-             patch("app.services.gemini_client.GeminiClient") as MockGeminiClient:
+             patch("app.services.llm_gateway.call_main_llm", new_callable=AsyncMock) as mock_llm:
 
             mock_find.return_value = mock_item
             mock_read_bytes.return_value = fake_png
 
-            mock_gemini_instance = MagicMock()
-            mock_gemini_instance.vision = AsyncMock(
-                return_value=json.dumps({
-                    "action": "metadata_update",
-                    "reply": "Updated fabric to 100% Cashmere.",
-                    "metadata_updates": {
-                        "material": "Cashmere",
-                        "fabric_materials": [{"name": "Cashmere", "percentage": 100}],
-                    },
-                })
-            )
-            MockGeminiClient.return_value = mock_gemini_instance
+            mock_llm.return_value = json.dumps({
+                "action": "metadata_update",
+                "reply": "Updated fabric to 100% Cashmere.",
+                "metadata_updates": {
+                    "material": "Cashmere",
+                    "fabric_materials": [{"name": "Cashmere", "percentage": 100}],
+                },
+            })
 
             response = client.post(
                 "/api/v1/closet/item_456/chat-analyse",
@@ -160,20 +152,16 @@ async def test_chat_analyse_clarification(mock_user):
 
         with patch("app.services.repos.find_one", new_callable=AsyncMock) as mock_find, \
              patch("app.api.v1.closet._read_image_bytes_from_url", new_callable=AsyncMock) as mock_read_bytes, \
-             patch("app.services.gemini_client.GeminiClient") as MockGeminiClient:
+             patch("app.services.llm_gateway.call_main_llm", new_callable=AsyncMock) as mock_llm:
 
             mock_find.return_value = mock_item
             mock_read_bytes.return_value = fake_png
 
-            mock_gemini_instance = MagicMock()
-            mock_gemini_instance.vision = AsyncMock(
-                return_value=json.dumps({
-                    "action": "clarification",
-                    "reply": "Would you like me to remove the entire pattern or just alter the sleeves?",
-                    "image_edit_prompt": None,
-                })
-            )
-            MockGeminiClient.return_value = mock_gemini_instance
+            mock_llm.return_value = json.dumps({
+                "action": "clarification",
+                "reply": "Would you like me to remove the entire pattern or just alter the sleeves?",
+                "image_edit_prompt": None,
+            })
 
             response = client.post(
                 "/api/v1/closet/item_789/chat-analyse",
@@ -203,7 +191,7 @@ async def test_chat_analyse_hebrew_image_edit(mock_user):
 
         with patch("app.services.repos.find_one", new_callable=AsyncMock) as mock_find, \
              patch("app.api.v1.closet._read_image_bytes_from_url", new_callable=AsyncMock) as mock_read_bytes, \
-             patch("app.services.gemini_client.GeminiClient") as MockGeminiClient, \
+             patch("app.services.llm_gateway.call_main_llm", new_callable=AsyncMock) as mock_llm, \
              patch("app.services.billing_service.deduct_user_credits", new_callable=AsyncMock) as mock_billing, \
              patch("app.api.v1.closet.ingestion.get_image_provider") as mock_get_provider:
 
@@ -211,15 +199,11 @@ async def test_chat_analyse_hebrew_image_edit(mock_user):
             mock_read_bytes.return_value = fake_png
             mock_billing.return_value = True
 
-            mock_gemini_instance = MagicMock()
-            mock_gemini_instance.vision = AsyncMock(
-                return_value=json.dumps({
-                    "action": "image_edit",
-                    "reply": "מבצע עריכת תמונה: מסיר את הנעליים.",
-                    "image_edit_prompt": "Remove the shoes and isolate cargo pants on neutral background",
-                })
-            )
-            MockGeminiClient.return_value = mock_gemini_instance
+            mock_llm.return_value = json.dumps({
+                "action": "image_edit",
+                "reply": "מבצע עריכת תמונה: מסיר את הנעליים.",
+                "image_edit_prompt": "Remove the shoes and isolate cargo pants on neutral background",
+            })
 
             mock_provider = MagicMock()
             mock_provider.edit_image = AsyncMock(

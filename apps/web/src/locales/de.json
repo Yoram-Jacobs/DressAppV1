@@ -2783,7 +2783,9 @@
     "currency": "Währung",
     "toppedUp": "Anzeigenguthaben hinzugefügt – vielen Dank!",
     "paypalDisclosure": "Sichere Bezahlung über PayPal. Sie bestätigen die Zahlung im PayPal-Fenster, dann laden wir Ihr Guthaben sofort auf.",
-    "insufficientFunds": "Unzureichendes Anzeigenguthaben – Ihre Kampagne wurde automatisch pausiert. Laden Sie auf, um fortzufahren."
+    "insufficientFunds": "Unzureichendes Anzeigenguthaben – Ihre Kampagne wurde automatisch pausiert. Laden Sie auf, um fortzufahren.",
+    "exhausted_free": "Sie haben Ihre kostenlosen KI-Rekonstruktionen aufgebraucht! Upgraden Sie auf Manager für automatisierten Zugriff oder kaufen Sie ein Guthabenpaket.",
+    "exhausted_paid": "Sie haben Ihre KI-Rekonstruktionen aufgebraucht! Kaufen Sie ein Guthabenpaket, um fortzufahren."
   },
   "dpp": {
     "nav": {
@@ -4602,7 +4604,18 @@
     "headerTitle": "Preise und Mitgliedschaft",
     "loadingPlans": "Preispläne werden geladen...",
     "included": "Inbegriffen",
-    "notIncluded": "Nicht inbegriffen"
+    "notIncluded": "Nicht inbegriffen",
+    "freeCreditsOnboarding": "5 kostenlose KI-Rekonstruktionen",
+    "monthlyCreditsDesc": "100 KI-Credits / Monat (nicht kumulativ)",
+    "creditPacksTitle": "Guthabenpakete",
+    "creditPacksSubtitle": "Kaufen Sie Guthabenpakete für KI-Rekonstruktionen auf Abruf. Gekaufte Credits verfallen nie.",
+    "pack10": "10 Credits — 3 $",
+    "pack50": "50 Credits — 12 $",
+    "pack100": "100 Credits — 20 $",
+    "bestValue": "Bestes Angebot",
+    "buyPack": "{{count}} Credits kaufen",
+    "purchasePackSuccess": "{{count}} Credits erfolgreich gekauft!",
+    "purchasePackError": "Kauf des Guthabenpakets fehlgeschlagen."
   },
   "avatar": {
     "savedSuccess": "Avatar und visuelles Profil gespeichert!",

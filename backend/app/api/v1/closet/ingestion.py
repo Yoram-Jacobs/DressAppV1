@@ -826,14 +826,20 @@ async def polish_crop(
     This is called by the client to complete or reconstruct a bad, distorted,
     or low-resolution image using Gemini Nano Banana.
     """
-    from app.services.auth import resolve_user_custom_gemini_api_key
+    from app.services.billing_service import deduct_user_credits, get_credit_exhaustion_info
+    from app.db.database import get_db
 
-    custom_gemini_key = resolve_user_custom_gemini_api_key(user)
-    if not custom_gemini_key:
+    db = get_db()
+    if not await deduct_user_credits(db, user, cost=1, operation="polish_crop"):
+        exhaustion = get_credit_exhaustion_info(user)
         raise HTTPException(
-            status_code=403,
-            detail="Nano Banana image reconstruction and completion requires a custom Google Gemini API key. Please configure your API key in Profile -> AI Configuration.",
+            status_code=402,
+            detail=exhaustion["message"],
+            headers={"X-Credit-Status": exhaustion["code"], "X-I18n-Key": exhaustion["i18n_key"]},
         )
+
+    from app.services.auth import resolve_user_custom_gemini_api_key
+    custom_gemini_key = resolve_user_custom_gemini_api_key(user)
 
     try:
         # Strip data URL prefix if present
@@ -846,7 +852,7 @@ async def polish_crop(
 
     from app.services.reconstruction import reconstruct
 
-    # Call the Nano Banana reconstructor with the user's custom key
+    # Call the Server-Side Nano Banana reconstructor (zero friction, metered by credits)
     try:
         out = await reconstruct(
             raw_bytes,
@@ -1708,6 +1714,36 @@ def _get_localized_closet_msg(msg_type: str, lang: str, user_msg: str = "") -> s
         lang = "en"
 
     messages = {
+        "credits_exhausted_free": {
+            "he": "סיימת את שחזורי ה-AI בחינם! שדרג למנוי מנהל לגישה אוטומטית או רכוש חבילת קרדיטים.",
+            "ar": "لقد استنفدت عمليات إعادة البناء المجانية بالذكاء الاصطناعي! قم بالترقية إلى باقة المدير للوصول التلقائي أو اشترِ حزمة نقاط.",
+            "en": "You've used your free AI reconstructions! Upgrade to Manager for automated access or purchase a credit pack.",
+            "es": "¡Has usado tus reconstrucciones gratuitas de IA! Actualiza a Manager para acceso automatizado o compra un paquete de créditos.",
+            "fr": "Vous avez utilisé vos reconstructions IA gratuites ! Passez au forfait Manager pour un accès automatisé ou achetez un pack de crédits.",
+            "de": "Du hast deine kostenlosen KI-Rekonstruktionen aufgebraucht! Upgrade auf Manager für automatischen Zugriff oder kaufe ein Guthaben-Paket.",
+            "it": "Hai esaurito le tue ricostruzioni IA gratuite! Passa a Manager per l'accesso automatico o acquista un pacchetto di crediti.",
+            "pt": "Você usou suas reconstruções de IA gratuitas! Atualize para o plano Manager para acesso automatizado ou compre um pacote de créditos.",
+            "ru": "Вы исчерпали свои бесплатные AI-реконструкции! Перейдите на тариф Manager для автоматического доступа или приобретите пакет кредитов.",
+            "zh": "您已用完免费的 AI 重建额度！升级到经理版（Manager）获取自动访问权限，或购买积分包。",
+            "ja": "無料のAI再構築を使い切りました！自動アクセスのためにManagerプランにアップグレードするか、クレジットパックをご購入ください。",
+            "hi": "आपने अपने मुफ़्त एआई पुनर्निर्माण का उपयोग कर लिया है! स्वचालित पहुँच के लिए मैनेजर में अपग्रेड करें या क्रेडिट पैक खरीदें।",
+            "nl": "Je hebt je gratis AI-reconstructies gebruikt! Upgrade naar Manager voor geautomatiseerde toegang of koop een creditpakket.",
+        },
+        "credits_exhausted_paid": {
+            "he": "סיימת את שחזורי ה-AI שלך! רכוש חבילת קרדיטים כדי להמשיך.",
+            "ar": "لقد استنفدت عمليات إعادة البناء بالذكاء الاصطناعي! اشترِ حزمة نقاط للمتابعة.",
+            "en": "You've used your AI reconstructions! Purchase a credit pack to continue.",
+            "es": "¡Has usado tus reconstrucciones de IA! Compra un paquete de créditos para continuar.",
+            "fr": "Vous avez utilisé vos reconstructions IA ! Achetez un pack de crédits pour continuer.",
+            "de": "Du hast deine KI-Rekonstruktionen aufgebraucht! Kaufe ein Guthaben-Paket, um fortzufahren.",
+            "it": "Hai esaurito le tue ricostruzioni IA! Acquista un pacchetto di crediti per continuare.",
+            "pt": "Você usou suas reconstruções de IA! Compre um pacote de créditos para continuar.",
+            "ru": "Вы исчерпали свои AI-реконструкции! Приобретите пакет кредитов, чтобы продолжить.",
+            "zh": "您已用完 AI 重建额度！请购买积分包以继续。",
+            "ja": "AI再構築のクレジットを使い切りました！続けるにはクレジットパックをご購入ください。",
+            "hi": "आपने अपने एआई पुनर्निर्माण का उपयोग कर लिया है! जारी रखने के लिए क्रेडिट पैक खरीदें।",
+            "nl": "Je hebt je AI-reconstructies gebruikt! Koop een creditpakket om door te gaan.",
+        },
         "image_edit_failed": {
             "he": f"ניסיתי לערוך את התמונה ({user_msg}), אך נתקלתי בבעיה בעיבוד התמונה. אנא נסה שוב או נסח את הבקשה בצורה שונה.",
             "ar": f"حاولت تعديل الصورة ({user_msg})، ولكن حدث خطأ أثناء المعالجة. يرجى المحاولة مرة أخرى.",
@@ -1838,20 +1874,9 @@ async def chat_analyse_item(
         else:
             user_lang = "en"
 
-    # Build conversation context for Gemini
+    # Build conversation context for main LLM (DressApp Eyes Gemma4-E4B)
     user_api_key = resolve_user_gemini_api_key(user)
     user_model = resolve_user_gemini_model(user)
-
-    from app.services.gemini_client import GeminiClient
-
-    gemini_client = None
-    try:
-        gemini_client = GeminiClient(api_key=user_api_key or settings.GEMINI_API_KEY)
-    except Exception as exc:
-        logger.warning("Failed to initialize GeminiClient: %s", exc)
-
-    if not gemini_client:
-        raise HTTPException(503, "AI Eyes assistant is temporarily unavailable.")
 
     history_str = ""
     for turn in payload.history[-6:]:
@@ -1895,17 +1920,18 @@ async def chat_analyse_item(
         "}"
     )
 
-    user_parts = [
-        raw,
-        f"Conversation History:\n{history_str}\nUser Prompt: {user_msg}\nPlease respond in language: {user_lang} (except JSON keys and image_edit_prompt which MUST be English).",
-    ]
+    prompt_text = f"Conversation History:\n{history_str}\nUser Prompt: {user_msg}\nPlease respond in language: {user_lang} (except JSON keys and image_edit_prompt which MUST be English)."
+    from app.services.llm_gateway import call_main_llm
+    raw_b64 = base64.b64encode(raw).decode("ascii")
 
     try:
-        decision_raw = await gemini_client.vision(
-            user_parts=user_parts,
-            system=system_prompt,
+        decision_raw = await call_main_llm(
+            user_text=prompt_text,
+            system_prompt=system_prompt,
+            image_b64_jpeg=raw_b64,
             response_mime_type="application/json",
-            model=user_model,
+            fallback_model=user_model or "gemini-3.5-flash",
+            api_key=user_api_key,
         )
         clean_json = (decision_raw or "").strip()
         import re as _re
@@ -1980,68 +2006,70 @@ async def chat_analyse_item(
     updated_doc: dict[str, Any] = {}
 
     if action == "image_edit":
-        from app.services.auth import resolve_user_custom_gemini_api_key
-        custom_gemini_key = resolve_user_custom_gemini_api_key(user)
-        try:
-            img_provider = get_image_provider(user_custom_gemini_key=custom_gemini_key)
-        except Exception as prov_err:
-            logger.warning("No image generation provider available: %s", prov_err)
-            img_provider = None
-
-        if img_provider is None:
-            reply = _get_localized_closet_msg("image_edit_key_required", user_lang)
+        from app.services.billing_service import deduct_user_credits, get_credit_exhaustion_info
+        if not await deduct_user_credits(db, user, cost=1, operation="chat_image_edit"):
+            exhaustion = get_credit_exhaustion_info(user)
+            reply = _get_localized_closet_msg(exhaustion["code"], user_lang) or exhaustion["message"]
             action = "clarification"
         else:
+            from app.services.auth import resolve_user_custom_gemini_api_key
+            custom_gemini_key = resolve_user_custom_gemini_api_key(user)
             try:
-                from app.services.billing_service import deduct_user_credits
-                await deduct_user_credits(db, user, cost=1)
+                img_provider = get_image_provider(user_custom_gemini_key=custom_gemini_key, provider_override="gemini")
+            except Exception as prov_err:
+                logger.warning("No image generation provider available: %s", prov_err)
+                img_provider = None
 
-                edit_prompt = decision.get("image_edit_prompt") or user_msg
-                edit_res = await img_provider.edit_image(
-                    image_bytes=raw,
-                    prompt=edit_prompt,
-                    strength=0.45,
-                    garment_metadata={
-                        "title": item.get("title"),
-                        "category": item.get("category"),
-                        "color": item.get("color"),
-                        "material": item.get("material"),
-                        "pattern": item.get("pattern"),
-                        "brand": item.get("brand"),
-                    },
-                )
-                import base64
-                res_b64 = base64.b64encode(edit_res.image_bytes).decode("ascii")
-                mime = edit_res.mime_type
-                image_url_out = f"data:{mime};base64,{res_b64}"
-
-                # Unbind generated garment from background (transparent clean cutout)
-                from app.services.garment_visuals import GarmentVisuals
-                clean_image_url_out = await GarmentVisuals.ensure_transparent_cutout(res_b64)
-
-                # Update in-memory reconstructed_image_url & clean_image_url
-                # Always prefer the transparent clean cutout so clothes layer perfectly without background boxes
-                from app.services.vision.image import fit_image_data_url_to_card
-                final_img = fit_image_data_url_to_card(clean_image_url_out or image_url_out)
-                updated_doc["reconstructed_image_url"] = final_img
-                # Do NOT overwrite clean_image_url (preserving the original cutout)
-                image_url_out = final_img
-                updated_doc["reconstruction_metadata"] = {
-                    "method": f"{edit_res.provider}_chat",
-                    "prompt": edit_prompt,
-                    "model": edit_res.model_name,
-                    "provider": edit_res.provider,
-                    "latency_ms": edit_res.latency_ms,
-                    "updated_at": datetime.now(timezone.utc).isoformat(),
-                }
-            except Exception as edit_exc:
-                logger.warning("Image edit failed in chat_analyse: %s", edit_exc)
-                exc_str = str(edit_exc).lower()
-                if "spending cap" in exc_str or "resource_exhausted" in exc_str or "quota" in exc_str or "429" in exc_str:
-                    reply = _get_localized_closet_msg("image_edit_quota_exceeded", user_lang)
-                else:
-                    reply = _get_localized_closet_msg("image_edit_failed", user_lang, user_msg=user_msg)
+            if img_provider is None:
+                reply = "Image editing service temporarily unavailable."
                 action = "clarification"
+            else:
+                try:
+                    edit_prompt = decision.get("image_edit_prompt") or user_msg
+                    edit_res = await img_provider.edit_image(
+                        image_bytes=raw,
+                        prompt=edit_prompt,
+                        strength=0.45,
+                        garment_metadata={
+                            "title": item.get("title"),
+                            "category": item.get("category"),
+                            "color": item.get("color"),
+                            "material": item.get("material"),
+                            "pattern": item.get("pattern"),
+                            "brand": item.get("brand"),
+                        },
+                    )
+                    res_b64 = base64.b64encode(edit_res.image_bytes).decode("ascii")
+                    mime = edit_res.mime_type
+                    image_url_out = f"data:{mime};base64,{res_b64}"
+
+                    # Unbind generated garment from background (transparent clean cutout)
+                    from app.services.garment_visuals import GarmentVisuals
+                    clean_image_url_out = await GarmentVisuals.ensure_transparent_cutout(res_b64)
+
+                    # Update in-memory reconstructed_image_url & clean_image_url
+                    # Always prefer the transparent clean cutout so clothes layer perfectly without background boxes
+                    from app.services.vision.image import fit_image_data_url_to_card
+                    final_img = fit_image_data_url_to_card(clean_image_url_out or image_url_out)
+                    updated_doc["reconstructed_image_url"] = final_img
+                    # Do NOT overwrite clean_image_url (preserving the original cutout)
+                    image_url_out = final_img
+                    updated_doc["reconstruction_metadata"] = {
+                        "method": f"{edit_res.provider}_chat",
+                        "prompt": edit_prompt,
+                        "model": edit_res.model_name,
+                        "provider": edit_res.provider,
+                        "latency_ms": edit_res.latency_ms,
+                        "updated_at": datetime.now(timezone.utc).isoformat(),
+                    }
+                except Exception as edit_exc:
+                    logger.warning("Image edit failed in chat_analyse: %s", edit_exc)
+                    exc_str = str(edit_exc).lower()
+                    if "spending cap" in exc_str or "resource_exhausted" in exc_str or "quota" in exc_str or "429" in exc_str:
+                        reply = _get_localized_closet_msg("image_edit_quota_exceeded", user_lang)
+                    else:
+                        reply = _get_localized_closet_msg("image_edit_failed", user_lang, user_msg=user_msg)
+                    action = "clarification"
 
     elif action == "metadata_update":
         meta_updates = decision.get("metadata_updates") or {}
@@ -2091,16 +2119,6 @@ async def repair_item_image(
     from app.services.auth import resolve_user_custom_gemini_api_key
 
     custom_gemini_key = resolve_user_custom_gemini_api_key(user)
-    try:
-        prov = get_image_provider(user_custom_gemini_key=custom_gemini_key)
-    except Exception:
-        prov = None
-
-    if prov is None and not custom_gemini_key:
-        raise HTTPException(
-            status_code=403,
-            detail="Image reconstruction is temporarily unavailable. Please configure an image provider or custom API key in Profile.",
-        )
 
     db = get_db()
     item = await repos.find_one(
@@ -2139,9 +2157,14 @@ async def repair_item_image(
     crop_url = _get_item_image_url(item)
     crop_bytes = await _read_image_bytes_from_url(crop_url) if crop_url else b""
 
-    from app.services.billing_service import deduct_user_credits
-    if not await deduct_user_credits(db, user, cost=1):
-        raise HTTPException(status_code=402, detail="Insufficient credits or quota limit reached")
+    from app.services.billing_service import deduct_user_credits, get_credit_exhaustion_info
+    if not await deduct_user_credits(db, user, cost=1, operation="repair_item_crop"):
+        exhaustion = get_credit_exhaustion_info(user)
+        raise HTTPException(
+            status_code=402,
+            detail=exhaustion["message"],
+            headers={"X-Credit-Status": exhaustion["code"], "X-I18n-Key": exhaustion["i18n_key"]},
+        )
 
     out = await reconstruct(
         crop_bytes,
@@ -2231,15 +2254,9 @@ async def edit_item_image(
 
     custom_gemini_key = resolve_user_custom_gemini_api_key(user)
     try:
-        img_provider = get_image_provider(user_custom_gemini_key=custom_gemini_key)
+        img_provider = get_image_provider(user_custom_gemini_key=custom_gemini_key, provider_override="gemini")
     except Exception:
         img_provider = None
-
-    if img_provider is None and not custom_gemini_key:
-        raise HTTPException(
-            status_code=403,
-            detail="Image editing is temporarily unavailable. Please configure an image provider or custom API key in Profile.",
-        )
 
     db = get_db()
     item = await repos.find_one(
@@ -2256,9 +2273,14 @@ async def edit_item_image(
     if img_provider is None:
         raise HTTPException(503, "Image generation service not configured")
     try:
-        from app.services.billing_service import deduct_user_credits
-        if not await deduct_user_credits(db, user, cost=1):
-            raise HTTPException(status_code=402, detail="Insufficient credits or quota limit reached")
+        from app.services.billing_service import deduct_user_credits, get_credit_exhaustion_info
+        if not await deduct_user_credits(db, user, cost=1, operation="edit_item_image"):
+            exhaustion = get_credit_exhaustion_info(user)
+            raise HTTPException(
+                status_code=402,
+                detail=exhaustion["message"],
+                headers={"X-Credit-Status": exhaustion["code"], "X-I18n-Key": exhaustion["i18n_key"]},
+            )
 
         edit_res = await img_provider.edit_image(
             source_bytes,

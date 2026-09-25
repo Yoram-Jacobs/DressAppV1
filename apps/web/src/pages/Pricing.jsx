@@ -78,7 +78,9 @@ export default function Pricing() {
 
   useEffect(() => {
     const subStatus = searchParams.get('sub_status');
+    const creditStatus = searchParams.get('credit_status');
     const token = searchParams.get('token');
+
     if (subStatus === 'success' && token) {
       const capture = async () => {
         setSubBusy(true);
@@ -88,6 +90,8 @@ export default function Pricing() {
           searchParams.delete('sub_status');
           searchParams.delete('token');
           setSearchParams(searchParams);
+          const pricingRes = await api.getPricingInfo();
+          setPricingData(pricingRes);
         } catch (err) {
           toast.error(t('pricing.subscriptionActivateError', { defaultValue: 'Error activating subscription.' }));
         } finally {
@@ -98,6 +102,28 @@ export default function Pricing() {
     } else if (subStatus === 'cancel') {
       toast.info(t('pricing.subscriptionCancelled', { defaultValue: 'Subscription checkout cancelled.' }));
       searchParams.delete('sub_status');
+      setSearchParams(searchParams);
+    } else if (creditStatus === 'success' && token) {
+      const captureCredit = async () => {
+        setSubBusy(true);
+        try {
+          await api.aiCreditsCapture(token);
+          toast.success(t('pricing.purchaseSuccessToast', { defaultValue: 'Credits purchased successfully!' }));
+          searchParams.delete('credit_status');
+          searchParams.delete('token');
+          setSearchParams(searchParams);
+          const pricingRes = await api.getPricingInfo();
+          setPricingData(pricingRes);
+        } catch (err) {
+          toast.error(t('pricing.captureFailed', { defaultValue: 'Failed to confirm transaction.' }));
+        } finally {
+          setSubBusy(false);
+        }
+      };
+      captureCredit();
+    } else if (creditStatus === 'cancel') {
+      toast.info(t('pricing.checkoutCancelled', { defaultValue: 'Checkout cancelled.' }));
+      searchParams.delete('credit_status');
       setSearchParams(searchParams);
     }
   }, [searchParams, setSearchParams, t]);
@@ -124,6 +150,32 @@ export default function Pricing() {
       }
     } catch (err) {
       toast.error(err?.response?.data?.detail?.message || err?.response?.data?.detail || t('pricing.subscriptionError', { defaultValue: 'Error creating subscription' }));
+    } finally {
+      setSubBusy(false);
+    }
+  };
+
+  const handleBuyCreditPack = async (packId) => {
+    if (!user) {
+      navigate('/login');
+      return;
+    }
+    if (subBusy) return;
+    setSubBusy(true);
+    try {
+      const res = await api.aiCreditsPurchase({
+        pack: packId,
+        currency: 'USD',
+        return_url: `${window.location.origin}/pricing?credit_status=success`,
+        cancel_url: `${window.location.origin}/pricing?credit_status=cancel`,
+      });
+      if (res?.approve_url) {
+        window.location.href = res.approve_url;
+      } else {
+        toast.error(t('pricing.purchasePackError', { defaultValue: 'Failed to purchase credit pack.' }));
+      }
+    } catch (err) {
+      toast.error(err?.response?.data?.detail?.message || err?.response?.data?.detail || t('pricing.purchasePackError', { defaultValue: 'Failed to purchase credit pack.' }));
     } finally {
       setSubBusy(false);
     }
@@ -218,6 +270,7 @@ export default function Pricing() {
             setIsAnnual={setIsAnnual}
             subBusy={subBusy}
             handleUpgrade={handleUpgrade}
+            handleBuyCreditPack={handleBuyCreditPack}
           />
           {/* Quota status, warnings, and daily limits monitor (authenticated users only) */}
           {user && (
