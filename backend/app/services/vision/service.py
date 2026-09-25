@@ -435,14 +435,10 @@ class GarmentVisionService:
                     system_prompt=system_prompt,
                     user_text=user_text,
                     image_b64_jpeg=b64,
-                    # The Gemma-4 fine-tune is a thinking model: it spends
-                    # ~600-1200 tokens reasoning inside ``<|think|> ...
-                    # </think>`` before producing the JSON. Combined with
-                    # the 18-field schema (~600 tokens of valid output),
-                    # the default 900-token budget is too tight and the
-                    # response gets cut off mid-think with empty
-                    # ``content``. 2400 leaves comfortable headroom.
-                    max_tokens=2400,
+                    # Thinking is explicitly disabled in the prompt and proxy,
+                    # so garment JSON is cleanly produced in ~350 tokens.
+                    # 500 tokens guarantees fast CPU execution (<25s).
+                    max_tokens=500,
                     timeout=settings.EYES_GEMMA_TIMEOUT_S,
                     json_schema=EYES_JSON_SCHEMA,
                     think=think,
@@ -493,7 +489,7 @@ class GarmentVisionService:
                         system_prompt=system_prompt,
                         user_text=user_text,
                         image_b64_jpeg=b64,
-                        max_tokens=2400,
+                        max_tokens=500,
                         timeout=settings.EYES_GEMMA_TIMEOUT_S,
                         json_schema=EYES_JSON_SCHEMA,
                         think=think,
@@ -538,7 +534,7 @@ class GarmentVisionService:
                             system_prompt=system_prompt,
                             user_text=user_text,
                             image_b64_jpeg=b64,
-                            max_tokens=2400,
+                            max_tokens=500,
                             timeout=settings.EYES_GEMMA_TIMEOUT_S,
                             json_schema=EYES_JSON_SCHEMA,
                             think=think,

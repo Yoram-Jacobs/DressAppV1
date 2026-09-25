@@ -252,9 +252,9 @@ export class EyesEngine {
       await this.context.initMultimodal({
         path: toPosixPath(mmprojPath),
         use_gpu: false,
-        image_max_tokens: 512,
+        image_max_tokens: 258,
       });
-      console.log('[EyesEngine] Multimodal vision projector initialized successfully');
+      console.log('[EyesEngine] Multimodal vision projector initialized successfully (image_max_tokens: 258)');
     }
   }
 

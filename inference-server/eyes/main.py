@@ -247,7 +247,7 @@ def _build_llama_argv(model_path: Path, mmproj_path: Path | None) -> list[str]:
         "--threads", str(N_THREADS),
         "--batch-size", str(N_BATCH),
         "--ubatch-size", str(N_BATCH),
-        "--n-predict", "1024",
+        "--n-predict", "512",
         "--jinja",
         "--reasoning-budget", "0",
         "--chat-template-kwargs", '{"enable_thinking": false}',
@@ -396,6 +396,10 @@ class PredictIn(BaseModel):
     json_mode: bool = False
     json_schema: dict[str, Any] | None = None
     response_format: dict[str, Any] | None = None
+    enable_thinking: bool = False
+    think: bool = False
+    reasoning_budget: int = 0
+    chat_template_kwargs: dict[str, Any] | None = None
     # Legacy fields for backward compatibility (unused when messages is provided)
     prompt: str | None = None
     system: str | None = None
@@ -536,10 +540,13 @@ async def predict(req: PredictIn) -> PredictOut:
     payload: dict[str, Any] = {
         "model": "local",  # llama-server ignores model name; field required.
         "messages": msgs,
-        "max_tokens": req.max_tokens,
+        "max_tokens": min(req.max_tokens, 512),
         "temperature": req.temperature,
         "top_p": req.top_p,
         "stream": False,
+        "chat_template_kwargs": req.chat_template_kwargs or {"enable_thinking": False},
+        "reasoning_budget": req.reasoning_budget if (req.enable_thinking or req.think) else 0,
+        "reasoning_format": "none",
     }
     if req.response_format:
         payload["response_format"] = req.response_format
