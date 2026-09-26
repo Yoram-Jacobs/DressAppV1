@@ -42,15 +42,18 @@ const { client, API_BASE, tokenStore, userStore } = createApiClient({
 // Backward-compatible merged `api` object
 // (preserves `import { api } from '@/lib/api'` across 46+ files)
 // ============================================================
+const callableStylist = (formData) => stylist.stylist(formData);
+Object.assign(callableStylist, stylist);
+
 export const api = buildApi();
 api.outfits = outfits;
 api.closet = closet;
-api.stylist = stylist;
+api.stylist = callableStylist;
 
 // ============================================================
 // Individual adapters (for focused imports)
 // ============================================================
-export { auth, users, closet, listings, transactions, stylist, outfits };
+export { auth, users, closet, listings, transactions, callableStylist as stylist, outfits };
 export { suitcase, admin, trends, professionals, promotions, pricing, share, avatar };
 export { calendar, misc };
 export { campaignApi };

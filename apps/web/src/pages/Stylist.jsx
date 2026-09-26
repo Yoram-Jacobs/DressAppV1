@@ -1773,9 +1773,13 @@ export default function Stylist() {
         if (spoken) playLocalSpeech(newId, spoken);
       }
     } catch (err) {
-      toast.error(err?.response?.data?.detail || t('stylist.errorAdvice'));
+      console.error('[Stylist] sendTurn failed:', err);
+      toast.error(err?.response?.data?.detail || err?.message || t('stylist.errorAdvice'));
       // Roll back optimistic user bubble on failure so the user can retry.
       setMessages((m) => m.filter((x) => x.id !== optimistic.id));
+      if (outgoingText && !text) {
+        setText(outgoingText);
+      }
     } finally {
       setBusy(false);
     }

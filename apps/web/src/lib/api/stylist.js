@@ -2,10 +2,7 @@ import { client } from './client.js';
 
 export const stylist = {
   // stylist — returns raw axios promise for multipart
-  stylist: (formData) =>
-    client.post('/stylist', formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    }).then((r) => r.data),
+  stylist: (formData) => client.post('/stylist', formData).then((r) => r.data),
   stylistHistory: (sessionId = null, limit = 200) =>
     client
       .get('/stylist/history', {
@@ -22,7 +19,6 @@ export const stylist = {
   // Phase R — Stylist Power-Up: multi-image outfit composer
   composeOutfit: (formData) =>
     client.post('/stylist/compose-outfit', formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
       timeout: 240000,
     }).then((r) => r.data),
 
@@ -31,8 +27,6 @@ export const stylist = {
 
   // Speech-to-Text transcription
   transcribeAudio: (formData) =>
-    client.post('/stylist/transcribe', formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    }).then((r) => r.data),
+    client.post('/stylist/transcribe', formData).then((r) => r.data),
 };
 

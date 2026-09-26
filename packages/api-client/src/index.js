@@ -74,14 +74,22 @@ export function buildApi() {
   };
   merged.outfits = outfits;
   merged.closet = closet;
-  merged.stylist = stylist;
+
+  // Make merged.stylist both callable as a function (api.stylist(formData))
+  // and accessible as a namespace (api.stylist.transcribeAudio(...)).
+  const callableStylist = (formData) => stylist.stylist(formData);
+  Object.assign(callableStylist, stylist);
+  merged.stylist = callableStylist;
   return merged;
 }
+
+const callableStylist = (formData) => stylist.stylist(formData);
+Object.assign(callableStylist, stylist);
 
 // ============================================================
 // Individual adapters (for focused imports in mobile screens)
 // ============================================================
-export { auth, users, closet, listings, transactions, stylist, outfits };
+export { auth, users, closet, listings, transactions, callableStylist as stylist, outfits };
 export { suitcase, admin, trends, professionals, promotions, pricing, share, avatar };
 export { calendar, misc, campaignApi, sync, syncManager };
 
