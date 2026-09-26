@@ -16,7 +16,6 @@ import {
 } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
   UploadCloud,
@@ -86,6 +85,13 @@ export function AttachmentPicker({
   const remaining = Math.max(0, maxItems - currentCount);
   const pickedCount = uploadFiles.length + selectedIds.size;
   const overLimit = pickedCount > remaining;
+
+  // Prewarm closet when the picker opens if not already loaded
+  useEffect(() => {
+    if (open && closetItems.length === 0) {
+      closet.prewarm?.().catch(() => {});
+    }
+  }, [open, closetItems.length, closet]);
 
   // Reset state when the sheet closes so the next open starts fresh.
   // (We deliberately do NOT reset on confirm — the close-and-reset path
@@ -260,7 +266,7 @@ export function AttachmentPicker({
       <Sheet open={open} onOpenChange={setOpen}>
         <SheetContent
           side="right"
-          className="w-full sm:max-w-md p-0 flex flex-col"
+          className="w-full sm:max-w-md p-0 flex flex-col h-full max-h-[100dvh] overflow-hidden"
           data-testid="attachment-picker-sheet"
         >
           <SheetHeader className="px-5 py-4 border-b border-border shrink-0">
@@ -275,7 +281,7 @@ export function AttachmentPicker({
           <Tabs
             value={tab}
             onValueChange={setTab}
-            className="flex-1 flex flex-col overflow-hidden"
+            className="flex-1 min-h-0 flex flex-col overflow-hidden"
           >
             <TabsList className="grid grid-cols-2 mx-5 mt-3 shrink-0">
               <TabsTrigger
@@ -297,7 +303,7 @@ export function AttachmentPicker({
             {/* -------- Upload tab -------- */}
             <TabsContent
               value="upload"
-              className="flex-1 m-0 p-5 overflow-y-auto"
+              className="flex-1 min-h-0 m-0 p-5 overflow-y-auto data-[state=inactive]:hidden"
             >
               <button
                 type="button"
@@ -368,7 +374,7 @@ export function AttachmentPicker({
             {/* -------- Closet tab -------- */}
             <TabsContent
               value="closet"
-              className="flex-1 m-0 flex flex-col overflow-hidden"
+              className="flex-1 min-h-0 m-0 flex flex-col overflow-hidden data-[state=inactive]:hidden"
             >
               <div className="px-5 pt-3 pb-2 shrink-0">
                 <div className="relative">
@@ -382,7 +388,7 @@ export function AttachmentPicker({
                   />
                 </div>
               </div>
-              <ScrollArea className="flex-1 px-5 pb-3">
+              <div className="flex-1 min-h-0 px-5 pb-4 overflow-y-auto overscroll-contain">
                 {closet.loading && closetItems.length === 0 ? (
                   <div
                     className="grid grid-cols-3 gap-2"
@@ -458,7 +464,7 @@ export function AttachmentPicker({
                     })}
                   </div>
                 )}
-              </ScrollArea>
+              </div>
             </TabsContent>
           </Tabs>
 
