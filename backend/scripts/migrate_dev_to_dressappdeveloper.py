@@ -87,10 +87,10 @@ async def migrate() -> int:
             continue
         print(f"Merging data from {old_u.get('email')} (ID={old_id}) into {target_id}...")
 
-        # Migrate clothes
-        c_res = await db.clothes.update_many({"user_id": old_id}, {"$set": {"user_id": target_id}})
+        # Migrate closet_items
+        c_res = await db.closet_items.update_many({"user_id": old_id}, {"$set": {"user_id": target_id}})
         if c_res.modified_count:
-            print(f"  Moved {c_res.modified_count} clothes items.")
+            print(f"  Moved {c_res.modified_count} closet items.")
 
         # Migrate stylist sessions
         s_res = await db.stylist_sessions.update_many({"user_id": old_id}, {"$set": {"user_id": target_id}})
@@ -102,10 +102,29 @@ async def migrate() -> int:
         if o_res.modified_count:
             print(f"  Moved {o_res.modified_count} outfits.")
 
+        # Migrate shared_outfits
+        so_res = await db.shared_outfits.update_many({"owner_id": old_id}, {"$set": {"owner_id": target_id}})
+        if so_res.modified_count:
+            print(f"  Moved {so_res.modified_count} shared outfits.")
+
         # Migrate suitcases
         sc_res = await db.suitcases.update_many({"user_id": old_id}, {"$set": {"user_id": target_id}})
         if sc_res.modified_count:
             print(f"  Moved {sc_res.modified_count} suitcases.")
+
+        # Migrate suitcase archives
+        sa_res = await db.suitcase_archives.update_many({"user_id": old_id}, {"$set": {"user_id": target_id}})
+        if sa_res.modified_count:
+            print(f"  Moved {sa_res.modified_count} suitcase archives.")
+
+        # Migrate daily proposals
+        dp_res = await db.daily_proposals.update_many({"user_id": old_id}, {"$set": {"user_id": target_id}})
+        if dp_res.modified_count:
+            print(f"  Moved {dp_res.modified_count} daily proposals.")
+
+        # Migrate remaining user-referenced collections
+        for coll_name in ["user_credits", "simulated_notifications", "token_usage", "ai_credit_purchases", "atzmai_topups"]:
+            await db[coll_name].update_many({"user_id": old_id}, {"$set": {"user_id": target_id}})
 
         # Delete the obsolete alias user document
         await db.users.delete_one({"id": old_id})
@@ -146,7 +165,7 @@ async def migrate() -> int:
 
     # 5. Verification count
     sessions_count = await db.stylist_sessions.count_documents({"user_id": target_id})
-    clothes_count = await db.clothes.count_documents({"user_id": target_id})
+    clothes_count = await db.closet_items.count_documents({"user_id": target_id})
     print(f"SUCCESS: {target_email} has {sessions_count} stylist sessions and {clothes_count} closet items intact.")
     return 0
 
