@@ -88,6 +88,8 @@ async def stylist_transcribe(
     audio_bytes = await file.read()
     if not audio_bytes:
         raise HTTPException(status_code=400, detail="Empty audio file provided.")
+    if len(audio_bytes) > 20 * 1024 * 1024:
+        raise HTTPException(status_code=413, detail="Audio file exceeds 20MB limit.")
 
     from app.services.stt_service import stt_service
 

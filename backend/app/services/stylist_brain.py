@@ -220,6 +220,7 @@ def _make_provider(name: str) -> StylistBrain | None:
 def build_stylist_brain() -> StylistBrain:
     """Resolve the brain stack based on current settings."""
     primary_name = settings.STYLIST_PROVIDER.lower().strip() or "gemini"
+    fallback_name = settings.STYLIST_FALLBACK.lower().strip() or "gemma"
     if primary_name in ("gemma", "eyes", "dressapp") and (not fallback_name or fallback_name in ("gemma", "eyes", "dressapp")):
         if gemini_stylist_service is not None:
             fallback_name = "gemini"

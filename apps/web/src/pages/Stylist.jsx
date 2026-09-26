@@ -1238,7 +1238,7 @@ export default function Stylist() {
   const threadRef = useRef(null);
 
   useEffect(() => () => {
-    try { dictationSessionRef.current?.stop?.(); } catch { /* ignore */ }
+    try { dictationSessionRef.current?.abort?.(); } catch { /* ignore */ }
   }, []);
 
   const userLang = (user?.preferred_language || i18n.language || 'en').split('-')[0].toLowerCase();

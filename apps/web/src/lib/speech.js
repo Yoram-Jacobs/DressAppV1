@@ -391,6 +391,15 @@ export async function startDictationSession({
     onEnd?.();
   };
 
-  return { stop };
+  const abort = () => {
+    if (finished) return;
+    finished = true;
+    onRecordingChange?.(false);
+    try { rec?.abort(); } catch {}
+    try { recorder?.abort(); } catch {}
+    onEnd?.();
+  };
+
+  return { stop, abort };
 }
 

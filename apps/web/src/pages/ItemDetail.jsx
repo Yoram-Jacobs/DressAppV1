@@ -700,6 +700,7 @@ export default function ItemDetail() {
   useEffect(() => { load(); }, [id]);
   useEffect(() => () => {
     try { recognitionRef.current?.abort?.(); } catch { /* ignore */ }
+    try { reanalyzeRecRef.current?.abort?.(); } catch { /* ignore */ }
   }, []);
 
   const patch = useMemo(
@@ -1162,7 +1163,7 @@ export default function ItemDetail() {
           const fd = new FormData();
           fd.append('file', blob, 'reanalyze_dictation.webm');
           fd.append('language', (user?.preferred_language || i18n?.language || 'auto').toLowerCase());
-          const res = await api.transcribeAudio(fd);
+          const res = await api.stylist.transcribeAudio(fd);
           return res?.text || '';
         },
         onInterim: (txt) => {
@@ -1180,7 +1181,7 @@ export default function ItemDetail() {
           }
         },
         onRecordingChange: (isRec) => setReanalyzeDictating(isRec),
-        onError: () => toast.error(t('stylist.micDenied')),
+        onError: () => toast.error(t('stylist.micDenied', { defaultValue: 'Microphone access denied' })),
       });
       reanalyzeRecRef.current = session;
     } catch (err) {
@@ -1373,7 +1374,7 @@ export default function ItemDetail() {
           const fd = new FormData();
           fd.append('file', blob, 'hint_dictation.webm');
           fd.append('language', (user?.preferred_language || i18n?.language || 'auto').toLowerCase());
-          const res = await api.transcribeAudio(fd);
+          const res = await api.stylist.transcribeAudio(fd);
           return res?.text || '';
         },
         onInterim: (txt) => setDictationInterim(txt || ''),
@@ -1390,7 +1391,7 @@ export default function ItemDetail() {
           setDictating(isRec);
           if (!isRec) setDictationInterim('');
         },
-        onError: () => toast.error(t('stylist.micDenied')),
+        onError: () => toast.error(t('stylist.micDenied', { defaultValue: 'Microphone access denied' })),
       });
       recognitionRef.current = session;
     } catch (err) {
