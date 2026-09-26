@@ -1260,7 +1260,7 @@ export default function HelpMenu() {
                         <p className="text-[12px] text-text-brand font-semibold">
                           {t("help.tiers_free_desc", {
                             defaultValue:
-                              "Baseline limit of 150 items. Expandable up to 1,000 items by sharing your invite code with friends (+10 capacity slots per friend).",
+                              "Baseline limit of 50 items. Expandable up to 150 items by sharing your invite code with friends (+10 capacity slots per friend).",
                           })}
                         </p>
                       </div>
@@ -1273,7 +1273,7 @@ export default function HelpMenu() {
                         <p className="text-[12px] text-text-brand font-semibold">
                           {t("help.tiers_manager_desc", {
                             defaultValue:
-                              "Costs $4.99/mo. Removes closet size limits entirely, unlocks advanced stats, calendar synchronization, and Trend Scout ranking filters.",
+                              "Costs $10/mo (or $100/yr). Removes closet size limits entirely, unlocks morning outfit push scheduler, calendar synchronization, circular marketplace selling, and Trend Scout ranking filters.",
                           })}
                         </p>
                       </div>
@@ -1286,7 +1286,7 @@ export default function HelpMenu() {
                         <p className="text-[12px] text-text-brand font-semibold">
                           {t("help.tiers_pro_desc", {
                             defaultValue:
-                              "Costs $9.99/mo. Built for style experts and fashion creators. Allows registration in the stylist directory and creation of fashion campaigns.",
+                              "Costs $15/mo (or $150/yr). Built for style experts and fashion creators. Allows registration in the stylist directory, creation of fashion campaigns, priority support, and 100 monthly styling credits.",
                           })}
                         </p>
                       </div>

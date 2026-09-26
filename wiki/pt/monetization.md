@@ -1,33 +1,33 @@
 # Subscrições, Pacotes de Créditos e Faturação
 
-Compreenda os limites da sua conta, aumente o espaço do seu guarda-roupa e faça a gestão dos seus créditos de styling com IA.
+Compreenda os limites da sua conta, aumente o espaço do seu guarda-roupa e faça a gestão dos seus créditos de estilo com IA.
 
 ## Visão Geral
-O DressApp disponibiliza um modelo de monetização híbrido e flexível criado para a organização quotidiana e ferramentas avançadas para entusiastas de moda, criadores e estilistas certificados:
-- **Plano Gratuito Base (Free Tier Baseline)**: Guarde até 150 peças gratuitamente (expansível até 1.000 peças através de bónus de recomendação). Alimentado diretamente pelo modelo local DressApp Eyes v1 sem necessidade de configurar chaves de API.
-- **Plano Manager ($4.99/mês ou $49.99/ano)**: Capacidade de guarda-roupa ilimitada, agendador de visuais matinais por notificações push, sincronização de calendário, venda no marketplace circular, estatísticas avançadas e filtros do Trend Scout.
-- **Plano Professional ($9.99/mês ou $99.99/ano)**: Criado para estilistas e criadores de moda, inclui criação de campanhas publicitárias patrocinadas, listagem no diretório de especialistas, suporte prioritário e 100 créditos mensais de IA.
-- **Pacotes de Créditos Pré-pagos**: Carregue com pacotes sem validade de expiração ($3 por 10, $12 por 50, $20 por 100) sempre que precisar de styling intensivo ou reconstrução fotográfica.
+O DressApp oferece um modelo de monetização híbrido e flexível, concebido para simplificar a organização diária e fornecer ferramentas profissionais a entusiastas de moda, criadores e consultores de estilo:
+- **Plano Gratuito Base (Free Tier Baseline)**: Guarde até 50 peças gratuitamente (expansível até um máximo de 150 itens por meio de bónus de recomendação de +10 vagas por registo). Funciona de imediato com o modelo local DressApp Eyes v1 sem necessidade de chaves de API.
+- **Plano Manager ($10/mês ou $100/ano)**: Capacidade de guarda-roupa ilimitada, agendador de visuais matinais por notificações push, sincronização de calendário, venda no marketplace circular, estatísticas avançadas e filtros do Trend Scout.
+- **Plano Professional ($15/mês ou $150/ano)**: Criado para estilistas e criadores de moda, inclui criação de campanhas publicitárias patrocinadas, listagem no diretório de especialistas, suporte prioritário e 100 créditos mensais de IA.
+- **Pacotes de Créditos Pré-pagos**: Carregue com pacotes de créditos que nunca expiram ($3 por 10, $12 por 50, $20 por 100 créditos) para sessões intensivas de styling ou reconstrução fotográfica.
 
 ## Pré-requisitos
-- Uma conta registada no DressApp.
-- Uma conta PayPal, cartão de crédito/débito ou aplicação Bit para pagamento de planos ou pacotes de créditos.
+- Uma conta DressApp registada.
+- Uma conta PayPal, cartão de crédito/débito ou a aplicação Bit (para pagamentos locais em ILS) para upgrades ou carregamentos.
 
 ## Instruções Passo a Passo
-1. **Explore a Base Gratuita**: Comece a organizar imediatamente com 150 peças. As sugestões são geradas diretamente pelo DressApp Eyes v1 sem necessidade de chaves de API.
-2. **Expanda Gratuitamente com Convites**: Partilhe o seu link de convite pessoal a partir das definições do Perfil. Cada amigo que se registar desbloqueia +10 espaços permanentes no guarda-roupa (até 1.000 peças no máx.).
-3. **Atualize para Manager ($4.99/mês)**: Aceda a Definições de perfil > Preferências do sistema > Limites de guarda-roupa e subscrição e toque na Página de Preços para desbloquear peças ilimitadas e sincronização de calendário.
-4. **Atualize para Professional ($9.99/mês)**: Selecione Professional para criar campanhas de moda direcionadas, constar no diretório de estilistas e obter suporte prioritário.
-5. **Compre Créditos Pré-pagos (Nunca Expiram)**: Se precisar de créditos adicionais, compre um pacote de 10, 50 ou 100 créditos. O sistema consome primeiro os créditos mensais da subscrição, protegendo o seu saldo permanente.
+1. **Explore a base gratuita**: Comece a organizar imediatamente até 50 peças. As sugestões de looks são geradas por DressApp Eyes v1 sem necessidade de chave de API.
+2. **Expanda gratuitamente convidando amigos**: Partilhe a sua ligação de convite a partir das Definições de Perfil. Cada amigo registado desbloqueia +10 vagas permanentes no guarda-roupa (até 150 itens no máximo).
+3. **Atualize para Manager ($10/mês ou $100/ano)**: Aceda a Definições de perfil > Preferências do sistema > Limites de guarda-roupa e subscrição e toque na Página de Preços para desbloquear peças ilimitadas e sincronização de calendário.
+4. **Atualize para Professional ($15/mês ou $150/ano)**: Selecione Professional para criar campanhas de moda direcionadas, constar no diretório de estilistas e obter suporte prioritário.
+5. **Compre créditos pré-pagos (nunca expiram)**: Escolha um pacote de 10 ($3), 50 ($12) ou 100 ($20) créditos. O sistema consome primeiro os créditos mensais da subscrição, preservando o saldo permanente.
 
 ## Resultados Esperados
-Ativação imediata das vantagens do plano após a subscrição. Os limites do guarda-roupa passam imediatamente para ilimitado e os emblemas do seu perfil refletem o plano ativo.
+Ativação imediata das vantagens da subscrição. Os limites de capacidade passam a ilimitados instantaneamente e os emblemas do perfil refletem o plano ativo.
 
 ## Resolução de Problemas
-- **Aviso de "Limite do guarda-roupa atingido"**: Preencheu todas as vagas disponíveis (150 base ou até 1.000 com convites). Arquive peças que não usa, convide amigos ou atualize para Manager/Pro.
-- **Pacote de créditos não aparece após o pagamento**: Atualize a página do Perfil; os webhooks registam a transação em segundos.
-- **Gestão da subscrição**: Pode gerir ou cancelar a sua subscrição a qualquer momento diretamente na sua conta PayPal ou nas definições do Perfil sem perder as roupas já guardadas.
+- **Aviso "Limite de capacidade atingido"**: Preencheu todas as vagas disponíveis (50 base ou até 150 com convites). Arquive peças não utilizadas, convide amigos (+10 por amigo até 150 no máx.) ou atualize para Manager/Professional para capacidade ilimitada.
+- **Créditos não refletidos após o pagamento**: Atualize a sua página de perfil; os webhooks de transação creditam a conta em poucos segundos.
+- **Gestão de subscrição**: Pode gerir ou cancelar a subscrição a qualquer momento diretamente a partir do PayPal ou das definições de perfil sem perder as suas roupas.
 
 ## Limitações
-- Os bónus de recomendação aplicam-se até um limite máximo de 1.000 peças no nível gratuito.
-- Os créditos mensais da subscrição não transitam para ciclos seguintes; no entanto, os pacotes pré-pagos adquiridos nunca expiram.
+- Os bónus de recomendação aplicam-se até ao limite máximo de 150 itens no plano Free.
+- Os créditos mensais da subscrição não acumulam para o ciclo seguinte; os pacotes pré-pagos adquiridos nunca expiram.

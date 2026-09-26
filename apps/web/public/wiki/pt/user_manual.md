@@ -230,8 +230,8 @@ Verificação do funcionamento do sistema, contabilidade financeira e gestão de
 ## 5. Solução de Problemas
 
 ### HTTP 402 Payment Required
-- **Problema**: Ingestão de roupas bloqueada. Você atingiu o limite base de 150 itens (ou até 1.000 itens com bônus de indicação).
-- **Solução**: Vá para a **página de preços** (`/pricing`) e assine o plano Manager ou Professional, ou compartilhe seu link de indicação para obter +10 vagas por registro (até 1.000 itens no máximo).
+- **Problema**: Ingestão de roupas bloqueada. Você atingiu o limite base de 50 itens (ou até 150 itens com bônus de indicação).
+- **Solução**: Vá para a **página de preços** (`/pricing`) e assine o plano Manager ou Professional, ou compartilhe seu link de indicação para obter +10 vagas por registro (até 150 itens no máximo).
 
 ### SSRF Blocked / DNS Error no DPP
 - **Problema**: Falha ao analisar a URL do QR code do passaporte de produto digitalizado.

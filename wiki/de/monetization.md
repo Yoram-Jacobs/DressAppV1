@@ -1,33 +1,33 @@
-# Abonnements, Guthabenpakete & Abrechnung
+# Abonnements, Guthaben-Pakete & Abrechnung
 
-Verstehen Sie Ihre Kontolimits, erweitern Sie Ihren Kleiderschrank und verwalten Sie Ihr KI-Styling-Guthaben.
+Verstehen Sie Ihre Kontolimits, erweitern Sie Ihren Kleiderschrank und verwalten Sie Ihre KI-Styling-Credits.
 
 ## Übersicht
-DressApp bietet ein flexibles Hybrid-Monetarisierungsmodell, das alltägliche Kleiderschrank-Verwaltung mit leistungsstarken Tools für Modebegeisterte, Creator und professionelle Stylisten kombiniert:
-- **Kostenloser Basis-Tarif (Free Tier Baseline)**: Bis zu 150 Kleidungsstücke kostenlos speichern (über Empfehlungsboni auf bis zu 1.000 Stück erweiterbar). Betrieben durch das lokale DressApp Eyes v1-Modell ohne notwendige API-Schlüssel.
-- **Manager-Tarif (4,99 $/Monat oder 49,99 $/Jahr)**: Unbegrenzte Garderobenkapazität, morgendlicher Outfit-Push-Planer, Kalendersynchronisierung, Verkauf auf dem Kreislauf-Marktplatz, erweiterte Statistiken und Trend Scout-Filter.
-- **Professional-Tarif (9,99 $/Monat oder 99,99 $/Jahr)**: Zugeschnitten auf Stylisten und Fashion-Creator – inklusive gesponserter Werbekampagnen, Eintrag im Expertenverzeichnis, Prioritäts-Support und 100 monatlichen KI-Credits.
-- **Prepaid-Guthabenpakete**: Nicht ablaufende Credit-Pakete (3 $ für 10, 12 $ für 50, 20 $ für 100) für intensives Styling oder erweiterte Bildrekonstruktion.
+DressApp bietet ein flexibles hybrides Monetarisierungsmodell, das alltägliche Nutzer willkommen heißt und gleichzeitig leistungsstarke Werkzeuge für Modebegeisterte, Kreative und zertifizierte Stylisten bereitstellt:
+- **Kostenloser Basis-Tarif (Free Tier Baseline)**: Bis zu 50 Kleidungsstücke kostenlos speichern (erweiterbar auf maximal 150 Artikel durch Empfehlungsboni mit +10 Plätzen pro Registrierung). Sofort einsatzbereit betrieben durch das lokal optimierte DressApp Eyes v1 Modell ohne jegliche API-Schlüssel-Konfiguration.
+- **Manager-Tarif (10 $/Monat oder 100 $/Jahr)**: Unbegrenzte Kleiderschrankkapazität, morgendliche Outfit-Push-Erinnerungen, Kalendersynchronisation, Verkauf auf dem zirkulären Marktplatz, erweiterte Statistiken und Trend-Scout-Ranking-Filter.
+- **Professional-Tarif (15 $/Monat oder 150 $/Jahr)**: Maßgeschneidert für Solo-Stylisten und Mode-Creators, inklusive Erstellung gesponserter Werbekampagnen, Eintrag im Stylisten-Expertenverzeichnis, Priority-Support und 100 monatlichen Styling-Credits.
+- **Prepaid-Guthabenpakete**: Nicht verfallende Guthabenpakete (3 $ für 10, 12 $ für 50, 20 $ für 100 Credits) für hochvolumiges Styling oder Bildrekonstruktion.
 
 ## Voraussetzungen
 - Ein registriertes DressApp-Konto.
-- Ein PayPal-Konto, eine Kredit-/Debitkarte oder die Bit-App (für lokale ILS-Abrechnung) für Tarif-Upgrades oder Guthabenkäufe.
+- Ein PayPal-Konto, eine Kredit-/Debitkarte oder die israelische Bit-App (für lokale ILS-Zahlungen) für Tarif-Upgrades oder Guthabenkäufe.
 
 ## Schritt-für-Schritt-Anleitung
-1. **Kostenlosen Basis-Tarif erkunden**: Starten Sie sofort mit 150 Kleidungsstücken. Outfits werden direkt von DressApp Eyes v1 ohne API-Schlüssel zusammengestellt.
-2. **Kostenlos über Empfehlungen erweitern**: Teilen Sie Ihren persönlichen Einladungslink aus den Profileinstellungen. Jeder registrierte Freund schaltet dauerhaft +10 Garderobenplätze frei (bis max. 1.000 Plätze).
-3. **Upgrade auf Manager (4,99 $/Monat)**: Öffnen Sie Profileinstellungen > Systemeinstellungen > Garderoben- & Abonnementlimits und tippen Sie auf die Preisseite für unbegrenzte Garderobenplätze, morgendliche Benachrichtigungen und Kalendersync.
-4. **Upgrade auf Professional (9,99 $/Monat)**: Wählen Sie Professional, um Werbekampagnen zu schalten, im Stylisten-Verzeichnis gelistet zu werden und Premium-Support zu erhalten.
-5. **Prepaid-Credits kaufen (verfallen nie)**: Wenn Sie zusätzliche Credits benötigen, wählen Sie ein Paket mit 10, 50 oder 100 Credits. Das System verbraucht immer zuerst die monatlichen Abonnement-Credits.
+1. **Basis-Tarif erkunden**: Beginnen Sie sofort mit der Organisation von 50 Kleidungsstücken. Outfits werden direkt über DressApp Eyes v1 ohne API-Schlüssel generiert.
+2. **Kostenlos über Empfehlungen erweitern**: Teilen Sie Ihren persönlichen Einladungslink aus den Profileinstellungen. Jeder registrierte Freund schaltet dauerhaft +10 Kleiderschrankplätze frei (bis zu maximal 150 Artikel).
+3. **Upgrade auf Manager (10 $/Monat oder 100 $/Jahr)**: Gehen Sie zu Profileinstellungen > Systemeinstellungen > Kleiderschrank- & Abonnement-Limits und tippen Sie auf die Preisseite, um unbegrenzte Kapazität, Morgenbenachrichtigungen und Kalendersynchronisation freizuschalten.
+4. **Upgrade auf Professional (15 $/Monat oder 150 $/Jahr)**: Wählen Sie Professional, um Modekampagnen zu erstellen, sich im Stylisten-Verzeichnis listen zu lassen und Priority-Support zu erhalten.
+5. **Prepaid-Credits kaufen (verfallen nie)**: Wählen Sie ein Paket mit 10 (3 $), 50 (12 $) oder 100 (20 $) Credits. Das System verbraucht zuerst die monatlichen Abonnement-Credits und schützt Ihr dauerhaftes Prepaid-Guthaben.
 
 ## Erwartete Ergebnisse
-Sofortige Freischaltung aller Tarifvorteile nach dem Kauf. Die Garderobenlimits werden augenblicklich auf unbegrenzt gesetzt und Profil-Badges aktualisiert.
+Sofortige Aktivierung der Tarifvorteile nach dem Abschluss. Das Kleiderschranklimit wird unverzüglich auf unbegrenzt gesetzt und Ihr Profil-Dashboard zeigt den aktiven Tarifstatus an.
 
 ## Fehlerbehebung
-- **Hinweis "Garderobenlimit erreicht"**: Ihre Plätze sind voll (150 Basis oder bis zu 1.000 mit Empfehlungen). Archivieren Sie ungetragene Stücke, laden Sie Freunde ein oder wechseln Sie zu Manager/Pro.
-- **Credit-Paket erscheint nach Kauf nicht**: Aktualisieren Sie Ihr Profil; Webhooks verbuchen die Transaktion innerhalb weniger Sekunden.
-- **Abonnement verwalten**: Sie können Ihr Abonnement jederzeit über Ihr PayPal-Konto oder die Profileinstellungen kündigen, ohne bereits hochgeladene Kleidung zu verlieren.
+- **Benachrichtigung „Kleiderschranklimit erreicht“**: Sie haben Ihre verfügbaren Plätze belegt (50 Basis-Plätze oder bis zu 150 mit Empfehlungen). Archivieren Sie ungenutzte Kleidung, laden Sie Freunde ein (+10 pro Freund bis max. 150) oder führen Sie ein Upgrade auf Manager/Professional durch.
+- **Guthaben nach Zahlung nicht sichtbar**: Aktualisieren Sie Ihre Profilseite; Webhooks schreiben das Guthaben innerhalb weniger Sekunden gut.
+- **Abonnementverwaltung**: Sie können Ihr Abonnement jederzeit direkt in Ihrem PayPal-Konto oder in den Profileinstellungen verwalten oder kündigen, ohne hochgeladene Kleidungsstücke zu verlieren.
 
 ## Einschränkungen
-- Empfehlungsboni gelten im Free-Tarif bis zu einer Obergrenze von 1.000 Artikeln.
-- Monatliche Abonnement-Credits verfallen am Monatsende; gekaufte Prepaid-Guthabenpakete verfallen hingegen nie.
+- Empfehlungsboni gelten im Free-Tarif bis zu einer Obergrenze von maximal 150 Artikeln.
+- Monatliche Abonnement-Credits werden nicht in Folgemonate übertragen; gekaufte Prepaid-Credits verfallen nie.

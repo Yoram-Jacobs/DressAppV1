@@ -14,7 +14,7 @@ Organized into **7 curated channels**, Trend Scout personalizes style stories to
 ## 2. Prerequisites
 To get the most out of Trend Scout, ensure you have:
 - **Custom AI Supplier API Key (BYOK)**: Trend Scout requires a personal AI supplier API key (such as Google Gemini, obtainable for free via [Google AI Studio](https://aistudio.google.com/)) configured under **Profile > AI Configuration** to power live article crawling and synthesis.
-- **An Active Plan**: Trend Scout is available on the **Manager** ($4.99/mo) and **Professional** ($9.99/mo) plans. Free accounts can view a preview and upgrade at any time.
+- **An Active Plan**: Trend Scout is available on the **Manager** ($10/mo) and **Professional** ($15/mo) plans. Free accounts can view a preview and upgrade at any time.
 - **Digitized Wardrobe Items**: At least 5 to 10 garments in your digital closet so the AI Stylist can provide accurate "Style with My Closet" outfit proposals.
 - **Location Access**: Allows Trend Scout to anchor local news, regional boutique highlights, and domestic fashion events to your city and country.
 - **Demographics in Settings**: Specifying your gender, lifestyle, and aesthetic preferences ensures your feed prioritizes looks tailored to your personal taste.
@@ -75,7 +75,7 @@ Filter stories by selecting the category tabs along the top of your feed:
 
 ### My feed says "Trend Scout is Premium"
 - **Cause**: Your account is currently on the Free tier.
-- **Solution**: Tap **Upgrade Plan** to subscribe to the Manager plan ($4.99/mo) or Professional plan ($9.99/mo).
+- **Solution**: Tap **Upgrade Plan** to subscribe to the Manager plan ($10/mo) or Professional plan ($15/mo).
 
 ### The cards are not showing my local country's news
 - **Cause**: Location permissions may be turned off or your profile address is unconfigured.

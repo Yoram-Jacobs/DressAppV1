@@ -33,5 +33,5 @@ Obtienes un armario digital estructurado y accesible que elimina la fatiga de el
 - **Problemas de dirección del diseño**: Cambia entre idiomas; DressApp refleja automáticamente la alineación de la interfaz para idiomas RTL (hebreo, árabe).
 
 ## Limitaciones
-- La capacidad del armario en el plan Free Tier comienza en 50 artículos (ampliable a 1.000 mediante bonificaciones por recomendación); actualizar a Manager o Professional desbloquea almacenamiento ilimitado.
+- La capacidad del armario en el plan Free Tier comienza en 50 artículos (ampliable a 150 mediante bonificaciones por recomendación); actualizar a Manager o Professional desbloquea almacenamiento ilimitado.
 - La eliminación de fondos y la segmentación funcionan mejor con buena iluminación y fondos contrastantes.

@@ -28,4 +28,4 @@ Un dressing parfaitement structuré et fluide, vous permettant de trouver, trier
 - **Regroupement accidentel**: Si vous avez associé deux pièces par erreur, ouvrez les détails de l'article et appuyez sur **Dissocier** pour les séparer.
 
 ## Limites
-- Les comptes gratuits peuvent enregistrer jusqu'à 1,000 vêtements. Pour en ajouter davantage, invitez des amis (+10 places par inscription) ou passez à l'offre Pro pour un stockage illimité.
+- Les comptes gratuits peuvent enregistrer jusqu'à 150 vêtements. Pour en ajouter davantage, invitez des amis (+10 places par inscription) ou passez à l'offre Pro pour un stockage illimité.

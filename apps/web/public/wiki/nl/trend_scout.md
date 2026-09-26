@@ -13,7 +13,7 @@ Onderverdeeld in **7 themakanalen**, stemt Trend Scout nieuws af op uw demografi
 
 ## 2. Vereisten
 - **Eigen AI API-sleutel (BYOK)**: Trend Scout vereist een persoonlijke Google Gemini API-sleutel (gratis via [Google AI Studio](https://aistudio.google.com/)), ingesteld onder **Profiel > AI-configuratie** voor live artikelsynthese.
-- **Actief abonnement**: Beschikbaar in de plannen **Manager** ($4.99/mnd) en **Professional** ($9.99/mnd). Gratis accounts hebben toegang tot een preview.
+- **Actief abonnement**: Beschikbaar in de plannen **Manager** ($10/mnd) en **Professional** ($15/mnd). Gratis accounts hebben toegang tot een preview.
 - **Gedigitaliseerde kleding**: Minimaal 5 tot 10 kledingstukken in uw kast voor accurate suggesties.
 - **Locatietoegang**: Voor lokaal modenieuws en ontwerpersevenementen in uw regio.
 - **Profielgegevens**: Stel uw voorkeuren in voor een optimaal afgestemde feed.

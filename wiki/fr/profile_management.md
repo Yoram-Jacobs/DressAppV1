@@ -115,10 +115,10 @@ Gère les paramètres généraux, les abonnements et les intégrations d'IA :
   - *Filet de sécurité pour les quotas sur site* : Si les plafonds d'appels cloud (`429` / `RESOURCE_EXHAUSTED`) sont atteints, les requêtes basculent automatiquement vers le conteneur auto-hébergé et affiné **Gemma-4-E4B** sur le port 7860, évitant ainsi toute coupure de service.
   - *Mode clés API personnalisées (BYOK)* : Connectez votre propre clé API Google Gemini pour débloquer des quotas de développement plus larges et des outils génératifs cloud tels que le radar quotidien Trend Scout et la reconstruction d'images Nano Banana.
 - **Abonnements et limites de garde-robe** :
-  - Consultez le niveau actuel de votre compte (**Free** : limite de 150 articles de base contre **Manager** (4.99\$/mois) ou **Professional** (9.99\$/mois) : articles illimités).
+  - Consultez le niveau actuel de votre compte (**Free** : limite de 50 articles baseline contre **Manager** (10\$/mois) ou **Professional** (15\$/mois) : articles illimités).
   - Accédez à la **page Tarifs** (`/pricing` ou cliquez sur la carte de votre offre) pour consulter le tableau comparatif, choisir une formule ou acheter des packs de crédits prépayés sans expiration.
   - Mettez à niveau votre compte via PayPal Subscriptions ou la passerelle Atzmai pour les paiements locaux en Israël en ILS (Bit / carte bancaire).
-  - Copier le **lien de parrainage** : Vous rapporte +10 emplacements de garde-robe supplémentaires pour chaque proche inscrit (jusqu'à 1,000 articles au total).
+  - Copier le **lien de parrainage** : Vous rapporte +10 emplacements de garde-robe supplémentaires pour chaque proche inscrit (jusqu'à 150 articles au total).
 - **Programmateur et rappels push** :
   - Activez ou désactivez les notifications de propositions matinales de tenues.
   - Définissez la fréquence (*Chaque jour*, *Un jour sur deux*, *Deux fois par semaine*, *En semaine*), l'heure (par exemple *07:00*) et les exigences de style vestimentaire (*Décontracté*, *Formel*, *Sportif*, *Personnalisé*).

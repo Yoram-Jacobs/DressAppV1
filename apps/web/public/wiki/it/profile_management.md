@@ -115,10 +115,10 @@ Gestisce le impostazioni di sistema, gli abbonamenti e le integrazioni con l'IA:
   - *Rete di Sicurezza Quote On-Premises*: Se si superano i limiti dell'API cloud (`429` / `RESOURCE_EXHAUSTED`), le richieste passano in automatico al container ottimizzato e self-hosted **Gemma-4-E4B** sulla porta 7860, evitando interruzioni durante la sessione di styling.
   - *Modalità Chiavi API Personali (BYOK)*: Collegate la vostra chiave API di Google Gemini per usufruire di quote dedicate per sviluppatori e sbloccare strumenti generativi avanzati come il radar Trend Scout e la ricostruzione foto con Nano Banana.
 - **Abbonamento e Limiti dell'Armadio**:
-  - Controllate il piano attuale (**Free**: limite base di 150 capi vs **Manager** (4.99\$/mese) o **Professional** (9.99\$/mese): capi illimitati).
+  - Controllate il piano attuale (**Free**: limite base di 50 capi vs **Manager** (10\$/mese) o **Professional** (15\$/mese): capi illimitati).
   - Accedete alla **pagina Prezzi** (`/pricing` oppure cliccate sulla scheda del vostro piano) per consultare il riepilogo comparativo dei piani, attivare un abbonamento o acquistare pacchetti di crediti prepagati senza scadenza.
   - Aggiornate il piano tramite PayPal Subscriptions o con il Gateway Atzmai per pagamenti locali in valuta israeliana ILS (Bit / carta di credito).
-  - Copia **Link di Invito**: Ricevete +10 spazi permanenti nel guardaroba per ogni amico registrato (fino a un massimo di 1,000 capi).
+  - Copia **Link di Invito**: Ricevete +10 spazi permanenti nel guardaroba per ogni amico registrato (fino a un massimo di 150 capi).
 - **Pianificatore e Promemoria Push**:
   - Attivate o disattivate le notifiche mattutine con le proposte di outfit.
   - Selezionate frequenza (*Tutti i giorni*, *A giorni alterni*, *Due volte a settimana*, *Nei giorni feriali*), orario (ad es. *07:00*) e stile richiesto (*Casual*, *Formale*, *Sportivo*, *Personalizzato*).
@@ -155,6 +155,6 @@ Gestisce le impostazioni di sistema, gli abbonamenti e le integrazioni con l'IA:
 ---
 
 ## Limitazioni
-- Lo spazio disponibile nel piano Free Tier è limitato a 1150 capi base, salvo ampliamento con i bonus di invito (+10 posti per invitato fino a un massimo di 1,000 capi) o passaggio ai piani Manager o Professional.
+- Lo spazio disponibile nel piano Free Tier è limitato a 1150 capi base, salvo ampliamento con i bonus di invito (+10 posti per invitato fino a un massimo di 150 capi) o passaggio ai piani Manager o Professional.
 - Le funzionalità generative ad alta intensità di calcolo su cloud (radar Trend Scout e ricostruzione fotografica Nano Banana) richiedono l'inserimento di una chiave API Google Gemini personale fornita dall'utente.
 - La modalità con chiave API personale passerà automaticamente al motore locale Gemma-4-E4B in caso di esaurimento della quota presso il fornitore esterno.

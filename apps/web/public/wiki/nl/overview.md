@@ -33,5 +33,5 @@ U beschikt over een gestructureerde, toegankelijke digitale kledingkast die keuz
 - **Problemen met de lay-outrichting**: Schakel tussen talen; DressApp spiegelt de interface-uitlijning automatisch voor RTL-talen (Hebreeuws, Arabisch).
 
 ## Beperkingen
-- De kledingkastcapaciteit in het Free Tier begint bij 150 items (uitbreidbaar tot 1.000 via aanbevelingsbonussen); een upgrade naar Manager of Professional ontgrendelt onbeperkte opslag.
+- De kledingkastcapaciteit in het Free Tier begint bij 50 items (uitbreidbaar tot 150 via aanbevelingsbonussen); een upgrade naar Manager of Professional ontgrendelt onbeperkte opslag.
 - Achtergrondverwijdering en segmentatie presteren het best bij goede verlichting en contrasterende achtergronden.

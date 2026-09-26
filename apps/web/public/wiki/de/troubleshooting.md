@@ -13,7 +13,7 @@ Hier finden Sie schnelle Lösungen für Kamerazugriff, Bildverarbeitungszeiten, 
 1. **Kamera schaltet sich nicht ein**:
    - Öffnen Sie Ihre Browser- oder Geräteeinstellungen, suchen Sie nach **DressApp** und stellen Sie sicher, dass der **Kamerazugriff** auf "Erlauben" steht. Laden Sie die Seite neu.
 2. **Meldung „Kleiderschrank-Kapazität erreicht“**:
-   - Kostenlose Konten speichern standardmäßig bis zu **150 Kleidungsstücke**.
+   - Kostenlose Konten speichern standardmäßig bis zu **50 Kleidungsstücke**.
    - Sie können Freunde einladen und **+10 kostenlose Plätze** pro Registrierung erhalten (bis maximal 150 Artikel), ungetragene Kleidung löschen oder auf **Pro upgraden** (4,99 $/Monat) für unbegrenzten Speicherplatz.
 3. **Spracheingabe oder Sprachwiedergabe reagiert nicht**:
    - Prüfen Sie, ob der Zugriff auf das Mikrofon in Ihren Browsereinstellungen gestattet ist.

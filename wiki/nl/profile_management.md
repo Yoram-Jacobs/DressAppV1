@@ -115,10 +115,10 @@ Beheert instellingen op systeemniveau, abonnementen en AI-integraties:
   - *On-premises quotumvangnet*: Als er clouddatalimieten (`429` / `RESOURCE_EXHAUSTED`) worden bereikt, schakelen zoekopdrachten automatisch over naar de zelfgehoste, verfijnde **Gemma-4-E4B**-container op poort 7860, zodat uw stylingsessie nooit wordt onderbroken.
   - *Eigen API-sleutelmodus (BYOK)*: Koppel uw eigen Google Gemini API-sleutel om geavanceerde ontwikkelaarsquota en generatieve cloudtools zoals de dagelijkse Trend Scout-radar en Nano Banana-fotoreconstructie te ontgrendelen.
 - **Abonnement & Kledingkastlimieten**:
-  - Bekijk het huidige accountniveau (**Free**: basislimiet van 150 items vs. **Manager** ($ 10/mnd) of **Professional** ($ 15/mnd): onbeperkt aantal items).
+  - Bekijk het huidige accountniveau (**Free**: basislimiet van 50 items vs. **Manager** ($ 10/mnd) of **Professional** ($ 15/mnd): onbeperkt aantal items).
   - Ga naar de **Prijzenpagina** (`/pricing` of klik op uw abonnementskaart) om de vergelijkingstabel te bekijken, een abonnement te kiezen of niet-verlopende prepaid-tegoedpakketten te kopen.
   - Upgraden via PayPal Subscriptions of de Atzmai Gateway voor lokale Israëlische ILS-transacties (Bit / creditcard).
-  - **Aanbevelingslink kopiëren**: Levert +10 kledingkastplaatsen op voor elke vriend die zich registreert (tot maximaal 1,000 items).
+  - **Aanbevelingslink kopiëren**: Levert +10 kledingkastplaatsen op voor elke vriend die zich registreert (tot maximaal 150 items).
 - **Planner & Pushherinneringen**:
   - Schakel meldingen voor ochtendoutfitvoorstellen in of uit.
   - Stel de frequentie in (*Elke dag*, *Om de dag*, *Tweemaal per week*, *Op weekdagen*), tijd (bijv. *07:00*) en dresscode-eisen (*Casual*, *Formeel*, *Sportief*, *Aangepast*).
@@ -155,6 +155,6 @@ Beheert instellingen op systeemniveau, abonnementen en AI-integraties:
 ---
 
 ## Beperkingen
-- De accountruimte in het Free Tier is standaard beperkt tot 150 items, tenzij uitgebreid via aanbevelingsbonussen (+10 plaatsen per uitnodiging tot maximaal 1.000 items) of een upgrade naar het Manager- of Professional-niveau.
+- De accountruimte in het Free Tier is standaard beperkt tot 50 items, tenzij uitgebreid via aanbevelingsbonussen (+10 plaatsen per uitnodiging tot maximaal 150 items) of een upgrade naar het Manager- of Professional-niveau.
 - Kostbare generatieve cloud-endpoints (Trend Scout-radar en Nano Banana-fotoreconstructie) vereisen een door de gebruiker verstrekte persoonlijke Google Gemini API-sleutel.
 - De modus met eigen API-sleutel schakelt soepel terug naar de ingebouwde Gemma-4-E4B-engine als het quotum van de externe provider is uitgeput.

@@ -13,7 +13,7 @@ Organizado en **7 canales temáticos**, Trend Scout adapta las noticias a tu per
 
 ## 2. Requisitos previos
 - **Clave API de IA propia (BYOK)**: Trend Scout requiere una clave personal de Google Gemini API (gratuita en [Google AI Studio](https://aistudio.google.com/)) configurada en **Perfil > Configuración de IA** para el rastreo y resumen en vivo.
-- **Suscripción activa**: Disponible en los planes **Manager** ($4.99/mes) y **Professional** ($9.99/mes). Las cuentas gratuitas pueden ver una vista previa.
+- **Suscripción activa**: Disponible en los planes **Manager** ($10/mes) y **Professional** ($15/mes). Las cuentas gratuitas pueden ver una vista previa.
 - **Prendas registradas**: Al menos 5 o 10 prendas en el armario digital para sugerencias precisas.
 - **Acceso a la ubicación**: Para noticias de eventos y diseñadores de tu ciudad.
 - **Datos demográficos**: Define género y preferencias de estilo en tu perfil.

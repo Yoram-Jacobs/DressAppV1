@@ -33,5 +33,5 @@ Você conquista um guarda-roupa digital estruturado e acessível que elimina a i
 - **Problemas de direção do layout**: Alterne entre os idiomas; o DressApp espelha automaticamente o alinhamento da interface para idiomas RTL (hebraico, árabe).
 
 ## Limitações
-- A capacidade do closet no plano Free Tier começa em 150 itens (expansível até 150 por meio de bônus de indicação); a atualização para Manager ou Professional desbloqueia armazenamento ilimitado.
+- A capacidade do closet no plano Free Tier começa em 50 itens (expansível até 150 por meio de bônus de indicação); a atualização para Manager ou Professional desbloqueia armazenamento ilimitado.
 - A remoção de fundo e a segmentação funcionam melhor com boa iluminação e fundos contrastantes.

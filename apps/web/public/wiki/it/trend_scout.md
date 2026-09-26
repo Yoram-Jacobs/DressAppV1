@@ -13,7 +13,7 @@ Suddiviso in **7 canali tematici**, Trend Scout personalizza le notizie in base 
 
 ## 2. Prerequisiti
 - **Chiave API AI personale (BYOK)**: Trend Scout richiede una chiave Google Gemini API personale (gratuita su [Google AI Studio](https://aistudio.google.com/)) configurata in **Profilo > Configurazione AI** per la scansione e la sintesi degli articoli.
-- **Abbonamento attivo**: Disponibile nei piani **Manager** ($4.99/mese) e **Professional** ($9.99/mese). Gli account gratuiti possono visualizzare un'anteprima.
+- **Abbonamento attivo**: Disponibile nei piani **Manager** ($10/mese) e **Professional** ($15/mese). Gli account gratuiti possono visualizzare un'anteprima.
 - **Capi nel guardaroba**: Almeno 5-10 capi per consentire all'AI di suggerire abbinamenti accurati.
 - **Accesso alla posizione**: Per notizie ed eventi su stilisti e boutique della tua città.
 - **Dati demografici**: Specifica genere e preferenze di stile nel tuo profilo.

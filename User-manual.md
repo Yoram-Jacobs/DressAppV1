@@ -155,7 +155,7 @@ The Profile page serves as the core control panel for DressApp. Configuration fi
      - **On-Premises VPS Eyes (`gemma-4-E4B`)**: Evaluates unauthenticated background tasks and acts as the transparent quota fallback engine whenever Google API calls encounter `429` / `RESOURCE_EXHAUSTED`.
      - **Custom API Key Mode (BYOK)**: Entering a personal Google Gemini API key (from Google AI Studio) unlocks higher-tier models (`gemini-2.5-pro`) and enables restricted generative tools (**Trend Scout** daily fashion radar and **Nano Banana** photo inpainting).
      - **Automated Quota Fallback**: If a custom BYOK key triggers rate limits (`429`), `RESOURCE_EXHAUSTED`, or spending cap errors, `FallbackBrain` immediately redirects the request to on-premises Gemma-4-E4B, rendering a non-blocking notification banner (`stylist.fallbackQuotaBanner`) without interrupting the styling conversation.
-     - **Trial & Paid Plans**: Free baseline (150 garments), Manager tier, and Professional tier. If credits are exhausted, the app enters an async pause-and-resume wait state (up to 60s) checking for top-up events.
+     - **Trial & Paid Plans**: Free baseline (50 garments), Manager tier, and Professional tier. If credits are exhausted, the app enters an async pause-and-resume wait state (up to 60s) checking for top-up events.
 
 7. **Scheduler & Push (Frequency, daily alarm, style focus)**
    - **Why does it matter?**: It manages automatic daily style pushes.
@@ -179,7 +179,7 @@ The Profile page serves as the core control panel for DressApp. Configuration fi
 
 12. **Developer & Administrator Access (Google OAuth)**
     - **Why does it matter?**: Ensures privileged platform governance and diagnostic tools are restricted to verified accounts.
-    - **Subsystem Dependencies**: Gated through Google OAuth (`dressapdeveloper@gmail.com`). Users defined under `ADMIN_EMAILS` in production environment settings are assigned administrative roles (`role: "admin"`), while `TESTER_EMAILS` enjoy complimentary Professional tier perks without client-side bypass shortcuts.
+    - **Subsystem Dependencies**: Gated through Google OAuth (`dressapdeveloper@gmail.com`). Users defined under `ADMIN_EMAILS` in production environment settings are assigned administrative roles (`role: "admin"`).
 
 ---
 

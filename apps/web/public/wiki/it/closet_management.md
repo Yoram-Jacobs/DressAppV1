@@ -28,4 +28,4 @@ Un armadio digitale ordinato che si carica all'istante, permettendoti di catalog
 - **Raggruppamento per errore**: Se hai unito due capi per sbaglio, apri i dettagli e tocca **Separa**.
 
 ## Limitazioni
-- Gli account gratuiti possono salvare fino a 1,000 capi. Invita amici (+10 posti per registrazione) o passa a Pro per spazio illimitato.
+- Gli account gratuiti possono salvare fino a 150 capi. Invita amici (+10 posti per registrazione) o passa a Pro per spazio illimitato.

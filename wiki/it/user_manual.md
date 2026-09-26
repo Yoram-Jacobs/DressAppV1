@@ -230,8 +230,8 @@ Verifica del funzionamento del sistema, contabilità finanziaria e gestione dei 
 ## 5. Risoluzione dei problemi
 
 ### HTTP 402 Payment Required
-- **Problema**: Caricamento degli elementi bloccato. Hai raggiunto il limite di base del guardaroba di 150 elementi (o fino a 1.000 elementi con i bonus di referral).
-- **Soluzione**: Vai alla **pagina dei prezzi** (`/pricing`) e abbonati al piano Manager o Professional, o condividi il tuo link di referral per ottenere +10 slot per registrazione (fino a un massimo di 1.000 articoli).
+- **Problema**: Caricamento degli elementi bloccato. Hai raggiunto il limite di base del guardaroba di 50 elementi (o fino a 150 elementi con i bonus di referral).
+- **Soluzione**: Vai alla **pagina dei prezzi** (`/pricing`) e abbonati al piano Manager o Professional, o condividi il tuo link di referral per ottenere +10 slot per registrazione (fino a un massimo di 150 articoli).
 
 ### SSRF Blocked / DNS Error su DPP
 - **Problema**: Errore durante l'analisi dell'URL del codice QR del passaporto del prodotto scansionato.

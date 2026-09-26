@@ -230,8 +230,8 @@ Verificación del funcionamiento del sistema, contabilidad financiera y gestión
 ## 5. Resolución de problemas
 
 ### HTTP 402 Payment Required
-- **Problema**: Carga de elementos bloqueada. Ha alcanzado el límite base del armario de 150 elementos (o hasta 1.000 elementos con bonos de recomendación).
-- **Solución**: Vaya a la **página de precios** (`/pricing`) y suscríbase al plan Manager o Professional, o comparta su enlace de recomendación para obtener +10 espacios por registro (hasta un máximo de 1.000 elementos).
+- **Problema**: Carga de elementos bloqueada. Ha alcanzado el límite base del armario de 50 elementos (o hasta 150 elementos con bonos de recomendación).
+- **Solución**: Vaya a la **página de precios** (`/pricing`) y suscríbase al plan Manager o Professional, o comparta su enlace de recomendación para obtener +10 espacios por registro (hasta un máximo de 150 elementos).
 
 ### SSRF Blocked / DNS Error en DPP
 - **Problema**: Error al analizar la URL del código QR del pasaporte de producto escaneado.
