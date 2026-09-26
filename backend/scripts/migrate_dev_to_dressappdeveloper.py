@@ -91,7 +91,7 @@ async def migrate() -> int:
 
         # Top up subscription credits for the month
         try:
-            await ensure_monthly_subscription_credits(old_user["id"], tier="professional")
+            await ensure_monthly_subscription_credits(old_user, db)
             print(f"Ensured monthly subscription credits for {new_email}")
         except Exception as exc:
             print(f"Warning: Credit allocation error: {exc}")
