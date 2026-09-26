@@ -2,71 +2,24 @@ from __future__ import annotations
 
 import asyncio
 import base64
-import json
-import logging
-import os
 import uuid
 from datetime import datetime, timezone
-from typing import Any, Literal
+from typing import Any
 
-import httpx
-from bson import ObjectId
-from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query, Request, Response, UploadFile, File, Form
-from fastapi.responses import StreamingResponse
-from pydantic import BaseModel, ConfigDict, Field
-from pymongo import ReturnDocument
+from fastapi import APIRouter, Depends, HTTPException
+from pydantic import BaseModel, Field
 
 from app.db.database import get_db
-from app.config import settings
-from app.models.schemas import (
-    ClosetItem,
-    DressCode,
-    FinancialMetadata,
-    Formality,
-    GarmentAnalysis,
-    GarmentCondition,
-    GarmentGender,
-    GarmentQuality,
-    GarmentState,
-    Listing,
-    MarketplaceIntent,
-    RetailMetadata,
-    Source,
-    WeightedTag,
-)
+from app.models.schemas import ClosetItem
 from app.services import repos
-from app.services.auth import (
-    get_current_user,
-    resolve_user_gemini_api_key,
-    resolve_user_gemini_model,
-)
-from app.services.fees import compute_fees
-from app.services.vision import garment_vision_service, get_garment_vision_service
-from app.services.fashion_clip import fashion_clip_service
-from app.services.gemini_image_service import gemini_image_service, get_gemini_image_service
-from app.services.image_compression import (
-    compress_b64_image,
-    compress_image_bytes,
-    compress_image_url_or_b64,
-)
+from app.services.auth import get_current_user
+from app.services.vision import get_garment_vision_service
 from app.services import closet_service
 from app.services.sync_service import broadcast_sync_event
 from app.api.v1.closet.common import (
-    _active_background_tasks,
     _track_task,
-    _ANALYZE_CONCURRENCY,
     _ANALYZE_LOCK,
-    _get_item_image_url,
-    _pick_segformer_mask_for_category,
-    _bytes_from_data_url,
-    _ensure_min_resolution,
     _read_image_bytes_from_url,
-    _maybe_retry_stale_matte,
-    _run_background_matte,
-    _run_background_matte_and_analyze,
-    _run_background_reconstruction,
-    CreateItemIn,
-    UpdateItemIn,
     logger,
 )
 
@@ -233,7 +186,6 @@ async def save_migration_crops(
     """
     check_migration_access(user)
     db = get_db()
-    from app.models.schemas import ClosetItem
     saved = 0
     skipped = 0
     item_ids: list[str] = []
@@ -383,5 +335,18 @@ async def reanalyze_by_brand(
 
     _track_task(asyncio.create_task(_run_reanalyze_items(items, user, job_id, db)))
     return {"job_id": job_id, "total_items": len(items)}
+
+
+@router.get("/migration/status/{job_id}")
+async def get_migration_status(
+    job_id: str,
+    user: dict = Depends(get_current_user),
+) -> dict[str, Any]:
+    """Poll the status of an ongoing wardrobe migration job."""
+    check_migration_access(user)
+    status_info = _migration_status.get(job_id)
+    if not status_info:
+        raise HTTPException(404, "Migration job not found")
+    return status_info
 
 

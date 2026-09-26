@@ -3,71 +3,21 @@ from __future__ import annotations
 import asyncio
 import base64
 import json
-import logging
-import os
-import uuid
-from datetime import datetime, timezone
-from typing import Any, Literal
+from typing import Any
 
 import httpx
-from bson import ObjectId
-from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query, Request, Response, UploadFile, File, Form
-from fastapi.responses import StreamingResponse
-from pydantic import BaseModel, ConfigDict, Field
-from pymongo import ReturnDocument
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form
+from pydantic import BaseModel, ConfigDict
 
 from app.db.database import get_db
-from app.config import settings
-from app.models.schemas import (
-    ClosetItem,
-    DressCode,
-    FinancialMetadata,
-    Formality,
-    GarmentAnalysis,
-    GarmentCondition,
-    GarmentGender,
-    GarmentQuality,
-    GarmentState,
-    Listing,
-    MarketplaceIntent,
-    RetailMetadata,
-    Source,
-    WeightedTag,
-)
-from app.services import repos
 from app.services.auth import (
     get_current_user,
     resolve_user_gemini_api_key,
     resolve_user_gemini_model,
 )
-from app.services.fees import compute_fees
-from app.services.vision import garment_vision_service, get_garment_vision_service
-from app.services.fashion_clip import fashion_clip_service
-from app.services.gemini_image_service import gemini_image_service, get_gemini_image_service
-from app.services.image_compression import (
-    compress_b64_image,
-    compress_image_bytes,
-    compress_image_url_or_b64,
-)
+from app.services.vision import get_garment_vision_service
 from app.services import closet_service
-from app.api.v1.closet.common import (
-    _active_background_tasks,
-    _track_task,
-    _ANALYZE_CONCURRENCY,
-    _ANALYZE_LOCK,
-    _get_item_image_url,
-    _pick_segformer_mask_for_category,
-    _bytes_from_data_url,
-    _ensure_min_resolution,
-    _read_image_bytes_from_url,
-    _maybe_retry_stale_matte,
-    _run_background_matte,
-    _run_background_matte_and_analyze,
-    _run_background_reconstruction,
-    CreateItemIn,
-    UpdateItemIn,
-    logger,
-)
+from app.api.v1.closet.common import logger
 
 _safe_analysis = closet_service.safe_analysis
 
@@ -249,7 +199,6 @@ async def extract_pdf_text(
     user: dict = Depends(get_current_user),
 ):
     """Extract raw text from an uploaded file (PDF/Image) using Gemini's native OCR with a local pypdf fallback for PDFs."""
-    from app.services.gemini_client import get_default_client
     from fastapi import HTTPException
     import mimetypes
     import pypdf
@@ -329,7 +278,6 @@ async def parse_receipt(
     user: dict = Depends(get_current_user),
 ):
     """Extract garment information from pasted text, a URL, or an uploaded receipt image/PDF."""
-    from app.services.gemini_client import get_default_client
     import httpx
     import mimetypes
     import base64

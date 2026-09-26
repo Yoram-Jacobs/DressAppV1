@@ -302,7 +302,7 @@ export default function DressMeShuffler({ onSaveSuccess, onOpenCalendar }) {
       clearInterval(spinTimer);
 
       if (res.weather_summary) {
-        setWeatherSummary(res.weather_summary);
+        setWeather(res.weather_summary);
       }
       if (res.why) {
         setAiRationale(res.why);

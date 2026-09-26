@@ -209,7 +209,7 @@ export const closet = {
               },
             ],
           })
-          .then((r) => {
+          .then(async (r) => {
             const data = r.data || {};
             if (data && data._status && Number(data._status) >= 400) {
               const err = new Error(data._error || 'Analyze failed');

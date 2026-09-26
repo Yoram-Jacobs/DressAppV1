@@ -22,6 +22,7 @@ export default [
         ...globals.browser,
         ...globals.node,
         ...globals.es2021,
+        ...globals.jest,
         // keep compatibility for older commonjs references in dev tooling
         module: "readonly",
         require: "readonly"

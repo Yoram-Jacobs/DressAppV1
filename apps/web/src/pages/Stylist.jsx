@@ -79,7 +79,7 @@ import { AttachmentPicker } from '@/components/stylist/AttachmentPicker';
 import { api } from '@/lib/api';
 import { toast } from 'sonner';
 import { useAuth } from '@/lib/auth';
-import { useOutfitStore } from '@/lib/useOutfitStore';
+import { useOutfitStore, prewarmOutfits } from '@/lib/useOutfitStore';
 import { useLocation as useAppLocation } from '@/lib/location';
 import { useDailySuggestionsStore } from '@/lib/dailySuggestionsStore';
 import {
@@ -794,12 +794,16 @@ export default function Stylist() {
       description: rec.why || '',
       source_workflow: isEvent ? 'event' : 'scheduled',
       prompt: isEvent ? (eventDetails.prompt || 'Event') : (user?.scheduler_settings?.style_dress_for || 'casual'),
-      garments: (rec.items || []).map((it) => ({
-        closet_item_id: it.closet_item_id || it.id,
-        role: it.role,
-        title: it.description || it.title || it.name,
-        image_url: (ci ? bestImageUrl(ci) : null) || bestImageUrl(it) || it.clean_image_url || it.image_url || '',
-      })),
+      garments: (rec.items || []).map((it) => {
+        const cid = it.closet_item_id || it.id;
+        const ci = (closetItems || []).find((c) => c && (c.id === cid || c._id === cid));
+        return {
+          closet_item_id: cid,
+          role: it.role,
+          title: it.description || it.title || it.name,
+          image_url: (ci ? bestImageUrl(ci) : null) || bestImageUrl(it) || it.clean_image_url || it.image_url || '',
+        };
+      }),
       usage: {
         date: targetDate,
         time: isEvent ? (eventDetails.time || '12:00') : (user?.scheduler_settings?.time || '08:00'),
@@ -1103,12 +1107,16 @@ export default function Stylist() {
       name: displayName,
       source_workflow: isEvent ? 'event' : 'scheduled',
       prompt: isEvent ? 'Event' : (user?.scheduler_settings?.style_dress_for || 'casual'),
-      garments: (rec.items || []).map((it) => ({
-        closet_item_id: it.closet_item_id || it.id,
-        role: it.role,
-        title: it.description || it.title || it.name,
-        image_url: (ci ? bestImageUrl(ci) : null) || bestImageUrl(it) || it.clean_image_url || it.image_url || '',
-      })),
+      garments: (rec.items || []).map((it) => {
+        const cid = it.closet_item_id || it.id;
+        const ci = (closetItems || []).find((c) => c && (c.id === cid || c._id === cid));
+        return {
+          closet_item_id: cid,
+          role: it.role,
+          title: it.description || it.title || it.name,
+          image_url: (ci ? bestImageUrl(ci) : null) || bestImageUrl(it) || it.clean_image_url || it.image_url || '',
+        };
+      }),
       usage: {
         date: targetDate,
         time: user?.scheduler_settings?.time || '08:00',

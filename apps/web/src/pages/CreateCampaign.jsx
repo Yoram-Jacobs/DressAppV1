@@ -137,6 +137,7 @@ const INITIAL_FORM = {
 export default function CreateCampaign() {
   const { t } = useTranslation();
   const nav = useNavigate();
+  const navigate = nav;
   const { user } = useAuth();
   const { canCreateCampaign } = useTierLimits();
   const [searchParams] = useSearchParams();

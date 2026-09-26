@@ -350,6 +350,7 @@ function Suitcase() {
 
   // Full screen view state
   const [fullscreenOutfit, setFullscreenOutfit] = useState(null);
+  const [refining, setRefining] = useState(false);
   const [loadingInitial, setLoadingInitial] = useState(
     !suitcaseStoreState.lastFullSync,
   );

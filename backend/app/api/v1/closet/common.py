@@ -1,57 +1,27 @@
-"""backend/app/api/v1/closet/common.py
-Shared constants, Pydantic models, locks, and service aliases.
-"""
 from __future__ import annotations
 
 import asyncio
-import base64
-import httpx
-import json
 import logging
 import os
-import uuid
-from datetime import datetime, timezone
+import sys
 from typing import Any, Literal
 
-from pymongo import ReturnDocument
-
-from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query, Request, Response, UploadFile, File, Form
-from fastapi.responses import StreamingResponse
+from fastapi import APIRouter
 from pydantic import BaseModel, ConfigDict, Field
 
-from app.db.database import get_db
-from app.config import settings
 from app.models.schemas import (
-    ClosetItem,
     DressCode,
-    FinancialMetadata,
     Formality,
-    GarmentAnalysis,
     GarmentCondition,
     GarmentGender,
     GarmentQuality,
     GarmentState,
-    Listing,
     MarketplaceIntent,
     RetailMetadata,
     Source,
     WeightedTag,
 )
-from app.services import repos
-from app.services.auth import (
-    get_current_user,
-    resolve_user_gemini_api_key,
-    resolve_user_gemini_model,
-)
-from app.services.fees import compute_fees
-from app.services.vision import garment_vision_service, get_garment_vision_service
-from app.services.fashion_clip import fashion_clip_service
-from app.services.gemini_image_service import gemini_image_service, get_gemini_image_service
-from app.services.image_compression import (
-    compress_b64_image,
-    compress_image_bytes,
-    compress_image_url_or_b64,
-)
+from app.services import closet_service
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/closet", tags=["closet"])
@@ -276,8 +246,6 @@ class UpdateItemIn(BaseModel):
 
 
 # --- Closet Service Helpers & Background Tasks ---
-import sys
-from app.services import closet_service
 
 
 def _get_closet_attr(name: str, fallback: Any) -> Any:
