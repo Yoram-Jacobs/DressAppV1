@@ -50,14 +50,14 @@ async def dev_bypass() -> TokenOut:
         raise HTTPException(status.HTTP_403_FORBIDDEN, "Dev bypass disabled")
 
     db = get_db()
-    email = "dev@dressapp.io"
+    email = "dressapdeveloper@gmail.com"
     user = await db.users.find_one({"email": email}, {"_id": 0})
     if not user:
         new_user = User(
             email=email,
             password_hash=hash_password("DevPass123!"),
-            display_name="Dev User",
-            roles=["user", "admin"],
+            display_name="DressApp Developer",
+            roles=["user", "admin", "tester"],
             preferred_language="en",
             preferred_voice_id="en_US-ryan-medium",
             home_location={"lat": 40.758, "lng": -73.9855, "city": "New York"},

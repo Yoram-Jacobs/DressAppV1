@@ -594,7 +594,10 @@ class Settings:
     # role on register / login / Google sign-in. Re-checked on every login,
     # so adding/removing an email + restarting the backend promotes/demotes
     # without DB surgery. The CLI fallback is ``backend/scripts/grant_admin.py``.
-    ADMIN_EMAILS: str = os.environ.get("ADMIN_EMAILS", "")
+    ADMIN_EMAILS: str = os.environ.get(
+        "ADMIN_EMAILS",
+        "dressapdeveloper@gmail.com,lokoprod@gmail.com",
+    )
 
     @property
     def admin_emails_set(self) -> set[str]:
@@ -609,7 +612,7 @@ class Settings:
     # Users in this group automatically receive the 'tester' role and free Professional tier.
     TESTER_EMAILS: str = os.environ.get(
         "TESTER_EMAILS",
-        "maystarboard@gmail.com,lokoprod@gmail.com",
+        "maystarboard@gmail.com,lokoprod@gmail.com,dressapdeveloper@gmail.com",
     )
 
     @property

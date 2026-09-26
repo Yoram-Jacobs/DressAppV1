@@ -1,12 +1,6 @@
 import { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
-import { toast } from "sonner";
-import { Sparkles } from "lucide-react";
-import { useAuth } from "@/lib/auth";
 import { GoogleAuthButton } from "@/components/GoogleAuthButton";
 import { BrandLogo } from "@/components/BrandLogo";
 import { LanguagePicker } from "@/components/LanguagePicker";
@@ -14,23 +8,7 @@ import loginimg from "../assets/img/loginimg.webp";
 
 export default function Login() {
   const { t } = useTranslation();
-  const nav = useNavigate();
-  const { devBypass } = useAuth();
-  const [busy, setBusy] = useState(false);
   const [withCalendar, setWithCalendar] = useState(false);
-
-  const dev = async () => {
-    setBusy(true);
-    try {
-      await devBypass();
-      toast.success(t("auth.signedInAsDev"));
-      nav("/home");
-    } catch (err) {
-      toast.error(err?.response?.data?.detail || t("auth.devDisabled"));
-    } finally {
-      setBusy(false);
-    }
-  };
 
   return (
     <div className="relative grid min-h-[100dvh] grid-rows-[auto_1fr] overflow-x-hidden bg-accent-beige md:grid-rows-none md:grid-cols-[3fr_2fr]">
@@ -96,17 +74,6 @@ export default function Login() {
               <span className="leading-snug">{t("auth.alsoConnectCalendar")}</span>
             </label>
           </div>
-
-          <Button
-            type="button"
-            variant="ghost"
-            onClick={dev}
-            disabled={busy}
-            className="mt-2 min-h-11 w-full whitespace-normal rounded-xl text-muted-foreground hover:text-foreground"
-            data-testid="login-dev-bypass-button"
-          >
-            <Sparkles className="h-4 w-4 me-2 shrink-0" /> {t("auth.continueAsDev")}
-          </Button>
         </div>
       </div>
     </div>
