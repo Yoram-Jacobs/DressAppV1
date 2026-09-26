@@ -70,7 +70,7 @@ async def migrate() -> int:
                     "last_credit_cycle_start": now_iso,
                     "credits_allocated_cycle": 100,
                 },
-                "migration_flag": "dismissed",
+                "migration_flag": "New",
                 "created_at": now_iso,
                 "updated_at": now_iso,
             }
@@ -129,7 +129,7 @@ async def migrate() -> int:
             "$set": {
                 "roles": roles,
                 "subscription": sub,
-                "migration_flag": "dismissed",
+                "migration_flag": "New",
                 "updated_at": now_iso,
             }
         },

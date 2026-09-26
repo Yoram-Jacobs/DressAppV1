@@ -199,7 +199,7 @@ class User(BaseDoc):
     professional: dict[str, Any] | None = None
 
     # --- Migration & Competitor Onboarding ---
-    migration_flag: Literal["New", "Migrate"] | None = None
+    migration_flag: Literal["New", "Migrate", "dismissed"] | None = None
     migration_details: dict[str, Any] | None = None
 
     # --- AI Stylist Scheduler Settings (Phase Scheduler) ---
