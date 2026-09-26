@@ -99,6 +99,6 @@ N'oubliez aucun article lors de vos voyages :
 
 ## 3. Dépannage rapide & conseils
 
-- **Capacité de dressing en formule gratuite** : Les comptes gratuits stockent jusqu'à 150 articles. Passez à la formule **Pro** (4,99 $/mois) ou invitez des amis (+10 places offertes par ami invité) pour un espace illimité !
+- **Capacité de dressing en formule gratuite** : Les comptes gratuits stockent jusqu'à 50 articles (extensible jusqu'à 150 articles max via les bonus de parrainage de +10 places par inscription). Passez à la formule **Manager** (10 $/mois ou 100 $/an) ou **Professional** (15 $/mois ou 150 $/an) pour un espace illimité !
 - **La saisie vocale ne fonctionne pas** : Assurez-vous que l'accès au microphone est autorisé dans les paramètres de votre navigateur (Chrome ou Safari recommandé).
 - **Détourage photo** : Pour des découpes plus nettes, prenez vos vêtements en photo devant un mur ou un drap de couleur contrastée.

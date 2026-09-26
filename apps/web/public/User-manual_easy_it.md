@@ -99,6 +99,6 @@ Non dimenticare mai un articolo quando viaggi:
 
 ## 3. Risoluzione rapida dei problemi e consigli
 
-- **Capacità dell'armadio per il piano gratuito**: I account gratuiti memorizzano fino a 150 articoli. Passa a **Pro** ($4.99/mese) o invita gli amici (+10 spazi extra per ogni amico invitato) per avere spazio illimitato!
+- **Capacità dell'armadio per il piano gratuito**: Gli account gratuiti memorizzano fino a 50 articoli (espandibile fino a 150 articoli max tramite bonus passaparola di +10 spazi per registrazione). Passa a **Manager** ($10/mese o $100/anno) o **Professional** ($15/mese o $150/anno) per avere spazio illimitato!
 - **La digitazione vocale non funziona**: Assicurati che i permessi del microfono siano abilitati nelle impostazioni del tuo browser (consigliato Chrome o Safari).
 - **Rimozione dello sfondo**: Per ritagli fotografici più puliti, fotografa i vestiti contro una parete o un lenzuolo a contrasto.

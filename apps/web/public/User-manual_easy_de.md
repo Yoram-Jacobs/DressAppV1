@@ -99,6 +99,6 @@ Vergessen Sie beim Reisen nie wieder ein Kleidungsstück:
 
 ## 3. Schnelle Fehlerbehebung & Tipps
 
-- **Kapazität im kostenlosen Tarif**: Kostenlose Konten können bis zu 150 Artikel speichern. Upgrade auf **Pro** (4,99 $/Monat) oder Freunde einladen (+10 zusätzliche Plätze pro Freundschaftswerbung) für unbegrenzten Speicherplatz!
+- **Kapazität im kostenlosen Tarif**: Kostenlose Konten können bis zu 50 Artikel speichern (erweiterbar auf bis zu 150 Artikel max. durch Empfehlungsboni mit +10 Plätzen pro Registrierung). Upgrade auf **Manager** (10 $/Monat oder 100 $/Jahr) oder **Professional** (15 $/Monat oder 150 $/Jahr) für unbegrenzten Speicherplatz!
 - **Spracheingabe funktioniert nicht**: Stellen Sie sicher, dass der Zugriff auf das Mikrofon in Ihren Browsereinstellungen freigegeben ist (Chrome oder Safari empfohlen).
 - **Hintergrundentfernung**: Fotografieren Sie Ihre Kleidung für optimale Ergebnisse vor einer kontrastierenden Wand oder einem Bettlaken.

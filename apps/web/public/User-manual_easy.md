@@ -128,6 +128,6 @@ Buy, sell, trade, or rent pre-loved clothing:
 
 ## 3. Quick Troubleshooting & Tips
 
-- **Free Tier Closet Capacity**: Free accounts store up to 150 items. Upgrade to **Pro** ($4.99/month) or invite friends (+10 extra slots per friend invite) for unlimited space!
+- **Free Tier Closet Capacity**: Free accounts store up to 50 items (expandable up to 150 items max via referral bonuses at +10 slots per signup). Upgrade to **Manager** ($10/month or $100/year) or **Professional** ($15/month or $150/year) for unlimited space!
 - **Voice Typing Not Working**: Make sure microphone permissions are allowed in your browser settings (Chrome or Safari recommended).
 - **Background Removal**: For the cleanest photo cutouts, photograph clothing against a contrasting wall or bedsheet.

@@ -99,6 +99,6 @@ No olvides ninguna prenda cuando viajes:
 
 ## 3. Resolución rápida de problemas y consejos
 
-- **Capacidad de armario del plan gratuito**: Las cuentas gratuitas almacenan hasta 150 artículos. ¡Actualiza a **Pro** ($4.99/mes) o invita a amigos (+10 espacios adicionales por amigo invitado) para obtener espacio ilimitado!
+- **Capacidad de armario del plan gratuito**: Las cuentas gratuitas almacenan hasta 50 artículos (ampliable hasta 150 artículos como máximo mediante bonificaciones por recomendación de +10 espacios por registro). ¡Actualiza a **Manager** ($10/mes o $100/año) o **Professional** ($15/mes o $150/año) para obtener espacio ilimitado!
 - **La escritura por voz no funciona**: Asegúrate de que los permisos del micrófono estén habilitados en la configuración de tu navegador (se recomienda Chrome o Safari).
 - **Eliminación de fondo**: Para obtener los recortes de fotos más limpios, fotografía las prendas sobre una pared o sábana que contraste.

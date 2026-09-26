@@ -99,6 +99,6 @@ Nunca se esqueça de um item ao viajar:
 
 ## 3. Resolução Rápida de Problemas e Dicas
 
-- **Capacidade do Armário no Plano Gratuito**: Contas gratuitas armazenam até 150 itens. Atualize para o **Pro** (USD 4,99/mês) ou convide amigos (+10 espaços extras por amigo convidado) para obter espaço ilimitado!
+- **Capacidade do Armário no Plano Gratuito**: Contas gratuitas armazenam até 50 itens (expansível até 150 itens no máximo por meio de bônus de indicação de +10 espaços por cadastro). Atualize para **Manager** ($10/mês ou $100/ano) ou **Professional** ($15/mês ou $150/ano) para obter espaço ilimitado!
 - **A Digitação por Voz Não Funciona**: Certifique-se de que as permissões do microfone estejam habilitadas nas configurações do seu navegador (recomenda-se Chrome ou Safari).
 - **Remoção de Fundo**: Para recortes de fotos mais limpos, fotografe as roupas contra uma parede ou lençol de cor contrastante.
