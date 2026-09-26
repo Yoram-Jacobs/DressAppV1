@@ -102,12 +102,18 @@ async def stylist_transcribe(
         else:
             content_type = "audio/webm"
 
+    ai_cfg = (user.get("ai_configuration") if isinstance(user, dict) else getattr(user, "ai_configuration", None)) or {}
+    selected_model = ai_cfg.get("selected_model") or ""
+    selected_provider = ai_cfg.get("selected_provider") or ""
+    provider = "gemma" if (selected_provider == "dressapp" or selected_model in ("Eyes v1", "gemma", "gemma-4-E4B-it-Q3_K_M.gguf")) else None
+
     try:
         res = await stt_service.transcribe(
             audio_bytes=audio_bytes,
             filename=file.filename or "audio.webm",
             content_type=content_type,
             language=language if language != "auto" else None,
+            provider=provider,
         )
         return {
             "text": res.get("text", "").strip(),
@@ -216,7 +222,7 @@ async def stylist_endpoint(
     # Resolve user's API key and model if a custom key was configured
     from app.services.auth import resolve_user_custom_gemini_api_key, resolve_user_gemini_model
     api_key_resolved = resolve_user_custom_gemini_api_key(user)
-    user_model = resolve_user_gemini_model(user) if api_key_resolved else None
+    user_model = resolve_user_gemini_model(user)
 
     # Phase S — render user preferences once (cheap, ~1ms) so we can
     # both inject them into the LLM prompt AND echo the applied keys.

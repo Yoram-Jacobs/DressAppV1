@@ -48,7 +48,7 @@ async def _call_gemma_space(
     # Build the payload in OpenAI-compatible format for the eyes proxy
     payload: dict[str, Any] = {
         "messages": messages,
-        "max_tokens": min(int(max_tokens), 512),
+        "max_tokens": min(int(max_tokens), 2048),
         "temperature": float(temperature),
         "json_mode": True,
         "enable_thinking": bool(think),

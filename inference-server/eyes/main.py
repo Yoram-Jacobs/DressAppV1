@@ -675,7 +675,7 @@ async def transcribe(
     b64_audio = base64.b64encode(audio_data).decode("utf-8")
     
     prompt = "Transcribe this audio precisely. Output ONLY the raw transcription text in the language it was spoken. Do not add any introductory or concluding text, formatting, or commentary."
-    if language:
+    if language and language != "auto":
         prompt += f" The audio is expected to be in {language}."
 
     payload = {

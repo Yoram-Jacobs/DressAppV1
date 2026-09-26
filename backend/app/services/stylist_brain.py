@@ -217,7 +217,9 @@ def _make_provider(name: str) -> StylistBrain | None:
 def build_stylist_brain() -> StylistBrain:
     """Resolve the brain stack based on current settings."""
     primary_name = settings.STYLIST_PROVIDER.lower().strip() or "gemini"
-    fallback_name = settings.STYLIST_FALLBACK.lower().strip() or "gemma"
+    if primary_name in ("gemma", "eyes", "dressapp") and (not fallback_name or fallback_name in ("gemma", "eyes", "dressapp")):
+        if gemini_stylist_service is not None:
+            fallback_name = "gemini"
 
     primary = _make_provider(primary_name)
     fallback = (
@@ -256,7 +258,12 @@ _service: StylistBrain | None = None
 
 
 def stylist_brain_service(api_key: str | None = None, model: str | None = None) -> StylistBrain:
-    if api_key or (model and model not in ("Eyes v1", "gemma", "gemma-4-E4B-it-Q3_K_M.gguf")):
+    if model in ("Eyes v1", "gemma", "dressapp", "gemma-4-E4B-it-Q3_K_M.gguf"):
+        primary = GemmaStylistBrain(model=model)
+        fallback = GeminiStylistBrain() if gemini_stylist_service else None
+        return FallbackBrain(primary=primary, fallback=fallback) if fallback else primary
+
+    if api_key or (model and model not in ("Eyes v1", "gemma", "dressapp", "gemma-4-E4B-it-Q3_K_M.gguf")):
         primary = GeminiStylistBrain(api_key=api_key, model=model)
         # Always equip user BYOK brains with on-prem Gemma fallback for quota exhaustion
         return FallbackBrain(primary=primary, fallback=GemmaStylistBrain())

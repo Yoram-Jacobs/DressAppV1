@@ -95,6 +95,7 @@ import {
   isTTSSupported,
   getSpeechRecognitionCtor,
   createRecognition,
+  startDictationSession,
   speak,
   cancelSpeak,
   ensureVoicesLoaded,
@@ -1232,11 +1233,13 @@ export default function Stylist() {
   const sttSupportedRef = useRef(isSTTSupported());
   const ttsSupportedRef = useRef(isTTSSupported());
 
-  // Server-side STT fallback
-  const mediaRecorderRef = useRef(null);
-  const audioChunksRef = useRef([]);
-  const recognitionRef = useRef(null);
+  // Voice dictation session
+  const dictationSessionRef = useRef(null);
   const threadRef = useRef(null);
+
+  useEffect(() => () => {
+    try { dictationSessionRef.current?.stop?.(); } catch { /* ignore */ }
+  }, []);
 
   const userLang = (user?.preferred_language || i18n.language || 'en').split('-')[0].toLowerCase();
 
@@ -1571,114 +1574,54 @@ export default function Stylist() {
     }
   };
 
-  /* ---------- Combined Voice Recording (Native SpeechRecognition + MediaRecorder) ---------- */
+  /* ---------- Voice Dictation (Native SpeechRecognition + Server STT) ---------- */
   const startRecording = async () => {
     try {
-      audioChunksRef.current = [];
-      let stream = null;
-      try {
-        stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      } catch (err) {
-        console.debug('[Stylist] mic access denied:', err);
-        toast.error(t('stylist.micError'));
-        return;
-      }
-
-      // 1. Setup MediaRecorder for universal backend STT fallback
-      let mimeType = '';
-      if (typeof MediaRecorder !== 'undefined') {
-        if (MediaRecorder.isTypeSupported('audio/webm;codecs=opus')) {
-          mimeType = 'audio/webm;codecs=opus';
-        } else if (MediaRecorder.isTypeSupported('audio/webm')) {
-          mimeType = 'audio/webm';
-        } else if (MediaRecorder.isTypeSupported('audio/mp4')) {
-          mimeType = 'audio/mp4';
-        } else if (MediaRecorder.isTypeSupported('audio/ogg')) {
-          mimeType = 'audio/ogg';
-        }
-      }
-      const mr = new MediaRecorder(stream, mimeType ? { mimeType } : undefined);
-      mediaRecorderRef.current = mr;
-      audioChunksRef.current = [];
-      mr.ondataavailable = (e) => {
-        if (e.data && e.data.size > 0) audioChunksRef.current.push(e.data);
-      };
-      mr.start(250);
-
-      // 2. Setup native SpeechRecognition for live interim preview
-      if (getSpeechRecognitionCtor()) {
-        const rec = createRecognition({
-          lang: userLang,
-          onInterim: (txt) => {
-            setInterim(txt || '');
-          },
-          onFinal: () => {},
-          onError: (err) => {
-            console.debug('[Stylist] native recognition error (falling back to audio recorder):', err?.error || err);
-          },
-          onEnd: () => {},
-        });
-        if (rec) {
-          recognitionRef.current = rec;
-          try {
-            rec.start();
-          } catch {
-            recognitionRef.current = null;
-          }
-        }
-      }
-
       setInterim('');
-      setRecording(true);
+      const session = await startDictationSession({
+        lang: userLang,
+        transcribeFn: async (blob) => {
+          const fd = new FormData();
+          fd.append('file', blob, 'stylist_dictation.webm');
+          fd.append('language', userLang || 'auto');
+          const res = await api.stylist.transcribeAudio(fd);
+          return res?.text || '';
+        },
+        onInterim: (txt) => {
+          if (txt) {
+            setInterim(txt);
+          }
+        },
+        onFinal: (finalText) => {
+          if (finalText && finalText.trim()) {
+            setText((prev) => {
+              const trimmed = finalText.trim();
+              if (!prev || prev.trim() === trimmed) return trimmed;
+              return `${prev} ${trimmed}`;
+            });
+          }
+          setInterim('');
+        },
+        onRecordingChange: (isRec) => setRecording(isRec),
+        onError: () => toast.error(t('stylist.micDenied', { defaultValue: 'Microphone access denied' })),
+      });
+      dictationSessionRef.current = session;
     } catch (err) {
-      console.debug('[Stylist] startRecording failed:', err?.message || err);
-      toast.error(t('stylist.micError'));
+      console.debug('[Stylist] startRecording failed:', err);
+      setRecording(false);
+      dictationSessionRef.current = null;
     }
   };
 
-  const stopRecording = async () => {
+  const stopRecording = () => {
+    try {
+      dictationSessionRef.current?.stop?.();
+    } catch (err) {
+      console.debug('[Stylist] stopRecording error:', err);
+    }
+    dictationSessionRef.current = null;
     setRecording(false);
     setInterim('');
-
-    // Stop native recognition and grab any transcribed text
-    let nativeText = '';
-    if (recognitionRef.current) {
-      try {
-        recognitionRef.current.stop();
-        nativeText = recognitionRef.current.getTranscript?.() || '';
-      } catch (err) {
-        console.debug('[Stylist] recognition stop error:', err);
-      }
-      recognitionRef.current = null;
-    }
-
-    // Stop MediaRecorder and grab audio blob
-    let blob = null;
-    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
-      blob = await new Promise((resolve) => {
-        const mr = mediaRecorderRef.current;
-        mr.onstop = () => {
-          const type = mr.mimeType || 'audio/webm';
-          const b = new Blob(audioChunksRef.current, { type });
-          if (mr.stream) {
-            try { mr.stream.getTracks().forEach((x) => x.stop()); } catch {}
-          }
-          resolve(b);
-        };
-        try {
-          mr.stop();
-        } catch {
-          resolve(null);
-        }
-      });
-      mediaRecorderRef.current = null;
-    }
-
-    if (nativeText && nativeText.trim()) {
-      await sendTurn({ overrideText: nativeText.trim() });
-    } else if (blob && blob.size > 100) {
-      await sendTurn({ voiceBlob: blob });
-    }
   };
 
   /* ---------- Local TTS ---------- */

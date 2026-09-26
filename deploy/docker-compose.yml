@@ -80,6 +80,8 @@ services:
       LLAMA_THREADS: ${EYES_LLAMA_THREADS:-3}
       LLAMA_CTX_SIZE: ${EYES_LLAMA_CTX_SIZE:-4096}
       LLAMA_N_BATCH: ${EYES_LLAMA_N_BATCH:-256}
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      GOOGLE_API_KEY: ${GEMINI_API_KEY:-}
     expose:
       - "7860"
     # Memory ceiling: Q4_K_M of a ~5B Gemma model resides at ~4 GB.

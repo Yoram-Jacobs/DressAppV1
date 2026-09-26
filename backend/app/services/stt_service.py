@@ -74,10 +74,11 @@ class EyesSTTService:
         filename: str = "audio.webm",
         content_type: str = "audio/webm",
         language: str | None = None,
+        provider: str | None = None,
     ) -> dict[str, Any]:
-        provider = await eyes_override.get_active_provider()
+        active_provider = provider or await eyes_override.get_active_provider()
         
-        if provider == "gemini":
+        if active_provider == "gemini":
             return await self.gemini_fallback.transcribe(
                 audio_bytes, filename=filename, content_type=content_type, language=language
             )
