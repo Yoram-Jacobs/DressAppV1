@@ -1,143 +1,138 @@
-# DressApp-beheerderspaneel — Architectuurverhaal en gebruikershandleiding
+# DressApp Beheerderspaneel — Architectuuroverzicht & Handleiding
 
-Dit document biedt een uitsplitsing op masterclassniveau van het DressApp-beheerderspaneel, waarbij de frontend-dashboardinterface ([Admin.jsx](file:///C:/DressApp_AG/frontend/src/pages/Admin.jsx)) en de bijbehorende backend-API-laag ([admin.py](file:///C:/DressApp_AG/backend/app/api/v1/admin.py)) worden gevolgd.
+Dit document biedt een uitgebreide, gezaghebbende analyse van het DressApp Beheerderspaneel (Admin Panel), waarbij zowel de frontend dashboard-interface ([Admin.jsx](file:///C:/DressApp_AG/apps/web/src/pages/Admin.jsx)) als de bijbehorende backend API-laag ([admin.py](file:///C:/DressApp_AG/backend/app/api/v1/admin.py)) worden behandeld.
 
 ---
 
-## 1. Samenvatting en waardevoorstel
+## 1. Managementsamenvatting & Waardepropositie
 
-### Overzicht op hoog niveau
-Het DressApp-beheerderspaneel is de gecentraliseerde hub voor applicatiebeheer, auditing van het genereren van inkomsten, configuratie van AI-modellen en pijplijndiagnostiek. Het geeft systeembeheerders een real-time, high-fidelity lens voor de operationele gezondheid van het systeem, de transactievolumes op de markt, het verbruik van AI-credits van gebruikers en API-afhankelijkheden van derden, zonder dat directe SSH/database-shell-toegang nodig is.
+### Algemeen overzicht
+Het DressApp Beheerderspaneel is het centrale knooppunt voor platformtoezicht, financiële audits, configuratie van AI-modellen en systeemdiagnostiek. Het biedt beheerders realtime, uiterst nauwkeurig inzicht in de status van het platform, transactievolumes op de marktplaats, het verbruik van AI-credits door gebruikers, testergroepen en de prestaties van onderliggende AI-microservices – zonder dat directe toegang tot de terminal of databaseshell vereist is.
 
-### Architecturale stroom
-Het volgende diagram illustreert hoe het frontend-dashboard overzichtsgegevens, gebruikersconfiguraties en live-diagnostiek opvraagt bij de backend FastAPI-services, MongoDB-verzamelingen bevraagt en downstream liveness-controles uitvoert.
+### Architectuurstroom
+Het volgende diagram illustreert hoe het frontend-dashboard communiceert met de backend-services, MongoDB Atlas-collecties raadpleegt en statuscontroles uitvoert op onderliggende services:
 
-```Zeemeermin
-grafiek TD
-    %% Frontend-componenten
-    subgraph Frontend [React Applicatie Client]
-        UI[Admin.jsx-dashboard]
-        API_JS[api.js-client]
-        Gebruikersinterface --> API_JS
-    einde
+```mermaid
+graph TD
+    %% Frontend Layer
+    subgraph Frontend [React Web Application]
+        UI[Admin.jsx Dashboard]
+        API[api.js client]
+        UI --> API
+    end
 
-%% Backend-router
+    %% Backend Router & Security
     subgraph Backend [FastAPI Backend Service]
         Router[admin.py Router]
-        Auth [require_admin afhankelijkheid]
-        ProviderAct[provider_activiteittracker]
+        Auth[require_admin Dependency]
+        Gateway[llm_gateway.py]
+        Activity[provider_activity Tracker]
         
-        API_JS -- HTTP GET/POST --> Auth
-        Verificatie --> Router
-    einde
+        API -- HTTP GET/POST --> Auth
+        Auth --> Router
+        Router --> Gateway
+        Router --> Activity
+    end
 
-%% Database en downstream
-    subgraph Opslag [MongoDB-database]
+    %% Data Storage
+    subgraph Storage [MongoDB Atlas M10]
         db_users[(db.users)]
-        db_tx[(db.transacties)]
+        db_tx[(db.transactions)]
         db_topups[(db.credit_topups)]
         db_listings[(db.listings)]
-        db_trends[(db.trend_rapporten)]
-    einde
+        db_trends[(db.trend_reports)]
+        db_config[(db.config)]
+    end
 
-subgrafiek AI_Services [Downstream API & Microservices]
-        Gemini[Google Gemini-API]
-        Gemma[Zelfgehoste Gemma Space]
-    einde
+    %% Downstream Microservices
+    subgraph AI_Engines [Downstream AI Services]
+        Gemini[Google Gemini 3.5 Flash-Lite]
+        Eyes[DressApp Eyes :7860 Gemma-4-E4B]
+    end
 
-Router --> db_users
+    Router --> db_users
     Router --> db_tx
     Router --> db_topups
     Router --> db_listings
     Router --> db_trends
-    Router --> ProviderAct
+    Router --> db_config
     
-    %% Downstream-controles
-    Router -- tekst(ping) --x Gemini
-    Router -- GET /gezondheid --x Gemma
+    %% Downstream Probes
+    Router -- text('ping') --> Gemini
+    Router -- GET /health --> Eyes
 ```
 
-### Waardepropositie voor gebruikers
-- **Totale zichtbaarheid**: realtime KPI-samenvattingskaarten die het totale aantal gebruikers, actieve vermeldingen, betaalde transacties, berichtvolumes van stylisten en wereldwijde applicatie-inkomsten weergeven.
-- **Factureringstransparantie**: Duidelijke uitsplitsing per gebruiker van geselecteerde modellen, beschikbare kredietquota, huidig ​​cyclusgebruik en totale vastgelegde factuurgeschiedenis.
-- **Proactieve gezondheidsmonitoring**: directe diagnostiek van de validiteit van de Gemini API-sleutel en de status van het zelfgehoste Gemma vision-model op afstand met één enkele interfaceklik.
-- **Marktplaatsveiligheidsschakelaars**: directe mogelijkheid om vermeldingen te pauzeren/reactiveren, frauduleuze professionals te verbergen of beheerders te degraderen/promoveren.
+### Belangrijkste beheerdersmogelijkheden
+- **Realtime KPI-inzicht**: Overzichtsstatistieken voor actieve gebruikers, totale kledingstukken, marktplaatsvolume, platformvergoedingen, stylistenverzoeken en gepubliceerde Trend Scout-rapporten.
+- **Testergroepprogramma**: Automatische toewijzing van rollen en gratis privileges voor het Professional Tier voor geverifieerde testeraccounts (`maystarboard@gmail.com`, `lokoprod@gmail.com`, `dressapdeveloper@gmail.com`).
+- **Beveiligde authenticatie**: Toegang in productie is strikt beveiligd via Google OAuth-authenticatie (`ADMIN_EMAILS`); oude niet-geauthenticeerde bypass-knoppen zijn volledig verwijderd.
+- **Beheer van multi-tier AI-routing**: Directe verificatie en live ping-diagnostiek voor de primaire **Google Gemini 3.5 Flash-Lite**-gateway en de lokale **Gemma-4-E4B** Eyes-container op poort 7860.
+- **Marktplaatsveiligheid & moderatie**: Mogelijkheid om direct advertenties te inspecteren, te pauzeren of te herstellen en gebruikersrechten te beheren.
 
 ---
 
-## 2. Uitgebreide gebruikershandleiding
+## 2. Uitgebreide handleiding
 
-### Visuele interfacetopologie
-Het beheerdersdashboard is onderverdeeld in een overzichtelijke lay-out met meerdere tabbladen, geoptimaliseerd voor desktop- en mobiele stijl:
+### Topologie van de visuele interface
+Het beheerderspaneel is georganiseerd in een overzichtelijke indeling met tabbladen, geoptimaliseerd voor administratieve taken met een hoge informatiedichtheid:
 
 ```
-+----------------------------------------------------------------------+
-|  DressApp (beheerder) [Terug naar Home] |
-|  ------------------------------------------------------------------- |
-|  [ Overzicht ] [ Aanbieders ] [ Trend Scout ] [ Gebruikers ] [ Advertenties ] ... |
-+----------------------------------------------------------------------+
-|  OVERZICHT TAB |
-|  +-----------------+ +-----------------+ +----------------+ +-------+ |
-|  | Gebruikers |  | Kastartikelen |  | Actieve vermeldingen |  | ... |  |
-|  | 15 (+0 nieuw binnen 24 uur)|  | 262 onder gebruikers |  | 5 (11 totaal) |  |       |  |
-|  +-----------------+ +-----------------+ +----------------+ +-------+ |
++-------------------------------------------------------------------------------+
+|  DressApp (Admin Console)                              [Return to App]        |
+|  ---------------------------------------------------------------------------  |
+|  [ Overview ]  [ Providers ]  [ Trend Scout ]  [ Users ]  [ Listings ]  ...   |
++-------------------------------------------------------------------------------+
+|  OVERVIEW TAB                                                                 |
+|  +------------------+  +------------------+  +------------------+  +-------+  |
+|  | Active Users     |  | Closet Inventory |  | Active Listings  |  | Gross |  |
+|  | 18 (+2 today)    |  | 340 garments     |  | 8 items listed   |  | $140  |  |
+|  +------------------+  +------------------+  +------------------+  +-------+  |
 |                                                                               |
-|  +-----------------------------------------------------------------+ |
-|  | Provideractiviteit (laatste 200 oproepen) |  |
-|  | tweeling-stylist: 1 keer gebeld, 100% foutenpercentage | openweer: 1 oproepen, 0% fout |  |
-|  +-----------------------------------------------------------------+ |
-+----------------------------------------------------------------------+
+|  +-------------------------------------------------------------------------+  |
+|  | Downstream Provider Activity (Rolling 200 calls)                        |  |
+|  | gemini-flash: 142 calls (0% err, 280ms) | eyes-gemma: 12 calls (0% err) |  |
+|  +-------------------------------------------------------------------------+  |
++-------------------------------------------------------------------------------+
 ```
 
-### Modus- en workflow-walkthroughs
+### Operationele toelichting
 
-#### 1. Tabblad Overzicht
-- **Statistiekenraster**: geeft 8 essentiële statistieken weer (gebruikers, kastitems, actieve vermeldingen, transacties, brutovolume, platformkosten, 24 uur stylist, live trendkaarten).
-  - *Opmerking*: **Brutovolume** en **Platformkosten** omvatten dynamisch zowel marktplaatstransacties als vastgelegde kredietopwaarderingen.
-- **Provider-activiteitentabel**: toont liveness-statistieken voor downstream-services van derden (bijvoorbeeld `gemini-stylist`, `openweather`) met het aantal oproepen, foutpercentages, gemiddelde latentie en p95-benchmarks.
+#### 1. Tabblad Overview (Overzicht)
+- **Statistiekkaarten**: Realtime tellers voor geregistreerde gebruikers, totaal aantal kledingstukken, marktplaatsadvertenties, transacties, brutovolume, platformkosten en stylistenactiviteit.
+- **Provider Activity Monitor**: Continue telemetrie voor gekoppelde AI- en weer-endpoints, waarbij aantallen aanroepen, foutpercentages en latentiebenchmarks (mediaan en p95) worden bijgehouden.
 
-#### 2. Tabblad Providers
-- **Gemini API-kaart**: geeft directe statusvalidatie van de Gemini API-sleutel weer. Als u op **Sleutel verifiëren** klikt, wordt een backend-pingtest geactiveerd.
-- **Eyes Vision Override**: Maakt het mogelijk om de standaard afbeeldingssegmentatie/analyserouting te schakelen tussen 'gemini' en een zelf-gehost 'gemma'-containermodel.
+#### 2. Tabblad Providers (Aanbieders)
+- **Google Gemini Gateway**: Toont de configuratiestatus en verbindingskwaliteit voor de native `google-genai` SDK. Als u op **Verify Key** tikt, wordt een lichte tekstgeneratie-ping uitgevoerd om de beschikbaarheid van het quotum te bevestigen.
+- **Eyes Vision Engine**: Inspecteert de lokale CPX32 VPS-container (`http://eyes:7860`). Maakt het mogelijk om de runtime-override tussen cloud vision en lokaal gehoste Gemma-inferentie om te schakelen zonder backend-pods opnieuw te hoeven starten.
 
-#### 3. Tabblad Gebruikers
-- **Interactieve lijst**: Toont een tabel met zoekmogelijkheden, met een lijst van e-mailadressen van gebruikers, rollen, actief model, beschikbare kredietquota, kredietgebruik, DressApp-kosten en levenslange betalingen.
-- **Beheerschakelaars**: Directe knoppen om standaardgebruikers te **promoveren** tot beheerders of **degraderen** bestaande gebruikers.
+#### 3. Tabblad Users (Gebruikers)
+- **Gebruikerslijst**: Doorzoekbare lijst met e-mailadres, toegewezen rol (`user`, `tester`, `admin`), actieve tier (`free`, `manager`, `pro`), creditsaldo en transactiegeschiedenis.
+- **Rollenbeheer**: Acties met één klik om gebruikers te promoveren tot beheerder of testerrechten aan te passen.
+- **Identificatie van de testergroep**: Een visuele badge markeert accounts die zijn ingeschreven in het gratis testerprogramma.
 
-#### 4. Tabbladen Advertenties en Transacties
-- **Lijstfilters**: filter actieve garderobelijsten op 'alles', 'actief', 'gepauzeerd', 'verkocht' of 'verwijderd'. Beheerders kunnen vermeldingen geforceerd pauzeren/activeren.
-- **Transactietotalen**: vat het totale brutovolume, platformkosten, Stripe-kosten en netto verkopers samen.
+#### 4. Tabbladen Listings & Transactions (Advertenties & Transacties)
+- **Toezicht op advertenties**: Filter op advertentiestatus (`active`, `paused`, `sold`, `removed`). Beheerders kunnen niet-conforme advertenties direct modereren en pauzeren.
+- **Financiële audit**: Totalen van het brutovolume, geïnde platformkosten, commissies van betalingsgateways en nettobetalingen aan verkopers.
 
 ---
 
-## 3. Technologiestapel en mogelijkheden Deep-Dive
+## 3. Technologiestack & Verdieping in de mogelijkheden
 
-### Kernorkestratie en AI/logica
-- **API Engine**: FastAPI Python-framework dat op rollen gebaseerde afhankelijkheden implementeert (extractie van `require_admin`).
-- **Gemini Direct Integratie**: Voert een tekstgeneratiecontrole uit met `GeminiClient` om de API rechtstreeks te pingen, waarbij middlewares van derden worden omzeild:
-  ```python
-  client = wacht op get_default_client()
-  wacht op client.text(user_text="ping", max_tokens=5)
-  ```
-- **Gemma Space Probe**: lost dynamische modelrouting op en verzendt liveheid HTTP-controles:
-  ```python
-  async met httpx.AsyncClient(timeout=probe_timeout) als cli:
-      r = wacht op cli.get(f"{gemma_url}/health")
-  ```
+### Authenticatie & Autorisatie
+- **Dependency Guard**: API-endpoints dwingen de `require_admin`-dependency af in `backend/app/api/v1/admin.py` en controleren of het JWT-e-mailadres van de aanvrager voorkomt in de omgevingsvariabele `ADMIN_EMAILS` van de productieomgeving.
+- **Google OAuth-integratie**: Aanmelding in productie verloopt via Google OAuth (`dressapdeveloper@gmail.com`), waardoor lokale hardcoded ontwikkelingsshortcuts zijn verwijderd voor optimale beveiliging.
 
-### Gegevens- en contextpijplijnen
-- **MongoDB-aggregaties**:
-  - Financiële gegevens van marktplaatstransacties:
+### Multi-tier AI-routinginfrastructuur
+- **Primaire engine**: Google Gemini 3.5 Flash-Lite verwerkt productiestylistenverzoeken en beeldanalyse via `backend/app/services/llm_gateway.py`.
+- **Quotumvangnet**: Als Gemini tegen snelheidslimieten aanloopt (`429` / `RESOURCE_EXHAUSTED`), schakelt het verzoek naadloos over naar de lokale Gemma-4-E4B-container op poort 7860 en retourneert `provider_fallback="gemma"` zonder de gebruikerservaring te verstoren.
+
+### Databasebewerkingen
+- **MongoDB Atlas-aggregaties**:
+  - Vat financiële totalen van betaalde transacties samen:
     ```python
-    pipeline = [{"$match": {"status": "paid"}}, {"$group": {"_id": Geen, "bruto": {"$sum": "$financial.gross_cents"}}}]
+    pipeline = [{"$match": {"status": "paid"}}, {"$group": {"_id": None, "gross": {"$sum": "$financial.gross_cents"}}}]
     ```
-  - Aankoopbedrag prepaid credits:
+  - Aggregeert aankopen van prepaid-tegoed:
     ```python
-    topup_pipeline = [{"$match": {"status": "captured"}}, {"$group": {"_id": Geen, "total": {"$sum": "$amount_cents"}}}]
+    topup_pipeline = [{"$match": {"status": "captured"}}, {"$group": {"_id": None, "total": {"$sum": "$amount_cents"}}}]
     ```
-- **Lichtgewicht DB-query's**: items per gebruiker en aantallen actieve vermeldingen worden asynchroon parallel ingevuld.
-
-### Frontend-clientarchitectuur
-- **State Management**: Reageer op `useState` hooks gekoppeld aan lokale API-aanroepen gedefinieerd in `src/lib/api.js`.
-- **Lokalisatie-integratie**: rigoureuze op i18next-opties gebaseerde sleutels toegewezen onder `pages.admin.*` in 12 talen. Mirroring van rechts naar links (RTL) wordt mogelijk gemaakt via de start/end-eigenschappen van Tailwind (bijvoorbeeld `ps-`, `pe-`, `text-end`).
-- **Visuele responsiviteit**: op maat gemaakte ondersteuning voor de donkere modus en aangepaste lay-outrasters gebouwd met behulp van shadcn/ui-componenten (`Tabel`, `Kaart`, `Badge`, `Skelet`).

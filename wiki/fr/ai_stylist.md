@@ -1,33 +1,38 @@
-# Styliste conversationnel par IA
+# Styliste IA conversationnel
 
-Échangez avec un styliste personnel intelligent qui connaît votre garde-robe, la météo locale et votre planning.
+Échangez avec un styliste personnel intelligent qui connaît votre garde-robe, la météo et votre emploi du temps quotidien.
 
 ## Vue d'ensemble
-Le Styliste IA est votre conseiller mode dans DressApp. Vous pouvez dialoguer par texte ou par la voix de manière naturelle. Il consulte vos prévisions météorologiques, prend en compte vos événements Google Calendar et conçoit des tenues harmonieuses créées à partir de vos propres vêtements.
+L'AI Stylist est votre compagnon de mode personnel. Vous pouvez discuter avec lui en écrivant ou en parlant à voix haute, tout comme avec un ami. Le styliste consulte vos prévisions locales, jette un œil à vos événements Google Calendar et vous suggère des tenues complètes et élégantes composées directement à partir des vêtements que vous possédez déjà.
 
-Le moteur de stylisme de DressApp s'appuie sur le modèle d'IA local **Gemma-4-E4B**, disponible immédiatement pour tous les comptes gratuits sans clé d'API. Pour les utilisateurs utilisant leur propre clé Google Gemini, DressApp intègre un **Relais automatique en cas de quota dépassé (Quota Fallback)** : si votre clé personnelle atteint sa limite de requêtes, le système bascule automatiquement et de façon fluide vers le modèle interne Gemma avec une notification d'information, sans jamais interrompre votre conversation.
+Le cerveau de stylisme de DressApp repose sur une architecture d'intelligence multiniveau résiliente :
+- **Moteur de production principal (Google Gemini 3.5 Flash-Lite)** : Propulse nativement toutes les conversations de stylisme principales via `llm_gateway.py`. Il fournit des réponses ultra-rapides (TTFT inférieur à 350 ms) sans configuration initiale ni friction — aucune clé API personnelle n'est requise pour commencer à créer des looks !
+- **VPS Eyes sur site (`gemma-4-E4B`) — Offre gratuite et filet de sécurité pour les quotas** : Un modèle dédié et affiné `gemma-4-E4B` fonctionnant localement dans le conteneur `dressapp-eyes` sur le port 7860 du VPS Hetzner CPX32. Il offre une base à coût variable nul pour les comptes Free Tier et sert de solution de secours transparente. Si les limites d'API Google Gemini (`429` / `RESOURCE_EXHAUSTED`) sont atteintes, les requêtes basculent automatiquement vers Gemma sur site sans échec ni erreur 500.
+- **Programme du groupe de testeurs** : Les testeurs approuvés bénéficient d'un accès gratuit au forfait **Professional**, avec capacité de garde-robe illimitée, flux radar Trend Scout, planification quotidienne de style et 100 crédits/cycle.
+- **Modèles Cloud personnalisés (BYOK)** : Les utilisateurs peuvent facultativement renseigner leur propre clé API Google Gemini dans les paramètres du profil pour accéder à des modèles supérieurs (`gemini-2.5-pro`) ou débloquer des outils génératifs avancés (reconstruction photo Nano Banana).
 
 ## Prérequis
-- Au moins un haut, un bas et une paire de chaussures enregistrés dans votre garde-robe.
-- Autorisation du microphone activée pour le guidage vocal mains libres.
-- *(Facultatif)* Connexion à Google Calendar pour des tenues adaptées à vos réunions et sorties.
-- *(Facultatif)* Clé d'API Google Gemini personnelle pour exploiter vos propres quotas cloud.
+- Au moins un haut, un bas et une paire de chaussures ajoutés à votre dressing.
+- Autorisation du microphone accordée si vous souhaitez utiliser le stylisme vocal mains libres.
+- *(Optionnel)* Compte Google Calendar connecté pour adapter les suggestions de tenues aux occasions prévues.
+- *(Optionnel)* Clé API Google Gemini personnelle si vous souhaitez utiliser votre propre quota de développeur cloud.
 
 ## Instructions étape par étape
-1. **Ouvrir le Styliste**: Appuyez sur l'onglet **AI Stylist** dans la barre de navigation.
-2. **Parlez ou écrivez**: Touchez l'**icône microphone** et posez votre question (ex. : *« Que devrais-je porter pour un déjeuner professionnel sous la pluie ? »* ou *« Propose-moi un look chic décontracté »*).
-3. **Écoutez les conseils vocaux**: Le styliste vous répond oralement et affiche les tenues suggérées. Appuyez sur **Écouter la réponse** pour réentendre le conseil.
-4. **Fonction Shuffle**: Envie de nouveauté ? Utilisez l'onglet **Shuffle** pour mélanger les pièces de votre dressing et imaginer des looks inédits !
-5. **Enregistrer dans le journal**: Appuyez sur **Enregistrer dans le journal** pour planifier la tenue sur votre calendrier vestimentaire.
+1. **Ouvrir le styliste** : Appuyez sur l'onglet **AI Stylist** dans la barre de navigation inférieure.
+2. **Parler ou écrire** : Appuyez sur l'**icône de microphone** et demandez ce que vous devriez porter (par exemple, *"Que devrais-je porter pour un déjeuner par un après-midi pluvieux ?"* ou *"Suggère-moi un look professionnel élégant"*).
+3. **Écouter les conseils oraux** : Le styliste vous répond avec des conseils sur mesure et affiche des cartes de tenues coordonnées. Appuyez sur **Écouter la réponse** pour réécouter les conseils audio à tout moment.
+4. **Essayer l'outil Shuffle** : Envie d'inspiration spontanée ? Appuyez sur l'onglet **Shuffle** pour faire tourner les pièces de votre dressing et découvrir des associations inédites auxquelles vous n'auriez peut-être pas pensé !
+5. **Affiner avec des relances** : Demandez au styliste de changer de chaussures, de remplacer une veste ou d'adapter la tenue aux variations de température au fil d'une conversation naturelle.
+6. **Enregistrer vos favoris** : Appuyez sur **Enregistrer dans le journal** pour planifier ce look sur le calendrier de votre garde-robe.
 
 ## Résultats attendus
-Des propositions de tenues pertinentes et adaptées au climat, assorties d'explications audio détaillées. Si votre clé d'API est indisponible, une bannière vous avertit que le moteur local a pris le relais sans aucune erreur.
+Des suggestions de tenues personnalisées et adaptées à la météo affichées sur votre écran, accompagnées d'explications vocales justifiant l'harmonie des pièces. Si les quotas d'API externes sont temporairement atteints, une bannière d'information indique que le styliste sur site intégré a pris le relais en toute transparence.
 
 ## Dépannage
-- **Le micro ne capte pas votre voix**: Vérifiez les autorisations de votre navigateur ou appareil pour autoriser l'accès au micro.
-- **Le styliste propose souvent les mêmes tenues**: Marquez vos tenues portées dans le calendrier pour l'aider à privilégier vos vêtements inutilisés.
-- **Bannière « Styliste de la plateforme utilisé (Quota Fallback) »**: S'affiche lorsque votre clé Gemini a épuisé son quota. La réponse a été traitée sans accroc par l'IA interne.
+- **Le microphone ne capte pas votre voix** : Vérifiez les autorisations de votre navigateur ou de votre appareil pour vous assurer que DressApp est autorisé à accéder au microphone.
+- **Le styliste propose trop souvent les mêmes tenues** : Consignez vos tenues quotidiennes dans le calendrier afin que le styliste sache ce que vous avez porté récemment et privilégie les pièces non portées.
+- **Bannière "Utilisation du styliste de la plateforme (Secours quota)"** : Elle s'affiche lorsque les limites de requêtes de l'API externe sont dépassées. L'application a répondu à votre demande grâce au moteur local Gemma de DressApp sans aucune coupure dans votre échange.
 
 ## Limites
-- Le styliste compose uniquement des looks à partir des pièces déjà présentes dans votre garde-robe.
-- Les utilisateurs de la formule gratuite bénéficient de 10 crédits de stylisme offerts par jour, renouvelés toutes les 24 heures.
+- Le styliste fonctionne exclusivement avec les vêtements de votre dressing ; il ne peut recommander des pièces non encore importées.
+- Les utilisateurs du forfait Free Tier reçoivent des crédits de stylisme offerts qui se renouvellent automatiquement, tandis que les comptes Pro et testeurs bénéficient de quotas mensuels supérieurs.

@@ -1,48 +1,53 @@
-# DressApp Admin Panel — Architectural Narrative & User Manual
+# Pannello di Amministrazione di DressApp — Panoramica Architetturale e Manuale Utente
 
-This document provides a masterclass-level breakdown of the DressApp Admin Panel, tracing the frontend dashboard interface ([Admin.jsx](file:///C:/DressApp_AG/frontend/src/pages/Admin.jsx)) and its corresponding backend API layer ([admin.py](file:///C:/DressApp_AG/backend/app/api/v1/admin.py)).
+Questo documento offre un'analisi completa e autorevole del Pannello di Amministrazione di DressApp, illustrando l'interfaccia della dashboard frontend ([Admin.jsx](file:///C:/DressApp_AG/apps/web/src/pages/Admin.jsx)) e il relativo layer di API backend ([admin.py](file:///C:/DressApp_AG/backend/app/api/v1/admin.py)).
 
 ---
 
-## 1. Executive Summary & Value Proposition
+## 1. Sintesi Esecutiva e Proposta di Valore
 
-### High-Level Overview
-The DressApp Admin Panel is the centralized hub for application management, monetization auditing, AI model configuration, and pipeline diagnostics. It gives system administrators a real-time, high-fidelity lens into the system's operational health, marketplace transaction volumes, user AI credits consumption, and third-party API dependencies without requiring direct SSH/database shell access.
+### Panoramica Generale
+Il Pannello di Amministrazione di DressApp è l'hub centrale per la supervisione della piattaforma, l'audit della monetizzazione, la configurazione dei modelli di intelligenza artificiale e la diagnostica di sistema. Fornisce agli amministratori una visuale fedele e in tempo reale sullo stato di salute della piattaforma, sui volumi di transazione del marketplace, sul consumo di crediti IA da parte degli utenti, sui gruppi di tester e sulle prestazioni dei microservizi IA a valle, senza richiedere l'accesso diretto al terminale o alla shell del database.
 
-### Architectural Flow
-The following diagram illustrates how the frontend dashboard requests overview data, user configurations, and live diagnostics from the backend FastAPI services, querying MongoDB collections and performing downstream liveness checks.
+### Flusso Architetturale
+Il diagramma seguente illustra l'interazione tra la dashboard frontend e i servizi backend, l'esecuzione di query sulle collection di MongoDB Atlas e i controlli di stato sui servizi a valle:
 
 ```mermaid
 graph TD
-    %% Frontend Components
-    subgraph Frontend [React Application Client]
+    %% Frontend Layer
+    subgraph Frontend [React Web Application]
         UI[Admin.jsx Dashboard]
-        API_JS[api.js client]
-        UI --> API_JS
+        API[api.js client]
+        UI --> API
     end
 
-    %% Backend Router
+    %% Backend Router & Security
     subgraph Backend [FastAPI Backend Service]
         Router[admin.py Router]
         Auth[require_admin Dependency]
-        ProviderAct[provider_activity Tracker]
+        Gateway[llm_gateway.py]
+        Activity[provider_activity Tracker]
         
-        API_JS -- HTTP GET/POST --> Auth
+        API -- HTTP GET/POST --> Auth
         Auth --> Router
+        Router --> Gateway
+        Router --> Activity
     end
 
-    %% Database & Downstream
-    subgraph Storage [MongoDB Database]
+    %% Data Storage
+    subgraph Storage [MongoDB Atlas M10]
         db_users[(db.users)]
         db_tx[(db.transactions)]
         db_topups[(db.credit_topups)]
         db_listings[(db.listings)]
         db_trends[(db.trend_reports)]
+        db_config[(db.config)]
     end
 
-    subgraph AI_Services [Downstream API & Microservices]
-        Gemini[Google Gemini API]
-        Gemma[Self-Hosted Gemma Space]
+    %% Downstream Microservices
+    subgraph AI_Engines [Downstream AI Services]
+        Gemini[Google Gemini 3.5 Flash-Lite]
+        Eyes[DressApp Eyes :7860 Gemma-4-E4B]
     end
 
     Router --> db_users
@@ -50,94 +55,84 @@ graph TD
     Router --> db_topups
     Router --> db_listings
     Router --> db_trends
-    Router --> ProviderAct
+    Router --> db_config
     
-    %% Downstream Checks
-    Router -- text(ping) --x Gemini
-    Router -- GET /health --x Gemma
+    %% Downstream Probes
+    Router -- text('ping') --> Gemini
+    Router -- GET /health --> Eyes
 ```
 
-### User Value Proposition
-- **Total Visibility**: Real-time KPI summary cards covering total users, active listings, paid transactions, stylist message volumes, and global application revenue.
-- **Billing Transparency**: Clear, per-user breakdown of selected models, available credits quota, current cycle usage, and total captured billing history.
-- **Proactive Health Monitoring**: Direct diagnostics of Gemini API key validity and remote self-hosted Gemma vision model status in a single interface click.
-- **Marketplace Safety Toggles**: Instant ability to pause/reactivate listings, hide fraudulent professionals, or demote/promote administrators.
+### Funzionalità Amministrative Chiave
+- **Visibilità dei KPI in Tempo Reale**: Metriche riassuntive riguardanti utenti attivi, capi totali nel guardaroba, volumi del marketplace, commissioni della piattaforma, chiamate allo stylist e report Trend Scout pubblicati.
+- **Programma per il Gruppo di Tester**: Assegnazione automatica dei ruoli e del piano Professional di benvenuto per gli account tester verificati (`maystarboard@gmail.com`, `lokoprod@gmail.com`, `dressapdeveloper@gmail.com`).
+- **Autenticazione Sicura**: L'accesso in produzione è protetto rigidamente dall'autenticazione con Google OAuth (`ADMIN_EMAILS`); i vecchi pulsanti di bypass non autenticati sono stati rimossi.
+- **Governance dell'Instradamento IA Multilivello**: Verifica diretta e diagnostica ping in tempo reale per il gateway primario **Google Gemini 3.5 Flash-Lite** e per il container Eyes on-premises **Gemma-4-E4B** sulla porta 7860.
+- **Sicurezza e Moderazione del Marketplace**: Capacità immediata di esaminare, sospendere o ripristinare annunci e di gestire i privilegi degli utenti.
 
 ---
 
-## 2. Comprehensive User Manual
+## 2. Manuale Utente Completo
 
-### Visual Interface Topology
-The Admin panel is divided into a clean, multi-tab layout optimized for desktop and mobile styling:
+### Topologia dell'Interfaccia Visiva
+Il pannello di amministrazione è strutturato con una visualizzazione pulita a schede, ottimizzata per operazioni amministrative ad alta densità:
 
 ```
 +-------------------------------------------------------------------------------+
-|  DressApp (Admin)                      [Back to Home]                         |
+|  DressApp (Admin Console)                              [Return to App]        |
 |  ---------------------------------------------------------------------------  |
 |  [ Overview ]  [ Providers ]  [ Trend Scout ]  [ Users ]  [ Listings ]  ...   |
 +-------------------------------------------------------------------------------+
 |  OVERVIEW TAB                                                                 |
 |  +------------------+  +------------------+  +------------------+  +-------+  |
-|  | Users            |  | Closet Items     |  | Active Listings  |  | ...   |  |
-|  | 15 (+0 new in24h)|  | 262 across users |  | 5 (11 total)     |  |       |  |
+|  | Active Users     |  | Closet Inventory |  | Active Listings  |  | Gross |  |
+|  | 18 (+2 today)    |  | 340 garments     |  | 8 items listed   |  | $140  |  |
 |  +------------------+  +------------------+  +------------------+  +-------+  |
 |                                                                               |
 |  +-------------------------------------------------------------------------+  |
-|  | Provider Activity (last 200 calls)                                      |  |
-|  | gemini-stylist: 1 calls, 100% error rate | openweather: 1 calls, 0% err |  |
+|  | Downstream Provider Activity (Rolling 200 calls)                        |  |
+|  | gemini-flash: 142 calls (0% err, 280ms) | eyes-gemma: 12 calls (0% err) |  |
 |  +-------------------------------------------------------------------------+  |
 +-------------------------------------------------------------------------------+
 ```
 
-### Mode & Workflow Walkthroughs
+### Procedure Operative
 
-#### 1. Overview Tab
-- **Stats Grid**: Displays 8 essential metrics (Users, Closet Items, Active Listings, Transactions, Gross Volume, Platform Fees, Stylist 24h, Trend Cards Live).
-  - *Note*: **Gross Volume** and **Platform Fees** dynamically include both marketplace transactions and captured credit top-ups.
-- **Provider Activity Table**: Displays liveness statistics for downstream third-party services (e.g., `gemini-stylist`, `openweather`) showing call count, error rates, average latency, and p95 benchmarks.
+#### 1. Scheda Panoramica (Overview)
+- **Schede Metriche**: Contatori in tempo reale per Utenti Registrati, Capi Totali, Annunci nel Marketplace, Transazioni, Volume Lordo, Commissioni di Piattaforma e Attività dello Stylist.
+- **Monitor Attività Provider**: Telemetria mobile per gli endpoint di intelligenza artificiale e meteo collegati, con monitoraggio del numero di chiamate, delle percentuali di errore e dei benchmark di latenza (mediana e p95).
 
-#### 2. Providers Tab
-- **Gemini API Card**: Displays direct status validation of the Gemini API Key. Clicking **Verify Key** triggers a backend ping test.
-- **Eyes Vision Override**: Allows switching the default image segmentation/analysis routing between `gemini` and a self-hosted `gemma` container model.
+#### 2. Scheda Provider (Providers)
+- **Gateway Google Gemini**: Visualizza lo stato di configurazione e la salute della connessione per l'SDK nativo `google-genai`. Toccando **Verify Key** viene eseguito un ping leggero di generazione testo per verificare la disponibilità delle quote.
+- **Motore di Visione Eyes**: Esamina il container VPS CPX32 on-premises (`http://eyes:7860`). Consente di cambiare l'override in tempo reale tra visione cloud e inferenza Gemma in locale senza riavviare i pod backend.
 
-#### 3. Users Tab
-- **Interactive List**: Shows a table with search capabilities, listing user emails, roles, active model, available credits quota, credit usage, DressApp fee, and lifetime payments.
-- **Admin Toggles**: Direct buttons to **Promote** standard users to administrators or **Demote** existing ones.
+#### 3. Scheda Utenti (Users)
+- **Directory Utenti**: Elenco ricercabile con indirizzo email, ruolo assegnato (`user`, `tester`, `admin`), piano attivo (`free`, `manager`, `pro`), saldo crediti e cronologia delle transazioni.
+- **Gestione dei Ruoli**: Azioni con un solo clic per promuovere utenti ad amministratore o modificare i privilegi dei tester.
+- **Identificazione Gruppo Tester**: Un badge visivo contraddistingue gli account registrati nel programma di test gratuito.
 
-#### 4. Listings & Transactions Tabs
-- **Listing Filters**: Filter active wardrobe listings by `all`, `active`, `paused`, `sold`, or `removed`. Administrators can force pause/activate listings.
-- **Transaction Totals**: Summarizes aggregate gross volume, platform fees, Stripe fees, and seller net.
+#### 4. Schede Annunci e Transazioni (Listings & Transactions)
+- **Monitoraggio Annunci**: Filtraggio in base allo stato (`active`, `paused`, `sold`, `removed`). Gli amministratori possono moderare e sospendere immediatamente gli annunci non conformi.
+- **Audit Finanziario**: Riepiloga volume lordo, commissioni di piattaforma incassate, commissioni dei gateway di pagamento e pagamenti netti ai venditori.
 
 ---
 
-## 3. Technology Stack & Capability Deep-Dive
+## 3. Stack Tecnologico e Approfondimento sulle Funzionalità
 
-### Core Orchestration & AI/Logic
-- **API Engine**: FastAPI python framework implementing role-based dependencies (`require_admin` extraction).
-- **Gemini Direct Integration**: Performs a text generation check using `GeminiClient` to ping the API directly, bypassing third-party middlewares:
-  ```python
-  client = await get_default_client()
-  await client.text(user_text="ping", max_tokens=5)
-  ```
-- **Gemma Space Probe**: Resolves dynamic model routing and sends liveness HTTP checks:
-  ```python
-  async with httpx.AsyncClient(timeout=probe_timeout) as cli:
-      r = await cli.get(f"{gemma_url}/health")
-  ```
+### Autenticazione e Autorizzazione
+- **Protezione delle Dipendenze**: Gli endpoint API applicano la dipendenza `require_admin` in `backend/app/api/v1/admin.py`, verificando che l'email estratta dal token JWT sia inclusa nella variabile d'ambiente di produzione `ADMIN_EMAILS`.
+- **Integrazione Google OAuth**: L'accesso in produzione avviene tramite Google OAuth (`dressapdeveloper@gmail.com`), rimuovendo scorciatoie locali statiche per garantire la massima sicurezza.
 
-### Data & Context Pipelines
-- **MongoDB Aggregations**:
-  - Marketplace transaction financials:
+### Infrastruttura di Routing IA Multilivello
+- **Motore Primario**: Google Gemini 3.5 Flash-Lite gestisce le richieste per lo stylist e l'analisi visiva in produzione tramite `backend/app/services/llm_gateway.py`.
+- **Rete di Sicurezza per le Quote**: Qualora Gemini incontri limiti di frequenza (`429` / `RESOURCE_EXHAUSTED`), la richiesta passa trasparentemente al container Gemma-4-E4B on-premises sulla porta 7860, restituendo `provider_fallback="gemma"` senza alcuna interruzione per l'utente.
+
+### Operazioni sul Database
+- **Aggregazioni MongoDB Atlas**:
+  - Calcola i totali finanziari delle transazioni andate a buon fine:
     ```python
     pipeline = [{"$match": {"status": "paid"}}, {"$group": {"_id": None, "gross": {"$sum": "$financial.gross_cents"}}}]
     ```
-  - Prepaid credits purchase sum:
+  - Aggrega gli acquisti dei pacchetti di crediti prepagati:
     ```python
     topup_pipeline = [{"$match": {"status": "captured"}}, {"$group": {"_id": None, "total": {"$sum": "$amount_cents"}}}]
     ```
-- **Lightweight DB Queries**: Per-user items and active listing counts are populated in parallel asynchronously.
-
-### Frontend Client Architecture
-- **State Management**: React `useState` hooks coupled with local API calls defined in `src/lib/api.js`.
-- **Localization Integration**: Rigorous i18next options-based keys mapped under `pages.admin.*` in 12 languages. Right-to-Left (RTL) mirroring is enabled via Tailwind's start/end properties (e.g. `ps-`, `pe-`, `text-end`).
-- **Visual Responsiveness**: Tailored dark-mode support and custom layout grids built using shadcn/ui components (`Table`, `Card`, `Badge`, `Skeleton`).

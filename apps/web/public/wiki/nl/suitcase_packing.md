@@ -1,26 +1,30 @@
-# Koffer inpakassistent
+# Koffer-inpakassistent
 
-Pak efficiënt in voor elke bestemming met AI-gestuurde weer- en contextanalyse.
+Pak efficiënt en zorgeloos in voor elke bestemming met AI-gestuurde weersvoorspellingen en interactieve verfijning van uw checklist.
 
 ## Overzicht
-Plan reizen, genereer op maat gemaakte dagelijkse paklijsten en verfijn de bagage-inhoud via een interactieve planningschat.
+De Koffer-inpakassistent neemt alle reisstress weg door uw reisschema, de weersverwachting op uw bestemming en uw persoonlijke kledingcatalogus te analyseren om een op maat gemaakte, dag-tot-dag paklijst samen te stellen. Aangedreven door **Google Gemini 3.5 Flash-Lite** via `llm_gateway.py` genereert de assistent binnen enkele seconden complete inpakplannen en stelt u in staat items interactief via een chatgesprek te verfijnen.
 
 ## Vereisten
-- Bestemmingsgegevens en reisdata.
-- Actieve kastinventaris.
+- Naam van de bestemmingsstad en vertrek- en terugkeerdata.
+- Een actieve kledingkastinventaris met minimaal een aantal basiskledingstukken.
+- Een actieve internetverbinding om weersvoorspellingen voor de bestemming op te halen.
 
-## Stap voor stap
-1. **Reis maken**: Stel de stad, de datums en het doel van de bestemming in (zaken, vakantie, enz.).
-2. **Lijst genereren**: de AI controleert de weersvoorspellingen en kalenderschema's van de bestemming om de inpakchecklist samen te stellen.
-3. **Chat verfijnen**: gebruik de inpakchathelper om om aanpassingen te vragen (bijvoorbeeld "formele schoenen toevoegen").
-4. **Lijst opslaan**: Exporteer de definitieve lijst naar uw koffermanager voor optimistische, offline toegang.
+## Stapsgewijze instructies
+1. **Reis aanmaken**: Open het tabblad Suitcase, tik op **New Trip** en voer uw bestemmingsstad, begin- en einddatum en het reisdoel in (bijv. *Zakelijk*, *Strandvakantie*, *Stedentrip*).
+2. **Inpakplan genereren**: Tik op **Generate Checklist**. De AI haalt de voorspelde temperaturen en weersomstandigheden op voor uw bestemming, vergelijkt deze met uw kledingkast en stelt een gebalanceerde paklijst op.
+3. **Dagelijkse outfits bekijken**: Bekijk de voorgestelde dagelijkse combinaties en zorg voor geschikte laagjes voor frisse ochtenden en warme middagen.
+4. **Verfijnen via chat**: Extra opties nodig? Chat rechtstreeks met de inpakassistent (bijv. *„Voeg comfortabele wandelsneakers toe“* of *„Neem een cocktailjurk op voor het diner“*). De checklist wordt direct dynamisch bijgewerkt.
+5. **Items als ingepakt markeren**: Gebruik de interactieve selectievakjes terwijl u uw bagage inpakt om bij te houden wat al is ingepakt.
+6. **Opslaan voor offlinereizen**: Sla het voltooide reisplan op voor snelle, directe toegang op uw apparaat, zelfs wanneer u onderweg offline bent.
 
 ## Verwachte resultaten
-Een stressvrije, weerbestendige inpakchecklist die precies laat zien wat u uit uw kast moet inpakken.
+Een complete, aan het weer aangepaste inpakchecklist voor uw bagage, geordend per kledingcategorie (bovenkleding, broeken/rokken, jassen, schoenen, essentials) zonder dubbele of onnodige kledingstukken.
 
-## Problemen oplossen
-- **Geen weergegevens**: Zorg ervoor dat de spelling van de stad van bestemming correct is en dat uw internetverbinding actief is.
-- **Lijst leeg**: zorg ervoor dat u geschikte kledingartikelen in uw kastcatalogus heeft voor het weer op de bestemming.
+## Probleemoplossing
+- **Weersvoorspelling niet beschikbaar**: Controleer de spelling van de bestemmingsstad; probeer voor afgelegen locaties de dichtstbijzijnde grote stad op te geven.
+- **Checklist toont weinig items**: Zorg ervoor dat u voldoende kledingstukken heeft geüpload die passen bij het seizoen en de verwachte temperaturen op uw bestemming.
+- **Aanpassingen worden niet opgeslagen**: Controleer of uw internetverbinding actief is wanneer u aangepaste chatnotities toevoegt.
 
 ## Beperkingen
-- Momenteel worden er paklijsten gegenereerd voor een reisperiode van maximaal 14 dagen.
+- Geautomatiseerde weersvoorspellingen zijn beschikbaar voor reizen die tot 14 dagen van tevoren zijn gepland; voor reizen verder in de toekomst worden historische seizoensgemiddelden gebruikt.

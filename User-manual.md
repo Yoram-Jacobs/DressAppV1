@@ -111,9 +111,10 @@ Describe styling dilemmas and receive hands-free spoken outfit advice.
 3. Speak your request (e.g., "What top matches my beige trousers for a rainy outdoor lunch?").
 4. If Web Speech is supported, your voice transcribes live in the input box. If not, the app records a WebM file and uploads it.
 5. **Multi-Tier Brain Resolution**:
-   - **Free Tier / Zero-BYOK**: The backend processes your request using the self-hosted, fine-tuned **Gemma-4-E4B** engine running on-premises in `dressapp-eyes`. It evaluates your wardrobe inventory, local weather, and calendar context with zero cloud API costs.
-   - **Custom BYOK Keys**: If you provided a personal Google Gemini API key, your request is processed via your selected model (`gemini-2.5-flash`, etc.).
-   - **Transparent Quota Fallback**: If your personal key runs out of daily quota or triggers rate limits (`429` / `RESOURCE_EXHAUSTED`), the backend intercepts the failure and seamlessly reroutes the query to on-premises Gemma-4-E4B. An informative banner (*"Using Platform Stylist (Quota Fallback)"*) appears above the assistant's reply so you know your session was protected without crashing.
+   - **Primary Production Engine (Google Gemini 3.5 Flash-Lite)**: By default, your styling queries route to Google Gemini 3.5 Flash-Lite via `llm_gateway.py`. This delivers sub-350ms initial token latency, natural conversational advice, and precise JSON schema matching across complex wardrobe inventories.
+   - **On-Premises VPS Eyes (`gemma-4-E4B`) — Free Tier & Quota Safety Net**: The self-hosted, fine-tuned **Gemma-4-E4B** engine running in `dressapp-eyes` on port 7860 acts as the zero-cost offline baseline and transparent quota safety fallback.
+   - **Transparent Quota Fallback**: If external API limits or quota errors (`429` / `RESOURCE_EXHAUSTED`) occur, the backend seamlessly falls back to on-premise Gemma-4-E4B. An informative banner (*"Using Platform Stylist (Quota Fallback)"*) appears above the assistant's reply so your styling session is never interrupted by a 500 error.
+   - **Tester Group Program**: Designated testers (`TESTER_EMAILS`) automatically enjoy complimentary **Professional tier** access (unlimited wardrobe capacity, morning styling scheduler, Trend Scout, and 100 credits/cycle).
 6. The stylist presents head-to-toe matching outfit cards with detailed styling rationales.
 7. Spoken audio advice plays automatically using preselected voice profiles (`puck`, `aoede`, or `charon`).
 8. Tap **Play reply** (or **Replay** in RTL mode) on the card to replay the voice audio anytime.
@@ -151,10 +152,12 @@ The Profile page serves as the core control panel for DressApp. Configuration fi
 6. **AI Configuration (Platform Default vs BYOK Keys, Quota Fallback, Credits)**
    - **Why does it matter?**: It controls LLM brain routing, billing tiers, and feature gating.
    - **Subsystem Dependencies**:
-     - **Built-in Standard Mode (Platform Default)**: Evaluates requests using the on-premises fine-tuned **Gemma-4-E4B** engine running in `dressapp-eyes` on port 7860. Free Tier users and accounts without custom API keys operate in this mode at zero cost. Standard free users receive 10 complimentary daily credits with a 30-day lifespan.
-     - **Custom API Key Mode (BYOK)**: Entering a personal Google Gemini API key (from Google AI Studio) unlocks cloud models (`gemini-2.5-flash`, etc.) and enables restricted high-cost features (**Trend Scout** daily fashion radar and **Nano Banana** generative photo inpainting).
+     - **Primary Production Engine (Google Gemini 3.5 Flash-Lite)**: Powers all core styling, migration, and planning flows via `llm_gateway.py` with zero setup required by the user.
+     - **On-Premises VPS Eyes (`gemma-4-E4B`)**: Evaluates unauthenticated background tasks and acts as the transparent quota fallback engine whenever Google API calls encounter `429` / `RESOURCE_EXHAUSTED`.
+     - **Tester Group Program**: Allow-listed tester emails enjoy full complimentary access to the **Professional tier** with unlimited wardrobe capacity, Trend Scout radar, daily style notifications, and 100 credits/cycle.
+     - **Custom API Key Mode (BYOK)**: Entering a personal Google Gemini API key (from Google AI Studio) unlocks higher-tier models (`gemini-2.5-pro`) and enables restricted generative tools (**Trend Scout** daily fashion radar and **Nano Banana** photo inpainting).
      - **Automated Quota Fallback**: If a custom BYOK key triggers rate limits (`429`), `RESOURCE_EXHAUSTED`, or spending cap errors, `FallbackBrain` immediately redirects the request to on-premises Gemma-4-E4B, rendering a non-blocking notification banner (`stylist.fallbackQuotaBanner`) without interrupting the styling conversation.
-     - **Trial Plans**: Manager trial (14 days, 50 free credits) and Professional trial (30 days, 300 free credits). If credits are exhausted, the app enters an async pause-and-resume wait state (up to 60s) checking for top-up events.
+     - **Trial & Paid Plans**: Free baseline (150 garments), Manager tier, and Professional tier. If credits are exhausted, the app enters an async pause-and-resume wait state (up to 60s) checking for top-up events.
 
 7. **Scheduler & Push (Frequency, daily alarm, style focus)**
    - **Why does it matter?**: It manages automatic daily style pushes.
@@ -176,6 +179,9 @@ The Profile page serves as the core control panel for DressApp. Configuration fi
     - **Why does it matter?**: It provides a viral loop for free closet expansion.
     - **Subsystem Dependencies**: Appends the referrer's MongoDB ID to the URL. New registrations dynamically query this ID and atomically increment the referrer's `closet_capacity_bonus` by +10 slots, modifying the limit guards in `closet.py`. Free tier capacity is capped at 50 items baseline, but can expand up to a maximum limit of 150 items through referral credits (+10 slots per referral).
 
+12. **Developer & Administrator Access (Google OAuth)**
+    - **Why does it matter?**: Ensures privileged platform governance and diagnostic tools are restricted to verified accounts.
+    - **Subsystem Dependencies**: Gated through Google OAuth (`dressapdeveloper@gmail.com`). Users defined under `ADMIN_EMAILS` in production environment settings are assigned administrative roles (`role: "admin"`), while `TESTER_EMAILS` enjoy complimentary Professional tier perks without client-side bypass shortcuts.
 
 ---
 

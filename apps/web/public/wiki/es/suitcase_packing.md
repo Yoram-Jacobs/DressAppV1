@@ -1,26 +1,30 @@
-# Asistente de embalaje de maletas
+# Asistente de empaque de maletas
 
-Empaque de manera eficiente para cualquier destino con análisis de clima y contexto impulsados ​​por IA.
+Empaca de manera eficiente y sin estrés para cualquier destino gracias a los pronósticos del clima basados en IA y al perfeccionamiento conversacional de la lista de verificación.
 
 ## Descripción general
-Planifique viajes, genere listas de equipaje diarias personalizadas y refine el contenido del equipaje a través de un chat de planificación interactivo.
+El Asistente de empaque de maletas elimina la ansiedad previa al viaje analizando tu itinerario, el clima del destino y el catálogo de tu armario personal para crear una lista de equipaje personalizada día por día. Impulsado por **Google Gemini 3.5 Flash-Lite** a través de `llm_gateway.py`, el asistente genera planes de empaque completos en segundos y te permite perfeccionar los artículos de manera interactiva a través del chat conversacional.
 
 ## Requisitos previos
-- Detalles del destino y fechas de viaje.
-- Inventario de armario activo.
+- Nombre de la ciudad de destino y fechas de salida y regreso.
+- Un inventario activo en el armario con al menos algunas prendas básicas.
+- Conexión a Internet para obtener los pronósticos meteorológicos del destino.
 
-## Paso a paso
-1. **Crear viaje**: establezca la ciudad de destino, las fechas y el propósito (negocios, vacaciones, etc.).
-2. **Generar lista**: la IA verifica los pronósticos meteorológicos del destino y los horarios del calendario para compilar la lista de verificación de empaque.
-3. **Refinar el chat**: utilice el asistente del chat de embalaje para solicitar ajustes (por ejemplo, "agregar zapatos formales").
-4. **Guardar lista**: Exporta la lista final a tu administrador de maletas para un acceso optimista y sin conexión.
+## Instrucciones paso a paso
+1. **Crear un viaje**: Abre la pestaña Maleta, toca **Nuevo viaje** e ingresa la ciudad de destino, las fechas de inicio y fin, y el propósito del viaje (por ejemplo, *Negocios*, *Vacaciones en la playa*, *Paseo urbano casual*).
+2. **Generar plan de empaque**: Toca **Generar lista**. La IA consulta las temperaturas y condiciones previstas para tu destino, las cruza con las prendas de tu armario y crea una lista de empaque equilibrada.
+3. **Revisar atuendos diarios**: Inspecciona las combinaciones sugeridas día por día asegurando las capas adecuadas para mañanas frescas y tardes cálidas.
+4. **Perfeccionar mediante chat conversacional**: ¿Necesitas opciones adicionales? Chatea directamente con el asistente de empaque (por ejemplo, *"Agrega zapatillas cómodas para caminar"* o *"Incluye un vestido de cóctel para la cena"*). La lista se actualiza dinámicamente.
+5. **Marcar artículos como empacados**: Usa las casillas de verificación interactivas a medida que llenas tu equipaje para llevar un registro de lo que ya empacaste.
+6. **Guardar para viajar sin conexión**: Guarda el plan de viaje completo para acceder a él de forma rápida y optimista en tu dispositivo, incluso sin conexión durante el trayecto.
 
 ## Resultados esperados
-Una lista de verificación de embalaje apropiada para el clima y sin estrés que muestra exactamente qué empacar de su armario.
+Una lista de equipaje completa y optimizada según el clima, organizada por categorías de ropa (partes superiores, inferiores, prendas de abrigo, calzado, esenciales) sin prendas duplicadas ni innecesarias.
 
 ## Solución de problemas
-- **Sin datos meteorológicos**: asegúrese de que la ortografía de la ciudad de destino sea correcta y que su conexión a Internet esté activa.
-- **Lista vacía**: Asegúrate de tener prendas de vestir adecuadas en el catálogo de tu armario para el clima del destino.
+- **Pronóstico del tiempo no disponible**: Verifica la ortografía de la ciudad de destino; para ubicaciones remotas, intenta indicar la ciudad principal más cercana.
+- **La lista muestra pocos artículos**: Asegúrate de haber subido a tu armario suficientes prendas adecuadas para la temporada y las temperaturas previstas en el destino.
+- **Los ajustes no se guardan**: Confirma que tu conexión de red esté activa al agregar notas personalizadas por chat.
 
 ## Limitaciones
-- Actualmente se generan listas de equipaje para un período de viaje de hasta 14 días.
+- Los pronósticos meteorológicos automáticos cubren viajes planificados con hasta 14 días de anticipación; los viajes a fechas posteriores utilizan promedios climáticos estacionales históricos.

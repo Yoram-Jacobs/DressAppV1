@@ -111,13 +111,14 @@ If you signed in with Google before DressApp requested access to your **People A
 Manages system-level settings, subscriptions, and AI integrations:
 
 - **AI Configuration**:
-  - *Standard Mode (Built-in Platform Engine)*: Uses DressApp's self-hosted, fine-tuned **Gemma-4-E4B** model. Completely free, requires zero API key setup, and provides 10 complimentary styling credits daily.
-  - *Custom API Keys Mode (BYOK)*: Connect your own Google Gemini API key (or other supported providers) to unlock advanced capabilities like Trend Scout fashion news feeds and Nano Banana photo reconstruction.
-  - *Automated Quota Fallback Protection*: If your custom API key runs out of quota (`429` / `RESOURCE_EXHAUSTED`), DressApp automatically reroutes your request to the built-in Gemma engine with a visible notification banner, ensuring your styling conversation is never interrupted.
+  - *Standard Mode (Primary Production Engine)*: Powered by **Google Gemini 3.5 Flash-Lite** via `llm_gateway.py`. Delivers lightning-fast styling with zero initial setup and no personal API keys required.
+  - *On-Premises Quota Safety Net*: If cloud rate limits (`429` / `RESOURCE_EXHAUSTED`) are hit, queries automatically fall back to the self-hosted, fine-tuned **Gemma-4-E4B** container on port 7860, ensuring your styling conversation is never interrupted.
+  - *Custom API Keys Mode (BYOK)*: Connect your own Google Gemini API key to unlock advanced developer quotas and cloud generative tools like Trend Scout daily radar and Nano Banana photo reconstruction.
 - **Subscription & Closet Limits**:
-  - View current account tier (**Free**: 50-item limit vs **Manager** or **Professional**: Unlimited items).
-  - Access the **Pricing page** (`/pricing` or click on your plan card) to view the tier comparison table, select a plan, and subscribe.
-  - Upgrade via PayPal Subscriptions REST API (Manager: $4.99/month; Professional: $9.99/month) or the Atzmai Gateway for local ILS transactions.
+  - View current account tier (**Free**: 50-item limit baseline vs **Manager** ($10/mo) or **Professional** ($15/mo): Unlimited items).
+  - **Tester Group Program**: Approved tester emails (`maystarboard@gmail.com`, `lokoprod@gmail.com`, `dressapdeveloper@gmail.com`) automatically enjoy complimentary access to the **Professional plan tier** with zero subscription fees.
+  - Access the **Pricing page** (`/pricing` or click on your plan card) to view the tier comparison table, select a plan, or purchase non-expiring prepaid credit packs.
+  - Upgrade via PayPal Subscriptions or the Atzmai Gateway for local Israeli ILS (Bit / credit card) transactions.
   - Copy **Referral Link**: Grants +10 closet capacity slots for each friend who registers (up to 150 items max).
 - **Scheduler & Push Reminders**:
   - Toggle morning outfit proposal notifications.
@@ -136,7 +137,7 @@ Manages system-level settings, subscriptions, and AI integrations:
 ### 5. Account Actions & Diagnostics
 - **Sign Out**: Log out of your current session.
 - **Delete my Account**: Link to permanently purge account data.
-- **Developer Panel**: Diagnostic accordion for environment testing.
+- **Developer Panel**: Diagnostic view for environment testing. Authenticated via Google OAuth (`dressapdeveloper@gmail.com`).
 
 ---
 
@@ -156,5 +157,5 @@ Manages system-level settings, subscriptions, and AI integrations:
 
 ## Limitations
 - Free tier account space is capped at 50 items baseline unless expanded via referral bonus (+10 slots per invite up to 150 items max) or upgrading to the Manager or Professional tier.
-- Trend Scout fashion channels and Nano Banana generative image repair require a personal Google Gemini API key.
-- Custom API key mode will gracefully fall back to the built-in Gemma engine if the external provider runs out of quota.
+- High-cost cloud generative endpoints (Trend Scout radar and Nano Banana photo reconstruction) require a user-supplied personal Google Gemini API key.
+- Custom API key mode will gracefully fall back to the built-in Gemma-4-E4B engine if the external provider runs out of quota.

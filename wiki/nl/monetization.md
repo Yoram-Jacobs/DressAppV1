@@ -1,41 +1,36 @@
 # Abonnementen, Tegoedpakketten & Facturering
 
-Inzicht in uw accountlimieten, uw kledingkast uitbreiden en uw styling-tegoed beheren.
+Krijg inzicht in uw accountlimieten, vergroot uw kledingkastruimte, ontdek het Testergroepprogramma en beheer uw AI-stylingcredits.
 
 ## Overzicht
-DressApp biedt een royale gratis versie naast Pro-upgrades voor modeliefhebbers. U kunt tot 150 kledingstukken gratis opslaan, extra ruimte verdienen door vrienden uit te nodigen, onbeperkt opslaan met Pro of tegoedpakketten kopen die nooit verlopen.
+DressApp biedt een flexibel hybride verdienmodel dat zowel gericht is op wie gewoon de eigen kledingkast wil organiseren als op modeliefhebbers, makers en gecertificeerde stylisten:
+- **Free Tier-basis**: Bewaar gratis tot 50 kledingstukken (uitbreidbaar tot 150 items via aanbevelingsbonussen) inclusief 5 gratis AI-reconstructiecredits bij onboarding. Direct aangedreven door Google Gemini 3.5 Flash-Lite zonder dat een API-sleutel hoeft te worden ingesteld.
+- **Manager Plan ($ 10/maand of $ 100/jaar)**: Onbeperkte garderobecapaciteit, pushplanner voor ochtendoutfits, Trend Scout-modemicrofoon/radar, verkopen op de circulaire marktplaats en 100 maandelijkse AI-credits.
+- **Professional Plan ($ 15/maand of $ 150/jaar)**: Afgestemd op zelfstandige stylisten en influencers, inclusief het aanmaken van gesponsorde advertentiecampagnes, vermelding in de expertengids, prioritaire ondersteuning en 100 maandelijkse AI-credits.
+- **Testergroepprogramma**: Goedgekeurde tester-e-mailadressen krijgen automatisch gratis toegang tot het volledige Professional Tier zonder abonnementskosten.
+- **Prepaid-tegoedpakketten**: Waardeer op met tegoedpakketten die nooit verlopen ($ 3 voor 10, $ 12 voor 50, $ 20 voor 100) wanneer u veel stylingsessies of fotoreconstructies nodig heeft.
 
 ## Vereisten
-- Een actief DressApp-account.
-- PayPal, creditcard of Bit in Israël.
+- Een geregistreerd DressApp-account.
+- Een PayPal-rekening, creditcard/betaalpas of de Israëlische Bit-app (voor lokale ILS-betalingen) voor abonnementupgrades of het opwaarderen van tegoed.
+- *(Voor testers)* Registratie met een goedgekeurd tester-e-mailadres.
 
 ## Stapsgewijze instructies
-1. **Het Gratis Tarief**:
-   - Bewaar tot **150 kledingstukken**.
-   - Ontvang **elke 24 uur 10 gratis AI-credits** voor de stylist en fotoreparatie (30 dagen geldig).
-2. **Kast gratis uitbreiden (Vrienden uitnodigen)**:
-   - Ga naar **Profiel** &rarr; **Vrienden uitnodigen**.
-   - Deel uw persoonlijke uitnodigingslink.
-   - Voor elke vriend die zich aanmeldt, ontvangt u blijvend **+10 extra kastplekken** (tot 1.000 items)!
-3. **Upgraden naar Pro ($ 4,99/maand of $ 29,99/jaar)**:
-   - Tik op **Upgraden naar Pro** in uw profiel.
-   - Geniet van een **onbeperkte kledingkast**, voorrang bij beeldverwerking en 50 bonuscredits met 14 dagen gratis proefperiode.
-4. **Prepaid Tegoedpakketten (Verlopen Nooit)**:
-   - Extra credits nodig?
-     - **10 credits**: $ 1,99
-     - **25 credits**: $ 3,99
-     - **50 credits**: $ 7,99
-     - **100 credits**: $ 15,99
-   - **Slim verbruik**: Het systeem verbruikt altijd eerst uw dagelijkse gratis tegoed, waardoor uw betaalde credits voor altijd bewaard blijven!
-5. **Lokale betalingen in Israël (Atzmai & Bit)**:
-   - Eenvoudig betalen in ILS via Bit met een officiële factuur per e-mail.
+1. **Ontdek de gratis basis**: Begin direct met organiseren met 50 items en 5 welkomstcredits. Er zijn geen API-sleutels nodig.
+2. **Gratis uitbreiden via aanbevelingen**: Deel uw persoonlijke uitnodigingslink via de profielinstellingen. Elke vriend die zich aanmeldt, levert permanent +10 extra kastplaatsen op (tot maximaal 150 items).
+3. **Testergroepverificatie**: Als u deel uitmaakt van de DressApp-bètatestgroep (`maystarboard@gmail.com`, `lokoprod@gmail.com`, `dressapdeveloper@gmail.com`), meld u dan aan via Google OAuth om automatisch gratis privileges voor het **Professional Plan** te ontvangen.
+4. **Upgraden naar Manager ($ 10/mnd of $ 100/jr)**: Tik op **Upgrade Plan** op de pagina Prijzen om onbeperkte kledingstukken, ochtendplannermeldingen en 100 maandelijkse AI-credits te ontgrendelen.
+5. **Upgraden naar Professional ($ 15/mnd of $ 150/jr)**: Kies Professional om gerichte mode-advertentiecampagnes te maken, lokale klanten te bereiken en prioritaire stylistenondersteuning te krijgen.
+6. **Prepaid-tegoed kopen (vervalt nooit)**: Als uw maandelijkse credits op zijn, schaf dan een pakket van 10, 50 of 100 credits aan. Het systeem verbruikt altijd eerst de maandelijkse abonnementscredits, zodat uw permanente prepaidtegoed intact blijft!`
 
 ## Verwachte resultaten
-Directe activering van extra kastruimte of credits met directe bevestiging per e-mail.
+Onmiddellijke activering van de planvoordelen na het afsluiten van het abonnement of na herkenning als tester. Kastlimieten worden onmiddellijk omgezet naar onbeperkt, en badges op uw profieldashboard tonen uw actieve status.
 
 ## Probleemoplossing
-- **Melding "Kledingkast vol"**: U heeft 150 kledingstukken bereikt. Verwijder ongebruikte kleding, deel uw uitnodigingslink of stap over op Pro.
-- **Tegoed niet direct zichtbaar**: Ververs uw profielpagina; het tegoed verschijnt binnen enkele seconden.
+- **Melding „Closet Limit Reached“ (Kastlimiet bereikt)**: U heeft al uw beschikbare plaatsen gevuld (50 basis of tot 150 met aanbevelingen). Archiveer ongedragen items, nodig vrienden uit voor extra plaatsen of upgrade naar Manager/Pro voor onbeperkte capaciteit.
+- **Testervoordelen worden niet weergegeven**: Controleer of u bent aangemeld met het exacte tester-e-mailadres dat op de lijst staat. De backend kent het Professional Tier direct toe bij de uitgifte van het token.
+- **Tegoedpakket niet zichtbaar na betaling**: Vernieuw uw profielpagina; transactiewebhooks verwerken de betaling en schrijven het tegoed binnen enkele seconden bij op uw account.
 
 ## Beperkingen
-- Dagelijkse gratis credits verlopen na 30 dagen; aangeschafte credits verlopen nooit.
+- Maandelijkse abonnementscredits worden niet meegenomen naar volgende factureringsperioden; aangeschafte prepaid-tegoedpakketten verlopen echter nooit.
+- Aanbevelingsbonussen voor extra capaciteit gelden tot een maximum van 150 items in het Free Tier.

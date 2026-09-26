@@ -45,10 +45,11 @@ DressApp turns a closet of physical clothes into a structured, quarriable wardro
 
 **Voice / Audio** — Deepgram (STT/TTS fallback), Gemini 2.5 Flash native modulations (prebuilt voice configs puck/aoede/charon), Web Speech API browser integration, and local Piper ONNX support.
 
-**LLM / Inference Engine** — Multi-tier architecture:
-* **On-premises Default & Fallback**: Self-hosted `dressapp-eyes` container running fine-tuned **Gemma-4-E4B** (`gemma-4-E4B-it-Q3_K_M.gguf` via `llama-server` on port 7860) serving Free Tier users, zero-BYOK accounts, and autonomous background cron jobs.
-* **Transparent Quota Fallback**: Gracefully catches third-party API exhaustion (`429`, `RESOURCE_EXHAUSTED`, spending caps) and falls back to on-prem Gemma without downtime or hard errors.
-* **Commercial Cloud (BYOK)**: User-provided Google Gemini API keys (`gemini-2.5-flash`, etc.) for advanced custom styling, and required for high-cost generation (Trend Scout daily feeds, Nano Banana photorealistic inpainting).
+**LLM / Inference Engine** — Multi-tier production routing:
+* **Primary Production Engine (Google Gemini 3.5 Flash-Lite)**: Powers all 6 interactive and core pipelines (Stylist Brain, Wardrobe Migration, Suitcase Planner, Trend Scout localization, Session Titles, and Closet Ingestion) via `backend/app/services/llm_gateway.py` with native `google-genai` SDK and sub-350ms TTFT.
+* **On-Premises VPS Eyes (`gemma-4-E4B`) — Free Tier & Quota Safety Net**: Self-hosted `dressapp-eyes` container running fine-tuned **Gemma-4-E4B** (`gemma-4-E4B-it-Q3_K_M.gguf` via `llama-server` on port 7860). Serves as the zero-cost baseline for offline/free usage and transparently intercepts quota exhaustion (`429` / `RESOURCE_EXHAUSTED`) with zero downtime.
+* **Tester Group Program**: Designated testers (`TESTER_EMAILS`) automatically receive the `tester` role and complimentary **Professional plan tier** (unlimited closet space, Trend Scout, daily stylist scheduler, and 100 credits/cycle).
+* **High-Cost Generative Features**: Trend Scout and Nano Banana photorealistic inpainting strictly require validated user keys.
 
 **External APIs** — OpenWeather · PayPal Live · Google OAuth + Google Calendar · HuggingFace Inference API
 
@@ -76,10 +77,11 @@ DressApp turns a closet of physical clothes into a structured, quarriable wardro
         │
         ├─ MongoDB Atlas (users, closet, listings, trends, …)
         ├─ Vision pipeline: local SegFormer + rembg + Fashion-CLIP
-        ├─ On-prem Eyes (:7860): llama-server + Gemma-4-E4B (Free Tier & Quota Fallback)
+        ├─ Primary Engine: Google Gemini 3.5 Flash-Lite (native google-genai)
+        ├─ On-prem Eyes (:7860): llama-server + Gemma-4-E4B (Free Tier & Quota Safety Net)
         ├─ Deepgram & Gemini Audio (STT/TTS over HTTPS)
         ├─ OpenWeather, PayPal Live, Google OAuth/Calendar
-        └─ Cloud Gemini API (BYOK user keys, Nano Banana, Trend Scout)
+        └─ High-cost generative cloud endpoints (BYOK keys for Nano Banana & Trend Scout)
 ```
 
 ### In-depth documentation

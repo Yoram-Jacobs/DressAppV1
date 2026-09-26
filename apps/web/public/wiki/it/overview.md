@@ -1,28 +1,37 @@
-# Benvenuto su DressApp
+# Benvenuti su DressApp
 
-Benvenuto nel tuo ultimo compagno di guardaroba digitale! DressApp è progettata per aiutarti a digitalizzare, organizzare e sfruttare al massimo il tuo armadio fisico.
+Benvenuti nel vostro compagno di guardaroba digitale definitivo! DressApp è progettato per aiutarvi a digitalizzare, organizzare e sfruttare al meglio il vostro armadio fisico.
 
 ## Panoramica
-DressApp sfrutta la tecnologia AI avanzata per trasformare i tuoi vestiti fisici in un archivio digitale strutturato. Fornisce suggerimenti di outfit giornalieri integrati nel calendario, pianificazioni intelligenti delle notifiche push mattutine, un'estensione per lo shopping di Chrome per il confronto delle dimensioni, strumenti intelligenti per l'imballaggio delle valigie, elenco diretto per la vendita o lo scambio di indumenti e uno stilista personale interattivo.
+DressApp trasforma i vostri capi fisici in un archivio digitale strutturato, basato su un motore di intelligenza artificiale multilivello all'avanguardia:
+- **Styling intelligente e immediato**: Guidato da **Google Gemini 3.5 Flash-Lite** come motore principale per risposte inferiori a 350 ms, supportato da un container on-premises **Gemma-4-E4B** che funge da rete di sicurezza trasparente per le quote. Ricevete consigli intelligenti all'istante senza bisogno di chiavi API personali.
+- **Integrazione con calendario e meteo**: Consigli mattutini in tempo reale su misura in base alle previsioni meteo giornaliere e agli appuntamenti di Google Calendar.
+- **Pianificatore di outfit e canvas dell'avatar**: Sovrapponete i capi digitalmente su un manichino vettoriale 2D personalizzato o sul vostro ritaglio fotografico.
+- **Assistente interattivo per la valigia**: Checklist per la valigia curate dall'IA per viaggi di qualsiasi durata.
+- **Assistente per lo shopping**: Estensione Chrome e bookmarklet universale per confrontare taglie e vestibilità nei negozi online in modo intelligente.
+- **Marketplace circolare**: Annunci diretti per vendere, scambiare o noleggiare capi inutilizzati con protezione integrata per acquirenti e venditori.
 
 ## Prerequisiti
-- Un browser web (si consiglia Google Chrome o Apple Safari).
-- Accesso a Internet.
-- Accesso alla fotocamera del tuo dispositivo (per le funzionalità "aggancia all'armadio").
+- Un browser web moderno (consigliati Google Chrome, Apple Safari o Mozilla Firefox).
+- Connessione a Internet.
+- Accesso alla fotocamera o alla libreria fotografica del dispositivo per digitalizzare i vestiti.
+- *(Opzionale)* Autorizzazione all'uso del microfono per i consigli di stile vocali interattivi.
 
-## Passo dopo passo
-1. **Digitalizza**: acquisisci vestiti utilizzando la fotocamera, carica file o scansiona ricevute digitali.
-2. **Organizza**: tagga, cerca e raggruppa gli indumenti all'interno dell'area di lavoro del tuo armadio.
-3. **Pianifica**: progetta layout con Outfit Planner, configura la pianificazione push mattutina quotidiana o crea liste di cose da portare con te.
-4. **Acquista e sincronizza**: esplora i negozi al dettaglio utilizzando l'estensione Shopping Assistant per confrontare le regole di adattamento della taglia.
-5. **Rivendi/Scambia**: pubblica i capi inutilizzati direttamente sul mercato circolare.
+## Istruzioni passo dopo passo
+1. **Digitalizzare**: Fotografate i vestiti con la fotocamera, caricate foto o importate scontrini digitali. L'app segmenta automaticamente i capi e rimuove lo sfondo.
+2. **Organizzare**: Aggiungete tag, cercate e raggruppate i capi in collezioni all'interno del vostro spazio Closet.
+3. **Consultare lo stylist**: Toccate l'AI Stylist per richiedere consigli di outfit contestuali tramite voce o testo.
+4. **Pianificare e comporre**: Componete i look nell'Outfit Canvas, verificate la sovrapposizione dei capi e programmateli nel vostro Diario.
+5. **Preparare la valigia**: Generate checklist per i bagagli personalizzate in base al meteo previsto a destinazione.
+6. **Rivendere o scambiare**: Pubblicate i capi inutilizzati direttamente sul marketplace circolare per monetizzare il vostro guardaroba.
 
 ## Risultati attesi
-Otterrai una rappresentazione strutturata del tuo armadio, riducendo l'affaticamento mattutino e massimizzando i tassi di utilizzo dei capi.
+Otterrete un guardaroba digitale strutturato e accessibile che elimina l'indecisione mattutina, aumenta l'utilizzo dei vostri capi e vi aiuta a compiere scelte di moda più sostenibili.
 
 ## Risoluzione dei problemi
-- **Pagine non caricate**: assicurati di avere una connessione di rete stabile.
-- **Problemi di layout RTL**: passa all'ebraico/arabo; il layout si specchia automaticamente per corrispondere all'allineamento RTL.
+- **Caricamento lento di pagine o immagini**: Verificate di avere una connessione di rete stabile; gli elementi memorizzati nella cache offline rimangono accessibili.
+- **Problemi di direzione del layout**: Passate da una lingua all'altra; DressApp adatta automaticamente la direzione dell'interfaccia per le lingue RTL (ebraico, arabo).
 
 ## Limitazioni
-- L'elaborazione completa dei caricamenti batch pesanti (più di 5 elementi) potrebbe richiedere fino a un minuto.
+- La capacità dell'armadio nel piano Free Tier parte da 50 articoli (espandibile fino a 150 tramite bonus di invito); il passaggio a Manager o Professional sblocca lo spazio illimitato.
+- La rimozione dello sfondo e la segmentazione offrono i risultati migliori con una buona illuminazione e sfondi contrastanti.

@@ -126,18 +126,19 @@ When an image is ingested via camera, file upload, or external URL:
 1. **Analysis & Bounding Boxes**: The request is routed to `backend/app/services/clothing_parser.py`, which utilizes HuggingFace `SegFormer-b2-clothes` running locally on CPU. The parser segments multi-garment photos into distinct items (tops, bottoms, outerwear, shoes, accessories).
 2. **Background Matting**: Handled by `backend/app/services/background_matting.py` using `rembg` (U2-Net). Non-clothing background pixels are keyed out into a transparent PNG (`clean_image_url`).
 3. **Deep Module `GarmentVisuals`** (`backend/app/services/garment_visuals.py`): Enforces the Transparency Invariant across all operations. Ensures thumbnails and layered crops have zero bounding-box artifacts when composited onto canvases or 2D avatars.
-4. **Garment Attribute Analysis & Vision Routing**: Analyzes cropped garments via `GarmentVisionService`. Defaults to on-premises `dressapp-eyes` running fine-tuned `gemma-4-E4B-it-Q3_K_M.gguf`. For users with custom API keys, queries external vision models with transparent fallback to on-prem Gemma upon `429` / `RESOURCE_EXHAUSTED` quota limits.
+4. **Garment Attribute Analysis & Vision Routing**: Analyzes cropped garments via `GarmentVisionService` and `llm_gateway.py`. Routes by default to **Google Gemini** (`gemini-3.5-flash-lite`) via native `google-genai` SDK with sub-350ms TTFT, with transparent on-the-fly fallback to on-prem Gemma-4-E4B upon `429` / `RESOURCE_EXHAUSTED` quota limits.
 5. **Nano Banana Inpainting**: If the user requests corrections via the interactive chat prompt (*"remove the belt"*, *"complete the sleeve where the hand was"*), the image is sent to `gemini-3.1-flash-lite-image` via `gemini_image_service.py` to perform photorealistic inpainting. This high-cost generative feature strictly requires a user-supplied BYOK key.
 
 ### 4.2 Conversational AI Stylist & Speech Pipeline
 
 The stylist provides contextually-grounded outfit suggestions:
 - **`StylingContext`** (`backend/app/services/styling_context.py`): Synthesizes user preferences, body sizing, wardrobe inventory, localized weather conditions (via OpenWeatherMap), and Google Calendar events into an optimized prompt.
-- **Multi-Tier LLM Routing (`stylist_brain.py`)**:
-  - **Free Tier / Zero-BYOK**: Evaluated via `GemmaStylistBrain` running against the on-prem `dressapp-eyes` container (:7860). Delivers full conversational styling and outfit assembly without third-party API keys or external costs.
-  - **Custom BYOK Models**: Users with configured Google Gemini keys route to `GeminiStylistBrain` (`gemini-2.5-flash`, `gemini-2.5-pro`) wrapped in `FallbackBrain`.
-  - **Automatic Quota Fallback**: If a custom BYOK key triggers rate limits (`429`), `RESOURCE_EXHAUSTED`, or billing caps, `FallbackBrain` intercepts the exception and seamlessly falls back to on-prem Gemma-4-E4B, annotating `provider_fallback="gemma"` and `fallback_from_quota=True` so the frontend displays a transparent status banner without failing.
-  - **Autonomous Background Cron Jobs**: Daily wardrobe re-indexing and scheduled morning outfit proposals run via `GemmaStylistBrain`.
+- **Multi-Tier LLM Routing (`llm_gateway.py` & `stylist_brain.py`)**:
+  - **Primary Production Engine (Google Gemini 3.5 Flash-Lite)**: All 6 core pipelines (Stylist Brain, Wardrobe Migration, Suitcase Planner, Trend Scout localization, Session Titles, and Closet Ingestion) route by default to Google Gemini via `llm_gateway.py` with strict JSON schema enforcement and zero-friction user onboarding.
+  - **On-Prem VPS Eyes (`gemma-4-E4B`) — Free Tier & Quota Safety Net**: `dressapp-eyes` container running fine-tuned `gemma-4-E4B-it-Q3_K_M.gguf` on port 7860 of the Hetzner CPX32 VPS. Serves as the zero-cost baseline for offline/free usage and transparently intercepts quota exhaustion (`429` / `RESOURCE_EXHAUSTED`), stripping thinking tokens and returning fallback status without raising 500 errors.
+  - **Tester Group Program**: Allow-listed tester emails (`TESTER_EMAILS`) automatically receive the `tester` role and complimentary **Professional plan tier** (unlimited closet space, Trend Scout, daily stylist scheduler, and 100 credits/cycle).
+  - **Developer Authentication**: Standardized on Google OAuth sign-in (`dressapdeveloper@gmail.com`) with permanent Admin rights and Professional tester perks.
+  - **Custom BYOK Models**: Users with configured Google Gemini keys can select higher-tier models (`gemini-2.5-pro`, etc.).
 - **Audio Routing**:
   - *Speech-to-Text (STT)*: Routes microphone audio between Deepgram Aura STT, direct Gemini audio transcription, and client-side browser Web Speech Recognition.
   - *Text-to-Speech (TTS)*: Generates spoken responses using native Gemini Audio voice profiles (`puck`, `aoede`, `charon`), falling back to Deepgram TTS, local Piper ONNX, or browser `speechSynthesis`.

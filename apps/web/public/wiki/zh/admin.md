@@ -1,48 +1,53 @@
-# DressApp Admin Panel — Architectural Narrative & User Manual
+# DressApp 管理后台 — 架构解析与用户手册
 
-This document provides a masterclass-level breakdown of the DressApp Admin Panel, tracing the frontend dashboard interface ([Admin.jsx](file:///C:/DressApp_AG/frontend/src/pages/Admin.jsx)) and its corresponding backend API layer ([admin.py](file:///C:/DressApp_AG/backend/app/api/v1/admin.py)).
+本文档全面而权威地剖析了 DressApp 管理后台（Admin Panel），梳理了前端仪表盘界面（[Admin.jsx](file:///C:/DressApp_AG/apps/web/src/pages/Admin.jsx)）及其对应的后端 API 逻辑层（[admin.py](file:///C:/DressApp_AG/backend/app/api/v1/admin.py)）。
 
 ---
 
-## 1. Executive Summary & Value Proposition
+## 1. 概述与核心价值
 
-### High-Level Overview
-The DressApp Admin Panel is the centralized hub for application management, monetization auditing, AI model configuration, and pipeline diagnostics. It gives system administrators a real-time, high-fidelity lens into the system's operational health, marketplace transaction volumes, user AI credits consumption, and third-party API dependencies without requiring direct SSH/database shell access.
+### 高层概览
+DressApp 管理后台是整个平台集中管控、商业化审计、AI 模型配置以及系统诊断的核心中枢。它为管理员提供了一个实时、高保真的全景窗口，用以洞察平台运行状况、二手市场交易量、用户 AI 积分消耗、测试用户组管理以及下游 AI 微服务的性能表现，而无需直接进入终端或数据库命令行。
 
-### Architectural Flow
-The following diagram illustrates how the frontend dashboard requests overview data, user configurations, and live diagnostics from the backend FastAPI services, querying MongoDB collections and performing downstream liveness checks.
+### 架构流程图
+下图清晰展示了前端仪表盘如何与后端服务交互、查询 MongoDB Atlas 数据集合并执行下游健康状态探针：
 
 ```mermaid
 graph TD
-    %% Frontend Components
-    subgraph Frontend [React Application Client]
+    %% Frontend Layer
+    subgraph Frontend [React Web Application]
         UI[Admin.jsx Dashboard]
-        API_JS[api.js client]
-        UI --> API_JS
+        API[api.js client]
+        UI --> API
     end
 
-    %% Backend Router
+    %% Backend Router & Security
     subgraph Backend [FastAPI Backend Service]
         Router[admin.py Router]
         Auth[require_admin Dependency]
-        ProviderAct[provider_activity Tracker]
+        Gateway[llm_gateway.py]
+        Activity[provider_activity Tracker]
         
-        API_JS -- HTTP GET/POST --> Auth
+        API -- HTTP GET/POST --> Auth
         Auth --> Router
+        Router --> Gateway
+        Router --> Activity
     end
 
-    %% Database & Downstream
-    subgraph Storage [MongoDB Database]
+    %% Data Storage
+    subgraph Storage [MongoDB Atlas M10]
         db_users[(db.users)]
         db_tx[(db.transactions)]
         db_topups[(db.credit_topups)]
         db_listings[(db.listings)]
         db_trends[(db.trend_reports)]
+        db_config[(db.config)]
     end
 
-    subgraph AI_Services [Downstream API & Microservices]
-        Gemini[Google Gemini API]
-        Gemma[Self-Hosted Gemma Space]
+    %% Downstream Microservices
+    subgraph AI_Engines [Downstream AI Services]
+        Gemini[Google Gemini 3.5 Flash-Lite]
+        Eyes[DressApp Eyes :7860 Gemma-4-E4B]
     end
 
     Router --> db_users
@@ -50,94 +55,84 @@ graph TD
     Router --> db_topups
     Router --> db_listings
     Router --> db_trends
-    Router --> ProviderAct
+    Router --> db_config
     
-    %% Downstream Checks
-    Router -- text(ping) --x Gemini
-    Router -- GET /health --x Gemma
+    %% Downstream Probes
+    Router -- text('ping') --> Gemini
+    Router -- GET /health --> Eyes
 ```
 
-### User Value Proposition
-- **Total Visibility**: Real-time KPI summary cards covering total users, active listings, paid transactions, stylist message volumes, and global application revenue.
-- **Billing Transparency**: Clear, per-user breakdown of selected models, available credits quota, current cycle usage, and total captured billing history.
-- **Proactive Health Monitoring**: Direct diagnostics of Gemini API key validity and remote self-hosted Gemma vision model status in a single interface click.
-- **Marketplace Safety Toggles**: Instant ability to pause/reactivate listings, hide fraudulent professionals, or demote/promote administrators.
+### 核心管理能力
+- **实时 KPI 指标监控**：汇总统计活跃用户数、衣橱单品总数、市场在售单品、平台交易手续费、造型师调用量以及已发布的 Trend Scout 趋势报告。
+- **测试用户组计划**：自动为白名单验证通过的测试账户（`maystarboard@gmail.com`、`lokoprod@gmail.com`、`dressapdeveloper@gmail.com`）分配角色与免费 Professional 专业版层级。
+- **安全身份验证**：生产环境访问受到 Google OAuth 鉴权严格保护（校验 `ADMIN_EMAILS`）；遗留的未经身份验证的测试跳过按钮已彻底清除。
+- **多层级 AI 路由管控**：对主力 **Google Gemini 3.5 Flash-Lite** 网关及位于 7860 端口的本地 **Gemma-4-E4B** Eyes 容器提供直接连通性验证与实时 Ping 诊断。
+- **市场安全与内容审核**：具备即时查看、暂停或恢复商品刊登以及调整用户权限的完整能力。
 
 ---
 
-## 2. Comprehensive User Manual
+## 2. 详尽用户操作手册
 
-### Visual Interface Topology
-The Admin panel is divided into a clean, multi-tab layout optimized for desktop and mobile styling:
+### 界面视觉布局
+管理后台采用清晰明了的多标签页布局，专为高密度信息运维操作深度优化：
 
 ```
 +-------------------------------------------------------------------------------+
-|  DressApp (Admin)                      [Back to Home]                         |
+|  DressApp (Admin Console)                              [Return to App]        |
 |  ---------------------------------------------------------------------------  |
 |  [ Overview ]  [ Providers ]  [ Trend Scout ]  [ Users ]  [ Listings ]  ...   |
 +-------------------------------------------------------------------------------+
 |  OVERVIEW TAB                                                                 |
 |  +------------------+  +------------------+  +------------------+  +-------+  |
-|  | Users            |  | Closet Items     |  | Active Listings  |  | ...   |  |
-|  | 15 (+0 new in24h)|  | 262 across users |  | 5 (11 total)     |  |       |  |
+|  | Active Users     |  | Closet Inventory |  | Active Listings  |  | Gross |  |
+|  | 18 (+2 today)    |  | 340 garments     |  | 8 items listed   |  | $140  |  |
 |  +------------------+  +------------------+  +------------------+  +-------+  |
 |                                                                               |
 |  +-------------------------------------------------------------------------+  |
-|  | Provider Activity (last 200 calls)                                      |  |
-|  | gemini-stylist: 1 calls, 100% error rate | openweather: 1 calls, 0% err |  |
+|  | Downstream Provider Activity (Rolling 200 calls)                        |  |
+|  | gemini-flash: 142 calls (0% err, 280ms) | eyes-gemma: 12 calls (0% err) |  |
 |  +-------------------------------------------------------------------------+  |
 +-------------------------------------------------------------------------------+
 ```
 
-### Mode & Workflow Walkthroughs
+### 核心功能操作指引
 
-#### 1. Overview Tab
-- **Stats Grid**: Displays 8 essential metrics (Users, Closet Items, Active Listings, Transactions, Gross Volume, Platform Fees, Stylist 24h, Trend Cards Live).
-  - *Note*: **Gross Volume** and **Platform Fees** dynamically include both marketplace transactions and captured credit top-ups.
-- **Provider Activity Table**: Displays liveness statistics for downstream third-party services (e.g., `gemini-stylist`, `openweather`) showing call count, error rates, average latency, and p95 benchmarks.
+#### 1. 概览标签页 (Overview Tab)
+- **指标卡片**：展示注册用户数、总衣物数、在售商品数、交易笔数、总交易额（Gross Volume）、平台抽成费用以及造型师活跃度的实时计数器。
+- **服务提供方活跃度监控**：针对已连接的 AI 及天气接口的近 200 次调用提供滚动遥测分析，精确追踪调用频次、错误率及延迟基准（中位数与 P95）。
 
-#### 2. Providers Tab
-- **Gemini API Card**: Displays direct status validation of the Gemini API Key. Clicking **Verify Key** triggers a backend ping test.
-- **Eyes Vision Override**: Allows switching the default image segmentation/analysis routing between `gemini` and a self-hosted `gemma` container model.
+#### 2. 服务商标签页 (Providers Tab)
+- **Google Gemini 网关**：展示原生 `google-genai` SDK 的配置状态与连接健康度。点击 **Verify Key** 将发起一次轻量级文本生成 Ping 探测，以确认配额可用性。
+- **Eyes 视觉推理引擎**：检查 CPX32 VPS 本地容器（`http://eyes:7860`）的运行状态。支持在云端视觉与本地自托管 Gemma 推理之间动态切换运行时策略，无需重启后端容器。
 
-#### 3. Users Tab
-- **Interactive List**: Shows a table with search capabilities, listing user emails, roles, active model, available credits quota, credit usage, DressApp fee, and lifetime payments.
-- **Admin Toggles**: Direct buttons to **Promote** standard users to administrators or **Demote** existing ones.
+#### 3. 用户标签页 (Users Tab)
+- **用户档案目录**：支持全文检索，详尽展示用户邮箱、分配角色（`user`、`tester`、`admin`）、当前激活订阅层级（`free`、`manager`、`pro`）、可用积分余额及历史交易记录。
+- **角色权限管理**：一键将普通用户提升为管理员，或灵活调整测试人员专属特权。
+- **测试用户组识别**：通过直观的视觉徽章高亮显示已纳入免费测试计划的账户。
 
-#### 4. Listings & Transactions Tabs
-- **Listing Filters**: Filter active wardrobe listings by `all`, `active`, `paused`, `sold`, or `removed`. Administrators can force pause/activate listings.
-- **Transaction Totals**: Summarizes aggregate gross volume, platform fees, Stripe fees, and seller net.
+#### 4. 商品刊登与交易标签页 (Listings & Transactions Tabs)
+- **商品状态监控**：按状态筛选刊登物品（`active` 在售、`paused` 暂停、`sold` 已售、`removed` 已下架）。管理员可即刻审核并暂停违规刊登。
+- **财务账目审计**：汇总统计总交易流水、平台扣收费用、支付网关通道佣金及卖家最终净结算额。
 
 ---
 
-## 3. Technology Stack & Capability Deep-Dive
+## 3. 技术栈深度剖析与核心机制
 
-### Core Orchestration & AI/Logic
-- **API Engine**: FastAPI python framework implementing role-based dependencies (`require_admin` extraction).
-- **Gemini Direct Integration**: Performs a text generation check using `GeminiClient` to ping the API directly, bypassing third-party middlewares:
-  ```python
-  client = await get_default_client()
-  await client.text(user_text="ping", max_tokens=5)
-  ```
-- **Gemma Space Probe**: Resolves dynamic model routing and sends liveness HTTP checks:
-  ```python
-  async with httpx.AsyncClient(timeout=probe_timeout) as cli:
-      r = await cli.get(f"{gemma_url}/health")
-  ```
+### 身份验证与权限管控
+- **依赖守卫机制**：API 端点在 `backend/app/api/v1/admin.py` 中强制执行 `require_admin` 依赖项，严格比对调用者 JWT 中的邮箱是否包含在生产环境环境变量 `ADMIN_EMAILS` 白名单中。
+- **Google OAuth 深度集成**：生产环境登录流全部接入 Google OAuth（`dressapdeveloper@gmail.com`），坚决杜绝本地硬编码的开发环境跳过逻辑，确保极致安全性。
 
-### Data & Context Pipelines
-- **MongoDB Aggregations**:
-  - Marketplace transaction financials:
+### 多层级 AI 路由架构
+- **核心生产引擎**：Google Gemini 3.5 Flash-Lite 依托 `backend/app/services/llm_gateway.py` 处理线上所有的造型咨询与图像特征分析。
+- **配额安全网 (Quota Safety Net)**：当 Gemini 遭遇频率或配额限制（`429` / `RESOURCE_EXHAUSTED`）时，系统平滑降级至位于 7860 端口的本地 Gemma-4-E4B 容器，返回 `provider_fallback="gemma"`，全程对用户无感，绝不中断业务。
+
+### 数据库聚合操作
+- **MongoDB Atlas 数据聚合**：
+  - 汇总统计所有已完成支付交易的财务总额：
     ```python
     pipeline = [{"$match": {"status": "paid"}}, {"$group": {"_id": None, "gross": {"$sum": "$financial.gross_cents"}}}]
-    ```
-  - Prepaid credits purchase sum:
+```
+  - 统计已确认收款的预付费积分购买充值总额：
     ```python
     topup_pipeline = [{"$match": {"status": "captured"}}, {"$group": {"_id": None, "total": {"$sum": "$amount_cents"}}}]
-    ```
-- **Lightweight DB Queries**: Per-user items and active listing counts are populated in parallel asynchronously.
-
-### Frontend Client Architecture
-- **State Management**: React `useState` hooks coupled with local API calls defined in `src/lib/api.js`.
-- **Localization Integration**: Rigorous i18next options-based keys mapped under `pages.admin.*` in 12 languages. Right-to-Left (RTL) mirroring is enabled via Tailwind's start/end properties (e.g. `ps-`, `pe-`, `text-end`).
-- **Visual Responsiveness**: Tailored dark-mode support and custom layout grids built using shadcn/ui components (`Table`, `Card`, `Badge`, `Skeleton`).
+```
