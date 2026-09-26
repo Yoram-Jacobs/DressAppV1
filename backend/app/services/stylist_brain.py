@@ -86,6 +86,9 @@ class GemmaStylistBrain:
         from app.services.vision.llm import _call_gemma_space
         from app.services import provider_activity
 
+        # Gemma on-prem has a 4096 token context window; cap closet items to top 15 so it fits cleanly
+        gemma_closet = closet_summary[:15] if closet_summary else None
+
         sys_msg, prompt_text = await prepare_stylist_prompt(
             session_id=session_id,
             user_text=user_text,
@@ -94,7 +97,7 @@ class GemmaStylistBrain:
             calendar_events=calendar_events,
             cultural_rules=cultural_rules,
             user_profile=user_profile,
-            closet_summary=closet_summary,
+            closet_summary=gemma_closet,
             user_preferences_block=user_preferences_block,
         )
 
