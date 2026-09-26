@@ -4463,7 +4463,8 @@
     "agentNoNewImages": "אין תמונות חדשות (ניסיון {{attempt}}/3)... {{count}} פריטים",
     "agentSavingRemaining": "שומר {{count}} פריטים נוספים ב-DressApp...",
     "agentSavedSuccess": "✓ {{count}} פריטים נשמרו בארון!",
-    "agentCompletionNotice": "כל הפריטים הועלו ישירות למסד הנתונים של הארון שלך ב-DressApp.<br><br><b>כעת תוכל/י לחזור ל-DressApp כדי לצפות בארון שלך!</b>"
+    "agentCompletionNotice": "כל הפריטים הועלו ישירות למסד הנתונים של הארון שלך ב-DressApp.<br><br><b>כעת תוכל/י לחזור ל-DressApp כדי לצפות בארון שלך!</b>",
+    "upgradePrompt": "ייבוא ארון בגדים מאפליקציות אחרות זמין במסלולי מנהל ומקצוען."
   },
   "login_reminder": {
     "newTitle": "הארון שלך ריק — בוא/י נוסיף פריט ראשון!",

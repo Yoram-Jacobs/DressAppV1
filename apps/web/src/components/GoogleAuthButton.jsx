@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
@@ -43,21 +44,25 @@ export const GoogleAuthButton = ({
   disabled = false,
   className,
 }) => {
+  const { t } = useTranslation();
   const [busy, setBusy] = useState(false);
 
   const onClick = async () => {
     setBusy(true);
+    let targetUrl = null;
+    let failureDetail = null;
+
     try {
       const res = await api.googleLoginStart({
         withCalendar,
         next,
       });
       if (res?.authorization_url) {
-        window.location.assign(res.authorization_url);
-        return;
+        targetUrl = res.authorization_url;
       }
     } catch (err) {
       console.warn('googleLoginStart via client failed, trying direct fetch:', err);
+      failureDetail = err?.response?.data?.detail || err?.message;
       try {
         const qs = new URLSearchParams();
         if (withCalendar) qs.set('with_calendar', 'true');
@@ -70,17 +75,23 @@ export const GoogleAuthButton = ({
         if (fRes.ok) {
           const data = await fRes.json();
           if (data?.authorization_url) {
-            window.location.assign(data.authorization_url);
-            return;
+            targetUrl = data.authorization_url;
           }
         }
       } catch (fallbackErr) {
         console.error('googleLoginStart direct fetch error:', fallbackErr);
+        failureDetail = fallbackErr?.message || failureDetail;
       }
-      setBusy(false);
-      const msg = err?.response?.data?.detail || err?.message || 'Failed to connect to Google sign-in. Please check your network.';
-      toast.error(msg);
     }
+
+    if (targetUrl) {
+      window.location.assign(targetUrl);
+      return;
+    }
+
+    setBusy(false);
+    const msg = failureDetail || t('auth.signInFailed', { defaultValue: 'Connection failed. Please check your network.' });
+    toast.error(msg);
   };
 
   return (

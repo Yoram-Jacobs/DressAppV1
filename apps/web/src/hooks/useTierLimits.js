@@ -10,9 +10,10 @@ export function useTierLimits() {
   const planType = sub.plan_type || 'free';
   const tier = (sub.tier || 'free').toLowerCase();
   const isTester = Boolean(sub.is_tester || planType === 'tester' || user?.roles?.includes('tester'));
+  const isAdmin = Boolean(user?.roles?.includes('admin'));
 
   let userTier = 'free';
-  if (isTester) {
+  if (isTester || isAdmin) {
     userTier = 'professional';
   } else if (isActive && planType !== 'free') {
     if (['pro', 'manager'].includes(tier)) {
@@ -54,6 +55,7 @@ export function useTierLimits() {
     isManager,
     isProfessional,
     isTester,
+    isAdmin,
     canCreateCampaign,
     canAccessTrendScout,
     canAccessScheduler,

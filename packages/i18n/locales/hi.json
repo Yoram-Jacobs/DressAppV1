@@ -4387,7 +4387,8 @@
     "agentNoNewImages": "कोई नया चित्र नहीं (प्रयास {{attempt}}/3)... {{count}} कार्ड",
     "agentSavingRemaining": "शेष {{count}} वस्तुएं DressApp में सहेजी जा रही हैं...",
     "agentSavedSuccess": "✓ {{count}} वस्तुएं क्लोसेट में सहेज ली गईं!",
-    "agentCompletionNotice": "सभी वस्तुएं सीधे आपके DressApp क्लोसेट डेटाबेस में अपलोड हो गई हैं।<br><br><b>अब आप अपना क्लोसेट देखने के लिए DressApp पर वापस जा सकते हैं!</b>"
+    "agentCompletionNotice": "सभी वस्तुएं सीधे आपके DressApp क्लोसेट डेटाबेस में अपलोड हो गई हैं।<br><br><b>अब आप अपना क्लोसेट देखने के लिए DressApp पर वापस जा सकते हैं!</b>",
+    "upgradePrompt": "अन्य ऐप्स से वॉर्डरोब माइग्रेशन मैनेजर और प्रोफेशनल प्लान्स में उपलब्ध है।"
   },
   "login_reminder": {
     "newTitle": "आपकी अलमारी खाली है — अपना पहला कपड़ा जोड़ें!",

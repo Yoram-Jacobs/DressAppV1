@@ -4388,7 +4388,8 @@
     "agentNoNewImages": "新しい画像がありません（試行 {{attempt}}/3）... {{count}} 枚",
     "agentSavingRemaining": "残りの {{count}} 件を DressApp に保存中...",
     "agentSavedSuccess": "✓ {{count}} 件のアイテムがクローゼットに保存されました！",
-    "agentCompletionNotice": "すべてのアイテムが DressApp クローゼットデータベースに直接アップロードされました。<br><br><b>DressApp に戻ってクローゼットを確認できます！</b>"
+    "agentCompletionNotice": "すべてのアイテムが DressApp クローゼットデータベースに直接アップロードされました。<br><br><b>DressApp に戻ってクローゼットを確認できます！</b>",
+    "upgradePrompt": "他のアプリからのワードローブ移行は、マネージャーおよびプロフェッショナルプランでご利用いただけます。"
   },
   "login_reminder": {
     "newTitle": "クローゼットが空です — 最初の服を追加しましょう！",

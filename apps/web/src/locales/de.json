@@ -4380,7 +4380,8 @@
     "agentNoNewImages": "Keine neuen Bilder (Versuch {{attempt}}/3)... {{count}} Karten",
     "agentSavingRemaining": "Verbleibende {{count}} Artikel werden in DressApp gespeichert...",
     "agentSavedSuccess": "✓ {{count}} Artikel im Kleiderschrank gespeichert!",
-    "agentCompletionNotice": "Alle Artikel wurden direkt in Ihre DressApp-Garderobendatenbank hochgeladen.<br><br><b>Sie können jetzt zu DressApp zurückwechseln, um Ihren Kleiderschrank anzusehen!</b>"
+    "agentCompletionNotice": "Alle Artikel wurden direkt in Ihre DressApp-Garderobendatenbank hochgeladen.<br><br><b>Sie können jetzt zu DressApp zurückwechseln, um Ihren Kleiderschrank anzusehen!</b>",
+    "upgradePrompt": "Die Garderobenmigration aus anderen Apps ist in den Tarifen Manager und Professional verfügbar."
   },
   "login_reminder": {
     "newTitle": "Ihr Kleiderschrank ist leer — Fügen Sie Ihr erstes Kleidungsstück hinzu!",

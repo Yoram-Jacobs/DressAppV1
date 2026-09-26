@@ -1,4 +1,4 @@
-import { Outlet, Navigate } from 'react-router-dom';
+import { Outlet, Navigate, useLocation } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { TopNav } from '@/components/TopNav';
@@ -33,12 +33,25 @@ function urlBase64ToUint8Array(base64String) {
 
 export const AppLayout = () => {
   const { t } = useTranslation();
+  const location = useLocation();
   const { user, loading, refresh } = useAuth();
   const [show, setShow] = useState(false);
   const { items, total, isLoaded, error: closetError } = useClosetStore();
   const [dismissedLoginReminder, setDismissedLoginReminder] = useState(() => {
     return sessionStorage.getItem('dressapp_dismissed_login_reminder') === 'true';
   });
+  const [dismissedMigration, setDismissedMigration] = useState(() => {
+    return sessionStorage.getItem('dressapp_dismissed_migration') === 'true';
+  });
+
+  const handleDismissMigration = (flag = 'New') => {
+    setDismissedMigration(true);
+    try {
+      sessionStorage.setItem('dressapp_dismissed_migration', 'true');
+    } catch { /* noop */ }
+    api.updateMigrationFlag({ migration_flag: flag }).catch(() => {});
+    refresh().catch(() => {});
+  };
 
   // Eager warm-up for closet, marketplace browse + my-listings,
   // experts directory, and traveling suitcase.
@@ -176,7 +189,8 @@ export const AppLayout = () => {
     );
   }
 
-  const showOnboardingMigration = isLoaded && !closetError && user && !user.migration_flag && !hasClosetItems;
+  const isPricingPage = location.pathname === '/pricing';
+  const showOnboardingMigration = !dismissedMigration && !isPricingPage && isLoaded && !closetError && user && !user.migration_flag && !hasClosetItems;
   const showLoginReminder = isLoaded && !closetError && user && user.migration_flag && !hasClosetItems && !dismissedLoginReminder && !showOnboardingMigration;
 
   return (
@@ -193,8 +207,8 @@ export const AppLayout = () => {
       {showOnboardingMigration && !('ontouchstart' in window) && (
         <OnboardingMigrationModal
           isOpen={true}
-          onClose={() => { refresh().catch(() => { }); }}
-          onFlagUpdated={() => { refresh().catch(() => { }); }}
+          onClose={() => handleDismissMigration('New')}
+          onFlagUpdated={(flag) => handleDismissMigration(flag || 'New')}
         />
       )}
 

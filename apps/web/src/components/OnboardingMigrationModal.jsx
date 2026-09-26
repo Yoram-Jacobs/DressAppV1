@@ -36,7 +36,7 @@ export default function OnboardingMigrationModal({ isOpen, onClose, onFlagUpdate
   // Kill modal (not process) when user navigates to Closet page from another route
   const prevPathRef = useRef(location.pathname);
   useEffect(() => {
-    if (isOpen && prevPathRef.current !== location.pathname && location.pathname === '/closet') {
+    if (isOpen && prevPathRef.current !== location.pathname && (location.pathname === '/closet' || location.pathname === '/pricing')) {
       onClose();
     }
     prevPathRef.current = location.pathname;

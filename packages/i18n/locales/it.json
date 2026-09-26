@@ -4387,7 +4387,8 @@
     "agentNoNewImages": "Nessuna nuova immagine (tentativo {{attempt}}/3)... {{count}} schede",
     "agentSavingRemaining": "Salvataggio dei restanti {{count}} articoli su DressApp...",
     "agentSavedSuccess": "✓ {{count}} articoli salvati nel guardaroba!",
-    "agentCompletionNotice": "Tutti gli articoli sono stati caricati direttamente nel database del guardaroba di DressApp.<br><br><b>Ora puoi tornare su DressApp per vedere il tuo guardaroba!</b>"
+    "agentCompletionNotice": "Tutti gli articoli sono stati caricati direttamente nel database del guardaroba di DressApp.<br><br><b>Ora puoi tornare su DressApp per vedere il tuo guardaroba!</b>",
+    "upgradePrompt": "La migrazione del guardaroba da altre app è disponibile nei piani Manager e Professional."
   },
   "login_reminder": {
     "newTitle": "Il tuo armadio è vuoto — Aggiungi il tuo primo capo!",

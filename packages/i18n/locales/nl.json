@@ -4394,7 +4394,8 @@
     "agentNoNewImages": "Geen nieuwe afbeeldingen (poging {{attempt}}/3)... {{count}} items",
     "agentSavingRemaining": "Resterende {{count}} items opslaan in DressApp...",
     "agentSavedSuccess": "✓ {{count}} items opgeslagen in je kledingkast!",
-    "agentCompletionNotice": "Alle items zijn direct geüpload naar je DressApp-kledingkastdatabase.<br><br><b>Je kunt nu terugkeren naar DressApp om je kledingkast te bekijken!</b>"
+    "agentCompletionNotice": "Alle items zijn direct geüpload naar je DressApp-kledingkastdatabase.<br><br><b>Je kunt nu terugkeren naar DressApp om je kledingkast te bekijken!</b>",
+    "upgradePrompt": "Kledingkastmigratie vanuit andere apps is beschikbaar voor Manager- en Professional-abonnementen."
   },
   "login_reminder": {
     "newTitle": "Je kledingkast is leeg — Voeg je eerste kledingstuk toe!",

@@ -4380,7 +4380,8 @@
     "agentNoNewImages": "Aucune nouvelle image (tentative {{attempt}}/3)... {{count}} cartes",
     "agentSavingRemaining": "Enregistrement des {{count}} articles restants dans DressApp...",
     "agentSavedSuccess": "✓ {{count}} articles enregistrés dans la garde-robe !",
-    "agentCompletionNotice": "Tous les articles ont été directement téléversés dans la base de données de votre garde-robe DressApp.<br><br><b>Vous pouvez maintenant revenir sur DressApp pour voir votre garde-robe !</b>"
+    "agentCompletionNotice": "Tous les articles ont été directement téléversés dans la base de données de votre garde-robe DressApp.<br><br><b>Vous pouvez maintenant revenir sur DressApp pour voir votre garde-robe !</b>",
+    "upgradePrompt": "L'importation de garde-robe depuis d'autres applications est disponible sur les forfaits Manager et Professional."
   },
   "login_reminder": {
     "newTitle": "Votre garde-robe est vide — Ajoutez votre premier vêtement !",

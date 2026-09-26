@@ -4387,7 +4387,8 @@
     "agentNoNewImages": "Sin imágenes nuevas (intento {{attempt}}/3)... {{count}} prendas",
     "agentSavingRemaining": "Guardando {{count}} prendas restantes en DressApp...",
     "agentSavedSuccess": "✓ ¡{{count}} prendas guardadas en el armario!",
-    "agentCompletionNotice": "Todas las prendas se han subido directamente a la base de datos de tu armario de DressApp.<br><br><b>¡Ahora puedes volver a DressApp para ver tu armario!</b>"
+    "agentCompletionNotice": "Todas las prendas se han subido directamente a la base de datos de tu armario de DressApp.<br><br><b>¡Ahora puedes volver a DressApp para ver tu armario!</b>",
+    "upgradePrompt": "La migración del armario desde otras aplicaciones está disponible en los planes Manager y Professional."
   },
   "login_reminder": {
     "newTitle": "Tu armario está vacío — ¡Añade tu primera prenda!",

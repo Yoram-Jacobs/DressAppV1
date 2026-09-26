@@ -4384,7 +4384,8 @@
     "agentNoNewImages": "لا توجد صور جديدة (محاولة {{attempt}}/3)... {{count}} بطاقة",
     "agentSavingRemaining": "جارٍ حفظ {{count}} عنصر متبقي في DressApp...",
     "agentSavedSuccess": "✓ تم حفظ {{count}} عنصر في الخزانة!",
-    "agentCompletionNotice": "تم رفع جميع العناصر مباشرة إلى قاعدة بيانات خزانة DressApp الخاصة بك.<br><br><b>يمكنك الآن الرجوع إلى DressApp لعرض خزانة ملابسك!</b>"
+    "agentCompletionNotice": "تم رفع جميع العناصر مباشرة إلى قاعدة بيانات خزانة DressApp الخاصة بك.<br><br><b>يمكنك الآن الرجوع إلى DressApp لعرض خزانة ملابسك!</b>",
+    "upgradePrompt": "استيراد خزانة الملابس من التطبيقات الأخرى متاح في خطتي المدير والمحترف."
   },
   "login_reminder": {
     "newTitle": "خزانتك فارغة — فلنضف عنصرك الأول!",

@@ -4387,7 +4387,8 @@
     "agentNoNewImages": "未发现新图片（尝试 {{attempt}}/3）... {{count}} 件",
     "agentSavingRemaining": "正在将剩余的 {{count}} 件物品保存到 DressApp...",
     "agentSavedSuccess": "✓ 已将 {{count}} 件物品保存到衣橱！",
-    "agentCompletionNotice": "所有物品已直接上传至您的 DressApp 衣橱数据库。<br><br><b>您现在可以返回 DressApp 查看您的衣橱！</b>"
+    "agentCompletionNotice": "所有物品已直接上传至您的 DressApp 衣橱数据库。<br><br><b>您现在可以返回 DressApp 查看您的衣橱！</b>",
+    "upgradePrompt": "从其他应用导入衣橱仅在管理者和专业版方案中可用。"
   },
   "login_reminder": {
     "newTitle": "您的衣橱还是空的 — 添加您的第一件衣服吧！",

@@ -596,7 +596,7 @@ class Settings:
     # without DB surgery. The CLI fallback is ``backend/scripts/grant_admin.py``.
     ADMIN_EMAILS: str = os.environ.get(
         "ADMIN_EMAILS",
-        "dressapdeveloper@gmail.com,lokoprod@gmail.com",
+        "dressappdeveloper@gmail.com,dressapdeveloper@gmail.com,lokoprod@gmail.com",
     )
 
     @property
@@ -612,7 +612,7 @@ class Settings:
     # Users in this group automatically receive the 'tester' role and free Professional tier.
     TESTER_EMAILS: str = os.environ.get(
         "TESTER_EMAILS",
-        "maystarboard@gmail.com,lokoprod@gmail.com,dressapdeveloper@gmail.com",
+        "dressappdeveloper@gmail.com,dressapdeveloper@gmail.com,maystarboard@gmail.com,lokoprod@gmail.com",
     )
 
     @property

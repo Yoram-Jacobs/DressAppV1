@@ -33,122 +33,122 @@ from app.services.credit_manager import ensure_monthly_subscription_credits  # n
 
 async def migrate() -> int:
     db = get_db()
-    old_email = "dev@dressapp.io"
-    new_email = "dressapdeveloper@gmail.com"
-
-    old_user = await db.users.find_one({"email": old_email})
-    new_user = await db.users.find_one({"email": new_email})
+    target_email = "dressappdeveloper@gmail.com"
+    alias_emails = ["dressapdeveloper@gmail.com", "dev@dressapp.io"]
 
     now_iso = datetime.now(timezone.utc).isoformat()
 
-    if old_user:
-        print(f"Found existing old dev user: ID={old_user.get('id')}, email={old_user.get('email')}")
-        if new_user and new_user["id"] != old_user["id"]:
-            print(f"WARNING: A separate user with email {new_email} already exists (ID={new_user['id']}).")
-            print("Merging or keeping existing new user roles.")
-            roles = list(set(list(new_user.get("roles") or []) + ["user", "admin", "tester"]))
+    target_user = await db.users.find_one({"email": target_email})
+    alias_users = await db.users.find({"email": {"$in": alias_emails}}).to_list(10)
+
+    # 1. Determine target user ID
+    if not target_user:
+        if alias_users:
+            primary_old = alias_users[0]
+            print(f"Renaming alias user {primary_old.get('email')} (ID={primary_old.get('id')}) to {target_email}...")
             await db.users.update_one(
-                {"id": new_user["id"]},
-                {
-                    "$set": {
-                        "roles": roles,
-                        "subscription.tier": "professional",
-                        "subscription.plan_type": "tester",
-                        "subscription.is_tester": True,
-                        "subscription.is_active": True,
-                        "updated_at": now_iso,
-                    }
-                },
+                {"id": primary_old["id"]},
+                {"$set": {"email": target_email, "display_name": "DressApp Developer", "updated_at": now_iso}},
             )
-            print(f"Updated existing {new_email} with admin & tester roles.")
-            return 0
+            target_user = await db.users.find_one({"email": target_email})
+            alias_users = [u for u in alias_users if u["id"] != primary_old["id"]]
+        else:
+            import uuid
+            user_id = str(uuid.uuid4())
+            print(f"Creating brand-new user for {target_email} (ID={user_id})...")
+            doc = {
+                "id": user_id,
+                "email": target_email,
+                "display_name": "DressApp Developer",
+                "roles": ["user", "admin", "tester"],
+                "subscription": {
+                    "is_active": True,
+                    "plan_type": "tester",
+                    "tier": "professional",
+                    "is_tester": True,
+                    "expires_at": None,
+                    "last_credit_cycle_start": now_iso,
+                    "credits_allocated_cycle": 100,
+                },
+                "migration_flag": "dismissed",
+                "created_at": now_iso,
+                "updated_at": now_iso,
+            }
+            await db.users.insert_one(doc)
+            target_user = await db.users.find_one({"email": target_email})
 
-        # Update the old user document in-place to new email
-        roles = list(set(list(old_user.get("roles") or []) + ["user", "admin", "tester"]))
-        sub = dict(old_user.get("subscription") or {})
-        sub["is_active"] = True
-        sub["plan_type"] = "tester"
-        sub["tier"] = "professional"
-        sub["is_tester"] = True
-        sub["expires_at"] = None
-        if not sub.get("last_credit_cycle_start"):
-            sub["last_credit_cycle_start"] = now_iso
-        sub["credits_allocated_cycle"] = 100
+    target_id = target_user["id"]
+    print(f"Target user established: {target_email} (ID={target_id})")
 
-        res = await db.users.update_one(
-            {"id": old_user["id"]},
-            {
-                "$set": {
-                    "email": new_email,
-                    "display_name": "DressApp Developer",
-                    "roles": roles,
-                    "subscription": sub,
-                    "updated_at": now_iso,
-                }
-            },
-        )
-        print(f"Successfully migrated user ID={old_user['id']} from {old_email} to {new_email}. Matched: {res.matched_count}, Modified: {res.modified_count}")
+    # 2. Merge collections from any alias users into target user
+    for old_u in alias_users:
+        old_id = old_u.get("id")
+        if not old_id or old_id == target_id:
+            continue
+        print(f"Merging data from {old_u.get('email')} (ID={old_id}) into {target_id}...")
 
-        # Top up subscription credits for the month
-        try:
-            await ensure_monthly_subscription_credits(old_user, db)
-            print(f"Ensured monthly subscription credits for {new_email}")
-        except Exception as exc:
-            print(f"Warning: Credit allocation error: {exc}")
+        # Migrate clothes
+        c_res = await db.clothes.update_many({"user_id": old_id}, {"$set": {"user_id": target_id}})
+        if c_res.modified_count:
+            print(f"  Moved {c_res.modified_count} clothes items.")
 
-        # Count related collections to verify data preservation
-        sessions_count = await db.stylist_sessions.count_documents({"user_id": old_user["id"]})
-        clothes_count = await db.clothes.count_documents({"user_id": old_user["id"]})
-        print(f"Data verification: User has {sessions_count} stylist sessions and {clothes_count} closet items intact.")
-        return 0
+        # Migrate stylist sessions
+        s_res = await db.stylist_sessions.update_many({"user_id": old_id}, {"$set": {"user_id": target_id}})
+        if s_res.modified_count:
+            print(f"  Moved {s_res.modified_count} stylist sessions.")
 
-    elif new_user:
-        print(f"Old dev user not found, but {new_email} already exists (ID={new_user.get('id')}).")
-        roles = list(set(list(new_user.get("roles") or []) + ["user", "admin", "tester"]))
-        sub = dict(new_user.get("subscription") or {})
-        sub["is_active"] = True
-        sub["plan_type"] = "tester"
-        sub["tier"] = "professional"
-        sub["is_tester"] = True
-        sub["expires_at"] = None
-        await db.users.update_one(
-            {"id": new_user["id"]},
-            {
-                "$set": {
-                    "roles": roles,
-                    "subscription": sub,
-                    "updated_at": now_iso,
-                }
-            },
-        )
-        print(f"Ensured admin and tester roles for {new_email}")
-        return 0
+        # Migrate outfits
+        o_res = await db.outfits.update_many({"user_id": old_id}, {"$set": {"user_id": target_id}})
+        if o_res.modified_count:
+            print(f"  Moved {o_res.modified_count} outfits.")
 
-    else:
-        print(f"Neither {old_email} nor {new_email} found. Pre-provisioning {new_email}...")
-        import uuid
+        # Migrate suitcases
+        sc_res = await db.suitcases.update_many({"user_id": old_id}, {"$set": {"user_id": target_id}})
+        if sc_res.modified_count:
+            print(f"  Moved {sc_res.modified_count} suitcases.")
 
-        user_id = str(uuid.uuid4())
-        doc = {
-            "id": user_id,
-            "email": new_email,
-            "display_name": "DressApp Developer",
-            "roles": ["user", "admin", "tester"],
-            "subscription": {
-                "is_active": True,
-                "plan_type": "tester",
-                "tier": "professional",
-                "is_tester": True,
-                "expires_at": None,
-                "last_credit_cycle_start": now_iso,
-                "credits_allocated_cycle": 100,
-            },
-            "created_at": now_iso,
-            "updated_at": now_iso,
-        }
-        await db.users.insert_one(doc)
-        print(f"SUCCESS: Pre-provisioned user {new_email} as Admin & Professional Tester (id={user_id})")
-        return 0
+        # Delete the obsolete alias user document
+        await db.users.delete_one({"id": old_id})
+        print(f"  Removed obsolete alias user {old_u.get('email')} (ID={old_id})")
+
+    # 3. Ensure target user has admin and professional tester privileges, 100 credits, and dismissed migration
+    roles = list(set(list(target_user.get("roles") or []) + ["user", "admin", "tester"]))
+    sub = dict(target_user.get("subscription") or {})
+    sub["is_active"] = True
+    sub["plan_type"] = "tester"
+    sub["tier"] = "professional"
+    sub["is_tester"] = True
+    sub["expires_at"] = None
+    if not sub.get("last_credit_cycle_start"):
+        sub["last_credit_cycle_start"] = now_iso
+    sub["credits_allocated_cycle"] = 100
+
+    await db.users.update_one(
+        {"id": target_id},
+        {
+            "$set": {
+                "roles": roles,
+                "subscription": sub,
+                "migration_flag": "dismissed",
+                "updated_at": now_iso,
+            }
+        },
+    )
+    print(f"Updated {target_email} with roles={roles}, Professional tester subscription, and migration_flag='dismissed'.")
+
+    # 4. Top up subscription credits for the month
+    try:
+        refreshed_user = await db.users.find_one({"id": target_id})
+        await ensure_monthly_subscription_credits(refreshed_user, db)
+        print(f"Ensured monthly subscription credits for {target_email}")
+    except Exception as exc:
+        print(f"Warning: Credit allocation error: {exc}")
+
+    # 5. Verification count
+    sessions_count = await db.stylist_sessions.count_documents({"user_id": target_id})
+    clothes_count = await db.clothes.count_documents({"user_id": target_id})
+    print(f"SUCCESS: {target_email} has {sessions_count} stylist sessions and {clothes_count} closet items intact.")
+    return 0
 
 
 async def _main():
