@@ -25,5 +25,10 @@ export const stylist = {
 
   // AI Stylist Scheduler (Phase Scheduler)
   plannerScout: (body) => client.post('/stylist/planner-scout', body).then((r) => r.data),
+
+  // Speech-to-Text transcription
+  transcribeAudio: (formData) =>
+    client.post('/stylist/transcribe', formData).then((r) => r.data),
 };
+
 

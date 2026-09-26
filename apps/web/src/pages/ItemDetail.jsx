@@ -93,7 +93,7 @@ import {
 } from '@/lib/taxonomy';
 import { toast } from 'sonner';
 import { useAuth } from '@/lib/auth';
-import { isSTTSupported, createRecognition } from '@/lib/speech';
+import { isSTTSupported, createRecognition, startDictationSession } from '@/lib/speech';
 import { deriveSizeFromPreferences } from '@/lib/size_preferences';
 import ItemDetailBanner from "../assets/img/inner6.webp";
 import { PageHeroBanner } from '@/components/ui/PageHeroBanner';
@@ -1153,33 +1153,48 @@ export default function ItemDetail() {
   };
 
   /* ------------------- Re-analyse AI Chat & Prompt Box ------------------- */
-  const startPromptDictation = () => {
+  const startPromptDictation = async () => {
     if (!sttSupported.current) return;
-    const rec = createRecognition({
-      lang: (user?.preferred_language || 'en').toLowerCase(),
-      onInterim: () => { },
-      onFinal: (finalText) => {
-        if (finalText) {
-          setReanalyzePrompt((prev) =>
-            prev ? `${prev} ${finalText}`.slice(0, 240) : finalText.slice(0, 240),
-          );
-        }
-      },
-      onEnd: () => {
-        setReanalyzeDictating(false);
-        reanalyzeRecRef.current = null;
-      },
-      onError: () => toast.error(t('stylist.micDenied')),
-    });
-    if (!rec) return;
-    reanalyzeRecRef.current = rec;
-    rec.start();
-    setReanalyzeDictating(true);
+    try {
+      const session = await startDictationSession({
+        lang: (user?.preferred_language || i18n?.language || 'en').toLowerCase(),
+        transcribeFn: async (blob) => {
+          const fd = new FormData();
+          fd.append('file', blob, 'reanalyze_dictation.webm');
+          fd.append('language', (user?.preferred_language || i18n?.language || 'auto').toLowerCase());
+          const res = await api.transcribeAudio(fd);
+          return res?.text || '';
+        },
+        onInterim: (txt) => {
+          if (txt) {
+            setReanalyzePrompt(txt.slice(0, 240));
+          }
+        },
+        onFinal: (finalText) => {
+          if (finalText) {
+            setReanalyzePrompt((prev) => {
+              const trimmed = finalText.trim();
+              if (!prev || prev.trim() === trimmed) return trimmed.slice(0, 240);
+              return `${prev} ${trimmed}`.slice(0, 240);
+            });
+          }
+        },
+        onRecordingChange: (isRec) => setReanalyzeDictating(isRec),
+        onError: () => toast.error(t('stylist.micDenied')),
+      });
+      reanalyzeRecRef.current = session;
+    } catch (err) {
+      console.debug('[ItemDetail] startPromptDictation failed:', err);
+      setReanalyzeDictating(false);
+      reanalyzeRecRef.current = null;
+    }
   };
 
   const stopPromptDictation = () => {
     try { reanalyzeRecRef.current?.stop?.(); } catch { /* ignore */ }
+    reanalyzeRecRef.current = null;
   };
+
 
   const onSendReanalyzePrompt = async (customPrompt) => {
     const text = (typeof customPrompt === 'string' ? customPrompt : reanalyzePrompt).trim();
@@ -1349,33 +1364,46 @@ export default function ItemDetail() {
     }
   };
 
-  const startDictation = () => {
+  const startDictation = async () => {
     if (!sttSupported.current) return;
-    const rec = createRecognition({
-      lang: (user?.preferred_language || 'en').toLowerCase(),
-      onInterim: (txt) => setDictationInterim(txt || ''),
-      onFinal: (finalText) => {
-        if (finalText) {
-          setCleanBackgroundHint((prev) =>
-            prev ? `${prev} ${finalText}`.slice(0, 240) : finalText.slice(0, 240),
-          );
-        }
-      },
-      onEnd: () => {
-        setDictating(false);
-        setDictationInterim('');
-        recognitionRef.current = null;
-      },
-      onError: () => toast.error(t('stylist.micDenied')),
-    });
-    if (!rec) return;
-    recognitionRef.current = rec;
-    rec.start();
-    setDictating(true);
+    try {
+      const session = await startDictationSession({
+        lang: (user?.preferred_language || i18n?.language || 'en').toLowerCase(),
+        transcribeFn: async (blob) => {
+          const fd = new FormData();
+          fd.append('file', blob, 'hint_dictation.webm');
+          fd.append('language', (user?.preferred_language || i18n?.language || 'auto').toLowerCase());
+          const res = await api.transcribeAudio(fd);
+          return res?.text || '';
+        },
+        onInterim: (txt) => setDictationInterim(txt || ''),
+        onFinal: (finalText) => {
+          if (finalText) {
+            setCleanBackgroundHint((prev) => {
+              const trimmed = finalText.trim();
+              if (!prev || prev.trim() === trimmed) return trimmed.slice(0, 240);
+              return `${prev} ${trimmed}`.slice(0, 240);
+            });
+          }
+        },
+        onRecordingChange: (isRec) => {
+          setDictating(isRec);
+          if (!isRec) setDictationInterim('');
+        },
+        onError: () => toast.error(t('stylist.micDenied')),
+      });
+      recognitionRef.current = session;
+    } catch (err) {
+      console.debug('[ItemDetail] startDictation failed:', err);
+      setDictating(false);
+      recognitionRef.current = null;
+    }
   };
   const stopDictation = () => {
     try { recognitionRef.current?.stop?.(); } catch { /* ignore */ }
+    recognitionRef.current = null;
   };
+
 
 
 

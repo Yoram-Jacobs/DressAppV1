@@ -76,6 +76,49 @@ async def stylist_delete_session(
 
 
 # ---------------------------------------------------------------------------
+# POST /stylist/transcribe — standalone Speech-to-Text transcription
+# ---------------------------------------------------------------------------
+@router.post("/transcribe")
+async def stylist_transcribe(
+    file: UploadFile = File(..., description="Audio file to transcribe"),
+    language: str = Form("auto"),
+    user: dict = Depends(get_current_user),
+) -> dict[str, Any]:
+    """Transcribe user voice audio via Gemini/Eyes multimodal STT."""
+    audio_bytes = await file.read()
+    if not audio_bytes:
+        raise HTTPException(status_code=400, detail="Empty audio file provided.")
+
+    from app.services.stt_service import stt_service
+
+    content_type = file.content_type or "audio/webm"
+    if content_type == "application/octet-stream" and file.filename:
+        if file.filename.endswith(".wav"):
+            content_type = "audio/wav"
+        elif file.filename.endswith(".mp3"):
+            content_type = "audio/mp3"
+        elif file.filename.endswith(".ogg"):
+            content_type = "audio/ogg"
+        else:
+            content_type = "audio/webm"
+
+    try:
+        res = await stt_service.transcribe(
+            audio_bytes=audio_bytes,
+            filename=file.filename or "audio.webm",
+            content_type=content_type,
+            language=language if language != "auto" else None,
+        )
+        return {
+            "text": res.get("text", "").strip(),
+            "language": res.get("language") or language,
+        }
+    except Exception as exc:
+        logger.exception("STT transcribe endpoint failed: %s", exc)
+        raise HTTPException(status_code=500, detail=f"Audio transcription failed: {exc}") from exc
+
+
+# ---------------------------------------------------------------------------
 # POST /stylist — primary conversational endpoint
 # ---------------------------------------------------------------------------
 @router.post("")

@@ -41,7 +41,10 @@ export function getSpeechRecognitionCtor() {
 }
 
 export function isSTTSupported() {
-  return !!getSpeechRecognitionCtor();
+  return (
+    !!getSpeechRecognitionCtor() ||
+    (typeof navigator !== 'undefined' && !!navigator.mediaDevices?.getUserMedia)
+  );
 }
 
 export function isTTSSupported() {
@@ -144,11 +147,12 @@ export function createRecognition({
   const rec = new Ctor();
   rec.lang = toBcp47(lang);
   rec.interimResults = true;
-  rec.continuous = false;
+  rec.continuous = true;
   rec.maxAlternatives = 1;
 
   let finalText = '';
   let interimText = '';
+  let isStopped = false;
 
   rec.onresult = (event) => {
     interimText = '';
@@ -161,23 +165,32 @@ export function createRecognition({
         interimText += chunk;
       }
     }
-    onInterim?.((finalText ? `${finalText} ` : '') + interimText);
+    const currentCombined = (finalText ? `${finalText} ` : '') + interimText;
+    onInterim?.(currentCombined.trim());
   };
 
   rec.onerror = (event) => {
+    // 'no-speech' is non-fatal: user paused or is thinking
+    // 'aborted' is non-fatal: stop() or abort() was explicitly invoked
+    if (event?.error === 'no-speech' || event?.error === 'aborted') {
+      return;
+    }
     onError?.(event);
   };
 
   rec.onend = () => {
-    const combined = (finalText || interimText || '').trim();
-    if (combined) onFinal?.(combined);
-    onEnd?.();
+    if (!isStopped) {
+      const combined = (finalText || interimText || '').trim();
+      if (combined) onFinal?.(combined);
+      onEnd?.();
+    }
   };
 
   return {
     start: () => {
       finalText = '';
       interimText = '';
+      isStopped = false;
       try {
         rec.start();
       } catch (e) {
@@ -186,10 +199,198 @@ export function createRecognition({
       }
     },
     stop: () => {
+      if (isStopped) return;
+      isStopped = true;
       try { rec.stop(); } catch { /* ignore */ }
+      const combined = (finalText || interimText || '').trim();
+      if (combined) onFinal?.(combined);
+      onEnd?.();
     },
     abort: () => {
+      isStopped = true;
       try { rec.abort(); } catch { /* ignore */ }
+      onEnd?.();
+    },
+    getTranscript: () => (finalText || interimText || '').trim(),
+  };
+}
+
+/**
+ * Microphone audio recorder using MediaRecorder.
+ * Captures clean audio/webm or audio/mp4 blobs for backend multimodal STT.
+ */
+export function createAudioRecorder({ onError } = {}) {
+  let stream = null;
+  let mediaRecorder = null;
+  let chunks = [];
+
+  return {
+    start: async () => {
+      chunks = [];
+      try {
+        if (typeof navigator === 'undefined' || !navigator.mediaDevices?.getUserMedia) {
+          throw new Error('Microphone audio capture is not supported in this browser.');
+        }
+        stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        let mimeType = '';
+        if (typeof MediaRecorder !== 'undefined') {
+          if (MediaRecorder.isTypeSupported('audio/webm;codecs=opus')) {
+            mimeType = 'audio/webm;codecs=opus';
+          } else if (MediaRecorder.isTypeSupported('audio/webm')) {
+            mimeType = 'audio/webm';
+          } else if (MediaRecorder.isTypeSupported('audio/mp4')) {
+            mimeType = 'audio/mp4';
+          } else if (MediaRecorder.isTypeSupported('audio/ogg')) {
+            mimeType = 'audio/ogg';
+          }
+        }
+        mediaRecorder = new MediaRecorder(stream, mimeType ? { mimeType } : undefined);
+        mediaRecorder.ondataavailable = (e) => {
+          if (e.data && e.data.size > 0) chunks.push(e.data);
+        };
+        mediaRecorder.start(250);
+        return true;
+      } catch (err) {
+        if (stream) {
+          try { stream.getTracks().forEach((t) => t.stop()); } catch {}
+          stream = null;
+        }
+        onError?.(err);
+        return false;
+      }
+    },
+    stop: () => {
+      return new Promise((resolve) => {
+        if (!mediaRecorder || mediaRecorder.state === 'inactive') {
+          if (stream) {
+            try { stream.getTracks().forEach((t) => t.stop()); } catch {}
+            stream = null;
+          }
+          resolve(null);
+          return;
+        }
+        mediaRecorder.onstop = () => {
+          const type = mediaRecorder?.mimeType || 'audio/webm';
+          const blob = new Blob(chunks, { type });
+          if (stream) {
+            try { stream.getTracks().forEach((t) => t.stop()); } catch {}
+            stream = null;
+          }
+          mediaRecorder = null;
+          resolve(blob);
+        };
+        try {
+          mediaRecorder.stop();
+        } catch {
+          resolve(null);
+        }
+      });
+    },
+    abort: () => {
+      if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+        try { mediaRecorder.stop(); } catch {}
+      }
+      if (stream) {
+        try { stream.getTracks().forEach((t) => t.stop()); } catch {}
+        stream = null;
+      }
+      mediaRecorder = null;
+      chunks = [];
     },
   };
 }
+
+/**
+ * Universal dual-engine Dictation Session:
+ * Combines local real-time Web Speech recognition with background MediaRecorder + backend STT fallback.
+ */
+export async function startDictationSession({
+  lang = 'en',
+  transcribeFn = null,
+  onInterim,
+  onFinal,
+  onError,
+  onStart,
+  onEnd,
+  onRecordingChange,
+} = {}) {
+  let finished = false;
+  let nativeResult = '';
+  const recorder = createAudioRecorder({
+    onError: (err) => {
+      console.debug('[speech] audio recorder error:', err?.message || err);
+    },
+  });
+
+  const recorderStarted = await recorder.start();
+  if (!recorderStarted && !getSpeechRecognitionCtor()) {
+    onError?.(new Error('Microphone access denied or unavailable.'));
+    onRecordingChange?.(false);
+    return null;
+  }
+
+  onRecordingChange?.(true);
+  onStart?.();
+
+  let rec = null;
+  if (getSpeechRecognitionCtor()) {
+    rec = createRecognition({
+      lang,
+      onInterim: (txt) => {
+        if (!finished) onInterim?.(txt);
+      },
+      onFinal: (txt) => {
+        if (txt) nativeResult = txt;
+      },
+      onError: (err) => {
+        console.debug('[speech] native recognition non-fatal error:', err?.error || err);
+      },
+    });
+    try {
+      rec.start();
+    } catch {
+      rec = null;
+    }
+  }
+
+  const stop = async () => {
+    if (finished) return;
+    finished = true;
+    onRecordingChange?.(false);
+
+    if (rec) {
+      try {
+        rec.stop();
+        const rTxt = rec.getTranscript();
+        if (rTxt) nativeResult = rTxt;
+      } catch {}
+    }
+
+    const audioBlob = await recorder.stop();
+
+    if (nativeResult && nativeResult.trim()) {
+      onFinal?.(nativeResult.trim());
+      onEnd?.();
+      return;
+    }
+
+    // If native speech gave no text, fall back to backend transcription
+    if (audioBlob && audioBlob.size > 100 && typeof transcribeFn === 'function') {
+      try {
+        const serverText = await transcribeFn(audioBlob);
+        if (serverText && serverText.trim()) {
+          onFinal?.(serverText.trim());
+          onEnd?.();
+          return;
+        }
+      } catch (err) {
+        console.debug('[speech] backend transcribe failed:', err?.message || err);
+      }
+    }
+
+    onEnd?.();
+  };
+
+  return { stop };
+}
+

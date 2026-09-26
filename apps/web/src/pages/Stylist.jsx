@@ -93,6 +93,7 @@ import {
 import {
   isSTTSupported,
   isTTSSupported,
+  getSpeechRecognitionCtor,
   createRecognition,
   speak,
   cancelSpeak,
@@ -1570,86 +1571,114 @@ export default function Stylist() {
     }
   };
 
-  /* ---------- Native STT path (preferred) ---------- */
-  const startNativeRecognition = () => {
+  /* ---------- Combined Voice Recording (Native SpeechRecognition + MediaRecorder) ---------- */
+  const startRecording = async () => {
     try {
-      let finalText = '';
-      const rec = createRecognition({
-        lang: userLang,
-        onInterim: (txt) => {
-          setInterim(txt || '');
-        },
-        onFinal: (txt) => {
-          finalText = txt || '';
-        },
-        onError: () => {
-          setRecording(false);
-          toast.error(t('stylist.voiceError'));
-        },
-        onEnd: () => {
-          setRecording(false);
-          setInterim('');
-          if (finalText.trim()) {
-            sendTurn({ overrideText: finalText.trim() });
-          }
-        },
-      });
-      if (!rec) return false;
-      recognitionRef.current = rec;
-      setInterim('');
-      setRecording(true);
-      rec.start();
-      return true;
-    } catch (err) {
-      console.debug('[Stylist] startNativeRecognition failed:', err?.message || err);
-      recognitionRef.current = null;
-      return false;
-    }
-  };
+      audioChunksRef.current = [];
+      let stream = null;
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      } catch (err) {
+        console.debug('[Stylist] mic access denied:', err);
+        toast.error(t('stylist.micError'));
+        return;
+      }
 
-  /* ---------- MediaRecorder fallback ---------- */
-  const startMediaRecorder = async () => {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const mr = new MediaRecorder(stream);
+      // 1. Setup MediaRecorder for universal backend STT fallback
+      let mimeType = '';
+      if (typeof MediaRecorder !== 'undefined') {
+        if (MediaRecorder.isTypeSupported('audio/webm;codecs=opus')) {
+          mimeType = 'audio/webm;codecs=opus';
+        } else if (MediaRecorder.isTypeSupported('audio/webm')) {
+          mimeType = 'audio/webm';
+        } else if (MediaRecorder.isTypeSupported('audio/mp4')) {
+          mimeType = 'audio/mp4';
+        } else if (MediaRecorder.isTypeSupported('audio/ogg')) {
+          mimeType = 'audio/ogg';
+        }
+      }
+      const mr = new MediaRecorder(stream, mimeType ? { mimeType } : undefined);
       mediaRecorderRef.current = mr;
       audioChunksRef.current = [];
       mr.ondataavailable = (e) => {
-        if (e.data?.size) audioChunksRef.current.push(e.data);
+        if (e.data && e.data.size > 0) audioChunksRef.current.push(e.data);
       };
-      mr.onstop = async () => {
-        const blob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
-        stream.getTracks().forEach((x) => x.stop());
-        await sendTurn({ voiceBlob: blob });
-      };
-      mr.start();
+      mr.start(250);
+
+      // 2. Setup native SpeechRecognition for live interim preview
+      if (getSpeechRecognitionCtor()) {
+        const rec = createRecognition({
+          lang: userLang,
+          onInterim: (txt) => {
+            setInterim(txt || '');
+          },
+          onFinal: () => {},
+          onError: (err) => {
+            console.debug('[Stylist] native recognition error (falling back to audio recorder):', err?.error || err);
+          },
+          onEnd: () => {},
+        });
+        if (rec) {
+          recognitionRef.current = rec;
+          try {
+            rec.start();
+          } catch {
+            recognitionRef.current = null;
+          }
+        }
+      }
+
+      setInterim('');
       setRecording(true);
     } catch (err) {
-      console.debug('[Stylist] startMediaRecorder failed:', err?.message || err);
+      console.debug('[Stylist] startRecording failed:', err?.message || err);
       toast.error(t('stylist.micError'));
     }
   };
 
-  const startRecording = () => {
-    if (sttSupportedRef.current && startNativeRecognition()) return;
-    startMediaRecorder();
-  };
+  const stopRecording = async () => {
+    setRecording(false);
+    setInterim('');
 
-  const stopRecording = () => {
+    // Stop native recognition and grab any transcribed text
+    let nativeText = '';
     if (recognitionRef.current) {
       try {
         recognitionRef.current.stop();
+        nativeText = recognitionRef.current.getTranscript?.() || '';
       } catch (err) {
-        // SpeechRecognition.stop() throws on some browsers after it's already stopped.
-        console.debug('[Stylist] recognition stop:', err?.message || err);
+        console.debug('[Stylist] recognition stop error:', err);
       }
       recognitionRef.current = null;
-      return;
     }
-    if (mediaRecorderRef.current?.state === 'recording') {
-      mediaRecorderRef.current.stop();
+
+    // Stop MediaRecorder and grab audio blob
+    let blob = null;
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+      blob = await new Promise((resolve) => {
+        const mr = mediaRecorderRef.current;
+        mr.onstop = () => {
+          const type = mr.mimeType || 'audio/webm';
+          const b = new Blob(audioChunksRef.current, { type });
+          if (mr.stream) {
+            try { mr.stream.getTracks().forEach((x) => x.stop()); } catch {}
+          }
+          resolve(b);
+        };
+        try {
+          mr.stop();
+        } catch {
+          resolve(null);
+        }
+      });
+      mediaRecorderRef.current = null;
     }
-    setRecording(false);
+
+    if (nativeText && nativeText.trim()) {
+      await sendTurn({ overrideText: nativeText.trim() });
+    } else if (blob && blob.size > 100) {
+      await sendTurn({ voiceBlob: blob });
+    }
   };
 
   /* ---------- Local TTS ---------- */
@@ -1775,6 +1804,13 @@ export default function Stylist() {
         spokenText: advice.spoken_reply || advice.reasoning_summary || '',
       };
       setMessages((m) => [...m, assistantMsg]);
+      if (res?.advice?.transcript && voiceBlob) {
+        setMessages((m) =>
+          m.map((msg) =>
+            msg.id === optimistic.id ? { ...msg, transcript: res.advice.transcript } : msg
+          )
+        );
+      }
       // Update the active session meta (title + snippet + id) in the sidebar and store.
       if (res.session) {
         const sId = res.session.id;
@@ -1783,7 +1819,10 @@ export default function Stylist() {
         const updatedSessions = [res.session, ...(sessions || []).filter((s) => s.id !== sId)];
         setSessions(updatedSessions);
         setStylistSessions(updatedSessions);
-        addStylistMessage(sId, optimistic);
+        const resolvedOptimistic = res?.advice?.transcript && voiceBlob
+          ? { ...optimistic, transcript: res.advice.transcript }
+          : optimistic;
+        addStylistMessage(sId, resolvedOptimistic);
         addStylistMessage(sId, assistantMsg);
       }
       if (ttsSupportedRef.current && !audioUrl) {

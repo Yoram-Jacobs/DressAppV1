@@ -1,4 +1,4 @@
-﻿import { client } from './client.js';
+import { client } from './client.js';
 
 export const stylist = {
   // stylist — returns raw axios promise for multipart
@@ -28,4 +28,11 @@ export const stylist = {
 
   // AI Stylist Scheduler (Phase Scheduler)
   plannerScout: (body) => client.post('/stylist/planner-scout', body).then((r) => r.data),
+
+  // Speech-to-Text transcription
+  transcribeAudio: (formData) =>
+    client.post('/stylist/transcribe', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    }).then((r) => r.data),
 };
+
