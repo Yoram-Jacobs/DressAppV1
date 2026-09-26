@@ -4,7 +4,7 @@ Understand your account limits, upgrade your closet space, and manage your AI st
 
 ## Overview
 DressApp offers a flexible hybrid monetization model designed to welcome casual closet organizers while providing powerful tools for fashion enthusiasts, creators, and certified stylists:
-- **Free Tier Baseline**: Store up to 1,000 garments for free (expandable up to 1,000 items via referral bonuses). Powered out-of-the-box by the fine-tuned DressApp Eyes v1 model with zero API key setup.
+- **Free Tier Baseline**: Store up to 150 garments for free (expandable up to 1,000 items via referral bonuses). Powered out-of-the-box by the fine-tuned DressApp Eyes v1 model with zero API key setup.
 - **Manager Plan ($4.99/month or $49.99/year)**: Unlimited wardrobe capacity, morning outfit push scheduler, calendar synchronization, circular marketplace selling, advanced stats, and Trend Scout ranking filters.
 - **Professional Plan ($9.99/month or $99.99/year)**: Tailored for solo stylists and fashion creators, adding sponsored Ad Campaign creation, expert stylist directory listing, priority support, and 100 monthly AI credits.
 - **Prepaid Credit Packs**: Top up with non-expiring credit packs ($3 for 10, $12 for 50, $20 for 100) whenever high-volume styling or photo reconstruction is needed.

@@ -4,7 +4,7 @@ Comprenez les limites de votre compte, augmentez l'espace de votre garde-robe et
 
 ## Vue d'Ensemble
 DressApp propose un modèle de monétisation hybride et flexible conçu pour l'organisation quotidienne tout en offrant des outils puissants aux passionnés de mode, créateurs et stylistes certifiés :
-- **Formule Gratuite de Base (Free Tier Baseline)**: Stockez jusqu'à 1,000 vêtements gratuitement (extensible jusqu'à 1 000 pièces grâce aux bonus de parrainage). Propulsé directement par le modèle local DressApp Eyes v1 sans configuration de clé API.
+- **Formule Gratuite de Base (Free Tier Baseline)**: Stockez jusqu'à 150 vêtements gratuitement (extensible jusqu'à 1 000 pièces grâce aux bonus de parrainage). Propulsé directement par le modèle local DressApp Eyes v1 sans configuration de clé API.
 - **Formule Manager (4,99 $/mois ou 49,99 $/an)**: Capacité de garde-robe illimitée, planificateur matinal de tenues par notifications push, synchronisation du calendrier, vente sur la marketplace circulaire, statistiques avancées et filtres Trend Scout.
 - **Formule Professional (9,99 $/mois ou 99,99 $/an)**: Conçue pour les stylistes et créateurs de mode, ajoutant la création de campagnes publicitaires sponsorisées, le référencement dans l'annuaire d'experts, un support prioritaire et 100 crédits IA mensuels.
 - **Packs de Crédits Prépayés**: Rechargez avec des crédits sans date d'expiration (3 $ pour 10, 12 $ pour 50, 20 $ pour 100) pour vos besoins de stylisme intensif ou de retouche photo avancée.

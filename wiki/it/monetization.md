@@ -4,7 +4,7 @@ Comprendi i limiti del tuo account, espandi lo spazio del tuo guardaroba e gesti
 
 ## Panoramica
 DressApp offre un modello di monetizzazione ibrido e flessibile progettato per l'organizzazione quotidiana offrendo al contempo strumenti avanzati per appassionati di moda, creator e stilisti certificati:
-- **Livello Gratuito di Base (Free Tier Baseline)**: Salva fino a 1,000 capi gratuitamente (espandibile fino a 1.000 articoli tramite bonus invito). Gestito direttamente dal modello locale DressApp Eyes v1 senza necessità di chiavi API.
+- **Livello Gratuito di Base (Free Tier Baseline)**: Salva fino a 150 capi gratuitamente (espandibile fino a 1.000 articoli tramite bonus invito). Gestito direttamente dal modello locale DressApp Eyes v1 senza necessità di chiavi API.
 - **Piano Manager ($4.99/mese o $49.99/anno)**: Capacità di guardaroba illimitata, pianificatore outfit mattutino tramite notifiche push, sincronizzazione calendario, vendita nel marketplace circolare, statistiche avanzate e filtri Trend Scout.
 - **Piano Professional ($9.99/mese o $99.99/anno)**: Ideato per stilisti e creator di moda, include la creazione di campagne pubblicitarie sponsorizzate, l'inserimento nella directory degli esperti, supporto prioritario e 100 crediti IA mensili.
 - **Pacchetti Crediti Prepagati**: Ricarica con pacchetti senza scadenza ($3 per 10, $12 per 50, $20 per 100) per esigenze di styling intensivo o ricostruzione fotografica.

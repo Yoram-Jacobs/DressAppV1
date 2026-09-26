@@ -4,7 +4,7 @@ Conozca los límites de su cuenta, amplíe el espacio de su armario y gestione s
 
 ## Descripción General
 DressApp ofrece un modelo de monetización híbrido y flexible diseñado para organizar el armario diario a la vez que proporciona potentes herramientas para entusiastas de la moda, creadores y estilistas certificados:
-- **Nivel Gratuito Base (Free Tier Baseline)**: Almacene hasta 1,000 prendas de forma gratuita (ampliable hasta 1.000 artículos mediante bonificaciones por recomendación). Impulsado directamente por el modelo local DressApp Eyes v1 sin necesidad de configurar claves API.
+- **Nivel Gratuito Base (Free Tier Baseline)**: Almacene hasta 150 prendas de forma gratuita (ampliable hasta 1.000 artículos mediante bonificaciones por recomendación). Impulsado directamente por el modelo local DressApp Eyes v1 sin necesidad de configurar claves API.
 - **Plan Manager ($4.99/mes o $49.99/año)**: Capacidad de armario ilimitada, programador de conjuntos matutinos por notificaciones push, sincronización de calendario, venta en el mercado circular, estadísticas avanzadas y filtros de Trend Scout.
 - **Plan Professional ($9.99/mes o $99.99/año)**: Diseñado para estilistas y creadores de moda, incluye creación de campañas publicitarias patrocinadas, inclusión en el directorio de expertos, soporte prioritario y 100 créditos mensuales de IA.
 - **Paquetes de Créditos Prepagados**: Recargue con paquetes sin caducidad ($3 por 10, $12 por 50, $20 por 100) cuando necesite estilismos intensivos o reconstrucción fotográfica avanzada.
