@@ -604,6 +604,22 @@ class Settings:
             if e.strip()
         }
 
+    # --- Tester Group allow-list (Phase TG) ---
+    # Comma-separated list of emails that belong to the free Professional tester group.
+    # Users in this group automatically receive the 'tester' role and free Professional tier.
+    TESTER_EMAILS: str = os.environ.get(
+        "TESTER_EMAILS",
+        "maystarboard@gmail.com,lokoprod@gmail.com",
+    )
+
+    @property
+    def tester_emails_set(self) -> set[str]:
+        return {
+            e.strip().lower()
+            for e in (self.TESTER_EMAILS or "").split(",")
+            if e.strip()
+        }
+
     # --- Trend-Scout scheduler ---
     TREND_SCOUT_ENABLED: bool = (
         os.environ.get("TREND_SCOUT_ENABLED", "true").lower() == "true"

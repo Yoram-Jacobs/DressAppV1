@@ -20,6 +20,7 @@ from app.services.stylist_scheduler_brain import generate_scheduled_proposals
 from app.services.i18n import t
 from app.services.campaign_service import activate_scheduled_campaigns, expire_overdue_campaigns
 from app.services.pricing import expire_old_free_credits, check_trial_expiration, cleanup_expired_trials  # Import our new credit and trial cleanup functions
+from app.services.credit_manager import get_user_tier
 
 logger = logging.getLogger(__name__)
 
@@ -819,16 +820,7 @@ async def check_scheduler_triggers() -> None:
                     continue
 
                 # Free tier has no Schedule & push notifications
-                sub = user.get("subscription") or {}
-                is_active = sub.get("is_active", False)
-                plan_type = sub.get("plan_type", "free")
-                tier = sub.get("tier", "free")
-                user_tier = "free"
-                if is_active and plan_type != "free":
-                    if tier in ["pro", "manager"]:
-                        user_tier = "manager"
-                    elif tier in ["business", "professional"]:
-                        user_tier = "professional"
+                user_tier = get_user_tier(user)
                 if user_tier == "free":
                     continue
 

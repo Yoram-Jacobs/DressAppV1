@@ -36,6 +36,7 @@ from app.models.schemas import User
 from app.services import repos
 from app.services.auth import (
     apply_admin_role,
+    apply_tester_group,
     create_access_token,
     get_current_user,
 )
@@ -818,8 +819,12 @@ async def _handle_login_callback(
             # Re-apply admin allow-list on every Google login — same idempotent
             # behaviour as email/password login.
             new_roles = apply_admin_role(user_doc.get("roles"), email)
+            # Re-apply tester group allow-list
+            new_roles, new_sub, tester_mod = apply_tester_group(new_roles, email, user_doc.get("subscription"))
             if set(new_roles) != set(user_doc.get("roles") or []):
                 patch["roles"] = new_roles
+            if tester_mod:
+                patch["subscription"] = new_sub
             if patch:
                 patch["updated_at"] = datetime.now(timezone.utc).isoformat()
                 await db.users.update_one({"id": user_doc["id"]}, {"$set": patch})
@@ -861,6 +866,9 @@ async def _handle_login_callback(
                     logger.info("google sign-in: awarded +10 closet slots to referrer id=%s for new user id=%s", ref_id, new_user.id)
 
             user_doc["roles"] = apply_admin_role(user_doc.get("roles"), email)
+            final_roles, final_sub, _ = apply_tester_group(user_doc.get("roles"), email, user_doc.get("subscription"))
+            user_doc["roles"] = final_roles
+            user_doc["subscription"] = final_sub
             await repos.insert(db.users, user_doc)
             logger.info("google sign-in: created new user email=%s id=%s", email, new_user.id)
 

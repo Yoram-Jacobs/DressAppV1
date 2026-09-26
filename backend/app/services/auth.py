@@ -99,7 +99,38 @@ class AuthenticatedUser(dict):
 
 
 async def _fetch_user(user_id: str) -> dict[str, Any] | None:
-    return await get_db().users.find_one({"id": user_id}, {"_id": 0})
+    db = get_db()
+    user = await db.users.find_one({"id": user_id}, {"_id": 0})
+    if not user:
+        return None
+
+    patch: dict[str, Any] = {}
+    email = user.get("email")
+
+    # Sync admin role if allowlisted
+    admin_roles = apply_admin_role(user.get("roles"), email)
+    if set(admin_roles) != set(user.get("roles") or []):
+        patch["roles"] = admin_roles
+        user["roles"] = admin_roles
+
+    # Sync tester group if allowlisted or flagged
+    new_roles, new_sub, tester_mod = apply_tester_group(
+        user.get("roles"), email, user.get("subscription")
+    )
+    if tester_mod:
+        patch["roles"] = new_roles
+        patch["subscription"] = new_sub
+        user["roles"] = new_roles
+        user["subscription"] = new_sub
+
+    if patch:
+        patch["updated_at"] = datetime.now(timezone.utc).isoformat()
+        try:
+            await db.users.update_one({"id": user_id}, {"$set": patch})
+        except Exception as exc:
+            logger.warning("Failed to auto-sync user roles/subscription in _fetch_user: %s", exc)
+
+    return user
 
 
 async def get_current_user(
@@ -152,6 +183,42 @@ def apply_admin_role(roles: list[str] | None, email: str | None) -> list[str]:
     if email and email.lower() in settings.admin_emails_set and "admin" not in base:
         base.append("admin")
     return base
+
+
+def apply_tester_group(
+    roles: list[str] | None,
+    email: str | None,
+    subscription: dict[str, Any] | None = None,
+) -> tuple[list[str], dict[str, Any], bool]:
+    """Ensures users in the tester group (settings.tester_emails_set or with 'tester' role)
+    receive the 'tester' role and an active Professional subscription.
+
+    Returns:
+        tuple of (updated_roles, updated_subscription, was_modified)
+    """
+    base_roles = list(roles or ["user"])
+    if "user" not in base_roles:
+        base_roles.append("user")
+    email_clean = (email or "").strip().lower()
+    is_tester = email_clean in settings.tester_emails_set or "tester" in base_roles
+
+    if not is_tester:
+        return base_roles, subscription or {}, False
+
+    modified = False
+    if "tester" not in base_roles:
+        base_roles.append("tester")
+        modified = True
+
+    sub = dict(subscription or {})
+    if not sub.get("is_active") or sub.get("tier") != "professional" or not sub.get("is_tester"):
+        sub["is_active"] = True
+        sub["tier"] = "professional"
+        sub["plan_type"] = sub.get("plan_type") if sub.get("plan_type") in ["monthly", "yearly"] else "tester"
+        sub["is_tester"] = True
+        modified = True
+
+    return base_roles, sub, modified
 
 
 def encrypt_api_key(plain_key: str) -> str:

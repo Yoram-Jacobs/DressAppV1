@@ -21,9 +21,10 @@ export function SubscriptionSettings() {
   const isActive = sub.is_active || false;
   const planType = sub.plan_type || 'free';
   const tier = sub.tier || 'free';
+  const isTester = Boolean(sub.is_tester || planType === 'tester' || user?.roles?.includes('tester'));
   const expiresAt = sub.expires_at ? new Date(sub.expires_at).toLocaleDateString() : '';
 
-  const userTier = (isActive && planType !== 'free') ? tier : 'free';
+  const userTier = isTester ? 'professional' : ((isActive && planType !== 'free') ? tier : 'free');
   const capacity = userTier === 'free' ? Math.min(150, 50 + (user?.closet_capacity_bonus || 0)) : 999999;
 
   const handleUpgrade = async (type) => {
@@ -105,7 +106,10 @@ export function SubscriptionSettings() {
             </span>
             <span className="text-[11px] text-text-brand font-semibold block normal-case">
               {userTier !== 'free'
-                ? t('profile.subActiveSummary', { defaultValue: 'Active: {{plan}} plan (Expires: {{date}})', plan: userTier.toUpperCase(), date: expiresAt })
+                ? (isTester
+                    ? t('profile.subTesterSummary', { defaultValue: 'Active: Professional Plan (Tester Group - Free)' })
+                    : t('profile.subActiveSummary', { defaultValue: 'Active: {{plan}} plan (Expires: {{date}})', plan: userTier.toUpperCase(), date: expiresAt })
+                  )
                 : t('profile.subFreeSummary', { defaultValue: 'Free Plan: {{count}} / {{capacity}} items used', count: closetCount, capacity: capacity })
               }
             </span>
@@ -118,31 +122,44 @@ export function SubscriptionSettings() {
             <div className="p-4 rounded-[12px] border border-[hsl(47_95%_80%)] bg-[hsl(47_95%_97%)] dark:bg-[hsl(47_30%_12%)] dark:border-[hsl(47_30%_25%)] flex items-center justify-between">
               <div>
                 <h4 className="font-bold text-dark-brand text-[14px] flex items-center gap-1.5 mb-1">
-                  <Crown className="h-4 w-4 text-[hsl(47_95%_50%)]" /> {t('profile.planTitle', { defaultValue: 'DressApp {{tier}} ({{plan}})', tier: userTier.toUpperCase(), plan: planType.toUpperCase() })}
+                  <Crown className="h-4 w-4 text-[hsl(47_95%_50%)]" /> {isTester
+                    ? t('profile.testerPlanTitle', { defaultValue: 'DressApp Professional (Tester Group)' })
+                    : t('profile.planTitle', { defaultValue: 'DressApp {{tier}} ({{plan}})', tier: userTier.toUpperCase(), plan: planType.toUpperCase() })
+                  }
                 </h4>
                 <p className="text-xs text-text-brand font-semibold">
-                  {t('profile.renewalDate', { defaultValue: 'Renewal date: {{date}}', date: expiresAt })}
+                  {isTester
+                    ? t('profile.testerPermanentAccess', { defaultValue: 'Complimentary permanent access for tester group' })
+                    : t('profile.renewalDate', { defaultValue: 'Renewal date: {{date}}', date: expiresAt })
+                  }
                 </p>
               </div>
-              <Badge className="bg-[hsl(47_95%_45%)] text-white hover:!bg-dark-brand dark:bg-[hsl(47_95%_35%)]">{t('profile.statusActive', { defaultValue: 'Active' })}</Badge>
+              <Badge className="bg-[hsl(47_95%_45%)] text-white hover:!bg-dark-brand dark:bg-[hsl(47_95%_35%)]">
+                {isTester
+                  ? t('profile.statusTester', { defaultValue: 'Tester Access' })
+                  : t('profile.statusActive', { defaultValue: 'Active' })
+                }
+              </Badge>
             </div>
             <p className="text-[12px] text-text-brand font-semibold italic">
               {userTier === 'professional'
                 ? t('profile.professionalPlanBenefits', { defaultValue: 'You have unlimited closet slots, unlimited daily requests, full marketplace access, and active ad campaign management.' })
                 : t('profile.managerPlanBenefits', { defaultValue: 'You have unlimited closet slots, unlimited daily requests, and full marketplace access.' })}
             </p>
-            <div className="flex justify-end">
-              <Button
-                variant="destructive"
-                size="sm"
-                onClick={handleCancel}
-                disabled={busy}
-                className="rounded-xl"
-              >
-                {busy && <Loader2 className="h-4 w-4 animate-spin" />}
-                {t('profile.cancelSubBtn', { defaultValue: 'Cancel Subscription' })}
-              </Button>
-            </div>
+            {!isTester && (
+              <div className="flex justify-end">
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  onClick={handleCancel}
+                  disabled={busy}
+                  className="rounded-xl"
+                >
+                  {busy && <Loader2 className="h-4 w-4 animate-spin" />}
+                  {t('profile.cancelSubBtn', { defaultValue: 'Cancel Subscription' })}
+                </Button>
+              </div>
+            )}
           </div>
         ) : (
           <div className="space-y-3 text-start">

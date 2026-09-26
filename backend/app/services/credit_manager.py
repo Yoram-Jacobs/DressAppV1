@@ -16,6 +16,7 @@ from typing import Any, Optional, Dict, List, Tuple
 from fastapi import HTTPException, status
 from pydantic import BaseModel
 
+from app.config import settings
 from app.db.database import get_db
 from app.models.schemas import User, CreditBucket, CreditType, CreditUsageResponse
 from app.models.credit import prune_expired_buckets
@@ -279,18 +280,7 @@ async def check_operation_quota(user_id: str, required_credits: int = 1, operati
         if not user_record:
             return False, CreditQuotaStatus.EXHAUSTED, "User not found"
             
-        sub = user_record.get("subscription") or {}
-        is_active = sub.get("is_active", False)
-        plan_type = sub.get("plan_type", "free")
-        tier = sub.get("tier", "free")
-        
-        user_tier = "free"
-        if is_active and plan_type != "free":
-            if tier in ["pro", "manager"]:
-                user_tier = "manager"
-            elif tier in ["business", "professional"]:
-                user_tier = "professional"
-                
+        user_tier = get_user_tier(user_record)
         if user_tier != "free":
             return True, CreditQuotaStatus.OK, "All set"
             
@@ -450,18 +440,7 @@ async def check_and_increment_daily_request(db: Any, user_id: str) -> bool:
     if not user_record:
         return False
         
-    sub = user_record.get("subscription") or {}
-    is_active = sub.get("is_active", False)
-    plan_type = sub.get("plan_type", "free")
-    tier = sub.get("tier", "free")
-    
-    user_tier = "free"
-    if is_active and plan_type != "free":
-        if tier in ["pro", "manager"]:
-            user_tier = "manager"
-        elif tier in ["business", "professional"]:
-            user_tier = "professional"
-            
+    user_tier = get_user_tier(user_record)
     if user_tier != "free":
         return True
         
@@ -493,8 +472,20 @@ async def check_and_increment_daily_request(db: Any, user_id: str) -> bool:
 
 
 def get_user_tier(user_record: dict) -> str:
-    """Returns 'free', 'manager', or 'professional' based on active subscription."""
+    """Returns 'free', 'manager', or 'professional' based on active subscription or tester group membership."""
+    email = (user_record.get("email") or "").strip().lower()
+    roles = user_record.get("roles") or []
     sub = user_record.get("subscription") or {}
+
+    # Tester group members always enjoy the Professional tier for free
+    if (
+        email in settings.tester_emails_set
+        or "tester" in roles
+        or sub.get("is_tester")
+        or sub.get("plan_type") == "tester"
+    ):
+        return "professional"
+
     is_active = sub.get("is_active", False)
     plan_type = sub.get("plan_type", "free")
     tier = (sub.get("tier") or "free").lower()

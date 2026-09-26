@@ -82,12 +82,16 @@ class GoogleOAuthTokens(BaseModel):
 
 class SubscriptionInfo(BaseModel):
     is_active: bool = False
-    plan_type: Literal["free", "monthly", "yearly"] = "free"
+    plan_type: Literal["free", "monthly", "yearly", "tester", "custom", "trial"] = "free"
     tier: Literal["free", "pro", "business", "manager", "professional"] = "free"
     stripe_subscription_id: str | None = None
     paypal_subscription_id: str | None = None
+    atzmai_subscription_id: str | None = None
     expires_at: str | None = None
     cancelled_at: str | None = None
+    is_tester: bool = False
+    last_credit_cycle_start: str | None = None
+    credits_allocated_cycle: int = 0
 
 
 from app.models.credit import (
