@@ -65,19 +65,19 @@ class GarmentVisionService:
         # for detection, so both keys are typically required.
         self.provider = provider or settings.GARMENT_VISION_PROVIDER or "gemini"
         if self.provider == "gemini":
-            self.model = model if (model and model.lower().startswith("gemini")) else "gemini-3.5-flash"
+            self.model = model if (model and model.lower().startswith("gemini")) else "gemini-3.5-flash-lite"
         else:
             self.model = model or settings.GARMENT_VISION_MODEL or "Eyes v1"
-        # Detection stays on Gemini Flash for Phase A.
+        # Detection stays on Gemini Flash until we upgrade to a fine-tuned vision model.
         self.detect_provider = settings.GARMENT_VISION_DETECT_PROVIDER
         self.detect_model = (
             model if (model and model.lower().startswith("gemini"))
-            else (settings.GARMENT_VISION_DETECT_MODEL or "gemini-3.5-flash")
+            else (settings.GARMENT_VISION_DETECT_MODEL or "gemini-3.5-flash-lite")
         )
         # Per-crop analyser (multi-item pipeline).
         self.crop_model = (
             model if (model and model.lower().startswith("gemini"))
-            else (settings.GARMENT_VISION_CROP_MODEL or "gemini-3.5-flash")
+            else (settings.GARMENT_VISION_CROP_MODEL or "gemini-3.5-flash-lite")
         )
         self.max_items = settings.GARMENT_VISION_MAX_ITEMS
         # Gemini chat key — explicit parameter, else direct GEMINI_API_KEY from .env.
@@ -677,11 +677,12 @@ class GarmentVisionService:
         ok = False
         last_err: str | None = None
         
+        group_model = getattr(self, "model", "gemini-3.5-flash-lite")
         try:
             raw = await gem.vision(
                 system=system_prompt,
                 user_parts=[user_text] + shrunk_list,
-                model="gemini-3.5-flash",
+                model=group_model,
                 temperature=0.1,
                 response_mime_type="application/json",
             )
@@ -695,7 +696,7 @@ class GarmentVisionService:
                 ok=ok,
                 latency_ms=int((time.perf_counter() - t0) * 1000),
                 error=last_err,
-                extra={"provider": "gemini", "model": "gemini-3.5-flash"},
+                extra={"provider": "gemini", "model": group_model},
             )
             
         parsed = _extract_json(raw or "")
@@ -2149,7 +2150,7 @@ class GarmentVisionService:
                 "or does it contain a person wearing MULTIPLE GARMENTS (a full outfit, e.g. a shirt AND pants)? "
                 "Reply with exactly one word: 'SINGLE' or 'MULTIPLE'."
             )
-            model = getattr(self, "flash_model", "gemini-3.5-flash")
+            model = getattr(self, "flash_model", "gemini-3.5-flash-lite")
             resp = await client.vision(
                 user_parts=[prompt, image_bytes],
                 model=model,
@@ -2982,7 +2983,7 @@ def get_garment_vision_service(
 
     if api_key:
         try:
-            return GarmentVisionService(api_key=api_key, model="gemini-3.5-flash", provider="gemini")
+            return GarmentVisionService(api_key=api_key, model="gemini-3.5-flash-lite", provider="gemini")
         except Exception as exc:
             logger.warning("Failed to build explicit key GarmentVisionService: %s", exc)
 

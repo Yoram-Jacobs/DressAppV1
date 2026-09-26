@@ -151,7 +151,7 @@ class WardrobeMigrationAgent:
                     image_b64_jpeg=b64_img,
                     json_schema=response_schema,
                     response_mime_type="application/json",
-                    fallback_model="gemini-3.5-flash",
+                    model="gemini-3.5-flash-lite",
                 )
 
                 result = json.loads(response_text)
@@ -315,7 +315,7 @@ class WardrobeMigrationAgent:
                 image_b64_jpeg=b64_crop,
                 json_schema=class_schema,
                 response_mime_type="application/json",
-                fallback_model="gemini-3.5-flash",
+                model="gemini-3.5-flash-lite",
             )
             class_result = json.loads(class_resp)
             category = class_result.get("category", "Top")
@@ -483,7 +483,7 @@ class WardrobeMigrationAgent:
                 image_b64_jpeg=b64_crop,
                 json_schema=stylist_schema,
                 response_mime_type="application/json",
-                fallback_model="gemini-3.5-flash",
+                model="gemini-3.5-flash-lite",
             )
             stylist_result = json.loads(class_resp)
 

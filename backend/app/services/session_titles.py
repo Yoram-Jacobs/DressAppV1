@@ -63,7 +63,7 @@ async def generate_session_title(text: str, language: str = "en", api_key: str |
             user_text=text[:300],
             max_tokens=60,
             temperature=0.3,
-            fallback_model="gemini-3.5-flash",
+            model="gemini-3.5-flash-lite",
             api_key=active_key,
         )
     except Exception as exc:  # noqa: BLE001

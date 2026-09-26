@@ -111,18 +111,18 @@ class Settings:
         or os.environ.get("GOOGLE_API_KEY")  # accept the canonical google-genai name too
         or None
     )
-    DEFAULT_STYLIST_MODEL: str = os.environ.get("DEFAULT_STYLIST_MODEL", "gemma-4-E4B-it-Q3_K_M.gguf")
-    DEFAULT_STYLIST_PROVIDER: str = os.environ.get("DEFAULT_STYLIST_PROVIDER", "gemma")
+    DEFAULT_STYLIST_MODEL: str = os.environ.get("DEFAULT_STYLIST_MODEL", "gemini-3.5-flash-lite")
+    DEFAULT_STYLIST_PROVIDER: str = os.environ.get("DEFAULT_STYLIST_PROVIDER", "gemini")
 
     # --- Phase O: Stylist brain provider ---
     # STYLIST_PROVIDER picks the primary LLM that backs /api/v1/stylist.
-    # In production, the default is the fine-tuned Gemma4-E4B on-prem Eyes container.
-    # ``STYLIST_FALLBACK`` points at Gemini as safety net when Gemma is unavailable.
+    # In production, the default is Google Gemini 3.5 Flash-Lite (Phase 2).
+    # ``STYLIST_FALLBACK`` points at on-prem Eyes Gemma-4-E4B on the VPS as the Quota Safety Net (Phase 3).
     STYLIST_PROVIDER: str = (
-        os.environ.get("STYLIST_PROVIDER", "gemma").lower().strip()
+        os.environ.get("STYLIST_PROVIDER", "gemini").lower().strip()
     )
     STYLIST_FALLBACK: str = (
-        os.environ.get("STYLIST_FALLBACK", "gemini").lower().strip()
+        os.environ.get("STYLIST_FALLBACK", "gemma").lower().strip()
     )
 
     @property
@@ -192,10 +192,10 @@ class Settings:
     #     GARMENT_VISION_PROVIDER=hf
     #     GARMENT_VISION_MODEL=<hf-repo-or-endpoint-url>
     GARMENT_VISION_PROVIDER: str = os.environ.get(
-        "GARMENT_VISION_PROVIDER", os.environ.get("EYES_PROVIDER", "gemma")
+        "GARMENT_VISION_PROVIDER", os.environ.get("EYES_PROVIDER", "gemini")
     )
     GARMENT_VISION_MODEL: str = os.environ.get(
-        "GARMENT_VISION_MODEL", "Eyes v1"
+        "GARMENT_VISION_MODEL", "gemini-3.5-flash-lite"
     )
     # When set, the HF path hits this OpenAI-compatible endpoint URL
     # instead of going through HF Inference Providers routing. Use this
@@ -210,21 +210,18 @@ class Settings:
         os.environ.get("GARMENT_VISION_ENDPOINT_KEY") or None
     )
 
-    # --- Phase O Wave O.3 — Self-hosted Gemma-4 E2B Eyes ---
+    # --- Phase O Wave O.3 — Self-hosted Gemma-4 E2B/E4B Eyes (Quota Safety Net) ---
     # Toggle for the AddItem garment-vision pipeline. Values:
+    #   "gemini" — direct Google Gemini 3.5 Flash-Lite (Phase 2 production default).
     #   "gemma"  — route through the self-hosted dressapp-eyes
     #              container (production Hetzner deploy reaches it at
-    #              ``http://eyes:7860``). Failures auto-fall-back to
-    #              Gemini so a flaky container never breaks AddItem.
-    #   "gemini" — direct Gemini 3.5 Flash via Emergent/Google chat
-    #              key. Used in the Emergent preview pod, which has
-    #              no Eyes container on its network.
+    #              ``http://eyes:7860``) as Free Tier / Quota Safety Net.
     # The legacy ``"qwen"`` value is **deprecated** — the Qwen Eyes
     # path was never enabled in production and was physically removed
     # in May 2026. Any persisted ``"qwen"`` override falls through to
     # the env default via ``eyes_override._VALID_PROVIDERS``.
     EYES_PROVIDER: str = (
-        os.environ.get("EYES_PROVIDER", "gemma") or "gemma"
+        os.environ.get("EYES_PROVIDER", "gemini") or "gemini"
     ).strip().lower()
     # Public URL where the ``dressapp-eyes`` container exposes
     # FastAPI ``/predict``. Internal docker DNS in production
@@ -272,7 +269,7 @@ class Settings:
     # file has no effect.
     # Per-crop analyzer used inside the multi-item outfit pipeline.
     GARMENT_VISION_CROP_MODEL: str = os.environ.get(
-        "GARMENT_VISION_CROP_MODEL", "gemini-3.5-flash"
+        "GARMENT_VISION_CROP_MODEL", "gemini-3.5-flash-lite"
     )
     # Detection stays on Gemini Flash until we upgrade to a fine-tuned
     # vision model that does boxes well.
@@ -280,7 +277,7 @@ class Settings:
         "GARMENT_VISION_DETECT_PROVIDER", "gemini"
     )
     GARMENT_VISION_DETECT_MODEL: str = os.environ.get(
-        "GARMENT_VISION_DETECT_MODEL", "gemini-3.5-flash"
+        "GARMENT_VISION_DETECT_MODEL", "gemini-3.5-flash-lite"
     )
     # Hard cap on how many items we analyse per uploaded photo.
     GARMENT_VISION_MAX_ITEMS: int = int(

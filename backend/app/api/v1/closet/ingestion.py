@@ -1930,7 +1930,7 @@ async def chat_analyse_item(
             system_prompt=system_prompt,
             image_b64_jpeg=raw_b64,
             response_mime_type="application/json",
-            fallback_model=user_model or "gemini-3.5-flash",
+            model=user_model or "gemini-3.5-flash-lite",
             api_key=user_api_key,
         )
         clean_json = (decision_raw or "").strip()

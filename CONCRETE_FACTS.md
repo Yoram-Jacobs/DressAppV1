@@ -81,9 +81,10 @@ on the VPS — never in the repo.
 | Env var | Value | Purpose |
 | --- | --- | --- |
 | `EYES_GEMMA_SPACE_URL` | `http://eyes:7860` | Internal docker DNS target for [`backend/app/services/vision/service.py`](backend/app/services/vision/service.py) calls |
-| `EYES_PROVIDER` | `gemma` \| `gemini` | Env-default provider. **Use the runtime override below to switch in production** — do not edit this on the fly. |
+| `EYES_PROVIDER` | `gemini` \| `gemma` | Env-default provider (defaults to `gemini` with `gemma` as fallback). **Use the runtime override below to switch in production** — do not edit this on the fly. |
+| `DEFAULT_STYLIST_MODEL` | `gemini-3.5-flash-lite` | Default primary LLM model across all 6 core backend pipelines |
 | `EYES_API_TOKEN` | (secret) | Bearer token required by `dressapp-eyes` `/predict` and `/transcribe` |
-| `GEMINI_API_KEY` | (secret) | Google AI Studio key for the native `google-genai` SDK. Drives **every** Gemini call (Eyes fallback, batched garment analysis + streaming, stylist, vision verifier, session titles, trend scout, size-chart OCR). Required whenever the production provider is `gemini` OR when Gemma falls back to Gemini. |
+| `GEMINI_API_KEY` | (secret) | Google AI Studio key for the native `google-genai` SDK. Drives **every** Gemini call (primary stylist brain, wardrobe migration, suitcase, session titles, trend scout, vision verifier). Required whenever the production provider is `gemini`. |
 | `GOOGLE_API_KEY` | (secret, optional) | Canonical Google SDK name. `config.py` aliases it into `GEMINI_API_KEY` when the latter is unset, so only one of the two needs to be defined. |
 | `MONGO_URL` | (secret, Atlas) | Backend → Mongo connection string |
 
@@ -97,16 +98,20 @@ on the VPS — never in the repo.
 
 ### Multi-Tier AI Routing & Quota Fallback (Locked Production Rules)
 
-1. **Free Tier / Zero-BYOK Core**:
-   - Free Tier users and accounts with no configured custom API keys route by default to the on-prem `dressapp-eyes` container running fine-tuned `gemma-4-E4B-it-Q3_K_M.gguf` on port 7860.
-   - Provides full interactive AI Stylist advice, outfit pairing, and garment vision attribute analysis at zero variable cloud API cost.
-2. **Autonomous Background Cron Jobs**:
-   - Automated scheduled background tasks (e.g. daily morning styling proposals, wardrobe re-indexing, push notifications) execute via on-prem Gemma-4-E4B when running without an interactive user session or when the user has no custom keys.
-3. **Transparent Quota Fallback**:
-   - If a user's custom third-party key encounters quota exhaustion (`429`, `RESOURCE_EXHAUSTED`, `spending cap`, `deadline exceeded`), `FallbackBrain` (`backend/app/services/stylist_brain.py`) and `GarmentVisionService` catch the exception and immediately route the query to on-prem Gemma-4-E4B.
+1. **Primary Production Engine (Google Gemini 3.5 Flash-Lite)**:
+   - All 6 interactive and core pipelines (Stylist Brain, Wardrobe Migration, Suitcase Planner, Trend Scout localization, Session Titles, Closet Ingestion) route by default to **Google Gemini** (`gemini-3.5-flash-lite`) via [`backend/app/services/llm_gateway.py`](backend/app/services/llm_gateway.py).
+   - Driven by native `google-genai` SDK with strict JSON schema enforcement (`response_schema`), sub-350ms TTFT, and ultra-cost-effective rates ($0.30/1M input, $2.50/1M output).
+2. **On-Prem VPS Eyes (`gemma-4-E4B`) — Free-Tier & Offline Baseline**:
+   - `dressapp-eyes` container running fine-tuned `gemma-4-E4B-it-Q3_K_M.gguf` on port 7860 of the Hetzner CPX32 VPS.
+   - Serves as the zero-variable-cost baseline for Free Tier accounts or offline modes (`force_provider="gemma"`) and scheduled unauthenticated background tasks.
+3. **Transparent Quota Safety Net**:
+   - If Google Gemini external calls encounter rate limits (`429`), quota exhaustion (`RESOURCE_EXHAUSTED`), spending caps, or network timeouts, `call_main_llm` and `FallbackBrain` (`backend/app/services/stylist_brain.py`) catch the exception and immediately route the query to on-prem Gemma-4-E4B.
+   - Automatically sanitizes and strips internal reasoning tokens (`<|channel>thought...<channel|>`, `<think>...</think>`).
    - The response includes `provider_fallback: "gemma"` and `fallback_from_quota: True`, displaying an informational banner in the UI (`stylist.fallbackQuotaBanner`) without interrupting the user or failing with a 500 error.
 4. **Strict Cost Protection Perimeter (Tier Gating)**:
    - High-cost generative cloud endpoints (**Trend Scout** and **Nano Banana** photo reconstruction/inpainting) strictly require validated user-supplied API keys (HTTP 403 / clarify prompt for users without custom keys).
+5. **Headless Model Fine-Tuning**:
+   - Eyes fine-tuning is scheduled as a headless CI/CD workflow on GitHub Actions utilizing **Modal serverless GPU containers** ([`inference-server/eyes/training/train_eyes_lora.py`](inference-server/eyes/training/train_eyes_lora.py)). RunPod is redundant.
 
 > **🛑 Auth surface — `HF_TOKEN` / `EYES_HF_TOKEN` are NOT part of
 > DressApp.** Any reference to either in the live tree is a deprecated/forbidden

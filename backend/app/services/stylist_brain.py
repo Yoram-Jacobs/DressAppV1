@@ -206,9 +206,9 @@ def _make_provider(name: str) -> StylistBrain | None:
             return None
         logger.warning(
             "Unknown / retired STYLIST_PROVIDER value: %r — falling "
-            "through to gemma default", name,
+            "through to gemini default", name,
         )
-        return GemmaStylistBrain()
+        return GeminiStylistBrain() if gemini_stylist_service else GemmaStylistBrain()
     except Exception as exc:  # noqa: BLE001
         logger.exception("Failed to instantiate provider %s: %s", name, exc)
         return None
@@ -216,8 +216,8 @@ def _make_provider(name: str) -> StylistBrain | None:
 
 def build_stylist_brain() -> StylistBrain:
     """Resolve the brain stack based on current settings."""
-    primary_name = settings.STYLIST_PROVIDER.lower().strip() or "gemma"
-    fallback_name = settings.STYLIST_FALLBACK.lower().strip() or "gemini"
+    primary_name = settings.STYLIST_PROVIDER.lower().strip() or "gemini"
+    fallback_name = settings.STYLIST_FALLBACK.lower().strip() or "gemma"
 
     primary = _make_provider(primary_name)
     fallback = (

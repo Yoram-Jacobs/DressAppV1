@@ -164,7 +164,7 @@ async def generate_text(
     max_tokens: int | None = None,
     temperature: float | None = None,
     api_key: str | None = None,
-    model: str = "gemini-3.5-flash",
+    model: str = "gemini-3.5-flash-lite",
 ) -> str:
     from app.services.llm_gateway import call_main_llm
 
@@ -175,6 +175,7 @@ async def generate_text(
         response_mime_type=response_mime_type,
         max_tokens=max_tokens or 2048,
         temperature=temperature or 0.1,
+        model=model,
         fallback_model=model,
         api_key=api_key,
     )

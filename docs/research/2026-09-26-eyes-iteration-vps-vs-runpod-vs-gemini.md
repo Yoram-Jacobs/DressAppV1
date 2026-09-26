@@ -36,12 +36,12 @@ The trade-offs across all three approaches are stark:
 
 | Objective | Recommended Path | Strategic Rationale |
 | :--- | :--- | :--- |
-| **Model Fine-Tuning & Training** | 🟢 **RunPod (On-Demand Pods)** | Training on the VPS is physically impossible (CPU, 8 GB RAM). RunPod RTX 4090 ($0.34/hr) trains Eyes QLoRA in 18 minutes for ~$0.15 per run. |
-| **Interactive Stylist Brain** | 🟢 **Google Gemini 3.5 Flash** | Unmatched fashion domain depth, 1M context window for full wardrobe reasoning, zero infrastructure overhead, TTFT < 350ms. |
-| **High-Fidelity Garment Parsing** | 🟢 **Google Gemini 3.5 Flash-Lite** | Superior textile nuance (cashmere, herringbone, satin sheen, hardware finishes) vs. 2B–4B quantized models; native JSON grammar. |
-| **Free-Tier & Background Cron Engine** | 🟢 **Hetzner VPS (Eyes Gemma GGUF)** | Zero marginal cost for non-paying users, nightly wardrobe re-indexing, morning notification generation, and transparent 429 quota fallback. |
+| **Model Fine-Tuning & Training** | 🟢 **GitHub Actions via Modal** | Already scheduled as a headless CI/CD task on GitHub Actions via Modal (`inference-server/eyes/training/train_eyes_lora.py`). RunPod is redundant. |
+| **Interactive Stylist Brain** | 🟢 **Google Gemini 3.5 Flash-Lite** | Unmatched fashion domain depth, 1M context window, zero infrastructure overhead, TTFT < 350ms, and ultra cost-effective (\$0.30/1M input, \$2.50/1M output). |
+| **High-Fidelity Garment Parsing** | 🟢 **Google Gemini 3.5 Flash-Lite** | Superior textile nuance (cashmere, herringbone, satin sheen, hardware finishes) vs. 2B–4B quantized models; native JSON grammar; zero-friction pricing. |
+| **Free-Tier & Quota Safety Net** | 🟢 **Hetzner VPS (Eyes Gemma GGUF)** | Zero marginal cost for non-paying users, scheduled background cron jobs, and transparent automatic fallback on Gemini 429 quota exhaustion. |
 
-The optimal strategy is a **Tricameral Hybrid**: RunPod serves as the **offline R&D and training lab**, Gemini serves as the **high-capability production engine for interactive sessions**, and the Hetzner VPS serves as the **cost-insulating baseline and safety moat**.
+The finalized strategy formalizes **Google Gemini 3.5 Flash-Lite** as the primary production engine across all pipelines, while **Hetzner VPS Eyes (`gemma-4-E4B`)** serves as the **Free-Tier baseline & Quota Safety Net**, and **Modal on GitHub Actions** automates model fine-tuning.
 
 ---
 
@@ -263,39 +263,40 @@ Adopting Gemini as the **main model** means deprecating local self-hosted `dress
 ## 5. Strategic Synthesis: The Tricameral Architecture
 
 Attempting to force **one** of these options to solve every operational challenge creates an unnecessary compromise:
-- Choosing **VPS-only** strangles developer iteration, blocks model fine-tuning, and caps output quality.
-- Choosing **RunPod-only** incurs either massive standing costs ($300+/mo) or unacceptable 30-second cold starts.
+- Choosing **VPS-only** strangles developer iteration, blocks model fine-tuning, and caps output quality (CPU-only inference fails on heavy tasks like Suitcase, Wardrobe Migration, and complex Stylist multi-turn chat).
+- Choosing **RunPod-only** introduces unnecessary operational complexity and standing costs, whereas headless training is already natively solved via serverless containers.
 - Choosing **Gemini-only** creates financial exposure on Free Tier traffic and vulnerability to Google 429 quota exhaustion.
 
-The winning design is a **Tricameral Division of Labor**, which aligns with DressApp's existing architecture:
+The winning design is a **Tricameral Division of Labor**, which aligns with DressApp's production architecture:
 
 ```
                                   DRESSAPP HYBRID AI ECOSYSTEM
   ┌────────────────────────────────────────────────────────────────────────────────────────┐
   │                                                                                        │
-  │   1. DEVELOPMENT & TRAINING (Offline R&D Lab)                                          │
+  │   1. DEVELOPMENT & TRAINING (Headless Cloud CI/CD)                                     │
   │   ┌────────────────────────────────────────────────────────────────────────────────┐   │
-  │   │  RunPod Ephemeral GPU Pods (RTX 4090 @ $0.34/hr)                               │   │
-  │   │  • Used on-demand for train_eyes_lora.py & export_gguf.py                     │   │
+  │   │  GitHub Actions via Modal (Serverless GPU Containers)                          │   │
+  │   │  • Headless execution of train_eyes_lora.py (QLoRA SFT)                        │   │
   │   │  • Automated evaluation gates via evaluate_eyes.py                             │   │
-  │   │  • Shuts down immediately after artifact export (~$0.15–$0.50 per experiment)  │   │
+  │   │  • Automated GGUF export via export_gguf.py                                    │   │
+  │   │  • Zero standing infrastructure cost; RunPod is redundant                      │   │
   │   └────────────────────────────────────────────────────────────────────────────────┘   │
   │                                                                                        │
   │   2. PRODUCTION INTERACTIVE TIER (Flagship Intelligence)                               │
   │   ┌────────────────────────────────────────────────────────────────────────────────┐   │
-  │   │  Google Gemini 3.5 Flash / Flash-Lite (google-genai SDK)                       │   │
-  │   │  • Primary Stylist Brain (complex chat, multi-look generation, travel packing) │   │
-  │   │  • High-fidelity garment parsing for Pro subscribers & BYOK users              │   │
-  │   │  • High-throughput, streaming tokens, zero VPS load                            │   │
+  │   │  Google Gemini 3.5 Flash-Lite (google-genai SDK via llm_gateway.py)            │   │
+  │   │  • Primary Stylist Brain & Main LLM across all 6 core pipelines                │   │
+  │   │  • High-fidelity garment parsing & multimodal vision                           │   │
+  │   │  • Ultra-efficient pricing ($0.30/1M input, $2.50/1M output), TTFT < 350ms    │   │
   │   └────────────────────────────────────────────────────────────────────────────────┘   │
   │                                    │  Automatic Failover                               │
-  │                                    ▼  (429 / Quota / Offline)                          │
+  │                                    ▼  (429 / Quota / Timeout)                          │
   │   3. BASELINE & SAFETY MOAT (On-Prem Zero-Cost Core)                                   │
   │   ┌────────────────────────────────────────────────────────────────────────────────┐   │
   │   │  Hetzner VPS Eyes Container (Gemma-4 E4B Q3_K_M GGUF on llama-server)          │   │
-  │   │  • Default provider for Free-Tier users without BYOK API keys                  │   │
+  │   │  • Free-Tier baseline / zero-BYOK mode for non-paying users                     │   │
+  │   │  • Transparent Quota Safety Net on Gemini 429 / RESOURCE_EXHAUSTED / timeout   │   │
   │   │  • Autonomous scheduled background cron jobs (morning looks, re-indexing)      │   │
-  │   │  • Transparent fallback via FallbackBrain when Gemini hits quota limits        │   │
   │   └────────────────────────────────────────────────────────────────────────────────┘   │
   │                                                                                        │
   └────────────────────────────────────────────────────────────────────────────────────────┘
@@ -303,39 +304,41 @@ The winning design is a **Tricameral Division of Labor**, which aligns with Dres
 
 ### Component Roles Defined
 
-#### Role 1: RunPod as the Ephemeral R&D Lab
-* **Do NOT run RunPod 24/7** as an active production server.
-* Use RunPod **strictly as an on-demand training and conversion bench**:
-  - Run `prepare_dataset.py` to ingest new fashion datasets.
-  - Launch an RTX 4090 pod to run `train_eyes_lora.py` with QLoRA for 15–20 minutes.
-  - Run `evaluate_eyes.py` to assert regression gates.
-  - Quantize via `export_gguf.py` and upload the final `.gguf` to R2 / VPS.
-  - Kill the pod.
-* **Cost**: ~$2.00 to $5.00/month in total training compute.
+#### Role 1: GitHub Actions via Modal as the Headless Training Lab
+* **RunPod training is redundant.** Model fine-tuning is scheduled as a headless CI/CD workflow on GitHub Actions utilizing **Modal serverless GPU containers**.
+* Operates strictly on-demand:
+  - Ingests fashion training datasets into `inference-server/eyes/training/`.
+  - Executes `train_eyes_lora.py` with QLoRA across target linear projection modules in 15–20 minutes on on-demand cloud GPUs (A10G/A100).
+  - Validates regression gates via `evaluate_eyes.py` against the 30 canonical ground-truth test outfits.
+  - Converts and quantizes adapters to `Q4_K_M` and `Q3_K_M` GGUF binaries via `export_gguf.py`.
+  - Ships final artifacts directly to the deployment cache.
+* **Cost**: Under \$0.20 per training run, with zero standing monthly server fees.
 
-#### Role 2: Google Gemini as the Primary Stylist & High-Tier Vision Engine
-* Designate **Gemini 3.5 Flash** as the default Stylist Brain (`DEFAULT_STYLIST_PROVIDER=gemini`). Its creative breadth, fashion vernacular, and multilingual fluency cannot be matched by small local models.
-* Use **Gemini 3.5 Flash-Lite** for all interactive garment scanning when the user is on a Pro subscription or has provided their own Google API key (BYOK).
-* The cost per garment scan is negligible (~$0.0006), and the visual fidelity (capturing hardware, exact textile weaves, and color palettes) directly enhances the core product value.
+#### Role 2: Google Gemini 3.5 Flash-Lite as the Primary Main LLM
+* Designates **Google Gemini 3.5 Flash-Lite** (`gemini-3.5-flash-lite`) as DressApp's primary model across all 6 operational pipelines via `backend/app/services/llm_gateway.py::call_main_llm`:
+  1. **Wardrobe Migration Agent** (`wardrobe_migration_agent.py`): Ingests legacy closets with complex schema extraction.
+  2. **AI Stylist & Scheduled Outfit Brain** (`gemini_stylist.py`): Real-time conversational stylist, multi-outfit recommendations, and morning looks.
+  3. **Suitcase Packing Assistant** (`suitcase.py`): Multi-day weather-aware trip wardrobe planning and cultural guideline generation.
+  4. **Trend Scout Localization & Card Summaries** (`trend_scout.py`): Editorial trend translations and card syntheses across 13 locales.
+  5. **Session Title Generator** (`session_titles.py`): Fast contextual title generation for stylist conversations.
+  6. **Closet Chat & Photo Re-analysis** (`ingestion.py`): Deep multimodal re-analysis and taxonomy correction.
+* **Pricing & Performance**: \$0.30 per 1M input tokens, \$2.50 per 1M output tokens (~$0.0006 per garment scan). Native JSON schema grammar enforcement (`response_schema`), 1M token context window, and sub-350ms TTFT.
 
-#### Role 3: Hetzner VPS Eyes as the Zero-Cost Baseline & Quota Shield
-* Keep the `dressapp-eyes` container running `gemma-4-E4B-it-Q3_K_M.gguf` on the VPS.
-* Restrict its usage to:
-  1. **Free Tier users** who have no BYOK key, ensuring DressApp never spends external money on non-paying users.
-  2. **Background cron tasks**: Autonomous morning styling recommendations, push notification generators, and internal batch re-indexing.
-  3. **Transparent Quota Fallback**: If Gemini returns `429 RESOURCE_EXHAUSTED`, `FallbackBrain` silently routes the query to `dressapp-eyes` without crashing the user session.
+#### Role 3: Hetzner VPS Eyes as the On-Prem Free-Tier & Quota Safety Net
+* The `dressapp-eyes` container continues running `gemma-4-E4B-it-Q3_K_M.gguf` on port 7860 of the Hetzner CPX32 VPS.
+* Preserved as:
+  1. **Free-Tier Baseline**: Zero variable cloud cost for users on the platform free tier or offline modes (`force_provider="gemma"`).
+  2. **Quota Safety Net**: If external Gemini API calls encounter rate limits (`429`), quota exhaustion (`RESOURCE_EXHAUSTED`), spending caps, or network timeouts, `call_main_llm` and `FallbackBrain` catch the error and seamlessly fail over to on-prem Gemma-4-E4B.
+  3. **Thinking Token Stripping**: Transparently strips internal reasoning channel markers (`<|channel>thought...<channel|>`, `<think>...</think>`) before returning text to end users.
+  4. **Informational Banner**: Emits `provider_fallback="gemma"` and `fallback_from_quota=True`, rendering the localized `stylist.fallbackQuotaBanner` in the UI without throwing 500 errors.
 
 ---
 
-## 6. Concrete Implementation Roadmap
+## 6. Concrete Implementation Status
 
-To align the codebase with this architecture without regressions:
+| Phase | Description | Status | Implementation Details |
+| :--- | :--- | :--- | :--- |
+| **Phase 1: Eyes Training Pipeline** | Fine-tuning automation | 🟢 **Complete (Modal / GHA)** | RunPod is redundant. Eyes fine-tuning is scheduled as a headless CI/CD workflow on GitHub Actions using Modal (`inference-server/eyes/training/train_eyes_lora.py`). |
+| **Phase 2: Gemini 3.5 Flash-Lite as Main LLM** | Production Stylist Brain & Main Model | 🟢 **Complete** | Standardized on `gemini-3.5-flash-lite` across all 6 core backend pipelines via `backend/app/services/llm_gateway.py::call_main_llm`. Updated `config.py` defaults (`DEFAULT_STYLIST_MODEL = "gemini-3.5-flash-lite"`, `DEFAULT_STYLIST_PROVIDER = "gemini"`). |
+| **Phase 3: VPS Eyes Quota Safety Net** | Free-Tier baseline & Quota fallback | 🟢 **Complete** | Preserved `gemma-4-E4B-it-Q3_K_M.gguf` on `http://eyes:7860/predict`. Implemented automatic failover on 429/RESOURCE_EXHAUSTED, thinking token sanitization (`strip_thinking_tokens`), and UI quota warning banners. |
 
-1. **Phase 1: Automate RunPod Training Harness**
-   - Create a one-click CLI script (`scripts/runpod_train_eyes.sh`) that provisions an ephemeral RunPod RTX 4090 pod, runs `train_eyes_lora.py`, validates via `evaluate_eyes.py`, converts to GGUF, pushes to R2, and terminates the pod.
-2. **Phase 2: Formalize Gemini as the Default Production Stylist Brain**
-   - In `backend/app/config.py`, verify `DEFAULT_STYLIST_PROVIDER` defaults to `gemini` for interactive user sessions, with fallback to `gemma` (`FallbackBrain`).
-   - Validate that `gemini_client.py` utilizes `gemini-3.5-flash` for stylist chat and `gemini-3.5-flash-lite` for vision classification.
-3. **Phase 3: Preserve VPS Eyes as Free-Tier & Quota Safety Net**
-   - Retain `gemma-4-E4B-it-Q3_K_M.gguf` inside `inference-server/eyes/`.
-   - Ensure the runtime database switch in `backend/app/services/eyes_override.py` enables seamless toggling between `gemini` and `gemma` without container restarts.

@@ -102,18 +102,6 @@ def _language_directive(code: str | None) -> str:
     return _i18n.language_directive(code)
 
 
-class GeminiStylistService:
-    def __init__(self, api_key: str | None = None, model: str | None = None) -> None:
-        # Native google-genai path: requires a direct GEMINI_API_KEY or user-provided key.
-        self.api_key = api_key or settings.GEMINI_API_KEY
-        if not self.api_key:
-            raise RuntimeError(
-                "No Gemini API key available. Set GEMINI_API_KEY or provide user API key."
-            )
-        self.model = model or settings.DEFAULT_STYLIST_MODEL or "gemini-3.5-flash"
-        self.provider = settings.DEFAULT_STYLIST_PROVIDER
-        self._client = GeminiClient(api_key=self.api_key)
-
 async def prepare_stylist_prompt(
     *,
     session_id: str | None = None,
@@ -181,7 +169,7 @@ class GeminiStylistService:
             raise RuntimeError(
                 "No Gemini API key available. Set GEMINI_API_KEY or provide user API key."
             )
-        self.model = model or settings.DEFAULT_STYLIST_MODEL or "gemini-3.5-flash"
+        self.model = model or settings.DEFAULT_STYLIST_MODEL or "gemini-3.5-flash-lite"
         self.provider = settings.DEFAULT_STYLIST_PROVIDER
         self._client = GeminiClient(api_key=self.api_key)
 
@@ -229,9 +217,10 @@ class GeminiStylistService:
                 )
 
         logger.info(
-            "Stylist call session=%s has_image=%s via main LLM (Eyes Gemma4-E4B)",
+            "Stylist call session=%s has_image=%s via main LLM (Gemini %s)",
             session_id,
             bool(image_base64),
+            self.model,
         )
         from app.services import provider_activity
         from app.services.llm_gateway import call_main_llm
@@ -246,6 +235,7 @@ class GeminiStylistService:
                 max_tokens=4096,
                 temperature=0.2,
                 response_mime_type="application/json",
+                model=self.model,
                 fallback_model=self.model,
                 api_key=self.api_key,
             )

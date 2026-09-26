@@ -220,16 +220,16 @@ def resolve_user_gemini_api_key(user: dict[str, Any] | None = None) -> str | Non
 
 
 def resolve_user_gemini_model(user: dict[str, Any] | None = None) -> str:
-    """Resolve the active Gemini multimodal model for a user, defaulting to gemini-3.5-flash."""
-    default_model = getattr(settings, "DEFAULT_STYLIST_MODEL", "gemini-3.5-flash") or "gemini-3.5-flash"
+    """Resolve the active Gemini multimodal model for a user, defaulting to gemini-3.5-flash-lite."""
+    default_model = getattr(settings, "DEFAULT_STYLIST_MODEL", "gemini-3.5-flash-lite") or "gemini-3.5-flash-lite"
     if user and isinstance(user, dict):
         ai_config = user.get("ai_configuration") or {}
         selected = ai_config.get("selected_model")
         if selected and isinstance(selected, str) and selected.strip():
             selected = selected.strip()
-            # Normalize legacy deprecated model strings
-            if selected in ("gemini-2.5-flash", "gemini-3.5-flash-lite"):
-                return "gemini-3.5-flash"
+            # Normalize legacy deprecated model strings to cost-effective gemini-3.5-flash-lite
+            if selected in ("gemini-2.5-flash", "gemini-3.5-flash"):
+                return "gemini-3.5-flash-lite"
             return selected
     return default_model
 
