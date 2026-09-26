@@ -2280,8 +2280,8 @@
   "taxonomy": {
     "categories": {
       "all": "הכל",
-      "top": "עליונית",
-      "bottom": "תחתונית",
+      "top": "חלק עליון",
+      "bottom": "חלק תחתון",
       "outerwear": "מעיל",
       "full_body": "חלק שלם",
       "footwear": "הנעלה",
@@ -2385,13 +2385,15 @@
       "retail": "ריטייל"
     },
     "role": {
-      "top": "עליונית",
-      "bottom": "תחתונית",
-      "outerwear": "מעיל",
+      "top": "חלק עליון",
+      "bottom": "חלק תחתון",
+      "outerwear": "מעיל ועליונית",
       "shoes": "נעליים",
-      "accessory": "אביזר",
+      "accessory": "אקססוריז",
       "dress": "שמלה",
-      "other": "אחר"
+      "other": "אחר",
+      "bag": "תיק",
+      "headwear": "כיסוי ראש"
     },
     "sub_category": {
       "boots": "מגפיים",
@@ -2939,7 +2941,31 @@
       "brief": "תקציר:",
       "outfit_canvas": "קנבס אאוטפיט",
       "the_look": "המראה",
-      "view_profile": "צפייה בפרופיל ←"
+      "view_profile": "צפייה בפרופיל ←",
+      "view_full_outfit": "צפה בתלבושת המלאה",
+      "selected_count": "{{count}} נבחרו",
+      "selected_count_one": "פריט {{count}} נבחר",
+      "selected_count_other": "{{count}} נבחרו",
+      "gaps_count": "{{count}} חסרים",
+      "gaps_count_one": "פריט חסר אחד",
+      "gaps_count_other": "{{count}} פריטים חסרים",
+      "marketplace_matches": "{{count}} התאמות בשוק",
+      "marketplace_matches_one": "התאמה אחת בשוק",
+      "marketplace_matches_other": "{{count}} התאמות בשוק",
+      "rejected_count": "נדחו ({{count}})",
+      "marketplace_matches_count": "התאמות בשוק ({{count}})",
+      "your_outfit": "התלבושת שלך",
+      "garment": "פריט לבוש",
+      "fashion_pro": "מומחה אופנה",
+      "reject_reasons": {
+        "duplicate": "כמעט כפול",
+        "wrong_category": "קטגוריה שגויה",
+        "color_clash": "התנגשות צבעים",
+        "wrong_formality": "חריגה ממידת הרשמיות",
+        "wrong_season": "לא מתאים לעונה",
+        "off_brief": "לא תואם לבקשה",
+        "low_quality": "איכות תמונה נמוכה מדי"
+      }
     },
     "profileDetailsCard": {
       "eg_marketing_manager_student_barista": "למשל: מנהל שיווק, סטודנט, בריסטה",

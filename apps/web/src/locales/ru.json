@@ -2359,9 +2359,11 @@
       "bottom": "Низ",
       "outerwear": "Верхняя одежда",
       "shoes": "Обувь",
-      "accessory": "Аксессуар",
+      "accessory": "Аксессуары",
       "dress": "Платье",
-      "other": "Другое"
+      "other": "Другое",
+      "bag": "Сумка",
+      "headwear": "Головной убор"
     },
     "sub_category": {
       "boots": "Ботинки и сапоги",
@@ -2908,7 +2910,31 @@
       "brief": "Бриф:",
       "outfit_canvas": "Холст образа",
       "the_look": "Образ",
-      "view_profile": "Смотреть профиль ←"
+      "view_profile": "Смотреть профиль ←",
+      "view_full_outfit": "Посмотреть образ целиком",
+      "selected_count": "{{count}} выбрано",
+      "selected_count_one": "{{count}} выбран",
+      "selected_count_other": "{{count}} выбрано",
+      "gaps_count": "{{count}} не хватает",
+      "gaps_count_one": "{{count}} недостающий предмет",
+      "gaps_count_other": "{{count}} недостающих предметов",
+      "marketplace_matches": "{{count}} совпадений в каталоге",
+      "marketplace_matches_one": "{{count}} совпадение в каталоге",
+      "marketplace_matches_other": "{{count}} совпадений в каталоге",
+      "rejected_count": "Отклонено ({{count}})",
+      "marketplace_matches_count": "Совпадений в каталоге ({{count}})",
+      "your_outfit": "Ваш образ",
+      "garment": "Предмет гардероба",
+      "fashion_pro": "Стилист-профи",
+      "reject_reasons": {
+        "duplicate": "Почти дубликат",
+        "wrong_category": "Не та категория",
+        "color_clash": "Несочетаемые цвета",
+        "wrong_formality": "Не тот уровень формальности",
+        "wrong_season": "Не по сезону",
+        "off_brief": "Не соответствует запросу",
+        "low_quality": "Слишком низкое качество фото"
+      }
     },
     "profileDetailsCard": {
       "eg_marketing_manager_student_barista": "напр. Маркетолог, Студент, Бариста",

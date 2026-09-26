@@ -2348,13 +2348,15 @@
       "retail": "Tienda / Retail"
     },
     "role": {
-      "top": "Superior",
-      "bottom": "Inferior",
-      "outerwear": "Ropa de abrigo",
+      "top": "Parte superior",
+      "bottom": "Parte inferior",
+      "outerwear": "Prenda de abrigo",
       "shoes": "Zapatos",
-      "accessory": "Accesorio",
+      "accessory": "Accesorios",
       "dress": "Vestido",
-      "other": "Otro"
+      "other": "Otro",
+      "bag": "Bolso",
+      "headwear": "Sombrerería"
     },
     "sub_category": {
       "boots": "Botas",
@@ -2901,7 +2903,31 @@
       "brief": "Briefing:",
       "outfit_canvas": "Lienzo de looks",
       "the_look": "El look",
-      "view_profile": "Ver perfil ←"
+      "view_profile": "Ver perfil ←",
+      "view_full_outfit": "Ver atuendo completo",
+      "selected_count": "{{count}} seleccionados",
+      "selected_count_one": "{{count}} seleccionado",
+      "selected_count_other": "{{count}} seleccionados",
+      "gaps_count": "{{count}} falta",
+      "gaps_count_one": "{{count}} prenda faltante",
+      "gaps_count_other": "{{count}} prendas faltantes",
+      "marketplace_matches": "{{count}} coincidencias de mercado",
+      "marketplace_matches_one": "{{count}} coincidencia en el mercado",
+      "marketplace_matches_other": "{{count}} coincidencias en el mercado",
+      "rejected_count": "Rechazados ({{count}})",
+      "marketplace_matches_count": "Coincidencias en el mercado ({{count}})",
+      "your_outfit": "Tu atuendo",
+      "garment": "Prenda",
+      "fashion_pro": "Profesional de la moda",
+      "reject_reasons": {
+        "duplicate": "Casi duplicado",
+        "wrong_category": "Categoría incorrecta",
+        "color_clash": "Conflicto de colores",
+        "wrong_formality": "Formalidad inadecuada",
+        "wrong_season": "Temporada equivocada",
+        "off_brief": "Fuera de la indicación",
+        "low_quality": "Calidad de imagen insuficiente"
+      }
     },
     "profileDetailsCard": {
       "eg_marketing_manager_student_barista": "ej. Responsable de marketing, Estudiante, Barista",

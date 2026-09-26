@@ -2355,13 +2355,15 @@
       "retail": "रिटेल"
     },
     "role": {
-      "top": "टॉप",
-      "bottom": "बॉटम",
-      "outerwear": "बाहरी कपड़े",
+      "top": "ऊपरी वस्त्र",
+      "bottom": "निचला वस्त्र",
+      "outerwear": "आउटरवियर",
       "shoes": "जूते",
-      "accessory": "एक्सेसरी",
+      "accessory": "एक्सेसरीज",
       "dress": "ड्रेस",
-      "other": "अन्य"
+      "other": "अन्य",
+      "bag": "बैग",
+      "headwear": "टोपी / पगड़ी"
     },
     "sub_category": {
       "boots": "बूट",
@@ -2908,7 +2910,31 @@
       "brief": "ब्रीफ:",
       "outfit_canvas": "आउटफ़िट कैनवास",
       "the_look": "लुक",
-      "view_profile": "प्रोफ़ाइल देखें ←"
+      "view_profile": "प्रोफ़ाइल देखें ←",
+      "view_full_outfit": "पूरा पहनावा देखें",
+      "selected_count": "{{count}} चुने गए",
+      "selected_count_one": "{{count}} चुना गया",
+      "selected_count_other": "{{count}} चुने गए",
+      "gaps_count": "{{count}} बाकी",
+      "gaps_count_one": "{{count}} अधूरा वस्त्र",
+      "gaps_count_other": "{{count}} अधूरे वस्त्र",
+      "marketplace_matches": "{{count}} मार्केटप्लेस मैच",
+      "marketplace_matches_one": "{{count}} मार्केटप्लेस मैच",
+      "marketplace_matches_other": "{{count}} मार्केटप्लेस मैच",
+      "rejected_count": "अस्वीकृत ({{count}})",
+      "marketplace_matches_count": "मार्केटप्लेस मैच ({{count}})",
+      "your_outfit": "आपका पहनावा",
+      "garment": "कपड़ा",
+      "fashion_pro": "फ़ैशन विशेषज्ञ",
+      "reject_reasons": {
+        "duplicate": "लगभग डुप्लिकेट",
+        "wrong_category": "गलत श्रेणी",
+        "color_clash": "रंगों का टकराव",
+        "wrong_formality": "औपचारिकता अनुपयुक्त",
+        "wrong_season": "मौसम के अनुकूल नहीं",
+        "off_brief": "अनुरोध के अनुसार नहीं",
+        "low_quality": "छवि की गुणवत्ता बहुत कम"
+      }
     },
     "profileDetailsCard": {
       "eg_marketing_manager_student_barista": "उदा. मार्केटिंग मैनेजर, छात्र, बरिस्ता",

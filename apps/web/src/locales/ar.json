@@ -2352,9 +2352,11 @@
       "bottom": "قطعة سفلية",
       "outerwear": "ملابس خارجية",
       "shoes": "أحذية",
-      "accessory": "إكسسوار",
+      "accessory": "إكسسوارات",
       "dress": "فستان",
-      "other": "أخرى"
+      "other": "أخرى",
+      "bag": "حقيبة",
+      "headwear": "غطاء رأس"
     },
     "sub_category": {
       "boots": "أحذية برقبة (بوات)",
@@ -2901,7 +2903,31 @@
       "brief": "ملخص:",
       "outfit_canvas": "لوحة الزي",
       "the_look": "الإطلالة",
-      "view_profile": "عرض الملف الشخصي ←"
+      "view_profile": "عرض الملف الشخصي ←",
+      "view_full_outfit": "عرض الإطلالة الكاملة",
+      "selected_count": "{{count}} محدد",
+      "selected_count_one": "عنصر محدد واحد",
+      "selected_count_other": "{{count}} محددة",
+      "gaps_count": "{{count}} مفقود",
+      "gaps_count_one": "قطعة ناقصة واحدة",
+      "gaps_count_other": "{{count}} قطع ناقصة",
+      "marketplace_matches": "{{count}} مطابقة في السوق",
+      "marketplace_matches_one": "مطابقة واحدة في السوق",
+      "marketplace_matches_other": "{{count}} مطابقات في السوق",
+      "rejected_count": "مرفوض ({{count}})",
+      "marketplace_matches_count": "مطابقات في السوق ({{count}})",
+      "your_outfit": "إطلالتك",
+      "garment": "قطعة ملابس",
+      "fashion_pro": "خبير أزياء",
+      "reject_reasons": {
+        "duplicate": "شبه مكرر",
+        "wrong_category": "فئة خاطئة",
+        "color_clash": "تعارض ألوان",
+        "wrong_formality": "مستوى رسمية غير ملائم",
+        "wrong_season": "غير ملائم للموسم",
+        "off_brief": "غير مطابق للطلب",
+        "low_quality": "جودة الصورة منخفضة"
+      }
     },
     "profileDetailsCard": {
       "eg_marketing_manager_student_barista": "مثال: مدير تسويق، طالب، باريستا",

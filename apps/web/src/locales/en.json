@@ -2354,7 +2354,9 @@
       "shoes": "Shoes",
       "accessory": "Accessory",
       "dress": "Dress",
-      "other": "Other"
+      "other": "Other",
+      "bag": "Bag",
+      "headwear": "Headwear"
     },
     "sub_category": {
       "boots": "Boots",
@@ -2907,7 +2909,31 @@
       "resultsCount": "Found {{count}} of {{total}} outfits",
       "noSearchMatches": "No outfits match this vibe",
       "noSearchMatchesDesc": "We couldn't find any saved outfits matching \"{{query}}\". Try another vibe, garment, or clear the search.",
-      "clearSearch": "Clear search"
+      "clearSearch": "Clear search",
+      "view_full_outfit": "View full outfit",
+      "selected_count": "{{count}} selected",
+      "selected_count_one": "{{count}} selected",
+      "selected_count_other": "{{count}} selected",
+      "gaps_count": "{{count}} gap",
+      "gaps_count_one": "{{count}} gap",
+      "gaps_count_other": "{{count}} gaps",
+      "marketplace_matches": "{{count}} marketplace match",
+      "marketplace_matches_one": "{{count}} marketplace match",
+      "marketplace_matches_other": "{{count}} marketplace matches",
+      "rejected_count": "Rejected ({{count}})",
+      "marketplace_matches_count": "Marketplace matches ({{count}})",
+      "your_outfit": "Your outfit",
+      "garment": "Garment",
+      "fashion_pro": "Fashion pro",
+      "reject_reasons": {
+        "duplicate": "Near-duplicate",
+        "wrong_category": "Wrong category",
+        "color_clash": "Color clash",
+        "wrong_formality": "Off formality",
+        "wrong_season": "Wrong season",
+        "off_brief": "Off brief",
+        "low_quality": "Image too low quality"
+      }
     },
     "profileDetailsCard": {
       "eg_marketing_manager_student_barista": "e.g. Marketing manager, Student, Barista",

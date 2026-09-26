@@ -2352,9 +2352,11 @@
       "bottom": "Bas",
       "outerwear": "Vêtements d'extérieur",
       "shoes": "Chaussures",
-      "accessory": "Accessoire",
+      "accessory": "Accessoires",
       "dress": "Robe",
-      "other": "Autre"
+      "other": "Autre",
+      "bag": "Sac",
+      "headwear": "Couvre-chef"
     },
     "sub_category": {
       "boots": "Bottes et bottines",
@@ -2901,7 +2903,31 @@
       "brief": "Brief :",
       "outfit_canvas": "Canevas de tenue",
       "the_look": "Le look",
-      "view_profile": "Voir le profil ←"
+      "view_profile": "Voir le profil ←",
+      "view_full_outfit": "Voir la tenue complète",
+      "selected_count": "{{count}} sélectionnés",
+      "selected_count_one": "{{count}} sélectionné",
+      "selected_count_other": "{{count}} sélectionnés",
+      "gaps_count": "{{count}} manquant",
+      "gaps_count_one": "{{count}} pièce manquante",
+      "gaps_count_other": "{{count}} pièces manquantes",
+      "marketplace_matches": "{{count}} correspondances marketplace",
+      "marketplace_matches_one": "{{count}} correspondance marketplace",
+      "marketplace_matches_other": "{{count}} correspondances marketplace",
+      "rejected_count": "Refusés ({{count}})",
+      "marketplace_matches_count": "Correspondances marketplace ({{count}})",
+      "your_outfit": "Votre tenue",
+      "garment": "Vêtement",
+      "fashion_pro": "Pro de la mode",
+      "reject_reasons": {
+        "duplicate": "Presque en double",
+        "wrong_category": "Mauvaise catégorie",
+        "color_clash": "Conflit de couleurs",
+        "wrong_formality": "Formalité inadaptée",
+        "wrong_season": "Mauvaise saison",
+        "off_brief": "Hors consigne",
+        "low_quality": "Qualité d'image trop faible"
+      }
     },
     "profileDetailsCard": {
       "eg_marketing_manager_student_barista": "ex. responsable marketing, étudiant·e, barista",

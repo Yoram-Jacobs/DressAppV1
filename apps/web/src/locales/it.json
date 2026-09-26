@@ -2357,11 +2357,13 @@
     "role": {
       "top": "Parte superiore",
       "bottom": "Parte inferiore",
-      "outerwear": "Capospalla",
+      "outerwear": "Capispalla",
       "shoes": "Scarpe",
-      "accessory": "Accessorio",
+      "accessory": "Accessori",
       "dress": "Abito",
-      "other": "Altro"
+      "other": "Altro",
+      "bag": "Borsa",
+      "headwear": "Copricapo"
     },
     "sub_category": {
       "boots": "Stivali",
@@ -2908,7 +2910,31 @@
       "brief": "Breve:",
       "outfit_canvas": "Tela dell'outfit",
       "the_look": "Il look",
-      "view_profile": "Vedi profilo ←"
+      "view_profile": "Vedi profilo ←",
+      "view_full_outfit": "Visualizza outfit completo",
+      "selected_count": "{{count}} selezionati",
+      "selected_count_one": "{{count}} selezionato",
+      "selected_count_other": "{{count}} selezionati",
+      "gaps_count": "{{count}} mancante",
+      "gaps_count_one": "{{count}} pezzo mancante",
+      "gaps_count_other": "{{count}} pezzi mancanti",
+      "marketplace_matches": "{{count}} corrispondenze marketplace",
+      "marketplace_matches_one": "{{count}} corrispondenza marketplace",
+      "marketplace_matches_other": "{{count}} corrispondenze marketplace",
+      "rejected_count": "Rifiutati ({{count}})",
+      "marketplace_matches_count": "Corrispondenze marketplace ({{count}})",
+      "your_outfit": "Il tuo outfit",
+      "garment": "Capo d'abbigliamento",
+      "fashion_pro": "Stilista professionista",
+      "reject_reasons": {
+        "duplicate": "Quasi duplicato",
+        "wrong_category": "Categoria errata",
+        "color_clash": "Contrasto di colore",
+        "wrong_formality": "Formalità non adatta",
+        "wrong_season": "Stagione errata",
+        "off_brief": "Non in linea con la richiesta",
+        "low_quality": "Qualità dell'immagine troppo bassa"
+      }
     },
     "profileDetailsCard": {
       "eg_marketing_manager_student_barista": "es. Responsabile marketing, Studente, Barista",

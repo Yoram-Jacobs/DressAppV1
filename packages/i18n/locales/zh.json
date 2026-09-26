@@ -2361,7 +2361,9 @@
       "shoes": "鞋履",
       "accessory": "配饰",
       "dress": "连衣裙",
-      "other": "其他"
+      "other": "其他",
+      "bag": "包袋",
+      "headwear": "帽饰"
     },
     "sub_category": {
       "boots": "靴子",
@@ -2908,7 +2910,31 @@
       "brief": "简报：",
       "outfit_canvas": "穿搭画布",
       "the_look": "造型",
-      "view_profile": "查看档案 ←"
+      "view_profile": "查看档案 ←",
+      "view_full_outfit": "查看整套穿搭",
+      "selected_count": "已选 {{count}} 件",
+      "selected_count_one": "已选 {{count}} 件",
+      "selected_count_other": "已选 {{count}} 件",
+      "gaps_count": "缺少 {{count}} 件",
+      "gaps_count_one": "缺少 {{count}} 件",
+      "gaps_count_other": "缺少 {{count}} 件",
+      "marketplace_matches": "{{count}} 个市集匹配",
+      "marketplace_matches_one": "{{count}} 个市集匹配",
+      "marketplace_matches_other": "{{count}} 个市集匹配",
+      "rejected_count": "未入选 ({{count}})",
+      "marketplace_matches_count": "市集匹配 ({{count}})",
+      "your_outfit": "您的搭配",
+      "garment": "衣物",
+      "fashion_pro": "专业造型师",
+      "reject_reasons": {
+        "duplicate": "高度相似",
+        "wrong_category": "分类不合",
+        "color_clash": "色彩冲突",
+        "wrong_formality": "正式度不符",
+        "wrong_season": "季节不符",
+        "off_brief": "偏离要求",
+        "low_quality": "图片画质过低"
+      }
     },
     "profileDetailsCard": {
       "eg_marketing_manager_student_barista": "例如：市场经理、学生、咖啡师",

@@ -2355,13 +2355,15 @@
       "retail": "Varejo"
     },
     "role": {
-      "top": "Parte de cima",
-      "bottom": "Parte de baixo",
-      "outerwear": "Agasalho",
-      "shoes": "Sapatos",
-      "accessory": "Acessório",
+      "top": "Parte superior",
+      "bottom": "Parte inferior",
+      "outerwear": "Casacos e sobretudos",
+      "shoes": "Calçado",
+      "accessory": "Acessórios",
       "dress": "Vestido",
-      "other": "Outro"
+      "other": "Outro",
+      "bag": "Bolsa",
+      "headwear": "Chapéus"
     },
     "sub_category": {
       "boots": "Botas",
@@ -2908,7 +2910,31 @@
       "brief": "Briefing:",
       "outfit_canvas": "Tela de looks",
       "the_look": "O look",
-      "view_profile": "Ver perfil ←"
+      "view_profile": "Ver perfil ←",
+      "view_full_outfit": "Ver visual completo",
+      "selected_count": "{{count}} selecionados",
+      "selected_count_one": "{{count}} selecionado",
+      "selected_count_other": "{{count}} selecionados",
+      "gaps_count": "{{count}} em falta",
+      "gaps_count_one": "{{count}} peça em falta",
+      "gaps_count_other": "{{count}} peças em falta",
+      "marketplace_matches": "{{count}} correspondências no marketplace",
+      "marketplace_matches_one": "{{count}} correspondência no marketplace",
+      "marketplace_matches_other": "{{count}} correspondências no marketplace",
+      "rejected_count": "Rejeitados ({{count}})",
+      "marketplace_matches_count": "Correspondências no marketplace ({{count}})",
+      "your_outfit": "O seu visual",
+      "garment": "Peça de roupa",
+      "fashion_pro": "Profissional de moda",
+      "reject_reasons": {
+        "duplicate": "Quase duplicado",
+        "wrong_category": "Categoria errada",
+        "color_clash": "Conflito de cores",
+        "wrong_formality": "Formalidade desajustada",
+        "wrong_season": "Estação errada",
+        "off_brief": "Fora do pedido",
+        "low_quality": "Qualidade de imagem insuficiente"
+      }
     },
     "profileDetailsCard": {
       "eg_marketing_manager_student_barista": "ex. Gestor de marketing, Estudante, Barista",

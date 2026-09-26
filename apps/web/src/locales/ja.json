@@ -2360,8 +2360,10 @@
       "outerwear": "アウター",
       "shoes": "シューズ",
       "accessory": "アクセサリー",
-      "dress": "ドレス",
-      "other": "その他"
+      "dress": "ワンピース",
+      "other": "その他",
+      "bag": "バッグ",
+      "headwear": "ヘッドウェア"
     },
     "sub_category": {
       "boots": "ブーツ",
@@ -2908,7 +2910,31 @@
       "brief": "ブリーフ：",
       "outfit_canvas": "コーディネートキャンバス",
       "the_look": "ルック",
-      "view_profile": "プロファイルを見る ←"
+      "view_profile": "プロファイルを見る ←",
+      "view_full_outfit": "コーディネート全体を見る",
+      "selected_count": "{{count}}点 選択済み",
+      "selected_count_one": "{{count}}点 選択済み",
+      "selected_count_other": "{{count}}点 選択済み",
+      "gaps_count": "{{count}}点 不足",
+      "gaps_count_one": "{{count}}点 不足",
+      "gaps_count_other": "{{count}}点 不足",
+      "marketplace_matches": "{{count}}件のマーケット候補",
+      "marketplace_matches_one": "{{count}}件のマーケット候補",
+      "marketplace_matches_other": "{{count}}件のマーケット候補",
+      "rejected_count": "不採用 ({{count}})",
+      "marketplace_matches_count": "マーケット候補 ({{count}})",
+      "your_outfit": "あなたのコーデ",
+      "garment": "アイテム",
+      "fashion_pro": "プロスタイリスト",
+      "reject_reasons": {
+        "duplicate": "ほぼ重複",
+        "wrong_category": "カテゴリ違い",
+        "color_clash": "色のミスマッチ",
+        "wrong_formality": "TPO不一致",
+        "wrong_season": "季節違い",
+        "off_brief": "要望に不一致",
+        "low_quality": "画質不足"
+      }
     },
     "profileDetailsCard": {
       "eg_marketing_manager_student_barista": "例：マーケティングマネージャー、学生、バリスタ",

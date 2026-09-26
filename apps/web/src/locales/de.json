@@ -2350,11 +2350,13 @@
     "role": {
       "top": "Oberteil",
       "bottom": "Unterteil",
-      "outerwear": "Outdoor-Bekleidung",
+      "outerwear": "Oberbekleidung",
       "shoes": "Schuhe",
-      "accessory": "Accessoire",
+      "accessory": "Accessoires",
       "dress": "Kleid",
-      "other": "Sonstiges"
+      "other": "Sonstiges",
+      "bag": "Tasche",
+      "headwear": "Kopfbedeckung"
     },
     "sub_category": {
       "boots": "Stiefel",
@@ -2901,7 +2903,31 @@
       "brief": "Briefing:",
       "outfit_canvas": "Outfit-Canvas",
       "the_look": "Der Look",
-      "view_profile": "Profil anzeigen ←"
+      "view_profile": "Profil anzeigen ←",
+      "view_full_outfit": "Vollständiges Outfit ansehen",
+      "selected_count": "{{count}} ausgewählt",
+      "selected_count_one": "{{count}} ausgewählt",
+      "selected_count_other": "{{count}} ausgewählt",
+      "gaps_count": "{{count}} Lücke",
+      "gaps_count_one": "{{count}} fehlendes Teil",
+      "gaps_count_other": "{{count}} fehlende Teile",
+      "marketplace_matches": "{{count}} Marktplatz-Treffer",
+      "marketplace_matches_one": "{{count}} Marktplatz-Treffer",
+      "marketplace_matches_other": "{{count}} Marktplatz-Treffer",
+      "rejected_count": "Abgelehnt ({{count}})",
+      "marketplace_matches_count": "Marktplatz-Treffer ({{count}})",
+      "your_outfit": "Dein Outfit",
+      "garment": "Kleidungsstück",
+      "fashion_pro": "Mode-Profi",
+      "reject_reasons": {
+        "duplicate": "Fast-Duplikat",
+        "wrong_category": "Falsche Kategorie",
+        "color_clash": "Farbkonflikt",
+        "wrong_formality": "Unpassende Formalität",
+        "wrong_season": "Falsche Saison",
+        "off_brief": "Am Wunsch vorbei",
+        "low_quality": "Bildqualität zu niedrig"
+      }
     },
     "profileDetailsCard": {
       "eg_marketing_manager_student_barista": "z. B. Marketing-Manager, Student, Barista",

@@ -25,18 +25,9 @@ import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import ShareOutfitModal from '@/components/stylist/ShareOutfitModal';
 import HarmonyBadge from '@/components/stylist/HarmonyBadge';
+import { labelForRole } from '@/lib/taxonomy';
 
 import { useTranslation } from 'react-i18next';
-const SLOT_LABELS = {
-  top: 'Top',
-  bottom: 'Bottom',
-  dress: 'Dress',
-  outerwear: 'Outerwear',
-  shoes: 'Shoes',
-  accessory: 'Accessory',
-  bag: 'Bag',
-  headwear: 'Headwear',
-};
 
 const REJECT_LABELS = {
   duplicate: 'Near-duplicate',
@@ -55,8 +46,6 @@ function formatPrice(cents, currency) {
 }
 
 function CandidateImage({ src, alt, className }) {
-  const { t } = useTranslation();
-
   if (!src) {
     return (
       <div
@@ -75,7 +64,7 @@ function CandidateImage({ src, alt, className }) {
 function SlotCard({ slot, candidate, onOpen }) {
   const { t } = useTranslation();
 
-  const label = SLOT_LABELS[slot.role] || slot.role;
+  const label = labelForRole(slot.role, t) || slot.role;
   const empty = slot.is_gap || !candidate;
   return (
     <button
@@ -95,7 +84,7 @@ function SlotCard({ slot, candidate, onOpen }) {
         )}
       >
         {empty ? (
-          <div className="flex h-full w-full items-center justify-center text-xs text-text-brand">
+          <div className="flex h-full w-full items-center justify-center text-xs text-text-brand text-center px-1">
             <span className="opacity-70">{label}</span>
           </div>
         ) : (
@@ -108,9 +97,9 @@ function SlotCard({ slot, candidate, onOpen }) {
           <Badge variant="outline" className="absolute top-1 start-1 text-[9px] pt-0 px-2 bg-amber-900 text-white">{t('common.gap', { defaultValue: 'gap' })}</Badge>
         )}
       </div>
-      <div className="text-[10px] font-semibold text-primary-brand">{label}</div>
+      <div className="text-[10px] font-semibold text-primary-brand text-center truncate w-full">{label}</div>
       {!empty && candidate.title && (
-        <div className="text-[12px] line-clamp-2 text-dark-brand font-bold">{candidate.title}</div>
+        <div className="text-[12px] line-clamp-2 text-dark-brand font-bold text-center">{candidate.title}</div>
       )}
     </button>
   );
@@ -120,13 +109,17 @@ function RejectedRow({ reject, candidate }) {
   const { t } = useTranslation();
 
   if (!candidate) return null;
+  const reasonLabel = t(`components.outfitCanvas.reject_reasons.${reject.reason}`, {
+    defaultValue: REJECT_LABELS[reject.reason] || reject.reason,
+  });
+
   return (
     <div className="flex items-center gap-2 rounded-lg border border-border bg-card/60 p-2" data-testid="outfit-rejected-row">
       <CandidateImage src={candidate.image_data_url} alt={candidate.title || ''} className="h-12 w-12 rounded-md flex-shrink-0" />
       <div className="min-w-0 flex-1">
-        <div className="text-xs font-medium truncate">{candidate.title || 'Garment'}</div>
+        <div className="text-xs font-medium truncate">{candidate.title || t('components.outfitCanvas.garment', { defaultValue: 'Garment' })}</div>
         <div className="text-[11px] text-text-brand">
-          <span className="text-amber-600 dark:text-amber-400">{REJECT_LABELS[reject.reason] || reject.reason}</span>
+          <span className="text-amber-600 dark:text-amber-400">{reasonLabel}</span>
           {reject.detail && ` — ${reject.detail}`}
         </div>
       </div>
@@ -149,7 +142,7 @@ function MarketplaceCard({ s }) {
         <div className="mt-1 flex items-center justify-between">
           <span className="text-xs text-foreground/70">{formatPrice(s.price_cents, s.currency) || '—'}</span>
           {s.fills_slot && (
-            <Badge variant="outline" className="text-[10px] px-1 py-0">{SLOT_LABELS[s.fills_slot] || s.fills_slot}</Badge>
+            <Badge variant="outline" className="text-[10px] px-1 py-0">{labelForRole(s.fills_slot, t) || s.fills_slot}</Badge>
           )}
         </div>
       </div>
@@ -175,14 +168,14 @@ function ProfessionalCard({ pro }) {
       <div className="min-w-0 flex-1">
         <div className="text-sm font-semibold truncate">{pro.display_name}</div>
         <div className="text-xs text-text-brand">
-          {[pro.profession, pro.location].filter(Boolean).join(' · ') || 'Fashion pro'}
+          {[pro.profession, pro.location].filter(Boolean).join(' · ') || t('components.outfitCanvas.fashion_pro', { defaultValue: 'Fashion pro' })}
         </div>
         <div className="text-xs mt-1 text-foreground/80">{pro.why_suggested}</div>
         <Link
           to={`/experts/${pro.professional_id}`}
           className="text-xs font-medium text-[hsl(var(--accent))] hover:underline mt-1 inline-block"
         >
-          {t('components.outfitCanvas.view_profile')}
+          {t('components.outfitCanvas.view_profile', { defaultValue: 'View profile →' })}
         </Link>
       </div>
     </div>
@@ -221,7 +214,9 @@ export function OutfitCanvasPreview({ canvas, onExpand }) {
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-2 min-w-0">
           <Sparkles className="h-4 w-4 text-primary-brand shrink-0" />
-          <span className="text-[12px] font-bold truncate">{canvas.summary || 'Your outfit'}</span>
+          <span className="text-[12px] font-bold truncate">
+            {canvas.summary || t('components.outfitCanvas.your_outfit', { defaultValue: 'Your outfit' })}
+          </span>
         </div>
         {outfitColors.length >= 2 && (
           <div className="shrink-0">
@@ -239,13 +234,28 @@ export function OutfitCanvasPreview({ canvas, onExpand }) {
           />
         ))}
       </div>
-      <div className="flex items-center justify-between gap-2 pt-1">
-        <div className="text-[12px] font-semibold text-text-brand">
-          {filled} selected · {gaps > 0 && <span className="text-amber-600 dark:text-amber-400">{gaps} gap{gaps !== 1 ? 's' : ''}</span>}
-          {market.length > 0 && <span className="ms-2">· {market.length} marketplace match{market.length !== 1 ? 'es' : ''}</span>}
+      <div className="flex items-center justify-between gap-2 pt-1 flex-wrap sm:flex-nowrap">
+        <div className="flex flex-wrap items-center gap-1.5 text-[12px] font-semibold text-text-brand">
+          <span>{t('components.outfitCanvas.selected_count', { count: filled, defaultValue: `${filled} selected` })}</span>
+          {gaps > 0 && (
+            <>
+              <span className="opacity-40 select-none">·</span>
+              <span className="text-amber-600 dark:text-amber-400">
+                {t('components.outfitCanvas.gaps_count', { count: gaps, defaultValue: gaps === 1 ? '1 gap' : `${gaps} gaps` })}
+              </span>
+            </>
+          )}
+          {market.length > 0 && (
+            <>
+              <span className="opacity-40 select-none">·</span>
+              <span>
+                {t('components.outfitCanvas.marketplace_matches', { count: market.length, defaultValue: market.length === 1 ? '1 marketplace match' : `${market.length} marketplace matches` })}
+              </span>
+            </>
+          )}
         </div>
         <Button onClick={onExpand} size="sm" data-testid="outfit-canvas-expand-btn">
-          View full outfit
+          {t('components.outfitCanvas.view_full_outfit', { defaultValue: 'View full outfit' })}
         </Button>
       </div>
     </div>
@@ -293,16 +303,19 @@ export function OutfitCanvasFull({ canvas, onClose, embedded = false, sessionId 
         <div className="min-w-0">
           <div className="flex items-center gap-2 mb-3">
             <Sparkles className="h-4 w-4 text-primary-brand" />
-            <span className="text-[20px] text-dark-brand font-bold">{t('nav.outfits')}</span>
+            <span className="text-[20px] text-dark-brand font-bold">{t('nav.outfits', { defaultValue: 'Outfits' })}</span>
           </div>
-          <h2 className="text-[14px] font-semibold text-text-brand">{canvas.summary || 'Your outfit'}</h2>
+          <h2 className="text-[14px] font-semibold text-text-brand">{canvas.summary || t('components.outfitCanvas.your_outfit', { defaultValue: 'Your outfit' })}</h2>
           {outfitColors.length >= 2 && (
             <div className="mt-1.5 mb-1">
               <HarmonyBadge colors={outfitColors} />
             </div>
           )}
           {canvas.brief && (
-            <p className="text-[12px] text-text-brand font-semibold mt-1">{t('components.outfitCanvas.brief')} <span className="italic">{canvas.brief}</span></p>
+            <p className="text-[12px] text-text-brand font-semibold mt-1">
+              {t('components.outfitCanvas.brief', { defaultValue: 'Brief:' })}{' '}
+              <span className="italic">{canvas.brief}</span>
+            </p>
           )}
         </div>
         <div className="flex items-center gap-1.5 flex-shrink-0">
@@ -329,7 +342,7 @@ export function OutfitCanvasFull({ canvas, onClose, embedded = false, sessionId 
 
       {/* Selected slots */}
       <div>
-        <div className="text-[14px] font-semibold text-text-brand mb-2">{t('components.outfitCanvas.the_look')}</div>
+        <div className="text-[14px] font-semibold text-text-brand mb-2">{t('components.outfitCanvas.the_look', { defaultValue: 'The look' })}</div>
         <div className="flex gap-2 overflow-x-auto pb-2 -mx-1 px-1">
           {slots.map((slot, i) => (
             <SlotCard
@@ -347,7 +360,7 @@ export function OutfitCanvasFull({ canvas, onClose, embedded = false, sessionId 
         <div>
           <div className="flex items-center gap-2 text-[14px] font-semibold text-text-brand mb-2">
             <AlertTriangle className="!h-4 !w-4 text-destructive" />
-            Rejected ({rejected.length})
+            {t('components.outfitCanvas.rejected_count', { count: rejected.length, defaultValue: `Rejected (${rejected.length})` })}
           </div>
           <div className="grid sm:grid-cols-2 gap-2">
             {rejected.map((r, i) => (
@@ -362,7 +375,7 @@ export function OutfitCanvasFull({ canvas, onClose, embedded = false, sessionId 
         <div>
           <div className="flex items-center gap-2 text-[14px] font-semibold text-text-brand mb-2">
             <ShoppingBag className="!h-4 !w-4 text-yellow-brand" />
-            Marketplace matches ({market.length})
+            {t('components.outfitCanvas.marketplace_matches_count', { count: market.length, defaultValue: `Marketplace matches (${market.length})` })}
           </div>
           <div className="flex gap-2 overflow-x-auto pb-2 -mx-1 px-1">
             {market.map((s) => <MarketplaceCard key={s.listing_id} s={s} />)}

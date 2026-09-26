@@ -2355,13 +2355,15 @@
       "retail": "Winkel / Retail"
     },
     "role": {
-      "top": "Bovenkant",
-      "bottom": "Onderkant",
+      "top": "Bovenstuk",
+      "bottom": "Onderstuk",
       "outerwear": "Bovenkleding",
       "shoes": "Schoenen",
-      "accessory": "Accessoire",
+      "accessory": "Accessoires",
       "dress": "Jurk",
-      "other": "Overig"
+      "other": "Overig",
+      "bag": "Tas",
+      "headwear": "Hoofddeksel"
     },
     "sub_category": {
       "boots": "Laarzen",
@@ -2908,7 +2910,31 @@
       "brief": "Kort:",
       "outfit_canvas": "Outfitcanvas",
       "the_look": "De blik",
-      "view_profile": "Bekijk profiel →"
+      "view_profile": "Bekijk profiel →",
+      "view_full_outfit": "Volledige outfit bekijken",
+      "selected_count": "{{count}} geselecteerd",
+      "selected_count_one": "{{count}} geselecteerd",
+      "selected_count_other": "{{count}} geselecteerd",
+      "gaps_count": "{{count}} ontbrekend",
+      "gaps_count_one": "{{count}} ontbrekend item",
+      "gaps_count_other": "{{count}} ontbrekende items",
+      "marketplace_matches": "{{count}} marktplaats matches",
+      "marketplace_matches_one": "{{count}} marktplaats match",
+      "marketplace_matches_other": "{{count}} marktplaats matches",
+      "rejected_count": "Afgewezen ({{count}})",
+      "marketplace_matches_count": "Marktplaats matches ({{count}})",
+      "your_outfit": "Jouw outfit",
+      "garment": "Kledingstuk",
+      "fashion_pro": "Mode-expert",
+      "reject_reasons": {
+        "duplicate": "Vrijwel dubbel",
+        "wrong_category": "Verkeerde categorie",
+        "color_clash": "Vloekende kleuren",
+        "wrong_formality": "Verkeerde formaliteit",
+        "wrong_season": "Verkeerd seizoen",
+        "off_brief": "Niet volgens wens",
+        "low_quality": "Beeldkwaliteit te laag"
+      }
     },
     "profileDetailsCard": {
       "eg_marketing_manager_student_barista": "bijv. Marketingmanager, Student, Barista",
