@@ -64,7 +64,6 @@ graph TD
 
 ### Principais Capacidades Administrativas
 - **Visibilidade de KPIs em Tempo Real**: Métricas consolidadas sobre usuários ativos, total de itens de vestuário, volume do marketplace, taxas da plataforma, chamadas ao estilista e relatórios publicados no Trend Scout.
-- **Programa do Grupo de Testadores**: Atribuição automática de perfil e do plano Professional de cortesia para contas de testadores homologados (`maystarboard@gmail.com`, `lokoprod@gmail.com`, `dressapdeveloper@gmail.com`).
 - **Autenticação Segura**: O acesso em produção é protegido exclusivamente via autenticação Google OAuth (`ADMIN_EMAILS`); atalhos não autenticados herdados foram descontinuados.
 - **Governança de Roteamento de IA Multinível**: Verificação direta e testes de ping em tempo real para o gateway principal do **Google Gemini 3.5 Flash-Lite** e para o contêiner Eyes **Gemma-4-E4B** on-premises na porta 7860.
 - **Segurança e Moderação do Marketplace**: Capacidade imediata para inspecionar, suspender ou reativar anúncios e gerenciar privilégios de usuários.
@@ -120,7 +119,7 @@ O painel administrativo é organizado em abas com layout limpo e otimizado para 
 
 ### Autenticação e Autorização
 - **Guarda de Dependência**: Os endpoints da API exigem a dependência `require_admin` em `backend/app/api/v1/admin.py`, checando se o e-mail no JWT está configurado na variável de ambiente `ADMIN_EMAILS` de produção.
-- **Integração com Google OAuth**: O login em produção utiliza o fluxo do Google OAuth (`dressapdeveloper@gmail.com`), eliminando credenciais de desenvolvimento locais para reforçar a segurança.
+- **Integração com Google OAuth**: O login em produção utiliza o fluxo do Google OAuth (`dressappdeveloper@gmail.com`), eliminando credenciais de desenvolvimento locais para reforçar a segurança.
 
 ### Infraestrutura de Roteamento de IA Multinível
 - **Motor Principal**: Google Gemini 3.5 Flash-Lite processa consultas de estilo e análises visuais em produção por meio do `backend/app/services/llm_gateway.py`.

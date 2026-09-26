@@ -28,4 +28,4 @@ Um guarda-roupa digital impecável que carrega instantaneamente, permitindo orga
 - **Agrupamento por engano**: Abra os detalhes da peça e toque em **Desagrupar**.
 
 ## Limitações
-- Contas gratuitas armazenam até 150 peças. Convide amigos (+10 vagas por cadastro) ou assine o Pro para espaço ilimitado.
+- Contas gratuitas armazenam até 1,000 peças. Convide amigos (+10 vagas por cadastro) ou assine o Pro para espaço ilimitado.

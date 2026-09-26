@@ -136,8 +136,7 @@ The stylist provides contextually-grounded outfit suggestions:
 - **Multi-Tier LLM Routing (`llm_gateway.py` & `stylist_brain.py`)**:
   - **Primary Production Engine (Google Gemini 3.5 Flash-Lite)**: All 6 core pipelines (Stylist Brain, Wardrobe Migration, Suitcase Planner, Trend Scout localization, Session Titles, and Closet Ingestion) route by default to Google Gemini via `llm_gateway.py` with strict JSON schema enforcement and zero-friction user onboarding.
   - **On-Prem VPS Eyes (`gemma-4-E4B`) — Free Tier & Quota Safety Net**: `dressapp-eyes` container running fine-tuned `gemma-4-E4B-it-Q3_K_M.gguf` on port 7860 of the Hetzner CPX32 VPS. Serves as the zero-cost baseline for offline/free usage and transparently intercepts quota exhaustion (`429` / `RESOURCE_EXHAUSTED`), stripping thinking tokens and returning fallback status without raising 500 errors.
-  - **Tester Group Program**: Allow-listed tester emails (`TESTER_EMAILS`) automatically receive the `tester` role and complimentary **Professional plan tier** (unlimited closet space, Trend Scout, daily stylist scheduler, and 100 credits/cycle).
-  - **Developer Authentication**: Standardized on Google OAuth sign-in (`dressapdeveloper@gmail.com`) with permanent Admin rights and Professional tester perks.
+  - **Developer Authentication**: Standardized on Google OAuth sign-in (`dressappdeveloper@gmail.com`) with permanent Admin rights.
   - **Custom BYOK Models**: Users with configured Google Gemini keys can select higher-tier models (`gemini-2.5-pro`, etc.).
 - **Audio Routing**:
   - *Speech-to-Text (STT)*: Routes microphone audio between Deepgram Aura STT, direct Gemini audio transcription, and client-side browser Web Speech Recognition.

@@ -1,36 +1,33 @@
-# Assinaturas, pacotes de créditos e cobrança
+# Subscrições, Pacotes de Créditos e Faturação
 
-Entenda os limites da sua conta, aumente a capacidade do seu closet, conheça o programa do grupo de testadores e gerencie seus créditos de consultoria de estilo com IA.
+Compreenda os limites da sua conta, aumente o espaço do seu guarda-roupa e faça a gestão dos seus créditos de styling com IA.
 
-## Visão geral
-O DressApp adota um modelo de monetização híbrido e flexível, desenhado para receber quem organiza o armário de forma casual e ao mesmo tempo oferecer recursos avançados para entusiastas da moda, criadores e estilistas certificados:
-- **Plano gratuito básico (Free Tier)**: Armazene até 50 peças gratuitamente (expansível até 150 itens por meio de bônus de indicação) com 5 créditos iniciais de cortesia para reconstrução por IA. Alimentado de fábrica pelo Google Gemini 3.5 Flash-Lite, sem necessidade de configuração de chaves de API.
-- **Plano Manager (\$10/mês ou \$100/ano)**: Capacidade ilimitada no guarda-roupa, programador de notificações matinais de looks, radar de tendências Trend Scout, vendas no marketplace circular e 100 créditos mensais de IA.
-- **Plano Professional (\$15/mês ou \$150/ano)**: Voltado para estilistas autônomos e influenciadores, incluindo criação de campanhas de anúncios patrocinados, destaque no diretório de especialistas, suporte prioritário e 100 créditos mensais de IA.
-- **Programa do grupo de testadores**: E-mails de testadores homologados recebem automaticamente acesso gratuito e completo ao nível Professional, com isenção de mensalidade.
-- **Pacotes de créditos pré-pagos**: Recarregue com pacotes de créditos sem validade (\$3 por 10, \$12 por 50, \$20 por 100) sempre que precisar de um volume maior de consultas de estilo ou reconstrução de fotos.
+## Visão Geral
+O DressApp disponibiliza um modelo de monetização híbrido e flexível criado para a organização quotidiana e ferramentas avançadas para entusiastas de moda, criadores e estilistas certificados:
+- **Plano Gratuito Base (Free Tier Baseline)**: Guarde até 1,000 peças gratuitamente (expansível até 1.000 peças através de bónus de recomendação). Alimentado diretamente pelo modelo local DressApp Eyes v1 sem necessidade de configurar chaves de API.
+- **Plano Manager ($4.99/mês ou $49.99/ano)**: Capacidade de guarda-roupa ilimitada, agendador de visuais matinais por notificações push, sincronização de calendário, venda no marketplace circular, estatísticas avançadas e filtros do Trend Scout.
+- **Plano Professional ($9.99/mês ou $99.99/ano)**: Criado para estilistas e criadores de moda, inclui criação de campanhas publicitárias patrocinadas, listagem no diretório de especialistas, suporte prioritário e 100 créditos mensais de IA.
+- **Pacotes de Créditos Pré-pagos**: Carregue com pacotes sem validade de expiração ($3 por 10, $12 por 50, $20 por 100) sempre que precisar de styling intensivo ou reconstrução fotográfica.
 
 ## Pré-requisitos
-- Uma conta DressApp registrada.
-- Conta no PayPal, cartão de crédito/débito ou o app israelense Bit (para pagamentos locais em ILS) para migrações de plano ou recargas de créditos.
-- *(Para testadores)* Cadastro realizado com um endereço de e-mail de testador aprovado.
+- Uma conta registada no DressApp.
+- Uma conta PayPal, cartão de crédito/débito ou aplicação Bit para pagamento de planos ou pacotes de créditos.
 
-## Instruções passo a passo
-1. **Explorar a base gratuita**: Comece a organizar suas peças imediatamente com 50 itens e 5 créditos de boas-vindas. Nenhuma chave de API é necessária.
-2. **Expandir gratuitamente por indicações**: Compartilhe seu link pessoal de convite a partir das configurações de Perfil. Cada amigo cadastrado desbloqueia +10 espaços permanentes no seu armário (até o limite de 150 itens).
-3. **Verificação do grupo de testadores**: Caso faça parte do grupo de testadores beta do DressApp (`maystarboard@gmail.com`, `lokoprod@gmail.com`, `dressapdeveloper@gmail.com`), faça login pelo Google OAuth para receber automaticamente as vantagens gratuitas do **Plano Professional**.
-4. **Fazer upgrade para Manager (\$10/mês ou \$100/ano)**: Toque em **Alterar plano** na página de Preços para desbloquear peças ilimitadas, avisos do programador matinal e 100 créditos mensais de IA.
-5. **Fazer upgrade para Professional (\$15/mês ou \$150/ano)**: Escolha o Professional para criar campanhas publicitárias segmentadas de moda, atrair clientes locais e contar com suporte prioritário de consultoria de estilo.
-6. **Comprar créditos pré-pagos (não expiram)**: Se os créditos mensais terminarem, adquira um pacote de 10, 50 ou 100 créditos. O sistema sempre consome primeiro os créditos da assinatura mensal, protegendo seu saldo permanente sem expiração!
+## Instruções Passo a Passo
+1. **Explore a Base Gratuita**: Comece a organizar imediatamente com 150 peças. As sugestões são geradas diretamente pelo DressApp Eyes v1 sem necessidade de chaves de API.
+2. **Expanda Gratuitamente com Convites**: Partilhe o seu link de convite pessoal a partir das definições do Perfil. Cada amigo que se registar desbloqueia +10 espaços permanentes no guarda-roupa (até 1.000 peças no máx.).
+3. **Atualize para Manager ($4.99/mês)**: Aceda a Definições de perfil > Preferências do sistema > Limites de guarda-roupa e subscrição e toque na Página de Preços para desbloquear peças ilimitadas e sincronização de calendário.
+4. **Atualize para Professional ($9.99/mês)**: Selecione Professional para criar campanhas de moda direcionadas, constar no diretório de estilistas e obter suporte prioritário.
+5. **Compre Créditos Pré-pagos (Nunca Expiram)**: Se precisar de créditos adicionais, compre um pacote de 10, 50 ou 100 créditos. O sistema consome primeiro os créditos mensais da subscrição, protegendo o seu saldo permanente.
 
-## Resultados esperados
-Ativação imediata dos benefícios do plano após a assinatura ou identificação como testador. Os limites do guarda-roupa são atualizados instantaneamente para ilimitado, e os selos exibem o seu plano ativo no painel de Perfil.
+## Resultados Esperados
+Ativação imediata das vantagens do plano após a subscrição. Os limites do guarda-roupa passam imediatamente para ilimitado e os emblemas do seu perfil refletem o plano ativo.
 
-## Solução de problemas
-- **Aviso de "Limite do closet atingido"**: Você preencheu todos os espaços disponíveis (50 no plano básico ou até 150 com indicações). Arquive peças fora de uso, convide amigos para ganhar novos espaços ou faça upgrade para Manager/Pro para ter capacidade ilimitada.
-- **Benefícios de testador não aparecem**: Certifique-se de ter feito login exatamente com o e-mail cadastrado na lista autorizada de testadores. O backend concede o nível Professional no momento da emissão do token.
-- **Pacote de créditos não aparece após o pagamento**: Atualize a página do seu Perfil; os webhooks de transação processam e creditam a conta em poucos segundos.
+## Resolução de Problemas
+- **Aviso de "Limite do guarda-roupa atingido"**: Preencheu todas as vagas disponíveis (150 base ou até 1.000 com convites). Arquive peças que não usa, convide amigos ou atualize para Manager/Pro.
+- **Pacote de créditos não aparece após o pagamento**: Atualize a página do Perfil; os webhooks registam a transação em segundos.
+- **Gestão da subscrição**: Pode gerir ou cancelar a sua subscrição a qualquer momento diretamente na sua conta PayPal ou nas definições do Perfil sem perder as roupas já guardadas.
 
 ## Limitações
-- Créditos da assinatura mensal não acumulam para os ciclos de faturamento seguintes; contudo, os pacotes de créditos pré-pagos comprados nunca expiram.
-- Os bônus de capacidade por indicação são válidos até o teto de 150 itens no plano Free Tier.
+- Os bónus de recomendação aplicam-se até um limite máximo de 1.000 peças no nível gratuito.
+- Os créditos mensais da subscrição não transitam para ciclos seguintes; no entanto, os pacotes pré-pagos adquiridos nunca expiram.

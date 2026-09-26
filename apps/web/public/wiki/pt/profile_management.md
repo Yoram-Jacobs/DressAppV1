@@ -115,8 +115,7 @@ Gerencia configurações globais, planos de assinatura e integrações de IA:
   - *Rede de Proteção de Cotas On-Premises*: Caso ocorram limites de requisição na nuvem (`429` / `RESOURCE_EXHAUSTED`), as perguntas são atendidas automaticamente pelo contêiner local e otimizado **Gemma-4-E4B** na porta 7860, sem interrupções.
   - *Modo Chave de API Própria (BYOK)*: Insira sua chave de API do Google Gemini para ter cotas dedicadas de desenvolvedor e usar recursos generativos avançados, como o radar diário do Trend Scout e a reconstrução de fotos do Nano Banana.
 - **Assinatura e Limites do Guarda-Roupa**:
-  - Acompanhe o plano atual da conta (**Free**: base de 50 peças vs **Manager** (\$10/mês) ou **Professional** (\$15/mês): peças ilimitadas).
-  - **Programa do Grupo de Testadores**: E-mails de testadores autorizados (`maystarboard@gmail.com`, `lokoprod@gmail.com`, `dressapdeveloper@gmail.com`) têm acesso gratuito concedido ao **Plano Professional**, sem mensalidades.
+  - Acompanhe o plano atual da conta (**Free**: base de 150 peças vs **Manager** (\$4.99/mês) ou **Professional** (\$9.99/mês): peças ilimitadas).
   - Acesse a **página de Preços** (`/pricing` ou clique no card do seu plano) para ver a tabela comparativa, escolher um plano ou comprar pacotes pré-pagos de créditos sem validade.
   - Faça upgrade via PayPal Subscriptions ou pela Atzmai Gateway para pagamentos locais em Israel em ILS (Bit / cartão de crédito).
   - Copiar **Link de Indicação**: Ganhe +10 vagas permanentes no armário para cada amigo cadastrado (até o limite de 150 peças).
@@ -137,7 +136,7 @@ Gerencia configurações globais, planos de assinatura e integrações de IA:
 ### 5. Ações da Conta e Diagnósticos
 - **Sair da Conta**: Encerre sua sessão atual.
 - **Excluir Minha Conta**: Opção para apagar definitivamente todos os dados da conta.
-- **Painel do Desenvolvedor**: Área de testes e diagnósticos do sistema. Autenticada pelo Google OAuth (`dressapdeveloper@gmail.com`).
+- **Painel do Desenvolvedor**: Área de testes e diagnósticos do sistema. Autenticada pelo Google OAuth (`dressappdeveloper@gmail.com`).
 
 ---
 
@@ -154,6 +153,6 @@ Gerencia configurações globais, planos de assinatura e integrações de IA:
 - **Preenchimento de endereço não responde**: Confira se a conexão com a Internet está funcionando para consultar o OpenStreetMap Nominatim.
 
 ## Limitações
-- O limite do plano Free Tier é de 50 peças por padrão, a menos que seja ampliado por indicações (+10 vagas por convidado até o limite de 150 peças) ou por upgrade para Manager ou Professional.
+- O limite do plano Free Tier é de 1150 peças por padrão, a menos que seja ampliado por indicações (+10 vagas por convidado até o limite de 150 peças) ou por upgrade para Manager ou Professional.
 - Recursos generativos avançados na nuvem (radar Trend Scout e reconstrução de fotos Nano Banana) exigem chave de API pessoal do Google Gemini fornecida pelo usuário.
 - O modo com chave de API própria usará automaticamente o motor local Gemma-4-E4B caso os limites do provedor externo sejam atingidos.

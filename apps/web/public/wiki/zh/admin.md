@@ -64,7 +64,6 @@ graph TD
 
 ### 核心管理能力
 - **实时 KPI 指标监控**：汇总统计活跃用户数、衣橱单品总数、市场在售单品、平台交易手续费、造型师调用量以及已发布的 Trend Scout 趋势报告。
-- **测试用户组计划**：自动为白名单验证通过的测试账户（`maystarboard@gmail.com`、`lokoprod@gmail.com`、`dressapdeveloper@gmail.com`）分配角色与免费 Professional 专业版层级。
 - **安全身份验证**：生产环境访问受到 Google OAuth 鉴权严格保护（校验 `ADMIN_EMAILS`）；遗留的未经身份验证的测试跳过按钮已彻底清除。
 - **多层级 AI 路由管控**：对主力 **Google Gemini 3.5 Flash-Lite** 网关及位于 7860 端口的本地 **Gemma-4-E4B** Eyes 容器提供直接连通性验证与实时 Ping 诊断。
 - **市场安全与内容审核**：具备即时查看、暂停或恢复商品刊登以及调整用户权限的完整能力。
@@ -120,7 +119,7 @@ graph TD
 
 ### 身份验证与权限管控
 - **依赖守卫机制**：API 端点在 `backend/app/api/v1/admin.py` 中强制执行 `require_admin` 依赖项，严格比对调用者 JWT 中的邮箱是否包含在生产环境环境变量 `ADMIN_EMAILS` 白名单中。
-- **Google OAuth 深度集成**：生产环境登录流全部接入 Google OAuth（`dressapdeveloper@gmail.com`），坚决杜绝本地硬编码的开发环境跳过逻辑，确保极致安全性。
+- **Google OAuth 深度集成**：生产环境登录流全部接入 Google OAuth（`dressappdeveloper@gmail.com`），坚决杜绝本地硬编码的开发环境跳过逻辑，确保极致安全性。
 
 ### 多层级 AI 路由架构
 - **核心生产引擎**：Google Gemini 3.5 Flash-Lite 依托 `backend/app/services/llm_gateway.py` 处理线上所有的造型咨询与图像特征分析。

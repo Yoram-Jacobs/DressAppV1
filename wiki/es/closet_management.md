@@ -28,4 +28,4 @@ Un armario digital perfectamente organizado que carga al instante, permitiéndot
 - **Agrupación accidental**: Si agrupaste dos prendas por error, abre los detalles de la prenda y pulsa **Desagrupar** para separarlas nuevamente.
 
 ## Limitaciones
-- Las cuentas gratuitas pueden almacenar hasta 150 prendas. Para ampliar tu espacio, invita a amigos (+10 espacios por registro) o pásate al plan Pro para disfrutar de espacio ilimitado.
+- Las cuentas gratuitas pueden almacenar hasta 1,000 prendas. Para ampliar tu espacio, invita a amigos (+10 espacios por registro) o pásate al plan Pro para disfrutar de espacio ilimitado.

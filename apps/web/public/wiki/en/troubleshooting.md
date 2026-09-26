@@ -13,8 +13,8 @@ Find fast answers for camera access, upload speed questions, closet limit ceilin
 1. **Camera Won't Turn On**:
    - Open your browser or device settings, find **DressApp**, and ensure **Camera** permissions are set to "Allow". Refresh the page.
 2. **"Closet Capacity Reached" Message**:
-   - Free accounts store up to **50 garments** baseline.
-   - You can invite friends to get **+10 extra slots** per signup (up to 150 items max), delete unworn clothes, or tap **Upgrade to Pro** ($4.99/mo) for unlimited storage.
+   - Free accounts store up to **1,000 garments** baseline.
+   - You can invite friends to get **+10 extra slots** per signup (up to 1,000 items max), delete unworn clothes, or tap **Upgrade to Manager** ($4.99/mo) or **Professional** ($9.99/mo) for unlimited storage.
 3. **Voice Typing or Audio Replay Not Working**:
    - Verify that microphone permissions are allowed in your browser settings.
    - Check that your phone or computer volume is turned up and not muted or in "Do Not Disturb" mode.

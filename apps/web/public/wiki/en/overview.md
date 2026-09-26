@@ -33,5 +33,5 @@ You achieve a structured, accessible digital closet that eliminates morning styl
 - **Layout direction issues**: Toggle between languages; DressApp automatically mirrors interface alignment for RTL languages (Hebrew, Arabic).
 
 ## Limitations
-- Closet capacity on the Free Tier starts at 50 items (expandable to 150 via referral bonuses); upgrading to Manager or Professional unlocks unlimited storage.
+- Closet capacity on the Free Tier starts at 150 items (expandable up to 1,000 via referral bonuses); upgrading to Manager or Professional unlocks unlimited storage.
 - Background removal and segmentation perform best with good lighting and contrasting backgrounds.

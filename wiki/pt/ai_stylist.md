@@ -8,7 +8,6 @@ O AI Stylist é o seu consultor de moda pessoal. Você pode conversar com ele di
 A inteligência de estilo do DressApp é estruturada sobre uma arquitetura multinível resiliente:
 - **Motor principal de produção (Google Gemini 3.5 Flash-Lite)**: Responsável por todas as conversas principais de estilo nativamente por meio do `llm_gateway.py`. Entrega respostas extremamente rápidas (TTFT abaixo de 350 ms) sem necessidade de configuração prévia nem burocracia — nenhuma chave de API pessoal é necessária para começar a receber sugestões!
 - **Eyes no VPS on-premises (`gemma-4-E4B`) — Plano gratuito e rede de proteção de cotas**: Um modelo dedicado e refinado `gemma-4-E4B` executado localmente no contêiner `dressapp-eyes` na porta 7860 do VPS Hetzner CPX32. Garante uma base de custo variável zero para contas Free Tier e atua como fallback transparente. Caso ocorram limites de API no Google Gemini (`429` / `RESOURCE_EXHAUSTED`), as consultas são redirecionadas automaticamente para o Gemma on-premises sem falhas nem erros 500.
-- **Programa do grupo de testadores**: Testadores aprovados contam com acesso gratuito ao nível **Professional**, com capacidade ilimitada de closet, feed radar do Trend Scout, agendamento diário de estilo e 100 créditos por ciclo.
 - **Modelos em nuvem personalizados (BYOK)**: Opcionalmente, os usuários podem inserir sua própria chave de API do Google Gemini nas configurações de Perfil para acessar modelos superiores (`gemini-2.5-pro`) ou desbloquear recursos generativos avançados (reconstrução de fotos Nano Banana).
 
 ## Pré-requisitos

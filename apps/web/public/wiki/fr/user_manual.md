@@ -230,8 +230,8 @@ Vérification du fonctionnement du système, comptabilité financière et gestio
 ## 5. Dépannage
 
 ### HTTP 402 Payment Required
-- **Problème** : Chargement des éléments bloqué. Vous avez atteint la limite de base de la garde-robe de 50 éléments (ou jusqu'à 200 éléments avec des bonus de parrainage).
-- **Solution** : Accédez à la **page des tarifs** (`/pricing`) et abonnez-vous au plan Manager ou Professional, ou partagez votre lien de parrainage pour obtenir +10 emplacements par inscription (jusqu'à un maximum de 200 éléments).
+- **Problème** : Chargement des éléments bloqué. Vous avez atteint la limite de base de la garde-robe de 150 éléments (ou jusqu'à 1 000 éléments avec des bonus de parrainage).
+- **Solution** : Accédez à la **page des tarifs** (`/pricing`) et abonnez-vous au plan Manager ou Professional, ou partagez votre lien de parrainage pour obtenir +10 emplacements par inscription (jusqu'à un maximum de 1 000 éléments).
 
 ### SSRF Blocked / DNS Error sur DPP
 - **Problème** : Erreur lors de l'analyse de l'URL du code QR du passeport de produit scanné.

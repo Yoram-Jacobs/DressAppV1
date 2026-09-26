@@ -115,8 +115,7 @@ Verwaltung von Systemeinstellungen, Abonnements und KI-Integrationen:
   - *On-Premises-Quoten-Sicherheitsnetz*: Sollten Cloud-Ratenbegrenzungen (`429` / `RESOURCE_EXHAUSTED`) erreicht werden, weichen Anfragen automatisch auf den selbst gehosteten, feingetunten **Gemma-4-E4B**-Container auf Port 7860 aus, sodass Ihre Styling-Unterhaltung niemals unterbrochen wird.
   - *Eigener API-Schlüssel-Modus (BYOK)*: Hinterlegen Sie Ihren eigenen Google Gemini API-Schlüssel, um erweiterte Entwicklerkontingente und cloudbasierte generative Tools wie das tägliche Trend-Scout-Radar und die Nano Banana Fotorekonstruktion freizuschalten.
 - **Abonnement & Kleiderschranklimits**:
-  - Zeigt die aktuelle Kontostufe an (**Free**: 50 Artikel Basislimit vs. **Manager** (10 $/Monat) oder **Professional** (15 $/Monat): unbegrenzte Artikel).
-  - **Tester-Gruppenprogramm**: Freigegebene Tester-E-Mail-Adressen (`maystarboard@gmail.com`, `lokoprod@gmail.com`, `dressapdeveloper@gmail.com`) erhalten automatisch kostenfreien Zugang zum **Professional-Tarif** ohne Abonnementgebühren.
+  - Zeigt die aktuelle Kontostufe an (**Free**: 50 Artikel Basislimit vs. **Manager** (4.99$/Monat) oder **Professional** (9.99$/Monat): unbegrenzte Artikel).
   - Rufen Sie die **Preisseite** (`/pricing` oder Klick auf Ihre Tarifkarte) auf, um die Tarifvergleichstabelle einzusehen, ein Abonnement zu wählen oder nicht verfallende Prepaid-Guthabenpakete zu erwerben.
   - Upgrade über PayPal-Abonnements oder das Atzmai-Gateway für lokale israelische ILS-Zahlungen (Bit / Kreditkarte).
   - **Empfehlungslink kopieren**: Bringt +10 dauerhafte Kleiderschrankplätze für jeden registrierten Freund (bis maximal 150 Artikel).
@@ -137,7 +136,7 @@ Verwaltung von Systemeinstellungen, Abonnements und KI-Integrationen:
 ### 5. Kontoaktionen & Diagnose
 - **Abmelden (Sign Out)**: Aus der aktuellen Sitzung ausloggen.
 - **Mein Konto löschen (Delete my Account)**: Link zum dauerhaften Löschen aller Kontodaten.
-- **Entwickler-Panel**: Diagnoseansicht für Umgebungstests. Authentifiziert über Google OAuth (`dressapdeveloper@gmail.com`).
+- **Entwickler-Panel**: Diagnoseansicht für Umgebungstests. Authentifiziert über Google OAuth (`dressappdeveloper@gmail.com`).
 
 ---
 

@@ -33,5 +33,5 @@ Vous disposez d'un dressing numérique structuré et accessible qui élimine la 
 - **Problèmes de sens de lecture de l'interface** : Basculez entre les langues ; DressApp inverse automatiquement l'alignement de l'interface pour les langues RTL (hébreu, arabe).
 
 ## Limites
-- La capacité de la garde-robe sur l'offre Free Tier démarre à 50 articles (extensible à 150 grâce aux bonus de parrainage) ; passer au forfait Manager ou Professional débloque un stockage illimité.
+- La capacité de la garde-robe sur l'offre Free Tier démarre à 150 articles (extensible à 150 grâce aux bonus de parrainage) ; passer au forfait Manager ou Professional débloque un stockage illimité.
 - La suppression d'arrière-plan et la segmentation fonctionnent de manière optimale avec un bon éclairage et des arrière-plans contrastés.

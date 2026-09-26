@@ -64,7 +64,6 @@ graph TD
 
 ### Belangrijkste beheerdersmogelijkheden
 - **Realtime KPI-inzicht**: Overzichtsstatistieken voor actieve gebruikers, totale kledingstukken, marktplaatsvolume, platformvergoedingen, stylistenverzoeken en gepubliceerde Trend Scout-rapporten.
-- **Testergroepprogramma**: Automatische toewijzing van rollen en gratis privileges voor het Professional Tier voor geverifieerde testeraccounts (`maystarboard@gmail.com`, `lokoprod@gmail.com`, `dressapdeveloper@gmail.com`).
 - **Beveiligde authenticatie**: Toegang in productie is strikt beveiligd via Google OAuth-authenticatie (`ADMIN_EMAILS`); oude niet-geauthenticeerde bypass-knoppen zijn volledig verwijderd.
 - **Beheer van multi-tier AI-routing**: Directe verificatie en live ping-diagnostiek voor de primaire **Google Gemini 3.5 Flash-Lite**-gateway en de lokale **Gemma-4-E4B** Eyes-container op poort 7860.
 - **Marktplaatsveiligheid & moderatie**: Mogelijkheid om direct advertenties te inspecteren, te pauzeren of te herstellen en gebruikersrechten te beheren.
@@ -120,7 +119,7 @@ Het beheerderspaneel is georganiseerd in een overzichtelijke indeling met tabbla
 
 ### Authenticatie & Autorisatie
 - **Dependency Guard**: API-endpoints dwingen de `require_admin`-dependency af in `backend/app/api/v1/admin.py` en controleren of het JWT-e-mailadres van de aanvrager voorkomt in de omgevingsvariabele `ADMIN_EMAILS` van de productieomgeving.
-- **Google OAuth-integratie**: Aanmelding in productie verloopt via Google OAuth (`dressapdeveloper@gmail.com`), waardoor lokale hardcoded ontwikkelingsshortcuts zijn verwijderd voor optimale beveiliging.
+- **Google OAuth-integratie**: Aanmelding in productie verloopt via Google OAuth (`dressappdeveloper@gmail.com`), waardoor lokale hardcoded ontwikkelingsshortcuts zijn verwijderd voor optimale beveiliging.
 
 ### Multi-tier AI-routinginfrastructuur
 - **Primaire engine**: Google Gemini 3.5 Flash-Lite verwerkt productiestylistenverzoeken en beeldanalyse via `backend/app/services/llm_gateway.py`.

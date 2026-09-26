@@ -115,8 +115,7 @@ Administra configuraciones a nivel de sistema, suscripciones e integraciones de 
   - *Red de seguridad de cuotas on-premises*: Si se alcanzan los límites de velocidad en la nube (`429` / `RESOURCE_EXHAUSTED`), las consultas pasan automáticamente al contenedor autohospedado y optimizado **Gemma-4-E4B** en el puerto 7860, garantizando que tu conversación de estilismo no se interrumpa.
   - *Modo de claves de API personalizadas (BYOK)*: Conecta tu propia clave de API de Google Gemini para desbloquear cuotas avanzadas de desarrollador y herramientas generativas en la nube como el radar diario Trend Scout y la reconstrucción de fotos Nano Banana.
 - **Límites de suscripción y armario**:
-  - Consulta el nivel de cuenta actual (**Free**: base de 50 artículos frente a **Manager** (\$10/mes) o **Professional** (\$15/mes): artículos ilimitados).
-  - **Programa del grupo de evaluadores**: Los correos de evaluadores aprobados (`maystarboard@gmail.com`, `lokoprod@gmail.com`, `dressapdeveloper@gmail.com`) disfrutan automáticamente de acceso de cortesía al **nivel de plan Professional** sin costo de suscripción.
+  - Consulta el nivel de cuenta actual (**Free**: base de 50 artículos frente a **Manager** (\$4.99/mes) o **Professional** (\$9.99/mes): artículos ilimitados).
   - Accede a la **página de Precios** (`/pricing` o haz clic en tu tarjeta de plan) para consultar la tabla comparativa de niveles, seleccionar un plan o comprar paquetes de créditos prepagados sin vencimiento.
   - Actualiza mediante suscripciones de PayPal o a través de la pasarela Atzmai para transacciones locales en Israel en ILS (Bit / tarjeta de crédito).
   - Copiar **enlace de recomendación**: Otorga +10 espacios de capacidad de armario por cada amigo que se registre (hasta un máximo de 150 artículos).
@@ -137,7 +136,7 @@ Administra configuraciones a nivel de sistema, suscripciones e integraciones de 
 ### 5. Acciones de cuenta y diagnósticos
 - **Cerrar sesión**: Cierra tu sesión actual.
 - **Eliminar mi cuenta**: Enlace para purgar de forma permanente los datos de la cuenta.
-- **Panel de desarrollador**: Vista diagnóstica para pruebas del entorno. Autenticado mediante Google OAuth (`dressapdeveloper@gmail.com`).
+- **Panel de desarrollador**: Vista diagnóstica para pruebas del entorno. Autenticado mediante Google OAuth (`dressappdeveloper@gmail.com`).
 
 ---
 

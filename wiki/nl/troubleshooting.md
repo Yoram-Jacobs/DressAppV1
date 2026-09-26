@@ -14,7 +14,7 @@ Vind snelle antwoorden op vragen over cameratoegang, verwerkingssnelheden, kastc
    - Open uw browser- of apparaatinstellingen, zoek **DressApp** en zorg dat de **Cameramachtiging** op "Toestaan" staat. Vernieuw de pagina.
 2. **Melding "Kledingkast vol"**:
    - Gratis accounts bewaren standaard maximaal **50 kledingstukken**.
-   - U kunt vrienden uitnodigen om **+10 extra slots** per aanmelding te ontvangen (tot maximaal 150 items), ongedragen kleding verwijderen of tikken op **Upgraden naar Pro** ($4.99/mnd) voor onbeperkte opslag.
+   - U kunt vrienden uitnodigen om **+10 extra slots** per aanmelding te ontvangen (tot maximaal 1.000 items), ongedragen kleding verwijderen of tikken op **Upgraden naar Pro** ($4.99/mnd) voor onbeperkte opslag.
 3. **Spraakgestuurd typen of audio-afspelen reageert niet**:
    - Controleer of de microfoontoestemming is verleend in uw browserinstellingen.
    - Zorg ervoor dat het volume van uw apparaat niet gedempt is of op "Niet storen" staat.

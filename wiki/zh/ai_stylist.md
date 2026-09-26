@@ -8,7 +8,6 @@ AI Stylist 是您的贴心时尚伴侣。您可以像与好友聊天一样，通
 DressApp 的造型大脑由高可用性的多层级智能架构驱动：
 - **核心主力引擎 (Google Gemini 3.5 Flash-Lite)**：通过 `llm_gateway.py` 开箱即用，承担所有核心造型对话。它提供极致迅捷的响应（TTFT 首字延迟低于 350ms），零初始配置、零门槛——无需个人 API 密钥即可即刻开启造型咨询！
 - **本地 VPS Eyes (`gemma-4-E4B`) — 免费层级与配额安全网 (Quota Safety Net)**：运行在 Hetzner CPX32 VPS 服务器 7860 端口 `dressapp-eyes` 容器中的专用精调 `gemma-4-E4B` 模型。它为免费层级（Free Tier）用户提供零变动成本的基础保障，并充当透明的故障备用（fallback）网。一旦遭遇 Google Gemini API 频率超限（`429` / `RESOURCE_EXHAUSTED`），查询将自动无缝重定向至本地部署的 Gemma，绝不会报错中断或产生 500 异常。
-- **测试用户组计划 (Tester Group Program)**：经审核的测试人员可免费享有 **Professional 专业版** 权益，包括无限衣橱容量、Trend Scout 潮流雷达、每日着装排程推送以及每周期 100 造型额度。
 - **自带密钥定制云端模型 (BYOK)**：用户可在“个人资料”设置中选择配置自己的 Google Gemini API 密钥，从而接入更高阶的模型（`gemini-2.5-pro`）或解锁高级生成式工具（Nano Banana 图像重构）。
 
 ## 先决条件

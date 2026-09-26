@@ -114,7 +114,6 @@ Describe styling dilemmas and receive hands-free spoken outfit advice.
    - **Primary Production Engine (Google Gemini 3.5 Flash-Lite)**: By default, your styling queries route to Google Gemini 3.5 Flash-Lite via `llm_gateway.py`. This delivers sub-350ms initial token latency, natural conversational advice, and precise JSON schema matching across complex wardrobe inventories.
    - **On-Premises VPS Eyes (`gemma-4-E4B`) — Free Tier & Quota Safety Net**: The self-hosted, fine-tuned **Gemma-4-E4B** engine running in `dressapp-eyes` on port 7860 acts as the zero-cost offline baseline and transparent quota safety fallback.
    - **Transparent Quota Fallback**: If external API limits or quota errors (`429` / `RESOURCE_EXHAUSTED`) occur, the backend seamlessly falls back to on-premise Gemma-4-E4B. An informative banner (*"Using Platform Stylist (Quota Fallback)"*) appears above the assistant's reply so your styling session is never interrupted by a 500 error.
-   - **Tester Group Program**: Designated testers (`TESTER_EMAILS`) automatically enjoy complimentary **Professional tier** access (unlimited wardrobe capacity, morning styling scheduler, Trend Scout, and 100 credits/cycle).
 6. The stylist presents head-to-toe matching outfit cards with detailed styling rationales.
 7. Spoken audio advice plays automatically using preselected voice profiles (`puck`, `aoede`, or `charon`).
 8. Tap **Play reply** (or **Replay** in RTL mode) on the card to replay the voice audio anytime.
@@ -154,7 +153,6 @@ The Profile page serves as the core control panel for DressApp. Configuration fi
    - **Subsystem Dependencies**:
      - **Primary Production Engine (Google Gemini 3.5 Flash-Lite)**: Powers all core styling, migration, and planning flows via `llm_gateway.py` with zero setup required by the user.
      - **On-Premises VPS Eyes (`gemma-4-E4B`)**: Evaluates unauthenticated background tasks and acts as the transparent quota fallback engine whenever Google API calls encounter `429` / `RESOURCE_EXHAUSTED`.
-     - **Tester Group Program**: Allow-listed tester emails enjoy full complimentary access to the **Professional tier** with unlimited wardrobe capacity, Trend Scout radar, daily style notifications, and 100 credits/cycle.
      - **Custom API Key Mode (BYOK)**: Entering a personal Google Gemini API key (from Google AI Studio) unlocks higher-tier models (`gemini-2.5-pro`) and enables restricted generative tools (**Trend Scout** daily fashion radar and **Nano Banana** photo inpainting).
      - **Automated Quota Fallback**: If a custom BYOK key triggers rate limits (`429`), `RESOURCE_EXHAUSTED`, or spending cap errors, `FallbackBrain` immediately redirects the request to on-premises Gemma-4-E4B, rendering a non-blocking notification banner (`stylist.fallbackQuotaBanner`) without interrupting the styling conversation.
      - **Trial & Paid Plans**: Free baseline (150 garments), Manager tier, and Professional tier. If credits are exhausted, the app enters an async pause-and-resume wait state (up to 60s) checking for top-up events.

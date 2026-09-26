@@ -64,7 +64,6 @@ graph TD
 
 ### Fonctionnalités administratives clés
 - **Visibilité des KPI en temps réel** : Métriques consolidées couvrant les utilisateurs actifs, le total des articles de garde-robe, le volume du marketplace, les commissions de plateforme, les appels au styliste et les rapports Trend Scout publiés.
-- **Programme du groupe de testeurs** : Attribution automatique de rôles et du forfait Professional offert pour les comptes testeurs vérifiés (`maystarboard@gmail.com`, `lokoprod@gmail.com`, `dressapdeveloper@gmail.com`).
 - **Authentification sécurisée** : L'accès à la production est strictement réservé via l'authentification Google OAuth (`ADMIN_EMAILS`) ; les boutons de contournement non authentifiés obsolètes ont été supprimés.
 - **Gouvernance du routage d'IA multiniveau** : Vérification directe et diagnostics de ping en direct pour la passerelle principale **Google Gemini 3.5 Flash-Lite** et le conteneur Eyes sur site **Gemma-4-E4B** sur le port 7860.
 - **Sécurité et modération du marketplace** : Capacité immédiate d'inspecter, de suspendre ou de rétablir des annonces et de gérer les privilèges des utilisateurs.
@@ -120,7 +119,7 @@ Le panneau d'administration est organisé selon une présentation épurée à on
 
 ### Authentification et autorisation
 - **Garde de dépendance** : Les points de terminaison de l'API appliquent la dépendance `require_admin` dans `backend/app/api/v1/admin.py`, s'assurant que l'adresse e-mail issue du JWT est bien présente dans la variable d'environnement de production `ADMIN_EMAILS`.
-- **Intégration Google OAuth** : La connexion en production transite par Google OAuth (`dressapdeveloper@gmail.com`), supprimant ainsi tout raccourci de développement codé en dur pour une sécurité renforcée.
+- **Intégration Google OAuth** : La connexion en production transite par Google OAuth (`dressappdeveloper@gmail.com`), supprimant ainsi tout raccourci de développement codé en dur pour une sécurité renforcée.
 
 ### Infrastructure de routage d'IA multiniveau
 - **Moteur principal** : Google Gemini 3.5 Flash-Lite traite les requêtes de stylisme en production et les analyses de vision via `backend/app/services/llm_gateway.py`.

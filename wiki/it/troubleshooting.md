@@ -13,8 +13,8 @@ Trova soluzioni rapide per l'accesso alla fotocamera, i tempi di caricamento, la
 1. **La fotocamera non si accende**:
    - Apri le impostazioni del browser o del dispositivo, cerca **DressApp** e assicurati che il permesso **Fotocamera** sia impostato su "Consenti". Ricarica la pagina.
 2. **Messaggio "Capienza del guardaroba esaurita"**:
-   - Gli account gratuiti possono conservare fino a **50 capi** di base.
-   - Puoi invitare amici per ottenere **+10 slot aggiuntivi** per ogni iscrizione (fino a 150 capi), eliminare i capi inutilizzati o toccare **Passa a Pro** ($4.99/mese) per avere spazio illimitato.
+   - Gli account gratuiti possono conservare fino a **1,000 capi** di base.
+   - Puoi invitare amici per ottenere **+10 slot aggiuntivi** per ogni iscrizione (fino a 1,000 capi), eliminare i capi inutilizzati o toccare **Passa a Pro** ($4.99/mese) per avere spazio illimitato.
 3. **Digitazione vocale o audio non rispondono**:
    - Verifica che i permessi del microfono siano concessi nel browser.
    - Assicurati che il volume del dispositivo non sia disattivato o in modalità "Non disturbare".

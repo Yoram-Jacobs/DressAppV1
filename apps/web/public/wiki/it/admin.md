@@ -64,7 +64,6 @@ graph TD
 
 ### Funzionalità Amministrative Chiave
 - **Visibilità dei KPI in Tempo Reale**: Metriche riassuntive riguardanti utenti attivi, capi totali nel guardaroba, volumi del marketplace, commissioni della piattaforma, chiamate allo stylist e report Trend Scout pubblicati.
-- **Programma per il Gruppo di Tester**: Assegnazione automatica dei ruoli e del piano Professional di benvenuto per gli account tester verificati (`maystarboard@gmail.com`, `lokoprod@gmail.com`, `dressapdeveloper@gmail.com`).
 - **Autenticazione Sicura**: L'accesso in produzione è protetto rigidamente dall'autenticazione con Google OAuth (`ADMIN_EMAILS`); i vecchi pulsanti di bypass non autenticati sono stati rimossi.
 - **Governance dell'Instradamento IA Multilivello**: Verifica diretta e diagnostica ping in tempo reale per il gateway primario **Google Gemini 3.5 Flash-Lite** e per il container Eyes on-premises **Gemma-4-E4B** sulla porta 7860.
 - **Sicurezza e Moderazione del Marketplace**: Capacità immediata di esaminare, sospendere o ripristinare annunci e di gestire i privilegi degli utenti.
@@ -120,7 +119,7 @@ Il pannello di amministrazione è strutturato con una visualizzazione pulita a s
 
 ### Autenticazione e Autorizzazione
 - **Protezione delle Dipendenze**: Gli endpoint API applicano la dipendenza `require_admin` in `backend/app/api/v1/admin.py`, verificando che l'email estratta dal token JWT sia inclusa nella variabile d'ambiente di produzione `ADMIN_EMAILS`.
-- **Integrazione Google OAuth**: L'accesso in produzione avviene tramite Google OAuth (`dressapdeveloper@gmail.com`), rimuovendo scorciatoie locali statiche per garantire la massima sicurezza.
+- **Integrazione Google OAuth**: L'accesso in produzione avviene tramite Google OAuth (`dressappdeveloper@gmail.com`), rimuovendo scorciatoie locali statiche per garantire la massima sicurezza.
 
 ### Infrastruttura di Routing IA Multilivello
 - **Motore Primario**: Google Gemini 3.5 Flash-Lite gestisce le richieste per lo stylist e l'analisi visiva in produzione tramite `backend/app/services/llm_gateway.py`.

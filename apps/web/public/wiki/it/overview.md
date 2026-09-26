@@ -33,5 +33,5 @@ Otterrete un guardaroba digitale strutturato e accessibile che elimina l'indecis
 - **Problemi di direzione del layout**: Passate da una lingua all'altra; DressApp adatta automaticamente la direzione dell'interfaccia per le lingue RTL (ebraico, arabo).
 
 ## Limitazioni
-- La capacità dell'armadio nel piano Free Tier parte da 50 articoli (espandibile fino a 150 tramite bonus di invito); il passaggio a Manager o Professional sblocca lo spazio illimitato.
+- La capacità dell'armadio nel piano Free Tier parte da 150 articoli (espandibile fino a 1.000 tramite bonus di invito); il passaggio a Manager o Professional sblocca lo spazio illimitato.
 - La rimozione dello sfondo e la segmentazione offrono i risultati migliori con una buona illuminazione e sfondi contrastanti.

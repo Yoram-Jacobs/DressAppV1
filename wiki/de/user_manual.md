@@ -230,8 +230,8 @@ Nehmen Sie am Peer-to-Peer-Circular-Fashion-Marktplatz teil.
 ## 5. Fehlerbehebung
 
 ### HTTP 402 Payment Required
-- **Problem**: Ingestion blockiert. Sie haben das Basislimit von 50 Artikeln erreicht (oder bis zu 200 Artikel durch Empfehlungsboni).
-- **Lösung**: Gehen Sie zur **Preisseite** (`/pricing`) und abonnieren Sie den Manager- oder Professional-Plan, oder teilen Sie Ihren Empfehlungslink, um +10 Plätze pro Registrierung zu erhalten (bis zu maximal 200 Artikel).
+- **Problem**: Ingestion blockiert. Sie haben das Basislimit von 150 Artikeln erreicht (oder bis zu 1.000 Artikel durch Empfehlungsboni).
+- **Lösung**: Gehen Sie zur **Preisseite** (`/pricing`) und abonnieren Sie den Manager- oder Professional-Plan, oder teilen Sie Ihren Empfehlungslink, um +10 Plätze pro Registrierung zu erhalten (bis zu maximal 1.000 Artikel).
 
 ### SSRF-Blockierung / DNS-Fehler bei DPP
 - **Problem**: URL des gescannten QR-Produktpasses kann nicht analysiert werden.

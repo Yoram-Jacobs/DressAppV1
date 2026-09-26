@@ -8,7 +8,6 @@ De AI Stylist is uw persoonlijke modeadviseur. U kunt ermee chatten door te type
 Het stylingbrein van DressApp wordt aangedreven door een veerkrachtige multi-tier intelligentie-architectuur:
 - **Primaire Productie-engine (Google Gemini 3.5 Flash-Lite)**: Drijft direct alle centrale stylinggesprekken aan via `llm_gateway.py`. Het levert razendsnelle reacties (minder dan 350 ms TTFT) zonder initiële configuratie en zonder gedoe – geen persoonlijke API-sleutels nodig om met stylen te beginnen!
 - **On-Premises VPS Eyes (`gemma-4-E4B`) – Free Tier & Quotumvangnet**: Een speciaal, verfijnd `gemma-4-E4B`-model dat lokaal draait in de `dressapp-eyes`-container op poort 7860 van de Hetzner CPX32 VPS. Het biedt een basis zonder variabele kosten voor Free Tier-accounts en fungeert als transparante fallback. Als er limieten voor de Google Gemini API (`429` / `RESOURCE_EXHAUSTED`) worden bereikt, worden zoekopdrachten automatisch omgeleid naar lokale Gemma zonder te mislukken of 500-fouten te veroorzaken.
-- **Testergroepprogramma**: Goedgekeurde testers profiteren van gratis toegang tot het **Professional Tier**, compleet met onbeperkte garderobecapaciteit, Trend Scout-radarfeeds, dagelijkse stijlplanning en 100 credits per cyclus.
 - **Aangepaste BYOK-cloudmodellen**: Gebruikers kunnen desgewenst hun eigen Google Gemini API-sleutel invoeren in de profielinstellingen om toegang te krijgen tot geavanceerdere modellen (`gemini-2.5-pro`) of geavanceerde generatieve tools te ontgrendelen (Nano Banana fotoreconstructie).
 
 ## Vereisten

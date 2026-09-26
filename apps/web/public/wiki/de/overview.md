@@ -33,5 +33,5 @@ Sie erhalten einen strukturierten, leicht zugänglichen digitalen Kleiderschrank
 - **Probleme mit der Layout-Ausrichtung**: Wechseln Sie zwischen den Sprachen; DressApp spiegelt die Ausrichtung der Benutzeroberfläche für RTL-Sprachen (Hebräisch, Arabisch) automatisch.
 
 ## Einschränkungen
-- Die Kleiderschrankkapazität im Free Tier beginnt bei 50 Artikeln (erweiterbar auf bis zu 150 über Empfehlungsboni); ein Upgrade auf Manager oder Professional schaltet unbegrenzten Speicherplatz frei.
+- Die Kleiderschrankkapazität im Free Tier beginnt bei 150 Artikeln (erweiterbar auf bis zu 150 über Empfehlungsboni); ein Upgrade auf Manager oder Professional schaltet unbegrenzten Speicherplatz frei.
 - Die Hintergrundentfernung und Segmentierung funktionieren am besten bei guter Beleuchtung und kontrastreichen Hintergründen.

@@ -64,7 +64,6 @@ graph TD
 
 ### Capacidades administrativas clave
 - **Visibilidad de KPI en tiempo real**: Métricas resumidas sobre usuarios activos, prendas totales en el armario, volumen del mercado, comisiones de la plataforma, llamadas al estilista e informes publicados de Trend Scout.
-- **Programa del grupo de evaluadores**: Asignación automática de roles y del nivel Professional de cortesía para cuentas de evaluadores verificadas (`maystarboard@gmail.com`, `lokoprod@gmail.com`, `dressapdeveloper@gmail.com`).
 - **Autenticación segura**: El acceso a producción está estrictamente protegido detrás de la autenticación con Google OAuth (`ADMIN_EMAILS`); se han eliminado los botones heredados de acceso directo sin autenticación.
 - **Gobernanza del enrutamiento de IA multinivel**: Verificación directa y diagnósticos de ping en vivo para la puerta de enlace principal de **Google Gemini 3.5 Flash-Lite** y el contenedor de Eyes **Gemma-4-E4B** on-premises en el puerto 7860.
 - **Seguridad y moderación del mercado**: Capacidad inmediata para inspeccionar, pausar o restablecer publicaciones y gestionar privilegios de usuarios.
@@ -120,7 +119,7 @@ El panel de administración está organizado en un diseño limpio de múltiples 
 
 ### Autenticación y autorización
 - **Protección por dependencias**: Los endpoints de la API aplican la dependencia `require_admin` en `backend/app/api/v1/admin.py`, verificando que el correo electrónico del JWT del solicitante esté incluido en la variable de entorno `ADMIN_EMAILS` de producción.
-- **Integración con Google OAuth**: El inicio de sesión en producción fluye a través de Google OAuth (`dressapdeveloper@gmail.com`), eliminando atajos locales codificados para reforzar la seguridad.
+- **Integración con Google OAuth**: El inicio de sesión en producción fluye a través de Google OAuth (`dressappdeveloper@gmail.com`), eliminando atajos locales codificados para reforzar la seguridad.
 
 ### Infraestructura de enrutamiento de IA multinivel
 - **Motor principal**: Google Gemini 3.5 Flash-Lite gestiona las consultas de estilismo en producción y el análisis de visión mediante `backend/app/services/llm_gateway.py`.

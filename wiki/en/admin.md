@@ -7,7 +7,7 @@ This document provides a comprehensive, authoritative breakdown of the DressApp 
 ## 1. Executive Summary & Value Proposition
 
 ### High-Level Overview
-The DressApp Admin Panel is the centralized hub for platform oversight, monetization auditing, AI model configuration, and system diagnostics. It provides administrators with a real-time, high-fidelity lens into platform health, marketplace transaction volumes, user AI credit consumption, tester groups, and downstream AI microservice performance without requiring direct terminal or database shell access.
+The DressApp Admin Panel is the centralized hub for platform oversight, monetization auditing, AI model configuration, and system diagnostics. It provides administrators with a real-time, high-fidelity lens into platform health, marketplace transaction volumes, user AI credit consumption, user tier distribution, and downstream AI microservice performance without requiring direct terminal or database shell access.
 
 ### Architectural Flow
 The following diagram illustrates how the frontend dashboard interfaces with the backend services, queries MongoDB Atlas collections, and conducts downstream health probes:
@@ -64,7 +64,6 @@ graph TD
 
 ### Key Administrative Capabilities
 - **Real-Time KPI Visibility**: Summary metrics covering active users, total closet items, marketplace volume, platform fees, stylist calls, and published Trend Scout reports.
-- **Tester Group Program**: Automatic role and complimentary Professional tier assignment for verified tester accounts (`maystarboard@gmail.com`, `lokoprod@gmail.com`, `dressapdeveloper@gmail.com`).
 - **Secure Authentication**: Production access is strictly gated behind Google OAuth authentication (`ADMIN_EMAILS`); legacy unauthenticated bypass buttons have been eliminated.
 - **Multi-Tier AI Routing Governance**: Direct verification and live ping diagnostics for the primary **Google Gemini 3.5 Flash-Lite** gateway and the on-premises **Gemma-4-E4B** Eyes container on port 7860.
 - **Marketplace Safety & Moderation**: Instant capability to inspect, pause, or restore listings and manage user privileges.
@@ -106,9 +105,8 @@ The Admin panel is organized into a clean, multi-tab layout optimized for high-d
 - **Eyes Vision Engine**: Inspects the on-prem CPX32 VPS container (`http://eyes:7860`). Allows toggling the runtime override between cloud vision and self-hosted Gemma inference without restarting backend pods.
 
 #### 3. Users Tab
-- **User Directory**: Searchable list detailing user email, assigned role (`user`, `tester`, `admin`), active tier (`free`, `manager`, `pro`), credit balance, and transaction history.
-- **Role Administration**: One-click actions to promote users to administrator or adjust tester privileges.
-- **Tester Group Identification**: Visual badge highlights accounts enrolled in the complimentary tester program.
+- **User Directory**: Searchable list detailing user email, assigned role (`user`, `admin`), active tier (`free`, `manager`, `pro`), credit balance, and transaction history.
+- **Role Administration**: One-click actions to promote users to administrator or adjust account permissions.
 
 #### 4. Listings & Transactions Tabs
 - **Listing Oversight**: Filter by listing status (`active`, `paused`, `sold`, `removed`). Administrators can moderate and pause non-compliant listings immediately.
@@ -120,7 +118,7 @@ The Admin panel is organized into a clean, multi-tab layout optimized for high-d
 
 ### Authentication & Authorization
 - **Dependency Guard**: API endpoints enforce the `require_admin` dependency in `backend/app/api/v1/admin.py`, checking that the caller's JWT email is included in the production `ADMIN_EMAILS` environment variable.
-- **Google OAuth Integration**: Production sign-in flows through Google OAuth (`dressapdeveloper@gmail.com`), removing local hardcoded dev shortcuts for hardened security.
+- **Google OAuth Integration**: Production sign-in flows through Google OAuth (`dressappdeveloper@gmail.com`), removing local hardcoded dev shortcuts for hardened security.
 
 ### Multi-Tier AI Routing Infrastructure
 - **Primary Engine**: Google Gemini 3.5 Flash-Lite handles production stylist inquiries and vision analysis via `backend/app/services/llm_gateway.py`.

@@ -64,7 +64,6 @@ graph TD
 
 ### 主な管理機能
 - **リアルタイム KPI 可視化**: アクティブユーザー数、登録クローゼット衣類総数、出品中アイテム数、プラットフォーム手数料、スタイリスト呼び出し回数、発行された Trend Scout レポートなどのサマリー指標を表示。
-- **テスターグループプログラム**: 認証されたテスターアカウント（`maystarboard@gmail.com`、`lokoprod@gmail.com`、`dressapdeveloper@gmail.com`）に対して、ロールおよび無償の Professional プラン権限を自動付与。
 - **セキュアな認証**: 本番環境へのアクセスは Google OAuth 認証（`ADMIN_EMAILS`）によって厳格に制御されており、従来の未認証バイパスボタンは完全に排除されています。
 - **マルチティア AI ルーティング管理**: プライマリの **Google Gemini 3.5 Flash-Lite** ゲートウェイと、ポート 7860 で稼働するオンプレミス **Gemma-4-E4B** Eyes コンテナに対する直接検証とライブ Ping 診断を実施。
 - **マーケットプレイスの安全性とモデレーション**: 出品内容の確認、一時停止、復元、およびユーザー権限の管理を即座に実行可能。
@@ -120,7 +119,7 @@ graph TD
 
 ### 認証と認可
 - **依存関係ガード**: API エンドポイントは `backend/app/api/v1/admin.py` 内の `require_admin` 依存関係を強制し、呼び出し元の JWT メールアドレスが本番環境の `ADMIN_EMAILS` 環境変数に含まれているかを検証します。
-- **Google OAuth 連携**: 本番環境のサインインは Google OAuth（`dressapdeveloper@gmail.com`）を経由し、安全性を高めるためローカル環境のハードコードされた開発用バイパスは排除されています。
+- **Google OAuth 連携**: 本番環境のサインインは Google OAuth（`dressappdeveloper@gmail.com`）を経由し、安全性を高めるためローカル環境のハードコードされた開発用バイパスは排除されています。
 
 ### マルチティア AI ルーティングインフラストラクチャ
 - **プライマリエンジン**: Google Gemini 3.5 Flash-Lite が `backend/app/services/llm_gateway.py` を通じて本番環境のスタイリストへの問い合わせおよび画像解析を処理します。

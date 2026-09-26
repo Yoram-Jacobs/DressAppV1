@@ -8,7 +8,6 @@ The AI Stylist is your personal fashion companion. You can chat with it by typin
 DressApp's styling brain is driven by a resilient multi-tier intelligence architecture:
 - **Primary Production Engine (Google Gemini 3.5 Flash-Lite)**: Powers all core styling conversations out of the box via `llm_gateway.py`. It delivers lightning-fast responses (sub-350ms TTFT) with zero initial configuration and zero friction—no personal API keys required to start styling!
 - **On-Premises VPS Eyes (`gemma-4-E4B`) — Free Tier & Quota Safety Net**: A dedicated, fine-tuned `gemma-4-E4B` model running locally in the `dressapp-eyes` container on port 7860 of the Hetzner CPX32 VPS. It provides a zero-variable-cost baseline for Free Tier accounts and serves as a transparent fallback. If Google Gemini API limits (`429` / `RESOURCE_EXHAUSTED`) are encountered, queries automatically redirect to on-prem Gemma without failing or raising 500 errors.
-- **Tester Group Program**: Approved testers enjoy complimentary **Professional tier** access, complete with unlimited wardrobe capacity, Trend Scout radar feeds, daily style scheduling, and 100 credits/cycle.
 - **Custom BYOK Cloud Models**: Users can optionally provide their own Google Gemini API key in Profile settings to access higher-tier models (`gemini-2.5-pro`) or unlock advanced generative tools (Nano Banana photo reconstruction).
 
 ## Prerequisites

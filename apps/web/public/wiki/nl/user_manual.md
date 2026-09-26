@@ -230,8 +230,8 @@ Controle van de systeemwerking, financiële boekhouding en beheer van gebruikers
 ## 5. Problemen oplossen
 
 ### HTTP 402 Payment Required
-- **Probleem**: Kledinginvoer geblokkeerd. U heeft de basislimiet van 50 items bereikt (of tot 200 items door verwijzingsbonussen).
-- **Oplossing**: Ga naar de **tarievenpagina** (`/pricing`) en neem een abonnement op de Manager- of Professional-plan, of deel uw verwijzingslink om +10 plaatsen per registratie te krijgen (tot maximaal 200 items).
+- **Probleem**: Kledinginvoer geblokkeerd. U heeft de basislimiet van 150 items bereikt (of tot 1.000 items door verwijzingsbonussen).
+- **Oplossing**: Ga naar de **tarievenpagina** (`/pricing`) en neem een abonnement op de Manager- of Professional-plan, of deel uw verwijzingslink om +10 plaatsen per registratie te krijgen (tot maximaal 1.000 items).
 
 ### SSRF-blokkering / DNS-fout bij DPP
 - **Probleem**: URL van de gescande QR-productpas kan niet worden geanalyseerd.

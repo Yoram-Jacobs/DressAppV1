@@ -64,7 +64,6 @@ graph TD
 
 ### Zentrale administrative Funktionen
 - **Echtzeit-KPI-Transparenz**: Übersichtsmetriken zu aktiven Nutzern, Gesamtzahl der Garderobenartikel, Marktplatzvolumen, Plattformgebühren, Stylisten-Aufrufen und veröffentlichten Trend-Scout-Berichten.
-- **Tester-Gruppenprogramm**: Automatische Rollen- und kostenlose Professional-Tier-Zuweisung für verifizierte Tester-Konten (`maystarboard@gmail.com`, `lokoprod@gmail.com`, `dressapdeveloper@gmail.com`).
 - **Sichere Authentifizierung**: Der Produktionszugriff ist streng durch Google OAuth-Authentifizierung (`ADMIN_EMAILS`) geschützt; veraltete unauthentifizierte Bypass-Schaltflächen wurden vollständig entfernt.
 - **Governance für mehrstufiges KI-Routing**: Direkte Verifizierung und Live-Ping-Diagnose für das primäre **Google Gemini 3.5 Flash-Lite**-Gateway und den lokalen **Gemma-4-E4B**-Eyes-Container auf Port 7860.
 - **Marktplatz-Sicherheit & Moderation**: Sofortige Möglichkeit, Angebote zu prüfen, zu pausieren oder wiederherzustellen und Benutzerberechtigungen zu verwalten.
@@ -120,7 +119,7 @@ Das Admin-Panel ist in ein übersichtliches Layout mit mehreren Reitern untertei
 
 ### Authentifizierung & Autorisierung
 - **Dependency Guard**: API-Endpunkte erzwingen die Abhängigkeit `require_admin` in `backend/app/api/v1/admin.py`, die prüft, ob die JWT-E-Mail des Aufrufers in der Produktionsumgebungsvariable `ADMIN_EMAILS` enthalten ist.
-- **Google OAuth Integration**: Die Produktionsanmeldung erfolgt über Google OAuth (`dressapdeveloper@gmail.com`), wodurch lokale fest programmierte Entwickler-Shortcuts für maximale Sicherheit entfernt wurden.
+- **Google OAuth Integration**: Die Produktionsanmeldung erfolgt über Google OAuth (`dressappdeveloper@gmail.com`), wodurch lokale fest programmierte Entwickler-Shortcuts für maximale Sicherheit entfernt wurden.
 
 ### Mehrstufige KI-Routing-Infrastruktur
 - **Primäre Engine**: Google Gemini 3.5 Flash-Lite verarbeitet produktive Stylisten-Anfragen und Bildanalysen über `backend/app/services/llm_gateway.py`.

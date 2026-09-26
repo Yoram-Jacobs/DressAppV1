@@ -1260,7 +1260,7 @@ export default function HelpMenu() {
                         <p className="text-[12px] text-text-brand font-semibold">
                           {t("help.tiers_free_desc", {
                             defaultValue:
-                              "Baseline limit of 50 items. Expandable up to 200 items by sharing your invite code with friends (+10 capacity slots per friend).",
+                              "Baseline limit of 150 items. Expandable up to 1,000 items by sharing your invite code with friends (+10 capacity slots per friend).",
                           })}
                         </p>
                       </div>

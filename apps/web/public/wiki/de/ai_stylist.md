@@ -8,7 +8,6 @@ Der AI Stylist ist Ihr persönlicher Modebegleiter. Sie können per Texteingabe 
 Das Styling-Gehirn von DressApp basiert auf einer resilienten mehrstufigen Intelligenz-Architektur:
 - **Primäre Produktions-Engine (Google Gemini 3.5 Flash-Lite)**: Treibt alle zentralen Styling-Gespräche standardmäßig über `llm_gateway.py` an. Sie liefert blitzschnelle Antworten (unter 350 ms TTFT) ohne anfängliche Konfiguration und ohne Hürden – keine persönlichen API-Schlüssel erforderlich, um mit dem Styling zu beginnen!
 - **On-Premises-VPS-Eyes (`gemma-4-E4B`) – Free Tier & Quoten-Sicherheitsnetz**: Ein dediziertes, feingetuntes `gemma-4-E4B`-Modell, das lokal im `dressapp-eyes`-Container auf Port 7860 des Hetzner-CPX32-VPS ausgeführt wird. Es bietet eine Basis ohne variable Kosten für Free-Tier-Konten und dient als transparenter Fallback. Treten Begrenzungen der Google Gemini API (`429` / `RESOURCE_EXHAUSTED`) auf, werden Anfragen automatisch an das lokale Gemma weitergeleitet, ohne fehlzuschlagen oder 500-Fehler auszulösen.
-- **Tester-Gruppenprogramm**: Freigeschaltete Tester genießen kostenlosen Zugang zum **Professional Tier** inklusive unbegrenzter Garderobenkapazität, Trend-Scout-Radar-Feeds, täglicher Styling-Planung und 100 Credits pro Zyklus.
 - **Benutzerdefinierte BYOK-Cloud-Modelle**: Benutzer können in den Profileinstellungen optional ihren eigenen Google Gemini API-Schlüssel hinterlegen, um auf höherwertige Modelle (`gemini-2.5-pro`) zuzugreifen oder erweiterte generative Tools (Nano Banana Fotorekonstruktion) freizuschalten.
 
 ## Voraussetzungen

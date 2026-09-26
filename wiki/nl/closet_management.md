@@ -28,4 +28,4 @@ Een prachtige digitale kledingkast die direct laadt en waarmee u tientallen kled
 - **Per ongeluk gegroepeerd**: Open de itemdetails en tik op **Groep opheffen** om ze weer los te koppelen.
 
 ## Beperkingen
-- Gratis accounts kunnen maximaal 150 kledingstukken bewaren. Nodig vrienden uit (+10 plekken per aanmelding) of stap over op Pro voor onbeperkte opslag.
+- Gratis accounts kunnen 150 kledingstukken (tot 1.000 met vrienden) bewaren. Nodig vrienden uit (+10 plekken per aanmelding) of stap over op Pro voor onbeperkte opslag.
