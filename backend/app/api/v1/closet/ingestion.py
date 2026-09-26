@@ -14,7 +14,6 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from app.db.database import get_db
 from app.config import settings
-from app.models.schemas import GarmentVisuals
 from app.services import repos
 from app.services.auth import (
     get_current_user,
