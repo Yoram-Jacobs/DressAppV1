@@ -465,7 +465,7 @@ def run_training_on_runpod(
 
         # Step 1: Install Python dependencies
         run_ssh_streaming(
-            "pip install --no-cache-dir peft trl transformers bitsandbytes datasets accelerate safetensors scikit-learn",
+            "pip install --no-cache-dir -r /workspace/requirements-train.txt",
             "Install QLoRA Training Dependencies",
         )
 
