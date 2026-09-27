@@ -286,26 +286,21 @@ def train_lora_native(
 # ---------------------------------------------------------------------------
 # Modal Labs Serverless Compute Integration
 # ---------------------------------------------------------------------------
+modal_init_error: str | None = None
 try:
     import modal
 
     app = modal.App("dressapp-eyes-trainer")
-    image = (
-        modal.Image.debian_slim(python_version="3.11")
-        .pip_install_from_requirements(
-            str(Path(__file__).parent / "requirements-train.txt")
-            if (Path(__file__).parent / "requirements-train.txt").exists()
-            else "torch>=2.2.0"
-        )
-    )
+    req_file = Path(__file__).resolve().parent / "requirements-train.txt"
+    if req_file.exists():
+        image = modal.Image.debian_slim(python_version="3.11").pip_install_from_requirements(str(req_file))
+    else:
+        image = modal.Image.debian_slim(python_version="3.11").pip_install("torch>=2.2.0")
 
     @app.function(
         image=image,
         gpu="A10G",
         timeout=3600,
-        secrets=[
-            modal.Secret.from_name("huggingface-secret", required=False),
-        ],
     )
     def modal_train_entrypoint(
         dataset_content: str,
@@ -349,8 +344,12 @@ try:
             "adapter_tar_gz": tar_buf.getvalue(),
         }
 
-except Exception:
-    # Modal not installed or not in Modal environment
+except ImportError as err:
+    modal_init_error = f"Modal SDK is not installed: {err}"
+    app = None
+except Exception as err:
+    modal_init_error = f"Modal initialization error: {err}"
+    logger.warning("Modal initialization failed: %s", err, exc_info=True)
     app = None
 
 
@@ -373,7 +372,7 @@ def main() -> None:
 
     if args.backend == "modal":
         if app is None:
-            logger.error("Modal SDK is not available. Install modal or use --backend local")
+            logger.error(modal_init_error or "Modal SDK is not available. Install modal or use --backend local")
             sys.exit(1)
         logger.info("Dispatching training job to Modal Labs serverless A10G GPU...")
         dataset_text = args.dataset.read_text(encoding="utf-8")
