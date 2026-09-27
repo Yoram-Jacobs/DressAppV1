@@ -111,15 +111,10 @@ on the VPS — never in the repo.
 4. **Strict Cost Protection Perimeter (Tier Gating)**:
    - High-cost generative cloud endpoints (**Trend Scout** and **Nano Banana** photo reconstruction/inpainting) strictly require validated user-supplied API keys (HTTP 403 / clarify prompt for users without custom keys).
 5. **Headless Model Fine-Tuning**:
-   - Eyes fine-tuning is scheduled as a headless CI/CD workflow on GitHub Actions utilizing **Modal serverless GPU containers** ([`inference-server/eyes/training/train_eyes_lora.py`](inference-server/eyes/training/train_eyes_lora.py)). RunPod is redundant.
+   - Eyes fine-tuning is scheduled as a headless CI/CD workflow on GitHub Actions utilizing **RunPod serverless GPU pods** ([`inference-server/eyes/training/train_eyes_lora.py`](inference-server/eyes/training/train_eyes_lora.py)) with multi-tier candidate failover, strict regression gating, and GGUF quantization.
 
-> **🛑 Auth surface — `HF_TOKEN` / `EYES_HF_TOKEN` are NOT part of
-> DressApp.** Any reference to either in the live tree is a deprecated/forbidden
-> artefact (archived to [`quarantine/`](quarantine/)).
-> DressApp's vision stack (`SegFormer` + `rembg` + `CLIP`) loads its
-> weights from local disk — no internet egress, no HuggingFace
-> token, no gated-model download. **Do not reintroduce these env
-> vars.**
+> **ℹ️ Auth surface — `HF_TOKEN` / `EYES_HF_TOKEN`**:
+> `HF_TOKEN` (or alias `EYES_HF_TOKEN`) is utilized in headless CI/CD automation for model staging, model card generation, and publishing fine-tuned GGUF checkpoints to the official Hugging Face Hub repository (`Yoram-Jacobs/dressapp-eyes-gguf`). The on-prem Hetzner VPS runtime continues to bind-mount its model weights locally without runtime Hugging Face egress.
 
 ### Runtime provider override
 

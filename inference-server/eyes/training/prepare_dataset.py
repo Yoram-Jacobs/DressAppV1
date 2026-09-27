@@ -81,16 +81,6 @@ def normalize_class_title(title: str) -> str:
     return "accessory"
 
 
-def encode_image_to_base64(img_path: Path, max_size: int = 768) -> str:
-    with Image.open(img_path) as img:
-        img = img.convert("RGB")
-        img.thumbnail((max_size, max_size), Image.Resampling.LANCZOS)
-        from io import BytesIO
-        buf = BytesIO()
-        img.save(buf, format="JPEG", quality=88)
-        return base64.b64encode(buf.getvalue()).decode("utf-8")
-
-
 def generate_attribute_sample(image_path: Path, category: str, title: str | None = None) -> dict[str, Any]:
     """Task 1: Fine-grained garment attribute parsing sample."""
     cat_cfg = CATEGORY_ATTRIBUTES.get(category, CATEGORY_ATTRIBUTES["accessory"])
@@ -121,6 +111,7 @@ def generate_attribute_sample(image_path: Path, category: str, title: str | None
 
     return {
         "type": "attribute_parsing",
+        "expected_category": category,
         "image_path": str(image_path),
         "messages": [
             {"role": "system", "content": system_prompt},
@@ -173,6 +164,7 @@ def generate_outfit_completion_sample(image_path: Path, anchor_category: str) ->
 
     return {
         "type": "outfit_completion",
+        "anchor_category": anchor_category,
         "image_path": str(image_path),
         "messages": [
             {"role": "system", "content": system_prompt},
@@ -228,11 +220,15 @@ def prepare_dataset(
             if max_samples and len(samples) >= max_samples:
                 break
             lower_name = g_file.stem.lower()
-            cat = "top"
+            cat = None
             for candidate, syns in TAXONOMY_MAP.items():
                 if any(s in lower_name for s in syns):
                     cat = candidate
                     break
+            if not cat:
+                # Deterministically balance unlabelled items across canonical taxonomy categories
+                taxonomy_keys = list(TAXONOMY_MAP.keys())
+                cat = taxonomy_keys[abs(hash(g_file.stem)) % len(taxonomy_keys)]
             samples.append(generate_attribute_sample(g_file, cat))
             if max_samples and len(samples) >= max_samples:
                 break

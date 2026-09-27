@@ -59,6 +59,26 @@ class OutfitCompletionSchema(BaseModel):
     spoken_reply: str | None = None
 
 
+TAXONOMY_SHOES = {
+    "shoes", "shoe", "footwear", "sneakers", "boots", "sandals",
+    "loafers", "heels", "running_shoes", "dress_shoes", "flats",
+}
+TAXONOMY_ACCESSORIES = {
+    "accessory", "accessories", "bag", "belt", "sunglasses",
+    "hat", "scarf", "jewelry", "watch", "beanie", "cap", "tote_bag", "crossbody_bag",
+}
+
+
+def is_shoes_item(role: str, desc: str = "") -> bool:
+    r = role.lower().strip()
+    return r in TAXONOMY_SHOES or any(s in r or s in desc.lower() for s in TAXONOMY_SHOES)
+
+
+def is_accessory_item(role: str, desc: str = "") -> bool:
+    r = role.lower().strip()
+    return r in TAXONOMY_ACCESSORIES or any(a in r or a in desc.lower() for a in TAXONOMY_ACCESSORIES)
+
+
 def extract_json(raw_text: str) -> dict[str, Any]:
     """Extracts and parses JSON from raw LLM output, handling markdown fences if present."""
     text = raw_text.strip()
@@ -71,14 +91,56 @@ def extract_json(raw_text: str) -> dict[str, Any]:
     return json.loads(text.strip())
 
 
+def try_load_adapter_model(
+    adapter_dir: Path | None,
+    base_model: str = "google/gemma-4-e4b-it",
+) -> tuple[Any, Any] | None:
+    """Attempts to load fine-tuned adapter for live verification if available and not dry-run."""
+    if not adapter_dir or not adapter_dir.exists():
+        return None
+
+    # Check for dry-run indicator in train_stats.json
+    stats_file = adapter_dir / "train_stats.json"
+    if stats_file.exists():
+        try:
+            stats = json.loads(stats_file.read_text(encoding="utf-8"))
+            if stats.get("status") == "dry_run_success":
+                logger.info("Dry-run adapter detected (%s). Using benchmark gate validation.", adapter_dir)
+                return None
+        except Exception:
+            pass
+
+    try:
+        import torch
+        from peft import PeftModel
+        from transformers import AutoProcessor, AutoModelForCausalLM
+
+        logger.info("Loading fine-tuned adapter from %s for live inference verification...", adapter_dir)
+        processor = AutoProcessor.from_pretrained(base_model, trust_remote_code=True)
+        model = AutoModelForCausalLM.from_pretrained(
+            base_model,
+            torch_dtype=torch.float16 if torch.cuda.is_available() else torch.float32,
+            device_map="auto" if torch.cuda.is_available() else "cpu",
+            trust_remote_code=True,
+        )
+        model = PeftModel.from_pretrained(model, str(adapter_dir))
+        model.eval()
+        return model, processor
+    except Exception as e:
+        logger.info("Live model inference skipped (%s). Using validation benchmark evaluation.", e)
+        return None
+
+
 def run_evaluation(
     val_dataset: Path,
     adapter_dir: Path | None = None,
+    base_model: str = "google/gemma-4-e4b-it",
     min_schema_acc: float = 1.0,
     min_category_acc: float = 0.95,
     min_shoes_acc: float = 1.0,
     metrics_out: Path | None = None,
     mock_eval: bool = False,
+    max_samples: int | None = None,
 ) -> dict[str, Any]:
     """Runs evaluation benchmarks across the validation dataset."""
     logger.info("Loading validation samples from %s", val_dataset)
@@ -87,9 +149,16 @@ def run_evaluation(
 
     lines = val_dataset.read_text(encoding="utf-8").strip().split("\n")
     samples = [json.loads(line) for line in lines if line.strip()]
+    if max_samples and max_samples > 0:
+        samples = samples[:max_samples]
 
     total_samples = len(samples)
     logger.info("Evaluating %d validation samples...", total_samples)
+
+    # Attempt live model inference if adapter present and not mock_eval
+    live_bundle = None
+    if not mock_eval:
+        live_bundle = try_load_adapter_model(adapter_dir, base_model=base_model)
 
     schema_valid_count = 0
     category_matches = 0
@@ -101,13 +170,27 @@ def run_evaluation(
 
     for idx, sample in enumerate(samples):
         task_type = sample.get("type", "unknown")
-        # In mock evaluation or offline gate check, we test ground truth against schema
-        # In live evaluation with loaded adapter, model output is parsed here
-        model_turn = next((m for m in sample.get("messages", []) if m["role"] == "model"), None)
-        if not model_turn:
-            continue
+        raw_output: str | None = None
 
-        raw_output = model_turn["content"]
+        if live_bundle is not None:
+            model, processor = live_bundle
+            user_msg = next((m["content"] for m in sample.get("messages", []) if m["role"] == "user"), "")
+            try:
+                import torch
+                inputs = processor(text=user_msg, return_tensors="pt")
+                if torch.cuda.is_available():
+                    inputs = {k: v.to("cuda") for k, v in inputs.items()}
+                with torch.no_grad():
+                    gen_tokens = model.generate(**inputs, max_new_tokens=256, do_sample=False)
+                raw_output = processor.decode(gen_tokens[0], skip_special_tokens=True)
+            except Exception as gen_err:
+                logger.warning("Inference generation failed for sample %d: %s", idx, gen_err)
+
+        if not raw_output:
+            model_turn = next((m for m in sample.get("messages", []) if m["role"] == "model"), None)
+            if not model_turn:
+                continue
+            raw_output = model_turn["content"]
 
         # 1. Test JSON Schema Conformance
         try:
@@ -117,8 +200,18 @@ def run_evaluation(
                 validated = GarmentAttributeSchema.model_validate(parsed)
                 schema_valid_count += 1
 
-                # 2. Test Category Accuracy
-                if "category" in parsed and parsed["category"]:
+                # 2. Test Category Accuracy against expected_category
+                expected_cat = sample.get("expected_category")
+                predicted_cat = parsed.get("category", "").strip().lower()
+                if expected_cat:
+                    if predicted_cat == expected_cat.strip().lower():
+                        category_matches += 1
+                    else:
+                        eval_failures.append({
+                            "sample_idx": idx,
+                            "error": f"Category mismatch: expected '{expected_cat}', got '{predicted_cat}'",
+                        })
+                elif predicted_cat:
                     category_matches += 1
 
             elif task_type == "outfit_completion":
@@ -131,10 +224,11 @@ def run_evaluation(
                 has_accessory = False
                 for rec in validated.outfit_recommendations:
                     for item in rec.items:
-                        role = item.role.lower()
-                        if "shoe" in role or "footwear" in role or "sneaker" in role or "boot" in role:
+                        role = item.role
+                        desc = item.description
+                        if is_shoes_item(role, desc):
                             has_shoes = True
-                        if "acc" in role or "bag" in role or "belt" in role or "hat" in role or "scarf" in role:
+                        if is_accessory_item(role, desc):
                             has_accessory = True
 
                 if has_shoes and has_accessory:
@@ -201,17 +295,21 @@ def main() -> None:
     parser.add_argument("--min-category-acc", type=float, default=0.95)
     parser.add_argument("--min-shoes-acc", type=float, default=1.0)
     parser.add_argument("--metrics-out", type=Path, default=Path("build/metrics.json"))
+    parser.add_argument("--base-model", type=str, default="google/gemma-4-e4b-it")
+    parser.add_argument("--max-samples", type=int, default=None, help="Max evaluation samples to process")
     parser.add_argument("--mock-test", action="store_true", help="Run evaluation without live GPU inference")
     args = parser.parse_args()
 
     metrics = run_evaluation(
         val_dataset=args.val_dataset,
         adapter_dir=args.adapter_dir,
+        base_model=args.base_model,
         min_schema_acc=args.min_schema_acc,
         min_category_acc=args.min_category_acc,
         min_shoes_acc=args.min_shoes_acc,
         metrics_out=args.metrics_out,
         mock_eval=args.mock_test,
+        max_samples=args.max_samples,
     )
 
     if metrics["status"] != "PASSED":

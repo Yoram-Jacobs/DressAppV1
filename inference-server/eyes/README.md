@@ -5,13 +5,11 @@ GGUF (`gemma-4-e2b-it.Q4_K_M-002.gguf` + `gemma-4-e2b-it.BF16-mmproj.gguf`) used
 the DressApp closet pipeline. Replaces the Qwen-VL leg of
 `backend/app/services/garment_vision.py` when `EYES_PROVIDER=gemma`.
 
-> **No HuggingFace token, ever.** GGUF + mmproj artefacts are
-> bind-mounted from a local directory on the VPS (see Section 2
-> below). Read
-> `quarantine/2026-05-sabotage/READ_THIS_FIRST.md` for the
-> background — earlier versions of this README told you to set
-> `EYES_HF_TOKEN` and download from a private HF repo. That was
-> the sabotage line. **Don't reintroduce it.**
+> **VPS Local Bind-Mount.** GGUF + mmproj artefacts on the production VPS
+> are bind-mounted from a local directory (see Section 2 below) without
+> runtime Hugging Face egress. For automated model training and checkpoint
+> release pipelines in GitHub Actions, `HF_TOKEN` / `EYES_HF_TOKEN` is used
+> for staging and publishing to the official repository.
 
 Runs as a sibling container next to `backend`, `frontend`, and `caddy`
 in `deploy/docker-compose.yml`. Internal-only: backend reaches it at

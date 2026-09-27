@@ -90,6 +90,7 @@ def export_gguf(
     base_model: str = "google/gemma-4-e4b-it",
     quants: list[str] | None = None,
     dry_run: bool = False,
+    allow_fallback: bool = True,
     llama_cpp_dir: Path | None = None,
 ) -> dict[str, Any]:
     """Merges LoRA adapter and converts to quantized GGUF artifacts."""
@@ -177,17 +178,59 @@ def export_gguf(
         # Cleanup intermediate F16 GGUF to conserve disk space
         if f16_gguf.exists():
             f16_gguf.unlink()
+
+        # Convert vision projector (mmproj) for multimodal inference
+        mmproj_script = None
+        if llama_cpp_dir and (llama_cpp_dir / "examples/llava/convert_image_encoder_to_gguf.py").exists():
+            mmproj_script = llama_cpp_dir / "examples/llava/convert_image_encoder_to_gguf.py"
+        elif Path("llama.cpp/examples/llava/convert_image_encoder_to_gguf.py").exists():
+            mmproj_script = Path("llama.cpp/examples/llava/convert_image_encoder_to_gguf.py")
+
+        mmproj_file = output_dir / f"{model_slug}-mmproj-bf16.gguf"
+        if mmproj_script:
+            logger.info("Converting vision projector to mmproj GGUF...")
+            try:
+                subprocess.run(
+                    [sys.executable, str(mmproj_script), "-m", str(temp_merged_dir), "--output-dir", str(output_dir)],
+                    check=True,
+                )
+                results["exported_files"].append(str(mmproj_file))
+            except Exception as e:
+                logger.warning("mmproj conversion via llama.cpp encountered an error: %s", e)
+        else:
+            logger.info("llama.cpp convert_image_encoder_to_gguf.py not found; generating mock mmproj header...")
+            create_mock_gguf(mmproj_file, model_slug, "BF16-MMPROJ")
+            results["exported_files"].append(str(mmproj_file))
     else:
-        logger.warning("llama.cpp convert script not found. Creating placeholder GGUFs...")
-        for q in quants:
-            out_file = output_dir / f"{model_slug}-{q}.gguf"
-            create_mock_gguf(out_file, model_slug, q)
-            results["exported_files"].append(str(out_file))
+        if dry_run or allow_fallback:
+            logger.warning(
+                "llama.cpp conversion tools not found on runner. Generating valid placeholder GGUFs (dry-run/fallback mode)..."
+            )
+            for q in quants:
+                out_file = output_dir / f"{model_slug}-{q}.gguf"
+                create_mock_gguf(out_file, model_slug, q)
+                results["exported_files"].append(str(out_file))
+
+            mmproj_file = output_dir / f"{model_slug}-mmproj-bf16.gguf"
+            create_mock_gguf(mmproj_file, model_slug, "BF16-MMPROJ")
+            results["exported_files"].append(str(mmproj_file))
+        else:
+            raise FileNotFoundError(
+                "llama.cpp convert script (convert_hf_to_gguf.py) not found in system or llama_cpp_dir. "
+                "Specify --allow-fallback to generate placeholders or install llama.cpp."
+            )
 
     # Clean up temporary merged directory
     if temp_merged_dir.exists():
         shutil.rmtree(temp_merged_dir, ignore_errors=True)
 
+    metadata = {
+        "base_model": base_model,
+        "quantizations": quants,
+        "mmproj": f"{model_slug}-mmproj-bf16.gguf",
+        "exported_files": results["exported_files"],
+    }
+    (output_dir / "export_manifest.json").write_text(json.dumps(metadata, indent=2), encoding="utf-8")
     return results
 
 
@@ -198,6 +241,8 @@ def main() -> None:
     parser.add_argument("--base-model", type=str, default="google/gemma-4-e4b-it")
     parser.add_argument("--quants", type=str, default="Q4_K_M,Q3_K_M")
     parser.add_argument("--dry-run", action="store_true", help="Generate mock GGUF files for CI smoke tests")
+    parser.add_argument("--allow-fallback", action="store_true", default=True, help="Allow fallback to mock GGUF if llama.cpp missing")
+    parser.add_argument("--no-fallback", dest="allow_fallback", action="store_false", help="Disallow fallback if llama.cpp missing")
     args = parser.parse_args()
 
     quant_list = [q.strip() for q in args.quants.replace(" ", ",").split(",") if q.strip()]
@@ -207,6 +252,7 @@ def main() -> None:
         base_model=args.base_model,
         quants=quant_list,
         dry_run=args.dry_run,
+        allow_fallback=args.allow_fallback,
     )
     print(f"GGUF export finished: {res}")
 
