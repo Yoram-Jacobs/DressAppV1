@@ -100,8 +100,6 @@ def generate_attribute_sample(image_path: Path, category: str, title: str | None
     color = random.choice(COLORS)
     formality = random.choice(FORMALITIES)
 
-    b64_image = encode_image_to_base64(image_path)
-
     system_prompt = (
         "You are DressApp Eyes, an expert fashion vision and taxonomy classification engine. "
         "Analyze the garment in the provided photo and extract its precise attributes matching "
@@ -126,13 +124,7 @@ def generate_attribute_sample(image_path: Path, category: str, title: str | None
         "image_path": str(image_path),
         "messages": [
             {"role": "system", "content": system_prompt},
-            {
-                "role": "user",
-                "content": [
-                    {"type": "image_base64", "data": b64_image},
-                    {"type": "text", "text": user_text},
-                ],
-            },
+            {"role": "user", "content": f"<image>\n{user_text}"},
             {"role": "model", "content": json.dumps(ground_truth, ensure_ascii=False)},
         ],
     }
@@ -140,8 +132,6 @@ def generate_attribute_sample(image_path: Path, category: str, title: str | None
 
 def generate_outfit_completion_sample(image_path: Path, anchor_category: str) -> dict[str, Any]:
     """Task 2: Complete Outfit Generation sample with mandatory Shoes & Accessories."""
-    b64_image = encode_image_to_base64(image_path)
-
     system_prompt = (
         "You are DressApp Eyes, an expert fashion stylist. Given an anchor garment, create a complete, "
         "harmonious head-to-toe outfit. Every outfit recommendation MUST include primary complementary "
@@ -186,13 +176,7 @@ def generate_outfit_completion_sample(image_path: Path, anchor_category: str) ->
         "image_path": str(image_path),
         "messages": [
             {"role": "system", "content": system_prompt},
-            {
-                "role": "user",
-                "content": [
-                    {"type": "image_base64", "data": b64_image},
-                    {"type": "text", "text": user_text},
-                ],
-            },
+            {"role": "user", "content": f"<image>\n{user_text}"},
             {"role": "model", "content": json.dumps(ground_truth, ensure_ascii=False)},
         ],
     }

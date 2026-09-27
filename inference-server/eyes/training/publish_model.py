@@ -223,7 +223,7 @@ def publish_to_hub(
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Publish DressApp Eyes Model to Hugging Face Hub")
-    parser.add_argument("--model-dir", type=Path, default=Path("build/gguf"))
+    parser.add_argument("--model-dir", "--gguf-dir", dest="model_dir", type=Path, default=Path("build/gguf"))
     parser.add_argument("--repo-id", type=str, default="Yoram-Jacobs/dressapp-eyes-gguf")
     parser.add_argument("--tag-name", type=str, default=f"weekly-{datetime.date.today().isoformat()}")
     parser.add_argument("--metrics-path", type=Path, default=Path("build/metrics.json"))

@@ -200,7 +200,7 @@ def main() -> None:
     parser.add_argument("--dry-run", action="store_true", help="Generate mock GGUF files for CI smoke tests")
     args = parser.parse_args()
 
-    quant_list = [q.strip() for q in args.quants.split(",") if q.strip()]
+    quant_list = [q.strip() for q in args.quants.replace(" ", ",").split(",") if q.strip()]
     res = export_gguf(
         adapter_dir=args.adapter_dir,
         output_dir=args.output_dir,

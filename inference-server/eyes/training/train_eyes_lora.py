@@ -171,7 +171,40 @@ def train_lora_native(
         logger.warning("CUDA is not available on this machine! Fallback to CPU dry run or expect slow execution.")
 
     logger.info("Loading SFT dataset from %s", dataset_path)
-    dataset = load_dataset("json", data_files=str(dataset_path), split="train")
+    try:
+        dataset = load_dataset("json", data_files=str(dataset_path), split="train")
+    except Exception as err:
+        logger.warning(
+            "load_dataset('json', ...) failed (%s). Normalizing dataset via Python JSON parser...",
+            err,
+        )
+        with open(dataset_path, "r", encoding="utf-8") as f:
+            raw_records = [json.loads(line) for line in f if line.strip()]
+
+        cleaned_records = []
+        for r in raw_records:
+            cleaned_messages = []
+            for m in r.get("messages", []):
+                role = m.get("role", "user")
+                content = m.get("content", "")
+                if isinstance(content, list):
+                    text_parts = [
+                        p.get("text", "")
+                        for p in content
+                        if isinstance(p, dict) and p.get("type") == "text"
+                    ]
+                    content = " ".join(text_parts)
+                elif not isinstance(content, str):
+                    content = str(content)
+                cleaned_messages.append({"role": role, "content": content})
+            cleaned_records.append({
+                "type": r.get("type", "attribute_parsing"),
+                "image_path": str(r.get("image_path", "")),
+                "messages": cleaned_messages,
+            })
+        from datasets import Dataset
+
+        dataset = Dataset.from_list(cleaned_records)
 
     logger.info("Configuring 4-bit BitsAndBytes quantization...")
     bnb_config = BitsAndBytesConfig(
@@ -528,7 +561,10 @@ def run_training_on_runpod(
         import tarfile
 
         with tarfile.open(local_archive, "r:gz") as tar:
-            tar.extractall(path=str(output_dir))
+            if hasattr(tarfile, "data_filter"):
+                tar.extractall(path=str(output_dir), filter="data")
+            else:
+                tar.extractall(path=str(output_dir))
         if local_archive.exists():
             local_archive.unlink()
 
