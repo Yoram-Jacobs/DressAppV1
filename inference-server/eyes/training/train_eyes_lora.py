@@ -299,21 +299,41 @@ def train_lora_native(
     model.print_trainable_parameters()
 
     output_dir.mkdir(parents=True, exist_ok=True)
-    training_args = TrainingArguments(
-        output_dir=str(output_dir),
-        num_train_epochs=epochs,
-        per_device_train_batch_size=batch_size,
-        gradient_accumulation_steps=gradient_accumulation_steps,
-        learning_rate=learning_rate,
-        weight_decay=0.01,
-        warmup_ratio=warmup_ratio,
-        lr_scheduler_type="cosine",
-        logging_steps=10,
-        save_strategy="epoch",
-        fp16=not torch.cuda.is_bf16_supported() and torch.cuda.is_available(),
-        bf16=torch.cuda.is_bf16_supported(),
-        report_to="none",
-    )
+    training_args = None
+    try:
+        from trl import SFTConfig
+        training_args = SFTConfig(
+            output_dir=str(output_dir),
+            num_train_epochs=epochs,
+            per_device_train_batch_size=batch_size,
+            gradient_accumulation_steps=gradient_accumulation_steps,
+            learning_rate=learning_rate,
+            weight_decay=0.01,
+            warmup_ratio=warmup_ratio,
+            lr_scheduler_type="cosine",
+            logging_steps=10,
+            save_strategy="epoch",
+            fp16=not torch.cuda.is_bf16_supported() and torch.cuda.is_available(),
+            bf16=torch.cuda.is_bf16_supported(),
+            report_to="none",
+            max_seq_length=max_seq_length,
+        )
+    except Exception:
+        training_args = TrainingArguments(
+            output_dir=str(output_dir),
+            num_train_epochs=epochs,
+            per_device_train_batch_size=batch_size,
+            gradient_accumulation_steps=gradient_accumulation_steps,
+            learning_rate=learning_rate,
+            weight_decay=0.01,
+            warmup_ratio=warmup_ratio,
+            lr_scheduler_type="cosine",
+            logging_steps=10,
+            save_strategy="epoch",
+            fp16=not torch.cuda.is_bf16_supported() and torch.cuda.is_available(),
+            bf16=torch.cuda.is_bf16_supported(),
+            report_to="none",
+        )
 
     def format_prompts(batch: dict[str, Any] | list[Any]) -> list[str] | str:
         raw_msgs = batch.get("messages", []) if isinstance(batch, dict) else batch
@@ -375,9 +395,10 @@ def train_lora_native(
         "train_dataset": dataset,
         "peft_config": None,
         "formatting_func": format_prompts,
-        "max_seq_length": max_seq_length,
         "args": training_args,
     }
+    if "max_seq_length" in sft_params:
+        sft_kwargs["max_seq_length"] = max_seq_length
     if "processing_class" in sft_params:
         sft_kwargs["processing_class"] = tok
     elif "tokenizer" in sft_params:
@@ -598,10 +619,10 @@ def run_training_on_runpod(
                 err_text = stderr.read().decode("utf-8", errors="replace").strip()
                 raise RuntimeError(f"Step '{label}' failed with exit code {exit_status}. Details: {err_text}")
 
-        # Step 1: Install Python dependencies (ensuring PyTorch >= 2.5 with CUDA 12.4 support & synchronized torchaudio)
+        # Step 1: Install Python dependencies (ensuring PyTorch >= 2.5 with CUDA 12.4 support, accelerate >= 1.1, & synchronized torchaudio)
         run_ssh_streaming(
             "pip uninstall -y torchaudio && "
-            "pip install --no-cache-dir 'torch>=2.5.0' 'torchvision>=0.20.0' 'torchaudio>=2.5.0' --extra-index-url https://download.pytorch.org/whl/cu124 && "
+            "pip install --no-cache-dir 'torch>=2.5.0' 'torchvision>=0.20.0' 'torchaudio>=2.5.0' 'accelerate>=1.1.0' --extra-index-url https://download.pytorch.org/whl/cu124 && "
             "pip install --no-cache-dir -r /workspace/requirements-train.txt",
             "Install QLoRA Training Dependencies",
         )
