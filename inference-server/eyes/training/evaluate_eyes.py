@@ -113,11 +113,31 @@ def try_load_adapter_model(
     try:
         import torch
         from peft import PeftModel
-        from transformers import AutoProcessor, AutoModelForCausalLM
+        import transformers
 
         logger.info("Loading fine-tuned adapter from %s for live inference verification...", adapter_dir)
-        processor = AutoProcessor.from_pretrained(base_model, trust_remote_code=True)
-        model = AutoModelForCausalLM.from_pretrained(
+        processor = None
+        try:
+            processor = transformers.AutoProcessor.from_pretrained(base_model, trust_remote_code=True)
+        except Exception:
+            processor = transformers.AutoTokenizer.from_pretrained(base_model, trust_remote_code=True)
+
+        model_cls = None
+        for cand in [
+            "AutoModelForMultimodalLM",
+            "AutoModelForConditionalGeneration",
+            "AutoModelForImageTextToText",
+            "AutoModelForCausalLM",
+        ]:
+            cls = getattr(transformers, cand, None)
+            if cls is not None:
+                model_cls = cls
+                break
+
+        if model_cls is None:
+            raise ImportError("No compatible model class found in transformers.")
+
+        model = model_cls.from_pretrained(
             base_model,
             torch_dtype=torch.float16 if torch.cuda.is_available() else torch.float32,
             device_map="auto" if torch.cuda.is_available() else "cpu",

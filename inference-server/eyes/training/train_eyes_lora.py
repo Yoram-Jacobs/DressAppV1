@@ -74,8 +74,9 @@ def resolve_vlm_model_class() -> Any:
     import transformers
 
     candidates = [
-        "AutoModelForImageTextToText",
+        "AutoModelForMultimodalLM",
         "AutoModelForConditionalGeneration",
+        "AutoModelForImageTextToText",
         "AutoModelForCausalLM",
         "AutoModelForVision2Seq",
     ]
@@ -214,26 +215,74 @@ def train_lora_native(
         bnb_4bit_use_double_quant=True,
     )
 
-    model_cls = resolve_vlm_model_class()
-    logger.info("Loading base model: %s using %s", base_model, model_cls.__name__)
-    processor = AutoProcessor.from_pretrained(base_model, trust_remote_code=True)
-    model = model_cls.from_pretrained(
-        base_model,
-        quantization_config=bnb_config,
-        device_map="auto",
-        trust_remote_code=True,
-    )
+    # Load processor or fallback to tokenizer
+    processor = None
+    try:
+        logger.info("Attempting to load AutoProcessor for %s...", base_model)
+        processor = AutoProcessor.from_pretrained(base_model, trust_remote_code=True)
+        logger.info("AutoProcessor loaded successfully: %s", type(processor).__name__)
+    except Exception as exc:
+        logger.warning(
+            "AutoProcessor.from_pretrained failed (%s). Falling back to AutoTokenizer...",
+            exc,
+        )
+        from transformers import AutoTokenizer
+        processor = AutoTokenizer.from_pretrained(base_model, trust_remote_code=True)
+        logger.info("AutoTokenizer loaded successfully: %s", type(processor).__name__)
+
+    if hasattr(processor, "pad_token") and processor.pad_token is None:
+        processor.pad_token = getattr(processor, "eos_token", "<pad>")
+    if hasattr(processor, "tokenizer") and getattr(processor.tokenizer, "pad_token", None) is None:
+        processor.tokenizer.pad_token = getattr(processor.tokenizer, "eos_token", "<pad>")
+
+    # Load base model with candidate fallback
+    model = None
+    import transformers
+    candidates = [
+        "AutoModelForMultimodalLM",
+        "AutoModelForConditionalGeneration",
+        "AutoModelForImageTextToText",
+        "AutoModelForCausalLM",
+        "AutoModelForVision2Seq",
+    ]
+    last_model_err = None
+    for cand in candidates:
+        cls = getattr(transformers, cand, None)
+        if cls is None:
+            continue
+        try:
+            logger.info("Attempting to load base model with %s...", cand)
+            model = cls.from_pretrained(
+                base_model,
+                quantization_config=bnb_config,
+                device_map="auto",
+                trust_remote_code=True,
+            )
+            logger.info("Successfully loaded base model %s using %s", base_model, cand)
+            break
+        except Exception as err:
+            logger.warning("Failed loading base model with %s: %s. Trying next candidate...", cand, err)
+            last_model_err = err
+
+    if model is None:
+        raise RuntimeError(
+            f"Failed to load base model '{base_model}' with any supported Transformers class. Last error: {last_model_err}"
+        )
 
     model = prepare_model_for_kbit_training(model)
 
-    # Freeze vision encoder parameters to preserve pre-trained fashion representations
-    for vision_attr in ["vision_tower", "vision_model", "visual"]:
-        if hasattr(model, vision_attr):
-            submod = getattr(model, vision_attr)
-            for param in submod.parameters():
+    # Freeze vision and audio encoder parameters to preserve pre-trained fashion representations
+    for tower_attr in ["vision_tower", "vision_model", "visual", "audio_tower", "audio_model"]:
+        target = None
+        if hasattr(model, tower_attr):
+            target = getattr(model, tower_attr)
+        elif hasattr(model, "model") and hasattr(model.model, tower_attr):
+            target = getattr(model.model, tower_attr)
+
+        if target is not None:
+            for param in target.parameters():
                 param.requires_grad = False
-            logger.info("Froze vision encoder parameters (%s).", vision_attr)
-            break
+            logger.info("Froze encoder parameters (%s).", tower_attr)
 
     peft_config = LoraConfig(
         r=lora_r,
@@ -288,6 +337,9 @@ def train_lora_native(
 
     import inspect
     tok = processor.tokenizer if hasattr(processor, "tokenizer") else processor
+    if hasattr(tok, "pad_token") and tok.pad_token is None:
+        tok.pad_token = getattr(tok, "eos_token", "<pad>")
+
     sft_params = inspect.signature(SFTTrainer.__init__).parameters
     sft_kwargs = {
         "model": model,
@@ -311,7 +363,8 @@ def train_lora_native(
 
     logger.info("Training completed in %.2f seconds. Saving adapter to %s", total_time, output_dir)
     trainer.model.save_pretrained(str(output_dir))
-    processor.save_pretrained(str(output_dir))
+    if hasattr(processor, "save_pretrained"):
+        processor.save_pretrained(str(output_dir))
 
     stats = {
         "status": "success",

@@ -31,8 +31,9 @@ def resolve_vlm_model_class() -> Any:
     import transformers
 
     candidates = [
-        "AutoModelForImageTextToText",
+        "AutoModelForMultimodalLM",
         "AutoModelForConditionalGeneration",
+        "AutoModelForImageTextToText",
         "AutoModelForCausalLM",
         "AutoModelForVision2Seq",
     ]
@@ -136,7 +137,13 @@ def export_gguf(
         device_map="cpu",
         trust_remote_code=True,
     )
-    processor = AutoProcessor.from_pretrained(base_model, trust_remote_code=True)
+    processor = None
+    try:
+        processor = AutoProcessor.from_pretrained(base_model, trust_remote_code=True)
+    except Exception as exc:
+        logger.warning("AutoProcessor failed (%s); falling back to AutoTokenizer...", exc)
+        from transformers import AutoTokenizer
+        processor = AutoTokenizer.from_pretrained(base_model, trust_remote_code=True)
 
     logger.info("Merging LoRA adapter from %s...", adapter_dir)
     merged_model = PeftModel.from_pretrained(base, str(adapter_dir))
@@ -146,7 +153,8 @@ def export_gguf(
     temp_merged_dir.mkdir(parents=True, exist_ok=True)
     logger.info("Saving merged Hugging Face model to %s...", temp_merged_dir)
     merged_model.save_pretrained(str(temp_merged_dir))
-    processor.save_pretrained(str(temp_merged_dir))
+    if hasattr(processor, "save_pretrained"):
+        processor.save_pretrained(str(temp_merged_dir))
 
     # 2. Convert to GGUF using llama.cpp
     f16_gguf = output_dir / f"{model_slug}-f16.gguf"
