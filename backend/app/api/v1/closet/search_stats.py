@@ -298,6 +298,8 @@ async def complete_outfit(
                 "subcategory": listing_doc.get("subcategory") or (seller_item.get("subcategory") if seller_item else None),
                 "color": listing_doc.get("color") or (seller_item.get("color") if seller_item else None),
                 "colors": listing_doc.get("colors") or (seller_item.get("colors") if seller_item else []),
+                "gender": listing_doc.get("gender") or (seller_item.get("gender") if seller_item else None),
+                "size": listing_doc.get("size") or (seller_item.get("size") if seller_item else None),
                 "clip_embedding": (seller_item.get("clip_embedding") if seller_item else None) or listing_doc.get("clip_embedding"),
                 "image_url": img,
                 "thumbnail_data_url": img,
@@ -664,6 +666,8 @@ async def complete_outfit(
                 user_profile = {
                     "preferred_language": user_lang,
                     "style_profile": user.get("style_profile"),
+                    "sex": user.get("sex"),
+                    "body_measurements": user.get("body_measurements"),
                 }
                 advice = await stylist_service.advise(
                     session_id=f"complete-outfit:{user['id']}",

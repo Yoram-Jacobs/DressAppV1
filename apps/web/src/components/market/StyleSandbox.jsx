@@ -15,6 +15,7 @@ import { useAuth } from '@/lib/auth';
 import { api, outfits as outfitsApi } from '@/lib/api';
 import { prewarmOutfits } from '@/lib/useOutfitStore';
 import { bestImageUrl } from '@/lib/itemImage';
+import { checkListingFit } from '@/lib/fitCompatibility';
 import {
   ImageOff,
   Sparkles,
@@ -24,6 +25,7 @@ import {
   BookmarkPlus,
   Palette,
   Layers,
+  AlertTriangle,
 } from 'lucide-react';
 import AvatarViewer from '@/components/AvatarViewer';
 import { HarmonyBadge } from '@/components/stylist/HarmonyBadge';
@@ -82,6 +84,8 @@ export default function StyleSandbox({ isOpen, onClose, listingItem }) {
   const { user } = useAuth();
   const store = useClosetStore();
   const items = store.items || [];
+
+  const fitCheck = useMemo(() => checkListingFit(listingItem, user, t), [listingItem, user, t]);
 
   // Categorize local wardrobe items
   const localTops = items.filter(
@@ -395,6 +399,25 @@ export default function StyleSandbox({ isOpen, onClose, listingItem }) {
               </DialogDescription>
             </DialogHeader>
 
+            {fitCheck.hasMismatch && (
+              <div
+                className="mt-3 rounded-[12px] border border-amber-300 bg-amber-50/90 dark:bg-amber-950/25 dark:border-amber-800 p-2.5 text-amber-900 dark:text-amber-200 text-xs"
+                data-testid="sandbox-fit-warning-banner"
+              >
+                <div className="flex items-start gap-2">
+                  <AlertTriangle className="h-4 w-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+                  <div>
+                    <span className="font-bold block">
+                      {t('market.fitCheck.bannerTitle', { defaultValue: 'Fit & Proportions Notice' })}: {fitCheck.title}
+                    </span>
+                    <span className="text-[11.5px] opacity-90 leading-tight block mt-0.5">
+                      {fitCheck.reasoning}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            )}
+
             <div className="mt-4">
               {/* Closet Selection Panel */}
               <div className="flex flex-col justify-between">
@@ -586,6 +609,25 @@ export default function StyleSandbox({ isOpen, onClose, listingItem }) {
                 </Button>
               </div>
             </DialogHeader>
+
+            {fitCheck.hasMismatch && (
+              <div
+                className="rounded-[12px] border border-amber-300 bg-amber-50/90 dark:bg-amber-950/25 dark:border-amber-800 p-2.5 text-amber-900 dark:text-amber-200 text-xs"
+                data-testid="sandbox-results-fit-warning-banner"
+              >
+                <div className="flex items-start gap-2">
+                  <AlertTriangle className="h-4 w-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+                  <div>
+                    <span className="font-bold block">
+                      {t('market.fitCheck.bannerTitle', { defaultValue: 'Fit & Proportions Notice' })}: {fitCheck.title}
+                    </span>
+                    <span className="text-[11.5px] opacity-90 leading-tight block mt-0.5">
+                      {fitCheck.reasoning}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* Look Selector Tabs/Pills */}
             {outfits.length > 1 && (

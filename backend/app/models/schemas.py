@@ -477,6 +477,7 @@ class Listing(BaseDoc):
     category: str
     brand: str | None = None
     color: str | None = None
+    gender: str | None = None
     size: str | None = None
     condition: Condition = "good"
     tags: list[str] = Field(default_factory=list)

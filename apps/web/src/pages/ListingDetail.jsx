@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Card, CardContent } from '@/components/ui/card';
@@ -19,6 +19,8 @@ import {
 import { SourceTagBadge } from '@/components/SourceTagBadge';
 import { SwapPickerModal } from '@/components/SwapPickerModal';
 import StyleSandbox from '@/components/market/StyleSandbox';
+import FitCompatibilityDialog from '@/components/market/FitCompatibilityDialog';
+import { checkListingFit } from '@/lib/fitCompatibility';
 import {
   ArrowLeft,
   Eye,
@@ -29,6 +31,8 @@ import {
   Repeat,
   HeartHandshake,
   Trash2,
+  AlertTriangle,
+  CheckCircle2,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { api } from '@/lib/api';
@@ -56,6 +60,19 @@ export default function ListingDetail() {
   const [removing, setRemoving] = useState(false);
   const [removeDialogOpen, setRemoveDialogOpen] = useState(false);
   const [sandboxOpen, setSandboxOpen] = useState(false);
+  const [fitDialogOpen, setFitDialogOpen] = useState(false);
+
+  const fitCheck = useMemo(() => {
+    return checkListingFit(listing, user, t);
+  }, [listing, user, t]);
+
+  const handleOpenSandbox = () => {
+    if (fitCheck.hasMismatch) {
+      setFitDialogOpen(true);
+    } else {
+      setSandboxOpen(true);
+    }
+  };
 
   const handleRemoveListing = async () => {
     setRemoving(true);
@@ -541,8 +558,45 @@ export default function ListingDetail() {
               )}
               {listing.status === 'active' && (
                 <div className="mt-4">
+                  {fitCheck.hasMismatch && (
+                    <div
+                      className="rounded-[12px] border border-amber-300 bg-amber-50/90 dark:bg-amber-950/20 dark:border-amber-800 p-3 mb-2.5 text-amber-900 dark:text-amber-200"
+                      data-testid="listing-fit-warning-banner"
+                    >
+                      <div className="flex items-start gap-2.5">
+                        <AlertTriangle className="h-4 w-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+                        <div className="text-xs flex-1">
+                          <div className="font-bold flex items-center justify-between">
+                            <span>{fitCheck.title}</span>
+                            <button
+                              type="button"
+                              onClick={() => setFitDialogOpen(true)}
+                              className="text-[11px] underline font-semibold hover:text-amber-800 dark:hover:text-amber-100"
+                              data-testid="view-fit-reasoning-btn"
+                            >
+                              {t('market.fitCheck.viewDetails', { defaultValue: 'View reasoning' })}
+                            </button>
+                          </div>
+                          <p className="mt-1 text-amber-800/90 dark:text-amber-300/90 leading-relaxed text-[11.5px]">
+                            {fitCheck.reasoning}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                  {!fitCheck.hasMismatch && !fitCheck.hasMissingData && (
+                    <div
+                      className="rounded-[12px] border border-emerald-300 bg-emerald-50/80 dark:bg-emerald-950/20 dark:border-emerald-800 p-2.5 mb-2.5 text-emerald-900 dark:text-emerald-200"
+                      data-testid="listing-fit-verified-banner"
+                    >
+                      <div className="flex items-center gap-2 text-xs font-semibold">
+                        <CheckCircle2 className="h-4 w-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                        <span>{t('market.fitCheck.fitMatchVerified', { defaultValue: 'Size & gender match your wardrobe profile' })}</span>
+                      </div>
+                    </div>
+                  )}
                   <Button
-                    onClick={() => setSandboxOpen(true)}
+                    onClick={handleOpenSandbox}
                     className="w-full"
                     data-testid="listing-style-sandbox-btn"
                   >
@@ -632,6 +686,13 @@ export default function ListingDetail() {
           isOpen={sandboxOpen}
           onClose={() => setSandboxOpen(false)}
           listingItem={listing}
+        />
+        <FitCompatibilityDialog
+          open={fitDialogOpen}
+          onOpenChange={setFitDialogOpen}
+          onProceed={() => setSandboxOpen(true)}
+          fitCheck={fitCheck}
+          listing={listing}
         />
       </section>
     </>

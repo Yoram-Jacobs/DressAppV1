@@ -161,6 +161,7 @@ class CreateListingIn(BaseModel):
     title: str
     description: str | None = None
     category: str
+    gender: str | None = None
     size: str | None = None
     condition: Condition = "good"
     images: list[str] = Field(default_factory=list)
@@ -181,6 +182,7 @@ class UpdateListingIn(BaseModel):
     title: str | None = None
     description: str | None = None
     category: str | None = None
+    gender: str | None = None
     size: str | None = None
     condition: Condition | None = None
     tags: list[str] | None = None
@@ -322,6 +324,7 @@ async def create_listing(
     cultural_tags = list(payload.cultural_tags or [])
     brand = None
     color = None
+    gender = payload.gender
     if closet_item:
         if not tags and closet_item.get("tags"):
             tags = list(closet_item.get("tags") or [])
@@ -329,6 +332,8 @@ async def create_listing(
             cultural_tags = list(closet_item.get("cultural_tags") or [])
         brand = closet_item.get("brand")
         color = closet_item.get("color")
+        if not gender:
+            gender = closet_item.get("gender")
 
     listing = Listing(
         closet_item_id=payload.closet_item_id,
@@ -340,6 +345,7 @@ async def create_listing(
         category=payload.category,
         brand=brand,
         color=color,
+        gender=gender,
         size=payload.size,
         condition=payload.condition,
         tags=tags,
@@ -705,6 +711,16 @@ async def get_listing(listing_id: str) -> dict[str, Any]:
     except Exception as exc:  # noqa: BLE001
         logger.warning("seller hydrate failed: %s", exc)
     listing = dict(listing)
+    if listing.get("closet_item_id") and (not listing.get("gender") or not listing.get("size")):
+        try:
+            closet_item = await repos.find_one(db.closet_items, {"id": listing["closet_item_id"]})
+            if closet_item:
+                if not listing.get("gender") and closet_item.get("gender"):
+                    listing["gender"] = closet_item.get("gender")
+                if not listing.get("size") and closet_item.get("size"):
+                    listing["size"] = closet_item.get("size")
+        except Exception:
+            pass
     listing["seller_public"] = seller_pub
     _sanitize_listing_browse_doc(listing)
     return listing
