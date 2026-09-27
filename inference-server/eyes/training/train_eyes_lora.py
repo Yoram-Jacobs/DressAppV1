@@ -68,6 +68,23 @@ def load_env_credentials() -> None:
 load_env_credentials()
 
 
+def resolve_vlm_model_class() -> Any:
+    """Dynamically resolves the appropriate Transformers model class for multimodal models."""
+    import transformers
+
+    candidates = [
+        "AutoModelForImageTextToText",
+        "AutoModelForConditionalGeneration",
+        "AutoModelForCausalLM",
+        "AutoModelForVision2Seq",
+    ]
+    for attr in candidates:
+        cls = getattr(transformers, attr, None)
+        if cls is not None:
+            return cls
+    raise ImportError("No compatible vision-language model class found in transformers.")
+
+
 def create_dry_run_adapter(output_dir: Path, base_model: str) -> dict[str, Any]:
     """Generates a valid dummy PEFT LoRA adapter for smoke testing CI/CD pipelines without GPU."""
     logger.info("Running in DRY-RUN mode. Emulating QLoRA training and producing mock adapter...")
@@ -143,7 +160,6 @@ def train_lora_native(
     from datasets import load_dataset
     from peft import LoraConfig, get_peft_model, prepare_model_for_kbit_training
     from transformers import (
-        AutoModelForVision2Seq,
         AutoProcessor,
         BitsAndBytesConfig,
         TrainingArguments,
@@ -164,9 +180,10 @@ def train_lora_native(
         bnb_4bit_use_double_quant=True,
     )
 
-    logger.info("Loading base model: %s", base_model)
+    model_cls = resolve_vlm_model_class()
+    logger.info("Loading base model: %s using %s", base_model, model_cls.__name__)
     processor = AutoProcessor.from_pretrained(base_model, trust_remote_code=True)
-    model = AutoModelForVision2Seq.from_pretrained(
+    model = model_cls.from_pretrained(
         base_model,
         quantization_config=bnb_config,
         device_map="auto",
@@ -175,11 +192,14 @@ def train_lora_native(
 
     model = prepare_model_for_kbit_training(model)
 
-    # Freeze vision encoder to preserve pre-trained fashion representations
-    if hasattr(model, "vision_tower"):
-        for param in model.vision_tower.parameters():
-            param.requires_grad = False
-        logger.info("Froze vision encoder parameters.")
+    # Freeze vision encoder parameters to preserve pre-trained fashion representations
+    for vision_attr in ["vision_tower", "vision_model", "visual"]:
+        if hasattr(model, vision_attr):
+            submod = getattr(model, vision_attr)
+            for param in submod.parameters():
+                param.requires_grad = False
+            logger.info("Froze vision encoder parameters (%s).", vision_attr)
+            break
 
     peft_config = LoraConfig(
         r=lora_r,
@@ -210,11 +230,33 @@ def train_lora_native(
         report_to="none",
     )
 
+    def format_prompts(batch: dict[str, list[Any]]) -> list[str]:
+        formatted = []
+        for msgs in batch["messages"]:
+            if hasattr(processor, "apply_chat_template"):
+                try:
+                    formatted.append(processor.apply_chat_template(msgs, tokenize=False))
+                    continue
+                except Exception:
+                    pass
+            conv_str = ""
+            for m in msgs:
+                role = m.get("role", "user")
+                content = m.get("content", "")
+                if isinstance(content, list):
+                    text_parts = [
+                        p.get("text", "") for p in content if isinstance(p, dict) and p.get("type") == "text"
+                    ]
+                    content = " ".join(text_parts)
+                conv_str += f"<|{role}|>\n{content}\n"
+            formatted.append(conv_str)
+        return formatted
+
     trainer = SFTTrainer(
         model=model,
         train_dataset=dataset,
-        peft_config=peft_config,
-        dataset_text_field="messages",
+        peft_config=None,
+        formatting_func=format_prompts,
         max_seq_length=max_seq_length,
         tokenizer=processor.tokenizer if hasattr(processor, "tokenizer") else processor,
         args=training_args,
@@ -271,15 +313,23 @@ try:
         epochs: int,
         batch_size: int,
         learning_rate: float,
+        hf_token: str | None = None,
     ) -> dict[str, Any]:
         """Runs inside Modal cloud GPU container."""
+        import io
+        import tarfile
+
+        if hf_token:
+            os.environ["HF_TOKEN"] = hf_token
+            os.environ["HUGGING_FACE_HUB_TOKEN"] = hf_token
+
         work_dir = Path("/tmp/eyes_train")
         work_dir.mkdir(parents=True, exist_ok=True)
         dataset_file = work_dir / "train.jsonl"
         dataset_file.write_text(dataset_content, encoding="utf-8")
 
         adapter_out = work_dir / "adapter"
-        return train_lora_native(
+        stats = train_lora_native(
             dataset_path=dataset_file,
             base_model=base_model,
             output_dir=adapter_out,
@@ -287,6 +337,17 @@ try:
             batch_size=batch_size,
             learning_rate=learning_rate,
         )
+
+        tar_buf = io.BytesIO()
+        with tarfile.open(fileobj=tar_buf, mode="w:gz") as tar:
+            if adapter_out.exists():
+                for item in adapter_out.iterdir():
+                    tar.add(str(item), arcname=item.name)
+
+        return {
+            "stats": stats,
+            "adapter_tar_gz": tar_buf.getvalue(),
+        }
 
 except Exception:
     # Modal not installed or not in Modal environment
@@ -316,6 +377,7 @@ def main() -> None:
             sys.exit(1)
         logger.info("Dispatching training job to Modal Labs serverless A10G GPU...")
         dataset_text = args.dataset.read_text(encoding="utf-8")
+        hf_token = os.environ.get("HF_TOKEN")
         with app.run():
             res = modal_train_entrypoint.remote(
                 dataset_content=dataset_text,
@@ -323,8 +385,23 @@ def main() -> None:
                 epochs=args.epochs,
                 batch_size=args.batch_size,
                 learning_rate=args.lr,
+                hf_token=hf_token,
             )
-        print(f"Modal training complete: {res}")
+
+        args.output_dir.mkdir(parents=True, exist_ok=True)
+        stats = res.get("stats", res) if isinstance(res, dict) else {}
+        (args.output_dir / "train_stats.json").write_text(json.dumps(stats, indent=2), encoding="utf-8")
+
+        if isinstance(res, dict) and "adapter_tar_gz" in res and res["adapter_tar_gz"]:
+            import io
+            import tarfile
+            tar_data = res["adapter_tar_gz"]
+            logger.info("Extracting %d bytes of adapter artifacts into %s...", len(tar_data), args.output_dir)
+            with tarfile.open(fileobj=io.BytesIO(tar_data), mode="r:gz") as tar:
+                tar.extractall(path=str(args.output_dir))
+            logger.info("Successfully extracted adapter artifacts to %s", args.output_dir)
+
+        print(f"Modal training complete: {stats}")
         return
 
     # Default: local training

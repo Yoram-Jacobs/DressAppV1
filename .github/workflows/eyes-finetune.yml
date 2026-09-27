@@ -132,6 +132,7 @@ jobs:
           MODAL_TOKEN_SECRET: ${{ secrets.MODAL_API_TOKEN_SECRET || secrets.MODAL_TOKEN_SECRET }}
           HF_TOKEN: ${{ secrets.EYES_HF_TOKEN || secrets.HF_TOKEN || secrets.HF_WRITE }}
         run: |
+          mkdir -p build/adapter build/metrics
           COMPUTE_BACKEND="${{ inputs.compute_backend || 'modal' }}"
           IS_DRY_RUN="${{ inputs.dry_run || 'false' }}"
 
@@ -168,6 +169,7 @@ jobs:
           path: |
             build/adapter/
             build/metrics.json
+          if-no-files-found: warn
           retention-days: 14
 
   # -------------------------------------------------------------------------

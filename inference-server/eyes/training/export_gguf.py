@@ -26,6 +26,23 @@ logger = logging.getLogger("export_gguf")
 GGUF_MAGIC = b"GGUF"  # 0x46554747 in little-endian
 
 
+def resolve_vlm_model_class() -> Any:
+    """Dynamically resolves the appropriate Transformers model class for multimodal models."""
+    import transformers
+
+    candidates = [
+        "AutoModelForImageTextToText",
+        "AutoModelForConditionalGeneration",
+        "AutoModelForCausalLM",
+        "AutoModelForVision2Seq",
+    ]
+    for attr in candidates:
+        cls = getattr(transformers, attr, None)
+        if cls is not None:
+            return cls
+    raise ImportError("No compatible vision-language model class found in transformers.")
+
+
 def create_mock_gguf(file_path: Path, model_name: str, quant_type: str) -> None:
     """Creates a mock GGUF binary with valid GGUF v3 magic and metadata header."""
     file_path.parent.mkdir(parents=True, exist_ok=True)
@@ -108,10 +125,11 @@ def export_gguf(
     # 1. Merge LoRA weights into base model
     import torch
     from peft import PeftModel
-    from transformers import AutoModelForVision2Seq, AutoProcessor
+    from transformers import AutoProcessor
 
-    logger.info("Loading base model %s for merge...", base_model)
-    base = AutoModelForVision2Seq.from_pretrained(
+    model_cls = resolve_vlm_model_class()
+    logger.info("Loading base model %s for merge using %s...", base_model, model_cls.__name__)
+    base = model_cls.from_pretrained(
         base_model,
         torch_dtype=torch.bfloat16,
         device_map="cpu",
