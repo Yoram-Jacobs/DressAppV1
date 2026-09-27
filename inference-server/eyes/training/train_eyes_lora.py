@@ -350,8 +350,12 @@ def run_training_on_runpod(
     ]
 
     pod_id: str | None = None
+    ssh_host: str | None = None
+    ssh_port: int | None = None
     last_err: Exception | None = None
+
     for gpu_type in gpu_candidates:
+        current_pod_id: str | None = None
         try:
             logger.info("Requesting RunPod instance with GPU type: %s...", gpu_type)
             pod = runpod.create_pod(
@@ -366,46 +370,62 @@ def run_training_on_runpod(
                 volume_in_gb=0,
                 env={"HF_TOKEN": hf_token or ""},
             )
-            if pod and isinstance(pod, dict) and "id" in pod:
-                pod_id = str(pod["id"])
-                logger.info("Successfully provisioned RunPod instance %s (%s)", pod_id, gpu_type)
-                break
-        except Exception as e:
-            logger.warning("Could not provision GPU candidate '%s': %s", gpu_type, e)
-            last_err = e
+            if not pod or not isinstance(pod, dict) or "id" not in pod:
+                raise RuntimeError(f"Unexpected pod creation response: {pod}")
 
-    if not pod_id:
-        raise RuntimeError(f"Unable to provision any GPU on RunPod. Last error: {last_err}")
+            current_pod_id = str(pod["id"])
+            logger.info("Successfully provisioned RunPod instance %s (%s)", current_pod_id, gpu_type)
+            logger.info("Polling instance %s for runtime status and public SSH port...", current_pod_id)
+
+            pod_poll_start = time.time()
+            per_pod_timeout = 200  # seconds per candidate
+            cand_host: str | None = None
+            cand_port: int | None = None
+
+            while time.time() - pod_poll_start < per_pod_timeout:
+                pod_info = runpod.get_pod(current_pod_id)
+                if pod_info and isinstance(pod_info, dict):
+                    runtime = pod_info.get("runtime")
+                    if runtime and isinstance(runtime, dict):
+                        ports = runtime.get("ports", [])
+                        if ports and isinstance(ports, list):
+                            for p in ports:
+                                if isinstance(p, dict) and p.get("privatePort") == 22 and p.get("ip") and p.get("publicPort"):
+                                    cand_host = str(p["ip"])
+                                    cand_port = int(p["publicPort"])
+                                    break
+                if cand_host and cand_port:
+                    break
+
+                elapsed = int(time.time() - pod_poll_start)
+                if elapsed > 0 and elapsed % 20 == 0:
+                    status_desc = pod_info.get("desiredStatus", "initializing") if pod_info else "unknown"
+                    logger.info("Instance %s (%s) starting up (%ds elapsed, status: %s)...", current_pod_id, gpu_type, elapsed, status_desc)
+                time.sleep(5)
+
+            if not cand_host or not cand_port:
+                raise TimeoutError(f"Pod {current_pod_id} ({gpu_type}) did not expose SSH within {per_pod_timeout}s.")
+
+            pod_id = current_pod_id
+            ssh_host = cand_host
+            ssh_port = cand_port
+            logger.info("RunPod instance is up! Public SSH endpoint: %s:%d", ssh_host, ssh_port)
+            break
+
+        except Exception as e:
+            logger.warning("GPU candidate '%s' failed: %s. Cleaning up and attempting next tier...", gpu_type, e)
+            last_err = e
+            if current_pod_id:
+                try:
+                    runpod.terminate_pod(current_pod_id)
+                except Exception:
+                    pass
+
+    if not pod_id or not ssh_host or not ssh_port:
+        raise RuntimeError(f"Unable to provision and connect to any RunPod GPU. Last error: {last_err}")
 
     stats: dict[str, Any] = {}
     try:
-        # Wait for pod runtime and port 22 mapping
-        logger.info("Polling RunPod instance %s for runtime status and SSH port...", pod_id)
-        ssh_host: str | None = None
-        ssh_port: int | None = None
-        poll_start = time.time()
-        poll_timeout = 360  # 6 minutes
-
-        while time.time() - poll_start < poll_timeout:
-            pod_info = runpod.get_pod(pod_id)
-            if pod_info and isinstance(pod_info, dict):
-                runtime = pod_info.get("runtime")
-                if runtime and isinstance(runtime, dict):
-                    ports = runtime.get("ports", [])
-                    if ports and isinstance(ports, list):
-                        for p in ports:
-                            if isinstance(p, dict) and p.get("privatePort") == 22 and p.get("ip") and p.get("publicPort"):
-                                ssh_host = str(p["ip"])
-                                ssh_port = int(p["publicPort"])
-                                break
-            if ssh_host and ssh_port:
-                break
-            time.sleep(5)
-
-        if not ssh_host or not ssh_port:
-            raise TimeoutError(f"RunPod instance {pod_id} did not expose SSH within {poll_timeout} seconds.")
-
-        logger.info("RunPod instance is up! Public SSH endpoint: %s:%d", ssh_host, ssh_port)
 
         # Establish Paramiko SSH connection with retry loop
         ssh = paramiko.SSHClient()
