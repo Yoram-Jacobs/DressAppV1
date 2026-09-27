@@ -192,6 +192,7 @@ export function ProfileScreen() {
 
   // Outfit Scheduler State
   const [schedulerEnabled, setSchedulerEnabled] = useState(true);
+  const [respectOccupation, setRespectOccupation] = useState(true);
   const [morningTime, setMorningTime] = useState('07:30');
   const [schedulerFrequency, setSchedulerFrequency] = useState('everyday');
   const [schedulerStyleOption, setSchedulerStyleOption] = useState('casual');
@@ -344,6 +345,7 @@ export function ProfileScreen() {
         }
         if (sched.weather_sync !== undefined) setWeatherSync(sched.weather_sync);
         if (sched.calendar_sync !== undefined) setCalendarSync(sched.calendar_sync);
+        if (sched.respect_occupation !== undefined) setRespectOccupation(sched.respect_occupation);
 
         // Professional
         if (u.is_stylist !== undefined) setIsStylist(u.is_stylist);
@@ -642,6 +644,7 @@ export function ProfileScreen() {
           style_dress_for: schedulerStyleOption === 'custom' || schedulerStyleOption === 'tags' ? schedulerCustomStyle : schedulerStyleOption,
           weather_sync: weatherSync,
           calendar_sync: calendarSync,
+          respect_occupation: respectOccupation,
           campaign_notification_prefs: {
             notification_frequency: campaignFrequency,
             max_campaign_distance_km: Number(campaignMaxDistance) || 25,
@@ -705,6 +708,7 @@ export function ProfileScreen() {
           }
           if (s.weather_sync !== undefined) setWeatherSync(Boolean(s.weather_sync));
           if (s.calendar_sync !== undefined) setCalendarSync(Boolean(s.calendar_sync));
+          if (s.respect_occupation !== undefined) setRespectOccupation(Boolean(s.respect_occupation));
         }
       }
       Alert.alert(
@@ -1583,6 +1587,9 @@ export function ProfileScreen() {
                           setWeatherSync={setWeatherSync}
                           calendarSync={calendarSync}
                           setCalendarSync={setCalendarSync}
+                          respectOccupation={respectOccupation}
+                          setRespectOccupation={setRespectOccupation}
+                          occupation={occupation}
                         />
                       </View>
                     )}

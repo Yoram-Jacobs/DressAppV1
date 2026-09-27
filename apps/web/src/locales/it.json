@@ -2115,7 +2115,11 @@
       "club": "Club",
       "pro": "Pro",
       "business": "Business"
-    }
+    },
+    "enableOccupation": "Adatta alla professione",
+    "enableOccupationDesc": "Personalizza i consigli di outfit in base alle esigenze del tuo lavoro (es. completi su misura per avvocati, abiti da lavoro resistenti per edili).",
+    "noOccupationSet": "Nessuna professione impostata nel profilo",
+    "currentOccupation": "Attuale"
   },
   "admin": {
     "title": "Amministratore",

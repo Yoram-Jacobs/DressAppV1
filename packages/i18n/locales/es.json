@@ -2115,7 +2115,11 @@
       "club": "Club",
       "pro": "Pro",
       "business": "Empresarial"
-    }
+    },
+    "enableOccupation": "Adaptar a la profesión",
+    "enableOccupationDesc": "Adapta las recomendaciones a las exigencias de tu trabajo (p. ej., trajes para abogados, ropa resistente para constructores).",
+    "noOccupationSet": "Sin profesión definida en el perfil",
+    "currentOccupation": "Actual"
   },
   "admin": {
     "title": "Administrador",

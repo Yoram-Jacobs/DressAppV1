@@ -152,6 +152,8 @@ def _generate_fallback_advice(
     weather_ctx: dict[str, Any] | None = None,
     filter_tags: list[str] | None = None,
     is_tags_filter: bool = False,
+    occupation: str | None = None,
+    respect_occupation: bool = False,
 ) -> dict[str, Any]:
     """Generate outfit recommendations based on closet items and user preferences, with strict category validation."""
     if not closet_items:
@@ -231,7 +233,13 @@ def _generate_fallback_advice(
 
     # Score item helper
     def score_item(it: dict) -> int:
-        score = calculate_garment_style_score(it, style_dress_for, is_tags_mode=is_tags_filter)
+        score = calculate_garment_style_score(
+            it, 
+            style_dress_for, 
+            is_tags_mode=is_tags_filter,
+            occupation=occupation,
+            respect_occupation=respect_occupation,
+        )
         if matches_season_func(it, target_season):
             score += 10
         return score
@@ -939,12 +947,16 @@ async def check_scheduler_triggers() -> None:
                         # Fallback to local rule-based scheduler
                         cursor_items = db.closet_items.find({"user_id": user_id})
                         closet_items = [d async for d in cursor_items]
+                        respect_occ = sched.get("respect_occupation", True)
+                        user_occ = (user.get("occupation") or "").strip()
                         fallback_result = _generate_fallback_advice(
                             closet_items,
                             style_option,
                             weather_ctx=target_weather,
                             filter_tags=filter_tags,
                             is_tags_filter=is_tags_filter,
+                            occupation=user_occ if respect_occ else None,
+                            respect_occupation=respect_occ,
                         )
                         proposals = fallback_result.get("outfit_recommendations") or []
 

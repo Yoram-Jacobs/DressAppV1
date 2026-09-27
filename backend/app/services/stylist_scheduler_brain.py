@@ -69,11 +69,17 @@ def norm_category(cat: Any) -> str:
     return "accessory"
 
 
-def calculate_garment_style_score(item: dict, style_dress_for: str | None, is_tags_mode: bool = False) -> int:
-    if not style_dress_for:
+def calculate_garment_style_score(
+    item: dict, 
+    style_dress_for: str | None, 
+    is_tags_mode: bool = False,
+    occupation: str | None = None,
+    respect_occupation: bool = False,
+) -> int:
+    if not style_dress_for and not (respect_occupation and occupation):
         return 0
         
-    prompt_lower = style_dress_for.strip().lower()
+    prompt_lower = (style_dress_for or "").strip().lower()
     tags = [str(t).lower().strip() for t in (item.get("tags") or []) if t]
     custom_tags = [str(t).lower().strip() for t in (item.get("custom_tags") or []) if t]
     cultural_tags = [str(t).lower().strip() for t in (item.get("cultural_tags") or []) if t]
@@ -91,32 +97,96 @@ def calculate_garment_style_score(item: dict, style_dress_for: str | None, is_ta
     # 1. Expand synonyms for prompt_lower and individual tag tokens
     # When user provides multiple tags (e.g. "Work, Summer, Solid" or "עבודה, קיץ"),
     # split by commas and evaluate each tag token as well as the full prompt.
-    tokens = [t.strip() for t in prompt_lower.replace(";", ",").split(",") if t.strip()]
-    if not tokens:
-        tokens = [prompt_lower]
+    if prompt_lower:
+        tokens = [t.strip() for t in prompt_lower.replace(";", ",").split(",") if t.strip()]
+        if not tokens:
+            tokens = [prompt_lower]
 
-    syns = set()
-    for tok in tokens:
-        syns.add(tok)
-        syns.update(SYNONYMS.get(tok, []))
-    syns.add(prompt_lower)
-    syns.update(SYNONYMS.get(prompt_lower, []))
-    
-    # Direct tag or custom tag match (Massive priority boost per matched tag)
-    for tok in tokens:
-        tok_syns = set(SYNONYMS.get(tok, [tok]))
-        tok_syns.add(tok)
-        for t in tags + custom_tags + cultural_tags:
-            if t in tok_syns or any(s in t for s in tok_syns if len(s) >= 2) or tok in t:
-                score += 100 if is_tags_mode else 60
-                break  # count boost once per user token
-            
-    # Text / Title / Description match
-    for s in syns:
-        if len(s) >= 2 and s in all_text:
-            score += 25
+        syns = set()
+        for tok in tokens:
+            syns.add(tok)
+            syns.update(SYNONYMS.get(tok, []))
+        syns.add(prompt_lower)
+        syns.update(SYNONYMS.get(prompt_lower, []))
+        
+        # Direct tag or custom tag match (Massive priority boost per matched tag)
+        for tok in tokens:
+            tok_syns = set(SYNONYMS.get(tok, [tok]))
+            tok_syns.add(tok)
+            for t in tags + custom_tags + cultural_tags:
+                if t in tok_syns or any(s in t for s in tok_syns if len(s) >= 2) or tok in t:
+                    score += 100 if is_tags_mode else 60
+                    break  # count boost once per user token
+                
+        # Text / Title / Description match
+        for s in syns:
+            if len(s) >= 2 and s in all_text:
+                score += 25
 
-    # If in tags mode, direct tag match is the primary filter criteria without imposing formal office assumptions!
+    # 2. Occupational adjustment if respect_occupation is enabled and occupation is specified
+    if respect_occupation and occupation:
+        occ_str = str(occupation).strip().lower()
+
+        # Group 1: Corporate, Legal, Finance, Executive
+        is_legal_or_corporate = any(w in occ_str for w in (
+            "lawyer", "attorney", "judge", "advocate", "solicitor", "barrister", 
+            "legal", "accountant", "auditor", "banker", "banking", "finance", 
+            "financial", "consultant", "consulting", "executive", "ceo", "cfo", 
+            "c-level", "director", "manager", "notary",
+            "עורך דין", "עורכת דין", "משפטן", "משפטנית", "שופט", "שופטת", 
+            "רואה חשבון", "יועץ", "יועצת", "בנקאי", "בנקאית", "מנהל", "מנהלת", 
+            "הנהלה", "עו\"ד", "נוטריון"
+        ))
+
+        # Group 2: Trades, Construction, Physical, Field Work, Active Manual
+        is_trade_or_physical = any(w in occ_str for w in (
+            "electrician", "construction", "builder", "plumber", "contractor", 
+            "carpenter", "technician", "mechanic", "welder", "handyman", 
+            "painter", "roofing", "mason", "farmer", "landscaper", "warehouse", 
+            "field worker", "field engineer", "driver", "installer", "machinist", 
+            "laborer", "craftsman", "electric",
+            "בנאי", "חשמלאי", "אינסטלטור", "שרברב", "טכנאי", "קבלן", "נגר", 
+            "מכונאי", "רתך", "הנדימן", "צבע", "פועל", "שיפוצים", "חקלאי", 
+            "מחסנאי", "נהג", "מתקין"
+        ))
+
+        # Group 3: Medical & Healthcare
+        is_medical = any(w in occ_str for w in (
+            "doctor", "physician", "surgeon", "nurse", "dentist", "veterinarian", 
+            "vet", "therapist", "pharmacist", "paramedic", "hygienist",
+            "רופא", "רופאה", "אח", "אחות", "רוקח", "רוקחת", "מטפל", "מטפלת", "פרמדיק"
+        ))
+
+        # Group 4: Tech & Creative
+        is_tech_creative = any(w in occ_str for w in (
+            "software", "developer", "programmer", "coder", "engineer", "designer", 
+            "architect", "artist", "photographer", "writer", "product manager",
+            "מתכנת", "מתכנתת", "מפתח", "מפתחת", "מעצב", "מעצבת", "מהנדס תוכנה"
+        ))
+
+        if is_legal_or_corporate:
+            if any(w in all_text for w in ("suit", "blazer", "dress shirt", "button", "collared", "oxford", "derby", "loafer", "slacks", "trouser", "tailored", "חליפה", "בלייזר", "מכופתרת", "מחויט", "מוקסין")):
+                score += 45
+            if any(w in all_text for w in ("sweatpants", "tank top", "flip flop", "slides", "cargo shorts", "טרנינג", "גופייה", "כפכף")):
+                score -= 50
+
+        elif is_trade_or_physical:
+            # Boost utility pants, work boots, safety footwear, durable t-shirts/hoodies
+            if any(w in all_text for w in ("cargo", "utility", "work", "boot", "boots", "safety", "durable", "sturdy", "hoodie", "fleece", "denim", "t-shirt", "tee", "מגפיים", "נעלי עבודה", "נעלי בטיחות", "בגדי עבודה", "דגמ\"ח", "דגמח", "עבודה")):
+                score += 45
+            # Penalize formal fragile suits, tuxedos, blazers, delicate dress shirts, ties
+            if any(w in all_text for w in ("blazer", "suit", "tuxedo", "dress shirt", "silk", "necktie", "tie", "חליפה", "בלייזר", "עניבה", "טוקסידו")):
+                score -= 50
+
+        elif is_medical:
+            if any(w in all_text for w in ("sneaker", "comfortable", "scrubs", "polo", "clean", "נעלי ספורט", "נוחות")):
+                score += 30
+
+        elif is_tech_creative:
+            if any(w in all_text for w in ("chino", "polo", "sweater", "sneaker", "clean", "cardigan", "צ'ינו", "סוודר")):
+                score += 25
+
+    # If in tags mode, direct tag match + occupation adjustment is the primary filter criteria without imposing formal office assumptions!
     if is_tags_mode:
         return score
             
@@ -236,6 +306,8 @@ async def get_rotation_prioritized_closet(
     weather: dict[str, Any] | None = None,
     filter_tags: list[str] | None = None,
     is_tags_filter: bool = False,
+    occupation: str | None = None,
+    respect_occupation: bool = False,
 ) -> list[dict[str, Any]]:
     """Fetch closet items prioritized for rotation, matching tag restrictions and weather/season.
 
@@ -334,7 +406,13 @@ async def get_rotation_prioritized_closet(
 
     # Rotation sort key: matches criteria first, then un-suggested/un-worn, oldest suggested, lowest wear
     def sort_key(item: dict[str, Any]) -> tuple:
-        style_score = calculate_garment_style_score(item, style_dress_for, is_tags_mode=is_tags_filter)
+        style_score = calculate_garment_style_score(
+            item, 
+            style_dress_for, 
+            is_tags_mode=is_tags_filter,
+            occupation=occupation,
+            respect_occupation=respect_occupation,
+        )
         matches_season = matches_season_func(item, target_season)
         season_score = 10 if matches_season else 0
         
@@ -773,6 +851,9 @@ async def generate_scheduled_proposals(
 
     # Determine if tag filtering mode is active from user scheduler settings if not passed
     sched_settings = user.get("scheduler_settings") or {}
+    respect_occupation = sched_settings.get("respect_occupation", True)
+    user_occupation = (user.get("occupation") or "").strip()
+
     if not is_tags_filter and sched_settings.get("style_option") == "tags":
         is_tags_filter = True
     if is_tags_filter and not filter_tags:
@@ -845,6 +926,8 @@ async def generate_scheduled_proposals(
         weather=weather,
         filter_tags=filter_tags,
         is_tags_filter=is_tags_filter,
+        occupation=user_occupation if respect_occupation else None,
+        respect_occupation=respect_occupation,
     )
     
     # If exclude_item_ids passed (e.g. from previous daily proposals today), prioritize fresh items
@@ -941,11 +1024,27 @@ async def generate_scheduled_proposals(
 
     weather_line = f"- {weather_info}\n" if weather_info else ""
     calendar_line = f"- {calendar_info}\n" if calendar_info else ""
+    occupation_line = f"- User Occupation: '{user_occupation}' (Match to Occupation: ACTIVE)\n" if (respect_occupation and user_occupation) else ""
     context_style_line = (
         f"- Target Wardrobe Tag Filter: '{style_display}' (Strict Tag Mode: curate outfit from garments tagged {tag_list_str})\n"
         if is_tags_filter
         else f"- Target Occasion / Style Preference: '{style_display}'\n"
     )
+
+    occupation_rule = ""
+    if respect_occupation and user_occupation:
+        occupation_rule = (
+            f"3. USER OCCUPATION & PROFESSIONAL DRESS CODE DEMANDS:\n"
+            f"   - Stated Occupation: '{user_occupation}'. The outfit recommendation MUST authentically suit the physical, social, and functional demands of this profession:\n"
+            f"     • Legal, Corporate, Finance & Executive (e.g. lawyer, attorney, judge, banker, corporate executive, accountant): "
+            f"Prefer formal or sharp business/smart-casual dress codes. Prioritize tailored suits, blazers, dress shirts, dress trousers, and polished dress shoes / oxfords / heels.\n"
+            f"     • Skilled Trades, Construction & Physical Work (e.g. electrician, construction builder, plumber, contractor, technician, mechanic, carpenter, field technician): "
+            f"Prefer casual, durable, and practical workwear. Curate outfits comfortable for physical labor and movement, including rugged utility/cargo pants, durable work t-shirts/hoodies, weather-protective layers, and safety shoes / work boots. Do NOT curate delicate suits, blazers, or dress shoes.\n"
+            f"     • Medical & Healthcare (e.g. doctor, nurse): Prioritize clean, functional, comfortable attire with supportive footwear and ease of movement.\n"
+            f"     • Tech, Creative & Startup: Prioritize relaxed smart-casual, modern clean staples, and comfortable sneakers.\n"
+            f"     • Other Occupations: Adapt functionally and stylistically to the day-to-day work environment of '{user_occupation}'.\n"
+            f"   - Highlight this occupational context in the outfit title ('name') and 'why' explanation.\n"
+        )
 
     prompt = (
         f"PERSONA & EXPERTISE:\n"
@@ -958,6 +1057,7 @@ async def generate_scheduled_proposals(
         f"following Fashion and Social Rules and Restrictions.\n\n"
         f"CONTEXT & APPLIED FILTERS:\n"
         f"{context_style_line}"
+        f"{occupation_line}"
         f"{weather_line}"
         f"{calendar_line}\n"
         f"STRICT STYLING RULES & RESTRICTIONS:\n"
@@ -966,10 +1066,11 @@ async def generate_scheduled_proposals(
         f"2. APPLIED TAG FILTERS & STYLE VIBE:\n"
         f"{tag_vibe_rule}"
         f"   - Only when no matching tags are found for an essential category or to complete the full-body outfit (e.g. if there are no shoes with the tag), select neutral complementary items from the closet inventory below to complete the full-body outfit.\n"
-        f"3. ROTATION & DIVERSITY:\n"
+        f"{occupation_rule}"
+        f"4. ROTATION & DIVERSITY:\n"
         f"   - Rotate items within categories: make every item count and get used.\n"
         f"   - Select a fresh, cohesive combination suited for the day.\n"
-        f"4. NEVER MIX CATEGORIES (STRICT ANATOMICAL ROLES):\n"
+        f"5. NEVER MIX CATEGORIES (STRICT ANATOMICAL ROLES):\n"
         f"   - A garment's 'role' MUST strictly match its anatomical category:\n"
         f"     • Category 'Top' / 'Tops' / 'Shirts' MUST have role: 'top'.\n"
         f"     • Category 'Bottom' / 'Bottoms' / 'Pants' / 'Jeans' / 'Shorts' / 'Skirts' MUST have role: 'bottom'.\n"
@@ -978,11 +1079,11 @@ async def generate_scheduled_proposals(
         f"     • Category 'Dress' / 'One-piece' MUST have role: 'dress'.\n"
         f"     • Category 'Accessories' / 'Bags' / 'Belts' / 'Hats' MUST have role: 'accessory'.\n"
         f"   - Never duplicate singleton anatomical roles (e.g. do not put two bottoms or two pairs of shoes in the same outfit).\n"
-        f"5. WEATHER AWARE:\n"
+        f"6. WEATHER AWARE:\n"
         f"   - Outfits must be perfectly suited to the forecast temperature and conditions. NEVER suggest shorts for rainy/cold weather, and NEVER suggest a heavy wool sweater or warm coat for a hot summer day. Match fabrics (e.g. breathable linen/cotton for warm weather, insulated wool/layering for cold).\n"
-        f"6. CALENDAR AWARE:\n"
+        f"7. CALENDAR AWARE:\n"
         f"   - When calendar events are scheduled for the day, tailor the outfits to appropriately suit those event descriptions (e.g., formal/business for meetings, smart-casual for lunches, functional for active/outdoor events).\n"
-        f"7. COMPLETE FULL-BODY OUTFIT (MANDATORY TOP + BOTTOM + SHOES):\n"
+        f"8. COMPLETE FULL-BODY OUTFIT (MANDATORY TOP + BOTTOM + SHOES):\n"
         f"   - Every outfit recommendation MUST be a COMPLETE full-body outfit consisting of: 1) Either (a 'top' AND a 'bottom') OR a 'dress', and 2) 'shoes' (footwear). Add outerwear and accessories to complete the look.\n"
         f"   - Shoes/footwear are MANDATORY for every single outfit recommendation.\n"
         f"   - List items inside the 'items' array strictly in top-to-bottom anatomical order:\n"
@@ -991,10 +1092,10 @@ async def generate_scheduled_proposals(
         f"     3rd: 'bottom' (if wearing a top)\n"
         f"     4th: 'shoes' (footwear)\n"
         f"     5th: 'accessory' (if any)\n"
-        f"8. APPROPRIATE ACCESSORIES (NO FASHION CLASH):\n"
+        f"9. APPROPRIATE ACCESSORIES (NO FASHION CLASH):\n"
         f"   - ONLY add an accessory if it harmonizes with the dress code and clothing items.\n"
         f"   - NEVER pair a formal necktie or bowtie with a casual graphic T-shirt, tank top, sportswear, shorts, or swim trunks! Formal ties belong ONLY with formal collared dress shirts, blazers, and suits.\n"
-        f"9. STRICT CLOSET INVENTORY CONSTRAINT:\n"
+        f"10. STRICT CLOSET INVENTORY CONSTRAINT:\n"
         f"   - You MUST select items ONLY from the user's closet list below. Under no circumstances should you recommend items that the user does not own or that have a null closet_item_id. Every recommended item must map to a valid closet item ID from the list below.\n\n"
         f"User's Closet Items:\n"
         f"{closet_summary_str}\n\n"

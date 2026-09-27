@@ -2115,7 +2115,11 @@
       "club": "Club",
       "pro": "Pro",
       "business": "Zakelijk"
-    }
+    },
+    "enableOccupation": "Aanpassen aan beroep",
+    "enableOccupationDesc": "Stem outfitadviezen af op de eisen van uw beroep (bijv. maatkostuums voor advocaten, stevige werkkleding voor bouwvakkers).",
+    "noOccupationSet": "Geen beroep ingesteld in profiel",
+    "currentOccupation": "Huidig"
   },
   "admin": {
     "title": "Beheerder",

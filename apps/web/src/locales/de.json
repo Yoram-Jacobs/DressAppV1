@@ -2115,7 +2115,11 @@
       "club": "Club",
       "pro": "Pro",
       "business": "Business"
-    }
+    },
+    "enableOccupation": "An Beruf anpassen",
+    "enableOccupationDesc": "Passen Sie Outfit-Empfehlungen an die Anforderungen Ihres Berufs an (z. B. maßgeschneiderte Anzüge für Anwälte, robuste Arbeitskleidung für Bauarbeiter).",
+    "noOccupationSet": "Kein Beruf im Profil angegeben",
+    "currentOccupation": "Aktuell"
   },
   "admin": {
     "title": "Admin",

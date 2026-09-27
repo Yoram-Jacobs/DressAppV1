@@ -61,6 +61,9 @@ interface SchedulerProps {
   setWeatherSync: (val: boolean) => void;
   calendarSync: boolean;
   setCalendarSync: (val: boolean) => void;
+  respectOccupation?: boolean;
+  setRespectOccupation?: (val: boolean) => void;
+  occupation?: string;
 }
 
 export function SchedulerSettings({
@@ -78,6 +81,9 @@ export function SchedulerSettings({
   setWeatherSync,
   calendarSync,
   setCalendarSync,
+  respectOccupation = true,
+  setRespectOccupation,
+  occupation,
 }: SchedulerProps) {
   const { t } = useTranslation();
   const { colors, isDark } = useTheme();
@@ -404,6 +410,35 @@ export function SchedulerSettings({
 
       {/* Environment & Sync Toggles */}
       <View style={styles.togglesList}>
+        <View style={[styles.toggleItem, { backgroundColor: colors.secondary, borderColor: colors.border }]}>
+          <View style={styles.toggleTextCol}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+              <Text style={[styles.toggleLabel, { color: colors.foreground }]}>
+                {t('profile.enableOccupation', { defaultValue: 'Match to Occupation' })}
+              </Text>
+              {occupation ? (
+                <View style={{ backgroundColor: 'rgba(31, 111, 107, 0.15)', borderColor: colors.accent, borderWidth: 1, paddingHorizontal: 6, paddingVertical: 1, borderRadius: 10 }}>
+                  <Text style={{ fontSize: 10, color: colors.foreground, fontFamily: fonts.bodyBold }}>
+                    {occupation}
+                  </Text>
+                </View>
+              ) : (
+                <Text style={{ fontSize: 10, color: colors.mutedFg, fontStyle: 'italic' }}>
+                  ({t('profile.noOccupationSet', { defaultValue: 'No occupation set in profile' })})
+                </Text>
+              )}
+            </View>
+            <Text style={[styles.toggleSub, { color: colors.mutedFg }]}>
+              {t('profile.enableOccupationDesc', { defaultValue: "Tailor outfit recommendations to your job's demands (e.g., tailored suits for lawyers, rugged workwear for construction builders)." })}
+            </Text>
+          </View>
+          <Switch
+            value={respectOccupation}
+            onValueChange={setRespectOccupation}
+            trackColor={{ false: colors.border, true: colors.accent }}
+          />
+        </View>
+
         <View style={[styles.toggleItem, { backgroundColor: colors.secondary, borderColor: colors.border }]}>
           <View style={styles.toggleTextCol}>
             <Text style={[styles.toggleLabel, { color: colors.foreground }]}>

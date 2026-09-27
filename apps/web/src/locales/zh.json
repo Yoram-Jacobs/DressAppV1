@@ -2115,7 +2115,11 @@
       "club": "俱乐部",
       "pro": "专业",
       "business": "企业"
-    }
+    },
+    "enableOccupation": "根据职业搭配",
+    "enableOccupationDesc": "根据您的工作需求定制穿搭建议（例如：律师定制西装，建筑工人耐穿工装）。",
+    "noOccupationSet": "个人资料中未设置职业",
+    "currentOccupation": "当前"
   },
   "admin": {
     "title": "管理",

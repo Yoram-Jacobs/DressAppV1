@@ -46,6 +46,11 @@ export function SchedulerSettings() {
   const { canAccessScheduler } = useTierLimits();
 
   const [enabled, setEnabled] = useState(user?.scheduler_settings?.enabled || false);
+  const [respectOccupation, setRespectOccupation] = useState(
+    user?.scheduler_settings?.respect_occupation !== undefined
+      ? Boolean(user.scheduler_settings.respect_occupation)
+      : true
+  );
   const [frequency, setFrequency] = useState(user?.scheduler_settings?.frequency || 'everyday');
   const [weekday, setWeekday] = useState(user?.scheduler_settings?.weekday || 'monday');
   const [time, setTime] = useState(user?.scheduler_settings?.time || '07:00');
@@ -75,6 +80,7 @@ export function SchedulerSettings() {
     }
     lastSavedJsonRef.current = schedJson;
     if (sched.enabled !== undefined) setEnabled(Boolean(sched.enabled));
+    if (sched.respect_occupation !== undefined) setRespectOccupation(Boolean(sched.respect_occupation));
     if (sched.frequency) setFrequency(sched.frequency);
     if (sched.weekday) setWeekday(sched.weekday);
     if (sched.time) setTime(sched.time);
@@ -228,6 +234,7 @@ export function SchedulerSettings() {
       const tagsStr = currentTags.join(', ');
       const effectiveCustom = currentStyleOption === 'tags' ? tagsStr : (overrides.customStyle !== undefined ? overrides.customStyle : customStyle);
       const effectiveDressFor = currentStyleOption === 'custom' ? effectiveCustom : currentStyleOption === 'tags' ? tagsStr : currentStyleOption;
+      const targetRespectOccupation = overrides.respectOccupation !== undefined ? overrides.respectOccupation : respectOccupation;
 
       const schedPayload = {
         ...(user?.scheduler_settings || {}),
@@ -239,6 +246,7 @@ export function SchedulerSettings() {
         custom_style: effectiveCustom,
         selected_tags: currentStyleOption === 'tags' ? currentTags : (Array.isArray(user?.scheduler_settings?.selected_tags) ? user.scheduler_settings.selected_tags : []),
         style_dress_for: effectiveDressFor,
+        respect_occupation: targetRespectOccupation,
         timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC',
       };
 
@@ -260,7 +268,7 @@ export function SchedulerSettings() {
     } finally {
       setBusy(false);
     }
-  }, [user, enabled, frequency, weekday, time, styleOption, customStyle, selectedTags, tagDraft, updateUserLocal, t]);
+  }, [user, enabled, respectOccupation, frequency, weekday, time, styleOption, customStyle, selectedTags, tagDraft, updateUserLocal, t]);
 
   useEffect(() => {
     const handleSaveFull = (e) => {
@@ -332,6 +340,35 @@ export function SchedulerSettings() {
         </div>
         {enabled && (
           <div className="space-y-3 text-start">
+            <div className="flex items-center justify-between gap-3 p-3 bg-yellow-shadow rounded-[12px] border border-border shadow-sm text-start">
+              <div className="space-y-1">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="font-semibold text-[14px] text-dark-brand">
+                    {t('profile.enableOccupation', { defaultValue: 'Match to Occupation' })}
+                  </span>
+                  {user?.occupation ? (
+                    <Badge variant="secondary" className="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-primary-brand/10 text-primary-brand border border-primary-brand/20">
+                      {t('profile.currentOccupation', { defaultValue: 'Current' })}: {user.occupation}
+                    </Badge>
+                  ) : (
+                    <span className="text-[11px] text-text-brand italic">
+                      ({t('profile.noOccupationSet', { defaultValue: 'No occupation set in profile' })})
+                    </span>
+                  )}
+                </div>
+                <div className="text-[12px] text-text-brand font-semibold text-start">
+                  {t('profile.enableOccupationDesc', { defaultValue: "Tailor outfit recommendations to your job's demands (e.g., tailored suits for lawyers, rugged workwear for construction builders)." })}
+                </div>
+              </div>
+              <Switch
+                checked={respectOccupation}
+                onCheckedChange={(val) => {
+                  isDirtyRef.current = true;
+                  setRespectOccupation(val);
+                }}
+                data-testid="scheduler-respect-occupation-switch"
+              />
+            </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="">
                 <Label htmlFor="s-freq">{t('profile.notificationFrequency', { defaultValue: 'Frequency' })}</Label>

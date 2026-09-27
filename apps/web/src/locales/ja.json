@@ -2115,7 +2115,11 @@
       "club": "クラブ",
       "pro": "プロ",
       "business": "ビジネス"
-    }
+    },
+    "enableOccupation": "職業に合わせて提案",
+    "enableOccupationDesc": "仕事の要求に合わせて服装の提案をカスタマイズします（例：弁护士にはスーツ、建設作業員には丈夫な作業着など）。",
+    "noOccupationSet": "プロフィールに職業が設定されていません",
+    "currentOccupation": "現在"
   },
   "admin": {
     "title": "管理",

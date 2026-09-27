@@ -2115,7 +2115,11 @@
       "club": "Club",
       "pro": "Pro",
       "business": "Business"
-    }
+    },
+    "enableOccupation": "Match to Occupation",
+    "enableOccupationDesc": "Tailor outfit recommendations to your job's demands (e.g., tailored suits for lawyers, rugged workwear for construction builders).",
+    "noOccupationSet": "No occupation set in profile",
+    "currentOccupation": "Current"
   },
   "admin": {
     "title": "Admin",
