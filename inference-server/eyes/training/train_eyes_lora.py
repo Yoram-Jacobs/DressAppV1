@@ -331,8 +331,11 @@ def run_training_on_runpod(
     gpu_candidates = [
         "NVIDIA GeForce RTX 4090",
         "NVIDIA RTX A5000",
-        "NVIDIA GeForce RTX 3090",
         "NVIDIA A40",
+        "NVIDIA L40S",
+        "NVIDIA GeForce RTX 5090",
+        "NVIDIA GeForce RTX 3090",
+        "NVIDIA A100 80GB PCIe",
         "NVIDIA L4",
     ]
 
@@ -346,8 +349,9 @@ def run_training_on_runpod(
                 image_name="runpod/pytorch:2.4.0-py3.11-cuda12.4.1-devel-ubuntu22.04",
                 gpu_type_id=gpu_type,
                 cloud_type="ALL",
-                support_public_ip=True,
+                support_public_ip=False,
                 start_ssh=True,
+                ports="22/tcp",
                 container_disk_in_gb=40,
                 volume_in_gb=0,
                 env={"HF_TOKEN": hf_token or ""},
