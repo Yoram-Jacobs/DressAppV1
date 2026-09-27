@@ -1763,7 +1763,11 @@
       "dressSize": "Kleidergröße",
       "calculatedSection": "Berechnete Körpermaße (KI-generiert)",
       "sizesSection": "Kleidungs- & Schuhgrößen",
-      "calculating": "Körpermaße werden per KI berechnet..."
+      "calculating": "Körpermaße werden per KI berechnet...",
+      "calculate": "Mit KI berechnen",
+      "recalculate": "Mit KI neu berechnen",
+      "predictedSuccess": "Körpermaße mit KI berechnet!",
+      "predictFailed": "Berechnung der Körpermaße fehlgeschlagen."
     },
     "hairFields": {
       "length": "Haarlänge",
@@ -3388,7 +3392,26 @@
     "noItemsInCategory": "Keine Artikel in dieser Kategorie.",
     "noShoes": "Schuhe wählen",
     "noTop": "Oberteil wählen",
-    "title": "Stil-Sandbox"
+    "title": "Stil-Sandbox",
+    "completeTheLook": "Look vervollständigen",
+    "matchingOutfitsTitle": "Komplette Looks mit deiner Garderobe",
+    "matchingOutfitsDesc": "Von der KI kuratierte Looks, die dieses Teil mit deiner vorhandenen Kleidung kombinieren.",
+    "generatingLooks": "Komplette Looks werden gestylt...",
+    "lookN": "Look {{n}}",
+    "stylistRationale": "Stylist-Begründung",
+    "colorPalette": "Farbpalette",
+    "styleMetrics": "Style-Metriken",
+    "harmonyScore": "Harmonie",
+    "wardrobeMatch": "Style-Übereinstimmung",
+    "versatility": "Vielseitigkeit",
+    "outfitPieces": "Outfit-Teile",
+    "fromYourCloset": "In deinem Kleiderschrank",
+    "saveOutfit": "Zu meinen Outfits speichern",
+    "savingOutfit": "Outfit wird gespeichert...",
+    "outfitSaved": "Outfit gespeichert!",
+    "outfitSavedSuccess": "Outfit erfolgreich in deiner Garderobe gespeichert!",
+    "adjustPieces": "Auswahl anpassen",
+    "noOutfitsFound": "Es konnten keine kompletten Looks generiert werden. Versuche andere Artikel auszuwählen."
   },
   "suitcase": {
     "destPlaceholder": "z. B. Rom, Tokio, New York",

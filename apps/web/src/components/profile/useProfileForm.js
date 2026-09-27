@@ -105,8 +105,15 @@ export function useProfileForm(user) {
   const isDirty = JSON.stringify(form) !== baselineRef.current;
 
   const setField = (k, v) => setForm((f) => ({ ...f, [k]: v }));
-  const setNested = (parent, k, v) =>
-    setForm((f) => ({ ...f, [parent]: { ...f[parent], [k]: v } }));
+  const setNested = (parent, k, v) => {
+    if (typeof k === 'function') {
+      setForm((f) => ({ ...f, [parent]: k(f[parent], f) }));
+    } else if (typeof k === 'object' && k !== null && v === undefined) {
+      setForm((f) => ({ ...f, [parent]: { ...f[parent], ...k } }));
+    } else {
+      setForm((f) => ({ ...f, [parent]: { ...f[parent], [k]: v } }));
+    }
+  };
   const setCampaignPref = (k, v) =>
     setForm((f) => ({
       ...f,

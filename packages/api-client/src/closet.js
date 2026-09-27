@@ -388,10 +388,11 @@ export const closet = {
     }),
 
   // --- outfit completion ---
-  completeOutfit: ({ itemIds, includeMarketplace = false, occasion = null, limit = 6 }) =>
+  completeOutfit: ({ itemIds = [], listingId = null, includeMarketplace = false, occasion = null, limit = 6 }) =>
     client
       .post('/closet/complete-outfit', {
         item_ids: itemIds,
+        listing_id: listingId,
         include_marketplace: includeMarketplace,
         occasion: occasion || null,
         limit,

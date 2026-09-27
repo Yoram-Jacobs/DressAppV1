@@ -1796,7 +1796,11 @@
       "dressSize": "Dress size",
       "calculatedSection": "Calculated Body Dimensions (AI Generated)",
       "sizesSection": "Garment & Footwear Sizes",
-      "calculating": "Calculating body shape measurements using AI..."
+      "calculating": "Calculating body shape measurements using AI...",
+      "calculate": "Calculate with AI",
+      "recalculate": "Recalculate with AI",
+      "predictedSuccess": "Body dimensions calculated using AI!",
+      "predictFailed": "Failed to calculate body dimensions."
     },
     "hairFields": {
       "length": "Hair length",
@@ -3394,7 +3398,26 @@
     "noItemsInCategory": "No items in this category.",
     "noShoes": "Select Shoes",
     "noTop": "Select Top",
-    "title": "Style Sandbox"
+    "title": "Style Sandbox",
+    "completeTheLook": "Complete The Look",
+    "matchingOutfitsTitle": "Complete Looks with Your Wardrobe",
+    "matchingOutfitsDesc": "AI-curated looks matching this piece with your existing clothes.",
+    "generatingLooks": "Styling complete looks...",
+    "lookN": "Look {{n}}",
+    "stylistRationale": "Stylist Rationale",
+    "colorPalette": "Color Palette",
+    "styleMetrics": "Style Metrics",
+    "harmonyScore": "Harmony",
+    "wardrobeMatch": "Style Match",
+    "versatility": "Versatility",
+    "outfitPieces": "Outfit Pieces",
+    "fromYourCloset": "In your closet",
+    "saveOutfit": "Save to My Outfits",
+    "savingOutfit": "Saving Outfit...",
+    "outfitSaved": "Outfit Saved!",
+    "outfitSavedSuccess": "Outfit saved to your closet!",
+    "adjustPieces": "Adjust Selection",
+    "noOutfitsFound": "Could not generate complete looks. Try selecting other items."
   },
   "suitcase": {
     "destPlaceholder": "e.g. Rome, Tokyo, New York",

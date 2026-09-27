@@ -1754,7 +1754,11 @@
       "dressSize": "ドレスサイズ",
       "calculatedSection": "計算された体型寸法 (AI生成)",
       "sizesSection": "衣類と靴のサイズ",
-      "calculating": "AIで体型寸法を計算中..."
+      "calculating": "AIで体型寸法を計算中...",
+      "calculate": "AIで計算",
+      "recalculate": "AIで再計算",
+      "predictedSuccess": "AIにより身体寸法が計算されました！",
+      "predictFailed": "身体寸法の計算に失敗しました。"
     },
     "hairFields": {
       "length": "髪の長さ",
@@ -3395,7 +3399,26 @@
     "noItemsInCategory": "このカテゴリにはアイテムがありません。",
     "noShoes": "シューズを選択",
     "noTop": "トップスを選択",
-    "title": "スタイルサンドボックス"
+    "title": "スタイルサンドボックス",
+    "completeTheLook": "ルックを完成させる",
+    "matchingOutfitsTitle": "ワードローブと合わせた完成ルック",
+    "matchingOutfitsDesc": "このアイテムとお手持ちの服を組み合わせたAI厳選のルック。",
+    "generatingLooks": "完成ルックをスタイリング中...",
+    "lookN": "ルック {{n}}",
+    "stylistRationale": "スタイリストの解説",
+    "colorPalette": "カラーパレット",
+    "styleMetrics": "スタイルメトリクス",
+    "harmonyScore": "調和度",
+    "wardrobeMatch": "スタイル適合度",
+    "versatility": "着回し力",
+    "outfitPieces": "アウトフィットのアイテム",
+    "fromYourCloset": "クローゼットから",
+    "saveOutfit": "マイアウトフィットに保存",
+    "savingOutfit": "アウトフィットを保存中...",
+    "outfitSaved": "アウトフィットを保存しました！",
+    "outfitSavedSuccess": "アウトフィットがクローゼットに保存されました！",
+    "adjustPieces": "選択を調整",
+    "noOutfitsFound": "完成ルックを生成できませんでした。他のアイテムを選択してみてください。"
   },
   "suitcase": {
     "destPlaceholder": "例：ローマ、東京、ニューヨーク",

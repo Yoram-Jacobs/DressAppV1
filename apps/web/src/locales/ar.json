@@ -1754,7 +1754,11 @@
       "dressSize": "مقاس الفستان",
       "calculatedSection": "أبعاد الجسم المحسوبة (تم إنشاؤها بواسطة الذكاء الاصطناعي)",
       "sizesSection": "مقاسات الملابس والأحذية",
-      "calculating": "جاري حساب قياسات الجسم باستخدام الذكاء الاصطناعي..."
+      "calculating": "جاري حساب قياسات الجسم باستخدام الذكاء الاصطناعي...",
+      "calculate": "احسب بالذكاء الاصطناعي",
+      "recalculate": "إعادة الحساب بالذكاء الاصطناعي",
+      "predictedSuccess": "تم حساب أبعاد الجسم بالذكاء الاصطناعي!",
+      "predictFailed": "فشل حساب أبعاد الجسم."
     },
     "hairFields": {
       "length": "طول الشعر",
@@ -3392,7 +3396,26 @@
     "noItemsInCategory": "لا توجد قطع في هذه الفئة.",
     "noShoes": "اختر حذاء",
     "noTop": "اختر قطعة علوية",
-    "title": "مختبر التنسيق"
+    "title": "مختبر التنسيق",
+    "completeTheLook": "أكمل الإطلالة",
+    "matchingOutfitsTitle": "إطلالات متكاملة مع خزانة ملابسك",
+    "matchingOutfitsDesc": "إطلالات منسقة بالذكاء الاصطناعي تجمع هذه القطعة مع ملابسك الحالية.",
+    "generatingLooks": "جارٍ تنسيق إطلالات متكاملة...",
+    "lookN": "إطلالة {{n}}",
+    "stylistRationale": "توجيهات خبير الأناقة",
+    "colorPalette": "لوحة الألوان",
+    "styleMetrics": "مقاييس الأناقة",
+    "harmonyScore": "التناغم",
+    "wardrobeMatch": "توافق الأسلوب",
+    "versatility": "تعدد الاستخدامات",
+    "outfitPieces": "قطع الإطلالة",
+    "fromYourCloset": "في خزانتك",
+    "saveOutfit": "حفظ في إطلالاتي",
+    "savingOutfit": "جارٍ حفظ الإطلالة...",
+    "outfitSaved": "تم حفظ الإطلالة!",
+    "outfitSavedSuccess": "تم حفظ الإطلالة في خزانتك بنجاح!",
+    "adjustPieces": "تعديل الاختيار",
+    "noOutfitsFound": "تعذر إنشاء إطلالات كاملة. حاول تحديد قطع أخرى."
   },
   "suitcase": {
     "destPlaceholder": "مثال: روما، طوكيو، نيويورك",

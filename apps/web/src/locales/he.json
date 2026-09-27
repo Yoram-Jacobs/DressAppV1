@@ -1788,7 +1788,11 @@
       "dressSize": "מידת שמלה",
       "calculatedSection": "מידות גוף מחושבות (נוצר על ידי AI)",
       "sizesSection": "מידות בגדים ונעליים",
-      "calculating": "מחשב מידות גוף באמצעות AI..."
+      "calculating": "מחשב מידות גוף באמצעות AI...",
+      "calculate": "חשב באמצעות AI",
+      "recalculate": "חשב מחדש באמצעות AI",
+      "predictedSuccess": "מידות הגוף חושבו באמצעות AI!",
+      "predictFailed": "חישוב מידות הגוף נכשל."
     },
     "hairFields": {
       "length": "אורך שיער",
@@ -3441,7 +3445,26 @@
     "noItemsInCategory": "אין פריטים בקטגוריה זו.",
     "noShoes": "בחר נעליים",
     "noTop": "בחר חלק עליון",
-    "title": "ארגז חול לסטייל"
+    "title": "ארגז חול לסטייל",
+    "completeTheLook": "השלם את הלוק",
+    "matchingOutfitsTitle": "לוקים מושלמים עם הארון שלך",
+    "matchingOutfitsDesc": "לוקים שנבחרו על ידי ה-AI המשלבים פריט זה עם בגדיך הקיימים.",
+    "generatingLooks": "מעצב לוקים מושלמים...",
+    "lookN": "לוק {{n}}",
+    "stylistRationale": "נימוק הסטייליסט",
+    "colorPalette": "פלטת צבעים",
+    "styleMetrics": "מדדי סטייל",
+    "harmonyScore": "הרמוניה",
+    "wardrobeMatch": "התאמת סטייל",
+    "versatility": "רבגוניות",
+    "outfitPieces": "פריטי הלוק",
+    "fromYourCloset": "בארון שלך",
+    "saveOutfit": "שמור ללוקים שלי",
+    "savingOutfit": "שומר לוק...",
+    "outfitSaved": "הלוק נשמר!",
+    "outfitSavedSuccess": "הלוק נשמר בהצלחה לארון שלך!",
+    "adjustPieces": "התאם בחירה",
+    "noOutfitsFound": "לא ניתן היה ליצור לוקים מושלמים. נסה לבחור פריטים אחרים."
   },
   "suitcase": {
     "destPlaceholder": "לדוגמה: רומא, טוקיו, ניו יורק",

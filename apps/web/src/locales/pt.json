@@ -1754,7 +1754,11 @@
       "dressSize": "Tamanho do vestido",
       "calculatedSection": "Dimensões corporais calculadas (Geradas por IA)",
       "sizesSection": "Tamanhos de roupas e calçados",
-      "calculating": "Calculando medidas corporais usando IA..."
+      "calculating": "Calculando medidas corporais usando IA...",
+      "calculate": "Calcular com IA",
+      "recalculate": "Recalcular com IA",
+      "predictedSuccess": "Medidas corporais calculadas com IA!",
+      "predictFailed": "Falha ao calcular medidas corporais."
     },
     "hairFields": {
       "length": "Comprimento do cabelo",
@@ -3395,7 +3399,26 @@
     "noItemsInCategory": "Nenhum item nesta categoria.",
     "noShoes": "Selecionar calçado",
     "noTop": "Selecionar parte superior",
-    "title": "Sandbox de estilo"
+    "title": "Sandbox de estilo",
+    "completeTheLook": "Completar o look",
+    "matchingOutfitsTitle": "Looks completos com seu guarda-roupa",
+    "matchingOutfitsDesc": "Looks selecionados por IA combinando esta peça com suas roupas existentes.",
+    "generatingLooks": "Criando looks completos...",
+    "lookN": "Look {{n}}",
+    "stylistRationale": "Justificativa do estilista",
+    "colorPalette": "Paleta de cores",
+    "styleMetrics": "Métricas de estilo",
+    "harmonyScore": "Harmonia",
+    "wardrobeMatch": "Combinação de estilo",
+    "versatility": "Versatilidade",
+    "outfitPieces": "Peças do look",
+    "fromYourCloset": "No seu guarda-roupa",
+    "saveOutfit": "Salvar nos meus looks",
+    "savingOutfit": "Salvando look...",
+    "outfitSaved": "Look salvo!",
+    "outfitSavedSuccess": "Look salvo com sucesso no seu guarda-roupa!",
+    "adjustPieces": "Ajustar seleção",
+    "noOutfitsFound": "Não foi possível gerar looks completos. Tente selecionar outros itens."
   },
   "suitcase": {
     "destPlaceholder": "ex.: Roma, Tóquio, Nova York",

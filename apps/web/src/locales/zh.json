@@ -1756,7 +1756,11 @@
       "dressSize": "连衣裙尺码",
       "calculatedSection": "计算出的身体尺寸 (AI 生成)",
       "sizesSection": "服装与鞋码",
-      "calculating": "正在使用 AI 计算身体尺寸..."
+      "calculating": "正在使用 AI 计算身体尺寸...",
+      "calculate": "通过 AI 计算",
+      "recalculate": "通过 AI 重新计算",
+      "predictedSuccess": "已通过 AI 成功计算身体尺寸！",
+      "predictFailed": "计算身体尺寸失败。"
     },
     "hairFields": {
       "length": "头发长度",
@@ -3395,7 +3399,26 @@
     "noItemsInCategory": "此分类下没有单品。",
     "noShoes": "选择鞋履",
     "noTop": "选择上装",
-    "title": "搭配沙盒"
+    "title": "搭配沙盒",
+    "completeTheLook": "完成造型",
+    "matchingOutfitsTitle": "与你的衣橱搭配的完整造型",
+    "matchingOutfitsDesc": "AI 精选造型，将此单品与你现有的衣物完美搭配。",
+    "generatingLooks": "正在搭配完整造型...",
+    "lookN": "造型 {{n}}",
+    "stylistRationale": "造型师解析",
+    "colorPalette": "色彩搭配",
+    "styleMetrics": "风格指标",
+    "harmonyScore": "协调度",
+    "wardrobeMatch": "风格匹配",
+    "versatility": "百搭性",
+    "outfitPieces": "造型单品",
+    "fromYourCloset": "来自你的衣橱",
+    "saveOutfit": "保存到我的造型",
+    "savingOutfit": "正在保存造型...",
+    "outfitSaved": "造型已保存！",
+    "outfitSavedSuccess": "造型已成功保存到你的衣橱！",
+    "adjustPieces": "调整选择",
+    "noOutfitsFound": "无法生成完整造型。请尝试选择其他单品。"
   },
   "suitcase": {
     "destPlaceholder": "例如：罗马、东京、纽约",

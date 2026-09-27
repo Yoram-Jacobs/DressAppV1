@@ -427,3 +427,11 @@ img {
   background: var(--primary-color);
   border-radius: 20px;
 }
+
+/* --- PAYPAL BUTTONS OVERLAY PREVENTION --- */
+.paypal-buttons,
+.paypal-button-container,
+[data-testid="listing-buy-wrapper"] iframe,
+iframe.zoid-component-frame {
+  z-index: 1 !important;
+}

@@ -1796,7 +1796,11 @@
       "dressSize": "Jurk maat",
       "calculatedSection": "Berekende lichaamsafmetingen (AI gegenereerd)",
       "sizesSection": "Kleding- & schoenmaten",
-      "calculating": "Lichaamsafmetingen berekenen met AI..."
+      "calculating": "Lichaamsafmetingen berekenen met AI...",
+      "calculate": "Berekenen met AI",
+      "recalculate": "Herberekenen met AI",
+      "predictedSuccess": "Lichaamsafmetingen berekend met AI!",
+      "predictFailed": "Kan lichaamsafmetingen niet berekenen."
     },
     "hairFields": {
       "length": "Haar lengte",
@@ -3395,7 +3399,26 @@
     "noItemsInCategory": "Geen artikelen in deze categorie.",
     "noShoes": "Selecteer Schoenen",
     "noTop": "Selecteer Boven",
-    "title": "Stijl zandbak"
+    "title": "Stijl zandbak",
+    "completeTheLook": "Maak de look compleet",
+    "matchingOutfitsTitle": "Complete looks met je garderobe",
+    "matchingOutfitsDesc": "Door AI gecureerde looks die dit kledingstuk combineren met je bestaande kleding.",
+    "generatingLooks": "Complete looks worden gestyled...",
+    "lookN": "Look {{n}}",
+    "stylistRationale": "Stylist toelichting",
+    "colorPalette": "Kleurenpalet",
+    "styleMetrics": "Stijlmetrieken",
+    "harmonyScore": "Harmonie",
+    "wardrobeMatch": "Stijlmatch",
+    "versatility": "Veelzijdigheid",
+    "outfitPieces": "Outfit-items",
+    "fromYourCloset": "In je kledingkast",
+    "saveOutfit": "Opslaan in Mijn Outfits",
+    "savingOutfit": "Outfit opslaan...",
+    "outfitSaved": "Outfit opgeslagen!",
+    "outfitSavedSuccess": "Outfit succesvol opgeslagen in je kledingkast!",
+    "adjustPieces": "Selectie aanpassen",
+    "noOutfitsFound": "Kon geen complete looks genereren. Probeer andere items te selecteren."
   },
   "suitcase": {
     "destPlaceholder": "bijv. Rome, Tokio, New York",

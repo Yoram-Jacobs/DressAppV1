@@ -145,6 +145,7 @@ export function ProfileDetailsCard() {
           <PreferencesSection form={form} setNested={setNested} t={t} wUnit={wUnit} lUnit={lUnit} />
           <MeasurementsSection
             form={form}
+            setForm={setForm}
             setNested={setNested}
             onChange={(k, v) => setNested('body_measurements', k, v)}
             t={t}
@@ -153,8 +154,6 @@ export function ProfileDetailsCard() {
             isFemale={isFemale}
             isFreshStart={isFreshStart}
             hasFilledBasic={!!(form.body_measurements.height && form.body_measurements.weight && form.body_measurements.waist && form.body_measurements.foot_length)}
-            predicting={false}
-            hasPredicted={false}
           />
           <PhotosSection form={form} setField={setField} t={t} user={user} />
           <StyleProfileSection form={form} setField={setField} t={t} />

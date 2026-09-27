@@ -508,7 +508,10 @@ export default function ListingDetail() {
                       )}
                     </>
                   ) : (
-                    <div data-testid="listing-buy-wrapper">
+                    <div
+                      data-testid="listing-buy-wrapper"
+                      className={sandboxOpen ? "invisible pointer-events-none" : ""}
+                    >
                       <PayPalCheckoutButton
                         createOrder={createOrder}
                         captureOrder={captureOrder}
