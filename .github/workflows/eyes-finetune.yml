@@ -29,10 +29,10 @@ on:
       compute_backend:
         description: 'Compute Backend for Training'
         required: true
-        default: 'modal'
+        default: 'runpod'
         type: choice
         options:
-          - 'modal'
+          - 'runpod'
           - 'local'
           - 'cpu_dry_run'
       dry_run:
@@ -128,12 +128,11 @@ jobs:
 
       - name: Execute Headless Training
         env:
-          MODAL_TOKEN_ID: ${{ secrets.MODAL_API_TOKEN_ID || secrets.MODAL_TOKEN_ID }}
-          MODAL_TOKEN_SECRET: ${{ secrets.MODAL_API_TOKEN_SECRET || secrets.MODAL_TOKEN_SECRET }}
+          RUNPOD_API_KEY: ${{ secrets.RUNPOD_API_KEY || secrets.RUNPOD_KEY }}
           HF_TOKEN: ${{ secrets.EYES_HF_TOKEN || secrets.HF_TOKEN || secrets.HF_WRITE }}
         run: |
           mkdir -p build/adapter build/metrics
-          COMPUTE_BACKEND="${{ inputs.compute_backend || 'modal' }}"
+          COMPUTE_BACKEND="${{ inputs.compute_backend || 'runpod' }}"
           IS_DRY_RUN="${{ inputs.dry_run || 'false' }}"
 
           EXTRA_ARGS=""
@@ -313,7 +312,7 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "- **Base Model:** \`${{ inputs.base_model || 'google/gemma-4-e4b-it' }}\`" >> $GITHUB_STEP_SUMMARY
           echo "- **Trigger:** \`${{ github.event_name }}\`" >> $GITHUB_STEP_SUMMARY
-          echo "- **Compute Backend:** \`${{ inputs.compute_backend || 'modal' }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **Compute Backend:** \`${{ inputs.compute_backend || 'runpod' }}\`" >> $GITHUB_STEP_SUMMARY
           echo "- **Dry Run:** \`${{ inputs.dry_run || 'false' }}\`" >> $GITHUB_STEP_SUMMARY
           echo "- **Dataset Status:** \`${{ needs.prepare-dataset.result }}\`" >> $GITHUB_STEP_SUMMARY
           echo "- **Training & Gate Status:** \`${{ needs.train-and-evaluate.result }}\`" >> $GITHUB_STEP_SUMMARY

@@ -4,7 +4,7 @@ inference-server/eyes/training/train_eyes_lora.py
 
 Headless QLoRA SFT fine-tuning for DressApp Eyes (Gemma-4 multimodal vision-language model).
 Supports:
-  1. Modal Labs serverless GPU execution (modal run train_eyes_lora.py)
+  1. RunPod serverless GPU execution (headless ephemeral pod via runpod + paramiko)
   2. Local GPU execution (NVIDIA CUDA / ROCm)
   3. CPU dry-run / smoke-test mode (--dry-run) for headless CI/CD testing
 """
@@ -47,11 +47,10 @@ def load_env_credentials() -> None:
             except Exception:
                 pass
 
-    # Normalize Modal Token aliases (supports both MODAL_API_TOKEN_* and MODAL_TOKEN_*)
-    if "MODAL_API_TOKEN_ID" in os.environ and "MODAL_TOKEN_ID" not in os.environ:
-        os.environ["MODAL_TOKEN_ID"] = os.environ["MODAL_API_TOKEN_ID"]
-    if "MODAL_API_TOKEN_SECRET" in os.environ and "MODAL_TOKEN_SECRET" not in os.environ:
-        os.environ["MODAL_TOKEN_SECRET"] = os.environ["MODAL_API_TOKEN_SECRET"]
+    # Normalize RunPod API Key aliases (supports RUNPOD_API_KEY, RUNPOD_KEY)
+    runpod_key = os.environ.get("RUNPOD_API_KEY") or os.environ.get("RUNPOD_KEY")
+    if runpod_key and "RUNPOD_API_KEY" not in os.environ:
+        os.environ["RUNPOD_API_KEY"] = runpod_key
 
     # Normalize HF Token aliases (supports EYES_HF_TOKEN, HF_WRITE, HF-WRITE, HF_TOKEN)
     hf_val = (
@@ -284,73 +283,240 @@ def train_lora_native(
 
 
 # ---------------------------------------------------------------------------
-# Modal Labs Serverless Compute Integration
+# RunPod Serverless Ephemeral GPU Pod Integration
 # ---------------------------------------------------------------------------
-modal_init_error: str | None = None
-try:
-    import modal
+def run_training_on_runpod(
+    dataset_path: Path,
+    base_model: str,
+    output_dir: Path,
+    epochs: int = 3,
+    batch_size: int = 2,
+    learning_rate: float = 2e-4,
+    api_key: str | None = None,
+    hf_token: str | None = None,
+) -> dict[str, Any]:
+    """
+    Provisions an ephemeral RunPod GPU instance, connects via SSH/SFTP, uploads dataset and code,
+    executes QLoRA training with live output streaming, downloads the resulting adapter artifacts,
+    and terminates the pod to prevent idle charges.
+    """
+    try:
+        import runpod
+        import paramiko
+    except ImportError as e:
+        raise ImportError(f"RunPod execution requires runpod and paramiko: {e}. Please install requirements-train.txt.")
 
-    app = modal.App("dressapp-eyes-trainer")
-    req_file = Path(__file__).resolve().parent / "requirements-train.txt"
-    if req_file.exists():
-        image = modal.Image.debian_slim(python_version="3.11").pip_install_from_requirements(str(req_file))
-    else:
-        image = modal.Image.debian_slim(python_version="3.11").pip_install("torch>=2.2.0")
+    api_key = api_key or os.environ.get("RUNPOD_API_KEY") or os.environ.get("RUNPOD_KEY")
+    if not api_key:
+        raise ValueError("RUNPOD_API_KEY environment variable is required to execute training on RunPod.")
 
-    @app.function(
-        image=image,
-        gpu="A10G",
-        timeout=3600,
-    )
-    def modal_train_entrypoint(
-        dataset_content: str,
-        base_model: str,
-        epochs: int,
-        batch_size: int,
-        learning_rate: float,
-        hf_token: str | None = None,
-    ) -> dict[str, Any]:
-        """Runs inside Modal cloud GPU container."""
-        import io
-        import tarfile
+    runpod.api_key = api_key
 
-        if hf_token:
-            os.environ["HF_TOKEN"] = hf_token
-            os.environ["HUGGING_FACE_HUB_TOKEN"] = hf_token
+    if not dataset_path.exists():
+        raise FileNotFoundError(f"Dataset file not found at: {dataset_path}")
 
-        work_dir = Path("/tmp/eyes_train")
-        work_dir.mkdir(parents=True, exist_ok=True)
-        dataset_file = work_dir / "train.jsonl"
-        dataset_file.write_text(dataset_content, encoding="utf-8")
+    # Generate ephemeral RSA keypair in-memory for secure SSH access
+    logger.info("Generating ephemeral 2048-bit RSA key for RunPod SSH session...")
+    rsa_key = paramiko.RSAKey.generate(2048)
+    pub_key_str = f"ssh-rsa {rsa_key.get_base64()} dressapp-ephemeral-eyes"
 
-        adapter_out = work_dir / "adapter"
-        stats = train_lora_native(
-            dataset_path=dataset_file,
-            base_model=base_model,
-            output_dir=adapter_out,
-            epochs=epochs,
-            batch_size=batch_size,
-            learning_rate=learning_rate,
+    # Register public key with RunPod user account
+    logger.info("Registering ephemeral public SSH key with RunPod...")
+    try:
+        runpod.update_user_settings(pubkey=pub_key_str)
+        logger.info("RunPod SSH key registration acknowledged.")
+    except Exception as e:
+        logger.warning("runpod.update_user_settings warning: %s. Continuing with pod provisioning...", e)
+
+    gpu_candidates = [
+        "NVIDIA GeForce RTX 4090",
+        "NVIDIA RTX A5000",
+        "NVIDIA GeForce RTX 3090",
+        "NVIDIA A40",
+        "NVIDIA L4",
+    ]
+
+    pod_id: str | None = None
+    last_err: Exception | None = None
+    for gpu_type in gpu_candidates:
+        try:
+            logger.info("Requesting RunPod instance with GPU type: %s...", gpu_type)
+            pod = runpod.create_pod(
+                name=f"dressapp-eyes-trainer-{int(time.time())}",
+                image_name="runpod/pytorch:2.4.0-py3.11-cuda12.4.1-devel-ubuntu22.04",
+                gpu_type_id=gpu_type,
+                cloud_type="ALL",
+                support_public_ip=True,
+                start_ssh=True,
+                container_disk_in_gb=40,
+                volume_in_gb=0,
+                env={"HF_TOKEN": hf_token or ""},
+            )
+            if pod and isinstance(pod, dict) and "id" in pod:
+                pod_id = str(pod["id"])
+                logger.info("Successfully provisioned RunPod instance %s (%s)", pod_id, gpu_type)
+                break
+        except Exception as e:
+            logger.warning("Could not provision GPU candidate '%s': %s", gpu_type, e)
+            last_err = e
+
+    if not pod_id:
+        raise RuntimeError(f"Unable to provision any GPU on RunPod. Last error: {last_err}")
+
+    stats: dict[str, Any] = {}
+    try:
+        # Wait for pod runtime and port 22 mapping
+        logger.info("Polling RunPod instance %s for runtime status and SSH port...", pod_id)
+        ssh_host: str | None = None
+        ssh_port: int | None = None
+        poll_start = time.time()
+        poll_timeout = 360  # 6 minutes
+
+        while time.time() - poll_start < poll_timeout:
+            pod_info = runpod.get_pod(pod_id)
+            if pod_info and isinstance(pod_info, dict):
+                runtime = pod_info.get("runtime")
+                if runtime and isinstance(runtime, dict):
+                    ports = runtime.get("ports", [])
+                    if ports and isinstance(ports, list):
+                        for p in ports:
+                            if isinstance(p, dict) and p.get("privatePort") == 22 and p.get("ip") and p.get("publicPort"):
+                                ssh_host = str(p["ip"])
+                                ssh_port = int(p["publicPort"])
+                                break
+            if ssh_host and ssh_port:
+                break
+            time.sleep(5)
+
+        if not ssh_host or not ssh_port:
+            raise TimeoutError(f"RunPod instance {pod_id} did not expose SSH within {poll_timeout} seconds.")
+
+        logger.info("RunPod instance is up! Public SSH endpoint: %s:%d", ssh_host, ssh_port)
+
+        # Establish Paramiko SSH connection with retry loop
+        ssh = paramiko.SSHClient()
+        ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+        connected = False
+        for attempt in range(24):  # 2 minutes max
+            try:
+                ssh.connect(
+                    hostname=ssh_host,
+                    port=ssh_port,
+                    username="root",
+                    pkey=rsa_key,
+                    timeout=10,
+                    banner_timeout=30,
+                )
+                connected = True
+                logger.info("SSH connection verified and authenticated.")
+                break
+            except Exception as e:
+                logger.debug("Waiting for SSH service (attempt %d/24): %s", attempt + 1, e)
+                time.sleep(5)
+
+        if not connected:
+            raise ConnectionError(f"Could not connect via SSH to RunPod instance {ssh_host}:{ssh_port}")
+
+        # SFTP file transfer
+        sftp = ssh.open_sftp()
+        try:
+            _, stdout, _ = ssh.exec_command("mkdir -p /workspace/adapter")
+            stdout.channel.recv_exit_status()
+
+            logger.info("Uploading dataset (%s) to pod /workspace/train.jsonl...", dataset_path)
+            sftp.put(str(dataset_path), "/workspace/train.jsonl")
+
+            script_path = Path(__file__).resolve()
+            logger.info("Uploading training script (%s) to pod /workspace/train_eyes_lora.py...", script_path)
+            sftp.put(str(script_path), "/workspace/train_eyes_lora.py")
+
+            req_file = script_path.parent / "requirements-train.txt"
+            if req_file.exists():
+                logger.info("Uploading requirements (%s) to pod /workspace/requirements-train.txt...", req_file)
+                sftp.put(str(req_file), "/workspace/requirements-train.txt")
+        finally:
+            sftp.close()
+
+        def run_ssh_streaming(cmd: str, label: str) -> None:
+            logger.info("Executing on pod: %s", label)
+            stdin, stdout, stderr = ssh.exec_command(cmd, get_pty=True)
+            for line in iter(stdout.readline, ""):
+                line_clean = line.rstrip()
+                if line_clean:
+                    print(f"[RunPod] {line_clean}", flush=True)
+            exit_status = stdout.channel.recv_exit_status()
+            if exit_status != 0:
+                err_text = stderr.read().decode("utf-8", errors="replace").strip()
+                raise RuntimeError(f"Step '{label}' failed with exit code {exit_status}. Details: {err_text}")
+
+        # Step 1: Install Python dependencies
+        run_ssh_streaming(
+            "pip install --no-cache-dir peft trl transformers bitsandbytes datasets accelerate safetensors scikit-learn",
+            "Install QLoRA Training Dependencies",
         )
 
-        tar_buf = io.BytesIO()
-        with tarfile.open(fileobj=tar_buf, mode="w:gz") as tar:
-            if adapter_out.exists():
-                for item in adapter_out.iterdir():
-                    tar.add(str(item), arcname=item.name)
+        # Step 2: Run QLoRA training
+        train_cmd = (
+            f"python3 /workspace/train_eyes_lora.py "
+            f"--backend local "
+            f"--dataset /workspace/train.jsonl "
+            f"--base-model '{base_model}' "
+            f"--epochs {epochs} "
+            f"--batch-size {batch_size} "
+            f"--lr {learning_rate} "
+            f"--output-dir /workspace/adapter"
+        )
+        if hf_token:
+            train_cmd = f"export HF_TOKEN='{hf_token}' && export HUGGING_FACE_HUB_TOKEN='{hf_token}' && " + train_cmd
 
-        return {
-            "stats": stats,
-            "adapter_tar_gz": tar_buf.getvalue(),
-        }
+        run_ssh_streaming(train_cmd, "Run QLoRA Native SFT Training")
 
-except ImportError as err:
-    modal_init_error = f"Modal SDK is not installed: {err}"
-    app = None
-except Exception as err:
-    modal_init_error = f"Modal initialization error: {err}"
-    logger.warning("Modal initialization failed: %s", err, exc_info=True)
-    app = None
+        # Step 3: Package adapter artifacts
+        run_ssh_streaming(
+            "tar -czf /workspace/adapter.tar.gz -C /workspace/adapter .",
+            "Compress Adapter Artifacts",
+        )
+
+        # Step 4: Download adapter archive via SFTP
+        output_dir.mkdir(parents=True, exist_ok=True)
+        local_archive = output_dir / "adapter.tar.gz"
+        logger.info("Downloading adapter package to %s...", local_archive)
+
+        sftp = ssh.open_sftp()
+        try:
+            sftp.get("/workspace/adapter.tar.gz", str(local_archive))
+        finally:
+            sftp.close()
+
+        ssh.close()
+
+        logger.info("Extracting adapter package into %s...", output_dir)
+        import tarfile
+
+        with tarfile.open(local_archive, "r:gz") as tar:
+            tar.extractall(path=str(output_dir))
+        if local_archive.exists():
+            local_archive.unlink()
+
+        stats_path = output_dir / "train_stats.json"
+        if stats_path.exists():
+            try:
+                stats = json.loads(stats_path.read_text(encoding="utf-8"))
+            except Exception:
+                stats = {"status": "success", "note": "adapter downloaded"}
+        else:
+            stats = {"status": "success", "note": "adapter downloaded"}
+
+        logger.info("Successfully fetched RunPod training artifacts. Stats: %s", stats)
+        return stats
+
+    finally:
+        logger.info("Terminating RunPod instance %s to prevent idle compute costs...", pod_id)
+        try:
+            runpod.terminate_pod(pod_id)
+            logger.info("RunPod instance %s successfully terminated.", pod_id)
+        except Exception as e:
+            logger.error("Failed to terminate RunPod instance %s: %s", pod_id, e)
 
 
 def main() -> None:
@@ -361,7 +527,7 @@ def main() -> None:
     parser.add_argument("--epochs", type=int, default=3)
     parser.add_argument("--batch-size", type=int, default=2)
     parser.add_argument("--lr", type=float, default=2e-4)
-    parser.add_argument("--backend", choices=["local", "modal", "cpu_dry_run"], default="local")
+    parser.add_argument("--backend", choices=["runpod", "local", "cpu_dry_run", "modal"], default="runpod")
     parser.add_argument("--dry-run", action="store_true", help="Smoke test without GPU compute")
     args = parser.parse_args()
 
@@ -371,36 +537,22 @@ def main() -> None:
         return
 
     if args.backend == "modal":
-        if app is None:
-            logger.error(modal_init_error or "Modal SDK is not available. Install modal or use --backend local")
-            sys.exit(1)
-        logger.info("Dispatching training job to Modal Labs serverless A10G GPU...")
-        dataset_text = args.dataset.read_text(encoding="utf-8")
+        logger.warning("Modal backend has been deprecated and replaced with RunPod. Switching to RunPod backend.")
+        args.backend = "runpod"
+
+    if args.backend == "runpod":
+        logger.info("Dispatching training job to RunPod serverless GPU...")
         hf_token = os.environ.get("HF_TOKEN")
-        with app.run():
-            res = modal_train_entrypoint.remote(
-                dataset_content=dataset_text,
-                base_model=args.base_model,
-                epochs=args.epochs,
-                batch_size=args.batch_size,
-                learning_rate=args.lr,
-                hf_token=hf_token,
-            )
-
-        args.output_dir.mkdir(parents=True, exist_ok=True)
-        stats = res.get("stats", res) if isinstance(res, dict) else {}
-        (args.output_dir / "train_stats.json").write_text(json.dumps(stats, indent=2), encoding="utf-8")
-
-        if isinstance(res, dict) and "adapter_tar_gz" in res and res["adapter_tar_gz"]:
-            import io
-            import tarfile
-            tar_data = res["adapter_tar_gz"]
-            logger.info("Extracting %d bytes of adapter artifacts into %s...", len(tar_data), args.output_dir)
-            with tarfile.open(fileobj=io.BytesIO(tar_data), mode="r:gz") as tar:
-                tar.extractall(path=str(args.output_dir))
-            logger.info("Successfully extracted adapter artifacts to %s", args.output_dir)
-
-        print(f"Modal training complete: {stats}")
+        res = run_training_on_runpod(
+            dataset_path=args.dataset,
+            base_model=args.base_model,
+            output_dir=args.output_dir,
+            epochs=args.epochs,
+            batch_size=args.batch_size,
+            learning_rate=args.lr,
+            hf_token=hf_token,
+        )
+        print(f"RunPod training complete: {res}")
         return
 
     # Default: local training
