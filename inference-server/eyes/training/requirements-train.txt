@@ -1,5 +1,5 @@
 # Dependencies for Eyes Model Training, Evaluation, and GGUF Export
-torch>=2.2.0
+torch>=2.5.0
 transformers>=5.5.0
 peft>=0.11.0,<1.0.0
 accelerate>=0.34.0,<1.0.0

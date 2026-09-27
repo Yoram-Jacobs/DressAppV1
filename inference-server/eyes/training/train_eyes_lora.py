@@ -569,8 +569,9 @@ def run_training_on_runpod(
                 err_text = stderr.read().decode("utf-8", errors="replace").strip()
                 raise RuntimeError(f"Step '{label}' failed with exit code {exit_status}. Details: {err_text}")
 
-        # Step 1: Install Python dependencies
+        # Step 1: Install Python dependencies (ensuring PyTorch >= 2.5 with CUDA 12.4 support)
         run_ssh_streaming(
+            "pip install --no-cache-dir 'torch>=2.5.0' 'torchvision>=0.20.0' --extra-index-url https://download.pytorch.org/whl/cu124 && "
             "pip install --no-cache-dir -r /workspace/requirements-train.txt",
             "Install QLoRA Training Dependencies",
         )

@@ -83,7 +83,7 @@ jobs:
       - name: Install Training Dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -r inference-server/eyes/training/requirements-train.txt
+          pip install -r inference-server/eyes/training/requirements-train.txt --extra-index-url https://download.pytorch.org/whl/cpu
 
       - name: Ingest Annotations & Compile SFT Splits
         run: |
@@ -118,7 +118,7 @@ jobs:
       - name: Install Training & Evaluation Dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -r inference-server/eyes/training/requirements-train.txt
+          pip install -r inference-server/eyes/training/requirements-train.txt --extra-index-url https://download.pytorch.org/whl/cpu
 
       - name: Download Processed Dataset
         uses: actions/download-artifact@v4
@@ -190,7 +190,7 @@ jobs:
       - name: Install Tooling Dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -r inference-server/eyes/training/requirements-train.txt
+          pip install -r inference-server/eyes/training/requirements-train.txt --extra-index-url https://download.pytorch.org/whl/cpu
 
       - name: Download Adapter & Metrics
         uses: actions/download-artifact@v4
