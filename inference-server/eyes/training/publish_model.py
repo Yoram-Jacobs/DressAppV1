@@ -24,13 +24,15 @@ logger = logging.getLogger("publish_model")
 
 def load_env_credentials() -> None:
     """Loads environment variables from local .env files if present and normalizes token aliases."""
+    file_resolved = Path(__file__).resolve()
     candidates = [
         Path(".env"),
         Path("deploy/.env"),
         Path("backend/.env"),
-        Path(__file__).resolve().parent / ".env",
-        Path(__file__).resolve().parents[3] / ".env",
     ]
+    for p in file_resolved.parents:
+        candidates.append(p / ".env")
+
     for c in candidates:
         if c.exists():
             try:

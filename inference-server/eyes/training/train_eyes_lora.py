@@ -26,13 +26,15 @@ logger = logging.getLogger("train_eyes_lora")
 
 def load_env_credentials() -> None:
     """Loads environment variables from local .env files if present and normalizes token aliases."""
+    file_resolved = Path(__file__).resolve()
     candidates = [
         Path(".env"),
         Path("deploy/.env"),
         Path("backend/.env"),
-        Path(__file__).resolve().parent / ".env",
-        Path(__file__).resolve().parents[3] / ".env",
     ]
+    for p in file_resolved.parents:
+        candidates.append(p / ".env")
+
     for c in candidates:
         if c.exists():
             try:
@@ -251,15 +253,23 @@ def train_lora_native(
             formatted.append(conv_str)
         return formatted
 
-    trainer = SFTTrainer(
-        model=model,
-        train_dataset=dataset,
-        peft_config=None,
-        formatting_func=format_prompts,
-        max_seq_length=max_seq_length,
-        tokenizer=processor.tokenizer if hasattr(processor, "tokenizer") else processor,
-        args=training_args,
-    )
+    import inspect
+    tok = processor.tokenizer if hasattr(processor, "tokenizer") else processor
+    sft_params = inspect.signature(SFTTrainer.__init__).parameters
+    sft_kwargs = {
+        "model": model,
+        "train_dataset": dataset,
+        "peft_config": None,
+        "formatting_func": format_prompts,
+        "max_seq_length": max_seq_length,
+        "args": training_args,
+    }
+    if "processing_class" in sft_params:
+        sft_kwargs["processing_class"] = tok
+    elif "tokenizer" in sft_params:
+        sft_kwargs["tokenizer"] = tok
+
+    trainer = SFTTrainer(**sft_kwargs)
 
     logger.info("Commencing QLoRA training for %d epochs...", epochs)
     start_time = time.time()
