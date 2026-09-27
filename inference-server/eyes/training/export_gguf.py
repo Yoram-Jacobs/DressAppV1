@@ -23,6 +23,46 @@ from typing import Any
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 logger = logging.getLogger("export_gguf")
 
+
+def load_env_credentials() -> None:
+    """Loads environment variables from local .env files if present and normalizes token aliases."""
+    file_resolved = Path(__file__).resolve()
+    candidates = [
+        Path(".env"),
+        Path("deploy/.env"),
+        Path("backend/.env"),
+    ]
+    for p in file_resolved.parents:
+        candidates.append(p / ".env")
+
+    for c in candidates:
+        if c.exists():
+            try:
+                for line in c.read_text(encoding="utf-8", errors="ignore").splitlines():
+                    line = line.strip()
+                    if line and not line.startswith("#") and "=" in line:
+                        k, v = line.split("=", 1)
+                        k = k.strip()
+                        v = v.strip().strip("'\"")
+                        if k and k not in os.environ:
+                            os.environ[k] = v
+            except Exception:
+                pass
+
+    # Normalize HF Token aliases (supports EYES_HF_TOKEN, HF_WRITE, HF-WRITE, HF_TOKEN)
+    hf_val = (
+        os.environ.get("EYES_HF_TOKEN")
+        or os.environ.get("HF_TOKEN")
+        or os.environ.get("HF_WRITE")
+        or os.environ.get("HF-WRITE")
+    )
+    if hf_val and "HF_TOKEN" not in os.environ:
+        os.environ["HF_TOKEN"] = hf_val
+
+
+# Initialize environment credentials
+load_env_credentials()
+
 GGUF_MAGIC = b"GGUF"  # 0x46554747 in little-endian
 
 
@@ -131,19 +171,21 @@ def export_gguf(
 
     model_cls = resolve_vlm_model_class()
     logger.info("Loading base model %s for merge using %s...", base_model, model_cls.__name__)
+    token = os.environ.get("HF_TOKEN")
     base = model_cls.from_pretrained(
         base_model,
         torch_dtype=torch.bfloat16,
         device_map="cpu",
+        token=token,
         trust_remote_code=True,
     )
     processor = None
     try:
-        processor = AutoProcessor.from_pretrained(base_model, trust_remote_code=True)
+        processor = AutoProcessor.from_pretrained(base_model, token=token, trust_remote_code=True)
     except Exception as exc:
         logger.warning("AutoProcessor failed (%s); falling back to AutoTokenizer...", exc)
         from transformers import AutoTokenizer
-        processor = AutoTokenizer.from_pretrained(base_model, trust_remote_code=True)
+        processor = AutoTokenizer.from_pretrained(base_model, token=token, trust_remote_code=True)
 
     logger.info("Merging LoRA adapter from %s...", adapter_dir)
     merged_model = PeftModel.from_pretrained(base, str(adapter_dir))

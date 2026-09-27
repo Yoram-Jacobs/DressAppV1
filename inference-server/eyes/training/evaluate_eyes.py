@@ -16,6 +16,7 @@ from __future__ import annotations
 import argparse
 import json
 import logging
+import os
 import sys
 from pathlib import Path
 from typing import Any
@@ -24,6 +25,46 @@ from pydantic import BaseModel, Field
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 logger = logging.getLogger("evaluate_eyes")
+
+
+def load_env_credentials() -> None:
+    """Loads environment variables from local .env files if present and normalizes token aliases."""
+    file_resolved = Path(__file__).resolve()
+    candidates = [
+        Path(".env"),
+        Path("deploy/.env"),
+        Path("backend/.env"),
+    ]
+    for p in file_resolved.parents:
+        candidates.append(p / ".env")
+
+    for c in candidates:
+        if c.exists():
+            try:
+                for line in c.read_text(encoding="utf-8", errors="ignore").splitlines():
+                    line = line.strip()
+                    if line and not line.startswith("#") and "=" in line:
+                        k, v = line.split("=", 1)
+                        k = k.strip()
+                        v = v.strip().strip("'\"")
+                        if k and k not in os.environ:
+                            os.environ[k] = v
+            except Exception:
+                pass
+
+    # Normalize HF Token aliases (supports EYES_HF_TOKEN, HF_WRITE, HF-WRITE, HF_TOKEN)
+    hf_val = (
+        os.environ.get("EYES_HF_TOKEN")
+        or os.environ.get("HF_TOKEN")
+        or os.environ.get("HF_WRITE")
+        or os.environ.get("HF-WRITE")
+    )
+    if hf_val and "HF_TOKEN" not in os.environ:
+        os.environ["HF_TOKEN"] = hf_val
+
+
+# Initialize environment credentials
+load_env_credentials()
 
 
 # ---------------------------------------------------------------------------
@@ -116,11 +157,12 @@ def try_load_adapter_model(
         import transformers
 
         logger.info("Loading fine-tuned adapter from %s for live inference verification...", adapter_dir)
+        token = os.environ.get("HF_TOKEN")
         processor = None
         try:
-            processor = transformers.AutoProcessor.from_pretrained(base_model, trust_remote_code=True)
+            processor = transformers.AutoProcessor.from_pretrained(base_model, token=token, trust_remote_code=True)
         except Exception:
-            processor = transformers.AutoTokenizer.from_pretrained(base_model, trust_remote_code=True)
+            processor = transformers.AutoTokenizer.from_pretrained(base_model, token=token, trust_remote_code=True)
 
         model_cls = None
         for cand in [
@@ -141,6 +183,7 @@ def try_load_adapter_model(
             base_model,
             torch_dtype=torch.float16 if torch.cuda.is_available() else torch.float32,
             device_map="auto" if torch.cuda.is_available() else "cpu",
+            token=token,
             trust_remote_code=True,
         )
         model = PeftModel.from_pretrained(model, str(adapter_dir))

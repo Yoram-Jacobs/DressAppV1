@@ -216,10 +216,11 @@ def train_lora_native(
     )
 
     # Load processor or fallback to tokenizer
+    token = os.environ.get("HF_TOKEN")
     processor = None
     try:
         logger.info("Attempting to load AutoProcessor for %s...", base_model)
-        processor = AutoProcessor.from_pretrained(base_model, trust_remote_code=True)
+        processor = AutoProcessor.from_pretrained(base_model, token=token, trust_remote_code=True)
         logger.info("AutoProcessor loaded successfully: %s", type(processor).__name__)
     except Exception as exc:
         logger.warning(
@@ -227,7 +228,7 @@ def train_lora_native(
             exc,
         )
         from transformers import AutoTokenizer
-        processor = AutoTokenizer.from_pretrained(base_model, trust_remote_code=True)
+        processor = AutoTokenizer.from_pretrained(base_model, token=token, trust_remote_code=True)
         logger.info("AutoTokenizer loaded successfully: %s", type(processor).__name__)
 
     if hasattr(processor, "pad_token") and processor.pad_token is None:
@@ -256,6 +257,7 @@ def train_lora_native(
                 base_model,
                 quantization_config=bnb_config,
                 device_map="auto",
+                token=token,
                 trust_remote_code=True,
             )
             logger.info("Successfully loaded base model %s using %s", base_model, cand)
@@ -313,17 +315,45 @@ def train_lora_native(
         report_to="none",
     )
 
-    def format_prompts(batch: dict[str, list[Any]]) -> list[str]:
-        formatted = []
-        for msgs in batch["messages"]:
+    def format_prompts(batch: dict[str, Any] | list[Any]) -> list[str] | str:
+        raw_msgs = batch.get("messages", []) if isinstance(batch, dict) else batch
+        if not raw_msgs:
+            return [] if isinstance(batch, dict) and isinstance(batch.get("messages"), list) and batch.get("messages") and isinstance(batch.get("messages")[0], list) else ""
+
+        if isinstance(raw_msgs, list) and len(raw_msgs) > 0 and isinstance(raw_msgs[0], list):
+            formatted = []
+            for msgs in raw_msgs:
+                if hasattr(processor, "apply_chat_template"):
+                    try:
+                        formatted.append(processor.apply_chat_template(msgs, tokenize=False))
+                        continue
+                    except Exception:
+                        pass
+                conv_str = ""
+                for m in msgs:
+                    if not isinstance(m, dict):
+                        continue
+                    role = m.get("role", "user")
+                    content = m.get("content", "")
+                    if isinstance(content, list):
+                        text_parts = [
+                            p.get("text", "") for p in content if isinstance(p, dict) and p.get("type") == "text"
+                        ]
+                        content = " ".join(text_parts)
+                    conv_str += f"<|{role}|>\n{content}\n"
+                formatted.append(conv_str)
+            return formatted
+        else:
+            msgs = raw_msgs
             if hasattr(processor, "apply_chat_template"):
                 try:
-                    formatted.append(processor.apply_chat_template(msgs, tokenize=False))
-                    continue
+                    return processor.apply_chat_template(msgs, tokenize=False)
                 except Exception:
                     pass
             conv_str = ""
             for m in msgs:
+                if not isinstance(m, dict):
+                    continue
                 role = m.get("role", "user")
                 content = m.get("content", "")
                 if isinstance(content, list):
@@ -332,8 +362,7 @@ def train_lora_native(
                     ]
                     content = " ".join(text_parts)
                 conv_str += f"<|{role}|>\n{content}\n"
-            formatted.append(conv_str)
-        return formatted
+            return conv_str
 
     import inspect
     tok = processor.tokenizer if hasattr(processor, "tokenizer") else processor
@@ -569,9 +598,10 @@ def run_training_on_runpod(
                 err_text = stderr.read().decode("utf-8", errors="replace").strip()
                 raise RuntimeError(f"Step '{label}' failed with exit code {exit_status}. Details: {err_text}")
 
-        # Step 1: Install Python dependencies (ensuring PyTorch >= 2.5 with CUDA 12.4 support)
+        # Step 1: Install Python dependencies (ensuring PyTorch >= 2.5 with CUDA 12.4 support & synchronized torchaudio)
         run_ssh_streaming(
-            "pip install --no-cache-dir 'torch>=2.5.0' 'torchvision>=0.20.0' --extra-index-url https://download.pytorch.org/whl/cu124 && "
+            "pip uninstall -y torchaudio && "
+            "pip install --no-cache-dir 'torch>=2.5.0' 'torchvision>=0.20.0' 'torchaudio>=2.5.0' --extra-index-url https://download.pytorch.org/whl/cu124 && "
             "pip install --no-cache-dir -r /workspace/requirements-train.txt",
             "Install QLoRA Training Dependencies",
         )
