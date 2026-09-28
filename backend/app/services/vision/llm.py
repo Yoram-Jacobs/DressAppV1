@@ -173,7 +173,7 @@ SYSTEM_PROMPT = (
     "Taxonomy & Extraction Rules:\n"
     "• Subcategory: NEVER output generic 'Top', 'Tops', 'Bottom', 'Clothing', or category name as sub_category or item_type! Choose specific cut: for Tops ALWAYS use 'Blouse', 'Shirt', 'T-Shirt', 'Tank Top', 'Sweater', 'Hoodie', 'Polo'. For Bottoms: 'Jeans', 'Pants', 'Shorts', 'Skirt'.\n"
     "• Item Type vs Subcategory: item_type and sub_category MUST NEVER be identical! sub_category is the broad classification (e.g. 'T-Shirt', 'Shirt', 'Jeans', 'Coat'), while item_type MUST be the specific cut or style (e.g. 'Short-Sleeve T-Shirt', 'Crew-Neck T-Shirt', 'V-Neck T-Shirt', 'Cap-Sleeve Top', 'Oversized Tee', 'Button-Down Shirt', 'Skinny Jeans', 'Trench Coat'). Never output the same string for both.\n"
-    "• Gender: Cap sleeves, flutter sleeves, puff shoulders, sweetheart/scoop/curved necklines, fitted silhouettes, or feminine tops MUST be 'women', NOT 'unisex'. 'unisex' is strictly reserved for boxy, oversized, neutral heavy straight-cut tees. When in doubt on tops and tees with short or cap sleeves, ALWAYS choose 'women'.\n"
+    "• Gender: Analyze the garment's cut, tailoring, silhouette, and styling intent ('men', 'women', 'unisex', 'kids'). Choose 'women' only for distinctly feminine silhouettes (e.g. bust darts, sweetheart/peplum cuts, flutter/cap sleeves) or styles traditionally designed for women (dresses, skirts, blouses). Choose 'men' for traditional men's tailoring and masculine cuts. For standard t-shirts, straight-cut tops, hoodies, jeans, and neutral everyday apparel without distinct gendered tailoring, identify the garment's target intent. If the garment intent is unrecognized, default to {DEFAULT_GENDER_HINT}.\n"
     "• Colors: Use PRECISE, fine-grained fashion color names! DO NOT output generic 'Blue', 'Red', 'Green' when a distinct shade is visible. Use specific shades such as 'Light Blue', 'Sky Blue', 'Baby Blue', 'Navy', 'Cyan', 'Turquoise', 'Teal', 'Indigo', 'Mint Green', 'Olive', 'Sage', 'Burgundy', 'Coral', 'Peach', 'Lavender', 'Lilac', 'Cream', 'Beige', 'Charcoal', 'Off-White'. If output language is Hebrew, use precise Hebrew color names: 'תכלת' or 'כחול בהיר' for light/sky/baby blue, 'כחול כהה' for navy, 'טורקיז' for turquoise, 'מנטה' for mint, 'בורדו' for burgundy.\n"
     "• Pattern: Look VERY CLOSELY at the fabric surface. If there is ANY subtle repeating texture, heathered grain, eyelets, micro-dots, perforations, honeycomb, waffles, jacquard, embossed textures, or subtle geometric weaves/textures, output 'geometric' (or 'striped'/'plaid'/'floral'), NEVER 'solid'! 'solid' is STRICTLY for completely flat, mirror-smooth, untextured fabrics with zero texture or weave pattern.\n"
     "• Dress Code: ALWAYS populate ('casual', 'smart-casual', 'business', 'formal', 'athletic', 'loungewear').\n"
@@ -246,17 +246,18 @@ SYSTEM_PROMPT_ONE_PASS_SUFFIX = (
 )
 
 
-def _build_system_prompt(*, one_pass: bool) -> str:
+def _build_system_prompt(*, one_pass: bool = False, user_gender: str | None = None) -> str:
     """Return the full system prompt for an Eyes call.
 
-    ``one_pass=False`` returns the legacy prompt verbatim so existing
-    callers (per-crop analysis, reconstruction re-validate, the old
-    ``analyze_outfit``) keep working bit-for-bit. ``one_pass=True``
+    ``one_pass=False`` returns the base prompt. ``one_pass=True``
     appends the bbox-emission rules + one-shot example.
     """
+    from .validation import resolve_garment_gender
+    norm_gender = resolve_garment_gender(user_gender) or "unisex"
+    prompt = SYSTEM_PROMPT.replace("{DEFAULT_GENDER_HINT}", f"'{norm_gender}'")
     if one_pass:
-        return SYSTEM_PROMPT + SYSTEM_PROMPT_ONE_PASS_SUFFIX
-    return SYSTEM_PROMPT
+        return prompt + SYSTEM_PROMPT_ONE_PASS_SUFFIX
+    return prompt
 
 
 # ─────────────────────────────────────────────────────────────────────
@@ -446,8 +447,10 @@ def _language_directive(code: str | None) -> str:
     return ""
 
 
-def _user_prompt(code: str | None) -> str:
+def _user_prompt(code: str | None, user_gender: str | None = None) -> str:
     """Build the user-message prompt for ``analyze()``."""
+    from .validation import resolve_garment_gender
+    norm_gender = resolve_garment_gender(user_gender) or "unisex"
     base = (
         "Analyse this photograph. If one garment is visible return a single "
         "JSON object; if multiple garments are visible return a JSON array "
@@ -455,7 +458,7 @@ def _user_prompt(code: str | None) -> str:
         "Crucial rules: (1) item_type and sub_category MUST be distinct (e.g. sub_category='T-Shirt', item_type='Short-Sleeve T-Shirt' or 'Crew-Neck T-Shirt'). "
         "(2) Use fine-grained colors (e.g. 'Light Blue', 'Sky Blue', 'Navy', 'Olive Green', not generic 'Blue'/'Green'). "
         "(3) If fabric has ANY micro-dots, eyelets, perforations, honeycomb, waffle, heathering, or subtle texture/weave, set pattern='geometric', NEVER 'solid'. "
-        "(4) Fitted tops, scoop necks, curved cuts, or cap sleeves MUST be gender='women', never 'unisex'."
+        f"(4) Gender rule: Analyze garment tailoring and styling intent ('men', 'women', 'unisex', 'kids'). Choose 'women' only for distinctly feminine silhouettes/tailoring, 'men' for men's tailoring. For neutral everyday wear or if garment intent is unrecognized, default to '{norm_gender}'."
     )
     code = (code or "en").lower()
     if code == "en":
@@ -473,7 +476,7 @@ def _user_prompt(code: str | None) -> str:
             "Taxonomy rules for Hebrew: `sub_category` and `item_type` MUST be distinct (e.g. sub_category='חולצות טי', item_type='חולצת טי שרוול קצר'). "
             "Colors MUST be specific (e.g. 'תכלת' / 'כחול בהיר' for light blue, 'כחול שמיים' for sky blue, 'כחול כהה' for navy, 'טורקיז', 'מנטה', 'בורדו'). "
             "Pattern rule: inspect fabric for ANY micro-dots, eyelets, perforations, honeycomb, waffles, or subtle geometric weaves/textures — if present, ALWAYS set pattern='geometric', NEVER 'solid'. "
-            "Gender rule: cap sleeves, flutter sleeves, scoop neck, or feminine cuts MUST be gender='women', NOT 'unisex'. "
+            f"Gender rule: Analyze garment tailoring and styling intent ('men', 'women', 'unisex', 'kids'). Do not default standard tops to 'women'. If unrecognized or neutral everyday wear, default to '{norm_gender}'. "
             "JSON keys and enum tokens (`category`, `gender`, `dress_code`, "
             "`season`, `pattern`, `state`, `condition`, `quality`) stay in English.\n\n"
         )
@@ -718,6 +721,7 @@ def _build_batch_prompts(
     n: int,
     language: str | None,
     kind_hints: list[str | None] | None = None,
+    user_gender: str | None = None,
 ) -> tuple[str, str]:
     """Build ``(system_prompt, user_text)`` for a batched garment analysis.
 
@@ -811,7 +815,7 @@ def _build_batch_prompts(
         user_text = directive + user_text
 
     system_prompt = (
-        _build_system_prompt(one_pass=False)
+        _build_system_prompt(one_pass=False, user_gender=user_gender)
         + _language_directive(language)
         + (
             "\n\nBATCH MODE — You will be given multiple cropped "
@@ -1084,6 +1088,7 @@ async def call_gemma_space_stream_attributes(
     request_id: str | None = None,
     id_slot: int | None = None,
     is_single_item: bool = False,
+    user_gender: str | None = None,
 ) -> "AsyncIterator[tuple[str, list[str], dict[str, Any]]]":
     """Patch M23 — per-attribute streaming for Gemma on CPU.
 
@@ -1125,7 +1130,7 @@ async def call_gemma_space_stream_attributes(
 
         # Use authoritative Gemini SYSTEM_PROMPT (exact prompt used by Gemini Flash)
         # Suffix with SegFormer category hint if available
-        sys_parts = [_build_system_prompt(one_pass=False)]
+        sys_parts = [_build_system_prompt(one_pass=False, user_gender=user_gender)]
         if segformer_category and not is_single_item:
             mapped_cat = None
             if segformer_category == "top":
@@ -1143,7 +1148,7 @@ async def call_gemma_space_stream_attributes(
                 sys_parts.append(f"\nSEGMENTATION HINT: SegFormer suggests '{mapped_cat}'.")
 
         system_prompt = "\n".join(sys_parts)
-        user_text = _user_prompt(language)
+        user_text = _user_prompt(language, user_gender=user_gender)
 
         import copy
         properties = {}
@@ -1230,8 +1235,8 @@ async def call_gemma_space_stream_attributes(
             if isinstance(parsed, list) and parsed:
                 parsed = parsed[0]
             if isinstance(parsed, dict) and len(parsed) >= 3:
-                parsed = _coerce_single_garment(parsed)
-                parsed = _coerce_enums(parsed)
+                parsed = _coerce_single_garment(parsed, user_gender=user_gender)
+                parsed = _coerce_enums(parsed, user_gender=user_gender)
                 for group_name, field_names, _, _ in ATTRIBUTE_GROUPS:
                     filtered = {k: v for k, v in parsed.items() if k in field_names}
                     yield group_name, field_names, filtered

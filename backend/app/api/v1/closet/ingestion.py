@@ -477,6 +477,8 @@ async def analyze_item_image(
         or (user or {}).get("preferred_language")
         or "en"
     )
+    from app.services.vision import resolve_garment_gender
+    user_gender = resolve_garment_gender(user)
 
     # Patch M19 (May 2026) — Streaming NDJSON variant. When the client
     # opts in via ``Accept: application/x-ndjson``, we stream
@@ -510,7 +512,7 @@ async def analyze_item_image(
 
             try:
                 streamer = active_vision.analyze_outfits_stream(
-                    raw_list, language=user_lang, cutout_only=payload.cutout_only,
+                    raw_list, language=user_lang, cutout_only=payload.cutout_only, user_gender=user_gender,
                 )
 
                 items_meta: list[dict[str, Any]] = []
@@ -619,7 +621,7 @@ async def analyze_item_image(
             items_out: list[dict[str, Any]] = []
             items_meta: list[dict[str, Any]] = []
             streamer = active_vision.analyze_outfits_stream(
-                raw_list, language=user_lang, cutout_only=payload.cutout_only,
+                raw_list, language=user_lang, cutout_only=payload.cutout_only, user_gender=user_gender,
             )
             from app.services.vision import _is_unidentifiable
 

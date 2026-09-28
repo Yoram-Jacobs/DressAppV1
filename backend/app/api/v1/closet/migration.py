@@ -45,6 +45,8 @@ async def _run_reanalyze_items(
         logger.warning("[migration] No vision service available for user %s", (user or {}).get("id"))
         return
     user_lang = (user or {}).get("preferred_language") or "en"
+    from app.services.vision import resolve_garment_gender
+    user_gender = resolve_garment_gender(user)
     imported = 0
     skipped = 0
     all_items: list[dict[str, Any]] = []
@@ -73,7 +75,7 @@ async def _run_reanalyze_items(
 
             try:
                 async with _ANALYZE_LOCK:
-                    parsed = await active_vision.analyze(raw, language=user_lang)
+                    parsed = await active_vision.analyze(raw, language=user_lang, user_gender=user_gender)
             except Exception as exc:
                 logger.warning("[migration] Re-analyze failed for %s: %s", item_id, exc)
                 skipped += 1

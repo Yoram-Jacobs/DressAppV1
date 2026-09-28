@@ -4,10 +4,35 @@ logger = logging.getLogger(__name__)
 
 from typing import Any
 
+_VALID_GENDER = {"men", "women", "unisex", "kids"}
+_GENDER_ALIASES = {
+    "male": "men", "man": "men", "m": "men", "זכר": "men", "גבר": "men",
+    "female": "women", "woman": "women", "f": "women", "w": "women", "נקבה": "women", "אישה": "women",
+    "uni": "unisex",
+    "kid": "kids", "child": "kids", "children": "kids", "ילד": "kids", "ילדים": "kids",
+}
+
+
+def resolve_garment_gender(val: Any) -> str | None:
+    """Normalize user object, dict, or raw string to 'men' | 'women' | 'unisex' | 'kids' | None."""
+    if not val:
+        return None
+    if isinstance(val, dict):
+        raw = val.get("gender") or val.get("sex") or val.get("avatar_gender")
+    else:
+        raw = val
+    if not raw:
+        return None
+    s = str(raw).strip().lower()
+    if s in _VALID_GENDER:
+        return s
+    return _GENDER_ALIASES.get(s)
+
 
 
 def _coerce_single_garment(
     parsed: dict[str, Any] | list[dict[str, Any]],
+    user_gender: str | None = None,
 ) -> dict[str, Any]:
     """Collapse a list-of-garments response into the single-item contract.
 
@@ -155,23 +180,31 @@ def _coerce_single_garment(
         elif res.get("item_type") and not str(res.get("item_type")).endswith("s"):
             res["item_type"] = f"{res['item_type']}s"
 
-    # Gender inference fallback (don't leave women's pieces as unisex)
-    g_val = (res.get("gender") or "").strip().lower()
-    if g_val in {"unisex", "", None}:
-        fem_cues = {
-            "dress", "skirt", "blouse", "heels", "pumps", "knee-high boots",
-            "shoulder bag", "handbag", "tote bag", "clutch", "cap sleeve",
-            "cap-sleeve", "flutter sleeve", "peplum", "sweetheart", "ruffle",
-            "scoop neck", "boat neck", "curved hem", "fitted", "light blue",
-            "baby blue", "pastel", "תכלת", "עדינה", "נשים",
-            "בלוזה", "שמלה", "חצאית", "גופיית", "עקבים"
-        }
-        full_text_fem = f"{sub_lower} {itype_lower} {res.get('name', '')} {res.get('title', '')} {res.get('caption', '')}".lower()
-        size_upper = str(res.get("size") or "").strip().upper()
-        is_fem_size = size_upper in {"XS", "S", "XXS", "34", "36", "38"}
-        is_fem_top = cat_lower == "top" and (is_fem_size or any(c in full_text_fem for c in ("cap", "flutter", "scoop", "light blue", "תכלת", "עדינ", "קצרצר")))
-        if cat_lower in {"full body", "dress"} or is_fem_top or any(c in full_text_fem for c in fem_cues):
-            res["gender"] = "women"
+    # Gender inference: analyze tailoring intent and respect user gender fallback
+    norm_user = resolve_garment_gender(user_gender)
+    raw_g = (res.get("gender") or "").strip().lower()
+    g_val = _GENDER_ALIASES.get(raw_g, raw_g)
+
+    # Distinctly feminine cuts
+    fem_cuts = {
+        "dress", "skirt", "blouse", "heels", "pumps", "knee-high boots",
+        "peplum", "sweetheart", "bra", "camisole",
+        "בלוזה", "שמלה", "חצאית", "עקבים",
+    }
+    # Distinctly masculine cuts
+    masc_cuts = {
+        "boxers", "briefs", "tuxedo", "בוקסר", "טוקסידו",
+    }
+
+    if cat_lower in {"full body", "dress"} or sub_lower in fem_cuts or itype_lower in fem_cuts:
+        res["gender"] = "women"
+    elif sub_lower in masc_cuts or itype_lower in masc_cuts:
+        res["gender"] = "men"
+    elif g_val in _VALID_GENDER:
+        res["gender"] = g_val
+    else:
+        # Unrecognized gender — default to user profile gender if known, otherwise unisex
+        res["gender"] = norm_user or "unisex"
 
     # Color refinement: upgrade generic "blue" / "כחול" to specific fine-grained shade if hinted
     full_color_text = f"{res.get('name', '')} {res.get('title', '')} {res.get('caption', '')} {' '.join(res.get('tags') or [])}".lower()
@@ -399,9 +432,6 @@ def _coerce_seasons(parsed: dict[str, Any]) -> None:
 # Alias tables for the model's common off-spec echoes. Keeping these at
 # module scope lets us unit-test them directly without instantiating the
 # vision service.
-_GENDER_ALIASES = {
-    "male": "men", "female": "women", "uni": "unisex", "kid": "kids",
-}
 _CONDITION_ALIASES = {"poor": "bad", "very-good": "excellent"}
 _QUALITY_ALIASES = {
     "cheap": "budget", "entry": "budget", "basic": "budget",
@@ -423,16 +453,23 @@ def _normalise_dress_code(raw: str | None) -> str | None:
     return value
 
 
-def _coerce_enums(parsed: dict[str, Any]) -> dict[str, Any]:
+def _coerce_enums(
+    parsed: dict[str, Any],
+    user_gender: str | None = None,
+) -> dict[str, Any]:
     """Best-effort coercion of AI-returned enum values.
 
     * Unknown / empty values are defaulted to sensible fallbacks rather than
       dropped, so the user never sees empty dashes ("—").
     * ``state`` defaults to ``used``; the user can flip to ``new`` in the form.
+    * ``gender`` defaults to user's profile gender if unrecognized, else 'unisex'.
     """
+    norm_user = resolve_garment_gender(user_gender)
     _coerce_enum_field(
-        parsed, "gender", _VALID_GENDER, aliases=_GENDER_ALIASES,
+        parsed, "gender", _VALID_GENDER, aliases=_GENDER_ALIASES, default=norm_user or "unisex",
     )
+    if not parsed.get("gender"):
+        parsed["gender"] = norm_user or "unisex"
     parsed["dress_code"] = (
         _normalise_dress_code(parsed.get("dress_code"))
         if _normalise_dress_code(parsed.get("dress_code")) in _VALID_DRESS_CODE

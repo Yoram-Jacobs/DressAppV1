@@ -5,3 +5,4 @@ from .service import (
     get_garment_vision_service as get_garment_vision_service,
 )
 from .geometry import _is_unidentifiable as _is_unidentifiable, _looks_already_cropped as _looks_already_cropped
+from .validation import resolve_garment_gender as resolve_garment_gender
