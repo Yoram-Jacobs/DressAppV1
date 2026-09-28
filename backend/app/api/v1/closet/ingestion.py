@@ -491,39 +491,23 @@ async def analyze_item_image(
     wants_ndjson = "application/x-ndjson" in accept or "text/event-stream" in accept
 
     if wants_ndjson:
-        async def _ndjson_stream():
-            # Frame producer — translates ``analyze_outfits_stream``
-            # frames into NDJSON lines + the per-item augmentation
-            # the existing closet save flow expects.
-            #
-            # Patch M22 (Aug 2026) — Split lock scope.
-            # The original implementation held ``_ANALYZE_LOCK`` for the
-            # entire generator (detect → LLM items).  When Gemma is the
-            # active provider each inference takes ~80 s on CPU, so a
-            # concurrent request would block here before emitting the
-            # detect frame — zero placeholder cards, zero loading
-            # indicator — giving the user the impression that the
-            # analysis was silently killed.
-            #
-            # Fix: run detect + emit the detect frame *outside* the lock,
-            # then acquire the lock only for the slow LLM item calls.
-            # This matches the intent of _ANALYZE_LOCK (guard GPU/CPU-
-            # intensive model calls) without blocking fast detect IO.
+        queue: asyncio.Queue[dict[str, Any] | None] = asyncio.Queue()
 
+        async def _run_analysis_pipeline() -> None:
+            saved_items_count = 0
             try:
                 streamer = active_vision.analyze_outfits_stream(
                     raw_list, language=user_lang, cutout_only=payload.cutout_only, user_gender=user_gender,
                 )
-
                 items_meta: list[dict[str, Any]] = []
 
                 async for frame in streamer:
                     ftype = frame.get("type")
                     if ftype == "detect":
                         items_meta = frame.get("items_meta") or []
-                        yield (json.dumps(frame, ensure_ascii=False) + "\n").encode("utf-8")
+                        await queue.put(frame)
                     elif ftype == "field":
-                        yield (json.dumps(frame, ensure_ascii=False) + "\n").encode("utf-8")
+                        await queue.put(frame)
                     elif ftype == "item":
                         idx = frame.get("index", -1)
                         meta = (
@@ -536,17 +520,83 @@ async def analyze_item_image(
                             _is_unidentifiable,
                         )
                         if _is_unidentifiable(analysis):
-                            out_frame = {
+                            await queue.put({
                                 "type": "item_skip",
                                 "index": idx,
                                 "image_index": frame.get("image_index"),
                                 "reason": "unidentifiable",
-                            }
+                            })
                         else:
+                            # Auto-save item directly into closet so closing page/app never loses progress
+                            saved_doc = None
+                            try:
+                                from app.api.v1.closet.common import CreateItemIn
+                                from app.api.v1.closet.items import save_closet_item_document
+
+                                raw_colors = analysis.get("colors") or []
+                                norm_colors = []
+                                if isinstance(raw_colors, list):
+                                    for c in raw_colors:
+                                        if isinstance(c, dict) and c.get("name"):
+                                            norm_colors.append(c)
+                                        elif isinstance(c, str):
+                                            norm_colors.append({"name": c, "pct": None})
+
+                                raw_fabrics = analysis.get("fabric_materials") or []
+                                norm_fabrics = []
+                                if isinstance(raw_fabrics, list):
+                                    for f in raw_fabrics:
+                                        if isinstance(f, dict) and f.get("name"):
+                                            norm_fabrics.append(f)
+                                        elif isinstance(f, str):
+                                            norm_fabrics.append({"name": f, "pct": None})
+
+                                item_in = CreateItemIn(
+                                    source="Private",
+                                    name=analysis.get("name") or analysis.get("title") or "Unnamed Garment",
+                                    title=analysis.get("title") or analysis.get("name") or "Unnamed Garment",
+                                    caption=analysis.get("caption"),
+                                    category=analysis.get("category") or "Top",
+                                    sub_category=analysis.get("sub_category"),
+                                    item_type=analysis.get("item_type"),
+                                    brand=analysis.get("brand"),
+                                    gender=analysis.get("gender"),
+                                    dress_code=analysis.get("dress_code"),
+                                    season=analysis.get("season") or [],
+                                    tradition=analysis.get("tradition"),
+                                    size=analysis.get("size"),
+                                    color=analysis.get("color") or (norm_colors[0]["name"] if norm_colors else None),
+                                    colors=norm_colors,
+                                    material=analysis.get("material") or (norm_fabrics[0]["name"] if norm_fabrics else None),
+                                    fabric_materials=norm_fabrics,
+                                    pattern=analysis.get("pattern"),
+                                    state=analysis.get("state") or "used",
+                                    condition=analysis.get("condition") or "good",
+                                    quality=analysis.get("quality") or "mid",
+                                    price_cents=analysis.get("price_cents") or 2500,
+                                    tags=analysis.get("tags") or [],
+                                    crop_base64=meta.get("crop_base64"),
+                                    image_mime=meta.get("crop_mime", "image/jpeg"),
+                                    from_one_pass=True,
+                                    defer_matte=meta.get("defer_matte", False),
+                                )
+                                res = await save_closet_item_document(user, item_in)
+                                saved_doc = res.get("item") if isinstance(res, dict) else res
+                                saved_items_count += 1
+                                logger.info(
+                                    "Auto-saved analyzed item %s (%s - %s) to closet for user %s",
+                                    saved_doc.get("id"), saved_doc.get("category"), saved_doc.get("sub_category"), user["id"],
+                                )
+                            except Exception as save_err:
+                                logger.warning("Failed to auto-save item to closet: %s", save_err)
+
                             out_frame = {
                                 "type": "item",
                                 "index": idx,
                                 "image_index": frame.get("image_index"),
+                                "item_id": saved_doc.get("id") if saved_doc else None,
+                                "saved": bool(saved_doc),
+                                "item_doc": saved_doc,
                                 "label": meta.get("label"),
                                 "kind": meta.get("kind"),
                                 "bbox": meta.get("bbox"),
@@ -554,6 +604,9 @@ async def analyze_item_image(
                                 "crop_mime": meta.get(
                                     "crop_mime", "image/jpeg",
                                 ),
+                                "clean_image_url": saved_doc.get("clean_image_url") if saved_doc else None,
+                                "original_image_url": saved_doc.get("original_image_url") if saved_doc else None,
+                                "thumbnail_data_url": saved_doc.get("thumbnail_data_url") if saved_doc else None,
                                 "analysis": analysis,
                                 "potential_duplicate": None,
                                 "reconstruction_advised": False,
@@ -568,42 +621,53 @@ async def analyze_item_image(
                                     "reconstruction_reasons", [],
                                 ),
                             }
-                        yield (
-                            json.dumps(out_frame, ensure_ascii=False)
-                            + "\n"
-                        ).encode("utf-8")
+                            await queue.put(out_frame)
                     elif ftype == "item_skip":
-                        yield (
-                            json.dumps(frame, ensure_ascii=False) + "\n"
-                        ).encode("utf-8")
+                        await queue.put(frame)
                     elif ftype == "done":
-                        yield (
-                            json.dumps(frame, ensure_ascii=False) + "\n"
-                        ).encode("utf-8")
+                        await queue.put(frame)
                     elif ftype == "error":
-                        await try_refund()
-                        yield (
-                            json.dumps(frame, ensure_ascii=False) + "\n"
-                        ).encode("utf-8")
+                        if saved_items_count == 0:
+                            await try_refund()
+                        await queue.put(frame)
                         return
 
             except Exception as exc:  # noqa: BLE001
-                logger.exception("ndjson analyze stream error: %s", exc)
-                await try_refund()
-                yield (
-                    json.dumps(
-                        {
-                            "type": "error",
-                            "status": 503,
-                            "message": (
-                                "Garment analyzer hit an unexpected "
-                                "error. Please try again."
-                            ),
-                        },
-                        ensure_ascii=False,
-                    )
-                    + "\n"
-                ).encode("utf-8")
+                logger.exception("Background analyze pipeline error: %s", exc)
+                if saved_items_count == 0:
+                    await try_refund()
+                await queue.put(
+                    {
+                        "type": "error",
+                        "status": 503,
+                        "message": (
+                            "Garment analyzer hit an unexpected "
+                            "error. Please try again."
+                        ),
+                    }
+                )
+            finally:
+                await queue.put(None)
+
+        _track_task(asyncio.create_task(_run_analysis_pipeline()))
+
+        async def _ndjson_stream():
+            try:
+                while True:
+                    frame = await queue.get()
+                    if frame is None:
+                        break
+                    yield (
+                        json.dumps(frame, ensure_ascii=False) + "\n"
+                    ).encode("utf-8")
+                    if frame.get("type") in ("done", "error"):
+                        break
+            except (asyncio.CancelledError, GeneratorExit):
+                logger.info(
+                    "Client disconnected from /analyze stream for user %s; background pipeline continues to save items to closet.",
+                    user["id"],
+                )
+                raise
 
         return StreamingResponse(
             _ndjson_stream(),
@@ -656,13 +720,79 @@ async def analyze_item_image(
                     )
                     analysis = _safe_analysis(frame.get("analysis") or {})
                     if not _is_unidentifiable(analysis):
+                        saved_doc = None
+                        try:
+                            from app.api.v1.closet.common import CreateItemIn
+                            from app.api.v1.closet.items import save_closet_item_document
+
+                            raw_colors = analysis.get("colors") or []
+                            norm_colors = []
+                            if isinstance(raw_colors, list):
+                                for c in raw_colors:
+                                    if isinstance(c, dict) and c.get("name"):
+                                        norm_colors.append(c)
+                                    elif isinstance(c, str):
+                                        norm_colors.append({"name": c, "pct": None})
+
+                            raw_fabrics = analysis.get("fabric_materials") or []
+                            norm_fabrics = []
+                            if isinstance(raw_fabrics, list):
+                                for f in raw_fabrics:
+                                    if isinstance(f, dict) and f.get("name"):
+                                        norm_fabrics.append(f)
+                                    elif isinstance(f, str):
+                                        norm_fabrics.append({"name": f, "pct": None})
+
+                            item_in = CreateItemIn(
+                                source="Private",
+                                name=analysis.get("name") or analysis.get("title") or "Unnamed Garment",
+                                title=analysis.get("title") or analysis.get("name") or "Unnamed Garment",
+                                caption=analysis.get("caption"),
+                                category=analysis.get("category") or "Top",
+                                sub_category=analysis.get("sub_category"),
+                                item_type=analysis.get("item_type"),
+                                brand=analysis.get("brand"),
+                                gender=analysis.get("gender"),
+                                dress_code=analysis.get("dress_code"),
+                                season=analysis.get("season") or [],
+                                tradition=analysis.get("tradition"),
+                                size=analysis.get("size"),
+                                color=analysis.get("color") or (norm_colors[0]["name"] if norm_colors else None),
+                                colors=norm_colors,
+                                material=analysis.get("material") or (norm_fabrics[0]["name"] if norm_fabrics else None),
+                                fabric_materials=norm_fabrics,
+                                pattern=analysis.get("pattern"),
+                                state=analysis.get("state") or "used",
+                                condition=analysis.get("condition") or "good",
+                                quality=analysis.get("quality") or "mid",
+                                price_cents=analysis.get("price_cents") or 2500,
+                                tags=analysis.get("tags") or [],
+                                crop_base64=meta.get("crop_base64"),
+                                image_mime=meta.get("crop_mime", "image/jpeg"),
+                                from_one_pass=True,
+                                defer_matte=meta.get("defer_matte", False),
+                            )
+                            res = await save_closet_item_document(user, item_in)
+                            saved_doc = res.get("item") if isinstance(res, dict) else res
+                            logger.info(
+                                "Auto-saved analyzed item %s (%s - %s) to closet for user %s",
+                                saved_doc.get("id"), saved_doc.get("category"), saved_doc.get("sub_category"), user["id"],
+                            )
+                        except Exception as save_err:
+                            logger.warning("Failed to auto-save item to closet: %s", save_err)
+
                         items_out.append(
                             {
+                                "item_id": saved_doc.get("id") if saved_doc else None,
+                                "saved": bool(saved_doc),
                                 "label": meta.get("label"),
                                 "kind": meta.get("kind"),
                                 "bbox": meta.get("bbox"),
                                 "crop_base64": meta.get("crop_base64"),
                                 "crop_mime": meta.get("crop_mime", "image/jpeg"),
+                                "clean_image_url": saved_doc.get("clean_image_url") if saved_doc else None,
+                                "original_image_url": saved_doc.get("original_image_url") if saved_doc else None,
+                                "thumbnail_data_url": saved_doc.get("thumbnail_data_url") if saved_doc else None,
                                 "analysis": analysis,
                                 "potential_duplicate": None,
                                 "reconstruction_advised": False,

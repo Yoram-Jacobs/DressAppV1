@@ -158,3 +158,55 @@ async def test_gatekeep_image_returns_none_for_gemma_provider():
     service = GarmentVisionService(provider="gemma")
     count = await service._gatekeep_image(b"fake_image_bytes")
     assert count is None
+
+
+def test_enforce_segformer_category_bag_overrides_belt():
+    """When SegFormer detects label='bag' and model outputs 'Belt' / 'Textured Rope Belt Accessory', override to Bag."""
+    hallucinated_analysis = {
+        "name": "Textured Rope Belt Accessory",
+        "title": "Textured Rope Belt Accessory",
+        "category": "Accessories",
+        "sub_category": "Belt",
+        "item_type": "Belt",
+        "colors": ["beige"],
+    }
+    
+    fixed = _enforce_segformer_category(
+        hallucinated_analysis,
+        segformer_kind="accessory",
+        label="bag",
+        is_single_item=False,
+    )
+    
+    assert fixed["category"] == "Accessories"
+    assert fixed["sub_category"] == "Bag"
+    assert fixed["item_type"] == "Handbag"
+    assert "Belt" not in fixed["name"]
+    assert "Bag" in fixed["name"]
+    assert fixed["_subcategory_overridden_by"] == "segformer-bag"
+
+
+def test_enforce_segformer_category_shoes_overrides_ankle_boots():
+    """When SegFormer detects label='shoes' and model outputs 'Boots' / 'White Platform Ankle Boots', override to Sneakers."""
+    hallucinated_analysis = {
+        "name": "White Platform Ankle Boots",
+        "title": "White Platform Ankle Boots",
+        "category": "Footwear",
+        "sub_category": "Boots",
+        "item_type": "Boots",
+        "colors": ["white"],
+    }
+    
+    fixed = _enforce_segformer_category(
+        hallucinated_analysis,
+        segformer_kind="footwear",
+        label="shoes",
+        is_single_item=False,
+    )
+    
+    assert fixed["category"] == "Footwear"
+    assert fixed["sub_category"] == "Sneakers"
+    assert fixed["item_type"] == "Low-Top Sneakers"
+    assert "Boots" not in fixed["name"]
+    assert "Sneakers" in fixed["name"]
+    assert fixed["_subcategory_overridden_by"] == "segformer-shoes"

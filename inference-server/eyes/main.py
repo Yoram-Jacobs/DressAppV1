@@ -63,7 +63,7 @@ MMPROJ_FILE = os.environ.get("EYES_MMPROJ_FILE", "mmproj-BF16.gguf")
 HF_TOKEN = os.environ.get("EYES_HF_TOKEN")
 API_TOKEN = os.environ.get("EYES_API_TOKEN")
 
-N_THREADS = int(os.environ.get("LLAMA_THREADS", "2"))
+N_THREADS = int(os.environ.get("LLAMA_THREADS", "4"))
 N_CTX = int(os.environ.get("LLAMA_CTX_SIZE", "4096"))
 N_BATCH = int(os.environ.get("LLAMA_N_BATCH", "2048"))
 
@@ -245,13 +245,14 @@ def _build_llama_argv(model_path: Path, mmproj_path: Path | None) -> list[str]:
         "--port", str(LLAMA_INTERNAL_PORT),
         "--ctx-size", str(N_CTX),
         "--threads", str(N_THREADS),
+        "--threads-batch", str(N_THREADS),
         "--batch-size", str(N_BATCH),
-        "--ubatch-size", str(N_BATCH),
-        "--n-predict", "512",
+        "--ubatch-size", str(min(N_BATCH, 512)),
+        "--n-predict", "280",
         "--jinja",
         "--reasoning-budget", "0",
         "--chat-template-kwargs", '{"enable_thinking": false}',
-        "-fa", "off",
+        "-fa", "auto",
         "-sps", "0.0",
         "--media-path", "/",
         "--cache-prompt",

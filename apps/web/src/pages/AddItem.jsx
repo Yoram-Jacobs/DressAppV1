@@ -2722,6 +2722,9 @@ export default function AddItem() {
         const reconstructedUrl = recValidated
           ? `data:${rec.mime_type || "image/png"};base64,${rec.image_b64}`
           : null;
+        if (frame.item_id && frame.item_doc) {
+          closetStore.upsert(frame.item_doc);
+        }
         setCards((prev) =>
           prev.map((c) =>
             c.id === slotId
@@ -2729,6 +2732,8 @@ export default function AddItem() {
                 ...c,
                 status: "ready",
                 progress: 100,
+                serverItemId: frame.item_id || null,
+                saved: !!frame.saved,
                 fields: hydrate(frame.analysis || {}, user, t, i18n),
                 label:
                   frame.analysis?.sub_category ||
@@ -3040,9 +3045,10 @@ export default function AddItem() {
     const nowIso = new Date().toISOString();
     for (const { card, body } of validCards) {
       const tempId =
-        typeof crypto !== "undefined" && crypto.randomUUID
+        card.serverItemId ||
+        (typeof crypto !== "undefined" && crypto.randomUUID
           ? crypto.randomUUID()
-          : `tmp-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+          : `tmp-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`);
       // Use a data URL (not blob:) so the thumbnail survives the
       // AddItem unmount. blob: URLs are document-scoped and would
       // 404 the moment the user lands on /closet.
@@ -3099,6 +3105,7 @@ export default function AddItem() {
         title: optimisticItem.title,
         thumbnail: dataUrl,
         filename,
+        serverItemId: card.serverItemId || null,
       });
       closetStore.upsert(optimisticItem);
       // Visual state on the AddItem cards in case the user doesn't
@@ -3151,8 +3158,14 @@ export default function AddItem() {
       const tempIds = Array.from(ghosts.keys());
       const results = [];
       for (const tid of tempIds) {
+        const g = ghosts.get(tid);
         try {
-          const res = await createItemWithTimeout(ghosts.get(tid).body);
+          let res;
+          if (g?.serverItemId) {
+            res = await api.updateItem(g.serverItemId, g.body);
+          } else {
+            res = await createItemWithTimeout(g.body);
+          }
           results.push({ status: "fulfilled", value: res });
         } catch (err) {
           results.push({ status: "rejected", reason: err });

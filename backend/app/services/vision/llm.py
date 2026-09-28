@@ -1131,6 +1131,7 @@ async def call_gemma_space_stream_attributes(
         # Use authoritative Gemini SYSTEM_PROMPT (exact prompt used by Gemini Flash)
         # Suffix with SegFormer category hint if available
         sys_parts = [_build_system_prompt(one_pass=False, user_gender=user_gender)]
+        lbl_low = (segformer_label or "").lower()
         if segformer_category and (not is_single_item or segformer_category in ("footwear", "bottom", "accessory", "headwear", "bag")):
             mapped_cat = None
             if segformer_category == "top":
@@ -1146,6 +1147,11 @@ async def call_gemma_space_stream_attributes(
 
             if mapped_cat:
                 sys_parts.append(f"\nIMPORTANT SEGMENTATION CONTEXT: This cropped image is specifically the '{mapped_cat}' region isolated from a photo. Classify, name, and describe this specific {mapped_cat} item only, NOT surrounding clothing.")
+
+        if "bag" in lbl_low or segformer_category == "bag":
+            sys_parts.append("\nIMPORTANT CATEGORY RULE: This item is specifically a BAG / HANDBAG / TOTE BAG / BASKET BAG. Classify sub_category as 'Bag' or 'Tote Bag' or 'Handbag'. Do NOT classify it as a belt, scarf, or jewelry.")
+        elif ("shoe" in lbl_low or segformer_category == "footwear") and "boot" not in lbl_low:
+            sys_parts.append("\nIMPORTANT CATEGORY RULE: This item is specifically FOOTWEAR / SHOES / SNEAKERS. If it is low-cut, athletic, canvas, platform, or casual footwear, classify sub_category as 'Sneakers' or 'Shoes'. Do NOT classify low-cut shoes or sneakers as boots.")
 
         system_prompt = "\n".join(sys_parts)
         user_text = _user_prompt(language, user_gender=user_gender)
@@ -1167,6 +1173,17 @@ async def call_gemma_space_stream_attributes(
                         prop["enum"] = ["Footwear"]
                     elif segformer_category in ("headwear", "accessory", "bag"):
                         prop["enum"] = ["Accessories"]
+
+                if name == "sub_category":
+                    if "bag" in lbl_low or segformer_category == "bag":
+                        prop["enum"] = [
+                            "Bag", "Handbag", "Tote Bag", "Crossbody Bag", "Shoulder Bag",
+                            "Backpack", "Clutch", "Wicker Bag", "Basket Bag",
+                        ]
+                    elif ("shoe" in lbl_low or segformer_category == "footwear") and "boot" not in lbl_low:
+                        prop["enum"] = [
+                            "Sneakers", "Shoes", "Loafers", "Flats", "Heels", "Sandals", "Boots",
+                        ]
 
                 if name == "price_cents":
                     prop["type"] = "integer"
@@ -1225,7 +1242,7 @@ async def call_gemma_space_stream_attributes(
                 system_prompt=system_prompt,
                 user_text=user_text,
                 image_b64_jpeg=image_b64_jpeg,
-                max_tokens=500,
+                max_tokens=280,
                 temperature=0.0,
                 timeout=timeout_single,
                 json_schema=full_schema,

@@ -38,14 +38,19 @@ from app.api.v1.closet.common import (
 
 reanalyze_group_helper = closet_service.reanalyze_group_helper
 
-router = APIRouter(prefix="/closet", tags=["closet"])
+from .common import _track_task
 
-@router.post("", status_code=201)
-async def create_item(
+async def save_closet_item_document(
+    user: dict[str, Any],
     payload: CreateItemIn,
-    background_tasks: BackgroundTasks,
-    user: dict = Depends(get_current_user),
+    background_tasks: BackgroundTasks | None = None,
 ) -> dict[str, Any]:
+    def _schedule_bg(func, *args):
+        if background_tasks is not None:
+            background_tasks.add_task(func, *args)
+        else:
+            _track_task(asyncio.create_task(func(*args)))
+
     db = get_db()
     sub = user.get("subscription") or {}
     is_active = sub.get("is_active", False)
@@ -321,7 +326,7 @@ async def create_item(
         # Gemini analysis. The task chains the matte step first, then
         # merges the VLM result while honouring receipt_locked_fields.
         doc["clean_image_status"] = "pending"
-        background_tasks.add_task(
+        _schedule_bg(
             _run_background_matte_and_analyze,
             item_id_for_bg,
             raw_for_bg,
@@ -331,7 +336,7 @@ async def create_item(
     elif needs_bg_matte and raw_for_bg:
         # Standard single-pass or deferred-matte path (no Gemini analysis).
         doc["clean_image_status"] = "pending"
-        background_tasks.add_task(
+        _schedule_bg(
             _run_background_matte,
             item_id_for_bg,
             raw_for_bg,
@@ -354,7 +359,7 @@ async def create_item(
     # NEW: Trigger the Dynamic Transcoding Pipeline for BlurHash, WebP, AVIF
     if raw_bytes:
         from app.services.encoder_pipeline import process_image_pipeline
-        background_tasks.add_task(
+        _schedule_bg(
             process_image_pipeline,
             item_id_for_bg,
             user["id"],
@@ -398,7 +403,7 @@ async def create_item(
             "image_quality_reason": payload.image_quality_reason,
             "reconstruction_prompt": payload.reconstruction_prompt,
         }
-        background_tasks.add_task(
+        _schedule_bg(
             _run_background_reconstruction,
             doc["id"],
             raw_for_bg or raw_bytes,
@@ -523,6 +528,17 @@ async def create_item(
     await broadcast_sync_event(user["id"], "closet_updated", {"action": "create", "item_id": doc.get("id")})
 
     return doc
+
+
+router = APIRouter(prefix="/closet", tags=["closet"])
+
+@router.post("", status_code=201)
+async def create_item(
+    payload: CreateItemIn,
+    background_tasks: BackgroundTasks,
+    user: dict = Depends(get_current_user),
+) -> dict[str, Any]:
+    return await save_closet_item_document(user, payload, background_tasks)
 
 
 # ---------------------------------------------------------------------------

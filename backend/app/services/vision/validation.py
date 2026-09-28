@@ -629,9 +629,71 @@ def _enforce_segformer_category(
             analysis["category"] = default
             analysis["_category_overridden_by"] = "segformer-fill"
         return analysis
+    lbl_low = (label or "").lower()
+
     if current.lower() in allowed:
-        # Gemini's classification is compatible with SegFormer.
+        # Category is compatible with SegFormer, but check sub_category & item_type anchors
+        # (e.g. prevent straw basket bag from being classified as a Belt under Accessories,
+        # and prevent white low-top sneakers from being classified as Ankle Boots under Footwear).
+        if "bag" in lbl_low or kind == "bag":
+            sub_low = (analysis.get("sub_category") or "").lower()
+            item_low = (analysis.get("item_type") or "").lower()
+            if sub_low in ("belt", "scarf", "hat", "gloves", "tie", "jewelry", "glasses", "sunglasses") or "belt" in sub_low or "belt" in item_low:
+                logger.warning(
+                    "garment_vision: SegFormer-anchored bag override label=%r kind=%r sub_category=%r -> Bag",
+                    label, kind, analysis.get("sub_category"),
+                )
+                analysis["sub_category"] = "Bag"
+                analysis["item_type"] = "Handbag"
+                curr_name = analysis.get("name") or analysis.get("title") or ""
+                if "belt" in curr_name.lower():
+                    import re
+                    new_name = re.sub(r"(?i)\b(rope\s+)?belt(\s+accessory)?\b", "Basket Bag", curr_name).strip()
+                    if not new_name or new_name.lower() == curr_name.lower():
+                        new_name = "Textured Basket Bag"
+                    analysis["name"] = new_name
+                    analysis["title"] = new_name
+                analysis["_subcategory_overridden_by"] = "segformer-bag"
+
+        elif ("shoe" in lbl_low or kind == "footwear") and "boot" not in lbl_low:
+            sub_low = (analysis.get("sub_category") or "").lower()
+            item_low = (analysis.get("item_type") or "").lower()
+            curr_name = (analysis.get("name") or analysis.get("title") or "").lower()
+            if sub_low in ("boots", "boot") or item_low in ("boots", "boot") or "ankle boots" in curr_name or "platform boots" in curr_name:
+                if not any(tall in curr_name for tall in ("knee", "thigh", "riding", "cowboy", "combat", "chelsea")):
+                    logger.warning(
+                        "garment_vision: SegFormer-anchored footwear override label=%r kind=%r sub_category=%r -> Sneakers",
+                        label, kind, analysis.get("sub_category"),
+                    )
+                    analysis["sub_category"] = "Sneakers"
+                    analysis["item_type"] = "Low-Top Sneakers"
+                    import re
+                    orig_name = analysis.get("name") or analysis.get("title") or "White Sneakers"
+                    new_name = re.sub(r"(?i)\b(ankle\s+)?boots?\b", "Sneakers", orig_name).strip()
+                    analysis["name"] = new_name
+                    analysis["title"] = new_name
+                    analysis["_subcategory_overridden_by"] = "segformer-shoes"
+
+        # Ensure sub_category and item_type are not identical
+        if analysis.get("sub_category") and analysis.get("item_type"):
+            sub_str = str(analysis["sub_category"]).strip()
+            item_str = str(analysis["item_type"]).strip()
+            if sub_str.lower() == item_str.lower():
+                if sub_str.lower() in ("sneakers", "shoes"):
+                    analysis["item_type"] = "Low-Top Sneakers" if sub_str.lower() == "sneakers" else "Casual Shoes"
+                elif sub_str.lower() in ("bag", "handbag"):
+                    analysis["sub_category"] = "Bag"
+                    analysis["item_type"] = "Handbag"
+                elif sub_str.lower() == "t-shirt":
+                    analysis["item_type"] = "Short-Sleeve T-Shirt"
+                elif sub_str.lower() == "jeans":
+                    analysis["item_type"] = "Straight-Leg Jeans"
+                elif sub_str.lower() == "pants":
+                    analysis["item_type"] = "Casual Pants"
+                else:
+                    analysis["item_type"] = f"Classic {sub_str}"
         return analysis
+
     # Flat lay tops and t-shirts are frequently misclassified by SegFormer as 'dress'.
     # If Gemini classified it as a Top or Outerwear, preserve Gemini's rich classification.
     if current.lower() in ("top", "tops", "outerwear") and kind == "dress":
@@ -651,7 +713,6 @@ def _enforce_segformer_category(
         label, kind, current, old_subcategory, default,
     )
     analysis["category"] = default
-    lbl_low = (label or "").lower()
     if default == "Footwear":
         analysis["sub_category"] = "Sneakers" if "sneaker" in lbl_low else "Shoes"
         analysis["item_type"] = "sneakers" if "sneaker" in lbl_low else "shoes"
@@ -679,5 +740,19 @@ def _enforce_segformer_category(
     else:
         analysis["sub_category"] = None
     analysis["_category_overridden_by"] = "segformer"
+
+    # Ensure sub_category and item_type are not identical
+    if analysis.get("sub_category") and analysis.get("item_type"):
+        sub_str = str(analysis["sub_category"]).strip()
+        item_str = str(analysis["item_type"]).strip()
+        if sub_str.lower() == item_str.lower():
+            if sub_str.lower() in ("sneakers", "shoes"):
+                analysis["item_type"] = "Low-Top Sneakers" if sub_str.lower() == "sneakers" else "Casual Shoes"
+            elif sub_str.lower() in ("bag", "handbag"):
+                analysis["sub_category"] = "Bag"
+                analysis["item_type"] = "Handbag"
+            else:
+                analysis["item_type"] = f"Classic {sub_str}"
+
     return analysis
 
