@@ -3034,6 +3034,7 @@ def get_garment_vision_service(
     """Return a GarmentVisionService instance scoped to the user's provider / API key if available,
     falling back to the server-configured Eyes provider."""
     from app.services.auth import (
+        is_tester_user,
         resolve_user_custom_gemini_api_key,
         resolve_user_custom_key,
         resolve_user_ai_provider,
@@ -3045,17 +3046,24 @@ def get_garment_vision_service(
         provider = resolve_user_ai_provider(user)
         model = resolve_user_ai_model(user)
 
-        # 1) If user has selected Google Gemini and entered a custom API key
+        # 1) If user has selected Google Gemini
         if provider in ("google_ai", "gemini"):
             user_gemini_key = api_key or resolve_user_custom_gemini_api_key(user)
+            gemini_model = resolve_user_gemini_model(user)
             if user_gemini_key:
                 try:
-                    gemini_model = resolve_user_gemini_model(user)
                     return GarmentVisionService(api_key=user_gemini_key, model=gemini_model, provider="gemini")
                 except Exception as exc:
                     logger.warning("Failed to build user-scoped Gemini GarmentVisionService: %s", exc)
+            elif is_tester_user(user):
+                # Tester evaluating Gemini via server key
+                try:
+                    return GarmentVisionService(model=gemini_model or "gemini-3.5-flash-lite", provider="gemini")
+                except Exception as exc:
+                    logger.warning("Failed to build tester Gemini GarmentVisionService: %s", exc)
+
         # 2) If user selected another supplier and entered a custom API key
-        elif provider not in ("dressapp", "gemma"):
+        elif provider not in ("dressapp", "gemma", "eyes"):
             custom_key = api_key or resolve_user_custom_key(user, provider)
             if custom_key:
                 try:
@@ -3064,15 +3072,24 @@ def get_garment_vision_service(
                     logger.warning("Failed to build user-scoped %s GarmentVisionService: %s", provider, exc)
 
         # 3) If user explicitly selected Gemma (local/self-hosted)
-        if provider == "gemma":
+        if provider in ("gemma", "eyes"):
             try:
                 return GarmentVisionService(provider="gemma", model=model or "Eyes v1")
             except Exception as exc:
                 logger.warning("Failed to build DressApp Eyes GarmentVisionService: %s", exc)
 
-        # 4) If provider is dressapp (platform default): use configured server provider (gemini)
+        # 4) If provider is dressapp:
         if provider == "dressapp":
-            server_provider = settings.EYES_PROVIDER or "gemma"
+            # For tester group members evaluating DressApp Eyes:
+            # Force switching to Gemma on-prem!
+            if is_tester_user(user):
+                try:
+                    return GarmentVisionService(provider="gemma", model=model or "Eyes v1")
+                except Exception as exc:
+                    logger.warning("Failed to build tester DressApp Eyes Gemma GarmentVisionService: %s", exc)
+
+            # For general users: use server provider (gemini)
+            server_provider = settings.EYES_PROVIDER or "gemini"
             try:
                 return GarmentVisionService(provider=server_provider, model=model or "Eyes v1")
             except Exception as exc:

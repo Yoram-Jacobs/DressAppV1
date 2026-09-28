@@ -562,10 +562,14 @@ async def complete_outfit(
     spoken_reply = ""
 
     # Determine provider preference
-    preferred_provider = (payload.provider or "").lower()
-    if not preferred_provider:
-        # Default to gemma if EYES_PROVIDER is gemma or if self-hosted EYES Space URL is configured
-        preferred_provider = "gemma" if (getattr(settings, "EYES_PROVIDER", "") or "").lower() == "gemma" or settings.EYES_GEMMA_SPACE_URL else "gemini"
+    from app.services.auth import resolve_effective_provider
+    eff_prov = resolve_effective_provider(user=user, force_provider=payload.provider)
+    if eff_prov:
+        preferred_provider = eff_prov
+    else:
+        preferred_provider = (payload.provider or "").lower()
+        if not preferred_provider:
+            preferred_provider = "gemma" if (getattr(settings, "EYES_PROVIDER", "") or "").lower() == "gemma" else "gemini"
 
     user_lang = user.get("preferred_language") or "en"
 

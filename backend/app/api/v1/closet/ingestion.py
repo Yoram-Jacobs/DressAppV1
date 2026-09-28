@@ -1938,6 +1938,7 @@ async def chat_analyse_item(
             response_mime_type="application/json",
             model=user_model or "gemini-3.5-flash-lite",
             api_key=user_api_key,
+            user=user,
         )
         clean_json = (decision_raw or "").strip()
         import re as _re

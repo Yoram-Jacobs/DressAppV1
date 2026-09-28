@@ -164,6 +164,9 @@ class FallbackBrain:
                 or "spending cap" in exc_str
                 or "temporarily unavailable" in exc_str
                 or "deadline exceeded" in exc_str
+                or "503" in exc_str
+                or "connecterror" in exc_str
+                or "connection" in exc_str
             )
             if is_quota_or_transient:
                 logger.warning(
@@ -261,7 +264,32 @@ def build_stylist_brain() -> StylistBrain:
 _service: StylistBrain | None = None
 
 
-def stylist_brain_service(api_key: str | None = None, model: str | None = None) -> StylistBrain:
+def stylist_brain_service(
+    api_key: str | None = None,
+    model: str | None = None,
+    user: dict[str, Any] | None = None,
+) -> StylistBrain:
+    from app.services.auth import (
+        is_tester_user,
+        resolve_effective_provider,
+        resolve_user_custom_gemini_api_key,
+        resolve_user_gemini_model,
+        resolve_user_ai_model,
+    )
+
+    if user and isinstance(user, dict) and is_tester_user(user):
+        eff_provider = resolve_effective_provider(user=user)
+        if eff_provider == "gemma":
+            user_model = model or resolve_user_ai_model(user) or "Eyes v1"
+            primary = GemmaStylistBrain(model=user_model)
+            fallback = GeminiStylistBrain() if gemini_stylist_service else None
+            return FallbackBrain(primary=primary, fallback=fallback) if fallback else primary
+        elif eff_provider == "gemini":
+            custom_key = api_key or resolve_user_custom_gemini_api_key(user)
+            gemini_model = model or resolve_user_gemini_model(user) or "gemini-3.5-flash-lite"
+            primary = GeminiStylistBrain(api_key=custom_key, model=gemini_model)
+            return FallbackBrain(primary=primary, fallback=GemmaStylistBrain())
+
     if model in ("Eyes v1", "gemma", "dressapp", "gemma-4-E4B-it-Q3_K_M.gguf"):
         primary = GemmaStylistBrain(model=model)
         fallback = GeminiStylistBrain() if gemini_stylist_service else None

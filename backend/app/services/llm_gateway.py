@@ -25,6 +25,11 @@ from app.config import settings
 from app.services.eyes_override import get_active_provider
 from app.services.vision.llm import _call_gemma_space
 from app.services.gemini_client import GeminiClient
+from app.services.auth import (
+    resolve_effective_provider,
+    resolve_user_custom_gemini_api_key,
+    resolve_user_gemini_model,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -58,6 +63,7 @@ async def call_main_llm(
     model: str | None = None,
     fallback_model: str | None = None,
     force_provider: str | None = None,
+    user: dict[str, Any] | None = None,
 ) -> str:
     """Invokes the primary DressApp LLM (Google Gemini gemini-3.5-flash-lite) with on-prem Eyes Gemma-4-E4B VPS fallback.
 
@@ -74,21 +80,33 @@ async def call_main_llm(
         model: Target model name (defaults to gemini-3.5-flash-lite).
         fallback_model: Backward-compatible alias for target Gemini model name.
         force_provider: Explicit provider override ('gemini' or 'gemma').
+        user: Authenticated user object/dict to resolve user-specific provider/model preferences (e.g. Tester group switching).
 
     Returns:
         Generated text / JSON string.
     """
-    provider = (force_provider or await get_active_provider()).lower()
+    effective = resolve_effective_provider(user=user, force_provider=force_provider)
+    provider = (effective or await get_active_provider()).lower().strip()
     target_model = model or fallback_model or DEFAULT_MAIN_MODEL
+
+    # If caller didn't explicitly specify a model, check if user has a custom Gemini model preference
+    if not model and not fallback_model and user and provider == "gemini":
+        custom_gemini_model = resolve_user_gemini_model(user)
+        if custom_gemini_model:
+            target_model = custom_gemini_model
 
     # Normalization: ensure cost-effective Gemini 3.5 Flash-Lite is preferred unless explicitly specified
     if target_model in ("gemini-3.5-flash", "gemini-2.5-flash"):
         target_model = DEFAULT_MAIN_MODEL
 
-    # 1. Gemma-first branch: activated only if provider explicitly set to gemma (e.g., Free Tier zero-BYOK or admin override)
+    # 1. Gemma-first branch: activated if provider resolved to gemma (e.g., tester user switch or admin override)
     if provider in ("gemma", "eyes", "dressapp") and settings.EYES_GEMMA_SPACE_URL:
         try:
-            logger.info("Routing LLM completion to on-prem DressApp Eyes Gemma-4-E4B VPS model")
+            logger.info(
+                "Routing LLM completion to on-prem DressApp Eyes Gemma-4-E4B VPS model (effective=%s, user_tester=%s)",
+                provider,
+                bool(effective),
+            )
             raw_response = await _call_gemma_space(
                 system_prompt=system_prompt or "",
                 user_text=user_text,
@@ -110,7 +128,7 @@ async def call_main_llm(
 
     # 2. Primary Production Branch: Google Gemini (gemini-3.5-flash-lite)
     try:
-        active_key = api_key or settings.gemini_chat_key
+        active_key = api_key or (resolve_user_custom_gemini_api_key(user) if user else None) or settings.gemini_chat_key
         if not active_key:
             raise RuntimeError("No Gemini API key configured for call_main_llm")
 

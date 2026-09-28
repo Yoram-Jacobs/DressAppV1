@@ -962,8 +962,11 @@ async def _generate_one(
     dress_code: str | None = None,
     style: str | None = None,
     social_platforms: list[str] | None = None,
+    user: dict[str, Any] | None = None,
 ) -> dict[str, Any] | None:
-    if not settings.GEMINI_API_KEY:
+    from app.services.auth import resolve_effective_provider
+    eff_prov = resolve_effective_provider(user=user)
+    if not settings.GEMINI_API_KEY and eff_prov != "gemma":
         return None
 
     country_name = COUNTRY_NAME_MAP.get((country_code or "").upper(), country_code or "Israel")
@@ -1118,14 +1121,16 @@ async def _generate_one(
     for _attempt in range(3):
         user_text = "\n".join(history)
         try:
-            raw = await gemini_client.text(
-                system=SYSTEM_PROMPT,
+            from app.services.llm_gateway import call_main_llm
+            raw = await call_main_llm(
+                system_prompt=SYSTEM_PROMPT,
                 user_text=user_text,
                 model="gemini-3.5-flash-lite",
                 response_mime_type="application/json",
+                user=user,
             )
         except Exception as exc:  # noqa: BLE001
-            logger.warning("Gemini Fashion-Scout crawler call failed for %s: %s", bucket["slug"], exc)
+            logger.warning("Fashion-Scout crawler call failed for %s: %s", bucket["slug"], exc)
             return None
 
         parsed = _extract_json(raw or "")
@@ -1697,6 +1702,7 @@ async def _run_trend_scout_internal(
                 dress_code=lead_dress_code,
                 style=effective_style,
                 social_platforms=active_socials,
+                user=user,
             )
             if not card:
                 return None
@@ -1993,7 +1999,7 @@ async def fashion_scout_feed(
         async with sem:
             try:
                 translated = await asyncio.wait_for(
-                    _translate_card(card_to_trans, language=language, country=country),
+                    _translate_card(card_to_trans, language=language, country=country, user=user),
                     timeout=3.5,
                 )
                 if translated:
@@ -2043,8 +2049,11 @@ async def _translate_card(
     *,
     language: str,
     country: str | None,
+    user: dict[str, Any] | None = None,
 ) -> dict[str, Any] | None:
-    if not settings.GEMINI_API_KEY:
+    from app.services.auth import resolve_effective_provider
+    eff_prov = resolve_effective_provider(user=user)
+    if not settings.GEMINI_API_KEY and eff_prov != "gemma":
         return None
     lang_name = {
         "en": "English", "he": "Hebrew", "ar": "Arabic", "es": "Spanish",
@@ -2101,6 +2110,7 @@ async def _translate_card(
             temperature=0.2,
             fallback_model="gemini-3.5-flash-lite",
             response_mime_type="application/json",
+            user=user,
         )
     except Exception as exc:
         logger.warning("Translate scout card failed (%s -> %s): %s", card.get("id"), language, exc)

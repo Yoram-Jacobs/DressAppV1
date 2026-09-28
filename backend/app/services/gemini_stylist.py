@@ -238,6 +238,7 @@ class GeminiStylistService:
                 model=self.model,
                 fallback_model=self.model,
                 api_key=self.api_key,
+                user=user_profile,
             )
         return _parse_json(raw)
 

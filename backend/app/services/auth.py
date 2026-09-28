@@ -369,3 +369,61 @@ def user_has_custom_api_key(user: dict[str, Any] | None = None) -> bool:
         return True
     return False
 
+
+def is_tester_user(user: Any) -> bool:
+    """Return True if user has tester status via email, roles, or subscription."""
+    if not user:
+        return False
+    u = user.model_dump() if hasattr(user, "model_dump") else user
+    if not isinstance(u, dict):
+        return False
+    email = (u.get("email") or "").strip().lower()
+    if email and email in settings.tester_emails_set:
+        return True
+    roles = u.get("roles") or []
+    if "tester" in roles:
+        return True
+    sub = u.get("subscription") or {}
+    if sub.get("is_tester") or sub.get("plan_type") == "tester":
+        return True
+    return False
+
+
+def resolve_effective_provider(
+    user: Any = None,
+    force_provider: str | None = None,
+) -> str:
+    """Resolve the effective AI provider for a workflow.
+
+    Priority:
+    1. Explicit `force_provider` parameter (e.g. 'gemma' or 'gemini').
+    2. Tester group user setting: if a tester member selects DressApp / Eyes v1 ('dressapp',
+       'eyes', 'gemma'), force switching to 'gemma' so they test the on-prem Gemma-4-E4B model.
+       If they select 'google_ai' / 'gemini', route to 'gemini'.
+    3. Regular user / general app / unauthenticated background: returns empty string so caller
+       falls back to the global platform provider (Gemini).
+    """
+    if force_provider:
+        return force_provider.lower().strip()
+
+    if user and is_tester_user(user):
+        u = user.model_dump() if hasattr(user, "model_dump") else user
+        if isinstance(u, dict):
+            ai_config = u.get("ai_configuration") or {}
+            sel_provider = (ai_config.get("selected_provider") or "").strip().lower()
+            sel_model = (ai_config.get("selected_model") or "").strip()
+
+            if sel_provider in ("dressapp", "eyes", "gemma") or sel_model in (
+                "Eyes v1",
+                "gemma",
+                "gemma-4-E4B-it-Q3_K_M.gguf",
+            ):
+                return "gemma"
+            if sel_provider in ("google_ai", "gemini"):
+                return "gemini"
+            if sel_provider:
+                return sel_provider
+
+    return ""
+
+

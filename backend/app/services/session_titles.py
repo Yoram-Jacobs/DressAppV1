@@ -40,13 +40,22 @@ def _fallback_title(text: str) -> str:
     return " ".join(words[:4])[:40]
 
 
-async def generate_session_title(text: str, language: str = "en", api_key: str | None = None) -> str:
+async def generate_session_title(
+    text: str,
+    language: str = "en",
+    api_key: str | None = None,
+    user: dict[str, Any] | None = None,
+) -> str:
     """Return a crisp 2–4 word conversation title based on the first user turn."""
     text = (text or "").strip()
     if not text:
         return "Style advice"
+
+    from app.services.auth import resolve_effective_provider
+    eff_prov = resolve_effective_provider(user=user)
+
     active_key = api_key or settings.GEMINI_API_KEY
-    if not active_key:
+    if not active_key and eff_prov != "gemma":
         return _fallback_title(text)
 
     lang_code = (language or "en").lower()
@@ -65,6 +74,7 @@ async def generate_session_title(text: str, language: str = "en", api_key: str |
             temperature=0.3,
             model="gemini-3.5-flash-lite",
             api_key=active_key,
+            user=user,
         )
     except Exception as exc:  # noqa: BLE001
         logger.warning("Session title generation failed: %s", exc)

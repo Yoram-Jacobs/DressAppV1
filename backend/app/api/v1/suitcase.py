@@ -165,6 +165,7 @@ async def generate_text(
     temperature: float | None = None,
     api_key: str | None = None,
     model: str = "gemini-3.5-flash-lite",
+    user: dict[str, Any] | None = None,
 ) -> str:
     from app.services.llm_gateway import call_main_llm
 
@@ -178,6 +179,7 @@ async def generate_text(
         model=model,
         fallback_model=model,
         api_key=api_key,
+        user=user,
     )
 
 
@@ -243,6 +245,7 @@ async def suitcase_chat(
         response_mime_type="application/json",
         api_key=user_api_key,
         model=user_model,
+        user=user,
     )
     import re
     try:
@@ -451,6 +454,7 @@ async def pack_suitcase(
             response_mime_type="application/json",
             api_key=user_api_key,
             model=user_model,
+            user=user,
         )
         geo_data = json.loads(geo_str)
         lat = geo_data.get("lat")
@@ -563,6 +567,7 @@ async def pack_suitcase(
         response_mime_type="application/json",
         api_key=user_api_key,
         model=user_model,
+        user=user,
     )
     analysis = json.loads(analysis_str)
 
@@ -868,6 +873,7 @@ async def enter_suitcase_location(
         response_mime_type="application/json",
         api_key=user_api_key,
         model=user_model,
+        user=user,
     )
     res = json.loads(resp_str)
 

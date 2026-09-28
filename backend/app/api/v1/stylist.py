@@ -401,7 +401,8 @@ async def stylist_endpoint(
             title = await generate_session_title(
                 final_text,
                 language=user_profile.get("preferred_language") or "en",
-                api_key=api_key_resolved
+                api_key=api_key_resolved,
+                user=user,
             )
             if title:
                 await update_session(session["id"], user["id"], title=title)
@@ -575,7 +576,8 @@ async def compose_outfit_endpoint(
                 title = await generate_session_title(
                     text.strip(),
                     language=language,
-                    api_key=api_key_resolved
+                    api_key=api_key_resolved,
+                    user=user,
                 )
                 if title:
                     await update_session(session["id"], user["id"], title=title)
@@ -764,7 +766,7 @@ async def planner_scout_endpoint(
         f"}}"
     )
 
-    brain = stylist_brain_service(api_key=api_key_resolved, model=user_model)
+    brain = stylist_brain_service(api_key=api_key_resolved, model=user_model, user=user)
     res_json = await brain.advise(
         session_id=f"planner-scout-{uuid.uuid4().hex[:8]}",
         user_text=prompt,

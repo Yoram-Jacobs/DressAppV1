@@ -48,6 +48,7 @@ class WardrobeMigrationAgent:
         and decide next scrolling actions.
         """
         db = get_db()
+        user = await db.users.find_one({"id": user_id})
         session = await db.migration_sessions.find_one({"id": session_id})
         if not session:
             # Create session on the fly if needed
@@ -152,6 +153,7 @@ class WardrobeMigrationAgent:
                     json_schema=response_schema,
                     response_mime_type="application/json",
                     model="gemini-3.5-flash-lite",
+                    user=user,
                 )
 
                 result = json.loads(response_text)
@@ -226,6 +228,7 @@ class WardrobeMigrationAgent:
                     crop_bytes=crop_bytes,
                     p_hash=p_hash,
                     new_items_out=new_items,
+                    user=user,
                 )
 
             # Update the session's parsed hashes
@@ -260,6 +263,7 @@ class WardrobeMigrationAgent:
         crop_bytes: bytes,
         p_hash: str,
         new_items_out: list[dict] | None = None,
+        user: dict | None = None,
     ):
         """
         Ingests a single cropped card in the background by classifying it with Gemini
@@ -276,6 +280,8 @@ class WardrobeMigrationAgent:
 
         logger = logging.getLogger(__name__)
         db = get_db()
+        if not user:
+            user = await db.users.find_one({"id": user_id})
 
         # Classify the unique crop via Gemini
         class_prompt = (
@@ -316,6 +322,7 @@ class WardrobeMigrationAgent:
                 json_schema=class_schema,
                 response_mime_type="application/json",
                 model="gemini-3.5-flash-lite",
+                user=user,
             )
             class_result = json.loads(class_resp)
             category = class_result.get("category", "Top")
@@ -484,6 +491,7 @@ class WardrobeMigrationAgent:
                 json_schema=stylist_schema,
                 response_mime_type="application/json",
                 model="gemini-3.5-flash-lite",
+                user=user,
             )
             stylist_result = json.loads(class_resp)
 

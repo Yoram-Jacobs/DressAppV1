@@ -832,7 +832,7 @@ def _get_scheduler_stylist_service(user: dict[str, Any]):
     from app.services.stylist_brain import stylist_brain_service
 
     api_key_resolved = resolve_user_custom_gemini_api_key(user)
-    return stylist_brain_service(api_key=api_key_resolved)
+    return stylist_brain_service(api_key=api_key_resolved, user=user)
 
 async def generate_scheduled_proposals(
     user: dict[str, Any],
