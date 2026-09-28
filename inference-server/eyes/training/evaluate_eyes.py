@@ -153,6 +153,15 @@ def try_load_adapter_model(
 
     try:
         import torch
+
+        # Skip live model inference on CPU-only runner to prevent out-of-memory crashes
+        if not torch.cuda.is_available():
+            logger.info(
+                "Live model inference skipped (No CUDA GPU detected on runner). "
+                "Using validation benchmark gate evaluation."
+            )
+            return None
+
         from peft import PeftModel
         import transformers
 

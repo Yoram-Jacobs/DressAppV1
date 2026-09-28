@@ -261,6 +261,9 @@ jobs:
     needs: quantize-and-publish
     if: (inputs.deploy_vps != false) && (inputs.dry_run != true)
     runs-on: ubuntu-latest
+    env:
+      VPS_SSH_KEY: ${{ secrets.SSH_PRIVATE_KEY || secrets.VPS_SSH_KEY }}
+      VPS_HOST: ${{ secrets.VPS_HOST || '178.105.144.142' }}
     steps:
       - name: Download Adapter & GGUF Artifacts
         uses: actions/download-artifact@v4
@@ -276,9 +279,6 @@ jobs:
 
       - name: Setup SSH Key
         if: env.VPS_SSH_KEY != ''
-        env:
-          VPS_SSH_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
-          VPS_HOST: ${{ secrets.VPS_HOST || '178.105.144.142' }}
         run: |
           mkdir -p ~/.ssh
           echo "$VPS_SSH_KEY" > ~/.ssh/id_rsa
@@ -287,8 +287,6 @@ jobs:
 
       - name: Deploy Checkpoint to Production VPS
         if: env.VPS_SSH_KEY != ''
-        env:
-          VPS_HOST: ${{ secrets.VPS_HOST || '178.105.144.142' }}
         run: |
           echo "Syncing verified adapter to Hetzner VPS (/srv/AI-Stylist/eyes_v4_adapter)..."
           ssh root@$VPS_HOST "mkdir -p /srv/AI-Stylist/eyes_v4_adapter /srv/AI-Stylist/eyes_gguf"

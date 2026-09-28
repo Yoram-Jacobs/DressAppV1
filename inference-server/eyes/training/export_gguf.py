@@ -164,51 +164,7 @@ def export_gguf(
         (output_dir / "export_manifest.json").write_text(json.dumps(metadata, indent=2), encoding="utf-8")
         return results
 
-    # 1. Merge LoRA weights into base model
-    import torch
-    from peft import PeftModel
-    from transformers import AutoProcessor
-
-    model_cls = resolve_vlm_model_class()
-    logger.info("Loading base model %s for merge using %s...", base_model, model_cls.__name__)
-    token = os.environ.get("HF_TOKEN")
-    base = model_cls.from_pretrained(
-        base_model,
-        torch_dtype=torch.bfloat16,
-        device_map="cpu",
-        token=token,
-        trust_remote_code=True,
-    )
-    processor = None
-    try:
-        processor = AutoProcessor.from_pretrained(base_model, token=token, trust_remote_code=True)
-    except Exception as exc:
-        logger.warning("AutoProcessor failed (%s); falling back to AutoTokenizer...", exc)
-        from transformers import AutoTokenizer
-        processor = AutoTokenizer.from_pretrained(base_model, token=token, trust_remote_code=True)
-
-    logger.info("Merging LoRA adapter from %s...", adapter_dir)
-    cfg_file = adapter_dir / "adapter_config.json"
-    if cfg_file.exists():
-        try:
-            cfg_data = json.loads(cfg_file.read_text(encoding="utf-8"))
-            if not cfg_data.get("exclude_modules"):
-                cfg_data["exclude_modules"] = r".*(vision_tower|audio_tower|embed_vision|embed_audio).*"
-                cfg_file.write_text(json.dumps(cfg_data, indent=2), encoding="utf-8")
-        except Exception:
-            pass
-
-    merged_model = PeftModel.from_pretrained(base, str(adapter_dir))
-    merged_model = merged_model.merge_and_unload()
-
-    temp_merged_dir = output_dir / "temp_merged_hf"
-    temp_merged_dir.mkdir(parents=True, exist_ok=True)
-    logger.info("Saving merged Hugging Face model to %s...", temp_merged_dir)
-    merged_model.save_pretrained(str(temp_merged_dir))
-    if hasattr(processor, "save_pretrained"):
-        processor.save_pretrained(str(temp_merged_dir))
-
-    # 2. Convert to GGUF using llama.cpp
+    # 1. Locate llama.cpp conversion tools before allocating large model weights
     f16_gguf = output_dir / f"{model_slug}-f16.gguf"
     convert_script = None
 
@@ -220,51 +176,11 @@ def export_gguf(
         if convert_candidate.exists():
             convert_script = convert_candidate
 
-    if convert_script:
-        logger.info("Converting merged model to F16 GGUF via llama.cpp...")
-        subprocess.run(
-            [sys.executable, str(convert_script), str(temp_merged_dir), "--outfile", str(f16_gguf), "--outtype", "f16"],
-            check=True,
-        )
-
-        # Quantize to target formats
-        quantize_bin = shutil.which("llama-quantize") or "llama-quantize"
-        for q in quants:
-            quant_out = output_dir / f"{model_slug}-{q}.gguf"
-            logger.info("Quantizing to %s...", q)
-            subprocess.run([quantize_bin, str(f16_gguf), str(quant_out), q], check=True)
-            results["exported_files"].append(str(quant_out))
-
-        # Cleanup intermediate F16 GGUF to conserve disk space
-        if f16_gguf.exists():
-            f16_gguf.unlink()
-
-        # Convert vision projector (mmproj) for multimodal inference
-        mmproj_script = None
-        if llama_cpp_dir and (llama_cpp_dir / "examples/llava/convert_image_encoder_to_gguf.py").exists():
-            mmproj_script = llama_cpp_dir / "examples/llava/convert_image_encoder_to_gguf.py"
-        elif Path("llama.cpp/examples/llava/convert_image_encoder_to_gguf.py").exists():
-            mmproj_script = Path("llama.cpp/examples/llava/convert_image_encoder_to_gguf.py")
-
-        mmproj_file = output_dir / f"{model_slug}-mmproj-bf16.gguf"
-        if mmproj_script:
-            logger.info("Converting vision projector to mmproj GGUF...")
-            try:
-                subprocess.run(
-                    [sys.executable, str(mmproj_script), "-m", str(temp_merged_dir), "--output-dir", str(output_dir)],
-                    check=True,
-                )
-                results["exported_files"].append(str(mmproj_file))
-            except Exception as e:
-                logger.warning("mmproj conversion via llama.cpp encountered an error: %s", e)
-        else:
-            logger.info("llama.cpp convert_image_encoder_to_gguf.py not found; generating mock mmproj header...")
-            create_mock_gguf(mmproj_file, model_slug, "BF16-MMPROJ")
-            results["exported_files"].append(str(mmproj_file))
-    else:
+    if not convert_script:
         if dry_run or allow_fallback:
             logger.warning(
-                "llama.cpp conversion tools not found on runner. Generating valid placeholder GGUFs (dry-run/fallback mode)..."
+                "llama.cpp conversion tools (convert_hf_to_gguf.py) not found on runner. "
+                "Generating valid placeholder GGUFs (dry-run/fallback mode)..."
             )
             for q in quants:
                 out_file = output_dir / f"{model_slug}-{q}.gguf"
@@ -274,11 +190,130 @@ def export_gguf(
             mmproj_file = output_dir / f"{model_slug}-mmproj-bf16.gguf"
             create_mock_gguf(mmproj_file, model_slug, "BF16-MMPROJ")
             results["exported_files"].append(str(mmproj_file))
+
+            metadata = {
+                "base_model": base_model,
+                "quantizations": quants,
+                "mmproj": f"{model_slug}-mmproj-bf16.gguf",
+                "exported_files": results["exported_files"],
+                "fallback": True,
+            }
+            (output_dir / "export_manifest.json").write_text(json.dumps(metadata, indent=2), encoding="utf-8")
+            return results
         else:
             raise FileNotFoundError(
                 "llama.cpp convert script (convert_hf_to_gguf.py) not found in system or llama_cpp_dir. "
                 "Specify --allow-fallback to generate placeholders or install llama.cpp."
             )
+
+    # 2. Merge LoRA weights into base model
+    temp_merged_dir = output_dir / "temp_merged_hf"
+    try:
+        import torch
+        from peft import PeftModel
+        from transformers import AutoProcessor
+
+        model_cls = resolve_vlm_model_class()
+        logger.info("Loading base model %s for merge using %s...", base_model, model_cls.__name__)
+        token = os.environ.get("HF_TOKEN")
+        base = model_cls.from_pretrained(
+            base_model,
+            torch_dtype=torch.bfloat16,
+            device_map="cpu",
+            token=token,
+            trust_remote_code=True,
+        )
+        processor = None
+        try:
+            processor = AutoProcessor.from_pretrained(base_model, token=token, trust_remote_code=True)
+        except Exception as exc:
+            logger.warning("AutoProcessor failed (%s); falling back to AutoTokenizer...", exc)
+            from transformers import AutoTokenizer
+            processor = AutoTokenizer.from_pretrained(base_model, token=token, trust_remote_code=True)
+
+        logger.info("Merging LoRA adapter from %s...", adapter_dir)
+        cfg_file = adapter_dir / "adapter_config.json"
+        if cfg_file.exists():
+            try:
+                cfg_data = json.loads(cfg_file.read_text(encoding="utf-8"))
+                if not cfg_data.get("exclude_modules"):
+                    cfg_data["exclude_modules"] = r".*(vision_tower|audio_tower|embed_vision|embed_audio).*"
+                    cfg_file.write_text(json.dumps(cfg_data, indent=2), encoding="utf-8")
+            except Exception:
+                pass
+
+        merged_model = PeftModel.from_pretrained(base, str(adapter_dir))
+        merged_model = merged_model.merge_and_unload()
+
+        temp_merged_dir.mkdir(parents=True, exist_ok=True)
+        logger.info("Saving merged Hugging Face model to %s...", temp_merged_dir)
+        merged_model.save_pretrained(str(temp_merged_dir))
+        if hasattr(processor, "save_pretrained"):
+            processor.save_pretrained(str(temp_merged_dir))
+    except Exception as exc:
+        if allow_fallback:
+            logger.warning("Model merge encountered error (%s). Falling back to placeholder GGUFs...", exc)
+            for q in quants:
+                out_file = output_dir / f"{model_slug}-{q}.gguf"
+                create_mock_gguf(out_file, model_slug, q)
+                results["exported_files"].append(str(out_file))
+
+            mmproj_file = output_dir / f"{model_slug}-mmproj-bf16.gguf"
+            create_mock_gguf(mmproj_file, model_slug, "BF16-MMPROJ")
+            results["exported_files"].append(str(mmproj_file))
+
+            metadata = {
+                "base_model": base_model,
+                "quantizations": quants,
+                "mmproj": f"{model_slug}-mmproj-bf16.gguf",
+                "exported_files": results["exported_files"],
+                "fallback": True,
+            }
+            (output_dir / "export_manifest.json").write_text(json.dumps(metadata, indent=2), encoding="utf-8")
+            return results
+        raise
+
+    # 3. Convert to GGUF using llama.cpp
+    logger.info("Converting merged model to F16 GGUF via llama.cpp...")
+    subprocess.run(
+        [sys.executable, str(convert_script), str(temp_merged_dir), "--outfile", str(f16_gguf), "--outtype", "f16"],
+        check=True,
+    )
+
+    # Quantize to target formats
+    quantize_bin = shutil.which("llama-quantize") or "llama-quantize"
+    for q in quants:
+        quant_out = output_dir / f"{model_slug}-{q}.gguf"
+        logger.info("Quantizing to %s...", q)
+        subprocess.run([quantize_bin, str(f16_gguf), str(quant_out), q], check=True)
+        results["exported_files"].append(str(quant_out))
+
+    # Cleanup intermediate F16 GGUF to conserve disk space
+    if f16_gguf.exists():
+        f16_gguf.unlink()
+
+    # Convert vision projector (mmproj) for multimodal inference
+    mmproj_script = None
+    if llama_cpp_dir and (llama_cpp_dir / "examples/llava/convert_image_encoder_to_gguf.py").exists():
+        mmproj_script = llama_cpp_dir / "examples/llava/convert_image_encoder_to_gguf.py"
+    elif Path("llama.cpp/examples/llava/convert_image_encoder_to_gguf.py").exists():
+        mmproj_script = Path("llama.cpp/examples/llava/convert_image_encoder_to_gguf.py")
+
+    mmproj_file = output_dir / f"{model_slug}-mmproj-bf16.gguf"
+    if mmproj_script:
+        logger.info("Converting vision projector to mmproj GGUF...")
+        try:
+            subprocess.run(
+                [sys.executable, str(mmproj_script), "-m", str(temp_merged_dir), "--output-dir", str(output_dir)],
+                check=True,
+            )
+            results["exported_files"].append(str(mmproj_file))
+        except Exception as e:
+            logger.warning("mmproj conversion via llama.cpp encountered an error: %s", e)
+    else:
+        logger.info("llama.cpp convert_image_encoder_to_gguf.py not found; generating mock mmproj header...")
+        create_mock_gguf(mmproj_file, model_slug, "BF16-MMPROJ")
+        results["exported_files"].append(str(mmproj_file))
 
     # Clean up temporary merged directory
     if temp_merged_dir.exists():
