@@ -81,6 +81,61 @@ def _get_session() -> Any:
         return _session
 
 
+def drop_disconnected_islands(
+    image_rgba: Image.Image | bytes,
+    min_area_ratio: float = 0.01,
+) -> Any:
+    """Filter out small stray specks, shadows, or background noise.
+
+    Identifies all connected components of opaque/semi-opaque alpha (alpha >= 32).
+    Finds the largest component (the main garment). Any secondary component whose
+    pixel count is less than `min_area_ratio` (default 1%) of the dominant component
+    is treated as a stray speck / artifact and zeroed out.
+    """
+    from scipy import ndimage
+
+    is_bytes = isinstance(image_rgba, (bytes, bytearray))
+    if is_bytes:
+        im = Image.open(io.BytesIO(image_rgba)).convert("RGBA")
+    else:
+        im = image_rgba.convert("RGBA")
+
+    arr = np.array(im)
+    alpha = arr[:, :, 3]
+    solid = alpha >= 32
+    if not solid.any():
+        return image_rgba
+
+    labeled, num_features = ndimage.label(solid)
+    if num_features <= 1:
+        return image_rgba
+
+    sizes = ndimage.sum(solid, labeled, range(1, num_features + 1))
+    max_size = sizes.max()
+    if max_size <= 0:
+        return image_rgba
+
+    min_size = max_size * min_area_ratio
+    drop_indices = [i + 1 for i, s in enumerate(sizes) if s < min_size]
+    if not drop_indices:
+        return image_rgba
+
+    mask_to_drop = np.isin(labeled, drop_indices)
+    arr[:, :, 3] = np.where(mask_to_drop, 0, alpha).astype(np.uint8)
+    cleaned = Image.fromarray(arr, "RGBA")
+    logger.info(
+        "drop_disconnected_islands: filtered %d small speck(s) (<%.1f%% of dominant item, total %d px)",
+        len(drop_indices),
+        min_area_ratio * 100,
+        int(mask_to_drop.sum()),
+    )
+    if is_bytes:
+        buf = io.BytesIO()
+        cleaned.save(buf, format="PNG", optimize=True)
+        return buf.getvalue()
+    return cleaned
+
+
 def _rembg_remove(image_bytes: bytes) -> bytes | None:
     """Blocking helper — call inside asyncio.to_thread.
 
@@ -166,6 +221,7 @@ def _rembg_remove(image_bytes: bytes) -> bytes | None:
                 alpha_full = alpha_small
             full_rgba = original.convert("RGBA")
             full_rgba.putalpha(alpha_full)
+            full_rgba = drop_disconnected_islands(full_rgba, min_area_ratio=0.01)
             buf = io.BytesIO()
             full_rgba.save(buf, format="PNG", optimize=True)
             out = buf.getvalue()
