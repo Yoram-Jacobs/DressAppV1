@@ -580,10 +580,56 @@ def run_training_on_runpod(
             if not cand_host or not cand_port:
                 raise TimeoutError(f"Pod {current_pod_id} ({gpu_type}) did not expose SSH within {per_pod_timeout}s.")
 
+            logger.info("RunPod instance %s (%s) is up! Connecting SSH endpoint: %s:%d...", current_pod_id, gpu_type, cand_host, cand_port)
+
+            # Establish Paramiko SSH connection with retry loop
+            cand_ssh = paramiko.SSHClient()
+            cand_ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+            connected = False
+            for attempt in range(12):  # 1 minute max for SSH daemon to accept connections
+                try:
+                    cand_ssh.connect(
+                        hostname=cand_host,
+                        port=cand_port,
+                        username="root",
+                        pkey=rsa_key,
+                        timeout=10,
+                        banner_timeout=30,
+                    )
+                    connected = True
+                    transport = cand_ssh.get_transport()
+                    if transport is not None:
+                        transport.set_keepalive(15)
+                    logger.info("SSH connection verified and authenticated (keepalive: 15s).")
+                    break
+                except Exception as e:
+                    logger.debug("Waiting for SSH service (attempt %d/12): %s", attempt + 1, e)
+                    time.sleep(5)
+
+            if not connected:
+                raise ConnectionError(f"Could not connect via SSH to RunPod instance {cand_host}:{cand_port}")
+
+            # Fast pre-flight hardware sanity check to ensure host NVIDIA driver and container CUDA communicate cleanly
+            logger.info("Running fast pre-flight hardware sanity check on candidate %s...", gpu_type)
+            preflight_cmd = (
+                "export PYTHONUNBUFFERED=1 && "
+                "[ -f /etc/environment ] && set -a && . /etc/environment && set +a && "
+                "nvidia-smi --query-gpu=name,memory.total --format=csv,noheader && "
+                "python3 -c 'import torch; assert torch.cuda.is_available(), \"CUDA unavailable in base container\"'"
+            )
+            _, pf_out, pf_err = cand_ssh.exec_command(preflight_cmd, get_pty=True)
+            pf_lines = [l.strip() for l in pf_out.readlines() if l.strip()]
+            pf_status = pf_out.channel.recv_exit_status()
+            if pf_status != 0:
+                err_text = pf_err.read().decode("utf-8", errors="replace").strip()
+                cand_ssh.close()
+                raise RuntimeError(f"Base container CUDA hardware check failed (code {pf_status}): {' '.join(pf_lines)} {err_text}")
+
+            logger.info("Candidate %s passed pre-flight hardware check: %s", gpu_type, ", ".join(pf_lines))
             pod_id = current_pod_id
             ssh_host = cand_host
             ssh_port = cand_port
-            logger.info("RunPod instance is up! Public SSH endpoint: %s:%d", ssh_host, ssh_port)
+            ssh = cand_ssh
             break
 
         except Exception as e:
@@ -595,39 +641,11 @@ def run_training_on_runpod(
                 except Exception:
                     pass
 
-    if not pod_id or not ssh_host or not ssh_port:
-        raise RuntimeError(f"Unable to provision and connect to any RunPod GPU. Last error: {last_err}")
+    if not pod_id or not ssh_host or not ssh_port or not ssh:
+        raise RuntimeError(f"Unable to provision, connect, and verify any RunPod GPU. Last error: {last_err}")
 
     stats: dict[str, Any] = {}
     try:
-
-        # Establish Paramiko SSH connection with retry loop
-        ssh = paramiko.SSHClient()
-        ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-        connected = False
-        for attempt in range(24):  # 2 minutes max
-            try:
-                ssh.connect(
-                    hostname=ssh_host,
-                    port=ssh_port,
-                    username="root",
-                    pkey=rsa_key,
-                    timeout=10,
-                    banner_timeout=30,
-                )
-                connected = True
-                transport = ssh.get_transport()
-                if transport is not None:
-                    transport.set_keepalive(15)
-                logger.info("SSH connection verified and authenticated (keepalive: 15s).")
-                break
-            except Exception as e:
-                logger.debug("Waiting for SSH service (attempt %d/24): %s", attempt + 1, e)
-                time.sleep(5)
-
-        if not connected:
-            raise ConnectionError(f"Could not connect via SSH to RunPod instance {ssh_host}:{ssh_port}")
-
         # SFTP file transfer
         sftp = ssh.open_sftp()
         try:
@@ -662,9 +680,7 @@ def run_training_on_runpod(
             logger.info("Executing on pod: %s", label)
             env_prefix = (
                 "export PYTHONUNBUFFERED=1 && "
-                "export PATH=\"/usr/local/nvidia/bin:/usr/local/cuda/bin:$PATH\" && "
-                "export LD_LIBRARY_PATH=\"/usr/local/nvidia/lib:/usr/local/nvidia/lib64:/usr/local/cuda/lib64:$LD_LIBRARY_PATH\" && "
-                "export NVIDIA_VISIBLE_DEVICES=all && "
+                "[ -f /etc/environment ] && set -a && . /etc/environment && set +a && "
             )
             full_cmd = env_prefix + cmd
             stdin, stdout, stderr = ssh.exec_command(full_cmd, get_pty=True)
@@ -687,6 +703,7 @@ def run_training_on_runpod(
 
         # Step 1.5: Verify CUDA GPU Hardware Acceleration on Pod
         run_ssh_streaming(
+            "nvidia-smi && "
             "python3 -c \""
             "import torch; "
             "print('PyTorch Version:', torch.__version__); "
