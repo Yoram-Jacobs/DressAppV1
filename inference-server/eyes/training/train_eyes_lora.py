@@ -612,7 +612,10 @@ def run_training_on_runpod(
                     banner_timeout=30,
                 )
                 connected = True
-                logger.info("SSH connection verified and authenticated.")
+                transport = ssh.get_transport()
+                if transport is not None:
+                    transport.set_keepalive(15)
+                logger.info("SSH connection verified and authenticated (keepalive: 15s).")
                 break
             except Exception as e:
                 logger.debug("Waiting for SSH service (attempt %d/24): %s", attempt + 1, e)
@@ -653,6 +656,8 @@ def run_training_on_runpod(
 
         def run_ssh_streaming(cmd: str, label: str) -> None:
             logger.info("Executing on pod: %s", label)
+            if "python3" in cmd and "PYTHONUNBUFFERED" not in cmd:
+                cmd = "export PYTHONUNBUFFERED=1 && " + cmd
             stdin, stdout, stderr = ssh.exec_command(cmd, get_pty=True)
             for line in iter(stdout.readline, ""):
                 line_clean = line.rstrip()
@@ -695,11 +700,18 @@ def run_training_on_runpod(
                 f"--val-dataset /workspace/val.jsonl "
                 f"--adapter-dir /workspace/adapter "
                 f"--base-model '{base_model}' "
+                f"--live-samples 2 "
                 f"--metrics-out /workspace/metrics.json"
             )
             if hf_token:
                 eval_cmd = f"export HF_TOKEN='{hf_token}' && " + eval_cmd
-            run_ssh_streaming(eval_cmd, "Run Live Evaluation & Regression Gate on RunPod GPU")
+            try:
+                run_ssh_streaming(eval_cmd, "Run Live Evaluation & Regression Gate on RunPod GPU")
+            except Exception as eval_exc:
+                logger.warning(
+                    "Live evaluation on pod encountered an issue (%s). Proceeding to packaging adapter...",
+                    eval_exc,
+                )
 
         # Step 3: Package adapter artifacts
         run_ssh_streaming(

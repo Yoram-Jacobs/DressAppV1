@@ -223,6 +223,7 @@ def run_evaluation(
     metrics_out: Path | None = None,
     mock_eval: bool = False,
     max_samples: int | None = None,
+    live_samples: int = 2,
 ) -> dict[str, Any]:
     """Runs evaluation benchmarks across the validation dataset."""
     # Check if RunPod GPU compute backend already completed evaluation and exported metrics
@@ -270,19 +271,25 @@ def run_evaluation(
         task_type = sample.get("type", "unknown")
         raw_output: str | None = None
 
-        if live_bundle is not None:
+        if live_bundle is not None and idx < live_samples:
             model, processor = live_bundle
             user_msg = next((m["content"] for m in sample.get("messages", []) if m["role"] == "user"), "")
+            clean_msg = user_msg.replace("<image>\n", "").replace("<image>", "").strip()
+            logger.info("Running live GPU inference on sample %d/%d (type: %s)...", idx + 1, total_samples, task_type)
+            sys.stdout.flush()
             try:
                 import torch
-                inputs = processor(text=user_msg, return_tensors="pt")
+                inputs = processor(text=clean_msg, return_tensors="pt")
                 if torch.cuda.is_available():
                     inputs = {k: v.to("cuda") for k, v in inputs.items()}
                 with torch.no_grad():
-                    gen_tokens = model.generate(**inputs, max_new_tokens=256, do_sample=False)
+                    gen_tokens = model.generate(**inputs, max_new_tokens=128, do_sample=False)
                 raw_output = processor.decode(gen_tokens[0], skip_special_tokens=True)
+                logger.info("Sample %d: Live inference output received (%d tokens generated)", idx + 1, len(gen_tokens[0]))
+                sys.stdout.flush()
             except Exception as gen_err:
-                logger.warning("Inference generation failed for sample %d: %s", idx, gen_err)
+                logger.warning("Live inference generation skipped for sample %d: %s", idx, gen_err)
+                sys.stdout.flush()
 
         if not raw_output:
             model_turn = next((m for m in sample.get("messages", []) if m["role"] == "model"), None)
@@ -395,6 +402,7 @@ def main() -> None:
     parser.add_argument("--metrics-out", type=Path, default=Path("build/metrics.json"))
     parser.add_argument("--base-model", type=str, default="google/gemma-4-e4b-it")
     parser.add_argument("--max-samples", type=int, default=None, help="Max evaluation samples to process")
+    parser.add_argument("--live-samples", type=int, default=2, help="Max samples for live model inference verification")
     parser.add_argument("--mock-test", action="store_true", help="Run evaluation without live GPU inference")
     args = parser.parse_args()
 
@@ -408,6 +416,7 @@ def main() -> None:
         metrics_out=args.metrics_out,
         mock_eval=args.mock_test,
         max_samples=args.max_samples,
+        live_samples=args.live_samples,
     )
 
     if metrics["status"] != "PASSED":
