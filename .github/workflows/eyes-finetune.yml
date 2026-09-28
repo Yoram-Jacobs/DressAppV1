@@ -237,6 +237,7 @@ jobs:
 
       - name: Create GitHub Release
         if: (inputs.push_to_hub != false) && (inputs.dry_run != true)
+        continue-on-error: true
         uses: softprops/action-gh-release@v2
         with:
           tag_name: weekly-${{ github.run_id }}
