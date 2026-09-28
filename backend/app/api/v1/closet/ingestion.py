@@ -582,12 +582,13 @@ async def analyze_item_image(
                                     defer_matte=meta.get("defer_matte", False),
                                 )
                                 res = await save_closet_item_document(user, item_in)
-                                saved_doc = res.get("item") if isinstance(res, dict) else res
+                                saved_doc = res if (isinstance(res, dict) and "id" in res) else (res.get("item") if isinstance(res, dict) else res)
                                 saved_items_count += 1
-                                logger.info(
-                                    "Auto-saved analyzed item %s (%s - %s) to closet for user %s",
-                                    saved_doc.get("id"), saved_doc.get("category"), saved_doc.get("sub_category"), user["id"],
-                                )
+                                if isinstance(saved_doc, dict):
+                                    logger.info(
+                                        "Auto-saved analyzed item %s (%s - %s) to closet for user %s",
+                                        saved_doc.get("id"), saved_doc.get("category"), saved_doc.get("sub_category"), user["id"],
+                                    )
                             except Exception as save_err:
                                 logger.warning("Failed to auto-save item to closet: %s", save_err)
 

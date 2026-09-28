@@ -248,7 +248,7 @@ def _build_llama_argv(model_path: Path, mmproj_path: Path | None) -> list[str]:
         "--threads-batch", str(N_THREADS),
         "--batch-size", str(N_BATCH),
         "--ubatch-size", str(min(N_BATCH, 512)),
-        "--n-predict", "280",
+        "--n-predict", "-1",
         "--jinja",
         "--reasoning-budget", "0",
         "--chat-template-kwargs", '{"enable_thinking": false}',
@@ -583,7 +583,7 @@ async def predict(req: PredictIn) -> PredictOut:
                             if not os.path.exists(temp_path):
                                 with open(temp_path, "wb") as f:
                                     f.write(img_bytes)
-                                asyncio.create_task(delete_after_delay(temp_path, 120.0))
+                                asyncio.create_task(delete_after_delay(temp_path, 3600.0))
                             img_url_obj["url"] = f"file://{temp_path}"
                         except Exception as e:
                             log.warning(f"Failed to convert base64 image: {e}")
@@ -591,7 +591,7 @@ async def predict(req: PredictIn) -> PredictOut:
     payload: dict[str, Any] = {
         "model": "local",  # llama-server ignores model name; field required.
         "messages": msgs,
-        "max_tokens": min(req.max_tokens, 512),
+        "max_tokens": min(req.max_tokens, 2048),
         "temperature": req.temperature,
         "top_p": req.top_p,
         "stream": False,

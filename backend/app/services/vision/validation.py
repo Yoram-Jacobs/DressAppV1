@@ -551,6 +551,7 @@ _SEGFORMER_KIND_TO_ALLOWED_CATEGORIES: dict[str, set[str]] = {
     "footwear": {"footwear"},
     "accessory": {"accessories", "accessory"},
     "headwear": {"accessories", "accessory"},
+    "bag": {"accessories", "accessory"},
 }
 
 # When we have to overwrite a bad Gemini answer, what should the
@@ -563,6 +564,7 @@ _SEGFORMER_KIND_TO_DEFAULT_CATEGORY: dict[str, str] = {
     "footwear": "Footwear",
     "accessory": "Accessories",
     "headwear": "Accessories",
+    "bag": "Accessories",
 }
 
 # Human-readable label injected into the Gemini system prompt as a
@@ -576,7 +578,86 @@ _SEGFORMER_KIND_HUMAN_LABEL: dict[str, str] = {
     "footwear": "Footwear (shoes / boots / sneakers)",
     "accessory": "Accessories (belt / scarf / sunglasses / bag)",
     "headwear": "Accessories (hat / cap / beanie)",
+    "bag": "Accessories (bag / handbag / tote / basket)",
 }
+
+
+_APPAREL_KEYWORDS = {
+    "cardigan", "sweater", "knit", "knitwear", "pullover", "jumper", "shirt",
+    "t-shirt", "top", "blouse", "hoodie", "jacket", "coat", "pants", "jeans",
+    "trousers", "shorts", "skirt", "dress", "tank", "vest", "sweatshirt",
+}
+_APPAREL_KEYWORDS_HE = {
+    "קרדיגן", "סוודר", "סריג", "חולצה", "גופיה", "שמלה", "חצאית", "מכנסיים",
+    "ג'ינס", "ג'קט", "מעיל", "סווטשירט", "סריגים", "חולצות",
+}
+
+
+def _sanitize_bag_or_accessory(
+    analysis: dict[str, Any],
+    *,
+    label: str | None = None,
+    kind: str | None = None,
+) -> None:
+    """Purge misplaced apparel keywords (cardigan, sweater, shirt, etc.) from bags and accessories."""
+    import re as _re
+    curr_name = str(analysis.get("name") or "").strip()
+    curr_title = str(analysis.get("title") or "").strip()
+    curr_cap = str(analysis.get("caption") or "").strip()
+    sub = str(analysis.get("sub_category") or "").strip()
+    itype = str(analysis.get("item_type") or "").strip()
+
+    combined = f"{curr_name} {curr_title} {curr_cap} {sub} {itype}".lower()
+    is_he = any("\u0590" <= ch <= "\u05ea" for ch in combined)
+
+    has_apparel_en = any(_re.search(rf"\b{_re.escape(w)}\b", combined) for w in _APPAREL_KEYWORDS)
+    has_apparel_he = any(w in combined for w in _APPAREL_KEYWORDS_HE)
+
+    lbl_low = (label or "").lower()
+    kind_low = (kind or "").lower()
+    is_bag = (
+        kind_low == "bag"
+        or "bag" in lbl_low
+        or sub.lower() in ("bag", "handbag", "tote bag", "crossbody bag", "shoulder bag", "backpack", "clutch", "wicker bag", "basket bag")
+        or "bag" in sub.lower()
+        or "תיק" in combined
+    )
+
+    if is_bag and (has_apparel_en or has_apparel_he or sub.lower() in _APPAREL_KEYWORDS or itype.lower() in _APPAREL_KEYWORDS):
+        is_straw = any(w in combined for w in ("straw", "wicker", "basket", "woven", "קש", "סל", "קלוע", "בז'", "beige"))
+        analysis["category"] = "Accessories"
+        analysis["sub_category"] = "Bag"
+        if is_he:
+            if is_straw:
+                name = "תיק סל קש"
+                analysis["item_type"] = "תיק סל קש"
+                analysis["caption"] = "תיק סל קש מעוצב בעל מרקם טבעי ואיכותי להשלמת המראה."
+            else:
+                name = "תיק יד מעוצב"
+                analysis["item_type"] = "תיק יד"
+                analysis["caption"] = "תיק מעוצב ואלגנטי להשלמת המראה היומיומי."
+            analysis["name"] = name
+            analysis["title"] = name
+            if is_straw:
+                analysis["fabric_materials"] = [{"name": "קש", "pct": 80}, {"name": "עור", "pct": 20}]
+        else:
+            if is_straw:
+                name = "Textured Basket Bag"
+                analysis["item_type"] = "Basket Bag"
+                analysis["caption"] = "An elegant woven basket bag crafted with natural texture, adding effortless sophistication to the outfit."
+            else:
+                name = "Classic Handbag"
+                analysis["item_type"] = "Handbag"
+                analysis["caption"] = "An elegant handbag crafted with clean lines, perfect for everyday styling."
+            analysis["name"] = name
+            analysis["title"] = name
+            if is_straw:
+                analysis["fabric_materials"] = [{"name": "Straw", "pct": 80}, {"name": "Leather", "pct": 20}]
+        analysis["_subcategory_overridden_by"] = "segformer-bag-apparel-purged"
+        logger.warning(
+            "garment_vision: Sanitized bag naming/caption from apparel contamination. New name=%r, sub_category=%r",
+            analysis["name"], analysis["sub_category"],
+        )
 
 
 def _enforce_segformer_category(
@@ -654,6 +735,7 @@ def _enforce_segformer_category(
                     analysis["name"] = new_name
                     analysis["title"] = new_name
                 analysis["_subcategory_overridden_by"] = "segformer-bag"
+            _sanitize_bag_or_accessory(analysis, label=label, kind=kind)
 
         elif ("shoe" in lbl_low or kind == "footwear") and "boot" not in lbl_low:
             sub_low = (analysis.get("sub_category") or "").lower()
@@ -732,11 +814,12 @@ def _enforce_segformer_category(
         else:
             analysis["sub_category"] = None
     elif default == "Accessories":
-        if "bag" in lbl_low:
+        if "bag" in lbl_low or kind == "bag":
             analysis["sub_category"] = "Bag"
             analysis["item_type"] = "handbag"
         else:
             analysis["sub_category"] = None
+        _sanitize_bag_or_accessory(analysis, label=label, kind=kind)
     else:
         analysis["sub_category"] = None
     analysis["_category_overridden_by"] = "segformer"
