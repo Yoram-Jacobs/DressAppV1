@@ -1131,7 +1131,7 @@ async def call_gemma_space_stream_attributes(
         # Use authoritative Gemini SYSTEM_PROMPT (exact prompt used by Gemini Flash)
         # Suffix with SegFormer category hint if available
         sys_parts = [_build_system_prompt(one_pass=False, user_gender=user_gender)]
-        if segformer_category and not is_single_item:
+        if segformer_category and (not is_single_item or segformer_category in ("footwear", "bottom", "accessory", "headwear", "bag")):
             mapped_cat = None
             if segformer_category == "top":
                 mapped_cat = "Top or Outerwear"
@@ -1145,7 +1145,7 @@ async def call_gemma_space_stream_attributes(
                 mapped_cat = "Accessories"
 
             if mapped_cat:
-                sys_parts.append(f"\nSEGMENTATION HINT: SegFormer suggests '{mapped_cat}'.")
+                sys_parts.append(f"\nIMPORTANT SEGMENTATION CONTEXT: This cropped image is specifically the '{mapped_cat}' region isolated from a photo. Classify, name, and describe this specific {mapped_cat} item only, NOT surrounding clothing.")
 
         system_prompt = "\n".join(sys_parts)
         user_text = _user_prompt(language, user_gender=user_gender)
@@ -1156,7 +1156,7 @@ async def call_gemma_space_stream_attributes(
         for name in all_field_names:
             if name in _GARMENT_OBJECT_SCHEMA["properties"]:
                 prop = copy.deepcopy(_GARMENT_OBJECT_SCHEMA["properties"][name])
-                if name == "category" and segformer_category and not is_single_item and not is_coarse_seg:
+                if name == "category" and segformer_category and (not is_single_item or segformer_category in ("footwear", "bottom", "accessory", "headwear", "bag")) and not is_coarse_seg:
                     if segformer_category == "top":
                         prop["enum"] = ["Top", "Outerwear"]
                     elif segformer_category == "bottom":

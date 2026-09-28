@@ -609,7 +609,7 @@ def _enforce_segformer_category(
     """
     if not isinstance(analysis, dict):
         return analysis
-    if is_single_item:
+    if is_single_item and kind not in ("footwear", "bottom", "accessory", "headwear"):
         return analysis
     if not segformer_kind:
         return analysis
@@ -647,14 +647,37 @@ def _enforce_segformer_category(
     logger.warning(
         "garment_vision: SegFormer-anchored category override "
         "label=%r kind=%r gemini_category=%r gemini_subcategory=%r "
-        "-> category=%r (sub_category cleared)",
+        "-> category=%r",
         label, kind, current, old_subcategory, default,
     )
     analysis["category"] = default
-    # Wipe sub_category — if Gemini said "Overcoat" but the SegFormer
-    # mask is unambiguously a bottom, an "Overcoat" sub_category makes
-    # no sense and would mis-render in the closet card.
-    analysis["sub_category"] = None
+    lbl_low = (label or "").lower()
+    if default == "Footwear":
+        analysis["sub_category"] = "Sneakers" if "sneaker" in lbl_low else "Shoes"
+        analysis["item_type"] = "sneakers" if "sneaker" in lbl_low else "shoes"
+        curr_name = (analysis.get("name") or analysis.get("title") or "").lower()
+        if any(w in curr_name for w in ("sweater", "shirt", "top", "hoodie", "cardigan", "jacket", "coat", "pants", "skirt", "dress")):
+            color = (analysis.get("colors") or [""])[0]
+            color_prefix = f"{color.capitalize()} " if color and isinstance(color, str) else ""
+            analysis["name"] = f"{color_prefix}Shoes".strip()
+            analysis["title"] = analysis["name"]
+    elif default == "Bottom":
+        if "skirt" in lbl_low:
+            analysis["sub_category"] = "Skirt"
+            analysis["item_type"] = "skirt"
+        elif "pants" in lbl_low or "trousers" in lbl_low:
+            analysis["sub_category"] = "Pants"
+            analysis["item_type"] = "pants"
+        else:
+            analysis["sub_category"] = None
+    elif default == "Accessories":
+        if "bag" in lbl_low:
+            analysis["sub_category"] = "Bag"
+            analysis["item_type"] = "handbag"
+        else:
+            analysis["sub_category"] = None
+    else:
+        analysis["sub_category"] = None
     analysis["_category_overridden_by"] = "segformer"
     return analysis
 

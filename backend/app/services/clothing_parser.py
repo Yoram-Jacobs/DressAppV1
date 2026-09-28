@@ -822,7 +822,7 @@ def _suppress_overlapping_garments(
             if kept_cat != item_cat:
                 garment_set = {"top", "dress", "outerwear"}
                 is_garment_pair = kept_cat in garment_set and item_cat in garment_set
-                is_flatlay_top_bottom = (not has_human or (count_hint is not None and count_hint <= 1)) and (
+                is_flatlay_top_bottom = (not has_human) and (count_hint is not None and count_hint <= 1) and (
                     {kept_cat, item_cat} == {"top", "bottom"} or {kept_cat, item_cat} == {"top", "dress"}
                 )
                 if not (is_garment_pair or is_flatlay_top_bottom):

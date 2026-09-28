@@ -2303,12 +2303,12 @@ class GarmentVisionService:
             logger.warning("_is_single_item check failed: %s", repr(exc)[:160])
             return False
 
-    async def _gatekeep_image(self, image_bytes: bytes) -> int:
+    async def _gatekeep_image(self, image_bytes: bytes) -> int | None:
         """Fast pre-check to count garments and route the pipeline."""
         if self.provider in ("gemma", "dressapp") or not self.api_key:
             # Gemma / on-prem Eyes operates without Gemini gatekeeper;
-            # return 1 so SegFormer & _looks_already_cropped handle single vs multi item.
-            return 1
+            # return None so downstream relies on SegFormer & human presence detection.
+            return None
 
         import io
         import asyncio
@@ -2378,14 +2378,14 @@ class GarmentVisionService:
                 return count
             except Exception as e:
                 logger.warning("_gatekeep_image failed to parse JSON: %s. Raw response: %s", e, resp)
-                return 1 # Fallback to single item / SegFormer if unparseable
+                return None
         except asyncio.TimeoutError:
             logger.warning("_gatekeep_image timed out after 12s, falling back to SegFormer")
-            return 1
+            return None
         except Exception as exc:
             import traceback
             logger.warning("_gatekeep_image check failed: %s\n%s", repr(exc)[:160], traceback.format_exc())
-            return 1
+            return None
 
     async def analyze_outfits_stream(
         self,
@@ -2421,7 +2421,10 @@ class GarmentVisionService:
                     logger.info("Gatekeeper: photo %d has 0 garments — dropping it", idx)
                     return idx, []
                 
-                logger.info("Gatekeeper: photo %d has %d garment(s) — running SegFormer detect_items", idx, count)
+                if count is not None:
+                    logger.info("Gatekeeper: photo %d has %d garment(s) — running SegFormer detect_items", idx, count)
+                else:
+                    logger.info("Gatekeeper: photo %d count unknown (provider=%s) — running SegFormer detect_items", idx, self.provider)
                 detections = await self.detect_items(img_bytes, count_hint=count)
                 if not detections and count == 1:
                     detections = [{"bbox": [0, 0, 1000, 1000], "kind": "garment", "label": "garment"}]
@@ -2485,20 +2488,23 @@ class GarmentVisionService:
                             return idx, [(det, matted, "image/png")]
                     return idx, [(det, img_bytes, "image/jpeg")]
 
-                if count <= 1 or len(useful) <= 1:
-                    for d in useful:
-                        d["is_single_item"] = True
+                has_human = _detect_human_presence(detections)
+                is_single = (count is None or count <= 1) and len(useful) <= 1 and not has_human
+                for d in useful:
+                    d["is_single_item"] = is_single
 
-                raw_crops = await asyncio.to_thread(self._bbox_crop_useful, img_bytes, useful)
+                raw_crops = await asyncio.to_thread(
+                    self._bbox_crop_useful, img_bytes, useful, is_single_item=is_single
+                )
                 if settings.AUTO_MATTE_CROPS:
                     final_crops = await self._matte_crops(raw_crops)
                 else:
                     final_crops = raw_crops
 
+                is_final_single = (count is None or count <= 1) and len(final_crops) <= 1 and not has_human
                 for det, cbytes, mime in final_crops:
                     det["defer_matte"] = False
-                    if count <= 1 or len(final_crops) <= 1:
-                        det["is_single_item"] = True
+                    det["is_single_item"] = is_final_single
                 return idx, final_crops
 
             except Exception as exc:
@@ -2518,7 +2524,7 @@ class GarmentVisionService:
         for idx, crops in results:
             for det, c_bytes, c_mime in crops:
                 flat_crops.append((idx, det, c_bytes, c_mime))
-        if len(flat_crops) == 1:
+        if len(flat_crops) == 1 and not flat_crops[0][1].get("has_human_head") and flat_crops[0][1].get("is_single_item") is not False:
             flat_crops[0][1]["is_single_item"] = True
         del results
         gc.collect()
@@ -2644,6 +2650,12 @@ class GarmentVisionService:
                     if not analysis.get("title"):
                         analysis["title"] = "Unnamed garment"
                     analysis = _coerce_enums(analysis, user_gender=eff_gender)
+                    _enforce_segformer_category(
+                        analysis,
+                        segformer_kind=det.get("kind") or det.get("category"),
+                        label=det.get("label"),
+                        is_single_item=det.get("is_single_item", False),
+                    )
                     analysis["provider_used"] = assembled.get("provider_used", "gemma")
                     analysis["model_used"] = assembled.get("model_used", "gemma-4-e2b-q4_k_m")
 

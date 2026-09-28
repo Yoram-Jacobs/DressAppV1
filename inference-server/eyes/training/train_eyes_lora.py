@@ -693,11 +693,12 @@ def run_training_on_runpod(
                 err_text = stderr.read().decode("utf-8", errors="replace").strip()
                 raise RuntimeError(f"Step '{label}' failed with exit code {exit_status}. Details: {err_text}")
 
-        # Step 1: Install Python dependencies (ensuring PyTorch 2.5.1 with CUDA 12.4 support)
+        # Step 1: Install Python dependencies while preserving the container's CUDA-enabled PyTorch
         run_ssh_streaming(
             "pip uninstall -y torchaudio && "
-            "pip install --no-cache-dir 'torch==2.5.1+cu124' 'torchvision==0.20.1+cu124' 'accelerate>=1.1.0' --extra-index-url https://download.pytorch.org/whl/cu124 && "
-            "pip install --no-cache-dir -r /workspace/requirements-train.txt --extra-index-url https://download.pytorch.org/whl/cu124",
+            "pip install --no-cache-dir 'h11>=0.16.0' && "
+            "(python3 -c 'import torch; assert torch.cuda.is_available()' || pip install --no-cache-dir 'torch>=2.4.0' 'torchvision>=0.19.0' --extra-index-url https://download.pytorch.org/whl/cu124) && "
+            "pip install --no-cache-dir 'accelerate>=1.1.0' 'peft>=0.13.0' 'bitsandbytes>=0.43.0' 'trl>=0.12.0' 'transformers>=4.45.0' 'datasets>=3.0.0' 'huggingface_hub>=0.23.0' 'pydantic>=2.7.0' 'scipy>=1.10.0'",
             "Install QLoRA Training Dependencies",
         )
 
