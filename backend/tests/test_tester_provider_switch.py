@@ -110,7 +110,7 @@ async def test_llm_gateway_routes_tester_to_gemma(tester_user_dressapp):
 @pytest.mark.anyio
 async def test_llm_gateway_routes_tester_gemini_switch(tester_user_gemini):
     with patch("app.services.gemini_client.GeminiClient.text", new_callable=AsyncMock) as mock_gemini, \
-         patch("app.config.settings.gemini_chat_key", "test_key"):
+         patch("app.config.settings.GEMINI_API_KEY", "test_key"):
         mock_gemini.return_value = '{"result": "gemini output"}'
         res = await call_main_llm(
             user_text="Suggest outfit",
@@ -123,7 +123,7 @@ async def test_llm_gateway_routes_tester_gemini_switch(tester_user_gemini):
 @pytest.mark.anyio
 async def test_llm_gateway_regular_user_stays_on_gemini_platform_default(regular_user):
     with patch("app.services.gemini_client.GeminiClient.text", new_callable=AsyncMock) as mock_gemini, \
-         patch("app.config.settings.gemini_chat_key", "test_key"), \
+         patch("app.config.settings.GEMINI_API_KEY", "test_key"), \
          patch("app.services.llm_gateway._call_gemma_space", new_callable=AsyncMock) as mock_gemma:
         mock_gemini.return_value = '{"result": "gemini output"}'
         res = await call_main_llm(
@@ -142,12 +142,12 @@ def test_vision_service_tester_routes_to_gemma(tester_user_dressapp, tester_user
     assert v_tester.model == "Eyes v1"
 
     # 2. Tester switching to Google Gemini gets Gemini GarmentVisionService
-    with patch("app.config.settings.gemini_chat_key", "test_gemini_key"):
+    with patch("app.config.settings.GEMINI_API_KEY", "test_gemini_key"):
         v_tester_gem = get_garment_vision_service(user=tester_user_gemini)
         assert v_tester_gem.provider == "gemini"
 
     # 3. Regular non-tester user gets Gemini platform default
-    with patch("app.config.settings.gemini_chat_key", "test_gemini_key"), \
+    with patch("app.config.settings.GEMINI_API_KEY", "test_gemini_key"), \
          patch("app.config.settings.EYES_PROVIDER", "gemini"):
         v_reg = get_garment_vision_service(user=regular_user)
         assert v_reg.provider == "gemini"
@@ -164,7 +164,7 @@ def test_stylist_brain_tester_switch(tester_user_dressapp, tester_user_gemini, r
         assert brain_tester.provider_name == "gemma"
 
     # 2. Tester switching to Google Gemini gets primary GeminiStylistBrain
-    with patch("app.config.settings.gemini_chat_key", "test_gemini_key"):
+    with patch("app.config.settings.GEMINI_API_KEY", "test_gemini_key"):
         brain_tester_gem = stylist_brain_service(user=tester_user_gemini)
         if isinstance(brain_tester_gem, FallbackBrain):
             assert brain_tester_gem.primary.provider_name == "gemini"
