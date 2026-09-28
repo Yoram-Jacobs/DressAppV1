@@ -976,12 +976,15 @@ async def parse_garments(image_bytes: bytes) -> list[dict[str, Any]]:
     has_head = False
     if human_class_ids:
         human_mask_full = np.isin(class_mask, list(human_class_ids)).astype(np.uint8)
-        head_class_ids = {
-            cid for cid, name in _id2label.items()
-            if name in {"Face", "Hair", "Neck"}
-        }
-        if head_class_ids:
-            has_head = bool(np.isin(class_mask, list(head_class_ids)).any())
+        if not human_mask_full.any():
+            human_mask_full = None
+        else:
+            head_class_ids = {
+                cid for cid, name in _id2label.items()
+                if name in {"Face", "Hair", "Neck"}
+            }
+            if head_class_ids:
+                has_head = bool(np.isin(class_mask, list(head_class_ids)).any())
     else:
         human_mask_full = None
 
@@ -1368,8 +1371,11 @@ def apply_alpha_intersection(
     # or human skin (if a human wearer is present).
     new_alpha = arr[:, :, 3].copy()
 
+    has_other = other_mask is not None and bool(other_mask.any())
+    has_human = human_mask is not None and bool(human_mask.any())
+
     # 1. Subtract other overlapping garments (dilated for clean boundaries)
-    if other_mask is not None:
+    if has_other:
         try:
             if other_mask.shape != (Hc, Wc):
                 other_resized = np.array(
@@ -1398,7 +1404,7 @@ def apply_alpha_intersection(
             )
 
     # 2. Subtract human mask (if present)
-    if human_mask is not None:
+    if has_human:
         try:
             if human_mask.shape != (Hc, Wc):
                 human_resized = np.array(
@@ -1433,7 +1439,7 @@ def apply_alpha_intersection(
     # cleavage, necks) and classifies them as background or clothes. If human_mask
     # is present and this is a body garment, detect and excise bare skin.
     norm_cat = (category or "").lower().replace(" ", "").replace("-", "")
-    if human_mask is not None and norm_cat in {"top", "outerwear", "dress", "fullbody", "bottom"}:
+    if has_human and norm_cat in {"top", "outerwear", "dress", "fullbody", "bottom"}:
         try:
             r = arr[:, :, 0].astype(float)
             g = arr[:, :, 1].astype(float)
@@ -1459,7 +1465,7 @@ def apply_alpha_intersection(
             )
 
     # 3. Apply geometric head exclusion ONLY when a human wearer is present
-    if human_mask is not None and seg_mask_bbox is not None and category and category.lower().replace(" ", "") in {
+    if has_human and seg_mask_bbox is not None and category and category.lower().replace(" ", "") in {
         "top", "outerwear", "dress", "fullbody",
     }:
         try:
@@ -1482,7 +1488,7 @@ def apply_alpha_intersection(
     # exist in the crop frame. If other_mask is None and human_mask is None, rembg already
     # isolated the standalone garment with studio-grade alpha boundaries; intersecting
     # with a coarse SegFormer mask introduces jagged erosion and punches holes in low-contrast/graphic fabric.
-    if soft_mask is not None and (other_mask is not None or human_mask is not None):
+    if soft_mask is not None and (has_other or has_human):
         try:
             new_alpha = np.minimum(new_alpha, soft_mask).astype(np.uint8)
         except Exception as exc:  # noqa: BLE001

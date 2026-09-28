@@ -1341,7 +1341,7 @@ async def clean_item_background(
             )
             seg_mask = None
 
-        if seg_mask is not None and human_mask is not None:
+        if seg_mask is not None and human_mask is not None and human_mask.any():
             try:
                 maybe_refined = _cp.apply_alpha_intersection(
                     result["image_png"],

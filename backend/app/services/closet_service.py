@@ -318,7 +318,7 @@ async def run_background_matte(
     provider = out.get("provider") if isinstance(out, dict) else None
     faithful = out.get("faithful", True) if isinstance(out, dict) else True
 
-    if result and seg_mask is not None and human_mask is not None:
+    if result and seg_mask is not None and human_mask is not None and human_mask.any():
         try:
             refined = _cp.apply_alpha_intersection(
                 result,
