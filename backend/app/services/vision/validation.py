@@ -609,11 +609,11 @@ def _enforce_segformer_category(
     """
     if not isinstance(analysis, dict):
         return analysis
-    if is_single_item and kind not in ("footwear", "bottom", "accessory", "headwear"):
-        return analysis
     if not segformer_kind:
         return analysis
     kind = segformer_kind.strip().lower()
+    if is_single_item and kind not in ("footwear", "bottom", "accessory", "headwear"):
+        return analysis
     allowed = _SEGFORMER_KIND_TO_ALLOWED_CATEGORIES.get(kind)
     if not allowed:
         # Unknown SegFormer kind (e.g. "garment" from the Gemini-only
