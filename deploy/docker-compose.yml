@@ -40,6 +40,7 @@ services:
           memory: 6g
     volumes:
       - ../backend/app:/app/backend/app
+      - ../backend/tests:/app/backend/tests
       - model-cache:/models/huggingface
       - rembg-cache:/models/u2net
       - static-uploads:/app/backend/static
