@@ -82,6 +82,7 @@ export const Footer = () => {
               <li>
                 <Link
                   to="/about"
+                  onClick={() => window.scrollTo({ top: 0, left: 0, behavior: 'instant' })}
                   className="text-sm text-white/60 no-underline transition-smooth duration-200 hover:text-white"
                 >
                   {t("footer.aboutUs", {
