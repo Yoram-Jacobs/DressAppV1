@@ -869,7 +869,9 @@
     "savedOptimistic": "クローゼットに追加",
     "currencyPlaceholder": "USD",
     "sourceTagPlaceholder": "自分の",
-    "gender": "性別"
+    "gender": "性別",
+    "eyesSlowNotice": "標準AIの解析には40〜60秒かかります。ManagerにアップグレードするとCloud Geminiで2秒の高速解析が可能になります！",
+    "skipWaitCta": "⚡ Managerなら2秒"
   },
   "itemDetail": {
     "reanalyze": {
@@ -1131,7 +1133,12 @@
     },
     "takePhoto": "写真を撮影",
     "replacePhoto": "写真を置き換え",
-    "useProfileShoeSize": "プロフィールより: {{size}}"
+    "useProfileShoeSize": "プロフィールより: {{size}}",
+    "generativeLockedTitle": "AIスタジオ再撮影＆再解析",
+    "generativeLocked": "ManagerおよびProfessionalプラン限定。Google Cloud Geminiにより、2秒での瞬時再解析、生成AIによるスタジオ再撮影、切り抜き補正、精緻な生地素材認識を実行します。",
+    "generativeFeature1": "⚡ Cloud Geminiによる2秒の瞬時解析",
+    "generativeFeature2": "🎨 生成AIスタジオ写真再撮影＆インペインティング",
+    "generativeFeature3": "🔬 生地・質感・属性の高精度ディープ検出"
   },
   "stylist": {
     "heroTitle": "あなた専属のAIスタイリスト",
@@ -4607,7 +4614,9 @@
       "marketplaceAccess": "マーケットプレイスでの販売・レンタル",
       "schedulerAccess": "スケジューラー・プッシュ通知",
       "campaignsAccess": "広告キャンペーン機能",
-      "wardrobeMigration": "ワードローブの移行"
+      "wardrobeMigration": "ワードローブの移行",
+      "analysisSpeed": "解析スピード",
+      "generativeInpainting": "AIスタジオ写真再撮影＆インペインティング"
     },
     "supportTiers": {
       "community": "コミュニティサポート",
@@ -4707,7 +4716,9 @@
     "bestValue": "一番お得",
     "buyPack": "{{count}}クレジットを購入",
     "purchasePackSuccess": "{{count}}クレジットを購入しました！",
-    "purchasePackError": "クレジットパックの購入に失敗しました。"
+    "purchasePackError": "クレジットパックの購入に失敗しました。",
+    "speedFree": "40〜60秒 (標準AI)",
+    "speedPaid": "⚡ 2秒 (Cloud Gemini)"
   },
   "avatar": {
     "savedSuccess": "アバターとビジュアルプロフィールを保存しました!",

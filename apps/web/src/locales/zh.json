@@ -869,7 +869,9 @@
     "savedOptimistic": "添加到衣柜",
     "currencyPlaceholder": "USD",
     "sourceTagPlaceholder": "自己的",
-    "gender": "性别"
+    "gender": "性别",
+    "eyesSlowNotice": "标准 AI 分析需 40–60 秒。升级至 Manager 即可享受 Cloud Gemini 极速 2 秒分析！",
+    "skipWaitCta": "⚡ Manager 2秒极速"
   },
   "itemDetail": {
     "reanalyze": {
@@ -1131,7 +1133,12 @@
     },
     "takePhoto": "拍摄照片",
     "replacePhoto": "替换照片",
-    "useProfileShoeSize": "来自个人资料：{{size}}"
+    "useProfileShoeSize": "来自个人资料：{{size}}",
+    "generativeLockedTitle": "AI 摄影棚重绘与再次分析",
+    "generativeLocked": "Manager 与 Professional 方案专享。由 Google Cloud Gemini 驱动，提供 2 秒极速再次分析、生成式摄影棚精修重绘、缺口修补以及精细面料材质识别。",
+    "generativeFeature1": "⚡ Cloud Gemini 2 秒极速分析",
+    "generativeFeature2": "🎨 生成式摄影棚重绘与智能修补",
+    "generativeFeature3": "🔬 深度面料、质感与属性智能识别"
   },
   "stylist": {
     "heroTitle": "您的专属AI造型师",
@@ -4606,7 +4613,9 @@
       "marketplaceAccess": "市场出售与租赁",
       "schedulerAccess": "日程安排器与推送通知",
       "campaignsAccess": "包含广告活动",
-      "wardrobeMigration": "衣橱迁移"
+      "wardrobeMigration": "衣橱迁移",
+      "analysisSpeed": "分析速度",
+      "generativeInpainting": "AI 摄影棚重绘与精修"
     },
     "supportTiers": {
       "community": "社区支持",
@@ -4706,7 +4715,9 @@
     "bestValue": "最划算",
     "buyPack": "购买 {{count}} 点积分",
     "purchasePackSuccess": "成功购买 {{count}} 点积分！",
-    "purchasePackError": "购买积分包失败。"
+    "purchasePackError": "购买积分包失败。",
+    "speedFree": "40–60 秒 (标准 AI)",
+    "speedPaid": "⚡ 2 秒 (Cloud Gemini)"
   },
   "avatar": {
     "savedSuccess": "头像和视觉配置文件已保存！",

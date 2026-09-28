@@ -38,6 +38,9 @@ import {
   Check,
   Image as ImageIcon,
   Unlink,
+  Crown,
+  Zap,
+  Lock,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ScrollToTop } from '@/components/ScrollToTop';
@@ -93,6 +96,7 @@ import {
 } from '@/lib/taxonomy';
 import { toast } from 'sonner';
 import { useAuth } from '@/lib/auth';
+import { useTierLimits } from '@/hooks/useTierLimits';
 import { isSTTSupported, createRecognition, startDictationSession } from '@/lib/speech';
 import { deriveSizeFromPreferences } from '@/lib/size_preferences';
 import ItemDetailBanner from "../assets/img/inner6.webp";
@@ -467,6 +471,7 @@ function NullableSelect({ value, onChange, options, placeholder, testid, format,
 export default function ItemDetail() {
   const { t, i18n } = useTranslation();
   const { user } = useAuth();
+  const { isFree } = useTierLimits();
   const { id } = useParams();
   const nav = useNavigate();
   const location = useLocation();
@@ -2178,7 +2183,61 @@ export default function ItemDetail() {
               "Remove the metal studs from the jacket's front"), calling Nano
               Banana image generation as needed. */}
             <Card className="rounded-[12px] bg-white overflow-hidden shadow-sm border border-border" data-testid="item-reanalyze-card">
-              <div className="flex items-center gap-3 p-5 border-b border-border">
+              {isFree ? (
+                <div>
+                  <div className="flex items-center gap-3 p-5 border-b border-border bg-gradient-to-r from-amber-500/10 via-amber-500/5 to-transparent">
+                    <div className="p-3 rounded-full bg-amber-500/20 text-amber-600 dark:text-amber-400 shrink-0">
+                      <Crown className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-[14px] font-bold block text-dark-brand uppercase">
+                          {t('itemDetail.generativeLockedTitle', { defaultValue: 'AI Studio Reshoots & Re-analysing' })}
+                        </span>
+                        <Badge variant="outline" className="text-[10px] bg-amber-100 text-amber-800 border-amber-300">
+                          {t('pricing.manager', { defaultValue: 'Manager' })}
+                        </Badge>
+                      </div>
+                      <span className="text-[12px] text-text-brand font-medium block mt-0.5 normal-case">
+                        {t('itemDetail.generativeLocked', { defaultValue: 'Exclusive to Manager & Professional. Cloud Gemini performs instant 2s re-analysis, generative studio inpainting, hole filling, and fine-grained fabric inspection.' })}
+                      </span>
+                    </div>
+                  </div>
+                  <CardContent className="p-5 space-y-4">
+                    <div className="space-y-2.5 rounded-xl bg-accent-beige/40 dark:bg-muted/30 p-4 border border-border/60">
+                      <div className="flex items-center gap-2.5 text-xs font-semibold text-text-brand">
+                        <Zap className="h-4 w-4 text-amber-500 shrink-0" />
+                        <span>{t('itemDetail.generativeFeature1', { defaultValue: '⚡ Instant 2s Cloud Gemini analysis' })}</span>
+                      </div>
+                      <div className="flex items-center gap-2.5 text-xs font-semibold text-text-brand">
+                        <Sparkles className="h-4 w-4 text-primary-brand shrink-0" />
+                        <span>{t('itemDetail.generativeFeature2', { defaultValue: '🎨 Generative studio photo reshoots & inpainting' })}</span>
+                      </div>
+                      <div className="flex items-center gap-2.5 text-xs font-semibold text-text-brand">
+                        <BadgeCheck className="h-4 w-4 text-emerald-600 shrink-0" />
+                        <span>{t('itemDetail.generativeFeature3', { defaultValue: '🔬 Deep fabric, texture & attribute detection' })}</span>
+                      </div>
+                    </div>
+
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-2">
+                      <span className="text-xs text-text-brand font-medium">
+                        {t('addItem.eyesSlowNotice', { defaultValue: 'Standard AI takes 40–60s. Upgrade to Manager for instant 2s Cloud Gemini analysis!' })}
+                      </span>
+                      <Button
+                        type="button"
+                        onClick={() => nav('/pricing')}
+                        className="bg-primary-brand text-white hover:opacity-95 font-bold shrink-0 shadow-sm"
+                        data-testid="item-reanalyze-upgrade-btn"
+                      >
+                        <Crown className="h-4 w-4 mr-1.5 text-amber-300" />
+                        {t('pricing.upgradePlan', { defaultValue: 'Upgrade Plan' })}
+                      </Button>
+                    </div>
+                  </CardContent>
+                </div>
+              ) : (
+                <>
+                  <div className="flex items-center gap-3 p-5 border-b border-border">
                 <div className="p-3 rounded-full bg-primary-shadow text-primary-brand dark:bg-[hsl(271_30%_18%)] dark:text-[hsl(271_81%_70%)] shrink-0">
                   <RefreshCw className="h-5 w-5" />
                 </div>
@@ -2428,7 +2487,9 @@ export default function ItemDetail() {
                   </div>
                 )}
               </CardContent>
-            </Card>
+            </>
+          )}
+        </Card>
           </div>
           {/* ---------- Edit form column ---------- */}
           <div className="md:col-span-2 space-y-4" data-testid="item-edit-form">

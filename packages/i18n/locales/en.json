@@ -869,7 +869,9 @@
     "uploadFailed": "Failed to process image. Please try again.",
     "savedOptimistic": "Add to closet",
     "currencyPlaceholder": "USD",
-    "sourceTagPlaceholder": "own"
+    "sourceTagPlaceholder": "own",
+    "eyesSlowNotice": "Standard AI takes 40–60s. Upgrade to Manager for instant 2s Cloud Gemini analysis!",
+    "skipWaitCta": "⚡ 2s with Manager"
   },
   "itemDetail": {
     "reanalyze": {
@@ -1131,7 +1133,12 @@
     },
     "takePhoto": "Take photo",
     "replacePhoto": "Replace photo",
-    "useProfileShoeSize": "From profile: {{size}}"
+    "useProfileShoeSize": "From profile: {{size}}",
+    "generativeLockedTitle": "AI Studio Reshoots & Re-analysing",
+    "generativeLocked": "Exclusive to Manager & Professional. Cloud Gemini performs instant 2s re-analysis, generative studio inpainting, hole filling, and fine-grained fabric inspection.",
+    "generativeFeature1": "⚡ Instant 2s Cloud Gemini analysis",
+    "generativeFeature2": "🎨 Generative studio photo reshoots & inpainting",
+    "generativeFeature3": "🔬 Deep fabric, texture & attribute detection"
   },
   "stylist": {
     "heroTitle": "Your Personal AI Stylist",
@@ -4603,7 +4610,9 @@
       "marketplaceAccess": "Marketplace selling & renting",
       "schedulerAccess": "Scheduler & push notifications",
       "campaignsAccess": "Ad Campaigns included",
-      "wardrobeMigration": "Wardrobe Migration"
+      "wardrobeMigration": "Wardrobe Migration",
+      "analysisSpeed": "Analysis Speed",
+      "generativeInpainting": "AI Photo Reshoots & Inpainting"
     },
     "supportTiers": {
       "community": "Community Support",
@@ -4703,7 +4712,9 @@
     "bestValue": "Best Value",
     "buyPack": "Buy {{count}} Credits",
     "purchasePackSuccess": "Successfully purchased {{count}} credits!",
-    "purchasePackError": "Failed to purchase credit pack."
+    "purchasePackError": "Failed to purchase credit pack.",
+    "speedFree": "40–60s (Standard AI)",
+    "speedPaid": "⚡ 2s (Cloud Gemini)"
   },
   "avatar": {
     "savedSuccess": "Avatar & visual profile saved!",

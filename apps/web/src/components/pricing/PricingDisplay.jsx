@@ -99,6 +99,20 @@ export function PricingDisplay({
   // feature row without touching markup.
   const COMPARE_ROWS = [
     {
+      label: t('pricing.features.analysisSpeed', { defaultValue: 'Analysis Speed' }),
+      free: t('pricing.speedFree', { defaultValue: '40–60s (Standard AI)' }),
+      manager: t('pricing.speedPaid', { defaultValue: '⚡ 2s (Cloud Gemini)' }),
+      professional: t('pricing.speedPaid', { defaultValue: '⚡ 2s (Cloud Gemini)' }),
+      type: 'text',
+    },
+    {
+      label: t('pricing.features.generativeInpainting', { defaultValue: 'AI Photo Reshoots & Inpainting' }),
+      free: false,
+      manager: true,
+      professional: true,
+      type: 'flag',
+    },
+    {
       label: t('pricing.features.credits', { defaultValue: 'AI Credits / Month' }),
       free: t('pricing.freeCreditsOnboarding', { defaultValue: '5 free AI reconstructions' }),
       manager: '100',

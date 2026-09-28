@@ -881,7 +881,9 @@
     "savedOptimistic": "הוסף לארון",
     "currencyPlaceholder": "USD",
     "sourceTagPlaceholder": "שֶׁלוֹ",
-    "gender": "מגדר"
+    "gender": "מגדר",
+    "eyesSlowNotice": "ה-AI הבסיסי לוקח 40–60 שניות. שדרגו ל-Manager לניתוח מהיר תוך 2 שניות עם Cloud Gemini!",
+    "skipWaitCta": "⚡ תוך 2 שנ' ב-Manager"
   },
   "itemDetail": {
     "reanalyze": {
@@ -1144,7 +1146,12 @@
     },
     "takePhoto": "צילום תמונה",
     "replacePhoto": "החלפת תמונה",
-    "useProfileShoeSize": "מהפרופיל: {{size}}"
+    "useProfileShoeSize": "מהפרופיל: {{size}}",
+    "generativeLockedTitle": "שחזור סטודיו וניתוח מחדש ב-AI",
+    "generativeLocked": "בלעדי למסלולי Manager ו-Professional. מודל Cloud Gemini מבצע ניתוח מחדש תוך 2 שניות, שחזור צילום סטודיו גנרטיבי, השלמת חורים וזיהוי בדים מעמיק.",
+    "generativeFeature1": "⚡ ניתוח מהיר תוך 2 שניות עם Cloud Gemini",
+    "generativeFeature2": "🎨 שחזור צילום סטודיו גנרטיבי והסרת פגמים",
+    "generativeFeature3": "🔬 זיהוי מעמיק של בדים, מרקמים ומאפיינים"
   },
   "stylist": {
     "heroTitle": "הסטייליסט האישי שלך מבוסס AI",
@@ -4682,7 +4689,9 @@
       "marketplaceAccess": "מכירה והשכרה במרקטפלייס",
       "schedulerAccess": "תזמון והתראות פוש",
       "campaignsAccess": "קמפיינים פרסומיים כלולים",
-      "wardrobeMigration": "העברת מלתחה"
+      "wardrobeMigration": "העברת מלתחה",
+      "analysisSpeed": "מהירות ניתוח",
+      "generativeInpainting": "שחזור סטודיו גנרטיבי ב-AI"
     },
     "supportTiers": {
       "community": "תמיכת קהילה",
@@ -4782,7 +4791,9 @@
     "bestValue": "המשתלם ביותר",
     "buyPack": "רכוש {{count}} קרדיטים",
     "purchasePackSuccess": "רכשת בהצלחה {{count}} קרדיטים!",
-    "purchasePackError": "שגיאה ברכישת חבילת קרדיטים."
+    "purchasePackError": "שגיאה ברכישת חבילת קרדיטים.",
+    "speedFree": "40–60 שנ' (AI בסיסי)",
+    "speedPaid": "⚡ 2 שנ' (Cloud Gemini)"
   },
   "avatar": {
     "savedSuccess": "אווטאר ופרופיל חזותי נשמר!",

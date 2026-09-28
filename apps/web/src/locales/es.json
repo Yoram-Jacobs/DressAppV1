@@ -869,7 +869,9 @@
     "savedOptimistic": "Añadir al armario",
     "currencyPlaceholder": "USD",
     "sourceTagPlaceholder": "propio",
-    "gender": "Género"
+    "gender": "Género",
+    "eyesSlowNotice": "La IA estándar tarda entre 40 y 60 s. ¡Actualiza a Manager para un análisis instantáneo en 2 s con Cloud Gemini!",
+    "skipWaitCta": "⚡ 2 s con Manager"
   },
   "itemDetail": {
     "reanalyze": {
@@ -1131,7 +1133,12 @@
     },
     "takePhoto": "Tomar foto",
     "replacePhoto": "Reemplazar foto",
-    "useProfileShoeSize": "Del perfil: {{size}}"
+    "useProfileShoeSize": "Del perfil: {{size}}",
+    "generativeLockedTitle": "Reanálisis y Retoques de Estudio con IA",
+    "generativeLocked": "Exclusivo para los planes Manager y Professional. Cloud Gemini realiza reanálisis instantáneo en 2 s, retoques generativos de estudio, relleno de huecos e inspección detallada de tejidos.",
+    "generativeFeature1": "⚡ Análisis instantáneo en 2 s con Cloud Gemini",
+    "generativeFeature2": "🎨 Retoques fotográficos generativos de estudio",
+    "generativeFeature3": "🔬 Detección profunda de tejidos, texturas y atributos"
   },
   "stylist": {
     "heroTitle": "Tu estilista personal con IA",
@@ -4606,7 +4613,9 @@
       "marketplaceAccess": "Venta y alquiler en el marketplace",
       "schedulerAccess": "Programador y notificaciones push",
       "campaignsAccess": "Campañas publicitarias incluidas",
-      "wardrobeMigration": "Migración de armario"
+      "wardrobeMigration": "Migración de armario",
+      "analysisSpeed": "Velocidad de análisis",
+      "generativeInpainting": "Retoques y Reanálisis de Estudio con IA"
     },
     "supportTiers": {
       "community": "Soporte de la comunidad",
@@ -4706,7 +4715,9 @@
     "bestValue": "Mejor valor",
     "buyPack": "Comprar {{count}} créditos",
     "purchasePackSuccess": "¡Has comprado {{count}} créditos con éxito!",
-    "purchasePackError": "Error al comprar el paquete de créditos."
+    "purchasePackError": "Error al comprar el paquete de créditos.",
+    "speedFree": "40–60 s (IA estándar)",
+    "speedPaid": "⚡ 2 s (Cloud Gemini)"
   },
   "avatar": {
     "savedSuccess": "¡Avatar y perfil visual guardados!",

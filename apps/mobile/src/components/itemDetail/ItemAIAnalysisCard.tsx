@@ -49,6 +49,8 @@ interface ItemAIAnalysisProps {
   appliedImageUrl?: string | null;
   onApplyImage?: (imageUrl: string) => void;
   onFocusInput?: () => void;
+  isFree?: boolean;
+  onUpgradePress?: () => void;
 }
 
 export function ItemAIAnalysisCard({
@@ -63,6 +65,8 @@ export function ItemAIAnalysisCard({
   appliedImageUrl,
   onApplyImage,
   onFocusInput,
+  isFree = false,
+  onUpgradePress,
 }: ItemAIAnalysisProps) {
   const { t } = useTranslation();
   const { colors, isDark } = useTheme();
@@ -76,6 +80,76 @@ export function ItemAIAnalysisCard({
     setPromptInput('');
     onSendPrompt(text);
   };
+
+  if (isFree) {
+    return (
+      <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
+        <View style={[styles.header, { borderBottomColor: colors.border }]}>
+          <View style={styles.titleRow}>
+            <View style={[styles.iconBox, { backgroundColor: isDark ? 'rgba(234, 179, 8, 0.15)' : '#FEF3C7' }]}>
+              <Lucide.Crown size={18} color="#D97706" />
+            </View>
+            <View style={styles.titleCol}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                <Text style={[styles.title, { color: colors.foreground }]}>
+                  {t('itemDetail.generativeLockedTitle', { defaultValue: 'AI Studio Reshoots & Re-analysing' })}
+                </Text>
+                <View style={[styles.proBadge, { backgroundColor: '#FDE68A' }]}>
+                  <Text style={styles.proBadgeText}>MANAGER</Text>
+                </View>
+              </View>
+              <Text style={[styles.subtitle, { color: colors.mutedFg }]}>
+                {t('itemDetail.generativeLocked', {
+                  defaultValue: 'Exclusive to Manager & Professional. Cloud Gemini performs instant 2s re-analysis, generative studio inpainting, hole filling, and fine-grained fabric inspection.',
+                })}
+              </Text>
+            </View>
+          </View>
+        </View>
+
+        <View style={styles.body}>
+          <View style={[styles.featuresBox, { backgroundColor: isDark ? 'rgba(255, 255, 255, 0.04)' : '#F9FAFB', borderColor: colors.border }]}>
+            <View style={styles.featureLine}>
+              <Lucide.Zap size={14} color="#D97706" />
+              <Text style={[styles.featureLineText, { color: colors.foreground }]}>
+                {t('itemDetail.generativeFeature1', { defaultValue: '⚡ Instant 2s Cloud Gemini analysis' })}
+              </Text>
+            </View>
+            <View style={styles.featureLine}>
+              <Lucide.Sparkles size={14} color={colors.accent} />
+              <Text style={[styles.featureLineText, { color: colors.foreground }]}>
+                {t('itemDetail.generativeFeature2', { defaultValue: '🎨 Generative studio photo reshoots & inpainting' })}
+              </Text>
+            </View>
+            <View style={styles.featureLine}>
+              <Lucide.CheckCircle2 size={14} color="#10B981" />
+              <Text style={[styles.featureLineText, { color: colors.foreground }]}>
+                {t('itemDetail.generativeFeature3', { defaultValue: '🔬 Deep fabric, texture & attribute detection' })}
+              </Text>
+            </View>
+          </View>
+
+          <View style={[styles.eyesNoticeBox, { backgroundColor: isDark ? 'rgba(234, 179, 8, 0.12)' : '#FFFBEB', borderColor: isDark ? 'rgba(234, 179, 8, 0.3)' : '#FDE68A' }]}>
+            <Lucide.Clock size={13} color="#D97706" style={{ marginTop: 1 }} />
+            <Text style={[styles.eyesNoticeText, { color: isDark ? '#FDE68A' : '#92400E' }]}>
+              {t('addItem.eyesSlowNotice', { defaultValue: 'Standard AI takes 40–60s. Upgrade to Manager for instant 2s Cloud Gemini analysis!' })}
+            </Text>
+          </View>
+
+          <TouchableOpacity
+            style={[styles.upgradePlanBtn, { backgroundColor: colors.accent }]}
+            onPress={onUpgradePress}
+            activeOpacity={0.85}
+          >
+            <Lucide.Crown size={15} color="#FFF" />
+            <Text style={styles.upgradePlanBtnText}>
+              {t('pricing.upgradeManager', { defaultValue: 'Upgrade to Manager' })}
+            </Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    );
+  }
 
   return (
     <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
@@ -427,6 +501,10 @@ const styles = StyleSheet.create({
     gap: spacing[2],
     flexWrap: 'wrap',
   },
+  body: {
+    gap: spacing[3],
+    marginTop: spacing[2],
+  },
   titleRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -660,5 +738,61 @@ const styles = StyleSheet.create({
     fontSize: 10,
     fontStyle: 'italic',
     lineHeight: 14,
+  },
+  proBadge: {
+    paddingHorizontal: 6,
+    paddingVertical: 1.5,
+    borderRadius: radii.sm,
+  },
+  proBadgeText: {
+    fontFamily: fonts.bodyBold,
+    fontSize: 9,
+    color: '#92400E',
+    letterSpacing: 0.5,
+  },
+  featuresBox: {
+    padding: spacing[3],
+    borderRadius: radii.lg,
+    borderWidth: 1,
+    gap: spacing[2],
+  },
+  featureLine: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing[2],
+  },
+  featureLineText: {
+    fontFamily: fonts.bodyMedium,
+    fontSize: fontSizes.xs,
+    flex: 1,
+  },
+  eyesNoticeBox: {
+    padding: spacing[2.5],
+    borderRadius: radii.md,
+    borderWidth: 1,
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: spacing[2],
+  },
+  eyesNoticeText: {
+    fontFamily: fonts.bodyMedium,
+    fontSize: 11,
+    lineHeight: 15,
+    flex: 1,
+  },
+  upgradePlanBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing[2],
+    paddingVertical: spacing[3],
+    borderRadius: radii.xl,
+    marginTop: spacing[1],
+    ...shadows.sm,
+  },
+  upgradePlanBtnText: {
+    fontFamily: fonts.bodyBold,
+    fontSize: fontSizes.sm,
+    color: '#FFF',
   },
 });

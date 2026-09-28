@@ -192,7 +192,9 @@ export function PricingScreen() {
             {t('pricing.freeDesc', { defaultValue: 'Up to 50 garments, basic AI styling & closet management.' })}
           </Text>
           <View style={styles.featureList}>
-            <Text style={[styles.featureItem, { color: colors.foreground }]}>✓ 50 Closet items (expandable to 200 with invites)</Text>
+            <Text style={[styles.featureItem, { color: colors.foreground }]}>⏱️ 40–60s / photo (Standard AI)</Text>
+            <Text style={[styles.featureItem, { color: colors.mutedFg }]}>✕ No AI Photo Reshoots & Inpainting</Text>
+            <Text style={[styles.featureItem, { color: colors.foreground }]}>✓ 50 Closet items (expandable to 150 with invites)</Text>
             <Text style={[styles.featureItem, { color: colors.foreground }]}>✓ 10 free daily AI styling operations</Text>
             <Text style={[styles.featureItem, { color: colors.foreground }]}>✓ Standard background cutout & tagger</Text>
           </View>
@@ -234,10 +236,13 @@ export function PricingScreen() {
               : t('pricing.managerMonthlyDesc', { defaultValue: '$4.99 billed monthly' })}
           </Text>
           <View style={styles.featureList}>
+            <Text style={[styles.featureItem, { color: colors.accent, fontFamily: fonts.bodyBold }]}>⚡ 2s / photo (Cloud Gemini, 20× faster)</Text>
+            <Text style={[styles.featureItem, { color: colors.foreground, fontFamily: fonts.bodyBold }]}>🎨 AI Photo Reshoots & Studio Inpainting</Text>
             <Text style={[styles.featureItem, { color: colors.foreground }]}>✓ Unlimited closet items & suitcases</Text>
             <Text style={[styles.featureItem, { color: colors.foreground }]}>✓ Unlimited daily AI operations</Text>
             <Text style={[styles.featureItem, { color: colors.foreground }]}>✓ Full Trend Scout & Local Fashion News</Text>
             <Text style={[styles.featureItem, { color: colors.foreground }]}>✓ Automatic morning outfit scheduler</Text>
+            <Text style={[styles.featureItem, { color: colors.foreground }]}>✓ Wardrobe Migration from other apps</Text>
             <Text style={[styles.featureItem, { color: colors.foreground }]}>✓ Marketplace buying & selling privileges</Text>
           </View>
           <TouchableOpacity
@@ -297,6 +302,8 @@ export function PricingScreen() {
               : t('pricing.proMonthlyDesc', { defaultValue: '$9.99 billed monthly' })}
           </Text>
           <View style={styles.featureList}>
+            <Text style={[styles.featureItem, { color: colors.accent, fontFamily: fonts.bodyBold }]}>⚡ 2s / photo (Cloud Gemini, 20× faster)</Text>
+            <Text style={[styles.featureItem, { color: colors.foreground, fontFamily: fonts.bodyBold }]}>🎨 AI Photo Reshoots & Studio Inpainting</Text>
             <Text style={[styles.featureItem, { color: colors.foreground }]}>✓ Everything in Manager tier</Text>
             <Text style={[styles.featureItem, { color: colors.foreground }]}>✓ Verified Stylist Directory Registry badge</Text>
             <Text style={[styles.featureItem, { color: colors.foreground }]}>✓ Create & manage ad campaigns ($1/day fee)</Text>
@@ -364,6 +371,93 @@ export function PricingScreen() {
             <Text style={[styles.packName, { color: colors.foreground }]}>{t('pricing.studioPack', { defaultValue: 'Studio' })}</Text>
             <Text style={[styles.packPrice, { color: colors.mutedFg }]}>$24.99</Text>
           </TouchableOpacity>
+        </View>
+
+        {/* ── Feature Comparison Table ─────────────────────────────────── */}
+        <Text style={[styles.sectionTitle, { color: colors.mutedFg }]}>
+          {t('pricing.featureComparisonHeader', { defaultValue: 'COMPARE PLAN FEATURES' })}
+        </Text>
+
+        <View style={[styles.compareTable, { backgroundColor: colors.card, borderColor: colors.border }]}>
+          {/* Header row */}
+          <View style={[styles.compareRow, styles.compareHeaderRow, { borderBottomColor: colors.border }]}>
+            <Text style={[styles.compareColHeader, { flex: 2, color: colors.mutedFg }]}>
+              {t('pricing.compareFeatureCol', { defaultValue: 'Feature' })}
+            </Text>
+            <Text style={[styles.compareColHeader, { flex: 1, textAlign: 'center', color: colors.mutedFg }]}>Free</Text>
+            <Text style={[styles.compareColHeader, { flex: 1.2, textAlign: 'center', color: colors.accent }]}>Manager</Text>
+            <Text style={[styles.compareColHeader, { flex: 1, textAlign: 'center', color: colors.foreground }]}>Pro</Text>
+          </View>
+
+          {/* Row 1: Speed */}
+          <View style={[styles.compareRow, { borderBottomColor: colors.border }]}>
+            <Text style={[styles.compareFeatureLabel, { flex: 2, color: colors.foreground }]}>
+              {t('pricing.features.analysisSpeed', { defaultValue: 'Analysis Speed' })}
+            </Text>
+            <Text style={[styles.compareValText, { flex: 1, textAlign: 'center', color: colors.mutedFg }]}>40-60s</Text>
+            <Text style={[styles.compareValText, { flex: 1.2, textAlign: 'center', color: colors.accent, fontFamily: fonts.bodyBold }]}>⚡ 2s</Text>
+            <Text style={[styles.compareValText, { flex: 1, textAlign: 'center', color: colors.foreground, fontFamily: fonts.bodyBold }]}>⚡ 2s</Text>
+          </View>
+
+          {/* Row 2: Generative Inpainting */}
+          <View style={[styles.compareRow, { borderBottomColor: colors.border }]}>
+            <Text style={[styles.compareFeatureLabel, { flex: 2, color: colors.foreground }]}>
+              {t('pricing.features.generativeInpainting', { defaultValue: 'AI Reshoots & Inpainting' })}
+            </Text>
+            <View style={{ flex: 1, alignItems: 'center' }}><Lucide.X size={14} color="#EF4444" /></View>
+            <View style={{ flex: 1.2, alignItems: 'center' }}><Lucide.Check size={14} color="#10B981" /></View>
+            <View style={{ flex: 1, alignItems: 'center' }}><Lucide.Check size={14} color="#10B981" /></View>
+          </View>
+
+          {/* Row 3: Closet Items */}
+          <View style={[styles.compareRow, { borderBottomColor: colors.border }]}>
+            <Text style={[styles.compareFeatureLabel, { flex: 2, color: colors.foreground }]}>
+              {t('pricing.features.closetLimit', { defaultValue: 'Closet Items' })}
+            </Text>
+            <Text style={[styles.compareValText, { flex: 1, textAlign: 'center', color: colors.mutedFg }]}>50-150</Text>
+            <Text style={[styles.compareValText, { flex: 1.2, textAlign: 'center', color: colors.foreground }]}>∞</Text>
+            <Text style={[styles.compareValText, { flex: 1, textAlign: 'center', color: colors.foreground }]}>∞</Text>
+          </View>
+
+          {/* Row 4: Daily AI Operations */}
+          <View style={[styles.compareRow, { borderBottomColor: colors.border }]}>
+            <Text style={[styles.compareFeatureLabel, { flex: 2, color: colors.foreground }]}>
+              {t('pricing.features.dailyLimit', { defaultValue: 'Daily AI Limit' })}
+            </Text>
+            <Text style={[styles.compareValText, { flex: 1, textAlign: 'center', color: colors.mutedFg }]}>10 / day</Text>
+            <Text style={[styles.compareValText, { flex: 1.2, textAlign: 'center', color: colors.foreground }]}>∞</Text>
+            <Text style={[styles.compareValText, { flex: 1, textAlign: 'center', color: colors.foreground }]}>∞</Text>
+          </View>
+
+          {/* Row 5: Trend Scout */}
+          <View style={[styles.compareRow, { borderBottomColor: colors.border }]}>
+            <Text style={[styles.compareFeatureLabel, { flex: 2, color: colors.foreground }]}>
+              {t('pricing.features.trendScout', { defaultValue: 'Trend Scout' })}
+            </Text>
+            <View style={{ flex: 1, alignItems: 'center' }}><Lucide.X size={14} color="#EF4444" /></View>
+            <View style={{ flex: 1.2, alignItems: 'center' }}><Lucide.Check size={14} color="#10B981" /></View>
+            <View style={{ flex: 1, alignItems: 'center' }}><Lucide.Check size={14} color="#10B981" /></View>
+          </View>
+
+          {/* Row 6: Wardrobe Migration */}
+          <View style={[styles.compareRow, { borderBottomColor: colors.border }]}>
+            <Text style={[styles.compareFeatureLabel, { flex: 2, color: colors.foreground }]}>
+              {t('pricing.features.wardrobeMigration', { defaultValue: 'Wardrobe Migration' })}
+            </Text>
+            <View style={{ flex: 1, alignItems: 'center' }}><Lucide.X size={14} color="#EF4444" /></View>
+            <View style={{ flex: 1.2, alignItems: 'center' }}><Lucide.Check size={14} color="#10B981" /></View>
+            <View style={{ flex: 1, alignItems: 'center' }}><Lucide.Check size={14} color="#10B981" /></View>
+          </View>
+
+          {/* Row 7: Ad Campaigns */}
+          <View style={styles.compareRow}>
+            <Text style={[styles.compareFeatureLabel, { flex: 2, color: colors.foreground }]}>
+              {t('pricing.features.campaigns', { defaultValue: 'Ad Campaigns' })}
+            </Text>
+            <View style={{ flex: 1, alignItems: 'center' }}><Lucide.X size={14} color="#EF4444" /></View>
+            <View style={{ flex: 1.2, alignItems: 'center' }}><Lucide.X size={14} color="#EF4444" /></View>
+            <View style={{ flex: 1, alignItems: 'center' }}><Lucide.Check size={14} color="#10B981" /></View>
+          </View>
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -555,6 +649,36 @@ const styles = StyleSheet.create({
     fontSize: fontSizes.xs,
   },
   packPrice: {
+    fontFamily: fonts.body,
+    fontSize: 11,
+  },
+  compareTable: {
+    borderRadius: radii.xl,
+    borderWidth: 1,
+    overflow: 'hidden',
+    ...shadows.sm,
+  },
+  compareRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: spacing[3],
+    paddingHorizontal: spacing[3],
+    borderBottomWidth: StyleSheet.hairlineWidth,
+  },
+  compareHeaderRow: {
+    backgroundColor: 'rgba(0, 0, 0, 0.03)',
+  },
+  compareColHeader: {
+    fontFamily: fonts.bodyBold,
+    fontSize: 10,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  compareFeatureLabel: {
+    fontFamily: fonts.bodyMedium,
+    fontSize: fontSizes.xs,
+  },
+  compareValText: {
     fontFamily: fonts.body,
     fontSize: 11,
   },

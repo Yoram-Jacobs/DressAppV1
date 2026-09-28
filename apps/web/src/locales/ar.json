@@ -869,7 +869,9 @@
     "savedOptimistic": "أضف إلى الخزانة",
     "currencyPlaceholder": "USD",
     "sourceTagPlaceholder": "ملك",
-    "gender": "جنس"
+    "gender": "جنس",
+    "eyesSlowNotice": "يستغرق الذكاء الاصطناعي القياسي 40-60 ثانية. قم بالترقية إلى Manager للتحليل الفوري خلال ثانيتين مع Cloud Gemini!",
+    "skipWaitCta": "⚡ ثانيتان مع Manager"
   },
   "itemDetail": {
     "reanalyze": {
@@ -1131,7 +1133,12 @@
     },
     "takePhoto": "التقاط صورة",
     "replacePhoto": "استبدال الصورة",
-    "useProfileShoeSize": "من الملف الشخصي: {{size}}"
+    "useProfileShoeSize": "من الملف الشخصي: {{size}}",
+    "generativeLockedTitle": "إعادة التصوير والتحليل باستوديو الذكاء الاصطناعي",
+    "generativeLocked": "حصري لخطة Manager وProfessional. يوفر Cloud Gemini إعادة تحليل فورية خلال ثانيتين، وتعديل الصور التوليدي، وملء الفراغات، وفحص الأقمشة بدقة.",
+    "generativeFeature1": "⚡ تحليل فوري خلال ثانيتين مع Cloud Gemini",
+    "generativeFeature2": "🎨 إعادة تصوير توليدية احترافية وإصلاح الصور",
+    "generativeFeature3": "🔬 كشف دقيق للأقمشة والملامس والمواصفات"
   },
   "stylist": {
     "heroTitle": "منسق الأزياء الشخصي بالذكاء الاصطناعي",
@@ -4603,7 +4610,9 @@
       "marketplaceAccess": "البيع والتأجير في السوق",
       "schedulerAccess": "المجدول والإشعارات الفورية",
       "campaignsAccess": "حملات إعلانية متضمنة",
-      "wardrobeMigration": "نقل خزانة الملابس"
+      "wardrobeMigration": "نقل خزانة الملابس",
+      "analysisSpeed": "سرعة التحليل",
+      "generativeInpainting": "إعادة تصوير وإصلاح الصور التوليدي"
     },
     "supportTiers": {
       "community": "دعم مجتمعي",
@@ -4703,7 +4712,9 @@
     "bestValue": "القيمة الأفضل",
     "buyPack": "شراء {{count}} نقطة",
     "purchasePackSuccess": "تم شراء {{count}} نقطة بنجاح!",
-    "purchasePackError": "فشل شراء حزمة الرصيد."
+    "purchasePackError": "فشل شراء حزمة الرصيد.",
+    "speedFree": "40–60 ثانية (AI قياسي)",
+    "speedPaid": "⚡ ثانيتان (Cloud Gemini)"
   },
   "avatar": {
     "savedSuccess": "تم حفظ الصورة الرمزية والملف الشخصي المرئي!",

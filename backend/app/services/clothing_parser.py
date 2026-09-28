@@ -1294,7 +1294,7 @@ def apply_alpha_intersection(
 
     # Patch 12i — per-category dilation budget.
     _dilate_pct = _resolve_dilate_pct_for_category(category)
-    _DILATE_MIN_PX = 1
+    _DILATE_MIN_PX = 4
     _DILATE_MAX_PX = 64
     dilate_px = max(_DILATE_MIN_PX, min(_DILATE_MAX_PX, int(_dilate_pct * min(Hc, Wc))))
 
@@ -1458,8 +1458,8 @@ def apply_alpha_intersection(
                 repr(exc)[:120],
             )
 
-    # 3. Apply geometric head exclusion
-    if seg_mask_bbox is not None and category and category.lower().replace(" ", "") in {
+    # 3. Apply geometric head exclusion ONLY when a human wearer is present
+    if human_mask is not None and seg_mask_bbox is not None and category and category.lower().replace(" ", "") in {
         "top", "outerwear", "dress", "fullbody",
     }:
         try:
@@ -1478,7 +1478,11 @@ def apply_alpha_intersection(
             )
 
     # 4. Intersect with the dilated soft mask of the target garment to crop out other garments
-    if soft_mask is not None:
+    # CRITICAL: Only perform soft-mask intersection if other garments or human body parts
+    # exist in the crop frame. If other_mask is None and human_mask is None, rembg already
+    # isolated the standalone garment with studio-grade alpha boundaries; intersecting
+    # with a coarse SegFormer mask introduces jagged erosion and punches holes in low-contrast/graphic fabric.
+    if soft_mask is not None and (other_mask is not None or human_mask is not None):
         try:
             new_alpha = np.minimum(new_alpha, soft_mask).astype(np.uint8)
         except Exception as exc:  # noqa: BLE001

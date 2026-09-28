@@ -78,6 +78,7 @@ import { DppPanel } from '@mobile/components/DppPanel';
 import { ItemAIAnalysisCard, ReanalyzeChatTurn } from '@mobile/components/itemDetail/ItemAIAnalysisCard';
 import { ItemOutfitPairings, PairedOutfit } from '@mobile/components/itemDetail/ItemOutfitPairings';
 import { PageHeroBanner } from '@mobile/components/common';
+import { useTierLimits } from '@mobile/hooks/useTierLimits';
 
 const STATE_OPTIONS = ['new', 'used'] as const;
 const ALL_CURRENCY_OPTIONS = ['ILS', 'USD', 'EUR', 'GBP', 'CAD', 'AUD', 'JPY', 'INR', 'CHF', 'AED', 'SAR'];
@@ -207,6 +208,7 @@ export function ItemDetailScreen() {
   const { colors, isDark } = useTheme();
   const { prewarm, deleteItem } = useClosetStore();
   const { user } = useUserStore();
+  const { isFree } = useTierLimits();
   const isRtl = I18nManager.isRTL;
   const scrollViewRef = useRef<ScrollView>(null);
 
@@ -1387,6 +1389,8 @@ export function ItemDetailScreen() {
                 scrollViewRef.current?.scrollToEnd({ animated: true });
               }, 150);
             }}
+            isFree={isFree}
+            onUpgradePress={() => (navigation as any).navigate('MeTab', { screen: 'Pricing' })}
           />
         )}
 

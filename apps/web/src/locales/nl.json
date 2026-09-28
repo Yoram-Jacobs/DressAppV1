@@ -869,7 +869,9 @@
     "savedOptimistic": "Toevoegen aan kast",
     "currencyPlaceholder": "USD",
     "sourceTagPlaceholder": "eigen",
-    "gender": "Geslacht"
+    "gender": "Geslacht",
+    "eyesSlowNotice": "Standaard AI duurt 40–60 s. Upgrade naar Manager voor directe analyse in 2 s met Cloud Gemini!",
+    "skipWaitCta": "⚡ 2 s met Manager"
   },
   "itemDetail": {
     "reanalyze": {
@@ -1131,7 +1133,12 @@
     },
     "takePhoto": "Maak een foto",
     "replacePhoto": "Vervang foto",
-    "useProfileShoeSize": "Uit profiel: {{size}}"
+    "useProfileShoeSize": "Uit profiel: {{size}}",
+    "generativeLockedTitle": "AI Studio Reshoots & Heranalyse",
+    "generativeLocked": "Exclusief voor Manager- en Professional-abonnementen. Cloud Gemini biedt directe heranalyse in 2 s, generatieve studio-inpainting, opvullen van gaten en diepgaande stofherkenning.",
+    "generativeFeature1": "⚡ Directe analyse in 2 s met Cloud Gemini",
+    "generativeFeature2": "🎨 Generatieve studio-reshoots & inpainting",
+    "generativeFeature3": "🔬 Diepgaande detectie van stoffen, texturen & kenmerken"
   },
   "stylist": {
     "heroTitle": "Je persoonlijke AI-stylist",
@@ -4613,7 +4620,9 @@
       "marketplaceAccess": "Verkopen en verhuren op de marketplace",
       "schedulerAccess": "Planner en pushmeldingen",
       "campaignsAccess": "Advertentiecampagnes inbegrepen",
-      "wardrobeMigration": "Garderobemigratie"
+      "wardrobeMigration": "Garderobemigratie",
+      "analysisSpeed": "Analysesnelheid",
+      "generativeInpainting": "Generatieve AI Studio-reshoots & Inpainting"
     },
     "supportTiers": {
       "community": "Community-support",
@@ -4713,7 +4722,9 @@
     "bestValue": "Voordeligste keuze",
     "buyPack": "Koop {{count}} credits",
     "purchasePackSuccess": "{{count}} credits succesvol gekocht!",
-    "purchasePackError": "Kan creditpakket niet kopen."
+    "purchasePackError": "Kan creditpakket niet kopen.",
+    "speedFree": "40–60 s (Standaard AI)",
+    "speedPaid": "⚡ 2 s (Cloud Gemini)"
   },
   "avatar": {
     "savedSuccess": "Avatar en visueel profiel opgeslagen!",

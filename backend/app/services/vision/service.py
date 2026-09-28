@@ -2164,6 +2164,11 @@ class GarmentVisionService:
 
     async def _gatekeep_image(self, image_bytes: bytes) -> int:
         """Fast pre-check to count garments and route the pipeline."""
+        if self.provider in ("gemma", "dressapp") or not self.api_key:
+            # Gemma / on-prem Eyes operates without Gemini gatekeeper;
+            # return 1 so SegFormer & _looks_already_cropped handle single vs multi item.
+            return 1
+
         import io
         import asyncio
         from PIL import Image, ImageOps
@@ -2227,19 +2232,19 @@ class GarmentVisionService:
                 clean_resp = clean_resp.strip()
                 
                 data = json.loads(clean_resp)
-                count = int(data.get("count", 2))
+                count = int(data.get("count", 1))
                 logger.info("_gatekeep_image parsed successfully. Model: %s. Count: %d, Items seen: %s", model, count, data.get("items_seen"))
                 return count
             except Exception as e:
                 logger.warning("_gatekeep_image failed to parse JSON: %s. Raw response: %s", e, resp)
-                return 2 # Fallback to SegFormer if unparseable
+                return 1 # Fallback to single item / SegFormer if unparseable
         except asyncio.TimeoutError:
             logger.warning("_gatekeep_image timed out after 12s, falling back to SegFormer")
-            return 2
+            return 1
         except Exception as exc:
             import traceback
             logger.warning("_gatekeep_image check failed: %s\n%s", repr(exc)[:160], traceback.format_exc())
-            return 2
+            return 1
 
     async def analyze_outfits_stream(
         self,
@@ -2284,7 +2289,7 @@ class GarmentVisionService:
             try:
                 # Only single-garment images can ever be considered already cropped.
                 # Never collapse multi-item photos into a single whole-image cutout!
-                if count <= 1 and len(detections) <= 1 and _looks_already_cropped(detections):
+                if (count is None or count <= 1) and _looks_already_cropped(detections):
                     if detections:
                         best_det = max(
                             detections,

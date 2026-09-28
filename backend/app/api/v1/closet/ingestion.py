@@ -1341,7 +1341,7 @@ async def clean_item_background(
             )
             seg_mask = None
 
-        if seg_mask is not None:
+        if seg_mask is not None and human_mask is not None:
             try:
                 maybe_refined = _cp.apply_alpha_intersection(
                     result["image_png"],
@@ -1573,6 +1573,17 @@ async def reanalyze_item(
     )
     if not item:
         raise HTTPException(404, "Item not found")
+
+    from app.services.credit_manager import get_user_tier
+    if get_user_tier(user) == "free":
+        raise HTTPException(
+            status_code=403,
+            detail={
+                "code": "feature_locked",
+                "message": "AI Re-analysing is exclusive to Manager and Professional tiers. Upgrade your plan to unlock.",
+                "feature": "reanalyze",
+            }
+        )
 
     from app.services.billing_service import deduct_user_credits
     if not await deduct_user_credits(db, user, cost=1, operation="reanalyze_item"):
@@ -1836,6 +1847,17 @@ async def chat_analyse_item(
     )
     if not item:
         raise HTTPException(404, "Item not found")
+
+    from app.services.credit_manager import get_user_tier
+    if get_user_tier(user) == "free":
+        raise HTTPException(
+            status_code=403,
+            detail={
+                "code": "feature_locked",
+                "message": "AI Re-analysing & Assistant are exclusive to Manager and Professional tiers. Upgrade your plan to unlock.",
+                "feature": "reanalyze",
+            }
+        )
 
     user_msg = (payload.message or "").strip()
     if not user_msg:
@@ -2111,6 +2133,17 @@ async def repair_item_image(
     if not item:
         raise HTTPException(404, "Item not found")
 
+    from app.services.credit_manager import get_user_tier
+    if get_user_tier(user) == "free":
+        raise HTTPException(
+            status_code=403,
+            detail={
+                "code": "generative_inpainting_locked",
+                "message": "AI Photo Reshoots & Inpainting are exclusive to the Manager tier. Upgrade your plan to use this feature.",
+                "feature": "generative_inpainting",
+            }
+        )
+
     analysis: dict[str, Any] = {
         "title": item.get("title"),
         "category": item.get("category"),
@@ -2248,6 +2281,17 @@ async def edit_item_image(
     )
     if not item:
         raise HTTPException(404, "Item not found")
+
+    from app.services.credit_manager import get_user_tier
+    if get_user_tier(user) == "free":
+        raise HTTPException(
+            status_code=403,
+            detail={
+                "code": "generative_inpainting_locked",
+                "message": "AI Photo Reshoots & Inpainting are exclusive to the Manager tier. Upgrade your plan to use this feature.",
+                "feature": "generative_inpainting",
+            }
+        )
     source_url = _get_item_image_url(item)
     if not source_url:
         raise HTTPException(400, "No source image on this item")

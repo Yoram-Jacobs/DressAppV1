@@ -869,7 +869,9 @@
     "savedOptimistic": "Добавить в гардероб",
     "currencyPlaceholder": "USD",
     "sourceTagPlaceholder": "собственный",
-    "gender": "Пол"
+    "gender": "Пол",
+    "eyesSlowNotice": "Стандартный ИИ требует 40–60 с. Перейдите на тариф Manager для мгновенного анализа за 2 с на Cloud Gemini!",
+    "skipWaitCta": "⚡ 2 с на Manager"
   },
   "itemDetail": {
     "reanalyze": {
@@ -1131,7 +1133,12 @@
     },
     "takePhoto": "Сделать фото",
     "replacePhoto": "Заменить фото",
-    "useProfileShoeSize": "Из профиля: {{size}}"
+    "useProfileShoeSize": "Из профиля: {{size}}",
+    "generativeLockedTitle": "Студийная пересъемка и повторный анализ ИИ",
+    "generativeLocked": "Эксклюзивно для тарифов Manager и Professional. Cloud Gemini выполняет мгновенный анализ за 2 с, генеративную студийную ретушь, заполнение пустот и глубокое распознавание тканей.",
+    "generativeFeature1": "⚡ Мгновенный анализ за 2 с на Cloud Gemini",
+    "generativeFeature2": "🎨 Генеративная студийная ретушь и пересъемка",
+    "generativeFeature3": "🔬 Точное определение тканей, текстур и деталей"
   },
   "stylist": {
     "heroTitle": "Ваш персональный ИИ-стилист",
@@ -4608,7 +4615,9 @@
       "marketplaceAccess": "Продажа и аренда на маркетплейсе",
       "schedulerAccess": "Планировщик и push-уведомления",
       "campaignsAccess": "Рекламные кампании включены",
-      "wardrobeMigration": "Перенос гардероба"
+      "wardrobeMigration": "Перенос гардероба",
+      "analysisSpeed": "Скорость анализа",
+      "generativeInpainting": "Генеративная студийная ретушь ИИ"
     },
     "supportTiers": {
       "community": "Поддержка сообщества",
@@ -4708,7 +4717,9 @@
     "bestValue": "Выгоднее всего",
     "buyPack": "Купить {{count}} кредитов",
     "purchasePackSuccess": "Успешно приобретено {{count}} кредитов!",
-    "purchasePackError": "Не удалось приобрести пакет кредитов."
+    "purchasePackError": "Не удалось приобрести пакет кредитов.",
+    "speedFree": "40–60 с (Стандартный ИИ)",
+    "speedPaid": "⚡ 2 с (Cloud Gemini)"
   },
   "avatar": {
     "savedSuccess": "Аватар и визуальный профиль сохранены!",

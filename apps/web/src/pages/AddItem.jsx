@@ -36,6 +36,8 @@ import {
   Check,
   Image as ImageIcon,
   Calendar,
+  Clock,
+  Zap,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -3581,6 +3583,26 @@ export default function AddItem() {
                   className="h-2"
                   data-testid="bg-batch-progress"
                 />
+                {isFree && (
+                  <div className="mt-2.5 pt-2 border-t border-border/50 flex items-center justify-between gap-2 text-xs">
+                    <span className="text-[11px] text-text-brand flex items-center gap-1.5 min-w-0">
+                      <Clock className="h-3.5 w-3.5 text-amber-500 shrink-0 animate-pulse" />
+                      <span className="truncate">
+                        {t("addItem.eyesSlowNotice", {
+                          defaultValue: "Standard AI takes 40–60s. Upgrade to Manager for instant 2s Cloud Gemini analysis!",
+                        })}
+                      </span>
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => nav("/pricing")}
+                      className="px-2.5 py-1 rounded bg-primary-brand text-white font-bold hover:opacity-90 transition-opacity text-[11px] shrink-0 flex items-center gap-1 cursor-pointer"
+                    >
+                      <Zap className="h-3 w-3 text-amber-300 fill-amber-300" />
+                      {t("addItem.skipWaitCta", { defaultValue: "⚡ 2s with Manager" })}
+                    </button>
+                  </div>
+                )}
                 {bgBatch.pendingDuplicates ? (
                   // Surfaced inline so the user knows the modal popping
                   // up over the progress card is intentional — these
@@ -4762,6 +4784,7 @@ function ItemCard({
 }) {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const { isFree } = useTierLimits();
   const { fields, status, progress, previewUrl, error } = card;
   const isBusy = status === "scanning";
   const saved = status === "saved";
@@ -4836,12 +4859,12 @@ function ItemCard({
                   })
                 }
                 className="absolute top-2 end-2 inline-flex items-center gap-1 rounded-full bg-background/90 backdrop-blur border border-border px-2 py-1 text-[10px] font-medium hover:bg-secondary transition-colors"
-                data-testid="add-item-toggle-reconstruction"
                 aria-label={
                   showingReconstructed
                     ? t("itemDetail.repair.ariaShowOriginal")
                     : t("itemDetail.repair.ariaShowRepaired")
                 }
+                data-testid="add-item-toggle-reconstruction"
               >
                 {showingReconstructed ? (
                   <>
@@ -4858,11 +4881,34 @@ function ItemCard({
             )}
             {isBusy && (
               <div
-                className="absolute bottom-0 start-0 end-0 bg-background/80 backdrop-blur-sm px-3 py-2"
+                className="absolute bottom-0 start-0 end-0 bg-background/95 backdrop-blur-md px-3 py-2.5 border-t border-border shadow-md transition-all"
                 data-testid="add-item-scanning-overlay"
               >
                 <ScanningPipeline variant="inline" />
-                <Progress value={progress} className="h-1 mt-1.5" />
+                <Progress value={progress} className="h-1.5 mt-2" />
+                {isFree && (
+                  <div className="mt-2 pt-2 border-t border-border/60 flex items-center justify-between gap-2 animate-in fade-in duration-300">
+                    <div className="flex items-center gap-1.5 min-w-0">
+                      <Clock className="h-3.5 w-3.5 text-amber-500 shrink-0 animate-pulse" />
+                      <p className="text-[11px] text-text-brand font-medium leading-tight truncate">
+                        {t("addItem.eyesSlowNotice", {
+                          defaultValue: "Standard AI takes 40–60s. Upgrade to Manager for instant 2s Cloud Gemini analysis!",
+                        })}
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        navigate("/pricing");
+                      }}
+                      className="shrink-0 px-2 py-0.5 rounded text-[10px] font-bold bg-primary-brand text-white hover:opacity-90 transition-opacity flex items-center gap-1 shadow-xs cursor-pointer"
+                    >
+                      <Zap className="h-2.5 w-2.5 text-amber-300 fill-amber-300" />
+                      {t("addItem.skipWaitCta", { defaultValue: "⚡ 2s with Manager" })}
+                    </button>
+                  </div>
+                )}
               </div>
             )}
             {status === "error" && !isBusy && (

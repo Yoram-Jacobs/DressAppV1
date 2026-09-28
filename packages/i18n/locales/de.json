@@ -869,7 +869,9 @@
     "savedOptimistic": "Zum Schrank hinzufügen",
     "currencyPlaceholder": "USD",
     "sourceTagPlaceholder": "eigen",
-    "gender": "Geschlecht"
+    "gender": "Geschlecht",
+    "eyesSlowNotice": "Standard-KI benötigt 40–60 s. Upgrade auf Manager für sofortige 2-Sekunden-Analyse mit Cloud Gemini!",
+    "skipWaitCta": "⚡ 2 s mit Manager"
   },
   "itemDetail": {
     "reanalyze": {
@@ -1131,7 +1133,12 @@
     },
     "takePhoto": "Foto aufnehmen",
     "replacePhoto": "Foto ersetzen",
-    "useProfileShoeSize": "Aus dem Profil: {{size}}"
+    "useProfileShoeSize": "Aus dem Profil: {{size}}",
+    "generativeLockedTitle": "KI-Studio-Neuaufnahmen & Neuanalyse",
+    "generativeLocked": "Exklusiv für Manager- und Professional-Tarife. Cloud Gemini bietet blitzschnelle 2-Sekunden-Neuanalyse, generative Studio-Inpainting, Schließen von Bildlücken und feine Stofferkennung.",
+    "generativeFeature1": "⚡ Sofortige 2-Sekunden-Analyse mit Cloud Gemini",
+    "generativeFeature2": "🎨 Generative Studio-Bildbearbeitung & Inpainting",
+    "generativeFeature3": "🔬 Präzise Erkennung von Stoffen, Texturen & Attributen"
   },
   "stylist": {
     "heroTitle": "Dein persönlicher KI-Stylist",
@@ -4599,7 +4606,9 @@
       "marketplaceAccess": "Marktplatz-Zugang (Verkaufen & Vermieten)",
       "schedulerAccess": "Terminplaner & Push-Benachrichtigungen",
       "campaignsAccess": "Werbekampagnen inklusive",
-      "wardrobeMigration": "Kleiderschrank-Migration"
+      "wardrobeMigration": "Kleiderschrank-Migration",
+      "analysisSpeed": "Analysegeschwindigkeit",
+      "generativeInpainting": "Generative KI-Studio-Retusche & Inpainting"
     },
     "supportTiers": {
       "community": "Community-Support",
@@ -4699,7 +4708,9 @@
     "bestValue": "Bestes Angebot",
     "buyPack": "{{count}} Credits kaufen",
     "purchasePackSuccess": "{{count}} Credits erfolgreich gekauft!",
-    "purchasePackError": "Kauf des Guthabenpakets fehlgeschlagen."
+    "purchasePackError": "Kauf des Guthabenpakets fehlgeschlagen.",
+    "speedFree": "40–60 s (Standard-KI)",
+    "speedPaid": "⚡ 2 s (Cloud Gemini)"
   },
   "avatar": {
     "savedSuccess": "Avatar und visuelles Profil gespeichert!",

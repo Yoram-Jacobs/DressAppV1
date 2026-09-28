@@ -869,7 +869,9 @@
     "savedOptimistic": "कोठरी में जोड़ें",
     "currencyPlaceholder": "USD",
     "sourceTagPlaceholder": "अपना",
-    "gender": "लिंग"
+    "gender": "लिंग",
+    "eyesSlowNotice": "स्टैंडर्ड AI में 40-60 सेकंड लगते हैं। Cloud Gemini के साथ 2 सेकंड में त्वरित विश्लेषण के लिए Manager में अपग्रेड करें!",
+    "skipWaitCta": "⚡ Manager के साथ 2 सेकंड"
   },
   "itemDetail": {
     "reanalyze": {
@@ -1131,7 +1133,12 @@
     },
     "takePhoto": "फ़ोटो लें",
     "replacePhoto": "फ़ोटो बदलें",
-    "useProfileShoeSize": "प्रोफ़ाइल से: {{size}}"
+    "useProfileShoeSize": "प्रोफ़ाइल से: {{size}}",
+    "generativeLockedTitle": "AI स्टूडियो रीशूट और पुन: विश्लेषण",
+    "generativeLocked": "Manager और Professional प्लान के लिए विशेष। Cloud Gemini 2 सेकंड में त्वरित पुन: विश्लेषण, जनरेटिव स्टूडियो इनपेंटिंग, कटआउट सुधार और कपड़े की बारीक पहचान प्रदान करता है।",
+    "generativeFeature1": "⚡ Cloud Gemini के साथ 2 सेकंड में त्वरित विश्लेषण",
+    "generativeFeature2": "🎨 जनरेटिव स्टूडियो फोटो रीशूट और इनपेंटिंग",
+    "generativeFeature3": "🔬 कपड़े, टेक्सचर और विशेषताओं की गहरी पहचान"
   },
   "stylist": {
     "heroTitle": "आपका व्यक्तिगत AI स्टाइलिस्ट",
@@ -4606,7 +4613,9 @@
       "marketplaceAccess": "मार्केटप्लेस में बेचना और किराए पर देना",
       "schedulerAccess": "शेड्यूलर और पुश सूचनाएं",
       "campaignsAccess": "विज्ञापन अभियान शामिल",
-      "wardrobeMigration": "वार्डरोब माइग्रेशन"
+      "wardrobeMigration": "वार्डरोब माइग्रेशन",
+      "analysisSpeed": "विश्लेषण गति",
+      "generativeInpainting": "AI फोटो रीशूट और इनपेंटिंग"
     },
     "supportTiers": {
       "community": "सामुदायिक समर्थन",
@@ -4706,7 +4715,9 @@
     "bestValue": "सर्वश्रेष्ठ मूल्य",
     "buyPack": "{{count}} क्रेडिट खरीदें",
     "purchasePackSuccess": "सफलतापूर्वक {{count}} क्रेडिट खरीदे गए!",
-    "purchasePackError": "क्रेडिट पैक खरीदने में विफल।"
+    "purchasePackError": "क्रेडिट पैक खरीदने में विफल।",
+    "speedFree": "40–60 सेकंड (स्टैंडर्ड AI)",
+    "speedPaid": "⚡ 2 सेकंड (Cloud Gemini)"
   },
   "avatar": {
     "savedSuccess": "अवतार और दृश्य प्रोफ़ाइल सहेजी गई!",

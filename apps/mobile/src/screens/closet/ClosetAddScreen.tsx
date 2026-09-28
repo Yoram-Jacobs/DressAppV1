@@ -1629,6 +1629,26 @@ export function ClosetAddScreen() {
                   {activeCard.status === 'scanning' && (
                     <View style={styles.cardScanningOverlay}>
                       <ScanningPipelineOverlay visible variant="inline" />
+                      {isFree && (
+                        <View style={[styles.eyesNoticeBox, { backgroundColor: isDark ? 'rgba(234, 179, 8, 0.15)' : '#FFFBEB', borderColor: isDark ? 'rgba(234, 179, 8, 0.35)' : '#FDE68A' }]}>
+                          <View style={styles.eyesNoticeRow}>
+                            <Lucide.Clock size={12} color="#D97706" style={{ marginTop: 1 }} />
+                            <Text style={[styles.eyesNoticeText, { color: isDark ? '#FDE68A' : '#92400E' }]}>
+                              {t('addItem.eyesSlowNotice', { defaultValue: 'Standard AI takes 40–60s. Upgrade to Manager for instant 2s Cloud Gemini analysis!' })}
+                            </Text>
+                          </View>
+                          <TouchableOpacity
+                            style={[styles.eyesNoticeCta, { backgroundColor: colors.accent }]}
+                            onPress={() => (navigation as any).navigate('MeTab', { screen: 'Pricing' })}
+                            activeOpacity={0.85}
+                          >
+                            <Lucide.Zap size={10} color="#FFF" />
+                            <Text style={styles.eyesNoticeCtaText}>
+                              {t('addItem.skipWaitCta', { defaultValue: '⚡ 2s with Manager' })}
+                            </Text>
+                          </TouchableOpacity>
+                        </View>
+                      )}
                     </View>
                   )}
 
@@ -2529,6 +2549,41 @@ const styles = StyleSheet.create({
     bottom: 10,
     left: 10,
     right: 10,
+  },
+  eyesNoticeBox: {
+    marginTop: spacing[1.5],
+    padding: spacing[2],
+    borderRadius: radii.md,
+    borderWidth: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: spacing[2],
+  },
+  eyesNoticeRow: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: spacing[1.5],
+  },
+  eyesNoticeText: {
+    flex: 1,
+    fontFamily: fonts.bodyMedium,
+    fontSize: 10,
+    lineHeight: 13,
+  },
+  eyesNoticeCta: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+    paddingHorizontal: spacing[2],
+    paddingVertical: spacing[1],
+    borderRadius: radii.full,
+  },
+  eyesNoticeCtaText: {
+    fontFamily: fonts.bodyBold,
+    fontSize: 10,
+    color: '#FFF',
   },
   detectedBadge: {
     position: 'absolute',
