@@ -130,54 +130,78 @@ export const closet = {
         const emittedItems = [];
         let detectMeta = null;
         let doneCount = 0;
-        while (true) {
-          const { value, done } = await reader.read();
-          if (done) break;
-          buffer += decoder.decode(value, { stream: true });
-          const newlineIdx = buffer.lastIndexOf('\n');
-          if (newlineIdx < 0) continue;
-          const lines = buffer.slice(0, newlineIdx).split('\n');
-          buffer = buffer.slice(newlineIdx + 1);
-          for (const raw of lines) {
-            const line = raw.trim();
-            if (!line) continue;
-            let frame;
-            try {
-              frame = JSON.parse(line);
-            } catch (_e) {
-              continue;
-            }
-            switch (frame.type) {
-              case 'detect':
-                detectMeta = frame;
-                await callbacks.onDetect?.(frame);
-                break;
-              case 'item':
-                emittedItems[frame.index] = frame;
-                await callbacks.onItem?.(frame);
-                break;
-              case 'item_skip':
-                await callbacks.onItemSkip?.(frame);
-                break;
-              case 'field':
-                await callbacks.onField?.(frame);
-                break;
-              case 'done':
-                doneCount = frame.count || 0;
-                await callbacks.onDone?.(frame);
-                break;
-              case 'error': {
-                const err = new Error(frame.message || 'Analyze failed');
-                err.response = {
-                  status: frame.status || 503,
-                  data: { detail: frame.message, _error: frame.message },
-                };
-                callbacks.onError?.(frame);
-                throw err;
+        let isStreamFinished = false;
+        try {
+          while (true) {
+            const { value, done } = await reader.read();
+            if (done) break;
+            buffer += decoder.decode(value, { stream: true });
+            const newlineIdx = buffer.lastIndexOf('\n');
+            if (newlineIdx < 0) continue;
+            const lines = buffer.slice(0, newlineIdx).split('\n');
+            buffer = buffer.slice(newlineIdx + 1);
+            for (const raw of lines) {
+              const line = raw.trim();
+              if (!line) continue;
+              let frame;
+              try {
+                frame = JSON.parse(line);
+              } catch (_e) {
+                continue;
               }
-              default:
-                break;
+              switch (frame.type) {
+                case 'detect':
+                  detectMeta = frame;
+                  await callbacks.onDetect?.(frame);
+                  break;
+                case 'item':
+                  emittedItems[frame.index] = frame;
+                  await callbacks.onItem?.(frame);
+                  break;
+                case 'item_skip':
+                  await callbacks.onItemSkip?.(frame);
+                  break;
+                case 'field':
+                  await callbacks.onField?.(frame);
+                  break;
+                case 'done':
+                  doneCount = frame.count || 0;
+                  await callbacks.onDone?.(frame);
+                  isStreamFinished = true;
+                  break;
+                case 'error': {
+                  const err = new Error(frame.message || 'Analyze failed');
+                  err.response = {
+                    status: frame.status || 503,
+                    data: { detail: frame.message, _error: frame.message },
+                  };
+                  callbacks.onError?.(frame);
+                  try {
+                    await reader.cancel();
+                  } catch {
+                    /* ignore cancellation errors */
+                  }
+                  throw err;
+                }
+                default:
+                  break;
+              }
+              if (isStreamFinished) break;
             }
+            if (isStreamFinished) {
+              try {
+                await reader.cancel();
+              } catch {
+                /* ignore cancellation errors */
+              }
+              break;
+            }
+          }
+        } finally {
+          try {
+            reader.releaseLock();
+          } catch {
+            /* ignore releaseLock errors */
           }
         }
         const items = emittedItems.filter(Boolean);

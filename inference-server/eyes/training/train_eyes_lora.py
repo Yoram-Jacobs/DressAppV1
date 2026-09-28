@@ -693,12 +693,25 @@ def run_training_on_runpod(
                 err_text = stderr.read().decode("utf-8", errors="replace").strip()
                 raise RuntimeError(f"Step '{label}' failed with exit code {exit_status}. Details: {err_text}")
 
-        # Step 1: Install Python dependencies with PyTorch 2.5.1+cu124 (satisfies Transformers >= 5 requirement)
+        # Step 1: Install Python dependencies with PyTorch 2.5.1+cu124 (with retry and extended network timeouts)
+        pip_cmd = (
+            "pip_install_retry() { "
+            "for attempt in 1 2 3 4 5; do "
+            "echo \"[Pip] Attempt $attempt/5: pip install $@\"; "
+            "pip install --no-cache-dir --default-timeout=300 --retries=10 \"$@\" && return 0; "
+            "echo \"[Pip] Attempt $attempt failed. Retrying in 10s...\"; "
+            "sleep 10; "
+            "done; "
+            "return 1; "
+            "}; "
+            "python3 -m pip install --upgrade --no-cache-dir --default-timeout=300 pip || true; "
+            "pip uninstall -y torchaudio || true; "
+            "pip_install_retry 'h11>=0.16.0' && "
+            "pip_install_retry --upgrade 'torch==2.5.1+cu124' 'torchvision==0.20.1+cu124' --extra-index-url https://download.pytorch.org/whl/cu124 && "
+            "pip_install_retry 'accelerate>=1.1.0' 'peft>=0.13.0' 'bitsandbytes>=0.43.0' 'trl>=0.12.0' 'transformers>=4.45.0' 'datasets>=3.0.0' 'huggingface_hub>=0.23.0' 'pydantic>=2.7.0' 'scipy>=1.10.0'"
+        )
         run_ssh_streaming(
-            "pip uninstall -y torchaudio && "
-            "pip install --no-cache-dir 'h11>=0.16.0' && "
-            "pip install --no-cache-dir --upgrade 'torch==2.5.1+cu124' 'torchvision==0.20.1+cu124' --extra-index-url https://download.pytorch.org/whl/cu124 && "
-            "pip install --no-cache-dir 'accelerate>=1.1.0' 'peft>=0.13.0' 'bitsandbytes>=0.43.0' 'trl>=0.12.0' 'transformers>=4.45.0' 'datasets>=3.0.0' 'huggingface_hub>=0.23.0' 'pydantic>=2.7.0' 'scipy>=1.10.0'",
+            pip_cmd,
             "Install QLoRA Training Dependencies",
         )
 
