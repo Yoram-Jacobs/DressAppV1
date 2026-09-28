@@ -96,6 +96,7 @@ def create_dry_run_adapter(output_dir: Path, base_model: str) -> dict[str, Any]:
         "auto_mapping": None,
         "base_model_name_or_path": base_model,
         "bias": "none",
+        "exclude_modules": r".*(vision_tower|audio_tower|embed_vision|embed_audio).*",
         "fan_in_fan_out": False,
         "inference_mode": True,
         "init_lora_weights": True,
@@ -286,15 +287,34 @@ def train_lora_native(
                 param.requires_grad = False
             logger.info("Froze encoder parameters (%s).", tower_attr)
 
-    peft_config = LoraConfig(
-        r=lora_r,
-        lora_alpha=lora_alpha,
-        target_modules=["q_proj", "k_proj", "v_proj", "o_proj", "gate_proj", "up_proj", "down_proj"],
-        lora_dropout=lora_dropout,
-        bias="none",
-        task_type="CAUSAL_LM",
-    )
+    # Target only linear projection layers in the language model, strictly excluding vision/audio towers
+    target_modules = []
+    for name, module in model.named_modules():
+        if any(tower in name for tower in ["vision_tower", "audio_tower", "embed_vision", "embed_audio"]):
+            continue
+        leaf = name.split(".")[-1]
+        if leaf in ["q_proj", "k_proj", "v_proj", "o_proj", "gate_proj", "up_proj", "down_proj"]:
+            target_modules.append(name)
 
+    if not target_modules:
+        target_modules = ["q_proj", "k_proj", "v_proj", "o_proj", "gate_proj", "up_proj", "down_proj"]
+
+    logger.info("Configured %d target linear modules for LoRA.", len(target_modules))
+
+    import inspect
+    lora_params = inspect.signature(LoraConfig.__init__).parameters
+    lora_kwargs = {
+        "r": lora_r,
+        "lora_alpha": lora_alpha,
+        "target_modules": target_modules,
+        "lora_dropout": lora_dropout,
+        "bias": "none",
+        "task_type": "CAUSAL_LM",
+    }
+    if "exclude_modules" in lora_params:
+        lora_kwargs["exclude_modules"] = r".*(vision_tower|audio_tower|embed_vision|embed_audio).*"
+
+    peft_config = LoraConfig(**lora_kwargs)
     model = get_peft_model(model, peft_config)
     model.print_trainable_parameters()
 

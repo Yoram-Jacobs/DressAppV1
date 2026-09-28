@@ -188,6 +188,16 @@ def export_gguf(
         processor = AutoTokenizer.from_pretrained(base_model, token=token, trust_remote_code=True)
 
     logger.info("Merging LoRA adapter from %s...", adapter_dir)
+    cfg_file = adapter_dir / "adapter_config.json"
+    if cfg_file.exists():
+        try:
+            cfg_data = json.loads(cfg_file.read_text(encoding="utf-8"))
+            if not cfg_data.get("exclude_modules"):
+                cfg_data["exclude_modules"] = r".*(vision_tower|audio_tower|embed_vision|embed_audio).*"
+                cfg_file.write_text(json.dumps(cfg_data, indent=2), encoding="utf-8")
+        except Exception:
+            pass
+
     merged_model = PeftModel.from_pretrained(base, str(adapter_dir))
     merged_model = merged_model.merge_and_unload()
 

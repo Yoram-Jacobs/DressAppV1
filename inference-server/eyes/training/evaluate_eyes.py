@@ -186,6 +186,16 @@ def try_load_adapter_model(
             token=token,
             trust_remote_code=True,
         )
+        cfg_file = adapter_dir / "adapter_config.json"
+        if cfg_file.exists():
+            try:
+                cfg_data = json.loads(cfg_file.read_text(encoding="utf-8"))
+                if not cfg_data.get("exclude_modules"):
+                    cfg_data["exclude_modules"] = r".*(vision_tower|audio_tower|embed_vision|embed_audio).*"
+                    cfg_file.write_text(json.dumps(cfg_data, indent=2), encoding="utf-8")
+            except Exception:
+                pass
+
         model = PeftModel.from_pretrained(model, str(adapter_dir))
         model.eval()
         return model, processor
