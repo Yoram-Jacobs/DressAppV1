@@ -339,6 +339,8 @@ async def lifespan(_app: FastAPI):
     _app.state.loaded_at = time.time()
     _app.state.model_basename = model_path.name
     _app.state.gguf_metadata = meta
+    _app.state.model_path = model_path
+    _app.state.mmproj_path = mmproj_path
     log.info(
         "ready: model=%s vision=%s",
         model_path.name, _app.state.vision_enabled,
@@ -433,24 +435,71 @@ async def root() -> dict[str, Any]:
     }
 
 
+async def _ensure_llama_ready() -> None:
+    proc = getattr(app.state, "llama_proc", None)
+    is_dead = proc is None or proc.returncode is not None
+    client: httpx.AsyncClient | None = getattr(app.state, "client", None)
+    if not is_dead and client is not None:
+        try:
+            r = await client.get(f"{LLAMA_BASE_URL}/health", timeout=2.0)
+            if r.status_code == 200 and r.json().get("status") == "ok":
+                return
+        except Exception:
+            is_dead = True
+
+    if is_dead:
+        log.warning("llama-server is dead or unresponsive — auto-respawning...")
+        lock = getattr(app.state, "lock", None)
+        if lock is None:
+            lock = asyncio.Lock()
+            app.state.lock = lock
+
+        async with lock:
+            proc = getattr(app.state, "llama_proc", None)
+            client = getattr(app.state, "client", None)
+            if client is None:
+                client = httpx.AsyncClient(timeout=httpx.Timeout(300.0, connect=10.0))
+                app.state.client = client
+            if proc is not None and proc.returncode is None:
+                try:
+                    r = await client.get(f"{LLAMA_BASE_URL}/health", timeout=2.0)
+                    if r.status_code == 200 and r.json().get("status") == "ok":
+                        return
+                except Exception:
+                    pass
+                try:
+                    os.killpg(proc.pid, signal.SIGKILL)
+                except Exception:
+                    pass
+
+            model_path = getattr(app.state, "model_path", None) or _ensure_model_present()
+            mmproj_path = getattr(app.state, "mmproj_path", None)
+            if mmproj_path is None:
+                mmproj_path = _ensure_mmproj_present()
+            argv = _build_llama_argv(model_path, mmproj_path)
+            log.info("Respawning llama-server: %s", " ".join(argv))
+            new_proc = await asyncio.create_subprocess_exec(
+                *argv,
+                stdout=None, stderr=None,
+                start_new_session=True,
+            )
+            app.state.llama_proc = new_proc
+            app.state.loaded_at = time.time()
+            await _wait_for_llama_ready(client)
+            log.info("llama-server respawned and verified healthy!")
+
+
 @app.get("/healthz")
 async def healthz() -> dict[str, Any]:
-    proc = getattr(app.state, "llama_proc", None)
-    if proc is None or proc.returncode is not None:
-        raise HTTPException(status_code=503, detail="llama-server not running")
-    client: httpx.AsyncClient = app.state.client
     try:
-        r = await client.get(f"{LLAMA_BASE_URL}/health", timeout=2.0)
-        ok = (r.status_code == 200) and (r.json().get("status") == "ok")
-    except Exception:
-        ok = False
-    if not ok:
-        raise HTTPException(status_code=503, detail="llama-server not healthy")
+        await _ensure_llama_ready()
+    except Exception as exc:
+        raise HTTPException(status_code=503, detail=f"llama-server not healthy: {exc}")
     return {
         "status": "ok",
-        "model": app.state.model_basename,
-        "vision_enabled": app.state.vision_enabled,
-        "uptime_s": int(time.time() - app.state.loaded_at),
+        "model": getattr(app.state, "model_basename", MODEL_FILE),
+        "vision_enabled": getattr(app.state, "vision_enabled", False),
+        "uptime_s": int(time.time() - getattr(app.state, "loaded_at", time.time())),
     }
 
 
@@ -500,6 +549,7 @@ def _build_openai_messages(req: PredictIn) -> list[dict[str, Any]]:
     dependencies=[Depends(_require_token)],
 )
 async def predict(req: PredictIn) -> PredictOut:
+    await _ensure_llama_ready()
     msgs = _build_openai_messages(req)
 
     import base64

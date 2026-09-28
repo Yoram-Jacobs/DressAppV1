@@ -763,6 +763,9 @@ _NMS_IOU_THRESHOLD: float = 0.45
 
 def _suppress_overlapping_garments(
     by_label: dict[str, dict[str, Any]],
+    *,
+    has_human: bool = False,
+    count_hint: int | None = None,
 ) -> dict[str, dict[str, Any]]:
     """Patch 12h (Aug 2026) — Dilated pixel & Bounding Box NMS.
 
@@ -815,9 +818,14 @@ def _suppress_overlapping_garments(
             kept_cat = kept_item.get("category")
             # Distinct fashion categories (e.g. headwear vs top, top vs bottom, bottom vs footwear, accessory vs garment)
             # must stay separate and not be merged.
+            is_flatlay_top_bottom = False
             if kept_cat != item_cat:
                 garment_set = {"top", "dress", "outerwear"}
-                if not (kept_cat in garment_set and item_cat in garment_set):
+                is_garment_pair = kept_cat in garment_set and item_cat in garment_set
+                is_flatlay_top_bottom = (not has_human or (count_hint is not None and count_hint <= 1)) and (
+                    {kept_cat, item_cat} == {"top", "bottom"} or {kept_cat, item_cat} == {"top", "dress"}
+                )
+                if not (is_garment_pair or is_flatlay_top_bottom):
                     continue
 
             bb_kept = _bbox(kept_item["mask"])
@@ -850,12 +858,26 @@ def _suppress_overlapping_garments(
                 pixel_containment >= 0.40 or bbox_containment >= 0.60 or bbox_iou >= 0.45
             )
 
-            if not (is_footwear_overlap or is_general_overlap):
+            is_flatlay_touch = False
+            if is_flatlay_top_bottom and bb_item and bb_kept:
+                y1, x1, y2, x2 = bb_item
+                Y1, X1, Y2, X2 = bb_kept
+                vert_gap = max(0, max(y1 - Y2, Y1 - y2))
+                horiz_inter = max(0, min(x2, X2) - max(x1, X1))
+                min_w = min(max(1, x2 - x1), max(1, X2 - X1))
+                if vert_gap <= 25 and min_w > 0 and (horiz_inter / float(min_w)) >= 0.45:
+                    is_flatlay_touch = True
+
+            if not (is_footwear_overlap or is_general_overlap or is_flatlay_touch):
                 continue
 
             # Merge smaller into kept_item
             kept_item["mask"] = np.maximum(kept_item["mask"], item["mask"])
-            if kept_lbl == "Dress" and lbl == "Upper-clothes":
+            if (kept_lbl == "Dress" and lbl == "Upper-clothes") or (kept_lbl == "Pants" and lbl == "Upper-clothes"):
+                kept_lbl = "Upper-clothes"
+                kept_item["label"] = "Upper-clothes"
+                kept_item["category"] = "top"
+            elif kept_cat == "bottom" and item_cat == "top":
                 kept_lbl = "Upper-clothes"
                 kept_item["label"] = "Upper-clothes"
                 kept_item["category"] = "top"
@@ -892,7 +914,11 @@ def _suppress_overlapping_garments(
 
 
 
-async def parse_garments(image_bytes: bytes) -> list[dict[str, Any]]:
+async def parse_garments(
+    image_bytes: bytes,
+    *,
+    count_hint: int | None = None,
+) -> list[dict[str, Any]]:
     """Return [{label, category, score, bbox, mask}] for each garment.
 
     * `bbox` → `[ymin, xmin, ymax, xmax]` on a 0..1000 scale (matches
@@ -1097,7 +1123,29 @@ async def parse_garments(image_bytes: bytes) -> list[dict[str, Any]]:
     #     footwear / headwear are intentionally exempt because they
     #     legitimately overlap with garments (belt on pants, bag on
     #     dress, shoes overlap the hem of trousers).
-    by_label = _suppress_overlapping_garments(by_label)
+    has_human = bool(has_head or (human_mask_full is not None))
+    by_label = _suppress_overlapping_garments(
+        by_label,
+        has_human=has_human,
+        count_hint=count_hint,
+    )
+
+    if count_hint is not None and count_hint <= 1 and not has_human and len(by_label) > 1:
+        # Flat-lay or hanger photo of a single garment: any multiple detections are
+        # sub-parts or two-tone splits of that single garment.
+        # Pick the most plausible garment label (preferring top / dress / outerwear over pants/skirt if top exists, or largest mask)
+        items_list = list(by_label.values())
+        def _garment_sort_key(it: dict[str, Any]) -> tuple[int, int]:
+            cat = it.get("category", "")
+            cat_priority = 0 if cat in ("top", "dress", "outerwear") else 1
+            area = int(it["mask"].sum()) if it.get("mask") is not None else 0
+            return (cat_priority, -area)
+        items_list.sort(key=_garment_sort_key)
+        primary = items_list[0]
+        for other in items_list[1:]:
+            if other.get("mask") is not None:
+                primary["mask"] = np.maximum(primary["mask"], other["mask"])
+        by_label = {primary["label"]: primary}
 
     # 3) Finalise: compute bboxes from merged masks, emit canonical dict.
     out: list[dict[str, Any]] = []

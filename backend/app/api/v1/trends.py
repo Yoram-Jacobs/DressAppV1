@@ -44,7 +44,10 @@ class SocialDisconnectPayload(BaseModel):
 
 
 def check_trend_scout_access(user: dict) -> None:
-    from app.services.auth import user_has_custom_api_key
+    from app.services.auth import user_has_custom_api_key, is_tester_user
+
+    if is_tester_user(user):
+        return
 
     if not user_has_custom_api_key(user):
         raise HTTPException(

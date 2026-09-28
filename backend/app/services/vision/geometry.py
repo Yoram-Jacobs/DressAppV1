@@ -330,7 +330,11 @@ def _is_unidentifiable(analysis: dict[str, Any] | None) -> bool:
     return False
 
 
-def _looks_already_cropped(detections: list[dict[str, Any]]) -> bool:
+def _looks_already_cropped(
+    detections: list[dict[str, Any]],
+    *,
+    count_hint: int | None = None,
+) -> bool:
     """Return True when the photo is already a tight single-item shot.
 
     This includes single-item product shots, standalone footwear/accessory
@@ -345,29 +349,21 @@ def _looks_already_cropped(detections: list[dict[str, Any]]) -> bool:
     if _detect_human_presence(detections):
         return False
 
+    # Signal 0: Gatekeeper or caller explicitly verified count <= 1 on an image without human model
+    if count_hint is not None and count_hint <= 1:
+        return True
+
     frame_area = 1000 * 1000
 
     def _area(bbox: list[int]) -> int:
         y1, x1, y2, x2 = bbox
         return max(0, (x2 - x1)) * max(0, (y2 - y1))
 
-    # If multiple distinct garment/accessory items exist, it's a multi-item flat lay.
-    kinds = {(d.get("category") or d.get("kind") or "garment").lower() for d in detections}
-    if len(detections) > 1 and len(kinds) > 1:
-        return False
-
-    significant = [d for d in detections if _area(d["bbox"]) >= frame_area * 0.01]
-    if len(significant) > 1:
-        return False
-
     areas = [_area(d["bbox"]) for d in detections]
     largest_area = max(areas) if areas else 0
+    kinds = {(d.get("category") or d.get("kind") or "garment").lower() for d in detections}
 
-    # Signal 0: single category detection covering >= single-item threshold
-    if len(kinds) <= 1 and largest_area >= frame_area * _SINGLE_ITEM_AREA_FRAC:
-        return True
-
-    # Signal 1: one dominant detection
+    # Signal 1: exactly one detection
     if len(detections) == 1:
         if largest_area >= frame_area * _SINGLE_ITEM_AREA_FRAC:
             return True
@@ -375,22 +371,45 @@ def _looks_already_cropped(detections: list[dict[str, Any]]) -> bool:
             return True
         return False
 
-    # Signal 3: heavily-overlapping detections imply one garment with
-    # conflicting class labels.
-    sum_areas = sum(areas)
     ymins = [d["bbox"][0] for d in detections]
     xmins = [d["bbox"][1] for d in detections]
     ymaxs = [d["bbox"][2] for d in detections]
     xmaxs = [d["bbox"][3] for d in detections]
     union = max(1, (max(ymaxs) - min(ymins)) * (max(xmaxs) - min(xmins)))
+
+    # Signal 2: touching or heavily-overlapping detections imply one garment with
+    # conflicting class labels (e.g. top + bottom split on a two-tone T-shirt or dress).
+    sum_areas = sum(areas)
     overlap_ratio = sum_areas / float(union)
-    if overlap_ratio >= 1.4:
+    if overlap_ratio >= 1.25:
         return True
 
-    # Signal 2: several detections of the same kind, all clustered inside
-    # a small area (collar / sleeve / hem hallucinations).
-    if len(kinds) > 1:
+    # Signal 3: Two detections in a flat lay that touch vertically (gap <= 2.5% frame height)
+    # and span a common width (horizontal overlap >= 50%), forming a single contiguous silhouette.
+    if len(detections) == 2:
+        d0, d1 = (detections[0], detections[1]) if detections[0]["bbox"][0] <= detections[1]["bbox"][0] else (detections[1], detections[0])
+        # d0 is above d1
+        vert_gap = max(0, d1["bbox"][0] - d0["bbox"][2])
+        horiz_inter = max(0, min(d0["bbox"][3], d1["bbox"][3]) - max(d0["bbox"][1], d1["bbox"][1]))
+        min_width = min(d0["bbox"][3] - d0["bbox"][1], d1["bbox"][3] - d1["bbox"][1])
+        if vert_gap <= 25 and min_width > 0 and (horiz_inter / float(min_width)) >= 0.50:
+            if union >= frame_area * 0.20:
+                return True
+
+    # If multiple distinct garment/accessory items exist, it's a multi-item flat lay.
+    if len(detections) > 1 and len(kinds) > 1:
         return False
+
+    significant = [d for d in detections if _area(d["bbox"]) >= frame_area * 0.01]
+    if len(significant) > 1:
+        return False
+
+    # Signal 4: single category detection covering >= single-item threshold
+    if len(kinds) <= 1 and largest_area >= frame_area * _SINGLE_ITEM_AREA_FRAC:
+        return True
+
+    # Signal 5: several detections of the same kind, all clustered inside
+    # a small area (collar / sleeve / hem hallucinations).
     return union <= frame_area * _SUBPART_UNION_FRAC
 
 

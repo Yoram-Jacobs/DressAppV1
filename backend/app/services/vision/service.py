@@ -2,7 +2,7 @@ from __future__ import annotations
 from __future__ import annotations
 from .llm import EYES_JSON_SCHEMA, _call_gemma_space, _build_system_prompt, _language_directive, _user_prompt, _extract_json, DETECT_SYSTEM_PROMPT, _scan_complete_json_objects, _build_batch_prompts, GROUP_ANALYZE_SYSTEM_PROMPT, _LANG_NAMES, call_gemma_space_stream_attributes
 from .image import _shrink_for_vision, _crop_to_bbox, _PHANTOM_DROP_PCT, _solid_alpha_coverage, _fit_crop_to_card, _apply_fast_matte
-from .geometry import _nms_detections, _is_unidentifiable, _looks_already_cropped, _iou_norm, _containment
+from .geometry import _nms_detections, _is_unidentifiable, _looks_already_cropped, _iou_norm, _containment, _detect_human_presence
 from .validation import _coerce_single_garment, _coerce_enums, _enforce_segformer_category
 
 import asyncio
@@ -122,7 +122,7 @@ class GarmentVisionService:
         return self._gemini
 
     async def _detect_via_clothing_parser(
-        self, image_bytes: bytes,
+        self, image_bytes: bytes, *, count_hint: int | None = None,
     ) -> list[dict[str, Any]] | None:
         """Try the local SegFormer-based parser. Returns the normalised
         detection list on success, or ``None`` to let the caller fall
@@ -134,7 +134,7 @@ class GarmentVisionService:
         try:
             from app.services import clothing_parser
 
-            parser_items = await clothing_parser.parse_garments(image_bytes)
+            parser_items = await clothing_parser.parse_garments(image_bytes, count_hint=count_hint)
         except Exception as exc:  # noqa: BLE001
             logger.info(
                 "detect_items: clothing_parser path failed (%s), falling back",
@@ -257,7 +257,7 @@ class GarmentVisionService:
         sunglasses, jewelry that SegFormer's 18 classes miss or under-detect), we query
         the Gemini bbox detector and merge any non-overlapping candidate items.
         """
-        parser_hits = await self._detect_via_clothing_parser(image_bytes)
+        parser_hits = await self._detect_via_clothing_parser(image_bytes, count_hint=count_hint)
         gemini_hits: list[dict[str, Any]] = []
 
         should_query_gemini = (not parser_hits) or (
@@ -1826,7 +1826,11 @@ class GarmentVisionService:
             detections = []
 
         # 2) Fast-path: already-cropped product photo.
-        if _looks_already_cropped(detections):
+        is_single = (
+            (not _detect_human_presence(detections) and len(detections) <= 1)
+            or _looks_already_cropped(detections)
+        )
+        if is_single:
             return await self._handle_already_cropped(
                 image_bytes, detections, language, think=think,
             )
@@ -1967,7 +1971,11 @@ class GarmentVisionService:
             }
             return
 
-        if _looks_already_cropped(detections):
+        is_single = (
+            (not _detect_human_presence(detections) and len(detections) <= 1)
+            or _looks_already_cropped(detections)
+        )
+        if is_single:
             # Already-cropped / single-item product photos skip per-crop
             # analysis and do a single full-frame analyze.
             # We must yield the detect frame IMMEDIATELY for fast TTFB,
@@ -2399,8 +2407,17 @@ class GarmentVisionService:
             try:
                 # Only single-garment images can ever be considered already cropped.
                 # Never collapse multi-item photos into a single whole-image cutout!
-                if (count is None or count <= 1) and _looks_already_cropped(detections):
+                is_single = (
+                    (count is not None and count <= 1 and not _detect_human_presence(detections))
+                    or _looks_already_cropped(detections, count_hint=count)
+                )
+                if (count is None or count <= 1) and is_single:
                     if detections:
+                        ymin = min(d["bbox"][0] for d in detections)
+                        xmin = min(d["bbox"][1] for d in detections)
+                        ymax = max(d["bbox"][2] for d in detections)
+                        xmax = max(d["bbox"][3] for d in detections)
+                        union_bbox = [ymin, xmin, ymax, xmax]
                         best_det = max(
                             detections,
                             key=lambda d: (
@@ -2409,13 +2426,14 @@ class GarmentVisionService:
                             ),
                         )
                     else:
-                        best_det = {"bbox": [0, 0, 1000, 1000], "kind": "garment", "label": "garment"}
+                        union_bbox = [0, 0, 1000, 1000]
+                        best_det = {"bbox": union_bbox, "kind": "garment", "label": "garment"}
 
                     det = {
                         "label": best_det.get("label") or "garment",
                         "kind": best_det.get("kind") or "garment",
                         "category": best_det.get("category") or best_det.get("kind") or "garment",
-                        "bbox": best_det.get("bbox", [0, 0, 1000, 1000]),
+                        "bbox": union_bbox,
                         "defer_matte": False,
                         "is_single_item": True,
                     }
