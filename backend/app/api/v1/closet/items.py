@@ -73,6 +73,18 @@ async def create_item(
                 }
             )
 
+        if (payload.image_base64 or payload.crop_base64) and not getattr(payload, "from_one_pass", False):
+            from app.services.billing_service import deduct_user_credits
+            if not await deduct_user_credits(db, user, cost=1, operation="add_item"):
+                raise HTTPException(
+                    status_code=402,
+                    detail={
+                        "code": "daily_ai_limit_reached",
+                        "message": "Daily AI operation limit of 10 requests reached. Upgrade your plan to use more AI actions.",
+                        "feature": "moreAiActions",
+                    }
+                )
+
     # Compress input base64 images to avoid bloating MongoDB
     if payload.image_base64:
         payload.image_base64 = compress_b64_image(payload.image_base64, max_dim=1024, quality=75)

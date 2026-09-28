@@ -1140,9 +1140,28 @@ export default function ItemDetail() {
       setForm(toFormState(res.item, user));
       toast.success(t('itemDetail.reanalyze.success') + " · Press Save to keep changes.");
     } catch (err) {
-      toast.error(
-        err?.response?.data?.detail || t('itemDetail.reanalyze.error'),
-      );
+      const detail = err?.response?.data?.detail;
+      const detailStr = typeof detail === 'string' ? detail : JSON.stringify(detail || '');
+      const isQuota = err?.response?.status === 402 || 
+        detailStr.toLowerCase().includes('quota') || 
+        detailStr.toLowerCase().includes('limit') || 
+        detailStr.toLowerCase().includes('daily');
+      if (isQuota) {
+        toast.error(t('common.upgradeToUse', {
+          feature: t('common.features.moreAiActions', { defaultValue: 'more AI actions' }),
+          defaultValue: 'Upgrade your plan to use more AI actions'
+        }), {
+          duration: 6000,
+          action: {
+            label: t('common.upgrade', { defaultValue: 'Upgrade' }),
+            onClick: () => navigate('/pricing')
+          }
+        });
+      } else {
+        toast.error(
+          err?.response?.data?.detail || t('itemDetail.reanalyze.error'),
+        );
+      }
     } finally {
       clearInterval(ticker);
       setAnalyzeProgress(100);
@@ -1314,7 +1333,26 @@ export default function ItemDetail() {
         toast.warning(res.detail || t('itemDetail.cleanBackground.rejected'));
       }
     } catch (err) {
-      toast.error(err?.response?.data?.detail || t('itemDetail.cleanBackground.error'));
+      const detail = err?.response?.data?.detail;
+      const detailStr = typeof detail === 'string' ? detail : JSON.stringify(detail || '');
+      const isQuota = err?.response?.status === 402 || 
+        detailStr.toLowerCase().includes('quota') || 
+        detailStr.toLowerCase().includes('limit') || 
+        detailStr.toLowerCase().includes('daily');
+      if (isQuota) {
+        toast.error(t('common.upgradeToUse', {
+          feature: t('common.features.moreAiActions', { defaultValue: 'more AI actions' }),
+          defaultValue: 'Upgrade your plan to use more AI actions'
+        }), {
+          duration: 6000,
+          action: {
+            label: t('common.upgrade', { defaultValue: 'Upgrade' }),
+            onClick: () => navigate('/pricing')
+          }
+        });
+      } else {
+        toast.error(err?.response?.data?.detail || t('itemDetail.cleanBackground.error'));
+      }
     } finally {
       clearInterval(ticker);
       setCleanBackgroundProgress(100);

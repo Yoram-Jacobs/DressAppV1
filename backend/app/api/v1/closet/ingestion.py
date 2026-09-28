@@ -1229,6 +1229,17 @@ async def clean_item_background(
     if not item:
         raise HTTPException(404, "Item not found")
 
+    from app.services.billing_service import deduct_user_credits
+    if not await deduct_user_credits(db, user, cost=1, operation="clean_background"):
+        raise HTTPException(
+            status_code=402,
+            detail={
+                "code": "daily_ai_limit_reached",
+                "message": "Daily AI operation limit of 10 requests reached. Upgrade your plan to use more AI actions.",
+                "feature": "moreAiActions",
+            }
+        )
+
     # Lightweight-deploy short-circuit. The Emergent host pod (250 m
     # CPU / 1 Gi RAM) can't run rembg inside the 60 s gateway window —
     # the model download + 2 K-image inference exceeds the budget and
@@ -1562,6 +1573,17 @@ async def reanalyze_item(
     )
     if not item:
         raise HTTPException(404, "Item not found")
+
+    from app.services.billing_service import deduct_user_credits
+    if not await deduct_user_credits(db, user, cost=1, operation="reanalyze_item"):
+        raise HTTPException(
+            status_code=402,
+            detail={
+                "code": "daily_ai_limit_reached",
+                "message": "Daily AI operation limit of 10 requests reached. Upgrade your plan to use more AI actions.",
+                "feature": "moreAiActions",
+            }
+        )
 
     image_url: str | None = _get_item_image_url(item)
     if not image_url:

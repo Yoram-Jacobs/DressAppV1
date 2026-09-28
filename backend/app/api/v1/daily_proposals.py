@@ -313,8 +313,34 @@ async def _generate_and_save_daily_proposal(
             if it.get("closet_item_id"):
                 past_item_ids.add(it["closet_item_id"])
 
-    # Fetch user's closet items
-    cursor = db.closet_items.find({"user_id": user["id"], "is_duplicate": {"$ne": True}})
+    # Fetch user's closet items with slim projection to eliminate heavy binary/base64 payload
+    _CLOSET_ITEM_PROJECTION = {
+        "_id": 0,
+        "id": 1,
+        "name": 1,
+        "title": 1,
+        "category": 1,
+        "sub_category": 1,
+        "color": 1,
+        "colors": 1,
+        "material": 1,
+        "pattern": 1,
+        "season": 1,
+        "dress_code": 1,
+        "preferred_image_view": 1,
+        "clean_image_url": 1,
+        "reconstructed_image_url": 1,
+        "image_url": 1,
+        "thumbnail_url": 1,
+        "thumbnail_data_url": 1,
+        "tags": 1,
+        "is_duplicate": 1,
+        "group_role": 1,
+    }
+    cursor = db.closet_items.find(
+        {"user_id": user["id"], "is_duplicate": {"$ne": True}},
+        _CLOSET_ITEM_PROJECTION,
+    )
     items = [doc async for doc in cursor]
 
     def _cat(i: dict) -> str:

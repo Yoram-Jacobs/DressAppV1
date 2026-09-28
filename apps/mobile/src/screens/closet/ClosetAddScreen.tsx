@@ -619,11 +619,48 @@ export function ClosetAddScreen() {
       });
     } catch (err: any) {
       console.warn('Analysis error:', err);
-      const errMsg = err?.response?.data?.detail || err?.response?.data?._error || err?.message || t('addItem.analyzeFailed', { defaultValue: 'Analysis failed' });
+      const dataDetail = err?.response?.data?.detail;
+      const detailStr = typeof dataDetail === 'string' ? dataDetail : JSON.stringify(dataDetail || '');
+      const errMsg = dataDetail || err?.response?.data?._error || err?.message || t('addItem.analyzeFailed', { defaultValue: 'Analysis failed' });
+      const status = err?.response?.status;
+      const isQuota = status === 402 || 
+        detailStr.toLowerCase().includes('quota') || 
+        detailStr.toLowerCase().includes('limit') || 
+        detailStr.toLowerCase().includes('credit') ||
+        detailStr.toLowerCase().includes('daily');
+
+      const finalMsg = isQuota
+        ? t('common.upgradeToUse', {
+            feature: t('common.features.moreAiActions', { defaultValue: 'more AI actions' }),
+            defaultValue: 'Upgrade your plan to use more AI actions',
+          })
+        : typeof errMsg === 'string' ? errMsg : JSON.stringify(errMsg);
+
       setCards((prev) =>
-        prev.map((c) => (c.id === tempCardId ? { ...c, status: 'error', progress: 0, error: errMsg } : c))
+        prev.map((c) => (c.id === tempCardId ? { ...c, status: 'error', progress: 0, error: finalMsg } : c))
       );
-      Alert.alert(t('common.error', { defaultValue: 'Error' }), errMsg);
+
+      if (isQuota) {
+        Alert.alert(
+          t('common.planUpgradeTitle', { defaultValue: 'Plan Upgrade Required' }),
+          finalMsg,
+          [
+            { text: t('common.cancel', { defaultValue: 'Cancel' }), style: 'cancel' },
+            {
+              text: t('common.upgrade', { defaultValue: 'Upgrade' }),
+              onPress: () => {
+                try {
+                  (navigation as any).navigate('MeTab', { screen: 'SubscriptionSettings' });
+                } catch {
+                  (navigation as any).navigate('SubscriptionSettings');
+                }
+              },
+            },
+          ]
+        );
+      } else {
+        Alert.alert(t('common.error', { defaultValue: 'Error' }), finalMsg);
+      }
     }
   };
 

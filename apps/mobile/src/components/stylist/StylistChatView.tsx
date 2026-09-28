@@ -688,21 +688,51 @@ export function StylistChatView({ onSelectOutfitForTryOn }: StylistChatViewProps
       console.warn('Stylist chat error:', err);
       const status = err?.response?.status;
       const dataDetail = err?.response?.data?.detail;
+      const detailStr = typeof dataDetail === 'string' ? dataDetail : JSON.stringify(dataDetail || '');
       const errMsg = err?.message || String(err);
-      const errorText = dataDetail
-        ? `${status ? `[${status}] ` : ''}${typeof dataDetail === 'string' ? dataDetail : JSON.stringify(dataDetail)}`
-        : `${status ? `[${status}] ` : ''}${errMsg}`;
+      const isQuota = status === 402 || 
+        detailStr.toLowerCase().includes('quota') || 
+        detailStr.toLowerCase().includes('limit') || 
+        detailStr.toLowerCase().includes('credit') ||
+        detailStr.toLowerCase().includes('daily');
+
+      const finalMsg = isQuota
+        ? t('common.upgradeToUse', {
+            feature: t('common.features.moreAiActions', { defaultValue: 'more AI actions' }),
+            defaultValue: 'Upgrade your plan to use more AI actions',
+          })
+        : (dataDetail
+          ? `${status ? `[${status}] ` : ''}${typeof dataDetail === 'string' ? dataDetail : JSON.stringify(dataDetail)}`
+          : `${status ? `[${status}] ` : ''}${errMsg}`);
 
       const fallbackMsg: ChatMessage = {
         id: `msg_${Date.now() + 1}`,
         role: 'assistant',
-        content: `${t('common.error', { defaultValue: 'Error' })}: ${errorText}`,
+        content: isQuota ? finalMsg : `${t('common.error', { defaultValue: 'Error' })}: ${finalMsg}`,
         outfits: [],
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       };
       setMessages((prev) => [...prev, fallbackMsg]);
 
-      if (typeof dataDetail === 'string' && (dataDetail.includes('API key') || dataDetail.includes('API_KEY'))) {
+      if (isQuota) {
+        Alert.alert(
+          t('common.planUpgradeTitle', { defaultValue: 'Plan Upgrade Required' }),
+          finalMsg,
+          [
+            { text: t('common.cancel', { defaultValue: 'Cancel' }), style: 'cancel' },
+            {
+              text: t('common.upgrade', { defaultValue: 'Upgrade' }),
+              onPress: () => {
+                try {
+                  navigation.navigate('MeTab', { screen: 'SubscriptionSettings' });
+                } catch {
+                  navigation.navigate('SubscriptionSettings' as any);
+                }
+              },
+            },
+          ]
+        );
+      } else if (typeof dataDetail === 'string' && (dataDetail.includes('API key') || dataDetail.includes('API_KEY'))) {
         Alert.alert(
           t('profile.apiKeyRequiredTitle', { defaultValue: 'API Key Required' }),
           t('profile.apiKeyRequiredMessage', {

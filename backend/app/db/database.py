@@ -91,7 +91,9 @@ async def ensure_indexes() -> None:
     except Exception:  # noqa: BLE001
         # Index may not exist (fresh DB) — safe to ignore.
         pass
+    await db.stylist_sessions.create_index("id", unique=True, sparse=True)
     await db.stylist_sessions.create_index([("user_id", 1), ("last_active_at", -1)])
+    await db.stylist_messages.create_index("id", unique=True, sparse=True)
     await db.stylist_messages.create_index([("session_id", 1), ("created_at", -1)])
 
     await db.embeddings.create_index(

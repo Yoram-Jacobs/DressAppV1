@@ -1774,7 +1774,28 @@ export default function Stylist() {
       }
     } catch (err) {
       console.error('[Stylist] sendTurn failed:', err);
-      toast.error(err?.response?.data?.detail || err?.message || t('stylist.errorAdvice'));
+      const detail = err?.response?.data?.detail;
+      const detailStr = typeof detail === 'string' ? detail : JSON.stringify(detail || '');
+      const isQuota = err?.response?.status === 402 || 
+        detailStr.toLowerCase().includes('quota') || 
+        detailStr.toLowerCase().includes('limit') || 
+        detailStr.toLowerCase().includes('credit') ||
+        detailStr.toLowerCase().includes('daily');
+
+      if (isQuota) {
+        toast.error(t('common.upgradeToUse', {
+          feature: t('common.features.moreAiActions', { defaultValue: 'more AI actions' }),
+          defaultValue: 'Upgrade your plan to use more AI actions'
+        }), {
+          duration: 6000,
+          action: {
+            label: t('common.upgrade', { defaultValue: 'Upgrade' }),
+            onClick: () => navigate('/pricing')
+          }
+        });
+      } else {
+        toast.error(err?.response?.data?.detail || err?.message || t('stylist.errorAdvice'));
+      }
       // Roll back optimistic user bubble on failure so the user can retry.
       setMessages((m) => m.filter((x) => x.id !== optimistic.id));
       if (outgoingText && !text) {

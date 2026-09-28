@@ -350,9 +350,12 @@ export default function DressMeShuffler({ onSaveSuccess, onOpenCalendar }) {
     } catch (err) {
       clearInterval(spinTimer);
       console.error('AI Planner Scout failed:', err);
-      const detail = err.response?.data?.detail || '';
-      if (detail.includes('quota') || detail.includes('exhausted') || err.response?.status === 402) {
-        toast.error(t('stylist.quotaExhausted', { defaultValue: 'Quota Exhausted. Please check your credit balance or input your own API Key.' }), { duration: 5000 });
+      const detailStr = typeof detail === 'string' ? detail : JSON.stringify(detail || '');
+      if (detailStr.toLowerCase().includes('quota') || detailStr.toLowerCase().includes('exhausted') || detailStr.toLowerCase().includes('limit') || err.response?.status === 402) {
+        toast.error(t('common.upgradeToUse', {
+          feature: t('common.features.moreAiActions', { defaultValue: 'more AI actions' }),
+          defaultValue: 'Upgrade your plan to use more AI actions'
+        }), { duration: 5000 });
       } else {
         toast.error(err.response?.data?.detail || t('stylist.failedScout', { defaultValue: 'Failed to Scout: ensure you have enough items in closet.' }));
       }

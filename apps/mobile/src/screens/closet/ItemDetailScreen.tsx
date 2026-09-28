@@ -496,10 +496,44 @@ export function ItemDetailScreen() {
       }
     } catch (e: any) {
       console.warn('Re-analysis failed:', e);
-      Alert.alert(
-        t('common.error', { defaultValue: 'Error' }),
-        e?.response?.data?.detail || e?.message || t('itemDetail.reanalyze.error', { defaultValue: 'Analysis failed. Please try again.' })
-      );
+      const dataDetail = e?.response?.data?.detail;
+      const detailStr = typeof dataDetail === 'string' ? dataDetail : JSON.stringify(dataDetail || '');
+      const errMsg = dataDetail || e?.message || t('itemDetail.reanalyze.error', { defaultValue: 'Analysis failed. Please try again.' });
+      const status = e?.response?.status;
+      const isQuota = status === 402 || 
+        detailStr.toLowerCase().includes('quota') || 
+        detailStr.toLowerCase().includes('limit') || 
+        detailStr.toLowerCase().includes('credit') ||
+        detailStr.toLowerCase().includes('daily');
+
+      const finalMsg = isQuota
+        ? t('common.upgradeToUse', {
+            feature: t('common.features.moreAiActions', { defaultValue: 'more AI actions' }),
+            defaultValue: 'Upgrade your plan to use more AI actions',
+          })
+        : typeof errMsg === 'string' ? errMsg : JSON.stringify(errMsg);
+
+      if (isQuota) {
+        Alert.alert(
+          t('common.planUpgradeTitle', { defaultValue: 'Plan Upgrade Required' }),
+          finalMsg,
+          [
+            { text: t('common.cancel', { defaultValue: 'Cancel' }), style: 'cancel' },
+            {
+              text: t('common.upgrade', { defaultValue: 'Upgrade' }),
+              onPress: () => {
+                try {
+                  (navigation as any).navigate('MeTab', { screen: 'SubscriptionSettings' });
+                } catch {
+                  (navigation as any).navigate('SubscriptionSettings');
+                }
+              },
+            },
+          ]
+        );
+      } else {
+        Alert.alert(t('common.error', { defaultValue: 'Error' }), finalMsg);
+      }
     } finally {
       clearInterval(ticker);
       setReanalyzeProgress(100);
@@ -576,15 +610,51 @@ export function ItemDetailScreen() {
         );
       }
     } catch (err: any) {
-      const errMsg = err?.response?.data?.detail || err?.message || t('itemDetail.reanalyze.error', { defaultValue: 'Analysis failed. Please try again.' });
+      const dataDetail = err?.response?.data?.detail;
+      const detailStr = typeof dataDetail === 'string' ? dataDetail : JSON.stringify(dataDetail || '');
+      const errMsg = dataDetail || err?.message || t('itemDetail.reanalyze.error', { defaultValue: 'Analysis failed. Please try again.' });
+      const status = err?.response?.status;
+      const isQuota = status === 402 || 
+        detailStr.toLowerCase().includes('quota') || 
+        detailStr.toLowerCase().includes('limit') || 
+        detailStr.toLowerCase().includes('credit') ||
+        detailStr.toLowerCase().includes('daily');
+
+      const finalMsg = isQuota
+        ? t('common.upgradeToUse', {
+            feature: t('common.features.moreAiActions', { defaultValue: 'more AI actions' }),
+            defaultValue: 'Upgrade your plan to use more AI actions',
+          })
+        : typeof errMsg === 'string' ? errMsg : JSON.stringify(errMsg);
+
       setReanalyzeChatHistory((prev) => [
         ...prev,
         {
           role: 'assistant',
-          content: errMsg,
+          content: finalMsg,
           error: true,
         },
       ]);
+
+      if (isQuota) {
+        Alert.alert(
+          t('common.planUpgradeTitle', { defaultValue: 'Plan Upgrade Required' }),
+          finalMsg,
+          [
+            { text: t('common.cancel', { defaultValue: 'Cancel' }), style: 'cancel' },
+            {
+              text: t('common.upgrade', { defaultValue: 'Upgrade' }),
+              onPress: () => {
+                try {
+                  (navigation as any).navigate('MeTab', { screen: 'SubscriptionSettings' });
+                } catch {
+                  (navigation as any).navigate('SubscriptionSettings');
+                }
+              },
+            },
+          ]
+        );
+      }
     } finally {
       clearInterval(ticker);
       setReanalyzeChatProgress(100);
@@ -608,7 +678,7 @@ export function ItemDetailScreen() {
     if (!itemId) return;
     setLoadingPairings(true);
     try {
-      const res = await api.completeOutfit({ itemIds: [itemId] });
+      const res = await (api as any).completeOutfit({ itemIds: [itemId] });
       if (res && res.completions) {
         setPairedOutfits(res.completions);
       }

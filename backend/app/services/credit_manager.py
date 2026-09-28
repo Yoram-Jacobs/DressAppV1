@@ -504,12 +504,13 @@ def get_credit_exhaustion_info(user_or_tier: dict | str) -> dict[str, str]:
         return {
             "code": "credits_exhausted_paid",
             "i18n_key": "credits.exhausted_paid",
-            "message": "You've used your AI reconstructions! Purchase a credit pack to continue.",
+            "message": "You've used your AI actions! Purchase a credit pack to continue.",
         }
     return {
         "code": "credits_exhausted_free",
-        "i18n_key": "credits.exhausted_free",
-        "message": "You've used your free AI reconstructions! Upgrade to Manager for automated access or purchase a credit pack.",
+        "i18n_key": "common.upgradeToUse",
+        "feature_key": "moreAiActions",
+        "message": "Upgrade your plan to use more AI actions.",
     }
 
 
@@ -586,43 +587,61 @@ async def deduct_user_credits(
         if not user_record:
             return False
 
-        # Ensure subscription credits are active/refreshed
-        user_record = await ensure_monthly_subscription_credits(user_record, db)
-        user_record = await migrate_legacy_credits_if_needed(user_record, db)
-
-        u_model = User.parse_obj(user_record)
+        user_tier = get_user_tier(user_record)
         req_int = max(1, int(round(cost)))
-        if u_model.total_credits < req_int:
-            if not wait_if_exhausted:
-                return False
-            got_enough = await handle_credit_exhaustion(
-                operation=operation or "ai_operation",
-                user_id=user_id,
-                required_credits=req_int,
-            )
-            if not got_enough:
-                return False
-            user_record = await db.users.find_one({"id": user_id})
-            u_model = User.parse_obj(user_record)
-            if u_model.total_credits < req_int:
-                return False
 
-        success, spent_details = u_model.spend_credits(req_int, operation or "ai_operation")
-        if not success:
+        # 1. Professional and Manager tiers have zero AI action restrictions.
+        if user_tier in ["manager", "professional"]:
+            try:
+                meter = TokenMeter(user_id, operation or "ai_operation")
+                meter.input_tokens = 0
+                meter.output_tokens = 0
+                meter.credits_consumed = req_int
+                meter.credit_type_used = "subscription"
+                await meter._save_token_usage(0, 0)
+            except Exception:
+                pass
+            return True
+
+        # 2. Free tier users:
+        # Check if the user has non-expiring paid credit packs
+        user_record = await migrate_legacy_credits_if_needed(user_record, db)
+        u_model = User.parse_obj(user_record)
+        paid_available = sum(b.amount for b in u_model.credit_buckets if getattr(b.type, "value", b.type) == "paid")
+        if paid_available >= req_int:
+            success, spent_details = u_model.spend_credits(req_int, operation or "ai_operation")
+            if success:
+                clean_buckets = [b.dict() for b in prune_expired_buckets(u_model.credit_buckets)]
+                await db.users.update_one(
+                    {"id": user_id},
+                    {"$set": {"credit_buckets": clean_buckets}}
+                )
+                try:
+                    meter = TokenMeter(user_id, operation or "ai_operation")
+                    meter.input_tokens = 0
+                    meter.output_tokens = 0
+                    meter.credits_consumed = req_int
+                    meter.credit_type_used = "paid"
+                    await meter._save_token_usage(0, 0)
+                except Exception:
+                    pass
+                return True
+
+        # 3. Fall back to the 10 daily AI actions quota
+        daily_ok = await check_and_increment_daily_request(db, user_id)
+        if not daily_ok:
+            logger.info(f"User {user_id} on Free plan has exhausted their 10 daily AI actions quota.")
             return False
 
-        clean_buckets = [b.dict() for b in prune_expired_buckets(u_model.credit_buckets)]
-        await db.users.update_one(
-            {"id": user_id},
-            {"$set": {"credit_buckets": clean_buckets}}
-        )
-
-        meter = TokenMeter(user_id, operation or "ai_operation")
-        meter.input_tokens = 0
-        meter.output_tokens = 0
-        meter.credits_consumed = req_int
-        meter.credit_type_used = "free" if any(d.get("type") == "free" for d in spent_details) else "paid"
-        await meter._save_token_usage(0, 0)
+        try:
+            meter = TokenMeter(user_id, operation or "ai_operation")
+            meter.input_tokens = 0
+            meter.output_tokens = 0
+            meter.credits_consumed = req_int
+            meter.credit_type_used = "free"
+            await meter._save_token_usage(0, 0)
+        except Exception:
+            pass
         return True
     except Exception as e:
         logger.error(f"Error checking/deducting user credits: {str(e)}")

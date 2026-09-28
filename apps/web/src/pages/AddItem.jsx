@@ -4871,10 +4871,10 @@ function ItemCard({
                   <AlertTriangle className="h-3.5 w-3.5 mt-0.5 shrink-0 text-rose-600" />
                   <span className="flex-1 font-medium">
                     {isQuotaError
-                      ? t("addItem.quotaBlockedDesc", {
-                        defaultValue:
-                          "AI features are locked due to insufficient credits or tier limitations.",
-                      })
+                      ? t("common.upgradeToUse", {
+                          feature: t("common.features.moreAiActions", { defaultValue: "more AI actions" }),
+                          defaultValue: "Upgrade your plan to use more AI actions.",
+                        })
                       : error ||
                       t("addItem.analyzeFailed", {
                         defaultValue: "Analysis failed",
@@ -4882,24 +4882,23 @@ function ItemCard({
                   </span>
                 </div>
                 {isQuotaError ? (
-                  <div className="flex flex-wrap gap-x-2 gap-y-1 ps-6 text-[10px] font-semibold text-rose-800">
-                    <button
-                      type="button"
-                      onClick={() => navigate("/me?open=ai-config")}
-                      className="underline hover:text-rose-950 cursor-pointer"
-                    >
-                      {t("addItem.configureKeyLink", {
-                        defaultValue: "Configure API Key",
-                      })}
-                    </button>
-                    <span className="text-rose-400">|</span>
+                  <div className="flex flex-wrap items-center gap-x-2 gap-y-1 ps-6 text-[11px] font-semibold text-rose-800">
                     <button
                       type="button"
                       onClick={() => navigate("/pricing")}
-                      className="underline hover:text-rose-950 cursor-pointer"
+                      className="px-2.5 py-1 rounded bg-rose-600 text-white font-bold hover:bg-rose-700 cursor-pointer transition-colors shadow-sm"
                     >
                       {t("addItem.upgradeTierLink", {
                         defaultValue: "Upgrade Tier",
+                      })}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => navigate("/me?open=ai-config")}
+                      className="underline hover:text-rose-950 cursor-pointer text-[10px]"
+                    >
+                      {t("addItem.configureKeyLink", {
+                        defaultValue: "Configure API Key",
                       })}
                     </button>
                   </div>

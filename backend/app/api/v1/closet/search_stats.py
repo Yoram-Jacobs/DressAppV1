@@ -423,28 +423,31 @@ async def complete_outfit(
     else:
         needed_cats.extend(["bottom", "top"])
 
-    for req_cat in needed_cats:
-        if len(buckets.get(req_cat, [])) < 3:
-            fb_docs = await repos.find_many(
-                db.closet_items,
-                {
-                    "user_id": user["id"],
-                    "id": {"$nin": list(existing_ids)},
-                    "group_role": {"$ne": "member"},
-                },
-                projection=_SLIM_SEARCH_PROJECTION,
-                sort=[("created_at", -1)],
-                limit=150,
-            )
-            for fb in fb_docs:
-                fnc = norm_category(fb.get("category"))
-                if fnc == req_cat and fb["id"] not in existing_ids:
-                    slim = _slim_item(fb)
-                    slim["_score"] = 0.5
-                    slim["norm_cat"] = fnc
-                    buckets.setdefault(fnc, []).append(slim)
-                    existing_ids.add(fb["id"])
-                    if len(buckets[fnc]) >= 4:
+    # Fallback: single-query batch fetch for deficient categories
+    deficient_cats = {req_cat for req_cat in needed_cats if len(buckets.get(req_cat, [])) < 3}
+    if deficient_cats:
+        fb_docs = await repos.find_many(
+            db.closet_items,
+            {
+                "user_id": user["id"],
+                "id": {"$nin": list(existing_ids)},
+                "group_role": {"$ne": "member"},
+            },
+            projection=_SLIM_SEARCH_PROJECTION,
+            sort=[("created_at", -1)],
+            limit=200,
+        )
+        for fb in fb_docs:
+            fnc = norm_category(fb.get("category"))
+            if fnc in deficient_cats and fb["id"] not in existing_ids:
+                slim = _slim_item(fb)
+                slim["_score"] = 0.5
+                slim["norm_cat"] = fnc
+                buckets.setdefault(fnc, []).append(slim)
+                existing_ids.add(fb["id"])
+                if len(buckets.get(fnc, [])) >= 4:
+                    deficient_cats.discard(fnc)
+                    if not deficient_cats:
                         break
 
     # Assemble stratified candidates list:
