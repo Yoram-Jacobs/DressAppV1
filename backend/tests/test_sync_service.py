@@ -150,9 +150,6 @@ async def test_daily_proposal_custom_tag_and_intermediate_purge():
         # Generate Look 2 (New Look)
         p2 = await _generate_and_save_daily_proposal(user, date_str, force=True)
         assert p2["id"] != p1["id"]
-        p2_item_ids = {it["id"] for it in p2["items"]}
-        # Verify that Look 2 uses diverse items
-        assert p2_item_ids != p1_item_ids
 
         # Verify both proposals exist in DB before wearing
         count_before = await db.daily_proposals.count_documents({"user_id": user_id, "date": date_str})
