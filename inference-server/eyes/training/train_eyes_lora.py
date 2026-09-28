@@ -170,7 +170,10 @@ def train_lora_native(
     from trl import SFTTrainer
 
     if not torch.cuda.is_available():
-        logger.warning("CUDA is not available on this machine! Fallback to CPU dry run or expect slow execution.")
+        raise RuntimeError(
+            "CUDA GPU accelerator is not available (torch.cuda.is_available() is False)! "
+            "Refusing to run full model training on CPU to prevent runaway 4+ hour execution. Use --dry-run for CPU testing."
+        )
 
     logger.info("Loading SFT dataset from %s", dataset_path)
     try:
@@ -532,6 +535,7 @@ def run_training_on_runpod(
                 name=f"dressapp-eyes-trainer-{int(time.time())}",
                 image_name="runpod/pytorch:2.4.0-py3.11-cuda12.4.1-devel-ubuntu22.04",
                 gpu_type_id=gpu_type,
+                gpu_count=1,
                 cloud_type="ALL",
                 support_public_ip=False,
                 start_ssh=True,
@@ -656,9 +660,14 @@ def run_training_on_runpod(
 
         def run_ssh_streaming(cmd: str, label: str) -> None:
             logger.info("Executing on pod: %s", label)
-            if "python3" in cmd and "PYTHONUNBUFFERED" not in cmd:
-                cmd = "export PYTHONUNBUFFERED=1 && " + cmd
-            stdin, stdout, stderr = ssh.exec_command(cmd, get_pty=True)
+            env_prefix = (
+                "export PYTHONUNBUFFERED=1 && "
+                "export PATH=\"/usr/local/nvidia/bin:/usr/local/cuda/bin:$PATH\" && "
+                "export LD_LIBRARY_PATH=\"/usr/local/nvidia/lib:/usr/local/nvidia/lib64:/usr/local/cuda/lib64:$LD_LIBRARY_PATH\" && "
+                "export NVIDIA_VISIBLE_DEVICES=all && "
+            )
+            full_cmd = env_prefix + cmd
+            stdin, stdout, stderr = ssh.exec_command(full_cmd, get_pty=True)
             for line in iter(stdout.readline, ""):
                 line_clean = line.rstrip()
                 if line_clean:
@@ -668,12 +677,25 @@ def run_training_on_runpod(
                 err_text = stderr.read().decode("utf-8", errors="replace").strip()
                 raise RuntimeError(f"Step '{label}' failed with exit code {exit_status}. Details: {err_text}")
 
-        # Step 1: Install Python dependencies (ensuring PyTorch >= 2.5 with CUDA 12.4 support, accelerate >= 1.1, & synchronized torchaudio)
+        # Step 1: Install Python dependencies (ensuring PyTorch 2.5.1 with CUDA 12.4 support)
         run_ssh_streaming(
             "pip uninstall -y torchaudio && "
-            "pip install --no-cache-dir 'torch>=2.5.0' 'torchvision>=0.20.0' 'torchaudio>=2.5.0' 'accelerate>=1.1.0' --extra-index-url https://download.pytorch.org/whl/cu124 && "
-            "pip install --no-cache-dir -r /workspace/requirements-train.txt",
+            "pip install --no-cache-dir 'torch==2.5.1+cu124' 'torchvision==0.20.1+cu124' 'accelerate>=1.1.0' --extra-index-url https://download.pytorch.org/whl/cu124 && "
+            "pip install --no-cache-dir -r /workspace/requirements-train.txt --extra-index-url https://download.pytorch.org/whl/cu124",
             "Install QLoRA Training Dependencies",
+        )
+
+        # Step 1.5: Verify CUDA GPU Hardware Acceleration on Pod
+        run_ssh_streaming(
+            "python3 -c \""
+            "import torch; "
+            "print('PyTorch Version:', torch.__version__); "
+            "print('CUDA Available:', torch.cuda.is_available()); "
+            "assert torch.cuda.is_available(), 'CRITICAL ERROR: CUDA is NOT available in PyTorch on the RunPod GPU instance! Refusing to run on CPU.'; "
+            "print(f'Active GPU: {torch.cuda.get_device_name(0)}'); "
+            "print(f'VRAM Total: {torch.cuda.get_device_properties(0).total_memory / (1024**3):.2f} GB'); "
+            "\"",
+            "Verify CUDA GPU Hardware Acceleration",
         )
 
         # Step 2: Run QLoRA training
