@@ -29,6 +29,7 @@ from app.api.v1.closet.common import (
     _get_item_image_url,
     _pick_segformer_mask_for_category,
     _read_image_bytes_from_url,
+    _track_task,
     logger,
 )
 
