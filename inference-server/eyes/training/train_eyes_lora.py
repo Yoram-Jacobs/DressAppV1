@@ -693,11 +693,11 @@ def run_training_on_runpod(
                 err_text = stderr.read().decode("utf-8", errors="replace").strip()
                 raise RuntimeError(f"Step '{label}' failed with exit code {exit_status}. Details: {err_text}")
 
-        # Step 1: Install Python dependencies while preserving the container's CUDA-enabled PyTorch
+        # Step 1: Install Python dependencies with PyTorch 2.5.1+cu124 (satisfies Transformers >= 5 requirement)
         run_ssh_streaming(
             "pip uninstall -y torchaudio && "
             "pip install --no-cache-dir 'h11>=0.16.0' && "
-            "(python3 -c 'import torch; assert torch.cuda.is_available()' || pip install --no-cache-dir 'torch>=2.4.0' 'torchvision>=0.19.0' --extra-index-url https://download.pytorch.org/whl/cu124) && "
+            "pip install --no-cache-dir --upgrade 'torch==2.5.1+cu124' 'torchvision==0.20.1+cu124' --extra-index-url https://download.pytorch.org/whl/cu124 && "
             "pip install --no-cache-dir 'accelerate>=1.1.0' 'peft>=0.13.0' 'bitsandbytes>=0.43.0' 'trl>=0.12.0' 'transformers>=4.45.0' 'datasets>=3.0.0' 'huggingface_hub>=0.23.0' 'pydantic>=2.7.0' 'scipy>=1.10.0'",
             "Install QLoRA Training Dependencies",
         )
@@ -710,8 +710,14 @@ def run_training_on_runpod(
             "print('PyTorch Version:', torch.__version__); "
             "print('CUDA Available:', torch.cuda.is_available()); "
             "assert torch.cuda.is_available(), 'CRITICAL ERROR: CUDA is NOT available in PyTorch on the RunPod GPU instance! Refusing to run on CPU.'; "
+            "assert tuple(map(int, torch.__version__.split('+')[0].split('.')[:2])) >= (2, 5), f'CRITICAL ERROR: PyTorch >= 2.5.0 required by transformers, but found {torch.__version__}'; "
             "print(f'Active GPU: {torch.cuda.get_device_name(0)}'); "
             "print(f'VRAM Total: {torch.cuda.get_device_properties(0).total_memory / (1024**3):.2f} GB'); "
+            "import transformers; "
+            "print('Transformers Version:', transformers.__version__); "
+            "import peft; "
+            "import accelerate; "
+            "print('Accelerate & PEFT successfully imported with PyTorch CUDA backend.'); "
             "\"",
             "Verify CUDA GPU Hardware Acceleration",
         )
