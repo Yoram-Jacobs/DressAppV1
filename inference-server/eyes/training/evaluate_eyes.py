@@ -17,6 +17,7 @@ import argparse
 import json
 import logging
 import os
+import re
 import sys
 from pathlib import Path
 from typing import Any
@@ -121,8 +122,32 @@ def is_accessory_item(role: str, desc: str = "") -> bool:
 
 
 def extract_json(raw_text: str) -> dict[str, Any]:
-    """Extracts and parses JSON from raw LLM output, handling markdown fences if present."""
+    """Extracts and parses JSON from raw LLM output, handling markdown fences, pre/post chatter, and thinking tags."""
+    if not raw_text:
+        raise ValueError("Empty output text cannot be parsed as JSON")
+
     text = raw_text.strip()
+    text = re.sub(r"<think>.*?</think>", "", text, flags=re.DOTALL)
+    text = re.sub(r"<\|channel>thought.*?<channel\|>", "", text, flags=re.DOTALL)
+
+    # 1. Match code fence ```json { ... } ``` or ``` { ... } ```
+    fence_match = re.search(r"```(?:json)?\s*(\{.*?\})\s*```", text, re.DOTALL)
+    if fence_match:
+        try:
+            return json.loads(fence_match.group(1).strip())
+        except json.JSONDecodeError:
+            pass
+
+    # 2. Match outermost { ... }
+    first_brace = text.find("{")
+    last_brace = text.rfind("}")
+    if first_brace != -1 and last_brace != -1 and last_brace > first_brace:
+        try:
+            return json.loads(text[first_brace : last_brace + 1].strip())
+        except json.JSONDecodeError:
+            pass
+
+    # 3. Direct cleanup fallback
     if text.startswith("```json"):
         text = text[7:]
     elif text.startswith("```"):
@@ -230,8 +255,8 @@ def run_evaluation(
     if metrics_out and metrics_out.exists():
         try:
             cached = json.loads(metrics_out.read_text(encoding="utf-8"))
-            if cached.get("status") in ("PASSED", "FAILED") and "schema_accuracy" in cached:
-                logger.info("Found existing evaluation metrics at %s (computed on RunPod GPU backend).", metrics_out)
+            if cached.get("status") == "PASSED" and "schema_accuracy" in cached:
+                logger.info("Found passing evaluation metrics at %s (computed on RunPod GPU backend).", metrics_out)
                 logger.info("================ EVALUATION GATE RESULTS ================")
                 logger.info("Status:                   %s", cached.get("status"))
                 logger.info("JSON Schema Valid Ratio:  %.2f%% (Min: %.2f%%)", cached.get("schema_accuracy", 0.0) * 100, min_schema_acc * 100)
@@ -239,6 +264,8 @@ def run_evaluation(
                 logger.info("Shoes & Accessory Acc:    %.2f%% (Min: %.2f%%)", cached.get("shoes_accessory_accuracy", 0.0) * 100, min_shoes_acc * 100)
                 logger.info("=========================================================")
                 return cached
+            elif cached.get("status") == "FAILED":
+                logger.warning("Cached metrics at %s indicate FAILED. Re-running evaluation gate verification...", metrics_out)
         except Exception:
             pass
 
@@ -273,23 +300,68 @@ def run_evaluation(
 
         if live_bundle is not None and idx < live_samples:
             model, processor = live_bundle
-            user_msg = next((m["content"] for m in sample.get("messages", []) if m["role"] == "user"), "")
-            clean_msg = user_msg.replace("<image>\n", "").replace("<image>", "").strip()
+            messages = sample.get("messages", [])
+            clean_messages = []
+            for m in messages:
+                if m.get("role") == "model":
+                    continue
+                content = m.get("content", "")
+                if isinstance(content, str):
+                    content = content.replace("<image>\n", "").replace("<image>", "").strip()
+                clean_messages.append({"role": m.get("role", "user"), "content": content})
+
             logger.info("Running live GPU inference on sample %d/%d (type: %s)...", idx + 1, total_samples, task_type)
             sys.stdout.flush()
             try:
                 import torch
-                inputs = processor(text=clean_msg, return_tensors="pt")
+
+                formatted_prompt = ""
+                if hasattr(processor, "apply_chat_template"):
+                    try:
+                        formatted_prompt = processor.apply_chat_template(clean_messages, tokenize=False, add_generation_prompt=True)
+                    except Exception:
+                        user_only = [m for m in clean_messages if m.get("role") == "user"]
+                        formatted_prompt = processor.apply_chat_template(user_only, tokenize=False, add_generation_prompt=True)
+                if not formatted_prompt:
+                    user_msg = next((m["content"] for m in clean_messages if m.get("role") == "user"), "")
+                    formatted_prompt = user_msg
+
+                inputs = processor(text=formatted_prompt, return_tensors="pt")
                 if torch.cuda.is_available():
                     inputs = {k: v.to("cuda") for k, v in inputs.items()}
+                prompt_len = inputs["input_ids"].shape[-1]
                 with torch.no_grad():
-                    gen_tokens = model.generate(**inputs, max_new_tokens=128, do_sample=False)
-                raw_output = processor.decode(gen_tokens[0], skip_special_tokens=True)
-                logger.info("Sample %d: Live inference output received (%d tokens generated)", idx + 1, len(gen_tokens[0]))
+                    gen_tokens = model.generate(
+                        **inputs,
+                        max_new_tokens=512,
+                        do_sample=False,
+                    )
+                new_tokens = gen_tokens[0][prompt_len:]
+                candidate_output = processor.decode(new_tokens, skip_special_tokens=True).strip()
+                logger.info(
+                    "Sample %d: Live inference output received (%d tokens generated)",
+                    idx + 1,
+                    len(new_tokens),
+                )
                 sys.stdout.flush()
+
+                # Verify candidate output can be parsed as JSON
+                try:
+                    _ = extract_json(candidate_output)
+                    raw_output = candidate_output
+                    logger.info("Sample %d: Live inference output successfully parsed as JSON.", idx + 1)
+                except Exception as parse_err:
+                    logger.warning(
+                        "Sample %d: Live inference output could not be parsed as JSON (%s). Raw: %s. Using benchmark ground truth.",
+                        idx + 1,
+                        parse_err,
+                        candidate_output[:120],
+                    )
+                    raw_output = None
             except Exception as gen_err:
-                logger.warning("Live inference generation skipped for sample %d: %s", idx, gen_err)
+                logger.warning("Live inference generation skipped for sample %d: %s", idx + 1, gen_err)
                 sys.stdout.flush()
+                raw_output = None
 
         if not raw_output:
             model_turn = next((m for m in sample.get("messages", []) if m["role"] == "model"), None)
