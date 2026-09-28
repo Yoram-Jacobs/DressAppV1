@@ -92,6 +92,7 @@ services:
     # than letting the kernel page out cold weights from the mmap.
     volumes:
       - /srv/AI-Stylist/eyes_gguf:/models
+      - ../inference-server/eyes/main.py:/app/main.py:ro
     healthcheck:
       test: ["CMD", "curl", "-fsS", "http://127.0.0.1:7860/healthz"]
       interval: 30s
