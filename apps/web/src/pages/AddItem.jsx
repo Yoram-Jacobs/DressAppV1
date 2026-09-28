@@ -2436,6 +2436,9 @@ export default function AddItem() {
         const reconstructedUrl = recValidated
           ? `data:${rec.mime_type || "image/png"};base64,${rec.image_b64}`
           : null;
+        if (frame.item_id && frame.item_doc) {
+          closetStore.upsert(frame.item_doc);
+        }
 
         setCards((prev) =>
           prev.map((c) =>
@@ -2444,6 +2447,8 @@ export default function AddItem() {
                 ...c,
                 status: "ready",
                 progress: 100,
+                serverItemId: frame.item_id || null,
+                saved: !!frame.saved,
                 fields: hydrate(frame.analysis || {}, user, t, i18n),
                 label:
                   frame.analysis?.sub_category ||
