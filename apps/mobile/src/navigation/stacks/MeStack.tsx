@@ -9,6 +9,7 @@ import { WardrobeStatsScreen } from '@mobile/screens/me/WardrobeStatsScreen';
 import { DeleteAccountScreen } from '@mobile/screens/me/DeleteAccountScreen';
 import { PrivacyScreen } from '@mobile/screens/me/PrivacyScreen';
 import { TermsScreen } from '@mobile/screens/me/TermsScreen';
+import { AboutUsScreen } from '@mobile/screens/me/AboutUsScreen';
 import { PricingScreen } from '@mobile/screens/me/PricingScreen';
 import { SuitcaseScreen } from '@mobile/screens/me/SuitcaseScreen';
 import { TrendScoutScreen } from '@mobile/screens/me/TrendScoutScreen';
@@ -42,6 +43,7 @@ export function MeStack() {
       <Stack.Screen name="DeleteAccount" component={DeleteAccountScreen} />
       <Stack.Screen name="Privacy" component={PrivacyScreen} />
       <Stack.Screen name="Terms" component={TermsScreen} />
+      <Stack.Screen name="AboutUs" component={AboutUsScreen} />
       <Stack.Screen name="Pricing" component={PricingScreen} />
       <Stack.Screen name="Suitcase" component={SuitcaseScreen} />
       <Stack.Screen name="TrendScout" component={TrendScoutScreen} />

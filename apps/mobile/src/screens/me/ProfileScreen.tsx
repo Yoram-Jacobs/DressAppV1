@@ -1768,8 +1768,14 @@ export function ProfileScreen() {
           <Text style={styles.signOutBtnText}>{t('profile.signOut', { defaultValue: 'Sign Out' })}</Text>
         </TouchableOpacity>
 
-        {/* Footer Legal Links */}
+        {/* Footer Legal & Company Links */}
         <View style={styles.legalRow}>
+          <TouchableOpacity onPress={() => navigation.navigate('AboutUs' as any)}>
+            <Text style={[styles.legalLink, { color: colors.mutedFg }]}>
+              {t('profile.aboutUs', { defaultValue: 'About Us' })}
+            </Text>
+          </TouchableOpacity>
+          <Text style={[styles.legalDot, { color: colors.mutedFg }]}>•</Text>
           <TouchableOpacity onPress={() => navigation.navigate('Privacy' as any)}>
             <Text style={[styles.legalLink, { color: colors.mutedFg }]}>
               {t('profile.privacyPolicy', { defaultValue: 'Privacy Policy' })}

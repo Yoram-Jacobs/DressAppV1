@@ -81,7 +81,7 @@ export const Footer = () => {
             <ul className="m-0 list-none space-y-3 p-0">
               <li>
                 <Link
-                  to="/home"
+                  to="/about"
                   className="text-sm text-white/60 no-underline transition-smooth duration-200 hover:text-white"
                 >
                   {t("footer.aboutUs", {

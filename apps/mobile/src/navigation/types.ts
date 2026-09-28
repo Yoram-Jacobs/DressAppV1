@@ -59,6 +59,7 @@ export type MeStackParamList = {
   DeleteAccount: undefined;
   Privacy: undefined;
   Terms: undefined;
+  AboutUs: undefined;
   Pricing: undefined;
   Suitcase: undefined;
   TrendScout: undefined;

@@ -54,6 +54,7 @@ const DeleteAccount = lazy(() => import('@/pages/DeleteAccount'));
 const Privacy = lazy(() => import('@/pages/Privacy'));
 const TermsOfService = lazy(() => import('@/pages/TermsOfService'));
 const Pricing = lazy(() => import('@/pages/Pricing'));
+const AboutUs = lazy(() => import('@/pages/AboutUs'));
 
 /** Global listener for migration events from the bookmarklet or cross-tab BroadcastChannel. */
 function MigrationMessageListener() {
@@ -162,6 +163,7 @@ function App() {
                       {/* Public routes visible without login */}
                       <Route path="/" element={<Home />} />
                       <Route path="/home" element={<Home />} />
+                      <Route path="/about" element={<AboutUs />} />
                       <Route path="/pricing" element={<Pricing />} />
                       <Route path="/experts" element={<ExpertsDirectory />} />
                       <Route path="/trends" element={<TrendScout />} />
