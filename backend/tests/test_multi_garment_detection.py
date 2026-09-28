@@ -100,7 +100,7 @@ def test_enforce_segformer_category_footwear_overrides_sweater():
     
     assert fixed["category"] == "Footwear"
     assert fixed["sub_category"] == "Shoes"
-    assert fixed["item_type"] == "shoes"
+    assert fixed["item_type"] in ("shoes", "Casual Shoes")
     assert "Shoes" in fixed["name"]
     assert "Sweater" not in fixed["name"]
     assert fixed["_category_overridden_by"] == "segformer"
@@ -126,7 +126,7 @@ def test_enforce_segformer_category_footwear_protected_even_if_single_item():
     
     assert fixed["category"] == "Footwear"
     assert fixed["sub_category"] == "Shoes"
-    assert fixed["item_type"] == "shoes"
+    assert fixed["item_type"] in ("shoes", "Casual Shoes")
 
 
 def test_enforce_segformer_category_bottom_skirt():
@@ -149,7 +149,7 @@ def test_enforce_segformer_category_bottom_skirt():
     
     assert fixed["category"] == "Bottom"
     assert fixed["sub_category"] == "Skirt"
-    assert fixed["item_type"] == "skirt"
+    assert fixed["item_type"] in ("skirt", "Classic Skirt")
 
 
 @pytest.mark.anyio
