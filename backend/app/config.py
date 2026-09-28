@@ -248,7 +248,7 @@ class Settings:
     # vision is added). Match the timeout to the worst case and let the
     # circuit breaker fall back to Gemini instead of stalling AddItem.
     EYES_GEMMA_TIMEOUT_S: float = float(
-        os.environ.get("EYES_GEMMA_TIMEOUT_S", "120") or "120"
+        os.environ.get("EYES_GEMMA_TIMEOUT_S", "300") or "300"
     )
     # When True, Gemma runs all attribute groups in a single unified inference pass (~25-30s)
     # avoiding repeating 5 expensive multimodal image prefill steps (~102s).
