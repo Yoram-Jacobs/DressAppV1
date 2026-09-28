@@ -320,40 +320,52 @@ def train_lora_native(
 
     output_dir.mkdir(parents=True, exist_ok=True)
     training_args = None
+
+    args_cls = None
     try:
         from trl import SFTConfig
-        training_args = SFTConfig(
-            output_dir=str(output_dir),
-            num_train_epochs=epochs,
-            per_device_train_batch_size=batch_size,
-            gradient_accumulation_steps=gradient_accumulation_steps,
-            learning_rate=learning_rate,
-            weight_decay=0.01,
-            warmup_ratio=warmup_ratio,
-            lr_scheduler_type="cosine",
-            logging_steps=10,
-            save_strategy="epoch",
-            fp16=not torch.cuda.is_bf16_supported() and torch.cuda.is_available(),
-            bf16=torch.cuda.is_bf16_supported(),
-            report_to="none",
-            max_seq_length=max_seq_length,
-        )
+        args_cls = SFTConfig
     except Exception:
-        training_args = TrainingArguments(
-            output_dir=str(output_dir),
-            num_train_epochs=epochs,
-            per_device_train_batch_size=batch_size,
-            gradient_accumulation_steps=gradient_accumulation_steps,
-            learning_rate=learning_rate,
-            weight_decay=0.01,
-            warmup_ratio=warmup_ratio,
-            lr_scheduler_type="cosine",
-            logging_steps=10,
-            save_strategy="epoch",
-            fp16=not torch.cuda.is_bf16_supported() and torch.cuda.is_available(),
-            bf16=torch.cuda.is_bf16_supported(),
-            report_to="none",
+        args_cls = TrainingArguments
+
+    import inspect
+    sig_params = inspect.signature(args_cls.__init__).parameters
+
+    raw_args = {
+        "output_dir": str(output_dir),
+        "num_train_epochs": epochs,
+        "per_device_train_batch_size": batch_size,
+        "gradient_accumulation_steps": gradient_accumulation_steps,
+        "learning_rate": learning_rate,
+        "weight_decay": 0.01,
+        "lr_scheduler_type": "cosine",
+        "logging_steps": 10,
+        "save_strategy": "epoch",
+        "fp16": not torch.cuda.is_bf16_supported() and torch.cuda.is_available(),
+        "bf16": torch.cuda.is_bf16_supported(),
+        "report_to": "none",
+    }
+    if "max_seq_length" in sig_params:
+        raw_args["max_seq_length"] = max_seq_length
+
+    # In Transformers 5, warmup_ratio was replaced by warmup_steps accepting a float in [0, 1)
+    if "warmup_ratio" in sig_params:
+        raw_args["warmup_ratio"] = warmup_ratio
+    elif "warmup_steps" in sig_params:
+        raw_args["warmup_steps"] = warmup_ratio
+
+    filtered_args = {k: v for k, v in raw_args.items() if k in sig_params}
+    try:
+        training_args = args_cls(**filtered_args)
+    except Exception as e:
+        logger.warning(
+            "Failed instantiating %s with filtered args (%s). Fallback to standard TrainingArguments...",
+            args_cls.__name__,
+            e,
         )
+        ta_params = inspect.signature(TrainingArguments.__init__).parameters
+        ta_args = {k: v for k, v in raw_args.items() if k in ta_params}
+        training_args = TrainingArguments(**ta_args)
 
     def format_prompts(batch: dict[str, Any] | list[Any]) -> list[str] | str:
         raw_msgs = batch.get("messages", []) if isinstance(batch, dict) else batch
