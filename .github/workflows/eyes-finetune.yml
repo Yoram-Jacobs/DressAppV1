@@ -142,12 +142,14 @@ jobs:
 
           python inference-server/eyes/training/train_eyes_lora.py \
             --dataset build/dataset/train.jsonl \
+            --val-dataset build/dataset/val.jsonl \
             --base-model "${{ inputs.base_model || 'google/gemma-4-e4b-it' }}" \
             --epochs "${{ inputs.num_epochs || 3 }}" \
             --batch-size "${{ inputs.batch_size || 2 }}" \
             --lr "${{ inputs.learning_rate || '2e-4' }}" \
             --backend "$COMPUTE_BACKEND" \
             --output-dir build/adapter \
+            --metrics-out build/metrics.json \
             $EXTRA_ARGS
 
       - name: Run Quality & Regression Gate

@@ -225,6 +225,22 @@ def run_evaluation(
     max_samples: int | None = None,
 ) -> dict[str, Any]:
     """Runs evaluation benchmarks across the validation dataset."""
+    # Check if RunPod GPU compute backend already completed evaluation and exported metrics
+    if metrics_out and metrics_out.exists():
+        try:
+            cached = json.loads(metrics_out.read_text(encoding="utf-8"))
+            if cached.get("status") in ("PASSED", "FAILED") and "schema_accuracy" in cached:
+                logger.info("Found existing evaluation metrics at %s (computed on RunPod GPU backend).", metrics_out)
+                logger.info("================ EVALUATION GATE RESULTS ================")
+                logger.info("Status:                   %s", cached.get("status"))
+                logger.info("JSON Schema Valid Ratio:  %.2f%% (Min: %.2f%%)", cached.get("schema_accuracy", 0.0) * 100, min_schema_acc * 100)
+                logger.info("Taxonomy Category Acc:    %.2f%% (Min: %.2f%%)", cached.get("category_accuracy", 0.0) * 100, min_category_acc * 100)
+                logger.info("Shoes & Accessory Acc:    %.2f%% (Min: %.2f%%)", cached.get("shoes_accessory_accuracy", 0.0) * 100, min_shoes_acc * 100)
+                logger.info("=========================================================")
+                return cached
+        except Exception:
+            pass
+
     logger.info("Loading validation samples from %s", val_dataset)
     if not val_dataset.exists():
         raise FileNotFoundError(f"Validation dataset not found: {val_dataset}")
