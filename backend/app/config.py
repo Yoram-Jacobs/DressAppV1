@@ -369,12 +369,11 @@ class Settings:
 
     # --- Phase V: Clothing parser + matting (commercial-safe, MIT models) ---
     # Primary clothing segmentation model (per-class parser).
-    # Default → `mattmdjaga/segformer_b2_clothes` (b2 backbone, MIT, ~95 MB
-    # weights, ~1 GB peak RAM during forward pass). Alternatives:
-    #   sayeed99/segformer_b3_clothes  (~180 MB, ~2 GB peak, slightly sharper)
+    # Default → `sayeed99/segformer_b3_clothes` (b3 backbone, MIT, ~180 MB
+    # weights, sharp outlines and high contrast edge fidelity).
     CLOTHING_PARSER_MODEL: str = (
         os.environ.get("CLOTHING_PARSER_MODEL")
-        or "mattmdjaga/segformer_b2_clothes"
+        or "sayeed99/segformer_b3_clothes"
     )
     # Optional self-hosted endpoint (FastAPI on dressapp.co). Blank = HF API.
     CLOTHING_PARSER_ENDPOINT_URL: str | None = (

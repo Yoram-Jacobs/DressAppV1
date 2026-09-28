@@ -37,8 +37,26 @@ def _coerce_single_garment(
     sub_lower = (res.get("sub_category") or "").strip().lower()
     full_text = f"{res.get('item_type', '')} {res.get('name', '')} {res.get('title', '')} {res.get('caption', '')}".lower()
 
+    if not cat_lower:
+        # If category is completely missing, infer from full_text or default to Top
+        if any(w in full_text for w in ("jean", "pant", "short", "skirt", "trouser", "legging")):
+            res["category"] = "Bottom"
+            cat_lower = "bottom"
+        elif any(w in full_text for w in ("coat", "jacket", "parka", "blazer", "cardigan")):
+            res["category"] = "Outerwear"
+            cat_lower = "outerwear"
+        elif any(w in full_text for w in ("dress", "gown")):
+            res["category"] = "Dress"
+            cat_lower = "dress"
+        elif any(w in full_text for w in ("shoe", "sneaker", "boot", "heel", "sandal")):
+            res["category"] = "Footwear"
+            cat_lower = "footwear"
+        else:
+            res["category"] = "Top"
+            cat_lower = "top"
+
     # Subcategory collision prevention: NEVER allow sub_category to be identical to category or generic "Top"/"Tops"/"Bottom"/"Bottoms"
-    if sub_lower in {"top", "tops", "bottom", "bottoms", "outerwear", "full body", "footwear", "accessories", "clothing", "garment", ""} or sub_lower == cat_lower:
+    if sub_lower in {"top", "tops", "bottom", "bottoms", "outerwear", "full body", "dress", "dresses", "footwear", "accessories", "clothing", "garment", ""} or sub_lower == cat_lower:
         if cat_lower == "top":
             if any(w in full_text for w in ("blouse", "בלוזה", "cap-sleeve", "cap sleeve", "flutter")):
                 res["sub_category"] = "Blouse"
@@ -69,7 +87,9 @@ def _coerce_single_garment(
             res["sub_category"] = "Dresses"
         elif cat_lower == "footwear":
             res["sub_category"] = "Sneakers"
-        sub_lower = (res["sub_category"] or "").strip().lower()
+        else:
+            res["sub_category"] = "T-Shirt" if cat_lower == "top" else "Garment"
+        sub_lower = (res.get("sub_category") or "").strip().lower()
 
     # Guarantee item_type is never blank or equal to category
     itype_lower = (res.get("item_type") or "").strip().lower()
@@ -107,7 +127,8 @@ def _coerce_single_garment(
         elif any(w in sub_lower for w in ("dress", "שמלה")):
             res["item_type"] = "Midi Dress"
         else:
-            res["item_type"] = f"Short-Sleeve {res['sub_category']}" if is_summer else f"Classic {res['sub_category']}"
+            fallback_sub = res.get("sub_category") or "Item"
+            res["item_type"] = f"Short-Sleeve {fallback_sub}" if is_summer else f"Classic {fallback_sub}"
         itype_lower = (res["item_type"] or "").strip().lower()
 
     # Footwear pluralization
@@ -126,13 +147,13 @@ def _coerce_single_garment(
         }
         if sub_lower in plural_map:
             res["sub_category"] = plural_map[sub_lower]
-        elif res.get("sub_category") and not res["sub_category"].endswith("s"):
-            res["sub_category"] = res["sub_category"] + "s"
+        elif res.get("sub_category") and not str(res.get("sub_category")).endswith("s"):
+            res["sub_category"] = f"{res['sub_category']}s"
 
         if itype_lower in plural_map:
             res["item_type"] = plural_map[itype_lower]
-        elif res.get("item_type") and not res["item_type"].endswith("s"):
-            res["item_type"] = res["item_type"] + "s"
+        elif res.get("item_type") and not str(res.get("item_type")).endswith("s"):
+            res["item_type"] = f"{res['item_type']}s"
 
     # Gender inference fallback (don't leave women's pieces as unisex)
     g_val = (res.get("gender") or "").strip().lower()

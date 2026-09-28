@@ -796,7 +796,7 @@ class GarmentVisionService:
                         has_human = False
                         for d in detections:
                             hm = d.get("_human_mask_full")
-                            if hm is not None and isinstance(hm, np.ndarray) and hm.any():
+                            if hm is not None and isinstance(hm, np.ndarray) and hm.sum() >= 5000:
                                 has_human = True
                                 break
 
@@ -809,8 +809,16 @@ class GarmentVisionService:
                             else:
                                 mask_resized = combined_mask > 0
 
-                            # Erode by 8 pixels to obtain the guaranteed solid garment core (avoids boundary bleed)
-                            core_clothing = ndimage.binary_erosion(mask_resized, iterations=8)
+                            # Bridge hairline gaps and fill enclosed interior holes (graphic prints, yin-yang cats, embroidery, contrast patterns)
+                            k = max(3, min(15, int(round(min(H_r, W_r) * 0.005)) | 1))
+                            closed = ndimage.binary_closing(mask_resized, structure=np.ones((k, k), dtype=bool), iterations=1)
+                            filled = ndimage.binary_fill_holes(closed)
+                            if filled is None:
+                                filled = closed
+
+                            # Erode by adaptive depth (2-8px) to obtain solid garment core while retaining sleeves/straps
+                            iter_count = max(2, min(8, int(round(min(H_r, W_r) * 0.01))))
+                            core_clothing = ndimage.binary_erosion(filled, iterations=iter_count)
                             if core_clothing.any():
                                 arr = np.array(rgba_img)
                                 alpha = arr[:, :, 3]
@@ -873,7 +881,7 @@ class GarmentVisionService:
         defer_matte = False
 
         if settings.AUTO_MATTE_CROPS:
-            matted = await self._whole_image_matte(image_bytes)
+            matted = await self._whole_image_matte(image_bytes, detections=detections)
             if matted:
                 crop_bytes = matted
                 crop_mime = "image/png"
@@ -1163,7 +1171,7 @@ class GarmentVisionService:
                         det.get("label"),
                         repr(exc)[:120],
                     )
-            elif is_single and seg_mask_bbox is not None and (human_mask_bbox is None or not getattr(human_mask_bbox, "any", lambda: False)()):
+            elif is_single and seg_mask_bbox is not None and (human_mask_bbox is None or getattr(human_mask_bbox, "sum", lambda: 0)() < 5000):
                 try:
                     import io
                     import numpy as np
@@ -1176,7 +1184,17 @@ class GarmentVisionService:
                         mask_resized = np.array(mask_img.resize((W_r, H_r), Image.NEAREST)) > 0
                     else:
                         mask_resized = seg_mask_bbox > 0
-                    core_clothing = ndimage.binary_erosion(mask_resized, iterations=8)
+
+                    # Bridge hairline gaps and fill enclosed interior holes (graphic prints, yin-yang cats, embroidery, contrast patterns)
+                    k = max(3, min(15, int(round(min(H_r, W_r) * 0.005)) | 1))
+                    closed = ndimage.binary_closing(mask_resized, structure=np.ones((k, k), dtype=bool), iterations=1)
+                    filled = ndimage.binary_fill_holes(closed)
+                    if filled is None:
+                        filled = closed
+
+                    # Erode by adaptive depth (2-8px) to obtain solid garment core while retaining sleeves/straps
+                    iter_count = max(2, min(8, int(round(min(H_r, W_r) * 0.01))))
+                    core_clothing = ndimage.binary_erosion(filled, iterations=iter_count)
                     if core_clothing.any():
                         arr = np.array(rgba_img)
                         alpha = arr[:, :, 3]
@@ -2565,6 +2583,16 @@ class GarmentVisionService:
                         except Exception as gem_exc:
                             logger.error("Gemini fallback also failed for slot %d: %s", slot_idx, gem_exc)
 
+                    # Ensure fallback metadata is populated if both providers failed
+                    if not assembled.get("category"):
+                        assembled["category"] = (det.get("category") or det.get("kind") or "Top").capitalize()
+                    if not assembled.get("sub_category") and not assembled.get("item_type"):
+                        fallback_type = (det.get("label") or det.get("kind") or "garment").lower()
+                        assembled["item_type"] = fallback_type
+                        assembled["sub_category"] = fallback_type.capitalize()
+                    if not assembled.get("title") and (det.get("label") or det.get("kind")):
+                        assembled["title"] = (det.get("label") or det.get("kind")).capitalize()
+
                     # Normalise / coerce the fully-assembled dict.
                     analysis = _coerce_single_garment(assembled)
                     if not analysis.get("title") and analysis.get("name"):
@@ -2685,11 +2713,14 @@ class GarmentVisionService:
                                 or "API_KEY_INVALID" in err_str
                             ):
                                 raise
-                            logger.warning(
-                                "analyze_outfits_stream: concurrent analyze failed slot=%d: %s",
-                                slot_idx, repr(exc)[:160],
-                            )
-                            return slot_idx, {}
+                            fallback_dict = {
+                                "category": (det.get("category") or det.get("kind") or "Top").capitalize(),
+                                "sub_category": (det.get("label") or det.get("kind") or "T-Shirt").capitalize(),
+                                "item_type": (det.get("label") or det.get("kind") or "T-Shirt").capitalize(),
+                                "title": (det.get("label") or det.get("kind") or "Garment").capitalize(),
+                                "caption": "Garment detected from photo upload.",
+                            }
+                            return slot_idx, fallback_dict
 
                 tasks = [
                     asyncio.create_task(_process_crop(i, crop_tuple))
