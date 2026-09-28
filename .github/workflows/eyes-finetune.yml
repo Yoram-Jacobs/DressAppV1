@@ -284,19 +284,31 @@ jobs:
         if: env.VPS_SSH_KEY != ''
         run: |
           mkdir -p ~/.ssh
-          echo "$VPS_SSH_KEY" > ~/.ssh/id_rsa
-          chmod 600 ~/.ssh/id_rsa
-          ssh-keyscan -H "$VPS_HOST" >> ~/.ssh/known_hosts
+          chmod 700 ~/.ssh
+          printf "%s\n" "$VPS_SSH_KEY" | tr -d '\r' > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -H "$VPS_HOST" >> ~/.ssh/known_hosts 2>/dev/null
+          chmod 644 ~/.ssh/known_hosts
+          echo "SSH Key Type & Fingerprint:"
+          ssh-keygen -l -f ~/.ssh/deploy_key || echo "::warning::Invalid private key format in secrets"
+          echo "SSH Public Key Derived from Secret:"
+          ssh-keygen -y -f ~/.ssh/deploy_key || echo "::warning::Failed to derive public key"
 
       - name: Deploy Checkpoint to Production VPS
         if: env.VPS_SSH_KEY != ''
         run: |
+          SSH_CMD="ssh -i ~/.ssh/deploy_key -o IdentitiesOnly=yes -o StrictHostKeyChecking=accept-new -o BatchMode=yes"
+          SCP_CMD="scp -i ~/.ssh/deploy_key -o IdentitiesOnly=yes -o StrictHostKeyChecking=accept-new -o BatchMode=yes"
+
+          echo "Testing SSH connectivity to Hetzner VPS ($VPS_HOST)..."
+          $SSH_CMD root@$VPS_HOST "echo 'Connected successfully to Hetzner VPS host: ' \$(hostname)"
+
           echo "Syncing verified adapter to Hetzner VPS (/srv/AI-Stylist/eyes_v4_adapter)..."
-          ssh root@$VPS_HOST "mkdir -p /srv/AI-Stylist/eyes_v4_adapter /srv/AI-Stylist/eyes_gguf"
-          scp -r build/adapter/* root@$VPS_HOST:/srv/AI-Stylist/eyes_v4_adapter/
-          scp -r build/gguf/*.gguf root@$VPS_HOST:/srv/AI-Stylist/eyes_gguf/ || true
+          $SSH_CMD root@$VPS_HOST "mkdir -p /srv/AI-Stylist/eyes_v4_adapter /srv/AI-Stylist/eyes_gguf"
+          $SCP_CMD -r build/adapter/* root@$VPS_HOST:/srv/AI-Stylist/eyes_v4_adapter/
+          $SCP_CMD -r build/gguf/*.gguf root@$VPS_HOST:/srv/AI-Stylist/eyes_gguf/ || true
           echo "Restarting eyes container on VPS..."
-          ssh root@$VPS_HOST "cd /srv/AI-Stylist/deploy && docker compose restart eyes"
+          $SSH_CMD root@$VPS_HOST "cd /srv/AI-Stylist/deploy && docker compose restart eyes"
 
   # -------------------------------------------------------------------------
   # Job 5: Pipeline Status & Metric Summary
