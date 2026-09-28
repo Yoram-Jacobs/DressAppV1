@@ -9,7 +9,7 @@ _GENDER_ALIASES = {
     "male": "men", "man": "men", "m": "men", "זכר": "men", "גבר": "men",
     "female": "women", "woman": "women", "f": "women", "w": "women", "נקבה": "women", "אישה": "women",
     "uni": "unisex",
-    "kid": "kids", "child": "kids", "children": "kids", "ילד": "kids", "ילדים": "kids",
+    "kid": "kids", "child": "kids", "children": "kids", "boy": "kids", "boys": "kids", "girl": "kids", "girls": "kids", "ילד": "kids", "ילדה": "kids", "ילדים": "kids",
 }
 
 
@@ -19,6 +19,8 @@ def resolve_garment_gender(val: Any) -> str | None:
         return None
     if isinstance(val, dict):
         raw = val.get("gender") or val.get("sex") or val.get("avatar_gender")
+        if not raw and isinstance(val.get("profile"), dict):
+            raw = val["profile"].get("gender") or val["profile"].get("sex")
     else:
         raw = val
     if not raw:
@@ -52,9 +54,9 @@ def _coerce_single_garment(
                 "(consider tightening crop or upgrading to multi-item path)",
                 len(items),
             )
-        res = items[0]
+        res = dict(items[0])
     elif isinstance(parsed, dict):
-        res = parsed
+        res = dict(parsed)
     else:
         return {}
 
@@ -196,9 +198,15 @@ def _coerce_single_garment(
         "boxers", "briefs", "tuxedo", "בוקסר", "טוקסידו",
     }
 
-    if cat_lower in {"full body", "dress"} or sub_lower in fem_cuts or itype_lower in fem_cuts:
+    is_fem_cut = (
+        cat_lower in {"full body", "dress"}
+        or any(c in sub_lower or c in itype_lower for c in fem_cuts)
+    )
+    is_masc_cut = any(c in sub_lower or c in itype_lower for c in masc_cuts)
+
+    if is_fem_cut:
         res["gender"] = "women"
-    elif sub_lower in masc_cuts or itype_lower in masc_cuts:
+    elif is_masc_cut:
         res["gender"] = "men"
     elif g_val in _VALID_GENDER:
         res["gender"] = g_val

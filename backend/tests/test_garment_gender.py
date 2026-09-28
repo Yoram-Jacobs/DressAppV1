@@ -19,21 +19,22 @@ def test_resolve_garment_gender_tokens():
     assert resolve_garment_gender("male") == "men"
     assert resolve_garment_gender("man") == "men"
     assert resolve_garment_gender("men") == "men"
-    assert resolve_garment_gender("boy") == "men"
     assert resolve_garment_gender("גבר") == "men"
     assert resolve_garment_gender("זכר") == "men"
 
     assert resolve_garment_gender("female") == "women"
     assert resolve_garment_gender("woman") == "women"
     assert resolve_garment_gender("women") == "women"
-    assert resolve_garment_gender("girl") == "women"
     assert resolve_garment_gender("אישה") == "women"
     assert resolve_garment_gender("נקבה") == "women"
 
     assert resolve_garment_gender("unisex") == "unisex"
     assert resolve_garment_gender("kids") == "kids"
+    assert resolve_garment_gender("boy") == "kids"
+    assert resolve_garment_gender("girl") == "kids"
     assert resolve_garment_gender("children") == "kids"
     assert resolve_garment_gender("ילדים") == "kids"
+    assert resolve_garment_gender("ילדה") == "kids"
 
     # Invalid / empty
     assert resolve_garment_gender("") is None
