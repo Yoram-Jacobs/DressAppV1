@@ -168,6 +168,7 @@ def publish_to_hub(
         quants=quants,
     )
 
+    model_dir.mkdir(parents=True, exist_ok=True)
     readme_path = model_dir / "README.md"
     readme_path.write_text(model_card_content, encoding="utf-8")
     logger.info("Generated Hugging Face Model Card at %s", readme_path)
@@ -201,8 +202,42 @@ def publish_to_hub(
     from huggingface_hub import HfApi
 
     api = HfApi(token=hf_token)
-    logger.info("Ensuring Hugging Face repository exists: %s", repo_id)
-    api.create_repo(repo_id=repo_id, repo_type="model", exist_ok=True, private=False)
+
+    # 1. Log authenticated token identity
+    try:
+        whoami = api.whoami()
+        username = whoami.get("name", "unknown")
+        token_type = whoami.get("auth", {}).get("type", "unknown")
+        logger.info("Authenticated to Hugging Face as user '%s' (Token type: %s)", username, token_type)
+    except Exception as whoami_err:
+        logger.warning("Could not verify HF token identity via whoami: %s", whoami_err)
+
+    # 2. Check if repository already exists
+    logger.info("Checking if Hugging Face repository exists: %s", repo_id)
+    repo_exists = False
+    try:
+        repo_exists = api.repo_exists(repo_id=repo_id, repo_type="model")
+    except Exception as exist_err:
+        logger.debug("repo_exists check returned: %s", exist_err)
+
+    if not repo_exists:
+        logger.info("Repository %s does not exist on Hugging Face. Attempting creation...", repo_id)
+        try:
+            api.create_repo(repo_id=repo_id, repo_type="model", exist_ok=True, private=False)
+            logger.info("Successfully created Hugging Face repository: %s", repo_id)
+        except Exception as create_err:
+            logger.error(
+                "Unable to create repository '%s' automatically on Hugging Face (%s). "
+                "Ensure your HF_TOKEN has 'Write' permissions, or manually create the repository "
+                "at https://huggingface.co/new (Owner: %s, Name: %s, Model).",
+                repo_id,
+                create_err,
+                repo_id.split("/")[0] if "/" in repo_id else repo_id,
+                repo_id.split("/")[1] if "/" in repo_id else repo_id,
+            )
+            raise
+    else:
+        logger.info("Repository %s already exists on Hugging Face. Proceeding to upload.", repo_id)
 
     logger.info("Uploading GGUF artifacts from %s to %s...", model_dir, repo_id)
     api.upload_folder(
