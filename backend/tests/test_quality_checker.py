@@ -126,15 +126,32 @@ class TestQualityChecker(unittest.TestCase):
 
     def test_reconstruct_routing(self):
         """Verify reconstruct routes needs_reconstruction to generate and needs_completion to edit."""
-        async def _test():
-            mock_service = MagicMock()
-            mock_service.generate = AsyncMock(return_value={"image_b64": "gen_b64", "mime_type": "image/png", "model_used": "nano-banana"})
-            mock_service.edit = AsyncMock(return_value={"image_b64": "edit_b64", "mime_type": "image/png", "model_used": "nano-banana"})
+        import base64
+        from app.services.image_generation.base import ImageGenerationResult
 
-            with patch("app.services.reconstruction.gemini_image_service", mock_service), \
+        async def _test():
+            mock_provider = MagicMock()
+            mock_provider.generate_image = AsyncMock(
+                return_value=ImageGenerationResult(
+                    image_bytes=b"fake_gen",
+                    mime_type="image/png",
+                    provider="gemini",
+                    model_name="nano-banana",
+                )
+            )
+            mock_provider.edit_image = AsyncMock(
+                return_value=ImageGenerationResult(
+                    image_bytes=b"fake_edit",
+                    mime_type="image/png",
+                    provider="gemini",
+                    model_name="nano-banana",
+                )
+            )
+
+            with patch("app.services.reconstruction.get_image_provider", return_value=mock_provider), \
                  patch("app.services.background_matting.remove_background", AsyncMock(return_value={"success": False})):
 
-                # Test needs_reconstruction -> calls generate
+                # Test needs_reconstruction -> calls generate_image
                 recon_analysis = {
                     "title": "Patent Black Pumps",
                     "category": "Footwear",
@@ -143,10 +160,10 @@ class TestQualityChecker(unittest.TestCase):
                 }
                 res_recon = await reconstruct(b"fake_crop", recon_analysis, validate=False)
                 self.assertIsNotNone(res_recon)
-                self.assertEqual(res_recon["image_b64"], "gen_b64")
-                mock_service.generate.assert_awaited_once()
+                self.assertEqual(res_recon["image_b64"], base64.b64encode(b"fake_gen").decode("ascii"))
+                mock_provider.generate_image.assert_awaited_once()
 
-                # Test needs_completion -> calls edit
+                # Test needs_completion -> calls edit_image
                 complete_analysis = {
                     "title": "Leather Jacket",
                     "category": "Outerwear",
@@ -155,8 +172,8 @@ class TestQualityChecker(unittest.TestCase):
                 }
                 res_edit = await reconstruct(b"fake_crop", complete_analysis, validate=False)
                 self.assertIsNotNone(res_edit)
-                self.assertEqual(res_edit["image_b64"], "edit_b64")
-                mock_service.edit.assert_awaited_once()
+                self.assertEqual(res_edit["image_b64"], base64.b64encode(b"fake_edit").decode("ascii"))
+                mock_provider.edit_image.assert_awaited_once()
 
         asyncio.run(_test())
 

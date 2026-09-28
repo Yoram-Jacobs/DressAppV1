@@ -12,7 +12,16 @@ client = TestClient(app)
 
 @pytest.fixture
 def mock_user():
-    return {"id": "user_123", "email": "test@example.com", "preferred_language": "en"}
+    return {
+        "id": "user_123",
+        "email": "test@example.com",
+        "preferred_language": "en",
+        "subscription": {
+            "tier": "professional",
+            "plan_type": "professional",
+            "is_active": True,
+        },
+    }
 
 
 def test_chat_analyse_unauthenticated():

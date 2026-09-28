@@ -48,7 +48,13 @@ class WardrobeMigrationAgent:
         and decide next scrolling actions.
         """
         db = get_db()
-        user = await db.users.find_one({"id": user_id})
+        user = None
+        try:
+            u = await db.users.find_one({"id": user_id})
+            if isinstance(u, dict):
+                user = u
+        except Exception:
+            user = None
         session = await db.migration_sessions.find_one({"id": session_id})
         if not session:
             # Create session on the fly if needed
@@ -144,17 +150,28 @@ class WardrobeMigrationAgent:
                     "required": ["garments", "should_scroll"],
                 }
 
-                from app.services.llm_gateway import call_main_llm
-                b64_img = base64.b64encode(jpeg_bytes).decode("ascii")
-                response_text = await call_main_llm(
-                    user_text="Analyze the wardrobe viewport and return garment bounding boxes and should_scroll in JSON format.",
-                    system_prompt=system_prompt,
-                    image_b64_jpeg=b64_img,
-                    json_schema=response_schema,
-                    response_mime_type="application/json",
-                    model="gemini-3.5-flash-lite",
-                    user=user,
-                )
+                from app.services.auth import resolve_effective_provider
+                if user and resolve_effective_provider(user) == "gemma":
+                    from app.services.llm_gateway import call_main_llm
+                    b64_img = base64.b64encode(jpeg_bytes).decode("ascii")
+                    response_text = await call_main_llm(
+                        user_text="Analyze the wardrobe viewport and return garment bounding boxes and should_scroll in JSON format.",
+                        system_prompt=system_prompt,
+                        image_b64_jpeg=b64_img,
+                        json_schema=response_schema,
+                        response_mime_type="application/json",
+                        model="gemini-3.5-flash-lite",
+                        user=user,
+                    )
+                else:
+                    response_text = await self.client.vision(
+                        user_text="Analyze the wardrobe viewport and return garment bounding boxes and should_scroll in JSON format.",
+                        image_bytes=jpeg_bytes,
+                        mime_type="image/jpeg",
+                        system_instruction=system_prompt,
+                        response_schema=response_schema,
+                        model="gemini-3.5-flash-lite",
+                    )
 
                 result = json.loads(response_text)
                 detected_garments = result.get("garments", [])
@@ -281,7 +298,12 @@ class WardrobeMigrationAgent:
         logger = logging.getLogger(__name__)
         db = get_db()
         if not user:
-            user = await db.users.find_one({"id": user_id})
+            try:
+                u = await db.users.find_one({"id": user_id})
+                if isinstance(u, dict):
+                    user = u
+            except Exception:
+                user = None
 
         # Classify the unique crop via Gemini
         class_prompt = (
@@ -313,17 +335,27 @@ class WardrobeMigrationAgent:
         is_model_fit_pic = False
 
         try:
-            from app.services.llm_gateway import call_main_llm
-            b64_crop = base64.b64encode(crop_bytes).decode("ascii")
-            class_resp = await call_main_llm(
-                user_text="Classify this cropped garment item according to the category schema.",
-                system_prompt=class_prompt,
-                image_b64_jpeg=b64_crop,
-                json_schema=class_schema,
-                response_mime_type="application/json",
-                model="gemini-3.5-flash-lite",
-                user=user,
-            )
+            from app.services.auth import resolve_effective_provider
+            if user and resolve_effective_provider(user) == "gemma":
+                from app.services.llm_gateway import call_main_llm
+                b64_crop = base64.b64encode(crop_bytes).decode("ascii")
+                class_resp = await call_main_llm(
+                    user_text="Classify this cropped garment item according to the category schema.",
+                    system_prompt=class_prompt,
+                    image_b64_jpeg=b64_crop,
+                    json_schema=class_schema,
+                    response_mime_type="application/json",
+                    model="gemini-3.5-flash-lite",
+                    user=user,
+                )
+            else:
+                class_resp = await self.client.vision(
+                    user_text=class_prompt,
+                    image_bytes=crop_bytes,
+                    mime_type="image/jpeg",
+                    response_schema=class_schema,
+                    model="gemini-3.5-flash-lite",
+                )
             class_result = json.loads(class_resp)
             category = class_result.get("category", "Top")
             color = class_result.get("color", "Neutral")
@@ -482,17 +514,27 @@ class WardrobeMigrationAgent:
                 "required": ["pattern", "material", "style", "dress_code", "gender", "season", "item_type", "sub_category"]
             }
 
-            from app.services.llm_gateway import call_main_llm
-            b64_crop = base64.b64encode(crop_bytes).decode("ascii")
-            class_resp = await call_main_llm(
-                user_text="Extract the fashion styling attributes for this garment according to the schema.",
-                system_prompt=stylist_prompt,
-                image_b64_jpeg=b64_crop,
-                json_schema=stylist_schema,
-                response_mime_type="application/json",
-                model="gemini-3.5-flash-lite",
-                user=user,
-            )
+            from app.services.auth import resolve_effective_provider
+            if user and resolve_effective_provider(user) == "gemma":
+                from app.services.llm_gateway import call_main_llm
+                b64_crop = base64.b64encode(crop_bytes).decode("ascii")
+                class_resp = await call_main_llm(
+                    user_text="Extract the fashion styling attributes for this garment according to the schema.",
+                    system_prompt=stylist_prompt,
+                    image_b64_jpeg=b64_crop,
+                    json_schema=stylist_schema,
+                    response_mime_type="application/json",
+                    model="gemini-3.5-flash-lite",
+                    user=user,
+                )
+            else:
+                class_resp = await self.client.vision(
+                    user_text=stylist_prompt,
+                    image_bytes=crop_bytes,
+                    mime_type="image/jpeg",
+                    response_schema=stylist_schema,
+                    model="gemini-3.5-flash-lite",
+                )
             stylist_result = json.loads(class_resp)
 
             # Normalize stylist values to match Pydantic Literal enums (lowercase)

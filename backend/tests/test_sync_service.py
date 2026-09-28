@@ -54,7 +54,14 @@ async def test_sync_broadcast_and_queue():
 @pytest.mark.anyio
 async def test_daily_proposal_generation_and_action():
     from app.api.v1.daily_proposals import _generate_and_save_daily_proposal, act_on_daily_proposal, ProposalActionIn
-    user = {"id": "test_user_daily_789"}
+    user = {
+        "id": "test_user_daily_789",
+        "subscription": {
+            "tier": "professional",
+            "plan_type": "professional",
+            "is_active": True,
+        },
+    }
     date_str = "2026-09-03"
     
     proposal = await _generate_and_save_daily_proposal(user, date_str, force=True)
@@ -90,6 +97,11 @@ async def test_daily_proposal_custom_tag_and_intermediate_purge():
         "scheduler_settings": {
             "style_option": "custom",
             "custom_style": "עבודה",
+        },
+        "subscription": {
+            "tier": "professional",
+            "plan_type": "professional",
+            "is_active": True,
         },
     }
     date_str = "2026-09-04"

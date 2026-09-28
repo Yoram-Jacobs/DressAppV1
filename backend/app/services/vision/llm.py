@@ -165,6 +165,9 @@ SYSTEM_PROMPT = (
     '  "quality": "budget"|"mid"|"premium"|"luxury",\n'
     '  "size": string|null,\n'
     '  "price_cents": integer,             // estimated resale value in USD cents (e.g. 2500 for $25.00)\n'
+    '  "image_quality_status": "complete"|"needs_completion"|"needs_reconstruction",\n'
+    '  "image_quality_reason": string|null,        // reason for reconstruction or null\n'
+    '  "reconstruction_prompt": string|null,       // image generation prompt for reconstruction or null\n'
     '  "tags": string[]                    // 3-8 searchable keywords\n'
     "}\n\n"
     "Taxonomy & Extraction Rules:\n"
@@ -178,6 +181,7 @@ SYSTEM_PROMPT = (
     "• Condition & Quality: ALWAYS classify condition ('good', 'excellent', 'fair', 'bad') and quality ('mid', 'premium', 'budget', 'luxury'). Standard items are condition='good', quality='mid'.\n"
     "• State: ALWAYS classify ('new', 'used').\n"
     "• Price: ALWAYS estimate resale value in USD cents as an integer (e.g. 2500 for $25 blouse, 3500 for $35 shirt, 4500 for $45 jeans, 9500 for $95 jacket).\n"
+    "• Quality Assessment: ALWAYS evaluate image_quality_status ('complete', 'needs_completion', 'needs_reconstruction'). If sleeves, collar, or hems are cut off by the edge of the frame, set to 'needs_completion' with reconstruction_prompt. If the garment is mostly occluded or severely deformed, set to 'needs_reconstruction'.\n"
     "• Banned Synonyms: Sweater/Cardigan (not jumper/pullover), Pants/Jeans (not trousers/slacks), Shirt/T-Shirt/Blouse (not vest), Jacket/Coat/Blazer (not anorak), Sneakers/Boots/Loafers (not trainers)."
 )
 
