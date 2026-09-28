@@ -855,6 +855,10 @@ def _suppress_overlapping_garments(
 
             # Merge smaller into kept_item
             kept_item["mask"] = np.maximum(kept_item["mask"], item["mask"])
+            if kept_lbl == "Dress" and lbl == "Upper-clothes":
+                kept_lbl = "Upper-clothes"
+                kept_item["label"] = "Upper-clothes"
+                kept_item["category"] = "top"
             kept[kept_idx] = (
                 kept_lbl,
                 kept_item,

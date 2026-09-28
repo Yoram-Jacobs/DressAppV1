@@ -745,7 +745,11 @@ class GarmentVisionService:
             "defer_matte": defer_matte,
         }
 
-    async def _whole_image_matte(self, image_bytes: bytes) -> bytes | None:
+    async def _whole_image_matte(
+        self,
+        image_bytes: bytes,
+        detections: list[dict[str, Any]] | None = None,
+    ) -> bytes | None:
         """rembg the full frame so already-cropped product photos save
         with a clean alpha channel instead of the raw upload.
 
@@ -773,6 +777,56 @@ class GarmentVisionService:
                     dt,
                     len(result),
                 )
+                if detections:
+                    try:
+                        import io
+                        import numpy as np
+                        from PIL import Image
+                        from scipy import ndimage
+
+                        combined_mask = None
+                        for d in detections:
+                            m = d.get("mask")
+                            if m is not None and isinstance(m, np.ndarray) and m.any():
+                                if combined_mask is None:
+                                    combined_mask = m.copy()
+                                else:
+                                    combined_mask = np.maximum(combined_mask, m)
+
+                        has_human = False
+                        for d in detections:
+                            hm = d.get("_human_mask_full")
+                            if hm is not None and isinstance(hm, np.ndarray) and hm.any():
+                                has_human = True
+                                break
+
+                        if combined_mask is not None and not has_human:
+                            rgba_img = Image.open(io.BytesIO(result))
+                            W_r, H_r = rgba_img.size
+                            if combined_mask.shape != (H_r, W_r):
+                                mask_img = Image.fromarray((combined_mask > 0).astype(np.uint8) * 255)
+                                mask_resized = np.array(mask_img.resize((W_r, H_r), Image.NEAREST)) > 0
+                            else:
+                                mask_resized = combined_mask > 0
+
+                            # Erode by 8 pixels to obtain the guaranteed solid garment core (avoids boundary bleed)
+                            core_clothing = ndimage.binary_erosion(mask_resized, iterations=8)
+                            if core_clothing.any():
+                                arr = np.array(rgba_img)
+                                alpha = arr[:, :, 3]
+                                healed_alpha = np.where(core_clothing & (alpha < 128), 255, alpha).astype(np.uint8)
+                                if not np.array_equal(alpha, healed_alpha):
+                                    arr[:, :, 3] = healed_alpha
+                                    healed_img = Image.fromarray(arr, "RGBA")
+                                    out_buf = io.BytesIO()
+                                    healed_img.save(out_buf, format="PNG", optimize=True)
+                                    result = out_buf.getvalue()
+                                    logger.info(
+                                        "_whole_image_matte: healed %d eroded interior pixels using SegFormer clothing core",
+                                        int((core_clothing & (alpha < 128)).sum()),
+                                    )
+                    except Exception as exc:
+                        logger.debug("_whole_image_matte core healing failed: %s", exc)
             else:
                 logger.warning(
                     "already-cropped matte: rembg returned None after %.1fs "
@@ -1104,6 +1158,32 @@ class GarmentVisionService:
                         det.get("label"),
                         repr(exc)[:120],
                     )
+            elif is_single and seg_mask_bbox is not None and (human_mask_bbox is None or not getattr(human_mask_bbox, "any", lambda: False)()):
+                try:
+                    import io
+                    import numpy as np
+                    from PIL import Image
+                    from scipy import ndimage
+                    rgba_img = Image.open(io.BytesIO(matted))
+                    W_r, H_r = rgba_img.size
+                    if seg_mask_bbox.shape != (H_r, W_r):
+                        mask_img = Image.fromarray((seg_mask_bbox > 0).astype(np.uint8) * 255)
+                        mask_resized = np.array(mask_img.resize((W_r, H_r), Image.NEAREST)) > 0
+                    else:
+                        mask_resized = seg_mask_bbox > 0
+                    core_clothing = ndimage.binary_erosion(mask_resized, iterations=8)
+                    if core_clothing.any():
+                        arr = np.array(rgba_img)
+                        alpha = arr[:, :, 3]
+                        healed_alpha = np.where(core_clothing & (alpha < 128), 255, alpha).astype(np.uint8)
+                        if not np.array_equal(alpha, healed_alpha):
+                            arr[:, :, 3] = healed_alpha
+                            healed_img = Image.fromarray(arr, "RGBA")
+                            out_buf = io.BytesIO()
+                            healed_img.save(out_buf, format="PNG", optimize=True)
+                            matted = out_buf.getvalue()
+                except Exception as exc:
+                    logger.debug("_matte_crops core healing failed: %s", exc)
             det.pop("_mask_bbox", None)
             det.pop("_human_mask_bbox", None)
             det.pop("_other_mask_bbox", None)
@@ -2310,7 +2390,7 @@ class GarmentVisionService:
                         "is_single_item": True,
                     }
                     if settings.AUTO_MATTE_CROPS:
-                        matted = await self._whole_image_matte(img_bytes)
+                        matted = await self._whole_image_matte(img_bytes, detections=detections)
                         if matted:
                             return idx, [(det, matted, "image/png")]
                     return idx, [(det, img_bytes, "image/jpeg")]
@@ -2327,7 +2407,7 @@ class GarmentVisionService:
                         "is_single_item": True,
                     }
                     if settings.AUTO_MATTE_CROPS:
-                        matted = await self._whole_image_matte(img_bytes)
+                        matted = await self._whole_image_matte(img_bytes, detections=detections)
                         if matted:
                             return idx, [(det, matted, "image/png")]
                     return idx, [(det, img_bytes, "image/jpeg")]

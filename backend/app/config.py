@@ -393,7 +393,7 @@ class Settings:
     # Default is u2netp so the feature works inside small pod memory
     # limits. Upgrade via env var when self-hosting on a GPU/larger box.
     BACKGROUND_MATTING_REMBG_MODEL: str = (
-        os.environ.get("BACKGROUND_MATTING_REMBG_MODEL") or "u2netp"
+        os.environ.get("BACKGROUND_MATTING_REMBG_MODEL") or "isnet-general-use"
     )
     BACKGROUND_MATTING_ENDPOINT_URL: str | None = (
         os.environ.get("BACKGROUND_MATTING_ENDPOINT_URL") or None
