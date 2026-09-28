@@ -2481,7 +2481,9 @@
       "gloves": "手套",
       "scarves_and_wraps": "围巾与披肩",
       "hosiery_and_socks": "袜子与丝袜",
-      "bag": "包"
+      "bag": "包",
+      "basket_bags": "草编包",
+      "basket_bag": "草编包"
     },
     "item_type": {
       "oxford_shirt": "牛津衬衫",
@@ -2532,7 +2534,9 @@
       "clutch": "手拿包",
       "short_sleeve_t_shirt": "短袖T恤",
       "cap_sleeve_top": "盖肩袖上衣",
-      "cap_sleeve_blouse": "盖肩袖衬衫"
+      "cap_sleeve_blouse": "盖肩袖衬衫",
+      "basket_bag": "草编包",
+      "handbag": "手提包"
     },
     "color": {
       "black": "黑色",

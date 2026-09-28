@@ -2481,7 +2481,9 @@
       "gloves": "Перчатки",
       "scarves_and_wraps": "Шарфы и платки",
       "hosiery_and_socks": "Носки и колготки",
-      "bag": "Сумка"
+      "bag": "Сумка",
+      "basket_bags": "Сумки-корзины",
+      "basket_bag": "Сумка-корзина"
     },
     "item_type": {
       "oxford_shirt": "Оксфордская рубашка",
@@ -2532,7 +2534,9 @@
       "clutch": "Клатч",
       "short_sleeve_t_shirt": "Футболка с коротким рукавом",
       "cap_sleeve_top": "Топ с короткими рукавчиками",
-      "cap_sleeve_blouse": "Блузка с короткими рукавчиками"
+      "cap_sleeve_blouse": "Блузка с короткими рукавчиками",
+      "basket_bag": "Сумка-корзина",
+      "handbag": "Сумка"
     },
     "color": {
       "black": "Черный",

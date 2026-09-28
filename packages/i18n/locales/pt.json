@@ -2481,7 +2481,9 @@
       "gloves": "Luvas",
       "scarves_and_wraps": "Cachecóis e lenços",
       "hosiery_and_socks": "Meias",
-      "bag": "Bolsa"
+      "bag": "Bolsa",
+      "basket_bags": "Bolsas de palha",
+      "basket_bag": "Bolsa de palha"
     },
     "item_type": {
       "oxford_shirt": "Camisa Oxford",
@@ -2532,7 +2534,9 @@
       "clutch": "Clutch (bolsa de mão)",
       "short_sleeve_t_shirt": "Camiseta de manga curta",
       "cap_sleeve_top": "Top de manga japonesa",
-      "cap_sleeve_blouse": "Blusa de manga japonesa"
+      "cap_sleeve_blouse": "Blusa de manga japonesa",
+      "basket_bag": "Bolsa de palha",
+      "handbag": "Bolsa de mão"
     },
     "color": {
       "black": "Preto",

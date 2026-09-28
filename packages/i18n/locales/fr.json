@@ -2474,7 +2474,9 @@
       "gloves": "Gants",
       "scarves_and_wraps": "Écharpes et étoles",
       "hosiery_and_socks": "Chaussettes et collants",
-      "bag": "Sac"
+      "bag": "Sac",
+      "basket_bags": "Sacs paniers",
+      "basket_bag": "Sac panier"
     },
     "item_type": {
       "oxford_shirt": "Chemise Oxford",
@@ -2525,7 +2527,9 @@
       "clutch": "Embrayage",
       "short_sleeve_t_shirt": "T-shirt à manches courtes",
       "cap_sleeve_top": "Haut à mancherons",
-      "cap_sleeve_blouse": "Blouse à mancherons"
+      "cap_sleeve_blouse": "Blouse à mancherons",
+      "basket_bag": "Sac panier",
+      "handbag": "Sac à main"
     },
     "color": {
       "black": "Noir",

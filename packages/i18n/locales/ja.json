@@ -2481,7 +2481,9 @@
       "gloves": "手袋",
       "scarves_and_wraps": "マフラー / ストール",
       "hosiery_and_socks": "靴下 / タイツ",
-      "bag": "バッグ"
+      "bag": "バッグ",
+      "basket_bags": "かごバッグ",
+      "basket_bag": "かごバッグ"
     },
     "item_type": {
       "oxford_shirt": "オックスフォードシャツ",
@@ -2532,7 +2534,9 @@
       "clutch": "クラッチバッグ",
       "short_sleeve_t_shirt": "半袖Tシャツ",
       "cap_sleeve_top": "キャップスリーブトップス",
-      "cap_sleeve_blouse": "キャップスリーブブラウス"
+      "cap_sleeve_blouse": "キャップスリーブブラウス",
+      "basket_bag": "かごバッグ",
+      "handbag": "ハンドバッグ"
     },
     "color": {
       "black": "ブラック",

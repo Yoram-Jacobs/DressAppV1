@@ -2481,7 +2481,9 @@
       "gloves": "Guanti",
       "scarves_and_wraps": "Sciarpe e stola",
       "hosiery_and_socks": "Calze e calzini",
-      "bag": "Borsa"
+      "bag": "Borsa",
+      "basket_bags": "Borse a cesto",
+      "basket_bag": "Borsa a cesto"
     },
     "item_type": {
       "oxford_shirt": "Camicia Oxford",
@@ -2532,7 +2534,9 @@
       "clutch": "Clutch (borsa da sera)",
       "short_sleeve_t_shirt": "T-shirt a maniche corte",
       "cap_sleeve_top": "Top con maniche ad aletta",
-      "cap_sleeve_blouse": "Camicetta con maniche ad aletta"
+      "cap_sleeve_blouse": "Camicetta con maniche ad aletta",
+      "basket_bag": "Borsa a cesto",
+      "handbag": "Borsa a mano"
     },
     "color": {
       "black": "Nero",

@@ -2481,7 +2481,9 @@
       "gloves": "दस्ताने",
       "scarves_and_wraps": "स्कार्फ और मफलर",
       "hosiery_and_socks": "मोज़े",
-      "bag": "थैला"
+      "bag": "थैला",
+      "basket_bags": "बास्केट बैग",
+      "basket_bag": "बास्केट बैग"
     },
     "item_type": {
       "oxford_shirt": "ऑक्सफोर्ड शर्ट",
@@ -2532,7 +2534,9 @@
       "clutch": "क्लच",
       "short_sleeve_t_shirt": "हाफ स्लीव टी-शर्ट",
       "cap_sleeve_top": "कैप स्लीव टॉप",
-      "cap_sleeve_blouse": "कैप स्लीव ब्लाउज"
+      "cap_sleeve_blouse": "कैप स्लीव ब्लाउज",
+      "basket_bag": "बास्केट बैग",
+      "handbag": "हैंडबैग"
     },
     "color": {
       "black": "काला",

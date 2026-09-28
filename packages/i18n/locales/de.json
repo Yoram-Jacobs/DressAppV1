@@ -2474,7 +2474,9 @@
       "gloves": "Handschuhe",
       "scarves_and_wraps": "Schals & Tücher",
       "hosiery_and_socks": "Strumpfwaren & Socken",
-      "bag": "Tasche"
+      "bag": "Tasche",
+      "basket_bags": "Korbtaschen",
+      "basket_bag": "Korbtasche"
     },
     "item_type": {
       "oxford_shirt": "Oxford-Hemd",
@@ -2525,7 +2527,9 @@
       "clutch": "Clutch / Abendtasche",
       "short_sleeve_t_shirt": "Kurzarm-T-Shirt",
       "cap_sleeve_top": "Top mit Flügelärmeln",
-      "cap_sleeve_blouse": "Bluse mit Flügelärmeln"
+      "cap_sleeve_blouse": "Bluse mit Flügelärmeln",
+      "basket_bag": "Korbtasche",
+      "handbag": "Handtasche"
     },
     "color": {
       "black": "Schwarz",

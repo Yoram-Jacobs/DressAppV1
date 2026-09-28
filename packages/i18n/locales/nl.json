@@ -2481,7 +2481,9 @@
       "gloves": "Handschoenen",
       "scarves_and_wraps": "Sjaals en omslagdoeken",
       "hosiery_and_socks": "Kousen en sokken",
-      "bag": "Tas"
+      "bag": "Tas",
+      "basket_bags": "Mandtassen",
+      "basket_bag": "Mandtas"
     },
     "item_type": {
       "oxford_shirt": "Oxford-overhemd",
@@ -2532,7 +2534,9 @@
       "clutch": "Koppeling",
       "short_sleeve_t_shirt": "T-shirt met korte mouwen",
       "cap_sleeve_top": "Top met kapmouwtjes",
-      "cap_sleeve_blouse": "Blouse met kapmouwtjes"
+      "cap_sleeve_blouse": "Blouse met kapmouwtjes",
+      "basket_bag": "Mandtas",
+      "handbag": "Handtas"
     },
     "color": {
       "black": "Zwart",

@@ -582,15 +582,279 @@ _SEGFORMER_KIND_HUMAN_LABEL: dict[str, str] = {
 }
 
 
-_APPAREL_KEYWORDS = {
-    "cardigan", "sweater", "knit", "knitwear", "pullover", "jumper", "shirt",
-    "t-shirt", "top", "blouse", "hoodie", "jacket", "coat", "pants", "jeans",
-    "trousers", "shorts", "skirt", "dress", "tank", "vest", "sweatshirt",
+_APPAREL_KEYWORDS_BY_LANG: dict[str, set[str]] = {
+    "en": {
+        "cardigan", "sweater", "knit", "knitwear", "pullover", "jumper", "shirt",
+        "t-shirt", "top", "blouse", "hoodie", "jacket", "coat", "pants", "jeans",
+        "trousers", "shorts", "skirt", "dress", "tank", "vest", "sweatshirt",
+    },
+    "he": {
+        "קרדיגן", "סוודר", "סריג", "חולצה", "גופיה", "שמלה", "חצאית", "מכנסיים",
+        "מכנס", "ג'ינס", "גקט", "ג'קט", "מעיל", "סווטשירט", "סריגים", "חולצות", "שורט",
+    },
+    "ar": {
+        "كارديجان", "كارديغان", "سترة", "سويتر", "قميص", "بلوزة", "كنزة", "فستان",
+        "تنورة", "بنطال", "بنطلون", "جينز", "معطف", "جاكيت", "هودي", "شورت", "توب",
+    },
+    "de": {
+        "strickjacke", "pullover", "pulli", "hemd", "bluse", "t-shirt", "jacke",
+        "mantel", "hose", "jeans", "rock", "kleid", "weste", "kapuzenpullover", "oberteil",
+    },
+    "es": {
+        "cárdigan", "cardigan", "suéter", "sueter", "jersey", "camisa", "camiseta",
+        "blusa", "chaqueta", "abrigo", "pantalón", "pantalon", "pantalones",
+        "vaqueros", "jeans", "falda", "vestido", "chaleco", "sudadera",
+    },
+    "fr": {
+        "cardigan", "gilet", "pull", "chandail", "chemise", "chemisier", "t-shirt",
+        "veste", "manteau", "pantalon", "jean", "jupe", "robe", "sweat", "haut",
+    },
+    "hi": {
+        "कार्डिगन", "स्वेटर", "कमीज़", "शर्ट", "ब्लाउज", "जैकेट", "कोट", "पैंट",
+        "पतलून", "जींस", "स्कर्ट", "पोशाक", "कुर्ता", "टॉप",
+    },
+    "it": {
+        "cardigan", "maglione", "maglia", "camicia", "camicetta", "maglietta",
+        "giacca", "cappotto", "pantaloni", "jeans", "gonna", "vestito", "abito", "felpa",
+    },
+    "ja": {
+        "カーディガン", "セーター", "ニット", "シャツ", "ブラウス", "ジャケット",
+        "コート", "パンツ", "ズボン", "ジーンズ", "スカート", "ワンピース", "ドレス", "トップス", "パーカー",
+    },
+    "nl": {
+        "vest", "trui", "cardigan", "overhemd", "hemd", "blouse", "jas", "mantel",
+        "broek", "spijkerbroek", "rok", "jurk", "sweatshirt",
+    },
+    "pt": {
+        "cardigã", "cardigan", "suéter", "camisa", "blusa", "camiseta", "jaqueta",
+        "casaco", "calça", "calças", "jeans", "saia", "vestido", "moletom", "colete",
+    },
+    "ru": {
+        "кардиган", "свитер", "джемпер", "кофта", "рубашка", "блузка", "футболка",
+        "куртка", "пальто", "брюки", "штаны", "джинсы", "юбка", "платье", "толстовка", "худи",
+    },
+    "zh": {
+        "开衫", "毛衣", "针织衫", "衬衫", "t恤", "短袖", "外套", "大衣", "裤子",
+        "牛仔裤", "裙子", "连衣裙", "卫衣", "背心", "上衣",
+    },
 }
-_APPAREL_KEYWORDS_HE = {
-    "קרדיגן", "סוודר", "סריג", "חולצה", "גופיה", "שמלה", "חצאית", "מכנסיים",
-    "ג'ינס", "ג'קט", "מעיל", "סווטשירט", "סריגים", "חולצות",
+
+_ALL_APPAREL_KEYWORDS: set[str] = {
+    kw for kw_set in _APPAREL_KEYWORDS_BY_LANG.values() for kw in kw_set
 }
+
+_BAG_DETECTION_TERMS: set[str] = {
+    # en
+    "bag", "handbag", "tote", "basket", "crossbody", "shoulder bag", "backpack", "clutch", "wicker bag", "basket bag",
+    # he
+    "תיק", "תיק יד", "סל קש", "תיק סל", "תרמיל", "קלאץ",
+    # ar
+    "حقيبة", "حقيبه", "شنطة", "شنطه", "سلة قش", "حقيبة يد", "كلاتش",
+    # de
+    "tasche", "handtasche", "korbtasche", "umhängetasche", "rucksack", "beuteltasche",
+    # es
+    "bolso", "bolsa", "capazo", "cesta", "cartera", "mochila", "bandolera",
+    # fr
+    "sac", "sac à main", "sac a main", "panier", "cabas", "sacoche", "sac à dos", "sac a dos", "pochette",
+    # hi
+    "बैग", "थैला", "हैंडबैग", "टोकरी बैग", "झोला", "पर्स",
+    # it
+    "borsa", "borsetta", "borsa a cesto", "cestino", "zaino",
+    # ja
+    "バッグ", "ハンドバッグ", "かごバッグ", "カゴバッグ", "トートバッグ", "リュック",
+    # nl
+    "tas", "handtas", "mandtas", "korftas", "rugzak", "schoudertas",
+    # pt
+    "bolsa", "bolsa de palha", "cesto", "mochila", "bolsa de mão", "bolsa de mao", "carteira",
+    # ru
+    "сумка", "сумочка", "плетеная сумка", "корзина", "рюкзак",
+    # zh
+    "包", "手提包", "草编包", "菜篮子包", "单肩包", "背包", "手拿包",
+}
+
+_STRAW_DETECTION_TERMS: set[str] = {
+    # en
+    "straw", "wicker", "basket", "woven", "raffia", "rattan", "cane", "beige",
+    # he
+    "קש", "סל", "קלוע", "בז'", "בז", "ראפיה", "קש קלוע",
+    # ar
+    "قش", "سلة", "سله", "مغزول", "منسوج", "بيج", "خيزران", "رافيا",
+    # de
+    "stroh", "korb", "geflochten", "bast", "rattan", "beige",
+    # es
+    "paja", "cesta", "capazo", "mimbre", "trenzado", "tejido", "rafia", "beige",
+    # fr
+    "paille", "panier", "osier", "tressé", "tresse", "raphia", "rotin", "beige",
+    # hi
+    "पुआल", "टोकरी", "बुना हुआ", "रतन", "बेज",
+    # it
+    "paglia", "cesto", "cestino", "intrecciato", "vimini", "rafia", "beige",
+    # ja
+    "ストロー", "かご", "カゴ", "編み", "ラフィア", "籐", "ベージュ",
+    # nl
+    "stro", "mand", "korf", "geweven", "riet", "rotan", "beige",
+    # pt
+    "palha", "cesto", "vime", "trançado", "trancado", "ráfia", "rafia", "bege",
+    # ru
+    "солома", "соломенная", "корзина", "плетеная", "плетеный", "рафия", "ротанг", "бежевый",
+    # zh
+    "草编", "竹编", "藤编", "编织", "草", "篮子", "米色", "拉菲草",
+}
+
+_LOCALIZED_BAG_ATTRS: dict[str, dict[str, Any]] = {
+    "en": {
+        "basket_name": "Textured Basket Bag",
+        "basket_item_type": "Basket Bag",
+        "basket_caption": "An elegant woven basket bag crafted with natural texture, adding effortless sophistication to the outfit.",
+        "bag_name": "Classic Handbag",
+        "bag_item_type": "Handbag",
+        "bag_caption": "An elegant handbag crafted with clean lines, perfect for everyday styling.",
+        "straw_material": "Straw",
+        "leather_material": "Leather",
+    },
+    "he": {
+        "basket_name": "תיק סל קש",
+        "basket_item_type": "תיק סל קש",
+        "basket_caption": "תיק סל קש מעוצב בעל מרקם טבעי ואיכותי להשלמת המראה.",
+        "bag_name": "תיק יד מעוצב",
+        "bag_item_type": "תיק יד",
+        "bag_caption": "תיק מעוצב ואלגנטי להשלמת המראה היומיומי.",
+        "straw_material": "קש",
+        "leather_material": "עור",
+    },
+    "ar": {
+        "basket_name": "حقيبة سلة قش",
+        "basket_item_type": "حقيبة سلة قش",
+        "basket_caption": "حقيبة سلة قش أنيقة منسوجة بلمسة طبيعية تضفي جاذبية راقية على الإطلالة.",
+        "bag_name": "حقيبة يد كلاسيكية",
+        "bag_item_type": "حقيبة يد",
+        "bag_caption": "حقيبة يد أنيقة بخطوط متقنة، مثالية للإطلالات اليومية الراقية.",
+        "straw_material": "قش",
+        "leather_material": "جلد",
+    },
+    "de": {
+        "basket_name": "Geflochtene Korbtasche",
+        "basket_item_type": "Korbtasche",
+        "basket_caption": "Eine elegante geflochtene Korbtasche mit natürlicher Textur, die dem Outfit mühelose Raffinesse verleiht.",
+        "bag_name": "Klassische Handtasche",
+        "bag_item_type": "Handtasche",
+        "bag_caption": "Eine elegante Handtasche mit klaren Linien, perfekt für das tägliche Styling.",
+        "straw_material": "Stroh",
+        "leather_material": "Leder",
+    },
+    "es": {
+        "basket_name": "Capazo Tejido",
+        "basket_item_type": "Capazo",
+        "basket_caption": "Un elegante capazo tejido con textura natural que aporta sofisticación sin esfuerzo al atuendo.",
+        "bag_name": "Bolso Clásico",
+        "bag_item_type": "Bolso de mano",
+        "bag_caption": "Un bolso elegante de líneas limpias, perfecto para el estilo diario.",
+        "straw_material": "Paja",
+        "leather_material": "Cuero",
+    },
+    "fr": {
+        "basket_name": "Sac Panier Tressé",
+        "basket_item_type": "Sac panier",
+        "basket_caption": "Un élégant sac panier tressé à la texture naturelle, apportant une touche de sophistication à la tenue.",
+        "bag_name": "Sac à Main Classique",
+        "bag_item_type": "Sac à main",
+        "bag_caption": "Un sac élégant aux lignes épurées, idéal pour le style quotidien.",
+        "straw_material": "Paille",
+        "leather_material": "Cuir",
+    },
+    "hi": {
+        "basket_name": "बुना हुआ बास्केट बैग",
+        "basket_item_type": "बास्केट बैग",
+        "basket_caption": "प्राकृतिक बनावट से तैयार किया गया सुरुचिपूर्ण बुना हुआ बास्केट बैग, जो परिधान में सहज आकर्षण जोड़ता है।",
+        "bag_name": "क्लासिक हैंडबैग",
+        "bag_item_type": "हैंडबैग",
+        "bag_caption": "साफ रेखाओं और सुरुचिपूर्ण डिज़ाइन वाला हैंडबैग, दैनिक स्टाइलिंग के लिए उत्तम।",
+        "straw_material": "पुआल",
+        "leather_material": "चमड़ा",
+    },
+    "it": {
+        "basket_name": "Borsa a Cesto Intrecciata",
+        "basket_item_type": "Borsa a cesto",
+        "basket_caption": "Un'elegante borsa a cesto intrecciata con trama naturale, che dona raffinatezza al look.",
+        "bag_name": "Borsa a Mano Classica",
+        "bag_item_type": "Borsa a mano",
+        "bag_caption": "Un'elegante borsa a mano dalle linee pulite, ideale per lo stile quotidiano.",
+        "straw_material": "Paglia",
+        "leather_material": "Pelle",
+    },
+    "ja": {
+        "basket_name": "編み込みかごバッグ",
+        "basket_item_type": "かごバッグ",
+        "basket_caption": "自然な風合いの美しい編み込みかごバッグ。コーディネートに洗練された魅力を添えます。",
+        "bag_name": "クラシックハンドバッグ",
+        "bag_item_type": "ハンドバッグ",
+        "bag_caption": "すっきりとしたラインが美しいエレガントなハンドバッグ。普段のスタイリングに最適です。",
+        "straw_material": "ストロー",
+        "leather_material": "レザー",
+    },
+    "nl": {
+        "basket_name": "Geweven Mandtas",
+        "basket_item_type": "Mandtas",
+        "basket_caption": "Een elegante geweven mandtas met natuurlijke textuur die een verfijnde touch geeft aan de outfit.",
+        "bag_name": "Klassieke Handtas",
+        "bag_item_type": "Handtas",
+        "bag_caption": "Een stijlvolle handtas met strakke lijnen, perfect voor dagelijkse styling.",
+        "straw_material": "Stro",
+        "leather_material": "Leer",
+    },
+    "pt": {
+        "basket_name": "Bolsa de Palha Trançada",
+        "basket_item_type": "Bolsa de palha",
+        "basket_caption": "Uma elegante bolsa de palha trançada com textura natural, trazendo sofisticação sem esforço ao visual.",
+        "bag_name": "Bolsa de Mão Clássica",
+        "bag_item_type": "Bolsa de mão",
+        "bag_caption": "Uma bolsa elegante com linhas limpas, perfeita para o estilo diário.",
+        "straw_material": "Palha",
+        "leather_material": "Couro",
+    },
+    "ru": {
+        "basket_name": "Плетеная сумка-корзина",
+        "basket_item_type": "Сумка-корзина",
+        "basket_caption": "Элегантная плетеная сумка-корзина с естественной текстурой, придающая образу непринужденный шарм.",
+        "bag_name": "Классическая сумка",
+        "bag_item_type": "Сумка",
+        "bag_caption": "Изящная сумка с чистыми линиями, идеально подходящая для повседневного стиля.",
+        "straw_material": "Солома",
+        "leather_material": "Кожа",
+    },
+    "zh": {
+        "basket_name": "编织草编包",
+        "basket_item_type": "草编包",
+        "basket_caption": "优雅的天然编织草编包，质感自然，为整体穿搭增添从容精致之感。",
+        "bag_name": "经典手提包",
+        "bag_item_type": "手提包",
+        "bag_caption": "线条简约利落的优雅手提包，百搭于日常各种造型。",
+        "straw_material": "草编",
+        "leather_material": "皮革",
+    },
+}
+
+
+def _detect_language(text: str, explicit_language: str | None = None) -> str:
+    """Resolve ISO 639-1 code among the 13 supported DressApp languages."""
+    if explicit_language:
+        norm = str(explicit_language).strip().lower().replace("_", "-").split("-")[0]
+        if norm in _LOCALIZED_BAG_ATTRS:
+            return norm
+    # Script-based heuristics if explicit_language is missing or fallback
+    if any("\u0590" <= ch <= "\u05ea" for ch in text):
+        return "he"
+    if any("\u0600" <= ch <= "\u06ff" for ch in text):
+        return "ar"
+    if any("\u0400" <= ch <= "\u04ff" for ch in text):
+        return "ru"
+    if any("\u3040" <= ch <= "\u30ff" or "\u31f0" <= ch <= "\u31ff" for ch in text):
+        return "ja"
+    if any("\u4e00" <= ch <= "\u9fff" for ch in text):
+        return "zh"
+    if any("\u0900" <= ch <= "\u097f" for ch in text):
+        return "hi"
+    return "en"
 
 
 def _sanitize_bag_or_accessory(
@@ -598,8 +862,9 @@ def _sanitize_bag_or_accessory(
     *,
     label: str | None = None,
     kind: str | None = None,
+    language: str | None = None,
 ) -> None:
-    """Purge misplaced apparel keywords (cardigan, sweater, shirt, etc.) from bags and accessories."""
+    """Purge misplaced apparel keywords (cardigan, sweater, shirt, etc.) from bags and accessories across 13 languages."""
     import re as _re
     curr_name = str(analysis.get("name") or "").strip()
     curr_title = str(analysis.get("title") or "").strip()
@@ -608,55 +873,71 @@ def _sanitize_bag_or_accessory(
     itype = str(analysis.get("item_type") or "").strip()
 
     combined = f"{curr_name} {curr_title} {curr_cap} {sub} {itype}".lower()
-    is_he = any("\u0590" <= ch <= "\u05ea" for ch in combined)
-
-    has_apparel_en = any(_re.search(rf"\b{_re.escape(w)}\b", combined) for w in _APPAREL_KEYWORDS)
-    has_apparel_he = any(w in combined for w in _APPAREL_KEYWORDS_HE)
-
     lbl_low = (label or "").lower()
     kind_low = (kind or "").lower()
+
+    # Determine if this item is a bag / handbag / basket
     is_bag = (
         kind_low == "bag"
         or "bag" in lbl_low
-        or sub.lower() in ("bag", "handbag", "tote bag", "crossbody bag", "shoulder bag", "backpack", "clutch", "wicker bag", "basket bag")
-        or "bag" in sub.lower()
-        or "תיק" in combined
+        or any(term in lbl_low for term in _BAG_DETECTION_TERMS)
+        or any(term in sub.lower() for term in _BAG_DETECTION_TERMS)
+        or any(term in itype.lower() for term in _BAG_DETECTION_TERMS)
+        or any(term in combined for term in _BAG_DETECTION_TERMS)
     )
 
-    if is_bag and (has_apparel_en or has_apparel_he or sub.lower() in _APPAREL_KEYWORDS or itype.lower() in _APPAREL_KEYWORDS):
-        is_straw = any(w in combined for w in ("straw", "wicker", "basket", "woven", "קש", "סל", "קלוע", "בז'", "beige"))
+    # Check whether contaminated with any apparel keywords
+    has_apparel = False
+    for lang_code, kw_set in _APPAREL_KEYWORDS_BY_LANG.items():
+        if lang_code in ("zh", "ja"):
+            if any(w in combined for w in kw_set):
+                has_apparel = True
+                break
+        else:
+            if any(_re.search(rf"(?:\b|_){_re.escape(w)}(?:\b|_)", combined) for w in kw_set):
+                has_apparel = True
+                break
+            if any(w in sub.lower() or w in itype.lower() for w in kw_set):
+                has_apparel = True
+                break
+
+    if is_bag and (has_apparel or sub.lower() in _ALL_APPAREL_KEYWORDS or itype.lower() in _ALL_APPAREL_KEYWORDS):
+        lang = _detect_language(combined, explicit_language=language)
+        attrs = _LOCALIZED_BAG_ATTRS.get(lang, _LOCALIZED_BAG_ATTRS["en"])
+        is_straw = any(term in combined for term in _STRAW_DETECTION_TERMS)
+
         analysis["category"] = "Accessories"
         analysis["sub_category"] = "Bag"
-        if is_he:
-            if is_straw:
-                name = "תיק סל קש"
-                analysis["item_type"] = "תיק סל קש"
-                analysis["caption"] = "תיק סל קש מעוצב בעל מרקם טבעי ואיכותי להשלמת המראה."
-            else:
-                name = "תיק יד מעוצב"
-                analysis["item_type"] = "תיק יד"
-                analysis["caption"] = "תיק מעוצב ואלגנטי להשלמת המראה היומיומי."
-            analysis["name"] = name
-            analysis["title"] = name
-            if is_straw:
-                analysis["fabric_materials"] = [{"name": "קש", "pct": 80}, {"name": "עור", "pct": 20}]
+
+        if is_straw:
+            name = attrs["basket_name"]
+            analysis["item_type"] = attrs["basket_item_type"]
+            analysis["caption"] = attrs["basket_caption"]
+            analysis["fabric_materials"] = [
+                {"name": attrs["straw_material"], "pct": 80},
+                {"name": attrs["leather_material"], "pct": 20},
+            ]
         else:
-            if is_straw:
-                name = "Textured Basket Bag"
-                analysis["item_type"] = "Basket Bag"
-                analysis["caption"] = "An elegant woven basket bag crafted with natural texture, adding effortless sophistication to the outfit."
-            else:
-                name = "Classic Handbag"
-                analysis["item_type"] = "Handbag"
-                analysis["caption"] = "An elegant handbag crafted with clean lines, perfect for everyday styling."
-            analysis["name"] = name
-            analysis["title"] = name
-            if is_straw:
-                analysis["fabric_materials"] = [{"name": "Straw", "pct": 80}, {"name": "Leather", "pct": 20}]
+            name = attrs["bag_name"]
+            analysis["item_type"] = attrs["bag_item_type"]
+            analysis["caption"] = attrs["bag_caption"]
+
+        analysis["name"] = name
+        analysis["title"] = name
+
+        # Purge apparel contamination from tags if present
+        if isinstance(analysis.get("tags"), list):
+            sanitized_tags = []
+            for t in analysis["tags"]:
+                t_str = str(t).strip().lower()
+                if not any(w in t_str for w in _ALL_APPAREL_KEYWORDS):
+                    sanitized_tags.append(t)
+            analysis["tags"] = sanitized_tags
+
         analysis["_subcategory_overridden_by"] = "segformer-bag-apparel-purged"
         logger.warning(
-            "garment_vision: Sanitized bag naming/caption from apparel contamination. New name=%r, sub_category=%r",
-            analysis["name"], analysis["sub_category"],
+            "garment_vision: Sanitized bag naming/caption from apparel contamination (lang=%s). New name=%r, sub_category=%r",
+            lang, analysis["name"], analysis["sub_category"],
         )
 
 
@@ -666,6 +947,7 @@ def _enforce_segformer_category(
     segformer_kind: str | None,
     label: str | None = None,
     is_single_item: bool = False,
+    language: str | None = None,
 ) -> dict[str, Any] | None:
     """Anchor Gemini's category classification to the SegFormer kind.
 
@@ -735,7 +1017,7 @@ def _enforce_segformer_category(
                     analysis["name"] = new_name
                     analysis["title"] = new_name
                 analysis["_subcategory_overridden_by"] = "segformer-bag"
-            _sanitize_bag_or_accessory(analysis, label=label, kind=kind)
+            _sanitize_bag_or_accessory(analysis, label=label, kind=kind, language=language)
 
         elif ("shoe" in lbl_low or kind == "footwear") and "boot" not in lbl_low:
             sub_low = (analysis.get("sub_category") or "").lower()
@@ -819,7 +1101,7 @@ def _enforce_segformer_category(
             analysis["item_type"] = "handbag"
         else:
             analysis["sub_category"] = None
-        _sanitize_bag_or_accessory(analysis, label=label, kind=kind)
+        _sanitize_bag_or_accessory(analysis, label=label, kind=kind, language=language)
     else:
         analysis["sub_category"] = None
     analysis["_category_overridden_by"] = "segformer"

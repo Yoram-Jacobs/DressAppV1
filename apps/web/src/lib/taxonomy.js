@@ -337,7 +337,35 @@ export const canonicalSubCategoryKey = (raw) => {
     .toLowerCase()
     .replace(/['’`]/g, '')
     .replace(/[\s\/\-]+/g, '_')
-    .replace(/[^a-z0-9_א-תа-яё]/g, '');
+    .replace(/[^\p{L}\p{M}\p{N}_]/gu, '');
+
+  if (
+    normalized.includes('basket_bag') ||
+    normalized.includes('wicker_bag') ||
+    normalized.includes('straw_bag') ||
+    normalized.includes('סל_קש') ||
+    normalized.includes('תיק_סל') ||
+    normalized.includes('سلة_قش') ||
+    normalized.includes('سله_قش') ||
+    normalized.includes('حقيبة_سلة') ||
+    normalized.includes('حقيبة_قش') ||
+    normalized.includes('korbtasche') ||
+    normalized.includes('capazo') ||
+    normalized.includes('cesta') ||
+    normalized.includes('sac_panier') ||
+    normalized.includes('panier') ||
+    normalized.includes('かごバッグ') ||
+    normalized.includes('カゴバッグ') ||
+    normalized.includes('草编包') ||
+    normalized.includes('菜篮子') ||
+    normalized.includes('बास्केट_बैग') ||
+    normalized.includes('borsa_a_cesto') ||
+    normalized.includes('mandtas') ||
+    normalized.includes('korftas') ||
+    normalized.includes('bolsa_de_palha') ||
+    normalized.includes('сумка_корзина') ||
+    normalized.includes('плетеная_сумка')
+  ) return 'basket_bags';
 
   if (normalized.includes('sports_bra') || normalized.includes('חזיי_ספורט') || normalized.includes('спортивн_топ') || normalized.includes('спортивн_бра')) return 'sports_bras';
   if (normalized.includes('tracksuit') || normalized.includes('חליפת_ספורט') || normalized.includes('חליפות_ספורט') || normalized.includes('спортивн_костюм')) return 'tracksuits';
@@ -363,7 +391,27 @@ export const canonicalSubCategoryKey = (raw) => {
   if (normalized.includes('watch') || normalized.includes('שעון') || normalized.includes('שעונים') || normalized.includes('часы') || normalized.includes('наручн_час')) return 'watches';
   if (normalized.includes('body_jewelry') || normalized.includes('תכשיט_גוף') || normalized.includes('украшен_для_тел')) return 'body_jewelry';
 
-  if (normalized.includes('bag') || normalized.includes('handbag') || normalized.includes('backpack') || normalized.includes('clutch') || normalized.includes('תיק') || normalized.includes('сумк') || normalized.includes('рюкзак')) return 'bags';
+  if (
+    normalized.includes('bag') ||
+    normalized.includes('handbag') ||
+    normalized.includes('backpack') ||
+    normalized.includes('clutch') ||
+    normalized.includes('תיק') ||
+    normalized.includes('תרמיל') ||
+    normalized.includes('сумк') ||
+    normalized.includes('рюкзак') ||
+    normalized.includes('حقيب') ||
+    normalized.includes('شنط') ||
+    normalized.includes('tasche') ||
+    normalized.includes('bolso') ||
+    normalized.includes('bolsa') ||
+    normalized.includes('borsa') ||
+    normalized.includes('sac') ||
+    normalized.includes('बैग') ||
+    normalized.includes('थैला') ||
+    normalized.includes('バッグ') ||
+    normalized.includes('包')
+  ) return 'bags';
   if (normalized.includes('small_good') || normalized.includes('ארנקים') || normalized.includes('бумажник') || normalized.includes('кошелек')) return 'small_goods';
   if (normalized.includes('headwear') || normalized.includes('hat') || normalized.includes('cap') || normalized.includes('beanie') || normalized.includes('כובע') || normalized.includes('כובעים') || normalized.includes('головн_убор') || normalized.includes('шапк') || normalized.includes('шляп')) return 'headwear';
   if (normalized.includes('belt') || normalized.includes('חגורה') || normalized.includes('חגורות') || normalized.includes('ремень') || normalized.includes('ремни') || normalized.includes('пояс')) return 'belts';

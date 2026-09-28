@@ -2474,7 +2474,9 @@
       "gloves": "Guantes",
       "scarves_and_wraps": "Bufandas y fulares",
       "hosiery_and_socks": "Medias y calcetines",
-      "bag": "Bolsa"
+      "bag": "Bolsa",
+      "basket_bags": "Capazos",
+      "basket_bag": "Capazo"
     },
     "item_type": {
       "oxford_shirt": "Camisa Oxford",
@@ -2525,7 +2527,9 @@
       "clutch": "Cartera de mano",
       "short_sleeve_t_shirt": "Camiseta de manga corta",
       "cap_sleeve_top": "Top de manga casquillo",
-      "cap_sleeve_blouse": "Blusa de manga casquillo"
+      "cap_sleeve_blouse": "Blusa de manga casquillo",
+      "basket_bag": "Capazo",
+      "handbag": "Bolso de mano"
     },
     "color": {
       "black": "Negro",

@@ -2511,7 +2511,9 @@
       "gloves": "כפפות",
       "scarves_and_wraps": "צעיפים ועליוניות",
       "hosiery_and_socks": "גרביים וגרבוניונים",
-      "bag": "תיק"
+      "bag": "תיק",
+      "basket_bags": "תיקי סל",
+      "basket_bag": "תיק סל קש"
     },
     "item_type": {
       "oxford_shirt": "חולצת אוקספורד",
@@ -2562,7 +2564,9 @@
       "clutch": "קלאץ׳",
       "short_sleeve_t_shirt": "חולצת טי שרוול קצר",
       "cap_sleeve_top": "חולצת שרוול קצרצר",
-      "cap_sleeve_blouse": "בלוזת שרוול קצרצר"
+      "cap_sleeve_blouse": "בלוזת שרוול קצרצר",
+      "basket_bag": "תיק סל קש",
+      "handbag": "תיק יד"
     },
     "color": {
       "black": "שחור",

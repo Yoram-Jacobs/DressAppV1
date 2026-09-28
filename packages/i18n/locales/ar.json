@@ -2474,7 +2474,9 @@
       "gloves": "قفازات",
       "scarves_and_wraps": "أوشحة وشيلان",
       "hosiery_and_socks": "جوارب",
-      "bag": "شنطة"
+      "bag": "شنطة",
+      "basket_bags": "حقائب سلة",
+      "basket_bag": "حقيبة سلة قش"
     },
     "item_type": {
       "oxford_shirt": "قميص أكسفورد",
@@ -2525,7 +2527,9 @@
       "clutch": "حقيبة كلاتش",
       "short_sleeve_t_shirt": "تي شيرت بأكمام قصيرة",
       "cap_sleeve_top": "قميص بأكمام قصيرة جداً",
-      "cap_sleeve_blouse": "بلوزة بأكمام قصيرة جداً"
+      "cap_sleeve_blouse": "بلوزة بأكمام قصيرة جداً",
+      "basket_bag": "حقيبة سلة قش",
+      "handbag": "حقيبة يد"
     },
     "color": {
       "black": "أسود",

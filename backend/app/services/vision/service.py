@@ -1288,6 +1288,7 @@ class GarmentVisionService:
                     segformer_kind=det.get("kind"),
                     label=det.get("label"),
                     is_single_item=det.get("is_single_item", False),
+                    language=language,
                 )
             except Exception as exc:  # noqa: BLE001
                 logger.warning(
@@ -1636,6 +1637,7 @@ class GarmentVisionService:
                         norm,
                         segformer_kind=kind_hints[slot_idx],
                         label=norm.get("name") or norm.get("title"),
+                        language=language,
                     )
                 norm["provider_used"] = "gemini"
                 norm["model_used"] = self.crop_model
@@ -1762,6 +1764,7 @@ class GarmentVisionService:
                                 norm,
                                 segformer_kind=kind_hints[yielded_count],
                                 label=norm.get("name") or norm.get("title"),
+                                language=language,
                             )
                         norm["provider_used"] = "gemini"
                         norm["model_used"] = self.crop_model
@@ -2646,6 +2649,7 @@ class GarmentVisionService:
                             segformer_kind=det.get("kind") or det.get("category"),
                             label=det.get("label"),
                             is_single_item=det.get("is_single_item", False),
+                            language=language,
                         )
                         analysis["provider_used"] = assembled.get("provider_used", "gemma")
                         analysis["model_used"] = assembled.get("model_used", "gemma-4-e2b-q4_k_m")
@@ -2789,6 +2793,7 @@ class GarmentVisionService:
                                 segformer_kind=det.get("kind") or det.get("category"),
                                 label=det.get("label"),
                                 is_single_item=det.get("is_single_item", False),
+                                language=language,
                             )
                             analysis["provider_used"] = assembled.get("provider_used", "gemma")
                             analysis["model_used"] = assembled.get("model_used", "gemma-4-e2b-q4_k_m")
@@ -2841,6 +2846,7 @@ class GarmentVisionService:
                                     segformer_kind=det.get("kind"),
                                     label=det.get("label"),
                                     is_single_item=det.get("is_single_item", False),
+                                    language=language,
                                 )
                                 # Ensure title is populated so _is_unidentifiable doesn't drop it prematurely
                                 if not analysis.get("title") and analysis.get("name"):

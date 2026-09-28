@@ -2474,7 +2474,9 @@
       "gloves": "Gloves",
       "scarves_and_wraps": "Scarves & Wraps",
       "hosiery_and_socks": "Hosiery & Socks",
-      "bag": "Bag"
+      "bag": "Bag",
+      "basket_bags": "Basket Bags",
+      "basket_bag": "Basket Bag"
     },
     "item_type": {
       "oxford_shirt": "Oxford shirt",
@@ -2525,7 +2527,9 @@
       "clutch": "Clutch",
       "short_sleeve_t_shirt": "Short-sleeve T-shirt",
       "cap_sleeve_top": "Cap-sleeve top",
-      "cap_sleeve_blouse": "Cap-sleeve blouse"
+      "cap_sleeve_blouse": "Cap-sleeve blouse",
+      "basket_bag": "Basket bag",
+      "handbag": "Handbag"
     },
     "color": {
       "black": "Black",
