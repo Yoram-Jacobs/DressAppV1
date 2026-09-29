@@ -818,6 +818,7 @@ def _suppress_overlapping_garments(
         dilated_item = ndimage.binary_dilation(item["mask"], iterations=10)
 
         for kept_idx, (kept_lbl, kept_item, kept_area) in enumerate(kept):
+            kept_cat = kept_item.get("category")
             # Distinct fashion categories (e.g. headwear vs top, top vs bottom, bottom vs footwear, accessory vs garment)
             # must stay separate and not be merged, UNLESS one is footwear and the other is a sub-part fragment of that footwear.
             # Real clothing categories (top, bottom, dress, outerwear, headwear) can NEVER merge with footwear!
