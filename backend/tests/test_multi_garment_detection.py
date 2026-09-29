@@ -281,8 +281,6 @@ async def test_multi_garment_single_prompt_ingestion(monkeypatch):
     async for frame in service.analyze_outfits_stream([fake_img]):
         frames.append(frame)
 
-    print("FRAMES RECEIVED:", frames)
-
     # 1. Assert _call_gemma_space was called EXACTLY ONCE for all 3 items (single prompt ingestion!)
     assert gemma_mock.call_count == 1, f"Expected 1 unified call, got {gemma_mock.call_count}"
 
