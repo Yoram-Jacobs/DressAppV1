@@ -2373,7 +2373,9 @@
       "polka_dot": "A pois",
       "animal_print": "Stampa animalier",
       "graphic": "Grafico",
-      "tie_dye": "Tintura per cravatta"
+      "tie_dye": "Tintura per cravatta",
+      "printed": "Stampato",
+      "print": "Stampato"
     },
     "formality": {
       "casual": "Casuale",
@@ -4906,5 +4908,24 @@
   },
   "scanner": {
     "tabFile": "Carica immagine"
+  },
+  "tags": {
+    "eagle": "Aquila",
+    "deer": "Cervo",
+    "casual": "Casual",
+    "t_shirt": "T-shirt",
+    "burgundy": "Bordeaux",
+    "cotton": "Cotone",
+    "denim": "Denim",
+    "vintage": "Vintage",
+    "streetwear": "Streetwear",
+    "graphic": "Grafico",
+    "printed": "Stampato",
+    "logo": "Logo",
+    "summer": "Estate",
+    "winter": "Inverno",
+    "front": "Fronte",
+    "back": "Retro",
+    "profile": "Profilo"
   }
 }

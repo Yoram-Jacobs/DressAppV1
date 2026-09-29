@@ -148,7 +148,8 @@ SYSTEM_PROMPT = (
     "• gender: 'men'|'women'|'unisex'|'kids'. Feminine cuts='women', masculine='men', default to {DEFAULT_GENDER_HINT}.\n"
     "• colors: [{\"name\": str, \"pct\": int}] summing to 100 (e.g. [{\"name\": \"Burgundy\", \"pct\": 70}, {\"name\": \"Navy\", \"pct\": 30}]; single color pct=100). Use specific shades ('Navy','Olive','Sage','Burgundy','Light Blue','Teal'), never generic 'Blue'/'Green'. Never omit pct.\n"
     "• fabric_materials: [{\"name\": str, \"pct\": int}] summing to 100 (e.g. [{\"name\": \"Cotton\", \"pct\": 100}] or [{\"name\": \"Cotton\", \"pct\": 70}, {\"name\": \"Polyester\", \"pct\": 30}]). Never omit pct.\n"
-    "• pattern: 'geometric' for repeating weave, texture, heathering, dots, waffle; 'striped'|'plaid'|'floral'; 'solid' only if mirror-smooth & untextured.\n"
+    "• pattern: 'printed' for graphic tees, text, logos, artwork, front prints; 'geometric' for repeating weave, texture, heathering, dots, waffle; 'striped'|'plaid'|'floral'; 'solid' only if mirror-smooth, unprinted & untextured.\n"
+    "• text/graphics/logos: Accurately read visible printed lettering and emblems (e.g. 'AMERICAN EAGLE' / flying eagle emblem is an eagle bird / in Hebrew: 'עיט' or 'איגל' or 'נשר', NEVER a deer 'אייל'). Do not confuse eagles with deer.\n"
     "• dress_code: 'casual'|'smart-casual'|'business'|'formal'|'athletic'|'loungewear'.\n"
     "• season: ['spring'|'summer'|'fall'|'winter'|'all']. Short-sleeve/linen=['summer']; wool/down=['fall','winter']. Never 'all' for short sleeves.\n"
     "• condition='good'|'excellent'|'fair'|'bad'; quality='mid'|'premium'|'budget'|'luxury'; state='new'|'used'. Defaults: 'good','mid','used'.\n"
@@ -257,7 +258,7 @@ _GARMENT_OBJECT_SCHEMA: dict[str, Any] = {
         "pattern": {
             "type": "string",
             "enum": [
-                "geometric", "striped", "plaid", "floral", "herringbone",
+                "printed", "geometric", "striped", "plaid", "floral", "herringbone",
                 "polka", "polka_dot", "paisley", "animal_print",
                 "graphic", "tie_dye", "abstract", "solid",
             ],
@@ -381,7 +382,7 @@ def _user_prompt(code: str | None, user_gender: str | None = None) -> str:
     if code == "en":
         return (
             "Analyze photo. Return raw JSON (1 object or array). No commentary.\n"
-            f"Rules: sub_category != item_type; specific shades; textured=pattern:'geometric'; default to '{norm_gender}'."
+            f"Rules: sub_category != item_type; specific shades; graphic/print/logo=pattern:'printed'; textured=pattern:'geometric'; default to '{norm_gender}'."
         )
 
     lang_name = _LANG_NAMES.get(code, code)
@@ -389,7 +390,8 @@ def _user_prompt(code: str | None, user_gender: str | None = None) -> str:
         return (
             "**OUTPUT LANGUAGE: Hebrew (עברית)**\n"
             "All string values (name, title, caption, tags, repair_advice, sub_category, item_type, colors, materials) in fluent modern Hebrew (חולצת טי, ג'ינס). No diacritics.\n"
-            f"• sub_category != item_type; specific colors (תכלת, כחול כהה, בורדו); textured=pattern:'geometric'; default to '{norm_gender}'.\n"
+            f"• sub_category != item_type; specific colors (תכלת, כחול כהה, בורדו); graphic/print/logo=pattern:'printed'; textured=pattern:'geometric'; default to '{norm_gender}'.\n"
+            "• Graphic text & emblems: Read visible text/logos accurately ('AMERICAN EAGLE' = עיט/נשר, NEVER deer/אייל). All tags MUST be in Hebrew.\n"
             "• JSON keys and enum values stay in English. Return raw JSON (1 object or array). No commentary."
         )
     elif code == "ar":
@@ -653,7 +655,7 @@ ATTRIBUTE_GROUPS: list[tuple[str, list[str], int, str]] = [
         (
             'Visual properties:\n'
             '- colors: [{"name": str, "pct": int}] summing to 100\n'
-            '- pattern: solid|striped|plaid|floral|herringbone|polka_dot|paisley|geometric|animal_print|graphic|tie_dye|abstract\n'
+            '- pattern: printed|solid|striped|plaid|floral|herringbone|polka_dot|paisley|geometric|animal_print|graphic|tie_dye|abstract\n'
             '- fabric_materials: [{"name": str, "pct": int}] summing to 100'
         )
     ),

@@ -2401,7 +2401,9 @@
       "polka_dot": "נקודות",
       "animal_print": "הדפס מנומר/חיה",
       "graphic": "גרפי",
-      "tie_dye": "טאי-דאי"
+      "tie_dye": "טאי-דאי",
+      "printed": "הדפס",
+      "print": "הדפס"
     },
     "formality": {
       "casual": "יומיומי",
@@ -4982,5 +4984,24 @@
   },
   "scanner": {
     "tabFile": "העלאת תמונה"
+  },
+  "tags": {
+    "eagle": "עיט",
+    "deer": "אייל",
+    "casual": "יומיומי",
+    "t_shirt": "חולצת טי",
+    "burgundy": "בורדו",
+    "cotton": "כותנה",
+    "denim": "דנים",
+    "vintage": "וינטג'",
+    "streetwear": "אופנת רחוב",
+    "graphic": "גרפי",
+    "printed": "הדפס",
+    "logo": "לוגו",
+    "summer": "קיץ",
+    "winter": "חורף",
+    "front": "חזית",
+    "back": "גב",
+    "profile": "פרופיל"
   }
 }

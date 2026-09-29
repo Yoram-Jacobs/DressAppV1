@@ -2366,7 +2366,9 @@
       "polka_dot": "المنقط",
       "animal_print": "طباعة الحيوان",
       "graphic": "رسم بياني",
-      "tie_dye": "صبغ التعادل"
+      "tie_dye": "صبغ التعادل",
+      "printed": "مطبوع",
+      "print": "مطبوع"
     },
     "formality": {
       "casual": "كاجوال",
@@ -4903,5 +4905,24 @@
   },
   "scanner": {
     "tabFile": "تحميل الصورة"
+  },
+  "tags": {
+    "eagle": "نسر",
+    "deer": "غزال",
+    "casual": "يومي",
+    "t_shirt": "تي شيرت",
+    "burgundy": "بورغندي",
+    "cotton": "قطن",
+    "denim": "جينز",
+    "vintage": "فينتاج",
+    "streetwear": "ملابس الشارع",
+    "graphic": "رسومي",
+    "printed": "مطبوع",
+    "logo": "شعار",
+    "summer": "صيف",
+    "winter": "شتاء",
+    "front": "أمامي",
+    "back": "خلفي",
+    "profile": "جانبي"
   }
 }

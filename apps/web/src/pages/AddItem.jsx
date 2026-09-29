@@ -90,6 +90,7 @@ import {
   labelForColor,
   labelForSubCategory,
   canonicalSubCategoryKey,
+  labelForTag,
 } from "@/lib/taxonomy";
 import { toast } from "sonner";
 import { useRememberedDirectory } from "@/hooks/useRememberedDirectory";
@@ -121,6 +122,7 @@ const CONDITION_OPTIONS = ["bad", "fair", "good", "excellent"];
 const QUALITY_OPTIONS = ["budget", "mid", "premium", "luxury"];
 const PATTERN_OPTIONS = [
   "solid",
+  "printed",
   "striped",
   "plaid",
   "floral",
@@ -376,11 +378,13 @@ const hydrate = (a, user, t, i18n) => {
     }
   }
 
-  // 2. Fallback pattern: if model returned solid/empty but text indicates geometric/stripes/etc.
+  // 2. Fallback pattern: if model returned solid/empty but text indicates printed/geometric/stripes/etc.
   let curPattern = String(out.pattern || '').trim().toLowerCase();
   if (!curPattern || curPattern === 'solid') {
     const fullPatternBlob = `${out.name} ${out.title} ${out.caption} ${(Array.isArray(out.tags) ? out.tags : []).join(' ')}`.toLowerCase();
-    if (/geometric|גיאומטרי|weave|textured|מרקם|טקסטורה|נקודות|עיגולים|מחורר|dots|eyelet|perforated|waffle|jacquard|pique|subtle/.test(fullPatternBlob)) {
+    if (/print|printed|graphic|logo|lettering|artwork|slogan|הדפס|הדפסה|גרפי|לוגו|כיתוב|איור/.test(fullPatternBlob)) {
+      out.pattern = 'printed';
+    } else if (/geometric|גיאומטרי|weave|textured|מרקם|טקסטורה|נקודות|עיגולים|מחורר|dots|eyelet|perforated|waffle|jacquard|pique|subtle/.test(fullPatternBlob)) {
       out.pattern = 'geometric';
     } else if (/strip|striped|stripe|פסים/.test(fullPatternBlob)) {
       out.pattern = 'striped';
@@ -5853,13 +5857,13 @@ function TagsEditor({ idPrefix, items, onChange, disabled }) {
               variant="outline"
               className="text-[11px] ps-2 pe-1 flex items-center !gap-0.5"
             >
-              {tag}
+              {labelForTag(tag, t)}
               <button
                 type="button"
                 onClick={() => onChange(items.filter((x) => x !== tag))}
                 disabled={disabled}
                 className="h-4 w-4 rounded-full hover:bg-secondary flex items-center justify-center"
-                aria-label={t("addItem.removeTagAria", { label: tag })}
+                aria-label={t("addItem.removeTagAria", { label: labelForTag(tag, t) })}
               >
                 <X className="h-3 w-3" />
               </button>
@@ -5886,10 +5890,10 @@ function TagsEditor({ idPrefix, items, onChange, disabled }) {
           <Button
             type="button"
             onClick={add}
-            className="!gap-0"
+            className="!gap-1"
             disabled={disabled || !draft.trim()}
           >
-            <Plus className="h-3 w-3 text-white" />Add
+            <Plus className="h-3 w-3 text-white me-1" />{t("addItem.addAction", { defaultValue: "Add" })}
           </Button>
         </div>
       </div>

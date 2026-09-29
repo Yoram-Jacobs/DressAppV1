@@ -2373,7 +2373,9 @@
       "polka_dot": "पोल्का डॉट",
       "animal_print": "पशु छाप",
       "graphic": "ग्राफ़िक",
-      "tie_dye": "टाई डाई"
+      "tie_dye": "टाई डाई",
+      "printed": "प्रिंटेड",
+      "print": "प्रिंटेड"
     },
     "formality": {
       "casual": "कैज़ुअल",
@@ -4906,5 +4908,24 @@
   },
   "scanner": {
     "tabFile": "तस्विर अपलोड करना"
+  },
+  "tags": {
+    "eagle": "चील",
+    "deer": "हिरण",
+    "casual": "अनौपचारिक",
+    "t_shirt": "टी-शर्ट",
+    "burgundy": "बरगंडी",
+    "cotton": "कपास",
+    "denim": "डेनिम",
+    "vintage": "विंटेज",
+    "streetwear": "स्ट्रीटवियर",
+    "graphic": "ग्राफिक",
+    "printed": "प्रिंटेड",
+    "logo": "लोगो",
+    "summer": "गर्मी",
+    "winter": "सर्दी",
+    "front": "सामने",
+    "back": "पीछे",
+    "profile": "पार्श्व"
   }
 }

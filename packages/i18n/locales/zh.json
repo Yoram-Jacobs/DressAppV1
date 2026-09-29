@@ -2373,7 +2373,9 @@
       "polka_dot": "波尔卡圆点",
       "animal_print": "动物纹",
       "graphic": "形象的",
-      "tie_dye": "扎染"
+      "tie_dye": "扎染",
+      "printed": "印花",
+      "print": "印花"
     },
     "formality": {
       "casual": "休闲",
@@ -4906,5 +4908,24 @@
   },
   "scanner": {
     "tabFile": "上传图片"
+  },
+  "tags": {
+    "eagle": "鹰",
+    "deer": "鹿",
+    "casual": "休闲",
+    "t_shirt": "T恤",
+    "burgundy": "酒红",
+    "cotton": "棉",
+    "denim": "牛仔",
+    "vintage": "复古",
+    "streetwear": "街头风",
+    "graphic": "图案",
+    "printed": "印花",
+    "logo": "标志",
+    "summer": "夏季",
+    "winter": "冬季",
+    "front": "正面",
+    "back": "背面",
+    "profile": "侧面"
   }
 }

@@ -2373,7 +2373,9 @@
       "polka_dot": "Stip",
       "animal_print": "Dierenprint",
       "graphic": "Grafisch",
-      "tie_dye": "Tie-kleurstof"
+      "tie_dye": "Tie-kleurstof",
+      "printed": "Bedrukt",
+      "print": "Bedrukt"
     },
     "formality": {
       "casual": "Casual",
@@ -4913,5 +4915,24 @@
   },
   "scanner": {
     "tabFile": "Afbeelding uploaden"
+  },
+  "tags": {
+    "eagle": "Arend",
+    "deer": "Hert",
+    "casual": "Casual",
+    "t_shirt": "T-shirt",
+    "burgundy": "Bordeaux",
+    "cotton": "Katoen",
+    "denim": "Denim",
+    "vintage": "Vintage",
+    "streetwear": "Streetwear",
+    "graphic": "Grafisch",
+    "printed": "Bedrukt",
+    "logo": "Logo",
+    "summer": "Zomer",
+    "winter": "Winter",
+    "front": "Voorkant",
+    "back": "Achterkant",
+    "profile": "Profiel"
   }
 }

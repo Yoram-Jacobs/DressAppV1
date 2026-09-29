@@ -2366,7 +2366,9 @@
       "polka_dot": "lunares",
       "animal_print": "Estampado de animales",
       "graphic": "Gráfico",
-      "tie_dye": "teñido anudado"
+      "tie_dye": "teñido anudado",
+      "printed": "Estampado",
+      "print": "Estampado"
     },
     "formality": {
       "casual": "Informal",
@@ -4906,5 +4908,24 @@
   },
   "scanner": {
     "tabFile": "Subir imagen"
+  },
+  "tags": {
+    "eagle": "Águila",
+    "deer": "Ciervo",
+    "casual": "Casual",
+    "t_shirt": "Camiseta",
+    "burgundy": "Burdeos",
+    "cotton": "Algodón",
+    "denim": "Denim",
+    "vintage": "Vintage",
+    "streetwear": "Ropa urbana",
+    "graphic": "Gráfico",
+    "printed": "Estampado",
+    "logo": "Logotipo",
+    "summer": "Verano",
+    "winter": "Invierno",
+    "front": "Frente",
+    "back": "Espalda",
+    "profile": "Perfil"
   }
 }

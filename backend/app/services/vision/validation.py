@@ -529,11 +529,13 @@ def _coerce_single_garment(
         else:
             res["caption"] = tpls["default"].format(name=name_val)
 
-    # Pattern fallback: if model returned solid/empty, check text for subtle geometric, striped, or floral patterns
+    # Pattern fallback: if model returned solid/empty, check text for printed graphics, geometric, striped, or floral patterns
     pat_str = (res.get("pattern") or "").strip().lower()
     if not pat_str or pat_str == "solid":
         full_pat_text = f"{res.get('name', '')} {res.get('title', '')} {res.get('caption', '')} {' '.join(res.get('tags') or [])}".lower()
-        if any(w in full_pat_text for w in ("geometric", "geometry", "texture", "textured", "weave", "waffle", "jacquard", "pique", "dot", "dots", "polka", "eyelet", "perforated", "mesh", "ribbed", "subtle", "גיאומטרי", "מרקם", "טקסטורה", "נקודות", "עיגולים", "מחורר", "דוגמה")):
+        if any(w in full_pat_text for w in ("print", "printed", "graphic", "logo", "lettering", "artwork", "illustration", "slogan", "הדפס", "הדפסה", "גרפי", "לוגו", "איור", "כיתוב")):
+            res["pattern"] = "printed"
+        elif any(w in full_pat_text for w in ("geometric", "geometry", "texture", "textured", "weave", "waffle", "jacquard", "pique", "dot", "dots", "polka", "eyelet", "perforated", "mesh", "ribbed", "subtle", "גיאומטרי", "מרקם", "טקסטורה", "נקודות", "עיגולים", "מחורר", "דוגמה")):
             res["pattern"] = "geometric"
         elif any(w in full_pat_text for w in ("stripe", "striped", "פסים")):
             res["pattern"] = "striped"
@@ -542,6 +544,78 @@ def _coerce_single_garment(
         elif any(w in full_pat_text for w in ("floral", "flower", "פרח")):
             res["pattern"] = "floral"
 
+    # Eagle vs Deer correction: American Eagle / eagle bird emblem is often mistranslated or confused with deer ("אייל")
+    full_text_lower = f"{res.get('name', '')} {res.get('title', '')} {res.get('caption', '')} {res.get('brand', '')} {' '.join(res.get('tags') or [])}".lower()
+    has_eagle = any(w in full_text_lower for w in ("eagle", "עיט", "נשר", "איגל", "american eagle", "aeo"))
+    has_deer_he = any(w in full_text_lower for w in ("אייל", "הדפס אייל", "ציור אייל", "איור אייל"))
+    if has_deer_he and (has_eagle or "eagle" in str(res.get("brand", "")).lower() or any("eagle" in str(t).lower() for t in (res.get("tags") or []))):
+        import re as _re
+        for field in ("name", "title", "caption"):
+            if res.get(field):
+                res[field] = _re.sub(r"הדפס\s+אייל", "הדפס עיט", res[field])
+                res[field] = _re.sub(r"\bאייל\b", "עיט", res[field])
+        if isinstance(res.get("tags"), list):
+            res["tags"] = [
+                _re.sub(r"\bאייל\b", "עיט", t) if isinstance(t, str) else t
+                for t in res["tags"]
+            ]
+
+    # Tag localization fallback for Hebrew output
+    is_lang_he = (language or "").lower() in ("he", "iw") or any("\u0590" <= ch <= "\u05ea" for ch in f"{res.get('name', '')} {res.get('title', '')}")
+    if is_lang_he and isinstance(res.get("tags"), list):
+        he_tag_map = {
+            "eagle": "עיט",
+            "deer": "אייל",
+            "casual": "יומיומי",
+            "smart-casual": "אלגנטי־יומיומי",
+            "formal": "רשמי",
+            "business": "עסקי",
+            "athletic": "ספורטיבי",
+            "t-shirt": "חולצת טי",
+            "t_shirt": "חולצת טי",
+            "tshirt": "חולצת טי",
+            "tee": "חולצת טי",
+            "shirt": "חולצה",
+            "jeans": "ג'ינס",
+            "pants": "מכנסיים",
+            "shorts": "מכנסיים קצרים",
+            "sweater": "סוודר",
+            "hoodie": "קפוצ'ון",
+            "jacket": "ז'קט",
+            "coat": "מעיל",
+            "burgundy": "בורדו",
+            "red": "אדום",
+            "blue": "כחול",
+            "navy": "כחול כהה",
+            "light blue": "תכלת",
+            "black": "שחור",
+            "white": "לבן",
+            "grey": "אפור",
+            "gray": "אפור",
+            "green": "ירוק",
+            "olive": "ירוק זית",
+            "brown": "חום",
+            "beige": "בז'",
+            "yellow": "צהוב",
+            "cotton": "כותנה",
+            "polyester": "פוליאסטר",
+            "denim": "דנים",
+            "wool": "צמר",
+            "leather": "עור",
+            "linen": "פשתן",
+            "printed": "הדפס",
+            "print": "הדפס",
+            "graphic": "גרפי",
+            "logo": "לוגו",
+            "summer": "קיץ",
+            "winter": "חורף",
+            "spring": "אביב",
+            "fall": "סתיו",
+            "autumn": "סתיו",
+            "vintage": "וינטג'",
+            "streetwear": "אופנת רחוב",
+        }
+        res["tags"] = [he_tag_map.get(str(t).strip().lower(), t) for t in res["tags"] if t]
 
     # Price estimation guarantee: provide realistic fallback if omitted or 0
     p = res.get("price_cents")
@@ -579,18 +653,21 @@ _VALID_PATTERN = {
     "solid", "striped", "plaid", "floral", "herringbone",
     "polka", "polka-dot", "polka_dot", "paisley", "geometric",
     "animal_print", "animal-print", "graphic", "tie_dye", "tie-dye", "abstract",
+    "printed", "print",
 }
 _PATTERN_ALIASES = {
     "polka-dot": "polka_dot",
     "polka": "polka_dot",
     "animal-print": "animal_print",
     "tie-dye": "tie_dye",
-    "print": "graphic",
-    "graphic-print": "graphic",
-    "text": "graphic",
-    "slogan": "graphic",
-    "lettering": "graphic",
-    "logo": "graphic",
+    "print": "printed",
+    "printed": "printed",
+    "graphic": "printed",
+    "graphic-print": "printed",
+    "text": "printed",
+    "slogan": "printed",
+    "lettering": "printed",
+    "logo": "printed",
 }
 
 

@@ -2366,7 +2366,9 @@
       "polka_dot": "Pois",
       "animal_print": "Imprimé animalier",
       "graphic": "Graphique",
-      "tie_dye": "Teinture cravate"
+      "tie_dye": "Teinture cravate",
+      "printed": "Imprimé",
+      "print": "Imprimé"
     },
     "formality": {
       "casual": "Occasionnel",
@@ -4899,5 +4901,24 @@
   },
   "scanner": {
     "tabFile": "Télécharger une image"
+  },
+  "tags": {
+    "eagle": "Aigle",
+    "deer": "Cerf",
+    "casual": "Décontracté",
+    "t_shirt": "T-shirt",
+    "burgundy": "Bordeaux",
+    "cotton": "Coton",
+    "denim": "Denim",
+    "vintage": "Vintage",
+    "streetwear": "Streetwear",
+    "graphic": "Graphique",
+    "printed": "Imprimé",
+    "logo": "Logo",
+    "summer": "Été",
+    "winter": "Hiver",
+    "front": "Devant",
+    "back": "Dos",
+    "profile": "Profil"
   }
 }

@@ -2373,7 +2373,9 @@
       "polka_dot": "De bolinhas",
       "animal_print": "Estampa animal",
       "graphic": "Gráfico",
-      "tie_dye": "Tie dye"
+      "tie_dye": "Tie dye",
+      "printed": "Estampado",
+      "print": "Estampado"
     },
     "formality": {
       "casual": "Casual",
@@ -4906,5 +4908,24 @@
   },
   "scanner": {
     "tabFile": "Carregar imagem"
+  },
+  "tags": {
+    "eagle": "Águia",
+    "deer": "Veado",
+    "casual": "Casual",
+    "t_shirt": "Camiseta",
+    "burgundy": "Bordô",
+    "cotton": "Algodão",
+    "denim": "Denim",
+    "vintage": "Vintage",
+    "streetwear": "Streetwear",
+    "graphic": "Gráfico",
+    "printed": "Estampado",
+    "logo": "Logotipo",
+    "summer": "Verão",
+    "winter": "Inverno",
+    "front": "Frente",
+    "back": "Costas",
+    "profile": "Perfil"
   }
 }

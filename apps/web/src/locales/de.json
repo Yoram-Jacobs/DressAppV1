@@ -2366,7 +2366,9 @@
       "polka_dot": "Tupfen",
       "animal_print": "Tierdruck",
       "graphic": "Grafik",
-      "tie_dye": "Krawattenfarbe"
+      "tie_dye": "Krawattenfarbe",
+      "printed": "Bedruckt",
+      "print": "Bedruckt"
     },
     "formality": {
       "casual": "Lässig",
@@ -4899,5 +4901,24 @@
   },
   "scanner": {
     "tabFile": "Bild hochladen"
+  },
+  "tags": {
+    "eagle": "Adler",
+    "deer": "Hirsch",
+    "casual": "Lässig",
+    "t_shirt": "T-Shirt",
+    "burgundy": "Bordeaux",
+    "cotton": "Baumwolle",
+    "denim": "Denim",
+    "vintage": "Vintage",
+    "streetwear": "Streetwear",
+    "graphic": "Grafik",
+    "printed": "Bedruckt",
+    "logo": "Logo",
+    "summer": "Sommer",
+    "winter": "Winter",
+    "front": "Vorderseite",
+    "back": "Rückseite",
+    "profile": "Profil"
   }
 }

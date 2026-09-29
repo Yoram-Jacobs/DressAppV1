@@ -2373,7 +2373,9 @@
       "polka_dot": "水玉模様",
       "animal_print": "アニマルプリント",
       "graphic": "グラフィック",
-      "tie_dye": "タイダイ"
+      "tie_dye": "タイダイ",
+      "printed": "プリント",
+      "print": "プリント"
     },
     "formality": {
       "casual": "カジュアル",
@@ -4907,5 +4909,24 @@
   },
   "scanner": {
     "tabFile": "画像をアップロードする"
+  },
+  "tags": {
+    "eagle": "ワシ",
+    "deer": "鹿",
+    "casual": "カジュアル",
+    "t_shirt": "Tシャツ",
+    "burgundy": "バーガンディ",
+    "cotton": "コットン",
+    "denim": "デニム",
+    "vintage": "ヴィンテージ",
+    "streetwear": "ストリートウェア",
+    "graphic": "グラフィック",
+    "printed": "プリント",
+    "logo": "ロゴ",
+    "summer": "夏",
+    "winter": "冬",
+    "front": "前面",
+    "back": "背面",
+    "profile": "側面"
   }
 }

@@ -80,7 +80,9 @@ export const labelForQuality = (code, t) => {
 
 export const labelForPattern = (code, t) => {
   if (!code) return '';
-  const key = `taxonomy.pattern.${code}`;
+  const normalized = String(code).trim().toLowerCase().replace(/[- ]/g, '_');
+  const mapped = normalized === 'print' ? 'printed' : normalized;
+  const key = `taxonomy.pattern.${mapped}`;
   return fallback(t, key, code);
 };
 
@@ -646,4 +648,48 @@ export const getTaxonomyMismatches = (itemA, itemB) => {
   if (seasonA.join(',') !== seasonB.join(',')) mismatches.push('season');
 
   return mismatches;
+};
+
+export const labelForTag = (raw, t) => {
+  if (!raw) return '';
+  const key = String(raw).trim().toLowerCase().replace(/[\s\-]+/g, '_');
+
+  // 1. Try dedicated tags namespace
+  const tagVal = t(`tags.${key}`, { defaultValue: '' });
+  if (tagVal && tagVal !== `tags.${key}`) return tagVal;
+  const taxTagVal = t(`taxonomy.tags.${key}`, { defaultValue: '' });
+  if (taxTagVal && taxTagVal !== `taxonomy.tags.${key}`) return taxTagVal;
+
+  // 2. Try taxonomy dress_code
+  const dcVal = t(`taxonomy.dress_code.${key}`, { defaultValue: '' });
+  if (dcVal && dcVal !== `taxonomy.dress_code.${key}`) return dcVal;
+
+  // 3. Try taxonomy pattern
+  const patVal = labelForPattern(key, t);
+  if (patVal && patVal.toLowerCase() !== key) return patVal;
+
+  // 4. Try taxonomy color
+  const colorVal = labelForColor(key, t);
+  if (colorVal && colorVal.toLowerCase() !== key) return colorVal;
+
+  // 5. Try taxonomy sub_category / item_type
+  const subVal = labelForSubCategory(raw, t);
+  if (subVal && subVal.toLowerCase() !== raw.toLowerCase()) return subVal;
+
+  const itypeVal = labelForItemType(raw, t);
+  if (itypeVal && itypeVal.toLowerCase() !== raw.toLowerCase()) return itypeVal;
+
+  // 6. Try taxonomy material
+  const matVal = labelForMaterial(key, t);
+  if (matVal && matVal.toLowerCase() !== key) return matVal;
+
+  // 7. Try taxonomy season
+  const seasonVal = labelForSeason(key, t);
+  if (seasonVal && seasonVal.toLowerCase() !== key) return seasonVal;
+
+  // 8. Try taxonomy gender
+  const genderVal = labelForGender(key, t);
+  if (genderVal && genderVal !== key) return genderVal;
+
+  return raw;
 };

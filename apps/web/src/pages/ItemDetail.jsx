@@ -93,6 +93,7 @@ import {
   labelForItemType,
   labelForColor,
   getTaxonomyMismatches,
+  labelForTag,
 } from '@/lib/taxonomy';
 import { toast } from 'sonner';
 import { useAuth } from '@/lib/auth';
@@ -127,6 +128,7 @@ const CONDITION_OPTIONS = ['bad', 'fair', 'good', 'excellent'];
 const QUALITY_OPTIONS = ['budget', 'mid', 'premium', 'luxury'];
 const PATTERN_OPTIONS = [
   'solid',
+  'printed',
   'striped',
   'plaid',
   'floral',
@@ -337,6 +339,7 @@ function diffPatch(loaded, form, user = null) {
 }
 /* -------------------- generic chip-list editor -------------------- */
 function ChipList({ value, onChange, placeholder, disabled, testidPrefix }) {
+  const { t } = useTranslation();
   const [draft, setDraft] = useState('');
   const add = () => {
     const trimmed = draft.trim();
@@ -357,13 +360,13 @@ function ChipList({ value, onChange, placeholder, disabled, testidPrefix }) {
           className="rounded-full text-[11px] inline-flex items-center gap-1 mb-2"
           data-testid={`${testidPrefix}-chip-${v}`}
         >
-          {v}
+          {labelForTag(v, t)}
           {!disabled && (
             <button
               type="button"
               onClick={() => onChange(value.filter((x) => x !== v))}
               className="hover:text-destructive"
-              aria-label={`Remove ${v}`}
+              aria-label={t("addItem.removeTagAria", { defaultValue: `Remove ${labelForTag(v, t)}`, label: labelForTag(v, t) })}
             >
               <X className="h-3 w-3" />
             </button>
@@ -386,10 +389,10 @@ function ChipList({ value, onChange, placeholder, disabled, testidPrefix }) {
           type="button"
           size="sm"
           onClick={add}
-          className="!gap-0"
+          className="!gap-1"
           data-testid={`${testidPrefix}-add`}
         >
-          <Plus className="h-3 w-3 text-white" />Add
+          <Plus className="h-3 w-3 text-white me-1" />{t("addItem.addAction", { defaultValue: "Add" })}
         </Button>
       )}
     </div>
@@ -1157,7 +1160,7 @@ export default function ItemDetail() {
           duration: 6000,
           action: {
             label: t('common.upgrade', { defaultValue: 'Upgrade' }),
-            onClick: () => navigate('/pricing')
+            onClick: () => nav('/pricing')
           }
         });
       } else {
@@ -1350,7 +1353,7 @@ export default function ItemDetail() {
           duration: 6000,
           action: {
             label: t('common.upgrade', { defaultValue: 'Upgrade' }),
-            onClick: () => navigate('/pricing')
+            onClick: () => nav('/pricing')
           }
         });
       } else {

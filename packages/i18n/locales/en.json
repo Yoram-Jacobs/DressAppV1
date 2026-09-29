@@ -2366,7 +2366,9 @@
       "animal_print": "Animal print",
       "graphic": "Graphic",
       "tie_dye": "Tie dye",
-      "abstract": "Abstract"
+      "abstract": "Abstract",
+      "printed": "Printed",
+      "print": "Printed"
     },
     "formality": {
       "casual": "Casual",
@@ -4892,5 +4894,24 @@
   },
   "scanner": {
     "tabFile": "Upload image"
+  },
+  "tags": {
+    "eagle": "Eagle",
+    "deer": "Deer",
+    "casual": "Casual",
+    "t_shirt": "T-Shirt",
+    "burgundy": "Burgundy",
+    "cotton": "Cotton",
+    "denim": "Denim",
+    "vintage": "Vintage",
+    "streetwear": "Streetwear",
+    "graphic": "Graphic",
+    "printed": "Printed",
+    "logo": "Logo",
+    "summer": "Summer",
+    "winter": "Winter",
+    "front": "Front",
+    "back": "Back",
+    "profile": "Profile"
   }
 }
