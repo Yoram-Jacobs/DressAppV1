@@ -432,13 +432,36 @@ export const canonicalSubCategoryKey = (raw) => {
   if (normalized.includes('combat_boot') || normalized.includes('boot') || normalized.includes('מגפ') || normalized.includes('ботин') || normalized.includes('сапог')) return 'boots';
   if (normalized.includes('sandal') || normalized.includes('סנדל') || normalized.includes('сандал') || normalized.includes('босоножк')) return 'sandals';
   if (normalized.includes('clog') || normalized.includes('slide') || normalized.includes('flopper') || normalized.includes('mule') || normalized.includes('flip_flop') || normalized.includes('כפכפ') || normalized.includes('קבקב')) return 'clogs';
-  if (normalized.includes('sneaker') || normalized.includes('runner') || normalized.includes('trainer') || normalized.includes('high_top') || normalized.includes('low_top') || normalized.includes('סניקרס') || normalized.includes('ספורט') || normalized.includes('кроссов') || normalized.includes('кеды')) return 'sneakers';
+  if (
+    normalized.includes('sneaker') ||
+    normalized.includes('runner') ||
+    normalized.includes('trainer') ||
+    normalized.includes('high_top') ||
+    normalized.includes('low_top') ||
+    normalized.includes('סניקרס') ||
+    normalized.includes('кроссов') ||
+    normalized.includes('кеды') ||
+    ((normalized.includes('נעלי') || normalized.includes('shoe') || normalized.includes('обув')) && (normalized.includes('ספורט') || normalized.includes('sport')))
+  ) return 'sneakers';
   if (normalized.includes('heel') || normalized.includes('עקב') || normalized.includes('каблук')) return 'heels';
-  if (normalized.includes('flat') || normalized.includes('שטוחות') || normalized.includes('балетк')) return 'flats';
-  if (normalized.includes('slipper') || normalized.includes('בית') || normalized.includes('тапоч')) return 'slippers';
+  if (normalized.includes('flat') || (normalized.includes('שטוחות') && (normalized.includes('נעלי') || normalized.includes('shoe'))) || normalized.includes('балетк')) return 'flats';
+  if (normalized.includes('slipper') || normalized.includes('נעלי_בית') || normalized.includes('тапоч') || ((normalized.includes('נעלי') || normalized.includes('shoe')) && normalized.includes('בית'))) return 'slippers';
   if (normalized.includes('loafer') || normalized.includes('לופר')) return 'loafers';
-  if (normalized.includes('oxford') || normalized.includes('dress_shoe') || normalized.includes('אלגנט') || normalized.includes('נעלי_עור') || normalized.includes('туфли') || normalized.includes('классическ_обув')) return 'dress_shoes';
-  if (normalized.includes('casual_shoe') || normalized.includes('קזואל') || normalized.includes('יומיומ')) return 'casual_shoes';
+  if (
+    normalized.includes('oxford') ||
+    normalized.includes('dress_shoe') ||
+    normalized.includes('נעלי_אלגנט') ||
+    normalized.includes('נעלי_עור') ||
+    normalized.includes('туфли') ||
+    normalized.includes('классическ_обув') ||
+    ((normalized.includes('נעלי') || normalized.includes('shoe') || normalized.includes('обув')) && (normalized.includes('אלגנט') || normalized.includes('dress')))
+  ) return 'dress_shoes';
+  if (
+    normalized.includes('casual_shoe') ||
+    normalized.includes('נעלי_קזואל') ||
+    normalized.includes('נעלי_יומיומ') ||
+    ((normalized.includes('נעלי') || normalized.includes('shoe') || normalized.includes('обув')) && (normalized.includes('קזואל') || normalized.includes('יומיומ') || normalized.includes('casual')))
+  ) return 'casual_shoes';
   if (normalized.includes('shoe') || normalized.includes('נעלי') || normalized.includes('обув')) return 'shoes';
 
   if (normalized.includes('overcoat') || normalized.includes('coat') || normalized.includes('parka') || normalized.includes('מעיל') || normalized.includes('пальто') || normalized.includes('плащ')) return 'coats';
@@ -650,46 +673,84 @@ export const getTaxonomyMismatches = (itemA, itemB) => {
   return mismatches;
 };
 
+export const TAG_REVERSE_MAP = {
+  'יומיומי': 'casual',
+  'אלגנטי': 'smart_casual',
+  'אלגנטי־יומיומי': 'smart_casual',
+  'אלגנטי_יומיומי': 'smart_casual',
+  'רשמי': 'formal',
+  'עסקי': 'business',
+  'ספורטיבי': 'athletic',
+  'חולצת טי': 't_shirt',
+  'חולצת_טי': 't_shirt',
+  'טישירט': 't_shirt',
+  'נשר': 'eagle',
+  'עיט': 'eagle',
+  'אייל': 'deer',
+  'כותנה': 'cotton',
+  'דנים': 'denim',
+  'בורדו': 'burgundy',
+  'הדפס': 'printed',
+  'גרפי': 'graphic',
+  'לוגו': 'logo',
+  'וינטג\'': 'vintage',
+  'וינטג': 'vintage',
+  'אופנת רחוב': 'streetwear',
+  'קיץ': 'summer',
+  'חורף': 'winter',
+  'אביב': 'spring',
+  'סתיו': 'fall',
+};
+
 export const labelForTag = (raw, t) => {
   if (!raw) return '';
   const key = String(raw).trim().toLowerCase().replace(/[\s\-]+/g, '_');
+  const canonicalKey = TAG_REVERSE_MAP[String(raw).trim()] || TAG_REVERSE_MAP[key] || key;
 
   // 1. Try dedicated tags namespace
-  const tagVal = t(`tags.${key}`, { defaultValue: '' });
-  if (tagVal && tagVal !== `tags.${key}`) return tagVal;
-  const taxTagVal = t(`taxonomy.tags.${key}`, { defaultValue: '' });
-  if (taxTagVal && taxTagVal !== `taxonomy.tags.${key}`) return taxTagVal;
+  const tagVal = t(`tags.${canonicalKey}`, { defaultValue: '' });
+  if (tagVal && tagVal !== `tags.${canonicalKey}`) return tagVal;
+  const taxTagVal = t(`taxonomy.tags.${canonicalKey}`, { defaultValue: '' });
+  if (taxTagVal && taxTagVal !== `taxonomy.tags.${canonicalKey}`) return taxTagVal;
 
   // 2. Try taxonomy dress_code
-  const dcVal = t(`taxonomy.dress_code.${key}`, { defaultValue: '' });
-  if (dcVal && dcVal !== `taxonomy.dress_code.${key}`) return dcVal;
+  const dcVal = t(`taxonomy.dress_code.${canonicalKey}`, { defaultValue: '' });
+  if (dcVal && dcVal !== `taxonomy.dress_code.${canonicalKey}`) return dcVal;
 
   // 3. Try taxonomy pattern
-  const patVal = labelForPattern(key, t);
-  if (patVal && patVal.toLowerCase() !== key) return patVal;
+  const patVal = labelForPattern(canonicalKey, t);
+  if (patVal && patVal.toLowerCase() !== canonicalKey) return patVal;
 
   // 4. Try taxonomy color
-  const colorVal = labelForColor(key, t);
-  if (colorVal && colorVal.toLowerCase() !== key) return colorVal;
+  const colorVal = labelForColor(canonicalKey, t);
+  if (colorVal && colorVal.toLowerCase() !== canonicalKey) return colorVal;
+
+  // If raw is already localized in Hebrew and current language is Hebrew,
+  // return raw directly to avoid subcategory false positives
+  const isHe = t?.language?.startsWith('he') || t?.language?.startsWith('iw');
+  const hasHebrew = /[\u0590-\u05FF]/.test(raw);
+  if (isHe && hasHebrew) {
+    return raw;
+  }
 
   // 5. Try taxonomy sub_category / item_type
-  const subVal = labelForSubCategory(raw, t);
-  if (subVal && subVal.toLowerCase() !== raw.toLowerCase()) return subVal;
+  const subVal = labelForSubCategory(canonicalKey, t);
+  if (subVal && subVal.toLowerCase() !== canonicalKey) return subVal;
 
-  const itypeVal = labelForItemType(raw, t);
-  if (itypeVal && itypeVal.toLowerCase() !== raw.toLowerCase()) return itypeVal;
+  const itypeVal = labelForItemType(canonicalKey, t);
+  if (itypeVal && itypeVal.toLowerCase() !== canonicalKey) return itypeVal;
 
   // 6. Try taxonomy material
-  const matVal = labelForMaterial(key, t);
-  if (matVal && matVal.toLowerCase() !== key) return matVal;
+  const matVal = labelForMaterial(canonicalKey, t);
+  if (matVal && matVal.toLowerCase() !== canonicalKey) return matVal;
 
   // 7. Try taxonomy season
-  const seasonVal = labelForSeason(key, t);
-  if (seasonVal && seasonVal.toLowerCase() !== key) return seasonVal;
+  const seasonVal = labelForSeason(canonicalKey, t);
+  if (seasonVal && seasonVal.toLowerCase() !== canonicalKey) return seasonVal;
 
   // 8. Try taxonomy gender
-  const genderVal = labelForGender(key, t);
-  if (genderVal && genderVal !== key) return genderVal;
+  const genderVal = labelForGender(canonicalKey, t);
+  if (genderVal && genderVal !== canonicalKey) return genderVal;
 
   return raw;
 };

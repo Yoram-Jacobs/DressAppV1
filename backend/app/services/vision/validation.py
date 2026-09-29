@@ -617,6 +617,12 @@ def _coerce_single_garment(
         }
         res["tags"] = [he_tag_map.get(str(t).strip().lower(), t) for t in res["tags"] if t]
 
+    # Ensure title and name are always synchronized
+    if not res.get("title") and res.get("name"):
+        res["title"] = res["name"]
+    elif not res.get("name") and res.get("title"):
+        res["name"] = res["title"]
+
     # Price estimation guarantee: provide realistic fallback if omitted or 0
     p = res.get("price_cents")
     if p is None or p <= 0:

@@ -143,19 +143,14 @@ SYSTEM_PROMPT = (
     "Output raw JSON only ({...} or [{...}]). No thinking tags, markdown, or intro. "
     "Analyze each visible garment in concise merchandisable detail.\n\n"
     "Rules:\n"
-    "• sub_category: Specific cut ('Shirt','T-Shirt','Sweater','Hoodie','Jeans','Pants','Skirt','Sneakers'). Never generic 'Top'/'Bottom'/'Clothing'.\n"
-    "• item_type: Styling cut ('Crew-Neck T-Shirt','Skinny Jeans','Trench Coat'). Must differ from sub_category.\n"
-    "• gender: 'men'|'women'|'unisex'|'kids'. Feminine cuts='women', masculine='men', default to {DEFAULT_GENDER_HINT}.\n"
-    "• colors: [{\"name\": str, \"pct\": int}] summing to 100 (e.g. [{\"name\": \"Burgundy\", \"pct\": 70}, {\"name\": \"Navy\", \"pct\": 30}]; single color pct=100). Use specific shades ('Navy','Olive','Sage','Burgundy','Light Blue','Teal'), never generic 'Blue'/'Green'. Never omit pct.\n"
-    "• fabric_materials: [{\"name\": str, \"pct\": int}] summing to 100 (e.g. [{\"name\": \"Cotton\", \"pct\": 100}] or [{\"name\": \"Cotton\", \"pct\": 70}, {\"name\": \"Polyester\", \"pct\": 30}]). Never omit pct.\n"
-    "• pattern: 'printed' for graphic tees, text, logos, artwork, front prints; 'geometric' for repeating weave, texture, heathering, dots, waffle; 'striped'|'plaid'|'floral'; 'solid' only if mirror-smooth, unprinted & untextured.\n"
-    "• text/graphics/logos: Accurately read visible printed lettering and emblems (e.g. 'AMERICAN EAGLE' / flying eagle emblem is an eagle bird / in Hebrew: 'עיט' or 'איגל' or 'נשר', NEVER a deer 'אייל'). Do not confuse eagles with deer.\n"
-    "• dress_code: 'casual'|'smart-casual'|'business'|'formal'|'athletic'|'loungewear'.\n"
-    "• season: ['spring'|'summer'|'fall'|'winter'|'all']. Short-sleeve/linen=['summer']; wool/down=['fall','winter']. Never 'all' for short sleeves.\n"
-    "• condition='good'|'excellent'|'fair'|'bad'; quality='mid'|'premium'|'budget'|'luxury'; state='new'|'used'. Defaults: 'good','mid','used'.\n"
-    "• price_cents: Estimated resale in USD cents as integer (e.g. 2500 for $25).\n"
-    "• image_quality_status: 'complete'|'needs_completion' (collar/sleeves/hems cut off; add reconstruction_prompt)|'needs_reconstruction' (deformed/occluded).\n"
-    "• US terms: sweater (not jumper), pants (not trousers), sneakers (not trainers)."
+    "• sub_category: Specific cut ('Shirt','T-Shirt','Sweater','Jeans','Pants','Skirt','Sneakers'). Never generic 'Top'/'Bottom'.\n"
+    "• item_type: Styling cut ('Crew-Neck T-Shirt','Skinny Jeans'). Must differ from sub_category.\n"
+    "• gender: 'men'|'women'|'unisex'|'kids', default to {DEFAULT_GENDER_HINT}.\n"
+    "• colors: [{\"name\": str, \"pct\": int}] summing to 100. Specific shades ('Burgundy','Navy','Olive','Light Blue'). Never omit pct.\n"
+    "• fabric_materials: [{\"name\": str, \"pct\": int}] summing to 100 (e.g. [{\"name\": \"Cotton\", \"pct\": 100}]). Never omit pct.\n"
+    "• pattern: 'printed' for graphic tees, text, logos, artwork, front prints; 'geometric' for repeating weave, texture, heathering, waffle; 'striped'|'plaid'|'floral'; 'solid' only if plain & unprinted.\n"
+    "• text/graphics/logos: Accurately read visible printed lettering and emblems (e.g. 'AMERICAN EAGLE' / flying eagle emblem is an eagle bird / in Hebrew: 'עיט' or 'איגל' or 'נשר', NEVER a deer 'אייל').\n"
+    "• season: ['spring'|'summer'|'fall'|'winter'|'all']. Short-sleeve/linen=['summer']; wool/down=['fall','winter']."
 )
 
 
@@ -389,22 +384,22 @@ def _user_prompt(code: str | None, user_gender: str | None = None) -> str:
     if code in ("he", "iw"):
         return (
             "**OUTPUT LANGUAGE: Hebrew (עברית)**\n"
-            "All string values (name, title, caption, tags, repair_advice, sub_category, item_type, colors, materials) in fluent modern Hebrew (חולצת טי, ג'ינס). No diacritics.\n"
-            f"• sub_category != item_type; specific colors (תכלת, כחול כהה, בורדו); graphic/print/logo=pattern:'printed'; textured=pattern:'geometric'; default to '{norm_gender}'.\n"
-            "• Graphic text & emblems: Read visible text/logos accurately ('AMERICAN EAGLE' = עיט/נשר, NEVER deer/אייל). All tags MUST be in Hebrew.\n"
+            "All string values (name, caption, tags, sub_category, item_type, colors, materials) in fluent modern Hebrew (חולצת טי, ג'ינס). No diacritics.\n"
+            f"• sub_category != item_type; specific colors (תכלת, כחול כהה, בורדו); graphic/print/logo=pattern:'printed'; default to '{norm_gender}'.\n"
+            "• Graphic text/logos: Read accurately ('AMERICAN EAGLE' = עיט/נשר, NEVER deer/אייל). All tags in Hebrew.\n"
             "• JSON keys and enum values stay in English. Return raw JSON (1 object or array). No commentary."
         )
     elif code == "ar":
         return (
             "**OUTPUT LANGUAGE: Arabic (العربية)**\n"
-            "All string values (name, title, caption, tags, repair_advice, sub_category, item_type, colors, materials) in fluent modern Arabic.\n"
+            "All string values (name, caption, tags, sub_category, item_type, colors, materials) in fluent modern Arabic.\n"
             f"• sub_category != item_type; textured=pattern:'geometric'; default to '{norm_gender}'.\n"
             "• JSON keys and enum values stay in English. Return raw JSON (1 object or array). No commentary."
         )
     else:
         return (
             f"**OUTPUT LANGUAGE: {lang_name} ({code})**\n"
-            f"All string values (name, title, caption, tags, repair_advice, sub_category, item_type, colors, materials) in fluent {lang_name}.\n"
+            f"All string values (name, caption, tags, sub_category, item_type, colors, materials) in fluent {lang_name}.\n"
             f"• sub_category != item_type; textured=pattern:'geometric'; default to '{norm_gender}'.\n"
             "• JSON keys and enum values stay in English. Return raw JSON (1 object or array). No commentary."
         )
@@ -823,18 +818,18 @@ async def call_gemma_space_stream_attributes(
 
                     if name == "caption":
                         prop["minLength"] = 10
-                        prop["maxLength"] = 240
+                        prop["maxLength"] = 120
 
                     if p_type == "array" and "items" in prop:
                         if name == "season":
                             prop["minItems"] = 1
                             prop["maxItems"] = 4
                         elif name == "colors":
-                            prop["maxItems"] = 4
-                        elif name == "fabric_materials":
                             prop["maxItems"] = 3
+                        elif name == "fabric_materials":
+                            prop["maxItems"] = 2
                         elif name == "tags":
-                            prop["maxItems"] = 6
+                            prop["maxItems"] = 4
 
                         items_schema = prop["items"]
                         if isinstance(items_schema, dict):
@@ -848,11 +843,13 @@ async def call_gemma_space_stream_attributes(
 
                 properties[name] = prop
 
+        # Omit 'title' from prompt schema to save ~25 tokens; title is populated from 'name'
+        schema_props = {k: v for k, v in properties.items() if k != "title"}
         full_schema = {
             "type": "object",
-            "properties": properties,
+            "properties": schema_props,
             "required": [
-                "name", "title", "category", "sub_category", "item_type",
+                "name", "category", "sub_category", "item_type",
                 "colors", "pattern", "gender", "dress_code", "season",
                 "fabric_materials", "state", "condition", "quality",
                 "price_cents", "caption",
@@ -866,7 +863,7 @@ async def call_gemma_space_stream_attributes(
                 system_prompt=system_prompt,
                 user_text=user_text,
                 image_b64_jpeg=image_b64_jpeg,
-                max_tokens=512,
+                max_tokens=380,
                 temperature=0.0,
                 timeout=timeout_single,
                 json_schema=full_schema,
@@ -876,6 +873,10 @@ async def call_gemma_space_stream_attributes(
             if isinstance(parsed, list) and parsed:
                 parsed = parsed[0]
             if isinstance(parsed, dict) and len(parsed) >= 3:
+                if not parsed.get("title") and parsed.get("name"):
+                    parsed["title"] = parsed["name"]
+                elif not parsed.get("name") and parsed.get("title"):
+                    parsed["name"] = parsed["title"]
                 parsed = _coerce_single_garment(parsed, user_gender=user_gender, language=language)
                 parsed = _coerce_enums(parsed, user_gender=user_gender)
                 for group_name, field_names, _, _ in ATTRIBUTE_GROUPS:
