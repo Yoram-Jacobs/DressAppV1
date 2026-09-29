@@ -423,6 +423,7 @@ async def run_background_matte(
 
 
 def _apply_defaults(parsed: Dict[str, Any]) -> Dict[str, Any]:
+    parsed.setdefault("title", parsed.get("name") or "Unnamed garment")
     parsed.setdefault("category", "Top")
     parsed.setdefault("pattern", "solid")
     parsed.setdefault("gender", "unisex")

@@ -2431,16 +2431,30 @@ export default function AddItem() {
 
     const startedAt = Date.now();
     const tick = setInterval(() => {
-      const elapsed = (Date.now() - startedAt) / 1000;
-      const target = Math.min(92, 4 + elapsed * 5);
-      setCards((prev) =>
-        prev.map((c) =>
-          cardsToProcess.some((cp) => cp.id === c.id) && c.status === "scanning"
+      setCards((prev) => {
+        const hasScanning = prev.some(
+          (c) =>
+            c.status === "scanning" &&
+            cardsToProcess.some(
+              (cp) => c.id === cp.id || c.id.startsWith(`${cp.id}-`),
+            ),
+        );
+        if (!hasScanning) {
+          clearInterval(tick);
+          return prev;
+        }
+        const elapsed = (Date.now() - startedAt) / 1000;
+        const target = Math.min(92, 4 + elapsed * 5);
+        return prev.map((c) =>
+          c.status === "scanning" &&
+          cardsToProcess.some(
+            (cp) => c.id === cp.id || c.id.startsWith(`${cp.id}-`),
+          )
             ? { ...c, progress: target }
             : c,
-        ),
-      );
-    }, 250);
+        );
+      });
+    }, 1000);
 
     let perCardIds = {};
     cardsToProcess.forEach((c) => {
@@ -2739,6 +2753,7 @@ export default function AddItem() {
       );
       toast.error(msg);
     } finally {
+      clearInterval(tick);
       cardsToProcess.forEach((origCard) => {
         analyzeInFlight.current.delete(origCard.id);
         workStore.completeAnalyze(origCard.id);
@@ -2774,16 +2789,26 @@ export default function AddItem() {
     // Faux-progress timer so the scanning animation paces with the API call.
     const startedAt = Date.now();
     const tick = setInterval(() => {
-      const elapsed = (Date.now() - startedAt) / 1000;
-      const target = Math.min(92, 4 + elapsed * 5); // reaches ~92 by 18s
-      setCards((prev) =>
-        prev.map((c) =>
-          c.id === card.id && c.status === "scanning"
+      setCards((prev) => {
+        const hasScanning = prev.some(
+          (c) =>
+            c.status === "scanning" &&
+            (c.id === card.id || c.id.startsWith(`${card.id}-`)),
+        );
+        if (!hasScanning) {
+          clearInterval(tick);
+          return prev;
+        }
+        const elapsed = (Date.now() - startedAt) / 1000;
+        const target = Math.min(92, 4 + elapsed * 5); // reaches ~92 by 18s
+        return prev.map((c) =>
+          c.status === "scanning" &&
+          (c.id === card.id || c.id.startsWith(`${card.id}-`))
             ? { ...c, progress: target }
             : c,
-        ),
-      );
-    }, 250);
+        );
+      });
+    }, 1000);
     // Hoisted above the try/catch so the catch handler can read
     // ``perCardIds`` after ``handleDetect`` has expanded the original
     // card into per-item slot cards. Originally declared inside the
@@ -3036,6 +3061,7 @@ export default function AddItem() {
       );
       toast.error(msg);
     } finally {
+      clearInterval(tick);
       // Patch 12 — release in-flight slot regardless of success/failure
       // so the user can legitimately retry via the "Try again" button.
       analyzeInFlight.current.delete(card.id);

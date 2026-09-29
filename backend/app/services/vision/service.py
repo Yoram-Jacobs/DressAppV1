@@ -2456,11 +2456,24 @@ class GarmentVisionService:
                     or (top_dets and shoe_dets and min(d["bbox"][0] for d in top_dets) < min(d["bbox"][0] for d in shoe_dets))
                 )
 
+                same_zone_or_category = False
+                if not has_human_wearer and not has_multi_body_zones and detections:
+                    det_cats = {
+                        (d.get("category") or d.get("kind") or "garment").lower()
+                        for d in detections
+                    }
+                    clothing_cats = det_cats & {"top", "bottom", "dress", "outerwear", "footwear"}
+                    if len(clothing_cats) <= 1:
+                        same_zone_or_category = True
+                    elif (bool(top_dets) + bool(bottom_dets) + bool(shoe_dets)) <= 1:
+                        same_zone_or_category = True
+
                 is_single = (
                     not has_multi_body_zones
                     and (
                         (count is not None and count <= 1 and not has_human_wearer)
                         or is_footwear_only
+                        or same_zone_or_category
                         or _looks_already_cropped(detections, count_hint=count)
                     )
                 )
@@ -2489,6 +2502,8 @@ class GarmentVisionService:
                         "bbox": union_bbox,
                         "defer_matte": False,
                         "is_single_item": True,
+                        "_raw_image_bytes": img_bytes,
+                        "_raw_image_mime": "image/jpeg",
                     }
                     if settings.AUTO_MATTE_CROPS:
                         matted = await self._whole_image_matte(img_bytes, detections=detections)
@@ -2506,6 +2521,8 @@ class GarmentVisionService:
                         "bbox": [0, 0, 1000, 1000],
                         "defer_matte": False,
                         "is_single_item": True,
+                        "_raw_image_bytes": img_bytes,
+                        "_raw_image_mime": "image/jpeg",
                     }
                     if settings.AUTO_MATTE_CROPS:
                         matted = await self._whole_image_matte(img_bytes, detections=detections)
@@ -2527,9 +2544,13 @@ class GarmentVisionService:
                     final_crops = raw_crops
 
                 is_final_single = (count is None or count <= 1) and len(final_crops) <= 1 and not has_human
-                for det, cbytes, mime in final_crops:
+                for i_c, (det, cbytes, mime) in enumerate(final_crops):
                     det["defer_matte"] = False
                     det["is_single_item"] = is_final_single
+                    if "_raw_image_bytes" not in det:
+                        raw_b = raw_crops[i_c][1] if i_c < len(raw_crops) else cbytes
+                        det["_raw_image_bytes"] = raw_b
+                        det["_raw_image_mime"] = "image/jpeg"
                 return idx, final_crops
 
             except Exception as exc:
@@ -2611,7 +2632,8 @@ class GarmentVisionService:
                     if len(slot_crop_list) == 1:
                         # Single item from this photo: fast single-item stream
                         slot_idx, (image_idx, det, c_bytes, c_mime) = slot_crop_list[0]
-                        shrunk = _shrink_for_vision(c_bytes)
+                        raw_for_vision = det.get("_raw_image_bytes") or c_bytes
+                        shrunk = _shrink_for_vision(raw_for_vision)
                         b64 = base64.b64encode(shrunk).decode("ascii")
                         assembled: dict[str, Any] = {}
                         import uuid
@@ -2644,7 +2666,7 @@ class GarmentVisionService:
                         if gemma_failed or not assembled.get("category") or (not assembled.get("sub_category") and not assembled.get("item_type")):
                             try:
                                 gem_analysis = await self.analyze(
-                                    c_bytes, language=language, think=False, provider="gemini", user_gender=eff_gender,
+                                    raw_for_vision, language=language, think=False, provider="gemini", user_gender=eff_gender,
                                 )
                                 if isinstance(gem_analysis, dict) and gem_analysis:
                                     assembled = gem_analysis
@@ -2796,8 +2818,9 @@ class GarmentVisionService:
                                     "Slot %d missing from multi-garment output — falling back to per-item.", slot_idx,
                                 )
                                 try:
+                                    raw_crop = det.get("_raw_image_bytes") or c_bytes
                                     gem_analysis = await self.analyze(
-                                        c_bytes, language=language, think=False, provider="gemini", user_gender=eff_gender,
+                                        raw_crop, language=language, think=False, provider="gemini", user_gender=eff_gender,
                                     )
                                     if isinstance(gem_analysis, dict) and gem_analysis:
                                         assembled = gem_analysis
@@ -2875,9 +2898,10 @@ class GarmentVisionService:
                 if len(flat_crops) == 1:
                     slot_idx = 0
                     image_idx, det, c_bytes, c_mime = flat_crops[0]
+                    raw_for_vision = det.get("_raw_image_bytes") or c_bytes
                     try:
                         analysis = await self.analyze(
-                            c_bytes, language=language, think=False, user_gender=eff_gender
+                            raw_for_vision, language=language, think=False, user_gender=eff_gender
                         )
                         if isinstance(analysis, dict):
                             _enforce_segformer_category(
@@ -2911,7 +2935,7 @@ class GarmentVisionService:
                             )
                             try:
                                 analysis = await self.analyze(
-                                    c_bytes, language=language, think=False, provider="gemma", user_gender=eff_gender
+                                    raw_for_vision, language=language, think=False, provider="gemma", user_gender=eff_gender
                                 )
                             except Exception as fallback_exc:
                                 logger.error("Gemma fallback also failed for slot %d: %s", slot_idx, fallback_exc)
@@ -2966,7 +2990,7 @@ class GarmentVisionService:
                     CHUNK_SIZE = 10
                     for chunk_start in range(0, len(flat_crops), CHUNK_SIZE):
                         chunk_crops = flat_crops[chunk_start : chunk_start + CHUNK_SIZE]
-                        chunk_bytes = [c[2] for c in chunk_crops]
+                        chunk_bytes = [c[1].get("_raw_image_bytes") or c[2] for c in chunk_crops]
                         chunk_hints = [
                             (c[1].get("kind") or c[1].get("category") or c[1].get("label"))
                             for c in chunk_crops
@@ -2995,8 +3019,9 @@ class GarmentVisionService:
                                     analysis.get("category") or analysis.get("sub_category") or analysis.get("item_type")
                                 ):
                                     try:
+                                        raw_fb = det.get("_raw_image_bytes") or c_bytes
                                         fb = await self.analyze(
-                                            c_bytes, language=language, think=False, user_gender=eff_gender
+                                            raw_fb, language=language, think=False, user_gender=eff_gender
                                         )
                                         if isinstance(fb, dict) and fb:
                                             analysis = fb
@@ -3073,17 +3098,18 @@ class GarmentVisionService:
                                     continue
                                 slot_idx = chunk_start + local_i
                                 fallback_analysis = None
+                                raw_fb = det.get("_raw_image_bytes") or c_bytes
                                 if is_quota and settings.EYES_GEMMA_SPACE_URL:
                                     try:
                                         fallback_analysis = await self.analyze(
-                                            c_bytes, language=language, think=False, provider="gemma", user_gender=eff_gender
+                                            raw_fb, language=language, think=False, provider="gemma", user_gender=eff_gender
                                         )
                                     except Exception:
                                         fallback_analysis = None
                                 if not fallback_analysis:
                                     try:
                                         fallback_analysis = await self.analyze(
-                                            c_bytes, language=language, think=False, user_gender=eff_gender
+                                            raw_fb, language=language, think=False, user_gender=eff_gender
                                         )
                                     except Exception:
                                         fallback_analysis = {

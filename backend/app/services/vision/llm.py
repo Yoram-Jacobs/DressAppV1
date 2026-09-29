@@ -748,8 +748,10 @@ async def call_gemma_space_stream_attributes(
             all_field_names.extend(fnames)
 
         # Use authoritative Gemini SYSTEM_PROMPT (exact prompt used by Gemini Flash)
-        # Suffix with SegFormer category hint if available
-        sys_parts = [_build_system_prompt(one_pass=False, user_gender=user_gender)]
+        # Keep system_prompt STATIC so llama-server can cache KV prefix across all batch items!
+        system_prompt = _build_system_prompt(one_pass=False, user_gender=user_gender)
+
+        user_hints = []
         lbl_low = (segformer_label or "").lower()
         if segformer_category and (not is_single_item or segformer_category in ("footwear", "bottom", "accessory", "headwear", "bag")):
             mapped_cat = None
@@ -765,15 +767,16 @@ async def call_gemma_space_stream_attributes(
                 mapped_cat = "Accessories"
 
             if mapped_cat:
-                sys_parts.append(f"\nSEGMENTATION: Crop is '{mapped_cat}'. Describe this item only.")
+                user_hints.append(f"SEGMENTATION: Crop is '{mapped_cat}'. Describe this item only.")
 
         if "bag" in lbl_low or segformer_category == "bag":
-            sys_parts.append("\nRULE: Bag item. sub_category='Bag'|'Tote Bag'|'Handbag'. Not belt/scarf/jewelry.")
+            user_hints.append("RULE: Bag item. sub_category='Bag'|'Tote Bag'|'Handbag'. Not belt/scarf/jewelry.")
         elif ("shoe" in lbl_low or segformer_category == "footwear") and "boot" not in lbl_low:
-            sys_parts.append("\nRULE: Footwear item. Low-cut/athletic/canvas/casual sub_category='Sneakers'|'Shoes' (not 'Boots').")
+            user_hints.append("RULE: Footwear item. Low-cut/athletic/canvas/casual sub_category='Sneakers'|'Shoes' (not 'Boots').")
 
-        system_prompt = "\n".join(sys_parts)
         user_text = _user_prompt(language, user_gender=user_gender)
+        if user_hints:
+            user_text = "\n".join(user_hints) + "\n\n" + user_text
 
         import copy
         properties = {}

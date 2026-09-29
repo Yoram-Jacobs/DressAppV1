@@ -377,6 +377,52 @@ _SINGLE_INSTANCE_CLASSES = {
 }
 
 
+def _bbox_gap(
+    a: tuple[int, int, int, int], b: tuple[int, int, int, int]
+) -> int:
+    """Minimum L-infinity distance between two ``(ymin, xmin, ymax, xmax)``
+    bboxes. Returns 0 if they overlap or touch."""
+    ay1, ax1, ay2, ax2 = a
+    by1, bx1, by2, bx2 = b
+    dx = max(0, max(bx1 - ax2, ax1 - bx2))
+    dy = max(0, max(by1 - ay2, ay1 - by2))
+    return max(dx, dy)
+
+
+def _is_same_garment_component(
+    a: tuple[int, int, int, int],
+    b: tuple[int, int, int, int],
+    frame_short: int,
+) -> bool:
+    """Check if two bounding boxes are parts of the same garment.
+    
+    Handles pants legs (vertical overlap + moderate horizontal gap),
+    sleeves/torso, and waistband/legs connections.
+    """
+    ay1, ax1, ay2, ax2 = a
+    by1, bx1, by2, bx2 = b
+    dx = max(0, max(bx1 - ax2, ax1 - bx2))
+    dy = max(0, max(by1 - ay2, ay1 - by2))
+
+    # General proximity (within 20% of frame short edge)
+    if max(dx, dy) <= max(16, int(0.20 * frame_short)):
+        return True
+
+    # Vertical overlap (e.g. two legs of pants side-by-side, or sleeves of a top)
+    y_overlap = max(0, min(ay2, by2) - max(ay1, by1))
+    min_h = min(max(1, ay2 - ay1), max(1, by2 - by1))
+    if (y_overlap / float(min_h)) >= 0.20 and dx <= int(0.35 * frame_short):
+        return True
+
+    # Horizontal overlap (e.g. waistband and legs, collar and torso)
+    x_overlap = max(0, min(ax2, bx2) - max(ax1, bx1))
+    min_w = min(max(1, ax2 - ax1), max(1, bx2 - bx1))
+    if (x_overlap / float(min_w)) >= 0.20 and dy <= int(0.35 * frame_short):
+        return True
+
+    return False
+
+
 def _split_into_spatial_groups(class_binary: np.ndarray) -> list[np.ndarray]:
     """Split a single-instance class mask into spatially-distinct groups.
 
@@ -399,12 +445,11 @@ def _split_into_spatial_groups(class_binary: np.ndarray) -> list[np.ndarray]:
       * A component is a "major" garment if its area is at least 20 %
         of the largest component's area AND at least 0.1 % of the
         frame.
-      * Two major components belong to the same garment if the gap
-        between their bboxes is at most 5 % of the frame's short
-        edge (≈ the natural spacing a print or a belt creates in
-        one garment, not the spacing between two separate items).
+      * Two major components belong to the same garment if they are
+        spatially cohesive via ``_is_same_garment_component`` or their
+        gap is within 15 % of the frame short edge.
       * "Minor" components (< 20 % of largest) are absorbed into the
-        nearest major group if within 10 % of the short edge; else
+        nearest major group if within 20 % of the short edge; else
         dropped as noise.
 
     On single-component input returns ``[class_binary]`` unchanged
@@ -456,16 +501,15 @@ def _split_into_spatial_groups(class_binary: np.ndarray) -> list[np.ndarray]:
 
     # If only one major survives, everything else is noise / fragment.
     if len(majors) == 1:
-        merge_gap = max(8, int(0.10 * frame_short))
+        merge_gap = max(16, int(0.15 * frame_short))
         main = majors[0]
         for frag in minors:
-            if _bbox_gap(frag["bbox"], main["bbox"]) <= merge_gap:
+            if _is_same_garment_component(frag["bbox"], main["bbox"], frame_short) or _bbox_gap(frag["bbox"], main["bbox"]) <= merge_gap:
                 main["mask"] = np.maximum(main["mask"], frag["mask"])
-        # Bridge disconnected fragments into the main blob (see the
-        # multi-major branch below for the rationale).
+        # Bridge disconnected fragments into the main blob
         try:
             from scipy import ndimage as _ndi
-            k = max(3, (merge_gap * 2 + 1) | 1)
+            k = max(7, (merge_gap * 2 + 1) | 1)
             structure = np.ones((k, k), dtype=bool)
             bridged = _ndi.binary_closing(
                 main["mask"] > 0, structure=structure, iterations=1,
@@ -474,15 +518,13 @@ def _split_into_spatial_groups(class_binary: np.ndarray) -> list[np.ndarray]:
         except Exception:  # noqa: BLE001
             return [main["mask"]]
 
-    # Multiple majors — group by spatial proximity. Two majors merge
-    # into the same group when their bbox gap is small (within
-    # 5 % of the frame's short edge — natural in-garment spacing).
-    merge_gap = max(8, int(0.05 * frame_short))
+    # Multiple majors — group by spatial proximity and garment structure
+    merge_gap = max(16, int(0.15 * frame_short))
     groups: list[dict[str, Any]] = []
     for major in majors:
         joined = False
         for g in groups:
-            if _bbox_gap(major["bbox"], g["bbox"]) <= merge_gap:
+            if _is_same_garment_component(major["bbox"], g["bbox"], frame_short) or _bbox_gap(major["bbox"], g["bbox"]) <= merge_gap:
                 g["mask"] = np.maximum(g["mask"], major["mask"])
                 gy1, gx1, gy2, gx2 = g["bbox"]
                 my1, mx1, my2, mx2 = major["bbox"]
@@ -498,61 +540,38 @@ def _split_into_spatial_groups(class_binary: np.ndarray) -> list[np.ndarray]:
                 "bbox": major["bbox"],
             })
 
-    # Absorb minor fragments into the nearest group (within 10 % of
-    # short edge); else drop as noise.
-    absorb_gap = max(16, int(0.10 * frame_short))
+    # Absorb minor fragments into the nearest group (within 20 % of
+    # short edge or garment structure); else drop as noise.
+    absorb_gap = max(24, int(0.20 * frame_short))
     for frag in minors:
         best = None
         best_gap = None
         for g in groups:
+            if _is_same_garment_component(frag["bbox"], g["bbox"], frame_short):
+                best = g
+                best_gap = 0
+                break
             gap = _bbox_gap(frag["bbox"], g["bbox"])
             if best is None or gap < (best_gap or 0):
                 best = g
                 best_gap = gap
-        if best is not None and best_gap is not None and best_gap <= absorb_gap:
+        if best is not None and (best_gap is None or best_gap <= absorb_gap):
             best["mask"] = np.maximum(best["mask"], frag["mask"])
 
-    # Bridge disconnected components within each group so the downstream
-    # ``_postprocess_mask`` "keep largest connected component" step
-    # doesn't kill the smaller half. Without this bridging step the
-    # merge above is purely bbox-level — the mask itself still has
-    # two (or more) disconnected blobs and ``_postprocess_mask`` then
-    # discards everything except the largest. The classic failure
-    # mode is a shoulder-bag whose strap and body are argmax-split:
-    # both fragments survive ``_split_into_spatial_groups``, both get
-    # merged into one group's mask, but the largest-component step
-    # drops the strap (or the body) anyway.
-    #
-    # The closing kernel scales with merge_gap × 2 + 1 (just enough
-    # to bridge the natural in-instance gap). Tighter would leave
-    # the components disconnected; looser would consume legitimate
-    # negative-space inside the garment (e.g. the hole between two
-    # halves of an open jacket).
+    # Bridge disconnected components within each group
     for g in groups:
         try:
             from scipy import ndimage as _ndi
-            k = max(3, (merge_gap * 2 + 1) | 1)
+            k = max(7, (merge_gap * 2 + 1) | 1)
             structure = np.ones((k, k), dtype=bool)
             bridged = _ndi.binary_closing(
                 g["mask"] > 0, structure=structure, iterations=1,
             )
             g["mask"] = bridged.astype(np.uint8)
         except Exception:  # noqa: BLE001
-            pass  # leave un-bridged; will be partially clipped downstream
+            pass
 
     return [g["mask"] for g in groups]
-
-
-def _bbox_gap(
-    a: tuple[int, int, int, int], b: tuple[int, int, int, int]
-) -> int:
-    """Minimum L-infinity distance between two ``(ymin, xmin, ymax, xmax)``
-    bboxes. Returns 0 if they overlap or touch."""
-    ay1, ax1, ay2, ax2 = a
-    by1, bx1, by2, bx2 = b
-    dx = max(0, max(bx1 - ax2, ax1 - bx2))
-    dy = max(0, max(by1 - ay2, ay1 - by2))
-    return max(dx, dy)
 
 
 def _split_instances(class_mask: np.ndarray) -> list[tuple[str, np.ndarray]]:
@@ -838,7 +857,30 @@ def _suppress_overlapping_garments(
                     {kept_cat, item_cat} == {"top", "bottom"} or {kept_cat, item_cat} == {"top", "dress"}
                 )
                 if not (is_garment_pair or is_flatlay_top_bottom or is_footwear_candidate):
+                    # Suppress phantom accessory / shoe speck on a flat-lay garment
+                    if (
+                        not has_human
+                        and kept_cat in {"top", "bottom", "dress", "outerwear"}
+                        and item_cat in {"accessory", "bag", "belt", "scarf", "headwear", "footwear"}
+                    ):
+                        if area <= 0.15 * kept_area:
+                            merged = True
+                            suppressed.append((lbl, kept_lbl, item_cat or "?", 0.0, 0.0))
+                            break
                     continue
+            else:
+                # Same category in a photo without a human model (e.g. two pieces of pants, or top fragments)
+                if not has_human and bb_item and bb_kept:
+                    if _is_same_garment_component(bb_item, bb_kept, min(H, W)):
+                        kept_item["mask"] = np.maximum(kept_item["mask"], item["mask"])
+                        kept[kept_idx] = (
+                            kept_lbl,
+                            kept_item,
+                            int(kept_item["mask"].sum()),
+                        )
+                        merged = True
+                        suppressed.append((lbl, kept_lbl, item_cat or "?", 1.0, 1.0))
+                        break
 
             bb_kept = _bbox(kept_item["mask"])
 
@@ -1026,7 +1068,7 @@ async def parse_garments(
         if name in {"Face", "Hair", "Neck", "Sunglasses"}
     }
     has_head = bool(np.isin(class_mask, list(head_class_ids)).sum() >= 30) if head_class_ids else False
-    if human_class_ids:
+    if human_class_ids and has_head:
         human_mask_full = np.isin(class_mask, list(human_class_ids)).astype(np.uint8)
         if not human_mask_full.any() or int(human_mask_full.sum()) < 150:
             human_mask_full = None
@@ -1487,7 +1529,11 @@ def apply_alpha_intersection(
     has_human = human_mask is not None and bool(human_mask.any())
 
     # 1. Subtract other overlapping garments (dilated for clean boundaries)
-    if has_other:
+    # ONLY when a human model is present and wearing layered garments.
+    # NEVER subtract on flat-lay or standalone photos without a human: rembg
+    # already provides studio-grade alpha boundaries, and subtracting other masks
+    # slices garments in half, erases pant legs, and destroys clean cutouts.
+    if has_other and has_human:
         try:
             if other_mask.shape != (Hc, Wc):
                 other_resized = np.array(
