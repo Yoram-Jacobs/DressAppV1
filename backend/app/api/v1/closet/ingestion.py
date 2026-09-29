@@ -560,23 +560,10 @@ async def analyze_item_image(
                                     from app.api.v1.closet.common import CreateItemIn
                                     from app.api.v1.closet.items import save_closet_item_document
 
-                                    raw_colors = analysis.get("colors") or []
-                                    norm_colors = []
-                                    if isinstance(raw_colors, list):
-                                        for c in raw_colors:
-                                            if isinstance(c, dict) and c.get("name"):
-                                                norm_colors.append(c)
-                                            elif isinstance(c, str):
-                                                norm_colors.append({"name": c, "pct": None})
+                                    from app.services.vision.validation import normalize_weighted_tags
 
-                                    raw_fabrics = analysis.get("fabric_materials") or []
-                                    norm_fabrics = []
-                                    if isinstance(raw_fabrics, list):
-                                        for f in raw_fabrics:
-                                            if isinstance(f, dict) and f.get("name"):
-                                                norm_fabrics.append(f)
-                                            elif isinstance(f, str):
-                                                norm_fabrics.append({"name": f, "pct": None})
+                                    norm_colors = normalize_weighted_tags(analysis.get("colors") or analysis.get("color"))
+                                    norm_fabrics = normalize_weighted_tags(analysis.get("fabric_materials"))
 
                                     item_in = CreateItemIn(
                                         source="Private",
@@ -779,23 +766,10 @@ async def analyze_item_image(
                                 from app.api.v1.closet.common import CreateItemIn
                                 from app.api.v1.closet.items import save_closet_item_document
 
-                                raw_colors = analysis.get("colors") or []
-                                norm_colors = []
-                                if isinstance(raw_colors, list):
-                                    for c in raw_colors:
-                                        if isinstance(c, dict) and c.get("name"):
-                                            norm_colors.append(c)
-                                        elif isinstance(c, str):
-                                            norm_colors.append({"name": c, "pct": None})
+                                from app.services.vision.validation import normalize_weighted_tags
 
-                                raw_fabrics = analysis.get("fabric_materials") or []
-                                norm_fabrics = []
-                                if isinstance(raw_fabrics, list):
-                                    for f in raw_fabrics:
-                                        if isinstance(f, dict) and f.get("name"):
-                                            norm_fabrics.append(f)
-                                        elif isinstance(f, str):
-                                            norm_fabrics.append({"name": f, "pct": None})
+                                norm_colors = normalize_weighted_tags(analysis.get("colors") or analysis.get("color"))
+                                norm_fabrics = normalize_weighted_tags(analysis.get("fabric_materials"))
 
                                 item_in = CreateItemIn(
                                     source="Private",

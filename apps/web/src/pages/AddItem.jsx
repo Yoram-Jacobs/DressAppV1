@@ -72,7 +72,7 @@ import { useClosetStore, useClosetItems } from "@/lib/useClosetStore";
 import { workStore } from "@/lib/workStore";
 import DuplicatePreflightDialog from "@/components/DuplicatePreflightDialog";
 import { DppScanner } from "@/components/DppScanner";
-import { WeightedList } from "@/components/WeightedList";
+import { WeightedList, normalizeWeightedTags } from "@/components/WeightedList";
 import { ScanningPipeline } from "@/components/ScanningPipeline";
 import { useAuth } from "@/lib/auth";
 import { deriveSizeFromPreferences } from "@/lib/size_preferences";
@@ -505,7 +505,8 @@ const hydrate = (a, user, t, i18n) => {
             else if (/mint|sage|מנטה/.test(fullColorBlob)) rawName = 'mint';
           }
           const localized = labelForColor(rawName, t);
-          return typeof c === 'string' ? (localized || rawName) : { ...c, name: localized || rawName };
+          const finalName = localized || rawName;
+          return typeof c === 'string' ? { name: finalName, pct: null } : { ...c, name: finalName };
         });
       }
       const rawTitle = (out.title || out.name || '').trim();
@@ -536,6 +537,18 @@ const hydrate = (a, user, t, i18n) => {
     out.sub_category = subRaw;
     out.item_type = itemRaw;
   }
+
+  // Always guarantee valid percentages summing strictly to 100%
+  if (Array.isArray(out.colors) && out.colors.length > 0) {
+    out.colors = normalizeWeightedTags(out.colors);
+  } else if (a?.color || out.color) {
+    const colName = (t ? labelForColor(out.color || a?.color, t) : null) || out.color || a?.color;
+    out.colors = normalizeWeightedTags([{ name: colName, pct: 100 }]);
+  }
+  if (Array.isArray(out.fabric_materials) && out.fabric_materials.length > 0) {
+    out.fabric_materials = normalizeWeightedTags(out.fabric_materials);
+  }
+
   return out;
 };
 

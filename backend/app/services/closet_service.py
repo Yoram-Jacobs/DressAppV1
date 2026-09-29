@@ -430,6 +430,17 @@ def _apply_defaults(parsed: Dict[str, Any]) -> Dict[str, Any]:
     parsed.setdefault("state", "used")
     parsed.setdefault("condition", "good")
     parsed.setdefault("quality", "mid")
+    try:
+        from app.services.vision.validation import normalize_weighted_tags
+        raw_colors = parsed.get("colors") or parsed.get("color")
+        if raw_colors:
+            parsed["colors"] = normalize_weighted_tags(raw_colors)
+            if parsed["colors"] and not parsed.get("color"):
+                parsed["color"] = parsed["colors"][0].get("name")
+        if parsed.get("fabric_materials"):
+            parsed["fabric_materials"] = normalize_weighted_tags(parsed["fabric_materials"])
+    except Exception as exc:
+        logger.debug("Failed normalizing weighted tags in _apply_defaults: %s", exc)
     return parsed
 
 def safe_analysis(parsed: Dict[str, Any]) -> Dict[str, Any]:

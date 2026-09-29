@@ -127,6 +127,81 @@ _CAPTION_TEMPLATES = {
 }
 
 
+def normalize_weighted_tags(tags: Any) -> list[dict[str, Any]]:
+    """Normalize a list of tags (strings or {name, pct} dicts) so that:
+    1. Every entry is a dict {"name": str, "pct": int}.
+    2. Missing, None, or 0 percentages are inferred.
+    3. The sum of all percentages is strictly 100%.
+    """
+    if not tags:
+        return []
+
+    if isinstance(tags, str):
+        tags = [tags]
+    if not isinstance(tags, list):
+        return []
+
+    clean: list[dict[str, Any]] = []
+    for item in tags:
+        if isinstance(item, str) and item.strip():
+            clean.append({"name": item.strip(), "pct": None})
+        elif isinstance(item, dict) and item.get("name"):
+            pct_val = item.get("pct")
+            try:
+                pct_int = int(pct_val) if pct_val is not None else None
+            except (ValueError, TypeError):
+                pct_int = None
+            entry = dict(item)
+            entry["pct"] = pct_int
+            clean.append(entry)
+
+    if not clean:
+        return []
+
+    if len(clean) == 1:
+        clean[0]["pct"] = 100
+        return clean
+
+    known_sum = sum(c["pct"] for c in clean if c.get("pct") is not None and c["pct"] > 0)
+    unassigned = [c for c in clean if c.get("pct") is None or c.get("pct") <= 0]
+
+    if not unassigned and known_sum == 100:
+        return clean
+
+    if known_sum > 0 and known_sum < 100 and unassigned:
+        rem = 100 - known_sum
+        share = rem // len(unassigned)
+        distributed = 0
+        for i, c in enumerate(unassigned):
+            if i == len(unassigned) - 1:
+                c["pct"] = rem - distributed
+            else:
+                c["pct"] = share
+                distributed += share
+        return clean
+
+    # All unassigned or invalid sum: distribute sensibly so first is dominant
+    if len(clean) == 2:
+        clean[0]["pct"] = 70
+        clean[1]["pct"] = 30
+    elif len(clean) == 3:
+        clean[0]["pct"] = 60
+        clean[1]["pct"] = 25
+        clean[2]["pct"] = 15
+    elif len(clean) == 4:
+        clean[0]["pct"] = 50
+        clean[1]["pct"] = 25
+        clean[2]["pct"] = 15
+        clean[3]["pct"] = 10
+    else:
+        share = 100 // len(clean)
+        rem = 100 % len(clean)
+        for i, c in enumerate(clean):
+            c["pct"] = share + (rem if i == 0 else 0)
+
+    return clean
+
+
 def _coerce_single_garment(
     parsed: dict[str, Any] | list[dict[str, Any]],
     user_gender: str | None = None,
@@ -364,6 +439,13 @@ def _coerce_single_garment(
                         c["name"] = "מנטה" if is_he else "Mint Green"
                         c["hex"] = "#6ee7b7"
 
+    # Guarantee valid percentages summing strictly to 100%
+    raw_colors = res.get("colors") or res.get("color")
+    if raw_colors:
+        res["colors"] = normalize_weighted_tags(raw_colors)
+        if res["colors"] and not res.get("color"):
+            res["color"] = res["colors"][0].get("name")
+
     # Unique name guarantee: ensure name is not just the subcategory name
     name_str = (res.get("name") or "").strip()
     sub_str = (res.get("sub_category") or "").strip()
@@ -387,7 +469,7 @@ def _coerce_single_garment(
             if not res.get("title") or res.get("title").lower() == sub_str.lower():
                 res["title"] = res["name"]
 
-    # Materials fallback: ensure never "Unknown"
+    # Materials fallback: ensure never "Unknown" and percentages sum strictly to 100%
     mats = res.get("fabric_materials")
     if not mats or (isinstance(mats, list) and all(str(m.get("name", "")).lower() in {"unknown", "n/a", "other", "none", ""} for m in mats if isinstance(m, dict))):
         if cat_lower == "footwear" or "boot" in sub_lower or "belt" in sub_lower or "bag" in sub_lower:
@@ -398,6 +480,8 @@ def _coerce_single_garment(
             res["fabric_materials"] = [{"name": "Wool", "pct": 70}, {"name": "Polyester", "pct": 30}]
         else:
             res["fabric_materials"] = [{"name": "Cotton", "pct": 70}, {"name": "Polyester", "pct": 30}]
+    else:
+        res["fabric_materials"] = normalize_weighted_tags(mats)
 
     # Coat vs Dress auto-correction: long tailored outerwear with lapels/buttons is Outerwear, not Dress
     coat_keywords = ("coat", "trench", "duster", "jacket", "overcoat", "parka", "blazer", "double-breasted")
@@ -626,6 +710,10 @@ def _coerce_enums(
         parsed, "pattern", _VALID_PATTERN, aliases=_PATTERN_ALIASES, default="solid"
     )
     _coerce_seasons(parsed)
+    if parsed.get("colors"):
+        parsed["colors"] = normalize_weighted_tags(parsed["colors"])
+    if parsed.get("fabric_materials"):
+        parsed["fabric_materials"] = normalize_weighted_tags(parsed["fabric_materials"])
     return parsed
 
 

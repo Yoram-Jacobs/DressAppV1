@@ -63,7 +63,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Progress } from '@/components/ui/progress';
-import { WeightedList } from '@/components/WeightedList';
+import { WeightedList, normalizeWeightedTags } from '@/components/WeightedList';
 import {
   Select,
   SelectContent,
@@ -224,17 +224,15 @@ function toFormState(item, user = null) {
   // arrays. We surface them as-is so the WeightedList editor can render
   // the per-material percentages. The legacy single-string `color` /
   // `material` fields are kept editable too for backward compat with
-  // older items that pre-date the weighted taxonomy.
-  const normalisedColors = Array.isArray(item.colors)
+  const rawColors = Array.isArray(item.colors) && item.colors.length > 0
     ? item.colors
-      .filter((c) => c && (c.name || c.pct != null))
-      .map((c) => ({ name: c.name || '', pct: c.pct ?? null }))
-    : [];
-  const normalisedMaterials = Array.isArray(item.fabric_materials)
+    : (item.color ? [{ name: item.color, pct: 100 }] : []);
+  const normalisedColors = normalizeWeightedTags(rawColors);
+
+  const rawMaterials = Array.isArray(item.fabric_materials) && item.fabric_materials.length > 0
     ? item.fabric_materials
-      .filter((c) => c && (c.name || c.pct != null))
-      .map((c) => ({ name: c.name || '', pct: c.pct ?? null }))
-    : [];
+    : (item.material ? [{ name: item.material, pct: 100 }] : []);
+  const normalisedMaterials = normalizeWeightedTags(rawMaterials);
   const rawSize = item.size || '';
   // Prefill missing size with the user's stored measurement for the
   // garment category (Top → shirt_size, Bottom → pants_size, …). The
