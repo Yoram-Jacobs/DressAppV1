@@ -129,12 +129,32 @@ def _dominant_color(analysis: dict[str, Any]) -> str:
 
 def _canonical_category(val: str | None) -> str:
     norm = _norm(val)
-    return CATEGORY_CANONICAL_MAP.get(norm, norm)
+    if not norm:
+        return ""
+    if norm in CATEGORY_CANONICAL_MAP:
+        return CATEGORY_CANONICAL_MAP[norm]
+    for part in norm.split():
+        if part in CATEGORY_CANONICAL_MAP:
+            return CATEGORY_CANONICAL_MAP[part]
+    for k, v in CATEGORY_CANONICAL_MAP.items():
+        if len(k) >= 3 and k in norm:
+            return v
+    return norm
 
 
 def _canonical_color(val: str | None) -> str:
     norm = _norm(val)
-    return COLOR_CANONICAL_MAP.get(norm, norm)
+    if not norm:
+        return ""
+    if norm in COLOR_CANONICAL_MAP:
+        return COLOR_CANONICAL_MAP[norm]
+    for part in norm.split():
+        if part in COLOR_CANONICAL_MAP:
+            return COLOR_CANONICAL_MAP[part]
+    for k, v in COLOR_CANONICAL_MAP.items():
+        if len(k) >= 3 and k in norm:
+            return v
+    return norm
 
 
 async def find_potential_duplicate(
