@@ -364,5 +364,67 @@ def test_coerce_single_garment_multilingual_captions():
     assert "履き心地" in _coerce_single_garment(ja_item, language="ja")["caption"]
 
 
+@pytest.mark.anyio
+async def test_analyze_outfits_stream_batches_multiple_photos_with_single_system_prompt():
+    """Uploading more than one image must run the system prompt ONCE for the whole batch sequence."""
+    from unittest.mock import AsyncMock, patch
+    from app.services.vision.service import GarmentVisionService
+
+    service = GarmentVisionService(api_key="test-key", provider="gemini")
+
+    async def mock_detect_items(img_bytes, count_hint=None):
+        return [{"bbox": [100, 100, 500, 500], "kind": "top", "label": "shirt"}]
+
+    async def mock_gatekeep(img_bytes):
+        return 1
+
+    batch_stream_called_with = []
+    async def mock_analyze_batch_stream(crops_bytes, *, language=None, kind_hints=None, user_gender=None):
+        batch_stream_called_with.append({
+            "num_crops": len(crops_bytes),
+            "kind_hints": kind_hints,
+        })
+        for i in range(len(crops_bytes)):
+            yield (i, {
+                "category": "Top",
+                "sub_category": "Shirt",
+                "item_type": "Button-down Shirt",
+                "title": f"Shirt {i}",
+            })
+
+    single_analyze_calls = []
+    async def mock_analyze(*args, **kwargs):
+        single_analyze_calls.append(args)
+        return {
+            "category": "Top",
+            "sub_category": "Shirt",
+            "item_type": "Shirt",
+            "title": "Shirt",
+        }
+
+    with patch.object(service, "detect_items", side_effect=mock_detect_items), \
+         patch.object(service, "_gatekeep_image", side_effect=mock_gatekeep), \
+         patch.object(service, "analyze_batch_stream", side_effect=mock_analyze_batch_stream), \
+         patch.object(service, "analyze", side_effect=mock_analyze):
+        
+        dummy_images = [b"fake_image_0", b"fake_image_1", b"fake_image_2"]
+        frames = []
+        async for frame in service.analyze_outfits_stream(dummy_images):
+            frames.append(frame)
+
+        assert len(batch_stream_called_with) == 1, (
+            f"Expected analyze_batch_stream to be called once for the batch, got {len(batch_stream_called_with)}"
+        )
+        assert batch_stream_called_with[0]["num_crops"] == 3
+        assert len(single_analyze_calls) == 0, (
+            f"Expected 0 per-crop analyze calls, got {len(single_analyze_calls)}"
+        )
+
+        item_frames = [f for f in frames if f.get("type") == "item"]
+        assert len(item_frames) == 3
+        assert [f["image_index"] for f in item_frames] == [0, 1, 2]
+
+
+
 
 

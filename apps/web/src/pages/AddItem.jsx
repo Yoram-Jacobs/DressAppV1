@@ -1871,9 +1871,9 @@ export default function AddItem() {
     if (!files.length) return;
 
     // BG_THRESHOLD: above this we skip the per-card editor and run
-    // the auto-save batch path. Anything above 5 is clearly a "dump
-    // my whole wardrobe" moment.
-    const BG_THRESHOLD = 5;
+    // the auto-save batch path. Anything above 12 is clearly a bulk
+    // wardrobe dump.
+    const BG_THRESHOLD = 12;
     const isBatch = files.length > BG_THRESHOLD;
 
     if (isBatch) {

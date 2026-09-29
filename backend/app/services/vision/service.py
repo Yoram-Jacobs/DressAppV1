@@ -2862,75 +2862,61 @@ class GarmentVisionService:
                             emitted += 1
 
             else:
-                # ── Gemini concurrent path (unchanged) ────────────────────
-                # Process all crops concurrently using individual analyze calls.
-                # We cap concurrency to 6 to avoid overwhelming the LLM proxy
-                # while maintaining very fast TTFB.
-                sem = asyncio.Semaphore(6)
-
-                async def _process_crop(
-                    slot_idx: int,
-                    crop_tuple: tuple[int, dict[str, Any], bytes, str],
-                ) -> tuple[int, dict[str, Any]]:
-                    image_idx, det, c_bytes, c_mime = crop_tuple
-                    async with sem:
-                        try:
-                            analysis = await self.analyze(
-                                c_bytes, language=language, think=False, user_gender=eff_gender
+                # ── Gemini batched path (single system prompt for whole batch) ──
+                # Run the system prompt ONCE for the whole batch sequence!
+                # Uses analyze_batch_stream to feed all crops in flat_crops to
+                # Gemini with a single system prompt, streaming back each garment.
+                if len(flat_crops) == 1:
+                    slot_idx = 0
+                    image_idx, det, c_bytes, c_mime = flat_crops[0]
+                    try:
+                        analysis = await self.analyze(
+                            c_bytes, language=language, think=False, user_gender=eff_gender
+                        )
+                        if isinstance(analysis, dict):
+                            _enforce_segformer_category(
+                                analysis,
+                                segformer_kind=det.get("kind") or det.get("category"),
+                                label=det.get("label"),
+                                is_single_item=det.get("is_single_item", False),
+                                language=language,
                             )
-                            if isinstance(analysis, dict):
-                                _enforce_segformer_category(
-                                    analysis,
-                                    segformer_kind=det.get("kind") or det.get("category"),
-                                    label=det.get("label"),
-                                    is_single_item=det.get("is_single_item", False),
-                                    language=language,
-                                )
-                                # Ensure title is populated so _is_unidentifiable doesn't drop it prematurely
-                                if not analysis.get("title") and analysis.get("name"):
-                                    analysis["title"] = analysis["name"]
-                                if not analysis.get("title") and (det.get("label") or det.get("kind")):
-                                    analysis["title"] = (det.get("label") or det.get("kind")).capitalize()
-                                if not analysis.get("item_type") and not analysis.get("sub_category"):
-                                    fallback_type = (det.get("label") or det.get("kind") or "garment").lower()
-                                    analysis["item_type"] = fallback_type
-                                    analysis["sub_category"] = fallback_type.capitalize()
-                            return slot_idx, analysis
-                        except Exception as exc:  # noqa: BLE001
-                            err_str = str(exc)
-                            is_quota = (
-                                "RESOURCE_EXHAUSTED" in err_str
-                                or "429" in err_str
-                                or "quota" in err_str.lower()
-                                or "spending cap" in err_str.lower()
+                            if not analysis.get("title") and analysis.get("name"):
+                                analysis["title"] = analysis["name"]
+                            if not analysis.get("title") and (det.get("label") or det.get("kind")):
+                                analysis["title"] = (det.get("label") or det.get("kind")).capitalize()
+                            if not analysis.get("item_type") and not analysis.get("sub_category"):
+                                fallback_type = (det.get("label") or det.get("kind") or "garment").lower()
+                                analysis["item_type"] = fallback_type
+                                analysis["sub_category"] = fallback_type.capitalize()
+                    except Exception as exc:
+                        err_str = str(exc)
+                        is_quota = (
+                            "RESOURCE_EXHAUSTED" in err_str
+                            or "429" in err_str
+                            or "quota" in err_str.lower()
+                            or "spending cap" in err_str.lower()
+                        )
+                        analysis = None
+                        if is_quota and settings.EYES_GEMMA_SPACE_URL:
+                            logger.warning(
+                                "Stream crop analysis hit quota on slot %d (%s); falling back to Gemma Eyes",
+                                slot_idx, repr(exc)[:160],
                             )
-                            if is_quota and settings.EYES_GEMMA_SPACE_URL:
-                                logger.warning(
-                                    "Stream crop analysis hit quota on slot %d (%s); falling back to Gemma Eyes",
-                                    slot_idx, repr(exc)[:160],
+                            try:
+                                analysis = await self.analyze(
+                                    c_bytes, language=language, think=False, provider="gemma", user_gender=eff_gender
                                 )
-                                try:
-                                    fallback_analysis = await self.analyze(
-                                        c_bytes, language=language, think=False, provider="gemma", user_gender=eff_gender
-                                    )
-                                    if isinstance(fallback_analysis, dict):
-                                        fallback_analysis["provider_fallback"] = {
-                                            "from": "gemini",
-                                            "to": "gemma",
-                                            "reason": repr(exc)[:160],
-                                            "quota_exhausted": True,
-                                        }
-                                        fallback_analysis["fallback_from_quota"] = True
-                                        return slot_idx, fallback_analysis
-                                except Exception as fallback_exc:
-                                    logger.error("Gemma fallback also failed for slot %d: %s", slot_idx, fallback_exc)
+                            except Exception as fallback_exc:
+                                logger.error("Gemma fallback also failed for slot %d: %s", slot_idx, fallback_exc)
+                        if not analysis:
                             if (
                                 "API_KEY_SERVICE_BLOCKED" in err_str
                                 or "PERMISSION_DENIED" in err_str
                                 or "API_KEY_INVALID" in err_str
                             ):
                                 raise
-                            fallback_dict = {
+                            analysis = {
                                 "category": (det.get("category") or det.get("kind") or "Top").capitalize(),
                                 "sub_category": (det.get("label") or det.get("kind") or "T-Shirt").capitalize(),
                                 "item_type": (det.get("label") or det.get("kind") or "T-Shirt").capitalize(),
@@ -2938,16 +2924,6 @@ class GarmentVisionService:
                                 "caption": "Garment detected from photo upload.",
                                 "gender": eff_gender or "unisex",
                             }
-                            return slot_idx, fallback_dict
-
-                tasks = [
-                    asyncio.create_task(_process_crop(i, crop_tuple))
-                    for i, crop_tuple in enumerate(flat_crops)
-                ]
-
-                for completed_task in asyncio.as_completed(tasks):
-                    slot_idx, analysis = await completed_task
-                    image_idx, det, c_bytes, c_mime = flat_crops[slot_idx]
 
                     needs_reconstruction = False
                     reasons: list[str] = []
@@ -2961,14 +2937,14 @@ class GarmentVisionService:
                                 reasons = list(raw_reasons)
                         except Exception as exc:  # noqa: BLE001
                             logger.warning(
-                                "reconstruction gate failed (concurrent) slot=%d: %s",
-                                slot_idx, repr(exc)[:160],
+                                "reconstruction gate failed slot=0: %s",
+                                repr(exc)[:160],
                             )
 
-                    meta_crop = items_meta[slot_idx] if slot_idx < len(items_meta) else {}
+                    meta_crop = items_meta[0] if items_meta else {}
                     yield {
                         "type": "item",
-                        "index": slot_idx,
+                        "index": 0,
                         "image_index": image_idx,
                         "analysis": analysis,
                         "crop_base64": meta_crop.get("crop_base64"),
@@ -2978,6 +2954,170 @@ class GarmentVisionService:
                         "reconstruction_reasons": reasons,
                     }
                     emitted += 1
+
+                else:
+                    # Multiple crops: run system prompt ONCE for the entire batch sequence!
+                    CHUNK_SIZE = 10
+                    for chunk_start in range(0, len(flat_crops), CHUNK_SIZE):
+                        chunk_crops = flat_crops[chunk_start : chunk_start + CHUNK_SIZE]
+                        chunk_bytes = [c[2] for c in chunk_crops]
+                        chunk_hints = [
+                            (c[1].get("kind") or c[1].get("category") or c[1].get("label"))
+                            for c in chunk_crops
+                        ]
+
+                        chunk_emitted: set[int] = set()
+                        try:
+                            logger.info(
+                                "analyze_outfits_stream: running unified batch Gemini stream for %d crops (chunk [%d..%d]) with 1 system prompt",
+                                len(chunk_crops), chunk_start, chunk_start + len(chunk_crops),
+                            )
+                            async for local_idx, analysis in self.analyze_batch_stream(
+                                chunk_bytes,
+                                language=language,
+                                kind_hints=chunk_hints,
+                                user_gender=eff_gender,
+                            ):
+                                slot_idx = chunk_start + local_idx
+                                if slot_idx >= len(flat_crops):
+                                    continue
+                                image_idx, det, c_bytes, c_mime = flat_crops[slot_idx]
+                                chunk_emitted.add(local_idx)
+
+                                # If batch returned empty/invalid dict, fallback for this slot
+                                if not analysis or not isinstance(analysis, dict) or not (
+                                    analysis.get("category") or analysis.get("sub_category") or analysis.get("item_type")
+                                ):
+                                    try:
+                                        fb = await self.analyze(
+                                            c_bytes, language=language, think=False, user_gender=eff_gender
+                                        )
+                                        if isinstance(fb, dict) and fb:
+                                            analysis = fb
+                                    except Exception:
+                                        analysis = {
+                                            "category": (det.get("category") or det.get("kind") or "Top").capitalize(),
+                                            "sub_category": (det.get("label") or det.get("kind") or "T-Shirt").capitalize(),
+                                            "item_type": (det.get("label") or det.get("kind") or "T-Shirt").capitalize(),
+                                            "title": (det.get("label") or det.get("kind") or "Garment").capitalize(),
+                                            "caption": "Garment detected from photo upload.",
+                                            "gender": eff_gender or "unisex",
+                                        }
+
+                                _enforce_segformer_category(
+                                    analysis,
+                                    segformer_kind=det.get("kind") or det.get("category"),
+                                    label=det.get("label"),
+                                    is_single_item=det.get("is_single_item", False),
+                                    language=language,
+                                )
+                                if not analysis.get("title") and analysis.get("name"):
+                                    analysis["title"] = analysis["name"]
+                                if not analysis.get("title") and (det.get("label") or det.get("kind")):
+                                    analysis["title"] = (det.get("label") or det.get("kind")).capitalize()
+                                if not analysis.get("item_type") and not analysis.get("sub_category"):
+                                    fallback_type = (det.get("label") or det.get("kind") or "garment").lower()
+                                    analysis["item_type"] = fallback_type
+                                    analysis["sub_category"] = fallback_type.capitalize()
+
+                                needs_reconstruction = False
+                                reasons: list[str] = []
+                                if should_reconstruct is not None:
+                                    try:
+                                        needs, raw_reasons = should_reconstruct(
+                                            analysis, det.get("bbox")
+                                        )
+                                        if needs and _settings.DEFER_RECONSTRUCTION_ON_ANALYZE:
+                                            needs_reconstruction = True
+                                            reasons = list(raw_reasons)
+                                    except Exception as exc:  # noqa: BLE001
+                                        logger.warning(
+                                            "reconstruction gate failed slot=%d: %s",
+                                            slot_idx, repr(exc)[:160],
+                                        )
+
+                                meta_crop = items_meta[slot_idx] if slot_idx < len(items_meta) else {}
+                                yield {
+                                    "type": "item",
+                                    "index": slot_idx,
+                                    "image_index": image_idx,
+                                    "analysis": analysis,
+                                    "crop_base64": meta_crop.get("crop_base64"),
+                                    "crop_mime": meta_crop.get("crop_mime", "image/png"),
+                                    "label": analysis.get("sub_category") or analysis.get("item_type"),
+                                    "needs_reconstruction": needs_reconstruction,
+                                    "reconstruction_reasons": reasons,
+                                }
+                                emitted += 1
+
+                        except Exception as batch_exc:
+                            logger.warning(
+                                "analyze_outfits_stream: batch stream failed for chunk [%d..%d]: %s — falling back to per-crop",
+                                chunk_start, chunk_start + len(chunk_crops), repr(batch_exc)[:200],
+                            )
+                            err_str = str(batch_exc)
+                            is_quota = (
+                                "RESOURCE_EXHAUSTED" in err_str
+                                or "429" in err_str
+                                or "quota" in err_str.lower()
+                                or "spending cap" in err_str.lower()
+                            )
+                            for local_i, (image_idx, det, c_bytes, c_mime) in enumerate(chunk_crops):
+                                if local_i in chunk_emitted:
+                                    continue
+                                slot_idx = chunk_start + local_i
+                                fallback_analysis = None
+                                if is_quota and settings.EYES_GEMMA_SPACE_URL:
+                                    try:
+                                        fallback_analysis = await self.analyze(
+                                            c_bytes, language=language, think=False, provider="gemma", user_gender=eff_gender
+                                        )
+                                    except Exception:
+                                        fallback_analysis = None
+                                if not fallback_analysis:
+                                    try:
+                                        fallback_analysis = await self.analyze(
+                                            c_bytes, language=language, think=False, user_gender=eff_gender
+                                        )
+                                    except Exception:
+                                        fallback_analysis = {
+                                            "category": (det.get("category") or det.get("kind") or "Top").capitalize(),
+                                            "sub_category": (det.get("label") or det.get("kind") or "T-Shirt").capitalize(),
+                                            "item_type": (det.get("label") or det.get("kind") or "T-Shirt").capitalize(),
+                                            "title": (det.get("label") or det.get("kind") or "Garment").capitalize(),
+                                            "caption": "Garment detected from photo upload.",
+                                            "gender": eff_gender or "unisex",
+                                        }
+
+                                _enforce_segformer_category(
+                                    fallback_analysis,
+                                    segformer_kind=det.get("kind") or det.get("category"),
+                                    label=det.get("label"),
+                                    is_single_item=det.get("is_single_item", False),
+                                    language=language,
+                                )
+                                if not fallback_analysis.get("title") and fallback_analysis.get("name"):
+                                    fallback_analysis["title"] = fallback_analysis["name"]
+                                if not fallback_analysis.get("title") and (det.get("label") or det.get("kind")):
+                                    fallback_analysis["title"] = (det.get("label") or det.get("kind")).capitalize()
+                                if not fallback_analysis.get("item_type") and not fallback_analysis.get("sub_category"):
+                                    fallback_type = (det.get("label") or det.get("kind") or "garment").lower()
+                                    fallback_analysis["item_type"] = fallback_type
+                                    fallback_analysis["sub_category"] = fallback_type.capitalize()
+
+                                meta_crop = items_meta[slot_idx] if slot_idx < len(items_meta) else {}
+                                yield {
+                                    "type": "item",
+                                    "index": slot_idx,
+                                    "image_index": image_idx,
+                                    "analysis": fallback_analysis,
+                                    "crop_base64": meta_crop.get("crop_base64"),
+                                    "crop_mime": meta_crop.get("crop_mime", "image/png"),
+                                    "label": fallback_analysis.get("sub_category") or fallback_analysis.get("item_type"),
+                                    "needs_reconstruction": False,
+                                    "reconstruction_reasons": [],
+                                }
+                                emitted += 1
 
         except Exception as exc:
             err_text = repr(exc)
