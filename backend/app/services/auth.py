@@ -413,16 +413,23 @@ def resolve_effective_provider(
             sel_provider = (ai_config.get("selected_provider") or "").strip().lower()
             sel_model = (ai_config.get("selected_model") or "").strip()
 
-            if sel_provider in ("dressapp", "eyes", "gemma") or sel_model in (
-                "Eyes v1",
+            if sel_provider in ("google_ai", "gemini"):
+                return "gemini"
+            if sel_provider in ("eyes", "gemma") or sel_model in (
                 "gemma",
                 "gemma-4-E4B-it-Q3_K_M.gguf",
             ):
                 return "gemma"
-            if sel_provider in ("google_ai", "gemini"):
-                return "gemini"
-            if sel_provider:
+            if sel_provider and sel_provider != "dressapp":
                 return sel_provider
+
+            # When tester has 'dressapp' (platform default) selected,
+            # honor the DB runtime toggle (eyes_override)
+            from app.services import eyes_override
+            active = eyes_override.get_cached_active_provider()
+            if active == "gemini":
+                return "gemini"
+            return "gemma"
 
     return ""
 

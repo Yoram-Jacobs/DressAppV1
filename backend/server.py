@@ -166,6 +166,11 @@ async def on_startup() -> None:
         start_scheduler()
     except Exception as exc:  # noqa: BLE001
         logger.warning("Scheduler start skipped: %s", exc)
+    try:
+        from app.services.eyes_override import get_active_provider
+        await get_active_provider()
+    except Exception as exc:  # noqa: BLE001
+        logger.warning("Eyes override warmup skipped: %s", exc)
     # Patch M13 (May 2026) — Fire-and-forget warmup of SegFormer + rembg
     # + FashionCLIP so the FIRST user upload doesn't pay the cumulative
     # cold-init tax that previously pushed /closet/analyze past the
