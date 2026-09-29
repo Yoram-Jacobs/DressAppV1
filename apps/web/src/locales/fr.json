@@ -2476,7 +2476,14 @@
       "hosiery_and_socks": "Chaussettes et collants",
       "bag": "Sac",
       "basket_bags": "Sacs paniers",
-      "basket_bag": "Sac panier"
+      "basket_bag": "Sac panier",
+      "shoes": "Chaussures",
+      "casual_shoes": "Chaussures décontractées",
+      "clogs": "Sabots",
+      "slides": "Claquettes",
+      "mules": "Mules",
+      "loafers": "Mocassins",
+      "oxfords": "Richelieus"
     },
     "item_type": {
       "oxford_shirt": "Chemise Oxford",
@@ -2529,7 +2536,22 @@
       "cap_sleeve_top": "Haut à mancherons",
       "cap_sleeve_blouse": "Blouse à mancherons",
       "basket_bag": "Sac panier",
-      "handbag": "Sac à main"
+      "handbag": "Sac à main",
+      "shoes": "Chaussures",
+      "casual_shoes": "Chaussures décontractées",
+      "clogs": "Sabots",
+      "platform_clogs": "Sabots à plateforme",
+      "slides": "Claquettes",
+      "platform_slides": "Claquettes à plateforme",
+      "sandals": "Sandales",
+      "platform_sandals": "Sandales à plateforme",
+      "loafers": "Mocassins",
+      "oxfords": "Richelieus",
+      "boots": "Bottes",
+      "sneakers": "Baskets",
+      "flats": "Ballerines / Chaussures plates",
+      "heels": "Talons",
+      "slippers": "Pantoufles"
     },
     "color": {
       "black": "Noir",
@@ -2976,7 +2998,13 @@
         "wrong_season": "Mauvaise saison",
         "off_brief": "Hors consigne",
         "low_quality": "Qualité d'image trop faible"
-      }
+      },
+      "searchPlaceholder": "Recherche d'ambiance : « Barbecue d'été », « Shopping au centre commercial », « Réunion de travail », « T-shirt noir », « Jean délavé »...",
+      "resultsCount": "{{count}} tenues trouvées sur {{total}}",
+      "noSearchMatchesDesc": "Nous n'avons trouvé aucune tenue enregistrée correspondant à « {{query}} ». Essayez une autre ambiance, un autre vêtement ou effacez la recherche.",
+      "noSearchMatches": "Aucune tenue ne correspond à cette ambiance",
+      "clearSearch": "Effacer la recherche",
+      "quickVibes": "Ambiances :"
     },
     "profileDetailsCard": {
       "eg_marketing_manager_student_barista": "ex. responsable marketing, étudiant·e, barista",
@@ -4475,7 +4503,8 @@
     "agentSavingRemaining": "Enregistrement des {{count}} articles restants dans DressApp...",
     "agentSavedSuccess": "✓ {{count}} articles enregistrés dans la garde-robe !",
     "agentCompletionNotice": "Tous les articles ont été directement téléversés dans la base de données de votre garde-robe DressApp.<br><br><b>Vous pouvez maintenant revenir sur DressApp pour voir votre garde-robe !</b>",
-    "upgradePrompt": "L'importation de garde-robe depuis d'autres applications est disponible sur les forfaits Manager et Professional."
+    "upgradePrompt": "L'importation de garde-robe depuis d'autres applications est disponible sur les forfaits Manager et Professional.",
+    "bookmarkletInstruction": "Appuyez sur le menu à trois points ⋮ de votre navigateur, puis sur « Favoris » pour enregistrer cette page."
   },
   "login_reminder": {
     "newTitle": "Votre garde-robe est vide — Ajoutez votre premier vêtement !",

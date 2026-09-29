@@ -2476,7 +2476,14 @@
       "hosiery_and_socks": "Strumpfwaren & Socken",
       "bag": "Tasche",
       "basket_bags": "Korbtaschen",
-      "basket_bag": "Korbtasche"
+      "basket_bag": "Korbtasche",
+      "shoes": "Schuhe",
+      "casual_shoes": "Freizeitschuhe",
+      "clogs": "Clogs",
+      "slides": "Slides",
+      "mules": "Mules",
+      "loafers": "Loafer",
+      "oxfords": "Oxfordschuhe"
     },
     "item_type": {
       "oxford_shirt": "Oxford-Hemd",
@@ -2529,7 +2536,22 @@
       "cap_sleeve_top": "Top mit Flügelärmeln",
       "cap_sleeve_blouse": "Bluse mit Flügelärmeln",
       "basket_bag": "Korbtasche",
-      "handbag": "Handtasche"
+      "handbag": "Handtasche",
+      "shoes": "Schuhe",
+      "casual_shoes": "Freizeitschuhe",
+      "clogs": "Clogs",
+      "platform_clogs": "Plateau-Clogs",
+      "slides": "Slides",
+      "platform_slides": "Plateau-Slides",
+      "sandals": "Sandalen",
+      "platform_sandals": "Plateausandalen",
+      "loafers": "Loafer",
+      "oxfords": "Oxfordschuhe",
+      "boots": "Stiefel",
+      "sneakers": "Sneaker",
+      "flats": "Flache Schuhe",
+      "heels": "Pumps & Absätze",
+      "slippers": "Hausschuhe"
     },
     "color": {
       "black": "Schwarz",
@@ -2976,7 +2998,13 @@
         "wrong_season": "Falsche Saison",
         "off_brief": "Am Wunsch vorbei",
         "low_quality": "Bildqualität zu niedrig"
-      }
+      },
+      "searchPlaceholder": "Vibe-Suche: „Sommergrillen“, „Einkaufsbummel“, „Geschäftstermin“, „Schwarzes T-Shirt“, „Stone-Washed-Jeans“...",
+      "resultsCount": "{{count}} von {{total}} Outfits gefunden",
+      "noSearchMatchesDesc": "Wir konnten keine gespeicherten Outfits finden, die zu „{{query}}“ passen. Versuchen Sie einen anderen Vibe, ein anderes Kleidungsstück oder setzen Sie die Suche zurück.",
+      "noSearchMatches": "Keine Outfits für diesen Vibe gefunden",
+      "clearSearch": "Suche zurücksetzen",
+      "quickVibes": "Vibes:"
     },
     "profileDetailsCard": {
       "eg_marketing_manager_student_barista": "z. B. Marketing-Manager, Student, Barista",
@@ -4475,7 +4503,8 @@
     "agentSavingRemaining": "Verbleibende {{count}} Artikel werden in DressApp gespeichert...",
     "agentSavedSuccess": "✓ {{count}} Artikel im Kleiderschrank gespeichert!",
     "agentCompletionNotice": "Alle Artikel wurden direkt in Ihre DressApp-Garderobendatenbank hochgeladen.<br><br><b>Sie können jetzt zu DressApp zurückwechseln, um Ihren Kleiderschrank anzusehen!</b>",
-    "upgradePrompt": "Die Garderobenmigration aus anderen Apps ist in den Tarifen Manager und Professional verfügbar."
+    "upgradePrompt": "Die Garderobenmigration aus anderen Apps ist in den Tarifen Manager und Professional verfügbar.",
+    "bookmarkletInstruction": "Tippen Sie auf das Drei-Punkte-Menü ⋮ im Browser und wählen Sie „Lesezeichen“, um diese Seite zu speichern."
   },
   "login_reminder": {
     "newTitle": "Ihr Kleiderschrank ist leer — Fügen Sie Ihr erstes Kleidungsstück hinzu!",

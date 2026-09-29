@@ -2483,7 +2483,14 @@
       "hosiery_and_socks": "Kousen en sokken",
       "bag": "Tas",
       "basket_bags": "Mandtassen",
-      "basket_bag": "Mandtas"
+      "basket_bag": "Mandtas",
+      "shoes": "Schoenen",
+      "casual_shoes": "Casual schoenen",
+      "clogs": "Klompjes / Clogs",
+      "slides": "Slides",
+      "mules": "Mules",
+      "loafers": "Loafers",
+      "oxfords": "Oxfordschoenen"
     },
     "item_type": {
       "oxford_shirt": "Oxford-overhemd",
@@ -2536,7 +2543,22 @@
       "cap_sleeve_top": "Top met kapmouwtjes",
       "cap_sleeve_blouse": "Blouse met kapmouwtjes",
       "basket_bag": "Mandtas",
-      "handbag": "Handtas"
+      "handbag": "Handtas",
+      "shoes": "Schoenen",
+      "casual_shoes": "Casual schoenen",
+      "clogs": "Klompjes / Clogs",
+      "platform_clogs": "Plateau clogs",
+      "slides": "Slides",
+      "platform_slides": "Plateau slides",
+      "sandals": "Sandalen",
+      "platform_sandals": "Plateausandalen",
+      "loafers": "Loafers",
+      "oxfords": "Oxfordschoenen",
+      "boots": "Laarzen",
+      "sneakers": "Sneakers",
+      "flats": "Platte schoenen / Ballerina's",
+      "heels": "Hakken",
+      "slippers": "Pantoffels"
     },
     "color": {
       "black": "Zwart",
@@ -2983,7 +3005,13 @@
         "wrong_season": "Verkeerd seizoen",
         "off_brief": "Niet volgens wens",
         "low_quality": "Beeldkwaliteit te laag"
-      }
+      },
+      "searchPlaceholder": "Vibe-zoekopdracht: „Zomerbarbecue”, „Winkelen in het winkelcentrum”, „Zakelijke afspraak”, „Zwart T-shirt”, „Stone-washed jeans”...",
+      "resultsCount": "{{count}} van {{total}} outfits gevonden",
+      "noSearchMatchesDesc": "We konden geen opgeslagen outfits vinden die overeenkomen met „{{query}}”. Probeer een andere vibe, een ander kledingstuk of wis de zoekopdracht.",
+      "noSearchMatches": "Geen outfits gevonden die bij deze vibe passen",
+      "clearSearch": "Zoekopdracht wissen",
+      "quickVibes": "Vibes:"
     },
     "profileDetailsCard": {
       "eg_marketing_manager_student_barista": "bijv. Marketingmanager, Student, Barista",
@@ -4489,7 +4517,8 @@
     "agentSavingRemaining": "Resterende {{count}} items opslaan in DressApp...",
     "agentSavedSuccess": "✓ {{count}} items opgeslagen in je kledingkast!",
     "agentCompletionNotice": "Alle items zijn direct geüpload naar je DressApp-kledingkastdatabase.<br><br><b>Je kunt nu terugkeren naar DressApp om je kledingkast te bekijken!</b>",
-    "upgradePrompt": "Kledingkastmigratie vanuit andere apps is beschikbaar voor Manager- en Professional-abonnementen."
+    "upgradePrompt": "Kledingkastmigratie vanuit andere apps is beschikbaar voor Manager- en Professional-abonnementen.",
+    "bookmarkletInstruction": "Tik op het menu met de drie puntjes ⋮ in uw browser en tik vervolgens op „Bladwijzers” om deze pagina op te slaan."
   },
   "login_reminder": {
     "newTitle": "Je kledingkast is leeg — Voeg je eerste kledingstuk toe!",

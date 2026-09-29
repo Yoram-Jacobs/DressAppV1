@@ -2483,7 +2483,14 @@
       "hosiery_and_socks": "Calze e calzini",
       "bag": "Borsa",
       "basket_bags": "Borse a cesto",
-      "basket_bag": "Borsa a cesto"
+      "basket_bag": "Borsa a cesto",
+      "shoes": "Scarpe",
+      "casual_shoes": "Scarpe casual",
+      "clogs": "Zoccoli",
+      "slides": "Ciabatte / Slides",
+      "mules": "Sabot / Mules",
+      "loafers": "Mocassini",
+      "oxfords": "Scarpe Oxford"
     },
     "item_type": {
       "oxford_shirt": "Camicia Oxford",
@@ -2536,7 +2543,22 @@
       "cap_sleeve_top": "Top con maniche ad aletta",
       "cap_sleeve_blouse": "Camicetta con maniche ad aletta",
       "basket_bag": "Borsa a cesto",
-      "handbag": "Borsa a mano"
+      "handbag": "Borsa a mano",
+      "shoes": "Scarpe",
+      "casual_shoes": "Scarpe casual",
+      "clogs": "Zoccoli",
+      "platform_clogs": "Zoccoli con plateau",
+      "slides": "Ciabatte / Slides",
+      "platform_slides": "Slides con plateau",
+      "sandals": "Sandali",
+      "platform_sandals": "Sandali con plateau",
+      "loafers": "Mocassini",
+      "oxfords": "Scarpe Oxford",
+      "boots": "Stivali",
+      "sneakers": "Sneakers",
+      "flats": "Scarpe basse / Ballerine",
+      "heels": "Tacchi",
+      "slippers": "Pantofole"
     },
     "color": {
       "black": "Nero",
@@ -2983,7 +3005,13 @@
         "wrong_season": "Stagione errata",
         "off_brief": "Non in linea con la richiesta",
         "low_quality": "Qualità dell'immagine troppo bassa"
-      }
+      },
+      "searchPlaceholder": "Cerca per stile: \"Barbecue estivo\", \"Shopping al centro commerciale\", \"Riunione di lavoro\", \"T-shirt nera\", \"Jeans lavati\"...",
+      "resultsCount": "Trovati {{count}} outfit su {{total}}",
+      "noSearchMatchesDesc": "Nessun outfit salvato corrisponde a \"{{query}}\". Prova un altro stile, un altro capo o cancella la ricerca.",
+      "noSearchMatches": "Nessun outfit corrisponde a questo stile",
+      "clearSearch": "Cancella ricerca",
+      "quickVibes": "Stili:"
     },
     "profileDetailsCard": {
       "eg_marketing_manager_student_barista": "es. Responsabile marketing, Studente, Barista",
@@ -4482,7 +4510,8 @@
     "agentSavingRemaining": "Salvataggio dei restanti {{count}} articoli su DressApp...",
     "agentSavedSuccess": "✓ {{count}} articoli salvati nel guardaroba!",
     "agentCompletionNotice": "Tutti gli articoli sono stati caricati direttamente nel database del guardaroba di DressApp.<br><br><b>Ora puoi tornare su DressApp per vedere il tuo guardaroba!</b>",
-    "upgradePrompt": "La migrazione del guardaroba da altre app è disponibile nei piani Manager e Professional."
+    "upgradePrompt": "La migrazione del guardaroba da altre app è disponibile nei piani Manager e Professional.",
+    "bookmarkletInstruction": "Tocca il menu a tre puntini ⋮ nel browser, quindi tocca \"Preferiti\" per salvare questa pagina."
   },
   "login_reminder": {
     "newTitle": "Il tuo armadio è vuoto — Aggiungi il tuo primo capo!",

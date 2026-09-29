@@ -2483,7 +2483,14 @@
       "hosiery_and_socks": "袜子与丝袜",
       "bag": "包",
       "basket_bags": "草编包",
-      "basket_bag": "草编包"
+      "basket_bag": "草编包",
+      "shoes": "鞋履",
+      "casual_shoes": "休闲鞋",
+      "clogs": "洞洞鞋 / 木屐",
+      "slides": "拖鞋 / 凉拖",
+      "mules": "穆勒鞋",
+      "loafers": "乐福鞋",
+      "oxfords": "牛津鞋"
     },
     "item_type": {
       "oxford_shirt": "牛津衬衫",
@@ -2536,7 +2543,22 @@
       "cap_sleeve_top": "盖肩袖上衣",
       "cap_sleeve_blouse": "盖肩袖衬衫",
       "basket_bag": "草编包",
-      "handbag": "手提包"
+      "handbag": "手提包",
+      "shoes": "鞋履",
+      "casual_shoes": "休闲鞋",
+      "clogs": "洞洞鞋 / 木屐",
+      "platform_clogs": "厚底洞洞鞋",
+      "slides": "拖鞋 / 凉拖",
+      "platform_slides": "厚底凉拖",
+      "sandals": "凉鞋",
+      "platform_sandals": "厚底凉鞋",
+      "loafers": "乐福鞋",
+      "oxfords": "牛津鞋",
+      "boots": "靴子",
+      "sneakers": "运动鞋 / 帆布鞋",
+      "flats": "平底鞋 / 芭蕾鞋",
+      "heels": "高跟鞋",
+      "slippers": "居家拖鞋"
     },
     "color": {
       "black": "黑色",
@@ -2983,7 +3005,13 @@
         "wrong_season": "季节不符",
         "off_brief": "偏离要求",
         "low_quality": "图片画质过低"
-      }
+      },
+      "searchPlaceholder": "按风格搜索：“夏日烧烤”、“商场购物”、“商务会议”、“黑色T恤”、“水洗牛仔裤”...",
+      "resultsCount": "在 {{total}} 套穿搭中找到 {{count}} 套",
+      "noSearchMatchesDesc": "未找到与“{{query}}”匹配的穿搭。请尝试其他风格、服饰，或清除搜索。",
+      "noSearchMatches": "没有符合该风格的穿搭",
+      "clearSearch": "清除搜索",
+      "quickVibes": "热门风格:"
     },
     "profileDetailsCard": {
       "eg_marketing_manager_student_barista": "例如：市场经理、学生、咖啡师",
@@ -4482,7 +4510,8 @@
     "agentSavingRemaining": "正在将剩余的 {{count}} 件物品保存到 DressApp...",
     "agentSavedSuccess": "✓ 已将 {{count}} 件物品保存到衣橱！",
     "agentCompletionNotice": "所有物品已直接上传至您的 DressApp 衣橱数据库。<br><br><b>您现在可以返回 DressApp 查看您的衣橱！</b>",
-    "upgradePrompt": "从其他应用导入衣橱仅在管理者和专业版方案中可用。"
+    "upgradePrompt": "从其他应用导入衣橱仅在管理者和专业版方案中可用。",
+    "bookmarkletInstruction": "点击浏览器右上角的三个点菜单 ⋮，然后点击“书签”以保存此页面。"
   },
   "login_reminder": {
     "newTitle": "您的衣橱还是空的 — 添加您的第一件衣服吧！",

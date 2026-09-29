@@ -32,6 +32,101 @@ def resolve_garment_gender(val: Any) -> str | None:
 
 
 
+_CAPTION_TEMPLATES = {
+    "en": {
+        "coat": "A tailored {name} crafted with structured silhouette and refined button detailing.",
+        "footwear": "Classic {name} featuring sleek styling and premium construction.",
+        "accessories": "An elegant {name} that adds functional sophistication to any ensemble.",
+        "default": "A versatile {name} designed with thoughtful proportions and clean detailing.",
+        "fallback_name": "garment",
+    },
+    "he": {
+        "coat": "{name} מחויט ומעוצב בגזרה מחמיאה וקלאסית.",
+        "footwear": "{name} בעל עיצוב אופנתי ונוח לשימוש יומיומי.",
+        "accessories": "{name} המוסיף טאץ' מיוחד וסטייל לכל הופעה.",
+        "default": "{name} ורסטילי ונוח בעיצוב מוקפד ונקי.",
+        "fallback_name": "פריט",
+    },
+    "ar": {
+        "coat": "{name} مصمم بقصة أنيقة ومتقنة ولمسات كلاسيكية.",
+        "footwear": "{name} بتصميم أنيق ومريح للاستخدام اليومي.",
+        "accessories": "{name} يضفي لمسة من الأناقة والجاذبية على أي إطلالة.",
+        "default": "{name} عملي ومريح بتصميم متقن وعصري.",
+        "fallback_name": "قطعة ملابس",
+    },
+    "de": {
+        "coat": "Ein maßgeschneiderter {name} mit eleganter Silhouette und raffinierten Knöpfen.",
+        "footwear": "Klassische {name} mit stilvollem Design und hohem Tragekomfort.",
+        "accessories": "Ein eleganter {name}, der jedem Outfit eine stilvolle Note verleiht.",
+        "default": "Ein vielseitiger {name} mit durchdachter Passform und klarem Design.",
+        "fallback_name": "Kleidungsstück",
+    },
+    "es": {
+        "coat": "Un elegante {name} con silueta estructurada y acabados de sastrería.",
+        "footwear": "{name} con estilo contemporáneo y confort óptimo para el día a día.",
+        "accessories": "Un distinguido {name} que aporta sofisticación a cualquier conjunto.",
+        "default": "Un versátil {name} con proporciones equilibradas y diseño impecable.",
+        "fallback_name": "prenda",
+    },
+    "fr": {
+        "coat": "Une pièce élégante : {name} à la coupe structurée et aux finitions soignées.",
+        "footwear": "{name} au style intemporel offrant confort et élégance au quotidien.",
+        "accessories": "Un superbe {name} qui apporte une touche de raffinement à votre tenue.",
+        "default": "Un modèle polyvalent : {name} aux proportions harmonieuses et au design épuré.",
+        "fallback_name": "vêtement",
+    },
+    "hi": {
+        "coat": "एक आकर्षक {name} जो संरचित बनावट और क्लासिक शैली से तैयार किया गया है।",
+        "footwear": "स्टाइलिश और आरामदायक {name}, दैनिक उपयोग के लिए एकदम उपयुक्त।",
+        "accessories": "एक सुरुचिपूर्ण {name} जो किसी भी परिधान में परिष्कार जोड़ता है।",
+        "default": "एक बहुमुखी और सुंदर {name}, उत्तम फिट और सुरुचिपूर्ण डिज़ाइन के साथ।",
+        "fallback_name": "परिधान",
+    },
+    "it": {
+        "coat": "Un capo sartoriale : {name} dal taglio strutturato e dai dettagli ricercati.",
+        "footwear": "{name} dallo stile sofisticato, ideale per unire comfort ed eleganza quotidiana.",
+        "accessories": "Un elegante {name} che dona un tocco di raffinatezza a qualsiasi look.",
+        "default": "Un capo versatile : {name} caratterizzato da linee pulite e proporzioni armoniose.",
+        "fallback_name": "capo",
+    },
+    "ja": {
+        "coat": "洗練されたシルエットと上質なディテールが魅力の{name}。",
+        "footwear": "スタイリッシュなデザインで日常使いに最適な履き心地の{name}。",
+        "accessories": "どんな装いにも洗練されたアクセントを添えるエレガントな{name}。",
+        "default": "すっきりとしたプロポーションと汎用性の高いデザインが特徴の{name}。",
+        "fallback_name": "アイテム",
+    },
+    "nl": {
+        "coat": "Een getailleerde {name} met een gestructureerd silhouet en verfijnde afwerking.",
+        "footwear": "Stijlvolle {name} met een tijdloos ontwerp en optimaal draagcomfort.",
+        "accessories": "Een elegante {name} die een verfijnde toets toevoegt aan elke outfit.",
+        "default": "Een veelzijdige {name} met doordachte proporties en een strak design.",
+        "fallback_name": "kledingstuk",
+    },
+    "pt": {
+        "coat": "Um elegante {name} com corte estruturado e acabamento impecável.",
+        "footwear": "{name} clássico, que combina estilo moderno com conforto para o dia a dia.",
+        "accessories": "Um charmoso {name} que confere sofisticação a qualquer combinação.",
+        "default": "Um versátil {name} projetado com proporções equilibradas e design atemporal.",
+        "fallback_name": "peça",
+    },
+    "ru": {
+        "coat": "Элегантный {name} структурированного кроя с утонченными деталями.",
+        "footwear": "Стильные {name}, сочетающие современный дизайн и комфорт на каждый день.",
+        "accessories": "Изысканный {name}, добавляющий выразительный акцент любому образу.",
+        "default": "Универсальный {name} гармоничных пропорций с лаконичным дизайном.",
+        "fallback_name": "предмет гардероба",
+    },
+    "zh": {
+        "coat": "版型挺括、剪裁利落的经典款{name}。",
+        "footwear": "兼顾时尚设计与日常舒适穿着体验的{name}。",
+        "accessories": "为任意穿搭增添优雅与精致细节的{name}。",
+        "default": "比例协调、简约百搭的质感{name}。",
+        "fallback_name": "单品",
+    },
+}
+
+
 def _coerce_single_garment(
     parsed: dict[str, Any] | list[dict[str, Any]],
     user_gender: str | None = None,
@@ -326,26 +421,29 @@ def _coerce_single_garment(
     # Caption guarantee: ensure caption is never empty or blank
     cap = (res.get("caption") or "").strip()
     if not cap:
-        name_val = res.get("name") or res.get("title") or ("פריט" if is_he else "garment")
-        itype = (res.get("item_type") or res.get("sub_category") or ("בגד" if is_he else "piece")).lower()
-        if is_he:
-            if "coat" in itype or cat_lower == "outerwear" or any(w in itype for w in ("מעיל", "ז'קט")):
-                res["caption"] = f"{name_val} מחויט ומעוצב בגזרה מחמיאה וקלאסית."
-            elif cat_lower == "footwear" or "boot" in itype or any(w in itype for w in ("shoe", "נעלי", "כפכפ", "סנדל", "מגפ")):
-                res["caption"] = f"{name_val} בעל עיצוב אופנתי ונוח לשימוש יומיומי."
-            elif "bag" in itype or "belt" in itype or cat_lower == "accessories" or any(w in itype for w in ("תיק", "חגור", "כובע")):
-                res["caption"] = f"{name_val} המוסיף טאץ' מיוחד וסטייל לכל הופעה."
-            else:
-                res["caption"] = f"{name_val} ורסטילי ונוח בעיצוב מוקפד ונקי."
+        lang_code = "en"
+        if language:
+            l_norm = language.strip().lower().replace("_", "-").split("-")[0]
+            if l_norm in _CAPTION_TEMPLATES:
+                lang_code = l_norm
+            elif l_norm in ("iw", "he"):
+                lang_code = "he"
+        elif is_he:
+            lang_code = "he"
+
+        tpls = _CAPTION_TEMPLATES.get(lang_code, _CAPTION_TEMPLATES["en"])
+        default_name = tpls["fallback_name"]
+        name_val = res.get("name") or res.get("title") or default_name
+        itype = (res.get("item_type") or res.get("sub_category") or default_name).lower()
+
+        if "coat" in itype or cat_lower == "outerwear" or any(w in itype for w in ("מעיל", "ז'קט", "معطف", "mantel", "abrigo", "manteau", "cappotto", "пальто", "大衣")):
+            res["caption"] = tpls["coat"].format(name=name_val)
+        elif cat_lower == "footwear" or "boot" in itype or any(w in itype for w in ("shoe", "נעלי", "כפכפ", "סנדל", "מגפ", "حذاء", "schuh", "zapato", "chaussure", "scarpa", "обувь", "鞋")):
+            res["caption"] = tpls["footwear"].format(name=name_val)
+        elif "bag" in itype or "belt" in itype or cat_lower == "accessories" or any(w in itype for w in ("תיק", "חגור", "כובע", "حقيبة", "tasche", "bolso", "sac", "borsa", "сумка", "包")):
+            res["caption"] = tpls["accessories"].format(name=name_val)
         else:
-            if "coat" in itype or cat_lower == "outerwear":
-                res["caption"] = f"A tailored {name_val.lower()} crafted with structured silhouette and refined button detailing."
-            elif cat_lower == "footwear" or "boot" in itype:
-                res["caption"] = f"Classic {name_val.lower()} featuring sleek styling and premium construction."
-            elif "bag" in itype or "belt" in itype or cat_lower == "accessories":
-                res["caption"] = f"An elegant {name_val.lower()} that adds functional sophistication to any ensemble."
-            else:
-                res["caption"] = f"A versatile {name_val.lower()} designed with thoughtful proportions and clean detailing."
+            res["caption"] = tpls["default"].format(name=name_val)
 
     # Pattern fallback: if model returned solid/empty, check text for subtle geometric, striped, or floral patterns
     pat_str = (res.get("pattern") or "").strip().lower()

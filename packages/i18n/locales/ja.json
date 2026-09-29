@@ -2483,7 +2483,14 @@
       "hosiery_and_socks": "靴下 / タイツ",
       "bag": "バッグ",
       "basket_bags": "かごバッグ",
-      "basket_bag": "かごバッグ"
+      "basket_bag": "かごバッグ",
+      "shoes": "シューズ",
+      "casual_shoes": "カジュアルシューズ",
+      "clogs": "クロッグ",
+      "slides": "スライドサンダル",
+      "mules": "ミュール",
+      "loafers": "ローファー",
+      "oxfords": "オックスフォードシューズ"
     },
     "item_type": {
       "oxford_shirt": "オックスフォードシャツ",
@@ -2536,7 +2543,22 @@
       "cap_sleeve_top": "キャップスリーブトップス",
       "cap_sleeve_blouse": "キャップスリーブブラウス",
       "basket_bag": "かごバッグ",
-      "handbag": "ハンドバッグ"
+      "handbag": "ハンドバッグ",
+      "shoes": "シューズ",
+      "casual_shoes": "カジュアルシューズ",
+      "clogs": "クロッグ",
+      "platform_clogs": "厚底クロッグ",
+      "slides": "スライドサンダル",
+      "platform_slides": "厚底スライドサンダル",
+      "sandals": "サンダル",
+      "platform_sandals": "厚底サンダル",
+      "loafers": "ローファー",
+      "oxfords": "オックスフォードシューズ",
+      "boots": "ブーツ",
+      "sneakers": "スニーカー",
+      "flats": "フラットシューズ",
+      "heels": "ヒール・パンプス",
+      "slippers": "スリッパ・ルームシューズ"
     },
     "color": {
       "black": "ブラック",
@@ -2983,7 +3005,13 @@
         "wrong_season": "季節違い",
         "off_brief": "要望に不一致",
         "low_quality": "画質不足"
-      }
+      },
+      "searchPlaceholder": "雰囲気検索: 「夏のバーベキュー」「ショッピング」「ビジネスミーティング」「黒Tシャツ」「ウォッシュドジーンズ」...",
+      "resultsCount": "{{total}}件中{{count}}件のコーディネートが見つかりました",
+      "noSearchMatchesDesc": "「{{query}}」に一致する保存済みコーディネートは見つかりませんでした。別のキーワードやアイテムを試すか、検索をクリアしてください。",
+      "noSearchMatches": "この雰囲気に一致するコーディネートはありません",
+      "clearSearch": "検索をクリア",
+      "quickVibes": "スタイル:"
     },
     "profileDetailsCard": {
       "eg_marketing_manager_student_barista": "例：マーケティングマネージャー、学生、バリスタ",
@@ -4483,7 +4511,8 @@
     "agentSavingRemaining": "残りの {{count}} 件を DressApp に保存中...",
     "agentSavedSuccess": "✓ {{count}} 件のアイテムがクローゼットに保存されました！",
     "agentCompletionNotice": "すべてのアイテムが DressApp クローゼットデータベースに直接アップロードされました。<br><br><b>DressApp に戻ってクローゼットを確認できます！</b>",
-    "upgradePrompt": "他のアプリからのワードローブ移行は、マネージャーおよびプロフェッショナルプランでご利用いただけます。"
+    "upgradePrompt": "他のアプリからのワードローブ移行は、マネージャーおよびプロフェッショナルプランでご利用いただけます。",
+    "bookmarkletInstruction": "ブラウザの3点リーダーメニュー ⋮ をタップし、「ブックマーク」をタップしてこのページを保存してください。"
   },
   "login_reminder": {
     "newTitle": "クローゼットが空です — 最初の服を追加しましょう！",

@@ -339,4 +339,30 @@ def test_coerce_single_garment_hebrew_footwear_and_caption():
     assert "נוח לשימוש יומיומי" in result["caption"] or "אופנתי" in result["caption"]
 
 
+def test_coerce_single_garment_multilingual_captions():
+    """Fallback captions must be localized across supported languages without English leaks."""
+    from app.services.vision.validation import _coerce_single_garment
+    
+    # Arabic
+    ar_item = {"name": "حذاء أنيق", "category": "Footwear", "sub_category": "Shoes", "caption": ""}
+    assert "مريح للاستخدام اليومي" in _coerce_single_garment(ar_item, language="ar")["caption"]
+
+    # French
+    fr_item = {"name": "Manteau en laine", "category": "Outerwear", "sub_category": "Coats", "caption": ""}
+    assert "coupe structurée" in _coerce_single_garment(fr_item, language="fr")["caption"]
+
+    # German
+    de_item = {"name": "Schwarze Schuhe", "category": "Footwear", "sub_category": "Shoes", "caption": ""}
+    assert "Tragekomfort" in _coerce_single_garment(de_item, language="de")["caption"]
+
+    # Spanish
+    es_item = {"name": "Bolso de cuero", "category": "Accessories", "sub_category": "Bags", "caption": ""}
+    assert "sofisticación" in _coerce_single_garment(es_item, language="es")["caption"]
+
+    # Japanese
+    ja_item = {"name": "スニーカー", "category": "Footwear", "sub_category": "Sneakers", "caption": ""}
+    assert "履き心地" in _coerce_single_garment(ja_item, language="ja")["caption"]
+
+
+
 

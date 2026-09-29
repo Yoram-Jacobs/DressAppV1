@@ -476,6 +476,16 @@ const hydrate = (a, user, t, i18n) => {
           out.item_type = t('taxonomy.item_type.button_down_shirt', { defaultValue: 'Button-down shirt' });
         } else if (subK === 'blouses' || /בלוזה|blouse/i.test(out.sub_category)) {
           out.item_type = t('taxonomy.item_type.cap_sleeve_blouse', { defaultValue: 'Cap-sleeve blouse' });
+        } else if (subK === 'clogs' || /clog|slide|כפכפ/i.test(out.sub_category)) {
+          out.item_type = t('taxonomy.item_type.platform_clogs', { defaultValue: 'Platform Clogs' });
+        } else if (subK === 'shoes' || /shoe|נעלי/i.test(out.sub_category)) {
+          out.item_type = t('taxonomy.item_type.casual_shoes', { defaultValue: 'Casual Shoes' });
+        } else if (subK === 'sandals' || /sandal|סנדל/i.test(out.sub_category)) {
+          out.item_type = t('taxonomy.item_type.platform_sandals', { defaultValue: 'Platform Sandals' });
+        } else if (subK === 'boots' || /boot|מגפ/i.test(out.sub_category)) {
+          out.item_type = t('taxonomy.item_type.ankle_boots', { defaultValue: 'Ankle Boots' });
+        } else if (subK === 'sneakers' || /sneaker|סניקרס/i.test(out.sub_category)) {
+          out.item_type = t('taxonomy.item_type.low_top_sneakers', { defaultValue: 'Low-top Sneakers' });
         } else {
           out.item_type = `${out.sub_category} ${t('taxonomy.season.summer', { defaultValue: 'Summer' })}`;
         }

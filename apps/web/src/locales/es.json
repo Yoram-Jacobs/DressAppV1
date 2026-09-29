@@ -2476,7 +2476,14 @@
       "hosiery_and_socks": "Medias y calcetines",
       "bag": "Bolsa",
       "basket_bags": "Capazos",
-      "basket_bag": "Capazo"
+      "basket_bag": "Capazo",
+      "shoes": "Zapatos",
+      "casual_shoes": "Zapatos casuales",
+      "clogs": "Zuecos",
+      "slides": "Chanclas / Slides",
+      "mules": "Mules",
+      "loafers": "Mocasines",
+      "oxfords": "Zapatos Oxford"
     },
     "item_type": {
       "oxford_shirt": "Camisa Oxford",
@@ -2529,7 +2536,22 @@
       "cap_sleeve_top": "Top de manga casquillo",
       "cap_sleeve_blouse": "Blusa de manga casquillo",
       "basket_bag": "Capazo",
-      "handbag": "Bolso de mano"
+      "handbag": "Bolso de mano",
+      "shoes": "Zapatos",
+      "casual_shoes": "Zapatos casuales",
+      "clogs": "Zuecos",
+      "platform_clogs": "Zuecos con plataforma",
+      "slides": "Chanclas / Slides",
+      "platform_slides": "Slides con plataforma",
+      "sandals": "Sandalias",
+      "platform_sandals": "Sandalias con plataforma",
+      "loafers": "Mocasines",
+      "oxfords": "Zapatos Oxford",
+      "boots": "Botas",
+      "sneakers": "Zapatillas deportivas",
+      "flats": "Zapatos planos / Bailarinas",
+      "heels": "Tacones",
+      "slippers": "Pantuflas"
     },
     "color": {
       "black": "Negro",
@@ -2976,7 +2998,13 @@
         "wrong_season": "Temporada equivocada",
         "off_brief": "Fuera de la indicación",
         "low_quality": "Calidad de imagen insuficiente"
-      }
+      },
+      "searchPlaceholder": "Buscar por vibra: \"Barbacoa de verano\", \"Paseo por el centro comercial\", \"Reunión de negocios\", \"Camiseta negra\", \"Vaqueros desgastados\"...",
+      "resultsCount": "Se encontraron {{count}} de {{total}} conjuntos",
+      "noSearchMatchesDesc": "No pudimos encontrar ningún conjunto guardado que coincida con \"{{query}}\". Prueba con otra vibra, otra prenda o borra la búsqueda.",
+      "noSearchMatches": "Ningún conjunto coincide con esta vibra",
+      "clearSearch": "Borrar búsqueda",
+      "quickVibes": "Vibras:"
     },
     "profileDetailsCard": {
       "eg_marketing_manager_student_barista": "ej. Responsable de marketing, Estudiante, Barista",
@@ -4482,7 +4510,8 @@
     "agentSavingRemaining": "Guardando {{count}} prendas restantes en DressApp...",
     "agentSavedSuccess": "✓ ¡{{count}} prendas guardadas en el armario!",
     "agentCompletionNotice": "Todas las prendas se han subido directamente a la base de datos de tu armario de DressApp.<br><br><b>¡Ahora puedes volver a DressApp para ver tu armario!</b>",
-    "upgradePrompt": "La migración del armario desde otras aplicaciones está disponible en los planes Manager y Professional."
+    "upgradePrompt": "La migración del armario desde otras aplicaciones está disponible en los planes Manager y Professional.",
+    "bookmarkletInstruction": "Toca el menú de tres puntos ⋮ en tu navegador y luego pulsa \"Marcadores\" para guardar esta página."
   },
   "login_reminder": {
     "newTitle": "Tu armario está vacío — ¡Añade tu primera prenda!",
