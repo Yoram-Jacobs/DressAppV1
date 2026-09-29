@@ -425,6 +425,110 @@ async def test_analyze_outfits_stream_batches_multiple_photos_with_single_system
         assert [f["image_index"] for f in item_frames] == [0, 1, 2]
 
 
+def test_coerce_enums_and_single_garment_anchors_to_wearer_gender():
+    """Ensure unisex/standard cuts align with known user/model gender, while gender-exclusive cuts stay intact."""
+    from app.services.vision.validation import _coerce_enums, _coerce_single_garment
+
+    # Case 1: Male model / user wearing suit jacket, dress pants, and dress shoes
+    male_pants = {
+        "name": "Light Gray Wool Dress Pants",
+        "category": "Bottom",
+        "sub_category": "Trousers",
+        "item_type": "Chinos",
+        "gender": "women",  # AI misclassification on isolated crop
+    }
+    coerced = _coerce_single_garment(male_pants, user_gender="men")
+    assert coerced["gender"] == "men", f"Expected 'men' for trousers worn by a man, got {coerced['gender']}"
+    coerced_enums = _coerce_enums(coerced, user_gender="men")
+    assert coerced_enums["gender"] == "men"
+
+    male_shoes = {
+        "name": "Black Leather Dress Shoes",
+        "category": "Footwear",
+        "sub_category": "Shoes",
+        "item_type": "Dress Shoes",
+        "gender": "women",  # AI misclassification on isolated crop
+    }
+    coerced_shoes = _coerce_single_garment(male_shoes, user_gender="men")
+    assert coerced_shoes["gender"] == "men", f"Expected 'men' for dress shoes worn by a man, got {coerced_shoes['gender']}"
+
+    # Feminine cuts must remain 'women' even if user_gender is 'men'
+    dress = {
+        "name": "Floral Summer Dress",
+        "category": "Full Body",
+        "sub_category": "Dress",
+        "item_type": "Maxi Dress",
+        "gender": "women",
+    }
+    coerced_dress = _coerce_single_garment(dress, user_gender="men")
+    assert coerced_dress["gender"] == "women", "Dress must remain 'women' even if user_gender='men'"
+
+    # Case 2: Female model / user wearing trousers and sneakers
+    female_trousers = {
+        "name": "High-Waist Tailored Trousers",
+        "category": "Bottom",
+        "sub_category": "Trousers",
+        "item_type": "Wide-leg pants",
+        "gender": "men",  # AI misclassification
+    }
+    coerced_fem = _coerce_single_garment(female_trousers, user_gender="women")
+    assert coerced_fem["gender"] == "women", f"Expected 'women' for trousers worn by a woman, got {coerced_fem['gender']}"
+
+    # Masculine cuts must remain 'men' even if user_gender is 'women'
+    tuxedo = {
+        "name": "Classic Black Tuxedo",
+        "category": "Outerwear",
+        "sub_category": "Tuxedo",
+        "item_type": "Tuxedo Jacket",
+        "gender": "men",
+    }
+    coerced_tux = _coerce_single_garment(tuxedo, user_gender="women")
+    assert coerced_tux["gender"] == "men", "Tuxedo must remain 'men' even if user_gender='women'"
+
+
+def test_apply_alpha_intersection_preserves_smooth_edges_and_no_chewing():
+    """Verify that apply_alpha_intersection preserves garment edges without chewing waists or fragmentation."""
+    import io
+    from PIL import Image
+    from app.services.clothing_parser import apply_alpha_intersection
+
+    H, W = 200, 150
+    # Create synthetic RGBA image with smooth circular/pill shaped garment
+    img = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+    for y in range(40, 180):
+        for x in range(30, 120):
+            img.putpixel((x, y), (120, 120, 130, 255))
+    
+    buf = io.BytesIO()
+    img.save(buf, format="PNG")
+    matted_bytes = buf.getvalue()
+
+    # SegFormer coarse mask (covering the garment with small margin)
+    seg_mask = np.zeros((H, W), dtype=np.uint8)
+    seg_mask[35:185, 25:125] = 1
+
+    # Human mask (e.g. skin outside the garment at bottom)
+    human_mask = np.zeros((H, W), dtype=np.uint8)
+    human_mask[185:195, 50:100] = 1
+
+    result_bytes = apply_alpha_intersection(
+        matted_bytes,
+        seg_mask_bbox=seg_mask,
+        category="bottom",
+        human_mask=human_mask,
+    )
+    assert result_bytes is not None, "apply_alpha_intersection should succeed"
+    res_img = Image.open(io.BytesIO(result_bytes))
+    res_arr = np.array(res_img)
+    alpha = res_arr[:, :, 3]
+
+    # Verify solid core of garment is 100% preserved (waistband at y=50, x=75)
+    assert alpha[50, 75] == 255, "Pants waistband core should be fully opaque (not chewed)"
+    assert alpha[100, 75] == 255, "Pants leg core should be fully opaque"
+    assert (alpha > 128).sum() > 8000, "Garment area should be well preserved"
+
+
+
 
 
 

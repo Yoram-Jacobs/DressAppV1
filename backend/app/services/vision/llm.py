@@ -574,6 +574,12 @@ def _build_batch_prompts(
     user_gender: str | None = None,
 ) -> tuple[str, str]:
     """Build ``(system_prompt, user_text)`` for a batched garment analysis."""
+    from .validation import resolve_garment_gender
+    norm_gender = resolve_garment_gender(user_gender)
+    gender_rule = ""
+    if norm_gender in ("men", "women"):
+        gender_rule = f"• All crops belong to the same outfit worn by a {norm_gender} model. Set gender='{norm_gender}' for each item unless strictly female-only (e.g. dress, skirt, bra).\n"
+
     hint_block = ""
     if n > 1 and kind_hints and len(kind_hints) == n:
         bullets: list[str] = []
@@ -590,7 +596,7 @@ def _build_batch_prompts(
                 + "\n".join(bullets)
                 + "\nAnchor category & sub_category to these hints."
             )
-    user_text = f"Analyze {n} crop(s) in order. Return JSON array of {n} GarmentAnalysis objects ([...])."
+    user_text = f"{gender_rule}Analyze {n} crop(s) in order. Return JSON array of {n} GarmentAnalysis objects ([...])."
     code = (language or "en").lower()
     if code != "en":
         lang_name = _LANG_NAMES.get(code, code)
@@ -606,6 +612,7 @@ def _build_batch_prompts(
         _build_system_prompt(one_pass=False, user_gender=user_gender)
         + _language_directive(language)
         + f"\nBATCH: Analyze {n} crops in order (1..{n}). Return raw JSON array of EXACTLY {n} objects matching GarmentAnalysis schema. No extra text."
+        + (f"\n{gender_rule}" if gender_rule else "")
         + hint_block
     )
     return system_prompt, user_text

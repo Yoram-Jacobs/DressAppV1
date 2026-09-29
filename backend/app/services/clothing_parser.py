@@ -1399,12 +1399,24 @@ def bbox_to_pixels(
     return x1, y1, x2, y2
 
 
+def _normalize_mask_to_u8(m: np.ndarray) -> np.ndarray:
+    """Normalize any mask (bool, 0/1 int, 0.0-1.0 float, or 0/255 u8) to uint8 0/255."""
+    if m is None or m.size == 0:
+        return np.zeros((0, 0), dtype=np.uint8)
+    if m.dtype == bool:
+        return (m.astype(np.uint8) * 255)
+    max_val = float(m.max())
+    if max_val <= 1.0:
+        return (m.astype(float) * 255.0).clip(0, 255).astype(np.uint8)
+    return np.clip(m, 0, 255).astype(np.uint8)
+
+
 def slice_mask_to_bbox(
     mask: np.ndarray, image_size: tuple[int, int], box_xyxy: tuple[int, int, int, int]
 ) -> np.ndarray | None:
     """Return the portion of ``mask`` covering the pixel-coord ``box_xyxy``.
 
-    * ``mask`` is a full-resolution binary uint8 (0/1) array.
+    * ``mask`` is a full-resolution binary uint8 (0/1 or 0/255) array.
     * ``image_size`` is ``(W, H)`` — the original image's dimensions.
     * ``box_xyxy`` is ``(x1, y1, x2, y2)`` in pixel coords (already padded).
 
@@ -1413,19 +1425,19 @@ def slice_mask_to_bbox(
     """
     W, H = image_size
     x1, y1, x2, y2 = box_xyxy
-    if mask.shape != (H, W):
-        # Resize to full resolution first, nearest-neighbour to preserve
-        # binary semantics.
+    norm_mask = _normalize_mask_to_u8(mask)
+    if norm_mask.shape != (H, W):
+        # Resize to full resolution with smooth bilinear interpolation
         try:
-            mask = np.array(
-                Image.fromarray((mask * 255).astype(np.uint8), mode="L").resize(
-                    (W, H), Image.NEAREST
+            norm_mask = np.array(
+                Image.fromarray(norm_mask, mode="L").resize(
+                    (W, H), Image.BILINEAR
                 )
             )
-            mask = (mask > 127).astype(np.uint8)
         except Exception:  # noqa: BLE001
             return None
-    return mask[y1:y2, x1:x2].astype(np.uint8)
+    sliced = (norm_mask[y1:y2, x1:x2] > 127).astype(np.uint8)
+    return sliced
 
 
 def apply_alpha_intersection(
@@ -1449,29 +1461,29 @@ def apply_alpha_intersection(
     arr = np.array(im)
     Hc, Wc = arr.shape[:2]
 
-    # Patch 12i — per-category dilation budget.
+    # GarmentVision spec: generous fixed safety margins (16-48px)
+    # SegFormer acts as a coarse semantic envelope; rembg provides studio-grade alpha boundaries.
     _dilate_pct = _resolve_dilate_pct_for_category(category)
-    _DILATE_MIN_PX = 4
-    _DILATE_MAX_PX = 64
+    _DILATE_MIN_PX = 16
+    _DILATE_MAX_PX = 48
     dilate_px = max(_DILATE_MIN_PX, min(_DILATE_MAX_PX, int(_dilate_pct * min(Hc, Wc))))
 
-    soft_mask = None
+    mask_resized = None
     if seg_mask_bbox is not None:
-        # Resize the mask to match the matted PNG (rembg sometimes pads/resizes).
-        if seg_mask_bbox.shape != (Hc, Wc):
+        norm_seg = _normalize_mask_to_u8(seg_mask_bbox)
+        # Resize mask with bilinear interpolation so contours remain continuous (never jagged NEAREST blocks)
+        if norm_seg.shape != (Hc, Wc):
             try:
                 mask_resized = np.array(
-                    Image.fromarray(
-                        (seg_mask_bbox * 255).astype(np.uint8), mode="L"
-                    ).resize((Wc, Hc), Image.NEAREST)
+                    Image.fromarray(norm_seg, mode="L").resize((Wc, Hc), Image.BILINEAR)
                 )
             except Exception:  # noqa: BLE001
                 return None
         else:
-            mask_resized = (seg_mask_bbox * 255).astype(np.uint8)
+            mask_resized = norm_seg
 
         # Patch 12g (May 2026) — SegFormer mask "confidence" check.
-        _MIN_MASK_CONFIDENCE = 0.40
+        _MIN_MASK_CONFIDENCE = 0.25
         try:
             mask_coverage = float((mask_resized > 127).mean())
         except Exception:  # noqa: BLE001
@@ -1487,114 +1499,27 @@ def apply_alpha_intersection(
             )
             return None
 
-        try:
-            mask_im = Image.fromarray(mask_resized, mode="L")
-            if dilate_px > 0:
-                mask_im = mask_im.filter(ImageFilter.MaxFilter(2 * dilate_px + 1))
-            mask_im = mask_im.filter(ImageFilter.GaussianBlur(radius=2.0))
-            soft_mask = np.array(mask_im)
-        except Exception:  # noqa: BLE001
-            soft_mask = mask_resized
-
-
-    # Geometric head-exclusion for torso garments.
-    #
-    # For tops / outerwear / dresses / full-body, the wearer's head
-    # always sits ABOVE the garment. SegFormer's per-pixel Face / Hair
-    # classification is imperfect at edges (translucent hair strands,
-    # the neck region — which has NO dedicated class in ATR-18 —
-    # gets argmax'd as either Face or Upper-clothes depending on
-    # local contrast). The human-mask subtraction below can't catch
-    # what SegFormer didn't classify as Face/Hair in the first
-    # place. But geometrically, the rows ABOVE the first row with
-    # significant garment coverage are GUARANTEED head / neck / hair —
-    # the garment hasn't started yet. Wipe soft_mask in those rows
-    # so the alpha intersection forces alpha = 0 there, even if
-    # rembg insists on keeping the head as foreground.
-    #
-    # 5 % of crop height is left as a buffer below the first solid
-    # row to avoid clipping a high collar / ribbed-cuff edge that
-    # the SegFormer mask itself thinned out at the very top. The
-    # "significant coverage" threshold is 30 % of row width — most
-    # garment-body rows clear this comfortably; sparse rows from
-    # spaghetti straps / open collars stay below and the buffer
-    # protects them.
-    # New alpha logic: "never crop inside the item's outline"
-    # We initialize new_alpha with the raw rembg alpha (the item's outline).
-    # We only set pixels to 0 if they belong to other overlapping garments
-    # or human skin (if a human wearer is present).
+    # Initialize new_alpha with rembg's studio-grade alpha
     new_alpha = arr[:, :, 3].copy()
-
-    has_other = other_mask is not None and bool(other_mask.any())
     has_human = human_mask is not None and bool(human_mask.any())
 
-    # 1. Subtract other overlapping garments (dilated for clean boundaries)
-    # ONLY when a human model is present and wearing layered garments.
-    # NEVER subtract on flat-lay or standalone photos without a human: rembg
-    # already provides studio-grade alpha boundaries, and subtracting other masks
-    # slices garments in half, erases pant legs, and destroys clean cutouts.
-    if has_other and has_human:
-        try:
-            if other_mask.shape != (Hc, Wc):
-                other_resized = np.array(
-                    Image.fromarray(
-                        (other_mask * 255).astype(np.uint8)
-                        if other_mask.dtype != np.uint8
-                        else other_mask,
-                        mode="L",
-                    ).resize((Wc, Hc), Image.NEAREST)
-                )
-            else:
-                other_resized = (
-                    other_mask * 255 if other_mask.dtype != np.uint8 else other_mask
-                ).astype(np.uint8)
-            
-            if dilate_px > 0:
-                other_im = Image.fromarray(other_resized, mode="L")
-                other_im = other_im.filter(ImageFilter.MaxFilter(2 * dilate_px + 1))
-                other_resized = np.array(other_im)
-            
-            candidate_alpha = np.where(other_resized > 127, np.uint8(0), new_alpha)
-            # Guard against aggressive chewing: if subtraction wipes out > 30% of the solid cutout,
-            # it means other_mask is incorrectly biting into this garment's main body!
-            orig_solid = int((new_alpha > 127).sum())
-            cand_solid = int((candidate_alpha > 127).sum())
-            if orig_solid > 0 and (cand_solid / float(orig_solid)) < 0.70:
-                logger.info(
-                    "apply_alpha_intersection: other-mask subtraction would wipe out >30%% of cutout (orig=%d, cand=%d); skipping subtraction to prevent chewing",
-                    orig_solid,
-                    cand_solid,
-                )
-            else:
-                new_alpha = candidate_alpha
-        except Exception as exc:  # noqa: BLE001
-            logger.info(
-                "apply_alpha_intersection: other-mask subtraction skipped: %s",
-                repr(exc)[:120],
-            )
-
-    # 2. Subtract human mask (if present)
+    # 1. Subtract human mask (if present)
     if has_human:
         try:
-            if human_mask.shape != (Hc, Wc):
+            norm_human = _normalize_mask_to_u8(human_mask)
+            if norm_human.shape != (Hc, Wc):
                 human_resized = np.array(
-                    Image.fromarray(
-                        (human_mask * 255).astype(np.uint8)
-                        if human_mask.dtype != np.uint8
-                        else human_mask,
-                        mode="L",
-                    ).resize((Wc, Hc), Image.NEAREST)
+                    Image.fromarray(norm_human, mode="L").resize((Wc, Hc), Image.BILINEAR)
                 )
             else:
-                human_resized = (
-                    human_mask * 255 if human_mask.dtype != np.uint8 else human_mask
-                ).astype(np.uint8)
-            skin_dilate_px = dilate_px + 2
+                human_resized = norm_human
+            skin_dilate_px = 3
             if skin_dilate_px > 0:
                 human_im = Image.fromarray(human_resized, mode="L")
                 human_im = human_im.filter(
                     ImageFilter.MaxFilter(2 * skin_dilate_px + 1)
                 )
+                human_im = human_im.filter(ImageFilter.GaussianBlur(radius=1.5))
                 human_resized = np.array(human_im)
             
             new_alpha = np.where(human_resized > 127, np.uint8(0), new_alpha).astype(np.uint8)
@@ -1604,10 +1529,9 @@ def apply_alpha_intersection(
                 repr(exc)[:120],
             )
 
-    # 2b. Human skin chrominance filter for torso/body garments.
+    # 2. Human skin chrominance filter for torso/body garments.
     # SegFormer ATR-18 often misses skin pixels (hands/wrists on hip, collarbones,
-    # cleavage, necks) and classifies them as background or clothes. If human_mask
-    # is present and this is a body garment, detect and excise bare skin.
+    # cleavage, necks). If human_mask is present and this is a body garment, detect and excise bare skin.
     norm_cat = (category or "").lower().replace(" ", "").replace("-", "")
     if has_human and norm_cat in {"top", "outerwear", "dress", "fullbody", "bottom"}:
         try:
@@ -1635,7 +1559,7 @@ def apply_alpha_intersection(
             )
 
     # 3. Apply geometric head exclusion ONLY when a human wearer is present
-    if has_human and seg_mask_bbox is not None and category and category.lower().replace(" ", "") in {
+    if has_human and mask_resized is not None and category and category.lower().replace(" ", "") in {
         "top", "outerwear", "dress", "fullbody",
     }:
         try:
@@ -1646,36 +1570,45 @@ def apply_alpha_intersection(
                 first_solid_y = int(solid_rows[0])
                 cut_y = max(0, first_solid_y - int(0.05 * Hc))
                 if cut_y > 0:
-                    new_alpha[:cut_y, :] = 0
+                    fade_h = min(8, cut_y)
+                    new_alpha[: cut_y - fade_h, :] = 0
+                    if fade_h > 0:
+                        fade_weights = np.linspace(0.0, 1.0, fade_h)[:, None]
+                        new_alpha[cut_y - fade_h : cut_y, :] = (
+                            new_alpha[cut_y - fade_h : cut_y, :].astype(float) * fade_weights
+                        ).astype(np.uint8)
         except Exception as exc:  # noqa: BLE001
             logger.info(
                 "apply_alpha_intersection: head-exclusion subtraction skipped: %s",
                 repr(exc)[:120],
             )
 
-    # 4. Intersect with the dilated soft mask of the target garment to crop out human wearer body
+    # 4. Intersect with the smooth, dilated soft envelope of the target garment.
     # CRITICAL: Only perform soft-mask intersection if a human wearer is present.
-    # In flat-lay or multi-garment photos without a human, rembg already isolates the standalone
-    # garment with studio-grade alpha boundaries; intersecting with a coarse SegFormer mask introduces
-    # jagged erosion, serrated edges, and punches holes in low-contrast/graphic/knit fabric.
-    if soft_mask is not None and has_human:
+    # By creating a smooth envelope with a generous safety margin (16-48px), rembg's clean boundary
+    # remains 100% UNTOUCHED (soft_envelope == 1.0), while distant non-garment areas (arms, legs,
+    # adjacent garments far outside the envelope) are smoothly zeroed out without any stair-step jaggedness.
+    if mask_resized is not None and has_human:
         try:
             from scipy import ndimage
-            mask_bin = soft_mask > 127
+            mask_bin = mask_resized > 64
             closed = ndimage.binary_closing(mask_bin, structure=np.ones((7, 7), dtype=bool), iterations=1)
             filled = ndimage.binary_fill_holes(closed)
-            filled_soft = np.where(filled, np.uint8(255), np.uint8(0))
-            new_alpha = np.minimum(new_alpha, filled_soft).astype(np.uint8)
+            
+            filled_im = Image.fromarray((filled * 255).astype(np.uint8), mode="L")
+            if dilate_px > 0:
+                filled_im = filled_im.filter(ImageFilter.MaxFilter(2 * dilate_px + 1))
+            filled_im = filled_im.filter(ImageFilter.GaussianBlur(radius=4.0))
+            soft_envelope = np.array(filled_im).astype(float) / 255.0
+            
+            new_alpha = (new_alpha.astype(float) * soft_envelope).round().astype(np.uint8)
         except Exception as exc:  # noqa: BLE001
             logger.info(
                 "apply_alpha_intersection: soft-mask intersection failed: %s",
                 repr(exc)[:120],
             )
 
-
-    # Patch 12j (May 2026) — phantom guard. If the subtraction wiped out
-    # > 95% of the solid alpha, the refined image is empty. Bail out and let
-    # the caller keep the untouched rembg output.
+    # Phantom guard: if subtraction wiped out > 95% of solid alpha, preserve original rembg output.
     if float((new_alpha >= 128).mean()) < 0.05:
         logger.info(
             "apply_alpha_intersection: intersection wiped out >95%% of solid "
@@ -1691,59 +1624,43 @@ def apply_alpha_intersection(
 
 
 # ---------------------------------------------------------------------------
-# Patch 12i — per-category dilation budget table.
+# Per-category dilation budget table (GarmentVision spec).
 # ---------------------------------------------------------------------------
-# Keyed by the *normalised* category string (lowercase, spaces → none).
-# Accepts both the SegFormer kind vocabulary (top, bottom, dress,
-# footwear, accessory, headwear) AND the Gemini Garment category
-# vocabulary (Top, Bottom, Outerwear, Full Body, Footwear, Accessories,
-# Underwear) so callers can pass whichever they have in scope without a
-# pre-mapping step.
+# Keyed by normalized category string (lowercase, spaces removed).
+# Provides safe 4-6% dilation margins so SegFormer envelopes encapsulate
+# the garment without clipping rembg's smooth subpixel edges.
 _DILATE_PCT_BY_CATEGORY: dict[str, float] = {
-    # Tight-boundary garments (0.2-0.3 %): share an edge with an
-    # adjacent garment that rembg also kept as foreground; over-
-    # dilating bleeds the adjacent fabric into this cutout.
-    "top": 0.002,
-    "bottom": 0.002,
-    "dress": 0.003,
-    "fullbody": 0.003,
-    "full body": 0.003,
-    "accessory": 0.003,
-    "accessories": 0.003,
-    "underwear": 0.002,
-    # Outerwear is the middle ground — jackets / coats often have a
-    # collar that overlaps a top's neckline but a free-hanging hem.
-    "outerwear": 0.004,
-    # Free-edge garments (0.6 %): no adjacent-garment risk; the
-    # original Patch 12f budget is preserved to keep the puffy-cuff
-    # / low-contrast-shoe recovery working.
-    "footwear": 0.006,
-    "shoes": 0.006,
-    "sneakers": 0.006,
-    "boots": 0.006,
-    "headwear": 0.006,
-    "hat": 0.006,
-    "unknown": 0.006,
+    "top": 0.04,
+    "bottom": 0.04,
+    "dress": 0.04,
+    "fullbody": 0.04,
+    "full body": 0.04,
+    "accessory": 0.05,
+    "accessories": 0.05,
+    "underwear": 0.04,
+    "outerwear": 0.04,
+    "footwear": 0.06,
+    "shoes": 0.06,
+    "sneakers": 0.06,
+    "boots": 0.06,
+    "headwear": 0.05,
+    "hat": 0.05,
+    "unknown": 0.04,
 }
-_DILATE_PCT_DEFAULT = 0.025  # backward-compat for unknown / missing categories.
+_DILATE_PCT_DEFAULT = 0.04
 
 
 def _resolve_dilate_pct_for_category(category: str | None) -> float:
     """Look up the per-category dilation budget.
 
     Case-insensitive, whitespace-insensitive. Falls back to
-    ``_DILATE_PCT_DEFAULT`` (2.5 % — the Patch 12f flat budget) when
-    the category is missing or not in the table. Backward-compatible
-    with callers that don't pass ``category``.
+    ``_DILATE_PCT_DEFAULT`` (4.0 %) when the category is missing or not in table.
     """
     if not category:
         return _DILATE_PCT_DEFAULT
     key = str(category).strip().lower()
     if not key:
         return _DILATE_PCT_DEFAULT
-    # Try exact match first, then collapsed-whitespace ("full body" →
-    # "fullbody") so both spellings of the Gemini category land on
-    # the same budget.
     if key in _DILATE_PCT_BY_CATEGORY:
         return _DILATE_PCT_BY_CATEGORY[key]
     key_collapsed = key.replace(" ", "")

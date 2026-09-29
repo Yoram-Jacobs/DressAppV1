@@ -65,17 +65,19 @@ _BBOX_PAD_TRBL_BY_CATEGORY: dict[str, tuple[float, float, float, float]] = {
     # of vertical breathing room below before the SegFormer
     # confidence drops). Skirt + footwear cards untouched —
     # they were already clean per the user screenshot.
-    "top":        (0.04, 0.03, -0.025, 0.03),
-    "bottom":     (-0.015, 0.03, -0.015, 0.03),
-    "dress":      (0.03, 0.03, 0.01, 0.03),
-    "fullbody":   (0.03, 0.03, 0.03, 0.03),
-    "full body":  (0.03, 0.03, 0.03, 0.03),
-    "outerwear":  (0.03, 0.03, -0.015, 0.03),
-    "footwear":   (0.01, 0.08, 0.05, 0.08),
-    "headwear":   (0.04, 0.04, 0.01, 0.04),
-    "accessory":  (0.03, 0.03, 0.03, 0.03),
-    "accessories": (0.03, 0.03, 0.03, 0.03),
-    "underwear":  (0.02, 0.02, 0.02, 0.02),
+    # Safe, positive bounding-box margins (GarmentVision spec):
+    # Never use negative padding that clips waistbands, hems, collars, or footwear.
+    "top":        (0.04, 0.04, 0.03, 0.04),
+    "bottom":     (0.04, 0.04, 0.03, 0.04),
+    "dress":      (0.04, 0.04, 0.03, 0.04),
+    "fullbody":   (0.04, 0.04, 0.03, 0.04),
+    "full body":  (0.04, 0.04, 0.03, 0.04),
+    "outerwear":  (0.04, 0.04, 0.03, 0.04),
+    "footwear":   (0.04, 0.06, 0.04, 0.06),
+    "headwear":   (0.04, 0.04, 0.03, 0.04),
+    "accessory":  (0.04, 0.04, 0.04, 0.04),
+    "accessories": (0.04, 0.04, 0.04, 0.04),
+    "underwear":  (0.03, 0.03, 0.03, 0.03),
 }
 _BBOX_PAD_TRBL_DEFAULT = (
     _BBOX_PADDING_PCT, _BBOX_PADDING_PCT,

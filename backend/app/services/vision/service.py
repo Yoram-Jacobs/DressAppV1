@@ -1052,41 +1052,6 @@ class GarmentVisionService:
                 if mask_bbox is not None:
                     det["_mask_bbox"] = mask_bbox
             
-            # Compute other garments mask in full-res and slice it to this crop bbox
-            other_garments_mask = None
-            if img_size is not None:
-                other_masks = []
-                for other in useful:
-                    if other is det:
-                        continue
-                    det_kind = (det.get("kind") or det.get("label") or "").lower()
-                    other_kind = (other.get("kind") or other.get("label") or "").lower()
-                    # Layering rule: Accessories / bags are worn ON TOP of torso/leg garments.
-                    # Never subtract the underlying dress/top/bottom from an accessory/bag!
-                    if any(k in det_kind for k in ("accessory", "bag", "belt", "headwear", "scarf", "jewelry")) and any(k in other_kind for k in ("top", "outerwear", "dress", "fullbody", "bottom")):
-                        continue
-                    if other.get("mask") is not None:
-                        m = other["mask"]
-                        if m.shape != (img_size[1], img_size[0]):
-                            from PIL import Image as _PIL
-                            m_full = _np.array(
-                                _PIL.fromarray((m * 255).astype(_np.uint8), mode="L").resize(
-                                    img_size, _PIL.NEAREST
-                                )
-                            )
-                            other_masks.append((m_full > 127).astype(_np.uint8))
-                        else:
-                            other_masks.append(m)
-                if other_masks:
-                    combined_other = other_masks[0]
-                    for m in other_masks[1:]:
-                        combined_other = _np.maximum(combined_other, m)
-                    other_garments_mask = clothing_parser.slice_mask_to_bbox(
-                        combined_other, img_size, box_px
-                    )
-            if other_garments_mask is not None:
-                det["_other_mask_bbox"] = other_garments_mask
-
             human_full = det.get("_human_mask_full")
             if human_full is not None and img_size is not None and not is_single_item:
                 human_bbox = clothing_parser.slice_mask_to_bbox(
@@ -1146,12 +1111,10 @@ class GarmentVisionService:
                 continue
             seg_mask_bbox = det.get("_mask_bbox")
             human_mask_bbox = det.get("_human_mask_bbox")
-            other_mask_bbox = det.get("_other_mask_bbox")
             is_single = det.get("is_single_item", False)
             if not is_single and (
                 seg_mask_bbox is not None
                 or human_mask_bbox is not None
-                or other_mask_bbox is not None
             ):
                 try:
                     refined = _cp.apply_alpha_intersection(
@@ -1159,7 +1122,6 @@ class GarmentVisionService:
                         seg_mask_bbox,
                         category=det.get("kind"),
                         human_mask=human_mask_bbox,
-                        other_mask=other_mask_bbox,
                     )
                     if refined:
                         matted = refined
@@ -1181,7 +1143,7 @@ class GarmentVisionService:
                     W_r, H_r = rgba_img.size
                     if seg_mask_bbox.shape != (H_r, W_r):
                         mask_img = Image.fromarray((seg_mask_bbox > 0).astype(np.uint8) * 255)
-                        mask_resized = np.array(mask_img.resize((W_r, H_r), Image.NEAREST)) > 0
+                        mask_resized = np.array(mask_img.resize((W_r, H_r), Image.BILINEAR)) > 127
                     else:
                         mask_resized = seg_mask_bbox > 0
 
@@ -1744,6 +1706,8 @@ class GarmentVisionService:
                         if not norm.get("title"):
                             norm["title"] = "Unnamed garment"
                         norm = _coerce_enums(norm, user_gender=eff_gender)
+                        if not eff_gender and norm.get("gender") in ("men", "women"):
+                            eff_gender = norm.get("gender")
                         # Patch M21 — Layer 2 SegFormer-anchored category
                         # enforcement on the streaming path. Applied
                         # after ``_coerce_enums`` so we only override
