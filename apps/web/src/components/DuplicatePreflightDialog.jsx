@@ -272,9 +272,16 @@ export default function DuplicatePreflightDialog({ matches, open, onResolve }) {
               onClick={finish}
               data-testid="duplicate-preflight-confirm"
             >
-              {t("addItem.preflight.confirm", {
-                defaultValue: "Continue",
-              })}
+              {willAdd === 0
+                ? t("addItem.preflight.skipAndContinue", {
+                    count: total,
+                    defaultValue: "Skip duplicates & continue",
+                  })
+                : t("addItem.preflight.confirmAddAndSkip", {
+                    addCount: willAdd,
+                    skipCount: total - willAdd,
+                    defaultValue: `Add ${willAdd} & continue`,
+                  })}
             </Button>
           </div>
         </DialogFooter>

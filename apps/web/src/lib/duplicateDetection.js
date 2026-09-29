@@ -166,7 +166,8 @@ export function findDuplicatesInCloset(fingerprints, closetItems) {
   const seen = new Set();
 
   // 1. First Pass: check for duplicates WITHIN the upload batch itself.
-  // We sequentialise the list by building a list of "survivors" (unique items in this batch).
+  // In an upload batch, we ONLY flag exact byte-for-byte duplicates (same SHA-256).
+  // Different photos uploaded together must NEVER be discarded based on perceptual hash similarity!
   const batchSurvivors = [];
   for (let i = 0; i < fingerprints.length; i++) {
     const p = fingerprints[i];
@@ -174,16 +175,7 @@ export function findDuplicatesInCloset(fingerprints, closetItems) {
 
     let batchDupOf = null;
     for (const prevFp of batchSurvivors) {
-      if (
-        isDuplicateMatch({
-          shaA: p.sha256,
-          shaB: prevFp.sha256,
-          phashA: p.phash,
-          phashB: prevFp.phash,
-          colorA: p.color_sig,
-          colorB: prevFp.color_sig,
-        })
-      ) {
+      if (p.sha256 && prevFp.sha256 && p.sha256 === prevFp.sha256) {
         batchDupOf = prevFp;
         break;
       }

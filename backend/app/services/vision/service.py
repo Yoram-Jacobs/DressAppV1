@@ -2407,10 +2407,16 @@ class GarmentVisionService:
             yield {"type": "done", "count": 0}
             return
 
+        logger.info(
+            "analyze_outfits_stream: starting stream for %d photo(s), provider=%s",
+            len(images_bytes_list),
+            self.provider,
+        )
+
         eff_gender = resolve_garment_gender(user_gender) or self.user_gender
         cap = max_items if max_items is not None else self.max_items
 
-        # 1. Detect on all photos concurrently
+        # 1. Detect on all photos sequentially
         async def _detect_and_crop(idx: int, img_bytes: bytes) -> tuple[int, list[tuple[dict[str, Any], bytes, str]]]:
             try:
                 count = await self._gatekeep_image(img_bytes)
@@ -2423,11 +2429,11 @@ class GarmentVisionService:
                 else:
                     logger.info("Gatekeeper: photo %d count unknown (provider=%s) — running SegFormer detect_items", idx, self.provider)
                 detections = await self.detect_items(img_bytes, count_hint=count)
-                if not detections and count == 1:
+                if not detections and (count == 1 or count is None):
                     detections = [{"bbox": [0, 0, 1000, 1000], "kind": "garment", "label": "garment"}]
             except Exception as exc:
                 logger.warning("analyze_outfits_stream: detect_items / gatekeep failed for idx %d: %s", idx, repr(exc)[:160])
-                return idx, []
+                return idx, [({"bbox": [0, 0, 1000, 1000], "kind": "garment", "label": "garment", "is_single_item": True}, img_bytes, "image/jpeg")]
 
             try:
                 has_human_wearer = _detect_human_presence(detections)
@@ -2528,7 +2534,7 @@ class GarmentVisionService:
 
             except Exception as exc:
                 logger.warning("analyze_outfits_stream: crop/matte failed for idx %d: %s", idx, repr(exc)[:160])
-                return idx, []
+                return idx, [({"bbox": [0, 0, 1000, 1000], "kind": "garment", "label": "garment", "is_single_item": True}, img_bytes, "image/jpeg")]
 
         # 1. Detect on all photos sequentially to avoid OOM on large batches
         import gc

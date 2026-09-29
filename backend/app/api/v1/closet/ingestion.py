@@ -445,6 +445,15 @@ async def analyze_item_image(
     if not raw_list:
         raise HTTPException(400, "Could not load image bytes")
 
+    logger.info(
+        "analyze_item_image: received %d image(s) to analyze (images_base64_len=%d, has_single_b64=%s, has_url=%s) for user %s",
+        len(raw_list),
+        len(payload.images_base64 or []),
+        bool(payload.image_base64),
+        bool(payload.image_url),
+        user.get("id"),
+    )
+
     cost = len(raw_list) if not payload.cutout_only else 0
     # Deduct credits for the AI model calls
     from app.db.database import get_db
@@ -679,7 +688,14 @@ async def analyze_item_image(
         async def _ndjson_stream():
             try:
                 while True:
-                    frame = await queue.get()
+                    try:
+                        frame = await asyncio.wait_for(queue.get(), timeout=4.0)
+                    except asyncio.TimeoutError:
+                        # Keepalive ping: empty line in NDJSON is ignored by client parser,
+                        # but keeps HTTP / Caddy connection alive during slow GPU/CPU inference!
+                        yield b"\n"
+                        continue
+
                     if frame is None:
                         break
                     yield (

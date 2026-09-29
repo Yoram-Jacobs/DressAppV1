@@ -1869,6 +1869,7 @@ export default function AddItem() {
       );
     });
     if (!files.length) return;
+    console.info(`[AddItem] handleFiles: received ${files.length} valid images`);
 
     // BG_THRESHOLD: above this we skip the per-card editor and run
     // the auto-save batch path. Anything above 12 is clearly a bulk
@@ -2165,6 +2166,9 @@ export default function AddItem() {
         isDuplicate: !!isDup,
       });
     }
+    console.info(
+      `[AddItem] continueInteractive: created ${drafts.length} drafts for analysis`,
+    );
     setCards((prev) => [...prev, ...drafts]);
     analyzeCards(drafts);
   };
@@ -2508,20 +2512,29 @@ export default function AddItem() {
           newCards.push(buildBaseCard(m, newId, origCard));
         });
 
+        const fallbackCards = [];
         cardsToProcess.forEach((origCard, idx) => {
           const count = counts[idx] || 0;
           if (count > 0) {
             workStore.updateAnalyze(origCard.id, { items: 0, total: count });
           } else {
-            // No items detected for this card. We should probably mark it as error later, but for now we skip.
-            // We don't remove it from DOM yet, we just leave it.
+            // No items detected for this card. Retain it in state with fallback fields
+            // so the photo and card never disappear from the screen!
+            fallbackCards.push({
+              ...origCard,
+              status: "ready",
+              progress: 100,
+              label: origCard.label || "Garment",
+              fields: origCard.fields || hydrate({}, user),
+            });
+            workStore.completeAnalyze(origCard.id);
           }
         });
 
         setCards((prev) => {
           const idsToRemove = new Set(cardsToProcess.map((c) => c.id));
           const filtered = prev.filter((c) => !idsToRemove.has(c.id));
-          return [...filtered, ...newCards];
+          return [...filtered, ...newCards, ...fallbackCards];
         });
 
         cardsToProcess.forEach((c) => {
@@ -2631,6 +2644,10 @@ export default function AddItem() {
       const images_base64 = cardsToProcess.map((c) => c.base64);
       const payload = { images_base64, language: requestLang };
 
+      console.info(
+        `[AddItem] analyzeCards: sending ${images_base64.length} images to /closet/analyze`,
+      );
+
       const resp = await api.analyzeItemImage(payload, {
         onDetect: handleDetect,
         onItem: handleItem,
@@ -2638,6 +2655,38 @@ export default function AddItem() {
         onField: handleField,
       });
       clearInterval(tick);
+
+      // If streaming callbacks were bypassed (e.g. axios POST fallback),
+      // hydrate any cards still scanning from resp.items so they don't get stuck!
+      if (Array.isArray(resp?.items) && resp.items.length > 0) {
+        setCards((prev) =>
+          prev.map((c) => {
+            if (c.status !== "scanning") return c;
+            const match = resp.items.find(
+              (it, idx) =>
+                (it.image_index !== undefined && cardsToProcess[it.image_index]?.id === c.id) ||
+                (cardsToProcess[idx]?.id === c.id),
+            );
+            if (match) {
+              const analysis = match.analysis || {};
+              return {
+                ...c,
+                status: "ready",
+                progress: 100,
+                serverItemId: match.item_id || null,
+                saved: !!match.saved,
+                fields: hydrate(analysis, user, t, i18n),
+                label:
+                  analysis.sub_category ||
+                  analysis.item_type ||
+                  analysis.category ||
+                  c.label,
+              };
+            }
+            return c;
+          }),
+        );
+      }
 
       const finalCount = resp?.count || (resp?.items || []).length;
       if (finalCount === 0) {
