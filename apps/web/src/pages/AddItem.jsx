@@ -4459,20 +4459,21 @@ export default function AddItem() {
                                 className="flex items-center gap-3 p-2 rounded-xl border border-border/60 hover:border-[hsl(var(--accent))] hover:bg-secondary/40 cursor-pointer transition-colors"
                               >
                                 <div className="w-10 h-10 rounded-lg bg-secondary/20 overflow-hidden shrink-0 border border-border/40 flex items-center justify-center">
-                                  {bestImageUrl(it) ||
+                                  {it.thumbnail_data_url ||
+                                    bestImageUrl(it) ||
                                     it.clean_image_url ||
-                                    it.thumbnail_data_url ||
                                     it.original_image_url ? (
                                     <img
                                       src={
                                         resolveMediaUrl(
+                                          it.thumbnail_data_url ||
                                           bestImageUrl(it) ||
                                           it.clean_image_url ||
-                                          it.thumbnail_data_url ||
                                           it.original_image_url
                                         )
                                       }
                                       alt={it.title}
+                                      loading="lazy"
                                       className="w-full h-full object-cover"
                                     />
                                   ) : (
@@ -4590,8 +4591,8 @@ export default function AddItem() {
             </Tabs>
           ) : (
             <>
-              <div className="flex flex-col gap-3 mb-3 bg-white rounded-[12px] p-5">
-                <div className="">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3 bg-white rounded-[12px] p-5">
+                <div className="flex items-center gap-2 bg-secondary/30 px-3 py-1.5 rounded-xl border border-border/50 self-start sm:self-auto">
                   <input
                     type="checkbox"
                     id="quick-confirm-mode"
@@ -4600,54 +4601,19 @@ export default function AddItem() {
                     className="sr-only peer"
                     data-testid="quick-confirm-toggle"
                   />
-                  <div className="flex gap-2 overflow-x-auto flex-nowrap pb-3">
-                    {closetItemsFiltered.map((it) => (
-                      <div
-                        key={it.id}
-                        onClick={() => handleLinkItem(it)}
-                        className="flex items-center gap-2 p-2 rounded-[12px] border border-border hover:border-primary-brand hover:bg-primary-shadow cursor-pointer transition-colors"
-                      >
-                        <div className="w-10 h-10 rounded-full bg-accent-beige overflow-hidden shrink-0 border border-border flex items-center justify-center">
-                          {bestImageUrl(it) ||
-                            it.clean_image_url ||
-                            it.thumbnail_data_url ||
-                            it.original_image_url ? (
-                            <img
-                              src={
-                                resolveMediaUrl(
-                                  bestImageUrl(it) ||
-                                  it.clean_image_url ||
-                                  it.thumbnail_data_url ||
-                                  it.original_image_url
-                                )
-                              }
-                              alt={it.title}
-                              className="w-full h-full object-cover"
-                            />
-                          ) : (
-                            <Shirt className="h-5 w-5 text-text-brand" />
-                          )}
-                        </div>
-                        <div className="min-w-0 flex-1">
-                          <h6 className="text-[12px] font-bold text-dark-brand truncate">{it.title}</h6>
-                          <p className="text-[10px] text-text-brand font-semibold truncate">
-                            {it.brand ||
-                              t("addItem.genericBrand", {
-                                defaultValue: "Generic",
-                              })}{" "}
-                            · {labelForCategory(it.category, t) || it.category}
-                          </p>
-                        </div>
-                      </div>
-                    ))}
-                    {closetItemsFiltered.length === 0 && (
-                      <div className="text-center py-8 text-xs text-text-brand">
-                        {t("addItem.import.noMatchingItems", {
-                          defaultValue: "No closet items found.",
-                        })}
-                      </div>
-                    )}
-                  </div>
+                  <label
+                    htmlFor="quick-confirm-mode"
+                    className="relative w-8 h-4 bg-muted peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-[hsl(var(--accent))] cursor-pointer"
+                  />
+                  <label
+                    htmlFor="quick-confirm-mode"
+                    className="text-xs font-semibold cursor-pointer select-none text-foreground flex items-center gap-1.5"
+                  >
+                    <Sparkles className="h-3.5 w-3.5 text-[hsl(var(--accent))]" />
+                    {t("addItem.quickConfirmMode", {
+                      defaultValue: "Quick Confirm Mode",
+                    })}
+                  </label>
                 </div>
                 <div className="flex items-center gap-2 justify-end flex-wrap">
                   <Button
