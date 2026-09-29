@@ -140,24 +140,21 @@ async def _call_gemma_space(
 
 
 SYSTEM_PROMPT = (
-    "You are The Eyes — DressApp's visual garment analyst. Analyze the photo and describe each garment in concise, merchandisable detail.\n\n"
-    "CRITICAL FORMAT RULES:\n"
-    "1. NO THINKING: Do NOT generate internal monologue or <think> tags. Output raw JSON immediately.\n"
-    "2. ZERO FILLER: Start immediately with '{' or '[' and end with '}' or ']'. No conversational markdown or intro.\n"
-    "3. Return 1 JSON object for a single item, or a JSON array of objects for multiple items.\n\n"
-    "Taxonomy & Extraction Rules:\n"
-    "• sub_category: Specific cut ('Blouse','Shirt','T-Shirt','Tank Top','Sweater','Hoodie','Polo','Jeans','Pants','Shorts','Skirt','Sneakers'). NEVER generic 'Top', 'Bottom', or 'Clothing'.\n"
-    "• item_type: Specific cut or styling details ('Crew-Neck T-Shirt','Oversized Tee','Skinny Jeans','Trench Coat','Cap-Sleeve Blouse'). MUST NOT be identical to sub_category.\n"
-    "• gender: Infer styling intent ('men','women','unisex','kids'). Reserve 'women' for distinctly feminine silhouettes (bust darts, sweetheart/peplum cuts, dresses, skirts) and 'men' for traditional masculine tailoring. For neutral everyday basics or unrecognized intent, default to {DEFAULT_GENDER_HINT}.\n"
-    "• colors: Array of objects [{\"name\": \"Specific fashion shade\", \"pct\": 0-100}] where \"pct\" is the percentage of that color in the garment, and all percentages MUST sum to 100 (e.g. [{\"name\": \"Burgundy\", \"pct\": 70}, {\"name\": \"Navy\", \"pct\": 30}]). For single-color items, use pct=100. Specific fashion shades ('Light Blue','Sky Blue','Navy','Olive','Sage','Burgundy','Teal','Mint Green','Coral','Cream','Charcoal'), never generic 'Blue'/'Green'. Never omit pct.\n"
-    "• fabric_materials: Array of objects [{\"name\": \"fabric\", \"pct\": 0-100}] summing to 100 (infer composition, e.g. [{\"name\": \"Cotton\", \"pct\": 100}] or [{\"name\": \"Cotton\", \"pct\": 70}, {\"name\": \"Polyester\", \"pct\": 30}]). Never omit pct.\n"
-    "• pattern: If fabric has ANY repeating weave, texture, heathering, eyelets, micro-dots, perforations, honeycomb, or waffle, set pattern='geometric' (or 'striped'/'plaid'/'floral'), NEVER 'solid'. 'solid' is strictly for flat, mirror-smooth, untextured fabrics.\n"
-    "• dress_code: Classify as 'casual','smart-casual','business','formal','athletic', or 'loungewear'.\n"
-    "• season: Array from ['spring','summer','fall','winter','all']. Short sleeves / sleeveless / linen = ['summer'] or ['spring','summer']. Wool / down / heavy knits = ['fall','winter']. NEVER use 'all' for short-sleeve tops.\n"
-    "• condition & quality: condition='good'|'excellent'|'fair'|'bad'; quality='mid'|'premium'|'budget'|'luxury'. Standard items default to condition='good', quality='mid'. state='new'|'used'.\n"
-    "• price_cents: Estimated resale value in USD cents as integer (e.g. 2500 for $25).\n"
-    "• image_quality_status: Evaluate 'complete', 'needs_completion' (collar, sleeves, or hems cut off by frame; provide reconstruction_prompt), or 'needs_reconstruction' (heavily occluded or deformed garment).\n"
-    "• Banned synonyms: sweater (not jumper/pullover), pants/jeans (not trousers/slacks), shirt/blouse (not vest), jacket/coat/blazer (not anorak), sneakers/boots (not trainers)."
+    "Output raw JSON only ({...} or [{...}]). No thinking tags, markdown, or intro. "
+    "Analyze each visible garment in concise merchandisable detail.\n\n"
+    "Rules:\n"
+    "• sub_category: Specific cut ('Shirt','T-Shirt','Sweater','Hoodie','Jeans','Pants','Skirt','Sneakers'). Never generic 'Top'/'Bottom'/'Clothing'.\n"
+    "• item_type: Styling cut ('Crew-Neck T-Shirt','Skinny Jeans','Trench Coat'). Must differ from sub_category.\n"
+    "• gender: 'men'|'women'|'unisex'|'kids'. Feminine cuts='women', masculine='men', default to {DEFAULT_GENDER_HINT}.\n"
+    "• colors: [{\"name\": str, \"pct\": int}] summing to 100 (e.g. [{\"name\": \"Burgundy\", \"pct\": 70}, {\"name\": \"Navy\", \"pct\": 30}]; single color pct=100). Use specific shades ('Navy','Olive','Sage','Burgundy','Light Blue','Teal'), never generic 'Blue'/'Green'. Never omit pct.\n"
+    "• fabric_materials: [{\"name\": str, \"pct\": int}] summing to 100 (e.g. [{\"name\": \"Cotton\", \"pct\": 100}] or [{\"name\": \"Cotton\", \"pct\": 70}, {\"name\": \"Polyester\", \"pct\": 30}]). Never omit pct.\n"
+    "• pattern: 'geometric' for repeating weave, texture, heathering, dots, waffle; 'striped'|'plaid'|'floral'; 'solid' only if mirror-smooth & untextured.\n"
+    "• dress_code: 'casual'|'smart-casual'|'business'|'formal'|'athletic'|'loungewear'.\n"
+    "• season: ['spring'|'summer'|'fall'|'winter'|'all']. Short-sleeve/linen=['summer']; wool/down=['fall','winter']. Never 'all' for short sleeves.\n"
+    "• condition='good'|'excellent'|'fair'|'bad'; quality='mid'|'premium'|'budget'|'luxury'; state='new'|'used'. Defaults: 'good','mid','used'.\n"
+    "• price_cents: Estimated resale in USD cents as integer (e.g. 2500 for $25).\n"
+    "• image_quality_status: 'complete'|'needs_completion' (collar/sleeves/hems cut off; add reconstruction_prompt)|'needs_reconstruction' (deformed/occluded).\n"
+    "• US terms: sweater (not jumper), pants (not trousers), sneakers (not trainers)."
 )
 
 
@@ -165,13 +162,10 @@ SYSTEM_PROMPT = (
 # Phase O.6 — single-pass-only suffix
 # ─────────────────────────────────────────────────────────────────────
 SYSTEM_PROMPT_ONE_PASS_SUFFIX = (
-    "\n\nSPATIAL REGION REQUIREMENT:\n"
-    "For each garment object, include `region: {\"bbox\": [ymin, xmin, ymax, xmax], \"confidence\": float, \"is_full_frame\": bool}`.\n"
-    "• Grid: Normalized integers 0..1000 (0=top/left, 1000=bottom/right).\n"
-    "• Single-garment flat lay or studio still: bbox=[0, 0, 1000, 1000], is_full_frame=true.\n"
-    "• Multi-garment or worn: Tightly enclose visible garment (sleeves, collar, hems; exclude bare skin). Overlapping boxes allowed.\n"
-    "• Omit garments occluded >80%.\n"
-    'Example region: {"bbox": [180, 280, 520, 720], "confidence": 0.95, "is_full_frame": false}'
+    "\n\nInclude `region`: {\"bbox\": [ymin, xmin, ymax, xmax], \"confidence\": float, \"is_full_frame\": bool}.\n"
+    "• 0..1000 normalized grid (0=top/left, 1000=bottom/right).\n"
+    "• Flat lay/studio still: bbox=[0, 0, 1000, 1000], is_full_frame=true.\n"
+    "• Worn/multi: tight box on visible garment (exclude skin). Omit if >80% occluded."
 )
 
 
@@ -386,38 +380,31 @@ def _user_prompt(code: str | None, user_gender: str | None = None) -> str:
 
     if code == "en":
         return (
-            "Analyse this photo. Return 1 JSON object for single item, or a JSON array for multiple items. No commentary.\n"
-            f"Key rules: sub_category != item_type; specific colors (not generic); textured/heathered fabric = pattern:'geometric' (never 'solid'); default to '{norm_gender}'."
+            "Analyze photo. Return raw JSON (1 object or array). No commentary.\n"
+            f"Rules: sub_category != item_type; specific shades; textured=pattern:'geometric'; default to '{norm_gender}'."
         )
 
     lang_name = _LANG_NAMES.get(code, code)
     if code in ("he", "iw"):
         return (
-            "**OUTPUT LANGUAGE = Hebrew (עברית).**\n"
-            "Free-text fields (`name`,`title`,`caption`,`tags`,`repair_advice`,`sub_category`,`item_type`,`colors[*].name`,`fabric_materials[*].name`) "
-            "MUST be fluent modern Hebrew (e.g. חולצת טי, ג'ינס, מכנסי קרגו). No diacritics/ligatures.\n"
-            "• `sub_category` and `item_type` MUST be distinct (e.g. sub_category='חולצות טי', item_type='חולצת טי שרוול קצר').\n"
-            "• Specific colors: 'תכלת'/'כחול בהיר' (light blue), 'כחול כהה' (navy), 'טורקיז', 'מנטה', 'בורדו'.\n"
-            f"• Fabric texture/weave/heather = pattern:'geometric'. Default gender = '{norm_gender}'.\n"
-            "• JSON keys and enum tokens stay in English.\n"
-            "Return 1 JSON object for single item, or JSON array for multiple items. No commentary."
+            "**OUTPUT LANGUAGE: Hebrew (עברית)**\n"
+            "All string values (name, title, caption, tags, repair_advice, sub_category, item_type, colors, materials) in fluent modern Hebrew (חולצת טי, ג'ינס). No diacritics.\n"
+            f"• sub_category != item_type; specific colors (תכלת, כחול כהה, בורדו); textured=pattern:'geometric'; default to '{norm_gender}'.\n"
+            "• JSON keys and enum values stay in English. Return raw JSON (1 object or array). No commentary."
         )
     elif code == "ar":
         return (
-            "**OUTPUT LANGUAGE = Arabic (العربية).**\n"
-            "Free-text fields (`name`,`title`,`caption`,`tags`,`repair_advice`,`sub_category`,`item_type`,`colors[*].name`,`fabric_materials[*].name`) "
-            "MUST be fluent modern Arabic in standard script.\n"
-            "• JSON keys and enum tokens stay in English.\n"
-            f"• sub_category != item_type. Texture/weave = pattern:'geometric'. Default gender = '{norm_gender}'.\n"
-            "Return 1 JSON object for single item, or JSON array for multiple items. No commentary."
+            "**OUTPUT LANGUAGE: Arabic (العربية)**\n"
+            "All string values (name, title, caption, tags, repair_advice, sub_category, item_type, colors, materials) in fluent modern Arabic.\n"
+            f"• sub_category != item_type; textured=pattern:'geometric'; default to '{norm_gender}'.\n"
+            "• JSON keys and enum values stay in English. Return raw JSON (1 object or array). No commentary."
         )
     else:
         return (
-            f"**OUTPUT LANGUAGE = {lang_name} ({code}).**\n"
-            f"Free-text fields (`name`,`title`,`caption`,`tags`,`repair_advice`,`sub_category`,`item_type`,`colors[*].name`,`fabric_materials[*].name`) "
-            f"MUST be fluent idiomatic {lang_name}. JSON keys and enum tokens stay in English.\n"
-            f"• sub_category != item_type. Texture/weave = pattern:'geometric'. Default gender = '{norm_gender}'.\n"
-            "Return 1 JSON object for single item, or JSON array for multiple items. No commentary."
+            f"**OUTPUT LANGUAGE: {lang_name} ({code})**\n"
+            f"All string values (name, title, caption, tags, repair_advice, sub_category, item_type, colors, materials) in fluent {lang_name}.\n"
+            f"• sub_category != item_type; textured=pattern:'geometric'; default to '{norm_gender}'.\n"
+            "• JSON keys and enum values stay in English. Return raw JSON (1 object or array). No commentary."
         )
 
 
@@ -484,36 +471,20 @@ def _extract_json(raw: str) -> dict[str, Any] | list[dict[str, Any]]:
 
 
 GROUP_ANALYZE_SYSTEM_PROMPT = (
-    "You are The Eyes — DressApp's visual garment group analyzer.\n"
-    "Analyze multiple views of the SAME garment (with current metadata and aspect ratios).\n"
-    "One item is 'host' (frontal view); others are 'members' (back, profile/side details).\n\n"
-    "Tasks:\n"
-    "1. Identify view: Tag host as 'Front', back view as 'Back', side view as 'Profile'. Add to item `tags`.\n"
-    "2. Refine metadata: Enhance host properties with details visible in member views (e.g. exposed back). Correct member metadata to reflect garment view.\n\n"
-    "Return JSON format:\n"
-    "{\n"
-    '  "items": [{\n'
-    '    "id": string,\n'
-    '    "group_role": "host"|"member",\n'
-    '    "view_tag": "Front"|"Back"|"Profile",\n'
-    '    "updates": { /* only include fields needing correction/update + tags */ }\n'
-    "  }]\n"
-    "}\n"
-    "Output in the requested language."
+    "Analyze multiple views of the same garment. 'host'=front view; 'members'=back/profile views.\n"
+    "1. Tag views: 'Front', 'Back', 'Profile' in `tags`.\n"
+    "2. Refine host metadata with details visible in member views; correct member metadata.\n"
+    'Return raw JSON in requested language:\n'
+    '{"items": [{"id": str, "group_role": "host"|"member", "view_tag": "Front"|"Back"|"Profile", "updates": {...}}]}'
 )
 
 
 DETECT_SYSTEM_PROMPT = (
-    "You are DressApp's object detector. Enumerate visible fashion items "
-    "(garments, outerwear, footwear, bags, accessories, jewelry). Ignore person, skin, hair, background.\n\n"
-    "Rules:\n"
-    "• 1 tight box per distinct physical item [ymin, xmin, ymax, xmax] (integers 0..1000, 0=top/left, 1000=bottom/right).\n"
-    "• Pairs (shoes, boots, earrings): 1 box enclosing BOTH items.\n"
-    "• Bags: Box the BAG BODY only; exclude long shoulder straps.\n"
-    "• Never return duplicate boxes for parts (e.g. sleeve of shirt). No full-frame outfit box unless single item fills frame.\n\n"
-    "Return raw JSON:\n"
-    '{"items": [{"label": "short name", "kind": "garment"|"outerwear"|"footwear"|"bag"|"accessory"|"jewelry", "bbox": [ymin, xmin, ymax, xmax]}]}\n'
-    'If uncertain, return 1 entry covering full frame: {"items": [{"label": "garment", "kind": "garment", "bbox": [0, 0, 1000, 1000]}].'
+    "Detect visible fashion items (garment, outerwear, footwear, bag, accessory, jewelry). Ignore person/background.\n"
+    "• Tight bbox [ymin, xmin, ymax, xmax] in 0..1000 grid. Pairs (shoes, earrings)=1 box for both. Bags=bag body only.\n"
+    "• No duplicate/part boxes. Return raw JSON:\n"
+    '{"items": [{"label": "name", "kind": "garment"|"outerwear"|"footwear"|"bag"|"accessory"|"jewelry", "bbox": [ymin, xmin, ymax, xmax]}]}\n'
+    'If uncertain, return full frame: {"items": [{"label": "garment", "kind": "garment", "bbox": [0, 0, 1000, 1000]}]}'
 )
 
 
@@ -618,42 +589,26 @@ def _build_batch_prompts(
             bullets.append(f"  - Image {i}: {human}")
         if bullets:
             hint_block = (
-                "\n\nCROP CATEGORY HINTS (from segmentation model):\n"
+                "\nCROP CATEGORY HINTS:\n"
                 + "\n".join(bullets)
-                + "\nUse hints to anchor `category` (e.g. 'Bottom' = pants/skirt/shorts). Choose `sub_category` within hinted category."
+                + "\nAnchor category & sub_category to these hints."
             )
-    user_text = (
-        f"Analyse the {n} cropped garment image(s) below in order. "
-        f"Return a JSON array of {n} GarmentAnalysis entries."
-    )
+    user_text = f"Analyze {n} crop(s) in order. Return JSON array of {n} GarmentAnalysis objects ([...])."
     code = (language or "en").lower()
     if code != "en":
         lang_name = _LANG_NAMES.get(code, code)
         if code in ("he", "iw"):
-            directive = (
-                "**OUTPUT LANGUAGE = Hebrew (עברית).** Free-text fields MUST be fluent modern Hebrew (e.g. חולצת טי, ג'ינס, מכנסי קרגו). "
-                "JSON keys and enum tokens stay in English.\n\n"
-            )
+            directive = "**OUTPUT LANGUAGE: Hebrew (עברית).** Strings in fluent modern Hebrew. Keys/enums in English.\n"
         elif code == "ar":
-            directive = (
-                "**OUTPUT LANGUAGE = Arabic (العربية).** Free-text fields MUST be fluent modern Arabic in standard script. "
-                "JSON keys and enum tokens stay in English.\n\n"
-            )
+            directive = "**OUTPUT LANGUAGE: Arabic (العربية).** Strings in fluent modern Arabic. Keys/enums in English.\n"
         else:
-            directive = (
-                f"**OUTPUT LANGUAGE = {lang_name} ({code}).** Free-text fields MUST be fluent idiomatic {lang_name}. "
-                "JSON keys and enum tokens stay in English.\n\n"
-            )
+            directive = f"**OUTPUT LANGUAGE: {lang_name} ({code}).** Strings in fluent {lang_name}. Keys/enums in English.\n"
         user_text = directive + user_text
 
     system_prompt = (
         _build_system_prompt(one_pass=False, user_gender=user_gender)
         + _language_directive(language)
-        + (
-            f"\n\nBATCH MODE — Analyze {n} cropped garment photographs in numbered order (image 1..{n}). "
-            f"Return a raw JSON ARRAY of EXACTLY {n} objects in the same order following the GarmentAnalysis schema. "
-            "No text outside the array. Must start with `[` and end with `]`."
-        )
+        + f"\nBATCH: Analyze {n} crops in order (1..{n}). Return raw JSON array of EXACTLY {n} objects matching GarmentAnalysis schema. No extra text."
         + hint_block
     )
     return system_prompt, user_text
@@ -683,12 +638,12 @@ ATTRIBUTE_GROUPS: list[tuple[str, list[str], int, str]] = [
         ["name", "title", "category", "sub_category", "item_type"],
         280,
         (
-            'Identify the garment:\n'
-            '- name: 2-5 unique, distinguishing words (e.g. "heavyweight boxy tee", "hooded windbreaker")\n'
-            '- title: short fallback title matching name (e.g. "Boxy Tee", "Windbreaker Jacket")\n'
-            '- category: Top | Bottom | Outerwear | Full Body | Footwear | Accessories | Underwear\n'
-            '- sub_category: e.g. Shirt, Pants, Jacket, Dress, Sneakers\n'
-            '- item_type: specific type, e.g. Oxford shirt, Bomber jacket, Parka'
+            'Garment identity:\n'
+            '- name: 2-5 unique distinguishing words\n'
+            '- title: short title matching name\n'
+            '- category: Top|Bottom|Outerwear|Full Body|Footwear|Accessories|Underwear\n'
+            '- sub_category: cut (Shirt, Pants, Jacket, Dress, Sneakers)\n'
+            '- item_type: specific cut (Oxford shirt, Bomber jacket)'
         )
     ),
     (
@@ -696,10 +651,10 @@ ATTRIBUTE_GROUPS: list[tuple[str, list[str], int, str]] = [
         ["colors", "pattern", "fabric_materials"],
         320,
         (
-            'Analyze visual properties:\n'
-            '- colors: list of [{"name": "color name", "pct": 0-100}] summing to 100\n'
-            '- pattern: solid | striped | plaid | floral | herringbone | polka_dot | paisley | geometric | animal_print | graphic | tie_dye | abstract\n'
-            '- fabric_materials: list of [{"name": "fabric", "pct": 0-100}] summing to 100 (infer composition)'
+            'Visual properties:\n'
+            '- colors: [{"name": str, "pct": int}] summing to 100\n'
+            '- pattern: solid|striped|plaid|floral|herringbone|polka_dot|paisley|geometric|animal_print|graphic|tie_dye|abstract\n'
+            '- fabric_materials: [{"name": str, "pct": int}] summing to 100'
         )
     ),
     (
@@ -707,11 +662,11 @@ ATTRIBUTE_GROUPS: list[tuple[str, list[str], int, str]] = [
         ["gender", "dress_code", "season", "tradition"],
         120,
         (
-            'Analyze context of use:\n'
-            '- gender: men | women | unisex | kids\n'
-            '- dress_code: casual | smart-casual | business | formal | athletic | loungewear\n'
-            '- season: array of spring, summer, fall, winter, all\n'
-            '- tradition: cultural/religious style if clearly visible (e.g. arabic, jewish, indian), else null'
+            'Context of use:\n'
+            '- gender: men|women|unisex|kids\n'
+            '- dress_code: casual|smart-casual|business|formal|athletic|loungewear\n'
+            '- season: [spring|summer|fall|winter|all]\n'
+            '- tradition: cultural style if visible, else null'
         )
     ),
     (
@@ -719,12 +674,12 @@ ATTRIBUTE_GROUPS: list[tuple[str, list[str], int, str]] = [
         ["state", "condition", "quality", "size", "brand"],
         160,
         (
-            'Analyze physical condition:\n'
-            '- state: new | used\n'
-            '- condition: bad | fair | good | excellent\n'
-            '- quality: budget | mid | premium | luxury\n'
-            '- size: readable size label/tag in photo, else null\n'
-            '- brand: legibly visible brand name, else null'
+            'Physical condition:\n'
+            '- state: new|used\n'
+            '- condition: bad|fair|good|excellent\n'
+            '- quality: budget|mid|premium|luxury\n'
+            '- size: visible size tag, else null\n'
+            '- brand: visible brand, else null'
         )
     ),
     (
@@ -732,11 +687,11 @@ ATTRIBUTE_GROUPS: list[tuple[str, list[str], int, str]] = [
         ["caption", "price_cents", "repair_advice", "tags"],
         520,
         (
-            'Generate narrative fields:\n'
-            '- caption: ONE confident vivid sentence (max 240 chars) describing silhouette and key details. No hedging!\n'
-            '- price_cents: estimated resale value in USD cents as integer, or null\n'
-            '- repair_advice: short actionable restoration tip if condition is bad, else null\n'
-            '- tags: array of 3 to 8 searchable keywords'
+            'Narrative fields:\n'
+            '- caption: ONE confident vivid sentence (max 240 chars)\n'
+            '- price_cents: estimated resale in USD cents (integer) or null\n'
+            '- repair_advice: restoration tip if worn/damaged, else null\n'
+            '- tags: 3 to 8 searchable keywords'
         )
     ),
 ]
@@ -813,12 +768,12 @@ async def call_gemma_space_stream_attributes(
                 mapped_cat = "Accessories"
 
             if mapped_cat:
-                sys_parts.append(f"\nSEGMENTATION CONTEXT: Cropped region is '{mapped_cat}'. Describe this item only, ignoring adjacent clothing.")
+                sys_parts.append(f"\nSEGMENTATION: Crop is '{mapped_cat}'. Describe this item only.")
 
         if "bag" in lbl_low or segformer_category == "bag":
-            sys_parts.append("\nCATEGORY RULE: This item is a BAG. Classify sub_category as 'Bag', 'Tote Bag', or 'Handbag'. Never classify as belt, scarf, or jewelry.")
+            sys_parts.append("\nRULE: Bag item. sub_category='Bag'|'Tote Bag'|'Handbag'. Not belt/scarf/jewelry.")
         elif ("shoe" in lbl_low or segformer_category == "footwear") and "boot" not in lbl_low:
-            sys_parts.append("\nCATEGORY RULE: This item is FOOTWEAR/SHOES/SNEAKERS. For low-cut, athletic, canvas, or casual footwear, classify sub_category as 'Sneakers' or 'Shoes' (never 'Boots').")
+            sys_parts.append("\nRULE: Footwear item. Low-cut/athletic/canvas/casual sub_category='Sneakers'|'Shoes' (not 'Boots').")
 
         system_prompt = "\n".join(sys_parts)
         user_text = _user_prompt(language, user_gender=user_gender)
