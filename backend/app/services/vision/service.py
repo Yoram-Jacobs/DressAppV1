@@ -2714,9 +2714,12 @@ class GarmentVisionService:
                                 hint += " (This item is footwear/shoes.)"
                             items_hints.append(hint)
 
+                        multi_garment_schema = dict(_GARMENT_OBJECT_SCHEMA)
+                        multi_garment_schema["required"] = ["name", "title", "category", "sub_category", "item_type"]
+
                         multi_item_schema = {
                             "type": "array",
-                            "items": _GARMENT_OBJECT_SCHEMA,
+                            "items": multi_garment_schema,
                             "minItems": len(slot_crop_list),
                             "maxItems": len(slot_crop_list),
                         }
@@ -2764,6 +2767,7 @@ class GarmentVisionService:
 
                         parsed_items: list[dict[str, Any]] = []
                         if raw_multi:
+                            logger.info("Gemma unified raw_multi (len=%d): %s", len(raw_multi), raw_multi[:300])
                             parsed_json = _extract_json(raw_multi)
                             if isinstance(parsed_json, list):
                                 parsed_items = parsed_json
@@ -2781,7 +2785,7 @@ class GarmentVisionService:
                             item_raw = parsed_items[sub_i] if sub_i < len(parsed_items) and isinstance(parsed_items[sub_i], dict) else None
                             assembled = dict(item_raw) if item_raw else {}
 
-                            if not assembled or not assembled.get("category"):
+                            if not assembled or len(assembled) < 2:
                                 logger.warning(
                                     "Slot %d missing from multi-garment output — falling back to per-item.", slot_idx,
                                 )

@@ -818,12 +818,18 @@ def _suppress_overlapping_garments(
         dilated_item = ndimage.binary_dilation(item["mask"], iterations=10)
 
         for kept_idx, (kept_lbl, kept_item, kept_area) in enumerate(kept):
-            kept_cat = kept_item.get("category")
             # Distinct fashion categories (e.g. headwear vs top, top vs bottom, bottom vs footwear, accessory vs garment)
-            # must stay separate and not be merged, UNLESS one is footwear in a non-human photo (partner shoe misclassification)
-            # or flatlay top/bottom.
+            # must stay separate and not be merged, UNLESS one is footwear and the other is a sub-part fragment of that footwear.
+            # Real clothing categories (top, bottom, dress, outerwear, headwear) can NEVER merge with footwear!
+            clothing_cats = {"top", "bottom", "dress", "outerwear", "headwear"}
+            has_clothing = bool(clothing_cats & {kept_cat, item_cat})
+            has_footwear = "footwear" in {kept_cat, item_cat}
+
+            if has_footwear and has_clothing:
+                continue
+
             is_flatlay_top_bottom = False
-            is_footwear_candidate = (not has_human) and ("footwear" in {kept_cat, item_cat})
+            is_footwear_candidate = (not has_human) and has_footwear
             if kept_cat != item_cat:
                 garment_set = {"top", "dress", "outerwear"}
                 is_garment_pair = kept_cat in garment_set and item_cat in garment_set
@@ -854,12 +860,11 @@ def _suppress_overlapping_garments(
                 bbox_containment = i_area / float(a_item)
                 bbox_iou = i_area / float(a_item + a_kept - i_area)
 
-            # Footwear rule: any fragment overlapping or proximate to footwear in non-human photo is footwear
+            # Footwear rule: only genuine fragments with high containment/overlap merge
             is_footwear_overlap = is_footwear_candidate and (
-                pixel_containment >= 0.08
-                or bbox_containment >= 0.20
-                or bbox_iou >= 0.10
-                or (bb_item and bb_kept and _bbox_gap(bb_item, bb_kept) <= int(0.25 * min(H, W)))
+                pixel_containment >= 0.35
+                or bbox_containment >= 0.50
+                or bbox_iou >= 0.30
             )
 
             is_general_overlap = (
@@ -1015,18 +1020,15 @@ async def parse_garments(
         cid for cid, name in _id2label.items()
         if name in _HUMAN_CLASS_NAMES
     }
-    has_head = False
+    head_class_ids = {
+        cid for cid, name in _id2label.items()
+        if name in {"Face", "Hair", "Neck", "Sunglasses"}
+    }
+    has_head = bool(np.isin(class_mask, list(head_class_ids)).sum() >= 30) if head_class_ids else False
     if human_class_ids:
         human_mask_full = np.isin(class_mask, list(human_class_ids)).astype(np.uint8)
-        if not human_mask_full.any() or int(human_mask_full.sum()) < 5000:
+        if not human_mask_full.any() or int(human_mask_full.sum()) < 150:
             human_mask_full = None
-        else:
-            head_class_ids = {
-                cid for cid, name in _id2label.items()
-                if name in {"Face", "Hair", "Neck"}
-            }
-            if head_class_ids:
-                has_head = bool(np.isin(class_mask, list(head_class_ids)).any())
     else:
         human_mask_full = None
 
@@ -1096,34 +1098,47 @@ async def parse_garments(
                 "mask": combined,
             }
 
-    has_human = bool(has_head or (human_mask_full is not None and int(human_mask_full.sum()) >= 5000))
+    has_human = bool(has_head or (human_mask_full is not None and int(human_mask_full.sum()) >= 150))
 
-    # 2a) Footwear Partner Recovery (when SegFormer mislabels one shoe as Upper-clothes/Dress/Skirt)
-    # When there is NO human model present, and by_label contains Shoes, check if any other detection
-    # is a partner shoe (adjacent, overlapping, or comparable in size). In non-human photos,
-    # two items where one is Shoes are almost always partner shoes (a pair of slides/sandals/sneakers).
+    # 2a) Footwear Partner Recovery (when SegFormer mislabels one shoe as another item in a footwear-only photo)
+    # Never merge genuine garments (top, dress, skirt, pants, hat) into Shoes!
+    # Partner footwear recovery only applies when there is NO human model, NO clothing outfit,
+    # and the candidate is comparable in size and at the same horizontal height tier (side-by-side shoes).
     if "Shoes" in by_label and not has_human:
-        shoes_mask = by_label["Shoes"]["mask"]
-        shoes_bb = _mask_bbox(shoes_mask)
-        if shoes_bb:
-            other_keys = [k for k in list(by_label.keys()) if k != "Shoes"]
-            for ok in other_keys:
-                other_it = by_label[ok]
-                other_mask = other_it.get("mask")
-                if other_mask is None:
-                    continue
-                obb = _mask_bbox(other_mask)
-                if not obb:
-                    continue
-                y1, x1, y2, x2 = shoes_bb
-                oy1, ox1, oy2, ox2 = obb
-                vert_dist = max(0, max(y1, oy1) - min(y2, oy2))
-                horiz_dist = max(0, max(x1, ox1) - min(x2, ox2))
-                # In non-human photos, if total detections <= 2 or distance <= 35%, merge partner into Shoes
-                if len(by_label) <= 2 or (vert_dist <= int(0.35 * H) and horiz_dist <= int(0.35 * W)):
-                    logger.info("clothing_parser: merging partner detection '%s' into Shoes pair", ok)
-                    by_label["Shoes"]["mask"] = np.maximum(by_label["Shoes"]["mask"], other_mask)
-                    del by_label[ok]
+        has_outfit_garments = any(
+            (it.get("category") in ("top", "bottom", "dress", "outerwear") or
+             it.get("label") in ("Upper-clothes", "Pants", "Skirt", "Dress", "Coat", "Hat"))
+            for k, it in by_label.items() if k != "Shoes"
+        )
+        if not has_outfit_garments and len(by_label) == 2:
+            shoes_mask = by_label["Shoes"]["mask"]
+            shoes_bb = _mask_bbox(shoes_mask)
+            if shoes_bb:
+                other_key = next((k for k in by_label if k != "Shoes"), None)
+                if other_key:
+                    other_it = by_label[other_key]
+                    other_mask = other_it.get("mask")
+                    if other_mask is not None:
+                        obb = _mask_bbox(other_mask)
+                        if obb:
+                            y1, x1, y2, x2 = shoes_bb
+                            oy1, ox1, oy2, ox2 = obb
+                            h_shoe = max(1, y2 - y1)
+                            h_other = max(1, oy2 - oy1)
+                            area_shoe = max(1, int(shoes_mask.sum()))
+                            area_other = max(1, int(other_mask.sum()))
+                            # Must be side-by-side (vertical centers within 20% of frame), comparable height & area
+                            vert_center_diff = abs(((y1 + y2) / 2.0) - ((oy1 + oy2) / 2.0))
+                            ratio_h = float(h_other) / float(h_shoe)
+                            ratio_area = float(area_other) / float(area_shoe)
+                            if (
+                                vert_center_diff <= int(0.20 * H)
+                                and 0.4 <= ratio_h <= 2.5
+                                and 0.25 <= ratio_area <= 4.0
+                            ):
+                                logger.info("clothing_parser: merging side-by-side partner shoe detection '%s' into Shoes pair", other_key)
+                                by_label["Shoes"]["mask"] = np.maximum(by_label["Shoes"]["mask"], other_mask)
+                                del by_label[other_key]
 
     # 2b) Patch 12e (May 2026) — Option B2 pair recovery for footwear.
     #     When the unified Shoes mask is anatomically lopsided (one
@@ -1162,18 +1177,26 @@ async def parse_garments(
         count_hint=count_hint,
     )
 
-    if count_hint is not None and count_hint <= 1 and not has_human and len(by_label) > 1:
+    distinct_categories = {it.get("category") for it in by_label.values()}
+    has_top = bool(distinct_categories & {"top", "dress", "outerwear"})
+    has_bottom = "bottom" in distinct_categories
+    has_shoes = "footwear" in distinct_categories
+    is_multi_category_outfit = (has_top and has_bottom) or (has_top and has_shoes) or (has_bottom and has_shoes)
+
+    if count_hint is not None and count_hint <= 1 and not has_human and not is_multi_category_outfit and len(by_label) > 1:
         # Flat-lay or hanger photo of a single garment: any multiple detections are
         # sub-parts or two-tone splits of that single garment.
         items_list = list(by_label.values())
         def _garment_sort_key(it: dict[str, Any]) -> tuple[int, int]:
             cat = it.get("category", "")
-            if cat == "footwear":
+            if cat in ("top", "dress", "outerwear"):
                 cat_priority = 0
-            elif cat in ("top", "dress", "outerwear"):
+            elif cat == "bottom":
                 cat_priority = 1
-            else:
+            elif cat == "footwear":
                 cat_priority = 2
+            else:
+                cat_priority = 3
             area = int(it["mask"].sum()) if it.get("mask") is not None else 0
             return (cat_priority, -area)
         items_list.sort(key=_garment_sort_key)
