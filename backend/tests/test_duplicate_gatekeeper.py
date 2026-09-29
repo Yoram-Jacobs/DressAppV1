@@ -158,3 +158,44 @@ async def test_different_black_tops_are_not_duplicates():
         dup = await find_potential_duplicate(user_id, incoming_sweater)
         assert dup is None, f"Expected no duplicate, but got {dup}"
 
+
+@pytest.mark.anyio
+async def test_distinct_graphic_shirts_not_flagged_as_duplicate():
+    """Verify that two visually distinct graphic shirts (even if sharing category,
+    sub_category, dominant color, and generic terms like 'graphic' and 'shirt')
+    are never falsely flagged as duplicates."""
+    user_id = "test-user-456"
+    existing_item = {
+        "id": "1d24b558-49dd-4c85-8e2b-f245bd966c14",
+        "title": "Navy long sleeve shirt with red graphic accents",
+        "name": "Graphic print long sleeve + tee",
+        "category": "top",
+        "sub_category": "t-shirt",
+        "item_type": "long_sleeve_t_shirt",
+        "brand": "",
+        "colors": [{"name": "black", "pct": 85}, {"name": "red", "pct": 15}],
+        "source_phash": "3c3c7e7e3c180000",
+        "source_sha256": "sha_existing_shirt",
+    }
+
+    mock_db = MagicMock()
+    mock_cursor = MagicMock()
+    mock_cursor.limit.return_value = mock_cursor
+    mock_cursor.to_list = AsyncMock(return_value=[existing_item])
+    mock_db.closet_items.find.return_value = mock_cursor
+
+    with patch("app.services.duplicate_detection.get_db", return_value=mock_db):
+        incoming_new_shirt = {
+            "title": "Black Cotton Graphic T-Shirt",
+            "name": "Black Cotton Graphic T-Shirt",
+            "category": "Top",
+            "sub_category": "T-Shirt",
+            "item_type": "Short-Sleeve T-Shirt",
+            "colors": [{"name": "Black", "pct": 90}],
+            "source_phash": "ffff0000ffff0000",  # clearly distinct phash (Hamming > 6)
+            "source_sha256": "sha_new_cartoon_shirt",
+        }
+        dup = await find_potential_duplicate(user_id, incoming_new_shirt)
+        assert dup is None, f"Expected no duplicate for distinct graphic shirts, but got: {dup}"
+
+

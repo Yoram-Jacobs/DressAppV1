@@ -347,16 +347,69 @@ const hydrate = (a, user, t, i18n) => {
     const pref = deriveSizeFromPreferences(user, out);
     if (pref) out.size = pref;
   }
-  // 1. Sanity check: Subcategory and Item Type cannot be identical to Category or generic "Top"/"Tops"
+  // 1. Sanity check: Subcategory and Item Type cannot be identical to Category or generic "Top"/"Tops"/"Garment"
   const catLower = String(out.category || '').trim().toLowerCase();
   let subRaw = String(out.sub_category || '').trim();
   let itemRaw = String(out.item_type || '').trim();
 
-  if (!subRaw || subRaw.toLowerCase() === 'top' || subRaw.toLowerCase() === 'tops' || subRaw.toLowerCase() === catLower) {
-    subRaw = (out.gender === 'women') ? 'blouses' : 'tailored_shirts';
+  const isGenericSub = !subRaw ||
+    subRaw.toLowerCase() === 'top' ||
+    subRaw.toLowerCase() === 'tops' ||
+    subRaw.toLowerCase() === 'garment' ||
+    subRaw.toLowerCase() === 'item' ||
+    subRaw.toLowerCase() === 'clothing' ||
+    subRaw.toLowerCase() === catLower;
+
+  if (isGenericSub) {
+    const itemBlob = `${itemRaw} ${out.name || ''} ${out.title || ''}`.toLowerCase();
+    if (catLower === 'accessories' || catLower === 'accessory') {
+      if (/hat|cap|beanie|trapper|beret|fedora|headwear|כובע/.test(itemBlob)) {
+        subRaw = 'headwear';
+      } else if (/bag|backpack|tote|purse|clutch|תיק/.test(itemBlob)) {
+        subRaw = 'bags';
+      } else if (/belt|חגורה/.test(itemBlob)) {
+        subRaw = 'belts';
+      } else if (/scarf|shawl|wrap|צעיף/.test(itemBlob)) {
+        subRaw = 'scarves_and_wraps';
+      } else if (/glove|mitten|כפפ/.test(itemBlob)) {
+        subRaw = 'gloves';
+      } else {
+        subRaw = 'headwear';
+      }
+    } else if (catLower === 'bottom' || catLower === 'bottoms') {
+      if (/jean|denim|ג׳ינס|גינס/.test(itemBlob)) {
+        subRaw = 'jeans';
+      } else if (/short|שורט/.test(itemBlob)) {
+        subRaw = 'shorts';
+      } else if (/skirt|חצאית/.test(itemBlob)) {
+        subRaw = 'skirt';
+      } else {
+        subRaw = 'trousers';
+      }
+    } else if (catLower === 'outerwear') {
+      if (/coat|מעיל|parka|trench/.test(itemBlob)) {
+        subRaw = 'coats';
+      } else {
+        subRaw = 'jackets';
+      }
+    } else if (catLower === 'footwear' || catLower === 'shoes') {
+      if (/sneaker|running|סניקרס|ספורט/.test(itemBlob)) {
+        subRaw = 'sneakers';
+      } else if (/boot|מגפ/.test(itemBlob)) {
+        subRaw = 'boots';
+      } else if (/sandal|slide|סנדל|כפכפ/.test(itemBlob)) {
+        subRaw = 'sandals';
+      } else {
+        subRaw = 'shoes';
+      }
+    } else if (catLower === 'full body' || catLower === 'dress' || catLower === 'one_piece') {
+      subRaw = 'dress';
+    } else {
+      subRaw = (out.gender === 'women') ? 'blouses' : 'tailored_shirts';
+    }
   }
   const subCanonical = canonicalSubCategoryKey(subRaw);
-  if (!itemRaw || itemRaw.toLowerCase() === 'top' || itemRaw.toLowerCase() === 'tops' || itemRaw.toLowerCase() === catLower || itemRaw === subRaw || canonicalSubCategoryKey(itemRaw) === subCanonical) {
+  if (!itemRaw || itemRaw.toLowerCase() === 'top' || itemRaw.toLowerCase() === 'tops' || itemRaw.toLowerCase() === 'garment' || itemRaw.toLowerCase() === 'item' || itemRaw.toLowerCase() === catLower || itemRaw === subRaw || canonicalSubCategoryKey(itemRaw) === subCanonical) {
     if (subCanonical === 't_shirts' || /t[-_ ]?shirt|tee|חולצת טי|חולצות טי/i.test(subRaw)) {
       itemRaw = 'short_sleeve_t_shirt';
     } else if (subCanonical === 'tailored_shirts' || /shirt|מכופתרת/i.test(subRaw)) {
@@ -373,6 +426,14 @@ const hydrate = (a, user, t, i18n) => {
       itemRaw = 'chinos';
     } else if (subCanonical === 'knitwear' || /sweater|סוודר|סריג/i.test(subRaw)) {
       itemRaw = 'crew_neck_sweater';
+    } else if (subCanonical === 'headwear' || /headwear|כובע/i.test(subRaw)) {
+      itemRaw = /beanie/i.test(itemRaw) ? 'beanie' : (/trapper/i.test(itemRaw) ? 'trapper_hat' : 'beanie');
+    } else if (subCanonical === 'bags' || /bag|תיק/i.test(subRaw)) {
+      itemRaw = 'handbag';
+    } else if (subCanonical === 'belts' || /belt|חגורה/i.test(subRaw)) {
+      itemRaw = 'leather_belt';
+    } else if (subCanonical === 'scarves_and_wraps' || /scarf|צעיף/i.test(subRaw)) {
+      itemRaw = 'knit_scarf';
     } else {
       itemRaw = subRaw;
     }
@@ -534,8 +595,27 @@ const hydrate = (a, user, t, i18n) => {
         }
       }
     } else {
-      out.sub_category = subRaw;
-      out.item_type = itemRaw;
+      // English: format canonical keys into proper display labels (e.g. 'tailored_shirts' -> 'Tailored Shirts', 'headwear' -> 'Headwear')
+      const subKey = canonicalSubCategoryKey(subRaw);
+      if (subKey && subKey !== 'other') {
+        const formattedSub = labelForSubCategory(subKey, t);
+        out.sub_category = (formattedSub && formattedSub !== subKey) ? formattedSub : subRaw;
+      } else {
+        out.sub_category = subRaw;
+      }
+
+      const formattedItem = labelForItemType(itemRaw, t);
+      if (formattedItem && formattedItem !== itemRaw) {
+        out.item_type = formattedItem;
+      } else {
+        const itemKey = canonicalSubCategoryKey(itemRaw);
+        if (itemKey && itemKey !== 'other') {
+          const fallbackItem = labelForSubCategory(itemKey, t);
+          out.item_type = (fallbackItem && fallbackItem !== itemKey) ? fallbackItem : itemRaw;
+        } else {
+          out.item_type = itemRaw;
+        }
+      }
     }
   } else {
     out.sub_category = subRaw;

@@ -148,9 +148,34 @@ COLOR_CANONICAL_MAP = {
 }
 
 STOP_WORDS = {
-    "a", "an", "the", "and", "or", "of", "in", "with", "for", "on", "by", "to",
-    "של", "עם", "בצבע", "בסיסי", "בסיסית", "פריט", "בגדים", "אופנה", "חדש", "יפה",
-    "garment", "item", "clothing", "fashion", "basic", "classic", "casual",
+    # English articles, prepositions, conjunctions
+    "a", "an", "the", "and", "or", "of", "in", "with", "for", "on", "by", "to", "at", "from",
+    # Hebrew stop words
+    "של", "עם", "בצבע", "בסיסי", "בסיסית", "פריט", "בגדים", "אופנה", "חדש", "חדשה", "יפה", "מ", "על", "זה", "זו", "או",
+    # Generic clothing categories and item types (English)
+    "garment", "item", "clothing", "apparel", "wear", "piece", "fashion", "basic", "classic", "casual",
+    "top", "bottom", "shirt", "tshirt", "t-shirt", "tee", "blouse", "sweater", "hoodie", "sweatshirt",
+    "pants", "trousers", "jeans", "shorts", "skirt", "dress", "jacket", "coat", "blazer", "vest",
+    "shoes", "sneakers", "boots", "sandals", "heels", "loafers", "bag", "handbag", "hat", "cap", "beanie", "belt", "scarf",
+    # Generic clothing categories and item types (Hebrew)
+    "חולצה", "חולצת", "טי", "טופ", "מכנסיים", "מכנס", "ג'ינס", "גינס", "שורטס", "חצאית", "שמלה",
+    "סוודר", "סריג", "קפוצ'ון", "סווטשירט", "ג'קט", "ז'קט", "מעיל", "בלייזר", "וסט",
+    "נעליים", "סניקרס", "מגפיים", "סנדלים", "כפכפים", "עקבים", "תיק", "כובע", "חגורה", "צעיף",
+    # Common fabrics, cuts, styles & patterns (English)
+    "cotton", "denim", "wool", "leather", "linen", "silk", "polyester", "fleece", "nylon", "knit", "knitted",
+    "graphic", "print", "printed", "pattern", "patterned", "solid", "plain", "striped", "stripes", "plaid",
+    "sleeve", "sleeves", "sleeveless", "long", "short", "regular", "oversized", "slim", "fit", "loose",
+    "neck", "collar", "collared", "pocket", "pockets", "button", "buttons", "zip", "zipper", "accents", "accent", "detail", "details",
+    # Common fabrics, cuts, styles & patterns (Hebrew)
+    "כותנה", "דנים", "צמר", "עור", "פשתן", "משי", "פוליאסטר", "פליז", "סרוג",
+    "הדפס", "מודפס", "גרפי", "פסים", "משבצות", "חלק", "ארוך", "ארוכה", "קצר", "קצרה", "שרוול", "שרוולים", "צווארון", "כיס", "כיסים",
+    # Color names (English)
+    "black", "white", "blue", "navy", "red", "green", "yellow", "grey", "gray", "brown", "tan", "camel",
+    "pink", "purple", "orange", "beige", "cream", "khaki", "olive", "charcoal", "burgundy", "silver", "gold",
+    # Color names (Hebrew)
+    "שחור", "שחורה", "לבן", "לבנה", "כחול", "כחולה", "נייבי", "אדום", "אדומה", "ירוק", "ירוקה",
+    "צהוב", "צהובה", "אפור", "אפורה", "חום", "חומה", "ורוד", "ורודה", "סגול", "סגולה", "כתום", "כתומה",
+    "בז'", "בז", "קרם", "שמנת", "חאקי", "זית", "בורדו", "כסוף", "זהב",
 }
 
 
@@ -396,6 +421,23 @@ async def find_potential_duplicate(
             existing_brand = _norm(existing.get("brand"))
             existing_tokens = _extract_title_tokens(existing.get("title") or existing.get("name"))
 
+            # Perceptual hash sanity check: if both items have valid perceptual hashes
+            # and their Hamming distance is > 6, they are visually distinct garments.
+            # A metadata match MUST NOT override clear visual dissimilarity.
+            ex_phash = existing.get("source_phash")
+            if incoming_phash and ex_phash:
+                try:
+                    ai = int(incoming_phash, 16)
+                    bi = int(ex_phash, 16)
+                    bits_a = ai.bit_count()
+                    bits_b = bi.bit_count()
+                except (ValueError, TypeError):
+                    bits_a = bits_b = 0
+                if 6 <= bits_a <= 58 and 6 <= bits_b <= 58:
+                    dist = hamming_distance(incoming_phash, ex_phash)
+                    if dist > 6:
+                        continue
+
             # Broad category AND dominant color family MUST match
             if incoming_cat != ex_cat or incoming_color != ex_color:
                 continue
@@ -413,8 +455,8 @@ async def find_potential_duplicate(
             overlap = incoming_tokens & existing_tokens
             if incoming_tokens and existing_tokens:
                 min_len = min(len(incoming_tokens), len(existing_tokens))
-                # For very short titles (1-2 tokens), 1 match is sufficient; otherwise require >= 2
-                if len(overlap) >= 2 or (min_len <= 2 and len(overlap) >= 1):
+                # For very short titles (1 token), 1 match is sufficient; otherwise require >= 2
+                if len(overlap) >= 2 or (min_len == 1 and len(overlap) >= 1):
                     return {
                         "id": existing.get("id"),
                         "title": existing.get("title") or existing.get("name") or "Untitled garment",

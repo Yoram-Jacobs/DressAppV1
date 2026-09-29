@@ -286,6 +286,19 @@ def _coerce_single_garment(
             res["sub_category"] = "Dresses"
         elif cat_lower == "footwear":
             res["sub_category"] = "Sneakers"
+        elif cat_lower in ("accessories", "accessory"):
+            if any(w in full_text for w in ("hat", "cap", "beanie", "trapper", "beret", "fedora", "כובע")):
+                res["sub_category"] = "Headwear"
+            elif any(w in full_text for w in ("bag", "backpack", "tote", "purse", "clutch", "תיק")):
+                res["sub_category"] = "Bags"
+            elif any(w in full_text for w in ("belt", "חגורה")):
+                res["sub_category"] = "Belts"
+            elif any(w in full_text for w in ("scarf", "shawl", "wrap", "צעיף")):
+                res["sub_category"] = "Scarves & Wraps"
+            elif any(w in full_text for w in ("glove", "mitten", "כפפה", "כפפות")):
+                res["sub_category"] = "Gloves"
+            else:
+                res["sub_category"] = "Headwear"
         else:
             res["sub_category"] = "T-Shirt" if cat_lower == "top" else "Garment"
         sub_lower = (res.get("sub_category") or "").strip().lower()
@@ -325,6 +338,16 @@ def _coerce_single_garment(
             res["item_type"] = "A-Line Skirt"
         elif any(w in sub_lower for w in ("dress", "שמלה")):
             res["item_type"] = "Midi Dress"
+        elif any(w in sub_lower for w in ("headwear", "hat", "cap", "beanie", "כובע")):
+            res["item_type"] = "Beanie" if "beanie" in full_text_itype else ("Trapper Hat" if "trapper" in full_text_itype else "Classic Hat")
+        elif any(w in sub_lower for w in ("bag", "תיק")):
+            res["item_type"] = "Handbag"
+        elif any(w in sub_lower for w in ("belt", "חגורה")):
+            res["item_type"] = "Leather Belt"
+        elif any(w in sub_lower for w in ("scarf", "צעיף")):
+            res["item_type"] = "Knit Scarf"
+        elif any(w in sub_lower for w in ("glove", "כפפה")):
+            res["item_type"] = "Gloves"
         else:
             fallback_sub = res.get("sub_category") or "Item"
             res["item_type"] = f"Short-Sleeve {fallback_sub}" if is_summer else f"Classic {fallback_sub}"
@@ -1399,10 +1422,39 @@ def _enforce_segformer_category(
             analysis["sub_category"] = None
     elif default == "Accessories":
         if "bag" in lbl_low or kind == "bag":
-            analysis["sub_category"] = "Bag"
-            analysis["item_type"] = "handbag"
+            analysis["sub_category"] = "Bags"
+            if not analysis.get("item_type") or str(analysis.get("item_type")).lower() in ("clothing", "garment", "top", "accessories"):
+                analysis["item_type"] = "Handbag"
+        elif kind == "headwear" or any(h in lbl_low for h in ("hat", "cap", "beanie", "trapper", "beret", "fedora")):
+            analysis["sub_category"] = "Headwear"
+            if not analysis.get("item_type") or str(analysis.get("item_type")).lower() in ("clothing", "garment", "top", "accessories"):
+                analysis["item_type"] = "Hat"
+        elif any(b in lbl_low for b in ("belt", "waistband")):
+            analysis["sub_category"] = "Belts"
+            if not analysis.get("item_type") or str(analysis.get("item_type")).lower() in ("clothing", "garment", "top", "accessories"):
+                analysis["item_type"] = "Belt"
+        elif any(s in lbl_low for s in ("scarf", "shawl", "wrap")):
+            analysis["sub_category"] = "Scarves & Wraps"
+            if not analysis.get("item_type") or str(analysis.get("item_type")).lower() in ("clothing", "garment", "top", "accessories"):
+                analysis["item_type"] = "Scarf"
+        elif any(g in lbl_low for g in ("glove", "mitten")):
+            analysis["sub_category"] = "Gloves"
+            if not analysis.get("item_type") or str(analysis.get("item_type")).lower() in ("clothing", "garment", "top", "accessories"):
+                analysis["item_type"] = "Gloves"
         else:
-            analysis["sub_category"] = None
+            sub_curr = (old_subcategory or analysis.get("item_type") or "").lower()
+            if any(h in sub_curr for h in ("hat", "cap", "beanie", "trapper", "headwear", "beret")):
+                analysis["sub_category"] = "Headwear"
+            elif any(b in sub_curr for b in ("bag", "backpack", "tote", "purse")):
+                analysis["sub_category"] = "Bags"
+            elif "belt" in sub_curr:
+                analysis["sub_category"] = "Belts"
+            elif "scarf" in sub_curr:
+                analysis["sub_category"] = "Scarves & Wraps"
+            elif "glove" in sub_curr:
+                analysis["sub_category"] = "Gloves"
+            else:
+                analysis["sub_category"] = "Headwear" if kind == "headwear" else "Bags"
         _sanitize_bag_or_accessory(analysis, label=label, kind=kind, language=language)
     else:
         analysis["sub_category"] = None
@@ -1415,9 +1467,12 @@ def _enforce_segformer_category(
         if sub_str.lower() == item_str.lower():
             if sub_str.lower() in ("sneakers", "shoes"):
                 analysis["item_type"] = "Low-Top Sneakers" if sub_str.lower() == "sneakers" else "Casual Shoes"
-            elif sub_str.lower() in ("bag", "handbag"):
-                analysis["sub_category"] = "Bag"
+            elif sub_str.lower() in ("bag", "bags", "handbag"):
+                analysis["sub_category"] = "Bags"
                 analysis["item_type"] = "Handbag"
+            elif sub_str.lower() in ("headwear", "hat"):
+                analysis["sub_category"] = "Headwear"
+                analysis["item_type"] = "Classic Hat"
             else:
                 analysis["item_type"] = f"Classic {sub_str}"
 
