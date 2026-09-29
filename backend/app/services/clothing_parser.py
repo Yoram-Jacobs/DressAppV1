@@ -1084,7 +1084,35 @@ async def parse_garments(
                 "mask": combined,
             }
 
-    # 2a) Patch 12e (May 2026) — Option B2 pair recovery for footwear.
+    has_human = bool(has_head or (human_mask_full is not None))
+
+    # 2a) Footwear Partner Recovery (when SegFormer mislabels one shoe as Upper-clothes/Dress/Skirt)
+    # When there is NO human model present, and by_label contains Shoes, check if any other detection
+    # is a partner shoe (adjacent, overlapping, or comparable in size). In non-human photos,
+    # two items where one is Shoes are almost always partner shoes (a pair of slides/sandals/sneakers).
+    if "Shoes" in by_label and not has_human:
+        shoes_mask = by_label["Shoes"]["mask"]
+        shoes_bb = _mask_bbox(shoes_mask)
+        if shoes_bb:
+            other_keys = [k for k in list(by_label.keys()) if k != "Shoes"]
+            for ok in other_keys:
+                other_it = by_label[ok]
+                other_mask = other_it.get("mask")
+                if other_mask is None:
+                    continue
+                obb = _mask_bbox(other_mask)
+                if not obb:
+                    continue
+                y1, x1, y2, x2 = shoes_bb
+                oy1, ox1, oy2, ox2 = obb
+                vert_dist = max(0, max(y1, oy1) - min(y2, oy2))
+                horiz_dist = max(0, max(x1, ox1) - min(x2, ox2))
+                if vert_dist <= int(0.20 * H) and horiz_dist <= int(0.20 * W):
+                    logger.info("clothing_parser: merging partner detection '%s' into Shoes pair", ok)
+                    by_label["Shoes"]["mask"] = np.maximum(by_label["Shoes"]["mask"], other_mask)
+                    del by_label[ok]
+
+    # 2b) Patch 12e (May 2026) — Option B2 pair recovery for footwear.
     #     When the unified Shoes mask is anatomically lopsided (one
     #     half of the frame carries < 30% the mass of the other), the
     #     first SegFormer pass almost certainly missed a partner boot
@@ -1105,7 +1133,7 @@ async def parse_garments(
                 repr(exc)[:120],
             )
 
-    # 2b) Clean up every merged mask: fill shadow-holes, smooth jagged
+    # 2c) Clean up every merged mask: fill shadow-holes, smooth jagged
     #     edges, drop floating specks. Without this step the alpha
     #     channel on cropped PNGs looks like swiss cheese.
     for item in by_label.values():
@@ -1114,16 +1142,7 @@ async def parse_garments(
             keep_top_k=2 if item["label"] == "Shoes" else 1,
         )
 
-    # 2c) Patch 12 (May 2026) — inter-label overlap suppression. Before
-    #     this step a long coat fires both "Upper-clothes" and "Dress"
-    #     and the user sees two cards from one garment. Trousers split
-    #     by a shadow fire two adjacent "bottom" masks and become two
-    #     cards. The fix is a pass of containment + IoU NMS across the
-    #     garment-class labels (top / bottom / dress). Accessory /
-    #     footwear / headwear are intentionally exempt because they
-    #     legitimately overlap with garments (belt on pants, bag on
-    #     dress, shoes overlap the hem of trousers).
-    has_human = bool(has_head or (human_mask_full is not None))
+    # 2d) Patch 12 (May 2026) — inter-label overlap suppression.
     by_label = _suppress_overlapping_garments(
         by_label,
         has_human=has_human,
@@ -1133,11 +1152,15 @@ async def parse_garments(
     if count_hint is not None and count_hint <= 1 and not has_human and len(by_label) > 1:
         # Flat-lay or hanger photo of a single garment: any multiple detections are
         # sub-parts or two-tone splits of that single garment.
-        # Pick the most plausible garment label (preferring top / dress / outerwear over pants/skirt if top exists, or largest mask)
         items_list = list(by_label.values())
         def _garment_sort_key(it: dict[str, Any]) -> tuple[int, int]:
             cat = it.get("category", "")
-            cat_priority = 0 if cat in ("top", "dress", "outerwear") else 1
+            if cat == "footwear":
+                cat_priority = 0
+            elif cat in ("top", "dress", "outerwear"):
+                cat_priority = 1
+            else:
+                cat_priority = 2
             area = int(it["mask"].sum()) if it.get("mask") is not None else 0
             return (cat_priority, -area)
         items_list.sort(key=_garment_sort_key)
@@ -1535,14 +1558,19 @@ def apply_alpha_intersection(
                 repr(exc)[:120],
             )
 
-    # 4. Intersect with the dilated soft mask of the target garment to crop out other garments
-    # CRITICAL: Only perform soft-mask intersection if other garments or human body parts
-    # exist in the crop frame. If other_mask is None and human_mask is None, rembg already
-    # isolated the standalone garment with studio-grade alpha boundaries; intersecting
-    # with a coarse SegFormer mask introduces jagged erosion and punches holes in low-contrast/graphic fabric.
-    if soft_mask is not None and (has_other or has_human):
+    # 4. Intersect with the dilated soft mask of the target garment to crop out human wearer body
+    # CRITICAL: Only perform soft-mask intersection if a human wearer is present.
+    # In flat-lay or multi-garment photos without a human, rembg already isolates the standalone
+    # garment with studio-grade alpha boundaries; intersecting with a coarse SegFormer mask introduces
+    # jagged erosion, serrated edges, and punches holes in low-contrast/graphic/knit fabric.
+    if soft_mask is not None and has_human:
         try:
-            new_alpha = np.minimum(new_alpha, soft_mask).astype(np.uint8)
+            from scipy import ndimage
+            mask_bin = soft_mask > 127
+            closed = ndimage.binary_closing(mask_bin, structure=np.ones((7, 7), dtype=bool), iterations=1)
+            filled = ndimage.binary_fill_holes(closed)
+            filled_soft = np.where(filled, np.uint8(255), np.uint8(0))
+            new_alpha = np.minimum(new_alpha, filled_soft).astype(np.uint8)
         except Exception as exc:  # noqa: BLE001
             logger.info(
                 "apply_alpha_intersection: soft-mask intersection failed: %s",

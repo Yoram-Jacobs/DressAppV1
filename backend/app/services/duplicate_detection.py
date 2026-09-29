@@ -89,6 +89,49 @@ CATEGORY_CANONICAL_MAP = {
     "scarf": "scarf", "צעיף": "scarf",
 }
 
+SUBCATEGORY_CANONICAL_MAP = {
+    # Tops / Upper
+    "sweater": "sweater", "סוודר": "sweater", "סריג": "sweater", "knitwear": "sweater",
+    "cardigan": "cardigan", "קרדיגן": "cardigan",
+    "hoodie": "hoodie", "קפוצ'ון": "hoodie", "sweatshirt": "hoodie", "סווטשירט": "hoodie",
+    "t-shirt": "t_shirt", "t_shirt": "t_shirt", "tee": "t_shirt", "טי שירט": "t_shirt", "חולצת טי": "t_shirt",
+    "shirt": "shirt", "button-down": "shirt", "button_down_shirt": "shirt", "חולצה מכופתרת": "shirt",
+    "blouse": "blouse", "בלוזה": "blouse",
+    "tank": "tank_top", "tank top": "tank_top", "tank_top": "tank_top", "גופייה": "tank_top", "גופיה": "tank_top",
+    "mesh top": "mesh_top", "mesh_top": "mesh_top", "טופ רשת": "mesh_top", "top": "top", "טופ": "top",
+
+    # Bottoms
+    "jeans": "jeans", "ג'ינס": "jeans",
+    "shorts": "shorts", "מכנס קצר": "shorts", "שורטס": "shorts",
+    "pants": "pants", "trousers": "pants", "מכנסיים": "pants", "מכנס": "pants",
+    "skirt": "skirt", "חצאית": "skirt",
+    "leggings": "leggings", "טייץ": "leggings",
+    "sweatpants": "sweatpants", "joggers": "sweatpants", "מכנסי טרנינג": "sweatpants",
+
+    # Outerwear
+    "jacket": "jacket", "ג'קט": "jacket", "ז'קט": "jacket", "בלייזר": "blazer", "blazer": "blazer",
+    "coat": "coat", "מעיל": "coat", "trench": "trench", "vest": "vest", "וסט": "vest",
+    "bolero": "bolero", "בולרו": "bolero",
+
+    # Footwear
+    "sandals": "sandals", "slides": "sandals", "flip_flops": "sandals", "flip-flops": "sandals",
+    "כפכפים": "sandals", "סנדלים": "sandals", "floppers": "sandals",
+    "sneakers": "sneakers", "נעלי ספורט": "sneakers", "סניקרס": "sneakers", "running_shoes": "sneakers",
+    "boots": "boots", "מגפיים": "boots", "מגפונים": "boots",
+    "heels": "heels", "עקבים": "heels", "נעלי עקב": "heels",
+    "loafers": "loafers", "נעלי מוקסין": "loafers", "shoes": "shoes", "נעליים": "shoes",
+
+    # Dresses & Jumpsuits
+    "dress": "dress", "שמלה": "dress",
+    "jumpsuit": "jumpsuit", "אוברול": "jumpsuit",
+
+    # Bags & Accessories
+    "bag": "bag", "handbag": "bag", "תיק": "bag", "תיק יד": "bag", "backpack": "backpack", "תיק גב": "backpack",
+    "belt": "belt", "חגורה": "belt",
+    "hat": "hat", "cap": "hat", "כובע": "hat",
+    "scarf": "scarf", "צעיף": "scarf",
+}
+
 COLOR_CANONICAL_MAP = {
     "white": "white", "לבן": "white",
     "black": "black", "שחור": "black",
@@ -102,6 +145,12 @@ COLOR_CANONICAL_MAP = {
     "purple": "purple", "סגול": "purple", "lavender": "purple", "לבנדר": "purple",
     "beige": "beige", "בז'": "beige", "cream": "beige", "שמנת": "beige",
     "orange": "orange", "כתום": "orange",
+}
+
+STOP_WORDS = {
+    "a", "an", "the", "and", "or", "of", "in", "with", "for", "on", "by", "to",
+    "של", "עם", "בצבע", "בסיסי", "בסיסית", "פריט", "בגדים", "אופנה", "חדש", "יפה",
+    "garment", "item", "clothing", "fashion", "basic", "classic", "casual",
 }
 
 
@@ -142,6 +191,18 @@ def _canonical_category(val: str | None) -> str:
     return norm
 
 
+def _canonical_subcategory(val: str | None) -> str:
+    norm = _norm(val).replace("-", "_").replace(" ", "_")
+    if not norm:
+        return ""
+    if norm in SUBCATEGORY_CANONICAL_MAP:
+        return SUBCATEGORY_CANONICAL_MAP[norm]
+    for k, v in SUBCATEGORY_CANONICAL_MAP.items():
+        if k in norm:
+            return v
+    return norm
+
+
 def _canonical_color(val: str | None) -> str:
     norm = _norm(val)
     if not norm:
@@ -157,11 +218,20 @@ def _canonical_color(val: str | None) -> str:
     return norm
 
 
+def _extract_title_tokens(title: str | None) -> set[str]:
+    norm = _norm(title)
+    if not norm:
+        return set()
+    for ch in ",.-_/:;'\"!?()[]{}":
+        norm = norm.replace(ch, " ")
+    return {w for w in norm.split() if len(w) >= 2 and w not in STOP_WORDS}
+
+
 async def find_potential_duplicate(
     user_id: str, analysis: dict[str, Any]
 ) -> dict[str, Any] | None:
     """Return the first existing closet item that "looks like" the
-    analysed garment by perceptual hash or normalized metadata,
+    analysed garment by perceptual hash or strict normalized metadata,
     or ``None`` if nothing matches.
     """
     db = get_db()
@@ -178,6 +248,9 @@ async def find_potential_duplicate(
     )
     incoming_phash = analysis.get("source_phash") or (average_hash(source_img) if source_img else None)
     incoming_sha = analysis.get("source_sha256") or (compute_sha256(source_img) if source_img else None)
+    incoming_parent_sha = analysis.get("parent_image_sha256") or (
+        compute_sha256(analysis.get("parent_image_bytes")) if analysis.get("parent_image_bytes") else None
+    )
     
     # Query all user closet items
     cursor = db.closet_items.find(
@@ -199,6 +272,7 @@ async def find_potential_duplicate(
             "segmented_image_url": 1,
             "source_phash": 1,
             "source_sha256": 1,
+            "parent_image_sha256": 1,
         },
     ).limit(300)
     
@@ -207,106 +281,152 @@ async def find_potential_duplicate(
         return None
     
     # Check visual hash match first
-    if incoming_phash or incoming_sha:
-        for existing in existing_items:
-            ex_phash = existing.get("source_phash")
-            ex_sha = existing.get("source_sha256")
-            
-            # Lazy compute if existing item has an image but no phash stored yet
-            if not ex_phash:
-                for candidate_key in (
-                    "thumbnail_data_url",
-                    "clean_image_url",
-                    "original_image_url",
-                    "segmented_image_url",
-                ):
-                    ex_img = existing.get(candidate_key)
-                    if not ex_img or not isinstance(ex_img, str):
-                        continue
-                    if ex_img.startswith("data:") or len(ex_img) > 300:
-                        ex_phash = average_hash(ex_img)
-                        ex_sha = compute_sha256(ex_img)
-                    else:
-                        try:
-                            from app.services.closet_service import read_image_bytes_from_url
-                            raw_ex = await read_image_bytes_from_url(ex_img)
-                            if raw_ex:
-                                ex_phash = average_hash(raw_ex)
-                                ex_sha = compute_sha256(raw_ex)
-                        except Exception:
-                            pass
-                    if ex_phash or ex_sha:
-                        try:
-                            await db.closet_items.update_one(
-                                {"id": existing["id"]},
-                                {"$set": {"source_phash": ex_phash, "source_sha256": ex_sha}},
-                            )
-                        except Exception:
-                            pass
-                        break
-                
-            if is_duplicate_match(incoming_sha, ex_sha, incoming_phash, ex_phash):
-                return {
-                    "id": existing.get("id"),
-                    "title": existing.get("title") or existing.get("name") or "Untitled garment",
-                    "name": existing.get("name"),
-                    "item_type": existing.get("item_type"),
-                    "sub_category": existing.get("sub_category"),
-                    "brand": existing.get("brand"),
-                    "thumbnail_data_url": existing.get("thumbnail_data_url") or existing.get("clean_image_url") or existing.get("original_image_url"),
-                    "match_reason": "visual_hash",
-                }
+    for existing in existing_items:
+        ex_phash = existing.get("source_phash")
+        ex_sha = existing.get("source_sha256")
+        ex_parent_sha = existing.get("parent_image_sha256")
 
-            # If visual hamming distance is small (<= 8) and category/color align
-            if incoming_phash and ex_phash:
+        # 1a. Check exact parent photo re-upload
+        if incoming_parent_sha and ex_parent_sha and incoming_parent_sha == ex_parent_sha:
+            return {
+                "id": existing.get("id"),
+                "title": existing.get("title") or existing.get("name") or "Untitled garment",
+                "name": existing.get("name"),
+                "item_type": existing.get("item_type"),
+                "sub_category": existing.get("sub_category"),
+                "brand": existing.get("brand"),
+                "thumbnail_data_url": existing.get("thumbnail_data_url") or existing.get("clean_image_url") or existing.get("original_image_url"),
+                "match_reason": "parent_photo_exact_match",
+            }
+
+        # Lazy compute if existing item has an image but no phash stored yet
+        if not ex_phash and not ex_sha:
+            for candidate_key in (
+                "clean_image_url",
+                "segmented_image_url",
+                "thumbnail_data_url",
+                "original_image_url",
+            ):
+                ex_img = existing.get(candidate_key)
+                if not ex_img or not isinstance(ex_img, str):
+                    continue
+                if ex_img.startswith("data:") or len(ex_img) > 300:
+                    ex_phash = average_hash(ex_img)
+                    ex_sha = compute_sha256(ex_img)
+                else:
+                    try:
+                        from app.services.closet_service import read_image_bytes_from_url
+                        raw_ex = await read_image_bytes_from_url(ex_img)
+                        if raw_ex:
+                            ex_phash = average_hash(raw_ex)
+                            ex_sha = compute_sha256(raw_ex)
+                    except Exception:
+                        pass
+                if ex_phash or ex_sha:
+                    try:
+                        await db.closet_items.update_one(
+                            {"id": existing["id"]},
+                            {"$set": {"source_phash": ex_phash, "source_sha256": ex_sha}},
+                        )
+                    except Exception:
+                        pass
+                    break
+            
+        # 1b. Exact crop SHA-256 match
+        if incoming_sha and ex_sha and incoming_sha == ex_sha:
+            return {
+                "id": existing.get("id"),
+                "title": existing.get("title") or existing.get("name") or "Untitled garment",
+                "name": existing.get("name"),
+                "item_type": existing.get("item_type"),
+                "sub_category": existing.get("sub_category"),
+                "brand": existing.get("brand"),
+                "thumbnail_data_url": existing.get("thumbnail_data_url") or existing.get("clean_image_url") or existing.get("original_image_url"),
+                "match_reason": "visual_hash_exact",
+            }
+
+        # 1c. Strict perceptual dHash match (Hamming distance <= 3)
+        if incoming_phash and ex_phash:
+            # Reject degenerate flat hashes (all-0s or all-1s has zero entropy and collides across flat cutouts)
+            try:
+                ai = int(incoming_phash, 16)
+                bi = int(ex_phash, 16)
+                bits_a = ai.bit_count()
+                bits_b = bi.bit_count()
+            except ValueError:
+                bits_a = bits_b = 0
+            
+            if 6 <= bits_a <= 58 and 6 <= bits_b <= 58:
                 dist = hamming_distance(incoming_phash, ex_phash)
-                if dist <= 8:
+                if dist <= 3:
+                    # Category and subcategory must not actively contradict
                     incoming_cat_v = _canonical_category(analysis.get("category") or analysis.get("sub_category") or analysis.get("item_type"))
                     ex_cat_v = _canonical_category(existing.get("category") or existing.get("sub_category") or existing.get("item_type"))
-                    incoming_col_v = _canonical_color(_dominant_color(analysis))
-                    ex_col_v = _canonical_color(_dominant_color(existing))
-                    if incoming_cat_v and incoming_cat_v == ex_cat_v and incoming_col_v and incoming_col_v == ex_col_v:
-                        return {
-                            "id": existing.get("id"),
-                            "title": existing.get("title") or existing.get("name") or "Untitled garment",
-                            "name": existing.get("name"),
-                            "item_type": existing.get("item_type"),
-                            "sub_category": existing.get("sub_category"),
-                            "brand": existing.get("brand"),
-                            "thumbnail_data_url": existing.get("thumbnail_data_url") or existing.get("clean_image_url") or existing.get("original_image_url"),
-                            "match_reason": f"visual_hash_with_metadata (dist={dist})",
-                        }
+                    incoming_sub_v = _canonical_subcategory(analysis.get("sub_category") or analysis.get("item_type") or analysis.get("category"))
+                    ex_sub_v = _canonical_subcategory(existing.get("sub_category") or existing.get("item_type") or existing.get("category"))
 
-    # 2. Normalized Multilingual Metadata Check
+                    if incoming_cat_v and ex_cat_v and incoming_cat_v != ex_cat_v:
+                        continue
+                    if incoming_sub_v and ex_sub_v and incoming_sub_v != ex_sub_v:
+                        continue
+
+                    return {
+                        "id": existing.get("id"),
+                        "title": existing.get("title") or existing.get("name") or "Untitled garment",
+                        "name": existing.get("name"),
+                        "item_type": existing.get("item_type"),
+                        "sub_category": existing.get("sub_category"),
+                        "brand": existing.get("brand"),
+                        "thumbnail_data_url": existing.get("thumbnail_data_url") or existing.get("clean_image_url") or existing.get("original_image_url"),
+                        "match_reason": f"visual_hash (dist={dist})",
+                    }
+
+    # 2. Strict Normalized Multilingual Metadata Check
     incoming_cat = _canonical_category(analysis.get("category") or analysis.get("sub_category") or analysis.get("item_type"))
-    incoming_sub = _canonical_category(analysis.get("sub_category") or analysis.get("item_type"))
+    incoming_sub = _canonical_subcategory(analysis.get("sub_category") or analysis.get("item_type") or analysis.get("category"))
     incoming_color = _canonical_color(_dominant_color(analysis))
     brand = _norm(analysis.get("brand"))
-    incoming_title = _norm(analysis.get("title") or analysis.get("name"))
+    incoming_tokens = _extract_title_tokens(analysis.get("title") or analysis.get("name"))
     
     if incoming_cat and incoming_color:
         for existing in existing_items:
             ex_cat = _canonical_category(existing.get("category") or existing.get("sub_category") or existing.get("item_type"))
-            ex_sub = _canonical_category(existing.get("sub_category") or existing.get("item_type"))
+            ex_sub = _canonical_subcategory(existing.get("sub_category") or existing.get("item_type") or existing.get("category"))
             ex_color = _canonical_color(_dominant_color(existing))
             existing_brand = _norm(existing.get("brand"))
-            existing_title = _norm(existing.get("title") or existing.get("name"))
+            existing_tokens = _extract_title_tokens(existing.get("title") or existing.get("name"))
 
+            # Broad category AND dominant color family MUST match
             if incoming_cat != ex_cat or incoming_color != ex_color:
                 continue
+
+            # If both have brands, they MUST agree
             if brand and existing_brand and brand != existing_brand:
                 continue
 
+            # Sub-category / item type MUST match (e.g. sweater != mesh top, hoodie != shirt)
             sub_matched = bool(incoming_sub and ex_sub and incoming_sub == ex_sub)
-            title_matched = False
-            if incoming_title and existing_title:
-                w_in = set(incoming_title.split())
-                w_ex = set(existing_title.split())
-                overlap = w_in & w_ex
-                if len(overlap) >= 2 or (len(overlap) >= 1 and min(len(w_in), len(w_ex)) <= 2):
-                    title_matched = True
+            if not sub_matched:
+                continue
 
-            if sub_matched or title_matched:
+            # Title tokens overlap
+            overlap = incoming_tokens & existing_tokens
+            if incoming_tokens and existing_tokens:
+                min_len = min(len(incoming_tokens), len(existing_tokens))
+                # For very short titles (1-2 tokens), 1 match is sufficient; otherwise require >= 2
+                if len(overlap) >= 2 or (min_len <= 2 and len(overlap) >= 1):
+                    return {
+                        "id": existing.get("id"),
+                        "title": existing.get("title") or existing.get("name") or "Untitled garment",
+                        "name": existing.get("name"),
+                        "item_type": existing.get("item_type"),
+                        "sub_category": existing.get("sub_category"),
+                        "brand": existing.get("brand"),
+                        "thumbnail_data_url": existing.get("thumbnail_data_url") or existing.get("clean_image_url") or existing.get("original_image_url"),
+                        "match_reason": "metadata_match",
+                    }
+            elif sub_matched and brand and existing_brand and brand == existing_brand:
+                # If titles are missing/generic, identical brand + subcategory + color confirms duplicate
                 return {
                     "id": existing.get("id"),
                     "title": existing.get("title") or existing.get("name") or "Untitled garment",
@@ -315,8 +435,9 @@ async def find_potential_duplicate(
                     "sub_category": existing.get("sub_category"),
                     "brand": existing.get("brand"),
                     "thumbnail_data_url": existing.get("thumbnail_data_url") or existing.get("clean_image_url") or existing.get("original_image_url"),
-                    "match_reason": "metadata_match",
+                    "match_reason": "metadata_brand_match",
                 }
                 
     return None
+
 

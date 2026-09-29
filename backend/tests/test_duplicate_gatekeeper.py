@@ -45,7 +45,7 @@ def test_dominant_color_extraction():
     assert _dominant_color({}) == ""
 
 
-@pytest.mark.asyncio
+@pytest.mark.anyio
 async def test_find_potential_duplicate_by_metadata():
     user_id = "test-user-123"
     existing_item = {
@@ -82,7 +82,7 @@ async def test_find_potential_duplicate_by_metadata():
         assert dup["match_reason"] == "metadata_match"
 
 
-@pytest.mark.asyncio
+@pytest.mark.anyio
 async def test_find_potential_duplicate_by_visual_hash():
     user_id = "test-user-123"
     img_b64 = _create_test_image_b64()
@@ -119,3 +119,42 @@ async def test_find_potential_duplicate_by_visual_hash():
         assert dup is not None
         assert dup["id"] == "item-existing-visual"
         assert "visual_hash" in dup["match_reason"]
+
+
+@pytest.mark.anyio
+async def test_different_black_tops_are_not_duplicates():
+    """Verify that a black sweater is never flagged as a duplicate of a black patterned mesh top."""
+    user_id = "test-user-123"
+    existing_item = {
+        "id": "item-mesh-top",
+        "title": "Geometric Patterned Mesh Top",
+        "name": "Geometric Patterned Mesh Top",
+        "category": "top",
+        "sub_category": "mesh top",
+        "item_type": "top",
+        "brand": "",
+        "colors": [{"name": "black"}],
+        "thumbnail_data_url": "data:image/jpeg;base64,different1",
+        "source_phash": "0000000000000000",
+        "source_sha256": "sha_mesh_top",
+    }
+
+    mock_db = MagicMock()
+    mock_cursor = MagicMock()
+    mock_cursor.limit.return_value = mock_cursor
+    mock_cursor.to_list = AsyncMock(return_value=[existing_item])
+    mock_db.closet_items.find.return_value = mock_cursor
+
+    with patch("app.services.duplicate_detection.get_db", return_value=mock_db):
+        incoming_sweater = {
+            "title": "סוודר שחור בסיסי",
+            "name": "סוודר שחור בסיסי",
+            "category": "top",
+            "sub_category": "סוודר",
+            "item_type": "sweater",
+            "colors": [{"name": "שחור"}],
+            "crop_base64": _create_test_image_b64(color=(20, 20, 20)),
+        }
+        dup = await find_potential_duplicate(user_id, incoming_sweater)
+        assert dup is None, f"Expected no duplicate, but got {dup}"
+

@@ -109,12 +109,8 @@ async def save_closet_item_document(
         payload.reconstructed_image_b64 = compress_b64_image(payload.reconstructed_image_b64, max_dim=1024, quality=75)
 
     raw_bytes: bytes | None = None
-    if payload.image_base64:
-        try:
-            raw_bytes = base64.b64decode(payload.image_base64, validate=True)
-        except Exception as exc:  # noqa: BLE001
-            raise HTTPException(400, f"Invalid image_base64: {exc}") from exc
-    elif payload.crop_base64:
+    parent_raw_bytes: bytes | None = None
+    if payload.crop_base64:
         try:
             crop_clean = payload.crop_base64
             if "," in crop_clean:
@@ -122,6 +118,17 @@ async def save_closet_item_document(
             raw_bytes = base64.b64decode(crop_clean, validate=False)
         except Exception:
             pass
+    if payload.image_base64:
+        try:
+            img_clean = payload.image_base64
+            if "," in img_clean:
+                img_clean = img_clean.split(",", 1)[1]
+            parent_raw_bytes = base64.b64decode(img_clean, validate=False)
+            if not raw_bytes:
+                raw_bytes = parent_raw_bytes
+        except Exception as exc:  # noqa: BLE001
+            if not raw_bytes:
+                raise HTTPException(400, f"Invalid image_base64: {exc}") from exc
 
     tags_list = list(payload.tags) if payload.tags else []
     if not tags_list:
@@ -256,6 +263,13 @@ async def save_closet_item_document(
                 if cs:
                     doc["source_color_sig"] = cs
         except Exception:  # noqa: BLE001
+            pass
+
+    if parent_raw_bytes and not doc.get("parent_image_sha256"):
+        try:
+            from app.services.image_hash import compute_sha256
+            doc["parent_image_sha256"] = compute_sha256(parent_raw_bytes)
+        except Exception:
             pass
 
     # Phase Q — persist the reconstructed image (data URL or uploaded file) when supplied.

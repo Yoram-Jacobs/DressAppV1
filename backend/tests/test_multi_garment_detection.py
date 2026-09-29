@@ -298,3 +298,15 @@ async def test_multi_garment_single_prompt_ingestion(monkeypatch):
     assert item_frames[2]["analysis"]["sub_category"] == "Bag"
     assert "cardigan" not in item_frames[2]["analysis"]["title"].lower()
 
+
+def test_looks_already_cropped_footwear_pair():
+    """Verify that a photo with two shoe detections is recognized as a single footwear pair."""
+    from app.services.vision.geometry import _looks_already_cropped
+    detections = [
+        {"bbox": [300, 200, 550, 800], "kind": "footwear", "category": "footwear", "label": "left_shoe"},
+        {"bbox": [530, 200, 800, 800], "kind": "footwear", "category": "footwear", "label": "right_shoe"},
+    ]
+    # Even if count is 2 (from a gatekeeper that counted 2 shoes), footwear detections must be treated as already cropped / single pair
+    assert _looks_already_cropped(detections, count_hint=2) is True
+
+

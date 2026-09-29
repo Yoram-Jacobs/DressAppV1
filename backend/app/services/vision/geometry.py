@@ -363,6 +363,10 @@ def _looks_already_cropped(
     largest_area = max(areas) if areas else 0
     kinds = {(d.get("category") or d.get("kind") or "garment").lower() for d in detections}
 
+    # Signal 0b: All detections are footwear without a human model (e.g. partner shoes, pair of sandals/slides)
+    if kinds and all(k in ("footwear", "shoes", "sandals", "sneakers", "boots", "floppers") for k in kinds):
+        return True
+
     # Signal 1: exactly one detection
     if len(detections) == 1:
         if largest_area >= frame_area * _SINGLE_ITEM_AREA_FRAC:

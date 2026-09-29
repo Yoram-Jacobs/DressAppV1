@@ -529,13 +529,15 @@ async def analyze_item_image(
                             })
                         else:
                             # Gatekeeper: check for duplicate before auto-saving
-                            from app.services.duplicate_detection import find_potential_duplicate
+                            img_idx = frame.get("image_index", 0)
+                            parent_img_bytes = raw_list[img_idx] if 0 <= img_idx < len(raw_list) else None
                             dup_payload = {
                                 **analysis,
                                 "crop_base64": meta.get("crop_base64"),
                                 "crop_mime": meta.get("crop_mime", "image/jpeg"),
                                 "clean_image_url": analysis.get("clean_image_url"),
                                 "thumbnail_data_url": analysis.get("thumbnail_data_url"),
+                                "parent_image_bytes": parent_img_bytes,
                             }
                             dup = None
                             try:
@@ -747,12 +749,15 @@ async def analyze_item_image(
                     analysis = _safe_analysis(frame.get("analysis") or {})
                     if not _is_unidentifiable(analysis):
                         from app.services.duplicate_detection import find_potential_duplicate
+                        img_idx = frame.get("image_index", 0)
+                        parent_img_bytes = raw_list[img_idx] if 0 <= img_idx < len(raw_list) else None
                         dup_payload = {
                             **analysis,
                             "crop_base64": meta.get("crop_base64"),
                             "crop_mime": meta.get("crop_mime", "image/jpeg"),
                             "clean_image_url": analysis.get("clean_image_url"),
                             "thumbnail_data_url": analysis.get("thumbnail_data_url"),
+                            "parent_image_bytes": parent_img_bytes,
                         }
                         dup = None
                         try:

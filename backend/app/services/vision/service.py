@@ -1077,18 +1077,6 @@ class GarmentVisionService:
                             other_masks.append((m_full > 127).astype(_np.uint8))
                         else:
                             other_masks.append(m)
-                    elif other.get("bbox") is not None:
-                        # For Gemini-detected items without SegFormer masks (e.g. bags, accessories),
-                        # build a binary mask from their bbox so adjacent garments don't incorporate them
-                        oy1, ox1, oy2, ox2 = other["bbox"]
-                        py1 = max(0, min(img_size[1], int(oy1 / 1000.0 * img_size[1])))
-                        px1 = max(0, min(img_size[0], int(ox1 / 1000.0 * img_size[0])))
-                        py2 = max(0, min(img_size[1], int(oy2 / 1000.0 * img_size[1])))
-                        px2 = max(0, min(img_size[0], int(ox2 / 1000.0 * img_size[0])))
-                        if py2 > py1 and px2 > px1:
-                            bmask = _np.zeros((img_size[1], img_size[0]), dtype=_np.uint8)
-                            bmask[py1:py2, px1:px2] = 1
-                            other_masks.append(bmask)
                 if other_masks:
                     combined_other = other_masks[0]
                     for m in other_masks[1:]:
@@ -1182,7 +1170,8 @@ class GarmentVisionService:
                         det.get("label"),
                         repr(exc)[:120],
                     )
-            elif is_single and seg_mask_bbox is not None and (human_mask_bbox is None or getattr(human_mask_bbox, "sum", lambda: 0)() < 5000):
+            # Core healing: heal interior holes in dark/textured/patterned garments across both single and multi-item crops
+            if matted and seg_mask_bbox is not None and (human_mask_bbox is None or getattr(human_mask_bbox, "sum", lambda: 0)() < 5000):
                 try:
                     import io
                     import numpy as np
@@ -2335,7 +2324,8 @@ class GarmentVisionService:
             system_prompt = (
                 "You are a visual gatekeeper. Your job is to count the number of distinct clothing garments, "
                 "shoes, or accessories clearly visible in this image. "
-                "Ignore tags, hangers, or background objects."
+                "CRITICAL: A pair of footwear (shoes, sandals, boots, flip-flops, slides, slippers) or accessories (gloves, earrings) ALWAYS counts as ONE single item (count = 1). "
+                "Never count partner shoes separately. Ignore tags, hangers, or background objects."
             )
             model = self.detect_model
             
@@ -2440,13 +2430,21 @@ class GarmentVisionService:
                 return idx, []
 
             try:
-                # Only single-garment images can ever be considered already cropped.
-                # Never collapse multi-item photos into a single whole-image cutout!
+                has_human_wearer = _detect_human_presence(detections)
+                is_footwear_only = bool(
+                    detections
+                    and not has_human_wearer
+                    and all(
+                        (d.get("category") or d.get("kind") or "").lower() in ("footwear", "shoes", "sandals", "sneakers", "boots", "floppers")
+                        for d in detections
+                    )
+                )
                 is_single = (
-                    (count is not None and count <= 1 and not _detect_human_presence(detections))
+                    (count is not None and count <= 1 and not has_human_wearer)
+                    or is_footwear_only
                     or _looks_already_cropped(detections, count_hint=count)
                 )
-                if (count is None or count <= 1) and is_single:
+                if (count is None or count <= 1 or is_footwear_only) and is_single:
                     if detections:
                         ymin = min(d["bbox"][0] for d in detections)
                         xmin = min(d["bbox"][1] for d in detections)
