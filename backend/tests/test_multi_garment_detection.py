@@ -250,9 +250,9 @@ async def test_multi_garment_single_prompt_ingestion(monkeypatch):
 
     # Mock detect_items to return 3 detected garments on image 0
     fake_detections = [
-        {"label": "shirt", "kind": "top", "category": "top", "bbox": [10, 10, 50, 90], "score": 0.95},
-        {"label": "pants", "kind": "bottom", "category": "bottom", "bbox": [50, 10, 90, 90], "score": 0.92},
-        {"label": "bag", "kind": "accessory", "category": "bag", "bbox": [20, 70, 60, 95], "score": 0.88},
+        {"label": "shirt", "kind": "top", "category": "top", "bbox": [100, 200, 500, 800], "score": 0.95, "has_human_head": True},
+        {"label": "pants", "kind": "bottom", "category": "bottom", "bbox": [500, 200, 950, 800], "score": 0.92, "has_human_head": True},
+        {"label": "bag", "kind": "accessory", "category": "bag", "bbox": [300, 750, 650, 950], "score": 0.88, "has_human_head": True},
     ]
     monkeypatch.setattr(service, "detect_items", AsyncMock(return_value=fake_detections))
 
@@ -280,6 +280,8 @@ async def test_multi_garment_single_prompt_ingestion(monkeypatch):
     frames = []
     async for frame in service.analyze_outfits_stream([fake_img]):
         frames.append(frame)
+
+    print("FRAMES RECEIVED:", frames)
 
     # 1. Assert _call_gemma_space was called EXACTLY ONCE for all 3 items (single prompt ingestion!)
     assert gemma_mock.call_count == 1, f"Expected 1 unified call, got {gemma_mock.call_count}"
