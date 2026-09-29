@@ -2431,25 +2431,32 @@ class GarmentVisionService:
 
             try:
                 has_human_wearer = _detect_human_presence(detections)
-                has_footwear = any(
-                    (d.get("category") or d.get("kind") or "").lower() in ("footwear", "shoes", "sandals", "sneakers", "boots", "floppers", "clogs", "slides")
-                    for d in detections
-                )
                 is_footwear_only = bool(
                     detections
                     and not has_human_wearer
-                    and (
-                        all(
-                            (d.get("category") or d.get("kind") or "").lower() in ("footwear", "shoes", "sandals", "sneakers", "boots", "floppers", "clogs", "slides")
-                            for d in detections
-                        )
-                        or (has_footwear and len(detections) <= 2)
+                    and all(
+                        (d.get("category") or d.get("kind") or "").lower() in ("footwear", "shoes", "sandals", "sneakers", "boots", "floppers", "clogs", "slides")
+                        for d in detections
                     )
                 )
+
+                top_dets = [d for d in detections if (d.get("category") or d.get("kind") or d.get("label") or "").lower() in ("top", "upper-clothes", "upper_clothes", "shirt", "t-shirt", "jacket", "coat", "sweater", "dress")]
+                bottom_dets = [d for d in detections if (d.get("category") or d.get("kind") or d.get("label") or "").lower() in ("bottom", "pants", "skirt", "jeans")]
+                shoe_dets = [d for d in detections if (d.get("category") or d.get("kind") or d.get("label") or "").lower() in ("footwear", "shoes", "sandals", "sneakers", "boots", "floppers", "clogs", "slides")]
+
+                has_multi_body_zones = bool(
+                    (top_dets and bottom_dets and min(d["bbox"][0] for d in top_dets) < min(d["bbox"][0] for d in bottom_dets))
+                    or (bottom_dets and shoe_dets and min(d["bbox"][0] for d in bottom_dets) < min(d["bbox"][0] for d in shoe_dets))
+                    or (top_dets and shoe_dets and min(d["bbox"][0] for d in top_dets) < min(d["bbox"][0] for d in shoe_dets))
+                )
+
                 is_single = (
-                    (count is not None and count <= 1 and not has_human_wearer)
-                    or is_footwear_only
-                    or _looks_already_cropped(detections, count_hint=count)
+                    not has_multi_body_zones
+                    and (
+                        (count is not None and count <= 1 and not has_human_wearer)
+                        or is_footwear_only
+                        or _looks_already_cropped(detections, count_hint=count)
+                    )
                 )
                 if (count is None or count <= 1 or is_footwear_only) and is_single:
                     if detections:
@@ -2470,9 +2477,9 @@ class GarmentVisionService:
                         best_det = {"bbox": union_bbox, "kind": "garment", "label": "garment"}
 
                     det = {
-                        "label": "Shoes" if (is_footwear_only or has_footwear) else (best_det.get("label") or "garment"),
-                        "kind": "footwear" if (is_footwear_only or has_footwear) else (best_det.get("kind") or "garment"),
-                        "category": "footwear" if (is_footwear_only or has_footwear) else (best_det.get("category") or best_det.get("kind") or "garment"),
+                        "label": "Shoes" if is_footwear_only else (best_det.get("label") or "garment"),
+                        "kind": "footwear" if is_footwear_only else (best_det.get("kind") or "garment"),
+                        "category": "footwear" if is_footwear_only else (best_det.get("category") or best_det.get("kind") or "garment"),
                         "bbox": union_bbox,
                         "defer_matte": False,
                         "is_single_item": True,

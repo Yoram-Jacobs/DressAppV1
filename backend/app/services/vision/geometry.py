@@ -349,6 +349,17 @@ def _looks_already_cropped(
     if _detect_human_presence(detections):
         return False
 
+    # Check if multiple distinct body zones exist in anatomical arrangement
+    # (e.g. top + bottom, or bottom + footwear, or top + footwear)
+    top_dets = [d for d in detections if (d.get("category") or d.get("kind") or d.get("label") or "").lower() in ("top", "upper-clothes", "upper_clothes", "shirt", "t-shirt", "jacket", "coat", "sweater", "dress")]
+    bottom_dets = [d for d in detections if (d.get("category") or d.get("kind") or d.get("label") or "").lower() in ("bottom", "pants", "skirt", "jeans")]
+    shoe_dets = [d for d in detections if (d.get("category") or d.get("kind") or d.get("label") or "").lower() in ("footwear", "shoes", "sandals", "sneakers", "boots", "floppers", "clogs", "slides")]
+
+    if (top_dets and bottom_dets and min(d["bbox"][0] for d in top_dets) < min(d["bbox"][0] for d in bottom_dets)) or \
+       (bottom_dets and shoe_dets and min(d["bbox"][0] for d in bottom_dets) < min(d["bbox"][0] for d in shoe_dets)) or \
+       (top_dets and shoe_dets and min(d["bbox"][0] for d in top_dets) < min(d["bbox"][0] for d in shoe_dets)):
+        return False
+
     # Signal 0: Gatekeeper or caller explicitly verified count <= 1 on an image without human model
     if count_hint is not None and count_hint <= 1:
         return True
@@ -364,10 +375,7 @@ def _looks_already_cropped(
     kinds = {(d.get("category") or d.get("kind") or "garment").lower() for d in detections}
 
     # Signal 0b: Footwear pair detection without a human model (e.g. pair of slides/sandals/sneakers/clogs)
-    has_footwear = any(k in ("footwear", "shoes", "sandals", "sneakers", "boots", "floppers", "clogs", "slides") for k in kinds)
     if kinds and all(k in ("footwear", "shoes", "sandals", "sneakers", "boots", "floppers", "clogs", "slides") for k in kinds):
-        return True
-    if has_footwear and len(detections) <= 2:
         return True
 
     # Signal 1: exactly one detection
@@ -405,8 +413,6 @@ def _looks_already_cropped(
 
     # If multiple distinct garment/accessory items exist, it's a multi-item flat lay.
     if len(detections) > 1 and len(kinds) > 1:
-        if has_footwear and len(detections) <= 2:
-            return True
         return False
 
     significant = [d for d in detections if _area(d["bbox"]) >= frame_area * 0.01]
