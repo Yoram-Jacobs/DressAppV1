@@ -65,11 +65,15 @@ class GarmentVisionService:
         # We tolerate a missing EMERGENT_LLM_KEY if HF is configured for
         # both analysis AND detection. In practice we keep Gemini Flash
         # for detection, so both keys are typically required.
-        self.provider = provider or settings.GARMENT_VISION_PROVIDER or "gemini"
+        # If provider is not explicitly passed, provider=None enables dynamic
+        # DB-backed runtime resolution via eyes_override.get_active_provider().
+        self.provider = provider
         if self.provider == "gemini":
             self.model = model if (model and model.lower().startswith("gemini")) else "gemini-3.5-flash-lite"
-        else:
+        elif self.provider:
             self.model = model or settings.GARMENT_VISION_MODEL or "Eyes v1"
+        else:
+            self.model = model or "gemini-3.5-flash-lite"
         # Detection stays on Gemini Flash until we upgrade to a fine-tuned vision model.
         self.detect_provider = settings.GARMENT_VISION_DETECT_PROVIDER
         self.detect_model = (
@@ -2574,7 +2578,7 @@ class GarmentVisionService:
 
             # Resolve provider so we can choose the right crop strategy.
             active_provider = (
-                self.provider if self.provider in ("gemma", "gemini", "dressapp")
+                self.provider if self.provider in ("gemma", "gemini")
                 else await _eyes_override.get_active_provider()
             ).lower()
 
@@ -2586,9 +2590,7 @@ class GarmentVisionService:
                     crops_by_img.setdefault(img_idx, []).append((slot_idx, crop_info))
 
                 for img_idx, slot_crop_list in crops_by_img.items():
-                    if len(slot_crop_list) == 1:
-                        # Single item from this photo: fast single-item stream
-                        slot_idx, (image_idx, det, c_bytes, c_mime) = slot_crop_list[0]
+                    for sub_i, (slot_idx, (image_idx, det, c_bytes, c_mime)) in enumerate(slot_crop_list):
                         shrunk = _shrink_for_vision(c_bytes)
                         b64 = base64.b64encode(shrunk).decode("ascii")
                         assembled: dict[str, Any] = {}
@@ -2679,150 +2681,6 @@ class GarmentVisionService:
                         }
                         emitted += 1
 
-                    else:
-                        # ── Multi-garment unified vision prompt ─────────────
-                        # Ingest the prompt and full image ONCE on CPU (~65s)
-                        # instead of re-ingesting N separate crop images (N x 75s)!
-                        full_img_bytes = images_bytes_list[img_idx] if img_idx < len(images_bytes_list) else slot_crop_list[0][1][2]
-                        shrunk_full = _shrink_for_vision(full_img_bytes)
-                        full_b64 = base64.b64encode(shrunk_full).decode("ascii")
-
-                        items_hints = []
-                        for sub_i, (slot_idx, (image_idx, det, c_bytes, c_mime)) in enumerate(slot_crop_list):
-                            lbl = (det.get("label") or "garment").lower()
-                            cat = (det.get("category") or det.get("kind") or "garment").lower()
-                            hint = f"Item [{sub_i}]: label='{lbl}', category='{cat}'"
-                            if "bag" in lbl or cat in ("bag", "accessory"):
-                                hint += " (This item is an accessory/bag. Do NOT classify as a top, sweater, or cardigan.)"
-                            elif "shoe" in lbl or cat == "footwear":
-                                hint += " (This item is footwear/shoes.)"
-                            items_hints.append(hint)
-
-                        multi_item_schema = {
-                            "type": "array",
-                            "items": _GARMENT_OBJECT_SCHEMA,
-                            "minItems": len(slot_crop_list),
-                            "maxItems": len(slot_crop_list),
-                        }
-
-                        sys_parts = [
-                            _build_system_prompt(one_pass=False, user_gender=eff_gender),
-                            _language_directive(language),
-                            "\n\nMULTI-ITEM OUTFIT EXTRACTION:\n"
-                            f"This photograph contains {len(slot_crop_list)} fashion items detected by computer vision:\n"
-                            + "\n".join(items_hints)
-                            + f"\n\nReturn a JSON array containing exactly {len(slot_crop_list)} garment objects in the SAME ORDER [0..{len(slot_crop_list)-1}]."
-                            + "\nFor each item, populate all 16 required fields. Bags and accessories MUST be classified under category 'Accessories' and sub_category 'Bag' or appropriate accessory cut, NEVER as a top, sweater, or cardigan."
-                        ]
-                        sys_prompt = "\n".join(sys_parts)
-                        user_text = (
-                            _user_prompt(language, user_gender=eff_gender)
-                            + f"\n\nAnalyze all {len(slot_crop_list)} fashion items visible in this photo. Return a JSON array with exactly {len(slot_crop_list)} items in order [0..{len(slot_crop_list)-1}]."
-                        )
-
-                        raw_multi = None
-                        t0_multi = time.perf_counter()
-                        try:
-                            logger.info(
-                                "Calling Gemma unified multi-garment analysis for %d items on image %d (single prompt ingestion)",
-                                len(slot_crop_list), img_idx,
-                            )
-                            raw_multi = await _call_gemma_space(
-                                system_prompt=sys_prompt,
-                                user_text=user_text,
-                                image_b64_jpeg=full_b64,
-                                max_tokens=min(350 * len(slot_crop_list), 2000),
-                                temperature=0.1,
-                                timeout=max(180.0, float(settings.EYES_GEMMA_TIMEOUT_S)),
-                                json_schema=multi_item_schema,
-                            )
-                            logger.info(
-                                "Gemma unified multi-garment call succeeded in %.2fs",
-                                time.perf_counter() - t0_multi,
-                            )
-                        except Exception as multi_exc:
-                            logger.warning(
-                                "Gemma unified multi-garment call failed: %s (falling back to per-item)",
-                                repr(multi_exc)[:200],
-                            )
-
-                        parsed_items = []
-                        if raw_multi:
-                            parsed_json = _extract_json(raw_multi)
-                            if isinstance(parsed_json, list):
-                                parsed_items = parsed_json
-                            elif isinstance(parsed_json, dict) and isinstance(parsed_json.get("items"), list):
-                                parsed_items = parsed_json["items"]
-                            elif isinstance(parsed_json, dict) and "category" in parsed_json:
-                                parsed_items = [parsed_json]
-
-                        for sub_i, (slot_idx, (image_idx, det, c_bytes, c_mime)) in enumerate(slot_crop_list):
-                            item_raw = parsed_items[sub_i] if sub_i < len(parsed_items) and isinstance(parsed_items[sub_i], dict) else None
-                            assembled = dict(item_raw) if item_raw else {}
-
-                            if not assembled or not assembled.get("category"):
-                                logger.warning(
-                                    "Slot %d missing from multi-garment output — falling back to Gemini.", slot_idx,
-                                )
-                                try:
-                                    gem_analysis = await self.analyze(
-                                        c_bytes, language=language, think=False, provider="gemini", user_gender=eff_gender,
-                                    )
-                                    if isinstance(gem_analysis, dict) and gem_analysis:
-                                        assembled = gem_analysis
-                                except Exception as gem_exc:
-                                    logger.error("Gemini fallback also failed for slot %d: %s", slot_idx, gem_exc)
-
-                            if not assembled.get("category"):
-                                assembled["category"] = (det.get("category") or det.get("kind") or "Top").capitalize()
-                            if not assembled.get("sub_category") and not assembled.get("item_type"):
-                                fallback_type = (det.get("label") or det.get("kind") or "garment").lower()
-                                assembled["item_type"] = fallback_type
-                                assembled["sub_category"] = fallback_type.capitalize()
-                            if not assembled.get("title") and (det.get("label") or det.get("kind")):
-                                assembled["title"] = (det.get("label") or det.get("kind")).capitalize()
-
-                            analysis = _coerce_single_garment(assembled, user_gender=eff_gender)
-                            if not analysis.get("title") and analysis.get("name"):
-                                analysis["title"] = analysis["name"]
-                            if not analysis.get("title"):
-                                analysis["title"] = "Unnamed garment"
-                            analysis = _coerce_enums(analysis, user_gender=eff_gender)
-                            _enforce_segformer_category(
-                                analysis,
-                                segformer_kind=det.get("kind") or det.get("category"),
-                                label=det.get("label"),
-                                is_single_item=det.get("is_single_item", False),
-                                language=language,
-                            )
-                            analysis["provider_used"] = assembled.get("provider_used", "gemma")
-                            analysis["model_used"] = assembled.get("model_used", "gemma-4-e2b-q4_k_m")
-
-                            needs_reconstruction = False
-                            reasons: list[str] = []
-                            if should_reconstruct is not None:
-                                try:
-                                    needs, raw_reasons = should_reconstruct(analysis, det.get("bbox"))
-                                    if needs and _settings.DEFER_RECONSTRUCTION_ON_ANALYZE:
-                                        needs_reconstruction = True
-                                        reasons = list(raw_reasons)
-                                except Exception:
-                                    pass
-
-                            meta_crop = items_meta[slot_idx] if slot_idx < len(items_meta) else {}
-                            yield {
-                                "type": "item",
-                                "index": slot_idx,
-                                "image_index": image_idx,
-                                "analysis": analysis,
-                                "crop_base64": meta_crop.get("crop_base64"),
-                                "crop_mime": meta_crop.get("crop_mime", "image/png"),
-                                "label": analysis.get("sub_category") or analysis.get("item_type"),
-                                "needs_reconstruction": needs_reconstruction,
-                                "reconstruction_reasons": reasons,
-                            }
-                            emitted += 1
-
             else:
                 # ── Gemini concurrent path (unchanged) ────────────────────
                 # Process all crops concurrently using individual analyze calls.
@@ -2843,7 +2701,7 @@ class GarmentVisionService:
                             if isinstance(analysis, dict):
                                 _enforce_segformer_category(
                                     analysis,
-                                    segformer_kind=det.get("kind"),
+                                    segformer_kind=det.get("kind") or det.get("category"),
                                     label=det.get("label"),
                                     is_single_item=det.get("is_single_item", False),
                                     language=language,
@@ -3212,8 +3070,10 @@ def _build_vision_service() -> GarmentVisionService | None:
         except Exception as exc:  # noqa: BLE001
             logger.warning("Garment vision default gemma init note: %s", exc)
 
-    want_hf = settings.GARMENT_VISION_PROVIDER == "hf"
-    want_gemini_analyze = settings.GARMENT_VISION_PROVIDER == "gemini"
+    from app.services import eyes_override
+    active_server_provider = eyes_override.get_cached_active_provider()
+    want_hf = active_server_provider == "hf"
+    want_gemini_analyze = active_server_provider == "gemini"
     has_hf_endpoint = bool(settings.GARMENT_VISION_ENDPOINT_KEY)
     has_gemini_chat = bool(settings.gemini_chat_key)
     if want_hf and not has_hf_endpoint:
@@ -3229,7 +3089,7 @@ def _build_vision_service() -> GarmentVisionService | None:
         )
         return None
     try:
-        return GarmentVisionService(provider=settings.EYES_PROVIDER or "gemma")
+        return GarmentVisionService(provider=active_server_provider)
     except Exception as exc:  # noqa: BLE001
         logger.exception("Garment vision init failed: %s", exc)
         return None
@@ -3243,15 +3103,17 @@ def get_garment_vision_service(
     api_key: str | None = None,
 ) -> GarmentVisionService | None:
     """Return a GarmentVisionService instance scoped to the user's provider / API key if available,
-    falling back to the server-configured Eyes provider."""
+    falling back to the server-configured Eyes provider (respecting DB runtime override)."""
     from app.services.auth import (
         is_tester_user,
+        resolve_effective_provider,
         resolve_user_custom_gemini_api_key,
         resolve_user_custom_key,
         resolve_user_ai_provider,
         resolve_user_ai_model,
         resolve_user_gemini_model,
     )
+    from app.services import eyes_override
 
     user_gender = resolve_garment_gender(user) if user and isinstance(user, dict) else None
 
@@ -3259,7 +3121,7 @@ def get_garment_vision_service(
         provider = resolve_user_ai_provider(user)
         model = resolve_user_ai_model(user)
 
-        # 1) If user has selected Google Gemini
+        # 1) If user has selected Google Gemini explicitly
         if provider in ("google_ai", "gemini"):
             user_gemini_key = api_key or resolve_user_custom_gemini_api_key(user)
             gemini_model = resolve_user_gemini_model(user)
@@ -3292,21 +3154,26 @@ def get_garment_vision_service(
                 logger.warning("Failed to build DressApp Eyes GarmentVisionService: %s", exc)
 
         # 4) If provider is dressapp:
-        if provider == "dressapp":
-            # For tester group members evaluating DressApp Eyes:
-            # Force switching to Gemma on-prem!
-            if is_tester_user(user):
-                try:
-                    return GarmentVisionService(provider="gemma", model=model or "Eyes v1", user_gender=user_gender)
-                except Exception as exc:
-                    logger.warning("Failed to build tester DressApp Eyes Gemma GarmentVisionService: %s", exc)
-
-            # For general users: use server provider (gemini)
-            server_provider = settings.EYES_PROVIDER or "gemini"
+        # Check if the user is a tester who has configured an effective provider switch
+        eff_provider = resolve_effective_provider(user)
+        if eff_provider == "gemma":
             try:
-                return GarmentVisionService(provider=server_provider, model=model or "Eyes v1", user_gender=user_gender)
+                return GarmentVisionService(provider="gemma", model=model or "Eyes v1", user_gender=user_gender)
             except Exception as exc:
-                logger.warning("Failed to build DressApp platform GarmentVisionService: %s", exc)
+                logger.warning("Failed to build tester DressApp Eyes Gemma GarmentVisionService: %s", exc)
+        elif eff_provider == "gemini":
+            try:
+                return GarmentVisionService(provider="gemini", model=model or "gemini-3.5-flash-lite", user_gender=user_gender)
+            except Exception as exc:
+                logger.warning("Failed to build tester Gemini GarmentVisionService: %s", exc)
+
+        # 5) Platform default:
+        # Resolve against the authoritative DB runtime override from eyes_override
+        active_server_provider = eyes_override.get_cached_active_provider()
+        try:
+            return GarmentVisionService(provider=active_server_provider, model=model or "Eyes v1", user_gender=user_gender)
+        except Exception as exc:
+            logger.warning("Failed to build DressApp platform GarmentVisionService: %s", exc)
 
     if api_key:
         try:
@@ -3316,8 +3183,10 @@ def get_garment_vision_service(
 
     if user_gender:
         try:
+            from app.services import eyes_override
+            active_server_provider = eyes_override.get_cached_active_provider()
             return GarmentVisionService(
-                provider=garment_vision_service.provider if garment_vision_service else (settings.EYES_PROVIDER or "gemma"),
+                provider=active_server_provider,
                 user_gender=user_gender,
             )
         except Exception as exc:

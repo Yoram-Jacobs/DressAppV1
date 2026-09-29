@@ -152,6 +152,13 @@ def test_vision_service_tester_routes_to_gemma(tester_user_dressapp, tester_user
         v_reg = get_garment_vision_service(user=regular_user)
         assert v_reg.provider == "gemini"
 
+    # 4. Developer / tester user without explicit Gemma selection respects active platform provider (Gemini)
+    with patch("app.config.settings.GEMINI_API_KEY", "test_gemini_key"), \
+         patch("app.config.settings.EYES_PROVIDER", "gemini"):
+        dev_user = {"id": "dev-1", "email": "dressappdeveloper@gmail.com"}
+        v_dev = get_garment_vision_service(user=dev_user)
+        assert v_dev.provider == "gemini"
+
 
 def test_stylist_brain_tester_switch(tester_user_dressapp, tester_user_gemini, regular_user):
     reset_stylist_brain_service()
