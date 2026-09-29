@@ -149,7 +149,7 @@ SYSTEM_PROMPT = (
     "• colors: [{\"name\": str, \"pct\": int}] summing to 100. Specific shades ('Burgundy','Navy','Olive','Light Blue'). Never omit pct.\n"
     "• fabric_materials: [{\"name\": str, \"pct\": int}] summing to 100 (e.g. [{\"name\": \"Cotton\", \"pct\": 100}]). Never omit pct.\n"
     "• pattern: 'printed' for graphic tees, text, logos, artwork, front prints; 'geometric' for repeating weave, texture, heathering, waffle; 'striped'|'plaid'|'floral'; 'solid' only if plain & unprinted.\n"
-    "• text/graphics/logos: Accurately read visible printed lettering and emblems (e.g. 'AMERICAN EAGLE' / flying eagle emblem is an eagle bird / in Hebrew: 'עיט' or 'איגל' or 'נשר', NEVER a deer 'אייל').\n"
+    "• text/logos: Read lettering & emblems accurately (e.g. 'American Eagle' = eagle/עיט, not deer/אייל).\n"
     "• season: ['spring'|'summer'|'fall'|'winter'|'all']. Short-sleeve/linen=['summer']; wool/down=['fall','winter']."
 )
 

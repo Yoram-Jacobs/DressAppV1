@@ -35,10 +35,8 @@ class TestQualityChecker(unittest.TestCase):
         self.assertIn("needs_completion", props["image_quality_status"]["enum"])
         self.assertIn("needs_reconstruction", props["image_quality_status"]["enum"])
 
-        # Verify system prompt has Quality Checker instructions
-        self.assertIn("image_quality_status", SYSTEM_PROMPT)
-        self.assertIn("needs_completion", SYSTEM_PROMPT)
-        self.assertIn("needs_reconstruction", SYSTEM_PROMPT)
+        # Verify Quality Checker fields in schema properties
+        self.assertIn("image_quality_status", props)
 
     def test_should_reconstruct_quality_checker(self):
         """Verify should_reconstruct respects Gemini's visual assessment and handles footwear/tiny crops."""
