@@ -348,6 +348,9 @@ class AnalyzeIn(BaseModel):
     # When True, only perform segmentation, matting, and crop centering,
     # returning items_meta with crop_base64 cutouts and zero Gemini calls / token cost.
     cutout_only: bool = False
+    # When True, automatically saves analyzed items to the closet.
+    # Default is False: items remain in-memory for review and are only saved when user clicks Save.
+    auto_save: bool = False
 
 
 _apply_defaults = closet_service._apply_defaults
@@ -496,7 +499,7 @@ async def analyze_item_image(
         queue: asyncio.Queue[dict[str, Any] | None] = asyncio.Queue()
 
         async def _run_analysis_pipeline() -> None:
-            saved_items_count = 0
+            analyzed_items_count = 0
             try:
                 streamer = active_vision.analyze_outfits_stream(
                     raw_list, language=user_lang, cutout_only=payload.cutout_only, user_gender=user_gender,
@@ -529,7 +532,7 @@ async def analyze_item_image(
                                 "reason": "unidentifiable",
                             })
                         else:
-                            # Gatekeeper: check for duplicate before auto-saving
+                            # Gatekeeper: check for duplicate before saving
                             img_idx = frame.get("image_index", 0)
                             parent_img_bytes = raw_list[img_idx] if 0 <= img_idx < len(raw_list) else None
                             dup_payload = {
@@ -555,8 +558,8 @@ async def analyze_item_image(
                                     dup.get("id"),
                                     user["id"],
                                 )
-                            else:
-                                # Auto-save unique item directly into closet so closing page/app never loses progress
+                            elif getattr(payload, "auto_save", False):
+                                # Only save when caller explicitly sets auto_save=True
                                 try:
                                     from app.api.v1.closet.common import CreateItemIn
                                     from app.api.v1.closet.items import save_closet_item_document
@@ -597,15 +600,23 @@ async def analyze_item_image(
                                     )
                                     res = await save_closet_item_document(user, item_in)
                                     saved_doc = res if (isinstance(res, dict) and "id" in res) else (res.get("item") if isinstance(res, dict) else res)
-                                    saved_items_count += 1
                                     if isinstance(saved_doc, dict):
                                         logger.info(
-                                            "Auto-saved analyzed item %s (%s - %s) to closet for user %s",
+                                            "Explicitly auto-saved analyzed item %s (%s - %s) to closet for user %s",
                                             saved_doc.get("id"), saved_doc.get("category"), saved_doc.get("sub_category"), user["id"],
                                         )
                                 except Exception as save_err:
-                                    logger.warning("Failed to auto-save item to closet: %s", save_err)
+                                    logger.warning("Failed to save item to closet: %s", save_err)
 
+                            analyzed_items_count += 1
+
+                            crop_b64 = meta.get("crop_base64")
+                            crop_mime = meta.get("crop_mime", "image/jpeg")
+                            thumb_url = (
+                                saved_doc.get("thumbnail_data_url")
+                                if (saved_doc and saved_doc.get("thumbnail_data_url"))
+                                else (f"data:{crop_mime};base64,{crop_b64}" if crop_b64 else None)
+                            )
                             out_frame = {
                                 "type": "item",
                                 "index": idx,
@@ -616,13 +627,11 @@ async def analyze_item_image(
                                 "label": meta.get("label"),
                                 "kind": meta.get("kind"),
                                 "bbox": meta.get("bbox"),
-                                "crop_base64": meta.get("crop_base64"),
-                                "crop_mime": meta.get(
-                                    "crop_mime", "image/jpeg",
-                                ),
+                                "crop_base64": crop_b64,
+                                "crop_mime": crop_mime,
                                 "clean_image_url": saved_doc.get("clean_image_url") if saved_doc else None,
                                 "original_image_url": saved_doc.get("original_image_url") if saved_doc else None,
-                                "thumbnail_data_url": saved_doc.get("thumbnail_data_url") if saved_doc else None,
+                                "thumbnail_data_url": thumb_url,
                                 "analysis": analysis,
                                 "potential_duplicate": dup,
                                 "reconstruction_advised": False,
@@ -643,14 +652,14 @@ async def analyze_item_image(
                     elif ftype == "done":
                         await queue.put(frame)
                     elif ftype == "error":
-                        if saved_items_count == 0:
+                        if analyzed_items_count == 0:
                             await try_refund()
                         await queue.put(frame)
                         return
 
             except Exception as exc:  # noqa: BLE001
                 logger.exception("Background analyze pipeline error: %s", exc)
-                if saved_items_count == 0:
+                if analyzed_items_count == 0:
                     await try_refund()
                 await queue.put(
                     {
@@ -762,7 +771,7 @@ async def analyze_item_image(
                                 dup.get("id"),
                                 user["id"],
                             )
-                        else:
+                        elif getattr(payload, "auto_save", False):
                             try:
                                 from app.api.v1.closet.common import CreateItemIn
                                 from app.api.v1.closet.items import save_closet_item_document
@@ -802,14 +811,22 @@ async def analyze_item_image(
                                     defer_matte=meta.get("defer_matte", False),
                                 )
                                 res = await save_closet_item_document(user, item_in)
-                                saved_doc = res.get("item") if isinstance(res, dict) else res
-                                logger.info(
-                                    "Auto-saved analyzed item %s (%s - %s) to closet for user %s",
-                                    saved_doc.get("id"), saved_doc.get("category"), saved_doc.get("sub_category"), user["id"],
-                                )
+                                saved_doc = res if (isinstance(res, dict) and "id" in res) else (res.get("item") if isinstance(res, dict) else res)
+                                if isinstance(saved_doc, dict):
+                                    logger.info(
+                                        "Explicitly auto-saved analyzed item %s (%s - %s) to closet for user %s",
+                                        saved_doc.get("id"), saved_doc.get("category"), saved_doc.get("sub_category"), user["id"],
+                                    )
                             except Exception as save_err:
-                                logger.warning("Failed to auto-save item to closet: %s", save_err)
+                                logger.warning("Failed to save item to closet: %s", save_err)
 
+                        crop_b64 = meta.get("crop_base64")
+                        crop_mime = meta.get("crop_mime", "image/jpeg")
+                        thumb_url = (
+                            saved_doc.get("thumbnail_data_url")
+                            if (saved_doc and saved_doc.get("thumbnail_data_url"))
+                            else (f"data:{crop_mime};base64,{crop_b64}" if crop_b64 else None)
+                        )
                         items_out.append(
                             {
                                 "item_id": saved_doc.get("id") if saved_doc else None,
@@ -817,11 +834,11 @@ async def analyze_item_image(
                                 "label": meta.get("label"),
                                 "kind": meta.get("kind"),
                                 "bbox": meta.get("bbox"),
-                                "crop_base64": meta.get("crop_base64"),
-                                "crop_mime": meta.get("crop_mime", "image/jpeg"),
+                                "crop_base64": crop_b64,
+                                "crop_mime": crop_mime,
                                 "clean_image_url": saved_doc.get("clean_image_url") if saved_doc else None,
                                 "original_image_url": saved_doc.get("original_image_url") if saved_doc else None,
-                                "thumbnail_data_url": saved_doc.get("thumbnail_data_url") if saved_doc else None,
+                                "thumbnail_data_url": thumb_url,
                                 "analysis": analysis,
                                 "potential_duplicate": dup,
                                 "reconstruction_advised": False,
