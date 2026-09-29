@@ -1034,9 +1034,9 @@ export default function Closet() {
               {/* Search Field */}
               <div className="relative min-w-0 flex-1">
                 {searchMode === "meaning" ? (
-                  <Sparkles className="absolute left-3 top-1/2 z-10 h-4 w-4 -translate-y-1/2 text-[hsl(var(--accent))]" />
+                  <Sparkles className="absolute start-3 top-1/2 z-10 h-4 w-4 -translate-y-1/2 text-[hsl(var(--accent))]" />
                 ) : (
-                  <Search className="absolute left-3 top-1/2 z-10 h-4 w-4 -translate-y-1/2 text-gray-500" />
+                  <Search className="absolute start-3 top-1/2 z-10 h-4 w-4 -translate-y-1/2 text-gray-500" />
                 )}
 
                 <Input
@@ -1056,7 +1056,7 @@ export default function Closet() {
                   className="
                       h-11 w-full rounded-[8px] mb-0
                       border border-gray-200
-                      bg-white px-10
+                      bg-white ps-10 pe-10
                       text-sm text-gray-900
                       shadow-none outline-none
                       placeholder:text-gray-400
@@ -1078,8 +1078,8 @@ export default function Closet() {
                     })}
                     data-testid="closet-search-clear"
                     className="
-                            absolute right-3 top-1/2 z-10
-                            flex h-6 w-6 -translate-y-1/2
+                            absolute end-3 top-1/2 z-10
+                            flex h-8 w-8 min-h-[32px] min-w-[32px] -translate-y-1/2
                             items-center justify-center
                             rounded-full text-gray-400
                             transition-colors
@@ -1104,7 +1104,9 @@ export default function Closet() {
                 <SelectTrigger
                   data-testid="closet-category-select"
                   className="
-                          lg:w-[130px]
+                          h-11 w-full rounded-[8px] border border-gray-200
+                          bg-white px-3 text-sm
+                          lg:w-auto lg:min-w-[140px]
                         "
                 >
                   <SelectValue placeholder={t("closet.category")} />
@@ -1134,7 +1136,7 @@ export default function Closet() {
                   className="
                           h-11 w-full rounded-[8px] border border-gray-200
                           bg-white px-3 text-sm
-                          lg:w-[140px]
+                          lg:w-auto lg:min-w-[140px]
                         "
                 >
                   <SelectValue placeholder={labelForSource("all", t)} />
@@ -1167,7 +1169,8 @@ export default function Closet() {
                   aria-pressed={searchMode === "keyword"}
                   data-testid="closet-search-mode-keyword"
                   className={`
-                                  h-full rounded-[8px] px-3 text-xs font-medium
+                                  flex h-full min-h-[36px] items-center justify-center
+                                  rounded-[8px] px-3.5 text-xs font-medium
                                   transition-all duration-200
                                   ${searchMode === "keyword"
                       ? "bg-white text-gray-900 shadow-sm"
@@ -1183,8 +1186,8 @@ export default function Closet() {
                   data-testid="closet-search-mode-meaning"
                   onClick={() => setSearchMode("meaning")}
                   className={`
-                                  flex h-full items-center gap-1.5
-                                  rounded-[8px] px-3 text-xs font-medium
+                                  flex h-full min-h-[36px] items-center justify-center gap-1.5
+                                  rounded-[8px] px-3.5 text-xs font-medium
                                   transition-all duration-200
                                   ${searchMode === "meaning"
                       ? "bg-white text-primary-brand shadow-sm"

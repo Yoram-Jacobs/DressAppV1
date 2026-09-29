@@ -466,14 +466,18 @@ const hydrate = (a, user, t, i18n) => {
       // Hard check: ensure sub_category and item_type are NEVER visually identical
       if (String(out.item_type).trim().toLowerCase() === String(out.sub_category).trim().toLowerCase()) {
         const subK = canonicalSubCategoryKey(subRaw);
-        if (subK === 't_shirts' || /חולצת טי|חולצות טי|t[-_ ]?shirt/i.test(out.sub_category)) {
-          out.item_type = t('taxonomy.item_type.short_sleeve_t_shirt', { defaultValue: 'חולצת טי שרוול קצר' });
+        if (subK === 'basket_bags') {
+          out.item_type = t('taxonomy.item_type.basket_bag', { defaultValue: 'Basket bag' });
+        } else if (subK === 'bags') {
+          out.item_type = t('taxonomy.item_type.handbag', { defaultValue: 'Handbag' });
+        } else if (subK === 't_shirts' || /חולצת טי|חולצות טי|t[-_ ]?shirt/i.test(out.sub_category)) {
+          out.item_type = t('taxonomy.item_type.short_sleeve_t_shirt', { defaultValue: 'Short-sleeve T-shirt' });
         } else if (subK === 'tailored_shirts' || /מכופתרת|shirt/i.test(out.sub_category)) {
-          out.item_type = t('taxonomy.item_type.button_down_shirt', { defaultValue: 'חולצה מכופתרת' });
+          out.item_type = t('taxonomy.item_type.button_down_shirt', { defaultValue: 'Button-down shirt' });
         } else if (subK === 'blouses' || /בלוזה|blouse/i.test(out.sub_category)) {
-          out.item_type = t('taxonomy.item_type.cap_sleeve_blouse', { defaultValue: 'בלוזת שרוול קצרצר' });
+          out.item_type = t('taxonomy.item_type.cap_sleeve_blouse', { defaultValue: 'Cap-sleeve blouse' });
         } else {
-          out.item_type = `${out.sub_category} ${t('taxonomy.season.summer', { defaultValue: 'קצר' })}`;
+          out.item_type = `${out.sub_category} ${t('taxonomy.season.summer', { defaultValue: 'Summer' })}`;
         }
       }
 
