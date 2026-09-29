@@ -23,7 +23,7 @@ from app.services.auth import (
 from app.services.vision import garment_vision_service, get_garment_vision_service
 from app.services.fashion_clip import fashion_clip_service
 from app.services import closet_service
-from app.services.duplicate_gatekeeper import find_potential_duplicate
+from app.services.duplicate_detection import find_potential_duplicate
 from app.services.image_generation.factory import get_image_provider
 from app.api.v1.closet.common import (
     _ANALYZE_LOCK,
