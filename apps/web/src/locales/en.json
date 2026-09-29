@@ -2404,6 +2404,13 @@
       "headwear": "Headwear"
     },
     "sub_category": {
+      "shoes": "Shoes",
+      "casual_shoes": "Casual Shoes",
+      "clogs": "Clogs",
+      "slides": "Slides",
+      "mules": "Mules",
+      "loafers": "Loafers",
+      "oxfords": "Oxfords",
       "boots": "Boots",
       "dress_shoes": "Dress Shoes",
       "sandals": "Sandals",
@@ -2529,7 +2536,22 @@
       "cap_sleeve_top": "Cap-sleeve top",
       "cap_sleeve_blouse": "Cap-sleeve blouse",
       "basket_bag": "Basket bag",
-      "handbag": "Handbag"
+      "handbag": "Handbag",
+      "shoes": "Shoes",
+      "casual_shoes": "Casual Shoes",
+      "clogs": "Clogs",
+      "platform_clogs": "Platform Clogs",
+      "slides": "Slides",
+      "platform_slides": "Platform Slides",
+      "sandals": "Sandals",
+      "platform_sandals": "Platform Sandals",
+      "loafers": "Loafers",
+      "oxfords": "Oxfords",
+      "boots": "Boots",
+      "sneakers": "Sneakers",
+      "flats": "Flats",
+      "heels": "Heels",
+      "slippers": "Slippers"
     },
     "color": {
       "black": "Black",

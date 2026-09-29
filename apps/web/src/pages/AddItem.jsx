@@ -4480,7 +4480,7 @@ export default function AddItem() {
                                       t("addItem.genericBrand", {
                                         defaultValue: "Generic",
                                       })}{" "}
-                                    · {it.category}
+                                    · {labelForCategory(it.category, t) || it.category}
                                   </div>
                                 </div>
                               </div>
@@ -4627,7 +4627,7 @@ export default function AddItem() {
                               t("addItem.genericBrand", {
                                 defaultValue: "Generic",
                               })}{" "}
-                            · {it.category}
+                            · {labelForCategory(it.category, t) || it.category}
                           </p>
                         </div>
                       </div>
@@ -5181,7 +5181,11 @@ function ItemCard({
                       </span>
                       {!sections.basic && (
                         <div className="text-[12px] text-text-brand font-bold truncate">
-                          {[fields.category, fields.brand, fields.size]
+                          {[
+                            labelForCategory(fields.category, t) || fields.category,
+                            fields.brand,
+                            fields.size,
+                          ]
                             .filter(Boolean)
                             .join(" · ") || "—"}
                         </div>
@@ -5234,10 +5238,10 @@ function ItemCard({
                       {!sections.styling && (
                         <div className="text-[12px] text-text-brand font-bold truncate">
                           {[
-                            fields.gender,
-                            fields.dress_code,
+                            labelForGender(fields.gender, t) || fields.gender,
+                            labelForDressCode(fields.dress_code, t) || fields.dress_code,
                             fields.season && fields.season.length
-                              ? fields.season.join("/")
+                              ? fields.season.map((s) => labelForSeason(s, t) || s).join("/")
                               : null,
                           ]
                             .filter(Boolean)
@@ -5315,7 +5319,11 @@ function ItemCard({
                       </span>
                       {!sections.care && (
                         <div className="text-[12px] text-text-brand font-bold truncate mt-0.5">
-                          {[fields.state, fields.condition, fields.quality]
+                          {[
+                            labelForState(fields.state, t) || fields.state,
+                            labelForCondition(fields.condition, t) || fields.condition,
+                            labelForQuality(fields.quality, t) || fields.quality,
+                          ]
                             .filter(Boolean)
                             .join(" · ") || "—"}
                         </div>

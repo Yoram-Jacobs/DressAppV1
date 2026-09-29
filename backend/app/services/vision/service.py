@@ -577,7 +577,7 @@ class GarmentVisionService:
 
         # 4) Parse + sanitise. Eyes v3 (Gemma 4) may return a JSON array
         #    when the crop contains multiple garments; collapse to first.
-        parsed = _coerce_single_garment(_extract_json(raw or ""), user_gender=eff_gender)
+        parsed = _coerce_single_garment(_extract_json(raw or ""), user_gender=eff_gender, language=language)
         if not parsed.get("title") and parsed.get("name"):
             parsed["title"] = parsed["name"]
         if not parsed.get("title"):
@@ -1616,7 +1616,7 @@ class GarmentVisionService:
         results: list[dict[str, Any]] = []
         for slot_idx, entry in enumerate(parsed):
             try:
-                norm = _coerce_single_garment(entry, user_gender=eff_gender)
+                norm = _coerce_single_garment(entry, user_gender=eff_gender, language=language)
                 if not norm.get("title") and norm.get("name"):
                     norm["title"] = norm["name"]
                 if not norm.get("title"):
@@ -1738,7 +1738,7 @@ class GarmentVisionService:
                 )
                 for raw_entry in new_objs:
                     try:
-                        norm = _coerce_single_garment(raw_entry, user_gender=eff_gender)
+                        norm = _coerce_single_garment(raw_entry, user_gender=eff_gender, language=language)
                         if not norm.get("title") and norm.get("name"):
                             norm["title"] = norm["name"]
                         if not norm.get("title"):
@@ -2431,12 +2431,19 @@ class GarmentVisionService:
 
             try:
                 has_human_wearer = _detect_human_presence(detections)
+                has_footwear = any(
+                    (d.get("category") or d.get("kind") or "").lower() in ("footwear", "shoes", "sandals", "sneakers", "boots", "floppers", "clogs", "slides")
+                    for d in detections
+                )
                 is_footwear_only = bool(
                     detections
                     and not has_human_wearer
-                    and all(
-                        (d.get("category") or d.get("kind") or "").lower() in ("footwear", "shoes", "sandals", "sneakers", "boots", "floppers")
-                        for d in detections
+                    and (
+                        all(
+                            (d.get("category") or d.get("kind") or "").lower() in ("footwear", "shoes", "sandals", "sneakers", "boots", "floppers", "clogs", "slides")
+                            for d in detections
+                        )
+                        or (has_footwear and len(detections) <= 2)
                     )
                 )
                 is_single = (
@@ -2463,9 +2470,9 @@ class GarmentVisionService:
                         best_det = {"bbox": union_bbox, "kind": "garment", "label": "garment"}
 
                     det = {
-                        "label": best_det.get("label") or "garment",
-                        "kind": best_det.get("kind") or "garment",
-                        "category": best_det.get("category") or best_det.get("kind") or "garment",
+                        "label": "Shoes" if (is_footwear_only or has_footwear) else (best_det.get("label") or "garment"),
+                        "kind": "footwear" if (is_footwear_only or has_footwear) else (best_det.get("kind") or "garment"),
+                        "category": "footwear" if (is_footwear_only or has_footwear) else (best_det.get("category") or best_det.get("kind") or "garment"),
                         "bbox": union_bbox,
                         "defer_matte": False,
                         "is_single_item": True,
@@ -2640,7 +2647,7 @@ class GarmentVisionService:
                         if not assembled.get("title") and (det.get("label") or det.get("kind")):
                             assembled["title"] = (det.get("label") or det.get("kind")).capitalize()
 
-                        analysis = _coerce_single_garment(assembled, user_gender=eff_gender)
+                        analysis = _coerce_single_garment(assembled, user_gender=eff_gender, language=language)
                         if not analysis.get("title") and analysis.get("name"):
                             analysis["title"] = analysis["name"]
                         if not analysis.get("title"):
@@ -2789,7 +2796,7 @@ class GarmentVisionService:
                             if not assembled.get("title") and (det.get("label") or det.get("kind")):
                                 assembled["title"] = (det.get("label") or det.get("kind")).capitalize()
 
-                            analysis = _coerce_single_garment(assembled, user_gender=eff_gender)
+                            analysis = _coerce_single_garment(assembled, user_gender=eff_gender, language=language)
                             if not analysis.get("title") and analysis.get("name"):
                                 analysis["title"] = analysis["name"]
                             if not analysis.get("title"):

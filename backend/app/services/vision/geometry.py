@@ -363,8 +363,11 @@ def _looks_already_cropped(
     largest_area = max(areas) if areas else 0
     kinds = {(d.get("category") or d.get("kind") or "garment").lower() for d in detections}
 
-    # Signal 0b: All detections are footwear without a human model (e.g. partner shoes, pair of sandals/slides)
-    if kinds and all(k in ("footwear", "shoes", "sandals", "sneakers", "boots", "floppers") for k in kinds):
+    # Signal 0b: Footwear pair detection without a human model (e.g. pair of slides/sandals/sneakers/clogs)
+    has_footwear = any(k in ("footwear", "shoes", "sandals", "sneakers", "boots", "floppers", "clogs", "slides") for k in kinds)
+    if kinds and all(k in ("footwear", "shoes", "sandals", "sneakers", "boots", "floppers", "clogs", "slides") for k in kinds):
+        return True
+    if has_footwear and len(detections) <= 2:
         return True
 
     # Signal 1: exactly one detection
@@ -402,6 +405,8 @@ def _looks_already_cropped(
 
     # If multiple distinct garment/accessory items exist, it's a multi-item flat lay.
     if len(detections) > 1 and len(kinds) > 1:
+        if has_footwear and len(detections) <= 2:
+            return True
         return False
 
     significant = [d for d in detections if _area(d["bbox"]) >= frame_area * 0.01]

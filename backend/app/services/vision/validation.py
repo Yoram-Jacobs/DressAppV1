@@ -35,6 +35,7 @@ def resolve_garment_gender(val: Any) -> str | None:
 def _coerce_single_garment(
     parsed: dict[str, Any] | list[dict[str, Any]],
     user_gender: str | None = None,
+    language: str | None = None,
 ) -> dict[str, Any]:
     """Collapse a list-of-garments response into the single-item contract.
 
@@ -63,6 +64,7 @@ def _coerce_single_garment(
     cat_lower = (res.get("category") or "").strip().lower()
     sub_lower = (res.get("sub_category") or "").strip().lower()
     full_text = f"{res.get('item_type', '')} {res.get('name', '')} {res.get('title', '')} {res.get('caption', '')}".lower()
+    is_he = ((language or "").lower() in ("he", "iw")) or any("\u0590" <= ch <= "\u05ea" for ch in full_text)
 
     if not cat_lower:
         # If category is completely missing, infer from full_text or default to Top
@@ -158,8 +160,8 @@ def _coerce_single_garment(
             res["item_type"] = f"Short-Sleeve {fallback_sub}" if is_summer else f"Classic {fallback_sub}"
         itype_lower = (res["item_type"] or "").strip().lower()
 
-    # Footwear pluralization
-    if cat_lower == "footwear" or sub_lower in {"boot", "shoe", "sneaker", "heel", "loafer", "sandal", "pump"}:
+    # Footwear pluralization and localization
+    if cat_lower == "footwear" or sub_lower in {"boot", "shoe", "sneaker", "heel", "loafer", "sandal", "pump", "clog", "slide", "נעליים", "סנדלים", "כפכפים", "מגפיים"}:
         plural_map = {
             "boot": "Boots",
             "shoe": "Shoes",
@@ -171,16 +173,37 @@ def _coerce_single_garment(
             "ankle boot": "Ankle Boots",
             "knee-high boot": "Knee-High Boots",
             "leather boot": "Leather Boots",
+            "clog": "Clogs",
+            "slide": "Slides",
         }
-        if sub_lower in plural_map:
-            res["sub_category"] = plural_map[sub_lower]
-        elif res.get("sub_category") and not str(res.get("sub_category")).endswith("s"):
-            res["sub_category"] = f"{res['sub_category']}s"
+        if is_he:
+            he_footwear_map = {
+                "boot": "מגפיים", "boots": "מגפיים", "ankle boot": "מגפונים", "ankle boots": "מגפונים",
+                "shoe": "נעליים", "shoes": "נעליים", "casual shoe": "נעלי קז'ואל", "casual shoes": "נעלי קז'ואל",
+                "sneaker": "סניקרס", "sneakers": "סניקרס", "heel": "נעלי עקב", "heels": "נעלי עקב",
+                "loafer": "לופרים", "loafers": "לופרים", "sandal": "סנדלים", "sandals": "סנדלים",
+                "clog": "כפכפים", "clogs": "כפכפים", "slide": "כפכפים", "slides": "כפכפים",
+                "flopper": "כפכפים", "floppers": "כפכפים", "slipper": "נעלי בית", "slippers": "נעלי בית",
+                "flat": "נעליים שטוחות", "flats": "נעליים שטוחות", "dress shoe": "נעליים אלגנטיות", "dress shoes": "נעליים אלגנטיות",
+            }
+            if sub_lower in he_footwear_map:
+                res["sub_category"] = he_footwear_map[sub_lower]
+            if itype_lower in he_footwear_map:
+                res["item_type"] = he_footwear_map[itype_lower]
+            if res.get("sub_category") and str(res.get("sub_category")).lower() in he_footwear_map:
+                res["sub_category"] = he_footwear_map[str(res.get("sub_category")).lower()]
+            if res.get("item_type") and str(res.get("item_type")).lower() in he_footwear_map:
+                res["item_type"] = he_footwear_map[str(res.get("item_type")).lower()]
+        else:
+            if sub_lower in plural_map:
+                res["sub_category"] = plural_map[sub_lower]
+            elif res.get("sub_category") and not str(res.get("sub_category")).endswith("s"):
+                res["sub_category"] = f"{res['sub_category']}s"
 
-        if itype_lower in plural_map:
-            res["item_type"] = plural_map[itype_lower]
-        elif res.get("item_type") and not str(res.get("item_type")).endswith("s"):
-            res["item_type"] = f"{res['item_type']}s"
+            if itype_lower in plural_map:
+                res["item_type"] = plural_map[itype_lower]
+            elif res.get("item_type") and not str(res.get("item_type")).endswith("s"):
+                res["item_type"] = f"{res['item_type']}s"
 
     # Gender inference: analyze tailoring intent and respect user gender fallback
     norm_user = resolve_garment_gender(user_gender)
@@ -303,16 +326,26 @@ def _coerce_single_garment(
     # Caption guarantee: ensure caption is never empty or blank
     cap = (res.get("caption") or "").strip()
     if not cap:
-        name_val = res.get("name") or res.get("title") or "garment"
-        itype = (res.get("item_type") or res.get("sub_category") or "piece").lower()
-        if "coat" in itype or cat_lower == "outerwear":
-            res["caption"] = f"A tailored {name_val.lower()} crafted with structured silhouette and refined button detailing."
-        elif cat_lower == "footwear" or "boot" in itype:
-            res["caption"] = f"Classic {name_val.lower()} featuring sleek styling and premium construction."
-        elif "bag" in itype or "belt" in itype or cat_lower == "accessories":
-            res["caption"] = f"An elegant {name_val.lower()} that adds functional sophistication to any ensemble."
+        name_val = res.get("name") or res.get("title") or ("פריט" if is_he else "garment")
+        itype = (res.get("item_type") or res.get("sub_category") or ("בגד" if is_he else "piece")).lower()
+        if is_he:
+            if "coat" in itype or cat_lower == "outerwear" or any(w in itype for w in ("מעיל", "ז'קט")):
+                res["caption"] = f"{name_val} מחויט ומעוצב בגזרה מחמיאה וקלאסית."
+            elif cat_lower == "footwear" or "boot" in itype or any(w in itype for w in ("shoe", "נעלי", "כפכפ", "סנדל", "מגפ")):
+                res["caption"] = f"{name_val} בעל עיצוב אופנתי ונוח לשימוש יומיומי."
+            elif "bag" in itype or "belt" in itype or cat_lower == "accessories" or any(w in itype for w in ("תיק", "חגור", "כובע")):
+                res["caption"] = f"{name_val} המוסיף טאץ' מיוחד וסטייל לכל הופעה."
+            else:
+                res["caption"] = f"{name_val} ורסטילי ונוח בעיצוב מוקפד ונקי."
         else:
-            res["caption"] = f"A versatile {name_val.lower()} designed with thoughtful proportions and clean detailing."
+            if "coat" in itype or cat_lower == "outerwear":
+                res["caption"] = f"A tailored {name_val.lower()} crafted with structured silhouette and refined button detailing."
+            elif cat_lower == "footwear" or "boot" in itype:
+                res["caption"] = f"Classic {name_val.lower()} featuring sleek styling and premium construction."
+            elif "bag" in itype or "belt" in itype or cat_lower == "accessories":
+                res["caption"] = f"An elegant {name_val.lower()} that adds functional sophistication to any ensemble."
+            else:
+                res["caption"] = f"A versatile {name_val.lower()} designed with thoughtful proportions and clean detailing."
 
     # Pattern fallback: if model returned solid/empty, check text for subtle geometric, striped, or floral patterns
     pat_str = (res.get("pattern") or "").strip().lower()

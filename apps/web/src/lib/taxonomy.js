@@ -429,11 +429,15 @@ export const canonicalSubCategoryKey = (raw) => {
 
   if (normalized.includes('combat_boot') || normalized.includes('boot') || normalized.includes('מגפ') || normalized.includes('ботин') || normalized.includes('сапог')) return 'boots';
   if (normalized.includes('sandal') || normalized.includes('סנדל') || normalized.includes('сандал') || normalized.includes('босоножк')) return 'sandals';
-  if (normalized.includes('sneaker') || normalized.includes('runner') || normalized.includes('trainer') || normalized.includes('high_top') || normalized.includes('low_top') || normalized.includes('סניקרס') || normalized.includes('סниקרס') || normalized.includes('ספורט') || normalized.includes('кроссов') || normalized.includes('кеды')) return 'sneakers';
+  if (normalized.includes('clog') || normalized.includes('slide') || normalized.includes('flopper') || normalized.includes('mule') || normalized.includes('flip_flop') || normalized.includes('כפכפ') || normalized.includes('קבקב')) return 'clogs';
+  if (normalized.includes('sneaker') || normalized.includes('runner') || normalized.includes('trainer') || normalized.includes('high_top') || normalized.includes('low_top') || normalized.includes('סניקרס') || normalized.includes('ספורט') || normalized.includes('кроссов') || normalized.includes('кеды')) return 'sneakers';
   if (normalized.includes('heel') || normalized.includes('עקב') || normalized.includes('каблук')) return 'heels';
   if (normalized.includes('flat') || normalized.includes('שטוחות') || normalized.includes('балетк')) return 'flats';
   if (normalized.includes('slipper') || normalized.includes('בית') || normalized.includes('тапоч')) return 'slippers';
-  if (normalized.includes('oxford') || normalized.includes('dress_shoe') || normalized.includes('loafer') || normalized.includes('אלגנט') || normalized.includes('נעליים') || normalized.includes('נעלי_עור') || normalized.includes('туфли') || normalized.includes('классическ_обув')) return 'dress_shoes';
+  if (normalized.includes('loafer') || normalized.includes('לופר')) return 'loafers';
+  if (normalized.includes('oxford') || normalized.includes('dress_shoe') || normalized.includes('אלגנט') || normalized.includes('נעלי_עור') || normalized.includes('туфли') || normalized.includes('классическ_обув')) return 'dress_shoes';
+  if (normalized.includes('casual_shoe') || normalized.includes('קזואל') || normalized.includes('יומיומ')) return 'casual_shoes';
+  if (normalized.includes('shoe') || normalized.includes('נעלי') || normalized.includes('обув')) return 'shoes';
 
   if (normalized.includes('overcoat') || normalized.includes('coat') || normalized.includes('parka') || normalized.includes('מעיל') || normalized.includes('пальто') || normalized.includes('плащ')) return 'coats';
   if (normalized.includes('jacket') || normalized.includes('bomber') || normalized.includes('moto') || normalized.includes('זקט') || normalized.includes('куртк')) return 'jackets';

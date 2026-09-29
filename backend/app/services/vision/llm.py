@@ -918,7 +918,7 @@ async def call_gemma_space_stream_attributes(
             if isinstance(parsed, list) and parsed:
                 parsed = parsed[0]
             if isinstance(parsed, dict) and len(parsed) >= 3:
-                parsed = _coerce_single_garment(parsed, user_gender=user_gender)
+                parsed = _coerce_single_garment(parsed, user_gender=user_gender, language=language)
                 parsed = _coerce_enums(parsed, user_gender=user_gender)
                 for group_name, field_names, _, _ in ATTRIBUTE_GROUPS:
                     filtered = {k: v for k, v in parsed.items() if k in field_names}

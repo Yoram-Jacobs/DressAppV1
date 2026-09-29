@@ -310,3 +310,33 @@ def test_looks_already_cropped_footwear_pair():
     assert _looks_already_cropped(detections, count_hint=2) is True
 
 
+def test_looks_already_cropped_footwear_partner_misclassified():
+    """When one shoe is classified as footwear and the other as top, it must still be treated as a single item."""
+    from app.services.vision.geometry import _looks_already_cropped
+    detections = [
+        {"bbox": [150, 250, 520, 750], "kind": "footwear", "category": "footwear", "label": "Shoes"},
+        {"bbox": [480, 280, 820, 780], "kind": "garment", "category": "top", "label": "Upper-clothes"},
+    ]
+    assert _looks_already_cropped(detections, count_hint=None) is True
+
+
+def test_coerce_single_garment_hebrew_footwear_and_caption():
+    """Hebrew output language must translate footwear sub_category, item_type and produce Hebrew caption."""
+    from app.services.vision.validation import _coerce_single_garment
+    parsed = {
+        "name": "שחור גומי כפכפים",
+        "title": "כפכפי פלטפורמה",
+        "category": "Footwear",
+        "sub_category": "Shoes",
+        "item_type": "Casual Shoes",
+        "gender": "women",
+        "caption": "",
+    }
+    result = _coerce_single_garment(parsed, language="he")
+    assert result["sub_category"] == "נעליים"
+    assert result["item_type"] == "נעלי קז'ואל"
+    assert "A versatile" not in result["caption"]
+    assert "נוח לשימוש יומיומי" in result["caption"] or "אופנתי" in result["caption"]
+
+
+

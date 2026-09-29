@@ -805,6 +805,9 @@ def _suppress_overlapping_garments(
             return None
         return int(ys.min()), int(xs.min()), int(ys.max()), int(xs.max())
 
+    first_mask = nms_items[0][1]["mask"]
+    H, W = first_mask.shape
+
     kept: list[tuple[str, dict[str, Any], int]] = []
     suppressed: list[tuple[str, str, str, float, float]] = []
     for lbl, item, area in nms_items:
@@ -817,15 +820,17 @@ def _suppress_overlapping_garments(
         for kept_idx, (kept_lbl, kept_item, kept_area) in enumerate(kept):
             kept_cat = kept_item.get("category")
             # Distinct fashion categories (e.g. headwear vs top, top vs bottom, bottom vs footwear, accessory vs garment)
-            # must stay separate and not be merged.
+            # must stay separate and not be merged, UNLESS one is footwear in a non-human photo (partner shoe misclassification)
+            # or flatlay top/bottom.
             is_flatlay_top_bottom = False
+            is_footwear_candidate = (not has_human) and ("footwear" in {kept_cat, item_cat})
             if kept_cat != item_cat:
                 garment_set = {"top", "dress", "outerwear"}
                 is_garment_pair = kept_cat in garment_set and item_cat in garment_set
                 is_flatlay_top_bottom = (not has_human) and (count_hint is not None and count_hint <= 1) and (
                     {kept_cat, item_cat} == {"top", "bottom"} or {kept_cat, item_cat} == {"top", "dress"}
                 )
-                if not (is_garment_pair or is_flatlay_top_bottom):
+                if not (is_garment_pair or is_flatlay_top_bottom or is_footwear_candidate):
                     continue
 
             bb_kept = _bbox(kept_item["mask"])
@@ -849,9 +854,12 @@ def _suppress_overlapping_garments(
                 bbox_containment = i_area / float(a_item)
                 bbox_iou = i_area / float(a_item + a_kept - i_area)
 
-            # Footwear rule: any fragment overlapping footwear (dilated >= 10% or bbox containment >= 35%) is footwear
-            is_footwear_overlap = (kept_cat == "footwear" or item_cat == "footwear") and (
-                pixel_containment >= 0.10 or bbox_containment >= 0.35 or bbox_iou >= 0.20
+            # Footwear rule: any fragment overlapping or proximate to footwear in non-human photo is footwear
+            is_footwear_overlap = is_footwear_candidate and (
+                pixel_containment >= 0.08
+                or bbox_containment >= 0.20
+                or bbox_iou >= 0.10
+                or (bb_item and bb_kept and _bbox_gap(bb_item, bb_kept) <= int(0.25 * min(H, W)))
             )
 
             is_general_overlap = (
@@ -873,7 +881,11 @@ def _suppress_overlapping_garments(
 
             # Merge smaller into kept_item
             kept_item["mask"] = np.maximum(kept_item["mask"], item["mask"])
-            if (kept_lbl == "Dress" and lbl == "Upper-clothes") or (kept_lbl == "Pants" and lbl == "Upper-clothes"):
+            if is_footwear_candidate or kept_cat == "footwear" or item_cat == "footwear":
+                kept_lbl = "Shoes"
+                kept_item["label"] = "Shoes"
+                kept_item["category"] = "footwear"
+            elif (kept_lbl == "Dress" and lbl == "Upper-clothes") or (kept_lbl == "Pants" and lbl == "Upper-clothes"):
                 kept_lbl = "Upper-clothes"
                 kept_item["label"] = "Upper-clothes"
                 kept_item["category"] = "top"
@@ -1006,7 +1018,7 @@ async def parse_garments(
     has_head = False
     if human_class_ids:
         human_mask_full = np.isin(class_mask, list(human_class_ids)).astype(np.uint8)
-        if not human_mask_full.any():
+        if not human_mask_full.any() or int(human_mask_full.sum()) < 5000:
             human_mask_full = None
         else:
             head_class_ids = {
@@ -1084,7 +1096,7 @@ async def parse_garments(
                 "mask": combined,
             }
 
-    has_human = bool(has_head or (human_mask_full is not None))
+    has_human = bool(has_head or (human_mask_full is not None and int(human_mask_full.sum()) >= 5000))
 
     # 2a) Footwear Partner Recovery (when SegFormer mislabels one shoe as Upper-clothes/Dress/Skirt)
     # When there is NO human model present, and by_label contains Shoes, check if any other detection
@@ -1107,7 +1119,8 @@ async def parse_garments(
                 oy1, ox1, oy2, ox2 = obb
                 vert_dist = max(0, max(y1, oy1) - min(y2, oy2))
                 horiz_dist = max(0, max(x1, ox1) - min(x2, ox2))
-                if vert_dist <= int(0.20 * H) and horiz_dist <= int(0.20 * W):
+                # In non-human photos, if total detections <= 2 or distance <= 35%, merge partner into Shoes
+                if len(by_label) <= 2 or (vert_dist <= int(0.35 * H) and horiz_dist <= int(0.35 * W)):
                     logger.info("clothing_parser: merging partner detection '%s' into Shoes pair", ok)
                     by_label["Shoes"]["mask"] = np.maximum(by_label["Shoes"]["mask"], other_mask)
                     del by_label[ok]
@@ -1471,7 +1484,19 @@ def apply_alpha_intersection(
                 other_im = other_im.filter(ImageFilter.MaxFilter(2 * dilate_px + 1))
                 other_resized = np.array(other_im)
             
-            new_alpha = np.where(other_resized > 127, np.uint8(0), new_alpha)
+            candidate_alpha = np.where(other_resized > 127, np.uint8(0), new_alpha)
+            # Guard against aggressive chewing: if subtraction wipes out > 30% of the solid cutout,
+            # it means other_mask is incorrectly biting into this garment's main body!
+            orig_solid = int((new_alpha > 127).sum())
+            cand_solid = int((candidate_alpha > 127).sum())
+            if orig_solid > 0 and (cand_solid / float(orig_solid)) < 0.70:
+                logger.info(
+                    "apply_alpha_intersection: other-mask subtraction would wipe out >30%% of cutout (orig=%d, cand=%d); skipping subtraction to prevent chewing",
+                    orig_solid,
+                    cand_solid,
+                )
+            else:
+                new_alpha = candidate_alpha
         except Exception as exc:  # noqa: BLE001
             logger.info(
                 "apply_alpha_intersection: other-mask subtraction skipped: %s",

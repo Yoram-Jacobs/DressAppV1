@@ -2441,6 +2441,13 @@
       "headwear": "כיסוי ראש"
     },
     "sub_category": {
+      "shoes": "נעליים",
+      "casual_shoes": "נעלי קז'ואל",
+      "clogs": "כפכפים",
+      "slides": "כפכפים",
+      "mules": "כפכפי מולס",
+      "loafers": "לופרים",
+      "oxfords": "נעלי אוקספורד",
       "boots": "מגפיים",
       "dress_shoes": "נעליים אלגנטיות",
       "sandals": "סנדלים",
@@ -2566,7 +2573,22 @@
       "cap_sleeve_top": "חולצת שרוול קצרצר",
       "cap_sleeve_blouse": "בלוזת שרוול קצרצר",
       "basket_bag": "תיק סל קש",
-      "handbag": "תיק יד"
+      "handbag": "תיק יד",
+      "shoes": "נעליים",
+      "casual_shoes": "נעלי קז'ואל",
+      "clogs": "כפכפים",
+      "platform_clogs": "כפכפי פלטפורמה",
+      "slides": "כפכפים",
+      "platform_slides": "כפכפי פלטפורמה",
+      "sandals": "סנדלים",
+      "platform_sandals": "סנדלי פלטפורמה",
+      "loafers": "לופרים",
+      "oxfords": "נעלי אוקספורד",
+      "boots": "מגפיים",
+      "sneakers": "סניקרס",
+      "flats": "נעליים שטוחות",
+      "heels": "נעלי עקב",
+      "slippers": "נעלי בית"
     },
     "color": {
       "black": "שחור",
