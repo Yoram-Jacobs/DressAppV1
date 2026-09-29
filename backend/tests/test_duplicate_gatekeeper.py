@@ -1,0 +1,121 @@
+import pytest
+from unittest.mock import AsyncMock, MagicMock, patch
+from app.services.duplicate_detection import (
+    _canonical_category,
+    _canonical_color,
+    _dominant_color,
+    find_potential_duplicate,
+)
+from app.services.image_hash import average_hash, compute_sha256
+from PIL import Image
+import io
+import base64
+
+
+def _create_test_image_b64(color=(100, 150, 80), size=(100, 100)) -> str:
+    img = Image.new("RGB", size, color)
+    buf = io.BytesIO()
+    img.save(buf, format="JPEG")
+    return base64.b64encode(buf.getvalue()).decode("ascii")
+
+
+def test_canonical_category_normalization():
+    assert _canonical_category("ז'קט") == "outerwear"
+    assert _canonical_category("בולרו") == "outerwear"
+    assert _canonical_category("jacket") == "outerwear"
+    assert _canonical_category("מכנסיים") == "bottom"
+    assert _canonical_category("חולצה") == "top"
+    assert _canonical_category("חגורה") == "belt"
+    assert _canonical_category("תיק") == "bag"
+
+
+def test_canonical_color_normalization():
+    assert _canonical_color("זית") == "green"
+    assert _canonical_color("ירוק כהה") == "green"
+    assert _canonical_color("olive") == "green"
+    assert _canonical_color("שחור") == "black"
+    assert _canonical_color("לבן") == "white"
+    assert _canonical_color("כחול כהה") == "blue"
+
+
+def test_dominant_color_extraction():
+    assert _dominant_color({"colors": [{"name": "זית", "pct": 80}]}) == "זית"
+    assert _dominant_color({"colors": ["ירוק", "שחור"]}) == "ירוק"
+    assert _dominant_color({"color": "navy"}) == "navy"
+    assert _dominant_color({}) == ""
+
+
+@pytest.mark.asyncio
+async def test_find_potential_duplicate_by_metadata():
+    user_id = "test-user-123"
+    existing_item = {
+        "id": "item-existing-1",
+        "title": "ז'קט בולרו שרוולים תפוחים",
+        "name": "ז'קט בולרו",
+        "category": "outerwear",
+        "sub_category": "ז'קט",
+        "item_type": "jacket",
+        "brand": "",
+        "colors": [{"name": "זית"}],
+        "thumbnail_data_url": "data:image/jpeg;base64,123",
+        "source_phash": None,
+        "source_sha256": None,
+    }
+
+    mock_db = MagicMock()
+    mock_cursor = MagicMock()
+    mock_cursor.limit.return_value = mock_cursor
+    mock_cursor.to_list = AsyncMock(return_value=[existing_item])
+    mock_db.closet_items.find.return_value = mock_cursor
+
+    with patch("app.services.duplicate_detection.get_db", return_value=mock_db):
+        incoming_analysis = {
+            "title": "ז'קט בולרו שרוולים תפוחים ומחוך",
+            "category": "outerwear",
+            "sub_category": "ז'קט",
+            "item_type": "jacket",
+            "colors": [{"name": "זית"}],
+        }
+        dup = await find_potential_duplicate(user_id, incoming_analysis)
+        assert dup is not None
+        assert dup["id"] == "item-existing-1"
+        assert dup["match_reason"] == "metadata_match"
+
+
+@pytest.mark.asyncio
+async def test_find_potential_duplicate_by_visual_hash():
+    user_id = "test-user-123"
+    img_b64 = _create_test_image_b64()
+    phash = average_hash(img_b64)
+    sha = compute_sha256(img_b64)
+
+    existing_item = {
+        "id": "item-existing-visual",
+        "title": "Dark Olive Bolero",
+        "name": "Bolero",
+        "category": "outerwear",
+        "sub_category": "jacket",
+        "item_type": "jacket",
+        "thumbnail_data_url": f"data:image/jpeg;base64,{img_b64}",
+        "source_phash": phash,
+        "source_sha256": sha,
+    }
+
+    mock_db = MagicMock()
+    mock_cursor = MagicMock()
+    mock_cursor.limit.return_value = mock_cursor
+    mock_cursor.to_list = AsyncMock(return_value=[existing_item])
+    mock_db.closet_items.find.return_value = mock_cursor
+
+    with patch("app.services.duplicate_detection.get_db", return_value=mock_db):
+        incoming_analysis = {
+            "title": "Different Title Here",
+            "crop_base64": img_b64,
+            "category": "outerwear",
+            "sub_category": "jacket",
+            "colors": [{"name": "green"}],
+        }
+        dup = await find_potential_duplicate(user_id, incoming_analysis)
+        assert dup is not None
+        assert dup["id"] == "item-existing-visual"
+        assert "visual_hash" in dup["match_reason"]

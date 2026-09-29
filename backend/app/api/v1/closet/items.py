@@ -114,6 +114,14 @@ async def save_closet_item_document(
             raw_bytes = base64.b64decode(payload.image_base64, validate=True)
         except Exception as exc:  # noqa: BLE001
             raise HTTPException(400, f"Invalid image_base64: {exc}") from exc
+    elif payload.crop_base64:
+        try:
+            crop_clean = payload.crop_base64
+            if "," in crop_clean:
+                crop_clean = crop_clean.split(",", 1)[1]
+            raw_bytes = base64.b64decode(crop_clean, validate=False)
+        except Exception:
+            pass
 
     tags_list = list(payload.tags) if payload.tags else []
     if not tags_list:
@@ -233,12 +241,16 @@ async def save_closet_item_document(
     # colour signature on the same condition for the same reason.
     if raw_bytes:
         try:
-            from app.services.image_hash import average_hash, color_signature
+            from app.services.image_hash import average_hash, color_signature, compute_sha256
 
             if not doc.get("source_phash"):
                 ph = average_hash(raw_bytes)
                 if ph:
                     doc["source_phash"] = ph
+            if not doc.get("source_sha256"):
+                sha = compute_sha256(raw_bytes)
+                if sha:
+                    doc["source_sha256"] = sha
             if not doc.get("source_color_sig"):
                 cs = color_signature(raw_bytes)
                 if cs:

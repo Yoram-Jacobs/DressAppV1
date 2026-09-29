@@ -386,7 +386,7 @@ def _user_prompt(code: str | None, user_gender: str | None = None) -> str:
     if code == "en":
         return (
             "Analyse this photo. Return 1 JSON object for single item, or a JSON array for multiple items. No commentary.\n"
-            f"Key rules: sub_category != item_type; specific colors (not generic); textured/heathered fabric = pattern:'geometric' (never 'solid'); default gender = '{norm_gender}'."
+            f"Key rules: sub_category != item_type; specific colors (not generic); textured/heathered fabric = pattern:'geometric' (never 'solid'); default to '{norm_gender}'."
         )
 
     lang_name = _LANG_NAMES.get(code, code)

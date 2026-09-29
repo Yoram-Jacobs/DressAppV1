@@ -528,69 +528,93 @@ async def analyze_item_image(
                                 "reason": "unidentifiable",
                             })
                         else:
-                            # Auto-save item directly into closet so closing page/app never loses progress
-                            saved_doc = None
+                            # Gatekeeper: check for duplicate before auto-saving
+                            from app.services.duplicate_detection import find_potential_duplicate
+                            dup_payload = {
+                                **analysis,
+                                "crop_base64": meta.get("crop_base64"),
+                                "crop_mime": meta.get("crop_mime", "image/jpeg"),
+                                "clean_image_url": analysis.get("clean_image_url"),
+                                "thumbnail_data_url": analysis.get("thumbnail_data_url"),
+                            }
+                            dup = None
                             try:
-                                from app.api.v1.closet.common import CreateItemIn
-                                from app.api.v1.closet.items import save_closet_item_document
+                                dup = await find_potential_duplicate(user["id"], dup_payload)
+                            except Exception as dup_err:
+                                logger.warning("Duplicate check failed: %s", dup_err)
 
-                                raw_colors = analysis.get("colors") or []
-                                norm_colors = []
-                                if isinstance(raw_colors, list):
-                                    for c in raw_colors:
-                                        if isinstance(c, dict) and c.get("name"):
-                                            norm_colors.append(c)
-                                        elif isinstance(c, str):
-                                            norm_colors.append({"name": c, "pct": None})
-
-                                raw_fabrics = analysis.get("fabric_materials") or []
-                                norm_fabrics = []
-                                if isinstance(raw_fabrics, list):
-                                    for f in raw_fabrics:
-                                        if isinstance(f, dict) and f.get("name"):
-                                            norm_fabrics.append(f)
-                                        elif isinstance(f, str):
-                                            norm_fabrics.append({"name": f, "pct": None})
-
-                                item_in = CreateItemIn(
-                                    source="Private",
-                                    name=analysis.get("name") or analysis.get("title") or "Unnamed Garment",
-                                    title=analysis.get("title") or analysis.get("name") or "Unnamed Garment",
-                                    caption=analysis.get("caption"),
-                                    category=analysis.get("category") or "Top",
-                                    sub_category=analysis.get("sub_category"),
-                                    item_type=analysis.get("item_type"),
-                                    brand=analysis.get("brand"),
-                                    gender=analysis.get("gender"),
-                                    dress_code=analysis.get("dress_code"),
-                                    season=analysis.get("season") or [],
-                                    tradition=analysis.get("tradition"),
-                                    size=analysis.get("size"),
-                                    color=analysis.get("color") or (norm_colors[0]["name"] if norm_colors else None),
-                                    colors=norm_colors,
-                                    material=analysis.get("material") or (norm_fabrics[0]["name"] if norm_fabrics else None),
-                                    fabric_materials=norm_fabrics,
-                                    pattern=analysis.get("pattern"),
-                                    state=analysis.get("state") or "used",
-                                    condition=analysis.get("condition") or "good",
-                                    quality=analysis.get("quality") or "mid",
-                                    price_cents=analysis.get("price_cents") or 2500,
-                                    tags=analysis.get("tags") or [],
-                                    crop_base64=meta.get("crop_base64"),
-                                    image_mime=meta.get("crop_mime", "image/jpeg"),
-                                    from_one_pass=True,
-                                    defer_matte=meta.get("defer_matte", False),
+                            saved_doc = None
+                            if dup:
+                                logger.info(
+                                    "Duplicate gatekeeper flagged item '%s' as duplicate of '%s' (id=%s) for user %s",
+                                    analysis.get("name") or analysis.get("title"),
+                                    dup.get("title"),
+                                    dup.get("id"),
+                                    user["id"],
                                 )
-                                res = await save_closet_item_document(user, item_in)
-                                saved_doc = res if (isinstance(res, dict) and "id" in res) else (res.get("item") if isinstance(res, dict) else res)
-                                saved_items_count += 1
-                                if isinstance(saved_doc, dict):
-                                    logger.info(
-                                        "Auto-saved analyzed item %s (%s - %s) to closet for user %s",
-                                        saved_doc.get("id"), saved_doc.get("category"), saved_doc.get("sub_category"), user["id"],
+                            else:
+                                # Auto-save unique item directly into closet so closing page/app never loses progress
+                                try:
+                                    from app.api.v1.closet.common import CreateItemIn
+                                    from app.api.v1.closet.items import save_closet_item_document
+
+                                    raw_colors = analysis.get("colors") or []
+                                    norm_colors = []
+                                    if isinstance(raw_colors, list):
+                                        for c in raw_colors:
+                                            if isinstance(c, dict) and c.get("name"):
+                                                norm_colors.append(c)
+                                            elif isinstance(c, str):
+                                                norm_colors.append({"name": c, "pct": None})
+
+                                    raw_fabrics = analysis.get("fabric_materials") or []
+                                    norm_fabrics = []
+                                    if isinstance(raw_fabrics, list):
+                                        for f in raw_fabrics:
+                                            if isinstance(f, dict) and f.get("name"):
+                                                norm_fabrics.append(f)
+                                            elif isinstance(f, str):
+                                                norm_fabrics.append({"name": f, "pct": None})
+
+                                    item_in = CreateItemIn(
+                                        source="Private",
+                                        name=analysis.get("name") or analysis.get("title") or "Unnamed Garment",
+                                        title=analysis.get("title") or analysis.get("name") or "Unnamed Garment",
+                                        caption=analysis.get("caption"),
+                                        category=analysis.get("category") or "Top",
+                                        sub_category=analysis.get("sub_category"),
+                                        item_type=analysis.get("item_type"),
+                                        brand=analysis.get("brand"),
+                                        gender=analysis.get("gender"),
+                                        dress_code=analysis.get("dress_code"),
+                                        season=analysis.get("season") or [],
+                                        tradition=analysis.get("tradition"),
+                                        size=analysis.get("size"),
+                                        color=analysis.get("color") or (norm_colors[0]["name"] if norm_colors else None),
+                                        colors=norm_colors,
+                                        material=analysis.get("material") or (norm_fabrics[0]["name"] if norm_fabrics else None),
+                                        fabric_materials=norm_fabrics,
+                                        pattern=analysis.get("pattern"),
+                                        state=analysis.get("state") or "used",
+                                        condition=analysis.get("condition") or "good",
+                                        quality=analysis.get("quality") or "mid",
+                                        price_cents=analysis.get("price_cents") or 2500,
+                                        tags=analysis.get("tags") or [],
+                                        crop_base64=meta.get("crop_base64"),
+                                        image_mime=meta.get("crop_mime", "image/jpeg"),
+                                        from_one_pass=True,
+                                        defer_matte=meta.get("defer_matte", False),
                                     )
-                            except Exception as save_err:
-                                logger.warning("Failed to auto-save item to closet: %s", save_err)
+                                    res = await save_closet_item_document(user, item_in)
+                                    saved_doc = res if (isinstance(res, dict) and "id" in res) else (res.get("item") if isinstance(res, dict) else res)
+                                    saved_items_count += 1
+                                    if isinstance(saved_doc, dict):
+                                        logger.info(
+                                            "Auto-saved analyzed item %s (%s - %s) to closet for user %s",
+                                            saved_doc.get("id"), saved_doc.get("category"), saved_doc.get("sub_category"), user["id"],
+                                        )
+                                except Exception as save_err:
+                                    logger.warning("Failed to auto-save item to closet: %s", save_err)
 
                             out_frame = {
                                 "type": "item",
@@ -610,7 +634,7 @@ async def analyze_item_image(
                                 "original_image_url": saved_doc.get("original_image_url") if saved_doc else None,
                                 "thumbnail_data_url": saved_doc.get("thumbnail_data_url") if saved_doc else None,
                                 "analysis": analysis,
-                                "potential_duplicate": None,
+                                "potential_duplicate": dup,
                                 "reconstruction_advised": False,
                                 "one_pass": False,
                                 "defer_matte": meta.get(
@@ -722,66 +746,89 @@ async def analyze_item_image(
                     )
                     analysis = _safe_analysis(frame.get("analysis") or {})
                     if not _is_unidentifiable(analysis):
-                        saved_doc = None
+                        from app.services.duplicate_detection import find_potential_duplicate
+                        dup_payload = {
+                            **analysis,
+                            "crop_base64": meta.get("crop_base64"),
+                            "crop_mime": meta.get("crop_mime", "image/jpeg"),
+                            "clean_image_url": analysis.get("clean_image_url"),
+                            "thumbnail_data_url": analysis.get("thumbnail_data_url"),
+                        }
+                        dup = None
                         try:
-                            from app.api.v1.closet.common import CreateItemIn
-                            from app.api.v1.closet.items import save_closet_item_document
+                            dup = await find_potential_duplicate(user["id"], dup_payload)
+                        except Exception as dup_err:
+                            logger.warning("Duplicate check failed: %s", dup_err)
 
-                            raw_colors = analysis.get("colors") or []
-                            norm_colors = []
-                            if isinstance(raw_colors, list):
-                                for c in raw_colors:
-                                    if isinstance(c, dict) and c.get("name"):
-                                        norm_colors.append(c)
-                                    elif isinstance(c, str):
-                                        norm_colors.append({"name": c, "pct": None})
-
-                            raw_fabrics = analysis.get("fabric_materials") or []
-                            norm_fabrics = []
-                            if isinstance(raw_fabrics, list):
-                                for f in raw_fabrics:
-                                    if isinstance(f, dict) and f.get("name"):
-                                        norm_fabrics.append(f)
-                                    elif isinstance(f, str):
-                                        norm_fabrics.append({"name": f, "pct": None})
-
-                            item_in = CreateItemIn(
-                                source="Private",
-                                name=analysis.get("name") or analysis.get("title") or "Unnamed Garment",
-                                title=analysis.get("title") or analysis.get("name") or "Unnamed Garment",
-                                caption=analysis.get("caption"),
-                                category=analysis.get("category") or "Top",
-                                sub_category=analysis.get("sub_category"),
-                                item_type=analysis.get("item_type"),
-                                brand=analysis.get("brand"),
-                                gender=analysis.get("gender"),
-                                dress_code=analysis.get("dress_code"),
-                                season=analysis.get("season") or [],
-                                tradition=analysis.get("tradition"),
-                                size=analysis.get("size"),
-                                color=analysis.get("color") or (norm_colors[0]["name"] if norm_colors else None),
-                                colors=norm_colors,
-                                material=analysis.get("material") or (norm_fabrics[0]["name"] if norm_fabrics else None),
-                                fabric_materials=norm_fabrics,
-                                pattern=analysis.get("pattern"),
-                                state=analysis.get("state") or "used",
-                                condition=analysis.get("condition") or "good",
-                                quality=analysis.get("quality") or "mid",
-                                price_cents=analysis.get("price_cents") or 2500,
-                                tags=analysis.get("tags") or [],
-                                crop_base64=meta.get("crop_base64"),
-                                image_mime=meta.get("crop_mime", "image/jpeg"),
-                                from_one_pass=True,
-                                defer_matte=meta.get("defer_matte", False),
-                            )
-                            res = await save_closet_item_document(user, item_in)
-                            saved_doc = res.get("item") if isinstance(res, dict) else res
+                        saved_doc = None
+                        if dup:
                             logger.info(
-                                "Auto-saved analyzed item %s (%s - %s) to closet for user %s",
-                                saved_doc.get("id"), saved_doc.get("category"), saved_doc.get("sub_category"), user["id"],
+                                "Duplicate gatekeeper flagged item '%s' as duplicate of '%s' (id=%s) for user %s",
+                                analysis.get("name") or analysis.get("title"),
+                                dup.get("title"),
+                                dup.get("id"),
+                                user["id"],
                             )
-                        except Exception as save_err:
-                            logger.warning("Failed to auto-save item to closet: %s", save_err)
+                        else:
+                            try:
+                                from app.api.v1.closet.common import CreateItemIn
+                                from app.api.v1.closet.items import save_closet_item_document
+
+                                raw_colors = analysis.get("colors") or []
+                                norm_colors = []
+                                if isinstance(raw_colors, list):
+                                    for c in raw_colors:
+                                        if isinstance(c, dict) and c.get("name"):
+                                            norm_colors.append(c)
+                                        elif isinstance(c, str):
+                                            norm_colors.append({"name": c, "pct": None})
+
+                                raw_fabrics = analysis.get("fabric_materials") or []
+                                norm_fabrics = []
+                                if isinstance(raw_fabrics, list):
+                                    for f in raw_fabrics:
+                                        if isinstance(f, dict) and f.get("name"):
+                                            norm_fabrics.append(f)
+                                        elif isinstance(f, str):
+                                            norm_fabrics.append({"name": f, "pct": None})
+
+                                item_in = CreateItemIn(
+                                    source="Private",
+                                    name=analysis.get("name") or analysis.get("title") or "Unnamed Garment",
+                                    title=analysis.get("title") or analysis.get("name") or "Unnamed Garment",
+                                    caption=analysis.get("caption"),
+                                    category=analysis.get("category") or "Top",
+                                    sub_category=analysis.get("sub_category"),
+                                    item_type=analysis.get("item_type"),
+                                    brand=analysis.get("brand"),
+                                    gender=analysis.get("gender"),
+                                    dress_code=analysis.get("dress_code"),
+                                    season=analysis.get("season") or [],
+                                    tradition=analysis.get("tradition"),
+                                    size=analysis.get("size"),
+                                    color=analysis.get("color") or (norm_colors[0]["name"] if norm_colors else None),
+                                    colors=norm_colors,
+                                    material=analysis.get("material") or (norm_fabrics[0]["name"] if norm_fabrics else None),
+                                    fabric_materials=norm_fabrics,
+                                    pattern=analysis.get("pattern"),
+                                    state=analysis.get("state") or "used",
+                                    condition=analysis.get("condition") or "good",
+                                    quality=analysis.get("quality") or "mid",
+                                    price_cents=analysis.get("price_cents") or 2500,
+                                    tags=analysis.get("tags") or [],
+                                    crop_base64=meta.get("crop_base64"),
+                                    image_mime=meta.get("crop_mime", "image/jpeg"),
+                                    from_one_pass=True,
+                                    defer_matte=meta.get("defer_matte", False),
+                                )
+                                res = await save_closet_item_document(user, item_in)
+                                saved_doc = res.get("item") if isinstance(res, dict) else res
+                                logger.info(
+                                    "Auto-saved analyzed item %s (%s - %s) to closet for user %s",
+                                    saved_doc.get("id"), saved_doc.get("category"), saved_doc.get("sub_category"), user["id"],
+                                )
+                            except Exception as save_err:
+                                logger.warning("Failed to auto-save item to closet: %s", save_err)
 
                         items_out.append(
                             {
@@ -796,7 +843,7 @@ async def analyze_item_image(
                                 "original_image_url": saved_doc.get("original_image_url") if saved_doc else None,
                                 "thumbnail_data_url": saved_doc.get("thumbnail_data_url") if saved_doc else None,
                                 "analysis": analysis,
-                                "potential_duplicate": None,
+                                "potential_duplicate": dup,
                                 "reconstruction_advised": False,
                                 "one_pass": False,
                                 "defer_matte": meta.get("defer_matte", False),

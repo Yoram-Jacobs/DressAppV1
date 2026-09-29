@@ -2944,8 +2944,9 @@ export default function AddItem() {
   const saveAll = async () => {
     const ready = cards.filter(
       (c) =>
-        c.status === "ready" ||
-        c.status === "error" /* still savable if user fills */,
+        (c.status === "ready" ||
+        c.status === "error") &&
+        (!c.potentialDuplicate || c.duplicateConfirmed),
     );
     const scanning = cards.filter((c) => c.status === "scanning");
 
@@ -5964,7 +5965,7 @@ function buildCreatePayload(card, inSuitcase = false) {
       typeof card.sourceSizeBytes === "number"
         ? card.sourceSizeBytes
         : undefined,
-    is_duplicate: card.isDuplicate ? true : undefined,
+    is_duplicate: (card.isDuplicate || card.duplicateConfirmed) ? true : undefined,
     in_suitcase: inSuitcase ? true : undefined,
     // Phase O.6 — flag the backend so it skips the synchronous
     // SegFormer cutout (the photo is already bbox-cropped to a single
