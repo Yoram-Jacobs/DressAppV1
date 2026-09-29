@@ -210,3 +210,91 @@ def test_enforce_segformer_category_shoes_overrides_ankle_boots():
     assert "Boots" not in fixed["name"]
     assert "Sneakers" in fixed["name"]
     assert fixed["_subcategory_overridden_by"] == "segformer-shoes"
+
+
+def test_extract_json_truncated_array_recovers_items():
+    """Truncated JSON arrays without closing brackets recover all completed garment objects."""
+    from app.services.vision.llm import _extract_json
+
+    truncated_raw = (
+        '[\n'
+        '  {"title": "White T-Shirt", "category": "Top", "sub_category": "T-Shirt"},\n'
+        '  {"title": "Blue Jeans", "category": "Bottom", "sub_category": "Jeans"},\n'
+        '  {"title": "Canvas Bag", "category": "Accessories", "sub_category": "Bag"},\n'
+        '  {"title": "Low-Top Sneakers", "category": "Footwear"'
+    )
+    extracted = _extract_json(truncated_raw)
+    assert isinstance(extracted, list), f"Expected list of objects, got {type(extracted)}"
+    assert len(extracted) == 3, f"Expected 3 recovered items, got {len(extracted)}"
+    assert extracted[0]["title"] == "White T-Shirt"
+    assert extracted[1]["title"] == "Blue Jeans"
+    assert extracted[2]["title"] == "Canvas Bag"
+
+
+@pytest.mark.anyio
+async def test_multi_garment_single_prompt_ingestion(monkeypatch):
+    """Verify that multi-garment detection runs the vision prompt ONLY ONCE for all items on an image."""
+    import io
+    from PIL import Image
+    from unittest.mock import AsyncMock
+    from app.services.vision.service import GarmentVisionService
+    import app.services.vision.service as vision_mod
+
+    # Create dummy 100x100 JPEG
+    img = Image.new("RGB", (100, 100), color="blue")
+    buf = io.BytesIO()
+    img.save(buf, format="JPEG")
+    fake_img = buf.getvalue()
+
+    service = GarmentVisionService(provider="gemma")
+
+    # Mock detect_items to return 3 detected garments on image 0
+    fake_detections = [
+        {"label": "shirt", "kind": "top", "category": "top", "bbox": [10, 10, 50, 90], "score": 0.95},
+        {"label": "pants", "kind": "bottom", "category": "bottom", "bbox": [50, 10, 90, 90], "score": 0.92},
+        {"label": "bag", "kind": "accessory", "category": "bag", "bbox": [20, 70, 60, 95], "score": 0.88},
+    ]
+    monkeypatch.setattr(service, "detect_items", AsyncMock(return_value=fake_detections))
+
+    # Mock _call_gemma_space to return a single multi-item JSON array
+    mock_multi_response = (
+        '[\n'
+        '  {"title": "Linen Shirt", "name": "Linen Shirt", "category": "Top", "sub_category": "Shirt", '
+        '   "item_type": "Linen Shirt", "gender": "unisex", "dress_code": "casual", "season": ["summer"], '
+        '   "colors": [{"name": "white", "pct": 100}], "fabric_materials": [{"name": "linen", "pct": 100}], '
+        '   "pattern": "solid", "state": "new", "condition": "good", "quality": "mid", "price_cents": 5000, "caption": "Shirt"},\n'
+        '  {"title": "Chino Pants", "name": "Chino Pants", "category": "Bottom", "sub_category": "Pants", '
+        '   "item_type": "Chino Pants", "gender": "unisex", "dress_code": "casual", "season": ["summer"], '
+        '   "colors": [{"name": "beige", "pct": 100}], "fabric_materials": [{"name": "cotton", "pct": 100}], '
+        '   "pattern": "solid", "state": "new", "condition": "good", "quality": "mid", "price_cents": 6000, "caption": "Pants"},\n'
+        '  {"title": "Canvas Tote Bag", "name": "Canvas Tote Bag", "category": "Accessories", "sub_category": "Bag", '
+        '   "item_type": "Handbag", "gender": "unisex", "dress_code": "casual", "season": ["all"], '
+        '   "colors": [{"name": "natural", "pct": 100}], "fabric_materials": [{"name": "canvas", "pct": 100}], '
+        '   "pattern": "solid", "state": "new", "condition": "good", "quality": "mid", "price_cents": 3000, "caption": "Bag"}\n'
+        ']'
+    )
+    gemma_mock = AsyncMock(return_value=mock_multi_response)
+    monkeypatch.setattr(vision_mod, "_call_gemma_space", gemma_mock)
+    monkeypatch.setattr(vision_mod.settings, "EYES_GEMMA_SPACE_URL", "http://fake-eyes:7860")
+
+    frames = []
+    async for frame in service.analyze_outfits_stream([fake_img]):
+        frames.append(frame)
+
+    # 1. Assert _call_gemma_space was called EXACTLY ONCE for all 3 items (single prompt ingestion!)
+    assert gemma_mock.call_count == 1, f"Expected 1 unified call, got {gemma_mock.call_count}"
+
+    # 2. Assert frames structure: detect frame, 3 item frames, done frame
+    types = [f["type"] for f in frames]
+    assert "detect" in types
+    assert types.count("item") == 3
+    assert "done" in types
+
+    # 3. Assert items were classified correctly and bags did not leak cardigan
+    item_frames = [f for f in frames if f["type"] == "item"]
+    assert item_frames[0]["analysis"]["category"] == "Top"
+    assert item_frames[1]["analysis"]["category"] == "Bottom"
+    assert item_frames[2]["analysis"]["category"] == "Accessories"
+    assert item_frames[2]["analysis"]["sub_category"] == "Bag"
+    assert "cardigan" not in item_frames[2]["analysis"]["title"].lower()
+

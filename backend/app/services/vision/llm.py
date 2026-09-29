@@ -48,7 +48,7 @@ async def _call_gemma_space(
     # Build the payload in OpenAI-compatible format for the eyes proxy
     payload: dict[str, Any] = {
         "messages": messages,
-        "max_tokens": min(int(max_tokens), 2048),
+        "max_tokens": min(int(max_tokens), 4096),
         "temperature": float(temperature),
         "json_mode": True,
         "enable_thinking": bool(think),
@@ -553,7 +553,16 @@ def _extract_json(raw: str) -> dict[str, Any] | list[dict[str, Any]]:
     try:
         return json.loads(raw)
     except Exception:  # noqa: BLE001
-        return {}
+        pass
+
+    # 5) Fallback for unclosed or truncated JSON arrays / objects
+    scanned_objs, _ = _scan_complete_json_objects(raw)
+    if scanned_objs:
+        if raw.lstrip().startswith("[") or len(scanned_objs) > 1:
+            return scanned_objs
+        return scanned_objs[0]
+
+    return {}
 
 
 GROUP_ANALYZE_SYSTEM_PROMPT = (

@@ -64,7 +64,7 @@ HF_TOKEN = os.environ.get("EYES_HF_TOKEN")
 API_TOKEN = os.environ.get("EYES_API_TOKEN")
 
 N_THREADS = int(os.environ.get("LLAMA_THREADS", "4"))
-N_CTX = int(os.environ.get("LLAMA_CTX_SIZE", "4096"))
+N_CTX = int(os.environ.get("LLAMA_CTX_SIZE", "8192"))
 N_BATCH = int(os.environ.get("LLAMA_N_BATCH", "2048"))
 
 LLAMA_BIN = os.environ.get("LLAMA_BIN", "/usr/local/bin/llama-server")
@@ -393,7 +393,7 @@ class ChatTurn(BaseModel):
 class PredictIn(BaseModel):
     # Support OpenAI-compatible format with optional custom backward compatibility
     messages: list[ChatTurn] | None = None
-    max_tokens: int = Field(default=512, ge=1, le=4096)
+    max_tokens: int = Field(default=512, ge=1, le=8192)
     temperature: float = Field(default=0.2, ge=0.0, le=1.5)
     top_p: float = Field(default=0.9, ge=0.0, le=1.0)
     json_mode: bool = False
@@ -591,7 +591,7 @@ async def predict(req: PredictIn) -> PredictOut:
     payload: dict[str, Any] = {
         "model": "local",  # llama-server ignores model name; field required.
         "messages": msgs,
-        "max_tokens": min(req.max_tokens, 2048),
+        "max_tokens": min(req.max_tokens, 4096),
         "temperature": req.temperature,
         "top_p": req.top_p,
         "stream": False,
