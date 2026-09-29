@@ -26,11 +26,14 @@ import { api } from '@/lib/api';
 import { closetStore } from '@/lib/closetStore';
 
 const POLL_INTERVAL_MS = 3000;
+const MIN_POLL_GAP_MS = 2500;
 // Hard ceiling: stop polling for any single item after this. Prevents
 // a wedged BackgroundTask from keeping the poller alive forever.
-const ITEM_POLL_TIMEOUT_MS = 5 * 60 * 1000; // 5 minutes
+const ITEM_POLL_TIMEOUT_MS = 45 * 1000; // 45 seconds (rembg/grouping takes 2-5s)
 
 const _timedOutIds = new Set();
+let _isPolling = false;
+let _lastPollTime = 0;
 
 const _listeners = new Set();
 let _state = {
@@ -55,6 +58,25 @@ function _set(patch) {
 
 let _pollerHandle = null;
 
+/** Helper to determine if an item still has active background work pending. */
+function _isItemPending(item) {
+  if (!item || !item.id) return false;
+  // Clean matte pending: only pending if clean_image_status is 'pending' AND clean_image_url is not yet present
+  const isCleanPending = item.clean_image_status === 'pending' && !item.clean_image_url;
+  // Group analysis pending: only pending if explicitly 'pending'
+  const isGroupPending = item.group_analysis_status === 'pending';
+  // Reconstruction: only pending if item explicitly needs reconstruction,
+  // clean cutout is not yet available, and reconstruction is actively in-flight.
+  const reconStatus = item.reconstruction_metadata?.status;
+  const isReconPending = Boolean(
+    item.needs_reconstruction &&
+    !item.clean_image_url &&
+    !item.reconstructed_image_url &&
+    (reconStatus === 'pending' || reconStatus === 'in_progress')
+  );
+  return isCleanPending || isGroupPending || isReconPending;
+}
+
 /** Patch pending items in the local closet cache when polish tracking ends. */
 function _syncClosetPolishTerminal(id, status) {
   try {
@@ -69,6 +91,10 @@ function _syncClosetPolishTerminal(id, status) {
 }
 
 async function _pollOnce() {
+  if (_isPolling) return;
+  const now = Date.now();
+  if (now - _lastPollTime < MIN_POLL_GAP_MS) return;
+
   // ── Polish job polling ──
   const pendingIds = Array.from(_state.polishPendingIds);
   if (pendingIds.length === 0) {
@@ -76,85 +102,100 @@ async function _pollOnce() {
     return;
   }
 
-  // Prune items that have been pending longer than the timeout —
-  // their BackgroundTask is presumed wedged. We accept whatever
-  // state the local store has and let the user pull-to-refresh
-  // manually if it ever recovers.
-  const now = Date.now();
-  const timedOut = pendingIds.filter(
-    (id) => now - (_state._polishStartedAt[id] || now) > ITEM_POLL_TIMEOUT_MS,
-  );
-  if (timedOut.length) {
-    const next = new Set(_state.polishPendingIds);
+  _isPolling = true;
+  _lastPollTime = Date.now();
+
+  try {
+    // Prune items that have been pending longer than the timeout —
+    // their BackgroundTask is presumed wedged. We accept whatever
+    // state the local store has and let the user pull-to-refresh
+    // manually if it ever recovers.
+    const timedOut = pendingIds.filter(
+      (id) => now - (_state._polishStartedAt[id] || 0) > ITEM_POLL_TIMEOUT_MS,
+    );
+    if (timedOut.length) {
+      const next = new Set(_state.polishPendingIds);
+      const nextStartedAt = { ..._state._polishStartedAt };
+      for (const id of timedOut) {
+        next.delete(id);
+        delete nextStartedAt[id];
+        _timedOutIds.add(id);
+        _syncClosetPolishTerminal(id, 'failed');
+      }
+      _set({
+        polishPendingIds: next,
+        _polishStartedAt: nextStartedAt,
+        polishBatchCompleted: _state.polishBatchCompleted + timedOut.length,
+      });
+      if (next.size === 0) _onBatchDrained();
+      _maybeStopPoller();
+      return;
+    }
+
+    // GET each pending item. We swallow per-item errors so a transient
+    // 5xx on one item doesn't kill the rest.
+    const results = await Promise.all(
+      pendingIds.map((id) => api.getItem(id).catch(() => null)),
+    );
+
+    let drained = false;
+    const nextSet = new Set(_state.polishPendingIds);
     const nextStartedAt = { ..._state._polishStartedAt };
-    for (const id of timedOut) {
-      next.delete(id);
-      delete nextStartedAt[id];
-      _timedOutIds.add(id);
-      _syncClosetPolishTerminal(id, 'failed');
+    let newlyCompleted = 0;
+
+    const liveItems = closetStore.getSnapshot().items || [];
+    const liveMap = new Map(liveItems.map((it) => [it?.id, it]));
+
+    for (let i = 0; i < pendingIds.length; i += 1) {
+      const id = pendingIds[i];
+      const item = results[i];
+      if (!item || !item.id) {
+        // GET failed (404 / network) — stop tracking so the floater
+        // and per-card badge don't spin forever on phantom ids.
+        nextSet.delete(id);
+        delete nextStartedAt[id];
+        _timedOutIds.add(id);
+        _syncClosetPolishTerminal(id, 'failed');
+        newlyCompleted += 1;
+        continue;
+      }
+
+      // Only push into closetStore if item data actually changed to avoid
+      // re-render loops and local storage churn.
+      const live = liveMap.get(id);
+      const hasChanged = !live ||
+        live.clean_image_status !== item.clean_image_status ||
+        live.clean_image_url !== item.clean_image_url ||
+        live.group_analysis_status !== item.group_analysis_status ||
+        live.reconstructed_image_url !== item.reconstructed_image_url ||
+        live.updated_at !== item.updated_at;
+
+      if (hasChanged) {
+        try {
+          closetStore.upsert(item);
+        } catch { /* swallow */ }
+      }
+
+      if (!_isItemPending(item)) {
+        nextSet.delete(item.id);
+        delete nextStartedAt[item.id];
+        newlyCompleted += 1;
+      }
     }
-    _set({
-      polishPendingIds: next,
-      _polishStartedAt: nextStartedAt,
-      polishBatchCompleted: _state.polishBatchCompleted + timedOut.length,
-    });
-    if (next.size === 0) _onBatchDrained();
+
+    if (newlyCompleted > 0) {
+      drained = nextSet.size === 0;
+      _set({
+        polishPendingIds: nextSet,
+        _polishStartedAt: nextStartedAt,
+        polishBatchCompleted: _state.polishBatchCompleted + newlyCompleted,
+      });
+    }
+    if (drained) _onBatchDrained();
     _maybeStopPoller();
-    return;
+  } finally {
+    _isPolling = false;
   }
-
-  // GET each pending item. We swallow per-item errors so a transient
-  // 5xx on one item doesn't kill the rest.
-  const results = await Promise.all(
-    pendingIds.map((id) => api.getItem(id).catch(() => null)),
-  );
-
-  let drained = false;
-  const nextSet = new Set(_state.polishPendingIds);
-  const nextStartedAt = { ..._state._polishStartedAt };
-  let newlyCompleted = 0;
-
-  for (let i = 0; i < pendingIds.length; i += 1) {
-    const id = pendingIds[i];
-    const item = results[i];
-    if (!item || !item.id) {
-      // GET failed (404 / network) — stop tracking so the floater
-      // and per-card badge don't spin forever on phantom ids.
-      nextSet.delete(id);
-      delete nextStartedAt[id];
-      _timedOutIds.add(id);
-      _syncClosetPolishTerminal(id, 'failed');
-      newlyCompleted += 1;
-      continue;
-    }
-    // Always push the freshest doc into closetStore so the Closet
-    // page picks it up next render — even if the status is still
-    // "pending" we want the latest analysis fields / thumbnails.
-    try {
-      closetStore.upsert(item);
-    } catch { /* swallow */ }
-    // "ready" / "failed" / null all mean "no longer in flight".
-    // Also if clean_image_url is already present, it is not pending.
-    const isCleanPending = item.clean_image_status === 'pending' && !item.clean_image_url;
-    const isGroupPending = item.group_analysis_status === 'pending';
-    const isReconPending = !!(item.reconstruction_metadata?.deferred && !item.reconstructed_image_url);
-    if (!isCleanPending && !isGroupPending && !isReconPending) {
-      nextSet.delete(item.id);
-      delete nextStartedAt[item.id];
-      newlyCompleted += 1;
-    }
-  }
-
-  if (newlyCompleted > 0) {
-    drained = nextSet.size === 0;
-    _set({
-      polishPendingIds: nextSet,
-      _polishStartedAt: nextStartedAt,
-      polishBatchCompleted: _state.polishBatchCompleted + newlyCompleted,
-    });
-  }
-  if (drained) _onBatchDrained();
-  _maybeStopPoller();
 }
 
 function _onBatchDrained() {
@@ -260,12 +301,22 @@ export const workStore = {
       .map((x) => (typeof x === 'string' ? x : x?.id))
       .filter(Boolean);
     if (ids.length === 0) return;
+
+    const liveItems = closetStore.getSnapshot().items || [];
+    const liveMap = new Map(liveItems.map((it) => [it?.id, it]));
+
     const nextSet = new Set(_state.polishPendingIds);
     const nextStartedAt = { ..._state._polishStartedAt };
     const now = Date.now();
     let added = 0;
+
     for (const id of ids) {
       if (_timedOutIds.has(id)) continue;
+      const live = liveMap.get(id);
+      if (live && !_isItemPending(live)) {
+        // Item is already completely ready — no need to poll!
+        continue;
+      }
       if (!nextSet.has(id)) {
         nextSet.add(id);
         nextStartedAt[id] = now;
@@ -279,14 +330,13 @@ export const workStore = {
         polishBatchTotal: _state.polishBatchTotal + added,
       });
     }
-    // Always (re)start the poller when anything is still pending —
-    // a prior ``added === 0`` early-return used to skip
-    // ``_ensurePollerRunning`` and leave the floater/card badge
-    // stuck after HMR or a Closet re-register.
+
     if (nextSet.size > 0) {
-      const kickImmediate = added > 0 || _pollerHandle == null;
       _ensurePollerRunning();
-      if (kickImmediate) _pollOnce().catch(() => { /* swallow */ });
+      const canKickImmediate = added > 0 && !_isPolling && (Date.now() - _lastPollTime >= MIN_POLL_GAP_MS);
+      if (canKickImmediate) {
+        _pollOnce().catch(() => { /* swallow */ });
+      }
     }
   },
 
@@ -307,6 +357,8 @@ export const workStore = {
       clearInterval(_pollerHandle);
       _pollerHandle = null;
     }
+    _isPolling = false;
+    _lastPollTime = 0;
     _timedOutIds.clear();
     _state = {
       analyzeJobs: {},

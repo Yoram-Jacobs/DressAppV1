@@ -549,15 +549,22 @@ async def run_background_reconstruction(
     analysis: Dict[str, Any],
     reasons: List[str],
 ) -> None:
+    db = get_db()
     if not settings.ENABLE_RECONSTRUCTION:
         logger.info(
             "Background reconstruction SKIPPED for item %s "
             "(ENABLE_RECONSTRUCTION=false)",
             item_id,
         )
+        try:
+            await db.closet_items.update_one(
+                {"id": item_id},
+                {"$set": {"reconstruction_metadata.status": "skipped", "reconstruction_metadata.deferred": False, "updated_at": datetime.now(timezone.utc).isoformat()}}
+            )
+        except Exception:
+            pass
         return
 
-    db = get_db()
     t0 = datetime.now(timezone.utc)
     try:
         result = await reconstruct(crop_bytes, analysis, reasons=reasons)
@@ -566,6 +573,13 @@ async def run_background_reconstruction(
             "Background reconstruction FAILED for item %s: %s",
             item_id, repr(exc)[:200],
         )
+        try:
+            await db.closet_items.update_one(
+                {"id": item_id},
+                {"$set": {"reconstruction_metadata.status": "failed", "reconstruction_metadata.deferred": False, "updated_at": datetime.now(timezone.utc).isoformat()}}
+            )
+        except Exception:
+            pass
         return
 
     if not result or not result.get("image_b64"):
@@ -574,6 +588,13 @@ async def run_background_reconstruction(
             "(no image returned; reasons=%s)",
             item_id, reasons,
         )
+        try:
+            await db.closet_items.update_one(
+                {"id": item_id},
+                {"$set": {"reconstruction_metadata.status": "skipped", "reconstruction_metadata.deferred": False, "updated_at": datetime.now(timezone.utc).isoformat()}}
+            )
+        except Exception:
+            pass
         return
 
     recon_raw = base64.b64decode(result['image_b64'])
@@ -595,12 +616,13 @@ async def run_background_reconstruction(
 
     meta = {
         "method": "reconstruction",
+        "status": "ready",
         "quality_status": analysis.get("image_quality_status"),
         "quality_reason": analysis.get("image_quality_reason"),
         "model": result.get("model"),
         "prompt": result.get("prompt"),
         "reasons": reasons,
-        "deferred": True,
+        "deferred": False,
         "updated_at": datetime.now(timezone.utc).isoformat(),
     }
     # NOTE: We preserve clean_image_url (the original crop's cutout) and only update reconstructed_image_url
@@ -635,57 +657,73 @@ async def run_background_reconstruction(
         logger.debug("Reconstruction broadcast_sync_event skipped: %s", sync_exc)
 
 async def reanalyze_group_helper(group_id: str, user_id: str) -> None:
-    from app.services.vision import garment_vision_service
-    if garment_vision_service is None:
-        logger.warning("reanalyze_group_helper: skipped (garment_vision_service not configured)")
-        return
-
     db = get_db()
-    cursor = db.closet_items.find(
-        {"user_id": user_id, "group_id": group_id},
-        {"_id": 0, "id": 1, "original_image_url": 1}
-    )
-    items = [d async for d in cursor]
-    if not items:
-        logger.warning(f"reanalyze_group_helper: no items found for group={group_id}")
-        return
+    try:
+        from app.services.vision import garment_vision_service
+        if garment_vision_service is None:
+            logger.warning("reanalyze_group_helper: skipped (garment_vision_service not configured)")
+            return
 
-    logger.info(f"reanalyze_group_helper: starting reanalysis for {len(items)} items in group={group_id}")
-    for it in items:
-        item_id = it["id"]
-        img_url = it.get("original_image_url")
-        if not img_url:
-            continue
+        cursor = db.closet_items.find(
+            {"user_id": user_id, "group_id": group_id},
+            {"_id": 0, "id": 1, "original_image_url": 1, "category": 1}
+        )
+        items = [d async for d in cursor]
+        if not items:
+            logger.warning(f"reanalyze_group_helper: no items found for group={group_id}")
+            return
+
+        # Outfit Set check: if items have different categories, keep independent tags and complete immediately
+        categories = {str(r.get("category") or "").strip().lower().replace(" ", "_") for r in items if r.get("category")}
+        if len(categories) > 1:
+            logger.info(f"reanalyze_group_helper: group {group_id} is an outfit set with multiple categories; completing without unifying tags")
+            return
+
+        logger.info(f"reanalyze_group_helper: starting reanalysis for {len(items)} items in group={group_id}")
+        for it in items:
+            item_id = it["id"]
+            img_url = it.get("original_image_url")
+            if not img_url:
+                continue
+            try:
+                raw_bytes = await read_image_bytes_from_url(img_url)
+                if not raw_bytes:
+                    continue
+                parsed = await garment_vision_service.analyze(raw_bytes)
+                analysis = safe_analysis(parsed)
+                if not analysis:
+                    continue
+
+                update_doc = {
+                    "category": analysis.get("category"),
+                    "sub_category": analysis.get("sub_category"),
+                    "item_type": analysis.get("item_type"),
+                    "brand": analysis.get("brand"),
+                    "gender": analysis.get("gender"),
+                    "dress_code": analysis.get("dress_code"),
+                    "season": analysis.get("season") or [],
+                    "colors": analysis.get("colors") or [],
+                    "fabric_materials": analysis.get("fabric_materials") or [],
+                    "pattern": analysis.get("pattern"),
+                    "tags": list(set(analysis.get("tags") or [])),
+                    "group_analysis_status": "ready",
+                    "updated_at": datetime.now(timezone.utc).isoformat()
+                }
+                # Remove keys that are None
+                update_doc = {k: v for k, v in update_doc.items() if v is not None}
+                if len(update_doc) > 1:
+                    await db.closet_items.update_one({"id": item_id}, {"$set": update_doc})
+                    logger.info(f"reanalyze_group_helper: updated item={item_id}")
+            except Exception as e:
+                logger.error(f"reanalyze_group_helper: error on item={item_id}: {e}")
+    finally:
         try:
-            raw_bytes = await read_image_bytes_from_url(img_url)
-            if not raw_bytes:
-                continue
-            parsed = await garment_vision_service.analyze(raw_bytes)
-            analysis = safe_analysis(parsed)
-            if not analysis:
-                continue
-
-            update_doc = {
-                "category": analysis.get("category"),
-                "sub_category": analysis.get("sub_category"),
-                "item_type": analysis.get("item_type"),
-                "brand": analysis.get("brand"),
-                "gender": analysis.get("gender"),
-                "dress_code": analysis.get("dress_code"),
-                "season": analysis.get("season") or [],
-                "colors": analysis.get("colors") or [],
-                "fabric_materials": analysis.get("fabric_materials") or [],
-                "pattern": analysis.get("pattern"),
-                "tags": list(set(analysis.get("tags") or [])),
-                "updated_at": datetime.now(timezone.utc).isoformat()
-            }
-            # Remove keys that are None
-            update_doc = {k: v for k, v in update_doc.items() if v is not None}
-            if len(update_doc) > 1:
-                await db.closet_items.update_one({"id": item_id}, {"$set": update_doc})
-                logger.info(f"reanalyze_group_helper: updated item={item_id}")
-        except Exception as e:
-            logger.error(f"reanalyze_group_helper: error on item={item_id}: {e}")
+            await db.closet_items.update_many(
+                {"user_id": user_id, "group_id": group_id, "group_analysis_status": "pending"},
+                {"$set": {"group_analysis_status": "ready", "updated_at": datetime.now(timezone.utc).isoformat()}}
+            )
+        except Exception as exc:
+            logger.warning(f"reanalyze_group_helper: failed to finalize group_analysis_status: {exc}")
 
 async def run_reanalyze_items(
     user_id: str,

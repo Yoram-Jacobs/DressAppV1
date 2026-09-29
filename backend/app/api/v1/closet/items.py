@@ -436,6 +436,11 @@ async def save_closet_item_document(
             recon_analysis,
             payload.reconstruction_reasons,
         )
+    else:
+        if isinstance(doc.get("reconstruction_metadata"), dict):
+            doc["reconstruction_metadata"]["deferred"] = False
+            if doc["reconstruction_metadata"].get("status") == "pending":
+                doc["reconstruction_metadata"]["status"] = "skipped"
 
     # Best-effort FashionCLIP embedding: persist a 512-d L2-normalised
     # vector so the closet can later be searched by similarity

@@ -696,7 +696,7 @@ export default function Closet() {
   // ──────────────────────────────────────────────────────────────────
   useEffect(() => {
     const now = Date.now();
-    const MAX_POLL_AGE_MS = 15 * 60 * 1000; // 15 minutes
+    const MAX_POLL_AGE_MS = 2 * 60 * 1000; // 2 minutes max age for in-flight background tasks
     const pendingIds = (store.items || [])
       .filter((it) => {
         if (!it || it.clean_image_status !== "pending") return false;
