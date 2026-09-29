@@ -140,109 +140,37 @@ async def _call_gemma_space(
 
 
 SYSTEM_PROMPT = (
-    "You are The Eyes — DressApp's visual garment analyst. Analyze the photograph and describe each garment in concise, merchandisable detail.\n\n"
+    "You are The Eyes — DressApp's visual garment analyst. Analyze the photo and describe each garment in concise, merchandisable detail.\n\n"
     "CRITICAL FORMAT RULES:\n"
-    "1. NO THINKING: Do NOT generate internal monologue, reasoning, or <think> tags. Output raw JSON immediately.\n"
-    "2. ZERO FILLER: Start immediately with '{' or '[' and end with '}' or ']'. No conversational introductions, markdown blocks, or commentary.\n"
-    "3. Return a single JSON object for 1 item, or a JSON array of objects for multiple items.\n\n"
-    "Garment Object Schema:\n"
-    "{\n"
-    '  "name": string,                     // 2-5 words distinguishing title (<detail> + <garment>)\n'
-    '  "title": string,                    // Short item title\n'
-    '  "caption": string,                  // 1 confident editorial sentence, max 240 chars. Never hedge.\n'
-    '  "category": "Top"|"Bottom"|"Outerwear"|"Full Body"|"Footwear"|"Accessories"|"Underwear",\n'
-    '  "sub_category": string,             // specific cut (e.g. "Blouse", "Shirt", "T-Shirt", "Blazer", "Jeans", "Sneakers")\n'
-    '  "item_type": string,                // specific type (e.g. "Cap-Sleeve Blouse", "Tailored Coat", "Knee-High Boots")\n'
-    '  "brand": string|null,               // visible brand name or null\n'
-    '  "gender": "men"|"women"|"unisex"|"kids",\n'
-    '  "dress_code": "casual"|"smart-casual"|"business"|"formal"|"athletic"|"loungewear",\n'
-    '  "season": string[],                 // ["spring","summer","fall","winter","all"]\n'
-    '  "colors": [{"name": string, "pct": integer}],\n'
-    '  "fabric_materials": [{"name": string, "pct": integer}],\n'
-    '  "pattern": "solid"|"striped"|"plaid"|"floral"|"geometric"|"animal_print"|"abstract"|"graphic",\n'
-    '  "state": "new"|"used",\n'
-    '  "condition": "bad"|"fair"|"good"|"excellent",\n'
-    '  "quality": "budget"|"mid"|"premium"|"luxury",\n'
-    '  "size": string|null,\n'
-    '  "price_cents": integer,             // estimated resale value in USD cents (e.g. 2500 for $25.00)\n'
-    '  "image_quality_status": "complete"|"needs_completion"|"needs_reconstruction",\n'
-    '  "image_quality_reason": string|null,        // reason for reconstruction or null\n'
-    '  "reconstruction_prompt": string|null,       // image generation prompt for reconstruction or null\n'
-    '  "tags": string[]                    // 3-8 searchable keywords\n'
-    "}\n\n"
+    "1. NO THINKING: Do NOT generate internal monologue or <think> tags. Output raw JSON immediately.\n"
+    "2. ZERO FILLER: Start immediately with '{' or '[' and end with '}' or ']'. No conversational markdown or intro.\n"
+    "3. Return 1 JSON object for a single item, or a JSON array of objects for multiple items.\n\n"
     "Taxonomy & Extraction Rules:\n"
-    "• Subcategory: NEVER output generic 'Top', 'Tops', 'Bottom', 'Clothing', or category name as sub_category or item_type! Choose specific cut: for Tops ALWAYS use 'Blouse', 'Shirt', 'T-Shirt', 'Tank Top', 'Sweater', 'Hoodie', 'Polo'. For Bottoms: 'Jeans', 'Pants', 'Shorts', 'Skirt'.\n"
-    "• Item Type vs Subcategory: item_type and sub_category MUST NEVER be identical! sub_category is the broad classification (e.g. 'T-Shirt', 'Shirt', 'Jeans', 'Coat'), while item_type MUST be the specific cut or style (e.g. 'Short-Sleeve T-Shirt', 'Crew-Neck T-Shirt', 'V-Neck T-Shirt', 'Cap-Sleeve Top', 'Oversized Tee', 'Button-Down Shirt', 'Skinny Jeans', 'Trench Coat'). Never output the same string for both.\n"
-    "• Gender: Analyze the garment's cut, tailoring, silhouette, and styling intent ('men', 'women', 'unisex', 'kids'). Choose 'women' only for distinctly feminine silhouettes (e.g. bust darts, sweetheart/peplum cuts, flutter/cap sleeves) or styles traditionally designed for women (dresses, skirts, blouses). Choose 'men' for traditional men's tailoring and masculine cuts. For standard t-shirts, straight-cut tops, hoodies, jeans, and neutral everyday apparel without distinct gendered tailoring, identify the garment's target intent. If the garment intent is unrecognized, default to {DEFAULT_GENDER_HINT}.\n"
-    "• Colors: Use PRECISE, fine-grained fashion color names! DO NOT output generic 'Blue', 'Red', 'Green' when a distinct shade is visible. Use specific shades such as 'Light Blue', 'Sky Blue', 'Baby Blue', 'Navy', 'Cyan', 'Turquoise', 'Teal', 'Indigo', 'Mint Green', 'Olive', 'Sage', 'Burgundy', 'Coral', 'Peach', 'Lavender', 'Lilac', 'Cream', 'Beige', 'Charcoal', 'Off-White'. If output language is Hebrew, use precise Hebrew color names: 'תכלת' or 'כחול בהיר' for light/sky/baby blue, 'כחול כהה' for navy, 'טורקיז' for turquoise, 'מנטה' for mint, 'בורדו' for burgundy.\n"
-    "• Pattern: Look VERY CLOSELY at the fabric surface. If there is ANY subtle repeating texture, heathered grain, eyelets, micro-dots, perforations, honeycomb, waffles, jacquard, embossed textures, or subtle geometric weaves/textures, output 'geometric' (or 'striped'/'plaid'/'floral'), NEVER 'solid'! 'solid' is STRICTLY for completely flat, mirror-smooth, untextured fabrics with zero texture or weave pattern.\n"
-    "• Dress Code: ALWAYS populate ('casual', 'smart-casual', 'business', 'formal', 'athletic', 'loungewear').\n"
-    "• Season: Infer from sleeves & fabric. Short sleeves, cap sleeves, sleeveless, linen, light cotton MUST be ['summer'] or ['spring', 'summer']. Heavy wool, down, knitwear MUST be ['fall', 'winter']. Only seasonless basics (e.g. jeans) can be ['all']. NEVER use 'all' for short-sleeve tops.\n"
-    "• Condition & Quality: ALWAYS classify condition ('good', 'excellent', 'fair', 'bad') and quality ('mid', 'premium', 'budget', 'luxury'). Standard items are condition='good', quality='mid'.\n"
-    "• State: ALWAYS classify ('new', 'used').\n"
-    "• Price: ALWAYS estimate resale value in USD cents as an integer (e.g. 2500 for $25 blouse, 3500 for $35 shirt, 4500 for $45 jeans, 9500 for $95 jacket).\n"
-    "• Quality Assessment: ALWAYS evaluate image_quality_status ('complete', 'needs_completion', 'needs_reconstruction'). If sleeves, collar, or hems are cut off by the edge of the frame, set to 'needs_completion' with reconstruction_prompt. If the garment is mostly occluded or severely deformed, set to 'needs_reconstruction'.\n"
-    "• Banned Synonyms: Sweater/Cardigan (not jumper/pullover), Pants/Jeans (not trousers/slacks), Shirt/T-Shirt/Blouse (not vest), Jacket/Coat/Blazer (not anorak), Sneakers/Boots/Loafers (not trainers)."
+    "• sub_category: Specific cut ('Blouse','Shirt','T-Shirt','Tank Top','Sweater','Hoodie','Polo','Jeans','Pants','Shorts','Skirt','Sneakers'). NEVER generic 'Top', 'Bottom', or 'Clothing'.\n"
+    "• item_type: Specific cut or styling details ('Crew-Neck T-Shirt','Oversized Tee','Skinny Jeans','Trench Coat','Cap-Sleeve Blouse'). MUST NOT be identical to sub_category.\n"
+    "• gender: Infer styling intent ('men','women','unisex','kids'). Reserve 'women' for distinctly feminine silhouettes (bust darts, sweetheart/peplum cuts, dresses, skirts) and 'men' for traditional masculine tailoring. For neutral everyday basics or unrecognized intent, default to {DEFAULT_GENDER_HINT}.\n"
+    "• colors: Specific fashion shades ('Light Blue','Sky Blue','Navy','Olive','Sage','Burgundy','Teal','Mint Green','Coral','Cream','Charcoal'), never generic 'Blue'/'Green'.\n"
+    "• pattern: If fabric has ANY repeating weave, texture, heathering, eyelets, micro-dots, perforations, honeycomb, or waffle, set pattern='geometric' (or 'striped'/'plaid'/'floral'), NEVER 'solid'. 'solid' is strictly for flat, mirror-smooth, untextured fabrics.\n"
+    "• dress_code: Classify as 'casual','smart-casual','business','formal','athletic', or 'loungewear'.\n"
+    "• season: Array from ['spring','summer','fall','winter','all']. Short sleeves / sleeveless / linen = ['summer'] or ['spring','summer']. Wool / down / heavy knits = ['fall','winter']. NEVER use 'all' for short-sleeve tops.\n"
+    "• condition & quality: condition='good'|'excellent'|'fair'|'bad'; quality='mid'|'premium'|'budget'|'luxury'. Standard items default to condition='good', quality='mid'. state='new'|'used'.\n"
+    "• price_cents: Estimated resale value in USD cents as integer (e.g. 2500 for $25).\n"
+    "• image_quality_status: Evaluate 'complete', 'needs_completion' (collar, sleeves, or hems cut off by frame; provide reconstruction_prompt), or 'needs_reconstruction' (heavily occluded or deformed garment).\n"
+    "• Banned synonyms: sweater (not jumper/pullover), pants/jeans (not trousers/slacks), shirt/blouse (not vest), jacket/coat/blazer (not anorak), sneakers/boots (not trainers)."
 )
 
 
 # ─────────────────────────────────────────────────────────────────────
 # Phase O.6 — single-pass-only suffix
 # ─────────────────────────────────────────────────────────────────────
-# Appended to ``SYSTEM_PROMPT`` ONLY when the caller is the single-pass
-# pipeline (``EYES_ONE_PASS=true`` or the ``analyze_outfit_one_pass``
-# helper). Teaches Eyes to additionally emit a ``region`` object with
-# a tightly-fitted bbox on the 0..1000 normalised grid for every
-# garment. Crucially we keep this OUT of the legacy ``SYSTEM_PROMPT``
-# so:
-#   1. legacy multi-call path keeps validating against the existing
-#      schema (region is optional in the schema, never required there);
-#   2. legacy LoRA evaluation runs are unaffected (no prompt drift);
-#   3. the one-pass change can be A/B'd without a deploy.
-#
-# One-shot example included so Gemma-4 E2B can pattern-match the grid
-# convention without needing a fine-tune (Option α per the proposal).
 SYSTEM_PROMPT_ONE_PASS_SUFFIX = (
-    "\n\n"
-    "ADDITIONAL OUTPUT REQUIREMENT \u2014 spatial region.\n"
-    "For EACH garment object you return, include a `region` block:\n"
-    "  region: {\n"
-    "    bbox: [ymin, xmin, ymax, xmax],   // integers on a 0..1000 grid\n"
-    "    confidence: number 0..1 (optional),\n"
-    "    is_full_frame: boolean (optional)\n"
-    "  }\n"
-    "Rules for `bbox`:\n"
-    "  \u2022 Coordinates are normalised: 0 is the top/left edge, 1000 is "
-    "the bottom/right edge. Use integers; ignore the source pixel size.\n"
-    "  \u2022 Tightly enclose the visible garment, INCLUDING sleeves, "
-    "collars, hems. EXCLUDE the wearer's face and bare skin.\n"
-    "  \u2022 If the photo is a clean, single-garment shot (flat lay, "
-    "studio still, ghost mannequin) and there is no other garment in "
-    "frame, set `region.bbox = [0, 0, 1000, 1000]` and "
-    "`region.is_full_frame = true`. This is the common case.\n"
-    "  \u2022 If multiple garments overlap, each garment's bbox encloses "
-    "ONLY that garment (the bboxes may overlap each other).\n"
-    "  \u2022 If a garment is mostly occluded (less than ~20% visible), "
-    "omit it from the output entirely \u2014 do not return a near-empty "
-    "bbox.\n"
-    "\n"
-    "Worked example. Input: a full-length photo of a person wearing a "
-    "white t-shirt tucked into blue jeans, plus white sneakers. "
-    "Correct output (truncated for clarity):\n"
-    "  [\n"
-    "    { \"title\": \"White crew tee\", "
-    "\"category\": \"Top\", "
-    "\"region\": {\"bbox\": [180, 280, 520, 720], \"confidence\": 0.92, "
-    "\"is_full_frame\": false} },\n"
-    "    { \"title\": \"Blue straight jeans\", "
-    "\"category\": \"Bottom\", "
-    "\"region\": {\"bbox\": [520, 290, 880, 720], \"confidence\": 0.94, "
-    "\"is_full_frame\": false} },\n"
-    "    { \"title\": \"White low-top sneakers\", "
-    "\"category\": \"Footwear\", "
-    "\"region\": {\"bbox\": [880, 320, 985, 700], \"confidence\": 0.88, "
-    "\"is_full_frame\": false} }\n"
-    "  ]"
+    "\n\nSPATIAL REGION REQUIREMENT:\n"
+    "For each garment object, include `region: {\"bbox\": [ymin, xmin, ymax, xmax], \"confidence\": float, \"is_full_frame\": bool}`.\n"
+    "• Grid: Normalized integers 0..1000 (0=top/left, 1000=bottom/right).\n"
+    "• Single-garment flat lay or studio still: bbox=[0, 0, 1000, 1000], is_full_frame=true.\n"
+    "• Multi-garment or worn: Tightly enclose visible garment (sleeves, collar, hems; exclude bare skin). Overlapping boxes allowed.\n"
+    "• Omit garments occluded >80%.\n"
+    'Example region: {"bbox": [180, 280, 520, 720], "confidence": 0.95, "is_full_frame": false}'
 )
 
 
@@ -272,11 +200,7 @@ def _build_system_prompt(*, one_pass: bool = False, user_gender: str | None = No
 # ─────────────────────────────────────────────────────────────────────
 _GARMENT_OBJECT_SCHEMA: dict[str, Any] = {
     "type": "object",
-    "required": [
-        "title", "name", "category", "sub_category", "item_type",
-        "gender", "dress_code", "season", "colors", "fabric_materials",
-        "pattern", "state", "condition", "quality", "price_cents", "caption",
-    ],
+    "required": ["title"],
     "additionalProperties": False,
     "properties": {
         "name": {"type": "string"},
@@ -361,6 +285,12 @@ _GARMENT_OBJECT_SCHEMA: dict[str, Any] = {
             "minItems": 0,
             "maxItems": 16,
         },
+        "image_quality_status": {
+            "type": ["string", "null"],
+            "enum": ["complete", "needs_completion", "needs_reconstruction", None],
+        },
+        "image_quality_reason": {"type": ["string", "null"]},
+        "reconstruction_prompt": {"type": ["string", "null"]},
         # ── Phase O.6 — single-pass region info ───────────────────────
         # Optional spatial metadata. Only populated when the caller is
         # the single-pass pipeline (``EYES_ONE_PASS=true``). Legacy
@@ -451,56 +381,43 @@ def _user_prompt(code: str | None, user_gender: str | None = None) -> str:
     """Build the user-message prompt for ``analyze()``."""
     from .validation import resolve_garment_gender
     norm_gender = resolve_garment_gender(user_gender) or "unisex"
-    base = (
-        "Analyse this photograph. If one garment is visible return a single "
-        "JSON object; if multiple garments are visible return a JSON array "
-        "of such objects. No commentary. "
-        "Crucial rules: (1) item_type and sub_category MUST be distinct (e.g. sub_category='T-Shirt', item_type='Short-Sleeve T-Shirt' or 'Crew-Neck T-Shirt'). "
-        "(2) Use fine-grained colors (e.g. 'Light Blue', 'Sky Blue', 'Navy', 'Olive Green', not generic 'Blue'/'Green'). "
-        "(3) If fabric has ANY micro-dots, eyelets, perforations, honeycomb, waffle, heathering, or subtle texture/weave, set pattern='geometric', NEVER 'solid'. "
-        f"(4) Gender rule: Analyze garment tailoring and styling intent ('men', 'women', 'unisex', 'kids'). Choose 'women' only for distinctly feminine silhouettes/tailoring, 'men' for men's tailoring. For neutral everyday wear or if garment intent is unrecognized, default to '{norm_gender}'."
-    )
     code = (code or "en").lower()
+
     if code == "en":
-        return base
+        return (
+            "Analyse this photo. Return 1 JSON object for single item, or a JSON array for multiple items. No commentary.\n"
+            f"Key rules: sub_category != item_type; specific colors (not generic); textured/heathered fabric = pattern:'geometric' (never 'solid'); default gender = '{norm_gender}'."
+        )
+
     lang_name = _LANG_NAMES.get(code, code)
     if code in ("he", "iw"):
-        directive = (
-            "**OUTPUT LANGUAGE = Hebrew (עברית).** Every free-text field "
-            "(`name`, `title`, `caption`, `tags`, `repair_advice`, "
-            "`sub_category`, `item_type`, `colors[*].name`, "
-            "`fabric_materials[*].name`) MUST be written in fluent, "
-            "idiomatic modern Hebrew using standard Hebrew Unicode characters "
-            "(e.g. מכנסי קרגו, חולצת טי, שמלת מקסי, ג'ינס). Do not use non-Hebrew "
-            "diacritics, Yiddish ligatures, or transliteration characters from other scripts. "
-            "Taxonomy rules for Hebrew: `sub_category` and `item_type` MUST be distinct (e.g. sub_category='חולצות טי', item_type='חולצת טי שרוול קצר'). "
-            "Colors MUST be specific (e.g. 'תכלת' / 'כחול בהיר' for light blue, 'כחול שמיים' for sky blue, 'כחול כהה' for navy, 'טורקיז', 'מנטה', 'בורדו'). "
-            "Pattern rule: inspect fabric for ANY micro-dots, eyelets, perforations, honeycomb, waffles, or subtle geometric weaves/textures — if present, ALWAYS set pattern='geometric', NEVER 'solid'. "
-            f"Gender rule: Analyze garment tailoring and styling intent ('men', 'women', 'unisex', 'kids'). Do not default standard tops to 'women'. If unrecognized or neutral everyday wear, default to '{norm_gender}'. "
-            "JSON keys and enum tokens (`category`, `gender`, `dress_code`, "
-            "`season`, `pattern`, `state`, `condition`, `quality`) stay in English.\n\n"
+        return (
+            "**OUTPUT LANGUAGE = Hebrew (עברית).**\n"
+            "Free-text fields (`name`,`title`,`caption`,`tags`,`repair_advice`,`sub_category`,`item_type`,`colors[*].name`,`fabric_materials[*].name`) "
+            "MUST be fluent modern Hebrew (e.g. חולצת טי, ג'ינס, מכנסי קרגו). No diacritics/ligatures.\n"
+            "• `sub_category` and `item_type` MUST be distinct (e.g. sub_category='חולצות טי', item_type='חולצת טי שרוול קצר').\n"
+            "• Specific colors: 'תכלת'/'כחול בהיר' (light blue), 'כחול כהה' (navy), 'טורקיז', 'מנטה', 'בורדו'.\n"
+            f"• Fabric texture/weave/heather = pattern:'geometric'. Default gender = '{norm_gender}'.\n"
+            "• JSON keys and enum tokens stay in English.\n"
+            "Return 1 JSON object for single item, or JSON array for multiple items. No commentary."
         )
     elif code == "ar":
-        directive = (
-            "**OUTPUT LANGUAGE = Arabic (العربية).** Every free-text field "
-            "(`name`, `title`, `caption`, `tags`, `repair_advice`, "
-            "`sub_category`, `item_type`, `colors[*].name`, "
-            "`fabric_materials[*].name`) MUST be written in fluent, "
-            "idiomatic modern Arabic using standard Arabic script. "
-            "JSON keys and enum tokens (`category`, `gender`, `dress_code`, "
-            "`season`, `pattern`, `state`, `condition`, `quality`) stay in English.\n\n"
+        return (
+            "**OUTPUT LANGUAGE = Arabic (العربية).**\n"
+            "Free-text fields (`name`,`title`,`caption`,`tags`,`repair_advice`,`sub_category`,`item_type`,`colors[*].name`,`fabric_materials[*].name`) "
+            "MUST be fluent modern Arabic in standard script.\n"
+            "• JSON keys and enum tokens stay in English.\n"
+            f"• sub_category != item_type. Texture/weave = pattern:'geometric'. Default gender = '{norm_gender}'.\n"
+            "Return 1 JSON object for single item, or JSON array for multiple items. No commentary."
         )
     else:
-        directive = (
-            f"**OUTPUT LANGUAGE = {lang_name} ({code}).** Every free-text "
-            f"field (`name`, `title`, `caption`, `tags`, `repair_advice`, "
-            f"`sub_category`, `item_type`, `colors[*].name`, "
-            f"`fabric_materials[*].name`) MUST be written in fluent, "
-            f"idiomatic {lang_name}. JSON keys and enum tokens "
-            f"(`category`, `gender`, `dress_code`, `season`, `pattern`, "
-            f"`state`, `condition`, `quality`) stay in English.\n\n"
+        return (
+            f"**OUTPUT LANGUAGE = {lang_name} ({code}).**\n"
+            f"Free-text fields (`name`,`title`,`caption`,`tags`,`repair_advice`,`sub_category`,`item_type`,`colors[*].name`,`fabric_materials[*].name`) "
+            f"MUST be fluent idiomatic {lang_name}. JSON keys and enum tokens stay in English.\n"
+            f"• sub_category != item_type. Texture/weave = pattern:'geometric'. Default gender = '{norm_gender}'.\n"
+            "Return 1 JSON object for single item, or JSON array for multiple items. No commentary."
         )
-    return directive + base
 
 
 def _extract_json(raw: str) -> dict[str, Any] | list[dict[str, Any]]:
@@ -567,90 +484,35 @@ def _extract_json(raw: str) -> dict[str, Any] | list[dict[str, Any]]:
 
 GROUP_ANALYZE_SYSTEM_PROMPT = (
     "You are The Eyes — DressApp's visual garment group analyzer.\n"
-    "You are given multiple images representing different views of the SAME single garment, "
-    "along with their current metadata (analysis details) and aspect ratios (width/height).\n"
-    "One item is designated as the 'host' (the master item, usually the frontal view), "
-    "and the others are 'members' (fine-tuning details, usually back or profile views).\n\n"
-    "Your tasks are:\n"
-    "1. Identify the view of each image:\n"
-    "   - One image is the frontal view (the host). Tag it as 'Front'.\n"
-    "   - Back views of the garment must be tagged as 'Back'.\n"
-    "   - Profile/side views of the garment (often identified by a narrow tall aspect ratio/image) must be tagged as 'Profile'.\n"
-    "2. Compare and refine metadata across all items in the group:\n"
-    "   - The host item's properties should be enhanced/corrected using details visible in other views (e.g. if a back view reveals an exposed back, update host tags/caption to reflect that).\n"
-    "   - Correct the member items' metadata if the initial analysis was inaccurate (e.g. if the back view of a dress was initially analyzed as a frontal 'Deep U decolletage dress', correct its description, item_type, category, etc., to align with being the back view of the garment).\n"
-    "3. Add the corresponding tag ('Front' for host, 'Back' for back view, 'Profile' for profile view) to each item's `tags` array.\n\n"
-    "Return a JSON object containing updates for each item in the group, keyed by their item ID, in the following shape:\n"
+    "Analyze multiple views of the SAME garment (with current metadata and aspect ratios).\n"
+    "One item is 'host' (frontal view); others are 'members' (back, profile/side details).\n\n"
+    "Tasks:\n"
+    "1. Identify view: Tag host as 'Front', back view as 'Back', side view as 'Profile'. Add to item `tags`.\n"
+    "2. Refine metadata: Enhance host properties with details visible in member views (e.g. exposed back). Correct member metadata to reflect garment view.\n\n"
+    "Return JSON format:\n"
     "{\n"
-    "  \"items\": [\n"
-    "    {\n"
-    "      \"id\": string,                   // The ID of the item\n"
-    "      \"group_role\": \"host\"|\"member\",\n"
-    "      \"view_tag\": \"Front\"|\"Back\"|\"Profile\",\n"
-    "      \"updates\": {\n"
-    "        \"title\": string,\n"
-    "        \"name\": string,\n"
-    "        \"caption\": string,\n"
-    "        \"category\": string,\n"
-    "        \"sub_category\": string,\n"
-    "        \"item_type\": string,\n"
-    "        \"brand\": string|null,\n"
-    "        \"gender\": \"men\"|\"women\"|\"unisex\"|\"kids\",\n"
-    "        \"dress_code\": \"casual\"|\"smart-casual\"|\"business\"|\"formal\"|\"athletic\"|\"loungewear\",\n"
-    "        \"season\": string[],\n"
-    "        \"tradition\": string|null,\n"
-    "        \"colors\": [{\"name\": string, \"pct\": integer}],\n"
-    "        \"fabric_materials\": [{\"name\": string, \"pct\": integer}],\n"
-    "        \"pattern\": string,\n"
-    "        \"state\": \"new\"|\"used\",\n"
-    "        \"condition\": \"bad\"|\"fair\"|\"good\"|\"excellent\",\n"
-    "        \"quality\": \"budget\"|\"mid\"|\"premium\"|\"luxury\",\n"
-    "        \"tags\": string[]\n"
-    "      }\n"
-    "    },\n"
-    "    ...\n"
-    "  ]\n"
-    "}\n\n"
-    "Rules:\n"
-    "- You only need to include fields in `updates` if they need to be updated/corrected. You MUST include `tags` containing the appropriate view tag ('Front', 'Back', 'Profile') along with any other tags for the item.\n"
-    "- Ensure all text is returned in the requested output language."
+    '  "items": [{\n'
+    '    "id": string,\n'
+    '    "group_role": "host"|"member",\n'
+    '    "view_tag": "Front"|"Back"|"Profile",\n'
+    '    "updates": { /* only include fields needing correction/update + tags */ }\n'
+    "  }]\n"
+    "}\n"
+    "Output in the requested language."
 )
 
 
 DETECT_SYSTEM_PROMPT = (
-    "You are DressApp's object detector. Look at a photo and enumerate EVERY "
-    "visible fashion item \u2014 garments, outerwear, footwear, bags, "
-    "accessories (belts, scarves, hats, glasses), and jewelry (rings, "
-    "necklaces, earrings, watches). Do not guess things that are not "
-    "clearly visible. Ignore the person, skin, hair, and background.\n\n"
-    "CRITICAL RULES:\n"
-    "- Return **exactly one** bounding box per distinct physical item. "
-    "Never output multiple boxes for the same piece (e.g. do not return "
-    "both a \"shirt\" box and a \"sleeve\" box for the same shirt).\n"
-    "- If you are uncertain whether two regions are the same garment, "
-    "merge them into a single box that covers both.\n"
-    "- Footwear & Pairs: A pair (boots, shoes, sneakers, earrings, gloves) counts as ONE item — "
-    "use a single bounding box that encloses BOTH boots/shoes in the pair (even if one is diagonally behind or partially occluded).\n"
-    "- Bags and purses: Return the bounding box around the BAG/PURSE BODY itself. "
-    "Do NOT extend the box up along long shoulder straps to the shoulder/neck, so the crop cleanly captures the handbag.\n"
-    "- Do NOT include a full-frame box covering the whole outfit — only individual items.\n\n"
-    "For each item, return a tight bounding box in normalized coordinates "
-    "on a 0\u20131000 scale (where 0 is top/left and 1000 is bottom/right), "
-    "using Gemini's standard ``[ymin, xmin, ymax, xmax]`` order.\n\n"
-    "Return ONLY a JSON object of the form:\n"
-    '{\n'
-    '  "items": [\n'
-    '    {\n'
-    '      "label": "short lowercase tag like \'oxford shirt\' or \'gold watch\'",\n'
-    '      "kind": "garment"|"outerwear"|"footwear"|"bag"|"accessory"|"jewelry",\n'
-    '      "bbox": [ymin, xmin, ymax, xmax]   // integers, 0\u20131000\n'
-    '    }\n'
-    '  ]\n'
-    '}\n'
-    "If only a single item fills the frame, return exactly one entry. "
-    "Never return an empty list \u2014 if you cannot confidently detect "
-    "anything, return a single entry covering the whole frame with "
-    'label="garment" and kind="garment".'
+    "You are DressApp's object detector. Enumerate visible fashion items "
+    "(garments, outerwear, footwear, bags, accessories, jewelry). Ignore person, skin, hair, background.\n\n"
+    "Rules:\n"
+    "• 1 tight box per distinct physical item [ymin, xmin, ymax, xmax] (integers 0..1000, 0=top/left, 1000=bottom/right).\n"
+    "• Pairs (shoes, boots, earrings): 1 box enclosing BOTH items.\n"
+    "• Bags: Box the BAG BODY only; exclude long shoulder straps.\n"
+    "• Never return duplicate boxes for parts (e.g. sleeve of shirt). No full-frame outfit box unless single item fills frame.\n\n"
+    "Return raw JSON:\n"
+    '{"items": [{"label": "short name", "kind": "garment"|"outerwear"|"footwear"|"bag"|"accessory"|"jewelry", "bbox": [ymin, xmin, ymax, xmax]}]}\n'
+    'If uncertain, return 1 entry covering full frame: {"items": [{"label": "garment", "kind": "garment", "bbox": [0, 0, 1000, 1000]}].'
 )
 
 
@@ -725,6 +587,16 @@ def _scan_complete_json_objects(
     return objects, start_pos
 
 
+_SEGFORMER_KIND_HUMAN_LABEL: dict[str, str] = {
+    "top": "Top or Outerwear (upper-body garment)",
+    "bottom": "Bottom (pants / skirt / shorts)",
+    "dress": "Full Body (dress / jumpsuit)",
+    "footwear": "Footwear (shoes / boots / sneakers)",
+    "accessory": "Accessories (belt / scarf / sunglasses / bag)",
+    "headwear": "Accessories (hat / cap / beanie)",
+}
+
+
 def _build_batch_prompts(
     *,
     n: int,
@@ -732,29 +604,7 @@ def _build_batch_prompts(
     kind_hints: list[str | None] | None = None,
     user_gender: str | None = None,
 ) -> tuple[str, str]:
-    """Build ``(system_prompt, user_text)`` for a batched garment analysis.
-
-    Used by both the one-shot batched path
-    (:meth:`GarmentVisionService.analyze_batch`) and the streaming
-    batched path (:meth:`GarmentVisionService.analyze_batch_stream`).
-    The image parts themselves are constructed at the call site, since
-    the native google-genai SDK accepts raw bytes / PIL images directly
-    and we don't need to reshape them into OpenAI ``image_url`` blocks
-    any more.
-
-    Patch M21 (May 2026) — ``kind_hints`` is a list of per-crop
-    SegFormer kind strings (or ``None`` for crops without a hint).
-    When provided, the system prompt is decorated with a numbered
-    "CROP CATEGORY HINTS" block telling Gemini what each image has
-    been pre-classified as. This is layer 1 of the SegFormer-anchored
-    category enforcement — layer 2 is the post-validation in
-    :func:`_enforce_segformer_category` which catches the cases where
-    Gemini ignores the hint.
-    """
-    # are supplied. We deliberately only emit the block when there's
-    # at least one usable hint AND we have multiple crops (n > 1).
-    # If there's only 1 crop, there are no adjacent garments to leak,
-    # so we let Gemini make its own decision without being forced.
+    """Build ``(system_prompt, user_text)`` for a batched garment analysis."""
     hint_block = ""
     if n > 1 and kind_hints and len(kind_hints) == n:
         bullets: list[str] = []
@@ -764,23 +614,12 @@ def _build_batch_prompts(
             human = _SEGFORMER_KIND_HUMAN_LABEL.get(k.strip().lower())
             if not human:
                 continue
-            bullets.append(f"  - Image {i}: pre-classified as {human}.")
+            bullets.append(f"  - Image {i}: {human}")
         if bullets:
             hint_block = (
-                "\n\nCROP CATEGORY HINTS — Each image below has been "
-                "pre-classified by a per-pixel garment segmentation "
-                "model that is highly reliable on the dominant pixels "
-                "of each crop. Use these hints to anchor your "
-                "`category` assignment when adjacent garments leak "
-                "into the crop frame:\n"
+                "\n\nCROP CATEGORY HINTS (from segmentation model):\n"
                 + "\n".join(bullets)
-                + "\n\nIf a hint says 'Bottom', the dominant garment "
-                "IS a bottom (pants / skirt / shorts), even if a "
-                "sleeve, hem, or coat tail from an adjacent garment "
-                "is partially visible. Same logic applies to "
-                "Footwear, Full Body, Headwear, and Accessory hints. "
-                "Honour these hints; choose `sub_category` from "
-                "within the hinted top-level category."
+                + "\nUse hints to anchor `category` (e.g. 'Bottom' = pants/skirt/shorts). Choose `sub_category` within hinted category."
             )
     user_text = (
         f"Analyse the {n} cropped garment image(s) below in order. "
@@ -791,35 +630,18 @@ def _build_batch_prompts(
         lang_name = _LANG_NAMES.get(code, code)
         if code in ("he", "iw"):
             directive = (
-                "**OUTPUT LANGUAGE = Hebrew (עברית).** Every free-text field "
-                "(`name`, `title`, `caption`, `tags`, `repair_advice`, "
-                "`sub_category`, `item_type`, `colors[*].name`, "
-                "`fabric_materials[*].name`) MUST be written in fluent, "
-                "idiomatic modern Hebrew using standard Hebrew Unicode characters "
-                "(e.g. מכנסי קרגו, חולצת טי, שמלת מקסי, ג'ינס). Do not use non-Hebrew "
-                "diacritics, Yiddish ligatures, or transliteration characters from other scripts. "
-                "JSON keys and enum tokens (`category`, `gender`, `dress_code`, "
-                "`season`, `pattern`, `state`, `condition`, `quality`) stay in English.\n\n"
+                "**OUTPUT LANGUAGE = Hebrew (עברית).** Free-text fields MUST be fluent modern Hebrew (e.g. חולצת טי, ג'ינס, מכנסי קרגו). "
+                "JSON keys and enum tokens stay in English.\n\n"
             )
         elif code == "ar":
             directive = (
-                "**OUTPUT LANGUAGE = Arabic (العربية).** Every free-text field "
-                "(`name`, `title`, `caption`, `tags`, `repair_advice`, "
-                "`sub_category`, `item_type`, `colors[*].name`, "
-                "`fabric_materials[*].name`) MUST be written in fluent, "
-                "idiomatic modern Arabic using standard Arabic script. "
-                "JSON keys and enum tokens (`category`, `gender`, `dress_code`, "
-                "`season`, `pattern`, `state`, `condition`, `quality`) stay in English.\n\n"
+                "**OUTPUT LANGUAGE = Arabic (العربية).** Free-text fields MUST be fluent modern Arabic in standard script. "
+                "JSON keys and enum tokens stay in English.\n\n"
             )
         else:
             directive = (
-                f"**OUTPUT LANGUAGE = {lang_name} ({code}).** Every free-text "
-                f"field (`name`, `title`, `caption`, `tags`, `repair_advice`, "
-                f"`sub_category`, `item_type`, `colors[*].name`, "
-                f"`fabric_materials[*].name`) MUST be written in fluent, "
-                f"idiomatic {lang_name}. JSON keys and enum tokens "
-                f"(`category`, `gender`, `dress_code`, `season`, `pattern`, "
-                f"`state`, `condition`, `quality`) stay in English.\n\n"
+                f"**OUTPUT LANGUAGE = {lang_name} ({code}).** Free-text fields MUST be fluent idiomatic {lang_name}. "
+                "JSON keys and enum tokens stay in English.\n\n"
             )
         user_text = directive + user_text
 
@@ -827,178 +649,13 @@ def _build_batch_prompts(
         _build_system_prompt(one_pass=False, user_gender=user_gender)
         + _language_directive(language)
         + (
-            "\n\nBATCH MODE — You will be given multiple cropped "
-            "garment photographs in a single message. They appear "
-            "in numbered order (image 1, image 2, ...). You MUST "
-            f"return a JSON ARRAY of EXACTLY {n} objects, one "
-            "per crop, in the same order, each following the "
-            "GarmentAnalysis schema described above. Do NOT "
-            "merge crops, do NOT skip crops, do NOT add explanatory "
-            "text outside the array. The response MUST start with "
-            "`[` and end with `]`."
+            f"\n\nBATCH MODE — Analyze {n} cropped garment photographs in numbered order (image 1..{n}). "
+            f"Return a raw JSON ARRAY of EXACTLY {n} objects in the same order following the GarmentAnalysis schema. "
+            "No text outside the array. Must start with `[` and end with `]`."
         )
         + hint_block
     )
     return system_prompt, user_text
-
-
-_GARMENT_OBJECT_SCHEMA: dict[str, Any] = {
-    "type": "object",
-    "required": ["title"],
-    "additionalProperties": False,
-    "properties": {
-        "name": {"type": "string"},
-        "title": {"type": "string"},
-        "caption": {"type": "string", "maxLength": 240},
-        "category": {
-            "type": "string",
-            "enum": [
-                "Top", "Bottom", "Outerwear", "Full Body",
-                "Footwear", "Accessories", "Underwear",
-            ],
-        },
-        "sub_category": {"type": "string"},
-        "item_type": {"type": "string"},
-        "brand": {"type": ["string", "null"]},
-        "gender": {
-            "type": "string",
-            "enum": ["men", "women", "unisex", "kids"],
-        },
-        "dress_code": {
-            "type": "string",
-            "enum": [
-                "casual", "smart-casual", "business",
-                "formal", "athletic", "loungewear",
-            ],
-        },
-        "season": {
-            "type": "array",
-            "items": {
-                "type": "string",
-                "enum": ["spring", "summer", "fall", "winter", "all"],
-            },
-        },
-        "tradition": {"type": ["string", "null"]},
-        "colors": {
-            "type": "array",
-            "items": {
-                "type": "object",
-                "required": ["name", "pct"],
-                "additionalProperties": False,
-                "properties": {
-                    "name": {"type": "string"},
-                    "pct": {"type": "integer", "minimum": 0, "maximum": 100},
-                },
-            },
-        },
-        "fabric_materials": {
-            "type": "array",
-            "items": {
-                "type": "object",
-                "required": ["name", "pct"],
-                "additionalProperties": False,
-                "properties": {
-                    "name": {"type": "string"},
-                    "pct": {"type": "integer", "minimum": 0, "maximum": 100},
-                },
-            },
-        },
-        "pattern": {
-            "type": "string",
-            "enum": [
-                "solid", "striped", "plaid", "floral", "herringbone",
-                "polka", "polka_dot", "paisley", "geometric", "animal_print",
-                "graphic", "tie_dye", "abstract",
-            ],
-        },
-        "state": {"type": "string", "enum": ["new", "used"]},
-        "condition": {
-            "type": "string",
-            "enum": ["bad", "fair", "good", "excellent"],
-        },
-        "quality": {
-            "type": "string",
-            "enum": ["budget", "mid", "premium", "luxury"],
-        },
-        "size": {"type": ["string", "null"]},
-        "price_cents": {"type": ["integer", "null"], "minimum": 0},
-        "repair_advice": {"type": ["string", "null"]},
-        "tags": {
-            "type": "array",
-            "items": {"type": "string"},
-            "minItems": 0,
-            "maxItems": 16,
-        },
-        "image_quality_status": {
-            "type": ["string", "null"],
-            "enum": ["complete", "needs_completion", "needs_reconstruction", None],
-        },
-        "image_quality_reason": {"type": ["string", "null"]},
-        "reconstruction_prompt": {"type": ["string", "null"]},
-        # ── Phase O.6 — single-pass region info ───────────────────────
-        # Optional spatial metadata. Only populated when the caller is
-        # the single-pass pipeline (``EYES_ONE_PASS=true``). Legacy
-        # multi-call pipelines never request this field, so the schema
-        # leaves it out of ``required`` and the existing crops/Gemini
-        # paths continue to validate without changes.
-        #
-        # The bbox is on a normalised 0..1000 grid so the model can
-        # answer in pure integers regardless of the source image's
-        # resolution; the backend rescales to pixels using the
-        # ``size`` it sent in the user message.
-        "region": {
-            "type": ["object", "null"],
-            "additionalProperties": False,
-            "required": ["bbox"],
-            "properties": {
-                "bbox": {
-                    "type": "array",
-                    "items": {"type": "integer", "minimum": 0, "maximum": 1000},
-                    "minItems": 4,
-                    "maxItems": 4,
-                    "description": (
-                        "[ymin, xmin, ymax, xmax] on the 0..1000 normalised "
-                        "grid. Origin top-left; ymax > ymin; xmax > xmin."
-                    ),
-                },
-                "confidence": {
-                    "type": ["number", "null"],
-                    "minimum": 0,
-                    "maximum": 1,
-                    "description": "Self-reported confidence in the bbox (optional).",
-                },
-                "is_full_frame": {
-                    "type": ["boolean", "null"],
-                    "description": (
-                        "True when the photo is already a clean, single-garment "
-                        "shot and the bbox is [0, 0, 1000, 1000]."
-                    ),
-                },
-            },
-        },
-    },
-}
-
-
-EYES_JSON_SCHEMA: dict[str, Any] = {
-    "oneOf": [
-        _GARMENT_OBJECT_SCHEMA,
-        {
-            "type": "array",
-            "items": _GARMENT_OBJECT_SCHEMA,
-        },
-    ],
-}
-
-
-_SEGFORMER_KIND_HUMAN_LABEL: dict[str, str] = {
-    "top": "Top or Outerwear (upper-body garment)",
-    "bottom": "Bottom (pants / skirt / shorts)",
-    "dress": "Full Body (dress / jumpsuit)",
-    "footwear": "Footwear (shoes / boots / sneakers)",
-    "accessory": "Accessories (belt / scarf / sunglasses / bag)",
-    "headwear": "Accessories (hat / cap / beanie)",
-}
 
 
 # ─────────────────────────────────────────────────────────────────────
@@ -1155,12 +812,12 @@ async def call_gemma_space_stream_attributes(
                 mapped_cat = "Accessories"
 
             if mapped_cat:
-                sys_parts.append(f"\nIMPORTANT SEGMENTATION CONTEXT: This cropped image is specifically the '{mapped_cat}' region isolated from a photo. Classify, name, and describe this specific {mapped_cat} item only, NOT surrounding clothing.")
+                sys_parts.append(f"\nSEGMENTATION CONTEXT: Cropped region is '{mapped_cat}'. Describe this item only, ignoring adjacent clothing.")
 
         if "bag" in lbl_low or segformer_category == "bag":
-            sys_parts.append("\nIMPORTANT CATEGORY RULE: This item is specifically a BAG / HANDBAG / TOTE BAG / BASKET BAG. Classify sub_category as 'Bag' or 'Tote Bag' or 'Handbag'. Do NOT classify it as a belt, scarf, or jewelry.")
+            sys_parts.append("\nCATEGORY RULE: This item is a BAG. Classify sub_category as 'Bag', 'Tote Bag', or 'Handbag'. Never classify as belt, scarf, or jewelry.")
         elif ("shoe" in lbl_low or segformer_category == "footwear") and "boot" not in lbl_low:
-            sys_parts.append("\nIMPORTANT CATEGORY RULE: This item is specifically FOOTWEAR / SHOES / SNEAKERS. If it is low-cut, athletic, canvas, platform, or casual footwear, classify sub_category as 'Sneakers' or 'Shoes'. Do NOT classify low-cut shoes or sneakers as boots.")
+            sys_parts.append("\nCATEGORY RULE: This item is FOOTWEAR/SHOES/SNEAKERS. For low-cut, athletic, canvas, or casual footwear, classify sub_category as 'Sneakers' or 'Shoes' (never 'Boots').")
 
         system_prompt = "\n".join(sys_parts)
         user_text = _user_prompt(language, user_gender=user_gender)
