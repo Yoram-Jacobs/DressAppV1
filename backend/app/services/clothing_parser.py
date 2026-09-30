@@ -1065,7 +1065,15 @@ async def parse_garments(
     }
     head_class_ids = {
         cid for cid, name in _id2label.items()
-        if name in {"Face", "Hair", "Neck", "Sunglasses"}
+        if name in {"Face", "Hair", "Neck"}
+    }
+    arm_class_ids = {
+        cid for cid, name in _id2label.items()
+        if name in {"Left-arm", "Right-arm"}
+    }
+    leg_class_ids = {
+        cid for cid, name in _id2label.items()
+        if name in {"Left-leg", "Right-leg"}
     }
     has_head = bool(np.isin(class_mask, list(head_class_ids)).sum() >= 30) if head_class_ids else False
     if human_class_ids and has_head:
@@ -1256,6 +1264,33 @@ async def parse_garments(
         if bb is None:
             continue
         ymin, xmin, ymax, xmax = bb
+        
+        cat = (item.get("category") or "").lower()
+        lbl = (item.get("label") or "").lower()
+
+        # Category-appropriate human mask:
+        # 1. Accessories (sunglasses, belt, bag, scarf) and footwear: NEVER subtract face or legs!
+        # Sunglasses sit on the face, belts on pants, shoes meet legs at ankle.
+        if cat in ("accessory", "footwear") or lbl in ("sunglasses", "belt", "bag", "scarf", "shoes"):
+            garment_human_mask = None
+        # 2. Bottoms (pants, skirt, shorts, chinos): NEVER subtract legs! Pants cover legs.
+        elif cat in ("bottom", "pants", "skirt") or lbl in ("pants", "skirt"):
+            if arm_class_ids and has_head:
+                arm_m = np.isin(class_mask, list(arm_class_ids)).astype(np.uint8)
+                garment_human_mask = arm_m if arm_m.any() and int(arm_m.sum()) >= 150 else None
+            else:
+                garment_human_mask = None
+        # 3. Tops, outerwear, dresses: head + arms (never legs)
+        elif cat in ("top", "outerwear", "dress") or lbl in ("upper-clothes", "coat", "dress"):
+            upper_human_ids = head_class_ids | arm_class_ids
+            if upper_human_ids and has_head:
+                up_m = np.isin(class_mask, list(upper_human_ids)).astype(np.uint8)
+                garment_human_mask = up_m if up_m.any() and int(up_m.sum()) >= 150 else None
+            else:
+                garment_human_mask = None
+        else:
+            garment_human_mask = human_mask_full
+
         out.append(
             {
                 "label": item["label"],
@@ -1268,15 +1303,7 @@ async def parse_garments(
                     int(xmax / W * 1000),
                 ],
                 "mask": item["mask"],
-                # Full-resolution union of Face / Hair / limb pixels.
-                # Sliced per-bbox downstream and subtracted from the
-                # dilated garment soft-mask in
-                # ``apply_alpha_intersection`` so face / hair / arms /
-                # legs can't leak into the final matte. May be None
-                # if SegFormer's id2label didn't expose any of the
-                # human classes (defensive — should never happen on
-                # the ATR-18 checkpoint).
-                "_human_mask_full": human_mask_full,
+                "_human_mask_full": garment_human_mask,
                 "has_human_head": has_head,
             }
         )
@@ -1484,7 +1511,8 @@ def apply_alpha_intersection(
             mask_resized = norm_seg
 
         # Patch 12g (May 2026) — SegFormer mask "confidence" check.
-        _MIN_MASK_CONFIDENCE = 0.25
+        norm_cat = (category or "").lower().replace(" ", "").replace("-", "")
+        _MIN_MASK_CONFIDENCE = 0.03 if norm_cat in {"accessory", "headwear", "footwear"} else 0.20
         try:
             mask_coverage = float((mask_resized > 127).mean())
         except Exception:  # noqa: BLE001
@@ -1516,7 +1544,8 @@ def apply_alpha_intersection(
     has_human = human_mask is not None and bool(human_mask.any())
 
     # 1. Subtract human mask (if present)
-    if has_human:
+    # Never subtract human mask from accessories (sunglasses sit on face, bags held in hand)
+    if has_human and norm_cat not in {"accessory"}:
         try:
             norm_human = _normalize_mask_to_u8(human_mask)
             if norm_human.shape != (Hc, Wc):
@@ -1525,15 +1554,33 @@ def apply_alpha_intersection(
                 )
             else:
                 human_resized = norm_human
-            skin_dilate_px = 3
+
+            # Collar / neckline protection: For tops/outerwear/dresses, prevent head mask
+            # from dilating downward into the garment collar / lapel
+            if norm_cat in {"top", "outerwear", "dress"} and mask_resized is not None:
+                top_rows = np.where(mask_resized > 64)[0]
+                if len(top_rows) > 0:
+                    topmost_y = int(top_rows.min())
+                    # Do not dilate into garment boundary at or below topmost_y
+                    human_resized[topmost_y:, :] = np.where(
+                        mask_resized[topmost_y:, :] > 64,
+                        np.uint8(0),
+                        human_resized[topmost_y:, :]
+                    )
+
+            skin_dilate_px = 1 if norm_cat in {"top", "outerwear", "dress", "bottom"} else 3
             if skin_dilate_px > 0:
                 human_im = Image.fromarray(human_resized, mode="L")
                 human_im = human_im.filter(
                     ImageFilter.MaxFilter(2 * skin_dilate_px + 1)
                 )
-                human_im = human_im.filter(ImageFilter.GaussianBlur(radius=1.5))
+                human_im = human_im.filter(ImageFilter.GaussianBlur(radius=1.2))
                 human_resized = np.array(human_im)
             
+            # CRITICAL: garment_core must NEVER be chewed by human mask subtraction!
+            if garment_core is not None and garment_core.any():
+                human_resized = np.where(garment_core, np.uint8(0), human_resized)
+
             new_alpha = np.where(human_resized > 127, np.uint8(0), new_alpha).astype(np.uint8)
         except Exception as exc:  # noqa: BLE001
             logger.info(
@@ -1545,8 +1592,8 @@ def apply_alpha_intersection(
     # SegFormer ATR-18 often misses skin pixels (hands/wrists on hip, collarbones,
     # cleavage, necks). If human_mask is present and this is a body garment, detect and excise bare skin.
     # CRITICAL: Never chew holes into the garment core (protects beige, tan, camel, khaki, olive fabrics).
-    norm_cat = (category or "").lower().replace(" ", "").replace("-", "")
-    if has_human and norm_cat in {"top", "outerwear", "dress", "fullbody", "bottom"}:
+    # Exclude "bottom" so chinos and khakis are not misclassified as bare skin!
+    if has_human and norm_cat in {"top", "outerwear", "dress", "fullbody"}:
         try:
             r = arr[:, :, 0].astype(float)
             g = arr[:, :, 1].astype(float)
@@ -1645,6 +1692,20 @@ def apply_alpha_intersection(
                 "apply_alpha_intersection: soft-mask intersection failed: %s",
                 repr(exc)[:120],
             )
+
+    # 5. Heal interior holes in fabric (crotch gaps, dark pattern voids, collar bites)
+    if norm_cat in {"top", "bottom", "outerwear", "dress", "fullbody"}:
+        try:
+            from scipy import ndimage
+            alpha_bin = new_alpha > 32
+            # Close minor cracks/chatter
+            closed_alpha = ndimage.binary_closing(alpha_bin, structure=np.ones((5, 5), dtype=bool), iterations=1)
+            # Fill enclosed interior holes
+            filled_alpha = ndimage.binary_fill_holes(closed_alpha)
+            # Restore 255 opacity to enclosed holes
+            new_alpha = np.where(filled_alpha & (new_alpha < 128), np.uint8(255), new_alpha).astype(np.uint8)
+        except Exception as fill_exc:  # noqa: BLE001
+            logger.debug("apply_alpha_intersection: hole filling failed: %s", fill_exc)
 
     # Phantom guard: if subtraction wiped out > 95% of solid alpha, preserve original rembg output.
     if float((new_alpha >= 128).mean()) < 0.05:

@@ -655,6 +655,120 @@ def test_garment_core_protected_from_skin_chrominance():
     assert alpha[75, 75] == 255, "Camel garment core must remain fully opaque and protected from skin filter"
 
 
+def test_align_analyses_to_crops_swapped_shoes_and_belt():
+    """Verify that _align_analyses_to_crops pairs Shoes with Sneakers and Belt with Belt even when LLM output order is inverted."""
+    from app.services.vision.service import _align_analyses_to_crops
+
+    # Crop list: Slot 0 = Top, Slot 1 = Pants, Slot 2 = Shoes, Slot 3 = Belt
+    slot_crop_list = [
+        (0, (0, {"label": "Upper-clothes", "kind": "top", "category": "top"}, b"", "image/png")),
+        (1, (0, {"label": "Pants", "kind": "bottom", "category": "bottom"}, b"", "image/png")),
+        (2, (0, {"label": "Shoes", "kind": "footwear", "category": "footwear"}, b"", "image/png")),
+        (3, (0, {"label": "Belt", "kind": "accessory", "category": "accessory"}, b"", "image/png")),
+    ]
+
+    # LLM returned items out of order: Belt at index 2, Sneakers at index 3
+    parsed_items = [
+        {"title": "White Oxford Shirt", "category": "Top", "sub_category": "Shirt", "item_type": "Oxford Shirt"},
+        {"title": "Light Blue Chinos", "category": "Bottom", "sub_category": "Pants", "item_type": "Chinos"},
+        {"title": "Brown Leather Belt", "category": "Accessories", "sub_category": "Belt", "item_type": "Leather Belt"},
+        {"title": "White Leather Low-Top Sneakers", "category": "Footwear", "sub_category": "Sneakers", "item_type": "Low-Top Sneakers"},
+    ]
+
+    aligned = _align_analyses_to_crops(slot_crop_list, parsed_items)
+
+    assert len(aligned) == 4
+    # Slot 0 -> Shirt
+    assert aligned[0][0] == 0
+    assert "Shirt" in aligned[0][2]["title"]
+    # Slot 1 -> Chinos
+    assert aligned[1][0] == 1
+    assert "Chinos" in aligned[1][2]["title"]
+    # Slot 2 (Shoes crop) MUST match Sneakers, NOT Belt!
+    assert aligned[2][0] == 2
+    assert aligned[2][2]["category"] == "Footwear"
+    assert "Sneakers" in aligned[2][2]["title"]
+    # Slot 3 (Belt crop) MUST match Belt, NOT Sneakers!
+    assert aligned[3][0] == 3
+    assert aligned[3][2]["category"] == "Accessories"
+    assert "Belt" in aligned[3][2]["title"]
+
+
+def test_apply_alpha_intersection_seals_crotch_holes():
+    """Verify that an interior void inside pants/chinos is sealed by binary_fill_holes in apply_alpha_intersection."""
+    from app.services.clothing_parser import apply_alpha_intersection
+    from PIL import Image
+    import io
+
+    H, W = 160, 160
+    # Create pants image with solid fabric
+    img = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+    for y in range(20, 140):
+        for x in range(30, 130):
+            img.putpixel((x, y), (140, 180, 220, 255)) # Light blue chinos
+
+    buf = io.BytesIO()
+    img.save(buf, format="PNG")
+    matted_bytes = buf.getvalue()
+
+    # Pants mask covers the chinos
+    pants_mask = np.zeros((H, W), dtype=np.uint8)
+    pants_mask[20:140, 30:130] = 1
+
+    # Human mask has legs that would bite into inner thighs / crotch at (70..100, 60..90)
+    # but garment_core + hole filling must protect and seal it!
+    human_mask = np.zeros((H, W), dtype=np.uint8)
+    human_mask[70:100, 60:90] = 1
+
+    result_bytes = apply_alpha_intersection(
+        matted_bytes,
+        seg_mask_bbox=pants_mask,
+        human_mask=human_mask,
+        category="bottom",
+    )
+    assert result_bytes is not None
+    res_img = Image.open(io.BytesIO(result_bytes))
+    arr = np.array(res_img)
+    alpha = arr[:, :, 3]
+
+    # Verify that crotch center is solid (not hollowed out)
+    assert alpha[85, 75] == 255, "Crotch / inner thigh interior must remain solid fabric without holes"
+
+
+def test_accessory_confidence_threshold_retains_sunglasses():
+    """Verify that small accessory masks (e.g. sunglasses covering ~5% of bbox) are NOT dropped as patchy."""
+    from app.services.clothing_parser import apply_alpha_intersection
+    from PIL import Image
+    import io
+
+    H, W = 100, 200
+    # Sunglasses crop: glasses cover ~8% of the bbox
+    img = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+    for y in range(45, 55):
+        for x in range(20, 180):
+            img.putpixel((x, y), (20, 20, 20, 255))
+
+    buf = io.BytesIO()
+    img.save(buf, format="PNG")
+    matted_bytes = buf.getvalue()
+
+    # Mask covers only ~8% of the crop
+    glasses_mask = np.zeros((H, W), dtype=np.uint8)
+    glasses_mask[45:55, 20:180] = 1
+    coverage = float((glasses_mask > 0).mean())
+    assert coverage < 0.15, f"Expected small coverage, got {coverage:.2f}"
+    assert coverage < 0.25, f"Must be below old 0.25 threshold, got {coverage:.2f}"
+
+    result_bytes = apply_alpha_intersection(
+        matted_bytes,
+        seg_mask_bbox=glasses_mask,
+        category="accessory",
+    )
+    # Must NOT return None (which was the bug that caused fallback to chewed rembg)
+    assert result_bytes is not None, "Sunglasses SegFormer mask must be retained, not discarded"
+
+
+
 
 
 

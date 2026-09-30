@@ -118,14 +118,12 @@ async def get_active_provider() -> str:
 def get_cached_active_provider() -> str:
     """Synchronously resolve the currently-active Eyes provider.
 
-    Returns the cached DB override if available and unexpired, otherwise
-    falls back to settings.EYES_PROVIDER or 'gemini'.
+    Returns the cached DB override if available (preferred over env default),
+    otherwise falls back to settings.EYES_PROVIDER or 'gemini'.
     """
-    now = time.time()
-    if _cache["loaded"] and (now - _cache["ts"]) < _CACHE_TTL_S:
-        override = _cache["value"]
-        if override:
-            return override
+    override = _cache.get("value")
+    if override:
+        return override
     return _normalize(settings.EYES_PROVIDER) or "gemini"
 
 

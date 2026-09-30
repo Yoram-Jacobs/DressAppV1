@@ -50,7 +50,225 @@ import logging
 logger = logging.getLogger(__name__)
 
 
+def _align_analyses_to_crops(
+    slot_crop_list: list[tuple[int, tuple[int, dict[str, Any], bytes, str]]],
+    parsed_items: list[dict[str, Any]],
+) -> list[tuple[int, tuple[int, dict[str, Any], bytes, str], dict[str, Any] | None]]:
+    """Align LLM-generated parsed_items to crops via semantic affinity bipartite matching.
+    
+    Prevents category swapping (e.g. Shoes receiving Belt metadata or vice versa)
+    when the model outputs items in a different order than SegFormer detected them.
+    """
+    import numpy as np
+    n_crops = len(slot_crop_list)
+    n_items = len(parsed_items)
+    if n_crops == 0:
+        return []
+    if n_items == 0:
+        return [(slot_idx, crop_info, None) for slot_idx, crop_info in slot_crop_list]
+    
+    # Pre-extract normalized info for crops
+    crop_data = []
+    for sub_i, (slot_idx, (image_idx, det, c_bytes, c_mime)) in enumerate(slot_crop_list):
+        cat = (det.get("category") or det.get("kind") or "").lower().strip()
+        lbl = (det.get("label") or "").lower().strip()
+        crop_data.append({
+            "sub_i": sub_i,
+            "slot_idx": slot_idx,
+            "crop_info": (image_idx, det, c_bytes, c_mime),
+            "category": cat,
+            "label": lbl,
+            "bbox": det.get("bbox") or [0, 0, 1000, 1000],
+        })
+    
+    # Pre-extract normalized info for parsed items
+    item_data = []
+    for item_idx, item in enumerate(parsed_items):
+        if not isinstance(item, dict):
+            continue
+        cat = (item.get("category") or "").lower().strip()
+        sub = (item.get("sub_category") or "").lower().strip()
+        itype = (item.get("item_type") or "").lower().strip()
+        title = (item.get("title") or item.get("name") or "").lower().strip()
+        caption = (item.get("caption") or "").lower().strip()
+        all_text = f"{cat} {sub} {itype} {title} {caption}"
+        slot_idx_hint = item.get("slot_index")
+        if slot_idx_hint is None:
+            slot_idx_hint = item.get("index") or item.get("item_index")
+        item_data.append({
+            "orig_idx": item_idx,
+            "item": item,
+            "category": cat,
+            "sub_category": sub,
+            "item_type": itype,
+            "all_text": all_text,
+            "slot_hint": slot_idx_hint,
+        })
+    
+    if not item_data:
+        return [(slot_idx, crop_info, None) for slot_idx, crop_info in slot_crop_list]
 
+    scores = np.zeros((n_crops, len(item_data)), dtype=float)
+    
+    def _is_footwear(cat: str, lbl: str, all_text: str) -> bool:
+        return (
+            cat in ("footwear", "shoes", "shoe") or
+            "shoe" in lbl or "boot" in lbl or "sneaker" in lbl or "sandal" in lbl or
+            any(w in all_text for w in ("shoe", "sneaker", "boot", "sandal", "loafer", "heel", "oxford", "clog", "slide", "footwear"))
+        )
+    
+    def _is_belt(cat: str, lbl: str, all_text: str) -> bool:
+        return "belt" in lbl or "belt" in all_text
+    
+    def _is_bag(cat: str, lbl: str, all_text: str) -> bool:
+        return "bag" in lbl or any(w in all_text for w in ("bag", "tote", "purse", "backpack", "clutch", "handbag", "crossbody"))
+    
+    def _is_glasses(cat: str, lbl: str, all_text: str) -> bool:
+        return "sunglass" in lbl or "glass" in lbl or any(w in all_text for w in ("sunglass", "glasses", "shades", "eyewear"))
+    
+    def _is_accessory(cat: str, lbl: str, all_text: str) -> bool:
+        return cat in ("accessory", "accessories") or _is_belt(cat, lbl, all_text) or _is_bag(cat, lbl, all_text) or _is_glasses(cat, lbl, all_text)
+    
+    def _is_top(cat: str, lbl: str, all_text: str) -> bool:
+        return (
+            cat in ("top", "outerwear") or
+            any(w in lbl for w in ("upper", "top", "shirt", "jacket", "coat", "sweater", "blouse", "hoodie", "cardigan")) or
+            any(w in all_text for w in ("shirt", "t-shirt", "top", "jacket", "coat", "sweater", "cardigan", "blouse", "hoodie", "polo", "tank"))
+        )
+    
+    def _is_bottom(cat: str, lbl: str, all_text: str) -> bool:
+        return (
+            cat in ("bottom", "pants", "skirt") or
+            any(w in lbl for w in ("pant", "skirt", "trouser", "jean", "short", "bottom")) or
+            any(w in all_text for w in ("pant", "pants", "chinos", "trousers", "jeans", "shorts", "skirt", "leggings", "bottom", "culottes"))
+        )
+    
+    def _is_headwear(cat: str, lbl: str, all_text: str) -> bool:
+        return (
+            cat in ("headwear", "hat") or
+            "hat" in lbl or "cap" in lbl or
+            any(w in all_text for w in ("hat", "cap", "beanie", "beret", "fedora"))
+        )
+
+    for i, c in enumerate(crop_data):
+        c_cat, c_lbl = c["category"], c["label"]
+        c_is_fw = _is_footwear(c_cat, c_lbl, "")
+        c_is_belt = _is_belt(c_cat, c_lbl, "")
+        c_is_bag = _is_bag(c_cat, c_lbl, "")
+        c_is_glasses = _is_glasses(c_cat, c_lbl, "")
+        c_is_acc = _is_accessory(c_cat, c_lbl, "")
+        c_is_top = _is_top(c_cat, c_lbl, "")
+        c_is_bot = _is_bottom(c_cat, c_lbl, "")
+        c_is_head = _is_headwear(c_cat, c_lbl, "")
+        
+        for j, it in enumerate(item_data):
+            i_text = it["all_text"]
+            i_cat = it["category"]
+            i_is_fw = _is_footwear(i_cat, "", i_text)
+            i_is_belt = _is_belt(i_cat, "", i_text)
+            i_is_bag = _is_bag(i_cat, "", i_text)
+            i_is_glasses = _is_glasses(i_cat, "", i_text)
+            i_is_acc = _is_accessory(i_cat, "", i_text)
+            i_is_top = _is_top(i_cat, "", i_text)
+            i_is_bot = _is_bottom(i_cat, "", i_text)
+            i_is_head = _is_headwear(i_cat, "", i_text)
+            
+            score = 0.0
+            # Strong specific accessory separation
+            if c_is_belt and i_is_belt:
+                score += 150.0
+            elif c_is_belt and not i_is_belt:
+                score -= 150.0
+            elif not c_is_belt and i_is_belt:
+                score -= 150.0
+
+            if c_is_fw and i_is_fw:
+                score += 150.0
+            elif c_is_fw and not i_is_fw:
+                score -= 150.0
+            elif not c_is_fw and i_is_fw:
+                score -= 150.0
+
+            if c_is_bag and i_is_bag:
+                score += 150.0
+            elif c_is_bag and not i_is_bag:
+                score -= 150.0
+
+            if c_is_glasses and i_is_glasses:
+                score += 150.0
+            elif c_is_glasses and not i_is_glasses:
+                score -= 150.0
+
+            if c_is_top and i_is_top:
+                score += 120.0
+            elif c_is_top and (i_is_bot or i_is_fw):
+                score -= 120.0
+
+            if c_is_bot and i_is_bot:
+                score += 120.0
+            elif c_is_bot and (i_is_top or i_is_fw):
+                score -= 120.0
+
+            if c_is_head and i_is_head:
+                score += 120.0
+
+            # General category match
+            if c_cat and i_cat and (c_cat in i_cat or i_cat in c_cat):
+                score += 40.0
+
+            # Model slot hint
+            if it["slot_hint"] is not None:
+                try:
+                    if int(it["slot_hint"]) == i:
+                        score += 35.0
+                except (ValueError, TypeError):
+                    pass
+
+            # Same order tie-breaker
+            if i == j:
+                score += 10.0
+
+            scores[i, j] = score
+
+    matched_assignment: dict[int, int] = {}
+    try:
+        from scipy.optimize import linear_sum_assignment
+        row_ind, col_ind = linear_sum_assignment(-scores)
+        for r, c in zip(row_ind, col_ind):
+            if scores[r, c] >= 0:
+                matched_assignment[r] = c
+    except Exception as assign_err:
+        logger.warning("_align_analyses_to_crops linear_sum_assignment failed: %s", assign_err)
+        used_cols = set()
+        for r in range(n_crops):
+            best_c = None
+            best_val = -float("inf")
+            for c in range(len(item_data)):
+                if c not in used_cols and scores[r, c] > best_val:
+                    best_val = scores[r, c]
+                    best_c = c
+            if best_c is not None and best_val >= 0:
+                matched_assignment[r] = best_c
+                used_cols.add(best_c)
+
+    out = []
+    for i, c in enumerate(crop_data):
+        item_raw = None
+        if i in matched_assignment:
+            col = matched_assignment[i]
+            item_raw = item_data[col]["item"]
+            logger.info(
+                "_align_analyses_to_crops: Crop %d (slot %d, label='%s', cat='%s') matched item %d ('%s', cat='%s', score=%.1f)",
+                i, c["slot_idx"], c["label"], c["category"], col,
+                item_raw.get("title") or item_raw.get("name"), item_raw.get("category"), scores[i, col]
+            )
+        else:
+            logger.warning(
+                "_align_analyses_to_crops: Crop %d (slot %d, label='%s', cat='%s') had no positive semantic match",
+                i, c["slot_idx"], c["label"], c["category"]
+            )
+        out.append((c["slot_idx"], c["crop_info"], item_raw))
+    return out
 
 
 class GarmentVisionService:
@@ -1195,7 +1413,7 @@ class GarmentVisionService:
                         repr(exc)[:120],
                     )
             # Core healing: heal interior holes in dark/textured/patterned garments across both single and multi-item crops
-            if matted and seg_mask_bbox is not None and (human_mask_bbox is None or getattr(human_mask_bbox, "sum", lambda: 0)() < 5000):
+            if matted and seg_mask_bbox is not None:
                 try:
                     import io
                     import numpy as np
@@ -2886,7 +3104,7 @@ class GarmentVisionService:
                         for sub_i, (slot_idx, (image_idx, det, c_bytes, c_mime)) in enumerate(slot_crop_list):
                             lbl = (det.get("label") or "garment").lower()
                             cat = (det.get("category") or det.get("kind") or "garment").lower()
-                            hint = f"Item [{sub_i}]: label='{lbl}', category='{cat}'"
+                            hint = f"Item [{sub_i}]: label='{lbl}', category='{cat}' (slot_index={sub_i})"
                             if "bag" in lbl or cat in ("bag", "accessory"):
                                 hint += " (This item is an accessory/bag. Do NOT classify as a top, sweater, or cardigan.)"
                             elif "shoe" in lbl or cat == "footwear":
@@ -2894,6 +3112,9 @@ class GarmentVisionService:
                             items_hints.append(hint)
 
                         multi_garment_schema = dict(_GARMENT_OBJECT_SCHEMA)
+                        multi_props = dict(multi_garment_schema.get("properties") or {})
+                        multi_props["slot_index"] = {"type": "integer", "description": "0-based item slot index"}
+                        multi_garment_schema["properties"] = multi_props
                         multi_garment_schema["required"] = ["name", "title", "category", "sub_category", "item_type"]
 
                         multi_item_schema = {
@@ -2970,8 +3191,8 @@ class GarmentVisionService:
                                 if len(scanned_objs) > len(parsed_items):
                                     parsed_items = scanned_objs
 
-                        for sub_i, (slot_idx, (image_idx, det, c_bytes, c_mime)) in enumerate(slot_crop_list):
-                            item_raw = parsed_items[sub_i] if sub_i < len(parsed_items) and isinstance(parsed_items[sub_i], dict) else None
+                        aligned_crop_items = _align_analyses_to_crops(slot_crop_list, parsed_items)
+                        for slot_idx, (image_idx, det, c_bytes, c_mime), item_raw in aligned_crop_items:
                             assembled = dict(item_raw) if item_raw else {}
                             item_mg = det.get("_photo_model_gender") or photo_mg
 
@@ -3719,7 +3940,8 @@ def get_garment_vision_service(
         # Resolve against the authoritative DB runtime override from eyes_override
         active_server_provider = eyes_override.get_cached_active_provider()
         try:
-            return GarmentVisionService(provider=active_server_provider, model=model or "Eyes v1", user_gender=user_gender)
+            default_m = "gemini-3.5-flash-lite" if active_server_provider == "gemini" else "Eyes v1"
+            return GarmentVisionService(provider=active_server_provider, model=model or default_m, user_gender=user_gender)
         except Exception as exc:
             logger.warning("Failed to build DressApp platform GarmentVisionService: %s", exc)
 
