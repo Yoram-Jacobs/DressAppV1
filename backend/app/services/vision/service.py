@@ -3235,7 +3235,7 @@ class GarmentVisionService:
                                 system_prompt=sys_prompt,
                                 user_text=user_text,
                                 image_b64_jpeg=full_b64,
-                                max_tokens=min(450 * len(slot_crop_list), 4000),
+                                max_tokens=min(500 * len(slot_crop_list), 4096),
                                 temperature=0.1,
                                 timeout=max(240.0, float(settings.EYES_GEMMA_TIMEOUT_S)),
                                 json_schema=multi_item_schema,

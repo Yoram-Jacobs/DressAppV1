@@ -75,8 +75,11 @@ _BBOX_PAD_TRBL_BY_CATEGORY: dict[str, tuple[float, float, float, float]] = {
     "outerwear":  (0.04, 0.04, 0.03, 0.04),
     "footwear":   (0.04, 0.06, 0.04, 0.06),
     "headwear":   (0.04, 0.04, 0.03, 0.04),
-    "accessory":  (0.06, 0.08, 0.06, 0.08),
-    "accessories": (0.06, 0.08, 0.06, 0.08),
+    "accessory":  (0.03, 0.04, 0.03, 0.04),
+    "accessories": (0.03, 0.04, 0.03, 0.04),
+    "sunglasses": (0.02, 0.03, 0.02, 0.03),
+    "glasses":    (0.02, 0.03, 0.02, 0.03),
+    "eyewear":    (0.02, 0.03, 0.02, 0.03),
     "underwear":  (0.03, 0.03, 0.03, 0.03),
 }
 _BBOX_PAD_TRBL_DEFAULT = (
@@ -99,6 +102,8 @@ def _resolve_bbox_pad_trbl_for_category(
     key = str(category).strip().lower()
     if not key:
         return _BBOX_PAD_TRBL_DEFAULT
+    if any(w in key for w in ("sunglass", "glasses", "eyewear")):
+        return (0.02, 0.03, 0.02, 0.03)
     if key in _BBOX_PAD_TRBL_BY_CATEGORY:
         return _BBOX_PAD_TRBL_BY_CATEGORY[key]
     key_collapsed = key.replace(" ", "")
@@ -292,20 +297,33 @@ def _nms_detections(items: list[dict[str, Any]]) -> list[dict[str, Any]]:
 
 def _is_unidentifiable(analysis: dict[str, Any] | None) -> bool:
     """Return True when the LLM analysis indicates it couldn't make sense
-    of the crop — used to drop noise crops from the closet rather
-    than save useless "Unidentifiable Garment" cards.
-
-    Triggers on three signals (any of them is enough):
-
-    1. Title contains a give-up phrase ("unidentifiable", "obscured",
-       "unknown", "cannot identify", "not visible").
-    2. Caption contains a give-up phrase or starts with the LLM's
-       boilerplate refusal pattern ("the item in this photo is not...").
-    3. Both ``item_type`` *and* ``sub_category`` are empty/missing —
-       a sign the LLM gave up on classifying the garment.
+    of the crop or when the crop is a discarded non-clothing object (water bottles,
+    cups, phones, electronics, bare skin) — used to drop noise crops from the closet
+    rather than save useless non-garment cards.
     """
     if not analysis:
         return True
+    if analysis.get("is_clothing") is False:
+        return True
+    cat = (analysis.get("category") or "").strip().lower()
+    if cat in ("none", "null", "non-clothing", "non_clothing"):
+        return True
+
+    title = (analysis.get("title") or "").lower().strip()
+    name = (analysis.get("name") or "").lower().strip()
+    sub_category = (analysis.get("sub_category") or "").lower().strip()
+    item_type = (analysis.get("item_type") or "").lower().strip()
+    caption = (analysis.get("caption") or "").lower().strip()
+
+    if any(s.startswith(p) for s in (sub_category, item_type) for p in ("non-clothing", "non_clothing")):
+        return True
+    if any(s in ("water bottle", "plastic bottle", "bottle", "disposable bottle") for s in (sub_category, item_type)):
+        return True
+    if any(t.startswith(p) for t in (title, name) for p in ("non-clothing", "non clothing")):
+        return True
+    if any(w in title or w in name for w in ("water bottle", "plastic water bottle", "disposable water bottle")):
+        return True
+
     GIVE_UP_PHRASES = (
         "unidentifiable",
         "obscured",
@@ -316,17 +334,14 @@ def _is_unidentifiable(analysis: dict[str, Any] | None) -> bool:
         "unable to identify",
         "no garment",
         "no clothing",
+        "non-clothing",
         "unknown garment",
         "unknown item",
     )
-    title = (analysis.get("title") or "").lower()
-    caption = (analysis.get("caption") or "").lower()
     if any(p in title for p in GIVE_UP_PHRASES):
         return True
     if any(p in caption for p in GIVE_UP_PHRASES):
         return True
-    item_type = (analysis.get("item_type") or "").strip()
-    sub_category = (analysis.get("sub_category") or "").strip()
     if not item_type and not sub_category:
         return True
     return False

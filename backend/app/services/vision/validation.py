@@ -38,6 +38,7 @@ _FEMININE_CUT_KEYWORDS = {
     "crop top", "cropped top", "croptop", "crop-top", "crop", "bustier", "bralette",
     "tunic", "babydoll", "floral crop", "tube top", "slip dress",
     "floral top", "floral print top", "floral print shirt", "floral shirt", "floral blouse",
+    "floral tee", "floral t-shirt", "floral print t-shirt", "floral lace",
     "lace top", "lace blouse", "lace shirt", "puff sleeve", "ruffle", "ruffled", "chiffon",
     "scallop", "bell sleeve", "off-shoulder", "off the shoulder", "cold shoulder",
     "בלוזה", "שמלה", "חצאית", "עקב", "עקבים", "חזייה", "מחוך",
@@ -67,7 +68,7 @@ def is_distinctly_feminine_garment(
     joined = f"{cat_l} {sub_l} {it_l} {extra_l}"
 
     # Footwear, tops, bottoms, socks that have "dress" in the name are formal/dressy, NOT dresses
-    is_formal_compound = any(
+    is_dress_compound = any(
         w in f"{cat_l} {sub_l} {it_l}"
         for w in ("shoe", "shirt", "pant", "trouser", "sock", "vest", "boot", "suit", "jacket", "tie")
     )
@@ -81,7 +82,7 @@ def is_distinctly_feminine_garment(
             or it_l.endswith(" gown")
             or "sundress" in it_l
         )
-        and not is_formal_compound
+        and not is_dress_compound
     )
     if is_dress:
         return True
@@ -89,9 +90,9 @@ def is_distinctly_feminine_garment(
     if any(c in joined for c in _FEMININE_CUT_KEYWORDS):
         return True
 
-    # Tops, shirts, or blouses with floral patterns or lace styling are distinctly feminine
-    if not is_formal_compound and any(w in joined for w in ("floral", "פרחוני", "lace", "תחרה")):
-        if any(w in joined for w in ("top", "shirt", "blouse", "crop", "skirt", "cami", "tee", "t-shirt")):
+    # Tops, shirts, tees, or blouses with floral patterns or lace styling are distinctly feminine
+    if any(w in joined for w in ("floral", "פרחוני", "lace", "תחרה", "ruffle", "ruffles", "frill", "peplum", "sweetheart", "off-shoulder", "puff sleeve")):
+        if any(w in joined for w in ("top", "shirt", "blouse", "crop", "skirt", "cami", "tee", "t-shirt", "chiffon")):
             return True
 
     return False
@@ -111,7 +112,9 @@ def is_distinctly_unisex_garment(
     extra_l = f"{name or ''} {full_text or ''}".lower()
     joined = f"{cat_l} {sub_l} {it_l} {extra_l}"
 
-    # If it has a feminine cut (crop top, camisole, lingerie, etc.), it's not unisex
+    # If it has a feminine cut (crop top, floral shirt, camisole, lingerie, etc.), it's not unisex
+    if is_distinctly_feminine_garment(cat, sub, itype, name=name, full_text=full_text):
+        return False
     if any(k in joined for k in _FEMININE_CUT_KEYWORDS):
         return False
     return any(c in joined for c in _UNISEX_CUT_KEYWORDS)
@@ -1425,6 +1428,12 @@ def _enforce_segformer_category(
     analysis is a no-op.
     """
     if not isinstance(analysis, dict):
+        return analysis
+    if analysis.get("is_clothing") is False:
+        return analysis
+    if (analysis.get("sub_category") or "").strip().lower() in ("non-clothing", "non_clothing"):
+        return analysis
+    if "non-clothing" in str(analysis.get("title") or "").lower():
         return analysis
     if not segformer_kind:
         return analysis

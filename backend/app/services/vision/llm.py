@@ -145,13 +145,14 @@ SYSTEM_PROMPT = (
     "Rules:\n"
     "• sub_category: Specific cut ('Shirt','T-Shirt','Sweater','Jeans','Pants','Skirt','Sneakers'). Never generic 'Top'/'Bottom'.\n"
     "• item_type: Styling cut ('Crew-Neck T-Shirt','Skinny Jeans'). Must differ from sub_category.\n"
-    "• caption: A concise, natural, informative 1-2 sentence description highlighting the garment's specific visual details, style, cut, color, pattern, texture, and silhouette (e.g. 'Light blue floral lace short-sleeve top with scoop neckline and scallop hem.', 'Classic dark brown leather boots with sturdy lug soles and lace-up front.'). Never generic filler.\n"
-    "• gender: 'women' for feminine cuts/styles (crop tops, blouses, skirts, dresses, heels, bras, feminine florals); 'men' for menswear/masculine cuts; 'unisex' for neutral activewear, tank tops, standard tees, sneakers, bags; 'kids' for children's items. If worn by an identifiable model, standard cuts align with the model's apparent gender.\n"
+    "• caption: A concise 1-2 sentence description highlighting specific visual details (style, cut, color, pattern, texture, silhouette). Must be a complete, grammatically closed sentence ending with a period. Never cut off or end with a comma. Never generic filler.\n"
+    "• gender: 'women' for feminine cuts/styles (crop tops, blouses, skirts, dresses, heels, bras, floral tees, floral tops, lace shirts); 'men' for menswear/masculine cuts; 'unisex' for neutral activewear, tank tops, standard plain tees, sneakers, bags; 'kids' for children's items. If worn by an identifiable model, standard cuts align with the model's apparent gender.\n"
     "• colors: [{\"name\": str, \"pct\": int}] summing to 100. Specific shades ('Burgundy','Navy','Olive','Light Blue'). Never omit pct.\n"
     "• fabric_materials: [{\"name\": str, \"pct\": int}] summing to 100 (e.g. [{\"name\": \"Cotton\", \"pct\": 100}]). Never omit pct.\n"
     "• pattern: 'printed' for graphic tees, text, logos, artwork, front prints; 'geometric' for repeating weave, texture, heathering, waffle; 'striped'|'plaid'|'floral'; 'solid' only if plain & unprinted.\n"
     "• text/logos: Read lettering & emblems accurately (e.g. 'American Eagle' = eagle/עיט, not deer/אייל).\n"
-    "• season: ['spring'|'summer'|'fall'|'winter'|'all']. Short-sleeve/linen=['summer']; wool/down=['fall','winter']."
+    "• season: ['spring'|'summer'|'fall'|'winter'|'all']. Short-sleeve/linen=['summer']; wool/down=['fall','winter'].\n"
+    "• non-clothing items: If an image/crop is NOT a wearable fashion item (e.g. water bottle, drink cup, beverage, phone, electronics, food, book, furniture) or shows only bare skin, set is_clothing: false, category: null, sub_category: 'non-clothing', item_type: 'non-clothing', title: 'Non-clothing item', caption: 'Non-clothing item'. Do NOT invent a garment or bag for bottles, phones, or objects."
 )
 
 
@@ -195,15 +196,19 @@ _GARMENT_OBJECT_SCHEMA: dict[str, Any] = {
     "required": ["title", "name", "category", "sub_category", "item_type", "caption"],
     "additionalProperties": False,
     "properties": {
+        "is_clothing": {
+            "type": "boolean",
+            "description": "True for wearable clothing/footwear/bags/accessories. False for non-clothing objects like water bottles, cups, phones, furniture.",
+        },
         "name": {"type": "string"},
         "title": {"type": "string"},
-        "caption": {"type": "string", "maxLength": 240},
+        "caption": {"type": "string", "maxLength": 350},
         "slot_index": {"type": "integer", "description": "0-based index of this crop (0..n-1)"},
         "category": {
-            "type": "string",
+            "type": ["string", "null"],
             "enum": [
                 "Top", "Bottom", "Outerwear", "Full Body",
-                "Footwear", "Accessories", "Underwear",
+                "Footwear", "Accessories", "Underwear", None,
             ],
         },
         "sub_category": {"type": "string"},
@@ -611,7 +616,7 @@ def _build_batch_prompts(
             hint_block = (
                 "\nCROP CATEGORY HINTS:\n"
                 + "\n".join(bullets)
-                + "\nAnchor category & sub_category to these hints."
+                + "\nUse hints as category guidance for clothing items, but discard non-clothing objects (e.g. water bottles, cups, phones) as non-clothing with is_clothing: false."
             )
     user_text = f"{gender_rule}Analyze {n} crop(s) in order. For each crop image [0..{n-1}], return a JSON object with 'slot_index': i. Return a JSON array of {n} objects matching GarmentAnalysis schema."
     code = (language or "en").lower()
@@ -890,7 +895,7 @@ async def call_gemma_space_stream_attributes(
                 system_prompt=system_prompt,
                 user_text=user_text,
                 image_b64_jpeg=image_b64_jpeg,
-                max_tokens=380,
+                max_tokens=550,
                 temperature=0.0,
                 timeout=timeout_single,
                 json_schema=full_schema,

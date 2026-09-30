@@ -905,6 +905,143 @@ def test_match_batch_entry_to_slot_scrambled_order():
     assert len(available) == 0
 
 
+def test_womens_floral_tshirt_flatlay_retains_women_gender_with_men_user():
+    """Verify that a light blue floral lace t-shirt in a flat lay stays 'women' even when user profile is 'men'."""
+    from app.services.vision.validation import _coerce_enums, _coerce_single_garment
+
+    floral_shirt = {
+        "name": "Light Wash Printed T-Shirt",
+        "title": "Light Wash Printed T-Shirt",
+        "category": "top",
+        "sub_category": "T-Shirt",
+        "item_type": "Short-sleeve T-shirt",
+        "caption": "Short-sleeve crewneck t-shirt with an all-over light blue and white floral lace pattern.",
+        "gender": "men",  # Model or profile mistakenly set 'men'
+        "colors": [{"name": "Light Blue", "pct": 80}, {"name": "White", "pct": 20}],
+    }
+    # Coerce single garment with a male user profile
+    coerced = _coerce_single_garment(dict(floral_shirt), user_gender="men", model_gender=None)
+    assert coerced["gender"] == "women", f"Expected 'women' for floral lace t-shirt, got {coerced['gender']}"
+
+    # Also test through _coerce_enums
+    coerced_enums = _coerce_enums(dict(floral_shirt), user_gender="men", model_gender=None)
+    assert coerced_enums["gender"] == "women", f"Expected 'women' from _coerce_enums, got {coerced_enums['gender']}"
+
+
+def test_is_unidentifiable_discards_non_clothing_water_bottle():
+    """Verify that handheld water bottles, phones, and non-clothing items are flagged as unidentifiable to trigger item_skip."""
+    from app.services.vision.geometry import _is_unidentifiable
+    from app.services.vision.validation import _enforce_segformer_category
+
+    # 1. Direct is_clothing: False signal
+    item1 = {
+        "is_clothing": False,
+        "title": "Non-clothing item",
+        "sub_category": "non-clothing",
+        "item_type": "non-clothing",
+        "caption": "Non-clothing item",
+    }
+    assert _is_unidentifiable(item1) is True
+
+    # 2. Plastic water bottle detected as Handbag by LLM
+    item2 = {
+        "title": "Plastic Water Bottle",
+        "name": "Plastic Water Bottle",
+        "category": "Accessories",
+        "sub_category": "Water Bottle",
+        "item_type": "Water Bottle",
+        "caption": "Clear disposable plastic water bottle with blue cap.",
+    }
+    assert _is_unidentifiable(item2) is True
+
+    # 3. SegFormer category enforcement must not override non-clothing into Bag
+    overridden = _enforce_segformer_category(
+        dict(item1),
+        segformer_kind="bag",
+        label="Bag",
+    )
+    assert overridden.get("sub_category") == "non-clothing"
+    assert overridden.get("is_clothing") is False
+
+    # 4. Legitimate clothing item is not unidentifiable
+    shirt = {
+        "is_clothing": True,
+        "title": "Oxford Cotton Shirt",
+        "name": "Oxford Cotton Shirt",
+        "category": "Top",
+        "sub_category": "Shirt",
+        "item_type": "Oxford Shirt",
+        "caption": "Classic light blue oxford button-down shirt.",
+    }
+    assert _is_unidentifiable(shirt) is False
+
+
+def test_sunglasses_clean_cutout_removes_wearer_face_and_preserves_nose_bridge():
+    """Verify that apply_alpha_intersection excises wearer face skin while preserving sunglasses frame and un-filled nose bridge."""
+    from app.services.clothing_parser import apply_alpha_intersection
+    from PIL import Image
+    import io
+
+    H, W = 100, 100
+    # Create image: dark sunglasses frame in middle, wearer's skin on cheeks/nose
+    img = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+    # Cheeks and nose skin (Cr~150, Cb~90, R>G>B)
+    for y in range(20, 80):
+        for x in range(20, 80):
+            img.putpixel((x, y), (210, 160, 130, 255))
+
+    # Sunglasses lenses and frame (y: 35..55):
+    # Left lens: x 25..45, Right lens: x 55..75, Bridge: x 45..55 (y 35..38 only)
+    # Nose gap between lenses: x 45..55 (y 39..55) has NO glasses frame, only nose skin!
+    for y in range(35, 55):
+        for x in range(25, 46):
+            img.putpixel((x, y), (15, 15, 15, 255))
+        for x in range(55, 76):
+            img.putpixel((x, y), (15, 15, 15, 255))
+    for y in range(35, 39):
+        for x in range(45, 56):
+            img.putpixel((x, y), (15, 15, 15, 255))
+
+    buf = io.BytesIO()
+    img.save(buf, format="PNG")
+    matted_bytes = buf.getvalue()
+
+    # SegFormer sunglasses mask: covers lenses and bridge, but NOT the nose gap below bridge
+    glasses_mask = np.zeros((H, W), dtype=np.uint8)
+    for y in range(35, 55):
+        glasses_mask[y, 25:46] = 1
+        glasses_mask[y, 55:76] = 1
+    glasses_mask[35:39, 45:56] = 1
+
+    # Human mask: covers face skin
+    human_face_mask = np.zeros((H, W), dtype=np.uint8)
+    human_face_mask[20:80, 20:80] = 1
+    # SegFormer Face class excludes the sunglasses themselves
+    human_face_mask[glasses_mask > 0] = 0
+
+    result_bytes = apply_alpha_intersection(
+        matted_bytes,
+        seg_mask_bbox=glasses_mask,
+        human_mask=human_face_mask,
+        category="sunglasses",
+    )
+    assert result_bytes is not None, "Sunglasses cutout must succeed"
+
+    res_img = Image.open(io.BytesIO(result_bytes))
+    res_arr = np.array(res_img)
+
+    # 1. The wearer's cheek skin (e.g. at (70, 30)) must be subtracted (alpha == 0)
+    assert res_arr[70, 30, 3] == 0, f"Wearer cheek skin must have alpha=0, got {res_arr[70, 30, 3]}"
+
+    # 2. The glasses lenses (e.g. at (45, 35) and (45, 65)) must be solid (alpha > 200)
+    assert res_arr[45, 35, 3] > 200, f"Left lens must be solid, got {res_arr[45, 35, 3]}"
+    assert res_arr[45, 65, 3] > 200, f"Right lens must be solid, got {res_arr[45, 65, 3]}"
+
+    # 3. The nose gap between lenses (at (48, 50)) must NOT be filled by hole filling (alpha == 0)
+    assert res_arr[48, 50, 3] == 0, f"Nose gap between sunglasses lenses must have alpha=0, got {res_arr[48, 50, 3]}"
+
+
+
 
 
 

@@ -1264,9 +1264,16 @@ async def parse_garments(
         lbl = (item.get("label") or "").lower()
 
         # Category-appropriate human mask:
-        # 1. Accessories (sunglasses, belt, bag, scarf) and footwear: NEVER subtract face or legs!
-        # Sunglasses sit on the face, belts on pants, shoes meet legs at ankle.
-        if cat in ("accessory", "footwear") or lbl in ("sunglasses", "belt", "bag", "scarf", "shoes"):
+        # 1. Accessories and footwear:
+        # For sunglasses/eyewear: wearer's face and hair are NOT the sunglasses and must be subtracted!
+        is_eyewear_item = lbl in ("sunglasses", "glasses", "eyewear") or "sunglass" in lbl
+        if is_eyewear_item:
+            garment_human_mask = (
+                np.isin(class_mask, list(head_class_ids)).astype(np.uint8)
+                if head_class_ids and np.isin(class_mask, list(head_class_ids)).any()
+                else None
+            )
+        elif cat in ("accessory", "footwear") or lbl in ("belt", "bag", "scarf", "shoes"):
             garment_human_mask = None
         # 2. Bottoms (pants, skirt, shorts, chinos): NEVER subtract legs! Pants cover legs.
         elif cat in ("bottom", "pants", "skirt") or lbl in ("pants", "skirt"):
@@ -1485,9 +1492,14 @@ def apply_alpha_intersection(
 
     # GarmentVision spec: calibrated safety margins (4-12px)
     # SegFormer acts as a coarse semantic envelope; rembg provides studio-grade alpha boundaries.
+    norm_cat = (category or "").lower().replace(" ", "").replace("-", "")
+    is_eyewear = bool(
+        norm_cat in {"sunglasses", "glasses", "eyewear"}
+        or (category and any(w in str(category).lower() for w in ("sunglass", "glasses", "eyewear")))
+    )
     _dilate_pct = _resolve_dilate_pct_for_category(category)
-    _DILATE_MIN_PX = 4
-    _DILATE_MAX_PX = 12
+    _DILATE_MIN_PX = 2 if is_eyewear else 4
+    _DILATE_MAX_PX = 4 if is_eyewear else 12
     dilate_px = max(_DILATE_MIN_PX, min(_DILATE_MAX_PX, int(round(_dilate_pct * min(Hc, Wc) * 0.5))))
 
     mask_resized = None
@@ -1506,8 +1518,7 @@ def apply_alpha_intersection(
             mask_resized = norm_seg
 
         # Patch 12g (May 2026) — SegFormer mask "confidence" check.
-        norm_cat = (category or "").lower().replace(" ", "").replace("-", "")
-        _MIN_MASK_CONFIDENCE = 0.03 if norm_cat in {"accessory", "headwear", "footwear"} else 0.20
+        _MIN_MASK_CONFIDENCE = 0.03 if norm_cat in {"accessory", "headwear", "footwear"} or is_eyewear else 0.20
         try:
             mask_coverage = float((mask_resized > 127).mean())
         except Exception:  # noqa: BLE001
@@ -1539,8 +1550,8 @@ def apply_alpha_intersection(
     has_human = human_mask is not None and bool(human_mask.any())
 
     # 1. Subtract human mask (if present)
-    # Never subtract human mask from accessories (sunglasses sit on face, bags held in hand)
-    if has_human and norm_cat not in {"accessory"}:
+    # Never subtract human mask from accessories (bags held in hand, belts), BUT DO subtract for sunglasses/eyewear!
+    if has_human and (norm_cat not in {"accessory"} or is_eyewear):
         try:
             norm_human = _normalize_mask_to_u8(human_mask)
             if norm_human.shape != (Hc, Wc):
@@ -1563,7 +1574,7 @@ def apply_alpha_intersection(
                         human_resized[topmost_y:, :]
                     )
 
-            skin_dilate_px = 1 if norm_cat in {"top", "outerwear", "dress", "bottom"} else 3
+            skin_dilate_px = 1 if (norm_cat in {"top", "outerwear", "dress", "bottom"} or is_eyewear) else 3
             if skin_dilate_px > 0:
                 human_im = Image.fromarray(human_resized, mode="L")
                 human_im = human_im.filter(
@@ -1583,12 +1594,12 @@ def apply_alpha_intersection(
                 repr(exc)[:120],
             )
 
-    # 2. Human skin chrominance filter for torso/body garments.
+    # 2. Human skin chrominance filter for torso/body garments and facial eyewear.
     # SegFormer ATR-18 often misses skin pixels (hands/wrists on hip, collarbones,
-    # cleavage, necks). If human_mask is present and this is a body garment, detect and excise bare skin.
+    # cleavage, necks, cheeks/nose behind glasses). If human_mask is present, detect and excise bare skin.
     # CRITICAL: Never chew holes into the garment core (protects beige, tan, camel, khaki, olive fabrics).
     # Exclude "bottom" so chinos and khakis are not misclassified as bare skin!
-    if has_human and norm_cat in {"top", "outerwear", "dress", "fullbody"}:
+    if has_human and (norm_cat in {"top", "outerwear", "dress", "fullbody"} or is_eyewear):
         try:
             r = arr[:, :, 0].astype(float)
             g = arr[:, :, 1].astype(float)
@@ -1673,12 +1684,16 @@ def apply_alpha_intersection(
             from scipy import ndimage
             mask_bin = mask_resized > 64
             closed = ndimage.binary_closing(mask_bin, structure=np.ones((5, 5), dtype=bool), iterations=1)
-            filled = ndimage.binary_fill_holes(closed)
+            # NEVER fill holes for sunglasses/eyewear!
+            # Filling holes fills the space between lenses across the wearer's nose bridge!
+            filled = closed if is_eyewear else ndimage.binary_fill_holes(closed)
             
             filled_im = Image.fromarray((filled * 255).astype(np.uint8), mode="L")
+            if is_eyewear:
+                dilate_px = 2
             if dilate_px > 0:
                 filled_im = filled_im.filter(ImageFilter.MaxFilter(2 * dilate_px + 1))
-            filled_im = filled_im.filter(ImageFilter.GaussianBlur(radius=2.5))
+            filled_im = filled_im.filter(ImageFilter.GaussianBlur(radius=1.2 if is_eyewear else 2.5))
             soft_envelope = np.array(filled_im).astype(float) / 255.0
             
             new_alpha = (new_alpha.astype(float) * soft_envelope).round().astype(np.uint8)
@@ -1729,8 +1744,11 @@ _DILATE_PCT_BY_CATEGORY: dict[str, float] = {
     "dress": 0.04,
     "fullbody": 0.04,
     "full body": 0.04,
-    "accessory": 0.05,
-    "accessories": 0.05,
+    "accessory": 0.04,
+    "accessories": 0.04,
+    "sunglasses": 0.02,
+    "glasses": 0.02,
+    "eyewear": 0.02,
     "underwear": 0.04,
     "outerwear": 0.04,
     "footwear": 0.06,
