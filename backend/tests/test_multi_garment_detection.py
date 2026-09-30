@@ -768,6 +768,144 @@ def test_accessory_confidence_threshold_retains_sunglasses():
     assert result_bytes is not None, "Sunglasses SegFormer mask must be retained, not discarded"
 
 
+def test_womens_floral_top_flatlay_retains_women_gender_with_men_user():
+    """Verify that a light blue floral lace top in a flat lay stays 'women' even when user profile is 'men'."""
+    from app.services.vision.validation import _coerce_enums, _coerce_single_garment
+
+    floral_top = {
+        "name": "Light Blue Floral Lace Top",
+        "title": "Light Blue Floral Lace Top",
+        "category": "top",
+        "sub_category": "Blouse",
+        "item_type": "Floral Blouse",
+        "gender": "women",
+        "colors": [{"name": "Light Blue", "pct": 100}],
+        "caption": "Delicate light blue floral lace short-sleeve top.",
+    }
+    coerced = _coerce_enums(dict(floral_top), user_gender="men", model_gender=None)
+    assert coerced["gender"] == "women", f"Expected 'women', got {coerced['gender']}"
+
+    full_coerced = _coerce_single_garment(dict(floral_top), user_gender="men", model_gender=None)
+    assert full_coerced["gender"] == "women", f"Expected 'women', got {full_coerced['gender']}"
+
+
+def test_classic_dark_brown_boots_not_overridden_to_sneakers():
+    """Verify that Classic Dark Brown Leather Boots are NOT converted into sneakers."""
+    from app.services.vision.validation import _enforce_segformer_category
+
+    boots = {
+        "name": "Classic Dark Brown Leather Boots",
+        "title": "Classic Dark Brown Leather Boots",
+        "category": "Footwear",
+        "sub_category": "Boots",
+        "item_type": "Lace-Up Boots",
+        "color": "Dark Brown",
+    }
+    _enforce_segformer_category(boots, segformer_kind="footwear", label="Shoes")
+    assert boots["sub_category"] == "Boots", f"Expected 'Boots', got {boots['sub_category']}"
+    assert boots["name"] == "Classic Dark Brown Leather Boots"
+    assert "sneaker" not in (boots.get("item_type") or "").lower()
+
+
+def test_red_leather_belt_not_overridden_to_bag():
+    """Verify that a Red Leather Belt is NOT overridden to 'Bag' / 'Handbag'."""
+    from app.services.vision.validation import _enforce_segformer_category
+
+    belt = {
+        "name": "Red Leather Belt",
+        "title": "Red Leather Belt",
+        "category": "Accessories",
+        "sub_category": "Belt",
+        "item_type": "Waist Belt",
+        "color": "Red",
+    }
+    _enforce_segformer_category(belt, segformer_kind="bag", label="Bag")
+    assert belt["sub_category"] == "Belt", f"Expected 'Belt', got {belt['sub_category']}"
+    assert "Bag" not in belt["sub_category"]
+    assert belt["name"] == "Red Leather Belt"
+
+
+def test_sunglasses_not_in_single_instance_classes():
+    """Verify that accessories (sunglasses, belt, hat, scarf) are not in _SINGLE_INSTANCE_CLASSES."""
+    from app.services.clothing_parser import _SINGLE_INSTANCE_CLASSES
+
+    assert "Sunglasses" not in _SINGLE_INSTANCE_CLASSES
+    assert "Belt" not in _SINGLE_INSTANCE_CLASSES
+    assert "Hat" not in _SINGLE_INSTANCE_CLASSES
+    assert "Bag" not in _SINGLE_INSTANCE_CLASSES
+
+
+def test_match_batch_entry_to_slot_scrambled_order():
+    """Verify that _match_batch_entry_to_slot correctly routes items when Gemini streams in arbitrary order."""
+    from app.services.vision.service import _match_batch_entry_to_slot
+
+    # 5 crops in batch:
+    # Slot 0: Belt (accessory)
+    # Slot 1: Blouse (top)
+    # Slot 2: Boots (footwear)
+    # Slot 3: Sneakers (footwear)
+    # Slot 4: Sunglasses (accessory)
+    kind_hints = ["accessory", "top", "footwear", "footwear", "accessory"]
+    available = {0, 1, 2, 3, 4}
+
+    # Gemini emits boots first with slot_index=2
+    boots_entry = {
+        "name": "Classic Dark Brown Leather Boots",
+        "category": "Footwear",
+        "sub_category": "Boots",
+        "slot_index": 2,
+    }
+    slot_boots = _match_batch_entry_to_slot(boots_entry, kind_hints, available, default_idx=0)
+    assert slot_boots == 2
+    available.remove(slot_boots)
+
+    # Gemini emits sunglasses second with slot_index=4
+    sunglasses_entry = {
+        "name": "Black Frame Sunglasses",
+        "category": "Accessories",
+        "sub_category": "Sunglasses",
+        "slot_index": 4,
+    }
+    slot_sg = _match_batch_entry_to_slot(sunglasses_entry, kind_hints, available, default_idx=1)
+    assert slot_sg == 4
+    available.remove(slot_sg)
+
+    # Gemini emits belt third with slot_index=0
+    belt_entry = {
+        "name": "Red Leather Belt",
+        "category": "Accessories",
+        "sub_category": "Belt",
+        "slot_index": 0,
+    }
+    slot_belt = _match_batch_entry_to_slot(belt_entry, kind_hints, available, default_idx=2)
+    assert slot_belt == 0
+    available.remove(slot_belt)
+
+    # Gemini emits floral blouse fourth with slot_index=1
+    blouse_entry = {
+        "name": "Light Blue Floral Lace Top",
+        "category": "Top",
+        "sub_category": "Blouse",
+        "slot_index": 1,
+    }
+    slot_blouse = _match_batch_entry_to_slot(blouse_entry, kind_hints, available, default_idx=3)
+    assert slot_blouse == 1
+    available.remove(slot_blouse)
+
+    # Gemini emits sneakers last with slot_index=3
+    sneakers_entry = {
+        "name": "White Leather Sneakers",
+        "category": "Footwear",
+        "sub_category": "Sneakers",
+        "slot_index": 3,
+    }
+    slot_snk = _match_batch_entry_to_slot(sneakers_entry, kind_hints, available, default_idx=4)
+    assert slot_snk == 3
+    available.remove(slot_snk)
+    assert len(available) == 0
+
+
+
 
 
 

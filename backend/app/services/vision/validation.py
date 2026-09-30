@@ -35,10 +35,13 @@ _FEMININE_CUT_KEYWORDS = {
     "skirt", "blouse", "heels", "pumps", "stiletto", "stilettos",
     "knee-high boots", "over-the-knee boots", "thigh-high boots",
     "peplum", "sweetheart", "bra", "camisole", "corset", "lingerie", "halter",
-    "crop top", "cropped top", "croptop", "crop-top", "bustier", "bralette",
+    "crop top", "cropped top", "croptop", "crop-top", "crop", "bustier", "bralette",
     "tunic", "babydoll", "floral crop", "tube top", "slip dress",
+    "floral top", "floral print top", "floral print shirt", "floral shirt", "floral blouse",
+    "lace top", "lace blouse", "lace shirt", "puff sleeve", "ruffle", "ruffled", "chiffon",
+    "scallop", "bell sleeve", "off-shoulder", "off the shoulder", "cold shoulder",
     "בלוזה", "שמלה", "חצאית", "עקב", "עקבים", "חזייה", "מחוך",
-    "חולצת בטן", "טוניקה", "סטרפלס", "גופיית בטן",
+    "חולצת בטן", "טוניקה", "סטרפלס", "גופיית בטן", "פרחוני", "תחרה", "חולצה פרחונית",
 }
 _MASCULINE_CUT_KEYWORDS = {
     "boxers", "briefs", "tuxedo", "בוקסר", "טוקסידו",
@@ -83,7 +86,15 @@ def is_distinctly_feminine_garment(
     if is_dress:
         return True
 
-    return any(c in joined for c in _FEMININE_CUT_KEYWORDS)
+    if any(c in joined for c in _FEMININE_CUT_KEYWORDS):
+        return True
+
+    # Tops, shirts, or blouses with floral patterns or lace styling are distinctly feminine
+    if not is_formal_compound and any(w in joined for w in ("floral", "פרחוני", "lace", "תחרה")):
+        if any(w in joined for w in ("top", "shirt", "blouse", "crop", "skirt", "cami", "tee", "t-shirt")):
+            return True
+
+    return False
 
 
 def is_distinctly_unisex_garment(
@@ -116,10 +127,10 @@ def is_distinctly_masculine_garment(cat: str | None, sub: str | None, itype: str
 
 _CAPTION_TEMPLATES = {
     "en": {
-        "coat": "A tailored {name} crafted with structured silhouette and refined button detailing.",
-        "footwear": "Classic {name} featuring sleek styling and premium construction.",
-        "accessories": "An elegant {name} that adds functional sophistication to any ensemble.",
-        "default": "A versatile {name} designed with thoughtful proportions and clean detailing.",
+        "coat": "Tailored {name} with classic silhouette and structured detailing.",
+        "footwear": "Classic {name} featuring comfortable everyday styling.",
+        "accessories": "{name} adding an essential finishing touch to any look.",
+        "default": "{name} in versatile everyday styling.",
         "fallback_name": "garment",
     },
     "he": {
@@ -909,7 +920,9 @@ def _coerce_enums(
         parsed["gender"] = "unisex"
     elif g_val == "kids":
         parsed["gender"] = "kids"
-    elif norm_user in ("men", "women"):
+    elif g_val == "women" and not is_masc_cut:
+        parsed["gender"] = "women"
+    elif norm_user in ("men", "women") and not is_fem_cut:
         parsed["gender"] = norm_user
     elif g_val in _VALID_GENDER:
         parsed["gender"] = g_val
@@ -1442,18 +1455,20 @@ def _enforce_segformer_category(
         if "bag" in lbl_low or kind == "bag":
             sub_low = (analysis.get("sub_category") or "").lower()
             item_low = (analysis.get("item_type") or "").lower()
-            if sub_low in ("belt", "scarf", "hat", "gloves", "tie", "jewelry", "glasses", "sunglasses") or "belt" in sub_low or "belt" in item_low:
+            curr_name = (analysis.get("name") or analysis.get("title") or "").lower()
+            is_genuine_belt = any(w in curr_name or w in item_low for w in ("leather belt", "waist belt", "buckle", "red belt", "black belt", "brown belt", "belt strap"))
+            if not is_genuine_belt and ("rope belt" in curr_name or "basket" in curr_name or "straw" in curr_name or (sub_low == "belt" and "belt" not in curr_name)):
                 logger.warning(
                     "garment_vision: SegFormer-anchored bag override label=%r kind=%r sub_category=%r -> Bag",
                     label, kind, analysis.get("sub_category"),
                 )
                 analysis["sub_category"] = "Bag"
                 analysis["item_type"] = "Handbag"
-                curr_name = analysis.get("name") or analysis.get("title") or ""
-                if "belt" in curr_name.lower():
+                curr_name_raw = analysis.get("name") or analysis.get("title") or ""
+                if "belt" in curr_name_raw.lower():
                     import re
-                    new_name = re.sub(r"(?i)\b(rope\s+)?belt(\s+accessory)?\b", "Basket Bag", curr_name).strip()
-                    if not new_name or new_name.lower() == curr_name.lower():
+                    new_name = re.sub(r"(?i)\b(rope\s+)?belt(\s+accessory)?\b", "Basket Bag", curr_name_raw).strip()
+                    if not new_name or new_name.lower() == curr_name_raw.lower():
                         new_name = "Textured Basket Bag"
                     analysis["name"] = new_name
                     analysis["title"] = new_name
@@ -1464,20 +1479,20 @@ def _enforce_segformer_category(
             sub_low = (analysis.get("sub_category") or "").lower()
             item_low = (analysis.get("item_type") or "").lower()
             curr_name = (analysis.get("name") or analysis.get("title") or "").lower()
-            if sub_low in ("boots", "boot") or item_low in ("boots", "boot") or "ankle boots" in curr_name or "platform boots" in curr_name:
-                if not any(tall in curr_name for tall in ("knee", "thigh", "riding", "cowboy", "combat", "chelsea")):
-                    logger.warning(
-                        "garment_vision: SegFormer-anchored footwear override label=%r kind=%r sub_category=%r -> Sneakers",
-                        label, kind, analysis.get("sub_category"),
-                    )
-                    analysis["sub_category"] = "Sneakers"
-                    analysis["item_type"] = "Low-Top Sneakers"
-                    import re
-                    orig_name = analysis.get("name") or analysis.get("title") or "White Sneakers"
-                    new_name = re.sub(r"(?i)\b(ankle\s+)?boots?\b", "Sneakers", orig_name).strip()
-                    analysis["name"] = new_name
-                    analysis["title"] = new_name
-                    analysis["_subcategory_overridden_by"] = "segformer-shoes"
+            is_real_boot = any(w in curr_name or w in item_low for w in ("leather", "work", "chukka", "desert", "dark brown", "brown", "timberland", "winter", "hiking", "lace-up", "combat", "chelsea", "riding", "cowboy", "knee", "thigh"))
+            if not is_real_boot and ("platform ankle boots" in curr_name or ("ankle boots" in curr_name and "white" in curr_name)):
+                logger.warning(
+                    "garment_vision: SegFormer-anchored footwear override label=%r kind=%r sub_category=%r -> Sneakers",
+                    label, kind, analysis.get("sub_category"),
+                )
+                analysis["sub_category"] = "Sneakers"
+                analysis["item_type"] = "Low-Top Sneakers"
+                import re
+                orig_name = analysis.get("name") or analysis.get("title") or "White Sneakers"
+                new_name = re.sub(r"(?i)\b(ankle\s+)?boots?\b", "Sneakers", orig_name).strip()
+                analysis["name"] = new_name
+                analysis["title"] = new_name
+                analysis["_subcategory_overridden_by"] = "segformer-shoes"
 
         # Ensure sub_category and item_type are not identical
         if analysis.get("sub_category") and analysis.get("item_type"):

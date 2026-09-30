@@ -369,11 +369,6 @@ _SINGLE_INSTANCE_CLASSES = {
     "Dress",
     "Skirt",
     "Pants",
-    "Hat",
-    "Sunglasses",
-    "Belt",
-    "Bag",
-    "Scarf",
 }
 
 
@@ -501,7 +496,7 @@ def _split_into_spatial_groups(class_binary: np.ndarray) -> list[np.ndarray]:
 
     # If only one major survives, everything else is noise / fragment.
     if len(majors) == 1:
-        merge_gap = max(16, int(0.15 * frame_short))
+        merge_gap = max(8, min(32, int(0.05 * frame_short)))
         main = majors[0]
         for frag in minors:
             if _is_same_garment_component(frag["bbox"], main["bbox"], frame_short) or _bbox_gap(frag["bbox"], main["bbox"]) <= merge_gap:
@@ -509,7 +504,7 @@ def _split_into_spatial_groups(class_binary: np.ndarray) -> list[np.ndarray]:
         # Bridge disconnected fragments into the main blob
         try:
             from scipy import ndimage as _ndi
-            k = max(7, (merge_gap * 2 + 1) | 1)
+            k = max(5, min(25, (merge_gap * 2 + 1) | 1))
             structure = np.ones((k, k), dtype=bool)
             bridged = _ndi.binary_closing(
                 main["mask"] > 0, structure=structure, iterations=1,
@@ -519,7 +514,7 @@ def _split_into_spatial_groups(class_binary: np.ndarray) -> list[np.ndarray]:
             return [main["mask"]]
 
     # Multiple majors — group by spatial proximity and garment structure
-    merge_gap = max(16, int(0.15 * frame_short))
+    merge_gap = max(8, min(32, int(0.05 * frame_short)))
     groups: list[dict[str, Any]] = []
     for major in majors:
         joined = False
@@ -542,7 +537,7 @@ def _split_into_spatial_groups(class_binary: np.ndarray) -> list[np.ndarray]:
 
     # Absorb minor fragments into the nearest group (within 20 % of
     # short edge or garment structure); else drop as noise.
-    absorb_gap = max(24, int(0.20 * frame_short))
+    absorb_gap = max(16, min(48, int(0.08 * frame_short)))
     for frag in minors:
         best = None
         best_gap = None
@@ -562,7 +557,7 @@ def _split_into_spatial_groups(class_binary: np.ndarray) -> list[np.ndarray]:
     for g in groups:
         try:
             from scipy import ndimage as _ndi
-            k = max(7, (merge_gap * 2 + 1) | 1)
+            k = max(5, min(25, (merge_gap * 2 + 1) | 1))
             structure = np.ones((k, k), dtype=bool)
             bridged = _ndi.binary_closing(
                 g["mask"] > 0, structure=structure, iterations=1,

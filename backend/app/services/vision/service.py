@@ -271,6 +271,86 @@ def _align_analyses_to_crops(
     return out
 
 
+def _match_batch_entry_to_slot(
+    entry: dict[str, Any],
+    kind_hints: list[str | None] | None,
+    available_slots: set[int],
+    default_idx: int,
+) -> int:
+    """Map a parsed batch entry to its best-matching crop slot using slot hints & semantic affinity."""
+    if not available_slots:
+        return default_idx
+
+    slot_hint = entry.get("slot_index")
+    if slot_hint is None:
+        slot_hint = entry.get("index")
+
+    # If slot_hint is valid int and directly in available_slots
+    if isinstance(slot_hint, int) and slot_hint in available_slots:
+        hint = (kind_hints[slot_hint] if (kind_hints and slot_hint < len(kind_hints) and kind_hints[slot_hint]) else "").lower()
+        sub = (entry.get("sub_category") or entry.get("item_type") or entry.get("name") or "").lower()
+        cat = (entry.get("category") or "").lower()
+        nm = (entry.get("name") or entry.get("title") or "").lower()
+        all_text = f"{cat} {sub} {nm}"
+
+        is_fw = any(w in all_text for w in ("shoe", "boot", "sneaker", "footwear", "sandal", "heel", "loafer", "clog", "slide"))
+        is_belt = "belt" in all_text
+        is_sunglasses = any(w in all_text for w in ("sunglass", "glasses", "shades", "eyewear"))
+        is_bag = any(w in all_text for w in ("bag", "tote", "purse", "backpack", "clutch", "handbag"))
+
+        conflict = False
+        if is_fw and any(w in hint for w in ("belt", "bag", "top", "upper", "bottom", "pants", "skirt")):
+            conflict = True
+        elif is_belt and any(w in hint for w in ("shoe", "footwear", "top", "upper", "bottom", "pants", "skirt")):
+            conflict = True
+        elif is_sunglasses and any(w in hint for w in ("shoe", "footwear", "top", "upper", "bottom", "pants", "skirt")):
+            conflict = True
+        elif is_bag and any(w in hint for w in ("shoe", "footwear", "top", "upper", "bottom", "pants", "skirt")):
+            conflict = True
+
+        if not conflict:
+            return slot_hint
+
+    # Otherwise, score all available slots
+    sub = (entry.get("sub_category") or entry.get("item_type") or entry.get("name") or "").lower()
+    cat = (entry.get("category") or "").lower()
+    nm = (entry.get("name") or entry.get("title") or "").lower()
+    all_text = f"{cat} {sub} {nm}"
+
+    best_slot = min(available_slots)
+    best_score = -999.0
+
+    for s in sorted(available_slots):
+        score = 0.0
+        hint = (kind_hints[s] if (kind_hints and s < len(kind_hints) and kind_hints[s]) else "").lower()
+
+        # Category/hint alignment
+        if any(w in all_text for w in ("shoe", "boot", "sneaker", "footwear", "sandal", "heel", "loafer")) and any(w in hint for w in ("shoe", "boot", "footwear", "sneaker")):
+            score += 120.0
+        elif "belt" in all_text and ("belt" in hint or "acc" in hint):
+            score += 120.0
+        elif any(w in all_text for w in ("sunglass", "glasses", "shades")) and ("sunglass" in hint or "acc" in hint):
+            score += 120.0
+        elif any(w in all_text for w in ("bag", "tote", "purse", "backpack", "handbag")) and ("bag" in hint or "acc" in hint):
+            score += 120.0
+        elif any(w in all_text for w in ("top", "shirt", "blouse", "sweater", "jacket", "coat", "hoodie", "cardigan")) and any(w in hint for w in ("top", "upper")):
+            score += 100.0
+        elif any(w in all_text for w in ("bottom", "pants", "skirt", "jeans", "shorts", "trousers")) and any(w in hint for w in ("bottom", "pants", "skirt")):
+            score += 100.0
+
+        if isinstance(slot_hint, int) and s == slot_hint:
+            score += 30.0
+
+        if s == default_idx:
+            score += 5.0
+
+        if score > best_score:
+            best_score = score
+            best_slot = s
+
+    return best_slot
+
+
 class GarmentVisionService:
     def __init__(
         self,
@@ -1937,7 +2017,9 @@ class GarmentVisionService:
         )
 
         user_parts: list[Any] = [user_text]
-        for b in crops_bytes:
+        for i, b in enumerate(crops_bytes):
+            hint_txt = f" (hint: {kind_hints[i]})" if (kind_hints and i < len(kind_hints) and kind_hints[i]) else ""
+            user_parts.append(f"Image {i + 1} of {n} (index [{i}]{hint_txt}):")
             user_parts.append(_shrink_for_vision(b))
 
         gem = self._get_gemini()
@@ -1949,7 +2031,8 @@ class GarmentVisionService:
         try:
             text_buf = ""
             scan_pos = 0
-            yielded_count = 0
+            available_slots = set(range(n))
+            incoming_idx = 0
             async for delta in gem.stream_vision(
                 system=system_prompt,
                 user_parts=user_parts,
@@ -1964,6 +2047,11 @@ class GarmentVisionService:
                     text_buf, scan_pos,
                 )
                 for raw_entry in new_objs:
+                    slot = _match_batch_entry_to_slot(
+                        raw_entry, kind_hints, available_slots, default_idx=incoming_idx
+                    )
+                    available_slots.discard(slot)
+                    incoming_idx += 1
                     try:
                         norm = _coerce_single_garment(raw_entry, user_gender=eff_gender, model_gender=norm_mg, language=language)
                         if not norm.get("title") and norm.get("name"):
@@ -1975,18 +2063,11 @@ class GarmentVisionService:
                             norm["gender"] = norm_mg
                         elif not eff_gender and norm.get("gender") in ("men", "women"):
                             eff_gender = norm.get("gender")
-                        # Patch M21 — Layer 2 SegFormer-anchored category
-                        # enforcement on the streaming path. Applied
-                        # after ``_coerce_enums`` so we only override
-                        # enum-valid values. ``yielded_count`` is the
-                        # zero-based slot index, which matches the
-                        # ``kind_hints`` ordering by construction
-                        # (one hint per crop, same order as
-                        # ``crops_bytes``).
-                        if kind_hints and yielded_count < len(kind_hints):
+
+                        if kind_hints and slot < len(kind_hints):
                             _enforce_segformer_category(
                                 norm,
-                                segformer_kind=kind_hints[yielded_count],
+                                segformer_kind=kind_hints[slot],
                                 label=norm.get("name") or norm.get("title"),
                                 language=language,
                             )
@@ -1996,15 +2077,12 @@ class GarmentVisionService:
                         norm["_streamed"] = True
                     except Exception as exc:  # noqa: BLE001
                         logger.warning(
-                            "analyze_batch_stream: dropping bad entry "
-                            "at index %d: %s",
-                            yielded_count, repr(exc)[:160],
+                            "analyze_batch_stream: dropping bad entry for slot %d: %s",
+                            slot, repr(exc)[:160],
                         )
                         norm = {}
-                    if yielded_count < n:
-                        yield (yielded_count, norm)
-                        emitted += 1
-                    yielded_count += 1
+                    yield (slot, norm)
+                    emitted += 1
             ok = True
         except Exception as exc:  # noqa: BLE001
             last_err = repr(exc)
@@ -2022,12 +2100,9 @@ class GarmentVisionService:
                     "emitted": emitted,
                 },
             )
-        # Pad the tail with empty dicts if the model returned fewer
-        # complete objects than crops (rare — usually it returns
-        # exactly N). The caller's `_iter_batched_results` treats
-        # empties as "skip this crop".
-        while emitted < n:
-            yield (emitted, {})
+        # Emit empty dict for any missing/unassigned slots so caller can run fallback
+        for s in sorted(available_slots):
+            yield (s, {})
             emitted += 1
 
     async def analyze_outfit(
@@ -3389,8 +3464,12 @@ class GarmentVisionService:
                             (c[1].get("kind") or c[1].get("category") or c[1].get("label"))
                             for c in chunk_crops
                         ]
+                        photo_ids = {c[0] for c in chunk_crops}
                         chunk_mgs = {c[1].get("_photo_model_gender") for c in chunk_crops if c[1].get("_photo_model_gender")}
-                        chunk_mg = chunk_mgs.pop() if len(chunk_mgs) == 1 else None
+                        if len(photo_ids) == 1 and len(chunk_mgs) == 1 and all(c[1].get("_photo_model_gender") for c in chunk_crops):
+                            chunk_mg = next(iter(chunk_mgs))
+                        else:
+                            chunk_mg = None
 
                         chunk_emitted: set[int] = set()
                         try:

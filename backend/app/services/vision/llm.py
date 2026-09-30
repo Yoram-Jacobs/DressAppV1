@@ -145,6 +145,7 @@ SYSTEM_PROMPT = (
     "Rules:\n"
     "• sub_category: Specific cut ('Shirt','T-Shirt','Sweater','Jeans','Pants','Skirt','Sneakers'). Never generic 'Top'/'Bottom'.\n"
     "• item_type: Styling cut ('Crew-Neck T-Shirt','Skinny Jeans'). Must differ from sub_category.\n"
+    "• caption: A concise, natural, informative 1-2 sentence description highlighting the garment's specific visual details, style, cut, color, pattern, texture, and silhouette (e.g. 'Light blue floral lace short-sleeve top with scoop neckline and scallop hem.', 'Classic dark brown leather boots with sturdy lug soles and lace-up front.'). Never generic filler.\n"
     "• gender: 'women' for feminine cuts/styles (crop tops, blouses, skirts, dresses, heels, bras, feminine florals); 'men' for menswear/masculine cuts; 'unisex' for neutral activewear, tank tops, standard tees, sneakers, bags; 'kids' for children's items. If worn by an identifiable model, standard cuts align with the model's apparent gender.\n"
     "• colors: [{\"name\": str, \"pct\": int}] summing to 100. Specific shades ('Burgundy','Navy','Olive','Light Blue'). Never omit pct.\n"
     "• fabric_materials: [{\"name\": str, \"pct\": int}] summing to 100 (e.g. [{\"name\": \"Cotton\", \"pct\": 100}]). Never omit pct.\n"
@@ -191,12 +192,13 @@ def _build_system_prompt(*, one_pass: bool = False, user_gender: str | None = No
 # ─────────────────────────────────────────────────────────────────────
 _GARMENT_OBJECT_SCHEMA: dict[str, Any] = {
     "type": "object",
-    "required": ["title"],
+    "required": ["title", "name", "category", "sub_category", "item_type", "caption"],
     "additionalProperties": False,
     "properties": {
         "name": {"type": "string"},
         "title": {"type": "string"},
         "caption": {"type": "string", "maxLength": 240},
+        "slot_index": {"type": "integer", "description": "0-based index of this crop (0..n-1)"},
         "category": {
             "type": "string",
             "enum": [
@@ -611,7 +613,7 @@ def _build_batch_prompts(
                 + "\n".join(bullets)
                 + "\nAnchor category & sub_category to these hints."
             )
-    user_text = f"{gender_rule}Analyze {n} crop(s) in order. Return JSON array of {n} GarmentAnalysis objects ([...])."
+    user_text = f"{gender_rule}Analyze {n} crop(s) in order. For each crop image [0..{n-1}], return a JSON object with 'slot_index': i. Return a JSON array of {n} objects matching GarmentAnalysis schema."
     code = (language or "en").lower()
     if code != "en":
         lang_name = _LANG_NAMES.get(code, code)
@@ -626,7 +628,7 @@ def _build_batch_prompts(
     system_prompt = (
         _build_system_prompt(one_pass=False, user_gender=norm_gender)
         + _language_directive(language)
-        + f"\nBATCH: Analyze {n} crops in order (1..{n}). Return raw JSON array of EXACTLY {n} objects matching GarmentAnalysis schema. No extra text."
+        + f"\nBATCH: Analyze {n} crops in order (Image 1..{n}, indices 0..{n-1}). Return raw JSON array of EXACTLY {n} objects matching GarmentAnalysis schema with 'slot_index' set to the corresponding 0-based image index. No extra text."
         + (f"\n{gender_rule}" if gender_rule else "")
         + hint_block
     )
