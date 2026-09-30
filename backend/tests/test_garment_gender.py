@@ -129,13 +129,16 @@ def test_unrecognized_gender_defaults_to_user_gender():
 def test_system_prompt_and_user_prompt_gender_hints():
     """Verify that system and user prompts include the user's gender hint."""
     sys_prompt = _build_system_prompt(user_gender="men")
-    assert "default to 'men'" in sys_prompt or "default to men" in sys_prompt or "{DEFAULT_GENDER_HINT}" not in sys_prompt
+    assert "{DEFAULT_GENDER_HINT}" not in sys_prompt
+    assert "Never default to 'men'" in sys_prompt or "never default to 'men'" in sys_prompt
 
     user_p = _user_prompt("en", user_gender="men")
-    assert "default to 'men'" in user_p
+    assert "'men'" in user_p
+    assert "never default to 'men'" in user_p
 
     user_p_fem = _user_prompt("en", user_gender="women")
-    assert "default to 'women'" in user_p_fem
+    assert "'women'" in user_p_fem
+    assert "never default to 'men'" in user_p_fem
 
 
 def test_get_garment_vision_service_scopes_user_gender():
@@ -270,4 +273,67 @@ def test_batch_prompts_injects_human_model_gender_rule():
         model_gender=None,
     )
     assert "HUMAN MODEL OUTFIT GENDER" not in sys_prompt_flat
+
+
+def test_floral_print_short_sleeve_top_classified_as_women():
+    """Floral print short sleeve top must classify as women's blouse/top, never men's tailored shirt."""
+    item = {
+        "title": "Floral Print Short Sleeve Top",
+        "category": "Top",
+        "sub_category": "Tailored Shirts",
+        "item_type": "Crew-neck t-shi",
+        "gender": "men",
+        "caption": "A stylish light blue floral top with delicate blossoms and d)",
+        "pattern": "floral",
+    }
+    coerced = _coerce_single_garment(item, user_gender="men")
+    assert coerced["gender"] == "women"
+    assert coerced["sub_category"] == "Blouse"
+    assert "Tailored" not in coerced["sub_category"]
+    assert coerced["item_type"] != "Crew-neck t-shi"
+    assert coerced["caption"].endswith(".")
+    assert not coerced["caption"].endswith("and d)")
+    assert not coerced["caption"].endswith("and d.")
+
+    enums = _coerce_enums(dict(coerced), user_gender="men")
+    assert enums["gender"] == "women"
+    assert enums["sub_category"] == "Blouse"
+    assert enums["caption"].endswith(".")
+
+
+def test_dress_code_inference():
+    """Verify that dress codes are inferred from garment type rather than defaulting to casual."""
+    # Button-down shirt -> smart-casual
+    btn_shirt = {"category": "Top", "sub_category": "Shirt", "item_type": "Button-Down Shirt", "dress_code": "casual"}
+    assert _coerce_enums(btn_shirt)["dress_code"] == "smart-casual"
+
+    # Blazer -> business
+    blazer = {"category": "Outerwear", "sub_category": "Jacket", "item_type": "Tailored Blazer"}
+    assert _coerce_enums(blazer)["dress_code"] == "business"
+
+    # Athletic tank -> athletic
+    gym_tank = {"category": "Top", "sub_category": "tank top", "item_type": "athletic_tank"}
+    assert _coerce_enums(gym_tank)["dress_code"] == "athletic"
+
+    # Pajamas -> loungewear
+    pajamas = {"category": "Bottom", "sub_category": "Pants", "item_type": "Silk Pajama Pants"}
+    assert _coerce_enums(pajamas)["dress_code"] == "loungewear"
+
+    # Tuxedo -> formal
+    tux = {"category": "Outerwear", "sub_category": "Jacket", "item_type": "Black Tie Tuxedo"}
+    assert _coerce_enums(tux)["dress_code"] == "formal"
+
+
+def test_water_bottle_rejected_by_is_unidentifiable():
+    """Handheld water bottles and non-clothing items must be identified as unidentifiable."""
+    from app.services.vision.geometry import _is_unidentifiable
+    bottle = {
+        "title": "Insulated Stainless Steel Water Bottle",
+        "category": "Accessories",
+        "sub_category": "Messenger Bag",
+        "item_type": "Water bottle",
+        "caption": "Handheld insulated water bottle with carry loop.",
+    }
+    assert _is_unidentifiable(bottle) is True
+
 

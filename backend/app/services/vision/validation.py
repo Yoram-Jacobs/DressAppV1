@@ -1,5 +1,6 @@
 from __future__ import annotations
 import logging
+import re
 logger = logging.getLogger(__name__)
 
 from typing import Any
@@ -59,12 +60,14 @@ def is_distinctly_feminine_garment(
     itype: str | None,
     name: str | None = None,
     full_text: str | None = None,
+    pattern: str | None = None,
 ) -> bool:
     """Check if a garment is strictly feminine by silhouette/design."""
     cat_l = str(cat or "").strip().lower()
     sub_l = str(sub or "").strip().lower()
     it_l = str(itype or "").strip().lower()
-    extra_l = f"{name or ''} {full_text or ''}".lower()
+    pat_l = str(pattern or "").strip().lower()
+    extra_l = f"{name or ''} {full_text or ''} {pat_l}".lower()
     joined = f"{cat_l} {sub_l} {it_l} {extra_l}"
 
     # Footwear, tops, bottoms, socks that have "dress" in the name are formal/dressy, NOT dresses
@@ -91,9 +94,12 @@ def is_distinctly_feminine_garment(
         return True
 
     # Tops, shirts, tees, or blouses with floral patterns or lace styling are distinctly feminine
-    if any(w in joined for w in ("floral", "פרחוני", "lace", "תחרה", "ruffle", "ruffles", "frill", "peplum", "sweetheart", "off-shoulder", "puff sleeve")):
+    if any(w in joined for w in ("floral", "פרחוני", "lace", "תחרה", "ruffle", "ruffles", "frill", "peplum", "sweetheart", "off-shoulder", "puff sleeve", "flutter", "wrap top", "wrap blouse")):
         if any(w in joined for w in ("top", "shirt", "blouse", "crop", "skirt", "cami", "tee", "t-shirt", "chiffon")):
             return True
+
+    if pat_l == "floral" and (cat_l == "top" or any(w in joined for w in ("top", "shirt", "tee", "blouse", "t-shirt"))):
+        return True
 
     return False
 
@@ -104,6 +110,7 @@ def is_distinctly_unisex_garment(
     itype: str | None,
     name: str | None = None,
     full_text: str | None = None,
+    pattern: str | None = None,
 ) -> bool:
     """Check if a garment is distinctly unisex (activewear tanks, singlets, etc.)."""
     cat_l = str(cat or "").strip().lower()
@@ -113,7 +120,7 @@ def is_distinctly_unisex_garment(
     joined = f"{cat_l} {sub_l} {it_l} {extra_l}"
 
     # If it has a feminine cut (crop top, floral shirt, camisole, lingerie, etc.), it's not unisex
-    if is_distinctly_feminine_garment(cat, sub, itype, name=name, full_text=full_text):
+    if is_distinctly_feminine_garment(cat, sub, itype, name=name, full_text=full_text, pattern=pattern):
         return False
     if any(k in joined for k in _FEMININE_CUT_KEYWORDS):
         return False
@@ -221,6 +228,53 @@ _CAPTION_TEMPLATES = {
         "fallback_name": "单品",
     },
 }
+
+
+def _clean_truncated_caption(caption: str | None) -> str:
+    """Ensure caption is a complete, well-formed sentence ending with proper punctuation.
+    
+    Removes trailing truncated fragments (e.g. 'offers a comfortable and d)')
+    and repairs incomplete grammar caused by max_token limits.
+    """
+    if not caption:
+        return ""
+    text = str(caption).strip()
+    if not text:
+        return ""
+
+    # Strip any dangling quotes, trailing commas, dashes, colons, or semicolons
+    text = re.sub(r'[\s",\-_:;]+$', '', text)
+
+    # Strip hanging unclosed parentheses/brackets (e.g. "and d)")
+    if text.endswith(")") and "(" not in text:
+        text = text[:-1].rstrip()
+    if text.endswith("]") and "[" not in text:
+        text = text[:-1].rstrip()
+
+    # Check if there is already a sentence terminator followed by a broken trailing fragment
+    # e.g. "A floral print blouse with soft fabric. It features a relaxed fit and"
+    sentence_endings = [m.end() for m in re.finditer(r'[.!?。۔](\s|$)', text)]
+    if sentence_endings:
+        last_end = sentence_endings[-1]
+        trailing = text[last_end:].strip()
+        # If there's a trailing fragment without sentence termination, check if it's incomplete
+        if trailing:
+            trailing_words = trailing.split()
+            last_word = trailing_words[-1].lower() if trailing_words else ""
+            if len(trailing_words) <= 6 or last_word in ("and", "with", "for", "the", "a", "an", "or", "in", "to", "of", "d", "is", "its", "offers", "ו", "עם", "של"):
+                text = text[:last_end].strip()
+
+    # Strip dangling trailing 1-2 letter fragments preceded by conjunction/preposition (e.g. "and d", "with a", "for s")
+    text = re.sub(r'\s+(?:and|with|for|or|the|in|on|at|to|of|a|an)\s+[a-zA-Z]{1,2}$', '', text, flags=re.IGNORECASE).rstrip()
+
+    # Strip dangling trailing conjunctions/prepositions
+    text = re.sub(r'\s+(?:and|with|for|or|in|on|at|to|of|the|a|an|but|ו|עם|של|ב|ל|על)$', '', text, flags=re.IGNORECASE).rstrip()
+
+    # Ensure text ends with a sentence terminator
+    if text and text[-1] not in ".!?。۔":
+        text += "."
+
+    return text
 
 
 def normalize_weighted_tags(tags: Any) -> list[dict[str, Any]]:
@@ -502,10 +556,29 @@ def _coerce_single_garment(
     raw_g = (res.get("gender") or "").strip().lower()
     g_val = _GENDER_ALIASES.get(raw_g, raw_g)
 
-    is_fem_cut = is_distinctly_feminine_garment(cat_lower, sub_lower, itype_lower, name=res.get("name"), full_text=full_text)
+    pat_val = (res.get("pattern") or "").strip().lower()
+    is_fem_cut = is_distinctly_feminine_garment(cat_lower, sub_lower, itype_lower, name=res.get("name"), full_text=full_text, pattern=pat_val)
     is_masc_cut = is_distinctly_masculine_garment(cat_lower, sub_lower, itype_lower)
-    is_unisex_cut = is_distinctly_unisex_garment(cat_lower, sub_lower, itype_lower, name=res.get("name"), full_text=full_text)
+    is_unisex_cut = is_distinctly_unisex_garment(cat_lower, sub_lower, itype_lower, name=res.get("name"), full_text=full_text, pattern=pat_val)
 
+    # Feminine tops with floral prints or feminine cuts should NEVER be "Tailored Shirts"
+    if is_fem_cut or res.get("gender") == "women" or any(w in full_text for w in ("floral", "flower", "פרח", "blouse", "בלוזה")):
+        if sub_lower in ("tailored shirts", "tailored shirt", "tailored_shirts", "tailored_shirt"):
+            res["sub_category"] = "Blouse"
+            sub_lower = "blouse"
+        if itype_lower in ("tailored shirts", "tailored shirt", "crew-neck t-shi", "crew-neck t-shirt", "crew neck t-shirt") and any(w in full_text for w in ("floral", "flower", "פרח")):
+            res["item_type"] = "Floral Print Blouse" if "blouse" in full_text else "Floral Print Short-Sleeve Top"
+            itype_lower = res["item_type"].lower()
+
+    if itype_lower.endswith("-shi") or itype_lower.endswith(" t-shi"):
+        res["item_type"] = res["item_type"].replace("-shi", "-Shirt").replace(" t-shi", " T-Shirt")
+        itype_lower = res["item_type"].lower()
+
+    # Strict 3-step gender determination hierarchy:
+    # 1. Human Model Gender: If an identifiable human model is detected in the photo, align with the model's gender.
+    # 2. Garment Criteria (Singlet analysis): If no model (flat lay, hanger, product), analyze garment silhouette, cut, pattern, and LLM vision prediction.
+    # 3. Uncertain basics: If the garment is a neutral basic without clear gender cues, fall back to user's profile gender.
+    # RULE: NEVER use a default gender; NEVER default to "men".
     if norm_model in ("men", "women"):
         res["gender"] = norm_model
         if norm_model == "men":
@@ -522,13 +595,13 @@ def _coerce_single_garment(
     elif g_val == "kids":
         res["gender"] = "kids"
     elif norm_user in ("men", "women"):
-        # Anchor unisex/standard garments (pants, shoes, jackets, shirts) to the known wearer gender
+        # Anchor unisex/standard garments (pants, trousers, shoes, jackets) to the known wearer gender
         res["gender"] = norm_user
     elif g_val in _VALID_GENDER:
         res["gender"] = g_val
     else:
-        # Unrecognized gender — default to user profile gender if known, otherwise unisex
-        res["gender"] = norm_user or "unisex"
+        # No model, no garment cues, and no user profile gender — safe neutral is unisex
+        res["gender"] = "unisex"
 
     # Color refinement: upgrade generic "blue" / "כחול" to specific fine-grained shade if hinted
     full_color_text = f"{res.get('name', '')} {res.get('title', '')} {res.get('caption', '')} {' '.join(res.get('tags') or [])}".lower()
@@ -651,6 +724,7 @@ def _coerce_single_garment(
             res["caption"] = tpls["accessories"].format(name=name_val)
         else:
             res["caption"] = tpls["default"].format(name=name_val)
+    res["caption"] = _clean_truncated_caption(res.get("caption"))
 
     # Pattern fallback: if model returned solid/empty, check text for printed graphics, geometric, striped, or floral patterns
     pat_str = (res.get("pattern") or "").strip().lower()
@@ -869,17 +943,105 @@ _QUALITY_ALIASES = {
 }
 
 
+_DRESS_CODE_ALIASES = {
+    "athleisure": "athletic",
+    "sport": "athletic",
+    "sports": "athletic",
+    "active": "athletic",
+    "activewear": "athletic",
+    "gym": "athletic",
+    "workout": "athletic",
+    "lounge": "loungewear",
+    "sleepwear": "loungewear",
+    "pajamas": "loungewear",
+    "pyjamas": "loungewear",
+    "homewear": "loungewear",
+    "business-casual": "smart-casual",
+    "business_casual": "smart-casual",
+    "smart_casual": "smart-casual",
+    "smartcasual": "smart-casual",
+    "semi-formal": "smart-casual",
+    "work": "business",
+    "office": "business",
+    "workwear": "business",
+    "cocktail": "formal",
+    "black-tie": "formal",
+    "gala": "formal",
+    "יומיומי": "casual",
+    "אלגנטי-יומיומי": "smart-casual",
+    "אלגנטי־יומיומי": "smart-casual",
+    "עסקי": "business",
+    "רשמי": "formal",
+    "ספורטיבי": "athletic",
+    "בגדי בית": "loungewear",
+}
+
+
 def _normalise_dress_code(raw: str | None) -> str | None:
     """Return the dress-code token after space→hyphen + common renames."""
     value = _norm_str(raw)
     if not value:
         return None
     value = value.replace(" ", "-")
-    if value == "athleisure":
-        value = "athletic"
-    if value == "lounge":
-        value = "loungewear"
-    return value
+    return _DRESS_CODE_ALIASES.get(value, value)
+
+
+def _infer_garment_dress_code(parsed: dict[str, Any]) -> str:
+    """Infer the dress code of a garment from its taxonomy, cut, and description.
+
+    Valid dress codes: 'casual', 'smart-casual', 'business', 'formal', 'athletic', 'loungewear'.
+    """
+    raw_dc = _normalise_dress_code(parsed.get("dress_code"))
+    if raw_dc in _VALID_DRESS_CODE and raw_dc != "casual":
+        return raw_dc
+
+    sub = (parsed.get("sub_category") or "").lower().strip()
+    itype = (parsed.get("item_type") or "").lower().strip()
+    full_text = f"{parsed.get('title', '')} {parsed.get('name', '')} {sub} {itype} {parsed.get('caption', '')}".lower()
+
+    # 1. Formal (Black tie, evening gowns, tuxedos, cocktail)
+    if any(w in full_text for w in (
+        "tuxedo", "ballgown", "evening gown", "cocktail dress", "formal gown",
+        "cufflinks", "cummerbund", "black tie", "טוקסידו", "שמלת ערב"
+    )):
+        return "formal"
+
+    # 2. Business (Suits, blazers, dress trousers, tailored suits, oxford dress shoes)
+    if any(w in full_text for w in (
+        "suit jacket", "suit pant", "business suit", "blazer", "dress trouser",
+        "tailored suit", "pencil skirt", "oxford shoe", "derby shoe",
+        "dress shoe", "חליפה", "בלייזר", "חצאית עיפרון"
+    )):
+        return "business"
+
+    # 3. Smart-Casual (Button-down shirts, tailored shirts, collared shirts, chinos, loafers, blouses, trench coats)
+    if any(w in full_text for w in (
+        "button-down", "button down", "tailored shirt", "collared shirt", "dress shirt",
+        "blouse", "chino", "chinos", "loafer", "loafers", "trench coat", "cardigan",
+        "polo", "polo shirt", "wrap dress", "midi dress", "ankle boot", "chelsea boot",
+        "מכופתרת", "פולו", "בלוזה", "לופר"
+    )):
+        return "smart-casual"
+
+    # 4. Athletic / Activewear
+    if any(w in full_text for w in (
+        "athletic", "running", "gym", "workout", "activewear", "sports bra", "sportswear",
+        "yoga", "sweatband", "swim", "swimsuit", "bikini", "rashguard", "track pants",
+        "cycling", "cleats", "jogging", "performance", "גופיית ספורט", "אימון"
+    )):
+        if not any(w in full_text for w in ("casual sneaker", "fashion sneaker", "classic sneaker")):
+            return "athletic"
+
+    # 5. Loungewear / Sleepwear
+    if any(w in full_text for w in (
+        "pajama", "pajamas", "pyjama", "sleepwear", "nightgown", "bathrobe", "robe",
+        "sweatpants", "lounge", "loungewear", "slippers", "hoodie", "פיג'מה", "חלוק"
+    )):
+        return "loungewear"
+
+    if raw_dc in _VALID_DRESS_CODE:
+        return raw_dc
+    return "casual"
 
 
 def _coerce_enums(
@@ -904,10 +1066,29 @@ def _coerce_enums(
     g_val = _GENDER_ALIASES.get(raw_g, raw_g)
     full_text_enum = f"{parsed.get('name', '')} {parsed.get('title', '')} {parsed.get('caption', '')}".lower()
 
-    is_fem_cut = is_distinctly_feminine_garment(cat_lower, sub_lower, itype_lower, name=parsed.get("name"), full_text=full_text_enum)
+    pat_val = (parsed.get("pattern") or "").strip().lower()
+    is_fem_cut = is_distinctly_feminine_garment(cat_lower, sub_lower, itype_lower, name=parsed.get("name"), full_text=full_text_enum, pattern=pat_val)
     is_masc_cut = is_distinctly_masculine_garment(cat_lower, sub_lower, itype_lower)
-    is_unisex_cut = is_distinctly_unisex_garment(cat_lower, sub_lower, itype_lower, name=parsed.get("name"), full_text=full_text_enum)
+    is_unisex_cut = is_distinctly_unisex_garment(cat_lower, sub_lower, itype_lower, name=parsed.get("name"), full_text=full_text_enum, pattern=pat_val)
 
+    # Feminine tops with floral prints or feminine cuts should NEVER be "Tailored Shirts"
+    if is_fem_cut or parsed.get("gender") == "women" or any(w in full_text_enum for w in ("floral", "flower", "פרח", "blouse", "בלוזה")):
+        if sub_lower in ("tailored shirts", "tailored shirt", "tailored_shirts", "tailored_shirt"):
+            parsed["sub_category"] = "Blouse"
+            sub_lower = "blouse"
+        if itype_lower in ("tailored shirts", "tailored shirt", "crew-neck t-shi", "crew-neck t-shirt", "crew neck t-shirt") and any(w in full_text_enum for w in ("floral", "flower", "פרח")):
+            parsed["item_type"] = "Floral Print Blouse" if "blouse" in full_text_enum else "Floral Print Short-Sleeve Top"
+            itype_lower = parsed["item_type"].lower()
+
+    if itype_lower.endswith("-shi") or itype_lower.endswith(" t-shi"):
+        parsed["item_type"] = parsed["item_type"].replace("-shi", "-Shirt").replace(" t-shi", " T-Shirt")
+        itype_lower = parsed["item_type"].lower()
+
+    # Strict 3-step gender determination hierarchy:
+    # 1. Human Model Gender: If an identifiable human model is detected in the photo, align with the model's gender.
+    # 2. Garment Criteria (Singlet analysis): If no model (flat lay, hanger, product), analyze garment silhouette, cut, pattern, and LLM vision prediction.
+    # 3. Uncertain basics: If the garment is a neutral basic without clear gender cues, fall back to user's profile gender.
+    # RULE: NEVER use a default gender; NEVER default to "men".
     if norm_model in ("men", "women"):
         parsed["gender"] = norm_model
         if norm_model == "men":
@@ -921,21 +1102,22 @@ def _coerce_enums(
         parsed["gender"] = "men"
     elif is_unisex_cut or g_val == "unisex":
         parsed["gender"] = "unisex"
-    elif g_val == "kids":
-        parsed["gender"] = "kids"
     elif g_val == "women" and not is_masc_cut:
         parsed["gender"] = "women"
-    elif norm_user in ("men", "women") and not is_fem_cut:
+    elif g_val == "men" and not is_fem_cut:
+        parsed["gender"] = "men"
+    elif g_val == "kids":
+        parsed["gender"] = "kids"
+    elif norm_user in ("men", "women"):
         parsed["gender"] = norm_user
-    elif g_val in _VALID_GENDER:
-        parsed["gender"] = g_val
     else:
-        parsed["gender"] = norm_user or "unisex"
-    parsed["dress_code"] = (
-        _normalise_dress_code(parsed.get("dress_code"))
-        if _normalise_dress_code(parsed.get("dress_code")) in _VALID_DRESS_CODE
-        else "casual"
-    )
+        parsed["gender"] = "unisex"
+
+    inferred_dc = _infer_garment_dress_code(parsed)
+    parsed["dress_code"] = inferred_dc if inferred_dc in _VALID_DRESS_CODE else "casual"
+
+    if parsed.get("caption"):
+        parsed["caption"] = _clean_truncated_caption(parsed["caption"])
     _coerce_enum_field(
         parsed, "condition", _VALID_CONDITION, aliases=_CONDITION_ALIASES, default="good"
     )

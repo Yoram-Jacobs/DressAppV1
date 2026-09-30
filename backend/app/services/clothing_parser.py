@@ -1500,6 +1500,7 @@ def apply_alpha_intersection(
     seg_mask_bbox: np.ndarray | None = None,
     *,
     category: str | None = None,
+    label: str | None = None,
     human_mask: np.ndarray | None = None,
     is_padded_canvas: bool = False,
     other_mask: np.ndarray | None = None,
@@ -1525,11 +1526,16 @@ def apply_alpha_intersection(
     # GarmentVision spec: calibrated safety margins (4-16px)
     # SegFormer acts as a coarse semantic envelope; rembg provides studio-grade alpha boundaries.
     norm_cat = (category or "").lower().replace(" ", "").replace("-", "")
+    norm_lbl = (label or "").lower().replace(" ", "").replace("-", "")
     is_eyewear = bool(
         norm_cat in {"sunglasses", "glasses", "eyewear"}
-        or (category and any(w in str(category).lower() for w in ("sunglass", "glasses", "eyewear")))
+        or norm_lbl in {"sunglasses", "glasses", "eyewear"}
+        or any(w in str(category).lower() for w in ("sunglass", "glasses", "eyewear", "משקפ"))
+        or any(w in str(label).lower() for w in ("sunglass", "glasses", "eyewear", "משקפ"))
     )
-    _dilate_pct = _resolve_dilate_pct_for_category(category)
+    _dilate_pct = _resolve_dilate_pct_for_category(category, label=label)
+    if is_eyewear:
+        _dilate_pct = min(_dilate_pct, 0.015)
     _DILATE_MIN_PX = 2 if is_eyewear else 4
     _DILATE_MAX_PX = 4 if is_eyewear else 16
     dilate_px = max(_DILATE_MIN_PX, min(_DILATE_MAX_PX, int(round(_dilate_pct * min(Hc, Wc) * 0.5))))
@@ -1593,19 +1599,6 @@ def apply_alpha_intersection(
             else:
                 human_resized = norm_human
 
-            # Collar / neckline protection: For tops/outerwear/dresses, prevent head mask
-            # from dilating downward into the garment collar / lapel
-            if norm_cat in {"top", "outerwear", "dress"} and mask_resized is not None:
-                top_rows = np.where(mask_resized > 64)[0]
-                if len(top_rows) > 0:
-                    topmost_y = int(top_rows.min())
-                    # Do not dilate into garment boundary at or below topmost_y
-                    human_resized[topmost_y:, :] = np.where(
-                        mask_resized[topmost_y:, :] > 64,
-                        np.uint8(0),
-                        human_resized[topmost_y:, :]
-                    )
-
             skin_dilate_px = 1 if (norm_cat in {"top", "outerwear", "dress", "bottom"} or is_eyewear) else 3
             if skin_dilate_px > 0:
                 human_im = Image.fromarray(human_resized, mode="L")
@@ -1614,6 +1607,19 @@ def apply_alpha_intersection(
                 )
                 human_im = human_im.filter(ImageFilter.GaussianBlur(radius=1.2))
                 human_resized = np.array(human_im)
+
+            # Collar / neckline protection: For tops/outerwear/dresses, prevent head mask
+            # from dilating downward into the garment collar / lapel
+            if norm_cat in {"top", "outerwear", "dress"} and mask_resized is not None:
+                top_rows = np.where(mask_resized > 64)[0]
+                if len(top_rows) > 0:
+                    topmost_y = int(top_rows.min())
+                    # Zero out any head mask that bled down into the garment collar
+                    human_resized[topmost_y:, :] = np.where(
+                        mask_resized[topmost_y:, :] > 64,
+                        np.uint8(0),
+                        human_resized[topmost_y:, :]
+                    )
             
             # CRITICAL: garment_core must NEVER be chewed by human mask subtraction!
             if garment_core is not None and garment_core.any():
@@ -1735,21 +1741,9 @@ def apply_alpha_intersection(
                 repr(exc)[:120],
             )
 
-    # 5. Heal interior holes in fabric (crotch gaps, dark pattern voids)
-    # Applies to multi-garment body crops (pants, outerwear, fullbody). Tops are excluded
-    # to protect crew-neck collar openings from being sealed shut.
-    if norm_cat in {"bottom", "outerwear", "dress", "fullbody"}:
-        try:
-            from scipy import ndimage
-            alpha_bin = new_alpha > 32
-            # Close minor cracks/chatter
-            closed_alpha = ndimage.binary_closing(alpha_bin, structure=np.ones((5, 5), dtype=bool), iterations=1)
-            # Fill enclosed interior holes
-            filled_alpha = ndimage.binary_fill_holes(closed_alpha)
-            # Restore 255 opacity to enclosed holes
-            new_alpha = np.where(filled_alpha & (new_alpha < 128), np.uint8(255), new_alpha).astype(np.uint8)
-        except Exception as fill_exc:  # noqa: BLE001
-            logger.debug("apply_alpha_intersection: hole filling failed: %s", fill_exc)
+    # Note: SegFormer's coarse mask must NEVER force transparent background pixels (alpha < 128)
+    # to 255. Rembg provides studio-grade alpha boundaries; forcing opaque holes creates
+    # jagged staircases, sawtooth edges, and opaque blocks between legs or in necklines.
 
     # Phantom guard: if subtraction wiped out > 95% of solid alpha, preserve original rembg output.
     if float((new_alpha >= 128).mean()) < 0.05:
@@ -1796,18 +1790,23 @@ _DILATE_PCT_BY_CATEGORY: dict[str, float] = {
 _DILATE_PCT_DEFAULT = 0.04
 
 
-def _resolve_dilate_pct_for_category(category: str | None) -> float:
+def _resolve_dilate_pct_for_category(category: str | None, label: str | None = None) -> float:
     """Look up the per-category dilation budget.
 
     Case-insensitive, whitespace-insensitive. Falls back to
     ``_DILATE_PCT_DEFAULT`` (4.0 %) when the category is missing or not in table.
     """
-    if not category:
-        return _DILATE_PCT_DEFAULT
-    key = str(category).strip().lower()
-    if not key:
-        return _DILATE_PCT_DEFAULT
-    if key in _DILATE_PCT_BY_CATEGORY:
-        return _DILATE_PCT_BY_CATEGORY[key]
-    key_collapsed = key.replace(" ", "")
-    return _DILATE_PCT_BY_CATEGORY.get(key_collapsed, _DILATE_PCT_DEFAULT)
+    for candidate in (label, category):
+        if not candidate:
+            continue
+        key = str(candidate).strip().lower()
+        if not key:
+            continue
+        if key in _DILATE_PCT_BY_CATEGORY:
+            return _DILATE_PCT_BY_CATEGORY[key]
+        key_collapsed = key.replace(" ", "")
+        if key_collapsed in _DILATE_PCT_BY_CATEGORY:
+            return _DILATE_PCT_BY_CATEGORY[key_collapsed]
+        if any(w in key for w in ("sunglass", "glasses", "eyewear", "משקפ")):
+            return 0.015
+    return _DILATE_PCT_DEFAULT

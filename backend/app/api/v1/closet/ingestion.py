@@ -1541,6 +1541,7 @@ async def clean_item_background(
                     result["image_png"],
                     seg_mask,
                     category=item.get("category"),
+                    label=item.get("sub_category") or item.get("item_type") or item.get("title"),
                     human_mask=human_mask,
                 )
                 if maybe_refined:

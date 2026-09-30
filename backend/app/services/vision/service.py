@@ -1422,6 +1422,7 @@ class GarmentVisionService:
                         matted,
                         seg_mask_bbox,
                         category=det.get("kind"),
+                        label=det.get("label"),
                         human_mask=human_mask_bbox,
                         other_mask=other_mask_bbox,
                         is_single_item=is_single,
@@ -2711,7 +2712,7 @@ class GarmentVisionService:
             if any(k in cat_labels for k in ("skirt", "dress")):
                 return "women"
 
-        return resolve_garment_gender(self.user_gender)
+        return None
 
     async def analyze_outfits_stream(
         self,
@@ -3048,6 +3049,16 @@ class GarmentVisionService:
                         analysis["provider_used"] = assembled.get("provider_used", "gemma")
                         analysis["model_used"] = assembled.get("model_used", "gemma-4-e2b-q4_k_m")
 
+                        if _is_unidentifiable(analysis):
+                            logger.info("analyze_outfits_stream: skipping unidentifiable/non-clothing item at slot %d (%s)", slot_idx, analysis.get("title"))
+                            yield {
+                                "type": "item_skip",
+                                "index": slot_idx,
+                                "image_index": image_idx,
+                                "reason": "non_clothing",
+                            }
+                            continue
+
                         needs_reconstruction = False
                         reasons: list[str] = []
                         if should_reconstruct is not None:
@@ -3208,8 +3219,6 @@ class GarmentVisionService:
                             if not analysis.get("title"):
                                 analysis["title"] = "Unnamed garment"
                             analysis = _coerce_enums(analysis, user_gender=eff_gender, model_gender=item_mg)
-                            if item_mg in ("men", "women"):
-                                analysis["gender"] = item_mg
                             _enforce_segformer_category(
                                 analysis,
                                 segformer_kind=det.get("kind") or det.get("category"),
@@ -3219,6 +3228,16 @@ class GarmentVisionService:
                             )
                             analysis["provider_used"] = assembled.get("provider_used", "gemma")
                             analysis["model_used"] = assembled.get("model_used", "gemma-4-e2b-q4_k_m")
+
+                            if _is_unidentifiable(analysis):
+                                logger.info("analyze_outfits_stream: skipping unidentifiable/non-clothing item at slot %d (%s)", slot_idx, analysis.get("title"))
+                                yield {
+                                    "type": "item_skip",
+                                    "index": slot_idx,
+                                    "image_index": image_idx,
+                                    "reason": "non_clothing",
+                                }
+                                continue
 
                             needs_reconstruction = False
                             reasons: list[str] = []
@@ -3346,6 +3365,16 @@ class GarmentVisionService:
                                 repr(exc)[:160],
                             )
 
+                    if _is_unidentifiable(analysis):
+                        logger.info("analyze_outfits_stream: skipping unidentifiable/non-clothing item at slot 0 (%s)", analysis.get("title"))
+                        yield {
+                            "type": "item_skip",
+                            "index": 0,
+                            "image_index": image_idx,
+                            "reason": "non_clothing",
+                        }
+                        return
+
                     meta_crop = items_meta[0] if items_meta else {}
                     yield {
                         "type": "item",
@@ -3442,8 +3471,16 @@ class GarmentVisionService:
                                     analysis["gender"] = item_mg
                                 analysis = _coerce_single_garment(analysis, user_gender=eff_gender, model_gender=item_mg, language=language)
                                 analysis = _coerce_enums(analysis, user_gender=eff_gender, model_gender=item_mg)
-                                if item_mg in ("men", "women"):
-                                    analysis["gender"] = item_mg
+
+                                if _is_unidentifiable(analysis):
+                                    logger.info("analyze_outfits_stream: skipping unidentifiable/non-clothing item at slot %d (%s)", slot_idx, analysis.get("title"))
+                                    yield {
+                                        "type": "item_skip",
+                                        "index": slot_idx,
+                                        "image_index": image_idx,
+                                        "reason": "non_clothing",
+                                    }
+                                    continue
 
                                 needs_reconstruction = False
                                 reasons: list[str] = []
@@ -3536,8 +3573,16 @@ class GarmentVisionService:
                                     fallback_analysis["gender"] = item_mg
                                 fallback_analysis = _coerce_single_garment(fallback_analysis, user_gender=eff_gender, model_gender=item_mg, language=language)
                                 fallback_analysis = _coerce_enums(fallback_analysis, user_gender=eff_gender, model_gender=item_mg)
-                                if item_mg in ("men", "women"):
-                                    fallback_analysis["gender"] = item_mg
+
+                                if _is_unidentifiable(fallback_analysis):
+                                    logger.info("analyze_outfits_stream: skipping unidentifiable/non-clothing item at slot %d (%s)", slot_idx, fallback_analysis.get("title"))
+                                    yield {
+                                        "type": "item_skip",
+                                        "index": slot_idx,
+                                        "image_index": image_idx,
+                                        "reason": "non_clothing",
+                                    }
+                                    continue
 
                                 meta_crop = items_meta[slot_idx] if slot_idx < len(items_meta) else {}
                                 yield {

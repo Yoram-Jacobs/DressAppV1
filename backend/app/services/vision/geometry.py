@@ -315,13 +315,23 @@ def _is_unidentifiable(analysis: dict[str, Any] | None) -> bool:
     item_type = (analysis.get("item_type") or "").lower().strip()
     caption = (analysis.get("caption") or "").lower().strip()
 
+    combined_text = f"{title} {name} {sub_category} {item_type} {caption}".lower()
+
     if any(s.startswith(p) for s in (sub_category, item_type) for p in ("non-clothing", "non_clothing")):
         return True
-    if any(s in ("water bottle", "plastic bottle", "bottle", "disposable bottle") for s in (sub_category, item_type)):
+    
+    NON_CLOTHING_OBJECT_KEYWORDS = (
+        "water bottle", "plastic bottle", "bottle", "disposable bottle", "water flask",
+        "tumbler", "drink cup", "beverage", "thermos", "drinking glass",
+        "smartphone", "cell phone", "mobile phone", "telephone", "iphone", "android phone",
+        "laptop", "tablet", "electronics", "keys", "keychain", "car keys",
+        "coffee mug", "coffee cup", "tea cup", "soda can", "aluminum can",
+        "handheld object", "bare skin", "furniture", "book", "umbrella stand",
+    )
+    if any(w in combined_text for w in NON_CLOTHING_OBJECT_KEYWORDS):
         return True
+
     if any(t.startswith(p) for t in (title, name) for p in ("non-clothing", "non clothing")):
-        return True
-    if any(w in title or w in name for w in ("water bottle", "plastic water bottle", "disposable water bottle")):
         return True
 
     GIVE_UP_PHRASES = (
@@ -335,12 +345,13 @@ def _is_unidentifiable(analysis: dict[str, Any] | None) -> bool:
         "no garment",
         "no clothing",
         "non-clothing",
+        "non_clothing",
         "unknown garment",
         "unknown item",
+        "bare body",
+        "only skin",
     )
-    if any(p in title for p in GIVE_UP_PHRASES):
-        return True
-    if any(p in caption for p in GIVE_UP_PHRASES):
+    if any(p in combined_text for p in GIVE_UP_PHRASES):
         return True
     if not item_type and not sub_category:
         return True
