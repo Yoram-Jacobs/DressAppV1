@@ -140,20 +140,18 @@ async def _call_gemma_space(
 
 
 SYSTEM_PROMPT = (
-    "Output raw JSON only ({...} or [{...}]). No thinking tags, markdown, or intro. "
-    "Analyze each visible garment in concise merchandisable detail.\n\n"
-    "Rules:\n"
-    "• sub_category: Specific cut ('Shirt','T-Shirt','Sweater','Jeans','Pants','Skirt','Sneakers'). Never generic 'Top'/'Bottom'.\n"
-    "• item_type: Styling cut ('Crew-Neck T-Shirt','Skinny Jeans'). Must differ from sub_category.\n"
-    "• caption: A concise 1-2 sentence description highlighting specific visual details (style, cut, color, pattern, texture, silhouette). Must be a complete, grammatically closed sentence ending with a period. Never cut off or end with a comma. Never generic filler.\n"
-    "• dress_code: Formality level ('casual', 'smart-casual', 'business', 'formal', 'athletic', 'loungewear'). Analyze every garment carefully: button-down shirts, tailored shirts, blazers, pencil skirts, elegant blouses, and suits are 'smart-casual' or 'business'; formal gowns and tuxedos are 'formal'; gym tanks, leggings, and sports gear are 'athletic'; hoodies, sweatpants, and sleepwear are 'loungewear'; casual tees, casual shorts, and everyday denim are 'casual'. Do NOT default everything to casual.\n"
-    "• gender: 'women' for feminine cuts/styles (crop tops, blouses, skirts, dresses, heels, bras, floral tees, floral tops, lace shirts); 'men' for menswear/masculine cuts; 'unisex' for neutral activewear, tank tops, standard plain tees, sneakers, bags; 'kids' for children's items. If worn by an identifiable model, standard cuts align with the model's apparent gender. If flat-lay or hanger, strictly evaluate garment silhouette and pattern. Never default to 'men'.\n"
-    "• colors: [{\"name\": str, \"pct\": int}] summing to 100. Specific shades ('Burgundy','Navy','Olive','Light Blue'). Never omit pct.\n"
-    "• fabric_materials: [{\"name\": str, \"pct\": int}] summing to 100 (e.g. [{\"name\": \"Cotton\", \"pct\": 100}]). Never omit pct.\n"
-    "• pattern: 'printed' for graphic tees, text, logos, artwork, front prints; 'geometric' for repeating weave, texture, heathering, waffle; 'striped'|'plaid'|'floral'; 'solid' only if plain & unprinted.\n"
-    "• text/logos: Read lettering & emblems accurately (e.g. 'American Eagle' = eagle/עיט, not deer/אייל).\n"
-    "• season: ['spring'|'summer'|'fall'|'winter'|'all']. Short-sleeve/linen=['summer']; wool/down=['fall','winter'].\n"
-    "• non-clothing items: If an image/crop is NOT a wearable fashion item (e.g. handheld water bottle, drink cup, beverage, phone, electronics, food, book, furniture) or shows only bare skin, strictly set is_clothing: false, category: null, sub_category: 'non-clothing', item_type: 'non-clothing', title: 'Non-clothing item', caption: 'Non-clothing item'. Do NOT invent a garment or bag for bottles, phones, or objects. A handheld water bottle is NEVER a messenger bag."
+    "Output raw JSON only ({...} or [{...}]). No markdown/intro.\n"
+    "• sub_category: Specific cut ('Shirt','Sweater','Jeans','Pants','Skirt','Sneakers'). Never generic 'Top'/'Bottom'.\n"
+    "• item_type: Detailed cut ('Crew-Neck T-Shirt','Skinny Jeans'). Must differ from sub_category.\n"
+    "• caption: 1-2 concise sentences on cut, color, pattern, texture. Must be a complete sentence ending with a period.\n"
+    "• dress_code: 'casual'|'smart-casual'|'business'|'formal'|'athletic'|'loungewear'. Suits/blazers/button-downs='smart-casual'|'business'; gowns/tuxedos='formal'; sportswear='athletic'; sleepwear/sweats='loungewear'; casual tees/denim='casual'. Do not default to casual.\n"
+    "• gender: 'women' for feminine styles (blouses, floral tops/tees, skirts, dresses, heels); 'men' for masculine cuts; 'unisex' for neutral basics (plain tees, activewear, sneakers, bags); 'kids' for children. If worn by a visible model, align with model gender. If flat-lay/hanger, evaluate silhouette & pattern. Never default to 'men'.\n"
+    "• colors: [{\"name\": str, \"pct\": int}] summing to 100. Specific shades ('Navy','Olive','Burgundy'). Never omit pct.\n"
+    "• fabric_materials: [{\"name\": str, \"pct\": int}] summing to 100. Never omit pct.\n"
+    "• pattern: 'printed' (graphics/logos), 'geometric' (textures/weave/heathering), 'striped'|'plaid'|'floral', 'solid' (plain unprinted).\n"
+    "• text/logos: Read accurately ('American Eagle'=eagle/עיט, not deer/אייל).\n"
+    "• season: ['spring'|'summer'|'fall'|'winter'|'all']. Linen/short-sleeve=['summer']; wool/down=['fall','winter'].\n"
+    "• non-clothing items: If not wearable fashion (bottles, cups, phones, bare skin), set is_clothing: false, category: null, sub_category: 'non-clothing', item_type: 'non-clothing', title: 'Non-clothing item', caption: 'Non-clothing item'. Bottles and handheld items are NEVER bags."
 )
 
 
@@ -162,9 +160,8 @@ SYSTEM_PROMPT = (
 # ─────────────────────────────────────────────────────────────────────
 SYSTEM_PROMPT_ONE_PASS_SUFFIX = (
     "\n\nInclude `region`: {\"bbox\": [ymin, xmin, ymax, xmax], \"confidence\": float, \"is_full_frame\": bool}.\n"
-    "• 0..1000 normalized grid (0=top/left, 1000=bottom/right).\n"
-    "• Flat lay/studio still: bbox=[0, 0, 1000, 1000], is_full_frame=true.\n"
-    "• Worn/multi: tight box on visible garment (exclude skin). Omit if >80% occluded."
+    "• 0..1000 grid. Flat lay: bbox=[0, 0, 1000, 1000], is_full_frame=true.\n"
+    "• Worn/multi: tight box on garment (exclude skin). Omit if >80% occluded."
 )
 
 
@@ -386,9 +383,8 @@ def _user_prompt(code: str | None, user_gender: str | None = None) -> str:
     if code == "en":
         return (
             "Analyze photo. Return raw JSON (1 object or array). No commentary.\n"
-            f"Rules: sub_category != item_type; specific shades; graphic/print/logo=pattern:'printed'; floral=pattern:'floral'; textured=pattern:'geometric'; "
-            f"dress_code: analyze formality ('casual','smart-casual','business','formal','athletic','loungewear'); "
-            f"gender: analyze garment criteria ('women' for floral/feminine/blouses, 'men' for masculine cuts, 'unisex' for neutral activewear/basics; {fallback_gender_hint}; never default to 'men')."
+            f"sub_category != item_type; pattern: 'printed'|'floral'|'geometric'|'solid'; dress_code: formality; "
+            f"gender: criteria ('women' for floral/feminine/blouses, 'men' for masculine cuts, 'unisex' for neutral; {fallback_gender_hint}; never default to 'men')."
         )
 
     lang_name = _LANG_NAMES.get(code, code)
@@ -396,31 +392,27 @@ def _user_prompt(code: str | None, user_gender: str | None = None) -> str:
         fallback_he = f"אם ניטרלי/לא ודאי, היעזר במגדר המשתמש '{norm_gender}'" if norm_gender != "unisex" else "אם לא ודאי, 'unisex'"
         return (
             "**OUTPUT LANGUAGE: Hebrew (עברית)**\n"
-            "All string values (name, caption, tags, sub_category, item_type, colors, materials) in fluent modern Hebrew (חולצת טי, ג'ינס). No diacritics.\n"
-            f"• sub_category != item_type; specific colors (תכלת, כחול כהה, בורדו); graphic/print/logo=pattern:'printed'; פרחוני=pattern:'floral'; "
-            f"dress_code: נתח רמת רשמיות ('casual','smart-casual','business','formal','athletic','loungewear'); "
-            f"מגדר: נתח לפי גזרה והדפס ('women' לפרחוני/נשי/בלוזות, 'men' לגברי, 'unisex' לפריטים ניטרליים; {fallback_he}; לעולם אל תניח אוטומטית 'men').\n"
-            "• Graphic text/logos: Read accurately ('AMERICAN EAGLE' = עיט/נשר, NEVER deer/אייל). All tags in Hebrew.\n"
-            "• JSON keys and enum values stay in English. Return raw JSON (1 object or array). No commentary."
+            "All strings in fluent modern Hebrew (חולצת טי, ג'ינס). Keys and enum values in English.\n"
+            f"• sub_category != item_type; פרחוני=pattern:'floral'; dress_code: רשמיות; "
+            f"מגדר: נתח גזרה והדפס ('women' לפרחוני/נשי/בלוזות, 'men' לגברי, 'unisex' לפריטים ניטרליים; {fallback_he}; לעולם אל תניח אוטומטית 'men').\n"
+            "• Graphic text: 'AMERICAN EAGLE'=עיט/נשר (not deer). Return raw JSON."
         )
     elif code == "ar":
         fallback_ar = f"إذا كان غير مؤكد، استخدم '{norm_gender}'" if norm_gender != "unisex" else "إذا كان غير مؤكد، 'unisex'"
         return (
             "**OUTPUT LANGUAGE: Arabic (العربية)**\n"
-            "All string values (name, caption, tags, sub_category, item_type, colors, materials) in fluent modern Arabic.\n"
-            f"• sub_category != item_type; textured=pattern:'geometric'; floral=pattern:'floral'; "
-            f"dress_code: analyze formality ('casual','smart-casual','business','formal','athletic','loungewear'); "
-            f"gender: analyze garment criteria ('women' for floral/feminine, 'men' for masculine, 'unisex' for neutral; {fallback_ar}; never default to 'men').\n"
-            "• JSON keys and enum values stay in English. Return raw JSON (1 object or array). No commentary."
+            "All strings in fluent Arabic. Keys and enum values in English.\n"
+            f"• sub_category != item_type; dress_code: formality; "
+            f"gender: criteria ('women' for floral/feminine, 'men' for masculine, 'unisex' for neutral; {fallback_ar}; never default to 'men').\n"
+            "• Return raw JSON."
         )
     else:
         return (
             f"**OUTPUT LANGUAGE: {lang_name} ({code})**\n"
-            f"All string values (name, caption, tags, sub_category, item_type, colors, materials) in fluent {lang_name}.\n"
-            f"• sub_category != item_type; textured=pattern:'geometric'; floral=pattern:'floral'; "
-            f"dress_code: analyze formality ('casual','smart-casual','business','formal','athletic','loungewear'); "
-            f"gender: analyze garment criteria ('women' for floral/feminine, 'men' for masculine, 'unisex' for neutral; {fallback_gender_hint}; never default to 'men').\n"
-            "• JSON keys and enum values stay in English. Return raw JSON (1 object or array). No commentary."
+            f"All strings in fluent {lang_name}. Keys and enum values in English.\n"
+            f"• sub_category != item_type; dress_code: formality; "
+            f"gender: criteria ('women' for floral/feminine, 'men' for masculine, 'unisex' for neutral; {fallback_gender_hint}; never default to 'men').\n"
+            "• Return raw JSON."
         )
 
 
@@ -496,12 +488,11 @@ GROUP_ANALYZE_SYSTEM_PROMPT = (
 
 
 DETECT_SYSTEM_PROMPT = (
-    "Detect visible wearable fashion items (clothing garments, outerwear, footwear, real wearable bags/backpacks, wearable accessories, jewelry). Ignore person body and background scene.\n"
-    "• DO NOT detect non-fashion handheld items: water bottles, cups, mugs, flasks, beverages, phones, keys, cameras, food, books, or background furniture. Only wearable items.\n"
-    "• Tight bbox [ymin, xmin, ymax, xmax] in 0..1000 grid. Pairs (shoes, earrings)=1 box for both. Bags=bag body only.\n"
-    "• No duplicate/part boxes. Return raw JSON:\n"
-    '{"items": [{"label": "name", "kind": "garment"|"outerwear"|"footwear"|"bag"|"accessory"|"jewelry", "bbox": [ymin, xmin, ymax, xmax]}]}\n'
-    'If uncertain, return full frame: {"items": [{"label": "garment", "kind": "garment", "bbox": [0, 0, 1000, 1000]}]}'
+    "Detect visible wearable fashion items (clothing, outerwear, footwear, bags, accessories, jewelry). Ignore body and background.\n"
+    "• Discard non-wearable items: water bottles, cups, flasks, phones, keys, cameras, food, furniture.\n"
+    "• Tight bbox [ymin, xmin, ymax, xmax] in 0..1000 grid. Pairs=1 box. Bags=bag body only. No duplicate boxes.\n"
+    'Return raw JSON: {"items": [{"label": "name", "kind": "garment"|"outerwear"|"footwear"|"bag"|"accessory"|"jewelry", "bbox": [ymin, xmin, ymax, xmax]}]}\n'
+    'If uncertain: {"items": [{"label": "garment", "kind": "garment", "bbox": [0, 0, 1000, 1000]}]}'
 )
 
 
@@ -607,48 +598,42 @@ def _build_batch_prompts(
         )
     else:
         norm_u = resolve_garment_gender(user_gender)
-        user_fallback_hint = f" If garment gender is completely uncertain or neutral basic, use user profile gender '{norm_u}'." if norm_u in ("men", "women") else ""
+        user_fallback_hint = f" If uncertain/basic, use '{norm_u}'." if norm_u in ("men", "women") else ""
         gender_rule = (
-            "• Garment gender classification: Analyze garment criteria strictly. "
-            "Feminine cuts/styles (crop tops, floral blouses, floral tops/tees, skirts, dresses, heels, bras) must be 'women'. "
-            "Masculine tailoring/cuts must be 'men'. "
-            "Activewear tanks, singlets, plain t-shirts, sneakers, and bags are 'unisex'."
-            f"{user_fallback_hint} Never use a default gender; NEVER default to 'men'.\n"
+            "• Garment gender: Analyze criteria strictly ('women' for feminine/floral, 'men' for masculine cuts, 'unisex' for neutral basics)."
+            f"{user_fallback_hint} Never default to 'men'.\n"
         )
 
     hint_block = ""
     if n > 1 and kind_hints and len(kind_hints) == n:
-        bullets: list[str] = []
-        for i, k in enumerate(kind_hints, 1):
-            if not k:
-                continue
-            human = _SEGFORMER_KIND_HUMAN_LABEL.get(k.strip().lower())
-            if not human:
-                continue
-            bullets.append(f"  - Image {i}: {human}")
+        bullets = [
+            f"  - Image {i}: {human}"
+            for i, k in enumerate(kind_hints, 1)
+            if k and (human := _SEGFORMER_KIND_HUMAN_LABEL.get(k.strip().lower()))
+        ]
         if bullets:
             hint_block = (
-                "\nCROP CATEGORY HINTS:\n"
+                "\nCROP HINTS:\n"
                 + "\n".join(bullets)
-                + "\nUse hints as category guidance for clothing items, but discard non-clothing objects (e.g. water bottles, cups, phones) as non-clothing with is_clothing: false."
+                + "\nDiscard non-clothing objects (bottles/cups/phones) with is_clothing: false."
             )
-    user_text = f"{gender_rule}Analyze {n} crop(s) in order. For each crop image [0..{n-1}], return a JSON object with 'slot_index': i. Return a JSON array of {n} objects matching GarmentAnalysis schema."
+
+    user_text = f"Analyze {n} crop(s) in order [0..{n-1}]. Return a JSON array of {n} objects with 'slot_index'."
     code = (language or "en").lower()
     if code != "en":
         lang_name = _LANG_NAMES.get(code, code)
         if code in ("he", "iw"):
-            directive = "**OUTPUT LANGUAGE: Hebrew (עברית).** Strings in fluent modern Hebrew. Keys/enums in English.\n"
+            directive = "**OUTPUT LANGUAGE: Hebrew (עברית).** Strings in fluent Hebrew. Keys/enums in English.\n"
         elif code == "ar":
-            directive = "**OUTPUT LANGUAGE: Arabic (العربية).** Strings in fluent modern Arabic. Keys/enums in English.\n"
+            directive = "**OUTPUT LANGUAGE: Arabic (العربية).** Strings in fluent Arabic. Keys/enums in English.\n"
         else:
             directive = f"**OUTPUT LANGUAGE: {lang_name} ({code}).** Strings in fluent {lang_name}. Keys/enums in English.\n"
         user_text = directive + user_text
 
     system_prompt = (
         _build_system_prompt(one_pass=False, user_gender=norm_gender)
-        + _language_directive(language)
-        + f"\nBATCH: Analyze {n} crops in order (Image 1..{n}, indices 0..{n-1}). Return raw JSON array of EXACTLY {n} objects matching GarmentAnalysis schema with 'slot_index' set to the corresponding 0-based image index. No extra text."
-        + (f"\n{gender_rule}" if gender_rule else "")
+        + f"\nBATCH: Analyze {n} crops (indices 0..{n-1}). Return JSON array of {n} objects with 'slot_index'.\n"
+        + gender_rule
         + hint_block
     )
     return system_prompt, user_text
@@ -810,12 +795,12 @@ async def call_gemma_space_stream_attributes(
                 mapped_cat = "Accessories"
 
             if mapped_cat:
-                user_hints.append(f"SEGMENTATION: Crop is '{mapped_cat}'. Describe this item only.")
+                user_hints.append(f"Crop: '{mapped_cat}'. Describe this item only.")
 
         if "bag" in lbl_low or segformer_category == "bag":
-            user_hints.append("RULE: Wearable bags only (handbag, backpack, tote). If the item is a water bottle, drink container, phone, or handheld object, set is_clothing: false and sub_category='non-clothing'.")
+            user_hints.append("RULE: Bags only. Water bottles/phones/objects: set is_clothing: false, sub_category='non-clothing'.")
         elif ("shoe" in lbl_low or segformer_category == "footwear") and "boot" not in lbl_low:
-            user_hints.append("RULE: Footwear item. Low-cut/athletic/canvas/casual sub_category='Sneakers'|'Shoes' (not 'Boots').")
+            user_hints.append("RULE: Footwear. Low-cut/athletic: sub_category='Sneakers'|'Shoes'.")
 
         user_text = _user_prompt(language, user_gender=user_gender)
         if user_hints:
