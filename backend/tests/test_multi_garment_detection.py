@@ -528,6 +528,133 @@ def test_apply_alpha_intersection_preserves_smooth_edges_and_no_chewing():
     assert (alpha > 128).sum() > 8000, "Garment area should be well preserved"
 
 
+def test_other_mask_suppresses_adjacent_garment_without_chewing_target_hem():
+    """Verify that other_mask cleanly suppresses an adjacent belt/waistband without chewing the shirt hem."""
+    from app.services.clothing_parser import apply_alpha_intersection
+    from PIL import Image
+    import io
+
+    H, W = 200, 150
+    # rembg output: shirt (y: 20..120) + belt/pants (y: 121..180) both opaque
+    img = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+    for y in range(20, 180):
+        for x in range(30, 120):
+            img.putpixel((x, y), (250, 250, 250, 255))
+    buf = io.BytesIO()
+    img.save(buf, format="PNG")
+    matted_bytes = buf.getvalue()
+
+    # Shirt mask
+    shirt_mask = np.zeros((H, W), dtype=np.uint8)
+    shirt_mask[20:120, 30:120] = 1
+
+    # Adjacent belt/pants mask
+    belt_mask = np.zeros((H, W), dtype=np.uint8)
+    belt_mask[121:180, 30:120] = 1
+
+    result_bytes = apply_alpha_intersection(
+        matted_bytes,
+        seg_mask_bbox=shirt_mask,
+        other_mask=belt_mask,
+        category="top",
+    )
+    assert result_bytes is not None
+    res_img = Image.open(io.BytesIO(result_bytes))
+    arr = np.array(res_img)
+    alpha = arr[:, :, 3]
+
+    # Shirt body and hem should remain opaque
+    assert alpha[60, 75] >= 240, "Shirt core must be fully opaque"
+    assert alpha[115, 75] >= 200, "Shirt hem must be preserved"
+    # Adjacent belt area should be cleanly suppressed to 0
+    assert alpha[145, 75] == 0, "Adjacent belt/pants must be excised"
+
+
+def test_collar_and_straps_not_guillotined():
+    """Verify narrow shoulder straps (row coverage < 30%) are not sliced off by a horizontal guillotine."""
+    from app.services.clothing_parser import apply_alpha_intersection
+    from PIL import Image
+    import io
+
+    H, W = 200, 150
+    img = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+    # Two narrow straps at top (x: 40..50 and 100..110, y: 15..45) -> row coverage is only 20px / 150px = 13%!
+    for y in range(15, 45):
+        for x in list(range(40, 50)) + list(range(100, 110)):
+            img.putpixel((x, y), (30, 30, 30, 255))
+    # Main shirt body (y: 45..150, x: 30..120)
+    for y in range(45, 150):
+        for x in range(30, 120):
+            img.putpixel((x, y), (30, 30, 30, 255))
+
+    buf = io.BytesIO()
+    img.save(buf, format="PNG")
+    matted_bytes = buf.getvalue()
+
+    top_mask = np.zeros((H, W), dtype=np.uint8)
+    for y in range(15, 45):
+        for x in list(range(40, 50)) + list(range(100, 110)):
+            top_mask[y, x] = 1
+    top_mask[45:150, 30:120] = 1
+
+    human_mask = np.zeros((H, W), dtype=np.uint8)
+    human_mask[0:14, 50:100] = 1  # head/neck above the garment
+
+    result_bytes = apply_alpha_intersection(
+        matted_bytes,
+        seg_mask_bbox=top_mask,
+        human_mask=human_mask,
+        category="top",
+    )
+    assert result_bytes is not None
+    res_img = Image.open(io.BytesIO(result_bytes))
+    arr = np.array(res_img)
+    alpha = arr[:, :, 3]
+
+    # Verify shoulder straps are NOT guillotined
+    assert alpha[30, 45] > 0, "Left shoulder strap must not be guillotined"
+    assert alpha[30, 105] > 0, "Right shoulder strap must not be guillotined"
+
+
+def test_garment_core_protected_from_skin_chrominance():
+    """Verify that a camel/tan colored garment core is protected from false skin chrominance excision."""
+    from app.services.clothing_parser import apply_alpha_intersection
+    from PIL import Image
+    import io
+
+    H, W = 150, 150
+    # Camel color: R=195, G=150, B=115 (Cr~150, Cb~90 -> matches raw skin chrominance bucket!)
+    img = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+    for y in range(30, 120):
+        for x in range(30, 120):
+            img.putpixel((x, y), (195, 150, 115, 255))
+
+    buf = io.BytesIO()
+    img.save(buf, format="PNG")
+    matted_bytes = buf.getvalue()
+
+    mask = np.zeros((H, W), dtype=np.uint8)
+    mask[30:120, 30:120] = 1
+
+    human_mask = np.zeros((H, W), dtype=np.uint8)
+    human_mask[10:28, 50:100] = 1  # neck/head above garment
+
+    result_bytes = apply_alpha_intersection(
+        matted_bytes,
+        seg_mask_bbox=mask,
+        human_mask=human_mask,
+        category="top",
+    )
+    assert result_bytes is not None
+    res_img = Image.open(io.BytesIO(result_bytes))
+    arr = np.array(res_img)
+    alpha = arr[:, :, 3]
+
+    # Center of camel top must NOT have swiss-cheese holes
+    assert alpha[75, 75] == 255, "Camel garment core must remain fully opaque and protected from skin filter"
+
+
+
 
 
 

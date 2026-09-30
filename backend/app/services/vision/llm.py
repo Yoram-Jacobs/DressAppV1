@@ -145,7 +145,7 @@ SYSTEM_PROMPT = (
     "Rules:\n"
     "• sub_category: Specific cut ('Shirt','T-Shirt','Sweater','Jeans','Pants','Skirt','Sneakers'). Never generic 'Top'/'Bottom'.\n"
     "• item_type: Styling cut ('Crew-Neck T-Shirt','Skinny Jeans'). Must differ from sub_category.\n"
-    "• gender: 'men'|'women'|'unisex'|'kids', default to {DEFAULT_GENDER_HINT}.\n"
+    "• gender: 'women' for feminine cuts/styles (crop tops, blouses, skirts, dresses, heels, bras, feminine florals); 'men' for menswear/masculine cuts; 'unisex' for neutral activewear, tank tops, standard tees, sneakers, bags; 'kids' for children's items. If worn by an identifiable model, standard cuts align with the model's apparent gender.\n"
     "• colors: [{\"name\": str, \"pct\": int}] summing to 100. Specific shades ('Burgundy','Navy','Olive','Light Blue'). Never omit pct.\n"
     "• fabric_materials: [{\"name\": str, \"pct\": int}] summing to 100 (e.g. [{\"name\": \"Cotton\", \"pct\": 100}]). Never omit pct.\n"
     "• pattern: 'printed' for graphic tees, text, logos, artwork, front prints; 'geometric' for repeating weave, texture, heathering, waffle; 'striped'|'plaid'|'floral'; 'solid' only if plain & unprinted.\n"
@@ -377,7 +377,8 @@ def _user_prompt(code: str | None, user_gender: str | None = None) -> str:
     if code == "en":
         return (
             "Analyze photo. Return raw JSON (1 object or array). No commentary.\n"
-            f"Rules: sub_category != item_type; specific shades; graphic/print/logo=pattern:'printed'; textured=pattern:'geometric'; default to '{norm_gender}'."
+            f"Rules: sub_category != item_type; specific shades; graphic/print/logo=pattern:'printed'; textured=pattern:'geometric'; "
+            f"default to '{norm_gender}' for standard menswear/womenswear cuts (feminine cuts/styles='women', activewear tanks/singlets='unisex')."
         )
 
     lang_name = _LANG_NAMES.get(code, code)
@@ -385,7 +386,7 @@ def _user_prompt(code: str | None, user_gender: str | None = None) -> str:
         return (
             "**OUTPUT LANGUAGE: Hebrew (עברית)**\n"
             "All string values (name, caption, tags, sub_category, item_type, colors, materials) in fluent modern Hebrew (חולצת טי, ג'ינס). No diacritics.\n"
-            f"• sub_category != item_type; specific colors (תכלת, כחול כהה, בורדו); graphic/print/logo=pattern:'printed'; default to '{norm_gender}'.\n"
+            f"• sub_category != item_type; specific colors (תכלת, כחול כהה, בורדו); graphic/print/logo=pattern:'printed'; default to '{norm_gender}' for standard cuts (feminine cuts='women', activewear tanks/singlets='unisex').\n"
             "• Graphic text/logos: Read accurately ('AMERICAN EAGLE' = עיט/נשר, NEVER deer/אייל). All tags in Hebrew.\n"
             "• JSON keys and enum values stay in English. Return raw JSON (1 object or array). No commentary."
         )
@@ -393,14 +394,14 @@ def _user_prompt(code: str | None, user_gender: str | None = None) -> str:
         return (
             "**OUTPUT LANGUAGE: Arabic (العربية)**\n"
             "All string values (name, caption, tags, sub_category, item_type, colors, materials) in fluent modern Arabic.\n"
-            f"• sub_category != item_type; textured=pattern:'geometric'; default to '{norm_gender}'.\n"
+            f"• sub_category != item_type; textured=pattern:'geometric'; default to '{norm_gender}' for standard cuts (feminine cuts='women', activewear tanks/singlets='unisex').\n"
             "• JSON keys and enum values stay in English. Return raw JSON (1 object or array). No commentary."
         )
     else:
         return (
             f"**OUTPUT LANGUAGE: {lang_name} ({code})**\n"
             f"All string values (name, caption, tags, sub_category, item_type, colors, materials) in fluent {lang_name}.\n"
-            f"• sub_category != item_type; textured=pattern:'geometric'; default to '{norm_gender}'.\n"
+            f"• sub_category != item_type; textured=pattern:'geometric'; default to '{norm_gender}' for standard cuts (feminine cuts='women', activewear tanks/singlets='unisex').\n"
             "• JSON keys and enum values stay in English. Return raw JSON (1 object or array). No commentary."
         )
 
@@ -477,7 +478,8 @@ GROUP_ANALYZE_SYSTEM_PROMPT = (
 
 
 DETECT_SYSTEM_PROMPT = (
-    "Detect visible fashion items (garment, outerwear, footwear, bag, accessory, jewelry). Ignore person/background.\n"
+    "Detect visible wearable fashion items (clothing garments, outerwear, footwear, real wearable bags/backpacks, wearable accessories, jewelry). Ignore person body and background scene.\n"
+    "• DO NOT detect non-fashion handheld items: water bottles, cups, mugs, flasks, beverages, phones, keys, cameras, food, books, or background furniture. Only wearable items.\n"
     "• Tight bbox [ymin, xmin, ymax, xmax] in 0..1000 grid. Pairs (shoes, earrings)=1 box for both. Bags=bag body only.\n"
     "• No duplicate/part boxes. Return raw JSON:\n"
     '{"items": [{"label": "name", "kind": "garment"|"outerwear"|"footwear"|"bag"|"accessory"|"jewelry", "bbox": [ymin, xmin, ymax, xmax]}]}\n'
@@ -578,7 +580,12 @@ def _build_batch_prompts(
     norm_gender = resolve_garment_gender(user_gender)
     gender_rule = ""
     if norm_gender in ("men", "women"):
-        gender_rule = f"• All crops belong to the same outfit worn by a {norm_gender} model. Set gender='{norm_gender}' for each item unless strictly female-only (e.g. dress, skirt, bra).\n"
+        gender_rule = (
+            f"• Garment gender classification: evaluate the specific cut and styling of each garment. "
+            f"Feminine cuts/styles (crop tops, floral blouses, skirts, dresses, heels, bras, feminine florals) must be 'women'. "
+            f"Activewear tank tops, singlets, standard t-shirts, sneakers, and bags are 'unisex'. "
+            f"Menswear tailoring or standard cuts worn by a visible {norm_gender} model are '{norm_gender}'.\n"
+        )
 
     hint_block = ""
     if n > 1 and kind_hints and len(kind_hints) == n:

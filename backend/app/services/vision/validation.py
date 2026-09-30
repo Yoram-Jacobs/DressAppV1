@@ -35,23 +35,37 @@ _FEMININE_CUT_KEYWORDS = {
     "skirt", "blouse", "heels", "pumps", "stiletto", "stilettos",
     "knee-high boots", "over-the-knee boots", "thigh-high boots",
     "peplum", "sweetheart", "bra", "camisole", "corset", "lingerie", "halter",
+    "crop top", "cropped top", "croptop", "crop-top", "bustier", "bralette",
+    "tunic", "babydoll", "floral crop", "tube top", "slip dress",
     "בלוזה", "שמלה", "חצאית", "עקב", "עקבים", "חזייה", "מחוך",
+    "חולצת בטן", "טוניקה", "סטרפלס", "גופיית בטן",
 }
 _MASCULINE_CUT_KEYWORDS = {
     "boxers", "briefs", "tuxedo", "בוקסר", "טוקסידו",
 }
+_UNISEX_CUT_KEYWORDS = {
+    "athletic tank top", "athletic tank", "tank top", "singlet", "running tank",
+    "gym tank", "sports tank", "workout tank", "גופיית ספורט", "גופיית ריצה",
+}
 
 
-def is_distinctly_feminine_garment(cat: str | None, sub: str | None, itype: str | None) -> bool:
+def is_distinctly_feminine_garment(
+    cat: str | None,
+    sub: str | None,
+    itype: str | None,
+    name: str | None = None,
+    full_text: str | None = None,
+) -> bool:
     """Check if a garment is strictly feminine by silhouette/design."""
     cat_l = str(cat or "").strip().lower()
     sub_l = str(sub or "").strip().lower()
     it_l = str(itype or "").strip().lower()
-    joined = f"{cat_l} {sub_l} {it_l}"
+    extra_l = f"{name or ''} {full_text or ''}".lower()
+    joined = f"{cat_l} {sub_l} {it_l} {extra_l}"
 
     # Footwear, tops, bottoms, socks that have "dress" in the name are formal/dressy, NOT dresses
     is_formal_compound = any(
-        w in joined
+        w in f"{cat_l} {sub_l} {it_l}"
         for w in ("shoe", "shirt", "pant", "trouser", "sock", "vest", "boot", "suit", "jacket", "tie")
     )
 
@@ -69,7 +83,27 @@ def is_distinctly_feminine_garment(cat: str | None, sub: str | None, itype: str 
     if is_dress:
         return True
 
-    return any(c in sub_l or c in it_l for c in _FEMININE_CUT_KEYWORDS)
+    return any(c in joined for c in _FEMININE_CUT_KEYWORDS)
+
+
+def is_distinctly_unisex_garment(
+    cat: str | None,
+    sub: str | None,
+    itype: str | None,
+    name: str | None = None,
+    full_text: str | None = None,
+) -> bool:
+    """Check if a garment is distinctly unisex (activewear tanks, singlets, etc.)."""
+    cat_l = str(cat or "").strip().lower()
+    sub_l = str(sub or "").strip().lower()
+    it_l = str(itype or "").strip().lower()
+    extra_l = f"{name or ''} {full_text or ''}".lower()
+    joined = f"{cat_l} {sub_l} {it_l} {extra_l}"
+
+    # If it has a feminine cut (crop top, camisole, lingerie, etc.), it's not unisex
+    if any(k in joined for k in _FEMININE_CUT_KEYWORDS):
+        return False
+    return any(c in joined for c in _UNISEX_CUT_KEYWORDS)
 
 
 def is_distinctly_masculine_garment(cat: str | None, sub: str | None, itype: str | None) -> bool:
@@ -451,17 +485,18 @@ def _coerce_single_garment(
     raw_g = (res.get("gender") or "").strip().lower()
     g_val = _GENDER_ALIASES.get(raw_g, raw_g)
 
-    is_fem_cut = is_distinctly_feminine_garment(cat_lower, sub_lower, itype_lower)
+    is_fem_cut = is_distinctly_feminine_garment(cat_lower, sub_lower, itype_lower, name=res.get("name"), full_text=full_text)
     is_masc_cut = is_distinctly_masculine_garment(cat_lower, sub_lower, itype_lower)
+    is_unisex_cut = is_distinctly_unisex_garment(cat_lower, sub_lower, itype_lower, name=res.get("name"), full_text=full_text)
 
     if is_fem_cut:
         res["gender"] = "women"
     elif is_masc_cut:
         res["gender"] = "men"
+    elif is_unisex_cut or g_val == "unisex":
+        res["gender"] = "unisex"
     elif g_val == "kids":
         res["gender"] = "kids"
-    elif g_val == "unisex":
-        res["gender"] = "unisex"
     elif norm_user in ("men", "women"):
         # Anchor unisex/standard garments (pants, shoes, jackets, shirts) to the known wearer gender
         res["gender"] = norm_user
@@ -840,18 +875,20 @@ def _coerce_enums(
     itype_lower = str(parsed.get("item_type") or "").strip().lower()
     raw_g = str(parsed.get("gender") or "").strip().lower()
     g_val = _GENDER_ALIASES.get(raw_g, raw_g)
+    full_text_enum = f"{parsed.get('name', '')} {parsed.get('title', '')} {parsed.get('caption', '')}".lower()
 
-    is_fem_cut = is_distinctly_feminine_garment(cat_lower, sub_lower, itype_lower)
+    is_fem_cut = is_distinctly_feminine_garment(cat_lower, sub_lower, itype_lower, name=parsed.get("name"), full_text=full_text_enum)
     is_masc_cut = is_distinctly_masculine_garment(cat_lower, sub_lower, itype_lower)
+    is_unisex_cut = is_distinctly_unisex_garment(cat_lower, sub_lower, itype_lower, name=parsed.get("name"), full_text=full_text_enum)
 
     if is_fem_cut:
         parsed["gender"] = "women"
     elif is_masc_cut:
         parsed["gender"] = "men"
+    elif is_unisex_cut or g_val == "unisex":
+        parsed["gender"] = "unisex"
     elif g_val == "kids":
         parsed["gender"] = "kids"
-    elif g_val == "unisex":
-        parsed["gender"] = "unisex"
     elif norm_user in ("men", "women"):
         parsed["gender"] = norm_user
     elif g_val in _VALID_GENDER:

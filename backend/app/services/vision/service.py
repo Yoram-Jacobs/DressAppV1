@@ -234,6 +234,14 @@ class GarmentVisionService:
         if not isinstance(items, list):
             items = []
 
+        _NON_FASHION_KEYWORDS = frozenset({
+            "bottle", "water bottle", "cup", "mug", "flask", "tumbler", "can",
+            "phone", "smartphone", "iphone", "cellphone", "camera", "food",
+            "drink", "coffee", "beverage", "laptop", "tablet", "book", "keys",
+            "wallet", "furniture", "chair", "table", "umbrella", "groceries",
+            "pet", "dog", "cat",
+        })
+
         clean: list[dict[str, Any]] = []
         for it in items:
             if not isinstance(it, dict):
@@ -241,6 +249,9 @@ class GarmentVisionService:
             bbox = it.get("bbox")
             label = (it.get("label") or "garment").strip().lower()
             kind = (it.get("kind") or "garment").strip().lower()
+            if any(k in label or k in kind for k in _NON_FASHION_KEYWORDS):
+                logger.info("detect_items: ignoring non-fashion item '%s' (kind=%s)", label, kind)
+                continue
             if (
                 not isinstance(bbox, list)
                 or len(bbox) != 4
@@ -276,10 +287,20 @@ class GarmentVisionService:
                 logger.info("detect_items: Gemini detection fallback skipped: %s", exc)
 
         if parser_hits and gemini_hits:
+            _NON_FASHION_KEYWORDS = frozenset({
+                "bottle", "water bottle", "cup", "mug", "flask", "tumbler", "can",
+                "phone", "smartphone", "iphone", "cellphone", "camera", "food",
+                "drink", "coffee", "beverage", "laptop", "tablet", "book", "keys",
+                "wallet", "furniture", "chair", "table", "umbrella", "groceries",
+                "pet", "dog", "cat",
+            })
             merged = list(parser_hits)
             for gd in gemini_hits:
                 g_bbox = gd.get("bbox")
+                g_label = (gd.get("label") or "garment").lower()
                 g_kind = (gd.get("kind") or "garment").lower()
+                if any(k in g_label or k in g_kind for k in _NON_FASHION_KEYWORDS):
+                    continue
                 covered = False
                 for sh in parser_hits:
                     s_bbox = sh.get("bbox")
@@ -1059,6 +1080,21 @@ class GarmentVisionService:
                 )
                 if human_bbox is not None:
                     det["_human_mask_bbox"] = human_bbox
+
+            # Sliced union of all OTHER garments' masks in multi-item photos
+            if not is_single_item and len(useful) > 1 and img_size is not None:
+                other_masks = [d["mask"] for d in useful if d is not det and d.get("mask") is not None]
+                if other_masks:
+                    try:
+                        other_full = _np.maximum.reduce(other_masks)
+                        other_bbox = clothing_parser.slice_mask_to_bbox(
+                            other_full, img_size, box_px
+                        )
+                        if other_bbox is not None and bool(other_bbox.any()):
+                            det["_other_mask_bbox"] = other_bbox
+                    except Exception as _exc:  # noqa: BLE001
+                        pass
+
             if is_single_item:
                 det["is_single_item"] = True
             out.append((det, crop_bytes, "image/jpeg"))
@@ -1095,26 +1131,51 @@ class GarmentVisionService:
                 matted = await background_matting.matte_crop(cbytes)
             except Exception as exc:  # noqa: BLE001
                 logger.info(
-                    "auto-matte failed for %s: %s — keeping bbox crop",
+                    "auto-matte failed for %s: %s — checking mask fallback",
                     det.get("label"),
                     repr(exc)[:120],
                 )
                 matted = None
-            if not matted:
-                # rembg failed or returned empty — keep the JPEG bbox
-                # crop. JPEG has no alpha channel so the phantom
-                # guard below doesn't apply; the bbox crop is by
-                # construction non-empty (caller filters tiny crops).
-                det.pop("_mask_bbox", None)
-                det.pop("_human_mask_bbox", None)
-                matted_crops.append((det, cbytes, mime))
-                continue
+
             seg_mask_bbox = det.get("_mask_bbox")
             human_mask_bbox = det.get("_human_mask_bbox")
+            other_mask_bbox = det.get("_other_mask_bbox")
             is_single = det.get("is_single_item", False)
+
+            if not matted:
+                if seg_mask_bbox is not None and bool(seg_mask_bbox.any()):
+                    # Use SegFormer semantic mask directly to produce an alpha cutout!
+                    # Never ship a raw rectangular JPEG of asphalt/ground when we have the garment mask.
+                    try:
+                        from PIL import Image, ImageFilter
+                        import io
+                        im = Image.open(io.BytesIO(cbytes)).convert("RGBA")
+                        Hc, Wc = im.size[1], im.size[0]
+                        norm_seg = _cp._normalize_mask_to_u8(seg_mask_bbox)
+                        if norm_seg.shape != (Hc, Wc):
+                            mask_res = _np.array(Image.fromarray(norm_seg, mode="L").resize((Wc, Hc), Image.BILINEAR))
+                        else:
+                            mask_res = norm_seg
+                        alpha_im = Image.fromarray(mask_res, mode="L").filter(ImageFilter.GaussianBlur(radius=1.5))
+                        im.putalpha(alpha_im)
+                        buf = io.BytesIO()
+                        im.save(buf, format="PNG", optimize=True)
+                        matted = buf.getvalue()
+                        mime = "image/png"
+                    except Exception as exc:  # noqa: BLE001
+                        matted = None
+
+                if not matted:
+                    det.pop("_mask_bbox", None)
+                    det.pop("_human_mask_bbox", None)
+                    det.pop("_other_mask_bbox", None)
+                    matted_crops.append((det, cbytes, mime))
+                    continue
+
             if not is_single and (
                 seg_mask_bbox is not None
                 or human_mask_bbox is not None
+                or other_mask_bbox is not None
             ):
                 try:
                     refined = _cp.apply_alpha_intersection(
@@ -1122,6 +1183,7 @@ class GarmentVisionService:
                         seg_mask_bbox,
                         category=det.get("kind"),
                         human_mask=human_mask_bbox,
+                        other_mask=other_mask_bbox,
                     )
                     if refined:
                         matted = refined

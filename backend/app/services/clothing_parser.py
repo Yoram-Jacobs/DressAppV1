@@ -1461,14 +1461,15 @@ def apply_alpha_intersection(
     arr = np.array(im)
     Hc, Wc = arr.shape[:2]
 
-    # GarmentVision spec: generous fixed safety margins (16-48px)
+    # GarmentVision spec: calibrated safety margins (4-12px)
     # SegFormer acts as a coarse semantic envelope; rembg provides studio-grade alpha boundaries.
     _dilate_pct = _resolve_dilate_pct_for_category(category)
-    _DILATE_MIN_PX = 16
-    _DILATE_MAX_PX = 48
-    dilate_px = max(_DILATE_MIN_PX, min(_DILATE_MAX_PX, int(_dilate_pct * min(Hc, Wc))))
+    _DILATE_MIN_PX = 4
+    _DILATE_MAX_PX = 12
+    dilate_px = max(_DILATE_MIN_PX, min(_DILATE_MAX_PX, int(round(_dilate_pct * min(Hc, Wc) * 0.5))))
 
     mask_resized = None
+    garment_core = None
     if seg_mask_bbox is not None:
         norm_seg = _normalize_mask_to_u8(seg_mask_bbox)
         # Resize mask with bilinear interpolation so contours remain continuous (never jagged NEAREST blocks)
@@ -1498,6 +1499,17 @@ def apply_alpha_intersection(
                 Wc, Hc,
             )
             return None
+
+        # Build solid garment core to protect fabric center from false skin/adjacent item chewing
+        try:
+            from scipy import ndimage
+            mask_bin_core = mask_resized > 127
+            closed_core = ndimage.binary_closing(mask_bin_core, structure=np.ones((5, 5), dtype=bool), iterations=1)
+            filled_core = ndimage.binary_fill_holes(closed_core)
+            core_iter = max(2, min(6, int(round(min(Hc, Wc) * 0.01))))
+            garment_core = ndimage.binary_erosion(filled_core, iterations=core_iter)
+        except Exception:  # noqa: BLE001
+            garment_core = None
 
     # Initialize new_alpha with rembg's studio-grade alpha
     new_alpha = arr[:, :, 3].copy()
@@ -1532,6 +1544,7 @@ def apply_alpha_intersection(
     # 2. Human skin chrominance filter for torso/body garments.
     # SegFormer ATR-18 often misses skin pixels (hands/wrists on hip, collarbones,
     # cleavage, necks). If human_mask is present and this is a body garment, detect and excise bare skin.
+    # CRITICAL: Never chew holes into the garment core (protects beige, tan, camel, khaki, olive fabrics).
     norm_cat = (category or "").lower().replace(" ", "").replace("-", "")
     if has_human and norm_cat in {"top", "outerwear", "dress", "fullbody", "bottom"}:
         try:
@@ -1551,6 +1564,8 @@ def apply_alpha_intersection(
                 skin_im = Image.fromarray((is_skin * 255).astype(np.uint8), mode="L")
                 skin_im = skin_im.filter(ImageFilter.MaxFilter(3))
                 is_skin_dilated = np.array(skin_im) > 127
+                if garment_core is not None and garment_core.any():
+                    is_skin_dilated = is_skin_dilated & (~garment_core)
                 new_alpha = np.where(is_skin_dilated, np.uint8(0), new_alpha).astype(np.uint8)
         except Exception as exc:  # noqa: BLE001
             logger.info(
@@ -1558,47 +1573,70 @@ def apply_alpha_intersection(
                 repr(exc)[:120],
             )
 
-    # 3. Apply geometric head exclusion ONLY when a human wearer is present
+    # 3. Clean neckline boundary without horizontal guillotine.
+    # SegFormer's human_mask already excises head/neck in step 1. Only zero out rows strictly
+    # ABOVE the topmost garment pixel so narrow straps, V-necks, collars, and lapels are never chopped off.
     if has_human and mask_resized is not None and category and category.lower().replace(" ", "") in {
         "top", "outerwear", "dress", "fullbody",
     }:
         try:
-            row_mask = (mask_resized > 127)
-            row_cov = row_mask.mean(axis=1)
-            solid_rows = np.where(row_cov >= 0.30)[0]
-            if len(solid_rows) > 0:
-                first_solid_y = int(solid_rows[0])
-                cut_y = max(0, first_solid_y - int(0.05 * Hc))
+            top_rows = np.where(mask_resized > 64)[0]
+            if len(top_rows) > 0:
+                topmost_y = int(top_rows.min())
+                cut_y = max(0, topmost_y - 2)
                 if cut_y > 0:
-                    fade_h = min(8, cut_y)
-                    new_alpha[: cut_y - fade_h, :] = 0
-                    if fade_h > 0:
-                        fade_weights = np.linspace(0.0, 1.0, fade_h)[:, None]
-                        new_alpha[cut_y - fade_h : cut_y, :] = (
-                            new_alpha[cut_y - fade_h : cut_y, :].astype(float) * fade_weights
-                        ).astype(np.uint8)
+                    new_alpha[:cut_y, :] = 0
         except Exception as exc:  # noqa: BLE001
             logger.info(
-                "apply_alpha_intersection: head-exclusion subtraction skipped: %s",
+                "apply_alpha_intersection: neckline cleanup skipped: %s",
+                repr(exc)[:120],
+            )
+
+    # 3b. Suppress adjacent garments (belts, waistband, bag straps) using eroded other_mask
+    if other_mask is not None and bool(other_mask.any()):
+        try:
+            from scipy import ndimage
+            norm_other = _normalize_mask_to_u8(other_mask)
+            if norm_other.shape != (Hc, Wc):
+                other_resized = np.array(
+                    Image.fromarray(norm_other, mode="L").resize((Wc, Hc), Image.BILINEAR)
+                )
+            else:
+                other_resized = norm_other
+            
+            other_bin = other_resized > 127
+            if other_bin.any():
+                # Erode other_mask by 2px so boundary contact seam is never chewed
+                other_eroded = ndimage.binary_erosion(other_bin, iterations=2)
+                excise_mask = other_eroded
+                if garment_core is not None and garment_core.any():
+                    excise_mask = excise_mask & (~garment_core)
+                if excise_mask.any():
+                    excise_im = Image.fromarray((excise_mask * 255).astype(np.uint8), mode="L")
+                    excise_im = excise_im.filter(ImageFilter.GaussianBlur(radius=1.2))
+                    sub_weight = 1.0 - (np.array(excise_im).astype(float) / 255.0)
+                    new_alpha = (new_alpha.astype(float) * sub_weight).round().astype(np.uint8)
+        except Exception as exc:  # noqa: BLE001
+            logger.info(
+                "apply_alpha_intersection: other_mask subtraction failed: %s",
                 repr(exc)[:120],
             )
 
     # 4. Intersect with the smooth, dilated soft envelope of the target garment.
-    # CRITICAL: Only perform soft-mask intersection if a human wearer is present.
-    # By creating a smooth envelope with a generous safety margin (16-48px), rembg's clean boundary
-    # remains 100% UNTOUCHED (soft_envelope == 1.0), while distant non-garment areas (arms, legs,
-    # adjacent garments far outside the envelope) are smoothly zeroed out without any stair-step jaggedness.
-    if mask_resized is not None and has_human:
+    # Applies to all multi-item crops (including shoes on asphalt and flat-lays).
+    # With calibrated 4-12px dilation, rembg's clean boundary remains 100% UNTOUCHED
+    # while distant asphalt, parking lines, background floor, and scenery are zeroed out.
+    if mask_resized is not None:
         try:
             from scipy import ndimage
             mask_bin = mask_resized > 64
-            closed = ndimage.binary_closing(mask_bin, structure=np.ones((7, 7), dtype=bool), iterations=1)
+            closed = ndimage.binary_closing(mask_bin, structure=np.ones((5, 5), dtype=bool), iterations=1)
             filled = ndimage.binary_fill_holes(closed)
             
             filled_im = Image.fromarray((filled * 255).astype(np.uint8), mode="L")
             if dilate_px > 0:
                 filled_im = filled_im.filter(ImageFilter.MaxFilter(2 * dilate_px + 1))
-            filled_im = filled_im.filter(ImageFilter.GaussianBlur(radius=4.0))
+            filled_im = filled_im.filter(ImageFilter.GaussianBlur(radius=2.5))
             soft_envelope = np.array(filled_im).astype(float) / 255.0
             
             new_alpha = (new_alpha.astype(float) * soft_envelope).round().astype(np.uint8)

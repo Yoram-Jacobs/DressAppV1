@@ -149,3 +149,65 @@ def test_get_garment_vision_service_scopes_user_gender():
     svc_fem = get_garment_vision_service(user=fem_user)
     assert svc_fem is not None
     assert svc_fem.user_gender == "women"
+
+
+def test_crop_top_floral_coerced_to_women_even_if_user_men():
+    """Crop tops and feminine floral tops must resolve to women even if user is a man."""
+    crop_top = {
+        "name": "Light Blue Floral Print Crop Top",
+        "category": "top",
+        "sub_category": "t-shirt",
+        "item_type": "crop_top",
+        "gender": "men",
+    }
+    res = _coerce_single_garment(crop_top, user_gender="men")
+    assert res["gender"] == "women", f"Expected 'women', got '{res['gender']}'"
+
+    hebrew_crop = {
+        "name": "חולצת בטן פרחונית",
+        "category": "top",
+        "sub_category": "חולצת בטן",
+        "item_type": "חולצת בטן",
+        "gender": "men",
+    }
+    res_he = _coerce_single_garment(hebrew_crop, user_gender="men")
+    assert res_he["gender"] == "women"
+
+
+def test_athletic_tank_top_coerced_to_unisex():
+    """Athletic tank tops and running singlets are unisex activewear."""
+    tank_top = {
+        "name": "Red Athletic Tank Top",
+        "category": "top",
+        "sub_category": "tank top",
+        "item_type": "athletic_tank",
+        "gender": "men",
+    }
+    res = _coerce_single_garment(tank_top, user_gender="men")
+    assert res["gender"] == "unisex", f"Expected 'unisex', got '{res['gender']}'"
+
+    singlet = {
+        "name": "Pro Running Singlet",
+        "category": "top",
+        "sub_category": "singlet",
+        "item_type": "running_singlet",
+        "gender": "men",
+    }
+    res_singlet = _coerce_single_garment(singlet, user_gender="men")
+    assert res_singlet["gender"] == "unisex"
+
+
+def test_ai_explicit_women_or_unisex_not_overwritten_by_user_men():
+    """When AI explicitly classifies as women or unisex, user_gender='men' must not overwrite it."""
+    ai_women_item = {
+        "name": "Silky Patterned Tunic",
+        "category": "top",
+        "sub_category": "tunic",
+        "item_type": "patterned_tunic",
+        "gender": "women",
+    }
+    res = _coerce_single_garment(ai_women_item, user_gender="men")
+    assert res["gender"] == "women"
+
+    res_enum = _coerce_enums(ai_women_item, user_gender="men")
+    assert res_enum["gender"] == "women"
