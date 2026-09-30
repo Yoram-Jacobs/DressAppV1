@@ -1041,6 +1041,93 @@ def test_sunglasses_clean_cutout_removes_wearer_face_and_preserves_nose_bridge()
     assert res_arr[48, 50, 3] == 0, f"Nose gap between sunglasses lenses must have alpha=0, got {res_arr[48, 50, 3]}"
 
 
+@pytest.mark.anyio
+async def test_whole_image_matte_preserves_clean_edges_without_staircase_chewing(monkeypatch):
+    """Verify that _whole_image_matte produces pure studio rembg output without SegFormer staircase teeth."""
+    import io
+    from unittest.mock import AsyncMock
+    from PIL import Image
+    from app.services.vision.service import GarmentVisionService
+    import app.services.background_matting as bm_mod
+
+    # Create synthetic smooth circular t-shirt image
+    H, W = 200, 200
+    img = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+    # Draw smooth black circle (alpha=255 inside circle, 0 outside)
+    for y in range(H):
+        for x in range(W):
+            if (x - 100) ** 2 + (y - 100) ** 2 <= 50 ** 2:
+                img.putpixel((x, y), (20, 20, 20, 255))
+
+    buf = io.BytesIO()
+    img.save(buf, format="PNG")
+    clean_matted_bytes = buf.getvalue()
+
+    # Mock background_matting.matte_crop to return clean_matted_bytes
+    monkeypatch.setattr(bm_mod, "matte_crop", AsyncMock(return_value=clean_matted_bytes))
+
+    # Pass a coarse blocky SegFormer detection that extends outside the circle into the background
+    coarse_seg_mask = np.zeros((H, W), dtype=np.uint8)
+    coarse_seg_mask[30:170, 30:170] = 1  # Square box extending beyond the circle
+
+    detections = [
+        {"label": "Upper-clothes", "kind": "top", "category": "top", "mask": coarse_seg_mask, "bbox": [150, 150, 850, 850]}
+    ]
+
+    service = GarmentVisionService(provider="gemini")
+    result = await service._whole_image_matte(b"dummy_bytes", detections=detections)
+    assert result is not None, "Matte crop must succeed"
+
+    res_img = Image.open(io.BytesIO(result))
+    res_arr = np.array(res_img)
+
+    # Outside the circle at (35, 35), alpha MUST remain 0 (transparent background).
+    # It must NOT be forced to 255 by SegFormer's coarse square mask!
+    assert res_arr[35, 35, 3] == 0, f"Background outside circle was chewed/forced opaque! Got alpha={res_arr[35, 35, 3]}"
+    # Inside the circle at (100, 100), alpha must remain 255
+    assert res_arr[100, 100, 3] == 255, "Garment core must remain opaque"
+
+
+def test_apply_alpha_intersection_single_item_bypass():
+    """Verify that is_single_item=True bypasses mask intersection and returns pristine bytes."""
+    from app.services.clothing_parser import apply_alpha_intersection
+    dummy_bytes = b"fake_png_data"
+    coarse_mask = np.ones((50, 50), dtype=np.uint8)
+    res = apply_alpha_intersection(dummy_bytes, seg_mask_bbox=coarse_mask, is_single_item=True)
+    assert res == dummy_bytes, "Single item must bypass alpha intersection completely"
+
+
+def test_apply_alpha_intersection_preserves_crewneck_opening():
+    """Verify that crew-neck collar opening in tops is not filled in by hole filling."""
+    from app.services.clothing_parser import apply_alpha_intersection
+    import io
+    from PIL import Image
+
+    H, W = 120, 120
+    # Create top with neck opening ring
+    img = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+    for y in range(20, 100):
+        for x in range(20, 100):
+            # Leave neck hole at (y=25..45, x=45..75) transparent
+            if 25 <= y <= 45 and 45 <= x <= 75:
+                continue
+            img.putpixel((x, y), (30, 30, 30, 255))
+
+    buf = io.BytesIO()
+    img.save(buf, format="PNG")
+    top_bytes = buf.getvalue()
+
+    seg_mask = np.ones((H, W), dtype=np.uint8)
+
+    result = apply_alpha_intersection(top_bytes, seg_mask_bbox=seg_mask, category="top")
+    assert result is not None
+    res_img = Image.open(io.BytesIO(result))
+    arr = np.array(res_img)
+
+    # Neck opening center at (35, 60) must remain transparent (alpha == 0)
+    assert arr[35, 60, 3] == 0, f"Neck opening must not be sealed by hole filling! Got alpha={arr[35, 60, 3]}"
+
+
 
 
 

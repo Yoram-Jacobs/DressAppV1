@@ -1105,64 +1105,6 @@ class GarmentVisionService:
                     dt,
                     len(result),
                 )
-                if detections:
-                    try:
-                        import io
-                        import numpy as np
-                        from PIL import Image
-                        from scipy import ndimage
-
-                        combined_mask = None
-                        for d in detections:
-                            m = d.get("mask")
-                            if m is not None and isinstance(m, np.ndarray) and m.any():
-                                if combined_mask is None:
-                                    combined_mask = m.copy()
-                                else:
-                                    combined_mask = np.maximum(combined_mask, m)
-
-                        has_human = False
-                        for d in detections:
-                            hm = d.get("_human_mask_full")
-                            if hm is not None and isinstance(hm, np.ndarray) and hm.sum() >= 5000:
-                                has_human = True
-                                break
-
-                        if combined_mask is not None and not has_human:
-                            rgba_img = Image.open(io.BytesIO(result))
-                            W_r, H_r = rgba_img.size
-                            if combined_mask.shape != (H_r, W_r):
-                                mask_img = Image.fromarray((combined_mask > 0).astype(np.uint8) * 255)
-                                mask_resized = np.array(mask_img.resize((W_r, H_r), Image.NEAREST)) > 0
-                            else:
-                                mask_resized = combined_mask > 0
-
-                            # Bridge hairline gaps and fill enclosed interior holes (graphic prints, yin-yang cats, embroidery, contrast patterns)
-                            k = max(3, min(15, int(round(min(H_r, W_r) * 0.005)) | 1))
-                            closed = ndimage.binary_closing(mask_resized, structure=np.ones((k, k), dtype=bool), iterations=1)
-                            filled = ndimage.binary_fill_holes(closed)
-                            if filled is None:
-                                filled = closed
-
-                            # Erode by adaptive depth (2-8px) to obtain solid garment core while retaining sleeves/straps
-                            iter_count = max(2, min(8, int(round(min(H_r, W_r) * 0.01))))
-                            core_clothing = ndimage.binary_erosion(filled, iterations=iter_count)
-                            if core_clothing.any():
-                                arr = np.array(rgba_img)
-                                alpha = arr[:, :, 3]
-                                healed_alpha = np.where(core_clothing & (alpha < 128), 255, alpha).astype(np.uint8)
-                                if not np.array_equal(alpha, healed_alpha):
-                                    arr[:, :, 3] = healed_alpha
-                                    healed_img = Image.fromarray(arr, "RGBA")
-                                    out_buf = io.BytesIO()
-                                    healed_img.save(out_buf, format="PNG", optimize=True)
-                                    result = out_buf.getvalue()
-                                    logger.info(
-                                        "_whole_image_matte: healed %d eroded interior pixels using SegFormer clothing core",
-                                        int((core_clothing & (alpha < 128)).sum()),
-                                    )
-                    except Exception as exc:
-                        logger.debug("_whole_image_matte core healing failed: %s", exc)
                 try:
                     from app.services.background_matting import drop_disconnected_islands
                     result = drop_disconnected_islands(result, min_area_ratio=0.01)
@@ -1482,6 +1424,7 @@ class GarmentVisionService:
                         category=det.get("kind"),
                         human_mask=human_mask_bbox,
                         other_mask=other_mask_bbox,
+                        is_single_item=is_single,
                     )
                     if refined:
                         matted = refined
@@ -1492,43 +1435,6 @@ class GarmentVisionService:
                         det.get("label"),
                         repr(exc)[:120],
                     )
-            # Core healing: heal interior holes in dark/textured/patterned garments across both single and multi-item crops
-            if matted and seg_mask_bbox is not None:
-                try:
-                    import io
-                    import numpy as np
-                    from PIL import Image
-                    from scipy import ndimage
-                    rgba_img = Image.open(io.BytesIO(matted))
-                    W_r, H_r = rgba_img.size
-                    if seg_mask_bbox.shape != (H_r, W_r):
-                        mask_img = Image.fromarray((seg_mask_bbox > 0).astype(np.uint8) * 255)
-                        mask_resized = np.array(mask_img.resize((W_r, H_r), Image.BILINEAR)) > 127
-                    else:
-                        mask_resized = seg_mask_bbox > 0
-
-                    # Bridge hairline gaps and fill enclosed interior holes (graphic prints, yin-yang cats, embroidery, contrast patterns)
-                    k = max(3, min(15, int(round(min(H_r, W_r) * 0.005)) | 1))
-                    closed = ndimage.binary_closing(mask_resized, structure=np.ones((k, k), dtype=bool), iterations=1)
-                    filled = ndimage.binary_fill_holes(closed)
-                    if filled is None:
-                        filled = closed
-
-                    # Erode by adaptive depth (2-8px) to obtain solid garment core while retaining sleeves/straps
-                    iter_count = max(2, min(8, int(round(min(H_r, W_r) * 0.01))))
-                    core_clothing = ndimage.binary_erosion(filled, iterations=iter_count)
-                    if core_clothing.any():
-                        arr = np.array(rgba_img)
-                        alpha = arr[:, :, 3]
-                        healed_alpha = np.where(core_clothing & (alpha < 128), 255, alpha).astype(np.uint8)
-                        if not np.array_equal(alpha, healed_alpha):
-                            arr[:, :, 3] = healed_alpha
-                            healed_img = Image.fromarray(arr, "RGBA")
-                            out_buf = io.BytesIO()
-                            healed_img.save(out_buf, format="PNG", optimize=True)
-                            matted = out_buf.getvalue()
-                except Exception as exc:
-                    logger.debug("_matte_crops core healing failed: %s", exc)
             det.pop("_mask_bbox", None)
             det.pop("_human_mask_bbox", None)
             det.pop("_other_mask_bbox", None)

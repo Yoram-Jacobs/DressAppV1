@@ -687,6 +687,12 @@ def _postprocess_mask(mask: np.ndarray, keep_top_k: int = 1) -> np.ndarray:
             top_labels = np.argsort(sizes)[-keep_top_k:] + 1
             filled = np.isin(labeled, top_labels)
 
+    # 4) Curvature anti-aliasing: smooth out the 8-16px staircase steps from low-res SegFormer
+    if filled.any():
+        smooth_sigma = max(1.5, min(5.0, float(min(H, W)) * 0.003))
+        blurred = ndimage.gaussian_filter(filled.astype(float), sigma=smooth_sigma)
+        filled = blurred >= 0.5
+
     return filled.astype(np.uint8)
 
 
@@ -1075,6 +1081,12 @@ async def parse_garments(
         human_mask_full = np.isin(class_mask, list(human_class_ids)).astype(np.uint8)
         if not human_mask_full.any() or int(human_mask_full.sum()) < 150:
             human_mask_full = None
+        else:
+            from scipy import ndimage
+            h_h, h_w = human_mask_full.shape
+            smooth_sigma = max(1.5, min(5.0, float(min(h_h, h_w)) * 0.003))
+            human_blurred = ndimage.gaussian_filter(human_mask_full.astype(float), sigma=smooth_sigma)
+            human_mask_full = (human_blurred >= 0.5).astype(np.uint8)
     else:
         human_mask_full = None
 
@@ -1279,7 +1291,14 @@ async def parse_garments(
         elif cat in ("bottom", "pants", "skirt") or lbl in ("pants", "skirt"):
             if arm_class_ids and has_head:
                 arm_m = np.isin(class_mask, list(arm_class_ids)).astype(np.uint8)
-                garment_human_mask = arm_m if arm_m.any() and int(arm_m.sum()) >= 150 else None
+                if arm_m.any() and int(arm_m.sum()) >= 150:
+                    from scipy import ndimage
+                    h_h, h_w = arm_m.shape
+                    smooth_sigma = max(1.5, min(5.0, float(min(h_h, h_w)) * 0.003))
+                    arm_m = (ndimage.gaussian_filter(arm_m.astype(float), sigma=smooth_sigma) >= 0.5).astype(np.uint8)
+                    garment_human_mask = arm_m
+                else:
+                    garment_human_mask = None
             else:
                 garment_human_mask = None
         # 3. Tops, outerwear, dresses: head + arms (never legs)
@@ -1287,7 +1306,14 @@ async def parse_garments(
             upper_human_ids = head_class_ids | arm_class_ids
             if upper_human_ids and has_head:
                 up_m = np.isin(class_mask, list(upper_human_ids)).astype(np.uint8)
-                garment_human_mask = up_m if up_m.any() and int(up_m.sum()) >= 150 else None
+                if up_m.any() and int(up_m.sum()) >= 150:
+                    from scipy import ndimage
+                    h_h, h_w = up_m.shape
+                    smooth_sigma = max(1.5, min(5.0, float(min(h_h, h_w)) * 0.003))
+                    up_m = (ndimage.gaussian_filter(up_m.astype(float), sigma=smooth_sigma) >= 0.5).astype(np.uint8)
+                    garment_human_mask = up_m
+                else:
+                    garment_human_mask = None
             else:
                 garment_human_mask = None
         else:
@@ -1366,7 +1392,7 @@ def crop_with_mask(
     if mask.shape != (H, W):
         m_resized = np.array(
             Image.fromarray((mask * 255).astype(np.uint8), mode="L").resize(
-                (W, H), Image.NEAREST
+                (W, H), Image.BILINEAR
             )
         )
     else:
@@ -1477,12 +1503,18 @@ def apply_alpha_intersection(
     human_mask: np.ndarray | None = None,
     is_padded_canvas: bool = False,
     other_mask: np.ndarray | None = None,
+    is_single_item: bool = False,
 ) -> bytes | None:
     """Refine a rembg-matted PNG by AND-ing its alpha with a SegFormer mask.
     
+    If is_single_item is True, returns matted_png_bytes immediately without
+    modifying rembg's studio-grade alpha boundary.
     If seg_mask_bbox is None, still subtracts human_mask and other_mask to
     isolate non-SegFormer detections (e.g. Gemini-detected bags/accessories).
     """
+    if is_single_item:
+        return matted_png_bytes
+
     try:
         im = Image.open(io.BytesIO(matted_png_bytes)).convert("RGBA")
     except Exception:  # noqa: BLE001
@@ -1490,7 +1522,7 @@ def apply_alpha_intersection(
     arr = np.array(im)
     Hc, Wc = arr.shape[:2]
 
-    # GarmentVision spec: calibrated safety margins (4-12px)
+    # GarmentVision spec: calibrated safety margins (4-16px)
     # SegFormer acts as a coarse semantic envelope; rembg provides studio-grade alpha boundaries.
     norm_cat = (category or "").lower().replace(" ", "").replace("-", "")
     is_eyewear = bool(
@@ -1499,7 +1531,7 @@ def apply_alpha_intersection(
     )
     _dilate_pct = _resolve_dilate_pct_for_category(category)
     _DILATE_MIN_PX = 2 if is_eyewear else 4
-    _DILATE_MAX_PX = 4 if is_eyewear else 12
+    _DILATE_MAX_PX = 4 if is_eyewear else 16
     dilate_px = max(_DILATE_MIN_PX, min(_DILATE_MAX_PX, int(round(_dilate_pct * min(Hc, Wc) * 0.5))))
 
     mask_resized = None
@@ -1693,7 +1725,7 @@ def apply_alpha_intersection(
                 dilate_px = 2
             if dilate_px > 0:
                 filled_im = filled_im.filter(ImageFilter.MaxFilter(2 * dilate_px + 1))
-            filled_im = filled_im.filter(ImageFilter.GaussianBlur(radius=1.2 if is_eyewear else 2.5))
+            filled_im = filled_im.filter(ImageFilter.GaussianBlur(radius=1.2 if is_eyewear else 3.0))
             soft_envelope = np.array(filled_im).astype(float) / 255.0
             
             new_alpha = (new_alpha.astype(float) * soft_envelope).round().astype(np.uint8)
@@ -1703,8 +1735,10 @@ def apply_alpha_intersection(
                 repr(exc)[:120],
             )
 
-    # 5. Heal interior holes in fabric (crotch gaps, dark pattern voids, collar bites)
-    if norm_cat in {"top", "bottom", "outerwear", "dress", "fullbody"}:
+    # 5. Heal interior holes in fabric (crotch gaps, dark pattern voids)
+    # Applies to multi-garment body crops (pants, outerwear, fullbody). Tops are excluded
+    # to protect crew-neck collar openings from being sealed shut.
+    if norm_cat in {"bottom", "outerwear", "dress", "fullbody"}:
         try:
             from scipy import ndimage
             alpha_bin = new_alpha > 32
