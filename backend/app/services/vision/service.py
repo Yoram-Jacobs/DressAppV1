@@ -1272,6 +1272,7 @@ class GarmentVisionService:
         *,
         think: bool = False,
         user_gender: str | None = None,
+        model_gender: str | None = None,
     ) -> dict[str, Any] | None:
         """Analyse a single crop + (optionally) reconstruct.
 
@@ -1280,6 +1281,7 @@ class GarmentVisionService:
         whole outfit response.
         """
         eff_gender = resolve_garment_gender(user_gender) or self.user_gender
+        norm_mg = resolve_garment_gender(model_gender)
         async with sem:
             try:
                 analysis = await self.analyze(
@@ -1287,19 +1289,13 @@ class GarmentVisionService:
                     model=self.crop_model,
                     language=language,
                     think=think,
-                    user_gender=eff_gender,
+                    user_gender=norm_mg or eff_gender,
                 )
                 # Patch M21 — Apply SegFormer-anchored category
                 # enforcement on the per-crop path too, so any caller
                 # of ``_analyse_one_crop`` (per-crop loop, batched-
                 # failure fallback, single-item analyze) gets the same
-                # category sanity check as the batched paths. Layer 1
-                # (prompt hint) isn't available here because
-                # ``self.analyze`` is single-crop and we don't decorate
-                # its system prompt yet — but layer 2 (post-validate)
-                # is enough on its own; the prompt hint is just an
-                # is enough on its own; the prompt hint is just an
-                # optimisation.
+                # category sanity check as the batched paths.
                 _enforce_segformer_category(
                     analysis,
                     segformer_kind=det.get("kind"),
@@ -1307,6 +1303,9 @@ class GarmentVisionService:
                     is_single_item=det.get("is_single_item", False),
                     language=language,
                 )
+                if norm_mg in ("men", "women"):
+                    analysis["gender"] = norm_mg
+                    _coerce_enums(analysis, user_gender=eff_gender, model_gender=norm_mg)
             except Exception as exc:  # noqa: BLE001
                 logger.warning(
                     "crop analyze failed for label=%s: %s",
@@ -1382,6 +1381,7 @@ class GarmentVisionService:
         *,
         think: bool = False,
         user_gender: str | None = None,
+        model_gender: str | None = None,
     ) -> list[dict[str, Any]]:
         """Run :meth:`_analyse_one_crop` over every crop with bounded
         concurrency, then strip unidentifiable results.
@@ -1413,6 +1413,7 @@ class GarmentVisionService:
             return []
 
         eff_gender = resolve_garment_gender(user_gender) or self.user_gender
+        norm_mg = resolve_garment_gender(model_gender)
 
         # M18 — try batched single-call first. ``think`` is intentionally
         # not threaded into the batched path: the closet AddItem flow
@@ -1437,7 +1438,7 @@ class GarmentVisionService:
                     for d, _b, _m in crops
                 ]
                 batched_analyses = await self.analyze_batch(
-                    crop_bytes_list, language=language, kind_hints=kind_hints, user_gender=eff_gender,
+                    crop_bytes_list, language=language, kind_hints=kind_hints, user_gender=eff_gender, model_gender=norm_mg,
                 )
                 logger.info(
                     "_analyse_crops batched OK: %d crops in %.1fs (one Gemini call)",
@@ -1452,12 +1453,12 @@ class GarmentVisionService:
                 batched_analyses = None
 
         if batched_analyses is not None and len(batched_analyses) == len(crops):
-            results = await self._build_batched_results(crops, batched_analyses)
+            results = await self._build_batched_results(crops, batched_analyses, model_gender=norm_mg)
         else:
             sem = asyncio.Semaphore(6)
             results = await asyncio.gather(
                 *[
-                    self._analyse_one_crop(d, b, m, language, sem, think=think, user_gender=eff_gender)
+                    self._analyse_one_crop(d, b, m, language, sem, think=think, user_gender=eff_gender, model_gender=norm_mg)
                     for d, b, m in crops
                 ]
             )
@@ -1476,6 +1477,8 @@ class GarmentVisionService:
         self,
         crops: list[tuple[dict[str, Any], bytes, str]],
         analyses: list[dict[str, Any]],
+        *,
+        model_gender: str | None = None,
     ) -> list[dict[str, Any] | None]:
         """Materialise the per-crop result dicts from a batched analyze.
 
@@ -1492,6 +1495,7 @@ class GarmentVisionService:
         except Exception:  # noqa: BLE001
             should_reconstruct = None  # type: ignore[assignment]
 
+        norm_mg = resolve_garment_gender(model_gender)
         out: list[dict[str, Any] | None] = []
         for (det, crop_bytes, crop_mime), analysis in zip(crops, analyses):
             if not isinstance(analysis, dict):
@@ -1499,6 +1503,8 @@ class GarmentVisionService:
                 # for one slot — treat as if that slot failed and skip.
                 out.append(None)
                 continue
+            if norm_mg in ("men", "women"):
+                analysis["gender"] = norm_mg
             needs_reconstruction = False
             reconstruction_reasons: list[str] = []
             if should_reconstruct is not None:
@@ -1540,6 +1546,7 @@ class GarmentVisionService:
         language: str | None = None,
         kind_hints: list[str | None] | None = None,
         user_gender: str | None = None,
+        model_gender: str | None = None,
     ) -> list[dict[str, Any]]:
         """Patch M18 — Single Gemini call analysing N crops at once.
 
@@ -1574,10 +1581,11 @@ class GarmentVisionService:
             )
 
         eff_gender = resolve_garment_gender(user_gender) or self.user_gender
+        norm_mg = resolve_garment_gender(model_gender)
 
         # streaming paths emit equivalent prompts.
         system_prompt, user_text = _build_batch_prompts(
-            n=n, language=language, kind_hints=kind_hints, user_gender=eff_gender,
+            n=n, language=language, kind_hints=kind_hints, user_gender=eff_gender, model_gender=norm_mg,
         )
 
         # Build native google-genai user parts: text first, then each
@@ -1640,12 +1648,14 @@ class GarmentVisionService:
         results: list[dict[str, Any]] = []
         for slot_idx, entry in enumerate(parsed):
             try:
-                norm = _coerce_single_garment(entry, user_gender=eff_gender, language=language)
+                norm = _coerce_single_garment(entry, user_gender=eff_gender, model_gender=norm_mg, language=language)
                 if not norm.get("title") and norm.get("name"):
                     norm["title"] = norm["name"]
                 if not norm.get("title"):
                     norm["title"] = "Unnamed garment"
-                norm = _coerce_enums(norm, user_gender=eff_gender)
+                norm = _coerce_enums(norm, user_gender=eff_gender, model_gender=norm_mg)
+                if norm_mg in ("men", "women"):
+                    norm["gender"] = norm_mg
                 # Patch M21 — Layer 2 SegFormer-anchored category
                 # enforcement. Applied AFTER ``_coerce_enums`` so we
                 # only override values that survived enum coercion.
@@ -1679,6 +1689,7 @@ class GarmentVisionService:
         language: str | None = None,
         kind_hints: list[str | None] | None = None,
         user_gender: str | None = None,
+        model_gender: str | None = None,
     ) -> "AsyncIterator[tuple[int, dict[str, Any]]]":
         """Patch M19 — Streaming variant of :meth:`analyze_batch`.
 
@@ -1686,27 +1697,6 @@ class GarmentVisionService:
         each complete object in the JSON array, so the caller can push
         per-item results to the frontend as they arrive instead of
         waiting for the full N-element response.
-
-        Implementation
-        --------------
-        Bypasses ``LlmChat.send_message`` (which awaits a complete
-        response) and goes straight to ``litellm.acompletion`` with
-        ``stream=True``. We accumulate text deltas, run the
-        :func:`_scan_complete_json_objects` brace-counting parser
-        after every chunk, and yield each newly-completed object.
-
-        Robustness
-        ----------
-        * On any ``litellm`` / network exception we bubble it up — the
-          caller (``_analyse_crops`` via ``_iter_batched_results``)
-          falls back to the per-crop loop.
-        * If a chunk produces a malformed object (rare), the parser
-          silently drops it; we still yield the surviving objects.
-        * The final shape per yielded analysis matches
-          :meth:`analyze_batch` (``_coerce_single_garment`` +
-          ``_coerce_enums`` + ``provider_used``/``model_used``/
-          ``_batched`` tags) so downstream consumers don't need to
-          care which path produced the dict.
         """
         n = len(crops_bytes)
         if n == 0:
@@ -1717,20 +1707,15 @@ class GarmentVisionService:
             )
 
         eff_gender = resolve_garment_gender(user_gender) or self.user_gender
+        norm_mg = resolve_garment_gender(model_gender)
 
         # Native google-genai streaming. Builds the same system prompt /
         # user-text payload that ``analyze_batch`` uses (delegating to
         # :func:`_build_batch_prompts` keeps both batched paths in
         # lock-step), then drives ``client.stream_vision`` for
-        # incremental JSON deltas. The legacy
-        # ``litellm.acompletion(stream=True)`` path that routed via
-        # Emergent's proxy was the prime suspect for the May 2026
-        # streaming hang: the proxy buffered the full response before
-        # flushing, so the frontend's NDJSON reader saw nothing until
-        # the very end (or a 502 if Caddy's upstream timeout hit).
-        # Native streaming bypasses that.
+        # incremental JSON deltas.
         system_prompt, user_text = _build_batch_prompts(
-            n=n, language=language, kind_hints=kind_hints, user_gender=eff_gender,
+            n=n, language=language, kind_hints=kind_hints, user_gender=eff_gender, model_gender=norm_mg,
         )
 
         user_parts: list[Any] = [user_text]
@@ -1762,13 +1747,15 @@ class GarmentVisionService:
                 )
                 for raw_entry in new_objs:
                     try:
-                        norm = _coerce_single_garment(raw_entry, user_gender=eff_gender, language=language)
+                        norm = _coerce_single_garment(raw_entry, user_gender=eff_gender, model_gender=norm_mg, language=language)
                         if not norm.get("title") and norm.get("name"):
                             norm["title"] = norm["name"]
                         if not norm.get("title"):
                             norm["title"] = "Unnamed garment"
-                        norm = _coerce_enums(norm, user_gender=eff_gender)
-                        if not eff_gender and norm.get("gender") in ("men", "women"):
+                        norm = _coerce_enums(norm, user_gender=eff_gender, model_gender=norm_mg)
+                        if norm_mg in ("men", "women"):
+                            norm["gender"] = norm_mg
+                        elif not eff_gender and norm.get("gender") in ("men", "women"):
                             eff_gender = norm.get("gender")
                         # Patch M21 — Layer 2 SegFormer-anchored category
                         # enforcement on the streaming path. Applied
@@ -1868,23 +1855,37 @@ class GarmentVisionService:
             )
             detections = []
 
+        has_human_wearer = _detect_human_presence(detections)
+        photo_model_gender = None
+        if has_human_wearer:
+            photo_model_gender = await self.detect_model_gender(image_bytes, detections=detections)
+
         # 2) Fast-path: already-cropped product photo.
         is_single = (
-            (not _detect_human_presence(detections) and len(detections) <= 1)
+            (not has_human_wearer and len(detections) <= 1)
             or _looks_already_cropped(detections)
         )
         if is_single:
-            return await self._handle_already_cropped(
-                image_bytes, detections, language, think=think, user_gender=eff_gender,
+            res = await self._handle_already_cropped(
+                image_bytes, detections, language, think=think, user_gender=photo_model_gender or eff_gender,
             )
+            if photo_model_gender in ("men", "women"):
+                for it in res:
+                    if isinstance(it, dict) and "analysis" in it and isinstance(it["analysis"], dict):
+                        it["analysis"]["gender"] = photo_model_gender
+                        _coerce_enums(it["analysis"], user_gender=eff_gender, model_gender=photo_model_gender)
+            return res
 
         # 3) Filter + cap detections.
         cap = max_items if max_items is not None else self.max_items
         useful = self._filter_useful_detections(detections, cap)
         if not useful:
             single = await self.analyze(
-                image_bytes, language=language, think=think, user_gender=eff_gender,
+                image_bytes, language=language, think=think, user_gender=photo_model_gender or eff_gender,
             )
+            if photo_model_gender in ("men", "women") and isinstance(single, dict):
+                single["gender"] = photo_model_gender
+                _coerce_enums(single, user_gender=eff_gender, model_gender=photo_model_gender)
             return [
                 self._build_fullframe_item(
                     single, image_bytes, defer_matte=settings.AUTO_MATTE_CROPS
@@ -1935,11 +1936,14 @@ class GarmentVisionService:
             ]
 
         # 6) Analyse each crop in parallel.
-        items = await self._analyse_crops(crops, language, think=think, user_gender=eff_gender)
+        items = await self._analyse_crops(crops, language, think=think, user_gender=eff_gender, model_gender=photo_model_gender)
 
         # 7) If every parallel call failed, fall back once.
         if not items:
-            single = await self.analyze(image_bytes, think=think, user_gender=eff_gender)
+            single = await self.analyze(image_bytes, think=think, user_gender=photo_model_gender or eff_gender)
+            if photo_model_gender in ("men", "women") and isinstance(single, dict):
+                single["gender"] = photo_model_gender
+                _coerce_enums(single, user_gender=eff_gender, model_gender=photo_model_gender)
             return [
                 self._build_fullframe_item(
                     single, image_bytes, defer_matte=settings.AUTO_MATTE_CROPS
@@ -2016,8 +2020,13 @@ class GarmentVisionService:
             }
             return
 
+        has_human_wearer = _detect_human_presence(detections)
+        photo_model_gender = None
+        if has_human_wearer:
+            photo_model_gender = await self.detect_model_gender(image_bytes, detections=detections)
+
         is_single = (
-            (not _detect_human_presence(detections) and len(detections) <= 1)
+            (not has_human_wearer and len(detections) <= 1)
             or _looks_already_cropped(detections)
         )
         if is_single:
@@ -2075,8 +2084,11 @@ class GarmentVisionService:
 
             # 2. Block on the LLM analysis
             single = await self.analyze(
-                image_bytes, language=language, think=False, user_gender=eff_gender,
+                image_bytes, language=language, think=False, user_gender=photo_model_gender or eff_gender,
             )
+            if photo_model_gender in ("men", "women") and isinstance(single, dict):
+                single["gender"] = photo_model_gender
+                _coerce_enums(single, user_gender=eff_gender, model_gender=photo_model_gender)
 
             # 3. Yield the analysis
             yield {
@@ -2177,7 +2189,7 @@ class GarmentVisionService:
         emitted = 0
         try:
             async for idx, analysis in self.analyze_batch_stream(
-                crops_bytes, language=language, kind_hints=kind_hints, user_gender=eff_gender,
+                crops_bytes, language=language, kind_hints=kind_hints, user_gender=eff_gender, model_gender=photo_model_gender,
             ):
                 if not isinstance(analysis, dict) or not analysis:
                     # Empty / dropped slot — emit a sentinel item with
@@ -2192,6 +2204,9 @@ class GarmentVisionService:
                     }
                     emitted += 1
                     continue
+                if photo_model_gender in ("men", "women"):
+                    analysis["gender"] = photo_model_gender
+                    _coerce_enums(analysis, user_gender=eff_gender, model_gender=photo_model_gender)
                 # Reconstruction gate — same logic as
                 # ``_build_batched_results`` so the streamed and
                 # one-shot batched paths produce identical shapes.
@@ -2325,12 +2340,12 @@ class GarmentVisionService:
             logger.warning("_is_single_item check failed: %s", repr(exc)[:160])
             return False
 
-    async def _gatekeep_image(self, image_bytes: bytes) -> int | None:
-        """Fast pre-check to count garments and route the pipeline."""
+    async def _gatekeep_image(self, image_bytes: bytes) -> tuple[int | None, str | None]:
+        """Fast pre-check to count garments and determine human model presence and gender."""
         if self.provider in ("gemma", "dressapp") or not self.api_key:
             # Gemma / on-prem Eyes operates without Gemini gatekeeper;
-            # return None so downstream relies on SegFormer & human presence detection.
-            return None
+            # return (None, None) so downstream relies on SegFormer & human presence detection.
+            return None, None
 
         import io
         import asyncio
@@ -2348,13 +2363,15 @@ class GarmentVisionService:
 
             client = self._get_gemini()
             system_prompt = (
-                "You are a visual gatekeeper. Your job is to count the number of distinct clothing garments, "
-                "shoes, or accessories clearly visible in this image. "
+                "You are a visual gatekeeper and fashion model analyzer. Your job is to:\n"
+                "1. Count the number of distinct clothing garments, shoes, or accessories clearly visible in this image.\n"
                 "CRITICAL: A pair of footwear (shoes, sandals, boots, flip-flops, slides, slippers) or accessories (gloves, earrings) ALWAYS counts as ONE single item (count = 1). "
-                "Never count partner shoes separately. Ignore tags, hangers, or background objects."
+                "Never count partner shoes separately. Ignore tags, hangers, or background objects.\n"
+                "2. Identify if a human model / person is visible wearing the outfit in this photo.\n"
+                "3. If a human model/wearer is present, determine their apparent gender ('men' or 'women'). If no human wearer is present (e.g. flat lay, clothes laid on floor/bed, hanger, product photo, ghost mannequin), set model_gender to 'none'."
             )
             model = self.detect_model
-            
+
             schema = {
                 "type": "object",
                 "properties": {
@@ -2366,24 +2383,31 @@ class GarmentVisionService:
                     "count": {
                         "type": "integer",
                         "description": "The final count of clothing items (0, 1, or more)"
+                    },
+                    "has_human_model": {
+                        "type": "boolean",
+                        "description": "True if a human person or model is visible wearing the clothing"
+                    },
+                    "model_gender": {
+                        "type": "string",
+                        "enum": ["men", "women", "none"],
+                        "description": "Apparent gender of the human model ('men' or 'women'), or 'none' if no human model"
                     }
                 },
-                "required": ["items_seen", "count"]
+                "required": ["items_seen", "count", "has_human_model", "model_gender"]
             }
-            
-            # Put a strict 12-second timeout so it never hangs the pipeline indefinitely,
-            # but gives the LLM enough time to respond under load.
+
             async def _call_vision():
                 return await client.vision(
                     system=system_prompt,
-                    user_parts=["Analyze the image and return the count of garments.", small_bytes],
+                    user_parts=["Analyze the image, return garment count and human model gender.", small_bytes],
                     model=model,
                     response_mime_type="application/json",
                     response_schema=schema,
                 )
-                
+
             resp = await asyncio.wait_for(_call_vision(), timeout=12.0)
-            
+
             try:
                 import json
                 clean_resp = resp.strip()
@@ -2394,21 +2418,101 @@ class GarmentVisionService:
                 if clean_resp.endswith("```"):
                     clean_resp = clean_resp[:-3]
                 clean_resp = clean_resp.strip()
-                
+
                 data = json.loads(clean_resp)
                 count = int(data.get("count", 1))
-                logger.info("_gatekeep_image parsed successfully. Model: %s. Count: %d, Items seen: %s", model, count, data.get("items_seen"))
-                return count
+                has_human = bool(data.get("has_human_model", False))
+                raw_mg = str(data.get("model_gender") or "").strip().lower()
+                from .validation import resolve_garment_gender
+                model_gender = resolve_garment_gender(raw_mg)
+                if not has_human or model_gender not in ("men", "women"):
+                    model_gender = None
+
+                logger.info(
+                    "_gatekeep_image parsed successfully. Model: %s. Count: %d, has_human: %s, model_gender: %s, Items seen: %s",
+                    model, count, has_human, model_gender, data.get("items_seen")
+                )
+                return count, model_gender
             except Exception as e:
                 logger.warning("_gatekeep_image failed to parse JSON: %s. Raw response: %s", e, resp)
-                return None
+                return None, None
         except asyncio.TimeoutError:
             logger.warning("_gatekeep_image timed out after 12s, falling back to SegFormer")
-            return None
+            return None, None
         except Exception as exc:
             import traceback
             logger.warning("_gatekeep_image check failed: %s\n%s", repr(exc)[:160], traceback.format_exc())
+            return None, None
+
+    async def detect_model_gender(
+        self,
+        image_bytes: bytes,
+        detections: list[dict[str, Any]] | None = None,
+    ) -> str | None:
+        """Determine the apparent gender ('men' or 'women') of the human model in a photo.
+
+        Returns 'men', 'women', or None if no human model is present.
+        """
+        from .validation import resolve_garment_gender
+        if detections is not None and not _detect_human_presence(detections):
             return None
+
+        if self.provider == "gemini" and self.api_key:
+            import io
+            import asyncio
+            from PIL import Image, ImageOps
+            try:
+                with Image.open(io.BytesIO(image_bytes)) as img:
+                    img = ImageOps.exif_transpose(img)
+                    img.thumbnail((512, 512))
+                    if img.mode != "RGB":
+                        img = img.convert("RGB")
+                    out = io.BytesIO()
+                    img.save(out, format="JPEG", quality=80)
+                    small_bytes = out.getvalue()
+
+                client = self._get_gemini()
+                system_prompt = (
+                    "You are a fashion analyst. Analyze whether a human model or person is visible wearing the outfit in this photo.\n"
+                    "If a human model is present, determine their apparent gender ('men' or 'women').\n"
+                    "If no human person/model is wearing the clothes (e.g. flat lay, hanger, product-only photo), respond with 'none'."
+                )
+                schema = {
+                    "type": "object",
+                    "properties": {
+                        "has_human_model": {"type": "boolean"},
+                        "model_gender": {"type": "string", "enum": ["men", "women", "none"]},
+                    },
+                    "required": ["has_human_model", "model_gender"],
+                }
+                resp = await asyncio.wait_for(
+                    client.vision(
+                        system=system_prompt,
+                        user_parts=["Analyze the wearer's gender.", small_bytes],
+                        model=self.detect_model,
+                        response_mime_type="application/json",
+                        response_schema=schema,
+                    ),
+                    timeout=10.0,
+                )
+                parsed = _extract_json(resp or "")
+                if isinstance(parsed, dict) and parsed.get("has_human_model"):
+                    mg = resolve_garment_gender(parsed.get("model_gender"))
+                    if mg in ("men", "women"):
+                        logger.info("detect_model_gender: detected model_gender=%s", mg)
+                        return mg
+            except Exception as exc:
+                logger.info("detect_model_gender: check failed: %s", repr(exc)[:120])
+
+        if detections:
+            cat_labels = {
+                (d.get("label") or d.get("category") or "").lower()
+                for d in detections
+            }
+            if any(k in cat_labels for k in ("skirt", "dress")):
+                return "women"
+
+        return resolve_garment_gender(self.user_gender)
 
     async def analyze_outfits_stream(
         self,
@@ -2444,14 +2548,23 @@ class GarmentVisionService:
 
         # 1. Detect on all photos sequentially
         async def _detect_and_crop(idx: int, img_bytes: bytes) -> tuple[int, list[tuple[dict[str, Any], bytes, str]]]:
+            photo_model_gender = None
             try:
-                count = await self._gatekeep_image(img_bytes)
+                gate_res = await self._gatekeep_image(img_bytes)
+                if isinstance(gate_res, tuple):
+                    count, photo_model_gender = gate_res
+                else:
+                    count, photo_model_gender = gate_res, None
+
                 if count == 0:
                     logger.info("Gatekeeper: photo %d has 0 garments — dropping it", idx)
                     return idx, []
                 
                 if count is not None:
-                    logger.info("Gatekeeper: photo %d has %d garment(s) — running SegFormer detect_items", idx, count)
+                    logger.info(
+                        "Gatekeeper: photo %d has %d garment(s), model_gender=%s — running SegFormer detect_items",
+                        idx, count, photo_model_gender,
+                    )
                 else:
                     logger.info("Gatekeeper: photo %d count unknown (provider=%s) — running SegFormer detect_items", idx, self.provider)
                 detections = await self.detect_items(img_bytes, count_hint=count)
@@ -2459,10 +2572,13 @@ class GarmentVisionService:
                     detections = [{"bbox": [0, 0, 1000, 1000], "kind": "garment", "label": "garment"}]
             except Exception as exc:
                 logger.warning("analyze_outfits_stream: detect_items / gatekeep failed for idx %d: %s", idx, repr(exc)[:160])
-                return idx, [({"bbox": [0, 0, 1000, 1000], "kind": "garment", "label": "garment", "is_single_item": True}, img_bytes, "image/jpeg")]
+                return idx, [({"bbox": [0, 0, 1000, 1000], "kind": "garment", "label": "garment", "is_single_item": True, "_photo_model_gender": photo_model_gender}, img_bytes, "image/jpeg")]
 
             try:
                 has_human_wearer = _detect_human_presence(detections)
+                if has_human_wearer and not photo_model_gender:
+                    photo_model_gender = await self.detect_model_gender(img_bytes, detections=detections)
+
                 is_footwear_only = bool(
                     detections
                     and not has_human_wearer
@@ -2528,6 +2644,7 @@ class GarmentVisionService:
                         "bbox": union_bbox,
                         "defer_matte": False,
                         "is_single_item": True,
+                        "_photo_model_gender": photo_model_gender,
                         "_raw_image_bytes": img_bytes,
                         "_raw_image_mime": "image/jpeg",
                     }
@@ -2547,6 +2664,7 @@ class GarmentVisionService:
                         "bbox": [0, 0, 1000, 1000],
                         "defer_matte": False,
                         "is_single_item": True,
+                        "_photo_model_gender": photo_model_gender,
                         "_raw_image_bytes": img_bytes,
                         "_raw_image_mime": "image/jpeg",
                     }
@@ -2560,6 +2678,7 @@ class GarmentVisionService:
                 is_single = (count is None or count <= 1) and len(useful) <= 1 and not has_human
                 for d in useful:
                     d["is_single_item"] = is_single
+                    d["_photo_model_gender"] = photo_model_gender
 
                 raw_crops = await asyncio.to_thread(
                     self._bbox_crop_useful, img_bytes, useful, is_single_item=is_single
@@ -2573,6 +2692,7 @@ class GarmentVisionService:
                 for i_c, (det, cbytes, mime) in enumerate(final_crops):
                     det["defer_matte"] = False
                     det["is_single_item"] = is_final_single
+                    det["_photo_model_gender"] = photo_model_gender
                     if "_raw_image_bytes" not in det:
                         raw_b = raw_crops[i_c][1] if i_c < len(raw_crops) else cbytes
                         det["_raw_image_bytes"] = raw_b
@@ -2581,7 +2701,7 @@ class GarmentVisionService:
 
             except Exception as exc:
                 logger.warning("analyze_outfits_stream: crop/matte failed for idx %d: %s", idx, repr(exc)[:160])
-                return idx, [({"bbox": [0, 0, 1000, 1000], "kind": "garment", "label": "garment", "is_single_item": True}, img_bytes, "image/jpeg")]
+                return idx, [({"bbox": [0, 0, 1000, 1000], "kind": "garment", "label": "garment", "is_single_item": True, "_photo_model_gender": photo_model_gender}, img_bytes, "image/jpeg")]
 
         # 1. Detect on all photos sequentially to avoid OOM on large batches
         import gc
@@ -2658,6 +2778,7 @@ class GarmentVisionService:
                     if len(slot_crop_list) == 1:
                         # Single item from this photo: fast single-item stream
                         slot_idx, (image_idx, det, c_bytes, c_mime) = slot_crop_list[0]
+                        photo_mg = det.get("_photo_model_gender")
                         raw_for_vision = det.get("_raw_image_bytes") or c_bytes
                         shrunk = _shrink_for_vision(raw_for_vision)
                         b64 = base64.b64encode(shrunk).decode("ascii")
@@ -2674,7 +2795,7 @@ class GarmentVisionService:
                                 request_id=request_id,
                                 id_slot=slot_idx,
                                 is_single_item=det.get("is_single_item", False),
-                                user_gender=eff_gender,
+                                user_gender=photo_mg or eff_gender,
                             ):
                                 assembled.update(partial)
                                 if partial:
@@ -2692,7 +2813,7 @@ class GarmentVisionService:
                         if gemma_failed or not assembled.get("category") or (not assembled.get("sub_category") and not assembled.get("item_type")):
                             try:
                                 gem_analysis = await self.analyze(
-                                    raw_for_vision, language=language, think=False, provider="gemini", user_gender=eff_gender,
+                                    raw_for_vision, language=language, think=False, provider="gemini", user_gender=photo_mg or eff_gender,
                                 )
                                 if isinstance(gem_analysis, dict) and gem_analysis:
                                     assembled = gem_analysis
@@ -2708,12 +2829,16 @@ class GarmentVisionService:
                         if not assembled.get("title") and (det.get("label") or det.get("kind")):
                             assembled["title"] = (det.get("label") or det.get("kind")).capitalize()
 
-                        analysis = _coerce_single_garment(assembled, user_gender=eff_gender, language=language)
+                        if photo_mg in ("men", "women"):
+                            assembled["gender"] = photo_mg
+                        analysis = _coerce_single_garment(assembled, user_gender=eff_gender, model_gender=photo_mg, language=language)
                         if not analysis.get("title") and analysis.get("name"):
                             analysis["title"] = analysis["name"]
                         if not analysis.get("title"):
                             analysis["title"] = "Unnamed garment"
-                        analysis = _coerce_enums(analysis, user_gender=eff_gender)
+                        analysis = _coerce_enums(analysis, user_gender=eff_gender, model_gender=photo_mg)
+                        if photo_mg in ("men", "women"):
+                            analysis["gender"] = photo_mg
                         _enforce_segformer_category(
                             analysis,
                             segformer_kind=det.get("kind") or det.get("category"),
@@ -2778,18 +2903,28 @@ class GarmentVisionService:
                             "maxItems": len(slot_crop_list),
                         }
 
+                        photo_mg = slot_crop_list[0][1][1].get("_photo_model_gender")
+                        gender_directive = ""
+                        if photo_mg in ("men", "women"):
+                            gender_directive = (
+                                f"\n• HUMAN MODEL OUTFIT GENDER: All garments in this outfit are worn by a visible {photo_mg} model. "
+                                f"Set the gender of every garment in this outfit to '{photo_mg}'. "
+                                f"Do NOT classify any garment from this {photo_mg}'s outfit as the opposite gender."
+                            )
+
                         sys_parts = [
-                            _build_system_prompt(one_pass=False, user_gender=eff_gender),
+                            _build_system_prompt(one_pass=False, user_gender=photo_mg or eff_gender),
                             _language_directive(language),
                             "\n\nMULTI-ITEM OUTFIT EXTRACTION:\n"
                             f"This photograph contains {len(slot_crop_list)} fashion items detected by computer vision:\n"
                             + "\n".join(items_hints)
+                            + gender_directive
                             + f"\n\nReturn a JSON array containing exactly {len(slot_crop_list)} garment objects in the SAME ORDER [0..{len(slot_crop_list)-1}]."
                             + "\nFor each item, populate all 16 required fields. Bags and accessories MUST be classified under category 'Accessories' and sub_category 'Bag' or appropriate accessory cut, NEVER as a top, sweater, or cardigan."
                         ]
                         sys_prompt = "\n".join(sys_parts)
                         user_text = (
-                            _user_prompt(language, user_gender=eff_gender)
+                            _user_prompt(language, user_gender=photo_mg or eff_gender)
                             + f"\n\nAnalyze all {len(slot_crop_list)} fashion items visible in this photo. Return a JSON array with exactly {len(slot_crop_list)} items in order [0..{len(slot_crop_list)-1}]."
                         )
 
@@ -2838,6 +2973,7 @@ class GarmentVisionService:
                         for sub_i, (slot_idx, (image_idx, det, c_bytes, c_mime)) in enumerate(slot_crop_list):
                             item_raw = parsed_items[sub_i] if sub_i < len(parsed_items) and isinstance(parsed_items[sub_i], dict) else None
                             assembled = dict(item_raw) if item_raw else {}
+                            item_mg = det.get("_photo_model_gender") or photo_mg
 
                             if not assembled or len(assembled) < 2:
                                 logger.warning(
@@ -2846,7 +2982,7 @@ class GarmentVisionService:
                                 try:
                                     raw_crop = det.get("_raw_image_bytes") or c_bytes
                                     gem_analysis = await self.analyze(
-                                        raw_crop, language=language, think=False, provider="gemini", user_gender=eff_gender,
+                                        raw_crop, language=language, think=False, provider="gemini", user_gender=item_mg or eff_gender,
                                     )
                                     if isinstance(gem_analysis, dict) and gem_analysis:
                                         assembled = gem_analysis
@@ -2862,12 +2998,16 @@ class GarmentVisionService:
                             if not assembled.get("title") and (det.get("label") or det.get("kind")):
                                 assembled["title"] = (det.get("label") or det.get("kind")).capitalize()
 
-                            analysis = _coerce_single_garment(assembled, user_gender=eff_gender, language=language)
+                            if item_mg in ("men", "women"):
+                                assembled["gender"] = item_mg
+                            analysis = _coerce_single_garment(assembled, user_gender=eff_gender, model_gender=item_mg, language=language)
                             if not analysis.get("title") and analysis.get("name"):
                                 analysis["title"] = analysis["name"]
                             if not analysis.get("title"):
                                 analysis["title"] = "Unnamed garment"
-                            analysis = _coerce_enums(analysis, user_gender=eff_gender)
+                            analysis = _coerce_enums(analysis, user_gender=eff_gender, model_gender=item_mg)
+                            if item_mg in ("men", "women"):
+                                analysis["gender"] = item_mg
                             _enforce_segformer_category(
                                 analysis,
                                 segformer_kind=det.get("kind") or det.get("category"),
@@ -2924,10 +3064,11 @@ class GarmentVisionService:
                 if len(flat_crops) == 1:
                     slot_idx = 0
                     image_idx, det, c_bytes, c_mime = flat_crops[0]
+                    item_mg = det.get("_photo_model_gender")
                     raw_for_vision = det.get("_raw_image_bytes") or c_bytes
                     try:
                         analysis = await self.analyze(
-                            raw_for_vision, language=language, think=False, user_gender=eff_gender
+                            raw_for_vision, language=language, think=False, user_gender=item_mg or eff_gender
                         )
                         if isinstance(analysis, dict):
                             _enforce_segformer_category(
@@ -2945,6 +3086,12 @@ class GarmentVisionService:
                                 fallback_type = (det.get("label") or det.get("kind") or "garment").lower()
                                 analysis["item_type"] = fallback_type
                                 analysis["sub_category"] = fallback_type.capitalize()
+                            if item_mg in ("men", "women"):
+                                analysis["gender"] = item_mg
+                            analysis = _coerce_single_garment(analysis, user_gender=eff_gender, model_gender=item_mg, language=language)
+                            analysis = _coerce_enums(analysis, user_gender=eff_gender, model_gender=item_mg)
+                            if item_mg in ("men", "women"):
+                                analysis["gender"] = item_mg
                     except Exception as exc:
                         err_str = str(exc)
                         is_quota = (
@@ -2961,7 +3108,7 @@ class GarmentVisionService:
                             )
                             try:
                                 analysis = await self.analyze(
-                                    raw_for_vision, language=language, think=False, provider="gemma", user_gender=eff_gender
+                                    raw_for_vision, language=language, think=False, provider="gemma", user_gender=item_mg or eff_gender
                                 )
                             except Exception as fallback_exc:
                                 logger.error("Gemma fallback also failed for slot %d: %s", slot_idx, fallback_exc)
@@ -2978,7 +3125,7 @@ class GarmentVisionService:
                                 "item_type": (det.get("label") or det.get("kind") or "T-Shirt").capitalize(),
                                 "title": (det.get("label") or det.get("kind") or "Garment").capitalize(),
                                 "caption": "Garment detected from photo upload.",
-                                "gender": eff_gender or "unisex",
+                                "gender": item_mg or eff_gender or "unisex",
                             }
 
                     needs_reconstruction = False
@@ -3021,24 +3168,32 @@ class GarmentVisionService:
                             (c[1].get("kind") or c[1].get("category") or c[1].get("label"))
                             for c in chunk_crops
                         ]
+                        chunk_mgs = {c[1].get("_photo_model_gender") for c in chunk_crops if c[1].get("_photo_model_gender")}
+                        chunk_mg = chunk_mgs.pop() if len(chunk_mgs) == 1 else None
 
                         chunk_emitted: set[int] = set()
                         try:
                             logger.info(
-                                "analyze_outfits_stream: running unified batch Gemini stream for %d crops (chunk [%d..%d]) with 1 system prompt",
-                                len(chunk_crops), chunk_start, chunk_start + len(chunk_crops),
+                                "analyze_outfits_stream: running unified batch Gemini stream for %d crops (chunk [%d..%d]) with 1 system prompt, chunk_mg=%s",
+                                len(chunk_crops), chunk_start, chunk_start + len(chunk_crops), chunk_mg,
                             )
+                            batch_kwargs: dict[str, Any] = {
+                                "language": language,
+                                "kind_hints": chunk_hints,
+                                "user_gender": eff_gender,
+                            }
+                            if chunk_mg is not None:
+                                batch_kwargs["model_gender"] = chunk_mg
                             async for local_idx, analysis in self.analyze_batch_stream(
                                 chunk_bytes,
-                                language=language,
-                                kind_hints=chunk_hints,
-                                user_gender=eff_gender,
+                                **batch_kwargs,
                             ):
                                 slot_idx = chunk_start + local_idx
                                 if slot_idx >= len(flat_crops):
                                     continue
                                 image_idx, det, c_bytes, c_mime = flat_crops[slot_idx]
                                 chunk_emitted.add(local_idx)
+                                item_mg = det.get("_photo_model_gender")
 
                                 # If batch returned empty/invalid dict, fallback for this slot
                                 if not analysis or not isinstance(analysis, dict) or not (
@@ -3047,7 +3202,7 @@ class GarmentVisionService:
                                     try:
                                         raw_fb = det.get("_raw_image_bytes") or c_bytes
                                         fb = await self.analyze(
-                                            raw_fb, language=language, think=False, user_gender=eff_gender
+                                            raw_fb, language=language, think=False, user_gender=item_mg or eff_gender
                                         )
                                         if isinstance(fb, dict) and fb:
                                             analysis = fb
@@ -3058,7 +3213,7 @@ class GarmentVisionService:
                                             "item_type": (det.get("label") or det.get("kind") or "T-Shirt").capitalize(),
                                             "title": (det.get("label") or det.get("kind") or "Garment").capitalize(),
                                             "caption": "Garment detected from photo upload.",
-                                            "gender": eff_gender or "unisex",
+                                            "gender": item_mg or eff_gender or "unisex",
                                         }
 
                                 _enforce_segformer_category(
@@ -3076,6 +3231,13 @@ class GarmentVisionService:
                                     fallback_type = (det.get("label") or det.get("kind") or "garment").lower()
                                     analysis["item_type"] = fallback_type
                                     analysis["sub_category"] = fallback_type.capitalize()
+
+                                if item_mg in ("men", "women"):
+                                    analysis["gender"] = item_mg
+                                analysis = _coerce_single_garment(analysis, user_gender=eff_gender, model_gender=item_mg, language=language)
+                                analysis = _coerce_enums(analysis, user_gender=eff_gender, model_gender=item_mg)
+                                if item_mg in ("men", "women"):
+                                    analysis["gender"] = item_mg
 
                                 needs_reconstruction = False
                                 reasons: list[str] = []
@@ -3123,19 +3285,20 @@ class GarmentVisionService:
                                 if local_i in chunk_emitted:
                                     continue
                                 slot_idx = chunk_start + local_i
+                                item_mg = det.get("_photo_model_gender")
                                 fallback_analysis = None
                                 raw_fb = det.get("_raw_image_bytes") or c_bytes
                                 if is_quota and settings.EYES_GEMMA_SPACE_URL:
                                     try:
                                         fallback_analysis = await self.analyze(
-                                            raw_fb, language=language, think=False, provider="gemma", user_gender=eff_gender
+                                            raw_fb, language=language, think=False, provider="gemma", user_gender=item_mg or eff_gender
                                         )
                                     except Exception:
                                         fallback_analysis = None
                                 if not fallback_analysis:
                                     try:
                                         fallback_analysis = await self.analyze(
-                                            raw_fb, language=language, think=False, user_gender=eff_gender
+                                            raw_fb, language=language, think=False, user_gender=item_mg or eff_gender
                                         )
                                     except Exception:
                                         fallback_analysis = {
@@ -3144,7 +3307,7 @@ class GarmentVisionService:
                                             "item_type": (det.get("label") or det.get("kind") or "T-Shirt").capitalize(),
                                             "title": (det.get("label") or det.get("kind") or "Garment").capitalize(),
                                             "caption": "Garment detected from photo upload.",
-                                            "gender": eff_gender or "unisex",
+                                            "gender": item_mg or eff_gender or "unisex",
                                         }
 
                                 _enforce_segformer_category(
@@ -3162,6 +3325,13 @@ class GarmentVisionService:
                                     fallback_type = (det.get("label") or det.get("kind") or "garment").lower()
                                     fallback_analysis["item_type"] = fallback_type
                                     fallback_analysis["sub_category"] = fallback_type.capitalize()
+
+                                if item_mg in ("men", "women"):
+                                    fallback_analysis["gender"] = item_mg
+                                fallback_analysis = _coerce_single_garment(fallback_analysis, user_gender=eff_gender, model_gender=item_mg, language=language)
+                                fallback_analysis = _coerce_enums(fallback_analysis, user_gender=eff_gender, model_gender=item_mg)
+                                if item_mg in ("men", "women"):
+                                    fallback_analysis["gender"] = item_mg
 
                                 meta_crop = items_meta[slot_idx] if slot_idx < len(items_meta) else {}
                                 yield {

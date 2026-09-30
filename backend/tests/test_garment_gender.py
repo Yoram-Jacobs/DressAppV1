@@ -211,3 +211,63 @@ def test_ai_explicit_women_or_unisex_not_overwritten_by_user_men():
 
     res_enum = _coerce_enums(ai_women_item, user_gender="men")
     assert res_enum["gender"] == "women"
+
+
+def test_human_model_gender_anchors_all_garments_in_outfit():
+    """When a human model's gender is identified, all garments worn by that model anchor to that gender."""
+    # 1. Men's model wearing a floral summer shirt (previously misclassified as blouse / women's)
+    mens_floral = {
+        "name": "Men's Casual Floral Summer Shirt",
+        "category": "top",
+        "sub_category": "blouse",
+        "item_type": "Cap-Sleeve Blouse",
+        "gender": "women",
+        "title": "Casual Floral Shirt",
+    }
+    res_men = _coerce_single_garment(mens_floral, user_gender="women", model_gender="men")
+    assert res_men["gender"] == "men"
+    assert res_men["sub_category"] == "Shirt"
+    assert res_men["item_type"] in ("Short-Sleeve Shirt", "Button-Down Shirt")
+
+    # In _coerce_enums as well:
+    res_men_enums = _coerce_enums(dict(mens_floral), user_gender="women", model_gender="men")
+    assert res_men_enums["gender"] == "men"
+    assert res_men_enums["sub_category"] == "Shirt"
+
+    # 2. Women's model wearing an athletic singlet (normally unisex in flat-lay)
+    womens_singlet = {
+        "name": "Athletic Running Singlet",
+        "category": "top",
+        "sub_category": "singlet",
+        "item_type": "running_singlet",
+        "gender": "unisex",
+        "title": "Running Singlet",
+    }
+    res_women = _coerce_single_garment(womens_singlet, user_gender="men", model_gender="women")
+    assert res_women["gender"] == "women"
+
+    res_women_enums = _coerce_enums(dict(womens_singlet), user_gender="men", model_gender="women")
+    assert res_women_enums["gender"] == "women"
+
+
+def test_batch_prompts_injects_human_model_gender_rule():
+    """Verify that _build_batch_prompts injects the strict model gender rule when model_gender is provided."""
+    from app.services.vision.llm import _build_batch_prompts
+
+    sys_prompt, user_text = _build_batch_prompts(
+        n=3,
+        language="en",
+        user_gender="unisex",
+        model_gender="men",
+    )
+    assert "HUMAN MODEL OUTFIT GENDER: All garments in this outfit are worn by a visible men model" in sys_prompt
+    assert "Do NOT classify any garment from this men's outfit as the opposite gender" in sys_prompt
+
+    sys_prompt_flat, _ = _build_batch_prompts(
+        n=3,
+        language="en",
+        user_gender="men",
+        model_gender=None,
+    )
+    assert "HUMAN MODEL OUTFIT GENDER" not in sys_prompt_flat
+

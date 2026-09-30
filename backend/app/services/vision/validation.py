@@ -288,6 +288,8 @@ def _coerce_single_garment(
     parsed: dict[str, Any] | list[dict[str, Any]],
     user_gender: str | None = None,
     language: str | None = None,
+    *,
+    model_gender: str | None = None,
 ) -> dict[str, Any]:
     """Collapse a list-of-garments response into the single-item contract.
 
@@ -313,6 +315,7 @@ def _coerce_single_garment(
     else:
         return {}
 
+    norm_model = resolve_garment_gender(model_gender)
     cat_lower = (res.get("category") or "").strip().lower()
     sub_lower = (res.get("sub_category") or "").strip().lower()
     full_text = f"{res.get('item_type', '')} {res.get('name', '')} {res.get('title', '')} {res.get('caption', '')}".lower()
@@ -339,7 +342,7 @@ def _coerce_single_garment(
     # Subcategory collision prevention: NEVER allow sub_category to be identical to category or generic "Top"/"Tops"/"Bottom"/"Bottoms"
     if sub_lower in {"top", "tops", "bottom", "bottoms", "outerwear", "full body", "dress", "dresses", "footwear", "accessories", "clothing", "garment", ""} or sub_lower == cat_lower:
         if cat_lower == "top":
-            if any(w in full_text for w in ("blouse", "בלוזה", "cap-sleeve", "cap sleeve", "flutter")):
+            if any(w in full_text for w in ("blouse", "בלוזה", "cap-sleeve", "cap sleeve", "flutter")) and norm_model != "men":
                 res["sub_category"] = "Blouse"
             elif any(w in full_text for w in ("tee", "t-shirt", "tshirt", "טי")):
                 res["sub_category"] = "T-Shirt"
@@ -350,7 +353,7 @@ def _coerce_single_garment(
             elif any(w in full_text for w in ("hoodie", "sweatshirt", "קפוצ")):
                 res["sub_category"] = "Hoodie"
             else:
-                res["sub_category"] = "Blouse" if res.get("gender") == "women" else "Shirt"
+                res["sub_category"] = "Shirt" if norm_model == "men" else ("Blouse" if (res.get("gender") == "women" or norm_model == "women") else "Shirt")
         elif cat_lower == "bottom":
             if any(w in full_text for w in ("jean", "denim", "גינס")):
                 res["sub_category"] = "Jeans"
@@ -489,7 +492,14 @@ def _coerce_single_garment(
     is_masc_cut = is_distinctly_masculine_garment(cat_lower, sub_lower, itype_lower)
     is_unisex_cut = is_distinctly_unisex_garment(cat_lower, sub_lower, itype_lower, name=res.get("name"), full_text=full_text)
 
-    if is_fem_cut:
+    if norm_model in ("men", "women"):
+        res["gender"] = norm_model
+        if norm_model == "men":
+            if sub_lower == "blouse":
+                res["sub_category"] = "Shirt"
+            if itype_lower in ("cap-sleeve blouse", "casual blouse", "blouse"):
+                res["item_type"] = "Short-Sleeve Shirt" if any(w in full_text for w in ("short", "summer", "קצר")) else "Button-Down Shirt"
+    elif is_fem_cut:
         res["gender"] = "women"
     elif is_masc_cut:
         res["gender"] = "men"
@@ -861,6 +871,8 @@ def _normalise_dress_code(raw: str | None) -> str | None:
 def _coerce_enums(
     parsed: dict[str, Any],
     user_gender: str | None = None,
+    *,
+    model_gender: str | None = None,
 ) -> dict[str, Any]:
     """Best-effort coercion of AI-returned enum values.
 
@@ -870,6 +882,7 @@ def _coerce_enums(
     * ``gender`` defaults to user's profile gender if unrecognized, else 'unisex'.
     """
     norm_user = resolve_garment_gender(user_gender)
+    norm_model = resolve_garment_gender(model_gender)
     cat_lower = str(parsed.get("category") or "").strip().lower()
     sub_lower = str(parsed.get("sub_category") or "").strip().lower()
     itype_lower = str(parsed.get("item_type") or "").strip().lower()
@@ -881,7 +894,14 @@ def _coerce_enums(
     is_masc_cut = is_distinctly_masculine_garment(cat_lower, sub_lower, itype_lower)
     is_unisex_cut = is_distinctly_unisex_garment(cat_lower, sub_lower, itype_lower, name=parsed.get("name"), full_text=full_text_enum)
 
-    if is_fem_cut:
+    if norm_model in ("men", "women"):
+        parsed["gender"] = norm_model
+        if norm_model == "men":
+            if sub_lower == "blouse":
+                parsed["sub_category"] = "Shirt"
+            if itype_lower in ("cap-sleeve blouse", "casual blouse", "blouse"):
+                parsed["item_type"] = "Short-Sleeve Shirt" if ("summer" in full_text_enum or "short" in full_text_enum) else "Button-Down Shirt"
+    elif is_fem_cut:
         parsed["gender"] = "women"
     elif is_masc_cut:
         parsed["gender"] = "men"

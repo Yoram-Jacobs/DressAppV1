@@ -154,10 +154,11 @@ def test_enforce_segformer_category_bottom_skirt():
 
 @pytest.mark.anyio
 async def test_gatekeep_image_returns_none_for_gemma_provider():
-    """Gemma provider operates without Gemini gatekeeper and must return None (unknown count)."""
+    """Gemma provider operates without Gemini gatekeeper and must return (None, None) (unknown count and model gender)."""
     service = GarmentVisionService(provider="gemma")
-    count = await service._gatekeep_image(b"fake_image_bytes")
+    count, model_gender = await service._gatekeep_image(b"fake_image_bytes")
     assert count is None
+    assert model_gender is None
 
 
 def test_enforce_segformer_category_bag_overrides_belt():
@@ -379,7 +380,7 @@ async def test_analyze_outfits_stream_batches_multiple_photos_with_single_system
         return 1
 
     batch_stream_called_with = []
-    async def mock_analyze_batch_stream(crops_bytes, *, language=None, kind_hints=None, user_gender=None):
+    async def mock_analyze_batch_stream(crops_bytes, *, language=None, kind_hints=None, user_gender=None, **kwargs):
         batch_stream_called_with.append({
             "num_crops": len(crops_bytes),
             "kind_hints": kind_hints,
