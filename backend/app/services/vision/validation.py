@@ -423,7 +423,9 @@ def _coerce_single_garment(
             else:
                 res["sub_category"] = "Shirt" if norm_model == "men" else ("Blouse" if (res.get("gender") == "women" or norm_model == "women") else "Shirt")
         elif cat_lower == "bottom":
-            if any(w in full_text for w in ("jean", "denim", "גינס")):
+            if any(w in full_text for w in ("chino", "chinos", "צ'ינו", "slacks", "trouser", "trousers", "pleat", "tailored pant", "dress pant")):
+                res["sub_category"] = "Pants"
+            elif any(w in full_text for w in ("jean", "denim", "גינס")) and not any(w in full_text for w in ("chino", "chinos", "צ'ינו")):
                 res["sub_category"] = "Jeans"
             elif any(w in full_text for w in ("short", "שורט", "קצר")):
                 res["sub_category"] = "Shorts"
@@ -478,9 +480,20 @@ def _coerce_single_garment(
         elif any(w in sub_lower for w in ("blouse", "בלוזה")):
             res["item_type"] = "Cap-Sleeve Blouse" if is_summer else "Casual Blouse"
         elif any(w in sub_lower for w in ("jeans", "ג'ינס", "גינס")):
-            res["item_type"] = "Straight Jeans"
+            if any(w in full_text_itype for w in ("chino", "chinos", "צ'ינו", "slacks", "trouser", "trousers")):
+                res["sub_category"] = "Pants"
+                res["item_type"] = "Chinos"
+            else:
+                res["item_type"] = "Straight Jeans"
         elif any(w in sub_lower for w in ("pants", "trousers", "מכנסי")):
-            res["item_type"] = "Tailored Trousers"
+            if any(w in full_text_itype for w in ("chino", "chinos", "צ'ינו")):
+                res["item_type"] = "Chinos"
+            elif any(w in full_text_itype for w in ("cargo", "קארגו")):
+                res["item_type"] = "Cargo Pants"
+            elif any(w in full_text_itype for w in ("sweat", "jogger", "טרנינג")):
+                res["item_type"] = "Sweatpants"
+            else:
+                res["item_type"] = "Chinos" if any(w in full_text_itype for w in ("cotton", "twill", "light blue", "blue", "beige", "khaki", "tan")) else "Tailored Trousers"
         elif any(w in sub_lower for w in ("coat", "מעיל")):
             res["item_type"] = "Tailored Coat"
         elif any(w in sub_lower for w in ("jacket", "ג'קט")):
@@ -1014,14 +1027,12 @@ def _infer_garment_dress_code(parsed: dict[str, Any]) -> str:
     )):
         return "business"
 
-    # 3. Smart-Casual (Button-down shirts, tailored shirts, collared shirts, chinos, loafers, blouses, trench coats)
+    # 3. Loungewear / Sleepwear (Check before smart-casual so silk pajamas/robes are loungewear)
     if any(w in full_text for w in (
-        "button-down", "button down", "tailored shirt", "collared shirt", "dress shirt",
-        "blouse", "chino", "chinos", "loafer", "loafers", "trench coat", "cardigan",
-        "polo", "polo shirt", "wrap dress", "midi dress", "ankle boot", "chelsea boot",
-        "מכופתרת", "פולו", "בלוזה", "לופר"
+        "pajama", "pajamas", "pyjama", "sleepwear", "nightgown", "bathrobe", "robe",
+        "sweatpants", "lounge", "loungewear", "slippers", "hoodie", "פיג'מה", "חלוק"
     )):
-        return "smart-casual"
+        return "loungewear"
 
     # 4. Athletic / Activewear
     if any(w in full_text for w in (
@@ -1032,12 +1043,17 @@ def _infer_garment_dress_code(parsed: dict[str, Any]) -> str:
         if not any(w in full_text for w in ("casual sneaker", "fashion sneaker", "classic sneaker")):
             return "athletic"
 
-    # 5. Loungewear / Sleepwear
+    # 5. Smart-Casual (Button-down shirts, tailored shirts, collared shirts, chinos, loafers, blouses, sweaters, trench coats)
     if any(w in full_text for w in (
-        "pajama", "pajamas", "pyjama", "sleepwear", "nightgown", "bathrobe", "robe",
-        "sweatpants", "lounge", "loungewear", "slippers", "hoodie", "פיג'מה", "חלוק"
-    )):
-        return "loungewear"
+        "button-down", "button down", "tailored shirt", "collared shirt", "dress shirt",
+        "blouse", "chino", "chinos", "loafer", "loafers", "trench coat", "cardigan",
+        "sweater", "pullover", "turtleneck", "polo", "polo shirt", "wrap dress", "midi dress",
+        "ankle boot", "chelsea boot", "derby", "oxford", "brogue", "trouser", "trousers",
+        "slacks", "tailored pant", "dress pant", "pleated", "heels", "pumps",
+        "silk blouse", "silk shirt", "linen shirt", "linen pant", "linen trouser",
+        "מכופתרת", "פולו", "בלוזה", "לופר", "סוודר", "סריג", "צ'ינו", "מכנסי בד"
+    )) or sub in ("sweater", "blouse") or itype in ("chinos", "tailored trousers", "button-down shirt", "crew-neck sweater"):
+        return "smart-casual"
 
     if raw_dc in _VALID_DRESS_CODE:
         return raw_dc
@@ -1065,6 +1081,30 @@ def _coerce_enums(
     raw_g = str(parsed.get("gender") or "").strip().lower()
     g_val = _GENDER_ALIASES.get(raw_g, raw_g)
     full_text_enum = f"{parsed.get('name', '')} {parsed.get('title', '')} {parsed.get('caption', '')}".lower()
+
+    # Discard non-clothing objects misclassified as garments/accessories (water bottles, cups, phones)
+    full_combined = f"{full_text_enum} {sub_lower} {itype_lower}".lower()
+    if any(w in full_combined for w in (
+        "water bottle", "plastic bottle", "bottle", "disposable bottle", "water flask", "flask",
+        "tumbler", "drink cup", "beverage", "thermos", "drinking glass", "coffee mug", "coffee cup",
+        "smartphone", "cell phone", "mobile phone", "telephone", "iphone", "android phone",
+    )):
+        parsed["is_clothing"] = False
+        parsed["category"] = "Accessories"
+        parsed["sub_category"] = "non-clothing"
+        parsed["item_type"] = "non-clothing"
+        parsed["title"] = "Non-clothing item"
+        sub_lower = "non-clothing"
+        itype_lower = "non-clothing"
+
+    # Chinos vs Jeans: Chinos, slacks, and tailored trousers are Pants, NEVER Jeans
+    is_chinos = any(w in full_combined for w in ("chino", "chinos", "צ'ינו", "slacks", "trouser", "trousers", "pleated pant", "dress pant"))
+    if is_chinos:
+        parsed["sub_category"] = "Pants"
+        if itype_lower in ("straight jeans", "skinny jeans", "jeans", "pants", "garment") or "jean" in itype_lower:
+            parsed["item_type"] = "Chinos"
+            itype_lower = "chinos"
+        sub_lower = "pants"
 
     pat_val = (parsed.get("pattern") or "").strip().lower()
     is_fem_cut = is_distinctly_feminine_garment(cat_lower, sub_lower, itype_lower, name=parsed.get("name"), full_text=full_text_enum, pattern=pat_val)
@@ -1102,14 +1142,13 @@ def _coerce_enums(
         parsed["gender"] = "men"
     elif is_unisex_cut or g_val == "unisex":
         parsed["gender"] = "unisex"
-    elif g_val == "women" and not is_masc_cut:
-        parsed["gender"] = "women"
-    elif g_val == "men" and not is_fem_cut:
-        parsed["gender"] = "men"
     elif g_val == "kids":
         parsed["gender"] = "kids"
     elif norm_user in ("men", "women"):
+        # Anchor unisex/standard garments (pants, trousers, shoes, jackets) to the known wearer gender
         parsed["gender"] = norm_user
+    elif g_val in _VALID_GENDER:
+        parsed["gender"] = g_val
     else:
         parsed["gender"] = "unisex"
 

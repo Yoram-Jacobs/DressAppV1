@@ -31,7 +31,7 @@ def compress_image_bytes(image_bytes: bytes, max_dim: int = 1024, quality: int =
         if has_alpha:
             if img.mode != "RGBA":
                 img = img.convert("RGBA")
-            img.save(out_io, format="WEBP", quality=quality)
+            img.save(out_io, format="WEBP", lossless=True, quality=90, method=6)
         else:
             if img.mode != "RGB":
                 img = img.convert("RGB")

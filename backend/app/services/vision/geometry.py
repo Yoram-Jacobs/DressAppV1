@@ -235,10 +235,10 @@ def _detect_human_presence(items: list[dict[str, Any]]) -> bool:
         if d.get("has_human_head"):
             return True
         hm = d.get("_human_mask_full")
-        if hm is not None and hm.sum() >= 5000:
+        if hm is not None and hm.sum() >= 150:
             return True
         lbl = (d.get("label") or "").lower()
-        if any(h in lbl for h in ("person", "model", "woman", "man", "human", "face", "hair")):
+        if any(h in lbl for h in ("person", "model", "woman", "man", "human", "face", "hair", "head", "skin", "body")):
             return True
     return False
 

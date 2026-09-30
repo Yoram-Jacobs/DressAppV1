@@ -1586,10 +1586,14 @@ def apply_alpha_intersection(
     # Initialize new_alpha with rembg's studio-grade alpha
     new_alpha = arr[:, :, 3].copy()
     has_human = human_mask is not None and bool(human_mask.any())
+    is_acc = (
+        norm_cat in {"accessory", "headwear", "bag", "belt", "jewelry"}
+        or any(w in norm_lbl for w in ("hat", "cap", "beanie", "bag", "belt", "necklace", "watch", "bracelet"))
+    )
 
     # 1. Subtract human mask (if present)
-    # Never subtract human mask from accessories (bags held in hand, belts), BUT DO subtract for sunglasses/eyewear!
-    if has_human and (norm_cat not in {"accessory"} or is_eyewear):
+    # Never subtract human mask from accessories (bags held in hand, belts, hats, jewelry), BUT DO subtract for sunglasses/eyewear!
+    if has_human and (not is_acc or is_eyewear):
         try:
             norm_human = _normalize_mask_to_u8(human_mask)
             if norm_human.shape != (Hc, Wc):
@@ -1684,7 +1688,8 @@ def apply_alpha_intersection(
             )
 
     # 3b. Suppress adjacent garments (belts, waistband, bag straps) using eroded other_mask
-    if other_mask is not None and bool(other_mask.any()):
+    # Never subtract other garments from accessories (hats, sunglasses, bags, jewelry, belts)
+    if other_mask is not None and bool(other_mask.any()) and not is_acc and not is_eyewear:
         try:
             from scipy import ndimage
             norm_other = _normalize_mask_to_u8(other_mask)
@@ -1714,27 +1719,24 @@ def apply_alpha_intersection(
             )
 
     # 4. Intersect with the smooth, dilated soft envelope of the target garment.
-    # Applies to all multi-item crops (including shoes on asphalt and flat-lays).
-    # With calibrated 4-12px dilation, rembg's clean boundary remains 100% UNTOUCHED
-    # while distant asphalt, parking lines, background floor, and scenery are zeroed out.
-    if mask_resized is not None:
+    # CRITICAL: For accessories, SegFormer masks are notoriously inaccurate or non-existent.
+    # Rembg provides the true studio-grade alpha boundary. DO NOT degrade accessories with SegFormer envelope!
+    if mask_resized is not None and not is_acc and not is_eyewear:
         try:
             from scipy import ndimage
             mask_bin = mask_resized > 64
             closed = ndimage.binary_closing(mask_bin, structure=np.ones((5, 5), dtype=bool), iterations=1)
-            # NEVER fill holes for sunglasses/eyewear!
-            # Filling holes fills the space between lenses across the wearer's nose bridge!
-            filled = closed if is_eyewear else ndimage.binary_fill_holes(closed)
+            filled = ndimage.binary_fill_holes(closed)
             
             filled_im = Image.fromarray((filled * 255).astype(np.uint8), mode="L")
-            if is_eyewear:
-                dilate_px = 2
             if dilate_px > 0:
                 filled_im = filled_im.filter(ImageFilter.MaxFilter(2 * dilate_px + 1))
-            filled_im = filled_im.filter(ImageFilter.GaussianBlur(radius=1.2 if is_eyewear else 3.0))
+            filled_im = filled_im.filter(ImageFilter.GaussianBlur(radius=3.0))
             soft_envelope = np.array(filled_im).astype(float) / 255.0
             
-            new_alpha = (new_alpha.astype(float) * soft_envelope).round().astype(np.uint8)
+            # RULE: SegFormer envelope must ONLY exclude far-away background debris (where envelope <= 0.01).
+            # It must NEVER multiply or truncate rembg's anti-aliased alpha boundary inside the garment!
+            new_alpha = np.where(soft_envelope <= 0.01, np.uint8(0), new_alpha)
         except Exception as exc:  # noqa: BLE001
             logger.info(
                 "apply_alpha_intersection: soft-mask intersection failed: %s",

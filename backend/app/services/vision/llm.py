@@ -142,16 +142,17 @@ async def _call_gemma_space(
 SYSTEM_PROMPT = (
     "Output raw JSON only ({...} or [{...}]). No markdown/intro.\n"
     "• sub_category: Specific cut ('Shirt','Sweater','Jeans','Pants','Skirt','Sneakers'). Never generic 'Top'/'Bottom'.\n"
-    "• item_type: Detailed cut ('Crew-Neck T-Shirt','Skinny Jeans'). Must differ from sub_category.\n"
+    "• Pants vs Jeans: 'Jeans' is EXCLUSIVELY for denim fabric with 5-pocket rivet construction. Cotton twill, chinos, dress slacks, suit trousers, and tailored pants MUST be sub_category: 'Pants' (item_type: 'Chinos'|'Tailored Trousers'), dress_code: 'smart-casual'|'business'. Light blue or khaki cotton twill pants are Chinos, NEVER Jeans.\n"
+    "• item_type: Detailed cut ('Crew-Neck T-Shirt','Chinos','Tailored Trousers','Skinny Jeans'). Must differ from sub_category.\n"
     "• caption: 1-2 concise sentences on cut, color, pattern, texture. Must be a complete sentence ending with a period.\n"
-    "• dress_code: 'casual'|'smart-casual'|'business'|'formal'|'athletic'|'loungewear'. Suits/blazers/button-downs='smart-casual'|'business'; gowns/tuxedos='formal'; sportswear='athletic'; sleepwear/sweats='loungewear'; casual tees/denim='casual'. Do not default to casual.\n"
-    "• gender: 'women' for feminine styles (blouses, floral tops/tees, skirts, dresses, heels); 'men' for masculine cuts; 'unisex' for neutral basics (plain tees, activewear, sneakers, bags); 'kids' for children. If worn by a visible model, align with model gender. If flat-lay/hanger, evaluate silhouette & pattern. Never default to 'men'.\n"
+    "• dress_code: 'casual'|'smart-casual'|'business'|'formal'|'athletic'|'loungewear'. Analyze each garment individually. Suits/blazers/dress trousers='business'|'smart-casual'; button-downs/blouses/chinos/slacks/cardigans/sweaters/turtlenecks/loafers='smart-casual'; gowns/tuxedos='formal'; sportswear='athletic'; sleepwear/sweats='loungewear'; casual tees/jeans/denim='casual'. NEVER default to casual.\n"
+    "• gender: 'women' for feminine styles (blouses, floral tops/tees, skirts, dresses, heels); 'men' for masculine cuts; 'unisex' for neutral basics (plain tees, activewear, sneakers, bags); 'kids' for children. If worn by a visible model, ALWAYS align with model gender. If flat-lay/hanger, evaluate silhouette & pattern. If uncertain, use {DEFAULT_GENDER_HINT}. Never default to 'men'.\n"
     "• colors: [{\"name\": str, \"pct\": int}] summing to 100. Specific shades ('Navy','Olive','Burgundy'). Never omit pct.\n"
     "• fabric_materials: [{\"name\": str, \"pct\": int}] summing to 100. Never omit pct.\n"
     "• pattern: 'printed' (graphics/logos), 'geometric' (textures/weave/heathering), 'striped'|'plaid'|'floral', 'solid' (plain unprinted).\n"
     "• text/logos: Read accurately ('American Eagle'=eagle/עיט, not deer/אייל).\n"
     "• season: ['spring'|'summer'|'fall'|'winter'|'all']. Linen/short-sleeve=['summer']; wool/down=['fall','winter'].\n"
-    "• non-clothing items: If not wearable fashion (bottles, cups, phones, bare skin), set is_clothing: false, category: null, sub_category: 'non-clothing', item_type: 'non-clothing', title: 'Non-clothing item', caption: 'Non-clothing item'. Bottles and handheld items are NEVER bags."
+    "• non-clothing items: If not wearable fashion (water bottles, flasks, cups, tumblers, beverages, phones, keys, cameras, bare skin), set is_clothing: false, category: 'Accessories', sub_category: 'non-clothing', item_type: 'non-clothing', title: 'Non-clothing item', caption: 'Non-clothing item'. Handheld bottles, cups, and phones are NEVER bags or accessories."
 )
 
 
@@ -191,7 +192,7 @@ def _build_system_prompt(*, one_pass: bool = False, user_gender: str | None = No
 # ─────────────────────────────────────────────────────────────────────
 _GARMENT_OBJECT_SCHEMA: dict[str, Any] = {
     "type": "object",
-    "required": ["title", "name", "category", "sub_category", "item_type", "caption"],
+    "required": ["is_clothing", "title", "name", "category", "sub_category", "item_type", "caption"],
     "additionalProperties": False,
     "properties": {
         "is_clothing": {
@@ -630,12 +631,16 @@ def _build_batch_prompts(
             directive = f"**OUTPUT LANGUAGE: {lang_name} ({code}).** Strings in fluent {lang_name}. Keys/enums in English.\n"
         user_text = directive + user_text
 
-    system_prompt = (
-        _build_system_prompt(one_pass=False, user_gender=norm_gender)
-        + f"\nBATCH: Analyze {n} crops (indices 0..{n-1}). Return JSON array of {n} objects with 'slot_index'.\n"
+    batch_directive = (
+        f"BATCH: Analyze {n} crops (indices 0..{n-1}). Return JSON array of {n} objects with 'slot_index'.\n"
         + gender_rule
         + hint_block
     )
+    user_text = batch_directive + "\n\n" + user_text
+
+    system_prompt = _build_system_prompt(one_pass=False, user_gender=norm_gender)
+    if norm_model in ("men", "women") and gender_rule:
+        system_prompt = f"{system_prompt}\n{gender_rule}"
     return system_prompt, user_text
 
 
@@ -736,6 +741,7 @@ async def call_gemma_space_stream_attributes(
     id_slot: int | None = None,
     is_single_item: bool = False,
     user_gender: str | None = None,
+    system_prompt: str | None = None,
 ) -> "AsyncIterator[tuple[str, list[str], dict[str, Any]]]":
     """Patch M23 — per-attribute streaming for Gemma on CPU.
 
@@ -777,7 +783,8 @@ async def call_gemma_space_stream_attributes(
 
         # Use authoritative Gemini SYSTEM_PROMPT (exact prompt used by Gemini Flash)
         # Keep system_prompt STATIC so llama-server can cache KV prefix across all batch items!
-        system_prompt = _build_system_prompt(one_pass=False, user_gender=user_gender)
+        if not system_prompt:
+            system_prompt = _build_system_prompt(one_pass=False, user_gender=user_gender)
 
         user_hints = []
         lbl_low = (segformer_label or "").lower()
@@ -798,9 +805,11 @@ async def call_gemma_space_stream_attributes(
                 user_hints.append(f"Crop: '{mapped_cat}'. Describe this item only.")
 
         if "bag" in lbl_low or segformer_category == "bag":
-            user_hints.append("RULE: Bags only. Water bottles/phones/objects: set is_clothing: false, sub_category='non-clothing'.")
+            user_hints.append("RULE: Genuine bags/purses only. Handheld water bottles/cups/phones/objects: set is_clothing: false, sub_category='non-clothing', item_type='non-clothing'.")
         elif ("shoe" in lbl_low or segformer_category == "footwear") and "boot" not in lbl_low:
             user_hints.append("RULE: Footwear. Low-cut/athletic: sub_category='Sneakers'|'Shoes'.")
+        elif "pants" in lbl_low or segformer_category == "bottom":
+            user_hints.append("RULE: Pants vs Jeans. 5-pocket rivet denim only is 'Jeans'. Chinos/slacks/trousers are sub_category='Pants', item_type='Chinos'|'Tailored Trousers', dress_code='smart-casual'.")
 
         user_text = _user_prompt(language, user_gender=user_gender)
         if user_hints:
@@ -828,11 +837,11 @@ async def call_gemma_space_stream_attributes(
                     if "bag" in lbl_low or segformer_category == "bag":
                         prop["enum"] = [
                             "Bag", "Handbag", "Tote Bag", "Crossbody Bag", "Shoulder Bag",
-                            "Backpack", "Clutch", "Wicker Bag", "Basket Bag",
+                            "Backpack", "Clutch", "Wicker Bag", "Basket Bag", "non-clothing",
                         ]
                     elif ("shoe" in lbl_low or segformer_category == "footwear") and "boot" not in lbl_low:
                         prop["enum"] = [
-                            "Sneakers", "Shoes", "Loafers", "Flats", "Heels", "Sandals", "Boots",
+                            "Sneakers", "Shoes", "Loafers", "Flats", "Heels", "Sandals", "Boots", "non-clothing",
                         ]
 
                 if name == "price_cents":
@@ -880,7 +889,7 @@ async def call_gemma_space_stream_attributes(
             "type": "object",
             "properties": schema_props,
             "required": [
-                "name", "category", "sub_category", "item_type",
+                "is_clothing", "name", "category", "sub_category", "item_type",
                 "colors", "pattern", "gender", "dress_code", "season",
                 "fabric_materials", "state", "condition", "quality",
                 "price_cents", "caption",

@@ -2654,23 +2654,27 @@ class GarmentVisionService:
         Returns 'men', 'women', or None if no human model is present.
         """
         from .validation import resolve_garment_gender
-        if detections is not None and not _detect_human_presence(detections):
+        if detections is not None and len(detections) <= 1 and not _detect_human_presence(detections):
             return None
 
-        if self.provider == "gemini" and self.api_key:
-            import io
-            import asyncio
-            from PIL import Image, ImageOps
-            try:
-                with Image.open(io.BytesIO(image_bytes)) as img:
-                    img = ImageOps.exif_transpose(img)
-                    img.thumbnail((512, 512))
-                    if img.mode != "RGB":
-                        img = img.convert("RGB")
-                    out = io.BytesIO()
-                    img.save(out, format="JPEG", quality=80)
-                    small_bytes = out.getvalue()
+        import io
+        import asyncio
+        from PIL import Image, ImageOps
+        small_bytes = None
+        try:
+            with Image.open(io.BytesIO(image_bytes)) as img:
+                img = ImageOps.exif_transpose(img)
+                img.thumbnail((512, 512))
+                if img.mode != "RGB":
+                    img = img.convert("RGB")
+                out = io.BytesIO()
+                img.save(out, format="JPEG", quality=80)
+                small_bytes = out.getvalue()
+        except Exception as prep_exc:
+            logger.info("detect_model_gender: image prep failed: %s", repr(prep_exc)[:120])
 
+        if self.api_key and small_bytes:
+            try:
                 client = self._get_gemini()
                 system_prompt = (
                     "You are a fashion analyst. Analyze whether a human model or person is visible wearing the outfit in this photo.\n"
@@ -2699,10 +2703,11 @@ class GarmentVisionService:
                 if isinstance(parsed, dict) and parsed.get("has_human_model"):
                     mg = resolve_garment_gender(parsed.get("model_gender"))
                     if mg in ("men", "women"):
-                        logger.info("detect_model_gender: detected model_gender=%s", mg)
+                        logger.info("detect_model_gender (Gemini): detected model_gender=%s", mg)
                         return mg
             except Exception as exc:
-                logger.info("detect_model_gender: check failed: %s", repr(exc)[:120])
+                logger.info("detect_model_gender: Gemini check failed: %s", repr(exc)[:120])
+
 
         if detections:
             cat_labels = {
@@ -2968,6 +2973,9 @@ class GarmentVisionService:
             ).lower()
 
             if active_provider in ("gemma", "dressapp") and settings.EYES_GEMMA_SPACE_URL:
+                # Build ONE static system prompt for the entire batch to preserve llama-server KV-cache prefix
+                batch_system_prompt = _build_system_prompt(one_pass=False, user_gender=eff_gender)
+
                 # Group flat_crops by their source image index
                 crops_by_img: dict[int, list[tuple[int, tuple[int, dict[str, Any], bytes, str]]]] = {}
                 for slot_idx, crop_info in enumerate(flat_crops):
@@ -2996,6 +3004,7 @@ class GarmentVisionService:
                                 id_slot=slot_idx,
                                 is_single_item=det.get("is_single_item", False),
                                 user_gender=photo_mg or eff_gender,
+                                system_prompt=batch_system_prompt,
                             ):
                                 assembled.update(partial)
                                 if partial:
@@ -3098,16 +3107,18 @@ class GarmentVisionService:
                             cat = (det.get("category") or det.get("kind") or "garment").lower()
                             hint = f"Item [{sub_i}]: label='{lbl}', category='{cat}' (slot_index={sub_i})"
                             if "bag" in lbl or cat in ("bag", "accessory"):
-                                hint += " (This item is an accessory/bag. Do NOT classify as a top, sweater, or cardigan.)"
+                                hint += " (Genuine bag/accessory. If this is a handheld water bottle, flask, cup, or phone, set is_clothing: false, sub_category: 'non-clothing', item_type: 'non-clothing'.)"
                             elif "shoe" in lbl or cat == "footwear":
                                 hint += " (This item is footwear/shoes.)"
+                            elif "pant" in lbl or cat == "bottom":
+                                hint += " (Pants vs Jeans: 5-pocket rivet denim only is 'Jeans'. Cotton twill, chinos, and slacks are sub_category='Pants', item_type='Chinos', dress_code='smart-casual'.)"
                             items_hints.append(hint)
 
                         multi_garment_schema = dict(_GARMENT_OBJECT_SCHEMA)
                         multi_props = dict(multi_garment_schema.get("properties") or {})
                         multi_props["slot_index"] = {"type": "integer", "description": "0-based item slot index"}
                         multi_garment_schema["properties"] = multi_props
-                        multi_garment_schema["required"] = ["name", "title", "category", "sub_category", "item_type"]
+                        multi_garment_schema["required"] = ["is_clothing", "name", "title", "category", "sub_category", "item_type"]
 
                         multi_item_schema = {
                             "type": "array",
@@ -3125,20 +3136,15 @@ class GarmentVisionService:
                                 f"Do NOT classify any garment from this {photo_mg}'s outfit as the opposite gender."
                             )
 
-                        sys_parts = [
-                            _build_system_prompt(one_pass=False, user_gender=photo_mg or eff_gender),
-                            _language_directive(language),
-                            "\n\nMULTI-ITEM OUTFIT EXTRACTION:\n"
+                        sys_prompt = batch_system_prompt
+                        user_text = (
+                            _user_prompt(language, user_gender=photo_mg or eff_gender)
+                            + "\n\nMULTI-ITEM OUTFIT EXTRACTION:\n"
                             f"This photograph contains {len(slot_crop_list)} fashion items detected by computer vision:\n"
                             + "\n".join(items_hints)
                             + gender_directive
                             + f"\n\nReturn a JSON array containing exactly {len(slot_crop_list)} garment objects in the SAME ORDER [0..{len(slot_crop_list)-1}]."
-                            + "\nFor each item, populate all 16 required fields. Bags and accessories MUST be classified under category 'Accessories' and sub_category 'Bag' or appropriate accessory cut, NEVER as a top, sweater, or cardigan."
-                        ]
-                        sys_prompt = "\n".join(sys_parts)
-                        user_text = (
-                            _user_prompt(language, user_gender=photo_mg or eff_gender)
-                            + f"\n\nAnalyze all {len(slot_crop_list)} fashion items visible in this photo. Return a JSON array with exactly {len(slot_crop_list)} items in order [0..{len(slot_crop_list)-1}]."
+                            + "\nFor each item, populate all required fields. If an item is an accessory, bag, or jewelry, classify under category 'Accessories'. If an item is a handheld non-clothing object (water bottle, flask, cup, phone, beverage), you MUST set is_clothing: false, sub_category: 'non-clothing', item_type: 'non-clothing'."
                         )
 
                         raw_multi = None
@@ -3219,6 +3225,8 @@ class GarmentVisionService:
                             if not analysis.get("title"):
                                 analysis["title"] = "Unnamed garment"
                             analysis = _coerce_enums(analysis, user_gender=eff_gender, model_gender=item_mg)
+                            if item_mg in ("men", "women"):
+                                analysis["gender"] = item_mg
                             _enforce_segformer_category(
                                 analysis,
                                 segformer_kind=det.get("kind") or det.get("category"),
