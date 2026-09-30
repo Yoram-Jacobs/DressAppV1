@@ -303,12 +303,6 @@ def _is_unidentifiable(analysis: dict[str, Any] | None) -> bool:
     """
     if not analysis:
         return True
-    if analysis.get("is_clothing") is False:
-        return True
-    cat = (analysis.get("category") or "").strip().lower()
-    if cat in ("none", "null", "non-clothing", "non_clothing"):
-        return True
-
     title = (analysis.get("title") or "").lower().strip()
     name = (analysis.get("name") or "").lower().strip()
     sub_category = (analysis.get("sub_category") or "").lower().strip()
@@ -321,7 +315,7 @@ def _is_unidentifiable(analysis: dict[str, Any] | None) -> bool:
         return True
     
     NON_CLOTHING_OBJECT_KEYWORDS = (
-        "water bottle", "plastic bottle", "bottle", "disposable bottle", "water flask",
+        "water bottle", "plastic bottle", "bottle", "disposable bottle", "water flask", "flask",
         "tumbler", "drink cup", "beverage", "thermos", "drinking glass",
         "smartphone", "cell phone", "mobile phone", "telephone", "iphone", "android phone",
         "laptop", "tablet", "electronics", "keys", "keychain", "car keys",
@@ -353,6 +347,20 @@ def _is_unidentifiable(analysis: dict[str, Any] | None) -> bool:
     )
     if any(p in combined_text for p in GIVE_UP_PHRASES):
         return True
+
+    if analysis.get("is_clothing") is False:
+        # Check if the LLM mistakenly marked a genuine fashion accessory as is_clothing: false
+        # because accessories (belts, sunglasses, bags, jewelry) are colloquially distinguished from clothing.
+        GENUINE_ACCESSORY_KEYWORDS = (
+            "belt", "sunglasses", "glasses", "eyewear", "hat", "cap", "beanie", "bag", "handbag",
+            "tote", "purse", "backpack", "shoe", "shoes", "sneaker", "sneakers", "boot", "boots",
+            "sandal", "sandals", "scarf", "glove", "gloves", "jewelry", "watch", "necklace", "bracelet",
+        )
+        if any(w in combined_text for w in GENUINE_ACCESSORY_KEYWORDS):
+            analysis["is_clothing"] = True
+        else:
+            return True
+
     if not item_type and not sub_category:
         return True
     return False

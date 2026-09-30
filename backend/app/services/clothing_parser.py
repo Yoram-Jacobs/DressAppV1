@@ -1638,10 +1638,10 @@ def apply_alpha_intersection(
 
     # 2. Human skin chrominance filter for torso/body garments and facial eyewear.
     # SegFormer ATR-18 often misses skin pixels (hands/wrists on hip, collarbones,
-    # cleavage, necks, cheeks/nose behind glasses). If human_mask is present, detect and excise bare skin.
+    # cleavage, necks). If human_mask is present, detect and excise bare skin.
     # CRITICAL: Never chew holes into the garment core (protects beige, tan, camel, khaki, olive fabrics).
-    # Exclude "bottom" so chinos and khakis are not misclassified as bare skin!
-    if has_human and (norm_cat in {"top", "outerwear", "dress", "fullbody"} or is_eyewear):
+    # Exclude "bottom" and eyewear so chinos, khakis, and sunglasses frames/lenses are never chewed!
+    if has_human and norm_cat in {"top", "outerwear", "dress", "fullbody"}:
         try:
             r = arr[:, :, 0].astype(float)
             g = arr[:, :, 1].astype(float)

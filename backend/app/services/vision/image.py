@@ -204,9 +204,10 @@ def _extract_garment_mask(img: Image.Image) -> np.ndarray:
     if has_alpha:
         img_rgba = img.convert("RGBA")
         alpha = np.array(img_rgba.split()[-1])
-        coverage = np.mean(alpha > 30)
-        if 0.02 < coverage < 0.95:
-            return (alpha > 30).astype(np.uint8) * 255
+        num_solid = int(np.sum(alpha > 30))
+        coverage = float(np.mean(alpha > 30))
+        if num_solid > 25 and coverage < 0.99:
+            return alpha
 
     # RGB fallback: segment by color contrast against corners/borders
     rgb = np.array(img.convert("RGB"))
@@ -352,8 +353,9 @@ def _fit_crop_to_card(
         if has_alpha:
             rgba = img.convert("RGBA")
             alpha_arr = np.array(rgba.split()[-1])
+            num_solid = int(np.sum(alpha_arr > 30))
             coverage = float(np.mean(alpha_arr > 30))
-            if 0.02 < coverage < 0.98:
+            if num_solid > 25 and coverage < 0.99:
                 # Pre-existing transparent cutout: preserve the studio-grade anti-aliased alpha!
                 # Do NOT overwrite with a binary thresholded mask (which produces sawtooth/staircase edges).
                 mask = (alpha_arr > 30).astype(np.uint8) * 255

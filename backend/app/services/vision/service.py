@@ -3079,6 +3079,19 @@ class GarmentVisionService:
                             except Exception:
                                 pass
 
+                        yield {
+                            "type": "field",
+                            "index": slot_idx,
+                            "image_index": image_idx,
+                            "group": "category",
+                            "fields": {
+                                "category": analysis.get("category"),
+                                "sub_category": analysis.get("sub_category"),
+                                "item_type": analysis.get("item_type"),
+                                "title": analysis.get("title"),
+                            },
+                        }
+
                         meta_crop = items_meta[slot_idx] if slot_idx < len(items_meta) else {}
                         yield {
                             "type": "item",

@@ -169,7 +169,9 @@ def _rembg_remove(image_bytes: bytes) -> bytes | None:
             original = ImageOps.exif_transpose(original).convert("RGB")
         except Exception:  # noqa: BLE001
             # Not a decodable image — let rembg attempt anyway.
-            rembg_kwargs = {"session": sess, "post_process_mask": True, "alpha_matting": use_alpha_matting}
+            # post_process_mask=False preserves continuous anti-aliased alpha boundaries
+            # without morphological erosion or binary thresholding that creates staircases and holes.
+            rembg_kwargs = {"session": sess, "post_process_mask": False, "alpha_matting": use_alpha_matting}
             if use_alpha_matting:
                 rembg_kwargs.update({
                     "alpha_matting_foreground_threshold": 240,
@@ -198,7 +200,8 @@ def _rembg_remove(image_bytes: bytes) -> bytes | None:
             inference_bytes = image_bytes
 
         # 3) Run rembg — yields PNG with alpha at the inference resolution.
-        rembg_kwargs = {"session": sess, "post_process_mask": True, "alpha_matting": use_alpha_matting}
+        # post_process_mask=False preserves continuous anti-aliased alpha boundaries
+        rembg_kwargs = {"session": sess, "post_process_mask": False, "alpha_matting": use_alpha_matting}
         if use_alpha_matting:
             rembg_kwargs.update({
                 "alpha_matting_foreground_threshold": 240,

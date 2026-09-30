@@ -1098,13 +1098,23 @@ def _coerce_enums(
         itype_lower = "non-clothing"
 
     # Chinos vs Jeans: Chinos, slacks, and tailored trousers are Pants, NEVER Jeans
-    is_chinos = any(w in full_combined for w in ("chino", "chinos", "צ'ינו", "slacks", "trouser", "trousers", "pleated pant", "dress pant"))
+    has_twill = any(w in full_combined for w in ("twill", "cotton twill", "chino", "chinos", "צ'ינו", "slacks", "trouser", "trousers", "pleated pant", "dress pant", "tailored pant"))
+    is_denim = "denim" in full_combined or "5-pocket" in full_combined or "rivet" in full_combined
+    is_chinos = (
+        any(w in full_combined for w in ("chino", "chinos", "צ'ינו", "slacks", "trouser", "trousers", "pleated pant", "dress pant"))
+        or (has_twill and not is_denim)
+        or ("light blue" in full_combined and any(w in full_combined for w in ("cotton", "pant", "trouser")) and not is_denim)
+    )
     if is_chinos:
         parsed["sub_category"] = "Pants"
         if itype_lower in ("straight jeans", "skinny jeans", "jeans", "pants", "garment") or "jean" in itype_lower:
             parsed["item_type"] = "Chinos"
             itype_lower = "chinos"
         sub_lower = "pants"
+        import re as _re
+        for key in ("name", "title"):
+            if parsed.get(key) and "jean" in str(parsed[key]).lower():
+                parsed[key] = _re.sub(r"(?i)\bjeans?\b", "Chinos", str(parsed[key])).strip()
 
     pat_val = (parsed.get("pattern") or "").strip().lower()
     is_fem_cut = is_distinctly_feminine_garment(cat_lower, sub_lower, itype_lower, name=parsed.get("name"), full_text=full_text_enum, pattern=pat_val)
@@ -1144,6 +1154,9 @@ def _coerce_enums(
         parsed["gender"] = "unisex"
     elif g_val == "kids":
         parsed["gender"] = "kids"
+    elif g_val in ("men", "women"):
+        # Explicit model/vision observation ALWAYS takes precedence over user profile gender!
+        parsed["gender"] = g_val
     elif norm_user in ("men", "women"):
         # Anchor unisex/standard garments (pants, trousers, shoes, jackets) to the known wearer gender
         parsed["gender"] = norm_user
@@ -1554,6 +1567,9 @@ def _sanitize_bag_or_accessory(
     lbl_low = (label or "").lower()
     kind_low = (kind or "").lower()
 
+    if analysis.get("is_clothing") is False or any(w in combined for w in ("bottle", "water bottle", "flask", "tumbler", "cup", "phone", "smartphone", "non-clothing", "non_clothing")):
+        return
+
     # Determine if this item is a bag / handbag / basket
     is_bag = (
         kind_low == "bag"
@@ -1683,6 +1699,15 @@ def _enforce_segformer_category(
         # (e.g. prevent straw basket bag from being classified as a Belt under Accessories,
         # and prevent white low-top sneakers from being classified as Ankle Boots under Footwear).
         if "bag" in lbl_low or kind == "bag":
+            combined_item_txt = f"{analysis.get('name', '')} {analysis.get('title', '')} {analysis.get('caption', '')} {analysis.get('sub_category', '')} {analysis.get('item_type', '')}".lower()
+            if any(w in combined_item_txt for w in ("bottle", "water bottle", "flask", "tumbler", "cup", "phone", "smartphone", "non-clothing", "non_clothing")):
+                analysis["is_clothing"] = False
+                analysis["category"] = "Accessories"
+                analysis["sub_category"] = "non-clothing"
+                analysis["item_type"] = "non-clothing"
+                analysis["title"] = "Non-clothing item"
+                return analysis
+
             sub_low = (analysis.get("sub_category") or "").lower()
             item_low = (analysis.get("item_type") or "").lower()
             curr_name = (analysis.get("name") or analysis.get("title") or "").lower()

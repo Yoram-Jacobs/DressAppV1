@@ -143,16 +143,16 @@ SYSTEM_PROMPT = (
     "Output raw JSON only ({...} or [{...}]). No markdown/intro.\n"
     "• sub_category: Specific cut ('Shirt','Sweater','Jeans','Pants','Skirt','Sneakers'). Never generic 'Top'/'Bottom'.\n"
     "• Pants vs Jeans: 'Jeans' is EXCLUSIVELY for denim fabric with 5-pocket rivet construction. Cotton twill, chinos, dress slacks, suit trousers, and tailored pants MUST be sub_category: 'Pants' (item_type: 'Chinos'|'Tailored Trousers'), dress_code: 'smart-casual'|'business'. Light blue or khaki cotton twill pants are Chinos, NEVER Jeans.\n"
-    "• item_type: Detailed cut ('Crew-Neck T-Shirt','Chinos','Tailored Trousers','Skinny Jeans'). Must differ from sub_category.\n"
+    "• item_type: Detailed cut ('Crew-Neck T-Shirt','Chinos','Tailored Trousers','Straight Jeans'). Must differ from sub_category.\n"
     "• caption: 1-2 concise sentences on cut, color, pattern, texture. Must be a complete sentence ending with a period.\n"
     "• dress_code: 'casual'|'smart-casual'|'business'|'formal'|'athletic'|'loungewear'. Analyze each garment individually. Suits/blazers/dress trousers='business'|'smart-casual'; button-downs/blouses/chinos/slacks/cardigans/sweaters/turtlenecks/loafers='smart-casual'; gowns/tuxedos='formal'; sportswear='athletic'; sleepwear/sweats='loungewear'; casual tees/jeans/denim='casual'. NEVER default to casual.\n"
-    "• gender: 'women' for feminine styles (blouses, floral tops/tees, skirts, dresses, heels); 'men' for masculine cuts; 'unisex' for neutral basics (plain tees, activewear, sneakers, bags); 'kids' for children. If worn by a visible model, ALWAYS align with model gender. If flat-lay/hanger, evaluate silhouette & pattern. If uncertain, use {DEFAULT_GENDER_HINT}. Never default to 'men'.\n"
+    "• gender: 'women' for feminine styles (blouses, floral tops/tees, skirts, dresses, heels); 'men' for masculine cuts; 'unisex' for neutral basics (plain tees, activewear, sneakers, bags); 'kids' for children. If worn by a visible model, ALWAYS match the model's apparent gender ('women' for female model, 'men' for male model). If flat-lay/hanger, evaluate silhouette & pattern. Never default to 'men'.\n"
     "• colors: [{\"name\": str, \"pct\": int}] summing to 100. Specific shades ('Navy','Olive','Burgundy'). Never omit pct.\n"
     "• fabric_materials: [{\"name\": str, \"pct\": int}] summing to 100. Never omit pct.\n"
     "• pattern: 'printed' (graphics/logos), 'geometric' (textures/weave/heathering), 'striped'|'plaid'|'floral', 'solid' (plain unprinted).\n"
     "• text/logos: Read accurately ('American Eagle'=eagle/עיט, not deer/אייל).\n"
     "• season: ['spring'|'summer'|'fall'|'winter'|'all']. Linen/short-sleeve=['summer']; wool/down=['fall','winter'].\n"
-    "• non-clothing items: If not wearable fashion (water bottles, flasks, cups, tumblers, beverages, phones, keys, cameras, bare skin), set is_clothing: false, category: 'Accessories', sub_category: 'non-clothing', item_type: 'non-clothing', title: 'Non-clothing item', caption: 'Non-clothing item'. Handheld bottles, cups, and phones are NEVER bags or accessories."
+    "• non-clothing items: If not wearable fashion (water bottles, flasks, cups, tumblers, beverages, cans, phones, keys, cameras, bare skin), set is_clothing: false, category: 'Accessories', sub_category: 'non-clothing', item_type: 'non-clothing', title: 'Non-clothing item', caption: 'Non-clothing item'. Handheld bottles, cups, and phones are NEVER bags or accessories. Genuine accessories (belts, sunglasses, hats, bags, jewelry, scarves) MUST have is_clothing: true."
 )
 
 
@@ -172,9 +172,11 @@ def _build_system_prompt(*, one_pass: bool = False, user_gender: str | None = No
     ``one_pass=False`` returns the base prompt. ``one_pass=True``
     appends the bbox-emission rules + one-shot example.
     """
-    from .validation import resolve_garment_gender
-    norm_gender = resolve_garment_gender(user_gender) or "unisex"
-    prompt = SYSTEM_PROMPT.replace("{DEFAULT_GENDER_HINT}", f"'{norm_gender}'")
+    prompt = SYSTEM_PROMPT
+    if "{DEFAULT_GENDER_HINT}" in prompt:
+        from .validation import resolve_garment_gender
+        norm_gender = resolve_garment_gender(user_gender) or "unisex"
+        prompt = prompt.replace("{DEFAULT_GENDER_HINT}", f"'{norm_gender}'")
     if one_pass:
         return prompt + SYSTEM_PROMPT_ONE_PASS_SUFFIX
     return prompt
