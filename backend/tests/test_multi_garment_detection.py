@@ -1597,6 +1597,86 @@ def test_fit_crop_to_card_avoids_zooming_into_noise():
     assert fitted_img.size == (900, 1200)
 
 
+def test_multi_body_zones_with_descriptive_labels():
+    """Verify that descriptive garment labels (e.g. plaid blazer, trousers, double monk strap shoes)
+    trigger multi-body zone detection and are never collapsed into an already-cropped single item."""
+    from app.services.vision.geometry import _looks_already_cropped
+
+    detections = [
+        {"bbox": [100, 250, 450, 750], "label": "plaid blazer", "kind": "garment", "category": "garment"},
+        {"bbox": [430, 300, 850, 700], "label": "trousers", "kind": "garment", "category": "garment"},
+        {"bbox": [840, 310, 960, 460], "label": "double monk strap shoes", "kind": "garment", "category": "garment"},
+        {"bbox": [840, 520, 960, 670], "label": "double monk strap shoes", "kind": "garment", "category": "garment"},
+        {"bbox": [150, 400, 300, 600], "label": "scarf", "kind": "accessory", "category": "accessory"},
+        {"bbox": [440, 340, 480, 660], "label": "belt", "kind": "accessory", "category": "accessory"},
+    ]
+    assert _looks_already_cropped(detections) is False, "Multi-garment outfit must not be treated as already cropped"
+
+
+def test_segformer_run_inference_forward_pass(monkeypatch):
+    """Verify _run_inference performs the model forward pass and computes logits without UnboundLocalError."""
+    pytest.importorskip("torch._C", exc_type=ImportError)
+    import torch
+    import numpy as np
+    from PIL import Image
+    from app.services import clothing_parser
+
+    # Mock processor and model to verify forward pass pipeline
+    class DummyOutputs:
+        def __init__(self):
+            # 1 batch, 18 classes, 32x32 feature map
+            self.logits = torch.zeros((1, 18, 32, 32), dtype=torch.float32)
+
+    class DummyModel:
+        def __call__(self, **kwargs):
+            return DummyOutputs()
+
+    class DummyProcessor:
+        def __call__(self, images=None, return_tensors=None):
+            return {"pixel_values": torch.zeros((1, 3, 512, 512))}
+
+    monkeypatch.setattr(clothing_parser, "_load_model", lambda: None)
+    monkeypatch.setattr(clothing_parser, "_processor", DummyProcessor())
+    monkeypatch.setattr(clothing_parser, "_model", DummyModel())
+
+    test_img = Image.new("RGB", (200, 300), color=(128, 128, 128))
+    pred = clothing_parser._run_inference(test_img)
+    assert isinstance(pred, np.ndarray)
+    assert pred.shape == (300, 200)
+
+
+@pytest.mark.anyio
+async def test_detect_items_merging_both_sources(monkeypatch):
+    """Verify detect_items merges parser hits and gemini hits without UnboundLocalError."""
+    from app.services.vision.service import GarmentVisionService
+
+    service = GarmentVisionService()
+
+    fake_parser_hits = [
+        {"bbox": [100, 200, 500, 600], "label": "upper_clothes", "kind": "top", "category": "top", "score": 0.95}
+    ]
+    fake_gemini_hits = [
+        {"bbox": [550, 200, 900, 600], "label": "trousers", "kind": "bottom", "category": "bottom", "score": 0.90}
+    ]
+
+    async def mock_parser(image_bytes, count_hint=None):
+        return fake_parser_hits
+
+    async def mock_gemini(image_bytes):
+        return fake_gemini_hits
+
+    monkeypatch.setattr(service, "_detect_via_clothing_parser", mock_parser)
+    monkeypatch.setattr(service, "_detect_via_gemini", mock_gemini)
+
+    results = await service.detect_items(b"fake_image_bytes", count_hint=2)
+    assert len(results) == 2
+    labels = [r["label"] for r in results]
+    assert "upper_clothes" in labels
+    assert "trousers" in labels
+
+
+
+
 
 
 

@@ -593,6 +593,7 @@ class GarmentVisionService:
                 logger.info("detect_items: Gemini detection fallback skipped: %s", exc)
 
         if parser_hits and gemini_hits:
+            merged: list[dict[str, Any]] = list(parser_hits)
             _NON_FASHION_KEYWORDS = frozenset({
                 "bottle", "water bottle", "cup", "mug", "flask", "tumbler", "can",
                 "phone", "smartphone", "iphone", "cellphone", "camera", "food",
@@ -2450,9 +2451,21 @@ class GarmentVisionService:
                     )
                 )
 
-                top_dets = [d for d in detections if (d.get("category") or d.get("kind") or d.get("label") or "").lower() in ("top", "upper-clothes", "upper_clothes", "shirt", "t-shirt", "jacket", "coat", "sweater", "dress")]
-                bottom_dets = [d for d in detections if (d.get("category") or d.get("kind") or d.get("label") or "").lower() in ("bottom", "pants", "skirt", "jeans")]
-                shoe_dets = [d for d in detections if (d.get("category") or d.get("kind") or d.get("label") or "").lower() in ("footwear", "shoes", "sandals", "sneakers", "boots", "floppers", "clogs", "slides")]
+                top_dets = [
+                    d for d in detections
+                    if any(k in f"{d.get('category') or ''} {d.get('kind') or ''} {d.get('label') or ''}".lower()
+                           for k in ("top", "upper", "shirt", "jacket", "blazer", "coat", "sweater", "dress", "hoodie", "cardigan", "blouse", "suit", "vest", "t-shirt", "tee"))
+                ]
+                bottom_dets = [
+                    d for d in detections
+                    if any(k in f"{d.get('category') or ''} {d.get('kind') or ''} {d.get('label') or ''}".lower()
+                           for k in ("bottom", "pant", "trousers", "skirt", "jean", "short", "legging", "chinos", "trouser", "sweatpant", "jogger", "slack"))
+                ]
+                shoe_dets = [
+                    d for d in detections
+                    if any(k in f"{d.get('category') or ''} {d.get('kind') or ''} {d.get('label') or ''}".lower()
+                           for k in ("footwear", "shoe", "sandal", "sneaker", "boot", "loafer", "heel", "clog", "slide", "flopper", "flip-flop", "mule", "pump", "oxford", "derby", "monk"))
+                ]
 
                 has_multi_body_zones = bool(
                     (top_dets and bottom_dets and min(d["bbox"][0] for d in top_dets) < min(d["bbox"][0] for d in bottom_dets))
@@ -2461,7 +2474,7 @@ class GarmentVisionService:
                 )
 
                 same_zone_or_category = False
-                if not has_human_wearer and not has_multi_body_zones and detections:
+                if not has_human_wearer and not has_multi_body_zones and detections and len(detections) <= 2:
                     det_cats = {
                         (d.get("category") or d.get("kind") or "garment").lower()
                         for d in detections

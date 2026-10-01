@@ -387,9 +387,21 @@ def _looks_already_cropped(
 
     # Check if multiple distinct body zones exist in anatomical arrangement
     # (e.g. top + bottom, or bottom + footwear, or top + footwear)
-    top_dets = [d for d in detections if (d.get("category") or d.get("kind") or d.get("label") or "").lower() in ("top", "upper-clothes", "upper_clothes", "shirt", "t-shirt", "jacket", "coat", "sweater", "dress")]
-    bottom_dets = [d for d in detections if (d.get("category") or d.get("kind") or d.get("label") or "").lower() in ("bottom", "pants", "skirt", "jeans")]
-    shoe_dets = [d for d in detections if (d.get("category") or d.get("kind") or d.get("label") or "").lower() in ("footwear", "shoes", "sandals", "sneakers", "boots", "floppers", "clogs", "slides")]
+    top_dets = [
+        d for d in detections
+        if any(k in f"{d.get('category') or ''} {d.get('kind') or ''} {d.get('label') or ''}".lower()
+               for k in ("top", "upper", "shirt", "jacket", "blazer", "coat", "sweater", "dress", "hoodie", "cardigan", "blouse", "suit", "vest", "t-shirt", "tee"))
+    ]
+    bottom_dets = [
+        d for d in detections
+        if any(k in f"{d.get('category') or ''} {d.get('kind') or ''} {d.get('label') or ''}".lower()
+               for k in ("bottom", "pant", "trousers", "skirt", "jean", "short", "legging", "chinos", "trouser", "sweatpant", "jogger", "slack"))
+    ]
+    shoe_dets = [
+        d for d in detections
+        if any(k in f"{d.get('category') or ''} {d.get('kind') or ''} {d.get('label') or ''}".lower()
+               for k in ("footwear", "shoe", "sandal", "sneaker", "boot", "loafer", "heel", "clog", "slide", "flopper", "flip-flop", "mule", "pump", "oxford", "derby", "monk"))
+    ]
 
     if (top_dets and bottom_dets and min(d["bbox"][0] for d in top_dets) < min(d["bbox"][0] for d in bottom_dets)) or \
        (bottom_dets and shoe_dets and min(d["bbox"][0] for d in bottom_dets) < min(d["bbox"][0] for d in shoe_dets)) or \
@@ -411,8 +423,12 @@ def _looks_already_cropped(
     kinds = {(d.get("category") or d.get("kind") or "garment").lower() for d in detections}
 
     # Signal 0b: Footwear pair detection without a human model (e.g. pair of slides/sandals/sneakers/clogs)
-    if kinds and all(k in ("footwear", "shoes", "sandals", "sneakers", "boots", "floppers", "clogs", "slides") for k in kinds):
+    if kinds and all(any(k in kind for k in ("footwear", "shoe", "sandal", "sneaker", "boot", "flopper", "clog", "slide")) for kind in kinds):
         return True
+
+    # 3 or more non-footwear detections is definitely a multi-item scene, never an already-cropped single item
+    if len(detections) >= 3:
+        return False
 
     # Signal 1: exactly one detection
     if len(detections) == 1:
@@ -430,10 +446,11 @@ def _looks_already_cropped(
 
     # Signal 2: touching or heavily-overlapping detections imply one garment with
     # conflicting class labels (e.g. top + bottom split on a two-tone T-shirt or dress).
-    sum_areas = sum(areas)
-    overlap_ratio = sum_areas / float(union)
-    if overlap_ratio >= 1.25:
-        return True
+    if len(detections) == 2:
+        sum_areas = sum(areas)
+        overlap_ratio = sum_areas / float(union)
+        if overlap_ratio >= 1.25:
+            return True
 
     # Signal 3: Two detections in a flat lay that touch vertically (gap <= 2.5% frame height)
     # and span a common width (horizontal overlap >= 50%), forming a single contiguous silhouette.

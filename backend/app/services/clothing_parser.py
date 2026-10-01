@@ -194,6 +194,9 @@ def _run_inference(pil_full: Image.Image) -> np.ndarray:
     import torch
     pil_small = _resize_for_inference(pil_full)
     inputs = _processor(images=pil_small, return_tensors="pt")
+    with torch.no_grad():
+        outputs = _model(**inputs)
+    logits = outputs.logits
     import torch.nn.functional as F
     # Bilinear interpolation of logits up to model input resolution (<= 512x512)
     # before argmax eliminates blocky 128px nearest-neighbor sawtooth staircases.
