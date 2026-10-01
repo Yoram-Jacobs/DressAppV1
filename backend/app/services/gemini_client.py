@@ -175,6 +175,7 @@ class GeminiClient:
         response_mime_type: str | None,
         response_schema: dict[str, Any] | None,
         tools: list[Any] | None = None,
+        thinking_budget: int | None = None,
     ) -> Any:
         cfg_kwargs: dict[str, Any] = {}
         if system:
@@ -192,6 +193,13 @@ class GeminiClient:
                 cfg_kwargs["response_schema"] = response_schema
         if tools:
             cfg_kwargs["tools"] = tools
+        if thinking_budget is not None and _genai_types is not None:
+            try:
+                thinking_cls = getattr(_genai_types, "ThinkingConfig", None)
+                if thinking_cls:
+                    cfg_kwargs["thinking_config"] = thinking_cls(thinking_budget=int(thinking_budget))
+            except Exception:
+                pass
 
         if cfg_kwargs and _genai_types is not None:
             return _genai_types.GenerateContentConfig(**cfg_kwargs)
@@ -209,6 +217,7 @@ class GeminiClient:
         response_mime_type: str | None = None,
         response_schema: dict[str, Any] | None = None,
         tools: list[Any] | None = None,
+        thinking_budget: int | None = None,
     ) -> str:
         """Text-only completion. Returns the model's response text."""
         config = self._build_config(
@@ -218,6 +227,7 @@ class GeminiClient:
             response_mime_type=response_mime_type,
             response_schema=response_schema,
             tools=tools,
+            thinking_budget=thinking_budget,
         )
         resp = await self._client.aio.models.generate_content(
             model=_normalise_model(model),
@@ -297,6 +307,7 @@ class GeminiClient:
         max_tokens: int | None = None,
         response_mime_type: str | None = None,
         response_schema: dict[str, Any] | None = None,
+        thinking_budget: int | None = None,
     ) -> str:
         """Multimodal completion (text + image parts). Non-streaming.
 
@@ -310,6 +321,7 @@ class GeminiClient:
             max_tokens=max_tokens,
             response_mime_type=response_mime_type,
             response_schema=response_schema,
+            thinking_budget=thinking_budget,
         )
         contents = _coerce_content_parts(user_parts)
         resp = await self._client.aio.models.generate_content(
@@ -330,6 +342,7 @@ class GeminiClient:
         max_tokens: int | None = None,
         response_mime_type: str | None = None,
         response_schema: dict[str, Any] | None = None,
+        thinking_budget: int | None = None,
     ) -> AsyncIterator[str]:
         """Streaming multimodal completion. Yields text deltas."""
         config = self._build_config(
@@ -338,6 +351,7 @@ class GeminiClient:
             max_tokens=max_tokens,
             response_mime_type=response_mime_type,
             response_schema=response_schema,
+            thinking_budget=thinking_budget,
         )
         contents = _coerce_content_parts(user_parts)
         stream = await self._client.aio.models.generate_content_stream(

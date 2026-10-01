@@ -102,6 +102,44 @@ def _language_directive(code: str | None) -> str:
     return _i18n.language_directive(code)
 
 
+def _compact_closet_summary(items: list[dict[str, Any]] | None) -> list[dict[str, Any]]:
+    if not items:
+        return []
+    compact: list[dict[str, Any]] = []
+    for it in items:
+        colors = it.get("colors")
+        color_names = []
+        if isinstance(colors, list):
+            for c in colors:
+                if isinstance(c, dict) and c.get("name"):
+                    color_names.append(c["name"])
+                elif isinstance(c, str):
+                    color_names.append(c)
+        elif isinstance(colors, str):
+            color_names.append(colors)
+
+        compact_item: dict[str, Any] = {
+            "id": str(it.get("id") or it.get("_id") or ""),
+            "name": it.get("title") or it.get("name") or "",
+            "category": it.get("category"),
+            "sub_category": it.get("sub_category"),
+        }
+        if color_names:
+            compact_item["colors"] = color_names
+        if it.get("dress_code"):
+            compact_item["dress_code"] = it.get("dress_code")
+        if it.get("season"):
+            compact_item["season"] = it.get("season")
+        if it.get("pattern"):
+            compact_item["pattern"] = it.get("pattern")
+        if it.get("tags"):
+            compact_item["tags"] = it.get("tags")[:6]
+        if it.get("brand"):
+            compact_item["brand"] = it.get("brand")
+        compact.append(compact_item)
+    return compact
+
+
 async def prepare_stylist_prompt(
     *,
     session_id: str | None = None,
@@ -141,7 +179,7 @@ async def prepare_stylist_prompt(
         "calendar_events": calendar_events or [],
         "cultural_rules": cultural_rules or [],
         "user_profile": safe_profile,
-        "closet_summary": closet_summary or [],
+        "closet_summary": _compact_closet_summary(closet_summary),
     }
     lang_code = ((user_profile or {}).get("preferred_language") or "en").lower()
     lang_name = _LANG_NAMES.get(lang_code, "English")
@@ -153,10 +191,12 @@ async def prepare_stylist_prompt(
         f"`spoken_reply`) MUST be written in fluent, idiomatic "
         f"{lang_name}. JSON keys and enum tokens stay in English.\n\n"
     )
+    # Compact JSON without whitespace indentation saves ~35% tokens
+    context_json = json.dumps(context_block, ensure_ascii=False, separators=(",", ":"), default=str)
     prompt_text = (
         f"{lang_preamble}"
         f"USER_REQUEST:\n{user_text}\n\n"
-        f"CONTEXT:\n{json.dumps(context_block, ensure_ascii=False, indent=2, default=str)}\n\n"
+        f"CONTEXT:\n{context_json}\n\n"
         "Return the JSON object now."
     )
     return sys_msg, prompt_text

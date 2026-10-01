@@ -213,13 +213,10 @@ def _build_reconstruction_prompt(analysis: dict[str, Any]) -> str:
         extras.append(f"{analysis['dress_code']} style")
     extras_str = (", " + ", ".join(extras)) if extras else ""
     prompt = (
-        f"High-fidelity editorial product photograph of a complete, "
-        f"full-length {descriptor}"
-        f"{extras_str}. Studio lighting, pure solid off-white background, "
-        "garment-only product shot, centered composition, sharp focus, "
-        "photorealistic, preserve fabric texture and pattern details, "
-        "CRITICAL: NO landscape, NO background scenery, NO outdoor environment, NO room, NO mannequin, NO model, "
-        "NO scenery of any kind, NO text, NO logos, NO watermarks."
+        f"High-fidelity editorial product photograph of an isolated complete {descriptor}"
+        f"{extras_str}. Centered flat lay composition, solid seamless off-white background, "
+        "balanced diffused softbox lighting, sharp fabric weave and stitch detail, front view. "
+        "Negative: person, model, mannequin, hanger, room, scenery, shadow, text, watermark."
     )
     return prompt[:1000]
 

@@ -143,7 +143,8 @@ async def call_main_llm(
                 logger.warning("Failed to decode image_b64_jpeg in call_main_llm; proceeding text-only: %s", b64_err)
                 user_parts = [user_text]
 
-            logger.info("Executing multimodal LLM completion via Gemini (%s)", target_model)
+            t_budget = None if think else 0
+            logger.info("Executing multimodal LLM completion via Gemini (%s, thinking_budget=%s)", target_model, t_budget)
             return await client.vision(
                 user_parts=user_parts,
                 system=system_prompt,
@@ -152,9 +153,11 @@ async def call_main_llm(
                 max_tokens=max_tokens,
                 response_mime_type=mime_type,
                 response_schema=json_schema,
+                thinking_budget=t_budget,
             )
         else:
-            logger.info("Executing text LLM completion via Gemini (%s)", target_model)
+            t_budget = None if think else 0
+            logger.info("Executing text LLM completion via Gemini (%s, thinking_budget=%s)", target_model, t_budget)
             return await client.text(
                 user_text=user_text,
                 system=system_prompt,
@@ -163,6 +166,7 @@ async def call_main_llm(
                 max_tokens=max_tokens,
                 response_mime_type=mime_type,
                 response_schema=json_schema,
+                thinking_budget=t_budget,
             )
     except Exception as gemini_exc:
         # Phase 3: Quota Safety Net — fallback to on-prem Eyes Gemma-4-E4B on the VPS

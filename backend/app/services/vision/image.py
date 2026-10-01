@@ -430,8 +430,8 @@ def fit_image_data_url_to_card(
 def _create_batch_collage(
     images_bytes_list: list[bytes],
     *,
-    max_side: int = 1024,
-    cell_padding: int = 8,
+    max_side: int = 768,  # Sized for Gemini single-tile boundary (258 tokens) and Gemma <=256 tokens
+    cell_padding: int = 6,
 ) -> bytes:
     """Compose multiple uploaded photos into a single contact-sheet collage image.
 

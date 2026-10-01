@@ -142,20 +142,19 @@ async def _call_gemma_space(
 SYSTEM_PROMPT = (
     "Output raw JSON only ({...} or [{...}]). No markdown/intro.\n"
     "• sub_category: Specific cut ('Shirt','Sweater','Jeans','Pants','Skirt','Sneakers','Sandals','Boots','Sunglasses','Bags'). Never generic 'Top'/'Bottom'.\n"
-    "• Bottoms: 'Jeans' is EXCLUSIVELY for denim fabric with 5-pocket rivet construction. Cotton twill, chinos, dress slacks, and suit trousers are sub_category: 'Pants' (item_type: 'Chinos'|'Tailored Trousers'), dress_code: 'smart-casual'|'business'. Athletic fleece pants, trainer pants, joggers, and sweatpants with elastic cuffs or drawstring waistbands MUST be sub_category: 'Pants' (item_type: 'Sweatpants'|'Joggers'), dress_code: 'casual'|'athletic', material: 'Cotton'|'Polyester'. They are NEVER 'Tailored Trousers' or 'Wool' or 'Business'.\n"
-    "• Footwear: Identify specific footwear style: 'Sneakers' (athletic/casual rubber-sole shoes), 'Sandals' (open-toe, strappy, heeled or flat summer footwear), 'Heels'/'Pumps', 'Boots', 'Loafers', 'Slides', 'Flats'. Open-toe patterned or strappy footwear is sub_category: 'Sandals' (item_type: 'Open-Toe Sandals'|'Strappy Sandals'|'Heeled Sandals'), NEVER 'Sneakers'.\n"
-    "• Accessories: 'Sunglasses' (eyewear/shades, item_type: 'Classic Sunglasses'), 'Handbag'/'Bags', 'Belts', 'Headwear' (hats/caps), 'Scarves & Wraps', 'Jewelry'. Sunglasses are NEVER 'Shorts' or 'Shirt'.\n"
+    "• Bottoms: 'Jeans' is EXCLUSIVELY denim with 5-pocket rivets. Chinos/slacks/trousers -> sub_category:'Pants', item_type:'Chinos'|'Tailored Trousers', dress_code:'smart-casual'|'business'. Sweatpants/joggers/trainers/fleece -> sub_category:'Pants', item_type:'Sweatpants'|'Joggers', dress_code:'casual'|'athletic', material:'Cotton'|'Polyester' (never 'Tailored Trousers'/'Wool'/'Business').\n"
+    "• Footwear: 'Sneakers' (athletic/rubber-sole), 'Sandals' (open-toe/strappy/heeled summer), 'Heels','Boots','Loafers','Flats'. Open-toe/strappy -> sub_category:'Sandals' (never 'Sneakers').\n"
+    "• Accessories: 'Sunglasses' (never 'Shorts'/'Shirt'), 'Bags','Belts','Headwear','Scarves & Wraps','Jewelry'. Non-wearables (bottles, cups, cans, phones, keys, cameras) -> is_clothing:false, category:'Accessories', sub_category:'non-clothing'. Genuine accessories -> is_clothing:true.\n"
     "• item_type: Detailed cut ('Crew-Neck T-Shirt','Chinos','Tailored Trousers','Straight Jeans','Sweatpants','Open-Toe Sandals','Classic Sunglasses'). Must differ from sub_category.\n"
-    "• caption: 1-2 concise sentences on cut, color, pattern, texture. Must be a complete sentence ending with a period.\n"
-    "• dress_code: 'casual'|'smart-casual'|'business'|'formal'|'athletic'|'loungewear'. Analyze each garment individually. Suits/blazers/dress trousers='business'|'smart-casual'; button-downs/blouses/chinos/slacks/cardigans/sweaters/turtlenecks/loafers='smart-casual'; gowns/tuxedos='formal'; sportswear='athletic'; sleepwear/sweatpants/joggers='casual'|'athletic'|'loungewear'; casual tees/jeans/denim='casual'. NEVER default to casual.\n"
-    "• model_gender: If an identifiable human model is detected in the photo, specify 'women' or 'men'. If no human model is present (flat lay, hanger, ghost mannequin, product shot), set to null.\n"
-    "• gender: Strict 3-Tier Hierarchy: (1) Human Model: If an identifiable human model is detected in the photo, anchor all detected garments to the model's gender ('women' for female model, 'men' for male model). (2) Garment Criteria: For flat lays, hangers, and ghost mannequins, determine gender strictly from garment cut, silhouette, and pattern ('women' for blouses, floral tops/tees, skirts, dresses, heels, open-toe sandals, kimonos; 'men' for masculine cuts; 'unisex' for neutral basics). (3) Uncertain neutral basics fall back to the profile gender, or 'unisex' if undefined. Never default to 'men'.\n"
-    "• colors: [{\"name\": str, \"pct\": int}] summing to 100. Specific shades ('Navy','Olive','Burgundy','Green','White'). Never omit pct.\n"
-    "• fabric_materials: [{\"name\": str, \"pct\": int}] summing to 100. Never omit pct.\n"
-    "• pattern: 'printed' (graphics/logos/prints), 'geometric' (patterns/checks/weave/heathering), 'striped'|'plaid'|'floral', 'solid' (plain unprinted).\n"
+    "• caption: 1 concise sentence on cut, color, pattern, texture ending with a period.\n"
+    "• dress_code: 'casual'|'smart-casual'|'business'|'formal'|'athletic'|'loungewear'. Suits/blazers='business'; button-downs/blouses/slacks/cardigans='smart-casual'; gowns/tuxedos='formal'; sportswear='athletic'; sweatpants/joggers='casual'|'athletic'; casual tees/jeans='casual'. Never default to casual.\n"
+    "• model_gender: Identifiable human model -> 'women'|'men'. Flat lay/hanger/mannequin -> null.\n"
+    "• gender: Strict 3-Tier Hierarchy: (1) Human Model: anchor all garments to model gender ('women'|'men'). (2) Garment Criteria: flat lays/hangers determined strictly by cut ('women' for floral/blouses/skirts/dresses/sandals; 'men' for masculine cuts; 'unisex' for neutral basics). (3) Neutral basics fall back to profile gender, or 'unisex'. Never default to 'men'.\n"
+    "• colors/fabric_materials: [{\"name\": str, \"pct\": int}] summing to 100.\n"
+    "• pattern: 'solid'|'printed'|'geometric'|'striped'|'plaid'|'floral'.\n"
     "• text/logos: Read accurately ('American Eagle'=eagle/עיט, not deer/אייל).\n"
     "• season: ['spring'|'summer'|'fall'|'winter'|'all']. Linen/short-sleeve/sandals=['summer']; wool/down=['fall','winter'].\n"
-    "• non-clothing items: If not wearable fashion (water bottles, flasks, cups, tumblers, beverages, cans, phones, keys, cameras, bare skin), set is_clothing: false, category: 'Accessories', sub_category: 'non-clothing', item_type: 'non-clothing', title: 'Non-clothing item', caption: 'Non-clothing item'. Handheld bottles, cups, and phones are NEVER bags or accessories. Genuine accessories (belts, sunglasses, hats, bags, jewelry, scarves) MUST have is_clothing: true."
+    "• Quality & Repair: Only emit 'reconstruction_prompt' if image_quality_status != 'complete'. Set null if complete."
 )
 
 
@@ -206,7 +205,7 @@ _GARMENT_OBJECT_SCHEMA: dict[str, Any] = {
         },
         "name": {"type": "string"},
         "title": {"type": "string"},
-        "caption": {"type": "string", "maxLength": 350},
+        "caption": {"type": "string", "maxLength": 160},
         "slot_index": {"type": "integer", "description": "0-based index of this crop (0..n-1)"},
         "category": {
             "type": ["string", "null"],
@@ -295,8 +294,8 @@ _GARMENT_OBJECT_SCHEMA: dict[str, Any] = {
             "type": ["string", "null"],
             "enum": ["complete", "needs_completion", "needs_reconstruction", None],
         },
-        "image_quality_reason": {"type": ["string", "null"]},
-        "reconstruction_prompt": {"type": ["string", "null"]},
+        "image_quality_reason": {"type": ["string", "null"], "description": "Reason if needs completion or reconstruction; null if complete."},
+        "reconstruction_prompt": {"type": ["string", "null"], "description": "Prompt for Wardrobe Reconstructor. Must be null if image_quality_status is complete."},
         # ── Phase O.6 — single-pass region info ───────────────────────
         # Optional spatial metadata. Only populated when the caller is
         # the single-pass pipeline (``EYES_ONE_PASS=true``). Legacy
@@ -628,27 +627,25 @@ def _build_batch_prompts(
                 + "\nDiscard non-clothing objects (bottles/cups/phones) with is_clothing: false."
             )
 
-    user_text = f"Analyze {n} crop(s) in order [0..{n-1}]. Return a JSON array of {n} objects with 'slot_index'."
+    user_parts = []
     code = (language or "en").lower()
     if code != "en":
         lang_name = _LANG_NAMES.get(code, code)
         if code in ("he", "iw"):
-            directive = "**OUTPUT LANGUAGE: Hebrew (עברית).** Strings in fluent Hebrew. Keys/enums in English.\n"
+            user_parts.append("**OUTPUT LANGUAGE: Hebrew (עברית).** Strings in fluent Hebrew. Keys/enums in English.")
         elif code == "ar":
-            directive = "**OUTPUT LANGUAGE: Arabic (العربية).** Strings in fluent Arabic. Keys/enums in English.\n"
+            user_parts.append("**OUTPUT LANGUAGE: Arabic (العربية).** Strings in fluent Arabic. Keys/enums in English.")
         else:
-            directive = f"**OUTPUT LANGUAGE: {lang_name} ({code}).** Strings in fluent {lang_name}. Keys/enums in English.\n"
-        user_text = directive + user_text
+            user_parts.append(f"**OUTPUT LANGUAGE: {lang_name} ({code}).** Strings in fluent {lang_name}. Keys/enums in English.")
 
-    batch_directive = (
-        f"BATCH: Analyze {n} crops (indices 0..{n-1}). Return JSON array of {n} objects with 'slot_index'.\n"
-        + gender_rule
-        + hint_block
-    )
-    user_text = batch_directive + "\n\n" + user_text
+    user_parts.append(f"BATCH: Analyze {n} crop(s) (indices 0..{n-1}). Return JSON array of {n} objects with 'slot_index'.")
+    if hint_block:
+        user_parts.append(hint_block)
+
+    user_text = "\n".join(user_parts)
 
     system_prompt = _build_system_prompt(one_pass=False, user_gender=norm_gender)
-    if norm_model in ("men", "women") and gender_rule:
+    if gender_rule:
         system_prompt = f"{system_prompt}\n{gender_rule}"
     return system_prompt, user_text
 
