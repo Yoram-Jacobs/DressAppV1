@@ -51,9 +51,17 @@ def _shrink_for_vision(image_bytes: bytes, *, max_side: int = 384, q: int = 80) 
         )
         if has_alpha:
             img = img.convert("RGBA")
-            bg = Image.new("RGB", img.size, (255, 255, 255))
-            bg.paste(img, mask=img)
-            img = bg
+            alpha_arr = np.asarray(img.split()[-1])
+            solid_frac = float((alpha_arr >= 128).mean())
+            if solid_frac < 0.03:
+                # Alpha is near-empty or collapsed — do NOT composite over white,
+                # as that converts the image into a blank white tile and blinds the vision model!
+                # Extract RGB channels directly so the vision model sees the real photograph.
+                img = img.convert("RGB")
+            else:
+                bg = Image.new("RGB", img.size, (255, 255, 255))
+                bg.paste(img, mask=img)
+                img = bg
         else:
             img = img.convert("RGB")
         img.thumbnail((max_side, max_side))
@@ -354,13 +362,14 @@ def _fit_crop_to_card(
             rgba = img.convert("RGBA")
             alpha_arr = np.array(rgba.split()[-1])
             num_solid = int(np.sum(alpha_arr > 30))
-            if num_solid > 25:
+            coverage = num_solid / float(max(1, alpha_arr.size))
+            if num_solid > 25 and (coverage >= 0.005 or num_solid >= 100):
                 # Pre-existing transparent cutout: ALWAYS preserve the studio-grade anti-aliased alpha!
                 # NEVER overwrite with a binary thresholded mask (which produces sawtooth edges and chewing holes).
                 mask = (alpha_arr > 30).astype(np.uint8) * 255
                 rgba = _orient_and_deskew_garment(rgba, mask=mask)
                 bbox = rgba.getbbox()
-                if bbox and (bbox[2] - bbox[0] > 4) and (bbox[3] - bbox[1] > 4):
+                if bbox and (bbox[2] - bbox[0] > 10) and (bbox[3] - bbox[1] > 10):
                     img = rgba.crop(bbox)
                 else:
                     img = rgba

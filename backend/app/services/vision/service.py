@@ -476,6 +476,7 @@ class GarmentVisionService:
                 # legs can't leak into the final matte. May be None
                 # if the parser couldn't build the human mask.
                 "_human_mask_full": p.get("_human_mask_full"),
+                "_global_human_mask": p.get("_global_human_mask"),
                 "has_human_head": p.get("has_human_head", False),
                 "source": "clothing_parser",
             }
@@ -599,7 +600,11 @@ class GarmentVisionService:
                 "wallet", "furniture", "chair", "table", "umbrella", "groceries",
                 "pet", "dog", "cat",
             })
-            merged = list(parser_hits)
+            global_human = next(
+                (p.get("_global_human_mask") or p.get("_human_mask_full") for p in parser_hits if (p.get("_global_human_mask") is not None or p.get("_human_mask_full") is not None)),
+                None,
+            )
+            has_head = any(p.get("has_human_head", False) for p in parser_hits)
             for gd in gemini_hits:
                 g_bbox = gd.get("bbox")
                 g_label = (gd.get("label") or "garment").lower()
@@ -633,8 +638,9 @@ class GarmentVisionService:
                         "bbox": g_bbox,
                         "score": 0.90,
                         "mask": None,
-                        "_human_mask_full": parser_hits[0].get("_human_mask_full"),
-                        "has_human_head": parser_hits[0].get("has_human_head", False),
+                        "_human_mask_full": global_human,
+                        "_global_human_mask": global_human,
+                        "has_human_head": has_head,
                         "source": "gemini",
                     })
             before = len(merged)
@@ -1371,6 +1377,7 @@ class GarmentVisionService:
         """
         from app.services import background_matting
         from app.services import clothing_parser as _cp
+        import numpy as _np
 
         matted_crops: list[tuple[dict[str, Any], bytes, str]] = []
         for det, cbytes, mime in raw_crops:
@@ -1389,10 +1396,32 @@ class GarmentVisionService:
             other_mask_bbox = det.get("_other_mask_bbox")
             is_single = det.get("is_single_item", False)
 
-            if not matted:
-                if seg_mask_bbox is not None and bool(seg_mask_bbox.any()):
+            m_cov = _solid_alpha_coverage(matted) if matted else None
+            seg_mask_pixels = 0
+            seg_mask_cov = 0.0
+            if seg_mask_bbox is not None and bool(seg_mask_bbox.any()):
+                seg_mask_pixels = int(_np.sum(seg_mask_bbox > 50))
+                seg_mask_cov = float(_np.mean(seg_mask_bbox > 50))
+
+            # Detect rembg collapse:
+            # Rembg collapsed if it returned None, OR if SegFormer found a confident garment (>= 40 px)
+            # but rembg returned < 2% solid alpha or lost > 70% of SegFormer's garment mass.
+            rembg_collapsed = bool(
+                not matted
+                or (
+                    seg_mask_pixels >= 40
+                    and (
+                        m_cov is None
+                        or m_cov < 0.02
+                        or (m_cov < 0.30 * seg_mask_cov)
+                    )
+                )
+            )
+
+            if rembg_collapsed:
+                if seg_mask_bbox is not None and seg_mask_pixels >= 20:
                     # Use SegFormer semantic mask directly to produce an alpha cutout!
-                    # Never ship a raw rectangular JPEG of asphalt/ground when we have the garment mask.
+                    # Smooth with anti-aliasing Gaussian blur so edges are clean and not blocky.
                     try:
                         from PIL import Image, ImageFilter
                         import io
@@ -1403,14 +1432,58 @@ class GarmentVisionService:
                             mask_res = _np.array(Image.fromarray(norm_seg, mode="L").resize((Wc, Hc), Image.BILINEAR))
                         else:
                             mask_res = norm_seg
-                        alpha_im = Image.fromarray(mask_res, mode="L").filter(ImageFilter.GaussianBlur(radius=1.5))
+                        if human_mask_bbox is not None and bool(human_mask_bbox.any()):
+                            norm_human = _cp._normalize_mask_to_u8(human_mask_bbox)
+                            if norm_human.shape != (Hc, Wc):
+                                human_res = _np.array(Image.fromarray(norm_human, mode="L").resize((Wc, Hc), Image.BILINEAR))
+                            else:
+                                human_res = norm_human
+                            mask_res = _np.where(human_res > 120, _np.uint8(0), mask_res)
+                        alpha_im = Image.fromarray(mask_res, mode="L").filter(ImageFilter.GaussianBlur(radius=1.2))
                         im.putalpha(alpha_im)
                         buf = io.BytesIO()
                         im.save(buf, format="PNG", optimize=True)
                         matted = buf.getvalue()
                         mime = "image/png"
+                        logger.info(
+                            "reconstructed alpha cutout from SegFormer mask for %s (pixels=%d, cov=%.3f)",
+                            det.get("label"), seg_mask_pixels, seg_mask_cov,
+                        )
                     except Exception as exc:  # noqa: BLE001
+                        logger.warning("SegFormer alpha synthesis failed for %s: %s", det.get("label"), exc)
                         matted = None
+
+                if not matted:
+                    # If we have human mask or other garments mask, excise them from cbytes so human parts don't leak
+                    if (human_mask_bbox is not None and bool(human_mask_bbox.any())) or (other_mask_bbox is not None and bool(other_mask_bbox.any())):
+                        try:
+                            from PIL import Image, ImageFilter
+                            import io
+                            im = Image.open(io.BytesIO(cbytes)).convert("RGBA")
+                            Hc, Wc = im.size[1], im.size[0]
+                            cut_alpha = _np.full((Hc, Wc), 255, dtype=_np.uint8)
+                            if human_mask_bbox is not None and bool(human_mask_bbox.any()):
+                                norm_human = _cp._normalize_mask_to_u8(human_mask_bbox)
+                                if norm_human.shape != (Hc, Wc):
+                                    human_res = _np.array(Image.fromarray(norm_human, mode="L").resize((Wc, Hc), Image.BILINEAR))
+                                else:
+                                    human_res = norm_human
+                                cut_alpha = _np.where(human_res > 120, _np.uint8(0), cut_alpha)
+                            if other_mask_bbox is not None and bool(other_mask_bbox.any()):
+                                norm_other = _cp._normalize_mask_to_u8(other_mask_bbox)
+                                if norm_other.shape != (Hc, Wc):
+                                    other_res = _np.array(Image.fromarray(norm_other, mode="L").resize((Wc, Hc), Image.BILINEAR))
+                                else:
+                                    other_res = norm_other
+                                cut_alpha = _np.where(other_res > 120, _np.uint8(0), cut_alpha)
+                            alpha_im = Image.fromarray(cut_alpha, mode="L").filter(ImageFilter.GaussianBlur(radius=1.2))
+                            im.putalpha(alpha_im)
+                            buf = io.BytesIO()
+                            im.save(buf, format="PNG", optimize=True)
+                            matted = buf.getvalue()
+                            mime = "image/png"
+                        except Exception:
+                            matted = None
 
                 if not matted:
                     det.pop("_mask_bbox", None)
@@ -1449,7 +1522,7 @@ class GarmentVisionService:
 
             # Phantom guard — verify that the matte has solid garment pixels.
             # Small items (sunglasses, belts, footwear) legitimately occupy < 5% of their crop box.
-            # Never replace a matted transparent PNG with a raw un-matted RGB JPEG (which leaks human skin/faces/sidewalk).
+            # Drop near-empty phantom masks to prevent 50x scaled ghost artifacts.
             cov = _solid_alpha_coverage(matted)
             cat_kind = (det.get("kind") or det.get("category") or "").lower()
             lbl_kind = (det.get("label") or "").lower()
@@ -1462,17 +1535,12 @@ class GarmentVisionService:
 
             if cov is not None and cov < effective_phantom_pct:
                 logger.info(
-                    "_matte_crops: near-empty matte for %s (%.2f%% < %.2f%%)",
+                    "_matte_crops: dropping phantom item %s (coverage %.3f%% < %.3f%%)",
                     det.get("label"),
                     cov * 100.0,
                     effective_phantom_pct * 100.0,
                 )
-                # If matted still has some valid alpha (> 0), keep the transparent PNG rather than returning raw JPEG
-                if cov > 0.0:
-                    pass
-                else:
-                    # Truly 0 solid pixels — drop phantom
-                    continue
+                continue
 
             if matted:
                 try:
@@ -2699,6 +2767,11 @@ class GarmentVisionService:
                         photo_model_gender = "women"
                     elif any(k in cat_labels for k in ("boxers", "tuxedo")):
                         photo_model_gender = "men"
+                    else:
+                        try:
+                            photo_model_gender = await self.detect_model_gender(img_bytes, detections=detections)
+                        except Exception as d_exc:
+                            logger.info("analyze_outfits_stream: detect_model_gender failed for idx %d: %s", idx, d_exc)
 
                 is_footwear_only = bool(
                     detections
@@ -3462,7 +3535,7 @@ class GarmentVisionService:
                         ]
                         photo_ids = {c[0] for c in chunk_crops}
                         chunk_mgs = {c[1].get("_photo_model_gender") for c in chunk_crops if c[1].get("_photo_model_gender")}
-                        if len(photo_ids) == 1 and len(chunk_mgs) == 1 and all(c[1].get("_photo_model_gender") for c in chunk_crops):
+                        if len(photo_ids) == 1 and len(chunk_mgs) == 1:
                             chunk_mg = next(iter(chunk_mgs))
                         else:
                             chunk_mg = None
@@ -3489,7 +3562,7 @@ class GarmentVisionService:
                                     continue
                                 image_idx, det, c_bytes, c_mime = flat_crops[slot_idx]
                                 chunk_emitted.add(local_idx)
-                                item_mg = det.get("_photo_model_gender")
+                                item_mg = det.get("_photo_model_gender") or chunk_mg
 
                                 # If batch returned empty/invalid dict, fallback for this slot
                                 if not analysis or not isinstance(analysis, dict) or not (
@@ -3532,6 +3605,8 @@ class GarmentVisionService:
                                     analysis["gender"] = item_mg
                                 analysis = _coerce_single_garment(analysis, user_gender=eff_gender, model_gender=item_mg, language=language)
                                 analysis = _coerce_enums(analysis, user_gender=eff_gender, model_gender=item_mg)
+                                if item_mg in ("men", "women"):
+                                    analysis["gender"] = item_mg
 
                                 if _is_unidentifiable(analysis):
                                     logger.info("analyze_outfits_stream: skipping unidentifiable/non-clothing item at slot %d (%s)", slot_idx, analysis.get("title"))
@@ -3634,6 +3709,8 @@ class GarmentVisionService:
                                     fallback_analysis["gender"] = item_mg
                                 fallback_analysis = _coerce_single_garment(fallback_analysis, user_gender=eff_gender, model_gender=item_mg, language=language)
                                 fallback_analysis = _coerce_enums(fallback_analysis, user_gender=eff_gender, model_gender=item_mg)
+                                if item_mg in ("men", "women"):
+                                    fallback_analysis["gender"] = item_mg
 
                                 if _is_unidentifiable(fallback_analysis):
                                     logger.info("analyze_outfits_stream: skipping unidentifiable/non-clothing item at slot %d (%s)", slot_idx, fallback_analysis.get("title"))

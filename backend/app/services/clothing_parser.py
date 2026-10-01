@@ -1283,12 +1283,8 @@ async def parse_garments(
         is_footwear_item = cat == "footwear" or lbl in ("shoes", "sandals", "sneakers", "boots", "floppers", "clogs", "slides") or "shoe" in lbl
         
         if is_eyewear_item:
-            head_and_arms = head_class_ids | arm_class_ids
-            garment_human_mask = (
-                np.isin(class_mask, list(head_and_arms)).astype(np.uint8)
-                if head_and_arms and np.isin(class_mask, list(head_and_arms)).any()
-                else None
-            )
+            # For sunglasses/eyewear: wearer's face, hair, neck, and arms are NOT the sunglasses and must be subtracted!
+            garment_human_mask = human_mask_full
         elif is_footwear_item:
             # For footwear: subtract legs (Left-leg, Right-leg), arms, and head/face!
             footwear_human_ids = leg_class_ids | arm_class_ids | head_class_ids
@@ -1347,6 +1343,7 @@ async def parse_garments(
                 ],
                 "mask": item["mask"],
                 "_human_mask_full": garment_human_mask,
+                "_global_human_mask": human_mask_full,
                 "has_human_head": has_head or has_any_human,
                 "has_human_skin": has_any_human,
             }
@@ -1650,7 +1647,7 @@ def apply_alpha_intersection(
     # CRITICAL: Tops, outerwear, dresses, and bottoms MUST NEVER be filtered by skin chrominance!
     # Fabrics routinely come in warm tones (tan, beige, cream, peach, pink, brown, warm gray, orange)
     # which trigger skin chrominance across the fabric body and turn it into a faded 5% opacity ghost.
-    if has_human and (is_footwear or is_eyewear or is_acc):
+    if (has_human and is_footwear) or is_eyewear or is_acc:
         try:
             r = arr[:, :, 0].astype(float)
             g = arr[:, :, 1].astype(float)
@@ -1777,25 +1774,41 @@ def apply_alpha_intersection(
     # to 255. Rembg provides studio-grade alpha boundaries; forcing opaque holes creates
     # jagged staircases, sawtooth edges, and opaque blocks between legs or in necklines.
 
-    # Phantom guard: if subtraction wiped out solid alpha, preserve original rembg output.
+    # Phantom guard: if subtraction wiped out solid alpha, recover from SegFormer mask or preserve rembg.
     # For small items (sunglasses, footwear, accessories), keep isolated cutouts even if pixel count is small.
     # NEVER revert to un-matted face/head or feet on asphalt when valid item pixels exist!
     solid_count = int((new_alpha >= 128).sum())
     if is_eyewear or is_acc or is_footwear:
         if solid_count < 5:
-            logger.info(
-                "apply_alpha_intersection: small item empty (count=%d) — returning None.",
-                solid_count,
-            )
-            return None
+            if mask_resized is not None and int((mask_resized > 50).sum()) >= 5:
+                logger.info("apply_alpha_intersection: small item recovering alpha from SegFormer mask")
+                new_alpha = np.where(mask_resized > 50, np.uint8(255), np.uint8(0))
+            else:
+                logger.info(
+                    "apply_alpha_intersection: small item empty (count=%d) — returning None.",
+                    solid_count,
+                )
+                return None
     else:
-        if solid_count < 40 and float((new_alpha >= 128).mean()) < 0.003:
-            logger.info(
-                "apply_alpha_intersection: intersection wiped out solid "
-                "alpha (count=%d) — returning None to preserve rembg-only output.",
-                solid_count,
-            )
-            return None
+        if solid_count < 40:
+            if mask_resized is not None and int((mask_resized > 50).sum()) >= 40:
+                logger.info(
+                    "apply_alpha_intersection: solid_count=%d < 40, recovering alpha from SegFormer mask (mask_pixels=%d)",
+                    solid_count, int((mask_resized > 50).sum()),
+                )
+                seg_alpha = mask_resized.copy()
+                if has_human and 'human_resized' in locals() and human_resized is not None:
+                    seg_alpha = np.where(human_resized > 120, np.uint8(0), seg_alpha)
+                new_alpha = np.where(seg_alpha > 50, np.uint8(255), np.uint8(0))
+                alpha_im = Image.fromarray(new_alpha, mode="L").filter(ImageFilter.GaussianBlur(radius=1.2))
+                new_alpha = np.array(alpha_im)
+            elif float((new_alpha >= 128).mean()) < 0.003:
+                logger.info(
+                    "apply_alpha_intersection: intersection wiped out solid "
+                    "alpha (count=%d) — returning None to preserve rembg-only output.",
+                    solid_count,
+                )
+                return None
 
     arr[:, :, 3] = new_alpha
     out = Image.fromarray(arr, mode="RGBA")

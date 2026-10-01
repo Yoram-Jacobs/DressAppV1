@@ -1500,6 +1500,104 @@ def test_sanitize_sleeve_and_cut_for_non_tops():
     assert coerced_enums["item_type"] == "Classic Sunglasses"
 
 
+@pytest.mark.anyio
+async def test_rembg_collapse_recovery_from_segformer_mask(monkeypatch):
+    """Verify that when rembg collapses on light gray sweatpants, SegFormer mask recovers the alpha cutout."""
+    import io
+    import numpy as np
+    from PIL import Image
+    from unittest.mock import AsyncMock
+    from app.services.vision.service import GarmentVisionService
+    from app.services.vision.image import _solid_alpha_coverage
+
+    # Create dummy 100x100 RGB image (gray sweatpants)
+    img = Image.new("RGB", (100, 100), color=(200, 200, 200))
+    buf = io.BytesIO()
+    img.save(buf, format="JPEG")
+    cbytes = buf.getvalue()
+
+    # Simulate rembg collapse: rembg returns an almost empty RGBA image (e.g. only 5 solid pixels, 0.05% coverage)
+    rembg_img = Image.new("RGBA", (100, 100), (0, 0, 0, 0))
+    for x in range(5):
+        rembg_img.putpixel((x, x), (200, 200, 200, 255))
+    rembg_buf = io.BytesIO()
+    rembg_img.save(rembg_buf, format="PNG")
+    collapsed_rembg_bytes = rembg_buf.getvalue()
+
+    # SegFormer mask has 2500 solid pixels (50x50 garment region in the center)
+    seg_mask = np.zeros((100, 100), dtype=np.uint8)
+    seg_mask[25:75, 25:75] = 255
+
+    det = {
+        "label": "pants",
+        "kind": "bottom",
+        "category": "bottom",
+        "bbox": [250, 250, 750, 750],
+        "_mask_bbox": seg_mask,
+        "is_single_item": False,
+    }
+
+    service = GarmentVisionService(provider="gemini")
+    import app.services.background_matting as bm
+    monkeypatch.setattr(bm, "matte_crop", AsyncMock(return_value=collapsed_rembg_bytes))
+
+    matted_crops = await service._matte_crops([(det, cbytes, "image/jpeg")])
+    assert len(matted_crops) == 1, "Garment should NOT be dropped when SegFormer mask is available"
+
+    out_det, out_matted, out_mime = matted_crops[0]
+    assert out_mime == "image/png"
+    cov = _solid_alpha_coverage(out_matted)
+    assert cov is not None and cov > 0.15, f"Expected SegFormer recovered alpha coverage > 15%, got {cov*100:.2f}%"
+
+
+def test_shrink_for_vision_near_empty_alpha_composite_guard():
+    """Verify that _shrink_for_vision extracts RGB directly when alpha is near-empty to prevent blank white tiles."""
+    import io
+    import numpy as np
+    from PIL import Image
+    from app.services.vision.image import _shrink_for_vision
+
+    # Create an RGBA image with dark red pixels, but alpha channel has only 10 solid pixels (< 0.1% coverage)
+    img = Image.new("RGBA", (200, 200), (180, 20, 20, 0))
+    for x in range(10):
+        img.putpixel((x, x), (180, 20, 20, 255))
+    buf = io.BytesIO()
+    img.save(buf, format="PNG")
+    ghost_bytes = buf.getvalue()
+
+    shrunk_bytes = _shrink_for_vision(ghost_bytes, max_side=100)
+    shrunk_img = Image.open(io.BytesIO(shrunk_bytes))
+    arr = np.array(shrunk_img)
+
+    # If it was composited onto white, mean brightness would be ~255 (blank white tile).
+    # Since RGB was preserved, red channel is dominant (> 100) and not all white.
+    assert arr.mean() < 240, f"Expected non-white photograph image, but got blank white mean {arr.mean():.1f}"
+
+
+def test_fit_crop_to_card_avoids_zooming_into_noise():
+    """Verify that _fit_crop_to_card does not zoom into tiny alpha noise clusters."""
+    import io
+    from PIL import Image
+    from app.services.vision.image import _fit_crop_to_card
+
+    # 500x500 image with only 26 noise pixels (< 0.01% coverage) in a tiny 5x5 corner
+    img = Image.new("RGBA", (500, 500), (0, 0, 0, 0))
+    for x in range(5):
+        for y in range(5):
+            img.putpixel((x, y), (200, 200, 200, 255))
+    img.putpixel((5, 5), (200, 200, 200, 255))
+    buf = io.BytesIO()
+    img.save(buf, format="PNG")
+    noise_bytes = buf.getvalue()
+
+    fitted_bytes, mime = _fit_crop_to_card(noise_bytes, crop_mime="image/png")
+    assert mime == "image/png"
+    fitted_img = Image.open(io.BytesIO(fitted_bytes))
+    # It should not error and should fit canvas
+    assert fitted_img.size == (900, 1200)
+
+
+
 
 
 
