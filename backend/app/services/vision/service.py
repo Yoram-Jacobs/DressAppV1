@@ -2261,348 +2261,21 @@ class GarmentVisionService:
         user_gender: str | None = None,
         **kwargs: Any,
     ) -> "AsyncIterator[dict[str, Any]]":
-        """Patch M19 — Streaming end-to-end variant of :meth:`analyze_outfit`.
+        """Streaming end-to-end multi-garment ingestion for a single image.
 
-        Yields high-level frames in order:
-
-          1. ``{"type": "detect", "count": N, "items_meta": [...]}`` —
-             emitted as soon as detection + cropping is done. Each
-             entry in ``items_meta`` carries the per-crop label / kind
-             / bbox / crop_base64 / crop_mime / defer_matte so the
-             frontend can render an "analysing…" placeholder card with
-             the cropped thumbnail BEFORE Gemini even starts on the
-             first analysis.
-          2. ``{"type": "item", "index": i, "analysis": {...},
-             "needs_reconstruction": bool, "reconstruction_reasons":
-             [...]}`` — one frame per crop, emitted as soon as Gemini
-             finishes that slot inside the streamed batched call.
-          3. ``{"type": "done", "count": N_emitted}`` — final marker.
-
-        On any failure (detect_items raises, batch stream fails, etc.)
-        we surface a single ``{"type": "error", "status": <int>,
-        "message": <str>}`` frame; the frontend treats this like a
-        rejected promise.
-
-        This generator deliberately does not include the full-frame
-        single-image fallback that ``analyze_outfit`` runs when
-        detection returns nothing useful — the streaming variant is
-        only used for multi-item uploads. The caller is expected to
-        fall back to ``analyze_outfit`` (one-shot JSON) when
-        ``items_meta`` would have come out empty.
+        Enforces GarmentVision Rule 1 (Multi-Item Single-Prompt Ingestion)
+        and Rule 3 (single system prompt sequence) by delegating directly
+        to analyze_outfits_stream with a single-image list.
         """
-        eff_gender = resolve_garment_gender(user_gender) or self.user_gender
-        try:
-            detections = await self.detect_items(image_bytes)
-        except Exception as exc:  # noqa: BLE001
-            logger.warning(
-                "analyze_outfit_stream: detect_items failed (%s)",
-                repr(exc)[:160],
-            )
-            yield {
-                "type": "error",
-                "status": 503,
-                "message": "Garment detection is temporarily unavailable.",
-            }
-            return
-
-        has_human_wearer = _detect_human_presence(detections)
-        photo_model_gender = None
-        if has_human_wearer:
-            photo_model_gender = await self.detect_model_gender(image_bytes, detections=detections)
-
-        is_single = (
-            (not has_human_wearer and len(detections) <= 1)
-            or _looks_already_cropped(detections)
-        )
-        if is_single:
-            # Already-cropped / single-item product photos skip per-crop
-            # analysis and do a single full-frame analyze.
-            # We must yield the detect frame IMMEDIATELY for fast TTFB,
-            # then run the blocking LLM analysis.
-            crop_bytes = image_bytes
-            crop_mime = "image/jpeg"
-
-            defer_matte = settings.AUTO_MATTE_CROPS
-            best_det: dict[str, Any] | None = None
-            if settings.AUTO_MATTE_CROPS:
-                if detections:
-                    best_det = max(
-                        detections,
-                        key=lambda d: (
-                            max(0, d["bbox"][2] - d["bbox"][0])
-                            * max(0, d["bbox"][3] - d["bbox"][1])
-                        ),
-                    )
-                    raw_crops = await asyncio.to_thread(
-                        self._bbox_crop_useful, image_bytes, [best_det], is_single_item=True,
-                    )
-                    out = await asyncio.to_thread(_apply_fast_matte, raw_crops)
-                    if out:
-                        d_meta, crop_bytes, crop_mime = out[0]
-                    elif raw_crops:
-                        d_meta, crop_bytes, crop_mime = raw_crops[0]
-
-                if crop_mime != "image/png":
-                    matted = await self._whole_image_matte(crop_bytes)
-                    if matted:
-                        crop_bytes = matted
-                        crop_mime = "image/png"
-                        defer_matte = False
-
-            fitted_bytes, fitted_mime = _fit_crop_to_card(
-                crop_bytes, crop_mime=crop_mime,
-            )
-
-            # 1. Yield the fast detect frame
-            yield {
-                "type": "detect",
-                "count": 1,
-                "items_meta": [{
-                    "label": best_det.get("label") if best_det else "garment",
-                    "kind": best_det.get("kind") if best_det else "garment",
-                    "bbox": best_det.get("bbox") if best_det else [0, 0, 1000, 1000],
-                    "crop_base64": base64.b64encode(fitted_bytes).decode("ascii"),
-                    "crop_mime": fitted_mime,
-                    "defer_matte": defer_matte,
-                }],
-            }
-
-            # 2. Block on the LLM analysis
-            single = await self.analyze(
-                image_bytes, language=language, think=False, user_gender=photo_model_gender or eff_gender,
-            )
-            if photo_model_gender in ("men", "women") and isinstance(single, dict):
-                single["gender"] = photo_model_gender
-                _coerce_enums(single, user_gender=eff_gender, model_gender=photo_model_gender)
-
-            # 3. Yield the analysis
-            yield {
-                "type": "item",
-                "index": 0,
-                "analysis": single,
-                "label": single.get("sub_category") or single.get("item_type"),
-                "needs_reconstruction": False,
-                "reconstruction_reasons": [],
-            }
-            yield {"type": "done", "count": 1}
-            return
-
-        cap = max_items if max_items is not None else self.max_items
-        useful = self._filter_useful_detections(detections, cap)
-        if not useful:
-            yield {
-                "type": "error",
-                "status": 422,
-                "message": (
-                    "We couldn't identify any garment in this photo. "
-                    "Please try a clearer, well-lit shot."
-                ),
-            }
-            return
-
-        raw_crops = await asyncio.to_thread(
-            self._bbox_crop_useful, image_bytes, useful,
-        )
-
-        if settings.AUTO_MATTE_CROPS and raw_crops:
-            fast_crops = await asyncio.to_thread(_apply_fast_matte, raw_crops)
-            crops = []
-            for det, cbytes, mime in fast_crops:
-                det["defer_matte"] = False
-                if mime != "image/png":
-                    try:
-                        from app.services import background_matting
-                        matted = await background_matting.matte_crop(cbytes)
-                        if matted:
-                            cbytes = matted
-                            mime = "image/png"
-                    except Exception as exc:
-                        logger.info("rembg crop matte failed: %s", exc)
-                crops.append((det, cbytes, mime))
-        else:
-            for det, _, _ in raw_crops:
-                det["defer_matte"] = False
-            crops = raw_crops
-
-        if not crops:
-            yield {
-                "type": "error",
-                "status": 422,
-                "message": (
-                    "We couldn't identify any garment in this photo. "
-                    "Please try a clearer, well-lit shot."
-                ),
-            }
-            return
-
-        # Emit the detect frame FIRST — gives the frontend everything
-        # it needs to render placeholder cards while we wait for
-        # per-item analyses to stream in.
-        items_meta = []
-        for d, crop_b, crop_m in crops:
-            fitted_b, fitted_m = _fit_crop_to_card(crop_b, crop_mime=crop_m)
-            items_meta.append({
-                "label": d.get("label") or "garment",
-                "kind": d.get("kind") or "garment",
-                "bbox": d.get("bbox"),
-                "crop_base64": base64.b64encode(fitted_b).decode("ascii"),
-                "crop_mime": fitted_m,
-                "defer_matte": d.get("defer_matte", False),
-            })
-        yield {"type": "detect", "count": len(crops), "items_meta": items_meta}
-        if cutout_only:
-            logger.info("analyze_outfit_stream: cutout_only is True — returning after detect frame")
-            yield {"type": "done", "count": len(crops)}
-            return
-
-        # Stream-analyse the crops via batched Gemini stream.
-        crops_bytes = [b for _, b, _ in crops]
-        # Patch M21 — extract SegFormer kinds in crop order so the
-        # streaming batched call can embed them as prompt hints AND
-        # post-validate Gemini's category against them per crop.
-        kind_hints = [
-            (d.get("kind") if isinstance(d, dict) else None)
-            for d, _b, _m in crops
-        ]
-        from app.config import settings as _settings
-
-        try:
-            from app.services.reconstruction import should_reconstruct
-        except Exception:  # noqa: BLE001
-            should_reconstruct = None  # type: ignore[assignment]
-
-        emitted = 0
-        try:
-            async for idx, analysis in self.analyze_batch_stream(
-                crops_bytes, language=language, kind_hints=kind_hints, user_gender=eff_gender, model_gender=photo_model_gender,
-            ):
-                if not isinstance(analysis, dict) or not analysis:
-                    # Empty / dropped slot — emit a sentinel item with
-                    # an empty analysis so the frontend can drop the
-                    # corresponding placeholder card.
-                    yield {
-                        "type": "item",
-                        "index": idx,
-                        "analysis": {},
-                        "needs_reconstruction": False,
-                        "reconstruction_reasons": [],
-                    }
-                    emitted += 1
-                    continue
-                if photo_model_gender in ("men", "women"):
-                    analysis["gender"] = photo_model_gender
-                    _coerce_enums(analysis, user_gender=eff_gender, model_gender=photo_model_gender)
-                # Reconstruction gate — same logic as
-                # ``_build_batched_results`` so the streamed and
-                # one-shot batched paths produce identical shapes.
-                needs_reconstruction = False
-                reasons: list[str] = []
-                if should_reconstruct is not None:
-                    try:
-                        det = crops[idx][0] if idx < len(crops) else {}
-                        needs, raw_reasons = should_reconstruct(
-                            analysis, det.get("bbox"),
-                        )
-                        if needs and _settings.DEFER_RECONSTRUCTION_ON_ANALYZE:
-                            needs_reconstruction = True
-                            reasons = list(raw_reasons)
-                    except Exception as exc:  # noqa: BLE001
-                        logger.warning(
-                            "reconstruction gate failed (streamed) "
-                            "idx=%d: %s",
-                            idx, repr(exc)[:160],
-                        )
-                yield {
-                    "type": "item",
-                    "index": idx,
-                    "analysis": analysis,
-                    "label": analysis.get("sub_category") or analysis.get("item_type"),
-                    "needs_reconstruction": needs_reconstruction,
-                    "reconstruction_reasons": reasons,
-                }
-                emitted += 1
-        except Exception as exc:  # noqa: BLE001
-            # Log the *full* repr at ERROR (not WARNING) so production
-            # operators can see auth / quota / model-not-found failures
-            # without grep magic. The 200-char truncation is enough for
-            # the actionable bit of any Google-API exception
-            # (status code + reason fits in ~120 chars).
-            err_text = repr(exc)
-            logger.error(
-                "analyze_outfit_stream: batch stream FAILED after "
-                "%d emit(s): %s",
-                emitted, err_text[:400],
-            )
-
-            # Surface a *specific* message to the frontend so the user
-            # sees the real cause instead of the generic "transient
-            # error" stub. We pattern-match on the exception text
-            # because google-genai raises different classes for each
-            # API status family.
-            low = err_text.lower()
-            if "permission_denied" in low or " 403" in low or "permission denied" in low:
-                msg = (
-                    "Garment analyzer: Gemini API rejected the request "
-                    "(403 PERMISSION_DENIED). Check that GEMINI_API_KEY "
-                    "is set in the production env, that the key is not "
-                    "expired/revoked, and that the project has the "
-                    "Generative Language API enabled."
-                )
-                status = 403
-            elif "unauthenticated" in low or " 401" in low:
-                msg = (
-                    "Garment analyzer: Gemini API rejected the key "
-                    "(401 UNAUTHENTICATED). The GEMINI_API_KEY in env "
-                    "is missing or invalid."
-                )
-                status = 401
-            elif "resource_exhausted" in low or " 429" in low or "quota" in low:
-                msg = (
-                    "Garment analyzer: Gemini quota exhausted "
-                    "(429). Wait a minute and retry, or upgrade the "
-                    "AI Studio billing tier."
-                )
-                status = 429
-            elif "not_found" in low or " 404" in low or "model not found" in low:
-                msg = (
-                    "Garment analyzer: requested Gemini model is not "
-                    "available to this key (404 NOT_FOUND). Verify "
-                    "GARMENT_VISION_CROP_MODEL points to a model your "
-                    "project has access to."
-                )
-                status = 404
-            elif "deadline" in low or "timeout" in low or "timed out" in low:
-                msg = (
-                    "Garment analyzer: Gemini API timed out. "
-                    "Retry in a moment."
-                )
-                status = 504
-            elif " 500" in low or " 502" in low or " 503" in low or "internal" in low:
-                msg = (
-                    "Garment analyzer: Gemini API returned a server "
-                    "error. This is on Google's side — retry shortly."
-                )
-                status = 503
-            else:
-                # True unknowns still get the friendly fallback, BUT we
-                # include the first 160 chars of the exception so the
-                # user (or support) can root-cause without log access.
-                msg = (
-                    "Garment analyzer hit a transient error. "
-                    "Please try again. (debug: "
-                    + err_text[:160].replace("\n", " ")
-                    + ")"
-                )
-                status = 503
-
-            yield {
-                "type": "error",
-                "status": status,
-                "message": msg,
-            }
-            return
-
-        yield {"type": "done", "count": emitted}
+        async for frame in self.analyze_outfits_stream(
+            [image_bytes],
+            max_items=max_items,
+            language=language,
+            cutout_only=cutout_only,
+            user_gender=user_gender,
+            **kwargs,
+        ):
+            yield frame
 
     async def _is_single_item(self, image_bytes: bytes) -> bool:
         """Fast pre-check to bypass Owl-ViT for single-item photos."""
@@ -2767,11 +2440,6 @@ class GarmentVisionService:
                         photo_model_gender = "women"
                     elif any(k in cat_labels for k in ("boxers", "tuxedo")):
                         photo_model_gender = "men"
-                    else:
-                        try:
-                            photo_model_gender = await self.detect_model_gender(img_bytes, detections=detections)
-                        except Exception as d_exc:
-                            logger.info("analyze_outfits_stream: detect_model_gender failed for idx %d: %s", idx, d_exc)
 
                 is_footwear_only = bool(
                     detections
@@ -3155,8 +2823,9 @@ class GarmentVisionService:
                             "gender": {"type": "string", "enum": ["women", "men", "unisex", "kids"]},
                             "model_gender": {"type": "string", "enum": ["women", "men", "none"]},
                             "pattern": {"type": "string"},
-                            "dress_code": {"type": "string", "enum": ["casual", "smart-casual", "business", "formal", "athletic", "lounge"]},
+                            "dress_code": {"type": "string", "enum": ["casual", "smart-casual", "business", "formal", "athletic", "loungewear", "lounge"]},
                             "season": {"type": "array", "items": {"type": "string"}},
+                            "tags": {"type": "array", "items": {"type": "string"}},
                             "caption": {"type": "string", "description": "One concise sentence describing style and color"},
                         },
                         "required": ["slot_index", "is_clothing", "title", "category", "sub_category", "item_type", "gender"],

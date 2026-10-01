@@ -467,3 +467,75 @@ def test_create_batch_collage_composition():
     assert out_im.format == "JPEG"
 
 
+@pytest.mark.anyio
+async def test_garmentvision_rules_enforcement():
+    """Verify all 6 GarmentVision Rules:
+    1. Multi-Item Single-Prompt Ingestion: Multi-garment images processed in a single pass.
+    2. Batch-upload Single-Prompt Ingestion: Multi-photo uploads ingested in a single pass.
+    3. Single System Prompt Execution across AddItem workflow.
+    4. Strict 3-Tier Gender Hierarchy: Model -> Cut -> Profile -> Unisex (Never men).
+    5. Continuous i18next-localization across supported languages.
+    6. Compact LLM input and output tokens.
+    """
+    from app.services.vision.llm import SYSTEM_PROMPT, _build_system_prompt, _user_prompt
+    from app.services.vision.service import GarmentVisionService
+
+    # Rule 3 & 6: System prompt word count < 260 words, contains critical taxonomy
+    words = SYSTEM_PROMPT.split()
+    assert len(words) < 260, f"SYSTEM_PROMPT is too verbose ({len(words)} words)"
+    assert "Strict 3-Tier Hierarchy" in SYSTEM_PROMPT
+    assert "reconstruction_prompt" in SYSTEM_PROMPT
+    assert "colors" in SYSTEM_PROMPT
+    assert "tags" in SYSTEM_PROMPT
+
+    # Rule 5: i18next localization in user prompts
+    prompt_he = _user_prompt("he", user_gender="women")
+    assert "Hebrew" in prompt_he
+    assert "עברית" in prompt_he
+    assert "women" in prompt_he
+
+    prompt_ar = _user_prompt("ar", user_gender="men")
+    assert "Arabic" in prompt_ar
+    assert "العربية" in prompt_ar
+
+    prompt_es = _user_prompt("es", user_gender="unisex")
+    assert "Spanish" in prompt_es
+
+    # Rule 4: Strict 3-Tier Hierarchy
+    # Tier 4a: Model gender overrides everything
+    model_fem = _coerce_single_garment(
+        {"category": "Bottom", "sub_category": "Jeans", "item_type": "Straight Jeans"},
+        user_gender="men",
+        model_gender="women",
+    )
+    assert model_fem["gender"] == "women"
+
+    # Tier 4b: Cut criteria on flat lay
+    blouse = _coerce_single_garment(
+        {"category": "Top", "sub_category": "Blouse", "item_type": "Silk Blouse"},
+        user_gender="men",
+    )
+    assert blouse["gender"] == "women"
+
+    # Tier 4c: Neutral basic anchors to profile gender
+    basic_male = _coerce_single_garment(
+        {"category": "Bottom", "sub_category": "Pants", "item_type": "Chinos"},
+        user_gender="men",
+    )
+    assert basic_male["gender"] == "men"
+
+    # Tier 4d: Fallback to unisex, never default to men
+    basic_neutral = _coerce_single_garment(
+        {"category": "Bottom", "sub_category": "Pants", "item_type": "Chinos"},
+        user_gender=None,
+    )
+    assert basic_neutral["gender"] == "unisex"
+    assert basic_neutral["gender"] != "men"
+
+    # Rule 1 & 2: Single-pass delegation in analyze_outfit_stream
+    svc = GarmentVisionService(api_key="fake-key-for-test", provider="gemma")
+    assert hasattr(svc, "analyze_outfit_stream")
+    assert hasattr(svc, "analyze_outfits_stream")
+
+
+

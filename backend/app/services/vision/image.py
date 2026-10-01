@@ -398,8 +398,6 @@ def _fit_crop_to_card(
     if (new_w, new_h) != (iw, ih):
         try:
             img = img.resize((new_w, new_h), Image.LANCZOS)
-            if scale > 1.2:
-                img = img.filter(ImageFilter.UnsharpMask(radius=1.5, percent=120, threshold=3))
         except Exception:  # noqa: BLE001
             return crop_bytes, crop_mime
 
