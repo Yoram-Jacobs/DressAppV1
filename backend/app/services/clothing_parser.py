@@ -1779,11 +1779,16 @@ def apply_alpha_intersection(
     # NEVER revert to un-matted face/head or feet on asphalt when valid item pixels exist!
     solid_count = int((new_alpha >= 128).sum())
     if is_eyewear or is_acc or is_footwear:
-        if solid_count < 5:
-            if mask_resized is not None and int((mask_resized > 50).sum()) >= 5:
+        if solid_count < 20:
+            if mask_resized is not None and int((mask_resized > 50).sum()) >= 10:
                 logger.info("apply_alpha_intersection: small item recovering alpha from SegFormer mask")
-                new_alpha = np.where(mask_resized > 50, np.uint8(255), np.uint8(0))
-            else:
+                seg_alpha = mask_resized.copy()
+                if has_human and 'human_resized' in locals() and human_resized is not None:
+                    seg_alpha = np.where(human_resized > 120, np.uint8(0), seg_alpha)
+                new_alpha = np.where(seg_alpha > 50, np.uint8(255), np.uint8(0))
+                alpha_im = Image.fromarray(new_alpha, mode="L").filter(ImageFilter.GaussianBlur(radius=1.2))
+                new_alpha = np.array(alpha_im)
+            elif solid_count < 5:
                 logger.info(
                     "apply_alpha_intersection: small item empty (count=%d) — returning None.",
                     solid_count,

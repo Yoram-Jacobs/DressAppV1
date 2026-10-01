@@ -1397,19 +1397,20 @@ class GarmentVisionService:
             is_single = det.get("is_single_item", False)
 
             m_cov = _solid_alpha_coverage(matted) if matted else None
+            norm_seg_u8 = _cp._normalize_mask_to_u8(seg_mask_bbox) if seg_mask_bbox is not None else None
             seg_mask_pixels = 0
             seg_mask_cov = 0.0
-            if seg_mask_bbox is not None and bool(seg_mask_bbox.any()):
-                seg_mask_pixels = int(_np.sum(seg_mask_bbox > 50))
-                seg_mask_cov = float(_np.mean(seg_mask_bbox > 50))
+            if norm_seg_u8 is not None and bool(norm_seg_u8.any()):
+                seg_mask_pixels = int(_np.sum(norm_seg_u8 > 50))
+                seg_mask_cov = float(_np.mean(norm_seg_u8 > 50))
 
             # Detect rembg collapse:
-            # Rembg collapsed if it returned None, OR if SegFormer found a confident garment (>= 40 px)
+            # Rembg collapsed if it returned None, OR if SegFormer found a confident garment (>= 20 px)
             # but rembg returned < 2% solid alpha or lost > 70% of SegFormer's garment mass.
             rembg_collapsed = bool(
                 not matted
                 or (
-                    seg_mask_pixels >= 40
+                    seg_mask_pixels >= 20
                     and (
                         m_cov is None
                         or m_cov < 0.02
@@ -1419,7 +1420,7 @@ class GarmentVisionService:
             )
 
             if rembg_collapsed:
-                if seg_mask_bbox is not None and seg_mask_pixels >= 20:
+                if norm_seg_u8 is not None and seg_mask_pixels >= 20:
                     # Use SegFormer semantic mask directly to produce an alpha cutout!
                     # Smooth with anti-aliasing Gaussian blur so edges are clean and not blocky.
                     try:
@@ -1427,11 +1428,10 @@ class GarmentVisionService:
                         import io
                         im = Image.open(io.BytesIO(cbytes)).convert("RGBA")
                         Hc, Wc = im.size[1], im.size[0]
-                        norm_seg = _cp._normalize_mask_to_u8(seg_mask_bbox)
-                        if norm_seg.shape != (Hc, Wc):
-                            mask_res = _np.array(Image.fromarray(norm_seg, mode="L").resize((Wc, Hc), Image.BILINEAR))
+                        if norm_seg_u8.shape != (Hc, Wc):
+                            mask_res = _np.array(Image.fromarray(norm_seg_u8, mode="L").resize((Wc, Hc), Image.BILINEAR))
                         else:
-                            mask_res = norm_seg
+                            mask_res = norm_seg_u8
                         if human_mask_bbox is not None and bool(human_mask_bbox.any()):
                             norm_human = _cp._normalize_mask_to_u8(human_mask_bbox)
                             if norm_human.shape != (Hc, Wc):
@@ -1492,7 +1492,7 @@ class GarmentVisionService:
                     matted_crops.append((det, cbytes, mime))
                     continue
 
-            if not is_single and (
+            if not rembg_collapsed and not is_single and (
                 seg_mask_bbox is not None
                 or human_mask_bbox is not None
                 or other_mask_bbox is not None
