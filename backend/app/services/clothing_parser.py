@@ -1585,20 +1585,24 @@ def apply_alpha_intersection(
             )
             return None
 
-        # Build solid garment core and smooth garment priority weight to protect fabric from false chewing
+        # Build solid garment core and protection region to protect fabric from false chewing
         try:
             from scipy import ndimage
-            mask_bin_core = mask_resized > 127
+            mask_bin_core = mask_resized > 64
             closed_core = ndimage.binary_closing(mask_bin_core, structure=np.ones((5, 5), dtype=bool), iterations=1)
             filled_core = ndimage.binary_fill_holes(closed_core)
-            core_iter = max(2, min(6, int(round(min(Hc, Wc) * 0.01))))
+            # garment_protect covers the garment interior where mask is confident or filled
+            garment_protect = filled_core | (mask_resized > 50)
+            core_iter = max(1, min(4, int(round(min(Hc, Wc) * 0.008))))
             garment_core = ndimage.binary_erosion(filled_core, iterations=core_iter)
         except Exception:  # noqa: BLE001
+            garment_protect = mask_resized > 50 if mask_resized is not None else None
             garment_core = None
 
         garment_weight = np.clip((mask_resized.astype(float) - 20.0) / 80.0, 0.0, 1.0)
     else:
         garment_weight = None
+        garment_protect = None
 
     # Initialize new_alpha with rembg's studio-grade alpha
     new_alpha = arr[:, :, 3].copy()
@@ -1619,28 +1623,34 @@ def apply_alpha_intersection(
             else:
                 human_resized = norm_human
 
-            # Zero out human mask over the target garment so garment edges/core are never chewed
-            if garment_weight is not None:
+            # Zero out human mask over the target garment interior so garment fabric is NEVER chewed
+            if garment_protect is not None and garment_protect.any():
+                human_clean = np.where(garment_protect, np.uint8(0), human_resized)
+            elif garment_weight is not None:
                 human_clean = (human_resized.astype(float) * (1.0 - garment_weight)).round().astype(np.uint8)
-            elif garment_core is not None and garment_core.any():
-                human_clean = np.where(garment_core, np.uint8(0), human_resized)
             else:
                 human_clean = human_resized
 
-            # Gaussian blur the human mask so boundary transitions are anti-aliased (zero sawtooth!)
+            # Anti-aliased Gaussian blur on subtraction mask
             human_blur = Image.fromarray(human_clean, mode="L").filter(ImageFilter.GaussianBlur(radius=1.5))
             human_factor = np.array(human_blur, dtype=float) / 255.0
 
-            # Soft subtraction preserving studio-grade subpixel anti-aliasing
-            new_alpha = (new_alpha.astype(float) * np.clip(1.0 - human_factor, 0.0, 1.0)).round().astype(np.uint8)
+            # Outside garment_protect, subtract human parts smoothly
+            sub_human = np.clip(1.0 - human_factor, 0.0, 1.0)
+            if garment_protect is not None and garment_protect.any():
+                sub_human = np.where(garment_protect, 1.0, sub_human)
+            new_alpha = (new_alpha.astype(float) * sub_human).round().astype(np.uint8)
         except Exception as exc:  # noqa: BLE001
             logger.info(
                 "apply_alpha_intersection: human-mask subtraction failed: %s",
                 repr(exc)[:120],
             )
 
-    # 2. Human skin chrominance filter for torso/body garments, facial eyewear, footwear, and accessories.
-    if has_human and (norm_cat in {"top", "outerwear", "dress", "fullbody"} or is_footwear or is_eyewear or is_acc):
+    # 2. Human skin chrominance filter for facial eyewear, footwear, and accessories.
+    # CRITICAL: Tops, outerwear, dresses, and bottoms MUST NEVER be filtered by skin chrominance!
+    # Fabrics routinely come in warm tones (tan, beige, cream, peach, pink, brown, warm gray, orange)
+    # which trigger skin chrominance across the fabric body and turn it into a faded 5% opacity ghost.
+    if has_human and (is_footwear or is_eyewear or is_acc):
         try:
             r = arr[:, :, 0].astype(float)
             g = arr[:, :, 1].astype(float)
@@ -1656,16 +1666,19 @@ def apply_alpha_intersection(
             )
             if is_skin.any():
                 skin_u8 = (is_skin * 255).astype(np.uint8)
-                if garment_weight is not None:
+                if garment_protect is not None and garment_protect.any():
+                    skin_clean = np.where(garment_protect, np.uint8(0), skin_u8)
+                elif garment_weight is not None:
                     skin_clean = (skin_u8.astype(float) * (1.0 - garment_weight)).round().astype(np.uint8)
-                elif garment_core is not None and garment_core.any():
-                    skin_clean = np.where(garment_core, np.uint8(0), skin_u8)
                 else:
                     skin_clean = skin_u8
 
                 skin_blur = Image.fromarray(skin_clean, mode="L").filter(ImageFilter.GaussianBlur(radius=1.5))
                 skin_factor = np.array(skin_blur, dtype=float) / 255.0
-                new_alpha = (new_alpha.astype(float) * np.clip(1.0 - skin_factor, 0.0, 1.0)).round().astype(np.uint8)
+                sub_skin = np.clip(1.0 - skin_factor, 0.0, 1.0)
+                if garment_protect is not None and garment_protect.any():
+                    sub_skin = np.where(garment_protect, 1.0, sub_skin)
+                new_alpha = (new_alpha.astype(float) * sub_skin).round().astype(np.uint8)
         except Exception as exc:  # noqa: BLE001
             logger.info(
                 "apply_alpha_intersection: skin-chrominance subtraction failed: %s",
@@ -1687,7 +1700,14 @@ def apply_alpha_intersection(
                     if cut_bottom_y < Hc:
                         new_alpha[cut_bottom_y:, :] = 0
                 elif norm_cat in {"bottom", "pants", "skirt"}:
-                    cut_top_y = max(0, topmost_y - 2)
+                    cut_top_y = max(0, topmost_y - 1)
+                    if cut_top_y > 0:
+                        new_alpha[:cut_top_y, :] = 0
+                    cut_bottom_y = min(Hc, bottommost_y + 3)
+                    if cut_bottom_y < Hc:
+                        new_alpha[cut_bottom_y:, :] = 0
+                elif is_footwear:
+                    cut_top_y = max(0, topmost_y - 1)
                     if cut_top_y > 0:
                         new_alpha[:cut_top_y, :] = 0
         except Exception as exc:  # noqa: BLE001
@@ -1707,16 +1727,21 @@ def apply_alpha_intersection(
             else:
                 other_resized = norm_other
 
-            if garment_weight is not None:
+            # Protect garment core while excising adjacent items outside core (e.g. hoodie hem over pants, pants hem over shoes)
+            protect_zone = garment_core if (garment_core is not None and garment_core.any()) else garment_protect
+            if protect_zone is not None and protect_zone.any():
+                other_clean = np.where(protect_zone, np.uint8(0), other_resized)
+            elif garment_weight is not None:
                 other_clean = (other_resized.astype(float) * (1.0 - garment_weight)).round().astype(np.uint8)
-            elif garment_core is not None and garment_core.any():
-                other_clean = np.where(garment_core, np.uint8(0), other_resized)
             else:
                 other_clean = other_resized
 
             other_blur = Image.fromarray(other_clean, mode="L").filter(ImageFilter.GaussianBlur(radius=1.5))
             other_factor = np.array(other_blur, dtype=float) / 255.0
-            new_alpha = (new_alpha.astype(float) * np.clip(1.0 - other_factor, 0.0, 1.0)).round().astype(np.uint8)
+            sub_other = np.clip(1.0 - other_factor, 0.0, 1.0)
+            if protect_zone is not None and protect_zone.any():
+                sub_other = np.where(protect_zone, 1.0, sub_other)
+            new_alpha = (new_alpha.astype(float) * sub_other).round().astype(np.uint8)
         except Exception as exc:  # noqa: BLE001
             logger.info(
                 "apply_alpha_intersection: other_mask subtraction failed: %s",
@@ -1739,9 +1764,9 @@ def apply_alpha_intersection(
             filled_im = filled_im.filter(ImageFilter.GaussianBlur(radius=blur_r))
             soft_envelope = np.array(filled_im).astype(float) / 255.0
             
-            # Smooth envelope gate outside the garment boundary (smoothly fades background debris without sawtooth)
-            envelope_gate = np.clip(soft_envelope / 0.03, 0.0, 1.0)
-            new_alpha = (new_alpha.astype(float) * envelope_gate).round().astype(np.uint8)
+            # RULE: SegFormer envelope must ONLY exclude far-away background debris (where envelope <= 0.01).
+            # It must NEVER multiply or truncate rembg's anti-aliased alpha boundary inside the garment!
+            new_alpha = np.where(soft_envelope <= 0.01, np.uint8(0), new_alpha)
         except Exception as exc:  # noqa: BLE001
             logger.info(
                 "apply_alpha_intersection: soft-mask intersection failed: %s",
@@ -1753,16 +1778,24 @@ def apply_alpha_intersection(
     # jagged staircases, sawtooth edges, and opaque blocks between legs or in necklines.
 
     # Phantom guard: if subtraction wiped out solid alpha, preserve original rembg output.
-    min_solid_ratio = 0.001 if (is_eyewear or is_acc or is_footwear) else 0.003
-    min_solid_pixels = 20 if (is_eyewear or is_acc or is_footwear) else 40
+    # For small items (sunglasses, footwear, accessories), keep isolated cutouts even if pixel count is small.
+    # NEVER revert to un-matted face/head or feet on asphalt when valid item pixels exist!
     solid_count = int((new_alpha >= 128).sum())
-    if solid_count < min_solid_pixels and float((new_alpha >= 128).mean()) < min_solid_ratio:
-        logger.info(
-            "apply_alpha_intersection: intersection wiped out solid "
-            "alpha (count=%d) — returning None to preserve rembg-only output.",
-            solid_count,
-        )
-        return None
+    if is_eyewear or is_acc or is_footwear:
+        if solid_count < 5:
+            logger.info(
+                "apply_alpha_intersection: small item empty (count=%d) — returning None.",
+                solid_count,
+            )
+            return None
+    else:
+        if solid_count < 40 and float((new_alpha >= 128).mean()) < 0.003:
+            logger.info(
+                "apply_alpha_intersection: intersection wiped out solid "
+                "alpha (count=%d) — returning None to preserve rembg-only output.",
+                solid_count,
+            )
+            return None
 
     arr[:, :, 3] = new_alpha
     out = Image.fromarray(arr, mode="RGBA")

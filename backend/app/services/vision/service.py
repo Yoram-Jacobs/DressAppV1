@@ -3,7 +3,14 @@ from __future__ import annotations
 from .llm import EYES_JSON_SCHEMA, _GARMENT_OBJECT_SCHEMA, _call_gemma_space, _build_system_prompt, _language_directive, _user_prompt, _extract_json, DETECT_SYSTEM_PROMPT, _scan_complete_json_objects, _build_batch_prompts, GROUP_ANALYZE_SYSTEM_PROMPT, _LANG_NAMES, call_gemma_space_stream_attributes
 from .image import _shrink_for_vision, _crop_to_bbox, _PHANTOM_DROP_PCT, _solid_alpha_coverage, _fit_crop_to_card, _apply_fast_matte, _create_batch_collage
 from .geometry import _nms_detections, _is_unidentifiable, _looks_already_cropped, _iou_norm, _containment, _detect_human_presence
-from .validation import _coerce_single_garment, _coerce_enums, _enforce_segformer_category, resolve_garment_gender, is_distinctly_feminine_garment
+from .validation import (
+    _coerce_single_garment,
+    _coerce_enums,
+    _enforce_segformer_category,
+    resolve_garment_gender,
+    is_distinctly_feminine_garment,
+    is_distinctly_masculine_garment,
+)
 
 import asyncio
 import base64
@@ -2680,13 +2687,18 @@ class GarmentVisionService:
 
             try:
                 has_human_wearer = _detect_human_presence(detections)
-                if detections:
+                if detections and has_human_wearer:
                     cat_labels = {
                         (d.get("label") or d.get("category") or "").lower()
                         for d in detections
                     }
-                    if any(k in cat_labels for k in ("skirt", "dress")):
+                    if any(k in cat_labels for k in (
+                        "skirt", "dress", "sandal", "sandals", "blouse", "heels", "crop", "halter",
+                        "camisole", "flats", "slip dress", "peplum", "ruffle", "floral"
+                    )) or any(w in str(d.get("label", "")).lower() for d in detections for w in ("sandal", "skirt", "dress", "blouse", "heel")):
                         photo_model_gender = "women"
+                    elif any(k in cat_labels for k in ("boxers", "tuxedo")):
+                        photo_model_gender = "men"
 
                 is_footwear_only = bool(
                     detections
@@ -3053,15 +3065,33 @@ class GarmentVisionService:
                             hint += " (Sunglasses/Eyewear: sub_category='Sunglasses', item_type='Classic Sunglasses', category='Accessories'.)"
                         items_hints.append(hint)
 
-                    multi_garment_schema = dict(_GARMENT_OBJECT_SCHEMA)
-                    multi_props = dict(multi_garment_schema.get("properties") or {})
-                    multi_props["slot_index"] = {"type": "integer", "description": "0-based item slot index"}
-                    multi_garment_schema["properties"] = multi_props
-                    multi_garment_schema["required"] = ["is_clothing", "name", "title", "category", "sub_category", "item_type"]
+                    compact_garment_schema = {
+                        "type": "object",
+                        "properties": {
+                            "slot_index": {"type": "integer", "description": "0-based item slot index"},
+                            "is_clothing": {"type": "boolean", "description": "true for wearable clothes, shoes, bags, eyewear, accessories"},
+                            "title": {"type": "string", "description": "Garment title"},
+                            "name": {"type": "string", "description": "Specific concise name"},
+                            "category": {
+                                "type": "string",
+                                "enum": ["Top", "Bottom", "Dress", "Outerwear", "Footwear", "Accessories", "Underwear"],
+                            },
+                            "sub_category": {"type": "string", "description": "Sub-category e.g. T-Shirt, Jeans, Pants, Sandals, Sneakers, Sunglasses, Handbag"},
+                            "item_type": {"type": "string", "description": "Specific cut e.g. Sweatpants, Strappy Sandals, Low-Top Sneakers, Classic Sunglasses"},
+                            "colors": {"type": "array", "items": {"type": "string"}},
+                            "gender": {"type": "string", "enum": ["women", "men", "unisex", "kids"]},
+                            "model_gender": {"type": "string", "enum": ["women", "men", "none"]},
+                            "pattern": {"type": "string"},
+                            "dress_code": {"type": "string", "enum": ["casual", "smart-casual", "business", "formal", "athletic", "lounge"]},
+                            "season": {"type": "array", "items": {"type": "string"}},
+                            "caption": {"type": "string", "description": "One concise sentence describing style and color"},
+                        },
+                        "required": ["slot_index", "is_clothing", "title", "category", "sub_category", "item_type", "gender"],
+                    }
 
                     multi_item_schema = {
                         "type": "array",
-                        "items": multi_garment_schema,
+                        "items": compact_garment_schema,
                         "minItems": len(flat_crops),
                         "maxItems": len(flat_crops),
                     }
@@ -3088,15 +3118,27 @@ class GarmentVisionService:
                             "Calling Gemma unified single-prompt ingestion for %d items across %d photos",
                             len(flat_crops), len(images_bytes_list),
                         )
-                        raw_multi = await _call_gemma_space(
-                            system_prompt=sys_prompt,
-                            user_text=user_text,
-                            image_b64_jpeg=full_b64,
-                            max_tokens=min(500 * len(flat_crops), 4096),
-                            temperature=0.1,
-                            timeout=max(240.0, float(settings.EYES_GEMMA_TIMEOUT_S)),
-                            json_schema=multi_item_schema,
+                        multi_task = asyncio.create_task(
+                            _call_gemma_space(
+                                system_prompt=sys_prompt,
+                                user_text=user_text,
+                                image_b64_jpeg=full_b64,
+                                max_tokens=min(140 * len(flat_crops), 1500),
+                                temperature=0.1,
+                                timeout=max(240.0, float(settings.EYES_GEMMA_TIMEOUT_S)),
+                                json_schema=multi_item_schema,
+                            )
                         )
+                        while not multi_task.done():
+                            await asyncio.sleep(3.0)
+                            if not multi_task.done():
+                                elapsed_sec = time.perf_counter() - t0_multi
+                                yield {
+                                    "type": "progress",
+                                    "count": len(flat_crops),
+                                    "elapsed_s": round(elapsed_sec, 1),
+                                }
+                        raw_multi = await multi_task
                         logger.info(
                             "Gemma unified single-prompt ingestion succeeded in %.2fs",
                             time.perf_counter() - t0_multi,
@@ -3126,31 +3168,58 @@ class GarmentVisionService:
                     slot_crop_list_all = list(enumerate(flat_crops))
                     aligned_crop_items = _align_analyses_to_crops(slot_crop_list_all, parsed_items)
 
-                    # Tier 4a: Determine human model gender per photo across all detected items
+                    # Strict 3-Tier Hierarchy:
+                    # Pass 1: Scan all items and detections per photo (image_idx) to determine human model gender.
                     photo_model_genders: dict[int, str] = {}
+                    from collections import defaultdict
+                    photo_fem_cues: dict[int, list[str]] = defaultdict(list)
+                    photo_masc_cues: dict[int, list[str]] = defaultdict(list)
+                    photo_has_model: dict[int, bool] = defaultdict(bool)
+
                     for slot_idx, (image_idx, det, c_bytes, c_mime), item_raw in aligned_crop_items:
+                        has_human = bool(
+                            det.get("has_human_head")
+                            or det.get("has_human_skin")
+                            or det.get("_photo_model_gender") in ("women", "men")
+                        )
+                        if has_human:
+                            photo_has_model[image_idx] = True
+
+                        if det.get("_photo_model_gender") == "women":
+                            photo_fem_cues[image_idx].append("det_women")
+                        elif det.get("_photo_model_gender") == "men":
+                            photo_masc_cues[image_idx].append("det_men")
+
                         item_dict = item_raw or {}
-                        mg = item_dict.get("model_gender") or det.get("_photo_model_gender")
+                        mg = item_dict.get("model_gender")
                         g = item_dict.get("gender")
-                        has_human = bool(det.get("has_human_head") or det.get("has_human_skin"))
-                        if mg in ("women", "men"):
-                            photo_model_genders[image_idx] = mg
-                        elif has_human:
-                            is_fem = (
-                                g == "women"
-                                or is_distinctly_feminine_garment(
-                                    item_dict.get("category") or det.get("category"),
-                                    item_dict.get("sub_category") or det.get("label"),
-                                    item_dict.get("item_type"),
-                                    name=item_dict.get("name"),
-                                    full_text=f"{item_dict.get('title', '')} {item_dict.get('caption', '')}",
-                                    pattern=item_dict.get("pattern"),
-                                )
-                            )
-                            if is_fem:
-                                photo_model_genders[image_idx] = "women"
-                            elif g == "men":
-                                photo_model_genders.setdefault(image_idx, "men")
+                        cat = item_dict.get("category") or det.get("category")
+                        sub = item_dict.get("sub_category") or det.get("label")
+                        itype = item_dict.get("item_type")
+                        name = item_dict.get("name")
+                        title = item_dict.get("title") or ""
+                        caption = item_dict.get("caption") or ""
+                        pattern = item_dict.get("pattern")
+                        full_txt = f"{title} {caption} {name or ''}".lower()
+
+                        if mg == "women" or g == "women":
+                            photo_fem_cues[image_idx].append(f"item_{slot_idx}_women")
+                        elif mg == "men":
+                            photo_masc_cues[image_idx].append(f"item_{slot_idx}_men")
+
+                        if is_distinctly_feminine_garment(cat, sub, itype, name=name, full_text=full_txt, pattern=pattern):
+                            photo_fem_cues[image_idx].append(f"item_{slot_idx}_fem_cut")
+                        elif is_distinctly_masculine_garment(cat, sub, itype):
+                            photo_masc_cues[image_idx].append(f"item_{slot_idx}_masc_cut")
+
+                    all_img_indices = set(idx for idx, _, _, _ in flat_crops)
+                    for img_i in all_img_indices:
+                        if photo_has_model.get(img_i):
+                            # Any feminine cue on a human model anchors the entire outfit to women
+                            if photo_fem_cues.get(img_i):
+                                photo_model_genders[img_i] = "women"
+                            elif photo_masc_cues.get(img_i):
+                                photo_model_genders[img_i] = "men"
 
                     for slot_idx, (image_idx, det, c_bytes, c_mime), item_raw in aligned_crop_items:
                         assembled = dict(item_raw) if item_raw else {}
@@ -3182,6 +3251,26 @@ class GarmentVisionService:
                         if item_mg in ("men", "women"):
                             assembled["model_gender"] = item_mg
                             assembled["gender"] = item_mg
+
+                        # Fill auxiliary fields with robust taxonomy defaults so zero tokens are wasted on them
+                        assembled.setdefault("condition", "used")
+                        assembled.setdefault("quality_tier", "good")
+                        assembled.setdefault("price_tier", "mid")
+                        assembled.setdefault("fit_style", "regular")
+                        assembled.setdefault("clothing_condition", "Good")
+                        if not assembled.get("fabric_materials"):
+                            cat_k = (assembled.get("category") or "").lower()
+                            sub_k = (assembled.get("sub_category") or "").lower()
+                            if cat_k == "footwear":
+                                assembled["fabric_materials"] = [{"name": "Leather", "pct": 70}, {"name": "Rubber", "pct": 30}]
+                            elif "jeans" in sub_k or "denim" in sub_k:
+                                assembled["fabric_materials"] = [{"name": "Cotton", "pct": 98}, {"name": "Elastane", "pct": 2}]
+                            elif "sweat" in sub_k or "jogger" in sub_k or "pant" in sub_k:
+                                assembled["fabric_materials"] = [{"name": "Cotton", "pct": 80}, {"name": "Polyester", "pct": 20}]
+                            else:
+                                assembled["fabric_materials"] = [{"name": "Cotton", "pct": 100}]
+                        if not assembled.get("care_instructions"):
+                            assembled["care_instructions"] = ["Machine wash cold", "Line dry"]
 
                         analysis = _coerce_single_garment(assembled, user_gender=eff_gender, model_gender=item_mg, language=language)
                         if not analysis.get("title") and analysis.get("name"):

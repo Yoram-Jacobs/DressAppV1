@@ -1357,6 +1357,149 @@ async def test_gemma_multi_item_and_batch_upload_single_prompt_ingestion(monkeyp
     assert len(batch_emitted) == 3, f"Expected 3 items emitted for batch, got {len(batch_emitted)}"
 
 
+def test_apply_alpha_intersection_preserves_solid_alpha_for_warm_colored_tops():
+    """Verify that warm-colored tops (beige, tan, cream, khaki) are NEVER faded by skin chrominance.
+    
+    Protects against regression where warm fabrics match skin chrominance ranges (Cr in 133..173, Cb in 77..127)
+    and were attenuated into ghostly, near-transparent smoke cutouts.
+    """
+    from app.services.clothing_parser import apply_alpha_intersection
+    import io
+    from PIL import Image
+
+    H, W = 160, 140
+    # Create rembg-style cutout with a warm beige/tan shirt
+    # RGB (215, 190, 165) falls exactly in skin chrominance range:
+    # cr = 128 + 0.5*215 - 0.418688*190 - 0.081312*165 = 142.5
+    # cb = 128 - 0.168736*215 - 0.331264*190 + 0.5*165 = 111.2
+    img = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+    for y in range(30, 140):
+        for x in range(20, 120):
+            img.putpixel((x, y), (215, 190, 165, 255))  # warm beige shirt
+    # Human head at top (y: 5..28, x: 50..90)
+    for y in range(5, 29):
+        for x in range(50, 91):
+            img.putpixel((x, y), (210, 165, 135, 255))
+
+    buf = io.BytesIO()
+    img.save(buf, format="PNG")
+    raw_shirt_bytes = buf.getvalue()
+
+    shirt_mask = np.zeros((H, W), dtype=np.uint8)
+    shirt_mask[30:140, 20:120] = 1
+
+    human_head_mask = np.zeros((H, W), dtype=np.uint8)
+    human_head_mask[5:29, 50:91] = 1
+
+    result = apply_alpha_intersection(
+        raw_shirt_bytes,
+        seg_mask_bbox=shirt_mask,
+        human_mask=human_head_mask,
+        category="top",
+        label="upper-clothes",
+    )
+    assert result is not None, "Cutout must not be wiped out"
+    out_img = Image.open(io.BytesIO(result))
+    arr = np.array(out_img)
+
+    # Center of warm shirt (y=80, x=70) MUST be 255 solid alpha — NOT faded smoke!
+    assert arr[80, 70, 3] == 255, f"Warm shirt core must have solid alpha 255, got {arr[80, 70, 3]}"
+    assert arr[100, 50, 3] == 255, f"Warm shirt body must have solid alpha 255, got {arr[100, 50, 3]}"
+    # Head above shirt collar (y=15, x=70) must be excised
+    assert arr[15, 70, 3] == 0, f"Human head above collar must be excised, got {arr[15, 70, 3]}"
+
+
+def test_sanitize_sweatpants_and_trainer_footer():
+    """Verify gray footer/trainer pants with drawstring are never classified as tailored wool business pants."""
+    from app.services.vision.validation import _coerce_enums, _coerce_single_garment
+
+    trainer_raw = {
+        "name": "Men's Gray Footer Trainer Pants",
+        "title": "Tailored Wool Trousers",
+        "caption": "Gray trainer pants with drawstring and elastic cuffs footer",
+        "category": "bottom",
+        "sub_category": "trousers",
+        "item_type": "Wool Tailored Trousers",
+        "dress_code": "business",
+        "gender": "men",
+        "fabric_materials": [{"name": "Wool", "pct": 100}],
+        "season": ["fall", "winter"],
+    }
+
+    # Test via _coerce_single_garment
+    coerced = _coerce_single_garment(dict(trainer_raw), user_gender="men", model_gender=None)
+    assert coerced["sub_category"] == "Pants"
+    assert coerced["item_type"] in ("Sweatpants", "Joggers")
+    assert coerced["dress_code"] == "casual"
+    assert any("cotton" in m.get("name", "").lower() for m in coerced["fabric_materials"])
+    assert not any("wool" in m.get("name", "").lower() for m in coerced["fabric_materials"])
+    assert "wool" not in coerced.get("title", "").lower()
+
+    # Test via _coerce_enums
+    coerced_enums = _coerce_enums(dict(trainer_raw), user_gender="men", model_gender=None)
+    assert coerced_enums["sub_category"] == "Pants"
+    assert coerced_enums["item_type"] in ("Sweatpants", "Joggers")
+    assert coerced_enums["dress_code"] == "casual"
+    assert any("cotton" in m.get("name", "").lower() for m in coerced_enums["fabric_materials"])
+
+
+def test_sanitize_sandals_and_open_toe_footwear():
+    """Verify green/white patterned sandals are never identified as classic white sneakers."""
+    from app.services.vision.validation import _coerce_enums, _coerce_single_garment
+
+    sandals_raw = {
+        "name": "Green and White Patterned Strappy Sandals",
+        "title": "Classic White Sneakers",
+        "caption": "Open-toe flat sandals with green and white strap pattern",
+        "category": "footwear",
+        "sub_category": "Sneakers",
+        "item_type": "Sneakers",
+        "dress_code": "business",
+        "gender": "women",
+        "pattern": "patterned",
+        "season": ["winter"],
+    }
+
+    coerced = _coerce_single_garment(dict(sandals_raw), user_gender="women", model_gender="women")
+    assert coerced["category"] == "Footwear"
+    assert coerced["sub_category"] == "Sandals"
+    assert "sandal" in coerced["item_type"].lower()
+    assert coerced["dress_code"] == "casual"
+    assert "summer" in [s.lower() for s in coerced["season"]]
+    assert "sneaker" not in coerced.get("title", "").lower()
+
+    coerced_enums = _coerce_enums(dict(sandals_raw), user_gender="women", model_gender="women")
+    assert coerced_enums["category"] == "Footwear"
+    assert coerced_enums["sub_category"] == "Sandals"
+    assert "sandal" in coerced_enums["item_type"].lower()
+    assert coerced_enums["dress_code"] == "casual"
+
+
+def test_sanitize_sleeve_and_cut_for_non_tops():
+    """Verify sunglasses and non-tops never get sleeve cuts or 'Shorts' item type."""
+    from app.services.vision.validation import _coerce_enums, _coerce_single_garment
+
+    sunglasses_raw = {
+        "name": "Classic Black Sunglasses",
+        "category": "accessories",
+        "sub_category": "sunglasses",
+        "item_type": "Shorts",  # bad LLM hallucination
+        "cut": "short-sleeve",
+        "gender": "unisex",
+    }
+
+    coerced = _coerce_single_garment(dict(sunglasses_raw), user_gender="women")
+    assert coerced["category"] == "Accessories"
+    assert coerced["sub_category"] == "Sunglasses"
+    assert coerced["item_type"] == "Classic Sunglasses"
+    assert coerced.get("cut") is None or "sleeve" not in coerced.get("cut", "").lower()
+
+    coerced_enums = _coerce_enums(dict(sunglasses_raw), user_gender="women")
+    assert coerced_enums["category"] == "Accessories"
+    assert coerced_enums["sub_category"] == "Sunglasses"
+    assert coerced_enums["item_type"] == "Classic Sunglasses"
+
+
 
 
 
