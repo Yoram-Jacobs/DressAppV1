@@ -977,6 +977,24 @@ def _coerce_single_garment(
         else:
             res["caption"] = tpls["default"].format(name=name_val)
     res["caption"] = _clean_truncated_caption(res.get("caption"))
+    # Post-process caption: strip redundant sentences that just repeat dress_code/season/gender info
+    cap = res.get("caption") or ""
+    if cap:
+        import re as _re
+        # Remove sentences containing obvious repetitive filler patterns
+        _filler_patterns = (
+            r"[^.]*\b(suitable for|perfect for|ideal for|great for|designed for|meant for)\b[^.]*\.",
+            r"[^.]*\b(in the (fall|winter|spring|summer)|for (men|women|casual|formal|business))\b[^.]*\.",
+        )
+        for pat in _filler_patterns:
+            cap = _re.sub(pat, "", cap, flags=_re.IGNORECASE).strip()
+        # Collapse multiple sentences into the first one (captions should be one clause)
+        sentences = [s.strip() for s in _re.split(r"(?<=[.!?])\s+", cap) if s.strip()]
+        if sentences:
+            cap = sentences[0]
+            if not cap.endswith("."):
+                cap += "."
+        res["caption"] = cap[:160]  # hard cap matches schema maxLength
 
     # Pattern fallback: if model returned solid/empty, check text for printed graphics, geometric, striped, or floral patterns
     pat_str = (res.get("pattern") or "").strip().lower()
@@ -1008,6 +1026,18 @@ def _coerce_single_garment(
                 _re.sub(r"\bאייל\b", "עיט", t) if isinstance(t, str) else t
                 for t in res["tags"]
             ]
+
+    # Deduplicate existing tags (case-insensitive) — Gemini sometimes returns ["Jackets", "Jackets", "red"]
+    if isinstance(res.get("tags"), list) and res["tags"]:
+        _seen_t: set[str] = set()
+        _deduped: list[str] = []
+        for _t in res["tags"]:
+            if isinstance(_t, str):
+                _key = _t.strip().lower()
+                if _key and _key not in _seen_t:
+                    _seen_t.add(_key)
+                    _deduped.append(_t.strip())
+        res["tags"] = _deduped
 
     # Tags guarantee: ensure tags are always populated with 3-6 relevant tags
     current_tags = res.get("tags")
