@@ -1077,9 +1077,10 @@ async def parse_garments(
         if name in {"Left-leg", "Right-leg"}
     }
     has_head = bool(np.isin(class_mask, list(head_class_ids)).sum() >= 30) if head_class_ids else False
-    if human_class_ids and has_head:
+    has_any_human = bool(np.isin(class_mask, list(human_class_ids)).sum() >= 80) if human_class_ids else False
+    if human_class_ids and (has_head or has_any_human):
         human_mask_full = np.isin(class_mask, list(human_class_ids)).astype(np.uint8)
-        if not human_mask_full.any() or int(human_mask_full.sum()) < 150:
+        if not human_mask_full.any() or int(human_mask_full.sum()) < 80:
             human_mask_full = None
         else:
             from scipy import ndimage
@@ -1277,21 +1278,33 @@ async def parse_garments(
 
         # Category-appropriate human mask:
         # 1. Accessories and footwear:
-        # For sunglasses/eyewear: wearer's face and hair are NOT the sunglasses and must be subtracted!
-        is_eyewear_item = lbl in ("sunglasses", "glasses", "eyewear") or "sunglass" in lbl
+        # For sunglasses/eyewear: wearer's face, hair, neck, and arms are NOT the sunglasses and must be subtracted!
+        is_eyewear_item = lbl in ("sunglasses", "glasses", "eyewear") or "sunglass" in lbl or cat in ("sunglasses", "glasses", "eyewear")
+        is_footwear_item = cat == "footwear" or lbl in ("shoes", "sandals", "sneakers", "boots", "floppers", "clogs", "slides") or "shoe" in lbl
+        
         if is_eyewear_item:
+            head_and_arms = head_class_ids | arm_class_ids
             garment_human_mask = (
-                np.isin(class_mask, list(head_class_ids)).astype(np.uint8)
-                if head_class_ids and np.isin(class_mask, list(head_class_ids)).any()
+                np.isin(class_mask, list(head_and_arms)).astype(np.uint8)
+                if head_and_arms and np.isin(class_mask, list(head_and_arms)).any()
                 else None
             )
-        elif cat in ("accessory", "footwear") or lbl in ("belt", "bag", "scarf", "shoes"):
+        elif is_footwear_item:
+            # For footwear: subtract legs (Left-leg, Right-leg), arms, and head/face!
+            footwear_human_ids = leg_class_ids | arm_class_ids | head_class_ids
+            garment_human_mask = (
+                np.isin(class_mask, list(footwear_human_ids)).astype(np.uint8)
+                if footwear_human_ids and np.isin(class_mask, list(footwear_human_ids)).any()
+                else None
+            )
+        elif cat in ("accessory",) or lbl in ("belt", "bag", "scarf"):
             garment_human_mask = None
-        # 2. Bottoms (pants, skirt, shorts, chinos): NEVER subtract legs! Pants cover legs.
+        # 2. Bottoms (pants, skirt, shorts, chinos): NEVER subtract legs! Pants cover legs. Subtract arms and head/torso.
         elif cat in ("bottom", "pants", "skirt") or lbl in ("pants", "skirt"):
-            if arm_class_ids and has_head:
-                arm_m = np.isin(class_mask, list(arm_class_ids)).astype(np.uint8)
-                if arm_m.any() and int(arm_m.sum()) >= 150:
+            upper_human_ids = arm_class_ids | head_class_ids
+            if upper_human_ids and np.isin(class_mask, list(upper_human_ids)).any():
+                arm_m = np.isin(class_mask, list(upper_human_ids)).astype(np.uint8)
+                if arm_m.any() and int(arm_m.sum()) >= 80:
                     from scipy import ndimage
                     h_h, h_w = arm_m.shape
                     smooth_sigma = max(1.5, min(5.0, float(min(h_h, h_w)) * 0.003))
@@ -1304,9 +1317,9 @@ async def parse_garments(
         # 3. Tops, outerwear, dresses: head + arms (never legs)
         elif cat in ("top", "outerwear", "dress") or lbl in ("upper-clothes", "coat", "dress"):
             upper_human_ids = head_class_ids | arm_class_ids
-            if upper_human_ids and has_head:
+            if upper_human_ids and np.isin(class_mask, list(upper_human_ids)).any():
                 up_m = np.isin(class_mask, list(upper_human_ids)).astype(np.uint8)
-                if up_m.any() and int(up_m.sum()) >= 150:
+                if up_m.any() and int(up_m.sum()) >= 80:
                     from scipy import ndimage
                     h_h, h_w = up_m.shape
                     smooth_sigma = max(1.5, min(5.0, float(min(h_h, h_w)) * 0.003))
@@ -1332,7 +1345,8 @@ async def parse_garments(
                 ],
                 "mask": item["mask"],
                 "_human_mask_full": garment_human_mask,
-                "has_human_head": has_head,
+                "has_human_head": has_head or has_any_human,
+                "has_human_skin": has_any_human,
             }
         )
     logger.info(
@@ -1533,6 +1547,10 @@ def apply_alpha_intersection(
         or any(w in str(category).lower() for w in ("sunglass", "glasses", "eyewear", "משקפ"))
         or any(w in str(label).lower() for w in ("sunglass", "glasses", "eyewear", "משקפ"))
     )
+    is_footwear = bool(
+        norm_cat in {"footwear", "shoes"}
+        or any(w in norm_lbl for w in ("shoe", "boot", "sneaker", "sandal", "slipper", "clog", "heel", "flopper", "slides"))
+    )
     _dilate_pct = _resolve_dilate_pct_for_category(category, label=label)
     if is_eyewear:
         _dilate_pct = min(_dilate_pct, 0.015)
@@ -1592,8 +1610,8 @@ def apply_alpha_intersection(
     )
 
     # 1. Subtract human mask (if present)
-    # Never subtract human mask from accessories (bags held in hand, belts, hats, jewelry), BUT DO subtract for sunglasses/eyewear!
-    if has_human and (not is_acc or is_eyewear):
+    # Never subtract human mask from accessories (bags held in hand, belts, hats, jewelry), BUT DO subtract for sunglasses/eyewear and footwear (legs/feet)!
+    if has_human and (not is_acc or is_eyewear or is_footwear):
         try:
             norm_human = _normalize_mask_to_u8(human_mask)
             if norm_human.shape != (Hc, Wc):
@@ -1636,12 +1654,11 @@ def apply_alpha_intersection(
                 repr(exc)[:120],
             )
 
-    # 2. Human skin chrominance filter for torso/body garments and facial eyewear.
-    # SegFormer ATR-18 often misses skin pixels (hands/wrists on hip, collarbones,
-    # cleavage, necks). If human_mask is present, detect and excise bare skin.
+    # 2. Human skin chrominance filter for torso/body garments, facial eyewear, and footwear.
+    # SegFormer ATR-18 often misses skin pixels (hands/wrists on hip, collarbones, cleavage, bare feet/toes).
     # CRITICAL: Never chew holes into the garment core (protects beige, tan, camel, khaki, olive fabrics).
-    # Exclude "bottom" and eyewear so chinos, khakis, and sunglasses frames/lenses are never chewed!
-    if has_human and norm_cat in {"top", "outerwear", "dress", "fullbody"}:
+    # Exclude "bottom" so chinos and khakis are never chewed.
+    if has_human and (norm_cat in {"top", "outerwear", "dress", "fullbody"} or is_footwear or is_eyewear):
         try:
             r = arr[:, :, 0].astype(float)
             g = arr[:, :, 1].astype(float)
@@ -1668,22 +1685,29 @@ def apply_alpha_intersection(
                 repr(exc)[:120],
             )
 
-    # 3. Clean neckline boundary without horizontal guillotine.
-    # SegFormer's human_mask already excises head/neck in step 1. Only zero out rows strictly
-    # ABOVE the topmost garment pixel so narrow straps, V-necks, collars, and lapels are never chopped off.
-    if has_human and mask_resized is not None and category and category.lower().replace(" ", "") in {
-        "top", "outerwear", "dress", "fullbody",
-    }:
+    # 3. Clean boundary cuts:
+    # - Tops/outerwear/dress: zero out rows strictly ABOVE topmost garment pixel (neckline) and BELOW bottommost garment pixel (pants/hem).
+    # - Bottoms: zero out rows strictly ABOVE the waistband (excises shirt/torso/hands hanging down).
+    if mask_resized is not None:
         try:
-            top_rows = np.where(mask_resized > 64)[0]
-            if len(top_rows) > 0:
-                topmost_y = int(top_rows.min())
-                cut_y = max(0, topmost_y - 2)
-                if cut_y > 0:
-                    new_alpha[:cut_y, :] = 0
+            non_zero_rows = np.where(mask_resized > 64)[0]
+            if len(non_zero_rows) > 0:
+                topmost_y = int(non_zero_rows.min())
+                bottommost_y = int(non_zero_rows.max())
+                if norm_cat in {"top", "outerwear", "dress", "fullbody"}:
+                    cut_top_y = max(0, topmost_y - 2)
+                    if cut_top_y > 0:
+                        new_alpha[:cut_top_y, :] = 0
+                    cut_bottom_y = min(Hc, bottommost_y + 3)
+                    if cut_bottom_y < Hc:
+                        new_alpha[cut_bottom_y:, :] = 0
+                elif norm_cat in {"bottom", "pants", "skirt"}:
+                    cut_top_y = max(0, topmost_y - 2)
+                    if cut_top_y > 0:
+                        new_alpha[:cut_top_y, :] = 0
         except Exception as exc:  # noqa: BLE001
             logger.info(
-                "apply_alpha_intersection: neckline cleanup skipped: %s",
+                "apply_alpha_intersection: boundary cleanup skipped: %s",
                 repr(exc)[:120],
             )
 
@@ -1719,19 +1743,21 @@ def apply_alpha_intersection(
             )
 
     # 4. Intersect with the smooth, dilated soft envelope of the target garment.
-    # CRITICAL: For accessories, SegFormer masks are notoriously inaccurate or non-existent.
-    # Rembg provides the true studio-grade alpha boundary. DO NOT degrade accessories with SegFormer envelope!
-    if mask_resized is not None and not is_acc and not is_eyewear:
+    # CRITICAL: For accessories, SegFormer masks are notoriously inaccurate or non-existent, EXCEPT eyewear (sunglasses)!
+    # Eyewear requires soft envelope intersection to isolate sunglasses from the human head and face.
+    if mask_resized is not None and (not is_acc or is_eyewear):
         try:
             from scipy import ndimage
             mask_bin = mask_resized > 64
-            closed = ndimage.binary_closing(mask_bin, structure=np.ones((5, 5), dtype=bool), iterations=1)
+            closed = ndimage.binary_closing(mask_bin, structure=np.ones((3 if is_eyewear else 5, 3 if is_eyewear else 5), dtype=bool), iterations=1)
             filled = ndimage.binary_fill_holes(closed)
             
             filled_im = Image.fromarray((filled * 255).astype(np.uint8), mode="L")
-            if dilate_px > 0:
-                filled_im = filled_im.filter(ImageFilter.MaxFilter(2 * dilate_px + 1))
-            filled_im = filled_im.filter(ImageFilter.GaussianBlur(radius=3.0))
+            env_dilate = 2 if is_eyewear else dilate_px
+            if env_dilate > 0:
+                filled_im = filled_im.filter(ImageFilter.MaxFilter(2 * env_dilate + 1))
+            blur_r = 1.5 if is_eyewear else 3.0
+            filled_im = filled_im.filter(ImageFilter.GaussianBlur(radius=blur_r))
             soft_envelope = np.array(filled_im).astype(float) / 255.0
             
             # RULE: SegFormer envelope must ONLY exclude far-away background debris (where envelope <= 0.01).
@@ -1747,11 +1773,15 @@ def apply_alpha_intersection(
     # to 255. Rembg provides studio-grade alpha boundaries; forcing opaque holes creates
     # jagged staircases, sawtooth edges, and opaque blocks between legs or in necklines.
 
-    # Phantom guard: if subtraction wiped out > 95% of solid alpha, preserve original rembg output.
-    if float((new_alpha >= 128).mean()) < 0.05:
+    # Phantom guard: if subtraction wiped out solid alpha, preserve original rembg output.
+    min_solid_ratio = 0.002 if (is_eyewear or is_acc or is_footwear) else 0.05
+    min_solid_pixels = 30 if (is_eyewear or is_acc or is_footwear) else 100
+    solid_count = int((new_alpha >= 128).sum())
+    if solid_count < min_solid_pixels and float((new_alpha >= 128).mean()) < min_solid_ratio:
         logger.info(
-            "apply_alpha_intersection: intersection wiped out >95%% of solid "
-            "alpha — returning None to preserve rembg-only output."
+            "apply_alpha_intersection: intersection wiped out solid "
+            "alpha (count=%d) — returning None to preserve rembg-only output.",
+            solid_count,
         )
         return None
 

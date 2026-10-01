@@ -354,10 +354,9 @@ def _fit_crop_to_card(
             rgba = img.convert("RGBA")
             alpha_arr = np.array(rgba.split()[-1])
             num_solid = int(np.sum(alpha_arr > 30))
-            coverage = float(np.mean(alpha_arr > 30))
-            if num_solid > 25 and coverage < 0.99:
-                # Pre-existing transparent cutout: preserve the studio-grade anti-aliased alpha!
-                # Do NOT overwrite with a binary thresholded mask (which produces sawtooth/staircase edges).
+            if num_solid > 25:
+                # Pre-existing transparent cutout: ALWAYS preserve the studio-grade anti-aliased alpha!
+                # NEVER overwrite with a binary thresholded mask (which produces sawtooth edges and chewing holes).
                 mask = (alpha_arr > 30).astype(np.uint8) * 255
                 rgba = _orient_and_deskew_garment(rgba, mask=mask)
                 bbox = rgba.getbbox()
@@ -366,24 +365,13 @@ def _fit_crop_to_card(
                 else:
                     img = rgba
             else:
-                mask = _extract_garment_mask(img)
-                pts = np.column_stack(np.where(mask > 0))
-                if len(pts) > 100:
-                    rgba.putalpha(Image.fromarray(mask, mode="L"))
-                    rgba = _orient_and_deskew_garment(rgba, mask=mask)
-                    bbox = rgba.getbbox()
-                    if bbox and (bbox[2] - bbox[0] > 4) and (bbox[3] - bbox[1] > 4):
-                        img = rgba.crop(bbox)
+                img = rgba
         else:
+            # RGB photo: deskew upright without synthesizing a chewing binary mask
             mask = _extract_garment_mask(img)
             pts = np.column_stack(np.where(mask > 0))
             if len(pts) > 100:
-                rgba = img.convert("RGBA")
-                rgba.putalpha(Image.fromarray(mask, mode="L"))
-                rgba = _orient_and_deskew_garment(rgba, mask=mask)
-                bbox = rgba.getbbox()
-                if bbox and (bbox[2] - bbox[0] > 4) and (bbox[3] - bbox[1] > 4):
-                    img = rgba.crop(bbox)
+                img = _orient_and_deskew_garment(img, mask=mask)
             else:
                 img = img.convert("RGB")
     except Exception as exc:  # noqa: BLE001

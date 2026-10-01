@@ -2204,6 +2204,7 @@ export default function AddItem() {
     let pendingDuplicatesTotal = 0;
     let lastErrorMsg = null;
 
+    const validPhotos = [];
     for (let i = 0; i < fingerprints.length; i++) {
       const fp = fingerprints[i];
       let b64 = "";
@@ -2221,37 +2222,48 @@ export default function AddItem() {
 
       if (!b64) {
         failedTotal += 1;
-        setBgBatch((b) => (b ? { ...b, failed: failedTotal, processed: i + 1 } : null));
+        setBgBatch((b) => (b ? { ...b, failed: failedTotal } : null));
         continue;
       }
 
-      const sourceMeta = {
-        sourceSha256: fp.sha256 || null,
-        sourcePhash: fp.phash || null,
-        sourceColorSig: fp.color_sig || null,
-        sourceFilename: fp.file?.name || fp.filename || null,
-        sourceSizeBytes:
-          typeof fp.file?.size === "number"
-            ? fp.file.size
-            : typeof fp.size_bytes === "number"
-              ? fp.size_bytes
-              : null,
-      };
+      validPhotos.push({
+        origIndex: i,
+        fp,
+        b64,
+        sourceMeta: {
+          sourceSha256: fp.sha256 || null,
+          sourcePhash: fp.phash || null,
+          sourceColorSig: fp.color_sig || null,
+          sourceFilename: fp.file?.name || fp.filename || null,
+          sourceSizeBytes:
+            typeof fp.file?.size === "number"
+              ? fp.file.size
+              : typeof fp.size_bytes === "number"
+                ? fp.size_bytes
+                : null,
+        },
+      });
+    }
 
-      let photoDetectMetas = [];
-      let photoItemSaved = false;
+    if (validPhotos.length > 0) {
+      const images_base64 = validPhotos.map((p) => p.b64);
+      let batchDetectMetas = [];
       const savePromises = [];
+      const savedPhotoIndices = new Set();
 
       const handleDetect = (frame) => {
-        photoDetectMetas = frame.items_meta || [];
+        batchDetectMetas = frame.items_meta || [];
       };
 
       const handleItem = (frame) => {
         const p = (async () => {
-          const meta = photoDetectMetas[frame.index] || photoDetectMetas[0] || {};
+          const meta = batchDetectMetas[frame.index] || batchDetectMetas[0] || {};
           const analysis = frame.analysis || {};
+          const photoIdx = frame.image_index != null ? frame.image_index : 0;
+          const photoObj = validPhotos[photoIdx] || validPhotos[0];
+          const b64 = photoObj?.b64 || "";
           const cropB64 = meta.crop_base64 || b64;
-          const mime = meta.crop_mime || fp.file?.type || "image/jpeg";
+          const mime = meta.crop_mime || photoObj?.fp?.file?.type || "image/jpeg";
 
           const cardLike = {
             base64: b64,
@@ -2261,7 +2273,7 @@ export default function AddItem() {
             fields: hydrate(analysis, user, t, i18n),
             useReconstructed: false,
             deferMatte: !!meta.defer_matte,
-            ...sourceMeta,
+            ...(photoObj?.sourceMeta || {}),
           };
 
           if (frame.potential_duplicate) {
@@ -2280,9 +2292,9 @@ export default function AddItem() {
             };
             setCards((prev) => [...prev, dupCard]);
             pendingDuplicatesTotal += 1;
-            photoItemSaved = true;
+            savedPhotoIndices.add(photoIdx);
             setBgBatch((b) =>
-              b ? { ...b, pendingDuplicates: pendingDuplicatesTotal } : null,
+              b ? { ...b, pendingDuplicates: pendingDuplicatesTotal, processed: savedPhotoIndices.size } : null,
             );
             return;
           }
@@ -2298,11 +2310,11 @@ export default function AddItem() {
                 /* ignore */
               }
               savedTotal += 1;
-              photoItemSaved = true;
-              setBgBatch((b) => (b ? { ...b, saved: savedTotal } : null));
+              savedPhotoIndices.add(photoIdx);
+              setBgBatch((b) => (b ? { ...b, saved: savedTotal, processed: savedPhotoIndices.size } : null));
             }
           } catch (createErr) {
-            console.error(`[handleBatchBackground] createItem failed for photo ${i}:`, createErr);
+            console.error(`[handleBatchBackground] createItem failed for photo ${photoIdx}:`, createErr);
             const detailMsg =
               createErr?.response?.data?.detail?.message ||
               createErr?.response?.data?.detail ||
@@ -2316,13 +2328,13 @@ export default function AddItem() {
 
       const handleItemSkip = (frame) => {
         console.log(
-          `[handleBatchBackground] item_skip: photo=${i}, index=${frame.index}, reason=${frame.reason}`,
+          `[handleBatchBackground] item_skip: photo=${frame.image_index}, index=${frame.index}, reason=${frame.reason}`,
         );
       };
 
       try {
         await api.analyzeItemImage(
-          { images_base64: [b64], language: requestLang },
+          { images_base64, language: requestLang },
           {
             onDetect: handleDetect,
             onItem: handleItem,
@@ -2330,7 +2342,7 @@ export default function AddItem() {
           },
         );
       } catch (err) {
-        console.warn(`[handleBatchBackground] analyzeItemImage failed for photo ${i}:`, err);
+        console.warn(`[handleBatchBackground] analyzeItemImage failed:`, err);
         const detailMsg =
           err?.response?.data?.detail?.message ||
           err?.response?.data?.detail ||
@@ -2338,15 +2350,14 @@ export default function AddItem() {
         if (detailMsg) lastErrorMsg = detailMsg;
       }
 
-      // Ensure all item creation promises finish before checking save status
       await Promise.all(savePromises);
 
-      if (!photoItemSaved) {
-        failedTotal += 1;
-        setBgBatch((b) => (b ? { ...b, failed: failedTotal } : null));
+      for (let pi = 0; pi < validPhotos.length; pi++) {
+        if (!savedPhotoIndices.has(pi)) {
+          failedTotal += 1;
+        }
       }
-
-      setBgBatch((b) => (b ? { ...b, processed: i + 1 } : null));
+      setBgBatch((b) => (b ? { ...b, failed: failedTotal, processed: fingerprints.length } : null));
     }
 
     try {

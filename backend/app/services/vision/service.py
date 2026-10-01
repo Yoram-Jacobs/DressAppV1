@@ -2541,108 +2541,13 @@ class GarmentVisionService:
             return False
 
     async def _gatekeep_image(self, image_bytes: bytes) -> tuple[int | None, str | None]:
-        """Fast pre-check to count garments and determine human model presence and gender."""
-        if self.provider in ("gemma", "dressapp") or not self.api_key:
-            # Gemma / on-prem Eyes operates without Gemini gatekeeper;
-            # return (None, None) so downstream relies on SegFormer & human presence detection.
-            return None, None
+        """Fast pre-check to count garments and determine human model presence and gender.
 
-        import io
-        import asyncio
-        from PIL import Image, ImageOps
-        try:
-            # Resize image to tiny thumbnail (512x512) to make the Gemini upload extremely fast
-            with Image.open(io.BytesIO(image_bytes)) as img:
-                img = ImageOps.exif_transpose(img)
-                img.thumbnail((512, 512))
-                if img.mode != "RGB":
-                    img = img.convert("RGB")
-                out = io.BytesIO()
-                img.save(out, format="JPEG", quality=80)
-                small_bytes = out.getvalue()
-
-            client = self._get_gemini()
-            system_prompt = (
-                "You are a visual gatekeeper and fashion model analyzer. Your job is to:\n"
-                "1. Count the number of distinct clothing garments, shoes, or accessories clearly visible in this image.\n"
-                "CRITICAL: A pair of footwear (shoes, sandals, boots, flip-flops, slides, slippers) or accessories (gloves, earrings) ALWAYS counts as ONE single item (count = 1). "
-                "Never count partner shoes separately. Ignore tags, hangers, or background objects.\n"
-                "2. Identify if a human model / person is visible wearing the outfit in this photo.\n"
-                "3. If a human model/wearer is present, determine their apparent gender ('men' or 'women'). If no human wearer is present (e.g. flat lay, clothes laid on floor/bed, hanger, product photo, ghost mannequin), set model_gender to 'none'."
-            )
-            model = self.detect_model
-
-            schema = {
-                "type": "object",
-                "properties": {
-                    "items_seen": {
-                        "type": "array",
-                        "items": {"type": "string"},
-                        "description": "Briefly list the clothing garments you see (e.g. ['yellow t-shirt'])"
-                    },
-                    "count": {
-                        "type": "integer",
-                        "description": "The final count of clothing items (0, 1, or more)"
-                    },
-                    "has_human_model": {
-                        "type": "boolean",
-                        "description": "True if a human person or model is visible wearing the clothing"
-                    },
-                    "model_gender": {
-                        "type": "string",
-                        "enum": ["men", "women", "none"],
-                        "description": "Apparent gender of the human model ('men' or 'women'), or 'none' if no human model"
-                    }
-                },
-                "required": ["items_seen", "count", "has_human_model", "model_gender"]
-            }
-
-            async def _call_vision():
-                return await client.vision(
-                    system=system_prompt,
-                    user_parts=["Analyze the image, return garment count and human model gender.", small_bytes],
-                    model=model,
-                    response_mime_type="application/json",
-                    response_schema=schema,
-                )
-
-            resp = await asyncio.wait_for(_call_vision(), timeout=12.0)
-
-            try:
-                import json
-                clean_resp = resp.strip()
-                if clean_resp.startswith("```json"):
-                    clean_resp = clean_resp[7:]
-                elif clean_resp.startswith("```"):
-                    clean_resp = clean_resp[3:]
-                if clean_resp.endswith("```"):
-                    clean_resp = clean_resp[:-3]
-                clean_resp = clean_resp.strip()
-
-                data = json.loads(clean_resp)
-                count = int(data.get("count", 1))
-                has_human = bool(data.get("has_human_model", False))
-                raw_mg = str(data.get("model_gender") or "").strip().lower()
-                from .validation import resolve_garment_gender
-                model_gender = resolve_garment_gender(raw_mg)
-                if not has_human or model_gender not in ("men", "women"):
-                    model_gender = None
-
-                logger.info(
-                    "_gatekeep_image parsed successfully. Model: %s. Count: %d, has_human: %s, model_gender: %s, Items seen: %s",
-                    model, count, has_human, model_gender, data.get("items_seen")
-                )
-                return count, model_gender
-            except Exception as e:
-                logger.warning("_gatekeep_image failed to parse JSON: %s. Raw response: %s", e, resp)
-                return None, None
-        except asyncio.TimeoutError:
-            logger.warning("_gatekeep_image timed out after 12s, falling back to SegFormer")
-            return None, None
-        except Exception as exc:
-            import traceback
-            logger.warning("_gatekeep_image check failed: %s\n%s", repr(exc)[:160], traceback.format_exc())
-            return None, None
+        Local SegFormer handles detection, segmentation, and human presence in ~100ms.
+        Returns (None, None) so downstream relies on local SegFormer and executes
+        one unified system prompt for the entire photo batch.
+        """
+        return None, None
 
     async def detect_model_gender(
         self,
@@ -2753,36 +2658,25 @@ class GarmentVisionService:
 
         # 1. Detect on all photos sequentially
         async def _detect_and_crop(idx: int, img_bytes: bytes) -> tuple[int, list[tuple[dict[str, Any], bytes, str]]]:
+            count = None
             photo_model_gender = None
             try:
-                gate_res = await self._gatekeep_image(img_bytes)
-                if isinstance(gate_res, tuple):
-                    count, photo_model_gender = gate_res
-                else:
-                    count, photo_model_gender = gate_res, None
-
-                if count == 0:
-                    logger.info("Gatekeeper: photo %d has 0 garments — dropping it", idx)
-                    return idx, []
-                
-                if count is not None:
-                    logger.info(
-                        "Gatekeeper: photo %d has %d garment(s), model_gender=%s — running SegFormer detect_items",
-                        idx, count, photo_model_gender,
-                    )
-                else:
-                    logger.info("Gatekeeper: photo %d count unknown (provider=%s) — running SegFormer detect_items", idx, self.provider)
-                detections = await self.detect_items(img_bytes, count_hint=count)
-                if not detections and (count == 1 or count is None):
+                detections = await self.detect_items(img_bytes)
+                if not detections:
                     detections = [{"bbox": [0, 0, 1000, 1000], "kind": "garment", "label": "garment"}]
             except Exception as exc:
-                logger.warning("analyze_outfits_stream: detect_items / gatekeep failed for idx %d: %s", idx, repr(exc)[:160])
+                logger.warning("analyze_outfits_stream: detect_items failed for idx %d: %s", idx, repr(exc)[:160])
                 return idx, [({"bbox": [0, 0, 1000, 1000], "kind": "garment", "label": "garment", "is_single_item": True, "_photo_model_gender": photo_model_gender}, img_bytes, "image/jpeg")]
 
             try:
                 has_human_wearer = _detect_human_presence(detections)
-                if has_human_wearer and not photo_model_gender:
-                    photo_model_gender = await self.detect_model_gender(img_bytes, detections=detections)
+                if detections:
+                    cat_labels = {
+                        (d.get("label") or d.get("category") or "").lower()
+                        for d in detections
+                    }
+                    if any(k in cat_labels for k in ("skirt", "dress")):
+                        photo_model_gender = "women"
 
                 is_footwear_only = bool(
                     detections
@@ -3412,7 +3306,7 @@ class GarmentVisionService:
 
                 else:
                     # Multiple crops: run system prompt ONCE for the entire batch sequence!
-                    CHUNK_SIZE = 10
+                    CHUNK_SIZE = max(30, len(flat_crops))
                     for chunk_start in range(0, len(flat_crops), CHUNK_SIZE):
                         chunk_crops = flat_crops[chunk_start : chunk_start + CHUNK_SIZE]
                         chunk_bytes = [c[1].get("_raw_image_bytes") or c[2] for c in chunk_crops]

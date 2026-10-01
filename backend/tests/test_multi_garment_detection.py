@@ -1128,6 +1128,165 @@ def test_apply_alpha_intersection_preserves_crewneck_opening():
     assert arr[35, 60, 3] == 0, f"Neck opening must not be sealed by hole filling! Got alpha={arr[35, 60, 3]}"
 
 
+def test_apply_alpha_intersection_eyewear_isolates_sunglasses_from_face():
+    """Verify that eyewear cutouts isolate sunglasses and excise the wearer's face and hair."""
+    from app.services.clothing_parser import apply_alpha_intersection
+    import io
+    from PIL import Image
+
+    H, W = 150, 150
+    # Create rembg-style cutout containing full human head/face
+    head_img = Image.new("RGBA", (W, H), (200, 160, 130, 255))  # skin/face
+    # Place sunglasses at y: 50..70, x: 40..110
+    for y in range(50, 71):
+        for x in range(40, 111):
+            head_img.putpixel((x, y), (20, 20, 20, 255))  # black sunglasses
+    
+    buf = io.BytesIO()
+    head_img.save(buf, format="PNG")
+    raw_head_bytes = buf.getvalue()
+
+    # SegFormer sunglasses mask: 1 only on the sunglasses
+    sg_mask = np.zeros((H, W), dtype=np.uint8)
+    sg_mask[50:71, 40:111] = 1
+
+    # Human mask: 1 on the face and forehead
+    human_m = np.ones((H, W), dtype=np.uint8)
+    human_m[50:71, 40:111] = 0
+
+    result = apply_alpha_intersection(
+        raw_head_bytes,
+        seg_mask_bbox=sg_mask,
+        human_mask=human_m,
+        category="eyewear",
+        label="sunglasses",
+    )
+    assert result is not None, "Eyewear cutout must not be dropped by phantom guard!"
+    res_img = Image.open(io.BytesIO(result))
+    arr = np.array(res_img)
+
+    # Sunglasses at (60, 75) must be preserved (alpha == 255)
+    assert arr[60, 75, 3] == 255, "Sunglasses must be preserved"
+    # Forehead/cheeks outside sunglasses at (20, 75) and (120, 75) must be excised (alpha == 0)
+    assert arr[20, 75, 3] == 0, "Forehead/hair must be excised from sunglasses crop"
+    assert arr[120, 75, 3] == 0, "Cheeks/chin must be excised from sunglasses crop"
+
+
+def test_apply_alpha_intersection_footwear_excises_legs():
+    """Verify that footwear cutouts subtract human legs and bare feet."""
+    from app.services.clothing_parser import apply_alpha_intersection
+    import io
+    from PIL import Image
+
+    H, W = 150, 150
+    # Crop contains shoe at bottom (y: 90..140, x: 30..120) and bare leg above (y: 10..89, x: 50..100)
+    img = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+    for y in range(10, 90):
+        for x in range(50, 101):
+            img.putpixel((x, y), (210, 170, 140, 255))  # skin leg
+    for y in range(90, 141):
+        for x in range(30, 121):
+            img.putpixel((x, y), (50, 50, 50, 255))  # dark shoe
+
+    buf = io.BytesIO()
+    img.save(buf, format="PNG")
+    raw_shoe_bytes = buf.getvalue()
+
+    shoe_mask = np.zeros((H, W), dtype=np.uint8)
+    shoe_mask[90:141, 30:121] = 1
+
+    leg_mask = np.zeros((H, W), dtype=np.uint8)
+    leg_mask[10:90, 50:101] = 1
+
+    result = apply_alpha_intersection(
+        raw_shoe_bytes,
+        seg_mask_bbox=shoe_mask,
+        human_mask=leg_mask,
+        category="footwear",
+        label="shoes",
+    )
+    assert result is not None
+    res_img = Image.open(io.BytesIO(result))
+    arr = np.array(res_img)
+
+    # Shoe at (110, 75) must be solid
+    assert arr[110, 75, 3] == 255, "Shoe body must be preserved"
+    # Leg at (50, 75) must be excised
+    assert arr[50, 75, 3] == 0, "Leg above shoe must be excised"
+
+
+def test_apply_alpha_intersection_bottoms_excises_torso_above_waistband():
+    """Verify that bottoms cutouts zero out torso, arms, and tucked shirts above the waistband."""
+    from app.services.clothing_parser import apply_alpha_intersection
+    import io
+    from PIL import Image
+
+    H, W = 160, 120
+    # Waistband is at y=40. Top region (y=0..37) contains shirt/torso. Pants are y=40..150.
+    img = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+    for y in range(10, 38):
+        for x in range(25, 95):
+            img.putpixel((x, y), (200, 50, 50, 255))  # red shirt / torso
+    for y in range(40, 150):
+        for x in range(20, 100):
+            img.putpixel((x, y), (40, 60, 120, 255))  # blue jeans
+
+    buf = io.BytesIO()
+    img.save(buf, format="PNG")
+    raw_pants_bytes = buf.getvalue()
+
+    pants_mask = np.zeros((H, W), dtype=np.uint8)
+    pants_mask[40:150, 20:100] = 1
+
+    result = apply_alpha_intersection(
+        raw_pants_bytes,
+        seg_mask_bbox=pants_mask,
+        category="bottom",
+        label="pants",
+    )
+    assert result is not None
+    res_img = Image.open(io.BytesIO(result))
+    arr = np.array(res_img)
+
+    # Jeans body at (80, 50) must be solid
+    assert arr[80, 50, 3] == 255, "Pants body must be preserved"
+    # Shirt/torso above waistband at (20, 50) must be excised by waistband cutoff
+    assert arr[20, 50, 3] == 0, "Torso/shirt above waistband must be excised"
+
+
+def test_fit_crop_to_card_preserves_antialiased_alpha_no_chewing():
+    """Verify that _fit_crop_to_card preserves transparent alpha without thresholding or chewing."""
+    from app.services.vision.image import _fit_crop_to_card
+    import io
+    from PIL import Image
+
+    H, W = 200, 150
+    # Create cutout with anti-aliased edge and pastel white/beige garment interior
+    img = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+    # Fill garment area with light beige fabric (240, 235, 230)
+    for y in range(20, 180):
+        for x in range(20, 130):
+            img.putpixel((x, y), (240, 235, 230, 255))
+    # Soft alpha border at x=19, x=130
+    for y in range(20, 180):
+        img.putpixel((19, y), (240, 235, 230, 120))
+        img.putpixel((130, y), (240, 235, 230, 120))
+
+    buf = io.BytesIO()
+    img.save(buf, format="PNG")
+    raw_cutout = buf.getvalue()
+
+    fitted_bytes, mime = _fit_crop_to_card(raw_cutout, crop_mime="image/png")
+    assert mime == "image/png"
+    out_img = Image.open(io.BytesIO(fitted_bytes))
+    arr = np.array(out_img)
+
+    # Interior of beige garment must remain 100% solid (NO CHEWING HOLES!)
+    center_y, center_x = 600, 450
+    assert arr[center_y, center_x, 3] == 255, f"Garment core must not have chewing holes! alpha={arr[center_y, center_x, 3]}"
+    assert arr[center_y, center_x, 0] == 240
+
+
 
 
 
