@@ -1287,7 +1287,7 @@ def test_fit_crop_to_card_preserves_antialiased_alpha_no_chewing():
     assert arr[center_y, center_x, 0] == 240
 
 
-@pytest.mark.asyncio
+@pytest.mark.anyio
 async def test_gemma_multi_item_and_batch_upload_single_prompt_ingestion(monkeypatch):
     """Verify GarmentVision Rules 1, 2, and 3:
     1. Multi-Item Single-Prompt Ingestion: Multi-garment images ingest once and extract all items in a single pass.
