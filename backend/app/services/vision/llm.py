@@ -141,17 +141,20 @@ async def _call_gemma_space(
 
 SYSTEM_PROMPT = (
     "Output raw JSON only ({...} or [{...}]). No markdown/intro.\n"
-    "• sub_category: Specific cut ('Shirt','Sweater','Jeans','Pants','Skirt','Sneakers'). Never generic 'Top'/'Bottom'.\n"
-    "• Pants vs Jeans: 'Jeans' is EXCLUSIVELY for denim fabric with 5-pocket rivet construction. Cotton twill, chinos, dress slacks, suit trousers, and tailored pants MUST be sub_category: 'Pants' (item_type: 'Chinos'|'Tailored Trousers'), dress_code: 'smart-casual'|'business'. Light blue or khaki cotton twill pants are Chinos, NEVER Jeans.\n"
-    "• item_type: Detailed cut ('Crew-Neck T-Shirt','Chinos','Tailored Trousers','Straight Jeans'). Must differ from sub_category.\n"
+    "• sub_category: Specific cut ('Shirt','Sweater','Jeans','Pants','Skirt','Sneakers','Sandals','Boots','Sunglasses','Bags'). Never generic 'Top'/'Bottom'.\n"
+    "• Bottoms: 'Jeans' is EXCLUSIVELY for denim fabric with 5-pocket rivet construction. Cotton twill, chinos, dress slacks, and suit trousers are sub_category: 'Pants' (item_type: 'Chinos'|'Tailored Trousers'), dress_code: 'smart-casual'|'business'. Athletic fleece pants, trainer pants, joggers, and sweatpants with elastic cuffs or drawstring waistbands MUST be sub_category: 'Pants' (item_type: 'Sweatpants'|'Joggers'), dress_code: 'casual'|'athletic', material: 'Cotton'|'Polyester'. They are NEVER 'Tailored Trousers' or 'Wool' or 'Business'.\n"
+    "• Footwear: Identify specific footwear style: 'Sneakers' (athletic/casual rubber-sole shoes), 'Sandals' (open-toe, strappy, heeled or flat summer footwear), 'Heels'/'Pumps', 'Boots', 'Loafers', 'Slides', 'Flats'. Open-toe patterned or strappy footwear is sub_category: 'Sandals' (item_type: 'Open-Toe Sandals'|'Strappy Sandals'|'Heeled Sandals'), NEVER 'Sneakers'.\n"
+    "• Accessories: 'Sunglasses' (eyewear/shades, item_type: 'Classic Sunglasses'), 'Handbag'/'Bags', 'Belts', 'Headwear' (hats/caps), 'Scarves & Wraps', 'Jewelry'. Sunglasses are NEVER 'Shorts' or 'Shirt'.\n"
+    "• item_type: Detailed cut ('Crew-Neck T-Shirt','Chinos','Tailored Trousers','Straight Jeans','Sweatpants','Open-Toe Sandals','Classic Sunglasses'). Must differ from sub_category.\n"
     "• caption: 1-2 concise sentences on cut, color, pattern, texture. Must be a complete sentence ending with a period.\n"
-    "• dress_code: 'casual'|'smart-casual'|'business'|'formal'|'athletic'|'loungewear'. Analyze each garment individually. Suits/blazers/dress trousers='business'|'smart-casual'; button-downs/blouses/chinos/slacks/cardigans/sweaters/turtlenecks/loafers='smart-casual'; gowns/tuxedos='formal'; sportswear='athletic'; sleepwear/sweats='loungewear'; casual tees/jeans/denim='casual'. NEVER default to casual.\n"
-    "• gender: 'women' for feminine styles (blouses, floral tops/tees, skirts, dresses, heels); 'men' for masculine cuts; 'unisex' for neutral basics (plain tees, activewear, sneakers, bags); 'kids' for children. If worn by a visible model, ALWAYS match the model's apparent gender ('women' for female model, 'men' for male model). If flat-lay/hanger, evaluate silhouette & pattern. Never default to 'men'.\n"
-    "• colors: [{\"name\": str, \"pct\": int}] summing to 100. Specific shades ('Navy','Olive','Burgundy'). Never omit pct.\n"
+    "• dress_code: 'casual'|'smart-casual'|'business'|'formal'|'athletic'|'loungewear'. Analyze each garment individually. Suits/blazers/dress trousers='business'|'smart-casual'; button-downs/blouses/chinos/slacks/cardigans/sweaters/turtlenecks/loafers='smart-casual'; gowns/tuxedos='formal'; sportswear='athletic'; sleepwear/sweatpants/joggers='casual'|'athletic'|'loungewear'; casual tees/jeans/denim='casual'. NEVER default to casual.\n"
+    "• model_gender: If an identifiable human model is detected in the photo, specify 'women' or 'men'. If no human model is present (flat lay, hanger, ghost mannequin, product shot), set to null.\n"
+    "• gender: Strict 3-Tier Hierarchy: (1) Human Model: If an identifiable human model is detected in the photo, anchor all detected garments to the model's gender ('women' for female model, 'men' for male model). (2) Garment Criteria: For flat lays, hangers, and ghost mannequins, determine gender strictly from garment cut, silhouette, and pattern ('women' for blouses, floral tops/tees, skirts, dresses, heels, open-toe sandals, kimonos; 'men' for masculine cuts; 'unisex' for neutral basics). (3) Uncertain neutral basics fall back to the profile gender, or 'unisex' if undefined. Never default to 'men'.\n"
+    "• colors: [{\"name\": str, \"pct\": int}] summing to 100. Specific shades ('Navy','Olive','Burgundy','Green','White'). Never omit pct.\n"
     "• fabric_materials: [{\"name\": str, \"pct\": int}] summing to 100. Never omit pct.\n"
-    "• pattern: 'printed' (graphics/logos), 'geometric' (textures/weave/heathering), 'striped'|'plaid'|'floral', 'solid' (plain unprinted).\n"
+    "• pattern: 'printed' (graphics/logos/prints), 'geometric' (patterns/checks/weave/heathering), 'striped'|'plaid'|'floral', 'solid' (plain unprinted).\n"
     "• text/logos: Read accurately ('American Eagle'=eagle/עיט, not deer/אייל).\n"
-    "• season: ['spring'|'summer'|'fall'|'winter'|'all']. Linen/short-sleeve=['summer']; wool/down=['fall','winter'].\n"
+    "• season: ['spring'|'summer'|'fall'|'winter'|'all']. Linen/short-sleeve/sandals=['summer']; wool/down=['fall','winter'].\n"
     "• non-clothing items: If not wearable fashion (water bottles, flasks, cups, tumblers, beverages, cans, phones, keys, cameras, bare skin), set is_clothing: false, category: 'Accessories', sub_category: 'non-clothing', item_type: 'non-clothing', title: 'Non-clothing item', caption: 'Non-clothing item'. Handheld bottles, cups, and phones are NEVER bags or accessories. Genuine accessories (belts, sunglasses, hats, bags, jewelry, scarves) MUST have is_clothing: true."
 )
 
@@ -215,6 +218,10 @@ _GARMENT_OBJECT_SCHEMA: dict[str, Any] = {
         "sub_category": {"type": "string"},
         "item_type": {"type": "string"},
         "brand": {"type": ["string", "null"]},
+        "model_gender": {
+            "type": ["string", "null"],
+            "enum": ["men", "women", None],
+        },
         "gender": {
             "type": "string",
             "enum": ["men", "women", "unisex", "kids"],

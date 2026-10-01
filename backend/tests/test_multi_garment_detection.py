@@ -1287,6 +1287,72 @@ def test_fit_crop_to_card_preserves_antialiased_alpha_no_chewing():
     assert arr[center_y, center_x, 0] == 240
 
 
+@pytest.mark.asyncio
+async def test_gemma_multi_item_and_batch_upload_single_prompt_ingestion(monkeypatch):
+    """Verify GarmentVision Rules 1, 2, and 3:
+    1. Multi-Item Single-Prompt Ingestion: Multi-garment images ingest once and extract all items in a single pass.
+    2. Batch-upload Single-Prompt Ingestion: Multi-photo uploads ingest once and extract all items in a single pass.
+    3. The analysis sequence fires the system prompt once in any AddItem workflow.
+    """
+    import json
+    from unittest.mock import AsyncMock
+    from PIL import Image
+    import io
+
+    # Create dummy JPEG image
+    img = Image.new("RGB", (200, 200), (200, 200, 200))
+    buf = io.BytesIO()
+    img.save(buf, format="JPEG")
+    dummy_img_bytes = buf.getvalue()
+
+    service = GarmentVisionService(provider="gemma")
+
+    # Case 1: Multi-garment single photo (3 detected garments)
+    async def mock_detect_items_3(img_bytes):
+        return [
+            {"bbox": [100, 100, 400, 400], "kind": "top", "label": "Upper-clothes"},
+            {"bbox": [400, 100, 800, 400], "kind": "bottom", "label": "Pants"},
+            {"bbox": [800, 100, 950, 400], "kind": "footwear", "label": "Shoes"},
+        ]
+
+    monkeypatch.setattr(service, "detect_items", mock_detect_items_3)
+    monkeypatch.setattr("app.config.settings.EYES_GEMMA_SPACE_URL", "http://mock-eyes:7860")
+    monkeypatch.setattr("app.config.settings.AUTO_MATTE_CROPS", False)
+
+    mock_gemma_call = AsyncMock()
+    # Return 3 items in a single pass
+    mock_gemma_call.return_value = json.dumps([
+        {"slot_index": 0, "is_clothing": True, "title": "White T-Shirt", "name": "White T-Shirt", "category": "Top", "sub_category": "T-Shirt", "item_type": "Crew-Neck T-Shirt", "gender": "unisex"},
+        {"slot_index": 1, "is_clothing": True, "title": "Gray Sweatpants", "name": "Gray Sweatpants", "category": "Bottom", "sub_category": "Pants", "item_type": "Sweatpants", "gender": "unisex"},
+        {"slot_index": 2, "is_clothing": True, "title": "Open-Toe Sandals", "name": "Open-Toe Sandals", "category": "Footwear", "sub_category": "Sandals", "item_type": "Open-Toe Sandals", "gender": "women"},
+    ])
+    monkeypatch.setattr("app.services.vision.service._call_gemma_space", mock_gemma_call)
+
+    # 1. Test multi-garment single photo:
+    items_emitted = []
+    async for frame in service.analyze_outfits_stream([dummy_img_bytes], user_gender="men"):
+        if frame.get("type") == "item":
+            items_emitted.append(frame)
+
+    assert mock_gemma_call.call_count == 1, f"Rule 1 & 3: Multi-garment photo must fire Gemma ONCE! Called {mock_gemma_call.call_count} times."
+    assert len(items_emitted) == 3, f"Expected 3 items emitted, got {len(items_emitted)}"
+
+    # Case 2: Batch upload with 3 photos:
+    mock_gemma_call.reset_mock()
+    async def mock_detect_items_1(img_bytes):
+        return [{"bbox": [50, 50, 950, 950], "kind": "top", "label": "Upper-clothes"}]
+    monkeypatch.setattr(service, "detect_items", mock_detect_items_1)
+
+    batch_emitted = []
+    async for frame in service.analyze_outfits_stream([dummy_img_bytes, dummy_img_bytes, dummy_img_bytes], user_gender="men"):
+        if frame.get("type") == "item":
+            batch_emitted.append(frame)
+
+    assert mock_gemma_call.call_count == 1, f"Rule 2 & 3: Multi-photo batch upload must fire Gemma ONCE! Called {mock_gemma_call.call_count} times."
+    assert len(batch_emitted) == 3, f"Expected 3 items emitted for batch, got {len(batch_emitted)}"
+
+
+
 
 
 

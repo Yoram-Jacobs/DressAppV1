@@ -337,3 +337,133 @@ def test_water_bottle_rejected_by_is_unidentifiable():
     assert _is_unidentifiable(bottle) is True
 
 
+def test_female_model_anchors_all_garments_to_women_even_with_male_user_profile():
+    """Rule 4a: When an identifiable human female model is detected, all garments must be anchored to 'women'."""
+    # User profile is male ('men'), but photo model is female
+    items = [
+        {"title": "Gray Trainer Pants", "category": "Bottom", "sub_category": "Pants", "item_type": "Sweatpants", "model_gender": "women"},
+        {"title": "Patterned Sandals", "category": "Footwear", "sub_category": "Sandals", "item_type": "Open-Toe Sandals", "model_gender": "women"},
+        {"title": "Classic Sunglasses", "category": "Accessories", "sub_category": "Sunglasses", "item_type": "Classic Sunglasses", "model_gender": "women"},
+    ]
+    for it in items:
+        coerced = _coerce_single_garment(it, user_gender="men", model_gender="women")
+        assert coerced["gender"] == "women", f"Item {it['title']} should be anchored to model gender 'women', got {coerced['gender']}"
+        enums = _coerce_enums(coerced, user_gender="men", model_gender="women")
+        assert enums["gender"] == "women"
+
+
+def test_gray_footer_trainer_pants_casual_not_business_wool():
+    """Gray footer trainer pants must be Sweatpants with casual/athletic dress code, NEVER business tailored wool."""
+    raw = {
+        "title": "Gray Footer Trainer Pants",
+        "name": "מכנסי פוטר טרנינג אפורים",
+        "category": "Bottom",
+        "sub_category": "Tailored Trousers",
+        "item_type": "Tailored Trousers",
+        "dress_code": "business",
+        "fabric_materials": [{"name": "Wool", "pct": 100}],
+        "caption": "מכנסי טרנינג פוטר נוחים עם שרוך קשירה.",
+    }
+    coerced = _coerce_single_garment(raw, user_gender="men")
+    assert coerced["sub_category"] == "Pants"
+    assert coerced["item_type"] == "Sweatpants"
+    assert coerced["dress_code"] == "casual"
+    assert not any(f.get("name", "").lower() == "wool" for f in coerced.get("fabric_materials", []))
+    assert any(f.get("name", "").lower() == "cotton" for f in coerced.get("fabric_materials", []))
+
+    enums = _coerce_enums(coerced, user_gender="men")
+    assert enums["dress_code"] == "casual"
+
+
+def test_green_and_white_patterned_sandals_identified_as_women_sandals():
+    """Green and white patterned women's sandals must be Sandals and women's, never white sneakers or men's."""
+    raw_en = {
+        "title": "Green and White Patterned Sandals",
+        "name": "Green and White Sandals",
+        "category": "Footwear",
+        "sub_category": "Shoes",
+        "item_type": "Low-Top Sneakers",
+        "gender": "men",
+        "pattern": "printed",
+        "caption": "Open-toe summer sandals with green and white patterned straps.",
+    }
+    coerced_en = _coerce_single_garment(raw_en, user_gender="men", language="en")
+    assert coerced_en["sub_category"] == "Sandals"
+    assert "Sandal" in coerced_en["item_type"]
+    assert coerced_en["gender"] == "women"
+
+    raw_he = {
+        "title": "סנדלים בדוגמת ירוק ולבן",
+        "name": "סנדלים בדוגמת ירוק ולבן",
+        "category": "Footwear",
+        "sub_category": "Shoes",
+        "item_type": "Low-Top Sneakers",
+        "gender": "men",
+        "pattern": "printed",
+        "caption": "סנדלי קיץ פתוחים עם רצועות בדוגמת ירוק ולבן.",
+    }
+    coerced_he = _coerce_single_garment(raw_he, user_gender="men", language="he")
+    assert coerced_he["sub_category"] == "סנדלים"
+    assert coerced_he["gender"] == "women"
+
+
+def test_strict_3_tier_gender_hierarchy():
+    """Verify Strict 3-Tier Hierarchy:
+    4a. Human Model Gender anchors all garments.
+    4b. Garment Criteria (cut/silhouette/pattern) determines gender on flat lays.
+    4c. Uncertain basics anchor to user profile gender.
+    4d. Unisex fallback when profile is undefined/neutral (NEVER default to men).
+    """
+    # 4a: Model gender overrides everything
+    model_override = _coerce_single_garment({"category": "Top", "sub_category": "T-Shirt", "item_type": "T-Shirt"}, user_gender="men", model_gender="women")
+    assert model_override["gender"] == "women"
+
+    # 4b: Flat lay garment criteria
+    fem_cut = _coerce_single_garment({"category": "Top", "sub_category": "Blouse", "item_type": "Floral Print Blouse", "pattern": "floral"}, user_gender="men")
+    assert fem_cut["gender"] == "women"
+
+    masc_cut = _coerce_single_garment({"category": "Underwear", "sub_category": "Boxers", "item_type": "Boxers"}, user_gender="women")
+    assert masc_cut["gender"] == "men"
+
+    unisex_cut = _coerce_single_garment({"category": "Top", "sub_category": "Tank Top", "item_type": "Running Singlet"}, user_gender="women")
+    assert unisex_cut["gender"] == "unisex"
+
+    # 4c: Neutral basics on flat lay anchor to user profile
+    neutral_basic_male = _coerce_single_garment({"category": "Bottom", "sub_category": "Pants", "item_type": "Chinos"}, user_gender="men")
+    assert neutral_basic_male["gender"] == "men"
+
+    neutral_basic_fem = _coerce_single_garment({"category": "Bottom", "sub_category": "Pants", "item_type": "Chinos"}, user_gender="women")
+    assert neutral_basic_fem["gender"] == "women"
+
+    # 4d: Fallback to unisex if profile gender is undefined or neutral, NEVER default to men
+    neutral_fallback = _coerce_single_garment({"category": "Bottom", "sub_category": "Pants", "item_type": "Chinos"}, user_gender=None)
+    assert neutral_fallback["gender"] == "unisex"
+    assert neutral_fallback["gender"] != "men"
+
+
+def test_create_batch_collage_composition():
+    """Verify _create_batch_collage compiles multiple photos into a valid contact sheet image."""
+    from app.services.vision.image import _create_batch_collage
+    from PIL import Image
+    import io
+
+    # Create 2 small test JPEG images
+    img1 = Image.new("RGB", (100, 150), (255, 0, 0))
+    buf1 = io.BytesIO()
+    img1.save(buf1, format="JPEG")
+    b1 = buf1.getvalue()
+
+    img2 = Image.new("RGB", (120, 140), (0, 255, 0))
+    buf2 = io.BytesIO()
+    img2.save(buf2, format="JPEG")
+    b2 = buf2.getvalue()
+
+    collage = _create_batch_collage([b1, b2], max_side=512)
+    assert collage is not None
+    assert len(collage) > 100
+
+    out_im = Image.open(io.BytesIO(collage))
+    assert out_im.size[0] > 0 and out_im.size[1] > 0
+    assert out_im.format == "JPEG"
+
+

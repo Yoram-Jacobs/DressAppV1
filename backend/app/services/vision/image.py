@@ -426,3 +426,72 @@ def fit_image_data_url_to_card(
     except Exception:
         return data_url
 
+
+def _create_batch_collage(
+    images_bytes_list: list[bytes],
+    *,
+    max_side: int = 1024,
+    cell_padding: int = 8,
+) -> bytes:
+    """Compose multiple uploaded photos into a single contact-sheet collage image.
+
+    Allows Gemma/Eyes to ingest all batch photos in a single pass with one prompt.
+    """
+    if not images_bytes_list:
+        return b""
+    if len(images_bytes_list) == 1:
+        return images_bytes_list[0]
+
+    imgs: list[Image.Image] = []
+    for b in images_bytes_list:
+        try:
+            im = Image.open(io.BytesIO(b)).convert("RGB")
+            imgs.append(im)
+        except Exception:
+            continue
+
+    if not imgs:
+        return images_bytes_list[0]
+    if len(imgs) == 1:
+        return images_bytes_list[0]
+
+    n = len(imgs)
+    if n == 2:
+        cols, rows = 2, 1
+    elif n <= 4:
+        cols, rows = 2, 2
+    elif n <= 6:
+        cols, rows = 3, 2
+    elif n <= 9:
+        cols, rows = 3, 3
+    else:
+        cols = 4
+        rows = (n + cols - 1) // cols
+
+    cell_w = max_side // cols
+    cell_h = max_side // rows
+
+    canvas = Image.new("RGB", (cols * cell_w, rows * cell_h), (255, 255, 255))
+
+    for idx, img in enumerate(imgs):
+        r = idx // cols
+        c = idx % cols
+        x_offset = c * cell_w + cell_padding
+        y_offset = r * cell_h + cell_padding
+        avail_w = max(1, cell_w - 2 * cell_padding)
+        avail_h = max(1, cell_h - 2 * cell_padding)
+
+        iw, ih = img.size
+        if iw > 0 and ih > 0:
+            scale = min(avail_w / float(iw), avail_h / float(ih))
+            nw = max(1, int(round(iw * scale)))
+            nh = max(1, int(round(ih * scale)))
+            resized = img.resize((nw, nh), Image.LANCZOS)
+            cx = x_offset + (avail_w - nw) // 2
+            cy = y_offset + (avail_h - nh) // 2
+            canvas.paste(resized, (cx, cy))
+
+    buf = io.BytesIO()
+    canvas.save(buf, format="JPEG", quality=85, optimize=True)
+    return buf.getvalue()
+
