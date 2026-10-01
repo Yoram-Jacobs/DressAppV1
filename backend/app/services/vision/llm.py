@@ -51,6 +51,7 @@ async def _call_gemma_space(
         "max_tokens": min(int(max_tokens), 4096),
         "temperature": float(temperature),
         "json_mode": True,
+        "repeat_penalty": 1.1,
         "enable_thinking": bool(think),
         "think": bool(think),
         "reasoning_budget": 0 if not think else 500,
@@ -141,16 +142,16 @@ async def _call_gemma_space(
 
 SYSTEM_PROMPT = (
     "Output raw JSON only ({...} or [{...}]). No markdown/intro.\n"
-    "• sub_category: Specific cut ('Shirt','Sweater','Jeans','Pants','Skirt','Sneakers','Sandals','Boots','Sunglasses','Bags'). Never generic 'Top'/'Bottom'.\n"
-    "• Bottoms: 'Jeans' is EXCLUSIVELY denim with 5-pocket rivets. Chinos/slacks/trousers -> sub_category:'Pants', item_type:'Chinos'|'Tailored Trousers', dress_code:'smart-casual'|'business'. Sweatpants/joggers/trainers/fleece -> sub_category:'Pants', item_type:'Sweatpants'|'Joggers', dress_code:'casual'|'athletic', material:'Cotton'|'Polyester' (never 'Tailored Trousers'/'Wool'/'Business').\n"
-    "• Footwear: 'Sneakers' (athletic/rubber-sole), 'Sandals' (open-toe/strappy/heeled summer), 'Heels','Boots','Loafers','Flats'. Open-toe/strappy -> sub_category:'Sandals' (never 'Sneakers').\n"
-    "• Accessories: 'Sunglasses', 'Bags','Belts','Headwear','Scarves & Wraps','Jewelry'. Attached hoods/collars/sleeves are part of the host garment, never separate headwear. Non-wearables (bottles, cups, phones) -> is_clothing:false. Genuine accessories -> is_clothing:true.\n"
-    "• item_type: Detailed cut ('Crew-Neck T-Shirt','Chinos','Tailored Trousers','Straight Jeans','Sweatpants','Open-Toe Sandals','Classic Sunglasses'). Must differ from sub_category.\n"
-    "• caption: <=15 words. One clause: [color] [fabric/texture if notable] [cut]. End with period. Never repeat season/gender/dress_code. No filler phrases.\n"
-    "• dress_code: 'casual'|'smart-casual'|'business'|'formal'|'athletic'|'loungewear'. Suits/blazers='business'; button-downs/blouses/slacks/cardigans='smart-casual'; gowns/tuxedos='formal'; sportswear='athletic'; sweatpants/joggers='casual'|'athletic'; jackets/hoodies='casual'|'athletic' (never loungewear); sleepwear='loungewear'. Never default to casual.\n"
-    "• model_gender: Identifiable human model -> 'women'|'men'. Flat lay/hanger/mannequin -> null.\n"
-    "• gender: Strict 3-Tier Hierarchy: (1) Human Model: anchor all garments to model gender ('women'|'men'). (2) Garment Criteria: flat lays/hangers determined strictly by cut ('women' for floral/blouses/skirts/dresses/sandals; 'men' for masculine cuts; 'unisex' for neutral basics). (3) Neutral basics fall back to profile gender, or 'unisex'. Never default to 'men'.\n"
-    "• colors: ALWAYS [{\"name\": str, \"pct\": int}] summing to 100 (never omit).\n"
+    "• sub_category: Specific cut ('Shirt','Sweater','Jeans','Pants','Skirt','Shoes','Sneakers','Sandals','Boots','Loafers','Heels','Flats','Sunglasses','Bags'). Never generic 'Top'/'Bottom'/'Footwear'.\n"
+    "• Bottoms: 'Jeans'=denim with 5-pocket rivets only. Chinos/slacks -> sub_category:'Pants', item_type:'Chinos'|'Tailored Trousers', dress_code:'smart-casual'|'business'. Sweatpants/joggers/fleece -> sub_category:'Pants', item_type:'Sweatpants'|'Joggers', dress_code:'casual'|'athletic' (never 'Tailored Trousers'/'Wool').\n"
+    "• Footwear: 'Shoes' (oxfords/monk straps/derbies/brogues/dress shoes), 'Sneakers' (athletic/trainers), 'Sandals' (open-toe/strappy), 'Loafers', 'Boots' (ankle/combat/knee-high boots only), 'Heels', 'Flats', 'Slides'. Never classify monk straps/oxfords as 'Boots'!\n"
+    "• Accessories: 'Sunglasses','Bags','Belts','Headwear','Scarves & Wraps','Jewelry'. Attached hoods/collars are part of host garment, never separate headwear. Non-wearables (bottles, cups, phones) -> is_clothing:false.\n"
+    "• item_type: Detailed cut ('Crew-Neck T-Shirt','Chinos','Straight Jeans','Sweatpants','Double Monk Strap Shoes','Open-Toe Sandals','Classic Sunglasses'). Must differ from sub_category.\n"
+    "• caption: <=15 words. [color] [fabric] [cut]. End with period. Never repeat season/gender/dress_code.\n"
+    "• dress_code: 'casual'|'smart-casual'|'business'|'formal'|'athletic'|'loungewear'. Suits='business'; shirts/slacks='smart-casual'; tuxedos='formal'; sportswear/sweatpants='athletic'; jackets/hoodies='casual'|'athletic' (never loungewear); sleepwear='loungewear'.\n"
+    "• model_gender: Identifiable model -> 'women'|'men'. Flat lay/hanger/mannequin -> null.\n"
+    "• gender: Strict 3-Tier Hierarchy: (1) Human Model: anchor garments to model gender ('women'|'men'). (2) Garment Criteria: flat lays determined strictly by cut ('women' for floral/blouses/skirts/dresses/sandals; 'men' for masculine cuts; 'unisex' for neutral basics). (3) Neutral basics fall back to profile gender, or 'unisex'. Never default to 'men'.\n"
+    "• colors: ALWAYS [{\"name\": str, \"pct\": int}] summing to 100.\n"
     "• fabric_materials: [{\"name\": str, \"pct\": int}] summing to 100. tags: [str] (3-6 tags).\n"
     "• pattern: 'solid'|'printed'|'geometric'|'striped'|'plaid'|'floral'.\n"
     "• text/logos: Read accurately ('American Eagle'=eagle/עיט, not deer/אייל).\n"

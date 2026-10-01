@@ -561,6 +561,8 @@ def _coerce_single_garment(
                 res["sub_category"] = "Sandals"
             elif any(w in full_text for w in ("heel", "pump", "עקב", "stiletto")):
                 res["sub_category"] = "Heels"
+            elif any(w in full_text for w in ("monk", "oxford", "derby", "brogue", "wingtip", "dress shoe")):
+                res["sub_category"] = "Shoes"
             elif any(w in full_text for w in ("boot", "מגף", "מגפיים")):
                 res["sub_category"] = "Boots"
             elif any(w in full_text for w in ("sneaker", "סניקרס", "running", "athletic")):
@@ -590,10 +592,21 @@ def _coerce_single_garment(
             res["sub_category"] = "T-Shirt" if cat_lower == "top" else "Garment"
         sub_lower = (res.get("sub_category") or "").strip().lower()
 
-    if cat_lower == "footwear" or sub_lower in {"shoes", "shoe", "casual shoes", "sneaker", "sneakers", "נעליים", "סניקרס"}:
+    if cat_lower == "footwear" or sub_lower in {"shoes", "shoe", "casual shoes", "sneaker", "sneakers", "boots", "boot", "נעליים", "סניקרס"}:
         if any(w in full_text for w in ("sandal", "סנדל", "open-toe", "strappy", "wedge", "espadrille")):
             res["sub_category"] = "סנדלים" if is_he else "Sandals"
             sub_lower = "sandal" if not is_he else "סנדלים"
+        elif any(w in full_text for w in ("monk", "oxford", "derby", "brogue", "wingtip", "dress shoe")) and not any(w in full_text for w in ("combat", "hiking", "timberland", "winter boot", "cowboy")):
+            res["sub_category"] = "נעליים" if is_he else "Shoes"
+            sub_lower = "shoes"
+            if "monk" in full_text:
+                res["item_type"] = "Double Monk Strap Shoes" if "double" in full_text else "Monk Strap Shoes"
+            elif "oxford" in full_text:
+                res["item_type"] = "Oxford Shoes"
+            elif "derby" in full_text:
+                res["item_type"] = "Derby Shoes"
+            elif "brogue" in full_text:
+                res["item_type"] = "Brogues"
 
     # Guarantee item_type is never blank or equal to category
     itype_lower = (res.get("item_type") or "").strip().lower()
@@ -2033,20 +2046,36 @@ def _enforce_segformer_category(
             sub_low = (analysis.get("sub_category") or "").lower()
             item_low = (analysis.get("item_type") or "").lower()
             curr_name = (analysis.get("name") or analysis.get("title") or "").lower()
-            is_real_boot = any(w in curr_name or w in item_low for w in ("leather", "work", "chukka", "desert", "dark brown", "brown", "timberland", "winter", "hiking", "lace-up", "combat", "chelsea", "riding", "cowboy", "knee", "thigh"))
-            if not is_real_boot and ("platform ankle boots" in curr_name or ("ankle boots" in curr_name and "white" in curr_name)):
-                logger.warning(
-                    "garment_vision: SegFormer-anchored footwear override label=%r kind=%r sub_category=%r -> Sneakers",
-                    label, kind, analysis.get("sub_category"),
-                )
-                analysis["sub_category"] = "Sneakers"
-                analysis["item_type"] = "Low-Top Sneakers"
-                import re
-                orig_name = analysis.get("name") or analysis.get("title") or "White Sneakers"
-                new_name = re.sub(r"(?i)\b(ankle\s+)?boots?\b", "Sneakers", orig_name).strip()
-                analysis["name"] = new_name
-                analysis["title"] = new_name
+            all_shoe_text = f"{sub_low} {item_low} {curr_name}"
+            is_monk_or_dress = any(w in all_shoe_text for w in ("monk", "oxford", "derby", "brogue", "wingtip", "dress shoe", "casual shoe", "flat shoe"))
+            if is_monk_or_dress:
+                if sub_low in ("boot", "boots", "booties"):
+                    analysis["sub_category"] = "Shoes"
+                if not analysis.get("item_type") or item_low in ("shoes", "shoe", "boot", "boots", "footwear"):
+                    if "monk" in all_shoe_text:
+                        analysis["item_type"] = "Double Monk Strap Shoes" if "double" in all_shoe_text else "Monk Strap Shoes"
+                    elif "oxford" in all_shoe_text:
+                        analysis["item_type"] = "Oxford Shoes"
+                    elif "derby" in all_shoe_text:
+                        analysis["item_type"] = "Derby Shoes"
+                    elif "brogue" in all_shoe_text:
+                        analysis["item_type"] = "Brogues"
                 analysis["_subcategory_overridden_by"] = "segformer-shoes"
+            else:
+                is_real_boot = any(w in curr_name or w in item_low for w in ("work boot", "chukka", "desert boot", "timberland", "winter boot", "hiking boot", "combat boot", "chelsea boot", "riding boot", "cowboy boot", "knee-high", "knee high", "thigh-high", "thigh high"))
+                if not is_real_boot and ("platform ankle boots" in curr_name or ("ankle boots" in curr_name and "white" in curr_name)):
+                    logger.warning(
+                        "garment_vision: SegFormer-anchored footwear override label=%r kind=%r sub_category=%r -> Sneakers",
+                        label, kind, analysis.get("sub_category"),
+                    )
+                    analysis["sub_category"] = "Sneakers"
+                    analysis["item_type"] = "Low-Top Sneakers"
+                    import re
+                    orig_name = analysis.get("name") or analysis.get("title") or "White Sneakers"
+                    new_name = re.sub(r"(?i)\b(ankle\s+)?boots?\b", "Sneakers", orig_name).strip()
+                    analysis["name"] = new_name
+                    analysis["title"] = new_name
+                    analysis["_subcategory_overridden_by"] = "segformer-shoes"
 
         # Ensure sub_category and item_type are not identical
         if analysis.get("sub_category") and analysis.get("item_type"):

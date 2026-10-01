@@ -409,7 +409,8 @@ const hydrate = (a, user, t, i18n) => {
     }
   }
   const subCanonical = canonicalSubCategoryKey(subRaw);
-  if (!itemRaw || itemRaw.toLowerCase() === 'top' || itemRaw.toLowerCase() === 'tops' || itemRaw.toLowerCase() === 'garment' || itemRaw.toLowerCase() === 'item' || itemRaw.toLowerCase() === catLower || itemRaw === subRaw || canonicalSubCategoryKey(itemRaw) === subCanonical) {
+  const isGenericItem = !itemRaw || ['top', 'tops', 'bottom', 'bottoms', 'outerwear', 'full body', 'footwear', 'shoes', 'accessories', 'clothing', 'garment', 'item'].includes(String(itemRaw).toLowerCase().trim()) || String(itemRaw).trim().toLowerCase() === String(subRaw).trim().toLowerCase() || String(itemRaw).trim().toLowerCase() === String(catLower).trim().toLowerCase();
+  if (isGenericItem) {
     if (subCanonical === 't_shirts' || /t[-_ ]?shirt|tee|חולצת טי|חולצות טי/i.test(subRaw)) {
       itemRaw = 'short_sleeve_t_shirt';
     } else if (subCanonical === 'tailored_shirts' || /shirt|מכופתרת/i.test(subRaw)) {
@@ -434,6 +435,14 @@ const hydrate = (a, user, t, i18n) => {
       itemRaw = 'leather_belt';
     } else if (subCanonical === 'scarves_and_wraps' || /scarf|צעיף/i.test(subRaw)) {
       itemRaw = 'knit_scarf';
+    } else if (subCanonical === 'shoes' || /shoe|נעלי/i.test(subRaw)) {
+      itemRaw = 'casual_shoes';
+    } else if (subCanonical === 'sneakers' || /sneaker|סניקרס/i.test(subRaw)) {
+      itemRaw = 'low_top_sneakers';
+    } else if (subCanonical === 'sandals' || /sandal|סנדל/i.test(subRaw)) {
+      itemRaw = 'flat_sandals';
+    } else if (subCanonical === 'boots' || /boot|מגפ/i.test(subRaw)) {
+      itemRaw = 'ankle_boots';
     } else {
       itemRaw = subRaw;
     }
@@ -514,18 +523,12 @@ const hydrate = (a, user, t, i18n) => {
         out.sub_category = subRaw;
       }
 
-      // Localize item_type using labelForItemType first, fallback to labelForSubCategory
+      // Localize item_type using labelForItemType first, otherwise keep specific itemRaw
       const localizedItem = labelForItemType(itemRaw, t);
       if (localizedItem && localizedItem !== itemRaw) {
         out.item_type = localizedItem;
       } else {
-        const itemKey = canonicalSubCategoryKey(itemRaw);
-        if (itemKey && itemKey !== 'other') {
-          const fallbackSub = labelForSubCategory(itemKey, t);
-          out.item_type = fallbackSub && fallbackSub !== itemKey ? fallbackSub : itemRaw;
-        } else {
-          out.item_type = itemRaw;
-        }
+        out.item_type = itemRaw;
       }
 
       // Hard check: ensure sub_category and item_type are NEVER visually identical
@@ -608,13 +611,7 @@ const hydrate = (a, user, t, i18n) => {
       if (formattedItem && formattedItem !== itemRaw) {
         out.item_type = formattedItem;
       } else {
-        const itemKey = canonicalSubCategoryKey(itemRaw);
-        if (itemKey && itemKey !== 'other') {
-          const fallbackItem = labelForSubCategory(itemKey, t);
-          out.item_type = (fallbackItem && fallbackItem !== itemKey) ? fallbackItem : itemRaw;
-        } else {
-          out.item_type = itemRaw;
-        }
+        out.item_type = itemRaw;
       }
     }
   } else {

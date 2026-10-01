@@ -2808,6 +2808,7 @@ class GarmentVisionService:
                             hint += (
                                 " (Footwear: Open-toe, strappy, slip-on, or heeled summer footwear are sub_category='Sandals' (item_type='Open-Toe Sandals', 'Strappy Sandals', or 'Flat Sandals'). "
                                 "Rubber-sole athletic or casual trainers are sub_category='Sneakers'. "
+                                "Double monk straps, oxfords, derbies, brogues, and dress/casual low shoes are sub_category='Shoes' (e.g. item_type='Double Monk Strap Shoes', 'Oxford Shoes', 'Derby Shoes'). NEVER classify low dress shoes or monk straps as 'Boots'! "
                                 "Analyze exact style, pattern, and color — do NOT default sandals to white sneakers!)"
                             )
                         elif "pant" in lbl or cat == "bottom":
@@ -2830,8 +2831,8 @@ class GarmentVisionService:
                                 "type": "string",
                                 "enum": ["Top", "Bottom", "Dress", "Outerwear", "Footwear", "Accessories", "Underwear"],
                             },
-                            "sub_category": {"type": "string", "description": "Sub-category e.g. T-Shirt, Jeans, Pants, Sandals, Sneakers, Sunglasses, Handbag"},
-                            "item_type": {"type": "string", "description": "Specific cut e.g. Sweatpants, Strappy Sandals, Low-Top Sneakers, Classic Sunglasses"},
+                            "sub_category": {"type": "string", "description": "Sub-category e.g. T-Shirt, Jeans, Pants, Shoes, Sneakers, Sandals, Boots, Loafers, Sunglasses, Handbag"},
+                            "item_type": {"type": "string", "description": "Specific cut e.g. Sweatpants, Double Monk Strap Shoes, Strappy Sandals, Low-Top Sneakers, Classic Sunglasses"},
                             "colors": {"type": "array", "items": {"type": "string"}},
                             "gender": {"type": "string", "enum": ["women", "men", "unisex", "kids"]},
                             "model_gender": {"type": "string", "enum": ["women", "men", "none"]},
@@ -2839,7 +2840,7 @@ class GarmentVisionService:
                             "dress_code": {"type": "string", "enum": ["casual", "smart-casual", "business", "formal", "athletic", "loungewear", "lounge"]},
                             "season": {"type": "array", "items": {"type": "string"}},
                             "tags": {"type": "array", "items": {"type": "string"}},
-                            "caption": {"type": "string", "description": "One concise sentence describing style and color"},
+                            "caption": {"type": "string", "description": "One short sentence <=10 words describing style and color"},
                         },
                         "required": ["slot_index", "is_clothing", "title", "category", "sub_category", "item_type", "gender"],
                     }
@@ -2878,7 +2879,7 @@ class GarmentVisionService:
                                 system_prompt=sys_prompt,
                                 user_text=user_text,
                                 image_b64_jpeg=full_b64,
-                                max_tokens=min(140 * len(flat_crops), 1500),
+                                max_tokens=min(350 * len(flat_crops), 2500),
                                 temperature=0.1,
                                 timeout=max(240.0, float(settings.EYES_GEMMA_TIMEOUT_S)),
                                 json_schema=multi_item_schema,

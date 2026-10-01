@@ -213,6 +213,29 @@ def test_enforce_segformer_category_shoes_overrides_ankle_boots():
     assert fixed["_subcategory_overridden_by"] == "segformer-shoes"
 
 
+def test_enforce_segformer_category_double_monk_strap_shoes():
+    """Verify double monk strap shoes are classified as Shoes, never Boots."""
+    raw_analysis = {
+        "name": "Brown Suede Double Monk Strap Shoes",
+        "title": "Brown Suede Double Monk Strap Shoes",
+        "category": "Footwear",
+        "sub_category": "Boots",
+        "item_type": "Boots",
+        "colors": ["brown"],
+    }
+
+    fixed = _enforce_segformer_category(
+        raw_analysis,
+        segformer_kind="footwear",
+        label="shoes",
+        is_single_item=False,
+    )
+
+    assert fixed["category"] == "Footwear"
+    assert fixed["sub_category"] == "Shoes"
+    assert fixed["item_type"] == "Double Monk Strap Shoes"
+
+
 def test_extract_json_truncated_array_recovers_items():
     """Truncated JSON arrays without closing brackets recover all completed garment objects."""
     from app.services.vision.llm import _extract_json
