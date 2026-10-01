@@ -842,6 +842,45 @@ def _coerce_single_garment(
 
     # Guarantee valid percentages summing strictly to 100%
     raw_colors = res.get("colors") or res.get("color")
+    if not raw_colors:
+        _COLOR_KEYWORDS = [
+            ("light blue", "Light Blue", "תכלת"),
+            ("sky blue", "Light Blue", "תכלת"),
+            ("navy", "Navy", "כחול כהה"),
+            ("blue", "Blue", "כחול"),
+            ("olive", "Olive Green", "ירוק זית"),
+            ("mint", "Mint Green", "מנטה"),
+            ("green", "Green", "ירוק"),
+            ("burgundy", "Burgundy", "בורדו"),
+            ("red", "Red", "אדום"),
+            ("yellow", "Yellow", "צהוב"),
+            ("orange", "Orange", "כתום"),
+            ("pink", "Pink", "ורוד"),
+            ("purple", "Purple", "סגול"),
+            ("brown", "Brown", "חום"),
+            ("beige", "Beige", "בז'"),
+            ("tan", "Tan", "בז'"),
+            ("cream", "Cream", "קרם"),
+            ("khaki", "Khaki", "חאקי"),
+            ("white", "White", "לבן"),
+            ("black", "Black", "שחור"),
+            ("grey", "Gray", "אפור"),
+            ("gray", "Gray", "אפור"),
+        ]
+        found_c = None
+        for kw, en_col, he_col in _COLOR_KEYWORDS:
+            if kw in full_color_text or (is_he and he_col in full_color_text):
+                found_c = he_col if is_he else en_col
+                break
+        if not found_c:
+            if any(w in full_color_text for w in ("jean", "denim")):
+                found_c = "כחול" if is_he else "Blue"
+            elif any(w in full_color_text for w in ("sneaker", "athletic shoe", "running shoe")):
+                found_c = "לבן" if is_he else "White"
+            else:
+                found_c = "אפור" if is_he else "Gray"
+        raw_colors = [{"name": found_c, "pct": 100}]
+
     if raw_colors:
         res["colors"] = normalize_weighted_tags(raw_colors)
         if res["colors"] and not res.get("color"):
@@ -969,6 +1008,39 @@ def _coerce_single_garment(
                 _re.sub(r"\bאייל\b", "עיט", t) if isinstance(t, str) else t
                 for t in res["tags"]
             ]
+
+    # Tags guarantee: ensure tags are always populated with 3-6 relevant tags
+    current_tags = res.get("tags")
+    if not isinstance(current_tags, list) or not current_tags:
+        fallback_tags: list[str] = []
+        if res.get("sub_category"):
+            fallback_tags.append(str(res["sub_category"]).lower())
+        if res.get("item_type") and str(res["item_type"]).lower() != str(res.get("sub_category", "")).lower():
+            fallback_tags.append(str(res["item_type"]).lower())
+        if res.get("color"):
+            fallback_tags.append(str(res["color"]).lower())
+        elif res.get("colors") and isinstance(res["colors"], list) and res["colors"] and res["colors"][0].get("name"):
+            fallback_tags.append(str(res["colors"][0]["name"]).lower())
+        if res.get("pattern") and str(res["pattern"]).lower() not in ("none", "other", "unknown", "solid"):
+            fallback_tags.append(str(res["pattern"]).lower())
+        if res.get("dress_code"):
+            fallback_tags.append(str(res["dress_code"]).lower())
+        if res.get("season") and isinstance(res["season"], list):
+            for s in res["season"]:
+                if s and s != "all":
+                    fallback_tags.append(str(s).lower())
+                    break
+        if res.get("brand"):
+            fallback_tags.append(str(res["brand"]).lower())
+        # Deduplicate preserving order
+        seen_t = set()
+        dedup_tags = []
+        for t in fallback_tags:
+            clean_t = t.strip()
+            if clean_t and clean_t not in seen_t:
+                seen_t.add(clean_t)
+                dedup_tags.append(clean_t)
+        res["tags"] = dedup_tags[:6]
 
     # Tag localization fallback for Hebrew output
     is_lang_he = (language or "").lower() in ("he", "iw") or any("\u0590" <= ch <= "\u05ea" for ch in f"{res.get('name', '')} {res.get('title', '')}")
@@ -1223,6 +1295,18 @@ def _infer_garment_dress_code(parsed: dict[str, Any]) -> str:
     if raw_dc in _VALID_DRESS_CODE and raw_dc != "casual":
         return raw_dc
 
+    # Outerwear (jackets, coats, windbreakers, parkas) should NEVER be loungewear
+    is_outerwear = (
+        parsed.get("category") == "Outerwear"
+        or sub in ("jackets", "jacket", "coats", "coat", "parka", "windbreaker")
+        or itype in ("jacket", "hooded jacket", "windbreaker", "parka", "coat", "bomber jacket")
+        or any(w in full_text for w in ("jacket", "coat", "windbreaker", "parka", "hooded jacket", "מעיל", "ז'קט"))
+    )
+    if is_outerwear:
+        if raw_dc in ("casual", "athletic", "smart-casual", "business"):
+            return raw_dc
+        return "casual"
+
     # 1. Formal (Black tie, evening gowns, tuxedos, cocktail)
     if any(w in full_text for w in (
         "tuxedo", "ballgown", "evening gown", "cocktail dress", "formal gown",
@@ -1239,9 +1323,10 @@ def _infer_garment_dress_code(parsed: dict[str, Any]) -> str:
         return "business"
 
     # 3. Loungewear / Sleepwear (Check before smart-casual so silk pajamas/robes are loungewear)
+    # Hoodies and jackets are NOT loungewear (they are casual/athletic).
     if any(w in full_text for w in (
         "pajama", "pajamas", "pyjama", "sleepwear", "nightgown", "bathrobe", "robe",
-        "sweatpants", "lounge", "loungewear", "slippers", "hoodie", "פיג'מה", "חלוק"
+        "lounge", "loungewear", "slippers", "פיג'מה", "חלוק"
     )):
         return "loungewear"
 

@@ -194,15 +194,14 @@ def _run_inference(pil_full: Image.Image) -> np.ndarray:
     import torch
     pil_small = _resize_for_inference(pil_full)
     inputs = _processor(images=pil_small, return_tensors="pt")
-    with torch.no_grad():
-        outputs = _model(**inputs)
-    logits = outputs.logits  # (1, C, H', W')
-
-    # Argmax directly on the model's output resolution to collapse 18 float32 channels
-    # to a single 2D integer class mask BEFORE resizing. This avoids allocating gigabytes
-    # of intermediate float32 tensors on high-resolution camera images.
-    small_pred = logits.argmax(dim=1).squeeze(0).cpu().numpy().astype(np.uint8)  # (H', W')
-    del inputs, outputs, logits
+    import torch.nn.functional as F
+    # Bilinear interpolation of logits up to model input resolution (<= 512x512)
+    # before argmax eliminates blocky 128px nearest-neighbor sawtooth staircases.
+    logits_up = F.interpolate(
+        logits, size=(pil_small.size[1], pil_small.size[0]), mode="bilinear", align_corners=False
+    )
+    small_pred = logits_up.argmax(dim=1).squeeze(0).cpu().numpy().astype(np.uint8)  # (H', W')
+    del inputs, outputs, logits, logits_up
 
     # Scale single-channel integer mask to original image size with nearest-neighbor
     mask_img = Image.fromarray(small_pred)
@@ -858,13 +857,37 @@ def _suppress_overlapping_garments(
                     {kept_cat, item_cat} == {"top", "bottom"} or {kept_cat, item_cat} == {"top", "dress"}
                 )
                 if not (is_garment_pair or is_flatlay_top_bottom or is_footwear_candidate):
+                    # Attached hood / collar rule: if headwear or scarf meets the upper border/neckline of top/outerwear,
+                    # it is an attached hood or collar and MUST be merged into the jacket/top!
+                    is_attached_hood = (
+                        kept_cat in {"top", "outerwear"}
+                        and item_cat in {"headwear", "scarf"}
+                        and bb_item and bb_kept
+                    )
+                    if is_attached_hood:
+                        y1, x1, y2, x2 = bb_item
+                        Y1, X1, Y2, X2 = bb_kept
+                        vert_gap = max(0, Y1 - y2)
+                        horiz_inter = max(0, min(x2, X2) - max(x1, X1))
+                        item_w = max(1, x2 - x1)
+                        if (vert_gap <= 30 or y2 >= Y1 - 10) and (horiz_inter / float(item_w) >= 0.35):
+                            kept_item["mask"] = np.maximum(kept_item["mask"], item["mask"])
+                            kept[kept_idx] = (
+                                kept_lbl,
+                                kept_item,
+                                int(kept_item["mask"].sum()),
+                            )
+                            merged = True
+                            suppressed.append((lbl, kept_lbl, item_cat or "?", 1.0, 1.0))
+                            break
+
                     # Suppress phantom accessory / shoe speck on a flat-lay garment
                     if (
                         not has_human
                         and kept_cat in {"top", "bottom", "dress", "outerwear"}
                         and item_cat in {"accessory", "bag", "belt", "scarf", "headwear", "footwear"}
                     ):
-                        if area <= 0.15 * kept_area:
+                        if area <= 0.25 * kept_area:
                             merged = True
                             suppressed.append((lbl, kept_lbl, item_cat or "?", 0.0, 0.0))
                             break
@@ -1582,12 +1605,14 @@ def apply_alpha_intersection(
             )
             return None
 
+        is_bottom = norm_cat in {"bottom", "pants", "skirt"} or any(w in norm_lbl for w in ("short", "skirt", "pant", "trouser", "jean"))
         # Build solid garment core and protection region to protect fabric from false chewing
         try:
             from scipy import ndimage
             mask_bin_core = mask_resized > 64
             closed_core = ndimage.binary_closing(mask_bin_core, structure=np.ones((5, 5), dtype=bool), iterations=1)
-            filled_core = ndimage.binary_fill_holes(closed_core)
+            # Never fill holes on bottoms (shorts/skirts) because the hole between legs is human skin!
+            filled_core = closed_core if is_bottom else ndimage.binary_fill_holes(closed_core)
             # garment_protect covers the garment interior where mask is confident or filled
             garment_protect = filled_core | (mask_resized > 50)
             core_iter = max(1, min(4, int(round(min(Hc, Wc) * 0.008))))
@@ -1598,6 +1623,7 @@ def apply_alpha_intersection(
 
         garment_weight = np.clip((mask_resized.astype(float) - 20.0) / 80.0, 0.0, 1.0)
     else:
+        is_bottom = norm_cat in {"bottom", "pants", "skirt"} or any(w in norm_lbl for w in ("short", "skirt", "pant", "trouser", "jean"))
         garment_weight = None
         garment_protect = None
 
@@ -1643,11 +1669,8 @@ def apply_alpha_intersection(
                 repr(exc)[:120],
             )
 
-    # 2. Human skin chrominance filter for facial eyewear, footwear, and accessories.
-    # CRITICAL: Tops, outerwear, dresses, and bottoms MUST NEVER be filtered by skin chrominance!
-    # Fabrics routinely come in warm tones (tan, beige, cream, peach, pink, brown, warm gray, orange)
-    # which trigger skin chrominance across the fabric body and turn it into a faded 5% opacity ghost.
-    if (has_human and is_footwear) or is_eyewear or is_acc:
+    # 2. Human skin chrominance filter for facial eyewear, footwear, accessories, and bottoms outside confident garment body
+    if (has_human and is_footwear) or is_eyewear or is_acc or (has_human and is_bottom):
         try:
             r = arr[:, :, 0].astype(float)
             g = arr[:, :, 1].astype(float)
@@ -1661,6 +1684,9 @@ def apply_alpha_intersection(
                 ((r - g) >= 12.0) &
                 (new_alpha > 30)
             )
+            if is_bottom and mask_resized is not None:
+                # Protect confident garment interior; only excise skin outside confident garment body
+                is_skin = is_skin & (mask_resized <= 40)
             if is_skin.any():
                 skin_u8 = (is_skin * 255).astype(np.uint8)
                 if garment_protect is not None and garment_protect.any():

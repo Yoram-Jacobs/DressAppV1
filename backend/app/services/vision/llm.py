@@ -144,13 +144,14 @@ SYSTEM_PROMPT = (
     "• sub_category: Specific cut ('Shirt','Sweater','Jeans','Pants','Skirt','Sneakers','Sandals','Boots','Sunglasses','Bags'). Never generic 'Top'/'Bottom'.\n"
     "• Bottoms: 'Jeans' is EXCLUSIVELY denim with 5-pocket rivets. Chinos/slacks/trousers -> sub_category:'Pants', item_type:'Chinos'|'Tailored Trousers', dress_code:'smart-casual'|'business'. Sweatpants/joggers/trainers/fleece -> sub_category:'Pants', item_type:'Sweatpants'|'Joggers', dress_code:'casual'|'athletic', material:'Cotton'|'Polyester' (never 'Tailored Trousers'/'Wool'/'Business').\n"
     "• Footwear: 'Sneakers' (athletic/rubber-sole), 'Sandals' (open-toe/strappy/heeled summer), 'Heels','Boots','Loafers','Flats'. Open-toe/strappy -> sub_category:'Sandals' (never 'Sneakers').\n"
-    "• Accessories: 'Sunglasses' (never 'Shorts'/'Shirt'), 'Bags','Belts','Headwear','Scarves & Wraps','Jewelry'. Non-wearables (bottles, cups, cans, phones, keys, cameras) -> is_clothing:false, category:'Accessories', sub_category:'non-clothing'. Genuine accessories -> is_clothing:true.\n"
+    "• Accessories: 'Sunglasses', 'Bags','Belts','Headwear','Scarves & Wraps','Jewelry'. Attached hoods/collars/sleeves are part of the host garment, never separate headwear. Non-wearables (bottles, cups, phones) -> is_clothing:false. Genuine accessories -> is_clothing:true.\n"
     "• item_type: Detailed cut ('Crew-Neck T-Shirt','Chinos','Tailored Trousers','Straight Jeans','Sweatpants','Open-Toe Sandals','Classic Sunglasses'). Must differ from sub_category.\n"
     "• caption: 1 concise sentence on cut, color, pattern, texture ending with a period.\n"
-    "• dress_code: 'casual'|'smart-casual'|'business'|'formal'|'athletic'|'loungewear'. Suits/blazers='business'; button-downs/blouses/slacks/cardigans='smart-casual'; gowns/tuxedos='formal'; sportswear='athletic'; sweatpants/joggers='casual'|'athletic'; casual tees/jeans='casual'. Never default to casual.\n"
+    "• dress_code: 'casual'|'smart-casual'|'business'|'formal'|'athletic'|'loungewear'. Suits/blazers='business'; button-downs/blouses/slacks/cardigans='smart-casual'; gowns/tuxedos='formal'; sportswear='athletic'; sweatpants/joggers='casual'|'athletic'; jackets/hoodies='casual'|'athletic' (never loungewear); sleepwear='loungewear'. Never default to casual.\n"
     "• model_gender: Identifiable human model -> 'women'|'men'. Flat lay/hanger/mannequin -> null.\n"
     "• gender: Strict 3-Tier Hierarchy: (1) Human Model: anchor all garments to model gender ('women'|'men'). (2) Garment Criteria: flat lays/hangers determined strictly by cut ('women' for floral/blouses/skirts/dresses/sandals; 'men' for masculine cuts; 'unisex' for neutral basics). (3) Neutral basics fall back to profile gender, or 'unisex'. Never default to 'men'.\n"
-    "• colors/fabric_materials: [{\"name\": str, \"pct\": int}] summing to 100.\n"
+    "• colors: ALWAYS [{\"name\": str, \"pct\": int}] summing to 100 (never omit).\n"
+    "• fabric_materials: [{\"name\": str, \"pct\": int}] summing to 100. tags: [str] (3-6 tags).\n"
     "• pattern: 'solid'|'printed'|'geometric'|'striped'|'plaid'|'floral'.\n"
     "• text/logos: Read accurately ('American Eagle'=eagle/עיט, not deer/אייל).\n"
     "• season: ['spring'|'summer'|'fall'|'winter'|'all']. Linen/short-sleeve/sandals=['summer']; wool/down=['fall','winter'].\n"
@@ -196,7 +197,7 @@ def _build_system_prompt(*, one_pass: bool = False, user_gender: str | None = No
 # ─────────────────────────────────────────────────────────────────────
 _GARMENT_OBJECT_SCHEMA: dict[str, Any] = {
     "type": "object",
-    "required": ["is_clothing", "title", "name", "category", "sub_category", "item_type", "caption"],
+    "required": ["is_clothing", "title", "name", "category", "sub_category", "item_type", "caption", "colors", "tags"],
     "additionalProperties": False,
     "properties": {
         "is_clothing": {
