@@ -1339,6 +1339,11 @@ async def test_gemma_multi_item_and_batch_upload_single_prompt_ingestion(monkeyp
 
     # Case 2: Batch upload with 3 photos:
     mock_gemma_call.reset_mock()
+    mock_gemma_call.return_value = json.dumps([
+        {"slot_index": 0, "is_clothing": True, "title": "White T-Shirt", "name": "White T-Shirt", "category": "Top", "sub_category": "T-Shirt", "item_type": "Crew-Neck T-Shirt", "gender": "unisex"},
+        {"slot_index": 1, "is_clothing": True, "title": "Blue Button Shirt", "name": "Blue Button Shirt", "category": "Top", "sub_category": "Shirt", "item_type": "Button-Up Shirt", "gender": "men"},
+        {"slot_index": 2, "is_clothing": True, "title": "Black Graphic Tee", "name": "Black Graphic Tee", "category": "Top", "sub_category": "T-Shirt", "item_type": "Graphic T-Shirt", "gender": "unisex"},
+    ])
     async def mock_detect_items_1(img_bytes):
         return [{"bbox": [50, 50, 950, 950], "kind": "top", "label": "Upper-clothes"}]
     monkeypatch.setattr(service, "detect_items", mock_detect_items_1)
