@@ -2553,7 +2553,12 @@
       "sneakers": "Baskets",
       "flats": "Ballerines / Chaussures plates",
       "heels": "Talons",
-      "slippers": "Pantoufles"
+      "slippers": "Pantoufles",
+      "printed_skirt": "Jupe imprimée",
+      "skirt": "Jupe",
+      "sweater": "Pull",
+      "sweatpants": "Pantalon de survêtement",
+      "joggers": "Jogging"
     },
     "color": {
       "black": "Noir",

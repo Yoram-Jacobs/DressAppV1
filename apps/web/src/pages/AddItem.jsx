@@ -422,10 +422,37 @@ const hydrate = (a, user, t, i18n) => {
     } else if (catLower === 'full body' || catLower === 'dress' || catLower === 'one_piece') {
       subRaw = 'dress';
     } else {
-      subRaw = (out.gender === 'women') ? 'blouses' : 'tailored_shirts';
+      if (/t[-_ ]?shirt|tee|טי/.test(itemBlob)) {
+        subRaw = 't_shirts';
+      } else if (/sweater|סוודר|cardigan|pullover|hoodie|קפוצ/.test(itemBlob)) {
+        subRaw = 'knitwear';
+      } else if (/blouse|בלוזה/.test(itemBlob)) {
+        subRaw = 'blouses';
+      } else if (/polo|פולו/.test(itemBlob)) {
+        subRaw = 'polo_shirts';
+      } else if (/tank|גופיי/.test(itemBlob)) {
+        subRaw = 'tank_tops';
+      } else if (/button[-_ ]?down|מכופתר|oxford|dress shirt/.test(itemBlob)) {
+        subRaw = 'tailored_shirts';
+      } else {
+        subRaw = 't_shirts';
+      }
     }
   }
-  const subCanonical = canonicalSubCategoryKey(subRaw);
+
+  // Cross-consistency: If itemRaw is explicitly a t-shirt, boots, or bag, align subRaw
+  if (/t[-_ ]?shirt|tee|חולצת טי/i.test(itemRaw) && !/button[-_ ]?down|מכופתר/i.test(itemRaw)) {
+    if (subRaw.toLowerCase().includes('tailored') || /מכופתר/.test(subRaw) || subRaw.toLowerCase() === 'shirt') {
+      subRaw = 't_shirts';
+    }
+  } else if (/boot|מגפ/i.test(itemRaw)) {
+    subRaw = 'boots';
+  } else if (/bag|backpack|tote|purse|clutch|תיק/i.test(itemRaw)) {
+    subRaw = 'bags';
+    if (!out.category || out.category.toLowerCase() !== 'accessories') {
+      out.category = 'Accessories';
+    }
+  }
   const isGenericItem = !itemRaw || ['top', 'tops', 'bottom', 'bottoms', 'outerwear', 'full body', 'footwear', 'shoes', 'accessories', 'clothing', 'garment', 'item'].includes(String(itemRaw).toLowerCase().trim()) || String(itemRaw).trim().toLowerCase() === String(subRaw).trim().toLowerCase() || String(itemRaw).trim().toLowerCase() === String(catLower).trim().toLowerCase();
   if (isGenericItem) {
     if (subCanonical === 't_shirts' || /t[-_ ]?shirt|tee|חולצת טי|חולצות טי/i.test(subRaw)) {
@@ -5116,7 +5143,7 @@ function ItemCard({
           {/* Photo + scanning */}
           <div className="relative">
             <div
-              className={`aspect-[3/4] bg-[#dddddd] md:aspect-auto md:h-full w-full ${isBusy ? "scanning" : ""}`}
+              className={`aspect-[3/4] bg-white md:aspect-auto md:h-full w-full ${isBusy ? "scanning" : ""}`}
               data-testid="add-item-card-photo"
             >
               <img

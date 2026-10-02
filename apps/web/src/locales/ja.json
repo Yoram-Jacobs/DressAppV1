@@ -2560,7 +2560,12 @@
       "sneakers": "スニーカー",
       "flats": "フラットシューズ",
       "heels": "ヒール・パンプス",
-      "slippers": "スリッパ・ルームシューズ"
+      "slippers": "スリッパ・ルームシューズ",
+      "printed_skirt": "プリントスカート",
+      "skirt": "スカート",
+      "sweater": "セーター",
+      "sweatpants": "スウェットパンツ",
+      "joggers": "ジョガーパンツ"
     },
     "color": {
       "black": "ブラック",

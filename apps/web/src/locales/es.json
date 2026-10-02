@@ -2553,7 +2553,12 @@
       "sneakers": "Zapatillas deportivas",
       "flats": "Zapatos planos / Bailarinas",
       "heels": "Tacones",
-      "slippers": "Pantuflas"
+      "slippers": "Pantuflas",
+      "printed_skirt": "Falda estampada",
+      "skirt": "Falda",
+      "sweater": "Suéter",
+      "sweatpants": "Pantalón de chándal",
+      "joggers": "Joggers"
     },
     "color": {
       "black": "Negro",

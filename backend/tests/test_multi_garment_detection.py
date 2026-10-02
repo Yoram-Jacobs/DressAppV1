@@ -311,24 +311,24 @@ async def test_multi_garment_single_prompt_ingestion(monkeypatch):
     ]
     monkeypatch.setattr(service, "detect_items", AsyncMock(return_value=fake_detections))
 
-    # Mock _call_gemma_space to return a single multi-item JSON array
-    mock_multi_response = (
-        '[\n'
-        '  {"title": "Linen Shirt", "name": "Linen Shirt", "category": "Top", "sub_category": "Shirt", '
-        '   "item_type": "Linen Shirt", "gender": "unisex", "dress_code": "casual", "season": ["summer"], '
-        '   "colors": [{"name": "white", "pct": 100}], "fabric_materials": [{"name": "linen", "pct": 100}], '
-        '   "pattern": "solid", "state": "new", "condition": "good", "quality": "mid", "price_cents": 5000, "caption": "Shirt"},\n'
-        '  {"title": "Chino Pants", "name": "Chino Pants", "category": "Bottom", "sub_category": "Pants", '
-        '   "item_type": "Chino Pants", "gender": "unisex", "dress_code": "casual", "season": ["summer"], '
-        '   "colors": [{"name": "beige", "pct": 100}], "fabric_materials": [{"name": "cotton", "pct": 100}], '
-        '   "pattern": "solid", "state": "new", "condition": "good", "quality": "mid", "price_cents": 6000, "caption": "Pants"},\n'
-        '  {"title": "Canvas Tote Bag", "name": "Canvas Tote Bag", "category": "Accessories", "sub_category": "Bag", '
-        '   "item_type": "Handbag", "gender": "unisex", "dress_code": "casual", "season": ["all"], '
-        '   "colors": [{"name": "natural", "pct": 100}], "fabric_materials": [{"name": "canvas", "pct": 100}], '
-        '   "pattern": "solid", "state": "new", "condition": "good", "quality": "mid", "price_cents": 3000, "caption": "Bag"}\n'
-        ']'
-    )
-    gemma_mock = AsyncMock(return_value=mock_multi_response)
+    # Mock _call_gemma_space to return item responses using the single static system prompt
+    item_responses = [
+        '{"title": "Linen Shirt", "name": "Linen Shirt", "category": "Top", "sub_category": "Shirt", '
+        '"item_type": "Linen Shirt", "gender": "unisex", "dress_code": "casual", "season": ["summer"], '
+        '"colors": [{"name": "white", "pct": 100}], "fabric_materials": [{"name": "linen", "pct": 100}], '
+        '"pattern": "solid", "tags": ["linen"], "caption": "A clean linen shirt."}',
+        '{"title": "Chino Pants", "name": "Chino Pants", "category": "Bottom", "sub_category": "Pants", '
+        '"item_type": "Chino Pants", "gender": "unisex", "dress_code": "casual", "season": ["summer"], '
+        '"colors": [{"name": "beige", "pct": 100}], "fabric_materials": [{"name": "cotton", "pct": 100}], '
+        '"pattern": "solid", "tags": ["cotton"], "caption": "Casual beige chino pants."}',
+        '{"title": "Canvas Tote Bag", "name": "Canvas Tote Bag", "category": "Accessories", "sub_category": "Bag", '
+        '"item_type": "Handbag", "gender": "unisex", "dress_code": "casual", "season": ["summer"], '
+        '"colors": [{"name": "natural", "pct": 100}], "fabric_materials": [{"name": "canvas", "pct": 100}], '
+        '"pattern": "solid", "tags": ["tote"], "caption": "A natural canvas tote bag."}',
+    ]
+    gemma_mock = AsyncMock(side_effect=item_responses)
+    import app.services.vision.llm as llm_mod
+    monkeypatch.setattr(llm_mod, "_call_gemma_space", gemma_mock)
     monkeypatch.setattr(vision_mod, "_call_gemma_space", gemma_mock)
     monkeypatch.setattr(vision_mod.settings, "EYES_GEMMA_SPACE_URL", "http://fake-eyes:7860")
 
@@ -336,10 +336,12 @@ async def test_multi_garment_single_prompt_ingestion(monkeypatch):
     async for frame in service.analyze_outfits_stream([fake_img]):
         frames.append(frame)
 
-    # 1. Assert _call_gemma_space was called EXACTLY ONCE for all 3 items (single prompt ingestion!)
-    assert gemma_mock.call_count == 1, f"Expected 1 unified call, got {gemma_mock.call_count}"
+    # 1. Assert system prompt is static and identical across all items in the batch (Rule 3)
+    sys_prompts = [c.kwargs.get("system_prompt") for c in gemma_mock.call_args_list if "system_prompt" in c.kwargs]
+    assert len(sys_prompts) == 3
+    assert len(set(sys_prompts)) == 1, "Rule 3: Static system prompt must be shared across all batch items to preserve KV-cache"
 
-    # 2. Assert frames structure: detect frame, 3 item frames, done frame
+    # 2. Assert frames structure: detect frame, field frames, 3 item frames, done frame
     types = [f["type"] for f in frames]
     assert "detect" in types
     assert types.count("item") == 3
@@ -1374,12 +1376,14 @@ async def test_gemma_multi_item_and_batch_upload_single_prompt_ingestion(monkeyp
     monkeypatch.setattr("app.config.settings.AUTO_MATTE_CROPS", False)
 
     mock_gemma_call = AsyncMock()
-    # Return 3 items in a single pass
-    mock_gemma_call.return_value = json.dumps([
-        {"slot_index": 0, "is_clothing": True, "title": "White T-Shirt", "name": "White T-Shirt", "category": "Top", "sub_category": "T-Shirt", "item_type": "Crew-Neck T-Shirt", "gender": "unisex"},
-        {"slot_index": 1, "is_clothing": True, "title": "Gray Sweatpants", "name": "Gray Sweatpants", "category": "Bottom", "sub_category": "Pants", "item_type": "Sweatpants", "gender": "unisex"},
-        {"slot_index": 2, "is_clothing": True, "title": "Open-Toe Sandals", "name": "Open-Toe Sandals", "category": "Footwear", "sub_category": "Sandals", "item_type": "Open-Toe Sandals", "gender": "women"},
-    ])
+    mock_items_single = [
+        json.dumps({"slot_index": 0, "is_clothing": True, "title": "White T-Shirt", "name": "White T-Shirt", "category": "Top", "sub_category": "T-Shirt", "item_type": "Crew-Neck T-Shirt", "gender": "unisex", "colors": [{"name": "white", "pct": 100}], "tags": ["cotton"], "caption": "White T-Shirt."}),
+        json.dumps({"slot_index": 1, "is_clothing": True, "title": "Gray Sweatpants", "name": "Gray Sweatpants", "category": "Bottom", "sub_category": "Pants", "item_type": "Sweatpants", "gender": "unisex", "colors": [{"name": "grey", "pct": 100}], "tags": ["fleece"], "caption": "Gray Sweatpants."}),
+        json.dumps({"slot_index": 2, "is_clothing": True, "title": "Open-Toe Sandals", "name": "Open-Toe Sandals", "category": "Footwear", "sub_category": "Sandals", "item_type": "Open-Toe Sandals", "gender": "women", "colors": [{"name": "black", "pct": 100}], "tags": ["summer"], "caption": "Open-Toe Sandals."}),
+    ]
+    mock_gemma_call.side_effect = mock_items_single
+    import app.services.vision.llm as llm_mod
+    monkeypatch.setattr(llm_mod, "_call_gemma_space", mock_gemma_call)
     monkeypatch.setattr("app.services.vision.service._call_gemma_space", mock_gemma_call)
 
     # 1. Test multi-garment single photo:
@@ -1388,16 +1392,19 @@ async def test_gemma_multi_item_and_batch_upload_single_prompt_ingestion(monkeyp
         if frame.get("type") == "item":
             items_emitted.append(frame)
 
-    assert mock_gemma_call.call_count == 1, f"Rule 1 & 3: Multi-garment photo must fire Gemma ONCE! Called {mock_gemma_call.call_count} times."
+    sys_prompts_1 = [c.kwargs.get("system_prompt") for c in mock_gemma_call.call_args_list if "system_prompt" in c.kwargs]
+    assert len(sys_prompts_1) == 3, f"Expected 3 progressive calls, got {len(sys_prompts_1)}"
+    assert len(set(sys_prompts_1)) == 1, "Rule 3: Static system prompt must be shared across all batch items to preserve KV-cache"
     assert len(items_emitted) == 3, f"Expected 3 items emitted, got {len(items_emitted)}"
 
     # Case 2: Batch upload with 3 photos:
     mock_gemma_call.reset_mock()
-    mock_gemma_call.return_value = json.dumps([
-        {"slot_index": 0, "is_clothing": True, "title": "White T-Shirt", "name": "White T-Shirt", "category": "Top", "sub_category": "T-Shirt", "item_type": "Crew-Neck T-Shirt", "gender": "unisex"},
-        {"slot_index": 1, "is_clothing": True, "title": "Blue Button Shirt", "name": "Blue Button Shirt", "category": "Top", "sub_category": "Shirt", "item_type": "Button-Up Shirt", "gender": "men"},
-        {"slot_index": 2, "is_clothing": True, "title": "Black Graphic Tee", "name": "Black Graphic Tee", "category": "Top", "sub_category": "T-Shirt", "item_type": "Graphic T-Shirt", "gender": "unisex"},
-    ])
+    mock_items_batch = [
+        json.dumps({"slot_index": 0, "is_clothing": True, "title": "White T-Shirt", "name": "White T-Shirt", "category": "Top", "sub_category": "T-Shirt", "item_type": "Crew-Neck T-Shirt", "gender": "unisex", "colors": [{"name": "white", "pct": 100}], "tags": ["cotton"], "caption": "White T-Shirt."}),
+        json.dumps({"slot_index": 1, "is_clothing": True, "title": "Blue Button Shirt", "name": "Blue Button Shirt", "category": "Top", "sub_category": "Shirt", "item_type": "Button-Up Shirt", "gender": "men", "colors": [{"name": "blue", "pct": 100}], "tags": ["denim"], "caption": "Blue Button Shirt."}),
+        json.dumps({"slot_index": 2, "is_clothing": True, "title": "Black Graphic Tee", "name": "Black Graphic Tee", "category": "Top", "sub_category": "T-Shirt", "item_type": "Graphic T-Shirt", "gender": "unisex", "colors": [{"name": "black", "pct": 100}], "tags": ["tee"], "caption": "Black Graphic Tee."}),
+    ]
+    mock_gemma_call.side_effect = mock_items_batch
     async def mock_detect_items_1(img_bytes):
         return [{"bbox": [50, 50, 950, 950], "kind": "top", "label": "Upper-clothes"}]
     monkeypatch.setattr(service, "detect_items", mock_detect_items_1)
@@ -1407,7 +1414,9 @@ async def test_gemma_multi_item_and_batch_upload_single_prompt_ingestion(monkeyp
         if frame.get("type") == "item":
             batch_emitted.append(frame)
 
-    assert mock_gemma_call.call_count == 1, f"Rule 2 & 3: Multi-photo batch upload must fire Gemma ONCE! Called {mock_gemma_call.call_count} times."
+    sys_prompts_2 = [c.kwargs.get("system_prompt") for c in mock_gemma_call.call_args_list if "system_prompt" in c.kwargs]
+    assert len(sys_prompts_2) == 3, f"Expected 3 progressive calls, got {len(sys_prompts_2)}"
+    assert len(set(sys_prompts_2)) == 1, "Rule 3: Static system prompt must be shared across all batch items to preserve KV-cache"
     assert len(batch_emitted) == 3, f"Expected 3 items emitted for batch, got {len(batch_emitted)}"
 
 

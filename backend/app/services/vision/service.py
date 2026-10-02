@@ -2646,13 +2646,50 @@ class GarmentVisionService:
                 # Build ONE static system prompt for the entire batch to preserve llama-server KV-cache prefix
                 batch_system_prompt = _build_system_prompt(one_pass=False, user_gender=eff_gender)
 
-                if len(flat_crops) == 1:
-                    # Single item from single photo: fast single-item stream
-                    slot_idx = 0
-                    image_idx, det, c_bytes, c_mime = flat_crops[0]
-                    photo_mg = det.get("_photo_model_gender")
-                    raw_for_vision = det.get("_raw_image_bytes") or c_bytes
-                    shrunk = _shrink_for_vision(raw_for_vision)
+                # Pre-scan detections across photos to detect human model gender (Strict 3-Tier Hierarchy)
+                photo_model_genders: dict[int, str] = {}
+                from collections import defaultdict
+                photo_fem_cues: dict[int, list[str]] = defaultdict(list)
+                photo_masc_cues: dict[int, list[str]] = defaultdict(list)
+                photo_has_model: dict[int, bool] = defaultdict(bool)
+
+                for slot_idx, (image_idx, det, c_bytes, c_mime) in enumerate(flat_crops):
+                    has_human = bool(
+                        det.get("has_human_head")
+                        or det.get("has_human_skin")
+                        or det.get("_photo_model_gender") in ("women", "men")
+                    )
+                    if has_human:
+                        photo_has_model[image_idx] = True
+
+                    if det.get("_photo_model_gender") == "women":
+                        photo_fem_cues[image_idx].append("det_women")
+                    elif det.get("_photo_model_gender") == "men":
+                        photo_masc_cues[image_idx].append("det_men")
+
+                    lbl = (det.get("label") or "").lower()
+                    cat = (det.get("category") or det.get("kind") or "").lower()
+                    if is_distinctly_feminine_garment(cat, lbl, lbl):
+                        photo_fem_cues[image_idx].append("fem_garment")
+                    elif is_distinctly_masculine_garment(cat, lbl, lbl):
+                        photo_masc_cues[image_idx].append("masc_garment")
+
+                all_img_indices = set(idx for idx, _, _, _ in flat_crops)
+                for img_i in all_img_indices:
+                    if photo_has_model.get(img_i):
+                        if photo_fem_cues.get(img_i):
+                            photo_model_genders[img_i] = "women"
+                        elif photo_masc_cues.get(img_i):
+                            photo_model_genders[img_i] = "men"
+
+                # Progressive streaming loop for each crop in flat_crops:
+                # 1. Clean cutout image composited onto pure white background via _shrink_for_vision(c_bytes)
+                # 2. Streams fields progressively
+                # 3. Emits 'item' frame immediately as each garment analysis finishes
+                for slot_idx, (image_idx, det, c_bytes, c_mime) in enumerate(flat_crops):
+                    item_mg = photo_model_genders.get(image_idx) or det.get("_photo_model_gender")
+                    # Clean cutout on pure white background
+                    shrunk = _shrink_for_vision(c_bytes)
                     b64 = base64.b64encode(shrunk).decode("ascii")
                     assembled: dict[str, Any] = {}
                     import uuid
@@ -2667,7 +2704,7 @@ class GarmentVisionService:
                             request_id=request_id,
                             id_slot=slot_idx,
                             is_single_item=det.get("is_single_item", False),
-                            user_gender=photo_mg or eff_gender,
+                            user_gender=item_mg or eff_gender,
                             system_prompt=batch_system_prompt,
                         ):
                             assembled.update(partial)
@@ -2680,13 +2717,16 @@ class GarmentVisionService:
                                     "fields": partial,
                                 }
                     except Exception as gemma_exc:
-                        logger.warning("Gemma stream failed for slot %d: %s", slot_idx, repr(gemma_exc)[:160])
+                        logger.warning(
+                            "Gemma stream attributes failed for slot %d: %s; falling back to Gemini",
+                            slot_idx, repr(gemma_exc)[:160],
+                        )
                         gemma_failed = True
 
-                    if gemma_failed or not assembled.get("category") or (not assembled.get("sub_category") and not assembled.get("item_type")):
+                    if gemma_failed or not assembled or len(assembled) < 2:
                         try:
                             gem_analysis = await self.analyze(
-                                raw_for_vision, language=language, think=False, provider="gemini", user_gender=photo_mg or eff_gender,
+                                c_bytes, language=language, think=False, provider="gemini", user_gender=item_mg or eff_gender,
                             )
                             if isinstance(gem_analysis, dict) and gem_analysis:
                                 assembled = gem_analysis
@@ -2703,7 +2743,7 @@ class GarmentVisionService:
                         assembled["title"] = (det.get("label") or det.get("kind")).capitalize()
 
                     has_human = bool(det.get("has_human_head") or det.get("has_human_skin"))
-                    model_g = assembled.get("model_gender") or photo_mg
+                    model_g = assembled.get("model_gender") or item_mg
                     if not model_g and has_human:
                         if assembled.get("gender") == "women" or is_distinctly_feminine_garment(
                             assembled.get("category"), assembled.get("sub_category"), assembled.get("item_type"),
@@ -2717,6 +2757,26 @@ class GarmentVisionService:
                     if model_g in ("men", "women"):
                         assembled["model_gender"] = model_g
                         assembled["gender"] = model_g
+
+                    # Robust taxonomy defaults for zero-token auxiliary fields
+                    assembled.setdefault("condition", "used")
+                    assembled.setdefault("quality_tier", "good")
+                    assembled.setdefault("price_tier", "mid")
+                    assembled.setdefault("fit_style", "regular")
+                    assembled.setdefault("clothing_condition", "Good")
+                    if not assembled.get("fabric_materials"):
+                        cat_k = (assembled.get("category") or "").lower()
+                        sub_k = (assembled.get("sub_category") or "").lower()
+                        if cat_k == "footwear":
+                            assembled["fabric_materials"] = [{"name": "Leather", "pct": 70}, {"name": "Rubber", "pct": 30}]
+                        elif "jeans" in sub_k or "denim" in sub_k:
+                            assembled["fabric_materials"] = [{"name": "Cotton", "pct": 98}, {"name": "Elastane", "pct": 2}]
+                        elif "sweat" in sub_k or "jogger" in sub_k or "pant" in sub_k:
+                            assembled["fabric_materials"] = [{"name": "Cotton", "pct": 80}, {"name": "Polyester", "pct": 20}]
+                        else:
+                            assembled["fabric_materials"] = [{"name": "Cotton", "pct": 100}]
+                    if not assembled.get("care_instructions"):
+                        assembled["care_instructions"] = ["Machine wash cold", "Line dry"]
 
                     analysis = _coerce_single_garment(assembled, user_gender=eff_gender, model_gender=model_g, language=language)
                     if not analysis.get("title") and analysis.get("name"):
@@ -2744,373 +2804,45 @@ class GarmentVisionService:
                             "image_index": image_idx,
                             "reason": "non_clothing",
                         }
-                    else:
-                        needs_reconstruction = False
-                        reasons: list[str] = []
-                        if should_reconstruct is not None:
-                            try:
-                                needs, raw_reasons = should_reconstruct(analysis, det.get("bbox"))
-                                if needs and _settings.DEFER_RECONSTRUCTION_ON_ANALYZE:
-                                    needs_reconstruction = True
-                                    reasons = list(raw_reasons)
-                            except Exception:
-                                pass
+                        continue
 
-                        yield {
-                            "type": "field",
-                            "index": slot_idx,
-                            "image_index": image_idx,
-                            "group": "category",
-                            "fields": {
-                                "category": analysis.get("category"),
-                                "sub_category": analysis.get("sub_category"),
-                                "item_type": analysis.get("item_type"),
-                                "title": analysis.get("title"),
-                            },
-                        }
+                    needs_reconstruction = False
+                    reasons: list[str] = []
+                    if should_reconstruct is not None:
+                        try:
+                            needs, raw_reasons = should_reconstruct(analysis, det.get("bbox"))
+                            if needs and _settings.DEFER_RECONSTRUCTION_ON_ANALYZE:
+                                needs_reconstruction = True
+                                reasons = list(raw_reasons)
+                        except Exception:
+                            pass
 
-                        meta_crop = items_meta[slot_idx] if slot_idx < len(items_meta) else {}
-                        yield {
-                            "type": "item",
-                            "index": slot_idx,
-                            "image_index": image_idx,
-                            "analysis": analysis,
-                            "crop_base64": meta_crop.get("crop_base64"),
-                            "crop_mime": meta_crop.get("crop_mime", "image/png"),
-                            "label": analysis.get("sub_category") or analysis.get("item_type"),
-                            "needs_reconstruction": needs_reconstruction,
-                            "reconstruction_reasons": reasons,
-                        }
-                        emitted += 1
-
-                else:
-                    # ── Unified Single-Prompt Ingestion for Multi-Item / Batch Upload ──
-                    # Rule 1: Multi-Item Single-Prompt Ingestion
-                    # Rule 2: Batch-upload Single-Prompt Ingestion
-                    # Rule 3: System prompt fires ONCE for the entire AddItem sequence
-                    # Rule 4: Strict 3-Tier Gender Hierarchy (Model > Garment Cut > Profile > Unisex)
-                    if len(images_bytes_list) > 1:
-                        full_img_bytes = _create_batch_collage(images_bytes_list, max_side=1024)
-                    else:
-                        full_img_bytes = images_bytes_list[0] if images_bytes_list else flat_crops[0][2]
-
-                    shrunk_full = _shrink_for_vision(full_img_bytes, max_side=1024)
-                    full_b64 = base64.b64encode(shrunk_full).decode("ascii")
-
-                    items_hints = []
-                    for sub_i, (image_idx, det, c_bytes, c_mime) in enumerate(flat_crops):
-                        lbl = (det.get("label") or "garment").lower()
-                        cat = (det.get("category") or det.get("kind") or "garment").lower()
-                        hint = f"Item [{sub_i}]: label='{lbl}', category='{cat}' (slot_index={sub_i}, photo_index={image_idx})"
-                        if "bag" in lbl or cat in ("bag", "accessory"):
-                            hint += " (Genuine bag/accessory. If this is a handheld water bottle, flask, cup, or phone, set is_clothing: false, sub_category: 'non-clothing', item_type: 'non-clothing'.)"
-                        elif "shoe" in lbl or cat == "footwear":
-                            hint += (
-                                " (Footwear: Open-toe, strappy, slip-on, or heeled summer footwear are sub_category='Sandals' (item_type='Open-Toe Sandals', 'Strappy Sandals', or 'Flat Sandals'). "
-                                "Rubber-sole athletic or casual trainers are sub_category='Sneakers'. "
-                                "Double monk straps, oxfords, derbies, brogues, and dress/casual low shoes are sub_category='Shoes' (e.g. item_type='Double Monk Strap Shoes', 'Oxford Shoes', 'Derby Shoes'). NEVER classify low dress shoes or monk straps as 'Boots'! "
-                                "Analyze exact style, pattern, and color — do NOT default sandals to white sneakers!)"
-                            )
-                        elif "pant" in lbl or cat == "bottom":
-                            hint += (
-                                " (Bottoms: Athletic fleece, sweatpants, joggers, or trainer pants with drawstring/elastic are sub_category='Pants', item_type='Sweatpants' or 'Joggers', dress_code='casual' or 'athletic'. "
-                                "5-pocket rivet denim only is 'Jeans'. Cotton twill/chinos are sub_category='Pants', item_type='Chinos', dress_code='smart-casual'. NEVER classify sweatpants as 'Tailored Trousers' or 'Wool' or 'Business'.)"
-                            )
-                        elif "sunglass" in lbl or "glass" in lbl:
-                            hint += " (Sunglasses/Eyewear: sub_category='Sunglasses', item_type='Classic Sunglasses', category='Accessories'.)"
-                        items_hints.append(hint)
-
-                    compact_garment_schema = {
-                        "type": "object",
-                        "properties": {
-                            "slot_index": {"type": "integer", "description": "0-based item slot index"},
-                            "is_clothing": {"type": "boolean"},
-                            "name": {"type": "string", "description": "Specific concise name in requested language"},
-                            "category": {
-                                "type": "string",
-                                "enum": ["Top", "Bottom", "Dress", "Outerwear", "Footwear", "Accessories", "Underwear"],
-                            },
-                            "sub_category": {"type": "string", "description": "Sub-category e.g. T-Shirt, Jeans, Pants, Shoes, Sneakers, Sandals, Boots, Loafers, Sunglasses, Handbag"},
-                            "item_type": {"type": "string", "description": "Specific cut e.g. Sweatpants, Double Monk Strap Shoes, Strappy Sandals, Low-Top Sneakers, Classic Sunglasses"},
-                            "colors": {"type": "array", "items": {"type": "string"}, "maxItems": 3},
-                            "gender": {"type": "string", "enum": ["women", "men", "unisex", "kids"]},
-                            "model_gender": {"type": "string", "enum": ["women", "men", "none"]},
-                            "pattern": {"type": "string"},
-                            "dress_code": {"type": "string", "enum": ["casual", "smart-casual", "business", "formal", "athletic", "loungewear", "lounge"]},
-                            "season": {"type": "array", "items": {"type": "string"}, "maxItems": 4},
-                            "fabric_materials": {
-                                "type": "array",
-                                "items": {
-                                    "type": "object",
-                                    "properties": {
-                                        "name": {"type": "string"},
-                                        "pct": {"type": "integer"},
-                                    },
-                                    "required": ["name", "pct"],
-                                },
-                                "maxItems": 2,
-                            },
-                            "tags": {"type": "array", "items": {"type": "string"}, "maxItems": 4, "uniqueItems": True},
-                            "caption": {"type": "string", "description": "One short sentence <=10 words describing style and color"},
+                    yield {
+                        "type": "field",
+                        "index": slot_idx,
+                        "image_index": image_idx,
+                        "group": "category",
+                        "fields": {
+                            "category": analysis.get("category"),
+                            "sub_category": analysis.get("sub_category"),
+                            "item_type": analysis.get("item_type"),
+                            "title": analysis.get("title"),
                         },
-                        "required": ["slot_index", "is_clothing", "name", "category", "sub_category", "item_type", "gender"],
                     }
 
-                    multi_item_schema = {
-                        "type": "array",
-                        "items": compact_garment_schema,
-                        "minItems": len(flat_crops),
-                        "maxItems": len(flat_crops),
+                    meta_crop = items_meta[slot_idx] if slot_idx < len(items_meta) else {}
+                    yield {
+                        "type": "item",
+                        "index": slot_idx,
+                        "image_index": image_idx,
+                        "analysis": analysis,
+                        "crop_base64": meta_crop.get("crop_base64"),
+                        "crop_mime": meta_crop.get("crop_mime", "image/png"),
+                        "label": analysis.get("sub_category") or analysis.get("item_type"),
+                        "needs_reconstruction": needs_reconstruction,
+                        "reconstruction_reasons": reasons,
                     }
-
-                    gender_directive = (
-                        "\n• STRICT GENDER DIRECTIVE: If an identifiable human model is detected wearing garments, specify model_gender ('women' or 'men') and set the gender of all garments worn by that model to that gender ('women' for female model, 'men' for male model). "
-                        "For flat lays, hangers, and ghost mannequins without a human model, determine gender strictly from garment cut, silhouette, and pattern ('women' for blouses, feminine cuts, sandals, floral tops; 'men' for masculine cuts; 'unisex' for neutral basics). Never default to 'men'."
-                    )
-
-                    sys_prompt = batch_system_prompt
-                    user_text = (
-                        _user_prompt(language, user_gender=eff_gender)
-                        + f"\n\nMULTI-ITEM INGESTION:\nThis photograph/batch contains {len(flat_crops)} fashion items detected by computer vision:\n"
-                        + "\n".join(items_hints)
-                        + gender_directive
-                        + f"\n\nReturn a JSON array containing exactly {len(flat_crops)} garment objects in the SAME ORDER [0..{len(flat_crops)-1}]."
-                        + "\nFor each item, populate all required fields. If an item is an accessory, bag, or jewelry, classify under category 'Accessories'."
-                    )
-
-                    raw_multi = None
-                    t0_multi = time.perf_counter()
-                    try:
-                        logger.info(
-                            "Calling Gemma unified single-prompt ingestion for %d items across %d photos",
-                            len(flat_crops), len(images_bytes_list),
-                        )
-                        multi_task = asyncio.create_task(
-                            _call_gemma_space(
-                                system_prompt=sys_prompt,
-                                user_text=user_text,
-                                image_b64_jpeg=full_b64,
-                                max_tokens=min(220 * len(flat_crops), 1200),
-                                temperature=0.1,
-                                timeout=max(240.0, float(settings.EYES_GEMMA_TIMEOUT_S)),
-                                json_schema=multi_item_schema,
-                            )
-                        )
-                        while not multi_task.done():
-                            await asyncio.sleep(3.0)
-                            if not multi_task.done():
-                                elapsed_sec = time.perf_counter() - t0_multi
-                                yield {
-                                    "type": "progress",
-                                    "count": len(flat_crops),
-                                    "elapsed_s": round(elapsed_sec, 1),
-                                }
-                        raw_multi = await multi_task
-                        logger.info(
-                            "Gemma unified single-prompt ingestion succeeded in %.2fs",
-                            time.perf_counter() - t0_multi,
-                        )
-                    except Exception as multi_exc:
-                        logger.warning(
-                            "Gemma unified single-prompt call failed: %s (falling back to per-item)",
-                            repr(multi_exc)[:200],
-                        )
-
-                    parsed_items: list[dict[str, Any]] = []
-                    if raw_multi:
-                        logger.info("Gemma unified raw_multi (len=%d): %s", len(raw_multi), raw_multi[:300])
-                        parsed_json = _extract_json(raw_multi)
-                        if isinstance(parsed_json, list):
-                            parsed_items = parsed_json
-                        elif isinstance(parsed_json, dict) and isinstance(parsed_json.get("items"), list):
-                            parsed_items = parsed_json["items"]
-                        elif isinstance(parsed_json, dict) and "category" in parsed_json:
-                            parsed_items = [parsed_json]
-
-                        if not parsed_items or len(parsed_items) < len(flat_crops):
-                            scanned_objs, _ = _scan_complete_json_objects(raw_multi)
-                            if len(scanned_objs) > len(parsed_items):
-                                parsed_items = scanned_objs
-
-                        for p_it in parsed_items:
-                            if isinstance(p_it, dict):
-                                if not p_it.get("title") and p_it.get("name"):
-                                    p_it["title"] = p_it["name"]
-                                elif not p_it.get("name") and p_it.get("title"):
-                                    p_it["name"] = p_it["title"]
-
-                    slot_crop_list_all = list(enumerate(flat_crops))
-                    aligned_crop_items = _align_analyses_to_crops(slot_crop_list_all, parsed_items)
-
-                    # Strict 3-Tier Hierarchy:
-                    # Pass 1: Scan all items and detections per photo (image_idx) to determine human model gender.
-                    photo_model_genders: dict[int, str] = {}
-                    from collections import defaultdict
-                    photo_fem_cues: dict[int, list[str]] = defaultdict(list)
-                    photo_masc_cues: dict[int, list[str]] = defaultdict(list)
-                    photo_has_model: dict[int, bool] = defaultdict(bool)
-
-                    for slot_idx, (image_idx, det, c_bytes, c_mime), item_raw in aligned_crop_items:
-                        has_human = bool(
-                            det.get("has_human_head")
-                            or det.get("has_human_skin")
-                            or det.get("_photo_model_gender") in ("women", "men")
-                        )
-                        if has_human:
-                            photo_has_model[image_idx] = True
-
-                        if det.get("_photo_model_gender") == "women":
-                            photo_fem_cues[image_idx].append("det_women")
-                        elif det.get("_photo_model_gender") == "men":
-                            photo_masc_cues[image_idx].append("det_men")
-
-                        item_dict = item_raw or {}
-                        mg = item_dict.get("model_gender")
-                        g = item_dict.get("gender")
-                        cat = item_dict.get("category") or det.get("category")
-                        sub = item_dict.get("sub_category") or det.get("label")
-                        itype = item_dict.get("item_type")
-                        name = item_dict.get("name")
-                        title = item_dict.get("title") or ""
-                        caption = item_dict.get("caption") or ""
-                        pattern = item_dict.get("pattern")
-                        full_txt = f"{title} {caption} {name or ''}".lower()
-
-                        if mg == "women" or g == "women":
-                            photo_fem_cues[image_idx].append(f"item_{slot_idx}_women")
-                        elif mg == "men":
-                            photo_masc_cues[image_idx].append(f"item_{slot_idx}_men")
-
-                        if is_distinctly_feminine_garment(cat, sub, itype, name=name, full_text=full_txt, pattern=pattern):
-                            photo_fem_cues[image_idx].append(f"item_{slot_idx}_fem_cut")
-                        elif is_distinctly_masculine_garment(cat, sub, itype):
-                            photo_masc_cues[image_idx].append(f"item_{slot_idx}_masc_cut")
-
-                    all_img_indices = set(idx for idx, _, _, _ in flat_crops)
-                    for img_i in all_img_indices:
-                        if photo_has_model.get(img_i):
-                            # Any feminine cue on a human model anchors the entire outfit to women
-                            if photo_fem_cues.get(img_i):
-                                photo_model_genders[img_i] = "women"
-                            elif photo_masc_cues.get(img_i):
-                                photo_model_genders[img_i] = "men"
-
-                    for slot_idx, (image_idx, det, c_bytes, c_mime), item_raw in aligned_crop_items:
-                        assembled = dict(item_raw) if item_raw else {}
-                        item_mg = photo_model_genders.get(image_idx) or det.get("_photo_model_gender")
-
-                        if not assembled or len(assembled) < 2:
-                            logger.warning(
-                                "Slot %d missing from multi-garment output — falling back to per-item.", slot_idx,
-                            )
-                            try:
-                                raw_crop = det.get("_raw_image_bytes") or c_bytes
-                                gem_analysis = await self.analyze(
-                                    raw_crop, language=language, think=False, provider="gemini", user_gender=item_mg or eff_gender,
-                                )
-                                if isinstance(gem_analysis, dict) and gem_analysis:
-                                    assembled = gem_analysis
-                            except Exception as gem_exc:
-                                logger.error("Gemini fallback also failed for slot %d: %s", slot_idx, gem_exc)
-
-                        if not assembled.get("category"):
-                            assembled["category"] = (det.get("category") or det.get("kind") or "Top").capitalize()
-                        if not assembled.get("sub_category") and not assembled.get("item_type"):
-                            fallback_type = (det.get("label") or det.get("kind") or "garment").lower()
-                            assembled["item_type"] = fallback_type
-                            assembled["sub_category"] = fallback_type.capitalize()
-                        if not assembled.get("title") and (det.get("label") or det.get("kind")):
-                            assembled["title"] = (det.get("label") or det.get("kind")).capitalize()
-
-                        if item_mg in ("men", "women"):
-                            assembled["model_gender"] = item_mg
-                            assembled["gender"] = item_mg
-
-                        # Fill auxiliary fields with robust taxonomy defaults so zero tokens are wasted on them
-                        assembled.setdefault("condition", "used")
-                        assembled.setdefault("quality_tier", "good")
-                        assembled.setdefault("price_tier", "mid")
-                        assembled.setdefault("fit_style", "regular")
-                        assembled.setdefault("clothing_condition", "Good")
-                        if not assembled.get("fabric_materials"):
-                            cat_k = (assembled.get("category") or "").lower()
-                            sub_k = (assembled.get("sub_category") or "").lower()
-                            if cat_k == "footwear":
-                                assembled["fabric_materials"] = [{"name": "Leather", "pct": 70}, {"name": "Rubber", "pct": 30}]
-                            elif "jeans" in sub_k or "denim" in sub_k:
-                                assembled["fabric_materials"] = [{"name": "Cotton", "pct": 98}, {"name": "Elastane", "pct": 2}]
-                            elif "sweat" in sub_k or "jogger" in sub_k or "pant" in sub_k:
-                                assembled["fabric_materials"] = [{"name": "Cotton", "pct": 80}, {"name": "Polyester", "pct": 20}]
-                            else:
-                                assembled["fabric_materials"] = [{"name": "Cotton", "pct": 100}]
-                        if not assembled.get("care_instructions"):
-                            assembled["care_instructions"] = ["Machine wash cold", "Line dry"]
-
-                        analysis = _coerce_single_garment(assembled, user_gender=eff_gender, model_gender=item_mg, language=language)
-                        if not analysis.get("title") and analysis.get("name"):
-                            analysis["title"] = analysis["name"]
-                        if not analysis.get("title"):
-                            analysis["title"] = "Unnamed garment"
-                        analysis = _coerce_enums(analysis, user_gender=eff_gender, model_gender=item_mg)
-                        if item_mg in ("men", "women"):
-                            analysis["gender"] = item_mg
-                        _enforce_segformer_category(
-                            analysis,
-                            segformer_kind=det.get("kind") or det.get("category"),
-                            label=det.get("label"),
-                            is_single_item=det.get("is_single_item", False),
-                            language=language,
-                        )
-                        analysis["provider_used"] = assembled.get("provider_used", "gemma")
-                        analysis["model_used"] = assembled.get("model_used", "gemma-4-e2b-q4_k_m")
-
-                        if _is_unidentifiable(analysis):
-                            logger.info("analyze_outfits_stream: skipping unidentifiable/non-clothing item at slot %d (%s)", slot_idx, analysis.get("title"))
-                            yield {
-                                "type": "item_skip",
-                                "index": slot_idx,
-                                "image_index": image_idx,
-                                "reason": "non_clothing",
-                            }
-                            continue
-
-                        needs_reconstruction = False
-                        reasons: list[str] = []
-                        if should_reconstruct is not None:
-                            try:
-                                needs, raw_reasons = should_reconstruct(analysis, det.get("bbox"))
-                                if needs and _settings.DEFER_RECONSTRUCTION_ON_ANALYZE:
-                                    needs_reconstruction = True
-                                    reasons = list(raw_reasons)
-                            except Exception:
-                                pass
-
-                        yield {
-                            "type": "field",
-                            "index": slot_idx,
-                            "image_index": image_idx,
-                            "group": "category",
-                            "fields": {
-                                "category": analysis.get("category"),
-                                "sub_category": analysis.get("sub_category"),
-                                "item_type": analysis.get("item_type"),
-                                "title": analysis.get("title"),
-                            },
-                        }
-
-                        meta_crop = items_meta[slot_idx] if slot_idx < len(items_meta) else {}
-                        yield {
-                            "type": "item",
-                            "index": slot_idx,
-                            "image_index": image_idx,
-                            "analysis": analysis,
-                            "crop_base64": meta_crop.get("crop_base64"),
-                            "crop_mime": meta_crop.get("crop_mime", "image/png"),
-                            "label": analysis.get("sub_category") or analysis.get("item_type"),
-                            "needs_reconstruction": needs_reconstruction,
-                            "reconstruction_reasons": reasons,
-                        }
-                        emitted += 1
+                    emitted += 1
 
             else:
                 # ── Gemini batched path (single system prompt for whole batch) ──
@@ -3121,7 +2853,7 @@ class GarmentVisionService:
                     slot_idx = 0
                     image_idx, det, c_bytes, c_mime = flat_crops[0]
                     item_mg = det.get("_photo_model_gender")
-                    raw_for_vision = det.get("_raw_image_bytes") or c_bytes
+                    raw_for_vision = c_bytes
                     try:
                         analysis = await self.analyze(
                             raw_for_vision, language=language, think=False, user_gender=item_mg or eff_gender
@@ -3229,7 +2961,7 @@ class GarmentVisionService:
                     CHUNK_SIZE = max(30, len(flat_crops))
                     for chunk_start in range(0, len(flat_crops), CHUNK_SIZE):
                         chunk_crops = flat_crops[chunk_start : chunk_start + CHUNK_SIZE]
-                        chunk_bytes = [c[1].get("_raw_image_bytes") or c[2] for c in chunk_crops]
+                        chunk_bytes = [c[2] for c in chunk_crops]
                         chunk_hints = [
                             (c[1].get("kind") or c[1].get("category") or c[1].get("label"))
                             for c in chunk_crops
@@ -3270,7 +3002,7 @@ class GarmentVisionService:
                                     analysis.get("category") or analysis.get("sub_category") or analysis.get("item_type")
                                 ):
                                     try:
-                                        raw_fb = det.get("_raw_image_bytes") or c_bytes
+                                        raw_fb = c_bytes
                                         fb = await self.analyze(
                                             raw_fb, language=language, think=False, user_gender=item_mg or eff_gender
                                         )
@@ -3367,7 +3099,7 @@ class GarmentVisionService:
                                 slot_idx = chunk_start + local_i
                                 item_mg = det.get("_photo_model_gender")
                                 fallback_analysis = None
-                                raw_fb = det.get("_raw_image_bytes") or c_bytes
+                                raw_fb = c_bytes
                                 if is_quota and settings.EYES_GEMMA_SPACE_URL:
                                     try:
                                         fallback_analysis = await self.analyze(

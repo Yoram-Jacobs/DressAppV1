@@ -476,6 +476,43 @@ def _sanitize_sandals_and_footwear(res: dict[str, Any]) -> None:
         if str(res.get("dress_code", "")).lower() == "business":
             res["dress_code"] = "casual"
 
+    is_boot_cues = any(w in full_text for w in (
+        "boot", "boots", "מגפיים", "מגפונים", "ankle boot", "combat boot", "chelsea boot",
+        "lace-up boot", "lace-up", "laces", "lacing", "lug sole", "high top boot"
+    ))
+    if is_boot_cues and (cat_l == "footwear" or "shoe" in full_text or "loaf" in full_text):
+        res["category"] = "Footwear"
+        res["sub_category"] = "Boots"
+        if any(w in full_text for w in ("combat", "lug", "lace", "שרוכים", "רצועות")):
+            res["item_type"] = "Combat Boots"
+        elif any(w in full_text for w in ("chelsea", "elastic")):
+            res["item_type"] = "Chelsea Boots"
+        else:
+            res["item_type"] = "Ankle Boots"
+        for field in ("name", "title"):
+            val = res.get(field)
+            if isinstance(val, str) and any(w in val.lower() for w in ("loafer", "loafers", "לופר")):
+                cleaned = re.sub(r"(?i)\bloafers?\b", "Boots", val)
+                cleaned = re.sub(r"לופרים", "מגפיים", cleaned)
+                res[field] = cleaned.strip()
+
+
+def _sanitize_tshirt_and_tops(res: dict[str, Any]) -> None:
+    """Ensure crewneck and casual t-shirts are classified under T-Shirt, never Button-Down Shirt."""
+    cat_l = str(res.get("category") or "").strip().lower()
+    sub_l = str(res.get("sub_category") or "").strip().lower()
+    it_l = str(res.get("item_type") or "").strip().lower()
+    full_text = f"{res.get('name', '')} {res.get('title', '')} {res.get('caption', '')} {sub_l} {it_l}".lower()
+
+    is_tshirt_cues = any(w in full_text for w in (
+        "t-shirt", "t shirt", "tee", "crew neck t-shirt", "crewneck t-shirt", "חולצת טי", "חולצת טי עגולה",
+        "short sleeve crew", "crew neck tee"
+    ))
+    if is_tshirt_cues and not any(w in full_text for w in ("button-down", "button down", "collared", "מכופתר", "oxford")):
+        res["category"] = "Top"
+        res["sub_category"] = "T-Shirt"
+        res["item_type"] = "Crew-Neck T-Shirt" if "crew" in full_text or "עגול" in full_text else "Short-Sleeve T-Shirt"
+
 
 def _sanitize_sweatpants_and_trainer(res: dict[str, Any]) -> None:
     """Ensure footer/trainer/sweatpants are classified as Sweatpants/Joggers, not Wool Tailored Trousers."""
@@ -763,6 +800,7 @@ def _coerce_single_garment(
     _sanitize_sleeve_and_cut_for_non_tops(res)
     _sanitize_sandals_and_footwear(res)
     _sanitize_sweatpants_and_trainer(res)
+    _sanitize_tshirt_and_tops(res)
     cat_lower = (res.get("category") or "").strip().lower()
     sub_lower = (res.get("sub_category") or "").strip().lower()
     itype_lower = (res.get("item_type") or "").strip().lower()
@@ -967,47 +1005,100 @@ def _coerce_single_garment(
         if is_he:
             # Hebrew grammar: Noun first, followed by adjective (color/material) with proper gender agreement
             he_item_dict = {
+                # Tops
                 "printed skirt": "חצאית מודפסת",
                 "skirt": "חצאית",
+                "mini skirt": "חצאית מיני",
+                "midi skirt": "חצאית מידי",
+                "maxi skirt": "חצאית מקסי",
+                "crew-neck t-shirt": "חולצת טי עגולה",
+                "crew_neck_t_shirt": "חולצת טי עגולה",
+                "short-sleeve t-shirt": "חולצת טי",
+                "short_sleeve_t_shirt": "חולצת טי",
+                "t-shirt": "חולצת טי",
+                "v-neck t-shirt": "חולצת וי",
+                "polo shirt": "חולצת פולו",
+                "tank top": "גופייה",
+                "blouse": "בלוזה",
+                "shirt": "חולצה",
+                "button-down shirt": "חולצה מכופתרת",
+                "dress shirt": "חולצה מכופתרת",
                 "crew-neck sweater": "סוודר צווארון עגול",
                 "crew neck sweater": "סוודר צווארון עגול",
                 "sweater": "סוודר",
+                "pullover": "סוודר",
+                "cardigan": "קרדיגן",
+                "hoodie": "קפוצ'ון",
+                # Bottoms
                 "sweatpants": "מכנסי טרנינג",
                 "joggers": "מכנסי ג'וגר",
                 "pants": "מכנסיים",
                 "trousers": "מכנסיים",
+                "chinos": "מכנסי צ'ינו",
+                "shorts": "מכנסיים קצרים",
+                "bermuda shorts": "ברמודה",
                 "jeans": "ג'ינס",
-                "shirt": "חולצה",
-                "t-shirt": "חולצת טי",
-                "blouse": "בלוזה",
+                # Outerwear & Dresses
+                "jacket": "ג'קט",
+                "coat": "מעיל",
+                "dress": "שמלה",
+                # Footwear
                 "shoes": "נעליים",
                 "casual shoes": "נעלי קז'ואל",
                 "sneakers": "סניקרס",
                 "sandals": "סנדלים",
                 "boots": "מגפיים",
+                "ankle boots": "מגפונים",
+                "ankle_boots": "מגפונים",
+                "combat boots": "מגפיים",
+                "combat_boots": "מגפיים",
+                "chelsea boots": "מגפוני צ'לסי",
                 "loafers": "לופרים",
-                "hoodie": "קפוצ'ון",
-                "jacket": "ג'קט",
-                "coat": "מעיל",
-                "dress": "שמלה",
+                "flats": "נעליים שטוחות",
+                "heels": "נעלי עקב",
+                "clogs": "קבקבים",
+                "slides": "כפכפים",
+                # Bags & Accessories
+                "bag": "תיק",
+                "bags": "תיקים",
+                "handbag": "תיק יד",
+                "crossbody bag": "תיק צד",
+                "crossbody_bag": "תיק צד",
+                "tote bag": "תיק טוט",
+                "tote_bag": "תיק טוט",
+                "clutch": "תיק קלאץ'",
+                "belt": "חגורה",
+                "sunglasses": "משקפי שמש",
+                "hat": "כובע",
+                "scarf": "צעיף",
             }
             he_color_dict = {
                 "white": "לבן", "grey": "אפור", "gray": "אפור", "black": "שחור",
                 "blue": "כחול", "green": "ירוק", "yellow": "צהוב", "red": "אדום",
                 "brown": "חום", "beige": "בז'", "navy": "כחול נייבי", "pink": "ורוד",
-                "orange": "כתום", "purple": "סגול",
+                "orange": "כתום", "purple": "סגול", "olive": "זית",
             }
             noun_he = he_item_dict.get(itype.lower()) or he_item_dict.get(sub_str.lower())
             if not noun_he:
                 # If itype already contains Hebrew letters, strip any English words
                 he_words = [w for w in itype.split() if any("\u0590" <= ch <= "\u05ea" for ch in w)]
-                noun_he = " ".join(he_words) if he_words else "בגד"
+                noun_he = " ".join(he_words) if he_words else ("תיק" if "bag" in f"{itype} {sub_str}".lower() else "בגד")
 
             col_he = he_color_dict.get(color_name.lower(), color_name)
-            # Gender agreement for feminine nouns (ending in ה or ת)
-            is_fem = noun_he.endswith(("ה", "ת")) and not noun_he.endswith("ות")
-            if is_fem and col_he in ("ירוק", "לבן", "שחור", "אפור", "צהוב", "אדום", "חום", "כחול"):
-                col_he = col_he + "ה"
+            if col_he:
+                # Feminine singular (ends in ה or ת, but not dual/plural like נעליים / מגפיים)
+                is_fem_sing = noun_he.endswith(("ה", "ת")) and not noun_he.endswith("ות") and noun_he not in ("נעליים", "מגפיים", "סנדלים")
+                # Feminine plural / dual (ends in ות, or נעליים)
+                is_fem_plur = noun_he.endswith("ות") or noun_he in ("נעליים", "נעלי קז'ואל", "נעלי עקב", "נעליים שטוחות")
+                # Masculine plural (ends in ים, or specific footwear/bottoms)
+                is_masc_plur = noun_he.endswith("ים") or noun_he in ("מכנסיים", "מכנסי טרנינג", "מכנסי ג'וגר", "מכנסי צ'ינו", "מכנסיים קצרים", "לופרים", "סניקרס", "מגפיים", "מגפונים", "כפכפים", "קבקבים", "משקפי שמש")
+
+                if is_fem_sing and col_he in ("ירוק", "לבן", "שחור", "אפור", "צהוב", "אדום", "חום", "כחול"):
+                    col_he = col_he + "ה"
+                elif is_fem_plur and col_he in ("ירוק", "לבן", "שחור", "אפור", "צהוב", "אדום", "חום", "כחול"):
+                    col_he = col_he + "ות"
+                elif is_masc_plur and col_he in ("ירוק", "לבן", "שחור", "אפור", "צהוב", "אדום", "חום", "כחול"):
+                    col_he = col_he + "ים"
 
             parts = [p for p in [noun_he, col_he] if p]
             res["name"] = " ".join(parts)
@@ -1136,17 +1227,21 @@ def _coerce_single_garment(
             seen_canonical.add(ck)
             cleaned_tags.append(clean_t)
 
-    # If tags are missing or fewer than 3, supplement with relevant attributes
+    # If tags are missing or fewer than 3, supplement with relevant style/occasion attributes (NEVER colors)
+    color_words = {
+        "black", "white", "grey", "gray", "blue", "green", "red", "yellow", "brown", "beige", "navy", "pink", "orange", "purple", "olive",
+        "שחור", "לבן", "אפור", "כחול", "ירוק", "אדום", "צהוב", "חום", "בז'", "ורוד", "כתום", "סגול", "זית",
+        "שחורה", "לבנה", "אפורה", "כחולה", "ירוקה", "אדומה", "צהובה", "חומה", "ורודה", "כתומה", "סגולה",
+    }
+    # Filter any color words from existing raw tags
+    cleaned_tags = [t for t in cleaned_tags if t.strip().lower() not in color_words]
+
     if len(cleaned_tags) < 3:
         candidates = []
         if res.get("sub_category"):
             candidates.append(str(res["sub_category"]))
         if res.get("item_type") and str(res["item_type"]).lower() != str(res.get("sub_category", "")).lower():
             candidates.append(str(res["item_type"]))
-        if res.get("color"):
-            candidates.append(str(res["color"]))
-        elif res.get("colors") and isinstance(res["colors"], list) and res["colors"] and res["colors"][0].get("name"):
-            candidates.append(str(res["colors"][0]["name"]))
         if res.get("pattern") and str(res["pattern"]).lower() not in ("none", "other", "unknown", "solid"):
             candidates.append(str(res["pattern"]))
         if res.get("dress_code"):
@@ -1161,16 +1256,16 @@ def _coerce_single_garment(
 
         for cand in candidates:
             cand_str = cand.strip()
-            if not cand_str:
+            if not cand_str or cand_str.lower() in color_words:
                 continue
             ck = _canonical_tag_key(cand_str)
-            if ck and ck not in seen_canonical:
+            if ck and ck not in seen_canonical and ck not in color_words:
                 seen_canonical.add(ck)
                 cleaned_tags.append(cand_str)
-            if len(cleaned_tags) >= 6:
+            if len(cleaned_tags) >= 5:
                 break
 
-    res["tags"] = cleaned_tags[:6]
+    res["tags"] = cleaned_tags[:5]
 
     # Tag localization fallback for Hebrew output
     is_lang_he = (language or "").lower() in ("he", "iw") or any("\u0590" <= ch <= "\u05ea" for ch in f"{res.get('name', '')} {res.get('title', '')}")
@@ -1364,10 +1459,10 @@ def _coerce_seasons(parsed: dict[str, Any]) -> None:
     itype = (parsed.get("item_type") or "").strip().lower()
     txt = f"{cat_lower} {sub_lower} {itype} {parsed.get('name', '')} {parsed.get('title', '')} {parsed.get('caption', '')}".lower()
 
-    # Short-sleeve, cap-sleeve, or lightweight tops must be summer wear, NEVER "all"
+    # Lightweight items, shorts, skirts, or summer wear must NEVER be "all"
     if not seasons or seasons == ["all"]:
-        if any(w in txt for w in ("short sleeve", "short-sleeve", "cap sleeve", "cap-sleeve", "sleeveless", "tank", "swim", "sandal", "linen", "shorts", "sundress", "blouse", "בלוזה", "קיץ", "קצר")):
-            seasons = ["summer"]
+        if any(w in txt for w in ("short sleeve", "short-sleeve", "cap sleeve", "cap-sleeve", "sleeveless", "tank", "swim", "sandal", "linen", "shorts", "skirt", "חצאית", "mini", "crop", "sundress", "blouse", "בלוזה", "קיץ", "קצר")):
+            seasons = ["summer", "spring"]
         elif any(w in txt for w in ("coat", "jacket", "outerwear", "boot", "wool", "sweater", "cardigan", "scarf", "parka", "overcoat", "puffer", "down", "fleece", "חורף", "מעיל", "סוודר")):
             seasons = ["fall", "winter"]
         elif not seasons:

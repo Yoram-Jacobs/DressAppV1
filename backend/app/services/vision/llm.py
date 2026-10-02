@@ -142,10 +142,10 @@ async def _call_gemma_space(
 
 SYSTEM_PROMPT = (
     "Output raw JSON only ({...} or [{...}]). No markdown/intro.\n"
-    "• sub_category: Specific cut ('Shirt','Sweater','Jeans','Pants','Skirt','Shoes','Sneakers','Sandals','Boots','Loafers','Heels','Flats','Sunglasses','Bags'). Never generic 'Top'/'Bottom'/'Footwear'.\n"
+    "• sub_category: Specific cut ('T-Shirt','Sweater','Button-Down Shirt','Blouse','Jeans','Pants','Skirt','Shoes','Sneakers','Sandals','Boots','Loafers','Heels','Flats','Sunglasses','Handbag','Crossbody Bag'). Never generic 'Top'/'Bottom'/'Footwear'.\n"
     "• Bottoms: 'Jeans'=denim rivets. Chinos -> sub_category:'Pants', item_type:'Chinos', dress_code:'smart-casual'. Sweatpants/joggers -> sub_category:'Pants', item_type:'Sweatpants'|'Joggers', dress_code:'casual'|'athletic' (never 'Wool'/'Business').\n"
-    "• Footwear: 'Shoes' (oxfords/monk straps/derbies/brogues), 'Sneakers' (trainers), 'Sandals' (open-toe/strappy), 'Loafers', 'Boots' (ankle/knee-high only), 'Heels', 'Flats', 'Slides'. Never classify monk straps/oxfords as 'Boots'!\n"
-    "• Accessories: 'Sunglasses','Bags','Belts','Headwear','Scarves & Wraps','Jewelry'. Attached hoods/collars belong to garment. Non-wearables (bottles, phones) -> is_clothing:false.\n"
+    "• Footwear: 'Shoes' (oxfords/monk straps/derbies/brogues), 'Sneakers' (trainers), 'Sandals' (open-toe/strappy), 'Loafers', 'Boots' (combat/lace-up/ankle/knee-high). Laced/ankle/combat footwear are 'Boots' (never 'Loafers'). Low dress shoes are 'Shoes' (never 'Boots').\n"
+    "• Accessories: 'Sunglasses','Handbag','Crossbody Bag','Tote Bag','Belts','Headwear','Scarves & Wraps','Jewelry'. Attached hoods/collars belong to garment. Non-wearables (bottles, phones) -> is_clothing:false.\n"
     "• item_type: Detailed cut ('Crew-Neck T-Shirt','Chinos','Straight Jeans','Sweatpants','Double Monk Strap Shoes','Open-Toe Sandals','Classic Sunglasses'). Differ from sub_category.\n"
     "• caption: <=12 words. Natural fluent sentence in requested language. End with period. Never output brackets or comma lists.\n"
     "• dress_code: 'casual'|'smart-casual'|'business'|'formal'|'athletic'|'loungewear'. Suits='business'; shirts='smart-casual'; tuxedos='formal'; sweatpants='athletic'; sleepwear='loungewear'.\n"
@@ -155,7 +155,7 @@ SYSTEM_PROMPT = (
     "• fabric_materials: [{\"name\": str, \"pct\": int}] summing to 100. tags: [str] (3-4 unique tags, never duplicate sub_category).\n"
     "• pattern: 'solid'|'printed'|'geometric'|'striped'|'plaid'|'floral'.\n"
     "• text/logos: Read accurately ('American Eagle'=eagle/עיט, not deer/אייל).\n"
-    "• season: ['spring'|'summer'|'fall'|'winter'|'all']. Linen/sandals=['summer']; wool/down=['fall','winter'].\n"
+    "• season: ['spring'|'summer'|'fall'|'winter']. Skirts/shorts/sandals=['summer','spring']. Sweaters/coats/boots=['fall','winter']. Basics=['spring','summer','fall','winter']. Avoid 'all' unless truly seasonless.\n"
     "• Quality & Repair: Only emit 'reconstruction_prompt' if image_quality_status != 'complete'. Set null if complete."
 )
 
@@ -899,8 +899,7 @@ async def call_gemma_space_stream_attributes(
             "required": [
                 "is_clothing", "name", "category", "sub_category", "item_type",
                 "colors", "pattern", "gender", "dress_code", "season",
-                "fabric_materials", "state", "condition", "quality",
-                "price_cents", "caption",
+                "fabric_materials", "tags", "caption",
             ],
             "additionalProperties": False,
         }
@@ -911,7 +910,7 @@ async def call_gemma_space_stream_attributes(
                 system_prompt=system_prompt,
                 user_text=user_text,
                 image_b64_jpeg=image_b64_jpeg,
-                max_tokens=700,
+                max_tokens=320,
                 temperature=0.0,
                 timeout=timeout_single,
                 json_schema=full_schema,

@@ -2560,7 +2560,12 @@
       "sneakers": "Sneakers",
       "flats": "Scarpe basse / Ballerine",
       "heels": "Tacchi",
-      "slippers": "Pantofole"
+      "slippers": "Pantofole",
+      "printed_skirt": "Gonna stampata",
+      "skirt": "Gonna",
+      "sweater": "Maglione",
+      "sweatpants": "Pantaloni della tuta",
+      "joggers": "Joggers"
     },
     "color": {
       "black": "Nero",

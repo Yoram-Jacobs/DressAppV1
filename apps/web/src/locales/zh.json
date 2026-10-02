@@ -2560,7 +2560,12 @@
       "sneakers": "运动鞋 / 帆布鞋",
       "flats": "平底鞋 / 芭蕾鞋",
       "heels": "高跟鞋",
-      "slippers": "居家拖鞋"
+      "slippers": "居家拖鞋",
+      "printed_skirt": "印花裙",
+      "skirt": "裙子",
+      "sweater": "毛衣",
+      "sweatpants": "运动裤",
+      "joggers": "慢跑裤"
     },
     "color": {
       "black": "黑色",

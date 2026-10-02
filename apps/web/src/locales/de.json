@@ -2553,7 +2553,12 @@
       "sneakers": "Sneaker",
       "flats": "Flache Schuhe",
       "heels": "Pumps & Absätze",
-      "slippers": "Hausschuhe"
+      "slippers": "Hausschuhe",
+      "printed_skirt": "Bedruckter Rock",
+      "skirt": "Rock",
+      "sweater": "Pullover",
+      "sweatpants": "Jogginghose",
+      "joggers": "Jogger"
     },
     "color": {
       "black": "Schwarz",

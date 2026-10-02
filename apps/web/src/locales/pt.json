@@ -2560,7 +2560,12 @@
       "sneakers": "Tênis",
       "flats": "Sapatilhas / Sapatos baixos",
       "heels": "Saltos",
-      "slippers": "Pantufas"
+      "slippers": "Pantufas",
+      "printed_skirt": "Saia estampada",
+      "skirt": "Saia",
+      "sweater": "Suéter",
+      "sweatpants": "Calça de moletom",
+      "joggers": "Joggers"
     },
     "color": {
       "black": "Preto",

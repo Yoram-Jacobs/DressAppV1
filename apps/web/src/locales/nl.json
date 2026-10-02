@@ -2560,7 +2560,12 @@
       "sneakers": "Sneakers",
       "flats": "Platte schoenen / Ballerina's",
       "heels": "Hakken",
-      "slippers": "Pantoffels"
+      "slippers": "Pantoffels",
+      "printed_skirt": "Bedrukte rok",
+      "skirt": "Rok",
+      "sweater": "Trui",
+      "sweatpants": "Joggingbroek",
+      "joggers": "Joggers"
     },
     "color": {
       "black": "Zwart",
