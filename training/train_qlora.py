@@ -140,7 +140,15 @@ def parse_args() -> argparse.Namespace:
         action="store_true",
         help="Execute dry-run to test dataset processing and mock output without GPU",
     )
-    return parser.parse_args()
+    parsed = parser.parse_args()
+    if not parsed.dataset_path or parsed.dataset_path == "training/datasets/sample_garment_vision.jsonl":
+        curated_p = Path("training/datasets/garment_vision_curated.jsonl")
+        spec_p = Path(f"training/datasets/{parsed.adapter_name}.jsonl")
+        if parsed.adapter_name == "garment_vision" and curated_p.exists():
+            parsed.dataset_path = str(curated_p)
+        elif spec_p.exists():
+            parsed.dataset_path = str(spec_p)
+    return parsed
 
 
 def create_dry_run_artifacts(output_dir: Path, base_model: str, adapter_name: str) -> Dict[str, Any]:

@@ -8,12 +8,13 @@ on:
         required: true
         type: choice
         options:
+          - 'all'
           - 'garment_vision'
           - 'trend_scout'
           - 'stylist_chat'
           - 'suitcase'
           - 'scheduled_outfit'
-        default: 'garment_vision'
+        default: 'all'
       epochs:
         description: 'Number of Training Epochs'
         required: false
@@ -58,7 +59,7 @@ jobs:
   train-and-deploy:
     name: Headless QLoRA (${{ inputs.adapter_name }})
     runs-on: ubuntu-latest
-    timeout-minutes: 90
+    timeout-minutes: 180
 
     steps:
       - name: Checkout Repository
@@ -86,15 +87,32 @@ jobs:
             DRY_RUN_FLAG="--dry_run"
           fi
 
-          python training/runpod_driver.py \
-            --adapter_name "${{ inputs.adapter_name }}" \
-            --epochs "${{ inputs.epochs }}" \
-            --batch_size "${{ inputs.batch_size }}" \
-            --learning_rate "${{ inputs.learning_rate }}" \
-            --gpu_type "${{ inputs.gpu_type }}" \
-            --dataset_path "training/datasets/sample_garment_vision.jsonl" \
-            --hf_repo "Yoram-Jacobs/dressapp-${{ inputs.adapter_name }}-adapter" \
-            $DRY_RUN_FLAG
+          if [ "${{ inputs.adapter_name }}" = "all" ]; then
+            ADAPTERS=("garment_vision" "trend_scout" "stylist_chat" "suitcase" "scheduled_outfit")
+          else
+            ADAPTERS=("${{ inputs.adapter_name }}")
+          fi
+
+          for ADAPTER in "${ADAPTERS[@]}"; do
+            echo "================================================================="
+            echo "🚀 Training QLoRA adapter: $ADAPTER"
+            echo "================================================================="
+
+            DATASET_PATH="training/datasets/${ADAPTER}.jsonl"
+            if [ "$ADAPTER" = "garment_vision" ]; then
+              DATASET_PATH="training/datasets/garment_vision_curated.jsonl"
+            fi
+
+            python training/runpod_driver.py \
+              --adapter_name "$ADAPTER" \
+              --epochs "${{ inputs.epochs }}" \
+              --batch_size "${{ inputs.batch_size }}" \
+              --learning_rate "${{ inputs.learning_rate }}" \
+              --gpu_type "${{ inputs.gpu_type }}" \
+              --dataset_path "$DATASET_PATH" \
+              --hf_repo "Yoram-Jacobs/dressapp-${ADAPTER}-adapter" \
+              $DRY_RUN_FLAG
+          done
 
       - name: Zero-Downtime VPS Deployment via SSH
         if: ${{ inputs.deploy_vps == true && !cancelled() && steps.runpod-training.outcome == 'success' }}
@@ -121,17 +139,35 @@ jobs:
           echo "Testing SSH connectivity to Hetzner VPS ($VPS_HOST)..."
           $SSH_CMD ${VPS_USER}@${VPS_HOST} "echo 'Connected successfully to Hetzner VPS host: ' \$(hostname)"
 
-          echo "Triggering zero-downtime adapter sync & reload on VPS..."
-          $SSH_CMD ${VPS_USER}@${VPS_HOST} "
-            set -eo pipefail
-            DEPLOY_SCRIPT=\"/srv/AI-Stylist/deploy/reload_eyes_adapters.sh\"
-            if [ ! -f \"\$DEPLOY_SCRIPT\" ]; then
-              cd /srv/AI-Stylist && git pull origin main
+          if [ "${{ inputs.adapter_name }}" = "all" ]; then
+            ADAPTERS=("garment_vision" "trend_scout" "stylist_chat" "suitcase" "scheduled_outfit")
+          else
+            ADAPTERS=("${{ inputs.adapter_name }}")
+          fi
+
+          $SSH_CMD ${VPS_USER}@${VPS_HOST} "mkdir -p /srv/AI-Stylist/eyes_gguf/adapters"
+
+          for ADAPTER in "${ADAPTERS[@]}"; do
+            GGUF_LOCAL="artifacts/${ADAPTER}/${ADAPTER}.gguf"
+            if [ -f "$GGUF_LOCAL" ]; then
+              echo "Transferring $ADAPTER GGUF adapter from runner artifacts to VPS..."
+              scp -i ~/.ssh/deploy_key -o IdentitiesOnly=yes -o StrictHostKeyChecking=accept-new -o BatchMode=yes \
+                "$GGUF_LOCAL" \
+                ${VPS_USER}@${VPS_HOST}:/srv/AI-Stylist/eyes_gguf/adapters/${ADAPTER}.gguf
             fi
-            chmod +x \"\$DEPLOY_SCRIPT\"
-            bash \"\$DEPLOY_SCRIPT\" \
-              --adapter \"${{ inputs.adapter_name }}\" \
-              --repo \"Yoram-Jacobs/dressapp-${{ inputs.adapter_name }}-adapter\" \
-              --adapters-dir \"/opt/dressApp/adapters\" \
-              --token \"${HF_TOKEN}\"
-          "
+
+            echo "Triggering zero-downtime adapter sync & reload on VPS for $ADAPTER..."
+            $SSH_CMD ${VPS_USER}@${VPS_HOST} "
+              set -eo pipefail
+              DEPLOY_SCRIPT=\"/srv/AI-Stylist/deploy/reload_eyes_adapters.sh\"
+              if [ ! -f \"\$DEPLOY_SCRIPT\" ]; then
+                cd /srv/AI-Stylist && git pull origin main
+              fi
+              chmod +x \"\$DEPLOY_SCRIPT\"
+              bash \"\$DEPLOY_SCRIPT\" \
+                --adapter \"${ADAPTER}\" \
+                --repo \"Yoram-Jacobs/dressapp-${ADAPTER}-adapter\" \
+                --adapters-dir \"/srv/AI-Stylist/eyes_v4_adapter\" \
+                --token \"${HF_TOKEN}\"
+            "
+          done

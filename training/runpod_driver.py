@@ -137,7 +137,15 @@ def parse_args() -> argparse.Namespace:
         default="output_adapters",
         help="Local directory to download trained adapter weights",
     )
-    return parser.parse_args()
+    parsed = parser.parse_args()
+    if not parsed.dataset_path or parsed.dataset_path == "training/datasets/sample_garment_vision.jsonl":
+        curated_p = Path("training/datasets/garment_vision_curated.jsonl")
+        spec_p = Path(f"training/datasets/{parsed.adapter_name}.jsonl")
+        if parsed.adapter_name == "garment_vision" and curated_p.exists():
+            parsed.dataset_path = str(curated_p)
+        elif spec_p.exists():
+            parsed.dataset_path = str(spec_p)
+    return parsed
 
 
 def execute_dry_run(args: argparse.Namespace) -> Dict[str, Any]:
@@ -357,6 +365,19 @@ def run_pod_training(args: argparse.Namespace) -> Dict[str, Any]:
             raise RuntimeError(f"Training script terminated with non-zero exit code {exit_code}")
 
         logger.info("Remote training finished successfully.")
+
+        # Convert trained adapter to GGUF format for llama-server
+        logger.info("Converting trained adapter to GGUF format on remote pod...")
+        convert_cmd = (
+            "git clone --depth 1 https://github.com/ggml-org/llama.cpp.git /workspace/llama.cpp 2>/dev/null || true; "
+            "pip install --no-cache-dir gguf 2>/dev/null || true; "
+            f"python3 /workspace/llama.cpp/convert_lora_to_gguf.py --outtype bf16 --outfile /workspace/adapter_out/{args.adapter_name}.gguf /workspace/adapter_out || true"
+        )
+        _, stdout, stderr = ssh_client.exec_command(convert_cmd, get_pty=True)
+        for line in iter(stdout.readline, ""):
+            if line:
+                logger.info("[Remote GGUF Conversion] %s", line.strip())
+        _ = stdout.channel.recv_exit_status()
 
         # Download adapter artifacts locally using compressed archive
         local_adapter_dir = Path(args.output_dir) / args.adapter_name

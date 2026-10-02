@@ -182,3 +182,37 @@ def test_japanese_classic_handbag_sanitization():
     assert res["name"] == "クラシックハンドバッグ"
     assert res["item_type"] == "ハンドバッグ"
 
+
+def test_foreign_token_bleed_sanitization():
+    from app.services.vision.validation import _coerce_single_garment
+    raw = {
+        "name": "מגפונים חום",
+        "title": "מגפונים חום",
+        "caption": "מגפיים 길 색 עם מראה עסקי.",
+        "category": "Footwear",
+        "sub_category": "Boots",
+        "item_type": "Ankle Boots",
+        "tags": ["מגפיים", "길 색", "עור"],
+    }
+    sanitized = _coerce_single_garment(raw, language="he")
+    assert "길" not in sanitized["caption"]
+    assert "색" not in sanitized["caption"]
+    assert sanitized["caption"] == "מגפיים עם מראה עסקי."
+    assert "길 색" not in sanitized["tags"]
+
+
+def test_sunglasses_not_overridden_to_bag():
+    from app.services.vision.validation import _enforce_segformer_category
+    analysis = {
+        "name": "Classic Sunglasses",
+        "title": "Classic Sunglasses",
+        "caption": "Dark polarized sunglasses for summer.",
+        "category": "Accessories",
+        "sub_category": "Sunglasses",
+        "item_type": "Classic Sunglasses",
+    }
+    res = _enforce_segformer_category(analysis, segformer_kind="accessory", label="bag")
+    assert res["category"] == "Accessories"
+    assert res["sub_category"] == "Sunglasses"
+    assert res["item_type"] == "Classic Sunglasses"
+

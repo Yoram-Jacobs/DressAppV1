@@ -21,6 +21,8 @@ async def _call_gemma_space(
     json_schema: dict[str, Any] | None = None,
     think: bool = False,
     id_slot: int | None = None,
+    model: str = "garment_vision",
+    adapter: str | None = None,
 ) -> str:
     """Phase O.3 — call the self-hosted Gemma-4 E2B/E4B HF Space.
 
@@ -47,6 +49,8 @@ async def _call_gemma_space(
     
     # Build the payload in OpenAI-compatible format for the eyes proxy
     payload: dict[str, Any] = {
+        "model": model,
+        "adapter": adapter or model,
         "messages": messages,
         "max_tokens": min(int(max_tokens), 4096),
         "temperature": float(temperature),
@@ -844,15 +848,23 @@ async def call_gemma_space_stream_attributes(
                         prop["enum"] = ["Accessories"]
 
                 if name == "sub_category":
-                    if "skirt" in lbl_low:
+                    if "sunglass" in lbl_low or "glass" in lbl_low:
+                        prop["enum"] = [
+                            "Sunglasses", "Glasses", "Eyewear", "Classic Sunglasses", "non-clothing",
+                        ]
+                    elif "skirt" in lbl_low:
                         prop["enum"] = [
                             "Skirt", "Midi Skirt", "Pleated Skirt", "A-Line Skirt", "Mini Skirt", "Maxi Skirt", "Pencil Skirt",
                         ]
                     elif "bag" in lbl_low or segformer_category == "bag":
-                        prop["enum"] = [
+                        base_bag_enums = [
                             "Bag", "Handbag", "Tote Bag", "Crossbody Bag", "Shoulder Bag",
                             "Backpack", "Clutch", "Wicker Bag", "Basket Bag", "non-clothing",
                         ]
+                        if is_single_item:
+                            # Standalone accessories on tables can be mislabeled as Bag by SegFormer; allow eyewear
+                            base_bag_enums.extend(["Sunglasses", "Glasses", "Belts"])
+                        prop["enum"] = base_bag_enums
                     elif ("shoe" in lbl_low or segformer_category == "footwear") and "boot" not in lbl_low:
                         prop["enum"] = [
                             "Sneakers", "Shoes", "Loafers", "Flats", "Heels", "Sandals", "Boots", "non-clothing",

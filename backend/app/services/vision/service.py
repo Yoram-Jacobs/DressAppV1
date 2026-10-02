@@ -765,7 +765,8 @@ class GarmentVisionService:
 
         raw: str | None = None
         used_provider: str = resolved
-        used_model: str = model or self.model
+        gemma_model = model if (model and "gemini" not in model.lower()) else "garment_vision"
+        used_model: str = gemma_model if resolved in ("gemma", "dressapp") else (model or self.model)
         used_fallback: bool = False
         fallback_reason: str | None = None
 
@@ -784,6 +785,7 @@ class GarmentVisionService:
                     timeout=settings.EYES_GEMMA_TIMEOUT_S,
                     json_schema=EYES_JSON_SCHEMA,
                     think=think,
+                    model=gemma_model,
                 )
                 provider_activity.record(
                     "garment-vision",
@@ -791,12 +793,12 @@ class GarmentVisionService:
                     latency_ms=int((time.perf_counter() - t0) * 1000),
                     extra={
                         "provider": "gemma",
-                        "model": "gemma-4-e2b-q4_k_m",
+                        "model": gemma_model,
                         "routing_source": routing_source,
                     },
                 )
                 used_provider = "gemma"
-                used_model = "gemma-4-e2b-q4_k_m"
+                used_model = gemma_model
             except Exception as exc:  # noqa: BLE001
                 provider_activity.record(
                     "garment-vision",
@@ -810,7 +812,7 @@ class GarmentVisionService:
                     },
                 )
                 logger.warning(
-                    "Gemma Space unavailable (%s) \u2014 falling back to Gemini.",
+                    "Gemma Space unavailable (%s) — falling back to Gemini.",
                     repr(exc)[:200],
                 )
                 used_fallback = True
@@ -818,8 +820,6 @@ class GarmentVisionService:
                 resolved = "gemini"
                 raw = None  # cascade into the Gemini branch below
 
-        # 3) Gemini path (toggle says gemini, OR Gemma path failed and
-        #    cascaded down here, OR gemma was selected but no Space URL
         # 3) Gemini path (toggle says gemini, OR Gemma path failed and
         #    cascaded down here, OR gemma was selected but no Space URL
         #    is configured on this pod).
@@ -835,9 +835,10 @@ class GarmentVisionService:
                         timeout=settings.EYES_GEMMA_TIMEOUT_S,
                         json_schema=EYES_JSON_SCHEMA,
                         think=think,
+                        model=model or self.model or "garment_vision",
                     )
                     used_provider = "gemma"
-                    used_model = "gemma-4-e2b-q4_k_m"
+                    used_model = model or self.model or "garment_vision"
                 else:
                     raise RuntimeError(
                         "Gemini Eyes path requires GEMINI_API_KEY to be set "
@@ -880,9 +881,10 @@ class GarmentVisionService:
                             timeout=settings.EYES_GEMMA_TIMEOUT_S,
                             json_schema=EYES_JSON_SCHEMA,
                             think=think,
+                            model=model or self.model or "garment_vision",
                         )
                         used_provider = "gemma"
-                        used_model = "gemma-4-e2b-q4_k_m"
+                        used_model = model or self.model or "garment_vision"
                         used_fallback = True
                         fallback_reason = repr(exc)[:200]
                         ok = True

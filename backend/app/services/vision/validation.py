@@ -441,6 +441,41 @@ def _sanitize_sleeve_and_cut_for_non_tops(res: dict[str, Any]) -> None:
                 res["item_type"] = "Classic Sunglasses"
 
 
+def _sanitize_foreign_token_bleed(res: dict[str, Any], language: str | None = None) -> None:
+    """Strip CJK ideographs and Korean Hangul from non-Asian target languages.
+
+    Multilingual quantized models (like Gemma-4 Q3_K_M) occasionally leak
+    Korean/Chinese subwords into Hebrew, Arabic, or English text (e.g. '길 색').
+    """
+    lang = (language or "en").lower().strip()
+    if lang in ("zh", "ja", "ko"):
+        return
+
+    # Match Hangul syllables, Jamo, and CJK ideographs
+    foreign_pattern = re.compile(r"[\uac00-\ud7af\u1100-\u11ff\u3130-\u318f\u4e00-\u9fff\u3040-\u30ff]+")
+
+    for field in ("caption", "name", "title", "item_type", "sub_category", "brand", "cut"):
+        val = res.get(field)
+        if isinstance(val, str) and foreign_pattern.search(val):
+            cleaned = foreign_pattern.sub(" ", val)
+            cleaned = re.sub(r"\s{2,}", " ", cleaned).strip()
+            cleaned = re.sub(r"\s+([.,;:!?])", r"\1", cleaned)
+            res[field] = cleaned
+
+    tags = res.get("tags")
+    if isinstance(tags, list):
+        clean_tags = []
+        for t in tags:
+            if isinstance(t, str):
+                t_clean = foreign_pattern.sub(" ", t)
+                t_clean = re.sub(r"\s{2,}", " ", t_clean).strip()
+                if t_clean:
+                    clean_tags.append(t_clean)
+            else:
+                clean_tags.append(t)
+        res["tags"] = clean_tags
+
+
 def _sanitize_sandals_and_footwear(res: dict[str, Any]) -> None:
     """Ensure strappy/open-toe sandals are classified under Sandals, not Sneakers."""
     cat_l = str(res.get("category") or "").strip().lower()
@@ -580,6 +615,7 @@ def _coerce_single_garment(
     _sanitize_sleeve_and_cut_for_non_tops(res)
     _sanitize_sandals_and_footwear(res)
     _sanitize_sweatpants_and_trainer(res)
+    _sanitize_foreign_token_bleed(res, language=language)
 
     norm_model = resolve_garment_gender(model_gender)
     cat_lower = (res.get("category") or "").strip().lower()
@@ -2259,6 +2295,14 @@ def _enforce_segformer_category(
                 analysis["sub_category"] = "non-clothing"
                 analysis["item_type"] = "non-clothing"
                 analysis["title"] = "Non-clothing item"
+                return analysis
+
+            # Never coerce sunglasses/eyewear into Bag
+            if any(w in combined_item_txt for w in ("sunglass", "glasses", "shades", "eyewear", "משקפ", "משקפיים")):
+                analysis["category"] = "Accessories"
+                analysis["sub_category"] = "Sunglasses"
+                if not analysis.get("item_type") or str(analysis.get("item_type")).lower() in ("bag", "handbag", "shorts", "shirt", "t-shirt"):
+                    analysis["item_type"] = "Classic Sunglasses"
                 return analysis
 
             sub_low = (analysis.get("sub_category") or "").lower()

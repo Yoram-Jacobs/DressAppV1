@@ -203,8 +203,43 @@ def _peek_gguf_arch(path: Path) -> dict[str, Any]:
     return out
 
 
+# ---- Config (env, with defaults set in Dockerfile) ------------------
+ADAPTERS_DIR = MODEL_DIR / "adapters"
+
+
+def _discover_adapters() -> list[Path]:
+    """Discover all GGUF LoRA adapters in /models/adapters, /adapter, and /models."""
+    found: list[Path] = []
+    seen: set[str] = set()
+
+    search_dirs = [
+        ADAPTERS_DIR,
+        Path(os.environ.get("EYES_ADAPTERS_DIR", "/models/adapters")),
+        Path("/adapter"),
+    ]
+    for d in search_dirs:
+        if d.is_dir():
+            for p in sorted(d.glob("*.gguf")):
+                if p.is_file() and p.stat().st_size > 1024 and p.name not in seen:
+                    if "mmproj" not in p.name.lower() and p.name != MODEL_FILE:
+                        found.append(p)
+                        seen.add(p.name)
+
+    if MODEL_DIR.is_dir():
+        for p in sorted(MODEL_DIR.glob("*lora*.gguf")):
+            if p.is_file() and p.stat().st_size > 1024 and p.name not in seen:
+                found.append(p)
+                seen.add(p.name)
+
+    return found
+
+
 # ---- llama-server lifecycle ----------------------------------------
-def _build_llama_argv(model_path: Path, mmproj_path: Path | None) -> list[str]:
+def _build_llama_argv(
+    model_path: Path,
+    mmproj_path: Path | None,
+    adapter_paths: list[Path] | None = None,
+) -> list[str]:
     """Compose the llama-server command line.
 
     We bind to loopback only — the proxy is the only thing that talks
@@ -231,6 +266,7 @@ def _build_llama_argv(model_path: Path, mmproj_path: Path | None) -> list[str]:
       -fa              — flash-attention; meaningful speedup on CPU too.
       --no-warmup      — skip the synthetic warmup token; saves ~3 s
                           and the first real request will warm naturally.
+      --lora           — attaches one or more fine-tuned LoRA GGUF adapters.
     """
     # Gemma-4 requires thinking mode to process images. The reasoning-budget
     # controls whether the model generates reasoning steps (CoT) before the
@@ -260,6 +296,9 @@ def _build_llama_argv(model_path: Path, mmproj_path: Path | None) -> list[str]:
     ]
     if mmproj_path is not None:
         argv += ["--mmproj", str(mmproj_path)]
+    if adapter_paths:
+        for ap in adapter_paths:
+            argv += ["--lora", str(ap)]
     return argv
 
 
@@ -302,11 +341,13 @@ async def lifespan(_app: FastAPI):
 
     model_path = _ensure_model_present()
     mmproj_path = _ensure_mmproj_present()
+    adapter_paths = _discover_adapters()
 
     meta = _peek_gguf_arch(model_path)
     log.info("gguf metadata: %s", meta)
+    log.info("discovered adapters: %s", [str(p) for p in adapter_paths])
 
-    argv = _build_llama_argv(model_path, mmproj_path)
+    argv = _build_llama_argv(model_path, mmproj_path, adapter_paths)
     log.info("spawning: %s", " ".join(argv))
     # We deliberately let llama-server inherit stdout/stderr so its
     # log lines (token throughput, KV cache, etc.) show up next to
@@ -342,9 +383,20 @@ async def lifespan(_app: FastAPI):
     _app.state.gguf_metadata = meta
     _app.state.model_path = model_path
     _app.state.mmproj_path = mmproj_path
+    _app.state.adapter_paths = adapter_paths
+
+    lora_adapters = []
+    try:
+        r_lora = await client.get(f"{LLAMA_BASE_URL}/lora-adapters", timeout=5.0)
+        if r_lora.status_code == 200:
+            lora_adapters = r_lora.json()
+    except Exception as exc:
+        log.warning("could not query lora-adapters: %s", exc)
+    _app.state.lora_adapters = lora_adapters
+
     log.info(
-        "ready: model=%s vision=%s",
-        model_path.name, _app.state.vision_enabled,
+        "ready: model=%s vision=%s adapters=%s",
+        model_path.name, _app.state.vision_enabled, lora_adapters,
     )
 
     try:
@@ -409,6 +461,9 @@ class PredictIn(BaseModel):
     image_b64: str | None = None
     image_mime: str = "image/jpeg"
     id_slot: int | None = None
+    # Multi-LoRA adapter selection
+    model: str | None = None
+    adapter: str | None = None
 
 
 class PredictOut(BaseModel):
@@ -419,6 +474,7 @@ class PredictOut(BaseModel):
     elapsed_ms: int = 0
     vision_used: bool = False
     vision_disabled: bool = False
+    adapter_used: str | None = None
 
 
 # ---- Public endpoints ----------------------------------------------
@@ -426,19 +482,28 @@ class PredictOut(BaseModel):
 async def root() -> dict[str, Any]:
     return {
         "service": "dressapp-eyes",
-        "phase": "1",
+        "phase": "2-lora-gguf",
         "engine": "llama-server (built from llama.cpp HEAD)",
         "model": getattr(app.state, "model_basename", MODEL_FILE),
+        "adapters": getattr(app.state, "lora_adapters", []),
         "gguf_metadata": getattr(app.state, "gguf_metadata", {}),
         "vision_enabled": getattr(app.state, "vision_enabled", False),
         "auth_required": bool(API_TOKEN),
-        "endpoints": ["GET /", "GET /healthz", "POST /predict"],
+        "endpoints": [
+            "GET /",
+            "GET /healthz",
+            "POST /predict",
+            "GET /v1/adapters",
+            "POST /v1/adapters/reload",
+            "GET /lora-adapters",
+            "POST /lora-adapters",
+        ],
     }
 
 
-async def _ensure_llama_ready() -> None:
+async def _ensure_llama_ready(force_respawn: bool = False) -> None:
     proc = getattr(app.state, "llama_proc", None)
-    is_dead = proc is None or proc.returncode is not None
+    is_dead = proc is None or proc.returncode is not None or force_respawn
     client: httpx.AsyncClient | None = getattr(app.state, "client", None)
     if not is_dead and client is not None:
         try:
@@ -449,7 +514,7 @@ async def _ensure_llama_ready() -> None:
             is_dead = True
 
     if is_dead:
-        log.warning("llama-server is dead or unresponsive — auto-respawning...")
+        log.warning("llama-server is dead, unresponsive, or respawn requested — spawning...")
         lock = getattr(app.state, "lock", None)
         if lock is None:
             lock = asyncio.Lock()
@@ -462,22 +527,26 @@ async def _ensure_llama_ready() -> None:
                 client = httpx.AsyncClient(timeout=httpx.Timeout(300.0, connect=10.0))
                 app.state.client = client
             if proc is not None and proc.returncode is None:
-                try:
-                    r = await client.get(f"{LLAMA_BASE_URL}/health", timeout=2.0)
-                    if r.status_code == 200 and r.json().get("status") == "ok":
-                        return
-                except Exception:
-                    pass
+                if not force_respawn:
+                    try:
+                        r = await client.get(f"{LLAMA_BASE_URL}/health", timeout=2.0)
+                        if r.status_code == 200 and r.json().get("status") == "ok":
+                            return
+                    except Exception:
+                        pass
                 try:
                     os.killpg(proc.pid, signal.SIGKILL)
+                    await asyncio.wait_for(proc.wait(), timeout=3.0)
                 except Exception:
                     pass
+                await asyncio.sleep(1.0)
 
             model_path = getattr(app.state, "model_path", None) or _ensure_model_present()
             mmproj_path = getattr(app.state, "mmproj_path", None)
             if mmproj_path is None:
                 mmproj_path = _ensure_mmproj_present()
-            argv = _build_llama_argv(model_path, mmproj_path)
+            adapter_paths = _discover_adapters()
+            argv = _build_llama_argv(model_path, mmproj_path, adapter_paths)
             log.info("Respawning llama-server: %s", " ".join(argv))
             new_proc = await asyncio.create_subprocess_exec(
                 *argv,
@@ -486,8 +555,16 @@ async def _ensure_llama_ready() -> None:
             )
             app.state.llama_proc = new_proc
             app.state.loaded_at = time.time()
+            app.state.adapter_paths = adapter_paths
             await _wait_for_llama_ready(client)
-            log.info("llama-server respawned and verified healthy!")
+            # Update lora_adapters
+            try:
+                r_lora = await client.get(f"{LLAMA_BASE_URL}/lora-adapters", timeout=5.0)
+                if r_lora.status_code == 200:
+                    app.state.lora_adapters = r_lora.json()
+            except Exception:
+                pass
+            log.info("llama-server respawned and verified healthy! Adapters: %s", getattr(app.state, "lora_adapters", []))
 
 
 @app.get("/healthz")
@@ -499,6 +576,7 @@ async def healthz() -> dict[str, Any]:
     return {
         "status": "ok",
         "model": getattr(app.state, "model_basename", MODEL_FILE),
+        "adapters": getattr(app.state, "lora_adapters", []),
         "vision_enabled": getattr(app.state, "vision_enabled", False),
         "uptime_s": int(time.time() - getattr(app.state, "loaded_at", time.time())),
     }
@@ -628,7 +706,50 @@ async def predict(req: PredictIn) -> PredictOut:
 
     client: httpx.AsyncClient = app.state.client
     t0 = time.time()
+    active_adapter_name: str | None = None
     async with app.state.lock:
+        target_adapter = (req.adapter or req.model or "").strip()
+        loaded = getattr(app.state, "lora_adapters", [])
+        if loaded:
+            new_scales = []
+            target_lower = target_adapter.lower()
+            for item in loaded:
+                item_id = item.get("id")
+                item_path = item.get("path", "")
+                base_name = Path(item_path).stem.lower()
+                if target_lower in ("base", "none", "raw"):
+                    scale = 0.0
+                elif (
+                    target_lower in ("garment_vision", "default", "local", "")
+                    or "gemini" in target_lower
+                    or target_lower == base_name
+                    or target_lower in base_name
+                    or base_name in target_lower
+                ):
+                    scale = 1.0
+                    active_adapter_name = Path(item_path).stem
+                else:
+                    scale = 0.0
+                new_scales.append({"id": item_id, "scale": scale})
+
+            try:
+                await client.post(
+                    f"{LLAMA_BASE_URL}/lora-adapters",
+                    json=new_scales,
+                    timeout=5.0,
+                )
+                r_refreshed = await client.get(f"{LLAMA_BASE_URL}/lora-adapters", timeout=5.0)
+                if r_refreshed.status_code == 200:
+                    app.state.lora_adapters = r_refreshed.json()
+                log.info("LoRA adapter scales updated for request (%s): %s", target_adapter, app.state.lora_adapters)
+            except Exception as exc:
+                log.warning("Failed to update LoRA scales: %s", exc)
+        elif getattr(app.state, "lora_adapters", []):
+            for item in app.state.lora_adapters:
+                if float(item.get("scale", 0.0)) > 0:
+                    active_adapter_name = Path(item.get("path", "")).stem
+                    break
+
         try:
             r = await client.post(
                 f"{LLAMA_BASE_URL}/v1/chat/completions",
@@ -702,7 +823,48 @@ async def predict(req: PredictIn) -> PredictOut:
         elapsed_ms=elapsed_ms,
         vision_used=bool(app.state.vision_enabled and has_image),
         vision_disabled=bool(has_image and not app.state.vision_enabled),
+        adapter_used=active_adapter_name,
     )
+
+
+# ---- Multi-LoRA Management Endpoints --------------------------------
+@app.get("/v1/adapters")
+async def get_adapters() -> dict[str, Any]:
+    await _ensure_llama_ready()
+    client: httpx.AsyncClient = app.state.client
+    try:
+        r = await client.get(f"{LLAMA_BASE_URL}/lora-adapters", timeout=5.0)
+        adapters = r.json() if r.status_code == 200 else getattr(app.state, "lora_adapters", [])
+    except Exception:
+        adapters = getattr(app.state, "lora_adapters", [])
+    return {"adapters": adapters, "count": len(adapters)}
+
+
+@app.post("/v1/adapters/reload")
+async def reload_adapters() -> dict[str, Any]:
+    log.info("Hot-reloading adapters requested via /v1/adapters/reload")
+    await _ensure_llama_ready(force_respawn=True)
+    return {
+        "status": "reloaded",
+        "adapters": getattr(app.state, "lora_adapters", []),
+        "count": len(getattr(app.state, "lora_adapters", [])),
+    }
+
+
+@app.get("/lora-adapters")
+async def proxy_get_lora_adapters() -> Any:
+    await _ensure_llama_ready()
+    client: httpx.AsyncClient = app.state.client
+    r = await client.get(f"{LLAMA_BASE_URL}/lora-adapters", timeout=5.0)
+    return r.json()
+
+
+@app.post("/lora-adapters")
+async def proxy_post_lora_adapters(data: list[dict[str, Any]]) -> Any:
+    await _ensure_llama_ready()
+    client: httpx.AsyncClient = app.state.client
+    r = await client.post(f"{LLAMA_BASE_URL}/lora-adapters", json=data, timeout=5.0)
+    return r.json()
 
 
 @app.post(
