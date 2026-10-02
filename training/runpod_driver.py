@@ -358,15 +358,43 @@ def run_pod_training(args: argparse.Namespace) -> Dict[str, Any]:
 
         logger.info("Remote training finished successfully.")
 
-        # Download adapter artifacts locally
+        # Download adapter artifacts locally using compressed archive
         local_adapter_dir = Path(args.output_dir) / args.adapter_name
         local_adapter_dir.mkdir(parents=True, exist_ok=True)
+        local_archive = local_adapter_dir / "adapter.tar.gz"
+
+        logger.info("Archiving remote adapter artifacts on pod...")
+        _, stdout, stderr = ssh_client.exec_command(
+            "tar --exclude='*checkpoint*' -czf /workspace/adapter.tar.gz -C /workspace/adapter_out ."
+        )
+        tar_exit = stdout.channel.recv_exit_status()
+        if tar_exit != 0:
+            tar_err = stderr.read().decode("utf-8", errors="replace").strip()
+            logger.warning("Remote tar command exited with %d: %s. Attempting fallback download...", tar_exit, tar_err)
+
         sftp = ssh_client.open_sftp()
         try:
-            remote_files = sftp.listdir("/workspace/adapter_out")
-            for rf in remote_files:
-                logger.info("Downloading artifact: %s", rf)
-                sftp.get(f"/workspace/adapter_out/{rf}", str(local_adapter_dir / rf))
+            try:
+                # Primary path: download compressed tarball
+                logger.info("Downloading adapter package to %s...", local_archive)
+                sftp.get("/workspace/adapter.tar.gz", str(local_archive))
+                import tarfile
+                logger.info("Extracting adapter package into %s...", local_adapter_dir)
+                with tarfile.open(local_archive, "r:gz") as tar:
+                    if hasattr(tarfile, "data_filter"):
+                        tar.extractall(path=str(local_adapter_dir), filter="data")
+                    else:
+                        tar.extractall(path=str(local_adapter_dir))
+                if local_archive.exists():
+                    local_archive.unlink()
+            except Exception as archive_err:
+                logger.warning("Tarball extraction failed (%s). Falling back to direct file download...", archive_err)
+                for entry in sftp.listdir_attr("/workspace/adapter_out"):
+                    import stat
+                    if not stat.S_ISDIR(entry.st_mode):
+                        rf = entry.filename
+                        logger.info("Downloading file artifact: %s", rf)
+                        sftp.get(f"/workspace/adapter_out/{rf}", str(local_adapter_dir / rf))
         finally:
             sftp.close()
 

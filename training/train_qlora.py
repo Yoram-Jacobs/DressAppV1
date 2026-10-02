@@ -475,7 +475,7 @@ def train_adapter(args: argparse.Namespace) -> Dict[str, Any]:
 
     sig_params = inspect.signature(args_cls.__init__).parameters
     raw_args = {
-        "output_dir": str(output_dir / "checkpoints"),
+        "output_dir": "/tmp/checkpoints_tmp" if os.name != "nt" else str(output_dir.parent / "_checkpoints_tmp"),
         "num_train_epochs": args.epochs,
         "per_device_train_batch_size": args.batch_size,
         "gradient_accumulation_steps": 4,
@@ -484,7 +484,7 @@ def train_adapter(args: argparse.Namespace) -> Dict[str, Any]:
         "fp16": False,
         "bf16": torch.cuda.is_bf16_supported() if torch.cuda.is_available() else False,
         "logging_steps": 10,
-        "save_strategy": "epoch",
+        "save_strategy": "no",
         "optim": "paged_adamw_8bit" if torch.cuda.is_available() else "adamw_torch",
         "report_to": "none",
     }
