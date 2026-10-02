@@ -294,6 +294,24 @@ def train_adapter(args: argparse.Namespace) -> Dict[str, Any]:
         tokenizer.pad_token = getattr(tokenizer, "eos_token", "<pad>")
 
     logger.info("Loading Base Model in 4-bit NF4: %s...", args.base_model)
+    import transformers
+
+    # Dynamic architecture registration safety net for gemma4
+    try:
+        from transformers.models.auto.configuration_auto import CONFIG_MAPPING
+        if "gemma4" not in CONFIG_MAPPING:
+            for cfg_name in ["Gemma4Config", "Gemma3Config", "Gemma2Config", "GemmaConfig"]:
+                cfg_cls = getattr(transformers, cfg_name, None)
+                if cfg_cls is not None:
+                    try:
+                        CONFIG_MAPPING.register("gemma4", cfg_cls)
+                    except AttributeError:
+                        CONFIG_MAPPING["gemma4"] = cfg_cls
+                    logger.info("Registered 'gemma4' configuration mapping to %s", cfg_name)
+                    break
+    except Exception as map_err:
+        logger.debug("Architecture mapping fallback skipped: %s", map_err)
+
     model = None
     model_classes = [
         "AutoModelForMultimodalLM",
@@ -302,7 +320,6 @@ def train_adapter(args: argparse.Namespace) -> Dict[str, Any]:
         "AutoModelForCausalLM",
         "AutoModelForVision2Seq",
     ]
-    import transformers
     for cand in model_classes:
         cls = getattr(transformers, cand, None)
         if cls is None:
