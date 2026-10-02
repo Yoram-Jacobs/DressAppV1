@@ -357,26 +357,49 @@ def train_adapter(args: argparse.Namespace) -> Dict[str, Any]:
         if target is not None:
             for param in target.parameters():
                 param.requires_grad = False
-            logger.info("Froze encoder parameters (%s).", tower_attr)
+    # PEFT patch for Gemma4ClippableLinear compatibility
+    try:
+        import peft.tuners.lora.model
+        orig_create_new_module = peft.tuners.lora.model.LoraModel._create_new_module
+        def _safe_create_new_module(self, lora_config, adapter_name, target, **kwargs):
+            if target.__class__.__name__ == "Gemma4ClippableLinear" and hasattr(target, "linear"):
+                new_inner = orig_create_new_module(self, lora_config, adapter_name, target.linear, **kwargs)
+                target.linear = new_inner
+                return target
+            return orig_create_new_module(self, lora_config, adapter_name, target, **kwargs)
+        peft.tuners.lora.model.LoraModel._create_new_module = _safe_create_new_module
+        logger.info("Successfully patched PEFT for Gemma4ClippableLinear support.")
+    except Exception as patch_e:
+        logger.debug("PEFT Gemma4ClippableLinear patch skipped: %s", patch_e)
 
-    target_modules = [
-        "q_proj",
-        "k_proj",
-        "v_proj",
-        "o_proj",
-        "gate_proj",
-        "up_proj",
-        "down_proj",
-    ]
-    logger.info("Configuring LoRA Adapter for target modules: %s", target_modules)
-    lora_config = LoraConfig(
-        r=args.lora_r,
-        lora_alpha=args.lora_alpha,
-        target_modules=target_modules,
-        lora_dropout=args.lora_dropout,
-        bias="none",
-        task_type="CAUSAL_LM",
-    )
+    # Target only linear projection layers in the language model, excluding vision/audio towers
+    target_modules = []
+    for name, module in model.named_modules():
+        if any(tower in name for tower in ["vision_tower", "audio_tower", "embed_vision", "embed_audio"]):
+            continue
+        leaf = name.split(".")[-1]
+        if leaf in ["q_proj", "k_proj", "v_proj", "o_proj", "gate_proj", "up_proj", "down_proj"]:
+            target_modules.append(name)
+
+    if not target_modules:
+        target_modules = ["q_proj", "k_proj", "v_proj", "o_proj", "gate_proj", "up_proj", "down_proj"]
+
+    logger.info("Configured %d target linear modules for LoRA.", len(target_modules))
+
+    import inspect
+    lora_params = inspect.signature(LoraConfig.__init__).parameters
+    lora_kwargs = {
+        "r": args.lora_r,
+        "lora_alpha": args.lora_alpha,
+        "target_modules": target_modules,
+        "lora_dropout": args.lora_dropout,
+        "bias": "none",
+        "task_type": "CAUSAL_LM",
+    }
+    if "exclude_modules" in lora_params:
+        lora_kwargs["exclude_modules"] = r".*(vision_tower|audio_tower|embed_vision|embed_audio).*"
+
+    lora_config = LoraConfig(**lora_kwargs)
     model = get_peft_model(model, lora_config)
     model.print_trainable_parameters()
 
