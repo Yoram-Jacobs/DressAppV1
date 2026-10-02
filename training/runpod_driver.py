@@ -311,7 +311,7 @@ def run_pod_training(args: argparse.Namespace) -> Dict[str, Any]:
             "python3 -m pip install --upgrade --no-cache-dir pip || true; "
             "pip uninstall -y torchaudio || true; "
             "pip install --no-cache-dir --upgrade 'torch==2.5.1+cu124' 'torchvision==0.20.1+cu124' --extra-index-url https://download.pytorch.org/whl/cu124 && "
-            "pip install --no-cache-dir 'accelerate>=1.1.0' 'peft>=0.13.0' 'bitsandbytes>=0.43.0' 'trl>=0.12.0' 'transformers>=4.45.0,<4.49.0' 'datasets>=3.0.0' 'huggingface_hub>=0.23.0' 'pydantic>=2.7.0' 'scipy>=1.10.0'"
+            "pip install --no-cache-dir 'accelerate>=1.1.0' 'peft>=0.13.0' 'bitsandbytes>=0.43.0' 'trl>=0.12.0' 'transformers>=4.45.0,<4.49.0' 'datasets>=3.0.0' 'huggingface_hub>=0.23.0' 'pydantic>=2.7.0' 'scipy>=1.10.0' 'protobuf>=3.20.0' 'sentencepiece>=0.1.99'"
         )
         _, stdout, stderr = ssh_client.exec_command(install_cmd, get_pty=True)
         for line in iter(stdout.readline, ""):

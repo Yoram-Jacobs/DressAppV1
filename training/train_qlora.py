@@ -257,24 +257,86 @@ def train_adapter(args: argparse.Namespace) -> Dict[str, Any]:
         bnb_4bit_use_double_quant=True,
     )
 
-    logger.info("Loading Tokenizer for %s...", args.base_model)
-    tokenizer = AutoTokenizer.from_pretrained(
-        args.base_model,
-        trust_remote_code=True,
-        token=args.hf_token or os.environ.get("HF_TOKEN"),
-    )
-    if tokenizer.pad_token is None:
-        tokenizer.pad_token = tokenizer.eos_token
+    # Patch tokenizer to prevent AttributeError if extra_special_tokens is a list
+    try:
+        import transformers.tokenization_utils_base
+        orig_set_tokens = getattr(
+            transformers.tokenization_utils_base.PreTrainedTokenizerBase,
+            "_set_model_specific_special_tokens",
+            None,
+        )
+        if orig_set_tokens:
+            def _safe_set_model_specific_special_tokens(self, special_tokens=None):
+                if isinstance(special_tokens, list):
+                    special_tokens = {tok: tok for tok in special_tokens}
+                return orig_set_tokens(self, special_tokens=special_tokens)
+            transformers.tokenization_utils_base.PreTrainedTokenizerBase._set_model_specific_special_tokens = _safe_set_model_specific_special_tokens
+    except Exception as patch_err:
+        logger.debug("Tokenizer patch skipped: %s", patch_err)
+
+    token = args.hf_token or os.environ.get("HF_TOKEN")
+    logger.info("Loading Tokenizer / Processor for %s...", args.base_model)
+    tokenizer = None
+    try:
+        from transformers import AutoProcessor
+        proc = AutoProcessor.from_pretrained(args.base_model, trust_remote_code=True, token=token)
+        tokenizer = getattr(proc, "tokenizer", proc)
+        logger.info("AutoProcessor loaded successfully.")
+    except Exception as proc_err:
+        logger.warning("AutoProcessor failed (%s). Falling back to AutoTokenizer...", proc_err)
+        try:
+            tokenizer = AutoTokenizer.from_pretrained(args.base_model, trust_remote_code=True, token=token)
+        except Exception as tok_err:
+            logger.warning("Fast tokenizer failed (%s). Retrying with use_fast=False...", tok_err)
+            tokenizer = AutoTokenizer.from_pretrained(args.base_model, trust_remote_code=True, token=token, use_fast=False)
+
+    if hasattr(tokenizer, "pad_token") and tokenizer.pad_token is None:
+        tokenizer.pad_token = getattr(tokenizer, "eos_token", "<pad>")
 
     logger.info("Loading Base Model in 4-bit NF4: %s...", args.base_model)
-    model = AutoModelForCausalLM.from_pretrained(
-        args.base_model,
-        quantization_config=bnb_config,
-        device_map="auto",
-        trust_remote_code=True,
-        token=args.hf_token or os.environ.get("HF_TOKEN"),
-    )
+    model = None
+    model_classes = [
+        "AutoModelForMultimodalLM",
+        "AutoModelForConditionalGeneration",
+        "AutoModelForImageTextToText",
+        "AutoModelForCausalLM",
+        "AutoModelForVision2Seq",
+    ]
+    import transformers
+    for cand in model_classes:
+        cls = getattr(transformers, cand, None)
+        if cls is None:
+            continue
+        try:
+            logger.info("Attempting to load base model with %s...", cand)
+            model = cls.from_pretrained(
+                args.base_model,
+                quantization_config=bnb_config,
+                device_map="auto",
+                trust_remote_code=True,
+                token=token,
+            )
+            logger.info("Successfully loaded base model %s using %s", args.base_model, cand)
+            break
+        except Exception as err:
+            logger.warning("Failed loading base model with %s: %s. Trying next candidate...", cand, err)
+
+    if model is None:
+        raise RuntimeError(f"Failed to load base model '{args.base_model}' with any supported class.")
+
     model = prepare_model_for_kbit_training(model)
+
+    # Freeze encoder parameters if multimodal
+    for tower_attr in ["vision_tower", "vision_model", "visual", "audio_tower", "audio_model"]:
+        target = None
+        if hasattr(model, tower_attr):
+            target = getattr(model, tower_attr)
+        elif hasattr(model, "model") and hasattr(model.model, tower_attr):
+            target = getattr(model.model, tower_attr)
+        if target is not None:
+            for param in target.parameters():
+                param.requires_grad = False
+            logger.info("Froze encoder parameters (%s).", tower_attr)
 
     target_modules = [
         "q_proj",
