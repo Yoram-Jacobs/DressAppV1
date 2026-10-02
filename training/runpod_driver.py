@@ -179,8 +179,9 @@ def run_pod_training(args: argparse.Namespace) -> Dict[str, Any]:
         raise ValueError("RUNPOD_API_KEY environment variable is required.")
     runpod.api_key = api_key
 
-    hf_token = args.hf_token or os.environ.get("HF_TOKEN", "")
+    hf_token = (args.hf_token or os.environ.get("HF_TOKEN") or "").strip()
     target_hf_repo = args.hf_repo or f"Yoram-Jacobs/dressapp-{args.adapter_name}-adapter"
+    pod_env = {"HF_TOKEN": hf_token} if hf_token else {}
 
     # In-memory ephemeral RSA keypair for secure pod SSH access
     logger.info("Generating ephemeral 2048-bit RSA key for SSH...")
@@ -215,7 +216,7 @@ def run_pod_training(args: argparse.Namespace) -> Dict[str, Any]:
                 ports="22/tcp",
                 container_disk_in_gb=40,
                 volume_in_gb=0,
-                env={"HF_TOKEN": hf_token},
+                env=pod_env,
             )
             if not pod or not isinstance(pod, dict) or "id" not in pod:
                 raise RuntimeError(f"Unexpected pod creation response: {pod}")
@@ -324,8 +325,9 @@ def run_pod_training(args: argparse.Namespace) -> Dict[str, Any]:
 
         # Construct training command
         hub_flag = f"--push_to_hub --hub_model_id '{target_hf_repo}'" if hf_token else ""
+        hf_export_str = f"export HF_TOKEN='{hf_token}' && " if hf_token else "unset HF_TOKEN && "
         run_cmd = (
-            f"export HF_TOKEN='{hf_token}' && "
+            f"{hf_export_str}"
             f"python3 /workspace/train_qlora.py "
             f"--adapter_name '{args.adapter_name}' "
             f"--dataset_path '{dataset_remote}' "

@@ -274,7 +274,11 @@ def train_adapter(args: argparse.Namespace) -> Dict[str, Any]:
     except Exception as patch_err:
         logger.debug("Tokenizer patch skipped: %s", patch_err)
 
-    token = args.hf_token or os.environ.get("HF_TOKEN")
+    raw_token = args.hf_token or os.environ.get("HF_TOKEN") or ""
+    token = raw_token.strip() if isinstance(raw_token, str) and raw_token.strip() else None
+    if token is None and "HF_TOKEN" in os.environ:
+        del os.environ["HF_TOKEN"]
+
     logger.info("Loading Tokenizer / Processor for %s...", args.base_model)
     tokenizer = None
     try:
