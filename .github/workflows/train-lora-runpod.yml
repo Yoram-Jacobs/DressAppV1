@@ -98,34 +98,40 @@ jobs:
 
       - name: Zero-Downtime VPS Deployment via SSH
         if: ${{ inputs.deploy_vps == true && !cancelled() && steps.runpod-training.outcome == 'success' }}
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ secrets.VPS_SSH_HOST }}
-          username: ${{ secrets.VPS_SSH_USER }}
-          key: ${{ secrets.VPS_SSH_KEY }}
-          envs: HF_TOKEN
-          script: |
+        env:
+          VPS_HOST: ${{ secrets.VPS_HOST || secrets.VPS_SSH_HOST || '178.105.144.142' }}
+          VPS_USER: ${{ secrets.VPS_USER || secrets.VPS_SSH_USER || 'root' }}
+          VPS_SSH_KEY: ${{ secrets.SSH_PRIVATE_KEY || secrets.VPS_SSH_KEY }}
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        run: |
+          set -eo pipefail
+          if [ -z "$VPS_SSH_KEY" ]; then
+            echo "::warning::No SSH key found in secrets (VPS_SSH_KEY or SSH_PRIVATE_KEY). Skipping automated deployment."
+            exit 0
+          fi
+
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          printf "%s\n" "$VPS_SSH_KEY" | tr -d '\r' > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -H "$VPS_HOST" >> ~/.ssh/known_hosts 2>/dev/null
+          chmod 644 ~/.ssh/known_hosts
+
+          SSH_CMD="ssh -i ~/.ssh/deploy_key -o IdentitiesOnly=yes -o StrictHostKeyChecking=accept-new -o BatchMode=yes"
+          echo "Testing SSH connectivity to Hetzner VPS ($VPS_HOST)..."
+          $SSH_CMD ${VPS_USER}@${VPS_HOST} "echo 'Connected successfully to Hetzner VPS host: ' \$(hostname)"
+
+          echo "Triggering zero-downtime adapter sync & reload on VPS..."
+          $SSH_CMD ${VPS_USER}@${VPS_HOST} "
             set -eo pipefail
-            echo "Connected to Hetzner VPS host: $(hostname)"
-            
-            # Target deployment directory
-            DEPLOY_SCRIPT="/srv/AI-Stylist/deploy/reload_eyes_adapters.sh"
-            
-            # Ensure reload script is executable
-            if [ -f "$DEPLOY_SCRIPT" ]; then
-              chmod +x "$DEPLOY_SCRIPT"
-              bash "$DEPLOY_SCRIPT" \
-                --adapter "${{ inputs.adapter_name }}" \
-                --repo "Yoram-Jacobs/dressapp-${{ inputs.adapter_name }}-adapter" \
-                --adapters-dir "/opt/dressApp/adapters" \
-                --token "${{ secrets.HF_TOKEN }}"
-            else
-              echo "Script $DEPLOY_SCRIPT not found on VPS. Staging from repo checkout..."
-              cd /srv/AI-Stylist && git pull
-              chmod +x deploy/reload_eyes_adapters.sh
-              bash deploy/reload_eyes_adapters.sh \
-                --adapter "${{ inputs.adapter_name }}" \
-                --repo "Yoram-Jacobs/dressapp-${{ inputs.adapter_name }}-adapter" \
-                --adapters-dir "/opt/dressApp/adapters" \
-                --token "${{ secrets.HF_TOKEN }}"
+            DEPLOY_SCRIPT=\"/srv/AI-Stylist/deploy/reload_eyes_adapters.sh\"
+            if [ ! -f \"\$DEPLOY_SCRIPT\" ]; then
+              cd /srv/AI-Stylist && git pull origin main
             fi
+            chmod +x \"\$DEPLOY_SCRIPT\"
+            bash \"\$DEPLOY_SCRIPT\" \
+              --adapter \"${{ inputs.adapter_name }}\" \
+              --repo \"Yoram-Jacobs/dressapp-${{ inputs.adapter_name }}-adapter\" \
+              --adapters-dir \"/opt/dressApp/adapters\" \
+              --token \"${HF_TOKEN}\"
+          "
