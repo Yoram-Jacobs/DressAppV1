@@ -26,6 +26,14 @@ import time
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
+# Ensure torch and torch.nn are imported early so downstream integrations (transformers.integrations.accelerate)
+# resolve nn.Module type annotations cleanly.
+try:
+    import torch
+    import torch.nn as nn
+except ImportError:
+    pass
+
 logging.basicConfig(
     level=os.environ.get("LOG_LEVEL", "INFO"),
     format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
