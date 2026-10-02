@@ -273,7 +273,10 @@ def _clean_truncated_caption(caption: str | None) -> str:
     # Strip dangling trailing conjunctions/prepositions
     text = re.sub(r'\s+(?:and|with|for|or|in|on|at|to|of|the|a|an|but|ו|עם|של|ב|ל|על)$', '', text, flags=re.IGNORECASE).rstrip()
 
-    # Ensure text ends with a sentence terminator
+    # Strip dangling punctuation, commas, colons, or double periods before ending
+    text = re.sub(r'[\s,;:.]+[\s,;:]*$', '', text).strip()
+
+    # Ensure text ends with a single sentence terminator
     if text and text[-1] not in ".!?。۔":
         text += "."
 
@@ -940,10 +943,13 @@ def _coerce_single_garment(
         if res["colors"] and not res.get("color"):
             res["color"] = res["colors"][0].get("name")
 
-    # Unique name guarantee: ensure name is not just the subcategory name
+    # Unique name guarantee: ensure name is not just the subcategory name and respects grammar & localization
     name_str = (res.get("name") or "").strip()
     sub_str = (res.get("sub_category") or "").strip()
-    if not name_str or name_str.lower() == sub_str.lower() or len(name_str.split()) < 2:
+    has_hebrew_chars = any("\u0590" <= ch <= "\u05ea" for ch in name_str)
+    has_latin_chars = any("a" <= ch.lower() <= "z" for ch in name_str)
+
+    if not name_str or name_str.lower() == sub_str.lower() or len(name_str.split()) < 2 or (is_he and has_latin_chars and has_hebrew_chars):
         color_name = ""
         colors = res.get("colors")
         if isinstance(colors, list) and colors and isinstance(colors[0], dict):
@@ -957,11 +963,61 @@ def _coerce_single_garment(
             if m_val.lower() not in {"unknown", "n/a", "other", "none"}:
                 mat_name = m_val
         itype = res.get("item_type") or sub_str or "Garment"
-        parts = [p for p in [color_name, mat_name, itype] if p]
-        if len(parts) >= 2:
-            res["name"] = " ".join(parts).title()
-            if not res.get("title") or res.get("title").lower() == sub_str.lower():
-                res["title"] = res["name"]
+
+        if is_he:
+            # Hebrew grammar: Noun first, followed by adjective (color/material) with proper gender agreement
+            he_item_dict = {
+                "printed skirt": "חצאית מודפסת",
+                "skirt": "חצאית",
+                "crew-neck sweater": "סוודר צווארון עגול",
+                "crew neck sweater": "סוודר צווארון עגול",
+                "sweater": "סוודר",
+                "sweatpants": "מכנסי טרנינג",
+                "joggers": "מכנסי ג'וגר",
+                "pants": "מכנסיים",
+                "trousers": "מכנסיים",
+                "jeans": "ג'ינס",
+                "shirt": "חולצה",
+                "t-shirt": "חולצת טי",
+                "blouse": "בלוזה",
+                "shoes": "נעליים",
+                "casual shoes": "נעלי קז'ואל",
+                "sneakers": "סניקרס",
+                "sandals": "סנדלים",
+                "boots": "מגפיים",
+                "loafers": "לופרים",
+                "hoodie": "קפוצ'ון",
+                "jacket": "ג'קט",
+                "coat": "מעיל",
+                "dress": "שמלה",
+            }
+            he_color_dict = {
+                "white": "לבן", "grey": "אפור", "gray": "אפור", "black": "שחור",
+                "blue": "כחול", "green": "ירוק", "yellow": "צהוב", "red": "אדום",
+                "brown": "חום", "beige": "בז'", "navy": "כחול נייבי", "pink": "ורוד",
+                "orange": "כתום", "purple": "סגול",
+            }
+            noun_he = he_item_dict.get(itype.lower()) or he_item_dict.get(sub_str.lower())
+            if not noun_he:
+                # If itype already contains Hebrew letters, strip any English words
+                he_words = [w for w in itype.split() if any("\u0590" <= ch <= "\u05ea" for ch in w)]
+                noun_he = " ".join(he_words) if he_words else "בגד"
+
+            col_he = he_color_dict.get(color_name.lower(), color_name)
+            # Gender agreement for feminine nouns (ending in ה or ת)
+            is_fem = noun_he.endswith(("ה", "ת")) and not noun_he.endswith("ות")
+            if is_fem and col_he in ("ירוק", "לבן", "שחור", "אפור", "צהוב", "אדום", "חום", "כחול"):
+                col_he = col_he + "ה"
+
+            parts = [p for p in [noun_he, col_he] if p]
+            res["name"] = " ".join(parts)
+            res["title"] = res["name"]
+        else:
+            parts = [p for p in [color_name, mat_name, itype] if p]
+            if len(parts) >= 2:
+                res["name"] = " ".join(parts).title()
+                if not res.get("title") or res.get("title").lower() == sub_str.lower():
+                    res["title"] = res["name"]
 
     # Materials fallback: ensure never "Unknown" and percentages sum strictly to 100%
     mats = res.get("fabric_materials")

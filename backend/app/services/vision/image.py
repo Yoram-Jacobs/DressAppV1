@@ -257,77 +257,14 @@ def _extract_garment_mask(img: Image.Image) -> np.ndarray:
 
 
 def _orient_and_deskew_garment(img: Image.Image, mask: np.ndarray | None = None) -> Image.Image:
-    """Detect tilt/skew angle of the garment and rotate it upright.
+    """Keep garment naturally upright.
 
-    Uses bilateral mirror symmetry search. Garments are designed to be
-    symmetric along their vertical spine. When rotated upright, the left
-    and right halves achieve maximum overlap (IoU).
-
-    Skips tilt-fixing for 0° to 5° item tilt, maintaining centering and
-    canvas expansion without altering straight garments.
+    Outfits and garments cropped from photos or flat lays are already
+    oriented upright by the camera. Artificial mirror-symmetry rotation
+    causes asymmetric folds and human poses to tilt unnaturally (e.g.
+    rotating sweaters or skirts by 20°-30°). We maintain the original
+    upright orientation.
     """
-    try:
-        import numpy as np
-
-        if mask is None:
-            mask = _extract_garment_mask(img)
-
-        pts = np.column_stack(np.where(mask > 20))
-        if len(pts) < 100:
-            return img
-
-        mask_img = Image.fromarray(mask, mode="L")
-        bbox = mask_img.getbbox()
-        if not bbox or (bbox[2] - bbox[0] < 10) or (bbox[3] - bbox[1] < 10):
-            return img
-
-        mask_cropped = mask_img.crop(bbox)
-
-        def _get_iou(deg: float, size: int = 100) -> float:
-            rot = mask_cropped.rotate(deg, resample=Image.NEAREST, expand=True)
-            b = rot.getbbox()
-            if not b:
-                return 0.0
-            c = rot.crop(b).resize((size, size), resample=Image.NEAREST)
-            arr = np.array(c) > 0
-            flipped = np.fliplr(arr)
-            inter = np.sum(arr & flipped)
-            union = np.sum(arr | flipped)
-            return inter / float(max(1, union))
-
-        iou_0 = _get_iou(0.0)
-        best_angle = 0.0
-        max_iou = iou_0
-
-        # Search within +/- 35 deg in steps of 2 deg
-        for deg in range(-35, 36, 2):
-            if deg == 0:
-                continue
-            iou = _get_iou(float(deg))
-            if iou > max_iou:
-                max_iou = iou
-                best_angle = float(deg)
-
-        # Fine search around best_angle in steps of 0.5 deg
-        refined_angle = best_angle
-        refined_iou = max_iou
-        if abs(best_angle) > 5.0:
-            for offset in [-1.5, -1.0, -0.5, 0.0, 0.5, 1.0, 1.5]:
-                deg = best_angle + offset
-                if abs(deg) > 35:
-                    continue
-                iou = _get_iou(deg, size=120)
-                if iou > refined_iou:
-                    refined_iou = iou
-                    refined_angle = deg
-
-        # Rule: Skip tilt-fixing for 0° to 5° item tilt.
-        # Also require at least +0.05 IoU improvement over 0° to prevent false rotation on straight garments.
-        if abs(refined_angle) > 5.0 and (refined_iou - iou_0 >= 0.05):
-            img = img.rotate(refined_angle, resample=Image.BICUBIC, expand=True)
-    except Exception as exc:
-        logger.debug("_orient_and_deskew_garment failed: %s", exc)
-
     return img
 
 
@@ -338,10 +275,10 @@ def _fit_crop_to_card(
     canvas_w: int = _CARD_CANVAS_W,
     canvas_h: int = _CARD_CANVAS_H,
 ) -> tuple[bytes, str]:
-    """Rescale a per-item crop, deskew upright, extend to 90% canvas, and center.
+    """Rescale a per-item crop, keep upright, extend to 90% canvas, and center.
 
-    1. Extracts garment mask (works for both RGBA cutouts and RGB studio/phone photos).
-    2. Aligns major symmetry axis straight upright.
+    1. Preserves garment cutout with anti-aliased alpha.
+    2. Ensures solid interior opacity so white/light items never appear faint or X-ray-like.
     3. Crops tight to non-background garment boundaries.
     4. Dynamically scales with a 0.90 safety margin, reaching up to 1080px height.
     5. Centers on fixed 900x1200 portrait canvas.
@@ -364,10 +301,18 @@ def _fit_crop_to_card(
             num_solid = int(np.sum(alpha_arr > 30))
             coverage = num_solid / float(max(1, alpha_arr.size))
             if num_solid > 25 and (coverage >= 0.005 or num_solid >= 100):
-                # Pre-existing transparent cutout: ALWAYS preserve the studio-grade anti-aliased alpha!
-                # NEVER overwrite with a binary thresholded mask (which produces sawtooth edges and chewing holes).
-                mask = (alpha_arr > 30).astype(np.uint8) * 255
-                rgba = _orient_and_deskew_garment(rgba, mask=mask)
+                # Ensure interior garment core is solid opaque (>= 250) so white/light garments
+                # never appear semi-transparent or X-ray-like against card backgrounds
+                try:
+                    from scipy import ndimage
+                    core_mask = ndimage.binary_erosion(alpha_arr > 80, iterations=2)
+                    if core_mask.any():
+                        alpha_arr = np.where(core_mask & (alpha_arr > 40), np.maximum(alpha_arr, np.uint8(250)), alpha_arr)
+                        r_ch, g_ch, b_ch, _ = rgba.split()
+                        rgba = Image.merge("RGBA", (r_ch, g_ch, b_ch, Image.fromarray(alpha_arr)))
+                except Exception:
+                    pass
+
                 bbox = rgba.getbbox()
                 if bbox and (bbox[2] - bbox[0] > 10) and (bbox[3] - bbox[1] > 10):
                     img = rgba.crop(bbox)

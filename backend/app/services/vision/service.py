@@ -2824,25 +2824,36 @@ class GarmentVisionService:
                         "type": "object",
                         "properties": {
                             "slot_index": {"type": "integer", "description": "0-based item slot index"},
-                            "is_clothing": {"type": "boolean", "description": "true for wearable clothes, shoes, bags, eyewear, accessories"},
-                            "title": {"type": "string", "description": "Garment title"},
-                            "name": {"type": "string", "description": "Specific concise name"},
+                            "is_clothing": {"type": "boolean"},
+                            "name": {"type": "string", "description": "Specific concise name in requested language"},
                             "category": {
                                 "type": "string",
                                 "enum": ["Top", "Bottom", "Dress", "Outerwear", "Footwear", "Accessories", "Underwear"],
                             },
                             "sub_category": {"type": "string", "description": "Sub-category e.g. T-Shirt, Jeans, Pants, Shoes, Sneakers, Sandals, Boots, Loafers, Sunglasses, Handbag"},
                             "item_type": {"type": "string", "description": "Specific cut e.g. Sweatpants, Double Monk Strap Shoes, Strappy Sandals, Low-Top Sneakers, Classic Sunglasses"},
-                            "colors": {"type": "array", "items": {"type": "string"}},
+                            "colors": {"type": "array", "items": {"type": "string"}, "maxItems": 3},
                             "gender": {"type": "string", "enum": ["women", "men", "unisex", "kids"]},
                             "model_gender": {"type": "string", "enum": ["women", "men", "none"]},
                             "pattern": {"type": "string"},
                             "dress_code": {"type": "string", "enum": ["casual", "smart-casual", "business", "formal", "athletic", "loungewear", "lounge"]},
-                            "season": {"type": "array", "items": {"type": "string"}},
-                            "tags": {"type": "array", "items": {"type": "string"}, "uniqueItems": True},
+                            "season": {"type": "array", "items": {"type": "string"}, "maxItems": 4},
+                            "fabric_materials": {
+                                "type": "array",
+                                "items": {
+                                    "type": "object",
+                                    "properties": {
+                                        "name": {"type": "string"},
+                                        "pct": {"type": "integer"},
+                                    },
+                                    "required": ["name", "pct"],
+                                },
+                                "maxItems": 2,
+                            },
+                            "tags": {"type": "array", "items": {"type": "string"}, "maxItems": 4, "uniqueItems": True},
                             "caption": {"type": "string", "description": "One short sentence <=10 words describing style and color"},
                         },
-                        "required": ["slot_index", "is_clothing", "title", "category", "sub_category", "item_type", "gender"],
+                        "required": ["slot_index", "is_clothing", "name", "category", "sub_category", "item_type", "gender"],
                     }
 
                     multi_item_schema = {
@@ -2879,7 +2890,7 @@ class GarmentVisionService:
                                 system_prompt=sys_prompt,
                                 user_text=user_text,
                                 image_b64_jpeg=full_b64,
-                                max_tokens=min(350 * len(flat_crops), 2500),
+                                max_tokens=min(220 * len(flat_crops), 1200),
                                 temperature=0.1,
                                 timeout=max(240.0, float(settings.EYES_GEMMA_TIMEOUT_S)),
                                 json_schema=multi_item_schema,
@@ -2920,6 +2931,13 @@ class GarmentVisionService:
                             scanned_objs, _ = _scan_complete_json_objects(raw_multi)
                             if len(scanned_objs) > len(parsed_items):
                                 parsed_items = scanned_objs
+
+                        for p_it in parsed_items:
+                            if isinstance(p_it, dict):
+                                if not p_it.get("title") and p_it.get("name"):
+                                    p_it["title"] = p_it["name"]
+                                elif not p_it.get("name") and p_it.get("title"):
+                                    p_it["name"] = p_it["title"]
 
                     slot_crop_list_all = list(enumerate(flat_crops))
                     aligned_crop_items = _align_analyses_to_crops(slot_crop_list_all, parsed_items)

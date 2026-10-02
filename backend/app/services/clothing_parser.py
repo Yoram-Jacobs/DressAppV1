@@ -1609,13 +1609,14 @@ def apply_alpha_intersection(
             return None
 
         is_bottom = norm_cat in {"bottom", "pants", "skirt"} or any(w in norm_lbl for w in ("short", "skirt", "pant", "trouser", "jean"))
+        is_multi_segment = is_bottom or is_footwear or is_eyewear
         # Build solid garment core and protection region to protect fabric from false chewing
         try:
             from scipy import ndimage
             mask_bin_core = mask_resized > 64
-            closed_core = ndimage.binary_closing(mask_bin_core, structure=np.ones((5, 5), dtype=bool), iterations=1)
-            # Never fill holes on bottoms (shorts/skirts) because the hole between legs is human skin!
-            filled_core = closed_core if is_bottom else ndimage.binary_fill_holes(closed_core)
+            closed_core = ndimage.binary_closing(mask_bin_core, structure=np.ones((3 if is_multi_segment else 5, 3 if is_multi_segment else 5), dtype=bool), iterations=1)
+            # Never fill holes on bottoms (shorts/skirts) or footwear (shoes) because the gap between legs/shoes is ground/skin!
+            filled_core = closed_core if is_multi_segment else ndimage.binary_fill_holes(closed_core)
             # garment_protect covers the garment interior where mask is confident or filled
             garment_protect = filled_core | (mask_resized > 50)
             core_iter = max(1, min(4, int(round(min(Hc, Wc) * 0.008))))
@@ -1627,6 +1628,7 @@ def apply_alpha_intersection(
         garment_weight = np.clip((mask_resized.astype(float) - 20.0) / 80.0, 0.0, 1.0)
     else:
         is_bottom = norm_cat in {"bottom", "pants", "skirt"} or any(w in norm_lbl for w in ("short", "skirt", "pant", "trouser", "jean"))
+        is_multi_segment = is_bottom or is_footwear or is_eyewear
         garment_weight = None
         garment_protect = None
 
@@ -1664,7 +1666,10 @@ def apply_alpha_intersection(
             # Outside garment_protect, subtract human parts smoothly
             sub_human = np.clip(1.0 - human_factor, 0.0, 1.0)
             if garment_protect is not None and garment_protect.any():
-                sub_human = np.where(garment_protect, 1.0, sub_human)
+                # Smooth the transition with Gaussian anti-aliasing to eliminate staircase-like edges on shoes and collars
+                from scipy import ndimage
+                protect_smooth = ndimage.gaussian_filter(garment_protect.astype(float), sigma=1.2)
+                sub_human = np.clip(sub_human * (1.0 - protect_smooth) + 1.0 * protect_smooth, 0.0, 1.0)
             new_alpha = (new_alpha.astype(float) * sub_human).round().astype(np.uint8)
         except Exception as exc:  # noqa: BLE001
             logger.info(
@@ -1703,7 +1708,9 @@ def apply_alpha_intersection(
                 skin_factor = np.array(skin_blur, dtype=float) / 255.0
                 sub_skin = np.clip(1.0 - skin_factor, 0.0, 1.0)
                 if garment_protect is not None and garment_protect.any():
-                    sub_skin = np.where(garment_protect, 1.0, sub_skin)
+                    from scipy import ndimage
+                    protect_smooth = ndimage.gaussian_filter(garment_protect.astype(float), sigma=1.2)
+                    sub_skin = np.clip(sub_skin * (1.0 - protect_smooth) + 1.0 * protect_smooth, 0.0, 1.0)
                 new_alpha = (new_alpha.astype(float) * sub_skin).round().astype(np.uint8)
         except Exception as exc:  # noqa: BLE001
             logger.info(
@@ -1766,7 +1773,9 @@ def apply_alpha_intersection(
             other_factor = np.array(other_blur, dtype=float) / 255.0
             sub_other = np.clip(1.0 - other_factor, 0.0, 1.0)
             if protect_zone is not None and protect_zone.any():
-                sub_other = np.where(protect_zone, 1.0, sub_other)
+                from scipy import ndimage
+                protect_smooth = ndimage.gaussian_filter(protect_zone.astype(float), sigma=1.2)
+                sub_other = np.clip(sub_other * (1.0 - protect_smooth) + 1.0 * protect_smooth, 0.0, 1.0)
             new_alpha = (new_alpha.astype(float) * sub_other).round().astype(np.uint8)
         except Exception as exc:  # noqa: BLE001
             logger.info(
@@ -1780,7 +1789,7 @@ def apply_alpha_intersection(
             from scipy import ndimage
             mask_bin = mask_resized > 50
             closed = ndimage.binary_closing(mask_bin, structure=np.ones((3 if (is_eyewear or is_footwear or is_acc) else 5, 3 if (is_eyewear or is_footwear or is_acc) else 5), dtype=bool), iterations=1)
-            filled = ndimage.binary_fill_holes(closed)
+            filled = closed if is_multi_segment else ndimage.binary_fill_holes(closed)
             
             filled_im = Image.fromarray((filled * 255).astype(np.uint8), mode="L")
             env_dilate = 2 if (is_eyewear or is_footwear or is_acc) else dilate_px
@@ -1793,11 +1802,21 @@ def apply_alpha_intersection(
             # RULE: SegFormer envelope must ONLY exclude far-away background debris (where envelope <= 0.01).
             # It must NEVER multiply or truncate rembg's anti-aliased alpha boundary inside the garment!
             new_alpha = np.where(soft_envelope <= 0.01, np.uint8(0), new_alpha)
+
+            # Footwear pavement smear cleanup: outside the two shoes (where mask_resized < 25), wipe any pavement/asphalt smear left by rembg
+            if is_footwear:
+                pavement_smear = (mask_resized < 25) & (soft_envelope < 0.25)
+                new_alpha = np.where(pavement_smear, np.uint8(0), new_alpha)
         except Exception as exc:  # noqa: BLE001
             logger.info(
                 "apply_alpha_intersection: soft-mask intersection failed: %s",
                 repr(exc)[:120],
             )
+
+    # Enforce solid fabric interior: garments are opaque. White/light tops must never become
+    # semi-transparent (X-ray-like) against the card background!
+    if garment_core is not None and garment_core.any():
+        new_alpha = np.where(garment_core & (new_alpha > 40), np.maximum(new_alpha, np.uint8(250)), new_alpha)
 
     # Note: SegFormer's coarse mask must NEVER force transparent background pixels (alpha < 128)
     # to 255. Rembg provides studio-grade alpha boundaries; forcing opaque holes creates

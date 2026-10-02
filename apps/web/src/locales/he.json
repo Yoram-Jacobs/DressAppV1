@@ -2525,6 +2525,11 @@
       "basket_bag": "תיק סל קש"
     },
     "item_type": {
+      "printed_skirt": "חצאית מודפסת",
+      "skirt": "חצאית",
+      "sweater": "סוודר",
+      "sweatpants": "מכנסי טרנינג",
+      "joggers": "מכנסי ג'וגר",
       "oxford_shirt": "חולצת אוקספורד",
       "button_down_shirt": "חולצה מכופתרת",
       "dress_shirt": "חולצה אלגנטית",

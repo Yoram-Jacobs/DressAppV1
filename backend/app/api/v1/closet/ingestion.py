@@ -520,6 +520,8 @@ async def analyze_item_image(
                     if ftype == "detect":
                         items_meta = frame.get("items_meta") or []
                         await queue.put(frame)
+                    elif ftype == "progress":
+                        await queue.put(frame)
                     elif ftype == "field":
                         await queue.put(frame)
                     elif ftype == "item":
@@ -715,7 +717,7 @@ async def analyze_item_image(
             media_type="text/event-stream",
             headers={
                 "X-Accel-Buffering": "no",
-                "Cache-Control": "no-cache",
+                "Cache-Control": "no-cache, no-transform",
                 "Connection": "keep-alive",
             },
         )

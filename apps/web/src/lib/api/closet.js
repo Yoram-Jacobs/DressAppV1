@@ -158,6 +158,9 @@ export const closet = {
                   emittedItems[frame.index] = frame;
                   await callbacks.onItem?.(frame);
                   break;
+                case 'progress':
+                  await callbacks.onProgress?.(frame);
+                  break;
                 case 'item_skip':
                   await callbacks.onItemSkip?.(frame);
                   break;

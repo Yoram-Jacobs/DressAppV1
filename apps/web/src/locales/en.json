@@ -2488,6 +2488,11 @@
       "basket_bag": "Basket Bag"
     },
     "item_type": {
+      "printed_skirt": "Printed skirt",
+      "skirt": "Skirt",
+      "sweater": "Sweater",
+      "sweatpants": "Sweatpants",
+      "joggers": "Joggers",
       "oxford_shirt": "Oxford shirt",
       "button_down_shirt": "Button-down shirt",
       "dress_shirt": "Dress shirt",

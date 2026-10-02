@@ -91,6 +91,7 @@ import {
   labelForSubCategory,
   canonicalSubCategoryKey,
   labelForTag,
+  labelForMaterial,
 } from "@/lib/taxonomy";
 import { toast } from "sonner";
 import { useRememberedDirectory } from "@/hooks/useRememberedDirectory";
@@ -593,21 +594,75 @@ const hydrate = (a, user, t, i18n) => {
           return typeof c === 'string' ? { name: finalName, pct: null } : { ...c, name: finalName };
         });
       }
+      // Localize materials
+      if (Array.isArray(out.fabric_materials) && out.fabric_materials.length > 0) {
+        out.fabric_materials = out.fabric_materials.map((m) => {
+          const rawName = typeof m === 'string' ? m : m?.name || '';
+          const localized = labelForMaterial(rawName, t);
+          const finalName = localized || rawName;
+          return typeof m === 'string' ? { name: finalName, pct: null } : { ...m, name: finalName };
+        });
+      }
+
+      // Deduplicate and localize tags
+      if (Array.isArray(out.tags) && out.tags.length > 0) {
+        const seen = new Set();
+        const cleanTags = [];
+        const excluded = new Set([
+          String(out.category || '').toLowerCase(),
+          String(out.sub_category || '').toLowerCase(),
+          String(out.item_type || '').toLowerCase(),
+          'clothing', 'garment', 'fashion'
+        ]);
+        for (const tg of out.tags) {
+          if (!tg) continue;
+          const localizedTg = labelForTag(tg, t) || tg;
+          const k = String(localizedTg).trim().toLowerCase();
+          if (!k || seen.has(k) || excluded.has(k)) continue;
+          seen.add(k);
+          cleanTags.push(localizedTg);
+        }
+        out.tags = cleanTags;
+      }
+
       const rawTitle = (out.title || out.name || '').trim();
       const hasTargetScript = (lang === 'he' || lang === 'iw')
         ? /[\u0590-\u05FF]/.test(rawTitle)
         : (lang === 'ar')
         ? /[\u0600-\u06FF]/.test(rawTitle)
         : false;
+      const hasLatin = /[a-zA-Z]/.test(rawTitle);
 
-      if (!hasTargetScript) {
-        const subCatRaw = out.sub_category || out.item_type || out.label || '';
-        const subCatKey = canonicalSubCategoryKey(subCatRaw) || String(subCatRaw).toLowerCase().replace(/\s+/g, '_');
+      if (!hasTargetScript || hasLatin) {
+        const itemTypeRaw = out.item_type || out.sub_category || out.label || '';
+        const localizedItem = labelForItemType(itemTypeRaw, t);
+        const subCatKey = canonicalSubCategoryKey(out.sub_category || itemTypeRaw);
         const localizedSub = labelForSubCategory(subCatKey, t);
+        const baseNoun = (localizedItem && !/[a-zA-Z]/.test(localizedItem))
+          ? localizedItem
+          : ((localizedSub && !/[a-zA-Z]/.test(localizedSub)) ? localizedSub : '');
+
         const primaryColor = (typeof out.colors?.[0] === 'string' ? out.colors[0] : out.colors?.[0]?.name) || '';
+        const cleanColor = (!/[a-zA-Z]/.test(primaryColor)) ? primaryColor : '';
+
         const parts = [];
-        if (localizedSub) parts.push(localizedSub);
-        if (primaryColor && !localizedSub.includes(primaryColor)) parts.push(primaryColor);
+        if (baseNoun) parts.push(baseNoun);
+        if (cleanColor && !baseNoun.includes(cleanColor)) {
+          let agreedColor = cleanColor;
+          if ((lang === 'he' || lang === 'iw') && (baseNoun.endsWith('ה') || baseNoun.endsWith('ת'))) {
+            if (!baseNoun.endsWith('ות')) {
+              if (agreedColor === 'ירוק') agreedColor = 'ירוקה';
+              else if (agreedColor === 'לבן') agreedColor = 'לבנה';
+              else if (agreedColor === 'שחור') agreedColor = 'שחורה';
+              else if (agreedColor === 'אפור') agreedColor = 'אפורה';
+              else if (agreedColor === 'צהוב') agreedColor = 'צהובה';
+              else if (agreedColor === 'אדום') agreedColor = 'אדומה';
+              else if (agreedColor === 'חום') agreedColor = 'חומה';
+              else if (agreedColor === 'כחול') agreedColor = 'כחולה';
+            }
+          }
+          parts.push(agreedColor);
+        }
         if (parts.length > 0) {
           out.title = parts.join(' ');
           out.name = parts.join(' ');
@@ -2679,6 +2734,21 @@ export default function AddItem() {
         );
       };
 
+      const handleProgress = (frame) => {
+        const elapsed = frame.elapsed_s || 0;
+        setCards((prev) =>
+          prev.map((c) =>
+            c.status === "scanning"
+              ? {
+                  ...c,
+                  progress: Math.min(95, Math.round(55 + elapsed * 1.5)),
+                  scanElapsedS: elapsed,
+                }
+              : c,
+          ),
+        );
+      };
+
       const images_base64 = cardsToProcess.map((c) => c.base64);
       const payload = { images_base64, language: requestLang };
 
@@ -2691,6 +2761,7 @@ export default function AddItem() {
         onItem: handleItem,
         onItemSkip: handleItemSkip,
         onField: handleField,
+        onProgress: handleProgress,
       });
       clearInterval(tick);
 
@@ -3018,6 +3089,21 @@ export default function AddItem() {
         );
       };
 
+      const handleProgress = (frame) => {
+        const elapsed = frame.elapsed_s || 0;
+        setCards((prev) =>
+          prev.map((c) =>
+            c.id === card.id || c.id.startsWith(`${card.id}-`)
+              ? {
+                  ...c,
+                  progress: Math.min(95, Math.round(55 + elapsed * 1.5)),
+                  scanElapsedS: elapsed,
+                }
+              : c,
+          ),
+        );
+      };
+
       const resp = await api.analyzeItemImage(
         { image_base64: card.base64, language: requestLang },
         {
@@ -3025,6 +3111,7 @@ export default function AddItem() {
           onItem: handleItem,
           onItemSkip: handleItemSkip,
           onField: handleField,
+          onProgress: handleProgress,
         },
       );
       clearInterval(tick);
