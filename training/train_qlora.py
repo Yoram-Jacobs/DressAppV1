@@ -364,12 +364,25 @@ def train_adapter(args: argparse.Namespace) -> Dict[str, Any]:
     try:
         import peft.tuners.lora.model
         orig_create_new_module = peft.tuners.lora.model.LoraModel._create_new_module
-        def _safe_create_new_module(self, lora_config, adapter_name, target, **kwargs):
-            if target.__class__.__name__ == "Gemma4ClippableLinear" and hasattr(target, "linear"):
-                new_inner = orig_create_new_module(self, lora_config, adapter_name, target.linear, **kwargs)
+
+        @staticmethod
+        def _safe_create_new_module(*args, **kwargs):
+            target = kwargs.get("target")
+            if target is None and len(args) >= 3:
+                target = args[2]
+            if target is not None and target.__class__.__name__ == "Gemma4ClippableLinear" and hasattr(target, "linear"):
+                if "target" in kwargs:
+                    kwargs_copy = dict(kwargs)
+                    kwargs_copy["target"] = target.linear
+                    new_inner = orig_create_new_module(*args, **kwargs_copy)
+                else:
+                    new_args = list(args)
+                    new_args[2] = target.linear
+                    new_inner = orig_create_new_module(*new_args, **kwargs)
                 target.linear = new_inner
                 return target
-            return orig_create_new_module(self, lora_config, adapter_name, target, **kwargs)
+            return orig_create_new_module(*args, **kwargs)
+
         peft.tuners.lora.model.LoraModel._create_new_module = _safe_create_new_module
         logger.info("Successfully patched PEFT for Gemma4ClippableLinear support.")
     except Exception as patch_e:
