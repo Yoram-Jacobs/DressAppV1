@@ -294,6 +294,9 @@ def train_adapter(args: argparse.Namespace) -> Dict[str, Any]:
             logger.warning("Fast tokenizer failed (%s). Retrying with use_fast=False...", tok_err)
             tokenizer = AutoTokenizer.from_pretrained(args.base_model, trust_remote_code=True, token=token, use_fast=False)
 
+    tok_obj = getattr(tokenizer, "tokenizer", tokenizer)
+    if hasattr(tok_obj, "pad_token") and tok_obj.pad_token is None:
+        tok_obj.pad_token = getattr(tok_obj, "eos_token", "<pad>")
     if hasattr(tokenizer, "pad_token") and tokenizer.pad_token is None:
         tokenizer.pad_token = getattr(tokenizer, "eos_token", "<pad>")
 
@@ -421,11 +424,16 @@ def train_adapter(args: argparse.Namespace) -> Dict[str, Any]:
 
         try:
             # Tokenize user prompt + generation prompt
-            prompt_str = tokenizer.apply_chat_template(user_msgs, tokenize=False, add_generation_prompt=True)
-            full_str = tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=False)
+            apply_fn = getattr(tokenizer, "apply_chat_template", None) or getattr(tok_obj, "apply_chat_template", None)
+            if apply_fn:
+                prompt_str = apply_fn(user_msgs, tokenize=False, add_generation_prompt=True)
+                full_str = apply_fn(messages, tokenize=False, add_generation_prompt=False)
+            else:
+                prompt_str = "\n".join([f"<|{m.get('role')}|>\n{m.get('content')}" for m in user_msgs]) + "\n<|assistant|>\n"
+                full_str = "\n".join([f"<|{m.get('role')}|>\n{m.get('content')}" for m in messages])
 
-            prompt_ids = tokenizer.encode(prompt_str, add_special_tokens=False)
-            full_ids = tokenizer.encode(full_str, add_special_tokens=False)
+            prompt_ids = tok_obj.encode(prompt_str, add_special_tokens=False)
+            full_ids = tok_obj.encode(full_str, add_special_tokens=False)
 
             if len(full_ids) > args.max_seq_length:
                 full_ids = full_ids[: args.max_seq_length]
@@ -478,10 +486,14 @@ def train_adapter(args: argparse.Namespace) -> Dict[str, Any]:
     filtered_args = {k: v for k, v in raw_args.items() if k in sig_params}
     training_args = args_cls(**filtered_args)
 
+    from transformers import DataCollatorForSeq2Seq
+    collator = DataCollatorForSeq2Seq(tokenizer=tok_obj, pad_to_multiple_of=8, return_tensors="pt")
+
     sft_sig = inspect.signature(SFTTrainer.__init__).parameters
     sft_kwargs = {
         "model": model,
         "train_dataset": hf_dataset,
+        "data_collator": collator,
         "args": training_args,
     }
     if "processing_class" in sft_sig:
