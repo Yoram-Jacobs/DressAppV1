@@ -418,30 +418,54 @@ def train_adapter(args: argparse.Namespace) -> Dict[str, Any]:
     hf_dataset = Dataset.from_list(processed_samples)
     logger.info("Compiled %d tokenized samples with assistant-only loss masking.", len(hf_dataset))
 
-    training_args = TrainingArguments(
-        output_dir=str(output_dir / "checkpoints"),
-        num_train_epochs=args.epochs,
-        per_device_train_batch_size=args.batch_size,
-        gradient_accumulation_steps=4,
-        warmup_ratio=0.03,
-        learning_rate=args.learning_rate,
-        fp16=False,
-        bf16=torch.cuda.is_bf16_supported(),
-        logging_steps=10,
-        save_strategy="epoch",
-        evaluation_strategy="no",
-        optim="paged_adamw_8bit",
-        report_to="none",
-    )
+    import inspect
+    try:
+        from trl import SFTConfig
+        args_cls = SFTConfig
+    except Exception:
+        args_cls = TrainingArguments
 
-    trainer = SFTTrainer(
-        model=model,
-        train_dataset=hf_dataset,
-        args=training_args,
-        tokenizer=tokenizer,
-        max_seq_length=args.max_seq_length,
-        dataset_text_field="text" if "text" in hf_dataset.column_names else None,
-    )
+    sig_params = inspect.signature(args_cls.__init__).parameters
+    raw_args = {
+        "output_dir": str(output_dir / "checkpoints"),
+        "num_train_epochs": args.epochs,
+        "per_device_train_batch_size": args.batch_size,
+        "gradient_accumulation_steps": 4,
+        "warmup_ratio": 0.03,
+        "learning_rate": args.learning_rate,
+        "fp16": False,
+        "bf16": torch.cuda.is_bf16_supported() if torch.cuda.is_available() else False,
+        "logging_steps": 10,
+        "save_strategy": "epoch",
+        "optim": "paged_adamw_8bit" if torch.cuda.is_available() else "adamw_torch",
+        "report_to": "none",
+    }
+    if "eval_strategy" in sig_params:
+        raw_args["eval_strategy"] = "no"
+    elif "evaluation_strategy" in sig_params:
+        raw_args["evaluation_strategy"] = "no"
+
+    if "max_seq_length" in sig_params:
+        raw_args["max_seq_length"] = args.max_seq_length
+
+    filtered_args = {k: v for k, v in raw_args.items() if k in sig_params}
+    training_args = args_cls(**filtered_args)
+
+    sft_sig = inspect.signature(SFTTrainer.__init__).parameters
+    sft_kwargs = {
+        "model": model,
+        "train_dataset": hf_dataset,
+        "args": training_args,
+    }
+    if "processing_class" in sft_sig:
+        sft_kwargs["processing_class"] = tokenizer
+    elif "tokenizer" in sft_sig:
+        sft_kwargs["tokenizer"] = tokenizer
+
+    if "max_seq_length" in sft_sig and "max_seq_length" not in sig_params:
+        sft_kwargs["max_seq_length"] = args.max_seq_length
+
+    trainer = SFTTrainer(**sft_kwargs)
 
     logger.info("Commencing QLoRA training for adapter '%s'...", args.adapter_name)
     t0 = time.time()
@@ -484,6 +508,10 @@ def main():
         stats = train_adapter(args)
         logger.info("Fine-tuning pipeline finished successfully: %s", stats)
     except Exception as e:
+        import traceback
+        sys.stderr.write(f"\n[FATAL ERROR in train_qlora]: {e}\n")
+        traceback.print_exc(file=sys.stderr)
+        sys.stderr.flush()
         logger.exception("Fine-tuning failed: %s", e)
         sys.exit(1)
 

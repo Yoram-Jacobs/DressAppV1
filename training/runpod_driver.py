@@ -345,6 +345,13 @@ def run_pod_training(args: argparse.Namespace) -> Dict[str, Any]:
 
         exit_code = stdout.channel.recv_exit_status()
         if exit_code != 0:
+            try:
+                err_leftover = stderr.read().decode("utf-8", errors="replace").strip()
+                if err_leftover:
+                    for el in err_leftover.splitlines():
+                        logger.error("[Remote Stderr] %s", el)
+            except Exception:
+                pass
             raise RuntimeError(f"Training script terminated with non-zero exit code {exit_code}")
 
         logger.info("Remote training finished successfully.")
