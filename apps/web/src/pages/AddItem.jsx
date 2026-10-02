@@ -453,6 +453,7 @@ const hydrate = (a, user, t, i18n) => {
       out.category = 'Accessories';
     }
   }
+  const subCanonical = subRaw.toLowerCase().replace(/[\s\-]+/g, '_');
   const isGenericItem = !itemRaw || ['top', 'tops', 'bottom', 'bottoms', 'outerwear', 'full body', 'footwear', 'shoes', 'accessories', 'clothing', 'garment', 'item'].includes(String(itemRaw).toLowerCase().trim()) || String(itemRaw).trim().toLowerCase() === String(subRaw).trim().toLowerCase() || String(itemRaw).trim().toLowerCase() === String(catLower).trim().toLowerCase();
   if (isGenericItem) {
     if (subCanonical === 't_shirts' || /t[-_ ]?shirt|tee|חולצת טי|חולצות טי/i.test(subRaw)) {
