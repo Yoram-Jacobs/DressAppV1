@@ -152,7 +152,7 @@ SYSTEM_PROMPT = (
     "• model_gender: Identifiable model -> 'women'|'men'. Flat lay/hanger/mannequin -> null.\n"
     "• gender: Strict 3-Tier Hierarchy: (1) Human Model: anchor garments to model gender ('women'|'men'). (2) Garment Criteria: flat lays determined strictly by cut ('women' for floral/blouses/skirts/dresses/sandals; 'men' for masculine cuts; 'unisex' for neutral basics). (3) Neutral basics fall back to profile gender, or 'unisex'. Never default to 'men'.\n"
     "• colors: ALWAYS [{\"name\": str, \"pct\": int}] summing to 100.\n"
-    "• fabric_materials: [{\"name\": str, \"pct\": int}] summing to 100. tags: [str] (3-6 tags).\n"
+    "• fabric_materials: [{\"name\": str, \"pct\": int}] summing to 100. tags: [str] (3-6 unique tags).\n"
     "• pattern: 'solid'|'printed'|'geometric'|'striped'|'plaid'|'floral'.\n"
     "• text/logos: Read accurately ('American Eagle'=eagle/עיט, not deer/אייל).\n"
     "• season: ['spring'|'summer'|'fall'|'winter'|'all']. Linen/short-sleeve/sandals=['summer']; wool/down=['fall','winter'].\n"

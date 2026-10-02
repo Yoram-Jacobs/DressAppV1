@@ -2839,7 +2839,7 @@ class GarmentVisionService:
                             "pattern": {"type": "string"},
                             "dress_code": {"type": "string", "enum": ["casual", "smart-casual", "business", "formal", "athletic", "loungewear", "lounge"]},
                             "season": {"type": "array", "items": {"type": "string"}},
-                            "tags": {"type": "array", "items": {"type": "string"}},
+                            "tags": {"type": "array", "items": {"type": "string"}, "uniqueItems": True},
                             "caption": {"type": "string", "description": "One short sentence <=10 words describing style and color"},
                         },
                         "required": ["slot_index", "is_clothing", "title", "category", "sub_category", "item_type", "gender"],

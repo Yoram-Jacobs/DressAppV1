@@ -236,6 +236,37 @@ def test_enforce_segformer_category_double_monk_strap_shoes():
     assert fixed["item_type"] == "Double Monk Strap Shoes"
 
 
+def test_tag_deduplication_and_semantic_normalization():
+    """Verify tags are normalized, deduplicated semantically, and never repeat words like Belts or Trousers."""
+    from app.services.vision.validation import _coerce_single_garment
+
+    # 1. Belt test case (Belts x 3 + accessory)
+    raw_belt = {
+        "title": "Brown Leather Belt",
+        "category": "Accessories",
+        "sub_category": "Belts",
+        "item_type": "Leather Belt",
+        "tags": ["Belts", "belts", "belt", "accessory"],
+    }
+    coerced_belt = _coerce_single_garment(raw_belt)
+    belt_count = sum(1 for t in coerced_belt["tags"] if t.lower() in ("belts", "belt"))
+    assert belt_count == 1
+    assert "accessory" in coerced_belt["tags"]
+
+    # 2. Trousers test case (Trousers x 2 + pants)
+    raw_trousers = {
+        "title": "Grey Trousers",
+        "category": "Bottom",
+        "sub_category": "Trousers",
+        "item_type": "Chinos",
+        "tags": ["Trousers", "trousers", "pants", "Grey", "smart-casual", "fall"],
+    }
+    coerced_trousers = _coerce_single_garment(raw_trousers)
+    trouser_count = sum(1 for t in coerced_trousers["tags"] if t.lower() in ("trouser", "trousers", "pants", "pant"))
+    assert trouser_count == 1
+    assert len(coerced_trousers["tags"]) == len(set(coerced_trousers["tags"]))
+
+
 def test_extract_json_truncated_array_recovers_items():
     """Truncated JSON arrays without closing brackets recover all completed garment objects."""
     from app.services.vision.llm import _extract_json

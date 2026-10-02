@@ -347,6 +347,22 @@ const hydrate = (a, user, t, i18n) => {
     const pref = deriveSizeFromPreferences(user, out);
     if (pref) out.size = pref;
   }
+
+  // Deduplicate initial tags
+  if (Array.isArray(out.tags)) {
+    const seenTags = new Set();
+    out.tags = out.tags.filter((tag) => {
+      if (!tag || typeof tag !== 'string') return false;
+      const clean = tag.trim();
+      if (!clean) return false;
+      const norm = clean.toLowerCase().replace(/[\s\-_]+/g, ' ').replace(/s$/, '');
+      if (seenTags.has(clean.toLowerCase()) || seenTags.has(norm)) return false;
+      seenTags.add(clean.toLowerCase());
+      seenTags.add(norm);
+      return true;
+    });
+  }
+
   // 1. Sanity check: Subcategory and Item Type cannot be identical to Category or generic "Top"/"Tops"/"Garment"
   const catLower = String(out.category || '').trim().toLowerCase();
   let subRaw = String(out.sub_category || '').trim();
@@ -5999,10 +6015,38 @@ function SeasonPicker({ idPrefix, fields, onChange, disabled }) {
 function TagsEditor({ idPrefix, items, onChange, disabled }) {
   const { t } = useTranslation();
   const [draft, setDraft] = useState("");
+
+  // Deduplicate tags by both raw key and localized display label
+  const displayedTags = useMemo(() => {
+    const result = [];
+    const seenDisplay = new Set();
+    const seenRaw = new Set();
+    (items || []).forEach((tag) => {
+      if (!tag || typeof tag !== 'string') return;
+      const clean = tag.trim();
+      if (!clean) return;
+      const rawKey = clean.toLowerCase();
+      const label = labelForTag(clean, t) || clean;
+      const displayKey = label.trim().toLowerCase();
+      if (!seenRaw.has(rawKey) && !seenDisplay.has(displayKey)) {
+        seenRaw.add(rawKey);
+        seenDisplay.add(displayKey);
+        result.push({ raw: clean, label });
+      }
+    });
+    return result;
+  }, [items, t]);
+
   const add = () => {
     const v = draft.trim();
     if (!v) return;
-    if (!items.includes(v)) onChange([...items, v]);
+    const vLabel = (labelForTag(v, t) || v).trim().toLowerCase();
+    const exists = displayedTags.some(
+      (dt) => dt.raw.toLowerCase() === v.toLowerCase() || dt.label.trim().toLowerCase() === vLabel
+    );
+    if (!exists) {
+      onChange([...(items || []), v]);
+    }
     setDraft("");
   };
   const fieldId = `${idPrefix}-tag-input`;
@@ -6014,19 +6058,27 @@ function TagsEditor({ idPrefix, items, onChange, disabled }) {
       <div className="mt-1" data-testid="add-item-tags">
         {/* Only tags */}
         <div className="flex flex-wrap gap-1.5">
-          {items.map((tag) => (
+          {displayedTags.map(({ raw, label }) => (
             <Badge
-              key={tag}
+              key={raw}
               variant="outline"
               className="text-[11px] ps-2 pe-1 flex items-center !gap-0.5"
             >
-              {labelForTag(tag, t)}
+              {label}
               <button
                 type="button"
-                onClick={() => onChange(items.filter((x) => x !== tag))}
+                onClick={() =>
+                  onChange(
+                    (items || []).filter(
+                      (x) =>
+                        x !== raw &&
+                        (labelForTag(x, t) || x).trim().toLowerCase() !== label.trim().toLowerCase()
+                    )
+                  )
+                }
                 disabled={disabled}
                 className="h-4 w-4 rounded-full hover:bg-secondary flex items-center justify-center"
-                aria-label={t("addItem.removeTagAria", { label: labelForTag(tag, t) })}
+                aria-label={t("addItem.removeTagAria", { label })}
               >
                 <X className="h-3 w-3" />
               </button>

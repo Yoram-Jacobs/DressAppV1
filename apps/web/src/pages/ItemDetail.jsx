@@ -341,11 +341,37 @@ function diffPatch(loaded, form, user = null) {
 function ChipList({ value, onChange, placeholder, disabled, testidPrefix }) {
   const { t } = useTranslation();
   const [draft, setDraft] = useState('');
+
+  const displayedChips = useMemo(() => {
+    const result = [];
+    const seenDisplay = new Set();
+    const seenRaw = new Set();
+    (value || []).forEach((v) => {
+      if (!v || typeof v !== 'string') return;
+      const clean = v.trim();
+      if (!clean) return;
+      const rawKey = clean.toLowerCase();
+      const label = labelForTag(clean, t) || clean;
+      const displayKey = label.trim().toLowerCase();
+      if (!seenRaw.has(rawKey) && !seenDisplay.has(displayKey)) {
+        seenRaw.add(rawKey);
+        seenDisplay.add(displayKey);
+        result.push({ raw: clean, label });
+      }
+    });
+    return result;
+  }, [value, t]);
+
   const add = () => {
     const trimmed = draft.trim();
     if (!trimmed) return;
-    if (value.includes(trimmed)) { setDraft(''); return; }
-    onChange([...value, trimmed]);
+    const trimLabel = (labelForTag(trimmed, t) || trimmed).trim().toLowerCase();
+    const exists = displayedChips.some(
+      (dc) => dc.raw.toLowerCase() === trimmed.toLowerCase() || dc.label.trim().toLowerCase() === trimLabel
+    );
+    if (!exists) {
+      onChange([...(value || []), trimmed]);
+    }
     setDraft('');
   };
   return (
@@ -353,20 +379,28 @@ function ChipList({ value, onChange, placeholder, disabled, testidPrefix }) {
       className="flex flex-wrap gap-1.5 items-center"
       data-testid={`${testidPrefix}-chiplist`}
     >
-      {value.map((v) => (
+      {displayedChips.map(({ raw, label }) => (
         <Badge
-          key={v}
+          key={raw}
           variant="secondary"
           className="rounded-full text-[11px] inline-flex items-center gap-1 mb-2"
-          data-testid={`${testidPrefix}-chip-${v}`}
+          data-testid={`${testidPrefix}-chip-${raw}`}
         >
-          {labelForTag(v, t)}
+          {label}
           {!disabled && (
             <button
               type="button"
-              onClick={() => onChange(value.filter((x) => x !== v))}
+              onClick={() =>
+                onChange(
+                  (value || []).filter(
+                    (x) =>
+                      x !== raw &&
+                      (labelForTag(x, t) || x).trim().toLowerCase() !== label.trim().toLowerCase()
+                  )
+                )
+              }
               className="hover:text-destructive"
-              aria-label={t("addItem.removeTagAria", { defaultValue: `Remove ${labelForTag(v, t)}`, label: labelForTag(v, t) })}
+              aria-label={t("addItem.removeTagAria", { defaultValue: `Remove ${label}`, label })}
             >
               <X className="h-3 w-3" />
             </button>

@@ -280,6 +280,47 @@ def _clean_truncated_caption(caption: str | None) -> str:
     return text
 
 
+def _canonical_tag_key(tag: Any) -> str:
+    """Return a lowercased, un-punctuated, stemmed canonical key for a tag to detect semantic duplicates."""
+    if not tag or not isinstance(tag, str):
+        return ""
+    s = str(tag).strip().lower()
+    s = re.sub(r"[\s\-_]+", " ", s)
+    # Strip common plural suffixes
+    if s.endswith("ies") and len(s) > 4:
+        s = s[:-3] + "y"
+    elif s.endswith("es") and len(s) > 3 and not s.endswith(("ss", "us", "is")):
+        s = s[:-2]
+    elif s.endswith("s") and len(s) > 2 and not s.endswith(("ss", "us", "is")):
+        s = s[:-1]
+
+    synonyms = {
+        "pant": "trouser",
+        "trouser": "trouser",
+        "trousers": "trouser",
+        "slacks": "trouser",
+        "jean": "jeans",
+        "tee": "t-shirt",
+        "tshirt": "t-shirt",
+        "t shirt": "t-shirt",
+        "shirt": "shirt",
+        "belt": "belt",
+        "shoe": "shoe",
+        "boot": "boot",
+        "sneaker": "sneaker",
+        "trainer": "sneaker",
+        "sandal": "sandal",
+        "sweater": "sweater",
+        "jacket": "jacket",
+        "coat": "coat",
+        "bag": "bag",
+        "handbag": "bag",
+        "autumn": "fall",
+        "gray": "grey",
+    }
+    return synonyms.get(s, s)
+
+
 def normalize_weighted_tags(tags: Any) -> list[dict[str, Any]]:
     """Normalize a list of tags (strings or {name, pct} dicts) so that:
     1. Every entry is a dict {"name": str, "pct": int}.
@@ -1022,38 +1063,58 @@ def _coerce_single_garment(
                 for t in res["tags"]
             ]
 
-    # Tags guarantee: ensure tags are always populated with 3-6 relevant tags
-    current_tags = res.get("tags")
-    if not isinstance(current_tags, list) or not current_tags:
-        fallback_tags: list[str] = []
+    # Clean, deduplicate, and ensure tags are populated with 3-6 relevant unique tags
+    raw_tags = res.get("tags") if isinstance(res.get("tags"), list) else []
+
+    # Pre-clean existing tags and filter semantic duplicates
+    seen_canonical: set[str] = set()
+    cleaned_tags: list[str] = []
+    for t in raw_tags:
+        if not t or not isinstance(t, str):
+            continue
+        clean_t = t.strip()
+        if not clean_t:
+            continue
+        ck = _canonical_tag_key(clean_t)
+        if ck and ck not in seen_canonical:
+            seen_canonical.add(ck)
+            cleaned_tags.append(clean_t)
+
+    # If tags are missing or fewer than 3, supplement with relevant attributes
+    if len(cleaned_tags) < 3:
+        candidates = []
         if res.get("sub_category"):
-            fallback_tags.append(str(res["sub_category"]).lower())
+            candidates.append(str(res["sub_category"]))
         if res.get("item_type") and str(res["item_type"]).lower() != str(res.get("sub_category", "")).lower():
-            fallback_tags.append(str(res["item_type"]).lower())
+            candidates.append(str(res["item_type"]))
         if res.get("color"):
-            fallback_tags.append(str(res["color"]).lower())
+            candidates.append(str(res["color"]))
         elif res.get("colors") and isinstance(res["colors"], list) and res["colors"] and res["colors"][0].get("name"):
-            fallback_tags.append(str(res["colors"][0]["name"]).lower())
+            candidates.append(str(res["colors"][0]["name"]))
         if res.get("pattern") and str(res["pattern"]).lower() not in ("none", "other", "unknown", "solid"):
-            fallback_tags.append(str(res["pattern"]).lower())
+            candidates.append(str(res["pattern"]))
         if res.get("dress_code"):
-            fallback_tags.append(str(res["dress_code"]).lower())
+            candidates.append(str(res["dress_code"]))
         if res.get("season") and isinstance(res["season"], list):
             for s in res["season"]:
                 if s and s != "all":
-                    fallback_tags.append(str(s).lower())
+                    candidates.append(str(s))
                     break
         if res.get("brand"):
-            fallback_tags.append(str(res["brand"]).lower())
-        # Deduplicate preserving order
-        seen_t = set()
-        dedup_tags = []
-        for t in fallback_tags:
-            clean_t = t.strip()
-            if clean_t and clean_t not in seen_t:
-                seen_t.add(clean_t)
-                dedup_tags.append(clean_t)
-        res["tags"] = dedup_tags[:6]
+            candidates.append(str(res["brand"]))
+
+        for cand in candidates:
+            cand_str = cand.strip()
+            if not cand_str:
+                continue
+            ck = _canonical_tag_key(cand_str)
+            if ck and ck not in seen_canonical:
+                seen_canonical.add(ck)
+                cleaned_tags.append(cand_str)
+            if len(cleaned_tags) >= 6:
+                break
+
+    res["tags"] = cleaned_tags[:6]
 
     # Tag localization fallback for Hebrew output
     is_lang_he = (language or "").lower() in ("he", "iw") or any("\u0590" <= ch <= "\u05ea" for ch in f"{res.get('name', '')} {res.get('title', '')}")
@@ -1073,11 +1134,32 @@ def _coerce_single_garment(
             "shirt": "חולצה",
             "jeans": "ג'ינס",
             "pants": "מכנסיים",
+            "trouser": "מכנסיים",
+            "trousers": "מכנסיים",
             "shorts": "מכנסיים קצרים",
             "sweater": "סוודר",
             "hoodie": "קפוצ'ון",
             "jacket": "ז'קט",
             "coat": "מעיל",
+            "belt": "חגורה",
+            "belts": "חגורה",
+            "accessory": "אקססוריז",
+            "accessories": "אקססוריז",
+            "shoe": "נעליים",
+            "shoes": "נעליים",
+            "boot": "מגפיים",
+            "boots": "מגפיים",
+            "sandal": "סנדלים",
+            "sandals": "סנדלים",
+            "sneaker": "סניקרס",
+            "sneakers": "סניקרס",
+            "heel": "נעלי עקב",
+            "heels": "נעלי עקב",
+            "loafer": "מוקסין",
+            "loafers": "מוקסינים",
+            "bag": "תיק",
+            "bags": "תיקים",
+            "handbag": "תיק יד",
             "burgundy": "בורדו",
             "red": "אדום",
             "blue": "כחול",
@@ -1110,7 +1192,15 @@ def _coerce_single_garment(
             "vintage": "וינטג'",
             "streetwear": "אופנת רחוב",
         }
-        res["tags"] = [he_tag_map.get(str(t).strip().lower(), t) for t in res["tags"] if t]
+        translated_tags = [he_tag_map.get(str(t).strip().lower(), t) for t in res["tags"] if t]
+        seen_he: set[str] = set()
+        dedup_he: list[str] = []
+        for t in translated_tags:
+            t_str = str(t).strip()
+            if t_str and t_str not in seen_he:
+                seen_he.add(t_str)
+                dedup_he.append(t_str)
+        res["tags"] = dedup_he[:6]
 
     # Ensure title and name are always synchronized
     if not res.get("title") and res.get("name"):
