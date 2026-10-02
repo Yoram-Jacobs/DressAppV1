@@ -812,11 +812,13 @@ async def call_gemma_space_stream_attributes(
             if mapped_cat:
                 user_hints.append(f"Crop: '{mapped_cat}'. Describe this item only.")
 
-        if "bag" in lbl_low or segformer_category == "bag":
+        if "skirt" in lbl_low:
+            user_hints.append("RULE: Skirt. Lower garment with continuous flare/hem and no leg division is sub_category='Skirt', item_type='Pleated Skirt'|'Midi Skirt'|'A-Line Skirt'|'Mini Skirt'|'Maxi Skirt'. NEVER classify as Pants or Trousers. Accurately report visual fabric color (grey/olive/charcoal), NOT black.")
+        elif "bag" in lbl_low or segformer_category == "bag":
             user_hints.append("RULE: Genuine bags/purses only. Handheld water bottles/cups/phones/objects: set is_clothing: false, sub_category='non-clothing', item_type='non-clothing'.")
         elif ("shoe" in lbl_low or segformer_category == "footwear") and "boot" not in lbl_low:
             user_hints.append("RULE: Footwear. Low-cut/athletic: sub_category='Sneakers'|'Shoes'.")
-        elif "pants" in lbl_low or segformer_category == "bottom":
+        elif "pants" in lbl_low or (segformer_category == "bottom" and "skirt" not in lbl_low):
             user_hints.append("RULE: Pants vs Jeans. 5-pocket rivet denim only is 'Jeans'. Chinos/slacks/trousers are sub_category='Pants', item_type='Chinos'|'Tailored Trousers', dress_code='smart-casual'.")
 
         user_text = _user_prompt(language, user_gender=user_gender)
@@ -842,7 +844,11 @@ async def call_gemma_space_stream_attributes(
                         prop["enum"] = ["Accessories"]
 
                 if name == "sub_category":
-                    if "bag" in lbl_low or segformer_category == "bag":
+                    if "skirt" in lbl_low:
+                        prop["enum"] = [
+                            "Skirt", "Midi Skirt", "Pleated Skirt", "A-Line Skirt", "Mini Skirt", "Maxi Skirt", "Pencil Skirt",
+                        ]
+                    elif "bag" in lbl_low or segformer_category == "bag":
                         prop["enum"] = [
                             "Bag", "Handbag", "Tote Bag", "Crossbody Bag", "Shoulder Bag",
                             "Backpack", "Clutch", "Wicker Bag", "Basket Bag", "non-clothing",

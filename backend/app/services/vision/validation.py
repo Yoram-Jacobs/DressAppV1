@@ -2318,12 +2318,82 @@ def _enforce_segformer_category(
                     analysis["title"] = new_name
                     analysis["_subcategory_overridden_by"] = "segformer-shoes"
 
+        elif "skirt" in lbl_low:
+            sub_low = (analysis.get("sub_category") or "").lower()
+            item_low = (analysis.get("item_type") or "").lower()
+            curr_name = (analysis.get("name") or analysis.get("title") or "").lower()
+            combined_txt = f"{sub_low} {item_low} {curr_name} {str(analysis.get('caption') or '').lower()}"
+            is_skirt = sub_low in ("skirt", "skirts") and not any(p in item_low for p in ("pant", "trouser", "jean", "chino", "slack"))
+            if not is_skirt:
+                logger.warning(
+                    "garment_vision: SegFormer-anchored skirt override label=%r kind=%r sub_category=%r item_type=%r -> Skirt",
+                    label, kind, analysis.get("sub_category"), analysis.get("item_type"),
+                )
+                analysis["category"] = "Bottom"
+                analysis["sub_category"] = "Skirt"
+                if "pleat" in combined_txt:
+                    analysis["item_type"] = "Pleated Skirt"
+                elif "mini" in combined_txt:
+                    analysis["item_type"] = "Mini Skirt"
+                elif "maxi" in combined_txt:
+                    analysis["item_type"] = "Maxi Skirt"
+                elif "a-line" in combined_txt or "aline" in combined_txt:
+                    analysis["item_type"] = "A-Line Skirt"
+                else:
+                    analysis["item_type"] = "Midi Skirt"
+
+                if (analysis.get("gender") or "").lower() not in ("women", "kids"):
+                    analysis["gender"] = "women"
+                if (analysis.get("dress_code") or "").lower() == "business":
+                    analysis["dress_code"] = "smart-casual"
+                analysis["_subcategory_overridden_by"] = "segformer-skirt"
+
+            # Check if colors were hallucinated as pure black due to pants misclassification
+            colors = analysis.get("colors")
+            is_pure_black = isinstance(colors, list) and len(colors) == 1 and str(colors[0].get("name", "")).lower() in ("black", "שחור")
+            if is_pure_black:
+                # If caption, name, or description has hints of grey, olive, charcoal, or khaki
+                if any(w in combined_txt for w in ("grey", "gray", "olive", "charcoal", "khaki", "אפור", "זית", "חאקי")):
+                    corrected_c = "Olive Green" if any(w in combined_txt for w in ("olive", "זית")) else "Gray"
+                    if language == "he":
+                        corrected_c = "ירוק זית" if ("זית" in corrected_c or "olive" in combined_txt) else "אפור"
+                    analysis["colors"] = [{"name": corrected_c, "pct": 100}]
+                    analysis["color"] = corrected_c
+
+            # Sanitize name and title to ensure no residual pants/trousers terms
+            curr_name_raw = analysis.get("name") or analysis.get("title") or ""
+            if any(w in curr_name_raw.lower() for w in ("trouser", "pant", "chino", "slack", "מכנסיים")):
+                if language == "he":
+                    col_str = ""
+                    if analysis.get("colors") and isinstance(analysis["colors"], list):
+                        c0 = str(analysis["colors"][0].get("name", "")).strip().lower()
+                        if "אפור" in c0 or "gray" in c0 or "grey" in c0:
+                            col_str = "אפורה"
+                        elif "שחור" in c0 or "black" in c0:
+                            col_str = "שחורה"
+                        elif "זית" in c0 or "olive" in c0:
+                            col_str = "ירוק זית"
+                    itype_str = "חצאית פליסה" if analysis.get("item_type") == "Pleated Skirt" else "חצאית מידי"
+                    new_name = f"{itype_str} {col_str}".strip() if col_str else itype_str
+                else:
+                    col_str = ""
+                    if analysis.get("colors") and isinstance(analysis["colors"], list):
+                        c0 = str(analysis["colors"][0].get("name", "")).strip()
+                        if c0.lower() not in ("unknown", "other"):
+                            col_str = c0
+                    itype_str = analysis.get("item_type") or "Midi Skirt"
+                    new_name = f"{col_str} {itype_str}".strip() if col_str else itype_str
+                analysis["name"] = new_name
+                analysis["title"] = new_name
+
         # Ensure sub_category and item_type are not identical
         if analysis.get("sub_category") and analysis.get("item_type"):
             sub_str = str(analysis["sub_category"]).strip()
             item_str = str(analysis["item_type"]).strip()
             if sub_str.lower() == item_str.lower():
-                if sub_str.lower() in ("sneakers", "shoes"):
+                if sub_str.lower() in ("skirt", "skirts"):
+                    analysis["item_type"] = "Classic Skirt"
+                elif sub_str.lower() in ("sneakers", "shoes"):
                     analysis["item_type"] = "Low-Top Sneakers" if sub_str.lower() == "sneakers" else "Casual Shoes"
                 elif sub_str.lower() in ("sandals", "sandal", "סנדלים"):
                     analysis["item_type"] = "Strappy Sandals"
@@ -2374,6 +2444,8 @@ def _enforce_segformer_category(
         if "skirt" in lbl_low:
             analysis["sub_category"] = "Skirt"
             analysis["item_type"] = "skirt"
+            if (analysis.get("gender") or "").lower() not in ("women", "kids"):
+                analysis["gender"] = "women"
         elif "pants" in lbl_low or "trousers" in lbl_low:
             analysis["sub_category"] = "Pants"
             analysis["item_type"] = "pants"

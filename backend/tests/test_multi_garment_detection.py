@@ -1738,6 +1738,40 @@ async def test_detect_items_merging_both_sources(monkeypatch):
     assert "trousers" in labels
 
 
+def test_enforce_segformer_skirt_overrides_pants_and_hebrew_name():
+    """Verify that when SegFormer detects a skirt, a falsely predicted 'Tailored Trousers' / 'Pants' is corrected to Skirt with valid Hebrew grammar."""
+    analysis = {
+        "name": "מכנסיים שחורים מחויטים",
+        "title": "מכנסיים שחורים מחויטים",
+        "category": "Bottom",
+        "sub_category": "Pants",
+        "item_type": "Tailored Trousers",
+        "dress_code": "business",
+        "gender": "men",
+        "colors": [{"name": "black", "pct": 100}],
+        "caption": "A chic woman wearing an olive/grey pleated skirt on the street",
+    }
+
+    fixed = _enforce_segformer_category(
+        analysis,
+        segformer_kind="bottom",
+        label="skirt",
+        is_single_item=False,
+        language="he",
+    )
+
+    assert fixed["category"] == "Bottom"
+    assert fixed["sub_category"] == "Skirt"
+    assert fixed["item_type"] == "Pleated Skirt"
+    assert fixed["gender"] == "women"
+    assert fixed["dress_code"] == "smart-casual"
+    assert "מכנסיים" not in fixed["name"]
+    assert "חצאית" in fixed["name"]
+    # Check that color was corrected from black based on caption
+    assert fixed["colors"][0]["name"] == "ירוק זית"
+
+
+
 
 
 

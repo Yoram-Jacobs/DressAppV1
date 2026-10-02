@@ -420,6 +420,22 @@ export const canonicalSubCategoryKey = (raw) => {
   if (normalized.includes('glove') || normalized.includes('כפפה') || normalized.includes('כפפות') || normalized.includes('перчат') || normalized.includes('варежк')) return 'gloves';
   if (normalized.includes('scarf') || normalized.includes('wrap') || normalized.includes('צעיף') || normalized.includes('צעיפים') || normalized.includes('шарф') || normalized.includes('платок')) return 'scarves_and_wraps';
   if (normalized.includes('sock') || normalized.includes('hosiery') || normalized.includes('tight') || normalized.includes('גרבי') || normalized.includes('גרב') || normalized.includes('колгот')) return 'hosiery_and_socks';
+  if (
+    normalized.includes('sunglass') ||
+    normalized.includes('משקפי') ||
+    normalized.includes('очки') ||
+    normalized.includes('solbrill') ||
+    normalized.includes('zonnebril') ||
+    normalized.includes('lunette') ||
+    normalized.includes('gafas') ||
+    normalized.includes('occhiali') ||
+    normalized.includes('óculos') ||
+    normalized.includes('نظار') ||
+    normalized.includes('सनग्लास') ||
+    normalized.includes('サングラス') ||
+    normalized.includes('太阳镜') ||
+    normalized.includes('墨镜')
+  ) return 'sunglasses';
 
   if (normalized.includes('soles') || normalized.includes('outsole') || normalized.includes('סוליה_חיצונית') || normalized.includes('подошв')) return 'soles_and_outsoles';
   if (normalized.includes('lifts') || normalized.includes('heel_stack') || normalized.includes('עקבים_והגבהה') || normalized.includes('каблук') || normalized.includes('набойк')) return 'heels_and_lifts';
