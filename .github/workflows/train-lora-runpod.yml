@@ -1,0 +1,131 @@
+name: Train LoRA on RunPod & Deploy to Hetzner VPS
+
+on:
+  workflow_dispatch:
+    inputs:
+      adapter_name:
+        description: 'Target LoRA Workflow Adapter'
+        required: true
+        type: choice
+        options:
+          - 'garment_vision'
+          - 'trend_scout'
+          - 'stylist_chat'
+          - 'suitcase'
+          - 'scheduled_outfit'
+        default: 'garment_vision'
+      epochs:
+        description: 'Number of Training Epochs'
+        required: false
+        default: '3'
+        type: string
+      batch_size:
+        description: 'Per-Device Batch Size'
+        required: false
+        default: '2'
+        type: string
+      learning_rate:
+        description: 'Peak Learning Rate'
+        required: false
+        default: '2e-4'
+        type: string
+      gpu_type:
+        description: 'Target RunPod GPU Type'
+        required: true
+        type: choice
+        options:
+          - 'NVIDIA RTX 4090'
+          - 'NVIDIA A40'
+          - 'NVIDIA RTX A5000'
+          - 'NVIDIA L4'
+        default: 'NVIDIA RTX 4090'
+      dry_run:
+        description: 'Dry Run Mode (Simulate without provisioning GPU)'
+        required: false
+        type: boolean
+        default: false
+      deploy_vps:
+        description: 'Deploy & hot-reload adapter on Hetzner VPS'
+        required: false
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  train-and-deploy:
+    name: Headless QLoRA (${{ inputs.adapter_name }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install Runner Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install runpod paramiko huggingface_hub
+
+      - name: Run Headless RunPod Training
+        id: runpod-training
+        env:
+          RUNPOD_API_KEY: ${{ secrets.RUNPOD_API_KEY }}
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        run: |
+          DRY_RUN_FLAG=""
+          if [ "${{ inputs.dry_run }}" = "true" ]; then
+            DRY_RUN_FLAG="--dry_run"
+          fi
+
+          python training/runpod_driver.py \
+            --adapter_name "${{ inputs.adapter_name }}" \
+            --epochs "${{ inputs.epochs }}" \
+            --batch_size "${{ inputs.batch_size }}" \
+            --learning_rate "${{ inputs.learning_rate }}" \
+            --gpu_type "${{ inputs.gpu_type }}" \
+            --dataset_path "training/datasets/sample_garment_vision.jsonl" \
+            --hf_repo "Yoram-Jacobs/dressapp-${{ inputs.adapter_name }}-adapter" \
+            $DRY_RUN_FLAG
+
+      - name: Zero-Downtime VPS Deployment via SSH
+        if: ${{ inputs.deploy_vps == true && !cancelled() && steps.runpod-training.outcome == 'success' }}
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.VPS_SSH_HOST }}
+          username: ${{ secrets.VPS_SSH_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          envs: HF_TOKEN
+          script: |
+            set -eo pipefail
+            echo "Connected to Hetzner VPS host: $(hostname)"
+            
+            # Target deployment directory
+            DEPLOY_SCRIPT="/srv/AI-Stylist/deploy/reload_eyes_adapters.sh"
+            
+            # Ensure reload script is executable
+            if [ -f "$DEPLOY_SCRIPT" ]; then
+              chmod +x "$DEPLOY_SCRIPT"
+              bash "$DEPLOY_SCRIPT" \
+                --adapter "${{ inputs.adapter_name }}" \
+                --repo "Yoram-Jacobs/dressapp-${{ inputs.adapter_name }}-adapter" \
+                --adapters-dir "/opt/dressApp/adapters" \
+                --token "${{ secrets.HF_TOKEN }}"
+            else
+              echo "Script $DEPLOY_SCRIPT not found on VPS. Staging from repo checkout..."
+              cd /srv/AI-Stylist && git pull
+              chmod +x deploy/reload_eyes_adapters.sh
+              bash deploy/reload_eyes_adapters.sh \
+                --adapter "${{ inputs.adapter_name }}" \
+                --repo "Yoram-Jacobs/dressapp-${{ inputs.adapter_name }}-adapter" \
+                --adapters-dir "/opt/dressApp/adapters" \
+                --token "${{ secrets.HF_TOKEN }}"
+            fi
