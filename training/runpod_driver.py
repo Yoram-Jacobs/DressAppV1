@@ -184,6 +184,20 @@ def run_pod_training(args: argparse.Namespace) -> Dict[str, Any]:
 
     api_key = os.environ.get("RUNPOD_API_KEY")
     if not api_key:
+        for env_path in [Path("backend/.env"), Path("deploy/.env"), Path(".env")]:
+            if env_path.exists():
+                try:
+                    with open(env_path, "r", encoding="utf-8") as f:
+                        for line in f:
+                            line = line.strip()
+                            if line.startswith("RUNPOD_API_KEY=") and not api_key:
+                                api_key = line.split("=", 1)[1].strip().strip('"').strip("'")
+                                os.environ["RUNPOD_API_KEY"] = api_key
+                            elif line.startswith("HF_TOKEN=") and "HF_TOKEN" not in os.environ:
+                                os.environ["HF_TOKEN"] = line.split("=", 1)[1].strip().strip('"').strip("'")
+                except Exception:
+                    pass
+    if not api_key:
         raise ValueError("RUNPOD_API_KEY environment variable is required.")
     runpod.api_key = api_key
 
