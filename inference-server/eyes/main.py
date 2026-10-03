@@ -205,10 +205,15 @@ def _peek_gguf_arch(path: Path) -> dict[str, Any]:
 
 # ---- Config (env, with defaults set in Dockerfile) ------------------
 ADAPTERS_DIR = MODEL_DIR / "adapters"
+ENABLE_LORA = os.environ.get("EYES_ENABLE_LORA", "false").lower() in ("true", "1", "yes")
 
 
 def _discover_adapters() -> list[Path]:
     """Discover all GGUF LoRA adapters in /models/adapters, /adapter, and /models."""
+    if not ENABLE_LORA:
+        log.info("Keyed Prompt Injection mode active (EYES_ENABLE_LORA=false): LoRA adapters disabled.")
+        return []
+
     found: list[Path] = []
     seen: set[str] = set()
 
@@ -482,7 +487,8 @@ class PredictOut(BaseModel):
 async def root() -> dict[str, Any]:
     return {
         "service": "dressapp-eyes",
-        "phase": "2-lora-gguf",
+        "phase": "2-keyed-prompt-injection" if not ENABLE_LORA else "2-lora-gguf",
+        "mode": "keyed_prompt_injection" if not ENABLE_LORA else "lora",
         "engine": "llama-server (built from llama.cpp HEAD)",
         "model": getattr(app.state, "model_basename", MODEL_FILE),
         "adapters": getattr(app.state, "lora_adapters", []),
@@ -575,6 +581,7 @@ async def healthz() -> dict[str, Any]:
         raise HTTPException(status_code=503, detail=f"llama-server not healthy: {exc}")
     return {
         "status": "ok",
+        "mode": "keyed_prompt_injection" if not ENABLE_LORA else "lora",
         "model": getattr(app.state, "model_basename", MODEL_FILE),
         "adapters": getattr(app.state, "lora_adapters", []),
         "vision_enabled": getattr(app.state, "vision_enabled", False),
@@ -707,49 +714,58 @@ async def predict(req: PredictIn) -> PredictOut:
     client: httpx.AsyncClient = app.state.client
     t0 = time.time()
     active_adapter_name: str | None = None
-    async with app.state.lock:
-        target_adapter = (req.adapter or req.model or "").strip()
-        loaded = getattr(app.state, "lora_adapters", [])
-        if loaded:
-            new_scales = []
-            target_lower = target_adapter.lower()
-            for item in loaded:
-                item_id = item.get("id")
-                item_path = item.get("path", "")
-                base_name = Path(item_path).stem.lower()
-                if target_lower in ("base", "none", "raw"):
-                    scale = 0.0
-                elif (
-                    target_lower in ("garment_vision", "default", "local", "")
-                    or "gemini" in target_lower
-                    or target_lower == base_name
-                    or target_lower in base_name
-                    or base_name in target_lower
-                ):
-                    scale = 1.0
-                    active_adapter_name = Path(item_path).stem
-                else:
-                    scale = 0.0
-                new_scales.append({"id": item_id, "scale": scale})
+    if ENABLE_LORA:
+        async with app.state.lock:
+            target_adapter = (req.adapter or req.model or "").strip()
+            loaded = getattr(app.state, "lora_adapters", [])
+            if loaded:
+                new_scales = []
+                target_lower = target_adapter.lower()
+                for item in loaded:
+                    item_id = item.get("id")
+                    item_path = item.get("path", "")
+                    base_name = Path(item_path).stem.lower()
+                    if target_lower in ("base", "none", "raw"):
+                        scale = 0.0
+                    elif (
+                        target_lower in ("garment_vision", "default", "local", "")
+                        or "gemini" in target_lower
+                        or target_lower == base_name
+                        or target_lower in base_name
+                        or base_name in target_lower
+                    ):
+                        scale = 1.0
+                        active_adapter_name = Path(item_path).stem
+                    else:
+                        scale = 0.0
+                    new_scales.append({"id": item_id, "scale": scale})
+
+                try:
+                    await client.post(
+                        f"{LLAMA_BASE_URL}/lora-adapters",
+                        json=new_scales,
+                        timeout=5.0,
+                    )
+                    r_refreshed = await client.get(f"{LLAMA_BASE_URL}/lora-adapters", timeout=5.0)
+                    if r_refreshed.status_code == 200:
+                        app.state.lora_adapters = r_refreshed.json()
+                    log.info("LoRA adapter scales updated for request (%s): %s", target_adapter, app.state.lora_adapters)
+                except Exception as exc:
+                    log.warning("Failed to update LoRA scales: %s", exc)
 
             try:
-                await client.post(
-                    f"{LLAMA_BASE_URL}/lora-adapters",
-                    json=new_scales,
-                    timeout=5.0,
+                r = await client.post(
+                    f"{LLAMA_BASE_URL}/v1/chat/completions",
+                    json=payload,
+                    timeout=httpx.Timeout(300.0, connect=10.0),
                 )
-                r_refreshed = await client.get(f"{LLAMA_BASE_URL}/lora-adapters", timeout=5.0)
-                if r_refreshed.status_code == 200:
-                    app.state.lora_adapters = r_refreshed.json()
-                log.info("LoRA adapter scales updated for request (%s): %s", target_adapter, app.state.lora_adapters)
-            except Exception as exc:
-                log.warning("Failed to update LoRA scales: %s", exc)
-        elif getattr(app.state, "lora_adapters", []):
-            for item in app.state.lora_adapters:
-                if float(item.get("scale", 0.0)) > 0:
-                    active_adapter_name = Path(item.get("path", "")).stem
-                    break
-
+            except httpx.HTTPError as exc:
+                log.exception("llama-server request failed")
+                raise HTTPException(
+                    status_code=502, detail=f"llama-server error: {exc}",
+                ) from exc
+    else:
+        # Keyed Prompt Injection mode: Direct call with prompt prefix caching (no LoRA overhead/lock)
         try:
             r = await client.post(
                 f"{LLAMA_BASE_URL}/v1/chat/completions",

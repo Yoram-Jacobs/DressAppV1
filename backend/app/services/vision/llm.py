@@ -6,6 +6,7 @@ import json
 import re
 from typing import Any
 from app.config import settings
+from app.services.keyed_prompts import PROMPT_GARMENT_VISION, KEY_GARMENT_VISION
 from .validation import _coerce_single_garment, _coerce_enums
 
 
@@ -144,25 +145,8 @@ async def _call_gemma_space(
 
 
 
-SYSTEM_PROMPT = (
-    "Output raw JSON only ({...} or [{...}]). No markdown/intro.\n"
-    "• name & title: Short, unique (2-4 words) extracting cut/attributes (e.g. 'Green Round-Toe Loafers', 'Navy Chinos', 'Camo Cargo Pants'). Never generic ('Green Garment', 'Clothing').\n"
-    "• sub_category: Specific cut ('T-Shirt','Sweater','Jeans','Pants','Skirt','Shoes','Sneakers','Sandals','Boots','Loafers','Sunglasses','Handbag'). Never 'Top'/'Bottom'/'Footwear'.\n"
-    "• Bottoms: 'Jeans'=denim. Chinos -> sub_category:'Pants', item_type:'Chinos', dress_code:'smart-casual'. Sweatpants/joggers -> sub_category:'Pants', item_type:'Sweatpants'|'Joggers', dress_code:'casual'|'athletic'.\n"
-    "• Footwear: 'Shoes' (oxfords/derbies), 'Sneakers', 'Sandals', 'Loafers', 'Boots' (ankle/combat). Laced/ankle are 'Boots'; low dress shoes are 'Shoes'.\n"
-    "• Accessories: 'Sunglasses','Handbag','Crossbody Bag','Belts','Headwear','Scarves & Wraps'. Non-wearables -> is_clothing:false.\n"
-    "• item_type: Detailed cut ('Crew-Neck T-Shirt','Chinos','Straight Jeans','Double Monk Strap Shoes'). Differ from sub_category.\n"
-    "• caption: <=12 words fluent sentence in requested language. End with period. No brackets/lists.\n"
-    "• dress_code: 'casual'|'smart-casual'|'business'|'formal'|'athletic'|'loungewear'. Suits='business'; shirts='smart-casual'; tuxedos='formal'.\n"
-    "• model_gender: Model -> 'women'|'men'. Flat lay/hanger/mannequin -> null.\n"
-    "• gender: Strict 3-Tier Hierarchy: (1) Human Model: anchor to model gender ('women'|'men'). (2) Garment Criteria: flat lays determined by cut ('women' for floral/blouses/skirts/sandals; 'men' for masculine cuts; 'unisex' for neutral basics). (3) Neutral basics fall back to profile gender, or 'unisex'. Never default to 'men'.\n"
-    "• colors: ALWAYS [{\"name\": str, \"pct\": int}] summing to 100. Indoor white/cream tops must be 'white'/'cream', never 'grey'.\n"
-    "• fabric_materials: [{\"name\": str, \"pct\": int}] summing to 100. tags: [str] (3-4 unique tags, never duplicate sub_category).\n"
-    "• pattern: 'solid'|'printed'|'geometric'|'striped'|'plaid'|'floral'|'camouflage'.\n"
-    "• text/logos: Read accurately ('American Eagle'=eagle/עיט, not deer/אייל).\n"
-    "• season: ['spring'|'summer'|'fall'|'winter']. Basics=['spring','summer','fall','winter'].\n"
-    "• Quality & Repair: Only emit 'reconstruction_prompt' if image_quality_status != 'complete'. Set null if complete."
-)
+# Canonical keyed prompt for garment vision workflow
+SYSTEM_PROMPT = PROMPT_GARMENT_VISION
 
 
 # ─────────────────────────────────────────────────────────────────────

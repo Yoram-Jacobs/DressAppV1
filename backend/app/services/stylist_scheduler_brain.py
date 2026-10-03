@@ -10,6 +10,7 @@ from app.db.database import get_db
 from app.services.gemini_stylist import gemini_stylist_service
 from app.services.marketplace_search import suggest_for_query
 from app.services import repos
+from app.services.keyed_prompts import PROMPT_SCHEDULED_OUTFIT, KEY_SCHEDULED_OUTFIT
 
 logger = logging.getLogger(__name__)
 

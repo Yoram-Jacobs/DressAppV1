@@ -20,6 +20,7 @@ from app.services.calendar_service import calendar_service
 from app.services.push_service import send_push_notification
 from app.services.marketplace_search import suggest_for_gaps
 from app.services.i18n import LANG_NAMES
+from app.services.keyed_prompts import PROMPT_SUITCASE, KEY_SUITCASE
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/suitcase", tags=["suitcase"])
@@ -493,50 +494,9 @@ async def pack_suitcase(
     target_lang = (body.language or user.get("preferred_language") or "en").lower().split("-")[0]
     lang_directive = get_suitcase_language_directive(target_lang)
 
-    system_prompt = (
-        "You are DressApp’s Traveling AI Stylist. You specialize in building smart packing plans.\n"
-        f"{lang_directive}\n\n"
-        "Your goals are:\n"
-        "1. Select appropriate clothing from the user's Closet honoring weather, duration, scheduled calendar events/activities during the trip. You MUST translate and understand calendar event titles if they are in another language (e.g. Hebrew like 'יום טרקים' = trekking day, 'ארוחת ערב חגיגית' = festive/gala dinner) and design outfits specifically for each day's scheduled activities (e.g., activewear/comfortable athletic shoes for active/trekking days, formalwear/dressy clothes for festive dinners/gala events, or comfortable travel outfits for flight days), while respecting cultural conventions, and strictly adhering to the user's personal style preferences, aesthetic, and outfit-generation rules.\n"
-        "2. Minimize the load: select versatile garments that can be recombined into different outfits (e.g. reuse jeans, shirts, jackets across multiple days).\n"
-        "3. Highlight cultural or religious dress restrictions of the destination using the provided Safety Context.\n"
-        "4. Alert if crucial items are missing.\n"
-        "5. Recommend shopping advisor local store recommendations (search/recommend top 3 fashion stores in the destination area where the user can buy missing items).\n"
-        "6. If 'Current Outfits' and 'Current Packing List' are provided in the input, the user is requesting modifications or refinements to their existing suitcase plan (e.g., as specified in the 'Feedback modification:' section of User Notes). Your primary objective is to execute these requested changes (e.g. replacing a specific outfit, adding or removing specific garments, adjusting for weather changes) while keeping the rest of the outfits and packing checklist as stable and close to the current ones as possible. Do not regenerate everything from scratch if not necessary.\n\n"
-    )
+    system_prompt = f"{PROMPT_SUITCASE}\n{lang_directive}\n"
     if prefs_block:
-        system_prompt += f"User's Personal Style & Closet Preferences:\n{prefs_block}\n\n"
-
-    system_prompt += (
-        "Output contract: You MUST respond ONLY with a JSON object matching this schema. Do not output markdown code blocks, just raw JSON:\n"
-        "{\n"
-        '  "cultural_guidelines": string, // weather-aware, calendar-aware, fashion guidelines on conventions, religion, proper dress codes\n'
-        '  "danger_zones_info": string,   // safety/danger zones alert if applicable (e.g. Iran hijab law warning details), otherwise empty string\n'
-        '  "outfits": Array<{\n'
-        '    "date": string, // YYYY-MM-DD\n'
-        '    "location": string,\n'
-        '    "time_to_wear": "morning" | "afternoon" | "evening" | "all_day",\n'
-        '    "outfit_name": string,\n'
-        '    "items": Array<{\n'
-        '      "role": "top" | "bottom" | "outerwear" | "shoes" | "accessory" | "dress",\n'
-        '      "description": string,\n'
-        '      "closet_item_id": string | null, // ID of matching closet item, or null if missing\n'
-        '      "status": "closet" | "missing"\n'
-        '    }>,\n'
-        '    "reasoning": string\n'
-        '  }>,\n'
-        '  "missing_items": Array<{\n'
-        '    "role": "top" | "bottom" | "outerwear" | "shoes" | "accessory" | "dress",\n'
-        '    "description": string,\n'
-        '    "reason_needed": string\n'
-        '  }>,\n'
-        '  "local_fashion_stores": Array<{\n'
-        '    "name": string,\n'
-        '    "address_or_area": string,\n'
-        '    "why": string\n'
-        '  }>\n'
-        "}"
-    )
+        system_prompt += f"\nUser's Personal Style & Closet Preferences:\n{prefs_block}\n\n"
 
     user_brief_parts = [
         f"Destinations: {body.destinations}",
