@@ -73,7 +73,7 @@ def create_notebook():
         "# Install Hugging Face, PEFT, BitsAndBytes, and Accelerate with compatible numpy & pandas",
         "!pip install -q -U torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121",
         "!pip install -q -U 'numpy>=2.1.0' 'pandas>=2.2.3' pyarrow",
-        "!pip install -q -U transformers datasets peft bitsandbytes accelerate pillow paramiko scp",
+        "!pip install -q -U transformers datasets peft 'bitsandbytes>=0.46.1' accelerate pillow paramiko scp",
         "",
         "# Clone and build llama.cpp for GGUF conversion & quantization utilities",
         "import os, sys",
@@ -349,6 +349,9 @@ def create_notebook():
         "We target attention and MLP projections while freezing the vision tower to prevent visual distortion.",
     ])
     add_code([
+        "# Ensure bitsandbytes 4-bit CUDA quantization backend is up-to-date",
+        "!pip install -q -U 'bitsandbytes>=0.46.1'",
+        "",
         "import os",
         "import sys",
         "import getpass",
