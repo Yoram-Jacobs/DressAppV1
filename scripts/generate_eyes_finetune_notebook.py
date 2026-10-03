@@ -349,6 +349,11 @@ def create_notebook():
         "We target attention and MLP projections while freezing the vision tower to prevent visual distortion.",
     ])
     add_code([
+        "import os",
+        "import sys",
+        "import getpass",
+        "import json",
+        "from PIL import Image",
         "import torch",
         "from transformers import AutoProcessor, AutoModelForCausalLM, BitsAndBytesConfig, TrainingArguments, Trainer",
         "from peft import LoraConfig, get_peft_model, prepare_model_for_kbit_training",
@@ -446,8 +451,12 @@ def create_notebook():
         "Merge fine-tuned LoRA weights into the base Gemma-4 model, convert to intermediate F16 GGUF, and quantize to `Q3_K_M` (production target) and `Q4_K_M` using `llama.cpp`.",
     ])
     add_code([
+        "import os",
+        "import sys",
+        "from pathlib import Path",
+        "import torch",
+        "from transformers import AutoModelForCausalLM",
         "from peft import PeftModel",
-        "import subprocess",
         "",
         "print('Reloading base model in BF16 for merge...')",
         "base_model = AutoModelForCausalLM.from_pretrained(",
@@ -488,7 +497,9 @@ def create_notebook():
         "Validate the quantized GGUF model with DressApp's canonical JSON schema and test samples to ensure no generic names or hallucinations.",
     ])
     add_code([
+        "import os",
         "import json",
+        "from pathlib import Path",
         "",
         "# Run a test inference using llama.cpp CLI with mmproj",
         "test_img = 'dataset_images/ashraq_0.jpg'",
