@@ -70,8 +70,9 @@ def create_notebook():
         "# Check GPU availability",
         "!nvidia-smi",
         "",
-        "# Install Hugging Face, PEFT, BitsAndBytes, and Accelerate",
+        "# Install Hugging Face, PEFT, BitsAndBytes, and Accelerate with compatible numpy & pandas",
         "!pip install -q -U torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121",
+        "!pip install -q -U 'numpy>=2.1.0' 'pandas>=2.2.3' pyarrow",
         "!pip install -q -U transformers datasets peft bitsandbytes accelerate pillow paramiko scp",
         "",
         "# Clone and build llama.cpp for GGUF conversion & quantization utilities",
@@ -83,6 +84,7 @@ def create_notebook():
         "    !pip install -q -r llama.cpp/requirements/requirements-convert_hf_to_gguf.txt",
         "",
         "print('✅ Dependencies installed and llama.cpp tools compiled!')",
+        "print('⚠️ If you ever see \"ValueError: numpy.dtype size changed\", click: Runtime -> Restart session, then run from Step 3.')",
     ])
 
     # Cell 3: VPS Asset Import
