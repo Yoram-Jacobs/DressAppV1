@@ -462,15 +462,19 @@ export const canonicalSubCategoryKey = (raw) => {
   if (normalized.includes('heel') || normalized.includes('עקב') || normalized.includes('каблук')) return 'heels';
   if (normalized.includes('flat') || (normalized.includes('שטוחות') && (normalized.includes('נעלי') || normalized.includes('shoe'))) || normalized.includes('балетк')) return 'flats';
   if (normalized.includes('slipper') || normalized.includes('נעלי_בית') || normalized.includes('тапоч') || ((normalized.includes('נעלי') || normalized.includes('shoe')) && normalized.includes('בית'))) return 'slippers';
-  if (normalized.includes('loafer') || normalized.includes('לופר')) return 'loafers';
+  if (normalized.includes('loafer') || normalized.includes('לופר') || normalized.includes('מוקסין')) return 'loafers';
+  if (normalized.includes('double_monk') || normalized.includes('דאבל_מאנק')) return 'double_monk_strap_shoes';
+  if (normalized.includes('monk_strap') || normalized.includes('מאנק')) return 'monk_strap_shoes';
+  if (normalized.includes('oxford') || normalized.includes('אוקספורד')) return 'oxford_shoes';
+  if (normalized.includes('derby') || normalized.includes('דרבי')) return 'derby_shoes';
+  if (normalized.includes('brogue') || normalized.includes('ברוג')) return 'brogues';
   if (
-    normalized.includes('oxford') ||
     normalized.includes('dress_shoe') ||
     normalized.includes('נעלי_אלגנט') ||
     normalized.includes('נעלי_עור') ||
     normalized.includes('туфли') ||
     normalized.includes('классическ_обув') ||
-    ((normalized.includes('נעלי') || normalized.includes('shoe') || normalized.includes('обув')) && (normalized.includes('אלגנט') || normalized.includes('dress')))
+    ((normalized.includes('נעלי') || normalized.includes('shoe') || normalized.includes('обув')) && (normalized.includes('אלגנט') || normalized.includes('dress') || normalized.includes('business') || normalized.includes('formal')))
   ) return 'dress_shoes';
   if (
     normalized.includes('casual_shoe') ||
@@ -478,6 +482,7 @@ export const canonicalSubCategoryKey = (raw) => {
     normalized.includes('נעלי_יומיומ') ||
     ((normalized.includes('נעלי') || normalized.includes('shoe') || normalized.includes('обув')) && (normalized.includes('קזואל') || normalized.includes('יומיומ') || normalized.includes('casual')))
   ) return 'casual_shoes';
+  if (normalized.includes('solid') && (normalized.includes('shoe') || normalized.includes('נעלי') || normalized.includes('обув'))) return 'shoes';
   if (normalized.includes('shoe') || normalized.includes('נעלי') || normalized.includes('обув')) return 'shoes';
 
   if (normalized.includes('overcoat') || normalized.includes('coat') || normalized.includes('parka') || normalized.includes('מעיל') || normalized.includes('пальто') || normalized.includes('плащ')) return 'coats';

@@ -1017,13 +1017,28 @@ def _coerce_single_garment(
         if res["colors"] and not res.get("color"):
             res["color"] = res["colors"][0].get("name")
 
-    # Unique name guarantee: ensure name is not just the subcategory name and respects grammar & localization
+    # Unique name guarantee: ensure name is not generic ("בגד", "בגד ירוק", "Garment") and respects grammar & localization
     name_str = (res.get("name") or "").strip()
     sub_str = (res.get("sub_category") or "").strip()
+    caption_str = (res.get("caption") or "").strip()
     has_hebrew_chars = any("\u0590" <= ch <= "\u05ea" for ch in name_str)
     has_latin_chars = any("a" <= ch.lower() <= "z" for ch in name_str)
+    is_generic_name = (
+        not name_str
+        or name_str.lower() in (
+            "בגד", "בגד ירוק", "בגד חום", "בגד שחור", "בגד לבן", "בגד כחול", "בגד אפור",
+            "בגד צהוב", "בגד אדום", "בגד ורוד", "בגד כתום", "בגד סגול",
+            "garment", "green garment", "brown garment", "black garment", "white garment",
+            "blue garment", "gray garment", "grey garment", "clothing", "item", "solid shoes"
+        )
+        or name_str.startswith("בגד ")
+        or name_str.lower().startswith("garment ")
+        or name_str.lower() == sub_str.lower()
+        or len(name_str.split()) < 2
+        or (is_he and has_latin_chars and has_hebrew_chars)
+    )
 
-    if not name_str or name_str.lower() == sub_str.lower() or len(name_str.split()) < 2 or (is_he and has_latin_chars and has_hebrew_chars):
+    if is_generic_name:
         color_name = ""
         colors = res.get("colors")
         if isinstance(colors, list) and colors and isinstance(colors[0], dict):
@@ -1036,17 +1051,62 @@ def _coerce_single_garment(
             m_val = mats[0].get("name", "")
             if m_val.lower() not in {"unknown", "n/a", "other", "none"}:
                 mat_name = m_val
-        itype = res.get("item_type") or sub_str or "Garment"
+        itype = res.get("item_type") or sub_str or ""
+        cat_lower = str(res.get("category") or "").strip().lower()
 
         if is_he:
             # Hebrew grammar: Noun first, followed by adjective (color/material) with proper gender agreement
             he_item_dict = {
+                # Footwear cuts
+                "oxford shoes": "נעלי אוקספורד",
+                "oxford shoe": "נעלי אוקספורד",
+                "oxfords": "נעלי אוקספורד",
+                "oxford": "נעלי אוקספורד",
+                "derby shoes": "נעלי דרבי",
+                "derby shoe": "נעלי דרבי",
+                "derbies": "נעלי דרבי",
+                "derby": "נעלי דרבי",
+                "monk strap shoes": "נעלי מאנק סטרפ",
+                "monk strap": "נעלי מאנק סטרפ",
+                "double monk strap shoes": "נעלי דאבל מאנק סטרפ",
+                "double monk strap": "נעלי דאבל מאנק סטרפ",
+                "brogues": "נעלי ברוג",
+                "brogue shoes": "נעלי ברוג",
+                "loafers": "לופרים",
+                "loafer": "נעלי לופר",
+                "round-toe loafers": "נעלי לופר",
+                "moccasins": "מוקסינים",
+                "moccasin": "מוקסין",
+                "dress shoes": "נעליים אלגנטיות",
+                "solid shoes": "נעליים אלגנטיות",
+                "shoes": "נעליים",
+                "casual shoes": "נעלי קז'ואל",
+                "sneakers": "סניקרס",
+                "running shoes": "נעלי ריצה",
+                "low-top sneakers": "סניקרס נמוכות",
+                "high-top sneakers": "סניקרס גבוהות",
+                "sandals": "סנדלים",
+                "platform sandals": "סנדלי פלטפורמה",
+                "strappy sandals": "סנדלי רצועות",
+                "boots": "מגפיים",
+                "ankle boots": "מגפונים",
+                "ankle_boots": "מגפונים",
+                "combat boots": "מגפיים",
+                "combat_boots": "מגפיים",
+                "chelsea boots": "מגפוני צ'לסי",
+                "flats": "נעליים שטוחות",
+                "heels": "נעלי עקב",
+                "pumps": "נעלי עקב",
+                "clogs": "קבקבים",
+                "slides": "כפכפים",
+                "slippers": "נעלי בית",
                 # Tops
                 "printed skirt": "חצאית מודפסת",
                 "skirt": "חצאית",
                 "mini skirt": "חצאית מיני",
                 "midi skirt": "חצאית מידי",
                 "maxi skirt": "חצאית מקסי",
+                "pleated skirt": "חצאית פליסה",
                 "crew-neck t-shirt": "חולצת טי עגולה",
                 "crew_neck_t_shirt": "חולצת טי עגולה",
                 "short-sleeve t-shirt": "חולצת טי",
@@ -1054,6 +1114,7 @@ def _coerce_single_garment(
                 "t-shirt": "חולצת טי",
                 "v-neck t-shirt": "חולצת וי",
                 "polo shirt": "חולצת פולו",
+                "polo": "חולצת פולו",
                 "tank top": "גופייה",
                 "blouse": "בלוזה",
                 "shirt": "חולצה",
@@ -1074,26 +1135,14 @@ def _coerce_single_garment(
                 "shorts": "מכנסיים קצרים",
                 "bermuda shorts": "ברמודה",
                 "jeans": "ג'ינס",
+                "straight jeans": "ג'ינס גזרה ישרה",
+                "skinny jeans": "ג'ינס סקיני",
                 # Outerwear & Dresses
-                "jacket": "ג'קט",
+                "jacket": "ז'קט",
+                "blazer": "בלייזר",
                 "coat": "מעיל",
+                "trench coat": "מעיל טרנץ'",
                 "dress": "שמלה",
-                # Footwear
-                "shoes": "נעליים",
-                "casual shoes": "נעלי קז'ואל",
-                "sneakers": "סניקרס",
-                "sandals": "סנדלים",
-                "boots": "מגפיים",
-                "ankle boots": "מגפונים",
-                "ankle_boots": "מגפונים",
-                "combat boots": "מגפיים",
-                "combat_boots": "מגפיים",
-                "chelsea boots": "מגפוני צ'לסי",
-                "loafers": "לופרים",
-                "flats": "נעליים שטוחות",
-                "heels": "נעלי עקב",
-                "clogs": "קבקבים",
-                "slides": "כפכפים",
                 # Bags & Accessories
                 "bag": "תיק",
                 "bags": "תיקים",
@@ -1114,37 +1163,150 @@ def _coerce_single_garment(
                 "brown": "חום", "beige": "בז'", "navy": "כחול נייבי", "pink": "ורוד",
                 "orange": "כתום", "purple": "סגול", "olive": "זית",
             }
-            noun_he = he_item_dict.get(itype.lower()) or he_item_dict.get(sub_str.lower())
+            noun_he = None
+            combined_txt = f"{itype} {sub_str} {caption_str}".lower()
+            
+            # 1. High-priority specific cuts from caption or itype
+            if "אוקספורד" in caption_str or "oxford" in combined_txt:
+                noun_he = "נעלי אוקספורד"
+            elif "דרבי" in caption_str or "derby" in combined_txt:
+                noun_he = "נעלי דרבי"
+            elif "מאנק" in caption_str or "monk" in combined_txt:
+                noun_he = "נעלי מאנק סטרפ"
+            elif "ברוג" in caption_str or "brogue" in combined_txt:
+                noun_he = "נעלי ברוג"
+            elif "מוקסין" in caption_str:
+                noun_he = "מוקסינים"
+            elif "לופר" in caption_str or "loafer" in combined_txt:
+                noun_he = "נעלי לופר"
+            elif "עקב" in caption_str or "heel" in combined_txt:
+                noun_he = "נעלי עקב"
+            elif "סנדל" in caption_str or "sandal" in combined_txt:
+                noun_he = "סנדלים"
+            elif "מגפונ" in caption_str or "ankle boot" in combined_txt:
+                noun_he = "מגפונים"
+            elif "מגפ" in caption_str or "boot" in combined_txt:
+                noun_he = "מגפיים"
+            elif "סניקר" in caption_str or "sneaker" in combined_txt:
+                noun_he = "סניקרס"
+            elif "פולו" in caption_str or "polo" in combined_txt:
+                noun_he = "חולצת פולו"
+            elif "מכופתרת" in caption_str or "button-down" in combined_txt:
+                noun_he = "חולצה מכופתרת"
+            elif "פליסה" in caption_str or "pleated" in combined_txt:
+                noun_he = "חצאית פליסה"
+            elif "צ'ינו" in caption_str or "chino" in combined_txt:
+                noun_he = "מכנסי צ'ינו"
+            elif "טרנץ'" in caption_str or "trench" in combined_txt:
+                noun_he = "מעיל טרנץ'"
+            elif "בלייזר" in caption_str or "blazer" in combined_txt:
+                noun_he = "בלייזר"
+            elif "קרדיגן" in caption_str or "cardigan" in combined_txt:
+                noun_he = "קרדיגן"
+            elif "משקפי שמש" in caption_str or "sunglass" in combined_txt:
+                noun_he = "משקפי שמש"
+            elif "תיק" in caption_str or "bag" in combined_txt:
+                noun_he = "תיק"
+
+            if not noun_he:
+                noun_he = he_item_dict.get(itype.lower()) or he_item_dict.get(sub_str.lower())
+
             if not noun_he:
                 # If itype already contains Hebrew letters, strip any English words
                 he_words = [w for w in itype.split() if any("\u0590" <= ch <= "\u05ea" for ch in w)]
-                noun_he = " ".join(he_words) if he_words else ("תיק" if "bag" in f"{itype} {sub_str}".lower() else "בגד")
+                if he_words and "בגד" not in he_words:
+                    noun_he = " ".join(he_words)
+
+            # Strict category fallbacks — NEVER generic "בגד"
+            if not noun_he or noun_he == "בגד":
+                if cat_lower == "footwear" or "shoe" in sub_str.lower() or "נעלי" in sub_str:
+                    noun_he = "נעליים"
+                elif cat_lower == "bottom" or "pant" in sub_str.lower() or "מכנסי" in sub_str:
+                    noun_he = "מכנסיים"
+                elif cat_lower == "top" or "shirt" in sub_str.lower() or "חולצ" in sub_str:
+                    noun_he = "חולצה"
+                elif cat_lower == "outerwear" or "coat" in sub_str.lower() or "מעיל" in sub_str:
+                    noun_he = "מעיל"
+                elif "bag" in sub_str.lower() or "תיק" in sub_str:
+                    noun_he = "תיק"
+                elif cat_lower == "accessories" or "חגור" in sub_str:
+                    noun_he = "חגורה" if "חגור" in sub_str or "belt" in sub_str.lower() else "משקפי שמש"
+                elif cat_lower == "full body" or "שמל" in sub_str:
+                    noun_he = "שמלה"
+                else:
+                    noun_he = "פריט לבוש"
 
             col_he = he_color_dict.get(color_name.lower(), color_name)
             if col_he:
+                _inflections = {
+                    "ירוק": ("ירוקה", "ירוקות", "ירוקים"),
+                    "לבן": ("לבנה", "לבנות", "לבנים"),
+                    "שחור": ("שחורה", "שחורות", "שחורים"),
+                    "אפור": ("אפורה", "אפורות", "אפורים"),
+                    "צהוב": ("צהובה", "צהובות", "צהובים"),
+                    "אדום": ("אדומה", "אדומות", "אדומים"),
+                    "חום": ("חומה", "חומות", "חומים"),
+                    "כחול": ("כחולה", "כחולות", "כחולים"),
+                    "ורוד": ("ורודה", "ורודות", "ורודים"),
+                    "כתום": ("כתומה", "כתומות", "כתומים"),
+                    "סגול": ("סגולה", "סגולות", "סגולים"),
+                }
                 # Feminine singular (ends in ה or ת, but not dual/plural like נעליים / מגפיים)
                 is_fem_sing = noun_he.endswith(("ה", "ת")) and not noun_he.endswith("ות") and noun_he not in ("נעליים", "מגפיים", "סנדלים")
                 # Feminine plural / dual (ends in ות, or נעליים)
-                is_fem_plur = noun_he.endswith("ות") or noun_he in ("נעליים", "נעלי קז'ואל", "נעלי עקב", "נעליים שטוחות")
+                is_fem_plur = noun_he.endswith("ות") or noun_he in ("נעליים", "נעלי אוקספורד", "נעלי דרבי", "נעלי לופר", "נעלי מאנק סטרפ", "נעלי ברוג", "נעלי קז'ואל", "נעלי עקב", "נעליים שטוחות", "נעליים אלגנטיות", "סניקרס")
                 # Masculine plural (ends in ים, or specific footwear/bottoms)
-                is_masc_plur = noun_he.endswith("ים") or noun_he in ("מכנסיים", "מכנסי טרנינג", "מכנסי ג'וגר", "מכנסי צ'ינו", "מכנסיים קצרים", "לופרים", "סניקרס", "מגפיים", "מגפונים", "כפכפים", "קבקבים", "משקפי שמש")
+                is_masc_plur = noun_he.endswith("ים") or noun_he in ("מכנסיים", "מכנסי טרנינג", "מכנסי ג'וגר", "מכנסי צ'ינו", "מכנסיים קצרים", "מוקסינים", "לופרים", "מגפיים", "מגפונים", "כפכפים", "קבקבים", "משקפי שמש", "סנדלים")
 
-                if is_fem_sing and col_he in ("ירוק", "לבן", "שחור", "אפור", "צהוב", "אדום", "חום", "כחול"):
-                    col_he = col_he + "ה"
-                elif is_fem_plur and col_he in ("ירוק", "לבן", "שחור", "אפור", "צהוב", "אדום", "חום", "כחול"):
-                    col_he = col_he + "ות"
-                elif is_masc_plur and col_he in ("ירוק", "לבן", "שחור", "אפור", "צהוב", "אדום", "חום", "כחול"):
-                    col_he = col_he + "ים"
+                if col_he in _inflections:
+                    fem_s, fem_p, masc_p = _inflections[col_he]
+                    if is_fem_sing:
+                        col_he = fem_s
+                    elif is_fem_plur:
+                        col_he = fem_p
+                    elif is_masc_plur:
+                        col_he = masc_p
 
             parts = [p for p in [noun_he, col_he] if p]
+            # Attribute extract: if leather mentioned and not yet in parts
+            if ("עור" in f"{mat_name} {caption_str}".lower() or "leather" in f"{mat_name} {caption_str}".lower()) and "מעור" not in parts and noun_he in ("נעלי אוקספורד", "נעלי דרבי", "נעלי לופר", "נעלי עקב", "נעליים", "תיק", "ז'קט"):
+                parts.append("מעור")
             res["name"] = " ".join(parts)
             res["title"] = res["name"]
         else:
-            parts = [p for p in [color_name, mat_name, itype] if p]
+            # English naming: Color + Attribute + Item Noun (e.g. "Green Round-Toe Loafers", "Brown Leather Oxford Shoes")
+            attr_cut = ""
+            comb_lower = f"{itype} {caption_str}".lower()
+            if "round-toe" in comb_lower or "round toe" in comb_lower:
+                attr_cut = "Round-Toe"
+            elif "pointed-toe" in comb_lower or "pointed toe" in comb_lower:
+                attr_cut = "Pointed-Toe"
+            elif "pleated" in comb_lower:
+                attr_cut = "Pleated"
+            elif mat_name and mat_name.lower() in ("leather", "linen", "silk", "wool", "denim", "cotton", "cashmere"):
+                attr_cut = mat_name.title()
+            
+            noun_en = itype
+            if "oxford" in comb_lower:
+                noun_en = "Oxford Shoes"
+            elif "derby" in comb_lower:
+                noun_en = "Derby Shoes"
+            elif "monk" in comb_lower:
+                noun_en = "Monk Strap Shoes"
+            elif "loafer" in comb_lower:
+                noun_en = "Loafers"
+            elif "chino" in comb_lower:
+                noun_en = "Chinos"
+            elif not noun_en or noun_en.lower() in ("garment", "clothing", "item", "solid shoes"):
+                noun_en = sub_str if sub_str and sub_str.lower() != "footwear" else "Shoes"
+
+            parts = [p for p in [color_name.title() if color_name else "", attr_cut, noun_en] if p]
             if len(parts) >= 2:
                 res["name"] = " ".join(parts).title()
-                if not res.get("title") or res.get("title").lower() == sub_str.lower():
-                    res["title"] = res["name"]
+            else:
+                res["name"] = f"{color_name.title()} {noun_en}".strip().title()
+            if not res.get("title") or res.get("title").lower() in (sub_str.lower(), "garment", "green garment", "brown garment"):
+                res["title"] = res["name"]
 
     # Materials fallback: ensure never "Unknown" and percentages sum strictly to 100%
     mats = res.get("fabric_materials")

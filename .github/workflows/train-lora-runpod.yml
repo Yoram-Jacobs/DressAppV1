@@ -144,13 +144,15 @@ jobs:
           else
             ADAPTERS=("${{ inputs.adapter_name }}")
           fi
-
           $SSH_CMD ${VPS_USER}@${VPS_HOST} "mkdir -p /srv/AI-Stylist/eyes_gguf/adapters"
 
           for ADAPTER in "${ADAPTERS[@]}"; do
-            GGUF_LOCAL="artifacts/${ADAPTER}/${ADAPTER}.gguf"
+            GGUF_LOCAL="output_adapters/${ADAPTER}/${ADAPTER}.gguf"
+            if [ ! -f "$GGUF_LOCAL" ]; then
+              GGUF_LOCAL="artifacts/${ADAPTER}/${ADAPTER}.gguf"
+            fi
             if [ -f "$GGUF_LOCAL" ]; then
-              echo "Transferring $ADAPTER GGUF adapter from runner artifacts to VPS..."
+              echo "Transferring $ADAPTER GGUF adapter from runner to VPS..."
               scp -i ~/.ssh/deploy_key -o IdentitiesOnly=yes -o StrictHostKeyChecking=accept-new -o BatchMode=yes \
                 "$GGUF_LOCAL" \
                 ${VPS_USER}@${VPS_HOST}:/srv/AI-Stylist/eyes_gguf/adapters/${ADAPTER}.gguf

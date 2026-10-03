@@ -592,7 +592,26 @@ const hydrate = (a, user, t, i18n) => {
         } else if (subK === 'clogs' || /clog|slide|כפכפ/i.test(out.sub_category)) {
           out.item_type = t('taxonomy.item_type.platform_clogs', { defaultValue: 'Platform Clogs' });
         } else if (subK === 'shoes' || /shoe|נעלי/i.test(out.sub_category)) {
-          out.item_type = t('taxonomy.item_type.casual_shoes', { defaultValue: 'Casual Shoes' });
+          const capOrName = `${out.caption || ''} ${out.name || ''} ${out.title || ''} ${itemRaw || ''}`.toLowerCase();
+          if (/oxford|אוקספורד/.test(capOrName)) {
+            out.item_type = t('taxonomy.item_type.oxford_shoes', { defaultValue: 'Oxford Shoes' });
+          } else if (/derby|דרבי/.test(capOrName)) {
+            out.item_type = t('taxonomy.item_type.derby_shoes', { defaultValue: 'Derby Shoes' });
+          } else if (/double[-_ ]monk|דאבל.*מאנק/.test(capOrName)) {
+            out.item_type = t('taxonomy.item_type.double_monk_strap_shoes', { defaultValue: 'Double Monk Strap Shoes' });
+          } else if (/monk|מאנק/.test(capOrName)) {
+            out.item_type = t('taxonomy.item_type.monk_strap_shoes', { defaultValue: 'Monk Strap Shoes' });
+          } else if (/brogue|ברוג/.test(capOrName)) {
+            out.item_type = t('taxonomy.item_type.brogues', { defaultValue: 'Brogues' });
+          } else if (/loafer|לופר|מוקסין/.test(capOrName)) {
+            out.item_type = t('taxonomy.item_type.loafers', { defaultValue: 'Loafers' });
+          } else if (/heel|עקב/.test(capOrName)) {
+            out.item_type = t('taxonomy.item_type.heels', { defaultValue: 'Heels' });
+          } else if (/dress|אלגנט|formal|business/.test(capOrName) || out.dress_code === 'business' || out.dress_code === 'formal') {
+            out.item_type = t('taxonomy.item_type.dress_shoes', { defaultValue: 'Dress Shoes' });
+          } else {
+            out.item_type = t('taxonomy.item_type.casual_shoes', { defaultValue: 'Casual Shoes' });
+          }
         } else if (subK === 'sandals' || /sandal|סנדל/i.test(out.sub_category)) {
           out.item_type = t('taxonomy.item_type.platform_sandals', { defaultValue: 'Platform Sandals' });
         } else if (subK === 'boots' || /boot|מגפ/i.test(out.sub_category)) {
@@ -660,15 +679,45 @@ const hydrate = (a, user, t, i18n) => {
         ? /[\u0600-\u06FF]/.test(rawTitle)
         : false;
       const hasLatin = /[a-zA-Z]/.test(rawTitle);
+      const isGenericName = !rawTitle
+        || /^(בגד(\s|$)|garment(\s|$)|clothing(\s|$))/i.test(rawTitle)
+        || /^(בגד ירוק|בגד חום|בגד שחור|בגד לבן|בגד כחול|בגד אפור|בגד צהוב|בגד אדום)$/.test(rawTitle);
 
-      if (!hasTargetScript || hasLatin) {
+      if (!hasTargetScript || hasLatin || isGenericName) {
         const itemTypeRaw = out.item_type || out.sub_category || out.label || '';
         const localizedItem = labelForItemType(itemTypeRaw, t);
         const subCatKey = canonicalSubCategoryKey(out.sub_category || itemTypeRaw);
         const localizedSub = labelForSubCategory(subCatKey, t);
-        const baseNoun = (localizedItem && !/[a-zA-Z]/.test(localizedItem))
+        let baseNoun = (localizedItem && !/[a-zA-Z]/.test(localizedItem) && !/^(בגד|garment)$/i.test(localizedItem))
           ? localizedItem
-          : ((localizedSub && !/[a-zA-Z]/.test(localizedSub)) ? localizedSub : '');
+          : ((localizedSub && !/[a-zA-Z]/.test(localizedSub) && !/^(בגד|garment)$/i.test(localizedSub)) ? localizedSub : '');
+
+        const captionBlob = `${out.caption || ''} ${itemTypeRaw} ${out.sub_category || ''}`.toLowerCase();
+        if (lang === 'he' || lang === 'iw') {
+          if (/אוקספורד|oxford/.test(captionBlob)) baseNoun = 'נעלי אוקספורד';
+          else if (/דרבי|derby/.test(captionBlob)) baseNoun = 'נעלי דרבי';
+          else if (/דאבל.*מאנק|double.*monk/.test(captionBlob)) baseNoun = 'נעלי דאבל מאנק סטרפ';
+          else if (/מאנק|monk/.test(captionBlob)) baseNoun = 'נעלי מאנק סטרפ';
+          else if (/ברוג|brogue/.test(captionBlob)) baseNoun = 'נעלי ברוג';
+          else if (/מוקסין|לופר|loafer/.test(captionBlob)) baseNoun = 'נעלי לופר';
+          else if (/עקב|heel/.test(captionBlob)) baseNoun = 'נעלי עקב';
+          else if (/פליסה|pleated/.test(captionBlob)) baseNoun = 'חצאית פליסה';
+          else if (/צ'ינו|chino/.test(captionBlob)) baseNoun = "מכנסי צ'ינו";
+          else if (/פולו|polo/.test(captionBlob)) baseNoun = 'חולצת פולו';
+          else if (/מכופתרת|button[-_ ]?down/.test(captionBlob)) baseNoun = 'חולצה מכופתרת';
+          else if (/טרנץ'|trench/.test(captionBlob)) baseNoun = "מעיל טרנץ'";
+          else if (!baseNoun || baseNoun === 'בגד') {
+            const cat = String(out.category || '').toLowerCase();
+            if (cat === 'footwear' || /shoe|נעלי/.test(subCatKey)) baseNoun = 'נעליים';
+            else if (cat === 'bottom' || /pant|מכנסי/.test(subCatKey)) baseNoun = 'מכנסיים';
+            else if (cat === 'top' || /shirt|חולצ/.test(subCatKey)) baseNoun = 'חולצה';
+            else if (cat === 'outerwear' || /coat|מעיל/.test(subCatKey)) baseNoun = 'מעיל';
+            else if (/bag|תיק/.test(subCatKey)) baseNoun = 'תיק';
+            else if (/glass|משקפ/.test(subCatKey)) baseNoun = 'משקפי שמש';
+            else if (/belt|חגור/.test(subCatKey)) baseNoun = 'חגורה';
+            else baseNoun = 'פריט אופנה';
+          }
+        }
 
         const primaryColor = (typeof out.colors?.[0] === 'string' ? out.colors[0] : out.colors?.[0]?.name) || '';
         const cleanColor = (!/[a-zA-Z]/.test(primaryColor)) ? primaryColor : '';
@@ -677,8 +726,11 @@ const hydrate = (a, user, t, i18n) => {
         if (baseNoun) parts.push(baseNoun);
         if (cleanColor && !baseNoun.includes(cleanColor)) {
           let agreedColor = cleanColor;
-          if ((lang === 'he' || lang === 'iw') && (baseNoun.endsWith('ה') || baseNoun.endsWith('ת'))) {
-            if (!baseNoun.endsWith('ות')) {
+          if (lang === 'he' || lang === 'iw') {
+            const isFemSing = (baseNoun.endsWith('ה') || baseNoun.endsWith('ת')) && !baseNoun.endsWith('ות') && !['נעליים', 'מגפיים', 'סנדלים'].includes(baseNoun);
+            const isFemPlur = baseNoun.endsWith('ות') || ['נעליים', 'נעלי אוקספורד', 'נעלי דרבי', 'נעלי לופר', 'נעלי מאנק סטרפ', 'נעלי ברוג', 'נעלי עקב', 'נעליים שטוחות', 'נעלי קז\'ואל', 'נעליים אלגנטיות', 'סניקרס'].includes(baseNoun);
+            const isMascPlur = baseNoun.endsWith('ים') || ['מכנסיים', 'מכנסי טרנינג', 'מכנסי ג\'וגר', 'מכנסי צ\'ינו', 'מכנסיים קצרים', 'מוקסינים', 'לופרים', 'מגפיים', 'מגפונים', 'כפכפים', 'קבקבים', 'משקפי שמש', 'סנדלים'].includes(baseNoun);
+            if (isFemSing) {
               if (agreedColor === 'ירוק') agreedColor = 'ירוקה';
               else if (agreedColor === 'לבן') agreedColor = 'לבנה';
               else if (agreedColor === 'שחור') agreedColor = 'שחורה';
@@ -687,9 +739,39 @@ const hydrate = (a, user, t, i18n) => {
               else if (agreedColor === 'אדום') agreedColor = 'אדומה';
               else if (agreedColor === 'חום') agreedColor = 'חומה';
               else if (agreedColor === 'כחול') agreedColor = 'כחולה';
+              else if (agreedColor === 'ורוד') agreedColor = 'ורודה';
+              else if (agreedColor === 'כתום') agreedColor = 'כתומה';
+              else if (agreedColor === 'סגול') agreedColor = 'סגולה';
+            } else if (isFemPlur) {
+              if (agreedColor === 'ירוק') agreedColor = 'ירוקות';
+              else if (agreedColor === 'לבן') agreedColor = 'לבנות';
+              else if (agreedColor === 'שחור') agreedColor = 'שחורות';
+              else if (agreedColor === 'אפור') agreedColor = 'אפורות';
+              else if (agreedColor === 'צהוב') agreedColor = 'צהובות';
+              else if (agreedColor === 'אדום') agreedColor = 'אדומות';
+              else if (agreedColor === 'חום') agreedColor = 'חומות';
+              else if (agreedColor === 'כחול') agreedColor = 'כחולות';
+              else if (agreedColor === 'ורוד') agreedColor = 'ורודות';
+              else if (agreedColor === 'כתום') agreedColor = 'כתומות';
+              else if (agreedColor === 'סגול') agreedColor = 'סגולות';
+            } else if (isMascPlur) {
+              if (agreedColor === 'ירוק') agreedColor = 'ירוקים';
+              else if (agreedColor === 'לבן') agreedColor = 'לבנים';
+              else if (agreedColor === 'שחור') agreedColor = 'שחורים';
+              else if (agreedColor === 'אפור') agreedColor = 'אפורים';
+              else if (agreedColor === 'צהוב') agreedColor = 'צהובים';
+              else if (agreedColor === 'אדום') agreedColor = 'אדומים';
+              else if (agreedColor === 'חום') agreedColor = 'חומים';
+              else if (agreedColor === 'כחול') agreedColor = 'כחולים';
+              else if (agreedColor === 'ורוד') agreedColor = 'ורודים';
+              else if (agreedColor === 'כתום') agreedColor = 'כתומים';
+              else if (agreedColor === 'סגול') agreedColor = 'סגולים';
             }
           }
           parts.push(agreedColor);
+        }
+        if ((lang === 'he' || lang === 'iw') && /עור|leather/.test(`${out.caption || ''} ${(out.fabric_materials || []).map(m => m.name || m).join(' ')}`) && ['נעלי אוקספורד', 'נעלי דרבי', 'נעלי לופר', 'נעלי עקב', 'נעליים', 'תיק', 'ז\'קט'].includes(baseNoun) && !parts.includes('מעור')) {
+          parts.push('מעור');
         }
         if (parts.length > 0) {
           out.title = parts.join(' ');
