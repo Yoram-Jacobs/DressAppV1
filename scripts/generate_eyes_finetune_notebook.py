@@ -625,7 +625,7 @@ def create_notebook():
         "    save_strategy='steps',",
         "    save_steps=300,",
         "    save_total_limit=2,",
-        "    warmup_ratio=0.05,",
+        "    warmup_steps=60,",
         "    dataloader_num_workers=2,",
         "    report_to='none',",
         ")",
