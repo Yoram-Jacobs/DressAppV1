@@ -2375,7 +2375,9 @@
       "graphic": "Grafico",
       "tie_dye": "Tintura per cravatta",
       "printed": "Stampato",
-      "print": "Stampato"
+      "print": "Stampato",
+      "camouflage": "Mimetico (Camouflage)",
+      "camo": "Mimetico"
     },
     "formality": {
       "casual": "Casuale",
@@ -2493,7 +2495,11 @@
       "mules": "Sabot / Mules",
       "loafers": "Mocassini",
       "oxfords": "Scarpe Oxford",
-      "sunglasses": "Occhiali da sole"
+      "sunglasses": "Occhiali da sole",
+      "cargo": "Pantaloni cargo",
+      "cargo_pants": "Pantaloni cargo",
+      "pants": "Pantaloni",
+      "chinos": "Chinos"
     },
     "item_type": {
       "oxford_shirt": "Camicia Oxford",
@@ -2516,7 +2522,7 @@
       "trench_coat": "Trench",
       "peacoat": "Cabann",
       "puffer_jacket": "Piumino",
-      "chinos": "Chino",
+      "chinos": "Chinos",
       "cargo_pants": "Pantaloni cargo",
       "wool_trousers": "Pantaloni di lana",
       "slim_jeans": "Jeans slim",
@@ -2597,7 +2603,9 @@
       "double_breasted_coat": "Cappotto doppiopetto",
       "tailored_long_coat": "Cappotto lungo sartoriale",
       "floral_print_blouse": "Camicetta floreale",
-      "floral_print_short_sleeve_top": "Top floreale a maniche corte"
+      "floral_print_short_sleeve_top": "Top floreale a maniche corte",
+      "cargo": "Pantaloni cargo",
+      "pants": "Pantaloni"
     },
     "color": {
       "black": "Nero",

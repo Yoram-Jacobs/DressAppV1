@@ -2403,7 +2403,9 @@
       "graphic": "גרפי",
       "tie_dye": "טאי-דאי",
       "printed": "הדפס",
-      "print": "הדפס"
+      "print": "הדפס",
+      "camouflage": "הסוואה (קמופלאז')",
+      "camo": "הסוואה"
     },
     "formality": {
       "casual": "יומיומי",
@@ -2523,7 +2525,11 @@
       "bag": "תיק",
       "basket_bags": "תיקי סל",
       "basket_bag": "תיק סל קש",
-      "sunglasses": "משקפי שמש"
+      "sunglasses": "משקפי שמש",
+      "cargo": "מכנסי דגמ\"ח",
+      "cargo_pants": "מכנסי דגמ\"ח",
+      "pants": "מכנסיים",
+      "chinos": "צ'ינוס"
     },
     "item_type": {
       "printed_skirt": "חצאית מודפסת",
@@ -2551,8 +2557,8 @@
       "trench_coat": "מעיל טרנץ׳",
       "peacoat": "מעיל פיקוט",
       "puffer_jacket": "ג׳קט פוך",
-      "chinos": "צ׳ינוס",
-      "cargo_pants": "מכנסי דגמ״ח",
+      "chinos": "צ'ינוס",
+      "cargo_pants": "מכנסי דגמ\"ח",
       "wool_trousers": "מכנסי צמר",
       "slim_jeans": "ג׳ינס סלים",
       "straight_jeans": "ג׳ינס ישר",
@@ -2629,7 +2635,9 @@
       "double_breasted_coat": "מעיל כפתורים כפול",
       "tailored_long_coat": "מעיל ארוך מחויט",
       "floral_print_blouse": "חולצה בהדפס פרחוני",
-      "floral_print_short_sleeve_top": "חולצה קצרה בהדפס פרחוני"
+      "floral_print_short_sleeve_top": "חולצה קצרה בהדפס פרחוני",
+      "cargo": "מכנסי דגמ\"ח",
+      "pants": "מכנסיים"
     },
     "color": {
       "black": "שחור",

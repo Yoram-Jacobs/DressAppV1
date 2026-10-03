@@ -146,21 +146,21 @@ async def _call_gemma_space(
 
 SYSTEM_PROMPT = (
     "Output raw JSON only ({...} or [{...}]). No markdown/intro.\n"
-    "• name & title: Short, unique, descriptive garment name (2-4 words) extracting the cut and key attributes (e.g. 'Green Round-Toe Loafers', 'Brown Leather Oxford Shoes', 'Olive Pleated Skirt', 'Navy Chinos', 'White Linen Button-Down Shirt'). NEVER generic like 'Green Garment', 'Piece of clothing', or 'Clothing'.\n"
-    "• sub_category: Specific cut ('T-Shirt','Sweater','Button-Down Shirt','Blouse','Jeans','Pants','Skirt','Shoes','Sneakers','Sandals','Boots','Loafers','Heels','Flats','Sunglasses','Handbag','Crossbody Bag'). Never generic 'Top'/'Bottom'/'Footwear'.\n"
-    "• Bottoms: 'Jeans'=denim rivets. Chinos -> sub_category:'Pants', item_type:'Chinos', dress_code:'smart-casual'. Sweatpants/joggers -> sub_category:'Pants', item_type:'Sweatpants'|'Joggers', dress_code:'casual'|'athletic' (never 'Wool'/'Business').\n"
-    "• Footwear: 'Shoes' (oxfords/monk straps/derbies/brogues), 'Sneakers' (trainers), 'Sandals' (open-toe/strappy), 'Loafers', 'Boots' (combat/lace-up/ankle/knee-high). Laced/ankle/combat footwear are 'Boots' (never 'Loafers'). Low dress shoes are 'Shoes' (never 'Boots').\n"
-    "• Accessories: 'Sunglasses','Handbag','Crossbody Bag','Tote Bag','Belts','Headwear','Scarves & Wraps','Jewelry'. Attached hoods/collars belong to garment. Non-wearables (bottles, phones) -> is_clothing:false.\n"
-    "• item_type: Detailed cut ('Crew-Neck T-Shirt','Chinos','Straight Jeans','Sweatpants','Double Monk Strap Shoes','Open-Toe Sandals','Classic Sunglasses'). Differ from sub_category.\n"
-    "• caption: <=12 words. Natural fluent sentence in requested language. End with period. Never output brackets or comma lists.\n"
-    "• dress_code: 'casual'|'smart-casual'|'business'|'formal'|'athletic'|'loungewear'. Suits='business'; shirts='smart-casual'; tuxedos='formal'; sweatpants='athletic'; sleepwear='loungewear'.\n"
+    "• name & title: Short, unique (2-4 words) extracting cut/attributes (e.g. 'Green Round-Toe Loafers', 'Navy Chinos', 'Camo Cargo Pants'). Never generic ('Green Garment', 'Clothing').\n"
+    "• sub_category: Specific cut ('T-Shirt','Sweater','Jeans','Pants','Skirt','Shoes','Sneakers','Sandals','Boots','Loafers','Sunglasses','Handbag'). Never 'Top'/'Bottom'/'Footwear'.\n"
+    "• Bottoms: 'Jeans'=denim. Chinos -> sub_category:'Pants', item_type:'Chinos', dress_code:'smart-casual'. Sweatpants/joggers -> sub_category:'Pants', item_type:'Sweatpants'|'Joggers', dress_code:'casual'|'athletic'.\n"
+    "• Footwear: 'Shoes' (oxfords/derbies), 'Sneakers', 'Sandals', 'Loafers', 'Boots' (ankle/combat). Laced/ankle are 'Boots'; low dress shoes are 'Shoes'.\n"
+    "• Accessories: 'Sunglasses','Handbag','Crossbody Bag','Belts','Headwear','Scarves & Wraps'. Non-wearables -> is_clothing:false.\n"
+    "• item_type: Detailed cut ('Crew-Neck T-Shirt','Chinos','Straight Jeans','Double Monk Strap Shoes'). Differ from sub_category.\n"
+    "• caption: <=12 words fluent sentence in requested language. End with period. No brackets/lists.\n"
+    "• dress_code: 'casual'|'smart-casual'|'business'|'formal'|'athletic'|'loungewear'. Suits='business'; shirts='smart-casual'; tuxedos='formal'.\n"
     "• model_gender: Model -> 'women'|'men'. Flat lay/hanger/mannequin -> null.\n"
-    "• gender: Strict 3-Tier Hierarchy: (1) Human Model: anchor garments to model gender ('women'|'men'). (2) Garment Criteria: flat lays determined strictly by cut ('women' for floral/blouses/skirts/sandals; 'men' for masculine cuts; 'unisex' for neutral basics). (3) Neutral basics fall back to profile gender, or 'unisex'. Never default to 'men'.\n"
-    "• colors: ALWAYS [{\"name\": str, \"pct\": int}] summing to 100. White/cream knitwear/tops photographed indoors must be 'white' or 'cream', never 'grey'.\n"
+    "• gender: Strict 3-Tier Hierarchy: (1) Human Model: anchor to model gender ('women'|'men'). (2) Garment Criteria: flat lays determined by cut ('women' for floral/blouses/skirts/sandals; 'men' for masculine cuts; 'unisex' for neutral basics). (3) Neutral basics fall back to profile gender, or 'unisex'. Never default to 'men'.\n"
+    "• colors: ALWAYS [{\"name\": str, \"pct\": int}] summing to 100. Indoor white/cream tops must be 'white'/'cream', never 'grey'.\n"
     "• fabric_materials: [{\"name\": str, \"pct\": int}] summing to 100. tags: [str] (3-4 unique tags, never duplicate sub_category).\n"
-    "• pattern: 'solid'|'printed'|'geometric'|'striped'|'plaid'|'floral'.\n"
+    "• pattern: 'solid'|'printed'|'geometric'|'striped'|'plaid'|'floral'|'camouflage'.\n"
     "• text/logos: Read accurately ('American Eagle'=eagle/עיט, not deer/אייל).\n"
-    "• season: ['spring'|'summer'|'fall'|'winter']. Skirts/shorts/sandals=['summer','spring']. Sweaters/coats/boots=['fall','winter']. Basics=['spring','summer','fall','winter']. Avoid 'all' unless truly seasonless.\n"
+    "• season: ['spring'|'summer'|'fall'|'winter']. Basics=['spring','summer','fall','winter'].\n"
     "• Quality & Repair: Only emit 'reconstruction_prompt' if image_quality_status != 'complete'. Set null if complete."
 )
 
@@ -274,7 +274,7 @@ _GARMENT_OBJECT_SCHEMA: dict[str, Any] = {
         "pattern": {
             "type": "string",
             "enum": [
-                "printed", "geometric", "striped", "plaid", "floral", "herringbone",
+                "camouflage", "printed", "geometric", "striped", "plaid", "floral", "herringbone",
                 "polka", "polka_dot", "paisley", "animal_print",
                 "graphic", "tie_dye", "abstract", "solid",
             ],
@@ -399,8 +399,8 @@ def _user_prompt(code: str | None, user_gender: str | None = None) -> str:
     if code == "en":
         return (
             "Analyze photo. Return raw JSON (1 object or array). No commentary.\n"
-            "• name & title: Short, unique, descriptive garment name (2-5 words) extracting the specific cut and key attributes (e.g. 'Green Round-Toe Loafers', 'Brown Leather Oxford Shoes', 'Olive Pleated Skirt', 'Navy Chinos', 'White Linen Button-Down Shirt'). NEVER generic like 'Green Garment', 'Piece of clothing', or 'Clothing'.\n"
-            f"• sub_category != item_type; pattern: 'printed'|'floral'|'geometric'|'solid'; dress_code: formality; "
+            "• name & title: Short, unique, descriptive garment name (2-5 words) extracting the specific cut and key attributes (e.g. 'Green Round-Toe Loafers', 'Brown Camouflage Cargo Pants', 'Brown Leather Oxford Shoes', 'Olive Pleated Skirt', 'Navy Chinos', 'White Linen Button-Down Shirt'). NEVER generic like 'Green Garment', 'Piece of clothing', or 'Clothing'.\n"
+            f"• sub_category != item_type; pattern: 'camouflage'|'printed'|'floral'|'geometric'|'solid'; dress_code: formality; "
             f"gender: criteria ('women' for floral/feminine/blouses, 'men' for masculine cuts, 'unisex' for neutral; {fallback_gender_hint}; never default to 'men')."
         )
 
@@ -410,8 +410,8 @@ def _user_prompt(code: str | None, user_gender: str | None = None) -> str:
         return (
             "**OUTPUT LANGUAGE: Hebrew (עברית)**\n"
             "All strings in fluent modern Hebrew (חולצת טי, ג'ינס). Keys and enum values in English.\n"
-            "• name & title: שם ייחודי, תמציתי ומדויק (2-5 מילים) הכולל גזרה ומאפיינים (למשל 'נעלי אוקספורד חומות', 'מוקסינים ירוקים', 'חצאית פליסה ירוקה', 'מכנסי צ'ינו זית'). לעולם אל תשתמש בשמות כלליים כמו 'בגד ירוק', 'בגד חום' או 'בגד'.\n"
-            f"• sub_category != item_type; פרחוני=pattern:'floral'; dress_code: רשמיות; "
+            "• name & title: שם ייחודי, תמציתי ומדויק (2-5 מילים) הכולל גזרה ומאפיינים (למשל 'נעלי אוקספורד חומות', 'מוקסינים ירוקים', 'מכנסי דגמ\"ח הסוואה', 'חצאית פליסה ירוקה', 'מכנסי צ'ינו זית'). לעולם אל תשתמש בשמות כלליים כמו 'בגד ירוק', 'בגד חום' או 'בגד'.\n"
+            f"• sub_category != item_type; הסוואה=pattern:'camouflage'; פרחוני=pattern:'floral'; dress_code: רשמיות; "
             f"מגדר: נתח גזרה והדפס ('women' לפרחוני/נשי/בלוזות, 'men' לגברי, 'unisex' לפריטים ניטרליים; {fallback_he}; לעולם אל תניח אוטומטית 'men').\n"
             "• Graphic text: 'AMERICAN EAGLE'=עיט/נשר (not deer). Return raw JSON."
         )
@@ -801,7 +801,7 @@ ATTRIBUTE_GROUPS: list[tuple[str, list[str], int, str]] = [
         (
             'Visual properties:\n'
             '- colors: [{"name": str, "pct": int}] summing to 100\n'
-            '- pattern: printed|solid|striped|plaid|floral|herringbone|polka_dot|paisley|geometric|animal_print|graphic|tie_dye|abstract\n'
+            '- pattern: camouflage|printed|solid|striped|plaid|floral|herringbone|polka_dot|paisley|geometric|animal_print|graphic|tie_dye|abstract\n'
             '- fabric_materials: [{"name": str, "pct": int}] summing to 100'
         )
     ),

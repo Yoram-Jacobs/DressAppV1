@@ -2368,7 +2368,9 @@
       "graphic": "رسم بياني",
       "tie_dye": "صبغ التعادل",
       "printed": "مطبوع",
-      "print": "مطبوع"
+      "print": "مطبوع",
+      "camouflage": "تمويه (كاموفلاج)",
+      "camo": "تمويه"
     },
     "formality": {
       "casual": "كاجوال",
@@ -2486,7 +2488,11 @@
       "mules": "أحذية ميول",
       "loafers": "لوفرز",
       "oxfords": "أحذية أوكسفورد",
-      "sunglasses": "نظارات شمسية"
+      "sunglasses": "نظارات شمسية",
+      "cargo": "بنطال كارجو",
+      "cargo_pants": "بنطال كارجو",
+      "pants": "بنطال",
+      "chinos": "تشينوز"
     },
     "item_type": {
       "oxford_shirt": "قميص أكسفورد",
@@ -2590,7 +2596,9 @@
       "double_breasted_coat": "معطف بصفين أزرار",
       "tailored_long_coat": "معطف طويل مفصل",
       "floral_print_blouse": "بلوزة بطبعة زهور",
-      "floral_print_short_sleeve_top": "توب قصير الأكمام بطبعة زهور"
+      "floral_print_short_sleeve_top": "توب قصير الأكمام بطبعة زهور",
+      "cargo": "بنطال كارجو",
+      "pants": "بنطال"
     },
     "color": {
       "black": "أسود",

@@ -273,8 +273,30 @@ def _clean_truncated_caption(caption: str | None) -> str:
     # Strip dangling trailing conjunctions/prepositions
     text = re.sub(r'\s+(?:and|with|for|or|in|on|at|to|of|the|a|an|but|ו|עם|של|ב|ל|על)$', '', text, flags=re.IGNORECASE).rstrip()
 
-    # Strip dangling punctuation, commas, colons, or double periods before ending
-    text = re.sub(r'[\s,;:.]+[\s,;:]*$', '', text).strip()
+    # Sanitize known phonetic garbles
+    if "קרוז דומים" in text:
+        text = text.replace("קרוז דומים", 'דגמ"ח')
+
+    # If Hebrew caption contains isolated English color or garment terms, localize them
+    if any("\u0590" <= ch <= "\u05ea" for ch in text):
+        _en_to_he_terms = {
+            r'\bnavy\b': 'כחול נייבי',
+            r'\bblack\b': 'שחור',
+            r'\bwhite\b': 'לבן',
+            r'\bblue\b': 'כחול',
+            r'\bbrown\b': 'חום',
+            r'\bgreen\b': 'ירוק',
+            r'\bgray\b': 'אפור',
+            r'\bgrey\b': 'אפור',
+            r'\bbeige\b': "בז'",
+            r'\bolive\b': 'זית',
+            r'\bkhaki\b': 'חאקי',
+            r'\bcamo\b': 'הסוואה',
+            r'\bcamouflage\b': 'הסוואה',
+            r'\bcargo\b': 'דגמ"ח',
+        }
+        for pat, rep in _en_to_he_terms.items():
+            text = re.sub(pat, rep, text, flags=re.IGNORECASE)
 
     # Ensure text ends with a single sentence terminator
     if text and text[-1] not in ".!?。۔":
@@ -1023,6 +1045,26 @@ def _coerce_single_garment(
     caption_str = (res.get("caption") or "").strip()
     has_hebrew_chars = any("\u0590" <= ch <= "\u05ea" for ch in name_str)
     has_latin_chars = any("a" <= ch.lower() <= "z" for ch in name_str)
+
+    _generic_cat_words_he = {"בגד", "מכנסיים", "חולצה", "חולצת", "נעליים", "נעלי", "מעיל", "ז'קט", "שמלה", "חצאית", "סוודר", "תיק", "פריט"}
+    _generic_cat_words_en = {"garment", "clothing", "item", "piece", "pants", "shirt", "shoes", "shoe", "coat", "jacket", "dress", "skirt", "sweater", "bag"}
+    _color_words_all = {
+        "black", "white", "grey", "gray", "blue", "green", "red", "yellow", "brown", "beige", "navy", "pink", "orange", "purple", "olive",
+        "שחור", "לבן", "אפור", "כחול", "ירוק", "אדום", "צהוב", "חום", "בז'", "ורוד", "כתום", "סגול", "זית",
+        "שחורה", "לבנה", "אפורה", "כחולה", "ירוקה", "אדומה", "צהובה", "חומה", "ורודה", "כתומה", "סגולה",
+        "שחורים", "לבנים", "אפורים", "כחולים", "ירוקים", "אדומים", "צהובים", "חומים", "ורודים", "כתומים", "סגולים",
+        "שחורות", "לבנות", "אפורות", "כחולות", "ירוקות", "אדומות", "צהובות", "חומות", "ורודות", "כתומות", "סגולות",
+    }
+    name_words = name_str.lower().split()
+    is_bare_cat_color = (
+        len(name_words) == 2
+        and (
+            (name_words[0] in _generic_cat_words_he and name_words[1] in _color_words_all)
+            or (name_words[0] in _color_words_all and name_words[1] in _generic_cat_words_en)
+            or (name_words[0] in _generic_cat_words_en and name_words[1] in _color_words_all)
+        )
+    )
+
     is_generic_name = (
         not name_str
         or name_str.lower() in (
@@ -1034,7 +1076,8 @@ def _coerce_single_garment(
         or name_str.startswith("בגד ")
         or name_str.lower().startswith("garment ")
         or name_str.lower() == sub_str.lower()
-        or len(name_str.split()) < 2
+        or len(name_words) < 2
+        or is_bare_cat_color
         or (is_he and has_latin_chars and has_hebrew_chars)
     )
 
@@ -1127,11 +1170,16 @@ def _coerce_single_garment(
                 "cardigan": "קרדיגן",
                 "hoodie": "קפוצ'ון",
                 # Bottoms
+                "cargo": "מכנסי דגמ\"ח",
+                "cargos": "מכנסי דגמ\"ח",
+                "cargo pants": "מכנסי דגמ\"ח",
+                "cargo_pants": "מכנסי דגמ\"ח",
                 "sweatpants": "מכנסי טרנינג",
                 "joggers": "מכנסי ג'וגר",
                 "pants": "מכנסיים",
                 "trousers": "מכנסיים",
                 "chinos": "מכנסי צ'ינו",
+                "chino": "מכנסי צ'ינו",
                 "shorts": "מכנסיים קצרים",
                 "bermuda shorts": "ברמודה",
                 "jeans": "ג'ינס",
@@ -1167,7 +1215,9 @@ def _coerce_single_garment(
             combined_txt = f"{itype} {sub_str} {caption_str}".lower()
             
             # 1. High-priority specific cuts from caption or itype
-            if "אוקספורד" in caption_str or "oxford" in combined_txt:
+            if "דגמח" in caption_str or "דגמ\"ח" in caption_str or "cargo" in combined_txt:
+                noun_he = "מכנסי דגמ\"ח"
+            elif "אוקספורד" in caption_str or "oxford" in combined_txt:
                 noun_he = "נעלי אוקספורד"
             elif "דרבי" in caption_str or "derby" in combined_txt:
                 noun_he = "נעלי דרבי"
@@ -1236,6 +1286,21 @@ def _coerce_single_garment(
                 else:
                     noun_he = "פריט לבוש"
 
+            # Enrich with camouflage pattern if detected
+            is_camo = (
+                res.get("pattern") == "camouflage"
+                or any(w in combined_txt for w in ("camo", "camouflage", "הסוואה", "צבאי", "קמופלאז", "קמופלאז'"))
+            )
+            if is_camo and "הסוואה" not in noun_he:
+                if noun_he in ("מכנסי דגמ\"ח", "דגמ\"ח"):
+                    noun_he = "מכנסי דגמ\"ח הסוואה"
+                elif noun_he == "מכנסיים":
+                    noun_he = "מכנסי הסוואה"
+                elif noun_he in ("חולצה", "חולצת טי"):
+                    noun_he = "חולצת הסוואה"
+                elif noun_he in ("מעיל", "ז'קט", "קפוצ'ון"):
+                    noun_he = f"{noun_he} הסוואה"
+
             col_he = he_color_dict.get(color_name.lower(), color_name)
             if col_he:
                 _inflections = {
@@ -1251,21 +1316,21 @@ def _coerce_single_garment(
                     "כתום": ("כתומה", "כתומות", "כתומים"),
                     "סגול": ("סגולה", "סגולות", "סגולים"),
                 }
-                # Feminine singular (ends in ה or ת, but not dual/plural like נעליים / מגפיים)
-                is_fem_sing = noun_he.endswith(("ה", "ת")) and not noun_he.endswith("ות") and noun_he not in ("נעליים", "מגפיים", "סנדלים")
+                # Masculine plural (ends in ים, or specific footwear/bottoms, or construct state מכנסי...)
+                is_masc_plur = noun_he.endswith("ים") or noun_he.startswith("מכנסי ") or noun_he in ("מכנסיים", "מוקסינים", "לופרים", "מגפיים", "מגפונים", "כפכפים", "קבקבים", "משקפי שמש", "סנדלים")
                 # Feminine plural / dual (ends in ות, or נעליים)
                 is_fem_plur = noun_he.endswith("ות") or noun_he in ("נעליים", "נעלי אוקספורד", "נעלי דרבי", "נעלי לופר", "נעלי מאנק סטרפ", "נעלי ברוג", "נעלי קז'ואל", "נעלי עקב", "נעליים שטוחות", "נעליים אלגנטיות", "סניקרס")
-                # Masculine plural (ends in ים, or specific footwear/bottoms)
-                is_masc_plur = noun_he.endswith("ים") or noun_he in ("מכנסיים", "מכנסי טרנינג", "מכנסי ג'וגר", "מכנסי צ'ינו", "מכנסיים קצרים", "מוקסינים", "לופרים", "מגפיים", "מגפונים", "כפכפים", "קבקבים", "משקפי שמש", "סנדלים")
+                # Feminine singular (ends in ה or ת, but not dual/plural like נעליים / מגפיים, and not masculine plural like מכנסי...)
+                is_fem_sing = not is_masc_plur and not is_fem_plur and noun_he.endswith(("ה", "ת")) and not noun_he.endswith("ות") and noun_he not in ("נעליים", "מגפיים", "סנדלים")
 
                 if col_he in _inflections:
                     fem_s, fem_p, masc_p = _inflections[col_he]
-                    if is_fem_sing:
-                        col_he = fem_s
+                    if is_masc_plur:
+                        col_he = masc_p
                     elif is_fem_plur:
                         col_he = fem_p
-                    elif is_masc_plur:
-                        col_he = masc_p
+                    elif is_fem_sing:
+                        col_he = fem_s
 
             parts = [p for p in [noun_he, col_he] if p]
             # Attribute extract: if leather mentioned and not yet in parts
@@ -1274,7 +1339,7 @@ def _coerce_single_garment(
             res["name"] = " ".join(parts)
             res["title"] = res["name"]
         else:
-            # English naming: Color + Attribute + Item Noun (e.g. "Green Round-Toe Loafers", "Brown Leather Oxford Shoes")
+            # English naming: Color + Pattern + Attribute/Cut + Item Noun (e.g. "Green Round-Toe Loafers", "Brown Camouflage Cargo Pants", "Brown Leather Oxford Shoes")
             attr_cut = ""
             comb_lower = f"{itype} {caption_str}".lower()
             if "round-toe" in comb_lower or "round toe" in comb_lower:
@@ -1287,7 +1352,9 @@ def _coerce_single_garment(
                 attr_cut = mat_name.title()
             
             noun_en = itype
-            if "oxford" in comb_lower:
+            if "cargo" in comb_lower or "דגמח" in comb_lower:
+                noun_en = "Cargo Pants"
+            elif "oxford" in comb_lower:
                 noun_en = "Oxford Shoes"
             elif "derby" in comb_lower:
                 noun_en = "Derby Shoes"
@@ -1300,13 +1367,18 @@ def _coerce_single_garment(
             elif not noun_en or noun_en.lower() in ("garment", "clothing", "item", "solid shoes"):
                 noun_en = sub_str if sub_str and sub_str.lower() != "footwear" else "Shoes"
 
-            parts = [p for p in [color_name.title() if color_name else "", attr_cut, noun_en] if p]
+            is_camo = (
+                res.get("pattern") == "camouflage"
+                or any(w in comb_lower for w in ("camo", "camouflage"))
+            )
+            attr_pat = "Camouflage" if is_camo and "camouflage" not in noun_en.lower() and "camo" not in noun_en.lower() else ""
+
+            parts = [p for p in [color_name.title() if color_name else "", attr_pat, attr_cut, noun_en] if p]
             if len(parts) >= 2:
                 res["name"] = " ".join(parts).title()
             else:
                 res["name"] = f"{color_name.title()} {noun_en}".strip().title()
-            if not res.get("title") or res.get("title").lower() in (sub_str.lower(), "garment", "green garment", "brown garment"):
-                res["title"] = res["name"]
+            res["title"] = res["name"]
 
     # Materials fallback: ensure never "Unknown" and percentages sum strictly to 100%
     mats = res.get("fabric_materials")
@@ -1379,9 +1451,13 @@ def _coerce_single_garment(
 
     # Pattern fallback: if model returned solid/empty, check text for printed graphics, geometric, striped, or floral patterns
     pat_str = (res.get("pattern") or "").strip().lower()
-    if not pat_str or pat_str == "solid":
+    if pat_str in ("camo", "camouflage", "camouflaged", "צבאי", "הסוואה", "קמופלאז", "קמופלאז'"):
+        res["pattern"] = "camouflage"
+    elif not pat_str or pat_str == "solid":
         full_pat_text = f"{res.get('name', '')} {res.get('title', '')} {res.get('caption', '')} {' '.join(res.get('tags') or [])}".lower()
-        if any(w in full_pat_text for w in ("print", "printed", "graphic", "logo", "lettering", "artwork", "illustration", "slogan", "הדפס", "הדפסה", "גרפי", "לוגו", "איור", "כיתוב")):
+        if any(w in full_pat_text for w in ("camo", "camouflage", "צבאי", "הסוואה", "קמופלאז", "קמופלאז'")):
+            res["pattern"] = "camouflage"
+        elif any(w in full_pat_text for w in ("print", "printed", "graphic", "logo", "lettering", "artwork", "illustration", "slogan", "הדפס", "הדפסה", "גרפי", "לוגו", "איור", "כיתוב")):
             res["pattern"] = "printed"
         elif any(w in full_pat_text for w in ("geometric", "geometry", "texture", "textured", "weave", "waffle", "jacquard", "pique", "dot", "dots", "polka", "eyelet", "perforated", "mesh", "ribbed", "subtle", "גיאומטרי", "מרקם", "טקסטורה", "נקודות", "עיגולים", "מחורר", "דוגמה")):
             res["pattern"] = "geometric"
@@ -1593,7 +1669,7 @@ _VALID_PATTERN = {
     "solid", "striped", "plaid", "floral", "herringbone",
     "polka", "polka-dot", "polka_dot", "paisley", "geometric",
     "animal_print", "animal-print", "graphic", "tie_dye", "tie-dye", "abstract",
-    "printed", "print",
+    "printed", "print", "camouflage",
 }
 _PATTERN_ALIASES = {
     "polka-dot": "polka_dot",
@@ -1608,6 +1684,13 @@ _PATTERN_ALIASES = {
     "slogan": "printed",
     "lettering": "printed",
     "logo": "printed",
+    "camo": "camouflage",
+    "camouflage": "camouflage",
+    "camouflaged": "camouflage",
+    "צבאי": "camouflage",
+    "הסוואה": "camouflage",
+    "קמופלאז": "camouflage",
+    "קמופלאז'": "camouflage",
 }
 
 
@@ -2612,8 +2695,16 @@ def _enforce_segformer_category(
                     analysis["item_type"] = "Short-Sleeve T-Shirt"
                 elif sub_str.lower() == "jeans":
                     analysis["item_type"] = "Straight-Leg Jeans"
-                elif sub_str.lower() == "pants":
-                    analysis["item_type"] = "Casual Pants"
+                elif sub_str.lower() in ("pants", "pant"):
+                    txt_comb = f"{analysis.get('name', '')} {analysis.get('caption', '')} {' '.join(analysis.get('tags') or [])}".lower()
+                    if "cargo" in txt_comb or "דגמח" in txt_comb or "דגמ\"ח" in txt_comb:
+                        analysis["item_type"] = "Cargo Pants"
+                    elif "chino" in txt_comb or "צ'ינו" in txt_comb:
+                        analysis["item_type"] = "Chinos"
+                    elif "jogger" in txt_comb or "sweat" in txt_comb:
+                        analysis["item_type"] = "Joggers"
+                    else:
+                        analysis["item_type"] = "Casual Pants"
                 else:
                     analysis["item_type"] = f"Classic {sub_str}"
         return analysis
@@ -2654,7 +2745,15 @@ def _enforce_segformer_category(
                 analysis["gender"] = "women"
         elif "pants" in lbl_low or "trousers" in lbl_low:
             analysis["sub_category"] = "Pants"
-            analysis["item_type"] = "pants"
+            txt_comb = f"{analysis.get('name', '')} {analysis.get('caption', '')} {' '.join(analysis.get('tags') or [])}".lower()
+            if "cargo" in txt_comb or "דגמח" in txt_comb or "דגמ\"ח" in txt_comb:
+                analysis["item_type"] = "Cargo Pants"
+            elif "chino" in txt_comb or "צ'ינו" in txt_comb:
+                analysis["item_type"] = "Chinos"
+            elif "jogger" in txt_comb or "sweat" in txt_comb:
+                analysis["item_type"] = "Joggers"
+            else:
+                analysis["item_type"] = "Casual Pants"
         else:
             analysis["sub_category"] = None
     elif default == "Accessories":
@@ -2702,7 +2801,17 @@ def _enforce_segformer_category(
         sub_str = str(analysis["sub_category"]).strip()
         item_str = str(analysis["item_type"]).strip()
         if sub_str.lower() == item_str.lower():
-            if sub_str.lower() in ("sneakers", "shoes"):
+            if sub_str.lower() in ("pants", "pant"):
+                txt_comb = f"{analysis.get('name', '')} {analysis.get('caption', '')} {' '.join(analysis.get('tags') or [])}".lower()
+                if "cargo" in txt_comb or "דגמח" in txt_comb or "דגמ\"ח" in txt_comb:
+                    analysis["item_type"] = "Cargo Pants"
+                elif "chino" in txt_comb or "צ'ינו" in txt_comb:
+                    analysis["item_type"] = "Chinos"
+                elif "jogger" in txt_comb or "sweat" in txt_comb:
+                    analysis["item_type"] = "Joggers"
+                else:
+                    analysis["item_type"] = "Casual Pants"
+            elif sub_str.lower() in ("sneakers", "shoes"):
                 analysis["item_type"] = "Low-Top Sneakers" if sub_str.lower() == "sneakers" else "Casual Shoes"
             elif sub_str.lower() in ("bag", "bags", "handbag"):
                 analysis["sub_category"] = "Bags"

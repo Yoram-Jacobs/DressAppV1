@@ -81,7 +81,8 @@ export const labelForQuality = (code, t) => {
 export const labelForPattern = (code, t) => {
   if (!code) return '';
   const normalized = String(code).trim().toLowerCase().replace(/[- ]/g, '_');
-  const mapped = normalized === 'print' ? 'printed' : normalized;
+  let mapped = normalized === 'print' ? 'printed' : normalized;
+  if (mapped === 'camo' || mapped === 'camouflaged') mapped = 'camouflage';
   const key = `taxonomy.pattern.${mapped}`;
   return fallback(t, key, code);
 };
@@ -324,13 +325,18 @@ export const labelForColor = (code, t) => {
  * we don't have a translation we return the raw value unchanged so non-
  * dictionary garments (e.g., brand-specific nomenclature) still render.
  */
-const itemSlug = (value) =>
-  String(value || '')
+const itemSlug = (value) => {
+  const s = String(value || '')
     .trim()
     .toLowerCase()
     .replace(/['’`]/g, '')
     .replace(/[\s\/\-]+/g, '_')
     .replace(/[^a-z0-9_]/g, '');
+  if (s === 'cargo' || s === 'cargos') return 'cargo_pants';
+  if (s === 'chino' || s === 'chinos') return 'chinos';
+  if (s === 'pant' || s === 'pants') return 'pants';
+  return s;
+};
 
 export const canonicalSubCategoryKey = (raw) => {
   if (!raw) return '';
@@ -501,12 +507,19 @@ export const canonicalSubCategoryKey = (raw) => {
   if (normalized.includes('sweatshirt') || normalized.includes('hoodie') || normalized.includes('fleece') || normalized.includes('סווטשירט') || normalized.includes('קפוצ') || normalized.includes('худи') || normalized.includes('толстовк')) return 'sweatshirts';
   if (normalized.includes('tunic') || normalized.includes('טוניק') || normalized.includes('туник')) return 'tunics';
 
+  if (
+    normalized.includes('cargo') ||
+    normalized.includes('דגמח') ||
+    normalized.includes('דגמ״ח') ||
+    normalized.includes('דגמ"ח') ||
+    normalized.includes('карго')
+  ) return 'cargo_pants';
   if (normalized.includes('shorts') || normalized.includes('short') || normalized.includes('קצרים') || normalized.includes('שורט') || normalized.includes('шорты')) return 'shorts';
   if (normalized.includes('trouser') || normalized.includes('chino') || normalized.includes('pants') || normalized.includes('מכנסי') || normalized.includes('מכנס') || normalized.includes('брюк') || normalized.includes('штаны')) return 'trousers';
   if (normalized.includes('jeans') || normalized.includes('jean') || normalized.includes('denim') || normalized.includes('גינס') || normalized.includes('ג׳ינס') || normalized.includes('джинс')) return 'jeans';
   if (normalized.includes('legging') || normalized.includes('טייץ') || normalized.includes('легинс')) return 'leggings';
   if (normalized.includes('sweatpants') || normalized.includes('jogger') || normalized.includes('אימונית') || normalized.includes('טרניניג') || normalized.includes('джоггер')) return 'sweatpants';
-  if (normalized.includes('jumpsuit') || normalized.includes('romper') || normalized.includes('אוברול') || normalized.includes('комбинезон') || normalized.includes('ромпер')) return 'jumpsuits_and_rompers';
+  if (normalized.includes('jumpsuit') || normalized.includes('romper') || normalized.includes('אוברול') || normalized.includes('комביнезон') || normalized.includes('ромпер')) return 'jumpsuits_and_rompers';
   if (normalized.includes('overall') || normalized.includes('dungaree') || normalized.includes('סרבל') || normalized.includes('полукомбинезон')) return 'overalls';
 
   if (normalized.includes('skirt') || normalized.includes('חצאית') || normalized.includes('חצאיות') || normalized.includes('юбк')) return 'skirts';
@@ -535,8 +548,19 @@ export const labelForItemType = (raw, t) => {
   if (!raw) return '';
   const slug = itemSlug(raw);
   if (!slug) return raw;
-  const key = `taxonomy.item_type.${slug}`;
-  return fallback(t, key, raw);
+  let val = fallback(t, `taxonomy.item_type.${slug}`, null);
+  if (val) return val;
+  val = fallback(t, `taxonomy.sub_category.${slug}`, null);
+  if (val) return val;
+  val = fallback(t, `taxonomy.subcategories.${slug}`, null);
+  if (val) return val;
+  if (slug === 'pants' || slug === 'pant' || slug === 'trousers' || slug === 'trouser') {
+    val = fallback(t, 'taxonomy.sub_category.trousers', null);
+    if (val) return val;
+    val = fallback(t, 'taxonomy.categories.bottom', null);
+    if (val) return val;
+  }
+  return fallback(t, `taxonomy.item_type.${slug}`, raw);
 };
 
 export const canonicalMaterialKey = (raw) => {

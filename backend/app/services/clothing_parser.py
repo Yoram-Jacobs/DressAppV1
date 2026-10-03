@@ -1609,13 +1609,14 @@ def apply_alpha_intersection(
             return None
 
         is_bottom = norm_cat in {"bottom", "pants", "skirt"} or any(w in norm_lbl for w in ("short", "skirt", "pant", "trouser", "jean"))
-        is_multi_segment = is_bottom or is_footwear or is_eyewear
+        is_multi_segment = is_footwear or is_eyewear
         # Build solid garment core and protection region to protect fabric from false chewing
         try:
             from scipy import ndimage
             mask_bin_core = mask_resized > 64
             closed_core = ndimage.binary_closing(mask_bin_core, structure=np.ones((3 if is_multi_segment else 5, 3 if is_multi_segment else 5), dtype=bool), iterations=1)
-            # Never fill holes on bottoms (shorts/skirts) or footwear (shoes) because the gap between legs/shoes is ground/skin!
+            # Fill enclosed holes inside garment body (protects fabric from shadow-dropout chewing).
+            # Bottoms (pants, jeans, chinos) are solid opaque fabric; enclosed holes are dark folds/shadows.
             filled_core = closed_core if is_multi_segment else ndimage.binary_fill_holes(closed_core)
             # garment_protect covers the garment interior where mask is confident or filled
             garment_protect = filled_core | (mask_resized > 50)
@@ -1628,7 +1629,7 @@ def apply_alpha_intersection(
         garment_weight = np.clip((mask_resized.astype(float) - 20.0) / 80.0, 0.0, 1.0)
     else:
         is_bottom = norm_cat in {"bottom", "pants", "skirt"} or any(w in norm_lbl for w in ("short", "skirt", "pant", "trouser", "jean"))
-        is_multi_segment = is_bottom or is_footwear or is_eyewear
+        is_multi_segment = is_footwear or is_eyewear
         garment_weight = None
         garment_protect = None
 

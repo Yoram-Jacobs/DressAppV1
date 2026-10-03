@@ -67,6 +67,8 @@ import {
   labelForSource,
   labelForIntent,
   labelForColor,
+  labelForPattern,
+  labelForTag,
   getTaxonomyMismatches,
 } from "@/lib/taxonomy";
 import { useClosetStore } from "@/lib/useClosetStore";
@@ -2436,6 +2438,9 @@ function ItemCardInner({ item, isSelected, showCheckbox, score }) {
               : [
                 labelForCategory(item.category, t),
                 labelForColor(item.color, t),
+                item.pattern && item.pattern !== "solid"
+                  ? labelForPattern(item.pattern, t)
+                  : null,
               ]
                 .filter(Boolean)
                 .join(" · ")}
@@ -2464,7 +2469,7 @@ function ItemCardInner({ item, isSelected, showCheckbox, score }) {
                 key={idx}
                 className="inline-flex items-center rounded-md bg-stone-100 px-1.5 py-0.5 text-[10px] font-medium text-stone-600"
               >
-                #{tg}
+                #{labelForTag(tg, t) || tg}
               </span>
             ))}
             {item.tags.length > 3 && (

@@ -2368,7 +2368,9 @@
       "tie_dye": "Tie dye",
       "abstract": "Abstract",
       "printed": "Printed",
-      "print": "Printed"
+      "print": "Printed",
+      "camouflage": "Camouflage",
+      "camo": "Camo"
     },
     "formality": {
       "casual": "Casual",
@@ -2486,7 +2488,11 @@
       "bag": "Bag",
       "basket_bags": "Basket Bags",
       "basket_bag": "Basket Bag",
-      "sunglasses": "Sunglasses"
+      "sunglasses": "Sunglasses",
+      "cargo": "Cargo Pants",
+      "cargo_pants": "Cargo pants",
+      "pants": "Pants",
+      "chinos": "Chinos"
     },
     "item_type": {
       "printed_skirt": "Printed skirt",
@@ -2515,7 +2521,7 @@
       "peacoat": "Peacoat",
       "puffer_jacket": "Puffer jacket",
       "chinos": "Chinos",
-      "cargo_pants": "Cargo pants",
+      "cargo_pants": "Cargo Pants",
       "wool_trousers": "Wool trousers",
       "slim_jeans": "Slim jeans",
       "straight_jeans": "Straight jeans",
@@ -2592,7 +2598,9 @@
       "double_breasted_coat": "Double-breasted coat",
       "tailored_long_coat": "Tailored long coat",
       "floral_print_blouse": "Floral print blouse",
-      "floral_print_short_sleeve_top": "Floral print short-sleeve top"
+      "floral_print_short_sleeve_top": "Floral print short-sleeve top",
+      "cargo": "Cargo Pants",
+      "pants": "Pants"
     },
     "color": {
       "black": "Black",

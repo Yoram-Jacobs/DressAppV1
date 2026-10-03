@@ -2375,7 +2375,9 @@
       "graphic": "グラフィック",
       "tie_dye": "タイダイ",
       "printed": "プリント",
-      "print": "プリント"
+      "print": "プリント",
+      "camouflage": "迷彩 (カモフラージュ)",
+      "camo": "カモフラージュ"
     },
     "formality": {
       "casual": "カジュアル",
@@ -2493,7 +2495,11 @@
       "mules": "ミュール",
       "loafers": "ローファー",
       "oxfords": "オックスフォードシューズ",
-      "sunglasses": "サングラス"
+      "sunglasses": "サングラス",
+      "cargo": "カーゴパンツ",
+      "cargo_pants": "カーゴパンツ",
+      "pants": "パンツ",
+      "chinos": "チノパン"
     },
     "item_type": {
       "oxford_shirt": "オックスフォードシャツ",
@@ -2597,7 +2603,9 @@
       "double_breasted_coat": "ダブルブレストコート",
       "tailored_long_coat": "テーラードロングコート",
       "floral_print_blouse": "花柄ブラウス",
-      "floral_print_short_sleeve_top": "花柄半袖トップス"
+      "floral_print_short_sleeve_top": "花柄半袖トップス",
+      "cargo": "カーゴパンツ",
+      "pants": "パンツ"
     },
     "color": {
       "black": "ブラック",

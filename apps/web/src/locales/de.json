@@ -2368,7 +2368,9 @@
       "graphic": "Grafik",
       "tie_dye": "Krawattenfarbe",
       "printed": "Bedruckt",
-      "print": "Bedruckt"
+      "print": "Bedruckt",
+      "camouflage": "Camouflage",
+      "camo": "Tarnmuster"
     },
     "formality": {
       "casual": "Lässig",
@@ -2486,7 +2488,11 @@
       "mules": "Mules",
       "loafers": "Loafer",
       "oxfords": "Oxfordschuhe",
-      "sunglasses": "Sonnenbrille"
+      "sunglasses": "Sonnenbrille",
+      "cargo": "Cargohose",
+      "cargo_pants": "Cargohose",
+      "pants": "Hose",
+      "chinos": "Chinos"
     },
     "item_type": {
       "oxford_shirt": "Oxford-Hemd",
@@ -2590,7 +2596,9 @@
       "double_breasted_coat": "Zweireihiger Mantel",
       "tailored_long_coat": "Langer klassischer Mantel",
       "floral_print_blouse": "Bluse mit Blumenmuster",
-      "floral_print_short_sleeve_top": "Kurzarm-Top mit Blumenmuster"
+      "floral_print_short_sleeve_top": "Kurzarm-Top mit Blumenmuster",
+      "cargo": "Cargohose",
+      "pants": "Hose"
     },
     "color": {
       "black": "Schwarz",

@@ -132,6 +132,7 @@ const PATTERN_OPTIONS = [
   "paisley",
   "geometric",
   "abstract",
+  "camouflage",
 ];
 const INTENT_OPTIONS = [
   {

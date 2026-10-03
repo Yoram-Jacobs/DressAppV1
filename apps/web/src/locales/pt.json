@@ -2375,7 +2375,9 @@
       "graphic": "Gráfico",
       "tie_dye": "Tie dye",
       "printed": "Estampado",
-      "print": "Estampado"
+      "print": "Estampado",
+      "camouflage": "Camuflagem",
+      "camo": "Camuflagem"
     },
     "formality": {
       "casual": "Casual",
@@ -2493,7 +2495,11 @@
       "mules": "Mules",
       "loafers": "Mocassins",
       "oxfords": "Sapatos Oxford",
-      "sunglasses": "Óculos de sol"
+      "sunglasses": "Óculos de sol",
+      "cargo": "Calça cargo",
+      "cargo_pants": "Calça cargo",
+      "pants": "Calças",
+      "chinos": "Chinos"
     },
     "item_type": {
       "oxford_shirt": "Camisa Oxford",
@@ -2516,7 +2522,7 @@
       "trench_coat": "Casaco trincheira",
       "peacoat": "Peacoat (casaco de marinheiro)",
       "puffer_jacket": "Jaqueta acolchoada (puffer)",
-      "chinos": "Calça chino",
+      "chinos": "Chinos",
       "cargo_pants": "Calça cargo",
       "wool_trousers": "Calça de lã",
       "slim_jeans": "Jeans slim",
@@ -2597,7 +2603,9 @@
       "double_breasted_coat": "Casaco trespassado",
       "tailored_long_coat": "Casaco comprido estruturado",
       "floral_print_blouse": "Blusa com estampado floral",
-      "floral_print_short_sleeve_top": "Top de manga curta com estampado floral"
+      "floral_print_short_sleeve_top": "Top de manga curta com estampado floral",
+      "cargo": "Calça cargo",
+      "pants": "Calça"
     },
     "color": {
       "black": "Preto",
