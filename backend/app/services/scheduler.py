@@ -1062,7 +1062,7 @@ async def check_scheduler_triggers() -> None:
                         lightweight_proposals.append(p_copy)
 
                     payload = {
-                        "url": "/stylist?tab=match", 
+                        "url": f"/stylist?tab=match&date={target_date_str}&view=proposal", 
                         "target_date": target_date_str,
                         "tag": f"daily-suggestions-{target_date_str}",
                         "proposals": lightweight_proposals

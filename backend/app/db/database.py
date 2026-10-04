@@ -14,17 +14,32 @@ _client: AsyncIOMotorClient | None = None
 _clients_by_loop: dict[int, AsyncIOMotorClient] = {}
 
 
+def _create_client() -> AsyncIOMotorClient:
+    """Create a tuned AsyncIOMotorClient optimized for on-prem local NVMe MongoDB."""
+    return AsyncIOMotorClient(
+        settings.MONGO_URL,
+        maxPoolSize=50,
+        minPoolSize=5,
+        maxIdleTimeMS=60000,
+        serverSelectionTimeoutMS=5000,
+        connectTimeoutMS=5000,
+        socketTimeoutMS=20000,
+        retryWrites=True,
+        retryReads=True,
+    )
+
+
 def get_client() -> AsyncIOMotorClient:
     global _client
     try:
         loop = asyncio.get_running_loop()
         loop_id = id(loop)
         if loop_id not in _clients_by_loop:
-            _clients_by_loop[loop_id] = AsyncIOMotorClient(settings.MONGO_URL)
+            _clients_by_loop[loop_id] = _create_client()
         return _clients_by_loop[loop_id]
     except RuntimeError:
         if _client is None:
-            _client = AsyncIOMotorClient(settings.MONGO_URL)
+            _client = _create_client()
         return _client
 
 
@@ -58,6 +73,12 @@ async def ensure_indexes() -> None:
     )
     await db.closet_items.create_index(
         [("title", "text"), ("brand", "text"), ("tags", "text")]
+    )
+    # Index for fast grouping lookups (host and member queries)
+    await db.closet_items.create_index(
+        [("user_id", 1), ("group_id", 1)],
+        sparse=True,
+        name="user_id_1_group_id_1",
     )
 
     await db.listings.create_index("id", unique=True, sparse=True)
@@ -376,8 +397,11 @@ async def ensure_indexes() -> None:
 
 
 async def close() -> None:
-    global _client, _db
+    global _client, _clients_by_loop
     if _client is not None:
         _client.close()
-    _client = None
-    _db = None
+        _client = None
+    for loop_client in _clients_by_loop.values():
+        loop_client.close()
+    _clients_by_loop.clear()
+

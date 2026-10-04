@@ -60,7 +60,9 @@ export const dailySuggestionsStore = {
       ]);
 
       const dailyProposal = dailyPropRes.status === 'fulfilled' ? dailyPropRes.value : null;
-      const proposals = dailyProposal ? [dailyProposal] : [];
+      const proposals = Array.isArray(dailyProposal?.all_proposals) && dailyProposal.all_proposals.length > 0
+        ? dailyProposal.all_proposals
+        : (dailyProposal ? [dailyProposal] : []);
       const calendarConnected = calStatus.status === 'fulfilled' ? !!calStatus.value?.connected : false;
       const notifications = notifRes.status === 'fulfilled' ? (notifRes.value?.notifications || []) : [];
       const calendarEvents = calEventsRes.status === 'fulfilled' ? (calEventsRes.value?.events || []) : [];
@@ -88,7 +90,7 @@ export const dailySuggestionsStore = {
       if (updated) {
         if (action === 'wear') {
           _set({
-            proposals: [updated],
+            proposals: [updated, ...(_state.proposals || []).filter(p => p.id !== updated.id)],
             dailyProposal: updated,
           });
         } else {
@@ -107,8 +109,9 @@ export const dailySuggestionsStore = {
       const targetDate = date || _state.dailyProposal?.date;
       const proposal = await api.generateDailyProposal(force, occasion, targetDate);
       if (proposal) {
+        const nextProps = [proposal, ...(_state.proposals || []).filter(p => p.id !== proposal.id && p.date !== proposal.date)];
         _set({
-          proposals: [proposal],
+          proposals: nextProps,
           dailyProposal: proposal,
         });
       }

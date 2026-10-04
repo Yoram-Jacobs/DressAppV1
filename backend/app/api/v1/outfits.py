@@ -446,41 +446,108 @@ async def get_vapid_key(
 async def webpush_test(
     user: dict = Depends(get_current_user),
 ) -> dict[str, Any]:
-    """Send an immediate test push notification to all registered devices of the current user."""
+    """Send an immediate test push notification with the user's active daily proposal to all registered devices."""
     from app.services.push_service import send_push_notification
-    lang = (user.get("preferred_language") or "en").lower().split("-")[0]
-    if lang == "he":
-        title = "בדיקת התראה 🌟"
-        body = "התראות דחיפה של DressApp מוגדרות ופועלות בהצלחה במכשיר זה!"
-    elif lang == "ar":
-        title = "اختبار الإشعار 🌟"
-        body = "إشعارات DressApp مفعلة وتعمل بنجاح على هذا الجهاز!"
-    elif lang == "es":
-        title = "Prueba de Notificación 🌟"
-        body = "¡Las notificaciones de DressApp están activas y funcionando en este dispositivo!"
-    elif lang == "fr":
-        title = "Test de Notification 🌟"
-        body = "Les notifications DressApp sont actives et fonctionnent sur cet appareil !"
-    elif lang == "de":
-        title = "Benachrichtigungstest 🌟"
-        body = "DressApp-Push-Benachrichtigungen sind aktiv und funktionieren auf diesem Gerät!"
-    elif lang == "it":
-        title = "Test di Notifica 🌟"
-        body = "Le notifiche di DressApp sono attive e funzionanti su questo dispositivo!"
-    elif lang == "ru":
-        title = "Тест уведомления 🌟"
-        body = "Push-уведомления DressApp активны и успешно работают на этом устройстве!"
-    else:
-        title = "Push Notification Test 🌟"
-        body = "DressApp push notifications are active and working on this device!"
+    from app.services.scheduler import get_localized_scheduler_notification
+
+    db = get_db()
+    sched = user.get("scheduler_settings") or {}
+    user_tz = sched.get("timezone") or "UTC"
+    try:
+        from zoneinfo import ZoneInfo
+        from datetime import timedelta
+        local_now = datetime.now(timezone.utc).astimezone(ZoneInfo(user_tz))
+    except Exception:
+        from datetime import timedelta
+        local_now = datetime.now(timezone.utc)
+
+    today_str = local_now.strftime("%Y-%m-%d")
+    tomorrow_str = (local_now + timedelta(days=1)).strftime("%Y-%m-%d")
+
+    # Find the active daily proposal (tomorrow first, then today)
+    prop = await db.daily_proposals.find_one(
+        {"user_id": user["id"], "date": tomorrow_str, "dismissed": {"$ne": True}},
+        {"_id": 0},
+        sort=[("worn", -1), ("created_at", -1)],
+    )
+    target_date_str = tomorrow_str
+    is_next_day = True
+    if not prop or not prop.get("items"):
+        prop = await db.daily_proposals.find_one(
+            {"user_id": user["id"], "date": today_str, "dismissed": {"$ne": True}},
+            {"_id": 0},
+            sort=[("worn", -1), ("created_at", -1)],
+        )
+        target_date_str = today_str
+        is_next_day = False
+
+    # If still no proposal, generate one for tomorrow
+    if not prop or not prop.get("items"):
+        from app.api.v1.daily_proposals import _generate_and_save_daily_proposal
+        prop = await _generate_and_save_daily_proposal(user, tomorrow_str, force=False)
+        target_date_str = tomorrow_str
+        is_next_day = True
+
+    user_lang = (user.get("preferred_language") or "en").lower().split("-")[0]
+    outfit_name = prop.get("outfit_name") or prop.get("title") or "Daily Look"
+    items = prop.get("items", [])
+    item_names = [it.get("title") or it.get("name") or it.get("role", "") for it in items[:3]]
+    style_option = sched.get("style_option") or sched.get("style") or "casual"
+
+    title, body = get_localized_scheduler_notification(
+        lang=user_lang,
+        style_option=style_option,
+        is_next_day=is_next_day,
+        outfit_name=outfit_name,
+        item_names=item_names,
+    )
+
+    lightweight_proposals = [
+        {
+            "id": prop.get("id"),
+            "name": outfit_name,
+            "title": outfit_name,
+            "items": [
+                {
+                    "id": it.get("closet_item_id") or it.get("id"),
+                    "closet_item_id": it.get("closet_item_id") or it.get("id"),
+                    "title": it.get("title") or it.get("name") or it.get("description"),
+                    "name": it.get("name") or it.get("title") or it.get("description"),
+                    "role": it.get("role") or it.get("category"),
+                    "category": it.get("category") or it.get("role"),
+                    "clean_image_url": it.get("clean_image_url") if (isinstance(it.get("clean_image_url"), str) and not it.get("clean_image_url", "").startswith("data:")) else None,
+                    "image_url": it.get("image_url") if (isinstance(it.get("image_url"), str) and not it.get("image_url", "").startswith("data:")) else None,
+                    "color": it.get("color"),
+                }
+                for it in items
+            ]
+        }
+    ]
+
+    payload = {
+        "url": f"/stylist?tab=match&date={target_date_str}&view=proposal",
+        "target_date": target_date_str,
+        "tag": f"daily-suggestions-{target_date_str}",
+        "proposals": lightweight_proposals,
+    }
+
+    # Record simulated notification so it appears in the in-app notification center
+    await db.simulated_notifications.insert_one({
+        "user_id": user["id"],
+        "title": title,
+        "body": body,
+        "payload": payload,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "read": False,
+    })
 
     res = await send_push_notification(
         user_id=user["id"],
         title=title,
         body=body,
-        payload={"url": "/stylist?tab=match", "tag": "test-push"}
+        payload=payload,
     )
-    return {"success": True, "result": res}
+    return {"success": True, "result": res, "title": title, "body": body, "target_date": target_date_str}
 
 
 class UpdateOutfitUsageIn(BaseModel):

@@ -65,14 +65,17 @@ quantization / memory / latency decisions assume this exact host.
 
 | Container | Source | Internal port | Role |
 | --- | --- | --- | --- |
+| `dressapp-mongo` | `mongo:7` | `27017` | Production database — on-prem MongoDB 7.0 with persistent storage on fast local NVMe at `/mnt/dressapp-db-data`. WiredTiger cache capped at 0.75 GB. Migrated off MongoDB Atlas M10 on 2026-10-04. |
 | `dressapp-backend` | [`backend/`](backend/) via [`deploy/Dockerfile.backend`](deploy/Dockerfile.backend) | (behind ingress) | FastAPI app — closet, marketplace, stylist, payments |
 | `dressapp-eyes` | [`inference-server/eyes/`](inference-server/eyes/) via [`inference-server/eyes/Dockerfile`](inference-server/eyes/Dockerfile) | `7860` | Live on-prem inference server (`llama-server` + FastAPI proxy) running fine-tuned `gemma-4-E4B-it-Q3_K_M.gguf` (~2.85 GB RAM). Platform default for Free Tier & background cron jobs, and transparent safety fallback on BYOK quota exhaustion (`429`/`RESOURCE_EXHAUSTED`). |
 | `dressapp-frontend` | [`apps/web/`](apps/web/) via [`deploy/Dockerfile.frontend`](deploy/Dockerfile.frontend) | `3000` | React 19 SPA served by Nginx |
 | `caddy` | [`deploy/Caddyfile`](deploy/Caddyfile) | `80`, `443` | Reverse proxy terminating TLS via Let's Encrypt |
 
-**Database.** MongoDB is **NOT** in Docker on the VPS. Production uses
-**MongoDB Atlas M10** (10 GB tier). The URI lives only in `deploy/.env`
-on the VPS — never in the repo.
+**Database.** On-prem **MongoDB 7.0 Community** inside Docker on the VPS.
+Data persists at `/mnt/dressapp-db-data` on the primary NVMe SSD (`/dev/sda2`, 103 GB available).
+Automated nightly backups run at 03:00 UTC via [`deploy/scripts/backup_mongo.sh`](deploy/scripts/backup_mongo.sh)
+to `/srv/AI-Stylist/deploy/backups/`. The connection string (`MONGO_URL=mongodb://dressapp:...@mongo:27017/dressapp?authSource=admin`)
+lives strictly in `deploy/.env` on the VPS — never in the repo.
 
 ---
 
@@ -86,7 +89,7 @@ on the VPS — never in the repo.
 | `EYES_API_TOKEN` | (secret) | Bearer token required by `dressapp-eyes` `/predict` and `/transcribe` |
 | `GEMINI_API_KEY` | (secret) | Google AI Studio key for the native `google-genai` SDK. Drives **every** Gemini call (primary stylist brain, wardrobe migration, suitcase, session titles, trend scout, vision verifier). Required whenever the production provider is `gemini`. |
 | `GOOGLE_API_KEY` | (secret, optional) | Canonical Google SDK name. `config.py` aliases it into `GEMINI_API_KEY` when the latter is unset, so only one of the two needs to be defined. |
-| `MONGO_URL` | (secret, Atlas) | Backend → Mongo connection string |
+| `MONGO_URL` | (secret, on-prem) | Backend → Mongo connection string (`mongodb://dressapp:...@mongo:27017/dressapp?authSource=admin`) |
 
 > **Gemini backend = native `google-genai`.** Since the May 2026
 > migration off `emergentintegrations`, every Gemini call in the

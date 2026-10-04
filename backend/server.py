@@ -38,7 +38,7 @@ load_dotenv(ROOT_DIR / ".env")
 sys.path.insert(0, str(ROOT_DIR))
 
 from app.api.v1.router import api_v1_router  # noqa: E402
-from app.db.database import ensure_indexes, get_client  # noqa: E402
+from app.db.database import close as close_db, ensure_indexes, get_client, get_db  # noqa: E402
 from app.services.scheduler import shutdown_scheduler, start_scheduler  # noqa: E402
 from app.services.warmup import warmup_models  # noqa: E402
 
@@ -47,11 +47,6 @@ logging.basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
 )
 logger = logging.getLogger("dressapp")
-
-# ---- MongoDB (legacy status_checks retained for template compatibility) ----
-mongo_url = os.environ["MONGO_URL"]
-client = AsyncIOMotorClient(mongo_url)
-db = client[os.environ["DB_NAME"]]
 
 app = FastAPI(title="DressApp API", version="0.1.0")
 api_router = APIRouter(prefix="/api")
@@ -79,7 +74,7 @@ async def health_check() -> dict:
     """Fast health probe checking database connectivity and API status."""
     db_ok = False
     try:
-        await db.command("ping")
+        await get_db().command("ping")
         db_ok = True
     except Exception as exc:  # noqa: BLE001
         logger.warning("Health ping failed: %s", exc)
@@ -97,13 +92,13 @@ async def create_status_check(input: StatusCheckCreate) -> StatusCheck:
     status_obj = StatusCheck(**input.model_dump())
     doc = status_obj.model_dump()
     doc["timestamp"] = doc["timestamp"].isoformat()
-    await db.status_checks.insert_one(doc)
+    await get_db().status_checks.insert_one(doc)
     return status_obj
 
 
 @api_router.get("/status", response_model=List[StatusCheck])
 async def get_status_checks() -> List[StatusCheck]:
-    checks = await db.status_checks.find({}, {"_id": 0}).to_list(1000)
+    checks = await get_db().status_checks.find({}, {"_id": 0}).to_list(1000)
     for check in checks:
         if isinstance(check.get("timestamp"), str):
             check["timestamp"] = datetime.fromisoformat(check["timestamp"])
@@ -192,4 +187,5 @@ async def shutdown_db_client() -> None:
         shutdown_scheduler()
     except Exception:  # noqa: BLE001
         pass
-    client.close()
+    await close_db()
+

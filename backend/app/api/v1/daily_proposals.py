@@ -162,14 +162,12 @@ async def get_daily_proposal(
             return doc
         return await _generate_and_save_daily_proposal(user, date, force=False)
 
-    # 2. Check tomorrow's proposal first (pushed the day before for advance prep)
+    # 2. Check tomorrow's proposal (pushed the day before for advance prep)
     tom_doc = await db.daily_proposals.find_one(
         {"user_id": user["id"], "date": tomorrow_str, "dismissed": {"$ne": True}},
         {"_id": 0},
         sort=[("worn", -1), ("created_at", -1)],
     )
-    if tom_doc and len(tom_doc.get("items") or []) > 0:
-        return tom_doc
 
     # 3. Check today's proposal (e.g. prepared yesterday for today)
     today_doc = await db.daily_proposals.find_one(
@@ -177,11 +175,24 @@ async def get_daily_proposal(
         {"_id": 0},
         sort=[("worn", -1), ("created_at", -1)],
     )
+
+    all_proposals = [p for p in [today_doc, tom_doc] if p and len(p.get("items") or []) > 0]
+
+    if tom_doc and len(tom_doc.get("items") or []) > 0:
+        res = dict(tom_doc)
+        res["all_proposals"] = all_proposals
+        return res
+
     if today_doc and len(today_doc.get("items") or []) > 0:
-        return today_doc
+        res = dict(today_doc)
+        res["all_proposals"] = all_proposals
+        return res
 
     # 4. If neither exists, generate for tomorrow
-    return await _generate_and_save_daily_proposal(user, tomorrow_str, force=False)
+    gen_res = await _generate_and_save_daily_proposal(user, tomorrow_str, force=False)
+    if gen_res and isinstance(gen_res, dict):
+        gen_res["all_proposals"] = [gen_res]
+    return gen_res
 
 
 @router.post("/daily-proposal/generate")
