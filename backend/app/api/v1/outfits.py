@@ -491,8 +491,22 @@ async def webpush_test(
     user_lang = (user.get("preferred_language") or "en").lower().split("-")[0]
     outfit_name = prop.get("outfit_name") or prop.get("title") or "Daily Look"
     items = prop.get("items", [])
-    item_names = [it.get("title") or it.get("name") or it.get("role", "") for it in items[:3]]
-    style_option = sched.get("style_option") or sched.get("style") or "casual"
+    sched_style_option = sched.get("style_option") or sched.get("style")
+    if sched_style_option == "tags":
+        selected_tags = sched.get("selected_tags")
+        if isinstance(selected_tags, list) and selected_tags:
+            style_option = ", ".join(str(t) for t in selected_tags if t).strip()
+        elif sched.get("custom_style"):
+            style_option = sched.get("custom_style").strip()
+        else:
+            style_option = "casual"
+    elif sched_style_option == "custom":
+        style_option = (sched.get("custom_style") or sched.get("style_dress_for") or "casual").strip()
+    else:
+        style_option = (sched.get("style_dress_for") or sched_style_option or "casual").strip()
+
+    if not style_option or style_option in ("custom", "tags"):
+        style_option = "casual"
 
     title, body = get_localized_scheduler_notification(
         lang=user_lang,
