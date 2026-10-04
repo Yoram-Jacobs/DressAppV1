@@ -491,6 +491,7 @@ async def webpush_test(
     user_lang = (user.get("preferred_language") or "en").lower().split("-")[0]
     outfit_name = prop.get("outfit_name") or prop.get("title") or "Daily Look"
     items = prop.get("items", [])
+    item_names = [it.get("title") or it.get("name") or it.get("role", "") for it in items[:3]]
     sched_style_option = sched.get("style_option") or sched.get("style")
     if sched_style_option == "tags":
         selected_tags = sched.get("selected_tags")
