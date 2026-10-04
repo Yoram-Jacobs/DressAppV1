@@ -154,6 +154,7 @@ def _generate_fallback_advice(
     is_tags_filter: bool = False,
     occupation: str | None = None,
     respect_occupation: bool = False,
+    lang: str = "en",
 ) -> dict[str, Any]:
     """Generate outfit recommendations based on closet items and user preferences, with strict category validation."""
     if not closet_items:
@@ -360,11 +361,17 @@ def _generate_fallback_advice(
 
                 top_title = top.get("title") or top.get("name") or "Top"
                 bottom_title = bottom.get("title") or bottom.get("name") or "Bottom"
-                vibe_label = style_dress_for.strip() if style_dress_for else "Daily Casual"
+                vibe_label = style_dress_for.strip() if style_dress_for else ("יומיומי" if lang == "he" else "Daily Casual")
+                if lang == "he":
+                    outfit_name = f"מראה {vibe_label}: {top_title} ו-{bottom_title}"
+                    outfit_why = f"המלצה המבוססת על העדפת הסגנון {vibe_label}"
+                else:
+                    outfit_name = f"{vibe_label} Outfit: {top_title} & {bottom_title}"
+                    outfit_why = f"Recommended based on {vibe_label} style preference"
                 all_outfits.append({
-                    "name": f"{vibe_label} Outfit: {top_title} & {bottom_title}",
+                    "name": outfit_name,
                     "items": items,
-                    "why": f"Recommended based on {vibe_label} style preference",
+                    "why": outfit_why,
                     "confidence": min(0.95, 0.7 + score / 100),
                     "_score": score,
                     "_top_id": top.get("id"),
@@ -444,11 +451,17 @@ def _generate_fallback_advice(
                 })
 
             dress_title = dress.get("title") or dress.get("name") or "Outfit"
-            vibe_label = style_dress_for.strip() if style_dress_for else "Daily Casual"
+            vibe_label = style_dress_for.strip() if style_dress_for else ("יומיומי" if lang == "he" else "Daily Casual")
+            if lang == "he":
+                dress_name = f"מראה {vibe_label}: {dress_title}"
+                dress_why = f"המלצה המבוססת על העדפת הסגנון {vibe_label}"
+            else:
+                dress_name = f"{vibe_label} Look: {dress_title}"
+                dress_why = f"Recommended based on {vibe_label} style preference"
             all_outfits.append({
-                "name": f"{vibe_label} Look: {dress_title}",
+                "name": dress_name,
                 "items": items,
-                "why": f"Recommended based on {vibe_label} style preference",
+                "why": dress_why,
                 "confidence": min(0.95, 0.7 + score / 100),
                 "_score": score,
                 "_top_id": dress.get("id"),
@@ -524,14 +537,19 @@ def _generate_fallback_advice(
 
         if items:
             recs.append({
-                "name": "Daily outfit suggestion",
+                "name": "מראה יומיומי מומלץ" if lang == "he" else "Daily outfit suggestion",
                 "items": items,
-                "why": "Curated suggestion based on available items in your closet",
+                "why": "הצעה מותאמת אישית מתוך הפריטים הזמינים בארון שלך" if lang == "he" else "Curated suggestion based on available items in your closet",
                 "confidence": 0.7,
             })
 
+    reasoning = (
+        f"הנה הצעות לבוש שנבחרו מהארון שלך עבור: {style_dress_for or 'יומיומי'}."
+        if lang == "he"
+        else f"Here are outfit recommendations curated from your closet for: {style_dress_for or 'casual'}."
+    )
     return {
-        "reasoning_summary": f"Here are outfit recommendations curated from your closet for: {style_dress_for or 'casual'}.",
+        "reasoning_summary": reasoning,
         "outfit_recommendations": recs
     }
 
@@ -957,6 +975,7 @@ async def check_scheduler_triggers() -> None:
                             is_tags_filter=is_tags_filter,
                             occupation=user_occ if respect_occ else None,
                             respect_occupation=respect_occ,
+                            lang=(user.get("preferred_language") or "en").lower().split("-")[0],
                         )
                         proposals = fallback_result.get("outfit_recommendations") or []
 

@@ -16,4 +16,5 @@ export const outfits = {
   subscribeWebPush: (sub) => client.post('/outfits/webpush/subscribe', sub).then((r) => r.data),
   unsubscribeWebPush: (endpoint) => client.post('/outfits/webpush/unsubscribe', { endpoint }).then((r) => r.data),
   getVapidKey: () => client.get('/outfits/webpush/vapid-key').then((r) => r.data),
+  testWebPush: () => client.post('/outfits/webpush/test').then((r) => r.data),
 };

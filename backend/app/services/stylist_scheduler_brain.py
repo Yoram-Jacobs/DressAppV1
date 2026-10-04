@@ -16,15 +16,17 @@ logger = logging.getLogger(__name__)
 
 
 SYNONYMS = {
-    "עבודה": ["עבודה", "work", "business", "business-casual", "business casual", "smart-casual", "smart casual", "formal", "office", "workwear", "משרד", "חליפה", "מכופתרת"],
-    "work": ["עבודה", "work", "business", "business-casual", "business casual", "smart-casual", "smart casual", "formal", "office", "workwear", "משרד", "חליפה", "מכופתרת"],
-    "business": ["עבודה", "work", "business", "business-casual", "business casual", "smart-casual", "smart casual", "formal", "office", "workwear", "משרד", "חליפה", "מכופתרת"],
-    "business casual": ["עבודה", "work", "business", "business-casual", "business casual", "smart-casual", "smart casual", "formal", "office", "workwear", "משרד", "חליפה", "מכופתרת"],
-    "business-casual": ["עבודה", "work", "business", "business-casual", "business casual", "smart-casual", "smart casual", "formal", "office", "workwear", "משרד", "חליפה", "מכופתרת"],
-    "smart-casual": ["עבודה", "work", "business", "business-casual", "business casual", "smart-casual", "smart casual", "formal", "office", "workwear", "משרד", "חליפה", "מכופתרת", "smart casual"],
-    "smart casual": ["עבודה", "work", "business", "business-casual", "business casual", "smart-casual", "smart casual", "formal", "office", "workwear", "משרד", "חליפה", "מכופתרת", "smart-casual"],
-    "office": ["עבודה", "work", "business", "business-casual", "business casual", "smart-casual", "smart casual", "formal", "office", "workwear", "משרד"],
-    "משרד": ["עבודה", "work", "business", "business-casual", "business casual", "smart-casual", "smart casual", "formal", "office", "workwear", "משרד"],
+    "עבודה": ["עבודה", "work", "workwear", "בגדי עבודה"],
+    "work": ["work", "עבודה", "workwear", "בגדי עבודה"],
+    "workwear": ["workwear", "בגדי עבודה", "work", "עבודה"],
+    "בגדי עבודה": ["בגדי עבודה", "workwear", "עבודה", "work"],
+    "business": ["business", "עסקים", "business-casual", "business casual", "formal", "office", "משרד"],
+    "business casual": ["business casual", "business-casual", "smart casual", "smart-casual", "office", "משרד"],
+    "business-casual": ["business-casual", "business casual", "smart-casual", "smart casual", "office", "משרד"],
+    "smart-casual": ["smart-casual", "smart casual", "business-casual", "business casual", "office", "משרד"],
+    "smart casual": ["smart-casual", "smart casual", "business-casual", "business casual", "office", "משרד"],
+    "office": ["office", "משרד", "business", "business-casual", "smart-casual", "formal"],
+    "משרד": ["משרד", "office", "business", "business-casual", "smart-casual", "formal"],
     "casual": ["casual", "יומיום", "יומיומי", "קז'ואל", "everyday", "everyday wear"],
     "יומיום": ["casual", "יומיום", "יומיומי", "קז'ואל", "everyday", "everyday wear"],
     "יומיומי": ["casual", "יומיום", "יומיומי", "קז'ואל", "everyday", "everyday wear"],
@@ -196,7 +198,7 @@ def calculate_garment_style_score(
         "elegant", "smart casual", "smart-casual", "business", "formal", "party", "birthday", 
         "dinner", "restaurant", "wedding", "cocktail", "celebration", "date night", "asian food",
         "אלגנטי", "ערב", "מסיבה", "מסעדה", "חתונה", "אירוע", "חגיגי", "יומולדת", "יום הולדת",
-        "עבודה", "work", "office", "משרד", "workwear", "business-casual", "business casual"
+        "office", "משרד", "business-casual", "business casual"
     ))
     
     is_swim_beach = any(w in prompt_lower for w in (
@@ -1047,12 +1049,24 @@ async def generate_scheduled_proposals(
             f"   - Highlight this occupational context in the outfit title ('name') and 'why' explanation.\n"
         )
 
+    user_lang = ((user or {}).get("preferred_language") or "en").lower().split("-")[0]
+    from app.services.i18n import LANG_NAMES
+    lang_name = LANG_NAMES.get(user_lang, "Hebrew" if user_lang == "he" else "English")
+    lang_rule = (
+        f"MANDATORY OUTPUT LANGUAGE ({lang_name}):\n"
+        f"- The user's preferred language is {lang_name} (code: '{user_lang}').\n"
+        f"- ALL free-text fields in your JSON response ('reasoning_summary', outfit 'name', and 'why') MUST be written entirely in fluent, natural {lang_name}.\n"
+        f"- NEVER use English titles like '{style_prompt} Outfit: ...' or English why descriptions when the user language is {lang_name}!\n"
+        f"- Give the outfit an authentic, stylish {lang_name} name (e.g. for work wear: 'מראה עבודה ספורטיבי ונוח' or 'שילוב עבודה נוח ופרקטי').\n\n"
+    )
+
     prompt = (
         f"PERSONA & EXPERTISE:\n"
         f"You are a senior fashion stylist and dresser with 30 years of experience in multi-nationality and cultural fashion and trends. "
         f"You have deep fashion knowledge, and rules like color matching, material matching, body fitting, pattern matching, and cultural and religious restrictions are natural to you; "
         f"you constantly keep up with current local fashion and social trends. Your ability to tailor a perfect outfit for an event and weather from the customer's own garments, "
         f"following the customer's restrictions and orders, is well known and admired.\n\n"
+        f"{lang_rule}"
         f"GOAL:\n"
         f"Generate EXACTLY 1 complete, distinct, and coordinated full-body outfit recommendation for {day_prefix}{target_day_name} ({target_date_str}) from the user's Closet items below, "
         f"following Fashion and Social Rules and Restrictions.\n\n"
@@ -1164,6 +1178,27 @@ async def generate_scheduled_proposals(
                     logger.warning("Dropping unmapped LLM item not in closet list: %s", item)
                     item["closet_item_id"] = None
         
+        # Strict Tag Guardrail: Ensure every category with tagged items uses ONLY tagged items
+        if is_tags_filter and filter_tags:
+            raw_by_id = {c["id"]: c for c in raw_closet if c.get("id")}
+            for item in prop.get("items", []):
+                cid = item.get("closet_item_id")
+                c_item = raw_by_id.get(cid)
+                if c_item:
+                    c_role = norm_category(c_item.get("category"))
+                    cat_tagged = [
+                        x for x in raw_closet 
+                        if norm_category(x.get("category")) == c_role and _item_has_any_tag(x, filter_tags)
+                    ]
+                    if cat_tagged and not _item_has_any_tag(c_item, filter_tags):
+                        replacement = cat_tagged[0]
+                        logger.info("Enforcing strict tag filter: replacing non-tagged %s (%s) with tagged item %s (%s)", cid, c_item.get("title"), replacement["id"], replacement.get("title"))
+                        item["closet_item_id"] = replacement["id"]
+                        item["id"] = replacement["id"]
+                        item["description"] = replacement.get("title") or replacement.get("name")
+                        item["title"] = replacement.get("title") or replacement.get("name")
+                        item["name"] = replacement.get("name") or replacement.get("title")
+
         # Guarantee complete outfit (Top + Bottom + Shoes or Dress + Shoes)
         _ensure_complete_outfit(prop, raw_closet)
     

@@ -442,6 +442,47 @@ async def get_vapid_key(
     return {"public_key": settings.VAPID_PUBLIC_KEY}
 
 
+@router.post("/webpush/test")
+async def webpush_test(
+    user: dict = Depends(get_current_user),
+) -> dict[str, Any]:
+    """Send an immediate test push notification to all registered devices of the current user."""
+    from app.services.push_service import send_push_notification
+    lang = (user.get("preferred_language") or "en").lower().split("-")[0]
+    if lang == "he":
+        title = "בדיקת התראה 🌟"
+        body = "התראות דחיפה של DressApp מוגדרות ופועלות בהצלחה במכשיר זה!"
+    elif lang == "ar":
+        title = "اختبار الإشعار 🌟"
+        body = "إشعارات DressApp مفعلة وتعمل بنجاح على هذا الجهاز!"
+    elif lang == "es":
+        title = "Prueba de Notificación 🌟"
+        body = "¡Las notificaciones de DressApp están activas y funcionando en este dispositivo!"
+    elif lang == "fr":
+        title = "Test de Notification 🌟"
+        body = "Les notifications DressApp sont actives et fonctionnent sur cet appareil !"
+    elif lang == "de":
+        title = "Benachrichtigungstest 🌟"
+        body = "DressApp-Push-Benachrichtigungen sind aktiv und funktionieren auf diesem Gerät!"
+    elif lang == "it":
+        title = "Test di Notifica 🌟"
+        body = "Le notifiche di DressApp sono attive e funzionanti su questo dispositivo!"
+    elif lang == "ru":
+        title = "Тест уведомления 🌟"
+        body = "Push-уведомления DressApp активны и успешно работают на этом устройстве!"
+    else:
+        title = "Push Notification Test 🌟"
+        body = "DressApp push notifications are active and working on this device!"
+
+    res = await send_push_notification(
+        user_id=user["id"],
+        title=title,
+        body=body,
+        payload={"url": "/stylist?tab=match", "tag": "test-push"}
+    )
+    return {"success": True, "result": res}
+
+
 class UpdateOutfitUsageIn(BaseModel):
     date: str | None = None
     time: str | None = None

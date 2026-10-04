@@ -540,22 +540,37 @@ async def _generate_and_save_daily_proposal(
             })
 
         # Generate vibrant title based on selected items & occasion
+        user_lang = ((user or {}).get("preferred_language") or "en").lower().split("-")[0]
         color_names = [i.get("color") for i in items if i.get("id") in [x["id"] for x in selected_items] and i.get("color")]
-        style_adjectives = ["Effortless", "Crisp", "Polished", "Modern", "Refined", "Relaxed", "Vibrant", "Chic", "Smart"]
-        adj = random.choice(style_adjectives)
-        if is_tags_mode and filter_tags:
-            tag_label = ", ".join(filter_tags)
-            proposal_title = f"{adj} {tag_label} Outfit"
-            proposal_desc = f"Curated strictly from your closet items tagged '{tag_label}'."
-        elif effective_occasion and effective_occasion not in ("casual", "daily", "default"):
-            proposal_title = f"{adj} {effective_occasion.title()} Look"
-            proposal_desc = f"Curated based on your '{effective_occasion}' preference, weather conditions, and closet harmony."
-        elif color_names:
-            proposal_title = f"{adj} {color_names[0].title()} Look"
-            proposal_desc = "Curated based on your style profile, weather conditions, and closet harmony."
+        if user_lang == "he":
+            he_adjectives = ["מראה מושלם ל", "מראה מוקפד ל", "שילוב נוח ל", "מראה רענן ל", "סטיילינג מדויק ל"]
+            adj = random.choice(he_adjectives)
+            if is_tags_mode and filter_tags:
+                tag_label = ", ".join(filter_tags)
+                proposal_title = f"{adj}{tag_label}"
+                proposal_desc = f"נבחר בקפידה מתוך הפריטים שלך בארון עם התגית '{tag_label}'."
+            elif effective_occasion and effective_occasion not in ("casual", "daily", "default"):
+                proposal_title = f"{adj}{effective_occasion}"
+                proposal_desc = f"נבחר בהתאמה להעדפת '{effective_occasion}', תנאי מזג האוויר והרמוניה בארון."
+            else:
+                proposal_title = "מראה יומיומי מושלם"
+                proposal_desc = "נבחר בהתאמה לפרופיל הסגנון שלך, תנאי מזג האוויר והרמוניה בארון."
         else:
-            proposal_title = f"{adj} Everyday Look"
-            proposal_desc = "Curated based on your style profile, weather conditions, and closet harmony."
+            style_adjectives = ["Effortless", "Crisp", "Polished", "Modern", "Refined", "Relaxed", "Vibrant", "Chic", "Smart"]
+            adj = random.choice(style_adjectives)
+            if is_tags_mode and filter_tags:
+                tag_label = ", ".join(filter_tags)
+                proposal_title = f"{adj} {tag_label} Outfit"
+                proposal_desc = f"Curated strictly from your closet items tagged '{tag_label}'."
+            elif effective_occasion and effective_occasion not in ("casual", "daily", "default"):
+                proposal_title = f"{adj} {effective_occasion.title()} Look"
+                proposal_desc = f"Curated based on your '{effective_occasion}' preference, weather conditions, and closet harmony."
+            elif color_names:
+                proposal_title = f"{adj} {color_names[0].title()} Look"
+                proposal_desc = "Curated based on your style profile, weather conditions, and closet harmony."
+            else:
+                proposal_title = f"{adj} Everyday Look"
+                proposal_desc = "Curated based on your style profile, weather conditions, and closet harmony."
         proposal_harmony = random.randint(88, 97) if len(selected_items) >= 2 else 85
         
     proposal = {

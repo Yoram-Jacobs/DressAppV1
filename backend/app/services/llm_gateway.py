@@ -143,7 +143,7 @@ async def call_main_llm(
                 logger.warning("Failed to decode image_b64_jpeg in call_main_llm; proceeding text-only: %s", b64_err)
                 user_parts = [user_text]
 
-            t_budget = None if think else 0
+            t_budget = int(think) if (isinstance(think, int) and think > 0) else None
             logger.info("Executing multimodal LLM completion via Gemini (%s, thinking_budget=%s)", target_model, t_budget)
             return await client.vision(
                 user_parts=user_parts,
@@ -156,7 +156,7 @@ async def call_main_llm(
                 thinking_budget=t_budget,
             )
         else:
-            t_budget = None if think else 0
+            t_budget = int(think) if (isinstance(think, int) and think > 0) else None
             logger.info("Executing text LLM completion via Gemini (%s, thinking_budget=%s)", target_model, t_budget)
             return await client.text(
                 user_text=user_text,

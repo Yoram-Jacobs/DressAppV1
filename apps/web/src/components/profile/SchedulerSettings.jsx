@@ -206,6 +206,21 @@ export function SchedulerSettings() {
     }
   };
 
+  const [testingPush, setTestingPush] = useState(false);
+  const handleSendTestPush = async () => {
+    if (testingPush || busy) return;
+    setTestingPush(true);
+    try {
+      await api.testWebPush();
+      toast.success(t('profile.testPushSent', { defaultValue: 'Test alert sent! Check your notification tray.' }));
+    } catch (err) {
+      console.error('[SchedulerSettings] test push error:', err);
+      toast.error(err?.response?.data?.detail || err?.message || t('profile.testPushFailed', { defaultValue: 'Failed to send test push alert.' }));
+    } finally {
+      setTestingPush(false);
+    }
+  };
+
   const save = useCallback(async (overrides = {}) => {
     const targetEnabled = overrides.enabled !== undefined ? overrides.enabled : enabled;
     if (targetEnabled && !canAccessScheduler) {
@@ -239,6 +254,7 @@ export function SchedulerSettings() {
       const schedPayload = {
         ...(user?.scheduler_settings || {}),
         enabled: overrides.enabled !== undefined ? overrides.enabled : enabled,
+        push_enabled: pushEnabled,
         frequency: overrides.frequency !== undefined ? overrides.frequency : frequency,
         weekday: overrides.weekday !== undefined ? overrides.weekday : weekday,
         time: overrides.time !== undefined ? overrides.time : time,
@@ -268,7 +284,7 @@ export function SchedulerSettings() {
     } finally {
       setBusy(false);
     }
-  }, [user, enabled, respectOccupation, frequency, weekday, time, styleOption, customStyle, selectedTags, tagDraft, updateUserLocal, t]);
+  }, [user, enabled, pushEnabled, respectOccupation, frequency, weekday, time, styleOption, customStyle, selectedTags, tagDraft, updateUserLocal, t]);
 
   useEffect(() => {
     const handleSaveFull = (e) => {
@@ -572,12 +588,34 @@ export function SchedulerSettings() {
           </div>
         )}
         {pushSupported && (
-          <div className="flex items-center justify-between gap-3 p-3 bg-yellow-shadow rounded-[12px] border border-border shadow-sm text-start">
-            <div className="space-y-1">
-              <div className="font-semibold text-[14px] text-dark-brand">{t('profile.browserPushAlerts', { defaultValue: 'Push Alerts' })}</div>
-              <div className="text-[12px] text-text-brand font-semibold text-start">{t('profile.receiveDirectBrowserAlerts', { defaultValue: 'Receive alerts on this device.' })}</div>
+          <div className="space-y-2.5 p-3 bg-yellow-shadow rounded-[12px] border border-border shadow-sm text-start">
+            <div className="flex items-center justify-between gap-3">
+              <div className="space-y-1">
+                <div className="font-semibold text-[14px] text-dark-brand">{t('profile.browserPushAlerts', { defaultValue: 'Push Alerts' })}</div>
+                <div className="text-[12px] text-text-brand font-semibold text-start">{t('profile.receiveDirectBrowserAlerts', { defaultValue: 'Receive alerts on this device.' })}</div>
+              </div>
+              <Switch checked={pushEnabled} onCheckedChange={handlePushToggle} disabled={busy} />
             </div>
-            <Switch checked={pushEnabled} onCheckedChange={handlePushToggle} disabled={busy} />
+            {pushEnabled && (
+              <div className="flex justify-end pt-1 border-t border-border/40">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={handleSendTestPush}
+                  disabled={testingPush || busy}
+                  className="rounded-lg h-7 px-2.5 text-xs border-primary-brand/40 text-primary-brand hover:bg-primary-brand/10 transition-colors inline-flex items-center gap-1.5"
+                  data-testid="send-test-push-button"
+                >
+                  {testingPush ? (
+                    <Loader2 className="h-3 w-3 animate-spin" />
+                  ) : (
+                    <Bell className="h-3 w-3" />
+                  )}
+                  <span>{t('profile.sendTestPushAlert', { defaultValue: 'Send Test Alert' })}</span>
+                </Button>
+              </div>
+            )}
           </div>
         )}
         <div className="text-[12px] text-text-brand p-3 bg-white rounded-full border border-primary-brand text-start">

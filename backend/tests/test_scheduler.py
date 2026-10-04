@@ -289,4 +289,42 @@ def test_localized_scheduler_notification():
     assert "Voici votre tenue Smart Casual sélectionnée pour demain :" in body_fr
 
 
+def test_item_has_any_tag_workwear_vs_formal():
+    from app.services.stylist_scheduler_brain import _item_has_any_tag
 
+    work_item = {
+        "id": "1",
+        "title": "Black Work Cargo Pants",
+        "category": "bottom",
+        "tags": ["עבודה"],
+    }
+    formal_item = {
+        "id": "2",
+        "title": "Classic Striped Button-Down Shirt",
+        "category": "top",
+        "tags": ["ערב", "חגיגי"],
+    }
+    assert _item_has_any_tag(work_item, ["עבודה"]) is True
+    assert _item_has_any_tag(formal_item, ["עבודה"]) is False
+
+
+def test_generate_fallback_advice_hebrew_localization():
+    from app.services.scheduler import _generate_fallback_advice
+
+    closet = [
+        {"id": "t1", "title": "חולצת עבודה שחורה", "category": "top", "tags": ["עבודה"]},
+        {"id": "b1", "title": "מכנסי דגמ\"ח עבודה", "category": "bottom", "tags": ["עבודה"]},
+        {"id": "s1", "title": "נעלי עבודה בטיחותיות", "category": "footwear", "tags": ["עבודה"]},
+    ]
+    res = _generate_fallback_advice(
+        closet_items=closet,
+        style_dress_for="עבודה",
+        filter_tags=["עבודה"],
+        is_tags_filter=True,
+        lang="he",
+    )
+    assert len(res["outfit_recommendations"]) > 0
+    rec = res["outfit_recommendations"][0]
+    assert "מראה עבודה:" in rec["name"]
+    assert "המלצה המבוססת על העדפת הסגנון עבודה" in rec["why"]
+    assert "הנה הצעות לבוש שנבחרו מהארון שלך עבור: עבודה." in res["reasoning_summary"]

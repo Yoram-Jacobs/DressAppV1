@@ -340,12 +340,46 @@ export default function Stylist() {
     let localized = name;
     localized = localized.replace('(Fallback. Quota exhausted)', t('stylist.fallbackQuotaExhausted', { defaultValue: '(Fallback. Quota exhausted)' }));
     localized = localized.replace('(Fallback)', t('stylist.fallbackLabel', { defaultValue: '(Fallback)' }));
+
+    // Convert legacy / fallback pattern "X Outfit: Top & Bottom" or "X Look: Dress"
+    // e.g. "עבודה Outfit: Classic Striped Button-Down Shirt & Smooth Fabric Black Flat-Front Trousers"
+    const outfitMatch = localized.match(/^(.+?)\s+Outfit:\s*(.+)$/i);
+    if (outfitMatch) {
+      const vibe = outfitMatch[1].trim();
+      const items = outfitMatch[2].trim();
+      return `${t('stylist.lookOf', { defaultValue: 'מראה' })} ${vibe}: ${items}`;
+    }
+    const lookMatch = localized.match(/^(.+?)\s+Look:\s*(.+)$/i);
+    if (lookMatch) {
+      const vibe = lookMatch[1].trim();
+      const items = lookMatch[2].trim();
+      return `${t('stylist.lookOf', { defaultValue: 'מראה' })} ${vibe}: ${items}`;
+    }
+    const tagOutfitMatch = localized.match(/^(\w+)\s+(.+)\s+Outfit$/i);
+    if (tagOutfitMatch) {
+      const tag = tagOutfitMatch[2].trim();
+      return `${t('stylist.lookOf', { defaultValue: 'מראה' })} ${tag}`;
+    }
     return localized;
   };
 
   const getOutfitDescription = (desc) => {
     if (!desc) return '';
     if (typeof desc !== 'string') return desc;
+    if (desc.startsWith("Curated strictly from your closet items tagged '")) {
+      const tag = desc.replace("Curated strictly from your closet items tagged '", "").replace("'.", "");
+      return t('stylist.curatedFromTags', {
+        defaultValue: "נבחר בקפידה מתוך הפריטים שלך בארון עם התגית '{{tag}}'.",
+        tag
+      });
+    }
+    if (desc.startsWith("Recommended based on ") && desc.endsWith(" style preference")) {
+      const style = desc.replace("Recommended based on ", "").replace(" style preference", "");
+      return t('stylist.recommendedForStyle', {
+        defaultValue: "המלצה המבוססת על העדפת הסגנון {{style}}",
+        style
+      });
+    }
     const regex = /^A balanced daily outfit matching your preferred (.+) style and local weather\.$/i;
     const match = desc.match(regex);
     if (match) {
