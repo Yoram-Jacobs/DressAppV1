@@ -522,6 +522,12 @@ export const canonicalSubCategoryKey = (raw) => {
   if (normalized.includes('jumpsuit') || normalized.includes('romper') || normalized.includes('אוברול') || normalized.includes('комביнезон') || normalized.includes('ромпер')) return 'jumpsuits_and_rompers';
   if (normalized.includes('overall') || normalized.includes('dungaree') || normalized.includes('סרבל') || normalized.includes('полукомбинезон')) return 'overalls';
 
+  if (normalized.includes('pleated_skirt') || normalized.includes('pleated skirt') || normalized.includes('pleated') || normalized.includes('פליסה')) return 'pleated_skirt';
+  if (normalized.includes('a_line_skirt') || normalized.includes('a-line') || normalized.includes('a_line') || normalized.includes('קו_a')) return 'a_line_skirt';
+  if (normalized.includes('pencil_skirt') || normalized.includes('עיפרון')) return 'pencil_skirt';
+  if (normalized.includes('mini_skirt') || normalized.includes('חצאית_מיני')) return 'mini_skirt';
+  if (normalized.includes('midi_skirt') || normalized.includes('חצאית_מידי')) return 'midi_skirt';
+  if (normalized.includes('maxi_skirt') || normalized.includes('חצאית_מקסי')) return 'maxi_skirt';
   if (normalized.includes('skirt') || normalized.includes('חצאית') || normalized.includes('חצאיות') || normalized.includes('юбк')) return 'skirts';
   if (normalized.includes('mini_dress') || normalized.includes('מיני') || normalized.includes('мини_плать')) return 'mini_dresses';
   if (normalized.includes('maxi_dress') || normalized.includes('מקסי') || normalized.includes('макси_плать')) return 'maxi_dresses';
@@ -530,6 +536,10 @@ export const canonicalSubCategoryKey = (raw) => {
   if (normalized.includes('sundress') || normalized.includes('שמלת_קיץ') || normalized.includes('сарафан')) return 'sundresses';
   if (normalized.includes('wrap_dress') || normalized.includes('מעטפת') || normalized.includes('платье_с_запах')) return 'wrap_dresses';
   if (normalized.includes('dress') || normalized.includes('שמלה') || normalized.includes('плать')) return 'midi_dresses';
+
+  if (normalized === 'clutches' || normalized === 'clutch' || normalized.includes('קלאץ')) return 'clutch';
+  if (normalized === 'handbags' || normalized === 'handbag' || normalized.includes('תיק_יד')) return 'handbag';
+  if (normalized === 'totes' || normalized === 'tote' || normalized === 'tote_bags' || normalized === 'tote_bag' || normalized === 'tote bag') return 'basket_bag';
 
   return normalized;
 };

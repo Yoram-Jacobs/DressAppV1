@@ -1558,7 +1558,12 @@ def _coerce_single_garment(
         if res.get("pattern") and str(res["pattern"]).lower() not in ("none", "other", "unknown", "solid"):
             candidates.append(str(res["pattern"]))
         if res.get("dress_code"):
-            candidates.append(str(res["dress_code"]))
+            dc = str(res["dress_code"]).strip().lower()
+            sub_l = str(res.get("sub_category", "")).lower()
+            it_l = str(res.get("item_type", "")).lower()
+            is_non_athletic = any(k in sub_l or k in it_l for k in ("skirt", "dress", "heel", "pump", "blazer", "blouse", "bag", "חצאית", "שמלה", "עקב", "בלייזר", "תיק", "clutch"))
+            if not (dc in ("athletic", "sports") and is_non_athletic):
+                candidates.append(str(res["dress_code"]))
         if res.get("season") and isinstance(res["season"], list):
             for s in res["season"]:
                 if s and s != "all":
@@ -2660,21 +2665,34 @@ def _enforce_segformer_category(
                     "garment_vision: SegFormer-anchored skirt override label=%r kind=%r sub_category=%r item_type=%r -> Skirt",
                     label, kind, analysis.get("sub_category"), analysis.get("item_type"),
                 )
-                analysis["category"] = "Bottom"
-                analysis["sub_category"] = "Skirt"
-                if "pleat" in combined_txt:
-                    analysis["item_type"] = "Pleated Skirt"
-                elif "mini" in combined_txt:
-                    analysis["item_type"] = "Mini Skirt"
-                elif "maxi" in combined_txt:
-                    analysis["item_type"] = "Maxi Skirt"
-                elif "a-line" in combined_txt or "aline" in combined_txt:
-                    analysis["item_type"] = "A-Line Skirt"
+                analysis["category"] = "חלק תחתון" if language == "he" else "Bottom"
+                if language == "he":
+                    analysis["sub_category"] = "חצאית"
+                    if "pleat" in combined_txt or "פליסה" in combined_txt:
+                        analysis["item_type"] = "חצאית פליסה"
+                    elif "mini" in combined_txt or "מיני" in combined_txt:
+                        analysis["item_type"] = "חצאית מיני"
+                    elif "maxi" in combined_txt or "מקסי" in combined_txt:
+                        analysis["item_type"] = "חצאית מקסי"
+                    elif "a-line" in combined_txt or "aline" in combined_txt:
+                        analysis["item_type"] = "חצאית A-Line"
+                    else:
+                        analysis["item_type"] = "חצאית מידי"
                 else:
-                    analysis["item_type"] = "Midi Skirt"
+                    analysis["sub_category"] = "Skirt"
+                    if "pleat" in combined_txt:
+                        analysis["item_type"] = "Pleated Skirt"
+                    elif "mini" in combined_txt:
+                        analysis["item_type"] = "Mini Skirt"
+                    elif "maxi" in combined_txt:
+                        analysis["item_type"] = "Maxi Skirt"
+                    elif "a-line" in combined_txt or "aline" in combined_txt:
+                        analysis["item_type"] = "A-Line Skirt"
+                    else:
+                        analysis["item_type"] = "Midi Skirt"
 
-                if (analysis.get("gender") or "").lower() not in ("women", "kids"):
-                    analysis["gender"] = "women"
+                if (analysis.get("gender") or "").lower() not in ("women", "kids", "נשים"):
+                    analysis["gender"] = "נשים" if language == "he" else "women"
                 if (analysis.get("dress_code") or "").lower() == "business":
                     analysis["dress_code"] = "smart-casual"
                 analysis["_subcategory_overridden_by"] = "segformer-skirt"
