@@ -843,6 +843,7 @@ async def call_gemma_space_stream_attributes(
     id_slot: int | None = None,
     is_single_item: bool = False,
     user_gender: str | None = None,
+    model_gender: str | None = None,
     system_prompt: str | None = None,
 ) -> "AsyncIterator[tuple[str, list[str], dict[str, Any]]]":
     """Patch M23 — per-attribute streaming for Gemma on CPU.
@@ -915,6 +916,9 @@ async def call_gemma_space_stream_attributes(
         elif "pants" in lbl_low or (segformer_category == "bottom" and "skirt" not in lbl_low):
             user_hints.append("RULE: Pants vs Jeans. 5-pocket rivet denim only is 'Jeans'. Chinos/slacks/trousers are sub_category='Pants', item_type='Chinos'|'Tailored Trousers', dress_code='smart-casual'.")
 
+        if model_gender in ("women", "men"):
+            user_hints.append(f"HUMAN MODEL GENDER: Item is worn by an identifiable {model_gender} model. Set gender='{model_gender}' and model_gender='{model_gender}'.")
+
         user_text = _user_prompt(language, user_gender=user_gender)
         if user_hints:
             user_text = "\n".join(user_hints) + "\n\n" + user_text
@@ -968,9 +972,9 @@ async def call_gemma_space_stream_attributes(
                 if isinstance(prop, dict):
                     p_type = prop.get("type")
                     if p_type == "string" and "maxLength" not in prop and "enum" not in prop:
-                        prop["maxLength"] = 16 if name == "size" else 36
+                        prop["maxLength"] = 16 if name == "size" else (120 if name in ("name", "title", "brand") else 300)
                     elif isinstance(p_type, list) and "string" in p_type and "maxLength" not in prop:
-                        prop["maxLength"] = 16 if name == "size" else 36
+                        prop["maxLength"] = 16 if name == "size" else (120 if name in ("name", "title", "brand") else 300)
 
                     if name == "caption":
                         prop["minLength"] = 10
@@ -1032,8 +1036,8 @@ async def call_gemma_space_stream_attributes(
                     parsed["title"] = parsed["name"]
                 elif not parsed.get("name") and parsed.get("title"):
                     parsed["name"] = parsed["title"]
-                parsed = _coerce_single_garment(parsed, user_gender=user_gender, language=language)
-                parsed = _coerce_enums(parsed, user_gender=user_gender)
+                parsed = _coerce_single_garment(parsed, user_gender=user_gender, model_gender=model_gender, language=language)
+                parsed = _coerce_enums(parsed, user_gender=user_gender, model_gender=model_gender)
                 for group_name, field_names, _, _ in ATTRIBUTE_GROUPS:
                     filtered = {k: v for k, v in parsed.items() if k in field_names}
                     yield group_name, field_names, filtered

@@ -2436,12 +2436,24 @@ class GarmentVisionService:
                         (d.get("label") or d.get("category") or "").lower()
                         for d in detections
                     }
-                    if any(k in cat_labels for k in (
+                    has_fem_cue = any(
+                        is_distinctly_feminine_garment(d.get("category"), d.get("label"), d.get("label"))
+                        for d in detections
+                    ) or any(k in cat_labels for k in (
                         "skirt", "dress", "sandal", "sandals", "blouse", "heels", "crop", "halter",
-                        "camisole", "flats", "slip dress", "peplum", "ruffle", "floral"
-                    )) or any(w in str(d.get("label", "")).lower() for d in detections for w in ("sandal", "skirt", "dress", "blouse", "heel")):
+                        "camisole", "flats", "slip dress", "peplum", "ruffle", "floral",
+                        "handbag", "purse", "clutch", "tote bag", "shoulder bag", "crossbody bag",
+                        "skinny jeans", "jeggings", "leggings", "bag",
+                    )) or any(w in str(d.get("label", "")).lower() for d in detections for w in (
+                        "sandal", "skirt", "dress", "blouse", "heel", "handbag", "purse", "clutch",
+                    ))
+                    has_masc_cue = any(
+                        is_distinctly_masculine_garment(d.get("category"), d.get("label"), d.get("label"))
+                        for d in detections
+                    ) or any(k in cat_labels for k in ("boxers", "tuxedo"))
+                    if has_fem_cue:
                         photo_model_gender = "women"
-                    elif any(k in cat_labels for k in ("boxers", "tuxedo")):
+                    elif has_masc_cue:
                         photo_model_gender = "men"
 
                 is_footwear_only = bool(
@@ -2707,6 +2719,7 @@ class GarmentVisionService:
                             id_slot=slot_idx,
                             is_single_item=det.get("is_single_item", False),
                             user_gender=item_mg or eff_gender,
+                            model_gender=item_mg,
                             system_prompt=batch_system_prompt,
                         ):
                             assembled.update(partial)
@@ -2744,21 +2757,22 @@ class GarmentVisionService:
                     if not assembled.get("title") and (det.get("label") or det.get("kind")):
                         assembled["title"] = (det.get("label") or det.get("kind")).capitalize()
 
-                    has_human = bool(det.get("has_human_head") or det.get("has_human_skin"))
+                    has_human = bool(det.get("has_human_head") or det.get("has_human_skin") or photo_has_model.get(image_idx))
                     model_g = assembled.get("model_gender") or item_mg
                     if not model_g and has_human:
-                        if assembled.get("gender") == "women" or is_distinctly_feminine_garment(
+                        if assembled.get("gender") == "women" or assembled.get("model_gender") == "women" or is_distinctly_feminine_garment(
                             assembled.get("category"), assembled.get("sub_category"), assembled.get("item_type"),
                             name=assembled.get("name"), full_text=f"{assembled.get('title', '')} {assembled.get('caption', '')}",
                             pattern=assembled.get("pattern"),
                         ):
                             model_g = "women"
-                        elif assembled.get("gender") == "men":
+                        elif assembled.get("gender") == "men" or assembled.get("model_gender") == "men":
                             model_g = "men"
 
                     if model_g in ("men", "women"):
                         assembled["model_gender"] = model_g
                         assembled["gender"] = model_g
+                        photo_model_genders[image_idx] = model_g
 
                     # Robust taxonomy defaults for zero-token auxiliary fields
                     assembled.setdefault("condition", "used")
@@ -2769,12 +2783,26 @@ class GarmentVisionService:
                     if not assembled.get("fabric_materials"):
                         cat_k = (assembled.get("category") or "").lower()
                         sub_k = (assembled.get("sub_category") or "").lower()
+                        full_desc = f"{assembled.get('name', '')} {assembled.get('title', '')} {assembled.get('caption', '')}".lower()
                         if cat_k == "footwear":
                             assembled["fabric_materials"] = [{"name": "Leather", "pct": 70}, {"name": "Rubber", "pct": 30}]
                         elif "jeans" in sub_k or "denim" in sub_k:
                             assembled["fabric_materials"] = [{"name": "Cotton", "pct": 98}, {"name": "Elastane", "pct": 2}]
-                        elif "sweat" in sub_k or "jogger" in sub_k or "pant" in sub_k:
+                        elif "sweat" in sub_k or "jogger" in sub_k or "track" in sub_k:
                             assembled["fabric_materials"] = [{"name": "Cotton", "pct": 80}, {"name": "Polyester", "pct": 20}]
+                        elif "bag" in sub_k or cat_k == "accessories":
+                            assembled["fabric_materials"] = [{"name": "Leather", "pct": 100}] if "leather" in full_desc else [{"name": "Canvas", "pct": 80}, {"name": "Polyester", "pct": 20}]
+                        elif "jacket" in sub_k or "coat" in sub_k or cat_k == "outerwear":
+                            if "leather" in full_desc:
+                                assembled["fabric_materials"] = [{"name": "Leather", "pct": 100}]
+                            elif any(w in full_desc for w in ("wool", "trench", "blazer", "suit")):
+                                assembled["fabric_materials"] = [{"name": "Wool", "pct": 70}, {"name": "Polyester", "pct": 30}]
+                            else:
+                                assembled["fabric_materials"] = [{"name": "Polyester", "pct": 70}, {"name": "Cotton", "pct": 30}]
+                        elif any(w in full_desc for w in ("silk", "satin", "chiffon", "blouse")):
+                            assembled["fabric_materials"] = [{"name": "Silk", "pct": 100}] if "silk" in full_desc else [{"name": "Viscose", "pct": 60}, {"name": "Polyester", "pct": 40}]
+                        elif any(w in full_desc for w in ("knit", "sweater", "cardigan")):
+                            assembled["fabric_materials"] = [{"name": "Wool", "pct": 80}, {"name": "Polyamide", "pct": 20}]
                         else:
                             assembled["fabric_materials"] = [{"name": "Cotton", "pct": 100}]
                     if not assembled.get("care_instructions"):

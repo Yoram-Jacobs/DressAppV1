@@ -45,7 +45,10 @@ _FEMININE_CUT_KEYWORDS = {
     "floral tee", "floral t-shirt", "floral print t-shirt", "floral lace",
     "lace top", "lace blouse", "lace shirt", "puff sleeve", "ruffle", "ruffled", "chiffon",
     "scallop", "bell sleeve", "off-shoulder", "off the shoulder", "cold shoulder",
+    "handbag", "purse", "clutch", "tote bag", "shoulder bag", "crossbody bag", "satchel", "hobo bag",
+    "skinny jeans", "jeggings",
     "בלוזה", "שמלה", "חצאית", "עקב", "עקבים", "חזייה", "מחוך", "סנדל", "סנדלים",
+    "תיק יד", "תיק צד", "תיק כתף", "קלאץ'", "ארנק", "סקיני", "ג'ינס סקיני",
     "חולצת בטן", "טוניקה", "סטרפלס", "גופיית בטן", "פרחוני", "תחרה", "חולצה פרחונית",
 }
 _MASCULINE_CUT_KEYWORDS = {
@@ -277,9 +280,16 @@ def _clean_truncated_caption(caption: str | None) -> str:
     if "קרוז דומים" in text:
         text = text.replace("קרוז דומים", 'דגמ"ח')
 
-    # If Hebrew caption contains isolated English color or garment terms, localize them
+    # If Hebrew caption contains isolated English color, garment terms, or leaked dress_code enums, localize them
     if any("\u0590" <= ch <= "\u05ea" for ch in text):
         _en_to_he_terms = {
+            r'[\.\s]*\bsmart-casual\b[\.\s]*': ' אלגנטי ',
+            r'[\.\s]*\bsmart casual\b[\.\s]*': ' אלגנטי ',
+            r'[\.\s]*(?<!smart[- ])\bcasual\b[\.\s]*': ' יומיומי ',
+            r'[\.\s]*\bformal\b[\.\s]*': ' רשמי ',
+            r'[\.\s]*\bathletic\b[\.\s]*': ' ספורטיבי ',
+            r'[\.\s]*\bbusiness\b[\.\s]*': ' עסקי ',
+            r'[\.\s]*\bloungewear\b[\.\s]*': ' נוח ',
             r'\bnavy\b': 'כחול נייבי',
             r'\bblack\b': 'שחור',
             r'\bwhite\b': 'לבן',
@@ -294,9 +304,35 @@ def _clean_truncated_caption(caption: str | None) -> str:
             r'\bcamo\b': 'הסוואה',
             r'\bcamouflage\b': 'הסוואה',
             r'\bcargo\b': 'דגמ"ח',
+            r'\bjackets?\b': "ז'קט",
+            r'\bt-?shirts?\b': 'חולצת טי',
+            r'\bshirts?\b': 'חולצה',
+            r'\bpants?\b': 'מכנסיים',
+            r'\btrousers?\b': 'מכנסיים',
+            r'\bjeans?\b': "ג'ינס",
+            r'\bshoes?\b': 'נעליים',
+            r'\bsneakers?\b': 'סניקרס',
+            r'\bboots?\b': 'מגפיים',
+            r'\bloafers?\b': 'מוקסינים',
+            r'\bhandbags?\b': 'תיק יד',
+            r'\bbags?\b': 'תיק',
+            r'\bskirts?\b': 'חצאית',
+            r'\bdresses?\b': 'שמלה',
         }
         for pat, rep in _en_to_he_terms.items():
             text = re.sub(pat, rep, text, flags=re.IGNORECASE)
+
+        # Fix plural agreement for common Hebrew plurals (ג'ינס, מכנסיים, נעליים, מגפיים, סניקרס)
+        if any(w in text for w in ("ג'ינס", "מכנסיים", "נעליים", "מגפיים", "סניקרס", "סנדלים")):
+            text = re.sub(r'\bהמתאים\b', 'המתאימים', text)
+            text = re.sub(r'\bמתאים\b', 'מתאימים', text)
+
+        # Normalize whitespace and strip bidi-punctuated edges
+        text = re.sub(r'\s+', ' ', text).strip()
+        text = re.sub(r'^[\.\,\s\-]+|[\.\,\s\-]+$', '', text).strip()
+
+    # Remove any trailing dangling English enum words across all languages (e.g. "style .casual")
+    text = re.sub(r'[\.\s\-_]+(?:casual|smart-casual|formal|athletic|business|loungewear)[\.\s\-_]*$', '', text, flags=re.IGNORECASE).strip()
 
     # Ensure text ends with a single sentence terminator
     if text and text[-1] not in ".!?。۔":
@@ -952,6 +988,9 @@ def _coerce_single_garment(
         res["gender"] = "unisex"
     elif g_val == "kids":
         res["gender"] = "kids"
+    elif g_val in ("women", "men"):
+        # Honor model's visual prediction
+        res["gender"] = g_val
     elif norm_user in ("men", "women"):
         # Anchor uncertain/neutral basics without clear gender cues to user's profile gender
         res["gender"] = norm_user
@@ -1905,7 +1944,7 @@ def _coerce_enums(
     _sanitize_sweatpants_and_trainer(parsed)
 
     norm_user = resolve_garment_gender(user_gender)
-    norm_model = resolve_garment_gender(model_gender)
+    norm_model = resolve_garment_gender(model_gender) or resolve_garment_gender(parsed.get("model_gender"))
     cat_lower = str(parsed.get("category") or "").strip().lower()
     sub_lower = str(parsed.get("sub_category") or "").strip().lower()
     itype_lower = str(parsed.get("item_type") or "").strip().lower()
@@ -1991,6 +2030,9 @@ def _coerce_enums(
         parsed["gender"] = "unisex"
     elif g_val == "kids":
         parsed["gender"] = "kids"
+    elif g_val in ("women", "men"):
+        # Honor model's visual prediction over user profile fallback
+        parsed["gender"] = g_val
     elif norm_user in ("men", "women"):
         # Anchor uncertain/neutral basics without clear gender cues to user's profile gender
         parsed["gender"] = norm_user
