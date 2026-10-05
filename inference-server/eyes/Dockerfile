@@ -109,12 +109,12 @@ COPY main.py ./main.py
 
 # --- Runtime defaults -----------------------------------------------
 ENV EYES_MODEL_DIR=/models \
-    EYES_MODEL_REPO=Yoram-Jacobs/dressapp-eyes-gguf \
-    EYES_MODEL_FILE=gemma-4-E4B-it-Q3_K_M.gguf \
-    EYES_MMPROJ_FILE=mmproj-BF16.gguf \
+    EYES_MODEL_REPO=ggml-org/Qwen2.5-VL-3B-Instruct-GGUF \
+    EYES_MODEL_FILE=Qwen2.5-VL-3B-Instruct-Q4_K_M.gguf \
+    EYES_MMPROJ_FILE=mmproj-Qwen2.5-VL-3B-Instruct-f16.gguf \
     LLAMA_THREADS=4 \
-    LLAMA_CTX_SIZE=4096 \
-    LLAMA_N_BATCH=256 \
+    LLAMA_CTX_SIZE=8192 \
+    LLAMA_N_BATCH=1024 \
     LLAMA_INTERNAL_PORT=8080 \
     PORT=7860
 

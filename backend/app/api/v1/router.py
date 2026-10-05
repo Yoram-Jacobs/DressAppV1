@@ -40,6 +40,30 @@ async def health_check():
     return {"status": "ok"}
 
 
+@api_v1_router.get("/dataset/distilled")
+async def get_distilled_dataset():
+    """Public high-speed endpoint for Colab fine-tuning to download distilled training dataset."""
+    from pathlib import Path
+    from fastapi.responses import FileResponse
+    from fastapi import HTTPException
+
+    candidates = [
+        Path("/srv/AI-Stylist/dataset_distilled.tar.gz"),
+        Path("/app/backend/dataset_distilled.tar.gz"),
+        Path("/app/backend/app/dataset_distilled.tar.gz"),
+        Path("dataset_distilled.tar.gz"),
+    ]
+    for p in candidates:
+        if p.exists() and p.stat().st_size > 1000000:
+            return FileResponse(
+                str(p),
+                media_type="application/gzip",
+                filename="dataset_distilled.tar.gz",
+            )
+    raise HTTPException(status_code=404, detail="Distilled dataset archive not found")
+
+
+
 api_v1_router.include_router(wiki.router)
 api_v1_router.include_router(ai_credits.ai_credits_router)  # AI credits endpoints
 api_v1_router.include_router(ai_credits.pricing_router)     # New pricing information endpoints

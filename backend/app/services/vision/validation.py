@@ -514,11 +514,28 @@ def _sanitize_foreign_token_bleed(res: dict[str, Any], language: str | None = No
 
     for field in ("caption", "name", "title", "item_type", "sub_category", "brand", "cut"):
         val = res.get(field)
-        if isinstance(val, str) and foreign_pattern.search(val):
-            cleaned = foreign_pattern.sub(" ", val)
-            cleaned = re.sub(r"\s{2,}", " ", cleaned).strip()
-            cleaned = re.sub(r"\s+([.,;:!?])", r"\1", cleaned)
-            res[field] = cleaned
+        if isinstance(val, str):
+            if foreign_pattern.search(val):
+                cleaned = foreign_pattern.sub(" ", val)
+                cleaned = re.sub(r"\s{2,}", " ", cleaned).strip()
+                cleaned = re.sub(r"\s+([.,;:!?])", r"\1", cleaned)
+                res[field] = cleaned
+            # Strip trailing dot-joined artifact tokens like .primetime
+            if "." in str(res.get(field, "")):
+                res[field] = re.sub(r"\.(?:primetime|clothing|garment|apparel|model|outfit)\b", "", str(res[field]), flags=re.IGNORECASE).strip()
+
+    if lang in ("he", "iw"):
+        cap = res.get("caption")
+        if isinstance(cap, str) and cap.strip():
+            has_he_cap = any("\u0590" <= ch <= "\u05ea" for ch in cap)
+            has_latin_cap = any(ch.isalpha() and ord(ch) < 128 for ch in cap)
+            if not has_he_cap and has_latin_cap:
+                # Caption was generated in English despite Hebrew mode
+                title_he = res.get("title") or res.get("name") or ""
+                if any("\u0590" <= ch <= "\u05ea" for ch in title_he):
+                    res["caption"] = f"{title_he} להשלמת המראה."
+                else:
+                    res["caption"] = "פריט אופנה איכותי ונוח להשלמת המראה."
 
     tags = res.get("tags")
     if isinstance(tags, list):
@@ -797,28 +814,28 @@ def _coerce_single_garment(
         is_summer = any(s in res.get("season", []) for s in ("summer", "spring")) or any(w in full_text_itype for w in ("short", "cap", "summer", "קצר", "קיץ"))
         if any(w in sub_lower for w in ("t-shirt", "t_shirt", "tshirt", "tee", "טי")):
             if is_summer or any(w in full_text_itype for w in ("cap", "flutter", "short")):
-                res["item_type"] = "Short-Sleeve T-Shirt"
+                res["item_type"] = "חולצת טי שרוול קצר" if is_he else "Short-Sleeve T-Shirt"
             elif any(w in full_text_itype for w in ("long", "ארוך")):
-                res["item_type"] = "Long-Sleeve T-Shirt"
+                res["item_type"] = "חולצת טי שרוול ארוך" if is_he else "Long-Sleeve T-Shirt"
             else:
-                res["item_type"] = "Short-Sleeve T-Shirt"
+                res["item_type"] = "חולצת טי שרוול קצר" if is_he else "Short-Sleeve T-Shirt"
         elif any(w in sub_lower for w in ("shirt", "מכופתרת")):
-            res["item_type"] = "Short-Sleeve Shirt" if is_summer else "Button-Down Shirt"
+            res["item_type"] = ("חולצה קצרה" if is_summer else "חולצה מכופתרת") if is_he else ("Short-Sleeve Shirt" if is_summer else "Button-Down Shirt")
         elif any(w in sub_lower for w in ("blouse", "בלוזה")):
-            res["item_type"] = "Cap-Sleeve Blouse" if is_summer else "Casual Blouse"
+            res["item_type"] = ("בלוזה קצרה" if is_summer else "בלוזה אלגנטית") if is_he else ("Cap-Sleeve Blouse" if is_summer else "Casual Blouse")
         elif any(w in sub_lower for w in ("jeans", "ג'ינס", "גינס")):
             if any(w in full_text_itype for w in ("chino", "chinos", "צ'ינו", "slacks")):
-                res["sub_category"] = "Pants"
-                res["item_type"] = "Chinos"
+                res["sub_category"] = "מכנסיים" if is_he else "Pants"
+                res["item_type"] = "מכנסי צ'ינו" if is_he else "Chinos"
             else:
-                res["item_type"] = "Straight Jeans"
+                res["item_type"] = "ג'ינס גזרה ישרה" if is_he else "Straight Jeans"
         elif any(w in sub_lower for w in ("pants", "trousers", "מכנסי")):
             is_athletic_sweats = any(w in full_text_itype for w in (
                 "sweat", "jogger", "trainer", "טרנינג", "פוטר", "fleece", "drawstring", "elastic", "track", "lounge", "sweatpant", "footer"
             ))
             if is_athletic_sweats:
-                res["sub_category"] = "Pants"
-                res["item_type"] = "Sweatpants"
+                res["sub_category"] = "מכנסיים" if is_he else "Pants"
+                res["item_type"] = "מכנסי טרנינג" if is_he else "Sweatpants"
                 res["dress_code"] = "casual"
                 fabrics = res.get("fabric_materials")
                 if not fabrics or any(str(f.get("name", "")).lower() == "wool" for f in fabrics if isinstance(f, dict)):
@@ -826,69 +843,69 @@ def _coerce_single_garment(
                 for fld in ("name", "title"):
                     if res.get(fld):
                         val_s = str(res[fld])
-                        cleaned_val = re.sub(r"(?i)\bwool\s+tailored\s+trousers?\b", "Casual Sweatpants", val_s)
-                        cleaned_val = re.sub(r"(?i)\btailored\s+trousers?\b", "Sweatpants", cleaned_val)
-                        cleaned_val = re.sub(r"(?i)\btailored\s+pants?\b", "Sweatpants", cleaned_val)
-                        cleaned_val = re.sub(r"(?i)\bwool\s+trousers?\b", "Fleece Joggers", cleaned_val)
-                        cleaned_val = re.sub(r"(?i)\bchinos?\b", "Sweatpants", cleaned_val)
+                        cleaned_val = re.sub(r"(?i)\bwool\s+tailored\s+trousers?\b", "מכנסי טרנינג" if is_he else "Casual Sweatpants", val_s)
+                        cleaned_val = re.sub(r"(?i)\btailored\s+trousers?\b", "מכנסי טרנינג" if is_he else "Sweatpants", cleaned_val)
+                        cleaned_val = re.sub(r"(?i)\btailored\s+pants?\b", "מכנסי טרנינג" if is_he else "Sweatpants", cleaned_val)
+                        cleaned_val = re.sub(r"(?i)\bwool\s+trousers?\b", "מכנסי טרנינג" if is_he else "Fleece Joggers", cleaned_val)
+                        cleaned_val = re.sub(r"(?i)\bchinos?\b", "מכנסי טרנינג" if is_he else "Sweatpants", cleaned_val)
                         res[fld] = cleaned_val.strip()
             elif any(w in full_text_itype for w in ("chino", "chinos", "צ'ינו")):
-                res["item_type"] = "Chinos"
-            elif any(w in full_text_itype for w in ("cargo", "קארגו")):
-                res["item_type"] = "Cargo Pants"
+                res["item_type"] = "מכנסי צ'ינו" if is_he else "Chinos"
+            elif any(w in full_text_itype for w in ("cargo", "קארגו", "דגמח")):
+                res["item_type"] = "מכנסי דגמ\"ח" if is_he else "Cargo Pants"
             elif any(w in full_text_itype for w in ("tailor", "suit", "formal", "dress pant", "crease", "pleat")):
-                res["item_type"] = "Tailored Trousers"
+                res["item_type"] = "מכנסיים מחויטים" if is_he else "Tailored Trousers"
                 res["dress_code"] = "business"
             elif any(w in full_text_itype for w in ("cotton", "twill", "khaki", "tan", "beige")):
-                res["item_type"] = "Chinos"
+                res["item_type"] = "מכנסי צ'ינו" if is_he else "Chinos"
             else:
-                res["item_type"] = "Casual Pants"
+                res["item_type"] = "מכנסי קז'ואל" if is_he else "Casual Pants"
         elif any(w in sub_lower for w in ("sandal", "סנדל")):
             if any(w in full_text_itype for w in ("heel", "heeled", "wedge", "high")):
-                res["item_type"] = "Heeled Sandals"
+                res["item_type"] = "סנדלי עקב" if is_he else "Heeled Sandals"
             elif any(w in full_text_itype for w in ("strap", "gladiator")):
-                res["item_type"] = "Strappy Sandals"
+                res["item_type"] = "סנדלי רצועות" if is_he else "Strappy Sandals"
             elif any(w in full_text_itype for w in ("slide", "slip")):
-                res["item_type"] = "Slide Sandals"
+                res["item_type"] = "כפכפי סלייד" if is_he else "Slide Sandals"
             else:
-                res["item_type"] = "Open-Toe Sandals" if any(w in full_text_itype for w in ("open", "toe", "pattern", "print")) else "Flat Sandals"
+                res["item_type"] = ("סנדלים פתוחים" if any(w in full_text_itype for w in ("open", "toe", "pattern", "print")) else "סנדלים שטוחים") if is_he else ("Open-Toe Sandals" if any(w in full_text_itype for w in ("open", "toe", "pattern", "print")) else "Flat Sandals")
         elif any(w in sub_lower for w in ("sneaker", "סניקרס")):
             if any(w in full_text_itype for w in ("high-top", "high top")):
-                res["item_type"] = "High-Top Sneakers"
+                res["item_type"] = "סניקרס גבוהות" if is_he else "High-Top Sneakers"
             elif any(w in full_text_itype for w in ("running", "athletic", "sport")):
-                res["item_type"] = "Running Sneakers"
+                res["item_type"] = "סניקרס ריצה" if is_he else "Running Sneakers"
             else:
-                res["item_type"] = "Low-Top Sneakers"
+                res["item_type"] = "סניקרס נמוכות" if is_he else "Low-Top Sneakers"
         elif any(w in sub_lower for w in ("shoe", "נעלי")):
-            res["item_type"] = "Casual Shoes"
+            res["item_type"] = "נעלי קז'ואל" if is_he else "Casual Shoes"
         elif any(w in sub_lower for w in ("sunglass", "glasses", "shades", "משקפ")):
-            res["item_type"] = "Classic Sunglasses"
+            res["item_type"] = "משקפי שמש קלאסיים" if is_he else "Classic Sunglasses"
         elif any(w in sub_lower for w in ("coat", "מעיל")):
-            res["item_type"] = "Tailored Coat"
+            res["item_type"] = "מעיל מחויט" if is_he else "Tailored Coat"
         elif any(w in sub_lower for w in ("jacket", "ג'קט")):
-            res["item_type"] = "Casual Jacket"
+            res["item_type"] = "ג'קט קז'ואל" if is_he else "Casual Jacket"
         elif any(w in sub_lower for w in ("sweater", "סוודר", "סריג")):
-            res["item_type"] = "Crew-Neck Sweater"
+            res["item_type"] = "סוודר צווארון עגול" if is_he else "Crew-Neck Sweater"
         elif any(w in sub_lower for w in ("skirt", "חצאית")):
-            res["item_type"] = "A-Line Skirt"
+            res["item_type"] = "חצאית A-Line" if is_he else "A-Line Skirt"
         elif any(w in sub_lower for w in ("dress", "שמלה")):
-            res["item_type"] = "Midi Dress"
+            res["item_type"] = "שמלת מידי" if is_he else "Midi Dress"
         elif any(w in sub_lower for w in ("headwear", "hat", "cap", "beanie", "כובע")):
-            res["item_type"] = "Beanie" if "beanie" in full_text_itype else ("Trapper Hat" if "trapper" in full_text_itype else "Classic Hat")
+            res["item_type"] = ("כובע גרב" if "beanie" in full_text_itype else "כובע קלאסי") if is_he else ("Beanie" if "beanie" in full_text_itype else ("Trapper Hat" if "trapper" in full_text_itype else "Classic Hat"))
         elif any(w in sub_lower for w in ("bag", "תיק")):
-            res["item_type"] = "Handbag"
+            res["item_type"] = "תיק יד" if is_he else "Handbag"
         elif any(w in sub_lower for w in ("belt", "חגורה")):
-            res["item_type"] = "Leather Belt"
+            res["item_type"] = "חגורת עור" if is_he else "Leather Belt"
         elif any(w in sub_lower for w in ("scarf", "צעיף")):
-            res["item_type"] = "Knit Scarf"
+            res["item_type"] = "צעיף סרוג" if is_he else "Knit Scarf"
         elif any(w in sub_lower for w in ("glove", "כפפה")):
-            res["item_type"] = "Gloves"
+            res["item_type"] = "כפפות" if is_he else "Gloves"
         else:
-            fallback_sub = res.get("sub_category") or "Item"
+            fallback_sub = res.get("sub_category") or ("פריט" if is_he else "Item")
             if cat_lower in ("top", "tops") or any(w in sub_lower for w in ("shirt", "top", "tee", "blouse")):
-                res["item_type"] = f"Short-Sleeve {fallback_sub}" if is_summer else f"Classic {fallback_sub}"
+                res["item_type"] = ("חולצה קצרה" if is_summer else "חולצה קלאסית") if is_he else (f"Short-Sleeve {fallback_sub}" if is_summer else f"Classic {fallback_sub}")
             else:
-                res["item_type"] = f"Classic {fallback_sub}"
+                res["item_type"] = f"{fallback_sub} קלאסי" if is_he else f"Classic {fallback_sub}"
         itype_lower = (res["item_type"] or "").strip().lower()
 
     _sanitize_sleeve_and_cut_for_non_tops(res)
@@ -988,12 +1005,12 @@ def _coerce_single_garment(
         res["gender"] = "unisex"
     elif g_val == "kids":
         res["gender"] = "kids"
-    elif g_val in ("women", "men"):
-        # Honor model's visual prediction
-        res["gender"] = g_val
     elif norm_user in ("men", "women"):
         # Anchor uncertain/neutral basics without clear gender cues to user's profile gender
         res["gender"] = norm_user
+    elif g_val in ("women", "men"):
+        # Honor model's visual prediction when no user profile gender
+        res["gender"] = g_val
     elif g_val in _VALID_GENDER:
         res["gender"] = g_val
     else:
@@ -2035,12 +2052,12 @@ def _coerce_enums(
         parsed["gender"] = "unisex"
     elif g_val == "kids":
         parsed["gender"] = "kids"
-    elif g_val in ("women", "men"):
-        # Honor model's visual prediction over user profile fallback
-        parsed["gender"] = g_val
     elif norm_user in ("men", "women"):
         # Anchor uncertain/neutral basics without clear gender cues to user's profile gender
         parsed["gender"] = norm_user
+    elif g_val in ("women", "men"):
+        # Honor model's visual prediction over user profile fallback
+        parsed["gender"] = g_val
     elif g_val in _VALID_GENDER:
         parsed["gender"] = g_val
     else:
@@ -2461,7 +2478,7 @@ def _sanitize_bag_or_accessory(
         or any(term in combined for term in _BAG_DETECTION_TERMS)
     )
 
-    # Check whether contaminated with any apparel keywords
+    # Check whether contaminated with any apparel keywords or luggage/suitcase cover terms
     has_apparel = False
     for lang_code, kw_set in _APPAREL_KEYWORDS_BY_LANG.items():
         if lang_code in ("zh", "ja"):
@@ -2476,7 +2493,11 @@ def _sanitize_bag_or_accessory(
                 has_apparel = True
                 break
 
-    if is_bag and (has_apparel or sub.lower() in _ALL_APPAREL_KEYWORDS or itype.lower() in _ALL_APPAREL_KEYWORDS):
+    has_luggage_cover = any(w in combined for w in (
+        "כיסוי מזוודה", "כיסוי למזוודה", "מזוודה", "מזוודות", "suitcase cover", "luggage cover", "suitcase", "luggage"
+    )) and not any(w in combined for w in ("עליונית", "cover-up", "cover up"))
+
+    if is_bag and (has_apparel or has_luggage_cover or sub.lower() in _ALL_APPAREL_KEYWORDS or itype.lower() in _ALL_APPAREL_KEYWORDS):
         lang = _detect_language(combined, explicit_language=language)
         attrs = _LOCALIZED_BAG_ATTRS.get(lang, _LOCALIZED_BAG_ATTRS["en"])
         is_straw = any(term in combined for term in _STRAW_DETECTION_TERMS)
@@ -2665,34 +2686,21 @@ def _enforce_segformer_category(
                     "garment_vision: SegFormer-anchored skirt override label=%r kind=%r sub_category=%r item_type=%r -> Skirt",
                     label, kind, analysis.get("sub_category"), analysis.get("item_type"),
                 )
-                analysis["category"] = "חלק תחתון" if language == "he" else "Bottom"
-                if language == "he":
-                    analysis["sub_category"] = "חצאית"
-                    if "pleat" in combined_txt or "פליסה" in combined_txt:
-                        analysis["item_type"] = "חצאית פליסה"
-                    elif "mini" in combined_txt or "מיני" in combined_txt:
-                        analysis["item_type"] = "חצאית מיני"
-                    elif "maxi" in combined_txt or "מקסי" in combined_txt:
-                        analysis["item_type"] = "חצאית מקסי"
-                    elif "a-line" in combined_txt or "aline" in combined_txt:
-                        analysis["item_type"] = "חצאית A-Line"
-                    else:
-                        analysis["item_type"] = "חצאית מידי"
+                analysis["category"] = "Bottom"
+                analysis["sub_category"] = "Skirt"
+                if "pleat" in combined_txt or "פליסה" in combined_txt:
+                    analysis["item_type"] = "Pleated Skirt"
+                elif "mini" in combined_txt or "מיני" in combined_txt:
+                    analysis["item_type"] = "Mini Skirt"
+                elif "maxi" in combined_txt or "מקסי" in combined_txt:
+                    analysis["item_type"] = "Maxi Skirt"
+                elif "a-line" in combined_txt or "aline" in combined_txt:
+                    analysis["item_type"] = "A-Line Skirt"
                 else:
-                    analysis["sub_category"] = "Skirt"
-                    if "pleat" in combined_txt:
-                        analysis["item_type"] = "Pleated Skirt"
-                    elif "mini" in combined_txt:
-                        analysis["item_type"] = "Mini Skirt"
-                    elif "maxi" in combined_txt:
-                        analysis["item_type"] = "Maxi Skirt"
-                    elif "a-line" in combined_txt or "aline" in combined_txt:
-                        analysis["item_type"] = "A-Line Skirt"
-                    else:
-                        analysis["item_type"] = "Midi Skirt"
+                    analysis["item_type"] = "Midi Skirt"
 
-                if (analysis.get("gender") or "").lower() not in ("women", "kids", "נשים"):
-                    analysis["gender"] = "נשים" if language == "he" else "women"
+                if (analysis.get("gender") or "").lower() not in ("women", "kids"):
+                    analysis["gender"] = "women"
                 if (analysis.get("dress_code") or "").lower() == "business":
                     analysis["dress_code"] = "smart-casual"
                 analysis["_subcategory_overridden_by"] = "segformer-skirt"
@@ -2740,33 +2748,37 @@ def _enforce_segformer_category(
             sub_str = str(analysis["sub_category"]).strip()
             item_str = str(analysis["item_type"]).strip()
             if sub_str.lower() == item_str.lower():
-                if sub_str.lower() in ("skirt", "skirts"):
-                    analysis["item_type"] = "Classic Skirt"
-                elif sub_str.lower() in ("sneakers", "shoes"):
-                    analysis["item_type"] = "Low-Top Sneakers" if sub_str.lower() == "sneakers" else "Casual Shoes"
+                is_he_local = (language in ("he", "iw")) or any("\u0590" <= ch <= "\u05ea" for ch in f"{sub_str} {item_str} {str(analysis.get('name', ''))}")
+                if sub_str.lower() in ("skirt", "skirts", "חצאית"):
+                    analysis["item_type"] = "חצאית קלאסית" if is_he_local else "Classic Skirt"
+                elif sub_str.lower() in ("sneakers", "shoes", "סניקרס", "נעליים"):
+                    if is_he_local:
+                        analysis["item_type"] = "סניקרס נמוכות" if (sub_str.lower() in ("sneakers", "סניקרס")) else "נעלי קז'ואל"
+                    else:
+                        analysis["item_type"] = "Low-Top Sneakers" if sub_str.lower() == "sneakers" else "Casual Shoes"
                 elif sub_str.lower() in ("sandals", "sandal", "סנדלים"):
-                    analysis["item_type"] = "Strappy Sandals"
-                elif sub_str.lower() in ("sunglasses", "glasses", "משקפיים"):
-                    analysis["item_type"] = "Classic Sunglasses"
-                elif sub_str.lower() in ("bag", "handbag"):
-                    analysis["sub_category"] = "Bag"
-                    analysis["item_type"] = "Handbag"
-                elif sub_str.lower() == "t-shirt":
-                    analysis["item_type"] = "Short-Sleeve T-Shirt"
-                elif sub_str.lower() == "jeans":
-                    analysis["item_type"] = "Straight-Leg Jeans"
-                elif sub_str.lower() in ("pants", "pant"):
+                    analysis["item_type"] = "סנדלי רצועות" if is_he_local else "Strappy Sandals"
+                elif sub_str.lower() in ("sunglasses", "glasses", "משקפיים", "משקפי שמש"):
+                    analysis["item_type"] = "משקפי שמש קלאסיים" if is_he_local else "Classic Sunglasses"
+                elif sub_str.lower() in ("bag", "handbag", "תיק", "תיקים"):
+                    analysis["sub_category"] = "תיקים" if is_he_local else "Bag"
+                    analysis["item_type"] = "תיק יד" if is_he_local else "Handbag"
+                elif sub_str.lower() in ("t-shirt", "t_shirt", "חולצת טי"):
+                    analysis["item_type"] = "חולצת טי שרוול קצר" if is_he_local else "Short-Sleeve T-Shirt"
+                elif sub_str.lower() in ("jeans", "ג'ינס", "גינס"):
+                    analysis["item_type"] = "ג'ינס גזרה ישרה" if is_he_local else "Straight-Leg Jeans"
+                elif sub_str.lower() in ("pants", "pant", "מכנסיים", "מכנס"):
                     txt_comb = f"{analysis.get('name', '')} {analysis.get('caption', '')} {' '.join(analysis.get('tags') or [])}".lower()
                     if "cargo" in txt_comb or "דגמח" in txt_comb or "דגמ\"ח" in txt_comb:
-                        analysis["item_type"] = "Cargo Pants"
+                        analysis["item_type"] = "מכנסי דגמ\"ח" if is_he_local else "Cargo Pants"
                     elif "chino" in txt_comb or "צ'ינו" in txt_comb:
-                        analysis["item_type"] = "Chinos"
-                    elif "jogger" in txt_comb or "sweat" in txt_comb:
-                        analysis["item_type"] = "Joggers"
+                        analysis["item_type"] = "מכנסי צ'ינו" if is_he_local else "Chinos"
+                    elif "jogger" in txt_comb or "sweat" in txt_comb or "טרנינג" in txt_comb:
+                        analysis["item_type"] = "מכנסי ג'וגר" if is_he_local else "Joggers"
                     else:
-                        analysis["item_type"] = "Casual Pants"
+                        analysis["item_type"] = "מכנסי קז'ואל" if is_he_local else "Casual Pants"
                 else:
-                    analysis["item_type"] = f"Classic {sub_str}"
+                    analysis["item_type"] = f"קלאסי {sub_str}" if is_he_local else f"Classic {sub_str}"
         return analysis
 
     # Flat lay tops and t-shirts are frequently misclassified by SegFormer as 'dress'.
@@ -2788,69 +2800,112 @@ def _enforce_segformer_category(
         label, kind, current, old_subcategory, default,
     )
     analysis["category"] = default
-    if default == "Footwear":
-        analysis["sub_category"] = "Sneakers" if "sneaker" in lbl_low else "Shoes"
-        analysis["item_type"] = "sneakers" if "sneaker" in lbl_low else "shoes"
-        curr_name = (analysis.get("name") or analysis.get("title") or "").lower()
-        if any(w in curr_name for w in ("sweater", "shirt", "top", "hoodie", "cardigan", "jacket", "coat", "pants", "skirt", "dress")):
-            color = (analysis.get("colors") or [""])[0]
-            color_prefix = f"{color.capitalize()} " if color and isinstance(color, str) else ""
-            analysis["name"] = f"{color_prefix}Shoes".strip()
+    curr_name_raw = str(analysis.get("name") or analysis.get("title") or "").strip()
+    curr_name_low = curr_name_raw.lower()
+    curr_cap_raw = str(analysis.get("caption") or "").strip()
+    is_he_override = (language in ("he", "iw")) or any("\u0590" <= ch <= "\u05ea" for ch in f"{curr_name_raw} {curr_cap_raw}")
+
+    if default == "Top":
+        is_blouse = any(w in lbl_low or w in curr_name_low for w in ("blouse", "בלוזה")) or (analysis.get("gender") == "women")
+        analysis["sub_category"] = ("בלוזה" if is_blouse else "חולצה") if is_he_override else ("Blouse" if is_blouse else "Shirt")
+        analysis["item_type"] = ("בלוזה אלגנטית" if is_blouse else "חולצה מכופתרת") if is_he_override else ("Elegant Blouse" if is_blouse else "Button-Down Shirt")
+        
+        # Purge conflicting bottom/skirt/pants names and captions (e.g. white blouse labeled 'חצאית פליסה ירוקה')
+        has_bottom_conflict = any(w in curr_name_low for w in ("skirt", "pant", "trouser", "jean", "short", "חצאית", "מכנס", "פליסה", "דגמח", "טייץ", "שורט"))
+        if has_bottom_conflict:
+            col_name = ""
+            colors = analysis.get("colors")
+            if isinstance(colors, list) and colors:
+                c0 = str(colors[0].get("name", "")).strip().lower()
+                if "white" in c0 or "לבן" in c0:
+                    col_name = "לבנה" if is_he_override else "White"
+                elif "black" in c0 or "שחור" in c0:
+                    col_name = "שחורה" if is_he_override else "Black"
+                elif "blue" in c0 or "כחול" in c0:
+                    col_name = "כחולה" if is_he_override else "Blue"
+                elif "green" in c0 or "ירוק" in c0:
+                    col_name = "ירוקה" if is_he_override else "Green"
+                elif "gray" in c0 or "grey" in c0 or "אפור" in c0:
+                    col_name = "אפורה" if is_he_override else "Gray"
+            noun = ("בלוזה" if is_blouse else "חולצה") if is_he_override else ("Blouse" if is_blouse else "Shirt")
+            new_title = f"{noun} {col_name} אלגנטית".strip() if is_he_override else f"Elegant {col_name} {noun}".strip()
+            analysis["name"] = new_title
+            analysis["title"] = new_title
+            if any(w in curr_cap_raw.lower() for w in ("skirt", "pant", "חצאית", "מכנס", "פליסה")):
+                analysis["caption"] = "חולצה אלגנטית ונוחה להשלמת המראה." if is_he_override else "An elegant, comfortable top."
+
+    elif default == "Footwear":
+        analysis["sub_category"] = ("סניקרס" if "sneaker" in lbl_low else "נעליים") if is_he_override else ("Sneakers" if "sneaker" in lbl_low else "Shoes")
+        analysis["item_type"] = ("סניקרס נמוכות" if "sneaker" in lbl_low else "נעלי קז'ואל") if is_he_override else ("Low-Top Sneakers" if "sneaker" in lbl_low else "Casual Shoes")
+        if any(w in curr_name_low for w in ("sweater", "shirt", "top", "hoodie", "cardigan", "jacket", "coat", "pants", "skirt", "dress", "חולצה", "סוודר", "מעיל", "חצאית", "מכנסיים", "שמלה")):
+            col = (analysis.get("colors") or [""])[0]
+            col_name = str(col.get("name") if isinstance(col, dict) else col).strip()
+            if is_he_override:
+                analysis["name"] = "נעליים אלגנטיות"
+            else:
+                color_prefix = f"{col_name.capitalize()} " if col_name and col_name.lower() not in ("unknown", "") else ""
+                analysis["name"] = f"{color_prefix}Shoes".strip()
             analysis["title"] = analysis["name"]
     elif default == "Bottom":
         if "skirt" in lbl_low:
-            analysis["sub_category"] = "Skirt"
-            analysis["item_type"] = "skirt"
-            if (analysis.get("gender") or "").lower() not in ("women", "kids"):
-                analysis["gender"] = "women"
+            analysis["sub_category"] = "חצאית" if is_he_override else "Skirt"
+            analysis["item_type"] = ("חצאית פליסה" if ("pleat" in curr_name_low or "פליסה" in curr_name_low) else "חצאית קלאסית") if is_he_override else ("Pleated Skirt" if "pleat" in curr_name_low else "Classic Skirt")
+            if (analysis.get("gender") or "").lower() not in ("women", "kids", "נשים"):
+                analysis["gender"] = "נשים" if is_he_override else "women"
         elif "pants" in lbl_low or "trousers" in lbl_low:
-            analysis["sub_category"] = "Pants"
+            analysis["sub_category"] = "מכנסיים" if is_he_override else "Pants"
             txt_comb = f"{analysis.get('name', '')} {analysis.get('caption', '')} {' '.join(analysis.get('tags') or [])}".lower()
             if "cargo" in txt_comb or "דגמח" in txt_comb or "דגמ\"ח" in txt_comb:
-                analysis["item_type"] = "Cargo Pants"
+                analysis["item_type"] = "מכנסי דגמ\"ח" if is_he_override else "Cargo Pants"
             elif "chino" in txt_comb or "צ'ינו" in txt_comb:
-                analysis["item_type"] = "Chinos"
-            elif "jogger" in txt_comb or "sweat" in txt_comb:
-                analysis["item_type"] = "Joggers"
+                analysis["item_type"] = "מכנסי צ'ינו" if is_he_override else "Chinos"
+            elif "jogger" in txt_comb or "sweat" in txt_comb or "טרנינג" in txt_comb:
+                analysis["item_type"] = "מכנסי ג'וגר" if is_he_override else "Joggers"
             else:
-                analysis["item_type"] = "Casual Pants"
+                analysis["item_type"] = "מכנסי קז'ואל" if is_he_override else "Casual Pants"
         else:
-            analysis["sub_category"] = None
+            analysis["sub_category"] = "חלק תחתון" if is_he_override else None
+            analysis["item_type"] = "מכנסי קז'ואל" if is_he_override else None
+        
+        # Purge top/shirt conflicts from bottoms
+        if any(w in curr_name_low for w in ("shirt", "blouse", "sweater", "top", "חולצה", "סוודר", "בלוזה")):
+            analysis["name"] = "מכנסיים אלגנטיים" if is_he_override else "Classic Pants"
+            analysis["title"] = analysis["name"]
     elif default == "Accessories":
         if "bag" in lbl_low or kind == "bag":
-            analysis["sub_category"] = "Bags"
-            if not analysis.get("item_type") or str(analysis.get("item_type")).lower() in ("clothing", "garment", "top", "accessories"):
-                analysis["item_type"] = "Handbag"
-        elif kind == "headwear" or any(h in lbl_low for h in ("hat", "cap", "beanie", "trapper", "beret", "fedora")):
-            analysis["sub_category"] = "Headwear"
-            if not analysis.get("item_type") or str(analysis.get("item_type")).lower() in ("clothing", "garment", "top", "accessories"):
-                analysis["item_type"] = "Hat"
-        elif any(b in lbl_low for b in ("belt", "waistband")):
-            analysis["sub_category"] = "Belts"
-            if not analysis.get("item_type") or str(analysis.get("item_type")).lower() in ("clothing", "garment", "top", "accessories"):
-                analysis["item_type"] = "Belt"
-        elif any(s in lbl_low for s in ("scarf", "shawl", "wrap")):
-            analysis["sub_category"] = "Scarves & Wraps"
-            if not analysis.get("item_type") or str(analysis.get("item_type")).lower() in ("clothing", "garment", "top", "accessories"):
-                analysis["item_type"] = "Scarf"
-        elif any(g in lbl_low for g in ("glove", "mitten")):
-            analysis["sub_category"] = "Gloves"
-            if not analysis.get("item_type") or str(analysis.get("item_type")).lower() in ("clothing", "garment", "top", "accessories"):
-                analysis["item_type"] = "Gloves"
+            analysis["sub_category"] = "תיקים" if is_he_override else "Bags"
+            analysis["item_type"] = "תיק יד" if is_he_override else "Handbag"
+        elif kind == "headwear" or any(h in lbl_low for h in ("hat", "cap", "beanie", "trapper", "beret", "fedora", "כובע")):
+            analysis["sub_category"] = "כובעים" if is_he_override else "Headwear"
+            analysis["item_type"] = "כובע קלאסי" if is_he_override else "Classic Hat"
+        elif any(b in lbl_low for b in ("belt", "waistband", "חגור")):
+            analysis["sub_category"] = "חגורות" if is_he_override else "Belts"
+            analysis["item_type"] = "חגורת עור" if is_he_override else "Leather Belt"
+        elif any(s in lbl_low for s in ("scarf", "shawl", "wrap", "צעיף")):
+            analysis["sub_category"] = "צעיפים ועליוניות" if is_he_override else "Scarves & Wraps"
+            analysis["item_type"] = "צעיף סרוג" if is_he_override else "Knit Scarf"
+        elif any(g in lbl_low for g in ("glove", "mitten", "כפפ")):
+            analysis["sub_category"] = "כפפות" if is_he_override else "Gloves"
+            analysis["item_type"] = "כפפות" if is_he_override else "Gloves"
         else:
             sub_curr = (old_subcategory or analysis.get("item_type") or "").lower()
-            if any(h in sub_curr for h in ("hat", "cap", "beanie", "trapper", "headwear", "beret")):
-                analysis["sub_category"] = "Headwear"
-            elif any(b in sub_curr for b in ("bag", "backpack", "tote", "purse")):
-                analysis["sub_category"] = "Bags"
-            elif "belt" in sub_curr:
-                analysis["sub_category"] = "Belts"
-            elif "scarf" in sub_curr:
-                analysis["sub_category"] = "Scarves & Wraps"
-            elif "glove" in sub_curr:
-                analysis["sub_category"] = "Gloves"
+            if any(h in sub_curr for h in ("hat", "cap", "beanie", "trapper", "headwear", "beret", "כובע")):
+                analysis["sub_category"] = "כובעים" if is_he_override else "Headwear"
+                analysis["item_type"] = "כובע קלאסי" if is_he_override else "Classic Hat"
+            elif any(b in sub_curr for b in ("bag", "backpack", "tote", "purse", "תיק")):
+                analysis["sub_category"] = "תיקים" if is_he_override else "Bags"
+                analysis["item_type"] = "תיק יד" if is_he_override else "Handbag"
+            elif "belt" in sub_curr or "חגור" in sub_curr:
+                analysis["sub_category"] = "חגורות" if is_he_override else "Belts"
+                analysis["item_type"] = "חגורת עור" if is_he_override else "Leather Belt"
+            elif "scarf" in sub_curr or "צעיף" in sub_curr:
+                analysis["sub_category"] = "צעיפים ועליוניות" if is_he_override else "Scarves & Wraps"
+                analysis["item_type"] = "צעיף סרוג" if is_he_override else "Knit Scarf"
+            elif "glove" in sub_curr or "כפפ" in sub_curr:
+                analysis["sub_category"] = "כפפות" if is_he_override else "Gloves"
+                analysis["item_type"] = "כפפות" if is_he_override else "Gloves"
             else:
-                analysis["sub_category"] = "Headwear" if kind == "headwear" else "Bags"
+                analysis["sub_category"] = "כובעים" if (kind == "headwear" and is_he_override) else ("תיקים" if is_he_override else ("Headwear" if kind == "headwear" else "Bags"))
         _sanitize_bag_or_accessory(analysis, label=label, kind=kind, language=language)
     else:
         analysis["sub_category"] = None
@@ -2861,26 +2916,27 @@ def _enforce_segformer_category(
         sub_str = str(analysis["sub_category"]).strip()
         item_str = str(analysis["item_type"]).strip()
         if sub_str.lower() == item_str.lower():
-            if sub_str.lower() in ("pants", "pant"):
+            is_he_post = (language in ("he", "iw")) or any("\u0590" <= ch <= "\u05ea" for ch in f"{sub_str} {item_str}")
+            if sub_str.lower() in ("pants", "pant", "מכנסיים"):
                 txt_comb = f"{analysis.get('name', '')} {analysis.get('caption', '')} {' '.join(analysis.get('tags') or [])}".lower()
                 if "cargo" in txt_comb or "דגמח" in txt_comb or "דגמ\"ח" in txt_comb:
-                    analysis["item_type"] = "Cargo Pants"
+                    analysis["item_type"] = "מכנסי דגמ\"ח" if is_he_post else "Cargo Pants"
                 elif "chino" in txt_comb or "צ'ינו" in txt_comb:
-                    analysis["item_type"] = "Chinos"
-                elif "jogger" in txt_comb or "sweat" in txt_comb:
-                    analysis["item_type"] = "Joggers"
+                    analysis["item_type"] = "מכנסי צ'ינו" if is_he_post else "Chinos"
+                elif "jogger" in txt_comb or "sweat" in txt_comb or "טרנינג" in txt_comb:
+                    analysis["item_type"] = "מכנסי ג'וגר" if is_he_post else "Joggers"
                 else:
-                    analysis["item_type"] = "Casual Pants"
-            elif sub_str.lower() in ("sneakers", "shoes"):
-                analysis["item_type"] = "Low-Top Sneakers" if sub_str.lower() == "sneakers" else "Casual Shoes"
-            elif sub_str.lower() in ("bag", "bags", "handbag"):
-                analysis["sub_category"] = "Bags"
-                analysis["item_type"] = "Handbag"
-            elif sub_str.lower() in ("headwear", "hat"):
-                analysis["sub_category"] = "Headwear"
-                analysis["item_type"] = "Classic Hat"
+                    analysis["item_type"] = "מכנסי קז'ואל" if is_he_post else "Casual Pants"
+            elif sub_str.lower() in ("sneakers", "shoes", "סניקרס", "נעליים"):
+                analysis["item_type"] = ("סניקרס נמוכות" if sub_str.lower() in ("sneakers", "סניקרס") else "נעלי קז'ואל") if is_he_post else ("Low-Top Sneakers" if sub_str.lower() == "sneakers" else "Casual Shoes")
+            elif sub_str.lower() in ("bag", "bags", "handbag", "תיק", "תיקים"):
+                analysis["sub_category"] = "תיקים" if is_he_post else "Bags"
+                analysis["item_type"] = "תיק יד" if is_he_post else "Handbag"
+            elif sub_str.lower() in ("headwear", "hat", "כובע", "כובעים"):
+                analysis["sub_category"] = "כובעים" if is_he_post else "Headwear"
+                analysis["item_type"] = "כובע קלאסי" if is_he_post else "Classic Hat"
             else:
-                analysis["item_type"] = f"Classic {sub_str}"
+                analysis["item_type"] = f"קלאסי {sub_str}" if is_he_post else f"Classic {sub_str}"
 
     return analysis
 

@@ -20,7 +20,7 @@ KEY_GARMENT_VISION = "garment_vision"
 
 PROMPT_GARMENT_VISION = (
     "Output raw JSON only ({...} or [{...}]). No markdown/intro.\n"
-    "• name & title: Short, unique (2-4 words) extracting cut/attributes (e.g. 'Green Round-Toe Loafers', 'Navy Chinos', 'Camo Cargo Pants'). Never generic ('Green Garment', 'Clothing').\n"
+    "• name & title: Short, unique (2-4 words) extracting the visible garment cut and attributes [Color] [Material/Cut] [Type]. Strictly reflect pixels in this image; NEVER hallucinate or copy items from other crops. Never generic ('Garment', 'Clothing').\n"
     "• sub_category: Specific cut ('T-Shirt','Sweater','Jeans','Pants','Skirt','Shoes','Sneakers','Sandals','Boots','Loafers','Sunglasses','Handbag'). Never 'Top'/'Bottom'/'Footwear'.\n"
     "• Bottoms: 'Jeans'=denim. Chinos -> sub_category:'Pants', item_type:'Chinos', dress_code:'smart-casual'. Sweatpants/joggers -> sub_category:'Pants', item_type:'Sweatpants'|'Joggers', dress_code:'casual'|'athletic'.\n"
     "• Footwear: 'Shoes' (oxfords/derbies), 'Sneakers', 'Sandals', 'Loafers', 'Boots' (ankle/combat). Laced/ankle are 'Boots'; low dress shoes are 'Shoes'.\n"

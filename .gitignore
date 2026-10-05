@@ -38,6 +38,7 @@ dist
 web-build/
 dataset_distilled/images/
 *.tar.gz
+!dataset_distilled.tar.gz
 
 # Android & Gradle local caches
 .gradle/
@@ -101,6 +102,7 @@ backend/.venv*/
 **/*.tar.gz
 **/*.tar
 **/*.tgz
+!dataset_distilled.tar.gz
 *.pack
 *.deb
 *.dylib

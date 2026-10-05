@@ -22,7 +22,7 @@ graph TD
 * **Key Components:** [`schemas.py:User`](backend/app/models/schemas.py), [`quota_manager.py`](backend/app/services/quota_manager.py).
 
 ### 2. Closet & Ingestion Context
-* **Responsibility:** Adding garments, background matting (`rembg`), clothing category segmentation (`SegFormer`), DPP QR parsing, conversational re-analysis (The Eyes), and generative inpainting/editing via Nano Banana (`gemini-3.1-flash-lite-image`).
+* **Responsibility:** Adding garments, background matting (`rembg`), clothing category segmentation (`SegFormer`), DPP QR parsing, conversational re-analysis (The Eyes via on-premise `Qwen2.5-VL-3B-Instruct`, see [ADR-0005](docs/adr/0005-eyes-vision-model-migration-qwen2-5-vl.md)), and generative inpainting/editing via Nano Banana (`gemini-3.1-flash-lite-image`).
 * **Key Components:** [`clothing_parser.py`](backend/app/services/clothing_parser.py), [`background_matting.py`](backend/app/services/background_matting.py), [`dpp_parser.py`](backend/app/services/dpp_parser.py), [`gemini_image_service.py`](backend/app/services/gemini_image_service.py).
 
 ### 3. AI Stylist & Audio Context
@@ -53,7 +53,7 @@ graph TD
 | --- | --- | --- |
 | **Garment / Closet Item** | Closet | A unique article of clothing owned by a user, cataloged with 20+ attributes (season, material, fit, color, etc.) and a background-removed image cutout. |
 | **Ingestion Pipeline** | Closet | The automated pipeline that segments multiple clothes from a photo, applies matting, and auto-attributes them via Gemini. |
-| **The Eyes** | Closet / Vision | The multimodal vision assistant that analyzes garment photos, clarifies user editing intent, and guides re-analysis. |
+| **The Eyes** | Closet / Vision | The multimodal vision assistant powered on-premise by `Qwen2.5-VL-3B-Instruct` that analyzes garment photos, extracts 20+ localized attributes, and guides re-analysis. |
 | **Nano Banana** | Vision / Inpainting | Generative image editing service powered by `gemini-3.1-flash-lite-image` for object removal, hole completion, and catalog reconstruction. |
 | **DPP (Digital Product Passport)**| Closet | Standard-compliant product metadata (fabric composition, brand traceability, care instructions) parsed from QR codes. |
 | **Stylist Session** | Stylist | An active chat session (text or voice) where outfit recommendations are tailored to the user's local weather and calendar events. |

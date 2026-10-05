@@ -67,7 +67,7 @@ quantization / memory / latency decisions assume this exact host.
 | --- | --- | --- | --- |
 | `dressapp-mongo` | `mongo:7` | `27017` | Production database — on-prem MongoDB 7.0 with persistent storage on fast local NVMe at `/mnt/dressapp-db-data`. WiredTiger cache capped at 0.75 GB. Migrated off MongoDB Atlas M10 on 2026-10-04. |
 | `dressapp-backend` | [`backend/`](backend/) via [`deploy/Dockerfile.backend`](deploy/Dockerfile.backend) | (behind ingress) | FastAPI app — closet, marketplace, stylist, payments |
-| `dressapp-eyes` | [`inference-server/eyes/`](inference-server/eyes/) via [`inference-server/eyes/Dockerfile`](inference-server/eyes/Dockerfile) | `7860` | Live on-prem inference server (`llama-server` + FastAPI proxy) running fine-tuned `gemma-4-E4B-it-Q3_K_M.gguf` (~2.85 GB RAM). Platform default for Free Tier & background cron jobs, and transparent safety fallback on BYOK quota exhaustion (`429`/`RESOURCE_EXHAUSTED`). |
+| `dressapp-eyes` | [`inference-server/eyes/`](inference-server/eyes/) via [`inference-server/eyes/Dockerfile`](inference-server/eyes/Dockerfile) | `7860` | Live on-prem inference server (`llama-server` + FastAPI proxy) running `Qwen2.5-VL-3B-Instruct-Q4_K_M.gguf` + `mmproj-Qwen2.5-VL-3B-Instruct-f16.gguf` (~2.8 GB resident RAM, NaViT dynamic aspect ratio, native clothing tag OCR). Platform default for Free Tier & background tasks, and transparent safety fallback on BYOK quota exhaustion (`429`/`RESOURCE_EXHAUSTED`). Migrated from corrupt Gemma-4 E4B on 2026-10-05. |
 | `dressapp-frontend` | [`apps/web/`](apps/web/) via [`deploy/Dockerfile.frontend`](deploy/Dockerfile.frontend) | `3000` | React 19 SPA served by Nginx |
 | `caddy` | [`deploy/Caddyfile`](deploy/Caddyfile) | `80`, `443` | Reverse proxy terminating TLS via Let's Encrypt |
 
@@ -104,12 +104,12 @@ lives strictly in `deploy/.env` on the VPS — never in the repo.
 1. **Primary Production Engine (Google Gemini 3.5 Flash-Lite)**:
    - All 6 interactive and core pipelines (Stylist Brain, Wardrobe Migration, Suitcase Planner, Trend Scout localization, Session Titles, Closet Ingestion) route by default to **Google Gemini** (`gemini-3.5-flash-lite`) via [`backend/app/services/llm_gateway.py`](backend/app/services/llm_gateway.py).
    - Driven by native `google-genai` SDK with strict JSON schema enforcement (`response_schema`), sub-350ms TTFT, and ultra-cost-effective rates ($0.30/1M input, $2.50/1M output).
-2. **On-Prem VPS Eyes (`gemma-4-E4B`) — Free-Tier & Offline Baseline**:
-   - `dressapp-eyes` container running fine-tuned `gemma-4-E4B-it-Q3_K_M.gguf` on port 7860 of the Hetzner CPX32 VPS.
-   - Serves as the zero-variable-cost baseline for Free Tier accounts or offline modes (`force_provider="gemma"`) and scheduled unauthenticated background tasks.
+2. **On-Prem VPS Eyes (`Qwen2.5-VL-3B-Instruct`) — Free-Tier & Offline Baseline**:
+   - `dressapp-eyes` container running `Qwen2.5-VL-3B-Instruct-Q4_K_M.gguf` with `mmproj-Qwen2.5-VL-3B-Instruct-f16.gguf` on port 7860 of the Hetzner CPX32 VPS.
+   - Preserves native non-square aspect ratios via NaViT, extracts text from clothing tags, and provides clean structured JSON responses.
+   - Serves as the zero-variable-cost baseline for Free Tier accounts or offline modes (`force_provider="gemma"`) and background tasks.
 3. **Transparent Quota Safety Net**:
-   - If Google Gemini external calls encounter rate limits (`429`), quota exhaustion (`RESOURCE_EXHAUSTED`), spending caps, or network timeouts, `call_main_llm` and `FallbackBrain` (`backend/app/services/stylist_brain.py`) catch the exception and immediately route the query to on-prem Gemma-4-E4B.
-   - Automatically sanitizes and strips internal reasoning tokens (`<|channel>thought...<channel|>`, `<think>...</think>`).
+   - If Google Gemini external calls encounter rate limits (`429`), quota exhaustion (`RESOURCE_EXHAUSTED`), spending caps, or network timeouts, `call_main_llm` and `FallbackBrain` (`backend/app/services/stylist_brain.py`) catch the exception and immediately route the query to on-prem Eyes.
    - The response includes `provider_fallback: "gemma"` and `fallback_from_quota: True`, displaying an informational banner in the UI (`stylist.fallbackQuotaBanner`) without interrupting the user or failing with a 500 error.
 4. **Strict Cost Protection Perimeter (Tier Gating)**:
    - High-cost generative cloud endpoints (**Trend Scout** and **Nano Banana** photo reconstruction/inpainting) strictly require validated user-supplied API keys (HTTP 403 / clarify prompt for users without custom keys).

@@ -57,9 +57,9 @@ log = logging.getLogger("dressapp-eyes")
 
 # ---- Config (env, with defaults set in Dockerfile) ------------------
 MODEL_DIR = Path(os.environ.get("EYES_MODEL_DIR", "/models"))
-MODEL_REPO = os.environ.get("EYES_MODEL_REPO", "Yoram-Jacobs/dressapp-eyes-gguf")
-MODEL_FILE = os.environ.get("EYES_MODEL_FILE", "gemma-4-E4B-it-Q3_K_M.gguf")
-MMPROJ_FILE = os.environ.get("EYES_MMPROJ_FILE", "mmproj-BF16.gguf")
+MODEL_REPO = os.environ.get("EYES_MODEL_REPO", "ggml-org/Qwen2.5-VL-3B-Instruct-GGUF")
+MODEL_FILE = os.environ.get("EYES_MODEL_FILE", "Qwen2.5-VL-3B-Instruct-Q4_K_M.gguf")
+MMPROJ_FILE = os.environ.get("EYES_MMPROJ_FILE", "mmproj-Qwen2.5-VL-3B-Instruct-f16.gguf")
 HF_TOKEN = os.environ.get("EYES_HF_TOKEN")
 API_TOKEN = os.environ.get("EYES_API_TOKEN")
 
@@ -279,6 +279,7 @@ def _build_llama_argv(
     # we enable thinking mode to ensure the model processes the image content.
     # Note: The <think> tags in the model's output will be stripped by the
     # backend's _extract_json function, so this doesn't affect our JSON parsing.
+    is_qwen = "qwen" in model_path.name.lower() or "qwen" in str(mmproj_path or "").lower()
     argv = [
         LLAMA_BIN,
         "--model", str(model_path),
@@ -291,14 +292,20 @@ def _build_llama_argv(
         "--ubatch-size", str(min(N_BATCH, 512)),
         "--n-predict", "-1",
         "--jinja",
-        "--reasoning-budget", "0",
-        "--chat-template-kwargs", '{"enable_thinking": false}',
         "-fa", "auto",
         "-sps", "0.0",
         "--media-path", "/",
         "--cache-prompt",
         "--parallel", "1",
     ]
+    if is_qwen:
+        # Let Qwen2.5-VL calculate tokens dynamically based on crop size (saves ~30s on CPU)
+        pass
+    else:
+        argv += [
+            "--reasoning-budget", "0",
+            "--chat-template-kwargs", '{"enable_thinking": false}',
+        ]
     if mmproj_path is not None:
         argv += ["--mmproj", str(mmproj_path)]
     if adapter_paths:

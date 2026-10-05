@@ -119,42 +119,56 @@ def _align_analyses_to_crops(
     
     def _is_footwear(cat: str, lbl: str, all_text: str) -> bool:
         return (
-            cat in ("footwear", "shoes", "shoe") or
-            "shoe" in lbl or "boot" in lbl or "sneaker" in lbl or "sandal" in lbl or
-            any(w in all_text for w in ("shoe", "sneaker", "boot", "sandal", "loafer", "heel", "oxford", "clog", "slide", "footwear"))
+            cat in ("footwear", "shoes", "shoe", "הנעלה", "נעליים") or
+            "shoe" in lbl or "boot" in lbl or "sneaker" in lbl or "sandal" in lbl or "נעלי" in lbl or
+            any(w in all_text for w in (
+                "shoe", "sneaker", "boot", "sandal", "loafer", "heel", "oxford", "clog", "slide", "footwear",
+                "נעלי", "נעליים", "מגפ", "מגפיים", "סנדל", "סנדלים", "סניקרס", "עקב", "לופר", "מוקסין", "כפכף", "כפכפים"
+            ))
         )
     
     def _is_belt(cat: str, lbl: str, all_text: str) -> bool:
-        return "belt" in lbl or "belt" in all_text
+        return "belt" in lbl or "חגור" in lbl or any(w in all_text for w in ("belt", "חגור", "חגורה"))
     
     def _is_bag(cat: str, lbl: str, all_text: str) -> bool:
-        return "bag" in lbl or any(w in all_text for w in ("bag", "tote", "purse", "backpack", "clutch", "handbag", "crossbody"))
+        return "bag" in lbl or "תיק" in lbl or any(w in all_text for w in (
+            "bag", "tote", "purse", "backpack", "clutch", "handbag", "crossbody",
+            "תיק", "תרמיל", "ארנק", "קלאץ"
+        ))
     
     def _is_glasses(cat: str, lbl: str, all_text: str) -> bool:
-        return "sunglass" in lbl or "glass" in lbl or any(w in all_text for w in ("sunglass", "glasses", "shades", "eyewear"))
+        return "sunglass" in lbl or "glass" in lbl or "משקפ" in lbl or any(w in all_text for w in (
+            "sunglass", "glasses", "shades", "eyewear", "משקפ", "משקפיים", "משקפי שמש"
+        ))
     
     def _is_accessory(cat: str, lbl: str, all_text: str) -> bool:
-        return cat in ("accessory", "accessories") or _is_belt(cat, lbl, all_text) or _is_bag(cat, lbl, all_text) or _is_glasses(cat, lbl, all_text)
+        return cat in ("accessory", "accessories", "אקססוריז", "אביזרים") or _is_belt(cat, lbl, all_text) or _is_bag(cat, lbl, all_text) or _is_glasses(cat, lbl, all_text)
     
     def _is_top(cat: str, lbl: str, all_text: str) -> bool:
         return (
-            cat in ("top", "outerwear") or
-            any(w in lbl for w in ("upper", "top", "shirt", "jacket", "coat", "sweater", "blouse", "hoodie", "cardigan")) or
-            any(w in all_text for w in ("shirt", "t-shirt", "top", "jacket", "coat", "sweater", "cardigan", "blouse", "hoodie", "polo", "tank"))
+            cat in ("top", "outerwear", "חלק עליון", "עליוניות", "הלבשה עליונה") or
+            any(w in lbl for w in ("upper", "top", "shirt", "jacket", "coat", "sweater", "blouse", "hoodie", "cardigan", "חולצ", "סוודר", "מעיל", "ז'קט", "בלוז")) or
+            any(w in all_text for w in (
+                "shirt", "t-shirt", "top", "jacket", "coat", "sweater", "cardigan", "blouse", "hoodie", "polo", "tank",
+                "חולצה", "חולצת", "טישירט", "סוודר", "סריג", "ז'קט", "מעיל", "בלוזה", "גופיה", "גופייה", "קפוצ'ון", "קרדיגן", "פולו"
+            ))
         )
     
     def _is_bottom(cat: str, lbl: str, all_text: str) -> bool:
         return (
-            cat in ("bottom", "pants", "skirt") or
-            any(w in lbl for w in ("pant", "skirt", "trouser", "jean", "short", "bottom")) or
-            any(w in all_text for w in ("pant", "pants", "chinos", "trousers", "jeans", "shorts", "skirt", "leggings", "bottom", "culottes"))
+            cat in ("bottom", "pants", "skirt", "חלק תחתון", "מכנסיים", "חצאית") or
+            any(w in lbl for w in ("pant", "skirt", "trouser", "jean", "short", "bottom", "מכנס", "חצאית", "גינס", "טייץ")) or
+            any(w in all_text for w in (
+                "pant", "pants", "chinos", "trousers", "jeans", "shorts", "skirt", "leggings", "bottom", "culottes",
+                "מכנסי", "מכנסיים", "מכנס", "חצאית", "ג'ינס", "גינס", "טייץ", "שורט", "ברמודה", "דגמ\"ח", "דגמח", "צ'ינו", "פליסה"
+            ))
         )
     
     def _is_headwear(cat: str, lbl: str, all_text: str) -> bool:
         return (
-            cat in ("headwear", "hat") or
-            "hat" in lbl or "cap" in lbl or
-            any(w in all_text for w in ("hat", "cap", "beanie", "beret", "fedora"))
+            cat in ("headwear", "hat", "כובעים", "כובע") or
+            "hat" in lbl or "cap" in lbl or "כובע" in lbl or
+            any(w in all_text for w in ("hat", "cap", "beanie", "beret", "fedora", "כובע", "ברט", "קסקט"))
         )
 
     for i, c in enumerate(crop_data):
@@ -300,19 +314,26 @@ def _match_batch_entry_to_slot(
         nm = (entry.get("name") or entry.get("title") or "").lower()
         all_text = f"{cat} {sub} {nm}"
 
-        is_fw = any(w in all_text for w in ("shoe", "boot", "sneaker", "footwear", "sandal", "heel", "loafer", "clog", "slide"))
-        is_belt = "belt" in all_text
-        is_sunglasses = any(w in all_text for w in ("sunglass", "glasses", "shades", "eyewear"))
-        is_bag = any(w in all_text for w in ("bag", "tote", "purse", "backpack", "clutch", "handbag"))
+        is_fw = any(w in all_text for w in (
+            "shoe", "boot", "sneaker", "footwear", "sandal", "heel", "loafer", "clog", "slide",
+            "נעלי", "נעליים", "מגפ", "סנדל", "סניקרס", "עקב", "לופר", "מוקסין", "כפכף"
+        ))
+        is_belt = "belt" in all_text or "חגור" in all_text
+        is_sunglasses = any(w in all_text for w in (
+            "sunglass", "glasses", "shades", "eyewear", "משקפ", "משקפיים", "משקפי שמש"
+        ))
+        is_bag = any(w in all_text for w in (
+            "bag", "tote", "purse", "backpack", "clutch", "handbag", "תיק", "תרמיל", "ארנק", "קלאץ"
+        ))
 
         conflict = False
-        if is_fw and any(w in hint for w in ("belt", "bag", "top", "upper", "bottom", "pants", "skirt")):
+        if is_fw and any(w in hint for w in ("belt", "bag", "top", "upper", "bottom", "pants", "skirt", "חגור", "תיק", "חולצ", "מכנס", "חצאית")):
             conflict = True
-        elif is_belt and any(w in hint for w in ("shoe", "footwear", "top", "upper", "bottom", "pants", "skirt")):
+        elif is_belt and any(w in hint for w in ("shoe", "footwear", "top", "upper", "bottom", "pants", "skirt", "נעלי", "חולצ", "מכנס", "חצאית")):
             conflict = True
-        elif is_sunglasses and any(w in hint for w in ("shoe", "footwear", "top", "upper", "bottom", "pants", "skirt")):
+        elif is_sunglasses and any(w in hint for w in ("shoe", "footwear", "top", "upper", "bottom", "pants", "skirt", "נעלי", "חולצ", "מכנס", "חצאית")):
             conflict = True
-        elif is_bag and any(w in hint for w in ("shoe", "footwear", "top", "upper", "bottom", "pants", "skirt")):
+        elif is_bag and any(w in hint for w in ("shoe", "footwear", "top", "upper", "bottom", "pants", "skirt", "נעלי", "חולצ", "מכנס", "חצאית")):
             conflict = True
 
         if not conflict:
@@ -332,17 +353,17 @@ def _match_batch_entry_to_slot(
         hint = (kind_hints[s] if (kind_hints and s < len(kind_hints) and kind_hints[s]) else "").lower()
 
         # Category/hint alignment
-        if any(w in all_text for w in ("shoe", "boot", "sneaker", "footwear", "sandal", "heel", "loafer")) and any(w in hint for w in ("shoe", "boot", "footwear", "sneaker")):
+        if any(w in all_text for w in ("shoe", "boot", "sneaker", "footwear", "sandal", "heel", "loafer", "נעלי", "מגפ", "סנדל", "סניקרס", "עקב", "מוקסין")) and any(w in hint for w in ("shoe", "boot", "footwear", "sneaker", "נעלי")):
             score += 120.0
-        elif "belt" in all_text and ("belt" in hint or "acc" in hint):
+        elif ("belt" in all_text or "חגור" in all_text) and ("belt" in hint or "acc" in hint or "חגור" in hint):
             score += 120.0
-        elif any(w in all_text for w in ("sunglass", "glasses", "shades")) and ("sunglass" in hint or "acc" in hint):
+        elif any(w in all_text for w in ("sunglass", "glasses", "shades", "משקפ")) and ("sunglass" in hint or "acc" in hint or "משקפ" in hint):
             score += 120.0
-        elif any(w in all_text for w in ("bag", "tote", "purse", "backpack", "handbag")) and ("bag" in hint or "acc" in hint):
+        elif any(w in all_text for w in ("bag", "tote", "purse", "backpack", "handbag", "תיק", "תרמיל")) and ("bag" in hint or "acc" in hint or "תיק" in hint):
             score += 120.0
-        elif any(w in all_text for w in ("top", "shirt", "blouse", "sweater", "jacket", "coat", "hoodie", "cardigan")) and any(w in hint for w in ("top", "upper")):
+        elif any(w in all_text for w in ("top", "shirt", "blouse", "sweater", "jacket", "coat", "hoodie", "cardigan", "חולצ", "סוודר", "ז'קט", "מעיל", "בלוז", "גופיי")) and any(w in hint for w in ("top", "upper", "חולצ")):
             score += 100.0
-        elif any(w in all_text for w in ("bottom", "pants", "skirt", "jeans", "shorts", "trousers")) and any(w in hint for w in ("bottom", "pants", "skirt")):
+        elif any(w in all_text for w in ("bottom", "pants", "skirt", "jeans", "shorts", "trousers", "מכנס", "חצאית", "גינס", "דגמח", "טייץ", "פליסה")) and any(w in hint for w in ("bottom", "pants", "skirt", "מכנס", "חצאית")):
             score += 100.0
 
         if isinstance(slot_hint, int) and s == slot_hint:

@@ -107,8 +107,9 @@ services:
     container_name: dressapp-eyes
     restart: unless-stopped
     environment:
-      EYES_MODEL_FILE: ${EYES_MODEL_FILE:-gemma-4-E4B-it-Q3_K_M.gguf}
-      EYES_MMPROJ_FILE: ${EYES_MMPROJ_FILE:-mmproj-BF16.gguf}
+      EYES_MODEL_REPO: ${EYES_MODEL_REPO:-ggml-org/Qwen2.5-VL-3B-Instruct-GGUF}
+      EYES_MODEL_FILE: ${EYES_MODEL_FILE:-Qwen2.5-VL-3B-Instruct-Q4_K_M.gguf}
+      EYES_MMPROJ_FILE: ${EYES_MMPROJ_FILE:-mmproj-Qwen2.5-VL-3B-Instruct-f16.gguf}
       EYES_API_TOKEN: ${EYES_API_TOKEN:-}
       LLAMA_THREADS: ${EYES_LLAMA_THREADS:-4}
       LLAMA_CTX_SIZE: ${EYES_LLAMA_CTX_SIZE:-8192}

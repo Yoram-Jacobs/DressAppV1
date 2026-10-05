@@ -693,30 +693,49 @@ const hydrate = (a, user, t, i18n) => {
           ? localizedItem
           : ((localizedSub && !/[a-zA-Z]/.test(localizedSub) && !/^(בגד|garment)$/i.test(localizedSub)) ? localizedSub : '');
 
+        const cat = String(out.category || '').toLowerCase();
         const captionBlob = `${out.caption || ''} ${itemTypeRaw} ${out.sub_category || ''}`.toLowerCase();
         if (lang === 'he' || lang === 'iw') {
-          if (/אוקספורד|oxford/.test(captionBlob)) baseNoun = 'נעלי אוקספורד';
-          else if (/דרבי|derby/.test(captionBlob)) baseNoun = 'נעלי דרבי';
-          else if (/דאבל.*מאנק|double.*monk/.test(captionBlob)) baseNoun = 'נעלי דאבל מאנק סטרפ';
-          else if (/מאנק|monk/.test(captionBlob)) baseNoun = 'נעלי מאנק סטרפ';
-          else if (/ברוג|brogue/.test(captionBlob)) baseNoun = 'נעלי ברוג';
-          else if (/מוקסין|לופר|loafer/.test(captionBlob)) baseNoun = 'נעלי לופר';
-          else if (/עקב|heel/.test(captionBlob)) baseNoun = 'נעלי עקב';
-          else if (/פליסה|pleated/.test(captionBlob)) baseNoun = 'חצאית פליסה';
-          else if (/צ'ינו|chino/.test(captionBlob)) baseNoun = "מכנסי צ'ינו";
-          else if (/פולו|polo/.test(captionBlob)) baseNoun = 'חולצת פולו';
-          else if (/מכופתרת|button[-_ ]?down/.test(captionBlob)) baseNoun = 'חולצה מכופתרת';
-          else if (/טרנץ'|trench/.test(captionBlob)) baseNoun = "מעיל טרנץ'";
-          else if (!baseNoun || baseNoun === 'בגד') {
-            const cat = String(out.category || '').toLowerCase();
-            if (cat === 'footwear' || /shoe|נעלי/.test(subCatKey)) baseNoun = 'נעליים';
-            else if (cat === 'bottom' || /pant|מכנסי/.test(subCatKey)) baseNoun = 'מכנסיים';
-            else if (cat === 'top' || /shirt|חולצ/.test(subCatKey)) baseNoun = 'חולצה';
-            else if (cat === 'outerwear' || /coat|מעיל/.test(subCatKey)) baseNoun = 'מעיל';
-            else if (/bag|תיק/.test(subCatKey)) baseNoun = 'תיק';
-            else if (/glass|משקפ/.test(subCatKey)) baseNoun = 'משקפי שמש';
-            else if (/belt|חגור/.test(subCatKey)) baseNoun = 'חגורה';
-            else baseNoun = 'פריט אופנה';
+          if (cat === 'footwear' || /shoe|footwear|sneaker|נעלי|סנדל|מגפ/.test(subCatKey)) {
+            if (/אוקספורד|oxford/.test(captionBlob)) baseNoun = 'נעלי אוקספורד';
+            else if (/דרבי|derby/.test(captionBlob)) baseNoun = 'נעלי דרבי';
+            else if (/דאבל.*מאנק|double.*monk/.test(captionBlob)) baseNoun = 'נעלי דאבל מאנק סטרפ';
+            else if (/מאנק|monk/.test(captionBlob)) baseNoun = 'נעלי מאנק סטרפ';
+            else if (/ברוג|brogue/.test(captionBlob)) baseNoun = 'נעלי ברוג';
+            else if (/מוקסין|לופר|loafer/.test(captionBlob)) baseNoun = 'נעלי לופר';
+            else if (/עקב|heel/.test(captionBlob)) baseNoun = 'נעלי עקב';
+            else if (/סנדל|sandal/.test(captionBlob)) baseNoun = 'סנדלים';
+            else if (/מגפ|boot/.test(captionBlob)) baseNoun = 'מגפיים';
+            else if (/סניקר|sneaker/.test(captionBlob)) baseNoun = 'סניקרס';
+            else if (!baseNoun || baseNoun === 'בגד') baseNoun = 'נעליים';
+          } else if (cat === 'bottom' || /pant|skirt|bottom|מכנסי|חצאי/.test(subCatKey)) {
+            if (/פליסה|pleated/.test(captionBlob) || /חצאי|skirt/.test(captionBlob)) baseNoun = 'חצאית פליסה';
+            else if (/צ'ינו|chino/.test(captionBlob)) baseNoun = "מכנסי צ'ינו";
+            else if (/טרנינג|ג'וגר|פוטר|sweat|jogger/.test(captionBlob)) baseNoun = 'מכנסי טרנינג';
+            else if (/ג'ינס|גינס|denim|jean/.test(captionBlob)) baseNoun = "ג'ינס";
+            else if (/קצר|short/.test(captionBlob)) baseNoun = 'מכנסיים קצרים';
+            else if (!baseNoun || baseNoun === 'בגד') baseNoun = 'מכנסיים';
+          } else if (cat === 'top' || /shirt|top|blouse|חולצ|בלוז|סוודר/.test(subCatKey)) {
+            if (/פולו|polo/.test(captionBlob)) baseNoun = 'חולצת פולו';
+            else if (/מכופתרת|button[-_ ]?down/.test(captionBlob)) baseNoun = 'חולצה מכופתרת';
+            else if (/בלוז|blouse/.test(captionBlob)) baseNoun = 'בלוזה';
+            else if (/טי|tee|t-shirt/.test(captionBlob)) baseNoun = 'חולצת טי';
+            else if (/סוודר|סריג|sweater|knit/.test(captionBlob)) baseNoun = 'סוודר';
+            else if (/גופיי|tank/.test(captionBlob)) baseNoun = 'גופייה';
+            else if (!baseNoun || baseNoun === 'בגד') baseNoun = 'חולצה';
+          } else if (cat === 'outerwear' || /coat|jacket|outerwear|מעיל|ז'קט/.test(subCatKey)) {
+            if (/טרנץ'|trench/.test(captionBlob)) baseNoun = "מעיל טרנץ'";
+            else if (/ז'קט|jacket/.test(captionBlob)) baseNoun = "ז'קט";
+            else if (!baseNoun || baseNoun === 'בגד') baseNoun = 'מעיל';
+          } else if (cat === 'accessories' || /bag|glass|belt|accessory|accessories|תיק|משקפ|חגור/.test(subCatKey)) {
+            if (/משקפ|sunglass|glasses/.test(captionBlob)) baseNoun = 'משקפי שמש';
+            else if (/חגור|belt/.test(captionBlob)) baseNoun = 'חגורה';
+            else if (/צעיף|scarf/.test(captionBlob)) baseNoun = 'צעיף';
+            else if (/כובע|hat|cap|beanie/.test(captionBlob)) baseNoun = 'כובע';
+            else if (/כיסוי מזוודה|suitcase/.test(captionBlob) || /תיק|bag/.test(captionBlob)) baseNoun = 'תיק יד';
+            else if (!baseNoun || baseNoun === 'בגד') baseNoun = 'תיק יד';
+          } else if (!baseNoun || baseNoun === 'בגד') {
+            baseNoun = 'פריט אופנה';
           }
         }
 
@@ -777,6 +796,14 @@ const hydrate = (a, user, t, i18n) => {
         if (parts.length > 0) {
           out.title = parts.join(' ');
           out.name = parts.join(' ');
+        }
+      }
+
+      if (lang === 'he' || lang === 'iw') {
+        const capStr = String(out.caption || '').trim();
+        const hasHeCap = /[\u0590-\u05FF]/.test(capStr);
+        if (!hasHeCap && capStr) {
+          out.caption = `${out.title || out.name || 'פריט אופנה איכותי'}.`;
         }
       }
     } else {
