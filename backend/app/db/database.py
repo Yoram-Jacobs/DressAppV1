@@ -72,6 +72,10 @@ async def ensure_indexes() -> None:
         name="user_id_1_updated_at_-1",
     )
     await db.closet_items.create_index(
+        [("is_duplicate", 1), ("created_at", 1)],
+        name="is_duplicate_1_created_at_1",
+    )
+    await db.closet_items.create_index(
         [("title", "text"), ("brand", "text"), ("tags", "text")]
     )
     # Index for fast grouping lookups (host and member queries)

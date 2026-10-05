@@ -1,7 +1,7 @@
 # DressApp — Technical Architecture Document
 
 > **Version:** 2.0 (Turborepo Monorepo & FARM Stack)  
-> **Runtime:** FastAPI (Python 3.11) + React 19 (Web SPA) + Expo 53 (React Native) + MongoDB Atlas  
+> **Runtime:** FastAPI (Python 3.11) + React 19 (Web SPA) + Expo 53 (React Native) + MongoDB 7.0 (On-Prem Docker / NVMe)  
 > **Deployment Target:** Hetzner CPX32 VPS (`dressapp.co`) via Docker Compose + Caddy TLS  
 
 ---
@@ -66,8 +66,8 @@ DressApp is an AI-powered fashion editor and digital wardrobe platform that turn
         │              │              │
         ▼              ▼              ▼
 ┌──────────────┐ ┌─────────────┐ ┌─────────────────────────────────────────┐
-│MongoDB Atlas │ │dressapp-eyes│ │External Cloud Services (BYOK)           │
-│M10 Cluster   │ │Container    │ ├─────────────────────────────────────────┤
+│MongoDB 7.0   │ │dressapp-eyes│ │External Cloud Services (BYOK)           │
+│dressapp-mongo│ │Container    │ ├─────────────────────────────────────────┤
 │(Users, Items,│ │Gemma-4 E4B  │ │• Google Gemini API (BYOK / Nano Banana) │
 │Listings,     │ │llama-server │ │• Deepgram Speech API (STT/TTS)          │
 │Vector Embed) │ │(:7860)      │ │• OpenWeatherMap & Google Calendar APIs  │
@@ -174,28 +174,23 @@ The billing engine in `backend/app/services/pricing.py` and `backend/app/models/
 The production application is deployed on a Hetzner Cloud CPX32 VPS (4 AMD vCPUs, 8 GB RAM, Ubuntu 24.04 LTS) at `dressapp.co`:
 
 ```
-┌────────────────────────────────────────────────────────────────────────────────────────┐
-│                                 Hetzner CPX32 Host                                     │
-│                                                                                        │
-│  ┌─────────────────┐   ┌──────────────────┐   ┌──────────────┐   ┌──────────────────┐  │
-│  │ dressapp-caddy  │   │ dressapp-backend │   │dressapp-     │   │ dressapp-eyes    │  │
-│  │ Ports 80, 443   │──▶│ Internal :8001   │──▶│frontend      │   │ Internal :7860   │  │
-│  │ (Caddy 2 Alpine)│   │ (FastAPI + ML)   │   │Internal :3000│   │ (Gemma-4 E4B)    │  │
-│  └────────┬────────┘   └────────┬─────────┘   └──────┬───────┘   └────────┬─────────┘  │
-│           │                     │                    │                    │            │
-│           └─────────────────────┴────────────────────┴────────────────────┘            │
-│                               Bridge Network: "dress"                                  │
-└───────────────────────────────────────────┬────────────────────────────────────────────┘
-                                            │ TLS
-                                            ▼
-                              ┌───────────────────────────┐
-                              │ MongoDB Atlas M10 Cluster │
-                              │ (Hosted Cloud Database)   │
-                              └───────────────────────────┘
+┌────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+│                                           Hetzner CPX32 Host                                           │
+│                                                                                                        │
+│  ┌─────────────────┐   ┌──────────────────┐   ┌──────────────┐   ┌──────────────────┐  ┌─────────────┐ │
+│  │ dressapp-caddy  │   │ dressapp-backend │   │dressapp-     │   │ dressapp-eyes    │  │dressapp-    │ │
+│  │ Ports 80, 443   │──▶│ Internal :8001   │──▶│frontend      │   │ Internal :7860   │  │mongo (:27017│ │
+│  │ (Caddy 2 Alpine)│   │ (FastAPI + ML)   │   │Internal :3000│   │ (Gemma-4 E4B)    │  │NVMe Storage)│ │
+│  └────────┬────────┘   └────────┬─────────┘   └──────┬───────┘   └────────┬─────────┘  └──────┬──────┘ │
+│           │                     │                    │                    │                   │        │
+│           └─────────────────────┴────────────────────┴────────────────────┴───────────────────┘        │
+│                                           Bridge Network: "dress"                                      │
+└────────────────────────────────────────────────────────────────────────────────────────────────────────┘
 ```
 
 - **Reverse Proxy**: Caddy 2 terminates TLS with automatic Let's Encrypt certificates, proxying `/api/*` to `dressapp-backend:8001` and static requests to `dressapp-frontend:3000`.
 - **Backend Service**: Runs `backend/server.py` via Uvicorn. Model weights for SegFormer and U2-Net persist across container restarts in named Docker volumes (`model-cache`, `rembg-cache`).
 - **Eyes Inference Service**: Dedicated `dressapp-eyes` container running `llama-server` on port 7860 with fine-tuned `gemma-4-E4B-it-Q3_K_M.gguf` + `mmproj-BF16.gguf` (~2.85 GB RAM), authenticated via `EYES_API_TOKEN`.
 - **Frontend Service**: Static React 19 SPA bundle served by Nginx with client-side routing fallback (`try_files $uri /index.html`).
-- **Database**: External MongoDB Atlas M10 cluster (10 GB storage, automated daily snapshots, Atlas Vector Search).
+- **Database**: On-prem MongoDB 7.0 Community containerized (`dressapp-mongo`) with persistent storage on high-speed local NVMe SSD at `/mnt/dressapp-db-data`, automated nightly backups at 03:00 UTC, and optimized WiredTiger cache capped at 0.75 GB.
+

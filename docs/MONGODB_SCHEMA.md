@@ -1,7 +1,7 @@
 # DressApp — MongoDB Schema Reference
 
 > **Version:** 2.0 (Verified against `backend/app/models/schemas.py` & `credit.py`)  
-> **Database:** MongoDB Atlas M10 (Cluster: `dressapp_prod`)  
+> **Database:** On-Prem MongoDB 7.0 Community (`dressapp-mongo` on NVMe `/mnt/dressapp-db-data`, database: `dressapp`)  
 > **Conventions:**
 > - All documents use UUID strings (`id: str`) as their primary domain identifier.
 > - Timestamps are ISO-8601 strings (`created_at`, `updated_at`) to ensure lossless JSON serialization.

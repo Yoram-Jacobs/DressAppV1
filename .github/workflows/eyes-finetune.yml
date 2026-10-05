@@ -50,6 +50,15 @@ on:
         required: false
         type: boolean
         default: true
+      force_training:
+        description: 'Force execution even if new item count in database < 500'
+        required: false
+        type: boolean
+        default: false
+      min_new_items:
+        description: 'Minimum new and approved items threshold in database to trigger training'
+        required: false
+        default: '500'
 
 permissions:
   contents: write
@@ -67,6 +76,10 @@ jobs:
   prepare-dataset:
     name: Prepare Multimodal SFT Dataset
     runs-on: ubuntu-latest
+    outputs:
+      should_train: ${{ steps.prep_dataset.outputs.should_train }}
+      new_item_count: ${{ steps.prep_dataset.outputs.new_item_count }}
+      total_samples: ${{ steps.prep_dataset.outputs.total_samples }}
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
@@ -85,14 +98,27 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r inference-server/eyes/training/requirements-train.txt --extra-index-url https://download.pytorch.org/whl/cpu
 
-      - name: Ingest Annotations & Compile SFT Splits
+      - name: Ingest Database Items & Compile Multimodal SFT Splits
+        id: prep_dataset
+        env:
+          EYES_API_TOKEN: ${{ secrets.EYES_API_TOKEN || secrets.API_TOKEN }}
+          MIN_NEW_ITEMS: ${{ inputs.min_new_items || '500' }}
+          FORCE_TRAINING: ${{ inputs.force_training || 'false' }}
         run: |
+          FORCE_ARG=""
+          if [ "$FORCE_TRAINING" = "true" ]; then
+            FORCE_ARG="--force"
+          fi
+
           python inference-server/eyes/training/prepare_dataset.py \
-            --images-dir inference-server/eyes/test_images \
-            --garments-dir inference-server/eyes/Garments \
-            --output-dir build/dataset
+            --api-url "https://dressapp.co/api/v1/internal/training-items" \
+            --api-token "$EYES_API_TOKEN" \
+            --min-new-items "$MIN_NEW_ITEMS" \
+            --output-dir build/dataset \
+            $FORCE_ARG
 
       - name: Upload Processed Dataset Artifacts
+        if: steps.prep_dataset.outputs.should_train == 'true'
         uses: actions/upload-artifact@v4
         with:
           name: eyes-sft-dataset
@@ -105,6 +131,7 @@ jobs:
   train-and-evaluate:
     name: Headless QLoRA Training & Regression Gate
     needs: prepare-dataset
+    if: needs.prepare-dataset.outputs.should_train == 'true'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Repository
@@ -178,7 +205,8 @@ jobs:
   # -------------------------------------------------------------------------
   quantize-and-publish:
     name: Quantize GGUF & Publish Checkpoint
-    needs: train-and-evaluate
+    needs: [prepare-dataset, train-and-evaluate]
+    if: needs.prepare-dataset.outputs.should_train == 'true'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Repository
@@ -249,6 +277,16 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Record Training Watermark in DressApp Database
+        if: (inputs.dry_run != true)
+        env:
+          EYES_API_TOKEN: ${{ secrets.EYES_API_TOKEN || secrets.API_TOKEN }}
+        run: |
+          curl -s -X POST "https://dressapp.co/api/v1/internal/training-watermark" \
+            -H "Authorization: Bearer $EYES_API_TOKEN" \
+            -H "Content-Type: application/json" \
+            -d "{\"item_count\": ${{ needs.prepare-dataset.outputs.new_item_count || 0 }}, \"run_id\": \"${{ github.run_id }}\"}" || echo "Watermark ping completed"
+
       - name: Upload Final Release Artifacts
         uses: actions/upload-artifact@v4
         with:
@@ -261,8 +299,8 @@ jobs:
   # -------------------------------------------------------------------------
   stage-to-vps:
     name: Production VPS Staging
-    needs: quantize-and-publish
-    if: (inputs.deploy_vps != false) && (inputs.dry_run != true)
+    needs: [prepare-dataset, quantize-and-publish]
+    if: (needs.prepare-dataset.outputs.should_train == 'true') && (inputs.deploy_vps != false) && (inputs.dry_run != true)
     runs-on: ubuntu-latest
     env:
       VPS_SSH_KEY: ${{ secrets.SSH_PRIVATE_KEY || secrets.VPS_SSH_KEY }}
@@ -327,12 +365,18 @@ jobs:
           echo "- **Trigger:** \`${{ github.event_name }}\`" >> $GITHUB_STEP_SUMMARY
           echo "- **Compute Backend:** \`${{ inputs.compute_backend || 'runpod' }}\`" >> $GITHUB_STEP_SUMMARY
           echo "- **Dry Run:** \`${{ inputs.dry_run || 'false' }}\`" >> $GITHUB_STEP_SUMMARY
-          echo "- **Dataset Status:** \`${{ needs.prepare-dataset.result }}\`" >> $GITHUB_STEP_SUMMARY
-          echo "- **Training & Gate Status:** \`${{ needs.train-and-evaluate.result }}\`" >> $GITHUB_STEP_SUMMARY
-          echo "- **Quantization & Publish Status:** \`${{ needs.quantize-and-publish.result }}\`" >> $GITHUB_STEP_SUMMARY
-          echo "- **Production VPS Staging:** \`${{ needs.stage-to-vps.result }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **New Approved Items in DB:** \`${{ needs.prepare-dataset.outputs.new_item_count || '0' }}\` (Threshold: \`>= ${{ inputs.min_new_items || '500' }}\`)" >> $GITHUB_STEP_SUMMARY
+          echo "- **Dataset Preparation:** \`${{ needs.prepare-dataset.result }}\` (should_train: \`${{ needs.prepare-dataset.outputs.should_train || 'false' }}\`)" >> $GITHUB_STEP_SUMMARY
+          echo "- **Training & Gate Status:** \`${{ needs.train-and-evaluate.result || 'skipped' }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **Quantization & Publish Status:** \`${{ needs.quantize-and-publish.result || 'skipped' }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **Production VPS Staging:** \`${{ needs.stage-to-vps.result || 'skipped' }}\`" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          if [ "${{ needs.train-and-evaluate.result }}" = "success" ]; then
+          if [ "${{ needs.prepare-dataset.outputs.should_train }}" != "true" ]; then
+            echo "⏸️ **Fine-Tuning Routine Skipped (Scheduling Rule Enforced):**" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "Only \`${{ needs.prepare-dataset.outputs.new_item_count || '0' }}\` newly added and approved items were found in the DressApp database (< 500 threshold)." >> $GITHUB_STEP_SUMMARY
+            echo "Fine-tuning was safely skipped to prevent model weight distortion and overfitting on repeated or insufficiently distinct data." >> $GITHUB_STEP_SUMMARY
+          elif [ "${{ needs.train-and-evaluate.result }}" = "success" ]; then
             echo "✅ **All Regression Gates Passed.** Model certified and deployed." >> $GITHUB_STEP_SUMMARY
           else
             echo "❌ **Regression Gate or Training Failed.** Production environment untouched." >> $GITHUB_STEP_SUMMARY

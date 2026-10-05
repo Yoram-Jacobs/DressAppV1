@@ -113,22 +113,35 @@ lives strictly in `deploy/.env` on the VPS — never in the repo.
    - The response includes `provider_fallback: "gemma"` and `fallback_from_quota: True`, displaying an informational banner in the UI (`stylist.fallbackQuotaBanner`) without interrupting the user or failing with a 500 error.
 4. **Strict Cost Protection Perimeter (Tier Gating)**:
    - High-cost generative cloud endpoints (**Trend Scout** and **Nano Banana** photo reconstruction/inpainting) strictly require validated user-supplied API keys (HTTP 403 / clarify prompt for users without custom keys).
-5. **Headless Model Fine-Tuning**:
-   - Eyes fine-tuning is scheduled as a headless CI/CD workflow on GitHub Actions utilizing **RunPod serverless GPU pods** ([`inference-server/eyes/training/train_eyes_lora.py`](inference-server/eyes/training/train_eyes_lora.py)) with multi-tier candidate failover, strict regression gating, and GGUF quantization.
+5. **Headless Model Fine-Tuning & Scheduling Rule**:
+   - Eyes fine-tuning is scheduled weekly (`.github/workflows/eyes-finetune.yml`) utilizing **RunPod serverless GPU pods** ([`inference-server/eyes/training/train_eyes_lora.py`](inference-server/eyes/training/train_eyes_lora.py)) with multi-tier candidate failover, strict regression gating, and GGUF quantization.
+   - **Scheduling Rule (Locked):** The fine-tuning workflow applies ONLY when there are **>= 500 newly added and approved items** in the on-prem DressApp database (`closet_items`) since the last watermark (`eyes_finetune_state`). If there are fewer than 500 new items, the routine is safely skipped (`should_train=false`) to protect model weight integrity from distortion caused by training repeatedly on small or static datasets. Manual override is available via `force_training=true` in `workflow_dispatch`.
 
 > **ℹ️ Auth surface — `HF_TOKEN` / `EYES_HF_TOKEN`**:
 > `HF_TOKEN` (or alias `EYES_HF_TOKEN`) is utilized in headless CI/CD automation for model staging, model card generation, and publishing fine-tuned GGUF checkpoints to the official Hugging Face Hub repository (`Yoram-Jacobs/dressapp-eyes-gguf`). The on-prem Hetzner VPS runtime continues to bind-mount its model weights locally without runtime Hugging Face egress.
 
-### Runtime provider override
+### Runtime provider override & Fine-Tuning State
 
-The `dressapp_prod.config` Mongo collection holds a single document:
+The `dressapp.config` Mongo collection holds operational state documents:
 
+1. **`eyes_provider`** (controls LLM/Eyes dispatch):
 ```json
 {
   "_id":        "eyes_provider",
   "value":      "gemma" | "gemini",
   "updated_at": "<iso8601>",
   "updated_by": "<email>"
+}
+```
+
+2. **`eyes_finetune_state`** (tracks training dataset watermark):
+```json
+{
+  "_id":               "eyes_finetune_state",
+  "last_finetuned_at": "<iso8601>",
+  "last_item_count":   500,
+  "last_run_id":       "<github_run_id>",
+  "updated_at":        "<iso8601>"
 }
 ```
 
