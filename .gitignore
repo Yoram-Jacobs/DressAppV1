@@ -36,6 +36,8 @@ dist
 *.aab
 *.apk
 web-build/
+dataset_distilled/images/
+*.tar.gz
 
 # Android & Gradle local caches
 .gradle/

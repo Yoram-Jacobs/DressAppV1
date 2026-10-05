@@ -1,0 +1,32 @@
+{
+  "version": "1.0.0",
+  "created_at": "2026-10-05 20:04:00",
+  "total_items": 4999,
+  "failed_items": 0,
+  "categories": {
+    "Jewelry": 500,
+    "Accessories": 500,
+    "Bags": 500,
+    "Full Body": 500,
+    "Top": 800,
+    "Footwear": 800,
+    "Outerwear": 599,
+    "Bottom": 800
+  },
+  "languages": {
+    "en": 385,
+    "he": 385,
+    "ar": 385,
+    "es": 385,
+    "fr": 385,
+    "de": 385,
+    "it": 385,
+    "pt": 384,
+    "ru": 384,
+    "zh": 384,
+    "ja": 384,
+    "hi": 384,
+    "nl": 384
+  },
+  "teacher_model": "gemini-2.5-flash"
+}
