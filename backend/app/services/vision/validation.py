@@ -486,6 +486,82 @@ def normalize_weighted_tags(tags: Any) -> list[dict[str, Any]]:
     return clean
 
 
+def sanitize_fabric_materials(
+    materials: Any,
+    *,
+    category: str | None = None,
+    sub_category: str | None = None,
+    item_type: str | None = None,
+    full_text: str = "",
+) -> list[dict[str, Any]]:
+    """Sanitize fabric_materials against physically impossible combinations.
+
+    Guarantees:
+    - Footwear (heels/pumps/shoes/boots) never has Cotton (replaced with Leather or Suede).
+    - Bags/Purses never default to generic 100% Polyester/Cotton (replaced with Leather or Faux Leather).
+    - Knitwear/Sweaters never default to flat 100% Cotton (replaced with realistic knit yarn/blend).
+    - Jeans always have Denim.
+    - Percentages always sum strictly to 100%.
+    """
+    normalized = normalize_weighted_tags(materials) if materials else []
+    cat_low = (category or "").lower()
+    sub_low = (sub_category or "").lower()
+    itype_low = (item_type or "").lower()
+    text_low = f"{full_text} {sub_low} {itype_low}".lower()
+
+    if not normalized:
+        # Fallbacks when completely empty
+        if cat_low == "footwear" or any(w in text_low for w in ("shoe", "heel", "pump", "boot", "loafer", "oxford", "sandal", "נעלי", "עקב", "מגפ")):
+            return [{"name": "Suede", "pct": 100}] if any(w in text_low for w in ("suede", "זמש")) else [{"name": "Leather", "pct": 70}, {"name": "Rubber", "pct": 30}]
+        if cat_low in ("accessories", "accessory", "bags") or any(w in text_low for w in ("bag", "handbag", "purse", "clutch", "crossbody", "תיק")):
+            return [{"name": "Canvas", "pct": 80}, {"name": "Polyester", "pct": 20}] if any(w in text_low for w in ("canvas", "קנבס", "בד", "tote")) else [{"name": "Leather", "pct": 100}]
+        if any(w in text_low for w in ("sweater", "knit", "knitwear", "pullover", "cardigan", "סוודר", "סריג", "סריגים")):
+            return [{"name": "Wool", "pct": 70}, {"name": "Acrylic", "pct": 30}]
+        if any(w in text_low for w in ("jean", "jeans", "denim", "דנים", "ג'ינס")):
+            return [{"name": "Denim", "pct": 100}]
+        return [{"name": "Cotton", "pct": 70}, {"name": "Polyester", "pct": 30}]
+
+    # 1. Footwear sanity
+    is_footwear = (
+        cat_low == "footwear"
+        or any(w in text_low for w in ("shoe", "heel", "pump", "boot", "loafer", "oxford", "sandal", "sneaker", "נעלי", "עקב", "מגפ", "סנדל", "מוקסין"))
+    )
+    if is_footwear:
+        is_canvas_or_textile = any(w in text_low for w in ("canvas", "קנבס", "בד", "textile", "espadrille", "slipper", "בית"))
+        has_cotton = any(str(m.get("name", "")).lower() in ("cotton", "כותנה") for m in normalized)
+        if has_cotton and not is_canvas_or_textile:
+            if any(w in text_low for w in ("suede", "זמש", "velvet", "קטיפה")):
+                return [{"name": "Suede", "pct": 100}]
+            return [{"name": "Leather", "pct": 70}, {"name": "Rubber", "pct": 30}]
+
+    # 2. Bag sanity
+    is_bag = (
+        cat_low in ("accessories", "accessory", "bags")
+        or any(w in text_low for w in ("bag", "handbag", "purse", "clutch", "crossbody", "tote", "תיק", "ארנק"))
+    )
+    if is_bag:
+        is_canvas_tote = any(w in text_low for w in ("canvas", "קנבס", "בד", "cotton tote", "canvas tote", "fabric tote", "straw", "קש", "wicker", "basket"))
+        is_generic_poly_or_cotton = all(str(m.get("name", "")).lower() in ("polyester", "cotton", "כותנה", "פוליאסטר") for m in normalized)
+        if is_generic_poly_or_cotton and not is_canvas_tote:
+            return [{"name": "Leather", "pct": 100}]
+
+    # 3. Knitwear / Sweaters sanity
+    is_knitwear = any(w in text_low for w in ("sweater", "knit", "knitwear", "pullover", "cardigan", "סוודר", "סריג", "סריגים"))
+    if is_knitwear:
+        is_flat_cotton = all(str(m.get("name", "")).lower() in ("cotton", "כותנה") for m in normalized)
+        if is_flat_cotton:
+            return [{"name": "Wool", "pct": 70}, {"name": "Acrylic", "pct": 30}]
+
+    # 4. Denim sanity
+    is_denim = any(w in text_low for w in ("jean", "jeans", "denim", "דנים", "ג'ינס", "גינס"))
+    if is_denim:
+        has_denim = any(str(m.get("name", "")).lower() in ("denim", "דנים") for m in normalized)
+        if not has_denim:
+            return [{"name": "Denim", "pct": 98}, {"name": "Spandex", "pct": 2}]
+
+    return normalized
+
+
 def _sanitize_sleeve_and_cut_for_non_tops(res: dict[str, Any]) -> None:
     """Strip hallucinated 'Short-Sleeve' / 'Long-Sleeve' from non-tops (Footwear, Bottom, Accessories).
 
@@ -1819,27 +1895,23 @@ def _coerce_single_garment(
                 res["name"] = f"{color_name.title()} {noun_en}".strip().title()
             res["title"] = res["name"]
 
-    # Materials fallback: ensure never "Unknown" and percentages sum strictly to 100%
+    # Materials normalization & domain sanity check (Footwear!=Cotton, Bag!=generic Poly, Sweaters=knit yarn)
     mats = res.get("fabric_materials")
     if not mats or (isinstance(mats, list) and all(str(m.get("name", "")).lower() in {"unknown", "n/a", "other", "none", ""} for m in mats if isinstance(m, dict))):
-        if any(w in f"{sub_lower} {itype_lower}" for w in ("sweat", "jogger", "track", "trainer", "lounge")):
-            res["fabric_materials"] = [{"name": "Cotton", "pct": 80}, {"name": "Polyester", "pct": 20}]
-        elif any(w in f"{sub_lower} {itype_lower}" for w in ("sandal", "sneaker", "slide", "canvas", "trainer")):
-            res["fabric_materials"] = [{"name": "Leather", "pct": 60}, {"name": "Rubber", "pct": 40}] if "leather" in full_text else [{"name": "Synthetic", "pct": 60}, {"name": "Textile", "pct": 40}]
-        elif cat_lower == "footwear" or "boot" in sub_lower or "belt" in sub_lower:
-            res["fabric_materials"] = [{"name": "Leather", "pct": 100}]
-        elif "sunglass" in sub_lower or "glasses" in sub_lower:
-            res["fabric_materials"] = [{"name": "Acetate", "pct": 70}, {"name": "Metal", "pct": 30}]
-        elif "bag" in sub_lower:
-            res["fabric_materials"] = [{"name": "Leather", "pct": 100}] if "leather" in full_text else ([{"name": "Faux Fur", "pct": 80}, {"name": "Polyester", "pct": 20}] if any(w in full_text for w in ("fur", "fuzzy")) else [{"name": "Canvas", "pct": 80}, {"name": "Polyester", "pct": 20}])
-        elif "jean" in sub_lower or "denim" in sub_lower:
-            res["fabric_materials"] = [{"name": "Denim", "pct": 100}]
-        elif "coat" in sub_lower or "jacket" in sub_lower or cat_lower == "outerwear":
-            res["fabric_materials"] = [{"name": "Wool", "pct": 70}, {"name": "Polyester", "pct": 30}]
-        else:
-            res["fabric_materials"] = [{"name": "Cotton", "pct": 70}, {"name": "Polyester", "pct": 30}]
-    else:
-        res["fabric_materials"] = normalize_weighted_tags(mats)
+        mats = []
+    res["fabric_materials"] = sanitize_fabric_materials(
+        mats,
+        category=res.get("category"),
+        sub_category=res.get("sub_category"),
+        item_type=res.get("item_type"),
+        full_text=f"{res.get('name', '')} {res.get('title', '')} {res.get('caption', '')}",
+    )
+
+    # Sweaters / Knitwear / Pullovers belong to category 'Top', NOT 'Outerwear'
+    if cat_lower == "outerwear" and any(w in f"{sub_lower} {itype_lower} {res.get('name', '')} {res.get('title', '')}".lower() for w in ("sweater", "knitwear", "pullover", "סוודר", "סריג", "סריגים", "jumper", "cardigan")):
+        if not any(w in f"{sub_lower} {itype_lower} {res.get('name', '')}".lower() for w in ("coat", "overcoat", "parka", "trench", "blazer", "מעיל", "ז'קט")):
+            res["category"] = "Top"
+            cat_lower = "top"
 
     # Coat vs Dress auto-correction: long tailored outerwear with lapels/buttons is Outerwear, not Dress
     coat_keywords = ("coat", "trench", "duster", "jacket", "overcoat", "parka", "blazer", "double-breasted")

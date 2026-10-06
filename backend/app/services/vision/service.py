@@ -2797,6 +2797,15 @@ class GarmentVisionService:
                                 model_gender=item_mg,
                                 system_prompt=batch_system_prompt,
                             ):
+                                if "fabric_materials" in partial:
+                                    from .validation import sanitize_fabric_materials
+                                    partial["fabric_materials"] = sanitize_fabric_materials(
+                                        partial["fabric_materials"],
+                                        category=assembled.get("category") or det.get("category"),
+                                        sub_category=assembled.get("sub_category") or det.get("label"),
+                                        item_type=assembled.get("item_type"),
+                                        full_text=f"{assembled.get('name', '')} {assembled.get('title', '')} {det.get('label', '')}",
+                                    )
                                 assembled.update(partial)
                                 if partial:
                                     await frame_queue.put({
@@ -2853,32 +2862,14 @@ class GarmentVisionService:
                         assembled.setdefault("quality_tier", "good")
                         assembled.setdefault("price_tier", "mid")
                         assembled.setdefault("fit_style", "regular")
-                        assembled.setdefault("clothing_condition", "Good")
-                        if not assembled.get("fabric_materials"):
-                            cat_k = (assembled.get("category") or "").lower()
-                            sub_k = (assembled.get("sub_category") or "").lower()
-                            full_desc = f"{assembled.get('name', '')} {assembled.get('title', '')} {assembled.get('caption', '')}".lower()
-                            if cat_k == "footwear":
-                                assembled["fabric_materials"] = [{"name": "Leather", "pct": 70}, {"name": "Rubber", "pct": 30}]
-                            elif "jeans" in sub_k or "denim" in sub_k:
-                                assembled["fabric_materials"] = [{"name": "Cotton", "pct": 98}, {"name": "Elastane", "pct": 2}]
-                            elif "sweat" in sub_k or "jogger" in sub_k or "track" in sub_k:
-                                assembled["fabric_materials"] = [{"name": "Cotton", "pct": 80}, {"name": "Polyester", "pct": 20}]
-                            elif "bag" in sub_k or cat_k == "accessories":
-                                assembled["fabric_materials"] = [{"name": "Leather", "pct": 100}] if "leather" in full_desc else [{"name": "Canvas", "pct": 80}, {"name": "Polyester", "pct": 20}]
-                            elif "jacket" in sub_k or "coat" in sub_k or cat_k == "outerwear":
-                                if "leather" in full_desc:
-                                    assembled["fabric_materials"] = [{"name": "Leather", "pct": 100}]
-                                elif any(w in full_desc for w in ("wool", "trench", "blazer", "suit")):
-                                    assembled["fabric_materials"] = [{"name": "Wool", "pct": 70}, {"name": "Polyester", "pct": 30}]
-                                else:
-                                    assembled["fabric_materials"] = [{"name": "Polyester", "pct": 70}, {"name": "Cotton", "pct": 30}]
-                            elif any(w in full_desc for w in ("silk", "satin", "chiffon", "blouse")):
-                                assembled["fabric_materials"] = [{"name": "Silk", "pct": 100}] if "silk" in full_desc else [{"name": "Viscose", "pct": 60}, {"name": "Polyester", "pct": 40}]
-                            elif any(w in full_desc for w in ("knit", "sweater", "cardigan")):
-                                assembled["fabric_materials"] = [{"name": "Wool", "pct": 80}, {"name": "Polyamide", "pct": 20}]
-                            else:
-                                assembled["fabric_materials"] = [{"name": "Cotton", "pct": 100}]
+                        from .validation import sanitize_fabric_materials
+                        assembled["fabric_materials"] = sanitize_fabric_materials(
+                            assembled.get("fabric_materials"),
+                            category=assembled.get("category") or det.get("category"),
+                            sub_category=assembled.get("sub_category") or det.get("label"),
+                            item_type=assembled.get("item_type"),
+                            full_text=f"{assembled.get('name', '')} {assembled.get('title', '')} {assembled.get('caption', '')} {det.get('label', '')}",
+                        )
                         if not assembled.get("care_instructions"):
                             assembled["care_instructions"] = ["Machine wash cold", "Line dry"]
 

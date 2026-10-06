@@ -250,8 +250,16 @@ _GARMENT_OBJECT_SCHEMA: dict[str, Any] = {
                 "required": ["name", "pct"],
                 "additionalProperties": False,
                 "properties": {
-                    "name": {"type": "string"},
-                    "pct": {"type": "integer", "minimum": 0, "maximum": 100},
+                    "name": {
+                        "type": "string",
+                        "enum": [
+                            "Cotton", "Leather", "Faux Leather", "Suede", "Wool", "Cashmere",
+                            "Denim", "Silk", "Satin", "Linen", "Polyester", "Nylon",
+                            "Spandex", "Viscose", "Rayon", "Canvas", "Acrylic", "Velvet",
+                            "Chiffon", "Fleece", "Tweed", "Corduroy", "Synthetic", "Rubber",
+                        ],
+                    },
+                    "pct": {"type": "integer", "minimum": 1, "maximum": 100},
                 },
             },
         },
@@ -391,13 +399,13 @@ def _user_prompt(code: str | None = None, user_gender: str | None = None) -> str
         "• Language: All fields, values, attributes, and captions MUST be in canonical English.\n"
         "• name & title: 2-4 canonical English words [Color] [Material/Cut] [Type] strictly reflecting visible pixels. Never generic ('Garment','Clothing').\n"
         "• caption: <=12 words concise English sentence describing this specific item: [Color] [Material] [Type] with [details]. End with period.\n"
-        "• category: 'Top'|'Bottom'|'Footwear'|'Outerwear'|'Full Body'|'Bags'|'Accessories'|'Jewelry'.\n"
+        "• category: 'Top'|'Bottom'|'Outerwear'|'Full Body'|'Footwear'|'Accessories'. NOTE: Sweaters/cardigans/shirts/tees are 'Top'. 'Outerwear' is strictly coats/jackets/blazers.\n"
         "• sub_category: Specific cut ('T-Shirt','Sweater','Jeans','Pants','Skirt','Oxfords','Loafers','Boots','Sandals','Sneakers','Heels','Pumps','Flats','Handbag','Crossbody Bag','Sunglasses','Belts','Headwear'). Never 'Top'/'Bottom'/'Footwear'.\n"
-        "• Footwear: Women's high heels/pumps must be 'Heels' or 'Pumps', never 'Sneakers'. Dress laced shoes are 'Oxfords' or 'Shoes'. Low slip-on dress shoes are 'Loafers'. Laced/ankle high are 'Boots'.\n"
+        "• Footwear: Women's heels/pumps='Heels'|'Pumps'. Dress shoes='Oxfords'|'Loafers'|'Shoes'. Boots='Boots'. Non-athletic footwear uppers are Leather/Suede/Synthetic, NEVER Cotton.\n"
         "• Bottoms: 'Cargo Pants','Chinos','Jeans','Sweatpants','Pants','Shorts','Skirt'.\n"
-        "• item_type: Detailed silhouette/cut ('Cargo Pants','Chinos','Straight Jeans','Pleated Skirt','Oxford Shoes','High Heel Pumps','Hooded Jacket'). Differ from sub_category.\n"
+        "• item_type: Detailed silhouette/cut ('Cargo Pants','Chinos','Straight Jeans','Pleated Skirt','Oxford Shoes','High Heel Pumps','Hooded Jacket','Knit Sweater'). Differ from sub_category.\n"
         '• colors: [{"name": str, "pct": int}] summing to 100. Accurate visible colors only.\n'
-        '• fabric_materials: [{"name": str, "pct": int}] summing to 100 using English names (\'Cotton\',\'Leather\',\'Wool\',\'Denim\',\'Polyester\',\'Nylon\',\'Silk\',\'Linen\',\'Spandex\',\'Suede\'). Never use Chinese or non-English characters.\n'
+        '• fabric_materials: [{"name": str, "pct": int}] summing strictly to 100 by visual texture & category: Footwear=Leather/Suede/Synthetic/Rubber (NEVER Cotton); Bags=Leather/Canvas/Nylon (never generic Polyester); Knitwear/Sweaters=Wool/Cashmere/Acrylic/Cotton knit; Jeans=Denim. Never use Chinese or non-English characters.\n'
         "• season: Array of applicable seasons ['spring'|'summer'|'fall'|'winter'] strictly based on visual fabric weight and cut. Never blindly select all four.\n"
         "• pattern: 'solid'|'printed'|'geometric'|'striped'|'plaid'|'floral'|'camouflage'.\n"
         f"• dress_code: 'casual'|'smart-casual'|'business'|'formal'|'athletic'|'loungewear'; "
@@ -672,7 +680,12 @@ ATTRIBUTE_GROUPS: list[tuple[str, list[str], int, str]] = [
             'Visual properties:\n'
             '- colors: [{"name": str, "pct": int}] summing to 100\n'
             '- pattern: camouflage|printed|solid|striped|plaid|floral|herringbone|polka_dot|paisley|geometric|animal_print|graphic|tie_dye|abstract\n'
-            '- fabric_materials: [{"name": str, "pct": int}] summing to 100'
+            '- fabric_materials: [{"name": str, "pct": int}] summing to 100. Match category & texture:\n'
+            '  * Footwear (shoes/heels/pumps/boots): Leather|Suede|Faux Leather|Canvas|Synthetic|Rubber. NEVER Cotton.\n'
+            '  * Bags/Purses: Leather|Faux Leather|Suede|Canvas|Nylon. NEVER generic Polyester/Cotton.\n'
+            '  * Knitwear/Sweaters: Wool|Cashmere|Acrylic|Cotton|Viscose knit.\n'
+            '  * Jeans: Denim.\n'
+            '  * Other: Cotton|Linen|Polyester|Silk|Satin|Rayon|Spandex.'
         )
     ),
     (
@@ -872,6 +885,23 @@ async def call_gemma_space_stream_attributes(
                             prop["maxItems"] = 3
                         elif name == "fabric_materials":
                             prop["maxItems"] = 2
+                            if isinstance(prop.get("items"), dict) and "properties" in prop["items"] and "name" in prop["items"]["properties"]:
+                                if segformer_category == "footwear" or "shoe" in lbl_low or "boot" in lbl_low:
+                                    prop["items"]["properties"]["name"]["enum"] = [
+                                        "Leather", "Faux Leather", "Suede", "Canvas", "Rubber", "Synthetic", "Velvet", "Mesh",
+                                    ]
+                                elif segformer_category == "bag" or "bag" in lbl_low:
+                                    prop["items"]["properties"]["name"]["enum"] = [
+                                        "Leather", "Faux Leather", "Suede", "Canvas", "Nylon", "Synthetic", "Polyester",
+                                    ]
+                                elif "sweater" in lbl_low or "knit" in lbl_low:
+                                    prop["items"]["properties"]["name"]["enum"] = [
+                                        "Wool", "Cashmere", "Acrylic", "Cotton", "Viscose", "Polyester", "Spandex",
+                                    ]
+                                elif "jean" in lbl_low or "denim" in lbl_low:
+                                    prop["items"]["properties"]["name"]["enum"] = [
+                                        "Denim", "Cotton", "Spandex", "Polyester",
+                                    ]
                         elif name == "tags":
                             prop["maxItems"] = 4
 
