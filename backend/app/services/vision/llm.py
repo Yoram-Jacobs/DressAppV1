@@ -394,14 +394,34 @@ def _user_prompt(code: str | None = None, user_gender: str | None = None) -> str
     norm_gender = resolve_garment_gender(user_gender) or "unisex"
     fallback_gender_hint = f"if uncertain/neutral basics, apply '{norm_gender}'" if norm_gender != "unisex" else "if uncertain, apply 'unisex'"
 
+    lang_hint = ""
+    if code:
+        _lang_names = {
+            "he": "Hebrew (עברית)",
+            "ar": "Arabic (العربية)",
+            "es": "Spanish (Español)",
+            "fr": "French (Français)",
+            "de": "German (Deutsch)",
+            "it": "Italian (Italiano)",
+            "ru": "Russian (Русский)",
+            "ja": "Japanese (日本語)",
+            "zh": "Chinese (中文)",
+            "hi": "Hindi (हिन्दी)",
+            "nl": "Dutch (Nederlands)",
+            "en": "English",
+        }
+        name_l = _lang_names.get(code, code)
+        lang_hint = f"• User interface language: {name_l}.\n"
+
     return (
         "Analyze the garment in this image. Return raw JSON (1 object or array). No markdown/intro.\n"
+        f"{lang_hint}"
         "• Language: All fields, values, attributes, and captions MUST be in canonical English.\n"
         "• name & title: 2-4 canonical English words [Color] [Material/Cut] [Type] strictly reflecting visible pixels. Never generic ('Garment','Clothing').\n"
         "• caption: <=12 words concise English sentence describing this specific item: [Color] [Material] [Type] with [details]. End with period.\n"
-        "• category: 'Top'|'Bottom'|'Outerwear'|'Full Body'|'Footwear'|'Accessories'. NOTE: Sweaters/cardigans/shirts/tees are 'Top'. 'Outerwear' is strictly coats/jackets/blazers.\n"
-        "• sub_category: Specific cut ('T-Shirt','Sweater','Jeans','Pants','Skirt','Oxfords','Loafers','Boots','Sandals','Sneakers','Heels','Pumps','Flats','Handbag','Crossbody Bag','Sunglasses','Belts','Headwear'). Never 'Top'/'Bottom'/'Footwear'.\n"
-        "• Footwear: Women's heels/pumps='Heels'|'Pumps'. Dress shoes='Oxfords'|'Loafers'|'Shoes'. Boots='Boots'. Non-athletic footwear uppers are Leather/Suede/Synthetic, NEVER Cotton.\n"
+        "• category: 'Top'|'Bottom'|'Outerwear'|'Full Body'|'Footwear'|'Accessories'. NOTE: Sweaters/cardigans/shirts/tees are 'Top'. 'Outerwear' is strictly coats/jackets/blazers. Dresses/skirt-suits/jumpsuits are 'Full Body' (NEVER 'Outerwear').\n"
+        "• sub_category: Specific cut ('T-Shirt','Sweater','Jeans','Pants','Skirt','Dresses','Suits','Jumpsuits','Oxfords','Loafers','Boots','Sandals','Sneakers','Heels','Pumps','Flats','Handbag','Crossbody Bag','Sunglasses','Belts','Headwear'). Never 'Top'/'Bottom'/'Footwear'.\n"
+        "• Footwear: Boots='Boots' (item_type='Ankle Boots'|'Heeled Boots'|'Combat Boots'). Heels/pumps='Heels'|'Pumps'. Dress shoes='Oxfords'|'Loafers'|'Shoes'. Non-athletic footwear uppers are Leather/Suede (heeled boots/dress shoes are Leather 70% + Rubber 30%), NEVER Cotton or generic Synthetic unless athletic sneakers.\n"
         "• Bottoms: 'Cargo Pants','Chinos','Jeans','Sweatpants','Pants','Shorts','Skirt'.\n"
         "• item_type: Detailed silhouette/cut ('Cargo Pants','Chinos','Straight Jeans','Pleated Skirt','Oxford Shoes','High Heel Pumps','Hooded Jacket','Knit Sweater'). Differ from sub_category.\n"
         '• colors: [{"name": str, "pct": int}] summing to 100. Accurate visible colors only.\n'

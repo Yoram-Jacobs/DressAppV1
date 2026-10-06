@@ -527,9 +527,11 @@ def sanitize_fabric_materials(
         or any(w in text_low for w in ("shoe", "heel", "pump", "boot", "loafer", "oxford", "sandal", "sneaker", "נעלי", "עקב", "מגפ", "סנדל", "מוקסין"))
     )
     if is_footwear:
-        is_canvas_or_textile = any(w in text_low for w in ("canvas", "קנבס", "בד", "textile", "espadrille", "slipper", "בית"))
+        is_athletic = any(w in text_low for w in ("sneaker", "running", "athletic", "סניקרס", "ריצה", "ספורט"))
+        is_canvas_or_textile = any(w in text_low for w in ("canvas", "קנבס", "בד", "textile", "espadrille", "slipper", "בית", "crocs", "rain boot"))
         has_cotton = any(str(m.get("name", "")).lower() in ("cotton", "כותנה") for m in normalized)
-        if has_cotton and not is_canvas_or_textile:
+        is_generic_synth_or_poly = all(str(m.get("name", "")).lower() in ("synthetic", "סינתטי", "polyester", "פוליאסטר", "cotton", "כותנה", "fabric", "בד") for m in normalized)
+        if (has_cotton or is_generic_synth_or_poly) and not is_canvas_or_textile and not is_athletic:
             if any(w in text_low for w in ("suede", "זמש", "velvet", "קטיפה")):
                 return [{"name": "Suede", "pct": 100}]
             return [{"name": "Leather", "pct": 70}, {"name": "Rubber", "pct": 30}]
@@ -1550,6 +1552,7 @@ def _coerce_single_garment(
         "שחורים", "לבנים", "אפורים", "כחולים", "ירוקים", "אדומים", "צהובים", "חומים", "ורודים", "כתומים", "סגולים",
         "שחורות", "לבנות", "אפורות", "כחולות", "ירוקות", "אדומות", "צהובות", "חומות", "ורודות", "כתומות", "סגולות",
     }
+    itype_str = (res.get("item_type") or "").strip()
     name_words = name_str.lower().split()
     is_bare_cat_color = (
         len(name_words) == 2
@@ -1566,7 +1569,8 @@ def _coerce_single_garment(
             "בגד", "בגד ירוק", "בגד חום", "בגד שחור", "בגד לבן", "בגד כחול", "בגד אפור",
             "בגד צהוב", "בגד אדום", "בגד ורוד", "בגד כתום", "בגד סגול",
             "garment", "green garment", "brown garment", "black garment", "white garment",
-            "blue garment", "gray garment", "grey garment", "clothing", "item", "solid shoes"
+            "blue garment", "gray garment", "grey garment", "clothing", "item", "solid shoes",
+            "נעלי עקב", "נעליים", "מגפיים", "חולצה", "מכנסיים", "שמלה"
         )
         or name_str.startswith("בגד ")
         or name_str.lower().startswith("garment ")
@@ -1574,6 +1578,7 @@ def _coerce_single_garment(
         or len(name_words) < 2
         or is_bare_cat_color
         or (is_he and (not has_hebrew_chars or (has_latin_chars and has_hebrew_chars)))
+        or (any(w in f"{itype_str} {sub_str}".lower() for w in ("boot", "מגפ")) and any(w in name_str for w in ("נעלי עקב", "נעליים")))
     )
 
     if is_generic_name:
@@ -1701,6 +1706,20 @@ def _coerce_single_garment(
                 "scarf": "צעיף",
                 "cargo shorts": 'מכנסי דגמ"ח קצרים',
                 "cargo_shorts": 'מכנסי דגמ"ח קצרים',
+                "heeled boots": "מגפי עקב",
+                "heeled ankle boots": "מגפוני עקב",
+                "high heel boots": "מגפי עקב",
+                "high heel ankle boots": "מגפוני עקב",
+                "platform boots": "מגפי פלטפורמה",
+                "platform ankle boots": "מגפוני פלטפורמה",
+                "midi dress": "שמלת מידי",
+                "maxi dress": "שמלת מקסי",
+                "mini dress": "שמלת מיני",
+                "peplum dress": "שמלת פפלום",
+                "wrap dress": "שמלת מעטפת",
+                "shirt dress": "שמלת חולצה",
+                "slip dress": "שמלת סליפ",
+                "skirt suit": "חליפת חצאית",
                 "high heel pump": "נעלי עקב",
                 "high heel pumps": "נעלי עקב",
                 "high heels": "נעלי עקב",
@@ -1722,11 +1741,24 @@ def _coerce_single_garment(
             combined_txt = f"{itype} {sub_str} {caption_str}".lower()
             
             # 1. High-priority specific cuts from caption or itype
-            if ("cargo" in combined_txt or "דגמח" in caption_str or "דגמ\"ח" in caption_str) and ("short" in combined_txt or "קצר" in combined_txt or "שורט" in combined_txt):
-                noun_he = "מכנסי דגמ\"ח קצרים"
-            elif "דגמח" in caption_str or "דגמ\"ח" in caption_str or "cargo" in combined_txt:
-                noun_he = "מכנסי דגמ\"ח"
-            elif any(w in combined_txt for w in ("high heel", "heel", "pump", "עקב")):
+            # Footwear: Boots & Ankle boots (with or without heels) must take precedence over generic נעלי עקב
+            is_ankle_boot = any(w in combined_txt for w in ("ankle boot", "ankle_boot", "מגפונ", "bootie", "chelsea"))
+            is_boot = is_ankle_boot or any(w in combined_txt for w in ("boot", "מגפ"))
+            has_heel = any(w in combined_txt for w in ("high heel", "heel", "pump", "עקב", "stiletto", "block heel"))
+
+            if ("cargo" in combined_txt or "דגמח" in caption_str or 'דגמ"ח' in caption_str) and ("short" in combined_txt or "קצר" in combined_txt or "שורט" in combined_txt):
+                noun_he = 'מכנסי דגמ"ח קצרים'
+            elif "דגמח" in caption_str or 'דגמ"ח' in caption_str or "cargo" in combined_txt:
+                noun_he = 'מכנסי דגמ"ח'
+            elif is_ankle_boot and has_heel:
+                noun_he = "מגפוני עקב"
+            elif is_boot and has_heel:
+                noun_he = "מגפי עקב"
+            elif is_ankle_boot:
+                noun_he = "מגפונים"
+            elif is_boot:
+                noun_he = "מגפיים"
+            elif has_heel:
                 noun_he = "נעלי עקב"
             elif any(w in combined_txt for w in ("long sleeve sv", "long sleeve sweater", "knit sweater", "סוודר סריג")):
                 noun_he = "סוודר סריג"
@@ -1742,16 +1774,24 @@ def _coerce_single_garment(
                 noun_he = "מוקסינים"
             elif "לופר" in caption_str or "loafer" in combined_txt:
                 noun_he = "נעלי לופר"
-            elif "עקב" in caption_str or "heel" in combined_txt:
-                noun_he = "נעלי עקב"
             elif "סנדל" in caption_str or "sandal" in combined_txt:
                 noun_he = "סנדלים"
-            elif "מגפונ" in caption_str or "ankle boot" in combined_txt:
-                noun_he = "מגפונים"
-            elif "מגפ" in caption_str or "boot" in combined_txt:
-                noun_he = "מגפיים"
             elif "סניקר" in caption_str or "sneaker" in combined_txt:
                 noun_he = "סניקרס"
+            elif any(w in combined_txt for w in ("peplum dress", "שמלת פפלום")):
+                noun_he = "שמלת פפלום"
+            elif any(w in combined_txt for w in ("midi dress", "שמלת מידי")):
+                noun_he = "שמלת מידי"
+            elif any(w in combined_txt for w in ("maxi dress", "שמלת מקסי")):
+                noun_he = "שמלת מקסי"
+            elif any(w in combined_txt for w in ("mini dress", "שמלת מיני")):
+                noun_he = "שמלת מיני"
+            elif any(w in combined_txt for w in ("wrap dress", "שמלת מעטפת")):
+                noun_he = "שמלת מעטפת"
+            elif any(w in combined_txt for w in ("skirt suit", "חליפת חצאית")):
+                noun_he = "חליפת חצאית"
+            elif "שמל" in caption_str or "dress" in combined_txt:
+                noun_he = "שמלה"
             elif "פולו" in caption_str or "polo" in combined_txt:
                 noun_he = "חולצת פולו"
             elif "מכופתרת" in caption_str or "button-down" in combined_txt:
@@ -1829,12 +1869,14 @@ def _coerce_single_garment(
                     "כתום": ("כתומה", "כתומות", "כתומים"),
                     "סגול": ("סגולה", "סגולות", "סגולים"),
                 }
-                # Masculine plural (ends in ים, or specific footwear/bottoms, or construct state מכנסי...)
-                is_masc_plur = noun_he.endswith("ים") or noun_he.startswith("מכנסי ") or noun_he in ("מכנסיים", "מוקסינים", "לופרים", "מגפיים", "מגפונים", "כפכפים", "קבקבים", "משקפי שמש", "סנדלים")
+                # Masculine plural (ends in ים, or specific footwear/bottoms, or construct state מכנסי... / מגפוני... / מגפי...)
+                is_masc_plur = noun_he.endswith("ים") or noun_he.startswith(("מכנסי ", "מגפוני ", "מגפי ")) or noun_he in ("מכנסיים", "מוקסינים", "לופרים", "מגפיים", "מגפונים", "כפכפים", "קבקבים", "משקפי שמש", "סנדלים")
                 # Feminine plural / dual (ends in ות, or נעליים)
                 is_fem_plur = noun_he.endswith("ות") or noun_he in ("נעליים", "נעלי אוקספורד", "נעלי דרבי", "נעלי לופר", "נעלי מאנק סטרפ", "נעלי ברוג", "נעלי קז'ואל", "נעלי עקב", "נעליים שטוחות", "נעליים אלגנטיות", "סניקרס")
-                # Feminine singular (ends in ה or ת, but not dual/plural like נעליים / מגפיים, and not masculine plural like מכנסי...)
-                is_fem_sing = not is_masc_plur and not is_fem_plur and noun_he.endswith(("ה", "ת")) and not noun_he.endswith("ות") and noun_he not in ("נעליים", "מגפיים", "סנדלים")
+                # Feminine singular (ends in ה or ת, or construct state שמלת... / חליפת... / חולצת..., but not dual/plural like נעליים / מגפיים, and not masculine plural like מכנסי...)
+                is_fem_sing = not is_masc_plur and not is_fem_plur and (
+                    noun_he.endswith(("ה", "ת")) or noun_he.startswith(("שמלת ", "חליפת ", "חולצת "))
+                ) and not noun_he.endswith("ות") and noun_he not in ("נעליים", "מגפיים", "סנדלים")
 
                 if col_he in _inflections:
                     fem_s, fem_p, masc_p = _inflections[col_he]
@@ -1847,7 +1889,7 @@ def _coerce_single_garment(
 
             parts = [p for p in [noun_he, col_he] if p]
             # Attribute extract: if leather mentioned and not yet in parts
-            if ("עור" in f"{mat_name} {caption_str}".lower() or "leather" in f"{mat_name} {caption_str}".lower()) and "מעור" not in parts and noun_he in ("נעלי אוקספורד", "נעלי דרבי", "נעלי לופר", "נעלי עקב", "נעליים", "תיק", "ז'קט"):
+            if ("עור" in f"{mat_name} {caption_str}".lower() or "leather" in f"{mat_name} {caption_str}".lower()) and "מעור" not in parts and noun_he in ("נעלי אוקספורד", "נעלי דרבי", "נעלי לופר", "נעלי עקב", "נעליים", "תיק", "ז'קט", "מגפיים", "מגפונים", "מגפוני עקב", "מגפי עקב"):
                 parts.append("מעור")
             res["name"] = " ".join(parts)
             res["title"] = res["name"]
@@ -1913,24 +1955,19 @@ def _coerce_single_garment(
             res["category"] = "Top"
             cat_lower = "top"
 
-    # Coat vs Dress auto-correction: long tailored outerwear with lapels/buttons is Outerwear, not Dress
-    coat_keywords = ("coat", "trench", "duster", "jacket", "overcoat", "parka", "blazer", "double-breasted")
-    name_and_type = f"{res.get('name', '')} {res.get('item_type', '')} {res.get('caption', '')}".lower()
-    if cat_lower in {"full body", "dress"} or sub_lower in {"dress", "dresses"}:
-        if any(w in name_and_type for w in coat_keywords):
+    # Coat vs Dress auto-correction: Only convert Full Body to Outerwear if item_type/title is explicitly a heavy coat (and NOT a dress, skirt, gown, peplum, or suit)
+    outerwear_coat_types = ("trench coat", "overcoat", "winter coat", "parka", "duster coat", "raincoat", "puffer coat", "מעיל טרנץ'", "מעיל חורף", "מעיל פוך")
+    itype_l = str(res.get("item_type") or "").strip().lower()
+    title_l = str(res.get("title") or "").strip().lower()
+    sub_l = str(res.get("sub_category") or "").strip().lower()
+    name_l = str(res.get("name") or "").strip().lower()
+    is_explicit_dress = any(w in f"{itype_l} {title_l} {sub_l} {name_l}" for w in ("dress", "skirt", "gown", "peplum", "two-piece", "two piece", "suit", "שמלה", "חצאית", "חליפה"))
+    if not is_explicit_dress and (cat_lower in {"full body", "dress"} or sub_l in {"dress", "dresses"}):
+        if any(c in itype_l or c in title_l for c in outerwear_coat_types):
             res["category"] = "Outerwear"
             cat_lower = "outerwear"
-            if sub_lower in {"dress", "dresses"}:
-                res["sub_category"] = "Coats"
-                sub_lower = "coats"
-            if res.get("item_type", "").lower() in {"dress", "dresses", "coat dress", "midi dress"}:
-                res["item_type"] = "Double-Breasted Coat" if "double-breasted" in name_and_type else "Tailored Long Coat"
-            if "dress" in res.get("name", "").lower():
-                import re as _re
-                res["name"] = _re.sub(r"(?i)\bdress\b", "Coat", res["name"]).strip()
-            if "dress" in res.get("title", "").lower():
-                import re as _re
-                res["title"] = _re.sub(r"(?i)\bdress\b", "Coat", res["title"]).strip()
+            res["sub_category"] = "Coats"
+            sub_lower = "coats"
 
     # Caption guarantee: ensure caption is never empty or blank
     cap = (res.get("caption") or "").strip()
@@ -1977,11 +2014,11 @@ def _coerce_single_garment(
             title_val = res.get("title") or res.get("name") or "פריט אופנה"
             cues = []
             comb_desc = f"{curr_cap} {' '.join(str(t) for t in res.get('tags') or [])}".lower()
-            if any(w in comb_desc for w in ("hood", "hooded", "קפוצ'ון")):
+            if any(w in comb_desc for w in ("hood", "hooded", "קפוצ'ון")) and "קפוצ'ון" not in title_val:
                 cues.append("עם קפוצ'ון")
-            if any(w in comb_desc for w in ("zipper", "zip-up", "full zip", "רוכסן")):
+            if any(w in comb_desc for w in ("zipper", "zip-up", "full zip", "רוכסן")) and "רוכסן" not in title_val:
                 cues.append("ורוכסן קדמי" if cues else "עם רוכסן קדמי")
-            if any(w in comb_desc for w in ("cargo", "multi-pocket", "pockets", "utility", 'דגמ"ח', "כיסים")):
+            if any(w in comb_desc for w in ("cargo", "multi-pocket", "pockets", "utility", 'דגמ"ח', "כיסים")) and not any(k in title_val for k in ('דגמ"ח', "כיסים")):
                 cues.append("וכיסים שימושיים" if cues else "עם כיסים שימושיים")
             if any(w in comb_desc for w in ("camo", "camouflage", "הסוואה")) and "הסוואה" not in title_val:
                 cues.append("בהדפס הסוואה")

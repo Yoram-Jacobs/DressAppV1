@@ -412,3 +412,75 @@ def test_knit_sweater_hebrew_and_season():
     mat_names = [m["name"] for m in res["fabric_materials"]]
     assert "Synthetic" in mat_names
 
+
+def test_heeled_boot_naming_and_material_hebrew():
+    """Verify ankle boots with heels are named מגפוני עקב שחורים (not נעלי עקב) and materials default to Leather/Rubber."""
+    raw_boot = {
+        "is_clothing": True,
+        "category": "Footwear",
+        "sub_category": "Boots",
+        "item_type": "High Heel Ankle Boots",
+        "caption": "Black leather ankle boots with high chunky heel and zipper.",
+        "colors": [{"name": "שחור", "pct": 100}],
+        "fabric_materials": [{"name": "סינתטי", "pct": 100}],
+        "name": "נעלי עקב",
+        "title": "נעלי עקב",
+    }
+    res = _coerce_single_garment(raw_boot, language="he")
+    name = res["name"]
+    # 1. Name must be boots / heeled boots in masculine plural, NOT נעלי עקב שחורות
+    assert "נעלי עקב" not in name, f"Boot should not be called 'נעלי עקב', got: {name}"
+    assert "מגפונ" in name or "מגפ" in name, f"Expected boot noun in name, got: {name}"
+    assert "שחורים" in name, f"Expected masculine plural 'שחורים', got: {name}"
+    # 2. Caption must not start with נעלי עקב
+    assert not res["caption"].startswith("נעלי עקב"), f"Caption should not start with 'נעלי עקב', got: {res['caption']}"
+    # 3. Material must not remain 100% synthetic for formal heeled boots
+    mat_names = [m["name"] for m in res["fabric_materials"]]
+    assert "Leather" in mat_names or "Suede" in mat_names, f"Expected Leather in materials, got: {res['fabric_materials']}"
+
+
+def test_hooded_jacket_caption_no_stutter_hebrew():
+    """Verify Hebrew caption synthesis does not repeat 'עם קפוצ'ון' when title already has it."""
+    raw_jacket = {
+        "is_clothing": True,
+        "category": "Outerwear",
+        "sub_category": "Jackets",
+        "item_type": "Hooded Jacket",
+        "title": "ז'קט עם קפוצ'ון אפור",
+        "name": "ז'קט עם קפוצ'ון אפור",
+        "caption": "ז'קט קז'ואלי עם רוכסן קדמי וקפוצ'ון.",
+        "tags": ["hooded", "zipper", "jacket"],
+        "colors": [{"name": "אפור", "pct": 100}],
+        "fabric_materials": [{"name": "כותנה", "pct": 70}, {"name": "פוליאסטר", "pct": 30}],
+    }
+    res = _coerce_single_garment(raw_jacket, language="he")
+    caption = res["caption"]
+    # Ensure "קפוצ'ון" appears only once in the caption
+    count_hood = caption.count("קפוצ'ון")
+    assert count_hood <= 1, f"Expected at most 1 mention of 'קפוצ'ון' in caption, got {count_hood}: {caption}"
+    assert not "עם קפוצ'ון אפור עם קפוצ'ון" in caption, f"Found stutter in caption: {caption}"
+
+
+def test_peplum_dress_not_misclassified_as_coat():
+    """Verify peplum dress or skirt suit is NOT converted to Outerwear/Coat even if caption mentions jacket/blazer silhouette."""
+    raw_dress = {
+        "is_clothing": True,
+        "category": "Full Body",
+        "sub_category": "Dresses",
+        "item_type": "Peplum Dress",
+        "name": "Burgundy Peplum Dress",
+        "title": "Burgundy Peplum Dress",
+        "caption": "Burgundy tailored peplum dress with a blazer-style jacket collar and pencil skirt.",
+        "colors": [{"name": "בורדו", "pct": 100}],
+        "fabric_materials": [{"name": "פוליאסטר", "pct": 95}, {"name": "אלסטן", "pct": 5}],
+    }
+    res = _coerce_single_garment(raw_dress, language="he")
+    # 1. Category must remain Full Body (never Outerwear)
+    assert res["category"].lower() in ("full body", "dress"), f"Expected Full Body, got: {res['category']}"
+    # 2. Subcategory must remain Dresses / Suits (never Coats)
+    assert res["sub_category"].lower() not in ("coats", "מעילים"), f"Subcategory should not be Coats, got: {res['sub_category']}"
+    # 3. Name must be dress, never 'מעיל בורדו'
+    assert "מעיל" not in res["name"], f"Name should be a dress, not a coat, got: {res['name']}"
+    assert "שמל" in res["name"] or "חליפ" in res["name"], f"Expected dress/suit in name, got: {res['name']}"
+
+
