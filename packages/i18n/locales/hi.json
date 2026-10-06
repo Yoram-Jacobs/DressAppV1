@@ -2605,7 +2605,9 @@
       "floral_print_blouse": "फ्लोरल प्रिंट ब्लाउज",
       "floral_print_short_sleeve_top": "फ्लोरल प्रिंट शॉर्ट-स्लीव टॉप",
       "cargo": "कार्गो पैंट",
-      "pants": "पैंट"
+      "pants": "पैंट",
+      "cargo_shorts": "कार्गो शॉर्ट्स",
+      "high_heel_pump": "हाई हील पंप्स"
     },
     "color": {
       "black": "काला",
@@ -2666,7 +2668,8 @@
       "velvet": "मखमल",
       "vinyl": "विनाइल",
       "wool": "ऊन",
-      "other": "अन्य"
+      "other": "अन्य",
+      "synthetic": "सिंथेटिक"
     },
     "subcategories": {
       "t_shirt": "टी-शर्ट",
@@ -4971,6 +4974,8 @@
     "winter": "सर्दी",
     "front": "सामने",
     "back": "पीछे",
-    "profile": "पार्श्व"
+    "profile": "पार्श्व",
+    "utility": "उपयोगिता",
+    "multi_pocket": "मल्टी-पॉकेट"
   }
 }

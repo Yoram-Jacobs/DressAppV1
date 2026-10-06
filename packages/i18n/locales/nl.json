@@ -2605,7 +2605,9 @@
       "floral_print_blouse": "Bloemenprint blouse",
       "floral_print_short_sleeve_top": "Bloemenprint top korte mouw",
       "cargo": "Cargobroek",
-      "pants": "Broek"
+      "pants": "Broek",
+      "cargo_shorts": "Cargoshorts",
+      "high_heel_pump": "Pumps met hoge hak"
     },
     "color": {
       "black": "Zwart",
@@ -2666,7 +2668,8 @@
       "velvet": "Flueel",
       "vinyl": "Vinyl",
       "wool": "Wol",
-      "other": "Ander"
+      "other": "Ander",
+      "synthetic": "Synthetisch"
     },
     "subcategories": {
       "t_shirt": "T-shirt",
@@ -4978,6 +4981,8 @@
     "winter": "Winter",
     "front": "Voorkant",
     "back": "Achterkant",
-    "profile": "Profiel"
+    "profile": "Profiel",
+    "utility": "Utility",
+    "multi_pocket": "Meerdere zakken"
   }
 }

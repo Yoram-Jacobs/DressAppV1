@@ -2605,7 +2605,9 @@
       "floral_print_blouse": "Camicetta floreale",
       "floral_print_short_sleeve_top": "Top floreale a maniche corte",
       "cargo": "Pantaloni cargo",
-      "pants": "Pantaloni"
+      "pants": "Pantaloni",
+      "cargo_shorts": "Bermuda cargo",
+      "high_heel_pump": "Décolleté con tacco alto"
     },
     "color": {
       "black": "Nero",
@@ -2666,7 +2668,8 @@
       "velvet": "Velluto",
       "vinyl": "Vinile",
       "wool": "Lana",
-      "other": "Altro"
+      "other": "Altro",
+      "synthetic": "Sintetico"
     },
     "subcategories": {
       "t_shirt": "T-shirt",
@@ -4971,6 +4974,8 @@
     "winter": "Inverno",
     "front": "Fronte",
     "back": "Retro",
-    "profile": "Profilo"
+    "profile": "Profilo",
+    "utility": "Utility",
+    "multi_pocket": "Tasche multiple"
   }
 }

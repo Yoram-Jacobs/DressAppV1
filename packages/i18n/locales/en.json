@@ -2600,7 +2600,9 @@
       "floral_print_blouse": "Floral print blouse",
       "floral_print_short_sleeve_top": "Floral print short-sleeve top",
       "cargo": "Cargo Pants",
-      "pants": "Pants"
+      "pants": "Pants",
+      "cargo_shorts": "Cargo Shorts",
+      "high_heel_pump": "High Heel Pumps"
     },
     "color": {
       "black": "Black",
@@ -2661,7 +2663,8 @@
       "velvet": "Velvet",
       "vinyl": "Vinyl",
       "wool": "Wool",
-      "other": "Other"
+      "other": "Other",
+      "synthetic": "Synthetic"
     },
     "subcategories": {
       "t_shirt": "T-Shirt",
@@ -4959,6 +4962,8 @@
     "winter": "Winter",
     "front": "Front",
     "back": "Back",
-    "profile": "Profile"
+    "profile": "Profile",
+    "utility": "Utility",
+    "multi_pocket": "Multi-Pocket"
   }
 }

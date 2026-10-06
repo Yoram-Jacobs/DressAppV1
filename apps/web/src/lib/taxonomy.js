@@ -333,6 +333,10 @@ const itemSlug = (value) => {
     .replace(/[\s\/\-]+/g, '_')
     .replace(/[^a-z0-9_]/g, '');
   if (s === 'cargo' || s === 'cargos') return 'cargo_pants';
+  if (s === 'cargo_short' || s === 'cargo_shorts') return 'cargo_shorts';
+  if (s.includes('high_heel') || s.includes('pump') || s === 'heels' || s === 'high_heel_pump' || s === 'high_heel_pumps') return 'heels';
+  if (s === 'long_sleeve_sv' || s === 'long_sleeve_sweater' || s === 'knit_sweater') return 'sweater';
+  if (s === 'casual_jacket' || s === 'hooded_jacket') return 'casual_jacket';
   if (s === 'chino' || s === 'chinos') return 'chinos';
   if (s === 'pant' || s === 'pants') return 'pants';
   return s;
@@ -728,7 +732,9 @@ export const canonicalMaterialKey = (raw) => {
   if (normalized === 'velvet') return 'velvet';
   if (normalized === 'vinyl') return 'vinyl';
   if (normalized === 'wool') return 'wool';
+  if (normalized === 'synthetic') return 'synthetic';
 
+  if (normalized.includes('synthetic') || normalized.includes('סינתטי') || normalized.includes('סינטטי') || normalized.includes('синтетик') || rawStr.includes('اصطناعي') || rawStr.includes('synthetisch') || rawStr.includes('synthétique') || rawStr.includes('sintético') || rawStr.includes('sintetico') || rawStr.includes('синтетика') || rawStr.includes('合成')) return 'synthetic';
   if (normalized.includes('cotton') || normalized.includes('כותנה') || normalized.includes('хлопок') || rawStr.includes('قطن') || rawStr.includes('baumwolle') || rawStr.includes('coton') || rawStr.includes('algod') || rawStr.includes('綿') || rawStr.includes('棉')) return 'cotton';
   if (normalized.includes('linen') || normalized.includes('פשתן') || normalized.includes('лен') || normalized.includes('лён') || rawStr.includes('كتان') || rawStr.includes('leinen') || rawStr.includes('lin') || rawStr.includes('lino') || rawStr.includes('リネン') || rawStr.includes('亚麻')) return 'linen';
   
@@ -871,11 +877,29 @@ export const TAG_REVERSE_MAP = {
   'חורף': 'winter',
   'אביב': 'spring',
   'סתיו': 'fall',
+  'יוטיליטי': 'utility',
+  'מרובה כיסים': 'multi_pocket',
+  'קפוצ\'ון': 'hooded',
+  'עם קפוצ\'ון': 'hooded',
+  'רוכסן': 'zipper',
+  'סרוג': 'knit',
+  'סריג': 'knitwear',
+  'סוודר': 'sweater',
+  'סינתטי': 'synthetic',
+  'הסוואה': 'camouflage',
+  'נעלי עקב': 'heels',
+  'מכנסי דגמ"ח קצרים': 'cargo_shorts',
+  'מכנסי דגמ"ח': 'cargo_pants',
 };
 
 export const labelForTag = (raw, t) => {
   if (!raw) return '';
-  const key = String(raw).trim().toLowerCase().replace(/[\s\-]+/g, '_');
+  let key = String(raw).trim().toLowerCase().replace(/[\s\-]+/g, '_');
+  if (key === 'casual_wear' || key === 'casualwear') key = 'casual';
+  if (key === 'multi_pocket' || key === 'multipocket' || key === 'multi_pockets') key = 'multi_pocket';
+  if (key === 'high_heel' || key === 'high_heels' || key === 'high_heel_pump' || key === 'pump' || key === 'pumps') key = 'heels';
+  if (key === 'hood' || key === 'hooded') key = 'hooded';
+  if (key === 'zip' || key === 'zipper') key = 'zipper';
   const canonicalKey = TAG_REVERSE_MAP[String(raw).trim()] || TAG_REVERSE_MAP[key] || key;
 
   // 1. Try dedicated tags namespace

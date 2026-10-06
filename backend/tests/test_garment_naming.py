@@ -309,3 +309,106 @@ def test_pumps_heels_not_sneakers():
     assert res["sub_category"].lower() in ("heels", "pumps", "shoes")
     assert "sneaker" not in res["sub_category"].lower()
     assert "sneaker" not in res["item_type"].lower()
+
+
+def test_red_hooded_jacket_hebrew_caption_and_season():
+    raw_jacket = {
+        "is_clothing": True,
+        "category": "Outerwear",
+        "sub_category": "Jacket",
+        "item_type": "Casual Jacket",
+        "caption": "Red casual hooded jacket with front zipper and side pockets.",
+        "colors": [{"name": "red", "pct": 100}],
+        "fabric_materials": [{"name": "polyester", "pct": 100}],
+        "season": ["spring", "summer", "fall", "winter"],
+        "tags": ["casual", "hooded", "zipper", "outerwear"],
+        "name": "Red Jacket",
+    }
+    res = _coerce_single_garment(raw_jacket, language="he")
+    # 1. Season must not contain summer
+    assert "summer" not in res["season"], f"Summer must be excluded from heavy jacket, got: {res['season']}"
+    assert "winter" in res["season"] and "fall" in res["season"]
+    # 2. Caption must not be generic fallback
+    cap = res["caption"]
+    assert cap != "פריט אופנה איכותי ונוח להשלמת המראה.", f"Generic fallback caption returned: {cap}"
+    assert any(term in cap for term in ("ז'קט", "מעיל", "קפוצ'ון")), f"Expected descriptive caption, got: {cap}"
+    # 3. Tags must be localized and not contain English
+    for t in res["tags"]:
+        assert not any(ord(ch) < 128 and ch.isalpha() for ch in str(t)), f"Tag contains English: {t}"
+
+
+def test_camo_cargo_shorts_hebrew_and_season():
+    raw_shorts = {
+        "is_clothing": True,
+        "category": "Bottom",
+        "sub_category": "Shorts",
+        "item_type": "Cargo Shorts",
+        "pattern": "printed",
+        "caption": "Men's camouflage cargo shorts with multi-pocket utility styling.",
+        "colors": [{"name": "green", "pct": 100}],
+        "fabric_materials": [{"name": "cotton", "pct": 100}],
+        "season": ["spring", "summer", "fall", "winter"],
+        "tags": ["cargo", "utility", "multi-pocket", "casual"],
+        "name": "Cargo Shorts",
+    }
+    res = _coerce_single_garment(raw_shorts, language="he")
+    # 1. Pattern upgraded to camouflage
+    assert res["pattern"] == "camouflage", f"Expected camouflage pattern, got: {res['pattern']}"
+    # 2. Item type localized in Hebrew
+    assert "קצרים" in res["item_type"] or "דגמ\"ח" in res["item_type"]
+    assert not any(ord(ch) < 128 and ch.isalpha() for ch in res["item_type"]), f"item_type has English: {res['item_type']}"
+    # 3. Season must not contain winter
+    assert "winter" not in res["season"], f"Winter must be excluded from shorts, got: {res['season']}"
+    assert "summer" in res["season"]
+    # 4. Tags translated, no raw English
+    for t in res["tags"]:
+        assert not any(ord(ch) < 128 and ch.isalpha() for ch in str(t)), f"Tag contains English: {t}"
+
+
+def test_high_heel_pump_no_stripes_or_category_echoes():
+    raw_heels = {
+        "is_clothing": True,
+        "category": "Footwear",
+        "sub_category": "Heels",
+        "item_type": "High Heel Pump",
+        "caption": "Black high heel pump with glossy stripe accent on stiletto heel.",
+        "colors": [{"name": "black", "pct": 100}],
+        "fabric_materials": [{"name": "synthetic", "pct": 100}],
+        "season": ["spring", "summer", "fall", "winter"],
+        "tags": ["high heel", "Women's Footwear", "striped", "formal"],
+        "name": "High Heel Pump",
+    }
+    res = _coerce_single_garment(raw_heels, language="he")
+    # 1. No false positive striped pattern on footwear
+    assert res.get("pattern") != "striped"
+    # 2. Item type localized
+    assert res["item_type"] == "נעלי עקב"
+    # 3. No category echoes or English tags
+    for t in res["tags"]:
+        assert str(t).lower() not in ("women's footwear", "footwear", "striped", "stripe", "פסים")
+        assert not any(ord(ch) < 128 and ch.isalpha() for ch in str(t)), f"Tag contains English: {t}"
+
+
+def test_knit_sweater_hebrew_and_season():
+    raw_sweater = {
+        "is_clothing": True,
+        "category": "Top",
+        "sub_category": "Sweater",
+        "item_type": "Long Sleeve Sv",
+        "caption": "Cream long sleeve knit sweater with textured soft weave.",
+        "colors": [{"name": "cream", "pct": 100}],
+        "fabric_materials": [{"name": "wool", "pct": 70}, {"name": "synthetic", "pct": 30}],
+        "season": ["spring", "summer", "fall", "winter"],
+        "tags": ["knitwear", "sweater", "casual wear"],
+        "name": "Long Sleeve Sv",
+    }
+    res = _coerce_single_garment(raw_sweater, language="he")
+    # 1. Item type localized in Hebrew
+    assert "סוודר" in res["item_type"] or "סריג" in res["item_type"]
+    assert not any(ord(ch) < 128 and ch.isalpha() for ch in res["item_type"]), f"item_type has English: {res['item_type']}"
+    # 2. Season must not contain summer
+    assert "summer" not in res["season"], f"Summer must be excluded from knit sweater, got: {res['season']}"
+    # 3. Synthetic material normalized
+    mat_names = [m["name"] for m in res["fabric_materials"]]
+    assert "Synthetic" in mat_names
+

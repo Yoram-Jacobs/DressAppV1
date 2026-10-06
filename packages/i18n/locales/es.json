@@ -2598,7 +2598,9 @@
       "floral_print_blouse": "Blusa con estampado floral",
       "floral_print_short_sleeve_top": "Top de manga corta con estampado floral",
       "cargo": "Pantalón cargo",
-      "pants": "Pantalón"
+      "pants": "Pantalón",
+      "cargo_shorts": "Bermudas cargo",
+      "high_heel_pump": "Zapatos de tacón alto"
     },
     "color": {
       "black": "Negro",
@@ -2659,7 +2661,8 @@
       "velvet": "Terciopelo",
       "vinyl": "Vinilo",
       "wool": "Lana",
-      "other": "Otro"
+      "other": "Otro",
+      "synthetic": "Sintético"
     },
     "subcategories": {
       "t_shirt": "Camiseta",
@@ -4971,6 +4974,8 @@
     "winter": "Invierno",
     "front": "Frente",
     "back": "Espalda",
-    "profile": "Perfil"
+    "profile": "Perfil",
+    "utility": "Utilitario",
+    "multi_pocket": "Multibolsillos"
   }
 }

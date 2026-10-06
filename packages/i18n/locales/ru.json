@@ -2605,7 +2605,9 @@
       "floral_print_blouse": "Блузка с цветочным принтом",
       "floral_print_short_sleeve_top": "Топ с коротким рукавом с цветочным принтом",
       "cargo": "Брюки карго",
-      "pants": "Брюки"
+      "pants": "Брюки",
+      "cargo_shorts": "Шорты-карго",
+      "high_heel_pump": "Туфли на высоком каблуке"
     },
     "color": {
       "black": "Черный",
@@ -2666,7 +2668,8 @@
       "velvet": "Бархат",
       "vinyl": "Винил",
       "wool": "Шерсть",
-      "other": "Другое"
+      "other": "Другое",
+      "synthetic": "Синтетика"
     },
     "subcategories": {
       "t_shirt": "Футболка",
@@ -4973,6 +4976,8 @@
     "winter": "Зима",
     "front": "Спереди",
     "back": "Сзади",
-    "profile": "Профиль"
+    "profile": "Профиль",
+    "utility": "Утилити",
+    "multi_pocket": "Много карманов"
   }
 }

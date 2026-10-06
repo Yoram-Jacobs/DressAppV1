@@ -2598,7 +2598,9 @@
       "floral_print_blouse": "Blouse à fleurs",
       "floral_print_short_sleeve_top": "Haut à fleurs manches courtes",
       "cargo": "Pantalon cargo",
-      "pants": "Pantalon"
+      "pants": "Pantalon",
+      "cargo_shorts": "Short cargo",
+      "high_heel_pump": "Escarpins à talons hauts"
     },
     "color": {
       "black": "Noir",
@@ -2659,7 +2661,8 @@
       "velvet": "Velours",
       "vinyl": "Vinyle",
       "wool": "Laine",
-      "other": "Autre"
+      "other": "Autre",
+      "synthetic": "Synthétique"
     },
     "subcategories": {
       "t_shirt": "T-shirt",
@@ -4964,6 +4967,8 @@
     "winter": "Hiver",
     "front": "Devant",
     "back": "Dos",
-    "profile": "Profil"
+    "profile": "Profil",
+    "utility": "Utilitaire",
+    "multi_pocket": "Multipoches"
   }
 }

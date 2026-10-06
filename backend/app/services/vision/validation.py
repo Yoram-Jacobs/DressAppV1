@@ -397,6 +397,9 @@ _CANONICAL_MATERIAL_MAP: dict[str, str] = {
     "דנים": "Denim", "ג'ינס": "Denim", "גינס": "Denim", "джинс": "Denim", "डेनिम": "Denim", "デニム": "Denim", "牛仔": "Denim",
     "פוליאסטר": "Polyester", "بوليستر": "Polyester", "полиэстер": "Polyester", "पॉलिएस्टर": "Polyester", "ポリエステル": "Polyester", "聚酯": "Polyester",
     "ניילון": "Nylon", "نايلון": "Nylon", "нейлон": "Nylon", "नायलॉन": "Nylon", "ナイロン": "Nylon", "锦纶": "Nylon",
+    "סינתטי": "Synthetic", "סינטטי": "Synthetic", "synthetic": "Synthetic", "synthetisch": "Synthetic",
+    "synthétique": "Synthetic", "sintético": "Synthetic", "sintetico": "Synthetic", "синтетика": "Synthetic",
+    "синтетический": "Synthetic", "синтетическое": "Synthetic", "اصطناعي": "Synthetic", "合成": "Synthetic",
 }
 
 
@@ -550,18 +553,8 @@ def _sanitize_foreign_token_bleed(res: dict[str, Any], language: str | None = No
             if "." in str(res.get(field, "")):
                 res[field] = re.sub(r"\.(?:primetime|clothing|garment|apparel|model|outfit)\b", "", str(res[field]), flags=re.IGNORECASE).strip()
 
-    if lang in ("he", "iw"):
-        cap = res.get("caption")
-        if isinstance(cap, str) and cap.strip():
-            has_he_cap = any("\u0590" <= ch <= "\u05ea" for ch in cap)
-            has_latin_cap = any(ch.isalpha() and ord(ch) < 128 for ch in cap)
-            if not has_he_cap and has_latin_cap:
-                # Caption was generated in English despite Hebrew mode
-                title_he = res.get("title") or res.get("name") or ""
-                if any("\u0590" <= ch <= "\u05ea" for ch in title_he):
-                    res["caption"] = f"{title_he} להשלמת המראה."
-                else:
-                    res["caption"] = "פריט אופנה איכותי ונוח להשלמת המראה."
+    # Note: Caption translation/synthesis for Hebrew/multilingual is handled after
+    # Hebrew title & feature synthesis so visual cues from the model caption are preserved.
 
     tags = res.get("tags")
     if isinstance(tags, list):
@@ -918,6 +911,111 @@ def _sanitize_cross_category_contamination(res: dict[str, Any], language: str | 
         tags = res.get("tags")
         if isinstance(tags, list):
             res["tags"] = [t for t in tags if str(t).strip().lower() not in ("# שקר", "שקר", "lie", "fake", "# פקקים", "פקקים", "# lie", "# fake")]
+
+
+def _norm_str(v: Any) -> str | None:
+    if not isinstance(v, str):
+        return None
+    return v.strip().lower().replace("_", "-")
+
+
+def _coerce_enum_field(
+    parsed: dict[str, Any],
+    key: str,
+    valid: set[str],
+    *,
+    aliases: dict[str, str] | None = None,
+    default: str | None = None,
+) -> None:
+    """Normalise ``parsed[key]`` to a value in ``valid`` (or ``None``).
+
+    Steps: strip → lower via ``_norm_str`` → remap via ``aliases`` →
+    accept only if in ``valid``. When the coerced value is invalid the
+    field is set to ``default`` (typically ``None``) so Pydantic's
+    optional-enum validators stay happy.
+    """
+    value = _norm_str(parsed.get(key))
+    if value and aliases:
+        value = aliases.get(value, value)
+    parsed[key] = value if value in valid else default
+
+
+def _coerce_seasons(parsed: dict[str, Any]) -> None:
+    """Coerce ``parsed['season']`` to a validated list. Incurs a context-aware default if empty,
+    and enforces strict seasonal realism (e.g. no summer for heavy outerwear/knitwear,
+    no winter for shorts/sandals/swimwear, and eliminates indiscriminate 4-season tagging).
+    """
+    allowed = {"spring", "summer", "fall", "autumn", "winter", "all"}
+    raw = parsed.get("season") or []
+    if isinstance(raw, str):
+        raw = [raw]
+    seasons: list[str] = []
+    for entry in raw:
+        tok = _norm_str(entry)
+        if tok == "autumn":
+            tok = "fall"
+        if tok in allowed and tok not in seasons:
+            seasons.append(tok)
+
+    cat_lower = (parsed.get("category") or "").strip().lower()
+    sub_lower = (parsed.get("sub_category") or "").strip().lower()
+    itype = (parsed.get("item_type") or "").strip().lower()
+    txt = f"{cat_lower} {sub_lower} {itype} {parsed.get('name', '')} {parsed.get('title', '')} {parsed.get('caption', '')}".lower()
+
+    is_heavy_cold = any(w in txt for w in (
+        "coat", "jacket", "outerwear", "parka", "overcoat", "puffer", "down jacket", "fleece",
+        "wool", "sweater", "cardigan", "knit", "knitwear", "hoodie", "hooded", "heavy",
+        "מעיל", "ז'קט", "סוודר", "סריג", "קפוצ'ון", "צמר", "חורף", "פליז", "מגפיים", "boot"
+    ))
+    is_hot_summer = any(w in txt for w in (
+        "shorts", "sandal", "sandals", "slide", "slides", "flip flop", "flip-flop",
+        "swim", "bikini", "tank", "sleeveless", "crop top", "linen shorts", "cargo shorts",
+        "סנדל", "סנדלים", "כפכף", "כפכפים", "בגד ים", "מכנסיים קצרים", "גופיה", "גופייה", "שורט"
+    ))
+
+    # Strip 'all' if heavy cold or hot summer
+    if "all" in seasons:
+        seasons.remove("all")
+        if not seasons:
+            if is_heavy_cold:
+                seasons = ["fall", "winter"]
+            elif is_hot_summer:
+                seasons = ["spring", "summer"]
+            else:
+                seasons = ["spring", "summer", "fall"]
+
+    # If empty, assign realistic seasons based on garment type
+    if not seasons:
+        if is_heavy_cold:
+            seasons = ["fall", "winter"]
+        elif is_hot_summer:
+            seasons = ["spring", "summer"]
+        else:
+            seasons = ["spring", "summer", "fall"]
+
+    # Rule 1: Heavy outerwear & knitwear & boots MUST NEVER include summer
+    if is_heavy_cold:
+        seasons = [s for s in seasons if s != "summer"]
+        if not seasons:
+            seasons = ["fall", "winter"]
+
+    # Rule 2: Shorts, sandals, swimwear, sleeveless MUST NEVER include winter
+    if is_hot_summer:
+        seasons = [s for s in seasons if s != "winter"]
+        if not seasons:
+            seasons = ["spring", "summer"]
+
+    # Rule 3: Eliminate indiscriminate 4-season check (spring, summer, fall, winter)
+    if set(seasons) >= {"spring", "summer", "fall", "winter"}:
+        if is_heavy_cold:
+            seasons = ["fall", "winter", "spring"]
+        elif is_hot_summer:
+            seasons = ["spring", "summer"]
+        else:
+            seasons = ["spring", "summer", "fall"]
+
+    order = ["spring", "summer", "fall", "winter"]
+    parsed["season"] = [s for s in order if s in seasons]
 
 
 def _coerce_single_garment(
@@ -1284,7 +1382,7 @@ def _coerce_single_garment(
 
     # Color refinement: upgrade generic "blue" / "כחול" to specific fine-grained shade if hinted
     full_color_text = f"{res.get('name', '')} {res.get('title', '')} {res.get('caption', '')} {' '.join(res.get('tags') or [])}".lower()
-    is_he = any("\u0590" <= ch <= "\u05ea" for ch in full_color_text)
+    is_he = (language in ("he", "iw")) or any("\u0590" <= ch <= "\u05ea" for ch in full_color_text)
 
     # Refine string color if present
     c_str = str(res.get("color") or "").strip().lower()
@@ -1525,6 +1623,18 @@ def _coerce_single_garment(
                 "sunglasses": "משקפי שמש",
                 "hat": "כובע",
                 "scarf": "צעיף",
+                "cargo shorts": 'מכנסי דגמ"ח קצרים',
+                "cargo_shorts": 'מכנסי דגמ"ח קצרים',
+                "high heel pump": "נעלי עקב",
+                "high heel pumps": "נעלי עקב",
+                "high heels": "נעלי עקב",
+                "pumps": "נעלי עקב",
+                "long sleeve sv": "סוודר שרוול ארוך",
+                "long sleeve sweater": "סוודר שרוול ארוך",
+                "knit sweater": "סוודר סריג",
+                "knitwear": "סריג",
+                "casual jacket": "ז'קט קז'ואל",
+                "hooded jacket": "ז'קט עם קפוצ'ון",
             }
             he_color_dict = {
                 "white": "לבן", "grey": "אפור", "gray": "אפור", "black": "שחור",
@@ -1536,8 +1646,14 @@ def _coerce_single_garment(
             combined_txt = f"{itype} {sub_str} {caption_str}".lower()
             
             # 1. High-priority specific cuts from caption or itype
-            if "דגמח" in caption_str or "דגמ\"ח" in caption_str or "cargo" in combined_txt:
+            if ("cargo" in combined_txt or "דגמח" in caption_str or "דגמ\"ח" in caption_str) and ("short" in combined_txt or "קצר" in combined_txt or "שורט" in combined_txt):
+                noun_he = "מכנסי דגמ\"ח קצרים"
+            elif "דגמח" in caption_str or "דגמ\"ח" in caption_str or "cargo" in combined_txt:
                 noun_he = "מכנסי דגמ\"ח"
+            elif any(w in combined_txt for w in ("high heel", "heel", "pump", "עקב")):
+                noun_he = "נעלי עקב"
+            elif any(w in combined_txt for w in ("long sleeve sv", "long sleeve sweater", "knit sweater", "סוודר סריג")):
+                noun_he = "סוודר סריג"
             elif "אוקספורד" in caption_str or "oxford" in combined_txt:
                 noun_he = "נעלי אוקספורד"
             elif "דרבי" in caption_str or "derby" in combined_txt:
@@ -1659,6 +1775,8 @@ def _coerce_single_garment(
                 parts.append("מעור")
             res["name"] = " ".join(parts)
             res["title"] = res["name"]
+            if noun_he:
+                res["item_type"] = noun_he
         else:
             # English naming: Color + Pattern + Attribute/Cut + Item Noun (e.g. "Green Round-Toe Loafers", "Brown Camouflage Cargo Pants", "Brown Leather Oxford Shoes")
             attr_cut = ""
@@ -1770,20 +1888,62 @@ def _coerce_single_garment(
             res["caption"] = tpls["default"].format(name=name_val)
     res["caption"] = _clean_truncated_caption(res.get("caption"))
 
-    # Pattern fallback: if model returned solid/empty, check text for printed graphics, geometric, striped, or floral patterns
+    # Rich descriptive caption synthesis for Hebrew
+    if is_he:
+        curr_cap = (res.get("caption") or "").strip()
+        has_he_cap = any("\u0590" <= ch <= "\u05ea" for ch in curr_cap)
+        has_latin_cap = any(ch.isalpha() and ord(ch) < 128 for ch in curr_cap)
+        is_generic_fallback = curr_cap in (
+            "פריט אופנה איכותי ונוח להשלמת המראה.",
+            "פריט ורסטילי ונוח בעיצוב מוקפד ונקי.",
+            "פריט בעל עיצוב אופנתי ונוח לשימוש יומיומי.",
+            "פריט המוסיף טאץ' מיוחד וסטייל לכל הופעה.",
+            "פריט מחויט ומעוצב בגזרה מחמיאה וקלאסית."
+        ) or curr_cap.startswith("פריט ")
+
+        if not curr_cap or (has_latin_cap and not has_he_cap) or is_generic_fallback:
+            title_val = res.get("title") or res.get("name") or "פריט אופנה"
+            cues = []
+            comb_desc = f"{curr_cap} {' '.join(str(t) for t in res.get('tags') or [])}".lower()
+            if any(w in comb_desc for w in ("hood", "hooded", "קפוצ'ון")):
+                cues.append("עם קפוצ'ון")
+            if any(w in comb_desc for w in ("zipper", "zip-up", "full zip", "רוכסן")):
+                cues.append("ורוכסן קדמי" if cues else "עם רוכסן קדמי")
+            if any(w in comb_desc for w in ("cargo", "multi-pocket", "pockets", "utility", 'דגמ"ח', "כיסים")):
+                cues.append("וכיסים שימושיים" if cues else "עם כיסים שימושיים")
+            if any(w in comb_desc for w in ("camo", "camouflage", "הסוואה")) and "הסוואה" not in title_val:
+                cues.append("בהדפס הסוואה")
+            if any(w in comb_desc for w in ("knit", "knitwear", "סרוג", "סריג")) and "סריג" not in title_val:
+                cues.append("במרקם סרוג נעים")
+            if any(w in comb_desc for w in ("heel", "high heel", "pump", "stiletto", "עקב")) and "עקב" not in title_val:
+                cues.append("עם עקב אלגנטי ומחמיא")
+
+            cue_suffix = f" {' '.join(cues)}" if cues else ""
+            if cat_lower == "outerwear" or any(w in title_val for w in ("מעיל", "ז'קט", "קפוצ'ון")):
+                res["caption"] = f"{title_val}{cue_suffix} מושלם לעונות הקרירות ולהשלמת המראה."
+            elif cat_lower == "footwear" or any(w in title_val for w in ("נעלי", "מוקסין", "סנדל", "מגפ", "סניקרס")):
+                res["caption"] = f"{title_val}{cue_suffix} המשלב נוחות וסטייל לכל הופעה."
+            elif any(w in title_val for w in ("מכנסי", 'דגמ"ח', "חצאית", "ג'ינס")):
+                res["caption"] = f"{title_val}{cue_suffix} בעיצוב יומיומי מחמיא ונוח."
+            else:
+                res["caption"] = f"{title_val}{cue_suffix} בעיצוב איכותי להשלמת המראה."
+
+    # Pattern fallback: if model returned solid/empty/printed, check text for camouflage or graphics
     pat_str = (res.get("pattern") or "").strip().lower()
-    if pat_str in ("camo", "camouflage", "camouflaged", "צבאי", "הסוואה", "קמופלאז", "קמופלאז'"):
+    full_pat_text = f"{res.get('name', '')} {res.get('title', '')} {res.get('caption', '')} {' '.join(str(t) for t in res.get('tags') or [])}".lower()
+    is_camo = any(w in full_pat_text for w in ("camo", "camouflage", "צבאי", "הסוואה", "קמופלאז", "קמופלאז'"))
+
+    if pat_str in ("camo", "camouflage", "camouflaged", "צבאי", "הסוואה", "קמופלאז", "קמופלאז'") or is_camo:
         res["pattern"] = "camouflage"
-    elif not pat_str or pat_str == "solid":
-        full_pat_text = f"{res.get('name', '')} {res.get('title', '')} {res.get('caption', '')} {' '.join(res.get('tags') or [])}".lower()
-        if any(w in full_pat_text for w in ("camo", "camouflage", "צבאי", "הסוואה", "קמופלאז", "קמופלאז'")):
-            res["pattern"] = "camouflage"
-        elif any(w in full_pat_text for w in ("print", "printed", "graphic", "logo", "lettering", "artwork", "illustration", "slogan", "הדפס", "הדפסה", "גרפי", "לוגו", "איור", "כיתוב")):
+    elif not pat_str or pat_str in ("solid", "printed", "print", "none", "unknown", "other"):
+        if any(w in full_pat_text for w in ("print", "printed", "graphic", "logo", "lettering", "artwork", "illustration", "slogan", "הדפס", "הדפסה", "גרפי", "לוגו", "איור", "כיתוב")):
             res["pattern"] = "printed"
         elif any(w in full_pat_text for w in ("geometric", "geometry", "texture", "textured", "weave", "waffle", "jacquard", "pique", "dot", "dots", "polka", "eyelet", "perforated", "mesh", "ribbed", "subtle", "גיאומטרי", "מרקם", "טקסטורה", "נקודות", "עיגולים", "מחורר", "דוגמה")):
             res["pattern"] = "geometric"
         elif any(w in full_pat_text for w in ("stripe", "striped", "פסים")):
-            res["pattern"] = "striped"
+            # Prevent footwear gloss/straps from triggering striped pattern unless zebra
+            if cat_lower != "footwear" or "zebra" in full_pat_text or "זברה" in full_pat_text:
+                res["pattern"] = "striped"
         elif any(w in full_pat_text for w in ("plaid", "check", "checker", "משובץ")):
             res["pattern"] = "plaid"
         elif any(w in full_pat_text for w in ("floral", "flower", "פרח")):
@@ -1874,20 +2034,28 @@ def _coerce_single_garment(
             "eagle": "עיט",
             "deer": "אייל",
             "casual": "יומיומי",
+            "casual wear": "יומיומי",
+            "casual-wear": "יומיומי",
+            "casualwear": "יומיומי",
             "smart-casual": "אלגנטי־יומיומי",
             "formal": "רשמי",
             "business": "עסקי",
             "athletic": "ספורטיבי",
-            "t-shirt": "חולצת טי",
-            "t_shirt": "חולצת טי",
-            "tshirt": "חולצת טי",
-            "tee": "חולצת טי",
-            "shirt": "חולצה",
-            "jeans": "ג'ינס",
-            "pants": "מכנסיים",
-            "trouser": "מכנסיים",
-            "trousers": "מכנסיים",
-            "shorts": "מכנסיים קצרים",
+            "utility": "יוטיליטי",
+            "multi-pocket": "מרובה כיסים",
+            "multipocket": "מרובה כיסים",
+            "multi-pockets": "מרובה כיסים",
+            "cargo": 'דגמ"ח',
+            "cargo shorts": 'מכנסי דגמ"ח קצרים',
+            "cargo pants": 'מכנסי דגמ"ח',
+            "camo": "הסוואה",
+            "camouflage": "הסוואה",
+            "hood": "קפוצ'ון",
+            "hooded": "עם קפוצ'ון",
+            "zipper": "רוכסן",
+            "zip": "רוכסן",
+            "knit": "סרוג",
+            "knitwear": "סריג",
             "sweater": "סוודר",
             "hoodie": "קפוצ'ון",
             "jacket": "ז'קט",
@@ -1906,11 +2074,26 @@ def _coerce_single_garment(
             "sneakers": "סניקרס",
             "heel": "נעלי עקב",
             "heels": "נעלי עקב",
+            "high heel": "נעלי עקב",
+            "high heels": "נעלי עקב",
+            "pump": "נעלי עקב",
+            "pumps": "נעלי עקב",
+            "high heel pump": "נעלי עקב",
             "loafer": "מוקסין",
             "loafers": "מוקסינים",
             "bag": "תיק",
             "bags": "תיקים",
             "handbag": "תיק יד",
+            "t-shirt": "חולצת טי",
+            "t_shirt": "חולצת טי",
+            "tshirt": "חולצת טי",
+            "tee": "חולצת טי",
+            "shirt": "חולצה",
+            "jeans": "ג'ינס",
+            "pants": "מכנסיים",
+            "trouser": "מכנסיים",
+            "trousers": "מכנסיים",
+            "shorts": "מכנסיים קצרים",
             "burgundy": "בורדו",
             "red": "אדום",
             "blue": "כחול",
@@ -1927,6 +2110,7 @@ def _coerce_single_garment(
             "yellow": "צהוב",
             "cotton": "כותנה",
             "polyester": "פוליאסטר",
+            "synthetic": "סינתטי",
             "denim": "דנים",
             "wool": "צמר",
             "leather": "עור",
@@ -1943,12 +2127,28 @@ def _coerce_single_garment(
             "vintage": "וינטג'",
             "streetwear": "אופנת רחוב",
         }
+        category_echoes = {
+            "women's footwear", "womens footwear", "men's footwear", "mens footwear",
+            "footwear", "women's clothing", "womens clothing", "men's clothing", "mens clothing",
+            "clothing", "apparel", "garment", "fashion", "נעלי נשים", "נעלי גברים", "הנעלה", "ביגוד"
+        }
+        # Strip striped tag on footwear unless zebra
+        if cat_lower == "footwear" and "zebra" not in full_pat_text and "זברה" not in full_pat_text:
+            category_echoes.add("striped")
+            category_echoes.add("stripe")
+            category_echoes.add("פסים")
+
         translated_tags = [he_tag_map.get(str(t).strip().lower(), t) for t in res["tags"] if t]
         seen_he: set[str] = set()
         dedup_he: list[str] = []
         for t in translated_tags:
             t_str = str(t).strip()
-            if t_str and t_str not in seen_he:
+            if not t_str or t_str.lower() in category_echoes:
+                continue
+            # Drop tags that still contain Latin characters in Hebrew mode to prevent English leaks
+            if any(ord(ch) < 128 and ch.isalpha() for ch in t_str):
+                continue
+            if t_str not in seen_he:
                 seen_he.add(t_str)
                 dedup_he.append(t_str)
         res["tags"] = dedup_he[:6]
@@ -1974,6 +2174,7 @@ def _coerce_single_garment(
         mult = {"budget": 0.6, "mid": 1.0, "premium": 2.2, "luxury": 5.0}.get(res.get("quality"), 1.0)
         res["price_cents"] = int(base_prices.get(cat_lower, 3000) * mult)
 
+    _coerce_seasons(res)
     _sanitize_cross_category_contamination(res, language=language)
     return res
 
@@ -2021,62 +2222,7 @@ _PATTERN_ALIASES = {
 }
 
 
-def _norm_str(v: Any) -> str | None:
-    if not isinstance(v, str):
-        return None
-    return v.strip().lower().replace("_", "-")
 
-
-def _coerce_enum_field(
-    parsed: dict[str, Any],
-    key: str,
-    valid: set[str],
-    *,
-    aliases: dict[str, str] | None = None,
-    default: str | None = None,
-) -> None:
-    """Normalise ``parsed[key]`` to a value in ``valid`` (or ``None``).
-
-    Steps: strip → lower via ``_norm_str`` → remap via ``aliases`` →
-    accept only if in ``valid``. When the coerced value is invalid the
-    field is set to ``default`` (typically ``None``) so Pydantic's
-    optional-enum validators stay happy.
-    """
-    value = _norm_str(parsed.get(key))
-    if value and aliases:
-        value = aliases.get(value, value)
-    parsed[key] = value if value in valid else default
-
-
-def _coerce_seasons(parsed: dict[str, Any]) -> None:
-    """Coerce ``parsed['season']`` to a validated list. Incurs a context-aware default if empty."""
-    allowed = {"spring", "summer", "fall", "autumn", "winter", "all"}
-    raw = parsed.get("season") or []
-    if isinstance(raw, str):
-        raw = [raw]
-    seasons: list[str] = []
-    for entry in raw:
-        tok = _norm_str(entry)
-        if tok == "autumn":
-            tok = "fall"
-        if tok in allowed and tok not in seasons:
-            seasons.append(tok)
-
-    cat_lower = (parsed.get("category") or "").strip().lower()
-    sub_lower = (parsed.get("sub_category") or "").strip().lower()
-    itype = (parsed.get("item_type") or "").strip().lower()
-    txt = f"{cat_lower} {sub_lower} {itype} {parsed.get('name', '')} {parsed.get('title', '')} {parsed.get('caption', '')}".lower()
-
-    # Lightweight items, shorts, skirts, or summer wear must NEVER be "all"
-    if not seasons or seasons == ["all"]:
-        if any(w in txt for w in ("short sleeve", "short-sleeve", "cap sleeve", "cap-sleeve", "sleeveless", "tank", "swim", "sandal", "linen", "shorts", "skirt", "חצאית", "mini", "crop", "sundress", "blouse", "בלוזה", "קיץ", "קצר")):
-            seasons = ["summer", "spring"]
-        elif any(w in txt for w in ("coat", "jacket", "outerwear", "boot", "wool", "sweater", "cardigan", "scarf", "parka", "overcoat", "puffer", "down", "fleece", "חורף", "מעיל", "סוודר")):
-            seasons = ["fall", "winter"]
-        elif not seasons:
-            seasons = ["all"]
-
-    parsed["season"] = seasons
 
 
 # Alias tables for the model's common off-spec echoes. Keeping these at

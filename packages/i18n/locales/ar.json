@@ -2598,7 +2598,9 @@
       "floral_print_blouse": "بلوزة بطبعة زهور",
       "floral_print_short_sleeve_top": "توب قصير الأكمام بطبعة زهور",
       "cargo": "بنطال كارجو",
-      "pants": "بنطال"
+      "pants": "بنطال",
+      "cargo_shorts": "شورت كارغو",
+      "high_heel_pump": "حذاء كعب عالي"
     },
     "color": {
       "black": "أسود",
@@ -2659,7 +2661,8 @@
       "velvet": "قطيفة",
       "vinyl": "فينيل",
       "wool": "صوف",
-      "other": "آخر"
+      "other": "آخر",
+      "synthetic": "اصطناعي"
     },
     "subcategories": {
       "t_shirt": "تي شيرت",
@@ -4968,6 +4971,8 @@
     "winter": "شتاء",
     "front": "أمامي",
     "back": "خلفي",
-    "profile": "جانبي"
+    "profile": "جانبي",
+    "utility": "عملي",
+    "multi_pocket": "متعدد الجيوب"
   }
 }

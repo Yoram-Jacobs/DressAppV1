@@ -2605,7 +2605,9 @@
       "floral_print_blouse": "Blusa com estampado floral",
       "floral_print_short_sleeve_top": "Top de manga curta com estampado floral",
       "cargo": "Calça cargo",
-      "pants": "Calça"
+      "pants": "Calça",
+      "cargo_shorts": "Bermuda cargo",
+      "high_heel_pump": "Sapatos de salto alto"
     },
     "color": {
       "black": "Preto",
@@ -2666,7 +2668,8 @@
       "velvet": "Veludo",
       "vinyl": "Vinil",
       "wool": "Lã",
-      "other": "Outro"
+      "other": "Outro",
+      "synthetic": "Sintético"
     },
     "subcategories": {
       "t_shirt": "Camiseta",
@@ -4971,6 +4974,8 @@
     "winter": "Inverno",
     "front": "Frente",
     "back": "Costas",
-    "profile": "Perfil"
+    "profile": "Perfil",
+    "utility": "Utilitário",
+    "multi_pocket": "Vários bolsos"
   }
 }

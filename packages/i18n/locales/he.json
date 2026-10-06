@@ -2637,7 +2637,9 @@
       "floral_print_blouse": "חולצה בהדפס פרחוני",
       "floral_print_short_sleeve_top": "חולצה קצרה בהדפס פרחוני",
       "cargo": "מכנסי דגמ\"ח",
-      "pants": "מכנסיים"
+      "pants": "מכנסיים",
+      "cargo_shorts": "מכנסי דגמ\"ח קצרים",
+      "high_heel_pump": "נעלי עקב"
     },
     "color": {
       "black": "שחור",
@@ -2698,7 +2700,8 @@
       "velvet": "קטיפה",
       "vinyl": "ויניל",
       "wool": "צמר",
-      "other": "אחר"
+      "other": "אחר",
+      "synthetic": "סינתטי"
     },
     "subcategories": {
       "t_shirt": "חולצת טי",
@@ -5049,6 +5052,8 @@
     "winter": "חורף",
     "front": "חזית",
     "back": "גב",
-    "profile": "פרופיל"
+    "profile": "פרופיל",
+    "utility": "יוטיליטי",
+    "multi_pocket": "מרובה כיסים"
   }
 }
