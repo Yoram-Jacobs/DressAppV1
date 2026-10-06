@@ -2939,8 +2939,37 @@ export default function AddItem() {
                   }
                   : null,
                 useReconstructed: recValidated,
-                previewUrl: recValidated ? reconstructedUrl : c.previewUrl,
+                cropBase64: frame.crop_base64 || c.cropBase64,
+                cropMime: frame.crop_mime || c.cropMime,
+                previewUrl: recValidated
+                  ? reconstructedUrl
+                  : (frame.crop_base64
+                    ? `data:${frame.crop_mime || "image/png"};base64,${frame.crop_base64}`
+                    : c.previewUrl),
               }
+              : c,
+          ),
+        );
+      };
+
+      const handleMatte = (frame) => {
+        const slot = flatSlotIds[frame.index];
+        if (!slot) return;
+        const { id: slotId } = slot;
+        const cropB64 = frame.crop_base64;
+        const cropMime = frame.crop_mime || "image/png";
+        if (!cropB64) return;
+        const newPreview = `data:${cropMime};base64,${cropB64}`;
+        setCards((prev) =>
+          prev.map((c) =>
+            c.id === slotId
+              ? {
+                  ...c,
+                  cropBase64: cropB64,
+                  cropMime: cropMime,
+                  previewUrl: newPreview,
+                  originalCropUrl: newPreview,
+                }
               : c,
           ),
         );
@@ -3001,6 +3030,7 @@ export default function AddItem() {
 
       const resp = await api.analyzeItemImage(payload, {
         onDetect: handleDetect,
+        onMatte: handleMatte,
         onItem: handleItem,
         onItemSkip: handleItemSkip,
         onField: handleField,
@@ -3295,8 +3325,36 @@ export default function AddItem() {
                   }
                   : null,
                 useReconstructed: recValidated,
-                previewUrl: recValidated ? reconstructedUrl : c.previewUrl,
+                cropBase64: frame.crop_base64 || c.cropBase64,
+                cropMime: frame.crop_mime || c.cropMime,
+                previewUrl: recValidated
+                  ? reconstructedUrl
+                  : (frame.crop_base64
+                    ? `data:${frame.crop_mime || "image/png"};base64,${frame.crop_base64}`
+                    : c.previewUrl),
               }
+              : c,
+          ),
+        );
+      };
+
+      const handleMatte = (frame) => {
+        const slotId = perCardIds[frame.index];
+        if (!slotId) return;
+        const cropB64 = frame.crop_base64;
+        const cropMime = frame.crop_mime || "image/png";
+        if (!cropB64) return;
+        const newPreview = `data:${cropMime};base64,${cropB64}`;
+        setCards((prev) =>
+          prev.map((c) =>
+            c.id === slotId
+              ? {
+                  ...c,
+                  cropBase64: cropB64,
+                  cropMime: cropMime,
+                  previewUrl: newPreview,
+                  originalCropUrl: newPreview,
+                }
               : c,
           ),
         );
@@ -3351,6 +3409,7 @@ export default function AddItem() {
         { image_base64: card.base64, language: requestLang },
         {
           onDetect: handleDetect,
+          onMatte: handleMatte,
           onItem: handleItem,
           onItemSkip: handleItemSkip,
           onField: handleField,

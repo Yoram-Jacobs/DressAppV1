@@ -524,6 +524,12 @@ async def analyze_item_image(
                         await queue.put(frame)
                     elif ftype == "field":
                         await queue.put(frame)
+                    elif ftype == "matte":
+                        idx = frame.get("index", -1)
+                        if 0 <= idx < len(items_meta):
+                            items_meta[idx]["crop_base64"] = frame.get("crop_base64")
+                            items_meta[idx]["crop_mime"] = frame.get("crop_mime", "image/png")
+                        await queue.put(frame)
                     elif ftype == "item":
                         idx = frame.get("index", -1)
                         meta = (
@@ -546,10 +552,12 @@ async def analyze_item_image(
                             # Gatekeeper: check for duplicate before saving
                             img_idx = frame.get("image_index", 0)
                             parent_img_bytes = raw_list[img_idx] if 0 <= img_idx < len(raw_list) else None
+                            eff_crop_b64 = frame.get("crop_base64") or meta.get("crop_base64")
+                            eff_crop_mime = frame.get("crop_mime") or meta.get("crop_mime", "image/png" if str(eff_crop_b64).startswith("iVBORw") else "image/jpeg")
                             dup_payload = {
                                 **analysis,
-                                "crop_base64": meta.get("crop_base64"),
-                                "crop_mime": meta.get("crop_mime", "image/jpeg"),
+                                "crop_base64": eff_crop_b64,
+                                "crop_mime": eff_crop_mime,
                                 "clean_image_url": analysis.get("clean_image_url"),
                                 "thumbnail_data_url": analysis.get("thumbnail_data_url"),
                                 "parent_image_bytes": parent_img_bytes,
@@ -604,8 +612,8 @@ async def analyze_item_image(
                                         quality=analysis.get("quality") or "mid",
                                         price_cents=analysis.get("price_cents") or 2500,
                                         tags=analysis.get("tags") or [],
-                                        crop_base64=meta.get("crop_base64"),
-                                        image_mime=meta.get("crop_mime", "image/jpeg"),
+                                        crop_base64=eff_crop_b64,
+                                        image_mime=eff_crop_mime,
                                         from_one_pass=True,
                                         defer_matte=meta.get("defer_matte", False),
                                     )
@@ -621,8 +629,8 @@ async def analyze_item_image(
 
                             analyzed_items_count += 1
 
-                            crop_b64 = meta.get("crop_base64")
-                            crop_mime = meta.get("crop_mime", "image/jpeg")
+                            crop_b64 = eff_crop_b64
+                            crop_mime = eff_crop_mime
                             thumb_url = (
                                 saved_doc.get("thumbnail_data_url")
                                 if (saved_doc and saved_doc.get("thumbnail_data_url"))
@@ -754,6 +762,14 @@ async def analyze_item_image(
                                     "reconstruction_reasons": [],
                                 }
                             )
+                elif ftype == "matte":
+                    idx = frame.get("index", -1)
+                    if 0 <= idx < len(items_meta):
+                        items_meta[idx]["crop_base64"] = frame.get("crop_base64")
+                        items_meta[idx]["crop_mime"] = frame.get("crop_mime", "image/png")
+                    if payload.cutout_only and 0 <= idx < len(items_out):
+                        items_out[idx]["crop_base64"] = frame.get("crop_base64")
+                        items_out[idx]["crop_mime"] = frame.get("crop_mime", "image/png")
                 elif ftype == "item":
                     idx = frame.get("index", -1)
                     meta = (
@@ -766,10 +782,12 @@ async def analyze_item_image(
                         from app.services.duplicate_detection import find_potential_duplicate
                         img_idx = frame.get("image_index", 0)
                         parent_img_bytes = raw_list[img_idx] if 0 <= img_idx < len(raw_list) else None
+                        eff_crop_b64 = frame.get("crop_base64") or meta.get("crop_base64")
+                        eff_crop_mime = frame.get("crop_mime") or meta.get("crop_mime", "image/png" if str(eff_crop_b64).startswith("iVBORw") else "image/jpeg")
                         dup_payload = {
                             **analysis,
-                            "crop_base64": meta.get("crop_base64"),
-                            "crop_mime": meta.get("crop_mime", "image/jpeg"),
+                            "crop_base64": eff_crop_b64,
+                            "crop_mime": eff_crop_mime,
                             "clean_image_url": analysis.get("clean_image_url"),
                             "thumbnail_data_url": analysis.get("thumbnail_data_url"),
                             "parent_image_bytes": parent_img_bytes,
@@ -823,8 +841,8 @@ async def analyze_item_image(
                                     quality=analysis.get("quality") or "mid",
                                     price_cents=analysis.get("price_cents") or 2500,
                                     tags=analysis.get("tags") or [],
-                                    crop_base64=meta.get("crop_base64"),
-                                    image_mime=meta.get("crop_mime", "image/jpeg"),
+                                    crop_base64=eff_crop_b64,
+                                    image_mime=eff_crop_mime,
                                     from_one_pass=True,
                                     defer_matte=meta.get("defer_matte", False),
                                 )
@@ -838,8 +856,8 @@ async def analyze_item_image(
                             except Exception as save_err:
                                 logger.warning("Failed to save item to closet: %s", save_err)
 
-                        crop_b64 = meta.get("crop_base64")
-                        crop_mime = meta.get("crop_mime", "image/jpeg")
+                        crop_b64 = eff_crop_b64
+                        crop_mime = eff_crop_mime
                         thumb_url = (
                             saved_doc.get("thumbnail_data_url")
                             if (saved_doc and saved_doc.get("thumbnail_data_url"))

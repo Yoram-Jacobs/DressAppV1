@@ -2587,11 +2587,8 @@ class GarmentVisionService:
                         "_photo_model_gender": photo_model_gender,
                         "_raw_image_bytes": img_bytes,
                         "_raw_image_mime": "image/jpeg",
+                        "_detections": detections,
                     }
-                    if settings.AUTO_MATTE_CROPS:
-                        matted = await self._whole_image_matte(img_bytes, detections=detections)
-                        if matted:
-                            return idx, [(det, matted, "image/png")]
                     return idx, [(det, img_bytes, "image/jpeg")]
 
                 useful = self._filter_useful_detections(detections, cap)
@@ -2607,11 +2604,8 @@ class GarmentVisionService:
                         "_photo_model_gender": photo_model_gender,
                         "_raw_image_bytes": img_bytes,
                         "_raw_image_mime": "image/jpeg",
+                        "_detections": detections,
                     }
-                    if settings.AUTO_MATTE_CROPS:
-                        matted = await self._whole_image_matte(img_bytes, detections=detections)
-                        if matted:
-                            return idx, [(det, matted, "image/png")]
                     return idx, [(det, img_bytes, "image/jpeg")]
 
                 has_human = _detect_human_presence(detections)
@@ -2623,25 +2617,19 @@ class GarmentVisionService:
                 raw_crops = await asyncio.to_thread(
                     self._bbox_crop_useful, img_bytes, useful, is_single_item=is_single
                 )
-                if settings.AUTO_MATTE_CROPS:
-                    final_crops = await self._matte_crops(raw_crops)
-                else:
-                    final_crops = raw_crops
 
-                is_final_single = (count is None or count <= 1) and len(final_crops) <= 1 and not has_human
-                for i_c, (det, cbytes, mime) in enumerate(final_crops):
+                for i_c, (det, cbytes, mime) in enumerate(raw_crops):
                     det["defer_matte"] = False
-                    det["is_single_item"] = is_final_single
+                    det["is_single_item"] = is_single
                     det["_photo_model_gender"] = photo_model_gender
-                    if "_raw_image_bytes" not in det:
-                        raw_b = raw_crops[i_c][1] if i_c < len(raw_crops) else cbytes
-                        det["_raw_image_bytes"] = raw_b
-                        det["_raw_image_mime"] = "image/jpeg"
-                return idx, final_crops
+                    det["_raw_image_bytes"] = cbytes
+                    det["_raw_image_mime"] = "image/jpeg"
+                    det["_detections"] = detections
+                return idx, raw_crops
 
             except Exception as exc:
                 logger.warning("analyze_outfits_stream: crop/matte failed for idx %d: %s", idx, repr(exc)[:160])
-                return idx, [({"bbox": [0, 0, 1000, 1000], "kind": "garment", "label": "garment", "is_single_item": True, "_photo_model_gender": photo_model_gender}, img_bytes, "image/jpeg")]
+                return idx, [({"bbox": [0, 0, 1000, 1000], "kind": "garment", "label": "garment", "is_single_item": True, "_photo_model_gender": photo_model_gender, "_detections": None}, img_bytes, "image/jpeg")]
 
         # 1. Detect on all photos sequentially to avoid OOM on large batches
         import gc
@@ -2686,419 +2674,301 @@ class GarmentVisionService:
                 "defer_matte": d.get("defer_matte", False),
             })
         yield {"type": "detect", "count": len(flat_crops), "items_meta": items_meta}
-        if cutout_only:
-            logger.info("analyze_outfits_stream: cutout_only is True — returning after detect frame")
-            yield {"type": "done", "count": len(flat_crops)}
-            return
+        # Option A (Instant Preview): emit detect frame at t~100ms with raw crops,
+        # then parallelize matting worker (transparent cutout) with VLM ingestion worker.
+        frame_queue: asyncio.Queue[dict[str, Any]] = asyncio.Queue()
+        matted_events = [asyncio.Event() for _ in range(len(flat_crops))]
+        matted_cutouts: dict[int, tuple[bytes, str]] = {}
 
-        from app.config import settings as _settings
-        from app.services import eyes_override as _eyes_override
-
-        emitted = 0
-        try:
+        async def _matte_worker() -> None:
             try:
-                from app.services.reconstruction import should_reconstruct
-            except Exception:
-                should_reconstruct = None  # type: ignore[assignment]
-
-            # Resolve provider so we can choose the right crop strategy.
-            active_provider = (
-                self.provider if self.provider in ("gemma", "gemini")
-                else await _eyes_override.get_active_provider()
-            ).lower()
-
-            if active_provider in ("gemma", "dressapp") and settings.EYES_GEMMA_SPACE_URL:
-                # Build ONE static system prompt for the entire batch to preserve llama-server KV-cache prefix
-                batch_system_prompt = _build_system_prompt(one_pass=False, user_gender=eff_gender)
-
-                # Pre-scan detections across photos to detect human model gender (Strict 3-Tier Hierarchy)
-                photo_model_genders: dict[int, str] = {}
-                from collections import defaultdict
-                photo_fem_cues: dict[int, list[str]] = defaultdict(list)
-                photo_masc_cues: dict[int, list[str]] = defaultdict(list)
-                photo_has_model: dict[int, bool] = defaultdict(bool)
+                if not settings.AUTO_MATTE_CROPS:
+                    for i in range(len(flat_crops)):
+                        matted_events[i].set()
+                    return
 
                 for slot_idx, (image_idx, det, c_bytes, c_mime) in enumerate(flat_crops):
-                    has_human = bool(
-                        det.get("has_human_head")
-                        or det.get("has_human_skin")
-                        or det.get("_photo_model_gender") in ("women", "men")
-                    )
-                    if has_human:
-                        photo_has_model[image_idx] = True
-
-                    if det.get("_photo_model_gender") == "women":
-                        photo_fem_cues[image_idx].append("det_women")
-                    elif det.get("_photo_model_gender") == "men":
-                        photo_masc_cues[image_idx].append("det_men")
-
-                    lbl = (det.get("label") or "").lower()
-                    cat = (det.get("category") or det.get("kind") or "").lower()
-                    if is_distinctly_feminine_garment(cat, lbl, lbl):
-                        photo_fem_cues[image_idx].append("fem_garment")
-                    elif is_distinctly_masculine_garment(cat, lbl, lbl):
-                        photo_masc_cues[image_idx].append("masc_garment")
-
-                all_img_indices = set(idx for idx, _, _, _ in flat_crops)
-                for img_i in all_img_indices:
-                    if photo_has_model.get(img_i):
-                        if photo_fem_cues.get(img_i):
-                            photo_model_genders[img_i] = "women"
-                        elif photo_masc_cues.get(img_i):
-                            photo_model_genders[img_i] = "men"
-
-                # Progressive streaming loop for each crop in flat_crops:
-                # 1. Clean cutout image composited onto pure white background via _shrink_for_vision(c_bytes)
-                # 2. Streams fields progressively
-                # 3. Emits 'item' frame immediately as each garment analysis finishes
-                for slot_idx, (image_idx, det, c_bytes, c_mime) in enumerate(flat_crops):
-                    item_mg = photo_model_genders.get(image_idx) or det.get("_photo_model_gender")
-                    # Clean cutout on pure white background
-                    shrunk = _shrink_for_vision(c_bytes)
-                    b64 = base64.b64encode(shrunk).decode("ascii")
-                    assembled: dict[str, Any] = {}
-                    import uuid
-                    request_id = str(uuid.uuid4())
-                    gemma_failed = False
                     try:
-                        async for grp_name, grp_fields, partial in call_gemma_space_stream_attributes(
-                            image_b64_jpeg=b64,
-                            language=language,
-                            segformer_label=det.get("label"),
-                            segformer_category=det.get("category"),
-                            request_id=request_id,
-                            id_slot=slot_idx,
-                            is_single_item=det.get("is_single_item", False),
-                            user_gender=item_mg or eff_gender,
-                            model_gender=item_mg,
-                            system_prompt=batch_system_prompt,
-                        ):
-                            assembled.update(partial)
-                            if partial:
-                                yield {
-                                    "type": "field",
-                                    "index": slot_idx,
-                                    "image_index": image_idx,
-                                    "group": grp_name,
-                                    "fields": partial,
-                                }
-                    except Exception as gemma_exc:
-                        logger.warning(
-                            "Gemma stream attributes failed for slot %d: %s; falling back to Gemini",
-                            slot_idx, repr(gemma_exc)[:160],
-                        )
-                        gemma_failed = True
-
-                    if gemma_failed or not assembled or len(assembled) < 2:
-                        try:
-                            gem_analysis = await self.analyze(
-                                c_bytes, language=language, think=False, provider="gemini", user_gender=item_mg or eff_gender,
+                        matted = None
+                        if det.get("is_single_item"):
+                            matted = await self._whole_image_matte(
+                                c_bytes, detections=det.get("_detections")
                             )
-                            if isinstance(gem_analysis, dict) and gem_analysis:
-                                assembled = gem_analysis
-                        except Exception as gem_exc:
-                            logger.error("Gemini fallback also failed for slot %d: %s", slot_idx, gem_exc)
-
-                    if not assembled.get("category"):
-                        assembled["category"] = (det.get("category") or det.get("kind") or "Top").capitalize()
-                    if not assembled.get("sub_category") and not assembled.get("item_type"):
-                        fallback_type = (det.get("label") or det.get("kind") or "garment").lower()
-                        assembled["item_type"] = fallback_type
-                        assembled["sub_category"] = fallback_type.capitalize()
-                    if not assembled.get("title") and (det.get("label") or det.get("kind")):
-                        assembled["title"] = (det.get("label") or det.get("kind")).capitalize()
-
-                    has_human = bool(det.get("has_human_head") or det.get("has_human_skin") or photo_has_model.get(image_idx))
-                    model_g = assembled.get("model_gender") or item_mg
-                    if not model_g and has_human:
-                        if assembled.get("gender") == "women" or assembled.get("model_gender") == "women" or is_distinctly_feminine_garment(
-                            assembled.get("category"), assembled.get("sub_category"), assembled.get("item_type"),
-                            name=assembled.get("name"), full_text=f"{assembled.get('title', '')} {assembled.get('caption', '')}",
-                            pattern=assembled.get("pattern"),
-                        ):
-                            model_g = "women"
-                        elif assembled.get("gender") == "men" or assembled.get("model_gender") == "men":
-                            model_g = "men"
-
-                    if model_g in ("men", "women"):
-                        assembled["model_gender"] = model_g
-                        assembled["gender"] = model_g
-                        photo_model_genders[image_idx] = model_g
-
-                    # Robust taxonomy defaults for zero-token auxiliary fields
-                    assembled.setdefault("condition", "used")
-                    assembled.setdefault("quality_tier", "good")
-                    assembled.setdefault("price_tier", "mid")
-                    assembled.setdefault("fit_style", "regular")
-                    assembled.setdefault("clothing_condition", "Good")
-                    if not assembled.get("fabric_materials"):
-                        cat_k = (assembled.get("category") or "").lower()
-                        sub_k = (assembled.get("sub_category") or "").lower()
-                        full_desc = f"{assembled.get('name', '')} {assembled.get('title', '')} {assembled.get('caption', '')}".lower()
-                        if cat_k == "footwear":
-                            assembled["fabric_materials"] = [{"name": "Leather", "pct": 70}, {"name": "Rubber", "pct": 30}]
-                        elif "jeans" in sub_k or "denim" in sub_k:
-                            assembled["fabric_materials"] = [{"name": "Cotton", "pct": 98}, {"name": "Elastane", "pct": 2}]
-                        elif "sweat" in sub_k or "jogger" in sub_k or "track" in sub_k:
-                            assembled["fabric_materials"] = [{"name": "Cotton", "pct": 80}, {"name": "Polyester", "pct": 20}]
-                        elif "bag" in sub_k or cat_k == "accessories":
-                            assembled["fabric_materials"] = [{"name": "Leather", "pct": 100}] if "leather" in full_desc else [{"name": "Canvas", "pct": 80}, {"name": "Polyester", "pct": 20}]
-                        elif "jacket" in sub_k or "coat" in sub_k or cat_k == "outerwear":
-                            if "leather" in full_desc:
-                                assembled["fabric_materials"] = [{"name": "Leather", "pct": 100}]
-                            elif any(w in full_desc for w in ("wool", "trench", "blazer", "suit")):
-                                assembled["fabric_materials"] = [{"name": "Wool", "pct": 70}, {"name": "Polyester", "pct": 30}]
-                            else:
-                                assembled["fabric_materials"] = [{"name": "Polyester", "pct": 70}, {"name": "Cotton", "pct": 30}]
-                        elif any(w in full_desc for w in ("silk", "satin", "chiffon", "blouse")):
-                            assembled["fabric_materials"] = [{"name": "Silk", "pct": 100}] if "silk" in full_desc else [{"name": "Viscose", "pct": 60}, {"name": "Polyester", "pct": 40}]
-                        elif any(w in full_desc for w in ("knit", "sweater", "cardigan")):
-                            assembled["fabric_materials"] = [{"name": "Wool", "pct": 80}, {"name": "Polyamide", "pct": 20}]
                         else:
-                            assembled["fabric_materials"] = [{"name": "Cotton", "pct": 100}]
-                    if not assembled.get("care_instructions"):
-                        assembled["care_instructions"] = ["Machine wash cold", "Line dry"]
+                            mc = await self._matte_crops([(det, c_bytes, c_mime)])
+                            if mc and mc[0][1] and mc[0][2] == "image/png":
+                                matted = mc[0][1]
 
-                    analysis = _coerce_single_garment(assembled, user_gender=eff_gender, model_gender=model_g, language=language)
-                    if not analysis.get("title") and analysis.get("name"):
-                        analysis["title"] = analysis["name"]
-                    if not analysis.get("title"):
-                        analysis["title"] = "Unnamed garment"
-                    analysis = _coerce_enums(analysis, user_gender=eff_gender, model_gender=model_g)
-                    if model_g in ("men", "women"):
-                        analysis["gender"] = model_g
-                    _enforce_segformer_category(
-                        analysis,
-                        segformer_kind=det.get("kind") or det.get("category"),
-                        label=det.get("label"),
-                        is_single_item=det.get("is_single_item", False),
-                        language=language,
-                    )
-                    analysis["provider_used"] = assembled.get("provider_used", "gemma")
-                    analysis["model_used"] = assembled.get("model_used", "gemma-4-e2b-q4_k_m")
+                        if matted:
+                            fitted_b, fitted_m = _fit_crop_to_card(matted, crop_mime="image/png")
+                            matted_cutouts[slot_idx] = (fitted_b, fitted_m)
+                            await frame_queue.put({
+                                "type": "matte",
+                                "index": slot_idx,
+                                "image_index": image_idx,
+                                "crop_base64": base64.b64encode(fitted_b).decode("ascii"),
+                                "crop_mime": fitted_m,
+                            })
+                    except Exception as m_exc:
+                        logger.warning(
+                            "analyze_outfits_stream: matting failed for slot %d: %s",
+                            slot_idx, repr(m_exc)[:160],
+                        )
+                    finally:
+                        matted_events[slot_idx].set()
+            except Exception as fatal_m_exc:
+                logger.error("analyze_outfits_stream: _matte_worker fatal error: %s", fatal_m_exc)
+                for i in range(len(flat_crops)):
+                    matted_events[i].set()
 
-                    if _is_unidentifiable(analysis):
-                        logger.info("analyze_outfits_stream: skipping unidentifiable/non-clothing item at slot %d (%s)", slot_idx, analysis.get("title"))
-                        yield {
-                            "type": "item_skip",
+        async def _vlm_worker() -> None:
+            try:
+                from app.config import settings as _settings
+                try:
+                    from app.services import eyes_override as _eyes_override
+                    active_provider = (
+                        self.provider if self.provider in ("gemma", "gemini")
+                        else await _eyes_override.get_active_provider()
+                    ).lower()
+                except Exception:
+                    active_provider = (self.provider or "gemini").lower()
+
+                try:
+                    from app.services.reconstruction import should_reconstruct
+                except Exception:
+                    should_reconstruct = None  # type: ignore[assignment]
+
+                if active_provider in ("gemma", "dressapp") and settings.EYES_GEMMA_SPACE_URL:
+                    batch_system_prompt = _build_system_prompt(one_pass=False, user_gender=eff_gender)
+
+                    photo_model_genders: dict[int, str] = {}
+                    from collections import defaultdict
+                    photo_fem_cues: dict[int, list[str]] = defaultdict(list)
+                    photo_masc_cues: dict[int, list[str]] = defaultdict(list)
+                    photo_has_model: dict[int, bool] = defaultdict(bool)
+
+                    for slot_idx, (image_idx, det, c_bytes, c_mime) in enumerate(flat_crops):
+                        has_human = bool(
+                            det.get("has_human_head")
+                            or det.get("has_human_skin")
+                            or det.get("_photo_model_gender") in ("women", "men")
+                        )
+                        if has_human:
+                            photo_has_model[image_idx] = True
+
+                        if det.get("_photo_model_gender") == "women":
+                            photo_fem_cues[image_idx].append("det_women")
+                        elif det.get("_photo_model_gender") == "men":
+                            photo_masc_cues[image_idx].append("det_men")
+
+                        lbl = (det.get("label") or "").lower()
+                        cat = (det.get("category") or det.get("kind") or "").lower()
+                        if is_distinctly_feminine_garment(cat, lbl, lbl):
+                            photo_fem_cues[image_idx].append("fem_garment")
+                        elif is_distinctly_masculine_garment(cat, lbl, lbl):
+                            photo_masc_cues[image_idx].append("masc_garment")
+
+                    all_img_indices = set(idx for idx, _, _, _ in flat_crops)
+                    for img_i in all_img_indices:
+                        if photo_has_model.get(img_i):
+                            if photo_fem_cues.get(img_i):
+                                photo_model_genders[img_i] = "women"
+                            elif photo_masc_cues.get(img_i):
+                                photo_model_genders[img_i] = "men"
+
+                    for slot_idx, (image_idx, det, c_bytes, c_mime) in enumerate(flat_crops):
+                        item_mg = photo_model_genders.get(image_idx) or det.get("_photo_model_gender")
+                        shrunk = _shrink_for_vision(c_bytes)
+                        b64 = base64.b64encode(shrunk).decode("ascii")
+                        assembled: dict[str, Any] = {}
+                        import uuid
+                        request_id = str(uuid.uuid4())
+                        gemma_failed = False
+                        try:
+                            async for grp_name, grp_fields, partial in call_gemma_space_stream_attributes(
+                                image_b64_jpeg=b64,
+                                language=language,
+                                segformer_label=det.get("label"),
+                                segformer_category=det.get("category"),
+                                request_id=request_id,
+                                id_slot=slot_idx,
+                                is_single_item=det.get("is_single_item", False),
+                                user_gender=item_mg or eff_gender,
+                                model_gender=item_mg,
+                                system_prompt=batch_system_prompt,
+                            ):
+                                assembled.update(partial)
+                                if partial:
+                                    await frame_queue.put({
+                                        "type": "field",
+                                        "index": slot_idx,
+                                        "image_index": image_idx,
+                                        "group": grp_name,
+                                        "fields": partial,
+                                    })
+                        except Exception as gemma_exc:
+                            logger.warning(
+                                "Gemma stream attributes failed for slot %d: %s; falling back to Gemini",
+                                slot_idx, repr(gemma_exc)[:160],
+                            )
+                            gemma_failed = True
+
+                        if gemma_failed or not assembled or len(assembled) < 2:
+                            try:
+                                gem_analysis = await self.analyze(
+                                    c_bytes, language=language, think=False, provider="gemini", user_gender=item_mg or eff_gender,
+                                )
+                                if isinstance(gem_analysis, dict) and gem_analysis:
+                                    assembled = gem_analysis
+                            except Exception as gem_exc:
+                                logger.error("Gemini fallback also failed for slot %d: %s", slot_idx, gem_exc)
+
+                        if not assembled.get("category"):
+                            assembled["category"] = (det.get("category") or det.get("kind") or "Top").capitalize()
+                        if not assembled.get("sub_category") and not assembled.get("item_type"):
+                            fallback_type = (det.get("label") or det.get("kind") or "garment").lower()
+                            assembled["item_type"] = fallback_type
+                            assembled["sub_category"] = fallback_type.capitalize()
+                        if not assembled.get("title") and (det.get("label") or det.get("kind")):
+                            assembled["title"] = (det.get("label") or det.get("kind")).capitalize()
+
+                        has_human = bool(det.get("has_human_head") or det.get("has_human_skin") or photo_has_model.get(image_idx))
+                        model_g = assembled.get("model_gender") or item_mg
+                        if not model_g and has_human:
+                            if assembled.get("gender") == "women" or assembled.get("model_gender") == "women" or is_distinctly_feminine_garment(
+                                assembled.get("category"), assembled.get("sub_category"), assembled.get("item_type"),
+                                name=assembled.get("name"), full_text=f"{assembled.get('title', '')} {assembled.get('caption', '')}",
+                                pattern=assembled.get("pattern"),
+                            ):
+                                model_g = "women"
+                            elif assembled.get("gender") == "men" or assembled.get("model_gender") == "men":
+                                model_g = "men"
+
+                        if model_g in ("men", "women"):
+                            assembled["model_gender"] = model_g
+                            assembled["gender"] = model_g
+                            photo_model_genders[image_idx] = model_g
+
+                        assembled.setdefault("condition", "used")
+                        assembled.setdefault("quality_tier", "good")
+                        assembled.setdefault("price_tier", "mid")
+                        assembled.setdefault("fit_style", "regular")
+                        assembled.setdefault("clothing_condition", "Good")
+                        if not assembled.get("fabric_materials"):
+                            cat_k = (assembled.get("category") or "").lower()
+                            sub_k = (assembled.get("sub_category") or "").lower()
+                            full_desc = f"{assembled.get('name', '')} {assembled.get('title', '')} {assembled.get('caption', '')}".lower()
+                            if cat_k == "footwear":
+                                assembled["fabric_materials"] = [{"name": "Leather", "pct": 70}, {"name": "Rubber", "pct": 30}]
+                            elif "jeans" in sub_k or "denim" in sub_k:
+                                assembled["fabric_materials"] = [{"name": "Cotton", "pct": 98}, {"name": "Elastane", "pct": 2}]
+                            elif "sweat" in sub_k or "jogger" in sub_k or "track" in sub_k:
+                                assembled["fabric_materials"] = [{"name": "Cotton", "pct": 80}, {"name": "Polyester", "pct": 20}]
+                            elif "bag" in sub_k or cat_k == "accessories":
+                                assembled["fabric_materials"] = [{"name": "Leather", "pct": 100}] if "leather" in full_desc else [{"name": "Canvas", "pct": 80}, {"name": "Polyester", "pct": 20}]
+                            elif "jacket" in sub_k or "coat" in sub_k or cat_k == "outerwear":
+                                if "leather" in full_desc:
+                                    assembled["fabric_materials"] = [{"name": "Leather", "pct": 100}]
+                                elif any(w in full_desc for w in ("wool", "trench", "blazer", "suit")):
+                                    assembled["fabric_materials"] = [{"name": "Wool", "pct": 70}, {"name": "Polyester", "pct": 30}]
+                                else:
+                                    assembled["fabric_materials"] = [{"name": "Polyester", "pct": 70}, {"name": "Cotton", "pct": 30}]
+                            elif any(w in full_desc for w in ("silk", "satin", "chiffon", "blouse")):
+                                assembled["fabric_materials"] = [{"name": "Silk", "pct": 100}] if "silk" in full_desc else [{"name": "Viscose", "pct": 60}, {"name": "Polyester", "pct": 40}]
+                            elif any(w in full_desc for w in ("knit", "sweater", "cardigan")):
+                                assembled["fabric_materials"] = [{"name": "Wool", "pct": 80}, {"name": "Polyamide", "pct": 20}]
+                            else:
+                                assembled["fabric_materials"] = [{"name": "Cotton", "pct": 100}]
+                        if not assembled.get("care_instructions"):
+                            assembled["care_instructions"] = ["Machine wash cold", "Line dry"]
+
+                        analysis = _coerce_single_garment(assembled, user_gender=eff_gender, model_gender=model_g, language=language)
+                        if not analysis.get("title") and analysis.get("name"):
+                            analysis["title"] = analysis["name"]
+                        if not analysis.get("title"):
+                            analysis["title"] = "Unnamed garment"
+                        analysis = _coerce_enums(analysis, user_gender=eff_gender, model_gender=model_g)
+                        if model_g in ("men", "women"):
+                            analysis["gender"] = model_g
+                        _enforce_segformer_category(
+                            analysis,
+                            segformer_kind=det.get("kind") or det.get("category"),
+                            label=det.get("label"),
+                            is_single_item=det.get("is_single_item", False),
+                            language=language,
+                        )
+                        analysis["provider_used"] = assembled.get("provider_used", "gemma")
+                        analysis["model_used"] = assembled.get("model_used", "gemma-4-e2b-q4_k_m")
+
+                        if _is_unidentifiable(analysis):
+                            logger.info("analyze_outfits_stream: skipping unidentifiable/non-clothing item at slot %d (%s)", slot_idx, analysis.get("title"))
+                            await frame_queue.put({
+                                "type": "item_skip",
+                                "index": slot_idx,
+                                "image_index": image_idx,
+                                "reason": "non_clothing",
+                            })
+                            continue
+
+                        needs_reconstruction = False
+                        reasons: list[str] = []
+                        if should_reconstruct is not None:
+                            try:
+                                needs, raw_reasons = should_reconstruct(analysis, det.get("bbox"))
+                                if needs and _settings.DEFER_RECONSTRUCTION_ON_ANALYZE:
+                                    needs_reconstruction = True
+                                    reasons = list(raw_reasons)
+                            except Exception:
+                                pass
+
+                        await frame_queue.put({
+                            "type": "field",
                             "index": slot_idx,
                             "image_index": image_idx,
-                            "reason": "non_clothing",
-                        }
-                        continue
+                            "group": "category",
+                            "fields": {
+                                "category": analysis.get("category"),
+                                "sub_category": analysis.get("sub_category"),
+                                "item_type": analysis.get("item_type"),
+                                "title": analysis.get("title"),
+                            },
+                        })
 
-                    needs_reconstruction = False
-                    reasons: list[str] = []
-                    if should_reconstruct is not None:
-                        try:
-                            needs, raw_reasons = should_reconstruct(analysis, det.get("bbox"))
-                            if needs and _settings.DEFER_RECONSTRUCTION_ON_ANALYZE:
-                                needs_reconstruction = True
-                                reasons = list(raw_reasons)
-                        except Exception:
-                            pass
-
-                    yield {
-                        "type": "field",
-                        "index": slot_idx,
-                        "image_index": image_idx,
-                        "group": "category",
-                        "fields": {
-                            "category": analysis.get("category"),
-                            "sub_category": analysis.get("sub_category"),
-                            "item_type": analysis.get("item_type"),
-                            "title": analysis.get("title"),
-                        },
-                    }
-
-                    meta_crop = items_meta[slot_idx] if slot_idx < len(items_meta) else {}
-                    yield {
-                        "type": "item",
-                        "index": slot_idx,
-                        "image_index": image_idx,
-                        "analysis": analysis,
-                        "crop_base64": meta_crop.get("crop_base64"),
-                        "crop_mime": meta_crop.get("crop_mime", "image/png"),
-                        "label": analysis.get("sub_category") or analysis.get("item_type"),
-                        "needs_reconstruction": needs_reconstruction,
-                        "reconstruction_reasons": reasons,
-                    }
-                    emitted += 1
-
-            else:
-                # ── Gemini batched path (single system prompt for whole batch) ──
-                # Run the system prompt ONCE for the whole batch sequence!
-                # Uses analyze_batch_stream to feed all crops in flat_crops to
-                # Gemini with a single system prompt, streaming back each garment.
-                if len(flat_crops) == 1:
-                    slot_idx = 0
-                    image_idx, det, c_bytes, c_mime = flat_crops[0]
-                    item_mg = det.get("_photo_model_gender")
-                    raw_for_vision = c_bytes
-                    try:
-                        analysis = await self.analyze(
-                            raw_for_vision, language=language, think=False, user_gender=item_mg or eff_gender
-                        )
-                        if isinstance(analysis, dict):
-                            _enforce_segformer_category(
-                                analysis,
-                                segformer_kind=det.get("kind") or det.get("category"),
-                                label=det.get("label"),
-                                is_single_item=det.get("is_single_item", False),
-                                language=language,
-                            )
-                            if not analysis.get("title") and analysis.get("name"):
-                                analysis["title"] = analysis["name"]
-                            if not analysis.get("title") and (det.get("label") or det.get("kind")):
-                                analysis["title"] = (det.get("label") or det.get("kind")).capitalize()
-                            if not analysis.get("item_type") and not analysis.get("sub_category"):
-                                fallback_type = (det.get("label") or det.get("kind") or "garment").lower()
-                                analysis["item_type"] = fallback_type
-                                analysis["sub_category"] = fallback_type.capitalize()
-                            if item_mg in ("men", "women"):
-                                analysis["gender"] = item_mg
-                            analysis = _coerce_single_garment(analysis, user_gender=eff_gender, model_gender=item_mg, language=language)
-                            analysis = _coerce_enums(analysis, user_gender=eff_gender, model_gender=item_mg)
-                            if item_mg in ("men", "women"):
-                                analysis["gender"] = item_mg
-                    except Exception as exc:
-                        err_str = str(exc)
-                        is_quota = (
-                            "RESOURCE_EXHAUSTED" in err_str
-                            or "429" in err_str
-                            or "quota" in err_str.lower()
-                            or "spending cap" in err_str.lower()
-                        )
-                        analysis = None
-                        if is_quota and settings.EYES_GEMMA_SPACE_URL:
-                            logger.warning(
-                                "Stream crop analysis hit quota on slot %d (%s); falling back to Gemma Eyes",
-                                slot_idx, repr(exc)[:160],
-                            )
+                        if settings.AUTO_MATTE_CROPS and not matted_events[slot_idx].is_set():
                             try:
-                                analysis = await self.analyze(
-                                    raw_for_vision, language=language, think=False, provider="gemma", user_gender=item_mg or eff_gender
-                                )
-                            except Exception as fallback_exc:
-                                logger.error("Gemma fallback also failed for slot %d: %s", slot_idx, fallback_exc)
-                        if not analysis:
-                            if (
-                                "API_KEY_SERVICE_BLOCKED" in err_str
-                                or "PERMISSION_DENIED" in err_str
-                                or "API_KEY_INVALID" in err_str
-                            ):
-                                raise
-                            analysis = {
-                                "category": (det.get("category") or det.get("kind") or "Top").capitalize(),
-                                "sub_category": (det.get("label") or det.get("kind") or "T-Shirt").capitalize(),
-                                "item_type": (det.get("label") or det.get("kind") or "T-Shirt").capitalize(),
-                                "title": (det.get("label") or det.get("kind") or "Garment").capitalize(),
-                                "caption": "Garment detected from photo upload.",
-                                "gender": item_mg or eff_gender or "unisex",
-                            }
+                                await asyncio.wait_for(matted_events[slot_idx].wait(), timeout=4.0)
+                            except (asyncio.TimeoutError, Exception):
+                                pass
 
-                    needs_reconstruction = False
-                    reasons: list[str] = []
-                    if should_reconstruct is not None:
-                        try:
-                            needs, raw_reasons = should_reconstruct(
-                                analysis, det.get("bbox")
-                            )
-                            if needs and _settings.DEFER_RECONSTRUCTION_ON_ANALYZE:
-                                needs_reconstruction = True
-                                reasons = list(raw_reasons)
-                        except Exception as exc:  # noqa: BLE001
-                            logger.warning(
-                                "reconstruction gate failed slot=0: %s",
-                                repr(exc)[:160],
-                            )
+                        m_res = matted_cutouts.get(slot_idx)
+                        meta_crop = items_meta[slot_idx] if slot_idx < len(items_meta) else {}
+                        crop_b64 = base64.b64encode(m_res[0]).decode("ascii") if m_res else meta_crop.get("crop_base64")
+                        crop_mime = m_res[1] if m_res else meta_crop.get("crop_mime", "image/png")
 
-                    if _is_unidentifiable(analysis):
-                        logger.info("analyze_outfits_stream: skipping unidentifiable/non-clothing item at slot 0 (%s)", analysis.get("title"))
-                        yield {
-                            "type": "item_skip",
-                            "index": 0,
+                        await frame_queue.put({
+                            "type": "item",
+                            "index": slot_idx,
                             "image_index": image_idx,
-                            "reason": "non_clothing",
-                        }
-                        return
-
-                    meta_crop = items_meta[0] if items_meta else {}
-                    yield {
-                        "type": "item",
-                        "index": 0,
-                        "image_index": image_idx,
-                        "analysis": analysis,
-                        "crop_base64": meta_crop.get("crop_base64"),
-                        "crop_mime": meta_crop.get("crop_mime", "image/png"),
-                        "label": analysis.get("sub_category") or analysis.get("item_type"),
-                        "needs_reconstruction": needs_reconstruction,
-                        "reconstruction_reasons": reasons,
-                    }
-                    emitted += 1
+                            "analysis": analysis,
+                            "crop_base64": crop_b64,
+                            "crop_mime": crop_mime,
+                            "label": analysis.get("sub_category") or analysis.get("item_type"),
+                            "needs_reconstruction": needs_reconstruction,
+                            "reconstruction_reasons": reasons,
+                        })
 
                 else:
-                    # Multiple crops: run system prompt ONCE for the entire batch sequence!
-                    CHUNK_SIZE = max(30, len(flat_crops))
-                    for chunk_start in range(0, len(flat_crops), CHUNK_SIZE):
-                        chunk_crops = flat_crops[chunk_start : chunk_start + CHUNK_SIZE]
-                        chunk_bytes = [c[2] for c in chunk_crops]
-                        chunk_hints = [
-                            (c[1].get("kind") or c[1].get("category") or c[1].get("label"))
-                            for c in chunk_crops
-                        ]
-                        photo_ids = {c[0] for c in chunk_crops}
-                        chunk_mgs = {c[1].get("_photo_model_gender") for c in chunk_crops if c[1].get("_photo_model_gender")}
-                        if len(photo_ids) == 1 and len(chunk_mgs) == 1:
-                            chunk_mg = next(iter(chunk_mgs))
-                        else:
-                            chunk_mg = None
-
-                        chunk_emitted: set[int] = set()
+                    # ── Gemini batched path (single system prompt for whole batch) ──
+                    if len(flat_crops) == 1:
+                        slot_idx = 0
+                        image_idx, det, c_bytes, c_mime = flat_crops[0]
+                        item_mg = det.get("_photo_model_gender")
+                        raw_for_vision = c_bytes
                         try:
-                            logger.info(
-                                "analyze_outfits_stream: running unified batch Gemini stream for %d crops (chunk [%d..%d]) with 1 system prompt, chunk_mg=%s",
-                                len(chunk_crops), chunk_start, chunk_start + len(chunk_crops), chunk_mg,
+                            analysis = await self.analyze(
+                                raw_for_vision, language=language, think=False, user_gender=item_mg or eff_gender
                             )
-                            batch_kwargs: dict[str, Any] = {
-                                "language": language,
-                                "kind_hints": chunk_hints,
-                                "user_gender": eff_gender,
-                            }
-                            if chunk_mg is not None:
-                                batch_kwargs["model_gender"] = chunk_mg
-                            async for local_idx, analysis in self.analyze_batch_stream(
-                                chunk_bytes,
-                                **batch_kwargs,
-                            ):
-                                slot_idx = chunk_start + local_idx
-                                if slot_idx >= len(flat_crops):
-                                    continue
-                                image_idx, det, c_bytes, c_mime = flat_crops[slot_idx]
-                                chunk_emitted.add(local_idx)
-                                item_mg = det.get("_photo_model_gender") or chunk_mg
-
-                                # If batch returned empty/invalid dict, fallback for this slot
-                                if not analysis or not isinstance(analysis, dict) or not (
-                                    analysis.get("category") or analysis.get("sub_category") or analysis.get("item_type")
-                                ):
-                                    try:
-                                        raw_fb = c_bytes
-                                        fb = await self.analyze(
-                                            raw_fb, language=language, think=False, user_gender=item_mg or eff_gender
-                                        )
-                                        if isinstance(fb, dict) and fb:
-                                            analysis = fb
-                                    except Exception:
-                                        analysis = {
-                                            "category": (det.get("category") or det.get("kind") or "Top").capitalize(),
-                                            "sub_category": (det.get("label") or det.get("kind") or "T-Shirt").capitalize(),
-                                            "item_type": (det.get("label") or det.get("kind") or "T-Shirt").capitalize(),
-                                            "title": (det.get("label") or det.get("kind") or "Garment").capitalize(),
-                                            "caption": "Garment detected from photo upload.",
-                                            "gender": item_mg or eff_gender or "unisex",
-                                        }
-
+                            if isinstance(analysis, dict):
                                 _enforce_segformer_category(
                                     analysis,
                                     segformer_kind=det.get("kind") or det.get("category"),
@@ -3114,178 +2984,393 @@ class GarmentVisionService:
                                     fallback_type = (det.get("label") or det.get("kind") or "garment").lower()
                                     analysis["item_type"] = fallback_type
                                     analysis["sub_category"] = fallback_type.capitalize()
-
                                 if item_mg in ("men", "women"):
                                     analysis["gender"] = item_mg
                                 analysis = _coerce_single_garment(analysis, user_gender=eff_gender, model_gender=item_mg, language=language)
                                 analysis = _coerce_enums(analysis, user_gender=eff_gender, model_gender=item_mg)
                                 if item_mg in ("men", "women"):
                                     analysis["gender"] = item_mg
-
-                                if _is_unidentifiable(analysis):
-                                    logger.info("analyze_outfits_stream: skipping unidentifiable/non-clothing item at slot %d (%s)", slot_idx, analysis.get("title"))
-                                    yield {
-                                        "type": "item_skip",
-                                        "index": slot_idx,
-                                        "image_index": image_idx,
-                                        "reason": "non_clothing",
-                                    }
-                                    continue
-
-                                needs_reconstruction = False
-                                reasons: list[str] = []
-                                if should_reconstruct is not None:
-                                    try:
-                                        needs, raw_reasons = should_reconstruct(
-                                            analysis, det.get("bbox")
-                                        )
-                                        if needs and _settings.DEFER_RECONSTRUCTION_ON_ANALYZE:
-                                            needs_reconstruction = True
-                                            reasons = list(raw_reasons)
-                                    except Exception as exc:  # noqa: BLE001
-                                        logger.warning(
-                                            "reconstruction gate failed slot=%d: %s",
-                                            slot_idx, repr(exc)[:160],
-                                        )
-
-                                meta_crop = items_meta[slot_idx] if slot_idx < len(items_meta) else {}
-                                yield {
-                                    "type": "item",
-                                    "index": slot_idx,
-                                    "image_index": image_idx,
-                                    "analysis": analysis,
-                                    "crop_base64": meta_crop.get("crop_base64"),
-                                    "crop_mime": meta_crop.get("crop_mime", "image/png"),
-                                    "label": analysis.get("sub_category") or analysis.get("item_type"),
-                                    "needs_reconstruction": needs_reconstruction,
-                                    "reconstruction_reasons": reasons,
-                                }
-                                emitted += 1
-
-                        except Exception as batch_exc:
-                            logger.warning(
-                                "analyze_outfits_stream: batch stream failed for chunk [%d..%d]: %s — falling back to per-crop",
-                                chunk_start, chunk_start + len(chunk_crops), repr(batch_exc)[:200],
-                            )
-                            err_str = str(batch_exc)
+                        except Exception as exc:
+                            err_str = str(exc)
                             is_quota = (
                                 "RESOURCE_EXHAUSTED" in err_str
                                 or "429" in err_str
                                 or "quota" in err_str.lower()
                                 or "spending cap" in err_str.lower()
                             )
-                            for local_i, (image_idx, det, c_bytes, c_mime) in enumerate(chunk_crops):
-                                if local_i in chunk_emitted:
-                                    continue
-                                slot_idx = chunk_start + local_i
-                                item_mg = det.get("_photo_model_gender")
-                                fallback_analysis = None
-                                raw_fb = c_bytes
-                                if is_quota and settings.EYES_GEMMA_SPACE_URL:
-                                    try:
-                                        fallback_analysis = await self.analyze(
-                                            raw_fb, language=language, think=False, provider="gemma", user_gender=item_mg or eff_gender
-                                        )
-                                    except Exception:
-                                        fallback_analysis = None
-                                if not fallback_analysis:
-                                    try:
-                                        fallback_analysis = await self.analyze(
-                                            raw_fb, language=language, think=False, user_gender=item_mg or eff_gender
-                                        )
-                                    except Exception:
-                                        fallback_analysis = {
-                                            "category": (det.get("category") or det.get("kind") or "Top").capitalize(),
-                                            "sub_category": (det.get("label") or det.get("kind") or "T-Shirt").capitalize(),
-                                            "item_type": (det.get("label") or det.get("kind") or "T-Shirt").capitalize(),
-                                            "title": (det.get("label") or det.get("kind") or "Garment").capitalize(),
-                                            "caption": "Garment detected from photo upload.",
-                                            "gender": item_mg or eff_gender or "unisex",
-                                        }
-
-                                _enforce_segformer_category(
-                                    fallback_analysis,
-                                    segformer_kind=det.get("kind") or det.get("category"),
-                                    label=det.get("label"),
-                                    is_single_item=det.get("is_single_item", False),
-                                    language=language,
+                            analysis = None
+                            if is_quota and settings.EYES_GEMMA_SPACE_URL:
+                                logger.warning(
+                                    "Stream crop analysis hit quota on slot %d (%s); falling back to Gemma Eyes",
+                                    slot_idx, repr(exc)[:160],
                                 )
-                                if not fallback_analysis.get("title") and fallback_analysis.get("name"):
-                                    fallback_analysis["title"] = fallback_analysis["name"]
-                                if not fallback_analysis.get("title") and (det.get("label") or det.get("kind")):
-                                    fallback_analysis["title"] = (det.get("label") or det.get("kind")).capitalize()
-                                if not fallback_analysis.get("item_type") and not fallback_analysis.get("sub_category"):
-                                    fallback_type = (det.get("label") or det.get("kind") or "garment").lower()
-                                    fallback_analysis["item_type"] = fallback_type
-                                    fallback_analysis["sub_category"] = fallback_type.capitalize()
+                                try:
+                                    analysis = await self.analyze(
+                                        raw_for_vision, language=language, think=False, provider="gemma", user_gender=item_mg or eff_gender
+                                    )
+                                except Exception as fallback_exc:
+                                    logger.error("Gemma fallback also failed for slot %d: %s", slot_idx, fallback_exc)
+                            if not analysis:
+                                if (
+                                    "API_KEY_SERVICE_BLOCKED" in err_str
+                                    or "PERMISSION_DENIED" in err_str
+                                    or "API_KEY_INVALID" in err_str
+                                ):
+                                    raise
+                                analysis = {
+                                    "category": (det.get("category") or det.get("kind") or "Top").capitalize(),
+                                    "sub_category": (det.get("label") or det.get("kind") or "T-Shirt").capitalize(),
+                                    "item_type": (det.get("label") or det.get("kind") or "T-Shirt").capitalize(),
+                                    "title": (det.get("label") or det.get("kind") or "Garment").capitalize(),
+                                    "caption": "Garment detected from photo upload.",
+                                    "gender": item_mg or eff_gender or "unisex",
+                                }
 
-                                if item_mg in ("men", "women"):
-                                    fallback_analysis["gender"] = item_mg
-                                fallback_analysis = _coerce_single_garment(fallback_analysis, user_gender=eff_gender, model_gender=item_mg, language=language)
-                                fallback_analysis = _coerce_enums(fallback_analysis, user_gender=eff_gender, model_gender=item_mg)
-                                if item_mg in ("men", "women"):
-                                    fallback_analysis["gender"] = item_mg
+                        needs_reconstruction = False
+                        reasons: list[str] = []
+                        if should_reconstruct is not None:
+                            try:
+                                needs, raw_reasons = should_reconstruct(
+                                    analysis, det.get("bbox")
+                                )
+                                if needs and _settings.DEFER_RECONSTRUCTION_ON_ANALYZE:
+                                    needs_reconstruction = True
+                                    reasons = list(raw_reasons)
+                            except Exception as exc:  # noqa: BLE001
+                                logger.warning(
+                                    "reconstruction gate failed slot=0: %s",
+                                    repr(exc)[:160],
+                                )
 
-                                if _is_unidentifiable(fallback_analysis):
-                                    logger.info("analyze_outfits_stream: skipping unidentifiable/non-clothing item at slot %d (%s)", slot_idx, fallback_analysis.get("title"))
-                                    yield {
-                                        "type": "item_skip",
+                        if _is_unidentifiable(analysis):
+                            logger.info("analyze_outfits_stream: skipping unidentifiable/non-clothing item at slot 0 (%s)", analysis.get("title"))
+                            await frame_queue.put({
+                                "type": "item_skip",
+                                "index": 0,
+                                "image_index": image_idx,
+                                "reason": "non_clothing",
+                            })
+                            return
+
+                        if settings.AUTO_MATTE_CROPS and not matted_events[0].is_set():
+                            try:
+                                await asyncio.wait_for(matted_events[0].wait(), timeout=4.0)
+                            except (asyncio.TimeoutError, Exception):
+                                pass
+
+                        m_res = matted_cutouts.get(0)
+                        meta_crop = items_meta[0] if items_meta else {}
+                        crop_b64 = base64.b64encode(m_res[0]).decode("ascii") if m_res else meta_crop.get("crop_base64")
+                        crop_mime = m_res[1] if m_res else meta_crop.get("crop_mime", "image/png")
+
+                        await frame_queue.put({
+                            "type": "item",
+                            "index": 0,
+                            "image_index": image_idx,
+                            "analysis": analysis,
+                            "crop_base64": crop_b64,
+                            "crop_mime": crop_mime,
+                            "label": analysis.get("sub_category") or analysis.get("item_type"),
+                            "needs_reconstruction": needs_reconstruction,
+                            "reconstruction_reasons": reasons,
+                        })
+
+                    else:
+                        CHUNK_SIZE = max(30, len(flat_crops))
+                        for chunk_start in range(0, len(flat_crops), CHUNK_SIZE):
+                            chunk_crops = flat_crops[chunk_start : chunk_start + CHUNK_SIZE]
+                            chunk_bytes = [c[2] for c in chunk_crops]
+                            chunk_hints = [
+                                (c[1].get("kind") or c[1].get("category") or c[1].get("label"))
+                                for c in chunk_crops
+                            ]
+                            photo_ids = {c[0] for c in chunk_crops}
+                            chunk_mgs = {c[1].get("_photo_model_gender") for c in chunk_crops if c[1].get("_photo_model_gender")}
+                            if len(photo_ids) == 1 and len(chunk_mgs) == 1:
+                                chunk_mg = next(iter(chunk_mgs))
+                            else:
+                                chunk_mg = None
+
+                            chunk_emitted: set[int] = set()
+                            try:
+                                logger.info(
+                                    "analyze_outfits_stream: running unified batch Gemini stream for %d crops (chunk [%d..%d]) with 1 system prompt, chunk_mg=%s",
+                                    len(chunk_crops), chunk_start, chunk_start + len(chunk_crops), chunk_mg,
+                                )
+                                batch_kwargs: dict[str, Any] = {
+                                    "language": language,
+                                    "kind_hints": chunk_hints,
+                                    "user_gender": eff_gender,
+                                }
+                                if chunk_mg is not None:
+                                    batch_kwargs["model_gender"] = chunk_mg
+                                async for local_idx, analysis in self.analyze_batch_stream(
+                                    chunk_bytes,
+                                    **batch_kwargs,
+                                ):
+                                    slot_idx = chunk_start + local_idx
+                                    if slot_idx >= len(flat_crops):
+                                        continue
+                                    image_idx, det, c_bytes, c_mime = flat_crops[slot_idx]
+                                    chunk_emitted.add(local_idx)
+                                    item_mg = det.get("_photo_model_gender") or chunk_mg
+
+                                    if not analysis or not isinstance(analysis, dict) or not (
+                                        analysis.get("category") or analysis.get("sub_category") or analysis.get("item_type")
+                                    ):
+                                        try:
+                                            raw_fb = c_bytes
+                                            fb = await self.analyze(
+                                                raw_fb, language=language, think=False, user_gender=item_mg or eff_gender
+                                            )
+                                            if isinstance(fb, dict) and fb:
+                                                analysis = fb
+                                        except Exception:
+                                            analysis = {
+                                                "category": (det.get("category") or det.get("kind") or "Top").capitalize(),
+                                                "sub_category": (det.get("label") or det.get("kind") or "T-Shirt").capitalize(),
+                                                "item_type": (det.get("label") or det.get("kind") or "T-Shirt").capitalize(),
+                                                "title": (det.get("label") or det.get("kind") or "Garment").capitalize(),
+                                                "caption": "Garment detected from photo upload.",
+                                                "gender": item_mg or eff_gender or "unisex",
+                                            }
+
+                                    _enforce_segformer_category(
+                                        analysis,
+                                        segformer_kind=det.get("kind") or det.get("category"),
+                                        label=det.get("label"),
+                                        is_single_item=det.get("is_single_item", False),
+                                        language=language,
+                                    )
+                                    if not analysis.get("title") and analysis.get("name"):
+                                        analysis["title"] = analysis["name"]
+                                    if not analysis.get("title") and (det.get("label") or det.get("kind")):
+                                        analysis["title"] = (det.get("label") or det.get("kind")).capitalize()
+                                    if not analysis.get("item_type") and not analysis.get("sub_category"):
+                                        fallback_type = (det.get("label") or det.get("kind") or "garment").lower()
+                                        analysis["item_type"] = fallback_type
+                                        analysis["sub_category"] = fallback_type.capitalize()
+
+                                    if item_mg in ("men", "women"):
+                                        analysis["gender"] = item_mg
+                                    analysis = _coerce_single_garment(analysis, user_gender=eff_gender, model_gender=item_mg, language=language)
+                                    analysis = _coerce_enums(analysis, user_gender=eff_gender, model_gender=item_mg)
+                                    if item_mg in ("men", "women"):
+                                        analysis["gender"] = item_mg
+
+                                    if _is_unidentifiable(analysis):
+                                        logger.info("analyze_outfits_stream: skipping unidentifiable/non-clothing item at slot %d (%s)", slot_idx, analysis.get("title"))
+                                        await frame_queue.put({
+                                            "type": "item_skip",
+                                            "index": slot_idx,
+                                            "image_index": image_idx,
+                                            "reason": "non_clothing",
+                                        })
+                                        continue
+
+                                    needs_reconstruction = False
+                                    reasons: list[str] = []
+                                    if should_reconstruct is not None:
+                                        try:
+                                            needs, raw_reasons = should_reconstruct(
+                                                analysis, det.get("bbox")
+                                            )
+                                            if needs and _settings.DEFER_RECONSTRUCTION_ON_ANALYZE:
+                                                needs_reconstruction = True
+                                                reasons = list(raw_reasons)
+                                        except Exception as exc:  # noqa: BLE001
+                                            logger.warning(
+                                                "reconstruction gate failed slot=%d: %s",
+                                                slot_idx, repr(exc)[:160],
+                                            )
+
+                                    if settings.AUTO_MATTE_CROPS and not matted_events[slot_idx].is_set():
+                                        try:
+                                            await asyncio.wait_for(matted_events[slot_idx].wait(), timeout=4.0)
+                                        except (asyncio.TimeoutError, Exception):
+                                            pass
+
+                                    m_res = matted_cutouts.get(slot_idx)
+                                    meta_crop = items_meta[slot_idx] if slot_idx < len(items_meta) else {}
+                                    crop_b64 = base64.b64encode(m_res[0]).decode("ascii") if m_res else meta_crop.get("crop_base64")
+                                    crop_mime = m_res[1] if m_res else meta_crop.get("crop_mime", "image/png")
+
+                                    await frame_queue.put({
+                                        "type": "item",
                                         "index": slot_idx,
                                         "image_index": image_idx,
-                                        "reason": "non_clothing",
-                                    }
-                                    continue
+                                        "analysis": analysis,
+                                        "crop_base64": crop_b64,
+                                        "crop_mime": crop_mime,
+                                        "label": analysis.get("sub_category") or analysis.get("item_type"),
+                                        "needs_reconstruction": needs_reconstruction,
+                                        "reconstruction_reasons": reasons,
+                                    })
 
-                                meta_crop = items_meta[slot_idx] if slot_idx < len(items_meta) else {}
-                                yield {
-                                    "type": "item",
-                                    "index": slot_idx,
-                                    "image_index": image_idx,
-                                    "analysis": fallback_analysis,
-                                    "crop_base64": meta_crop.get("crop_base64"),
-                                    "crop_mime": meta_crop.get("crop_mime", "image/png"),
-                                    "label": fallback_analysis.get("sub_category") or fallback_analysis.get("item_type"),
-                                    "needs_reconstruction": False,
-                                    "reconstruction_reasons": [],
-                                }
-                                emitted += 1
+                            except Exception as batch_exc:
+                                logger.warning(
+                                    "analyze_outfits_stream: batch stream failed for chunk [%d..%d]: %s — falling back to per-crop",
+                                    chunk_start, chunk_start + len(chunk_crops), repr(batch_exc)[:200],
+                                )
+                                err_str = str(batch_exc)
+                                is_quota = (
+                                    "RESOURCE_EXHAUSTED" in err_str
+                                    or "429" in err_str
+                                    or "quota" in err_str.lower()
+                                    or "spending cap" in err_str.lower()
+                                )
+                                for local_i, (image_idx, det, c_bytes, c_mime) in enumerate(chunk_crops):
+                                    if local_i in chunk_emitted:
+                                        continue
+                                    slot_idx = chunk_start + local_i
+                                    item_mg = det.get("_photo_model_gender")
+                                    fallback_analysis = None
+                                    raw_fb = c_bytes
+                                    if is_quota and settings.EYES_GEMMA_SPACE_URL:
+                                        try:
+                                            fallback_analysis = await self.analyze(
+                                                raw_fb, language=language, think=False, provider="gemma", user_gender=item_mg or eff_gender
+                                            )
+                                        except Exception:
+                                            fallback_analysis = None
+                                    if not fallback_analysis:
+                                        try:
+                                            fallback_analysis = await self.analyze(
+                                                raw_fb, language=language, think=False, user_gender=item_mg or eff_gender
+                                            )
+                                        except Exception:
+                                            fallback_analysis = {
+                                                "category": (det.get("category") or det.get("kind") or "Top").capitalize(),
+                                                "sub_category": (det.get("label") or det.get("kind") or "T-Shirt").capitalize(),
+                                                "item_type": (det.get("label") or det.get("kind") or "T-Shirt").capitalize(),
+                                                "title": (det.get("label") or det.get("kind") or "Garment").capitalize(),
+                                                "caption": "Garment detected from photo upload.",
+                                                "gender": item_mg or eff_gender or "unisex",
+                                            }
 
-        except Exception as exc:
-            err_text = repr(exc)
-            logger.error(
-                "analyze_outfits_stream: stream FAILED after %d emit(s): %s",
-                emitted, err_text[:400],
-            )
-            low = err_text.lower()
-            if "api_key_service_blocked" in low or "blocked" in low:
-                msg = (
-                    "Your Google API key is blocked for Generative Language API (API_KEY_SERVICE_BLOCKED). "
-                    "Please enable 'Generative Language API' in Google Cloud Console or generate a key from Google AI Studio (aistudio.google.com)."
+                                    _enforce_segformer_category(
+                                        fallback_analysis,
+                                        segformer_kind=det.get("kind") or det.get("category"),
+                                        label=det.get("label"),
+                                        is_single_item=det.get("is_single_item", False),
+                                        language=language,
+                                    )
+                                    if not fallback_analysis.get("title") and fallback_analysis.get("name"):
+                                        fallback_analysis["title"] = fallback_analysis["name"]
+                                    if not fallback_analysis.get("title") and (det.get("label") or det.get("kind")):
+                                        fallback_analysis["title"] = (det.get("label") or det.get("kind")).capitalize()
+                                    if not fallback_analysis.get("item_type") and not fallback_analysis.get("sub_category"):
+                                        fallback_type = (det.get("label") or det.get("kind") or "garment").lower()
+                                        fallback_analysis["item_type"] = fallback_type
+                                        fallback_analysis["sub_category"] = fallback_type.capitalize()
+
+                                    if item_mg in ("men", "women"):
+                                        fallback_analysis["gender"] = item_mg
+                                    fallback_analysis = _coerce_single_garment(fallback_analysis, user_gender=eff_gender, model_gender=item_mg, language=language)
+                                    fallback_analysis = _coerce_enums(fallback_analysis, user_gender=eff_gender, model_gender=item_mg)
+                                    if item_mg in ("men", "women"):
+                                        fallback_analysis["gender"] = item_mg
+
+                                    if _is_unidentifiable(fallback_analysis):
+                                        logger.info("analyze_outfits_stream: skipping unidentifiable/non-clothing item at slot %d (%s)", slot_idx, fallback_analysis.get("title"))
+                                        await frame_queue.put({
+                                            "type": "item_skip",
+                                            "index": slot_idx,
+                                            "image_index": image_idx,
+                                            "reason": "non_clothing",
+                                        })
+                                        continue
+
+                                    if settings.AUTO_MATTE_CROPS and not matted_events[slot_idx].is_set():
+                                        try:
+                                            await asyncio.wait_for(matted_events[slot_idx].wait(), timeout=4.0)
+                                        except (asyncio.TimeoutError, Exception):
+                                            pass
+
+                                    m_res = matted_cutouts.get(slot_idx)
+                                    meta_crop = items_meta[slot_idx] if slot_idx < len(items_meta) else {}
+                                    crop_b64 = base64.b64encode(m_res[0]).decode("ascii") if m_res else meta_crop.get("crop_base64")
+                                    crop_mime = m_res[1] if m_res else meta_crop.get("crop_mime", "image/png")
+
+                                    await frame_queue.put({
+                                        "type": "item",
+                                        "index": slot_idx,
+                                        "image_index": image_idx,
+                                        "analysis": fallback_analysis,
+                                        "crop_base64": crop_b64,
+                                        "crop_mime": crop_mime,
+                                        "label": fallback_analysis.get("sub_category") or fallback_analysis.get("item_type"),
+                                        "needs_reconstruction": False,
+                                        "reconstruction_reasons": [],
+                                    })
+
+            except Exception as exc:
+                err_text = repr(exc)
+                logger.error(
+                    "analyze_outfits_stream: VLM worker FAILED: %s",
+                    err_text[:400],
                 )
-                status = 403
-            elif "permission_denied" in low or " 403" in low or "permission denied" in low:
-                msg = "Garment analyzer: API rejected the request (403). Check your Gemini API key permissions."
-                status = 403
-            elif "unauthenticated" in low or " 401" in low:
-                msg = "Garment analyzer: API rejected the key (401)."
-                status = 401
-            elif "resource_exhausted" in low or " 429" in low or "quota" in low or "spending cap" in low:
-                msg = "Garment analyzer: Gemini quota or spend cap exhausted (429). Please check spend cap in Google AI Studio."
-                status = 429
-            elif "not_found" in low or " 404" in low or "model not found" in low:
-                msg = "Garment analyzer: requested model is not available (404)."
-                status = 404
-            elif "deadline" in low or "timeout" in low or "timed out" in low:
-                msg = "Garment analyzer: request timed out. Retry in a moment."
-                status = 504
-            elif " 500" in low or " 502" in low or " 503" in low or "internal" in low:
-                msg = "Garment analyzer: server error. Retry in a moment."
-                status = 503
-            else:
-                msg = "Garment analyzer hit a transient error. (debug: " + err_text[:160].replace("\n", " ") + ")"
-                status = 503
-            yield {"type": "error", "status": status, "message": msg}
-            return
+                low = err_text.lower()
+                if "api_key_service_blocked" in low or "blocked" in low:
+                    msg = (
+                        "Your Google API key is blocked for Generative Language API (API_KEY_SERVICE_BLOCKED). "
+                        "Please enable 'Generative Language API' in Google Cloud Console or generate a key from Google AI Studio (aistudio.google.com)."
+                    )
+                    status = 403
+                elif "permission_denied" in low or " 403" in low or "permission denied" in low:
+                    msg = "Garment analyzer: API rejected the request (403). Check your Gemini API key permissions."
+                    status = 403
+                elif "unauthenticated" in low or " 401" in low:
+                    msg = "Garment analyzer: API rejected the key (401)."
+                    status = 401
+                elif "resource_exhausted" in low or " 429" in low or "quota" in low or "spending cap" in low:
+                    msg = "Garment analyzer: Gemini quota or spend cap exhausted (429). Please check spend cap in Google AI Studio."
+                    status = 429
+                elif "not_found" in low or " 404" in low or "model not found" in low:
+                    msg = "Garment analyzer: requested model is not available (404)."
+                    status = 404
+                elif "deadline" in low or "timeout" in low or "timed out" in low:
+                    msg = "Garment analyzer: request timed out. Retry in a moment."
+                    status = 504
+                elif " 500" in low or " 502" in low or " 503" in low or "internal" in low:
+                    msg = "Garment analyzer: server error. Retry in a moment."
+                    status = 503
+                else:
+                    msg = "Garment analyzer hit a transient error. (debug: " + err_text[:160].replace("\n", " ") + ")"
+                    status = 503
+                await frame_queue.put({"type": "error", "status": status, "message": msg})
+
+        emitted = 0
+        matte_task = asyncio.create_task(_matte_worker())
+        vlm_task = None if cutout_only else asyncio.create_task(_vlm_worker())
+        tasks = [matte_task] if cutout_only else [matte_task, vlm_task]
+
+        try:
+            while True:
+                try:
+                    frame = await asyncio.wait_for(frame_queue.get(), timeout=0.05)
+                    ftype = frame.get("type")
+                    if ftype == "item":
+                        emitted += 1
+                    yield frame
+                    if ftype == "error":
+                        return
+                except asyncio.TimeoutError:
+                    if all(t.done() for t in tasks) and frame_queue.empty():
+                        break
+        finally:
+            for t in tasks:
+                if not t.done():
+                    t.cancel()
+
+        for t in tasks:
+            if t.done() and not t.cancelled():
+                exc = t.exception()
+                if exc:
+                    logger.error("analyze_outfits_stream task failed: %s", repr(exc)[:200])
+
+        if cutout_only:
+            emitted = len(flat_crops)
 
         yield {"type": "done", "count": emitted}
 

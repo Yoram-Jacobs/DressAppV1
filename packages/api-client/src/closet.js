@@ -256,6 +256,13 @@ export const closet = {
               case 'field':
                 callbacks.onField?.(frame);
                 break;
+              case 'matte':
+                if (detectMeta?.items_meta?.[frame.index]) {
+                  detectMeta.items_meta[frame.index].crop_base64 = frame.crop_base64;
+                  detectMeta.items_meta[frame.index].crop_mime = frame.crop_mime || 'image/png';
+                }
+                callbacks.onMatte?.(frame);
+                break;
               case 'done':
                 doneCount = frame.count || 0;
                 callbacks.onDone?.(frame);

@@ -1813,6 +1813,62 @@ def test_apply_alpha_intersection_heals_bitten_sleeve_dropout():
     assert res_arr[10, 10, 3] == 0, "Background must remain 0"
 
 
+@pytest.mark.anyio
+async def test_parallel_dispatch_instant_preview_option_a():
+    """Verify Option A (Instant Preview) parallel dispatch:
+    1. detect frame is yielded immediately with raw crop (within milliseconds).
+    2. Matting runs concurrently in background and emits a 'matte' frame.
+    3. VLM runs concurrently and emits 'item' frame carrying the transparent cutout.
+    """
+    from unittest.mock import patch
+    import asyncio
+    from app.services.vision.service import GarmentVisionService
+
+    service = GarmentVisionService(api_key="test-key", provider="gemini")
+
+    async def mock_detect_items(img_bytes, count_hint=None):
+        return [{"bbox": [100, 100, 500, 500], "kind": "top", "label": "shirt"}]
+
+    async def mock_whole_image_matte(img_bytes, detections=None):
+        await asyncio.sleep(0.02)
+        return b"\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00\x01\x00\x00\x00\x01\x08\x06\x00\x00\x00\x1f\x15c4\x00\x00\x00\nIDATx\x9cc\x00\x01\x00\x00\x05\x00\x01\r\n-\xb4\x00\x00\x00\x00IEND\xaeB`\x82"
+
+    async def mock_analyze(*args, **kwargs):
+        return {
+            "category": "Top",
+            "sub_category": "T-Shirt",
+            "item_type": "T-Shirt",
+            "title": "Graphic T-Shirt",
+        }
+
+    with patch.object(service, "detect_items", side_effect=mock_detect_items), \
+         patch.object(service, "_whole_image_matte", side_effect=mock_whole_image_matte), \
+         patch.object(service, "analyze", side_effect=mock_analyze):
+
+        dummy_img = b"fake_jpeg_photo"
+        frames = []
+        async for frame in service.analyze_outfits_stream([dummy_img]):
+            frames.append(frame)
+
+        frame_types = [f.get("type") for f in frames]
+        assert frame_types[0] == "detect", "First frame MUST be detect for instant preview"
+        assert "items_meta" in frames[0]
+        assert frames[0]["items_meta"][0]["crop_base64"] is not None
+
+        assert "matte" in frame_types, "A matte frame must be emitted when cutout finishes"
+        matte_frame = next(f for f in frames if f.get("type") == "matte")
+        assert matte_frame["crop_mime"] == "image/png"
+        assert matte_frame["index"] == 0
+
+        assert "item" in frame_types
+        item_frame = next(f for f in frames if f.get("type") == "item")
+        assert item_frame["crop_mime"] == "image/png"
+        assert item_frame["analysis"]["category"] == "Top"
+
+        assert frame_types[-1] == "done"
+
+
+
 
 
 
