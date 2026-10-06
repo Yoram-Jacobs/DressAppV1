@@ -3293,6 +3293,40 @@ def _enforce_segformer_category(
                 analysis["name"] = new_name
                 analysis["title"] = new_name
 
+        elif ("pants" in lbl_low or kind == "bottom") and "skirt" not in lbl_low:
+            sub_low = (analysis.get("sub_category") or "").lower()
+            item_low = (analysis.get("item_type") or "").lower()
+            curr_name = (analysis.get("name") or analysis.get("title") or "").lower()
+            is_footwear_conflict = any(w in f"{sub_low} {item_low} {curr_name}" for w in ("boot", "shoe", "sneaker", "heel", "sandal", "loafer", "oxford", "מגפ", "נעל", "סניקרס"))
+            if is_footwear_conflict:
+                logger.warning(
+                    "garment_vision: SegFormer-anchored bottom override label=%r kind=%r sub_category=%r -> Pants",
+                    label, kind, analysis.get("sub_category"),
+                )
+                is_he_local = (language in ("he", "iw")) or any("\u0590" <= ch <= "\u05ea" for ch in f"{curr_name} {str(analysis.get('caption', ''))}")
+                is_legging = any(w in curr_name or w in str(analysis.get("caption", "")).lower() for w in ("legging", "skinny", "tight", "טייץ", "סקיני"))
+                analysis["sub_category"] = "מכנסיים" if is_he_local else "Pants"
+                if is_legging:
+                    analysis["item_type"] = "טייץ" if is_he_local else "Leggings"
+                else:
+                    analysis["item_type"] = "מכנסי קז'ואל" if is_he_local else "Casual Pants"
+
+                col_str = ""
+                colors = analysis.get("colors")
+                if isinstance(colors, list) and colors:
+                    c0 = str(colors[0].get("name", "")).strip()
+                    if c0.lower() not in ("unknown", "other"):
+                        col_str = c0
+                item_noun = analysis["item_type"]
+                new_title = f"{col_str} {item_noun}".strip() if col_str else item_noun
+                analysis["name"] = new_title
+                analysis["title"] = new_title
+                analysis["caption"] = "מכנסיים נוחים ומחמיאים בגזרה מחטבת." if is_he_local else f"Classic {item_noun.lower()} designed for versatile everyday styling."
+                curr_size = str(analysis.get("size") or "").strip()
+                if curr_size and (curr_size.replace(".", "").isdigit() or curr_size in ("7.0", "7", "8", "8.5", "9", "9.5", "10", "11", "36", "37", "38", "39", "40", "41", "42", "43", "44", "45")):
+                    analysis["size"] = "M"
+                analysis["_subcategory_overridden_by"] = "segformer-bottom"
+
         elif kind == "dress" or "dress" in lbl_low:
             comb_dress_txt = f"{analysis.get('name', '')} {analysis.get('title', '')} {analysis.get('caption', '')} {analysis.get('sub_category', '')} {analysis.get('item_type', '')}".lower()
             is_real_long_coat = any(w in comb_dress_txt for w in ("trench coat", "overcoat", "winter parka", "duster coat", "raincoat", "puffer coat")) and not any(w in comb_dress_txt for w in ("peplum", "skirt", "dress", "gown", "suit", "פפלום", "חצאית", "שמלה"))
@@ -3478,6 +3512,20 @@ def _enforce_segformer_category(
         if any(w in curr_name_low for w in ("shirt", "blouse", "sweater", "top", "חולצה", "סוודר", "בלוזה")):
             analysis["name"] = "מכנסיים אלגנטיים" if is_he_override else "Classic Pants"
             analysis["title"] = analysis["name"]
+        # Purge footwear (boots/shoes) conflicts from bottoms
+        if any(w in curr_name_low for w in ("boot", "boots", "shoe", "shoes", "sneaker", "sneakers", "heel", "heels", "sandal", "sandals", "מגפ", "נעל")):
+            col_str = ""
+            colors = analysis.get("colors")
+            if isinstance(colors, list) and colors:
+                c0 = str(colors[0].get("name", "")).strip()
+                if c0.lower() not in ("unknown", "other"):
+                    col_str = c0
+            analysis["name"] = f"{col_str} Casual Pants".strip() if col_str else "Casual Pants"
+            analysis["title"] = analysis["name"]
+            analysis["caption"] = "Classic pants designed for versatile everyday styling."
+            curr_size = str(analysis.get("size") or "").strip()
+            if curr_size and (curr_size.replace(".", "").isdigit() or curr_size in ("7.0", "7", "8", "8.5", "9", "9.5", "10", "11", "36", "37", "38", "39", "40", "41", "42")):
+                analysis["size"] = "M"
     elif default == "Accessories":
         if "bag" in lbl_low or kind == "bag":
             analysis["sub_category"] = "תיקים" if is_he_override else "Bags"

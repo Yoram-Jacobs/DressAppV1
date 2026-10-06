@@ -115,8 +115,27 @@ def drop_disconnected_islands(
     if max_size <= 0:
         return image_rgba
 
-    min_size = max_size * min_area_ratio
-    drop_indices = [i + 1 for i, s in enumerate(sizes) if s < min_size]
+    dominant_idx = int(np.argmax(sizes)) + 1
+    dom_mask = labeled == dominant_idx
+    dist_from_dom = ndimage.distance_transform_edt(~dom_mask)
+
+    # Secondary components that are far away from the dominant garment body
+    # must have substantial mass (>= 25% of dominant) to survive (e.g. partner boot / shoe).
+    # Small far-away disconnected specks (< 25% of dominant) are noise/artifacts.
+    drop_indices = []
+    for i, s in enumerate(sizes):
+        idx = i + 1
+        if idx == dominant_idx:
+            continue
+        comp_mask = labeled == idx
+        min_dist = float(dist_from_dom[comp_mask].min()) if comp_mask.any() else 999.0
+        if min_dist <= 12.0:
+            if s < max_size * min_area_ratio:
+                drop_indices.append(idx)
+        else:
+            if s < max_size * 0.25:
+                drop_indices.append(idx)
+
     if not drop_indices:
         return image_rgba
 

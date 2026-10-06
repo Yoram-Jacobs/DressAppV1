@@ -68,7 +68,7 @@ _BBOX_PAD_TRBL_BY_CATEGORY: dict[str, tuple[float, float, float, float]] = {
     # Safe, positive bounding-box margins (GarmentVision spec):
     # Never use negative padding that clips waistbands, hems, collars, or footwear.
     "top":        (0.04, 0.04, 0.03, 0.04),
-    "bottom":     (0.01, 0.04, 0.03, 0.04),
+    "bottom":     (0.01, 0.04, 0.005, 0.04),
     "dress":      (0.04, 0.04, 0.03, 0.04),
     "fullbody":   (0.04, 0.04, 0.03, 0.04),
     "full body":  (0.04, 0.04, 0.03, 0.04),

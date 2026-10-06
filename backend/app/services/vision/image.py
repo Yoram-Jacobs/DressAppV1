@@ -344,6 +344,13 @@ def _fit_crop_to_card(
     # Scale-to-fit with a safety margin (0.90) so the item always has breathing room
     # and is never zoomed/stretched to touch the canvas edges, keeping it 100% visible.
     scale = min(canvas_w * 0.90 / float(iw), canvas_h * 0.90 / float(ih))
+    # Cap upscale factor on small accessories so tiny crops (e.g. 40x18 sunglasses,
+    # 30px watches) are not blown up 20x into giant pixelated mosaic blocks.
+    if max(iw, ih) < 160:
+        scale = min(scale, 4.0)
+    elif max(iw, ih) < 260:
+        scale = min(scale, 5.0)
+
     new_w = max(1, int(round(iw * scale)))
     new_h = max(1, int(round(ih * scale)))
     if (new_w, new_h) != (iw, ih):

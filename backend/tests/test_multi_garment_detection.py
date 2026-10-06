@@ -1868,6 +1868,130 @@ async def test_parallel_dispatch_instant_preview_option_a():
         assert frame_types[-1] == "done"
 
 
+def test_upper_garment_neckline_clamping():
+    """Verify that apply_alpha_intersection cleanly zeros out neck/head floating above collar."""
+    from PIL import Image
+    import io
+    from app.services.clothing_parser import apply_alpha_intersection
+
+    H, W = 100, 100
+    # Create image with upper torso/neck/head all opaque
+    img = Image.new("RGBA", (W, H), (100, 100, 100, 255))
+    buf = io.BytesIO()
+    img.save(buf, format="PNG")
+    matted_bytes = buf.getvalue()
+
+    # Jacket mask starts at row 30 (apex_y = 30) with collar dipping to row 45 in center
+    seg_mask = np.zeros((H, W), dtype=np.uint8)
+    for x in range(20, 80):
+        # Lapel neckline: V-shape from row 30 at edges (x=20,80) to row 45 at center (x=50)
+        top_y = 30 + int(15 * (1.0 - abs(x - 50) / 30.0))
+        seg_mask[top_y:90, x] = 255
+
+    res = apply_alpha_intersection(
+        matted_bytes,
+        seg_mask,
+        category="outerwear",
+        label="jacket",
+        is_single_item=False,
+    )
+    assert res is not None
+    res_img = Image.open(io.BytesIO(res))
+    alpha = np.array(res_img.split()[-1])
+
+    # 1. Above apex (row 20): strictly 0 (no floating head)
+    assert np.all(alpha[:25, :] == 0), "All pixels above jacket apex must be zeroed!"
+    # 2. Inside the V-neck above the lapels at (x=50, y=35): must be 0 (no floating throat/neck chunk)
+    assert alpha[35, 50] == 0, "Throat chunk inside V-neck must be zeroed!"
+    # 3. Inside the jacket lapel at (x=30, y=55): must be opaque
+    assert alpha[55, 30] > 200, "Jacket fabric must remain opaque!"
+
+
+def test_enforce_segformer_category_resolves_bottom_footwear_conflict():
+    """Verify that SegFormer 'bottom' clears footwear misclassification from Gemini."""
+    from app.services.vision.validation import _enforce_segformer_category
+
+    analysis = {
+        "category": "Bottom",
+        "sub_category": "Boots",
+        "item_type": "Ankle boot",
+        "name": "Black Boots",
+        "caption": "Black synthetic ankle boots with a high heel.",
+        "size": "7.0",
+        "colors": [{"name": "Black", "pct": 100}],
+    }
+    _enforce_segformer_category(
+        analysis,
+        segformer_kind="bottom",
+        label="pants",
+        is_single_item=False,
+    )
+
+    assert analysis["category"] == "Bottom"
+    assert analysis["sub_category"] == "Pants"
+    assert "boot" not in analysis["sub_category"].lower()
+    assert "boot" not in analysis["item_type"].lower()
+    assert "boot" not in analysis["name"].lower()
+    assert analysis["size"] != "7.0", "Shoe size 7.0 must be cleared on pants!"
+
+
+def test_small_item_upscale_capped():
+    """Verify that tiny sunglasses crop is not blown up 20x into giant pixel blocks."""
+    from PIL import Image
+    import io
+    from app.services.vision.image import _fit_crop_to_card
+
+    # Create small 40x20 image (representing sunglasses in a full-body photo)
+    tiny = Image.new("RGBA", (40, 20), (50, 50, 50, 255))
+    buf = io.BytesIO()
+    tiny.save(buf, format="PNG")
+    crop_bytes = buf.getvalue()
+
+    fitted_bytes, mime = _fit_crop_to_card(crop_bytes, crop_mime="image/png")
+    assert mime == "image/png"
+    fitted_img = Image.open(io.BytesIO(fitted_bytes))
+    # Card canvas is 900x1200. With 4.0x cap on 40x20, non-zero alpha bounding box must be <= 200px wide!
+    bbox = fitted_img.getbbox()
+    assert bbox is not None
+    w = bbox[2] - bbox[0]
+    h = bbox[3] - bbox[1]
+    assert w <= 200, f"Small item width was blown up to {w}px! Should be capped <= 200px."
+    assert h <= 100, f"Small item height was blown up to {h}px! Should be capped <= 100px."
+
+
+def test_drop_far_away_disconnected_specks():
+    """Verify drop_disconnected_islands removes far-away specks (like 4 handbag blobs)."""
+    from PIL import Image
+    import io
+    from app.services.background_matting import drop_disconnected_islands
+
+    H, W = 300, 300
+    img = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+    # Main garment body: 80x80 square at center
+    for y in range(100, 180):
+        for x in range(100, 180):
+            img.putpixel((x, y), (200, 50, 50, 255))
+
+    # Far-away speck 1 (at top-left corner, 80px away from main body, 15x15 size)
+    for y in range(10, 25):
+        for x in range(10, 25):
+            img.putpixel((x, y), (200, 50, 50, 255))
+
+    buf = io.BytesIO()
+    img.save(buf, format="PNG")
+    raw_bytes = buf.getvalue()
+
+    cleaned_bytes = drop_disconnected_islands(raw_bytes, min_area_ratio=0.01)
+    cleaned_img = Image.open(io.BytesIO(cleaned_bytes))
+    cleaned_arr = np.array(cleaned_img)
+
+    # Far speck must be zeroed out
+    assert np.all(cleaned_arr[10:25, 10:25, 3] == 0), "Far-away disconnected speck must be removed!"
+    # Main garment body must remain intact
+    assert np.all(cleaned_arr[110:170, 110:170, 3] == 255), "Main garment body must remain intact!"
+
+
+
 
 
 
