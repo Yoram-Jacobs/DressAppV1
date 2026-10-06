@@ -40,6 +40,7 @@ _FEMININE_CUT_KEYWORDS = {
     "kimono", "robe", "kaftan", "sarong", "pleated skirt", "midi skirt", "maxi skirt",
     "peplum", "sweetheart", "bra", "camisole", "corset", "lingerie", "halter",
     "crop top", "cropped top", "croptop", "crop-top", "crop", "bustier", "bralette",
+    "cropped blazer", "crop blazer", "bolero", "shrug", "tights", "stockings", "pantyhose",
     "tunic", "babydoll", "floral crop", "tube top", "slip dress",
     "floral top", "floral print top", "floral print shirt", "floral shirt", "floral blouse",
     "floral tee", "floral t-shirt", "floral print t-shirt", "floral lace",
@@ -50,6 +51,7 @@ _FEMININE_CUT_KEYWORDS = {
     "בלוזה", "שמלה", "חצאית", "עקב", "עקבים", "חזייה", "מחוך", "סנדל", "סנדלים",
     "תיק יד", "תיק צד", "תיק כתף", "קלאץ'", "ארנק", "סקיני", "ג'ינס סקיני",
     "חולצת בטן", "טוניקה", "סטרפלס", "גופיית בטן", "פרחוני", "תחרה", "חולצה פרחונית",
+    "גרביונים", "שראג", "בולרו",
 }
 _MASCULINE_CUT_KEYWORDS = {
     "boxers", "briefs", "tuxedo", "בוקסר", "טוקסידו",

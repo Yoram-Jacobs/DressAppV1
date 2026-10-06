@@ -1479,6 +1479,7 @@ class GarmentVisionService:
                     # Smooth with anti-aliasing Gaussian blur so edges are clean and not blocky.
                     try:
                         from PIL import Image, ImageFilter
+                        from scipy import ndimage
                         import io
                         im = Image.open(io.BytesIO(cbytes)).convert("RGBA")
                         Hc, Wc = im.size[1], im.size[0]
@@ -1486,6 +1487,11 @@ class GarmentVisionService:
                             mask_res = _np.array(Image.fromarray(norm_seg_u8, mode="L").resize((Wc, Hc), Image.BILINEAR))
                         else:
                             mask_res = norm_seg_u8
+                        # Fill enclosed holes in the garment body so white/light fabric folds don't create empty voids
+                        mask_bin = mask_res > 60
+                        mask_filled = ndimage.binary_fill_holes(mask_bin)
+                        mask_res = _np.where(mask_filled, _np.uint8(255), mask_res)
+
                         if human_mask_bbox is not None and bool(human_mask_bbox.any()):
                             norm_human = _cp._normalize_mask_to_u8(human_mask_bbox)
                             if norm_human.shape != (Hc, Wc):
@@ -1493,7 +1499,7 @@ class GarmentVisionService:
                             else:
                                 human_res = norm_human
                             mask_res = _np.where(human_res > 120, _np.uint8(0), mask_res)
-                        alpha_im = Image.fromarray(mask_res, mode="L").filter(ImageFilter.GaussianBlur(radius=1.2))
+                        alpha_im = Image.fromarray(mask_res, mode="L").filter(ImageFilter.GaussianBlur(radius=1.8))
                         im.putalpha(alpha_im)
                         buf = io.BytesIO()
                         im.save(buf, format="PNG", optimize=True)
@@ -1506,38 +1512,6 @@ class GarmentVisionService:
                     except Exception as exc:  # noqa: BLE001
                         logger.warning("SegFormer alpha synthesis failed for %s: %s", det.get("label"), exc)
                         matted = None
-
-                if not matted:
-                    # If we have human mask or other garments mask, excise them from cbytes so human parts don't leak
-                    if (human_mask_bbox is not None and bool(human_mask_bbox.any())) or (other_mask_bbox is not None and bool(other_mask_bbox.any())):
-                        try:
-                            from PIL import Image, ImageFilter
-                            import io
-                            im = Image.open(io.BytesIO(cbytes)).convert("RGBA")
-                            Hc, Wc = im.size[1], im.size[0]
-                            cut_alpha = _np.full((Hc, Wc), 255, dtype=_np.uint8)
-                            if human_mask_bbox is not None and bool(human_mask_bbox.any()):
-                                norm_human = _cp._normalize_mask_to_u8(human_mask_bbox)
-                                if norm_human.shape != (Hc, Wc):
-                                    human_res = _np.array(Image.fromarray(norm_human, mode="L").resize((Wc, Hc), Image.BILINEAR))
-                                else:
-                                    human_res = norm_human
-                                cut_alpha = _np.where(human_res > 120, _np.uint8(0), cut_alpha)
-                            if other_mask_bbox is not None and bool(other_mask_bbox.any()):
-                                norm_other = _cp._normalize_mask_to_u8(other_mask_bbox)
-                                if norm_other.shape != (Hc, Wc):
-                                    other_res = _np.array(Image.fromarray(norm_other, mode="L").resize((Wc, Hc), Image.BILINEAR))
-                                else:
-                                    other_res = norm_other
-                                cut_alpha = _np.where(other_res > 120, _np.uint8(0), cut_alpha)
-                            alpha_im = Image.fromarray(cut_alpha, mode="L").filter(ImageFilter.GaussianBlur(radius=1.2))
-                            im.putalpha(alpha_im)
-                            buf = io.BytesIO()
-                            im.save(buf, format="PNG", optimize=True)
-                            matted = buf.getvalue()
-                            mime = "image/png"
-                        except Exception:
-                            matted = None
 
                 if not matted:
                     det.pop("_mask_bbox", None)
@@ -2482,7 +2456,7 @@ class GarmentVisionService:
 
             try:
                 has_human_wearer = _detect_human_presence(detections)
-                if detections and has_human_wearer:
+                if detections:
                     cat_labels = {
                         (d.get("label") or d.get("category") or "").lower()
                         for d in detections
@@ -2494,18 +2468,19 @@ class GarmentVisionService:
                         "skirt", "dress", "sandal", "sandals", "blouse", "heels", "crop", "halter",
                         "camisole", "flats", "slip dress", "peplum", "ruffle", "floral",
                         "handbag", "purse", "clutch", "tote bag", "shoulder bag", "crossbody bag",
-                        "skinny jeans", "jeggings", "leggings", "bag",
+                        "skinny jeans", "jeggings", "leggings", "bag", "tights", "stockings",
                     )) or any(w in str(d.get("label", "")).lower() for d in detections for w in (
-                        "sandal", "skirt", "dress", "blouse", "heel", "handbag", "purse", "clutch",
+                        "sandal", "skirt", "dress", "blouse", "heel", "handbag", "purse", "clutch", "tight", "stocking",
                     ))
                     has_masc_cue = any(
                         is_distinctly_masculine_garment(d.get("category"), d.get("label"), d.get("label"))
                         for d in detections
                     ) or any(k in cat_labels for k in ("boxers", "tuxedo"))
-                    if has_fem_cue:
-                        photo_model_gender = "women"
-                    elif has_masc_cue:
-                        photo_model_gender = "men"
+                    if has_human_wearer or len(detections) > 1:
+                        if has_fem_cue:
+                            photo_model_gender = "women"
+                        elif has_masc_cue:
+                            photo_model_gender = "men"
 
                 is_footwear_only = bool(
                     detections
@@ -2738,43 +2713,43 @@ class GarmentVisionService:
                 except Exception:
                     should_reconstruct = None  # type: ignore[assignment]
 
+                photo_model_genders: dict[int, str] = {}
+                from collections import defaultdict
+                photo_fem_cues: dict[int, list[str]] = defaultdict(list)
+                photo_masc_cues: dict[int, list[str]] = defaultdict(list)
+                photo_has_model: dict[int, bool] = defaultdict(bool)
+
+                for slot_idx, (image_idx, det, c_bytes, c_mime) in enumerate(flat_crops):
+                    has_human = bool(
+                        det.get("has_human_head")
+                        or det.get("has_human_skin")
+                        or det.get("_photo_model_gender") in ("women", "men")
+                    )
+                    if has_human:
+                        photo_has_model[image_idx] = True
+
+                    if det.get("_photo_model_gender") == "women":
+                        photo_fem_cues[image_idx].append("det_women")
+                    elif det.get("_photo_model_gender") == "men":
+                        photo_masc_cues[image_idx].append("det_men")
+
+                    lbl = (det.get("label") or "").lower()
+                    cat = (det.get("category") or det.get("kind") or "").lower()
+                    if is_distinctly_feminine_garment(cat, lbl, lbl) or any(w in f"{cat} {lbl}" for w in ("skirt", "dress", "sandal", "heels", "blouse", "bag", "handbag", "purse", "clutch", "tights", "stockings")):
+                        photo_fem_cues[image_idx].append("fem_garment")
+                    elif is_distinctly_masculine_garment(cat, lbl, lbl) or any(w in f"{cat} {lbl}" for w in ("boxers", "tuxedo")):
+                        photo_masc_cues[image_idx].append("masc_garment")
+
+                all_img_indices = set(idx for idx, _, _, _ in flat_crops)
+                for img_i in all_img_indices:
+                    if photo_has_model.get(img_i) or len([c for c in flat_crops if c[0] == img_i]) > 1:
+                        if photo_fem_cues.get(img_i):
+                            photo_model_genders[img_i] = "women"
+                        elif photo_masc_cues.get(img_i):
+                            photo_model_genders[img_i] = "men"
+
                 if active_provider in ("gemma", "dressapp") and settings.EYES_GEMMA_SPACE_URL:
                     batch_system_prompt = _build_system_prompt(one_pass=False, user_gender=eff_gender)
-
-                    photo_model_genders: dict[int, str] = {}
-                    from collections import defaultdict
-                    photo_fem_cues: dict[int, list[str]] = defaultdict(list)
-                    photo_masc_cues: dict[int, list[str]] = defaultdict(list)
-                    photo_has_model: dict[int, bool] = defaultdict(bool)
-
-                    for slot_idx, (image_idx, det, c_bytes, c_mime) in enumerate(flat_crops):
-                        has_human = bool(
-                            det.get("has_human_head")
-                            or det.get("has_human_skin")
-                            or det.get("_photo_model_gender") in ("women", "men")
-                        )
-                        if has_human:
-                            photo_has_model[image_idx] = True
-
-                        if det.get("_photo_model_gender") == "women":
-                            photo_fem_cues[image_idx].append("det_women")
-                        elif det.get("_photo_model_gender") == "men":
-                            photo_masc_cues[image_idx].append("det_men")
-
-                        lbl = (det.get("label") or "").lower()
-                        cat = (det.get("category") or det.get("kind") or "").lower()
-                        if is_distinctly_feminine_garment(cat, lbl, lbl):
-                            photo_fem_cues[image_idx].append("fem_garment")
-                        elif is_distinctly_masculine_garment(cat, lbl, lbl):
-                            photo_masc_cues[image_idx].append("masc_garment")
-
-                    all_img_indices = set(idx for idx, _, _, _ in flat_crops)
-                    for img_i in all_img_indices:
-                        if photo_has_model.get(img_i):
-                            if photo_fem_cues.get(img_i):
-                                photo_model_genders[img_i] = "women"
-                            elif photo_masc_cues.get(img_i):
-                                photo_model_genders[img_i] = "men"
 
                     for slot_idx, (image_idx, det, c_bytes, c_mime) in enumerate(flat_crops):
                         item_mg = photo_model_genders.get(image_idx) or det.get("_photo_model_gender")
@@ -3076,7 +3051,7 @@ class GarmentVisionService:
                                 for c in chunk_crops
                             ]
                             photo_ids = {c[0] for c in chunk_crops}
-                            chunk_mgs = {c[1].get("_photo_model_gender") for c in chunk_crops if c[1].get("_photo_model_gender")}
+                            chunk_mgs = {photo_model_genders.get(c[0]) or c[1].get("_photo_model_gender") for c in chunk_crops if (photo_model_genders.get(c[0]) or c[1].get("_photo_model_gender"))}
                             if len(photo_ids) == 1 and len(chunk_mgs) == 1:
                                 chunk_mg = next(iter(chunk_mgs))
                             else:
@@ -3104,7 +3079,7 @@ class GarmentVisionService:
                                         continue
                                     image_idx, det, c_bytes, c_mime = flat_crops[slot_idx]
                                     chunk_emitted.add(local_idx)
-                                    item_mg = det.get("_photo_model_gender") or chunk_mg
+                                    item_mg = photo_model_genders.get(image_idx) or det.get("_photo_model_gender") or chunk_mg
 
                                     if not analysis or not isinstance(analysis, dict) or not (
                                         analysis.get("category") or analysis.get("sub_category") or analysis.get("item_type")
@@ -3141,6 +3116,14 @@ class GarmentVisionService:
                                         fallback_type = (det.get("label") or det.get("kind") or "garment").lower()
                                         analysis["item_type"] = fallback_type
                                         analysis["sub_category"] = fallback_type.capitalize()
+
+                                    if not item_mg:
+                                        if analysis.get("gender") == "women" or is_distinctly_feminine_garment(analysis.get("category"), analysis.get("sub_category"), analysis.get("item_type"), name=analysis.get("title")):
+                                            item_mg = "women"
+                                            photo_model_genders[image_idx] = "women"
+                                        elif analysis.get("gender") == "men" or is_distinctly_masculine_garment(analysis.get("category"), analysis.get("sub_category"), analysis.get("item_type")):
+                                            item_mg = "men"
+                                            photo_model_genders[image_idx] = "men"
 
                                     if item_mg in ("men", "women"):
                                         analysis["gender"] = item_mg
@@ -3214,7 +3197,7 @@ class GarmentVisionService:
                                     if local_i in chunk_emitted:
                                         continue
                                     slot_idx = chunk_start + local_i
-                                    item_mg = det.get("_photo_model_gender")
+                                    item_mg = photo_model_genders.get(image_idx) or det.get("_photo_model_gender")
                                     fallback_analysis = None
                                     raw_fb = c_bytes
                                     if is_quota and settings.EYES_GEMMA_SPACE_URL:

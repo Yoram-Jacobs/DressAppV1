@@ -240,6 +240,30 @@ def _detect_human_presence(items: list[dict[str, Any]]) -> bool:
         lbl = (d.get("label") or "").lower()
         if any(h in lbl for h in ("person", "model", "woman", "man", "human", "face", "hair", "head", "skin", "body")):
             return True
+
+    # Vertical anatomical arrangement of garments on a standing human model:
+    # A human wearer has top strictly above bottom/shoes spanning significant vertical frame.
+    tops = [d for d in items if (d.get("category") or d.get("kind") or "").lower() in ("top", "outerwear") and d.get("bbox")]
+    bottoms = [d for d in items if (d.get("category") or d.get("kind") or "").lower() in ("bottom", "dress") and d.get("bbox")]
+    shoes = [d for d in items if (d.get("category") or d.get("kind") or "").lower() in ("footwear", "shoes") and d.get("bbox")]
+    if tops and bottoms:
+        min_top_y = min(d["bbox"][0] for d in tops)
+        min_bot_y = min(d["bbox"][0] for d in bottoms)
+        max_bot_y = max(d["bbox"][2] for d in bottoms)
+        if min_top_y < min_bot_y and (max_bot_y - min_top_y) >= 250:
+            return True
+    if tops and shoes:
+        min_top_y = min(d["bbox"][0] for d in tops)
+        min_shoe_y = min(d["bbox"][0] for d in shoes)
+        max_shoe_y = max(d["bbox"][2] for d in shoes)
+        if min_top_y < min_shoe_y and (max_shoe_y - min_top_y) >= 350:
+            return True
+    if bottoms and shoes:
+        min_bot_y = min(d["bbox"][0] for d in bottoms)
+        min_shoe_y = min(d["bbox"][0] for d in shoes)
+        max_shoe_y = max(d["bbox"][2] for d in shoes)
+        if min_bot_y < min_shoe_y and (max_shoe_y - min_bot_y) >= 200:
+            return True
     return False
 
 

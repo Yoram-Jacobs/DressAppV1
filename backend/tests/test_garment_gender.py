@@ -538,4 +538,51 @@ async def test_garmentvision_rules_enforcement():
     assert hasattr(svc, "analyze_outfits_stream")
 
 
+def test_womens_outfit_ensemble_preserves_gender_and_layering():
+    """Verify that all items in an outfit worn by a woman anchor to 'women' even with user_gender='men'."""
+    # 1. Cropped blazer / shrug
+    blazer = _coerce_single_garment(
+        {"category": "Outerwear", "sub_category": "Blazer", "item_type": "Cropped Blazer"},
+        user_gender="men",
+        model_gender="women",
+    )
+    assert blazer["gender"] == "women"
+    assert _coerce_enums(blazer, user_gender="men", model_gender="women")["gender"] == "women"
+
+    # Flat lay cropped blazer has is_fem_cut
+    blazer_flat = _coerce_single_garment(
+        {"category": "Outerwear", "sub_category": "Blazers", "item_type": "Cropped Blazer"},
+        user_gender="men",
+        model_gender=None,
+    )
+    assert blazer_flat["gender"] == "women"
+
+    # 2. Combat boots on a woman model
+    boots = _coerce_single_garment(
+        {"category": "Footwear", "sub_category": "Boots", "item_type": "Combat Boots"},
+        user_gender="men",
+        model_gender="women",
+    )
+    assert boots["gender"] == "women"
+    assert _coerce_enums(boots, user_gender="men", model_gender="women")["gender"] == "women"
+
+    # 3. Oxford shoes on a woman model
+    oxfords = _coerce_single_garment(
+        {"category": "Footwear", "sub_category": "Shoes", "item_type": "Gold Oxford Shoes"},
+        user_gender="men",
+        model_gender="women",
+    )
+    assert oxfords["gender"] == "women"
+    assert _coerce_enums(oxfords, user_gender="men", model_gender="women")["gender"] == "women"
+
+    # 4. Tights on a flat lay or woman model
+    tights = _coerce_single_garment(
+        {"category": "Bottom", "sub_category": "Pants", "item_type": "Black Tights"},
+        user_gender="men",
+        model_gender=None,
+    )
+    assert tights["gender"] == "women"
+
+
+
 
