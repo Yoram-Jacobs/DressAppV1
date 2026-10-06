@@ -656,6 +656,90 @@ def _sanitize_sweatpants_and_trainer(res: dict[str, Any]) -> None:
                 res[field] = cleaned.strip()
 
 
+def _sanitize_cross_category_contamination(res: dict[str, Any], language: str | None = None) -> None:
+    """Purge cross-category and anatomical contradictions across category, name, item_type, and caption.
+    
+    Prevents hallucinated KV-cache bleed such as:
+    - A Top/Outerwear/Jacket having item_type='מכנסיים ארוכים' or caption='מכנסיים אדומים...'
+    - A Skirt having caption='מכנסיים גבריים...'
+    - A Footwear item having sub_category='פיקוס'
+    - A Bag having item_type='נימוציד' or tag='# שקר'
+    """
+    if not isinstance(res, dict):
+        return
+
+    cat_l = str(res.get("category") or "").strip().lower()
+    sub_l = str(res.get("sub_category") or "").strip().lower()
+    name_str = str(res.get("name") or res.get("title") or "").strip()
+    name_l = name_str.lower()
+    cap_str = str(res.get("caption") or "").strip()
+    cap_l = cap_str.lower()
+    itype_str = str(res.get("item_type") or "").strip()
+    itype_l = itype_str.lower()
+    is_he = (language in ("he", "iw")) or any("\u0590" <= ch <= "\u05ea" for ch in f"{name_str} {cap_str} {itype_str}")
+
+    # 1. Top / Outerwear cleanup
+    if cat_l in ("top", "outerwear") or any(w in sub_l or w in name_l for w in ("jacket", "coat", "shirt", "blouse", "sweater", "hoodie", "ז'קט", "מעיל", "חולצה", "סוודר", "קפוצ'ון")):
+        if any(w in itype_l for w in ("pant", "trouser", "jean", "skirt", "מכנס", "חצאית", "דגמח", "טייץ")):
+            if any(w in name_l or w in sub_l for w in ("jacket", "coat", "windbreaker", "ז'קט", "מעיל")):
+                res["item_type"] = "ז'קט רוח" if is_he else "Windbreaker Jacket"
+            elif any(w in name_l or w in sub_l for w in ("sweater", "cardigan", "hoodie", "סוודר", "סריג", "קפוצ")):
+                res["item_type"] = "סריג קז'ואל" if is_he else "Casual Sweater"
+            elif any(w in name_l or w in sub_l for w in ("blouse", "בלוז")):
+                res["item_type"] = "בלוזה אלגנטית" if is_he else "Elegant Blouse"
+            else:
+                res["item_type"] = "חולצת קז'ואל" if is_he else "Casual Top"
+
+        if any(w in cap_l for w in ("מכנסיים", "מכנסי", "מכנס", "חצאית", "pants", "trousers", "skirt")):
+            if is_he:
+                cleaned = re.sub(r"^(?:מכנסיים\s+(?:אדומים|שחורים|גבריים|נשיים)?|מכנסי\s+|מכנס\s+|חצאית\s+)", f"{name_str or 'זקט'} ", cap_str).strip()
+                cleaned = re.sub(r"\b(מכנסיים|מכנסי|מכנס)\b", "ז'קט" if ("ז'קט" in name_l or "מעיל" in name_l) else "חולצה", cleaned)
+                if any(w in cleaned for w in ("מכנסיים", "מכנסי", "מכנס")):
+                    cleaned = f"{name_str or 'זקט'} מעוצב ונוח לשימוש יומיומי."
+                res["caption"] = cleaned
+            else:
+                cleaned = re.sub(r"(?i)\b(pants|trousers?|chinos?|skirt)\b", "jacket" if "jacket" in name_l else "shirt", cap_str)
+                res["caption"] = cleaned
+
+    # 2. Skirt cleanup
+    elif "skirt" in sub_l or "חצאית" in sub_l or "skirt" in itype_l or "חצאית" in itype_l:
+        if any(w in itype_l for w in ("pant", "trouser", "jean", "מכנס")):
+            res["item_type"] = "חצאית A-Line" if is_he else "A-Line Skirt"
+        if any(w in cap_l for w in ("מכנסיים", "מכנסי", "מכנס", "pants", "trousers")):
+            if is_he:
+                cleaned = re.sub(r"^(?:מכנסיים\s+(?:גבריים|נשיים)?|מכנסי\s+|מכנס\s+)", "חצאית ", cap_str).strip()
+                cleaned = re.sub(r"\b(מכנסיים|מכנסי|מכנס)\b", "חצאית", cleaned)
+                if "מכנסי" in cleaned or "מכנס" in cleaned:
+                    cleaned = f"{name_str or 'חצאית'} מחמיאה ואלגנטית להופעה יומיומית."
+                res["caption"] = cleaned
+            else:
+                cleaned = re.sub(r"(?i)\b(pants|trousers?|chinos?)\b", "skirt", cap_str)
+                res["caption"] = cleaned
+
+    # 3. Footwear cleanup (e.g. 'פיקוס', 'פקקים')
+    elif cat_l == "footwear" or any(w in sub_l or w in name_l for w in ("shoe", "sneaker", "boot", "sandal", "heel", "נעלי", "סניקרס", "מגפ", "סנדל")):
+        valid_fw_subs = {"shoes", "sneakers", "sandals", "boots", "loafers", "heels", "flats", "oxfords", "derbies", "נעליים", "סניקרס", "סנדלים", "מגפיים", "נעלי עקב", "מוקסינים"}
+        if sub_l not in valid_fw_subs:
+            res["sub_category"] = "Shoes"
+        tags = res.get("tags")
+        if isinstance(tags, list):
+            res["tags"] = [t for t in tags if str(t).strip().lower() not in ("# פקקים", "פקקים", "# שקר", "שקר", "lie", "fake")]
+
+    # 4. Bags / Accessories cleanup (e.g. 'כיסוי קיר', 'נימוציד', '# שקר')
+    elif cat_l in ("accessories", "accessory") or "bag" in sub_l or "תיק" in sub_l:
+        if any(w in name_l for w in ("כיסוי קיר", "וילון", "wall cover", "curtain")):
+            res["name"] = "תיק צד שחור" if is_he else "Black Handbag"
+            res["title"] = res["name"]
+            res["sub_category"] = "Handbag"
+        if itype_str in ("נימוציד", "nimodicide") or not itype_str or itype_l == "accessories":
+            res["item_type"] = "תיק יד" if is_he else "Handbag"
+        if any(w in cap_l for w in ("כיסוי קיר", "וילון", "wall cover")):
+            res["caption"] = f"{res.get('name', 'תיק')} אלגנטי ושימושי." if is_he else "An elegant and practical handbag."
+        tags = res.get("tags")
+        if isinstance(tags, list):
+            res["tags"] = [t for t in tags if str(t).strip().lower() not in ("# שקר", "שקר", "lie", "fake", "# פקקים", "פקקים")]
+
+
 def _coerce_single_garment(
     parsed: dict[str, Any] | list[dict[str, Any]],
     user_gender: str | None = None,
@@ -691,6 +775,7 @@ def _coerce_single_garment(
     _sanitize_sandals_and_footwear(res)
     _sanitize_sweatpants_and_trainer(res)
     _sanitize_foreign_token_bleed(res, language=language)
+    _sanitize_cross_category_contamination(res, language=language)
 
     norm_model = resolve_garment_gender(model_gender)
     cat_lower = (res.get("category") or "").strip().lower()
@@ -1709,6 +1794,7 @@ def _coerce_single_garment(
         mult = {"budget": 0.6, "mid": 1.0, "premium": 2.2, "luxury": 5.0}.get(res.get("quality"), 1.0)
         res["price_cents"] = int(base_prices.get(cat_lower, 3000) * mult)
 
+    _sanitize_cross_category_contamination(res, language=language)
     return res
 
 
@@ -2616,6 +2702,7 @@ def _enforce_segformer_category(
                 analysis["sub_category"] = "Sunglasses"
                 if not analysis.get("item_type") or str(analysis.get("item_type")).lower() in ("bag", "handbag", "shorts", "shirt", "t-shirt"):
                     analysis["item_type"] = "Classic Sunglasses"
+                _sanitize_cross_category_contamination(analysis, language=language)
                 return analysis
 
             sub_low = (analysis.get("sub_category") or "").lower()
@@ -2938,5 +3025,6 @@ def _enforce_segformer_category(
             else:
                 analysis["item_type"] = f"קלאסי {sub_str}" if is_he_post else f"Classic {sub_str}"
 
+    _sanitize_cross_category_contamination(analysis, language=language)
     return analysis
 

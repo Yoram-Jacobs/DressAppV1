@@ -144,3 +144,69 @@ def test_bottom_hole_prevention_flag():
     src = inspect.getsource(clothing_parser.apply_alpha_intersection)
     assert "is_multi_segment = is_footwear or is_eyewear" in src, "Bottoms must NOT be multi-segment to allow hole filling"
 
+
+def test_cross_category_jacket_with_pants_caption():
+    raw_jacket = {
+        "is_clothing": True,
+        "category": "Outerwear",
+        "sub_category": "Jacket",
+        "item_type": "מכנסיים ארוכים",
+        "caption": "מכנסיים אדומים בגזרה ספורטיבית ונוחה.",
+        "colors": [{"name": "red", "pct": 100}],
+        "name": "ז'קט אדום",
+        "title": "ז'קט אדום",
+    }
+    coerced = _coerce_single_garment(raw_jacket, language="he")
+    assert "מכנסיים" not in coerced["caption"], f"Expected pants purged from caption, got: {coerced['caption']}"
+    assert "מכנסי" not in coerced["caption"]
+    assert "מכנסי" not in coerced["item_type"]
+    assert "ז'קט" in coerced["item_type"] or "מעיל" in coerced["item_type"]
+
+
+def test_cross_category_skirt_with_pants_caption():
+    raw_skirt = {
+        "is_clothing": True,
+        "category": "Bottom",
+        "sub_category": "Skirt",
+        "item_type": "מכנסיים",
+        "caption": "מכנסיים גבריים בגזרה מחויטת.",
+        "colors": [{"name": "black", "pct": 100}],
+        "name": "חצאית שחורה",
+        "title": "חצאית שחורה",
+    }
+    coerced = _coerce_single_garment(raw_skirt, language="he")
+    assert "מכנסיים" not in coerced["caption"], f"Expected pants purged from caption, got: {coerced['caption']}"
+    assert "חצאית" in coerced["item_type"]
+
+
+def test_cross_category_footwear_and_bag_sanitization():
+    raw_shoe = {
+        "is_clothing": True,
+        "category": "Footwear",
+        "sub_category": "פיקוס",
+        "item_type": "נעליים",
+        "caption": "נעליים אלגנטיות לגברים.",
+        "tags": ["# אופנה", "# פקקים", "# שקר"],
+        "name": "נעליים שחורות",
+    }
+    coerced = _coerce_single_garment(raw_shoe, language="he")
+    assert coerced["sub_category"] in ("Shoes", "נעליים")
+    assert coerced["sub_category"] != "פיקוס"
+    assert "# פקקים" not in coerced["tags"]
+    assert "# שקר" not in coerced["tags"]
+
+    raw_bag = {
+        "is_clothing": True,
+        "category": "Accessories",
+        "sub_category": "Handbag",
+        "item_type": "נימוציד",
+        "caption": "כיסוי קיר שחור ואיכותי.",
+        "name": "כיסוי קיר",
+        "tags": ["# שקר", "# תיק"],
+    }
+    coerced_bag = _coerce_single_garment(raw_bag, language="he")
+    assert coerced_bag["item_type"] == "תיק יד"
+    assert "כיסוי קיר" not in coerced_bag["name"]
+    assert "# שקר" not in coerced_bag["tags"]
+
+

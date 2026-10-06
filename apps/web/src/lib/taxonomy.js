@@ -428,7 +428,11 @@ export const canonicalSubCategoryKey = (raw) => {
   if (normalized.includes('sock') || normalized.includes('hosiery') || normalized.includes('tight') || normalized.includes('גרבי') || normalized.includes('גרב') || normalized.includes('колгот')) return 'hosiery_and_socks';
   if (
     normalized.includes('sunglass') ||
+    normalized.includes('glasses') ||
+    normalized.includes('eyewear') ||
+    normalized === 'glass' ||
     normalized.includes('משקפי') ||
+    normalized.includes('משקפ') ||
     normalized.includes('очки') ||
     normalized.includes('solbrill') ||
     normalized.includes('zonnebril') ||
