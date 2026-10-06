@@ -417,14 +417,15 @@ def _user_prompt(code: str | None = None, user_gender: str | None = None) -> str
         "Analyze the garment in this image. Return raw JSON (1 object or array). No markdown/intro.\n"
         f"{lang_hint}"
         "• Language: All fields, values, attributes, and captions MUST be in canonical English.\n"
-        "• name & title: 2-4 canonical English words [Color] [Material/Cut] [Type] strictly reflecting visible pixels. Never generic ('Garment','Clothing').\n"
+        "• name & title: 2-4 canonical English words [Color] [Material/Cut] [Type] strictly reflecting visible pixels of the garment only (never background surface). Never generic ('Garment','Clothing').\n"
         "• caption: <=12 words concise English sentence describing this specific item: [Color] [Material] [Type] with [details]. End with period.\n"
         "• category: 'Top'|'Bottom'|'Outerwear'|'Full Body'|'Footwear'|'Accessories'. NOTE: Sweaters/cardigans/shirts/tees are 'Top'. 'Outerwear' is strictly coats/jackets/blazers. Dresses/skirt-suits/jumpsuits are 'Full Body' (NEVER 'Outerwear').\n"
         "• sub_category: Specific cut ('T-Shirt','Sweater','Jeans','Pants','Skirt','Dresses','Suits','Jumpsuits','Oxfords','Loafers','Boots','Sandals','Sneakers','Heels','Pumps','Flats','Handbag','Crossbody Bag','Sunglasses','Belts','Headwear'). Never 'Top'/'Bottom'/'Footwear'.\n"
         "• Footwear: Boots='Boots' (item_type='Ankle Boots'|'Heeled Boots'|'Combat Boots'). Heels/pumps='Heels'|'Pumps'. Dress shoes='Oxfords'|'Loafers'|'Shoes'. Non-athletic footwear uppers are Leather/Suede (heeled boots/dress shoes are Leather 70% + Rubber 30%), NEVER Cotton or generic Synthetic unless athletic sneakers.\n"
         "• Bottoms: 'Cargo Pants','Chinos','Jeans','Sweatpants','Pants','Shorts','Skirt'.\n"
         "• item_type: Detailed silhouette/cut ('Cargo Pants','Chinos','Straight Jeans','Pleated Skirt','Oxford Shoes','High Heel Pumps','Hooded Jacket','Knit Sweater'). Differ from sub_category.\n"
-        '• colors: [{"name": str, "pct": int}] summing to 100. Accurate visible colors only.\n'
+        "• BACKGROUND REJECTION: Flat-lay & hanger shots rest on surfaces (bedsheets, blankets, carpets, floors, tables). STRICTLY IGNORE all background surface colors! The garment's 'colors', 'name', 'title', and 'caption' must describe EXCLUSIVELY the garment's own fabric (e.g. a white t-shirt lying on a blue blanket is 'White', NEVER 'Blue').\n"
+        '• colors: [{"name": str, "pct": int}] summing to 100. Garment fabric colors ONLY; 100% exclude background surfaces.\n'
         '• fabric_materials: [{"name": str, "pct": int}] summing strictly to 100 by visual texture & category: Footwear=Leather/Suede/Synthetic/Rubber (NEVER Cotton); Bags=Leather/Canvas/Nylon (never generic Polyester); Knitwear/Sweaters=Wool/Cashmere/Acrylic/Cotton knit; Jeans=Denim. Never use Chinese or non-English characters.\n'
         "• season: Array of applicable seasons ['spring'|'summer'|'fall'|'winter'] strictly based on visual fabric weight and cut. Never blindly select all four.\n"
         "• pattern: 'solid'|'printed'|'geometric'|'striped'|'plaid'|'floral'|'camouflage'.\n"
@@ -647,8 +648,9 @@ def _build_batch_prompts(
             user_parts.append(f"**OUTPUT LANGUAGE: {lang_name} ({code}).** Strings in fluent {lang_name}. Keys/enums in English.")
 
     user_parts.append(f"BATCH: Analyze {n} crop(s) (indices 0..{n-1}). Return JSON array of {n} objects with 'slot_index'.")
-    user_parts.append("• name & title: 2-5 words, unique, descriptive cut + key attributes [Color] [Material/Cut] [Type]. Strictly reflect pixels in this specific crop; NEVER hallucinate or copy items from other crops.")
+    user_parts.append("• name & title: 2-5 words, unique, descriptive cut + key attributes [Color] [Material/Cut] [Type]. Strictly reflect pixels of the garment only (never background surface); NEVER hallucinate or copy items from other crops.")
     user_parts.append("• caption: short fluent sentence in the requested language (<=12 words). Zero English leaks in non-English modes.")
+    user_parts.append("• BACKGROUND REJECTION: Flat-lay & hanger photos rest on background surfaces (bedsheets, blankets, carpets, floors, tables). STRICTLY IGNORE all background surface colors! The garment's 'colors', 'name', 'title', and 'caption' must describe EXCLUSIVELY the garment's own fabric (e.g. a white t-shirt lying on a blue blanket is 'White', NEVER 'Blue').")
     if hint_block:
         user_parts.append(hint_block)
 
@@ -685,7 +687,7 @@ ATTRIBUTE_GROUPS: list[tuple[str, list[str], int, str]] = [
         280,
         (
             'Garment identity:\n'
-            '- name: 2-5 unique descriptive words with cut and key attributes: [Color] [Material/Cut] [Type]. Strictly reflect visible pixels only. Never generic like "Garment".\n'
+            '- name: 2-5 unique descriptive words with cut and key attributes: [Color] [Material/Cut] [Type]. Strictly reflect visible garment pixels only (never background surface). Never generic like "Garment".\n'
             '- title: short title matching name\n'
             '- category: Top|Bottom|Outerwear|Full Body|Footwear|Accessories|Underwear\n'
             '- sub_category: cut (Shirt, Pants, Jacket, Dress, Sneakers)\n'
@@ -698,7 +700,7 @@ ATTRIBUTE_GROUPS: list[tuple[str, list[str], int, str]] = [
         320,
         (
             'Visual properties:\n'
-            '- colors: [{"name": str, "pct": int}] summing to 100\n'
+            '- colors: [{"name": str, "pct": int}] summing to 100. Garment fabric colors ONLY. Discard any background bedsheet, blanket, carpet, floor, or table surface colors!\n'
             '- pattern: camouflage|printed|solid|striped|plaid|floral|herringbone|polka_dot|paisley|geometric|animal_print|graphic|tie_dye|abstract\n'
             '- fabric_materials: [{"name": str, "pct": int}] summing to 100. Match category & texture:\n'
             '  * Footwear (shoes/heels/pumps/boots): Leather|Suede|Faux Leather|Canvas|Synthetic|Rubber. NEVER Cotton.\n'

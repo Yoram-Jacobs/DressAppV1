@@ -260,6 +260,17 @@ def _same_thing(a: dict[str, Any], b: dict[str, Any], has_human: bool = False) -
     if is_acc_a != is_acc_b:
         return False
 
+    # Layered garments: never collapse outerwear over tops (jacket over sweater/tee),
+    # or skirts over tights/pants/stockings.
+    is_layering = (
+        (kind_a in ("outerwear", "coat", "jacket") and kind_b in ("top", "sweater", "shirt", "t-shirt", "vest"))
+        or (kind_b in ("outerwear", "coat", "jacket") and kind_a in ("top", "sweater", "shirt", "t-shirt", "vest"))
+        or (lbl_a in ("skirt", "dress") and any(t in lbl_b for t in ("tight", "legging", "pant", "stocking")))
+        or (lbl_b in ("skirt", "dress") and any(t in lbl_a for t in ("tight", "legging", "pant", "stocking")))
+    )
+    if is_layering:
+        return False
+
     iou = _iou_norm(bbox_a, bbox_b)
     contain = _containment(bbox_a, bbox_b)
     compatible_kind = kind_b in _SIMILAR_KINDS.get(kind_a, {kind_a})

@@ -2673,13 +2673,11 @@ def _coerce_enums(
 # (case-insensitive match). Any Gemini answer OUTSIDE this set is
 # treated as an error and overridden.
 _SEGFORMER_KIND_TO_ALLOWED_CATEGORIES: dict[str, set[str]] = {
-    # SegFormer's "top" covers everything upper-body — shirts, tees,
-    # blouses, sweaters, jackets, coats. We let Gemini decide between
-    # Top and Outerwear because it has the vocabulary to distinguish
-    # a t-shirt from a parka, and either is a legitimate match for
-    # the SegFormer kind.
+    # SegFormer's "top" covers shirts, tees, blouses, sweaters.
     "top": {"top", "outerwear"},
-    # SegFormer's "bottom" covers pants / skirts / shorts — unambiguous.
+    # SegFormer fashion's "outerwear" covers jackets, coats, cardigans, capes.
+    "outerwear": {"outerwear", "top"},
+    # SegFormer's "bottom" covers pants / skirts / shorts / tights — unambiguous.
     "bottom": {"bottom"},
     # SegFormer's "dress" ATR dataset class has no outerwear/coat class, so long
     # coats/trench/dusters are also segmented as dress. We allow Outerwear and Full Body.
@@ -2694,6 +2692,7 @@ _SEGFORMER_KIND_TO_ALLOWED_CATEGORIES: dict[str, set[str]] = {
 # canonical ``category`` value be? Same rule as a human reading the
 # SegFormer kind: if SegFormer said "bottom", set category="Bottom".
 _SEGFORMER_KIND_TO_DEFAULT_CATEGORY: dict[str, str] = {
+    "outerwear": "Outerwear",
     "top": "Top",
     "bottom": "Bottom",
     "dress": "Full Body",
@@ -2708,7 +2707,8 @@ _SEGFORMER_KIND_TO_DEFAULT_CATEGORY: dict[str, str] = {
 # card*, not the raw SegFormer label, so Gemini interprets it in the
 # same vocabulary as its ``category`` field.
 _SEGFORMER_KIND_HUMAN_LABEL: dict[str, str] = {
-    "top": "Top or Outerwear (upper-body garment)",
+    "outerwear": "Outerwear (jacket / coat / cardigan / blazer)",
+    "top": "Top (shirt / t-shirt / sweater / top)",
     "bottom": "Bottom (pants / skirt / shorts)",
     "dress": "Outerwear (coat / trench / jacket) or Full Body (dress / jumpsuit)",
     "footwear": "Footwear (shoes / boots / sneakers)",

@@ -41,64 +41,153 @@ from app.services import provider_activity
 
 logger = logging.getLogger(__name__)
 
-# ATR/clothes label → our internal category. Labels we don't surface
-# (skin, hair, background) are filtered out.
-_LABEL_MAP: dict[str, str | None] = {
-    "Background": None,
-    "Hat": "headwear",
-    "Hair": None,
-    "Sunglasses": "accessory",
-    "Upper-clothes": "top",
-    "Skirt": "bottom",
-    "Pants": "bottom",
-    "Dress": "dress",
-    "Belt": "accessory",
-    "Left-shoe": "footwear",
-    "Right-shoe": "footwear",
-    "Face": None,
-    "Left-leg": None,
-    "Right-leg": None,
-    "Left-arm": None,
-    "Right-arm": None,
-    "Bag": "accessory",
-    "Scarf": "accessory",
+# Clean canonical labels for output to client & downstream pipeline
+_CANONICAL_LABEL: dict[str, str] = {
+    # sayeed99/segformer-b3-fashion (47 classes)
+    "shirt, blouse": "shirt",
+    "top, t-shirt, sweatshirt": "t-shirt",
+    "sweater": "sweater",
+    "cardigan": "cardigan",
+    "jacket": "jacket",
+    "vest": "vest",
+    "pants": "pants",
+    "shorts": "shorts",
+    "skirt": "skirt",
+    "coat": "coat",
+    "dress": "dress",
+    "jumpsuit": "jumpsuit",
+    "cape": "cape",
+    "glasses": "sunglasses",
+    "hat": "hat",
+    "headband, head covering, hair accessory": "headwear",
+    "tie": "tie",
+    "glove": "gloves",
+    "watch": "watch",
+    "belt": "belt",
+    "leg warmer": "leg warmers",
+    "tights, stockings": "tights",
+    "sock": "socks",
+    "shoe": "shoes",
+    "bag, wallet": "bag",
+    "scarf": "scarf",
+    # Legacy ATR (sayeed99/segformer_b3_clothes)
+    "Upper-clothes": "upper_clothes",
+    "Left-shoe": "shoes",
+    "Right-shoe": "shoes",
 }
 
+# Sub-parts that belong to a parent garment and should be absorbed into adjacent garments:
+_SUBPART_CLASSES = frozenset({
+    "sleeve", "collar", "lapel", "epaulette", "pocket", "neckline",
+    "buckle", "zipper", "applique", "bead", "bow", "flower", "fringe",
+    "ribbon", "rivet", "ruffle", "sequin", "tassel", "hood",
+})
+
+# Class label → internal category mapping.
+# Handles both ATR dataset (18 classes) and Fashion dataset (47 classes).
+_LABEL_MAP: dict[str, str | None] = {
+    # ATR dataset classes (sayeed99/segformer_b3_clothes)
+    "Background": None,
+    "background": None,
+    "Hat": "headwear",
+    "hat": "headwear",
+    "Hair": None,
+    "hair": None,
+    "Sunglasses": "accessory",
+    "sunglasses": "accessory",
+    "Upper-clothes": "top",
+    "upper-clothes": "top",
+    "Skirt": "bottom",
+    "skirt": "bottom",
+    "Pants": "bottom",
+    "pants": "bottom",
+    "Dress": "dress",
+    "dress": "dress",
+    "Belt": "accessory",
+    "belt": "accessory",
+    "Left-shoe": "footwear",
+    "left-shoe": "footwear",
+    "Right-shoe": "footwear",
+    "right-shoe": "footwear",
+    "Face": None,
+    "face": None,
+    "Left-leg": None,
+    "left-leg": None,
+    "Right-leg": None,
+    "right-leg": None,
+    "Left-arm": None,
+    "left-arm": None,
+    "Right-arm": None,
+    "right-arm": None,
+    "Bag": "accessory",
+    "bag": "accessory",
+    "Scarf": "accessory",
+    "scarf": "accessory",
+
+    # sayeed99/segformer-b3-fashion (47 classes with layering)
+    "unlabelled": None,
+    "shirt, blouse": "top",
+    "top, t-shirt, sweatshirt": "top",
+    "sweater": "top",
+    "cardigan": "outerwear",
+    "jacket": "outerwear",
+    "vest": "top",
+    "shorts": "bottom",
+    "coat": "outerwear",
+    "jumpsuit": "dress",
+    "cape": "outerwear",
+    "glasses": "accessory",
+    "headband, head covering, hair accessory": "headwear",
+    "tie": "accessory",
+    "glove": "accessory",
+    "watch": "accessory",
+    "leg warmer": "accessory",
+    "tights, stockings": "bottom",
+    "sock": "footwear",
+    "shoe": "footwear",
+    "bag, wallet": "accessory",
+    "umbrella": None,
+    "hood": None,
+    "collar": None,
+    "lapel": None,
+    "epaulette": None,
+    "sleeve": None,
+    "pocket": None,
+    "neckline": None,
+    "buckle": None,
+    "zipper": None,
+    "applique": None,
+    "bead": None,
+    "bow": None,
+    "flower": None,
+    "fringe": None,
+    "ribbon": None,
+    "rivet": None,
+    "ruffle": None,
+    "sequin": None,
+    "tassel": None,
+}
+
+
+def _get_label_category(label_name: str | None) -> str | None:
+    """Return the internal category for a class label in a case-tolerant manner."""
+    if not label_name:
+        return None
+    return _LABEL_MAP.get(label_name) or _LABEL_MAP.get(label_name.strip().lower())
+
 # SegFormer ATR classes that represent the WEARER'S BODY (not clothing).
-# `_LABEL_MAP` maps these to ``None`` so they never become garment
-# detections, but their pixel-level location in the source image is
-# valuable for downstream cleanup: rembg's person-shaped foreground
-# leaks past every garment's mask edge unless we explicitly subtract
-# the wearer's face / hair / arms / legs from the dilated soft-mask
-# used in ``apply_alpha_intersection``. Surface a single binary
-# "human" mask alongside each detection so the consumer can subtract
-# it post-dilation without re-running SegFormer.
 _HUMAN_CLASS_NAMES = (
     "Face", "Hair",
     "Left-arm", "Right-arm",
     "Left-leg", "Right-leg",
 )
 # Minimum mask area (as fraction of total image) to consider a detection.
-# Patch 10a (May 2026) — category-dependent. The flat ``_MIN_AREA_FRAC =
-# 0.005`` previously dropped any segment covering less than 0.5% of the
-# image; this is the right threshold for tops/bottoms/dresses (where a
-# 0.5%-of-frame mask is almost always noise) but it WAY over-filters
-# small accessories. In a full-body shot a pair of sunglasses or a
-# narrow belt typically occupies 0.05-0.3% of the frame, so they used
-# to vanish entirely. The CCP-Ninja benchmark exposed this as a 0%
-# recall on every accessory class. Lower the bar for the categories
-# that are intrinsically small.
-# Patch 12 (May 2026) — Garment-class threshold bumped from 0.005 to
-# 0.010 (0.5% → 1.0% of frame) after the closet test revealed that
-# SegFormer regularly hallucinates a ~0.5% phantom Skirt/Pants on the
-# lower edge of a top-only photo (the shadow band where the shirt hem
-# meets the body). The lower threshold filtered too few of those out
-# and the user saw blurred phantom cards in their closet. Real garment
-# detections on a full-body shot are always at least a few percent of
-# the frame, so this is safe. Accessories / footwear / headwear keep
-# their tighter thresholds because they're intrinsically small.
-_MIN_AREA_FRAC_DEFAULT = 0.010       # tops, bottoms, dresses
+_MIN_AREA_FRAC_DEFAULT = 0.010       # tops, bottoms, dresses, outerwear
 _MIN_AREA_FRAC_PER_CATEGORY: dict[str, float] = {
+    "outerwear": 0.010,
+    "top":       0.010,
+    "bottom":    0.010,
+    "dress":     0.010,
     "accessory": 0.0005,             # sunglasses, belts, bags, scarves
     "footwear":  0.0008,             # individual shoes/socks at full-body
     "headwear":  0.0010,             # hats in wide shots
@@ -106,13 +195,7 @@ _MIN_AREA_FRAC_PER_CATEGORY: dict[str, float] = {
 
 
 def _min_area_frac_for(category: str | None) -> float:
-    """Return the minimum-area fraction threshold for this internal category.
-
-    Anything not listed in ``_MIN_AREA_FRAC_PER_CATEGORY`` falls back to
-    ``_MIN_AREA_FRAC_DEFAULT``. Pass ``None`` for "unknown / unmapped"
-    labels — they get the default threshold and are typically filtered
-    out higher up anyway.
-    """
+    """Return the minimum-area fraction threshold for this internal category."""
     if category is None:
         return _MIN_AREA_FRAC_DEFAULT
     return _MIN_AREA_FRAC_PER_CATEGORY.get(category, _MIN_AREA_FRAC_DEFAULT)
@@ -205,6 +288,26 @@ def _run_inference(pil_full: Image.Image) -> np.ndarray:
     )
     small_pred = logits_up.argmax(dim=1).squeeze(0).cpu().numpy().astype(np.uint8)  # (H', W')
     del inputs, outputs, logits, logits_up
+
+    # Absorb fine-grained sub-parts (sleeves, collars, lapels, pockets, zippers, etc.)
+    # into the nearest adjacent garment so they don't produce holes or isolated noise
+    subpart_cids = {
+        cid for cid, name in _id2label.items()
+        if (name or "").lower() in _SUBPART_CLASSES
+    }
+    if subpart_cids and np.any(np.isin(small_pred, list(subpart_cids))):
+        try:
+            from scipy import ndimage
+            garment_mask = (small_pred > 0) & (~np.isin(small_pred, list(subpart_cids)))
+            if np.any(garment_mask):
+                dist, (ny, nx) = ndimage.distance_transform_edt(~garment_mask, return_indices=True)
+                sub_mask = np.isin(small_pred, list(subpart_cids))
+                # Reassign subparts within reasonable proximity (e.g. 50 px) to parent garment
+                valid_reassign = sub_mask & (dist <= 50)
+                small_pred[valid_reassign] = small_pred[ny[valid_reassign], nx[valid_reassign]]
+                small_pred[sub_mask & ~valid_reassign] = 0
+        except Exception as _sub_exc:  # noqa: BLE001
+            logger.debug("clothing_parser: sub-part absorption skipped: %s", _sub_exc)
 
     # Scale single-channel integer mask to original image size with nearest-neighbor
     mask_img = Image.fromarray(small_pred)
@@ -367,10 +470,27 @@ def _recover_paired_footwear(
 # literally two-instance and need to stay split so the post-pass
 # pair-collapser can union them into a single "Shoes" card.
 _SINGLE_INSTANCE_CLASSES = {
+    # ATR classes
     "Upper-clothes",
+    "upper-clothes",
     "Dress",
+    "dress",
     "Skirt",
+    "skirt",
     "Pants",
+    "pants",
+    # Fashion dataset classes
+    "shirt, blouse",
+    "top, t-shirt, sweatshirt",
+    "sweater",
+    "cardigan",
+    "jacket",
+    "vest",
+    "shorts",
+    "coat",
+    "jumpsuit",
+    "cape",
+    "tights, stockings",
 }
 
 
@@ -599,7 +719,7 @@ def _split_instances(class_mask: np.ndarray) -> list[tuple[str, np.ndarray]]:
         label_name = _id2label.get(cid_i)
         if not label_name:
             continue
-        if _LABEL_MAP.get(label_name) is None:
+        if _get_label_category(label_name) is None:
             continue
         class_binary = (class_mask == cid_i).astype(np.uint8)
 
@@ -734,7 +854,7 @@ async def _call_self_hosted(
     total = max(1, W * H)
     for seg in segments:
         label = seg.get("label") or ""
-        category = _LABEL_MAP.get(label)
+        category = _get_label_category(label)
         if not category:
             continue
         mask_b64 = seg.get("mask") or seg.get("mask_png_b64")
@@ -1123,10 +1243,12 @@ async def parse_garments(
         # Patch 10a: category-dependent area threshold. Accessories
         # and footwear get a smaller minimum so we don't filter out
         # sunglasses, belts, shoes, etc. in a full-body shot.
-        category = _LABEL_MAP.get(label_name)
+        category = _get_label_category(label_name)
+        if not category:
+            continue
         if int(mask.sum()) / total < _min_area_frac_for(category):
             continue
-        if label_name in _SINGLE_INSTANCE_CLASSES:
+        if label_name in _SINGLE_INSTANCE_CLASSES or str(label_name).lower() in _SINGLE_INSTANCE_CLASSES:
             # `_split_instances` has already split this class into
             # spatially-distinct garment groups via
             # `_split_into_spatial_groups`. Each entry is a separate
@@ -1160,15 +1282,15 @@ async def parse_garments(
         else:
             by_label[label_name] = {
                 "label": label_name,
-                "category": _LABEL_MAP[label_name],
+                "category": category,
                 "score": 0.95,
                 "mask": mask,
             }
 
-    # 2) Collapse Left-shoe + Right-shoe into a single "Shoes" item —
+    # 2) Collapse Left-shoe + Right-shoe / shoe into a single "Shoes" item —
     #    users think of them as one pair, and `_looks_already_cropped`
     #    handles single-item footwear photos more cleanly this way.
-    shoe_keys = [k for k in list(by_label.keys()) if k.startswith(("Left-shoe", "Right-shoe", "Shoes"))]
+    shoe_keys = [k for k in list(by_label.keys()) if k.startswith(("Left-shoe", "Right-shoe", "Shoes", "shoe", "sock"))]
     if shoe_keys:
         pair_items = [by_label.pop(k) for k in shoe_keys]
         pair_masks = [x["mask"] for x in pair_items if x and x.get("mask") is not None]
@@ -1356,9 +1478,11 @@ async def parse_garments(
         else:
             garment_human_mask = human_mask_full
 
+        raw_lbl = item["label"]
+        canonical_lbl = _CANONICAL_LABEL.get(raw_lbl) or _CANONICAL_LABEL.get(str(raw_lbl).strip().lower(), raw_lbl)
         out.append(
             {
-                "label": item["label"],
+                "label": canonical_lbl,
                 "category": item["category"],
                 "score": float(item["score"]),
                 "bbox": [

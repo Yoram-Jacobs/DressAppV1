@@ -44,6 +44,9 @@ def test_garment_vision_prompt_contract():
     assert "3-tier hierarchy" in p.lower() or "gender" in p.lower()
     # Includes camouflage pattern
     assert "camouflage" in p.lower()
+    # Enforces strict background surface rejection
+    assert "background rejection" in p.lower()
+    assert "background surfaces" in p.lower()
 
 
 def test_scheduled_outfit_prompt_contract():
