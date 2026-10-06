@@ -220,9 +220,6 @@ export function AIConfiguration() {
                 </span>
               </span>
             </div>
-            <p className="text-[12px] text-text-brand font-semibold mt-1">
-              {t('profile.aiConfig.dressappEyesDesc', { defaultValue: 'Default self-hosted Gemma 4-E4B Eyes model on DressApp infrastructure. No external API key required.' })}
-            </p>
           </div>
         ) : (
           <div className="p-3 rounded-[12px] border border-border bg-yellow-shadow shadow-sm text-start">
