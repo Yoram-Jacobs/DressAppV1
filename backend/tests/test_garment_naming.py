@@ -484,3 +484,45 @@ def test_peplum_dress_not_misclassified_as_coat():
     assert "שמל" in res["name"] or "חליפ" in res["name"], f"Expected dress/suit in name, got: {res['name']}"
 
 
+def test_peplum_coat_reclassified_to_peplum_dress_english():
+    """Verify when Gemini misclassifies a peplum dress as 'Red Wool Coat' under Outerwear, it is auto-corrected to Full Body Peplum Dress."""
+    raw_coat = {
+        "is_clothing": True,
+        "category": "Outerwear",
+        "sub_category": "Coats",
+        "item_type": "Long Wool Coat",
+        "name": "Red Wool Coat",
+        "title": "Red Wool Coat",
+        "caption": "A women's red wool coat with a peplum waist and long sleeves.",
+        "colors": [{"name": "Red", "pct": 100}],
+        "fabric_materials": [{"name": "Wool", "pct": 100}],
+    }
+    res = _coerce_single_garment(raw_coat, language="en")
+    assert res["category"] == "Full Body", f"Expected Full Body, got: {res['category']}"
+    assert res["sub_category"] == "Dresses", f"Expected Dresses, got: {res['sub_category']}"
+    assert res["item_type"] == "Peplum Dress", f"Expected Peplum Dress, got: {res['item_type']}"
+    assert "Coat" not in res["name"], f"Expected no Coat in name, got: {res['name']}"
+    assert "Peplum Dress" in res["name"], f"Expected Peplum Dress in name, got: {res['name']}"
+
+
+def test_segformer_dress_overrides_gemini_coat():
+    """Verify _enforce_segformer_category overrides Gemini Outerwear/Coats to Full Body/Dresses when mask is dress with peplum."""
+    from app.services.vision.validation import _enforce_segformer_category
+    raw_analysis = {
+        "is_clothing": True,
+        "category": "Outerwear",
+        "sub_category": "Coats",
+        "item_type": "Long Wool Coat",
+        "name": "Red Wool Coat",
+        "title": "Red Wool Coat",
+        "caption": "A women's red wool coat with a peplum waist and long sleeves.",
+        "colors": [{"name": "Red", "pct": 100}],
+    }
+    res = _enforce_segformer_category(raw_analysis, segformer_kind="dress", language="en")
+    assert res["category"] == "Full Body", f"Expected Full Body, got: {res['category']}"
+    assert res["sub_category"] == "Dresses", f"Expected Dresses, got: {res['sub_category']}"
+    assert res["item_type"] == "Peplum Dress", f"Expected Peplum Dress, got: {res['item_type']}"
+    assert "Coat" not in res["name"]
+
+
+
