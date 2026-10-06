@@ -1552,12 +1552,11 @@ def apply_alpha_intersection(
     If seg_mask_bbox is None, still subtracts human_mask and other_mask to
     isolate non-SegFormer detections (e.g. Gemini-detected bags/accessories).
     """
-    if is_single_item:
-        return matted_png_bytes
-
     try:
         im = Image.open(io.BytesIO(matted_png_bytes)).convert("RGBA")
     except Exception:  # noqa: BLE001
+        if is_single_item:
+            return matted_png_bytes
         return None
     arr = np.array(im)
     Hc, Wc = arr.shape[:2]
@@ -1606,7 +1605,7 @@ def apply_alpha_intersection(
                 "apply_alpha_intersection: SegFormer mask empty (%d px) — keeping rembg-only output (crop %dx%d).",
                 mask_pixels, Wc, Hc,
             )
-            return None
+            return matted_png_bytes if is_single_item else None
 
         is_bottom = norm_cat in {"bottom", "pants", "skirt"} or any(w in norm_lbl for w in ("short", "skirt", "pant", "trouser", "jean"))
         is_multi_segment = is_footwear or is_eyewear
@@ -1620,7 +1619,7 @@ def apply_alpha_intersection(
             filled_core = closed_core if is_multi_segment else ndimage.binary_fill_holes(closed_core)
             # garment_protect covers the garment interior where mask is confident or filled
             garment_protect = filled_core | (mask_resized > 50)
-            core_iter = max(1, min(4, int(round(min(Hc, Wc) * 0.008))))
+            core_iter = max(1, min(2, int(round(min(Hc, Wc) * 0.005))))
             garment_core = ndimage.binary_erosion(filled_core, iterations=core_iter)
         except Exception:  # noqa: BLE001
             garment_protect = mask_resized > 50 if mask_resized is not None else None
@@ -1719,8 +1718,8 @@ def apply_alpha_intersection(
                 repr(exc)[:120],
             )
 
-    # 3. Clean boundary cuts for tops, outerwear, and bottoms
-    if mask_resized is not None:
+    # 3. Clean boundary cuts for tops, outerwear, and bottoms (multi-garment separation only)
+    if mask_resized is not None and not is_single_item:
         try:
             non_zero_rows = np.where(mask_resized > 64)[0]
             if len(non_zero_rows) > 0:
@@ -1751,7 +1750,7 @@ def apply_alpha_intersection(
             )
 
     # 3b. Suppress adjacent garments (pants over shoes, shirts under jackets, straps) using other_mask
-    if other_mask is not None and bool(other_mask.any()):
+    if other_mask is not None and bool(other_mask.any()) and not is_single_item:
         try:
             norm_other = _normalize_mask_to_u8(other_mask)
             if norm_other.shape != (Hc, Wc):
@@ -1785,7 +1784,9 @@ def apply_alpha_intersection(
             )
 
     # 4. Intersect with the smooth, dilated soft envelope of the target garment.
-    if mask_resized is not None:
+    # On single items, envelope truncation is skipped so rembg's outer garment contours
+    # (collars, cuffs, hoods) are never truncated if SegFormer is slightly undersized.
+    if mask_resized is not None and not is_single_item:
         try:
             from scipy import ndimage
             mask_bin = mask_resized > 50
@@ -1814,10 +1815,33 @@ def apply_alpha_intersection(
                 repr(exc)[:120],
             )
 
-    # Enforce solid fabric interior: garments are opaque. White/light tops must never become
-    # semi-transparent (X-ray-like) against the card background!
+    # Enforce solid fabric interior: garments are opaque. White/light garments must never become
+    # semi-transparent (X-ray-like) against the card background, and light fabric folds or sleeves
+    # must never be bitten away by background matting salience dropouts!
     if garment_core is not None and garment_core.any():
-        new_alpha = np.where(garment_core & (new_alpha > 40), np.maximum(new_alpha, np.uint8(250)), new_alpha)
+        if norm_cat in {"top", "outerwear", "dress"}:
+            # Preserve crew-neck collar opening at top-center of tops if transparent in input
+            non_zero_rows = np.where(mask_resized > 50)[0]
+            non_zero_cols = np.where(mask_resized > 50)[1]
+            if len(non_zero_rows) > 0 and len(non_zero_cols) > 0:
+                t_y, b_y = int(non_zero_rows.min()), int(non_zero_rows.max())
+                l_x, r_x = int(non_zero_cols.min()), int(non_zero_cols.max())
+                g_h = max(1, b_y - t_y)
+                g_w = max(1, r_x - l_x)
+                c_x = (l_x + r_x) / 2.0
+                y_idx, x_idx = np.indices((Hc, Wc))
+                is_collar_zone = (
+                    (y_idx >= t_y) & (y_idx <= t_y + 0.35 * g_h) &
+                    (np.abs(x_idx - c_x) <= 0.25 * g_w)
+                )
+                heal_mask = garment_core & (~(is_collar_zone & (new_alpha == 0)))
+                new_alpha = np.where(heal_mask, np.maximum(new_alpha, np.uint8(250)), new_alpha)
+            else:
+                new_alpha = np.where(garment_core, np.maximum(new_alpha, np.uint8(250)), new_alpha)
+        elif norm_cat in {"bottom", "pants", "skirt", "fullbody", "suit"} or not is_multi_segment:
+            new_alpha = np.where(garment_core, np.maximum(new_alpha, np.uint8(250)), new_alpha)
+        else:
+            new_alpha = np.where(garment_core & (new_alpha > 40), np.maximum(new_alpha, np.uint8(250)), new_alpha)
 
     # Note: SegFormer's coarse mask must NEVER force transparent background pixels (alpha < 128)
     # to 255. Rembg provides studio-grade alpha boundaries; forcing opaque holes creates

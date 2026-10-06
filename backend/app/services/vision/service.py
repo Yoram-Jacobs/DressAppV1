@@ -1147,6 +1147,36 @@ class GarmentVisionService:
                     result = drop_disconnected_islands(result, min_area_ratio=0.01)
                 except Exception as exc:
                     logger.debug("_whole_image_matte island filter failed: %s", exc)
+
+                # Heal interior dropouts (e.g. bitten sleeves / light fabric folds on white backgrounds)
+                # using SegFormer mask if available in detections
+                if detections:
+                    try:
+                        best_det = max(
+                            detections,
+                            key=lambda d: (
+                                max(0, d.get("bbox", [0, 0, 0, 0])[2] - d.get("bbox", [0, 0, 0, 0])[0])
+                                * max(0, d.get("bbox", [0, 0, 0, 0])[3] - d.get("bbox", [0, 0, 0, 0])[1])
+                            ),
+                        )
+                        seg_mask = best_det.get("mask") or best_det.get("_mask_bbox")
+                        if seg_mask is not None and bool(seg_mask.any()):
+                            from app.services import clothing_parser as _cp
+                            refined = _cp.apply_alpha_intersection(
+                                result,
+                                seg_mask,
+                                category=best_det.get("category") or best_det.get("kind"),
+                                label=best_det.get("label"),
+                                is_single_item=True,
+                            )
+                            if refined:
+                                result = refined
+                                logger.info(
+                                    "already-cropped matte: SegFormer healed interior dropouts for %s",
+                                    best_det.get("label"),
+                                )
+                    except Exception as exc:
+                        logger.debug("_whole_image_matte SegFormer heal failed: %s", exc)
             else:
                 logger.warning(
                     "already-cropped matte: rembg returned None after %.1fs "
@@ -1516,7 +1546,7 @@ class GarmentVisionService:
                     matted_crops.append((det, cbytes, mime))
                     continue
 
-            if not rembg_collapsed and not is_single and (
+            if not rembg_collapsed and (
                 seg_mask_bbox is not None
                 or human_mask_bbox is not None
                 or other_mask_bbox is not None

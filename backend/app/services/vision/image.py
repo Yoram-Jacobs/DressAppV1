@@ -305,11 +305,17 @@ def _fit_crop_to_card(
                 # never appear semi-transparent or X-ray-like against card backgrounds
                 try:
                     from scipy import ndimage
-                    core_mask = ndimage.binary_erosion(alpha_arr > 80, iterations=2)
+                    alpha_bin = alpha_arr > 30
+                    filled_holes = ndimage.binary_fill_holes(alpha_bin)
+                    enclosed_holes = filled_holes & (~alpha_bin)
+                    if enclosed_holes.any():
+                        alpha_arr = np.where(enclosed_holes, np.uint8(250), alpha_arr)
+
+                    core_mask = ndimage.binary_erosion(filled_holes, iterations=1)
                     if core_mask.any():
-                        alpha_arr = np.where(core_mask & (alpha_arr > 40), np.maximum(alpha_arr, np.uint8(250)), alpha_arr)
-                        r_ch, g_ch, b_ch, _ = rgba.split()
-                        rgba = Image.merge("RGBA", (r_ch, g_ch, b_ch, Image.fromarray(alpha_arr)))
+                        alpha_arr = np.where(core_mask & (alpha_arr > 0) & (alpha_arr < 250), np.maximum(alpha_arr, np.uint8(250)), alpha_arr)
+                    r_ch, g_ch, b_ch, _ = rgba.split()
+                    rgba = Image.merge("RGBA", (r_ch, g_ch, b_ch, Image.fromarray(alpha_arr)))
                 except Exception:
                     pass
 

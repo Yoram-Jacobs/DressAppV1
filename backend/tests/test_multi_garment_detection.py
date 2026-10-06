@@ -1771,6 +1771,49 @@ def test_enforce_segformer_skirt_overrides_pants_and_hebrew_name():
     assert fixed["colors"][0]["name"] == "ירוק זית"
 
 
+def test_apply_alpha_intersection_heals_bitten_sleeve_dropout():
+    """Verify that light fabric sleeve dropouts with alpha=0 are healed to solid opacity."""
+    from app.services.clothing_parser import apply_alpha_intersection
+    import io
+    from PIL import Image
+
+    H, W = 100, 100
+    img = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+    # Garment body: x=20..80, y=20..80
+    for y in range(20, 80):
+        for x in range(20, 80):
+            img.putpixel((x, y), (180, 180, 180, 255))
+    
+    # Simulate a bitten sleeve dropout where rembg faded or zeroed out alpha at (y=40..60, x=65..75)
+    for y in range(40, 60):
+        for x in range(65, 75):
+            img.putpixel((x, y), (180, 180, 180, 0))
+
+    buf = io.BytesIO()
+    img.save(buf, format="PNG")
+    matted_bytes = buf.getvalue()
+
+    # SegFormer semantic mask correctly identifies the entire garment
+    seg_mask = np.zeros((H, W), dtype=np.uint8)
+    seg_mask[20:80, 20:80] = 255
+
+    res_bytes = apply_alpha_intersection(
+        matted_bytes,
+        seg_mask_bbox=seg_mask,
+        category="top",
+        label="hoodie",
+        is_single_item=True,
+    )
+    assert res_bytes is not None, "apply_alpha_intersection should succeed"
+    res_arr = np.array(Image.open(io.BytesIO(res_bytes)))
+
+    # The bitten sleeve patch at (50, 70) must now be healed to solid opacity (>= 250)
+    assert res_arr[50, 70, 3] >= 250, f"Bitten sleeve should be healed! Got alpha={res_arr[50, 70, 3]}"
+    # Outside background at (10, 10) must remain transparent (0)
+    assert res_arr[10, 10, 3] == 0, "Background must remain 0"
+
+
+
 
 
 
