@@ -509,7 +509,7 @@ export const canonicalSubCategoryKey = (raw) => {
     normalized.includes('运动鞋') ||
     ((normalized.includes('נעלי') || normalized.includes('shoe') || normalized.includes('обув')) && (normalized.includes('ספורט') || normalized.includes('sport')))
   ) return 'sneakers';
-  if (normalized.includes('heel') || normalized.includes('עקב') || normalized.includes('каблук') || normalized.includes('كعب') || normalized.includes('tacón') || normalized.includes('tacon') || normalized.includes('talon') || normalized.includes('tacco') || normalized.includes('salto') || normalized.includes('कील') || normalized.includes('ヒール') || normalized.includes('高跟鞋')) return 'heels';
+  if (normalized.includes('heel') || normalized.includes('pump') || normalized.includes('stiletto') || normalized.includes('עקב') || normalized.includes('каблук') || normalized.includes('كعب') || normalized.includes('tacón') || normalized.includes('tacon') || normalized.includes('talon') || normalized.includes('tacco') || normalized.includes('salto') || normalized.includes('कील') || normalized.includes('ヒール') || normalized.includes('高跟鞋')) return 'heels';
   if (normalized.includes('flat') || (normalized.includes('שטוחות') && (normalized.includes('נעלי') || normalized.includes('shoe'))) || normalized.includes('балетк')) return 'flats';
   if (normalized.includes('slipper') || normalized.includes('נעלי_בית') || normalized.includes('тапоч') || ((normalized.includes('נעלי') || normalized.includes('shoe')) && normalized.includes('בית'))) return 'slippers';
   if (
@@ -526,11 +526,10 @@ export const canonicalSubCategoryKey = (raw) => {
     normalized.includes('ローファー') ||
     normalized.includes('乐福鞋')
   ) return 'loafers';
-  if (normalized.includes('double_monk') || normalized.includes('דאבל_מאנק')) return 'double_monk_strap_shoes';
-  if (normalized.includes('monk_strap') || normalized.includes('מאנק')) return 'monk_strap_shoes';
-  if (normalized.includes('oxford') || normalized.includes('אוקספורד')) return 'oxford_shoes';
-  if (normalized.includes('derby') || normalized.includes('דרבי')) return 'derby_shoes';
-  if (normalized.includes('brogue') || normalized.includes('ברוג')) return 'brogues';
+  if (normalized.includes('double_monk') || normalized.includes('דאבל_מאנק') || normalized.includes('monk_strap') || normalized.includes('מאנק')) return 'dress_shoes';
+  if (normalized.includes('oxford') || normalized.includes('אוקספורד')) return 'oxfords';
+  if (normalized.includes('derby') || normalized.includes('דרבי')) return 'dress_shoes';
+  if (normalized.includes('brogue') || normalized.includes('ברוג')) return 'dress_shoes';
   if (
     normalized.includes('dress_shoe') ||
     normalized.includes('נעלי_אלגנט') ||
@@ -642,11 +641,18 @@ export const canonicalSubCategoryKey = (raw) => {
 
 export const labelForSubCategory = (raw, t) => {
   if (!raw) return '';
-  const canonical = canonicalSubCategoryKey(raw);
+  let canonical = canonicalSubCategoryKey(raw);
   if (canonical === 'other') {
     return t('stats.unknownSubcategory', { defaultValue: 'Other' });
   }
+  if (canonical === 'oxford_shoes') canonical = 'oxfords';
   const key = `taxonomy.sub_category.${canonical}`;
+  const translated = fallback(t, key, '');
+  if (translated && translated !== key) return translated;
+  if (canonical === 'oxfords') {
+    const alt = fallback(t, 'taxonomy.item_type.oxford_shoes', '');
+    if (alt && alt !== 'taxonomy.item_type.oxford_shoes') return alt;
+  }
   return fallback(t, key, raw);
 };
 
@@ -671,9 +677,28 @@ export const labelForItemType = (raw, t) => {
 
 export const canonicalMaterialKey = (raw) => {
   if (!raw) return '';
-  const normalized = String(raw)
-    .trim()
-    .toLowerCase()
+  const rawStr = String(raw).trim().toLowerCase();
+
+  // Chinese / Japanese / Arabic / multilingual leather detection
+  if (rawStr === '革' || rawStr === '皮革' || rawStr === '皮' || rawStr.includes('革')) return 'leather';
+  if (
+    rawStr.includes('leather') ||
+    rawStr.includes('עור') ||
+    rawStr.includes('جلد') ||
+    rawStr.includes('leder') ||
+    rawStr.includes('cuir') ||
+    rawStr.includes('cuero') ||
+    rawStr.includes('couro') ||
+    rawStr.includes('pelle') ||
+    rawStr.includes('кожа') ||
+    rawStr.includes('चमड़ा') ||
+    rawStr.includes('cowhide')
+  ) {
+    if (rawStr.includes('oxblood') || rawStr.includes('cordovan') || rawStr.includes('בורדו')) return 'oxblood';
+    return 'leather';
+  }
+
+  const normalized = rawStr
     .replace(/['’`]/g, '')
     .replace(/[\s\/\-]+/g, '_')
     .replace(/[^a-z0-9_א-תа-яё]/g, '');
@@ -704,8 +729,8 @@ export const canonicalMaterialKey = (raw) => {
   if (normalized === 'vinyl') return 'vinyl';
   if (normalized === 'wool') return 'wool';
 
-  if (normalized.includes('cotton') || normalized.includes('כותנה') || normalized.includes('хлопок')) return 'cotton';
-  if (normalized.includes('linen') || normalized.includes('פשתן') || normalized.includes('лен') || normalized.includes('лён')) return 'linen';
+  if (normalized.includes('cotton') || normalized.includes('כותנה') || normalized.includes('хлопок') || rawStr.includes('قطن') || rawStr.includes('baumwolle') || rawStr.includes('coton') || rawStr.includes('algod') || rawStr.includes('綿') || rawStr.includes('棉')) return 'cotton';
+  if (normalized.includes('linen') || normalized.includes('פשתן') || normalized.includes('лен') || normalized.includes('лён') || rawStr.includes('كتان') || rawStr.includes('leinen') || rawStr.includes('lin') || rawStr.includes('lino') || rawStr.includes('リネン') || rawStr.includes('亚麻')) return 'linen';
   
   if (normalized.includes('burlap') || normalized.includes('jute') || normalized.includes('יוטה') || normalized.includes('джут') || normalized.includes('мешковина')) return 'burlap';
   if (normalized.includes('canvas') || normalized.includes('קנבס') || normalized.includes('холст') || normalized.includes('канвас')) return 'canvas';
@@ -719,17 +744,12 @@ export const canonicalMaterialKey = (raw) => {
   if (normalized.includes('velvet') || normalized.includes('קטיפה') || normalized.includes('barhat') || normalized.includes('бархат')) return 'velvet';
   
   if (normalized.includes('suede') || normalized.includes('זמש') || normalized.includes('замша')) return 'suede';
-  if (normalized.includes('leather') || normalized.includes('עור') || normalized.includes('cowhide') || normalized.includes('кожа')) {
-    if (normalized.includes('oxblood') || normalized.includes('cordovan') || normalized.includes('בורדו')) return 'oxblood';
-    return 'leather';
-  }
-  
   if (normalized.includes('chambray') || normalized.includes('שמברה')) return 'chambray';
-  if (normalized.includes('denim') || normalized.includes('דנים') || normalized.includes('ג\'ינס') || normalized.includes('גינס') || normalized.includes('jeans')) return 'denim';
-  if (normalized.includes('nylon') || normalized.includes('ניילון') || normalized.includes('нейлон')) return 'nylon';
+  if (normalized.includes('denim') || normalized.includes('דנים') || normalized.includes('ג\'ינס') || normalized.includes('גינס') || normalized.includes('jeans') || rawStr.includes('джинс') || rawStr.includes('デニム') || rawStr.includes('牛仔')) return 'denim';
+  if (normalized.includes('nylon') || normalized.includes('ניילון') || normalized.includes('нейлон') || rawStr.includes('نايلون') || rawStr.includes('ナイロン') || rawStr.includes('锦纶')) return 'nylon';
   
   if (normalized.includes('mesh') || normalized.includes('רשת') || normalized.includes('сетка')) return 'mesh';
-  if (normalized.includes('polyester') || normalized.includes('פוליאסטר') || normalized.includes('полиэстер')) return 'polyester';
+  if (normalized.includes('polyester') || normalized.includes('פוליאסטר') || normalized.includes('полиэстер') || rawStr.includes('بوليستر') || rawStr.includes('ポリエステル') || rawStr.includes('聚酯')) return 'polyester';
   if (normalized.includes('rayon') || normalized.includes('viscose') || normalized.includes('ויסקוזה') || normalized.includes('ראיון') || normalized.includes('вискоза') || normalized.includes('район')) return 'rayon';
   if (normalized.includes('spandex') || normalized.includes('elastane') || normalized.includes('lycra') || normalized.includes('אלסטן') || normalized.includes('ספנדקס') || normalized.includes('לייקרה') || normalized.includes('эластан') || normalized.includes('лайкра')) return 'spandex';
   if (normalized.includes('acrylic') || normalized.includes('אקריליק') || normalized.includes('акрил')) return 'acrylic';
@@ -737,8 +757,8 @@ export const canonicalMaterialKey = (raw) => {
   if (normalized.includes('vinyl') || normalized.includes('tarp') || normalized.includes('rubber') || normalized.includes('ויניל') || normalized.includes('ברזנט') || normalized.includes('גומי') || normalized.includes('резина')) return 'vinyl';
   if (normalized.includes('ripstop') || normalized.includes('ריפסטופ')) return 'ripstop';
   
-  if (normalized.includes('wool') || normalized.includes('צמר') || normalized.includes('флис') || normalized.includes('твил') || normalized.includes('шерсть') || normalized.includes('פליז') || normalized.includes('טוויל') || normalized.includes('קצף') || normalized.includes('foam')) return 'wool';
-  if (normalized.includes('silk') || normalized.includes('משי') || normalized.includes('шелк') || normalized.includes('шёлк')) return 'silk';
+  if (normalized.includes('wool') || normalized.includes('צמר') || normalized.includes('флис') || normalized.includes('твил') || normalized.includes('шерсть') || normalized.includes('פליז') || normalized.includes('טוויל') || normalized.includes('קצף') || normalized.includes('foam') || rawStr.includes('صوف') || rawStr.includes('laine') || rawStr.includes('wolle') || rawStr.includes('ウール') || rawStr.includes('羊毛')) return 'wool';
+  if (normalized.includes('silk') || normalized.includes('משי') || normalized.includes('шелк') || normalized.includes('шёлк') || rawStr.includes('حرير') || rawStr.includes('soie') || rawStr.includes('シルク') || rawStr.includes('丝')) return 'silk';
 
   if (normalized.includes('בד') || normalized.includes('ткань') || normalized.includes('fabric')) return 'other';
 

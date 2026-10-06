@@ -256,4 +256,56 @@ def test_cross_category_german_jacket_sanitization():
     assert res["item_type"] == "Windjacke"
 
 
+def test_chinese_material_normalization():
+    raw = {
+        "is_clothing": True,
+        "category": "Footwear",
+        "sub_category": "Oxfords",
+        "item_type": "Oxford Shoes",
+        "caption": "Brown leather shoes.",
+        "colors": [{"name": "brown", "pct": 100}],
+        "fabric_materials": [{"name": "革", "pct": 100}],
+        "name": "Brown Oxford Shoes",
+    }
+    res = _coerce_single_garment(raw, language="en")
+    mats = res.get("fabric_materials")
+    assert mats and mats[0]["name"] == "Leather", f"Expected '革' -> 'Leather', got: {mats}"
 
+
+def test_english_model_output_hebrew_synthesis():
+    raw = {
+        "is_clothing": True,
+        "category": "Footwear",
+        "sub_category": "Oxfords",
+        "item_type": "Oxford Shoes",
+        "caption": "Brown leather oxford shoes for formal or business wear.",
+        "colors": [{"name": "brown", "pct": 100}],
+        "fabric_materials": [{"name": "leather", "pct": 100}],
+        "name": "Brown Leather Oxford Shoes",
+        "title": "Brown Leather Oxford Shoes",
+    }
+    res = _coerce_single_garment(raw, language="he")
+    name = res["name"]
+    title = res["title"]
+    assert "אוקספורד" in name, f"Expected 'אוקספורד' in name, got: {name}"
+    assert "חומות" in name or "חום" in name, f"Expected brown in name, got: {name}"
+    assert "מעור" in name or "עור" in name, f"Expected leather in name, got: {name}"
+    assert not any(ord(ch) < 128 and ch.isalpha() for ch in name), f"Expected no Latin chars in name, got: {name}"
+    assert name == title
+
+
+def test_pumps_heels_not_sneakers():
+    raw = {
+        "is_clothing": True,
+        "category": "Footwear",
+        "sub_category": "Heels",
+        "item_type": "High Heel Pumps",
+        "caption": "Black high heel pumps for evening wear.",
+        "colors": [{"name": "black", "pct": 100}],
+        "fabric_materials": [{"name": "leather", "pct": 100}],
+        "name": "Black High Heel Pumps",
+    }
+    res = _coerce_single_garment(raw, language="en")
+    assert res["sub_category"].lower() in ("heels", "pumps", "shoes")
+    assert "sneaker" not in res["sub_category"].lower()
+    assert "sneaker" not in res["item_type"].lower()

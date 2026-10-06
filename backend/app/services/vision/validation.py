@@ -382,6 +382,31 @@ def _canonical_tag_key(tag: Any) -> str:
     return synonyms.get(s, s)
 
 
+_CANONICAL_MATERIAL_MAP: dict[str, str] = {
+    "革": "Leather", "皮革": "Leather", "皮": "Leather",
+    "עור": "Leather", "جلد": "Leather", "cuir": "Leather", "leder": "Leather",
+    "cuero": "Leather", "couro": "Leather", "pelle": "Leather", "кожа": "Leather", "चमड़ा": "Leather",
+    "כותנה": "Cotton", "قطن": "Cotton", "coton": "Cotton", "baumwolle": "Cotton",
+    "algodón": "Cotton", "algodao": "Cotton", "cotone": "Cotton", "хлопок": "Cotton", "कपास": "Cotton", "綿": "Cotton", "棉": "Cotton",
+    "צמר": "Wool", "صوف": "Wool", "laine": "Wool", "wolle": "Wool", "lana": "Wool",
+    "шерсть": "Wool", "ऊन": "Wool", "ウール": "Wool", "羊毛": "Wool",
+    "משי": "Silk", "حرير": "Silk", "soie": "Silk", "seide": "Silk", "seda": "Silk",
+    "seta": "Silk", "шелк": "Silk", "шёлк": "Silk", "रेशम": "Silk", "シルク": "Silk", "丝": "Silk",
+    "פשתן": "Linen", "كتان": "Linen", "lin": "Linen", "leinen": "Linen", "lino": "Linen",
+    "лен": "Linen", "лён": "Linen", "सन": "Linen", "リネン": "Linen", "亚麻": "Linen",
+    "דנים": "Denim", "ג'ינס": "Denim", "גינס": "Denim", "джинс": "Denim", "डेनिम": "Denim", "デニム": "Denim", "牛仔": "Denim",
+    "פוליאסטר": "Polyester", "بوليستر": "Polyester", "полиэстер": "Polyester", "पॉलिएस्टर": "Polyester", "ポリエステル": "Polyester", "聚酯": "Polyester",
+    "ניילון": "Nylon", "نايلון": "Nylon", "нейлон": "Nylon", "नायलॉन": "Nylon", "ナイロン": "Nylon", "锦纶": "Nylon",
+}
+
+
+def _clean_material_name(raw_name: str) -> str:
+    if not raw_name:
+        return ""
+    name_clean = str(raw_name).strip()
+    return _CANONICAL_MATERIAL_MAP.get(name_clean.lower(), _CANONICAL_MATERIAL_MAP.get(name_clean, name_clean.title()))
+
+
 def normalize_weighted_tags(tags: Any) -> list[dict[str, Any]]:
     """Normalize a list of tags (strings or {name, pct} dicts) so that:
     1. Every entry is a dict {"name": str, "pct": int}.
@@ -399,7 +424,7 @@ def normalize_weighted_tags(tags: Any) -> list[dict[str, Any]]:
     clean: list[dict[str, Any]] = []
     for item in tags:
         if isinstance(item, str) and item.strip():
-            clean.append({"name": item.strip(), "pct": None})
+            clean.append({"name": _clean_material_name(item), "pct": None})
         elif isinstance(item, dict) and item.get("name"):
             pct_val = item.get("pct")
             try:
@@ -407,6 +432,7 @@ def normalize_weighted_tags(tags: Any) -> list[dict[str, Any]]:
             except (ValueError, TypeError):
                 pct_int = None
             entry = dict(item)
+            entry["name"] = _clean_material_name(str(item.get("name", "")))
             entry["pct"] = pct_int
             clean.append(entry)
 
@@ -1373,7 +1399,7 @@ def _coerce_single_garment(
         or name_str.lower() == sub_str.lower()
         or len(name_words) < 2
         or is_bare_cat_color
-        or (is_he and has_latin_chars and has_hebrew_chars)
+        or (is_he and (not has_hebrew_chars or (has_latin_chars and has_hebrew_chars)))
     )
 
     if is_generic_name:

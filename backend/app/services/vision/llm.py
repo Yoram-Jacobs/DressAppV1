@@ -373,193 +373,36 @@ def _language_directive(code: str | None) -> str:
     return ""
 
 
-def _user_prompt(code: str | None, user_gender: str | None = None) -> str:
-    """Build the user-message prompt for ``analyze()``."""
+def _user_prompt(code: str | None = None, user_gender: str | None = None) -> str:
+    """Build the user-message prompt for ``analyze()``.
+    
+    Enforces canonical English tokens across all fields and schema keys to minimize
+    prompt ingestion latency, eliminate low-resource language hallucinations (like
+    Hebrew false friends or Chinese character leaks), and provide stable ground-truth
+    attributes that the frontend/backend localization engine renders into the user's
+    selected language.
+    """
     from .validation import resolve_garment_gender
     norm_gender = resolve_garment_gender(user_gender) or "unisex"
     fallback_gender_hint = f"if uncertain/neutral basics, apply '{norm_gender}'" if norm_gender != "unisex" else "if uncertain, apply 'unisex'"
-    code = (code or "en").lower()
 
-    if code == "en":
-        return (
-            "Analyze photo. Return raw JSON (1 object or array). No commentary.\n"
-            "• name & title: Short, unique, descriptive garment name (2-5 words) extracting the visible cut and key attributes: [Color] [Material/Cut] [Type]. Strictly reflect pixels in this specific crop; NEVER hallucinate or copy items from other crops. NEVER generic like 'Garment', 'Piece of clothing', or 'Clothing'.\n"
-            "• caption: Short fluent sentence (<=12 words) describing this specific garment. End with period.\n"
-            f"• sub_category != item_type; pattern: 'camouflage'|'printed'|'floral'|'geometric'|'solid'; dress_code: formality; "
-            f"gender: criteria ('women' for floral/feminine/blouses, 'men' for masculine cuts, 'unisex' for neutral; {fallback_gender_hint}; never default to 'men')."
-        )
-
-    lang_name = _LANG_NAMES.get(code, code)
-    if code in ("he", "iw"):
-        fallback_he = f"אם ניטרלי/לא ודאי, היעזר במגדר המשתמש '{norm_gender}'" if norm_gender != "unisex" else "אם לא ודאי, 'unisex'"
-        return (
-            "**OUTPUT LANGUAGE: Hebrew (עברית)**\n"
-            "שדות תיאור חופשי (name, title, caption, item_type, tags) חייבים להיכתב בעברית שוטפת בלבד.\n"
-            "שדות קטגוריה ו-enum (category, sub_category, dress_code, pattern, gender, season) חייבים להיכתב באנגלית תקנית בלבד לפי ה-schema.\n"
-            "• sub_category באנגלית בלבד: ('T-Shirt','Sweater','Jeans','Pants','Skirt','Shoes','Sneakers','Sandals','Boots','Loafers','Sunglasses','Handbag'). לעולם לא Top/Bottom/Footwear.\n"
-            "• item_type בעברית: גזרה או סילואט ספציפיים בעברית בלבד (למשל 'חצאית A-Line', 'מכנסי צ'ינו', 'ז'קט רוח', 'חולצת טי', 'נעלי עקב', 'תיק צד').\n"
-            "• name & title: שם ייחודי, תמציתי ומדויק (2-5 מילים) בעברית לפי הפריט הנראה בתמונה זו בלבד. מבנה: [צבע עיקרי] [גזרה/חומר] [סוג הפריט]. לעולם אל תעתיק או תמציא פריטים, גזרות או דפוסים שאינם נראים בבירור בתמונה זו.\n"
-            "• caption: משפט תיאור קצר בעברית בלבד (עד 12 מילים) המתאר אך ורק את הפריט הנראה. אסור לערבב פריטים שאינם נראים בתמונה זו.\n"
-            f"• sub_category != item_type; pattern: 'camouflage'|'printed'|'floral'|'geometric'|'solid'; dress_code: רשמיות באנגלית; "
-            f"מגדר: נתח גזרה והדפס ('women' לנשי/שמלות/חצאיות/בלוזות, 'men' לגברי, 'unisex' לפריטים ניטרליים; {fallback_he}; לעולם אל תניח אוטומטית 'men').\n"
-            "• טקסטים/לוגואים: קרא במדויק (למשל 'American Eagle'=עיט/נשר). החזר אך ורק JSON תקני."
-        )
-    elif code == "ar":
-        fallback_ar = f"إذا كان غير مؤكد، استخدم '{norm_gender}'" if norm_gender != "unisex" else "إذا كان غير مؤكد، 'unisex'"
-        return (
-            "**OUTPUT LANGUAGE: Arabic (العربية)**\n"
-            "Descriptive strings (name, title, caption, item_type, tags) must be in fluent Arabic.\n"
-            "Category and enum fields (category, sub_category, dress_code, pattern, gender, season) must be strictly in English.\n"
-            "• sub_category in English: ('T-Shirt','Sweater','Jeans','Pants','Skirt','Shoes','Sneakers','Sandals','Boots','Loafers','Sunglasses','Handbag'). Never Top/Bottom/Footwear.\n"
-            "• item_type in Arabic: specific silhouette or cut in Arabic (e.g. 'تنورة بليسيه', 'بنطال جينز', 'سترة واقية').\n"
-            "• name & title: Unique, concise, accurate Arabic item name (2-5 words) reflecting visible crop pixels only: [Color] [Cut/Material] [Type]. Never hallucinate unseen items.\n"
-            "• caption: Concise descriptive sentence in Arabic only (<=12 words).\n"
-            f"• sub_category != item_type; dress_code: formality in English; "
-            f"gender: criteria ('women' for floral/feminine, 'men' for masculine, 'unisex' for neutral; {fallback_ar}; never default to 'men').\n"
-            "• Return raw JSON."
-        )
-    elif code == "es":
-        fallback_es = f"si no está seguro/básico, use '{norm_gender}'" if norm_gender != "unisex" else "si no está seguro, 'unisex'"
-        return (
-            "**OUTPUT LANGUAGE: Spanish (Español)**\n"
-            "Descriptive fields (name, title, caption, item_type, tags) in fluent Spanish. Classification and enum fields (category, sub_category, dress_code, pattern, gender, season) strictly in English.\n"
-            "• sub_category in English: ('T-Shirt','Sweater','Jeans','Pants','Skirt','Shoes','Sneakers','Sandals','Boots','Loafers','Sunglasses','Handbag').\n"
-            "• item_type in Spanish: specific cut/silhouette in Spanish (e.g. 'Falda A-Line', 'Pantalón Chino', 'Chaqueta Cazadora').\n"
-            "• name & title: Descriptive, unique, concise Spanish name (2-5 words) reflecting visible pixels only: [Color] [Cut/Material] [Type]. NEVER hallucinate unseen items.\n"
-            "• caption: Concise fluent sentence in Spanish (<=12 words).\n"
-            f"• sub_category != item_type; dress_code: formality in English; "
-            f"gender: criteria ('women' for floral/feminine, 'men' for masculine cut, 'unisex' for neutral; {fallback_es}; never default to 'men').\n"
-            "• Return raw JSON."
-        )
-    elif code == "fr":
-        fallback_fr = f"si incertain/basique, utilisez '{norm_gender}'" if norm_gender != "unisex" else "si incertain, 'unisex'"
-        return (
-            "**OUTPUT LANGUAGE: French (Français)**\n"
-            "Descriptive fields (name, title, caption, item_type, tags) in fluent French. Classification and enum fields (category, sub_category, dress_code, pattern, gender, season) strictly in English.\n"
-            "• sub_category in English: ('T-Shirt','Sweater','Jeans','Pants','Skirt','Shoes','Sneakers','Sandals','Boots','Loafers','Sunglasses','Handbag').\n"
-            "• item_type in French: specific cut/silhouette in French (e.g. 'Jupe Trapèze', 'Pantalon Chino', 'Veste Coupe-vent').\n"
-            "• name & title: Descriptive, unique, concise French name (2-5 words): [Couleur] [Coupe/Matière] [Type]. NEVER hallucinate unseen items.\n"
-            "• caption: Short fluent sentence in French (<=12 words).\n"
-            f"• sub_category != item_type; dress_code: formality in English; "
-            f"gender: criteria ('women' for floral/feminine, 'men' for masculine cut, 'unisex' for neutral; {fallback_fr}; never default to 'men').\n"
-            "• Return raw JSON."
-        )
-    elif code == "de":
-        fallback_de = f"bei Unsicherheit/Basics '{norm_gender}' verwenden" if norm_gender != "unisex" else "bei Unsicherheit 'unisex'"
-        return (
-            "**OUTPUT LANGUAGE: German (Deutsch)**\n"
-            "Descriptive fields (name, title, caption, item_type, tags) in fluent German. Classification and enum fields (category, sub_category, dress_code, pattern, gender, season) strictly in English.\n"
-            "• sub_category in English: ('T-Shirt','Sweater','Jeans','Pants','Skirt','Shoes','Sneakers','Sandals','Boots','Loafers','Sunglasses','Handbag').\n"
-            "• item_type in German: specific cut/silhouette in German (e.g. 'A-Linien-Rock', 'Chino-Hose', 'Windjacke').\n"
-            "• name & title: Descriptive, unique, concise German name (2-5 words): [Farbe] [Schnitt/Material] [Art]. NEVER hallucinate unseen items.\n"
-            "• caption: Short fluent sentence in German (<=12 words).\n"
-            f"• sub_category != item_type; dress_code: formality in English; "
-            f"gender: criteria ('women' for floral/feminine, 'men' for masculine cuts, 'unisex' for neutral basics; {fallback_de}; never default to 'men').\n"
-            "• Return raw JSON."
-        )
-    elif code == "it":
-        fallback_it = f"se incerto/base, usa '{norm_gender}'" if norm_gender != "unisex" else "se incerto, 'unisex'"
-        return (
-            "**OUTPUT LANGUAGE: Italian (Italiano)**\n"
-            "Descriptive fields (name, title, caption, item_type, tags) in fluent Italian. Classification and enum fields (category, sub_category, dress_code, pattern, gender, season) strictly in English.\n"
-            "• sub_category in English: ('T-Shirt','Sweater','Jeans','Pants','Skirt','Shoes','Sneakers','Sandals','Boots','Loafers','Sunglasses','Handbag').\n"
-            "• item_type in Italian: specific cut/silhouette in Italian (e.g. 'Gonna a trapezio', 'Pantaloni Chino', 'Giacca a vento').\n"
-            "• name & title: Descriptive, unique, concise Italian name (2-5 words): [Colore] [Taglio/Materiale] [Tipo]. NEVER hallucinate unseen items.\n"
-            "• caption: Short fluent sentence in Italian (<=12 words).\n"
-            f"• sub_category != item_type; dress_code: formality in English; "
-            f"gender: criteria ('women' for floral/feminine, 'men' for masculine cuts, 'unisex' for neutral; {fallback_it}; never default to 'men').\n"
-            "• Return raw JSON."
-        )
-    elif code == "pt":
-        fallback_pt = f"se incerto/básico, use '{norm_gender}'" if norm_gender != "unisex" else "se incerto, 'unisex'"
-        return (
-            "**OUTPUT LANGUAGE: Portuguese (Português)**\n"
-            "Descriptive fields (name, title, caption, item_type, tags) in fluent Portuguese. Classification and enum fields (category, sub_category, dress_code, pattern, gender, season) strictly in English.\n"
-            "• sub_category in English: ('T-Shirt','Sweater','Jeans','Pants','Skirt','Shoes','Sneakers','Sandals','Boots','Loafers','Sunglasses','Handbag').\n"
-            "• item_type in Portuguese: specific cut/silhouette in Portuguese (e.g. 'Saia Evasê', 'Calça Chino', 'Jaqueta Corta-Vento').\n"
-            "• name & title: Descriptive, unique, concise Portuguese name (2-5 words): [Cor] [Corte/Material] [Tipo]. NEVER hallucinate unseen items.\n"
-            "• caption: Short fluent sentence in Portuguese (<=12 words).\n"
-            f"• sub_category != item_type; dress_code: formality in English; "
-            f"gender: criteria ('women' for floral/feminine, 'men' for masculine cuts, 'unisex' for neutral; {fallback_pt}; never default to 'men').\n"
-            "• Return raw JSON."
-        )
-    elif code == "ru":
-        fallback_ru = f"если нейтральное/неуверенно, применить '{norm_gender}'" if norm_gender != "unisex" else "если неуверенно, 'unisex'"
-        return (
-            "**OUTPUT LANGUAGE: Russian (Русский)**\n"
-            "Descriptive fields (name, title, caption, item_type, tags) in fluent Russian. Classification and enum fields (category, sub_category, dress_code, pattern, gender, season) strictly in English.\n"
-            "• sub_category in English: ('T-Shirt','Sweater','Jeans','Pants','Skirt','Shoes','Sneakers','Sandals','Boots','Loafers','Sunglasses','Handbag').\n"
-            "• item_type in Russian: specific cut/silhouette in Russian (e.g. 'Юбка А-силуэта', 'Брюки чинос', 'Ветровка').\n"
-            "• name & title: Descriptive, unique, concise Russian name (2-5 words): [Цвет] [Фасон/Материал] [Тип]. NEVER hallucinate unseen items.\n"
-            "• caption: Short fluent sentence in Russian (<=12 words).\n"
-            f"• sub_category != item_type; dress_code: formality in English; "
-            f"gender: criteria ('women' for floral/feminine, 'men' for masculine cuts, 'unisex' for neutral; {fallback_ru}; never default to 'men').\n"
-            "• Return raw JSON."
-        )
-    elif code == "zh":
-        fallback_zh = f"若不确定或基础款，参考用户性别'{norm_gender}'" if norm_gender != "unisex" else "若不确定，'unisex'"
-        return (
-            "**OUTPUT LANGUAGE: Chinese Simplified (简体中文)**\n"
-            "Descriptive fields (name, title, caption, item_type, tags) in fluent Simplified Chinese. Classification and enum fields (category, sub_category, dress_code, pattern, gender, season) strictly in English.\n"
-            "• sub_category in English: ('T-Shirt','Sweater','Jeans','Pants','Skirt','Shoes','Sneakers','Sandals','Boots','Loafers','Sunglasses','Handbag').\n"
-            "• item_type in Chinese: specific cut/silhouette in Chinese (e.g. 'A字裙', '工装裤', '防风夹克').\n"
-            "• name & title: Descriptive, unique, concise Chinese name (2-5 words): [颜色] [剪裁/材质] [品类]. NEVER hallucinate unseen items.\n"
-            "• caption: Short fluent sentence in Chinese (<=12 words).\n"
-            f"• sub_category != item_type; dress_code: formality in English; "
-            f"gender: criteria ('women' for floral/feminine, 'men' for masculine cuts, 'unisex' for neutral; {fallback_zh}; never default to 'men').\n"
-            "• Return raw JSON."
-        )
-    elif code == "ja":
-        fallback_ja = f"不明またはベーシックな場合は'{norm_gender}'" if norm_gender != "unisex" else "不明な場合は'unisex'"
-        return (
-            "**OUTPUT LANGUAGE: Japanese (日本語)**\n"
-            "Descriptive fields (name, title, caption, item_type, tags) in fluent Japanese. Classification and enum fields (category, sub_category, dress_code, pattern, gender, season) strictly in English.\n"
-            "• sub_category in English: ('T-Shirt','Sweater','Jeans','Pants','Skirt','Shoes','Sneakers','Sandals','Boots','Loafers','Sunglasses','Handbag').\n"
-            "• item_type in Japanese: specific cut/silhouette in Japanese (e.g. 'Aラインスカート', 'チノパンツ', 'ウィンドブレーカー').\n"
-            "• name & title: Descriptive, unique, concise Japanese name (2-5 words): [色] [カッティング/素材] [種類]. NEVER hallucinate unseen items.\n"
-            "• caption: Short fluent sentence in Japanese (<=12 words).\n"
-            f"• sub_category != item_type; dress_code: formality in English; "
-            f"gender: criteria ('women' for floral/feminine, 'men' for masculine cuts, 'unisex' for neutral; {fallback_ja}; never default to 'men').\n"
-            "• Return raw JSON."
-        )
-    elif code == "hi":
-        fallback_hi = f"यदि अनिश्चित/बेसिक हो तो '{norm_gender}' लागू करें" if norm_gender != "unisex" else "यदि अनिश्चित हो तो 'unisex'"
-        return (
-            "**OUTPUT LANGUAGE: Hindi (हिन्दी)**\n"
-            "Descriptive fields (name, title, caption, item_type, tags) in fluent Hindi. Classification and enum fields (category, sub_category, dress_code, pattern, gender, season) strictly in English.\n"
-            "• sub_category in English: ('T-Shirt','Sweater','Jeans','Pants','Skirt','Shoes','Sneakers','Sandals','Boots','Loafers','Sunglasses','Handbag').\n"
-            "• item_type in Hindi: specific cut/silhouette in Hindi (e.g. 'ए-लाइन स्कर्ट', 'चिनो पैंट्स', 'विंडब्रेकर').\n"
-            "• name & title: Descriptive, unique, concise Hindi name (2-5 words): [रंग] [कट/सामग्री] [प्रकार]. NEVER hallucinate unseen items.\n"
-            "• caption: Short fluent sentence in Hindi (<=12 words).\n"
-            f"• sub_category != item_type; dress_code: formality in English; "
-            f"gender: criteria ('women' for floral/feminine, 'men' for masculine cuts, 'unisex' for neutral; {fallback_hi}; never default to 'men').\n"
-            "• Return raw JSON."
-        )
-    elif code == "nl":
-        fallback_nl = f"indien onzeker/basis, gebruik '{norm_gender}'" if norm_gender != "unisex" else "indien onzeker, 'unisex'"
-        return (
-            "**OUTPUT LANGUAGE: Dutch (Nederlands)**\n"
-            "Descriptive fields (name, title, caption, item_type, tags) in fluent Dutch. Classification and enum fields (category, sub_category, dress_code, pattern, gender, season) strictly in English.\n"
-            "• sub_category in English: ('T-Shirt','Sweater','Jeans','Pants','Skirt','Shoes','Sneakers','Sandals','Boots','Loafers','Sunglasses','Handbag').\n"
-            "• item_type in Dutch: specific cut/silhouette in Dutch (e.g. 'A-lijn Rok', 'Chino Broek', 'Windjack').\n"
-            "• name & title: Descriptive, unique, concise Dutch name (2-5 words): [Kleur] [Model/Materiaal] [Type]. NEVER hallucinate unseen items.\n"
-            "• caption: Short fluent sentence in Dutch (<=12 words).\n"
-            f"• sub_category != item_type; dress_code: formality in English; "
-            f"gender: criteria ('women' for floral/feminine, 'men' for masculine cuts, 'unisex' for neutral; {fallback_nl}; never default to 'men').\n"
-            "• Return raw JSON."
-        )
-    else:
-        return (
-            f"**OUTPUT LANGUAGE: {lang_name} ({code})**\n"
-            f"Descriptive fields (name, title, caption, item_type, tags) in fluent {lang_name}. Classification and enum fields (category, sub_category, dress_code, pattern, gender, season) strictly in English.\n"
-            "• sub_category in English: ('T-Shirt','Sweater','Jeans','Pants','Skirt','Shoes','Sneakers','Sandals','Boots','Loafers','Sunglasses','Handbag').\n"
-            f"• item_type in {lang_name}: specific cut/silhouette in {lang_name}.\n"
-            f"• name & title: Short, unique, descriptive garment name (2-5 words) in {lang_name} extracting visible cut and attributes: [Color] [Material/Cut] [Type]. NEVER hallucinate or invent items not in crop.\n"
-            f"• caption: Short fluent sentence in {lang_name} (<=12 words).\n"
-            f"• sub_category != item_type; dress_code: formality in English; "
-            f"gender: criteria ('women' for floral/feminine, 'men' for masculine, 'unisex' for neutral; {fallback_gender_hint}; never default to 'men').\n"
-            "• Return raw JSON."
-        )
+    return (
+        "Analyze the garment in this image. Return raw JSON (1 object or array). No markdown/intro.\n"
+        "• Language: All fields, values, attributes, and captions MUST be in canonical English.\n"
+        "• name & title: 2-4 canonical English words [Color] [Material/Cut] [Type] strictly reflecting visible pixels. Never generic ('Garment','Clothing').\n"
+        "• caption: <=12 words concise English sentence describing this specific item: [Color] [Material] [Type] with [details]. End with period.\n"
+        "• category: 'Top'|'Bottom'|'Footwear'|'Outerwear'|'Full Body'|'Bags'|'Accessories'|'Jewelry'.\n"
+        "• sub_category: Specific cut ('T-Shirt','Sweater','Jeans','Pants','Skirt','Oxfords','Loafers','Boots','Sandals','Sneakers','Heels','Pumps','Flats','Handbag','Crossbody Bag','Sunglasses','Belts','Headwear'). Never 'Top'/'Bottom'/'Footwear'.\n"
+        "• Footwear: Women's high heels/pumps must be 'Heels' or 'Pumps', never 'Sneakers'. Dress laced shoes are 'Oxfords' or 'Shoes'. Low slip-on dress shoes are 'Loafers'. Laced/ankle high are 'Boots'.\n"
+        "• Bottoms: 'Cargo Pants','Chinos','Jeans','Sweatpants','Pants','Shorts','Skirt'.\n"
+        "• item_type: Detailed silhouette/cut ('Cargo Pants','Chinos','Straight Jeans','Pleated Skirt','Oxford Shoes','High Heel Pumps','Hooded Jacket'). Differ from sub_category.\n"
+        '• colors: [{"name": str, "pct": int}] summing to 100. Accurate visible colors only.\n'
+        '• fabric_materials: [{"name": str, "pct": int}] summing to 100 using English names (\'Cotton\',\'Leather\',\'Wool\',\'Denim\',\'Polyester\',\'Nylon\',\'Silk\',\'Linen\',\'Spandex\',\'Suede\'). Never use Chinese or non-English characters.\n'
+        "• season: Array of applicable seasons ['spring'|'summer'|'fall'|'winter'] strictly based on visual fabric weight and cut. Never blindly select all four.\n"
+        "• pattern: 'solid'|'printed'|'geometric'|'striped'|'plaid'|'floral'|'camouflage'.\n"
+        f"• dress_code: 'casual'|'smart-casual'|'business'|'formal'|'athletic'|'loungewear'; "
+        f"gender: criteria ('women' for floral/feminine/blouses/heels/skirts, 'men' for masculine cuts, 'unisex' for neutral; {fallback_gender_hint}; never default to 'men')."
+    )
 
 
 def _extract_json(raw: str) -> dict[str, Any] | list[dict[str, Any]]:
