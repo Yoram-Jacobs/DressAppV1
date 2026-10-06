@@ -421,10 +421,10 @@ export const canonicalSubCategoryKey = (raw) => {
     normalized.includes('包')
   ) return 'bags';
   if (normalized.includes('small_good') || normalized.includes('ארנקים') || normalized.includes('бумажник') || normalized.includes('кошелек')) return 'small_goods';
-  if (normalized.includes('headwear') || normalized.includes('hat') || normalized.includes('cap') || normalized.includes('beanie') || normalized.includes('כובע') || normalized.includes('כובעים') || normalized.includes('головн_убор') || normalized.includes('шапк') || normalized.includes('шляп')) return 'headwear';
-  if (normalized.includes('belt') || normalized.includes('חגורה') || normalized.includes('חגורות') || normalized.includes('ремень') || normalized.includes('ремни') || normalized.includes('пояс')) return 'belts';
-  if (normalized.includes('glove') || normalized.includes('כפפה') || normalized.includes('כפפות') || normalized.includes('перчат') || normalized.includes('варежк')) return 'gloves';
-  if (normalized.includes('scarf') || normalized.includes('wrap') || normalized.includes('צעיף') || normalized.includes('צעיפים') || normalized.includes('шарф') || normalized.includes('платок')) return 'scarves_and_wraps';
+  if (normalized.includes('headwear') || normalized.includes('hat') || normalized.includes('cap') || normalized.includes('beanie') || normalized.includes('כובע') || normalized.includes('כובעים') || normalized.includes('головн_убор') || normalized.includes('шапк') || normalized.includes('шляп') || normalized.includes('قبعة') || normalized.includes('hut') || normalized.includes('mütze') || normalized.includes('sombrero') || normalized.includes('gorra') || normalized.includes('chapeau') || normalized.includes('cappello') || normalized.includes('chapéu') || normalized.includes('टोपी') || normalized.includes('帽子')) return 'headwear';
+  if (normalized.includes('belt') || normalized.includes('חגורה') || normalized.includes('חגורות') || normalized.includes('ремень') || normalized.includes('ремни') || normalized.includes('пояс') || normalized.includes('حزام') || normalized.includes('gürtel') || normalized.includes('cintur') || normalized.includes('ceinture') || normalized.includes('cinto') || normalized.includes('बेल्ट') || normalized.includes('ベルト') || normalized.includes('腰带')) return 'belts';
+  if (normalized.includes('glove') || normalized.includes('כפפה') || normalized.includes('כפפות') || normalized.includes('перчат') || normalized.includes('варежк') || normalized.includes('قفاز') || normalized.includes('handschuh') || normalized.includes('guante') || normalized.includes('gant') || normalized.includes('guanti') || normalized.includes('luva') || normalized.includes('दस्ताने') || normalized.includes('手袋') || normalized.includes('手套')) return 'gloves';
+  if (normalized.includes('scarf') || normalized.includes('wrap') || normalized.includes('צעיף') || normalized.includes('צעיפים') || normalized.includes('шарф') || normalized.includes('платок') || normalized.includes('وشاح') || normalized.includes('schal') || normalized.includes('bufanda') || normalized.includes('écharpe') || normalized.includes('echarpe') || normalized.includes('sciarpa') || normalized.includes('cachecol') || normalized.includes('स्कार्फ') || normalized.includes('スカーフ') || normalized.includes('围巾')) return 'scarves_and_wraps';
   if (normalized.includes('sock') || normalized.includes('hosiery') || normalized.includes('tight') || normalized.includes('גרבי') || normalized.includes('גרב') || normalized.includes('колгот')) return 'hosiery_and_socks';
   if (
     normalized.includes('sunglass') ||
@@ -436,14 +436,22 @@ export const canonicalSubCategoryKey = (raw) => {
     normalized.includes('очки') ||
     normalized.includes('solbrill') ||
     normalized.includes('zonnebril') ||
+    normalized.includes('brille') ||
     normalized.includes('lunette') ||
     normalized.includes('gafas') ||
+    normalized.includes('lentes') ||
     normalized.includes('occhiali') ||
     normalized.includes('óculos') ||
+    normalized.includes('oculos') ||
     normalized.includes('نظار') ||
     normalized.includes('सनग्लास') ||
+    normalized.includes('चश्मा') ||
+    normalized.includes('चश्म') ||
     normalized.includes('サングラス') ||
+    normalized.includes('メガネ') ||
+    normalized.includes('眼鏡') ||
     normalized.includes('太阳镜') ||
+    normalized.includes('眼镜') ||
     normalized.includes('墨镜')
   ) return 'sunglasses';
 
@@ -455,8 +463,31 @@ export const canonicalSubCategoryKey = (raw) => {
   if (normalized.includes('eyelet') || normalized.includes('grommet') || normalized.includes('לולאות') || normalized.includes('люверс')) return 'eyelets_and_grommets';
   if (normalized.includes('vamp') || normalized.includes('upper') || normalized.includes('חלקי_גפה') || normalized.includes('верх_обуви')) return 'vamps_and_uppers';
 
-  if (normalized.includes('combat_boot') || normalized.includes('boot') || normalized.includes('מגפ') || normalized.includes('ботин') || normalized.includes('сапог')) return 'boots';
-  if (normalized.includes('sandal') || normalized.includes('סנדל') || normalized.includes('сандал') || normalized.includes('босоножк')) return 'sandals';
+  if (
+    normalized.includes('combat_boot') ||
+    normalized.includes('boot') ||
+    normalized.includes('מגפ') ||
+    normalized.includes('ботин') ||
+    normalized.includes('сапог') ||
+    normalized.includes('stiefel') ||
+    normalized.includes('bota') ||
+    normalized.includes('botte') ||
+    normalized.includes('stival') ||
+    normalized.includes('جزمة') ||
+    normalized.includes('बूट') ||
+    normalized.includes('ブーツ') ||
+    normalized.includes('靴子')
+  ) return 'boots';
+  if (
+    normalized.includes('sandal') ||
+    normalized.includes('סנדל') ||
+    normalized.includes('сандал') ||
+    normalized.includes('босоножк') ||
+    normalized.includes('صندل') ||
+    normalized.includes('सैंडल') ||
+    normalized.includes('サンダル') ||
+    normalized.includes('凉鞋')
+  ) return 'sandals';
   if (normalized.includes('clog') || normalized.includes('slide') || normalized.includes('flopper') || normalized.includes('mule') || normalized.includes('flip_flop') || normalized.includes('כפכפ') || normalized.includes('קבקב')) return 'clogs';
   if (
     normalized.includes('sneaker') ||
@@ -467,12 +498,34 @@ export const canonicalSubCategoryKey = (raw) => {
     normalized.includes('סניקרס') ||
     normalized.includes('кроссов') ||
     normalized.includes('кеды') ||
+    normalized.includes('سنيكرز') ||
+    normalized.includes('turnschuh') ||
+    normalized.includes('zapatillas') ||
+    normalized.includes('baskets') ||
+    normalized.includes('tênis') ||
+    normalized.includes('tenis') ||
+    normalized.includes('स्नीकर्स') ||
+    normalized.includes('スニーカー') ||
+    normalized.includes('运动鞋') ||
     ((normalized.includes('נעלי') || normalized.includes('shoe') || normalized.includes('обув')) && (normalized.includes('ספורט') || normalized.includes('sport')))
   ) return 'sneakers';
-  if (normalized.includes('heel') || normalized.includes('עקב') || normalized.includes('каблук')) return 'heels';
+  if (normalized.includes('heel') || normalized.includes('עקב') || normalized.includes('каблук') || normalized.includes('كعب') || normalized.includes('tacón') || normalized.includes('tacon') || normalized.includes('talon') || normalized.includes('tacco') || normalized.includes('salto') || normalized.includes('कील') || normalized.includes('ヒール') || normalized.includes('高跟鞋')) return 'heels';
   if (normalized.includes('flat') || (normalized.includes('שטוחות') && (normalized.includes('נעלי') || normalized.includes('shoe'))) || normalized.includes('балетк')) return 'flats';
   if (normalized.includes('slipper') || normalized.includes('נעלי_בית') || normalized.includes('тапоч') || ((normalized.includes('נעלי') || normalized.includes('shoe')) && normalized.includes('בית'))) return 'slippers';
-  if (normalized.includes('loafer') || normalized.includes('לופר') || normalized.includes('מוקסין')) return 'loafers';
+  if (
+    normalized.includes('loafer') ||
+    normalized.includes('לופר') ||
+    normalized.includes('מוקסין') ||
+    normalized.includes('лофер') ||
+    normalized.includes('мокасин') ||
+    normalized.includes('لوفر') ||
+    normalized.includes('موكاسين') ||
+    normalized.includes('mocas') ||
+    normalized.includes('mocass') ||
+    normalized.includes('लोफर्स') ||
+    normalized.includes('ローファー') ||
+    normalized.includes('乐福鞋')
+  ) return 'loafers';
   if (normalized.includes('double_monk') || normalized.includes('דאבל_מאנק')) return 'double_monk_strap_shoes';
   if (normalized.includes('monk_strap') || normalized.includes('מאנק')) return 'monk_strap_shoes';
   if (normalized.includes('oxford') || normalized.includes('אוקספורד')) return 'oxford_shoes';
@@ -495,18 +548,18 @@ export const canonicalSubCategoryKey = (raw) => {
   if (normalized.includes('solid') && (normalized.includes('shoe') || normalized.includes('נעלי') || normalized.includes('обув'))) return 'shoes';
   if (normalized.includes('shoe') || normalized.includes('נעלי') || normalized.includes('обув')) return 'shoes';
 
-  if (normalized.includes('overcoat') || normalized.includes('coat') || normalized.includes('parka') || normalized.includes('מעיל') || normalized.includes('пальто') || normalized.includes('плащ')) return 'coats';
-  if (normalized.includes('jacket') || normalized.includes('bomber') || normalized.includes('moto') || normalized.includes('זקט') || normalized.includes('куртк')) return 'jackets';
+  if (normalized.includes('overcoat') || normalized.includes('coat') || normalized.includes('parka') || normalized.includes('מעיל') || normalized.includes('пальто') || normalized.includes('плащ') || normalized.includes('معطف') || normalized.includes('mantel') || normalized.includes('abrigo') || normalized.includes('manteau') || normalized.includes('cappotto') || normalized.includes('casaco') || normalized.includes('कोट') || normalized.includes('コート') || normalized.includes('大衣')) return 'coats';
+  if (normalized.includes('jacket') || normalized.includes('bomber') || normalized.includes('moto') || normalized.includes('זקט') || normalized.includes('куртк') || normalized.includes('جاكيت') || normalized.includes('سترة') || normalized.includes('jacke') || normalized.includes('chaqueta') || normalized.includes('veste') || normalized.includes('giacca') || normalized.includes('jaqueta') || normalized.includes('जैकेट') || normalized.includes('ジャケット') || normalized.includes('夹克')) return 'jackets';
   if (normalized.includes('performance_gear') || normalized.includes('windbreaker') || normalized.includes('ביגוד_טכני') || normalized.includes('ветров')) return 'performance_gear';
   if (normalized.includes('blazer') || normalized.includes('בלייזר') || normalized.includes('пиджак') || normalized.includes('блейзер')) return 'blazers';
   if (normalized.includes('vest') || normalized.includes('gilet') || normalized.includes('ווסט') || normalized.includes('жилет')) return 'vests';
   if (normalized.includes('cape') || normalized.includes('poncho') || normalized.includes('שכמי') || normalized.includes('פונצו') || normalized.includes('пончо')) return 'capes_and_ponchos';
   if (normalized.includes('shrug') || normalized.includes('bolero') || normalized.includes('עליונית_קצרה') || normalized.includes('болеро')) return 'shrugs';
 
-  if (normalized.includes('tailored_shirt') || normalized.includes('button_down') || normalized.includes('oxford_shirt') || normalized.includes('dress_shirt') || normalized.includes('מכופתרת') || normalized.includes('חולצה') || normalized.includes('рубашк') || normalized === 'shirt' || normalized === 'shirts' || normalized === 'top' || normalized === 'tops') return 'tailored_shirts';
-  if (normalized.includes('knitwear') || normalized.includes('sweater') || normalized.includes('cardigan') || normalized.includes('pullover') || normalized.includes('סריג') || normalized.includes('סוודר') || normalized.includes('трикотаж') || normalized.includes('свитер')) return 'knitwear';
-  if (normalized.includes('t_shirt') || normalized.includes('tshirt') || normalized.includes('t-shirt') || normalized.includes('tee') || normalized.includes('חולצת_טי') || normalized.includes('טישירט') || normalized.includes('футболк')) return 't_shirts';
-  if (normalized.includes('blouse') || normalized.includes('בלוזה') || normalized.includes('блузк')) return 'blouses';
+  if (normalized.includes('tailored_shirt') || normalized.includes('button_down') || normalized.includes('oxford_shirt') || normalized.includes('dress_shirt') || normalized.includes('מכופתרת') || normalized.includes('חולצה') || normalized.includes('рубашк') || normalized.includes('قميص') || normalized.includes('hemd') || normalized.includes('camisa') || normalized.includes('chemise') || normalized.includes('camicia') || normalized.includes('overhemd') || normalized.includes('शर्ट') || normalized.includes('シャツ') || normalized.includes('衬衫') || normalized === 'shirt' || normalized === 'shirts' || normalized === 'top' || normalized === 'tops') return 'tailored_shirts';
+  if (normalized.includes('knitwear') || normalized.includes('sweater') || normalized.includes('cardigan') || normalized.includes('pullover') || normalized.includes('סריג') || normalized.includes('סוודר') || normalized.includes('трикотаж') || normalized.includes('свитер') || normalized.includes('كنزة') || normalized.includes('suéter') || normalized.includes('sueter') || normalized.includes('pull') || normalized.includes('maglione') || normalized.includes('trui') || normalized.includes('स्वेटर') || normalized.includes('セーター') || normalized.includes('毛衣')) return 'knitwear';
+  if (normalized.includes('t_shirt') || normalized.includes('tshirt') || normalized.includes('t-shirt') || normalized.includes('tee') || normalized.includes('חולצת_טי') || normalized.includes('טישירט') || normalized.includes('футболк') || normalized.includes('تيشيرت') || normalized.includes('t_शर्ट') || normalized.includes('tシャツ') || normalized.includes('t恤')) return 't_shirts';
+  if (normalized.includes('blouse') || normalized.includes('בלוזה') || normalized.includes('блузк') || normalized.includes('بلوزة') || normalized.includes('bluse') || normalized.includes('blusa') || normalized.includes('chemisier') || normalized.includes('camicetta') || normalized.includes('ब्लाउज') || normalized.includes('ブラウス')) return 'blouses';
   if (normalized.includes('tank_top') || normalized.includes('tank') || normalized.includes('camisole') || normalized.includes('גופיי') || normalized.includes('גופיה') || normalized.includes('майк')) return 'tank_tops';
   if (normalized.includes('sweatshirt') || normalized.includes('hoodie') || normalized.includes('fleece') || normalized.includes('סווטשירט') || normalized.includes('קפוצ') || normalized.includes('худи') || normalized.includes('толстовк')) return 'sweatshirts';
   if (normalized.includes('tunic') || normalized.includes('טוניק') || normalized.includes('туник')) return 'tunics';
@@ -519,20 +572,59 @@ export const canonicalSubCategoryKey = (raw) => {
     normalized.includes('карго')
   ) return 'cargo_pants';
   if (normalized.includes('shorts') || normalized.includes('short') || normalized.includes('קצרים') || normalized.includes('שורט') || normalized.includes('шорты')) return 'shorts';
-  if (normalized.includes('trouser') || normalized.includes('chino') || normalized.includes('pants') || normalized.includes('מכנסי') || normalized.includes('מכנס') || normalized.includes('брюк') || normalized.includes('штаны')) return 'trousers';
+  if (
+    normalized.includes('trouser') ||
+    normalized.includes('chino') ||
+    normalized.includes('pants') ||
+    normalized.includes('pant') ||
+    normalized.includes('מכנסי') ||
+    normalized.includes('מכנס') ||
+    normalized.includes('брюк') ||
+    normalized.includes('штаны') ||
+    normalized.includes('بنطال') ||
+    normalized.includes('بنطلون') ||
+    normalized.includes('سروال') ||
+    normalized.includes('hose') ||
+    normalized.includes('hosen') ||
+    normalized.includes('pantalon') ||
+    normalized.includes('calca') ||
+    normalized.includes('calça') ||
+    normalized.includes('broek') ||
+    normalized.includes('पतलून') ||
+    normalized.includes('पैंट') ||
+    normalized.includes('ズボン') ||
+    normalized.includes('パンツ') ||
+    normalized.includes('裤子') ||
+    normalized.includes('长裤')
+  ) return 'trousers';
   if (normalized.includes('jeans') || normalized.includes('jean') || normalized.includes('denim') || normalized.includes('גינס') || normalized.includes('ג׳ינס') || normalized.includes('джинс')) return 'jeans';
   if (normalized.includes('legging') || normalized.includes('טייץ') || normalized.includes('легинс')) return 'leggings';
   if (normalized.includes('sweatpants') || normalized.includes('jogger') || normalized.includes('אימונית') || normalized.includes('טרניניג') || normalized.includes('джоггер')) return 'sweatpants';
   if (normalized.includes('jumpsuit') || normalized.includes('romper') || normalized.includes('אוברול') || normalized.includes('комביнезон') || normalized.includes('ромпер')) return 'jumpsuits_and_rompers';
   if (normalized.includes('overall') || normalized.includes('dungaree') || normalized.includes('סרבל') || normalized.includes('полукомбинезон')) return 'overalls';
 
-  if (normalized.includes('pleated_skirt') || normalized.includes('pleated skirt') || normalized.includes('pleated') || normalized.includes('פליסה')) return 'pleated_skirt';
-  if (normalized.includes('a_line_skirt') || normalized.includes('a-line') || normalized.includes('a_line') || normalized.includes('קו_a')) return 'a_line_skirt';
+  if (normalized.includes('pleated_skirt') || normalized.includes('pleated skirt') || normalized.includes('pleated') || normalized.includes('פליסה') || normalized.includes('плиссирован') || normalized.includes('كسرات') || normalized.includes('plisada') || normalized.includes('plissée') || normalized.includes('plissee')) return 'pleated_skirt';
+  if (normalized.includes('a_line_skirt') || normalized.includes('a-line') || normalized.includes('a_line') || normalized.includes('קו_a') || normalized.includes('трапец')) return 'a_line_skirt';
   if (normalized.includes('pencil_skirt') || normalized.includes('עיפרון')) return 'pencil_skirt';
   if (normalized.includes('mini_skirt') || normalized.includes('חצאית_מיני')) return 'mini_skirt';
   if (normalized.includes('midi_skirt') || normalized.includes('חצאית_מידי')) return 'midi_skirt';
   if (normalized.includes('maxi_skirt') || normalized.includes('חצאית_מקסי')) return 'maxi_skirt';
-  if (normalized.includes('skirt') || normalized.includes('חצאית') || normalized.includes('חצאיות') || normalized.includes('юбк')) return 'skirts';
+  if (
+    normalized.includes('skirt') ||
+    normalized.includes('חצאית') ||
+    normalized.includes('חצאיות') ||
+    normalized.includes('юбк') ||
+    normalized.includes('تنورة') ||
+    normalized.includes('falda') ||
+    normalized.includes('jupe') ||
+    normalized.includes('gonna') ||
+    normalized.includes('saia') ||
+    normalized.includes('rok') ||
+    normalized.includes('स्कर्ट') ||
+    normalized.includes('スカート') ||
+    normalized.includes('半身裙') ||
+    normalized.includes('短裙')
+  ) return 'skirts';
   if (normalized.includes('mini_dress') || normalized.includes('מיני') || normalized.includes('мини_плать')) return 'mini_dresses';
   if (normalized.includes('maxi_dress') || normalized.includes('מקסי') || normalized.includes('макси_плать')) return 'maxi_dresses';
   if (normalized.includes('evening_dress') || normalized.includes('gown') || normalized.includes('שמלת_ערב') || normalized.includes('שמלות_ערב') || normalized.includes('вечерн_плать')) return 'evening_dresses';

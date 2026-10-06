@@ -656,14 +656,124 @@ def _sanitize_sweatpants_and_trainer(res: dict[str, Any]) -> None:
                 res[field] = cleaned.strip()
 
 
+_MULTILINGUAL_BOTTOM_TERMS = {
+    # Hebrew
+    "מכנסיים", "מכנסי", "מכנס", "חצאית", "דגמח", "דגמ\"ח", "טייץ", "שורט", "ברמודה",
+    # English
+    "pant", "pants", "trouser", "trousers", "jean", "jeans", "skirt", "skirts", "chino", "chinos", "slacks", "legging", "leggings", "shorts",
+    # Arabic
+    "بنطال", "بنطلون", "سروال", "تنورة", "جينز", "شورت",
+    # German
+    "hose", "hosen", "stoffhose", "rock", "kurze hose",
+    # Spanish
+    "pantalón", "pantalon", "pantalones", "falda", "faldas", "vaqueros", "bermudas",
+    # French
+    "pantalon", "pantalons", "jupe", "jupes", "bermuda",
+    # Italian
+    "pantalone", "pantaloni", "gonna", "gonne", "bermuda",
+    # Portuguese
+    "calça", "calças", "calca", "calcas", "saia", "saias", "bermuda",
+    # Russian
+    "брюки", "штаны", "джинсы", "юбка", "юбки", "шорты",
+    # Dutch
+    "broek", "broeken", "rok", "rokken",
+    # Hindi
+    "पतलून", "पैंट", "ट्राउजर", "स्कर्ट", "जींस",
+    # Japanese
+    "パンツ", "ズボン", "スラックス", "スカート", "ジーンズ", "ボトムス",
+    # Chinese
+    "裤子", "长裤", "短裤", "裙子", "半身裙", "牛仔裤",
+}
+
+_MULTILINGUAL_PANTS_TERMS = {
+    "מכנסיים", "מכנסי", "מכנס", "דגמח", "דגמ\"ח", "טייץ",
+    "pant", "pants", "trouser", "trousers", "jean", "jeans", "chino", "chinos", "slacks", "legging", "leggings",
+    "بنطال", "بنطلون", "سروال", "جينز",
+    "hose", "hosen", "stoffhose",
+    "pantalón", "pantalon", "pantalones", "vaqueros",
+    "pantalon", "pantalons",
+    "pantalone", "pantaloni",
+    "calça", "calças", "calca", "calcas",
+    "брюки", "штаны", "джинсы",
+    "broek", "broeken",
+    "पतलून", "पैंट", "ट्राउजर",
+    "パンツ", "ズボン", "スラックス",
+    "裤子", "长裤", "牛仔裤",
+}
+
+_MULTILINGUAL_TOP_TERMS = {
+    "jacket", "coat", "shirt", "blouse", "sweater", "hoodie", "windbreaker", "cardigan", "top", "tee",
+    "ז'קט", "מעיל", "חולצה", "סוודר", "קפוצ'ון", "בלוזה", "סריג",
+    "سترة", "جاكيت", "معطف", "قميص", "بلوزة", "كنزة",
+    "jacke", "mantel", "hemd", "pullover", "bluse", "oberteil",
+    "chaqueta", "abrigo", "camisa", "suéter", "sueter", "blusa",
+    "veste", "manteau", "chemise", "pull", "chemisier", "haut",
+    "giacca", "cappotto", "camicia", "maglione", "camicetta",
+    "jaqueta", "casaco",
+    "куртка", "пальто", "рубашка", "свитер", "блузка", "топ",
+    "jas", "overhemd", "trui",
+    "जैकेट", "कोट", "शर्ट", "स्वेटर", "ब्लाउज", "टॉप",
+    "ジャケット", "コート", "シャツ", "セーター", "ブラウス", "トップス",
+    "夹克", "大衣", "外套", "衬衫", "毛衣", "上衣",
+}
+
+_TOP_CUTS_BY_LANG = {
+    "en": {"windbreaker": "Windbreaker Jacket", "sweater": "Casual Sweater", "blouse": "Elegant Blouse", "top": "Casual Top"},
+    "he": {"windbreaker": "ז'קט רוח", "sweater": "סריג קז'ואל", "blouse": "בלוזה אלגנטית", "top": "חולצת קז'ואל"},
+    "ar": {"windbreaker": "سترة واقية", "sweater": "كنزة كاجوال", "blouse": "بلوزة أنيقة", "top": "قميص كاجوال"},
+    "de": {"windbreaker": "Windjacke", "sweater": "Freizeitpullover", "blouse": "Elegante Bluse", "top": "Freizeitoberteil"},
+    "es": {"windbreaker": "Chaqueta cortavientos", "sweater": "Suéter casual", "blouse": "Blusa elegante", "top": "Top casual"},
+    "fr": {"windbreaker": "Coupe-vent", "sweater": "Pull décontracté", "blouse": "Chemisier élégant", "top": "Haut décontracté"},
+    "it": {"windbreaker": "Giacca a vento", "sweater": "Maglione casual", "blouse": "Camicetta elegante", "top": "Top casual"},
+    "pt": {"windbreaker": "Jaqueta corta-vento", "sweater": "Suéter casual", "blouse": "Blusa elegante", "top": "Blusa casual"},
+    "ru": {"windbreaker": "Ветровка", "sweater": "Повседневный свитер", "blouse": "Элегантная блузка", "top": "Повседневный топ"},
+    "nl": {"windbreaker": "Windjack", "sweater": "Casual trui", "blouse": "Elegante blouse", "top": "Casual top"},
+    "hi": {"windbreaker": "विंडब्रेकर जैकेट", "sweater": "कैजुअल स्वेटर", "blouse": "सुरुचिपूर्ण ब्लाउज", "top": "कैजुअल टॉप"},
+    "ja": {"windbreaker": "ウインドブレーカー", "sweater": "カジュアルセーター", "blouse": "エレガントブラウス", "top": "カジュアルトップス"},
+    "zh": {"windbreaker": "防风夹克", "sweater": "休闲毛衣", "blouse": "优雅衬衫", "top": "休闲上衣"},
+}
+
+_SKIRT_CUTS_BY_LANG = {
+    "en": "A-Line Skirt",
+    "he": "חצאית A-Line",
+    "ar": "تنورة بقصة A-Line",
+    "de": "A-Linien-Rock",
+    "es": "Falda línea A",
+    "fr": "Jupe trapèze",
+    "it": "Gonna a ruota",
+    "pt": "Saia evasê",
+    "ru": "Юбка А-силуэта",
+    "nl": "A-lijn rok",
+    "hi": "ए-लाइन स्कर्ट",
+    "ja": "Aラインスカート",
+    "zh": "A字半身裙",
+}
+
+_HANDBAG_NAMES_BY_LANG = {
+    "en": {"name": "Black Handbag", "item_type": "Handbag"},
+    "he": {"name": "תיק צד שחור", "item_type": "תיק יד"},
+    "ar": {"name": "حقيبة يد سوداء", "item_type": "حقيبة يد"},
+    "de": {"name": "Schwarze Handtasche", "item_type": "Handtasche"},
+    "es": {"name": "Bolso de mano negro", "item_type": "Bolso de mano"},
+    "fr": {"name": "Sac à main noir", "item_type": "Sac à main"},
+    "it": {"name": "Borsa a mano nera", "item_type": "Borsa a mano"},
+    "pt": {"name": "Bolsa de mão preta", "item_type": "Bolsa de mão"},
+    "ru": {"name": "Черная сумка", "item_type": "Сумка"},
+    "nl": {"name": "Zwarte handtas", "item_type": "Handtas"},
+    "hi": {"name": "काला हैंडबैग", "item_type": "हैंडबैग"},
+    "ja": {"name": "黒のハンドバッグ", "item_type": "ハンドバッグ"},
+    "zh": {"name": "黑色手提包", "item_type": "手提包"},
+}
+
+
 def _sanitize_cross_category_contamination(res: dict[str, Any], language: str | None = None) -> None:
-    """Purge cross-category and anatomical contradictions across category, name, item_type, and caption.
+    """Purge cross-category and anatomical contradictions across category, name, item_type, and caption across all 13 supported languages.
     
     Prevents hallucinated KV-cache bleed such as:
-    - A Top/Outerwear/Jacket having item_type='מכנסיים ארוכים' or caption='מכנסיים אדומים...'
-    - A Skirt having caption='מכנסיים גבריים...'
-    - A Footwear item having sub_category='פיקוס'
-    - A Bag having item_type='נימוציד' or tag='# שקר'
+    - A Top/Outerwear/Jacket having item_type='מכנסיים ארוכים' / 'Pants' or caption mentioning pants
+    - A Skirt having caption='מכנסיים גבריים...' / 'Men's pants...'
+    - A Footwear item having sub_category='פיקוס' / nonsense
+    - A Bag having item_type='נימוציד' / 'wall cover' or tag='# שקר'
     """
     if not isinstance(res, dict):
         return
@@ -676,21 +786,47 @@ def _sanitize_cross_category_contamination(res: dict[str, Any], language: str | 
     cap_l = cap_str.lower()
     itype_str = str(res.get("item_type") or "").strip()
     itype_l = itype_str.lower()
-    is_he = (language in ("he", "iw")) or any("\u0590" <= ch <= "\u05ea" for ch in f"{name_str} {cap_str} {itype_str}")
+
+    # Determine target language code
+    lang_code = "en"
+    if language:
+        l_norm = language.strip().lower().replace("_", "-").split("-")[0]
+        if l_norm in ("iw", "he"):
+            lang_code = "he"
+        elif l_norm in _CAPTION_TEMPLATES:
+            lang_code = l_norm
+    else:
+        combined_txt = f"{name_str} {cap_str} {itype_str}"
+        if any("\u0590" <= ch <= "\u05ea" for ch in combined_txt):
+            lang_code = "he"
+        elif any("\u0600" <= ch <= "\u06ff" for ch in combined_txt):
+            lang_code = "ar"
+        elif any("\u0400" <= ch <= "\u04ff" for ch in combined_txt):
+            lang_code = "ru"
+        elif any("\u0900" <= ch <= "\u097f" for ch in combined_txt):
+            lang_code = "hi"
+        elif any("\u3040" <= ch <= "\u30ff" for ch in combined_txt):
+            lang_code = "ja"
+        elif any("\u4e00" <= ch <= "\u9fff" for ch in combined_txt):
+            lang_code = "zh"
+
+    is_he = lang_code == "he"
+    top_cuts = _TOP_CUTS_BY_LANG.get(lang_code, _TOP_CUTS_BY_LANG["en"])
 
     # 1. Top / Outerwear cleanup
-    if cat_l in ("top", "outerwear") or any(w in sub_l or w in name_l for w in ("jacket", "coat", "shirt", "blouse", "sweater", "hoodie", "ז'קט", "מעיל", "חולצה", "סוודר", "קפוצ'ון")):
-        if any(w in itype_l for w in ("pant", "trouser", "jean", "skirt", "מכנס", "חצאית", "דגמח", "טייץ")):
-            if any(w in name_l or w in sub_l for w in ("jacket", "coat", "windbreaker", "ז'קט", "מעיל")):
-                res["item_type"] = "ז'קט רוח" if is_he else "Windbreaker Jacket"
-            elif any(w in name_l or w in sub_l for w in ("sweater", "cardigan", "hoodie", "סוודר", "סריג", "קפוצ")):
-                res["item_type"] = "סריג קז'ואל" if is_he else "Casual Sweater"
-            elif any(w in name_l or w in sub_l for w in ("blouse", "בלוז")):
-                res["item_type"] = "בלוזה אלגנטית" if is_he else "Elegant Blouse"
+    is_top_cat = cat_l in ("top", "outerwear") or any(w in sub_l or w in name_l for w in _MULTILINGUAL_TOP_TERMS)
+    if is_top_cat:
+        if any(w in itype_l for w in _MULTILINGUAL_BOTTOM_TERMS):
+            if any(w in name_l or w in sub_l for w in ("jacket", "coat", "windbreaker", "ז'קט", "מעיל", "جاكيت", "jacke", "chaqueta", "veste", "куртка")):
+                res["item_type"] = top_cuts["windbreaker"]
+            elif any(w in name_l or w in sub_l for w in ("sweater", "cardigan", "hoodie", "סוודר", "סריג", "קפוצ", "كنزة", "pullover", "suéter", "pull", "свитер")):
+                res["item_type"] = top_cuts["sweater"]
+            elif any(w in name_l or w in sub_l for w in ("blouse", "בלוז", "بلوزة", "bluse", "chemisier", "блузка")):
+                res["item_type"] = top_cuts["blouse"]
             else:
-                res["item_type"] = "חולצת קז'ואל" if is_he else "Casual Top"
+                res["item_type"] = top_cuts["top"]
 
-        if any(w in cap_l for w in ("מכנסיים", "מכנסי", "מכנס", "חצאית", "pants", "trousers", "skirt")):
+        if any(w in cap_l for w in _MULTILINGUAL_BOTTOM_TERMS):
             if is_he:
                 cleaned = re.sub(r"^(?:מכנסיים\s+(?:אדומים|שחורים|גבריים|נשיים)?|מכנסי\s+|מכנס\s+|חצאית\s+)", f"{name_str or 'זקט'} ", cap_str).strip()
                 cleaned = re.sub(r"\b(מכנסיים|מכנסי|מכנס)\b", "ז'קט" if ("ז'קט" in name_l or "מעיל" in name_l) else "חולצה", cleaned)
@@ -698,14 +834,15 @@ def _sanitize_cross_category_contamination(res: dict[str, Any], language: str | 
                     cleaned = f"{name_str or 'זקט'} מעוצב ונוח לשימוש יומיומי."
                 res["caption"] = cleaned
             else:
-                cleaned = re.sub(r"(?i)\b(pants|trousers?|chinos?|skirt)\b", "jacket" if "jacket" in name_l else "shirt", cap_str)
-                res["caption"] = cleaned
+                tpls = _CAPTION_TEMPLATES.get(lang_code, _CAPTION_TEMPLATES["en"])
+                template_key = "coat" if ("jacket" in name_l or "coat" in name_l or cat_l == "outerwear") else "default"
+                res["caption"] = tpls[template_key].format(name=name_str or tpls["fallback_name"])
 
     # 2. Skirt cleanup
-    elif "skirt" in sub_l or "חצאית" in sub_l or "skirt" in itype_l or "חצאית" in itype_l:
-        if any(w in itype_l for w in ("pant", "trouser", "jean", "מכנס")):
-            res["item_type"] = "חצאית A-Line" if is_he else "A-Line Skirt"
-        if any(w in cap_l for w in ("מכנסיים", "מכנסי", "מכנס", "pants", "trousers")):
+    elif "skirt" in sub_l or "חצאית" in sub_l or "skirt" in itype_l or "חצאית" in itype_l or any(w in sub_l for w in ("تنورة", "falda", "jupe", "gonna", "saia", "rok", "юбка", "स्कर्ट", "スカート", "半身裙")):
+        if any(w in itype_l for w in _MULTILINGUAL_PANTS_TERMS):
+            res["item_type"] = _SKIRT_CUTS_BY_LANG.get(lang_code, _SKIRT_CUTS_BY_LANG["en"])
+        if any(w in cap_l for w in _MULTILINGUAL_PANTS_TERMS):
             if is_he:
                 cleaned = re.sub(r"^(?:מכנסיים\s+(?:גבריים|נשיים)?|מכנסי\s+|מכנס\s+)", "חצאית ", cap_str).strip()
                 cleaned = re.sub(r"\b(מכנסיים|מכנסי|מכנס)\b", "חצאית", cleaned)
@@ -713,31 +850,48 @@ def _sanitize_cross_category_contamination(res: dict[str, Any], language: str | 
                     cleaned = f"{name_str or 'חצאית'} מחמיאה ואלגנטית להופעה יומיומית."
                 res["caption"] = cleaned
             else:
-                cleaned = re.sub(r"(?i)\b(pants|trousers?|chinos?)\b", "skirt", cap_str)
-                res["caption"] = cleaned
+                tpls = _CAPTION_TEMPLATES.get(lang_code, _CAPTION_TEMPLATES["en"])
+                res["caption"] = tpls["default"].format(name=name_str or tpls["fallback_name"])
 
     # 3. Footwear cleanup (e.g. 'פיקוס', 'פקקים')
-    elif cat_l == "footwear" or any(w in sub_l or w in name_l for w in ("shoe", "sneaker", "boot", "sandal", "heel", "נעלי", "סניקרס", "מגפ", "סנדל")):
-        valid_fw_subs = {"shoes", "sneakers", "sandals", "boots", "loafers", "heels", "flats", "oxfords", "derbies", "נעליים", "סניקרס", "סנדלים", "מגפיים", "נעלי עקב", "מוקסינים"}
+    elif cat_l == "footwear" or any(w in sub_l or w in name_l for w in ("shoe", "sneaker", "boot", "sandal", "heel", "נעלי", "סניקרס", "מגפ", "סנדל", "حذاء", "schuh", "zapato", "chaussure", "scarpa", "обувь", "鞋")):
+        valid_fw_subs = {
+            "shoes", "sneakers", "sandals", "boots", "loafers", "heels", "flats", "oxfords", "derbies",
+            "נעליים", "סניקרס", "סנדלים", "מגפיים", "נעלי עקב", "מוקסינים",
+            "أحذية", "سنيكرز", "صنادل", "أحذية بكعب", "لوفر",
+            "schuhe", "stiefel", "sandalen", "sneaker",
+            "zapatos", "botas", "sandalias", "zapatillas",
+            "chaussures", "bottes", "sandales", "baskets",
+            "scarpe", "stivali", "sandali",
+            "sapatos", "botas", "sandálias", "tênis",
+            "обувь", "ботинки", "сапоги", "сандалии", "кроссовки", "туфли",
+            "schoenen", "laarzen",
+            "जूते", "बूट", "सैंडल", "स्नीकर्स",
+            "靴", "ブーツ", "サンダル", "スニーカー",
+            "鞋", "鞋子", "靴子", "凉鞋", "运动鞋",
+        }
         if sub_l not in valid_fw_subs:
             res["sub_category"] = "Shoes"
         tags = res.get("tags")
         if isinstance(tags, list):
-            res["tags"] = [t for t in tags if str(t).strip().lower() not in ("# פקקים", "פקקים", "# שקר", "שקר", "lie", "fake")]
+            res["tags"] = [t for t in tags if str(t).strip().lower() not in ("# פקקים", "פקקים", "# שקר", "שקר", "lie", "fake", "# lie", "# fake")]
 
     # 4. Bags / Accessories cleanup (e.g. 'כיסוי קיר', 'נימוציד', '# שקר')
     elif cat_l in ("accessories", "accessory") or "bag" in sub_l or "תיק" in sub_l:
-        if any(w in name_l for w in ("כיסוי קיר", "וילון", "wall cover", "curtain")):
-            res["name"] = "תיק צד שחור" if is_he else "Black Handbag"
-            res["title"] = res["name"]
+        if any(w in name_l for w in ("כיסוי קיר", "וילון", "wall cover", "curtain", "rideau", "vorhang", "cortina")):
+            bag_meta = _HANDBAG_NAMES_BY_LANG.get(lang_code, _HANDBAG_NAMES_BY_LANG["en"])
+            res["name"] = bag_meta["name"]
+            res["title"] = bag_meta["name"]
             res["sub_category"] = "Handbag"
         if itype_str in ("נימוציד", "nimodicide") or not itype_str or itype_l == "accessories":
-            res["item_type"] = "תיק יד" if is_he else "Handbag"
-        if any(w in cap_l for w in ("כיסוי קיר", "וילון", "wall cover")):
-            res["caption"] = f"{res.get('name', 'תיק')} אלגנטי ושימושי." if is_he else "An elegant and practical handbag."
+            bag_meta = _HANDBAG_NAMES_BY_LANG.get(lang_code, _HANDBAG_NAMES_BY_LANG["en"])
+            res["item_type"] = bag_meta["item_type"]
+        if any(w in cap_l for w in ("כיסוי קיר", "וילון", "wall cover", "curtain", "rideau", "vorhang", "cortina")):
+            tpls = _CAPTION_TEMPLATES.get(lang_code, _CAPTION_TEMPLATES["en"])
+            res["caption"] = tpls["accessories"].format(name=res.get("name") or tpls["fallback_name"])
         tags = res.get("tags")
         if isinstance(tags, list):
-            res["tags"] = [t for t in tags if str(t).strip().lower() not in ("# שקר", "שקר", "lie", "fake", "# פקקים", "פקקים")]
+            res["tags"] = [t for t in tags if str(t).strip().lower() not in ("# שקר", "שקר", "lie", "fake", "# פקקים", "פקקים", "# lie", "# fake")]
 
 
 def _coerce_single_garment(

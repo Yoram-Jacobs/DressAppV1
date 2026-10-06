@@ -210,3 +210,50 @@ def test_cross_category_footwear_and_bag_sanitization():
     assert "# שקר" not in coerced_bag["tags"]
 
 
+def test_cross_category_arabic_jacket_sanitization():
+    raw = {
+        "is_clothing": True,
+        "category": "Outerwear",
+        "sub_category": "Jacket",
+        "item_type": "بنطال",
+        "caption": "بنطال أنيق ومريح للاستخدام اليومي.",
+        "name": "جاكيت شتوي أسود",
+        "title": "جاكيت شتوي أسود",
+    }
+    res = _coerce_single_garment(raw, language="ar")
+    assert "بنطال" not in res["caption"]
+    assert "بنطال" not in res["item_type"]
+    assert res["item_type"] == "سترة واقية"
+
+
+def test_cross_category_french_skirt_sanitization():
+    raw = {
+        "is_clothing": True,
+        "category": "Bottom",
+        "sub_category": "Skirt",
+        "item_type": "pantalon",
+        "caption": "Un pantalon élégant pour homme.",
+        "name": "Jupe noire",
+        "title": "Jupe noire",
+    }
+    res = _coerce_single_garment(raw, language="fr")
+    assert "pantalon" not in res["caption"].lower()
+    assert res["item_type"] == "Jupe trapèze"
+
+
+def test_cross_category_german_jacket_sanitization():
+    raw = {
+        "is_clothing": True,
+        "category": "Outerwear",
+        "sub_category": "Jacket",
+        "item_type": "Hose",
+        "caption": "Eine klassische Hose aus Baumwolle.",
+        "name": "Schwarze Jacke",
+        "title": "Schwarze Jacke",
+    }
+    res = _coerce_single_garment(raw, language="de")
+    assert "hose" not in res["caption"].lower()
+    assert res["item_type"] == "Windjacke"
+
+
+
