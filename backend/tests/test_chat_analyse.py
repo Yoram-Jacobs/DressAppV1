@@ -482,8 +482,9 @@ async def test_reanalyze_consumes_daily_quota_preserves_onboarding_credits(mock_
     db_mock = MagicMock()
     db_mock.users.find_one = AsyncMock(return_value={
         "id": "free_user_with_5_credits",
+        "email": "free@example.com",
         "tier": "free",
-        "credit_buckets": [{"id": "b1", "type": "free", "amount": 5, "expires_at": "2099-01-01T00:00:00Z"}],
+        "credit_buckets": [{"id": "b1", "type": "free", "amount": 5, "expires_at": "2099-01-01T00:00:00Z", "created_at": "2026-01-01T00:00:00Z"}],
     })
     db_mock.users.update_one = AsyncMock(return_value=MagicMock(modified_count=1))
     db_mock.token_meter = MagicMock()
@@ -494,8 +495,9 @@ async def test_reanalyze_consumes_daily_quota_preserves_onboarding_credits(mock_
 
         user_dict = {
             "id": "free_user_with_5_credits",
+            "email": "free@example.com",
             "tier": "free",
-            "credit_buckets": [{"id": "b1", "type": "free", "amount": 5, "expires_at": "2099-01-01T00:00:00Z"}],
+            "credit_buckets": [{"id": "b1", "type": "free", "amount": 5, "expires_at": "2099-01-01T00:00:00Z", "created_at": "2026-01-01T00:00:00Z"}],
         }
 
         # Non-generative reanalyze_item operation

@@ -604,10 +604,6 @@ async def deduct_user_credits(
             return True
 
         # 2. Free tier users:
-        # Check if the user has available credit buckets (e.g. 5 free onboarding credits or paid packs)
-        user_record = await migrate_legacy_credits_if_needed(user_record, db)
-        u_model = User.parse_obj(user_record)
-        available_credits = u_model.total_credits
         is_generative = operation in (
             "chat_image_edit",
             "repair_item_crop",
@@ -632,6 +628,11 @@ async def deduct_user_credits(
                 except Exception:
                     pass
                 return True
+
+        # Check if the user has available credit buckets (e.g. 5 free onboarding credits or paid packs)
+        user_record = await migrate_legacy_credits_if_needed(user_record, db)
+        u_model = User.parse_obj(user_record)
+        available_credits = u_model.total_credits
 
         if available_credits >= req_int:
             success, spent_details = u_model.spend_credits(req_int, operation or "ai_operation")
