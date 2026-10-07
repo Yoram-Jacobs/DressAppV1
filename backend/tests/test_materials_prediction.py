@@ -124,28 +124,52 @@ def test_prompts_contain_materials_rules():
 
 
 def test_coat_wool_vs_faux_leather_sanitization():
-    """Verify tailored wool coats misidentified as Faux Leather are sanitized to Wool blend."""
+    """Verify explicit wool coats misidentified as Faux Leather resolve to Wool blend,
+    while legitimate leather, faux leather, and suede coats/peacoats/fur-collar coats are preserved.
+    """
     raw_materials = [{"name": "Faux Leather", "pct": 100}]
-    sanitized = sanitize_fabric_materials(
+
+    # Case 1: Explicit wool coat ("wool", "מעיל צמר") misidentified as Faux Leather -> sanitized to Wool
+    sanitized_wool = sanitize_fabric_materials(
         raw_materials,
         category="Outerwear",
         sub_category="Coats",
         item_type="Wool Coat",
         full_text="Green wool coat with fur collar מעיל צמר ירוק",
     )
-    mat_names = [m["name"] for m in sanitized]
-    assert "Wool" in mat_names
-    assert "Faux Leather" not in mat_names
+    mat_names_wool = [m["name"] for m in sanitized_wool]
+    assert "Wool" in mat_names_wool
+    assert "Faux Leather" not in mat_names_wool
 
-    # Fur collar coat misidentified as faux leather
-    sanitized_fur = sanitize_fabric_materials(
+    # Case 2: Tailored leather coat with fur collar ("מעיל עור", "leather coat") -> Faux Leather PRESERVED
+    sanitized_leather_fur = sanitize_fabric_materials(
         raw_materials,
         category="Outerwear",
         sub_category="Coats",
-        item_type="Casual jacket",
-        full_text="Fur Collar Coat women wearing a brown hooded coat with fur collar",
+        item_type="Fur-Trimmed Coat",
+        full_text="Tailored faux leather coat with fur collar מעיל דמוי עור עם צווארון פרווה",
     )
-    mat_names_fur = [m["name"] for m in sanitized_fur]
-    assert "Wool" in mat_names_fur
-    assert "Faux Leather" not in mat_names_fur
+    mat_names_leather_fur = [m["name"] for m in sanitized_leather_fur]
+    assert "Faux Leather" in mat_names_leather_fur
+    assert "Wool" not in mat_names_leather_fur
+
+    # Case 3: Tailored overcoat / peacoat with leather materials and no wool cues -> PRESERVED as Leather
+    sanitized_overcoat = sanitize_fabric_materials(
+        [{"name": "Leather", "pct": 100}],
+        category="Outerwear",
+        sub_category="Coats",
+        item_type="Tailored Overcoat",
+        full_text="Brown tailored leather overcoat",
+    )
+    assert sanitized_overcoat == [{"name": "Leather", "pct": 100}]
+
+    # Case 4: Suede trench coat -> PRESERVED as Suede
+    sanitized_suede = sanitize_fabric_materials(
+        [{"name": "Suede", "pct": 100}],
+        category="Outerwear",
+        sub_category="Coats",
+        item_type="Trench Coat",
+        full_text="Tan suede trench coat מעיל זמש",
+    )
+    assert sanitized_suede == [{"name": "Suede", "pct": 100}]
 

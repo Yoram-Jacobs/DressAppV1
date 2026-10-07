@@ -34,7 +34,7 @@ PROMPT_GARMENT_VISION = (
     "• gender: Strict 3-Tier Hierarchy: (1) Model: anchor to model gender ('women'|'men'). (2) Garment Criteria: feminine/floral/heels='women', masculine='men', neutral='unisex'. (3) Neutral basics fall back to profile gender, or 'unisex'. Never default to 'men'.\n"
     "• BACKGROUND REJECTION: Flat-lays rest on background surfaces (bedsheets, blankets, floors). STRICTLY IGNORE background surface colors! 'colors', 'name', 'title' describe EXCLUSIVELY garment fabric (white tee on blue blanket is 'White', NEVER 'Blue').\n"
     "• colors: ALWAYS [{\"name\": str, \"pct\": int}] summing to 100. Garment fabric ONLY; 100% exclude background surfaces.\n"
-    "• fabric_materials: [{\"name\": str, \"pct\": int}] summing 100: Coats/Outerwear=Wool/Cashmere (matte woven cloth; NEVER Faux Leather unless glossy slick shine); Footwear=Leather/Suede/Rubber (NEVER Cotton); Bags=Leather/Canvas/Nylon; Knitwear=Wool/Cashmere/Cotton; Jeans=Denim. tags: [str] (3-4 unique).\n"
+    "• fabric_materials: [{\"name\": str, \"pct\": int}] summing 100: Coats/Outerwear=Wool (woven/felted cloth) vs Leather/Suede (grain/sheen/suede; tailored coats can be either); Footwear=Leather/Suede/Rubber (NEVER Cotton); Bags=Leather/Canvas/Nylon; Knitwear=Wool/Cashmere/Cotton; Jeans=Denim. tags: [str] (3-4 unique).\n"
     "• pattern: 'solid'|'printed'|'geometric'|'striped'|'plaid'|'floral'|'camouflage'.\n"
     "• text/logos: Read accurately ('American Eagle'=eagle, not deer).\n"
     "• season: Array ['spring'|'summer'|'fall'|'winter'] based on fabric weight/cut. Never select all four.\n"

@@ -563,17 +563,18 @@ def sanitize_fabric_materials(
         if not has_denim:
             return [{"name": "Denim", "pct": 98}, {"name": "Spandex", "pct": 2}]
 
-    # 5. Outerwear / Coat sanity: Wool vs. Faux Leather
+    # 5. Outerwear / Coat sanity: resolve explicit wool vs. leather contradiction
     is_coat_or_outerwear = (
         cat_low in ("outerwear", "coat", "coats")
         or sub_low in ("coats", "coat", "overcoat", "peacoat", "winter coat", "wool coat", "trench", "blazer")
-        or any(w in text_low for w in ("coat", "מעיל", "overcoat", "peacoat", "blazer", "בלייזר", "trench"))
+        or any(w in text_low for w in ("coat", "מעיל", "overcoat", "peacoat", "blazer", "בלייזר"))
     )
     if is_coat_or_outerwear:
-        has_wool_cue = any(w in text_low for w in ("wool", "צמר", "felt", "cashmere", "קשמיר", "tweed", "טוויד", "melton", "fur collar", "fur-collar", "collar coat"))
+        has_explicit_wool_cue = any(w in text_low for w in ("wool", "צמר", "cashmere", "קשמיר", "tweed", "טוויד", "melton", "wool coat", "מעיל צמר"))
+        has_explicit_leather_cue = any(w in text_low for w in ("leather", "עור", "suede", "זמש", "shearling", "patent", "vinyl", "pleather", "pu leather", "faux leather", "דמוי עור"))
         has_leather_mat = any(str(m.get("name", "")).lower() in ("faux leather", "leather", "דמוי עור", "עור", "pleather", "pu") for m in normalized)
-        is_slick_leather_jacket = any(w in text_low for w in ("biker", "moto", "leather jacket", "bomber leather", "מעיל עור", "leather trench", "biker jacket"))
-        if has_leather_mat and (has_wool_cue or not is_slick_leather_jacket):
+        # ONLY override if text explicitly specifies wool/cashmere/tweed AND there are NO leather cues anywhere in text!
+        if has_leather_mat and has_explicit_wool_cue and not has_explicit_leather_cue:
             return [{"name": "Wool", "pct": 80}, {"name": "Polyester", "pct": 20}]
 
     return normalized
