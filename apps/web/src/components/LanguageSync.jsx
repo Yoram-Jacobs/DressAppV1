@@ -49,18 +49,26 @@ export const LanguageSync = () => {
     }
   }, [user?.preferred_language, i18n, user, updateUserLocal]);
 
-  // Keep <html lang/dir> in sync with the active i18n language.
+  // Keep <html lang/dir> in sync with the active i18n language, and sync user.preferred_language to DB.
   useEffect(() => {
     const apply = (lng) => {
-      const code = SUPPORTED_CODES.has(lng) ? lng : 'en';
+      const code = (lng || 'en').split('-')[0].toLowerCase();
+      const validCode = SUPPORTED_CODES.has(code) ? code : 'en';
       const html = document.documentElement;
-      html.setAttribute('lang', code);
-      html.setAttribute('dir', isRtl(code) ? 'rtl' : 'ltr');
+      html.setAttribute('lang', validCode);
+      html.setAttribute('dir', isRtl(validCode) ? 'rtl' : 'ltr');
+      try { localStorage.setItem('dressapp.lang', validCode); } catch { /* ignore */ }
+
+      if (user && user.preferred_language !== validCode) {
+        api.patchMe({ preferred_language: validCode })
+          .then((updated) => { if (updateUserLocal) updateUserLocal(updated); })
+          .catch(() => {});
+      }
     };
     apply(i18n.language);
     i18n.on('languageChanged', apply);
     return () => { i18n.off('languageChanged', apply); };
-  }, [i18n]);
+  }, [i18n, user, updateUserLocal]);
 
   return null;
 };

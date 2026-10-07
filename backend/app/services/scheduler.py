@@ -1009,6 +1009,7 @@ async def check_scheduler_triggers() -> None:
                             "id": f"prop_{uuid.uuid4().hex[:12]}",
                             "user_id": user_id,
                             "date": target_date_str,
+                            "language": user_lang,
                             "title": outfit_name,
                             "description": prop.get("why") or "Curated based on your style profile, tomorrow's weather conditions, and closet harmony.",
                             "weather_summary": (target_weather.get("description") if target_weather else "Mild & Pleasant"),

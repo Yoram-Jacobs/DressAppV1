@@ -151,6 +151,8 @@ async def get_daily_proposal(
     today_str = local_now.strftime("%Y-%m-%d")
     tomorrow_str = (local_now + timedelta(days=1)).strftime("%Y-%m-%d")
 
+    user_lang = ((user or {}).get("preferred_language") or "en").lower().split("-")[0]
+
     # 1. If explicit date passed, return proposal for that date
     if date:
         doc = await db.daily_proposals.find_one(
@@ -159,8 +161,10 @@ async def get_daily_proposal(
             sort=[("worn", -1), ("created_at", -1)],
         )
         if doc and len(doc.get("items") or []) > 0:
-            return doc
-        return await _generate_and_save_daily_proposal(user, date, force=False)
+            doc_lang = doc.get("language")
+            if not doc_lang or doc_lang == user_lang:
+                return doc
+        return await _generate_and_save_daily_proposal(user, date, force=True if doc else False)
 
     # 2. Check tomorrow's proposal (pushed the day before for advance prep)
     tom_doc = await db.daily_proposals.find_one(
@@ -168,6 +172,8 @@ async def get_daily_proposal(
         {"_id": 0},
         sort=[("worn", -1), ("created_at", -1)],
     )
+    if tom_doc and tom_doc.get("language") and tom_doc.get("language") != user_lang:
+        tom_doc = None
 
     # 3. Check today's proposal (e.g. prepared yesterday for today)
     today_doc = await db.daily_proposals.find_one(
@@ -175,6 +181,8 @@ async def get_daily_proposal(
         {"_id": 0},
         sort=[("worn", -1), ("created_at", -1)],
     )
+    if today_doc and today_doc.get("language") and today_doc.get("language") != user_lang:
+        today_doc = None
 
     all_proposals = [p for p in [today_doc, tom_doc] if p and len(p.get("items") or []) > 0]
 
@@ -552,42 +560,147 @@ async def _generate_and_save_daily_proposal(
 
         # Generate vibrant title based on selected items & occasion
         user_lang = ((user or {}).get("preferred_language") or "en").lower().split("-")[0]
-        color_names = [i.get("color") for i in items if i.get("id") in [x["id"] for x in selected_items] and i.get("color")]
-        if user_lang == "he":
-            he_adjectives = ["מראה מושלם ל", "מראה מוקפד ל", "שילוב נוח ל", "מראה רענן ל", "סטיילינג מדויק ל"]
-            adj = random.choice(he_adjectives)
-            if is_tags_mode and filter_tags:
-                tag_label = ", ".join(filter_tags)
-                proposal_title = f"{adj}{tag_label}"
-                proposal_desc = f"נבחר בקפידה מתוך הפריטים שלך בארון עם התגית '{tag_label}'."
-            elif effective_occasion and effective_occasion not in ("casual", "daily", "default"):
-                proposal_title = f"{adj}{effective_occasion}"
-                proposal_desc = f"נבחר בהתאמה להעדפת '{effective_occasion}', תנאי מזג האוויר והרמוניה בארון."
-            else:
-                proposal_title = "מראה יומיומי מושלם"
-                proposal_desc = "נבחר בהתאמה לפרופיל הסגנון שלך, תנאי מזג האוויר והרמוניה בארון."
+
+        LOCALIZED_FALLBACKS = {
+            "en": {
+                "tag": "{adj} {tags} Outfit",
+                "tag_desc": "Curated strictly from your closet items tagged '{tags}'.",
+                "occasion": "{adj} {occasion} Look",
+                "occasion_desc": "Curated based on your '{occasion}' preference, weather conditions, and closet harmony.",
+                "default": "{adj} Everyday Look",
+                "default_desc": "Curated based on your style profile, weather conditions, and closet harmony.",
+                "adjs": ["Effortless", "Crisp", "Polished", "Modern", "Refined", "Relaxed", "Vibrant", "Chic", "Smart"],
+            },
+            "he": {
+                "tag": "{adj} {tags}",
+                "tag_desc": "נבחר בקפידה מתוך הפריטים שלך בארון עם התגית '{tags}'.",
+                "occasion": "{adj} {occasion}",
+                "occasion_desc": "נבחר בהתאמה להעדפת '{occasion}', תנאי מזג האוויר והרמוניה בארון.",
+                "default": "מראה יומיומי מושלם",
+                "default_desc": "נבחר בהתאמה לפרופיל הסגנון שלך, תנאי מזג האוויר והרמוניה בארון.",
+                "adjs": ["מראה מושלם ל", "מראה מוקפד ל", "שילוב נוח ל", "מראה רענן ל", "סטיילינג מדויק ל"],
+            },
+            "ar": {
+                "tag": "إطلالة {tags} أنيقة",
+                "tag_desc": "مختارة بعناية من خزانة ملابسك الموسومة بـ '{tags}'.",
+                "occasion": "إطلالة {occasion} متميزة",
+                "occasion_desc": "مختارة وفقاً لتفضيل '{occasion}' وحالة الطقس وتناسق الخزانة.",
+                "default": "إطلالة يومية مميزة",
+                "default_desc": "مختارة وفقاً لأسلوبك وحالة الطقس وتناسق خزانة ملابسك.",
+                "adjs": ["أنيقة", "عصرية", "مريحة", "متناسقة"],
+            },
+            "es": {
+                "tag": "Look {tags} {adj}",
+                "tag_desc": "Seleccionado estrictamente de tus prendas etiquetadas como '{tags}'.",
+                "occasion": "Look {occasion} {adj}",
+                "occasion_desc": "Seleccionado según tu preferencia '{occasion}', el clima y la armonía del armario.",
+                "default": "Look Diario Estilizado",
+                "default_desc": "Seleccionado según tu perfil de estilo, el clima y la armonía del armario.",
+                "adjs": ["Elegante", "Moderno", "Impecable", "Chic", "Cómodo"],
+            },
+            "fr": {
+                "tag": "Tenue {tags} {adj}",
+                "tag_desc": "Sélectionnée avec soin parmi vos pièces étiquetées '{tags}'.",
+                "occasion": "Look {occasion} {adj}",
+                "occasion_desc": "Sélectionné selon votre préférence '{occasion}', la météo et l'harmonie du dressing.",
+                "default": "Look Quotidien Soigné",
+                "default_desc": "Sélectionné selon votre profil de style, la météo et l'harmonie du dressing.",
+                "adjs": ["Élégant", "Moderne", "Chic", "Raffiné", "Confortable"],
+            },
+            "de": {
+                "tag": "{adj} {tags}-Outfit",
+                "tag_desc": "Sorgfältig ausgewählt aus deinen Kleidungsstücken mit dem Tag '{tags}'.",
+                "occasion": "{adj} {occasion}-Look",
+                "occasion_desc": "Ausgewählt basierend auf deiner Vorliebe '{occasion}', dem Wetter und deiner Garderobe.",
+                "default": "Stilvoller Alltagslook",
+                "default_desc": "Ausgewählt basierend auf deinem Stilprofil, dem Wetter und deiner Garderobe.",
+                "adjs": ["Stilvolles", "Modernes", "Elegantes", "Lässiges", "Klassisches"],
+            },
+            "it": {
+                "tag": "Outfit {tags} {adj}",
+                "tag_desc": "Selezionato attentamente dai tuoi capi contrassegnati come '{tags}'.",
+                "occasion": "Look {occasion} {adj}",
+                "occasion_desc": "Selezionato in base alla tua preferenza '{occasion}', al meteo e all'armonia del guardaroba.",
+                "default": "Look Quotidiano Impeccabile",
+                "default_desc": "Selezionato in base al tuo profilo di stile, al meteo e all'armonia del guardaroba.",
+                "adjs": ["Elegante", "Raffinato", "Moderno", "Chic", "Impeccabile"],
+            },
+            "pt": {
+                "tag": "Look {tags} {adj}",
+                "tag_desc": "Selecionado estritamente das suas peças etiquetadas como '{tags}'.",
+                "occasion": "Look {occasion} {adj}",
+                "occasion_desc": "Selecionado com base na sua preferência '{occasion}', clima e harmonia do closet.",
+                "default": "Look Diário Elegante",
+                "default_desc": "Selecionado com base no seu perfil de estilo, clima e harmonia do closet.",
+                "adjs": ["Elegante", "Moderno", "Sofisticado", "Confortável", "Chic"],
+            },
+            "ru": {
+                "tag": "{adj} образ для {tags}",
+                "tag_desc": "Тщательно подобран из ваших вещей с тегом '{tags}'.",
+                "occasion": "{adj} образ для {occasion}",
+                "occasion_desc": "Подобран с учётом предпочтения '{occasion}', погоды и гармонии гардероба.",
+                "default": "Стильный повседневный образ",
+                "default_desc": "Подобран на основе вашего стиля, погоды и гармонии гардероба.",
+                "adjs": ["Элегантный", "Стильный", "Современный", "Удобный", "Изысканный"],
+            },
+            "zh": {
+                "tag": "精选{tags}穿搭",
+                "tag_desc": "严格精选自带有标签“{tags}”的衣橱单品。",
+                "occasion": "精选{occasion}穿搭",
+                "occasion_desc": "根据您的“{occasion}”偏好、天气状况和衣橱协调度精选。",
+                "default": "优雅日常穿搭",
+                "default_desc": "根据您的风格档案、天气状况和衣橱协调度精选。",
+                "adjs": ["优雅", "利落", "时尚", "舒适"],
+            },
+            "ja": {
+                "tag": "洗練された{tags}スタイル",
+                "tag_desc": "「{tags}」タグの付いたクローゼットのアイテムから厳選しました。",
+                "occasion": "洗練された{occasion}スタイル",
+                "occasion_desc": "「{occasion}」のお好み、天候、クローゼットの調和に合わせて厳選しました。",
+                "default": "上質なデイリースタイル",
+                "default_desc": "スタイルプロファイル、天候、クローゼットの調和に合わせて厳選しました。",
+                "adjs": ["洗練された", "爽やかな", "上品な", "快適な"],
+            },
+            "hi": {
+                "tag": "आकर्षक {tags} आउटफिट",
+                "tag_desc": "आपके '{tags}' टैग वाले कपड़ों से सावधानीपूर्वक चुना गया।",
+                "occasion": "आकर्षक {occasion} लुक",
+                "occasion_desc": "आपकी '{occasion}' पसंद, मौसम और अलमारी के सामंजस्य पर आधारित।",
+                "default": "शानदार दैनिक लुक",
+                "default_desc": "आपकी स्टाइल प्रोफ़ाइल, मौसम और अलमारी के सामंजस्य पर आधारित।",
+                "adjs": ["आकर्षक", "स्टाइलिश", "आरामदायक", "आधुनिक"],
+            },
+            "nl": {
+                "tag": "{adj} {tags} Outfit",
+                "tag_desc": "Zorgvuldig geselecteerd uit je kledingstukken met de tag '{tags}'.",
+                "occasion": "{adj} {occasion} Look",
+                "occasion_desc": "Geselecteerd op basis van je voorkeur voor '{occasion}', het weer en kastbalans.",
+                "default": "Stijlvolle Dagelijkse Look",
+                "default_desc": "Geselecteerd op basis van je stijlprofiel, het weer en kastbalans.",
+                "adjs": ["Stijlvolle", "Moderne", "Elegante", "Frisse", "Vlotte"],
+            },
+        }
+
+        loc_fb = LOCALIZED_FALLBACKS.get(user_lang) or LOCALIZED_FALLBACKS["en"]
+        adj = random.choice(loc_fb["adjs"])
+        if is_tags_mode and filter_tags:
+            tag_label = ", ".join(filter_tags)
+            proposal_title = loc_fb["tag"].format(adj=adj, tags=tag_label)
+            proposal_desc = loc_fb["tag_desc"].format(tags=tag_label)
+        elif effective_occasion and effective_occasion not in ("casual", "daily", "default"):
+            proposal_title = loc_fb["occasion"].format(adj=adj, occasion=effective_occasion.title())
+            proposal_desc = loc_fb["occasion_desc"].format(occasion=effective_occasion)
         else:
-            style_adjectives = ["Effortless", "Crisp", "Polished", "Modern", "Refined", "Relaxed", "Vibrant", "Chic", "Smart"]
-            adj = random.choice(style_adjectives)
-            if is_tags_mode and filter_tags:
-                tag_label = ", ".join(filter_tags)
-                proposal_title = f"{adj} {tag_label} Outfit"
-                proposal_desc = f"Curated strictly from your closet items tagged '{tag_label}'."
-            elif effective_occasion and effective_occasion not in ("casual", "daily", "default"):
-                proposal_title = f"{adj} {effective_occasion.title()} Look"
-                proposal_desc = f"Curated based on your '{effective_occasion}' preference, weather conditions, and closet harmony."
-            elif color_names:
-                proposal_title = f"{adj} {color_names[0].title()} Look"
-                proposal_desc = "Curated based on your style profile, weather conditions, and closet harmony."
-            else:
-                proposal_title = f"{adj} Everyday Look"
-                proposal_desc = "Curated based on your style profile, weather conditions, and closet harmony."
+            proposal_title = loc_fb["default"].format(adj=adj)
+            proposal_desc = loc_fb["default_desc"]
+
         proposal_harmony = random.randint(88, 97) if len(selected_items) >= 2 else 85
         
     proposal = {
         "id": f"prop_{uuid.uuid4().hex[:12]}",
         "user_id": user["id"],
         "date": date_str,
+        "language": user_lang,
         "title": proposal_title,
         "description": proposal_desc,
         "weather_summary": "Mild & Pleasant",

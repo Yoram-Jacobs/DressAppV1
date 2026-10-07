@@ -1051,13 +1051,13 @@ async def generate_scheduled_proposals(
 
     user_lang = ((user or {}).get("preferred_language") or "en").lower().split("-")[0]
     from app.services.i18n import LANG_NAMES
-    lang_name = LANG_NAMES.get(user_lang, "Hebrew" if user_lang == "he" else "English")
+    lang_name = LANG_NAMES.get(user_lang, "English")
     lang_rule = (
         f"MANDATORY OUTPUT LANGUAGE ({lang_name}):\n"
         f"- The user's preferred language is {lang_name} (code: '{user_lang}').\n"
         f"- ALL free-text fields in your JSON response ('reasoning_summary', outfit 'name', and 'why') MUST be written entirely in fluent, natural {lang_name}.\n"
-        f"- NEVER use English titles like '{style_prompt} Outfit: ...' or English why descriptions when the user language is {lang_name}!\n"
-        f"- Give the outfit an authentic, stylish {lang_name} name (e.g. for work wear: 'מראה עבודה ספורטיבי ונוח' or 'שילוב עבודה נוח ופרקטי').\n\n"
+        f"- NEVER use a different language when the user language is {lang_name}!\n"
+        f"- Give the outfit an authentic, stylish {lang_name} name suited to the occasion, style, and context.\n\n"
     )
 
     prompt = (

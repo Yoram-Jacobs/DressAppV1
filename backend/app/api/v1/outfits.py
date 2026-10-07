@@ -495,9 +495,28 @@ async def webpush_test(
         target_date_str = tomorrow_str
         is_next_day = True
 
-    # If still no proposal or Hebrew was requested but proposal title was English, regenerate
-    has_hebrew_title = any('\u0590' <= ch <= '\u05ea' for ch in (prop.get("title") or "")) if prop else False
-    if force_gen or not prop or not prop.get("items") or (user_lang == "he" and not has_hebrew_title):
+    # If still no proposal or language mismatch, regenerate
+    prop_lang = prop.get("language") if prop else None
+    has_lang_mismatch = bool(prop and prop_lang and prop_lang != user_lang)
+    if not has_lang_mismatch and prop:
+        title = prop.get("title") or ""
+        has_he = any('\u0590' <= ch <= '\u05ea' for ch in title)
+        has_ar = any('\u0600' <= ch <= '\u06ff' for ch in title)
+        has_ru = any('\u0400' <= ch <= '\u04ff' for ch in title)
+        has_zh = any('\u4e00' <= ch <= '\u9fff' for ch in title)
+        has_ja = any(('\u3040' <= ch <= '\u30ff') or ('\u4e00' <= ch <= '\u9fff') for ch in title)
+        if user_lang == "he" and not has_he:
+            has_lang_mismatch = True
+        elif user_lang == "ar" and not has_ar:
+            has_lang_mismatch = True
+        elif user_lang == "ru" and not has_ru:
+            has_lang_mismatch = True
+        elif user_lang in ("zh", "ja") and not (has_zh or has_ja):
+            has_lang_mismatch = True
+        elif user_lang not in ("he", "ar") and (has_he or has_ar):
+            has_lang_mismatch = True
+
+    if force_gen or not prop or not prop.get("items") or has_lang_mismatch:
         from app.api.v1.daily_proposals import _generate_and_save_daily_proposal
         prop = await _generate_and_save_daily_proposal(user, tomorrow_str, force=True)
         target_date_str = tomorrow_str
