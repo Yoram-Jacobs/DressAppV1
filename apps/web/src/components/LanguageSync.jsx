@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/lib/auth';
 import { isRtl, SUPPORTED_LANGUAGES } from '@/lib/i18n';
+import api from '@/lib/api';
 
 const SUPPORTED_CODES = new Set(SUPPORTED_LANGUAGES.map((l) => l.code));
 
@@ -13,7 +14,7 @@ const SUPPORTED_CODES = new Set(SUPPORTED_LANGUAGES.map((l) => l.code));
  * (including Admin) updates consistently.
  */
 export const LanguageSync = () => {
-  const { user } = useAuth();
+  const { user, updateUserLocal } = useAuth();
   const { i18n } = useTranslation();
 
   // If the logged-in user has a preferred_language saved in the DB, adopt it
@@ -34,6 +35,11 @@ export const LanguageSync = () => {
       if (current !== storedLang) {
         i18n.changeLanguage(storedLang);
       }
+      if (user && lang && lang !== storedLang) {
+        api.patchMe({ preferred_language: storedLang })
+          .then((updated) => { if (updateUserLocal) updateUserLocal(updated); })
+          .catch(() => {});
+      }
       return;
     }
 
@@ -41,7 +47,7 @@ export const LanguageSync = () => {
       i18n.changeLanguage(lang);
       try { localStorage.setItem('dressapp.lang', lang); } catch { /* ignore */ }
     }
-  }, [user?.preferred_language, i18n]);
+  }, [user?.preferred_language, i18n, user, updateUserLocal]);
 
   // Keep <html lang/dir> in sync with the active i18n language.
   useEffect(() => {

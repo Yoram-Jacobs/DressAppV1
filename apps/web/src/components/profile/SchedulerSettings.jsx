@@ -211,7 +211,14 @@ export function SchedulerSettings() {
     if (testingPush || busy) return;
     setTestingPush(true);
     try {
-      await api.testWebPush();
+      const activeLang = (i18n.language || 'en').split('-')[0].toLowerCase();
+      if (user?.preferred_language !== activeLang) {
+        try {
+          await api.patchMe({ preferred_language: activeLang });
+          updateUserLocal({ preferred_language: activeLang });
+        } catch { /* ignore */ }
+      }
+      await api.testWebPush({ language: activeLang, force: true });
       toast.success(t('profile.testPushSent', { defaultValue: 'Test alert sent! Check your notification tray.' }));
     } catch (err) {
       console.error('[SchedulerSettings] test push error:', err);
@@ -266,9 +273,15 @@ export function SchedulerSettings() {
         timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC',
       };
 
-      const updated = await api.patchMe({
+      const activeLang = (i18n.language || 'en').split('-')[0].toLowerCase();
+      const patchData = {
         scheduler_settings: schedPayload,
-      });
+      };
+      if (user?.preferred_language !== activeLang) {
+        patchData.preferred_language = activeLang;
+      }
+
+      const updated = await api.patchMe(patchData);
       lastSavedJsonRef.current = JSON.stringify(updated.scheduler_settings || schedPayload);
       isDirtyRef.current = false;
       updateUserLocal(updated);

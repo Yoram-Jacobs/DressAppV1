@@ -444,6 +444,7 @@ async def get_vapid_key(
 
 @router.post("/webpush/test")
 async def webpush_test(
+    payload_in: dict[str, Any] = Body(default={}),
     user: dict = Depends(get_current_user),
 ) -> dict[str, Any]:
     """Send an immediate test push notification with the user's active daily proposal to all registered devices."""
@@ -451,6 +452,14 @@ async def webpush_test(
     from app.services.scheduler import get_localized_scheduler_notification
 
     db = get_db()
+    req_lang = payload_in.get("language") if isinstance(payload_in, dict) else None
+    user_lang = (req_lang or user.get("preferred_language") or "en").lower().split("-")[0]
+    if req_lang and req_lang != user.get("preferred_language"):
+        await db.users.update_one({"id": user["id"]}, {"$set": {"preferred_language": user_lang}})
+        user["preferred_language"] = user_lang
+
+    force_gen = bool(payload_in.get("force")) if isinstance(payload_in, dict) else False
+
     sched = user.get("scheduler_settings") or {}
     user_tz = sched.get("timezone") or "UTC"
     try:
@@ -465,30 +474,34 @@ async def webpush_test(
     tomorrow_str = (local_now + timedelta(days=1)).strftime("%Y-%m-%d")
 
     # Find the active daily proposal (tomorrow first, then today)
-    prop = await db.daily_proposals.find_one(
-        {"user_id": user["id"], "date": tomorrow_str, "dismissed": {"$ne": True}},
-        {"_id": 0},
-        sort=[("worn", -1), ("created_at", -1)],
-    )
-    target_date_str = tomorrow_str
-    is_next_day = True
-    if not prop or not prop.get("items"):
+    prop = None
+    if not force_gen:
         prop = await db.daily_proposals.find_one(
-            {"user_id": user["id"], "date": today_str, "dismissed": {"$ne": True}},
+            {"user_id": user["id"], "date": tomorrow_str, "dismissed": {"$ne": True}},
             {"_id": 0},
             sort=[("worn", -1), ("created_at", -1)],
         )
-        target_date_str = today_str
-        is_next_day = False
-
-    # If still no proposal, generate one for tomorrow
-    if not prop or not prop.get("items"):
-        from app.api.v1.daily_proposals import _generate_and_save_daily_proposal
-        prop = await _generate_and_save_daily_proposal(user, tomorrow_str, force=False)
+        target_date_str = tomorrow_str
+        is_next_day = True
+        if not prop or not prop.get("items"):
+            prop = await db.daily_proposals.find_one(
+                {"user_id": user["id"], "date": today_str, "dismissed": {"$ne": True}},
+                {"_id": 0},
+                sort=[("worn", -1), ("created_at", -1)],
+            )
+            target_date_str = today_str
+            is_next_day = False
+    else:
         target_date_str = tomorrow_str
         is_next_day = True
 
-    user_lang = (user.get("preferred_language") or "en").lower().split("-")[0]
+    # If still no proposal or Hebrew was requested but proposal title was English, regenerate
+    has_hebrew_title = any('\u0590' <= ch <= '\u05ea' for ch in (prop.get("title") or "")) if prop else False
+    if force_gen or not prop or not prop.get("items") or (user_lang == "he" and not has_hebrew_title):
+        from app.api.v1.daily_proposals import _generate_and_save_daily_proposal
+        prop = await _generate_and_save_daily_proposal(user, tomorrow_str, force=True)
+        target_date_str = tomorrow_str
+        is_next_day = True
     outfit_name = prop.get("outfit_name") or prop.get("title") or "Daily Look"
     items = prop.get("items", [])
     item_names = [it.get("title") or it.get("name") or it.get("role", "") for it in items[:3]]

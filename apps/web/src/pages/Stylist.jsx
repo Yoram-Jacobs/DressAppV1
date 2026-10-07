@@ -794,10 +794,37 @@ export default function Stylist() {
         || (dailyProposal?.date === activeDateStr ? dailyProposal : null)
         || (proposals && proposals[0]?.date === activeDateStr ? proposals[0] : null);
 
-      if (queryView === 'proposal' && matchingProp && (matchingProp.items || []).length > 0) {
-        setSelectedOutfitForDetail(proposalToOutfit(matchingProp, activeDateStr));
+      const currentSelectedPropId = selectedOutfitForDetail?.proposal_raw?.id || selectedOutfitForDetail?.id;
+      const isAlreadyShowingThisProp = Boolean(
+        selectedOutfitForDetail && (
+          (matchingProp && (currentSelectedPropId === matchingProp.id || currentSelectedPropId === matchingProp._id)) ||
+          (!matchingProp && selectedOutfitForDetail.isDailyProposal && selectedOutfitForDetail.usage?.date === activeDateStr)
+        )
+      );
+
+      if (queryView === 'proposal') {
+        if (matchingProp && (matchingProp.items || []).length > 0) {
+          if (!isAlreadyShowingThisProp && !userDismissedDetail) {
+            setSelectedOutfitForDetail(proposalToOutfit(matchingProp, activeDateStr));
+          }
+        } else if (!selectedOutfitForDetail && !userDismissedDetail) {
+          generateDailyProposalAction(false, 'daily', activeDateStr).then(prop => {
+            if (prop && (prop.items || []).length > 0) {
+              setSelectedOutfitForDetail(proposalToOutfit(prop, prop?.date || activeDateStr));
+            }
+          }).catch(() => { });
+        }
+
+        // Clean queryView from URL so subsequent navigation / dismiss doesn't re-trigger
+        try {
+          const currentUrl = new URL(window.location.href);
+          if (currentUrl.searchParams.has('view')) {
+            currentUrl.searchParams.delete('view');
+            window.history.replaceState(null, '', currentUrl.pathname + currentUrl.search + currentUrl.hash);
+          }
+        } catch { /* ignore */ }
       } else if (!selectedOutfitForDetail && !userDismissedDetail) {
-        if (scheduledOutfit && queryView !== 'proposal') {
+        if (scheduledOutfit) {
           setSelectedOutfitForDetail(scheduledOutfit);
         } else if (matchingProp && (matchingProp.items || []).length > 0) {
           setSelectedOutfitForDetail(proposalToOutfit(matchingProp, activeDateStr));
@@ -990,15 +1017,20 @@ export default function Stylist() {
   };
 
   const calculateOutfitMetrics = (outfit) => {
-    if (!outfit) return {};
+    if (!outfit) return null;
 
-    const colors = outfit.garments
+    const rawGarments = Array.isArray(outfit.garments) && outfit.garments.length > 0
+      ? outfit.garments
+      : (Array.isArray(outfit.items) ? outfit.items : []);
+
+    const colors = rawGarments
       .map(g => {
-        const item = closetItems.find(it => it.id === g.closet_item_id);
-        return item?.color || item?.colors?.[0]?.name;
+        const cid = g?.closet_item_id || g?.id;
+        const item = (closetItems || []).find(it => it && (it.id === cid || it._id === cid));
+        return g?.color || item?.color || item?.colors?.[0]?.name;
       })
       .filter(Boolean)
-      .map(c => c.toLowerCase());
+      .map(c => String(c).toLowerCase());
 
     let colorScore = 80;
     if (colors.length <= 1) {
@@ -1015,13 +1047,14 @@ export default function Stylist() {
       }
     }
 
-    const patterns = outfit.garments
+    const patterns = rawGarments
       .map(g => {
-        const item = closetItems.find(it => it.id === g.closet_item_id);
-        return item?.pattern;
+        const cid = g?.closet_item_id || g?.id;
+        const item = (closetItems || []).find(it => it && (it.id === cid || it._id === cid));
+        return g?.pattern || item?.pattern;
       })
       .filter(Boolean)
-      .map(p => p.toLowerCase());
+      .map(p => String(p).toLowerCase());
 
     let patternScore = 95;
     const patternedCount = patterns.filter(p => p !== 'solid' && p !== 'plain').length;
@@ -1031,13 +1064,14 @@ export default function Stylist() {
       patternScore = 88;
     }
 
-    const sizes = outfit.garments
+    const sizes = rawGarments
       .map(g => {
-        const item = closetItems.find(it => it.id === g.closet_item_id);
-        return item?.size;
+        const cid = g?.closet_item_id || g?.id;
+        const item = (closetItems || []).find(it => it && (it.id === cid || it._id === cid));
+        return g?.size || item?.size;
       })
       .filter(Boolean)
-      .map(s => s.toUpperCase());
+      .map(s => String(s).toUpperCase());
 
     let fitScore = 90;
     if (sizes.length > 0) {
@@ -1050,15 +1084,17 @@ export default function Stylist() {
     }
 
     let weatherScore = 85;
-    const seasonTags = outfit.garments
+    const seasonTags = rawGarments
       .flatMap(g => {
-        const item = closetItems.find(it => it.id === g.closet_item_id);
-        return item?.season || [];
+        const cid = g?.closet_item_id || g?.id;
+        const item = (closetItems || []).find(it => it && (it.id === cid || it._id === cid));
+        const s = item?.season;
+        return Array.isArray(s) ? s : (typeof s === 'string' && s ? [s] : []);
       });
 
     if (seasonTags.length > 0) {
-      const hasWinter = seasonTags.some(s => s.toLowerCase().includes('winter'));
-      const hasSummer = seasonTags.some(s => s.toLowerCase().includes('summer'));
+      const hasWinter = seasonTags.some(s => String(s).toLowerCase().includes('winter'));
+      const hasSummer = seasonTags.some(s => String(s).toLowerCase().includes('summer'));
       if (hasWinter && hasSummer) {
         weatherScore = 60;
       } else {
@@ -1076,8 +1112,9 @@ export default function Stylist() {
     const location = (outfit.usage?.location || '').toLowerCase();
     if (location) {
       if (location.includes('museum') || location.includes('church') || location.includes('temple') || location.includes('mosque') || location.includes('synagogue') || location.includes('warship') || location.includes('naval') || location.includes('base')) {
-        const isCasualOrSporty = outfit.garments.some(g => {
-          const item = closetItems.find(it => it.id === g.closet_item_id);
+        const isCasualOrSporty = rawGarments.some(g => {
+          const cid = g?.closet_item_id || g?.id;
+          const item = (closetItems || []).find(it => it && (it.id === cid || it._id === cid));
           const dc = (item?.dress_code || '').toLowerCase();
           return dc === 'sporty' || dc === 'beachwear' || dc === 'loungewear';
         });
@@ -2410,15 +2447,18 @@ export default function Stylist() {
       (detailMetrics.color + detailMetrics.pattern + detailMetrics.fit + detailMetrics.weather + detailMetrics.event + detailMetrics.location) / 6
     ) : 0;
 
-    const detailColors = selectedOutfitForDetail.garments
+    const rawGarments = Array.isArray(selectedOutfitForDetail?.garments) && selectedOutfitForDetail.garments.length > 0
       ? selectedOutfitForDetail.garments
-        .map((g) => {
-          const item = closetItems.find((it) => it.id === g.closet_item_id);
-          const name = g.color || item?.color || (Array.isArray(item?.colors) && item.colors[0]?.name) || null;
-          return name ? { name } : null;
-        })
-        .filter(Boolean)
-      : [];
+      : (Array.isArray(selectedOutfitForDetail?.items) ? selectedOutfitForDetail.items : []);
+
+    const detailColors = rawGarments
+      .map((g) => {
+        const cid = g?.closet_item_id || g?.id;
+        const item = closetItems.find((it) => it && (it.id === cid || it._id === cid));
+        const name = g?.color || item?.color || (Array.isArray(item?.colors) && item.colors[0]?.name) || null;
+        return name ? { name } : null;
+      })
+      .filter(Boolean);
 
     const isDaily = Boolean(selectedOutfitForDetail.isDailyProposal);
     const todayDateStr = formatLocalDate(new Date());
@@ -2648,9 +2688,10 @@ export default function Stylist() {
                       {t('outfits.outfitPieces', { defaultValue: 'Outfit Pieces' })}
                     </div>
                     <div className="grid grid-cols-2 sm:grid-cols-3 max-[420px]:grid-cols-1 gap-3">
-                      {Array.isArray(selectedOutfitForDetail?.garments) && selectedOutfitForDetail.garments.map((g, idx) => {
-                        const closetItem = closetItems.find(it => it && it.id === g.closet_item_id);
-                        const imgUrl = resolveMediaUrl(bestImageUrl(closetItem) || g.image_url || g.clean_image_url || closetItem?.image_url);
+                      {rawGarments.map((g, idx) => {
+                        const cid = g?.closet_item_id || g?.id;
+                        const closetItem = closetItems.find(it => it && (it.id === cid || it._id === cid));
+                        const imgUrl = resolveMediaUrl(bestImageUrl(closetItem) || g?.image_url || g?.clean_image_url || closetItem?.image_url);
                         return (
                           <div
                             key={idx}
