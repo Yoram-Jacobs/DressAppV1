@@ -251,3 +251,49 @@ async def test_scheduled_proposal_persists_session_and_messages(mock_user):
     finally:
         app.dependency_overrides.pop(get_current_user, None)
 
+
+def test_ensure_complete_outfit_handles_unhashable_and_malformed_ids():
+    """Verify that _ensure_complete_outfit does not raise TypeError on list or dict closet_item_id."""
+    from app.services.stylist_scheduler_brain import _ensure_complete_outfit
+
+    raw_closet = [
+        {
+            "id": "11111111-2222-3333-4444-555555555555",
+            "title": "White Button-up Shirt",
+            "category": "top",
+            "dress_code": "business",
+        },
+        {
+            "id": "22222222-3333-4444-5555-666666666666",
+            "title": "Black Trousers",
+            "category": "bottom",
+            "dress_code": "business",
+        },
+        {
+            "id": "33333333-4444-5555-6666-777777777777",
+            "title": "Oxford Shoes",
+            "category": "footwear",
+            "dress_code": "business",
+        },
+    ]
+
+    proposal = {
+        "items": [
+            {"closet_item_id": ["11111111-2222-3333-4444-555555555555"], "role": "top"},
+            {"closet_item_id": {"id": "22222222-3333-4444-5555-666666666666"}, "role": "bottom"},
+            {"closet_item_id": "33333333-4444", "role": "shoes"},  # Truncated UUID prefix
+            {"closet_item_id": ["invalid_list_item"], "role": "accessory"},
+            {"closet_item_id": None, "role": "accessory"},
+        ]
+    }
+
+    # Should execute cleanly without raising TypeError: unhashable type: 'list'
+    _ensure_complete_outfit(proposal, raw_closet)
+
+    assert len(proposal["items"]) >= 3
+    ids = [it["closet_item_id"] for it in proposal["items"]]
+    assert "11111111-2222-3333-4444-555555555555" in ids
+    assert "22222222-3333-4444-5555-666666666666" in ids
+    assert "33333333-4444-5555-6666-777777777777" in ids
+
+

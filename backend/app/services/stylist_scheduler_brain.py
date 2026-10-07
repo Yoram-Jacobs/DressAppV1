@@ -571,18 +571,18 @@ async def check_event_similarities(
 
     for prop in proposals:
         prop_item_ids = {
-            item.get("closet_item_id")
+            str(item["closet_item_id"]).strip()
             for item in prop.get("items", [])
-            if item.get("closet_item_id")
+            if item.get("closet_item_id") and isinstance(item.get("closet_item_id"), (str, int))
         }
         if not prop_item_ids:
             continue
 
         for past in past_outfits:
             past_item_ids = {
-                item.get("closet_item_id")
+                str(item["closet_item_id"]).strip()
                 for item in past.get("garments", [])
-                if item.get("closet_item_id")
+                if item.get("closet_item_id") and isinstance(item.get("closet_item_id"), (str, int))
             }
             # Overlap threshold: if they share 80%+ of their garments
             shared = prop_item_ids & past_item_ids
@@ -630,7 +630,21 @@ def _ensure_complete_outfit(prop: dict[str, Any], raw_closet: list[dict[str, Any
 
     for it in items:
         cid = it.get("closet_item_id")
-        if not cid or cid not in raw_by_id:
+        if isinstance(cid, list):
+            cid = cid[0] if cid else None
+        if isinstance(cid, dict):
+            cid = cid.get("id") or cid.get("closet_item_id")
+        if not isinstance(cid, str):
+            continue
+        cid = cid.strip()
+        if not cid:
+            continue
+        if cid not in raw_by_id and len(cid) >= 4:
+            prefix_match = next((k for k in raw_by_id if k.startswith(cid)), None)
+            if prefix_match:
+                cid = prefix_match
+        it["closet_item_id"] = cid
+        if cid not in raw_by_id:
             continue
         if cid in seen_ids:
             continue
@@ -1149,13 +1163,23 @@ async def generate_scheduled_proposals(
     # Extract proposals and limit to 1 daily outfit
     proposals = (res_json.get("outfit_recommendations") or [])[:1]
     
-    # Resolve any truncated IDs returned by the LLM back to the full UUIDs in raw_closet
-    valid_ids = {x["id"] for x in raw_closet}
+    valid_ids = {x["id"] for x in raw_closet if x.get("id")}
     for prop in proposals:
         for item in prop.get("items", []):
             cid = item.get("closet_item_id")
+            if isinstance(cid, list):
+                cid = cid[0] if cid else None
+            if isinstance(cid, dict):
+                cid = cid.get("id") or cid.get("closet_item_id")
+            if isinstance(cid, str):
+                cid = cid.strip()
+                item["closet_item_id"] = cid
+            else:
+                item["closet_item_id"] = None
+                cid = None
+
             if cid and len(cid) < 36:
-                match = next((x["id"] for x in raw_closet if x["id"].startswith(cid)), None)
+                match = next((x["id"] for x in raw_closet if x.get("id", "").startswith(cid)), None)
                 if match:
                     item["closet_item_id"] = match
                     logger.info("Resolved truncated ID %s to full UUID %s", cid, match)
@@ -1314,7 +1338,46 @@ async def generate_event_proposals(
         res_json = _generate_fallback_advice(prioritized_closet, style_dress_for=event_prompt)
 
     proposals = res_json.get("outfit_recommendations") or []
+    valid_ids = {x["id"] for x in prioritized_closet if x.get("id")}
     for prop in proposals:
+        for item in prop.get("items", []):
+            cid = item.get("closet_item_id")
+            if isinstance(cid, list):
+                cid = cid[0] if cid else None
+            if isinstance(cid, dict):
+                cid = cid.get("id") or cid.get("closet_item_id")
+            if isinstance(cid, str):
+                cid = cid.strip()
+                item["closet_item_id"] = cid
+            else:
+                item["closet_item_id"] = None
+                cid = None
+
+            if cid and len(cid) < 36:
+                match = next((x["id"] for x in prioritized_closet if x.get("id", "").startswith(cid)), None)
+                if match:
+                    item["closet_item_id"] = match
+                    logger.info("Resolved truncated ID %s to full UUID %s", cid, match)
+
+            # Validate that the item matches an actual item in the closet list
+            resolved_cid = item.get("closet_item_id")
+            if not resolved_cid or resolved_cid not in valid_ids:
+                desc = (item.get("description") or item.get("title") or "").lower().strip()
+                role = norm_category(item.get("role") or item.get("category"))
+                if role in ("footwear", "shoes"):
+                    role = "shoes"
+                found_match = None
+                if desc:
+                    found_match = next((x for x in prioritized_closet if x.get("title", "").lower() in desc or desc in x.get("title", "").lower()), None)
+                if not found_match and role:
+                    found_match = next((x for x in prioritized_closet if norm_category(x.get("category")) == role), None)
+                if found_match:
+                    item["closet_item_id"] = found_match["id"]
+                    logger.info("Recovered unmapped LLM event item '%s' to closet item %s (%s)", desc, found_match["id"], found_match.get("title"))
+                else:
+                    logger.warning("Dropping unmapped LLM item not in closet list: %s", item)
+                    item["closet_item_id"] = None
+
         _ensure_complete_outfit(prop, prioritized_closet)
     
     # 2. Check similar event similarities and location warnings
@@ -1328,7 +1391,7 @@ async def generate_event_proposals(
     for prop in proposals:
         for item in prop.get("items", []):
             cid = item.get("closet_item_id")
-            if cid:
+            if cid and isinstance(cid, str):
                 suggested_ids.append(cid)
     await update_suggested_timestamps(suggested_ids)
 
