@@ -612,9 +612,9 @@ async def deduct_user_credits(
             "generative_inpainting",
         ) or (bool(operation) and any(k in operation for k in ("image_edit", "reconstruct", "repair_item", "inpainting")))
 
-        # For non-generative analytical operations (e.g. 1-click re-analyse, outfit proposals),
-        # free users consume from their 10 daily actions quota first so their 5 generative
-        # credits remain reserved for Nano Banana photo reconstruction/editing.
+        # --- A. Non-generative analytical operations (1-click re-analyse, outfit proposals, stylist advice) ---
+        # Calculated strictly against the 10 daily AI actions quota.
+        # NEVER drains the user's Nano Banana generative credits!
         if not is_generative:
             daily_ok = await check_and_increment_daily_request(db, user_id)
             if daily_ok:
@@ -628,8 +628,13 @@ async def deduct_user_credits(
                 except Exception:
                     pass
                 return True
+            logger.info("User %s on Free plan has exhausted their 10 daily AI actions quota.", user_id)
+            return False
 
-        # Check if the user has available credit buckets (e.g. 5 free onboarding credits or paid packs)
+        # --- B. Generative image editing & reconstruction operations (Nano Banana) ---
+        # Calculated strictly and separately from daily AI credits.
+        # Can ONLY be spent from credit buckets (5 onboarding credits or purchased credit packs).
+        # Can be refilled ONLY with a purchased AI credit pack or when upgrading the plan.
         user_record = await migrate_legacy_credits_if_needed(user_record, db)
         u_model = User.parse_obj(user_record)
         available_credits = u_model.total_credits
@@ -653,14 +658,12 @@ async def deduct_user_credits(
                     pass
                 return True
 
-        # Generative inferences (Nano Banana image reconstruction / edit) strictly require credits or subscription.
-        # When onboarding credits are exhausted, no daily quota fallback is permitted.
-        if is_generative:
-            logger.info("User %s on Free plan has exhausted generative AI credits (available: %d).", user_id, available_credits)
-            return False
-
-        # Non-generative: daily quota was already exhausted and user has no available bucket credits
-        logger.info(f"User {user_id} on Free plan has exhausted their 10 daily AI actions quota.")
+        logger.info(
+            "User %s on Free plan has exhausted generative Nano Banana credits (available: %d). "
+            "Refill required via purchased credit pack or plan upgrade.",
+            user_id,
+            available_credits,
+        )
         return False
 
         try:

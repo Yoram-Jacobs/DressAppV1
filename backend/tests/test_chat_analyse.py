@@ -509,4 +509,34 @@ async def test_reanalyze_consumes_daily_quota_preserves_onboarding_credits(mock_
         assert not db_mock.users.update_one.called
 
 
+@pytest.mark.anyio
+async def test_daily_quota_exhaustion_does_not_drain_nano_banana_credits():
+    """Verify that when 10 daily actions are exhausted, non-generative operations fail with False
+    and NEVER drain Nano Banana credit buckets."""
+    from app.services.credit_manager import deduct_user_credits
+    db_mock = MagicMock()
+    db_mock.users.find_one = AsyncMock(return_value={
+        "id": "free_user_with_5_credits",
+        "email": "free@example.com",
+        "tier": "free",
+        "credit_buckets": [{"id": "b1", "type": "free", "amount": 5, "expires_at": "2099-01-01T00:00:00Z", "created_at": "2026-01-01T00:00:00Z"}],
+    })
+    db_mock.users.update_one = AsyncMock()
+
+    with patch("app.services.credit_manager.check_and_increment_daily_request", new_callable=AsyncMock) as mock_daily:
+        mock_daily.return_value = False
+
+        user_dict = {
+            "id": "free_user_with_5_credits",
+            "email": "free@example.com",
+            "tier": "free",
+            "credit_buckets": [{"id": "b1", "type": "free", "amount": 5, "expires_at": "2099-01-01T00:00:00Z", "created_at": "2026-01-01T00:00:00Z"}],
+        }
+
+        res = await deduct_user_credits(db_mock, user_dict, cost=1, operation="reanalyze_item")
+        assert res is False
+        assert not db_mock.users.update_one.called
+
+
+
 
