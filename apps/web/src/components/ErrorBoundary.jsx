@@ -52,6 +52,16 @@ export class ErrorBoundary extends React.Component {
                 <p className="text-xs text-muted-foreground">
                   {this.props.description || t('common.errorTryAgain', { defaultValue: 'An unexpected rendering error occurred. Please refresh or retry.' })}
                 </p>
+                {this.state.error && (
+                  <details className="mt-3 text-start p-2.5 rounded-xl bg-destructive/5 border border-destructive/20 text-xs">
+                    <summary className="cursor-pointer font-medium text-destructive select-none text-[11px]">
+                      {t('common.errorDetails', { defaultValue: 'View error details' })}
+                    </summary>
+                    <pre className="mt-2 text-[10px] text-destructive/90 overflow-x-auto whitespace-pre-wrap break-all font-mono">
+                      {this.state.error.message || String(this.state.error)}
+                    </pre>
+                  </details>
+                )}
               </div>
               <Button
                 onClick={this.handleReset}
