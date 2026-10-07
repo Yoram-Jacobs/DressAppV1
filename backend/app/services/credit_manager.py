@@ -616,6 +616,23 @@ async def deduct_user_credits(
             "generative_inpainting",
         ) or (bool(operation) and any(k in operation for k in ("image_edit", "reconstruct", "repair_item", "inpainting")))
 
+        # For non-generative analytical operations (e.g. 1-click re-analyse, outfit proposals),
+        # free users consume from their 10 daily actions quota first so their 5 generative
+        # credits remain reserved for Nano Banana photo reconstruction/editing.
+        if not is_generative:
+            daily_ok = await check_and_increment_daily_request(db, user_id)
+            if daily_ok:
+                try:
+                    meter = TokenMeter(user_id, operation or "ai_operation")
+                    meter.input_tokens = 0
+                    meter.output_tokens = 0
+                    meter.credits_consumed = req_int
+                    meter.credit_type_used = "free_daily_quota"
+                    await meter._save_token_usage(0, 0)
+                except Exception:
+                    pass
+                return True
+
         if available_credits >= req_int:
             success, spent_details = u_model.spend_credits(req_int, operation or "ai_operation")
             if success:
@@ -641,11 +658,9 @@ async def deduct_user_credits(
             logger.info("User %s on Free plan has exhausted generative AI credits (available: %d).", user_id, available_credits)
             return False
 
-        # 3. Fall back to the 10 daily AI actions quota for non-generative operations
-        daily_ok = await check_and_increment_daily_request(db, user_id)
-        if not daily_ok:
-            logger.info(f"User {user_id} on Free plan has exhausted their 10 daily AI actions quota.")
-            return False
+        # Non-generative: daily quota was already exhausted and user has no available bucket credits
+        logger.info(f"User {user_id} on Free plan has exhausted their 10 daily AI actions quota.")
+        return False
 
         try:
             meter = TokenMeter(user_id, operation or "ai_operation")

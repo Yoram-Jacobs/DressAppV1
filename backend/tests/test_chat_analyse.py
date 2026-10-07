@@ -445,7 +445,7 @@ async def test_1click_reanalyze_unlocked_for_free_users(mock_free_user_exhausted
         with patch("app.services.repos.find_one", new_callable=AsyncMock) as mock_find, \
              patch("app.api.v1.closet._read_image_bytes_from_url", new_callable=AsyncMock) as mock_read_bytes, \
              patch("app.services.billing_service.deduct_user_credits", new_callable=AsyncMock) as mock_billing, \
-             patch("app.api.v1.closet.ingestion.get_garment_vision_service") as mock_get_vision:
+             patch("app.services.vision.GarmentVisionService") as mock_vision_cls:
 
             mock_find.return_value = mock_item
             mock_read_bytes.return_value = fake_png
@@ -460,14 +460,51 @@ async def test_1click_reanalyze_unlocked_for_free_users(mock_free_user_exhausted
                 "fabric_materials": [{"name": "Cotton", "percentage": 100}],
                 "confidence": 0.95,
             })
-            mock_get_vision.return_value = mock_vision
+            mock_vision_cls.return_value = mock_vision
 
             response = client.post("/api/v1/closet/item_reanalyze_free/reanalyze")
             assert response.status_code == 200
             data = response.json()
             assert data["item"]["title"] == "Fresh Eyes Analysis"
             assert mock_vision.analyze.called
+            # Verify provider was gemma (DressApp Eyes on VPS)
+            mock_vision_cls.assert_called_once()
+            _, kwargs = mock_vision_cls.call_args
+            assert kwargs.get("provider") == "gemma"
     finally:
         app.dependency_overrides.pop(get_current_user, None)
+
+
+@pytest.mark.anyio
+async def test_reanalyze_consumes_daily_quota_preserves_onboarding_credits(mock_user):
+    """Verify that 1-click re-analyse consumes the daily action quota and does not spend the 5 generative onboarding credits."""
+    from app.services.credit_manager import deduct_user_credits
+    db_mock = MagicMock()
+    db_mock.users.find_one = AsyncMock(return_value={
+        "id": "free_user_with_5_credits",
+        "tier": "free",
+        "credit_buckets": [{"id": "b1", "type": "free", "amount": 5, "expires_at": "2099-01-01T00:00:00Z"}],
+    })
+    db_mock.users.update_one = AsyncMock(return_value=MagicMock(modified_count=1))
+    db_mock.token_meter = MagicMock()
+    db_mock.token_meter.insert_one = AsyncMock()
+
+    with patch("app.services.credit_manager.check_and_increment_daily_request", new_callable=AsyncMock) as mock_daily:
+        mock_daily.return_value = True
+
+        user_dict = {
+            "id": "free_user_with_5_credits",
+            "tier": "free",
+            "credit_buckets": [{"id": "b1", "type": "free", "amount": 5, "expires_at": "2099-01-01T00:00:00Z"}],
+        }
+
+        # Non-generative reanalyze_item operation
+        res = await deduct_user_credits(db_mock, user_dict, cost=1, operation="reanalyze_item")
+        assert res is True
+        # Daily request quota was incremented
+        assert mock_daily.called
+        # Credit buckets update was NOT called (buckets intact at 5)
+        assert not db_mock.users.update_one.called
+
 
 

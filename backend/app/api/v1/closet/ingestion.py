@@ -1778,10 +1778,6 @@ async def reanalyze_item(
     ``receipt_locked_fields`` stored on the document, which permanently
     protects fields that originated from the receipt parser.
     """
-    vision_service = get_garment_vision_service(user=user)
-    if vision_service is None:
-        raise HTTPException(503, "Garment analyzer not configured")
-
     db = get_db()
     item = await repos.find_one(
         db.closet_items, {"id": item_id, "user_id": user["id"]}
@@ -1789,8 +1785,30 @@ async def reanalyze_item(
     if not item:
         raise HTTPException(404, "Item not found")
 
+    user_tier = (user or {}).get("tier") or "free"
+    from app.services.auth import resolve_user_custom_gemini_api_key
+    custom_gemini_key = resolve_user_custom_gemini_api_key(user)
+
     # 1-Click Full Re-analyse is powered by DressApp Eyes (attribute analysis only; no image editing).
-    # Available to all users out-of-the-box.
+    # For Free users and default platform mode, explicitly wire to on-prem Eyes (Qwen2.5-VL-3B-Instruct)
+    # with transparent Gemini quota fallback inside GarmentVisionService.analyze.
+    # Paid or BYOK users with custom keys can use their custom Gemini key.
+    if user_tier == "free" and not custom_gemini_key:
+        from app.services.vision import GarmentVisionService, resolve_garment_gender
+        vision_service = GarmentVisionService(
+            provider="gemma",
+            model="garment_vision",
+            user_gender=resolve_garment_gender(user),
+        )
+    else:
+        vision_service = get_garment_vision_service(user=user)
+        if vision_service is None:
+            from app.services.vision import GarmentVisionService, resolve_garment_gender
+            vision_service = GarmentVisionService(
+                provider="gemma",
+                model="garment_vision",
+                user_gender=resolve_garment_gender(user),
+            )
 
     from app.services.billing_service import deduct_user_credits
     if not await deduct_user_credits(db, user, cost=1, operation="reanalyze_item"):
@@ -2192,7 +2210,10 @@ async def chat_analyse_item(
             decision["image_edit_prompt"] = f"Clean studio cutout isolating {item_title} on solid neutral #F5F2EB background, removing all extraneous objects, hands, or hangers"
         elif is_direct_remove:
             decision["reply"] = _get_localized_closet_msg("image_edit_processing", user_lang, user_msg=user_msg)
-            decision["image_edit_prompt"] = f"Clean commercial studio photo of {item_title} on neutral #F5F2EB background, removing requested elements: {user_msg}"
+            if any(k in low_msg for k in ("shoe", "shoes", "נעל", "נעליים", "חذاء")):
+                decision["image_edit_prompt"] = f"Remove the shoes and footwear at the bottom, isolating {item_title} cleanly on neutral #F5F2EB background"
+            else:
+                decision["image_edit_prompt"] = f"Clean commercial studio photo of {item_title} on neutral #F5F2EB background, removing requested elements: {user_msg}"
 
     if decision is None:
         user_api_key = resolve_user_gemini_api_key(user)
@@ -2489,7 +2510,7 @@ async def repair_item_image(
                 "message": exhaustion["message"],
                 "feature": "generative_inpainting",
             },
-            headers={"X-Credit-Status": exhaustion["code"], "X-I18n-Key": exhaustion["i18n_key"]},
+            headers={"X-Credit-Status": "exhausted", "X-Credit-Exhaustion-Key": exhaustion["i18n_key"], "X-I18n-Key": exhaustion["i18n_key"]},
         )
 
     out = await reconstruct(
@@ -2610,7 +2631,7 @@ async def edit_item_image(
                     "message": exhaustion["message"],
                     "feature": "generative_inpainting",
                 },
-                headers={"X-Credit-Status": exhaustion["code"], "X-I18n-Key": exhaustion["i18n_key"]},
+                headers={"X-Credit-Status": "exhausted", "X-Credit-Exhaustion-Key": exhaustion["i18n_key"], "X-I18n-Key": exhaustion["i18n_key"]},
             )
 
         edit_res = await img_provider.edit_image(

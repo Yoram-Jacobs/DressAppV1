@@ -1312,7 +1312,7 @@ export default function ItemDetail() {
       setReanalyzeChatHistory((prev) => [...prev, assistantTurn]);
 
       if (res.action_taken === 'image_edit' && res.image_url) {
-        toast.success(t('itemDetail.reanalyze.nanoBananaBadge') + "! Preview ready in chat.");
+        toast.success(`${t('itemDetail.reanalyze.nanoBananaBadge', { defaultValue: 'Nano Banana' })}: ${t('itemDetail.reanalyze.previewReady', { defaultValue: 'Preview ready in chat.' })}`);
       }
     } catch (err) {
       const detail = err?.response?.data?.detail;
