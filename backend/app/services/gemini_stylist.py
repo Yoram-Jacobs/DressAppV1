@@ -127,6 +127,30 @@ async def prepare_stylist_prompt(
     )
     if user_preferences_block:
         sys_msg = sys_msg + "\n\n" + user_preferences_block.strip() + "\n"
+
+    # Ground-Truth Fashion Knowledge Base & Modesty Gating
+    from app.services.fashion_rules_rag import (
+        filter_modesty_closet_items,
+        format_rules_for_prompt,
+        retrieve_fashion_axioms,
+    )
+
+    clean_closet = filter_modesty_closet_items(
+        closet_summary, (user_profile or {}).get("modesty_level")
+    )
+    first_evt = calendar_events[0].get("title") if (calendar_events and isinstance(calendar_events, list)) else None
+    axioms = retrieve_fashion_axioms(
+        user_profile=user_profile,
+        weather=weather,
+        occasion=first_evt,
+        user_text=user_text,
+        closet_summary=clean_closet,
+        top_k=4,
+    )
+    axioms_text = format_rules_for_prompt(axioms)
+    if axioms_text:
+        sys_msg = sys_msg + "\n\n" + axioms_text + "\n"
+
     safe_profile = {}
     if user_profile:
         safe_profile = {
@@ -143,7 +167,7 @@ async def prepare_stylist_prompt(
         "calendar_events": calendar_events or [],
         "cultural_rules": cultural_rules or [],
         "user_profile": safe_profile,
-        "closet_summary": _compact_closet_summary(closet_summary),
+        "closet_summary": _compact_closet_summary(clean_closet),
     }
     lang_code = ((user_profile or {}).get("preferred_language") or "en").lower()
     lang_name = _LANG_NAMES.get(lang_code, "English")

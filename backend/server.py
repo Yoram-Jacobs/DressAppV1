@@ -166,6 +166,11 @@ async def on_startup() -> None:
         await get_active_provider()
     except Exception as exc:  # noqa: BLE001
         logger.warning("Eyes override warmup skipped: %s", exc)
+    try:
+        from app.services.fashion_rules_rag import sync_rules_to_db
+        await sync_rules_to_db(get_db())
+    except Exception as exc:  # noqa: BLE001
+        logger.warning("Fashion rules sync skipped: %s", exc)
     # Patch M13 (May 2026) — Fire-and-forget warmup of SegFormer + rembg
     # + FashionCLIP so the FIRST user upload doesn't pay the cumulative
     # cold-init tax that previously pushed /closet/analyze past the

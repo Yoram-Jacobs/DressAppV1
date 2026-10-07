@@ -128,6 +128,8 @@ async def ensure_indexes() -> None:
     await db.cultural_rules.create_index(
         [("region", 1), ("religion", 1), ("occasion", 1)]
     )
+    await db.fashion_rules.create_index("id", unique=True, sparse=True)
+    await db.fashion_rules.create_index("category")
     await db.trend_reports.create_index([("date", -1), ("bucket", 1)])
     # Phase R+S: multi-language cards. Legacy unique index didn't include
     # `language` — drop and replace so we can persist per-(bucket,date,lang).

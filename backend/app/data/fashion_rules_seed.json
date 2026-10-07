@@ -1,0 +1,219 @@
+[
+  {
+    "id": "rule_color_60_30_10",
+    "category": "color_harmony",
+    "title": "The 60-30-10 Color Composition Rule",
+    "rule_statement": "Anchor the outfit in 60% dominant base neutral (e.g. suit, coat, or trousers+sweater), 30% secondary harmonic hue (shirt, jacket, or skirt), and 10% high-contrast accent (shoes, tie, scarf, or bag).",
+    "negative_constraint": "Do not divide the outfit into three equal 33% blocks of intensely competing colors.",
+    "criteria": {
+      "dress_codes": ["casual", "smart-casual", "business", "formal"]
+    },
+    "priority": 9,
+    "example": "60% Charcoal trousers and coat, 30% Light blue Oxford shirt, 10% Burgundy leather loafers."
+  },
+  {
+    "id": "rule_color_monochromatic",
+    "category": "color_harmony",
+    "title": "Tonal Monochromatic Harmony",
+    "rule_statement": "When styling a single color family (e.g. all navy or all cream), vary the shades, values, and textures significantly across pieces to create depth and avoid a flat uniform appearance.",
+    "negative_constraint": "Avoid pairing identical shades of the exact same flat cotton fabric unless it is a tailored matched suit.",
+    "criteria": {
+      "tags": ["monochromatic", "tonal", "minimalist"]
+    },
+    "priority": 8,
+    "example": "Midnight navy wool overcoat over slate blue merino knitwear and dark navy selvedge jeans."
+  },
+  {
+    "id": "rule_color_analogous",
+    "category": "color_harmony",
+    "title": "Analogous Warm & Cool Harmonies",
+    "rule_statement": "Combine 2 to 3 shades that sit adjacent on the 12-spoke color wheel (e.g. olive green + mustard camel + warm rust) for an organic, sophisticated sartorial flow.",
+    "negative_constraint": "Avoid mixing high-chroma adjacent primaries that clash without a neutral bridge.",
+    "criteria": {
+      "dress_codes": ["casual", "smart-casual"]
+    },
+    "priority": 7,
+    "example": "Olive field jacket over a camel cashmere crewneck and ecru chinos."
+  },
+  {
+    "id": "rule_color_complementary",
+    "category": "color_harmony",
+    "title": "Complementary Contrast Balancing",
+    "rule_statement": "When pairing direct color-wheel opposites (e.g. navy blue with cognac orange, or forest green with deep burgundy), let one hue occupy 70-80% of the visual space while the other acts as an intentional accent.",
+    "negative_constraint": "Do not balance two complementary colors in equal 50/50 visual weight.",
+    "criteria": {
+      "dress_codes": ["smart-casual", "business", "formal"]
+    },
+    "priority": 8,
+    "example": "Deep navy suit complemented by rich cognac leather shoes, cognac belt, and amber pocket square."
+  },
+  {
+    "id": "rule_color_neutral_anchor",
+    "category": "color_harmony",
+    "title": "Neutral Anchor Stabilization",
+    "rule_statement": "Ground vivid, saturated, or heavily patterned garments with classic neutral anchors (Charcoal, Black, White, Navy, Camel, Ecru, or Grey).",
+    "negative_constraint": "Avoid pairing two clashing bold patterns on both top and bottom simultaneously.",
+    "criteria": {
+      "dress_codes": ["casual", "smart-casual", "business", "formal"]
+    },
+    "priority": 8,
+    "example": "A statement houndstooth or bright cobalt blazer anchored by clean black tailored trousers and crisp white top."
+  },
+  {
+    "id": "rule_texture_tactile_contrast",
+    "category": "texture_material",
+    "title": "Tactile Texture Contrast",
+    "rule_statement": "Balance fabric surfaces by pairing matte/rough textures with smooth/sheen textures (e.g. chunky cable-knit with smooth poplin, or brushed suede with raw denim).",
+    "negative_constraint": "Do not combine all-flat, slick synthetic surfaces together in an outfit.",
+    "criteria": {
+      "requires_layering": true
+    },
+    "priority": 8,
+    "example": "Coarse wool tweed blazer paired with a smooth silk-blend shirt and brushed cotton chinos."
+  },
+  {
+    "id": "rule_texture_weight_matching",
+    "category": "texture_material",
+    "title": "Visual Fabric Weight Matching",
+    "rule_statement": "Ensure the physical and visual weight of garments harmonizes: heavy fabrics (shearling, heavyweight wool, denim) require substantial footwear (boots, brogues, lug soles), not flimsy canvas shoes.",
+    "negative_constraint": "Do not pair heavy winter outerwear with ultra-thin summery slip-on shoes or sandals.",
+    "criteria": {
+      "primary_roles": ["outerwear", "footwear"]
+    },
+    "priority": 9,
+    "example": "Heavy wool double-breasted coat paired with sturdy Goodyear-welted leather Chelsea boots."
+  },
+  {
+    "id": "rule_texture_sheen_balance",
+    "category": "texture_material",
+    "title": "Daytime Sheen Balancing",
+    "rule_statement": "Reserve high-sheen fabrics (satin, velvet, patent leather, sequins) for evening formalwear or restrained daytime accessory accents. Daytime looks must prioritize matte and natural finishes.",
+    "negative_constraint": "Avoid patent leather shoes or high-gloss satin dresses in casual daytime or office settings.",
+    "criteria": {
+      "dress_codes": ["casual", "smart-casual", "business"]
+    },
+    "priority": 8,
+    "example": "Matte finish leather loafers for the office rather than high-gloss patent leather."
+  },
+  {
+    "id": "rule_proportion_rule_of_thirds",
+    "category": "silhouette_proportion",
+    "title": "The 1:2 Golden Ratio (Rule of Thirds)",
+    "rule_statement": "Construct the silhouette in 1/3 and 2/3 visual proportions (e.g. tucked-in top with high-waisted bottoms, or cropped jacket over a long dress) to elongate vertical proportions.",
+    "negative_constraint": "Avoid bisecting the body exactly at the 50/50 midline with a long untucked boxy shirt ending mid-hip over untapered straight pants.",
+    "criteria": {
+      "dress_codes": ["casual", "smart-casual", "business", "formal"]
+    },
+    "priority": 8,
+    "example": "High-waisted tailored trousers (2/3 of silhouette) paired with a French-tucked blouse (1/3)."
+  },
+  {
+    "id": "rule_proportion_volume_counterbalance",
+    "category": "silhouette_proportion",
+    "title": "Volume Counterbalance Axiom",
+    "rule_statement": "Balance volume across horizontal planes: if the top is voluminous, oversized, or chunky, keep the bottom structured or slim. If the bottom is wide-leg or pleated, keep the top fitted or defined.",
+    "negative_constraint": "Avoid shapeless oversized top paired with oversized baggy bottoms unless deliberately styling an avant-garde runway silhouette with waist cinch.",
+    "criteria": {
+      "dress_codes": ["casual", "smart-casual"]
+    },
+    "priority": 8,
+    "example": "An oversized boyfriend cashmere knit sweater balanced with straight-leg dark wash jeans and sleek ankle boots."
+  },
+  {
+    "id": "rule_weather_subzero_layering",
+    "category": "weather_thermodynamics",
+    "title": "Sub-Zero Thermal Layering Hierarchy",
+    "rule_statement": "When temperature is 5°C or below, enforce a three-layer thermal sandwich: breathable base layer (cotton/modal) -> insulating mid-layer (wool/cashmere/fleece) -> protective outer shell (wool coat or down puffer) with closed weather-sealed footwear.",
+    "negative_constraint": "Strictly prohibit open-toe shoes, lightweight linen, bare ankles, or unlined lightweight jackets in freezing temperatures.",
+    "criteria": {
+      "max_temp_c": 5.0
+    },
+    "priority": 10,
+    "example": "Thermal base top + merino wool turtleneck + heavy wool overcoat + lined leather boots."
+  },
+  {
+    "id": "rule_weather_transitional_layering",
+    "category": "weather_thermodynamics",
+    "title": "Transitional Mid-Temperature Layering (6°C - 16°C)",
+    "rule_statement": "In temperate to cool weather (6°C - 16°C), design flexible layered looks featuring a collared shirt or fine-gauge knit under a trench coat, blazer, or utility jacket that can be adjusted through the day.",
+    "negative_constraint": "Avoid heavy sub-zero thermal puffers or lightweight summer shorts in 10-15°C climates.",
+    "criteria": {
+      "min_temp_c": 6.0,
+      "max_temp_c": 16.0
+    },
+    "priority": 8,
+    "example": "Cotton Oxford shirt under a V-neck merino pullover and a classic cotton gabardine trench coat."
+  },
+  {
+    "id": "rule_weather_summer_breathability",
+    "category": "weather_thermodynamics",
+    "title": "High-Heat Breathability (>25°C)",
+    "rule_statement": "When temperature exceeds 25°C, prioritize natural, open-weave, moisture-wicking fabrics (linen, seersucker, lightweight cotton, silk) with relaxed breathable cuts and light reflective palettes.",
+    "negative_constraint": "Strictly prohibit heavy wool, synthetic leather jackets, chunky fleece, or lined heavy boots in high summer heat.",
+    "criteria": {
+      "min_temp_c": 25.0
+    },
+    "priority": 10,
+    "example": "Pure linen button-down shirt paired with tailored linen-cotton blend shorts or lightweight chinos and suede espadrilles."
+  },
+  {
+    "id": "rule_weather_precipitation_protection",
+    "category": "weather_thermodynamics",
+    "title": "Wet Weather & Precipitation Footwear Defense",
+    "rule_statement": "In rain or wet conditions, select water-resistant treated leather or rubber footwear and darker bottom garments. Outerwear must feature water-repellent or dense wool protection.",
+    "negative_constraint": "Strictly prohibit raw untreated suede shoes, pale white trousers, or delicate silk bottoms in rainy conditions.",
+    "criteria": {
+      "requires_rain": true
+    },
+    "priority": 10,
+    "example": "Dark charcoal trousers with waterproof leather Chelsea boots and a water-resistant trench coat."
+  },
+  {
+    "id": "rule_occasion_business_formal",
+    "category": "occasion_dress_code",
+    "title": "Business Formal Sartorial Standards",
+    "rule_statement": "For business formal engagements, curate matching tailored dark two-piece suits (Navy or Charcoal), crisp white or pale blue collared dress shirts, silk neckwear, and polished leather Oxford or Derby shoes.",
+    "negative_constraint": "Prohibit denim, t-shirts, athletic sneakers, casual knitwear without blazers, or novelty accessories.",
+    "criteria": {
+      "dress_codes": ["business", "formal"]
+    },
+    "priority": 10,
+    "example": "Navy tailored suit, white poplin spread-collar shirt, navy polka dot silk tie, and black calfskin oxfords."
+  },
+  {
+    "id": "rule_occasion_smart_casual",
+    "category": "occasion_dress_code",
+    "title": "Smart Casual Sophistication",
+    "rule_statement": "Blend formal structure with casual ease: pair a tailored blazer or fine knit with clean dark-wash denim or chinos, anchored by clean minimalist leather sneakers or loafers.",
+    "negative_constraint": "Avoid distressed ripped jeans, athletic graphic hoodies, or formal tuxedo eveningwear in smart casual contexts.",
+    "criteria": {
+      "dress_codes": ["smart-casual"]
+    },
+    "priority": 9,
+    "example": "Navy unconstructed hopsack blazer over a white crewneck tee, khaki chinos, and clean white leather dress sneakers."
+  },
+  {
+    "id": "rule_cultural_modesty_conservative",
+    "category": "cultural_modesty",
+    "title": "Conservative & Religious Modesty Standards",
+    "rule_statement": "For users with conservative or orthodox modesty preferences, ensure sleeves extend past the elbow, hemlines reach below the knee or ankle, and necklines remain modest (covering the collarbone). All fabrics must be completely opaque.",
+    "negative_constraint": "Strictly prohibit sheer transparent textiles, sleeveless or tank tops, mini skirts, deep V-necks, or backless garments.",
+    "criteria": {
+      "modesty_levels": ["conservative", "orthodox", "high"]
+    },
+    "priority": 10,
+    "example": "High-neck fluid midi dress with long sleeves and opaque lining, styled with elegant closed-toe flat shoes."
+  },
+  {
+    "id": "rule_cultural_ceremony_etiquette",
+    "category": "cultural_modesty",
+    "title": "Ceremonial Color Etiquette",
+    "rule_statement": "Observe cultural venue and ceremony norms: in Western weddings, avoid solid white dresses/gowns (reserved for the bride); in formal joyous occasions, balance solemn darks with uplifting harmonic color accents.",
+    "negative_constraint": "Do not recommend a solid white lace dress to a guest attending a wedding.",
+    "criteria": {
+      "tags": ["wedding", "ceremony", "sacred"]
+    },
+    "priority": 10,
+    "example": "Emerald green or dusty rose midi cocktail dress with metallic neutral accessories for a wedding guest."
+  }
+]
