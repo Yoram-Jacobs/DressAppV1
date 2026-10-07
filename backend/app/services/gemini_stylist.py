@@ -130,6 +130,7 @@ async def prepare_stylist_prompt(
 
     # Ground-Truth Fashion Knowledge Base & Modesty Gating
     from app.services.fashion_rules_rag import (
+        filter_gender_closet_items,
         filter_modesty_closet_items,
         format_rules_for_prompt,
         retrieve_fashion_axioms,
@@ -138,6 +139,8 @@ async def prepare_stylist_prompt(
     clean_closet = filter_modesty_closet_items(
         closet_summary, (user_profile or {}).get("modesty_level")
     )
+    user_gender = (user_profile or {}).get("sex") or (user_profile or {}).get("gender")
+    clean_closet = filter_gender_closet_items(clean_closet, user_gender)
     first_evt = calendar_events[0].get("title") if (calendar_events and isinstance(calendar_events, list)) else None
     axioms = retrieve_fashion_axioms(
         user_profile=user_profile,

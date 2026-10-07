@@ -2038,8 +2038,19 @@ export default function Stylist() {
           <div className="min-w-0 flex-1 flex flex-col justify-center">
             {/* <div className="text-[11px] font-bold tracking-wide uppercase text-[var(--text-color)] whitespace-nowrap overflow-hidden text-ellipsis">{t('stylist.label')} </div> */}
             <h1 className="text-base font-extrabold text-[var(--dark-color)] whitespace-nowrap overflow-hidden text-ellipsis m-0">
-              {sessions.find((s) => s.id === activeSessionId)?.title ||
-                t('stylist.hero')}
+              {(() => {
+                const raw = sessions.find((s) => s.id === activeSessionId)?.title;
+                if (!raw) return t('stylist.hero');
+                let s = String(raw).trim();
+                if (s.includes('"text"') || s.includes('"action"') || s.startsWith('{') || s.includes('action":')) {
+                  const match = s.match(/"(?:text|title)"\s*:\s*"([^"]+)"/);
+                  if (match) s = match[1];
+                  s = s.replace(/^(?:action\s*:\s*"?[^"]*"?\s*,\s*)/i, '');
+                  s = s.replace(/^(?:title|topic|subject|text|ללבוש)\s*:\s*/i, '');
+                  s = s.replace(/["'{}[\]]/g, '').trim();
+                }
+                return s || t('stylist.hero');
+              })()}
             </h1>
           </div>
           <button

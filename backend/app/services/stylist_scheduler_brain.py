@@ -78,14 +78,8 @@ def calculate_garment_style_score(
     is_tags_mode: bool = False,
     occupation: str | None = None,
     respect_occupation: bool = False,
+    user_gender: str | None = None,
 ) -> int:
-    if not style_dress_for and not (respect_occupation and occupation):
-        return 0
-        
-    prompt_lower = (style_dress_for or "").strip().lower()
-    tags = [str(t).lower().strip() for t in (item.get("tags") or []) if t]
-    custom_tags = [str(t).lower().strip() for t in (item.get("custom_tags") or []) if t]
-    cultural_tags = [str(t).lower().strip() for t in (item.get("cultural_tags") or []) if t]
     brand = str(item.get("brand") or "").lower()
     title = str(item.get("title") or item.get("name") or "").lower()
     sub_cat = str(item.get("sub_category") or item.get("item_type") or "").lower()
@@ -93,8 +87,23 @@ def calculate_garment_style_score(
     dress_code = str(item.get("dress_code") or "").lower()
     material = str(item.get("material") or "").lower()
     description = str(item.get("description") or "").lower()
+    tags = [str(t).lower().strip() for t in (item.get("tags") or []) if t]
+    custom_tags = [str(t).lower().strip() for t in (item.get("custom_tags") or []) if t]
+    cultural_tags = [str(t).lower().strip() for t in (item.get("cultural_tags") or []) if t]
     all_text = f"{title} {brand} {sub_cat} {cat} {dress_code} {material} {description} {' '.join(tags)} {' '.join(custom_tags)} {' '.join(cultural_tags)}"
-    
+
+    # Immediate gender sanity constraint
+    user_gender_norm = str(user_gender or "").lower().strip()
+    if user_gender_norm in ("male", "man", "men", "גבר"):
+        if any(w in all_text for w in ("women", "ladies", "נשים", "שמלה", "חצאית", "גופיית כתפיות", "בולרו", "skirt", "dress", "bolero", "heels", "עקבים", "stiletto")):
+            return -100
+        if str(item.get("gender") or "").lower() == "female":
+            return -100
+
+    if not style_dress_for and not (respect_occupation and occupation):
+        return 0
+        
+    prompt_lower = (style_dress_for or "").strip().lower()
     score = 0
     
     # 1. Expand synonyms for prompt_lower and individual tag tokens
@@ -249,6 +258,17 @@ def calculate_garment_style_score(
             score += 35
         if any(w in all_text for w in ("suit", "blazer", "dress shirt", "leather", "חליפה", "נעלי עור")):
             return -50
+
+    is_diy_work_chore = any(w in prompt_lower for w in (
+        "להחליף", "תאורה", "אדניות", "גינה", "חצר", "שיפוץ", "שיפוצים", "לתקן", "תיקון", "ניקיון", "לנקות", "צביעה", "לצבוע", "הרכבה", "להרכיב",
+        "עבודה פיזית", "עבודת כפיים", "עבודה בחוץ", "עבודות בית",
+        "diy", "chore", "chores", "gardening", "yard", "repair", "maintenance", "cleaning", "physical work", "outdoor work", "install", "replace"
+    ))
+    if is_diy_work_chore:
+        if any(w in all_text for w in ("suit", "blazer", "silk", "bolero", "dress", "skirt", "tie", "stiletto", "heels", "jewelry", "חליפה", "בלייזר", "שמלה", "חצאית", "עקבים", "משי", "בולרו", "תכשיטים")):
+            return -100
+        if any(w in all_text for w in ("cargo", "denim", "jeans", "t-shirt", "tee", "sneaker", "sneakers", "boots", "hoodie", "shorts", "חולצת טי", "מכנסיים", "שורטס", "סניקרס", "נעלי ספורט", "מגפיים")):
+            score += 45
             
     return score
 
@@ -311,6 +331,7 @@ async def get_rotation_prioritized_closet(
     is_tags_filter: bool = False,
     occupation: str | None = None,
     respect_occupation: bool = False,
+    user_gender: str | None = None,
 ) -> list[dict[str, Any]]:
     """Fetch closet items prioritized for rotation, matching tag restrictions and weather/season.
 
@@ -407,6 +428,8 @@ async def get_rotation_prioritized_closet(
         else:
             target_season = "spring"
 
+    is_male = str(user_gender or "").lower().strip() in ("male", "man", "men", "גבר")
+
     # Rotation sort key: matches criteria first, then un-suggested/un-worn, oldest suggested, lowest wear
     def sort_key(item: dict[str, Any]) -> tuple:
         style_score = calculate_garment_style_score(
@@ -415,6 +438,7 @@ async def get_rotation_prioritized_closet(
             is_tags_mode=is_tags_filter,
             occupation=occupation,
             respect_occupation=respect_occupation,
+            user_gender=user_gender,
         )
         matches_season = matches_season_func(item, target_season)
         season_score = 10 if matches_season else 0
@@ -446,6 +470,9 @@ async def get_rotation_prioritized_closet(
         if cat_key not in buckets:
             cat_key = "accessory"
         buckets[cat_key].append(item)
+
+    if is_male:
+        buckets["dress"] = []
 
     # When in strict tag filtering mode:
     # 1. For categories where the user HAS tagged items, restrict strictly to tagged items!
@@ -483,20 +510,27 @@ async def get_rotation_prioritized_closet(
             "top": 4 if buckets["top"] else 0,
             "bottom": 4 if buckets["bottom"] else 0,
             "shoes": 2 if buckets["shoes"] else 0,
-            "dress": 1 if buckets["dress"] else 0,
+            "dress": 0 if is_male else (1 if buckets["dress"] else 0),
             "outerwear": 1 if buckets["outerwear"] else 0,
             "accessory": 1 if buckets["accessory"] else 0,
         }
     else:
         target_ratios = {
-            "top": 0.35,
-            "bottom": 0.35,
+            "top": 0.40 if is_male else 0.35,
+            "bottom": 0.40 if is_male else 0.35,
             "shoes": 0.20,
-            "dress": 0.04,
+            "dress": 0.0 if is_male else 0.04,
             "outerwear": 0.04,
             "accessory": 0.02,
         }
-        min_quotas = {"top": 4, "bottom": 4, "shoes": 4, "dress": 1, "outerwear": 1, "accessory": 1}
+        min_quotas = {
+            "top": 4, 
+            "bottom": 4, 
+            "shoes": 4, 
+            "dress": 0 if is_male else 1, 
+            "outerwear": 1, 
+            "accessory": 1
+        }
 
     quotas = {cat: max(min_quotas.get(cat, 0), int(limit * ratio)) for cat, ratio in target_ratios.items()}
 

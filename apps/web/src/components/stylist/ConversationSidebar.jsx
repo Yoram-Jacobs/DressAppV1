@@ -56,7 +56,20 @@ function SessionRow({
   title,
   t,
 }) {
-  const displayTitle = (title && title.trim()) || t('stylist.untitledConversation');
+  const sanitizeTitle = (raw) => {
+    if (!raw) return t('stylist.untitledConversation');
+    let s = String(raw).trim();
+    if (s.includes('"text"') || s.includes('"action"') || s.startsWith('{') || s.includes('action":')) {
+      const match = s.match(/"(?:text|title)"\s*:\s*"([^"]+)"/);
+      if (match) s = match[1];
+      s = s.replace(/^(?:action\s*:\s*"?[^"]*"?\s*,\s*)/i, '');
+      s = s.replace(/^(?:title|topic|subject|text|ללבוש)\s*:\s*/i, '');
+      s = s.replace(/["'{}[\]]/g, '').trim();
+    }
+    return s || t('stylist.untitledConversation');
+  };
+
+  const displayTitle = sanitizeTitle(title);
   const snippet = (session.snippet || '').trim();
 
   return (

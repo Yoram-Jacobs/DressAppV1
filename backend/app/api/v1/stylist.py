@@ -34,8 +34,14 @@ router = APIRouter(prefix="/stylist", tags=["stylist"])
 
 
 def _safe_session(session: dict) -> dict:
-    """Strip Mongo _id to keep the payload JSON-safe."""
-    return {k: v for k, v in session.items() if k != "_id"}
+    """Strip Mongo _id to keep the payload JSON-safe and sanitize titles."""
+    res = {k: v for k, v in session.items() if k != "_id"}
+    title = res.get("title")
+    if title and isinstance(title, str):
+        from app.services.session_titles import clean_title
+        if any(bad in title.lower() for bad in ('"action"', '"text"', 'action":', 'text":', '{"', '"}')):
+            res["title"] = clean_title(title, fallback_query=res.get("snippet") or "Style advice")
+    return res
 
 
 # ---------------------------------------------------------------------------
@@ -187,7 +193,15 @@ async def stylist_endpoint(
     is_first_turn = (session.get("turns") or 0) == 0
 
     history = await recent_messages(session["id"], limit=8)
-    closet = await closet_summary_for(user["id"], limit=1000)
+    from app.services.stylist_scheduler_brain import get_rotation_prioritized_closet
+    user_gender = user.get("sex") or user.get("gender")
+    prioritized_closet = await get_rotation_prioritized_closet(
+        user["id"],
+        limit=20,
+        style_dress_for=text,
+        user_gender=user_gender,
+    )
+    closet = prioritized_closet if prioritized_closet else await closet_summary_for(user["id"], limit=25)
 
     user_profile = {
         "preferred_language": (language or user.get("preferred_language") or "en").lower(),
@@ -346,6 +360,26 @@ async def stylist_endpoint(
         logger.warning("widen-stylist soft-failed: %s", repr(exc)[:200])
     advice["applied_preferences"] = applied_prefs
 
+    # Recover unmapped closet_item_id by fuzzy matching title/description against user's closet
+    all_user_closet = await closet_summary_for(user["id"], limit=200)
+    valid_ids = {str(x.get("id") or x.get("_id")) for x in all_user_closet if x.get("id") or x.get("_id")}
+    for rec in advice.get("outfit_recommendations", []):
+        for it in rec.get("items", []):
+            cid = it.get("closet_item_id")
+            if cid and str(cid) in valid_ids:
+                continue
+            desc = (it.get("description") or it.get("title") or it.get("name") or "").lower().strip()
+            if desc:
+                # 1. Exact match on title
+                match = next((x for x in all_user_closet if (x.get("title") or "").lower().strip() == desc), None)
+                # 2. Substring match
+                if not match:
+                    match = next((x for x in all_user_closet if (x.get("title") and (x.get("title").lower() in desc or desc in x.get("title").lower()))), None)
+                if match:
+                    it["closet_item_id"] = str(match.get("id") or match.get("_id"))
+                    it["description"] = match.get("title") or it.get("description")
+                    logger.info("Resolved unmapped item '%s' to closet item %s (%s)", desc, it["closet_item_id"], match.get("title"))
+
     await append_message(
         session_id=session["id"],
         role="assistant",
@@ -396,7 +430,8 @@ async def stylist_endpoint(
     final_text = (text or advice.get("transcript") or "").strip()
     current_title = session.get("title")
     is_untitled = not current_title or current_title in ("Untitled chat", "שיחה ללא שם", "New conversation", "Style advice")
-    if is_untitled and final_text:
+    is_corrupted = bool(current_title and any(bad in str(current_title).lower() for bad in ('"action"', '"text"', 'action":', 'text":', '{"', '"}')))
+    if (is_untitled or is_corrupted) and final_text:
         try:
             title = await generate_session_title(
                 final_text,

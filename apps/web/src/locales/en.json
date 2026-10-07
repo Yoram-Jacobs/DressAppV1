@@ -1182,6 +1182,7 @@
     "errorAdvice": "Stylist failed",
     "micDenied": "Microphone permission denied",
     "outfitN": "Outfit {{n}}",
+    "designerNote": "Designer Note:",
     "doDont": "Do / don't",
     "voiceNote": "[voice note]",
     "contextLabel": "Context",

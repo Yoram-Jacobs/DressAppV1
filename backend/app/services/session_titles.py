@@ -31,13 +31,49 @@ _LANG_NAMES: dict[str, str] = {
 }
 
 
-def _fallback_title(text: str) -> str:
-    cleaned = re.sub(r"\s+", " ", (text or "").strip())
-    if not cleaned:
-        return "Style advice"
-    # Remove leading common conversational prefixes like "Can you", "Please", "I need", "מה ללבוש", etc.
-    words = cleaned.split()
-    return " ".join(words[:4])[:40]
+def clean_title(raw: str, fallback_query: str = "") -> str:
+    """Sanitize title output, stripping JSON, tool call fragments, and punctuation."""
+    import json
+    text = (raw or "").strip()
+    if not text:
+        return _fallback_title(fallback_query)
+
+    # 1. Strip markdown fences
+    if "```" in text:
+        text = re.sub(r"```(?:json)?", "", text).replace("```", "").strip()
+
+    # 2. Try JSON parse if it looks like a JSON object
+    if ("{" in text and "}" in text) or text.startswith("{"):
+        try:
+            m = re.search(r"\{.*?\}", text, re.DOTALL)
+            if m:
+                obj = json.loads(m.group(0))
+                if isinstance(obj, dict):
+                    candidate = obj.get("title") or obj.get("text") or obj.get("response") or obj.get("answer")
+                    if candidate and isinstance(candidate, str):
+                        text = candidate
+        except Exception:
+            pass
+
+    # 3. Regex extract "text": "..." or "title": "..." if JSON fragments remain
+    frag_match = re.search(r'"(?:text|title|answer|topic)"\s*:\s*"([^"]+)"', text)
+    if frag_match:
+        text = frag_match.group(1)
+
+    # 4. Strip remaining quotes, brackets, and prefixes like "action": or "title:"
+    text = re.sub(r'^(?:action\s*:\s*"?[^"]*"?\s*,\s*)', '', text, flags=re.IGNORECASE)
+    text = re.sub(r'^(?:title|topic|subject|text|ללבוש)\s*:\s*', '', text, flags=re.IGNORECASE)
+    text = text.strip(" \t\n\r\"'`“”‘’[](){}:,;")
+    text = text.splitlines()[0].strip() if text else ""
+
+    # 5. Sanity check: if it still has json garbage like "action": or curly braces, use fallback
+    if any(bad in text.lower() for bad in ('"action"', '"text"', '{"', '"}', 'action":', 'text":')):
+        return _fallback_title(fallback_query)
+
+    if not text or len(text) < 2:
+        return _fallback_title(fallback_query)
+
+    return text[:45]
 
 
 async def generate_session_title(
@@ -80,9 +116,4 @@ async def generate_session_title(
         logger.warning("Session title generation failed: %s", exc)
         return _fallback_title(text)
 
-    title = (raw or "").strip()
-    title = title.strip(" \t\n\r\"'`“”‘’[](){}")
-    title = title.splitlines()[0].strip() if title else ""
-    if not title or len(title) < 2:
-        return _fallback_title(text)
-    return title[:45]
+    return clean_title(raw, fallback_query=text)

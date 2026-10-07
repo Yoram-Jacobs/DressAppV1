@@ -226,3 +226,38 @@ def filter_modesty_closet_items(
 
     return filtered if filtered else closet_items
 
+
+def filter_gender_closet_items(
+    closet_items: list[dict[str, Any]] | None,
+    user_gender: str | None,
+) -> list[dict[str, Any]]:
+    """Prune opposite-gender garments so male users are not assigned women's dresses/skirts/boleros."""
+    if not closet_items:
+        return []
+    gen_norm = str(user_gender or "").lower().strip()
+    if gen_norm not in ("male", "man", "men", "גבר"):
+        return closet_items
+
+    FEMALE_KEYWORDS = {
+        "women", "ladies", "נשים", "שמלה", "חצאית", "גופיית כתפיות", "בולרו",
+        "skirt", "dress", "bolero", "heels", "עקבים", "stiletto", "כתפיות"
+    }
+
+    filtered = []
+    for it in closet_items:
+        cat = str(it.get("category") or "").lower()
+        sub = str(it.get("sub_category") or it.get("item_type") or "").lower()
+        title = str(it.get("title") or it.get("name") or "").lower()
+        g = str(it.get("gender") or "").lower()
+
+        if g == "female":
+            continue
+        if cat in ("dress", "skirt") or sub in ("dress", "skirt", "שמלה", "חצאית"):
+            continue
+        if any(w in title for w in FEMALE_KEYWORDS):
+            continue
+        filtered.append(it)
+
+    return filtered if filtered else closet_items
+
+
