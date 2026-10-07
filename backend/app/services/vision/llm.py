@@ -426,7 +426,7 @@ def _user_prompt(code: str | None = None, user_gender: str | None = None) -> str
         "• item_type: Detailed silhouette/cut ('Cargo Pants','Chinos','Straight Jeans','Pleated Skirt','Oxford Shoes','High Heel Pumps','Hooded Jacket','Knit Sweater'). Differ from sub_category.\n"
         "• BACKGROUND REJECTION: Flat-lay & hanger shots rest on surfaces (bedsheets, blankets, carpets, floors, tables). STRICTLY IGNORE all background surface colors! The garment's 'colors', 'name', 'title', and 'caption' must describe EXCLUSIVELY the garment's own fabric (e.g. a white t-shirt lying on a blue blanket is 'White', NEVER 'Blue').\n"
         '• colors: [{"name": str, "pct": int}] summing to 100. Garment fabric colors ONLY; 100% exclude background surfaces.\n'
-        '• fabric_materials: [{"name": str, "pct": int}] summing strictly to 100 by visual texture & category: Footwear=Leather/Suede/Synthetic/Rubber (NEVER Cotton); Bags=Leather/Canvas/Nylon (never generic Polyester); Knitwear/Sweaters=Wool/Cashmere/Acrylic/Cotton knit; Jeans=Denim. Never use Chinese or non-English characters.\n'
+        '• fabric_materials: [{"name": str, "pct": int}] summing strictly to 100 by visual texture & category: Tailored coats/blazers/fur-collar coats=Wool/Cashmere (matte woven/felted cloth texture; NEVER Faux Leather unless shiny slick leather); Footwear=Leather/Suede/Synthetic/Rubber (NEVER Cotton); Bags=Leather/Canvas/Nylon (never generic Polyester); Knitwear/Sweaters=Wool/Cashmere/Acrylic/Cotton knit; Jeans=Denim. Never use Chinese or non-English characters.\n'
         "• season: Array of applicable seasons ['spring'|'summer'|'fall'|'winter'] strictly based on visual fabric weight and cut. Never blindly select all four.\n"
         "• pattern: 'solid'|'printed'|'geometric'|'striped'|'plaid'|'floral'|'camouflage'.\n"
         f"• dress_code: 'casual'|'smart-casual'|'business'|'formal'|'athletic'|'loungewear'; "
@@ -703,6 +703,7 @@ ATTRIBUTE_GROUPS: list[tuple[str, list[str], int, str]] = [
             '- colors: [{"name": str, "pct": int}] summing to 100. Garment fabric colors ONLY. Discard any background bedsheet, blanket, carpet, floor, or table surface colors!\n'
             '- pattern: camouflage|printed|solid|striped|plaid|floral|herringbone|polka_dot|paisley|geometric|animal_print|graphic|tie_dye|abstract\n'
             '- fabric_materials: [{"name": str, "pct": int}] summing to 100. Match category & texture:\n'
+            '  * Coats/Outerwear/Blazers: Wool|Cashmere|Cotton|Down/Nylon. Tailored cloth overcoats/peacoats/wool coats with fur collar = Wool (matte woven/felted cloth texture, NEVER Faux Leather unless shiny slick leather).\n'
             '  * Footwear (shoes/heels/pumps/boots): Leather|Suede|Faux Leather|Canvas|Synthetic|Rubber. NEVER Cotton.\n'
             '  * Bags/Purses: Leather|Faux Leather|Suede|Canvas|Nylon. NEVER generic Polyester/Cotton.\n'
             '  * Knitwear/Sweaters: Wool|Cashmere|Acrylic|Cotton|Viscose knit.\n'

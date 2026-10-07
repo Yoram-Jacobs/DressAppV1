@@ -121,3 +121,31 @@ def test_prompts_contain_materials_rules():
     snippet = vis_group[3]
     assert "NEVER Cotton" in snippet
     assert "Knitwear/Sweaters" in snippet
+
+
+def test_coat_wool_vs_faux_leather_sanitization():
+    """Verify tailored wool coats misidentified as Faux Leather are sanitized to Wool blend."""
+    raw_materials = [{"name": "Faux Leather", "pct": 100}]
+    sanitized = sanitize_fabric_materials(
+        raw_materials,
+        category="Outerwear",
+        sub_category="Coats",
+        item_type="Wool Coat",
+        full_text="Green wool coat with fur collar מעיל צמר ירוק",
+    )
+    mat_names = [m["name"] for m in sanitized]
+    assert "Wool" in mat_names
+    assert "Faux Leather" not in mat_names
+
+    # Fur collar coat misidentified as faux leather
+    sanitized_fur = sanitize_fabric_materials(
+        raw_materials,
+        category="Outerwear",
+        sub_category="Coats",
+        item_type="Casual jacket",
+        full_text="Fur Collar Coat women wearing a brown hooded coat with fur collar",
+    )
+    mat_names_fur = [m["name"] for m in sanitized_fur]
+    assert "Wool" in mat_names_fur
+    assert "Faux Leather" not in mat_names_fur
+

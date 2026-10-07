@@ -1991,6 +1991,53 @@ def test_drop_far_away_disconnected_specks():
     assert np.all(cleaned_arr[110:170, 110:170, 3] == 255), "Main garment body must remain intact!"
 
 
+def test_outerwear_collar_fragment_suppressed_into_coat():
+    """Verify that a small top/t-shirt fragment at the collar/neckline is merged into the coat."""
+    from app.services.clothing_parser import _suppress_overlapping_garments
+
+    H, W = 600, 400
+    coat_mask = np.zeros((H, W), dtype=np.uint8)
+    coat_mask[100:550, 80:320] = 1  # area: 450 * 240 = 108,000
+
+    # Top fragment at the collar/lapel zone (area: 4,000, 3.7% of coat)
+    collar_frag = np.zeros((H, W), dtype=np.uint8)
+    collar_frag[110:200, 160:210] = 1
+
+    by_label = {
+        "coat": {"label": "coat", "category": "outerwear", "score": 0.95, "mask": coat_mask},
+        "top, t-shirt, sweatshirt": {"label": "top, t-shirt, sweatshirt", "category": "top", "score": 0.95, "mask": collar_frag},
+    }
+
+    res = _suppress_overlapping_garments(by_label, has_human=True)
+    # The collar fragment must be suppressed into coat, leaving ONLY coat!
+    assert "coat" in res
+    assert "top, t-shirt, sweatshirt" not in res
+    # The coat mask must now contain the collar fragment pixels
+    assert np.all(res["coat"]["mask"][110:200, 160:210] == 1)
+
+
+def test_multiple_outerwear_on_human_merged():
+    """Verify that multiple overlapping outerwear detections on a human model are merged into one."""
+    from app.services.clothing_parser import _suppress_overlapping_garments
+
+    H, W = 600, 400
+    main_coat = np.zeros((H, W), dtype=np.uint8)
+    main_coat[150:550, 80:320] = 1
+
+    fur_collar_piece = np.zeros((H, W), dtype=np.uint8)
+    fur_collar_piece[100:220, 140:260] = 1
+
+    by_label = {
+        "coat": {"label": "coat", "category": "outerwear", "score": 0.95, "mask": main_coat},
+        "jacket": {"label": "jacket", "category": "outerwear", "score": 0.90, "mask": fur_collar_piece},
+    }
+
+    res = _suppress_overlapping_garments(by_label, has_human=True)
+    # Must only keep one dominant outerwear!
+    assert len([k for k, v in res.items() if v.get("category") == "outerwear"]) == 1
+
+
+
 
 
 

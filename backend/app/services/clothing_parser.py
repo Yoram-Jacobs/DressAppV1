@@ -1012,27 +1012,63 @@ def _suppress_overlapping_garments(
                 or (any(any(k in l for k in ("skirt", "dress")) for l in (kept_lbl_l, item_lbl_l)) and any(any(t in l for t in ("tight", "stocking", "pant", "legging")) for l in (kept_lbl_l, item_lbl_l)))
                 or (any(any(k in l for k in ("shoe", "boot", "footwear")) for l in (kept_lbl_l, item_lbl_l)) and any(any(t in l for t in ("tight", "stocking", "sock", "pant", "legging")) for l in (kept_lbl_l, item_lbl_l)))
             )
-            # Vest sub-part on outerwear: if 'vest' is inside/overlapping a jacket, coat, suit, or blazer
-            # and is small (< 22% of outerwear area or < 30% of outerwear width), it is a lapel/tie fragment, NOT a separate vest!
-            is_vest_fragment = (
-                ("vest" in (kept_lbl_l, item_lbl_l))
-                and ({"top", "outerwear"} == {kept_cat, item_cat} or any(k in (kept_lbl_l, item_lbl_l) for k in ("jacket", "coat", "suit", "blazer", "hoodie")))
+            # Top / vest / collar sub-part on outerwear:
+            # SegFormer often slices a fur collar, lapel, or throat sliver as 'vest', 'top, t-shirt, sweatshirt',
+            # 'shirt, blouse', or 'sweater'. If a top/vest is inside or overlapping outerwear (jacket/coat/blazer/hoodie)
+            # and is a fragment (< 18% of outerwear area, or < 25% of width/height, or ends within upper 35% of coat height),
+            # it is a collar, lapel, or inner neckline fragment, NOT a separate wearable garment!
+            is_top_outer_pair = (
+                ({"top", "outerwear"} == {kept_cat, item_cat})
+                or (
+                    any(k in (kept_lbl_l, item_lbl_l) for k in ("jacket", "coat", "suit", "blazer", "hoodie", "cardigan", "cape"))
+                    and any(t in (kept_lbl_l, item_lbl_l) for t in ("vest", "top", "t-shirt", "shirt", "blouse", "sweater"))
+                )
             )
-            if is_vest_fragment and bb_item and bb_kept:
-                outer_area = kept_area if "vest" == item_lbl_l else area
-                vest_area = area if "vest" == item_lbl_l else kept_area
-                outer_w = (bb_kept[3] - bb_kept[1]) if "vest" == item_lbl_l else (bb_item[3] - bb_item[1])
-                vest_w = (bb_item[3] - bb_item[1]) if "vest" == item_lbl_l else (bb_kept[3] - bb_kept[1])
-                if vest_area < 0.22 * max(1, outer_area) or vest_w < 0.30 * max(1, outer_w):
-                    if "vest" == item_lbl_l:
+            if is_top_outer_pair and bb_item and bb_kept:
+                outer_lbl = kept_lbl_l if kept_cat == "outerwear" else item_lbl_l
+                top_lbl = item_lbl_l if kept_cat == "outerwear" else kept_lbl_l
+                outer_area = kept_area if kept_cat == "outerwear" else area
+                top_area = area if kept_cat == "outerwear" else kept_area
+                outer_bb = bb_kept if kept_cat == "outerwear" else bb_item
+                top_bb = bb_item if kept_cat == "outerwear" else bb_kept
+                outer_w = max(1, outer_bb[3] - outer_bb[1])
+                outer_h = max(1, outer_bb[2] - outer_bb[0])
+                top_w = max(1, top_bb[3] - top_bb[1])
+                top_h = max(1, top_bb[2] - top_bb[0])
+
+                is_subpart_fragment = (
+                    top_area < 0.18 * max(1, outer_area)
+                    or top_w < 0.25 * outer_w
+                    or top_h < 0.25 * outer_h
+                    or (top_bb[2] <= outer_bb[0] + int(0.35 * outer_h))
+                )
+                if is_subpart_fragment:
+                    if kept_cat == "outerwear":
+                        kept_item["mask"] = np.maximum(kept_item["mask"], item["mask"])
+                        kept[kept_idx] = (kept_lbl, kept_item, int(kept_item["mask"].sum()))
                         merged = True
                         suppressed.append((lbl, kept_lbl, item_cat or "?", 1.0, 1.0))
                         break
                     else:
-                        kept[kept_idx] = (lbl, item, area)
+                        item["mask"] = np.maximum(item["mask"], kept_item["mask"])
+                        kept[kept_idx] = (lbl, item, int(item["mask"].sum()))
                         merged = True
                         suppressed.append((kept_lbl, lbl, kept_cat or "?", 1.0, 1.0))
                         break
+
+            # Multiple outerwear on a human model: a single person never wears two coats/jackets!
+            # If two outerwear detections overlap spatially or share the vertical torso corridor, merge into dominant outerwear.
+            if has_human and kept_cat == "outerwear" and item_cat == "outerwear" and bb_item and bb_kept:
+                y1, x1, y2, x2 = bb_item
+                Y1, X1, Y2, X2 = bb_kept
+                x_overlap = max(0, min(x2, X2) - max(x1, X1))
+                min_w = min(max(1, x2 - x1), max(1, X2 - X1))
+                if (x_overlap / float(min_w)) >= 0.25 or _is_same_garment_component(bb_item, bb_kept, min(H, W)):
+                    kept_item["mask"] = np.maximum(kept_item["mask"], item["mask"])
+                    kept[kept_idx] = (kept_lbl, kept_item, int(kept_item["mask"].sum()))
+                    merged = True
+                    suppressed.append((lbl, kept_lbl, item_cat or "?", 1.0, 1.0))
+                    break
 
             if is_layering:
                 continue
@@ -1964,13 +2000,22 @@ def apply_alpha_intersection(
                 if apex_y > 2:
                     new_alpha[:max(0, apex_y - 2), :] = 0
 
-                # Column-wise contour trimming along the neckline/shoulders
+                # Column-wise contour trimming along the central neckline/collar notch
                 col_min_y = np.full(Wc, Hc, dtype=int)
                 np.minimum.at(col_min_y, xs, ys)
-                valid_cols = col_min_y < Hc
+                # Bounding: a neckline curve never dips deeper than 18% of crop height from apex.
+                # Deeper dips are occlusions (hair, jewelry, scarves, hands) and must NOT slice the garment!
+                max_neck_dip = min(Hc - 1, apex_y + max(12, int(0.18 * Hc)))
+                col_min_y = np.minimum(col_min_y, max_neck_dip)
+
+                # Restrict column trimming to the central neck/throat corridor (20% to 80% of width)
+                # so shoulders, lapels, and fur collars on either side are never truncated.
+                neck_cols = np.zeros(Wc, dtype=bool)
+                neck_cols[int(0.20 * Wc):int(0.80 * Wc)] = True
+                valid_cols = (col_min_y < Hc) & neck_cols
                 if valid_cols.any():
                     y_indices = np.arange(Hc)[:, None]
-                    # Pixels above the collar in each column are neck/face/background
+                    # Pixels above the collar in the central neck zone are neck/face/background
                     above_collar = (y_indices < (col_min_y[None, :] - 3)) & valid_cols[None, :]
                     new_alpha = np.where(above_collar, np.uint8(0), new_alpha)
         except Exception as _neck_exc:
