@@ -486,7 +486,14 @@ export function ItemDetailScreen() {
         item?.from_receipt ||
         (Array.isArray(item?.receipt_locked_fields) && item.receipt_locked_fields.length > 0);
 
-      const res = await (api as any).reanalyzeItem(itemId, { fill_empty_only: isReceiptItem });
+      const activeImg = viewingCutout
+        ? (item?.reconstructed_image_url || item?.clean_image_url)
+        : (item?.clean_image_url || item?.image_variants?.original);
+
+      const res = await (api as any).reanalyzeItem(itemId, {
+        fill_empty_only: isReceiptItem,
+        image_url: activeImg || undefined,
+      });
       if (res?.item) {
         const updated = toFormState(res.item);
         setForm(updated);

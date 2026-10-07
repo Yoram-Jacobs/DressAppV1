@@ -1759,6 +1759,10 @@ async def reanalyze_item(
             "fills in gaps without overwriting receipt-provided data."
         ),
     ),
+    image_url: str | None = Query(
+        None,
+        description="Optional image URL to analyze. If omitted, uses the item's preferred/active image.",
+    ),
     user: dict = Depends(get_current_user),
 ) -> dict[str, Any]:
     """Re-run **The Eyes** on an existing item's stored image and patch
@@ -1821,14 +1825,14 @@ async def reanalyze_item(
             }
         )
 
-    image_url: str | None = _get_item_image_url(item)
-    if not image_url:
+    image_url_to_analyze: str | None = image_url or _get_item_image_url(item)
+    if not image_url_to_analyze:
         raise HTTPException(
             400,
             "Item has no stored image to re-analyse. "
             "Replace the photo first.",
         )
-    raw = await _read_image_bytes_from_url(image_url)
+    raw = await _read_image_bytes_from_url(image_url_to_analyze)
     if not raw:
         raise HTTPException(400, "Stored image is empty")
 

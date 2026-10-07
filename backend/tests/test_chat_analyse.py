@@ -538,5 +538,60 @@ async def test_daily_quota_exhaustion_does_not_drain_nano_banana_credits():
         assert not db_mock.users.update_one.called
 
 
+@pytest.mark.anyio
+async def test_reanalyze_respects_preferred_image_view_and_image_url_param(mock_free_user):
+    """Verify that reanalyze_item prioritizes reconstructed image when preferred_image_view
+    is active, and uses explicit image_url if provided."""
+    app.dependency_overrides[get_current_user] = lambda: mock_free_user
+    try:
+        mock_item = {
+            "id": "item_skirt_test",
+            "user_id": "user_free_123",
+            "title": "Old Skirt",
+            "category": "Bottom",
+            "clean_image_url": "https://example.com/chewed_strip.png",
+            "reconstructed_image_url": "https://example.com/perfect_skirt.png",
+            "preferred_image_view": "reconstructed",
+        }
+        fake_png = b"\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00\x01\x00\x00\x00\x01\x08\x06\x00\x00\x00\x1f\x15c4"
+
+        with patch("app.services.repos.find_one", new_callable=AsyncMock) as mock_find, \
+             patch("app.api.v1.closet._read_image_bytes_from_url", new_callable=AsyncMock) as mock_read_bytes, \
+             patch("app.services.billing_service.deduct_user_credits", new_callable=AsyncMock) as mock_billing, \
+             patch("app.services.vision.GarmentVisionService") as mock_vision_cls:
+
+            mock_find.return_value = mock_item
+            mock_read_bytes.return_value = fake_png
+            mock_billing.return_value = True
+
+            mock_instance = MagicMock()
+            mock_instance.analyze = AsyncMock(return_value={
+                "title": "Grey Midi Skirt",
+                "category": "Bottom",
+                "sub_category": "Skirt",
+                "item_type": "Midi Skirt",
+            })
+            mock_vision_cls.return_value = mock_instance
+
+            # Case 1: Without explicit image_url param, respects preferred_image_view == 'reconstructed'
+            res = client.post("/api/v1/closet/item_skirt_test/reanalyze")
+            assert res.status_code == 200
+            assert mock_read_bytes.call_args[0][0] == "https://example.com/perfect_skirt.png"
+
+            # Case 2: With explicit image_url param
+            res = client.post("/api/v1/closet/item_skirt_test/reanalyze?image_url=https://example.com/custom_view.png")
+            assert res.status_code == 200
+            assert mock_read_bytes.call_args[0][0] == "https://example.com/custom_view.png"
+
+            # Case 3: When preferred_image_view is 'clean'
+            mock_item["preferred_image_view"] = "clean"
+            res = client.post("/api/v1/closet/item_skirt_test/reanalyze")
+            assert res.status_code == 200
+            assert mock_read_bytes.call_args[0][0] == "https://example.com/chewed_strip.png"
+    finally:
+        app.dependency_overrides.pop(get_current_user, None)
+
+
+
 
 

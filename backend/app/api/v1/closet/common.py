@@ -298,14 +298,31 @@ def _run_background_reconstruction(*args: Any, **kwargs: Any) -> Any:
     return fn(*args, **kwargs)
 
 
-def _get_item_image_url(item: dict[str, Any]) -> str | None:
-    """Extract clean_image_url as the primary image URL from a closet item document with full fallbacks."""
+def _get_item_image_url(item: dict[str, Any], *, prefer_active: bool = True) -> str | None:
+    """Extract the primary/active garment image URL from a closet item document with full fallbacks.
+
+    When prefer_active is True (default), respects preferred_image_view:
+    - If preferred_image_view is 'clean' or 'original', prioritizes clean_image_url.
+    - Otherwise (e.g. 'reconstructed' or default), prioritizes reconstructed_image_url if present.
+    """
     if not isinstance(item, dict):
         return None
+
+    pref = item.get("preferred_image_view") or item.get("preferred_view")
+    recon = item.get("reconstructed_image_url") or item.get("reconstruct_image_url")
+    clean = item.get("clean_image_url")
+
+    if prefer_active and pref in ("clean", "original"):
+        primary = clean or recon
+    elif prefer_active and recon:
+        primary = recon or clean
+    else:
+        primary = clean or recon
+
     return (
-        item.get("clean_image_url")
-        or item.get("reconstructed_image_url")
+        primary
         or item.get("cutout_url")
+        or item.get("segmented_image_url")
         or item.get("image_url")
         or item.get("original_image_url")
         or item.get("thumbnail_data_url")

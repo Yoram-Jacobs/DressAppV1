@@ -319,8 +319,10 @@ export const closet = {
       .then((r) => r.data),
   cleanItemBackground: (itemId, preview = false) =>
     client.post(`/closet/${itemId}/clean-background`, null, { params: { preview } }).then((r) => r.data),
-  reanalyzeItem: (itemId, { fill_empty_only = false } = {}) => {
-    const params = fill_empty_only ? { fill_empty_only: true } : {};
+  reanalyzeItem: (itemId, { fill_empty_only = false, image_url = null } = {}) => {
+    const params = {};
+    if (fill_empty_only) params.fill_empty_only = true;
+    if (image_url) params.image_url = image_url;
     return client
       .post(`/closet/${itemId}/reanalyze`, null, { timeout: 90000, params })
       .then((r) => r.data);

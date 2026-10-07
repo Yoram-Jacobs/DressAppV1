@@ -1176,7 +1176,13 @@ export default function ItemDetail() {
       const isReceiptItem =
         item?.from_receipt ||
         (Array.isArray(item?.receipt_locked_fields) && item.receipt_locked_fields.length > 0);
-      const res = await api.reanalyzeItem(id, { fill_empty_only: isReceiptItem });
+      const activeImg = showingOriginal
+        ? (item?.clean_image_url || item?.image_variants?.original)
+        : (item?.reconstructed_image_url || item?.clean_image_url);
+      const res = await api.reanalyzeItem(id, {
+        fill_empty_only: isReceiptItem,
+        image_url: activeImg || undefined,
+      });
       setForm(toFormState(res.item, user));
       toast.success(t('itemDetail.reanalyze.success') + " · Press Save to keep changes.");
     } catch (err) {
