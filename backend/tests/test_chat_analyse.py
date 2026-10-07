@@ -445,13 +445,14 @@ async def test_1click_reanalyze_unlocked_for_free_users(mock_free_user_exhausted
         with patch("app.services.repos.find_one", new_callable=AsyncMock) as mock_find, \
              patch("app.api.v1.closet._read_image_bytes_from_url", new_callable=AsyncMock) as mock_read_bytes, \
              patch("app.services.billing_service.deduct_user_credits", new_callable=AsyncMock) as mock_billing, \
-             patch("app.services.vision_service.analyze", new_callable=AsyncMock) as mock_eyes, \
+             patch("app.api.v1.closet.ingestion.get_garment_vision_service") as mock_get_vision, \
              patch("app.services.repos.find_one_and_update", new_callable=AsyncMock) as mock_update:
 
             mock_find.return_value = mock_item
             mock_read_bytes.return_value = fake_png
             mock_billing.return_value = True
-            mock_eyes.return_value = {
+            mock_vision = MagicMock()
+            mock_vision.analyze = AsyncMock(return_value={
                 "title": "Fresh Eyes Analysis",
                 "category": "top",
                 "sub_category": "t-shirt",
@@ -459,14 +460,15 @@ async def test_1click_reanalyze_unlocked_for_free_users(mock_free_user_exhausted
                 "color": "white",
                 "fabric_materials": [{"name": "Cotton", "percentage": 100}],
                 "confidence": 0.95,
-            }
+            })
+            mock_get_vision.return_value = mock_vision
             mock_update.return_value = {**mock_item, "title": "Fresh Eyes Analysis"}
 
             response = client.post("/api/v1/closet/item_reanalyze_free/reanalyze")
             assert response.status_code == 200
             data = response.json()
             assert data["item"]["title"] == "Fresh Eyes Analysis"
-            assert mock_eyes.called
+            assert mock_vision.analyze.called
     finally:
         app.dependency_overrides.pop(get_current_user, None)
 

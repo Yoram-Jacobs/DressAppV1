@@ -2105,25 +2105,34 @@ async def chat_analyse_item(
             user_lang = "en"
 
     from app.services.credit_manager import get_user_tier
-    from app.models.schemas import User as SchemaUser
 
     user_tier = get_user_tier(user)
-    u_model = SchemaUser.parse_obj(user)
-    available_credits = u_model.total_credits
 
     # Free users have 5 free Nano Banana generative inferences from onboarding.
     # When exhausted, prompt them to upgrade immediately before any Gemini calls.
-    if user_tier == "free" and available_credits < 1:
-        exhaustion_msg = _get_localized_closet_msg("credits_exhausted_free", user_lang)
-        raise HTTPException(
-            status_code=402,
-            detail={
-                "code": "credits_exhausted",
-                "message": exhaustion_msg,
-                "feature": "generative_inpainting",
-            },
-            headers={"X-Credit-Status": "exhausted", "X-Credit-Exhaustion-Key": "credits.exhausted_free"},
-        )
+    if user_tier == "free":
+        raw_buckets = user.get("credit_buckets") or []
+        now_iso = datetime.now(timezone.utc).isoformat()
+        available_credits = 0
+        for b in raw_buckets:
+            b_type = b.get("type") if isinstance(b, dict) else getattr(b, "type", "free")
+            b_amount = b.get("amount") if isinstance(b, dict) else getattr(b, "amount", 0)
+            b_expires = b.get("expires_at") if isinstance(b, dict) else getattr(b, "expires_at", None)
+            if b_type == "free" and b_expires and now_iso > b_expires:
+                continue
+            available_credits += b_amount
+
+        if available_credits < 1:
+            exhaustion_msg = _get_localized_closet_msg("credits_exhausted_free", user_lang)
+            raise HTTPException(
+                status_code=402,
+                detail={
+                    "code": "credits_exhausted",
+                    "message": exhaustion_msg,
+                    "feature": "generative_inpainting",
+                },
+                headers={"X-Credit-Status": "exhausted", "X-Credit-Exhaustion-Key": "credits.exhausted_free"},
+            )
 
     low_msg = user_msg.lower().strip()
     is_direct_reconstruct = any(
