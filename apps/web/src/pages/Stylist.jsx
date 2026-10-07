@@ -1503,30 +1503,55 @@ export default function Stylist() {
     setBusy(true);
 
     const optimisticId = `tmp-sched-${Date.now()}`;
-    setMessages((prev) => [
-      ...prev,
-      {
-        id: optimisticId,
-        role: 'user',
-        transcript: t('stylist.triggerScheduledRequest', { defaultValue: 'Get tomorrow\'s scheduled outfit proposals' }),
-      },
-    ]);
+    const userMsg = {
+      id: optimisticId,
+      role: 'user',
+      transcript: t('stylist.triggerScheduledRequest', { defaultValue: 'Get tomorrow\'s scheduled outfit proposals' }),
+    };
+
+    const targetSessionId = messages.length === 0 ? (activeSessionId || null) : null;
+    if (targetSessionId) {
+      setMessages((prev) => [...prev, userMsg]);
+    } else {
+      setMessages([userMsg]);
+    }
 
     try {
-      const res = await api.triggerScheduledProposal();
+      const res = await api.triggerScheduledProposal({
+        session_id: targetSessionId,
+      });
       const newId = `sched-${Date.now()}`;
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: newId,
-          role: 'assistant',
-          transcript: res.advice.reasoning_summary,
-          payload: {
-            ...res.advice,
-            source_workflow: 'scheduled',
-          },
+      const assistantMsg = {
+        id: res.assistant_message_id || newId,
+        role: 'assistant',
+        transcript: res.advice.reasoning_summary,
+        payload: {
+          ...res.advice,
+          source_workflow: 'scheduled',
         },
-      ]);
+      };
+
+      const resolvedUserMsg = {
+        ...userMsg,
+        id: res.user_message_id || optimisticId,
+      };
+
+      if (res.session) {
+        const sId = res.session.id;
+        setActiveSessionId(sId);
+        setStylistActiveSession(sId);
+        const updatedSessions = [res.session, ...(sessions || []).filter((s) => s.id !== sId)];
+        setSessions(updatedSessions);
+        setStylistSessions(updatedSessions);
+        setMessages([resolvedUserMsg, assistantMsg]);
+        setStylistMessages(sId, [resolvedUserMsg, assistantMsg]);
+      } else {
+        setMessages((prev) => [
+          ...prev.filter((x) => x.id !== optimisticId),
+          resolvedUserMsg,
+          assistantMsg,
+        ]);
+      }
     } catch (err) {
       toast.error(err?.response?.data?.detail || t('stylist.proposalFailed', { defaultValue: 'Failed to generate daily proposals.' }));
       setMessages((prev) => prev.filter((x) => x.id !== optimisticId));
@@ -1552,14 +1577,18 @@ export default function Stylist() {
     const userText = `Suggest event outfits for "${eventName}"${locText}${dateText}${timeText}. Details: "${eventForm.prompt}".`;
 
     const optimisticId = `tmp-event-${Date.now()}`;
-    setMessages((prev) => [
-      ...prev,
-      {
-        id: optimisticId,
-        role: 'user',
-        transcript: userText,
-      },
-    ]);
+    const userMsg = {
+      id: optimisticId,
+      role: 'user',
+      transcript: userText,
+    };
+
+    const targetSessionId = messages.length === 0 ? (activeSessionId || null) : null;
+    if (targetSessionId) {
+      setMessages((prev) => [...prev, userMsg]);
+    } else {
+      setMessages([userMsg]);
+    }
 
     try {
       const res = await api.triggerEventProposal({
@@ -1568,22 +1597,42 @@ export default function Stylist() {
         time: eventForm.time || null,
         location: eventForm.location || null,
         event_name: eventForm.event_name || null,
+        session_id: targetSessionId,
       });
 
       const newId = `event-${Date.now()}`;
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: newId,
-          role: 'assistant',
-          transcript: res.advice.reasoning_summary,
-          payload: {
-            ...res.advice,
-            source_workflow: 'event',
-            event_details: { ...eventForm },
-          },
+      const assistantMsg = {
+        id: res.assistant_message_id || newId,
+        role: 'assistant',
+        transcript: res.advice.reasoning_summary,
+        payload: {
+          ...res.advice,
+          source_workflow: 'event',
+          event_details: { ...eventForm },
         },
-      ]);
+      };
+
+      const resolvedUserMsg = {
+        ...userMsg,
+        id: res.user_message_id || optimisticId,
+      };
+
+      if (res.session) {
+        const sId = res.session.id;
+        setActiveSessionId(sId);
+        setStylistActiveSession(sId);
+        const updatedSessions = [res.session, ...(sessions || []).filter((s) => s.id !== sId)];
+        setSessions(updatedSessions);
+        setStylistSessions(updatedSessions);
+        setMessages([resolvedUserMsg, assistantMsg]);
+        setStylistMessages(sId, [resolvedUserMsg, assistantMsg]);
+      } else {
+        setMessages((prev) => [
+          ...prev.filter((x) => x.id !== optimisticId),
+          resolvedUserMsg,
+          assistantMsg,
+        ]);
+      }
     } catch (err) {
       toast.error(err?.response?.data?.detail || t('stylist.proposalFailed', { defaultValue: 'Failed to generate event proposals.' }));
       setMessages((prev) => prev.filter((x) => x.id !== optimisticId));
@@ -1638,14 +1687,12 @@ export default function Stylist() {
       // Add user turn
       const isEvent = message.payload.source_workflow === 'event';
       const optimisticId = `tmp-retry-${Date.now()}`;
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: optimisticId,
-          role: 'user',
-          transcript: t('stylist.retryRequest', { defaultValue: 'Suggest 3 other options' }),
-        },
-      ]);
+      const retryUserMsg = {
+        id: optimisticId,
+        role: 'user',
+        transcript: t('stylist.retryRequest', { defaultValue: 'Suggest 3 other options' }),
+      };
+      setMessages((prev) => [...prev, retryUserMsg]);
 
       if (isEvent) {
         const eventDetails = message.payload.event_details || {};
@@ -1655,37 +1702,78 @@ export default function Stylist() {
           time: eventDetails.time || null,
           location: eventDetails.location || null,
           event_name: eventDetails.event_name || null,
+          session_id: activeSessionId || null,
         });
 
         const newId = `event-${Date.now()}`;
-        setMessages((prev) => [
-          ...prev,
-          {
-            id: newId,
-            role: 'assistant',
-            transcript: res.advice.reasoning_summary,
-            payload: {
-              ...res.advice,
-              source_workflow: 'event',
-              event_details: eventDetails,
-            },
+        const assistantMsg = {
+          id: res.assistant_message_id || newId,
+          role: 'assistant',
+          transcript: res.advice.reasoning_summary,
+          payload: {
+            ...res.advice,
+            source_workflow: 'event',
+            event_details: eventDetails,
           },
+        };
+
+        const resolvedUserMsg = {
+          ...retryUserMsg,
+          id: res.user_message_id || optimisticId,
+        };
+
+        setMessages((prev) => [
+          ...prev.filter((x) => x.id !== optimisticId),
+          resolvedUserMsg,
+          assistantMsg,
         ]);
+
+        if (activeSessionId) {
+          addStylistMessage(activeSessionId, resolvedUserMsg);
+          addStylistMessage(activeSessionId, assistantMsg);
+        }
+        if (res.session) {
+          const sId = res.session.id;
+          const updatedSessions = [res.session, ...(sessions || []).filter((s) => s.id !== sId)];
+          setSessions(updatedSessions);
+          setStylistSessions(updatedSessions);
+        }
       } else {
-        const res = await api.triggerScheduledProposal();
+        const res = await api.triggerScheduledProposal({
+          session_id: activeSessionId || null,
+        });
         const newId = `sched-${Date.now()}`;
-        setMessages((prev) => [
-          ...prev,
-          {
-            id: newId,
-            role: 'assistant',
-            transcript: res.advice.reasoning_summary,
-            payload: {
-              ...res.advice,
-              source_workflow: 'scheduled',
-            },
+        const assistantMsg = {
+          id: res.assistant_message_id || newId,
+          role: 'assistant',
+          transcript: res.advice.reasoning_summary,
+          payload: {
+            ...res.advice,
+            source_workflow: 'scheduled',
           },
+        };
+
+        const resolvedUserMsg = {
+          ...retryUserMsg,
+          id: res.user_message_id || optimisticId,
+        };
+
+        setMessages((prev) => [
+          ...prev.filter((x) => x.id !== optimisticId),
+          resolvedUserMsg,
+          assistantMsg,
         ]);
+
+        if (activeSessionId) {
+          addStylistMessage(activeSessionId, resolvedUserMsg);
+          addStylistMessage(activeSessionId, assistantMsg);
+        }
+        if (res.session) {
+          const sId = res.session.id;
+          const updatedSessions = [res.session, ...(sessions || []).filter((s) => s.id !== sId)];
+          setSessions(updatedSessions);
+          setStylistSessions(updatedSessions);
+        }
       }
     } catch (err) {
       toast.error(err?.response?.data?.detail || t('stylist.proposalFailed', { defaultValue: 'Failed to generate new proposals.' }));

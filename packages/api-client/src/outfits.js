@@ -24,8 +24,7 @@ export const outfits = {
     return client.post('/outfits', normalized).then((r) => r.data);
   },
   updateSavedOutfit: (id, body) => client.patch(`/outfits/${id}`, body).then((r) => r.data),
-  deleteSavedOutfit: (id) => client.delete(`/outfits/${id}`).then((r) => r.data),
-  triggerScheduledProposal: () => client.post('/outfits/proposal/scheduled').then((r) => r.data),
+  triggerScheduledProposal: (body = {}) => client.post('/outfits/proposal/scheduled', body).then((r) => r.data),
   triggerEventProposal: (body) => client.post('/outfits/proposal/event', body).then((r) => r.data),
   rejectItemSuggestion: (itemId) => client.post('/outfits/reject-item', { item_id: itemId }).then((r) => r.data),
 

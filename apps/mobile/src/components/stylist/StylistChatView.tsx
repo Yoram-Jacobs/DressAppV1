@@ -537,6 +537,8 @@ export function StylistChatView({ onSelectOutfitForTryOn }: StylistChatViewProps
       prompt: '',
     });
 
+    const targetSessionId = messages.length === 0 ? sessionId : null;
+
     try {
       const res = await api.triggerEventProposal({
         prompt: prompt.trim(),
@@ -544,11 +546,12 @@ export function StylistChatView({ onSelectOutfitForTryOn }: StylistChatViewProps
         time: time.trim() || null,
         location: location.trim() || null,
         event_name: event_name.trim() || null,
+        session_id: targetSessionId,
       });
 
       const advice = res?.advice || res;
       const outfitRecs = advice?.outfit_recommendations || (advice?.garments ? [advice] : []);
-      const newId = `event-${Date.now()}`;
+      const newId = res?.assistant_message_id || `event-${Date.now()}`;
       const assistantMsg: ChatMessage = {
         id: newId,
         role: 'assistant',
@@ -571,6 +574,12 @@ export function StylistChatView({ onSelectOutfitForTryOn }: StylistChatViewProps
         do_dont: advice?.do_dont || [],
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       };
+
+      if (res?.session) {
+        setSessionId(res.session.id);
+        setSessions((prev) => [res.session, ...prev.filter((s) => s.id !== res.session.id)]);
+      }
+
       setMessages((prev) => [...prev, assistantMsg]);
     } catch (err: any) {
       console.warn('Event proposal error:', err);

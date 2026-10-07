@@ -53,6 +53,11 @@ class EventProposalIn(BaseModel):
     time: str | None = None
     location: str | None = None
     event_name: str | None = None
+    session_id: str | None = None
+
+
+class ScheduledProposalIn(BaseModel):
+    session_id: str | None = None
 
 
 def _safe_doc(doc: dict) -> dict:
@@ -271,15 +276,21 @@ async def delete_saved_outfit(
 
 @router.post("/proposal/scheduled")
 async def trigger_scheduled_proposal(
+    payload: ScheduledProposalIn | None = None,
     user: dict = Depends(get_current_user),
 ) -> dict[str, Any]:
-    """Generate 3 scheduled outfit suggestions based on user settings."""
+    """Generate 3 scheduled outfit suggestions based on user settings and persist as a stylist chat session."""
+    from app.services.stylist_memory import (
+        get_session,
+        create_session,
+        append_message,
+        update_session,
+    )
     s_set = user.get("scheduler_settings") or {}
     style_preference = s_set.get("style_dress_for") or "casual/daily dress"
     
     try:
         advice = await generate_scheduled_proposals(user, style_preference)
-        return {"advice": advice}
     except Exception as exc:
         logger.warning("Scheduled proposal generation failed, falling back: %s", exc)
         try:
@@ -287,10 +298,50 @@ async def trigger_scheduled_proposal(
             from app.services.stylist_scheduler_brain import get_rotation_prioritized_closet
             closet_items = await get_rotation_prioritized_closet(user["id"], limit=20)
             advice = _generate_fallback_advice(closet_items, style_preference)
-            return {"advice": advice}
         except Exception as inner_exc:
             logger.error("Failed to generate fallback proposals: %s", inner_exc)
             raise HTTPException(status_code=500, detail=str(exc))
+
+    session = None
+    session_title = f"Daily suggestion: {style_preference}"[:80]
+    req_session_id = payload.session_id if payload else None
+    if req_session_id:
+        session = await get_session(req_session_id, user["id"])
+    
+    if not session:
+        session = await create_session(user["id"], title=session_title)
+    elif not session.get("title") or session.get("title") in ("Untitled chat", "שיחה ללא שם", "New conversation", "Style advice"):
+        await update_session(session["id"], user["id"], title=session_title)
+        session["title"] = session_title
+
+    user_text = f"Get tomorrow's scheduled outfit proposals for: {style_preference}"
+    user_msg_doc = await append_message(
+        session_id=session["id"],
+        role="user",
+        input_modality="text",
+        transcript=user_text,
+        context={"source_workflow": "scheduled"},
+    )
+
+    asst_msg_doc = await append_message(
+        session_id=session["id"],
+        role="assistant",
+        input_modality="text",
+        transcript=advice.get("reasoning_summary") or "",
+        assistant_payload={
+            **advice,
+            "source_workflow": "scheduled",
+        },
+    )
+
+    session = await get_session(session["id"], user["id"]) or session
+
+    return {
+        "advice": advice,
+        "session": _safe_doc(session),
+        "user_message_id": user_msg_doc.get("id"),
+        "assistant_message_id": asst_msg_doc.get("id"),
+    }
 
 
 @router.post("/proposal/event")
@@ -298,7 +349,14 @@ async def trigger_event_proposal(
     payload: EventProposalIn,
     user: dict = Depends(get_current_user),
 ) -> dict[str, Any]:
-    """Generate 3 event outfit suggestions based on user prompt."""
+    """Generate 3 event outfit suggestions based on user prompt and persist as a stylist chat session."""
+    from app.services.stylist_memory import (
+        get_session,
+        create_session,
+        append_message,
+        update_session,
+    )
+
     try:
         advice = await generate_event_proposals(
             user=user,
@@ -306,7 +364,6 @@ async def trigger_event_proposal(
             location=payload.location,
             event_name=payload.event_name,
         )
-        return {"advice": advice}
     except Exception as exc:
         logger.exception("Event proposal generation failed, falling back to deterministic advice: %s", exc)
         try:
@@ -314,10 +371,68 @@ async def trigger_event_proposal(
             from app.services.scheduler import _generate_fallback_advice
             raw_closet = await get_rotation_prioritized_closet(user["id"], limit=40)
             advice = _generate_fallback_advice(raw_closet, style_dress_for=payload.prompt)
-            return {"advice": advice}
         except Exception as inner_exc:
             logger.error("Failed to generate fallback event proposals: %s", inner_exc)
             raise HTTPException(status_code=500, detail=str(exc))
+
+    session = None
+    session_title = (payload.event_name or payload.prompt or "Event Outfit").strip()[:80]
+    if payload.session_id:
+        session = await get_session(payload.session_id, user["id"])
+    
+    if not session:
+        session = await create_session(user["id"], title=session_title)
+    elif not session.get("title") or session.get("title") in ("Untitled chat", "שיחה ללא שם", "New conversation", "Style advice"):
+        await update_session(session["id"], user["id"], title=session_title)
+        session["title"] = session_title
+
+    # Build human-readable user text matching what the UI displays
+    event_label = payload.event_name or "Special Event"
+    loc_part = f" at {payload.location}" if payload.location else ""
+    date_part = f" on {payload.date}" if payload.date else ""
+    time_part = f" at {payload.time}" if payload.time else ""
+    user_text = f'Suggest event outfits for "{event_label}"{loc_part}{date_part}{time_part}. Details: "{payload.prompt}".'
+
+    user_msg_doc = await append_message(
+        session_id=session["id"],
+        role="user",
+        input_modality="text",
+        transcript=user_text,
+        context={
+            "source_workflow": "event",
+            "event_name": payload.event_name,
+            "location": payload.location,
+            "date": payload.date,
+            "time": payload.time,
+        },
+    )
+
+    asst_msg_doc = await append_message(
+        session_id=session["id"],
+        role="assistant",
+        input_modality="text",
+        transcript=advice.get("reasoning_summary") or "",
+        assistant_payload={
+            **advice,
+            "source_workflow": "event",
+            "event_details": {
+                "event_name": payload.event_name,
+                "location": payload.location,
+                "date": payload.date,
+                "time": payload.time,
+                "prompt": payload.prompt,
+            },
+        },
+    )
+
+    session = await get_session(session["id"], user["id"]) or session
+
+    return {
+        "advice": advice,
+        "session": _safe_doc(session),
+        "user_message_id": user_msg_doc.get("id"),
+        "assistant_message_id": asst_msg_doc.get("id"),
+    }
 
 
 @router.post("/reject-item")

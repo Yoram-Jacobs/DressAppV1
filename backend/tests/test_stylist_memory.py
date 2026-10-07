@@ -142,3 +142,112 @@ async def test_stylist_history_endpoint(mock_user):
             assert data["messages"][0]["transcript"] == "Show me summer dresses"
     finally:
         app.dependency_overrides.pop(get_current_user, None)
+
+
+@pytest.mark.anyio
+async def test_event_proposal_persists_session_and_messages(mock_user):
+    """Verify that POST /outfits/proposal/event creates and persists a session and turns in stylist memory."""
+    app.dependency_overrides[get_current_user] = lambda: mock_user
+    try:
+        fake_advice = {
+            "reasoning_summary": "Here are 3 refined looks for your job interview at Intel.",
+            "outfit_recommendations": [{"name": "Smart casual blazer", "items": []}],
+        }
+        fake_session = {
+            "id": "sess_event_123",
+            "user_id": "user_stylist_1",
+            "title": "Job interview",
+            "turns": 2,
+            "snippet": 'Suggest event outfits for "Job interview"',
+        }
+
+        with patch("app.api.v1.outfits.generate_event_proposals", new_callable=AsyncMock) as mock_gen, \
+             patch("app.services.stylist_memory.create_session", new_callable=AsyncMock) as mock_create_s, \
+             patch("app.services.stylist_memory.get_session", new_callable=AsyncMock) as mock_get_s, \
+             patch("app.services.stylist_memory.append_message", new_callable=AsyncMock) as mock_append_m:
+
+            mock_gen.return_value = fake_advice
+            mock_create_s.return_value = fake_session
+            mock_get_s.return_value = fake_session
+            mock_append_m.side_effect = [
+                {"id": "msg_user_1", "role": "user"},
+                {"id": "msg_asst_1", "role": "assistant"},
+            ]
+
+            payload = {
+                "event_name": "Job interview",
+                "location": "Intel Offices, Raanana",
+                "date": "10/08/2026",
+                "time": "01:00 PM",
+                "prompt": "Smart casual.",
+            }
+
+            resp = client.post("/api/v1/outfits/proposal/event", json=payload)
+            assert resp.status_code == 200
+            data = resp.json()
+
+            # Verify advice and session are returned
+            assert "advice" in data
+            assert "session" in data
+            assert data["session"]["id"] == "sess_event_123"
+            assert data["session"]["title"] == "Job interview"
+
+            # Verify session was created and both messages (user + assistant) were appended
+            assert mock_create_s.called
+            assert mock_append_m.call_count == 2
+
+            # Check user message arguments
+            user_call_kwargs = mock_append_m.call_args_list[0].kwargs
+            assert user_call_kwargs["role"] == "user"
+            assert 'Job interview' in user_call_kwargs["transcript"]
+            assert 'Intel Offices, Raanana' in user_call_kwargs["transcript"]
+            assert 'Smart casual.' in user_call_kwargs["transcript"]
+
+            # Check assistant message arguments
+            asst_call_kwargs = mock_append_m.call_args_list[1].kwargs
+            assert asst_call_kwargs["role"] == "assistant"
+            assert asst_call_kwargs["assistant_payload"]["source_workflow"] == "event"
+    finally:
+        app.dependency_overrides.pop(get_current_user, None)
+
+
+@pytest.mark.anyio
+async def test_scheduled_proposal_persists_session_and_messages(mock_user):
+    """Verify that POST /outfits/proposal/scheduled creates and persists a session and turns."""
+    app.dependency_overrides[get_current_user] = lambda: mock_user
+    try:
+        fake_advice = {
+            "reasoning_summary": "Here are tomorrow's scheduled daily looks.",
+            "outfit_recommendations": [],
+        }
+        fake_session = {
+            "id": "sess_sched_456",
+            "user_id": "user_stylist_1",
+            "title": "Daily suggestion: casual/daily dress",
+            "turns": 2,
+        }
+
+        with patch("app.api.v1.outfits.generate_scheduled_proposals", new_callable=AsyncMock) as mock_gen, \
+             patch("app.services.stylist_memory.create_session", new_callable=AsyncMock) as mock_create_s, \
+             patch("app.services.stylist_memory.get_session", new_callable=AsyncMock) as mock_get_s, \
+             patch("app.services.stylist_memory.append_message", new_callable=AsyncMock) as mock_append_m:
+
+            mock_gen.return_value = fake_advice
+            mock_create_s.return_value = fake_session
+            mock_get_s.return_value = fake_session
+            mock_append_m.side_effect = [
+                {"id": "msg_user_sched", "role": "user"},
+                {"id": "msg_asst_sched", "role": "assistant"},
+            ]
+
+            resp = client.post("/api/v1/outfits/proposal/scheduled", json={})
+            assert resp.status_code == 200
+            data = resp.json()
+
+            assert "advice" in data
+            assert "session" in data
+            assert data["session"]["id"] == "sess_sched_456"
+            assert mock_append_m.call_count == 2
+    finally:
+        app.dependency_overrides.pop(get_current_user, None)
+
