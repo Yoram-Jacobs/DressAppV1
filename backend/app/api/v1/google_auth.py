@@ -137,7 +137,14 @@ async def google_oauth_start(
         extra={"redirect_uri": redirect_uri, "frontend_origin": frontend_origin},
     )
     try:
-        url = calendar_service.build_authorization_url(state, request=request)
+        url = calendar_service.build_authorization_url(
+            state,
+            request=request,
+            scopes=SCOPES,
+            prompt="consent",
+            include_granted_scopes=False,
+            access_type="offline",
+        )
     except RuntimeError as exc:
         raise HTTPException(503, str(exc)) from exc
     return {"authorization_url": url, "state": state}
@@ -271,6 +278,9 @@ async def google_re_consent(
             state,
             request=request,
             scopes=scopes,
+            prompt="consent",
+            include_granted_scopes=False,
+            access_type="offline",
         )
     except RuntimeError as exc:
         raise HTTPException(503, str(exc)) from exc
@@ -574,6 +584,9 @@ async def google_login_start(
             request=request,
             scopes=scopes,
             callback_path=LOGIN_CALLBACK_PATH,
+            prompt="consent" if with_calendar else "select_account",
+            include_granted_scopes=bool(with_calendar),
+            access_type="offline" if with_calendar else "online",
         )
     except RuntimeError as exc:
         raise HTTPException(503, str(exc)) from exc

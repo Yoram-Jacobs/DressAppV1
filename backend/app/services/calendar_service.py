@@ -176,6 +176,9 @@ class CalendarService:
         request: Any = None,
         scopes: list[str] | None = None,
         callback_path: str | None = None,
+        prompt: str | None = "consent",
+        include_granted_scopes: bool = False,
+        access_type: str = "offline",
     ) -> str:
         redirect_uri = self.resolve_redirect_uri(request, callback_path=callback_path)
         if not redirect_uri:
@@ -187,12 +190,15 @@ class CalendarService:
             "client_id": self.client_id,
             "redirect_uri": redirect_uri,
             "response_type": "code",
-            "scope": " ".join(scopes or SCOPES),
-            "access_type": "offline",
-            "prompt": "consent",
-            "include_granted_scopes": "true",
+            "scope": " ".join(scopes if scopes is not None else SCOPES),
+            "access_type": access_type,
             "state": state,
         }
+        if prompt:
+            params["prompt"] = prompt
+        if include_granted_scopes:
+            params["include_granted_scopes"] = "true"
+
         from urllib.parse import urlencode
 
         return f"{GOOGLE_AUTH_URL}?{urlencode(params)}"

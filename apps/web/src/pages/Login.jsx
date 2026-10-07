@@ -1,6 +1,4 @@
-import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Checkbox } from "@/components/ui/checkbox";
 import { GoogleAuthButton } from "@/components/GoogleAuthButton";
 import { BrandLogo } from "@/components/BrandLogo";
 import { LanguagePicker } from "@/components/LanguagePicker";
@@ -8,7 +6,6 @@ import loginimg from "../assets/img/loginimg.webp";
 
 export default function Login() {
   const { t } = useTranslation();
-  const [withCalendar, setWithCalendar] = useState(false);
 
   return (
     <div className="relative grid min-h-[100dvh] grid-rows-[auto_1fr] overflow-x-hidden bg-accent-beige md:grid-rows-none md:grid-cols-[3fr_2fr]">
@@ -56,23 +53,11 @@ export default function Login() {
 
           <div className="mb-4 space-y-3 sm:mb-6" data-testid="google-signin-block">
             <GoogleAuthButton
-              withCalendar={withCalendar}
               next="/home"
               label={t("auth.continueWithGoogle")}
               testId="login-google-button"
               className="w-full min-h-11"
             />
-            <label
-              className="flex min-h-11 cursor-pointer select-none items-center gap-2 text-[12px] font-semibold text-text-brand"
-              data-testid="login-with-calendar-row"
-            >
-              <Checkbox
-                checked={withCalendar}
-                onCheckedChange={(v) => setWithCalendar(Boolean(v))}
-                data-testid="login-with-calendar-checkbox"
-              />
-              <span className="leading-snug">{t("auth.alsoConnectCalendar")}</span>
-            </label>
           </div>
         </div>
       </div>
