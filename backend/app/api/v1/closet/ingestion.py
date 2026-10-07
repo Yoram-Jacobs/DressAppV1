@@ -2205,7 +2205,7 @@ async def chat_analyse_item(
             f"- Materials: {item.get('fabric_materials') or item.get('material') or 'Unknown'}\n"
             f"- Pattern: {item.get('pattern') or 'Unknown'}\n"
             f"- Condition: {item.get('condition') or 'Unknown'}\n"
-            f"- Quality: {item.get('quality') or 'Unknown'\n\n"
+            f"- Quality: {item.get('quality') or 'Unknown'}\n\n"
             "Your task: Analyze the user's message and determine the correct action from the following 4 options:\n\n"
             "1. 'image_edit': The user is asking to modify, inpaint, remove, or reconstruct elements in the photo.\n"
             "   - Set action: 'image_edit'\n"
