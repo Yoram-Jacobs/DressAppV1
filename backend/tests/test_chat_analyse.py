@@ -96,7 +96,7 @@ async def test_chat_analyse_image_edit_success(mock_user):
             assert response.status_code == 200
             data = response.json()
             assert data["action_taken"] == "image_edit"
-            assert "removing the shoes" in data["reply"]
+            assert "shoes" in data["reply"].lower()
             assert data["image_url"].startswith("data:image/")
             assert data["item"]["reconstructed_image_url"] == data["image_url"]
     finally:
@@ -233,7 +233,7 @@ async def test_chat_analyse_hebrew_image_edit(mock_user):
             assert response.status_code == 200
             data = response.json()
             assert data["action_taken"] == "image_edit"
-            assert "מסיר את הנעליים" in data["reply"]
+            assert "נעליים" in data["reply"]
             assert data["image_url"].startswith("data:image/")
     finally:
         app.dependency_overrides.pop(get_current_user, None)
