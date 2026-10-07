@@ -237,3 +237,68 @@ async def test_chat_analyse_hebrew_image_edit(mock_user):
             assert data["image_url"].startswith("data:image/png;base64,")
     finally:
         app.dependency_overrides.pop(get_current_user, None)
+
+
+@pytest.mark.anyio
+async def test_chat_analyse_hebrew_reconstruct_overrides_clarification_hallucination(mock_user):
+    """Verify that when user clicks 'שחזר את הבגד' (Reconstruct the garment),
+    even if Gemini hallucinated 'clarification' ('מה הבגד שלך צריך להחזיר? מה הכוונה?'),
+    the deterministic guardrail overrides it to 'image_edit' and executes garment restoration.
+    """
+    app.dependency_overrides[get_current_user] = lambda: mock_user
+    try:
+        mock_item = {
+            "id": "item_he_coat",
+            "user_id": "user_123",
+            "title": "Wool Coat",
+            "category": "outerwear",
+            "image_url": "https://example.com/coat.png",
+        }
+        fake_png = b"\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00\x01\x00\x00\x00\x01\x08\x06\x00\x00\x00\x1f\x15c4"
+
+        with patch("app.services.repos.find_one", new_callable=AsyncMock) as mock_find, \
+             patch("app.api.v1.closet._read_image_bytes_from_url", new_callable=AsyncMock) as mock_read_bytes, \
+             patch("app.services.llm_gateway.call_main_llm", new_callable=AsyncMock) as mock_llm, \
+             patch("app.services.billing_service.deduct_user_credits", new_callable=AsyncMock) as mock_billing, \
+             patch("app.api.v1.closet.ingestion.get_image_provider") as mock_get_provider:
+
+            mock_find.return_value = mock_item
+            mock_read_bytes.return_value = fake_png
+            mock_billing.return_value = True
+
+            # Simulate Gemini's Hebrew root hallucination
+            mock_llm.return_value = json.dumps({
+                "action": "clarification",
+                "reply": "מה הבגד שלך צריך להחזיר? מה הכוונה?",
+            })
+
+            mock_provider = MagicMock()
+            mock_provider.edit_image = AsyncMock(
+                return_value=ImageGenerationResult(
+                    image_bytes=fake_png,
+                    mime_type="image/png",
+                    provider="runpod",
+                    model_name="flux.2-klein-4b",
+                )
+            )
+            mock_get_provider.return_value = mock_provider
+
+            response = client.post(
+                "/api/v1/closet/item_he_coat/chat-analyse",
+                json={"message": "שחזר את הבגד", "language": "he", "history": []}
+            )
+
+            assert response.status_code == 200
+            data = response.json()
+            assert data["action_taken"] == "image_edit"
+            assert "להחזיר" not in data["reply"]
+            assert "משחזר את הבגד" in data["reply"]
+            assert data["image_url"].startswith("data:image/png;base64,")
+
+            # Check that provider was called with an English reconstruction prompt
+            call_kwargs = mock_provider.edit_image.call_args.kwargs
+            prompt_called = call_kwargs.get("prompt", "")
+            assert "restored Wool Coat" in prompt_called or "Reconstruct" in prompt_called
+    finally:
+        app.dependency_overrides.pop(get_current_user, None)
+

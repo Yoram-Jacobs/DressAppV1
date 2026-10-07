@@ -2037,6 +2037,34 @@ def _get_localized_closet_msg(msg_type: str, lang: str, user_msg: str = "") -> s
             "zh": f"正在处理图片修改：{user_msg}",
             "ja": f"画像を変更中：{user_msg}",
             "hi": f"छवि संशोधन संसाधित किया जा रहा है: {user_msg}",
+        },
+        "image_reconstruct_processing": {
+            "he": "משחזר את הבגד ומשלים את החלקים והפרטים החסרים...",
+            "ar": "جاري إعادة بناء القطعة واستكمال الأجزاء المفقودة...",
+            "en": "Reconstructing the garment and restoring missing details...",
+            "es": "Reconstruyendo la prenda y restaurando los detalles faltantes...",
+            "fr": "Reconstitution du vêtement et restauration des détails manquants...",
+            "de": "Rekonstruiere das Kleidungsstück und ergänze fehlende Details...",
+            "it": "Ricostruisco il capo e completo i dettagli mancanti...",
+            "pt": "Reconstruindo a peça e restaurando os detalhes ausentes...",
+            "ru": "Восстанавливаю вещь и дополняю недостающие детали...",
+            "zh": "正在重建衣物并补全缺失细节...",
+            "ja": "衣類を再構築し、不足しているディテールを復元しています...",
+            "hi": "कपड़े का पुनर्निर्माण किया जा रहा है और लापता विवरण पूरे किए जा रहे हैं...",
+        },
+        "image_fill_holes_processing": {
+            "he": "ממלא חורים, קרעים ורווחים בבד הפריט...",
+            "ar": "جاري إكمال الفجوات والفتحات في قماش القطعة...",
+            "en": "Filling holes, tears, and gaps in garment fabric...",
+            "es": "Rellenando huecos y espacios en la tela de la prenda...",
+            "fr": "Comblement des trous et des espaces dans le tissu du vêtement...",
+            "de": "Fülle Löcher und Lücken im Stoff des Kleidungsstücks...",
+            "it": "Riempio buchi e spazi vuoti nel tessuto del capo...",
+            "pt": "Preenchendo furos e lacunas no tecido da peça...",
+            "ru": "Заполняю дыры и пробелы в ткани вещи...",
+            "zh": "正在修补衣物布料上的破洞与缝隙...",
+            "ja": "衣服の生地の穴や隙間を修復しています...",
+            "hi": "कपड़े के छिद्रों और अंतराल को भरा जा रहा है...",
         }
     }
     return messages.get(msg_type, {}).get(lang) or messages.get(msg_type, {}).get("en", "")
@@ -2118,12 +2146,18 @@ async def chat_analyse_item(
         f"- Quality: {item.get('quality') or 'Unknown'}\n\n"
         "Your task: Analyze the user's message and determine the correct action from the following 4 options:\n\n"
         "1. 'image_edit': The user is asking to modify, inpaint, remove, or reconstruct elements in the photo.\n"
-        "   CRITICAL REQUIREMENTS FOR 'image_edit':\n"
+        "   CRITICAL RULES FOR 'image_edit':\n"
+        "   - STANDARD RECONSTRUCTION COMMANDS: Direct requests like 'Reconstruct the garment', 'Restore', 'Fill holes and gaps', 'Align vertically', 'Isolate the garment' (in Hebrew: 'שחזר את הבגד', 'שחזר', 'מלא חורים ורווחים', 'יישר אנכית', 'בודד את הבגד'; or in Arabic, Spanish, French, German, etc.) are EXPLICIT IMAGE RECONSTRUCTION COMMANDS. They MUST ALWAYS BE CLASSIFIED AS 'image_edit', NEVER as 'clarification'!\n"
+        "   - HEBREW LANGUAGE WARNING: In Hebrew, the verb 'שחזר' (shikhzer) means 'reconstruct / restore / rebuild'. It is strictly about image restoration and has NOTHING to do with 'להחזיר' (return/refund). NEVER ask 'מה הבגד צריך להחזיר' or question the user's intent when they ask to 'שחזר'!\n"
         "   - Set action: 'image_edit'\n"
-        "   - Set image_edit_prompt: ALWAYS IN ENGLISH! Translate the user's intent into a concise, highly specific inpainting / outpainting / reconstruction instruction for Gemini Nano Banana (e.g. 'Restore the footwear, clean commercial sneaker photo on solid neutral #F5F2EB off-white background', 'Outpaint and fill the missing area where the hand was, preserving original fabric texture and color').\n"
-        f"   - Set reply: Write a brief, friendly confirmation in the user's language ('{user_lang}') describing what you are modifying.\n\n"
-        "2. 'clarification': The user's request for image modification or editing is ambiguous or missing crucial specifics.\n"
-        "   - Set action: 'clarification'\n"
+        "   - Set image_edit_prompt: ALWAYS IN ENGLISH! Translate the user's intent into a concise, highly specific inpainting / outpainting / reconstruction instruction for Gemini Nano Banana:\n"
+        "     * For 'reconstruct the garment' / 'שחזר את הבגד': 'High-fidelity commercial catalog studio photograph of complete, restored garment, completing all missing areas, holes, cutouts, and edges cleanly on neutral #F5F2EB solid background with sharp details'.\n"
+        "     * For 'fill holes and gaps' / 'מלא חורים ורווחים': 'Outpaint and fill all missing areas, gaps, holes, and partial cutouts in the garment fabric, preserving texture and color seamlessly on clean neutral #F5F2EB solid background'.\n"
+        "     * For 'isolate the garment' / 'בודד את הבגד': 'Clean commercial studio cutout isolating the garment on solid neutral #F5F2EB background, removing all extraneous objects, hands, or hangers'.\n"
+        "     * For 'align vertically' / 'יישר אנכית': 'Straighten and align the garment vertically centered on clean neutral #F5F2EB solid background'.\n"
+        f"   - Set reply: Write a brief, friendly confirmation in the user's language ('{user_lang}') describing what you are reconstructing (e.g. in Hebrew: 'משחזר את הבגד ומשלים את החלקים והפרטים החסרים...').\n\n"
+        "2. 'clarification': The user's request is genuinely ambiguous, contradictory, or completely missing context.\n"
+        "   - DO NOT use 'clarification' for general restoration, reconstruction, cut completion, or hole-filling requests — execute them as 'image_edit'!\n"
         f"   - Set reply: A polite, direct question in '{user_lang}' asking for the needed clarification.\n\n"
         "3. 'metadata_update': The user is asking to update or re-classify attributes, materials, colors, brand, or category.\n"
         "   - Set action: 'metadata_update'\n"
@@ -2218,6 +2252,74 @@ async def chat_analyse_item(
                 "action": "answered",
                 "reply": default_reply,
             }
+
+    # Deterministic Guardrail for direct user reconstruction & repair requests:
+    low_msg = user_msg.lower().strip()
+    is_direct_reconstruct = any(
+        k in low_msg for k in [
+            "שחזר", "שחזור", "reconstruct", "restore", "rebuild", "восстановить",
+            "إعادة بناء", "استعادة", "reconstruir", "reconstituer", "rekonstruieren",
+            "ricostruisci", "再構築", "重建",
+        ]
+    )
+    is_direct_fill_holes = any(
+        k in low_msg for k in [
+            "חורים", "רווחים", "מלא חור", "השלם חיתוך", "השלם חורים", "fill hole", "fill gap",
+            "outpaint", "فجوات", "فتحات", "lücken", "huecos", "trous",
+        ]
+    )
+    is_direct_align = any(
+        k in low_msg for k in [
+            "יישר", "יישור", "align vertical", "straighten", "מחאذاة", "ausrichten", "alinear", "aligner",
+        ]
+    )
+    is_direct_isolate = any(
+        k in low_msg for k in [
+            "בודד", "בידוד", "isolate", "freistellen", "aislar", "isoler", "عزل",
+        ]
+    )
+    is_direct_remove = any(
+        k in low_msg for k in [
+            "הסר", "הסרה", "מחק", "מחיקה", "הורד", "חתוך", "בלי", "remove", "erase", "delete", "without",
+            "ازالة", "إزالة", "حذف", "entfernen", "eliminar", "supprimer",
+        ]
+    )
+
+    item_title = item.get("title") or item.get("name") or item.get("category") or "garment"
+
+    # If user requested a direct image modification/reconstruction action, never allow clarification or hallucinated replies (e.g. confusing 'שחזר' with 'להחזיר')
+    if is_direct_reconstruct or is_direct_fill_holes or is_direct_align or is_direct_isolate or is_direct_remove:
+        curr_action = decision.get("action")
+        curr_reply = str(decision.get("reply") or "")
+        needs_override = (
+            curr_action in ("clarification", "answered", None)
+            or not decision.get("image_edit_prompt")
+            or "להחזיר" in curr_reply
+            or "מה הכוונה" in curr_reply
+        )
+        if needs_override:
+            decision["action"] = "image_edit"
+            if is_direct_reconstruct:
+                decision["reply"] = _get_localized_closet_msg("image_reconstruct_processing", user_lang)
+                decision["image_edit_prompt"] = (
+                    f"Commercial fashion catalog photograph of complete, restored {item_title}, "
+                    f"completing all missing areas, holes, cutouts, and edges cleanly on neutral #F5F2EB solid background with sharp studio details"
+                )
+            elif is_direct_fill_holes:
+                decision["reply"] = _get_localized_closet_msg("image_fill_holes_processing", user_lang)
+                decision["image_edit_prompt"] = (
+                    f"Outpaint and fill all missing areas, gaps, holes, and partial cutouts in {item_title}, "
+                    f"preserving original fabric texture and color seamlessly on clean neutral #F5F2EB solid background"
+                )
+            elif is_direct_align:
+                decision["reply"] = _get_localized_closet_msg("image_edit_processing", user_lang, user_msg=user_msg)
+                decision["image_edit_prompt"] = f"Straighten and align {item_title} vertically centered on clean solid neutral #F5F2EB studio background"
+            elif is_direct_isolate:
+                decision["reply"] = _get_localized_closet_msg("image_edit_processing", user_lang, user_msg=user_msg)
+                decision["image_edit_prompt"] = f"Clean studio cutout isolating {item_title} on solid neutral #F5F2EB background, removing all extraneous objects, hands, or hangers"
+            elif is_direct_remove:
+                decision["reply"] = _get_localized_closet_msg("image_edit_processing", user_lang, user_msg=user_msg)
+                decision["image_edit_prompt"] = f"Clean commercial studio photo of {item_title} on neutral #F5F2EB background, removing requested elements: {user_msg}"
 
     action = decision.get("action") or "answered"
     if action not in ("image_edit", "metadata_update", "clarification", "answered"):
