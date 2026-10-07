@@ -1315,10 +1315,21 @@ export default function ItemDetail() {
         toast.success(t('itemDetail.reanalyze.nanoBananaBadge') + "! Preview ready in chat.");
       }
     } catch (err) {
+      const detail = err?.response?.data?.detail;
+      const rawMsg = (typeof detail === 'object' ? detail?.message : detail) || t('itemDetail.reanalyze.error');
       const exhaustionKey = err?.response?.headers?.['x-credit-exhaustion-key'] || err?.response?.data?.exhaustion_key;
-      const rawMsg = err?.response?.data?.detail || t('itemDetail.reanalyze.error');
       const errMsg = exhaustionKey ? t(exhaustionKey, { defaultValue: rawMsg }) : rawMsg;
-      toast.error(errMsg);
+      if (err?.response?.status === 402 || detail?.code === 'credits_exhausted') {
+        toast.error(errMsg, {
+          duration: 7000,
+          action: {
+            label: t('common.upgrade', { defaultValue: 'Upgrade' }),
+            onClick: () => nav('/pricing'),
+          },
+        });
+      } else {
+        toast.error(errMsg);
+      }
       setReanalyzeChatHistory((prev) => [
         ...prev,
         {

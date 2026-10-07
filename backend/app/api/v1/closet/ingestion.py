@@ -1789,16 +1789,8 @@ async def reanalyze_item(
     if not item:
         raise HTTPException(404, "Item not found")
 
-    from app.services.credit_manager import get_user_tier
-    if get_user_tier(user) == "free":
-        raise HTTPException(
-            status_code=403,
-            detail={
-                "code": "feature_locked",
-                "message": "AI Re-analysing is exclusive to Manager and Professional tiers. Upgrade your plan to unlock.",
-                "feature": "reanalyze",
-            }
-        )
+    # 1-Click Full Re-analyse is powered by DressApp Eyes (attribute analysis only; no image editing).
+    # Available to all users out-of-the-box.
 
     from app.services.billing_service import deduct_user_credits
     if not await deduct_user_credits(db, user, cost=1, operation="reanalyze_item"):
@@ -2091,17 +2083,6 @@ async def chat_analyse_item(
     if not item:
         raise HTTPException(404, "Item not found")
 
-    from app.services.credit_manager import get_user_tier
-    if get_user_tier(user) == "free":
-        raise HTTPException(
-            status_code=403,
-            detail={
-                "code": "feature_locked",
-                "message": "AI Re-analysing & Assistant are exclusive to Manager and Professional tiers. Upgrade your plan to unlock.",
-                "feature": "reanalyze",
-            }
-        )
-
     user_msg = (payload.message or "").strip()
     if not user_msg:
         raise HTTPException(400, "Message cannot be empty")
@@ -2123,137 +2104,27 @@ async def chat_analyse_item(
         else:
             user_lang = "en"
 
-    # Build conversation context for main LLM (DressApp Eyes Gemma4-E4B)
-    user_api_key = resolve_user_gemini_api_key(user)
-    user_model = resolve_user_gemini_model(user)
+    from app.services.credit_manager import get_user_tier
+    from app.models.schemas import User as SchemaUser
 
-    history_str = ""
-    for turn in payload.history[-6:]:
-        role = "User" if turn.role == "user" else "The Eyes"
-        history_str += f"{role}: {turn.content}\n"
+    user_tier = get_user_tier(user)
+    u_model = SchemaUser.parse_obj(user)
+    available_credits = u_model.total_credits
 
-    system_prompt = (
-        "You are 'The Eyes', DressApp's intelligent garment vision and wardrobe analysis assistant.\n"
-        f"The user is viewing their garment in the wardrobe. The user's active language is '{user_lang}'. "
-        "The user's instruction or question may be in Hebrew, Arabic, German, French, Spanish, English, or any other language.\n\n"
-        f"Garment Context:\n"
-        f"- Title: {item.get('title') or 'Unknown'}\n"
-        f"- Category: {item.get('category') or 'Unknown'} / {item.get('sub_category') or ''}\n"
-        f"- Colors: {item.get('colors') or item.get('color') or 'Unknown'}\n"
-        f"- Materials: {item.get('fabric_materials') or item.get('material') or 'Unknown'}\n"
-        f"- Pattern: {item.get('pattern') or 'Unknown'}\n"
-        f"- Condition: {item.get('condition') or 'Unknown'}\n"
-        f"- Quality: {item.get('quality') or 'Unknown'}\n\n"
-        "Your task: Analyze the user's message and determine the correct action from the following 4 options:\n\n"
-        "1. 'image_edit': The user is asking to modify, inpaint, remove, or reconstruct elements in the photo.\n"
-        "   CRITICAL RULES FOR 'image_edit':\n"
-        "   - STANDARD RECONSTRUCTION COMMANDS: Direct requests like 'Reconstruct the garment', 'Restore', 'Fill holes and gaps', 'Align vertically', 'Isolate the garment' (in Hebrew: 'שחזר את הבגד', 'שחזר', 'מלא חורים ורווחים', 'יישר אנכית', 'בודד את הבגד'; or in Arabic, Spanish, French, German, etc.) are EXPLICIT IMAGE RECONSTRUCTION COMMANDS. They MUST ALWAYS BE CLASSIFIED AS 'image_edit', NEVER as 'clarification'!\n"
-        "   - HEBREW LANGUAGE WARNING: In Hebrew, the verb 'שחזר' (shikhzer) means 'reconstruct / restore / rebuild'. It is strictly about image restoration and has NOTHING to do with 'להחזיר' (return/refund). NEVER ask 'מה הבגד צריך להחזיר' or question the user's intent when they ask to 'שחזר'!\n"
-        "   - Set action: 'image_edit'\n"
-        "   - Set image_edit_prompt: ALWAYS IN ENGLISH! Translate the user's intent into a concise, highly specific inpainting / outpainting / reconstruction instruction for Gemini Nano Banana:\n"
-        "     * For 'reconstruct the garment' / 'שחזר את הבגד': 'High-fidelity commercial catalog studio photograph of complete, restored garment, completing all missing areas, holes, cutouts, and edges cleanly on neutral #F5F2EB solid background with sharp details'.\n"
-        "     * For 'fill holes and gaps' / 'מלא חורים ורווחים': 'Outpaint and fill all missing areas, gaps, holes, and partial cutouts in the garment fabric, preserving texture and color seamlessly on clean neutral #F5F2EB solid background'.\n"
-        "     * For 'isolate the garment' / 'בודד את הבגד': 'Clean commercial studio cutout isolating the garment on solid neutral #F5F2EB background, removing all extraneous objects, hands, or hangers'.\n"
-        "     * For 'align vertically' / 'יישר אנכית': 'Straighten and align the garment vertically centered on clean neutral #F5F2EB solid background'.\n"
-        f"   - Set reply: Write a brief, friendly confirmation in the user's language ('{user_lang}') describing what you are reconstructing (e.g. in Hebrew: 'משחזר את הבגד ומשלים את החלקים והפרטים החסרים...').\n\n"
-        "2. 'clarification': The user's request is genuinely ambiguous, contradictory, or completely missing context.\n"
-        "   - DO NOT use 'clarification' for general restoration, reconstruction, cut completion, or hole-filling requests — execute them as 'image_edit'!\n"
-        f"   - Set reply: A polite, direct question in '{user_lang}' asking for the needed clarification.\n\n"
-        "3. 'metadata_update': The user is asking to update or re-classify attributes, materials, colors, brand, or category.\n"
-        "   - Set action: 'metadata_update'\n"
-        "   - Set metadata_updates: A dict of key-value changes (e.g. title, category, colors, fabric_materials, condition, etc.)\n"
-        f"   - Set reply: A brief explanation of the updated fields in '{user_lang}'.\n\n"
-        "4. 'answered': The user is asking a general styling, care, matching, or information question.\n"
-        "   - Set action: 'answered'\n"
-        f"   - Set reply: A helpful, expert styling/garment response in '{user_lang}'.\n\n"
-        "IMPORTANT: You MUST respond in valid JSON format with keys:\n"
-        "{\n"
-        '  "action": "image_edit" | "clarification" | "metadata_update" | "answered",\n'
-        '  "reply": "string",\n'
-        '  "image_edit_prompt": "string or null",\n'
-        '  "metadata_updates": { ... } or null\n'
-        "}"
-    )
-
-    prompt_text = f"Conversation History:\n{history_str}\nUser Prompt: {user_msg}\nPlease respond in language: {user_lang} (except JSON keys and image_edit_prompt which MUST be English)."
-    from app.services.llm_gateway import call_main_llm
-    raw_b64 = base64.b64encode(raw).decode("ascii")
-
-    try:
-        decision_raw = await call_main_llm(
-            user_text=prompt_text,
-            system_prompt=system_prompt,
-            image_b64_jpeg=raw_b64,
-            response_mime_type="application/json",
-            model=user_model or "gemini-3.5-flash-lite",
-            api_key=user_api_key,
-            user=user,
+    # Free users have 5 free Nano Banana generative inferences from onboarding.
+    # When exhausted, prompt them to upgrade immediately before any Gemini calls.
+    if user_tier == "free" and available_credits < 1:
+        exhaustion_msg = _get_localized_closet_msg("credits_exhausted_free", user_lang)
+        raise HTTPException(
+            status_code=402,
+            detail={
+                "code": "credits_exhausted",
+                "message": exhaustion_msg,
+                "feature": "generative_inpainting",
+            },
+            headers={"X-Credit-Status": "exhausted", "X-Credit-Exhaustion-Key": "credits.exhausted_free"},
         )
-        clean_json = (decision_raw or "").strip()
-        import re as _re
-        if "```" in clean_json:
-            m = _re.search(r"```(?:json)?\s*([\s\S]*?)\s*```", clean_json)
-            if m:
-                clean_json = m.group(1).strip()
-            else:
-                clean_json = _re.sub(r"^```(?:json)?\s*", "", clean_json)
-                clean_json = _re.sub(r"\s*```$", "", clean_json).strip()
-        decision = json.loads(clean_json)
-    except Exception as exc:
-        logger.warning("Gemini decision parsing failed in chat_analyse: %s", exc)
-        # Fallback heuristic (multilingual)
-        low_msg = user_msg.lower()
-        item_cat = (item.get("category") or "").strip().lower()
-        is_shoes_item = any(k in item_cat for k in ("footwear", "shoes", "sneakers", "boots", "נעל", "נעליים", "חذاء"))
 
-        is_remove = any(k in low_msg for k in [
-            "remove", "erase", "cutout", "delete", "crop", "drop", "without",
-            "הסר", "הסרה", "הורד", "הורדה", "מחק", "מחיקה", "חתוך", "בלי",
-            "ازالة", "إزالة", "حذف", "مسح", "قص", "بدون",
-        ])
-        is_restore = any(k in low_msg for k in [
-            "restore", "reconstruct", "repair", "fix", "complete", "fill", "outpaint", "enhance", "clean",
-            "שחזר", "שחזור", "תקן", "תיקון", "השלם", "השלמה", "שפר", "נקה",
-            "اصلاح", "إصلاح", "استعادة", "تعديل", "اكمال", "إكمال",
-        ])
-        image_keywords = [
-            # English
-            "remove", "complete", "fix", "hole", "stud", "shoe", "sleeve", "hand", "background", "erase", "repair", "clean", "cutout", "isolate", "crop", "inpaint", "restore", "reconstruct",
-            # Hebrew
-            "הסר", "הסרה", "הורד", "הורדה", "מחק", "מחיקה", "תקן", "תיקון", "השלם", "השלמה", "חור", "רקע", "שרוול", "נעל", "נעליים", "יד", "נקה", "חתוך", "ניטים", "קולב", "שחזר", "שחזור",
-            # Arabic
-            "ازالة", "إزالة", "حذف", "مسح", "اصلاح", "إصلاح", "تعديل", "خلفية", "حذاء", "قص", "ثقب", "كم", "شماعة", "استعادة", "اكمال",
-        ]
-        is_edit = any(k in low_msg for k in image_keywords)
-        if is_edit:
-            prompt_en = user_msg
-            if is_shoes_item and (is_restore or not is_remove or "שחזר" in user_msg or "restore" in low_msg):
-                prompt_en = f"Commercial product photograph of complete, restored {item.get('title') or 'pair of shoes'}, clean sneakers on solid neutral #F5F2EB off-white background, photorealistic crisp details"
-            elif is_remove and ("נעל" in user_msg or "נעליים" in user_msg or "shoe" in low_msg) and not is_shoes_item:
-                prompt_en = "Remove the shoes and footwear at the bottom, isolating the garment cleanly on neutral #F5F2EB background"
-            elif "חור" in user_msg or "יד" in user_msg or "השלם" in user_msg or "hole" in low_msg or "hand" in low_msg:
-                prompt_en = "Outpaint and complete the missing area where the hand or cutout was, preserving original fabric texture and color"
-            elif "ניטים" in user_msg or "stud" in low_msg:
-                prompt_en = "Remove the metal studs from the garment"
-            elif "רקע" in user_msg or "נקה" in user_msg or "background" in low_msg:
-                prompt_en = "Clean background and isolate the garment cleanly on neutral #F5F2EB background"
-            elif is_restore:
-                prompt_en = f"Reconstruct and restore {item.get('title') or item.get('category') or 'garment'}, high-fidelity commercial fashion catalog photograph on neutral #F5F2EB background"
-
-            reply_text = _get_localized_closet_msg("image_edit_processing", user_lang, user_msg=user_msg)
-            decision = {
-                "action": "image_edit",
-                "reply": reply_text,
-                "image_edit_prompt": prompt_en,
-            }
-        else:
-            default_reply = _get_localized_closet_msg("default_chat_reply", user_lang)
-            decision = {
-                "action": "answered",
-                "reply": default_reply,
-            }
-
-    # Deterministic Guardrail for direct user reconstruction & repair requests:
     low_msg = user_msg.lower().strip()
     is_direct_reconstruct = any(
         k in low_msg for k in [
@@ -2286,40 +2157,150 @@ async def chat_analyse_item(
     )
 
     item_title = item.get("title") or item.get("name") or item.get("category") or "garment"
+    decision = None
 
-    # If user requested a direct image modification/reconstruction action, never allow clarification or hallucinated replies (e.g. confusing 'שחזר' with 'להחזיר')
+    # Fast-path for direct image reconstruction/edit commands: skip LLM classification entirely
+    # to eliminate CPU latency (Qwen/VPS) and execute immediately via Nano Banana.
     if is_direct_reconstruct or is_direct_fill_holes or is_direct_align or is_direct_isolate or is_direct_remove:
-        curr_action = decision.get("action")
-        curr_reply = str(decision.get("reply") or "")
-        needs_override = (
-            curr_action in ("clarification", "answered", None)
-            or not decision.get("image_edit_prompt")
-            or "להחזיר" in curr_reply
-            or "מה הכוונה" in curr_reply
+        decision = {"action": "image_edit"}
+        if is_direct_reconstruct:
+            decision["reply"] = _get_localized_closet_msg("image_reconstruct_processing", user_lang)
+            decision["image_edit_prompt"] = (
+                f"Commercial fashion catalog photograph of complete, restored {item_title}, "
+                f"completing all missing areas, holes, cutouts, and edges cleanly on neutral #F5F2EB solid background with sharp studio details"
+            )
+        elif is_direct_fill_holes:
+            decision["reply"] = _get_localized_closet_msg("image_fill_holes_processing", user_lang)
+            decision["image_edit_prompt"] = (
+                f"Outpaint and fill all missing areas, gaps, holes, and partial cutouts in {item_title}, "
+                f"preserving original fabric texture and color seamlessly on clean neutral #F5F2EB solid background"
+            )
+        elif is_direct_align:
+            decision["reply"] = _get_localized_closet_msg("image_edit_processing", user_lang, user_msg=user_msg)
+            decision["image_edit_prompt"] = f"Straighten and align {item_title} vertically centered on clean solid neutral #F5F2EB studio background"
+        elif is_direct_isolate:
+            decision["reply"] = _get_localized_closet_msg("image_edit_processing", user_lang, user_msg=user_msg)
+            decision["image_edit_prompt"] = f"Clean studio cutout isolating {item_title} on solid neutral #F5F2EB background, removing all extraneous objects, hands, or hangers"
+        elif is_direct_remove:
+            decision["reply"] = _get_localized_closet_msg("image_edit_processing", user_lang, user_msg=user_msg)
+            decision["image_edit_prompt"] = f"Clean commercial studio photo of {item_title} on neutral #F5F2EB background, removing requested elements: {user_msg}"
+
+    if decision is None:
+        user_api_key = resolve_user_gemini_api_key(user)
+        user_model = resolve_user_gemini_model(user)
+
+        history_str = ""
+        for turn in payload.history[-6:]:
+            role = "User" if turn.role == "user" else "The Eyes"
+            history_str += f"{role}: {turn.content}\n"
+
+        system_prompt = (
+            "You are 'The Eyes', DressApp's intelligent garment vision and wardrobe analysis assistant.\n"
+            f"The user is viewing their garment in the wardrobe. The user's active language is '{user_lang}'. "
+            "The user's instruction or question may be in Hebrew, Arabic, German, French, Spanish, English, or any other language.\n\n"
+            f"Garment Context:\n"
+            f"- Title: {item.get('title') or 'Unknown'}\n"
+            f"- Category: {item.get('category') or 'Unknown'} / {item.get('sub_category') or ''}\n"
+            f"- Colors: {item.get('colors') or item.get('color') or 'Unknown'}\n"
+            f"- Materials: {item.get('fabric_materials') or item.get('material') or 'Unknown'}\n"
+            f"- Pattern: {item.get('pattern') or 'Unknown'}\n"
+            f"- Condition: {item.get('condition') or 'Unknown'}\n"
+            f"- Quality: {item.get('quality') or 'Unknown'\n\n"
+            "Your task: Analyze the user's message and determine the correct action from the following 4 options:\n\n"
+            "1. 'image_edit': The user is asking to modify, inpaint, remove, or reconstruct elements in the photo.\n"
+            "   - Set action: 'image_edit'\n"
+            "   - Set image_edit_prompt: ALWAYS IN ENGLISH! Translate user intent into a concise instruction for Gemini Nano Banana.\n"
+            f"   - Set reply: Write a brief, friendly confirmation in the user's language ('{user_lang}').\n\n"
+            "2. 'clarification': The user's request is genuinely ambiguous or contradictory.\n"
+            f"   - Set reply: A polite question in '{user_lang}'.\n\n"
+            "3. 'metadata_update': The user is asking to update or re-classify attributes, materials, colors, brand, or category.\n"
+            "   - Set action: 'metadata_update'\n"
+            "   - Set metadata_updates: A dict of key-value changes\n"
+            f"   - Set reply: A brief explanation in '{user_lang}'.\n\n"
+            "4. 'answered': General styling, care, matching, or information question.\n"
+            "   - Set action: 'answered'\n"
+            f"   - Set reply: A helpful styling/garment response in '{user_lang}'.\n\n"
+            "IMPORTANT: You MUST respond in valid JSON format with keys:\n"
+            "{\n"
+            '  "action": "image_edit" | "clarification" | "metadata_update" | "answered",\n'
+            '  "reply": "string",\n'
+            '  "image_edit_prompt": "string or null",\n'
+            '  "metadata_updates": { ... } or null\n'
+            "}"
         )
-        if needs_override:
-            decision["action"] = "image_edit"
-            if is_direct_reconstruct:
-                decision["reply"] = _get_localized_closet_msg("image_reconstruct_processing", user_lang)
-                decision["image_edit_prompt"] = (
-                    f"Commercial fashion catalog photograph of complete, restored {item_title}, "
-                    f"completing all missing areas, holes, cutouts, and edges cleanly on neutral #F5F2EB solid background with sharp studio details"
-                )
-            elif is_direct_fill_holes:
-                decision["reply"] = _get_localized_closet_msg("image_fill_holes_processing", user_lang)
-                decision["image_edit_prompt"] = (
-                    f"Outpaint and fill all missing areas, gaps, holes, and partial cutouts in {item_title}, "
-                    f"preserving original fabric texture and color seamlessly on clean neutral #F5F2EB solid background"
-                )
-            elif is_direct_align:
-                decision["reply"] = _get_localized_closet_msg("image_edit_processing", user_lang, user_msg=user_msg)
-                decision["image_edit_prompt"] = f"Straighten and align {item_title} vertically centered on clean solid neutral #F5F2EB studio background"
-            elif is_direct_isolate:
-                decision["reply"] = _get_localized_closet_msg("image_edit_processing", user_lang, user_msg=user_msg)
-                decision["image_edit_prompt"] = f"Clean studio cutout isolating {item_title} on solid neutral #F5F2EB background, removing all extraneous objects, hands, or hangers"
-            elif is_direct_remove:
-                decision["reply"] = _get_localized_closet_msg("image_edit_processing", user_lang, user_msg=user_msg)
-                decision["image_edit_prompt"] = f"Clean commercial studio photo of {item_title} on neutral #F5F2EB background, removing requested elements: {user_msg}"
+
+        prompt_text = f"Conversation History:\n{history_str}\nUser Prompt: {user_msg}\nPlease respond in language: {user_lang} (except JSON keys and image_edit_prompt which MUST be English)."
+        from app.services.llm_gateway import call_main_llm
+        raw_b64 = base64.b64encode(raw).decode("ascii")
+
+        try:
+            decision_raw = await call_main_llm(
+                user_text=prompt_text,
+                system_prompt=system_prompt,
+                image_b64_jpeg=raw_b64,
+                response_mime_type="application/json",
+                model="gemini-3.5-flash-lite",
+                api_key=user_api_key,
+                force_provider="gemini",
+                user=user,
+            )
+            clean_json = (decision_raw or "").strip()
+            import re as _re
+            if "```" in clean_json:
+                m = _re.search(r"```(?:json)?\s*([\s\S]*?)\s*```", clean_json)
+                if m:
+                    clean_json = m.group(1).strip()
+                else:
+                    clean_json = _re.sub(r"^```(?:json)?\s*", "", clean_json)
+                    clean_json = _re.sub(r"\s*```$", "", clean_json).strip()
+            decision = json.loads(clean_json)
+        except Exception as exc:
+            logger.warning("Gemini decision parsing failed in chat_analyse: %s", exc)
+            item_cat = (item.get("category") or "").strip().lower()
+            is_shoes_item = any(k in item_cat for k in ("footwear", "shoes", "sneakers", "boots", "נעל", "נעליים", "חذاء"))
+            is_remove = any(k in low_msg for k in [
+                "remove", "erase", "cutout", "delete", "crop", "drop", "without",
+                "הסר", "הסרה", "הורד", "הורדה", "מחק", "מחיקה", "חתוך", "בלי",
+                "ازالة", "إزالة", "حذف", "مسح", "قص", "بدון",
+            ])
+            is_restore = any(k in low_msg for k in [
+                "restore", "reconstruct", "repair", "fix", "complete", "fill", "outpaint", "enhance", "clean",
+                "שחזר", "שחזור", "תקן", "תיקון", "השלם", "השלמה", "שפר", "נקה",
+                "اصلاح", "إصلاح", "استعادة", "تعديل", "اكمال", "إكمال",
+            ])
+            image_keywords = [
+                "remove", "complete", "fix", "hole", "stud", "shoe", "sleeve", "hand", "background", "erase", "repair", "clean", "cutout", "isolate", "crop", "inpaint", "restore", "reconstruct",
+                "הסר", "הסרה", "הורד", "הורדה", "מחק", "מחיקה", "תקן", "תיקון", "השלם", "השלמה", "חור", "רקע", "שרוול", "נעל", "נעליים", "יד", "נקה", "חתוך", "ניטים", "קולב", "שחזר", "שחזור",
+                "ازالة", "إزالة", "حذف", "مسح", "اصلاح", "إصلاح", "تعديل", "خلفية", "حذاء", "قص", "ثقب", "كم", "شماعة", "استعادة", "اكمال",
+            ]
+            is_edit = any(k in low_msg for k in image_keywords)
+            if is_edit:
+                prompt_en = user_msg
+                if is_shoes_item and (is_restore or not is_remove or "שחזר" in user_msg or "restore" in low_msg):
+                    prompt_en = f"Commercial product photograph of complete, restored {item.get('title') or 'pair of shoes'}, clean sneakers on solid neutral #F5F2EB off-white background, photorealistic crisp details"
+                elif is_remove and ("נעל" in user_msg or "נעליים" in user_msg or "shoe" in low_msg) and not is_shoes_item:
+                    prompt_en = "Remove the shoes and footwear at the bottom, isolating the garment cleanly on neutral #F5F2EB background"
+                elif "חור" in user_msg or "יד" in user_msg or "השלם" in user_msg or "hole" in low_msg or "hand" in low_msg:
+                    prompt_en = "Outpaint and complete the missing area where the hand or cutout was, preserving original fabric texture and color"
+                elif "ניטים" in user_msg or "stud" in low_msg:
+                    prompt_en = "Remove the metal studs from the garment"
+                elif "רקע" in user_msg or "נקה" in user_msg or "background" in low_msg:
+                    prompt_en = "Clean background and isolate the garment cleanly on neutral #F5F2EB background"
+                elif is_restore:
+                    prompt_en = f"Reconstruct and restore {item.get('title') or item.get('category') or 'garment'}, high-fidelity commercial fashion catalog photograph on neutral #F5F2EB background"
+
+                reply_text = _get_localized_closet_msg("image_edit_processing", user_lang, user_msg=user_msg)
+                decision = {
+                    "action": "image_edit",
+                    "reply": reply_text,
+                    "image_edit_prompt": prompt_en,
+                }
+            else:
+                default_reply = _get_localized_closet_msg("default_chat_reply", user_lang)
+                decision = {
+                    "action": "answered",
+                    "reply": default_reply,
+                }
 
     action = decision.get("action") or "answered"
     if action not in ("image_edit", "metadata_update", "clarification", "answered"):
@@ -2333,8 +2314,16 @@ async def chat_analyse_item(
         from app.services.billing_service import deduct_user_credits, get_credit_exhaustion_info
         if not await deduct_user_credits(db, user, cost=1, operation="chat_image_edit"):
             exhaustion = get_credit_exhaustion_info(user)
-            reply = _get_localized_closet_msg(exhaustion["code"], user_lang) or exhaustion["message"]
-            action = "clarification"
+            exhaustion_msg = _get_localized_closet_msg("credits_exhausted_free", user_lang) if user_tier == "free" else (_get_localized_closet_msg(exhaustion["code"], user_lang) or exhaustion["message"])
+            raise HTTPException(
+                status_code=402,
+                detail={
+                    "code": "credits_exhausted",
+                    "message": exhaustion_msg,
+                    "feature": "generative_inpainting",
+                },
+                headers={"X-Credit-Status": exhaustion["code"], "X-Credit-Exhaustion-Key": exhaustion["i18n_key"]},
+            )
         else:
             from app.services.auth import resolve_user_custom_gemini_api_key
             custom_gemini_key = resolve_user_custom_gemini_api_key(user)
@@ -2451,17 +2440,6 @@ async def repair_item_image(
     if not item:
         raise HTTPException(404, "Item not found")
 
-    from app.services.credit_manager import get_user_tier
-    if get_user_tier(user) == "free":
-        raise HTTPException(
-            status_code=403,
-            detail={
-                "code": "generative_inpainting_locked",
-                "message": "AI Photo Reshoots & Inpainting are exclusive to the Manager tier. Upgrade your plan to use this feature.",
-                "feature": "generative_inpainting",
-            }
-        )
-
     analysis: dict[str, Any] = {
         "title": item.get("title"),
         "category": item.get("category"),
@@ -2497,7 +2475,11 @@ async def repair_item_image(
         exhaustion = get_credit_exhaustion_info(user)
         raise HTTPException(
             status_code=402,
-            detail=exhaustion["message"],
+            detail={
+                "code": "credits_exhausted",
+                "message": exhaustion["message"],
+                "feature": "generative_inpainting",
+            },
             headers={"X-Credit-Status": exhaustion["code"], "X-I18n-Key": exhaustion["i18n_key"]},
         )
 
@@ -2600,16 +2582,6 @@ async def edit_item_image(
     if not item:
         raise HTTPException(404, "Item not found")
 
-    from app.services.credit_manager import get_user_tier
-    if get_user_tier(user) == "free":
-        raise HTTPException(
-            status_code=403,
-            detail={
-                "code": "generative_inpainting_locked",
-                "message": "AI Photo Reshoots & Inpainting are exclusive to the Manager tier. Upgrade your plan to use this feature.",
-                "feature": "generative_inpainting",
-            }
-        )
     source_url = _get_item_image_url(item)
     if not source_url:
         raise HTTPException(400, "No source image on this item")
@@ -2624,7 +2596,11 @@ async def edit_item_image(
             exhaustion = get_credit_exhaustion_info(user)
             raise HTTPException(
                 status_code=402,
-                detail=exhaustion["message"],
+                detail={
+                    "code": "credits_exhausted",
+                    "message": exhaustion["message"],
+                    "feature": "generative_inpainting",
+                },
                 headers={"X-Credit-Status": exhaustion["code"], "X-I18n-Key": exhaustion["i18n_key"]},
             )
 

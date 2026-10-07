@@ -302,3 +302,172 @@ async def test_chat_analyse_hebrew_reconstruct_overrides_clarification_hallucina
     finally:
         app.dependency_overrides.pop(get_current_user, None)
 
+
+@pytest.fixture
+def mock_free_user_with_credits():
+    return {
+        "id": "user_free_credits",
+        "email": "free_credits@example.com",
+        "preferred_language": "he",
+        "credit_buckets": [
+            {
+                "id": "b1",
+                "amount": 5,
+                "type": "free",
+                "created_at": "2026-10-01T00:00:00Z",
+                "expires_at": "2026-11-01T00:00:00Z",
+            }
+        ],
+        "subscription": {
+            "tier": "free",
+            "plan_type": "free",
+            "is_active": True,
+        },
+    }
+
+
+@pytest.fixture
+def mock_free_user_exhausted():
+    return {
+        "id": "user_free_exhausted",
+        "email": "free_exhausted@example.com",
+        "preferred_language": "he",
+        "credit_buckets": [],
+        "subscription": {
+            "tier": "free",
+            "plan_type": "free",
+            "is_active": True,
+        },
+    }
+
+
+@pytest.mark.anyio
+async def test_chat_analyse_free_user_with_credits_success(mock_free_user_with_credits):
+    """Free user with onboarding credits successfully runs Nano Banana image reconstruction."""
+    app.dependency_overrides[get_current_user] = lambda: mock_free_user_with_credits
+    try:
+        mock_item = {
+            "id": "item_free_1",
+            "user_id": "user_free_credits",
+            "title": "White Linen Shirt",
+            "category": "top",
+            "image_url": "https://example.com/shirt.png",
+        }
+        fake_png = b"\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00\x01\x00\x00\x00\x01\x08\x06\x00\x00\x00\x1f\x15c4"
+
+        with patch("app.services.repos.find_one", new_callable=AsyncMock) as mock_find, \
+             patch("app.api.v1.closet._read_image_bytes_from_url", new_callable=AsyncMock) as mock_read_bytes, \
+             patch("app.services.billing_service.deduct_user_credits", new_callable=AsyncMock) as mock_billing, \
+             patch("app.api.v1.closet.ingestion.get_image_provider") as mock_get_provider:
+
+            mock_find.return_value = mock_item
+            mock_read_bytes.return_value = fake_png
+            mock_billing.return_value = True
+
+            mock_provider = MagicMock()
+            mock_provider.edit_image = AsyncMock(
+                return_value=ImageGenerationResult(
+                    image_bytes=fake_png,
+                    mime_type="image/png",
+                    provider="gemini",
+                    model_name="gemini-3.1-flash-lite-image",
+                )
+            )
+            mock_get_provider.return_value = mock_provider
+
+            response = client.post(
+                "/api/v1/closet/item_free_1/chat-analyse",
+                json={"message": "שחזר את הבגד", "language": "he", "history": []}
+            )
+
+            assert response.status_code == 200
+            data = response.json()
+            assert data["action_taken"] == "image_edit"
+            assert "משחזר את הבגד" in data["reply"]
+            assert data["model_used"] == "gemini-3.1-flash-lite-image"
+            assert mock_billing.called
+    finally:
+        app.dependency_overrides.pop(get_current_user, None)
+
+
+@pytest.mark.anyio
+async def test_chat_analyse_free_user_exhausted_returns_402_no_gemini_calls(mock_free_user_exhausted):
+    """Free user with 0 credits receives 402 with upgrade prompt and NO Gemini calls are made."""
+    app.dependency_overrides[get_current_user] = lambda: mock_free_user_exhausted
+    try:
+        mock_item = {
+            "id": "item_free_0",
+            "user_id": "user_free_exhausted",
+            "title": "White Linen Shirt",
+            "category": "top",
+            "image_url": "https://example.com/shirt.png",
+        }
+        fake_png = b"\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00\x01\x00\x00\x00\x01\x08\x06\x00\x00\x00\x1f\x15c4"
+
+        with patch("app.services.repos.find_one", new_callable=AsyncMock) as mock_find, \
+             patch("app.api.v1.closet._read_image_bytes_from_url", new_callable=AsyncMock) as mock_read_bytes, \
+             patch("app.services.llm_gateway.call_main_llm", new_callable=AsyncMock) as mock_llm, \
+             patch("app.api.v1.closet.ingestion.get_image_provider") as mock_get_provider:
+
+            mock_find.return_value = mock_item
+            mock_read_bytes.return_value = fake_png
+
+            response = client.post(
+                "/api/v1/closet/item_free_0/chat-analyse",
+                json={"message": "שחזר את הבגד", "language": "he", "history": []}
+            )
+
+            assert response.status_code == 402
+            data = response.json()
+            assert data["detail"]["code"] == "credits_exhausted"
+            assert "שדרג" in data["detail"]["message"] or "קרדיטים" in data["detail"]["message"]
+            # Ensure NO Gemini calls were made
+            assert not mock_llm.called
+            assert not mock_get_provider.called
+    finally:
+        app.dependency_overrides.pop(get_current_user, None)
+
+
+@pytest.mark.anyio
+async def test_1click_reanalyze_unlocked_for_free_users(mock_free_user_exhausted):
+    """Free users can use the 1-Click Full Re-analyse button powered by DressApp Eyes."""
+    app.dependency_overrides[get_current_user] = lambda: mock_free_user_exhausted
+    try:
+        mock_item = {
+            "id": "item_reanalyze_free",
+            "user_id": "user_free_exhausted",
+            "title": "Old Analysis",
+            "category": "top",
+            "image_url": "https://example.com/item.png",
+        }
+        fake_png = b"\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00\x01\x00\x00\x00\x01\x08\x06\x00\x00\x00\x1f\x15c4"
+
+        with patch("app.services.repos.find_one", new_callable=AsyncMock) as mock_find, \
+             patch("app.api.v1.closet._read_image_bytes_from_url", new_callable=AsyncMock) as mock_read_bytes, \
+             patch("app.services.billing_service.deduct_user_credits", new_callable=AsyncMock) as mock_billing, \
+             patch("app.services.vision_service.analyze", new_callable=AsyncMock) as mock_eyes, \
+             patch("app.services.repos.find_one_and_update", new_callable=AsyncMock) as mock_update:
+
+            mock_find.return_value = mock_item
+            mock_read_bytes.return_value = fake_png
+            mock_billing.return_value = True
+            mock_eyes.return_value = {
+                "title": "Fresh Eyes Analysis",
+                "category": "top",
+                "sub_category": "t-shirt",
+                "colors": ["white"],
+                "color": "white",
+                "fabric_materials": [{"name": "Cotton", "percentage": 100}],
+                "confidence": 0.95,
+            }
+            mock_update.return_value = {**mock_item, "title": "Fresh Eyes Analysis"}
+
+            response = client.post("/api/v1/closet/item_reanalyze_free/reanalyze")
+            assert response.status_code == 200
+            data = response.json()
+            assert data["item"]["title"] == "Fresh Eyes Analysis"
+            assert mock_eyes.called
+    finally:
+        app.dependency_overrides.pop(get_current_user, None)
+
+

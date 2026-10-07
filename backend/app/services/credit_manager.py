@@ -510,7 +510,7 @@ def get_credit_exhaustion_info(user_or_tier: dict | str) -> dict[str, str]:
         "code": "credits_exhausted_free",
         "i18n_key": "common.upgradeToUse",
         "feature_key": "moreAiActions",
-        "message": "Upgrade your plan to use more AI actions.",
+        "message": "Upgrade your plan or purchase AI credits to continue.",
     }
 
 
@@ -604,11 +604,19 @@ async def deduct_user_credits(
             return True
 
         # 2. Free tier users:
-        # Check if the user has non-expiring paid credit packs
+        # Check if the user has available credit buckets (e.g. 5 free onboarding credits or paid packs)
         user_record = await migrate_legacy_credits_if_needed(user_record, db)
         u_model = User.parse_obj(user_record)
-        paid_available = sum(b.amount for b in u_model.credit_buckets if getattr(b.type, "value", b.type) == "paid")
-        if paid_available >= req_int:
+        available_credits = u_model.total_credits
+        is_generative = operation in (
+            "chat_image_edit",
+            "repair_item_crop",
+            "edit_item_image",
+            "reconstruct",
+            "generative_inpainting",
+        ) or (bool(operation) and any(k in operation for k in ("image_edit", "reconstruct", "repair_item", "inpainting")))
+
+        if available_credits >= req_int:
             success, spent_details = u_model.spend_credits(req_int, operation or "ai_operation")
             if success:
                 clean_buckets = [b.dict() for b in prune_expired_buckets(u_model.credit_buckets)]
@@ -621,13 +629,19 @@ async def deduct_user_credits(
                     meter.input_tokens = 0
                     meter.output_tokens = 0
                     meter.credits_consumed = req_int
-                    meter.credit_type_used = "paid"
+                    meter.credit_type_used = spent_details[0].get("type", "free") if spent_details else "free"
                     await meter._save_token_usage(0, 0)
                 except Exception:
                     pass
                 return True
 
-        # 3. Fall back to the 10 daily AI actions quota
+        # Generative inferences (Nano Banana image reconstruction / edit) strictly require credits or subscription.
+        # When onboarding credits are exhausted, no daily quota fallback is permitted.
+        if is_generative:
+            logger.info("User %s on Free plan has exhausted generative AI credits (available: %d).", user_id, available_credits)
+            return False
+
+        # 3. Fall back to the 10 daily AI actions quota for non-generative operations
         daily_ok = await check_and_increment_daily_request(db, user_id)
         if not daily_ok:
             logger.info(f"User {user_id} on Free plan has exhausted their 10 daily AI actions quota.")
