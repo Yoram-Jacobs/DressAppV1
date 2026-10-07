@@ -57,6 +57,17 @@ export const TopNav = () => {
   const initials = (user?.display_name || user?.email || 'U').slice(0, 1).toUpperCase();
   const isPro = !!user?.professional?.is_professional;
 
+  const handleLogoClick = (e) => {
+    e.preventDefault();
+    resetRouteScrollPosition('/home');
+    window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
+    const mainEl = document.getElementById('main-content');
+    if (mainEl) mainEl.scrollTo({ top: 0, behavior: 'smooth' });
+    if (window.location.pathname !== '/home') {
+      nav('/home');
+    }
+  };
+
   const LINKS = [
     { to: '/home', icon: Home, key: 'home', label: t('nav.home') },
     { to: '/closet', icon: Shirt, key: 'closet', label: t('nav.closet') },
@@ -75,9 +86,10 @@ export const TopNav = () => {
       <div className="hidden md:flex px-[40px] py-3 h-18 items-center justify-between gap-6">
         <Link
           to="/home"
+          onClick={handleLogoClick}
           data-testid="brand-logo"
           aria-label={t('brand')}
-          className="shrink-0"
+          className="shrink-0 flex items-center select-none cursor-pointer"
         >
           <BrandLogo size="md" testId="brand-logo-mark" />
         </Link>
@@ -240,8 +252,10 @@ export const TopNav = () => {
       <div className="flex md:hidden h-14 items-center justify-between px-4">
         <Link
           to="/home"
+          onClick={handleLogoClick}
           data-testid="mobile-brand-logo"
           aria-label={t('brand')}
+          className="flex items-center select-none touch-manipulation cursor-pointer active:opacity-70 transition-opacity"
         >
           <BrandLogo size="sm" testId="mobile-brand-logo-mark" />
         </Link>
