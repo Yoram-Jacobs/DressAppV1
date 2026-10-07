@@ -1825,7 +1825,8 @@ async def reanalyze_item(
             }
         )
 
-    image_url_to_analyze: str | None = image_url or _get_item_image_url(item)
+    valid_image_url = image_url if isinstance(image_url, str) and image_url.strip() else None
+    image_url_to_analyze: str | None = valid_image_url or _get_item_image_url(item)
     if not image_url_to_analyze:
         raise HTTPException(
             400,
