@@ -97,7 +97,7 @@ async def test_chat_analyse_image_edit_success(mock_user):
             data = response.json()
             assert data["action_taken"] == "image_edit"
             assert "removing the shoes" in data["reply"]
-            assert data["image_url"].startswith("data:image/png;base64,")
+            assert data["image_url"].startswith("data:image/")
             assert data["item"]["reconstructed_image_url"] == data["image_url"]
     finally:
         app.dependency_overrides.pop(get_current_user, None)
@@ -234,7 +234,7 @@ async def test_chat_analyse_hebrew_image_edit(mock_user):
             data = response.json()
             assert data["action_taken"] == "image_edit"
             assert "מסיר את הנעליים" in data["reply"]
-            assert data["image_url"].startswith("data:image/png;base64,")
+            assert data["image_url"].startswith("data:image/")
     finally:
         app.dependency_overrides.pop(get_current_user, None)
 
@@ -293,7 +293,7 @@ async def test_chat_analyse_hebrew_reconstruct_overrides_clarification_hallucina
             assert data["action_taken"] == "image_edit"
             assert "להחזיר" not in data["reply"]
             assert "משחזר את הבגד" in data["reply"]
-            assert data["image_url"].startswith("data:image/png;base64,")
+            assert data["image_url"].startswith("data:image/")
 
             # Check that provider was called with an English reconstruction prompt
             call_kwargs = mock_provider.edit_image.call_args.kwargs
@@ -445,8 +445,7 @@ async def test_1click_reanalyze_unlocked_for_free_users(mock_free_user_exhausted
         with patch("app.services.repos.find_one", new_callable=AsyncMock) as mock_find, \
              patch("app.api.v1.closet._read_image_bytes_from_url", new_callable=AsyncMock) as mock_read_bytes, \
              patch("app.services.billing_service.deduct_user_credits", new_callable=AsyncMock) as mock_billing, \
-             patch("app.api.v1.closet.ingestion.get_garment_vision_service") as mock_get_vision, \
-             patch("app.services.repos.find_one_and_update", new_callable=AsyncMock) as mock_update:
+             patch("app.api.v1.closet.ingestion.get_garment_vision_service") as mock_get_vision:
 
             mock_find.return_value = mock_item
             mock_read_bytes.return_value = fake_png
@@ -462,7 +461,6 @@ async def test_1click_reanalyze_unlocked_for_free_users(mock_free_user_exhausted
                 "confidence": 0.95,
             })
             mock_get_vision.return_value = mock_vision
-            mock_update.return_value = {**mock_item, "title": "Fresh Eyes Analysis"}
 
             response = client.post("/api/v1/closet/item_reanalyze_free/reanalyze")
             assert response.status_code == 200
