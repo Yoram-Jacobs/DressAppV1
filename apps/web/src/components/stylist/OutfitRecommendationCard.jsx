@@ -155,22 +155,19 @@ export function OutfitRecommendationCard({ rec, index, sessionId, onItemClick, o
           </div>
         )}
         {rec.designer_notes && (
-          <div className="flex flex-wrap gap-1.5 mt-2">
-            {rec.designer_notes.color_harmony && (
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium bg-blue-50 text-blue-700 border border-blue-200" title={rec.designer_notes.color_harmony}>
-                🎨 {rec.designer_notes.color_harmony}
-              </span>
-            )}
-            {rec.designer_notes.texture_balance && (
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium bg-amber-50 text-amber-700 border border-amber-200" title={rec.designer_notes.texture_balance}>
-                🧶 {rec.designer_notes.texture_balance}
-              </span>
-            )}
-            {rec.designer_notes.silhouette && (
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium bg-purple-50 text-purple-700 border border-purple-200" title={rec.designer_notes.silhouette}>
-                📐 {rec.designer_notes.silhouette}
-              </span>
-            )}
+          <div className="mt-2 text-xs text-muted-foreground flex items-center gap-1.5 flex-wrap">
+            <span className="font-semibold text-[var(--primary-color)]">
+              {t('stylist.designerNote', { defaultValue: 'Designer Note:' })}
+            </span>
+            <span>
+              {typeof rec.designer_notes === 'string'
+                ? rec.designer_notes
+                : [
+                    rec.designer_notes.color_harmony,
+                    rec.designer_notes.texture_balance,
+                    rec.designer_notes.silhouette,
+                  ].filter(Boolean).join(' • ')}
+            </span>
           </div>
         )}
         {rec.why ? (

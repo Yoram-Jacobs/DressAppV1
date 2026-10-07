@@ -77,24 +77,26 @@ def test_retrieve_cultural_modesty_axioms():
 
 
 def test_filter_modesty_closet_items():
-    """Verify deterministic modesty pruning of revealing garments."""
+    """Verify hybrid modesty pruning: prunes unlayerables while preserving layerables."""
     closet = [
         {"id": "item1", "title": "Silk Blouse", "sub_category": "Blouse", "tags": ["elegant"]},
-        {"id": "item2", "title": "Denim Mini Skirt", "sub_category": "Mini Skirt", "tags": ["mini"]},
+        {"id": "item2", "title": "Beach Bikini Top", "sub_category": "Bikini", "tags": ["swim"]},
         {"id": "item3", "title": "Cotton Crop Top", "sub_category": "Crop Top", "tags": ["crop"]},
         {"id": "item4", "title": "Tailored Maxi Skirt", "sub_category": "Skirt", "tags": ["modest", "long"]},
+        {"id": "item5", "title": "Sleeveless Midi Dress", "sub_category": "Midi Dress", "tags": ["layerable"]},
     ]
 
     # Non-modest user: leaves all items untouched
     unfiltered = filter_modesty_closet_items(closet, modesty_level="standard")
-    assert len(unfiltered) == 4
+    assert len(unfiltered) == 5
 
-    # Conservative user: mini skirt and crop top are pruned
+    # Conservative user: bikini top and crop top are pruned; layerable midi dress is preserved
     filtered = filter_modesty_closet_items(closet, modesty_level="conservative")
-    assert len(filtered) == 2
+    assert len(filtered) == 3
     filtered_ids = [it["id"] for it in filtered]
     assert "item1" in filtered_ids
     assert "item4" in filtered_ids
+    assert "item5" in filtered_ids
     assert "item2" not in filtered_ids
     assert "item3" not in filtered_ids
 

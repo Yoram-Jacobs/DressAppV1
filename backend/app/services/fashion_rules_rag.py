@@ -198,18 +198,16 @@ def filter_modesty_closet_items(
     closet_items: list[dict[str, Any]] | None,
     modesty_level: str | None,
 ) -> list[dict[str, Any]]:
-    """Prune garments that violate strict conservative/orthodox modesty standards."""
+    """Hybrid modesty filter: Prune unlayerable revealing items while retaining layerable garments."""
     if not closet_items:
         return []
     mod_norm = str(modesty_level or "").lower().strip()
     if mod_norm not in ("conservative", "orthodox", "high", "modest"):
         return closet_items
 
-    # Garment cuts that inherently violate conservative modesty (exposed shoulders, knees, midriff)
-    IMMODEST_CUTS = {
-        "mini skirt", "crop top", "tank top", "halter top", "bikini",
-        "swimwear", "tube top", "spaghetti strap", "shorts", "cutoffs",
-        "camisole", "bralette", "sleeveless top", "mini dress"
+    # Only prune items that cannot be reasonably layered for everyday modest wear
+    EXCLUDED_UNLAYERABLE = {
+        "bikini", "swimwear", "cutoffs", "crop top", "bralette", "tube top"
     }
 
     filtered = []
@@ -218,14 +216,13 @@ def filter_modesty_closet_items(
         title = str(it.get("title") or it.get("name") or "").lower()
         tags = [str(t).lower() for t in (it.get("tags") or [])]
 
-        is_immodest = any(cut in sub or cut in title for cut in IMMODEST_CUTS)
-        is_immodest = is_immodest or any(t in ("sleeveless", "sheer", "crop", "mini", "revealing") for t in tags)
+        is_unlayerable = any(cut in sub or cut in title for cut in EXCLUDED_UNLAYERABLE)
+        is_unlayerable = is_unlayerable or any(t in ("revealing", "sheer", "crop") for t in tags)
 
-        if not is_immodest:
+        if not is_unlayerable:
             filtered.append(it)
         else:
-            logger.info("Modesty filter pruned item: %s (%s)", it.get("id"), title)
+            logger.info("Hybrid modesty filter pruned unlayerable item: %s (%s)", it.get("id"), title)
 
-    # Return filtered list (or fallback to original if user closet has nothing else)
     return filtered if filtered else closet_items
 

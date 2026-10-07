@@ -196,13 +196,13 @@
     "id": "rule_cultural_modesty_conservative",
     "category": "cultural_modesty",
     "title": "Conservative & Religious Modesty Standards",
-    "rule_statement": "For users with conservative or orthodox modesty preferences, ensure sleeves extend past the elbow, hemlines reach below the knee or ankle, and necklines remain modest (covering the collarbone). All fabrics must be completely opaque.",
-    "negative_constraint": "Strictly prohibit sheer transparent textiles, sleeveless or tank tops, mini skirts, deep V-necks, or backless garments.",
+    "rule_statement": "For users with conservative or orthodox modesty preferences, ensure full coverage past elbows and below knees. Sleeveless, slip, or lower-neckline garments are permissible ONLY WHEN layered under an opaque blazer, cardigan, or jacket.",
+    "negative_constraint": "Strictly prohibit unlayered sleeveless tops, mini skirts, sheer textiles, or exposed midriffs.",
     "criteria": {
-      "modesty_levels": ["conservative", "orthodox", "high"]
+      "modesty_levels": ["conservative", "orthodox", "high", "modest"]
     },
     "priority": 10,
-    "example": "High-neck fluid midi dress with long sleeves and opaque lining, styled with elegant closed-toe flat shoes."
+    "example": "A sleeveless midi dress layered under a tailored wool-blend blazer and styled with closed-toe flats."
   },
   {
     "id": "rule_cultural_ceremony_etiquette",
