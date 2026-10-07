@@ -278,16 +278,28 @@ export const TopNav = () => {
                   <div className="text-text-brand truncate">{user?.email}</div>
                 </div>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => nav('/me')}>
+                <DropdownMenuItem onClick={() => nav('/me')} data-testid="mobile-menu-settings">
                   <Settings className="h-4 w-4" />
                   {t('nav.settings')}
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => nav('/transactions')}>
+                <DropdownMenuItem onClick={() => nav('/transactions')} data-testid="mobile-menu-transactions">
                   <Receipt className="h-4 w-4" />
                   {t('nav.transactions')}
                 </DropdownMenuItem>
+                {isPro && (
+                  <DropdownMenuItem onClick={() => nav('/ads')} data-testid="mobile-menu-ads">
+                    <Megaphone className="h-4 w-4" />
+                    {t('nav.ads')}
+                  </DropdownMenuItem>
+                )}
+                {(user?.roles || []).includes('admin') && (
+                  <DropdownMenuItem onClick={() => nav('/admin')} data-testid="mobile-menu-admin">
+                    <Shield className="h-4 w-4" />
+                    {t('nav.admin')}
+                  </DropdownMenuItem>
+                )}
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => { logout(); nav('/login'); }}>
+                <DropdownMenuItem onClick={() => { logout(); nav('/login'); }} data-testid="mobile-menu-logout">
                   <LogOut className="h-4 w-4 text-destructive" />
                   <span className="text-destructive">{t('nav.signOut')}</span>
                 </DropdownMenuItem>
