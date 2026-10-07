@@ -539,10 +539,10 @@ async def test_daily_quota_exhaustion_does_not_drain_nano_banana_credits():
 
 
 @pytest.mark.anyio
-async def test_reanalyze_respects_preferred_image_view_and_image_url_param(mock_free_user):
+async def test_reanalyze_respects_preferred_image_view_and_image_url_param(mock_free_user_with_credits):
     """Verify that reanalyze_item prioritizes reconstructed image when preferred_image_view
     is active, and uses explicit image_url if provided."""
-    app.dependency_overrides[get_current_user] = lambda: mock_free_user
+    app.dependency_overrides[get_current_user] = lambda: mock_free_user_with_credits
     try:
         mock_item = {
             "id": "item_skirt_test",
