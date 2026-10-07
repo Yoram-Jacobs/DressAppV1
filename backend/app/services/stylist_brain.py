@@ -108,7 +108,7 @@ class GemmaStylistBrain:
                 system_prompt=sys_msg,
                 user_text=prompt_text,
                 image_b64_jpeg=image_base64,
-                max_tokens=3000,
+                max_tokens=1000,
                 temperature=0.3,
             )
         return _parse_json(raw)

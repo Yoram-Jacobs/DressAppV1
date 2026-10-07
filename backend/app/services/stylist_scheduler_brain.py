@@ -938,7 +938,7 @@ async def generate_scheduled_proposals(
     # Fetch closet items prioritized by tag restriction and weather/season matching
     raw_closet = await get_rotation_prioritized_closet(
         user_id,
-        limit=40,
+        limit=15,
         style_dress_for=style_dress_for,
         weather=weather,
         filter_tags=filter_tags,
@@ -971,12 +971,6 @@ async def generate_scheduled_proposals(
         }
         for item in raw_closet
     ]
-    
-    # We will query Gemini with customized rotation options
-    closet_summary_str = "\n".join(
-        f"- ID: {item['id']} | Title: {item.get('title')} | Category: {item.get('category')} | Tags: {item.get('tags')} | Color: {item.get('color')} | Brand: {item.get('brand')}"
-        for item in prioritized_closet
-    )
 
     style_prompt = style_dress_for or "casual/daily dress"
     tokens = [t.strip() for t in style_prompt.replace(";", ",").split(",") if t.strip()]
@@ -1125,9 +1119,7 @@ async def generate_scheduled_proposals(
         f"   - ONLY add an accessory if it harmonizes with the dress code and clothing items.\n"
         f"   - NEVER pair a formal necktie or bowtie with a casual graphic T-shirt, tank top, sportswear, shorts, or swim trunks! Formal ties belong ONLY with formal collared dress shirts, blazers, and suits.\n"
         f"10. STRICT CLOSET INVENTORY CONSTRAINT:\n"
-        f"   - You MUST select items ONLY from the user's closet list below. Under no circumstances should you recommend items that the user does not own or that have a null closet_item_id. Every recommended item must map to a valid closet item ID from the list below.\n\n"
-        f"User's Closet Items:\n"
-        f"{closet_summary_str}\n\n"
+        f"   - You MUST select items ONLY from the user's closet_summary provided in the context. Under no circumstances should you recommend items that the user does not own or that have a null closet_item_id. Every recommended item must map to a valid closet item ID from the context.\n\n"
         f"Output MUST be in JSON matching this TypeScript type:\n"
         f"{{\n"
         f"  \"reasoning_summary\": string,\n"
@@ -1251,7 +1243,7 @@ async def generate_event_proposals(
     user = dict(user)
     user.pop("_id", None)
     user_id = user["id"]
-    prioritized_closet = await get_rotation_prioritized_closet(user_id, limit=40, style_dress_for=event_prompt)
+    prioritized_closet = await get_rotation_prioritized_closet(user_id, limit=15, style_dress_for=event_prompt)
     
     # 1. Search marketplace listings in parallel to broaden results
     mkt_suggestions = []
@@ -1265,11 +1257,6 @@ async def generate_event_proposals(
     except Exception as exc:
         logger.warning("Event marketplace pre-search failed: %s", exc)
 
-    closet_summary_str = "\n".join(
-        f"- ID: {item['id']} | Title: {item.get('title')} | Category: {item.get('category')} | Color: {item.get('color')} | Brand: {item.get('brand')} | Formality: {item.get('formality')}"
-        for item in prioritized_closet
-    )
-
     mkt_summary_str = ""
     if mkt_suggestions:
         mkt_summary_str = "\n".join(
@@ -1278,46 +1265,18 @@ async def generate_event_proposals(
         )
 
     prompt = (
-        f"You are the Lead Fashion AI Stylist for DressApp.\n"
-        f"Generate EXACTLY 3 distinct, complete, and coordinated outfit recommendations for this special event: \"{event_prompt}\".\n\n"
-        f"CRITICAL STYLING & ROTATION RULES:\n"
-        f"1. OCCASION & STYLE HARMONY:\n"
-        f"   - Match the tone and dress code of the event. For elegant/smart-casual/dinner/party events, choose sophisticated, polished items (collared shirts, polos, blazers, chinos, trousers, smart shoes). NEVER choose gym tank tops, swim trunks, running shorts, or beach flip-flops for smart-casual/dinner events!\n"
-        f"2. ROTATION & DIVERSITY (NO REPEATS ACROSS OUTFITS):\n"
-        f"   - The 3 recommendations MUST be 3 DISTINCT looks with DIFFERENT tops, DIFFERENT bottoms, and DIFFERENT shoes across Outfit 1, 2, and 3 whenever multiple options are available in the closet.\n"
-        f"   - Do NOT repeat the exact same shirt or shoes across all 3 outfits!\n"
-        f"3. A garment's 'role' MUST strictly match its anatomical category:\n"
-        f"   - Category 'Top' / 'Tops' / 'Shirts' MUST have role: 'top'.\n"
-        f"   - Category 'Bottom' / 'Bottoms' / 'Pants' / 'Jeans' / 'Shorts' / 'Skirts' MUST have role: 'bottom'.\n"
-        f"   - Category 'Footwear' / 'Shoes' / 'Sneakers' / 'Boots' / 'Sandals' MUST have role: 'shoes'. NEVER label shoes as a top or bottom!\n"
-        f"   - Category 'Outerwear' / 'Jackets' / 'Coats' / 'Blazers' MUST have role: 'outerwear'.\n"
-        f"   - Category 'Dress' / 'One-piece' MUST have role: 'dress'.\n"
-        f"   - Category 'Accessories' / 'Bags' / 'Belts' / 'Hats' MUST have role: 'accessory'.\n\n"
-        f"4. COMPLETE OUTFIT & ANATOMICAL ORDERING:\n"
-        f"   - Every outfit must have: top (or dress), bottom (if top), and shoes (footwear).\n"
-        f"   - List items strictly top-to-bottom: 'top' (or 'dress'), 'outerwear', 'bottom', 'shoes', 'accessory'.\n\n"
-        f"User's Closet Items:\n{closet_summary_str}\n\n"
-        f"Available Marketplace Items to purchase (use if closet matches are poor or missing):\n{mkt_summary_str}\n\n"
-        f"Rules:\n"
-        f"1. Be honest and real. If the closet is missing good matches based on the event demands, suggest the closest closet option "
-        f"BUT recommend purchasing a missing piece. If utilizing a marketplace item, set `closet_item_id = null` and describe the garment in `description`.\n"
-        f"2. Add explicit shopping recommendations in `shopping_suggestions` detailing what to buy to complete the outfit.\n"
-        f"3. Output MUST be in JSON matching this TypeScript type:\n"
-        f"{{\n"
-        f"  \"reasoning_summary\": string,\n"
-        f"  \"outfit_recommendations\": Array<{{\n"
-        f"    \"name\": string, // 3-6 words. Generates a highly descriptive, appealing, and creative style title (e.g., 'Casual Blue & White Summer Hangout', 'Classic Charcoal Streetwear', 'Sporty Emerald Workout') describing the vibe, season, and color combination. Avoid generic titles like 'The Look' or 'Outfit 1'.\n"
-        f"    \"items\": Array<{{\n"
-        f"      \"role\": \"top\"|\"bottom\"|\"outerwear\"|\"shoes\"|\"accessory\"|\"dress\",\n"
-        f"      \"description\": string,\n"
-        f"      \"closet_item_id\": string | null\n"
-        f"    }}>,\n"
-        f"    \"why\": string,\n"
-        f"    \"confidence\": number\n"
-        f"  }}>\n"
-        f"  \"shopping_suggestions\": Array<string>\n"
-        f"}}"
+        f"Generate EXACTLY 3 distinct, complete, and coordinated outfit recommendations for this special event: \"{event_prompt}\".\n"
+        f"Key Requirements:\n"
+        f"- Curate 3 DISTINCT looks with different tops, bottoms, and footwear across Outfit 1, 2, and 3.\n"
+        f"- Every outfit MUST be complete: either (top + bottom) or a dress, plus mandatory footwear (shoes).\n"
+        f"- Select garments exclusively from the provided closet_summary in context.\n"
     )
+    if mkt_summary_str:
+        prompt += (
+            f"\nAvailable Marketplace Items to purchase (use if closet matches are missing):\n"
+            f"{mkt_summary_str}\n"
+            f"If utilizing a marketplace item, set closet_item_id = null and describe the garment in description.\n"
+        )
 
     from app.services.user_preferences import render_user_preferences
     prefs_block, _ = render_user_preferences(user)
