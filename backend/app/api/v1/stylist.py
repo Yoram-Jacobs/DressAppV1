@@ -364,13 +364,16 @@ async def stylist_endpoint(
     advice["applied_preferences"] = applied_prefs
 
     # Quality Assurance Test: Analyze overall look against user prompt, replace invalid/missing garments, and authorize
-    from app.services.stylist_qa_engine import evaluate_and_authorize_outfit
-    advice = await evaluate_and_authorize_outfit(
-        user_text=text or occasion or "",
-        advice_payload=advice,
-        all_closet_items=all_user_closet,
-        user_profile=user,
-    )
+    try:
+        from app.services.stylist_qa_engine import evaluate_and_authorize_outfit
+        advice = await evaluate_and_authorize_outfit(
+            user_text=text or occasion or "",
+            advice_payload=advice,
+            all_closet_items=all_user_closet,
+            user_profile=user,
+        )
+    except Exception as exc:  # noqa: BLE001
+        logger.exception("Stylist QA evaluation failed in stylist_endpoint: %s", exc)
 
     # Final pass: sanitize all text fields (scrub CJK bleed, drop fake URLs, polish Do/Don't prefixes)
     from app.services.gemini_stylist import sanitize_stylist_payload

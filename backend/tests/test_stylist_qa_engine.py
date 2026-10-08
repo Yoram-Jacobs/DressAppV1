@@ -620,4 +620,41 @@ def test_qa_multi_accessory_sub_slots_conflict_resolution():
     assert "Pruned duplicate belt" in rec["qa_notes"]
 
 
+def test_qa_handles_string_recommendations_and_notes():
+    import asyncio
+    closet = [
+        {"id": "shirt-1", "title": "White T-Shirt", "category": "Top"},
+        {"id": "pants-1", "title": "Blue Jeans", "category": "Bottom"},
+        {"id": "shoes-1", "title": "White Sneakers", "category": "Footwear"},
+    ]
+    # Simulates LLM returning strings in outfit_recommendations and a string for designer_notes
+    raw_advice = {
+        "spoken_reply": "הנה המלצה נהדרת",
+        "outfit_recommendations": [
+            "Casual string note emitted by LLM",
+            {
+                "name": "Proper Look",
+                "items": [
+                    {"role": "top", "name": "White T-Shirt", "closet_item_id": "shirt-1"},
+                    {"role": "bottom", "name": "Blue Jeans", "closet_item_id": "pants-1"},
+                    {"role": "shoes", "name": "White Sneakers", "closet_item_id": "shoes-1"},
+                ],
+                "designer_notes": "Clean balanced silhouette",
+            },
+            "Another trailing string",
+        ],
+    }
+    reviewed = asyncio.run(evaluate_and_authorize_outfit(
+        user_text="לוק יפה",
+        advice_payload=raw_advice,
+        all_closet_items=closet,
+    ))
+    assert reviewed["qa_authorized"] is True
+    # Non-dict recommendations must be safely pruned without AttributeError
+    assert len(reviewed["outfit_recommendations"]) == 1
+    assert reviewed["outfit_recommendations"][0]["name"] == "Proper Look"
+    assert isinstance(reviewed["outfit_recommendations"][0]["designer_notes"], dict)
+
+
+
 

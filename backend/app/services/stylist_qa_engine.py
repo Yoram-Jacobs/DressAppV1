@@ -349,32 +349,41 @@ def sanitize_spoken_reply_and_notes(
         advice["spoken_reply"] = sanitize_stylist_text(spoken, lang=lang)
 
     # 2. Designer Notes in Recommendations
-    for rec in advice.get("outfit_recommendations", []):
-        notes = rec.get("designer_notes")
-        if isinstance(notes, dict):
-            # Color harmony
-            ch = notes.get("color_harmony")
-            if ch and isinstance(ch, str):
-                if is_mourning:
-                    # Remove "אדום" / "red" / "זהב" from mourning palette
-                    ch = re.sub(r"(?:כחול\s+אדום|אדום|red|זהב|gold)[, ]*", "כחול כהה, שחור ואפור", ch, flags=re.IGNORECASE)
-                notes["color_harmony"] = sanitize_stylist_text(ch, lang=lang)
+    raw_recs = advice.get("outfit_recommendations", [])
+    if isinstance(raw_recs, list):
+        cleaned_recs = []
+        for rec in raw_recs:
+            if not isinstance(rec, dict):
+                continue
+            cleaned_recs.append(rec)
+            notes = rec.get("designer_notes")
+            if isinstance(notes, dict):
+                # Color harmony
+                ch = notes.get("color_harmony")
+                if ch and isinstance(ch, str):
+                    if is_mourning:
+                        # Remove "אדום" / "red" / "זהב" from mourning palette
+                        ch = re.sub(r"(?:כחול\s+אדום|אדום|red|זהב|gold)[, ]*", "כחול כהה, שחור ואפור", ch, flags=re.IGNORECASE)
+                    notes["color_harmony"] = sanitize_stylist_text(ch, lang=lang)
 
-            # Texture balance
-            tb = notes.get("texture_balance")
-            if tb and isinstance(tb, str):
-                # Clean garbled repeating phrases like "שרוול קצר ושרוול קצרים, מטוטל ורגליים"
-                if any(w in tb for w in ("מטוטל", "ורגליים", "ושרוול קצרים", "שרוול קצר ושרוול")):
-                    tb = "איזון בדים חלקים ונעימים המעניקים מראה מכובד"
-                notes["texture_balance"] = sanitize_stylist_text(tb, lang=lang)
+                # Texture balance
+                tb = notes.get("texture_balance")
+                if tb and isinstance(tb, str):
+                    # Clean garbled repeating phrases like "שרוול קצר ושרוול קצרים, מטוטל ורגליים"
+                    if any(w in tb for w in ("מטוטל", "ורגליים", "ושרוול קצרים", "שרוול קצר ושרוול")):
+                        tb = "איזון בדים חלקים ונעימים המעניקים מראה מכובד"
+                    notes["texture_balance"] = sanitize_stylist_text(tb, lang=lang)
 
-            # Silhouette
-            sil = notes.get("silhouette")
-            if sil and isinstance(sil, str):
-                # Clean nonsense like "כפתורים קצרים עם חגורת גב"
-                if any(w in sil for w in ("כפתורים קצרים", "חגורת גב", "רגליים")):
-                    sil = "גזרה קלאסית מאופקת ונוחה"
-                notes["silhouette"] = sanitize_stylist_text(sil, lang=lang)
+                # Silhouette
+                sil = notes.get("silhouette")
+                if sil and isinstance(sil, str):
+                    # Clean nonsense like "כפתורים קצרים עם חגורת גב"
+                    if any(w in sil for w in ("כפתורים קצרים", "חגורת גב", "רגליים")):
+                        sil = "גזרה קלאסית מאופקת ונוחה"
+                    notes["silhouette"] = sanitize_stylist_text(sil, lang=lang)
+            elif isinstance(notes, str) and notes.strip():
+                rec["designer_notes"] = {"silhouette": sanitize_stylist_text(notes.strip(), lang=lang)}
+        advice["outfit_recommendations"] = cleaned_recs
 
         # Do/Don't sanitization
         if isinstance(advice.get("do_dont"), list):
@@ -409,6 +418,9 @@ async def evaluate_and_authorize_outfit(
     if not isinstance(advice_payload, dict):
         return advice_payload
 
+    if advice_payload.get("qa_authorized") is True:
+        return advice_payload
+
     user_gender = (user_profile or {}).get("sex") or (user_profile or {}).get("gender")
     lang = ((user_profile or {}).get("preferred_language") or "he").lower()
     is_mourning = _is_mourning_context(user_text)
@@ -420,12 +432,14 @@ async def evaluate_and_authorize_outfit(
         if cid:
             closet_map[cid] = item
 
-    recommendations = advice_payload.get("outfit_recommendations") or []
+    raw_recs = advice_payload.get("outfit_recommendations") or []
+    if not isinstance(raw_recs, list):
+        raw_recs = []
+    recommendations = [r for r in raw_recs if isinstance(r, dict)]
+    advice_payload["outfit_recommendations"] = recommendations
     used_item_ids: set[str] = set()
 
     for rec_idx, rec in enumerate(recommendations):
-        if not isinstance(rec, dict):
-            continue
 
         items = rec.get("items") or []
         roles_present = set()
