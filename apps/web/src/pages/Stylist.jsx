@@ -76,7 +76,7 @@ import ShareOutfitModal from '@/components/stylist/ShareOutfitModal';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import DressMeShuffler from '@/components/stylist/DressMeShuffler';
 import { AttachmentPicker } from '@/components/stylist/AttachmentPicker';
-import { api } from '@/lib/api';
+import { api, client } from '@/lib/api';
 import { toast } from 'sonner';
 import { useAuth } from '@/lib/auth';
 import { useOutfitStore, prewarmOutfits } from '@/lib/useOutfitStore';
@@ -1356,9 +1356,16 @@ export default function Stylist() {
   // Voice dictation session
   const dictationSessionRef = useRef(null);
   const threadRef = useRef(null);
+  const localAudioRef = useRef(null);
 
   useEffect(() => () => {
     try { dictationSessionRef.current?.abort?.(); } catch { /* ignore */ }
+    try {
+      if (localAudioRef.current) {
+        localAudioRef.current.pause();
+        localAudioRef.current = null;
+      }
+    } catch { /* ignore */ }
   }, []);
 
   const userLang = (user?.preferred_language || i18n.language || 'en').split('-')[0].toLowerCase();
@@ -1832,7 +1839,7 @@ export default function Stylist() {
     setInterim('');
   };
 
-  /* ---------- Local TTS ---------- */
+  /* ---------- Local / Server TTS ---------- */
   const playLocalSpeech = async (id, txt) => {
     if (!txt) return;
     const isStr = typeof txt === 'string';
@@ -1841,14 +1848,60 @@ export default function Stylist() {
       : txt;
     try {
       setSpeakingId(id);
-      await speak(spokenTxt, userLang);
+
+      // Stop any existing playing speech or audio first
+      if (localAudioRef.current) {
+        try {
+          localAudioRef.current.pause();
+          localAudioRef.current.currentTime = 0;
+        } catch { /* ignore */ }
+        localAudioRef.current = null;
+      }
+      cancelSpeak();
+
+      let playedServerAudio = false;
+      try {
+        const res = await client.post('/stylist/speak', {
+          text: spokenTxt,
+          voice_id: user?.preferred_voice_id || 'Puck',
+          language: userLang || 'auto',
+        });
+        if (res.data?.audio_base64) {
+          const mimeType = res.data.mime_type || 'audio/wav';
+          const audio = new Audio(`data:${mimeType};base64,${res.data.audio_base64}`);
+          localAudioRef.current = audio;
+          await new Promise((resolve, reject) => {
+            audio.onended = resolve;
+            audio.onerror = reject;
+            audio.play().catch(reject);
+          });
+          playedServerAudio = true;
+        }
+      } catch (serverTtsErr) {
+        console.debug('[Stylist] Server TTS endpoint failed, falling back to Web Speech API:', serverTtsErr?.message || serverTtsErr);
+      }
+
+      if (!playedServerAudio) {
+        await speak(spokenTxt, userLang);
+      }
     } catch (err) {
       console.debug('[Stylist] playLocalSpeech failed:', err?.message || err);
     } finally {
+      localAudioRef.current = null;
       setSpeakingId(null);
     }
   };
+
   const stopLocalSpeech = () => {
+    if (localAudioRef.current) {
+      try {
+        localAudioRef.current.pause();
+        localAudioRef.current.currentTime = 0;
+      } catch (e) {
+        console.debug('[Stylist] error stopping audio:', e);
+      }
+      localAudioRef.current = null;
+    }
     cancelSpeak();
     setSpeakingId(null);
   };

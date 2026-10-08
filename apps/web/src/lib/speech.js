@@ -75,19 +75,60 @@ export function ensureVoicesLoaded() {
   return _voicesPromise;
 }
 
+export function detectLanguageFromText(text, fallbackLang = 'en') {
+  if (!text || typeof text !== 'string') return fallbackLang;
+  if (/[\u0590-\u05fe]/.test(text)) return 'he';
+  if (/[\u0600-\u06ff]/.test(text)) return 'ar';
+  if (/[\u0400-\u04ff]/.test(text)) return 'ru';
+  if (/[\u3040-\u30ff]/.test(text)) return 'ja';
+  if (/[\u4e00-\u9fff]/.test(text)) return 'zh';
+  if (/[\u0900-\u097f]/.test(text)) return 'hi';
+  return fallbackLang;
+}
+
 function pickVoice(voices, bcp47) {
   if (!voices || !voices.length) return null;
   const lower = bcp47.toLowerCase();
   const langPrefix = lower.split('-')[0];
+
+  // If target language is NOT Chinese, strictly filter out any Chinese voices
+  const eligibleVoices = langPrefix === 'zh'
+    ? voices
+    : voices.filter(
+        (vv) =>
+          !/^(zh|cmn|zho)/i.test(vv.lang || '') &&
+          !/chinese|huihui|yaoyao|kangkang|普通话/i.test(vv.name || '')
+      );
+
   // 1) exact match (e.g. "he-IL")
-  let v = voices.find((vv) => vv.lang?.toLowerCase() === lower);
+  let v = eligibleVoices.find((vv) => vv.lang?.toLowerCase() === lower);
   if (v) return v;
-  // 2) same language family (e.g. any "he-*")
-  v = voices.find((vv) => vv.lang?.toLowerCase().startsWith(`${langPrefix}-`));
+
+  // 2) name matching for Hebrew/Arabic (e.g. Windows voices named "Asaf", "Hila", "Hebrew", "עברית")
+  if (langPrefix === 'he') {
+    v = eligibleVoices.find((vv) => /hebrew|עברית|israel|asaf|hila/i.test(vv.name || ''));
+    if (v) return v;
+  }
+  if (langPrefix === 'ar') {
+    v = eligibleVoices.find((vv) => /arabic|عربي|saudi|egypt|naayf/i.test(vv.name || ''));
+    if (v) return v;
+  }
+
+  // 3) same language family (e.g. any "he-*")
+  v = eligibleVoices.find((vv) => vv.lang?.toLowerCase().startsWith(`${langPrefix}-`));
   if (v) return v;
-  // 3) bare language match
-  v = voices.find((vv) => vv.lang?.toLowerCase() === langPrefix);
+
+  // 4) bare language match
+  v = eligibleVoices.find((vv) => vv.lang?.toLowerCase() === langPrefix);
   if (v) return v;
+
+  // 5) If target is not Chinese, fall back to default English or first eligible non-Chinese voice
+  if (langPrefix !== 'zh') {
+    const enVoice = eligibleVoices.find((vv) => vv.lang?.toLowerCase().startsWith('en'));
+    if (enVoice) return enVoice;
+    return eligibleVoices[0] || null;
+  }
+
   return null;
 }
 
@@ -101,7 +142,8 @@ export async function speak(text, lang = 'en', { onStart, onEnd, onError } = {})
   // Cancel anything currently speaking (avoids queued playback surprises).
   try { synth.cancel(); } catch { /* ignore */ }
   const voices = await ensureVoicesLoaded();
-  const bcp = toBcp47(lang);
+  const detectedLang = detectLanguageFromText(text, lang);
+  const bcp = toBcp47(detectedLang);
   const voice = pickVoice(voices, bcp);
   const utter = new SpeechSynthesisUtterance(text);
   utter.lang = bcp;
@@ -120,6 +162,7 @@ export async function speak(text, lang = 'en', { onStart, onEnd, onError } = {})
   }
   return utter;
 }
+
 
 export function cancelSpeak() {
   if (!isTTSSupported()) return;

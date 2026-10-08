@@ -49,10 +49,11 @@ class GeminiTTSService:
                 }
             }
             resp = await client._client.aio.models.generate_content(
-                model="gemini-3.5-flash",
-                contents=f"Read this text aloud: {text}",
+                model="gemini-3.8-flash-tts",
+                contents=text,
                 config=config,
             )
+
             
             for candidate in getattr(resp, "candidates", None) or []:
                 content = getattr(candidate, "content", None)

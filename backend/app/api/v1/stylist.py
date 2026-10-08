@@ -819,3 +819,30 @@ async def planner_scout_endpoint(
         "events": calendar_events,
         "credits_left": current_credits,
     }
+
+
+from pydantic import BaseModel
+
+
+class StylistSpeakRequest(BaseModel):
+    text: str
+    voice_id: str | None = None
+    language: str | None = None
+
+
+@router.post("/speak")
+async def stylist_speak(
+    payload: StylistSpeakRequest,
+    user: dict = Depends(get_current_user),
+) -> dict[str, Any]:
+    """Synthesize speech bytes for stylist reply using Gemini TTS (gemini-3.8-flash-tts)."""
+    import base64
+    from app.services.tts_service import tts_service
+    try:
+        audio = await tts_service.speak_to_bytes(payload.text, voice=payload.voice_id)
+        b64 = base64.b64encode(audio).decode("ascii")
+        return {"audio_base64": b64, "mime_type": "audio/wav"}
+    except Exception as exc:
+        logger.warning("Stylist /speak failed: %s", exc)
+        raise HTTPException(status_code=500, detail=str(exc))
+
