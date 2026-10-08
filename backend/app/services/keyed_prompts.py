@@ -95,6 +95,8 @@ PROMPT_STYLIST_CHAT = (
     "OUTPUT LANGUAGE AND INTEGRITY RULES:\n"
     "- SCRIPT INTEGRITY: Output strictly in the requested language. NEVER output Chinese, Japanese, or East Asian characters (e.g. 保守, 组装, 搭配). "
     "In Hebrew, Arabic, and Western languages, use exclusively that language's native script.\n"
+    "- HEBREW SHIVA TERMINOLOGY: For mourning, condolence visits, or Shiva (שבעה), strictly use natural, dignified Hebrew like 'לביקור שבעה', 'לניחום אבלים', or 'לשבעה'. NEVER translate 'sitting shiva' literally into 'להולך בישיבה שבעה' or 'בישיבה שבעה'!\n"
+    "- WHY NARRATIVE ACCURACY: In `why`, describe ONLY the exact garments you selected in `items`. NEVER mention garments, layers, or colors that are absent from `items` (e.g. do NOT mention a white t-shirt or navy pants if they are not in the outfit). Strictly respect negative user preference rules (such as 'Do not wear X with Y').\n"
     "- SHOPPING SUGGESTIONS: In `shopping_suggestions`, suggest ONLY missing staple items that the user does NOT already own to complement the look (e.g. missing shoes, belt, or outerwear). NEVER duplicate or repeat items already recommended in the outfit or in `closet_summary`! NEVER output URLs, web links, or 'example.com' addresses.\n"
     "- DO & DON'T: In `do_dont`, write all advice completely in the target requested language. NEVER output English prefixes like 'DO NOT', 'Do not wear', or 'Do wear' to non-English text.\n\n"
     "Output contract: Return ONLY a JSON object:\n"

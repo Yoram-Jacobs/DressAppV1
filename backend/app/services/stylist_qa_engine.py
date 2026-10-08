@@ -519,6 +519,125 @@ GARBLED_SILHOUETTE_PATTERNS: tuple[str, ...] = (
 )
 
 
+def _clean_shiva_grammar(text: str) -> str:
+    """Fix awkward/literal Hebrew translations of sitting shiva / attending a shiva."""
+    if not text or not isinstance(text, str):
+        return text
+    # Fix garbled Hebrew phrases
+    text = re.sub(r"להולך\s+בישיבה\s+שבעה", "לביקור שבעה", text)
+    text = re.sub(r"להולך\s+בישיבה", "לביקור שבעה", text)
+    text = re.sub(r"הולך\s+בישיבה\s+שבעה", "הולך לשבעה", text)
+    text = re.sub(r"הולך\s+בישיבה", "הולך לשבעה", text)
+    text = re.sub(r"לישיבה\s+שבעה", "לשבעה", text)
+    text = re.sub(r"בישיבה\s+שבעה", "בשבעה", text)
+    text = re.sub(r"יושב\s+בישיבה\s+שבעה", "יושב שבעה", text)
+    text = re.sub(r"להולך\s+לשבעה", "לביקור שבעה", text)
+    # Fix literal English phrasing
+    text = re.sub(r"going\s+(?:in|to)\s+a\s+sitting\s+shiva", "attending a shiva", text, flags=re.IGNORECASE)
+    return text
+
+
+def _format_garment_list_natural(items: list[dict[str, Any]], lang: str = "he") -> str:
+    """Format actual authorized garments into a natural grammatically linked list."""
+    base_lang = (lang or "en").lower().strip().split("-")[0].split("_")[0]
+    garment_names = []
+    for it in items:
+        if not isinstance(it, dict):
+            continue
+        n = str(it.get("name") or it.get("title") or it.get("description") or "").strip()
+        if n and n not in garment_names:
+            garment_names.append(n)
+
+    if not garment_names:
+        return ""
+    if len(garment_names) == 1:
+        return garment_names[0]
+
+    if base_lang == "he":
+        return ", ".join(garment_names[:-1]) + " ו-" + garment_names[-1]
+    elif base_lang == "ar":
+        return "، ".join(garment_names[:-1]) + " و" + garment_names[-1]
+    elif base_lang == "zh":
+        return "、".join(garment_names[:-1]) + "以及" + garment_names[-1]
+    elif base_lang == "ja":
+        return "、".join(garment_names)
+    elif base_lang == "fr":
+        return ", ".join(garment_names[:-1]) + " et " + garment_names[-1]
+    elif base_lang == "es":
+        return ", ".join(garment_names[:-1]) + " y " + garment_names[-1]
+    elif base_lang == "de":
+        return ", ".join(garment_names[:-1]) + " und " + garment_names[-1]
+    elif base_lang == "it":
+        return ", ".join(garment_names[:-1]) + " e " + garment_names[-1]
+    elif base_lang == "pt":
+        return ", ".join(garment_names[:-1]) + " e " + garment_names[-1]
+    elif base_lang == "nl":
+        return ", ".join(garment_names[:-1]) + " en " + garment_names[-1]
+    elif base_lang == "ru":
+        return ", ".join(garment_names[:-1]) + " и " + garment_names[-1]
+    elif base_lang == "hi":
+        return ", ".join(garment_names[:-1]) + " और " + garment_names[-1]
+    else:
+        return ", ".join(garment_names[:-1]) + ", and " + garment_names[-1]
+
+
+def synchronize_outfit_why_narrative(
+    rec: dict[str, Any],
+    valid_items: list[dict[str, Any]],
+    replacements_made: list[str],
+    user_text: str,
+    lang: str = "he",
+) -> None:
+    """Synchronize rec['why'] so it never hallucinates dropped items or false colors and accurately reflects authorized pieces."""
+    is_mourning = _is_mourning_context(user_text)
+    base_lang = (lang or "he").lower().strip().split("-")[0].split("_")[0]
+    why = str(rec.get("why") or "").strip()
+    why = _clean_shiva_grammar(why)
+
+    # Check for listing phrase after כולל / including / بما في ذلك
+    has_including = bool(re.search(r"(?:כולל|הכולל|including|comprenant|incluyendo|bestehend aus|comprendente|inclusief|включая|包括|を含む|जिसमें शामिल)\s+", why, flags=re.IGNORECASE))
+
+    # Check for dropped items mentioned in why that are not in valid_items
+    valid_names_corpus = " ".join(
+        str(it.get("name") or it.get("title") or it.get("description") or "").lower()
+        for it in valid_items
+        if isinstance(it, dict)
+    )
+    has_phantom_item = False
+    if ("חולצת טי" in why or "חולצה לבנה" in why or "טי לבנה" in why) and ("חולצת טי" not in valid_names_corpus and "טי לבנה" not in valid_names_corpus):
+        has_phantom_item = True
+    if "t-shirt" in why.lower() and "t-shirt" not in valid_names_corpus and "tee" not in valid_names_corpus:
+        has_phantom_item = True
+
+    if is_mourning and "וקז'ואל" in why:
+        why = re.sub(r"וקז'ואל", "ומכובד", why)
+
+    garments_str = _format_garment_list_natural(valid_items, lang=lang)
+
+    if has_including:
+        prefix = re.split(r"(?:כולל|הכולל|including|comprenant|incluyendo|bestehend aus|comprendente|inclusief|включая|包括|を含む|जिसमें शामिल)\s+", why, flags=re.IGNORECASE)[0].strip().rstrip(",.- ")
+        if not prefix or len(prefix) < 5:
+            prefix = "לבוש מכובד וצנוע לביקור שבעה" if is_mourning and base_lang == "he" else ("מראה מעוצב ומותאם אישית" if base_lang == "he" else "Curated designer outfit")
+
+        if base_lang == "he":
+            rec["why"] = sanitize_stylist_text(f"{prefix}, הכולל {garments_str}.", lang=lang)
+        elif base_lang == "ar":
+            rec["why"] = sanitize_stylist_text(f"{prefix}، بما في ذلك {garments_str}.", lang=lang)
+        elif base_lang == "zh":
+            rec["why"] = sanitize_stylist_text(f"{prefix}，包括{garments_str}。", lang=lang)
+        else:
+            rec["why"] = sanitize_stylist_text(f"{prefix}, including {garments_str}.", lang=lang)
+    elif has_phantom_item or replacements_made:
+        if is_mourning and base_lang == "he":
+            rec["why"] = sanitize_stylist_text(f"לבוש מכובד וצנוע לביקור שבעה, הכולל {garments_str}.", lang=lang)
+        elif base_lang == "he":
+            rec["why"] = sanitize_stylist_text(f"מראה מותאם אישית הכולל {garments_str}.", lang=lang)
+        else:
+            rec["why"] = sanitize_stylist_text(f"Curated outfit including {garments_str}.", lang=lang)
+    else:
+        rec["why"] = sanitize_stylist_text(why, lang=lang)
+
+
 def sanitize_spoken_reply_and_notes(
     advice: dict[str, Any],
     user_text: str,
@@ -533,6 +652,7 @@ def sanitize_spoken_reply_and_notes(
     # 1. Spoken Reply
     spoken = advice.get("spoken_reply")
     if spoken and isinstance(spoken, str):
+        spoken = _clean_shiva_grammar(spoken)
         # Scrub Ramadan hallucination in Shiva context
         if is_mourning:
             daytime_text = LOCALIZED_DAYTIME_CONDOLENCE.get(base_lang, LOCALIZED_DAYTIME_CONDOLENCE["en"])
@@ -567,6 +687,11 @@ def sanitize_spoken_reply_and_notes(
 
             # Clean and validate outfit name: NEVER copy single garment title
             rec_name = str(rec.get("name") or "").strip()
+            rec_name = _clean_shiva_grammar(rec_name)
+            if is_mourning and ("קז'ואל" in rec_name or "להולך" in rec_name):
+                rec_name = re.sub(r"וקז'ואל|קז'ואל", "ומכובד", rec_name)
+                rec_name = re.sub(r"להולך\s+לשבעה|להולך\s+בישיבה|להולך", "לביקור שבעה", rec_name)
+
             item_descriptions = [
                 str(it.get("description") or it.get("title") or it.get("name") or "").strip().lower()
                 for it in rec.get("items", [])
@@ -582,6 +707,13 @@ def sanitize_spoken_reply_and_notes(
                     if is_mourning
                     else LOCALIZED_OUTFIT_NAME_DEFAULT.get(base_lang, LOCALIZED_OUTFIT_NAME_DEFAULT["en"])
                 )
+            else:
+                rec["name"] = sanitize_stylist_text(rec_name, lang=lang)
+
+            # Clean why narrative
+            if rec.get("why"):
+                rec["why"] = _clean_shiva_grammar(str(rec["why"]))
+                rec["why"] = sanitize_stylist_text(rec["why"], lang=lang)
 
             notes = rec.get("designer_notes")
             if isinstance(notes, dict):
@@ -976,6 +1108,15 @@ async def evaluate_and_authorize_outfit(
                     replacements_made.append(f"Added missing {essential_role}: '{new_name}'")
 
         rec["items"] = valid_items
+
+        # Synchronize rec['why'] narrative with valid_items so it never hallucinates dropped garments or false colors
+        synchronize_outfit_why_narrative(
+            rec=rec,
+            valid_items=valid_items,
+            replacements_made=replacements_made,
+            user_text=user_text,
+            lang=lang,
+        )
 
         # 4. Authorization Decision
         rec["qa_status"] = "authorized"

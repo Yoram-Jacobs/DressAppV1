@@ -158,13 +158,26 @@ export default function AvatarViewer2D({ shapeParams = {}, measurements: provide
         s = 'bag';
       }
 
+      const isWatch = name.includes('watch') ||
+                      name.includes('timepiece') ||
+                      name.includes('wrist') ||
+                      name.includes('שעון') ||
+                      name.includes('שעוני') ||
+                      name.includes('צמיד') ||
+                      name.includes('צמידי') ||
+                      name.includes('ساعة') ||
+                      name.includes('سوار');
+      if (isWatch && (s === 'accessory' || s === 'accessories' || !s || s === 'item' || s === 'garment')) {
+        s = 'watch';
+      }
+
       // Category / Intrinsic role detectors
       const isShoesByName = /\b(shoes?|sneakers?|boots?|sandals?|heels?|loafers?|slippers?|slides?|mules?|oxford\s+shoes?|oxfords|oxford(?!\s+(shirts?|cloth|cotton|button))|clogs?|נעליים|נעלי|סניקרס|מגפיים|מגפי|מגפונים|סנדלים|עקבים|כפכפים|מוקסינים|حذاء|أحذية|صندل|بوت)\b/i.test(name);
       const isBottomByName = /\b(pants?|cargo|trousers?|jeans?|shorts?|skirts?|sweatpants|joggers?|slacks?|chinos?|leggings?|bermuda|culottes?|מכנסיים|מכנס|מכנסי|ג'ינס|שורטס|חצאית|חצאיות|טייץ|טייטס|טרנינג|בוקסר|תחתונים|بنطلون|بنطال|سروال|شورت|تنورة|جينز)\b/i.test(name);
       const isTopByName = /\b(shirts?|t-shirts?|tees?|blouses?|sweaters?|hoodies?|sweatshirts?|crop\s+tops?|tank(?:\s+tops?)?|polos?|pullovers?|turtlenecks?|camisoles?|חולצה|חולצת|חולצות|גופייה|גופיה|גופיות|סוודר|סוודרים|קפוצ'ון|סווטשירט|פולו|מכופתרת|סריג|סריגים|قميص|بلوزة|كنزة|هودي)\b/i.test(name);
       const isOuterwearByName = /\b(jackets?|coats?|blazers?|parkas?|trench(?:coats?)?|overcoats?|windbreakers?|puffers?|anoraks?|vests?|ז'קט|ג'קט|מעיל|מעילים|בלייזר|וסט|מקטורן|עליונית|سترة|جاكيت|معطف|بليزر)\b/i.test(name);
       const isDressByName = /\b(dresses|dress(?!\s+(pants|trousers|shirts?|shoes?|boots?|code|socks|belt|suit))|gowns?|jumpsuits?|rompers?|dungarees?|overalls?|שמלה|שמלת|שמלות|אוברול|סרבל|فستان|فساتين|جمبسوت)\b/i.test(name);
-      const isAccessoryByName = isHat || isBelt || isGlasses || isBag || /\b(scarves|scarf|neckties?|bow\s*ties?|necklaces?|bracelets?|watches?|earrings?|צעיף|צעיפים|עניבה|עניבות|שרשרת|שרשראות|צמיד|צמידים|שעון|שעונים|עגילים|حزام|قبعة|نظارات|حقيبة|وشاح|ساعة|سوار|قلادة)\b/i.test(name) || /\bties?\b(?!\s*dye)/i.test(name);
+      const isAccessoryByName = isHat || isBelt || isGlasses || isBag || isWatch || /\b(scarves|scarf|neckties?|bow\s*ties?|necklaces?|bracelets?|watches?|earrings?|צעיף|צעיפים|עניבה|עניבות|שרשרת|שרשראות|צמיד|צמידים|שעון|שעונים|עגילים|حزام|قبعة|نظارات|حقيبة|وشاح|ساعة|سوار|قلادة)\b/i.test(name) || /\bties?\b(?!\s*dye)/i.test(name);
 
       // --- Hard Anatomical Safety Guards (All 5 Categories) ---
 
@@ -303,6 +316,7 @@ export default function AvatarViewer2D({ shapeParams = {}, measurements: provide
             {renderGarment('belt', t('taxonomy.categories.belt', { defaultValue: 'Belt' }), 'top-[36.5%] left-1/2 w-[62%] h-[5%] z-[25]', { opacity: 0, y: 5, x: "-50%" }, { opacity: 1, y: 0, x: "-50%" }, 'object-center', 'contain')}
             {renderGarment('outerwear', t('taxonomy.categories.outerwear', { defaultValue: 'Outerwear' }), 'top-[14.5%] left-1/2 w-[86%] h-[42%] z-[30] drop-shadow-lg', { opacity: 0, scale: 0.96, x: "-50%" }, { opacity: 1, scale: 1, x: "-50%" }, 'object-top', 'contain')}
             {renderGarment('shoes', t('taxonomy.categories.shoes', { defaultValue: 'Shoes' }), 'bottom-[0.5%] left-1/2 w-[76%] h-[18%] z-[15]', { opacity: 0, y: 10, x: "-50%" }, { opacity: 1, y: 0, x: "-50%" }, 'object-bottom', 'contain')}
+            {renderGarment('watch', t('taxonomy.sub_category.watch', { defaultValue: 'Watch' }), 'top-[55%] left-[81%] w-[14%] aspect-square z-[35] drop-shadow-md', { opacity: 0, scale: 0.9, x: "-50%", y: "-50%" }, { opacity: 1, scale: 1, x: "-50%", y: "-50%" }, 'object-center', 'contain')}
             {garments.bag && garments.bag.url && (
               <motion.div
                 initial={{ opacity: 0, x: 10 }}
@@ -351,6 +365,7 @@ export default function AvatarViewer2D({ shapeParams = {}, measurements: provide
             {renderGarment('belt', t('taxonomy.categories.belt', { defaultValue: 'Belt' }), 'top-[36.5%] left-1/2 w-[62%] h-[5%] z-[25]', { opacity: 0, y: 5, x: "-50%" }, { opacity: 1, y: 0, x: "-50%" }, 'object-center', 'contain')}
             {renderGarment('outerwear', t('taxonomy.categories.outerwear', { defaultValue: 'Outerwear' }), 'top-[14.5%] left-1/2 w-[86%] h-[42%] z-[30] drop-shadow-lg', { opacity: 0, scale: 0.96, x: "-50%" }, { opacity: 1, scale: 1, x: "-50%" }, 'object-top', 'contain')}
             {renderGarment('shoes', t('taxonomy.categories.shoes', { defaultValue: 'Shoes' }), 'bottom-[0.5%] left-1/2 w-[76%] h-[18%] z-[15]', { opacity: 0, y: 10, x: "-50%" }, { opacity: 1, y: 0, x: "-50%" }, 'object-bottom', 'contain')}
+            {renderGarment('watch', t('taxonomy.sub_category.watch', { defaultValue: 'Watch' }), 'top-[55%] left-[81%] w-[14%] aspect-square z-[35] drop-shadow-md', { opacity: 0, scale: 0.9, x: "-50%", y: "-50%" }, { opacity: 1, scale: 1, x: "-50%", y: "-50%" }, 'object-center', 'contain')}
 
             {garments.bag && garments.bag.url && (
               <motion.div

@@ -849,6 +849,94 @@ def test_scrubbing_exhibition_and_garment_name_hallucinations():
     assert "שרוול קצרים" not in rec["designer_notes"]["silhouette"]
 
 
+def test_shiva_grammar_and_why_narrative_synchronization():
+    """Verify that 'להולך בישיבה שבעה' is cleaned and why narrative is synchronized with valid items."""
+    import asyncio
+    from app.services.stylist_qa_engine import evaluate_and_authorize_outfit
+
+    closet = [
+        {
+            "id": "top-striped-1",
+            "name": "חולצת כפתורים כחולה עם פסים ושרוול קצר",
+            "category": "top",
+            "color": "blue",
+            "dress_code": "smart_casual",
+        },
+        {
+            "id": "coat-1",
+            "name": "Tailored Overcoat",
+            "category": "outerwear",
+            "color": "black",
+            "dress_code": "formal",
+        },
+        {
+            "id": "pant-blk-1",
+            "name": "מכנסיים מחויטים שחורים",
+            "category": "bottom",
+            "color": "black",
+            "dress_code": "formal",
+        },
+        {
+            "id": "shoes-loaf-1",
+            "name": "נעלי לואפרס עור חומות",
+            "category": "shoes",
+            "color": "brown",
+            "dress_code": "formal",
+        },
+        {
+            "id": "watch-brn-1",
+            "name": "שעון יד עור חום",
+            "category": "accessory",
+            "color": "brown",
+            "dress_code": "formal",
+        },
+    ]
+
+    prompt = "לביקור משפחה בשבעה"
+
+    raw_advice = {
+        "outfit_recommendations": [
+            {
+                "name": "לבוש מודרני להולך בישיבה שבעה",
+                "why": "לבוש מודרני וקז'ואל להולך בישיבה שבעה כולל חולצה כחולה עם פסים ושרוול קצר, וחולצת טי לבנה ומכנסיים מחויטים בצבע כחול כהה",
+                "items": [
+                    {"role": "top", "name": "חולצת כפתורים כחולה עם פסים ושרוול קצר", "closet_item_id": "top-striped-1"},
+                    {"role": "outerwear", "name": "Tailored Overcoat", "closet_item_id": "coat-1"},
+                    {"role": "bottom", "name": "מכנסיים מחויטים שחורים", "closet_item_id": "pant-blk-1"},
+                    {"role": "shoes", "name": "נעלי לואפרס עור חומות", "closet_item_id": "shoes-loaf-1"},
+                    {"role": "accessory", "name": "שעון יד עור חום", "closet_item_id": "watch-brn-1"},
+                ],
+            }
+        ]
+    }
+
+    reviewed = asyncio.run(evaluate_and_authorize_outfit(
+        user_text=prompt,
+        advice_payload=raw_advice,
+        all_closet_items=closet,
+        user_profile={"sex": "male", "preferred_language": "he"},
+    ))
+
+    rec = reviewed["outfit_recommendations"][0]
+
+    # 1. Outfit name must have broken grammar cleaned
+    assert "להולך בישיבה" not in rec["name"]
+    assert "לביקור שבעה" in rec["name"] or "לשבעה" in rec["name"]
+
+    # 2. Why narrative must NOT contain hallucinated white tee or wrong dark blue pants
+    assert "להולך בישיבה" not in rec["why"]
+    assert "וחולצת טי לבנה" not in rec["why"]
+    assert "חולצת טי" not in rec["why"]
+    assert "מכנסיים מחויטים בצבע כחול כהה" not in rec["why"]
+
+    # 3. Why narrative MUST contain actual items in the look
+    assert "חולצת כפתורים כחולה עם פסים ושרוול קצר" in rec["why"]
+    assert "מכנסיים מחויטים שחורים" in rec["why"]
+    assert "Tailored Overcoat" in rec["why"]
+    assert "שעון יד עור חום" in rec["why"]
+
+
+
 
 
 

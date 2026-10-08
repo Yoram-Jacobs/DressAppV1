@@ -426,6 +426,17 @@ def sanitize_stylist_text(text: str | None, lang: str = "en") -> str:
     clean = re.sub(r"^(כדאי ללבוש)\s+ללבוש\s+", r"כדאי ללבוש ", clean)
     clean = re.sub(r"\b(ללבוש)\s+\1\b", r"\1", clean)
 
+    # 4. Clean Hebrew Shiva / Mourning literal translation errors
+    clean = re.sub(r"להולך\s+בישיבה\s+שבעה", "לביקור שבעה", clean)
+    clean = re.sub(r"להולך\s+בישיבה", "לביקור שבעה", clean)
+    clean = re.sub(r"הולך\s+בישיבה\s+שבעה", "הולך לשבעה", clean)
+    clean = re.sub(r"הולך\s+בישיבה", "הולך לשבעה", clean)
+    clean = re.sub(r"לישיבה\s+שבעה", "לשבעה", clean)
+    clean = re.sub(r"בישיבה\s+שבעה", "בשבעה", clean)
+    clean = re.sub(r"יושב\s+בישיבה\s+שבעה", "יושב שבעה", clean)
+    clean = re.sub(r"להולך\s+לשבעה", "לביקור שבעה", clean)
+    clean = re.sub(r"going\s+(?:in|to)\s+a\s+sitting\s+shiva", "attending a shiva", clean, flags=re.IGNORECASE)
+
     return clean.strip()
 
 
