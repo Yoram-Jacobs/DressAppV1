@@ -82,7 +82,7 @@ class GemmaStylistBrain:
         closet_summary: list[dict[str, Any]] | None = None,
         user_preferences_block: str | None = None,
     ) -> dict[str, Any]:
-        from app.services.gemini_stylist import prepare_stylist_prompt, _parse_json
+        from app.services.gemini_stylist import prepare_stylist_prompt, _parse_json, sanitize_stylist_payload
         from app.services.vision.llm import _call_gemma_space
         from app.services import provider_activity
 
@@ -111,7 +111,9 @@ class GemmaStylistBrain:
                 max_tokens=1000,
                 temperature=0.3,
             )
-        return _parse_json(raw)
+        parsed = _parse_json(raw)
+        lang = (user_profile or {}).get("preferred_language") or "en"
+        return sanitize_stylist_payload(parsed, lang=lang)
 
 
 # -----------------------------------------------------------------

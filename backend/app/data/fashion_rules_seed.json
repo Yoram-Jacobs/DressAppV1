@@ -215,5 +215,17 @@
     },
     "priority": 10,
     "example": "Emerald green or dusty rose midi cocktail dress with metallic neutral accessories for a wedding guest."
+  },
+  {
+    "id": "rule_cultural_mourning_shiva",
+    "category": "cultural_modesty",
+    "title": "Mourning, Shiva & Funeral Etiquette (שבעה והלוויה)",
+    "rule_statement": "For mourning visits, Shiva (שבעה), and funerals, wear modest, understated, solemn dark or muted neutral solid clothing (black, charcoal, dark grey, navy, dark brown, or subdued earth tones). Men: clean long trousers or dark solid jeans, with an unadorned solid collared shirt or neat solid tee. Women: modest unadorned tops with sleeves, long pants or below-knee skirts.",
+    "negative_constraint": "Strictly prohibit graphic t-shirts, loud logos, eagle or animal prints, slogan tees, shorts, gym and athletic wear, beachwear, vibrant loud colors (red, yellow, orange, neon), distressed or ripped clothing, and comedy or party elements.",
+    "criteria": {
+      "tags": ["shiva", "mourning", "funeral", "condolence", "שבעה", "אבל", "ניחום", "לוויה", "הלוויה"]
+    },
+    "priority": 10,
+    "example": "Charcoal tailored trousers or clean dark jeans paired with a plain black or navy polo/button-down shirt and dark subdued shoes."
   }
 ]

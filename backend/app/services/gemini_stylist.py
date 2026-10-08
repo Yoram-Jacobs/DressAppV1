@@ -271,10 +271,118 @@ class GeminiStylistService:
                 api_key=self.api_key,
                 user=user_profile,
             )
-        return _parse_json(raw)
+        res = _parse_json(raw)
+        lang = (user_profile or {}).get("preferred_language") or "en"
+        return sanitize_stylist_payload(res, lang=lang)
 
 
 _JSON_RE = re.compile(r"\{.*\}", re.DOTALL)
+
+
+def sanitize_stylist_text(text: str | None, lang: str = "en") -> str:
+    """Scrub leaked CJK tokens and clean up language prefixes in generated text."""
+    if not text or not isinstance(text, str):
+        return ""
+
+    clean = text
+    lang_norm = (lang or "en").lower().strip()
+
+    # 1. Clean Chinese tokens when language is not Chinese
+    if not lang_norm.startswith("zh"):
+        cjk_replacements = {
+            "he": {
+                "组装": "שילוב",
+                "保守": "שמרני",
+                "推荐": "המלצה",
+                "搭配": "התאמה",
+                "合适": "מתאים",
+                "经典": "קלאסי",
+                "黑色": "שחור",
+                "白色": "לבן",
+                "灰色": "אפור",
+            },
+            "default": {
+                "组装": "ensemble",
+                "保守": "conservative",
+                "推荐": "recommended",
+                "搭配": "styling",
+                "合适": "appropriate",
+                "经典": "classic",
+            },
+        }
+        rep_map = cjk_replacements.get(lang_norm, cjk_replacements["default"])
+        for k, v in rep_map.items():
+            clean = clean.replace(k, v)
+        # Strip any other stray CJK characters in non-Chinese outputs
+        clean = re.sub(r"[\u4e00-\u9fff\u3400-\u4dbf\uf900-\ufaff]", "", clean)
+
+    # 2. Localize or remove English imperative prefixes in non-English text
+    if lang_norm == "he":
+        clean = re.sub(r"(?i)^do\s+not\s+wear\s*:?\s*", "אין ללבוש ", clean)
+        clean = re.sub(r"(?i)^don\'?t\s+wear\s*:?\s*", "אין ללבוש ", clean)
+        clean = re.sub(r"(?i)^do\s+wear\s*:?\s*", "מומלץ ללבוש ", clean)
+        clean = re.sub(r"(?i)^avoid\s+wearing\s*:?\s*", "להימנע מ-", clean)
+        clean = re.sub(r"(?i)^do\s*:\s*", "כדאי: ", clean)
+        clean = re.sub(r"(?i)^don\'?t\s*:\s*", "אין: ", clean)
+    elif lang_norm == "ar":
+        clean = re.sub(r"(?i)^do\s+not\s+wear\s*:?\s*", "تجنب ارتداء ", clean)
+        clean = re.sub(r"(?i)^don\'?t\s+wear\s*:?\s*", "تجنب ارتداء ", clean)
+        clean = re.sub(r"(?i)^do\s+wear\s*:?\s*", "يُفضل ارتداء ", clean)
+
+    return clean.strip()
+
+
+def sanitize_stylist_payload(advice: dict[str, Any], lang: str = "en") -> dict[str, Any]:
+    """Sanitize all text fields in stylist response payload (strip CJK, drop fake URLs, fix prefixes)."""
+    if not isinstance(advice, dict):
+        return advice
+
+    if advice.get("reasoning_summary"):
+        advice["reasoning_summary"] = sanitize_stylist_text(advice["reasoning_summary"], lang=lang)
+    if advice.get("spoken_reply"):
+        advice["spoken_reply"] = sanitize_stylist_text(advice["spoken_reply"], lang=lang)
+
+    # Clean Do / Don't
+    if isinstance(advice.get("do_dont"), list):
+        cleaned_dd = []
+        for entry in advice["do_dont"]:
+            if isinstance(entry, str):
+                s = sanitize_stylist_text(entry, lang=lang)
+                if s:
+                    cleaned_dd.append(s)
+        advice["do_dont"] = cleaned_dd
+
+    # Clean Shopping Suggestions: DROP any URLs, example.com links, or raw IDs
+    if isinstance(advice.get("shopping_suggestions"), list):
+        cleaned_shop = []
+        for s in advice["shopping_suggestions"]:
+            if not isinstance(s, str):
+                continue
+            s_clean = sanitize_stylist_text(s, lang=lang)
+            # Drop fake URLs or web links
+            if re.search(r"https?://|www\.|\.example\.com|/products/|[a-f0-9]{8}-[a-f0-9]{4}", s_clean):
+                continue
+            if len(s_clean) >= 3:
+                cleaned_shop.append(s_clean)
+        advice["shopping_suggestions"] = cleaned_shop
+
+    # Clean Outfit Recommendations names, whys, descriptions
+    if isinstance(advice.get("outfit_recommendations"), list):
+        for rec in advice["outfit_recommendations"]:
+            if not isinstance(rec, dict):
+                continue
+            if rec.get("name"):
+                rec["name"] = sanitize_stylist_text(rec["name"], lang=lang)
+            if rec.get("why"):
+                rec["why"] = sanitize_stylist_text(rec["why"], lang=lang)
+            if isinstance(rec.get("items"), list):
+                for item in rec["items"]:
+                    if isinstance(item, dict) and item.get("description"):
+                        item["description"] = sanitize_stylist_text(item["description"], lang=lang)
+                    if isinstance(item, dict) and item.get("name"):
+                        item["name"] = sanitize_stylist_text(item["name"], lang=lang)
+
+    return advice
 
 
 def _parse_json(raw: str) -> dict[str, Any]:

@@ -60,21 +60,23 @@ async def sync_rules_to_db(db: Any) -> None:
         return
 
     try:
-        count = await db.fashion_rules.count_documents({})
-        if count == 0:
-            docs = [r.model_dump() for r in _RULES_CACHE]
-            await db.fashion_rules.insert_many(docs)
-            logger.info("Seeded %d fashion rules into MongoDB 'fashion_rules'", len(docs))
-        else:
-            # Refresh local cache with any rules in the database (admin updates)
-            cursor = db.fashion_rules.find({})
-            db_rules = []
-            async for doc in cursor:
-                doc.pop("_id", None)
-                db_rules.append(FashionRule.model_validate(doc))
-            if db_rules:
-                _RULES_CACHE = db_rules
-                _RULES_BY_ID = {r.id: r for r in _RULES_CACHE}
+        # Upsert seed rules so new canonical rules are always seeded into MongoDB
+        for r in _RULES_CACHE:
+            await db.fashion_rules.update_one(
+                {"id": r.id},
+                {"$setOnInsert": r.model_dump()},
+                upsert=True,
+            )
+
+        # Refresh local cache with all rules in the database (seed + admin updates)
+        cursor = db.fashion_rules.find({})
+        db_rules = []
+        async for doc in cursor:
+            doc.pop("_id", None)
+            db_rules.append(FashionRule.model_validate(doc))
+        if db_rules:
+            _RULES_CACHE = db_rules
+            _RULES_BY_ID = {r.id: r for r in _RULES_CACHE}
     except Exception as exc:
         logger.warning("Could not sync fashion rules with MongoDB: %s", exc)
 
@@ -120,6 +122,9 @@ def retrieve_fashion_axioms(
 
     if any(w in text_corpus for w in ("wedding", "חתונה", "ceremony", "sacred")):
         add_rule("rule_cultural_ceremony_etiquette")
+
+    if any(w in text_corpus for w in ("shiva", "שבעה", "אבל", "אבלים", "לוויה", "הלוויה", "ניחום", "mourning", "funeral", "condolence", "condolences", "bereavement")):
+        add_rule("rule_cultural_mourning_shiva")
 
     # -------------------------------------------------------------
     # 2. Hard Weather & Thermodynamic Constraints

@@ -380,6 +380,10 @@ async def stylist_endpoint(
                     it["description"] = match.get("title") or it.get("description")
                     logger.info("Resolved unmapped item '%s' to closet item %s (%s)", desc, it["closet_item_id"], match.get("title"))
 
+    # Final pass: sanitize all text fields (scrub CJK bleed, drop fake URLs, polish Do/Don't prefixes)
+    from app.services.gemini_stylist import sanitize_stylist_payload
+    advice = sanitize_stylist_payload(advice, lang=user_profile.get("preferred_language") or "en")
+
     await append_message(
         session_id=session["id"],
         role="assistant",

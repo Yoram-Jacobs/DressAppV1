@@ -269,7 +269,40 @@ def calculate_garment_style_score(
             return -100
         if any(w in all_text for w in ("cargo", "denim", "jeans", "t-shirt", "tee", "sneaker", "sneakers", "boots", "hoodie", "shorts", "חולצת טי", "מכנסיים", "שורטס", "סניקרס", "נעלי ספורט", "מגפיים")):
             score += 45
-            
+
+    is_mourning_or_shiva = any(w in prompt_lower for w in (
+        "שבעה", "אבל", "ניחום", "לוויה", "הלוויה", "אבלים", "ניחום אבלים", "בית אבלים",
+        "shiva", "mourning", "condolence", "condolences", "funeral", "memorial", "bereavement"
+    ))
+    if is_mourning_or_shiva:
+        # Severe disqualifications (-100):
+        # 1. Shorts / Bermuda / Swim
+        if cat == "bottom" and any(w in all_text for w in ("shorts", "שורטס", "קצרים", "מכנסיים קצרים", "bermuda", "swim", "trunks")):
+            return -100
+        # 2. Graphic prints, eagles, slogans, cartoons, loud logos, comedy
+        if any(w in all_text for w in ("graphic", "print", "printed", "eagle", "slogan", "logo", "cartoon", "הדפס", "נשר", "ציור", "כיתוב", "party", "מסיבה", "קומדיה")):
+            return -100
+        # 3. Revealing / beach / gym / sleep wear
+        if any(w in all_text for w in ("tank top", "tank", "sleeveless", "גופייה", "גופיה", "flip flop", "slide", "slides", "כפכף", "כפכפים", "crop top", "bikini", "swimwear", "pajama", "פיג'מה")):
+            return -100
+        # 4. Loud vibrant neon colors
+        if any(w in all_text for w in ("bright red", "neon", "yellow", "orange", "hot pink", "זוהר", "ניאון", "אדום בוהק", "צהוב", "כתום", "ורוד")):
+            return -100
+        # 5. Distressed / ripped clothing
+        if any(w in all_text for w in ("ripped", "distressed", "torn", "קרוע", "שפשופים")):
+            return -100
+
+        # Subdued mourning boosts (+30 to +50):
+        # Dark solid pants / slacks / dark clean jeans
+        if any(w in all_text for w in ("black", "dark", "charcoal", "navy", "grey", "gray", "שחור", "כהה", "כחול כהה", "אפור")) and any(w in all_text for w in ("pant", "trouser", "chino", "slacks", "jeans", "מכנסיים", "צ'ינו", "ג'ינס")):
+            score += 50
+        # Solid plain dark/white collared shirt or neat tee
+        if any(w in all_text for w in ("button", "collared", "polo", "oxford", "shirt", "חולצה מכופתרת", "פולו", "מכופתרת", "חולצה")) and not any(w in all_text for w in ("print", "graphic", "הדפס")):
+            score += 40
+        # Dark subdued footwear
+        if any(w in all_text for w in ("loafer", "derby", "oxford", "boot", "black sneaker", "dark sneaker", "נעליים", "מוקסין", "מגפיים")):
+            score += 30
+
     return score
 
 def matches_style_func(item: dict, style_dress_for: str | None, has_exact_tag_match: bool = False) -> bool:
@@ -491,6 +524,28 @@ async def get_rotation_prioritized_closet(
                     buckets[cat_key] = []
                 else:
                     buckets[cat_key] = cat_items
+
+    # Disqualify incompatible garments (style_score <= -50) when context/gender/occasion is specified
+    is_mourning_prompt = any(w in (style_dress_for or "").lower() for w in (
+        "שבעה", "אבל", "ניחום", "לוויה", "הלוויה", "shiva", "mourning", "funeral", "condolence"
+    ))
+    for cat_key in list(buckets.keys()):
+        valid_items = [
+            it for it in buckets[cat_key]
+            if calculate_garment_style_score(
+                it,
+                style_dress_for,
+                is_tags_mode=is_tags_filter,
+                occupation=occupation,
+                respect_occupation=respect_occupation,
+                user_gender=user_gender,
+            ) > -50
+        ]
+        if valid_items:
+            buckets[cat_key] = valid_items
+        elif is_mourning_prompt or is_male:
+            # Strictly do not pass forbidden garments (e.g. shorts/graphic tees to Shiva, dresses to men)
+            buckets[cat_key] = []
 
     # Sort each bucket by rotation key
     for cat_key in buckets:
