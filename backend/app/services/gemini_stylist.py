@@ -468,6 +468,32 @@ def sanitize_stylist_text(text: str | None, lang: str = "en") -> str:
         clean = re.sub(r"חליפות\s+כחולה", "חולצה כחולה", clean)
         clean = re.sub(r"כחול\s+כחולה", "כחול", clean)
 
+        # Machine translation gibberish fixes ("שילוב מונה" -> "שילוב")
+        clean = re.sub(r"ה?שילוב\s+מונה\s+מושלם", "השילוב המושלם", clean)
+        clean = re.sub(r"שילוב\s+מונה\s+הולם", "שילוב הולם ומכובד", clean)
+        clean = re.sub(r"השילוב\s+מונה\s+הולם", "השילוב ההולם", clean)
+        clean = re.sub(r"\bשילוב\s+מונה\b", "שילוב", clean)
+        clean = re.sub(r"\bהשילוב\s+מונה\b", "השילוב", clean)
+        clean = re.sub(r"\bמונה\s+מושלם\b", "מושלם", clean)
+        clean = re.sub(r"\bמונה\s+הולם\b", "הולם", clean)
+
+        # Machine-translation fixes for footwear ("עקבות נוחות" -> "נעליים נוחות")
+        clean = re.sub(r"ועקבות\s+נוחות\b", "ונעליים נוחות", clean)
+        clean = re.sub(r"\bעקבות\s+נוחות\b", "נעליים נוחות", clean)
+        clean = re.sub(r"\bעקבות\b(?=\s+(?:נוחות|גמישות|אלגנטיות|מעור))", "נעליים", clean)
+
+        # Machine-translation fixes for centerpiece garment ("הגדולה היא" -> "הפריט המרכזי הוא")
+        clean = re.sub(r"\bהגדולה\s+היא\s+חולצת\b", "הפריט המרכזי הוא חולצת", clean)
+        clean = re.sub(r"\bהגדולה\s+היא\b", "הפריט המרכזי הוא", clean)
+
+        # Do/Don't machine translation fixes ("מפוחיות פנים", "חולצות קצרים או מכנסיים")
+        clean = re.sub(r"מפוחיות\s+פנים", "כיסויי פנים", clean)
+        clean = re.sub(r"מפוחית\s+פנים", "כיסוי פנים", clean)
+        clean = re.sub(r"חולצות\s+קצרים\s+או\s+מכנסיים\b(?!\s*קצרים)", "חולצות קצרות או מכנסיים קצרים", clean)
+        clean = re.sub(r"חולצות\s+קצרים", "חולצות קצרות", clean)
+        clean = re.sub(r"חולצות\s+קצרות\s+או\s+מכנסיים\b(?!\s*קצרים)", "חולצות עם שרוול קצר או מכנסיים קצרים", clean)
+        clean = re.sub(r"אין ללבוש מכנסיים\b(?!\s*קצרים)", "אין ללבוש מכנסיים קצרים", clean)
+
         # Garment mistranslation: vest/waistcoat -> וסט (never סינר which means apron)
         clean = re.sub(r"סינר\s+אפור\s+בהי\b", "וסט אפור בהיר", clean)
         clean = re.sub(r"סינר\s+אפור\s+בהיר", "וסט אפור בהיר", clean)

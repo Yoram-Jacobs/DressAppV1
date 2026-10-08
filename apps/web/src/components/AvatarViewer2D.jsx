@@ -181,8 +181,15 @@ export function getDressTopography(garment) {
   };
 }
 
-export function getTopTopography(garment) {
-  if (!garment) return { classes: 'top-[17.5%] left-1/2 w-[82%] h-[35%] z-[20]', align: 'object-top' };
+export function getTopTopography(garment, hasOuterwear = false) {
+  if (!garment) {
+    return {
+      classes: hasOuterwear
+        ? 'top-[17.5%] left-1/2 w-[70%] h-[35%] z-[20]'
+        : 'top-[17.5%] left-1/2 w-[82%] h-[35%] z-[20]',
+      align: 'object-top'
+    };
+  }
   const text = `${garment.sub_category || ''} ${garment.item_type || ''} ${garment.name || ''} ${garment.category || ''}`.toLowerCase();
 
   // 1. Crop tops, sports bras, bralettes, bikini tops
@@ -198,14 +205,20 @@ export function getTopTopography(garment) {
     text.includes('גופיית בטן')
   ) {
     return {
-      classes: 'top-[17.5%] left-1/2 w-[78%] h-[22%] z-[20]',
+      classes: hasOuterwear
+        ? 'top-[17.5%] left-1/2 w-[68%] h-[22%] z-[20]'
+        : 'top-[17.5%] left-1/2 w-[78%] h-[22%] z-[20]',
       align: 'object-top'
     };
   }
 
   // 2. Standard Top (Default)
+  // When an outer coat/jacket is worn over top, snug width to torso (w-[70%])
+  // so sleeve ends don't peek out laterally as wings behind outerwear.
   return {
-    classes: 'top-[17.5%] left-1/2 w-[82%] h-[35%] z-[20]',
+    classes: hasOuterwear
+      ? 'top-[17.5%] left-1/2 w-[70%] h-[35%] z-[20]'
+      : 'top-[17.5%] left-1/2 w-[82%] h-[35%] z-[20]',
     align: 'object-top'
   };
 }
@@ -539,9 +552,10 @@ export default function AvatarViewer2D({ shapeParams = {}, measurements: provide
     return res;
   }, [outfitItems]);
 
+  const hasOuterwear = Boolean(garments.outerwear && garments.outerwear.url);
   const bottomTopo = useMemo(() => getBottomTopography(garments.bottom), [garments.bottom]);
   const dressTopo = useMemo(() => getDressTopography(garments.dress), [garments.dress]);
-  const topTopo = useMemo(() => getTopTopography(garments.top), [garments.top]);
+  const topTopo = useMemo(() => getTopTopography(garments.top, hasOuterwear), [garments.top, hasOuterwear]);
   const outerwearTopo = useMemo(() => getOuterwearTopography(garments.outerwear), [garments.outerwear]);
 
   const renderGarment = (roleKey, altText, extraClasses = '', initial = {}, animate = {}, imgAlignClass = 'object-top', objectFitMode = 'contain') => {
@@ -594,7 +608,7 @@ export default function AvatarViewer2D({ shapeParams = {}, measurements: provide
             {renderGarment('belt', t('taxonomy.categories.belt', { defaultValue: 'Belt' }), 'top-[41%] left-1/2 w-[62%] h-[5%] z-[25]', { opacity: 0, y: 5, x: "-50%" }, { opacity: 1, y: 0, x: "-50%" }, 'object-center', 'contain')}
             {renderGarment('outerwear', t('taxonomy.categories.outerwear', { defaultValue: 'Outerwear' }), outerwearTopo.classes, { opacity: 0, scale: 0.96, x: "-50%" }, { opacity: 1, scale: 1, x: "-50%" }, outerwearTopo.align, 'contain')}
             {renderGarment('shoes', t('taxonomy.categories.shoes', { defaultValue: 'Shoes' }), 'bottom-[0.5%] left-1/2 w-[76%] h-[16%] z-[15]', { opacity: 0, y: 10, x: "-50%" }, { opacity: 1, y: 0, x: "-50%" }, 'object-bottom', 'contain')}
-            {renderGarment('watch', t('taxonomy.sub_category.watch', { defaultValue: 'Watch' }), 'top-[51%] left-[80%] w-[14%] aspect-square z-[35] drop-shadow-md', { opacity: 0, scale: 0.9, x: "-50%", y: "-50%" }, { opacity: 1, scale: 1, x: "-50%", y: "-50%" }, 'object-center', 'contain')}
+            {renderGarment('watch', t('taxonomy.sub_category.watch', { defaultValue: 'Watch' }), 'top-[57%] left-[70%] w-[13%] aspect-square z-[35] drop-shadow-md', { opacity: 0, scale: 0.9, x: "-50%", y: "-50%" }, { opacity: 1, scale: 1, x: "-50%", y: "-50%" }, 'object-center', 'contain')}
             {garments.bag && garments.bag.url && (
               <motion.div
                 initial={{ opacity: 0, x: 10 }}
@@ -643,7 +657,7 @@ export default function AvatarViewer2D({ shapeParams = {}, measurements: provide
             {renderGarment('belt', t('taxonomy.categories.belt', { defaultValue: 'Belt' }), 'top-[41%] left-1/2 w-[62%] h-[5%] z-[25]', { opacity: 0, y: 5, x: "-50%" }, { opacity: 1, y: 0, x: "-50%" }, 'object-center', 'contain')}
             {renderGarment('outerwear', t('taxonomy.categories.outerwear', { defaultValue: 'Outerwear' }), outerwearTopo.classes, { opacity: 0, scale: 0.96, x: "-50%" }, { opacity: 1, scale: 1, x: "-50%" }, outerwearTopo.align, 'contain')}
             {renderGarment('shoes', t('taxonomy.categories.shoes', { defaultValue: 'Shoes' }), 'bottom-[0.5%] left-1/2 w-[76%] h-[16%] z-[15]', { opacity: 0, y: 10, x: "-50%" }, { opacity: 1, y: 0, x: "-50%" }, 'object-bottom', 'contain')}
-            {renderGarment('watch', t('taxonomy.sub_category.watch', { defaultValue: 'Watch' }), 'top-[51%] left-[80%] w-[14%] aspect-square z-[35] drop-shadow-md', { opacity: 0, scale: 0.9, x: "-50%", y: "-50%" }, { opacity: 1, scale: 1, x: "-50%", y: "-50%" }, 'object-center', 'contain')}
+            {renderGarment('watch', t('taxonomy.sub_category.watch', { defaultValue: 'Watch' }), 'top-[57%] left-[70%] w-[13%] aspect-square z-[35] drop-shadow-md', { opacity: 0, scale: 0.9, x: "-50%", y: "-50%" }, { opacity: 1, scale: 1, x: "-50%", y: "-50%" }, 'object-center', 'contain')}
 
             {garments.bag && garments.bag.url && (
               <motion.div

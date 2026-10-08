@@ -304,6 +304,18 @@ def _is_mourning_context(text: str | None) -> bool:
     ))
 
 
+def _is_church_context(text: str | None) -> bool:
+    if not text:
+        return False
+    t = text.lower()
+    return any(w in t for w in (
+        "church", "mass", "bethlehem", "cathedral", "vatican", "basilica",
+        "sunday mass", "midnight mass", "holy sepulchre", "nativity",
+        "כנסייה", "כנסיית", "מיסה", "בית לחם", "כנסיית המולד", "כנסיית הקבר",
+        "كنيسة", "قداس", "بيت لحم"
+    ))
+
+
 COLOR_SYNONYMS: dict[str, set[str]] = {
     "black": {"black", "שחור", "أسود", "काला", "черный", "黒", "preto", "noir", "schwarz", "nero"},
     "white": {"white", "לבן", "أبيض", "सफेद", "белый", "白", "branco", "blanc", "weiß", "weiss", "bianco", "ivory", "cream", "שמנת"},
@@ -446,6 +458,49 @@ def validate_garment_against_negative_constraints(
     elif rule_id == "rule_cultural_modesty_conservative" or "unlayered sleeveless" in neg_constraint.lower():
         if any(w in all_text for w in ("crop top", "bralette", "tube top", "mini skirt", "חצאית מיני", "גופיית בטן")):
             return False, "Revealing garments violate conservative modesty standards."
+
+    # 11. Christian Church, Mass & Holy Sanctuary Etiquette
+    elif (
+        rule_id == "rule_cultural_christian_church_mass"
+        or "church" in neg_constraint.lower()
+        or "mass" in neg_constraint.lower()
+        or "bethlehem" in neg_constraint.lower()
+        or "sanctuary" in neg_constraint.lower()
+        or "כנסייה" in neg_constraint
+        or "מיסה" in neg_constraint
+    ):
+        cat = norm_category(it.get("category"))
+        # 1. Reject flip-flops and athletic beach footwear
+        if role in ("shoes", "footwear") or cat in ("shoes", "footwear"):
+            if any(w in all_text for w in ("flip-flop", "flip flop", "כפכפים", "כפכפי ים", "slides")):
+                return False, "Flip-flops and beach slides are forbidden in holy sanctuaries."
+
+        # 2. Reject casual headwear inside sanctuary
+        if role in ("headwear", "hat") or cat in ("headwear", "hat"):
+            if not any(w in all_text for w in ("mantilla", "veil", "כיסוי ראש", "צעיף")):
+                return False, "Caps and casual hats must be removed inside Christian sanctuaries."
+
+        # 3. Reject shorts and ripped bottoms
+        if role == "bottom" or cat == "bottom":
+            if any(w in all_text for w in (
+                "shorts", "שורטס", "מכנסיים קצרים", "bermuda", "swim", "trunks",
+                "טייץ", "טייטס", "leggings", "tights"
+            )):
+                return False, "Shorts and athletic tights are strictly forbidden in church services and holy sanctuaries."
+            if any(w in all_text for w in ("ripped", "קרוע", "distressed")):
+                return False, "Ripped or distressed jeans violate church etiquette."
+
+        # 4. Reject graphic tees, eagle prints, cartoon prints, animal graphics, slogan tees, tank tops, crop tops
+        pattern = str(it.get("pattern") or "").lower()
+        if pattern in ("graphic", "print", "cartoon", "camo", "camouflage", "psychedelic"):
+            return False, "Graphic and printed shirts are inappropriate for church services and holy sites."
+        if any(w in all_text for w in (
+            "graphic", "cartoon", "ציור", "נשר", "eagle", "slogan", "הדפס",
+            "tribal", "טריבל",
+            "tank top", "tank", "sleeveless", "גופייה", "גופיה", "crop top",
+            "חולצת בטן", "גופיית בטן", "bikini", "ביקיני", "swimwear", "beach"
+        )):
+            return False, "Graphic tees, eagle/tribal prints, tank tops, and beachwear are forbidden in holy sanctuaries."
 
     return True, None
 
@@ -737,6 +792,22 @@ LOCALIZED_OUTFIT_NAME_DEFAULT: dict[str, str] = {
     "zh": "专属精选设计师造型",
 }
 
+LOCALIZED_OUTFIT_NAME_CHURCH: dict[str, str] = {
+    "he": "מראה מכובד והולם לכנסייה",
+    "en": "Dignified Church & Sanctuary Attire",
+    "ar": "إطلالة محتشمة ولائقة للكنيسة",
+    "de": "Würdevolles Kirchen- und Festoutfit",
+    "es": "Atuendo respetuoso para iglesia",
+    "fr": "Tenue digne et respectueuse pour l'église",
+    "hi": "चर्च के लिए गरिमापूर्ण और शालीन परिधान",
+    "it": "Abbigliamento sobrio e rispettoso per la chiesa",
+    "ja": "教会・聖堂参拝のための品格ある装い",
+    "nl": "Respectvolle kleding voor de kerk",
+    "pt": "Traje solene e respeitoso para igreja",
+    "ru": "Достойный наряд для посещения храма",
+    "zh": "庄重得体的教堂礼拜着装",
+}
+
 GARBLED_TEXTURE_PATTERNS: tuple[str, ...] = (
     # Hebrew
     "מטוטל", "ורגליים", "רגליים", "ושרוול קצרים", "שרוול קצר ושרוול",
@@ -761,7 +832,7 @@ GARBLED_SILHOUETTE_PATTERNS: tuple[str, ...] = (
 
 
 def _clean_shiva_grammar(text: str) -> str:
-    """Fix awkward/literal Hebrew translations of sitting shiva / attending a shiva."""
+    """Fix awkward/literal Hebrew translations of sitting shiva / attending a shiva and machine translation gibberish."""
     if not text or not isinstance(text, str):
         return text
     # Fix garbled Hebrew phrases
@@ -778,6 +849,32 @@ def _clean_shiva_grammar(text: str) -> str:
 
     # Typo fixes in Shiva / condolence context
     text = re.sub(r"\bלניקום\b", "לניחום", text)
+
+    # Machine translation gibberish fixes ("שילוב מונה" -> "שילוב")
+    text = re.sub(r"ה?שילוב\s+מונה\s+מושלם", "השילוב המושלם", text)
+    text = re.sub(r"שילוב\s+מונה\s+הולם", "שילוב הולם ומכובד", text)
+    text = re.sub(r"השילוב\s+מונה\s+הולם", "השילוב ההולם", text)
+    text = re.sub(r"\bשילוב\s+מונה\b", "שילוב", text)
+    text = re.sub(r"\bהשילוב\s+מונה\b", "השילוב", text)
+    text = re.sub(r"\bמונה\s+מושלם\b", "מושלם", text)
+    text = re.sub(r"\bמונה\s+הולם\b", "הולם", text)
+
+    # Machine-translation fixes for footwear ("עקבות נוחות" -> "נעליים נוחות")
+    text = re.sub(r"ועקבות\s+נוחות\b", "ונעליים נוחות", text)
+    text = re.sub(r"\bעקבות\s+נוחות\b", "נעליים נוחות", text)
+    text = re.sub(r"\bעקבות\b(?=\s+(?:נוחות|גמישות|אלגנטיות|מעור))", "נעליים", text)
+
+    # Machine-translation fixes for centerpiece garment ("הגדולה היא" -> "הפריט המרכזי הוא")
+    text = re.sub(r"\bהגדולה\s+היא\s+חולצת\b", "הפריט המרכזי הוא חולצת", text)
+    text = re.sub(r"\bהגדולה\s+היא\b", "הפריט המרכזי הוא", text)
+
+    # Do/Don't machine translation fixes ("מפוחיות פנים", "חולצות קצרים או מכנסיים")
+    text = re.sub(r"מפוחיות\s+פנים", "כיסויי פנים", text)
+    text = re.sub(r"מפוחית\s+פנים", "כיסוי פנים", text)
+    text = re.sub(r"חולצות\s+קצרים\s+או\s+מכנסיים\b(?!\s*קצרים)", "חולצות קצרות או מכנסיים קצרים", text)
+    text = re.sub(r"חולצות\s+קצרים", "חולצות קצרות", text)
+    text = re.sub(r"חולצות\s+קצרות\s+או\s+מכנסיים\b(?!\s*קצרים)", "חולצות עם שרוול קצר או מכנסיים קצרים", text)
+    text = re.sub(r"אין ללבוש מכנסיים\b(?!\s*קצרים)", "אין ללבוש מכנסיים קצרים", text)
 
     # Tone fixes for solemn context
     text = re.sub(r"מלבוש\s+יומיומי\s+מושלם|יומיומי\s+מושלם", "לבוש מאופק ומכובד", text)
@@ -873,6 +970,7 @@ def synchronize_outfit_why_narrative(
 ) -> None:
     """Synchronize rec['why'] so it never hallucinates dropped items or false colors and accurately reflects authorized pieces."""
     is_mourning = _is_mourning_context(user_text)
+    is_church = _is_church_context(user_text)
     base_lang = (lang or "he").lower().strip().split("-")[0].split("_")[0]
     why = str(rec.get("why") or "").strip()
     why = _clean_shiva_grammar(why)
@@ -894,13 +992,22 @@ def synchronize_outfit_why_narrative(
 
     if is_mourning and "וקז'ואל" in why:
         why = re.sub(r"וקז'ואל", "ומכובד", why)
+    if is_church and "וקז'ואל" in why:
+        why = re.sub(r"וקז'ואל", "ומכובד", why)
 
     garments_str = _format_garment_list_natural(valid_items, lang=lang)
 
     if has_including:
         prefix = re.split(r"(?:כולל|הכולל|including|comprenant|incluyendo|bestehend aus|comprendente|inclusief|включая|包括|を含む|जिसमें शामिल)\s+", why, flags=re.IGNORECASE)[0].strip().rstrip(",.- ")
         if not prefix or len(prefix) < 5:
-            prefix = "לבוש מכובד וצנוע לביקור שבעה" if is_mourning and base_lang == "he" else ("מראה מעוצב ומותאם אישית" if base_lang == "he" else "Curated designer outfit")
+            if is_mourning and base_lang == "he":
+                prefix = "לבוש מכובד וצנוע לביקור שבעה"
+            elif is_church and base_lang == "he":
+                prefix = "לבוש מכובד והולם לכנסייה"
+            elif base_lang == "he":
+                prefix = "מראה מעוצב ומותאם אישית"
+            else:
+                prefix = "Curated designer outfit"
 
         if base_lang == "he":
             rec["why"] = sanitize_stylist_text(f"{prefix}, הכולל {garments_str}.", lang=lang)
@@ -913,6 +1020,8 @@ def synchronize_outfit_why_narrative(
     elif has_phantom_item or replacements_made:
         if is_mourning and base_lang == "he":
             rec["why"] = sanitize_stylist_text(f"לבוש מכובד וצנוע לביקור שבעה, הכולל {garments_str}.", lang=lang)
+        elif is_church and base_lang == "he":
+            rec["why"] = sanitize_stylist_text(f"לבוש מכובד והולם לכנסייה, הכולל {garments_str}.", lang=lang)
         elif base_lang == "he":
             rec["why"] = sanitize_stylist_text(f"מראה מותאם אישית הכולל {garments_str}.", lang=lang)
         else:
@@ -928,6 +1037,7 @@ def sanitize_spoken_reply_and_notes(
 ) -> None:
     """Clean hallucinations and garbled phrases from spoken reply and designer notes."""
     is_mourning = _is_mourning_context(user_text)
+    is_church = _is_church_context(user_text)
     base_lang = (lang or "he").lower().strip().split("-")[0].split("_")[0]
     if base_lang not in LOCALIZED_SILHOUETTE_MOURNING:
         base_lang = "en"
@@ -957,6 +1067,11 @@ def sanitize_spoken_reply_and_notes(
             spoken = re.sub(r"(?:golden\s+combination\s+of\s+display\s+and\s+lighting|display\s+and\s+lighting|modern\s+lighting)", "dignified and understated combination", spoken, flags=re.IGNORECASE)
             spoken = re.sub(r",?\s*(?:with\s+a\s+)?modern\s+casual\s+accessory(?:\s+and\s+modern\s+lighting)?", "", spoken, flags=re.IGNORECASE)
 
+        if is_church:
+            # Clean casual or inappropriate words from spoken reply for church / mass
+            spoken = re.sub(r"(?:חולצת\s+טי\s+עם\s+הדפס\s+נשר|חולצת\s+טי|טי\s+שירט|חולצת\s+טריקו|graphic\s+tee)", "חולצה מכופתרת אלגנטית", spoken)
+            spoken = re.sub(r",?\s*(?:עם\s+)?כפתורים\s+כחולים\s+ושרוול\s+קצר", "", spoken)
+
         advice["spoken_reply"] = sanitize_stylist_text(spoken, lang=lang)
 
     # 2. Designer Notes & Outfit Names in Recommendations
@@ -980,6 +1095,8 @@ def sanitize_spoken_reply_and_notes(
                 rec_name = re.sub(r"\bמשובח\b", "מכובד", rec_name)
                 rec_name = re.sub(r"\bמושלמת\b", "הולמת", rec_name)
                 rec_name = re.sub(r"\bמושלם\b", "הולם", rec_name)
+            if is_church:
+                rec_name = re.sub(r"וקז'ואל|קז'ואל", "ומכובד", rec_name)
 
             item_descriptions = [
                 str(it.get("description") or it.get("title") or it.get("name") or "").strip().lower()
@@ -991,11 +1108,12 @@ def sanitize_spoken_reply_and_notes(
                 re.match(r"^(?:חולצת|חולצה|מכנסי|מכנסיים|מעיל|ז'קט|ג'קט|שמלת|שמלה|נעלי|נעליים|shirt|pants|trousers|jacket|overcoat|dress|shoes)\b", rec_name, re.IGNORECASE) is not None
             )
             if not rec_name or is_single_garment_name:
-                rec["name"] = (
-                    LOCALIZED_OUTFIT_NAME_MOURNING.get(base_lang, LOCALIZED_OUTFIT_NAME_MOURNING["en"])
-                    if is_mourning
-                    else LOCALIZED_OUTFIT_NAME_DEFAULT.get(base_lang, LOCALIZED_OUTFIT_NAME_DEFAULT["en"])
-                )
+                if is_mourning:
+                    rec["name"] = LOCALIZED_OUTFIT_NAME_MOURNING.get(base_lang, LOCALIZED_OUTFIT_NAME_MOURNING["en"])
+                elif is_church:
+                    rec["name"] = LOCALIZED_OUTFIT_NAME_CHURCH.get(base_lang, LOCALIZED_OUTFIT_NAME_CHURCH["en"])
+                else:
+                    rec["name"] = LOCALIZED_OUTFIT_NAME_DEFAULT.get(base_lang, LOCALIZED_OUTFIT_NAME_DEFAULT["en"])
             else:
                 rec["name"] = sanitize_stylist_text(rec_name, lang=lang)
 
@@ -1235,6 +1353,25 @@ async def evaluate_and_authorize_outfit(
                     continue
 
             # Item is valid and compliant!
+            # Attribute Grounding: ensure item description does not hallucinate false colors that contradict closet item
+            if item_data:
+                item_title = item_data.get("title") or item_data.get("name") or ""
+                raw_desc = str(it.get("description") or "")
+                item_color_names = []
+                for c in (item_data.get("colors") or []):
+                    if isinstance(c, dict) and c.get("name"):
+                        item_color_names.append(str(c["name"]).lower())
+                    elif isinstance(c, str):
+                        item_color_names.append(c.lower())
+                if item_color_names:
+                    # If item is red, but description falsely hallucinates blue
+                    if any(c in ("red", "אדום") for c in item_color_names) and not any(c in ("blue", "כחול") for c in item_color_names):
+                        if any(w in raw_desc.lower() for w in ("blue", "כחול", "כחולה", "כחולים")):
+                            it["description"] = item_title
+                            it["name"] = item_title
+                if not it.get("description") or "מונה" in str(it.get("description") or ""):
+                    it["description"] = item_title or str(it.get("description") or "")
+
             used_item_ids.add(cid)
             roles_present.add(role)
             valid_items.append(it)

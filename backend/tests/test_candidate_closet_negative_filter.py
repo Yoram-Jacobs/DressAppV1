@@ -208,3 +208,82 @@ async def test_evaluate_and_authorize_outfit_enforces_axioms_and_emits_audit():
     assert reviewed["cultural_audit"]["status"] == "authorized"
     assert "rule_cultural_hindu_antyeshti" in reviewed["cultural_audit"]["active_axioms"]
     assert any("Replaced top" in note for note in reviewed["cultural_audit"]["qa_replacements"])
+
+
+def test_church_mass_bethlehem_negative_constraints_purges_graphic_tee_and_shorts():
+    axioms = retrieve_fashion_axioms(user_text="השילוב לכנסיית חג המולד בבית לחם", top_k=4)
+    church_rule = next((r for r in axioms if r.id == "rule_cultural_christian_church_mass"), None)
+    assert church_rule is not None, "Church & sanctuary rule must be retrieved for Bethlehem Church"
+
+    # 1. Red Tribal Graphic Crew-neck Tee -> must be rejected
+    red_graphic_tee = {
+        "id": "t1",
+        "title": "Red Tribal Graphic Crew-neck Tee",
+        "category": "Top",
+        "pattern": "graphic",
+        "tags": ["graphic", "tribal", "eagle"],
+        "colors": ["red"],
+    }
+    is_valid, reason = validate_garment_against_negative_constraints(red_graphic_tee, church_rule, role="top")
+    assert not is_valid
+    assert "graphic" in reason.lower() or "eagle" in reason.lower()
+
+    # 2. Shorts -> must be rejected
+    shorts = {"id": "b1", "title": "Bermuda Cargo Shorts", "category": "Bottom", "colors": ["khaki"]}
+    is_valid, reason = validate_garment_against_negative_constraints(shorts, church_rule, role="bottom")
+    assert not is_valid
+    assert "shorts" in reason.lower()
+
+    # 3. Flip flops -> must be rejected
+    flip_flops = {"id": "s1", "title": "Beach Flip Flops", "category": "Shoes", "colors": ["blue"]}
+    is_valid, reason = validate_garment_against_negative_constraints(flip_flops, church_rule, role="shoes")
+    assert not is_valid
+    assert "flip-flop" in reason.lower()
+
+    # 4. Button-down shirt & tailored trousers -> compliant!
+    oxford_shirt = {"id": "t2", "title": "Crisp White Oxford Button Down", "category": "Top", "colors": ["white"]}
+    tailored_pants = {"id": "b2", "title": "Charcoal Tailored Trousers", "category": "Bottom", "colors": ["charcoal"]}
+    loafers = {"id": "s2", "title": "Dark Brown Leather Loafers", "category": "Shoes", "colors": ["brown"]}
+
+    assert validate_garment_against_negative_constraints(oxford_shirt, church_rule, role="top")[0]
+    assert validate_garment_against_negative_constraints(tailored_pants, church_rule, role="bottom")[0]
+    assert validate_garment_against_negative_constraints(loafers, church_rule, role="shoes")[0]
+
+    # 5. Candidate pre-filter purges non-compliant garments BEFORE LLM inference
+    closet = [red_graphic_tee, shorts, flip_flops, oxford_shirt, tailored_pants, loafers]
+    compliant, purged = filter_candidate_closet_by_axioms(closet, axioms)
+    purged_ids = [it["id"] for it in purged]
+    compliant_ids = [it["id"] for it in compliant]
+
+    assert "t1" in purged_ids, "Red Tribal Graphic Crew-neck Tee MUST be purged before inference"
+    assert "b1" in purged_ids, "Shorts MUST be purged before inference"
+    assert "s1" in purged_ids, "Flip flops MUST be purged before inference"
+    assert "t2" in compliant_ids
+    assert "b2" in compliant_ids
+    assert "s2" in compliant_ids
+
+
+def test_hebrew_machine_translation_gibberish_sanitization():
+    from app.services.gemini_stylist import sanitize_stylist_text
+
+    # 1. "שילוב מונה" cleaning
+    raw_title = "שילוב מונה הולם לכנסיית חג המולד"
+    clean_title = sanitize_stylist_text(raw_title, lang="he")
+    assert "מונה" not in clean_title
+    assert "שילוב" in clean_title
+
+    # 2. "השילוב מונה מושלם" and "ועקבות נוחות"
+    raw_spoken = "השילוב מונה מושלם לכנסיית חג המולד בבית לחם. הגדולה היא חולצת טי עם הדפס נשר, עם כפתורים כחולים ושרוול קצר, ועקבות נוחות."
+    clean_spoken = sanitize_stylist_text(raw_spoken, lang="he")
+    assert "מונה" not in clean_spoken
+    assert "עקבות נוחות" not in clean_spoken
+    assert "ונעליים נוחות" in clean_spoken
+    assert "הפריט המרכזי הוא" in clean_spoken
+
+    # 3. Do/Don't machine translation fixes ("מפוחיות פנים", "חולצות קצרים או מכנסיים")
+    raw_dd = "אין ללבוש חולצות קצרים או מכנסיים, כובעים, או אביזרים מפוחיות פנים"
+    clean_dd = sanitize_stylist_text(raw_dd, lang="he")
+    assert "מפוחיות פנים" not in clean_dd
+    assert "כיסויי פנים" in clean_dd
+    assert "חולצות קצרות או מכנסיים קצרים" in clean_dd
+

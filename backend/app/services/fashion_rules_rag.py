@@ -164,6 +164,15 @@ def retrieve_fashion_axioms(
     if any(w in text_corpus for w in ("black tie", "black-tie", "gala", "opera", "tuxedo", "טוקסידו", "ערב חגיגי", "charity ball", "white tie")):
         add_rule("rule_cultural_western_black_tie")
 
+    # Christian Church, Mass & Holy Land Sanctuaries
+    if any(w in text_corpus for w in (
+        "church", "mass", "bethlehem", "cathedral", "vatican", "basilica",
+        "sunday mass", "midnight mass", "holy sepulchre", "nativity",
+        "כנסייה", "כנסיית", "מיסה", "בית לחם", "כנסיית המולד", "כנסיית הקבר",
+        "كنيسة", "قداس", "بيت لحم"
+    )):
+        add_rule("rule_cultural_christian_church_mass")
+
     # -------------------------------------------------------------
     # 2. Hard Weather & Thermodynamic Constraints
     # -------------------------------------------------------------

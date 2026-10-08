@@ -323,5 +323,35 @@
     },
     "priority": 10,
     "example": "Midnight-blue shawl-collar tuxedo with black grosgrain lapels, crisp white pique wing-collar shirt, black silk grosgrain bow tie, and black patent dress shoes."
+  },
+  {
+    "id": "rule_cultural_christian_church_mass",
+    "category": "cultural_modesty",
+    "title": "Christian Church, Cathedral & Holy Sanctuary Etiquette (כנסייה, מיסה ואתרים קדושים)",
+    "rule_statement": "For Christian church services, Sunday Mass, cathedral visits, and pilgrimage to Holy Land sanctuaries (e.g. Church of the Nativity in Bethlehem, Church of the Holy Sepulchre, Vatican), wear dignified, respectful, modest attire. Shoulders, chest, and knees must be fully covered. Men wear smart collared shirts (button-down, neat polo, or fine knit), tailored trousers or dark chinos, and closed-toe dress shoes or clean loafers. Women wear modest dresses or skirts covering the knees, or elegant tailored slacks with covered shoulders.",
+    "negative_constraint": "Strictly forbid graphic tees, loud slogan prints, cartoon graphics, animal face prints, eagle prints, ripped or distressed denim, sleeveless tops, tank tops, crop tops, shorts, beachwear, flip-flops, or hats/caps inside the sanctuary.",
+    "criteria": {
+      "tags": [
+        "church",
+        "mass",
+        "bethlehem",
+        "cathedral",
+        "vatican",
+        "basilica",
+        "sunday_mass",
+        "midnight_mass",
+        "כנסייה",
+        "כנסיית",
+        "מיסה",
+        "בית לחם",
+        "כנסיית המולד",
+        "כנסיית הקבר",
+        "كنيسة",
+        "قداس",
+        "بيت لحم"
+      ]
+    },
+    "priority": 10,
+    "example": "Crisp pressed white or light blue Oxford button-down shirt paired with tailored charcoal trousers, navy blazer, and polished dark brown leather loafers."
   }
 ]
