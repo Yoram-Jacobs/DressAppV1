@@ -5,7 +5,7 @@ import { resolveMediaUrl } from '@/lib/itemImage';
  * Reusable progressive image loading component with an instant low-res blurred placeholder.
  * Similar to Pinterest/Instagram loading transitions.
  */
-export default function ImageWithPlaceholder({ src, placeholder, alt, className = '', objectFit = 'cover', ...props }) {
+export default function ImageWithPlaceholder({ src, placeholder, alt, className = '', imgClassName = '', objectFit = 'cover', ...props }) {
   const [isLoaded, setIsLoaded] = useState(false);
   const [highResSrc, setHighResSrc] = useState(null);
 
@@ -39,7 +39,7 @@ export default function ImageWithPlaceholder({ src, placeholder, alt, className 
         <img
           src={placeholder}
           alt={alt}
-          className={`absolute inset-0 w-full h-full object-${objectFit} filter blur-md scale-[1.05] transition-opacity duration-500 ease-out`}
+          className={`absolute inset-0 w-full h-full object-${objectFit} ${imgClassName} filter blur-md scale-[1.05] transition-opacity duration-500 ease-out`}
           style={{ zIndex: 1 }}
         />
       )}
@@ -49,7 +49,7 @@ export default function ImageWithPlaceholder({ src, placeholder, alt, className 
         <img
           src={highResSrc}
           alt={alt}
-          className={`w-full h-full object-${objectFit} transition-opacity duration-500 ease-in-out`}
+          className={`w-full h-full object-${objectFit} ${imgClassName} transition-opacity duration-500 ease-in-out`}
           style={{
             opacity: isLoaded ? 1 : 0,
             position: isLoaded ? 'relative' : 'absolute',

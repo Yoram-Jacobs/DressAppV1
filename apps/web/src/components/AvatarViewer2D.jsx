@@ -7,6 +7,251 @@ import { useAuth } from '@/lib/auth';
 import ImageWithPlaceholder from '@/components/ImageWithPlaceholder';
 import DynamicAvatar from '@/components/DynamicAvatar';
 
+// ─── Dynamic Anatomical Topography Helpers ───
+export function getBottomTopography(garment) {
+  if (!garment) return { classes: 'top-[44%] left-1/2 w-[62%] h-[46.5%] z-[10]', align: 'object-top' };
+  const text = `${garment.sub_category || ''} ${garment.item_type || ''} ${garment.name || ''} ${garment.category || ''}`.toLowerCase();
+
+  // 1. Bikini bottom / Swim briefs / Underwear
+  if (
+    text.includes('bikini') ||
+    text.includes('swim_brief') ||
+    text.includes('brief') ||
+    text.includes('thong') ||
+    text.includes('תחתונים') ||
+    text.includes('ביקיני') ||
+    (text.includes('swim') && text.includes('bottom')) ||
+    (text.includes('ים') && text.includes('תחתון'))
+  ) {
+    return {
+      classes: 'top-[44%] left-1/2 w-[54%] h-[16%] z-[10]',
+      align: 'object-top'
+    };
+  }
+
+  // 2. Mini Skirt
+  if (
+    text.includes('mini_skirt') ||
+    (text.includes('skirt') && text.includes('mini')) ||
+    text.includes('חצאית מיני') ||
+    text.includes('חצאית_מיני')
+  ) {
+    return {
+      classes: 'top-[44%] left-1/2 w-[68%] h-[20%] z-[10]',
+      align: 'object-top'
+    };
+  }
+
+  // 3. Shorts / Swim Trunks / Running Shorts / Boxers
+  if (
+    text.includes('short') ||
+    text.includes('trunk') ||
+    text.includes('boxer') ||
+    text.includes('שורט') ||
+    text.includes('קצרים') ||
+    text.includes('מכנסי ים') ||
+    text.includes('מכנסי_ים') ||
+    text.includes('שמכנסי ריצה')
+  ) {
+    if (text.includes('bermuda') || text.includes('ברמודה') || text.includes('knee')) {
+      return {
+        classes: 'top-[44%] left-1/2 w-[62%] h-[28%] z-[10]',
+        align: 'object-top'
+      };
+    }
+    return {
+      classes: 'top-[44%] left-1/2 w-[62%] h-[22%] z-[10]',
+      align: 'object-top'
+    };
+  }
+
+  // 4. Maxi Skirt
+  if (
+    text.includes('maxi_skirt') ||
+    (text.includes('skirt') && (text.includes('maxi') || text.includes('long'))) ||
+    text.includes('חצאית מקסי') ||
+    text.includes('חצאית_מקסי') ||
+    text.includes('חצאית ארוכה')
+  ) {
+    return {
+      classes: 'top-[44%] left-1/2 w-[76%] h-[46.5%] z-[10]',
+      align: 'object-top'
+    };
+  }
+
+  // 5. Midi Skirt / Pencil / Pleated / A-Line / General Skirts
+  if (
+    text.includes('skirt') ||
+    text.includes('חצאית') ||
+    text.includes('تنورة') ||
+    text.includes('юбк') ||
+    text.includes('falda') ||
+    text.includes('jupe')
+  ) {
+    return {
+      classes: 'top-[44%] left-1/2 w-[72%] h-[35%] z-[10]',
+      align: 'object-top'
+    };
+  }
+
+  // 6. Cropped / Capri / Culottes / 3/4 Pants
+  if (
+    text.includes('capri') ||
+    text.includes('cropped') ||
+    text.includes('culotte') ||
+    text.includes('3/4') ||
+    text.includes('קפרי') ||
+    text.includes('שבע שמיניות')
+  ) {
+    return {
+      classes: 'top-[44%] left-1/2 w-[62%] h-[36%] z-[10]',
+      align: 'object-top'
+    };
+  }
+
+  // 7. Full Pants / Trousers / Jeans / Leggings / Sweatpants (Default)
+  return {
+    classes: 'top-[44%] left-1/2 w-[62%] h-[46.5%] z-[10]',
+    align: 'object-top'
+  };
+}
+
+export function getDressTopography(garment) {
+  if (!garment) return { classes: 'top-[23.5%] left-1/2 w-[82%] h-[53%] z-[20] drop-shadow-lg', align: 'object-top' };
+  const text = `${garment.sub_category || ''} ${garment.item_type || ''} ${garment.name || ''} ${garment.category || ''}`.toLowerCase();
+
+  // 1. One-Piece Swimsuit / Bodysuit / Monokini
+  if (
+    text.includes('one_piece') ||
+    text.includes('swimsuit') ||
+    text.includes('bathing_suit') ||
+    text.includes('swimwear') ||
+    text.includes('monokini') ||
+    text.includes('bodysuit') ||
+    text.includes('בגד ים שלם') ||
+    text.includes('בגד_ים_שלם') ||
+    text.includes('בגדי ים שלמים') ||
+    text.includes('слитн_купальник') ||
+    text.includes('купальник') ||
+    (text.includes('בגד ים') && !text.includes('שני חלקים') && !text.includes('ביקיני'))
+  ) {
+    return {
+      classes: 'top-[23.5%] left-1/2 w-[68%] h-[36%] z-[20] drop-shadow-lg',
+      align: 'object-top'
+    };
+  }
+
+  // 2. Mini Dress
+  if (
+    text.includes('mini_dress') ||
+    (text.includes('dress') && text.includes('mini')) ||
+    text.includes('שמלת מיני') ||
+    text.includes('שמלת_מיני') ||
+    text.includes('שמלה קצרה')
+  ) {
+    return {
+      classes: 'top-[23.5%] left-1/2 w-[80%] h-[42%] z-[20] drop-shadow-lg',
+      align: 'object-top'
+    };
+  }
+
+  // 3. Maxi Dress / Evening Gown
+  if (
+    text.includes('maxi_dress') ||
+    (text.includes('dress') && (text.includes('maxi') || text.includes('long'))) ||
+    text.includes('gown') ||
+    text.includes('evening_dress') ||
+    text.includes('שמלת מקסי') ||
+    text.includes('שמלת_מקסי') ||
+    text.includes('שמלת ערב') ||
+    text.includes('שמלת_ערב') ||
+    text.includes('שמלה ארוכה')
+  ) {
+    return {
+      classes: 'top-[23.5%] left-1/2 w-[84%] h-[66%] z-[20] drop-shadow-lg',
+      align: 'object-top'
+    };
+  }
+
+  // 4. Midi Dress (Default)
+  return {
+    classes: 'top-[23.5%] left-1/2 w-[82%] h-[53%] z-[20] drop-shadow-lg',
+    align: 'object-top'
+  };
+}
+
+export function getTopTopography(garment) {
+  if (!garment) return { classes: 'top-[23.5%] left-1/2 w-[82%] h-[30%] z-[20]', align: 'object-top' };
+  const text = `${garment.sub_category || ''} ${garment.item_type || ''} ${garment.name || ''} ${garment.category || ''}`.toLowerCase();
+
+  // 1. Crop tops, sports bras, bralettes, bikini tops
+  if (
+    text.includes('crop') ||
+    text.includes('sports_bra') ||
+    text.includes('bralette') ||
+    text.includes('bikini_top') ||
+    text.includes('חזיית ספורט') ||
+    text.includes('חזיית_ספורט') ||
+    text.includes('קרופ') ||
+    text.includes('חולצת בטן') ||
+    text.includes('גופיית בטן')
+  ) {
+    return {
+      classes: 'top-[23.5%] left-1/2 w-[78%] h-[18%] z-[20]',
+      align: 'object-top'
+    };
+  }
+
+  // 2. Standard Top (Default)
+  return {
+    classes: 'top-[23.5%] left-1/2 w-[82%] h-[30%] z-[20]',
+    align: 'object-top'
+  };
+}
+
+export function getOuterwearTopography(garment) {
+  if (!garment) return { classes: 'top-[22.5%] left-1/2 w-[86%] h-[44%] z-[30] drop-shadow-lg', align: 'object-top' };
+  const text = `${garment.sub_category || ''} ${garment.item_type || ''} ${garment.name || ''} ${garment.category || ''}`.toLowerCase();
+
+  // 1. Long coats, trench coats, overcoats, dusters, parkas
+  if (
+    text.includes('overcoat') ||
+    text.includes('trench') ||
+    text.includes('duster') ||
+    text.includes('מעיל ארוך') ||
+    text.includes('טרנץ') ||
+    text.includes('пальто') ||
+    (text.includes('coat') && (text.includes('long') || text.includes('maxi')))
+  ) {
+    return {
+      classes: 'top-[22.5%] left-1/2 w-[88%] h-[58%] z-[30] drop-shadow-lg',
+      align: 'object-top'
+    };
+  }
+
+  // 2. Cropped jackets, shrugs, boleros, vests
+  if (
+    text.includes('bolero') ||
+    text.includes('shrug') ||
+    text.includes('vest') ||
+    text.includes('gilet') ||
+    text.includes('עליונית קצרה') ||
+    text.includes('וסט') ||
+    (text.includes('jacket') && text.includes('crop'))
+  ) {
+    return {
+      classes: 'top-[22.5%] left-1/2 w-[84%] h-[26%] z-[30] drop-shadow-lg',
+      align: 'object-top'
+    };
+  }
+
+  // 3. Standard Jacket / Blazer / Cardigan (Default)
+  return {
+    classes: 'top-[22.5%] left-1/2 w-[86%] h-[44%] z-[30] drop-shadow-lg',
+    align: 'object-top'
+  };
+}
+
 export default function AvatarViewer2D({ shapeParams = {}, measurements: providedMeasurements, skinColor = '#9CA3AF', sex = 'female', outfitItems = {}, onItemClick, bodyPhotoUrl }) {
   const { t } = useTranslation();
   const { user } = useAuth();
@@ -77,6 +322,15 @@ export default function AvatarViewer2D({ shapeParams = {}, measurements: provide
     const resolveSlot = (roleName, itemObj, dbItem) => {
       let s = roleName;
       const category = dbItem?.category || itemObj?.category;
+      const subCat = String(itemObj?.sub_category || dbItem?.sub_category || '').toLowerCase();
+      const itemType = String(itemObj?.item_type || dbItem?.item_type || '').toLowerCase();
+      const name = String(itemObj?.name || itemObj?.title || dbItem?.name || dbItem?.title || '').toLowerCase();
+      const allText = `${name} ${subCat} ${itemType} ${category || ''}`.toLowerCase();
+
+      const isOnePieceSwim = allText.includes('one_piece') || allText.includes('שלם') || allText.includes('monokini') || allText.includes('bodysuit') || allText.includes('слитн');
+      const isSwimBottom = allText.includes('trunk') || allText.includes('מכנסי ים') || allText.includes('מכנסי_ים') || allText.includes('плавк') || (allText.includes('bikini') && !allText.includes('top') && !allText.includes('חזיי'));
+      const isSwimTop = (allText.includes('bikini') && (allText.includes('top') || allText.includes('חזיי'))) || allText.includes('rash_guard') || allText.includes('חולצת_גלישה');
+
       if (category) {
         const cat = String(category).toLowerCase().trim().replace(/\s+/g, '_');
         // Only map category to slot if role is unspecified or generic
@@ -88,8 +342,18 @@ export default function AvatarViewer2D({ shapeParams = {}, measurements: provide
           else if (cat === 'headwear' || cat === 'hat') s = 'headwear';
           else if (cat === 'outerwear' || cat === 'jacket') s = 'outerwear';
           else if (cat === 'dress' || cat === 'dresses') s = 'dress';
+          else if (cat === 'swimwear' || cat === 'swim') {
+            if (isOnePieceSwim) s = 'dress';
+            else if (isSwimTop) s = 'top';
+            else s = 'bottom';
+          }
           else s = cat;
         }
+      }
+      if (s === 'swimwear' || s === 'swim') {
+        if (isOnePieceSwim) s = 'dress';
+        else if (isSwimTop) s = 'top';
+        else s = 'bottom';
       }
       if (s === 'hat' || s === 'cap') s = 'headwear';
       if (s === 'accessories') s = 'accessory';
@@ -97,7 +361,6 @@ export default function AvatarViewer2D({ shapeParams = {}, measurements: provide
       if (s === 'belt') s = 'belt';
       if (s === 'glasses' || s === 'sunglasses' || s === 'eyewear') s = 'glasses';
 
-      const name = String(itemObj?.name || itemObj?.title || dbItem?.name || dbItem?.title || '').toLowerCase();
       const isHat = name.includes('hat') || 
                     name.includes('cap') || 
                     name.includes('beanie') || 
@@ -173,10 +436,10 @@ export default function AvatarViewer2D({ shapeParams = {}, measurements: provide
 
       // Category / Intrinsic role detectors
       const isShoesByName = /\b(shoes?|sneakers?|boots?|sandals?|heels?|loafers?|slippers?|slides?|mules?|oxford\s+shoes?|oxfords|oxford(?!\s+(shirts?|cloth|cotton|button))|clogs?|נעליים|נעלי|סניקרס|מגפיים|מגפי|מגפונים|סנדלים|עקבים|כפכפים|מוקסינים|حذاء|أحذية|صندل|بوت)\b/i.test(name);
-      const isBottomByName = /\b(pants?|cargo|trousers?|jeans?|shorts?|skirts?|sweatpants|joggers?|slacks?|chinos?|leggings?|bermuda|culottes?|מכנסיים|מכנס|מכנסי|ג'ינס|שורטס|חצאית|חצאיות|טייץ|טייטס|טרנינג|בוקסר|תחתונים|بنطلون|بنطال|سروال|شورت|تنورة|جينز)\b/i.test(name);
-      const isTopByName = /\b(shirts?|t-shirts?|tees?|blouses?|sweaters?|hoodies?|sweatshirts?|crop\s+tops?|tank(?:\s+tops?)?|polos?|pullovers?|turtlenecks?|camisoles?|חולצה|חולצת|חולצות|גופייה|גופיה|גופיות|סוודר|סוודרים|קפוצ'ון|סווטשירט|פולו|מכופתרת|סריג|סריגים|قميص|بلوزة|كنزة|هودي)\b/i.test(name);
-      const isOuterwearByName = /\b(jackets?|coats?|blazers?|parkas?|trench(?:coats?)?|overcoats?|windbreakers?|puffers?|anoraks?|vests?|ז'קט|ג'קט|מעיל|מעילים|בלייזר|וסט|מקטורן|עליונית|سترة|جاكيت|معطف|بليزر)\b/i.test(name);
-      const isDressByName = /\b(dresses|dress(?!\s+(pants|trousers|shirts?|shoes?|boots?|code|socks|belt|suit))|gowns?|jumpsuits?|rompers?|dungarees?|overalls?|שמלה|שמלת|שמלות|אוברול|סרבל|فستان|فساتين|جمبسوت)\b/i.test(name);
+      const isBottomByName = /\b(pants?|cargo|trousers?|jeans?|shorts?|skirts?|sweatpants|joggers?|slacks?|chinos?|leggings?|bermuda|culottes?|trunks?|briefs?|מכנסיים|מכנס|מכנסי|ג'ינס|שורטס|חצאית|חצאיות|טייץ|טייטס|טרנינג|בוקסר|תחתונים|בגד ים|מכנסי ים|ביקיני|بنطلون|بنطال|سروال|شورت|تنورة|جينز)\b/i.test(allText) || isSwimBottom;
+      const isTopByName = /\b(shirts?|t-shirts?|tees?|blouses?|sweaters?|hoodies?|sweatshirts?|crop\s+tops?|tank(?:\s+tops?)?|polos?|pullovers?|turtlenecks?|camisoles?|rash_guards?|חולצה|חולצת|חולצות|גופייה|גופיה|גופיות|סוודר|סוודרים|קפוצ'ון|סווטשירט|פולו|מכופתרת|סריג|סריגים|חולצת גלישה|قميص|بلوزة|كنزة|هودي)\b/i.test(allText) || isSwimTop;
+      const isOuterwearByName = /\b(jackets?|coats?|blazers?|parkas?|trench(?:coats?)?|overcoats?|windbreakers?|puffers?|anoraks?|vests?|ז'קט|ג'קט|מעיל|מעילים|בלייזר|וסט|מקטורן|עליונית|סטرة|جاكيت|معطف|بليزر)\b/i.test(name);
+      const isDressByName = /\b(dresses|dress(?!\s+(pants|trousers|shirts?|shoes?|boots?|code|socks|belt|suit))|gowns?|jumpsuits?|rompers?|dungarees?|overalls?|one_piece|swimsuit|שמלה|שמלת|שמלות|אוברול|סרבל|בגד ים שלם|فستان|فساتين|جمبسوت)\b/i.test(allText) || isOnePieceSwim;
       const isAccessoryByName = isHat || isBelt || isGlasses || isBag || isWatch || /\b(scarves|scarf|neckties?|bow\s*ties?|necklaces?|bracelets?|watches?|earrings?|צעיף|צעיפים|עניבה|עניבות|שרשרת|שרשראות|צמיד|צמידים|שעון|שעונים|עגילים|حزام|قبعة|نظارات|حقيبة|وشاح|ساعة|سوار|قلادة)\b/i.test(name) || /\bties?\b(?!\s*dye)/i.test(name);
 
       // --- Hard Anatomical Safety Guards (All 5 Categories) ---
@@ -249,7 +512,11 @@ export default function AvatarViewer2D({ shapeParams = {}, measurements: provide
               res[gSlot] = {
                 url: resolveMediaUrl(bestImageUrl(gItem) || gItem.clean_image_url || gItem.image_data_url || gItem.segmented_image_url || gItem.image_url || gItem.original_image_url),
                 placeholder: resolveMediaUrl(gItem.placeholder_data_url || null),
-                id: gItem.id
+                id: gItem.id,
+                category: gItem.category || '',
+                sub_category: gItem.sub_category || '',
+                item_type: gItem.item_type || '',
+                name: gItem.name || gItem.title || ''
               };
             });
             return;
@@ -259,13 +526,22 @@ export default function AvatarViewer2D({ shapeParams = {}, measurements: provide
         res[slot] = {
            url: resolveMediaUrl(bestImageUrl(item) || item.clean_image_url || item.image_data_url || item.segmented_image_url || item.image_url || item.original_image_url || item.url),
            placeholder: resolveMediaUrl(item.placeholder_data_url || item.placeholder || null),
-           id: item.closet_item_id || item.id || null
+           id: item.closet_item_id || item.id || null,
+           category: item.category || closetItem?.category || '',
+           sub_category: item.sub_category || closetItem?.sub_category || '',
+           item_type: item.item_type || closetItem?.item_type || '',
+           name: item.name || item.title || closetItem?.name || closetItem?.title || ''
         };
 
       }
     });
     return res;
   }, [outfitItems]);
+
+  const bottomTopo = useMemo(() => getBottomTopography(garments.bottom), [garments.bottom]);
+  const dressTopo = useMemo(() => getDressTopography(garments.dress), [garments.dress]);
+  const topTopo = useMemo(() => getTopTopography(garments.top), [garments.top]);
+  const outerwearTopo = useMemo(() => getOuterwearTopography(garments.outerwear), [garments.outerwear]);
 
   const renderGarment = (roleKey, altText, extraClasses = '', initial = {}, animate = {}, imgAlignClass = 'object-top', objectFitMode = 'contain') => {
     const garment = garments[roleKey];
@@ -283,7 +559,8 @@ export default function AvatarViewer2D({ shapeParams = {}, measurements: provide
           placeholder={garment.placeholder}
           alt={altText}
           objectFit={objectFitMode}
-          className={`w-full h-full ${imgAlignClass}`}
+          imgClassName={imgAlignClass}
+          className="w-full h-full"
         />
       </motion.div>
     );
@@ -306,15 +583,15 @@ export default function AvatarViewer2D({ shapeParams = {}, measurements: provide
             {renderGarment('glasses', t('taxonomy.categories.glasses', { defaultValue: 'Glasses' }), 'top-[15%] left-1/2 w-[18%] h-[4.5%] z-[45]', { opacity: 0, x: "-50%" }, { opacity: 1, x: "-50%" }, 'object-center', 'contain')}
             {renderGarment('accessory', t('taxonomy.categories.accessory', { defaultValue: 'Accessory' }), 'top-[22.5%] left-1/2 w-[30%] aspect-square z-[35]', { opacity: 0, x: "-50%" }, { opacity: 1, x: "-50%" }, 'object-top', 'contain')}
             {garments.dress && garments.dress.url ? (
-              renderGarment('dress', t('taxonomy.categories.dress', { defaultValue: 'Dress' }), 'top-[23.5%] left-1/2 w-[82%] h-[62%] z-[20] drop-shadow-lg', { opacity: 0, scale: 0.95, x: "-50%" }, { opacity: 1, scale: 1, x: "-50%" }, 'object-top', 'contain')
+              renderGarment('dress', t('taxonomy.categories.dress', { defaultValue: 'Dress' }), dressTopo.classes, { opacity: 0, scale: 0.95, x: "-50%" }, { opacity: 1, scale: 1, x: "-50%" }, dressTopo.align, 'contain')
             ) : (
               <>
-                {renderGarment('top', t('taxonomy.categories.top', { defaultValue: 'Top' }), 'top-[23.5%] left-1/2 w-[82%] h-[30%] z-[20]', { opacity: 0, scale: 0.95, x: "-50%" }, { opacity: 1, scale: 1, x: "-50%", scaleX: scales.chest / scales.width }, 'object-top', 'contain')}
-                {renderGarment('bottom', t('taxonomy.categories.bottom', { defaultValue: 'Bottom' }), 'top-[44%] left-1/2 w-[62%] h-[46.5%] z-[10]', { opacity: 0, scale: 0.95, x: "-50%" }, { opacity: 1, scale: 1, x: "-50%", scaleX: scales.hips / scales.width }, 'object-top', 'contain')}
+                {renderGarment('top', t('taxonomy.categories.top', { defaultValue: 'Top' }), topTopo.classes, { opacity: 0, scale: 0.95, x: "-50%" }, { opacity: 1, scale: 1, x: "-50%", scaleX: scales.chest / scales.width }, topTopo.align, 'contain')}
+                {renderGarment('bottom', t('taxonomy.categories.bottom', { defaultValue: 'Bottom' }), bottomTopo.classes, { opacity: 0, scale: 0.95, x: "-50%" }, { opacity: 1, scale: 1, x: "-50%", scaleX: scales.hips / scales.width }, bottomTopo.align, 'contain')}
               </>
             )}
             {renderGarment('belt', t('taxonomy.categories.belt', { defaultValue: 'Belt' }), 'top-[44%] left-1/2 w-[62%] h-[5%] z-[25]', { opacity: 0, y: 5, x: "-50%" }, { opacity: 1, y: 0, x: "-50%" }, 'object-center', 'contain')}
-            {renderGarment('outerwear', t('taxonomy.categories.outerwear', { defaultValue: 'Outerwear' }), 'top-[22.5%] left-1/2 w-[86%] h-[48%] z-[30] drop-shadow-lg', { opacity: 0, scale: 0.96, x: "-50%" }, { opacity: 1, scale: 1, x: "-50%" }, 'object-top', 'contain')}
+            {renderGarment('outerwear', t('taxonomy.categories.outerwear', { defaultValue: 'Outerwear' }), outerwearTopo.classes, { opacity: 0, scale: 0.96, x: "-50%" }, { opacity: 1, scale: 1, x: "-50%" }, outerwearTopo.align, 'contain')}
             {renderGarment('shoes', t('taxonomy.categories.shoes', { defaultValue: 'Shoes' }), 'bottom-[0.5%] left-1/2 w-[76%] h-[16%] z-[15]', { opacity: 0, y: 10, x: "-50%" }, { opacity: 1, y: 0, x: "-50%" }, 'object-bottom', 'contain')}
             {renderGarment('watch', t('taxonomy.sub_category.watch', { defaultValue: 'Watch' }), 'top-[51%] left-[80%] w-[14%] aspect-square z-[35] drop-shadow-md', { opacity: 0, scale: 0.9, x: "-50%", y: "-50%" }, { opacity: 1, scale: 1, x: "-50%", y: "-50%" }, 'object-center', 'contain')}
             {garments.bag && garments.bag.url && (
@@ -354,16 +631,16 @@ export default function AvatarViewer2D({ shapeParams = {}, measurements: provide
             {renderGarment('accessory', t('taxonomy.categories.accessory', { defaultValue: 'Accessory' }), 'top-[22.5%] left-1/2 w-[30%] aspect-square z-[35]', { opacity: 0, x: "-50%" }, { opacity: 1, x: "-50%" }, 'object-top', 'contain')}
 
             {garments.dress && garments.dress.url ? (
-              renderGarment('dress', t('taxonomy.categories.dress', { defaultValue: 'Dress' }), 'top-[23.5%] left-1/2 w-[82%] h-[62%] z-[20] drop-shadow-lg', { opacity: 0, scale: 0.95, x: "-50%" }, { opacity: 1, scale: 1, x: "-50%" }, 'object-top', 'contain')
+              renderGarment('dress', t('taxonomy.categories.dress', { defaultValue: 'Dress' }), dressTopo.classes, { opacity: 0, scale: 0.95, x: "-50%" }, { opacity: 1, scale: 1, x: "-50%" }, dressTopo.align, 'contain')
             ) : (
               <>
-                {renderGarment('top', t('taxonomy.categories.top', { defaultValue: 'Top' }), 'top-[23.5%] left-1/2 w-[82%] h-[30%] z-[20]', { opacity: 0, scale: 0.95, x: "-50%" }, { opacity: 1, scale: 1, x: "-50%", scaleX: scales.chest / scales.width }, 'object-top', 'contain')}
-                {renderGarment('bottom', t('taxonomy.categories.bottom', { defaultValue: 'Bottom' }), 'top-[44%] left-1/2 w-[62%] h-[46.5%] z-[10]', { opacity: 0, scale: 0.95, x: "-50%" }, { opacity: 1, scale: 1, x: "-50%", scaleX: scales.hips / scales.width }, 'object-top', 'contain')}
+                {renderGarment('top', t('taxonomy.categories.top', { defaultValue: 'Top' }), topTopo.classes, { opacity: 0, scale: 0.95, x: "-50%" }, { opacity: 1, scale: 1, x: "-50%", scaleX: scales.chest / scales.width }, topTopo.align, 'contain')}
+                {renderGarment('bottom', t('taxonomy.categories.bottom', { defaultValue: 'Bottom' }), bottomTopo.classes, { opacity: 0, scale: 0.95, x: "-50%" }, { opacity: 1, scale: 1, x: "-50%", scaleX: scales.hips / scales.width }, bottomTopo.align, 'contain')}
               </>
             )}
 
             {renderGarment('belt', t('taxonomy.categories.belt', { defaultValue: 'Belt' }), 'top-[44%] left-1/2 w-[62%] h-[5%] z-[25]', { opacity: 0, y: 5, x: "-50%" }, { opacity: 1, y: 0, x: "-50%" }, 'object-center', 'contain')}
-            {renderGarment('outerwear', t('taxonomy.categories.outerwear', { defaultValue: 'Outerwear' }), 'top-[22.5%] left-1/2 w-[86%] h-[48%] z-[30] drop-shadow-lg', { opacity: 0, scale: 0.96, x: "-50%" }, { opacity: 1, scale: 1, x: "-50%" }, 'object-top', 'contain')}
+            {renderGarment('outerwear', t('taxonomy.categories.outerwear', { defaultValue: 'Outerwear' }), outerwearTopo.classes, { opacity: 0, scale: 0.96, x: "-50%" }, { opacity: 1, scale: 1, x: "-50%" }, outerwearTopo.align, 'contain')}
             {renderGarment('shoes', t('taxonomy.categories.shoes', { defaultValue: 'Shoes' }), 'bottom-[0.5%] left-1/2 w-[76%] h-[16%] z-[15]', { opacity: 0, y: 10, x: "-50%" }, { opacity: 1, y: 0, x: "-50%" }, 'object-bottom', 'contain')}
             {renderGarment('watch', t('taxonomy.sub_category.watch', { defaultValue: 'Watch' }), 'top-[51%] left-[80%] w-[14%] aspect-square z-[35] drop-shadow-md', { opacity: 0, scale: 0.9, x: "-50%", y: "-50%" }, { opacity: 1, scale: 1, x: "-50%", y: "-50%" }, 'object-center', 'contain')}
 
