@@ -107,35 +107,112 @@ export default function AvatarViewer2D({ shapeParams = {}, measurements: provide
                     name.includes('flat cap') ||
                     name.includes('bonnet') ||
                     name.includes('bucket hat') ||
-                    name.includes('helmet');
+                    name.includes('helmet') ||
+                    name.includes('כובע') ||
+                    name.includes('קובע') ||
+                    name.includes('ברט') ||
+                    name.includes('מצחייה') ||
+                    name.includes('קסקט') ||
+                    name.includes('قبعة') ||
+                    name.includes('طاقية');
       if (isHat && (s === 'accessory' || s === 'accessories')) {
-        return 'headwear';
+        s = 'headwear';
       }
 
-      const isBelt = name.includes('belt');
+      const isBelt = name.includes('belt') ||
+                     name.includes('waistband') ||
+                     name.includes('חגורה') ||
+                     name.includes('חגור') ||
+                     name.includes('חגורת') ||
+                     name.includes('حزام');
       if (isBelt) {
-        return 'belt';
+        s = 'belt';
       }
 
       const isGlasses = name.includes('glasses') || 
                         name.includes('spectacles') || 
                         name.includes('sunglasses') || 
                         name.includes('eyewear') || 
-                        name.includes('shades');
+                        name.includes('shades') ||
+                        name.includes('משקפיים') ||
+                        name.includes('משקפי') ||
+                        name.includes('نظارات') ||
+                        name.includes('نظارة');
       if (isGlasses && (s === 'accessory' || s === 'accessories')) {
-        return 'glasses';
+        s = 'glasses';
       }
 
-      // Hard safety guard: Never render pants/bottoms on the torso ('top')
-      const isBottomByName = /\b(pants?|cargo|trousers?|jeans?|shorts?|skirts?|sweatpants|joggers?|slacks?|chinos?|leggings?|bermuda|מכנסיים|מכנס|ג'ינס|שורטס|חצאית|טייץ)\b/i.test(name);
-      if (isBottomByName && s === 'top') {
+      const isBag = name.includes('bag') ||
+                    name.includes('backpack') ||
+                    name.includes('tote') ||
+                    name.includes('clutch') ||
+                    name.includes('purse') ||
+                    name.includes('satchel') ||
+                    name.includes('briefcase') ||
+                    name.includes('duffel') ||
+                    name.includes('תיק') ||
+                    name.includes('ארנק') ||
+                    name.includes('حقيبة') ||
+                    name.includes('شنطة');
+      if (isBag && (s === 'accessory' || s === 'accessories')) {
+        s = 'bag';
+      }
+
+      // Category / Intrinsic role detectors
+      const isShoesByName = /\b(shoes?|sneakers?|boots?|sandals?|heels?|loafers?|slippers?|slides?|mules?|oxford\s+shoes?|oxfords|oxford(?!\s+(shirts?|cloth|cotton|button))|clogs?|נעליים|נעלי|סניקרס|מגפיים|מגפי|מגפונים|סנדלים|עקבים|כפכפים|מוקסינים|حذاء|أحذية|صندل|بوت)\b/i.test(name);
+      const isBottomByName = /\b(pants?|cargo|trousers?|jeans?|shorts?|skirts?|sweatpants|joggers?|slacks?|chinos?|leggings?|bermuda|culottes?|מכנסיים|מכנס|מכנסי|ג'ינס|שורטס|חצאית|חצאיות|טייץ|טייטס|טרנינג|בוקסר|תחתונים|بنطلون|بنطال|سروال|شورت|تنورة|جينز)\b/i.test(name);
+      const isTopByName = /\b(shirts?|t-shirts?|tees?|blouses?|sweaters?|hoodies?|sweatshirts?|crop\s+tops?|tank(?:\s+tops?)?|polos?|pullovers?|turtlenecks?|camisoles?|חולצה|חולצת|חולצות|גופייה|גופיה|גופיות|סוודר|סוודרים|קפוצ'ון|סווטשירט|פולו|מכופתרת|סריג|סריגים|قميص|بلوزة|كنزة|هودي)\b/i.test(name);
+      const isOuterwearByName = /\b(jackets?|coats?|blazers?|parkas?|trench(?:coats?)?|overcoats?|windbreakers?|puffers?|anoraks?|vests?|ז'קט|ג'קט|מעיל|מעילים|בלייזר|וסט|מקטורן|עליונית|سترة|جاكيت|معطف|بليزر)\b/i.test(name);
+      const isDressByName = /\b(dresses|dress(?!\s+(pants|trousers|shirts?|shoes?|boots?|code|socks|belt|suit))|gowns?|jumpsuits?|rompers?|dungarees?|overalls?|שמלה|שמלת|שמלות|אוברול|סרבל|فستان|فساتين|جمبسوت)\b/i.test(name);
+      const isAccessoryByName = isHat || isBelt || isGlasses || isBag || /\b(scarves|scarf|neckties?|bow\s*ties?|necklaces?|bracelets?|watches?|earrings?|צעיף|צעיפים|עניבה|עניבות|שרשרת|שרשראות|צמיד|צמידים|שעון|שעונים|עגילים|حزام|قبعة|نظارات|حقيبة|وشاح|ساعة|سوار|قلادة)\b/i.test(name) || /\bties?\b(?!\s*dye)/i.test(name);
+
+      // --- Hard Anatomical Safety Guards (All 5 Categories) ---
+
+      // 1. Footwear Safety Guard: Shoes can ONLY render in 'shoes' slot!
+      if (isShoesByName && s !== 'shoes') {
+        return null;
+      }
+      if (s === 'shoes' && !isShoesByName && (isTopByName || isBottomByName || isOuterwearByName || isDressByName || isAccessoryByName)) {
         return null;
       }
 
-      // Hard safety guard: Never render tops on legs ('bottom')
-      const isTopByName = /\b(shirts?|t-shirts?|tees?|blouses?|sweaters?|hoodies?|sweatshirts?|חולצה|חולצת|גופייה|גופיה|סוודר|קפוצ'ון)\b/i.test(name);
-      if (isTopByName && s === 'bottom') {
+      // 2. Bottom Safety Guard: Pants/bottoms can NEVER render on torso, feet, head, face, waist, or bag!
+      if (isBottomByName && s !== 'bottom') {
         return null;
+      }
+      if (s === 'bottom' && !isBottomByName && (isTopByName || isShoesByName || isOuterwearByName || isDressByName || isAccessoryByName)) {
+        return null;
+      }
+
+      // 3. Top Safety Guard: Tops can NEVER render on legs, feet, head, face, waist, or bag!
+      if (isTopByName && !isBottomByName && !isShoesByName) {
+        if (s === 'bottom' || s === 'shoes' || s === 'headwear' || s === 'glasses' || s === 'belt' || s === 'bag' || s === 'accessory') {
+          return null;
+        }
+      }
+
+      // 4. Outerwear Safety Guard: Outerwear can NEVER render on legs, feet, head, face, waist, or bag!
+      if (isOuterwearByName && !isShoesByName && !isBottomByName) {
+        if (s === 'bottom' || s === 'shoes' || s === 'headwear' || s === 'glasses' || s === 'belt' || s === 'bag' || s === 'accessory') {
+          return null;
+        }
+      }
+
+      // 5. Full Body / Dress Safety Guard: Dresses can NEVER render on legs, feet, or accessories!
+      if (isDressByName) {
+        if (s === 'bottom' || s === 'shoes' || s === 'headwear' || s === 'glasses' || s === 'belt' || s === 'bag' || s === 'accessory') {
+          return null;
+        }
+        if (s === 'top') {
+          s = 'dress';
+        }
+      }
+
+      // 6. Accessories Safety Guard: Accessories can NEVER render in clothing or shoe slots!
+      if (isAccessoryByName && !isTopByName && !isBottomByName && !isOuterwearByName && !isDressByName && !isShoesByName) {
+        if (s === 'top' || s === 'bottom' || s === 'shoes' || s === 'outerwear' || s === 'dress') {
+          return null;
+        }
       }
 
       return s;
@@ -226,6 +303,22 @@ export default function AvatarViewer2D({ shapeParams = {}, measurements: provide
             {renderGarment('belt', t('taxonomy.categories.belt', { defaultValue: 'Belt' }), 'top-[36.5%] left-1/2 w-[62%] h-[5%] z-21', { opacity: 0, y: 5, x: "-50%" }, { opacity: 1, y: 0, x: "-50%" }, 'object-center', 'contain')}
             {renderGarment('outerwear', t('taxonomy.categories.outerwear', { defaultValue: 'Outerwear' }), 'top-[14.5%] left-1/2 w-[86%] h-[42%] z-22 drop-shadow-lg', { opacity: 0, scale: 0.96, x: "-50%" }, { opacity: 1, scale: 1, x: "-50%" }, 'object-top', 'contain')}
             {renderGarment('shoes', t('taxonomy.categories.shoes', { defaultValue: 'Shoes' }), 'bottom-[0.5%] left-1/2 w-[76%] h-[18%] z-15', { opacity: 0, y: 10, x: "-50%" }, { opacity: 1, y: 0, x: "-50%" }, 'object-bottom', 'contain')}
+            {garments.bag && garments.bag.url && (
+              <motion.div
+                initial={{ opacity: 0, x: 10 }}
+                animate={{ opacity: 1, x: 0 }}
+                className={`absolute top-[40%] right-[-5%] w-[40%] h-[30%] z-25 drop-shadow-md ${onItemClick && garments.bag.id ? 'cursor-pointer hover:scale-[1.02] transition-transform' : 'pointer-events-none'}`}
+                onClick={onItemClick && garments.bag.id ? (e) => { e.stopPropagation(); onItemClick(garments.bag.id); } : undefined}
+              >
+                <ImageWithPlaceholder
+                  src={garments.bag.url}
+                  placeholder={garments.bag.placeholder}
+                  alt={t('taxonomy.sub_category.bag', { defaultValue: 'Bag' })}
+                  objectFit="contain"
+                  className="w-full h-full"
+                />
+              </motion.div>
+            )}
           </div>
         ) : (
           <DynamicAvatar

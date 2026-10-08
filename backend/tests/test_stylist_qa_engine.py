@@ -408,3 +408,216 @@ def test_qa_drops_pants_from_top_when_no_replacement_available():
     assert items_by_role["bottom"]["closet_item_id"] == "brown-jeans-1"
 
 
+def test_check_garment_role_mismatch_all_categories():
+    from app.services.stylist_qa_engine import check_garment_role_mismatch
+
+    # 1. Outerwear in bottom/shoes/accessories
+    coat = {"title": "Wool Trench Coat", "category": "Outerwear"}
+    assert check_garment_role_mismatch(coat, "bottom") is not None
+    assert check_garment_role_mismatch(coat, "shoes") is not None
+    assert check_garment_role_mismatch(coat, "accessory") is not None
+    assert check_garment_role_mismatch(coat, "outerwear") is None
+
+    # 2. Dress in bottom/shoes/accessories
+    dress = {"title": "Summer Floral Maxi Dress", "category": "Dress"}
+    assert check_garment_role_mismatch(dress, "bottom") is not None
+    assert check_garment_role_mismatch(dress, "shoes") is not None
+    assert check_garment_role_mismatch(dress, "top") is not None
+    assert check_garment_role_mismatch(dress, "dress") is None
+
+    # 3. Top in bottom/shoes/accessories
+    shirt = {"title": "Classic Oxford Cotton Shirt", "category": "Top"}
+    assert check_garment_role_mismatch(shirt, "bottom") is not None
+    assert check_garment_role_mismatch(shirt, "shoes") is not None
+    assert check_garment_role_mismatch(shirt, "accessory") is not None
+    assert check_garment_role_mismatch(shirt, "top") is None
+
+    # 4. Footwear in top/bottom/outerwear/accessories
+    boots = {"title": "Chelsea Leather Boots", "category": "Footwear"}
+    assert check_garment_role_mismatch(boots, "top") is not None
+    assert check_garment_role_mismatch(boots, "bottom") is not None
+    assert check_garment_role_mismatch(boots, "outerwear") is not None
+    assert check_garment_role_mismatch(boots, "accessory") is not None
+    assert check_garment_role_mismatch(boots, "shoes") is None
+
+    # 5. Accessories in clothing/footwear slots
+    hat = {"title": "Wool Fedora Hat", "category": "Accessories"}
+    assert check_garment_role_mismatch(hat, "top") is not None
+    assert check_garment_role_mismatch(hat, "bottom") is not None
+    assert check_garment_role_mismatch(hat, "shoes") is not None
+    assert check_garment_role_mismatch(hat, "belt") is not None
+    assert check_garment_role_mismatch(hat, "headwear") is None
+
+
+def test_qa_multi_outerwear_conflict_resolution():
+    import asyncio
+    closet = [
+        {"id": "coat-1", "title": "Heavy Winter Trench Coat", "category": "Outerwear"},
+        {"id": "jacket-1", "title": "Biker Leather Jacket", "category": "Outerwear"},
+        {"id": "shirt-1", "title": "White T-Shirt", "category": "Top"},
+        {"id": "pants-1", "title": "Blue Jeans", "category": "Bottom"},
+        {"id": "shoes-1", "title": "White Sneakers", "category": "Footwear"},
+    ]
+    raw_advice = {
+        "outfit_recommendations": [
+            {
+                "name": "Layered Winter Look",
+                "items": [
+                    {"role": "top", "name": "White T-Shirt", "closet_item_id": "shirt-1"},
+                    {"role": "bottom", "name": "Blue Jeans", "closet_item_id": "pants-1"},
+                    {"role": "shoes", "name": "White Sneakers", "closet_item_id": "shoes-1"},
+                    {"role": "outerwear", "name": "Heavy Winter Trench Coat", "closet_item_id": "coat-1"},
+                    {"role": "outerwear", "name": "Biker Leather Jacket", "closet_item_id": "jacket-1"},
+                ],
+            }
+        ]
+    }
+    reviewed = asyncio.run(evaluate_and_authorize_outfit(
+        user_text="מעיל לחורף",
+        advice_payload=raw_advice,
+        all_closet_items=closet,
+    ))
+    rec = reviewed["outfit_recommendations"][0]
+    outerwear_items = [it for it in rec["items"] if it.get("role") == "outerwear"]
+    assert len(outerwear_items) == 1
+    assert "Pruned duplicate outerwear" in rec["qa_notes"]
+
+
+def test_qa_full_body_dress_colliding_with_bottom_separates():
+    import asyncio
+    closet = [
+        {"id": "dress-1", "title": "Summer Floral Evening Dress", "category": "Dress"},
+        {"id": "pants-1", "title": "Blue Jeans", "category": "Bottom"},
+        {"id": "shoes-1", "title": "Strappy Heels", "category": "Footwear"},
+    ]
+    raw_advice = {
+        "outfit_recommendations": [
+            {
+                "name": "Summer Evening Look",
+                "items": [
+                    {"role": "dress", "name": "Summer Floral Evening Dress", "closet_item_id": "dress-1"},
+                    {"role": "bottom", "name": "Blue Jeans", "closet_item_id": "pants-1"},  # Collision!
+                    {"role": "shoes", "name": "Strappy Heels", "closet_item_id": "shoes-1"},
+                ],
+            }
+        ]
+    }
+    reviewed = asyncio.run(evaluate_and_authorize_outfit(
+        user_text="שמלת ערב לקיץ",
+        advice_payload=raw_advice,
+        all_closet_items=closet,
+    ))
+    rec = reviewed["outfit_recommendations"][0]
+    roles = [it.get("role") for it in rec["items"]]
+    assert "dress" in roles
+    # Pants MUST be dropped when dress is active!
+    assert "bottom" not in roles
+    assert "Dropped colliding bottom" in rec["qa_notes"]
+
+
+def test_qa_multi_top_conflict_resolution():
+    import asyncio
+    closet = [
+        {"id": "tee-1", "title": "Plain White Crewneck Tee", "category": "Top"},
+        {"id": "shirt-2", "title": "Black Graphic Tee", "category": "Top"},
+        {"id": "pants-1", "title": "Chino Pants", "category": "Bottom"},
+        {"id": "shoes-1", "title": "Loafers", "category": "Footwear"},
+    ]
+    raw_advice = {
+        "outfit_recommendations": [
+            {
+                "name": "Casual Day",
+                "items": [
+                    {"role": "top", "name": "Plain White Crewneck Tee", "closet_item_id": "tee-1"},
+                    {"role": "top", "name": "Black Graphic Tee", "closet_item_id": "shirt-2"},
+                    {"role": "bottom", "name": "Chino Pants", "closet_item_id": "pants-1"},
+                    {"role": "shoes", "name": "Loafers", "closet_item_id": "shoes-1"},
+                ],
+            }
+        ]
+    }
+    reviewed = asyncio.run(evaluate_and_authorize_outfit(
+        user_text="חולצה יומיומית",
+        advice_payload=raw_advice,
+        all_closet_items=closet,
+    ))
+    rec = reviewed["outfit_recommendations"][0]
+    top_items = [it for it in rec["items"] if it.get("role") == "top"]
+    assert len(top_items) == 1
+    assert "Pruned duplicate tops" in rec["qa_notes"]
+
+
+def test_qa_multi_footwear_conflict_resolution():
+    import asyncio
+    closet = [
+        {"id": "shirt-1", "title": "Classic Polo", "category": "Top"},
+        {"id": "pants-1", "title": "Slim Jeans", "category": "Bottom"},
+        {"id": "shoes-1", "title": "White Leather Sneakers", "category": "Footwear"},
+        {"id": "shoes-2", "title": "Brown Leather Boots", "category": "Footwear"},
+    ]
+    raw_advice = {
+        "outfit_recommendations": [
+            {
+                "name": "Weekend Vibe",
+                "items": [
+                    {"role": "top", "name": "Classic Polo", "closet_item_id": "shirt-1"},
+                    {"role": "bottom", "name": "Slim Jeans", "closet_item_id": "pants-1"},
+                    {"role": "shoes", "name": "White Leather Sneakers", "closet_item_id": "shoes-1"},
+                    {"role": "shoes", "name": "Brown Leather Boots", "closet_item_id": "shoes-2"},
+                ],
+            }
+        ]
+    }
+    reviewed = asyncio.run(evaluate_and_authorize_outfit(
+        user_text="סניקרס לסופש",
+        advice_payload=raw_advice,
+        all_closet_items=closet,
+    ))
+    rec = reviewed["outfit_recommendations"][0]
+    shoe_items = [it for it in rec["items"] if it.get("role") in ("shoes", "footwear")]
+    assert len(shoe_items) == 1
+    assert "Pruned duplicate shoes" in rec["qa_notes"]
+
+
+def test_qa_multi_accessory_sub_slots_conflict_resolution():
+    import asyncio
+    closet = [
+        {"id": "shirt-1", "title": "Linen Shirt", "category": "Top"},
+        {"id": "pants-1", "title": "Linen Shorts", "category": "Bottom"},
+        {"id": "shoes-1", "title": "Espadrilles", "category": "Footwear"},
+        {"id": "hat-1", "title": "Panama Straw Hat", "category": "Accessories"},
+        {"id": "hat-2", "title": "Bucket Hat", "category": "Accessories"},
+        {"id": "belt-1", "title": "Brown Braided Belt", "category": "Accessories"},
+        {"id": "belt-2", "title": "Black Leather Belt", "category": "Accessories"},
+    ]
+    raw_advice = {
+        "outfit_recommendations": [
+            {
+                "name": "Resort Style",
+                "items": [
+                    {"role": "top", "name": "Linen Shirt", "closet_item_id": "shirt-1"},
+                    {"role": "bottom", "name": "Linen Shorts", "closet_item_id": "pants-1"},
+                    {"role": "shoes", "name": "Espadrilles", "closet_item_id": "shoes-1"},
+                    {"role": "headwear", "name": "Panama Straw Hat", "closet_item_id": "hat-1"},
+                    {"role": "headwear", "name": "Bucket Hat", "closet_item_id": "hat-2"},
+                    {"role": "belt", "name": "Brown Braided Belt", "closet_item_id": "belt-1"},
+                    {"role": "belt", "name": "Black Leather Belt", "closet_item_id": "belt-2"},
+                ],
+            }
+        ]
+    }
+    reviewed = asyncio.run(evaluate_and_authorize_outfit(
+        user_text="לוק חופשה",
+        advice_payload=raw_advice,
+        all_closet_items=closet,
+    ))
+    rec = reviewed["outfit_recommendations"][0]
+    headwear_items = [it for it in rec["items"] if "hat" in it.get("name", "").lower()]
+    belt_items = [it for it in rec["items"] if "belt" in it.get("name", "").lower()]
+    assert len(headwear_items) == 1
+    assert len(belt_items) == 1
+    assert "Pruned duplicate headwear" in rec["qa_notes"]
+    assert "Pruned duplicate belt" in rec["qa_notes"]
+
+
+

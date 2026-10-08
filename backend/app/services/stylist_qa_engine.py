@@ -47,6 +47,10 @@ ROLE_ALLOWED_CATEGORIES: dict[str, set[str]] = {
     "outerwear": {"outerwear", "jacket", "coat", "blazer", "cardigan", "trench", "vest"},
     "accessory": {"accessory", "accessories", "bag", "belt", "hat", "glasses", "jewelry", "scarf", "tie", "necktie"},
     "dress": {"dress", "dresses", "one-piece", "jumpsuit"},
+    "headwear": {"accessory", "accessories", "hat", "headwear"},
+    "glasses": {"accessory", "accessories", "glasses", "eyewear"},
+    "belt": {"accessory", "accessories", "belt"},
+    "bag": {"accessory", "accessories", "bag", "handbag"},
 }
 
 RE_BOTTOM_WORDS = re.compile(
@@ -73,7 +77,8 @@ RE_TOP_WORDS = re.compile(
 
 RE_SHOES_WORDS = re.compile(
     r"\bshoes?\b|\bsneakers?\b|\bboots?\b|\bsandals?\b|\bheels?\b|"
-    r"\bloafers?\b|\bslippers?\b|\bslides?\b|\bmules?\b|\boxfords?\b|\bclogs?\b|"
+    r"\bloafers?\b|\bslippers?\b|\bslides?\b|\bmules?\b|"
+    r"\boxford\s+shoes?\b|\boxfords\b|\boxford\b(?!\s+(?:shirts?|cloth|cotton|button))\b|\bclogs?\b|"
     r"\bנעליים\b|\bנעלי\b|\bסניקרס\b|\bמגפיים\b|\bמגפי\b|\bמגפונים\b|"
     r"\bסנדלים\b|\bעקבים\b|\bכפכפים\b|\bמוקסינים\b|"
     r"\bحذاء\b|\bأحذية\b|\bصندل\b|\bبوت\b",
@@ -84,45 +89,150 @@ RE_OUTERWEAR_WORDS = re.compile(
     r"\bjackets?\b|\bcoats?\b|\bblazers?\b|\bparkas?\b|\btrench(?:coats?)?\b|"
     r"\bovercoats?\b|\bwindbreakers?\b|\bvests?\b|\banoraks?\b|\bpuffers?\b|"
     r"\bז'קט\b|\bג'קט\b|\bמעיל\b|\bמעילים\b|\bבלייזר\b|\bוסט\b|\bמקטורן\b|"
-    r"\bسترة\b|\bجاكيت\b|\bمعطف\b|\bبليزر\b",
+    r"\bעליונית\b|\bسترة\b|\bجاكيت\b|\bمعطف\b|\bبليزر\b",
     re.IGNORECASE,
 )
 
 RE_DRESS_WORDS = re.compile(
-    r"\bdresses?\b|\bgowns?\b|\bjumpsuits?\b|\brompers?\b|\bdungarees?\b|\boveralls?\b|"
+    r"\bdresses\b|\bdress\b(?!\s+(?:pants|trousers|shirts?|shoes?|boots?|code|socks|belt|suit))\b|"
+    r"\bgowns?\b|\bjumpsuits?\b|\brompers?\b|\bdungarees?\b|\boveralls?\b|"
     r"\bשמלה\b|\bשמלת\b|\bשמלות\b|\bאוברול\b|\bסרבל\b|"
     r"\bفستان\b|\bفساتين\b|\bجمبسوت\b",
+    re.IGNORECASE,
+)
+
+RE_HEADWEAR_WORDS = re.compile(
+    r"\b(?:hats?|caps?|beanies?|berets?|fedora|visors?|bucket\s+hats?|bonnets?|helmets?|"
+    r"flat\s+caps?|panama\s+hats?|"
+    r"כובע|כובעים|ברט|מצחייה|קסקט|כובע\s+טמבל|"
+    r"קובע|"
+    r"قبعة|طاقية)\b",
+    re.IGNORECASE,
+)
+
+RE_GLASSES_WORDS = re.compile(
+    r"\b(?:glasses|sunglasses|eyewear|spectacles|shades|"
+    r"משקפיים|משקפי\s+שמש|משקפי\s+ראייה|"
+    r"نظارات|نظارة)\b",
+    re.IGNORECASE,
+)
+
+RE_BELT_WORDS = re.compile(
+    r"\b(?:belts?|waistbands?|sashes?|"
+    r"חגורה|חגורות|חגורת|"
+    r"חגור|"
+    r"حزام)\b",
+    re.IGNORECASE,
+)
+
+RE_BAG_WORDS = re.compile(
+    r"\b(?:bags?|handbags?|backpacks?|totes?|clutches?|purses?|crossbod(?:y|ies)|"
+    r"satchels?|briefcases?|duffels?|fanny\s+packs?|"
+    r"תיק|תיקי|תיקים|תיק\s+יד|תיק\s+גב|ארנק|ארנקים|"
+    r"حقيبة|شنطة)\b",
+    re.IGNORECASE,
+)
+
+RE_ACCESSORY_WORDS = re.compile(
+    r"\b(?:belts?|hats?|caps?|beanies?|berets?|glasses|sunglasses|eyewear|spectacles|"
+    r"bags?|handbags?|backpacks?|totes?|clutches?|purses?|crossbody|satchels?|"
+    r"scarves|scarf|neckties?|bow\s*ties?|necklaces?|bracelets?|watches?|earrings?|"
+    r"ties?\b(?!\s*dye)|"
+    r"חגורה|חגורות|כובע|כובעים|משקפיים|משקפי\s+שמש|תיק|תיקים|ארנק|"
+    r"צעיף|צעיפים|עניבה|עניבות|שרשרת|שרשראות|צמיד|צמידים|שעון|שעונים|עגילים|"
+    r"חגור|"
+    r"حزام|قبعة|نظارات|حقيبة|وشاح|ربطة\s+عنق|ساعة|سوار|قلادة|أقراط)\b",
     re.IGNORECASE,
 )
 
 
 def check_garment_role_mismatch(item: dict[str, Any], role: str) -> str | None:
     """Return an error string if item is semantically/intrinsically incompatible with role, else None."""
+    role_norm = str(role or "").lower().strip()
     title_name_sub = f"{item.get('title') or ''} {item.get('name') or ''} {item.get('sub_category') or ''}".lower()
+    item_label = item.get('title') or item.get('name') or 'Item'
 
-    # 1. Role: TOP — strictly reject pants/bottoms and footwear
-    if role == "top":
-        if RE_BOTTOM_WORDS.search(title_name_sub):
-            return f"Item '{item.get('title') or item.get('name')}' contains bottom keywords (pants/cargo/trousers/shorts/jeans/skirt) but was placed in 'top' role."
-        if RE_SHOES_WORDS.search(title_name_sub) and not RE_TOP_WORDS.search(title_name_sub):
-            return f"Item '{item.get('title') or item.get('name')}' is footwear but was placed in 'top' role."
+    is_bottom = bool(RE_BOTTOM_WORDS.search(title_name_sub))
+    is_top = bool(RE_TOP_WORDS.search(title_name_sub))
+    is_shoes = bool(RE_SHOES_WORDS.search(title_name_sub))
+    is_outerwear = bool(RE_OUTERWEAR_WORDS.search(title_name_sub))
+    is_dress = bool(RE_DRESS_WORDS.search(title_name_sub))
+    is_accessory = bool(RE_ACCESSORY_WORDS.search(title_name_sub))
 
-    # 2. Role: BOTTOM — strictly reject tops and footwear
-    elif role == "bottom":
-        if RE_TOP_WORDS.search(title_name_sub) and not RE_BOTTOM_WORDS.search(title_name_sub):
-            return f"Item '{item.get('title') or item.get('name')}' contains top keywords (shirt/sweater/blouse/hoodie) but was placed in 'bottom' role."
-        if RE_SHOES_WORDS.search(title_name_sub) and not RE_BOTTOM_WORDS.search(title_name_sub):
-            return f"Item '{item.get('title') or item.get('name')}' is footwear but was placed in 'bottom' role."
+    # 1. Role: TOP — strictly reject bottoms, footwear, dresses, accessories, heavy outerwear
+    if role_norm == "top":
+        if is_bottom and not is_top:
+            return f"Item '{item_label}' contains bottom keywords (pants/cargo/trousers/shorts/jeans/skirt) but was placed in 'top' role."
+        if is_shoes and not is_top:
+            return f"Item '{item_label}' is footwear but was placed in 'top' role."
+        if is_dress and not is_top:
+            return f"Item '{item_label}' is a full-body dress but was placed in 'top' role."
+        if is_accessory and not (is_top or is_outerwear):
+            return f"Item '{item_label}' is an accessory but was placed in 'top' role."
+        if is_outerwear and not is_top and any(w in title_name_sub for w in ("trench", "coat", "parka", "puffer", "מעיל", "overcoat")):
+            return f"Item '{item_label}' is heavy outerwear but was placed in 'top' role."
 
-    # 3. Role: SHOES / FOOTWEAR
-    elif role in ("shoes", "footwear"):
-        if (RE_TOP_WORDS.search(title_name_sub) or RE_BOTTOM_WORDS.search(title_name_sub) or RE_OUTERWEAR_WORDS.search(title_name_sub)) and not RE_SHOES_WORDS.search(title_name_sub):
-            return f"Item '{item.get('title') or item.get('name')}' is clothing but was placed in 'shoes' role."
+    # 2. Role: BOTTOM — strictly reject tops, footwear, dresses, outerwear, accessories
+    elif role_norm == "bottom":
+        if is_top and not is_bottom:
+            return f"Item '{item_label}' contains top keywords (shirt/sweater/blouse/hoodie) but was placed in 'bottom' role."
+        if is_shoes and not is_bottom:
+            return f"Item '{item_label}' is footwear but was placed in 'bottom' role."
+        if is_dress and not is_bottom:
+            return f"Item '{item_label}' is a full-body dress but was placed in 'bottom' role."
+        if is_outerwear and not is_bottom:
+            return f"Item '{item_label}' is outerwear but was placed in 'bottom' role."
+        if is_accessory and not is_bottom:
+            return f"Item '{item_label}' is an accessory but was placed in 'bottom' role."
 
-    # 4. Role: ACCESSORY / HEADWEAR / BELT
-    elif role in ("accessory", "belt", "headwear"):
-        if (RE_BOTTOM_WORDS.search(title_name_sub) or RE_TOP_WORDS.search(title_name_sub)) and not any(w in title_name_sub for w in ("belt", "hat", "cap", "tie", "scarf", "חגורה", "כובע", "עניבה")):
-            return f"Item '{item.get('title') or item.get('name')}' is clothing but was placed in '{role}' role."
+    # 3. Role: SHOES / FOOTWEAR — strictly reject clothing and accessories
+    elif role_norm in ("shoes", "footwear"):
+        if (is_top or is_bottom or is_outerwear or is_dress or is_accessory) and not is_shoes:
+            return f"Item '{item_label}' is clothing/accessory but was placed in 'shoes' role."
+
+    # 4. Role: OUTERWEAR — strictly reject bottoms, footwear, dresses, accessories
+    elif role_norm in ("outerwear", "jacket"):
+        if is_bottom and not is_outerwear:
+            return f"Item '{item_label}' is a bottom garment but was placed in 'outerwear' role."
+        if is_shoes and not is_outerwear:
+            return f"Item '{item_label}' is footwear but was placed in 'outerwear' role."
+        if is_dress and not is_outerwear:
+            return f"Item '{item_label}' is a full-body dress but was placed in 'outerwear' role."
+        if is_accessory and not is_outerwear:
+            return f"Item '{item_label}' is an accessory but was placed in 'outerwear' role."
+
+    # 5. Role: FULL BODY / DRESS — strictly reject separates, shoes, accessories
+    elif role_norm in ("dress", "full_body", "dresses", "one_piece"):
+        if is_shoes and not is_dress:
+            return f"Item '{item_label}' is footwear but was placed in 'dress' role."
+        if is_bottom and not is_dress:
+            return f"Item '{item_label}' is a separate bottom garment but was placed in 'dress' role."
+        if is_top and not is_dress:
+            return f"Item '{item_label}' is a separate top garment but was placed in 'dress' role."
+        if is_accessory and not is_dress:
+            return f"Item '{item_label}' is an accessory but was placed in 'dress' role."
+
+    # 6. Role: ACCESSORIES
+    elif role_norm in ("accessory", "accessories"):
+        if (is_top or is_bottom or is_shoes or is_outerwear or is_dress) and not is_accessory:
+            return f"Item '{item_label}' is clothing/footwear but was placed in 'accessory' role."
+
+    # 7. Sub-accessories: headwear, glasses, belt, bag
+    elif role_norm in ("headwear", "hat"):
+        if (is_bottom or is_top or is_shoes or is_outerwear or is_dress or bool(RE_BELT_WORDS.search(title_name_sub)) or bool(RE_BAG_WORDS.search(title_name_sub)) or bool(RE_GLASSES_WORDS.search(title_name_sub))) and not bool(RE_HEADWEAR_WORDS.search(title_name_sub)):
+            return f"Item '{item_label}' is not headwear but was placed in '{role_norm}' role."
+
+    elif role_norm in ("glasses", "eyewear"):
+        if (is_bottom or is_top or is_shoes or is_outerwear or is_dress or bool(RE_BELT_WORDS.search(title_name_sub)) or bool(RE_BAG_WORDS.search(title_name_sub)) or bool(RE_HEADWEAR_WORDS.search(title_name_sub))) and not bool(RE_GLASSES_WORDS.search(title_name_sub)):
+            return f"Item '{item_label}' is not glasses but was placed in '{role_norm}' role."
+
+    elif role_norm == "belt":
+        if (is_bottom or is_top or is_shoes or is_outerwear or is_dress or bool(RE_HEADWEAR_WORDS.search(title_name_sub)) or bool(RE_BAG_WORDS.search(title_name_sub)) or bool(RE_GLASSES_WORDS.search(title_name_sub))) and not bool(RE_BELT_WORDS.search(title_name_sub)):
+            return f"Item '{item_label}' is not a belt but was placed in 'belt' role."
+
+    elif role_norm in ("bag", "handbag"):
+        if (is_bottom or is_top or is_shoes or is_outerwear or is_dress or bool(RE_HEADWEAR_WORDS.search(title_name_sub)) or bool(RE_BELT_WORDS.search(title_name_sub)) or bool(RE_GLASSES_WORDS.search(title_name_sub))) and not bool(RE_BAG_WORDS.search(title_name_sub)):
+            return f"Item '{item_label}' is not a bag but was placed in 'bag' role."
 
     return None
 
@@ -398,25 +508,167 @@ async def evaluate_and_authorize_outfit(
             roles_present.add(role)
             valid_items.append(it)
 
-        # 2. Multi-Bottom Conflict Check: An outfit must NEVER wear pants on top!
-        bottom_items = [
+        def get_item_score(it_entry: dict[str, Any]) -> int:
+            cid = str(it_entry.get("closet_item_id") or "")
+            item_data = closet_map.get(cid, it_entry)
+            return calculate_garment_style_score(item_data, user_text, user_gender=user_gender)
+
+        # -------------------------------------------------------------------------
+        # Category Conflict Resolution: Apply across ALL 5 categories
+        # 1) Outwear
+        # 2) Full body (Dress)
+        # 3) Top
+        # 4) Footwear
+        # 5) Accessories (sub-slots: headwear, glasses, belt, bag)
+        # -------------------------------------------------------------------------
+
+        # A. MULTI-BOTTOM CONFLICT & INTRUDER RESOLUTION
+        pruned_valid = []
+        for it in valid_items:
+            r = str(it.get("role") or "").lower()
+            text_desc = f"{it.get('name') or ''} {it.get('description') or ''}".lower()
+            is_bottom_garment = bool(RE_BOTTOM_WORDS.search(text_desc)) and not bool(RE_TOP_WORDS.search(text_desc))
+            if is_bottom_garment and r != "bottom":
+                logger.warning("QA: Dropping intruder bottom '%s' from role '%s'", it.get("name"), r)
+                replacements_made.append(f"Dropped misclassified bottom '{it.get('name')}' from role '{r}'")
+                roles_present.discard(r)
+                continue
+            pruned_valid.append(it)
+        valid_items = pruned_valid
+
+        bottoms_in_outfit = [it for it in valid_items if str(it.get("role") or "").lower() == "bottom"]
+        if len(bottoms_in_outfit) > 1:
+            bottoms_in_outfit.sort(key=get_item_score, reverse=True)
+            best_bottom = bottoms_in_outfit[0]
+            logger.warning("QA: Detected %d bottoms. Keeping best '%s' and dropping duplicates.", len(bottoms_in_outfit), best_bottom.get("name"))
+            valid_items = [it for it in valid_items if str(it.get("role") or "").lower() != "bottom"] + [best_bottom]
+            replacements_made.append(f"Pruned duplicate bottoms, kept best '{best_bottom.get('name')}'")
+
+        # B. MULTI-TOP CONFLICT & INTRUDER RESOLUTION
+        pruned_valid = []
+        for it in valid_items:
+            r = str(it.get("role") or "").lower()
+            text_desc = f"{it.get('name') or ''} {it.get('description') or ''}".lower()
+            is_top_garment = bool(RE_TOP_WORDS.search(text_desc)) and not bool(RE_BOTTOM_WORDS.search(text_desc)) and not bool(RE_OUTERWEAR_WORDS.search(text_desc))
+            if is_top_garment and r not in ("top", "outerwear"):
+                logger.warning("QA: Dropping intruder top '%s' from role '%s'", it.get("name"), r)
+                replacements_made.append(f"Dropped misclassified top '{it.get('name')}' from role '{r}'")
+                roles_present.discard(r)
+                continue
+            pruned_valid.append(it)
+        valid_items = pruned_valid
+
+        tops_in_outfit = [it for it in valid_items if str(it.get("role") or "").lower() == "top"]
+        if len(tops_in_outfit) > 1:
+            tops_in_outfit.sort(key=get_item_score, reverse=True)
+            best_top = tops_in_outfit[0]
+            logger.warning("QA: Detected %d tops. Keeping best '%s' and dropping duplicates.", len(tops_in_outfit), best_top.get("name"))
+            valid_items = [it for it in valid_items if str(it.get("role") or "").lower() != "top"] + [best_top]
+            replacements_made.append(f"Pruned duplicate tops, kept best '{best_top.get('name')}'")
+
+        # C. MULTI-FOOTWEAR CONFLICT & INTRUDER RESOLUTION
+        pruned_valid = []
+        for it in valid_items:
+            r = str(it.get("role") or "").lower()
+            text_desc = f"{it.get('name') or ''} {it.get('description') or ''}".lower()
+            is_shoe_garment = bool(RE_SHOES_WORDS.search(text_desc))
+            if is_shoe_garment and r not in ("shoes", "footwear"):
+                logger.warning("QA: Dropping intruder shoes '%s' from role '%s'", it.get("name"), r)
+                replacements_made.append(f"Dropped misclassified footwear '{it.get('name')}' from role '{r}'")
+                roles_present.discard(r)
+                continue
+            pruned_valid.append(it)
+        valid_items = pruned_valid
+
+        shoes_in_outfit = [it for it in valid_items if str(it.get("role") or "").lower() in ("shoes", "footwear")]
+        if len(shoes_in_outfit) > 1:
+            shoes_in_outfit.sort(key=get_item_score, reverse=True)
+            best_shoe = shoes_in_outfit[0]
+            logger.warning("QA: Detected %d footwear items. Keeping best '%s' and dropping duplicates.", len(shoes_in_outfit), best_shoe.get("name"))
+            valid_items = [it for it in valid_items if str(it.get("role") or "").lower() not in ("shoes", "footwear")] + [best_shoe]
+            replacements_made.append(f"Pruned duplicate shoes, kept best '{best_shoe.get('name')}'")
+
+        # D. MULTI-OUTERWEAR CONFLICT & INTRUDER RESOLUTION
+        pruned_valid = []
+        for it in valid_items:
+            r = str(it.get("role") or "").lower()
+            text_desc = f"{it.get('name') or ''} {it.get('description') or ''}".lower()
+            is_outerwear_garment = bool(RE_OUTERWEAR_WORDS.search(text_desc)) and not bool(RE_BOTTOM_WORDS.search(text_desc))
+            if is_outerwear_garment and r not in ("outerwear", "jacket", "top"):
+                logger.warning("QA: Dropping intruder outerwear '%s' from role '%s'", it.get("name"), r)
+                replacements_made.append(f"Dropped misclassified outerwear '{it.get('name')}' from role '{r}'")
+                roles_present.discard(r)
+                continue
+            pruned_valid.append(it)
+        valid_items = pruned_valid
+
+        outerwear_in_outfit = [it for it in valid_items if str(it.get("role") or "").lower() in ("outerwear", "jacket")]
+        if len(outerwear_in_outfit) > 1:
+            outerwear_in_outfit.sort(key=get_item_score, reverse=True)
+            best_outerwear = outerwear_in_outfit[0]
+            logger.warning("QA: Detected %d outerwear items. Keeping best '%s' and dropping duplicates.", len(outerwear_in_outfit), best_outerwear.get("name"))
+            valid_items = [it for it in valid_items if str(it.get("role") or "").lower() not in ("outerwear", "jacket")] + [best_outerwear]
+            replacements_made.append(f"Pruned duplicate outerwear, kept best '{best_outerwear.get('name')}'")
+
+        # E. FULL BODY (DRESS) VS SEPARATES RESOLUTION
+        dresses_in_outfit = [
             it for it in valid_items
-            if str(it.get("role") or "").lower() == "bottom" or bool(RE_BOTTOM_WORDS.search(f"{it.get('name') or ''} {it.get('description') or ''}".lower()))
+            if str(it.get("role") or "").lower() in ("dress", "full_body") or bool(RE_DRESS_WORDS.search(f"{it.get('name') or ''} {it.get('description') or ''}".lower()))
         ]
-        if len(bottom_items) > 1:
-            logger.warning("QA: Detected %d bottoms in outfit %d. Pruning non-bottom slots...", len(bottom_items), rec_idx)
-            pruned_valid = []
-            for it in valid_items:
-                r = str(it.get("role") or "").lower()
-                is_bottom_garment = bool(RE_BOTTOM_WORDS.search(f"{it.get('name') or ''} {it.get('description') or ''}".lower()))
-                if is_bottom_garment and r != "bottom":
-                    logger.warning("QA: Dropping intruder bottom '%s' from role '%s'", it.get("name"), r)
-                    replacements_made.append(f"Dropped misclassified bottom '{it.get('name')}' from role '{r}'")
-                    if r in roles_present:
-                        roles_present.remove(r)
-                    continue
-                pruned_valid.append(it)
-            valid_items = pruned_valid
+        if len(dresses_in_outfit) > 1:
+            dresses_in_outfit.sort(key=get_item_score, reverse=True)
+            best_dress = dresses_in_outfit[0]
+            logger.warning("QA: Detected %d dresses. Keeping best '%s'.", len(dresses_in_outfit), best_dress.get("name"))
+            valid_items = [it for it in valid_items if it not in dresses_in_outfit] + [best_dress]
+            replacements_made.append(f"Pruned duplicate dresses, kept best '{best_dress.get('name')}'")
+            dresses_in_outfit = [best_dress]
+
+        if dresses_in_outfit:
+            clashing_bottoms = [it for it in valid_items if str(it.get("role") or "").lower() == "bottom"]
+            if clashing_bottoms:
+                for cb in clashing_bottoms:
+                    logger.warning("QA: Dropping colliding bottom '%s' because full-body dress is active", cb.get("name"))
+                    replacements_made.append(f"Dropped colliding bottom '{cb.get('name')}' for full-body dress")
+                    roles_present.discard("bottom")
+                valid_items = [it for it in valid_items if str(it.get("role") or "").lower() != "bottom"]
+
+        # F. ACCESSORY SUB-SLOT RESOLUTION
+        pruned_valid = []
+        for it in valid_items:
+            r = str(it.get("role") or "").lower()
+            text_desc = f"{it.get('name') or ''} {it.get('description') or ''}".lower()
+            is_acc_garment = (
+                bool(RE_ACCESSORY_WORDS.search(text_desc))
+                and not bool(RE_TOP_WORDS.search(text_desc))
+                and not bool(RE_BOTTOM_WORDS.search(text_desc))
+                and not bool(RE_OUTERWEAR_WORDS.search(text_desc))
+            )
+            if is_acc_garment and r in ("top", "bottom", "shoes", "footwear", "outerwear", "dress"):
+                logger.warning("QA: Dropping intruder accessory '%s' from clothing role '%s'", it.get("name"), r)
+                replacements_made.append(f"Dropped misclassified accessory '{it.get('name')}' from role '{r}'")
+                roles_present.discard(r)
+                continue
+            pruned_valid.append(it)
+        valid_items = pruned_valid
+
+        for sub_slot_name, sub_regex in (
+            ("headwear", RE_HEADWEAR_WORDS),
+            ("belt", RE_BELT_WORDS),
+            ("glasses", RE_GLASSES_WORDS),
+            ("bag", RE_BAG_WORDS),
+        ):
+            matching_sub = [
+                it for it in valid_items
+                if str(it.get("role") or "").lower() == sub_slot_name or bool(sub_regex.search(f"{it.get('name') or ''} {it.get('description') or ''}".lower()))
+            ]
+            if len(matching_sub) > 1:
+                matching_sub.sort(key=get_item_score, reverse=True)
+                best_sub = matching_sub[0]
+                dropped_subs = matching_sub[1:]
+                logger.warning("QA: Detected %d %s items. Keeping best '%s' and dropping duplicates.", len(matching_sub), sub_slot_name, best_sub.get("name"))
+                valid_items = [it for it in valid_items if it not in dropped_subs]
+                replacements_made.append(f"Pruned duplicate {sub_slot_name}, kept best '{best_sub.get('name')}'")
+
 
         # 3. Completeness Check: Ensure essential roles exist (top, bottom, shoes)
         for essential_role in ("top", "bottom", "shoes"):
