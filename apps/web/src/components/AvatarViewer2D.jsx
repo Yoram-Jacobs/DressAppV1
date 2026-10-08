@@ -125,6 +125,19 @@ export default function AvatarViewer2D({ shapeParams = {}, measurements: provide
       if (isGlasses && (s === 'accessory' || s === 'accessories')) {
         return 'glasses';
       }
+
+      // Hard safety guard: Never render pants/bottoms on the torso ('top')
+      const isBottomByName = /\b(pants?|cargo|trousers?|jeans?|shorts?|skirts?|sweatpants|joggers?|slacks?|chinos?|leggings?|bermuda|מכנסיים|מכנס|ג'ינס|שורטס|חצאית|טייץ)\b/i.test(name);
+      if (isBottomByName && s === 'top') {
+        return null;
+      }
+
+      // Hard safety guard: Never render tops on legs ('bottom')
+      const isTopByName = /\b(shirts?|t-shirts?|tees?|blouses?|sweaters?|hoodies?|sweatshirts?|חולצה|חולצת|גופייה|גופיה|סוודר|קפוצ'ון)\b/i.test(name);
+      if (isTopByName && s === 'bottom') {
+        return null;
+      }
+
       return s;
     };
 
@@ -134,6 +147,7 @@ export default function AvatarViewer2D({ shapeParams = {}, measurements: provide
         const closetItem = allClosetItems.find(it => it && it.id === itemId);
         
         let slot = resolveSlot(role, item, closetItem);
+        if (!slot) return;
 
         if (closetItem && closetItem.group_id) {
           const groupItems = allClosetItems.filter(it => it && it.group_id === closetItem.group_id);

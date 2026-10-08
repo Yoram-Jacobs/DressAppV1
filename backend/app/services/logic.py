@@ -50,6 +50,7 @@ async def get_styling_advice(
     cultural_rules: list[dict[str, Any]] | None = None,
     user_profile: dict[str, Any] | None = None,
     closet_summary: list[dict[str, Any]] | None = None,
+    all_closet_items: list[dict[str, Any]] | None = None,
     user_preferences_block: str | None = None,
     synthesize_tts: bool = True,
     api_key: str | None = None,
@@ -182,6 +183,21 @@ async def get_styling_advice(
         result["provider_fallback"] = advice["provider_fallback"]
     if "fallback_from_quota" in advice:
         result["fallback_from_quota"] = advice["fallback_from_quota"]
+
+    # --- 4.5 Stylist QA Engine (Autonomous Evaluation & Authorization)
+    from app.services.stylist_qa_engine import evaluate_and_authorize_outfit
+    try:
+        t0 = time.perf_counter()
+        qa_inventory = all_closet_items if all_closet_items is not None else (closet_summary or [])
+        result = await evaluate_and_authorize_outfit(
+            user_text=final_user_text,
+            advice_payload=result,
+            all_closet_items=qa_inventory,
+            user_profile=user_profile,
+        )
+        latency["qa_ms"] = int((time.perf_counter() - t0) * 1000)
+    except Exception as exc:  # noqa: BLE001
+        logger.exception("Stylist QA evaluation failed: %s", exc)
 
     # --- 5. Gemini Native TTS
     if synthesize_tts and result["spoken_reply"]:

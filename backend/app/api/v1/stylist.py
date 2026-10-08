@@ -266,6 +266,7 @@ async def stylist_endpoint(
             cultural_rules=user.get("cultural_context"),
             user_profile=user_profile,
             closet_summary=closet,
+            all_closet_items=all_user_closet,
             user_preferences_block=prefs_block,
             synthesize_tts=not skip_tts,
             api_key=api_key_resolved,

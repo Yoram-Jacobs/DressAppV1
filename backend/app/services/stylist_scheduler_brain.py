@@ -43,30 +43,36 @@ def norm_category(cat: Any) -> str:
         "top", "tops", "shirt", "shirts", "t_shirt", "tshirt", "tshirts",
         "polo", "sweater", "sweaters", "blouse", "blouses", "hoodie",
         "hoodies", "tank", "tank_top", "tanktop", "crop_top", "sweatshirt",
-        "cardigan", "knitwear", "topwear"
+        "cardigan", "knitwear", "topwear", "חלק_עליון", "חולצה", "חולצות",
+        "גופייה", "גופיה", "סוודר", "קפוצ'ון", "עליון", "قميص", "بلوزة"
     ):
         return "top"
     if s in (
         "bottom", "bottoms", "pants", "shorts", "jeans", "skirt", "skirts",
         "trousers", "joggers", "leggings", "sweatpants", "chinos", "slacks",
-        "bottomwear"
+        "bottomwear", "חלק_תחתון", "מכנסיים", "מכנס", "ג'ינס", "שורטס",
+        "חצאית", "תחתון", "טייץ", "טייטס", "ברמודה", "بنطلون", "سروال", "تنورة"
     ):
         return "bottom"
     if s in (
         "footwear", "shoes", "shoe", "sneakers", "sneaker", "boots", "boot",
         "sandals", "sandal", "heels", "heel", "loafers", "loafer", "slides",
-        "slippers", "flats"
+        "slippers", "flats", "נעליים", "נעל", "מגפיים", "סנדלים", "כפכפים",
+        "הנעלה", "מוקסינים", "حذاء", "صندل"
     ):
         return "shoes"
     if s in (
         "dress", "dresses", "jumpsuit", "jumpsuits", "suit", "suits", "overall",
         "overalls", "dungaree", "dungarees", "full_body", "full_body_suit",
-        "romper", "gown", "tracksuit", "bodysuit", "unitard"
+        "romper", "gown", "tracksuit", "bodysuit", "unitard",
+        "שמלה", "שמלות", "אוברול", "סרבל", "فستان"
     ):
         return "dress"
     if s in (
         "outerwear", "jacket", "jackets", "coat", "coats", "blazer",
-        "blazers", "parka", "trench", "vest", "overcoat"
+        "blazers", "parka", "trench", "vest", "overcoat",
+        "עליונית", "ז'קט", "ג'קט", "מעיל", "בלייזר", "וסט", "מקטורן",
+        "جاكيت", "معطف"
     ):
         return "outerwear"
     return "accessory"

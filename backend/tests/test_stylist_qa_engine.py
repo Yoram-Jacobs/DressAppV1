@@ -261,3 +261,150 @@ def test_full_closet_metadata_search_performance():
     # Must be lightning fast (under 25ms for 150 items)
     assert elapsed_ms < 25.0
 
+
+def test_qa_drops_pants_mistakenly_tagged_as_top():
+    import asyncio
+    closet = [
+        {
+            "id": "cargo-pants-1",
+            "title": "grid-patterned utility cargo pants",
+            "category": "Top",  # Mistakenly tagged as Top
+            "tags": ["חלק עליון", "אפור", "משובץ"],
+        },
+        {
+            "id": "brown-jeans-1",
+            "title": "Vintage Washed Brown Jeans",
+            "category": "Bottom",
+            "sub_category": "Jeans",
+            "tags": ["brown", "jeans", "denim"],
+        },
+        {
+            "id": "white-tee-1",
+            "title": "Classic White Cotton Crewneck T-Shirt",
+            "category": "Top",
+            "sub_category": "T-Shirt",
+            "tags": ["t-shirt", "white", "tee", "top"],
+        },
+        {
+            "id": "shoes-1",
+            "title": "Brown Leather Loafers",
+            "category": "Footwear",
+            "sub_category": "Loafers",
+            "tags": ["brown", "loafers", "shoes"],
+        },
+    ]
+
+    raw_advice = {
+        "outfit_recommendations": [
+            {
+                "name": "Casual Streetwear",
+                "items": [
+                    {
+                        "role": "top",
+                        "name": "grid-patterned utility cargo pants",
+                        "closet_item_id": "cargo-pants-1",
+                    },
+                    {
+                        "role": "bottom",
+                        "name": "Vintage Washed Brown Jeans",
+                        "closet_item_id": "brown-jeans-1",
+                    },
+                    {
+                        "role": "shoes",
+                        "name": "Brown Leather Loafers",
+                        "closet_item_id": "shoes-1",
+                    },
+                ],
+            }
+        ]
+    }
+
+    user_profile = {"sex": "male", "preferred_language": "he"}
+    reviewed = asyncio.run(evaluate_and_authorize_outfit(
+        user_text="תרכיב לי לוק יומיומי מגניב",
+        advice_payload=raw_advice,
+        all_closet_items=closet,
+        user_profile=user_profile,
+    ))
+
+    rec = reviewed["outfit_recommendations"][0]
+    assert rec["qa_status"] == "authorized"
+
+    items_by_role = {it["role"]: it for it in rec["items"]}
+    # 1. Top MUST NOT be the cargo pants!
+    assert items_by_role["top"]["closet_item_id"] != "cargo-pants-1"
+    # 2. Top must be replaced by the authentic top from the closet
+    assert items_by_role["top"]["closet_item_id"] == "white-tee-1"
+    assert "T-Shirt" in items_by_role["top"]["name"]
+
+    # 3. Bottom remains the brown jeans
+    assert items_by_role["bottom"]["closet_item_id"] == "brown-jeans-1"
+
+    # 4. Outfit must NOT contain multiple bottoms
+    assert len(rec["items"]) == 3
+    assert "cargo" not in items_by_role["top"]["name"].lower()
+
+
+def test_qa_drops_pants_from_top_when_no_replacement_available():
+    import asyncio
+    # Closet has ONLY pants and shoes, NO tops
+    closet = [
+        {
+            "id": "cargo-pants-1",
+            "title": "grid-patterned utility cargo pants",
+            "category": "Top",  # Mistakenly tagged as Top!
+            "tags": ["חלק עליון", "אפור", "משובץ"],
+        },
+        {
+            "id": "brown-jeans-1",
+            "title": "Vintage Washed Brown Jeans",
+            "category": "Bottom",
+        },
+        {
+            "id": "shoes-1",
+            "title": "Brown Leather Loafers",
+            "category": "Footwear",
+        },
+    ]
+
+    raw_advice = {
+        "outfit_recommendations": [
+            {
+                "name": "Casual Streetwear",
+                "items": [
+                    {
+                        "role": "top",
+                        "name": "grid-patterned utility cargo pants",
+                        "closet_item_id": "cargo-pants-1",
+                    },
+                    {
+                        "role": "bottom",
+                        "name": "Vintage Washed Brown Jeans",
+                        "closet_item_id": "brown-jeans-1",
+                    },
+                    {
+                        "role": "shoes",
+                        "name": "Brown Leather Loafers",
+                        "closet_item_id": "shoes-1",
+                    },
+                ],
+            }
+        ]
+    }
+
+    user_profile = {"sex": "male", "preferred_language": "he"}
+    reviewed = asyncio.run(evaluate_and_authorize_outfit(
+        user_text="לוק יומיומי",
+        advice_payload=raw_advice,
+        all_closet_items=closet,
+        user_profile=user_profile,
+    ))
+
+    rec = reviewed["outfit_recommendations"][0]
+    # Cargo pants MUST be dropped from top role!
+    items_by_role = {it["role"]: it for it in rec["items"]}
+    assert "top" not in items_by_role
+    assert "bottom" in items_by_role
+    assert items_by_role["bottom"]["closet_item_id"] == "brown-jeans-1"
+
+
