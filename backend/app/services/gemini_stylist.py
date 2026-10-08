@@ -435,7 +435,15 @@ def sanitize_stylist_text(text: str | None, lang: str = "en") -> str:
     clean = re.sub(r"^(כדאי ללבוש)\s+ללבוש\s+", r"כדאי ללבוש ", clean)
     clean = re.sub(r"\b(ללבוש)\s+\1\b", r"\1", clean)
 
-    # 4. Clean Hebrew Shiva / Mourning literal translation errors
+    # 4. Clean Cyrillic tokens when language is not Russian
+    if base_lang != "ru":
+        clean = re.sub(r"\bправило\b", "כלל" if base_lang == "he" else "rule", clean, flags=re.IGNORECASE)
+        clean = re.sub(r"[\u0400-\u04ff]+", "", clean)
+
+    # 5. Strip formulaic math ratio and design rules (e.g. 10–30–60, 60-30-10, 1:2 Ratio)
+    clean = re.sub(r"(?:את\s+)?(?:\d+[\s–\-/:]\d+[\s–\-/:]\d+|\d+:\d+(?:\s*Ratio)?)\s*(?:правило|rule|כלל)?", "", clean, flags=re.IGNORECASE)
+
+    # 6. Clean Hebrew Shiva / Mourning literal translation errors and typos
     clean = re.sub(r"להולך\s+בישיבה\s+שבעה", "לביקור שבעה", clean)
     clean = re.sub(r"להולך\s+בישיבה", "לביקור שבעה", clean)
     clean = re.sub(r"הולך\s+בישיבה\s+שבעה", "הולך לשבעה", clean)
@@ -445,6 +453,45 @@ def sanitize_stylist_text(text: str | None, lang: str = "en") -> str:
     clean = re.sub(r"יושב\s+בישיבה\s+שבעה", "יושב שבעה", clean)
     clean = re.sub(r"להולך\s+לשבעה", "לביקור שבעה", clean)
     clean = re.sub(r"going\s+(?:in|to)\s+a\s+sitting\s+shiva", "attending a shiva", clean, flags=re.IGNORECASE)
+
+    # 7. Hebrew specific token, garment name, and typo corrections
+    if base_lang == "he":
+        # Multilingual model token corruptions (Greek/Latin blend, mangled roots)
+        clean = re.sub(r"\bמתא[a-zA-Z]+\b", "מתאים", clean)
+        clean = re.sub(r"מתאistes", "מתאים", clean)
+        clean = re.sub(r"התאוםשתאור", "וסט", clean)
+        clean = re.sub(r"(?:ו?תאוםשת\s+האורודת|התאוםשת\s*האורודת|ו?תאוםשת|התאוםשת)", "וההתאמה", clean)
+        clean = re.sub(r"\bשתאור\b", "מחויט", clean)
+
+        # Common typos and awkward phrasing
+        clean = re.sub(r"\bלניקום\b", "לניחום", clean)
+        clean = re.sub(r"חליפות\s+כחולה", "חולצה כחולה", clean)
+        clean = re.sub(r"כחול\s+כחולה", "כחול", clean)
+
+        # Garment mistranslation: vest/waistcoat -> וסט (never סינר which means apron)
+        clean = re.sub(r"סינר\s+אפור\s+בהי\b", "וסט אפור בהיר", clean)
+        clean = re.sub(r"סינר\s+אפור\s+בהיר", "וסט אפור בהיר", clean)
+        clean = re.sub(r"וסינר\b", "ו-וסט", clean)
+        clean = re.sub(r"\bסינר\b", "וסט", clean)
+
+        # English garment labels leaked into Hebrew
+        clean = re.sub(r"notched\s+lapel\s+tailored\s*\+?\s*vest", "וסט מחויט עם צווארון דש", clean, flags=re.IGNORECASE)
+        clean = re.sub(r"tailored\s*\+?\s*vest", "וסט מחויט", clean, flags=re.IGNORECASE)
+        clean = re.sub(r"black\s+wool\s+tailored\s+overcoat", "מעיל צמר שחור מחויט", clean, flags=re.IGNORECASE)
+        clean = re.sub(r"tailored\s+overcoat", "מעיל מחויט", clean, flags=re.IGNORECASE)
+
+        # Shiva and mourning tone adjustments (replace celebratory words with solemn ones)
+        if any(w in clean for w in ("שבעה", "אבל", "ניחום", "לוויה", "אזכרה")):
+            clean = re.sub(r"מלבוש\s+יומיומי\s+מושלם|יומיומי\s+מושלם", "לבוש מאופק ומכובד", clean)
+            clean = re.sub(r"\bמשובחת\b", "מכובדת", clean)
+            clean = re.sub(r"\bמשובח\b", "מכובד", clean)
+            clean = re.sub(r"\bמושלמת\b", "הולמת", clean)
+            clean = re.sub(r"\bמושלם\b", "הולם", clean)
+
+    # 8. Clean double spaces and stray punctuation spacing
+    clean = re.sub(r"[ \t]{2,}", " ", clean)
+    clean = re.sub(r"\s+([,.:;?!])", r"\1", clean)
+    clean = re.sub(r",\s*,+", ",", clean)
 
     return clean.strip()
 

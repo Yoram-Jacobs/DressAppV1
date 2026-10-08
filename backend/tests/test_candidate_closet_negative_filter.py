@@ -139,7 +139,7 @@ def test_filter_candidate_closet_by_axioms_purges_before_inference():
     assert "sh-canvas" in compliant_ids
 
 
-@pytest.mark.asyncio
+@pytest.mark.anyio
 async def test_build_stylist_prompt_purges_prohibited_closet_items():
     closet = [
         {"id": "top-black", "title": "Black Cashmere Sweater", "category": "Top", "colors": ["black"]},
@@ -165,7 +165,7 @@ async def test_build_stylist_prompt_purges_prohibited_closet_items():
     assert "Black Tailored Trousers" not in prompt_text
 
 
-@pytest.mark.asyncio
+@pytest.mark.anyio
 async def test_evaluate_and_authorize_outfit_enforces_axioms_and_emits_audit():
     all_closet = [
         {"id": "w-top", "title": "White Cotton Long-Sleeve Shirt", "category": "Top", "colors": ["white"]},

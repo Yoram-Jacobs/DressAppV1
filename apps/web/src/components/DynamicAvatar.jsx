@@ -85,9 +85,10 @@ export default function DynamicAvatar({
     const wFootTip = isMale ? 24 : 20;
     const wFootHeel = isMale ? 10 : 8.5;
 
-    // Arm widths
-    const wUpperArm = isMale ? 12 : 8.5;
-    const wForearm = isMale ? 9.5 : 6.8;
+    // Arm widths (anatomically streamlined so resting arms hug the torso cleanly)
+    const armThickUpper = isMale ? 6.5 : 5.2;
+    const armThickElbow = isMale ? 5.5 : 4.5;
+    const armThickWrist = isMale ? 4.0 : 3.2;
 
     // --- Build Body Contours Path with Cubic Bezier Curves (C & S) ---
     const pNeckR = `${X0 + wNeck},${yChin}`;
@@ -141,24 +142,28 @@ export default function DynamicAvatar({
       `Z`
     ].join(' ');
 
-    // --- Arms Paths ---
+    // --- Arms Paths (Natural resting contour, strictly within shoulder boundaries) ---
     const armPathR = [
-      `M ${X0 + wShoulders - 1},${yShoulders + 2}`,
-      `C ${X0 + wShoulders + wUpperArm},${yShoulders + (yElbow - yShoulders) * 0.4} ${X0 + wShoulders + wForearm + 2},${yElbow} ${X0 + wShoulders + wForearm + 1},${yElbow + 10}`,
-      `C ${X0 + wShoulders + wForearm},${yElbow + (yWrist - yElbow) * 0.5} ${X0 + wShoulders + 5},${yWrist - 5} ${X0 + wShoulders + 4},${yWrist}`,
-      `C ${X0 + wShoulders + 3},${yWrist + 5} ${X0 + wShoulders + 4},${yHandTip - 5} ${X0 + wShoulders + 2},${yHandTip}`,
-      `C ${X0 + wShoulders - 2},${yHandTip} ${X0 + wShoulders - 2},${yWrist + 5} ${X0 + wShoulders - 2},${yWrist}`,
-      `C ${X0 + wShoulders - 2},${yWrist - 5} ${X0 + wChest + 2},${yElbow + 5} ${X0 + wChest + 1},${yChest + 5}`,
+      `M ${X0 + wShoulders - 0.5},${yShoulders + 2}`,
+      `C ${X0 + wShoulders + 0.2},${yShoulders + (yElbow - yShoulders) * 0.4} ${X0 + wShoulders - 0.8},${yElbow - 6} ${X0 + wShoulders - 1.2},${yElbow}`,
+      `C ${X0 + wShoulders - 1.6},${yElbow + (yWrist - yElbow) * 0.45} ${X0 + wShoulders - 2.8},${yWrist - 6} ${X0 + wShoulders - 3.2},${yWrist}`,
+      `C ${X0 + wShoulders - 3.4},${yWrist + 5} ${X0 + wShoulders - 3.8},${yHandTip - 4} ${X0 + wShoulders - 4.0},${yHandTip}`,
+      `C ${X0 + wShoulders - 5.5},${yHandTip + 0.5} ${X0 + wShoulders - 6.8},${yHandTip} ${X0 + wShoulders - 7.0},${yHandTip - 3}`,
+      `C ${X0 + wShoulders - 7.0},${yHandTip - 6} ${X0 + wShoulders - 3.2 - armThickWrist},${yWrist + 5} ${X0 + wShoulders - 3.2 - armThickWrist},${yWrist}`,
+      `C ${X0 + wShoulders - 3.2 - armThickWrist},${yElbow + (yWrist - yElbow) * 0.45} ${X0 + wShoulders - 1.2 - armThickElbow},${yElbow + 6} ${X0 + wShoulders - 1.2 - armThickElbow},${yElbow}`,
+      `C ${X0 + wShoulders - 1.2 - armThickElbow},${yShoulders + (yElbow - yShoulders) * 0.5} ${X0 + wShoulders - armThickUpper - 0.5},${yShoulders + 10} ${X0 + wShoulders - armThickUpper},${yShoulders + 4}`,
       `Z`
     ].join(' ');
 
     const armPathL = [
-      `M ${X0 - wShoulders + 1},${yShoulders + 2}`,
-      `C ${X0 - wShoulders - wUpperArm},${yShoulders + (yElbow - yShoulders) * 0.4} ${X0 - wShoulders - wForearm - 2},${yElbow} ${X0 - wShoulders - wForearm - 1},${yElbow + 10}`,
-      `C ${X0 - wShoulders - wForearm},${yElbow + (yWrist - yElbow) * 0.5} ${X0 - wShoulders - 5},${yWrist - 5} ${X0 - wShoulders - 4},${yWrist}`,
-      `C ${X0 - wShoulders - 3},${yWrist + 5} ${X0 - wShoulders - 4},${yHandTip - 5} ${X0 - wShoulders - 2},${yHandTip}`,
-      `C ${X0 - wShoulders + 2},${yHandTip} ${X0 - wShoulders + 2},${yWrist + 5} ${X0 - wShoulders + 2},${yWrist}`,
-      `C ${X0 - wShoulders + 2},${yWrist - 5} ${X0 - wChest - 2},${yElbow + 5} ${X0 - wChest - 1},${yChest + 5}`,
+      `M ${X0 - wShoulders + 0.5},${yShoulders + 2}`,
+      `C ${X0 - wShoulders - 0.2},${yShoulders + (yElbow - yShoulders) * 0.4} ${X0 - wShoulders + 0.8},${yElbow - 6} ${X0 - wShoulders + 1.2},${yElbow}`,
+      `C ${X0 - wShoulders + 1.6},${yElbow + (yWrist - yElbow) * 0.45} ${X0 - wShoulders + 2.8},${yWrist - 6} ${X0 - wShoulders + 3.2},${yWrist}`,
+      `C ${X0 - wShoulders + 3.4},${yWrist + 5} ${X0 - wShoulders + 3.8},${yHandTip - 4} ${X0 - wShoulders + 4.0},${yHandTip}`,
+      `C ${X0 - wShoulders + 5.5},${yHandTip + 0.5} ${X0 - wShoulders + 6.8},${yHandTip} ${X0 - wShoulders + 7.0},${yHandTip - 3}`,
+      `C ${X0 - wShoulders + 7.0},${yHandTip - 6} ${X0 - wShoulders + 3.2 + armThickWrist},${yWrist + 5} ${X0 - wShoulders + 3.2 + armThickWrist},${yWrist}`,
+      `C ${X0 - wShoulders + 3.2 + armThickWrist},${yElbow + (yWrist - yElbow) * 0.45} ${X0 - wShoulders + 1.2 + armThickElbow},${yElbow + 6} ${X0 - wShoulders + 1.2 + armThickElbow},${yElbow}`,
+      `C ${X0 - wShoulders + 1.2 + armThickElbow},${yShoulders + (yElbow - yShoulders) * 0.5} ${X0 - wShoulders + armThickUpper + 0.5},${yShoulders + 10} ${X0 - wShoulders + armThickUpper},${yShoulders + 4}`,
       `Z`
     ].join(' ');
 

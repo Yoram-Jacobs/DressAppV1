@@ -775,7 +775,48 @@ def _clean_shiva_grammar(text: str) -> str:
     text = re.sub(r"להולך\s+לשבעה", "לביקור שבעה", text)
     # Fix literal English phrasing
     text = re.sub(r"going\s+(?:in|to)\s+a\s+sitting\s+shiva", "attending a shiva", text, flags=re.IGNORECASE)
+
+    # Typo fixes in Shiva / condolence context
+    text = re.sub(r"\bלניקום\b", "לניחום", text)
+
+    # Tone fixes for solemn context
+    text = re.sub(r"מלבוש\s+יומיומי\s+מושלם|יומיומי\s+מושלם", "לבוש מאופק ומכובד", text)
+    text = re.sub(r"\bמשובחת\b", "מכובדת", text)
+    text = re.sub(r"\bמשובח\b", "מכובד", text)
+    text = re.sub(r"\bמושלמת\b", "הולמת", text)
+    text = re.sub(r"\bמושלם\b", "הולם", text)
+
+    # Broken grammar & apron/vest corrections
+    text = re.sub(r"חליפות\s+כחולה", "חולצה כחולה", text)
+    text = re.sub(r"כחול\s+כחולה", "כחול", text)
+    text = re.sub(r"סינר\s+אפור\s+בהי\b", "וסט אפור בהיר", text)
+    text = re.sub(r"סינר\s+אפור\s+בהיר", "וסט אפור בהיר", text)
+    text = re.sub(r"וסינר\b", "ו-וסט", text)
+    text = re.sub(r"\bסינר\b", "וסט", text)
+
+    # Corrupted multilingual tokens
+    text = re.sub(r"\bמתא[a-zA-Z]+\b", "מתאים", text)
+    text = re.sub(r"מתאistes", "מתאים", text)
+    text = re.sub(r"התאוםשתאור", "וסט", text)
+    text = re.sub(r"(?:ו?תאוםשת\s+האורודת|התאוםשת\s*האורודת|ו?תאוםשת|התאוםשת)", "וההתאמה", text)
+    text = re.sub(r"\bשתאור\b", "מחויט", text)
+    text = re.sub(r"\bправило\b", "כלל", text, flags=re.IGNORECASE)
+
     return text
+
+
+def _clean_garment_title_for_lang(name: str, base_lang: str) -> str:
+    """Localize known English titles and clean translation artifacts in garment names."""
+    if not name or not isinstance(name, str):
+        return ""
+    clean = name
+    if base_lang == "he":
+        clean = re.sub(r"notched\s+lapel\s+tailored\s*\+?\s*vest", "וסט מחויט עם צווארון דש", clean, flags=re.IGNORECASE)
+        clean = re.sub(r"\btailored\s*\+?\s*vest\b", "וסט מחויט", clean, flags=re.IGNORECASE)
+        clean = re.sub(r"\bvest\b", "וסט", clean, flags=re.IGNORECASE)
+        clean = re.sub(r"\bסינר\b", "וסט", clean)
+        clean = re.sub(r"התאוםשתאור", "וסט", clean)
+    return clean.strip()
 
 
 def _format_garment_list_natural(items: list[dict[str, Any]], lang: str = "he") -> str:
@@ -786,6 +827,7 @@ def _format_garment_list_natural(items: list[dict[str, Any]], lang: str = "he") 
         if not isinstance(it, dict):
             continue
         n = str(it.get("name") or it.get("title") or it.get("description") or "").strip()
+        n = _clean_garment_title_for_lang(n, base_lang)
         if n and n not in garment_names:
             garment_names.append(n)
 
@@ -929,9 +971,15 @@ def sanitize_spoken_reply_and_notes(
             # Clean and validate outfit name: NEVER copy single garment title
             rec_name = str(rec.get("name") or "").strip()
             rec_name = _clean_shiva_grammar(rec_name)
-            if is_mourning and ("קז'ואל" in rec_name or "להולך" in rec_name):
+            if is_mourning:
                 rec_name = re.sub(r"וקז'ואל|קז'ואל", "ומכובד", rec_name)
                 rec_name = re.sub(r"להולך\s+לשבעה|להולך\s+בישיבה|להולך", "לביקור שבעה", rec_name)
+                rec_name = re.sub(r"\bלניקום\b", "לניחום", rec_name)
+                rec_name = re.sub(r"מלבוש\s+יומיומי\s+מושלם|יומיומי\s+מושלם|יומיומי", "מאופק ומכובד", rec_name)
+                rec_name = re.sub(r"\bמשובחת\b", "מכובדת", rec_name)
+                rec_name = re.sub(r"\bמשובח\b", "מכובד", rec_name)
+                rec_name = re.sub(r"\bמושלמת\b", "הולמת", rec_name)
+                rec_name = re.sub(r"\bמושלם\b", "הולם", rec_name)
 
             item_descriptions = [
                 str(it.get("description") or it.get("title") or it.get("name") or "").strip().lower()
@@ -1075,6 +1123,7 @@ async def evaluate_and_authorize_outfit(
     else:
         lang = "en"
 
+    base_lang = (lang or "en").lower().strip().split("-")[0].split("_")[0]
     is_mourning = _is_mourning_context(user_text)
 
     # Build lookup map for user's full closet
@@ -1378,6 +1427,14 @@ async def evaluate_and_authorize_outfit(
                     used_item_ids.add(new_id)
                     roles_present.add(essential_role)
                     replacements_made.append(f"Added missing {essential_role}: '{new_name}'")
+
+        # Sanitize item names and descriptions for target language
+        for it in valid_items:
+            if isinstance(it, dict):
+                for key in ("name", "description"):
+                    if it.get(key) and isinstance(it[key], str):
+                        it[key] = _clean_garment_title_for_lang(it[key], base_lang)
+                        it[key] = sanitize_stylist_text(it[key], lang=lang)
 
         rec["items"] = valid_items
 

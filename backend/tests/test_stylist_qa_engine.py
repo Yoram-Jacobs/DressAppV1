@@ -932,8 +932,49 @@ def test_shiva_grammar_and_why_narrative_synchronization():
     # 3. Why narrative MUST contain actual items in the look
     assert "חולצת כפתורים כחולה עם פסים ושרוול קצר" in rec["why"]
     assert "מכנסיים מחויטים שחורים" in rec["why"]
-    assert "Tailored Overcoat" in rec["why"]
+    assert "Tailored Overcoat" in rec["why"] or "מעיל מחויט" in rec["why"]
     assert "שעון יד עור חום" in rec["why"]
+
+
+def test_hebrew_mourning_text_and_garment_sanitization():
+    """Verify that 'סינר' -> 'וסט', Cyrillic/hybrid tokens are cleaned, and mourning tone is moderated."""
+    from app.services.gemini_stylist import sanitize_stylist_text
+
+    # 1. 'סינר' mistranslation for vest
+    raw_desc = "וחליפות כחולה וסינר אפור בהיר"
+    cleaned = sanitize_stylist_text(raw_desc, lang="he")
+    assert "סינר" not in cleaned
+    assert "וסט אפור בהיר" in cleaned
+    assert "חולצה כחולה" in cleaned
+
+    # 2. Multilingual bleed: Cyrillic 'правило', mixed Latin 'מתאistes', corrupted 'ותאוםשת האורודת'
+    raw_mixed = "המבנה מתאistes את 10–30–60 правило, ותאוםשת האורודת מושלמת עם צבעי כחול כהה ולבן."
+    cleaned_mixed = sanitize_stylist_text(raw_mixed, lang="he")
+    assert "правило" not in cleaned_mixed
+    assert "מתאistes" not in cleaned_mixed
+    assert "מתאים" in cleaned_mixed
+    assert "ותאוםשת" not in cleaned_mixed
+    assert "10–30–60" not in cleaned_mixed
+
+    # 3. Typo: 'לניקום' -> 'לניחום' and inappropriate celebratory wording in shiva context
+    raw_shiva = "לבוש יומיומי מושלם לניקום משפחה בשבעה"
+    cleaned_shiva = sanitize_stylist_text(raw_shiva, lang="he")
+    assert "לניקום" not in cleaned_shiva
+    assert "לניחום" in cleaned_shiva
+    assert "מושלם" not in cleaned_shiva
+    assert "מאופק ומכובד" in cleaned_shiva or "מכובד" in cleaned_shiva
+
+    # 4. Do/Don't corrupted token: 'התאוםשתאור אפור בהיר כותנה'
+    raw_dd = "אין ללבוש התאוםשתאור אפור בהיר כותנה, או מכנסיים מחויטים כחולים עם כפתורים"
+    cleaned_dd = sanitize_stylist_text(raw_dd, lang="he")
+    assert "התאוםשתאור" not in cleaned_dd
+    assert "וסט" in cleaned_dd
+
+    # 5. English vest title in Hebrew
+    raw_vest = "notched lapel tailored + vest"
+    cleaned_vest = sanitize_stylist_text(raw_vest, lang="he")
+    assert "notched lapel" not in cleaned_vest
+    assert "וסט מחויט עם צווארון דש" in cleaned_vest
 
 
 
