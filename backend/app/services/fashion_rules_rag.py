@@ -245,7 +245,8 @@ def filter_gender_closet_items(
 
     FEMALE_KEYWORDS = {
         "women", "ladies", "נשים", "שמלה", "חצאית", "גופיית כתפיות", "בולרו",
-        "skirt", "dress", "bolero", "heels", "עקבים", "stiletto", "כתפיות"
+        "skirt", "dress", "bolero", "heels", "עקבים", "stiletto", "כתפיות",
+        "טייץ", "טייטס", "leggings", "tights", "jeggings"
     }
 
     filtered = []
@@ -253,16 +254,18 @@ def filter_gender_closet_items(
         cat = str(it.get("category") or "").lower()
         sub = str(it.get("sub_category") or it.get("item_type") or "").lower()
         title = str(it.get("title") or it.get("name") or "").lower()
+        tags = [str(t).lower() for t in (it.get("tags") or [])]
+        all_text = f"{title} {sub} {cat} {' '.join(tags)}"
         g = str(it.get("gender") or "").lower()
 
-        if g == "female":
+        if g in ("female", "women"):
             continue
-        if cat in ("dress", "skirt") or sub in ("dress", "skirt", "שמלה", "חצאית"):
+        if cat in ("dress", "skirt") or sub in ("dress", "skirt", "שמלה", "חצאית", "טייץ", "טייטס", "leggings", "tights"):
             continue
-        if any(w in title for w in FEMALE_KEYWORDS):
+        if any(w in all_text for w in FEMALE_KEYWORDS):
             continue
         filtered.append(it)
 
-    return filtered if filtered else closet_items
+    return filtered
 
 

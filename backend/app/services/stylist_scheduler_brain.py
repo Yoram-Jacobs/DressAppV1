@@ -95,9 +95,13 @@ def calculate_garment_style_score(
     # Immediate gender sanity constraint
     user_gender_norm = str(user_gender or "").lower().strip()
     if user_gender_norm in ("male", "man", "men", "גבר"):
-        if any(w in all_text for w in ("women", "ladies", "נשים", "שמלה", "חצאית", "גופיית כתפיות", "בולרו", "skirt", "dress", "bolero", "heels", "עקבים", "stiletto")):
+        if any(w in all_text for w in (
+            "women", "ladies", "נשים", "שמלה", "חצאית", "גופיית כתפיות", "בולרו",
+            "skirt", "dress", "bolero", "heels", "עקבים", "stiletto",
+            "טייץ", "טייטס", "leggings", "tights", "jeggings"
+        )):
             return -100
-        if str(item.get("gender") or "").lower() == "female":
+        if str(item.get("gender") or "").lower() in ("female", "women"):
             return -100
 
     if not style_dress_for and not (respect_occupation and occupation):
@@ -276,11 +280,12 @@ def calculate_garment_style_score(
     ))
     if is_mourning_or_shiva:
         # Severe disqualifications (-100):
-        # 1. Shorts / Bermuda / Swim
-        if cat == "bottom" and any(w in all_text for w in ("shorts", "שורטס", "קצרים", "מכנסיים קצרים", "bermuda", "swim", "trunks")):
+        # 1. Shorts / Bermuda / Swim / Leggings / Tights
+        if cat == "bottom" and any(w in all_text for w in ("shorts", "שורטס", "קצרים", "מכנסיים קצרים", "bermuda", "swim", "trunks", "טייץ", "טייטס", "leggings", "tights")):
             return -100
-        # 2. Graphic prints, eagles, slogans, cartoons, loud logos, comedy
-        if any(w in all_text for w in ("graphic", "print", "printed", "eagle", "slogan", "logo", "cartoon", "הדפס", "נשר", "ציור", "כיתוב", "party", "מסיבה", "קומדיה")):
+        # 2. Graphic prints, florals, botanical, eagles, slogans, cartoons, loud logos, comedy
+        pattern_norm = str(item.get("pattern") or "").lower()
+        if pattern_norm in ("floral", "botanical", "flower", "hawaiian", "tropical", "graphic", "print") or any(w in all_text for w in ("graphic", "print", "printed", "eagle", "slogan", "logo", "cartoon", "floral", "botanical", "flower", "פרחוני", "פרחים", "הדפס", "נשר", "ציור", "כיתוב", "party", "מסיבה", "קומדיה")):
             return -100
         # 3. Revealing / beach / gym / sleep wear
         if any(w in all_text for w in ("tank top", "tank", "sleeveless", "גופייה", "גופיה", "flip flop", "slide", "slides", "כפכף", "כפכפים", "crop top", "bikini", "swimwear", "pajama", "פיג'מה")):

@@ -150,3 +150,75 @@ def test_sanitize_stylist_payload_urls_and_cjk():
     rec = sanitized["outfit_recommendations"][0]
     assert "组装" not in rec["name"]
     assert "保守" not in rec["items"][0]["description"]
+
+
+def test_fallback_title_generation():
+    from app.services.session_titles import _fallback_title, clean_title
+    res = _fallback_title("לבוש הולם לביקור משפחה של חבר בשבעה")
+    assert res == "לבוש הולם לביקור משפחה"
+    assert clean_title("", fallback_query="לבוש הולם") == "לבוש הולם"
+
+
+def test_tights_and_floral_disqualification():
+    from app.services.fashion_rules_rag import filter_gender_closet_items
+
+    floral_tights = {
+        "id": "ccee8af2-135a-4e17-85a2-24fccc004bfd",
+        "title": "טייץ פרחוני אפור עם מותן שחור",
+        "category": "Bottom",
+        "sub_category": "טייץ",
+        "tags": ["טייץ", "אקטיבי", "פרחוני", "אפור"],
+        "pattern": "floral",
+    }
+
+    # 1. Pruned by filter_gender_closet_items for male users
+    filtered = filter_gender_closet_items([floral_tights], "male")
+    assert len(filtered) == 0
+
+    # 2. Scored -100 for male user in style score
+    assert calculate_garment_style_score(floral_tights, "יום יום", user_gender="male") == -100
+
+    # 3. Scored -100 for mourning / Shiva (floral + tights)
+    assert calculate_garment_style_score(floral_tights, "לבוש הולם לשבעה") == -100
+
+
+def test_do_not_prefix_without_space():
+    raw1 = "DO NOTהתאמה אביזרי אופנה מודרנית או מפוארת"
+    cleaned1 = sanitize_stylist_text(raw1, lang="he")
+    assert cleaned1.startswith("אין ללבוש התאמה") or cleaned1.startswith("אין התאמה")
+
+    raw2 = "DO NOT התאמה אביזרי אופנה"
+    cleaned2 = sanitize_stylist_text(raw2, lang="he")
+    assert cleaned2.startswith("אין ללבוש התאמה") or cleaned2.startswith("אין התאמה")
+
+
+def test_shopping_suggestions_deduplication():
+    payload = {
+        "outfit_recommendations": [
+            {
+                "name": "חולצת כפתורים כחולה עם פסים ושרוול קצר",
+                "items": [
+                    {
+                        "role": "top",
+                        "description": "חולצת כפתורים כחולה עם פסים ושרוול קצר",
+                        "closet_item_id": "adfa-123",
+                    },
+                    {
+                        "role": "bottom",
+                        "description": "מכנסיים מחויטים בצבע כחול כהה",
+                        "closet_item_id": "d996-456",
+                    },
+                ],
+            }
+        ],
+        "shopping_suggestions": [
+            "חולצת כפתורים כחולה עם פסים ושרוול קצר",
+            "מכנסיים מחויטים בצבע כחול כהה",
+            "עניבה כחולה משובחת",
+        ],
+    }
+
+    sanitized = sanitize_stylist_payload(payload, lang="he")
+    # Duplicate shirt and pants must be pruned, leaving only the missing tie
+    assert len(sanitized["shopping_suggestions"]) == 1
+    assert sanitized["shopping_suggestions"][0] == "עניבה כחולה משובחת"

@@ -360,25 +360,46 @@ async def stylist_endpoint(
         logger.warning("widen-stylist soft-failed: %s", repr(exc)[:200])
     advice["applied_preferences"] = applied_prefs
 
-    # Recover unmapped closet_item_id by fuzzy matching title/description against user's closet
+    # Validate and recover closet_item_id ensuring category matches role
+    ROLE_ALLOWED_CATEGORIES = {
+        "top": {"top", "tops", "shirt", "blouse", "sweater", "hoodie", "cardigan", "blazer", "jacket"},
+        "bottom": {"bottom", "bottoms", "pants", "trousers", "jeans", "shorts", "skirt"},
+        "shoes": {"shoes", "footwear", "sneakers", "boots", "loafers", "sandals", "heels", "slippers"},
+        "outerwear": {"outerwear", "jacket", "coat", "blazer", "cardigan", "trench"},
+        "accessory": {"accessory", "accessories", "bag", "belt", "hat", "glasses", "jewelry", "scarf", "tie"},
+        "dress": {"dress", "dresses", "one-piece", "jumpsuit"},
+    }
+
     all_user_closet = await closet_summary_for(user["id"], limit=200)
-    valid_ids = {str(x.get("id") or x.get("_id")) for x in all_user_closet if x.get("id") or x.get("_id")}
+    closet_map = {str(x.get("id") or x.get("_id")): x for x in all_user_closet if x.get("id") or x.get("_id")}
+
     for rec in advice.get("outfit_recommendations", []):
         for it in rec.get("items", []):
+            role = str(it.get("role") or "").lower().strip()
+            allowed_cats = ROLE_ALLOWED_CATEGORIES.get(role)
+
             cid = it.get("closet_item_id")
-            if cid and str(cid) in valid_ids:
-                continue
+            if cid and str(cid) in closet_map:
+                it_cat = str(closet_map[str(cid)].get("category") or "").lower().strip()
+                if allowed_cats and it_cat and it_cat not in allowed_cats:
+                    logger.warning("Category mismatch for item %s: role=%s, cat=%s — clearing invalid mapping", cid, role, it_cat)
+                    it["closet_item_id"] = None
+                else:
+                    continue
+
             desc = (it.get("description") or it.get("title") or it.get("name") or "").lower().strip()
             if desc:
-                # 1. Exact match on title
-                match = next((x for x in all_user_closet if (x.get("title") or "").lower().strip() == desc), None)
-                # 2. Substring match
+                candidates = [
+                    x for x in all_user_closet
+                    if not allowed_cats or str(x.get("category") or "").lower().strip() in allowed_cats
+                ]
+                match = next((x for x in candidates if (x.get("title") or "").lower().strip() == desc), None)
                 if not match:
-                    match = next((x for x in all_user_closet if (x.get("title") and (x.get("title").lower() in desc or desc in x.get("title").lower()))), None)
+                    match = next((x for x in candidates if (x.get("title") and (x.get("title").lower() in desc or desc in x.get("title").lower()))), None)
                 if match:
                     it["closet_item_id"] = str(match.get("id") or match.get("_id"))
                     it["description"] = match.get("title") or it.get("description")
-                    logger.info("Resolved unmapped item '%s' to closet item %s (%s)", desc, it["closet_item_id"], match.get("title"))
+                    logger.info("Resolved unmapped item '%s' to %s (%s)", desc, it["closet_item_id"], match.get("title"))
 
     # Final pass: sanitize all text fields (scrub CJK bleed, drop fake URLs, polish Do/Don't prefixes)
     from app.services.gemini_stylist import sanitize_stylist_payload

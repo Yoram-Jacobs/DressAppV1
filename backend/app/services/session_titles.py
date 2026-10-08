@@ -31,6 +31,19 @@ _LANG_NAMES: dict[str, str] = {
 }
 
 
+def _fallback_title(text: str) -> str:
+    """Crisp 2–4 word title extracted directly from the user query."""
+    cleaned = (text or "").strip()
+    if not cleaned:
+        return "Style advice"
+    cleaned = re.sub(r'[\r\n\t]+', ' ', cleaned)
+    cleaned = re.sub(r'[^\w\s\u0590-\u05fe\u0600-\u06ff]', ' ', cleaned)
+    words = [w for w in cleaned.split() if len(w) >= 2]
+    if not words:
+        return "Style advice"
+    return " ".join(words[:4])[:35]
+
+
 def clean_title(raw: str, fallback_query: str = "") -> str:
     """Sanitize title output, stripping JSON, tool call fragments, and punctuation."""
     import json

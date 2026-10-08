@@ -79,14 +79,17 @@ export default function AvatarViewer2D({ shapeParams = {}, measurements: provide
       const category = dbItem?.category || itemObj?.category;
       if (category) {
         const cat = String(category).toLowerCase().trim().replace(/\s+/g, '_');
-        if (cat === 'top' || cat === 'tops') s = 'top';
-        else if (cat === 'bottom' || cat === 'bottoms') s = 'bottom';
-        else if (cat === 'footwear' || cat === 'shoes') s = 'shoes';
-        else if (cat === 'accessories' || cat === 'accessory') s = 'accessory';
-        else if (cat === 'headwear' || cat === 'hat') s = 'headwear';
-        else if (cat === 'outerwear' || cat === 'jacket') s = 'outerwear';
-        else if (cat === 'dress' || cat === 'dresses') s = 'dress';
-        else s = cat;
+        // Only map category to slot if role is unspecified or generic
+        if (!roleName || roleName === 'item' || roleName === 'garment' || roleName === 'clothing') {
+          if (cat === 'top' || cat === 'tops') s = 'top';
+          else if (cat === 'bottom' || cat === 'bottoms') s = 'bottom';
+          else if (cat === 'footwear' || cat === 'shoes') s = 'shoes';
+          else if (cat === 'accessories' || cat === 'accessory') s = 'accessory';
+          else if (cat === 'headwear' || cat === 'hat') s = 'headwear';
+          else if (cat === 'outerwear' || cat === 'jacket') s = 'outerwear';
+          else if (cat === 'dress' || cat === 'dresses') s = 'dress';
+          else s = cat;
+        }
       }
       if (s === 'hat' || s === 'cap') s = 'headwear';
       if (s === 'accessories') s = 'accessory';

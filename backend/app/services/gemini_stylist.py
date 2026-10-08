@@ -366,7 +366,7 @@ _PREFIX_LOCALIZATIONS: dict[str, dict[str, str]] = {
     },
 }
 
-_RE_DO_NOT_WEAR = re.compile(r"^(?:do\s+not\s+wear|don\'?t\s+wear)\s*:?\s*", re.IGNORECASE)
+_RE_DO_NOT_WEAR = re.compile(r"^(?:do\s+not\s+wear|don\'?t\s+wear|do\s+not|don\'?t)\s*:?\s*", re.IGNORECASE)
 _RE_DO_WEAR = re.compile(r"^(?:do\s+wear|always\s+wear)\s*:?\s*", re.IGNORECASE)
 _RE_AVOID_WEARING = re.compile(r"^(?:avoid\s+wearing|avoid)\s*:?\s*", re.IGNORECASE)
 _RE_DO_COLON = re.compile(r"^do\s*:\s*", re.IGNORECASE)
@@ -443,7 +443,23 @@ def sanitize_stylist_payload(advice: dict[str, Any], lang: str = "en") -> dict[s
                     cleaned_dd.append(s)
         advice["do_dont"] = cleaned_dd
 
-    # Clean Shopping Suggestions: DROP any URLs, example.com links, or raw IDs
+    # Collect all items already recommended in outfit_recommendations to avoid duplicate shopping suggestions
+    existing_look_tokens = set()
+    if isinstance(advice.get("outfit_recommendations"), list):
+        for rec in advice["outfit_recommendations"]:
+            if isinstance(rec, dict):
+                if rec.get("name"):
+                    existing_look_tokens.add(str(rec["name"]).lower().strip())
+                for it in rec.get("items") or []:
+                    if isinstance(it, dict):
+                        d = str(it.get("description") or it.get("name") or "").lower().strip()
+                        if d:
+                            existing_look_tokens.add(d)
+                            for part in d.split(","):
+                                if part.strip():
+                                    existing_look_tokens.add(part.strip())
+
+    # Clean Shopping Suggestions: DROP URLs, raw IDs, and items already in the outfit!
     if isinstance(advice.get("shopping_suggestions"), list):
         cleaned_shop = []
         for s in advice["shopping_suggestions"]:
@@ -453,7 +469,13 @@ def sanitize_stylist_payload(advice: dict[str, Any], lang: str = "en") -> dict[s
             # Drop fake URLs or web links
             if re.search(r"https?://|www\.|\.example\.com|/products/|[a-f0-9]{8}-[a-f0-9]{4}", s_clean):
                 continue
-            if len(s_clean) >= 3:
+            s_lower = s_clean.lower().strip()
+            # Drop if it duplicates an item already in the look
+            is_dup = any(
+                s_lower == tok or (len(tok) >= 5 and (s_lower in tok or tok in s_lower))
+                for tok in existing_look_tokens
+            )
+            if not is_dup and len(s_clean) >= 3:
                 cleaned_shop.append(s_clean)
         advice["shopping_suggestions"] = cleaned_shop
 
