@@ -81,6 +81,27 @@ def test_sanitize_stylist_text_cjk_and_prefixes():
     cleaned_do = sanitize_stylist_text(raw_do, lang="he")
     assert cleaned_do.startswith("מומלץ ללבוש מכנסיים כהים")
 
+    raw_avoid = "Avoid wearing חולצות טי עם כיתובים"
+    cleaned_avoid = sanitize_stylist_text(raw_avoid, lang="he")
+    assert cleaned_avoid.startswith("להימנע מללבוש חולצות טי")
+
+
+def test_sanitize_stylist_text_prefixes_all_languages():
+    languages = ["he", "ar", "es", "fr", "de", "it", "pt", "nl", "ru", "zh", "ja", "hi"]
+    for lang in languages:
+        # 1. Do not wear
+        t_dont = sanitize_stylist_text("Do not wear shorts and sandals", lang=lang)
+        assert not t_dont.lower().startswith("do not wear"), f"Failed for lang {lang}: {t_dont}"
+        assert not t_dont.lower().startswith("don't wear"), f"Failed for lang {lang}: {t_dont}"
+
+        # 2. Do wear
+        t_do = sanitize_stylist_text("Do wear tailored dark trousers", lang=lang)
+        assert not t_do.lower().startswith("do wear"), f"Failed for lang {lang}: {t_do}"
+
+        # 3. Avoid wearing
+        t_avoid = sanitize_stylist_text("Avoid wearing bright colors", lang=lang)
+        assert not t_avoid.lower().startswith("avoid wearing"), f"Failed for lang {lang}: {t_avoid}"
+
 
 def test_sanitize_stylist_payload_urls_and_cjk():
     payload = {

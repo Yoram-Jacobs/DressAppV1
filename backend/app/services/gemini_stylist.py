@@ -279,6 +279,100 @@ class GeminiStylistService:
 _JSON_RE = re.compile(r"\{.*\}", re.DOTALL)
 
 
+_PREFIX_LOCALIZATIONS: dict[str, dict[str, str]] = {
+    "he": {
+        "do_not_wear": "אין ללבוש ",
+        "do_wear": "מומלץ ללבוש ",
+        "avoid_wearing": "להימנע מללבוש ",
+        "do_colon": "כדאי: ",
+        "dont_colon": "אין: ",
+    },
+    "ar": {
+        "do_not_wear": "لا ترتدِ ",
+        "do_wear": "يُفضل ارتداء ",
+        "avoid_wearing": "تجنب ارتداء ",
+        "do_colon": "افعل: ",
+        "dont_colon": "لا تفعل: ",
+    },
+    "es": {
+        "do_not_wear": "No usar ",
+        "do_wear": "Se recomienda usar ",
+        "avoid_wearing": "Evitar usar ",
+        "do_colon": "Hacer: ",
+        "dont_colon": "No hacer: ",
+    },
+    "fr": {
+        "do_not_wear": "Ne pas porter ",
+        "do_wear": "À privilégier : ",
+        "avoid_wearing": "Évitez de porter ",
+        "do_colon": "À faire : ",
+        "dont_colon": "À éviter : ",
+    },
+    "de": {
+        "do_not_wear": "Nicht tragen: ",
+        "do_wear": "Empfohlen: ",
+        "avoid_wearing": "Vermeide: ",
+        "do_colon": "Empfehlung: ",
+        "dont_colon": "Vermeiden: ",
+    },
+    "it": {
+        "do_not_wear": "Non indossare ",
+        "do_wear": "Consigliato indossare ",
+        "avoid_wearing": "Evitare di indossare ",
+        "do_colon": "Cosa fare: ",
+        "dont_colon": "Da evitare: ",
+    },
+    "pt": {
+        "do_not_wear": "Não usar ",
+        "do_wear": "Recomenda-se usar ",
+        "avoid_wearing": "Evite usar ",
+        "do_colon": "Recomendado: ",
+        "dont_colon": "Evitar: ",
+    },
+    "nl": {
+        "do_not_wear": "Draag geen ",
+        "do_wear": "Aanbevolen om te dragen: ",
+        "avoid_wearing": "Vermijd het dragen van ",
+        "do_colon": "Wel doen: ",
+        "dont_colon": "Niet doen: ",
+    },
+    "ru": {
+        "do_not_wear": "Не надевайте ",
+        "do_wear": "Рекомендуется надеть ",
+        "avoid_wearing": "Избегайте носить ",
+        "do_colon": "Рекомендуется: ",
+        "dont_colon": "Не рекомендуется: ",
+    },
+    "zh": {
+        "do_not_wear": "请勿穿着 ",
+        "do_wear": "建议穿着 ",
+        "avoid_wearing": "避免穿着 ",
+        "do_colon": "建议：",
+        "dont_colon": "避免：",
+    },
+    "ja": {
+        "do_not_wear": "着用を避ける: ",
+        "do_wear": "着用をおすすめ: ",
+        "avoid_wearing": "着用を避ける: ",
+        "do_colon": "おすすめ: ",
+        "dont_colon": "避ける: ",
+    },
+    "hi": {
+        "do_not_wear": "पहनने से बचें: ",
+        "do_wear": "पहनना बेहतर है: ",
+        "avoid_wearing": "पहनने से बचें: ",
+        "do_colon": "क्या करें: ",
+        "dont_colon": "क्या न करें: ",
+    },
+}
+
+_RE_DO_NOT_WEAR = re.compile(r"^(?:do\s+not\s+wear|don\'?t\s+wear)\s*:?\s*", re.IGNORECASE)
+_RE_DO_WEAR = re.compile(r"^(?:do\s+wear|always\s+wear)\s*:?\s*", re.IGNORECASE)
+_RE_AVOID_WEARING = re.compile(r"^(?:avoid\s+wearing|avoid)\s*:?\s*", re.IGNORECASE)
+_RE_DO_COLON = re.compile(r"^do\s*:\s*", re.IGNORECASE)
+_RE_DONT_COLON = re.compile(r"^(?:don\'?t|do\s+not)\s*:\s*", re.IGNORECASE)
+
+
 def sanitize_stylist_text(text: str | None, lang: str = "en") -> str:
     """Scrub leaked CJK tokens and clean up language prefixes in generated text."""
     if not text or not isinstance(text, str):
@@ -286,9 +380,10 @@ def sanitize_stylist_text(text: str | None, lang: str = "en") -> str:
 
     clean = text
     lang_norm = (lang or "en").lower().strip()
+    base_lang = lang_norm.split("-")[0].split("_")[0]
 
     # 1. Clean Chinese tokens when language is not Chinese
-    if not lang_norm.startswith("zh"):
+    if not base_lang.startswith("zh"):
         cjk_replacements = {
             "he": {
                 "组装": "שילוב",
@@ -310,24 +405,20 @@ def sanitize_stylist_text(text: str | None, lang: str = "en") -> str:
                 "经典": "classic",
             },
         }
-        rep_map = cjk_replacements.get(lang_norm, cjk_replacements["default"])
+        rep_map = cjk_replacements.get(base_lang, cjk_replacements["default"])
         for k, v in rep_map.items():
             clean = clean.replace(k, v)
         # Strip any other stray CJK characters in non-Chinese outputs
         clean = re.sub(r"[\u4e00-\u9fff\u3400-\u4dbf\uf900-\ufaff]", "", clean)
 
-    # 2. Localize or remove English imperative prefixes in non-English text
-    if lang_norm == "he":
-        clean = re.sub(r"(?i)^do\s+not\s+wear\s*:?\s*", "אין ללבוש ", clean)
-        clean = re.sub(r"(?i)^don\'?t\s+wear\s*:?\s*", "אין ללבוש ", clean)
-        clean = re.sub(r"(?i)^do\s+wear\s*:?\s*", "מומלץ ללבוש ", clean)
-        clean = re.sub(r"(?i)^avoid\s+wearing\s*:?\s*", "להימנע מ-", clean)
-        clean = re.sub(r"(?i)^do\s*:\s*", "כדאי: ", clean)
-        clean = re.sub(r"(?i)^don\'?t\s*:\s*", "אין: ", clean)
-    elif lang_norm == "ar":
-        clean = re.sub(r"(?i)^do\s+not\s+wear\s*:?\s*", "تجنب ارتداء ", clean)
-        clean = re.sub(r"(?i)^don\'?t\s+wear\s*:?\s*", "تجنب ارتداء ", clean)
-        clean = re.sub(r"(?i)^do\s+wear\s*:?\s*", "يُفضل ارتداء ", clean)
+    # 2. Localize or remove English imperative prefixes across all supported languages
+    if base_lang in _PREFIX_LOCALIZATIONS:
+        loc = _PREFIX_LOCALIZATIONS[base_lang]
+        clean = _RE_DO_NOT_WEAR.sub(loc["do_not_wear"], clean)
+        clean = _RE_DO_WEAR.sub(loc["do_wear"], clean)
+        clean = _RE_AVOID_WEARING.sub(loc["avoid_wearing"], clean)
+        clean = _RE_DO_COLON.sub(loc["do_colon"], clean)
+        clean = _RE_DONT_COLON.sub(loc["dont_colon"], clean)
 
     return clean.strip()
 
