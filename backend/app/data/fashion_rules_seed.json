@@ -221,11 +221,107 @@
     "category": "cultural_modesty",
     "title": "Mourning, Shiva & Funeral Etiquette (שבעה והלוויה)",
     "rule_statement": "For mourning visits, Shiva (שבעה), and funerals, wear modest, understated, solemn dark or muted neutral solid clothing (black, charcoal, dark grey, navy, dark brown, or subdued earth tones). Men: clean long trousers or dark solid jeans, with an unadorned solid collared shirt or neat solid tee. Women: modest unadorned tops with sleeves, long pants or below-knee skirts.",
-    "negative_constraint": "Strictly prohibit graphic t-shirts, loud logos, eagle or animal prints, slogan tees, shorts, gym and athletic wear, beachwear, vibrant loud colors (red, yellow, orange, neon), distressed or ripped clothing, and comedy or party elements.",
+    "negative_constraint": "Strictly prohibit graphic t-shirts, loud logos, eagle or animal prints, slogan tees, shorts, gym and athletic wear, beachwear, vibrant loud colors (red, yellow, orange, neon), distressed or ripped clothing, and comedy or party elements. In Hebrew, use 'לביקור שבעה' or 'לניחום אבלים', never 'להולך בישיבה שבעה'.",
     "criteria": {
-      "tags": ["shiva", "mourning", "funeral", "condolence", "שבעה", "אבל", "ניחום", "לוויה", "הלוויה"]
+      "tags": ["shiva", "mourning", "funeral", "condolence", "שבעה", "אבל", "ניחום", "לוויה", "הלוויה", "عزاء"]
     },
     "priority": 10,
     "example": "Charcoal tailored trousers or clean dark jeans paired with a plain black or navy polo/button-down shirt and dark subdued shoes."
+  },
+  {
+    "id": "rule_cultural_jewish_tzniut",
+    "category": "cultural_modesty",
+    "title": "Orthodox Jewish Modesty (צניעות - Tzniut)",
+    "rule_statement": "For Orthodox Jewish modesty guidelines, women require skirts or dresses extending below the knee even when seated, sleeves extending past the elbow, and high necklines covering the collarbone with opaque fabrics. Men wear long trousers with collared shirts.",
+    "negative_constraint": "Strictly forbid trousers, shorts, or jeans for orthodox women. Forbid sleeveless tops, sheer fabrics, deep V-necks, low backs, or high leg slits.",
+    "criteria": {
+      "tags": ["tzniut", "צניעות", "חרדי", "דתי", "orthodox", "orthodox_jewish", "synagogue", "בית כנסת"]
+    },
+    "priority": 10,
+    "example": "Navy A-line pleated midi skirt falling well below the knee, paired with a long-sleeved silk-blend blouse with high jewel neckline."
+  },
+  {
+    "id": "rule_cultural_jewish_shabbat",
+    "category": "cultural_modesty",
+    "title": "Shabbat & Jewish Festive Attire (שבת וחגים)",
+    "rule_statement": "For Shabbat meals, synagogue services, and Jewish holidays (Yom Tov), wear elevated, celebratory, elegant attire. Men wear crisp white or pastel button-down shirts, tailored trousers, blazers, and polished dress shoes. Women wear festive elegant midi or maxi dresses.",
+    "negative_constraint": "Avoid casual workwear, gym clothes, distressed denim, graphic tees, or worn sneakers.",
+    "criteria": {
+      "tags": ["shabbat", "shabbos", "שבת", "חג", "yom_tov", "קידוש", "פסח", "ראש השנה", "סוכות"]
+    },
+    "priority": 9,
+    "example": "Crisp white tailored button-down shirt paired with charcoal dress trousers, navy hopsack blazer, and polished leather dress shoes."
+  },
+  {
+    "id": "rule_cultural_islamic_jumuah",
+    "category": "cultural_modesty",
+    "title": "Islamic Friday Prayer & Mosque Etiquette (صلاة الجمعة وزيارة المسجد)",
+    "rule_statement": "For Jumu'ah Friday prayers, mosque visits, and sacred spaces, attire must be loose-fitting, clean, and fully modest. Men must cover from navel to below knee (long trousers or clean thobe). Women require loose abayas or maxi garments covering to wrists and ankles with a hijab.",
+    "negative_constraint": "Strictly forbid shorts above or at the knee for men. Forbid tight bodycon clothing, sheer fabrics, low necklines, or garments with human or animal face graphics.",
+    "criteria": {
+      "tags": ["jumuah", "mosque", "masjid", "جمعة", "مسجد", "صلاة", "islamic_prayer", "ramadan", "رمضان"]
+    },
+    "priority": 10,
+    "example": "Clean tailored linen thobe or loose navy trousers with a pressed long-sleeved white tunic shirt and clean dress socks."
+  },
+  {
+    "id": "rule_cultural_hindu_antyeshti",
+    "category": "cultural_modesty",
+    "title": "Hindu Funeral & Bereavement Etiquette (Antyeshti - अंतिम संस्कार)",
+    "rule_statement": "For Hindu funerals, cremations, and mourning rites, wear plain, solid, unadorned white attire (white cotton kurta-pyjama or simple white cotton saree). White represents purity, detachment, and peaceful passage.",
+    "negative_constraint": "STRICTLY FORBID BLACK CLOTHING: Black is considered highly inauspicious at Hindu funerals. Forbid vibrant colors (red, gold, bright yellow, hot pink). Forbid leather shoes or leather belts inside sacred cremation rituals.",
+    "criteria": {
+      "tags": ["hindu_funeral", "antyeshti", "cremation", "अंतिम_संस्कार", "shraddh", "hindu_mourning"]
+    },
+    "priority": 10,
+    "example": "Plain unembellished white cotton kurta paired with white cotton pyjama pants and simple non-leather slip-on shoes."
+  },
+  {
+    "id": "rule_cultural_hindu_vivaha",
+    "category": "cultural_modesty",
+    "title": "Hindu Wedding & Festival Celebrations (Vivaha & Diwali - विवाह उत्सव)",
+    "rule_statement": "For Hindu weddings (Vivaha, Sangeet, Baraat) and festivals like Diwali, wear vibrant, auspicious, opulent celebratory colors (crimson red, deep maroon, gold, saffron, emerald green, royal navy, royal magenta) in traditional silk, brocade, or fine embroidery.",
+    "negative_constraint": "STRICTLY FORBID SOLID BLACK: Black is considered inauspicious at Hindu wedding rituals. STRICTLY FORBID PLAIN UNADORNED WHITE: Plain white is reserved for bereavement and is avoided by wedding guests.",
+    "criteria": {
+      "tags": ["hindu_wedding", "vivaha", "विवाह", "sangeet", "baraat", "diwali", "दिवाली", "shaadi", "puja"]
+    },
+    "priority": 10,
+    "example": "Rich maroon or royal navy silk Kurta with an embroidered gold Nehru jacket and tailored churidar pants."
+  },
+  {
+    "id": "rule_cultural_east_asian_funeral",
+    "category": "cultural_modesty",
+    "title": "East Asian Funeral & Memorial Etiquette (葬礼 / お葬式 / 장례식)",
+    "rule_statement": "For Chinese, Japanese, and Korean funerals and memorial services, wear plain, solemn, dark clothing—a tailored black suit with white dress shirt and solid plain black necktie for men; plain black formal dress or dark modest suit for women.",
+    "negative_constraint": "STRICTLY FORBID RED AND GOLD: Red and gold are symbols of supreme celebration and are considered an extreme taboo and grave insult at East Asian funerals. Avoid colorful accessories, shiny jewelry, or flashy patterns.",
+    "criteria": {
+      "tags": ["chinese_funeral", "japanese_funeral", "korean_funeral", "葬礼", "お葬式", "告別式", "장례식", "east_asian_mourning"]
+    },
+    "priority": 10,
+    "example": "Tailored solid black two-piece suit with a crisp white spread-collar dress shirt, matte solid black necktie, and polished black Oxford shoes."
+  },
+  {
+    "id": "rule_cultural_east_asian_wedding",
+    "category": "cultural_modesty",
+    "title": "East Asian Wedding Guest Etiquette (婚礼 / 結婚式)",
+    "rule_statement": "For guests attending Chinese, Japanese, or Korean weddings and banquets, wear elegant, festive, respectful attire such as pastel, navy, grey, blush, or jewel-toned cocktail dresses or dark tailored suits with a celebratory tie.",
+    "negative_constraint": "STRICTLY FORBID SOLID RED: At Chinese weddings, red is reserved exclusively for the bride. STRICTLY FORBID SOLID WHITE: Solid white is reserved exclusively for the bridal gown in modern ceremonies. Avoid mourning black suits paired with plain black ties.",
+    "criteria": {
+      "tags": ["chinese_wedding", "japanese_wedding", "korean_wedding", "婚礼", "結婚式", "喜酒", "결혼식"]
+    },
+    "priority": 10,
+    "example": "Soft dusty-rose or navy cocktail dress, or a charcoal tailored suit with a champagne silk tie and pocket square."
+  },
+  {
+    "id": "rule_cultural_western_black_tie",
+    "category": "occasion_dress_code",
+    "title": "Western Black Tie & Gala Protocol",
+    "rule_statement": "For Black Tie galas, formal charity balls, and evening opera receptions, men strictly wear a black or midnight blue tuxedo with satin lapels, white pleated/pique tuxedo shirt, black silk bow tie, and patent leather dress shoes. Women wear floor-length evening gowns.",
+    "negative_constraint": "Strictly forbid daytime business suits, sports jackets, neckties (long ties), button-down collar shirts, chinos, loafers, or sneakers.",
+    "criteria": {
+      "tags": ["black_tie", "gala", "opera", "charity_ball", "tuxedo", "white_tie", "פפיון", "טוקסידו"]
+    },
+    "priority": 10,
+    "example": "Midnight-blue shawl-collar tuxedo with black grosgrain lapels, crisp white pique wing-collar shirt, black silk grosgrain bow tie, and black patent dress shoes."
   }
 ]

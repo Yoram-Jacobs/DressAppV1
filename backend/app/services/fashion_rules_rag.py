@@ -119,14 +119,50 @@ def retrieve_fashion_axioms(
     # 1. Hard Cultural & Modesty Constraints (Highest Priority = 10)
     # -------------------------------------------------------------
     modesty_level = str(user_profile.get("modesty_level") or "").lower().strip()
-    if modesty_level in ("conservative", "orthodox", "high", "modest"):
+    if modesty_level in ("conservative", "orthodox", "high", "modest") or any(w in text_corpus for w in ("tzniut", "צניעות", "חרדי", "דתי", "modest")):
         add_rule("rule_cultural_modesty_conservative")
+        add_rule("rule_cultural_jewish_tzniut")
 
-    if any(w in text_corpus for w in ("wedding", "חתונה", "ceremony", "sacred")):
+    # Jewish Shiva & Mourning
+    if any(w in text_corpus for w in ("shiva", "שבעה", "אבל", "אבלים", "לוויה", "הלוויה", "ניחום", "mourning", "funeral", "condolence", "condolences", "bereavement", "عزاء")):
+        if any(w in text_corpus for w in ("chinese funeral", "japanese funeral", "korean funeral", "葬礼", "お葬式", "告別式", "장례식")):
+            add_rule("rule_cultural_east_asian_funeral")
+        elif any(w in text_corpus for w in ("hindu funeral", "antyeshti", "cremation", "अंतिम_संस्कार", "अंतिम संस्कार", "shraddh")):
+            add_rule("rule_cultural_hindu_antyeshti")
+        else:
+            add_rule("rule_cultural_mourning_shiva")
+
+    # Hindu Funerals (Antyeshti)
+    if any(w in text_corpus for w in ("antyeshti", "अंतिम_संस्कार", "अंतिम संस्कार", "hindu funeral", "cremation")):
+        add_rule("rule_cultural_hindu_antyeshti")
+
+    # Hindu Weddings & Diwali
+    if any(w in text_corpus for w in ("hindu wedding", "vivaha", "विवाह", "sangeet", "baraat", "diwali", "दिवाली", "shaadi")):
+        add_rule("rule_cultural_hindu_vivaha")
+
+    # Islamic Friday Prayer & Mosque
+    if any(w in text_corpus for w in ("jumuah", "mosque", "masjid", "جمعة", "مسجد", "صلاة الجمعة", "islamic prayer", "ramadan", "رمضان")):
+        add_rule("rule_cultural_islamic_jumuah")
+
+    # Jewish Shabbat & Holidays
+    if any(w in text_corpus for w in ("shabbat", "shabbos", "שבת", "yom tov", "חג", "קידוש", "פסח", "ראש השנה", "סוכות")):
+        add_rule("rule_cultural_jewish_shabbat")
+
+    # East Asian Funerals
+    if any(w in text_corpus for w in ("chinese funeral", "japanese funeral", "korean funeral", "葬礼", "お葬式", "告別式", "장례식")):
+        add_rule("rule_cultural_east_asian_funeral")
+
+    # East Asian Weddings
+    if any(w in text_corpus for w in ("chinese wedding", "japanese wedding", "korean wedding", "婚礼", "喜酒", "結婚式", "결혼식")):
+        add_rule("rule_cultural_east_asian_wedding")
+
+    # Western Ceremonies & Weddings
+    if any(w in text_corpus for w in ("wedding", "חתונה", "ceremony", "sacred")) and not any(w in text_corpus for w in ("hindu wedding", "chinese wedding", "japanese wedding", "korean wedding", "vivaha", "婚礼")):
         add_rule("rule_cultural_ceremony_etiquette")
 
-    if any(w in text_corpus for w in ("shiva", "שבעה", "אבל", "אבלים", "לוויה", "הלוויה", "ניחום", "mourning", "funeral", "condolence", "condolences", "bereavement")):
-        add_rule("rule_cultural_mourning_shiva")
+    # Black Tie & Formal Galas
+    if any(w in text_corpus for w in ("black tie", "black-tie", "gala", "opera", "tuxedo", "טוקסידו", "ערב חגיגי", "charity ball", "white tie")):
+        add_rule("rule_cultural_western_black_tie")
 
     # -------------------------------------------------------------
     # 2. Hard Weather & Thermodynamic Constraints
@@ -192,8 +228,10 @@ def format_rules_for_prompt(rules: list[FashionRule], max_chars_per_rule: int = 
     lines = ["GROUND-TRUTH FASHION DESIGN AXIOMS:"]
     for r in rules:
         stmt = r.rule_statement.strip()
-        if r.negative_constraint and len(stmt) + len(r.negative_constraint) < max_chars_per_rule:
+        if r.negative_constraint and len(stmt) + len(r.negative_constraint) + 12 <= max_chars_per_rule:
             line = f"• [{r.title}]: {stmt} (Avoid: {r.negative_constraint})"
+        elif len(stmt) > max_chars_per_rule:
+            line = f"• [{r.title}]: {stmt[:max_chars_per_rule - 3].rstrip()}..."
         else:
             line = f"• [{r.title}]: {stmt}"
         lines.append(line)
