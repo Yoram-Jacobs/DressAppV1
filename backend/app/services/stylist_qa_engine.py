@@ -588,6 +588,8 @@ def sanitize_spoken_reply_and_notes(
                 # Color harmony
                 ch = notes.get("color_harmony")
                 if ch and isinstance(ch, str):
+                    # Strip formulaic math tokens like "60-30-10"
+                    ch = re.sub(r"^\s*(?:60[-/:]30[-/:]10|70[-/:]20[-/:]10|1:2(?:\s*Ratio)?|\d+[-/:]\d+[-/:]\d+)\s*[-—:]*\s*", "", ch, flags=re.IGNORECASE)
                     if is_mourning:
                         # Remove "אדום" / "red" / "זהב" from mourning palette
                         mourning_palette = LOCALIZED_PALETTE_MOURNING.get(base_lang, LOCALIZED_PALETTE_MOURNING["en"])
@@ -617,6 +619,7 @@ def sanitize_spoken_reply_and_notes(
                     notes["silhouette"] = sanitize_stylist_text(sil, lang=lang)
             elif isinstance(notes, str) and notes.strip():
                 clean_str = notes.strip()
+                clean_str = re.sub(r"^\s*(?:60[-/:]30[-/:]10|70[-/:]20[-/:]10|1:2(?:\s*Ratio)?|\d+[-/:]\d+[-/:]\d+)\s*[-—:]*\s*", "", clean_str, flags=re.IGNORECASE)
                 if any(w in clean_str.lower() for w in GARBLED_TEXTURE_PATTERNS + GARBLED_SILHOUETTE_PATTERNS):
                     clean_str = (
                         LOCALIZED_SILHOUETTE_MOURNING.get(base_lang, LOCALIZED_SILHOUETTE_MOURNING["en"])

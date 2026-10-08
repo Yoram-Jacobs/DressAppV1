@@ -158,7 +158,7 @@ export function OutfitRecommendationCard({ rec, index, sessionId, onItemClick, o
         {/* Pieces in this Outfit — Thumbnails & Quick View */}
         {items.length > 0 && (
           <div className="mt-3">
-            <div className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider mb-1.5 flex items-center justify-between">
+            <div className="text-[12px] font-semibold text-muted-foreground mb-1.5 flex items-center justify-between">
               <span>{t('stylist.outfitPieces', { defaultValue: 'Outfit Pieces' })}</span>
               <span className="text-[10px] text-muted-foreground font-normal">{t('stylist.tapToInspect', { defaultValue: 'Tap to inspect' })}</span>
             </div>
@@ -205,13 +205,19 @@ export function OutfitRecommendationCard({ rec, index, sessionId, onItemClick, o
               {t('stylist.designerNote', { defaultValue: 'Designer Note:' })}
             </span>
             <span>
-              {typeof rec.designer_notes === 'string'
-                ? rec.designer_notes
-                : [
-                    rec.designer_notes.color_harmony,
-                    rec.designer_notes.texture_balance,
-                    rec.designer_notes.silhouette,
-                  ].filter(Boolean).join(' • ')}
+              {(() => {
+                const clean = (s) => (s && typeof s === 'string')
+                  ? s.replace(/^\s*(?:60[-/:]30[-/:]10|70[-/:]20[-/:]10|1:2(?:\s*Ratio)?|\d+[-/:]\d+[-/:]\d+)\s*[-—:]*\s*/i, '').trim()
+                  : '';
+                if (typeof rec.designer_notes === 'string') {
+                  return clean(rec.designer_notes);
+                }
+                return [
+                  clean(rec.designer_notes.color_harmony),
+                  clean(rec.designer_notes.texture_balance),
+                  clean(rec.designer_notes.silhouette),
+                ].filter(Boolean).join(' • ');
+              })()}
             </span>
           </div>
         )}
