@@ -597,6 +597,10 @@ async def get_rotation_prioritized_closet(
             "accessory": 1
         }
 
+    # Selected items list
+    selected_ids = set()
+    result_items = []
+
     if limit is None:
         for cat_key in ["top", "bottom", "shoes", "outerwear", "accessory", "dress"]:
             for item in buckets[cat_key]:
@@ -607,9 +611,6 @@ async def get_rotation_prioritized_closet(
 
     quotas = {cat: max(min_quotas.get(cat, 0), int(limit * ratio)) for cat, ratio in target_ratios.items()}
 
-    # Selected items list
-    selected_ids = set()
-    result_items = []
 
     # First pass: take up to quota from each category bucket
     leftover_budget = 0
