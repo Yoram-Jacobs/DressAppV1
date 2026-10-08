@@ -193,6 +193,17 @@ async def stylist_endpoint(
     is_first_turn = (session.get("turns") or 0) == 0
 
     history = await recent_messages(session["id"], limit=8)
+    
+    # Extract closet item IDs suggested in recent turns of this session to enforce wardrobe rotation
+    recent_item_ids: set[str] = set()
+    for m in history:
+        payload = m.get("assistant_payload") or {}
+        for rec in payload.get("outfit_recommendations") or []:
+            for itm in rec.get("items") or []:
+                cid = itm.get("closet_item_id")
+                if cid:
+                    recent_item_ids.add(str(cid))
+
     from app.services.stylist_scheduler_brain import get_rotation_prioritized_closet
     user_gender = user.get("sex") or user.get("gender")
     all_user_closet = await closet_summary_for(user["id"], limit=500)
@@ -201,6 +212,7 @@ async def stylist_endpoint(
         limit=None,
         style_dress_for=text,
         user_gender=user_gender,
+        recent_item_ids=recent_item_ids,
     )
     closet = prioritized_closet if prioritized_closet else all_user_closet
 
@@ -371,6 +383,7 @@ async def stylist_endpoint(
             advice_payload=advice,
             all_closet_items=all_user_closet,
             user_profile=user,
+            recent_item_ids=recent_item_ids,
         )
     except Exception as exc:  # noqa: BLE001
         logger.exception("Stylist QA evaluation failed in stylist_endpoint: %s", exc)
@@ -378,6 +391,20 @@ async def stylist_endpoint(
     # Final pass: sanitize all text fields (scrub CJK bleed, drop fake URLs, polish Do/Don't prefixes)
     from app.services.gemini_stylist import sanitize_stylist_payload
     advice = sanitize_stylist_payload(advice, lang=user_profile.get("preferred_language") or "en")
+
+    # Update last_suggested_at for recommended garments so wardrobe rotation stays fresh across turns
+    try:
+        from app.services.stylist_scheduler_brain import update_suggested_timestamps
+        suggested_cids = [
+            str(itm.get("closet_item_id"))
+            for rec in (advice.get("outfit_recommendations") or [])
+            for itm in (rec.get("items") or [])
+            if itm.get("closet_item_id")
+        ]
+        if suggested_cids:
+            await update_suggested_timestamps(suggested_cids)
+    except Exception as exc:  # noqa: BLE001
+        logger.warning("Failed to update suggested timestamps: %s", exc)
 
     await append_message(
         session_id=session["id"],

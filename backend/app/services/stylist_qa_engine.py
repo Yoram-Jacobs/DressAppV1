@@ -790,10 +790,12 @@ def find_best_garment_replacement(
     user_gender: str | None,
     exclude_item_ids: set[str],
     axioms: list[Any] | None = None,
+    recent_item_ids: set[str] | list[str] | None = None,
 ) -> dict[str, Any] | None:
     """Search user's closet metadata for the best matching replacement garment for a specific role."""
     allowed_cats = ROLE_ALLOWED_CATEGORIES.get(role, set())
     is_mourning = _is_mourning_context(user_text)
+    recent_set = {str(x) for x in recent_item_ids} if recent_item_ids else set()
 
     # 1. Filter candidates by category, gender, and axiom negative constraints
     candidates = []
@@ -832,14 +834,30 @@ def find_best_garment_replacement(
         if is_mourning and is_item_mourning_inappropriate(it, role=role):
             continue
 
-        candidates.append((score, it))
+        is_recent = 1 if cid in recent_set else 0
+        last_sug = str(it.get("last_suggested_at") or "")
+        last_worn = str(it.get("last_worn_at") or "")
+        wear_count = int(it.get("wear_count") or 0)
+        sug_val = last_sug if last_sug else "0000-00-00"
+        worn_val = last_worn if last_worn else "0000-00-00"
+
+        # Deterministic rotation hash based on query + cid + role so tied items rotate
+        rot_hash = abs(hash(f"{user_text}_{cid}_{role}")) % 1000
+
+        candidates.append((is_recent, -score, sug_val, worn_val, wear_count, rot_hash, it))
 
     if not candidates:
         return None
 
-    # Sort candidates by score descending
-    candidates.sort(key=lambda x: x[0], reverse=True)
-    best_item = candidates[0][1]
+    # Sort candidates by:
+    # 1. Non-recent first (is_recent=0)
+    # 2. Highest style score first (-score)
+    # 3. Oldest suggested timestamp first (sug_val == "0000-00-00" first)
+    # 4. Oldest worn timestamp first (worn_val)
+    # 5. Lowest wear count
+    # 6. Rotational hash to break ties evenly
+    candidates.sort(key=lambda x: (x[0], x[1], x[2], x[3], x[4], x[5]))
+    best_item = candidates[0][6]
     return best_item
 
 
@@ -1393,11 +1411,13 @@ async def evaluate_and_authorize_outfit(
     all_closet_items: list[dict[str, Any]],
     user_profile: dict[str, Any] | None = None,
     axioms: list[Any] | None = None,
+    recent_item_ids: set[str] | list[str] | None = None,
 ) -> dict[str, Any]:
     """Execute complete Quality Assurance check on stylist outfit recommendations.
 
     Analyzes overall look against user prompt, replaces inappropriate or unmapped garments,
-    validates against negative constraints of retrieved RAG axioms, and authorizes the verified look.
+    validates against negative constraints of retrieved RAG axioms, enforces wardrobe rotation,
+    and authorizes the verified look.
     """
     if not isinstance(advice_payload, dict):
         return advice_payload
@@ -1438,6 +1458,18 @@ async def evaluate_and_authorize_outfit(
         lang = "en"
 
     base_lang = (lang or "en").lower().strip().split("-")[0].split("_")[0]
+
+    # Resolve items suggested recently in this session to enforce wardrobe rotation
+    recent_set: set[str] = {str(x) for x in recent_item_ids} if recent_item_ids else set()
+    if not recent_set and isinstance(user_profile, dict):
+        conv_hist = user_profile.get("conversation_history") or []
+        for turn in conv_hist:
+            payload = turn.get("payload") or {}
+            for rec in payload.get("outfit_recommendations") or []:
+                for itm in rec.get("items") or []:
+                    cid = itm.get("closet_item_id")
+                    if cid:
+                        recent_set.add(str(cid))
     is_mourning = _is_mourning_context(user_text)
 
     # Build lookup map for user's full closet
@@ -1531,6 +1563,7 @@ async def evaluate_and_authorize_outfit(
                     user_gender=user_gender,
                     exclude_item_ids=used_item_ids,
                     axioms=axioms,
+                    recent_item_ids=recent_set,
                 )
                 if replacement:
                     new_id = str(replacement.get("id") or replacement.get("_id"))
@@ -1745,6 +1778,7 @@ async def evaluate_and_authorize_outfit(
                     user_gender=user_gender,
                     exclude_item_ids=used_item_ids,
                     axioms=axioms,
+                    recent_item_ids=recent_set,
                 )
                 if replacement:
                     new_id = str(replacement.get("id") or replacement.get("_id"))

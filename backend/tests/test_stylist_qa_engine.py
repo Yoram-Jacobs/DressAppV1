@@ -977,6 +977,114 @@ def test_hebrew_mourning_text_and_garment_sanitization():
     assert "וסט מחויט עם צווארון דש" in cleaned_vest
 
 
+def test_wardrobe_rotation_deprioritizes_recent_items():
+    """Verify that find_best_garment_replacement deprioritizes recent_item_ids."""
+    from app.services.stylist_qa_engine import find_best_garment_replacement
+
+    closet = [
+        {
+            "id": "polo-blue-1",
+            "title": "חולצת כפתורים כחולה עם פסים ושרוול קצר",
+            "category": "top",
+            "last_suggested_at": "2026-10-08T12:00:00Z",
+        },
+        {
+            "id": "polo-white-2",
+            "title": "חולצת פולו לבנה קלאסית",
+            "category": "top",
+            "last_suggested_at": "",
+        },
+    ]
+
+    # Without recent_item_ids, both are candidates, but polo-white-2 has last_suggested_at="" (sug_val="0000-00-00")
+    # while polo-blue-1 was suggested today.
+    picked_fresh = find_best_garment_replacement(
+        role="top",
+        all_closet_items=closet,
+        user_text="חולצה יומיומית",
+        user_gender="male",
+        exclude_item_ids=set(),
+    )
+    assert picked_fresh is not None
+    assert picked_fresh["id"] == "polo-white-2"
+
+    # When polo-white-2 was recently suggested in this session, polo-blue-1 is chosen instead
+    picked_rotated = find_best_garment_replacement(
+        role="top",
+        all_closet_items=closet,
+        user_text="חולצה יומיומית",
+        user_gender="male",
+        exclude_item_ids=set(),
+        recent_item_ids={"polo-white-2"},
+    )
+    assert picked_rotated is not None
+    assert picked_rotated["id"] == "polo-blue-1"
+
+
+def test_qa_evaluate_and_authorize_extracts_recent_from_conversation_history():
+    """Verify evaluate_and_authorize_outfit extracts recent item IDs from conversation history and rotates."""
+    import asyncio
+    from app.services.stylist_qa_engine import evaluate_and_authorize_outfit
+
+    closet = [
+        {"id": "pants-black", "title": "מכנסיים מחויטים שחורים", "category": "bottom"},
+        {"id": "pants-navy", "title": "מכנסיים מחויטים כחולים", "category": "bottom"},
+        {"id": "shirt-1", "title": "חולצה מכופתרת לבנה", "category": "top"},
+        {"id": "shoes-1", "title": "נעלי אוקספורד שחורות", "category": "shoes"},
+    ]
+
+    # Conversation history shows pants-black was already recommended in turn 1
+    user_profile = {
+        "preferred_language": "he",
+        "sex": "male",
+        "conversation_history": [
+            {
+                "role": "assistant",
+                "payload": {
+                    "outfit_recommendations": [
+                        {
+                            "name": "Look 1",
+                            "items": [
+                                {"role": "top", "closet_item_id": "shirt-1"},
+                                {"role": "bottom", "closet_item_id": "pants-black"},
+                                {"role": "shoes", "closet_item_id": "shoes-1"},
+                            ],
+                        }
+                    ]
+                },
+            }
+        ],
+    }
+
+    # Now LLM returns an incomplete outfit missing a bottom
+    incomplete_advice = {
+        "outfit_recommendations": [
+            {
+                "name": "Look 2",
+                "items": [
+                    {"role": "top", "name": "חולצה מכופתרת לבנה", "closet_item_id": "shirt-1"},
+                    {"role": "shoes", "name": "נעלי אוקספורד שחורות", "closet_item_id": "shoes-1"},
+                ],
+            }
+        ]
+    }
+
+    reviewed = asyncio.run(
+        evaluate_and_authorize_outfit(
+            user_text="חליפה אלגנטית לעבודה",
+            advice_payload=incomplete_advice,
+            all_closet_items=closet,
+            user_profile=user_profile,
+        )
+    )
+
+    rec = reviewed["outfit_recommendations"][0]
+    bottom_item = next(it for it in rec["items"] if it.get("role") == "bottom")
+    # Must pick pants-navy, NOT the recently used pants-black!
+    assert bottom_item["closet_item_id"] == "pants-navy"
+
+
+
 
 
 

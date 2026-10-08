@@ -455,6 +455,7 @@ async def get_rotation_prioritized_closet(
     occupation: str | None = None,
     respect_occupation: bool = False,
     user_gender: str | None = None,
+    recent_item_ids: list[str] | set[str] | None = None,
 ) -> list[dict[str, Any]]:
     """Fetch closet items prioritized for rotation, matching tag restrictions and weather/season.
 
@@ -552,8 +553,9 @@ async def get_rotation_prioritized_closet(
             target_season = "spring"
 
     is_male = str(user_gender or "").lower().strip() in ("male", "man", "men", "גבר")
+    recent_set = {str(x) for x in recent_item_ids} if recent_item_ids else set()
 
-    # Rotation sort key: matches criteria first, then un-suggested/un-worn, oldest suggested, lowest wear
+    # Rotation sort key: un-recent first, matches criteria, un-suggested/un-worn, oldest suggested, lowest wear
     def sort_key(item: dict[str, Any]) -> tuple:
         style_score = calculate_garment_style_score(
             item, 
@@ -566,6 +568,9 @@ async def get_rotation_prioritized_closet(
         matches_season = matches_season_func(item, target_season)
         season_score = 10 if matches_season else 0
         
+        cid = str(item.get("id") or item.get("_id") or "")
+        is_recent = 1 if (cid and cid in recent_set) else 0
+
         last_sug = item.get("last_suggested_at") or ""
         last_worn = item.get("last_worn_at") or ""
         wear_count = item.get("wear_count") or 0
@@ -573,10 +578,11 @@ async def get_rotation_prioritized_closet(
         sug_val = last_sug if last_sug else "0000-00-00"
         worn_val = last_worn if last_worn else "0000-00-00"
         
+        # is_recent=0 comes first (penalize items suggested in current session turns).
         # Style score is PRIMARY (-style_score: highest score first).
         # Season is secondary (-season_score).
         # Rotation (sug_val, worn_val, wear_count) is tie-breaker among matching items.
-        return (-style_score, -season_score, sug_val, worn_val, wear_count)
+        return (is_recent, -style_score, -season_score, sug_val, worn_val, wear_count)
 
     # Partition items into category buckets using global norm_category
     buckets: dict[str, list[dict[str, Any]]] = {
