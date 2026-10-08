@@ -420,7 +420,14 @@ def sanitize_stylist_text(text: str | None, lang: str = "en") -> str:
         clean = _RE_DO_COLON.sub(loc["do_colon"], clean)
         clean = _RE_DONT_COLON.sub(loc["dont_colon"], clean)
 
+    # 3. Clean duplicate prefix verbs (e.g. 'אין ללבוש ללבוש' -> 'אין ללבוש')
+    clean = re.sub(r"^(אין ללבוש)\s+ללבוש\s+", r"אין ללבוש ", clean)
+    clean = re.sub(r"^(מומלץ ללבוש)\s+ללבוש\s+", r"מומלץ ללבוש ", clean)
+    clean = re.sub(r"^(כדאי ללבוש)\s+ללבוש\s+", r"כדאי ללבוש ", clean)
+    clean = re.sub(r"\b(ללבוש)\s+\1\b", r"\1", clean)
+
     return clean.strip()
+
 
 
 def sanitize_stylist_payload(advice: dict[str, Any], lang: str = "en") -> dict[str, Any]:

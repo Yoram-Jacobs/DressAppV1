@@ -95,14 +95,19 @@ def calculate_garment_style_score(
     # Immediate gender sanity constraint
     user_gender_norm = str(user_gender or "").lower().strip()
     if user_gender_norm in ("male", "man", "men", "גבר"):
-        if any(w in all_text for w in (
-            "women", "ladies", "נשים", "שמלה", "חצאית", "גופיית כתפיות", "בולרו",
-            "skirt", "dress", "bolero", "heels", "עקבים", "stiletto",
-            "טייץ", "טייטס", "leggings", "tights", "jeggings"
-        )):
+        g = str(item.get("gender") or "").lower()
+        if g in ("female", "women"):
             return -100
-        if str(item.get("gender") or "").lower() in ("female", "women"):
+        if cat in ("dress", "skirt") or sub_cat in ("dress", "skirt", "שמלה", "חצאית", "טייץ", "טייטס", "leggings", "tights", "jeggings"):
             return -100
+        from app.services.fashion_rules_rag import FEMALE_GARMENT_RE
+        if FEMALE_GARMENT_RE.search(all_text):
+            if not ("men" in title or "גברים" in title or g in ("male", "men")):
+                return -100
+        if any(w in all_text for w in ("ladies", "נשים", "גופיית כתפיות", "בולרו", "bolero", "heels", "עקבים", "stiletto")):
+            if not ("men" in title or "גברים" in title or g in ("male", "men")):
+                return -100
+
 
     if not style_dress_for and not (respect_occupation and occupation):
         return 0
@@ -592,6 +597,14 @@ async def get_rotation_prioritized_closet(
             "accessory": 1
         }
 
+    if limit is None:
+        for cat_key in ["top", "bottom", "shoes", "outerwear", "accessory", "dress"]:
+            for item in buckets[cat_key]:
+                if item["id"] not in selected_ids:
+                    selected_ids.add(item["id"])
+                    result_items.append(item)
+        return result_items
+
     quotas = {cat: max(min_quotas.get(cat, 0), int(limit * ratio)) for cat, ratio in target_ratios.items()}
 
     # Selected items list
@@ -625,6 +638,7 @@ async def get_rotation_prioritized_closet(
                     leftover_budget -= 1
 
     return result_items[:limit]
+
 
 
 async def update_suggested_timestamps(closet_item_ids: list[str]) -> None:

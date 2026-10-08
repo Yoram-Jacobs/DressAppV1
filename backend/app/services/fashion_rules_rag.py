@@ -15,7 +15,9 @@ from __future__ import annotations
 import json
 import logging
 from pathlib import Path
+import re
 from typing import Any
+
 
 from app.models.fashion_rule import FashionRule
 
@@ -232,6 +234,13 @@ def filter_modesty_closet_items(
     return filtered if filtered else closet_items
 
 
+FEMALE_GARMENT_RE = re.compile(
+    r"\b(skirt|חצאית|בולרו|bolero|heels|עקבים|stiletto|טייץ|טייטס|leggings|tights|jeggings|bikini|ביקיני|גופיית כתפיות)\b"
+    r"|\b(?<!dress\s)(?:dress|שמלה)(?!\s*(?:pants|shirt|trousers|shoes|socks|boot|code|vest|חולצה|מכנסיים))\b",
+    re.IGNORECASE,
+)
+
+
 def filter_gender_closet_items(
     closet_items: list[dict[str, Any]] | None,
     user_gender: str | None,
@@ -242,12 +251,6 @@ def filter_gender_closet_items(
     gen_norm = str(user_gender or "").lower().strip()
     if gen_norm not in ("male", "man", "men", "גבר"):
         return closet_items
-
-    FEMALE_KEYWORDS = {
-        "women", "ladies", "נשים", "שמלה", "חצאית", "גופיית כתפיות", "בולרו",
-        "skirt", "dress", "bolero", "heels", "עקבים", "stiletto", "כתפיות",
-        "טייץ", "טייטס", "leggings", "tights", "jeggings"
-    }
 
     filtered = []
     for it in closet_items:
@@ -262,10 +265,15 @@ def filter_gender_closet_items(
             continue
         if cat in ("dress", "skirt") or sub in ("dress", "skirt", "שמלה", "חצאית", "טייץ", "טייטס", "leggings", "tights"):
             continue
-        if any(w in all_text for w in FEMALE_KEYWORDS):
-            continue
+        if FEMALE_GARMENT_RE.search(all_text):
+            if not ("men" in title or "גברים" in title or g in ("male", "men")):
+                continue
+        if any(w in all_text for w in ("ladies", "נשים", "גופיית כתפיות", "בולרו", "bolero", "heels", "עקבים", "stiletto")):
+            if not ("men" in title or "גברים" in title or g in ("male", "men")):
+                continue
         filtered.append(it)
 
     return filtered
+
 
 

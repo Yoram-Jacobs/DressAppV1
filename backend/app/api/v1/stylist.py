@@ -195,13 +195,15 @@ async def stylist_endpoint(
     history = await recent_messages(session["id"], limit=8)
     from app.services.stylist_scheduler_brain import get_rotation_prioritized_closet
     user_gender = user.get("sex") or user.get("gender")
+    all_user_closet = await closet_summary_for(user["id"], limit=500)
     prioritized_closet = await get_rotation_prioritized_closet(
         user["id"],
-        limit=20,
+        limit=None,
         style_dress_for=text,
         user_gender=user_gender,
     )
-    closet = prioritized_closet if prioritized_closet else await closet_summary_for(user["id"], limit=25)
+    closet = prioritized_closet if prioritized_closet else all_user_closet
+
 
     user_profile = {
         "preferred_language": (language or user.get("preferred_language") or "en").lower(),
@@ -360,46 +362,14 @@ async def stylist_endpoint(
         logger.warning("widen-stylist soft-failed: %s", repr(exc)[:200])
     advice["applied_preferences"] = applied_prefs
 
-    # Validate and recover closet_item_id ensuring category matches role
-    ROLE_ALLOWED_CATEGORIES = {
-        "top": {"top", "tops", "shirt", "blouse", "sweater", "hoodie", "cardigan", "blazer", "jacket"},
-        "bottom": {"bottom", "bottoms", "pants", "trousers", "jeans", "shorts", "skirt"},
-        "shoes": {"shoes", "footwear", "sneakers", "boots", "loafers", "sandals", "heels", "slippers"},
-        "outerwear": {"outerwear", "jacket", "coat", "blazer", "cardigan", "trench"},
-        "accessory": {"accessory", "accessories", "bag", "belt", "hat", "glasses", "jewelry", "scarf", "tie"},
-        "dress": {"dress", "dresses", "one-piece", "jumpsuit"},
-    }
-
-    all_user_closet = await closet_summary_for(user["id"], limit=200)
-    closet_map = {str(x.get("id") or x.get("_id")): x for x in all_user_closet if x.get("id") or x.get("_id")}
-
-    for rec in advice.get("outfit_recommendations", []):
-        for it in rec.get("items", []):
-            role = str(it.get("role") or "").lower().strip()
-            allowed_cats = ROLE_ALLOWED_CATEGORIES.get(role)
-
-            cid = it.get("closet_item_id")
-            if cid and str(cid) in closet_map:
-                it_cat = str(closet_map[str(cid)].get("category") or "").lower().strip()
-                if allowed_cats and it_cat and it_cat not in allowed_cats:
-                    logger.warning("Category mismatch for item %s: role=%s, cat=%s — clearing invalid mapping", cid, role, it_cat)
-                    it["closet_item_id"] = None
-                else:
-                    continue
-
-            desc = (it.get("description") or it.get("title") or it.get("name") or "").lower().strip()
-            if desc:
-                candidates = [
-                    x for x in all_user_closet
-                    if not allowed_cats or str(x.get("category") or "").lower().strip() in allowed_cats
-                ]
-                match = next((x for x in candidates if (x.get("title") or "").lower().strip() == desc), None)
-                if not match:
-                    match = next((x for x in candidates if (x.get("title") and (x.get("title").lower() in desc or desc in x.get("title").lower()))), None)
-                if match:
-                    it["closet_item_id"] = str(match.get("id") or match.get("_id"))
-                    it["description"] = match.get("title") or it.get("description")
-                    logger.info("Resolved unmapped item '%s' to %s (%s)", desc, it["closet_item_id"], match.get("title"))
+    # Quality Assurance Test: Analyze overall look against user prompt, replace invalid/missing garments, and authorize
+    from app.services.stylist_qa_engine import evaluate_and_authorize_outfit
+    advice = await evaluate_and_authorize_outfit(
+        user_text=text or occasion or "",
+        advice_payload=advice,
+        all_closet_items=all_user_closet,
+        user_profile=user,
+    )
 
     # Final pass: sanitize all text fields (scrub CJK bleed, drop fake URLs, polish Do/Don't prefixes)
     from app.services.gemini_stylist import sanitize_stylist_payload
@@ -429,8 +399,10 @@ async def stylist_endpoint(
                 "generated_examples",
                 "widened_for",
                 "applied_preferences",
+                "qa_authorized",
             )
         },
+
         latency_ms=advice.get("latency_ms") or {},
     )
 
