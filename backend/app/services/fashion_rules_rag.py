@@ -173,6 +173,182 @@ def retrieve_fashion_axioms(
     )):
         add_rule("rule_cultural_christian_church_mass")
 
+    # Vatican & Papal Audience Protocol
+    if any(w in text_corpus for w in (
+        "vatican", "papal", "pope", "holy see", "mantilla", "privilege du blanc", "apostolic palace",
+        "וותיקן", "פגישה עם האפיפיור", "האפיפיור", "الفاتيكان", "لقاء البابا", "vaticano", "audiencia papal"
+    )):
+        add_rule("rule_cultural_vatican_papal_audience")
+
+    # Eastern Orthodox & Coptic Sanctuary
+    if any(w in text_corpus for w in (
+        "eastern orthodox", "orthodox church", "coptic", "greek orthodox", "russian orthodox", "monastery", "mount athos",
+        "קופטית", "אורתודוקסית", "כנסייה אורתודוקסית", "מנזר", "كنيسة أرثوذكسية", "قبطية", "دير"
+    )):
+        add_rule("rule_cultural_christian_eastern_orthodox")
+
+    # Western White Tie Protocol
+    if any(w in text_corpus for w in (
+        "white tie", "white-tie", "cravate blanche", "tailcoat", "state banquet", "nobel prize",
+        "וויט טאי", "עניבה לבנה", "סעודת מדינה", "ربطة عنق بيضاء", "frac"
+    )):
+        add_rule("rule_cultural_western_white_tie")
+
+    # Synagogue & Kotel Prayer Etiquette
+    if any(w in text_corpus for w in (
+        "synagogue", "beit knesset", "shul", "kotel", "western wall", "tallit", "kippah",
+        "בית כנסת", "כותל", "תפילה", "שחרית", "מנחה", "ערבית", "כיפה", "טלית", "كنيس"
+    )):
+        add_rule("rule_cultural_jewish_synagogue_prayer")
+
+    # Brit Milah & Jewish Simchas
+    if any(w in text_corpus for w in (
+        "brit milah", "bris", "simchat bat", "pidyon haben", "baby naming",
+        "ברית מילה", "ברית", "שמחת בת", "פדיון הבן", "שמחה משפחתית"
+    )):
+        add_rule("rule_cultural_jewish_brit_milah_simcha")
+
+    # Tisha B'Av & Yom Kippur Non-Leather Fast
+    if any(w in text_corpus for w in (
+        "tisha b'av", "tisha bav", "yom kippur", "neilat hasandal",
+        "תשעה באב", "יום כיפור", "צום", "איסור נעילת הסנדל", "נעלי בד"
+    )):
+        add_rule("rule_cultural_jewish_tisha_bav_fast")
+
+    # Islamic Hajj & Umrah Pilgrimage (Ihram)
+    if any(w in text_corpus for w in (
+        "ihram", "hajj", "umrah", "makkah", "pilgrimage", "tawaf",
+        "حج", "عمرة", "إحرام", "مكة المكرمة", "المسجد الحرام", "איחראם", "חאג'", "עומרה"
+    )):
+        add_rule("rule_cultural_islamic_hajj_umrah_ihram")
+
+    # Islamic Eid al-Fitr & Eid al-Adha
+    if any(w in text_corpus for w in (
+        "eid", "eid al-fitr", "eid al-adha", "eid mubarak",
+        "عيد الفطر", "عيد الأضحى", "ملابس العيد", "עיד אל פיטר", "עיד אל אדחא"
+    )):
+        add_rule("rule_cultural_islamic_eid_festive")
+
+    # Arabian Gulf Bisht & Formal Protocol
+    if any(w in text_corpus for w in (
+        "bisht", "kandura", "dishdasha", "shemagh", "ghutra", "agal",
+        "بشت", "كندورة", "شماغ", "عقال", "دשדאשה", "خليجي", "בישט", "ת'וב"
+    )):
+        add_rule("rule_cultural_islamic_regional_gulf_bisht")
+
+    # North African Djellaba & Babouche
+    if any(w in text_corpus for w in (
+        "djellaba", "takchita", "babouche", "belgha", "moroccan kaftan", "morocco", "maghreb",
+        "جلابة", "قفطان مغربي", "تكشيطة", "بلغة", "ג'לאביה", "כפתן מרוקאי"
+    )):
+        add_rule("rule_cultural_islamic_regional_maghreb_djellaba")
+
+    # Southeast Asian Batik & Baju Melayu
+    if any(w in text_corpus for w in (
+        "batik", "baju melayu", "baju kurung", "songkok", "kain samping", "kebaya", "indonesia", "malaysia",
+        "باتيك", "باجو ملايو", "באטיק", "אינדונזיה"
+    )):
+        add_rule("rule_cultural_islamic_regional_se_asia_batik")
+
+    # Hindu Temple Darshan & Non-Leather Sanctum
+    if any(w in text_corpus for w in (
+        "temple darshan", "darshan", "puja", "mandir", "hindu temple", "no leather",
+        "मंदिर", "दर्शन", "पूजा", "מקדש הינדי", "פוג'ה", "דארשאן"
+    )):
+        add_rule("rule_cultural_hindu_temple_darshan")
+
+    # South Indian Kerala Temple (Mundu)
+    if any(w in text_corpus for w in (
+        "kerala temple", "mundu", "veshti", "kasavu", "set mundu", "guruvayur", "padmanabhaswamy",
+        "കേരളം", "മുണ്ട്", "ക്ഷേത്രം", "मुंडू", "מונדו", "דרום הודו"
+    )):
+        add_rule("rule_cultural_hindu_kerala_mundu")
+
+    # Buddhist Temple Etiquette & Saffron Taboo
+    if any(w in text_corpus for w in (
+        "buddhist temple", "wat", "theravada", "mahayana", "saffron taboo", "monk robe",
+        "wat phra kaew", "temple of the tooth", "pagoda", "buddha",
+        "วัด", "ทำบุญ", "佛寺", "寺庙礼仪", "מקדש בודהיסטי", "בודהיזם"
+    )):
+        add_rule("rule_cultural_buddhist_temple_etiquette")
+
+    # Buddhist Lay Meditation (White)
+    if any(w in text_corpus for w in (
+        "buddhist meditation", "vipassana", "uposatha", "chut khao", "upasaka white",
+        "ชุดขาว", "白衣居士", "禅修", "מדיטציה בודהיסטית", "לבוש לבן בודהיסטי"
+    )):
+        add_rule("rule_cultural_buddhist_lay_meditation_white")
+
+    # Sikh Gurdwara Protocol (Rumal & Head Covering)
+    if any(w in text_corpus for w in (
+        "gurdwara", "sikh", "golden temple", "darbar sahib", "rumal", "dastar", "turban", "amritsar",
+        "ਗੁਰਦੁਆਰਾ", "ਰੁਮਾਲ", "ਦਸਤਾਰ", "ਸਿੱਖ", "גורדווארה", "סיקים", "טורבן", "מקדש הזהב"
+    )):
+        add_rule("rule_cultural_sikh_gurdwara_protocol")
+
+    # Japanese Kimono Collar Rule
+    if any(w in text_corpus for w in (
+        "kimono", "yukata", "houmongi", "tomesode", "obi", "tabi", "zori", "hidari-mae",
+        "着物", "浴衣", "左前", "קימונו", "יוקטה", "כימונו"
+    )):
+        add_rule("rule_cultural_japanese_kimono_collar_rule")
+
+    # Korean Hanbok Maternal Colors
+    if any(w in text_corpus for w in (
+        "hanbok", "korean wedding", "jeogori", "chima", "paebaek", "seollal",
+        "한복", "혼주한복", "הנבוק", "חתונה קוריאנית"
+    )):
+        add_rule("rule_cultural_korean_hanbok_wedding_palette")
+
+    # Chinese Green Hat Taboo
+    if any(w in text_corpus for w in (
+        "green hat", "green cap", "dai lu maozi", "dài lǜ màozi",
+        "戴绿帽子", "绿帽子", "כובע ירוק סין", "טאבו סיני"
+    )):
+        add_rule("rule_cultural_chinese_green_hat_taboo")
+
+    # Yoruba Agbada, Gele & Aso Ebi
+    if any(w in text_corpus for w in (
+        "agbada", "gele", "aso ebi", "aso-ebi", "aso oke", "yoruba", "fila",
+        "أغبادہ", "يوروبا", "אגבאדה", "גלה", "אסו אבי"
+    )):
+        add_rule("rule_cultural_yoruba_agbada_aso_ebi")
+
+    # Igbo Isiagu & Coral Beads
+    if any(w in text_corpus for w in (
+        "isiagu", "igbo", "okpu agu", "coral beads", "igba nkwu", "iri ji",
+        "איגבו", "איסיאגו", "חרוזי אלמוגים"
+    )):
+        add_rule("rule_cultural_igbo_isiagu_coral_beads")
+
+    # Ghanaian Ashanti / Akan Kente & Mourning Kobene
+    if any(w in text_corpus for w in (
+        "kente", "ghana", "ashanti", "akan", "kobene", "kuntunkuni", "adinkra", "durbar",
+        "كينتي", "קנטה", "גאנה", "אקאן"
+    )):
+        add_rule("rule_cultural_ghanaian_kente_protocol")
+
+    # Zulu Shweshwe & Isicholo
+    if any(w in text_corpus for w in (
+        "zulu", "isicholo", "shweshwe", "south africa", "umabo", "lobola",
+        "זולו", "איסיצ'ולו", "דרום אפריקה"
+    )):
+        add_rule("rule_cultural_zulu_shweshwe_isicholo")
+
+    # Latin American Guayabera de Gala
+    if any(w in text_corpus for w in (
+        "guayabera", "guayabera de gala", "chacabana", "camisa de yucatan", "tropical formal",
+        "cuba", "yucatan", "cartagena", "גואיברה", "חולצה מקסיקנית", "חתונה טרופית", "غوايابيرا"
+    )):
+        add_rule("rule_cultural_guayabera_formal_protocol")
+
+    # Latin American Quinceañera
+    if any(w in text_corpus for w in (
+        "quinceanera", "quinceañera", "quince anos", "quince años", "misa quinceanera",
+        "קוינסאניירה", "בת מצווה לטינית", "كينسينييرا"
+    )):
+        add_rule("rule_cultural_latin_quinceanera_guest")
+
     # -------------------------------------------------------------
     # 2. Hard Weather & Thermodynamic Constraints
     # -------------------------------------------------------------

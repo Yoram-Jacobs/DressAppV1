@@ -1,10 +1,8 @@
-import asyncio
 import pytest
 from app.services.stylist_qa_engine import (
     validate_garment_against_negative_constraints,
     filter_candidate_closet_by_axioms,
     evaluate_and_authorize_outfit,
-    find_best_garment_replacement,
 )
 from app.services.fashion_rules_rag import (
     retrieve_fashion_axioms,
@@ -286,4 +284,119 @@ def test_hebrew_machine_translation_gibberish_sanitization():
     assert "מפוחיות פנים" not in clean_dd
     assert "כיסויי פנים" in clean_dd
     assert "חולצות קצרות או מכנסיים קצרים" in clean_dd
+
+
+def test_buddhist_temple_saffron_taboo_and_modesty():
+    axioms = retrieve_fashion_axioms(user_text="Visiting Wat Phra Kaew Buddhist temple Bangkok", top_k=3)
+    buddhist_rule = next((r for r in axioms if r.id == "rule_cultural_buddhist_temple_etiquette"), None)
+    assert buddhist_rule is not None, "Buddhist temple rule must be retrieved"
+
+    # Saffron monk robe / orange tunic -> strictly forbidden for lay visitors
+    saffron_top = {
+        "id": "s-monk",
+        "title": "Saffron Orange Linen Tunic Robe",
+        "category": "Top",
+        "colors": ["orange"],
+        "tags": ["saffron", "tunic"],
+    }
+    is_valid, reason = validate_garment_against_negative_constraints(saffron_top, buddhist_rule, role="top")
+    assert not is_valid
+    assert "monks" in reason.lower()
+
+    # Tank top -> forbidden (bare shoulders)
+    tank_top = {"id": "t-tank", "title": "Summer Sleeveless Tank Top", "category": "Top", "colors": ["white"]}
+    is_valid, reason = validate_garment_against_negative_constraints(tank_top, buddhist_rule, role="top")
+    assert not is_valid
+    assert "sleeveless" in reason.lower()
+
+    # Modest navy linen trousers -> compliant!
+    modest_pants = {"id": "b-linen", "title": "Wide Leg Navy Linen Trousers", "category": "Bottom", "colors": ["navy"]}
+    is_valid, reason = validate_garment_against_negative_constraints(modest_pants, buddhist_rule, role="bottom")
+    assert is_valid
+
+
+def test_sikh_gurdwara_head_covering_and_no_caps():
+    axioms = retrieve_fashion_axioms(user_text="Visiting Golden Temple Sikh Gurdwara Amritsar", top_k=3)
+    gurdwara_rule = next((r for r in axioms if r.id == "rule_cultural_sikh_gurdwara_protocol"), None)
+    assert gurdwara_rule is not None, "Sikh Gurdwara rule must be retrieved"
+
+    # Baseball cap -> strictly forbidden (must use cloth Rumal or Dastar)
+    baseball_cap = {"id": "h-cap", "title": "NY Yankees Baseball Cap", "category": "Accessory", "sub_category": "headwear"}
+    is_valid, reason = validate_garment_against_negative_constraints(baseball_cap, gurdwara_rule, role="headwear")
+    assert not is_valid
+    assert "rumāl" in reason.lower() or "dastar" in reason.lower() or "baseball" in reason.lower()
+
+    # Shorts -> strictly forbidden
+    shorts = {"id": "b-shorts", "title": "Khaki Cargo Shorts", "category": "Bottom", "colors": ["khaki"]}
+    is_valid, reason = validate_garment_against_negative_constraints(shorts, gurdwara_rule, role="bottom")
+    assert not is_valid
+
+
+def test_hindu_temple_darshan_purges_leather_articles():
+    axioms = retrieve_fashion_axioms(user_text="Hindu temple darshan and puja mandir", top_k=3)
+    darshan_rule = next((r for r in axioms if r.id == "rule_cultural_hindu_temple_darshan"), None)
+    assert darshan_rule is not None, "Hindu temple darshan rule must be retrieved"
+
+    # Leather belt -> strictly purged
+    leather_belt = {"id": "a-belt", "title": "Genuine Brown Leather Belt", "category": "Accessory", "material": "leather"}
+    is_valid, reason = validate_garment_against_negative_constraints(leather_belt, darshan_rule, role="belt")
+    assert not is_valid
+    assert "leather" in reason.lower()
+
+    # Leather loafers -> strictly purged
+    leather_shoes = {"id": "s-shoes", "title": "Calfskin Leather Loafers", "category": "Shoes", "material": "leather"}
+    is_valid, reason = validate_garment_against_negative_constraints(leather_shoes, darshan_rule, role="shoes")
+    assert not is_valid
+
+
+def test_chinese_green_hat_taboo_purged_for_men():
+    axioms = retrieve_fashion_axioms(user_text="Styling a Chinese man for autumn street style with a green hat", top_k=3)
+    green_hat_rule = next((r for r in axioms if r.id == "rule_cultural_chinese_green_hat_taboo"), None)
+    assert green_hat_rule is not None, "Chinese green hat taboo rule must be retrieved"
+
+    # Green beanie / cap -> strictly purged
+    green_beanie = {"id": "h-green", "title": "Forest Green Knit Beanie", "category": "Accessory", "colors": ["green"]}
+    is_valid, reason = validate_garment_against_negative_constraints(green_beanie, green_hat_rule, role="headwear")
+    assert not is_valid
+    assert "dài lǜ màozi" in reason.lower() or "green hats" in reason.lower()
+
+    # Black beanie -> compliant!
+    black_beanie = {"id": "h-black", "title": "Charcoal Black Knit Beanie", "category": "Accessory", "colors": ["black"]}
+    is_valid, reason = validate_garment_against_negative_constraints(black_beanie, green_hat_rule, role="headwear")
+    assert is_valid
+
+
+def test_vatican_papal_audience_purges_white_dress():
+    axioms = retrieve_fashion_axioms(user_text="Private papal audience at the Vatican with the Pope", top_k=3)
+    vatican_rule = next((r for r in axioms if r.id == "rule_cultural_vatican_papal_audience"), None)
+    assert vatican_rule is not None, "Vatican papal audience rule must be retrieved"
+
+    # White cocktail dress -> strictly forbidden (Privilège du blanc reserved for Catholic queens)
+    white_dress = {"id": "d-white", "title": "White Silk Crepe Midi Dress", "category": "Dress", "colors": ["white"]}
+    is_valid, reason = validate_garment_against_negative_constraints(white_dress, vatican_rule, role="dress")
+    assert not is_valid
+    assert "privilège du blanc" in reason.lower() or "white dresses" in reason.lower()
+
+    # Black midi dress -> compliant!
+    black_dress = {"id": "d-black", "title": "Long-Sleeved Black Crepe Formal Midi Dress", "category": "Dress", "colors": ["black"]}
+    is_valid, reason = validate_garment_against_negative_constraints(black_dress, vatican_rule, role="dress")
+    assert is_valid
+
+
+def test_yom_kippur_and_tisha_bav_purges_leather_footwear():
+    axioms = retrieve_fashion_axioms(user_text="יום כיפור תפילה נעילת הסנדל", top_k=3)
+    yom_kippur_rule = next((r for r in axioms if r.id == "rule_cultural_jewish_tisha_bav_fast"), None)
+    assert yom_kippur_rule is not None, "Yom Kippur / Tisha B'Av rule must be retrieved"
+
+    # Leather shoes -> strictly purged
+    leather_derby = {"id": "s-leather", "title": "Brown Leather Derby Shoes", "category": "Shoes", "material": "leather"}
+    is_valid, reason = validate_garment_against_negative_constraints(leather_derby, yom_kippur_rule, role="shoes")
+    assert not is_valid
+    assert "leather" in reason.lower()
+
+    # Canvas shoes -> compliant!
+    canvas_sneakers = {"id": "s-canvas", "title": "White Canvas Slip-on Shoes", "category": "Shoes", "material": "canvas", "colors": ["white"]}
+    is_valid, reason = validate_garment_against_negative_constraints(canvas_sneakers, yom_kippur_rule, role="shoes")
+    assert is_valid
+
 

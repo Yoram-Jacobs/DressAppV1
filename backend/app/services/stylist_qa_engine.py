@@ -27,11 +27,6 @@ import logging
 import re
 from typing import Any
 
-from app.services.fashion_rules_rag import (
-    FEMALE_GARMENT_RE,
-    filter_gender_closet_items,
-    filter_modesty_closet_items,
-)
 from app.services.gemini_stylist import sanitize_stylist_text
 from app.services.stylist_scheduler_brain import (
     calculate_garment_style_score,
@@ -324,6 +319,7 @@ COLOR_SYNONYMS: dict[str, set[str]] = {
     "yellow": {"yellow", "צהוב", "أصفر", "पीला", "желтый", "黄", "amarelo", "jaune", "gelb", "giallo"},
     "pink": {"pink", "ורוד", "ورדי", "गुलाबी", "розовый", "粉", "rosa", "rose", "fuchsia", "פוקסיה"},
     "orange": {"orange", "כתום", "ברتقالي", "नारंगी", "оранжевый", "橙", "laranja", "arancione"},
+    "green": {"green", "ירוק", "أخضر", "हरा", "зеленый", "绿", "緑", "verde", "vert", "grün"},
 }
 
 
@@ -501,6 +497,206 @@ def validate_garment_against_negative_constraints(
             "חולצת בטן", "גופיית בטן", "bikini", "ביקיני", "swimwear", "beach"
         )):
             return False, "Graphic tees, eagle/tribal prints, tank tops, and beachwear are forbidden in holy sanctuaries."
+
+    # 12. Buddhist Temple Visitation & Monastic Color Taboo
+    elif (
+        rule_id == "rule_cultural_buddhist_temple_etiquette"
+        or "monastic robes" in neg_constraint.lower()
+        or "saffron" in neg_constraint.lower()
+    ):
+        cat = norm_category(it.get("category"))
+        # Laypersons must never wear saffron/monastic orange robes
+        if role in ("top", "outerwear", "dress", "one-piece") or cat in ("top", "outerwear", "dress", "one-piece"):
+            if _item_has_color(it, "orange"):
+                if any(w in all_text for w in ("saffron", "ochre", "monk", "כתום", "נזיר", "robe", "tunic")):
+                    return False, "Saffron and monastic orange robes are strictly reserved for ordained monks."
+        # Modesty & Respect
+        if role == "bottom" or cat == "bottom":
+            if any(w in all_text for w in ("shorts", "שורטס", "מכנסיים קצרים", "mini skirt", "חצאית מיני")):
+                return False, "Shorts and mini skirts are strictly forbidden in Buddhist temples (knees must be covered)."
+        if any(w in all_text for w in ("sleeveless", "tank", "גופייה", "גופיה", "crop top", "חולצת בטן")):
+            return False, "Sleeveless tops and crop tops are strictly forbidden in Buddhist temples."
+        if any(w in all_text for w in ("buddha print", "buddha graphic", "הדפס בודהה")):
+            return False, "Disrespectful prints depicting sacred religious figures on garments are forbidden."
+
+    # 13. Buddhist Lay Meditation (White Attire)
+    elif (
+        rule_id == "rule_cultural_buddhist_lay_meditation_white"
+        or "chut khao" in neg_constraint.lower()
+        or ("solid white" in neg_constraint.lower() and "meditation" in neg_constraint.lower())
+    ):
+        if not _item_has_color(it, "white"):
+            return False, "Lay meditation and precept observance strictly mandates pure white attire (Chut Khao)."
+        pattern = str(it.get("pattern") or "").lower()
+        if pattern in ("loud", "floral", "graphic", "print", "geometric"):
+            return False, "Patterned garments violate simple white meditation guidelines."
+
+    # 14. Sikh Gurdwara Protocol
+    elif (
+        rule_id == "rule_cultural_sikh_gurdwara_protocol"
+        or "gurdwara" in neg_constraint.lower()
+        or ("head covering" in neg_constraint.lower() and "sikh" in neg_constraint.lower())
+    ):
+        cat = norm_category(it.get("category"))
+        # Headwear must be a cloth scarf / Rumal / Dastar, NOT a baseball cap / fedora / beanie
+        if role in ("headwear", "hat") or cat in ("headwear", "hat"):
+            if any(w in all_text for w in ("cap", "baseball", "fedora", "beanie", "visor", "קסקט", "כובע מצחייה", "כובע גרב")):
+                return False, "Baseball caps and casual hats are strictly forbidden inside a Gurdwara (use a Rumāl or Dastar)."
+        if role == "bottom" or cat == "bottom":
+            if any(w in all_text for w in ("shorts", "שורטס", "מכנסיים קצרים", "mini skirt", "חצאית מיני")):
+                return False, "Shorts and mini skirts are strictly forbidden in a Gurdwara."
+        if any(w in all_text for w in ("sleeveless", "tank", "גופייה", "גופיה", "crop top")):
+            return False, "Bare shoulders and sleeveless garments are strictly forbidden in a Gurdwara."
+
+    # 15. Chinese Green Hat Taboo
+    elif (
+        rule_id == "rule_cultural_chinese_green_hat_taboo"
+        or "green hat" in neg_constraint.lower()
+        or "dài lǜ màozi" in neg_constraint.lower()
+        or "戴绿帽子" in neg_constraint
+    ):
+        cat = norm_category(it.get("category"))
+        if role in ("headwear", "hat", "accessory") or cat in ("headwear", "hat"):
+            if _item_has_color(it, "green"):
+                return False, "Green hats/caps for men are an extreme cultural taboo in Chinese tradition (dài lǜ màozi)."
+
+    # 16. Hindu Temple Darshan & Non-Leather Sanctum
+    elif (
+        rule_id == "rule_cultural_hindu_temple_darshan"
+        or "temple sanctum" in neg_constraint.lower()
+        or ("ritual impurity" in neg_constraint.lower() and "leather" in neg_constraint.lower())
+    ):
+        cat = norm_category(it.get("category"))
+        # Strictly purge all leather articles
+        mat = str(it.get("material") or "").lower()
+        if any(w in mat or w in all_text for w in ("leather", "suede", "עור", "جلد", "चमड़ा", "cuir", "leder")):
+            return False, "All leather articles (shoes, belts, wallets, bags) are strictly forbidden in Hindu temple sanctums (Ahimsa)."
+        if role == "bottom" or cat == "bottom":
+            if any(w in all_text for w in ("shorts", "שורטס", "mini skirt", "חצאית מיני")):
+                return False, "Shorts and mini skirts are forbidden for Hindu temple Darshan."
+        if any(w in all_text for w in ("sleeveless", "tank", "גופייה", "crop top")):
+            return False, "Sleeveless tops and crop tops are forbidden for Hindu temple Darshan."
+
+    # 17. South Indian Kerala Temple (Mundu)
+    elif (
+        rule_id == "rule_cultural_hindu_kerala_mundu"
+        or "kerala temple" in neg_constraint.lower()
+    ):
+        cat = norm_category(it.get("category"))
+        gen = (user_gender or "").lower()
+        if gen in ("male", "man", "men", "גבר") or not gen:
+            if role in ("top", "outerwear") or cat in ("top", "outerwear"):
+                if not any(w in all_text for w in ("melmundu", "angavastram", "stole", "צעיף")):
+                    return False, "Stitched shirts and tops are strictly barred for men in traditional Kerala temple inner courtyards."
+            if role == "bottom" or cat == "bottom":
+                if any(w in all_text for w in ("trousers", "pants", "jeans", "shorts", "מכנסיים", "ג'ינס")):
+                    return False, "Western pants and trousers are forbidden in Kerala temple courtyards (Mundu required)."
+
+    # 18. Tisha B'Av & Yom Kippur Footwear Protocol
+    elif (
+        rule_id == "rule_cultural_jewish_tisha_bav_fast"
+        or "ne'ilat hasandal" in neg_constraint.lower()
+        or "נעילת הסנדל" in neg_constraint
+    ):
+        cat = norm_category(it.get("category"))
+        if role in ("shoes", "footwear", "accessory", "belt") or cat in ("shoes", "footwear", "accessory", "belt"):
+            mat = str(it.get("material") or "").lower()
+            if any(w in mat or w in all_text for w in ("leather", "suede", "עור", "جلد", "cuir", "leder")):
+                return False, "Leather footwear is strictly forbidden on Yom Kippur and Tisha B'Av (Ne'ilat HaSandal)."
+
+    # 19. Synagogue Worship & Western Wall (Kotel)
+    elif (
+        rule_id == "rule_cultural_jewish_synagogue_prayer"
+        or "synagogue services" in neg_constraint.lower()
+    ):
+        cat = norm_category(it.get("category"))
+        if role in ("shoes", "footwear") or cat in ("shoes", "footwear"):
+            if any(w in all_text for w in ("flip-flop", "flip flop", "slides", "כפכפים", "כפכפי ים")):
+                return False, "Beach flip-flops and athletic slides are forbidden in synagogue services."
+        if role == "bottom" or cat == "bottom":
+            if any(w in all_text for w in ("shorts", "שורטס", "מכנסיים קצרים", "swim", "trunks")):
+                return False, "Shorts and swimwear are forbidden in synagogue services."
+        if any(w in all_text for w in ("sleeveless", "tank", "גופייה", "גופיה", "crop top")):
+            return False, "Sleeveless tops and crop tops violate synagogue reverence standards."
+
+    # 20. Vatican & Papal Audience Protocol
+    elif (
+        rule_id == "rule_cultural_vatican_papal_audience"
+        or "privilège du blanc" in neg_constraint.lower()
+        or "papal audience" in neg_constraint.lower()
+    ):
+        cat = norm_category(it.get("category"))
+        # White dresses strictly reserved for Catholic queens/monarchs
+        if role == "dress" or cat == "dress" or "dress" in all_text or "שמלה" in all_text:
+            if _item_has_color(it, "white"):
+                return False, "White dresses are strictly forbidden at papal audiences (Privilège du blanc reserved for Catholic queens)."
+        if role in ("shoes", "footwear") or cat in ("shoes", "footwear"):
+            if any(w in all_text for w in ("open-toe", "sandals", "סנדלים", "slides", "sneaker", "sneakers")):
+                return False, "Open-toed sandals and athletic shoes are strictly forbidden at papal audiences."
+        if any(w in all_text for w in ("sleeveless", "tank", "גופייה", "crop top", "shorts", "שורטס")):
+            return False, "Revealing garments and shorts are forbidden at papal audiences."
+
+    # 21. Islamic Hajj & Umrah Pilgrimage (Ihram)
+    elif (
+        rule_id == "rule_cultural_islamic_hajj_umrah_ihram"
+        or "ihram" in neg_constraint.lower()
+    ):
+        cat = norm_category(it.get("category"))
+        gen = (user_gender or "").lower()
+        if gen in ("male", "man", "men", "גבר") or not gen:
+            # Stitched clothes strictly barred for men in Ihram
+            if role in ("top", "bottom", "outerwear") or cat in ("top", "bottom", "outerwear"):
+                if not any(w in all_text for w in ("unstitched", "seamless", "izar", "rida", "towel")):
+                    if any(w in all_text for w in ("shirt", "pants", "trousers", "jacket", "coat", "boxer", "underwear", "חולצה", "מכנסיים")):
+                        return False, "Stitched and tailored garments are strictly forbidden for men in Ihram."
+            if role in ("headwear", "hat") or cat in ("headwear", "hat"):
+                return False, "Head coverings are strictly forbidden for men in Ihram."
+
+    # 22. Western White Tie Protocol
+    elif (
+        rule_id == "rule_cultural_western_white_tie"
+        or ("white tie" in neg_constraint.lower() and "tailcoat" in neg_constraint.lower())
+    ):
+        cat = norm_category(it.get("category"))
+        if role in ("shoes", "footwear") or cat in ("shoes", "footwear"):
+            if any(w in all_text for w in ("sneaker", "sneakers", "loafer", "sandals", "boots")):
+                return False, "Casual shoes, sneakers, and loafers are strictly forbidden for White Tie (patent court shoes/oxfords required)."
+        if role in ("top", "outerwear") or cat in ("top", "outerwear"):
+            if any(w in all_text for w in ("t-shirt", "polo", "hoodie", "denim", "sweater")):
+                return False, "Casual garments are strictly forbidden for White Tie protocol."
+
+    # 23. Latin American Guayabera Protocol
+    elif (
+        rule_id == "rule_cultural_guayabera_formal_protocol"
+        or "guayabera" in neg_constraint.lower()
+    ):
+        cat = norm_category(it.get("category"))
+        if role == "bottom" or cat == "bottom":
+            if any(w in all_text for w in ("shorts", "שורטס", "swim", "trunks")):
+                return False, "Casual shorts and swimwear are strictly forbidden with formal Guayabera de gala."
+        if role in ("shoes", "footwear") or cat in ("shoes", "footwear"):
+            if any(w in all_text for w in ("flip-flop", "slides", "sneakers", "סניקרס")):
+                return False, "Athletic sneakers and flip-flops are strictly forbidden with formal Guayabera de gala."
+
+    # 24. Latin American Quinceañera Guest Protocol
+    elif (
+        rule_id == "rule_cultural_latin_quinceanera_guest"
+        or "quinceañera" in neg_constraint.lower()
+        or "quinceanera" in neg_constraint.lower()
+    ):
+        cat = norm_category(it.get("category"))
+        if role == "dress" or cat == "dress" or "dress" in all_text or "gown" in all_text:
+            if _item_has_color(it, "white") or any(w in all_text for w in ("ivory", "שמנת")):
+                return False, "White or ivory formal gowns are strictly reserved for the Quinceañera celebrant."
+
+    # 25. Ghanaian Funeral Kente Taboo
+    elif (
+        rule_id == "rule_cultural_ghanaian_kente_protocol"
+        or "kobene" in neg_constraint.lower()
+    ):
+        if any(w in all_text for w in ("funeral", "mourning", "לוויה", "אבל")):
+            if _item_has_color(it, "gold") or any(w in all_text for w in ("multicolor", "joyous", "celebratory kente")):
+                return False, "Joyous gold or multicolored Kente is strictly forbidden at Ghanaian funerals (Kobene/Kuntunkuni required)."
 
     return True, None
 
