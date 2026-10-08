@@ -656,5 +656,163 @@ def test_qa_handles_string_recommendations_and_notes():
     assert isinstance(reviewed["outfit_recommendations"][0]["designer_notes"], dict)
 
 
+def test_qa_disqualifies_geometric_mesh_top_and_selects_blue_striped_shirt():
+    import asyncio
+    closet = [
+        {
+            "id": "mesh-top-1",
+            "title": "Geometric Patterned Mesh Top",
+            "category": "Top",
+            "sub_category": "Top",
+            "tags": ["mesh", "geometric", "patterned", "rave"],
+            "pattern": "geometric",
+            "material": "mesh",
+        },
+        {
+            "id": "shirt-btn-1",
+            "title": "חולצת כפתורים כחולה עם פסים ושרוול קצר",
+            "category": "Top",
+            "sub_category": "Shirt",
+            "tags": ["חולצה", "כפתורים", "כחולה", "פסים", "כחול"],
+            "pattern": "striped",
+            "dress_code": "smart casual",
+        },
+        {
+            "id": "faded-cargo-1",
+            "title": "Faded Olive Cargo Pants",
+            "category": "Bottom",
+            "sub_category": "Pants",
+            "tags": ["cargo", "faded", "olive", "pants"],
+            "dress_code": "casual",
+        },
+        {
+            "id": "pant-dress-1",
+            "title": "Men's Charcoal Gray Dress Pants",
+            "category": "Bottom",
+            "sub_category": "Pants",
+            "tags": ["trousers", "formal", "tailored", "charcoal", "gray", "מחויט", "כהה"],
+            "dress_code": "business",
+        },
+        {
+            "id": "boots-blk-1",
+            "title": "Sturdy Black Leather Boots",
+            "category": "Footwear",
+            "sub_category": "Boots",
+            "tags": ["boots", "leather", "black"],
+            "dress_code": "casual",
+        },
+    ]
+
+    prompt = "לביקור משפחה בשבעה, המבוסס על אופנה מודרנית ומשובחת, כולל חולצה כחולה עם פסים, חולצת טי לבנה, ומכנסיים מחויטים בצבע כהה."
+
+    raw_advice = {
+        "outfit_recommendations": [
+            {
+                "name": "Look 1",
+                "items": [
+                    {
+                        "role": "top",
+                        "name": "Geometric Patterned Mesh Top",
+                        "closet_item_id": "mesh-top-1",
+                    },
+                    {
+                        "role": "bottom",
+                        "name": "Faded Olive Cargo Pants",
+                        "closet_item_id": "faded-cargo-1",
+                    },
+                    {
+                        "role": "shoes",
+                        "name": "Sturdy Black Leather Boots",
+                        "closet_item_id": "boots-blk-1",
+                    },
+                ],
+            }
+        ]
+    }
+
+    reviewed = asyncio.run(evaluate_and_authorize_outfit(
+        user_text=prompt,
+        advice_payload=raw_advice,
+        all_closet_items=closet,
+        user_profile={"sex": "male", "preferred_language": "he"},
+    ))
+
+    rec = reviewed["outfit_recommendations"][0]
+    assert rec["qa_status"] == "authorized"
+
+    items_by_role = {it["role"]: it for it in rec["items"]}
+    # Top: Geometric Mesh Top MUST be disqualified and replaced by blue striped shirt!
+    assert items_by_role["top"]["closet_item_id"] == "shirt-btn-1"
+    assert "חולצת כפתורים כחולה עם פסים" in items_by_role["top"]["name"]
+
+    # Bottom: Faded cargo pants MUST be disqualified and replaced by charcoal tailored dress pants!
+    assert items_by_role["bottom"]["closet_item_id"] == "pant-dress-1"
+    assert "Dress Pants" in items_by_role["bottom"]["name"]
+
+    # Shoes remain black leather boots
+    assert items_by_role["shoes"]["closet_item_id"] == "boots-blk-1"
+
+
+def test_qa_localization_all_13_languages():
+    import re
+    from app.services.stylist_qa_engine import (
+        LOCALIZED_SILHOUETTE_MOURNING,
+        LOCALIZED_TEXTURE_MOURNING,
+        LOCALIZED_PALETTE_MOURNING,
+        LOCALIZED_DAYTIME_CONDOLENCE,
+    )
+
+    languages = ["en", "he", "ar", "es", "fr", "de", "it", "pt", "nl", "ru", "zh", "ja", "hi"]
+
+    for lang in languages:
+        payload = {
+            "spoken_reply": "הו, המלצה לשעות החמה והרמדונות, הכוונה היא לביקור משפחה או,",
+            "outfit_recommendations": [
+                {
+                    "designer_notes": {
+                        "color_harmony": "כחול אדום, שחור",
+                        "texture_balance": "Ratio 1:2 שרוול קצר ושרוול קצרים, מטוטל ורגליים",
+                        "silhouette": "כפתורים קצרים עם חגורת גב",
+                    }
+                }
+            ],
+            "do_dont": [
+                "אין ללבוש ללבוש בגדים צבעוניים",
+                "אין ללבוש מזון או אוכל",
+            ],
+        }
+
+        sanitize_spoken_reply_and_notes(payload, user_text="לבוש הולם לשבעה", lang=lang)
+
+        notes = payload["outfit_recommendations"][0]["designer_notes"]
+        expected_sil = LOCALIZED_SILHOUETTE_MOURNING[lang]
+        expected_tex = LOCALIZED_TEXTURE_MOURNING[lang]
+        expected_pal = LOCALIZED_PALETTE_MOURNING[lang]
+        expected_condolence = LOCALIZED_DAYTIME_CONDOLENCE[lang]
+
+        # Verify silhouette is localized exactly
+        assert notes["silhouette"] == expected_sil, f"Silhouette mismatch for lang {lang}"
+        # Verify texture balance is localized exactly
+        assert notes["texture_balance"] == expected_tex, f"Texture balance mismatch for lang {lang}"
+        # Verify mourning palette contains expected localized translation
+        assert expected_pal in notes["color_harmony"], f"Palette mismatch for lang {lang}"
+
+        # If non-Hebrew, verify NO Hebrew strings leaked into silhouette or texture balance
+        if lang != "he":
+            assert not re.search(r"[\u0590-\u05fe]", notes["silhouette"]), f"Hebrew leaked into silhouette for {lang}"
+            assert not re.search(r"[\u0590-\u05fe]", notes["texture_balance"]), f"Hebrew leaked into texture balance for {lang}"
+            assert "גזרה קלאסית" not in notes["silhouette"]
+            assert "איזון בדים" not in notes["texture_balance"]
+
+        # Verify spoken reply scrubbed Ramadan
+        assert "והרמדונות" not in payload["spoken_reply"]
+        assert expected_condolence in payload["spoken_reply"]
+
+        # Verify do_dont pruned food and cleaned duplicate words
+        assert len(payload["do_dont"]) == 1
+        assert "אין ללבוש ללבוש" not in payload["do_dont"][0]
+
+
+
 
 

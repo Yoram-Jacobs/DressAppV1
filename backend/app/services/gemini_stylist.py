@@ -382,8 +382,8 @@ def sanitize_stylist_text(text: str | None, lang: str = "en") -> str:
     lang_norm = (lang or "en").lower().strip()
     base_lang = lang_norm.split("-")[0].split("_")[0]
 
-    # 1. Clean Chinese tokens when language is not Chinese
-    if not base_lang.startswith("zh"):
+    # 1. Clean Chinese tokens when language is neither Chinese nor Japanese
+    if not base_lang.startswith("zh") and not base_lang.startswith("ja"):
         cjk_replacements = {
             "he": {
                 "组装": "שילוב",

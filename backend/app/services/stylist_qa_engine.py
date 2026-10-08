@@ -243,30 +243,52 @@ def is_item_mourning_inappropriate(it: dict[str, Any], role: str) -> bool:
         str(it.get("description") or ""),
         str(it.get("category") or ""),
         str(it.get("sub_category") or ""),
+        str(it.get("material") or ""),
         " ".join(str(t) for t in (it.get("tags") or [])),
     ]).lower()
 
-    # 1. Shorts / swim / trunks / leggings only forbidden on bottom
+    # 1. Shorts / swim / trunks / leggings / cargo only forbidden on bottom
     if role == "bottom" or norm_category(it.get("category")) == "bottom":
-        if any(w in all_text for w in ("shorts", "שורטס", "מכנסיים קצרים", "bermuda", "swim", "trunks", "טייץ", "טייטס", "leggings", "tights")):
+        if any(w in all_text for w in (
+            "shorts", "שורטס", "מכנסיים קצרים", "bermuda", "swim", "trunks",
+            "טייץ", "טייטס", "leggings", "tights", "cargo", "דגמ\"ח", "דגמח",
+        )):
             return True
 
-    # 2. Graphic prints, loud florals, cartoons, party wear
+    # 2. Graphic prints, loud florals, cartoons, party wear, mesh, sheer, geometric, optical, psychedelic, rave
     pattern = str(it.get("pattern") or "").lower()
-    if pattern in ("floral", "botanical", "flower", "graphic", "print"):
+    if pattern in (
+        "floral", "botanical", "flower", "graphic", "print", "geometric",
+        "mesh", "psychedelic", "optical", "checkerboard", "checkered", "abstract",
+    ):
         return True
-    if any(w in all_text for w in ("floral", "flower", "פרחוני", "פרחים", "graphic", "cartoon", "ציור", "נשר", "מסיבה", "party", "ripped", "קרוע")):
+    if any(w in all_text for w in (
+        "floral", "flower", "פרחוני", "פרחים", "graphic", "cartoon", "ציור", "נשר", "מסיבה", "party",
+        "ripped", "קרוע", "distressed", "faded", "משופשף", "שפשופים",
+        "mesh", "sheer", "geometric", "optical", "psychedelic", "vortex", "checkerboard", "checkered",
+        "net", "see-through", "transparent", "lace", "sequin", "sequins", "glitter", "rave", "trippy",
+        "רשת", "שקוף", "שקופה", "משובץ", "גיאומטרי", "פסיכדלי",
+        "شبكة", "شفاف", "هندسي",
+    )):
         return True
 
-    # 3. Bright neon / loud colors (red, gold, neon, hot pink)
+    # 3. Sheer / mesh materials
+    material = str(it.get("material") or "").lower()
+    if any(w in material for w in ("mesh", "sheer", "net", "lace", "sequin", "רשת", "שקוף")):
+        return True
+
+    # 4. Bright neon / loud colors (red, gold, neon, hot pink, orange, yellow)
     colors = [str(c).lower() for c in (it.get("colors") or [])]
-    if any(c in ("red", "gold", "yellow", "neon", "orange") or c in ("אדום", "זהב", "צהוב", "ניאון", "כתום") for c in colors):
+    if any(c in ("red", "gold", "yellow", "neon", "orange", "pink") or c in ("אדום", "זהב", "צהוב", "ניאון", "כתום", "ורוד") for c in colors):
         return True
-    if any(w in all_text for w in ("bright red", "neon", "אדום בוהק", "זהב", "gold", "ניאון")):
+    if any(w in all_text for w in ("bright red", "neon", "אדום בוהק", "זהב", "gold", "ניאון", "צהוב", "כתום")):
         return True
 
-    # 4. Inappropriate non-clothing items
-    if any(w in all_text for w in ("apron", "סינר", "דובון", "pajama", "פיג'מה", "bikini", "ביקיני")):
+    # 5. Inappropriate non-clothing items or sleepwear/beachwear
+    if any(w in all_text for w in (
+        "apron", "סינר", "דובון", "pajama", "פיג'מה", "bikini", "ביקיני",
+        "tank top", "tank", "sleeveless", "גופייה", "גופיה",
+    )):
         return True
 
     return False
@@ -330,6 +352,137 @@ def find_best_garment_replacement(
 
 
 
+LOCALIZED_SILHOUETTE_MOURNING: dict[str, str] = {
+    "en": "Classic, understated, and comfortable silhouette",
+    "he": "גזרה קלאסית מאופקת ונוחה",
+    "ar": "قصة كلاسيكية هادئة ومريحة",
+    "es": "Corte clásico, sobrio y cómodo",
+    "fr": "Coupe classique, sobre et confortable",
+    "de": "Klassischer, dezenter und bequemer Schnitt",
+    "it": "Taglio classico, sobrio e confortevole",
+    "pt": "Corte clássico, sóbrio e confortável",
+    "nl": "Klassiek, ingetogen en comfortabel model",
+    "ru": "Классический, сдержанный и удобный крой",
+    "zh": "经典、内敛且舒适的版型",
+    "ja": "クラシックで控えめな、着心地の良いシルエット",
+    "hi": "क्लासिक, शालीन और आरामदायक कट",
+}
+
+LOCALIZED_SILHOUETTE_DEFAULT: dict[str, str] = {
+    "en": "Clean, well-proportioned, and comfortable silhouette",
+    "he": "גזרה נקייה, מאוזנת ונוחה",
+    "ar": "قصة نظيفة ومتناسقة ومريحة",
+    "es": "Corte limpio, equilibrado y cómodo",
+    "fr": "Coupe nette, bien équilibrée et confortable",
+    "de": "Klarer, gut proportionierter und bequemer Schnitt",
+    "it": "Taglio pulito, proporzionato e confortevole",
+    "pt": "Corte limpo, bem proporcionado e confortável",
+    "nl": "Strak, evenwichtig en comfortabel model",
+    "ru": "Чистый, пропорциональный и удобный крой",
+    "zh": "利落、比例协调且舒适的版型",
+    "ja": "すっきりとしたバランスの良い着心地の良いシルエット",
+    "hi": "साफ, संतुलित और आरामदायक कट",
+}
+
+LOCALIZED_TEXTURE_MOURNING: dict[str, str] = {
+    "en": "Smooth, comfortable fabrics providing a dignified appearance",
+    "he": "איזון בדים חלקים ונעימים המעניקים מראה מכובד",
+    "ar": "أقمشة ناعمة ومريحة تمنح مظهراً لائقاً ومحترماً",
+    "es": "Telas suaves y cómodas que aportan una apariencia digna",
+    "fr": "Tissus lisses et confortables offrant une allure digne",
+    "de": "Glatte, angenehme Stoffe für ein würdevolles Erscheinungsbild",
+    "it": "Tessuti lisci e confortevoli per un aspetto dignitoso",
+    "pt": "Tecidos suaves e confortáveis que conferem uma aparência digna",
+    "nl": "Gladde, comfortabele stoffen voor een waardige uitstraling",
+    "ru": "Гладкие, приятные ткани, создающие достойный вид",
+    "zh": "平滑舒适的面料，展现庄重得体的外观",
+    "ja": "品位ある印象を与える、滑らかで着心地の良い生地",
+    "hi": "सौम्य और आरामदायक कपड़े जो गरिमापूर्ण रूप प्रदान करते हैं",
+}
+
+LOCALIZED_TEXTURE_DEFAULT: dict[str, str] = {
+    "en": "Balanced fabric textures creating a harmonious appearance",
+    "he": "איזון מרקמים והרמוניה בין הבדים",
+    "ar": "توازن في ملمس الأقمشة يمنح مظهراً متناسقاً",
+    "es": "Equilibrio de texturas que crea una apariencia armoniosa",
+    "fr": "Équilibre des textures créant une allure harmonieuse",
+    "de": "Ausgewogene Stoffstrukturen für ein harmonisches Gesamtbild",
+    "it": "Equilibrio di trame per un aspetto armonioso",
+    "pt": "Equilíbrio de texturas criando uma aparência harmoniosa",
+    "nl": "Harmonieus evenwicht tussen verschillende stoftexturen",
+    "ru": "Гармоничное сочетание фактур тканей",
+    "zh": "面料质感平衡，呈现和谐视觉效果",
+    "ja": "調和の取れた生地の質感による美しい組み合わせ",
+    "hi": "कपड़ों की बुनावट का संतुलित और सामंजस्यपूर्ण संयोजन",
+}
+
+LOCALIZED_PALETTE_MOURNING: dict[str, str] = {
+    "en": "Dark navy, black, and charcoal gray",
+    "he": "כחול כהה, שחור ואפור",
+    "ar": "كحلي داكن، أسود ورمادي",
+    "es": "Azul marino oscuro, negro y gris marengo",
+    "fr": "Bleu marine foncé, noir et gris anthracite",
+    "de": "Dunkles Marineblau, Schwarz und Anthrazitgrau",
+    "it": "Blu navy scuro, nero e grigio antracite",
+    "pt": "Azul-marinho escuro, preto e cinza-escuro",
+    "nl": "Donker marineblauw, zwart en antracietgrijs",
+    "ru": "Темно-синий, черный и темно-серый",
+    "zh": "深藏青、黑色与炭灰色",
+    "ja": "ダークネイビー、ブラック、チャコールグレー",
+    "hi": "गहरा नेवी ब्लू, काला और चारकोल ग्रे",
+}
+
+LOCALIZED_DAYTIME_CONDOLENCE: dict[str, str] = {
+    "en": "for daytime and the condolence visit",
+    "he": "לשעות היום ולביקור המנחם",
+    "ar": "لساعات النهار وزيارة التعزية",
+    "es": "para el día y la visita de pésame",
+    "fr": "pour la journée et la visite de condoléances",
+    "de": "für den Tag und den Kondolenzbesuch",
+    "it": "per il giorno e la visita di condoglianze",
+    "pt": "para o dia e a visita de pêsames",
+    "nl": "voor overdag en het condoleancebezoek",
+    "ru": "для дневного времени и визита соболезнования",
+    "zh": "适合白天及吊唁探访",
+    "ja": "日中および弔問の訪問に最適です",
+    "hi": "दिन के समय और शोक संवेदना यात्रा के लिए",
+}
+
+LOCALIZED_DIGNIFIED_INTRO: dict[str, str] = {
+    "en": "The recommendation focuses on a dignified look,",
+    "he": "ההמלצה מתמקדת במראה הולם ומכובד,",
+    "ar": "تركز التوصية على مظهر لائق ومحترم،",
+    "es": "La recomendación se centra en un aspecto digno,",
+    "fr": "La recommandation mise sur une tenue digne,",
+    "de": "Die Empfehlung zielt auf ein würdevolles Erscheinungsbild ab,",
+    "it": "La raccomandazione punta su un aspetto dignitoso,",
+    "pt": "A recomendação foca em uma aparência digna,",
+    "nl": "Het advies richt zich op een waardige uitstraling,",
+    "ru": "Рекомендация ориентирована на достойный образ,",
+    "zh": "该建议聚焦于庄重得体的着装，",
+    "ja": "品位ある装いに重点を置いた提案です、",
+    "hi": "यह अनुशंसा गरिमापूर्ण रूप पर केंद्रित है,",
+}
+
+GARBLED_TEXTURE_PATTERNS: tuple[str, ...] = (
+    # Hebrew
+    "מטוטל", "ורגליים", "רגליים", "ושרוול קצרים", "שרוול קצר ושרוול",
+    # English
+    "pendulum", "and legs", "short buttons", "back belt", "short sleeves and short sleeves", "short sleeve and short sleeves",
+    # Arabic
+    "بندول", "وأرجل", "أزرار قصيرة", "حزام ظهر",
+)
+
+GARBLED_SILHOUETTE_PATTERNS: tuple[str, ...] = (
+    # Hebrew
+    "כפתורים קצרים", "חגורת גב", "רגליים",
+    # English
+    "short buttons", "back belt", "legs",
+    # Arabic
+    "أزرار قصيرة", "حزام ظهر",
+)
+
+
 def sanitize_spoken_reply_and_notes(
     advice: dict[str, Any],
     user_text: str,
@@ -337,15 +490,28 @@ def sanitize_spoken_reply_and_notes(
 ) -> None:
     """Clean hallucinations and garbled phrases from spoken reply and designer notes."""
     is_mourning = _is_mourning_context(user_text)
+    base_lang = (lang or "he").lower().strip().split("-")[0].split("_")[0]
+    if base_lang not in LOCALIZED_SILHOUETTE_MOURNING:
+        base_lang = "en"
 
     # 1. Spoken Reply
     spoken = advice.get("spoken_reply")
     if spoken and isinstance(spoken, str):
         # Scrub Ramadan hallucination in Shiva context
         if is_mourning:
-            spoken = re.sub(r"(?:לשעות\s+החמה\s+והרמדונות|והרמדונות|ברמדאן|רמדאן)", "לשעות היום ולביקור המנחם", spoken)
-            spoken = re.sub(r"הכוונה היא לביקור משפחה או,", "ההמלצה מתמקדת במראה הולם ומכובד,", spoken)
+            daytime_text = LOCALIZED_DAYTIME_CONDOLENCE.get(base_lang, LOCALIZED_DAYTIME_CONDOLENCE["en"])
+            dignified_text = LOCALIZED_DIGNIFIED_INTRO.get(base_lang, LOCALIZED_DIGNIFIED_INTRO["en"])
+
+            # Hebrew scrubbing
+            spoken = re.sub(r"(?:לשעות\s+החמה\s+והרמדונות|והרמדונות|ברמדאן|רמדאן)", daytime_text, spoken)
+            spoken = re.sub(r"הכוונה היא לביקור משפחה או,", dignified_text, spoken)
             spoken = re.sub(r"הו,\s*", "", spoken)
+
+            # English / Latin scrubbing
+            spoken = re.sub(r"(?:for\s+the\s+hot\s+hours\s+and\s+ramadan|and\s+ramadan|in\s+ramadan|during\s+ramadan)", daytime_text, spoken, flags=re.IGNORECASE)
+            spoken = re.sub(r"(?:the\s+intention\s+is\s+a\s+family\s+visit\s+or,|meaning\s+a\s+family\s+visit\s+or,)", dignified_text, spoken, flags=re.IGNORECASE)
+            spoken = re.sub(r"^(?:oh,\s*|whoa,\s*)", "", spoken, flags=re.IGNORECASE)
+
         advice["spoken_reply"] = sanitize_stylist_text(spoken, lang=lang)
 
     # 2. Designer Notes in Recommendations
@@ -363,23 +529,30 @@ def sanitize_spoken_reply_and_notes(
                 if ch and isinstance(ch, str):
                     if is_mourning:
                         # Remove "אדום" / "red" / "זהב" from mourning palette
-                        ch = re.sub(r"(?:כחול\s+אדום|אדום|red|זהב|gold)[, ]*", "כחול כהה, שחור ואפור", ch, flags=re.IGNORECASE)
+                        mourning_palette = LOCALIZED_PALETTE_MOURNING.get(base_lang, LOCALIZED_PALETTE_MOURNING["en"])
+                        ch = re.sub(r"(?:כחול\s+אדום|אדום|red|זהב|gold)[, ]*", mourning_palette, ch, flags=re.IGNORECASE)
                     notes["color_harmony"] = sanitize_stylist_text(ch, lang=lang)
 
                 # Texture balance
                 tb = notes.get("texture_balance")
                 if tb and isinstance(tb, str):
-                    # Clean garbled repeating phrases like "שרוול קצר ושרוול קצרים, מטוטל ורגליים"
-                    if any(w in tb for w in ("מטוטל", "ורגליים", "ושרוול קצרים", "שרוול קצר ושרוול")):
-                        tb = "איזון בדים חלקים ונעימים המעניקים מראה מכובד"
+                    # Clean garbled repeating phrases
+                    if any(w in tb.lower() for w in GARBLED_TEXTURE_PATTERNS):
+                        if is_mourning:
+                            tb = LOCALIZED_TEXTURE_MOURNING.get(base_lang, LOCALIZED_TEXTURE_MOURNING["en"])
+                        else:
+                            tb = LOCALIZED_TEXTURE_DEFAULT.get(base_lang, LOCALIZED_TEXTURE_DEFAULT["en"])
                     notes["texture_balance"] = sanitize_stylist_text(tb, lang=lang)
 
                 # Silhouette
                 sil = notes.get("silhouette")
                 if sil and isinstance(sil, str):
                     # Clean nonsense like "כפתורים קצרים עם חגורת גב"
-                    if any(w in sil for w in ("כפתורים קצרים", "חגורת גב", "רגליים")):
-                        sil = "גזרה קלאסית מאופקת ונוחה"
+                    if any(w in sil.lower() for w in GARBLED_SILHOUETTE_PATTERNS):
+                        if is_mourning:
+                            sil = LOCALIZED_SILHOUETTE_MOURNING.get(base_lang, LOCALIZED_SILHOUETTE_MOURNING["en"])
+                        else:
+                            sil = LOCALIZED_SILHOUETTE_DEFAULT.get(base_lang, LOCALIZED_SILHOUETTE_DEFAULT["en"])
                     notes["silhouette"] = sanitize_stylist_text(sil, lang=lang)
             elif isinstance(notes, str) and notes.strip():
                 rec["designer_notes"] = {"silhouette": sanitize_stylist_text(notes.strip(), lang=lang)}
@@ -392,13 +565,17 @@ def sanitize_spoken_reply_and_notes(
                 if not isinstance(dd, str):
                     continue
                 # Prune nonsense entries like "wearing food"
-                if any(w in dd for w in ("מזון", "אוכל", "food")):
+                if any(w in dd.lower() for w in (
+                    "מזון", "אוכל", "food", "طعام", "comida", "nourriture", "essen", "cibo", "eten", "еда", "食物", "食べ物", "भोजन"
+                )):
                     continue
 
                 # Fix duplicate words like "אין ללבוש ללבוש"
                 dd_clean = re.sub(r"\b(ללבוש)\s+\1\b", r"\1", dd)
                 dd_clean = re.sub(r"^(אין ללבוש)\s+ללבוש\s+", r"אין ללבוש ", dd_clean)
                 dd_clean = re.sub(r"^(מומלץ ללבוש)\s+ללבוש\s+", r"מומלץ ללבוש ", dd_clean)
+                dd_clean = re.sub(r"^(do not wear)\s+wear\s+", r"Do not wear ", dd_clean, flags=re.IGNORECASE)
+                dd_clean = re.sub(r"^(do wear)\s+wear\s+", r"Do wear ", dd_clean, flags=re.IGNORECASE)
                 cleaned_dd.append(sanitize_stylist_text(dd_clean, lang=lang))
             advice["do_dont"] = cleaned_dd
 
@@ -422,7 +599,24 @@ async def evaluate_and_authorize_outfit(
         return advice_payload
 
     user_gender = (user_profile or {}).get("sex") or (user_profile or {}).get("gender")
-    lang = ((user_profile or {}).get("preferred_language") or "he").lower()
+    lang_pref = (user_profile or {}).get("preferred_language")
+    if lang_pref:
+        lang = lang_pref.lower().strip()
+    elif re.search(r"[\u0590-\u05fe]", user_text):
+        lang = "he"
+    elif re.search(r"[\u0600-\u06ff]", user_text):
+        lang = "ar"
+    elif re.search(r"[\u0400-\u04ff]", user_text):
+        lang = "ru"
+    elif re.search(r"[\u4e00-\u9fff]", user_text):
+        lang = "zh"
+    elif re.search(r"[\u3040-\u30ff]", user_text):
+        lang = "ja"
+    elif re.search(r"[\u0900-\u097f]", user_text):
+        lang = "hi"
+    else:
+        lang = "en"
+
     is_mourning = _is_mourning_context(user_text)
 
     # Build lookup map for user's full closet

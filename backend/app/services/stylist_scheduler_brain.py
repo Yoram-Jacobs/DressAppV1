@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+import re
 import uuid
 from datetime import datetime, timezone, timedelta
 from typing import Any
@@ -35,6 +36,42 @@ SYNONYMS = {
     "winter": ["חורף", "winter", "winter wear", "snow", "cold"],
     "חורף": ["חורף", "winter", "winter wear", "snow", "cold"],
 }
+
+_PROMPT_CLEAN_PREFIX_RE = re.compile(
+    r"^(?:ו|ה)?(?:כולל|הכולל|וכולל|כוללת|הכוללת|וכוללת|עם|ועם|בלי|וגם|גם|בצבע|צבע|של|את|including|with|without|and|also|in|in\s+color)\s+",
+    re.IGNORECASE,
+)
+
+_STOPWORDS_PROMPT = {
+    "לביקור", "משפחה", "ביקור", "המבוסס", "מבוסס", "אופנה", "מודרנית", "משובחת",
+    "כולל", "הכולל", "כוללת", "הכוללת", "וכולל", "וכוללת", "עם", "ועם", "בלי", "וגם",
+    "גם", "של", "את", "בצבע", "צבע", "לבוש", "בגדי", "בגד", "מתאים", "הולם", "עבור", "בשביל",
+    "including", "with", "without", "and", "also", "for", "visit", "family", "based",
+    "modern", "fine", "fashion", "outfit", "wearing", "wear", "color", "coloured", "colored",
+    "suitable", "appropriate", "look", "style", "the", "a", "an", "of", "in", "to",
+}
+
+def _stem_kw(w: str) -> str:
+    w = w.lower().strip(".,:;!?\"'()")
+    if len(w) >= 5 and w.startswith(("ו", "ה", "ב", "כ", "ל", "מ", "ש")):
+        w_sub = w[1:]
+        if len(w_sub) >= 3:
+            w = w_sub
+    if len(w) >= 5 and w.endswith("ות"):
+        return w[:-2]
+    if len(w) >= 5 and w.endswith("ים"):
+        return w[:-2]
+    if len(w) >= 4 and w.endswith(("ת", "ה")):
+        return w[:-1]
+    if len(w) >= 5 and w.endswith("ing"):
+        return w[:-3]
+    if len(w) >= 4 and w.endswith("ed"):
+        return w[:-2]
+    if len(w) >= 4 and w.endswith("es"):
+        return w[:-2]
+    if len(w) >= 4 and w.endswith("s"):
+        return w[:-1]
+    return w
 
 def norm_category(cat: Any) -> str:
     """Normalize raw clothing categories into standard taxonomy tokens."""
@@ -150,6 +187,25 @@ def calculate_garment_style_score(
             if len(s) >= 2 and s in all_text:
                 score += 25
 
+        # Multi-word content matching for explicit garment requests in prompt
+        # E.g. "כולל חולצה כחולה עם פסים" -> matches item with ["חולצה", "כחולה", "פסים"]
+        garment_words = {_stem_kw(gw) for gw in re.findall(r"\w+", all_text) if len(gw) >= 2}
+        for tok in tokens:
+            clean_tok = _PROMPT_CLEAN_PREFIX_RE.sub("", tok).strip()
+            if clean_tok.startswith("ו") and len(clean_tok) >= 3 and "\u0590" <= clean_tok[1] <= "\u05fe":
+                clean_tok = clean_tok[1:].strip()
+            # Direct clean clause in all_text
+            if len(clean_tok) >= 4 and clean_tok in all_text:
+                score += 80
+            # Token word overlap
+            tok_words = [_stem_kw(w) for w in re.findall(r"\w+", clean_tok) if len(w) >= 2 and w not in _STOPWORDS_PROMPT]
+            if len(tok_words) >= 2:
+                matched_count = sum(1 for tw in tok_words if tw in garment_words or any(tw in gw or gw in tw for gw in garment_words if len(tw) >= 3))
+                if matched_count >= 3:
+                    score += 100
+                elif matched_count == 2:
+                    score += 60
+
     # 2. Occupational adjustment if respect_occupation is enabled and occupation is specified
     if respect_occupation and occupation:
         occ_str = str(occupation).strip().lower()
@@ -225,12 +281,14 @@ def calculate_garment_style_score(
         "office", "משרד", "business-casual", "business casual"
     ))
     
-    is_swim_beach = any(w in prompt_lower for w in (
-        "beach", "pool", "swim", "swimming", "sea", "resort", "ים", "בריכה", "שחייה", "חוף"
+    is_swim_beach = bool(re.search(
+        r"\b(?:beach|pool|swimming|resort|בריכה|שחייה|חוף|(?:ל|ב|ה|מ)?ים)\b|(?<![a-z])swim(?![a-z])|(?<![a-z])sea(?![a-z])",
+        prompt_lower,
     ))
     
-    is_sport_gym = any(w in prompt_lower for w in (
-        "gym", "workout", "running", "sport", "fitness", "yoga", "אימון", "כושר", "ריצה", "ספורט"
+    is_sport_gym = bool(re.search(
+        r"\b(?:gym|workout|running|sport|fitness|yoga|אימון|כושר|ריצה|ספורט)\b",
+        prompt_lower,
     ))
     
     if is_formal_or_smart and not is_swim_beach and not is_sport_gym:
@@ -291,12 +349,28 @@ def calculate_garment_style_score(
     ))
     if is_mourning_or_shiva:
         # Severe disqualifications (-100):
-        # 1. Shorts / Bermuda / Swim / Leggings / Tights
-        if cat == "bottom" and any(w in all_text for w in ("shorts", "שורטס", "קצרים", "מכנסיים קצרים", "bermuda", "swim", "trunks", "טייץ", "טייטס", "leggings", "tights")):
+        # 1. Shorts / Bermuda / Swim / Leggings / Tights / Cargo
+        if cat == "bottom" and any(w in all_text for w in (
+            "shorts", "שורטס", "קצרים", "מכנסיים קצרים", "bermuda", "swim", "trunks",
+            "טייץ", "טייטס", "leggings", "tights", "cargo", "דגמ\"ח", "דגמח",
+        )):
             return -100
-        # 2. Graphic prints, florals, botanical, eagles, slogans, cartoons, loud logos, comedy
+        # 2. Graphic prints, florals, botanical, eagles, slogans, cartoons, loud logos, mesh, geometric, optical, psychedelic, rave
         pattern_norm = str(item.get("pattern") or "").lower()
-        if pattern_norm in ("floral", "botanical", "flower", "hawaiian", "tropical", "graphic", "print") or any(w in all_text for w in ("graphic", "print", "printed", "eagle", "slogan", "logo", "cartoon", "floral", "botanical", "flower", "פרחוני", "פרחים", "הדפס", "נשר", "ציור", "כיתוב", "party", "מסיבה", "קומדיה")):
+        if pattern_norm in (
+            "floral", "botanical", "flower", "hawaiian", "tropical", "graphic", "print",
+            "geometric", "mesh", "psychedelic", "optical", "checkerboard", "checkered", "abstract",
+        ) or any(w in all_text for w in (
+            "graphic", "print", "printed", "eagle", "slogan", "logo", "cartoon", "floral", "botanical", "flower",
+            "פרחוני", "פרחים", "הדפס", "נשר", "ציור", "כיתוב", "party", "מסיבה", "קומדיה",
+            "mesh", "sheer", "geometric", "optical", "psychedelic", "vortex", "checkerboard", "checkered",
+            "net", "see-through", "transparent", "lace", "sequin", "sequins", "glitter", "rave", "trippy",
+            "רשת", "שקוף", "שקופה", "משובץ", "גיאומטרי", "פסיכדלי", "شبكة", "شفاف", "هندسي",
+        )):
+            return -100
+        # 2b. Sheer / mesh materials
+        material_norm = str(item.get("material") or "").lower()
+        if any(w in material_norm for w in ("mesh", "sheer", "net", "lace", "sequin", "רשת", "שקוף")):
             return -100
         # 3. Revealing / beach / gym / sleep wear
         if any(w in all_text for w in ("tank top", "tank", "sleeveless", "גופייה", "גופיה", "flip flop", "slide", "slides", "כפכף", "כפכפים", "crop top", "bikini", "swimwear", "pajama", "פיג'מה")):
@@ -304,13 +378,13 @@ def calculate_garment_style_score(
         # 4. Loud vibrant neon colors
         if any(w in all_text for w in ("bright red", "neon", "yellow", "orange", "hot pink", "זוהר", "ניאון", "אדום בוהק", "צהוב", "כתום", "ורוד")):
             return -100
-        # 5. Distressed / ripped clothing
-        if any(w in all_text for w in ("ripped", "distressed", "torn", "קרוע", "שפשופים")):
+        # 5. Distressed / ripped / faded / acid wash clothing
+        if any(w in all_text for w in ("ripped", "distressed", "torn", "faded", "acid wash", "bleached", "קרוע", "שפשופים", "משופשף")):
             return -100
 
         # Subdued mourning boosts (+30 to +50):
-        # Dark solid pants / slacks / dark clean jeans
-        if any(w in all_text for w in ("black", "dark", "charcoal", "navy", "grey", "gray", "שחור", "כהה", "כחול כהה", "אפור")) and any(w in all_text for w in ("pant", "trouser", "chino", "slacks", "jeans", "מכנסיים", "צ'ינו", "ג'ינס")):
+        # Dark solid pants / slacks / dark clean jeans / tailored
+        if any(w in all_text for w in ("black", "dark", "charcoal", "navy", "grey", "gray", "שחור", "כהה", "כחול כהה", "אפור")) and any(w in all_text for w in ("pant", "trouser", "chino", "slacks", "jeans", "tailored", "מכנסיים", "צ'ינו", "ג'ינס", "מחויט", "מחויטים")):
             score += 50
         # Solid plain dark/white collared shirt or neat tee
         if any(w in all_text for w in ("button", "collared", "polo", "oxford", "shirt", "חולצה מכופתרת", "פולו", "מכופתרת", "חולצה")) and not any(w in all_text for w in ("print", "graphic", "הדפס")):
