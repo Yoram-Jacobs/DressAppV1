@@ -57,8 +57,7 @@ def sample_user_closet():
     ]
 
 
-@pytest.mark.asyncio
-async def test_male_dress_pants_and_shirts_not_disqualified():
+def test_male_dress_pants_and_shirts_not_disqualified():
     dress_pants = {
         "id": "p-1",
         "title": "Men's Charcoal Gray Dress Pants",
@@ -84,8 +83,8 @@ async def test_male_dress_pants_and_shirts_not_disqualified():
     assert score_s >= 0
 
 
-@pytest.mark.asyncio
-async def test_qa_replaces_unmapped_bottom_and_prevents_naked_mannequin(sample_user_closet):
+def test_qa_replaces_unmapped_bottom_and_prevents_naked_mannequin(sample_user_closet):
+    import asyncio
     # Simulates the bug where LLM recommended shirt with adfa ID, but bottom had id: None
     raw_advice = {
         "outfit_recommendations": [
@@ -115,12 +114,12 @@ async def test_qa_replaces_unmapped_bottom_and_prevents_naked_mannequin(sample_u
     user_profile = {"sex": "male", "preferred_language": "he"}
     prompt = "לבוש הולם לביקור משפחה של חבר בשבעה"
 
-    reviewed = await evaluate_and_authorize_outfit(
+    reviewed = asyncio.run(evaluate_and_authorize_outfit(
         user_text=prompt,
         advice_payload=raw_advice,
         all_closet_items=sample_user_closet,
         user_profile=user_profile,
-    )
+    ))
 
     rec = reviewed["outfit_recommendations"][0]
     assert rec["qa_status"] == "authorized"
@@ -136,8 +135,8 @@ async def test_qa_replaces_unmapped_bottom_and_prevents_naked_mannequin(sample_u
     assert items_by_role["shoes"]["closet_item_id"] == "boots-blk-1"
 
 
-@pytest.mark.asyncio
-async def test_qa_replaces_mourning_violating_shorts(sample_user_closet):
+def test_qa_replaces_mourning_violating_shorts(sample_user_closet):
+    import asyncio
     raw_advice = {
         "outfit_recommendations": [
             {
@@ -161,17 +160,18 @@ async def test_qa_replaces_mourning_violating_shorts(sample_user_closet):
     user_profile = {"sex": "male", "preferred_language": "he"}
     prompt = "לבוש הולם לביקור משפחה של חבר בשבעה"
 
-    reviewed = await evaluate_and_authorize_outfit(
+    reviewed = asyncio.run(evaluate_and_authorize_outfit(
         user_text=prompt,
         advice_payload=raw_advice,
         all_closet_items=sample_user_closet,
         user_profile=user_profile,
-    )
+    ))
 
     rec = reviewed["outfit_recommendations"][0]
     items_by_role = {it["role"]: it for it in rec["items"]}
     # Shorts must have been replaced with dress pants
     assert items_by_role["bottom"]["closet_item_id"] == "pant-dress-1"
+
 
 
 def test_sanitize_spoken_reply_and_notes():
