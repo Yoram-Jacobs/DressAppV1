@@ -1399,7 +1399,10 @@
     "fallbackQuotaBanner": "A cota da sua chave de API personalizada foi excedida. A solicitação foi atendida perfeitamente usando a IA local do DressApp (Gemma-4-E4B).",
     "fallbackQuotaExhausted": "(Alternativo. Cota esgotada)",
     "fallbackLabel": "(Alternativo)",
-    "fallbackDescriptionPattern": "Um visual diário equilibrado que combina com seu estilo {{style}} preferido e o clima local."
+    "fallbackDescriptionPattern": "Um visual diário equilibrado que combina com seu estilo {{style}} preferido e o clima local.",
+    "designerNote": "Nota do estilista:",
+    "outfitPieces": "Peças do visual",
+    "tapToInspect": "Toque para inspecionar"
   },
   "outfitCompletion": {
     "cta": "Completar o look",

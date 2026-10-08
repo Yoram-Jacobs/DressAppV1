@@ -101,7 +101,7 @@ PROMPT_STYLIST_CHAT = (
     "{\n"
     '  "reasoning_summary": string, // Professional design analysis and direct answer to user questions\n'
     '  "outfit_recommendations": Array<{\n'
-    '    "name": string,\n'
+    '    "name": string, // 3-6 words descriptive outfit title reflecting the occasion and aesthetic vibe (e.g. "לבוש מכובד וצנוע לביקור אבלים", "Dignified Condolence Attire", "Casual Weekend Outfit"). NEVER use single garment titles (e.g. NEVER name an outfit after a shirt or pants)!\n'
     '    "items": Array<{ "role": "top"|"bottom"|"outerwear"|"shoes"|"accessory"|"dress"|"belt"|"headwear"|"glasses", "description": string, "closet_item_id": string | null }>,\n'
     '    "why": string,\n'
     '    "designer_notes": {\n'

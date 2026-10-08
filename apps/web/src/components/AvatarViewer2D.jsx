@@ -262,7 +262,7 @@ export default function AvatarViewer2D({ shapeParams = {}, measurements: provide
       <motion.div
         initial={initial}
         animate={animate}
-        className={`absolute drop-shadow-md ${extraClasses} ${clickable ? 'cursor-pointer hover:scale-[1.02] transition-transform z-50' : 'pointer-events-none'}`}
+        className={`absolute drop-shadow-md ${extraClasses} ${clickable ? 'cursor-pointer hover:scale-[1.02] transition-transform' : 'pointer-events-none'}`}
         onClick={clickable ? (e) => { e.stopPropagation(); onItemClick(garment.id); } : undefined}
       >
         <ImageWithPlaceholder
@@ -371,6 +371,39 @@ export default function AvatarViewer2D({ shapeParams = {}, measurements: provide
           </DynamicAvatar>
         )}
       </div>
+
+      {/* Floating Layer Quick-Select Bar on the Mannequin (allows inspecting covered underlayers) */}
+      {onItemClick && Object.keys(garments).length > 0 && (
+        <div className="absolute top-2.5 end-2.5 flex flex-col gap-1 z-40 bg-background/85 backdrop-blur-md p-1 rounded-xl border border-border shadow-md opacity-85 hover:opacity-100 transition-opacity">
+          {['headwear', 'outerwear', 'top', 'dress', 'belt', 'bottom', 'shoes', 'bag', 'accessory'].map((slotKey) => {
+            const g = garments[slotKey];
+            if (!g || !g.id) return null;
+            const slotIcons = {
+              headwear: '🧢',
+              outerwear: '🧥',
+              top: '👕',
+              dress: '👗',
+              belt: '🥋',
+              bottom: '👖',
+              shoes: '👞',
+              bag: '👜',
+              accessory: '🕶️'
+            };
+            return (
+              <button
+                key={slotKey}
+                type="button"
+                onClick={(e) => { e.stopPropagation(); onItemClick(g.id); }}
+                className="w-7 h-7 flex items-center justify-center text-xs rounded-lg hover:bg-primary-shadow hover:scale-110 active:scale-95 transition-all"
+                title={t(`taxonomy.categories.${slotKey}`, { defaultValue: slotKey })}
+                aria-label={t(`taxonomy.categories.${slotKey}`, { defaultValue: slotKey })}
+              >
+                {slotIcons[slotKey] || '👔'}
+              </button>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }

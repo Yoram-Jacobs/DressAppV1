@@ -464,20 +464,56 @@ LOCALIZED_DIGNIFIED_INTRO: dict[str, str] = {
     "hi": "यह अनुशंसा गरिमापूर्ण रूप पर केंद्रित है,",
 }
 
+LOCALIZED_OUTFIT_NAME_MOURNING: dict[str, str] = {
+    "he": "לבוש מכובד וצנוע לביקור אבלים",
+    "en": "Dignified Shiva Condolence Attire",
+    "ar": "زي لائق ومحترم للعزاء",
+    "de": "Würdevolle Kondolenzkleidung",
+    "es": "Atuendo digno para condolencias",
+    "fr": "Tenue digne pour condoléances",
+    "hi": "शोक सभा के लिए गरिमापूर्ण पोशाक",
+    "it": "Abbigliamento dignitoso per condoglianze",
+    "ja": "弔問・お悔やみのための端正な装い",
+    "nl": "Waardige condoleancekleding",
+    "pt": "Traje solene e digno para condolências",
+    "ru": "Достойный наряд для соболезнований",
+    "zh": "庄重得体的慰问吊唁着装",
+}
+
+LOCALIZED_OUTFIT_NAME_DEFAULT: dict[str, str] = {
+    "he": "מראה מעוצב ומותאם אישית",
+    "en": "Curated Designer Look",
+    "ar": "إطلالة منسقة ומصممة خصيصاً",
+    "de": "Kuratierter Designer-Look",
+    "es": "Look de diseñador personalizado",
+    "fr": "Look stylisé sur mesure",
+    "hi": "क्यूरेटेड डिज़ाइनर लुक",
+    "it": "Look curato dallo stilista",
+    "ja": "キュレーションされたデザイナーズコーデ",
+    "nl": "Gecureerde designerlook",
+    "pt": "Visual curado pelo estilista",
+    "ru": "Подобранный дизайнерский образ",
+    "zh": "专属精选设计师造型",
+}
+
 GARBLED_TEXTURE_PATTERNS: tuple[str, ...] = (
     # Hebrew
     "מטוטל", "ורגליים", "רגליים", "ושרוול קצרים", "שרוול קצר ושרוול",
+    "שרוול קצרים מודרנ", "שרוול קצרים", "מחוטים ימיומיים", "חורים ימיומיים",
+    "אביזר מזדמן מודרני", "אביזר מזדמן", "תצוגה ותאורה", "תאורה מודרנית", "הזהב של תצוגה", "חורים",
     # English
     "pendulum", "and legs", "short buttons", "back belt", "short sleeves and short sleeves", "short sleeve and short sleeves",
+    "modern short sleeves", "daily threads", "daily holes", "casual modern accessory", "modern casual accessory",
+    "display and lighting", "golden display",
     # Arabic
-    "بندول", "وأرجل", "أزرار قصيرة", "حزام ظهر",
+    "بندول", "وأرجل", "أزرار قصيرة", "حزام ظهر", "إضاءة وعرض",
 )
 
 GARBLED_SILHOUETTE_PATTERNS: tuple[str, ...] = (
     # Hebrew
-    "כפתורים קצרים", "חגורת גב", "רגליים",
+    "כפתורים קצרים", "חגורת גב", "רגליים", "שרוול קצרים מודרנ", "שרוול קצרים", "אביזר מזדמן", "תצוגה ותאורה",
     # English
-    "short buttons", "back belt", "legs",
+    "short buttons", "back belt", "legs", "modern short sleeves", "casual accessory", "display and lighting",
     # Arabic
     "أزرار قصيرة", "حزام ظهر",
 )
@@ -507,14 +543,20 @@ def sanitize_spoken_reply_and_notes(
             spoken = re.sub(r"הכוונה היא לביקור משפחה או,", dignified_text, spoken)
             spoken = re.sub(r"הו,\s*", "", spoken)
 
+            # Scrub exhibition / lighting / casual accessory hallucinations in mourning context
+            spoken = re.sub(r"(?:השילוב\s+הזהב\s+של\s+תצוגה\s+ותאורה|תצוגה\s+ותאורה|תאורה\s+מודרנית|הזהב\s+של\s+תצוגה)", "השילוב המכובד והמאופק", spoken)
+            spoken = re.sub(r",?\s*(?:עם\s+)?אביזר\s+מזדמן\s+מודרני(?:\s+ותאורה\s+מודרנית)?", "", spoken)
+
             # English / Latin scrubbing
             spoken = re.sub(r"(?:for\s+the\s+hot\s+hours\s+and\s+ramadan|and\s+ramadan|in\s+ramadan|during\s+ramadan)", daytime_text, spoken, flags=re.IGNORECASE)
             spoken = re.sub(r"(?:the\s+intention\s+is\s+a\s+family\s+visit\s+or,|meaning\s+a\s+family\s+visit\s+or,)", dignified_text, spoken, flags=re.IGNORECASE)
             spoken = re.sub(r"^(?:oh,\s*|whoa,\s*)", "", spoken, flags=re.IGNORECASE)
+            spoken = re.sub(r"(?:golden\s+combination\s+of\s+display\s+and\s+lighting|display\s+and\s+lighting|modern\s+lighting)", "dignified and understated combination", spoken, flags=re.IGNORECASE)
+            spoken = re.sub(r",?\s*(?:with\s+a\s+)?modern\s+casual\s+accessory(?:\s+and\s+modern\s+lighting)?", "", spoken, flags=re.IGNORECASE)
 
         advice["spoken_reply"] = sanitize_stylist_text(spoken, lang=lang)
 
-    # 2. Designer Notes in Recommendations
+    # 2. Designer Notes & Outfit Names in Recommendations
     raw_recs = advice.get("outfit_recommendations", [])
     if isinstance(raw_recs, list):
         cleaned_recs = []
@@ -522,6 +564,25 @@ def sanitize_spoken_reply_and_notes(
             if not isinstance(rec, dict):
                 continue
             cleaned_recs.append(rec)
+
+            # Clean and validate outfit name: NEVER copy single garment title
+            rec_name = str(rec.get("name") or "").strip()
+            item_descriptions = [
+                str(it.get("description") or it.get("title") or it.get("name") or "").strip().lower()
+                for it in rec.get("items", [])
+                if isinstance(it, dict)
+            ]
+            is_single_garment_name = (
+                any(rec_name.lower() == idesc for idesc in item_descriptions if idesc) or
+                re.match(r"^(?:חולצת|חולצה|מכנסי|מכנסיים|מעיל|ז'קט|ג'קט|שמלת|שמלה|נעלי|נעליים|shirt|pants|trousers|jacket|overcoat|dress|shoes)\b", rec_name, re.IGNORECASE) is not None
+            )
+            if not rec_name or is_single_garment_name:
+                rec["name"] = (
+                    LOCALIZED_OUTFIT_NAME_MOURNING.get(base_lang, LOCALIZED_OUTFIT_NAME_MOURNING["en"])
+                    if is_mourning
+                    else LOCALIZED_OUTFIT_NAME_DEFAULT.get(base_lang, LOCALIZED_OUTFIT_NAME_DEFAULT["en"])
+                )
+
             notes = rec.get("designer_notes")
             if isinstance(notes, dict):
                 # Color harmony
@@ -555,7 +616,14 @@ def sanitize_spoken_reply_and_notes(
                             sil = LOCALIZED_SILHOUETTE_DEFAULT.get(base_lang, LOCALIZED_SILHOUETTE_DEFAULT["en"])
                     notes["silhouette"] = sanitize_stylist_text(sil, lang=lang)
             elif isinstance(notes, str) and notes.strip():
-                rec["designer_notes"] = {"silhouette": sanitize_stylist_text(notes.strip(), lang=lang)}
+                clean_str = notes.strip()
+                if any(w in clean_str.lower() for w in GARBLED_TEXTURE_PATTERNS + GARBLED_SILHOUETTE_PATTERNS):
+                    clean_str = (
+                        LOCALIZED_SILHOUETTE_MOURNING.get(base_lang, LOCALIZED_SILHOUETTE_MOURNING["en"])
+                        if is_mourning
+                        else LOCALIZED_SILHOUETTE_DEFAULT.get(base_lang, LOCALIZED_SILHOUETTE_DEFAULT["en"])
+                    )
+                rec["designer_notes"] = {"silhouette": sanitize_stylist_text(clean_str, lang=lang)}
         advice["outfit_recommendations"] = cleaned_recs
 
         # Do/Don't sanitization

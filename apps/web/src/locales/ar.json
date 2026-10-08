@@ -1399,7 +1399,10 @@
     "fallbackQuotaBanner": "تم تجاوز حصة مفتاح API المخصص. تمت معالجة الطلب بسلاسة باستخدام الذكاء الاصطناعي المدمج في DressApp ‏(Gemma-4-E4B).",
     "fallbackQuotaExhausted": "(احتياطي. نفدت الحصة)",
     "fallbackLabel": "(احتياطي)",
-    "fallbackDescriptionPattern": "إطلالة يومية متوازنة تناسب أسلوبك المفضل {{style}} وحالة الطقس المحلية."
+    "fallbackDescriptionPattern": "إطلالة يومية متوازنة تناسب أسلوبك المفضل {{style}} وحالة الطقس المحلية.",
+    "designerNote": "ملاحظة المصمم:",
+    "outfitPieces": "قطع الإطلالة",
+    "tapToInspect": "انقر للمعاينة"
   },
   "outfitCompletion": {
     "cta": "أكمل الإطلالة",

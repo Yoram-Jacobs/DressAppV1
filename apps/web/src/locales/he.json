@@ -1413,7 +1413,9 @@
         "casual_chic": "קז'ואל שיק"
       }
     },
-    "fallbackQuotaBanner": "מכסת מפתח ה-API האישי מוצתה. הבקשה מולאה בצורה חלקה באמצעות מודל ה-AI המובנה של DressApp ‏(Gemma-4-E4B)."
+    "fallbackQuotaBanner": "מכסת מפתח ה-API האישי מוצתה. הבקשה מולאה בצורה חלקה באמצעות מודל ה-AI המובנה של DressApp ‏(Gemma-4-E4B).",
+    "outfitPieces": "פריטי הלוק",
+    "tapToInspect": "לחצו לצפייה"
   },
   "outfitCompletion": {
     "cta": "השלם את הלוק",

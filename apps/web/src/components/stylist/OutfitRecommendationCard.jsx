@@ -154,6 +154,51 @@ export function OutfitRecommendationCard({ rec, index, sessionId, onItemClick, o
             <HarmonyBadge colors={outfitColors} />
           </div>
         )}
+
+        {/* Pieces in this Outfit — Thumbnails & Quick View */}
+        {items.length > 0 && (
+          <div className="mt-3">
+            <div className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider mb-1.5 flex items-center justify-between">
+              <span>{t('stylist.outfitPieces', { defaultValue: 'Outfit Pieces' })}</span>
+              <span className="text-[10px] text-muted-foreground font-normal">{t('stylist.tapToInspect', { defaultValue: 'Tap to inspect' })}</span>
+            </div>
+            <div className="flex items-center gap-2 overflow-x-auto pb-1.5 scrollbar-thin">
+              {items.map((it, idx) => {
+                const itId = it.closet_item_id || it.id;
+                const itObj = itemData[itId];
+                const itImg = images[itId] || (itObj ? bestImageUrl(itObj) : null);
+                const roleLabel = labelForRole(it.role, t);
+                const itTitle = itObj?.title || itObj?.name || it.description || roleLabel;
+                return (
+                  <button
+                    key={itId || `piece-${idx}`}
+                    type="button"
+                    onClick={() => itId && onItemClick?.(itId)}
+                    disabled={!itId}
+                    className="flex items-center gap-2 p-1.5 pe-2.5 rounded-lg border border-border bg-card hover:bg-accent/10 hover:border-primary-brand/40 transition-all text-start shrink-0 group focus:outline-none focus:ring-1 focus:ring-primary-brand"
+                    title={itTitle}
+                  >
+                    <div className="w-10 h-10 rounded-md overflow-hidden bg-secondary/20 shrink-0 border border-border/50 flex items-center justify-center">
+                      {itImg ? (
+                        <img src={itImg} alt={itTitle} className="w-full h-full object-contain group-hover:scale-105 transition-transform" />
+                      ) : (
+                        <span className="text-[10px] text-muted-foreground font-semibold">{it.role?.[0]?.toUpperCase()}</span>
+                      )}
+                    </div>
+                    <div className="min-w-0 max-w-[110px]">
+                      <span className="block text-[10px] font-semibold text-primary-brand leading-tight uppercase truncate">
+                        {roleLabel}
+                      </span>
+                      <span className="block text-xs font-medium text-foreground leading-tight truncate">
+                        {itTitle}
+                      </span>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
         {rec.designer_notes && (
           <div className="mt-2 text-xs text-muted-foreground flex items-center gap-1.5 flex-wrap">
             <span className="font-semibold text-[var(--primary-color)]">

@@ -1790,6 +1790,38 @@ export default function Stylist() {
   };
 
   /* ---------- Voice Dictation (Native SpeechRecognition + Server STT) ---------- */
+  const deduplicateRepeatedPhrases = (str) => {
+    if (!str || typeof str !== 'string') return str || '';
+    const trimmed = str.trim();
+    if (!trimmed) return '';
+
+    // 1. Multiline / double-newline repeated identical chunks
+    const lines = trimmed.split(/[\r\n]+/).map((l) => l.trim()).filter(Boolean);
+    if (lines.length > 1 && lines.every((l) => l === lines[0])) {
+      return lines[0];
+    }
+
+    // 2. Token-level cycle detection (e.g. "X X X X" or repeated phrases separated by spaces)
+    const words = trimmed.split(/\s+/);
+    if (words.length >= 2) {
+      for (let len = 1; len <= Math.floor(words.length / 2); len++) {
+        if (words.length % len === 0) {
+          const pattern = words.slice(0, len).join(' ');
+          let allMatch = true;
+          for (let i = len; i < words.length; i += len) {
+            if (words.slice(i, i + len).join(' ') !== pattern) {
+              allMatch = false;
+              break;
+            }
+          }
+          if (allMatch) return pattern;
+        }
+      }
+    }
+
+    return trimmed;
+  };
+
   const startRecording = async () => {
     try {
       setInterim('');
@@ -1809,13 +1841,11 @@ export default function Stylist() {
         },
         onFinal: (finalText) => {
           if (finalText && finalText.trim()) {
-            setText((prev) => {
-              const trimmed = finalText.trim();
-              if (!prev || prev.trim() === trimmed) return trimmed;
-              return `${prev} ${trimmed}`;
-            });
+            const cleaned = deduplicateRepeatedPhrases(finalText);
+            setText(cleaned);
           }
           setInterim('');
+          setRecording(false);
         },
         onRecordingChange: (isRec) => setRecording(isRec),
         onError: () => toast.error(t('stylist.micDenied', { defaultValue: 'Microphone access denied' })),
@@ -1913,7 +1943,7 @@ export default function Stylist() {
       return;
     }
     if (busy) return;
-    const outgoingText = (overrideText ?? text).trim();
+    const outgoingText = deduplicateRepeatedPhrases((overrideText ?? text).trim());
     // Route: 2+ images → multi-image outfit composer (Phase R).
     // The composer endpoint also auto-persists an assistant message, so
     // we don't need a parallel call to /stylist.

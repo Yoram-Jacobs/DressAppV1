@@ -148,7 +148,7 @@ export function ItemFloater({ itemId, onClose, fromOutfits }) {
           className="font-bold text-dark-brand text-[16px] truncate "
           data-testid="item-floater-title"
         >
-          {item?.name || (
+          {item?.title || item?.name || (
             <Skeleton className="h-4 w-32" />
           )}
         </h3>
@@ -271,14 +271,30 @@ export function ItemFloater({ itemId, onClose, fromOutfits }) {
             ) : null}
 
             {/* Description */}
-            {item.description ? (
-              <p
-                className="text-xs leading-relaxed text-muted-foreground italic border-l-2 border-border ps-3"
-                data-testid="item-floater-description"
-              >
-                {item.description}
-              </p>
-            ) : null}
+            {(() => {
+              const desc = item.description || item.caption || item.notes || item.ai_notes || item.ai_analysis?.description;
+              const summary = [
+                item.color ? labelForColor(item.color, t) : null,
+                item.material,
+                item.pattern ? labelForPattern(item.pattern, t) : null,
+                item.brand,
+                item.sub_category ? labelForSubCategory(item.sub_category, t) : (item.category ? labelForCategory(item.category, t) : null),
+              ].filter(Boolean).join(' • ');
+
+              return (desc || summary) ? (
+                <div className="space-y-1 pt-1">
+                  <span className="text-[12px] font-bold text-dark-brand block">
+                    {t('itemDetail.description', { defaultValue: 'Description' })}:
+                  </span>
+                  <p
+                    className="text-xs leading-relaxed text-muted-foreground italic border-l-2 border-primary-brand/40 ps-3"
+                    data-testid="item-floater-description"
+                  >
+                    {desc || summary}
+                  </p>
+                </div>
+              ) : null;
+            })()}
           </div>
         ) : !error ? (
           <div className="space-y-2">

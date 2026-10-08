@@ -813,6 +813,43 @@ def test_qa_localization_all_13_languages():
         assert "אין ללבוש ללבוש" not in payload["do_dont"][0]
 
 
+def test_scrubbing_exhibition_and_garment_name_hallucinations():
+    payload = {
+        "spoken_reply": "השילוב הזהב של תצוגה ותאורה, עם אביזר מזדמן מודרני ותאורה מודרנית, מתאימים ללבוש הולם לביקור משפחה בשבעה.",
+        "outfit_recommendations": [
+            {
+                "name": "חולצת כפתורים כחולה עם פסים ושרוול קצר",
+                "items": [
+                    {"role": "top", "description": "חולצת כפתורים כחולה עם פסים ושרוול קצר", "closet_item_id": "c1"},
+                    {"role": "bottom", "description": "מכנסיים שחורים מחויטים", "closet_item_id": "c2"},
+                ],
+                "designer_notes": {
+                    "color_harmony": "60-30-10 כחול כהה, אפור בהיר וסגול",
+                    "texture_balance": "שרוול קצרים מודרנ, מחוטים ימיומיים, חורים ימיומיים, אביזר מזדמן מודרני",
+                    "silhouette": "שרוול קצרים מודרנ עם חורים",
+                },
+            }
+        ],
+    }
+
+    sanitize_spoken_reply_and_notes(payload, user_text="לבוש הולם לביקור משפחה בשבעה", lang="he")
+
+    # Spoken reply should not have exhibition or casual accessory hallucinations
+    assert "תצוגה ותאורה" not in payload["spoken_reply"]
+    assert "אביזר מזדמן" not in payload["spoken_reply"]
+    assert "השילוב המכובד והמאופק" in payload["spoken_reply"]
+
+    rec = payload["outfit_recommendations"][0]
+    # Outfit name should be replaced with dignified title instead of shirt name
+    assert rec["name"] == "לבוש מכובד וצנוע לביקור אבלים"
+
+    # Designer notes should have garbled phrases replaced
+    assert "חורים ימיומיים" not in rec["designer_notes"]["texture_balance"]
+    assert "אביזר מזדמן" not in rec["designer_notes"]["texture_balance"]
+    assert "שרוול קצרים" not in rec["designer_notes"]["silhouette"]
+
+
+
 
 
 

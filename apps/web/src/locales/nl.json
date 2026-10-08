@@ -1399,7 +1399,10 @@
     "fallbackQuotaBanner": "Het quotum van uw aangepaste API-sleutel is overschreden. Het verzoek is naadloos afgehandeld met de ingebouwde on-premise AI van DressApp (Gemma-4-E4B).",
     "fallbackQuotaExhausted": "(Fallback. Quotum verbruikt)",
     "fallbackLabel": "(Fallback)",
-    "fallbackDescriptionPattern": "Een evenwichtige dagelijkse outfit afgestemd op uw favoriete {{style}}-stijl en het lokale weer."
+    "fallbackDescriptionPattern": "Een evenwichtige dagelijkse outfit afgestemd op uw favoriete {{style}}-stijl en het lokale weer.",
+    "designerNote": "Opmerking van de ontwerper:",
+    "outfitPieces": "Outfitstukken",
+    "tapToInspect": "Tik om te bekijken"
   },
   "outfitCompletion": {
     "cta": "Maak de outfit compleet",

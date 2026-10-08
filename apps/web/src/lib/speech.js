@@ -203,7 +203,10 @@ export function createRecognition({
       const r = event.results[i];
       const chunk = r[0]?.transcript || '';
       if (r.isFinal) {
-        finalText += (finalText ? ' ' : '') + chunk.trim();
+        const trimmedChunk = chunk.trim();
+        if (trimmedChunk && !finalText.endsWith(trimmedChunk)) {
+          finalText += (finalText ? ' ' : '') + trimmedChunk;
+        }
       } else {
         interimText += chunk;
       }
