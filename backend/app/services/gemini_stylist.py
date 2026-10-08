@@ -135,6 +135,7 @@ async def prepare_stylist_prompt(
         format_rules_for_prompt,
         retrieve_fashion_axioms,
     )
+    from app.services.stylist_qa_engine import filter_candidate_closet_by_axioms
 
     clean_closet = filter_modesty_closet_items(
         closet_summary, (user_profile or {}).get("modesty_level")
@@ -153,6 +154,14 @@ async def prepare_stylist_prompt(
     axioms_text = format_rules_for_prompt(axioms)
     if axioms_text:
         sys_msg = sys_msg + "\n\n" + axioms_text + "\n"
+
+    # Candidate closet pre-filter: Purge items violating retrieved RAG negative constraints before LLM inference
+    clean_closet, _ = filter_candidate_closet_by_axioms(
+        clean_closet,
+        axioms,
+        user_profile=user_profile,
+        user_gender=user_gender,
+    )
 
     safe_profile = {}
     if user_profile:

@@ -304,18 +304,247 @@ def _is_mourning_context(text: str | None) -> bool:
     ))
 
 
+COLOR_SYNONYMS: dict[str, set[str]] = {
+    "black": {"black", "שחור", "أسود", "काला", "черный", "黒", "preto", "noir", "schwarz", "nero"},
+    "white": {"white", "לבן", "أبيض", "सफेद", "белый", "白", "branco", "blanc", "weiß", "weiss", "bianco", "ivory", "cream", "שמנת"},
+    "red": {"red", "אדום", "أحمر", "लाल", "красный", "红", "赤", "vermelho", "rouge", "rot", "rosso", "crimson", "scarlet", "burgundy", "בורדו"},
+    "gold": {"gold", "זהב", "ذهب", "सुनहरा", "золотой", "金", "dourado", "or", "oro"},
+    "yellow": {"yellow", "צהוב", "أصفر", "पीला", "желтый", "黄", "amarelo", "jaune", "gelb", "giallo"},
+    "pink": {"pink", "ורוד", "ورדי", "गुलाबी", "розовый", "粉", "rosa", "rose", "fuchsia", "פוקסיה"},
+    "orange": {"orange", "כתום", "ברتقالي", "नारंगी", "оранжевый", "橙", "laranja", "arancione"},
+}
+
+
+def _item_has_color(it: dict[str, Any], target_color_family: str) -> bool:
+    """Check if garment has a color belonging to target family."""
+    syns = COLOR_SYNONYMS.get(target_color_family, {target_color_family})
+    raw_colors = it.get("colors") or []
+    if isinstance(raw_colors, str):
+        raw_colors = [raw_colors]
+    for c in raw_colors:
+        if str(c).lower().strip() in syns:
+            return True
+    title_desc = f"{it.get('title') or ''} {it.get('name') or ''} {it.get('description') or ''}".lower()
+    for s in syns:
+        if re.search(rf"\b{re.escape(s)}\b", title_desc):
+            return True
+    return False
+
+
+def validate_garment_against_negative_constraints(
+    it: dict[str, Any],
+    rule: Any,
+    role: str | None = None,
+    user_gender: str | None = None,
+) -> tuple[bool, str | None]:
+    """Validate a garment against the negative_constraint of a FashionRule or dict.
+
+    Returns:
+        (True, None) if compliant.
+        (False, reason_str) if non-compliant with negative constraint.
+    """
+    rule_id = getattr(rule, "id", None) or (rule.get("id") if isinstance(rule, dict) else "")
+    neg_constraint = getattr(rule, "negative_constraint", None) or (rule.get("negative_constraint") if isinstance(rule, dict) else "")
+    if not neg_constraint:
+        return True, None
+
+    all_text = " ".join([
+        str(it.get("title") or ""),
+        str(it.get("name") or ""),
+        str(it.get("description") or ""),
+        str(it.get("category") or ""),
+        str(it.get("sub_category") or ""),
+        str(it.get("material") or ""),
+        str(it.get("pattern") or ""),
+        " ".join(str(t) for t in (it.get("tags") or [])),
+    ]).lower()
+
+    # 1. Hindu Funerals (Antyeshti)
+    if rule_id == "rule_cultural_hindu_antyeshti" or "hindu funeral" in neg_constraint.lower() or "antyeshti" in neg_constraint.lower():
+        if _item_has_color(it, "black"):
+            return False, "Black clothing is strictly forbidden in Hindu funerals."
+        if any(w in all_text for w in ("charcoal", "dark slate", "dark grey", "dark gray")):
+            return False, "Dark charcoal/slate garments are forbidden in Hindu funerals."
+        for col in ("red", "gold", "yellow", "orange", "pink"):
+            if _item_has_color(it, col):
+                return False, f"Vibrant celebratory color '{col}' is forbidden in Hindu funerals."
+        cat = norm_category(it.get("category"))
+        if role in ("shoes", "accessory", "belt", "footwear") or cat in ("shoes", "accessory", "belt", "footwear"):
+            mat = str(it.get("material") or "").lower()
+            if any(w in mat or w in all_text for w in ("leather", "suede", "עור", "جلد", "चमड़ा", "cuir", "leder", "pelle")):
+                return False, "Leather shoes or belts are forbidden inside sacred Hindu cremation rituals."
+
+    # 2. Hindu Weddings & Diwali (Vivaha)
+    elif rule_id == "rule_cultural_hindu_vivaha" or "hindu wedding" in neg_constraint.lower() or "vivaha" in neg_constraint.lower():
+        if _item_has_color(it, "black"):
+            if not any(_item_has_color(it, c) for c in ("gold", "red", "yellow")):
+                return False, "Solid black is inauspicious and strictly avoided at Hindu weddings."
+        if _item_has_color(it, "white"):
+            if not any(w in all_text for w in ("embroidered", "embroidery", "gold", "silk", "brocade", "nehru", "festive", "ריקמה", "זהב")):
+                if not any(_item_has_color(it, c) for c in ("gold", "red", "yellow", "orange", "pink", "maroon")):
+                    return False, "Plain unadorned white is associated with mourning and avoided by wedding guests."
+
+    # 3. Shiva & Mourning Etiquette
+    elif rule_id == "rule_cultural_mourning_shiva" or "shiva" in neg_constraint.lower() or "mourning" in neg_constraint.lower():
+        if is_item_mourning_inappropriate(it, role=role or norm_category(it.get("category"))):
+            return False, "Garment violates Shiva mourning etiquette (graphic prints, shorts, or vibrant loud colors)."
+
+    # 4. East Asian Funerals
+    elif rule_id == "rule_cultural_east_asian_funeral" or "east asian funeral" in neg_constraint.lower() or "red and gold" in neg_constraint.lower():
+        if _item_has_color(it, "red") or _item_has_color(it, "gold"):
+            return False, "Red and gold are celebratory symbols and strictly taboo at East Asian funerals."
+
+    # 5. East Asian Weddings
+    elif rule_id == "rule_cultural_east_asian_wedding" or "chinese weddings" in neg_constraint.lower():
+        cat = norm_category(it.get("category"))
+        if role in ("dress", "top") or cat in ("dress", "top", "one-piece"):
+            if _item_has_color(it, "red"):
+                return False, "Solid red is reserved exclusively for the bride at Chinese weddings."
+            if _item_has_color(it, "white") and (role == "dress" or cat == "dress"):
+                return False, "Solid white bridal dresses are reserved exclusively for the bride."
+
+    # 6. Western Wedding Guest Etiquette
+    elif rule_id == "rule_cultural_ceremony_etiquette" or "solid white lace dress" in neg_constraint.lower() or "wedding" in neg_constraint.lower():
+        cat = norm_category(it.get("category"))
+        if role == "dress" or cat == "dress" or "dress" in all_text or "gown" in all_text or "שמלה" in all_text:
+            if _item_has_color(it, "white"):
+                return False, "Solid white, ivory, or cream dresses are reserved exclusively for the bride."
+
+    # 7. Western Black Tie & Gala Protocol
+    elif rule_id == "rule_cultural_western_black_tie" or "black tie" in neg_constraint.lower() or "tuxedo" in neg_constraint.lower():
+        cat = norm_category(it.get("category"))
+        if role in ("shoes", "footwear") or cat in ("shoes", "footwear"):
+            if any(w in all_text for w in ("sneaker", "sneakers", "running", "sport", "סניקרס", "נעלי ספורט", "sandal", "sandals", "סנדלים", "slides", "flip")):
+                return False, "Casual sneakers, sandals, and sports shoes are strictly forbidden for Black Tie galas."
+        if role == "bottom" or cat == "bottom":
+            if any(w in all_text for w in ("shorts", "שורטס", "cargo", "דגמח", "jeans", "ג'ינס", "sweatpants", "joggers")):
+                return False, "Jeans, shorts, and casual pants are forbidden for Black Tie galas."
+
+    # 8. Orthodox Jewish Modesty (Tzniut)
+    elif rule_id == "rule_cultural_jewish_tzniut" or "tzniut" in neg_constraint.lower():
+        gen = (user_gender or "").lower()
+        cat = norm_category(it.get("category"))
+        if gen in ("female", "women", "woman", "אישה"):
+            if role == "bottom" or cat == "bottom":
+                if any(w in all_text for w in ("pants", "trousers", "jeans", "shorts", "מכנסיים", "מכנס", "ג'ינס", "שורטס")):
+                    return False, "Pants and shorts are prohibited for women under Orthodox Tzniut modesty."
+        if role in ("top", "dress") or cat in ("top", "dress"):
+            if any(w in all_text for w in ("sleeveless", "tank", "strapless", "גופייה", "גופיה", "crop top", "mini skirt", "חצאית מיני")):
+                return False, "Sleeveless tops, crop tops, and mini skirts violate Orthodox Tzniut modesty."
+
+    # 9. Islamic Friday Prayer & Mosque (Jumu'ah)
+    elif rule_id == "rule_cultural_islamic_jumuah" or "jumuah" in neg_constraint.lower() or "mosque" in neg_constraint.lower():
+        cat = norm_category(it.get("category"))
+        gen = (user_gender or "").lower()
+        if (gen in ("male", "man", "men", "גבר") or not gen) and (role == "bottom" or cat == "bottom"):
+            if any(w in all_text for w in ("shorts", "שורטס", "bermuda")):
+                return False, "Shorts above or at the knee are forbidden for men in mosque prayer (awrah)."
+        if any(w in all_text for w in ("sheer", "bodycon", "crop top", "mini skirt", "חולצת בטן")):
+            return False, "Tight or revealing clothing is forbidden in mosque prayer."
+
+    # 10. Conservative Modesty
+    elif rule_id == "rule_cultural_modesty_conservative" or "unlayered sleeveless" in neg_constraint.lower():
+        if any(w in all_text for w in ("crop top", "bralette", "tube top", "mini skirt", "חצאית מיני", "גופיית בטן")):
+            return False, "Revealing garments violate conservative modesty standards."
+
+    return True, None
+
+
+def filter_candidate_closet_by_axioms(
+    closet_items: list[dict[str, Any]] | None,
+    axioms: list[Any] | None,
+    *,
+    user_profile: dict[str, Any] | None = None,
+    user_gender: str | None = None,
+) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
+    """Pre-filter candidate closet items against negative constraints of retrieved RAG axioms.
+
+    Executed BEFORE LLM inference so that prohibited garments (e.g. black clothes at Hindu funerals,
+    red/gold at East Asian funerals, solid white dresses at weddings, bright prints at Shiva)
+    are purged from candidate inventory and never presented to the model.
+
+    Returns:
+        tuple(compliant_items, purged_items)
+    """
+    if not closet_items:
+        return [], []
+    if not axioms:
+        return list(closet_items), []
+
+    user_gender = user_gender or (user_profile or {}).get("sex") or (user_profile or {}).get("gender")
+
+    active_negative_axioms = [
+        ax for ax in axioms
+        if getattr(ax, "negative_constraint", None) or (isinstance(ax, dict) and ax.get("negative_constraint"))
+    ]
+    if not active_negative_axioms:
+        return list(closet_items), []
+
+    compliant: list[dict[str, Any]] = []
+    purged: list[dict[str, Any]] = []
+
+    for it in closet_items:
+        cid = str(it.get("id") or it.get("_id") or "")
+        title = it.get("title") or it.get("name") or cid
+        role = norm_category(it.get("category"))
+        is_clean = True
+        violation_reason = None
+        violation_rule = None
+
+        for ax in active_negative_axioms:
+            is_valid, reason = validate_garment_against_negative_constraints(
+                it, ax, role=role, user_gender=user_gender
+            )
+            if not is_valid:
+                is_clean = False
+                violation_reason = reason
+                violation_rule = getattr(ax, "id", None) or (ax.get("id") if isinstance(ax, dict) else "")
+                break
+
+        if is_clean:
+            compliant.append(it)
+        else:
+            it_copy = dict(it)
+            it_copy["_purged_reason"] = violation_reason
+            it_copy["_purged_rule_id"] = violation_rule
+            purged.append(it_copy)
+            logger.info(
+                "Axiom candidate pre-filter purged non-compliant item '%s' (cid=%s) due to %s: %s",
+                title, cid, violation_rule, violation_reason
+            )
+
+    # Safety guard: ensure critical categories (top, bottom, shoes) do not become completely empty
+    cat_counts: dict[str, int] = {}
+    for it in compliant:
+        cat = norm_category(it.get("category"))
+        cat_counts[cat] = cat_counts.get(cat, 0) + 1
+
+    essential_roles = ("top", "bottom", "shoes")
+    for r in essential_roles:
+        if cat_counts.get(r, 0) == 0:
+            purged_for_role = [it for it in purged if norm_category(it.get("category")) == r]
+            if purged_for_role:
+                logger.warning(
+                    "Axiom pre-filter warning: Category '%s' was completely emptied by negative constraints. User has no compliant items in this slot.",
+                    r,
+                )
+
+    return compliant, purged
+
+
 def find_best_garment_replacement(
     role: str,
     all_closet_items: list[dict[str, Any]],
     user_text: str,
     user_gender: str | None,
     exclude_item_ids: set[str],
+    axioms: list[Any] | None = None,
 ) -> dict[str, Any] | None:
     """Search user's closet metadata for the best matching replacement garment for a specific role."""
     allowed_cats = ROLE_ALLOWED_CATEGORIES.get(role, set())
     is_mourning = _is_mourning_context(user_text)
 
-    # 1. Filter candidates by category and gender
+    # 1. Filter candidates by category, gender, and axiom negative constraints
     candidates = []
     for it in all_closet_items:
         cid = str(it.get("id") or it.get("_id") or "")
@@ -328,6 +557,18 @@ def find_best_garment_replacement(
 
         if check_garment_role_mismatch(it, role=role) is not None:
             continue
+
+        if axioms:
+            is_axiom_clean = True
+            for ax in axioms:
+                is_comp, _ = validate_garment_against_negative_constraints(
+                    it, ax, role=role, user_gender=user_gender
+                )
+                if not is_comp:
+                    is_axiom_clean = False
+                    break
+            if not is_axiom_clean:
+                continue
 
         score = calculate_garment_style_score(
             it,
@@ -789,17 +1030,31 @@ async def evaluate_and_authorize_outfit(
     advice_payload: dict[str, Any],
     all_closet_items: list[dict[str, Any]],
     user_profile: dict[str, Any] | None = None,
+    axioms: list[Any] | None = None,
 ) -> dict[str, Any]:
     """Execute complete Quality Assurance check on stylist outfit recommendations.
 
     Analyzes overall look against user prompt, replaces inappropriate or unmapped garments,
-    and authorizes the verified look.
+    validates against negative constraints of retrieved RAG axioms, and authorizes the verified look.
     """
     if not isinstance(advice_payload, dict):
         return advice_payload
 
     if advice_payload.get("qa_authorized") is True:
         return advice_payload
+
+    if axioms is None:
+        try:
+            from app.services.fashion_rules_rag import retrieve_fashion_axioms
+            axioms = retrieve_fashion_axioms(
+                user_profile=user_profile,
+                user_text=user_text,
+                closet_summary=all_closet_items,
+                top_k=4,
+            )
+        except Exception as exc:
+            logger.warning("Could not retrieve fashion axioms for QA evaluation: %s", exc)
+            axioms = []
 
     user_gender = (user_profile or {}).get("sex") or (user_profile or {}).get("gender")
     lang_pref = (user_profile or {}).get("preferred_language")
@@ -882,6 +1137,21 @@ async def evaluate_and_authorize_outfit(
                     is_valid_item = False
                     item_data = None
 
+            # Check for negative constraint violations across all retrieved active axioms
+            if is_valid_item and item_data and axioms:
+                for ax in axioms:
+                    is_comp, ax_reason = validate_garment_against_negative_constraints(
+                        item_data, ax, role=role, user_gender=user_gender
+                    )
+                    if not is_comp:
+                        logger.warning(
+                            "QA: Axiom negative constraint violation in %s: %s (Rule %s: %s)",
+                            role, item_data.get("title"), getattr(ax, "id", None) or (ax.get("id") if isinstance(ax, dict) else ""), ax_reason
+                        )
+                        is_valid_item = False
+                        item_data = None
+                        break
+
             # If invalid or unmapped, attempt to find best replacement in closet metadata
             if not is_valid_item:
                 # If it's a bizarre non-garment (e.g. apron / סינר), drop or replace
@@ -897,6 +1167,7 @@ async def evaluate_and_authorize_outfit(
                     user_text=user_text,
                     user_gender=user_gender,
                     exclude_item_ids=used_item_ids,
+                    axioms=axioms,
                 )
                 if replacement:
                     new_id = str(replacement.get("id") or replacement.get("_id"))
@@ -1091,6 +1362,7 @@ async def evaluate_and_authorize_outfit(
                     user_text=user_text,
                     user_gender=user_gender,
                     exclude_item_ids=used_item_ids,
+                    axioms=axioms,
                 )
                 if replacement:
                     new_id = str(replacement.get("id") or replacement.get("_id"))
@@ -1131,5 +1403,21 @@ async def evaluate_and_authorize_outfit(
     # 4. Text & Narrative Validation
     sanitize_spoken_reply_and_notes(advice_payload, user_text=user_text, lang=lang)
     advice_payload["qa_authorized"] = True
+
+    # 5. Cultural Audit Trail
+    active_neg_rules = [
+        getattr(r, "id", None) or (r.get("id") if isinstance(r, dict) else "")
+        for r in (axioms or [])
+        if getattr(r, "negative_constraint", None) or (isinstance(r, dict) and r.get("negative_constraint"))
+    ]
+    all_replacements = [
+        note for rec in recommendations for note in (str(rec.get("qa_notes") or "").split("; "))
+        if note and "Outfit verified" not in note
+    ]
+    advice_payload["cultural_audit"] = {
+        "status": "authorized",
+        "active_axioms": [r for r in active_neg_rules if r],
+        "qa_replacements": all_replacements,
+    }
 
     return advice_payload
