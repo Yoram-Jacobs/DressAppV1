@@ -653,5 +653,173 @@
     },
     "priority": 9,
     "example": "Navy blue pleated chiffon A-line midi dress with jewel neckline, matching lightweight pashmina shawl for the church service, silver leather clutch, and suede block heels."
+  },
+  {
+    "id": "rule_cultural_jewish_sigd",
+    "category": "cultural_modesty",
+    "title": "Sigd Holiday Attire (חג הסיגד - Beta Israel Ethiopian Jewish Tradition)",
+    "rule_statement": "Dress in pristine, respectful solid white clothing (white Habesha Kemis with Netela shawl for women; white collared shirt with light/white trousers and Netela/Tallit for men) to honor the sacred renewal of the covenant and longing for Jerusalem.",
+    "negative_constraint": "Strictly forbid graphic t-shirts, loud logos, eagle/animal prints, slogan tees, black/dark mourning clothes, distressed denim, shorts, or casual beach sandals.",
+    "criteria": {
+      "tags": ["sigd", "סיגד", "חג הסיגד", "ביתא ישראל", "beta israel", "habesha kemis", "netela"]
+    },
+    "priority": 10,
+    "example": "White linen collared shirt with tailored light trousers and white Netela shawl."
+  },
+  {
+    "id": "rule_cultural_inuit_sinck_tuck",
+    "category": "cultural_modesty",
+    "title": "Inuit Sinck Tuck & Winter Drum Dancing Protocol",
+    "rule_statement": "Wear authentic Arctic insulated winter garments (Atigi/Amauti hooded parkas, Kamiks sealskin/caribou boots, or Mother-Hubbard Silapaaq fabric parkas) suitable for freezing conditions and communal drum dancing.",
+    "negative_constraint": "Strictly forbid thin canvas sneakers, un-insulated jackets, bare ankles, or commercial polyester costume caricatures.",
+    "criteria": {
+      "tags": ["sinck tuck", "sink tuck", "inuit", "drum dance", "kamik", "amauti", "atigi"]
+    },
+    "priority": 10,
+    "example": "Down-insulated Atigi parka with fur ruff, warm wool trousers, and thermal Kamik boots."
+  },
+  {
+    "id": "rule_cultural_jewish_mimouna",
+    "category": "cultural_modesty",
+    "title": "Mimouna Festive Attire (מימונה - North African Sephardic Tradition)",
+    "rule_statement": "Wear celebratory traditional festive attire (embroidered Kaftans, Jelabas, velvet vests with gold Zari braid, Tarboush caps, and leather Babouche slippers) in joyful vibrant colors (gold, emerald green, royal blue, white).",
+    "negative_constraint": "Avoid somber funeral black, austere mourning tones, or drab athletic gym wear.",
+    "criteria": {
+      "tags": ["mimouna", "מימונה", "תרבחו ותסעדו", "moroccan kaftan", "jellaba"]
+    },
+    "priority": 9,
+    "example": "Embroidered white and gold festive Kaftan with gold-threaded vest and leather Babouche."
+  },
+  {
+    "id": "rule_cultural_jewish_lag_baomer",
+    "category": "cultural_modesty",
+    "title": "Lag BaOmer Bonfire & Spark Safety (ל\"ג בעומר והילולת הרשב\"י)",
+    "rule_statement": "Wear 100% natural, flame-resistant breathable fabrics (heavy cotton, denim, canvas, wool) and sturdy closed-toe boots or shoes for outdoor bonfires and Meron festivities.",
+    "negative_constraint": "Strictly forbid meltable synthetic garments (polyester windbreakers, thin nylon shells, acrylic fleece) near active fires, and avoid open-toed sandals or high heels.",
+    "criteria": {
+      "tags": ["lag baomer", "ל\"ג בעומר", "לג בעומר", "מירון", "מדורה", "upsherin"]
+    },
+    "priority": 9,
+    "example": "Heavy cotton button-down over sturdy denim jeans and leather work boots."
+  },
+  {
+    "id": "rule_cultural_jewish_tu_bav",
+    "category": "cultural_modesty",
+    "title": "Tu B'Av White Vineyard Attire (ט\"ו באב - חג האהבה והפיוס)",
+    "rule_statement": "Wear light, elegant, pure plain white garments (white linen dresses, white cotton button-downs, light chinos) following the ancient egalitarian tradition of joyful vineyard gatherings.",
+    "negative_constraint": "Avoid dark or somber black clothing, and avoid ostentatious luxury logos or gaudy designer branding.",
+    "criteria": {
+      "tags": ["tu b'av", "tu bav", "ט\"ו באב", "טו באב", "חג האהבה", "כרמים"]
+    },
+    "priority": 9,
+    "example": "Crisp white linen button-down shirt paired with off-white cotton chinos and clean loafers."
+  },
+  {
+    "id": "rule_cultural_thai_songkran",
+    "category": "cultural_modesty",
+    "title": "Songkran Water Festival & Public Decency Protocol (เทศกาลสงกรานต์)",
+    "rule_statement": "Wear colorful floral tropical Songkran shirts (Sua Songkran) with lightweight, quick-drying cotton or technical shorts and secure non-slip water-resistant sandals.",
+    "negative_constraint": "Strictly forbid sheer or thin white fabrics that become transparent when wet, strictly forbid shirtless men or bikini tops in public (criminal decency violation), and avoid dry-clean-only silk.",
+    "criteria": {
+      "tags": ["songkran", "สงกรานต์", "thai new year", "water festival", "סונגקראן"]
+    },
+    "priority": 10,
+    "example": "Vibrant floral print short-sleeved cotton shirt with quick-dry shorts and non-slip sandals."
+  },
+  {
+    "id": "rule_cultural_persian_nowruz",
+    "category": "cultural_modesty",
+    "title": "Nowruz Spring Equinox Attire (نوروز - Nou-Poosh New Clothes)",
+    "rule_statement": "Wear brand new, pristine, unworn clothes (Nou-poosh) in vibrant spring tones (emerald green, turquoise, rose, pastel yellow, crisp white) to welcome renewal and good fortune.",
+    "negative_constraint": "Strictly forbid old, worn-out, torn, or stained clothing, and avoid dreary funeral black or somber mourning apparel.",
+    "criteria": {
+      "tags": ["nowruz", "norooz", "نوروز", "haft-seen", "persian new year", "נוירוז"]
+    },
+    "priority": 9,
+    "example": "New crisp pastel green linen blazer with fresh white shirt and light beige chinos."
+  },
+  {
+    "id": "rule_cultural_korean_chuseok_seollal",
+    "category": "cultural_modesty",
+    "title": "Korean Chuseok & Seollal Heritage Attire (추석 / 설날 - Chuseok-Bim & Seol-Bim)",
+    "rule_statement": "Wear traditional Hanbok or dignified conservative smart-casual attire suitable for ancestral Charye rites and formal bowing to elders (Sebae).",
+    "negative_constraint": "Strictly forbid distressed/ripped denim, tight mini skirts, shorts, sleeveless tops, or casual loungewear during ancestral rites.",
+    "criteria": {
+      "tags": ["chuseok", "seollal", "추석", "설날", "charye", "sebae", "צ'וסוק"]
+    },
+    "priority": 9,
+    "example": "Traditional silk Hanbok with Norigae ornament or navy tailored suit with clean collared shirt."
+  },
+  {
+    "id": "rule_cultural_hindu_holi",
+    "category": "cultural_modesty",
+    "title": "Holi Festival of Colors Attire (होली - Rangwali Holi)",
+    "rule_statement": "Wear inexpensive, plain white or light cotton clothing (Kurta-pyjama or simple tee and trousers) specifically intended to be permanently colored with herbal powders (Gulal), with long sleeves to shield skin.",
+    "negative_constraint": "Strictly forbid expensive silk, wool, cashmere, dry-clean-only garments, leather footwear, or items you intend to wear again.",
+    "criteria": {
+      "tags": ["holi", "होली", "gulal", "festival of colors", "הולי"]
+    },
+    "priority": 10,
+    "example": "Plain white cotton kurta-pyjama with sunglasses and washable canvas footwear."
+  },
+  {
+    "id": "rule_cultural_bavarian_oktoberfest_dirndl",
+    "category": "cultural_modesty",
+    "title": "Bavarian Oktoberfest Trachten & Dirndl Bow Protocol",
+    "rule_statement": "Men wear authentic leather Lederhosen with H-suspenders, Trachten shirt, and Haferlschuhe; women wear a classic knee-length or midi Dirndl with bodice, blouse, and apron with bow placed according to relationship status.",
+    "negative_constraint": "Strictly forbid cheap shiny polyester mini-dirndls ('Halloween costumes'), plastic Lederhosen, fluorescent neon colors, or athletic sneakers.",
+    "criteria": {
+      "tags": ["oktoberfest", "dirndl", "lederhosen", "trachten", "אוקטוברפסט", "דירנדל"]
+    },
+    "priority": 10,
+    "example": "Midi linen Dirndl with cotton apron bow tied on the right or left, paired with classic Haferlschuhe."
+  },
+  {
+    "id": "rule_cultural_native_powwow_ribbonwork",
+    "category": "cultural_modesty",
+    "title": "Intertribal Powwow & Ribbonwork Protocol",
+    "rule_statement": "Wear below-the-knee ribbon skirts or tailored ribbon shirts with moccasins or neat clean footwear, respecting sacred tribal regalia.",
+    "negative_constraint": "Strictly forbid non-indigenous guests from wearing eagle feathers, warbonnets, or sacred ceremonial regalia; forbid short skirts above the knee, crop tops, or alcohol.",
+    "criteria": {
+      "tags": ["powwow", "ribbon skirt", "ribbon shirt", "native american", "first nations", "פאו וואו"]
+    },
+    "priority": 10,
+    "example": "Dark cotton ribbon skirt adorned with satin prayer ribbons, paired with modest black blouse and soft moccasins."
+  },
+  {
+    "id": "rule_cultural_mexican_dia_de_muertos",
+    "category": "cultural_modesty",
+    "title": "Mexican Día de los Muertos Attire (Día de Muertos)",
+    "rule_statement": "Wear celebratory traditional Mexican attire (embroidered Puebla dresses, elegant Catrina lace gowns, Charro suits) accented with vibrant marigold floral crowns and artistic sugar skull face art.",
+    "negative_constraint": "Strictly forbid gory horror movie masks, fake blood, gruesome props, or mocking cultural caricatures.",
+    "criteria": {
+      "tags": ["dia de los muertos", "dia de muertos", "day of the dead", "catrina", "יום המתים"]
+    },
+    "priority": 9,
+    "example": "Black lace Catrina dress with vibrant marigold floral headpiece and embroidered shawl."
+  },
+  {
+    "id": "rule_cultural_ethiopian_timkat_meskel",
+    "category": "cultural_modesty",
+    "title": "Ethiopian Orthodox Timkat & Meskel Attire (ጥምቀት እና መስቀል)",
+    "rule_statement": "Wear pristine white handwoven Habesha Kemis and white cotton Netela or Gabi shawls with woven Tibeb borders, paired with comfortable flat footwear for outdoor processions.",
+    "negative_constraint": "Strictly forbid black or dark funeral mourning clothes, shorts, sleeveless shirts, or revealing cuts.",
+    "criteria": {
+      "tags": ["timkat", "meskel", "ጥምቀት", "መስቀል", "טיםקאת", "טימקאט", "מסקל"]
+    },
+    "priority": 10,
+    "example": "White woven cotton Habesha dress with colorful Tibeb hem, draped with a white Netela shawl."
+  },
+  {
+    "id": "rule_cultural_scottish_burns_night",
+    "category": "cultural_modesty",
+    "title": "Scottish Burns Night & Highland Dress Protocol",
+    "rule_statement": "Men wear authentic Highland dress (Prince Charlie or Argyll jacket, 8-yard clan tartan kilt, sporran, kilt hose, flashes, sgian-dubh, ghillie brogues, bow tie); women wear evening dress with clan tartan sash.",
+    "negative_constraint": "Avoid wearing the sporran off-center, avoid mixing mismatched clan tartans, and forbid casual denim, trainers, or non-traditional novelty kilts.",
+    "criteria": {
+      "tags": ["burns night", "burns supper", "kilt", "highland dress", "sporran", "סקוטלנד", "קילט"]
+    },
+    "priority": 9,
+    "example": "Prince Charlie black wool jacket with clan tartan kilt, leather sporran, and ghillie brogues."
   }
 ]

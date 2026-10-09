@@ -393,7 +393,7 @@ def validate_garment_against_negative_constraints(
                     return False, "Plain unadorned white is associated with mourning and avoided by wedding guests."
 
     # 3. Shiva & Mourning Etiquette
-    elif rule_id == "rule_cultural_mourning_shiva" or "shiva" in neg_constraint.lower() or "mourning" in neg_constraint.lower():
+    elif rule_id == "rule_cultural_mourning_shiva" or "shiva" in neg_constraint.lower() or "shiva mourning" in neg_constraint.lower():
         if is_item_mourning_inappropriate(it, role=role or norm_category(it.get("category"))):
             return False, "Garment violates Shiva mourning etiquette (graphic prints, shorts, or vibrant loud colors)."
 
@@ -697,6 +697,119 @@ def validate_garment_against_negative_constraints(
         if any(w in all_text for w in ("funeral", "mourning", "לוויה", "אבל")):
             if _item_has_color(it, "gold") or any(w in all_text for w in ("multicolor", "joyous", "celebratory kente")):
                 return False, "Joyous gold or multicolored Kente is strictly forbidden at Ghanaian funerals (Kobene/Kuntunkuni required)."
+
+    # 26. Sigd Holiday (Beta Israel Ethiopian Jewish Tradition)
+    elif (
+        rule_id == "rule_cultural_jewish_sigd"
+        or "sigd" in neg_constraint.lower()
+        or "סיגד" in neg_constraint
+    ):
+        cat = norm_category(it.get("category"))
+        # Strictly forbid black or dark funeral mourning garments
+        if _item_has_color(it, "black"):
+            return False, "Black clothing is strictly forbidden on the sacred Sigd holiday."
+        if any(w in all_text for w in ("charcoal", "dark grey", "dark gray", "mourning")):
+            return False, "Dark somber mourning colors are forbidden on the festive Sigd holiday."
+        # Strictly forbid graphic tees, eagle prints, loud prints, slogan tees
+        pattern = str(it.get("pattern") or "").lower()
+        if pattern in ("graphic", "print", "cartoon", "camo", "camouflage"):
+            return False, "Graphic and printed tees are inappropriate for the sacred Sigd holiday."
+        if any(w in all_text for w in (
+            "graphic", "cartoon", "ציור", "נשר", "eagle", "slogan", "הדפס", "tribal", "טריבל"
+        )):
+            return False, "Graphic tees and animal/eagle prints are strictly forbidden on Sigd."
+        # Modesty & Respect: forbid shorts, ripped jeans, tank tops
+        if role == "bottom" or cat == "bottom":
+            if any(w in all_text for w in ("shorts", "שורטס", "מכנסיים קצרים", "ripped", "קרוע", "swim")):
+                return False, "Shorts and ripped jeans are forbidden on Sigd."
+        if any(w in all_text for w in ("tank top", "tank", "sleeveless", "גופייה", "גופיה", "crop top", "חולצת בטן")):
+            return False, "Sleeveless tops and crop tops violate Sigd sanctity."
+        if role in ("shoes", "footwear") or cat in ("shoes", "footwear"):
+            if any(w in all_text for w in ("flip-flop", "flip flop", "כפכפים", "כפכפי ים", "slides")):
+                return False, "Beach flip-flops and casual slides are forbidden on Sigd."
+
+    # 27. Inuit Sinck Tuck & Winter Drum Dancing
+    elif (
+        rule_id == "rule_cultural_inuit_sinck_tuck"
+        or "sinck tuck" in neg_constraint.lower()
+        or "sink tuck" in neg_constraint.lower()
+    ):
+        cat = norm_category(it.get("category"))
+        if role in ("shoes", "footwear") or cat in ("shoes", "footwear"):
+            if any(w in all_text for w in ("canvas", "sneaker", "sneakers", "flip-flop", "sandal", "sandals", "סנדלים", "כפכפים")):
+                return False, "Thin canvas sneakers and sandals are strictly forbidden in Arctic Sinck Tuck winter conditions."
+        if role in ("top", "outerwear") or cat in ("top", "outerwear"):
+            if any(w in all_text for w in ("sleeveless", "tank", "crop top", "thin jacket", "unlined")):
+                return False, "Un-insulated or sleeveless clothing is dangerous in Arctic winter conditions."
+
+    # 28. Thai Songkran Water Festival
+    elif (
+        rule_id == "rule_cultural_thai_songkran"
+        or "songkran" in neg_constraint.lower()
+        or "สงกรานต์" in neg_constraint
+    ):
+        mat = str(it.get("material") or "").lower()
+        if any(w in mat or w in all_text for w in ("silk", "משי", "cashmere", "suede")):
+            return False, "Dry-clean-only silk and delicate fabrics will be permanently ruined during Songkran water splashing."
+        if any(w in all_text for w in ("transparent", "sheer", "שקוף", "bikini", "ביקיני")):
+            return False, "Translucent or revealing swimwear violates Thai public modesty laws during Songkran."
+
+    # 29. Hindu Holi Festival of Colors
+    elif (
+        rule_id == "rule_cultural_hindu_holi"
+        or "holi" in neg_constraint.lower()
+        or "होली" in neg_constraint
+    ):
+        mat = str(it.get("material") or "").lower()
+        if any(w in mat or w in all_text for w in ("silk", "משי", "wool", "צמר", "cashmere", "קשמיר")):
+            return False, "Silk and wool garments will be permanently ruined by colored Holi powders (Gulal)."
+        cat = norm_category(it.get("category"))
+        if role in ("shoes", "footwear", "accessory", "belt") or cat in ("shoes", "footwear", "accessory", "belt"):
+            if any(w in mat or w in all_text for w in ("leather", "suede", "עור")):
+                return False, "Leather footwear and accessories will be ruined by wet Holi dyes."
+
+    # 30. Lag BaOmer Bonfire Safety
+    elif (
+        rule_id == "rule_cultural_jewish_lag_baomer"
+        or "lag baomer" in neg_constraint.lower()
+        or "ל\"ג בעומר" in neg_constraint
+    ):
+        mat = str(it.get("material") or "").lower()
+        if any(w in mat or w in all_text for w in ("100% polyester", "thin nylon", "windbreaker", "מעיל רוח ניילון")):
+            return False, "Meltable synthetic fabrics pose a severe burn hazard near active Lag BaOmer bonfires."
+        if role in ("shoes", "footwear") or norm_category(it.get("category")) in ("shoes", "footwear"):
+            if any(w in all_text for w in ("high heel", "stiletto", "flip-flop", "עקבים", "כפכפים")):
+                return False, "High heels and flip-flops are hazardous around rough bonfire terrain."
+
+    # 31. Tu B'Av White Vineyard Attire
+    elif (
+        rule_id == "rule_cultural_jewish_tu_bav"
+        or "tu b'av" in neg_constraint.lower()
+        or "ט\"ו באב" in neg_constraint
+    ):
+        if _item_has_color(it, "black"):
+            return False, "Black clothing is avoided on Tu B'Av (celebrated traditionally in pure white garments)."
+
+    # 32. Bavarian Oktoberfest Trachten
+    elif (
+        rule_id == "rule_cultural_bavarian_oktoberfest_dirndl"
+        or "oktoberfest" in neg_constraint.lower()
+        or "dirndl" in neg_constraint.lower()
+    ):
+        if any(w in all_text for w in ("mini dirndl", "halloween dirndl", "costume dirndl", "mini skirt", "חצאית מיני")):
+            return False, "Mini-length synthetic carnival dirndls are considered vulgar and strictly avoided at Oktoberfest."
+
+    # 33. Intertribal Powwow Protocol
+    elif (
+        rule_id == "rule_cultural_native_powwow_ribbonwork"
+        or "powwow" in neg_constraint.lower()
+    ):
+        cat = norm_category(it.get("category"))
+        if role == "bottom" or cat == "bottom":
+            if any(w in all_text for w in ("short shorts", "mini skirt", "חצאית מיני", "shorts")):
+                return False, "Shorts and mini skirts are inappropriate for sacred Powwow grounds (ribbon skirts must cover knees)."
+        if any(w in all_text for w in ("crop top", "revealing", "גופיית בטן")):
+            return False, "Revealing garments violate Powwow protocol."
 
     return True, None
 

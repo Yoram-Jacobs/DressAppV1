@@ -400,3 +400,165 @@ def test_yom_kippur_and_tisha_bav_purges_leather_footwear():
     assert is_valid
 
 
+def test_sigd_holiday_purges_graphic_eagle_tee_and_black_clothes():
+    """Verify that asking for Sigd retrieves rule_cultural_jewish_sigd and purges graphic tees, eagle prints, and black clothes."""
+    axioms = retrieve_fashion_axioms(user_text="לבוש לחג הסיגד", top_k=3)
+    sigd_rule = next((r for r in axioms if r.id == "rule_cultural_jewish_sigd"), None)
+    assert sigd_rule is not None, "Sigd rule must be retrieved for 'לבוש לחג הסיגד'"
+
+    # 1. Red tee with eagle print (as seen in user screenshot) -> strictly purged!
+    eagle_tee = {
+        "id": "t-eagle",
+        "title": "Classic Crew-neck Tee",
+        "description": "חולצת טי עם הדפס נשר ותכלית, צבע בורדו",
+        "category": "Top",
+        "pattern": "graphic",
+        "colors": ["red", "burgundy"],
+    }
+    is_valid, reason = validate_garment_against_negative_constraints(eagle_tee, sigd_rule, role="top")
+    assert not is_valid
+    assert "graphic" in reason.lower() or "eagle" in reason.lower() or "sigd" in reason.lower()
+
+    # 2. Black pants -> strictly purged (mourning color on Sigd)
+    black_pants = {"id": "p-black", "title": "מכנסיים מחויטים שחורים", "category": "Bottom", "colors": ["black"]}
+    is_valid, reason = validate_garment_against_negative_constraints(black_pants, sigd_rule, role="bottom")
+    assert not is_valid
+    assert "black" in reason.lower()
+
+    # 3. Clean white linen shirt -> compliant!
+    white_shirt = {"id": "s-white", "title": "חולצת פשתן לבנה חגיגית", "category": "Top", "colors": ["white"], "material": "linen"}
+    is_valid, reason = validate_garment_against_negative_constraints(white_shirt, sigd_rule, role="top")
+    assert is_valid
+    assert reason is None
+
+
+def test_sinck_tuck_arctic_retrieval_and_validation():
+    """Verify that asking for Sinck Tuck retrieves rule_cultural_inuit_sinck_tuck and purges non-insulated footwear/clothes."""
+    axioms = retrieve_fashion_axioms(user_text="what to wear to Sinck Tuck", top_k=3)
+    sinck_tuck_rule = next((r for r in axioms if r.id == "rule_cultural_inuit_sinck_tuck"), None)
+    assert sinck_tuck_rule is not None, "Sinck Tuck rule must be retrieved for 'what to wear to Sinck Tuck'"
+
+    # Canvas sneakers -> strictly purged in Arctic winter conditions
+    canvas_shoes = {"id": "sh-canvas", "title": "Low Top Canvas Sneakers", "category": "Shoes", "material": "canvas"}
+    is_valid, reason = validate_garment_against_negative_constraints(canvas_shoes, sinck_tuck_rule, role="shoes")
+    assert not is_valid
+    assert "canvas" in reason.lower() or "sneakers" in reason.lower() or "arctic" in reason.lower()
+
+    # Insulated parka / Kamiks -> compliant!
+    kamiks = {"id": "sh-kamik", "title": "Sealskin Kamiks Winter Boots", "category": "Shoes", "material": "shearling"}
+    is_valid, reason = validate_garment_against_negative_constraints(kamiks, sinck_tuck_rule, role="shoes")
+    assert is_valid
+
+
+def test_songkran_purges_silk_and_sheer():
+    """Verify that Songkran water festival purges delicate silk and sheer garments."""
+    axioms = retrieve_fashion_axioms(user_text="Songkran festival in Chiang Mai", top_k=3)
+    songkran_rule = next((r for r in axioms if r.id == "rule_cultural_thai_songkran"), None)
+    assert songkran_rule is not None, "Songkran rule must be retrieved"
+
+    # Silk shirt -> strictly purged (water ruin)
+    silk_shirt = {"id": "s-silk", "title": "Luxury Silk Button-down Shirt", "category": "Top", "material": "silk"}
+    is_valid, reason = validate_garment_against_negative_constraints(silk_shirt, songkran_rule, role="top")
+    assert not is_valid
+    assert "silk" in reason.lower()
+
+    # Floral cotton shirt -> compliant!
+    floral_shirt = {"id": "s-floral", "title": "Bright Floral Tropical Cotton Shirt", "category": "Top", "material": "cotton", "colors": ["multi"]}
+    is_valid, reason = validate_garment_against_negative_constraints(floral_shirt, songkran_rule, role="top")
+    assert is_valid
+
+
+def test_holi_purges_silk_and_leather():
+    """Verify that Holi festival purges expensive silk and leather footwear."""
+    axioms = retrieve_fashion_axioms(user_text="outfit for Holi festival celebration", top_k=3)
+    holi_rule = next((r for r in axioms if r.id == "rule_cultural_hindu_holi"), None)
+    assert holi_rule is not None, "Holi rule must be retrieved"
+
+    # Silk kurta -> strictly purged
+    silk_kurta = {"id": "k-silk", "title": "Pure Raw Silk Kurta", "category": "Top", "material": "silk"}
+    is_valid, reason = validate_garment_against_negative_constraints(silk_kurta, holi_rule, role="top")
+    assert not is_valid
+    assert "silk" in reason.lower()
+
+    # Leather loafers -> strictly purged
+    leather_loafers = {"id": "sh-leather", "title": "Brown Leather Loafers", "category": "Shoes", "material": "leather"}
+    is_valid, reason = validate_garment_against_negative_constraints(leather_loafers, holi_rule, role="shoes")
+    assert not is_valid
+    assert "leather" in reason.lower()
+
+    # Inexpensive plain white cotton kurta -> compliant!
+    white_cotton_kurta = {"id": "k-cotton", "title": "Plain White Cotton Kurta", "category": "Top", "material": "cotton", "colors": ["white"]}
+    is_valid, reason = validate_garment_against_negative_constraints(white_cotton_kurta, holi_rule, role="top")
+    assert is_valid
+
+
+def test_qa_evaluates_sigd_replaces_red_eagle_tee_with_white_shirt():
+    """Verify that evaluate_and_authorize_outfit strips a red eagle graphic tee when styled for Sigd and replaces it with a compliant white shirt."""
+    import asyncio
+
+    closet = [
+        {
+            "id": "t-eagle",
+            "title": "Classic Crew-neck Tee",
+            "description": "חולצת טי עם הדפס נשר ותכלית, צבע בורדו",
+            "category": "Top",
+            "pattern": "graphic",
+            "colors": ["red", "burgundy"],
+        },
+        {
+            "id": "s-white",
+            "title": "חולצת פשתן לבנה חגיגית",
+            "description": "חולצה מכופתרת לבנה קלאסית",
+            "category": "Top",
+            "pattern": "solid",
+            "colors": ["white"],
+            "material": "linen",
+        },
+        {
+            "id": "p-light",
+            "title": "מכנסי צ'ינו בהירים",
+            "category": "Bottom",
+            "colors": ["beige"],
+        },
+        {
+            "id": "sh-clean",
+            "title": "נעלי מוקסין חומות בהירות",
+            "category": "Shoes",
+            "colors": ["tan"],
+        },
+    ]
+
+    # Raw advice payload where LLM hallucinates/selects the red eagle tee
+    raw_advice = {
+        "outfit_recommendations": [
+            {
+                "name": "מראה לחג הסיגד",
+                "items": [
+                    {"role": "top", "name": "Classic Crew-neck Tee", "closet_item_id": "t-eagle"},
+                    {"role": "bottom", "name": "מכנסי צ'ינו בהירים", "closet_item_id": "p-light"},
+                    {"role": "shoes", "name": "נעלי מוקסין חומות בהירות", "closet_item_id": "sh-clean"},
+                ],
+                "why": "מראה חגיגי ומכובד",
+            }
+        ]
+    }
+
+    reviewed = asyncio.run(
+        evaluate_and_authorize_outfit(
+            user_text="לבוש לחג הסיגד",
+            advice_payload=raw_advice,
+            all_closet_items=closet,
+            user_profile={"preferred_language": "he", "sex": "male"},
+        )
+    )
+
+    rec = reviewed["outfit_recommendations"][0]
+    top_item = next(it for it in rec["items"] if it.get("role") == "top")
+    # Red eagle tee MUST be replaced with white shirt
+    assert top_item["closet_item_id"] == "s-white"
+    assert "t-eagle" not in [it.get("closet_item_id") for it in rec["items"]]
+    assert reviewed.get("qa_authorized") is True
+
+
+
+

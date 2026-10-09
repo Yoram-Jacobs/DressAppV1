@@ -349,6 +349,91 @@ def retrieve_fashion_axioms(
     )):
         add_rule("rule_cultural_latin_quinceanera_guest")
 
+    # Sigd Holiday (Beta Israel Ethiopian Jewish Tradition)
+    if any(w in text_corpus for w in (
+        "sigd", "חג הסיגד", "חג סיגד", "סיגד", "ביתא ישראל", "beta israel", "habesha kemis", "netela", "kessim"
+    )):
+        add_rule("rule_cultural_jewish_sigd")
+
+    # Inuit Sinck Tuck & Winter Drum Dancing
+    if any(w in text_corpus for w in (
+        "sinck tuck", "sink tuck", "sinck-tuck", "sink-tuck", "sincktuck", "sinktuck",
+        "inuit", "drum dance", "kamik", "amauti", "atigi", "qaggiq", "אינואיט", "סינק טאק", "סינק טוק"
+    )):
+        add_rule("rule_cultural_inuit_sinck_tuck")
+
+    # Mimouna (North African Sephardic Celebration)
+    if any(w in text_corpus for w in (
+        "mimouna", "מימונה", "תרבחו ותסעדו", "מופלטה", "moroccan kaftan", "jellaba"
+    )):
+        add_rule("rule_cultural_jewish_mimouna")
+
+    # Lag BaOmer & Hillula of Rashbi
+    if any(w in text_corpus for w in (
+        "lag baomer", "lag b'omer", "ל\"ג בעומר", "לג בעומר", "מירון", "רשב\"י", "מדורה", "upsherin", "אופשערן"
+    )):
+        add_rule("rule_cultural_jewish_lag_baomer")
+
+    # Tu B'Av White Vineyard Attire
+    if any(w in text_corpus for w in (
+        "tu b'av", "tu bav", "ט\"ו באב", "טו באב", "חג האהבה", "כרמים"
+    )):
+        add_rule("rule_cultural_jewish_tu_bav")
+
+    # Songkran Thai Water Festival
+    if any(w in text_corpus for w in (
+        "songkran", "สงกรานต์", "thai new year", "sua songkran", "water festival", "סונגקראן"
+    )):
+        add_rule("rule_cultural_thai_songkran")
+
+    # Persian Nowruz Spring Equinox (Nou-Poosh)
+    if any(w in text_corpus for w in (
+        "nowruz", "norooz", "نوروز", "haft-seen", "nou-poosh", "persian new year", "נוירוז", "ראש השנה הפרסי"
+    )):
+        add_rule("rule_cultural_persian_nowruz")
+
+    # Korean Chuseok & Seollal
+    if any(w in text_corpus for w in (
+        "chuseok", "seollal", "추석", "설날", "charye", "sebae", "chuseok-bim", "seol-bim", "צ'וסוק", "סולאל"
+    )):
+        add_rule("rule_cultural_korean_chuseok_seollal")
+
+    # Hindu Holi Festival of Colors
+    if any(w in text_corpus for w in (
+        "holi", "होली", "gulal", "festival of colors", "rangwali", "הולי", "פסטיבל הצבעים"
+    )):
+        add_rule("rule_cultural_hindu_holi")
+
+    # Bavarian & Austrian Oktoberfest / Kirchtag (Trachten & Dirndl)
+    if any(w in text_corpus for w in (
+        "oktoberfest", "dirndl", "lederhosen", "trachten", "haferlschuhe", "schleife", "אוקטוברפסט", "דירנדל", "לדרהוזן"
+    )):
+        add_rule("rule_cultural_bavarian_oktoberfest_dirndl")
+
+    # Native American & First Nations Intertribal Powwow
+    if any(w in text_corpus for w in (
+        "powwow", "pow-wow", "ribbon skirt", "ribbon shirt", "native american regalia", "first nations", "פאו וואו", "חצאית סרטים"
+    )):
+        add_rule("rule_cultural_native_powwow_ribbonwork")
+
+    # Mexican Día de los Muertos
+    if any(w in text_corpus for w in (
+        "dia de los muertos", "dia de muertos", "day of the dead", "catrina", "cempasuchil", "calavera", "יום המתים"
+    )):
+        add_rule("rule_cultural_mexican_dia_de_muertos")
+
+    # Ethiopian Orthodox Timkat & Meskel
+    if any(w in text_corpus for w in (
+        "timkat", "meskel", "ጥምቀት", "መስቀል", "epiphany ethiopia", "טיםקאת", "טימקאט", "מסקל"
+    )):
+        add_rule("rule_cultural_ethiopian_timkat_meskel")
+
+    # Scottish Burns Night & Highland Dress
+    if any(w in text_corpus for w in (
+        "burns night", "burns supper", "highland dress", "prince charlie", "sporran", "sgian-dubh", "ghillie brogues", "סקוטלנד", "קילט", "בירנס נייט"
+    )):
+        add_rule("rule_cultural_scottish_burns_night")
+
     # -------------------------------------------------------------
     # 2. Hard Weather & Thermodynamic Constraints
     # -------------------------------------------------------------
