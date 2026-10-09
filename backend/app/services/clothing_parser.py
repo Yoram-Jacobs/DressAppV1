@@ -1356,10 +1356,13 @@ async def parse_garments(
             # Only consider skin where SegFormer did not predict a clothing item
             garment_occupied = class_mask > 0
             skin_outside_garments = is_skin & (~garment_occupied)
-            if skin_outside_garments.sum() >= 100:
+            skin_px = int(skin_outside_garments.sum())
+            skin_frac = skin_px / float(total)
+            # A human wearer's exposed skin (face/arms/legs) typically covers 1.5% to 25% of the frame.
+            # If > 28%, it is a warm background surface (bedsheet, table, wall, floor), NOT a human!
+            if 0.015 <= skin_frac <= 0.28:
                 human_mask_full = skin_outside_garments.astype(np.uint8)
                 has_any_human = True
-                has_head = True
             else:
                 human_mask_full = None
         except Exception:
@@ -1444,47 +1447,56 @@ async def parse_garments(
                 "mask": combined,
             }
 
-    has_human = bool(has_head or (human_mask_full is not None and int(human_mask_full.sum()) >= 150))
+    distinct_cats = {it.get("category") for it in by_label.values()}
+    has_torso_clothing = bool(distinct_cats & {"top", "dress", "outerwear"})
+    has_human = bool(has_head or (has_torso_clothing and human_mask_full is not None and int(human_mask_full.sum()) >= 150))
 
-    # 2a) Footwear Partner Recovery (when SegFormer mislabels one shoe as another item in a footwear-only photo)
-    # Never merge genuine garments (top, dress, skirt, pants, hat) into Shoes!
-    # Partner footwear recovery only applies when there is NO human model, NO clothing outfit,
-    # and the candidate is comparable in size and at the same horizontal height tier (side-by-side shoes).
+    # 2a) Footwear Consolidation (when SegFormer fragments footwear in a footwear-focused photo)
     if "Shoes" in by_label and not has_human:
-        has_outfit_garments = any(
-            (it.get("category") in ("top", "bottom", "dress", "outerwear") or
-             it.get("label") in ("Upper-clothes", "Pants", "Skirt", "Dress", "Coat", "Hat"))
-            for k, it in by_label.items() if k != "Shoes"
-        )
-        if not has_outfit_garments and len(by_label) == 2:
-            shoes_mask = by_label["Shoes"]["mask"]
-            shoes_bb = _mask_bbox(shoes_mask)
-            if shoes_bb:
-                other_key = next((k for k in by_label if k != "Shoes"), None)
-                if other_key:
-                    other_it = by_label[other_key]
-                    other_mask = other_it.get("mask")
-                    if other_mask is not None:
-                        obb = _mask_bbox(other_mask)
-                        if obb:
-                            y1, x1, y2, x2 = shoes_bb
-                            oy1, ox1, oy2, ox2 = obb
-                            h_shoe = max(1, y2 - y1)
-                            h_other = max(1, oy2 - oy1)
-                            area_shoe = max(1, int(shoes_mask.sum()))
-                            area_other = max(1, int(other_mask.sum()))
-                            # Must be side-by-side (vertical centers within 20% of frame), comparable height & area
-                            vert_center_diff = abs(((y1 + y2) / 2.0) - ((oy1 + oy2) / 2.0))
-                            ratio_h = float(h_other) / float(h_shoe)
-                            ratio_area = float(area_other) / float(area_shoe)
-                            if (
-                                vert_center_diff <= int(0.20 * H)
-                                and 0.4 <= ratio_h <= 2.5
-                                and 0.25 <= ratio_area <= 4.0
-                            ):
-                                logger.info("clothing_parser: merging side-by-side partner shoe detection '%s' into Shoes pair", other_key)
-                                by_label["Shoes"]["mask"] = np.maximum(by_label["Shoes"]["mask"], other_mask)
-                                del by_label[other_key]
+        shoes_mask = by_label["Shoes"]["mask"]
+        shoes_bb = _mask_bbox(shoes_mask)
+        if shoes_bb:
+            # Check if there is any genuine tall flat-lay outfit item:
+            # 1. Torso garment (top, dress, coat) starting in upper third (ymin < 0.35 * H) with height >= 0.20 * H
+            # 2. Pants starting in upper half (ymin < 0.50 * H) with height >= 0.35 * H
+            has_genuine_outfit = False
+            for k, it in by_label.items():
+                if k == "Shoes" or it.get("mask") is None:
+                    continue
+                ibb = _mask_bbox(it["mask"])
+                if not ibb:
+                    continue
+                i_cat = it.get("category")
+                i_h = ibb[2] - ibb[0]
+                if i_cat in ("top", "dress", "outerwear") and ibb[0] < int(0.35 * H) and i_h >= int(0.20 * H):
+                    has_genuine_outfit = True
+                    break
+                if i_cat == "bottom" and ibb[0] < int(0.50 * H) and i_h >= int(0.35 * H):
+                    has_genuine_outfit = True
+                    break
+
+            if not has_genuine_outfit:
+                from scipy import ndimage
+                keys_to_merge = []
+                for other_key, other_it in list(by_label.items()):
+                    if other_key == "Shoes" or other_it.get("mask") is None:
+                        continue
+                    obb = _mask_bbox(other_it["mask"])
+                    if not obb:
+                        continue
+                    # Check if the fragment is part of the footwear
+                    dil_other = ndimage.binary_dilation(other_it["mask"], iterations=15)
+                    dil_shoes = ndimage.binary_dilation(by_label["Shoes"]["mask"], iterations=15)
+                    touches = np.logical_and(dil_other, dil_shoes).any()
+                    is_proximate = _is_same_garment_component(shoes_bb, obb, min(H, W))
+                    in_lower_tier = obb[0] >= int(0.25 * H)
+                    if touches or is_proximate or in_lower_tier:
+                        logger.info("clothing_parser: absorbing footwear fragment '%s' into Shoes", other_key)
+                        by_label["Shoes"]["mask"] = np.maximum(by_label["Shoes"]["mask"], other_it["mask"])
+                        shoes_bb = _mask_bbox(by_label["Shoes"]["mask"])
+                        keys_to_merge.append(other_key)
+                for k in keys_to_merge:
+                    del by_label[k]
 
     # 2b) Patch 12e (May 2026) — Option B2 pair recovery for footwear.
     #     When the unified Shoes mask is anatomically lopsided (one

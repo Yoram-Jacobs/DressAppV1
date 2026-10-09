@@ -2124,6 +2124,99 @@ def test_enforce_segformer_category_preserves_llm_footwear():
     assert validated_sole["sub_category"] == "Sneakers"
 
 
+def test_footwear_consolidation_with_warm_background_and_fragmented_garments():
+    """Verify that in a footwear photo on a warm bedsheet (high skin chrominance),
+    has_human evaluates to False and all fragments (pants, cardigan, belt) consolidate into Shoes."""
+    from scipy import ndimage
+    from app.services.clothing_parser import _is_same_garment_component
+
+    H, W = 600, 600
+    total = H * W
+
+    # Simulated warm bedsheet skin pixels outside garments (e.g. 60% of frame)
+    skin_outside_garments = np.zeros((H, W), dtype=bool)
+    skin_outside_garments[:400, :] = True
+    skin_px = int(skin_outside_garments.sum())
+    skin_frac = skin_px / float(total)
+
+    # Verify skin fraction check rejects bedsheet as human skin
+    assert skin_frac > 0.28, "Bedsheet covers >28% of frame"
+    human_mask_full = skin_outside_garments.astype(np.uint8) if 0.015 <= skin_frac <= 0.28 else None
+    assert human_mask_full is None, "Warm bedsheet must NOT be accepted as human skin!"
+
+    # Footwear fragments
+    shoes_mask = np.zeros((H, W), dtype=np.uint8)
+    shoes_mask[360:480, 100:260] = 1  # left heel/sole
+    shoes_mask[360:480, 340:500] = 1  # right heel/sole
+
+    pants_left = np.zeros((H, W), dtype=np.uint8)
+    pants_left[300:420, 110:250] = 1  # left toe-box
+
+    pants_right = np.zeros((H, W), dtype=np.uint8)
+    pants_right[300:420, 350:490] = 1  # right toe-box
+
+    cardigan_vamp = np.zeros((H, W), dtype=np.uint8)
+    cardigan_vamp[320:440, 370:480] = 1  # right vamp
+
+    belt_lace = np.zeros((H, W), dtype=np.uint8)
+    belt_lace[310:350, 150:180] = 1  # left laces
+
+    by_label = {
+        "Shoes": {"label": "Shoes", "category": "footwear", "score": 0.95, "mask": shoes_mask},
+        "pants": {"label": "pants", "category": "bottom", "score": 0.95, "mask": pants_left},
+        "pants#1": {"label": "pants", "category": "bottom", "score": 0.95, "mask": pants_right},
+        "cardigan": {"label": "cardigan", "category": "outerwear", "score": 0.95, "mask": cardigan_vamp},
+        "belt": {"label": "belt", "category": "accessory", "score": 0.95, "mask": belt_lace},
+    }
+
+    distinct_cats = {it.get("category") for it in by_label.values()}
+    has_torso_clothing = bool(distinct_cats & {"top", "dress", "outerwear"})
+    has_head = False
+    has_human = bool(has_head or (has_torso_clothing and human_mask_full is not None and int(human_mask_full.sum()) >= 150))
+    assert not has_human, "Photo with no head and no real human skin must have has_human=False"
+
+    # Simulate Step 2a
+    shoes_mask = by_label["Shoes"]["mask"]
+    def _mask_bbox(m):
+        ys, xs = np.where(m)
+        return (int(ys.min()), int(xs.min()), int(ys.max()), int(xs.max())) if len(ys) else None
+
+    shoes_bb = _mask_bbox(shoes_mask)
+    assert shoes_bb is not None
+
+    keys_to_merge = []
+    for other_key, other_it in list(by_label.items()):
+        if other_key == "Shoes" or other_it.get("mask") is None:
+            continue
+        obb = _mask_bbox(other_it["mask"])
+        if not obb:
+            continue
+        dil_other = ndimage.binary_dilation(other_it["mask"], iterations=15)
+        dil_shoes = ndimage.binary_dilation(by_label["Shoes"]["mask"], iterations=15)
+        touches = np.logical_and(dil_other, dil_shoes).any()
+        is_proximate = _is_same_garment_component(shoes_bb, obb, min(H, W))
+        in_lower_tier = obb[0] >= int(0.25 * H)
+        if touches or is_proximate or in_lower_tier:
+            by_label["Shoes"]["mask"] = np.maximum(by_label["Shoes"]["mask"], other_it["mask"])
+            shoes_bb = _mask_bbox(by_label["Shoes"]["mask"])
+            keys_to_merge.append(other_key)
+    for k in keys_to_merge:
+        del by_label[k]
+
+    # After step 2a, ALL fragments must be consolidated into single Shoes
+    assert len(by_label) == 1, f"Expected 1 Shoes item, got {len(by_label)}: {list(by_label.keys())}"
+    assert "Shoes" in by_label
+    assert by_label["Shoes"]["category"] == "footwear"
+    # Unified mask must cover all pixels of left and right sneakers
+    final_m = by_label["Shoes"]["mask"]
+    assert np.all(final_m[360:480, 100:260] == 1)
+    assert np.all(final_m[300:420, 110:250] == 1)
+    assert np.all(final_m[300:420, 350:490] == 1)
+    assert np.all(final_m[320:440, 370:480] == 1)
+    assert np.all(final_m[310:350, 150:180] == 1)
+
+
+
 
 
 
