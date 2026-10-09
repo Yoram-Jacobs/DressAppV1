@@ -132,11 +132,13 @@ RE_ACCESSORY_WORDS = re.compile(
     r"\b(?:belts?|hats?|caps?|beanies?|berets?|glasses|sunglasses|eyewear|spectacles|"
     r"bags?|handbags?|backpacks?|totes?|clutches?|purses?|crossbody|satchels?|"
     r"scarves|scarf|neckties?|bow\s*ties?|necklaces?|bracelets?|watches?|earrings?|"
+    r"socks?|stockings?|hosiery|"
     r"ties?\b(?!\s*dye)|"
     r"חגורה|חגורות|כובע|כובעים|משקפיים|משקפי\s+שמש|תיק|תיקים|ארנק|"
     r"צעיף|צעיפים|עניבה|עניבות|שרשרת|שרשראות|צמיד|צמידים|שעון|שעונים|עגילים|"
+    r"גרביים|גרב|"
     r"חגור|"
-    r"حزام|قبعة|نظارات|حقيبة|وشاح|ربطة\s+عنق|ساعة|سوار|قلادة|أقراط)\b",
+    r"حزام|قبعة|نظارات|حقيبة|وشاح|ربطة\s+عنق|ساعة|سوار|قلادة|أقراط|جوارب)\b",
     re.IGNORECASE,
 )
 
@@ -182,6 +184,8 @@ def check_garment_role_mismatch(item: dict[str, Any], role: str) -> str | None:
 
     # 3. Role: SHOES / FOOTWEAR — strictly reject clothing and accessories
     elif role_norm in ("shoes", "footwear"):
+        if re.search(r"\b(?:socks?|stockings?|hosiery|גרביים|גרב|ג'ווארב|جوارب)\b", title_name_sub, re.IGNORECASE):
+            return f"Item '{item_label}' is socks/hosiery but was placed in 'shoes' role."
         if (is_top or is_bottom or is_outerwear or is_dress or is_accessory) and not is_shoes:
             return f"Item '{item_label}' is clothing/accessory but was placed in 'shoes' role."
 
@@ -727,12 +731,12 @@ def validate_garment_against_negative_constraints(
             )
             if not is_white_or_light:
                 return False, "Sigd holiday sacred tradition requires pure white or light celebratory attire (white shirt/Habesha Kemis)."
-        # Modesty & Respect: forbid shorts, mini skirts, ripped jeans, tank tops
+        # Modesty & Respect: forbid shorts, mini skirts, distressed/ripped jeans, tank tops
         if role == "bottom" or cat == "bottom":
             if any(w in all_text for w in (
-                "shorts", "שורטס", "מכנסיים קצרים", "ripped", "קרוע", "swim", "mini skirt", "חצאית מיני", "ברמודה", "טייץ"
+                "shorts", "שורטס", "מכנסיים קצרים", "ripped", "קרוע", "קרעים", "distressed", "משופשף", "swim", "mini skirt", "חצאית מיני", "ברמודה", "טייץ"
             )):
-                return False, "Shorts, mini skirts, and ripped jeans violate Sigd sanctity."
+                return False, "Shorts, mini skirts, distressed and ripped jeans violate Sigd sanctity."
         if any(w in all_text for w in ("tank top", "tank", "sleeveless", "גופייה", "גופיה", "crop top", "חולצת בטן")):
             return False, "Sleeveless tops and crop tops violate Sigd sanctity."
         if role in ("shoes", "footwear") or cat in ("shoes", "footwear"):
