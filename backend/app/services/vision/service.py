@@ -758,20 +758,14 @@ class GarmentVisionService:
             shrunk_list = [shrunk]
             b64 = base64.b64encode(shrunk).decode("ascii")
 
-        system_prompt = (
-            _build_system_prompt(one_pass=one_pass, user_gender=eff_gender)
-            + _language_directive(language)
-        )
-        user_text = _user_prompt(language, user_gender=eff_gender)
-
+        multi_view_suffix = ""
         if isinstance(image_bytes, list) and len(image_bytes) > 1:
-            multi_view_instruction = (
+            multi_view_suffix = (
                 "\n\nNOTE: The provided images show different views (e.g., front, back, details) "
                 "of the SAME single garment. Please analyze all views to extract a complete, unified "
                 "description of the garment (e.g. if the back view reveals it is sexy/exposed, incorporate "
                 "that into the tags, dress code, and caption, even if the front view looks modest)."
             )
-            user_text += multi_view_instruction
 
         # 1) Resolve the routing target.
         if provider:
@@ -793,11 +787,13 @@ class GarmentVisionService:
 
         # 2) Gemma path (toggle says gemma AND a Space URL is configured).
         if resolved in ("gemma", "dressapp") and settings.EYES_GEMMA_SPACE_URL:
+            gemma_sys = _build_system_prompt(provider="gemma", one_pass=one_pass, user_gender=eff_gender)
+            gemma_u = _user_prompt(language, user_gender=eff_gender) + multi_view_suffix
             t0 = time.perf_counter()
             try:
                 raw = await _call_gemma_space(
-                    system_prompt=system_prompt,
-                    user_text=user_text,
+                    system_prompt=gemma_sys,
+                    user_text=gemma_u,
                     image_b64_jpeg=b64,
                     # Thinking is explicitly disabled in the prompt and proxy,
                     # so garment JSON is cleanly produced in ~350 tokens.
@@ -845,12 +841,18 @@ class GarmentVisionService:
         #    cascaded down here, OR gemma was selected but no Space URL
         #    is configured on this pod).
         if raw is None:
+            from app.services.vision.llm import _gemini_user_prompt
+            gemini_sys = _build_system_prompt(provider="gemini", one_pass=one_pass, user_gender=eff_gender)
+            gemini_u = _gemini_user_prompt(language, user_gender=eff_gender) + multi_view_suffix
+
             if not self.api_key:
                 if settings.EYES_GEMMA_SPACE_URL and used_provider != "gemma":
                     logger.info("No Gemini API key provided; falling back to platform Gemma Eyes")
+                    gemma_sys = _build_system_prompt(provider="gemma", one_pass=one_pass, user_gender=eff_gender)
+                    gemma_u = _user_prompt(language, user_gender=eff_gender) + multi_view_suffix
                     raw = await _call_gemma_space(
-                        system_prompt=system_prompt,
-                        user_text=user_text,
+                        system_prompt=gemma_sys,
+                        user_text=gemma_u,
                         image_b64_jpeg=b64,
                         max_tokens=500,
                         timeout=settings.EYES_GEMMA_TIMEOUT_S,
@@ -873,8 +875,8 @@ class GarmentVisionService:
                 last_err: str | None = None
                 try:
                     raw = await gem.vision(
-                        system=system_prompt,
-                        user_parts=[user_text] + shrunk_list,
+                        system=gemini_sys,
+                        user_parts=[gemini_u] + shrunk_list,
                         model=gemini_model,
                         temperature=0.1,
                         response_mime_type="application/json",
@@ -894,9 +896,11 @@ class GarmentVisionService:
                             "Custom provider hit quota / 429 (%s); falling back to platform Gemma Eyes",
                             repr(exc)[:200],
                         )
+                        gemma_sys = _build_system_prompt(provider="gemma", one_pass=one_pass, user_gender=eff_gender)
+                        gemma_u = _user_prompt(language, user_gender=eff_gender) + multi_view_suffix
                         raw = await _call_gemma_space(
-                            system_prompt=system_prompt,
-                            user_text=user_text,
+                            system_prompt=gemma_sys,
+                            user_text=gemma_u,
                             image_b64_jpeg=b64,
                             max_tokens=500,
                             timeout=settings.EYES_GEMMA_TIMEOUT_S,

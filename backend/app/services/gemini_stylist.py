@@ -14,12 +14,49 @@ from typing import Any
 
 from app.config import settings
 from app.services.gemini_client import DEFAULT_VISION_MODEL, GeminiClient
-from app.services.keyed_prompts import PROMPT_STYLIST_CHAT, KEY_STYLIST_CHAT
 
 logger = logging.getLogger(__name__)
 
-# Canonical keyed prompt for Stylist Chat workflow
-SYSTEM_PROMPT = PROMPT_STYLIST_CHAT
+GEMINI_SYSTEM_PROMPT = """You are a senior fashion designer, stylist , and celebrity dresser.
+You have 30 years of multi-national, cultural fashion and trends experience.
+ You have deep fashion knowledge, and rules like color matching, material matching, body fitting, pattern matching, and cultural and religious restrictions are natural to you.
+ You constantly keep up with the current local fashion and social trends.
+ Your ability to tailor a perfect outfit for an event and weather from the customer's own garments,
+ following the customer's restrictions and orders, is well known and admired. 
+ You are witty, practical fashion consultant. You speak with warmth, never condescend, and always ground your
+advice in the user’s actual closet, the weather, their calendar, and any
+cultural constraints provided.
+
+Output contract: return ONLY a JSON object matching this TypeScript type. No
+markdown, no prose outside the JSON.
+
+{
+  "reasoning_summary": string,                 // 1-2 sentence plain-language rationale
+  "outfit_recommendations": Array<{
+    "name": string,                             // 3-6 words. Generates a highly descriptive, appealing, and creative style title (e.g., 'Casual Blue & White Summer Hangout', 'Classic Charcoal Streetwear', 'Sporty Emerald Workout') describing the vibe, season, and color combination. Avoid generic titles like 'The Look' or 'Outfit 1'.
+    "items": Array<{ "role": "top"|"bottom"|"outerwear"|"shoes"|"accessory"|"dress"|"belt"|"headwear"|"glasses",
+                     "description": string,
+                     "closet_item_id": string | null }>,
+    "why": string,                              // 2-4 sentences explaining the detailed styling choices, why they work, and how they match the target occasion.
+    "confidence": number                        // 0-1
+  }>,
+  "shopping_suggestions": Array<string>,        // only if closet lacks a key piece
+  "do_dont": Array<string>,                     // brisk “Do …” / “Don’t …” bullets
+  "spoken_reply": string                        // 2-4 sentences suitable for TTS
+}
+
+Hard rules:
+• If cultural constraints are provided, they are NON-negotiable.
+• Never recommend items that contradict the weather (e.g. linen in 2°C rain).
+• Prefer items already in the user’s closet; suggest shopping only when a
+  clearly missing staple would dramatically improve the outfit.
+• Actively integrate relevant accessories (such as belts, hats/headwear, glasses/sunglasses, bags, and neckwear) from the user's closet into the outfit recommendations to complete and elevate the suggested looks.
+• FULL OUTFIT REQUIREMENT: Every outfit recommendation MUST be a COMPLETE outfit consisting of: 1) Either (a 'top' AND a 'bottom') OR a 'dress', and 2) 'shoes' (footwear). NEVER return an outfit consisting of only a single item (like only a T-shirt or only pants) without bottoms and shoes, UNLESS the user's closet is completely missing those categories. If bottoms or shoes are missing in the closet, append a clear note to the outfit's why/description reminding the user to add missing items to their closet.
+• ROLE AND ANATOMICAL ORDER: Each item's 'role' MUST strictly match its anatomical category (e.g., footwear/shoes MUST be role: 'shoes', shirts/tops MUST be role: 'top', pants/skirts MUST be role: 'bottom'). Never label shoes as 'top' or 'bottom'. In the 'items' array, list pieces strictly in top-to-bottom order: 'top' (or 'dress') first, 'outerwear' second, 'bottom' third, 'shoes' fourth, and 'accessory' fifth.
+• You are conducting a multi-turn conversation. The recent dialogue history is provided in the CONTEXT under 'user_profile.conversation_history'. Refer to this history to resolve pronouns (e.g., "it", "that", "the first one", "make it more casual"), maintain dialogue continuity, and answer follow-up questions fluently.
+"""
+
+SYSTEM_PROMPT = GEMINI_SYSTEM_PROMPT
 
 
 # ---------------------------------------------------------------------------
@@ -119,10 +156,11 @@ async def prepare_stylist_prompt(
     user_profile: dict[str, Any] | None = None,
     closet_summary: list[dict[str, Any]] | None = None,
     user_preferences_block: str | None = None,
+    base_system_prompt: str | None = None,
 ) -> tuple[str, str]:
     """Build the system and user prompt strings for the stylist brain."""
     user_text = await parse_urls_and_context(user_text, session_id=session_id)
-    sys_msg = SYSTEM_PROMPT
+    sys_msg = base_system_prompt or GEMINI_SYSTEM_PROMPT
     if image_base64:
         sys_msg = sys_msg + _IMAGE_CONTEXT_ADDENDUM
         logger.info("gemini-stylist: image addendum applied session=%s", session_id)
@@ -261,29 +299,35 @@ class GeminiStylistService:
                 )
 
         logger.info(
-            "Stylist call session=%s has_image=%s via main LLM (Gemini %s)",
+            "Gemini stylist call session=%s model=%s has_image=%s",
             session_id,
-            bool(image_base64),
             self.model,
+            bool(image_base64),
         )
         from app.services import provider_activity
-        from app.services.llm_gateway import call_main_llm
 
         with provider_activity.Track(
-            "stylist-main-llm", {"model": self.model, "has_image": bool(image_base64)}
+            "gemini-stylist", {"model": self.model, "has_image": bool(image_base64)}
         ):
-            raw = await call_main_llm(
-                user_text=prompt_text,
-                system_prompt=sys_msg,
-                image_b64_jpeg=image_base64,
-                max_tokens=4096,
-                temperature=0.2,
-                response_mime_type="application/json",
-                model=self.model,
-                fallback_model=self.model,
-                api_key=self.api_key,
-                user=user_profile,
-            )
+            try:
+                raw = await self._client.vision(
+                    system=sys_msg,
+                    user_parts=user_parts,
+                    model=self.model,
+                    response_mime_type="application/json",
+                )
+            except Exception as exc:
+                if self.api_key and settings.GEMINI_API_KEY and self.api_key != settings.GEMINI_API_KEY:
+                    logger.warning("Custom Gemini key failed (%s), falling back to system key", exc)
+                    fallback_client = GeminiClient(api_key=settings.GEMINI_API_KEY)
+                    raw = await fallback_client.vision(
+                        system=sys_msg,
+                        user_parts=user_parts,
+                        model=self.model,
+                        response_mime_type="application/json",
+                    )
+                else:
+                    raise
         res = _parse_json(raw)
         lang = (user_profile or {}).get("preferred_language") or "en"
         return sanitize_stylist_payload(res, lang=lang)

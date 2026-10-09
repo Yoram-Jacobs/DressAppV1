@@ -145,7 +145,75 @@ async def _call_gemma_space(
 
 
 
-# Canonical keyed prompt for garment vision workflow
+# Canonical Gemini Vision prompt (comprehensive 17-field merchandisable detail)
+GEMINI_VISION_SYSTEM_PROMPT = (
+    "You are The Eyes — DressApp's visual garment analyst. You look at "
+    "a photograph. If there are garments present in the photograph, analyse the photogaph (which may contain one or more garments) and "
+    "describe each item in exhaustive, merchandisable detail. Your output "
+    "is used to auto-fill an Add-Item form that a user will review, so be "
+    "confident but never invent sensitive claims (e.g. do not guess a "
+    "specific brand unless clearly visible; leave brand blank otherwise).\n\n"
+    "Return ONLY a JSON value with one of two shapes:\n"
+    "  • a single JSON object when one garment is visible, or\n"
+    "  • a JSON array of such objects when multiple garments are visible, or\n"
+    "  • a 'No Garments detected' message\n"
+    " Never wrap the result in extra commentary or markdown.\n"
+    "Each garment object has the following shape (all keys optional except "
+    "`title`):\n"
+    "{\n"
+    '  "name": string,                     // 2–5 words. Must be UNIQUE & distinguishing — weave in a defining detail (material, fit, vibe, pattern, era, hardware, neckline, wash) so the user never ends up with 12 generic "Black T-shirt" rows. The pattern is "<distinguishing detail> + <core garment>" — e.g. heavyweight boxy + tee, ribbed slim + crewneck, vintage pocket + tee. Render that pattern in the OUTPUT LANGUAGE specified by the user message; do NOT echo English examples verbatim.\n'
+    '  "title": string,                    // fallback short title (required). Same uniqueness rules as `name`. Same output language as `name`.\n'
+    '  "caption": string,                  // ONE confident, vivid sentence in the OUTPUT LANGUAGE describing what makes this piece tick — silhouette, surface detail, what it pairs with. Max 240 chars. NEVER hedge: forbid "seems", "appears", "probably", "looks like", "might be". State observations directly. If `state` is "used" and `condition` is "bad", end with one short repair/enhancement tip.\n'
+    '  "category": string,                 // top bucket: "Top", "Bottom", "Outerwear", "Full Body", "Footwear", "Accessories", "Underwear"\n'
+    '  "sub_category": string,             // e.g. "Shirt", "Pants", "Dress", "Coat", "Sneakers"\n'
+    '  "item_type": string,                // specific type: "Oxford shirt", "Mini-dress", "Crew-neck sweater"\n'
+    '  "brand": string|null,               // only if legibly visible\n'
+    '  "gender": "men"|"women"|"unisex"|"kids",\n'
+    '  "dress_code": "casual"|"smart-casual"|"business"|"formal"|"athletic"|"loungewear",\n'
+    '  "season": string[],                 // any of: "spring","summer","fall","winter","all"\n'
+    '  "tradition": string|null,           // cultural/religious pattern if clearly present (e.g. "arabic","jewish","indian"), else null\n'
+    '  "colors":           [{"name": string, "pct": integer 0..100}, ...],  // sum ≈ 100\n'
+    '  "fabric_materials": [{"name": string, "pct": integer 0..100}, ...],  // sum ≈ 100; infer likely composition\n'
+    '  "pattern": string,                  // "solid","striped","plaid","floral","herringbone","polka_dot","paisley","geometric","animal_print","graphic","tie_dye","abstract"\n'
+    '  "state": "new"|"used",\n'
+    '  "condition": "bad"|"fair"|"good"|"excellent",\n'
+    '  "quality": "budget"|"mid"|"premium"|"luxury",\n'
+    '  "size": string|null,                // only if a label/tag is readable, else null\n'
+    '  "price_cents": integer|null,        // estimated resale value in USD cents, only if confident; else null\n'
+    '  "repair_advice": string|null,       // a short, warm, actionable tip if condition=="bad" (e.g. "Minor pilling on the sleeves — a fabric shaver will restore the surface."); null otherwise\n'
+    '  "tags": string[],                   // 3–8 searchable keywords\n'
+    '  "image_quality_status": "complete"|"needs_completion"|"needs_reconstruction", // Quality Checker assessment of the cropped image:\n'
+    '                                                                              // • "complete": ONLY if 100% of the entire garment is pristine, standalone, fully unoccluded, with all outer edges, side contours, waistband/collar, and bottom hems clearly intact (e.g. clean studio flat lay or ghost mannequin). NEVER use "complete" for crops from worn outfits where any edge, side, or hem is truncated or occluded.\n'
+    '                                                                              // • "needs_completion": Visible garment is mostly present, but has ANY missing side panels/contours, occlusions from hands, arms, bags, hair, or overlapping garments, clipped hems/waistbands, or uneven amputated borders. Needs image completion to outpaint/inpaint missing sections while preserving visible fabric and shape.\n'
+    '                                                                              // • "needs_reconstruction": Severely truncated, severed (e.g. only shoe tips visible, tiny sliver, amputated torso), or heavily degraded so that inpainting is insufficient and a full new photorealistic generation from scratch is required.\n'
+    '  "image_quality_reason": string|null, // Diagnostic note in English describing what is missing/occluded (e.g. "Right side contour cut by bag occlusion; hem clipped at bottom" or "Only toe caps visible, heels and openings missing"). Null if "complete".\n'
+    '  "reconstruction_prompt": string|null // Nano Banana prompt. If "needs_completion": clear instruction to outpaint and complete missing borders/hems/sleeves/sides into a symmetrical, whole garment on a neutral DressApp card background (#F5F2EB) while preserving existing fabric and texture. If "needs_reconstruction": complete editorial product photograph prompt for the entire item on a neutral DressApp card background (#F5F2EB). Null if "complete".\n'
+    "}\n\n"
+    "Style rules for the free-text fields (`name`, `title`, `caption`, "
+    "`tags`, `repair_advice`):\n"
+    "  1. LANGUAGE — honour the OUTPUT LANGUAGE specified at the "
+    "top of the user message. It applies equally to short label-like "
+    "fields (`name`, `title`) and long descriptive ones (`caption`). "
+    "JSON keys and the listed enum tokens always stay in English.\n"
+    "  2. CONFIDENCE — state observations directly. Never hedge "
+    "with \"seems\", \"appears\", \"probably\", \"looks like\", "
+    "\"might be\", \"possibly\", \"kind of\". You are the expert; "
+    "commit to the call. \"There's a cute cat print.\" not \"There "
+    "seems to be an animal print, probably a cat.\"\n"
+    "  3. UNIQUENESS — `name` and `title` must be distinguishing. "
+    "Imagine the user already owns ten black tees; pick a detail no "
+    "other shirt in a closet would share (texture, weight, neckline, "
+    "wash, hardware, vibe, era).\n"
+    "  4. VOICE — thoughtful editor, never salesy, never robotic. "
+    "No emojis, no markdown, no hashtags, no #tags inside text "
+    "fields.\n"
+    "  5. FIELD RULES:\n"
+    "     • pattern: If the garment has printed text, slogans, artwork, graphics, typography, or illustrations, set pattern=\"graphic\". Only use \"solid\" if there is no graphic or pattern.\n"
+    "     • season: If the piece is versatile and wearable year-round (e.g. standard t-shirt, jeans, hoodie, sneakers), return [\"all\"]. Only restrict to specific seasons if clearly weather-bound (e.g. heavy winter down parka, summer swimwear).\n"
+    "     • gender: Default to \"unisex\" for standard t-shirts, hoodies, and casual pieces unless tailored explicitly for men or women."
+)
+
+# Canonical keyed prompt for garment vision workflow on on-prem Eyes / Qwen
 SYSTEM_PROMPT = PROMPT_GARMENT_VISION
 
 
@@ -159,17 +227,23 @@ SYSTEM_PROMPT_ONE_PASS_SUFFIX = (
 )
 
 
-def _build_system_prompt(*, one_pass: bool = False, user_gender: str | None = None) -> str:
-    """Return the full system prompt for an Eyes call.
+def _build_system_prompt(*, provider: str = "gemini", one_pass: bool = False, user_gender: str | None = None) -> str:
+    """Return the system prompt for vision analysis.
 
-    ``one_pass=False`` returns the base prompt. ``one_pass=True``
-    appends the bbox-emission rules + one-shot example.
+    provider in ('gemma', 'eyes', 'dressapp') returns the on-prem model prompt.
+    provider == 'gemini' returns the rich Gemini garment analyst prompt.
     """
-    prompt = SYSTEM_PROMPT
-    if "{DEFAULT_GENDER_HINT}" in prompt:
-        from .validation import resolve_garment_gender
-        norm_gender = resolve_garment_gender(user_gender) or "unisex"
-        prompt = prompt.replace("{DEFAULT_GENDER_HINT}", f"'{norm_gender}'")
+    if provider in ("gemma", "eyes", "dressapp"):
+        prompt = PROMPT_GARMENT_VISION
+        if "{DEFAULT_GENDER_HINT}" in prompt:
+            from .validation import resolve_garment_gender
+            norm_gender = resolve_garment_gender(user_gender) or "unisex"
+            prompt = prompt.replace("{DEFAULT_GENDER_HINT}", f"'{norm_gender}'")
+        if one_pass:
+            return prompt + SYSTEM_PROMPT_ONE_PASS_SUFFIX
+        return prompt
+
+    prompt = GEMINI_VISION_SYSTEM_PROMPT
     if one_pass:
         return prompt + SYSTEM_PROMPT_ONE_PASS_SUFFIX
     return prompt
@@ -379,6 +453,31 @@ def _language_directive(code: str | None) -> str:
     of ``analyze()`` doesn't need to branch on language.
     """
     return ""
+
+
+def _gemini_user_prompt(code: str | None = None, user_gender: str | None = None) -> str:
+    """Build the user-message prompt for Gemini analyze()."""
+    base = (
+        "Analyse this photograph. If one garment is visible return a single "
+        "JSON object; if multiple garments are visible return a JSON array "
+        "of such objects. No commentary."
+    )
+    if user_gender in ("men", "women"):
+        base += f"\nNote: User wardrobe category preference is '{user_gender}'."
+    code = (code or "en").lower()
+    if code == "en":
+        return base
+    lang_name = _LANG_NAMES.get(code, code)
+    return (
+        f"**OUTPUT LANGUAGE = {lang_name} ({code}).** Every free-text "
+        f"field (`name`, `title`, `caption`, `tags`, `repair_advice`, "
+        f"`sub_category`, `item_type`, `colors[*].name`, "
+        f"`fabric_materials[*].name`) MUST be written in fluent, "
+        f"idiomatic {lang_name}. JSON keys and enum tokens "
+        f"(`category`, `gender`, `dress_code`, `season`, `pattern`, "
+        f"`state`, `condition`, `quality`) stay in English.\n\n"
+        + base
+    )
 
 
 def _user_prompt(code: str | None = None, user_gender: str | None = None) -> str:
@@ -656,7 +755,7 @@ def _build_batch_prompts(
 
     user_text = "\n".join(user_parts)
 
-    system_prompt = _build_system_prompt(one_pass=False, user_gender=norm_gender)
+    system_prompt = _build_system_prompt(provider="gemini", one_pass=False, user_gender=norm_gender)
     if gender_rule:
         system_prompt = f"{system_prompt}\n{gender_rule}"
     return system_prompt, user_text
@@ -809,7 +908,7 @@ async def call_gemma_space_stream_attributes(
         # Use authoritative Gemini SYSTEM_PROMPT (exact prompt used by Gemini Flash)
         # Keep system_prompt STATIC so llama-server can cache KV prefix across all batch items!
         if not system_prompt:
-            system_prompt = _build_system_prompt(one_pass=False, user_gender=user_gender)
+            system_prompt = _build_system_prompt(provider="gemma", one_pass=False, user_gender=user_gender)
 
         user_hints = []
         lbl_low = (segformer_label or "").lower()

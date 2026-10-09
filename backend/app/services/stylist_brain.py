@@ -83,6 +83,7 @@ class GemmaStylistBrain:
         user_preferences_block: str | None = None,
     ) -> dict[str, Any]:
         from app.services.gemini_stylist import prepare_stylist_prompt, _parse_json, sanitize_stylist_payload
+        from app.services.keyed_prompts import PROMPT_STYLIST_CHAT
         from app.services.vision.llm import _call_gemma_space
         from app.services import provider_activity
 
@@ -99,6 +100,7 @@ class GemmaStylistBrain:
             user_profile=user_profile,
             closet_summary=gemma_closet,
             user_preferences_block=user_preferences_block,
+            base_system_prompt=PROMPT_STYLIST_CHAT,
         )
 
         with provider_activity.Track(

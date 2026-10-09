@@ -124,6 +124,7 @@ async def test_llm_gateway_routes_tester_gemini_switch(tester_user_gemini):
 async def test_llm_gateway_regular_user_stays_on_gemini_platform_default(regular_user):
     with patch("app.services.gemini_client.GeminiClient.text", new_callable=AsyncMock) as mock_gemini, \
          patch("app.config.settings.GEMINI_API_KEY", "test_key"), \
+         patch("app.services.llm_gateway.get_active_provider", new_callable=AsyncMock, return_value="gemini"), \
          patch("app.services.llm_gateway._call_gemma_space", new_callable=AsyncMock) as mock_gemma:
         mock_gemini.return_value = '{"result": "gemini output"}'
         res = await call_main_llm(

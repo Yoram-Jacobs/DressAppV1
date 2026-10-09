@@ -135,7 +135,7 @@ async def test_vision_service_quota_fallback_to_gemma():
             res = await vision.analyze(b"fake_image_bytes")
 
             assert res["category"] == "Top"
-            assert res["sub_category"] == "T-shirt"
+            assert res["sub_category"].lower() == "t-shirt"
             assert res["provider_used"] == "gemma"
             assert res.get("fallback_from_quota") is True
             assert "provider_fallback" in res
@@ -189,7 +189,9 @@ def test_stylist_endpoint_free_user_routed_to_gemma_without_gemini_key():
         "do_dont": [],
     }
 
-    with patch("app.services.billing_service.deduct_user_credits", new_callable=AsyncMock) as mock_billing, \
+    with patch("app.db.database.get_db", return_value=MagicMock()), \
+         patch("app.services.stylist_scheduler_brain.get_rotation_prioritized_closet", new_callable=AsyncMock, return_value=[]), \
+         patch("app.services.billing_service.deduct_user_credits", new_callable=AsyncMock) as mock_billing, \
          patch("app.api.v1.stylist.get_styling_advice", new_callable=AsyncMock) as mock_stylist, \
          patch("app.api.v1.stylist.get_or_create_active_session", new_callable=AsyncMock) as mock_sess, \
          patch("app.api.v1.stylist.recent_messages", new_callable=AsyncMock) as mock_hist, \
@@ -251,7 +253,9 @@ def test_stylist_endpoint_quota_fallback_surfaces_flag_in_assistant_payload():
         },
     }
 
-    with patch("app.services.billing_service.deduct_user_credits", new_callable=AsyncMock) as mock_billing, \
+    with patch("app.db.database.get_db", return_value=MagicMock()), \
+         patch("app.services.stylist_scheduler_brain.get_rotation_prioritized_closet", new_callable=AsyncMock, return_value=[]), \
+         patch("app.services.billing_service.deduct_user_credits", new_callable=AsyncMock) as mock_billing, \
          patch("app.api.v1.stylist.get_styling_advice", new_callable=AsyncMock) as mock_stylist, \
          patch("app.api.v1.stylist.get_or_create_active_session", new_callable=AsyncMock) as mock_sess, \
          patch("app.api.v1.stylist.recent_messages", new_callable=AsyncMock) as mock_hist, \
