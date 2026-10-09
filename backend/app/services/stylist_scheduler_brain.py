@@ -404,24 +404,31 @@ def calculate_garment_style_score(
     ))
     if is_sigd_holiday:
         # Strictly forbid black, charcoal, or dark mourning colors (-100)
-        from app.services.stylist_qa_engine import _item_has_color
+        from app.services.stylist_qa_engine import _item_has_color, is_predominantly_white_garment
         if _item_has_color(item, "black") or _item_has_color(item, "charcoal"):
             return -100
         # Strictly forbid graphic prints, eagle, animal prints, slogans (-100)
         if any(w in all_text for w in ("graphic", "eagle", "animal print", "נשר", "הדפס", "slogan", "tribal")):
             return -100
-        # Strictly forbid shorts, mini skirts, ripped jeans, gym wear (-100)
-        if any(w in all_text for w in ("shorts", "שורטס", "מכנסיים קצרים", "mini skirt", "חצאית מיני", "tank", "גופייה", "ripped", "קרוע")):
+        # Strictly forbid shorts, mini skirts, distressed/ripped jeans, gym wear (-100)
+        if any(w in all_text for w in ("shorts", "שורטס", "מכנסיים קצרים", "mini skirt", "חצאית מיני", "tank", "גופייה", "ripped", "קרוע", "distressed")):
             return -100
-        # Major positive boost for pure white, cream, off-white, light garments (+80)
-        is_white_item = _item_has_color(item, "white") or any(
-            w in all_text for w in ("white", "off-white", "cream", "ivory", "לבן", "שמנת", "קרם", "בהיר", "light")
-        )
+        # Forbid socks as main category / shoe (-100)
+        if any(w in all_text for w in ("sock", "socks", "גרביים", "גרב")):
+            return -100
+        # Major positive boost for predominantly pure white, cream, off-white garments (+120)
+        is_white_item = is_predominantly_white_garment(item)
         if is_white_item:
-            score += 80
-        # White button-downs, polos, and clean white tops get an additional +40
-        if is_white_item and any(w in all_text for w in ("button", "collared", "polo", "oxford", "shirt", "tee", "חולצה", "פולו", "מכופתרת")):
-            score += 40
+            score += 120
+            # White button-downs, polos, and clean white tops get an additional +50
+            if any(w in all_text for w in ("button", "collared", "polo", "oxford", "shirt", "tee", "חולצה", "פולו", "מכופתרת")):
+                score += 50
+        else:
+            # Non-white tops/dresses or dark jackets get penalized on Sigd
+            if cat in ("top", "dress"):
+                score -= 80
+            if cat == "outerwear" and any(w in all_text for w in ("rust", "terracotta", "orange", "red", "כתום", "אדום")):
+                score -= 60
 
     return score
 

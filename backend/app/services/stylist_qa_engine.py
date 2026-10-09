@@ -345,6 +345,51 @@ def _item_has_color(it: dict[str, Any], target_color_family: str) -> bool:
     return False
 
 
+def is_predominantly_white_garment(item: dict[str, Any]) -> bool:
+    """Return True only if garment is predominantly/solidly white, cream, or off-white.
+
+    Strictly rejects items whose primary color is dark or vibrant (e.g. blue striped shirts,
+    navy polo shirts, grey tops, red shirts, black shirts) even if they contain secondary white trim.
+    """
+    primary_col = str(item.get("color") or item.get("colour") or "").lower().strip()
+    title = str(item.get("title") or item.get("name") or "").lower()
+
+    # If primary color is explicitly non-white / colored, it is NOT white
+    non_white_colors = (
+        "blue", "navy", "black", "red", "green", "brown", "dark", "charcoal", "burgundy", "yellow", "orange", "rust",
+        "כחול", "שחור", "אדום", "ירוק", "חום", "כהה", "בורדו", "צהוב", "כתום", "חלודה",
+    )
+    if any(c in primary_col for c in non_white_colors):
+        return False
+
+    # If title explicitly highlights a non-white color
+    if any(re.search(rf"\b{re.escape(c)}\b", title) for c in (
+        "blue", "navy", "black", "red", "green", "brown", "dark", "grey", "gray",
+        "כחול", "כחולה", "שחור", "שחורה", "אדום", "אדומה", "ירוק", "ירוקה", "חום", "חומה", "אפור", "אפורה",
+    )):
+        return False
+
+    # Check color breakdown percentages if present
+    cols = item.get("colors") or []
+    if isinstance(cols, list) and len(cols) > 0 and isinstance(cols[0], dict):
+        white_pct = 0
+        max_other_pct = 0
+        for c in cols:
+            cname = str(c.get("name") or "").lower()
+            cpct = c.get("pct") or 0
+            if any(w in cname for w in ("white", "off-white", "cream", "ivory", "לבן", "שמנת", "קרם")):
+                white_pct += cpct
+            else:
+                max_other_pct = max(max_other_pct, cpct)
+        if white_pct > 0 and white_pct >= 60 and white_pct >= max_other_pct:
+            return True
+        if white_pct < max_other_pct or white_pct < 50:
+            return False
+
+    # Fallback to _item_has_color
+    return _item_has_color(item, "white")
+
+
 def validate_garment_against_negative_constraints(
     it: dict[str, Any],
     rule: Any,
@@ -726,11 +771,12 @@ def validate_garment_against_negative_constraints(
             return False, "Graphic tees and animal/eagle prints are strictly forbidden on Sigd."
         # Sigd Tradition Mandate: Tops & Dresses MUST be predominantly pure white, off-white, or cream
         if role in ("top", "dress") or cat in ("top", "dress"):
-            is_white_or_light = _item_has_color(it, "white") or any(
-                w in all_text for w in ("white", "off-white", "cream", "ivory", "לבן", "שמנת", "קרם", "בהיר", "light")
-            )
-            if not is_white_or_light:
-                return False, "Sigd holiday sacred tradition requires pure white or light celebratory attire (white shirt/Habesha Kemis)."
+            if not is_predominantly_white_garment(it):
+                return False, "Sigd holiday sacred tradition requires predominantly pure white or light celebratory attire (white shirt/Habesha Kemis). Colored, striped, or dark tops are strictly forbidden."
+        # Outerwear: must not clash with white festive attire (reject rust, terracotta, bright orange, red, black)
+        if role in ("outerwear", "jacket") or cat in ("outerwear", "jacket"):
+            if _item_has_color(it, "rust") or _item_has_color(it, "orange") or _item_has_color(it, "red") or _item_has_color(it, "black"):
+                return False, "Loud rust/terracotta or dark black jackets clash with festive white Sigd attire."
         # Modesty & Respect: forbid shorts, mini skirts, distressed/ripped jeans, tank tops
         if role == "bottom" or cat == "bottom":
             if any(w in all_text for w in (
