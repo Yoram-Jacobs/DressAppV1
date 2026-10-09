@@ -239,6 +239,8 @@ async def _gather_visualizations(
     style_words = (user.get("style_profile") or {}).get("aesthetics") or []
     style_blurb = ", ".join(str(s) for s in style_words[:3])
 
+    user_lang = (user.get("preferred_language") or "en").lower().split("-")[0].split("_")[0]
+
     async def _one(cat: str) -> dict[str, Any] | None:
         prompt = _build_viz_prompt(
             category=cat,
@@ -258,7 +260,7 @@ async def _gather_visualizations(
             "category": cat,
             "prompt": prompt[:240],
             "image_data_url": f"data:{out.get('mime_type', 'image/png')};base64,{out['image_b64']}",
-            "caption": _viz_caption(cat, advice),
+            "caption": _viz_caption(cat, advice, lang=user_lang),
         }
 
     sem = asyncio.Semaphore(2)
@@ -298,9 +300,110 @@ def _build_viz_prompt(
     )[:1000]
 
 
-def _viz_caption(category: str, advice: dict[str, Any]) -> str:
+_LOCALIZED_SUGGESTED: dict[str, dict[str, str]] = {
+    "he": {
+        "accessory": "אקססורי מוצע",
+        "shoes": "נעליים מוצעות",
+        "outerwear": "עליונית מוצעת",
+        "top": "חולצה מוצעת",
+        "bottom": "מכנסיים מוצעים",
+        "dress": "שמלה מוצעת",
+        "bag": "תיק מוצע",
+        "default": "פריט משלים מוצע",
+    },
+    "ar": {
+        "accessory": "إكسسوار مقترح",
+        "shoes": "حذاء مقترح",
+        "outerwear": "سترة مقترحة",
+        "top": "قميص مقترح",
+        "bottom": "بنطال مقترح",
+        "dress": "فستان مقترح",
+        "bag": "حقيبة مقترحة",
+        "default": "قطعة مقترحة",
+    },
+    "es": {
+        "accessory": "Accesorio sugerido",
+        "shoes": "Calzado sugerido",
+        "outerwear": "Prenda de abrigo sugerida",
+        "top": "Parte superior sugerida",
+        "bottom": "Pantalón sugerido",
+        "dress": "Vestido sugerido",
+        "bag": "Bolso sugerido",
+        "default": "Artículo sugerido",
+    },
+    "fr": {
+        "accessory": "Accessoire suggéré",
+        "shoes": "Chaussures suggérées",
+        "outerwear": "Vêtement d'extérieur suggéré",
+        "top": "Haut suggéré",
+        "bottom": "Bas suggéré",
+        "dress": "Robe suggérée",
+        "bag": "Sac suggéré",
+        "default": "Article suggéré",
+    },
+    "de": {
+        "accessory": "Vorgeschlagenes Accessoire",
+        "shoes": "Vorgeschlagene Schuhe",
+        "outerwear": "Vorgeschlagene Oberbekleidung",
+        "top": "Vorgeschlagenes Oberteil",
+        "bottom": "Vorgeschlagene Hose",
+        "dress": "Vorgeschlagenes Kleid",
+        "bag": "Vorgeschlagene Tasche",
+        "default": "Vorgeschlagener Artikel",
+    },
+    "it": {
+        "accessory": "Accessorio suggerito",
+        "shoes": "Scarpe suggerite",
+        "outerwear": "Capospalla suggerito",
+        "top": "Top suggerito",
+        "bottom": "Pantaloni suggeriti",
+        "dress": "Abito suggerito",
+        "bag": "Borsa suggerita",
+        "default": "Articolo suggerito",
+    },
+    "ru": {
+        "accessory": "Рекомендуемый аксессуар",
+        "shoes": "Рекомендуемая обувь",
+        "outerwear": "Рекомендуемая верхняя одежда",
+        "top": "Рекомендуемый верх",
+        "bottom": "Рекомендуемый низ",
+        "dress": "Рекомендуемое платье",
+        "bag": "Рекомендуемая сумка",
+        "default": "Рекомендуемый предмет",
+    },
+    "zh": {
+        "accessory": "推荐配饰",
+        "shoes": "推荐鞋履",
+        "outerwear": "推荐外套",
+        "top": "推荐上衣",
+        "bottom": "推荐裤装",
+        "dress": "推荐连衣裙",
+        "bag": "推荐包袋",
+        "default": "推荐单品",
+    },
+    "ja": {
+        "accessory": "おすすめのアクセサリー",
+        "shoes": "おすすめの靴",
+        "outerwear": "おすすめのアウター",
+        "top": "おすすめのトップス",
+        "bottom": "おすすめのボトムス",
+        "dress": "おすすめのドレス",
+        "bag": "おすすめのバッグ",
+        "default": "おすすめアイテム",
+    },
+}
+
+
+def _viz_caption(category: str, advice: dict[str, Any], lang: str = "en") -> str:
+    lang_clean = (lang or "en").lower().split("-")[0].split("_")[0]
+    loc_dict = _LOCALIZED_SUGGESTED.get(lang_clean)
+    if loc_dict:
+        base_label = loc_dict.get(category.lower(), loc_dict.get("default", f"Suggested {category}"))
+    else:
+        base_label = f"Suggested {category}"
+
     rec = (advice.get("outfit_recommendations") or [{}])[0]
     desc = rec.get("description") if isinstance(rec, dict) else None
     if desc:
-        return f"Suggested {category}: {desc[:80]}"
-    return f"Suggested {category}"
+        return f"{base_label}: {desc[:80]}"
+    return base_label

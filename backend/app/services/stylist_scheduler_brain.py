@@ -151,6 +151,12 @@ def calculate_garment_style_score(
             if not ("men" in title or "גברים" in title or g in ("male", "men")):
                 return -100
 
+    elif user_gender_norm in ("female", "woman", "women", "אישה"):
+        g = str(item.get("gender") or item.get("target_gender") or "").lower()
+        if g in ("male", "men", "גבר", "גברים"):
+            if any(w in all_text for w in ("men's", "mens", "גברים", "גבר", "boxers", "בוקסר", "תחתונים לגבר", "trunks")):
+                return -100
+
 
     if not style_dress_for and not (respect_occupation and occupation):
         return 0
@@ -393,6 +399,30 @@ def calculate_garment_style_score(
         if any(w in all_text for w in ("loafer", "derby", "oxford", "boot", "black sneaker", "dark sneaker", "נעליים", "מוקסין", "מגפיים")):
             score += 30
 
+    is_sigd_holiday = any(w in prompt_lower for w in (
+        "sigd", "חג הסיגד", "חג סיגד", "סיגד", "ביתא ישראל", "beta israel"
+    ))
+    if is_sigd_holiday:
+        # Strictly forbid black, charcoal, or dark mourning colors (-100)
+        from app.services.stylist_qa_engine import _item_has_color
+        if _item_has_color(item, "black") or _item_has_color(item, "charcoal"):
+            return -100
+        # Strictly forbid graphic prints, eagle, animal prints, slogans (-100)
+        if any(w in all_text for w in ("graphic", "eagle", "animal print", "נשר", "הדפס", "slogan", "tribal")):
+            return -100
+        # Strictly forbid shorts, mini skirts, ripped jeans, gym wear (-100)
+        if any(w in all_text for w in ("shorts", "שורטס", "מכנסיים קצרים", "mini skirt", "חצאית מיני", "tank", "גופייה", "ripped", "קרוע")):
+            return -100
+        # Major positive boost for pure white, cream, off-white, light garments (+80)
+        is_white_item = _item_has_color(item, "white") or any(
+            w in all_text for w in ("white", "off-white", "cream", "ivory", "לבן", "שמנת", "קרם", "בהיר", "light")
+        )
+        if is_white_item:
+            score += 80
+        # White button-downs, polos, and clean white tops get an additional +40
+        if is_white_item and any(w in all_text for w in ("button", "collared", "polo", "oxford", "shirt", "tee", "חולצה", "פולו", "מכופתרת")):
+            score += 40
+
     return score
 
 def matches_style_func(item: dict, style_dress_for: str | None, has_exact_tag_match: bool = False) -> bool:
@@ -552,10 +582,13 @@ async def get_rotation_prioritized_closet(
         else:
             target_season = "spring"
 
+    from app.services.fashion_rules_rag import filter_gender_closet_items
+    items = filter_gender_closet_items(items, user_gender)
+
     is_male = str(user_gender or "").lower().strip() in ("male", "man", "men", "גבר")
     recent_set = {str(x) for x in recent_item_ids} if recent_item_ids else set()
 
-    # Rotation sort key: un-recent first, matches criteria, un-suggested/un-worn, oldest suggested, lowest wear
+    # Rotation sort key: un-recent first, matches criteria, un-suggested/un-worn, oldest suggested, lowest wear, rot_hash
     def sort_key(item: dict[str, Any]) -> tuple:
         style_score = calculate_garment_style_score(
             item, 
@@ -578,11 +611,14 @@ async def get_rotation_prioritized_closet(
         sug_val = last_sug if last_sug else "0000-00-00"
         worn_val = last_worn if last_worn else "0000-00-00"
         
+        # Salt hash based on user, garment ID and query to break ties deterministically across queries
+        rot_hash = abs(hash(f"{user_id}_{cid}_{style_dress_for or ''}")) % 1000
+
         # is_recent=0 comes first (penalize items suggested in current session turns).
         # Style score is PRIMARY (-style_score: highest score first).
         # Season is secondary (-season_score).
-        # Rotation (sug_val, worn_val, wear_count) is tie-breaker among matching items.
-        return (is_recent, -style_score, -season_score, sug_val, worn_val, wear_count)
+        # Rotation (sug_val, worn_val, wear_count, rot_hash) is tie-breaker among matching items.
+        return (is_recent, -style_score, -season_score, sug_val, worn_val, wear_count, rot_hash)
 
     # Partition items into category buckets using global norm_category
     buckets: dict[str, list[dict[str, Any]]] = {

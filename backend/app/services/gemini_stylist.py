@@ -71,7 +71,7 @@ def _compact_closet_summary(items: list[dict[str, Any]] | None) -> list[dict[str
         return []
     compact: list[dict[str, Any]] = []
     for it in items:
-        colors = it.get("colors")
+        colors = it.get("colors") or it.get("color")
         color_names = []
         if isinstance(colors, list):
             for c in colors:
@@ -88,8 +88,12 @@ def _compact_closet_summary(items: list[dict[str, Any]] | None) -> list[dict[str
             "category": it.get("category"),
             "sub_category": it.get("sub_category"),
         }
+        if it.get("gender") or it.get("target_gender"):
+            compact_item["gender"] = it.get("gender") or it.get("target_gender")
         if color_names:
             compact_item["colors"] = color_names
+        if it.get("material"):
+            compact_item["material"] = it.get("material")
         if it.get("dress_code"):
             compact_item["dress_code"] = it.get("dress_code")
         if it.get("season"):

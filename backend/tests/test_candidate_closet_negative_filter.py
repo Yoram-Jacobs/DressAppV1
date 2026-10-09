@@ -560,5 +560,65 @@ def test_qa_evaluates_sigd_replaces_red_eagle_tee_with_white_shirt():
     assert reviewed.get("qa_authorized") is True
 
 
+def test_gender_closet_filtering_and_cross_gender_rejection():
+    import asyncio
+    from app.services.fashion_rules_rag import filter_gender_closet_items
+    from app.services.stylist_qa_engine import evaluate_and_authorize_outfit
+
+    closet = [
+        {"id": "skirt-1", "title": "Mini Skirt", "category": "skirt", "gender": "women", "colors": ["black"]},
+        {"id": "dress-1", "title": "Floral Summer Dress", "category": "dress", "gender": "female", "colors": ["pink"]},
+        {"id": "polo-1", "title": "White Pique Polo", "category": "top", "gender": "men", "colors": ["white"]},
+        {"id": "jeans-1", "title": "Classic Chino Pants", "category": "bottom", "gender": "men", "colors": ["navy"]},
+        {"id": "shoes-1", "title": "Leather Loafers", "category": "shoes", "gender": "men", "colors": ["brown"]},
+    ]
+
+    # 1. Male filtering test
+    male_filtered = filter_gender_closet_items(closet, "male")
+    filtered_ids = {it["id"] for it in male_filtered}
+    assert "skirt-1" not in filtered_ids
+    assert "dress-1" not in filtered_ids
+    assert "polo-1" in filtered_ids
+    assert "jeans-1" in filtered_ids
+
+    # 2. Female filtering test
+    female_filtered = filter_gender_closet_items(closet, "female")
+    female_ids = {it["id"] for it in female_filtered}
+    assert "polo-1" not in female_ids
+    assert "skirt-1" in female_ids
+
+    # 3. QA Engine cross-gender replacement test for male user given mini skirt
+    bad_advice = {
+        "outfit_recommendations": [
+            {
+                "name": "מראה חגיגי",
+                "items": [
+                    {"role": "top", "name": "White Pique Polo", "closet_item_id": "polo-1"},
+                    {"role": "bottom", "name": "Mini Skirt", "closet_item_id": "skirt-1"},
+                    {"role": "shoes", "name": "Leather Loafers", "closet_item_id": "shoes-1"},
+                ],
+                "why": "שילוב נוח",
+            }
+        ]
+    }
+
+    reviewed = asyncio.run(
+        evaluate_and_authorize_outfit(
+            user_text="אאוטפיט לפגישה עסקית",
+            advice_payload=bad_advice,
+            all_closet_items=closet,
+            user_profile={"preferred_language": "he", "sex": "male", "gender": "male"},
+        )
+    )
+
+    rec = reviewed["outfit_recommendations"][0]
+    bottom_item = next(it for it in rec["items"] if it.get("role") == "bottom")
+    # Mini skirt MUST be replaced with male bottoms (chino pants)
+    assert bottom_item["closet_item_id"] == "jeans-1"
+    assert "skirt-1" not in [it.get("closet_item_id") for it in rec["items"]]
+    assert reviewed.get("qa_authorized") is True
+
+
+
 
 

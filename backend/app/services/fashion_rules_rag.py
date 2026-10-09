@@ -553,11 +553,14 @@ def filter_gender_closet_items(
     closet_items: list[dict[str, Any]] | None,
     user_gender: str | None,
 ) -> list[dict[str, Any]]:
-    """Prune opposite-gender garments so male users are not assigned women's dresses/skirts/boleros."""
+    """Prune opposite-gender garments so users are not assigned garments from the opposite gender."""
     if not closet_items:
         return []
     gen_norm = str(user_gender or "").lower().strip()
-    if gen_norm not in ("male", "man", "men", "גבר"):
+    is_male = gen_norm in ("male", "man", "men", "גבר")
+    is_female = gen_norm in ("female", "woman", "women", "אישה")
+
+    if not is_male and not is_female:
         return closet_items
 
     filtered = []
@@ -567,18 +570,32 @@ def filter_gender_closet_items(
         title = str(it.get("title") or it.get("name") or "").lower()
         tags = [str(t).lower() for t in (it.get("tags") or [])]
         all_text = f"{title} {sub} {cat} {' '.join(tags)}"
-        g = str(it.get("gender") or "").lower()
+        g = str(it.get("gender") or it.get("target_gender") or "").lower()
 
-        if g in ("female", "women"):
-            continue
-        if cat in ("dress", "skirt") or sub in ("dress", "skirt", "שמלה", "חצאית", "טייץ", "טייטס", "leggings", "tights"):
-            continue
-        if FEMALE_GARMENT_RE.search(all_text):
-            if not ("men" in title or "גברים" in title or g in ("male", "men")):
+        if is_male:
+            if g in ("female", "women", "אישה", "נשים"):
                 continue
-        if any(w in all_text for w in ("ladies", "נשים", "גופיית כתפיות", "בולרו", "bolero", "heels", "עקבים", "stiletto")):
-            if not ("men" in title or "גברים" in title or g in ("male", "men")):
+            if cat in ("dress", "skirt") or sub in ("dress", "skirt", "שמלה", "חצאית", "טייץ", "טייטס", "leggings", "tights"):
                 continue
+            if FEMALE_GARMENT_RE.search(all_text):
+                if not ("men" in title or "גברים" in title or g in ("male", "men")):
+                    continue
+            if any(w in all_text for w in (
+                "ladies", "נשים", "גופיית כתפיות", "בולרו", "bolero", "heels", "עקבים", "stiletto",
+                "tube top", "bodycon", "corset", "bra", "חזייה", "חצאית מיני", "mini skirt"
+            )):
+                if not ("men" in title or "גברים" in title or g in ("male", "men")):
+                    continue
+
+        elif is_female:
+            if g in ("male", "men", "גבר", "גברים"):
+                # Men's-specific garments should not be assigned to female users
+                if any(w in all_text for w in ("men's", "mens", "גברים", "גבר", "boxers", "בוקסר", "תחתונים לגבר", "trunks")):
+                    continue
+                # If explicitly tagged male and not unisex
+                if cat in ("bottom", "top", "outerwear", "shoes"):
+                    continue
+
         filtered.append(it)
 
     return filtered

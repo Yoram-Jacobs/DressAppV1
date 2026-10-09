@@ -2321,7 +2321,19 @@ export default function Stylist() {
                                     className="w-full aspect-square rounded-[10px] border border-black/[0.08] object-cover"
                                   />
                                   <figcaption className="text-[11px] text-[var(--text-color)] mt-1 line-clamp-2">
-                                    {ex.caption || ex.category}
+                                    {(() => {
+                                      const rawCaption = ex.caption || ex.category || '';
+                                      if (!rawCaption) return '';
+                                      const lower = rawCaption.toLowerCase().trim();
+                                      if (lower === 'suggested accessory' || lower === 'suggested accessories') {
+                                        return t('stylist.suggestedAccessory', { defaultValue: 'אקססורי מוצע' });
+                                      }
+                                      if (lower.startsWith('suggested ')) {
+                                        const rest = rawCaption.slice(10).trim();
+                                        return `${t('stylist.suggestedPrefix', { defaultValue: 'מוצע:' })} ${rest}`;
+                                      }
+                                      return rawCaption;
+                                    })()}
                                   </figcaption>
                                 </figure>
                               ))}

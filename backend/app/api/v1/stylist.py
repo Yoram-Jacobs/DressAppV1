@@ -218,6 +218,11 @@ async def stylist_endpoint(
 
 
     user_profile = {
+        "sex": user_gender,
+        "gender": user_gender,
+        "display_name": user.get("display_name") or user.get("name") or user.get("first_name"),
+        "body_measurements": user.get("body_measurements"),
+        "modesty_level": user.get("modesty_level") or (user.get("cultural_context") or {}).get("dress_conservativeness"),
         "preferred_language": (language or user.get("preferred_language") or "en").lower(),
         "preferred_voice_id": user.get("preferred_voice_id") or voice_id or "aura-2-thalia-en",
         "style_profile": user.get("style_profile"),

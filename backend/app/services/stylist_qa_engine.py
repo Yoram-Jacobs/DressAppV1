@@ -326,11 +326,13 @@ COLOR_SYNONYMS: dict[str, set[str]] = {
 def _item_has_color(it: dict[str, Any], target_color_family: str) -> bool:
     """Check if garment has a color belonging to target family."""
     syns = COLOR_SYNONYMS.get(target_color_family, {target_color_family})
-    raw_colors = it.get("colors") or []
+    raw_colors = it.get("colors") or it.get("color") or it.get("colour") or []
     if isinstance(raw_colors, str):
         raw_colors = [raw_colors]
     for c in raw_colors:
-        if str(c).lower().strip() in syns:
+        c_name = c.get("name") if isinstance(c, dict) else c
+        c_str = str(c_name or "").lower().strip()
+        if c_str in syns or any(s in c_str for s in syns):
             return True
     title_desc = f"{it.get('title') or ''} {it.get('name') or ''} {it.get('description') or ''}".lower()
     for s in syns:
@@ -718,10 +720,19 @@ def validate_garment_against_negative_constraints(
             "graphic", "cartoon", "ציור", "נשר", "eagle", "slogan", "הדפס", "tribal", "טריבל"
         )):
             return False, "Graphic tees and animal/eagle prints are strictly forbidden on Sigd."
-        # Modesty & Respect: forbid shorts, ripped jeans, tank tops
+        # Sigd Tradition Mandate: Tops & Dresses MUST be predominantly pure white, off-white, or cream
+        if role in ("top", "dress") or cat in ("top", "dress"):
+            is_white_or_light = _item_has_color(it, "white") or any(
+                w in all_text for w in ("white", "off-white", "cream", "ivory", "לבן", "שמנת", "קרם", "בהיר", "light")
+            )
+            if not is_white_or_light:
+                return False, "Sigd holiday sacred tradition requires pure white or light celebratory attire (white shirt/Habesha Kemis)."
+        # Modesty & Respect: forbid shorts, mini skirts, ripped jeans, tank tops
         if role == "bottom" or cat == "bottom":
-            if any(w in all_text for w in ("shorts", "שורטס", "מכנסיים קצרים", "ripped", "קרוע", "swim")):
-                return False, "Shorts and ripped jeans are forbidden on Sigd."
+            if any(w in all_text for w in (
+                "shorts", "שורטס", "מכנסיים קצרים", "ripped", "קרוע", "swim", "mini skirt", "חצאית מיני", "ברמודה", "טייץ"
+            )):
+                return False, "Shorts, mini skirts, and ripped jeans violate Sigd sanctity."
         if any(w in all_text for w in ("tank top", "tank", "sleeveless", "גופייה", "גופיה", "crop top", "חולצת בטן")):
             return False, "Sleeveless tops and crop tops violate Sigd sanctity."
         if role in ("shoes", "footwear") or cat in ("shoes", "footwear"):
@@ -909,6 +920,10 @@ def find_best_garment_replacement(
     allowed_cats = ROLE_ALLOWED_CATEGORIES.get(role, set())
     is_mourning = _is_mourning_context(user_text)
     recent_set = {str(x) for x in recent_item_ids} if recent_item_ids else set()
+
+    # Prune opposite-gender items immediately from replacement candidates
+    from app.services.fashion_rules_rag import filter_gender_closet_items
+    all_closet_items = filter_gender_closet_items(all_closet_items, user_gender)
 
     # 1. Filter candidates by category, gender, and axiom negative constraints
     candidates = []
@@ -1637,6 +1652,31 @@ async def evaluate_and_authorize_outfit(
                 it_pseudo = {"title": it.get("name") or it.get("description") or "", "name": it.get("name") or ""}
                 if check_garment_role_mismatch(it_pseudo, role):
                     logger.warning("QA: Raw item description mismatch for role=%s: %s", role, it_pseudo["title"])
+
+            # Check for gender conflict with user profile
+            if is_valid_item and item_data and user_gender:
+                gen_norm = str(user_gender).lower().strip()
+                if gen_norm in ("male", "man", "men", "גבר"):
+                    from app.services.fashion_rules_rag import FEMALE_GARMENT_RE
+                    it_g = str(item_data.get("gender") or item_data.get("target_gender") or "").lower()
+                    cat = norm_category(item_data.get("category"))
+                    all_text_check = f"{item_data.get('title') or ''} {item_data.get('name') or ''} {item_data.get('sub_category') or ''}".lower()
+                    if (
+                        it_g in ("female", "women", "אישה", "נשים")
+                        or cat in ("dress", "skirt")
+                        or bool(FEMALE_GARMENT_RE.search(all_text_check))
+                        or any(w in all_text_check for w in ("skirt", "חצאית", "mini skirt", "חצאית מיני", "bolero", "heels", "עקבים"))
+                    ):
+                        logger.warning("QA: Gender conflict: female garment '%s' for male user in role %s", item_data.get("title"), role)
+                        is_valid_item = False
+                        item_data = None
+                elif gen_norm in ("female", "woman", "women", "אישה"):
+                    it_g = str(item_data.get("gender") or item_data.get("target_gender") or "").lower()
+                    all_text_check = f"{item_data.get('title') or ''} {item_data.get('name') or ''} {item_data.get('sub_category') or ''}".lower()
+                    if it_g in ("male", "men", "גבר", "גברים") and any(w in all_text_check for w in ("men's", "mens", "גברים", "גבר", "boxers", "בוקסר", "תחתונים לגבר", "trunks")):
+                        logger.warning("QA: Gender conflict: men's garment '%s' for female user in role %s", item_data.get("title"), role)
+                        is_valid_item = False
+                        item_data = None
 
             # Check for etiquette violations (e.g. mourning etiquette)
             if is_valid_item and is_mourning and item_data:
