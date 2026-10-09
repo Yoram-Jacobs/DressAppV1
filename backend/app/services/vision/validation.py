@@ -3157,6 +3157,12 @@ def _enforce_segformer_category(
             analysis["category"] = default
             analysis["_category_overridden_by"] = "segformer-fill"
         return analysis
+
+    # If the LLM has identified the crop as Footwear (shoes, sneakers, boots, sandals),
+    # never override it with SegFormer's non-footwear kind (SegFormer often confuses shoe textures/mesh with pants, coats, or accessories).
+    if kind not in ("footwear", "shoes") and current.lower() in ("footwear", "shoes"):
+        return analysis
+
     lbl_low = (label or "").lower()
 
     if current.lower() in allowed:
@@ -3311,7 +3317,12 @@ def _enforce_segformer_category(
             sub_low = (analysis.get("sub_category") or "").lower()
             item_low = (analysis.get("item_type") or "").lower()
             curr_name = (analysis.get("name") or analysis.get("title") or "").lower()
-            is_footwear_conflict = any(w in f"{sub_low} {item_low} {curr_name}" for w in ("boot", "shoe", "sneaker", "heel", "sandal", "loafer", "oxford", "מגפ", "נעל", "סניקרס"))
+            curr_cat = (analysis.get("category") or "").lower()
+            is_footwear_conflict = (
+                not is_single_item
+                and curr_cat not in ("footwear", "shoes")
+                and any(w in f"{sub_low} {item_low} {curr_name}" for w in ("boot", "shoe", "sneaker", "heel", "sandal", "loafer", "oxford", "מגפ", "נעל", "סניקרס"))
+            )
             if is_footwear_conflict:
                 logger.warning(
                     "garment_vision: SegFormer-anchored bottom override label=%r kind=%r sub_category=%r -> Pants",

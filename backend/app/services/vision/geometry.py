@@ -281,7 +281,7 @@ def _same_thing(a: dict[str, Any], b: dict[str, Any], has_human: bool = False) -
     # Belts, bags, scarves, shoes legitimately overlap or sit inside garments.
     is_acc_a = kind_a in _ACCESSORY_KINDS or lbl_a in _ACCESSORY_KINDS
     is_acc_b = kind_b in _ACCESSORY_KINDS or lbl_b in _ACCESSORY_KINDS
-    if is_acc_a != is_acc_b:
+    if has_human and is_acc_a != is_acc_b:
         return False
 
     # Layered garments: never collapse outerwear over tops (jacket over sweater/tee),

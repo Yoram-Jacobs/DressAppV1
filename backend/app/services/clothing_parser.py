@@ -1010,7 +1010,7 @@ def _suppress_overlapping_garments(
                 ({kept_cat, item_cat} == {"top", "outerwear"})
                 or (has_human and kept_cat == "top" and item_cat == "top" and kept_lbl_l != item_lbl_l)
                 or (any(any(k in l for k in ("skirt", "dress")) for l in (kept_lbl_l, item_lbl_l)) and any(any(t in l for t in ("tight", "stocking", "pant", "legging")) for l in (kept_lbl_l, item_lbl_l)))
-                or (any(any(k in l for k in ("shoe", "boot", "footwear")) for l in (kept_lbl_l, item_lbl_l)) and any(any(t in l for t in ("tight", "stocking", "sock", "pant", "legging")) for l in (kept_lbl_l, item_lbl_l)))
+                or (has_human and any(any(k in l for k in ("shoe", "boot", "footwear")) for l in (kept_lbl_l, item_lbl_l)) and any(any(t in l for t in ("tight", "stocking", "sock", "pant", "legging")) for l in (kept_lbl_l, item_lbl_l)))
             )
             # Top / vest / collar sub-part on outerwear:
             # SegFormer often slices a fur collar, lapel, or throat sliver as 'vest', 'top, t-shirt, sweatshirt',
@@ -1075,12 +1075,12 @@ def _suppress_overlapping_garments(
 
             # Distinct fashion categories (e.g. headwear vs top, top vs bottom, bottom vs footwear, accessory vs garment)
             # must stay separate and not be merged, UNLESS one is footwear and the other is a sub-part fragment of that footwear.
-            # Real clothing categories (top, bottom, dress, outerwear, headwear) can NEVER merge with footwear!
+            # Real clothing categories (top, bottom, dress, outerwear, headwear) can NEVER merge with footwear on a human model!
             clothing_cats = {"top", "bottom", "dress", "outerwear", "headwear"}
             has_clothing = bool(clothing_cats & {kept_cat, item_cat})
             has_footwear = "footwear" in {kept_cat, item_cat}
 
-            if has_footwear and has_clothing:
+            if has_human and has_footwear and has_clothing:
                 continue
 
             is_flatlay_top_bottom = False
@@ -1116,10 +1116,10 @@ def _suppress_overlapping_garments(
                             suppressed.append((lbl, kept_lbl, item_cat or "?", 1.0, 1.0))
                             break
 
-                    # Suppress phantom accessory / shoe speck on a flat-lay garment
+                    # Suppress phantom accessory / shoe speck on a flat-lay garment or footwear
                     if (
                         not has_human
-                        and kept_cat in {"top", "bottom", "dress", "outerwear"}
+                        and kept_cat in {"top", "bottom", "dress", "outerwear", "footwear"}
                         and item_cat in {"accessory", "bag", "belt", "scarf", "headwear", "footwear"}
                     ):
                         if area <= 0.25 * kept_area:
@@ -1160,11 +1160,12 @@ def _suppress_overlapping_garments(
                 bbox_containment = i_area / float(a_item)
                 bbox_iou = i_area / float(a_item + a_kept - i_area)
 
-            # Footwear rule: only genuine fragments with high containment/overlap merge
+            # Footwear rule: genuine fragments with containment/overlap or spatial connectivity merge
             is_footwear_overlap = is_footwear_candidate and (
-                pixel_containment >= 0.35
-                or bbox_containment >= 0.50
-                or bbox_iou >= 0.30
+                pixel_containment >= 0.20
+                or bbox_containment >= 0.30
+                or bbox_iou >= 0.15
+                or (bb_item and bb_kept and _is_same_garment_component(bb_item, bb_kept, min(H, W)))
             )
 
             is_general_overlap = (
@@ -1521,6 +1522,49 @@ async def parse_garments(
         has_human=has_human,
         count_hint=count_hint,
     )
+
+    # 2e) Footwear Partner Recovery after suppression:
+    # If a footwear item survived alongside another side-by-side item at the footwear height tier
+    # (e.g. left shoe predicted as Shoes and right shoe mislabeled as pants/cardigan),
+    # merge them into a single Shoes pair.
+    if "Shoes" in by_label and not has_human and len(by_label) >= 2:
+        shoes_mask = by_label["Shoes"]["mask"]
+        shoes_bb = _mask_bbox(shoes_mask)
+        if shoes_bb:
+            y1, x1, y2, x2 = shoes_bb
+            h_shoe = max(1, y2 - y1)
+            area_shoe = max(1, int(shoes_mask.sum()))
+            keys_to_merge = []
+            for other_key, other_it in list(by_label.items()):
+                if other_key == "Shoes":
+                    continue
+                other_mask = other_it.get("mask")
+                if other_mask is None:
+                    continue
+                obb = _mask_bbox(other_mask)
+                if not obb:
+                    continue
+                oy1, ox1, oy2, ox2 = obb
+                h_other = max(1, oy2 - oy1)
+                area_other = max(1, int(other_mask.sum()))
+                vert_center_diff = abs(((y1 + y2) / 2.0) - ((oy1 + oy2) / 2.0))
+                ratio_h = float(h_other) / float(h_shoe)
+                ratio_area = float(area_other) / float(area_shoe)
+                if (
+                    vert_center_diff <= int(0.20 * H)
+                    and 0.35 <= ratio_h <= 2.8
+                    and 0.20 <= ratio_area <= 5.0
+                ):
+                    logger.info("clothing_parser: merging side-by-side partner shoe detection '%s' into Shoes pair", other_key)
+                    by_label["Shoes"]["mask"] = np.maximum(by_label["Shoes"]["mask"], other_mask)
+                    shoes_bb = _mask_bbox(by_label["Shoes"]["mask"])
+                    if shoes_bb:
+                        y1, x1, y2, x2 = shoes_bb
+                        h_shoe = max(1, y2 - y1)
+                        area_shoe = max(1, int(by_label["Shoes"]["mask"].sum()))
+                    keys_to_merge.append(other_key)
+            for k in keys_to_merge:
+                del by_label[k]
 
     distinct_categories = {it.get("category") for it in by_label.values()}
     has_top = bool(distinct_categories & {"top", "dress", "outerwear"})

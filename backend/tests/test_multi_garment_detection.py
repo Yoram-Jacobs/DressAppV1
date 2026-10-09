@@ -2037,6 +2037,94 @@ def test_multiple_outerwear_on_human_merged():
     assert len([k for k, v in res.items() if v.get("category") == "outerwear"]) == 1
 
 
+def test_sneakers_fragmentation_suppressed_into_single_shoes_item():
+    """Verify that a pair of sneakers fragmented into shoes, pants, cardigan, and belt merges into Shoes."""
+    from app.services.clothing_parser import _suppress_overlapping_garments
+
+    H, W = 600, 600
+    # Sole/heel of the shoes
+    shoes_mask = np.zeros((H, W), dtype=np.uint8)
+    shoes_mask[380:480, 100:260] = 1  # left sole
+    shoes_mask[380:480, 340:500] = 1  # right sole
+
+    # Left sneaker upper misclassified as pants (houndstooth knit fabric)
+    pants_upper = np.zeros((H, W), dtype=np.uint8)
+    pants_upper[240:400, 110:250] = 1  # directly touches and overlaps sole
+
+    # Right sneaker upper misclassified as cardigan
+    cardigan_upper = np.zeros((H, W), dtype=np.uint8)
+    cardigan_upper[240:400, 350:490] = 1  # directly touches and overlaps right sole
+
+    # Sneaker tongue/lace misclassified as belt
+    belt_lace = np.zeros((H, W), dtype=np.uint8)
+    belt_lace[270:320, 160:190] = 1  # nested inside left sneaker
+
+    by_label = {
+        "Shoes": {"label": "Shoes", "category": "footwear", "score": 0.95, "mask": shoes_mask},
+        "pants": {"label": "pants", "category": "bottom", "score": 0.95, "mask": pants_upper},
+        "cardigan": {"label": "cardigan", "category": "outerwear", "score": 0.95, "mask": cardigan_upper},
+        "belt": {"label": "belt", "category": "accessory", "score": 0.95, "mask": belt_lace},
+    }
+
+    res = _suppress_overlapping_garments(by_label, has_human=False)
+    # Must suppress all fragments into a SINGLE Shoes item!
+    assert len(res) == 1, f"Expected 1 Shoes item, got {len(res)}: {list(res.keys())}"
+    assert "Shoes" in res
+    assert res["Shoes"]["category"] == "footwear"
+    # Merged mask must contain all parts
+    merged_m = res["Shoes"]["mask"]
+    assert np.all(merged_m[380:480, 100:260] == 1)
+    assert np.all(merged_m[240:400, 110:250] == 1)
+    assert np.all(merged_m[240:400, 350:490] == 1)
+    assert np.all(merged_m[270:320, 160:190] == 1)
+
+
+def test_enforce_segformer_category_preserves_llm_footwear():
+    """Verify that when the LLM detects Footwear/Sneakers, SegFormer kind does not override to Pants or Outerwear."""
+    from app.services.vision.validation import _enforce_segformer_category
+
+    # Case 1: LLM detected Footwear, SegFormer predicted 'bottom' (e.g. houndstooth upper)
+    analysis_sneaker = {
+        "name": "סניקרס ספורט מעוצבות",
+        "title": "סניקרס ספורט מעוצבות",
+        "category": "Footwear",
+        "sub_category": "סניקרס",
+        "item_type": "סניקרס נמוכות",
+        "caption": "סניקרס אופנתיות עם שרוכים וסוליה עבה.",
+        "colors": [{"name": "שחור", "pct": 60}, {"name": "לבן", "pct": 40}],
+    }
+    validated = _enforce_segformer_category(
+        analysis_sneaker,
+        segformer_kind="bottom",
+        label="pants",
+        is_single_item=True,
+        language="he",
+    )
+    assert validated["category"] == "Footwear"
+    assert validated["sub_category"] == "סניקרס"
+    assert "סניקרס" in validated["name"]
+
+    # Case 2: LLM detected Footwear, SegFormer predicted 'outerwear' (e.g. thick sole)
+    analysis_sole = {
+        "name": "White Chunky Sole Sneakers",
+        "title": "White Chunky Sole Sneakers",
+        "category": "Footwear",
+        "sub_category": "Sneakers",
+        "item_type": "Low-Top Sneakers",
+        "caption": "Sport sneakers with thick rubber sole.",
+    }
+    validated_sole = _enforce_segformer_category(
+        analysis_sole,
+        segformer_kind="outerwear",
+        label="cardigan",
+        is_single_item=True,
+        language="en",
+    )
+    assert validated_sole["category"] == "Footwear"
+    assert validated_sole["sub_category"] == "Sneakers"
+
+
+
 
 
 
