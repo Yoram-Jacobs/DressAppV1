@@ -1447,56 +1447,56 @@ async def parse_garments(
                 "mask": combined,
             }
 
+    # 2a) Footwear Consolidation (when SegFormer fragments footwear into multiple pieces or mislabels shoe parts)
+    if "Shoes" in by_label:
+        from scipy import ndimage
+        while True:
+            shoes_mask = by_label["Shoes"]["mask"]
+            shoes_bb = _mask_bbox(shoes_mask)
+            if not shoes_bb:
+                break
+            sy1, sx1, sy2, sx2 = shoes_bb
+            merged_any = False
+            for other_key, other_it in list(by_label.items()):
+                if other_key == "Shoes" or other_it.get("mask") is None:
+                    continue
+                obb = _mask_bbox(other_it["mask"])
+                if not obb:
+                    continue
+                oy1, ox1, oy2, ox2 = obb
+                o_cat = (other_it.get("category") or "").lower()
+
+                # If there is a genuine tall upper body garment or full-length pants, do not absorb it
+                is_genuine_tall_top = o_cat in ("top", "dress", "outerwear") and oy1 < int(0.20 * H) and (oy2 - oy1) >= int(0.40 * H)
+                is_genuine_tall_bottom = o_cat in ("bottom", "dress") and oy1 < int(0.40 * H) and (oy2 - oy1) >= int(0.45 * H)
+                if is_genuine_tall_top or is_genuine_tall_bottom:
+                    continue
+
+                x_inter = max(0, min(sx2, ox2) - max(sx1, ox1))
+                y_inter = max(0, min(sy2, oy2) - max(sy1, oy1))
+                o_area = max(1, (ox2 - ox1) * (oy2 - oy1))
+                inter_area = x_inter * y_inter
+                box_containment = inter_area / float(o_area)
+
+                dil_other = ndimage.binary_dilation(other_it["mask"], iterations=15)
+                dil_shoes = ndimage.binary_dilation(by_label["Shoes"]["mask"], iterations=15)
+                touches = np.logical_and(dil_other, dil_shoes).any()
+                is_proximate = _is_same_garment_component(shoes_bb, obb, min(H, W))
+                vert_center_diff = abs(((sy1 + sy2) / 2.0) - ((oy1 + oy2) / 2.0))
+                is_side_by_side = (vert_center_diff <= int(0.25 * H)) and (oy1 >= int(0.20 * H))
+
+                if touches or is_proximate or box_containment >= 0.20 or is_side_by_side:
+                    logger.info("clothing_parser: consolidating footwear fragment '%s' into Shoes", other_key)
+                    by_label["Shoes"]["mask"] = np.maximum(by_label["Shoes"]["mask"], other_it["mask"])
+                    del by_label[other_key]
+                    merged_any = True
+                    break
+            if not merged_any:
+                break
+
     distinct_cats = {it.get("category") for it in by_label.values()}
     has_torso_clothing = bool(distinct_cats & {"top", "dress", "outerwear"})
     has_human = bool(has_head or (has_torso_clothing and human_mask_full is not None and int(human_mask_full.sum()) >= 150))
-
-    # 2a) Footwear Consolidation (when SegFormer fragments footwear in a footwear-focused photo)
-    if "Shoes" in by_label and not has_human:
-        shoes_mask = by_label["Shoes"]["mask"]
-        shoes_bb = _mask_bbox(shoes_mask)
-        if shoes_bb:
-            # Check if there is any genuine tall flat-lay outfit item:
-            # 1. Torso garment (top, dress, coat) starting in upper third (ymin < 0.35 * H) with height >= 0.20 * H
-            # 2. Pants starting in upper half (ymin < 0.50 * H) with height >= 0.35 * H
-            has_genuine_outfit = False
-            for k, it in by_label.items():
-                if k == "Shoes" or it.get("mask") is None:
-                    continue
-                ibb = _mask_bbox(it["mask"])
-                if not ibb:
-                    continue
-                i_cat = it.get("category")
-                i_h = ibb[2] - ibb[0]
-                if i_cat in ("top", "dress", "outerwear") and ibb[0] < int(0.35 * H) and i_h >= int(0.20 * H):
-                    has_genuine_outfit = True
-                    break
-                if i_cat == "bottom" and ibb[0] < int(0.50 * H) and i_h >= int(0.35 * H):
-                    has_genuine_outfit = True
-                    break
-
-            if not has_genuine_outfit:
-                from scipy import ndimage
-                keys_to_merge = []
-                for other_key, other_it in list(by_label.items()):
-                    if other_key == "Shoes" or other_it.get("mask") is None:
-                        continue
-                    obb = _mask_bbox(other_it["mask"])
-                    if not obb:
-                        continue
-                    # Check if the fragment is part of the footwear
-                    dil_other = ndimage.binary_dilation(other_it["mask"], iterations=15)
-                    dil_shoes = ndimage.binary_dilation(by_label["Shoes"]["mask"], iterations=15)
-                    touches = np.logical_and(dil_other, dil_shoes).any()
-                    is_proximate = _is_same_garment_component(shoes_bb, obb, min(H, W))
-                    in_lower_tier = obb[0] >= int(0.25 * H)
-                    if touches or is_proximate or in_lower_tier:
-                        logger.info("clothing_parser: absorbing footwear fragment '%s' into Shoes", other_key)
-                        by_label["Shoes"]["mask"] = np.maximum(by_label["Shoes"]["mask"], other_it["mask"])
-                        shoes_bb = _mask_bbox(by_label["Shoes"]["mask"])
-                        keys_to_merge.append(other_key)
-                for k in keys_to_merge:
-                    del by_label[k]
 
     # 2b) Patch 12e (May 2026) — Option B2 pair recovery for footwear.
     #     When the unified Shoes mask is anatomically lopsided (one
@@ -1688,8 +1688,8 @@ async def parse_garments(
                 "mask": item["mask"],
                 "_human_mask_full": garment_human_mask,
                 "_global_human_mask": human_mask_full,
-                "has_human_head": has_head or has_any_human,
-                "has_human_skin": has_any_human,
+                "has_human_head": bool(has_head),
+                "has_human_skin": bool(has_any_human),
             }
         )
     logger.info(

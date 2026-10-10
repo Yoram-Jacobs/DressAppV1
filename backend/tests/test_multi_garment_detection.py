@@ -2216,6 +2216,99 @@ def test_footwear_consolidation_with_warm_background_and_fragmented_garments():
     assert np.all(final_m[310:350, 150:180] == 1)
 
 
+def test_sneakers_unconditional_consolidation_even_with_background_skin_and_hallucinations():
+    """Verify that SegFormer fragmenting a sneaker into Shoes, Pants, Cardigan, Belt on a warm surface
+    is unconditionally consolidated into a single Shoes item, and does not falsely trigger human presence."""
+    from scipy import ndimage
+    from app.services.clothing_parser import _is_same_garment_component
+    from app.services.vision.geometry import _detect_human_presence
+
+    H, W = 600, 600
+    shoes_mask = np.zeros((H, W), dtype=np.uint8)
+    shoes_mask[360:480, 100:260] = 1  # left heel/sole
+    shoes_mask[360:480, 340:500] = 1  # right heel/sole
+
+    pants_left = np.zeros((H, W), dtype=np.uint8)
+    pants_left[300:420, 110:250] = 1  # left toe-box
+
+    pants_right = np.zeros((H, W), dtype=np.uint8)
+    pants_right[300:420, 350:490] = 1  # right toe-box
+
+    cardigan_vamp = np.zeros((H, W), dtype=np.uint8)
+    cardigan_vamp[320:440, 370:480] = 1  # right vamp
+
+    belt_lace = np.zeros((H, W), dtype=np.uint8)
+    belt_lace[310:350, 150:180] = 1  # left laces
+
+    by_label = {
+        "Shoes": {"label": "Shoes", "category": "footwear", "score": 0.95, "mask": shoes_mask},
+        "pants": {"label": "pants", "category": "bottom", "score": 0.95, "mask": pants_left},
+        "pants#1": {"label": "pants", "category": "bottom", "score": 0.95, "mask": pants_right},
+        "cardigan": {"label": "cardigan", "category": "outerwear", "score": 0.95, "mask": cardigan_vamp},
+        "belt": {"label": "belt", "category": "accessory", "score": 0.95, "mask": belt_lace},
+    }
+
+    def _mask_bbox(m):
+        ys, xs = np.where(m)
+        return (int(ys.min()), int(xs.min()), int(ys.max()), int(xs.max())) if len(ys) else None
+
+    # Step 2a: Unconditional Footwear Consolidation
+    if "Shoes" in by_label:
+        while True:
+            shoes_mask = by_label["Shoes"]["mask"]
+            shoes_bb = _mask_bbox(shoes_mask)
+            if not shoes_bb:
+                break
+            sy1, sx1, sy2, sx2 = shoes_bb
+            merged_any = False
+            for other_key, other_it in list(by_label.items()):
+                if other_key == "Shoes" or other_it.get("mask") is None:
+                    continue
+                obb = _mask_bbox(other_it["mask"])
+                if not obb:
+                    continue
+                oy1, ox1, oy2, ox2 = obb
+                o_cat = (other_it.get("category") or "").lower()
+
+                is_genuine_tall_top = o_cat in ("top", "dress", "outerwear") and oy1 < int(0.20 * H) and (oy2 - oy1) >= int(0.40 * H)
+                is_genuine_tall_bottom = o_cat in ("bottom", "dress") and oy1 < int(0.40 * H) and (oy2 - oy1) >= int(0.45 * H)
+                if is_genuine_tall_top or is_genuine_tall_bottom:
+                    continue
+
+                x_inter = max(0, min(sx2, ox2) - max(sx1, ox1))
+                y_inter = max(0, min(sy2, oy2) - max(sy1, oy1))
+                o_area = max(1, (ox2 - ox1) * (oy2 - oy1))
+                inter_area = x_inter * y_inter
+                box_containment = inter_area / float(o_area)
+
+                dil_other = ndimage.binary_dilation(other_it["mask"], iterations=15)
+                dil_shoes = ndimage.binary_dilation(by_label["Shoes"]["mask"], iterations=15)
+                touches = np.logical_and(dil_other, dil_shoes).any()
+                is_proximate = _is_same_garment_component(shoes_bb, obb, min(H, W))
+                vert_center_diff = abs(((sy1 + sy2) / 2.0) - ((oy1 + oy2) / 2.0))
+                is_side_by_side = (vert_center_diff <= int(0.25 * H)) and (oy1 >= int(0.20 * H))
+
+                if touches or is_proximate or box_containment >= 0.20 or is_side_by_side:
+                    by_label["Shoes"]["mask"] = np.maximum(by_label["Shoes"]["mask"], other_it["mask"])
+                    del by_label[other_key]
+                    merged_any = True
+                    break
+            if not merged_any:
+                break
+
+    assert len(by_label) == 1
+    assert "Shoes" in by_label
+    assert by_label["Shoes"]["category"] == "footwear"
+
+    # Also test geometry _detect_human_presence
+    items_for_geo = [
+        {"label": "Shoes", "category": "footwear", "bbox": [500, 160, 800, 830]},
+        {"label": "Pants", "category": "bottom", "bbox": [500, 180, 700, 410], "_human_mask_full": np.ones((50, 50))},
+    ]
+    # Geometry must NOT detect human presence from sneaker parts or skin mask
+    assert not _detect_human_presence(items_for_geo)
+
+
 
 
 

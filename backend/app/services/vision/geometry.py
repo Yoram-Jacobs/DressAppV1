@@ -234,9 +234,6 @@ def _detect_human_presence(items: list[dict[str, Any]]) -> bool:
     for d in items:
         if d.get("has_human_head"):
             return True
-        hm = d.get("_human_mask_full")
-        if hm is not None and hm.sum() >= 150:
-            return True
         lbl = (d.get("label") or "").lower()
         if any(h in lbl for h in ("person", "model", "woman", "man", "human", "face", "hair", "head", "skin", "body")):
             return True
@@ -260,9 +257,10 @@ def _detect_human_presence(items: list[dict[str, Any]]) -> bool:
             return True
     if bottoms and shoes:
         min_bot_y = min(d["bbox"][0] for d in bottoms)
+        bot_h = max(d["bbox"][2] - d["bbox"][0] for d in bottoms)
         min_shoe_y = min(d["bbox"][0] for d in shoes)
         max_shoe_y = max(d["bbox"][2] for d in shoes)
-        if min_bot_y < min_shoe_y and (max_shoe_y - min_bot_y) >= 200:
+        if min_bot_y <= 400 and bot_h >= 350 and min_bot_y < min_shoe_y and (max_shoe_y - min_bot_y) >= 450:
             return True
     return False
 
