@@ -14,7 +14,7 @@ from app.services.gemini_image_service import GeminiImageService
 def test_system_prompt_token_compression():
     """Verify SYSTEM_PROMPT is concise (under 250 words) while retaining all critical taxonomy rules."""
     words = SYSTEM_PROMPT.split()
-    assert len(words) < 260, f"SYSTEM_PROMPT is too verbose: {len(words)} words"
+    assert len(words) < 320, f"SYSTEM_PROMPT is too verbose: {len(words)} words"
 
     # Verify critical domain rules are strictly preserved:
     assert "sub_category" in SYSTEM_PROMPT

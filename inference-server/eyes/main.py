@@ -43,6 +43,7 @@ import struct
 import time
 from contextlib import asynccontextmanager
 from pathlib import Path
+from enum import Enum
 from typing import Any
 
 import httpx
@@ -448,6 +449,142 @@ def _require_token(authorization: str | None = Header(default=None)) -> None:
         raise HTTPException(status_code=401, detail="bad bearer token")
 
 
+# ---- Taxonomy Enums & Schemas ---------------------------------------
+class CategoryTaxonomy(str, Enum):
+    TOP = "Top"
+    BOTTOM = "Bottom"
+    OUTERWEAR = "Outerwear"
+    FULL_BODY = "Full Body"
+    FOOTWEAR = "Footwear"
+    ACCESSORIES = "Accessories"
+    UNDERWEAR = "Underwear"
+
+
+class SubCategoryTaxonomy(str, Enum):
+    # Tops & Shirts
+    T_SHIRT = "T-Shirt"
+    SHIRT = "Shirt"
+    SWEATER = "Sweater"
+    HOODIE = "Hoodie"
+    POLO = "Polo"
+    BLOUSE = "Blouse"
+    TANK_TOP = "Tank Top"
+
+    # Bottoms
+    JEANS = "Jeans"
+    PANTS = "Pants"
+    SHORTS = "Shorts"
+    SKIRT = "Skirt"
+    SWEATPANTS = "Sweatpants"
+
+    # Full Body & Formal
+    DRESSES = "Dresses"
+    SUITS = "Suits"
+    JUMPSUIT = "Jumpsuit"
+
+    # Cultural & Traditional Attire
+    GALABIYA = "Galabiya"
+    KAFTAN = "Kaftan"
+    THOBE = "Thobe"
+    ABAYA = "Abaya"
+    KURTA = "Kurta"
+    SHERWANI = "Sherwani"
+    SARI = "Sari"
+    LEHENGA = "Lehenga"
+    HANBOK = "Hanbok"
+    KIMONO = "Kimono"
+    DIRNDL = "Dirndl"
+    GUAYABERA = "Guayabera"
+
+    # Outerwear
+    COAT = "Coat"
+    JACKET = "Jacket"
+    BLAZER = "Blazer"
+    CARDIGAN = "Cardigan"
+    VEST = "Vest"
+
+    # Footwear
+    OXFORDS = "Oxfords"
+    LOAFERS = "Loafers"
+    BOOTS = "Boots"
+    SANDALS = "Sandals"
+    SNEAKERS = "Sneakers"
+    HEELS = "Heels"
+    PUMPS = "Pumps"
+    FLATS = "Flats"
+
+    # Accessories & Headwear
+    HANDBAG = "Handbag"
+    CROSSBODY_BAG = "Crossbody Bag"
+    SUNGLASSES = "Sunglasses"
+    BELTS = "Belts"
+    HEADWEAR = "Headwear"
+    SCARVES_WRAPS = "Scarves & Wraps"
+    GLOVES = "Gloves"
+
+
+DEFAULT_GARMENT_SCHEMA: dict[str, Any] = {
+    "type": "object",
+    "required": [
+        "is_clothing", "title", "name", "category", "sub_category",
+        "item_type", "caption", "colors", "tags"
+    ],
+    "properties": {
+        "is_clothing": {"type": "boolean"},
+        "name": {"type": "string"},
+        "title": {"type": "string"},
+        "caption": {"type": "string"},
+        "category": {
+            "type": ["string", "null"],
+            "enum": [c.value for c in CategoryTaxonomy] + [None],
+        },
+        "sub_category": {
+            "type": "string",
+            "enum": [s.value for s in SubCategoryTaxonomy],
+        },
+        "item_type": {"type": "string"},
+        "brand": {"type": ["string", "null"]},
+        "gender": {
+            "type": "string",
+            "enum": ["men", "women", "unisex", "kids"],
+        },
+        "dress_code": {
+            "type": "string",
+            "enum": ["casual", "smart-casual", "business", "formal", "athletic", "loungewear"],
+        },
+        "season": {
+            "type": "array",
+            "items": {"type": "string", "enum": ["spring", "summer", "fall", "winter", "all"]},
+        },
+        "tradition": {"type": ["string", "null"]},
+        "colors": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "required": ["name", "pct"],
+                "properties": {
+                    "name": {"type": "string"},
+                    "pct": {"type": "integer", "minimum": 0, "maximum": 100},
+                },
+            },
+        },
+        "fabric_materials": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "required": ["name", "pct"],
+                "properties": {
+                    "name": {"type": "string"},
+                    "pct": {"type": "integer", "minimum": 1, "maximum": 100},
+                },
+            },
+        },
+        "pattern": {"type": "string"},
+        "tags": {"type": "array", "items": {"type": "string"}},
+    },
+}
+
+
 # ---- Schemas (updated for OpenAI-compatible format) ------------------
 class ChatTurn(BaseModel):
     role: str = Field(..., pattern="^(system|user|assistant)$")
@@ -467,6 +604,7 @@ class PredictIn(BaseModel):
     think: bool = False
     reasoning_budget: int = 0
     chat_template_kwargs: dict[str, Any] | None = None
+    sub_category_hint: SubCategoryTaxonomy | None = None
     # Legacy fields for backward compatibility (unused when messages is provided)
     prompt: str | None = None
     system: str | None = None
@@ -502,15 +640,42 @@ async def root() -> dict[str, Any]:
         "gguf_metadata": getattr(app.state, "gguf_metadata", {}),
         "vision_enabled": getattr(app.state, "vision_enabled", False),
         "auth_required": bool(API_TOKEN),
+        "sub_categories_count": len(SubCategoryTaxonomy),
         "endpoints": [
             "GET /",
             "GET /healthz",
+            "GET /taxonomy",
+            "GET /v1/taxonomy",
             "POST /predict",
             "GET /v1/adapters",
             "POST /v1/adapters/reload",
             "GET /lora-adapters",
             "POST /lora-adapters",
         ],
+    }
+
+
+@app.get("/taxonomy")
+@app.get("/v1/taxonomy")
+async def get_taxonomy() -> dict[str, Any]:
+    return {
+        "categories": [c.value for c in CategoryTaxonomy],
+        "sub_categories": [s.value for s in SubCategoryTaxonomy],
+        "cultural_sub_categories": [
+            SubCategoryTaxonomy.GALABIYA.value,
+            SubCategoryTaxonomy.KAFTAN.value,
+            SubCategoryTaxonomy.THOBE.value,
+            SubCategoryTaxonomy.ABAYA.value,
+            SubCategoryTaxonomy.KURTA.value,
+            SubCategoryTaxonomy.SHERWANI.value,
+            SubCategoryTaxonomy.SARI.value,
+            SubCategoryTaxonomy.LEHENGA.value,
+            SubCategoryTaxonomy.HANBOK.value,
+            SubCategoryTaxonomy.KIMONO.value,
+            SubCategoryTaxonomy.DIRNDL.value,
+            SubCategoryTaxonomy.GUAYABERA.value,
+        ],
+        "schema": DEFAULT_GARMENT_SCHEMA,
     }
 
 

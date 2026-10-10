@@ -1387,5 +1387,123 @@
     },
     "priority": 9,
     "example": "Prince Charlie black wool jacket with clan tartan kilt, leather sporran, and ghillie brogues."
+  },
+  {
+    "id": "rule_cultural_galabiya_etiquette",
+    "category": "cultural_modesty",
+    "title": "Egyptian & Levantine Galabiya Protocol (الجلابية المصرية والشامية)",
+    "rule_statement": "The Galabiya / Jalabiya is a traditional full-length flowing robe worn in Egypt, Sudan, and the Levant. For daytime and casual social gatherings, choose breathable natural linen or Egyptian cotton in neutral or earth tones. For festive, ceremonial, or guest occasions, choose formal Galabiyas featuring tailored embroidery along the collar, placket, and cuffs (Tawshih). Pair strictly with traditional leather slip-on sandals or handmade babouche slippers.",
+    "negative_constraint": "STRICTLY FORBID pairing a Galabiya with athletic sneakers, running shoes, baseball caps, or heavy combat boots. Never attempt to tuck a Galabiya into pants or wear a belt over traditional loose-cut Galabiyas.",
+    "criteria": {
+      "tags": [
+        "galabiya",
+        "jalabiya",
+        "galabeya",
+        "جلابية",
+        "جلابيه",
+        "ג'לביה",
+        "גלבייה",
+        "egyptian dress",
+        "sudanese tobe"
+      ]
+    },
+    "priority": 10,
+    "example": "Crisp sand-beige Egyptian linen Galabiya with subtle tone-on-tone embroidery on the neckline, paired with brown woven leather sandals."
+  },
+  {
+    "id": "rule_cultural_abaya_modest_layering",
+    "category": "cultural_modesty",
+    "title": "Contemporary & Traditional Abaya Layering Protocol (العباية والشيلة)",
+    "rule_statement": "The Abaya is an elegant modest garment worn across the Arabian Peninsula, Levant, and global Islamic communities. Closed Abayas function as the core Full Body garment. Front-open kimono-style Abayas function as an Outerwear duster coat layered over an opaque modest inner maxi dress, slip, or tailored wide-leg trousers. Always coordinate with a matching or harmonic Sheila / Hijab and elegant pointed flats, minimalist block heels, or refined mules.",
+    "negative_constraint": "STRICTLY FORBID translucent or sheer inner garments beneath an open Abaya. Forbid pairing open Abayas with shorts, mini skirts, distressed denim, or plunge necklines. Avoid neon clashing colors for traditional conservative formal events.",
+    "criteria": {
+      "tags": [
+        "abaya",
+        "عباية",
+        "عبايه",
+        "עבאיה",
+        "sheila",
+        "hijab",
+        "modest layering",
+        "kimono abaya"
+      ]
+    },
+    "priority": 10,
+    "example": "Textured charcoal linen front-open Abaya layered over a cream satin-crepe inner column dress, styled with a matching charcoal chiffon Sheila and pointed leather mules."
+  },
+  {
+    "id": "rule_cultural_thobe_kandura_etiquette",
+    "category": "cultural_modesty",
+    "title": "Arabian Thobe, Kandura & Dishdasha Sartorial Etiquette (الثوب والكندورة)",
+    "rule_statement": "The Thobe (also known as Kandura or Dishdasha) is the foundational traditional men's garment across the Arab world. For warm weather and daytime formal events, wear a crisp, impeccably pressed white, off-white, or cream cotton Thobe. For winter and cool climates, wear heavyweight wool or cashmere-blend Thobes in rich muted tones (navy, charcoal, camel, forest green). Pair with a crisp white Ghutra or red-and-white houndstooth Shemagh held with an Agal, and luxury leather sandals (Na'al) or tailored Oxford dress shoes.",
+    "negative_constraint": "STRICTLY FORBID wearing a wrinkled, stained, or ill-fitting Thobe. Forbid pairing formal Thobes with athletic sneakers, flip-flops, denim jackets, or casual baseball caps.",
+    "criteria": {
+      "tags": [
+        "thobe",
+        "thawb",
+        "kandura",
+        "dishdasha",
+        "ثوب",
+        "كندورة",
+        "دشداشة",
+        "ת'וב",
+        "קנדורה",
+        "דשדאשה",
+        "ghutra",
+        "shemagh"
+      ]
+    },
+    "priority": 10,
+    "example": "Tailored Japanese cotton white Thobe with French cuffs, paired with a red-and-white houndstooth Shemagh, double-black cord Agal, and handcrafted calfskin leather sandals."
+  },
+  {
+    "id": "rule_cultural_kurta_sherwani_pairing",
+    "category": "cultural_modesty",
+    "title": "South Asian Kurta-Pyjama & Sherwani Formal Protocol (कुर्ता / शेरवानी)",
+    "rule_statement": "In South Asian traditional menswear (India, Pakistan, Bangladesh), the Kurta functions as a versatile Top worn over Churidar (fitted tapered pants), Pyjama (loose straight trousers), or a Dhoti. For festivals and formal weddings, layer with an embroidered Nehru / Modi jacket or an ornate tailored Sherwani / Achkan (Outerwear coat) crafted from raw silk, brocade, or Jamdani. Complete the ensemble with handcrafted leather Mojari or Jutti footwear.",
+    "negative_constraint": "STRICTLY FORBID wearing a Kurta with athletic running shoes, gym shorts, or ripped denim. Avoid pairing heavy winter brocade Sherwanis with ultra-casual flip-flops or plastic sandals.",
+    "criteria": {
+      "tags": [
+        "kurta",
+        "kurta pyjama",
+        "sherwani",
+        "churidar",
+        "nehru jacket",
+        "bandhgala",
+        "कुर्ता",
+        "शेरवानी",
+        "קורטה",
+        "שרוואני",
+        "mojari",
+        "jutti"
+      ]
+    },
+    "priority": 10,
+    "example": "Raw silk ivory Kurta with gold zari Mandarin collar, paired with fitted off-white Churidar pants, a royal sapphire embroidered velvet Nehru vest, and handcrafted leather Mojaris."
+  },
+  {
+    "id": "rule_cultural_sari_lehenga_ensemble",
+    "category": "cultural_modesty",
+    "title": "Traditional Saree Draping & Lehenga Choli Ensemble (साड़ी / लहंगा चोली)",
+    "rule_statement": "Traditional South Asian festive and wedding attire for women centers on the Saree or Lehenga Choli. A Saree (6 to 9 yards of Banarasi, Kanjeevaram, or Chanderi silk) requires a tailored fitted Blouse (Choli) and an inskirt/petticoat, draped with structured pleats and a flowing shoulder pallu. A Lehenga Choli consists of an ornate flared maxi skirt (Lehenga), a fitted blouse (Choli), and a sheer or embroidered Dupatta scarf pinned securely across the shoulder/chest for modesty. Accessorize with traditional gold or Kundan jewelry and embellished sandals or juttis.",
+    "negative_constraint": "STRICTLY FORBID wearing a Saree without a secure inskirt or proper blouse foundation. Forbid wearing western athletic sneakers, plastic flip-flops, or casual denim jackets over a formal Saree or Lehenga.",
+    "criteria": {
+      "tags": [
+        "sari",
+        "saree",
+        "lehenga",
+        "lehenga choli",
+        "choli",
+        "dupatta",
+        "साड़ी",
+        "लहंगा",
+        "סארי",
+        "להנגה",
+        "kanjeevaram",
+        "banarasi"
+      ]
+    },
+    "priority": 10,
+    "example": "Crimson Banarasi silk Saree with gold woven floral motifs, paired with a matching elbow-sleeve brocade blouse, gold Kundan necklace, and gold metallic sandals."
   }
 ]

@@ -79,6 +79,26 @@ BENCHMARK_CASES = [
     # Western Wedding Guest
     ("what to wear as a guest to a summer chapel wedding", "rule_cultural_ceremony_etiquette"),
     ("שמלה יפה לאורחת בחתונה", "rule_cultural_ceremony_etiquette"),
+
+    # Egyptian & Levantine Galabiya
+    ("אירוע משפחתי מסורתי במצרים עם גלבייה", "rule_cultural_galabiya_etiquette"),
+    ("Egyptian linen galabiya for family dinner", "rule_cultural_galabiya_etiquette"),
+
+    # Abaya & Sheila Layering
+    ("layering an abaya with a matching sheila", "rule_cultural_abaya_modest_layering"),
+    ("תלבושת עבאיה מכובדת עם חיג'אב", "rule_cultural_abaya_modest_layering"),
+
+    # Arabian Thobe & Kandura
+    ("formal white thobe for business gathering in Riyadh", "rule_cultural_thobe_kandura_etiquette"),
+    ("ת'וב לבן מגוהץ עם כאפייה ועקאל", "rule_cultural_thobe_kandura_etiquette"),
+
+    # South Asian Kurta & Sherwani
+    ("formal kurta pyjama with embroidered sherwani for wedding", "rule_cultural_kurta_sherwani_pairing"),
+    ("בגדי קורטה מסורתיים עם שרוואני לאירוע", "rule_cultural_kurta_sherwani_pairing"),
+
+    # Traditional Saree & Lehenga Choli
+    ("silk saree draping for reception dinner", "rule_cultural_sari_lehenga_ensemble"),
+    ("להנגה צ'ולי מפוארת לחתונה הודית", "rule_cultural_sari_lehenga_ensemble"),
 ]
 
 
@@ -88,6 +108,22 @@ def test_cultural_retrieval_hit_rate(query: str, expected_rule_id: str):
     rules = retrieve_fashion_axioms(user_text=query, top_k=4)
     rule_ids = [r.id for r in rules]
     assert expected_rule_id in rule_ids, f"Query '{query}' failed to retrieve {expected_rule_id}. Retrieved: {rule_ids}"
+
+
+def test_cultural_taxonomy_enum_presence():
+    """Verify cultural garments are present in both eyes inference server and backend vision schema."""
+    from app.services.vision.llm import _GARMENT_OBJECT_SCHEMA
+
+    sub_props = _GARMENT_OBJECT_SCHEMA["properties"]["sub_category"]
+    assert "enum" in sub_props, "sub_category must have strict enum validation"
+    enums = sub_props["enum"]
+
+    expected_cultural = [
+        "Galabiya", "Kaftan", "Thobe", "Abaya", "Kurta", "Sherwani",
+        "Sari", "Lehenga", "Hanbok", "Kimono", "Dirndl", "Guayabera",
+    ]
+    for garment in expected_cultural:
+        assert garment in enums, f"Missing {garment} in _GARMENT_OBJECT_SCHEMA sub_category enum"
 
 
 # -----------------------------------------------------------------------------

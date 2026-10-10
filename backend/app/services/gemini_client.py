@@ -196,7 +196,7 @@ class GeminiClient:
         if thinking_budget is not None and _genai_types is not None:
             try:
                 tb_val = int(thinking_budget)
-                if tb_val > 0:
+                if tb_val >= 0:
                     thinking_cls = getattr(_genai_types, "ThinkingConfig", None)
                     if thinking_cls:
                         cfg_kwargs["thinking_config"] = thinking_cls(thinking_budget=tb_val)

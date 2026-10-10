@@ -242,6 +242,38 @@ def retrieve_fashion_axioms(
     )):
         add_rule("rule_cultural_islamic_regional_gulf_bisht")
 
+    # Arabian Thobe, Kandura & Dishdasha
+    if any(w in text_corpus for w in (
+        "thobe", "thawb", "kandura", "dishdasha", "ثوب", "كندورة", "דשדאשה", "ת'וב", "קנדורה"
+    )):
+        add_rule("rule_cultural_thobe_kandura_etiquette")
+
+    # Abaya & Sheila Layering Protocol
+    if any(w in text_corpus for w in (
+        "abaya", "sheila", "hijab", "عباية", "عبايه", "עבאיה", "שילה", "חיג'אב"
+    )):
+        add_rule("rule_cultural_abaya_modest_layering")
+
+    # Egyptian & Levantine Galabiya Protocol
+    if any(w in text_corpus for w in (
+        "galabiya", "jalabiya", "galabeya", "جلابية", "جلابيه", "ג'לביה", "גלבייה"
+    )):
+        add_rule("rule_cultural_galabiya_etiquette")
+
+    # South Asian Kurta & Sherwani Formal Pairing
+    if any(w in text_corpus for w in (
+        "kurta", "sherwani", "churidar", "nehru jacket", "bandhgala", "achkan",
+        "कुर्ता", "शेरवानी", "קורטה", "שרוואני", "mojari", "jutti"
+    )):
+        add_rule("rule_cultural_kurta_sherwani_pairing")
+
+    # Traditional Saree & Lehenga Choli Ensemble
+    if any(w in text_corpus for w in (
+        "sari", "saree", "lehenga", "lehenga choli", "choli", "dupatta",
+        "साड़ी", "लहंगा", "סארי", "להנגה", "kanjeevaram", "banarasi"
+    )):
+        add_rule("rule_cultural_sari_lehenga_ensemble")
+
     # North African Djellaba & Babouche
     if any(w in text_corpus for w in (
         "djellaba", "takchita", "babouche", "belgha", "moroccan kaftan", "morocco", "maghreb",

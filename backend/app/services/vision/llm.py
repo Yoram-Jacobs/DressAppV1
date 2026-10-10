@@ -279,7 +279,19 @@ _GARMENT_OBJECT_SCHEMA: dict[str, Any] = {
                 "Footwear", "Accessories", "Underwear", None,
             ],
         },
-        "sub_category": {"type": "string"},
+        "sub_category": {
+            "type": "string",
+            "enum": [
+                "T-Shirt", "Shirt", "Sweater", "Hoodie", "Polo", "Blouse", "Tank Top",
+                "Jeans", "Pants", "Shorts", "Skirt", "Sweatpants",
+                "Dresses", "Suits", "Jumpsuit",
+                "Galabiya", "Kaftan", "Thobe", "Abaya", "Kurta", "Sherwani", "Sari", "Lehenga",
+                "Hanbok", "Kimono", "Dirndl", "Guayabera",
+                "Coat", "Jacket", "Blazer", "Cardigan", "Vest",
+                "Oxfords", "Loafers", "Boots", "Sandals", "Sneakers", "Heels", "Pumps", "Flats",
+                "Handbag", "Crossbody Bag", "Sunglasses", "Belts", "Headwear", "Scarves & Wraps", "Gloves",
+            ],
+        },
         "item_type": {"type": "string"},
         "brand": {"type": ["string", "null"]},
         "model_gender": {

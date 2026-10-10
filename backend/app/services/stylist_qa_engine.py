@@ -75,34 +75,41 @@ RE_SHOES_WORDS = re.compile(
     r"\bshoes?\b|\bsneakers?\b|\bboots?\b|\bsandals?\b|\bheels?\b|"
     r"\bloafers?\b|\bslippers?\b|\bslides?\b|\bmules?\b|"
     r"\boxford\s+shoes?\b|\boxfords\b|\boxford\b(?!\s+(?:shirts?|cloth|cotton|button))\b|\bclogs?\b|"
+    r"\bmojaris?\b|\bjuttis?\b|\bbabouches?\b|\bbelghas?\b|"
     r"\bנעליים\b|\bנעלי\b|\bסניקרס\b|\bמגפיים\b|\bמגפי\b|\bמגפונים\b|"
-    r"\bסנדלים\b|\bעקבים\b|\bכפכפים\b|\bמוקסינים\b|"
-    r"\bحذاء\b|\bأحذية\b|\bصندل\b|\bبوت\b",
+    r"\bסנדלים\b|\bעקבים\b|\bכפכפים\b|\bמוקסינים\b|\bבאבוש\b|\bבבוש\b|\bמוז'ארי\b|"
+    r"\bحذاء\b|\bأحذية\b|\bصندل\b|\bبوت\b|\bبلغة\b|\bبابوش\b",
     re.IGNORECASE,
 )
 
 RE_OUTERWEAR_WORDS = re.compile(
     r"\bjackets?\b|\bcoats?\b|\bblazers?\b|\bparkas?\b|\btrench(?:coats?)?\b|"
     r"\bovercoats?\b|\bwindbreakers?\b|\bvests?\b|\banoraks?\b|\bpuffers?\b|"
+    r"\bbisht\b|\bachkan\b|"
     r"\bז'קט\b|\bג'קט\b|\bמעיל\b|\bמעילים\b|\bבלייזר\b|\bוסט\b|\bמקטורן\b|"
-    r"\bעליונית\b|\bسترة\b|\bجاكيت\b|\bمعطف\b|\bبليزر\b",
+    r"\bעליונית\b|\bבישט\b|\bسترة\b|\bجاكيت\b|\bمعطف\b|\bبليزر\b|\bبشت\b",
     re.IGNORECASE,
 )
 
 RE_DRESS_WORDS = re.compile(
     r"\bdresses\b|\bdress\b(?!\s+(?:pants|trousers|shirts?|shoes?|boots?|code|socks|belt|suit))\b|"
     r"\bgowns?\b|\bjumpsuits?\b|\brompers?\b|\bdungarees?\b|\boveralls?\b|"
+    r"\bgalabiyas?\b|\bjalabiyas?\b|\bkaftans?\b|\bcaftans?\b|\bthobes?\b|\bkanduras?\b|\bdishdashas?\b|"
+    r"\babayas?\b|\bsaris?\b|\bsarees?\b|\blehengas?\b|\bhanboks?\b|\bkimonos?\b|\bdirndls?\b|"
     r"\bשמלה\b|\bשמלת\b|\bשמלות\b|\bאוברול\b|\bסרבל\b|"
-    r"\bفستان\b|\bفساتين\b|\bجمبسوت\b",
+    r"\bגלבייה\b|\bכפתן\b|\bת'וב\b|\bעבאיה\b|\bסארי\b|\bלהנגה\b|\bקימונו\b|"
+    r"\bفستان\b|\bفساتين\b|\bجمبسوت\b|\bجلابية\b|\bقفطان\b|\bثوب\b|\bعباية\b|\bساري\b",
     re.IGNORECASE,
 )
 
 RE_HEADWEAR_WORDS = re.compile(
     r"\b(?:hats?|caps?|beanies?|berets?|fedora|visors?|bucket\s+hats?|bonnets?|helmets?|"
     r"flat\s+caps?|panama\s+hats?|"
+    r"kippahs?|yarmulkes?|keffiyehs?|shemaghs?|turbans?|dastars?|pagris?|hijabs?|mitpachat|tichel|shtreimel|tarboushs?|fezs?|rumals?|"
     r"כובע|כובעים|ברט|מצחייה|קסקט|כובע\s+טמבל|"
+    r"כיפה|כיפות|כפייה|שמאג|טורבן|חיג'אב|מטפחת|שטריימל|תרבוש|רומאל|"
     r"קובע|"
-    r"قبعة|طاقية)\b",
+    r"قبعة|طاقية|شماغ|كوفية|عمامة|حجاب|طربوش)\b",
     re.IGNORECASE,
 )
 
@@ -114,7 +121,7 @@ RE_GLASSES_WORDS = re.compile(
 )
 
 RE_BELT_WORDS = re.compile(
-    r"\b(?:belts?|waistbands?|sashes?|"
+    r"\b(?:belts?|waistbands?|sashes?|mdamma|"
     r"חגורה|חגורות|חגורת|"
     r"חגור|"
     r"حزام)\b",
@@ -133,13 +140,15 @@ RE_ACCESSORY_WORDS = re.compile(
     r"\b(?:belts?|hats?|caps?|beanies?|berets?|glasses|sunglasses|eyewear|spectacles|"
     r"bags?|handbags?|backpacks?|totes?|clutches?|purses?|crossbody|satchels?|"
     r"scarves|scarf|neckties?|bow\s*ties?|necklaces?|bracelets?|watches?|earrings?|"
-    r"socks?|stockings?|hosiery|"
+    r"socks?|stockings?|hosiery|mdamma|"
+    r"kippahs?|yarmulkes?|keffiyehs?|shemaghs?|turbans?|dastars?|pagris?|hijabs?|mitpachat|tichel|shtreimel|tarboushs?|fezs?|rumals?|"
     r"ties?\b(?!\s*dye)|"
     r"חגורה|חגורות|כובע|כובעים|משקפיים|משקפי\s+שמש|תיק|תיקים|ארנק|"
+    r"כיפה|כיפות|כפייה|שמאג|טורבן|חיג'אב|מטפחת|שטריימל|תרבוש|רומאל|"
     r"צעיף|צעיפים|עניבה|עניבות|שרשרת|שרשראות|צמיד|צמידים|שעון|שעונים|עגילים|"
     r"גרביים|גרב|"
     r"חגור|"
-    r"حزام|قبعة|نظارات|حقيبة|وشاح|ربطة\s+عنق|ساعة|سوار|قلادة|أقراط|جوارب)\b",
+    r"حزام|قبعة|نظارات|حقيبة|وشاح|ربطة\s+عنق|ساعة|سوار|قلادة|أقراط|جوارب|شماغ|كوفية|عمامة|حجاب|طربوش)\b",
     re.IGNORECASE,
 )
 
