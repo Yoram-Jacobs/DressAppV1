@@ -366,7 +366,7 @@ export const canonicalSubCategoryKey = (raw) => {
   if (normalized.includes('dirndl') || normalized.includes('trachtenkleid') || normalized.includes('דירנדל') || normalized.includes('ديرندل') || normalized.includes('дирндль')) return 'dirndl';
   if (normalized.includes('guayabera') || normalized.includes('chacabana') || normalized.includes('גוואיאברה') || normalized.includes('גואיברה') || normalized.includes('غوايابيرا') || normalized.includes('гуаябера')) return 'guayabera';
   if (normalized.includes('dhoti') || normalized.includes('דהוטי') || normalized.includes('دهوتي') || normalized.includes('дхоти') || normalized.includes('धोती')) return 'dhoti';
-  if (normalized.includes('salwar') || normalized.includes('shalwar') || normalized.includes('סלוואר') || normalized.includes('سروال_هندي') || normalized.includes('шальвары') || normalized.includes('सलवार')) return 'salwar';
+  if (normalized.includes('salwar') || normalized.includes('shalwar') || normalized.includes('sharwal') || normalized.includes('sirwal') || normalized.includes('שרוואל') || normalized.includes('שרואל') || normalized.includes('סלוואר') || normalized.includes('سروال') || normalized.includes('شروال') || normalized.includes('шальвары') || normalized.includes('सलवार')) return 'salwar';
 
   // Traditional Headwear & Accessories
   if (normalized.includes('kippah') || normalized.includes('yarmulke') || normalized.includes('yarmulka') || normalized.includes('kipa') || normalized.includes('כיפה') || normalized.includes('ירמולקה') || normalized.includes('كيباه') || normalized.includes('кипа') || normalized.includes('किप्पा')) return 'kippah';

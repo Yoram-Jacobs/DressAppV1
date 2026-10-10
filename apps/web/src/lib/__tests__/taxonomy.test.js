@@ -117,6 +117,14 @@ describe('Multilingual Bag and Basket Bag Taxonomy', () => {
     expect(canonicalSubCategoryKey('דירנדל')).toBe('dirndl');
     expect(canonicalSubCategoryKey('Guayabera')).toBe('guayabera');
     expect(canonicalSubCategoryKey('גוואיאברה')).toBe('guayabera');
+
+    // Dhoti & Salwar / Sharwal
+    expect(canonicalSubCategoryKey('Dhoti')).toBe('dhoti');
+    expect(canonicalSubCategoryKey('דהוטי')).toBe('dhoti');
+    expect(canonicalSubCategoryKey('Salwar')).toBe('salwar');
+    expect(canonicalSubCategoryKey('שרוואל')).toBe('salwar');
+    expect(canonicalSubCategoryKey('סלוואר')).toBe('salwar');
+    expect(canonicalSubCategoryKey('شروال')).toBe('salwar');
   });
 
   test('resolves canonical subcategories for traditional headwear across languages', () => {
