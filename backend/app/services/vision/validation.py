@@ -1176,7 +1176,22 @@ def _coerce_single_garment(
     full_text = f"{res.get('item_type', '')} {res.get('name', '')} {res.get('title', '')} {res.get('caption', '')}".lower()
     is_he = ((language or "").lower() in ("he", "iw")) or any("\u0590" <= ch <= "\u05ea" for ch in full_text)
 
-    if not cat_lower:
+    # Ensure headwear and accessories are properly rooted in Accessories
+    is_headwear_item = any(w in full_text or w in sub_lower for w in ("hat", "cap", "beanie", "visor", "headwear", "beret", "fedora", "כובע", "chullo"))
+    is_belt_item = any(w in full_text or w in sub_lower for w in ("belt", "חגור"))
+    if is_headwear_item:
+        res["category"] = "Accessories"
+        cat_lower = "accessories"
+        if not sub_lower or sub_lower in {"top", "tops", "bottom", "bottoms", "shirt", "pants", "trousers", "t-shirt"}:
+            res["sub_category"] = "Headwear"
+            sub_lower = "headwear"
+    elif is_belt_item:
+        res["category"] = "Accessories"
+        cat_lower = "accessories"
+        if not sub_lower or sub_lower in {"top", "tops", "bottom", "bottoms", "shirt", "pants", "trousers", "skirt"}:
+            res["sub_category"] = "Belts"
+            sub_lower = "belts"
+    elif not cat_lower:
         # If category is completely missing, infer from full_text or default to Top
         if any(w in full_text for w in ("jean", "pant", "short", "skirt", "trouser", "legging")):
             res["category"] = "Bottom"
@@ -1190,6 +1205,9 @@ def _coerce_single_garment(
         elif any(w in full_text for w in ("shoe", "sneaker", "boot", "heel", "sandal")):
             res["category"] = "Footwear"
             cat_lower = "footwear"
+        elif any(w in full_text for w in ("sunglass", "glasses", "bag", "scarf", "משקפ", "תיק", "צעיף")):
+            res["category"] = "Accessories"
+            cat_lower = "accessories"
         else:
             res["category"] = "Top"
             cat_lower = "top"
@@ -1369,7 +1387,14 @@ def _coerce_single_garment(
         elif any(w in sub_lower for w in ("dress", "שמלה")):
             res["item_type"] = "שמלת מידי" if is_he else "Midi Dress"
         elif any(w in sub_lower for w in ("headwear", "hat", "cap", "beanie", "כובע")):
-            res["item_type"] = ("כובע גרב" if "beanie" in full_text_itype else "כובע קלאסי") if is_he else ("Beanie" if "beanie" in full_text_itype else ("Trapper Hat" if "trapper" in full_text_itype else "Classic Hat"))
+            if "beanie" in full_text_itype:
+                res["item_type"] = "כובע גרב" if is_he else "Beanie"
+            elif any(w in full_text_itype for w in ("cap", "baseball", "visor", "מצחייה")):
+                res["item_type"] = "כובע מצחייה" if is_he else "Baseball Cap"
+            elif "trapper" in full_text_itype:
+                res["item_type"] = "כובע טרפר" if is_he else "Trapper Hat"
+            else:
+                res["item_type"] = "כובע קלאסי" if is_he else "Classic Hat"
         elif any(w in sub_lower for w in ("bag", "תיק")):
             res["item_type"] = "תיק יד" if is_he else "Handbag"
         elif any(w in sub_lower for w in ("belt", "חגורה")):
@@ -3184,23 +3209,30 @@ def _enforce_segformer_category(
     if kind not in ("footwear", "shoes") and current.lower() in ("footwear", "shoes"):
         return analysis
 
+    lbl_low = (label or "").lower()
+
     # If the LLM has identified the crop as a Belt (חגורה / belt),
-    # never override it with SegFormer's non-accessory kind (SegFormer often confuses belt straps with skirts, pants, or scarves).
+    # never override it with SegFormer's non-accessory kind (SegFormer often confuses belt straps with skirts, pants, or scarves),
+    # UNLESS SegFormer specifically detected a bag (straw basket bags often get hallucinated as rope belts).
     curr_low = current.lower()
     sub_low = (analysis.get("sub_category") or "").lower()
     title_low = (analysis.get("title") or "").lower()
     desc_low = (analysis.get("description") or "").lower()
     is_llm_belt = any(w in curr_low or w in sub_low or w in title_low or w in desc_low for w in ("belt", "חגור"))
-    if kind != "accessory" and is_llm_belt:
+    if is_llm_belt and kind != "accessory" and "bag" not in lbl_low and kind != "bag":
+        analysis["category"] = "Accessories"
+        if not analysis.get("sub_category") or analysis.get("sub_category").lower() in ("top", "bottom", "skirt", "pants", "trousers"):
+            analysis["sub_category"] = "Belts"
         return analysis
 
     # If the LLM has identified the crop as Headwear (hat, cap, beanie, visor, כובע),
-    # never override it with SegFormer's non-accessory/non-headwear kind (SegFormer often confuses tassels/earflaps with heels or shoes).
+    # never override it with SegFormer's non-accessory/non-headwear kind (SegFormer often confuses hats/caps with tops, pants, or footwear).
     is_llm_headwear = any(w in curr_low or w in sub_low or w in title_low or w in desc_low for w in ("hat", "cap", "beanie", "visor", "headwear", "beret", "fedora", "כובע", "chullo"))
-    if kind in ("footwear", "shoes", "bottom") and is_llm_headwear:
+    if is_llm_headwear and "bag" not in lbl_low and kind != "bag":
+        analysis["category"] = "Accessories"
+        if not analysis.get("sub_category") or analysis.get("sub_category").lower() in ("top", "bottom", "shoes", "footwear", "pants", "shirt", "trousers", "sweatpants", "t-shirt"):
+            analysis["sub_category"] = "Headwear"
         return analysis
-
-    lbl_low = (label or "").lower()
 
     if current.lower() in allowed:
         # Category is compatible with SegFormer, but check sub_category & item_type anchors

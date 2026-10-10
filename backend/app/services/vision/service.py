@@ -53,8 +53,20 @@ Deprecated paths (removed in May 2026)
   ``docs/WASTED_WORK_REPORT.md §2.2``.
 """
 
-import logging
-logger = logging.getLogger(__name__)
+def _map_detection_category(raw_cat: str | None) -> str:
+    """Map internal/SegFormer detection category to a canonical DressApp category."""
+    c = (raw_cat or "top").strip().lower()
+    if c in ("headwear", "bag", "accessory", "accessories"):
+        return "Accessories"
+    if c in ("footwear", "shoes"):
+        return "Footwear"
+    if c == "outerwear":
+        return "Outerwear"
+    if c == "bottom":
+        return "Bottom"
+    if c in ("dress", "full body", "fullbody"):
+        return "Full Body"
+    return "Top"
 
 
 def _align_analyses_to_crops(
@@ -2812,7 +2824,7 @@ class GarmentVisionService:
                                 logger.error("Gemini fallback also failed for slot %d: %s", slot_idx, gem_exc)
 
                         if not assembled.get("category"):
-                            assembled["category"] = (det.get("category") or det.get("kind") or "Top").capitalize()
+                            assembled["category"] = _map_detection_category(det.get("category") or det.get("kind"))
                         if not assembled.get("sub_category") and not assembled.get("item_type"):
                             fallback_type = (det.get("label") or det.get("kind") or "garment").lower()
                             assembled["item_type"] = fallback_type
@@ -2988,7 +3000,7 @@ class GarmentVisionService:
                                 ):
                                     raise
                                 analysis = {
-                                    "category": (det.get("category") or det.get("kind") or "Top").capitalize(),
+                                    "category": _map_detection_category(det.get("category") or det.get("kind")),
                                     "sub_category": (det.get("label") or det.get("kind") or "T-Shirt").capitalize(),
                                     "item_type": (det.get("label") or det.get("kind") or "T-Shirt").capitalize(),
                                     "title": (det.get("label") or det.get("kind") or "Garment").capitalize(),
@@ -3097,7 +3109,7 @@ class GarmentVisionService:
                                                 analysis = fb
                                         except Exception:
                                             analysis = {
-                                                "category": (det.get("category") or det.get("kind") or "Top").capitalize(),
+                                                "category": _map_detection_category(det.get("category") or det.get("kind")),
                                                 "sub_category": (det.get("label") or det.get("kind") or "T-Shirt").capitalize(),
                                                 "item_type": (det.get("label") or det.get("kind") or "T-Shirt").capitalize(),
                                                 "title": (det.get("label") or det.get("kind") or "Garment").capitalize(),
@@ -3218,7 +3230,7 @@ class GarmentVisionService:
                                             )
                                         except Exception:
                                             fallback_analysis = {
-                                                "category": (det.get("category") or det.get("kind") or "Top").capitalize(),
+                                                "category": _map_detection_category(det.get("category") or det.get("kind")),
                                                 "sub_category": (det.get("label") or det.get("kind") or "T-Shirt").capitalize(),
                                                 "item_type": (det.get("label") or det.get("kind") or "T-Shirt").capitalize(),
                                                 "title": (det.get("label") or det.get("kind") or "Garment").capitalize(),

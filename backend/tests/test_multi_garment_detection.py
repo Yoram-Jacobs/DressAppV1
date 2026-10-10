@@ -2410,6 +2410,158 @@ def test_belt_consolidation_absorbs_flanking_strap_fragments():
     assert fixed["sub_category"] == "Belts"
 
 
+def test_hat_fragment_consolidation_and_category_protection():
+    """Verify that a baseball cap fragmented into crown (Hat), brim (Pants), and embroidery (Upper-clothes)
+    is completely consolidated into a single Hat item and protected as Accessories / Headwear.
+    """
+    from app.services.clothing_parser import _mask_bbox, _is_same_garment_component
+    from app.services.vision.validation import _enforce_segformer_category, _coerce_single_garment
+    from scipy import ndimage
+
+    H, W = 1000, 1000
+    # 1. Hat crown (centered dome)
+    crown_mask = np.zeros((H, W), dtype=np.uint8)
+    crown_mask[200:500, 300:700] = 1
+
+    # 2. Curved brim / visor (attached below crown, mislabeled as Pants)
+    brim_mask = np.zeros((H, W), dtype=np.uint8)
+    brim_mask[480:620, 250:750] = 1
+
+    # 3. Embroidery panel / logo 'BRASIL' (inside crown, mislabeled as Upper-clothes)
+    logo_mask = np.zeros((H, W), dtype=np.uint8)
+    logo_mask[320:380, 400:600] = 1
+
+    by_label = {
+        "Hat": {
+            "label": "Hat",
+            "category": "headwear",
+            "score": 0.95,
+            "mask": crown_mask,
+        },
+        "Pants": {
+            "label": "Pants",
+            "category": "bottom",
+            "score": 0.88,
+            "mask": brim_mask,
+        },
+        "Upper-clothes": {
+            "label": "Upper-clothes",
+            "category": "top",
+            "score": 0.82,
+            "mask": logo_mask,
+        },
+    }
+
+    # Simulate Step 2a-4 and Step 2a-5 Headwear Consolidation
+    hat_keys = [
+        k for k, v in list(by_label.items())
+        if k.lower().startswith(("hat", "headwear", "cap", "beanie"))
+        or (v and v.get("category") == "headwear")
+        or "head covering" in k.lower()
+    ]
+    if hat_keys:
+        hat_items = [by_label.pop(k) for k in hat_keys]
+        hat_masks = [x["mask"] for x in hat_items if x and x.get("mask") is not None]
+        if hat_masks:
+            combined = hat_masks[0]
+            for m in hat_masks[1:]:
+                combined = np.maximum(combined, m)
+            by_label["Hat"] = {
+                "label": "Hat",
+                "category": "headwear",
+                "score": 0.95,
+                "mask": combined,
+            }
+
+    if "Hat" in by_label:
+        while True:
+            hat_mask = by_label["Hat"]["mask"]
+            hat_bb = _mask_bbox(hat_mask)
+            if not hat_bb:
+                break
+            hy1, hx1, hy2, hx2 = hat_bb
+            hat_h = max(1, hy2 - hy1)
+            hat_w = max(1, hx2 - hx1)
+            merged_any = False
+            for other_key, other_it in list(by_label.items()):
+                if other_key == "Hat" or other_it.get("mask") is None:
+                    continue
+                obb = _mask_bbox(other_it["mask"])
+                if not obb:
+                    continue
+                oy1, ox1, oy2, ox2 = obb
+                o_h = max(1, oy2 - oy1)
+                o_w = max(1, ox2 - ox1)
+                o_cat = (other_it.get("category") or "").lower()
+                o_lbl = (other_it.get("label") or "").lower()
+
+                is_genuine_tall_top = o_cat in ("top", "dress", "outerwear") and o_h >= int(0.35 * H) and oy2 > int(0.40 * H)
+                is_genuine_tall_bottom = o_cat in ("bottom", "dress") and o_h >= int(0.35 * H) and oy1 >= int(0.35 * H)
+                if is_genuine_tall_top or is_genuine_tall_bottom:
+                    continue
+
+                if o_cat == "footwear" or "shoe" in o_lbl or "boot" in o_lbl:
+                    continue
+
+                x_inter = max(0, min(hx2, ox2) - max(hx1, ox1))
+                y_inter = max(0, min(hy2, oy2) - max(hy1, oy1))
+                o_box_area = max(1, (ox2 - ox1) * (oy2 - oy1))
+                inter_area = x_inter * y_inter
+                box_containment = inter_area / float(o_box_area)
+
+                dil_other = ndimage.binary_dilation(other_it["mask"], iterations=15)
+                dil_hat = ndimage.binary_dilation(by_label["Hat"]["mask"], iterations=15)
+                touches = np.logical_and(dil_other, dil_hat).any()
+                is_proximate = _is_same_garment_component(hat_bb, obb, min(H, W))
+
+                vert_gap = max(0, oy1 - hy2) if oy1 >= hy2 else max(0, hy1 - oy2)
+                horiz_overlap = max(0, min(hx2, ox2) - max(hx1, ox1))
+                is_adjacent_brim = (vert_gap <= int(0.08 * H)) and (horiz_overlap >= int(0.25 * min(hat_w, o_w))) and (o_h <= int(0.40 * H))
+
+                if touches or is_proximate or box_containment >= 0.20 or is_adjacent_brim:
+                    by_label["Hat"]["mask"] = np.maximum(by_label["Hat"]["mask"], other_it["mask"])
+                    del by_label[other_key]
+                    merged_any = True
+                    break
+            if not merged_any:
+                break
+
+    assert len(by_label) == 1
+    assert "Hat" in by_label
+    assert by_label["Hat"]["category"] == "headwear"
+    final_mask = by_label["Hat"]["mask"]
+    # Check that crown, brim, and logo are all unified in the mask
+    assert np.all(final_mask[220:480, 320:680] == 1)
+    assert np.all(final_mask[500:600, 280:720] == 1)
+    assert np.all(final_mask[330:370, 420:580] == 1)
+
+    # Test category enforcement doesn't override LLM hat to top or bottom
+    llm_analysis = {
+        "title": "BRASIL Baseball Cap",
+        "category": "Accessories",
+        "sub_category": "Headwear",
+        "item_type": "Classic hat",
+    }
+    fixed_top = _enforce_segformer_category(dict(llm_analysis), segformer_kind="top")
+    assert fixed_top["category"] == "Accessories"
+    assert fixed_top["sub_category"] == "Headwear"
+
+    fixed_bottom = _enforce_segformer_category(dict(llm_analysis), segformer_kind="bottom")
+    assert fixed_bottom["category"] == "Accessories"
+    assert fixed_bottom["sub_category"] == "Headwear"
+
+    # Test single garment coercion
+    coerced = _coerce_single_garment({
+        "name": "Yellow and Green Brasil Cap",
+        "title": "Brasil Cap",
+        "category": "Top",
+        "sub_category": "Headwear",
+    })
+    assert coerced["category"] == "Accessories"
+    assert coerced["sub_category"] == "Headwear"
+    assert coerced["item_type"] == "Baseball Cap"
+
+
 
 
 

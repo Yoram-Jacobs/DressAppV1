@@ -59,7 +59,10 @@ _CANONICAL_LABEL: dict[str, str] = {
     "cape": "cape",
     "glasses": "sunglasses",
     "hat": "hat",
+    "Hat": "hat",
     "headband, head covering, hair accessory": "headwear",
+    "Headwear": "headwear",
+    "headwear": "headwear",
     "tie": "tie",
     "glove": "gloves",
     "watch": "watch",
@@ -1566,6 +1569,86 @@ async def parse_garments(
             if not merged_any:
                 break
 
+    # 2a-4) Collapse all Hat/Headwear pieces into a single "Hat" item
+    hat_keys = [
+        k for k, v in list(by_label.items())
+        if k.lower().startswith(("hat", "headwear", "cap", "beanie"))
+        or (v and v.get("category") == "headwear")
+        or "head covering" in k.lower()
+    ]
+    if hat_keys:
+        hat_items = [by_label.pop(k) for k in hat_keys]
+        hat_masks = [x["mask"] for x in hat_items if x and x.get("mask") is not None]
+        if hat_masks:
+            combined = hat_masks[0]
+            for m in hat_masks[1:]:
+                combined = np.maximum(combined, m)
+            by_label["Hat"] = {
+                "label": "Hat",
+                "category": "headwear",
+                "score": 0.95,
+                "mask": combined,
+            }
+
+    # 2a-5) Headwear Consolidation (when SegFormer fragments a hat/cap into crown, visor/brim, and embroidery patches)
+    if "Hat" in by_label:
+        from scipy import ndimage
+        while True:
+            hat_mask = by_label["Hat"]["mask"]
+            hat_bb = _mask_bbox(hat_mask)
+            if not hat_bb:
+                break
+            hy1, hx1, hy2, hx2 = hat_bb
+            hat_h = max(1, hy2 - hy1)
+            hat_w = max(1, hx2 - hx1)
+            merged_any = False
+            for other_key, other_it in list(by_label.items()):
+                if other_key == "Hat" or other_it.get("mask") is None:
+                    continue
+                obb = _mask_bbox(other_it["mask"])
+                if not obb:
+                    continue
+                oy1, ox1, oy2, ox2 = obb
+                o_h = max(1, oy2 - oy1)
+                o_w = max(1, ox2 - ox1)
+                o_cat = (other_it.get("category") or "").lower()
+                o_lbl = (other_it.get("label") or "").lower()
+
+                # Protect genuine tall garments on a person or full-body outfit:
+                is_genuine_tall_top = o_cat in ("top", "dress", "outerwear") and o_h >= int(0.35 * H) and oy2 > int(0.40 * H)
+                is_genuine_tall_bottom = o_cat in ("bottom", "dress") and o_h >= int(0.35 * H) and oy1 >= int(0.35 * H)
+                if is_genuine_tall_top or is_genuine_tall_bottom:
+                    continue
+
+                # Shoes/footwear should never be absorbed into a hat
+                if o_cat == "footwear" or "shoe" in o_lbl or "boot" in o_lbl:
+                    continue
+
+                x_inter = max(0, min(hx2, ox2) - max(hx1, ox1))
+                y_inter = max(0, min(hy2, oy2) - max(hy1, oy1))
+                o_box_area = max(1, (ox2 - ox1) * (oy2 - oy1))
+                inter_area = x_inter * y_inter
+                box_containment = inter_area / float(o_box_area)
+
+                dil_other = ndimage.binary_dilation(other_it["mask"], iterations=15)
+                dil_hat = ndimage.binary_dilation(by_label["Hat"]["mask"], iterations=15)
+                touches = np.logical_and(dil_other, dil_hat).any()
+                is_proximate = _is_same_garment_component(hat_bb, obb, min(H, W))
+
+                # Visor / brim check:
+                vert_gap = max(0, oy1 - hy2) if oy1 >= hy2 else max(0, hy1 - oy2)
+                horiz_overlap = max(0, min(hx2, ox2) - max(hx1, ox1))
+                is_adjacent_brim = (vert_gap <= int(0.08 * H)) and (horiz_overlap >= int(0.25 * min(hat_w, o_w))) and (o_h <= int(0.40 * H))
+
+                if touches or is_proximate or box_containment >= 0.20 or is_adjacent_brim:
+                    logger.info("clothing_parser: consolidating headwear fragment '%s' into Hat", other_key)
+                    by_label["Hat"]["mask"] = np.maximum(by_label["Hat"]["mask"], other_it["mask"])
+                    del by_label[other_key]
+                    merged_any = True
+                    break
+            if not merged_any:
+                break
+
     distinct_cats = {it.get("category") for it in by_label.values()}
     has_torso_clothing = bool(distinct_cats & {"top", "dress", "outerwear"})
     has_human = bool(has_head or (has_torso_clothing and human_mask_full is not None and int(human_mask_full.sum()) >= 150))
@@ -1597,7 +1680,7 @@ async def parse_garments(
     for item in by_label.values():
         item["mask"] = _postprocess_mask(
             item["mask"],
-            keep_top_k=2 if item["label"] in ("Shoes", "Belt", "belt") else 1,
+            keep_top_k=2 if item["label"] in ("Shoes", "Belt", "belt", "Hat", "hat", "Headwear", "headwear") else 1,
         )
 
     # 2d) Patch 12 (May 2026) — inter-label overlap suppression.
