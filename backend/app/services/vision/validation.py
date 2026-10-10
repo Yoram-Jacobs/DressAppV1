@@ -3163,6 +3163,16 @@ def _enforce_segformer_category(
     if kind not in ("footwear", "shoes") and current.lower() in ("footwear", "shoes"):
         return analysis
 
+    # If the LLM has identified the crop as a Belt (חגורה / belt),
+    # never override it with SegFormer's non-accessory kind (SegFormer often confuses belt straps with skirts, pants, or scarves).
+    curr_low = current.lower()
+    sub_low = (analysis.get("sub_category") or "").lower()
+    title_low = (analysis.get("title") or "").lower()
+    desc_low = (analysis.get("description") or "").lower()
+    is_llm_belt = any(w in curr_low or w in sub_low or w in title_low or w in desc_low for w in ("belt", "חגור"))
+    if kind != "accessory" and is_llm_belt:
+        return analysis
+
     lbl_low = (label or "").lower()
 
     if current.lower() in allowed:

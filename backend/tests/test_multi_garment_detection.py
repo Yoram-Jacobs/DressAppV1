@@ -2309,6 +2309,107 @@ def test_sneakers_unconditional_consolidation_even_with_background_skin_and_hall
     assert not _detect_human_presence(items_for_geo)
 
 
+def test_belt_consolidation_absorbs_flanking_strap_fragments():
+    """Verify that SegFormer fragmenting a belt into buckle (Belt) and straps (Skirt/Pants)
+    is consolidated into a single Belt card with category 'accessory'."""
+    from scipy import ndimage
+    from app.services.clothing_parser import _is_same_garment_component
+    from app.services.vision.validation import _enforce_segformer_category
+
+    H, W = 600, 1000
+    # Buckle in center
+    buckle_mask = np.zeros((H, W), dtype=np.uint8)
+    buckle_mask[240:360, 440:560] = 1
+
+    # Left strap mislabeled as skirt
+    skirt_strap = np.zeros((H, W), dtype=np.uint8)
+    skirt_strap[260:340, 100:450] = 1
+
+    # Right strap mislabeled as pants
+    pants_strap = np.zeros((H, W), dtype=np.uint8)
+    pants_strap[260:340, 550:900] = 1
+
+    by_label = {
+        "Belt": {"label": "Belt", "category": "accessory", "score": 0.95, "mask": buckle_mask},
+        "skirt": {"label": "skirt", "category": "bottom", "score": 0.95, "mask": skirt_strap},
+        "pants": {"label": "pants", "category": "bottom", "score": 0.95, "mask": pants_strap},
+    }
+
+    def _mask_bbox(m):
+        ys, xs = np.where(m)
+        return (int(ys.min()), int(xs.min()), int(ys.max()), int(xs.max())) if len(ys) else None
+
+    # Run Belt consolidation logic
+    if "Belt" in by_label:
+        while True:
+            belt_mask = by_label["Belt"]["mask"]
+            belt_bb = _mask_bbox(belt_mask)
+            if not belt_bb:
+                break
+            by1, bx1, by2, bx2 = belt_bb
+            belt_h = max(1, by2 - by1)
+            belt_y_center = (by1 + by2) / 2.0
+            merged_any = False
+            for other_key, other_it in list(by_label.items()):
+                if other_key == "Belt" or other_it.get("mask") is None:
+                    continue
+                obb = _mask_bbox(other_it["mask"])
+                if not obb:
+                    continue
+                oy1, ox1, oy2, ox2 = obb
+                o_h = max(1, oy2 - oy1)
+                o_cat = (other_it.get("category") or "").lower()
+                o_lbl = (other_it.get("label") or "").lower()
+
+                is_genuine_tall_top = o_cat in ("top", "dress", "outerwear") and oy1 < int(0.20 * H) and o_h >= int(0.40 * H)
+                is_genuine_tall_bottom = o_cat in ("bottom", "dress") and oy1 < int(0.40 * H) and o_h >= int(0.40 * H)
+                if is_genuine_tall_top or is_genuine_tall_bottom:
+                    continue
+
+                if o_cat == "footwear" or "shoe" in o_lbl:
+                    continue
+
+                x_inter = max(0, min(bx2, ox2) - max(bx1, ox1))
+                y_inter = max(0, min(by2, oy2) - max(by1, oy1))
+                o_area = max(1, (ox2 - ox1) * (oy2 - oy1))
+                inter_area = x_inter * y_inter
+                box_containment = inter_area / float(o_area)
+
+                dil_other = ndimage.binary_dilation(other_it["mask"], iterations=15)
+                dil_belt = ndimage.binary_dilation(by_label["Belt"]["mask"], iterations=15)
+                touches = np.logical_and(dil_other, dil_belt).any()
+                is_proximate = _is_same_garment_component(belt_bb, obb, min(H, W))
+                vert_center_diff = abs(belt_y_center - ((oy1 + oy2) / 2.0))
+                is_belt_band = ((vert_center_diff <= int(0.20 * H)) or (y_inter > 0)) and (o_h <= int(0.35 * H))
+
+                if touches or is_proximate or box_containment >= 0.20 or is_belt_band:
+                    by_label["Belt"]["mask"] = np.maximum(by_label["Belt"]["mask"], other_it["mask"])
+                    del by_label[other_key]
+                    merged_any = True
+                    break
+            if not merged_any:
+                break
+
+    assert len(by_label) == 1
+    assert "Belt" in by_label
+    assert by_label["Belt"]["category"] == "accessory"
+    final_mask = by_label["Belt"]["mask"]
+    # Verify the final mask covers left strap, buckle, and right strap
+    assert np.all(final_mask[240:360, 440:560] == 1)
+    assert np.all(final_mask[260:340, 100:450] == 1)
+    assert np.all(final_mask[260:340, 550:900] == 1)
+
+    # Test category enforcement doesn't override LLM belt to bottom
+    llm_analysis = {
+        "title": "חגורת בד שחורה עם אבזם נשר",
+        "category": "Accessories",
+        "sub_category": "Belts",
+    }
+    fixed = _enforce_segformer_category(llm_analysis, segformer_kind="bottom")
+    assert fixed["category"] == "Accessories"
+    assert fixed["sub_category"] == "Belts"
+
+
 
 
 

@@ -1408,8 +1408,8 @@ async def parse_garments(
             # sweater — so the UI shows one card per garment.
             # BUT for accessories (bags, belts, scarves, sunglasses, hats),
             # never merge components that are far apart (> 8% of frame short edge)!
-            # Disconnected accessory specks on opposite sides of the body are noise.
-            if category in ("accessory", "headwear"):
+            # Disconnected accessory specks on opposite sides of the body are noise (except for belts which span the waist).
+            if category in ("accessory", "headwear") and not label_name.lower().startswith("belt"):
                 prev_bb = _mask_bbox(by_label[label_name]["mask"])
                 cur_bb = _mask_bbox(mask)
                 if prev_bb and cur_bb and _bbox_gap(prev_bb, cur_bb) > int(0.08 * min(H, W)):
@@ -1494,6 +1494,78 @@ async def parse_garments(
             if not merged_any:
                 break
 
+    # 2a-2) Collapse all Belt pieces into a single "Belt" item
+    belt_keys = [k for k in list(by_label.keys()) if k.lower().startswith("belt")]
+    if belt_keys:
+        belt_items = [by_label.pop(k) for k in belt_keys]
+        belt_masks = [x["mask"] for x in belt_items if x and x.get("mask") is not None]
+        if belt_masks:
+            combined = belt_masks[0]
+            for m in belt_masks[1:]:
+                combined = np.maximum(combined, m)
+            by_label["Belt"] = {
+                "label": "Belt",
+                "category": "accessory",
+                "score": 0.95,
+                "mask": combined,
+            }
+
+    # 2a-3) Belt Consolidation (when SegFormer fragments a belt into buckle and strap pieces mislabeled as skirt/pants/accessory)
+    if "Belt" in by_label:
+        from scipy import ndimage
+        while True:
+            belt_mask = by_label["Belt"]["mask"]
+            belt_bb = _mask_bbox(belt_mask)
+            if not belt_bb:
+                break
+            by1, bx1, by2, bx2 = belt_bb
+            belt_h = max(1, by2 - by1)
+            belt_y_center = (by1 + by2) / 2.0
+            merged_any = False
+            for other_key, other_it in list(by_label.items()):
+                if other_key == "Belt" or other_it.get("mask") is None:
+                    continue
+                obb = _mask_bbox(other_it["mask"])
+                if not obb:
+                    continue
+                oy1, ox1, oy2, ox2 = obb
+                o_h = max(1, oy2 - oy1)
+                o_cat = (other_it.get("category") or "").lower()
+                o_lbl = (other_it.get("label") or "").lower()
+
+                # If there is a genuine tall upper body garment or full-length pants, do not absorb it
+                is_genuine_tall_top = o_cat in ("top", "dress", "outerwear") and oy1 < int(0.20 * H) and o_h >= int(0.40 * H)
+                is_genuine_tall_bottom = o_cat in ("bottom", "dress") and oy1 < int(0.40 * H) and o_h >= int(0.40 * H)
+                if is_genuine_tall_top or is_genuine_tall_bottom:
+                    continue
+
+                # Shoes/footwear should never be absorbed into a belt
+                if o_cat == "footwear" or "shoe" in o_lbl:
+                    continue
+
+                x_inter = max(0, min(bx2, ox2) - max(bx1, ox1))
+                y_inter = max(0, min(by2, oy2) - max(by1, oy1))
+                o_area = max(1, (ox2 - ox1) * (oy2 - oy1))
+                inter_area = x_inter * y_inter
+                box_containment = inter_area / float(o_area)
+
+                dil_other = ndimage.binary_dilation(other_it["mask"], iterations=15)
+                dil_belt = ndimage.binary_dilation(by_label["Belt"]["mask"], iterations=15)
+                touches = np.logical_and(dil_other, dil_belt).any()
+                is_proximate = _is_same_garment_component(belt_bb, obb, min(H, W))
+                vert_center_diff = abs(belt_y_center - ((oy1 + oy2) / 2.0))
+                # For belts, strap pieces share the same horizontal band and are relatively thin (height <= 35% frame)
+                is_belt_band = ((vert_center_diff <= int(0.20 * H)) or (y_inter > 0)) and (o_h <= int(0.35 * H))
+
+                if touches or is_proximate or box_containment >= 0.20 or is_belt_band:
+                    logger.info("clothing_parser: consolidating belt fragment '%s' into Belt", other_key)
+                    by_label["Belt"]["mask"] = np.maximum(by_label["Belt"]["mask"], other_it["mask"])
+                    del by_label[other_key]
+                    merged_any = True
+                    break
+            if not merged_any:
+                break
+
     distinct_cats = {it.get("category") for it in by_label.values()}
     has_torso_clothing = bool(distinct_cats & {"top", "dress", "outerwear"})
     has_human = bool(has_head or (has_torso_clothing and human_mask_full is not None and int(human_mask_full.sum()) >= 150))
@@ -1525,7 +1597,7 @@ async def parse_garments(
     for item in by_label.values():
         item["mask"] = _postprocess_mask(
             item["mask"],
-            keep_top_k=2 if item["label"] == "Shoes" else 1,
+            keep_top_k=2 if item["label"] in ("Shoes", "Belt", "belt") else 1,
         )
 
     # 2d) Patch 12 (May 2026) — inter-label overlap suppression.
