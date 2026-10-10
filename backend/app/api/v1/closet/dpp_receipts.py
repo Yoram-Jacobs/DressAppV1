@@ -410,6 +410,26 @@ async def parse_receipt(
                         f"Extract garment details such as brand, item_type, category, gender, and name from the URL path and store domain above.)"
                     )
                     parts.append(fallback_text)
+                elif resp.status_code == 404:
+                    parsed_u = urlparse(url_str)
+                    path_parts = [unquote(p) for p in parsed_u.path.split("/") if p and not p.isdigit() and p not in ("listing", "listings", "item", "product", "dp", "p", "ie", "en", "us", "r", "il")]
+                    clean_slug = [p for p in path_parts if not p.startswith("il_") and len(p) > 2]
+                    if clean_slug:
+                        slug_text = " ".join([p.replace("-", " ").replace("_", " ") for p in clean_slug])
+                        domain = parsed_u.netloc.replace("www.", "")
+                        fallback_text = (
+                            f"Product Web Link: {url_str}\n"
+                            f"Store/Domain: {domain}\n"
+                            f"Garment title and description from URL path: {slug_text}\n"
+                        )
+                        parts.append(fallback_text)
+                    else:
+                        raise HTTPException(
+                            400,
+                            "The link returned HTTP 404 (Not Found). It appears to be incomplete or truncated. "
+                            "Please paste the full store page link from your browser's address bar (e.g., https://etsy.com/listing/...) "
+                            "or the complete image address ending in .jpg/.png."
+                        )
                 else:
                     raise HTTPException(400, f"Failed to fetch URL, status code: {resp.status_code}")
         except Exception as e:
