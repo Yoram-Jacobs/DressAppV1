@@ -1516,9 +1516,11 @@ async def generate_event_proposals(
     from app.services.fashion_rules_rag import (
         filter_gender_closet_items,
         retrieve_fashion_axioms,
+    )
+    from app.services.stylist_qa_engine import (
+        evaluate_and_authorize_outfit,
         filter_candidate_closet_by_axioms,
     )
-    from app.services.stylist_qa_engine import evaluate_and_authorize_outfit
     from app.services.gemini_stylist import sanitize_stylist_payload
 
     # Fetch full candidate closet (up to 100 items), prioritizing by style and gender
@@ -1543,7 +1545,7 @@ async def generate_event_proposals(
         logger.warning("Could not retrieve fashion axioms for event proposal: %s", exc)
 
     # Pre-filter candidate closet by active axiom negative constraints
-    prioritized_closet = filter_candidate_closet_by_axioms(
+    prioritized_closet, _ = filter_candidate_closet_by_axioms(
         all_user_closet,
         axioms,
         user_gender=user_gender,
