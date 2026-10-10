@@ -2449,6 +2449,45 @@ export default function AddItem() {
     });
   };
 
+  // Support pasting images directly from clipboard anywhere on the page (Ctrl+V)
+  useEffect(() => {
+    const handlePaste = (e) => {
+      const activeTag = document.activeElement?.tagName;
+      if (
+        activeTag === "INPUT" ||
+        activeTag === "TEXTAREA" ||
+        document.activeElement?.isContentEditable
+      ) {
+        return;
+      }
+
+      const items = e.clipboardData?.items;
+      if (!items || !items.length) return;
+
+      const pastedFiles = [];
+      for (let i = 0; i < items.length; i++) {
+        const item = items[i];
+        if (item.kind === "file" && item.type?.startsWith("image/")) {
+          const file = item.getAsFile();
+          if (file) pastedFiles.push(file);
+        }
+      }
+
+      if (pastedFiles.length > 0) {
+        e.preventDefault();
+        toast.success(
+          t("addItem.clipboardPasted", {
+            defaultValue: "Image pasted from clipboard!",
+          }),
+        );
+        handleFiles(pastedFiles);
+      }
+    };
+
+    window.addEventListener("paste", handlePaste);
+    return () => window.removeEventListener("paste", handlePaste);
+  }, [handleFiles, t]);
+
   // Carved out of handleFiles so the pre-flight dialog can call it
   // after the user resolves the duplicates list. ``fingerprints`` is
   // the post-filter array of {file, sha256, phash, filename, size_bytes};
@@ -4316,7 +4355,7 @@ export default function AddItem() {
                   <p className="text-[14px] text-text-brand font-bold mt-1 max-w-md">
                     {t("addItem.dropzoneBody", {
                       defaultValue:
-                        "Snap a quick shot with your camera or upload existing photos. JPG, PNG, HEIC supported — each piece is analysed in parallel.",
+                        "Snap a quick shot, upload existing photos, or paste from clipboard (Ctrl+V). JPG, PNG, HEIC supported — each piece is analysed in parallel.",
                     })}
                   </p>
                   <div
