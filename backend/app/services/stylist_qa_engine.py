@@ -584,6 +584,89 @@ def is_revealing_or_beachwear(it: dict[str, Any], all_text: str = "", role: str 
     return bool(RE_REVEALING_BEACH_TERMS.search(all_text))
 
 
+RE_SHORT_SLEEVE_TERMS = re.compile(
+    r"\b("
+    # English
+    r"short\s+sleeves?|short-sleeved?|short\s+sleeved?|t-?shirts?|tees?|polos?|tank\s+tops?|tanks?|muscle\s+tees?|cap\s+sleeves?|"
+    # Spanish
+    r"mangas?\s+cortas?|camisetas?|polos?|sin\s+mangas|"
+    # French
+    r"manches?\s+courtes?|t-?shirts?|polos?|sans\s+manches|"
+    # German
+    r"kurzarm|kurz[eä]rmelig|kurze\s+[aä]rmel|t-?shirts?|polos?|[aä]rmellos|"
+    # Italian
+    r"maniche?\s+corte?|magliette?|polos?|senza\s+maniche|"
+    # Portuguese
+    r"mangas?\s+curtas?|camisetas?|polos?|sem\s+mangas|"
+    # Dutch
+    r"korte\s+mouwen?|t-?shirts?|polos?|mouwloos|"
+    # Russian
+    r"короткий\s+рукав|короткими\s+рукавами|футболк[аи]|поло|без\s+рукавов|"
+    # Chinese
+    r"短袖|半袖|t恤|polo衫|无袖|"
+    # Japanese
+    r"半袖|ショートスリーブ|tシャツ|ポロシャツ|ノースリーブ|"
+    # Hindi
+    r"छोटी\s+आस्तीन|हाफ\s+स्लीव|टी-?शर्ट|पोलो|बिना\s+आस्तीन"
+    r")\b|"
+    # Hebrew
+    r"(?:שרוול\s+קצר|שרוולים\s+קצרים|חולצה\s+קצרה|חולצות\s+קצרות|חולצת\s+טי|טי\s+שירט|פולו|גופייה|גופיה)|"
+    # Arabic
+    r"(?:أكمام\s+قصيرة|كم\s+قصير|نصف\s+كم|تي\s+شيرت|بولو|بدون\s+أكمام)",
+    re.IGNORECASE | re.UNICODE,
+)
+
+
+def is_short_sleeve_top(it: dict[str, Any], all_text: str = "") -> bool:
+    """Return True if garment is a short-sleeve top, t-shirt, polo, tank top, or sleeveless upper garment."""
+    cat = norm_category(it.get("category"))
+    if cat in {"bottom", "shoes", "accessory", "belt", "bag", "headwear", "eyewear", "footwear"}:
+        return False
+
+    title = str(it.get("title") or it.get("name") or "").lower()
+    sub_cat = str(it.get("sub_category") or "").lower().strip()
+    sleeve_len = str(it.get("sleeve_length") or "").lower().strip()
+
+    # 1. Explicit sleeve_length field
+    if sleeve_len in {"short", "short-sleeve", "short_sleeve", "sleeveless", "cap", "elbow"}:
+        return True
+    if sleeve_len in {"long", "long-sleeve", "long_sleeve", "full"}:
+        return False
+
+    # Check if title explicitly specifies long sleeves
+    is_explicit_long = any(w in title for w in (
+        "long sleeve", "long-sleeve", "longsleeve", "שרוול ארוך", "أكمام طويلة",
+        "manga larga", "manches longues", "langarm", "maniche lunghe", "manga comprida",
+        "lange mouwen", "длинный рукав", "长袖", "長袖", "फुल स्लीव"
+    ))
+    if is_explicit_long:
+        return False
+
+    # Outerwear & knitwear with full sleeves are not short-sleeve
+    if sub_cat in {"sweater", "hoodie", "cardigan", "jacket", "coat", "blazer", "trench", "parka", "overcoat"}:
+        return False
+    if any(w in title for w in ("sweater", "hoodie", "cardigan", "jacket", "coat", "blazer", "סוודר", "קפוצ'ון", "מעיל", "ז'קט")):
+        return False
+
+    # 2. Inherently short-sleeved or sleeveless sub-categories (T-shirts, polos, tanks)
+    if sub_cat in {"t-shirt", "tshirt", "tee", "polo", "tank_top", "tank", "crop_top", "camisole", "tube_top", "sleeveless"}:
+        return True
+
+    # 3. Text inspection across tags, description, title
+    if not all_text:
+        all_text = " ".join([
+            title,
+            str(it.get("description") or ""),
+            str(it.get("sub_category") or ""),
+            " ".join(str(t) for t in (it.get("tags") or [])),
+        ]).lower()
+
+    if bool(RE_SHORT_SLEEVE_TERMS.search(all_text)):
+        return True
+
+    return False
+
+
 def validate_garment_against_negative_constraints(
     it: dict[str, Any],
     rule: Any,
@@ -710,6 +793,11 @@ def validate_garment_against_negative_constraints(
         # 4. Revealing cuts (crop top, tank, sleeveless, sheer, mini skirt) and beach footwear forbidden
         if is_revealing_or_beachwear(it, all_text, role=role):
             return False, "Revealing garments (sleeveless tops, crop tops, sheer fabrics, mini skirts) and flip-flops are strictly forbidden in mosque prayer."
+        # 5. Short-sleeve tops strictly forbidden when specified in negative constraint or when arms must be covered
+        if role in ("top", "upper") or cat in ("top", "upper") or is_short_sleeve_top(it, all_text):
+            if any(w in neg_constraint.lower() for w in ("short-sleeve", "short sleeve", "shortsleeve", "שרוול קצר", "أكمام قصيرة", "sleeveless", "arms")):
+                if is_short_sleeve_top(it, all_text):
+                    return False, "Short-sleeve tops and t-shirts are inappropriate for mosque prayer (arms must be covered with long sleeves)."
 
     # 10. Conservative Modesty
     elif rule_id == "rule_cultural_modesty_conservative" or "unlayered sleeveless" in neg_constraint.lower():
@@ -1235,6 +1323,22 @@ def find_best_garment_replacement(
                 if any(w in dd_low for w in ("flip-flop", "slides", "sandals", "כפכפים", "כפכפי ים", "סנדלים", "شبشب", "chanclas")):
                     all_text_check = f"{it.get('title') or ''} {it.get('name') or ''} {it.get('sub_category') or ''}".lower()
                     if any(w in all_text_check for w in ("flip-flop", "flip flop", "slides", "כפכפים", "כפכפי ים")):
+                        is_dd_clean = False
+                        break
+                if any(w in dd_low for w in (
+                    "short-sleeve", "short sleeve", "short sleeves", "shortsleeve",
+                    "שרוול קצר", "שרוולים קצרים", "חולצות קצרות", "חולצה קצרה",
+                    "أكمام قصيرة", "كم قصير", "نصف كم",
+                    "manga corta", "mangas cortas",
+                    "manches courtes", "manche courte",
+                    "kurzarm", "kurzärmelig", "kurze ärmel",
+                    "maniche corte", "manica corta",
+                    "mangas curtas", "manga curta",
+                    "korte mouwen", "korte mouw",
+                    "короткий рукав", "короткими рукавами",
+                    "短袖", "半袖", "छोटी आस्तीन"
+                )):
+                    if is_short_sleeve_top(it):
                         is_dd_clean = False
                         break
             if not is_dd_clean:
@@ -2039,7 +2143,26 @@ async def evaluate_and_authorize_outfit(
                             is_valid_item = False
                             item_data = None
                             break
-                    # 5. Color restrictions: "avoid black" / "do not wear black" / "אין ללבוש שחור"
+                    # 5. Short-sleeve restriction
+                    if any(w in dd_low for w in (
+                        "short-sleeve", "short sleeve", "short sleeves", "shortsleeve",
+                        "שרוול קצר", "שרוולים קצרים", "חולצות קצרות", "חולצה קצרה",
+                        "أكمام قصيرة", "كم قصير", "نصف كم",
+                        "manga corta", "mangas cortas",
+                        "manches courtes", "manche courte",
+                        "kurzarm", "kurzärmelig", "kurze ärmel",
+                        "maniche corte", "manica corta",
+                        "mangas curtas", "manga curta",
+                        "korte mouwen", "korte mouw",
+                        "короткий рукав", "короткими рукавами",
+                        "短袖", "半袖", "छोटी आस्तीन"
+                    )):
+                        if is_short_sleeve_top(item_data):
+                            logger.warning("QA: Item '%s' violates DO/DON'T short-sleeve restriction: %s", item_data.get("title"), dd)
+                            is_valid_item = False
+                            item_data = None
+                            break
+                    # 6. Color restrictions: "avoid black" / "do not wear black" / "אין ללבוש שחור"
                     for col in ("black", "white", "red", "gold", "yellow", "orange"):
                         col_terms = COLOR_SYNONYMS.get(col, {col})
                         if any(f"avoid {col}" in dd_low or f"do not wear {col}" in dd_low or f"אין ללבוש {s}" in dd_low or f"להימנע מ{s}" in dd_low for s in col_terms):
@@ -2348,4 +2471,205 @@ async def evaluate_and_authorize_outfit(
         "qa_replacements": all_replacements,
     }
 
+    # 6. Filter Shopping Suggestions against user's closet inventory
+    raw_shopping = advice_payload.get("shopping_suggestions") or []
+    if isinstance(raw_shopping, list) and raw_shopping:
+        advice_payload["shopping_suggestions"] = filter_shopping_suggestions_against_closet(
+            raw_shopping,
+            all_closet_items=all_closet_items,
+            outfit_recommendations=advice_payload.get("outfit_recommendations"),
+            lang=lang,
+        )
+
     return advice_payload
+
+
+SHOPPING_COLOR_FAMILIES: dict[str, set[str]] = {
+    "white": {"white", "off-white", "cream", "ivory", "לבן", "לבנה", "שמנת", "קרם", "أبيض", "بيضاء", "كريمي", "blanc", "blanche", "blanco", "blanca", "weiß", "weiss", "bianco", "bianca", "branco", "branca", "wit", "белый", "белая", "白", "白色", "सफेद"},
+    "black": {"black", "שחור", "שחורה", "أسود", "سوداء", "noir", "noire", "negro", "negra", "schwarz", "nero", "nera", "preto", "preta", "zwart", "черный", "черная", "黑", "黑色", "काला"},
+    "grey": {"grey", "gray", "charcoal", "heather", "slate", "אפור", "אפורה", "צ'רקול", "ערפילי", "رمادي", "رمادية", "شاركول", "gris", "grau", "grigio", "cinza", "grijs", "серый", "серая", "灰", "灰色", "चारकोल", "स्लेटी"},
+    "blue": {"blue", "navy", "indigo", "כחול", "כחולה", "נייבי", "אינדיגו", "أزرق", "زرقاء", "كحلي", "bleu", "bleue", "marine", "azul", "marino", "blau", "marineblau", "blu", "azur", "blauw", "синий", "синяя", "голубой", "голубая", "蓝", "蓝色", "藏青", "青", "深蓝", "नीला"},
+    "brown": {"brown", "tan", "beige", "camel", "khaki", "חום", "חומה", "בז'", "חאקי", "קאמל", "בז", "בייג'", "בייג", "בני", "بني", "بنية", "بيج", "خاكي", "marron", "beige", "marrón", "braun", "marrone", "castanho", "bruin", "коричневый", "бежевый", "хаки", "棕", "褐色", "卡其", "米色", "茶色", "ベージュ", "カーキ", "भूरा"},
+    "red": {"red", "burgundy", "maroon", "crimson", "אדום", "אדומה", "בורדו", "أحمر", "حمراء", "بورغندي", "rouge", "bordeaux", "rojo", "burdeos", "rot", "rosso", "vermelho", "rood", "красный", "бордовый", "红", "红色", "酒红", "赤", "लाल"},
+    "green": {"green", "olive", "sage", "ירוק", "ירוקה", "זית", "أخضر", "خضراء", "زيتوني", "vert", "verde", "grün", "groen", "зеленый", "зеленая", "оливковый", "绿", "绿色", "橄榄绿", "緑", "हरा"},
+    "yellow": {"yellow", "mustard", "gold", "צהוב", "צהובה", "חרדל", "זהב", "أصفر", "صفراء", "خردلي", "ذهبي", "jaune", "moutarde", "or", "amarillo", "mostaza", "oro", "gelb", "giallo", "amarelo", "geel", "желтый", "желтая", "горчичный", "золотой", "黄", "黄色", "金色", "黄色い", "पीला"},
+    "pink": {"pink", "rose", "ורוד", "ורודה", "פוקסיה", "ورדי", "وردية", "rose", "rosa", "roze", "розовый", "розовая", "粉", "粉色", "ピンク", "गुलाबी"},
+}
+
+SHOPPING_GARMENT_FAMILIES: dict[str, set[str]] = {
+    "cargo_pants": {"cargo", "cargos", "cargo pants", "דגמ\"ח", "דגמח", "מכנסי דגמ\"ח", "מכנסי דגמח", "דגמ\"חים", "كارغو", "سروال كارغو", "pantalones cargo", "pantalon cargo", "cargo-hose", "pantaloni cargo"},
+    "pants": {"pants", "trousers", "slacks", "chinos", "joggers", "sweatpants", "jeans", "denim", "מכנסיים", "מכנס", "ג'ינס", "גינס", "דנים", "טרנינג", "צ'ינו", "בןטאל", "بنطال", "سروال", "جينز", "pantalones", "pantalon", "hose", "pantaloni", "calças", "broek", "брюки", "штаны", "牛仔裤", "裤子", "长裤", "パンツ", "ズボン", "जींस", "पैंट"},
+    "shorts": {"shorts", "bermuda", "שורטס", "מכנסיים קצרים", "מכנס קצר", "ברמודה", "שورت", "سروال قصير", "pantalon corto", "short", "kurze hose", "pantaloncini", "calções", "korte broek", "шорты", "短裤", "ショートパンツ", "शॉर्ट्स"},
+    "skirt": {"skirt", "skirts", "חצאית", "חצאיות", "تنورة", "falda", "jupe", "rock", "gonna", "saia", "rok", "юбка", "半身裙", "裙子", "スカート", "स्कर्ट"},
+    "dress": {"dress", "dresses", "gown", "שמלה", "שמלות", "שמלת", "فستان", "vestido", "robe", "kleid", "abito", "jurk", "платье", "连衣裙", "ドレス", "पोशाक"},
+    "v_neck": {"v-neck", "v neck", "vneck", "צווארון v", "מפתח v", "וי", "צווארון וי", "فتحة v", "ياقة v", "cuello v", "col v", "v-ausschnitt", "scollo a v", "gola v", "v-hals", "v-образный", "v领", "vネック", "वी-नेक"},
+    "crewneck": {"crewneck", "crew-neck", "crew neck", "round neck", "צווארון עגול", "קרו נק", "ياقة مستديرة", "رقبة دائرية", "cuello redondo", "col rond", "rundhals", "girocollo", "gola redonda", "ronde hals", "круглый вырез", "圆领", "クルーネック", "क्रू नेक"},
+    "t_shirt": {"t-shirt", "tshirt", "tee", "tees", "חולצת טי", "טי שירט", "טישירט", "טי", "חולצה קצרה", "טי-שירט", "טי שירטס", "חולצות טי", "تي شيرت", "تيشيرت", "camiseta", "maglietta", "футболка", "t恤", "tシャツ", "टी-शर्ट"},
+    "knit_top": {"knit", "knitwear", "knit shirt", "knit top", "סריג", "חולצת סריג", "סריגים", "טריקוטאז'", "מחבוك", "محבוכה", "كنزة", "punto", "tricot", "strick", "maglia", "malha", "breisel", "трикотаж", "вязаный", "针织", "ニット", "बुना हुआ"},
+    "polo": {"polo", "polo shirt", "פולו", "חולצת פולו", "בولو", "قميص بولو"},
+    "shirt": {"shirt", "shirts", "button-down", "button down", "blouse", "חולצה", "חולצות", "חולצת כפתורים", "בלוזה", "قميص", "بلوزة", "camisa", "chemise", "hemd", "camicia", "overhemd", "рубашка", "блузка", "衬衫", "シャツ", "कमीज"},
+    "sweater": {"sweater", "sweaters", "jumper", "pullover", "cardigan", "hoodie", "סוודר", "סוודרים", "קרדיגן", "קפוצ'ון", "סריג חם", "سترة", "كنزة صوف", "هودي", "suéter", "pull", "pullover", "maglione", "camisola", "trui", "свитер", "толстовка", "худи", "毛衣", "卫衣", "セーター", "パーカー", "स्वेटर", "हुडी"},
+    "outerwear": {"jacket", "jackets", "blazer", "blazers", "coat", "coats", "outerwear", "bomber", "trench", "parka", "overcoat", "vest", "waistcoat", "ז'קט", "ג'קט", "בלייזר", "מעיל", "מעילים", "וסט", "סוודר", "جاكيت", "سترة", "معطف", "صديري", "chaqueta", "blazer", "manteau", "veste", "gilet", "jacke", "mantel", "weste", "giacca", "cappotto", "gilet", "jaqueta", "casaco", "colete", "jas", "vest", "куртка", "пиджак", "пальто", "жилет", "夹克", "外套", "西装", "大衣", "马甲", "ジャケット", "コート", "ベスト", "जैकेट", "ब्लेज़र", "कोट", "वास्कट"},
+    "shoes": {"shoes", "shoe", "footwear", "sneakers", "boots", "loafers", "oxfords", "sandals", "flats", "heels", "נעליים", "נעל", "נעלי", "סניקרס", "מגפיים", "מוקסינים", "סנדלים", "עקבים", "חצי מגף", "חצי מגפיים", "חذاء", "أحذية", "سنيكرز", "بوت", "صندل", "كعب", "zapatos", "calzado", "zapatillas", "botas", "mocasines", "sandalias", "tacones", "chaussures", "baskets", "bottes", "mocassins", "sandales", "talons", "schuhe", "sneaker", "stiefel", "slipper", "sandalen", "absätze", "scarpe", "stivali", "mocassini", "sandali", "tacchi", "sapatos", "tênis", "botas", "sandálias", "saltos", "schoenen", "laarzen", "обувь", "кроссовки", "ботинки", "туфли", "сандалии", "каблуки", "鞋", "球鞋", "靴", "皮鞋", "凉鞋", "高跟鞋", "スニーカー", "ブーツ", "ローファー", "サンダル", "ヒール", "जूते", "स्नीकर्स", "बूट", "सैंडल", "हील"},
+    "belt": {"belt", "belts", "חגורה", "חגורות", "חגורת עור", "חגור", "حزام", "cinturón", "ceinture", "gürtel", "cintura", "cinto", "riem", "ремень", "腰带", "皮带", "ベルト", "बेल्ट"},
+    "headwear": {"hat", "hats", "cap", "caps", "beanie", "beret", "כובע", "כובעים", "מגבעת", "כיפה", "קסקט", "קפלוש", "ברט", "קסקט", "قبعة", "sombrero", "gorra", "chapeau", "casquette", "mütze", "hut", "cappello", "berretto", "chapéu", "boné", "hoed", "pet", "шапка", "шляпа", "кепка", "帽子", "ハット", "キャップ", "टोपी"},
+    "bag": {"bag", "bags", "handbag", "handbags", "backpack", "backpacks", "tote", "clutch", "purse", "crossbody", "תיק", "תיקים", "תיק יד", "תיק גב", "ארנק", "حقيبة", "شنطة", "bolso", "mochila", "sac", "sac à dos", "tasche", "rucksack", "borsa", "zaino", "bolsa", "tas", "rugzak", "сумка", "рюкзак", "包", "手提包", "背包", "バッグ", "リュック", "बैग"},
+}
+
+
+def extract_shopping_color_families(text: str) -> set[str]:
+    low = text.lower()
+    matched = set()
+    for col, terms in SHOPPING_COLOR_FAMILIES.items():
+        for term in terms:
+            if re.search(rf"\b{re.escape(term)}\b", low):
+                matched.add(col)
+                break
+    return matched
+
+
+def extract_shopping_garment_families(text: str) -> set[str]:
+    low = text.lower()
+    matched = set()
+    for fam, terms in SHOPPING_GARMENT_FAMILIES.items():
+        for term in terms:
+            if re.search(rf"\b{re.escape(term)}\b", low):
+                matched.add(fam)
+                break
+    return matched
+
+
+def item_matches_shopping_suggestion(suggestion: str, item: dict[str, Any]) -> bool:
+    """Return True if closet item matches the shopping suggestion's garment type and style/color."""
+    s_low = suggestion.lower().strip()
+    s_colors = extract_shopping_color_families(s_low)
+    s_fams = extract_shopping_garment_families(s_low)
+
+    item_text = " ".join([
+        str(item.get("title") or ""),
+        str(item.get("name") or ""),
+        str(item.get("description") or ""),
+        str(item.get("category") or ""),
+        str(item.get("sub_category") or ""),
+        str(item.get("material") or ""),
+        " ".join(str(t) for t in (item.get("tags") or [])),
+    ]).lower()
+
+    # Direct substring match
+    clean_title = str(item.get("title") or item.get("name") or "").lower().strip()
+    if clean_title and len(clean_title) >= 5:
+        if clean_title in s_low or s_low in clean_title:
+            return True
+
+    item_colors = extract_shopping_color_families(item_text)
+    raw_col = item.get("colors") or item.get("color") or []
+    if isinstance(raw_col, str):
+        raw_col = [raw_col]
+    for c in raw_col:
+        c_str = (c.get("name") if isinstance(c, dict) else str(c)).lower()
+        item_colors.update(extract_shopping_color_families(c_str))
+
+    item_fams = extract_shopping_garment_families(item_text)
+    cat = str(item.get("category") or "").lower()
+    sub_cat = str(item.get("sub_category") or "").lower()
+    item_fams.update(extract_shopping_garment_families(f"{cat} {sub_cat}"))
+
+    common_fams = s_fams.intersection(item_fams)
+    if not common_fams:
+        return False
+
+    # 1. Cargo pants
+    if "cargo_pants" in s_fams:
+        if "cargo_pants" in item_fams or "pants" in item_fams:
+            if not s_colors or (s_colors and s_colors.intersection(item_colors)):
+                return True
+        return False
+
+    # 2. V-neck knit / V-neck shirt / crewneck
+    if "v_neck" in s_fams:
+        if "v_neck" in item_fams:
+            if not s_colors or (s_colors and s_colors.intersection(item_colors)):
+                return True
+        return False
+
+    if "crewneck" in s_fams:
+        if "crewneck" in item_fams or "t_shirt" in item_fams:
+            if not s_colors or (s_colors and s_colors.intersection(item_colors)):
+                return True
+        return False
+
+    # 3. T-shirt / Polo
+    if "t_shirt" in s_fams or "polo" in s_fams:
+        if "t_shirt" in item_fams or "polo" in item_fams or "shirt" in item_fams:
+            if not s_colors or (s_colors and s_colors.intersection(item_colors)):
+                return True
+        return False
+
+    # 4. General pants / jeans
+    if "pants" in s_fams:
+        if "pants" in item_fams or "cargo_pants" in item_fams:
+            if s_colors and s_colors.intersection(item_colors):
+                return True
+            if not s_colors and len(common_fams) >= 1:
+                return True
+        return False
+
+    # 5. Belt / Shoes / Outerwear / Bag / Headwear / Skirt / Dress
+    for specific_fam in ("belt", "shoes", "outerwear", "bag", "headwear", "skirt", "dress"):
+        if specific_fam in s_fams:
+            if specific_fam in item_fams:
+                if not s_colors or (s_colors and s_colors.intersection(item_colors)):
+                    return True
+            return False
+
+    return False
+
+
+def filter_shopping_suggestions_against_closet(
+    suggestions: list[str] | None,
+    all_closet_items: list[dict[str, Any]] | None,
+    outfit_recommendations: list[dict[str, Any]] | None = None,
+    lang: str = "en",
+) -> list[str]:
+    """Prune shopping suggestions that match items the user already owns in their closet or look."""
+    if not suggestions or not isinstance(suggestions, list):
+        return []
+
+    # Gather all outfit items from recommendations
+    outfit_items: list[dict[str, Any]] = []
+    if outfit_recommendations and isinstance(outfit_recommendations, list):
+        for rec in outfit_recommendations:
+            if isinstance(rec, dict):
+                for it in rec.get("items") or []:
+                    if isinstance(it, dict):
+                        outfit_items.append(it)
+
+    closet_items_list = list(all_closet_items or []) + outfit_items
+    filtered: list[str] = []
+
+    for s in suggestions:
+        if not isinstance(s, str):
+            continue
+        s_clean = sanitize_stylist_text(s, lang=lang).strip()
+        if len(s_clean) < 3:
+            continue
+        # Drop fake URLs
+        if re.search(r"https?://|www\.|\.example\.com|/products/|[a-f0-9]{8}-[a-f0-9]{4}", s_clean):
+            continue
+
+        is_owned = False
+        for item in closet_items_list:
+            if item_matches_shopping_suggestion(s_clean, item):
+                logger.info(
+                    "QA: Dropped redundant shopping suggestion '%s' (user already owns '%s')",
+                    s_clean,
+                    item.get("title") or item.get("name") or "closet item",
+                )
+                is_owned = True
+                break
+
+        if not is_owned:
+            filtered.append(s_clean)
+
+    return filtered
+

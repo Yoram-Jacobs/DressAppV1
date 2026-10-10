@@ -1175,6 +1175,81 @@ def test_evaluate_and_authorize_outfit_enforces_do_dont_restrictions():
     assert "c-top-clean" in item_ids, "Should replace distressed tee with clean shirt"
 
 
+def test_reject_short_sleeve_top_when_do_dont_restricts_short_sleeves():
+    """Ensure a short-sleeved top (like a V-neck knit T-shirt) is rejected and replaced when DO/DON'T restricts short sleeves."""
+    import asyncio
+    from app.services.stylist_qa_engine import evaluate_and_authorize_outfit
+    closet = [
+        {
+            "id": "c-vneck-heather",
+            "title": "Soft heather grey V-neck knit shirt",
+            "category": "Top",
+            "sub_category": "T-shirt",
+            "tags": ["heather", "v-neck", "knit", "grey", "casual", "long-sleeve", "soft"],
+        },
+        {
+            "id": "c-long-sleeve-shirt",
+            "title": "Clean White Long-Sleeve Oxford Shirt",
+            "category": "Top",
+            "sub_category": "Shirt",
+            "sleeve_length": "long",
+            "tags": ["white", "oxford", "long sleeve", "button-down"],
+        },
+        {
+            "id": "c-pants",
+            "title": "Black Tailored Trousers",
+            "category": "Bottom",
+            "sub_category": "Pants",
+            "tags": ["black", "tailored", "trousers"],
+        },
+    ]
+
+    raw_advice = {
+        "reasoning_summary": "Look for Friday prayer in a mosque",
+        "spoken_reply": "Here is your modest look.",
+        "do_dont": [
+            "Do wear loose-fitting, comfortable clothing that covers the entire body",
+            "Do not wear short-sleeve tops or shorts",
+        ],
+        "shopping_suggestions": [
+            "Light grey or charcoal V-neck knit shirt",
+            "Classic black or dark grey cargo pants",
+            "Dark brown suede loafers",
+        ],
+        "outfit_recommendations": [
+            {
+                "name": "Mosque Prayer Look",
+                "items": [
+                    {"role": "top", "closet_item_id": "c-vneck-heather", "name": "Soft heather grey V-neck knit shirt"},
+                    {"role": "bottom", "closet_item_id": "c-pants", "name": "Black Tailored Trousers"},
+                ],
+            }
+        ],
+    }
+
+    reviewed = asyncio.run(
+        evaluate_and_authorize_outfit(
+            user_text="What should I wear for Friday prayer in a mosque?",
+            advice_payload=raw_advice,
+            all_closet_items=closet,
+        )
+    )
+
+    rec = reviewed["outfit_recommendations"][0]
+    item_ids = [it.get("closet_item_id") for it in rec["items"]]
+
+    # Short-sleeved V-neck shirt must be rejected despite errant 'long-sleeve' tag, and replaced with long-sleeve shirt!
+    assert "c-vneck-heather" not in item_ids, "Short-sleeved knit shirt must be rejected when short sleeves are restricted"
+    assert "c-long-sleeve-shirt" in item_ids, "Should replace with confirmed long-sleeve shirt"
+
+    # Shopping suggestions that duplicate closet items must be purged!
+    shopping = reviewed.get("shopping_suggestions") or []
+    assert not any("v-neck" in s.lower() for s in shopping), "V-neck knit shirt must be purged from shopping suggestions"
+    assert not any("cargo pants" in s.lower() and "pants" in s.lower() for s in shopping if "pants" in [it.get("sub_category", "").lower() for it in closet]), "Owned pants styles must be filtered"
+    assert "Dark brown suede loafers" in shopping, "Genuinely missing items (loafers) must be kept"
+
+
+
 
 
 

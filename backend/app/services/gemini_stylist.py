@@ -48,8 +48,7 @@ markdown, no prose outside the JSON.
 Hard rules:
 • If cultural constraints are provided, they are NON-negotiable.
 • Never recommend items that contradict the weather (e.g. linen in 2°C rain).
-• Prefer items already in the user’s closet; suggest shopping only when a
-  clearly missing staple would dramatically improve the outfit.
+• SHOPPING SUGGESTIONS STRICT RULE: In 'shopping_suggestions', suggest ONLY items or pieces that the user DOES NOT already own in their closet. Carefully review the user's closet inventory ('closet_summary') before proposing any shopping item. NEVER suggest purchasing an item, style, color, or silhouette that matches or closely resembles an item already present in the user's closet (e.g. if the user already has a grey V-neck knit shirt, cargo pants, black pants, or white t-shirts, do NOT suggest buying them!). If the user already has sufficient pieces to complete the look or no key pieces are truly missing, return an empty array: "shopping_suggestions": [].
 • Actively integrate relevant accessories (such as belts, hats/headwear, glasses/sunglasses, bags, and neckwear) from the user's closet into the outfit recommendations to complete and elevate the suggested looks.
 • FULL OUTFIT REQUIREMENT: Every outfit recommendation MUST be a COMPLETE outfit consisting of: 1) Either (a 'top' AND a 'bottom') OR a 'dress', and 2) 'shoes' (footwear). NEVER return an outfit consisting of only a single item (like only a T-shirt or only pants) without bottoms and shoes, UNLESS the user's closet is completely missing those categories. If bottoms or shoes are missing in the closet, append a clear note to the outfit's why/description reminding the user to add missing items to their closet.
 • ROLE AND ANATOMICAL ORDER: Each item's 'role' MUST strictly match its anatomical category (e.g., footwear/shoes MUST be role: 'shoes', shirts/tops MUST be role: 'top', pants/skirts MUST be role: 'bottom'). Never label shoes as 'top' or 'bottom'. In the 'items' array, list pieces strictly in top-to-bottom order: 'top' (or 'dress') first, 'outerwear' second, 'bottom' third, 'shoes' fourth, and 'accessory' fifth.
@@ -330,7 +329,7 @@ class GeminiStylistService:
                     raise
         res = _parse_json(raw)
         lang = (user_profile or {}).get("preferred_language") or "en"
-        return sanitize_stylist_payload(res, lang=lang)
+        return sanitize_stylist_payload(res, lang=lang, closet_summary=closet_summary)
 
 
 _JSON_RE = re.compile(r"\{.*\}", re.DOTALL)
@@ -571,7 +570,11 @@ def sanitize_stylist_text(text: str | None, lang: str = "en") -> str:
 
 
 
-def sanitize_stylist_payload(advice: dict[str, Any], lang: str = "en") -> dict[str, Any]:
+def sanitize_stylist_payload(
+    advice: dict[str, Any],
+    lang: str = "en",
+    closet_summary: list[dict[str, Any]] | None = None,
+) -> dict[str, Any]:
     """Sanitize all text fields in stylist response payload (strip CJK, drop fake URLs, fix prefixes)."""
     if not isinstance(advice, dict):
         return advice
@@ -607,7 +610,7 @@ def sanitize_stylist_payload(advice: dict[str, Any], lang: str = "en") -> dict[s
                                 if part.strip():
                                     existing_look_tokens.add(part.strip())
 
-    # Clean Shopping Suggestions: DROP URLs, raw IDs, and items already in the outfit!
+    # Clean Shopping Suggestions: DROP URLs, raw IDs, and items already in the outfit or closet!
     if isinstance(advice.get("shopping_suggestions"), list):
         cleaned_shop = []
         for s in advice["shopping_suggestions"]:
@@ -625,6 +628,20 @@ def sanitize_stylist_payload(advice: dict[str, Any], lang: str = "en") -> dict[s
             )
             if not is_dup and len(s_clean) >= 3:
                 cleaned_shop.append(s_clean)
+
+        # Filter against closet_summary
+        if cleaned_shop and closet_summary:
+            try:
+                from app.services.stylist_qa_engine import filter_shopping_suggestions_against_closet
+                cleaned_shop = filter_shopping_suggestions_against_closet(
+                    cleaned_shop,
+                    all_closet_items=closet_summary,
+                    outfit_recommendations=advice.get("outfit_recommendations"),
+                    lang=lang,
+                )
+            except Exception as exc:
+                logger.warning("Could not filter shopping suggestions against closet summary: %s", exc)
+
         advice["shopping_suggestions"] = cleaned_shop
 
     # Clean Outfit Recommendations names, whys, descriptions
