@@ -50,7 +50,7 @@ ROLE_ALLOWED_CATEGORIES: dict[str, set[str]] = {
 
 RE_BOTTOM_WORDS = re.compile(
     r"\b(?:cargo\s+)?pants\b|\bpant\b|\btrousers?\b|\bjeans?\b|\bdenim\s+pants?\b|"
-    r"\bshorts?\b|\bskirts?\b|\bsweatpants?\b|\bjoggers?\b|\bchinos?\b|\bslacks?\b|"
+    r"\bshorts\b|\bshort\s+pants\b|\bshorts?(?![\s\-_]*(?:sleeves?|sleeved|arm|curt[ao]s?))\b|\bskirts?\b|\bsweatpants?\b|\bjoggers?\b|\bchinos?\b|\bslacks?\b|"
     r"\bleggings?\b|\bbermuda\b|\bculottes?\b|\btrunks?\b|\bboxers?\b|\bbriefs?\b|"
     r"\bמכנסיים\b|\bמכנס\b|\bמכנסי\b|\bג'ינס\b|\bג'ינסים\b|\bשורטס\b|"
     r"\bחצאית\b|\bחצאיות\b|\bברמודה\b|\bטייץ\b|\bטייטס\b|\bטרנינג\b|"
@@ -394,7 +394,7 @@ def is_predominantly_white_garment(item: dict[str, Any]) -> bool:
 RE_SHORTS_TERMS = re.compile(
     r"\b("
     # English
-    r"shorts?|short\s+pants|bermuda|bermudas|swim\s+trunks|trunks|boardshorts|cut-?offs?|hot\s+pants|"
+    r"shorts\b|short\s+pants|shorts?(?![\s\-_]*(?:sleeves?|sleeved|arm|curt[ao]s?))|bermuda|bermudas|swim\s+trunks|trunks|boardshorts|cut-?offs?|hot\s+pants|"
     # Spanish
     r"pantalones?\s+cortos?|pantal[oó]n\s+corto|bermudas?|ba[ñn]ador|"
     # French
@@ -713,6 +713,7 @@ def validate_garment_against_negative_constraints(
 
     # 2. Hindu Weddings & Diwali (Vivaha)
     elif rule_id == "rule_cultural_hindu_vivaha" or "hindu wedding" in neg_constraint.lower() or "vivaha" in neg_constraint.lower():
+        cat = norm_category(it.get("category"))
         if _item_has_color(it, "black"):
             if not any(_item_has_color(it, c) for c in ("gold", "red", "yellow")):
                 return False, "Solid black is inauspicious and strictly avoided at Hindu weddings."
@@ -720,6 +721,14 @@ def validate_garment_against_negative_constraints(
             if not any(w in all_text for w in ("embroidered", "embroidery", "gold", "silk", "brocade", "nehru", "festive", "ריקמה", "זהב")):
                 if not any(_item_has_color(it, c) for c in ("gold", "red", "yellow", "orange", "pink", "maroon")):
                     return False, "Plain unadorned white is associated with mourning and avoided by wedding guests."
+        if role in ("shoes", "footwear") or cat in ("shoes", "footwear"):
+            if any(w in all_text for w in ("flip-flop", "flip flop", "slides", "כפכפים", "כפכפי ים", "סנדלי ים", "slippers", "mules")):
+                return False, "Beach flip-flops and casual slides are strictly inappropriate for a Hindu wedding."
+        if role == "bottom" or cat == "bottom":
+            if is_shorts_garment(it, all_text, role=role):
+                return False, "Shorts are inappropriate for a Hindu wedding ceremony."
+            if any(w in all_text for w in ("sweatpants", "graffiti", "טרנינג", "distressed", "ripped", "baggy sweatpants")):
+                return False, "Sweatpants, graffiti prints, and distressed denim are inappropriate for a Hindu wedding."
 
     # 3. Shiva & Mourning Etiquette
     elif rule_id == "rule_cultural_mourning_shiva" or "shiva" in neg_constraint.lower() or "shiva mourning" in neg_constraint.lower():
@@ -746,6 +755,14 @@ def validate_garment_against_negative_constraints(
         if role == "dress" or cat == "dress" or "dress" in all_text or "gown" in all_text or "שמלה" in all_text:
             if _item_has_color(it, "white"):
                 return False, "Solid white, ivory, or cream dresses are reserved exclusively for the bride."
+        if role in ("shoes", "footwear") or cat in ("shoes", "footwear"):
+            if any(w in all_text for w in ("flip-flop", "flip flop", "slides", "כפכפים", "כפכפי ים", "סנדלי ים")):
+                return False, "Flip-flops and casual slides are strictly inappropriate for wedding guests."
+        if role == "bottom" or cat == "bottom":
+            if is_shorts_garment(it, all_text, role=role):
+                return False, "Shorts are inappropriate for wedding guests."
+            if any(w in all_text for w in ("sweatpants", "graffiti", "טרנינג", "distressed", "ripped", "baggy sweatpants")):
+                return False, "Distressed streetwear, graffiti prints, and sweatpants are inappropriate for wedding guests."
 
     # 7. Western Black Tie & Gala Protocol
     elif rule_id == "rule_cultural_western_black_tie" or "black tie" in neg_constraint.lower() or "tuxedo" in neg_constraint.lower():
@@ -1544,6 +1561,22 @@ LOCALIZED_OUTFIT_NAME_CHURCH: dict[str, str] = {
     "zh": "庄重得体的教堂礼拜着装",
 }
 
+LOCALIZED_OUTFIT_NAME_WEDDING: dict[str, str] = {
+    "he": "מראה חגיגי ומכובד לחתונה",
+    "en": "Elegant Wedding Guest Attire",
+    "ar": "إطلالة أنيقة ומחובדה לחתונה",
+    "de": "Elegantes Outfit für Hochzeitsgäste",
+    "es": "Atuendo elegante para invitados de boda",
+    "fr": "Tenue élégante pour invité de mariage",
+    "hi": "विवाह समारोह के लिए सुरुचिपूर्ण पोशाक",
+    "it": "Abbigliamento elegante per invitati a nozze",
+    "ja": "結婚式ゲストのためのエレガントな装い",
+    "nl": "Elegante kleding voor bruiloftsgasten",
+    "pt": "Traje elegante para convidados de casamento",
+    "ru": "Элегантный наряд для гостей свадьбы",
+    "zh": "优雅得体婚礼宾客着装",
+}
+
 GARBLED_TEXTURE_PATTERNS: tuple[str, ...] = (
     # Hebrew
     "מטוטל", "ורגליים", "רגליים", "ושרוול קצרים", "שרוול קצר ושרוול",
@@ -1707,6 +1740,9 @@ def synchronize_outfit_why_narrative(
     """Synchronize rec['why'] so it never hallucinates dropped items or false colors and accurately reflects authorized pieces."""
     is_mourning = _is_mourning_context(user_text)
     is_church = _is_church_context(user_text)
+    is_wedding = any(w in user_text.lower() for w in (
+        "wedding", "חתונה", "vivaha", "boda", "mariage", "hochzeit", "casamento", "matrimonio", "נישואין", "חופה", "חתן", "כלה"
+    ))
     base_lang = (lang or "he").lower().strip().split("-")[0].split("_")[0]
     why = str(rec.get("why") or "").strip()
     why = _clean_shiva_grammar(why)
@@ -1725,6 +1761,10 @@ def synchronize_outfit_why_narrative(
         has_phantom_item = True
     if "t-shirt" in why.lower() and "t-shirt" not in valid_names_corpus and "tee" not in valid_names_corpus:
         has_phantom_item = True
+    for kw in ("blazer", "suit", "sneaker", "sneakers", "boots", "chelsea", "cargo", "בלייזר", "חליפה", "סניקרס", "מגפיים", "דגמ\"ח", "דגמח"):
+        if kw in why.lower() and kw not in valid_names_corpus:
+            has_phantom_item = True
+            break
 
     if is_mourning and "וקז'ואל" in why:
         why = re.sub(r"וקז'ואל", "ומכובד", why)
@@ -1740,6 +1780,10 @@ def synchronize_outfit_why_narrative(
                 prefix = "לבוש מכובד וצנוע לביקור שבעה"
             elif is_church and base_lang == "he":
                 prefix = "לבוש מכובד והולם לכנסייה"
+            elif is_wedding and base_lang == "he":
+                prefix = "לבוש חגיגי ומכובד לחתונה"
+            elif is_wedding:
+                prefix = "Curated elegant wedding guest attire"
             elif base_lang == "he":
                 prefix = "מראה מעוצב ומותאם אישית"
             else:
@@ -1758,6 +1802,10 @@ def synchronize_outfit_why_narrative(
             rec["why"] = sanitize_stylist_text(f"לבוש מכובד וצנוע לביקור שבעה, הכולל {garments_str}.", lang=lang)
         elif is_church and base_lang == "he":
             rec["why"] = sanitize_stylist_text(f"לבוש מכובד והולם לכנסייה, הכולל {garments_str}.", lang=lang)
+        elif is_wedding and base_lang == "he":
+            rec["why"] = sanitize_stylist_text(f"לבוש חגיגי ומכובד לחתונה, הכולל {garments_str}.", lang=lang)
+        elif is_wedding:
+            rec["why"] = sanitize_stylist_text(f"Curated elegant wedding attire including {garments_str}.", lang=lang)
         elif base_lang == "he":
             rec["why"] = sanitize_stylist_text(f"מראה מותאם אישית הכולל {garments_str}.", lang=lang)
         else:
@@ -1774,6 +1822,9 @@ def sanitize_spoken_reply_and_notes(
     """Clean hallucinations and garbled phrases from spoken reply and designer notes."""
     is_mourning = _is_mourning_context(user_text)
     is_church = _is_church_context(user_text)
+    is_wedding = any(w in user_text.lower() for w in (
+        "wedding", "חתונה", "vivaha", "boda", "mariage", "hochzeit", "casamento", "matrimonio", "נישואין", "חופה", "חתן", "כלה"
+    ))
     base_lang = (lang or "he").lower().strip().split("-")[0].split("_")[0]
     if base_lang not in LOCALIZED_SILHOUETTE_MOURNING:
         base_lang = "en"
@@ -1833,6 +1884,8 @@ def sanitize_spoken_reply_and_notes(
                 rec_name = re.sub(r"\bמושלם\b", "הולם", rec_name)
             if is_church:
                 rec_name = re.sub(r"וקז'ואל|קז'ואל", "ומכובד", rec_name)
+            if is_wedding:
+                rec_name = re.sub(r"streetwear|קז'ואל|יומיומי|casual|street\s+style", "חגיגי", rec_name, flags=re.IGNORECASE)
 
             item_descriptions = [
                 str(it.get("description") or it.get("title") or it.get("name") or "").strip().lower()
@@ -1848,6 +1901,8 @@ def sanitize_spoken_reply_and_notes(
                     rec["name"] = LOCALIZED_OUTFIT_NAME_MOURNING.get(base_lang, LOCALIZED_OUTFIT_NAME_MOURNING["en"])
                 elif is_church:
                     rec["name"] = LOCALIZED_OUTFIT_NAME_CHURCH.get(base_lang, LOCALIZED_OUTFIT_NAME_CHURCH["en"])
+                elif is_wedding:
+                    rec["name"] = LOCALIZED_OUTFIT_NAME_WEDDING.get(base_lang, LOCALIZED_OUTFIT_NAME_WEDDING["en"])
                 else:
                     rec["name"] = LOCALIZED_OUTFIT_NAME_DEFAULT.get(base_lang, LOCALIZED_OUTFIT_NAME_DEFAULT["en"])
             else:
@@ -1993,6 +2048,9 @@ async def evaluate_and_authorize_outfit(
                     if cid:
                         recent_set.add(str(cid))
     is_mourning = _is_mourning_context(user_text)
+    is_wedding = any(w in user_text.lower() for w in (
+        "wedding", "חתונה", "vivaha", "boda", "mariage", "hochzeit", "casamento", "matrimonio", "נישואין", "חופה", "חתן", "כלה"
+    ))
 
     # Build lookup map for user's full closet
     closet_map: dict[str, dict[str, Any]] = {}
@@ -2043,6 +2101,22 @@ async def evaluate_and_authorize_outfit(
 
             item_data = closet_map.get(cid)
             is_valid_item = bool(item_data)
+
+            # Variety check across multiple outfit recommendations in the same session:
+            # If item was already used in a preceding recommendation of this payload,
+            # and alternative unused garments exist in the user's closet for this role,
+            # mark invalid so find_best_garment_replacement picks a diverse piece.
+            if is_valid_item and cid in used_item_ids:
+                avail_alts = [
+                    x for x in all_closet_items
+                    if (norm_category(x.get("category")) in allowed_cats or str(x.get("category") or "").lower() in allowed_cats)
+                    and str(x.get("id") or x.get("_id") or "") not in used_item_ids
+                    and check_garment_role_mismatch(x, role) is None
+                ]
+                if avail_alts:
+                    logger.info("QA: Item '%s' (cid=%s) already used in previous outfit; seeking variety from %d alternatives", it.get("name"), cid, len(avail_alts))
+                    is_valid_item = False
+                    item_data = None
 
             # Check for semantic role mismatch (e.g. pants mistakenly tagged as top)
             if is_valid_item and item_data:
@@ -2095,6 +2169,25 @@ async def evaluate_and_authorize_outfit(
                     logger.warning("QA: Mourning violation in %s: %s", role, item_data.get("title"))
                     is_valid_item = False
                     item_data = None
+
+            # Check for wedding etiquette violations
+            if is_valid_item and is_wedding and item_data:
+                all_text_check = f"{item_data.get('title') or ''} {item_data.get('name') or ''} {item_data.get('sub_category') or ''}".lower()
+                cat_qa = norm_category(item_data.get("category"))
+                if role in ("shoes", "footwear") or cat_qa in ("shoes", "footwear"):
+                    if any(w in all_text_check for w in ("flip-flop", "flip flop", "slides", "כפכפים", "כפכפי ים", "סנדלי ים", "נעלי בית", "slippers")):
+                        logger.warning("QA: Wedding violation: footwear '%s' is unacceptable for a wedding", item_data.get("title"))
+                        is_valid_item = False
+                        item_data = None
+                elif role == "bottom" or cat_qa == "bottom":
+                    if is_shorts_garment(item_data, all_text_check, role=role):
+                        logger.warning("QA: Wedding violation: shorts '%s' are unacceptable for a wedding", item_data.get("title"))
+                        is_valid_item = False
+                        item_data = None
+                    elif any(w in all_text_check for w in ("sweatpants", "joggers", "טרנינג", "מכנסי טרנינג", "distressed", "ripped", "קרעים", "graffiti", "baggy sweatpants")):
+                        logger.warning("QA: Wedding violation: bottom '%s' is unacceptable for a wedding", item_data.get("title"))
+                        is_valid_item = False
+                        item_data = None
 
             # Check for negative constraint violations across all retrieved active axioms
             if is_valid_item and item_data and axioms:

@@ -297,6 +297,36 @@ def calculate_garment_style_score(
         prompt_lower,
     ))
     
+    # Dedicated Wedding & Ceremony Rules
+    is_wedding = any(w in prompt_lower for w in (
+        "wedding", "חתונה", "נישואין", "חופה", "vivaha", "boda", "mariage", "hochzeit", "casamento", "matrimonio", "свадьба", "शादी", "婚礼"
+    ))
+    if is_wedding:
+        # Severe disqualifications (-100)
+        if any(w in all_text for w in ("flip flop", "flip-flop", "slide", "slides", "כפכף", "כפכפים", "נעלי בית", "slippers")):
+            return -100
+        if any(w in all_text for w in ("sweatpants", "joggers", "טרנינג", "מכנסי טרנינג", "baggy")):
+            return -100
+        if any(w in all_text for w in ("shorts", "שורטס", "מכנסיים קצרים")):
+            return -100
+        if any(w in all_text for w in ("graffiti", "distressed", "ripped", "קרוע", "שפשופים")):
+            return -100
+        if any(w in all_text for w in ("tank top", "tank", "sleeveless", "גופייה", "גופיה")):
+            return -100
+        if "hindu" in prompt_lower or "vivaha" in prompt_lower:
+            from app.services.stylist_qa_engine import _item_has_color
+            if _item_has_color(item, "black") and not any(_item_has_color(item, c) for c in ("gold", "red", "yellow")):
+                return -100
+        # Boosts for elegant / formal wedding attire (+50)
+        if any(w in all_text for w in ("button", "collared", "dress shirt", "oxford", "linen", "חולצה מכופתרת", "מכופתרת")):
+            score += 50
+        if any(w in all_text for w in ("trouser", "slacks", "dress pants", "tailored", "chino", "מכנסיים מחויטים", "אלגנט", "מחויט", "trousers")):
+            score += 50
+        if any(w in all_text for w in ("blazer", "suit", "jacket", "בלייזר", "חליפה")):
+            score += 40
+        if any(w in all_text for w in ("loafer", "derby", "oxford", "chelsea", "boot", "נעלי עור", "מוקסין", "מגפיים")):
+            score += 45
+
     if is_formal_or_smart and not is_swim_beach and not is_sport_gym:
         # Severe penalties for clashing casual/beach/gym/sleeveless wear
         if any(w in all_text for w in ("swim", "swimwear", "trunks", "בגד ים")):
@@ -1481,8 +1511,63 @@ async def generate_event_proposals(
     user = dict(user)
     user.pop("_id", None)
     user_id = user["id"]
-    prioritized_closet = await get_rotation_prioritized_closet(user_id, limit=15, style_dress_for=event_prompt)
-    
+    user_gender = user.get("sex") or user.get("gender")
+
+    from app.services.fashion_rules_rag import (
+        filter_gender_closet_items,
+        retrieve_fashion_axioms,
+        filter_candidate_closet_by_axioms,
+    )
+    from app.services.stylist_qa_engine import evaluate_and_authorize_outfit
+    from app.services.gemini_stylist import sanitize_stylist_payload
+
+    # Fetch full candidate closet (up to 100 items), prioritizing by style and gender
+    raw_closet = await get_rotation_prioritized_closet(
+        user_id,
+        limit=100,
+        style_dress_for=event_prompt,
+        user_gender=user_gender,
+    )
+    all_user_closet = filter_gender_closet_items(raw_closet, user_gender)
+
+    # Retrieve fashion axioms for this event
+    axioms = []
+    try:
+        axioms = retrieve_fashion_axioms(
+            user_profile=user,
+            user_text=event_prompt,
+            closet_summary=all_user_closet,
+            top_k=4,
+        )
+    except Exception as exc:
+        logger.warning("Could not retrieve fashion axioms for event proposal: %s", exc)
+
+    # Pre-filter candidate closet by active axiom negative constraints
+    prioritized_closet = filter_candidate_closet_by_axioms(
+        all_user_closet,
+        axioms,
+        user_gender=user_gender,
+    )
+    if not prioritized_closet:
+        prioritized_closet = all_user_closet
+
+    # Slim down closet items for Gemini prompt
+    slim_closet = [
+        {
+            "id": item["id"],
+            "title": item.get("title") or item.get("name") or "Garment",
+            "category": item.get("category"),
+            "sub_category": item.get("sub_category"),
+            "color": item.get("color") or item.get("colors"),
+            "brand": item.get("brand"),
+            "pattern": item.get("pattern"),
+            "material": item.get("material"),
+            "dress_code": item.get("dress_code"),
+            "tags": item.get("tags") or [],
+        }
+        for item in prioritized_closet
+    ]
+
     # 1. Search marketplace listings in parallel to broaden results
     mkt_suggestions = []
     try:
@@ -1502,12 +1587,17 @@ async def generate_event_proposals(
             for m in mkt_suggestions
         )
 
+    gender_label = f"User Gender: {user_gender} (STRICT: recommend ONLY garments appropriate for this gender).\n" if user_gender else ""
+
     prompt = (
         f"Generate EXACTLY 3 distinct, complete, and coordinated outfit recommendations for this special event: \"{event_prompt}\".\n"
         f"Key Requirements:\n"
-        f"- Curate 3 DISTINCT looks with different tops, bottoms, and footwear across Outfit 1, 2, and 3.\n"
+        f"- {gender_label}"
+        f"- Curate 3 DISTINCT looks with different tops, bottoms, and footwear across Outfit 1, 2, and 3. DO NOT repeat the same pieces across outfits unless the closet has no alternatives.\n"
         f"- Every outfit MUST be complete: either (top + bottom) or a dress, plus mandatory footwear (shoes).\n"
+        f"- Strictly respect the dress code, cultural solemnity, and etiquette of \"{event_prompt}\". For weddings and formal events, NEVER recommend casual loungewear, sweatpants, beach slides, flip-flops, shorts, or distressed graphics. Prioritize dress trousers, chinos, button-down shirts, blazers, and dress shoes/loafers.\n"
         f"- Select garments exclusively from the provided closet_summary in context.\n"
+        f"- In the 'why' rationale, describe ONLY the pieces actually included in 'items'. Do not hallucinate garments that are not present.\n"
     )
     if mkt_summary_str:
         prompt += (
@@ -1526,7 +1616,7 @@ async def generate_event_proposals(
             user_text=prompt,
             image_base64=None,
             user_profile=user,
-            closet_summary=prioritized_closet,
+            closet_summary=slim_closet,
             user_preferences_block=prefs_block,
         )
     except Exception as exc:
@@ -1534,49 +1624,40 @@ async def generate_event_proposals(
         from app.services.scheduler import _generate_fallback_advice
         res_json = _generate_fallback_advice(prioritized_closet, style_dress_for=event_prompt)
 
+    # Run through Stylist QA Engine to validate completeness, enforce role assignments,
+    # prevent gender conflicts, enforce negative constraints, and synchronize 'why' narratives.
+    try:
+        res_json = await evaluate_and_authorize_outfit(
+            user_text=event_prompt,
+            advice_payload=res_json,
+            all_closet_items=all_user_closet,
+            user_profile=user,
+            axioms=axioms,
+        )
+    except Exception as qa_exc:
+        logger.warning("Stylist QA Engine failed in generate_event_proposals: %s", qa_exc)
+
+    # Sanitize payload
+    lang = user.get("preferred_language") or "en"
+    res_json = sanitize_stylist_payload(res_json, lang=lang)
+
+    # Hydrate image_url and metadata for each item in each proposal
+    closet_by_id = {str(x["id"]): x for x in all_user_closet if x.get("id")}
     proposals = res_json.get("outfit_recommendations") or []
-    valid_ids = {x["id"] for x in prioritized_closet if x.get("id")}
     for prop in proposals:
         for item in prop.get("items", []):
-            cid = item.get("closet_item_id")
-            if isinstance(cid, list):
-                cid = cid[0] if cid else None
-            if isinstance(cid, dict):
-                cid = cid.get("id") or cid.get("closet_item_id")
-            if isinstance(cid, str):
-                cid = cid.strip()
-                item["closet_item_id"] = cid
-            else:
-                item["closet_item_id"] = None
-                cid = None
+            cid = str(item.get("closet_item_id") or "")
+            c_item = closet_by_id.get(cid)
+            if c_item:
+                clean_img = c_item.get("clean_image_url") or c_item.get("image_url") or ""
+                item["clean_image_url"] = clean_img
+                item["image_url"] = clean_img
+                item["thumbnail_data_url"] = c_item.get("thumbnail_data_url") or clean_img
+                if not item.get("name"):
+                    item["name"] = c_item.get("title") or c_item.get("name")
+                if not item.get("description"):
+                    item["description"] = c_item.get("title") or c_item.get("name")
 
-            if cid and len(cid) < 36:
-                match = next((x["id"] for x in prioritized_closet if x.get("id", "").startswith(cid)), None)
-                if match:
-                    item["closet_item_id"] = match
-                    logger.info("Resolved truncated ID %s to full UUID %s", cid, match)
-
-            # Validate that the item matches an actual item in the closet list
-            resolved_cid = item.get("closet_item_id")
-            if not resolved_cid or resolved_cid not in valid_ids:
-                desc = (item.get("description") or item.get("title") or "").lower().strip()
-                role = norm_category(item.get("role") or item.get("category"))
-                if role in ("footwear", "shoes"):
-                    role = "shoes"
-                found_match = None
-                if desc:
-                    found_match = next((x for x in prioritized_closet if x.get("title", "").lower() in desc or desc in x.get("title", "").lower()), None)
-                if not found_match and role:
-                    found_match = next((x for x in prioritized_closet if norm_category(x.get("category")) == role), None)
-                if found_match:
-                    item["closet_item_id"] = found_match["id"]
-                    logger.info("Recovered unmapped LLM event item '%s' to closet item %s (%s)", desc, found_match["id"], found_match.get("title"))
-                else:
-                    logger.warning("Dropping unmapped LLM item not in closet list: %s", item)
-                    item["closet_item_id"] = None
-
-        _ensure_complete_outfit(prop, prioritized_closet)
-    
     # 2. Check similar event similarities and location warnings
     try:
         await check_event_similarities(user_id, proposals, location, event_name or event_prompt)

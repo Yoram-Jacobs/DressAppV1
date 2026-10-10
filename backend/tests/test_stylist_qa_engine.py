@@ -1249,6 +1249,149 @@ def test_reject_short_sleeve_top_when_do_dont_restricts_short_sleeves():
     assert "Dark brown suede loafers" in shopping, "Genuinely missing items (loafers) must be kept"
 
 
+def test_short_sleeve_not_classified_as_bottom():
+    from app.services.stylist_qa_engine import RE_BOTTOM_WORDS, check_garment_role_mismatch
+    item = {
+        "title": "Heather Grey Cotton Short-Sleeve T-Shirt",
+        "category": "top",
+        "sub_category": "Short-sleeve T-shirt",
+    }
+    # It must NOT match bottom words
+    assert not RE_BOTTOM_WORDS.search(item["title"].lower())
+    assert not RE_BOTTOM_WORDS.search(item["sub_category"].lower())
+    # Should not produce a mismatch error when assigned role="top"
+    assert check_garment_role_mismatch(item, role="top") is None
+    # Should produce a mismatch error when assigned role="bottom"
+    assert check_garment_role_mismatch(item, role="bottom") is not None
+
+
+def test_hindu_wedding_rejects_slides_sweatpants_and_opposite_gender():
+    import asyncio
+    from app.services.fashion_rules_rag import FashionRule
+
+    closet = [
+        # Male items
+        {"id": "top-tshirt", "title": "Heather Grey Cotton Short-Sleeve T-Shirt", "category": "top", "gender": "unisex"},
+        {"id": "top-kurta", "title": "Maroon Silk Embroidered Kurta", "category": "top", "gender": "male", "colors": ["maroon", "gold"]},
+        {"id": "bot-sweatpants", "title": "Grey Baggy Graffiti Sweatpants", "category": "bottom", "gender": "unisex"},
+        {"id": "bot-trousers", "title": "Dark Brown Pleated Dress Pants", "category": "bottom", "gender": "male", "colors": ["brown"]},
+        {"id": "bot-skirt", "title": "Gray Straight Skirt", "category": "bottom", "gender": "female"},
+        {"id": "shoes-diesel-slides", "title": "כפכפי פלטפורמה מדנים שחורים של דיזל", "category": "footwear", "gender": "female"},
+        {"id": "shoes-loafers", "title": "Brown Leather Loafers", "category": "footwear", "gender": "male", "colors": ["brown"]},
+    ]
+
+    raw_advice = {
+        "outfit_recommendations": [
+            {
+                "name": "Casual Streetwear Wedding Guest Look",
+                "items": [
+                    {"role": "top", "closet_item_id": "top-tshirt", "name": "Heather Grey Cotton Short-Sleeve T-Shirt"},
+                    {"role": "bottom", "closet_item_id": "bot-skirt", "name": "Gray Straight Skirt"},
+                    {"role": "shoes", "closet_item_id": "shoes-diesel-slides", "name": "כפכפי פלטפורמה מדנים שחורים של דיזל"},
+                ],
+                "why": "A relaxed look with white sneakers, tailored blazer, and cargo pants.",
+            }
+        ]
+    }
+
+    axiom = FashionRule(
+        id="rule_cultural_hindu_vivaha",
+        category="cultural_modesty",
+        title="Hindu Wedding & Festival Celebrations",
+        rule_statement="Wear vibrant, auspicious, opulent celebratory colors in traditional silk or fine embroidery.",
+        negative_constraint="STRICTLY FORBID SOLID BLACK: Black is considered inauspicious at Hindu wedding rituals. STRICTLY FORBID PLAIN UNADORNED WHITE: Plain white is reserved for bereavement and is avoided by wedding guests. STRICTLY FORBID CASUAL WEAR: Flip-flops, beach slides, casual slides, sweatpants, shorts, and graffiti/distressed streetwear are strictly inappropriate for a Hindu wedding.",
+        criteria={"tags": ["hindu_wedding", "vivaha"]},
+        priority=10,
+        example="Rich maroon or royal navy silk Kurta with gold Nehru jacket."
+    )
+
+    reviewed = asyncio.run(
+        evaluate_and_authorize_outfit(
+            user_text="Hindu wedding",
+            advice_payload=raw_advice,
+            all_closet_items=closet,
+            user_profile={"sex": "male", "gender": "male", "preferred_language": "he"},
+            axioms=[axiom],
+        )
+    )
+
+    rec = reviewed["outfit_recommendations"][0]
+    assigned_ids = [it.get("closet_item_id") for it in rec["items"]]
+
+    # 1. Female skirt must be rejected for male user and replaced with male dress pants
+    assert "bot-skirt" not in assigned_ids, "Female skirt must not be recommended to male user"
+    assert "bot-trousers" in assigned_ids, "Should replace with dark brown pleated dress pants"
+
+    # 2. Women's diesel platform slides must be rejected and replaced with brown loafers
+    assert "shoes-diesel-slides" not in assigned_ids, "Slides must not be recommended for Hindu wedding"
+    assert "shoes-loafers" in assigned_ids, "Should replace with brown leather loafers"
+
+    # 3. Phantom garments must be purged from why narrative
+    assert "cargo" not in rec["why"].lower()
+    assert "sneakers" not in rec["why"].lower()
+    assert "blazer" not in rec["why"].lower()
+
+    # 4. Casual streetwear must be scrubbed from outfit name
+    assert "streetwear" not in rec["name"].lower()
+
+
+def test_multi_outfit_variety_across_recommendations():
+    import asyncio
+
+    closet = [
+        {"id": "top-1", "title": "White Linen Button-Down Shirt", "category": "top"},
+        {"id": "top-2", "title": "Navy Blue Dress Shirt", "category": "top"},
+        {"id": "top-3", "title": "Olive Green Oxford Shirt", "category": "top"},
+        {"id": "bot-1", "title": "Khaki Chino Trousers", "category": "bottom"},
+        {"id": "bot-2", "title": "Charcoal Dress Slacks", "category": "bottom"},
+        {"id": "bot-3", "title": "Dark Navy Tailored Trousers", "category": "bottom"},
+        {"id": "shoes-1", "title": "Brown Leather Loafers", "category": "footwear"},
+        {"id": "shoes-2", "title": "Black Oxford Shoes", "category": "footwear"},
+        {"id": "shoes-3", "title": "Cognac Chelsea Boots", "category": "footwear"},
+    ]
+
+    # Model repetitively recommends the exact same top, bottom, and shoes across rec 1 and rec 2
+    raw_advice = {
+        "outfit_recommendations": [
+            {
+                "name": "Look 1",
+                "items": [
+                    {"role": "top", "closet_item_id": "top-1", "name": "White Linen Button-Down Shirt"},
+                    {"role": "bottom", "closet_item_id": "bot-1", "name": "Khaki Chino Trousers"},
+                    {"role": "shoes", "closet_item_id": "shoes-1", "name": "Brown Leather Loafers"},
+                ],
+            },
+            {
+                "name": "Look 2",
+                "items": [
+                    {"role": "top", "closet_item_id": "top-1", "name": "White Linen Button-Down Shirt"},
+                    {"role": "bottom", "closet_item_id": "bot-1", "name": "Khaki Chino Trousers"},
+                    {"role": "shoes", "closet_item_id": "shoes-1", "name": "Brown Leather Loafers"},
+                ],
+            },
+        ]
+    }
+
+    reviewed = asyncio.run(
+        evaluate_and_authorize_outfit(
+            user_text="Summer smart casual wedding",
+            advice_payload=raw_advice,
+            all_closet_items=closet,
+            user_profile={"sex": "male", "gender": "male", "preferred_language": "en"},
+        )
+    )
+
+    rec1 = reviewed["outfit_recommendations"][0]
+    rec2 = reviewed["outfit_recommendations"][1]
+
+    rec1_ids = {it.get("closet_item_id") for it in rec1["items"]}
+    rec2_ids = {it.get("closet_item_id") for it in rec2["items"]}
+
+    # Variety must be enforced: Look 2 must not repeat the garments of Look 1 when alternates exist!
+    assert not rec1_ids.intersection(rec2_ids), f"Look 1 and Look 2 must have distinct items, got collision: {rec1_ids.intersection(rec2_ids)}"
+
+
+
 
 
 

@@ -387,7 +387,7 @@ async def stylist_endpoint(
             user_text=text or occasion or "",
             advice_payload=advice,
             all_closet_items=all_user_closet,
-            user_profile=user,
+            user_profile=user_profile,
             recent_item_ids=recent_item_ids,
         )
     except Exception as exc:  # noqa: BLE001

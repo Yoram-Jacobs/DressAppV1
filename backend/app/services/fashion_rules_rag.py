@@ -66,7 +66,7 @@ async def sync_rules_to_db(db: Any) -> None:
         for r in _RULES_CACHE:
             await db.fashion_rules.update_one(
                 {"id": r.id},
-                {"$setOnInsert": r.model_dump()},
+                {"$set": r.model_dump()},
                 upsert=True,
             )
 

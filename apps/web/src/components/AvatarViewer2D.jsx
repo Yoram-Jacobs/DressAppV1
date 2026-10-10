@@ -399,23 +399,7 @@ export default function AvatarViewer2D({ shapeParams = {}, measurements: provide
       if (s === 'belt') s = 'belt';
       if (s === 'glasses' || s === 'sunglasses' || s === 'eyewear') s = 'glasses';
 
-      const isHat = name.includes('hat') || 
-                    name.includes('cap') || 
-                    name.includes('beanie') || 
-                    name.includes('beret') || 
-                    name.includes('fedora') || 
-                    name.includes('visor') || 
-                    name.includes('flat cap') ||
-                    name.includes('bonnet') ||
-                    name.includes('bucket hat') ||
-                    name.includes('helmet') ||
-                    name.includes('כובע') ||
-                    name.includes('קובע') ||
-                    name.includes('ברט') ||
-                    name.includes('מצחייה') ||
-                    name.includes('קסקט') ||
-                    name.includes('قبعة') ||
-                    name.includes('طاقية');
+      const isHat = /\b(hats?|caps?|beanies?|berets?|fedoras?|visors?|flat\s+caps?|bonnets?|bucket\s+hats?|helmets?|turbans?|kippahs?|yarmulkes?|yamulkas?|keffiyehs?|kaffias?|shemaghs?|ghutras?|agals?|hijabs?|niqabs?|tarbooshes?|fezes?|fez|shtreimels?|sombreros?|panamas?|כובע|קובע|ברט|מצחייה|קסקט|טורבן|כיפה|כיפות|יארמולקה|כפייה|כאפייה|שמאג|עגאל|עקאל|חיג'אב|חג'אב|תרבוש|שטריימל|סומבררו|כומתה|פדורה|בנדנה|מטפחת|סודרא|قبعة|طاقية|كوفية|شماغ|عقال|عمامة|طربوش|حجاب|نقاب)\b/i.test(name) && !/\bcapri\b/i.test(name);
       if (isHat && (s === 'accessory' || s === 'accessories')) {
         s = 'headwear';
       }
@@ -474,7 +458,7 @@ export default function AvatarViewer2D({ shapeParams = {}, measurements: provide
 
       // Category / Intrinsic role detectors
       const isShoesByName = /\b(shoes?|sneakers?|boots?|sandals?|heels?|loafers?|slippers?|slides?|mules?|oxford\s+shoes?|oxfords|oxford(?!\s+(shirts?|cloth|cotton|button))|clogs?|נעליים|נעלי|סניקרס|מגפיים|מגפי|מגפונים|סנדלים|עקבים|כפכפים|מוקסינים|حذاء|أحذية|صندل|بوت)\b/i.test(name);
-      const isBottomByName = /\b(pants?|cargo|trousers?|jeans?|shorts?|skirts?|sweatpants|joggers?|slacks?|chinos?|leggings?|bermuda|culottes?|trunks?|briefs?|מכנסיים|מכנס|מכנסי|ג'ינס|שורטס|חצאית|חצאיות|טייץ|טייטס|טרנינג|בוקסר|תחתונים|בגד ים|מכנסי ים|ביקיני|بنطلون|بنطال|سروال|شورت|تنورة|جينز)\b/i.test(allText) || isSwimBottom;
+      const isBottomByName = (/\b(pants?|cargo(?!\s+pocket)|trousers?|jeans?|shorts\b|short\s+pants\b|shorts?(?![\s-_]*(?:sleeves?|sleeved|arm|curt[ao]s?))|skirts?|sweatpants|joggers?|slacks?|chinos?|leggings?|bermuda|culottes?|trunks?|briefs?|מכנסיים|מכנס|מכנסי|ג'ינס|שורטס|חצאית|חצאיות|טייץ|טייטס|טרנינג|בוקסר|תחתונים|בגד ים|מכנסי ים|ביקיני|بنطلون|بنطال|سروال|شورت|تنورة|جينز)\b/i.test(allText) || isSwimBottom) && !/\b(?:short[-_\s]*sleeves?|shortsleeve|חולצה|חולצת|shirt|tee|t-shirt)\b/i.test(allText);
       const isTopByName = /\b(shirts?|t-shirts?|tees?|blouses?|sweaters?|hoodies?|sweatshirts?|crop\s+tops?|tank(?:\s+tops?)?|polos?|pullovers?|turtlenecks?|camisoles?|rash_guards?|kurtas?|kurtis?|tunics?|kaftans?|caftans?|galabiyas?|thobes?|guayaberas?|sherwanis?|tops?|חולצה|חולצת|חולצות|גופייה|גופיה|גופיות|סוודר|סוודרים|קפוצ'ון|סווטשירט|פולו|מכופתרת|סריג|סריגים|טוניקה|קורטה|גלבייה|חולצת גלישה|قميص|بلوزة|كنزة|هودي|تونيك|جلابية|ثوب)\b/i.test(allText) || isSwimTop;
       const isOuterwearByName = /\b(jackets?|coats?|blazers?|parkas?|trench(?:coats?)?|overcoats?|windbreakers?|puffers?|anoraks?|vests?|ז'קט|ג'קט|מעיל|מעילים|בלייזר|וסט|מקטורן|עליונית|סטרה|جاكيت|معطف|بليزر)\b/i.test(name);
       const isDressByName = /\b(dresses|dress(?!\s+(pants|trousers|shirts?|shoes?|boots?|code|socks|belt|suit))|gowns?|jumpsuits?|rompers?|dungarees?|overalls?|one_piece|swimsuit|שמלה|שמלת|שמלות|אוברול|סרבל|בגד ים שלם|فستان|فساتين|جمبسوت)\b/i.test(allText) || isOnePieceSwim;
@@ -491,7 +475,7 @@ export default function AvatarViewer2D({ shapeParams = {}, measurements: provide
       }
 
       // 2. Bottom Safety Guard: Pants/bottoms can NEVER render on torso, feet, head, face, waist, or bag!
-      if (isBottomByName && s !== 'bottom') {
+      if (isBottomByName && !isTopByName && s !== 'bottom') {
         return null;
       }
       if (s === 'bottom' && !isBottomByName && (isTopByName || isShoesByName || isOuterwearByName || isDressByName || isAccessoryByName)) {

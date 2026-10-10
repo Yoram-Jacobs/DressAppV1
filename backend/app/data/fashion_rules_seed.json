@@ -6,7 +6,12 @@
     "rule_statement": "Anchor the outfit in 60% dominant base neutral (e.g. suit, coat, or trousers+sweater), 30% secondary harmonic hue (shirt, jacket, or skirt), and 10% high-contrast accent (shoes, tie, scarf, or bag).",
     "negative_constraint": "Do not divide the outfit into three equal 33% blocks of intensely competing colors.",
     "criteria": {
-      "dress_codes": ["casual", "smart-casual", "business", "formal"]
+      "dress_codes": [
+        "casual",
+        "smart-casual",
+        "business",
+        "formal"
+      ]
     },
     "priority": 9,
     "example": "60% Charcoal trousers and coat, 30% Light blue Oxford shirt, 10% Burgundy leather loafers."
@@ -18,7 +23,11 @@
     "rule_statement": "When styling a single color family (e.g. all navy or all cream), vary the shades, values, and textures significantly across pieces to create depth and avoid a flat uniform appearance.",
     "negative_constraint": "Avoid pairing identical shades of the exact same flat cotton fabric unless it is a tailored matched suit.",
     "criteria": {
-      "tags": ["monochromatic", "tonal", "minimalist"]
+      "tags": [
+        "monochromatic",
+        "tonal",
+        "minimalist"
+      ]
     },
     "priority": 8,
     "example": "Midnight navy wool overcoat over slate blue merino knitwear and dark navy selvedge jeans."
@@ -30,7 +39,10 @@
     "rule_statement": "Combine 2 to 3 shades that sit adjacent on the 12-spoke color wheel (e.g. olive green + mustard camel + warm rust) for an organic, sophisticated sartorial flow.",
     "negative_constraint": "Avoid mixing high-chroma adjacent primaries that clash without a neutral bridge.",
     "criteria": {
-      "dress_codes": ["casual", "smart-casual"]
+      "dress_codes": [
+        "casual",
+        "smart-casual"
+      ]
     },
     "priority": 7,
     "example": "Olive field jacket over a camel cashmere crewneck and ecru chinos."
@@ -42,7 +54,11 @@
     "rule_statement": "When pairing direct color-wheel opposites (e.g. navy blue with cognac orange, or forest green with deep burgundy), let one hue occupy 70-80% of the visual space while the other acts as an intentional accent.",
     "negative_constraint": "Do not balance two complementary colors in equal 50/50 visual weight.",
     "criteria": {
-      "dress_codes": ["smart-casual", "business", "formal"]
+      "dress_codes": [
+        "smart-casual",
+        "business",
+        "formal"
+      ]
     },
     "priority": 8,
     "example": "Deep navy suit complemented by rich cognac leather shoes, cognac belt, and amber pocket square."
@@ -54,7 +70,12 @@
     "rule_statement": "Ground vivid, saturated, or heavily patterned garments with classic neutral anchors (Charcoal, Black, White, Navy, Camel, Ecru, or Grey).",
     "negative_constraint": "Avoid pairing two clashing bold patterns on both top and bottom simultaneously.",
     "criteria": {
-      "dress_codes": ["casual", "smart-casual", "business", "formal"]
+      "dress_codes": [
+        "casual",
+        "smart-casual",
+        "business",
+        "formal"
+      ]
     },
     "priority": 8,
     "example": "A statement houndstooth or bright cobalt blazer anchored by clean black tailored trousers and crisp white top."
@@ -78,7 +99,10 @@
     "rule_statement": "Ensure the physical and visual weight of garments harmonizes: heavy fabrics (shearling, heavyweight wool, denim) require substantial footwear (boots, brogues, lug soles), not flimsy canvas shoes.",
     "negative_constraint": "Do not pair heavy winter outerwear with ultra-thin summery slip-on shoes or sandals.",
     "criteria": {
-      "primary_roles": ["outerwear", "footwear"]
+      "primary_roles": [
+        "outerwear",
+        "footwear"
+      ]
     },
     "priority": 9,
     "example": "Heavy wool double-breasted coat paired with sturdy Goodyear-welted leather Chelsea boots."
@@ -90,7 +114,11 @@
     "rule_statement": "Reserve high-sheen fabrics (satin, velvet, patent leather, sequins) for evening formalwear or restrained daytime accessory accents. Daytime looks must prioritize matte and natural finishes.",
     "negative_constraint": "Avoid patent leather shoes or high-gloss satin dresses in casual daytime or office settings.",
     "criteria": {
-      "dress_codes": ["casual", "smart-casual", "business"]
+      "dress_codes": [
+        "casual",
+        "smart-casual",
+        "business"
+      ]
     },
     "priority": 8,
     "example": "Matte finish leather loafers for the office rather than high-gloss patent leather."
@@ -102,7 +130,12 @@
     "rule_statement": "Construct the silhouette in 1/3 and 2/3 visual proportions (e.g. tucked-in top with high-waisted bottoms, or cropped jacket over a long dress) to elongate vertical proportions.",
     "negative_constraint": "Avoid bisecting the body exactly at the 50/50 midline with a long untucked boxy shirt ending mid-hip over untapered straight pants.",
     "criteria": {
-      "dress_codes": ["casual", "smart-casual", "business", "formal"]
+      "dress_codes": [
+        "casual",
+        "smart-casual",
+        "business",
+        "formal"
+      ]
     },
     "priority": 8,
     "example": "High-waisted tailored trousers (2/3 of silhouette) paired with a French-tucked blouse (1/3)."
@@ -114,7 +147,10 @@
     "rule_statement": "Balance volume across horizontal planes: if the top is voluminous, oversized, or chunky, keep the bottom structured or slim. If the bottom is wide-leg or pleated, keep the top fitted or defined.",
     "negative_constraint": "Avoid shapeless oversized top paired with oversized baggy bottoms unless deliberately styling an avant-garde runway silhouette with waist cinch.",
     "criteria": {
-      "dress_codes": ["casual", "smart-casual"]
+      "dress_codes": [
+        "casual",
+        "smart-casual"
+      ]
     },
     "priority": 8,
     "example": "An oversized boyfriend cashmere knit sweater balanced with straight-leg dark wash jeans and sleek ankle boots."
@@ -175,7 +211,10 @@
     "rule_statement": "For business formal engagements, curate matching tailored dark two-piece suits (Navy or Charcoal), crisp white or pale blue collared dress shirts, silk neckwear, and polished leather Oxford or Derby shoes.",
     "negative_constraint": "Prohibit denim, t-shirts, athletic sneakers, casual knitwear without blazers, or novelty accessories.",
     "criteria": {
-      "dress_codes": ["business", "formal"]
+      "dress_codes": [
+        "business",
+        "formal"
+      ]
     },
     "priority": 10,
     "example": "Navy tailored suit, white poplin spread-collar shirt, navy polka dot silk tie, and black calfskin oxfords."
@@ -187,7 +226,9 @@
     "rule_statement": "Blend formal structure with casual ease: pair a tailored blazer or fine knit with clean dark-wash denim or chinos, anchored by clean minimalist leather sneakers or loafers.",
     "negative_constraint": "Avoid distressed ripped jeans, athletic graphic hoodies, or formal tuxedo eveningwear in smart casual contexts.",
     "criteria": {
-      "dress_codes": ["smart-casual"]
+      "dress_codes": [
+        "smart-casual"
+      ]
     },
     "priority": 9,
     "example": "Navy unconstructed hopsack blazer over a white crewneck tee, khaki chinos, and clean white leather dress sneakers."
@@ -199,7 +240,12 @@
     "rule_statement": "For users with conservative or orthodox modesty preferences, ensure full coverage past elbows and below knees. Sleeveless, slip, or lower-neckline garments are permissible ONLY WHEN layered under an opaque blazer, cardigan, or jacket.",
     "negative_constraint": "Strictly prohibit unlayered sleeveless tops, mini skirts, sheer textiles, or exposed midriffs.",
     "criteria": {
-      "modesty_levels": ["conservative", "orthodox", "high", "modest"]
+      "modesty_levels": [
+        "conservative",
+        "orthodox",
+        "high",
+        "modest"
+      ]
     },
     "priority": 10,
     "example": "A sleeveless midi dress layered under a tailored wool-blend blazer and styled with closed-toe flats."
@@ -209,9 +255,13 @@
     "category": "cultural_modesty",
     "title": "Ceremonial Color Etiquette",
     "rule_statement": "Observe cultural venue and ceremony norms: in Western weddings, avoid solid white dresses/gowns (reserved for the bride); in formal joyous occasions, balance solemn darks with uplifting harmonic color accents.",
-    "negative_constraint": "Do not recommend a solid white lace dress to a guest attending a wedding.",
+    "negative_constraint": "Do not recommend a solid white lace dress to a guest attending a wedding. Strictly forbid beach flip-flops, casual slides, sweatpants, shorts, and distressed streetwear for wedding guests.",
     "criteria": {
-      "tags": ["wedding", "ceremony", "sacred"]
+      "tags": [
+        "wedding",
+        "ceremony",
+        "sacred"
+      ]
     },
     "priority": 10,
     "example": "Emerald green or dusty rose midi cocktail dress with metallic neutral accessories for a wedding guest."
@@ -223,7 +273,18 @@
     "rule_statement": "For mourning visits, Shiva (שבעה), and funerals, wear modest, understated, solemn dark or muted neutral solid clothing (black, charcoal, dark grey, navy, dark brown, or subdued earth tones). Men: clean long trousers or dark solid jeans, with an unadorned solid collared shirt or neat solid tee. Women: modest unadorned tops with sleeves, long pants or below-knee skirts.",
     "negative_constraint": "Strictly prohibit graphic t-shirts, loud logos, eagle or animal prints, slogan tees, shorts, gym and athletic wear, beachwear, vibrant loud colors (red, yellow, orange, neon), distressed or ripped clothing, and comedy or party elements. In Hebrew, use 'לביקור שבעה' or 'לניחום אבלים', never 'להולך בישיבה שבעה'.",
     "criteria": {
-      "tags": ["shiva", "mourning", "funeral", "condolence", "שבעה", "אבל", "ניחום", "לוויה", "הלוויה", "عزاء"]
+      "tags": [
+        "shiva",
+        "mourning",
+        "funeral",
+        "condolence",
+        "שבעה",
+        "אבל",
+        "ניחום",
+        "לוויה",
+        "הלוויה",
+        "عزاء"
+      ]
     },
     "priority": 10,
     "example": "Charcoal tailored trousers or clean dark jeans paired with a plain black or navy polo/button-down shirt and dark subdued shoes."
@@ -235,7 +296,16 @@
     "rule_statement": "For Orthodox Jewish modesty guidelines, women require skirts or dresses extending below the knee even when seated, sleeves extending past the elbow, and high necklines covering the collarbone with opaque fabrics. Men wear long trousers with collared shirts.",
     "negative_constraint": "Strictly forbid trousers, shorts, or jeans for orthodox women. Forbid sleeveless tops, sheer fabrics, deep V-necks, low backs, or high leg slits.",
     "criteria": {
-      "tags": ["tzniut", "צניעות", "חרדי", "דתי", "orthodox", "orthodox_jewish", "synagogue", "בית כנסת"]
+      "tags": [
+        "tzniut",
+        "צניעות",
+        "חרדי",
+        "דתי",
+        "orthodox",
+        "orthodox_jewish",
+        "synagogue",
+        "בית כנסת"
+      ]
     },
     "priority": 10,
     "example": "Navy A-line pleated midi skirt falling well below the knee, paired with a long-sleeved silk-blend blouse with high jewel neckline."
@@ -247,7 +317,17 @@
     "rule_statement": "For Shabbat meals, synagogue services, and Jewish holidays (Yom Tov), wear elevated, celebratory, elegant attire. Men wear crisp white or pastel button-down shirts, tailored trousers, blazers, and polished dress shoes. Women wear festive elegant midi or maxi dresses.",
     "negative_constraint": "Avoid casual workwear, gym clothes, distressed denim, graphic tees, or worn sneakers.",
     "criteria": {
-      "tags": ["shabbat", "shabbos", "שבת", "חג", "yom_tov", "קידוש", "פסח", "ראש השנה", "סוכות"]
+      "tags": [
+        "shabbat",
+        "shabbos",
+        "שבת",
+        "חג",
+        "yom_tov",
+        "קידוש",
+        "פסח",
+        "ראש השנה",
+        "סוכות"
+      ]
     },
     "priority": 9,
     "example": "Crisp white tailored button-down shirt paired with charcoal dress trousers, navy hopsack blazer, and polished leather dress shoes."
@@ -259,7 +339,27 @@
     "rule_statement": "For Jumu'ah Friday prayers, mosque visits, and sacred spaces, attire must be loose-fitting, clean, and fully modest. Men must cover from navel to below knee (long trousers or clean thobe). Women require loose abayas or maxi garments covering to wrists and ankles with a hijab.",
     "negative_constraint": "Strictly forbid short-sleeve tops or shorts for all genders (arms and legs must be covered). Forbid animal prints (leopard, zebra, etc.), graphic/slogan tees, distressed/ripped clothing, sheer fabrics, or sleeveless/crop tops.",
     "criteria": {
-      "tags": ["jumuah", "mosque", "masjid", "friday_prayer", "جمعة", "مسجد", "صلاة", "islamic_prayer", "ramadan", "رمضان", "מסגד", "תפילת_יום_שישי", "mezquita", "mosquée", "moschee", "мечеть", "清真寺", "モスク", "मस्जिद"]
+      "tags": [
+        "jumuah",
+        "mosque",
+        "masjid",
+        "friday_prayer",
+        "جمعة",
+        "مسجد",
+        "صلاة",
+        "islamic_prayer",
+        "ramadan",
+        "رمضان",
+        "מסגד",
+        "תפילת_יום_שישי",
+        "mezquita",
+        "mosquée",
+        "moschee",
+        "мечеть",
+        "清真寺",
+        "モスク",
+        "मस्जिद"
+      ]
     },
     "priority": 10,
     "example": "Clean tailored linen thobe or loose navy trousers with a pressed long-sleeved white tunic shirt and clean dress socks."
@@ -271,7 +371,14 @@
     "rule_statement": "For Hindu funerals, cremations, and mourning rites, wear plain, solid, unadorned white attire (white cotton kurta-pyjama or simple white cotton saree). White represents purity, detachment, and peaceful passage.",
     "negative_constraint": "STRICTLY FORBID BLACK CLOTHING: Black is considered highly inauspicious at Hindu funerals. Forbid vibrant colors (red, gold, bright yellow, hot pink). Forbid leather shoes or leather belts inside sacred cremation rituals.",
     "criteria": {
-      "tags": ["hindu_funeral", "antyeshti", "cremation", "अंतिम_संस्कार", "shraddh", "hindu_mourning"]
+      "tags": [
+        "hindu_funeral",
+        "antyeshti",
+        "cremation",
+        "अंतिम_संस्कार",
+        "shraddh",
+        "hindu_mourning"
+      ]
     },
     "priority": 10,
     "example": "Plain unembellished white cotton kurta paired with white cotton pyjama pants and simple non-leather slip-on shoes."
@@ -281,9 +388,19 @@
     "category": "cultural_modesty",
     "title": "Hindu Wedding & Festival Celebrations (Vivaha & Diwali - विवाह उत्सव)",
     "rule_statement": "For Hindu weddings (Vivaha, Sangeet, Baraat) and festivals like Diwali, wear vibrant, auspicious, opulent celebratory colors (crimson red, deep maroon, gold, saffron, emerald green, royal navy, royal magenta) in traditional silk, brocade, or fine embroidery.",
-    "negative_constraint": "STRICTLY FORBID SOLID BLACK: Black is considered inauspicious at Hindu wedding rituals. STRICTLY FORBID PLAIN UNADORNED WHITE: Plain white is reserved for bereavement and is avoided by wedding guests.",
+    "negative_constraint": "STRICTLY FORBID SOLID BLACK: Black is considered inauspicious at Hindu wedding rituals. STRICTLY FORBID PLAIN UNADORNED WHITE: Plain white is reserved for bereavement and is avoided by wedding guests. STRICTLY FORBID CASUAL WEAR: Flip-flops, beach slides, casual slides, sweatpants, shorts, and graffiti/distressed streetwear are strictly inappropriate for a Hindu wedding.",
     "criteria": {
-      "tags": ["hindu_wedding", "vivaha", "विवाह", "sangeet", "baraat", "diwali", "दिवाली", "shaadi", "puja"]
+      "tags": [
+        "hindu_wedding",
+        "vivaha",
+        "विवाह",
+        "sangeet",
+        "baraat",
+        "diwali",
+        "दिवाली",
+        "shaadi",
+        "puja"
+      ]
     },
     "priority": 10,
     "example": "Rich maroon or royal navy silk Kurta with an embroidered gold Nehru jacket and tailored churidar pants."
@@ -295,7 +412,16 @@
     "rule_statement": "For Chinese, Japanese, and Korean funerals and memorial services, wear plain, solemn, dark clothing—a tailored black suit with white dress shirt and solid plain black necktie for men; plain black formal dress or dark modest suit for women.",
     "negative_constraint": "STRICTLY FORBID RED AND GOLD: Red and gold are symbols of supreme celebration and are considered an extreme taboo and grave insult at East Asian funerals. Avoid colorful accessories, shiny jewelry, or flashy patterns.",
     "criteria": {
-      "tags": ["chinese_funeral", "japanese_funeral", "korean_funeral", "葬礼", "お葬式", "告別式", "장례식", "east_asian_mourning"]
+      "tags": [
+        "chinese_funeral",
+        "japanese_funeral",
+        "korean_funeral",
+        "葬礼",
+        "お葬式",
+        "告別式",
+        "장례식",
+        "east_asian_mourning"
+      ]
     },
     "priority": 10,
     "example": "Tailored solid black two-piece suit with a crisp white spread-collar dress shirt, matte solid black necktie, and polished black Oxford shoes."
@@ -307,7 +433,15 @@
     "rule_statement": "For guests attending Chinese, Japanese, or Korean weddings and banquets, wear elegant, festive, respectful attire such as pastel, navy, grey, blush, or jewel-toned cocktail dresses or dark tailored suits with a celebratory tie.",
     "negative_constraint": "STRICTLY FORBID SOLID RED: At Chinese weddings, red is reserved exclusively for the bride. STRICTLY FORBID SOLID WHITE: Solid white is reserved exclusively for the bridal gown in modern ceremonies. Avoid mourning black suits paired with plain black ties.",
     "criteria": {
-      "tags": ["chinese_wedding", "japanese_wedding", "korean_wedding", "婚礼", "結婚式", "喜酒", "결혼식"]
+      "tags": [
+        "chinese_wedding",
+        "japanese_wedding",
+        "korean_wedding",
+        "婚礼",
+        "結婚式",
+        "喜酒",
+        "결혼식"
+      ]
     },
     "priority": 10,
     "example": "Soft dusty-rose or navy cocktail dress, or a charcoal tailored suit with a champagne silk tie and pocket square."
@@ -319,7 +453,16 @@
     "rule_statement": "For Black Tie galas, formal charity balls, and evening opera receptions, men strictly wear a black or midnight blue tuxedo with satin lapels, white pleated/pique tuxedo shirt, black silk bow tie, and patent leather dress shoes. Women wear floor-length evening gowns.",
     "negative_constraint": "Strictly forbid daytime business suits, sports jackets, neckties (long ties), button-down collar shirts, chinos, loafers, or sneakers.",
     "criteria": {
-      "tags": ["black_tie", "gala", "opera", "charity_ball", "tuxedo", "white_tie", "פפיון", "טוקסידו"]
+      "tags": [
+        "black_tie",
+        "gala",
+        "opera",
+        "charity_ball",
+        "tuxedo",
+        "white_tie",
+        "פפיון",
+        "טוקסידו"
+      ]
     },
     "priority": 10,
     "example": "Midnight-blue shawl-collar tuxedo with black grosgrain lapels, crisp white pique wing-collar shirt, black silk grosgrain bow tie, and black patent dress shoes."
@@ -361,7 +504,21 @@
     "rule_statement": "For papal audiences and Vatican Apostolic Palace engagements, attire must be conservative and formal. Men wear a dark conservative suit (charcoal or navy) with subdued tie and black leather dress shoes. Women wear a long-sleeved black dress or skirt suit falling well below the knee, high neckline, and a black lace mantilla (veil).",
     "negative_constraint": "Strictly forbid white, ivory, or cream dresses for women (Privilège du blanc is strictly reserved for reigning Catholic monarchs). Strictly forbid sleeveless tops, bare shoulders, necklines below collarbone, hemlines above knee, open-toed sandals, athletic footwear, loud neon colors, or caps/beanies.",
     "criteria": {
-      "tags": ["vatican", "papal_audience", "pope", "holy_see", "mantilla", "privilege_du_blanc", "וותיקן", "פגישה_עם_האפיפיור", "האפיפיור", "الفاتيكان", "لقاء_البابا", "vaticano", "audiencia_papal"]
+      "tags": [
+        "vatican",
+        "papal_audience",
+        "pope",
+        "holy_see",
+        "mantilla",
+        "privilege_du_blanc",
+        "וותיקן",
+        "פגישה_עם_האפיפיור",
+        "האפיפיור",
+        "الفاتيكان",
+        "لقاء_البابا",
+        "vaticano",
+        "audiencia_papal"
+      ]
     },
     "priority": 10,
     "example": "Modest long-sleeved black crepe midi dress with high jewel neckline, black tailored wool blazer, black lace mantilla, and closed-toe black pumps."
@@ -373,7 +530,21 @@
     "rule_statement": "For Eastern Orthodox and Coptic church services and monasteries, attire requires reverence and modesty. Men wear long trousers with collared shirts and must remove all hats upon entering. Women wear below-the-knee modest skirts or dresses with covered shoulders and chest, often with a headscarf/foulard. In Coptic Holy of Holies, shoes are removed.",
     "negative_constraint": "Strictly forbid women from wearing pants or trousers in traditional Orthodox monasteries (skirts only). Strictly forbid shorts, sleeveless tops, plunging necklines, or graphic prints. Men are strictly forbidden from wearing caps or hats inside.",
     "criteria": {
-      "tags": ["orthodox", "eastern_orthodox", "coptic", "greek_orthodox", "russian_orthodox", "monastery", "mount_athos", "קופטית", "אורתודוקסית", "מנזר", "كنيسة_أرثوذكسية", "قبطية", "دير"]
+      "tags": [
+        "orthodox",
+        "eastern_orthodox",
+        "coptic",
+        "greek_orthodox",
+        "russian_orthodox",
+        "monastery",
+        "mount_athos",
+        "קופטית",
+        "אורתודוקסית",
+        "מנזר",
+        "كنيسة_أرثوذكسية",
+        "قبطية",
+        "دير"
+      ]
     },
     "priority": 10,
     "example": "Long-sleeved dusty blue blouse with high collar, modest charcoal A-line pleated wool-blend midi skirt, silk hair scarf, and closed-toe leather boots."
@@ -385,7 +556,18 @@
     "rule_statement": "For White Tie state banquets, royal coronations, and Nobel ceremonies, men wear a black wool tailcoat cut short in front with dual swallowtails, matching trousers with double side braid, white piqué stiff wing-collar shirt, white piqué low-cut waistcoat, white piqué bow tie, and black patent court pumps or oxfords. Women wear formal floor-length ball gowns.",
     "negative_constraint": "Strictly forbid standard tuxedos, black bow ties with tails (reserved for waitstaff), colored waistcoats, business suits, daytime neckties, sneakers, or short cocktail dresses.",
     "criteria": {
-      "tags": ["white_tie", "cravate_blanche", "tailcoat", "state_banquet", "nobel_prize", "וויט_טאי", "עניבה_לבנה", "סעודת_מדינה", "ربطة_عنق_بيضاء", "frac"]
+      "tags": [
+        "white_tie",
+        "cravate_blanche",
+        "tailcoat",
+        "state_banquet",
+        "nobel_prize",
+        "וויט_טאי",
+        "עניבה_לבנה",
+        "סעודת_מדינה",
+        "ربطة_عنق_بيضاء",
+        "frac"
+      ]
     },
     "priority": 10,
     "example": "Black wool tailcoat with silk grosgrain peak lapels, white piqué wing-collar shirt, white piqué low-cut waistcoat, matching white bow tie, double-striped black trousers, and patent oxford shoes."
@@ -397,7 +579,23 @@
     "rule_statement": "Attire for synagogue services and Western Wall (Kotel) visitation must reflect sanctity (Kavod HaTzibbur). Men wear long tailored trousers or smart chinos, collared button-down shirt or blazer, closed shoes, and head covering (Kippah). Women wear modest dresses or skirts covering knees, with covered shoulders and elbows.",
     "negative_constraint": "Strictly forbid shorts, sleeveless shirts, gym wear, graphic tees, distressed/ripped denim, beach flip-flops, or bare heads for men. Forbid short skirts, bare midriffs, or low-cut tops for women.",
     "criteria": {
-      "tags": ["synagogue", "beit_knesset", "shul", "kotel", "western_wall", "kippah", "yarmulke", "tallit", "בית כנסת", "כותל", "תפילה", "שחרית", "כיפה", "טלית", "كنيس_يهودي"]
+      "tags": [
+        "synagogue",
+        "beit_knesset",
+        "shul",
+        "kotel",
+        "western_wall",
+        "kippah",
+        "yarmulke",
+        "tallit",
+        "בית כנסת",
+        "כותל",
+        "תפילה",
+        "שחרית",
+        "כיפה",
+        "טלית",
+        "كنيس_يهودي"
+      ]
     },
     "priority": 10,
     "example": "Light blue poplin button-down shirt with navy unstructured wool blazer, medium-grey tailored trousers, suede Kippah, and polished leather loafers."
@@ -409,7 +607,18 @@
     "rule_statement": "Attire for circumcisions (Brit Milah), baby namings, and family simchas is elevated, joyful, smart-formal or cocktail in celebratory palettes (pastels, sky blue, cream, sage, festive navy). Men wear crisp dress shirts, blazers, and dress slacks. Women wear celebratory modest midi dresses or elegant suits.",
     "negative_constraint": "Avoid somber mourning all-black suits and black neckties. Forbid casual athletic attire, denim, t-shirts, or workout sneakers.",
     "criteria": {
-      "tags": ["brit_milah", "bris", "simchat_bat", "pidyon_haben", "simcha", "ברית", "ברית מילה", "שמחת בת", "פדיון הבן", "שמחה משפחתית"]
+      "tags": [
+        "brit_milah",
+        "bris",
+        "simchat_bat",
+        "pidyon_haben",
+        "simcha",
+        "ברית",
+        "ברית מילה",
+        "שמחת בת",
+        "פדיון הבן",
+        "שמחה משפחתית"
+      ]
     },
     "priority": 9,
     "example": "Crisp white spread-collar dress shirt with lavender woven silk tie, light grey wool-linen sports jacket, dark navy trousers, and cognac leather Derby shoes."
@@ -421,7 +630,18 @@
     "rule_statement": "Halakha strictly prohibits wearing leather shoes on Yom Kippur and the fast of Tisha B'Av. Worshippers must wear non-leather footwear made exclusively of canvas, rubber, cotton, or synthetic materials. Yom Kippur attire is traditionally pure white; Tisha B'Av attire is somber, plain, subdued mourning dress.",
     "negative_constraint": "STRICTLY FORBID LEATHER FOOTWEAR: Shoes, boots, sandals, or clogs containing any real leather or suede are forbidden. Avoid flashy luxury accessories, gold jewelry, or ornate embellishments.",
     "criteria": {
-      "tags": ["tisha_bav", "yom_kippur", "fast_day", "non_leather_shoes", "תשעה באב", "יום כיפור", "צום", "נעלי בד", "איסור נעילת הסנדל", "ירושלים"]
+      "tags": [
+        "tisha_bav",
+        "yom_kippur",
+        "fast_day",
+        "non_leather_shoes",
+        "תשעה באב",
+        "יום כיפור",
+        "צום",
+        "נעלי בד",
+        "איסור נעילת הסנדל",
+        "ירושלים"
+      ]
     },
     "priority": 10,
     "example": "Clean unadorned white linen-cotton tunic with relaxed stone cotton trousers and plain white non-leather canvas slip-ons."
@@ -433,7 +653,21 @@
     "rule_statement": "For men in the sacred state of Ihram, clothing consists strictly of two seamless, unhemmed, unstitched sheets of white cotton/terrycloth (Izar and Rida). Footwear must leave ankles and foot bridge exposed (simple sandals). Women wear loose-fitting modest clothing (abaya) covering the whole body except face and hands.",
     "negative_constraint": "For men in Ihram: STRICTLY FORBID STITCHED OR TAILORED GARMENTS (no underwear, trousers, shirts, jackets, or socks). Forbid any head covering (caps, ghutras). For women in Ihram: STRICTLY FORBID NIQAB (face veil) AND GLOVES (face and hands must remain uncovered).",
     "criteria": {
-      "tags": ["ihram", "hajj", "umrah", "makkah", "pilgrimage", "حج", "عمرة", "إحرام", "مكة المكرمة", "المسجد الحرام", "חאג'", "עומרה", "איחראם"]
+      "tags": [
+        "ihram",
+        "hajj",
+        "umrah",
+        "makkah",
+        "pilgrimage",
+        "حج",
+        "عمرة",
+        "إحرام",
+        "مكة المكرمة",
+        "المسجد الحرام",
+        "חאג'",
+        "עומרה",
+        "איחראם"
+      ]
     },
     "priority": 10,
     "example": "Two seamless sheets of unstitched pure white combed cotton waffle-weave cloth secured with travel belt, paired with non-stitched rubber open-instep sandals."
@@ -445,7 +679,17 @@
     "rule_statement": "Following prophetic tradition (Sunnah), Muslims wear their finest, cleanest, often newly purchased clothing for Eid prayers and family feasts. Men wear pristine white or jewel-toned Thobes, Kurtas, or tailored suits. Women wear celebratory embroidered Abayas, Kaftans, or modest festive dresses with coordinated luxury hijabs.",
     "negative_constraint": "Strictly forbid worn-out, stained, distressed casualwear (ripped jeans, faded t-shirts, gym sneakers). Prohibit revealing cuts (mini hemlines, low necklines, sheer textiles).",
     "criteria": {
-      "tags": ["eid", "eid_al_fitr", "eid_al_adha", "eid_mubarak", "عيد الفطر", "عيد الأضحى", "ملابس العيد", "עיד אל פיטר", "עיד אל אדחא"]
+      "tags": [
+        "eid",
+        "eid_al_fitr",
+        "eid_al_adha",
+        "eid_mubarak",
+        "عيد الفطر",
+        "عيد الأضحى",
+        "ملابس العيد",
+        "עיד אל פיטר",
+        "עיד אל אדחא"
+      ]
     },
     "priority": 10,
     "example": "Opulent emerald green silk-crepe Kaftan with gold Zari hand-embroidery along neckline, champagne chiffon-silk hijab, and metallic leather kitten heels."
@@ -457,7 +701,24 @@
     "rule_statement": "Formal, diplomatic, and wedding attire for Gulf Arab men consists of a tailored floor-length white or dark wool Thobe/Kandura, Ghutra/Shemagh headscarf with black Agal, and a Bisht (flowing camel-hair or wool cloak trimmed with gold Zari embroidery). Women wear haute-couture tailored Abayas with matching Sheila.",
     "negative_constraint": "Strictly forbid wearing a Bisht with sportswear, denim, casual t-shirts, or athletic footwear. Forbid ill-fitting, wrinkled, or soiled Thobes.",
     "criteria": {
-      "tags": ["gulf", "bisht", "thobe", "kandura", "shemagh", "ghutra", "agal", "بشت", "ثوب", "كندورة", "شماغ", "عقال", "دشداشة", "خليجي", "בישט", "ת'וב"]
+      "tags": [
+        "gulf",
+        "bisht",
+        "thobe",
+        "kandura",
+        "shemagh",
+        "ghutra",
+        "agal",
+        "بشت",
+        "ثوب",
+        "كندورة",
+        "شماغ",
+        "عقال",
+        "دشداشة",
+        "خليجي",
+        "בישט",
+        "ת'וב"
+      ]
     },
     "priority": 10,
     "example": "Pristine white superfine cotton bespoke Thobe, sheer black wool Bisht with Saudi royal gold Zari trim, crisp white Ghutra with Agal, and ostrich leather sandals."
@@ -469,7 +730,21 @@
     "rule_statement": "North African ceremonial attire centers on the Djellaba (long loose hooded robe with full sleeves), Gandora tunic, or ceremonial women's Takchita/Kaftan with gold Mdamma belt. Men and women wear handcrafted leather Babouche/Belgha slippers.",
     "negative_constraint": "Avoid cheap synthetic knockoffs with plastic trims. Strictly forbid wearing dirty sneakers or worn rubber flip-flops with a ceremonial silk Djellaba.",
     "criteria": {
-      "tags": ["djellaba", "kaftan", "takchita", "babouche", "belgha", "morocco", "maghreb", "جلابة", "قفطان مغربي", "تكشيطة", "بلغة", "ג'לאביה", "כפתן מרוקאי"]
+      "tags": [
+        "djellaba",
+        "kaftan",
+        "takchita",
+        "babouche",
+        "belgha",
+        "morocco",
+        "maghreb",
+        "جلابة",
+        "قفطان مغربي",
+        "تكشيطة",
+        "بلغة",
+        "ג'לאביה",
+        "כפתן מרוקאי"
+      ]
     },
     "priority": 9,
     "example": "Olive green fine-wool woven Djellaba with handcrafted silk Sfifa and Aakad buttons over a white Gandora, with hand-stitched yellow leather Belgha slippers."
@@ -481,7 +756,20 @@
     "rule_statement": "In Indonesia and Malaysia, authentic long-sleeved silk Batik shirts are officially recognized formal business and diplomatic attire substituting for Western suits. For religious occasions and weddings, men wear the Baju Melayu tunic and trousers with Songket Kain Samping wrap and Songkok cap. Women wear Baju Kurung or Kebaya with Tudung.",
     "negative_constraint": "Strictly forbid short-sleeved casual Hawaiian tourist print shirts in place of formal long-sleeved silk Batik. Do not omit the Kain Samping from ceremonial Baju Melayu.",
     "criteria": {
-      "tags": ["batik", "baju_melayu", "baju_kurung", "songkok", "kain_samping", "kebaya", "indonesia", "malaysia", "باتيك", "باجو ملايو", "באטיק", "אינדונזיה"]
+      "tags": [
+        "batik",
+        "baju_melayu",
+        "baju_kurung",
+        "songkok",
+        "kain_samping",
+        "kebaya",
+        "indonesia",
+        "malaysia",
+        "باتيك",
+        "باجو ملايو",
+        "באטיק",
+        "אינדונזיה"
+      ]
     },
     "priority": 9,
     "example": "Long-sleeved handcrafted silk Batik shirt in deep indigo Parang motif, tailored black formal wool trousers, and polished black leather Derby dress shoes."
@@ -493,7 +781,23 @@
     "rule_statement": "Visiting a Hindu Mandir for Darshan and Puja requires modesty and ritual purity. Men wear traditional unstitched or loose cotton/silk garments: Kurta with Pyjama, Dhoti, or Kurta with formal trousers. Women wear Sarees, Salwar Kameez with Dupatta, or Anarkalis covering shoulders and knees. Shoes are removed outside at the Charan Paduka.",
     "negative_constraint": "STRICTLY FORBID ALL LEATHER ARTICLES: Belts, shoes, watch straps, wallets, or handbags made of real animal leather are strictly forbidden inside the temple sanctum (representing ritual impurity and Ahimsa). Strictly forbid shorts, mini skirts, low-cut tops, or bare shoulders.",
     "criteria": {
-      "tags": ["temple_darshan", "puja", "mandir", "hindu_temple", "no_leather", "dhoti", "saree", "kurta", "मंदिर", "दर्शन", "पूजा", "बिना चमड़ा", "מקדש הינדי", "פוג'ה", "דארשאן"]
+      "tags": [
+        "temple_darshan",
+        "puja",
+        "mandir",
+        "hindu_temple",
+        "no_leather",
+        "dhoti",
+        "saree",
+        "kurta",
+        "मंदिर",
+        "दर्शन",
+        "पूजा",
+        "बिना चमड़ा",
+        "מקדש הינדי",
+        "פוג'ה",
+        "דארשאן"
+      ]
     },
     "priority": 10,
     "example": "Saffron-gold pure raw silk Kurta with Mandarin collar, off-white cotton-linen drawstring churidar trousers (no leather belt), cotton Angavastram stole, and fabric slip-ons removed outside."
@@ -505,7 +809,20 @@
     "rule_statement": "In traditional Kerala and South Indian temples, Hindu men must enter the inner courtyard bare-chested (removing shirts and outerwear) wearing a pristine white/cream Mundu (cotton sarong with gold Kasavu border) with a folded Melmundu stole. Women wear the cream-and-gold Kasavu Saree or two-piece Set Mundu.",
     "negative_constraint": "Strictly forbid stitched shirts, t-shirts, trousers, jeans, or shorts for men inside orthodox Kerala temple courtyards. Forbid synthetic colors or Western casual attire.",
     "criteria": {
-      "tags": ["kerala_temple", "mundu", "veshti", "kasavu", "set_mundu", "south_indian_temple", "കേരളം", "മുണ്ട്", "ക്ഷേത്രം", "मुंडू", "דרום הודו", "מונדו"]
+      "tags": [
+        "kerala_temple",
+        "mundu",
+        "veshti",
+        "kasavu",
+        "set_mundu",
+        "south_indian_temple",
+        "കേരളം",
+        "മുണ്ട്",
+        "ക്ഷേത്രം",
+        "मुंडू",
+        "דרום הודו",
+        "מונדו"
+      ]
     },
     "priority": 10,
     "example": "Handwoven Kerala double-Mundu in off-white organic cotton with 3-inch pure gold Kasavu border, with folded matching Melmundu draped over shoulder."
@@ -517,7 +834,22 @@
     "rule_statement": "When visiting Buddhist temples, stupas, and wats (e.g. Thailand, Myanmar, Sri Lanka, Japan, Tibet), attire must be calm, modest, and respectful. Shoulders, upper arms, and knees must be fully covered (ankle-length bottoms preferred). Shoes and hats must be removed before entering shrine halls.",
     "negative_constraint": "STRICTLY FORBID CLOTHING RESEMBLING MONASTIC ROBES: Laypersons must NEVER wear solid saffron, golden-orange, ochre, or Tibetan maroon robes reserved for ordained monks (Bhikkhus). Strictly forbid sleeveless tank tops, shorts, mini skirts, sheer tops, or garments with disrespectful Buddha graphics.",
     "criteria": {
-      "tags": ["buddhist_temple", "monastery", "wat", "theravada", "mahayana", "saffron_taboo", "temple_dress_code", "วัด", "ทำบุญ", "佛寺", "寺庙礼仪", "מקדש בודהיסטי", "בודהיזם", "pagoda"]
+      "tags": [
+        "buddhist_temple",
+        "monastery",
+        "wat",
+        "theravada",
+        "mahayana",
+        "saffron_taboo",
+        "temple_dress_code",
+        "วัด",
+        "ทำบุญ",
+        "佛寺",
+        "寺庙礼仪",
+        "מקדש בודהיסטי",
+        "בודהיזם",
+        "pagoda"
+      ]
     },
     "priority": 10,
     "example": "Airy cream cotton-linen long-sleeved tunic shirt paired with wide-leg navy lightweight linen trousers reaching past ankles and slip-on canvas shoes."
@@ -529,7 +861,18 @@
     "rule_statement": "When lay devotees attend temple on holy observance days (Uposatha, Vesak) or attend meditation retreats observing Eight Precepts, canonical attire is entirely pure solid white (Chut Khao). White signifies simplicity, mental purity, renunciation of vanity, and equality.",
     "negative_constraint": "Strictly forbid bright, multicolored, saturated garments. Avoid jewelry, makeup, loud patterns, tight activewear leggings, or luxury branding.",
     "criteria": {
-      "tags": ["buddhist_meditation", "vipassana", "uposatha", "white_clothing_buddhism", "ชุดขาว", "ชุดปฏิบัติธรรม", "白衣居士", "禅修服装", "מדיטציה בודהיסטית", "לבוש לבן בודהיסטי"]
+      "tags": [
+        "buddhist_meditation",
+        "vipassana",
+        "uposatha",
+        "white_clothing_buddhism",
+        "ชุดขาว",
+        "ชุดปฏิบัติธรรม",
+        "白衣居士",
+        "禅修服装",
+        "מדיטציה בודהיסטית",
+        "לבוש לבן בודהיסטי"
+      ]
     },
     "priority": 10,
     "example": "Plain unadorned white cotton loose button-front meditation tunic with loose white drawstring wide-leg cotton pants and simple white socks."
@@ -541,7 +884,24 @@
     "rule_statement": "Entering a Sikh Gurdwara requires humility, equality, and reverence. MANDATORY HEAD COVERING: Every person must cover their head entirely with a Rumāl (cloth scarf), Patka, Dastar (turban), or Chunni. Feet must be bare: shoes and socks are removed at Joda Ghar, and feet are washed before entering Darbar Sahib. Clothing must be loose and modest.",
     "negative_constraint": "STRICTLY FORBID HATS AND CAPS: Baseball caps, beanies, fedoras, or sunhats are strictly forbidden as head coverings inside a Gurdwara. Strictly forbid bare heads. Strictly forbid shorts, mini skirts, or bare shoulders. STRICTLY FORBID TOBACCO OR ALCOHOL ON PERSON.",
     "criteria": {
-      "tags": ["gurdwara", "sikh", "golden_temple", "rumal", "dastar", "turban", "head_covering", "amritsar", "ਗੁਰਦੁਆਰਾ", "ਰੁਮਾਲ", "ਦਸਤਾਰ", "ਸਿੱਖ", "גורדווארה", "סיקים", "טורבן", "מקדש הזהב"]
+      "tags": [
+        "gurdwara",
+        "sikh",
+        "golden_temple",
+        "rumal",
+        "dastar",
+        "turban",
+        "head_covering",
+        "amritsar",
+        "ਗੁਰਦੁਆਰਾ",
+        "ਰੁਮਾਲ",
+        "ਦਸਤਾਰ",
+        "ਸਿੱਖ",
+        "גורדווארה",
+        "סיקים",
+        "טורבן",
+        "מקדש הזהב"
+      ]
     },
     "priority": 10,
     "example": "Breathable sky-blue cotton Kurta tunic with loose white cotton Pyjama pants and a royal blue cotton Rumāl tied securely covering all hair."
@@ -553,7 +913,23 @@
     "rule_statement": "When wearing Japanese traditional clothing (Kimono, Yukata, Haori), the wearer must ALWAYS wrap the left collar over the right collar (Hidari-mae). For formal events, women wear silk Houmongi or Tomesode with an authentic Obi sash and white split-toe Tabi socks with Zōri sandals.",
     "negative_constraint": "STRICTLY FORBID WRAPPING RIGHT COLLAR OVER LEFT COLLAR: Right-over-left wrapping (Migi-mae) is exclusively reserved for dressing corpses for Buddhist cremation funerals. Crossing right-over-left on living persons is an ominous death taboo. Forbid bare feet with formal Kimono (must wear white Tabi).",
     "criteria": {
-      "tags": ["kimono", "yukata", "japanese_attire", "collar_rule", "obi", "tabi", "zori", "着物", "浴衣", "左前", "右前の禁忌", "和服", "קימונו", "יוקטה", "יפן"]
+      "tags": [
+        "kimono",
+        "yukata",
+        "japanese_attire",
+        "collar_rule",
+        "obi",
+        "tabi",
+        "zori",
+        "着物",
+        "浴衣",
+        "左前",
+        "右前の禁忌",
+        "和服",
+        "קימונו",
+        "יוקטה",
+        "יפן"
+      ]
     },
     "priority": 9,
     "example": "Sage-green silk Houmongi kimono wrapped left collar over right collar, tied with gold brocade Fukuro Obi, pristine white split-toe Tabi socks, and lacquer Zōri sandals."
@@ -565,7 +941,21 @@
     "rule_statement": "The traditional Korean Hanbok features the Jeogori jacket and Chima skirt for women, and Baji with Jeogori for men. At Korean weddings, Confucian protocol dictates maternal colors: The Mother of the Bride strictly wears warm tones (pink, coral, peach, soft red); The Mother of the Groom strictly wears cool tones (sky blue, indigo, navy, jade green, cyan).",
     "negative_constraint": "Mothers must never swap maternal color codes (groom's mother wearing pink or bride's mother wearing blue causes confusion and disrespect). Guests must avoid wearing bridal white or neon colors.",
     "criteria": {
-      "tags": ["hanbok", "korean_wedding", "jeogori", "chima", "paebaek", "seollal", "한복", "혼주한복", "신부어머니한복", "신랑어머니한복", "결혼식한복", "הנבוק", "קוריאה"]
+      "tags": [
+        "hanbok",
+        "korean_wedding",
+        "jeogori",
+        "chima",
+        "paebaek",
+        "seollal",
+        "한복",
+        "혼주한복",
+        "신부어머니한복",
+        "신랑어머니한복",
+        "결혼식한복",
+        "הנבוק",
+        "קוריאה"
+      ]
     },
     "priority": 9,
     "example": "Ivory silk Jeogori jacket with blue cuff embroidery tied with navy Otgoreum ribbon, over a sky-blue raw silk floor-length Chima skirt and traditional Kkotsin shoes."
@@ -577,7 +967,16 @@
     "rule_statement": "In Chinese society, headwear for men should feature neutral or dark styling tones (black, navy, grey, charcoal, brown, camel).",
     "negative_constraint": "STRICTLY PROHIBIT MEN FROM WEARING GREEN HATS OR CAPS: In Chinese culture, wearing a green hat (dài lǜ màozi / 戴绿帽子) signifies that a man's wife or partner has committed adultery. Styling a man with a green cap, green beanie, or green fedora is an extreme cultural insult and taboo.",
     "criteria": {
-      "tags": ["green_hat_taboo", "chinese_taboo", "dai_lu_maozi", "戴绿帽子", "绿帽子", "中国文化禁忌", "כובע ירוק סין", "טאבו סיני"]
+      "tags": [
+        "green_hat_taboo",
+        "chinese_taboo",
+        "dai_lu_maozi",
+        "戴绿帽子",
+        "绿帽子",
+        "中国文化禁忌",
+        "כובע ירוק סין",
+        "טאבו סיני"
+      ]
     },
     "priority": 10,
     "example": "Tailored charcoal grey cashmere mock-neck sweater, camel wool trench coat, dark selvedge denim, and classic midnight navy or black wool beanie (strictly non-green)."
@@ -589,7 +988,22 @@
     "rule_statement": "For major Yoruba celebrations, weddings, and chieftaincy events, men wear the grand 3-piece Agbada (inner Buba tunic, Sokoto drawstring trousers, and flowing embroidered Agbada outer robe) crowned by an embroidered Fila cap. Women wear an opulent Buba, Iro wrap skirt, sculpted Gele head-tie, and Ipele shoulder sash conforming to host Aso Ebi colors.",
     "negative_constraint": "Strictly forbid wearing an Agbada without the Fila cap (considered incomplete and disrespectful). Do not let Agbada sleeves drag on the floor. Avoid breaking the designated host Aso Ebi color palette.",
     "criteria": {
-      "tags": ["agbada", "gele", "aso_ebi", "aso_oke", "yoruba", "nigerian_wedding", "fila", "buba", "iro", "أغبادہ", "يوروبا", "ניגריה", "אגבאדה", "גלה"]
+      "tags": [
+        "agbada",
+        "gele",
+        "aso_ebi",
+        "aso_oke",
+        "yoruba",
+        "nigerian_wedding",
+        "fila",
+        "buba",
+        "iro",
+        "أغبادہ",
+        "يوروبا",
+        "ניגריה",
+        "אגבאדה",
+        "גלה"
+      ]
     },
     "priority": 9,
     "example": "Royal purple handwoven Aso Oke 3-piece Agbada with gold geometric embroidery, matching purple Fila Gobi cap angled to the side, and dark leather loafers."
@@ -601,7 +1015,18 @@
     "rule_statement": "The Isiagu (tunic featuring embroidered lion/leopard heads) is the sovereign formal garment for Igbo men, cut as a long tunic paired with solid black/dark trousers, an Okpu Agu knit cap or red chieftaincy cap, and authentic cylindrical coral neck beads (Ijele). Women wear George fabric wrappers, embroidered blouses, and tiered coral beads.",
     "negative_constraint": "Forbid wearing an Isiagu with patterned or clashing bottoms (trousers must be plain solid black or dark to anchor the lion print). Non-titled men should not wear the solid red chief's cap unless conferred. Avoid cheap plastic imitation beads.",
     "criteria": {
-      "tags": ["isiagu", "igbo", "igba_nkwu", "okpu_agu", "coral_beads", "iri_ji", "nigeria", "איגבו", "איסיאגו", "חרוזי אלמוגים"]
+      "tags": [
+        "isiagu",
+        "igbo",
+        "igba_nkwu",
+        "okpu_agu",
+        "coral_beads",
+        "iri_ji",
+        "nigeria",
+        "איגבו",
+        "איסיאגו",
+        "חרוזי אלמוגים"
+      ]
     },
     "priority": 9,
     "example": "Black heavy velvet Isiagu tunic with gold woven lion-head medallions, tailored solid black slacks, genuine cylindrical coral neck beads, and red/black Okpu Agu cap."
@@ -613,7 +1038,20 @@
     "rule_statement": "Authentic handwoven Kente is sacred heraldry. Gold/Yellow denotes royalty; Blue represents peace; Green represents growth. For celebrations, men drape multi-yard Kente toga-style over the left shoulder (leaving right arm free). Women wear 3-piece tailored Kaba and Slit. At funerals, mourners wear Kobene (fiery vermilion red) or Kuntunkuni (dark brown/black indigo cloth), never joyous gold Kente.",
     "negative_constraint": "STRICTLY FORBID JOYOUS GOLD/MULTICOLORED KENTE AT FUNERALS. Strictly forbid draping male Kente toga over the right shoulder (must always rest over the left shoulder). Avoid machine-printed polyester knockoffs.",
     "criteria": {
-      "tags": ["kente", "ghana", "ashanti", "akan", "kobene", "kuntunkuni", "adinkra", "كينتي", "غانا", "קנטה", "גאנה", "אקאן"]
+      "tags": [
+        "kente",
+        "ghana",
+        "ashanti",
+        "akan",
+        "kobene",
+        "kuntunkuni",
+        "adinkra",
+        "كينتي",
+        "غانا",
+        "קנטה",
+        "גאנה",
+        "אקאן"
+      ]
     },
     "priority": 10,
     "example": "Master handwoven Akan royal Kente cloth featuring gold, emerald, and crimson threads wrapped over the left shoulder, with traditional Ahenema leather sandals."
@@ -625,7 +1063,17 @@
     "rule_statement": "For traditional South African ceremonies (Zulu Umabo weddings and heritage gatherings), married Zulu women wear the Isicholo (wide flared woven hat dyed red/ochre) with beaded capes. Celebratory dresses crafted from authentic indigo printed Shweshwe cotton are standard across southern Africa.",
     "negative_constraint": "Unmarried women do not wear the Isicholo (reserved for married women). Prohibit casual denim, sportswear, or plain Western loungewear at traditional lobola or umabo ceremonies.",
     "criteria": {
-      "tags": ["zulu", "isicholo", "shweshwe", "south_africa", "umabo", "lobola", "زولو", "איסיצ'ולו", "דרום אפריקה"]
+      "tags": [
+        "zulu",
+        "isicholo",
+        "shweshwe",
+        "south_africa",
+        "umabo",
+        "lobola",
+        "زولو",
+        "איסיצ'ולו",
+        "דרום אפריקה"
+      ]
     },
     "priority": 9,
     "example": "Indigo-blue geometric printed authentic Shweshwe A-line midi dress with tiered ruffle hem, crimson red flared woven Isicholo hat, and beaded Zulu collar necklace."
@@ -637,7 +1085,18 @@
     "rule_statement": "In tropical Latin America and the Caribbean, the Guayabera de gala (formal long-sleeved Guayabera) is recognized as formalwear substituting for a suit or tuxedo. Must feature 100% fine linen, 4 front pockets, vertical alforza pleats front and back, side button vents, and a straight hem worn strictly UNTUCKED, paired with tailored dress trousers and leather dress loafers.",
     "negative_constraint": "STRICTLY FORBID TUCKING IN A GUAYABERA: Tucking a Guayabera into trousers destroys its vents and pleats and is a major fashion blunder. Forbid short-sleeved casual Guayaberas at formal evening weddings. Forbid sneakers, flip-flops, or jeans.",
     "criteria": {
-      "tags": ["guayabera", "guayabera_de_gala", "chacabana", "camisa_yucatan", "tropical_formal", "cuba", "mexico", "גואיברה", "חתונה טרופית", "غوايابيرا"]
+      "tags": [
+        "guayabera",
+        "guayabera_de_gala",
+        "chacabana",
+        "camisa_yucatan",
+        "tropical_formal",
+        "cuba",
+        "mexico",
+        "גואיברה",
+        "חתונה טרופית",
+        "غوايابيرا"
+      ]
     },
     "priority": 10,
     "example": "Long-sleeved crisp white 100% Irish linen Guayabera de gala with 4 pockets and hand-stitched alforzas worn untucked, with dark charcoal tropical wool trousers and cognac woven leather loafers."
@@ -649,7 +1108,15 @@
     "rule_statement": "A Quinceañera begins with a Catholic Mass of Thanksgiving followed by a formal gala. Men wear tailored suits with ties. Female guests wear elegant formal cocktail dresses or festive midi/maxi dresses with covered shoulders for the church liturgy.",
     "negative_constraint": "STRICTLY FORBID OUTSHINING OR COPYING THE QUINCEAÑERA: Female guests must NEVER wear a voluminous ball gown, tiara, or the signature celebration color theme chosen by the celebrant. Strictly forbid solid white or ivory gowns. Maintain church modesty during the preliminary Mass.",
     "criteria": {
-      "tags": ["quinceanera", "quince_anos", "misa_quinceanera", "latin_milestone", "קוינסאניירה", "בת מצווה לטינית", "كينسينييرا"]
+      "tags": [
+        "quinceanera",
+        "quince_anos",
+        "misa_quinceanera",
+        "latin_milestone",
+        "קוינסאניירה",
+        "בת מצווה לטינית",
+        "كينسينييرا"
+      ]
     },
     "priority": 9,
     "example": "Navy blue pleated chiffon A-line midi dress with jewel neckline, matching lightweight pashmina shawl for the church service, silver leather clutch, and suede block heels."
@@ -661,7 +1128,15 @@
     "rule_statement": "Dress in pristine, respectful solid white clothing (white Habesha Kemis with Netela shawl for women; white collared shirt with light/white trousers and Netela/Tallit for men) to honor the sacred renewal of the covenant and longing for Jerusalem.",
     "negative_constraint": "Strictly forbid graphic t-shirts, loud logos, eagle/animal prints, slogan tees, black/dark mourning clothes, distressed denim, shorts, or casual beach sandals.",
     "criteria": {
-      "tags": ["sigd", "סיגד", "חג הסיגד", "ביתא ישראל", "beta israel", "habesha kemis", "netela"]
+      "tags": [
+        "sigd",
+        "סיגד",
+        "חג הסיגד",
+        "ביתא ישראל",
+        "beta israel",
+        "habesha kemis",
+        "netela"
+      ]
     },
     "priority": 10,
     "example": "White linen collared shirt with tailored light trousers and white Netela shawl."
@@ -673,7 +1148,15 @@
     "rule_statement": "Wear authentic Arctic insulated winter garments (Atigi/Amauti hooded parkas, Kamiks sealskin/caribou boots, or Mother-Hubbard Silapaaq fabric parkas) suitable for freezing conditions and communal drum dancing.",
     "negative_constraint": "Strictly forbid thin canvas sneakers, un-insulated jackets, bare ankles, or commercial polyester costume caricatures.",
     "criteria": {
-      "tags": ["sinck tuck", "sink tuck", "inuit", "drum dance", "kamik", "amauti", "atigi"]
+      "tags": [
+        "sinck tuck",
+        "sink tuck",
+        "inuit",
+        "drum dance",
+        "kamik",
+        "amauti",
+        "atigi"
+      ]
     },
     "priority": 10,
     "example": "Down-insulated Atigi parka with fur ruff, warm wool trousers, and thermal Kamik boots."
@@ -685,7 +1168,13 @@
     "rule_statement": "Wear celebratory traditional festive attire (embroidered Kaftans, Jelabas, velvet vests with gold Zari braid, Tarboush caps, and leather Babouche slippers) in joyful vibrant colors (gold, emerald green, royal blue, white).",
     "negative_constraint": "Avoid somber funeral black, austere mourning tones, or drab athletic gym wear.",
     "criteria": {
-      "tags": ["mimouna", "מימונה", "תרבחו ותסעדו", "moroccan kaftan", "jellaba"]
+      "tags": [
+        "mimouna",
+        "מימונה",
+        "תרבחו ותסעדו",
+        "moroccan kaftan",
+        "jellaba"
+      ]
     },
     "priority": 9,
     "example": "Embroidered white and gold festive Kaftan with gold-threaded vest and leather Babouche."
@@ -697,7 +1186,14 @@
     "rule_statement": "Wear 100% natural, flame-resistant breathable fabrics (heavy cotton, denim, canvas, wool) and sturdy closed-toe boots or shoes for outdoor bonfires and Meron festivities.",
     "negative_constraint": "Strictly forbid meltable synthetic garments (polyester windbreakers, thin nylon shells, acrylic fleece) near active fires, and avoid open-toed sandals or high heels.",
     "criteria": {
-      "tags": ["lag baomer", "ל\"ג בעומר", "לג בעומר", "מירון", "מדורה", "upsherin"]
+      "tags": [
+        "lag baomer",
+        "ל\"ג בעומר",
+        "לג בעומר",
+        "מירון",
+        "מדורה",
+        "upsherin"
+      ]
     },
     "priority": 9,
     "example": "Heavy cotton button-down over sturdy denim jeans and leather work boots."
@@ -709,7 +1205,14 @@
     "rule_statement": "Wear light, elegant, pure plain white garments (white linen dresses, white cotton button-downs, light chinos) following the ancient egalitarian tradition of joyful vineyard gatherings.",
     "negative_constraint": "Avoid dark or somber black clothing, and avoid ostentatious luxury logos or gaudy designer branding.",
     "criteria": {
-      "tags": ["tu b'av", "tu bav", "ט\"ו באב", "טו באב", "חג האהבה", "כרמים"]
+      "tags": [
+        "tu b'av",
+        "tu bav",
+        "ט\"ו באב",
+        "טו באב",
+        "חג האהבה",
+        "כרמים"
+      ]
     },
     "priority": 9,
     "example": "Crisp white linen button-down shirt paired with off-white cotton chinos and clean loafers."
@@ -721,7 +1224,13 @@
     "rule_statement": "Wear colorful floral tropical Songkran shirts (Sua Songkran) with lightweight, quick-drying cotton or technical shorts and secure non-slip water-resistant sandals.",
     "negative_constraint": "Strictly forbid sheer or thin white fabrics that become transparent when wet, strictly forbid shirtless men or bikini tops in public (criminal decency violation), and avoid dry-clean-only silk.",
     "criteria": {
-      "tags": ["songkran", "สงกรานต์", "thai new year", "water festival", "סונגקראן"]
+      "tags": [
+        "songkran",
+        "สงกรานต์",
+        "thai new year",
+        "water festival",
+        "סונגקראן"
+      ]
     },
     "priority": 10,
     "example": "Vibrant floral print short-sleeved cotton shirt with quick-dry shorts and non-slip sandals."
@@ -733,7 +1242,14 @@
     "rule_statement": "Wear brand new, pristine, unworn clothes (Nou-poosh) in vibrant spring tones (emerald green, turquoise, rose, pastel yellow, crisp white) to welcome renewal and good fortune.",
     "negative_constraint": "Strictly forbid old, worn-out, torn, or stained clothing, and avoid dreary funeral black or somber mourning apparel.",
     "criteria": {
-      "tags": ["nowruz", "norooz", "نوروز", "haft-seen", "persian new year", "נוירוז"]
+      "tags": [
+        "nowruz",
+        "norooz",
+        "نوروز",
+        "haft-seen",
+        "persian new year",
+        "נוירוז"
+      ]
     },
     "priority": 9,
     "example": "New crisp pastel green linen blazer with fresh white shirt and light beige chinos."
@@ -745,7 +1261,15 @@
     "rule_statement": "Wear traditional Hanbok or dignified conservative smart-casual attire suitable for ancestral Charye rites and formal bowing to elders (Sebae).",
     "negative_constraint": "Strictly forbid distressed/ripped denim, tight mini skirts, shorts, sleeveless tops, or casual loungewear during ancestral rites.",
     "criteria": {
-      "tags": ["chuseok", "seollal", "추석", "설날", "charye", "sebae", "צ'וסוק"]
+      "tags": [
+        "chuseok",
+        "seollal",
+        "추석",
+        "설날",
+        "charye",
+        "sebae",
+        "צ'וסוק"
+      ]
     },
     "priority": 9,
     "example": "Traditional silk Hanbok with Norigae ornament or navy tailored suit with clean collared shirt."
@@ -757,7 +1281,13 @@
     "rule_statement": "Wear inexpensive, plain white or light cotton clothing (Kurta-pyjama or simple tee and trousers) specifically intended to be permanently colored with herbal powders (Gulal), with long sleeves to shield skin.",
     "negative_constraint": "Strictly forbid expensive silk, wool, cashmere, dry-clean-only garments, leather footwear, or items you intend to wear again.",
     "criteria": {
-      "tags": ["holi", "होली", "gulal", "festival of colors", "הולי"]
+      "tags": [
+        "holi",
+        "होली",
+        "gulal",
+        "festival of colors",
+        "הולי"
+      ]
     },
     "priority": 10,
     "example": "Plain white cotton kurta-pyjama with sunglasses and washable canvas footwear."
@@ -769,7 +1299,14 @@
     "rule_statement": "Men wear authentic leather Lederhosen with H-suspenders, Trachten shirt, and Haferlschuhe; women wear a classic knee-length or midi Dirndl with bodice, blouse, and apron with bow placed according to relationship status.",
     "negative_constraint": "Strictly forbid cheap shiny polyester mini-dirndls ('Halloween costumes'), plastic Lederhosen, fluorescent neon colors, or athletic sneakers.",
     "criteria": {
-      "tags": ["oktoberfest", "dirndl", "lederhosen", "trachten", "אוקטוברפסט", "דירנדל"]
+      "tags": [
+        "oktoberfest",
+        "dirndl",
+        "lederhosen",
+        "trachten",
+        "אוקטוברפסט",
+        "דירנדל"
+      ]
     },
     "priority": 10,
     "example": "Midi linen Dirndl with cotton apron bow tied on the right or left, paired with classic Haferlschuhe."
@@ -781,7 +1318,14 @@
     "rule_statement": "Wear below-the-knee ribbon skirts or tailored ribbon shirts with moccasins or neat clean footwear, respecting sacred tribal regalia.",
     "negative_constraint": "Strictly forbid non-indigenous guests from wearing eagle feathers, warbonnets, or sacred ceremonial regalia; forbid short skirts above the knee, crop tops, or alcohol.",
     "criteria": {
-      "tags": ["powwow", "ribbon skirt", "ribbon shirt", "native american", "first nations", "פאו וואו"]
+      "tags": [
+        "powwow",
+        "ribbon skirt",
+        "ribbon shirt",
+        "native american",
+        "first nations",
+        "פאו וואו"
+      ]
     },
     "priority": 10,
     "example": "Dark cotton ribbon skirt adorned with satin prayer ribbons, paired with modest black blouse and soft moccasins."
@@ -793,7 +1337,13 @@
     "rule_statement": "Wear celebratory traditional Mexican attire (embroidered Puebla dresses, elegant Catrina lace gowns, Charro suits) accented with vibrant marigold floral crowns and artistic sugar skull face art.",
     "negative_constraint": "Strictly forbid gory horror movie masks, fake blood, gruesome props, or mocking cultural caricatures.",
     "criteria": {
-      "tags": ["dia de los muertos", "dia de muertos", "day of the dead", "catrina", "יום המתים"]
+      "tags": [
+        "dia de los muertos",
+        "dia de muertos",
+        "day of the dead",
+        "catrina",
+        "יום המתים"
+      ]
     },
     "priority": 9,
     "example": "Black lace Catrina dress with vibrant marigold floral headpiece and embroidered shawl."
@@ -805,7 +1355,15 @@
     "rule_statement": "Wear pristine white handwoven Habesha Kemis and white cotton Netela or Gabi shawls with woven Tibeb borders, paired with comfortable flat footwear for outdoor processions.",
     "negative_constraint": "Strictly forbid black or dark funeral mourning clothes, shorts, sleeveless shirts, or revealing cuts.",
     "criteria": {
-      "tags": ["timkat", "meskel", "ጥምቀት", "መስቀል", "טיםקאת", "טימקאט", "מסקל"]
+      "tags": [
+        "timkat",
+        "meskel",
+        "ጥምቀት",
+        "መስቀል",
+        "טיםקאת",
+        "טימקאט",
+        "מסקל"
+      ]
     },
     "priority": 10,
     "example": "White woven cotton Habesha dress with colorful Tibeb hem, draped with a white Netela shawl."
@@ -817,7 +1375,15 @@
     "rule_statement": "Men wear authentic Highland dress (Prince Charlie or Argyll jacket, 8-yard clan tartan kilt, sporran, kilt hose, flashes, sgian-dubh, ghillie brogues, bow tie); women wear evening dress with clan tartan sash.",
     "negative_constraint": "Avoid wearing the sporran off-center, avoid mixing mismatched clan tartans, and forbid casual denim, trainers, or non-traditional novelty kilts.",
     "criteria": {
-      "tags": ["burns night", "burns supper", "kilt", "highland dress", "sporran", "סקוטלנד", "קילט"]
+      "tags": [
+        "burns night",
+        "burns supper",
+        "kilt",
+        "highland dress",
+        "sporran",
+        "סקוטלנד",
+        "קילט"
+      ]
     },
     "priority": 9,
     "example": "Prince Charlie black wool jacket with clan tartan kilt, leather sporran, and ghillie brogues."
