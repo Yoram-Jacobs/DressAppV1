@@ -2523,14 +2523,26 @@ class GarmentVisionService:
                            for k in ("footwear", "shoe", "sandal", "sneaker", "boot", "loafer", "heel", "clog", "slide", "flopper", "flip-flop", "mule", "pump", "oxford", "derby", "monk"))
                 ]
 
+                total_span = (
+                    max(d["bbox"][2] for d in detections) - min(d["bbox"][0] for d in detections)
+                    if detections else 0
+                )
+                max_bottom_h = (
+                    max((d["bbox"][2] - d["bbox"][0]) for d in bottom_dets)
+                    if bottom_dets else 0
+                )
                 has_multi_body_zones = bool(
-                    (top_dets and bottom_dets and min(d["bbox"][0] for d in top_dets) < min(d["bbox"][0] for d in bottom_dets))
-                    or (bottom_dets and shoe_dets and min(d["bbox"][0] for d in bottom_dets) < min(d["bbox"][0] for d in shoe_dets))
-                    or (top_dets and shoe_dets and min(d["bbox"][0] for d in top_dets) < min(d["bbox"][0] for d in shoe_dets))
+                    (total_span >= 550 or has_human_wearer)
+                    and (max_bottom_h >= 260 or not bottom_dets or has_human_wearer)
+                    and (
+                        (top_dets and bottom_dets and min(d["bbox"][0] for d in top_dets) < min(d["bbox"][0] for d in bottom_dets))
+                        or (bottom_dets and shoe_dets and min(d["bbox"][0] for d in bottom_dets) < min(d["bbox"][0] for d in shoe_dets))
+                        or (top_dets and shoe_dets and min(d["bbox"][0] for d in top_dets) < min(d["bbox"][0] for d in shoe_dets))
+                    )
                 )
 
                 same_zone_or_category = False
-                if not has_human_wearer and not has_multi_body_zones and detections and len(detections) <= 2:
+                if not has_human_wearer and not has_multi_body_zones and detections and len(detections) <= 4:
                     det_cats = {
                         (d.get("category") or d.get("kind") or "garment").lower()
                         for d in detections

@@ -1041,23 +1041,40 @@ def _suppress_overlapping_garments(
 
                 is_subpart_fragment = (
                     top_area < 0.18 * max(1, outer_area)
+                    or (not has_human and outer_area < 0.25 * max(1, top_area))
                     or top_w < 0.25 * outer_w
                     or top_h < 0.25 * outer_h
+                    or (not has_human and outer_w < 0.25 * top_w)
+                    or (not has_human and outer_h < 0.25 * top_h)
                     or (top_bb[2] <= outer_bb[0] + int(0.35 * outer_h))
                 )
                 if is_subpart_fragment:
-                    if kept_cat == "outerwear":
-                        kept_item["mask"] = np.maximum(kept_item["mask"], item["mask"])
-                        kept[kept_idx] = (kept_lbl, kept_item, int(kept_item["mask"].sum()))
-                        merged = True
-                        suppressed.append((lbl, kept_lbl, item_cat or "?", 1.0, 1.0))
-                        break
+                    if outer_area >= top_area:
+                        if kept_cat == "outerwear":
+                            kept_item["mask"] = np.maximum(kept_item["mask"], item["mask"])
+                            kept[kept_idx] = (kept_lbl, kept_item, int(kept_item["mask"].sum()))
+                            merged = True
+                            suppressed.append((lbl, kept_lbl, item_cat or "?", 1.0, 1.0))
+                            break
+                        else:
+                            item["mask"] = np.maximum(item["mask"], kept_item["mask"])
+                            kept[kept_idx] = (lbl, item, int(item["mask"].sum()))
+                            merged = True
+                            suppressed.append((kept_lbl, lbl, kept_cat or "?", 1.0, 1.0))
+                            break
                     else:
-                        item["mask"] = np.maximum(item["mask"], kept_item["mask"])
-                        kept[kept_idx] = (lbl, item, int(item["mask"].sum()))
-                        merged = True
-                        suppressed.append((kept_lbl, lbl, kept_cat or "?", 1.0, 1.0))
-                        break
+                        if kept_cat == "top":
+                            kept_item["mask"] = np.maximum(kept_item["mask"], item["mask"])
+                            kept[kept_idx] = (kept_lbl, kept_item, int(kept_item["mask"].sum()))
+                            merged = True
+                            suppressed.append((lbl, kept_lbl, item_cat or "?", 1.0, 1.0))
+                            break
+                        else:
+                            item["mask"] = np.maximum(item["mask"], kept_item["mask"])
+                            kept[kept_idx] = (lbl, item, int(item["mask"].sum()))
+                            merged = True
+                            suppressed.append((kept_lbl, lbl, kept_cat or "?", 1.0, 1.0))
+                            break
 
             # Multiple outerwear on a human model: a single person never wears two coats/jackets!
             # If two outerwear detections overlap spatially or share the vertical torso corridor, merge into dominant outerwear.
@@ -1568,6 +1585,80 @@ async def parse_garments(
                     break
             if not merged_any:
                 break
+
+    # 2a-3b) Detect and synthesize Hat when SegFormer (Fashion 47-class) fragments a baseball cap into
+    # crown (vest/top/jacket/hood) and brim/visor (shorts/pants/skirt)
+    if not any(k.lower().startswith(("hat", "headwear", "cap", "beanie")) or (v and v.get("category") == "headwear") for k, v in by_label.items()) and not has_human:
+        from scipy import ndimage
+        dome_candidates = []
+        brim_candidates = []
+        for k, it in list(by_label.items()):
+            m = it.get("mask")
+            if m is None:
+                continue
+            bb = _mask_bbox(m)
+            if not bb:
+                continue
+            y1, x1, y2, x2 = bb
+            h = max(1, y2 - y1)
+            w = max(1, x2 - x1)
+            cat = (it.get("category") or "").lower()
+            lbl = (it.get("label") or "").lower()
+
+            # Visor/brim candidates: wide, short bottom piece (shorts, pants, skirt)
+            is_brim_candidate = (
+                cat in ("bottom", "accessory")
+                or any(b in lbl for b in ("short", "pant", "skirt", "belt", "scarf"))
+            ) and (h <= int(0.32 * H)) and (float(w) / float(h) >= 1.4)
+
+            # Dome candidates: compact upper piece (vest, top, jacket, hoodie)
+            is_dome_candidate = (
+                cat in ("top", "outerwear", "headwear")
+                or any(d in lbl for d in ("vest", "top", "shirt", "jacket", "sweater", "hood", "cover"))
+            ) and (h <= int(0.50 * H))
+
+            if is_brim_candidate:
+                brim_candidates.append((k, bb, it))
+            elif is_dome_candidate:
+                dome_candidates.append((k, bb, it))
+
+        hat_pair_found = False
+        for d_k, d_bb, d_it in dome_candidates:
+            if hat_pair_found:
+                break
+            dy1, dx1, dy2, dx2 = d_bb
+            d_w = max(1, dx2 - dx1)
+            d_h = max(1, dy2 - dy1)
+            for b_k, b_bb, b_it in brim_candidates:
+                by1, bx1, by2, bx2 = b_bb
+                b_w = max(1, bx2 - bx1)
+                b_h = max(1, by2 - by1)
+
+                vert_gap = max(0, by1 - dy2) if by1 >= dy2 else 0
+                horiz_overlap = max(0, min(dx2, bx2) - max(dx1, bx1))
+                total_h = max(dy2, by2) - min(dy1, by1)
+                total_w = max(dx2, bx2) - min(dx1, bx1)
+
+                is_cap_geometry = (
+                    (by1 >= dy1 + int(0.25 * d_h))
+                    and (vert_gap <= int(0.08 * H))
+                    and (horiz_overlap >= int(0.30 * min(d_w, b_w)))
+                    and (total_h <= int(0.55 * H))
+                    and (float(total_w) / float(total_h) >= 0.70)
+                )
+                if is_cap_geometry:
+                    logger.info("clothing_parser: synthesized Hat from dome '%s' and brim '%s'", d_k, b_k)
+                    combined_mask = np.maximum(d_it["mask"], b_it["mask"])
+                    by_label["Hat"] = {
+                        "label": "Hat",
+                        "category": "headwear",
+                        "score": 0.95,
+                        "mask": combined_mask,
+                    }
+                    del by_label[d_k]
+                    del by_label[b_k]
+                    hat_pair_found = True
+                    break
 
     # 2a-4) Collapse all Hat/Headwear pieces into a single "Hat" item
     hat_keys = [

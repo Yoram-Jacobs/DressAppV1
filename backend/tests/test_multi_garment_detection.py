@@ -2562,6 +2562,186 @@ def test_hat_fragment_consolidation_and_category_protection():
     assert coerced["item_type"] == "Baseball Cap"
 
 
+def test_hat_synthesis_from_47_class_segformer_vest_shorts_jacket():
+    """Verify that when 47-class SegFormer (which has no Hat class) detects a cap as:
+    1. vest (crown, category: top)
+    2. shorts (brim/visor, category: bottom)
+    3. jacket (embroidery patch, category: outerwear)
+    the geometric synthesis and headwear consolidation combine them into a single 'Hat' item.
+    """
+    from app.services.clothing_parser import _mask_bbox, _is_same_garment_component
+    from scipy import ndimage
+
+    H, W = 1000, 1000
+
+    # 1. Crown mislabeled as vest (top)
+    vest_mask = np.zeros((H, W), dtype=np.uint8)
+    vest_mask[220:480, 320:680] = 1
+
+    # 2. Visor mislabeled as shorts (bottom)
+    shorts_mask = np.zeros((H, W), dtype=np.uint8)
+    shorts_mask[480:600, 260:740] = 1
+
+    # 3. Embroidery patch mislabeled as jacket (outerwear)
+    jacket_mask = np.zeros((H, W), dtype=np.uint8)
+    jacket_mask[340:390, 420:580] = 1
+
+    by_label = {
+        "vest": {
+            "label": "vest",
+            "category": "top",
+            "score": 0.90,
+            "mask": vest_mask,
+        },
+        "shorts": {
+            "label": "shorts",
+            "category": "bottom",
+            "score": 0.85,
+            "mask": shorts_mask,
+        },
+        "jacket": {
+            "label": "jacket",
+            "category": "outerwear",
+            "score": 0.80,
+            "mask": jacket_mask,
+        },
+    }
+
+    # Execute Step 2a-3b (Detect and synthesize Hat)
+    has_human = False
+    if not any(k.lower().startswith(("hat", "headwear", "cap", "beanie")) or (v and v.get("category") == "headwear") for k, v in by_label.items()) and not has_human:
+        dome_candidates = []
+        brim_candidates = []
+        for k, it in list(by_label.items()):
+            m = it.get("mask")
+            if m is None:
+                continue
+            bb = _mask_bbox(m)
+            if not bb:
+                continue
+            y1, x1, y2, x2 = bb
+            h = max(1, y2 - y1)
+            w = max(1, x2 - x1)
+            cat = (it.get("category") or "").lower()
+            lbl = (it.get("label") or "").lower()
+
+            is_brim_candidate = (
+                cat in ("bottom", "accessory")
+                or any(b in lbl for b in ("short", "pant", "skirt", "belt", "scarf"))
+            ) and (h <= int(0.32 * H)) and (float(w) / float(h) >= 1.4)
+
+            is_dome_candidate = (
+                cat in ("top", "outerwear", "headwear")
+                or any(d in lbl for d in ("vest", "top", "shirt", "jacket", "sweater", "hood", "cover"))
+            ) and (h <= int(0.50 * H))
+
+            if is_brim_candidate:
+                brim_candidates.append((k, bb, it))
+            elif is_dome_candidate:
+                dome_candidates.append((k, bb, it))
+
+        hat_pair_found = False
+        for d_k, d_bb, d_it in dome_candidates:
+            if hat_pair_found:
+                break
+            dy1, dx1, dy2, dx2 = d_bb
+            d_w = max(1, dx2 - dx1)
+            d_h = max(1, dy2 - dy1)
+            for b_k, b_bb, b_it in brim_candidates:
+                by1, bx1, by2, bx2 = b_bb
+                b_w = max(1, bx2 - bx1)
+                b_h = max(1, by2 - by1)
+
+                vert_gap = max(0, by1 - dy2) if by1 >= dy2 else 0
+                horiz_overlap = max(0, min(dx2, bx2) - max(dx1, bx1))
+                total_h = max(dy2, by2) - min(dy1, by1)
+                total_w = max(dx2, bx2) - min(dx1, bx1)
+
+                is_cap_geometry = (
+                    (by1 >= dy1 + int(0.25 * d_h))
+                    and (vert_gap <= int(0.08 * H))
+                    and (horiz_overlap >= int(0.30 * min(d_w, b_w)))
+                    and (total_h <= int(0.55 * H))
+                    and (float(total_w) / float(total_h) >= 0.70)
+                )
+                if is_cap_geometry:
+                    combined_mask = np.maximum(d_it["mask"], b_it["mask"])
+                    by_label["Hat"] = {
+                        "label": "Hat",
+                        "category": "headwear",
+                        "score": 0.95,
+                        "mask": combined_mask,
+                    }
+                    del by_label[d_k]
+                    del by_label[b_k]
+                    hat_pair_found = True
+                    break
+
+    # Now verify Step 2a-5 (Headwear Consolidation) absorbs remaining jacket patch
+    if "Hat" in by_label:
+        while True:
+            hat_mask = by_label["Hat"]["mask"]
+            hat_bb = _mask_bbox(hat_mask)
+            if not hat_bb:
+                break
+            hy1, hx1, hy2, hx2 = hat_bb
+            hat_h = max(1, hy2 - hy1)
+            hat_w = max(1, hx2 - hx1)
+            merged_any = False
+            for other_key, other_it in list(by_label.items()):
+                if other_key == "Hat" or other_it.get("mask") is None:
+                    continue
+                obb = _mask_bbox(other_it["mask"])
+                if not obb:
+                    continue
+                oy1, ox1, oy2, ox2 = obb
+                o_h = max(1, oy2 - oy1)
+                o_w = max(1, ox2 - ox1)
+                o_cat = (other_it.get("category") or "").lower()
+                o_lbl = (other_it.get("label") or "").lower()
+
+                is_genuine_tall_top = o_cat in ("top", "dress", "outerwear") and o_h >= int(0.35 * H) and oy2 > int(0.40 * H)
+                is_genuine_tall_bottom = o_cat in ("bottom", "dress") and o_h >= int(0.35 * H) and oy1 >= int(0.35 * H)
+                if is_genuine_tall_top or is_genuine_tall_bottom:
+                    continue
+
+                if o_cat == "footwear" or "shoe" in o_lbl or "boot" in o_lbl:
+                    continue
+
+                x_inter = max(0, min(hx2, ox2) - max(hx1, ox1))
+                y_inter = max(0, min(hy2, oy2) - max(hy1, oy1))
+                o_box_area = max(1, (ox2 - ox1) * (oy2 - oy1))
+                inter_area = x_inter * y_inter
+                box_containment = inter_area / float(o_box_area)
+
+                dil_other = ndimage.binary_dilation(other_it["mask"], iterations=15)
+                dil_hat = ndimage.binary_dilation(by_label["Hat"]["mask"], iterations=15)
+                touches = np.logical_and(dil_other, dil_hat).any()
+                is_proximate = _is_same_garment_component(hat_bb, obb, min(H, W))
+
+                vert_gap = max(0, oy1 - hy2) if oy1 >= hy2 else max(0, hy1 - oy2)
+                horiz_overlap = max(0, min(hx2, ox2) - max(hx1, ox1))
+                is_adjacent_brim = (vert_gap <= int(0.08 * H)) and (horiz_overlap >= int(0.25 * min(hat_w, o_w))) and (o_h <= int(0.40 * H))
+
+                if touches or is_proximate or box_containment >= 0.20 or is_adjacent_brim:
+                    by_label["Hat"]["mask"] = np.maximum(by_label["Hat"]["mask"], other_it["mask"])
+                    del by_label[other_key]
+                    merged_any = True
+                    break
+            if not merged_any:
+                break
+
+    assert len(by_label) == 1
+    assert "Hat" in by_label
+    assert by_label["Hat"]["category"] == "headwear"
+    # Mask covers the crown, brim, and jacket embroidery
+    hat_mask = by_label["Hat"]["mask"]
+    assert np.all(hat_mask[220:480, 320:680] == 1)
+    assert np.all(hat_mask[480:600, 260:740] == 1)
+    assert np.all(hat_mask[340:390, 420:580] == 1)
+
+
+
 
 
 
