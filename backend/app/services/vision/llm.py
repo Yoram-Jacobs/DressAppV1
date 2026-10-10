@@ -958,7 +958,7 @@ async def call_gemma_space_stream_attributes(
                     elif segformer_category == "dress":
                         prop["enum"] = ["Outerwear", "Full Body"]
                     elif segformer_category == "footwear":
-                        prop["enum"] = ["Footwear"]
+                        prop["enum"] = ["Footwear", "Accessories"]
                     elif segformer_category in ("headwear", "accessory", "bag"):
                         prop["enum"] = ["Accessories"]
 
@@ -980,7 +980,7 @@ async def call_gemma_space_stream_attributes(
                         ]
                     elif ("shoe" in lbl_low or segformer_category == "footwear") and "boot" not in lbl_low:
                         prop["enum"] = [
-                            "Sneakers", "Shoes", "Loafers", "Flats", "Heels", "Sandals", "Boots", "Oxfords", "Derbies", "non-clothing",
+                            "Sneakers", "Shoes", "Loafers", "Flats", "Heels", "Sandals", "Boots", "Oxfords", "Derbies", "Headwear", "Beanie", "Hat", "non-clothing",
                         ]
 
                 if name == "price_cents":

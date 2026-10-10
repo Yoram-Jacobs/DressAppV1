@@ -173,3 +173,54 @@ def test_coat_wool_vs_faux_leather_sanitization():
     )
     assert sanitized_suede == [{"name": "Suede", "pct": 100}]
 
+
+def test_headwear_materials_never_default_to_leather():
+    """Verify baseball caps, visors, and beanies never get converted to Leather 100%."""
+    # 1. Sun visor / baseball cap with empty materials -> Cotton 100%
+    empty_cap = sanitize_fabric_materials(
+        [],
+        category="Accessories",
+        sub_category="Baseball Cap",
+        item_type="Cap",
+        full_text="White sun visor bucket hat כובע מצחייה",
+    )
+    assert empty_cap == [{"name": "Cotton", "pct": 100}]
+
+    # 2. Baseball cap with hallucinated Leather -> Cotton 100% (unless explicitly leather cap)
+    hallucinated_cap = sanitize_fabric_materials(
+        [{"name": "Leather", "pct": 100}],
+        category="Accessories",
+        sub_category="Baseball Cap",
+        item_type="Cap",
+        full_text="Black cotton twill baseball cap with red eagle patch",
+    )
+    assert hallucinated_cap == [{"name": "Cotton", "pct": 100}]
+
+    # 3. Knit winter beanie / chullo -> Acrylic / Wool blend
+    beanie = sanitize_fabric_materials(
+        [],
+        category="Accessories",
+        sub_category="Beanie",
+        item_type="Knit Beanie",
+        full_text="Black knit winter beanie chullo hat with earflaps and pom pom",
+    )
+    mat_names = [m["name"] for m in beanie]
+    assert "Acrylic" in mat_names or "Wool" in mat_names
+    assert "Leather" not in mat_names
+
+
+def test_beanie_not_overridden_to_footwear():
+    """Verify that SegFormer misclassifying a winter hat with tassels as footwear does not override LLM."""
+    from app.services.vision.validation import _enforce_segformer_category
+
+    llm_hat = {
+        "title": "Winter Knit Beanie with Earflaps",
+        "category": "Accessories",
+        "sub_category": "Beanie",
+        "item_type": "Knit Hat",
+    }
+    fixed = _enforce_segformer_category(llm_hat, segformer_kind="footwear")
+    assert fixed["category"] == "Accessories"
+    assert fixed["sub_category"] == "Beanie"
+
+

@@ -515,7 +515,11 @@ def sanitize_fabric_materials(
         # Fallbacks when completely empty
         if cat_low == "footwear" or any(w in text_low for w in ("shoe", "heel", "pump", "boot", "loafer", "oxford", "sandal", "נעלי", "עקב", "מגפ")):
             return [{"name": "Suede", "pct": 100}] if any(w in text_low for w in ("suede", "זמש")) else [{"name": "Leather", "pct": 70}, {"name": "Rubber", "pct": 30}]
-        if cat_low in ("accessories", "accessory", "bags") or any(w in text_low for w in ("bag", "handbag", "purse", "clutch", "crossbody", "תיק")):
+        if any(w in text_low for w in ("hat", "cap", "beanie", "visor", "headwear", "beret", "fedora", "כובע")):
+            if any(w in text_low for w in ("beanie", "knit", "winter", "chullo", "pom", "סרוג", "גרב")):
+                return [{"name": "Acrylic", "pct": 70}, {"name": "Wool", "pct": 30}]
+            return [{"name": "Cotton", "pct": 100}]
+        if cat_low in ("bags", "bag") or any(w in text_low for w in ("bag", "handbag", "purse", "clutch", "crossbody", "תיק")):
             return [{"name": "Canvas", "pct": 80}, {"name": "Polyester", "pct": 20}] if any(w in text_low for w in ("canvas", "קנבס", "בד", "tote")) else [{"name": "Leather", "pct": 100}]
         if any(w in text_low for w in ("sweater", "knit", "knitwear", "pullover", "cardigan", "סוודר", "סריג", "סריגים")):
             return [{"name": "Wool", "pct": 70}, {"name": "Acrylic", "pct": 30}]
@@ -538,10 +542,27 @@ def sanitize_fabric_materials(
                 return [{"name": "Suede", "pct": 100}]
             return [{"name": "Leather", "pct": 70}, {"name": "Rubber", "pct": 30}]
 
-    # 2. Bag sanity
+    # 2. Headwear sanity
+    is_headwear = (
+        cat_low in ("headwear",)
+        or any(w in text_low for w in ("hat", "cap", "beanie", "visor", "headwear", "beret", "fedora", "כובע"))
+    )
+    if is_headwear:
+        is_knit_headwear = any(w in text_low for w in ("beanie", "knit", "winter", "chullo", "pom", "סרוג", "גרב"))
+        if is_knit_headwear:
+            has_knit_mat = any(str(m.get("name", "")).lower() in ("wool", "acrylic", "cotton", "cashmere", "צמר", "אקריליק", "כותנה") for m in normalized)
+            if not has_knit_mat:
+                return [{"name": "Acrylic", "pct": 70}, {"name": "Wool", "pct": 30}]
+        else:
+            has_leather_mat = any(str(m.get("name", "")).lower() in ("leather", "עור", "suede", "זמש", "faux leather", "דמוי עור") for m in normalized)
+            has_explicit_leather_cue = any(w in text_low for w in ("leather cap", "leather hat", "כובע עור", "suede cap", "suede hat"))
+            if has_leather_mat and not has_explicit_leather_cue:
+                return [{"name": "Cotton", "pct": 100}]
+
+    # 3. Bag sanity (strictly bags, never all accessories!)
     is_bag = (
-        cat_low in ("accessories", "accessory", "bags")
-        or any(w in text_low for w in ("bag", "handbag", "purse", "clutch", "crossbody", "tote", "תיק", "ארנק"))
+        (cat_low in ("bags", "bag") or any(w in text_low for w in ("bag", "handbag", "purse", "clutch", "crossbody", "tote", "תיק", "ארנק")))
+        and not is_headwear
     )
     if is_bag:
         is_canvas_tote = any(w in text_low for w in ("canvas", "קנבס", "בד", "cotton tote", "canvas tote", "fabric tote", "straw", "קש", "wicker", "basket"))
@@ -3171,6 +3192,12 @@ def _enforce_segformer_category(
     desc_low = (analysis.get("description") or "").lower()
     is_llm_belt = any(w in curr_low or w in sub_low or w in title_low or w in desc_low for w in ("belt", "חגור"))
     if kind != "accessory" and is_llm_belt:
+        return analysis
+
+    # If the LLM has identified the crop as Headwear (hat, cap, beanie, visor, כובע),
+    # never override it with SegFormer's non-accessory/non-headwear kind (SegFormer often confuses tassels/earflaps with heels or shoes).
+    is_llm_headwear = any(w in curr_low or w in sub_low or w in title_low or w in desc_low for w in ("hat", "cap", "beanie", "visor", "headwear", "beret", "fedora", "כובע", "chullo"))
+    if kind in ("footwear", "shoes", "bottom") and is_llm_headwear:
         return analysis
 
     lbl_low = (label or "").lower()
