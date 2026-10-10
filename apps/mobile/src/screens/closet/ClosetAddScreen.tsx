@@ -439,8 +439,11 @@ export function ClosetAddScreen() {
 
         // 4. Pattern derivation (with intelligent text extraction fallback if backend returned default/solid)
         let finalPattern = String(analysis.pattern || item.pattern || '').trim().toLowerCase().replace(/\s+/g, '_');
+        if (finalPattern === 'embroidery') finalPattern = 'embroidered';
         if (!finalPattern || finalPattern === 'solid') {
-          if (/graphic|print|slogan|typography|logo|lettering|artwork|illustration|printed/.test(fullTextBlob)) {
+          if (/embroid|needlework|רקמ|רקום/.test(fullTextBlob)) {
+            finalPattern = 'embroidered';
+          } else if (/graphic|print|slogan|typography|logo|lettering|artwork|illustration|printed/.test(fullTextBlob)) {
             finalPattern = 'graphic';
           } else if (/strip|striped|stripe/.test(fullTextBlob)) {
             finalPattern = 'striped';

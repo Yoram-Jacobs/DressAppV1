@@ -2741,6 +2741,56 @@ def test_hat_synthesis_from_47_class_segformer_vest_shorts_jacket():
     assert np.all(hat_mask[340:390, 420:580] == 1)
 
 
+def test_embroidered_pattern_validation_and_fallback():
+    """Verify that 'embroidered' is a valid pattern, and aliases ('embroidery', 'רקמה', 'רקום')
+    properly coerce to 'embroidered', and textual cues trigger embroidered fallback.
+    """
+    from app.services.vision.validation import _VALID_PATTERN, _PATTERN_ALIASES, _coerce_enums, _coerce_single_garment
+
+    # 1. Direct validation enum check
+    assert "embroidered" in _VALID_PATTERN
+    assert _PATTERN_ALIASES.get("embroidery") == "embroidered"
+    assert _PATTERN_ALIASES.get("רקמה") == "embroidered"
+    assert _PATTERN_ALIASES.get("רקום") == "embroidered"
+
+    # 2. _coerce_enums coercion from alias
+    item_alias = {
+        "category": "Accessories",
+        "sub_category": "Headwear",
+        "item_type": "Baseball Cap",
+        "pattern": "embroidery",
+    }
+    _coerce_enums(item_alias)
+    assert item_alias["pattern"] == "embroidered"
+
+    # 3. Fallback when pattern is solid/empty but caption has embroidery cues
+    repaired_fallback = _coerce_single_garment({
+        "category": "Top",
+        "sub_category": "T-Shirts",
+        "item_type": "Hoodie",
+        "name": "Yellow and Green Embroidered Hoodie",
+        "title": "Yellow and Green Embroidered Hoodie",
+        "caption": "Hoodie with detailed embroidered lettering.",
+        "pattern": "solid",
+        "colors": [{"name": "Yellow", "pct": 100}],
+    })
+    assert repaired_fallback["pattern"] == "embroidered"
+
+    # 4. Hebrew embroidery fallback
+    repaired_he = _coerce_single_garment({
+        "category": "Accessories",
+        "sub_category": "Headwear",
+        "item_type": "כובע מצחייה",
+        "name": "כובע ברזיל עם רקמה",
+        "title": "כובע ברזיל עם רקמה",
+        "caption": "כובע מצחייה צהוב עם רקמה ירוקה ואיכותית.",
+        "pattern": "חלק",
+        "colors": [{"name": "צהוב", "pct": 100}],
+    }, language="he")
+    assert repaired_he["pattern"] == "embroidered"
+
+
+
 
 
 

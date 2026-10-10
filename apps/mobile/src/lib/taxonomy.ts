@@ -68,6 +68,8 @@ export const INTENT_OPTIONS = ['own', 'for_sale', 'donate', 'swap', 'rent'] as c
 
 export const PATTERN_OPTIONS = [
   'solid',
+  'printed',
+  'embroidered',
   'striped',
   'plaid',
   'floral',
@@ -77,6 +79,7 @@ export const PATTERN_OPTIONS = [
   'graphic',
   'tie_dye',
   'abstract',
+  'camouflage',
 ] as const;
 
 const slug = (value?: string) =>
@@ -223,7 +226,8 @@ export const labelForItemType = (code?: string, t?: TFunction): string => {
 export const labelForPattern = (code?: string, t?: TFunction): string => {
   if (!code) return '';
   if (!t) return code;
-  const s = slug(code);
+  let s = slug(code);
+  if (s === 'embroidery') s = 'embroidered';
   const capitalized = code.replace(/[-_]/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase());
   return fallback(t, `taxonomy.pattern.${s}`, capitalized);
 };

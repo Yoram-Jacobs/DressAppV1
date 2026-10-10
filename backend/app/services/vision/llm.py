@@ -174,7 +174,7 @@ GEMINI_VISION_SYSTEM_PROMPT = (
     '  "tradition": string|null,           // cultural/religious pattern if clearly present (e.g. "arabic","jewish","indian"), else null\n'
     '  "colors":           [{"name": string, "pct": integer 0..100}, ...],  // sum ≈ 100\n'
     '  "fabric_materials": [{"name": string, "pct": integer 0..100}, ...],  // sum ≈ 100; infer likely composition\n'
-    '  "pattern": string,                  // "solid","striped","plaid","floral","herringbone","polka_dot","paisley","geometric","animal_print","graphic","tie_dye","abstract"\n'
+    '  "pattern": string,                  // "solid","striped","plaid","floral","herringbone","polka_dot","paisley","geometric","animal_print","graphic","tie_dye","abstract","embroidered","camouflage"\n'
     '  "state": "new"|"used",\n'
     '  "condition": "bad"|"fair"|"good"|"excellent",\n'
     '  "quality": "budget"|"mid"|"premium"|"luxury",\n'
@@ -208,7 +208,7 @@ GEMINI_VISION_SYSTEM_PROMPT = (
     "No emojis, no markdown, no hashtags, no #tags inside text "
     "fields.\n"
     "  5. FIELD RULES:\n"
-    "     • pattern: If the garment has printed text, slogans, artwork, graphics, typography, or illustrations, set pattern=\"graphic\". Only use \"solid\" if there is no graphic or pattern.\n"
+    "     • pattern: If the garment has embroidered details, stitching, or embroidery artwork/patches, set pattern=\"embroidered\". If the garment has printed text, slogans, artwork, graphics, typography, or illustrations, set pattern=\"graphic\". Only use \"solid\" if there is no graphic or pattern.\n"
     "     • season: If the piece is versatile and wearable year-round (e.g. standard t-shirt, jeans, hoodie, sneakers), return [\"all\"]. Only restrict to specific seasons if clearly weather-bound (e.g. heavy winter down parka, summer swimwear).\n"
     "     • gender: Default to \"unisex\" for standard t-shirts, hoodies, and casual pieces unless tailored explicitly for men or women."
 )
@@ -342,7 +342,7 @@ _GARMENT_OBJECT_SCHEMA: dict[str, Any] = {
             "enum": [
                 "camouflage", "printed", "geometric", "striped", "plaid", "floral", "herringbone",
                 "polka", "polka_dot", "paisley", "animal_print",
-                "graphic", "tie_dye", "abstract", "solid",
+                "graphic", "tie_dye", "abstract", "solid", "embroidered",
             ],
         },
         "state": {"type": "string", "enum": ["new", "used"]},
@@ -527,7 +527,7 @@ def _user_prompt(code: str | None = None, user_gender: str | None = None) -> str
         '• colors: [{"name": str, "pct": int}] summing to 100. Garment fabric colors ONLY; 100% exclude background surfaces.\n'
         '• fabric_materials: [{"name": str, "pct": int}] summing strictly to 100 by visual texture & category: Coats/Outerwear/Blazers=Wool/Cashmere (woven/felted cloth) vs Leather/Faux Leather/Suede (grain, sheen, panel seams, or suede nap; tailored coats and fur-trimmed coats can legitimately be either); Footwear=Leather/Suede/Synthetic/Rubber (NEVER Cotton); Bags=Leather/Canvas/Nylon (never generic Polyester); Knitwear/Sweaters=Wool/Cashmere/Acrylic/Cotton knit; Jeans=Denim. Never use Chinese or non-English characters.\n'
         "• season: Array of applicable seasons ['spring'|'summer'|'fall'|'winter'] strictly based on visual fabric weight and cut. Never blindly select all four.\n"
-        "• pattern: 'solid'|'printed'|'geometric'|'striped'|'plaid'|'floral'|'camouflage'.\n"
+        "• pattern: 'solid'|'printed'|'embroidered'|'geometric'|'striped'|'plaid'|'floral'|'camouflage'.\n"
         f"• dress_code: 'casual'|'smart-casual'|'business'|'formal'|'athletic'|'loungewear'; "
         f"gender: criteria ('women' for floral/feminine/blouses/heels/skirts, 'men' for masculine cuts, 'unisex' for neutral; {fallback_gender_hint}; never default to 'men')."
     )
@@ -800,7 +800,7 @@ ATTRIBUTE_GROUPS: list[tuple[str, list[str], int, str]] = [
         (
             'Visual properties:\n'
             '- colors: [{"name": str, "pct": int}] summing to 100. Garment fabric colors ONLY. Discard any background bedsheet, blanket, carpet, floor, or table surface colors!\n'
-            '- pattern: camouflage|printed|solid|striped|plaid|floral|herringbone|polka_dot|paisley|geometric|animal_print|graphic|tie_dye|abstract\n'
+            '- pattern: camouflage|printed|embroidered|solid|striped|plaid|floral|herringbone|polka_dot|paisley|geometric|animal_print|graphic|tie_dye|abstract\n'
             '- fabric_materials: [{"name": str, "pct": int}] summing to 100. Match category & texture:\n'
             '  * Coats/Outerwear/Blazers: Wool|Cashmere|Leather|Faux Leather|Suede|Cotton|Down. Tailored coats & fur-collar coats can be either Wool (woven/felted cloth) or Leather/Suede (grain/sheen/suede nap).\n'
             '  * Footwear (shoes/heels/pumps/boots): Leather|Suede|Faux Leather|Canvas|Synthetic|Rubber. NEVER Cotton.\n'

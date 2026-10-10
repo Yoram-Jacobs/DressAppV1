@@ -2125,13 +2125,16 @@ def _coerce_single_garment(
             else:
                 res["caption"] = f"{title_val}{cue_suffix} בעיצוב איכותי להשלמת המראה."
 
-    # Pattern fallback: if model returned solid/empty/printed, check text for camouflage or graphics
+    # Pattern fallback: if model returned solid/empty/printed, check text for camouflage, embroidery, or graphics
     pat_str = (res.get("pattern") or "").strip().lower()
     full_pat_text = f"{res.get('name', '')} {res.get('title', '')} {res.get('caption', '')} {' '.join(str(t) for t in res.get('tags') or [])}".lower()
     is_camo = any(w in full_pat_text for w in ("camo", "camouflage", "צבאי", "הסוואה", "קמופלאז", "קמופלאז'"))
+    is_embroidered = any(w in full_pat_text for w in ("embroidered", "embroidery", "needlework", "רקמה", "רקום", "רקומה", "רקומי"))
 
     if pat_str in ("camo", "camouflage", "camouflaged", "צבאי", "הסוואה", "קמופלאז", "קמופלאז'") or is_camo:
         res["pattern"] = "camouflage"
+    elif pat_str in ("embroidered", "embroidery", "רקמה", "רקום", "רקומה") or is_embroidered:
+        res["pattern"] = "embroidered"
     elif not pat_str or pat_str in ("solid", "printed", "print", "none", "unknown", "other"):
         if any(w in full_pat_text for w in ("print", "printed", "graphic", "logo", "lettering", "artwork", "illustration", "slogan", "הדפס", "הדפסה", "גרפי", "לוגו", "איור", "כיתוב")):
             res["pattern"] = "printed"
@@ -2394,7 +2397,7 @@ _VALID_PATTERN = {
     "solid", "striped", "plaid", "floral", "herringbone",
     "polka", "polka-dot", "polka_dot", "paisley", "geometric",
     "animal_print", "animal-print", "graphic", "tie_dye", "tie-dye", "abstract",
-    "printed", "print", "camouflage",
+    "printed", "print", "camouflage", "embroidered",
 }
 _PATTERN_ALIASES = {
     "polka-dot": "polka_dot",
@@ -2416,6 +2419,12 @@ _PATTERN_ALIASES = {
     "הסוואה": "camouflage",
     "קמופלאז": "camouflage",
     "קמופלאז'": "camouflage",
+    "embroidered": "embroidered",
+    "embroidery": "embroidered",
+    "needlework": "embroidered",
+    "רקמה": "embroidered",
+    "רקום": "embroidered",
+    "רקומה": "embroidered",
 }
 
 

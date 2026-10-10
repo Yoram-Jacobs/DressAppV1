@@ -83,6 +83,7 @@ export const labelForPattern = (code, t) => {
   const normalized = String(code).trim().toLowerCase().replace(/[- ]/g, '_');
   let mapped = normalized === 'print' ? 'printed' : normalized;
   if (mapped === 'camo' || mapped === 'camouflaged') mapped = 'camouflage';
+  if (mapped === 'embroidery') mapped = 'embroidered';
   const key = `taxonomy.pattern.${mapped}`;
   return fallback(t, key, code);
 };

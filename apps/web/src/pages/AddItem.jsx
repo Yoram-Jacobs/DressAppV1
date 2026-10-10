@@ -124,6 +124,7 @@ const QUALITY_OPTIONS = ["budget", "mid", "premium", "luxury"];
 const PATTERN_OPTIONS = [
   "solid",
   "printed",
+  "embroidered",
   "striped",
   "plaid",
   "floral",
@@ -494,11 +495,19 @@ const hydrate = (a, user, t, i18n) => {
     }
   }
 
-  // 2. Fallback pattern: if model returned solid/empty but text indicates printed/geometric/stripes/etc.
+  // 2. Fallback pattern: if model returned solid/empty but text indicates embroidered/printed/geometric/stripes/etc.
   let curPattern = String(out.pattern || '').trim().toLowerCase();
+  if (curPattern === 'embroidery') {
+    out.pattern = 'embroidered';
+    curPattern = 'embroidered';
+  }
   if (!curPattern || curPattern === 'solid') {
     const fullPatternBlob = `${out.name} ${out.title} ${out.caption} ${(Array.isArray(out.tags) ? out.tags : []).join(' ')}`.toLowerCase();
-    if (/print|printed|graphic|logo|lettering|artwork|slogan|הדפס|הדפסה|גרפי|לוגו|כיתוב|איור/.test(fullPatternBlob)) {
+    if (/embroid|needlework|רקמ|רקום/.test(fullPatternBlob)) {
+      out.pattern = 'embroidered';
+    } else if (/camo|camouflage|הסוואה|קמופלאז/.test(fullPatternBlob)) {
+      out.pattern = 'camouflage';
+    } else if (/print|printed|graphic|logo|lettering|artwork|slogan|הדפס|הדפסה|גרפי|לוגו|כיתוב|איור/.test(fullPatternBlob)) {
       out.pattern = 'printed';
     } else if (/geometric|גיאומטרי|weave|textured|מרקם|טקסטורה|נקודות|עיגולים|מחורר|dots|eyelet|perforated|waffle|jacquard|pique|subtle/.test(fullPatternBlob)) {
       out.pattern = 'geometric';

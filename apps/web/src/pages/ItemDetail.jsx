@@ -129,6 +129,7 @@ const QUALITY_OPTIONS = ['budget', 'mid', 'premium', 'luxury'];
 const PATTERN_OPTIONS = [
   'solid',
   'printed',
+  'embroidered',
   'striped',
   'plaid',
   'floral',
@@ -137,6 +138,7 @@ const PATTERN_OPTIONS = [
   'paisley',
   'geometric',
   'abstract',
+  'camouflage',
 ];
 const FORMALITY_OPTIONS = ['casual', 'smart-casual', 'business', 'formal'];
 const INTENT_OPTIONS = ['own', 'for_sale', 'donate', 'swap', 'rent'];
