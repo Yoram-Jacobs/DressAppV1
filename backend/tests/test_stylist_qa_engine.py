@@ -1084,6 +1084,98 @@ def test_qa_evaluate_and_authorize_extracts_recent_from_conversation_history():
     assert bottom_item["closet_item_id"] == "pants-navy"
 
 
+def test_mosque_prayer_negative_constraints_reject_shorts_animal_print_and_graphics():
+    from app.services.fashion_rules_rag import retrieve_fashion_axioms
+    from app.services.stylist_qa_engine import validate_garment_against_negative_constraints
+
+    axioms = retrieve_fashion_axioms(user_text="What should I wear for Friday prayer in a mosque?", top_k=2)
+    mosque_rule = next((ax for ax in axioms if getattr(ax, "id", None) == "rule_cultural_islamic_jumuah"), None)
+    assert mosque_rule is not None, "Mosque rule must be retrieved"
+
+    # 1. Shorts in Hebrew (e.g. מכנסיים קצרים שחורים)
+    item_hebrew_shorts = {"title": "מכנסיים קצרים שחורים", "name": "מכנסיים קצרים שחורים", "category": "bottom"}
+    valid, reason = validate_garment_against_negative_constraints(item_hebrew_shorts, mosque_rule, role="bottom")
+    assert not valid
+    assert "Shorts" in str(reason)
+
+    # 2. Shorts in Arabic (e.g. شورت أسود)
+    item_arabic_shorts = {"title": "شورت قطني أسود", "name": "شورت قطني أسود", "category": "bottom"}
+    valid, reason = validate_garment_against_negative_constraints(item_arabic_shorts, mosque_rule, role="bottom")
+    assert not valid
+
+    # 3. Animal print (e.g. תיק צד מנומר / leopard bag)
+    item_leopard_bag = {"title": "תיק צד מנומר", "name": "תיק צד מנומר", "category": "accessory", "pattern": "animal_print"}
+    valid, reason = validate_garment_against_negative_constraints(item_leopard_bag, mosque_rule, role="accessory")
+    assert not valid
+    assert "animal prints" in str(reason).lower()
+
+    # 4. Distressed / graphic tee
+    item_distressed = {"title": "distressed heart-print t-shirt", "name": "distressed heart-print t-shirt", "category": "top"}
+    valid, reason = validate_garment_against_negative_constraints(item_distressed, mosque_rule, role="top")
+    assert not valid
+
+    # 5. Compliant long trousers
+    item_clean_pants = {"title": "מכנסי כותנה ישרים כחולים", "name": "מכנסי כותנה ישרים כחולים", "category": "bottom", "sub_category": "trousers"}
+    valid, reason = validate_garment_against_negative_constraints(item_clean_pants, mosque_rule, role="bottom")
+    assert valid
+
+
+def test_evaluate_and_authorize_outfit_enforces_do_dont_restrictions():
+    import asyncio
+    from app.services.stylist_qa_engine import evaluate_and_authorize_outfit
+
+    closet = [
+        {"id": "c-shorts", "title": "מכנסיים קצרים שחורים", "category": "bottom", "sub_category": "shorts"},
+        {"id": "c-pants", "title": "מכנסי פשתן ארוכים כחולים", "category": "bottom", "sub_category": "pants"},
+        {"id": "c-bag-leopard", "title": "תיק צד מנומר", "category": "accessory", "pattern": "animal_print"},
+        {"id": "c-bag-plain", "title": "תיק צד עור שחור קלאסי", "category": "accessory"},
+        {"id": "c-top-distressed", "title": "distressed heart-print t-shirt", "category": "top", "pattern": "graphic"},
+        {"id": "c-top-clean", "title": "חולצת כפתורים פשתן לבנה", "category": "top", "sub_category": "shirt"},
+    ]
+
+    # Simulates the exact LLM advice shown in the user's issue:
+    # DO/DON'T says avoid shorts & avoid animal prints, yet LLM recommended them
+    raw_advice = {
+        "reasoning_summary": "Dignified prayer attire for Friday mosque prayers.",
+        "spoken_reply": "Here is a respectful outfit for mosque prayers.",
+        "do_dont": [
+            "Avoid wearing shorts or beachwear, as these are not appropriate for religious gatherings.",
+            "Do not wear graphic tees with eagle/animal prints, as they may be considered inappropriate for a mosque visit.",
+        ],
+        "outfit_recommendations": [
+            {
+                "name": "Dignified Prayer Attire",
+                "items": [
+                    {"role": "top", "closet_item_id": "c-top-distressed", "name": "distressed heart-print t-shirt"},
+                    {"role": "bottom", "closet_item_id": "c-shorts", "name": "מכנסיים קצרים שחורים"},
+                    {"role": "accessory", "closet_item_id": "c-bag-leopard", "name": "תיק צד מנומר"},
+                ],
+            }
+        ],
+    }
+
+    reviewed = asyncio.run(
+        evaluate_and_authorize_outfit(
+            user_text="What should I wear for Friday prayer in a mosque?",
+            advice_payload=raw_advice,
+            all_closet_items=closet,
+        )
+    )
+
+    rec = reviewed["outfit_recommendations"][0]
+    item_ids = [it.get("closet_item_id") for it in rec["items"]]
+
+    # Both shorts and leopard bag MUST have been purged and replaced with compliant alternatives!
+    assert "c-shorts" not in item_ids, "Black shorts must NOT be in the prayer outfit"
+    assert "c-bag-leopard" not in item_ids, "Leopard bag must NOT be in the prayer outfit"
+    assert "c-top-distressed" not in item_ids, "Distressed graphic tee must NOT be in the prayer outfit"
+
+    # Replacements must be the compliant alternatives from the closet
+    assert "c-pants" in item_ids, "Should replace shorts with long pants"
+    assert "c-top-clean" in item_ids, "Should replace distressed tee with clean shirt"
+
+
+
 
 
 

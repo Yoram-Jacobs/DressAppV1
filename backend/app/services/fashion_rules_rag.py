@@ -141,7 +141,13 @@ def retrieve_fashion_axioms(
         add_rule("rule_cultural_hindu_vivaha")
 
     # Islamic Friday Prayer & Mosque
-    if any(w in text_corpus for w in ("jumuah", "mosque", "masjid", "جمعة", "مسجد", "صلاة الجمعة", "islamic prayer", "ramadan", "رمضان")):
+    if any(w in text_corpus for w in (
+        "jumuah", "mosque", "masjid", "friday prayer", "islamic prayer", "salah", "salat", "namaz", "ramadan",
+        "جمعة", "مسجد", "صلاة الجمعة", "صلاة", "رمضان",
+        "מסגד", "תפילת יום שישי", "תפילה במסגד", "רמדאן", "ג'ומעה",
+        "mezquita", "mosquée", "moschee", "moschea", "mesquita", "moskee",
+        "мечеть", "пятничная молитва", "清真寺", "主麻", "モスク", "金曜礼拝", "मस्जिद", "नमाज़"
+    )):
         add_rule("rule_cultural_islamic_jumuah")
 
     # Jewish Shabbat & Holidays

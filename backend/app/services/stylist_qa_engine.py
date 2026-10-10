@@ -390,6 +390,200 @@ def is_predominantly_white_garment(item: dict[str, Any]) -> bool:
     return _item_has_color(item, "white")
 
 
+RE_SHORTS_TERMS = re.compile(
+    r"\b("
+    # English
+    r"shorts?|short\s+pants|bermuda|bermudas|swim\s+trunks|trunks|boardshorts|cut-?offs?|hot\s+pants|"
+    # Spanish
+    r"pantalones?\s+cortos?|pantal[oó]n\s+corto|bermudas?|ba[ñn]ador|"
+    # French
+    r"shorts?|pantacourts?|bermudas?|culottes?\s+courtes?|cale[cç]on\s+de\s+bain|"
+    # German
+    r"kurze\s+hosen?|shorts?|bermudas?|badehosen?|"
+    # Italian
+    r"pantaloncini|pantaloni\s+corti|shorts?|bermuda|costume\s+da\s+bagno|"
+    # Portuguese
+    r"cal[cç][oõ]es|cal[cç][aã]o|bermudas?|shorts?|"
+    # Dutch
+    r"korte\s+broek|shorts?|bermudas?|zwembroek|"
+    # Russian
+    r"шорты|короткие\s+штаны|бермуды|плавки|"
+    # Chinese
+    r"短裤|五分裤|热裤|沙滩裤|"
+    # Japanese
+    r"ショートパンツ|短パン|ハーフパンツ|水着|"
+    # Hindi
+    r"शॉर्ट्स|निक्कर|हाफ\s+पैंट"
+    r")\b|"
+    # Hebrew
+    r"(?:מכנסיים\s+קצרים|מכנס\s+קצר|שורטס|ברמודה|מכנסי\s+קצרים|בגד\s+ים|בגדי\s+ים)|"
+    # Arabic
+    r"(?:شورت|سروال\s+قصير|بنطال\s+قصير|سراويل\s+قصيرة|برמודה|مايوه|ملابس\s+سباحة)",
+    re.IGNORECASE | re.UNICODE,
+)
+
+RE_ANIMAL_PRINT_TERMS = re.compile(
+    r"\b("
+    # English
+    r"animal\s+prints?|leopards?|cheetahs?|tigers?|zebras?|snakes?|snakeskins?|reptiles?|crocodiles?|alligators?|python|"
+    # Spanish
+    r"estampado\s+animal|leopardo|cebra|serpiente|cocodrilo|"
+    # French
+    r"imprim[eé]\s+animal|l[eé]opard|z[eè]bre|serpent|"
+    # German
+    r"tierprints?|leopardenmuster|zebramuster|schlangenmuster|"
+    # Italian
+    r"stampa\s+animalier|maculato|leopardato|zebrato|"
+    # Portuguese
+    r"estampa\s+animal|oncinha|leopardo|zebra|"
+    # Dutch
+    r"dierenprint|luipaardprint|zebraprint|"
+    # Russian
+    r"леопардовый|животный\s+принт|зебра|змеиный|леопард|"
+    # Chinese
+    r"豹纹|动物纹|斑马纹|蛇纹|"
+    # Japanese
+    r"ヒョウ柄|アニマル柄|ゼブラ柄|蛇柄|"
+    # Hindi
+    r"तेंदुआ\s+प्रिंट|एनिमल\s+प्रिंट|चीता\s+प्रिंट"
+    r")\b|"
+    # Hebrew
+    r"(?:מנומר|מנומרת|הדפס\s+נמר|הדפס\s+זברה|זברה|חברבורות|הדפס\s+חיה|עור\s+נחש)|"
+    # Arabic
+    r"(?:نقشة\s+نمر|نقشة\s+فهد|جلد\s+الثعبان|طباعة\s+حيوان|نمر|فهد|زيبرا)",
+    re.IGNORECASE | re.UNICODE,
+)
+
+RE_GRAPHIC_DISTRESSED_TERMS = re.compile(
+    r"\b("
+    # English
+    r"graphics?|graphic\s+tees?|cartoons?|slogans?|distressed|ripped|torn|frayed|acid\s+wash|eagle\s+prints?|band\s+tees?|skulls?|"
+    # Spanish
+    r"gr[aá]ficos?|estampados?|dibujos?|rotos?|rasgados?|[aá]guila|"
+    # French
+    r"graphiques?|imprim[eé]s?|dessins?|d[eé]chir[eé]s?|aigles?|"
+    # German
+    r"grafik|comics?|zerrissen|adler|"
+    # Italian
+    r"grafica|stampe?|strappato|aquila|"
+    # Portuguese
+    r"gr[aá]ficos?|estampas?|rasgados?|[aá]guia|"
+    # Russian
+    r"графический|принт|рисунок|рваный|орел|череп|"
+    # Chinese
+    r"图案|印花|卡通|破洞|老鹰|"
+    # Japanese
+    r"グラフィック|プリント|イラスト|ダメージ|ワシ|"
+    # Hindi
+    r"ग्राफिक|प्रिंट|कार्टून|फटा\s+हुआ"
+    r")\b|"
+    # Hebrew
+    r"(?:גרפי|הדפס\s+גרפי|ציור|קרוע|קרועים|משופשף|בלוי|נשר|גולגולת|סלוגן)|"
+    # Arabic
+    r"(?:غرافيك|طباعة|رسوم|ممزق|مهترئ|نسر|جمجمة)",
+    re.IGNORECASE | re.UNICODE,
+)
+
+RE_REVEALING_BEACH_TERMS = re.compile(
+    r"\b("
+    # English
+    r"crop\s+tops?|tank\s+tops?|tanks?|sleeveless|bralettes?|tube\s+tops?|strapless|halters?|mini\s+skirts?|micro\s+skirts?|sheer|see-?through|bodycon|bikinis?|swimwear|beachwear|flip-?flops?|slides?|"
+    # Spanish
+    r"sin\s+mangas|tirantes|minifaldas?|transparente|bikinis?|ba[ñn]ador|chanclas?|"
+    # French
+    r"sans\s+manches|d[eé]bardeurs?|minijupes?|transparent|bikinis?|claquettes?|tongs?|"
+    # German
+    r"[aä]rmellos|unterhemd|minirock|durchsichtig|bikinis?|badelatschen?|"
+    # Italian
+    r"senza\s+maniche|canottiere?|minigonne?|trasparente|bikinis?|ciabatte?|infradito|"
+    # Portuguese
+    r"sem\s+mangas|regatas?|minissaias?|transparente|bikinis?|chinelos?|"
+    # Russian
+    r"без\s+рукавов|майка|мини-юбка|прозрачный|бикини|шлепанцы|сланцы|"
+    # Chinese
+    r"无袖|背心|超短裙|透视|比基尼|泳衣|人字拖|拖鞋|"
+    # Japanese
+    r"ノースリーブ|タンクトップ|ミニスカート|シースルー|ビキニ|水着|ビーチサンダル|"
+    # Hindi
+    r"बिना\s+बांह|स्लीवलेस|टैंक\s+टॉप|मिनी\s+स्कर्ट|पारदर्शी|बिकनी|चप्पल"
+    r")\b|"
+    # Hebrew
+    r"(?:חולצת\s+בטן|גופיית\s+בטן|גופייה|גופיה|ללא\s+שרוולים|סטרפלס|חצאית\s+מיני|שקוף|שקופה|ביקיני|בגד\s+ים|כפכפים|כפכפי\s+ים)|"
+    # Arabic
+    r"(?:بدون\s+أكمام|كاشف\s+البطن|تنورة\s+قصيرة|شفاف|بيكيني|ملابس\s+سباحة|شبشب)",
+    re.IGNORECASE | re.UNICODE,
+)
+
+
+def is_shorts_garment(it: dict[str, Any], all_text: str = "", role: str | None = None) -> bool:
+    """Return True if garment is shorts, short pants, trunks, or beach swimwear."""
+    cat = norm_category(it.get("category"))
+    sub_cat = str(it.get("sub_category") or "").lower().strip()
+    cut = str(it.get("cut") or "").lower().strip()
+    if sub_cat in {"shorts", "short_pants", "bermuda", "swimwear", "beachwear", "trunks", "swim_trunks", "boardshorts", "bikini", "hot_pants"}:
+        return True
+    if cut in {"short", "mini"} and (role == "bottom" or cat == "bottom"):
+        return True
+    if not all_text:
+        all_text = " ".join([
+            str(it.get("title") or ""),
+            str(it.get("name") or ""),
+            str(it.get("description") or ""),
+            str(it.get("category") or ""),
+            str(it.get("sub_category") or ""),
+            " ".join(str(t) for t in (it.get("tags") or [])),
+        ]).lower()
+    return bool(RE_SHORTS_TERMS.search(all_text))
+
+
+def has_animal_or_distracted_print(it: dict[str, Any], all_text: str = "") -> bool:
+    """Return True if garment has animal print (leopard, cheetah, zebra, tiger, snake)."""
+    pattern = str(it.get("pattern") or "").lower().strip()
+    if pattern in {"animal", "animal_print", "leopard", "cheetah", "zebra", "tiger", "snake", "camo", "camouflage"}:
+        return True
+    if not all_text:
+        all_text = " ".join([
+            str(it.get("title") or ""),
+            str(it.get("name") or ""),
+            str(it.get("description") or ""),
+            str(it.get("pattern") or ""),
+            " ".join(str(t) for t in (it.get("tags") or [])),
+        ]).lower()
+    return bool(RE_ANIMAL_PRINT_TERMS.search(all_text))
+
+
+def is_distressed_or_graphic(it: dict[str, Any], all_text: str = "") -> bool:
+    """Return True if garment has graphic prints, cartoons, slogans, or distressed/ripped finish."""
+    pattern = str(it.get("pattern") or "").lower().strip()
+    if pattern in {"graphic", "print", "cartoon", "camo", "camouflage", "psychedelic"}:
+        return True
+    if not all_text:
+        all_text = " ".join([
+            str(it.get("title") or ""),
+            str(it.get("name") or ""),
+            str(it.get("description") or ""),
+            str(it.get("pattern") or ""),
+            " ".join(str(t) for t in (it.get("tags") or [])),
+        ]).lower()
+    return bool(RE_GRAPHIC_DISTRESSED_TERMS.search(all_text))
+
+
+def is_revealing_or_beachwear(it: dict[str, Any], all_text: str = "", role: str | None = None) -> bool:
+    """Return True if garment has revealing cuts (crop top, tank, sleeveless, sheer, mini) or beachwear."""
+    sub_cat = str(it.get("sub_category") or "").lower().strip()
+    if sub_cat in {"tank_top", "crop_top", "mini_skirt", "bralette", "tube_top", "swimwear", "bikini"}:
+        return True
+    if not all_text:
+        all_text = " ".join([
+            str(it.get("title") or ""),
+            str(it.get("name") or ""),
+            str(it.get("description") or ""),
+            str(it.get("sub_category") or ""),
+            " ".join(str(t) for t in (it.get("tags") or [])),
+        ]).lower()
+    return bool(RE_REVEALING_BEACH_TERMS.search(all_text))
+
+
 def validate_garment_against_negative_constraints(
     it: dict[str, Any],
     rule: Any,
@@ -492,14 +686,30 @@ def validate_garment_against_negative_constraints(
                 return False, "Sleeveless tops, crop tops, and mini skirts violate Orthodox Tzniut modesty."
 
     # 9. Islamic Friday Prayer & Mosque (Jumu'ah)
-    elif rule_id == "rule_cultural_islamic_jumuah" or "jumuah" in neg_constraint.lower() or "mosque" in neg_constraint.lower():
+    elif (
+        rule_id == "rule_cultural_islamic_jumuah"
+        or "jumuah" in neg_constraint.lower()
+        or "mosque" in neg_constraint.lower()
+        or "masjid" in neg_constraint.lower()
+        or "مسجد" in neg_constraint
+        or "מסגד" in neg_constraint
+        or "пятничная молитва" in neg_constraint.lower()
+        or "islamic prayer" in neg_constraint.lower()
+    ):
         cat = norm_category(it.get("category"))
-        gen = (user_gender or "").lower()
-        if (gen in ("male", "man", "men", "גבר") or not gen) and (role == "bottom" or cat == "bottom"):
-            if any(w in all_text for w in ("shorts", "שורטס", "bermuda")):
-                return False, "Shorts above or at the knee are forbidden for men in mosque prayer (awrah)."
-        if any(w in all_text for w in ("sheer", "bodycon", "crop top", "mini skirt", "חולצת בטן")):
-            return False, "Tight or revealing clothing is forbidden in mosque prayer."
+        # 1. Shorts and short bottoms strictly forbidden for all genders (knees and legs must be fully covered)
+        if role == "bottom" or cat == "bottom" or is_shorts_garment(it, all_text, role=role):
+            if is_shorts_garment(it, all_text, role=role):
+                return False, "Shorts and beachwear are strictly forbidden in mosque prayer (knees and legs must be fully covered)."
+        # 2. Animal prints (leopard, cheetah, tiger, zebra, snake, eagle) strictly forbidden
+        if has_animal_or_distracted_print(it, all_text):
+            return False, "Garments or accessories with animal prints (leopard, zebra, etc.) are strictly forbidden in mosque prayer."
+        # 3. Graphic tees, cartoons, slogan prints, distressed/ripped clothing forbidden
+        if is_distressed_or_graphic(it, all_text):
+            return False, "Graphic tees, slogan prints, and distressed/ripped garments are inappropriate for mosque prayer."
+        # 4. Revealing cuts (crop top, tank, sleeveless, sheer, mini skirt) and beach footwear forbidden
+        if is_revealing_or_beachwear(it, all_text, role=role):
+            return False, "Revealing garments (sleeveless tops, crop tops, sheer fabrics, mini skirts) and flip-flops are strictly forbidden in mosque prayer."
 
     # 10. Conservative Modesty
     elif rule_id == "rule_cultural_modesty_conservative" or "unlayered sleeveless" in neg_constraint.lower():
@@ -528,26 +738,21 @@ def validate_garment_against_negative_constraints(
                 return False, "Caps and casual hats must be removed inside Christian sanctuaries."
 
         # 3. Reject shorts and ripped bottoms
-        if role == "bottom" or cat == "bottom":
-            if any(w in all_text for w in (
-                "shorts", "שורטס", "מכנסיים קצרים", "bermuda", "swim", "trunks",
-                "טייץ", "טייטס", "leggings", "tights"
-            )):
+        if role == "bottom" or cat == "bottom" or is_shorts_garment(it, all_text, role=role):
+            if is_shorts_garment(it, all_text, role=role):
                 return False, "Shorts and athletic tights are strictly forbidden in church services and holy sanctuaries."
-            if any(w in all_text for w in ("ripped", "קרוע", "distressed")):
-                return False, "Ripped or distressed jeans violate church etiquette."
+            if is_distressed_or_graphic(it, all_text):
+                return False, "Ripped or distressed garments violate church etiquette."
 
-        # 4. Reject graphic tees, eagle prints, cartoon prints, animal graphics, slogan tees, tank tops, crop tops
-        pattern = str(it.get("pattern") or "").lower()
-        if pattern in ("graphic", "print", "cartoon", "camo", "camouflage", "psychedelic"):
-            return False, "Graphic and printed shirts are inappropriate for church services and holy sites."
-        if any(w in all_text for w in (
-            "graphic", "cartoon", "ציור", "נשר", "eagle", "slogan", "הדפס",
-            "tribal", "טריבל",
-            "tank top", "tank", "sleeveless", "גופייה", "גופיה", "crop top",
-            "חולצת בטן", "גופיית בטן", "bikini", "ביקיני", "swimwear", "beach"
-        )):
-            return False, "Graphic tees, eagle/tribal prints, tank tops, and beachwear are forbidden in holy sanctuaries."
+        # 4. Reject animal prints
+        if has_animal_or_distracted_print(it, all_text):
+            return False, "Animal prints (leopard, zebra, etc.) are inappropriate for church services and holy sanctuaries."
+
+        # 5. Reject graphic tees, cartoon prints, animal graphics, slogan tees, tank tops, crop tops
+        if is_distressed_or_graphic(it, all_text):
+            return False, "Graphic tees, eagle/tribal prints, and slogan shirts are inappropriate for church services and holy sites."
+        if is_revealing_or_beachwear(it, all_text, role=role):
+            return False, "Revealing garments (tank tops, crop tops, sheer fabrics, mini skirts) and beachwear are forbidden in holy sanctuaries."
 
     # 12. Buddhist Temple Visitation & Monastic Color Taboo
     elif (
@@ -659,16 +864,25 @@ def validate_garment_against_negative_constraints(
     elif (
         rule_id == "rule_cultural_jewish_synagogue_prayer"
         or "synagogue services" in neg_constraint.lower()
+        or "synagogue" in neg_constraint.lower()
+        or "בית כנסת" in neg_constraint
+        or "כותל" in neg_constraint
     ):
         cat = norm_category(it.get("category"))
         if role in ("shoes", "footwear") or cat in ("shoes", "footwear"):
             if any(w in all_text for w in ("flip-flop", "flip flop", "slides", "כפכפים", "כפכפי ים")):
                 return False, "Beach flip-flops and athletic slides are forbidden in synagogue services."
-        if role == "bottom" or cat == "bottom":
-            if any(w in all_text for w in ("shorts", "שורטס", "מכנסיים קצרים", "swim", "trunks")):
+        if role == "bottom" or cat == "bottom" or is_shorts_garment(it, all_text, role=role):
+            if is_shorts_garment(it, all_text, role=role):
                 return False, "Shorts and swimwear are forbidden in synagogue services."
-        if any(w in all_text for w in ("sleeveless", "tank", "גופייה", "גופיה", "crop top")):
-            return False, "Sleeveless tops and crop tops violate synagogue reverence standards."
+            if is_distressed_or_graphic(it, all_text):
+                return False, "Ripped, distressed, or slogan bottoms violate synagogue reverence standards."
+        if has_animal_or_distracted_print(it, all_text):
+            return False, "Animal prints (leopard, zebra, etc.) violate synagogue reverence standards."
+        if is_distressed_or_graphic(it, all_text):
+            return False, "Graphic tees, band prints, and distressed garments violate synagogue reverence standards."
+        if is_revealing_or_beachwear(it, all_text, role=role):
+            return False, "Sleeveless tops, crop tops, and revealing cuts violate synagogue reverence standards."
 
     # 20. Vatican & Papal Audience Protocol
     elif (
@@ -965,6 +1179,7 @@ def find_best_garment_replacement(
     exclude_item_ids: set[str],
     axioms: list[Any] | None = None,
     recent_item_ids: set[str] | list[str] | None = None,
+    do_dont_negative_rules: list[str] | None = None,
 ) -> dict[str, Any] | None:
     """Search user's closet metadata for the best matching replacement garment for a specific role."""
     allowed_cats = ROLE_ALLOWED_CATEGORIES.get(role, set())
@@ -999,6 +1214,30 @@ def find_best_garment_replacement(
                     is_axiom_clean = False
                     break
             if not is_axiom_clean:
+                continue
+
+        if do_dont_negative_rules:
+            is_dd_clean = True
+            for dd in do_dont_negative_rules:
+                dd_low = dd.lower()
+                if any(w in dd_low for w in ("shorts", "beachwear", "מכנסיים קצרים", "בגדי ים", "בגד ים", "شورט", "سروال قصير", "bermuda", "kurze hose", "pantalon corto", "pantacourt")):
+                    if is_shorts_garment(it, role=role):
+                        is_dd_clean = False
+                        break
+                if any(w in dd_low for w in ("animal", "leopard", "cheetah", "zebra", "eagle", "graphic", "print", "tees", "מנומר", "הדפס", "חיות", "נשר", "ציור", "نقشة نمر", "tierprint")):
+                    if has_animal_or_distracted_print(it) or is_distressed_or_graphic(it):
+                        is_dd_clean = False
+                        break
+                if any(w in dd_low for w in ("sleeveless", "tank", "crop top", "mini skirt", "גופייה", "גופיה", "חולצת בטן", "חצאית מיני", "بدון أكمام", "sin mangas")):
+                    if is_revealing_or_beachwear(it, role=role):
+                        is_dd_clean = False
+                        break
+                if any(w in dd_low for w in ("flip-flop", "slides", "sandals", "כפכפים", "כפכפי ים", "סנדלים", "شبشب", "chanclas")):
+                    all_text_check = f"{it.get('title') or ''} {it.get('name') or ''} {it.get('sub_category') or ''}".lower()
+                    if any(w in all_text_check for w in ("flip-flop", "flip flop", "slides", "כפכפים", "כפכפי ים")):
+                        is_dd_clean = False
+                        break
+            if not is_dd_clean:
                 continue
 
         score = calculate_garment_style_score(
@@ -1664,6 +1903,23 @@ async def evaluate_and_authorize_outfit(
     advice_payload["outfit_recommendations"] = recommendations
     used_item_ids: set[str] = set()
 
+    # Extract dynamic negative constraints from generated advice do_dont list
+    do_dont_list = advice_payload.get("do_dont") or []
+    do_dont_negative_rules: list[str] = []
+    if isinstance(do_dont_list, list):
+        for dd in do_dont_list:
+            if not isinstance(dd, str):
+                continue
+            dd_lower = dd.lower()
+            if any(prefix in dd_lower for prefix in (
+                "avoid", "do not", "don't", "never wear", "steer clear", "not appropriate", "forbidden",
+                "אין ללבוש", "להימנע", "לא ללבוש", "אסור ללבוש", "אל תלבש", "לא מומלץ",
+                "لا ترتد", "تجنب", "إياك", "لا ينبغي", "ممنوع",
+                "evita", "no uses", "ne pas porter", "évitez", "vermeide", "trage keine", "nicht tragen",
+                "non indossare", "não use", "избегайте", "не надевайте", "не носите", "不要穿", "穿かない", "न पहनें"
+            )):
+                do_dont_negative_rules.append(dd)
+
     for rec_idx, rec in enumerate(recommendations):
 
         items = rec.get("items") or []
@@ -1750,6 +2006,49 @@ async def evaluate_and_authorize_outfit(
                         item_data = None
                         break
 
+            # Check against generated advice DO/DON'T guidance
+            if is_valid_item and item_data and do_dont_negative_rules:
+                for dd in do_dont_negative_rules:
+                    dd_low = dd.lower()
+                    # 1. Shorts / beachwear restriction
+                    if any(w in dd_low for w in ("shorts", "beachwear", "מכנסיים קצרים", "בגדי ים", "בגד ים", "شورט", "سروال قصير", "bermuda", "kurze hose", "pantalon corto", "pantacourt")):
+                        if is_shorts_garment(item_data, role=role):
+                            logger.warning("QA: Item '%s' violates DO/DON'T restriction: %s", item_data.get("title"), dd)
+                            is_valid_item = False
+                            item_data = None
+                            break
+                    # 2. Animal print / graphic print restriction
+                    if any(w in dd_low for w in ("animal", "leopard", "cheetah", "zebra", "eagle", "graphic", "print", "tees", "מנומר", "הדפס", "חיות", "נשר", "ציור", "نقشة نمر", "غرافيك", "tierprint")):
+                        if has_animal_or_distracted_print(item_data) or is_distressed_or_graphic(item_data):
+                            logger.warning("QA: Item '%s' violates DO/DON'T restriction: %s", item_data.get("title"), dd)
+                            is_valid_item = False
+                            item_data = None
+                            break
+                    # 3. Revealing / sleeveless / crop top / mini skirt restriction
+                    if any(w in dd_low for w in ("sleeveless", "tank", "crop top", "mini skirt", "גופייה", "גופיה", "חולצת בטן", "חצאית מיני", "بدון أكمام", "sin mangas")):
+                        if is_revealing_or_beachwear(item_data, role=role):
+                            logger.warning("QA: Item '%s' violates DO/DON'T restriction: %s", item_data.get("title"), dd)
+                            is_valid_item = False
+                            item_data = None
+                            break
+                    # 4. Flip-flops / slides restriction
+                    if any(w in dd_low for w in ("flip-flop", "slides", "sandals", "כפכפים", "כפכפי ים", "סנדלים", "شبشب", "chanclas")):
+                        all_text_check = f"{item_data.get('title') or ''} {item_data.get('name') or ''} {item_data.get('sub_category') or ''}".lower()
+                        if any(w in all_text_check for w in ("flip-flop", "flip flop", "slides", "כפכפים", "כפכפי ים")):
+                            logger.warning("QA: Item '%s' violates DO/DON'T restriction: %s", item_data.get("title"), dd)
+                            is_valid_item = False
+                            item_data = None
+                            break
+                    # 5. Color restrictions: "avoid black" / "do not wear black" / "אין ללבוש שחור"
+                    for col in ("black", "white", "red", "gold", "yellow", "orange"):
+                        col_terms = COLOR_SYNONYMS.get(col, {col})
+                        if any(f"avoid {col}" in dd_low or f"do not wear {col}" in dd_low or f"אין ללבוש {s}" in dd_low or f"להימנע מ{s}" in dd_low for s in col_terms):
+                            if _item_has_color(item_data, col):
+                                logger.warning("QA: Item '%s' has forbidden color '%s' per DO/DON'T: %s", item_data.get("title"), col, dd)
+                                is_valid_item = False
+                                item_data = None
+                                break
+
             # If invalid or unmapped, attempt to find best replacement in closet metadata
             if not is_valid_item:
                 # If it's a bizarre non-garment (e.g. apron / סינר), drop or replace
@@ -1767,6 +2066,7 @@ async def evaluate_and_authorize_outfit(
                     exclude_item_ids=used_item_ids,
                     axioms=axioms,
                     recent_item_ids=recent_set,
+                    do_dont_negative_rules=do_dont_negative_rules,
                 )
                 if replacement:
                     new_id = str(replacement.get("id") or replacement.get("_id"))
@@ -1982,6 +2282,7 @@ async def evaluate_and_authorize_outfit(
                     exclude_item_ids=used_item_ids,
                     axioms=axioms,
                     recent_item_ids=recent_set,
+                    do_dont_negative_rules=do_dont_negative_rules,
                 )
                 if replacement:
                     new_id = str(replacement.get("id") or replacement.get("_id"))
