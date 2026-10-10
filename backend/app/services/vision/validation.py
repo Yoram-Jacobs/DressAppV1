@@ -1236,30 +1236,33 @@ def _coerce_seasons(parsed: dict[str, Any]) -> None:
 _MULTILINGUAL_HEADWEAR_KEYWORDS = (
     # EN
     "cap", "hat", "baseball", "headwear", "beanie", "beret", "fedora", "bucket hat", "visor", "snapback",
+    "turban", "yarmulke", "kippah", "keffiyeh", "kuffiyeh", "shemagh", "ghutra", "hijab", "shayla",
+    "mitpachat", "tichel", "shtreimel", "spodik", "dastar", "pagri", "fez", "tarboosh", "kufi", "taqiyah", "agal",
     # HE
-    "כובע", "מצחייה", "ברט", "מגבעת", "כיפה",
+    "כובע", "מצחייה", "ברט", "מגבעת", "כיפה", "יארמולקה", "כאפייה", "שמאג", "טורבן", "דסטאר",
+    "מטפחת", "טיכל", "שטריימל", "ספודיק", "חיג'אב", "תרבוש",
     # AR
-    "قبعة", "طاقية", "كاب", "بيريه",
+    "قبعة", "طاقية", "كاب", "بيريه", "كوفية", "شماغ", "غترة", "عمامة", "حجاب", "طربوش", "عقال", "شيلة",
     # ES
-    "gorra", "sombrero", "gorro", "boina", "visera",
+    "gorra", "sombrero", "gorro", "boina", "visera", "turbante", "quipá", "velo", "hiyab",
     # FR
-    "casquette", "chapeau", "bonnet", "béret", "visière",
+    "casquette", "chapeau", "bonnet", "béret", "visière", "turban", "kippa", "keffieh", "voile", "hijab",
     # DE
-    "mütze", "kappe", "hut", "barett", "schirmmütze",
+    "mütze", "kappe", "hut", "barett", "schirmmütze", "turban", "kippa", "kopftuch",
     # IT
-    "cappellino", "cappello", "berretto", "cuffia", "visiera",
+    "cappellino", "cappello", "berretto", "cuffia", "visiera", "turbante", "kippah", "velo",
     # PT
-    "boné", "chapéu", "gorro", "boina", "viseira",
+    "boné", "chapéu", "gorro", "boina", "viseira", "turbante", "quipá", "véu",
     # NL
-    "pet", "hoed", "muts", "baret", "klep",
+    "pet", "hoed", "muts", "baret", "klep", "tulband", "keppeltje", "hoofddoek",
     # RU
-    "кепка", "бейсболка", "шапка", "шляпа", "берет", "козырек",
+    "кепка", "бейсболка", "шапка", "шляпа", "берет", "козырек", "тюрбан", "кипа", "ермолка", "хиджаб", "куфия",
     # ZH
-    "帽子", "棒球帽", "鸭舌帽", "贝雷帽", "针织帽", "礼帽",
+    "帽子", "棒球帽", "鸭舌帽", "贝雷帽", "针织帽", "礼帽", "头巾", "包头巾",
     # JA
-    "帽子", "キャップ", "ハット", "ベレー帽", "ニット帽", "キャスケット",
+    "帽子", "キャップ", "ハット", "ベレー帽", "ニット帽", "キャスケット", "ターバン", "ヒジャブ",
     # HI
-    "टोपी", "कैप", "हैट", "बेरी"
+    "टोपी", "कैप", "हैट", "बेरी", "पगड़ी", "दस्तार", "साफा", "हिजाब"
 )
 
 _MULTILINGUAL_TEXT_KEYWORDS = (
