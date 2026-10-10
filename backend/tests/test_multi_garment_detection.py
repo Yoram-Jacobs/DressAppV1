@@ -2803,6 +2803,147 @@ def test_embroidered_pattern_validation_and_fallback():
     assert repaired_cap["pattern"] == "embroidered"
 
 
+def test_validation_multilingual_support_across_all_languages():
+    """Verify that validation.py properly resolves patterns, genders, dress codes, and headwear text across all 13 languages."""
+    from backend.app.services.vision.validation import _coerce_single_garment, resolve_garment_gender, _normalise_dress_code
+
+    # 1. Gender aliases in multiple languages
+    assert resolve_garment_gender("זכר") == "men"
+    assert resolve_garment_gender("ذكر") == "men"
+    assert resolve_garment_gender("hombre") == "men"
+    assert resolve_garment_gender("homme") == "men"
+    assert resolve_garment_gender("männer") == "men"
+    assert resolve_garment_gender("мужской") == "men"
+    assert resolve_garment_gender("男士") == "men"
+    assert resolve_garment_gender("メンズ") == "men"
+    assert resolve_garment_gender("पुरुष") == "men"
+
+    assert resolve_garment_gender("אישה") == "women"
+    assert resolve_garment_gender("أنثى") == "women"
+    assert resolve_garment_gender("mujer") == "women"
+    assert resolve_garment_gender("femme") == "women"
+    assert resolve_garment_gender("frauen") == "women"
+    assert resolve_garment_gender("женский") == "women"
+    assert resolve_garment_gender("女士") == "women"
+    assert resolve_garment_gender("レディース") == "women"
+    assert resolve_garment_gender("महिला") == "women"
+
+    assert resolve_garment_gender("ילדים") == "kids"
+    assert resolve_garment_gender("أطفال") == "kids"
+    assert resolve_garment_gender("niños") == "kids"
+    assert resolve_garment_gender("enfants") == "kids"
+    assert resolve_garment_gender("kinder") == "kids"
+    assert resolve_garment_gender("дети") == "kids"
+    assert resolve_garment_gender("儿童") == "kids"
+    assert resolve_garment_gender("キッズ") == "kids"
+    assert resolve_garment_gender("बच्चे") == "kids"
+
+    # 2. Dress code aliases across languages
+    assert _normalise_dress_code("رسمي") == "formal"
+    assert _normalise_dress_code("formal") == "formal"
+    assert _normalise_dress_code("sportlich") == "athletic"
+    assert _normalise_dress_code("деловой") == "business"
+    assert _normalise_dress_code("商务休闲") == "smart-casual"
+    assert _normalise_dress_code("ルームウェア") == "loungewear"
+
+    # 3. Pattern aliases in 13 languages
+    cases = [
+        ("ar", "مطرز", "embroidered"),
+        ("ar", "مخطط", "striped"),
+        ("es", "bordado", "embroidered"),
+        ("es", "camuflaje", "camouflage"),
+        ("fr", "brodé", "embroidered"),
+        ("fr", "rayé", "striped"),
+        ("de", "bestickt", "embroidered"),
+        ("de", "kariert", "plaid"),
+        ("it", "ricamato", "embroidered"),
+        ("it", "a quadri", "plaid"),
+        ("pt", "listrado", "striped"),
+        ("pt", "xadrez", "plaid"),
+        ("nl", "geborduurd", "embroidered"),
+        ("nl", "gestreept", "striped"),
+        ("ru", "вышивка", "embroidered"),
+        ("ru", "в горошек", "polka_dot"),
+        ("zh", "刺绣", "embroidered"),
+        ("zh", "条纹", "striped"),
+        ("ja", "刺繍", "embroidered"),
+        ("ja", "花柄", "floral"),
+        ("hi", "कढ़ाई", "embroidered"),
+        ("hi", "धारीदार", "striped"),
+    ]
+    for lang, raw_pat, expected in cases:
+        res = _coerce_single_garment({
+            "category": "Top",
+            "sub_category": "T-Shirt",
+            "name": f"Item {raw_pat}",
+            "title": f"Item {raw_pat}",
+            "pattern": raw_pat,
+        }, language=lang)
+        assert res["pattern"] == expected, f"Failed for {lang}: {raw_pat} -> {res['pattern']} (expected {expected})"
+
+    # 4. Multilingual Cap with text/lettering/patches auto-classified as embroidered
+    # Spanish
+    cap_es = _coerce_single_garment({
+        "category": "Accessories",
+        "sub_category": "Headwear",
+        "item_type": "Gorra",
+        "name": "Gorra Madrid",
+        "title": "Gorra Madrid",
+        "caption": "Gorra deportiva con la palabra 'MADRID' bordada en letras grandes.",
+        "pattern": "liso",
+    }, language="es")
+    assert cap_es["pattern"] == "embroidered"
+
+    # French
+    cap_fr = _coerce_single_garment({
+        "category": "Accessories",
+        "sub_category": "Headwear",
+        "item_type": "Casquette",
+        "name": "Casquette Paris",
+        "title": "Casquette Paris",
+        "caption": "Casquette bleue avec le mot 'PARIS' et un écusson brodé.",
+        "pattern": "uni",
+    }, language="fr")
+    assert cap_fr["pattern"] == "embroidered"
+
+    # Russian
+    cap_ru = _coerce_single_garment({
+        "category": "Accessories",
+        "sub_category": "Headwear",
+        "item_type": "Бейсболка",
+        "name": "Бейсболка с нашивкой",
+        "title": "Бейсболка с нашивкой",
+        "caption": "Бейсболка с надписью 'CHAMPION' и гербом на передней панели.",
+        "pattern": "однотонный",
+    }, language="ru")
+    assert cap_ru["pattern"] == "embroidered"
+
+    # Arabic
+    cap_ar = _coerce_single_garment({
+        "category": "Accessories",
+        "sub_category": "Headwear",
+        "item_type": "قبعة",
+        "name": "قبعة رياضية",
+        "title": "قبعة رياضية",
+        "caption": "قبعة أنيقة مع كتابة وشعار بارز في الأمام.",
+        "pattern": "سادة",
+    }, language="ar")
+    assert cap_ar["pattern"] == "embroidered"
+
+    # Japanese
+    cap_ja = _coerce_single_garment({
+        "category": "Accessories",
+        "sub_category": "Headwear",
+        "item_type": "キャップ",
+        "name": "ベースボールキャップ",
+        "title": "ベースボールキャップ",
+        "caption": "フロントに文字のロゴとパッチがあしらわれたキャップ。",
+        "pattern": "無地",
+    }, language="ja")
+    assert cap_ja["pattern"] == "embroidered"
+
+
+
 
 
 

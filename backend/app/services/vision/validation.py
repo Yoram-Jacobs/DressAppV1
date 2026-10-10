@@ -7,10 +7,78 @@ from typing import Any
 
 _VALID_GENDER = {"men", "women", "unisex", "kids"}
 _GENDER_ALIASES = {
-    "male": "men", "man": "men", "m": "men", "זכר": "men", "גבר": "men",
-    "female": "women", "woman": "women", "f": "women", "w": "women", "נקבה": "women", "אישה": "women",
-    "uni": "unisex",
-    "kid": "kids", "child": "kids", "children": "kids", "boy": "kids", "boys": "kids", "girl": "kids", "girls": "kids", "ילד": "kids", "ילדה": "kids", "ילדים": "kids",
+    # English
+    "male": "men", "man": "men", "men": "men", "m": "men", "masculine": "men", "gentleman": "men", "gentlemen": "men",
+    "female": "women", "woman": "women", "women": "women", "f": "women", "w": "women", "feminine": "women", "lady": "women", "ladies": "women",
+    "uni": "unisex", "unisex": "unisex", "neutral": "unisex", "genderless": "unisex",
+    "kid": "kids", "kids": "kids", "child": "kids", "children": "kids", "boy": "kids", "boys": "kids", "girl": "kids", "girls": "kids", "youth": "kids", "toddler": "kids",
+
+    # Hebrew (he)
+    "זכר": "men", "גבר": "men", "גברים": "men",
+    "נקבה": "women", "אישה": "women", "נשים": "women",
+    "יוניסקס": "unisex", "לשני המינים": "unisex",
+    "ילד": "kids", "ילדה": "kids", "ילדים": "kids", "ילדות": "kids", "פעוט": "kids",
+
+    # Arabic (ar)
+    "ذكر": "men", "رجل": "men", "رجال": "men", "رجالي": "men",
+    "أنثى": "women", "امرأة": "women", "نساء": "women", "نسائي": "women",
+    "للجنسين": "unisex", "محايد": "unisex",
+    "طفل": "kids", "أطفال": "kids", "ولد": "kids", "أولاد": "kids", "بنت": "kids", "بنات": "kids",
+
+    # Spanish (es)
+    "hombre": "men", "hombres": "men", "caballero": "men", "masculino": "men",
+    "mujer": "women", "mujeres": "women", "dama": "women", "femenino": "women",
+    "niño": "kids", "niña": "kids", "niños": "kids", "niñas": "kids", "infantil": "kids",
+
+    # French (fr)
+    "homme": "men", "hommes": "men", "masculin": "men",
+    "femme": "women", "femmes": "women", "féminin": "women",
+    "enfant": "kids", "enfants": "kids", "garçon": "kids", "fille": "kids",
+
+    # German (de)
+    "mann": "men", "männer": "men", "herren": "men", "männlich": "men",
+    "frau": "women", "frauen": "women", "damen": "women", "weiblich": "women",
+    "geschlechtsneutral": "unisex",
+    "kind": "kids", "kinder": "kids", "junge": "kids", "mädchen": "kids",
+
+    # Italian (it)
+    "uomo": "men", "uomini": "men", "maschile": "men",
+    "donna": "women", "donne": "women", "femminile": "women",
+    "bambino": "kids", "bambina": "kids", "bambini": "kids", "bambine": "kids",
+
+    # Portuguese (pt)
+    "homem": "men", "homens": "men",
+    "mulher": "women", "mulheres": "women",
+    "criança": "kids", "crianças": "kids", "menino": "kids", "menina": "kids",
+
+    # Dutch (nl)
+    "heren": "men",
+    "vrouw": "women", "vrouwen": "women",
+    "jongen": "kids",
+
+    # Russian (ru)
+    "мужской": "men", "мужчины": "men", "мужчина": "men",
+    "женский": "women", "женщины": "women", "женщина": "women",
+    "унисекс": "unisex",
+    "дети": "kids", "детский": "kids", "детская": "kids", "детское": "kids", "ребенок": "kids", "мальчик": "kids", "девочка": "kids",
+
+    # Chinese (zh)
+    "男": "men", "男士": "men", "男性": "men", "男生": "men",
+    "女": "women", "女士": "women", "女性": "women", "女生": "women",
+    "中性": "unisex", "通用": "unisex",
+    "儿童": "kids", "童装": "kids", "小孩": "kids", "童": "kids",
+
+    # Japanese (ja)
+    "メンズ": "men", "男性": "men",
+    "レディース": "women", "女性": "women",
+    "ユニセックス": "unisex", "男女兼用": "unisex",
+    "キッズ": "kids", "子供": "kids", "子ども": "kids",
+
+    # Hindi (hi)
+    "पुरुष": "men", "आदमी": "men", "पुल्लिंग": "men",
+    "महिला": "women", "स्त्री": "women", "औरत": "women", "महिलाएं": "women",
+    "यूनिसेक्स": "unisex",
+    "बच्चे": "kids", "बच्चा": "kids", "बाल": "kids",
 }
 
 
@@ -48,13 +116,40 @@ _FEMININE_CUT_KEYWORDS = {
     "scallop", "bell sleeve", "off-shoulder", "off the shoulder", "cold shoulder",
     "handbag", "purse", "clutch", "tote bag", "shoulder bag", "crossbody bag", "satchel", "hobo bag",
     "skinny jeans", "jeggings",
+    # Hebrew (he)
     "בלוזה", "שמלה", "חצאית", "עקב", "עקבים", "חזייה", "מחוך", "סנדל", "סנדלים",
     "תיק יד", "תיק צד", "תיק כתף", "קלאץ'", "ארנק", "סקיני", "ג'ינס סקיני",
     "חולצת בטן", "טוניקה", "סטרפלס", "גופיית בטן", "פרחוני", "תחרה", "חולצה פרחונית",
     "גרביונים", "שראג", "בולרו",
+    # Arabic (ar)
+    "تنورة", "فستان", "بلوزة", "حذاء كعب", "كعب عالي", "حقيبة يد", "حمالة صدر",
+    # Spanish (es)
+    "falda", "vestido", "blusa", "tacones", "tacón", "bolso", "sujetador",
+    # French (fr)
+    "jupe", "robe", "blouse", "talons", "sac à main", "soutien-gorge",
+    # German (de)
+    "rock", "kleid", "bluse", "pumps", "high heels", "handtasche", "bh",
+    # Italian (it)
+    "gonna", "abito", "camicetta", "tacchi", "borsa a mano", "reggiseno",
+    # Portuguese (pt)
+    "saia", "vestido", "blusa", "saltos", "bolsa de mão", "sutiã",
+    # Dutch (nl)
+    "rok", "jurk", "blouse", "hakken", "handtas", "beha",
+    # Russian (ru)
+    "юбка", "платье", "блузка", "каблуки", "туфли на каблуке", "дамская сумочка", "бюстгальтер",
+    # Chinese (zh)
+    "半身裙", "连衣裙", "短裙", "女式衬衫", "高跟鞋", "手提包", "文胸",
+    # Japanese (ja)
+    "スカート", "ワンピース", "ブラウス", "ハイヒール", "パンプス", "ハンドバッグ", "ブラジャー",
+    # Hindi (hi)
+    "स्कर्ट", "साड़ी", "लहंगा", "ब्लाउज", "ऊँची एड़ी", "हैंडबैग",
 }
 _MASCULINE_CUT_KEYWORDS = {
     "boxers", "briefs", "tuxedo", "בוקסר", "טוקסידו",
+    "بدلة سهرة", "bóxer", "esmoquin", "caleçon", "smoking",
+    "boxershorts", "frack", "boxershort", "боксеры", "смокинг",
+    "平角裤", "四角裤", "燕尾服", "ボクサーパンツ", "タキシード",
+    "बॉक्सर", "टक्सीडो",
 }
 _UNISEX_CUT_KEYWORDS = {
     "athletic tank top", "athletic tank", "tank top", "singlet", "running tank",
@@ -1133,6 +1228,303 @@ def _coerce_seasons(parsed: dict[str, Any]) -> None:
     parsed["season"] = [s for s in order if s in seasons]
 
 
+# ---------------------------------------------------------------------------
+# Multilingual pattern, headwear, text & emblem lexicons
+# Covering all 13 DressApp languages: EN, HE, AR, ES, FR, DE, IT, PT, NL, RU, ZH, JA, HI
+# ---------------------------------------------------------------------------
+
+_MULTILINGUAL_HEADWEAR_KEYWORDS = (
+    # EN
+    "cap", "hat", "baseball", "headwear", "beanie", "beret", "fedora", "bucket hat", "visor", "snapback",
+    # HE
+    "כובע", "מצחייה", "ברט", "מגבעת", "כיפה",
+    # AR
+    "قبعة", "طاقية", "كاب", "بيريه",
+    # ES
+    "gorra", "sombrero", "gorro", "boina", "visera",
+    # FR
+    "casquette", "chapeau", "bonnet", "béret", "visière",
+    # DE
+    "mütze", "kappe", "hut", "barett", "schirmmütze",
+    # IT
+    "cappellino", "cappello", "berretto", "cuffia", "visiera",
+    # PT
+    "boné", "chapéu", "gorro", "boina", "viseira",
+    # NL
+    "pet", "hoed", "muts", "baret", "klep",
+    # RU
+    "кепка", "бейсболка", "шапка", "шляпа", "берет", "козырек",
+    # ZH
+    "帽子", "棒球帽", "鸭舌帽", "贝雷帽", "针织帽", "礼帽",
+    # JA
+    "帽子", "キャップ", "ハット", "ベレー帽", "ニット帽", "キャスケット",
+    # HI
+    "टोपी", "कैप", "हैट", "बेरी"
+)
+
+_MULTILINGUAL_TEXT_KEYWORDS = (
+    # EN
+    "word", "words", "letter", "letters", "lettering", "text", "slogan", "typography", "statement", "quote",
+    # HE
+    "כיתוב", "מילה", "מילים", "אותיות", "סלוגן", "טקסט",
+    # AR
+    "كتابة", "نص", "كلمات", "كلمة", "حروف", "شعار", "عبارة",
+    # ES
+    "texto", "palabra", "palabras", "letras", "letra", "lema", "eslogan", "tipografía",
+    # FR
+    "texte", "mot", "mots", "lettres", "lettre", "slogan", "typographie",
+    # DE
+    "text", "wort", "wörter", "buchstaben", "buchstabe", "slogan", "schriftzug",
+    # IT
+    "testo", "parola", "parole", "lettere", "lettera", "slogan", "scritta",
+    # PT
+    "texto", "palavra", "palavras", "letras", "letra", "slogan", "escrita", "tipografia",
+    # NL
+    "tekst", "woord", "woorden", "letters", "letter", "leus", "slogan", "belettering",
+    # RU
+    "текст", "слово", "слова", "буквы", "буква", "надпись", "лозунг", "слоган",
+    # ZH
+    "文字", "字母", "标语", "口号", "单词", "字体", "字样",
+    # JA
+    "文字", "テキスト", "レタリング", "スローガン", "ロゴ文字", "ワード",
+    # HI
+    "शब्द", "अक्षर", "टेक्स्ट", "नारा", "स्लोगन", "लिखावट"
+)
+
+_MULTILINGUAL_EMBLEM_KEYWORDS = (
+    # EN
+    "patch", "patches", "emblem", "crest", "badge", "flag", "insignia", "shield",
+    # HE
+    "פאץ'", "פאצ'", "סמל", "דגל", "תג",
+    # AR
+    "شارة", "رقعة", "شعار", "رمز", "علم", "وسام",
+    # ES
+    "parche", "parches", "emblema", "escudo", "insignia", "bandera",
+    # FR
+    "écusson", "patch", "emblème", "badge", "drapeau", "insigne",
+    # DE
+    "aufnäher", "patch", "emblem", "wappen", "abzeichen", "fahne", "flagge",
+    # IT
+    "toppa", "patch", "stemma", "emblema", "distintivo", "bandiera",
+    # PT
+    "patch", "retalho", "emblema", "brasão", "distintivo", "bandeira",
+    # NL
+    "patch", "embleem", "wapen", "badge", "vlag",
+    # RU
+    "нашивка", "патч", "эмблема", "герб", "шеврон", "флаг", "значок",
+    # ZH
+    "补丁", "徽章", "标志", "刺绣贴", "旗帜", "队标",
+    # JA
+    "ワッペン", "パッチ", "エンブレム", "紋章", "バッジ", "国旗",
+    # HI
+    "पैच", "प्रतीक", "बैज", "झंडा", "निशान"
+)
+
+_MULTILINGUAL_EMBROIDERED_KEYWORDS = (
+    # EN
+    "embroidered", "embroidery", "needlework", "stitched", "stitching", "stitch", "threaded",
+    # HE
+    "רקמה", "רקום", "רקומה", "רקומי", "תפירה", "תפור", "תפורה",
+    # AR
+    "تطريز", "مطرز", "مطرزة", "غرزة", "درزة", "منسوج بخيوط",
+    # ES
+    "bordado", "bordada", "bordados", "costura", "cosido", "pespunte",
+    # FR
+    "brodé", "brodée", "broderie", "cousu", "piqûre",
+    # DE
+    "bestickt", "stickerei", "gesteppt", "naht", "genäht",
+    # IT
+    "ricamato", "ricamata", "ricamo", "cucito", "cucitura",
+    # PT
+    "bordado", "bordada", "bordados", "costura", "costurado",
+    # NL
+    "geborduurd", "borduurwerk", "gestikt", "stiksel",
+    # RU
+    "вышивка", "вышитый", "вышитая", "строчка", "вышитое", "прошитый",
+    # ZH
+    "刺绣", "刺绣花纹", "缝线", "针织刺绣", "挑花",
+    # JA
+    "刺繍", "刺しゅう", "ステッチ", "縫い取り",
+    # HI
+    "कढ़ाई", "कढ़ाईदार", "सिलाई", "कसीदाकारी", "कशीदाकारी"
+)
+
+_MULTILINGUAL_CAMO_KEYWORDS = (
+    # EN
+    "camo", "camouflage", "camouflaged",
+    # HE
+    "צבאי", "הסוואה", "קמופלאז", "קמופלאז'",
+    # AR
+    "تمويه", "مموه", "عسكري",
+    # ES
+    "camuflaje", "camuflado", "militar",
+    # FR
+    "camouflage", "camouflé", "treillis",
+    # DE
+    "tarnung", "tarnmuster", "camouflage",
+    # IT
+    "mimetico", "mimetica", "camouflage",
+    # PT
+    "camuflagem", "camuflado",
+    # NL
+    "camouflage", "camouflerend",
+    # RU
+    "камуфляж", "камуфляжный", "милитари",
+    # ZH
+    "迷彩", "伪装色",
+    # JA
+    "迷彩", "カモフラージュ", "カモフラ",
+    # HI
+    "छलावरण", "कैमोफ्लेज", "सैन्य"
+)
+
+_MULTILINGUAL_PRINTED_KEYWORDS = (
+    # EN
+    "print", "printed", "graphic", "logo", "lettering", "artwork", "illustration", "slogan", "screen-print", "screenprint",
+    # HE
+    "הדפס", "הדפסה", "גרפי", "לוגו", "איור", "כיתוב",
+    # AR
+    "طباعة", "مطبوع", "مطبوعة", "جرافيك", "رسم", "شعار",
+    # ES
+    "estampado", "estampada", "gráfico", "logo", "serigrafía", "ilustración",
+    # FR
+    "imprimé", "imprimée", "graphisme", "graphique", "logo", "sérigraphie", "illustration",
+    # DE
+    "bedruckt", "druck", "grafik", "logo", "aufdruck", "illustration",
+    # IT
+    "stampato", "stampata", "grafica", "logo", "serigrafia", "stampa",
+    # PT
+    "estampado", "estampada", "gráfico", "logo", "serigrafia", "estampa",
+    # NL
+    "bedrukt", "print", "grafisch", "logo", "opdruk",
+    # RU
+    "принт", "напечатанный", "рисунок", "логотип", "графика", "печать",
+    # ZH
+    "印花", "印刷", "图案", "图标", "标志", "印字",
+    # JA
+    "プリント", "グラフィック", "ロゴ", "イラスト",
+    # HI
+    "प्रिंट", "प्रिंटेड", "ग्राफिक", "लोगो", "चित्र", "छपाई"
+)
+
+_MULTILINGUAL_GEOMETRIC_KEYWORDS = (
+    # EN
+    "geometric", "geometry", "texture", "textured", "weave", "waffle", "jacquard", "pique",
+    "dot", "dots", "polka", "eyelet", "perforated", "mesh", "ribbed", "subtle",
+    # HE
+    "גיאומטרי", "מרקם", "טקסטורה", "נקודות", "עיגולים", "מחורר", "דוגמה", "ריב",
+    # AR
+    "هندسي", "منقط", "نسيج", "ملمس", "مضلع", "مشبك", "نقاط",
+    # ES
+    "geométrico", "textura", "texturizado", "lunares", "topos", "calado", "rejilla", "acanalado",
+    # FR
+    "géométrique", "texture", "texturé", "pois", "ajouré", "résille", "côtelé",
+    # DE
+    "geometrisch", "textur", "strukturiert", "punkte", "gepunktet", "mesh", "gerippt", "wabenmuster",
+    # IT
+    "geometrico", "trama", "strutturato", "pois", "traforato", "a coste", "retinato",
+    # PT
+    "geométrico", "textura", "texturizado", "poá", "bolinhas", "furadinho", "canelado",
+    # NL
+    "geometrisch", "textuur", "gestructureerd", "stippen", "geribbeld", "gaas",
+    # RU
+    "геометрический", "текстура", "фактура", "горошек", "сетка", "рубчик", "перфорация", "узор",
+    # ZH
+    "几何", "纹理", "提花", "圆点", "波点", "镂空", "网眼", "螺纹",
+    # JA
+    "幾何学", "テクスチャ", "ドット", "水玉", "メッシュ", "リブ", "ワッフル",
+    # HI
+    "ज्यामितीय", "बनावट", "पोल्का डॉट", "जालीदार", "रिब्ड", "बूंदी"
+)
+
+_MULTILINGUAL_STRIPE_KEYWORDS = (
+    # EN
+    "stripe", "striped", "stripes", "zebra", "pinstripe",
+    # HE
+    "פסים", "מפוספס", "זברה",
+    # AR
+    "مخطط", "مقلم", "خطوط", "حمار وحشي",
+    # ES
+    "rayas", "rayado", "líneas", "cebra",
+    # FR
+    "rayé", "rayures", "lignes", "zèbre",
+    # DE
+    "gestreift", "streifen", "zebra", "nadelstreifen",
+    # IT
+    "righe", "a righe", "strisce", "zebrato",
+    # PT
+    "listrado", "listras", "riscas", "zebra",
+    # NL
+    "gestreept", "strepen", "zebra",
+    # RU
+    "полоска", "полосатый", "в полоску", "зебра",
+    # ZH
+    "条纹", "斑马纹", "细条纹",
+    # JA
+    "ストライプ", "ボーダー", "縞模様", "ゼブラ",
+    # HI
+    "धारीदार", "धारियां", "ज़ेबरा"
+)
+
+_MULTILINGUAL_PLAID_KEYWORDS = (
+    # EN
+    "plaid", "check", "checker", "checkered", "tartan", "gingham",
+    # HE
+    "משובץ", "משבצות", "טרטאן", "גינגהאם",
+    # AR
+    "مربعات", "كاروهات", "تارتان",
+    # ES
+    "cuadros", "a cuadros", "tartán", "vichy",
+    # FR
+    "carreaux", "à carreaux", "tartan", "vichy",
+    # DE
+    "kariert", "schottenmuster", "gingham", "karomuster",
+    # IT
+    "a quadri", "scozzese", "quadretti",
+    # PT
+    "xadrez", "quadriculado", "tartã",
+    # NL
+    "geruit", "ruitjes", "tartan",
+    # RU
+    "клетка", "клетчатый", "в клетку", "тартан",
+    # ZH
+    "格子", "方格", "苏格兰格", "格纹",
+    # JA
+    "チェック", "格子柄", "タータン", "ギンガム",
+    # HI
+    "चेक", "चेक्स", "चौखाने"
+)
+
+_MULTILINGUAL_FLORAL_KEYWORDS = (
+    # EN
+    "floral", "flower", "flowers", "botanical", "blossom",
+    # HE
+    "פרח", "פרחוני", "פרחים",
+    # AR
+    "زهري", "ورد", "أزهار", "ورود", "مشجر",
+    # ES
+    "floral", "flores", "flor", "estampado floral",
+    # FR
+    "floral", "fleur", "fleurs", "fleuri",
+    # DE
+    "blumig", "blumen", "floral", "blumenmuster",
+    # IT
+    "floreale", "fiori", "fiore",
+    # PT
+    "floral", "flores", "florido",
+    # NL
+    "bloemen", "bloemig", "floraal",
+    # RU
+    "цветочный", "цветы", "в цветочек", "растительный",
+    # ZH
+    "碎花", "花朵", "花卉", "印花花",
+    # JA
+    "花柄", "フラワー", "ボタニカル",
+    # HI
+    "फ्लोरल", "फूल", "फूलों"
+)
+
+
 def _coerce_single_garment(
     parsed: dict[str, Any] | list[dict[str, Any]],
     user_gender: str | None = None,
@@ -2128,44 +2520,42 @@ def _coerce_single_garment(
     # Pattern fallback: if model returned solid/empty/printed, check text for camouflage, embroidery, or graphics
     pat_str = (res.get("pattern") or "").strip().lower()
     full_pat_text = f"{res.get('name', '')} {res.get('title', '')} {res.get('caption', '')} {' '.join(str(t) for t in res.get('tags') or [])}".lower()
-    is_camo = any(w in full_pat_text for w in ("camo", "camouflage", "צבאי", "הסוואה", "קמופלאז", "קמופלאז'"))
+    is_camo = any(w in full_pat_text for w in _MULTILINGUAL_CAMO_KEYWORDS)
 
     is_headwear_or_cap = (
         cat_lower in ("accessories", "accessory")
         or sub_lower in ("headwear", "hat", "cap", "baseball cap", "beanie")
-        or any(w in full_pat_text for w in ("cap", "hat", "baseball", "כובע"))
+        or any(w in full_pat_text for w in _MULTILINGUAL_HEADWEAR_KEYWORDS)
     )
-    has_text_or_words = any(w in full_pat_text for w in (
-        "word", "words", "letter", "letters", "lettering", "text", "slogan", "typography",
-        "כיתוב", "מילה", "מילים", "אותיות", "סלוגן"
-    )) or bool(re.search(r"(?:word|letters?|text)\s*['\"][^'\"]+['\"]", full_pat_text))
-    has_patches_or_emblems = any(w in full_pat_text for w in (
-        "patch", "patches", "emblem", "crest", "badge", "flag", "פאץ'", "פאצ'", "סמל", "דגל"
-    ))
-    is_explicit_embroidered = any(w in full_pat_text for w in (
-        "embroidered", "embroidery", "needlework", "stitched", "stitching", "stitch",
-        "רקמה", "רקום", "רקומה", "רקומי", "תפירה", "תפור"
-    ))
+    has_text_or_words = any(w in full_pat_text for w in _MULTILINGUAL_TEXT_KEYWORDS) or bool(
+        re.search(r"(?:word|letters?|text|כיתוב|نص|texto|texte|schriftzug|надпись|文字)\s*['\"][^'\"]+['\"]", full_pat_text)
+    )
+    has_patches_or_emblems = any(w in full_pat_text for w in _MULTILINGUAL_EMBLEM_KEYWORDS)
+    is_explicit_embroidered = any(w in full_pat_text for w in _MULTILINGUAL_EMBROIDERED_KEYWORDS)
     is_embroidered = is_explicit_embroidered or (is_headwear_or_cap and (has_text_or_words or has_patches_or_emblems))
 
-    if pat_str in ("camo", "camouflage", "camouflaged", "צבאי", "הסוואה", "קמופלאז", "קמופלאז'") or is_camo:
+    norm_pat_from_alias = _PATTERN_ALIASES.get(pat_str)
+
+    if norm_pat_from_alias == "camouflage" or is_camo:
         res["pattern"] = "camouflage"
-    elif pat_str in ("embroidered", "embroidery", "רקמה", "רקום", "רקומה") or is_embroidered:
+    elif norm_pat_from_alias == "embroidered" or is_embroidered:
         res["pattern"] = "embroidered"
-    elif not pat_str or pat_str in ("solid", "printed", "print", "none", "unknown", "other"):
+    elif norm_pat_from_alias in ("striped", "plaid", "floral", "geometric", "polka_dot"):
+        res["pattern"] = norm_pat_from_alias
+    elif not pat_str or pat_str in ("solid", "printed", "print", "none", "unknown", "other") or norm_pat_from_alias in ("solid", "printed"):
         if is_headwear_or_cap and (has_text_or_words or has_patches_or_emblems):
             res["pattern"] = "embroidered"
-        elif any(w in full_pat_text for w in ("print", "printed", "graphic", "logo", "lettering", "artwork", "illustration", "slogan", "הדפס", "הדפסה", "גרפי", "לוגו", "איור", "כיתוב")) or has_text_or_words:
+        elif any(w in full_pat_text for w in _MULTILINGUAL_PRINTED_KEYWORDS) or has_text_or_words:
             res["pattern"] = "printed"
-        elif any(w in full_pat_text for w in ("geometric", "geometry", "texture", "textured", "weave", "waffle", "jacquard", "pique", "dot", "dots", "polka", "eyelet", "perforated", "mesh", "ribbed", "subtle", "גיאומטרי", "מרקם", "טקסטורה", "נקודות", "עיגולים", "מחורר", "דוגמה")):
+        elif any(w in full_pat_text for w in _MULTILINGUAL_GEOMETRIC_KEYWORDS):
             res["pattern"] = "geometric"
-        elif any(w in full_pat_text for w in ("stripe", "striped", "פסים")):
+        elif any(w in full_pat_text for w in _MULTILINGUAL_STRIPE_KEYWORDS):
             # Prevent footwear gloss/straps from triggering striped pattern unless zebra
-            if cat_lower != "footwear" or "zebra" in full_pat_text or "זברה" in full_pat_text:
+            if cat_lower != "footwear" or "zebra" in full_pat_text or any(z in full_pat_text for z in ("זברה", "حمار وحشي", "cebra", "zèbre", "zebrato", "зебра", "斑马", "ゼブラ")):
                 res["pattern"] = "striped"
-        elif any(w in full_pat_text for w in ("plaid", "check", "checker", "משובץ")):
+        elif any(w in full_pat_text for w in _MULTILINGUAL_PLAID_KEYWORDS):
             res["pattern"] = "plaid"
-        elif any(w in full_pat_text for w in ("floral", "flower", "פרח")):
+        elif any(w in full_pat_text for w in _MULTILINGUAL_FLORAL_KEYWORDS):
             res["pattern"] = "floral"
 
     # Eagle vs Deer correction: American Eagle / eagle bird emblem is often mistranslated or confused with deer ("אייל")
@@ -2419,10 +2809,15 @@ _VALID_PATTERN = {
     "printed", "print", "camouflage", "embroidered",
 }
 _PATTERN_ALIASES = {
+    # Structural variants & English
     "polka-dot": "polka_dot",
     "polka": "polka_dot",
+    "dots": "polka_dot",
+    "dot": "polka_dot",
     "animal-print": "animal_print",
+    "animal": "animal_print",
     "tie-dye": "tie_dye",
+    "tiedyed": "tie_dye",
     "print": "printed",
     "printed": "printed",
     "graphic": "printed",
@@ -2434,16 +2829,153 @@ _PATTERN_ALIASES = {
     "camo": "camouflage",
     "camouflage": "camouflage",
     "camouflaged": "camouflage",
-    "צבאי": "camouflage",
-    "הסוואה": "camouflage",
-    "קמופלאז": "camouflage",
-    "קמופלאז'": "camouflage",
     "embroidered": "embroidered",
     "embroidery": "embroidered",
     "needlework": "embroidered",
-    "רקמה": "embroidered",
-    "רקום": "embroidered",
-    "רקומה": "embroidered",
+    "stitched": "embroidered",
+    "solid": "solid",
+    "plain": "solid",
+    "striped": "striped",
+    "stripe": "striped",
+    "stripes": "striped",
+    "plaid": "plaid",
+    "check": "plaid",
+    "checked": "plaid",
+    "checker": "plaid",
+    "checkered": "plaid",
+    "tartan": "plaid",
+    "gingham": "plaid",
+    "floral": "floral",
+    "flower": "floral",
+    "flowers": "floral",
+    "botanical": "floral",
+    "geometric": "geometric",
+    "geometry": "geometric",
+
+    # Hebrew (he)
+    "חלק": "solid",
+    "צבאי": "camouflage", "הסוואה": "camouflage", "קמופלאז": "camouflage", "קמופלאז'": "camouflage",
+    "רקמה": "embroidered", "רקום": "embroidered", "רקומה": "embroidered", "רקומי": "embroidered",
+    "הדפס": "printed", "הדפסה": "printed", "גרפי": "printed", "לוגו": "printed", "איור": "printed", "כיתוב": "printed",
+    "פסים": "striped", "מפוספס": "striped",
+    "משובץ": "plaid", "משבצות": "plaid", "טרטאן": "plaid",
+    "פרח": "floral", "פרחוני": "floral", "פרחים": "floral",
+    "גיאומטרי": "geometric",
+    "נקודות": "polka_dot", "עיגולים": "polka_dot", "פולקה": "polka_dot",
+
+    # Arabic (ar)
+    "سادة": "solid", "مصمت": "solid",
+    "مطرز": "embroidered", "تطريز": "embroidered", "مطرزة": "embroidered",
+    "تمويه": "camouflage", "مموه": "camouflage", "عسكري": "camouflage",
+    "مطبوع": "printed", "طباعة": "printed", "جرافيك": "printed",
+    "مخطط": "striped", "مقلم": "striped",
+    "مربعات": "plaid", "كاروهات": "plaid",
+    "زهري": "floral", "مشجر": "floral", "ورود": "floral", "أزهار": "floral",
+    "هندسي": "geometric",
+    "منقط": "polka_dot",
+
+    # Spanish (es)
+    "liso": "solid", "sólido": "solid",
+    "bordado": "embroidered", "bordada": "embroidered", "bordados": "embroidered",
+    "camuflaje": "camouflage", "camuflado": "camouflage",
+    "estampado": "printed", "estampada": "printed", "gráfico": "printed",
+    "rayas": "striped", "rayado": "striped",
+    "cuadros": "plaid", "a cuadros": "plaid",
+    "floral": "floral", "flores": "floral",
+    "geométrico": "geometric",
+    "lunares": "polka_dot", "topos": "polka_dot",
+
+    # French (fr)
+    "uni": "solid",
+    "brodé": "embroidered", "brodée": "embroidered", "broderie": "embroidered",
+    "camouflé": "camouflage", "treillis": "camouflage",
+    "imprimé": "printed", "imprimée": "printed", "graphique": "printed",
+    "rayé": "striped", "rayures": "striped",
+    "carreaux": "plaid", "à carreaux": "plaid",
+    "fleuri": "floral",
+    "géométrique": "geometric",
+    "pois": "polka_dot", "à pois": "polka_dot",
+
+    # German (de)
+    "einfarbig": "solid", "uni-farben": "solid",
+    "bestickt": "embroidered", "stickerei": "embroidered",
+    "tarnung": "camouflage", "tarnmuster": "camouflage",
+    "bedruckt": "printed", "aufdruck": "printed",
+    "gestreift": "striped", "streifen": "striped",
+    "kariert": "plaid", "schottenmuster": "plaid",
+    "blumig": "floral", "blumenmuster": "floral",
+    "geometrisch": "geometric",
+    "punkte": "polka_dot", "gepunktet": "polka_dot",
+
+    # Italian (it)
+    "tinta unita": "solid", "tinta-unita": "solid",
+    "ricamato": "embroidered", "ricamata": "embroidered", "ricamo": "embroidered",
+    "mimetico": "camouflage", "mimetica": "camouflage",
+    "stampato": "printed", "stampata": "printed",
+    "a righe": "striped", "righe": "striped",
+    "a quadri": "plaid", "scozzese": "plaid",
+    "floreale": "floral", "a fiori": "floral",
+    "geometrico": "geometric",
+    "pois": "polka_dot", "a pois": "polka_dot",
+
+    # Portuguese (pt)
+    "listrado": "striped", "listras": "striped",
+    "xadrez": "plaid", "quadriculado": "plaid",
+    "florido": "floral",
+    "poá": "polka_dot", "bolinhas": "polka_dot",
+
+    # Dutch (nl)
+    "egaal": "solid", "effen": "solid",
+    "geborduurd": "embroidered", "borduurwerk": "embroidered",
+    "camouflerend": "camouflage",
+    "gestreept": "striped", "strepen": "striped",
+    "geruit": "plaid", "ruitjes": "plaid",
+    "bloemen": "floral", "bloemig": "floral",
+    "stippen": "polka_dot",
+
+    # Russian (ru)
+    "однотонный": "solid", "сплошной": "solid",
+    "вышивка": "embroidered", "вышитый": "embroidered", "вышитая": "embroidered", "вышитое": "embroidered",
+    "камуфляж": "camouflage", "камуфляжный": "camouflage", "милитари": "camouflage",
+    "принт": "printed", "напечатанный": "printed", "рисунок": "printed",
+    "полоска": "striped", "полосатый": "striped", "в полоску": "striped",
+    "клетка": "plaid", "клетчатый": "plaid", "в клетку": "plaid",
+    "цветочный": "floral", "в цветочек": "floral", "цветы": "floral",
+    "геометрический": "geometric", "геометрия": "geometric",
+    "в горошек": "polka_dot", "горошек": "polka_dot", "горох": "polka_dot",
+
+    # Chinese (zh)
+    "纯色": "solid", "素色": "solid",
+    "刺绣": "embroidered", "刺绣款": "embroidered",
+    "迷彩": "camouflage",
+    "印花": "printed", "印制": "printed",
+    "条纹": "striped",
+    "格子": "plaid", "格纹": "plaid",
+    "碎花": "floral", "花朵": "floral", "花卉": "floral",
+    "几何": "geometric",
+    "波点": "polka_dot", "圆点": "polka_dot",
+
+    # Japanese (ja)
+    "無地": "solid",
+    "刺繍": "embroidered", "刺しゅう": "embroidered",
+    "カモフラ": "camouflage",
+    "プリント": "printed",
+    "ストライプ": "striped", "ボーダー": "striped",
+    "チェック": "plaid", "格子柄": "plaid",
+    "花柄": "floral", "フラワー": "floral",
+    "幾何学": "geometric",
+    "水玉": "polka_dot", "ドット柄": "polka_dot",
+
+    # Hindi (hi)
+    "सादा": "solid", "प्लेन": "solid",
+    "कढ़ाई": "embroidered", "कढ़ाईदार": "embroidered",
+    "छलावरण": "camouflage", "कैमोफ्लेज": "camouflage",
+    "प्रिंटेड": "printed",
+    "धारीदार": "striped",
+    "चेक": "plaid", "चौखाने": "plaid",
+    "फ्लोरल": "floral", "फूलों": "floral",
+    "ज्यामितीय": "geometric",
+    "पोल्का डॉट": "polka_dot",
 }
 
 
@@ -2453,11 +2985,64 @@ _PATTERN_ALIASES = {
 # Alias tables for the model's common off-spec echoes. Keeping these at
 # module scope lets us unit-test them directly without instantiating the
 # vision service.
-_CONDITION_ALIASES = {"poor": "bad", "very-good": "excellent"}
+_CONDITION_ALIASES = {
+    # English
+    "poor": "bad", "very-good": "excellent", "very_good": "excellent", "like-new": "excellent", "brand-new": "new",
+    # Hebrew (he)
+    "חדש": "new", "כמו חדש": "excellent", "מצוין": "excellent", "טוב": "good", "סביר": "fair", "גרוע": "bad", "בלאי": "bad",
+    # Arabic (ar)
+    "جديد": "new", "كالجديد": "excellent", "ممتاز": "excellent", "جيد": "good", "مقبول": "fair", "رديء": "bad",
+    # Spanish (es)
+    "nuevo": "new", "como nuevo": "excellent", "excelente": "excellent", "bueno": "good", "aceptable": "fair", "malo": "bad",
+    # French (fr)
+    "neuf": "new", "comme neuf": "excellent", "bon": "good", "moyen": "fair", "mauvais": "bad",
+    # German (de)
+    "neu": "new", "wie neu": "excellent", "sehr gut": "excellent", "gut": "good", "akzeptabel": "fair", "schlecht": "bad",
+    # Italian (it)
+    "nuovo": "new", "come nuovo": "excellent", "ottimo": "excellent", "buono": "good", "discreto": "fair", "pessimo": "bad",
+    # Portuguese (pt)
+    "como novo": "excellent", "bom": "good",
+    # Dutch (nl)
+    "nieuw": "new", "als nieuw": "excellent", "uitstekend": "excellent", "goed": "good", "redelijk": "fair", "slecht": "bad",
+    # Russian (ru)
+    "новый": "new", "как новый": "excellent", "отличное": "excellent", "хорошее": "good", "удовлетворительное": "fair", "плохое": "bad",
+    # Chinese (zh)
+    "全新": "new", "九成新": "excellent", "优秀": "excellent", "良好": "good", "一般": "fair", "差": "bad",
+    # Japanese (ja)
+    "新品": "new", "未使用に近い": "excellent", "美品": "excellent", "良い": "good", "普通": "fair", "悪い": "bad",
+    # Hindi (hi)
+    "नया": "new", "नए जैसा": "excellent", "बहुत अच्छा": "excellent", "अच्छा": "good", "सामान्य": "fair", "खराब": "bad",
+}
+
 _QUALITY_ALIASES = {
-    "cheap": "budget", "entry": "budget", "basic": "budget",
-    "mid-range": "mid", "standard": "mid",
+    # English
+    "cheap": "budget", "entry": "budget", "basic": "budget", "economy": "budget",
+    "mid-range": "mid", "standard": "mid", "medium": "mid", "regular": "mid",
     "high": "premium", "high-end": "premium",
+    # Hebrew (he)
+    "בסיסי": "budget", "זול": "budget", "בינוני": "mid", "סטנדרטי": "mid", "פרימיום": "premium", "יוקרה": "luxury", "יוקרתי": "luxury",
+    # Arabic (ar)
+    "اقتصادي": "budget", "متوسط": "mid", "عالي": "premium", "فاخر": "luxury",
+    # Spanish (es)
+    "económico": "budget", "medio": "mid", "alta gama": "premium", "lujo": "luxury",
+    # French (fr)
+    "économique": "budget", "moyen": "mid", "haut de gamme": "premium", "luxe": "luxury",
+    # German (de)
+    "günstig": "budget", "mittel": "mid", "hochwertig": "premium", "luxus": "luxury",
+    # Italian (it)
+    "economico": "budget", "medio": "mid", "lusso": "luxury",
+    # Portuguese (pt)
+    "médio": "mid",
+    # Dutch (nl)
+    "gemiddeld": "mid", "luxe": "luxury",
+    # Russian (ru)
+    "бюджетный": "budget", "эконом": "budget", "средний": "mid", "стандарт": "mid", "премиум": "premium", "люкс": "luxury",
+    # Chinese (zh)
+    "平价": "budget", "经济": "budget", "中端": "mid", "高端": "premium", "奢侈": "luxury", "奢华": "luxury",
+    # Japanese (ja)
+    "プチプラ": "budget", "ミドル": "mid", "プレミアム": "premium", "高級": "luxury", "ラグジュアリー": "luxury",
+    # Hindi (hi)
+    "बजट": "budget", "किफायती": "budget", "मध्यम": "mid", "प्रीमियम": "premium", "लक्जरी": "luxury",
 }
 
 
@@ -2485,13 +3070,98 @@ _DRESS_CODE_ALIASES = {
     "cocktail": "formal",
     "black-tie": "formal",
     "gala": "formal",
-    "יומיומי": "casual",
-    "אלגנטי-יומיומי": "smart-casual",
-    "אלגנטי־יומיומי": "smart-casual",
+
+    # Hebrew (he)
+    "יומיומי": "casual", "קז'ואל": "casual",
+    "אלגנטי-יומיומי": "smart-casual", "אלגנטי־יומיומי": "smart-casual", "סמארט קז'ואל": "smart-casual",
     "עסקי": "business",
     "רשמי": "formal",
     "ספורטיבי": "athletic",
     "בגדי בית": "loungewear",
+
+    # Arabic (ar)
+    "كاجوال": "casual", "يومي": "casual",
+    "سمارت كاجوال": "smart-casual", "أنيق غير رسمي": "smart-casual",
+    "أعمال": "business", "مكتبي": "business",
+    "رسمي": "formal", "سهرة": "formal",
+    "رياضي": "athletic",
+    "ملابس منزلية": "loungewear", "منزلي": "loungewear",
+
+    # Spanish (es)
+    "casual": "casual", "informal": "casual",
+    "elegante informal": "smart-casual",
+    "negocios": "business", "oficina": "business",
+    "formal": "formal",
+    "deportivo": "athletic",
+    "ropa de casa": "loungewear", "ropa de descanso": "loungewear",
+
+    # French (fr)
+    "décontracté": "casual",
+    "élégant décontracté": "smart-casual",
+    "affaires": "business", "bureau": "business",
+    "sportif": "athletic",
+    "vêtements d'intérieur": "loungewear", "tenue d'intérieur": "loungewear",
+
+    # German (de)
+    "freizeit": "casual", "alltäglich": "casual",
+    "gepflegt-lässig": "smart-casual",
+    "geschäftlich": "business", "büro": "business",
+    "formell": "formal",
+    "sportlich": "athletic",
+    "hausanzug": "loungewear", "schlafbekleidung": "loungewear",
+
+    # Italian (it)
+    "quotidiano": "casual",
+    "elegante casual": "smart-casual",
+    "lavoro": "business",
+    "sportivo": "athletic",
+    "abbigliamento da casa": "loungewear",
+
+    # Portuguese (pt)
+    "elegante casual": "smart-casual",
+    "trabalho": "business",
+    "esportivo": "athletic",
+    "roupa de descanso": "loungewear",
+
+    # Dutch (nl)
+    "dagelijks": "casual",
+    "netjes informeel": "smart-casual",
+    "zakelijk": "business",
+    "formele kleding": "formal",
+    "sportief": "athletic",
+    "huiskleding": "loungewear",
+
+    # Russian (ru)
+    "повседневный": "casual", "кэжуал": "casual",
+    "смарт-кэжуал": "smart-casual", "элегантный повседневный": "smart-casual",
+    "деловой": "business", "офисный": "business",
+    "формальный": "formal", "вечерний": "formal",
+    "спортивный": "athletic",
+    "домашняя одежда": "loungewear",
+
+    # Chinese (zh)
+    "休闲": "casual", "日常": "casual",
+    "商务休闲": "smart-casual", "精致休闲": "smart-casual",
+    "商务": "business",
+    "正装": "formal",
+    "运动": "athletic",
+    "家居服": "loungewear",
+
+    # Japanese (ja)
+    "カジュアル": "casual", "普段着": "casual",
+    "スマートカジュアル": "smart-casual",
+    "ビジネス": "business",
+    "フォーマル": "formal", "礼服": "formal",
+    "スポーツ": "athletic",
+    "ルームウェア": "loungewear", "部屋着": "loungewear",
+
+    # Hindi (hi)
+    "आकस्मिक": "casual", "अनौपचारिक": "casual",
+    "स्मार्ट कैजुअल": "smart-casual",
+    "व्यावसायिक": "business",
+    "औपचारिक": "formal",
+    "स्पोर्ट्स": "athletic",
+    "लाउंजवियर": "loungewear",
 }
 
 
@@ -2516,7 +3186,10 @@ def _infer_garment_dress_code(parsed: dict[str, Any]) -> str:
 
     # Athletic fleece pants, trainer pants, joggers, and sweatpants should NEVER be business
     if any(w in full_text for w in (
-        "sweat", "jogger", "trainer", "טרנינג", "פוטר", "track pant", "sweatpant", "fleece pant", "footer"
+        "sweat", "jogger", "trainer", "track pant", "sweatpant", "fleece pant", "footer",
+        "טרנינג", "פוטר", "سروال رياضي", "pantalon de chándal", "survêtement",
+        "jogginghose", "trainingshose", "pantaloni della tuta", "trainingsbroek",
+        "спортивные штаны", "джоггеры", "运动裤", "慢跑裤", "スウェットパンツ", "ジョガーパンツ", "जॉगर्स"
     )) or itype in ("sweatpants", "joggers", "track pants") or sub in ("sweatpants", "joggers"):
         return "casual" if raw_dc not in ("athletic", "loungewear") else raw_dc
 
@@ -2531,15 +3204,19 @@ def _infer_garment_dress_code(parsed: dict[str, Any]) -> str:
     # 1. Formal (Black tie, evening gowns, tuxedos, cocktail)
     if any(w in full_text for w in (
         "tuxedo", "ballgown", "evening gown", "cocktail dress", "formal gown",
-        "cufflinks", "cummerbund", "black tie", "טוקסידו", "שמלת ערב"
+        "cufflinks", "cummerbund", "black tie",
+        "טוקסידו", "שמלת ערב", "بدلة سهرة", "ثوب سهرة", "esmoquin", "vestido de gala",
+        "smoking", "robe de soirée", "abendkleid", "frack", "abito da sera",
+        "смокинг", "вечернее платье", "晚礼服", "燕尾服", "タキシード", "イブニングドレス", "टक्सीडो"
     )):
         return "formal"
 
     # 2. Business (Suits, blazers, dress trousers, tailored suits, oxford dress shoes)
     if any(w in full_text for w in (
         "suit jacket", "suit pant", "business suit", "blazer", "dress trouser",
-        "tailored suit", "pencil skirt", "oxford shoe", "derby shoe",
-        "dress shoe", "חליפה", "בלייזר", "חצאית עיפרון"
+        "tailored suit", "pencil skirt", "oxford shoe", "derby shoe", "dress shoe",
+        "חליפה", "בלייזר", "חצאית עיפרון", "بدلة", "سترة رسمية", "traje", "costume",
+        "anzug", "abito", "костюм", "блейзер", "西装", "西服", "スーツ", "ブレザー", "सूट", "ब्लेज़र"
     )):
         return "business"
 
@@ -2548,14 +3225,23 @@ def _infer_garment_dress_code(parsed: dict[str, Any]) -> str:
         parsed.get("category") == "Outerwear"
         or sub in ("jackets", "jacket", "coats", "coat", "parka", "windbreaker")
         or itype in ("jacket", "hooded jacket", "windbreaker", "parka", "coat", "bomber jacket")
-        or any(w in full_text for w in ("jacket", "coat", "windbreaker", "parka", "hooded jacket", "מעיל", "ז'קט"))
+        or any(w in full_text for w in (
+            "jacket", "coat", "windbreaker", "parka", "hooded jacket",
+            "מעיל", "ז'קט", "معطف", "سترة", "chaqueta", "manteau", "veste",
+            "jacke", "mantel", "giacca", "cappotto", "jas", "куртка", "пальто",
+            "夹克", "大衣", "ジャケット", "コート", "जैकेट"
+        ))
     )
 
     # 3. Loungewear / Sleepwear (Check before smart-casual so silk pajamas/robes are loungewear)
     # Hoodies and jackets are NOT loungewear (they are casual/athletic).
     if not is_outerwear and any(w in full_text for w in (
         "pajama", "pajamas", "pyjama", "sleepwear", "nightgown", "bathrobe", "robe",
-        "lounge", "loungewear", "slippers", "פיג'מה", "חלוק"
+        "lounge", "loungewear", "slippers",
+        "פיג'מה", "חלוק", "بيجاما", "رداء", "pijama", "bata", "peignoir",
+        "schlafanzug", "bademantel", "vestaglia", "ochtendjas",
+        "пижама", "халат", "домашний костюм", "睡衣", "家居服", "浴袍",
+        "パジャマ", "バスローブ", "पजामा", "नाइटवियर"
     )):
         return "loungewear"
 
@@ -2563,7 +3249,10 @@ def _infer_garment_dress_code(parsed: dict[str, Any]) -> str:
     if any(w in full_text for w in (
         "athletic", "running", "gym", "workout", "activewear", "sports bra", "sportswear",
         "yoga", "sweatband", "swim", "swimsuit", "bikini", "rashguard", "track pants",
-        "cycling", "cleats", "jogging", "performance", "גופיית ספורט", "אימון"
+        "cycling", "cleats", "jogging", "performance",
+        "גופיית ספורט", "אימון", "ספורט", "رياضي", "ملابس رياضية", "ropa deportiva",
+        "tenue de sport", "sportbekleidung", "abbigliamento sportivo", "sportkleding",
+        "спортивная одежда", "фитнес", "运动装", "健身", "スポーツウェア", "フィットネス", "खेल वस्त्र"
     )):
         if not any(w in full_text for w in ("casual sneaker", "fashion sneaker", "classic sneaker")):
             return "athletic"
