@@ -320,27 +320,120 @@ async def parse_receipt(
     elif url and url.strip():
         url_str = url.strip()
         try:
-            async with httpx.AsyncClient(timeout=15.0) as client:
-                headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"}
-                resp = await client.get(url_str, headers=headers, follow_redirects=True)
+            from urllib.parse import urlparse, urlunparse, parse_qsl, urlencode, unquote, urljoin
+            from bs4 import BeautifulSoup
+
+            # Clean tracking query parameters
+            try:
+                parsed_u = urlparse(url_str)
+                qsl = parse_qsl(parsed_u.query)
+                clean_qsl = [
+                    (k, v) for k, v in qsl
+                    if not k.lower().startswith("utm_") and k.lower() not in (
+                        "cto_pld", "fbclid", "gclid", "ga_order", "ga_search_type", "ga_view_type", "ga_search_query"
+                    )
+                ]
+                clean_url = urlunparse(parsed_u._replace(query=urlencode(clean_qsl)))
+            except Exception:
+                clean_url = url_str
+
+            headers = {
+                "User-Agent": (
+                    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+                    "(KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+                ),
+                "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,image/*,*/*;q=0.8",
+                "Accept-Language": "en-US,en;q=0.9",
+            }
+            async with httpx.AsyncClient(timeout=15.0, headers=headers) as client:
+                resp = await client.get(clean_url, follow_redirects=True)
                 if resp.status_code == 200:
                     ct = resp.headers.get("content-type", "").split(";")[0].strip().lower()
                     if not ct or ct == "application/octet-stream":
-                        ct = mimetypes.guess_type(url_str)[0] or ct
-                    
+                        ct = mimetypes.guess_type(clean_url)[0] or ct
+
                     if ct and ("image" in ct or "pdf" in ct):
                         parts.append((resp.content, ct))
                         if "image" in ct:
                             is_image = True
                             image_bytes = resp.content
                             image_mime = ct
+                    elif ct and "html" in ct:
+                        soup = BeautifulSoup(resp.text, "html.parser")
+
+                        # Attempt to extract product image from og:image / twitter:image
+                        img_url = None
+                        og_img = soup.find("meta", property="og:image")
+                        if og_img and og_img.get("content"):
+                            img_url = og_img["content"]
+                        if not img_url:
+                            tw_img = soup.find("meta", name="twitter:image")
+                            if tw_img and tw_img.get("content"):
+                                img_url = tw_img["content"]
+                        if not img_url:
+                            schema_img = soup.find("link", rel="image_src")
+                            if schema_img and schema_img.get("href"):
+                                img_url = schema_img["href"]
+
+                        if img_url:
+                            try:
+                                resolved_img = urljoin(clean_url, img_url)
+                                img_resp = await client.get(resolved_img)
+                                if img_resp.status_code == 200:
+                                    img_ct = img_resp.headers.get("content-type", "image/jpeg").split(";")[0].strip().lower()
+                                    if "image" in img_ct:
+                                        parts.append((img_resp.content, img_ct))
+                                        is_image = True
+                                        image_bytes = img_resp.content
+                                        image_mime = img_ct
+                            except Exception as img_err:
+                                logger.warning("Could not fetch product image from webpage HTML: %s", img_err)
+
+                        # Clean webpage body text for Gemini
+                        for tag in soup(["script", "style", "svg", "noscript"]):
+                            tag.decompose()
+                        clean_text = soup.get_text(separator=" ", strip=True)
+                        parts.append(f"Product Page URL: {url_str}\n\nContent:\n{clean_text[:10000]}")
                     else:
-                        parts.append(resp.text)
+                        parts.append(resp.text[:10000])
+                elif resp.status_code in (403, 429):
+                    logger.warning("Merchant site blocked direct scraper access (HTTP %s) for %s; extracting URL slug details", resp.status_code, url_str)
+                    parsed_u = urlparse(url_str)
+                    path_parts = [unquote(p) for p in parsed_u.path.split("/") if p and not p.isdigit() and p not in ("listing", "listings", "item", "product", "dp", "p", "ie", "en", "us")]
+                    slug_text = " ".join([p.replace("-", " ").replace("_", " ") for p in path_parts])
+                    domain = parsed_u.netloc.replace("www.", "")
+                    fallback_text = (
+                        f"Product Web Link: {url_str}\n"
+                        f"Store/Domain: {domain}\n"
+                        f"Garment title and description from URL path: {slug_text}\n"
+                        f"(Note: The merchant site blocked direct scraper access with HTTP {resp.status_code}. "
+                        f"Extract garment details such as brand, item_type, category, gender, and name from the URL path and store domain above.)"
+                    )
+                    parts.append(fallback_text)
                 else:
                     raise HTTPException(400, f"Failed to fetch URL, status code: {resp.status_code}")
         except Exception as e:
+            if isinstance(e, HTTPException):
+                raise e
             logger.error("Failed to fetch URL %s: %s", url_str, e)
-            raise HTTPException(400, f"Failed to fetch receipt from URL: {e}")
+            # Resilient fallback: extract details from URL slug
+            try:
+                from urllib.parse import urlparse, unquote
+                parsed_u = urlparse(url_str)
+                path_parts = [unquote(p) for p in parsed_u.path.split("/") if p and not p.isdigit() and p not in ("listing", "listings", "item", "product", "dp", "p", "ie", "en", "us")]
+                if path_parts:
+                    slug_text = " ".join([p.replace("-", " ").replace("_", " ") for p in path_parts])
+                    domain = parsed_u.netloc.replace("www.", "")
+                    fallback_text = (
+                        f"Product Web Link: {url_str}\n"
+                        f"Store/Domain: {domain}\n"
+                        f"Garment title and description from URL path: {slug_text}\n"
+                    )
+                    parts.append(fallback_text)
+                else:
+                    raise HTTPException(400, f"Failed to fetch receipt from URL: {e}")
+            except Exception:
+                raise HTTPException(400, f"Failed to fetch receipt from URL: {e}")
     else:
         raise HTTPException(400, "Either text, file, or url is required and must not be blank")
 

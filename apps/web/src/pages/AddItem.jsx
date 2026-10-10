@@ -4447,11 +4447,7 @@ export default function AddItem() {
                   className="w-full border-2 border-dashed border-border rounded-[12px] p-10 max-[480px]:p-5 bg-white flex flex-col items-center text-center cursor-pointer hover:bg-card/85 transition-colors"
                   data-testid="add-item-digital-import-pane"
                 >
-                  {!(
-                    importFile ||
-                    (importMode === "text" && receiptText.trim()) ||
-                    (importMode === "url" && importUrl.trim())
-                  ) ? (
+                  {!importFile ? (
                     <>
                       <div className="h-14 w-14 rounded-full bg-accent-beige flex items-center justify-center mb-3">
                         <Sparkles className="h-6 w-6 text-primary-brand" />
@@ -4603,6 +4599,12 @@ export default function AddItem() {
                             type="url"
                             value={importUrl}
                             onChange={(e) => setImportUrl(e.target.value)}
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter" && importUrl.trim() && !isExtracting) {
+                                e.preventDefault();
+                                handleExtractReceipt();
+                              }
+                            }}
                             placeholder={t("addItem.import.urlPlaceholder", {
                               defaultValue:
                                 "Enter receipt URL (e.g., https://zara.com/orders/...)",
