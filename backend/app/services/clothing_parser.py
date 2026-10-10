@@ -1611,13 +1611,13 @@ async def parse_garments(
             is_brim_candidate = (
                 cat in ("bottom", "accessory")
                 or any(b in lbl for b in ("short", "pant", "skirt", "belt", "scarf"))
-            ) and (h <= int(0.32 * H)) and (float(w) / float(h) >= 1.4)
+            ) and (h <= int(0.65 * H)) and (float(w) / float(h) >= 0.9)
 
             # Dome candidates: compact upper piece (vest, top, jacket, hoodie)
             is_dome_candidate = (
                 cat in ("top", "outerwear", "headwear")
                 or any(d in lbl for d in ("vest", "top", "shirt", "jacket", "sweater", "hood", "cover"))
-            ) and (h <= int(0.50 * H))
+            ) and (h <= int(0.80 * H))
 
             if is_brim_candidate:
                 brim_candidates.append((k, bb, it))
@@ -1642,11 +1642,11 @@ async def parse_garments(
                 total_w = max(dx2, bx2) - min(dx1, bx1)
 
                 is_cap_geometry = (
-                    (by1 >= dy1 + int(0.25 * d_h))
-                    and (vert_gap <= int(0.08 * H))
-                    and (horiz_overlap >= int(0.30 * min(d_w, b_w)))
-                    and (total_h <= int(0.55 * H))
-                    and (float(total_w) / float(total_h) >= 0.70)
+                    (by1 >= dy1 + int(0.20 * d_h))
+                    and (vert_gap <= int(0.12 * H))
+                    and (horiz_overlap >= int(0.20 * min(d_w, b_w)))
+                    and (total_h <= int(0.95 * H))
+                    and (float(total_w) / float(total_h) >= 0.60)
                 )
                 if is_cap_geometry:
                     logger.info("clothing_parser: synthesized Hat from dome '%s' and brim '%s'", d_k, b_k)
@@ -1707,11 +1707,12 @@ async def parse_garments(
                 o_cat = (other_it.get("category") or "").lower()
                 o_lbl = (other_it.get("label") or "").lower()
 
-                # Protect genuine tall garments on a person or full-body outfit:
-                is_genuine_tall_top = o_cat in ("top", "dress", "outerwear") and o_h >= int(0.35 * H) and oy2 > int(0.40 * H)
-                is_genuine_tall_bottom = o_cat in ("bottom", "dress") and o_h >= int(0.35 * H) and oy1 >= int(0.35 * H)
-                if is_genuine_tall_top or is_genuine_tall_bottom:
-                    continue
+                # Protect genuine tall garments on a person wearing an outfit:
+                if has_human:
+                    is_genuine_tall_top = o_cat in ("top", "dress", "outerwear") and o_h >= int(0.35 * H) and oy2 > int(0.40 * H)
+                    is_genuine_tall_bottom = o_cat in ("bottom", "dress") and o_h >= int(0.35 * H) and oy1 >= int(0.35 * H)
+                    if is_genuine_tall_top or is_genuine_tall_bottom:
+                        continue
 
                 # Shoes/footwear should never be absorbed into a hat
                 if o_cat == "footwear" or "shoe" in o_lbl or "boot" in o_lbl:
@@ -1731,7 +1732,13 @@ async def parse_garments(
                 # Visor / brim check:
                 vert_gap = max(0, oy1 - hy2) if oy1 >= hy2 else max(0, hy1 - oy2)
                 horiz_overlap = max(0, min(hx2, ox2) - max(hx1, ox1))
-                is_adjacent_brim = (vert_gap <= int(0.08 * H)) and (horiz_overlap >= int(0.25 * min(hat_w, o_w))) and (o_h <= int(0.40 * H))
+                total_comb_h = max(hy2, oy2) - min(hy1, oy1)
+                is_adjacent_brim = (
+                    (vert_gap <= int(0.12 * H))
+                    and (horiz_overlap >= int(0.20 * min(hat_w, o_w)))
+                    and (o_h <= int(0.65 * H))
+                    and (total_comb_h <= int(0.95 * H) or not has_human)
+                )
 
                 if touches or is_proximate or box_containment >= 0.20 or is_adjacent_brim:
                     logger.info("clothing_parser: consolidating headwear fragment '%s' into Hat", other_key)

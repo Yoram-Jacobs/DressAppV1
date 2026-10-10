@@ -2495,10 +2495,12 @@ def test_hat_fragment_consolidation_and_category_protection():
                 o_cat = (other_it.get("category") or "").lower()
                 o_lbl = (other_it.get("label") or "").lower()
 
-                is_genuine_tall_top = o_cat in ("top", "dress", "outerwear") and o_h >= int(0.35 * H) and oy2 > int(0.40 * H)
-                is_genuine_tall_bottom = o_cat in ("bottom", "dress") and o_h >= int(0.35 * H) and oy1 >= int(0.35 * H)
-                if is_genuine_tall_top or is_genuine_tall_bottom:
-                    continue
+                has_human = False
+                if has_human:
+                    is_genuine_tall_top = o_cat in ("top", "dress", "outerwear") and o_h >= int(0.35 * H) and oy2 > int(0.40 * H)
+                    is_genuine_tall_bottom = o_cat in ("bottom", "dress") and o_h >= int(0.35 * H) and oy1 >= int(0.35 * H)
+                    if is_genuine_tall_top or is_genuine_tall_bottom:
+                        continue
 
                 if o_cat == "footwear" or "shoe" in o_lbl or "boot" in o_lbl:
                     continue
@@ -2516,7 +2518,13 @@ def test_hat_fragment_consolidation_and_category_protection():
 
                 vert_gap = max(0, oy1 - hy2) if oy1 >= hy2 else max(0, hy1 - oy2)
                 horiz_overlap = max(0, min(hx2, ox2) - max(hx1, ox1))
-                is_adjacent_brim = (vert_gap <= int(0.08 * H)) and (horiz_overlap >= int(0.25 * min(hat_w, o_w))) and (o_h <= int(0.40 * H))
+                total_comb_h = max(hy2, oy2) - min(hy1, oy1)
+                is_adjacent_brim = (
+                    (vert_gap <= int(0.12 * H))
+                    and (horiz_overlap >= int(0.20 * min(hat_w, o_w)))
+                    and (o_h <= int(0.65 * H))
+                    and (total_comb_h <= int(0.95 * H) or not has_human)
+                )
 
                 if touches or is_proximate or box_containment >= 0.20 or is_adjacent_brim:
                     by_label["Hat"]["mask"] = np.maximum(by_label["Hat"]["mask"], other_it["mask"])
@@ -2560,6 +2568,108 @@ def test_hat_fragment_consolidation_and_category_protection():
     assert coerced["category"] == "Accessories"
     assert coerced["sub_category"] == "Headwear"
     assert coerced["item_type"] == "Baseball Cap"
+
+
+def test_hat_close_up_tall_brim_consolidation():
+    """Verify that a close-up photo of a baseball cap where the visor/brim takes up >40% of the image
+    and is misclassified as Pants/bottom is completely consolidated into the Hat when there is no human.
+    """
+    from app.services.clothing_parser import _mask_bbox, _is_same_garment_component
+    from scipy import ndimage
+
+    H, W = 1000, 1000
+    # Crown: top half of cap (dome)
+    crown_mask = np.zeros((H, W), dtype=np.uint8)
+    crown_mask[150:550, 200:800] = 1
+
+    # Brim: large curved visor extending from y=500 to y=920 (height = 420px = 42% of H), mislabeled as Pants
+    brim_mask = np.zeros((H, W), dtype=np.uint8)
+    brim_mask[500:920, 150:850] = 1
+
+    by_label = {
+        "Hat": {
+            "label": "Hat",
+            "category": "headwear",
+            "score": 0.94,
+            "mask": crown_mask,
+        },
+        "Pants": {
+            "label": "Pants",
+            "category": "bottom",
+            "score": 0.89,
+            "mask": brim_mask,
+        },
+    }
+
+    has_human = False
+
+    # Simulate Section 2a-5 Headwear Consolidation
+    if "Hat" in by_label:
+        while True:
+            hat_mask = by_label["Hat"]["mask"]
+            hat_bb = _mask_bbox(hat_mask)
+            if not hat_bb:
+                break
+            hy1, hx1, hy2, hx2 = hat_bb
+            hat_h = max(1, hy2 - hy1)
+            hat_w = max(1, hx2 - hx1)
+            merged_any = False
+            for other_key, other_it in list(by_label.items()):
+                if other_key == "Hat" or other_it.get("mask") is None:
+                    continue
+                obb = _mask_bbox(other_it["mask"])
+                if not obb:
+                    continue
+                oy1, ox1, oy2, ox2 = obb
+                o_h = max(1, oy2 - oy1)
+                o_w = max(1, ox2 - ox1)
+                o_cat = (other_it.get("category") or "").lower()
+                o_lbl = (other_it.get("label") or "").lower()
+
+                if has_human:
+                    is_genuine_tall_top = o_cat in ("top", "dress", "outerwear") and o_h >= int(0.35 * H) and oy2 > int(0.40 * H)
+                    is_genuine_tall_bottom = o_cat in ("bottom", "dress") and o_h >= int(0.35 * H) and oy1 >= int(0.35 * H)
+                    if is_genuine_tall_top or is_genuine_tall_bottom:
+                        continue
+
+                if o_cat == "footwear" or "shoe" in o_lbl or "boot" in o_lbl:
+                    continue
+
+                x_inter = max(0, min(hx2, ox2) - max(hx1, ox1))
+                y_inter = max(0, min(hy2, oy2) - max(hy1, oy1))
+                o_box_area = max(1, (ox2 - ox1) * (oy2 - oy1))
+                inter_area = x_inter * y_inter
+                box_containment = inter_area / float(o_box_area)
+
+                dil_other = ndimage.binary_dilation(other_it["mask"], iterations=15)
+                dil_hat = ndimage.binary_dilation(by_label["Hat"]["mask"], iterations=15)
+                touches = np.logical_and(dil_other, dil_hat).any()
+                is_proximate = _is_same_garment_component(hat_bb, obb, min(H, W))
+
+                vert_gap = max(0, oy1 - hy2) if oy1 >= hy2 else max(0, hy1 - oy2)
+                horiz_overlap = max(0, min(hx2, ox2) - max(hx1, ox1))
+                total_comb_h = max(hy2, oy2) - min(hy1, oy1)
+                is_adjacent_brim = (
+                    (vert_gap <= int(0.12 * H))
+                    and (horiz_overlap >= int(0.20 * min(hat_w, o_w)))
+                    and (o_h <= int(0.65 * H))
+                    and (total_comb_h <= int(0.95 * H) or not has_human)
+                )
+
+                if touches or is_proximate or box_containment >= 0.20 or is_adjacent_brim:
+                    by_label["Hat"]["mask"] = np.maximum(by_label["Hat"]["mask"], other_it["mask"])
+                    del by_label[other_key]
+                    merged_any = True
+                    break
+            if not merged_any:
+                break
+
+    assert len(by_label) == 1
+    assert "Hat" in by_label
+    assert by_label["Hat"]["category"] == "headwear"
+    # Ensure crown and tall brim are both in the unified mask
+    assert np.all(by_label["Hat"]["mask"][200:500, 300:700] == 1)
+    assert np.all(by_label["Hat"]["mask"][600:900, 250:750] == 1)
 
 
 def test_hat_synthesis_from_47_class_segformer_vest_shorts_jacket():
@@ -2700,10 +2810,12 @@ def test_hat_synthesis_from_47_class_segformer_vest_shorts_jacket():
                 o_cat = (other_it.get("category") or "").lower()
                 o_lbl = (other_it.get("label") or "").lower()
 
-                is_genuine_tall_top = o_cat in ("top", "dress", "outerwear") and o_h >= int(0.35 * H) and oy2 > int(0.40 * H)
-                is_genuine_tall_bottom = o_cat in ("bottom", "dress") and o_h >= int(0.35 * H) and oy1 >= int(0.35 * H)
-                if is_genuine_tall_top or is_genuine_tall_bottom:
-                    continue
+                has_human = False
+                if has_human:
+                    is_genuine_tall_top = o_cat in ("top", "dress", "outerwear") and o_h >= int(0.35 * H) and oy2 > int(0.40 * H)
+                    is_genuine_tall_bottom = o_cat in ("bottom", "dress") and o_h >= int(0.35 * H) and oy1 >= int(0.35 * H)
+                    if is_genuine_tall_top or is_genuine_tall_bottom:
+                        continue
 
                 if o_cat == "footwear" or "shoe" in o_lbl or "boot" in o_lbl:
                     continue
@@ -2721,7 +2833,13 @@ def test_hat_synthesis_from_47_class_segformer_vest_shorts_jacket():
 
                 vert_gap = max(0, oy1 - hy2) if oy1 >= hy2 else max(0, hy1 - oy2)
                 horiz_overlap = max(0, min(hx2, ox2) - max(hx1, ox1))
-                is_adjacent_brim = (vert_gap <= int(0.08 * H)) and (horiz_overlap >= int(0.25 * min(hat_w, o_w))) and (o_h <= int(0.40 * H))
+                total_comb_h = max(hy2, oy2) - min(hy1, oy1)
+                is_adjacent_brim = (
+                    (vert_gap <= int(0.12 * H))
+                    and (horiz_overlap >= int(0.20 * min(hat_w, o_w)))
+                    and (o_h <= int(0.65 * H))
+                    and (total_comb_h <= int(0.95 * H) or not has_human)
+                )
 
                 if touches or is_proximate or box_containment >= 0.20 or is_adjacent_brim:
                     by_label["Hat"]["mask"] = np.maximum(by_label["Hat"]["mask"], other_it["mask"])
