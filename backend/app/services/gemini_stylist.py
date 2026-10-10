@@ -667,6 +667,118 @@ def sanitize_stylist_payload(
     return advice
 
 
+def _sanitize_spoken_reply_field(parsed: dict[str, Any]) -> None:
+    """Ensure spoken_reply never contains raw JSON syntax or prompt leaks."""
+    spk = str(parsed.get("spoken_reply") or "").strip()
+    if not spk or spk.startswith("{") or '"reasoning_summary"' in spk or '"outfit_recommendations"' in spk or "{" in spk[:10]:
+        parsed["spoken_reply"] = parsed.get("reasoning_summary") or "Here are your curated outfit recommendations."
+
+
+def _repair_truncated_json(text: str) -> dict[str, Any] | None:
+    """Attempt graceful recovery of truncated JSON streams by balancing stacks or extracting completed objects."""
+    if not text or not isinstance(text, str):
+        return None
+    cleaned = re.sub(r"^```(?:json)?\s*|\s*```$", "", text.strip())
+    # 1. Direct parse attempt
+    try:
+        res = json.loads(cleaned)
+        if isinstance(res, dict):
+            return res
+    except Exception:
+        pass
+
+    # 2. Structural closing of unclosed strings, arrays, and objects
+    s = cleaned
+    for _ in range(50):
+        in_string = False
+        escape = False
+        stack = []
+        for ch in s:
+            if escape:
+                escape = False
+                continue
+            if ch == '\\':
+                escape = True
+                continue
+            if ch == '"':
+                in_string = not in_string
+                continue
+            if not in_string:
+                if ch in ('{', '['):
+                    stack.append(ch)
+                elif ch == '}':
+                    if stack and stack[-1] == '{':
+                        stack.pop()
+                elif ch == ']':
+                    if stack and stack[-1] == '[':
+                        stack.pop()
+
+        closing = ""
+        if in_string:
+            closing += '"'
+        for token in reversed(stack):
+            if token == '{':
+                closing += '}'
+            elif token == '[':
+                closing += ']'
+
+        candidate = s + closing
+        try:
+            res = json.loads(candidate)
+            if isinstance(res, dict):
+                return res
+        except Exception:
+            pass
+
+        # Trim back to previous delimiter
+        last_delim = max(s.rfind(','), s.rfind('{'), s.rfind('['), s.rfind('}'), s.rfind(']'))
+        if last_delim <= 0:
+            break
+        s = s[:last_delim].rstrip()
+
+    # 3. Regex extraction of outfit recommendations if JSON root failed
+    recs = []
+    rec_pattern = re.compile(
+        r'\{\s*"name"\s*:\s*"(?P<name>[^"]+)"\s*,\s*"items"\s*:\s*\[(?P<items>[^\]]+)\](?:\s*,\s*"why"\s*:\s*"(?P<why>[^"]*)")?',
+        re.DOTALL
+    )
+    for m in rec_pattern.finditer(cleaned):
+        rec_obj = {"name": m.group("name"), "items": []}
+        if m.group("why"):
+            rec_obj["why"] = m.group("why")
+        item_pattern = re.compile(
+            r'\{\s*"role"\s*:\s*"(?P<role>[^"]+)"\s*,\s*"description"\s*:\s*"(?P<desc>[^"]*)"(?:,\s*"closet_item_id"\s*:\s*(?P<cid>"[^"]*"|null))?\s*\}'
+        )
+        for itm in item_pattern.finditer(m.group("items")):
+            cid_val = itm.group("cid")
+            if cid_val and cid_val != "null":
+                cid_val = cid_val.strip('"')
+            else:
+                cid_val = None
+            rec_obj["items"].append({
+                "role": itm.group("role"),
+                "description": itm.group("desc"),
+                "name": itm.group("desc"),
+                "closet_item_id": cid_val,
+            })
+        if rec_obj["items"]:
+            recs.append(rec_obj)
+
+    reasoning_match = re.search(r'"reasoning_summary"\s*:\s*"(?P<res>[^"]+)"', cleaned)
+    spoken_match = re.search(r'"spoken_reply"\s*:\s*"(?P<spk>[^"]+)"', cleaned)
+
+    if recs:
+        return {
+            "reasoning_summary": reasoning_match.group("res") if reasoning_match else "Curated recommendations",
+            "outfit_recommendations": recs,
+            "spoken_reply": spoken_match.group("spk") if spoken_match else (reasoning_match.group("res") if reasoning_match else ""),
+            "shopping_suggestions": [],
+            "do_dont": [],
+        }
+
+    return None
+
+
 def _parse_json(raw: str) -> dict[str, Any]:
     if isinstance(raw, dict):
         return raw  # defensive
@@ -674,22 +786,38 @@ def _parse_json(raw: str) -> dict[str, Any]:
     # Strip ```json fences if present
     text = re.sub(r"^```(?:json)?\s*|\s*```$", "", text.strip())
     try:
-        return json.loads(text)
+        parsed = json.loads(text)
+        if isinstance(parsed, dict):
+            _sanitize_spoken_reply_field(parsed)
+            return parsed
     except json.JSONDecodeError:
-        match = _JSON_RE.search(text)
-        if match:
-            try:
-                return json.loads(match.group(0))
-            except json.JSONDecodeError as exc:
-                logger.error("Gemini returned non-JSON: %s", exc)
-        return {
-            "reasoning_summary": "Parser could not decode model output.",
-            "outfit_recommendations": [],
-            "shopping_suggestions": [],
-            "do_dont": [],
-            "spoken_reply": text[:400],
-            "_raw": text,
-        }
+        pass
+
+    match = _JSON_RE.search(text)
+    if match:
+        try:
+            parsed = json.loads(match.group(0))
+            if isinstance(parsed, dict):
+                _sanitize_spoken_reply_field(parsed)
+                return parsed
+        except json.JSONDecodeError as exc:
+            logger.error("Stylist regex JSON parse failed: %s", exc)
+
+    # Try stream repair of truncated JSON
+    repaired = _repair_truncated_json(text)
+    if repaired and isinstance(repaired, dict):
+        _sanitize_spoken_reply_field(repaired)
+        return repaired
+
+    logger.error("Stylist model returned non-JSON / unrepairable output (len=%d)", len(text))
+    return {
+        "reasoning_summary": "Parser could not decode model output.",
+        "outfit_recommendations": [],
+        "shopping_suggestions": [],
+        "do_dont": [],
+        "spoken_reply": "Here are your curated outfit recommendations.",
+        "_raw": text,
+    }
 
 
 def image_bytes_to_base64(img: bytes) -> str:

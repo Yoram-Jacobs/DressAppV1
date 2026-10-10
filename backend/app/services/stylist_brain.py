@@ -103,6 +103,9 @@ class GemmaStylistBrain:
             base_system_prompt=PROMPT_STYLIST_CHAT,
         )
 
+        # Append conciseness instruction so Eyes/Gemma completes all outfit recommendations cleanly
+        prompt_text = prompt_text + "\n\nCONCISE REQUIREMENT: Keep descriptions under 10 words and 'why' under 2 sentences to ensure all 3 outfit recommendations are completed."
+
         with provider_activity.Track(
             "gemma-stylist", {"model": self.model, "has_image": bool(image_base64)}
         ):
@@ -110,10 +113,24 @@ class GemmaStylistBrain:
                 system_prompt=sys_msg,
                 user_text=prompt_text,
                 image_b64_jpeg=image_base64,
-                max_tokens=1000,
+                max_tokens=2048,
                 temperature=0.3,
             )
         parsed = _parse_json(raw)
+
+        # Route through Stylist QA Engine for validation and role authorization
+        if parsed.get("outfit_recommendations"):
+            try:
+                from app.services.stylist_qa_engine import evaluate_and_authorize_outfit
+                parsed = await evaluate_and_authorize_outfit(
+                    user_text=user_text or "",
+                    advice_payload=parsed,
+                    all_closet_items=closet_summary or [],
+                    user_profile=user_profile,
+                )
+            except Exception as qa_exc:
+                logger.warning("GemmaStylistBrain QA authorization soft-failed: %s", qa_exc)
+
         lang = (user_profile or {}).get("preferred_language") or "en"
         return sanitize_stylist_payload(parsed, lang=lang)
 
