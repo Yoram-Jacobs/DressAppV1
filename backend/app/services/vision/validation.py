@@ -2129,14 +2129,33 @@ def _coerce_single_garment(
     pat_str = (res.get("pattern") or "").strip().lower()
     full_pat_text = f"{res.get('name', '')} {res.get('title', '')} {res.get('caption', '')} {' '.join(str(t) for t in res.get('tags') or [])}".lower()
     is_camo = any(w in full_pat_text for w in ("camo", "camouflage", "צבאי", "הסוואה", "קמופלאז", "קמופלאז'"))
-    is_embroidered = any(w in full_pat_text for w in ("embroidered", "embroidery", "needlework", "רקמה", "רקום", "רקומה", "רקומי"))
+
+    is_headwear_or_cap = (
+        cat_lower in ("accessories", "accessory")
+        or sub_lower in ("headwear", "hat", "cap", "baseball cap", "beanie")
+        or any(w in full_pat_text for w in ("cap", "hat", "baseball", "כובע"))
+    )
+    has_text_or_words = any(w in full_pat_text for w in (
+        "word", "words", "letter", "letters", "lettering", "text", "slogan", "typography",
+        "כיתוב", "מילה", "מילים", "אותיות", "סלוגן"
+    )) or bool(re.search(r"(?:word|letters?|text)\s*['\"][^'\"]+['\"]", full_pat_text))
+    has_patches_or_emblems = any(w in full_pat_text for w in (
+        "patch", "patches", "emblem", "crest", "badge", "flag", "פאץ'", "פאצ'", "סמל", "דגל"
+    ))
+    is_explicit_embroidered = any(w in full_pat_text for w in (
+        "embroidered", "embroidery", "needlework", "stitched", "stitching", "stitch",
+        "רקמה", "רקום", "רקומה", "רקומי", "תפירה", "תפור"
+    ))
+    is_embroidered = is_explicit_embroidered or (is_headwear_or_cap and (has_text_or_words or has_patches_or_emblems))
 
     if pat_str in ("camo", "camouflage", "camouflaged", "צבאי", "הסוואה", "קמופלאז", "קמופלאז'") or is_camo:
         res["pattern"] = "camouflage"
     elif pat_str in ("embroidered", "embroidery", "רקמה", "רקום", "רקומה") or is_embroidered:
         res["pattern"] = "embroidered"
     elif not pat_str or pat_str in ("solid", "printed", "print", "none", "unknown", "other"):
-        if any(w in full_pat_text for w in ("print", "printed", "graphic", "logo", "lettering", "artwork", "illustration", "slogan", "הדפס", "הדפסה", "גרפי", "לוגו", "איור", "כיתוב")):
+        if is_headwear_or_cap and (has_text_or_words or has_patches_or_emblems):
+            res["pattern"] = "embroidered"
+        elif any(w in full_pat_text for w in ("print", "printed", "graphic", "logo", "lettering", "artwork", "illustration", "slogan", "הדפס", "הדפסה", "גרפי", "לוגו", "איור", "כיתוב")) or has_text_or_words:
             res["pattern"] = "printed"
         elif any(w in full_pat_text for w in ("geometric", "geometry", "texture", "textured", "weave", "waffle", "jacquard", "pique", "dot", "dots", "polka", "eyelet", "perforated", "mesh", "ribbed", "subtle", "גיאומטרי", "מרקם", "טקסטורה", "נקודות", "עיגולים", "מחורר", "דוגמה")):
             res["pattern"] = "geometric"

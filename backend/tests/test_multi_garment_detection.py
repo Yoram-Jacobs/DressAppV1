@@ -2789,6 +2789,19 @@ def test_embroidered_pattern_validation_and_fallback():
     }, language="he")
     assert repaired_he["pattern"] == "embroidered"
 
+    # 5. Cap with text/words on front (like the Brazilian Flag Baseball Cap)
+    repaired_cap = _coerce_single_garment({
+        "category": "Accessories",
+        "sub_category": "Headwear",
+        "item_type": "Baseball Cap",
+        "name": "Brazilian Flag Baseball Cap",
+        "title": "Brazilian Flag Baseball Cap",
+        "caption": "This vibrant Brazil-themed baseball cap features a bold yellow and green design with the word 'BRASIL' in green.",
+        "pattern": "solid",
+        "colors": [{"name": "Yellow", "pct": 60}, {"name": "Green", "pct": 40}],
+    })
+    assert repaired_cap["pattern"] == "embroidered"
+
 
 
 

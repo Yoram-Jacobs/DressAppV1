@@ -1398,6 +1398,8 @@ async def parse_garments(
             human_blurred = ndimage.gaussian_filter(human_mask_full.astype(float), sigma=smooth_sigma)
             human_mask_full = (human_blurred >= 0.3).astype(np.uint8)
 
+    has_human = bool(has_head or (human_mask_full is not None and int(human_mask_full.sum()) >= 150))
+
     # 1) First pass: keep only sufficiently-large instances; index by label.
     by_label: dict[str, dict[str, Any]] = {}
     for label_name, mask in instances:

@@ -501,13 +501,18 @@ const hydrate = (a, user, t, i18n) => {
     out.pattern = 'embroidered';
     curPattern = 'embroidered';
   }
-  if (!curPattern || curPattern === 'solid') {
-    const fullPatternBlob = `${out.name} ${out.title} ${out.caption} ${(Array.isArray(out.tags) ? out.tags : []).join(' ')}`.toLowerCase();
-    if (/embroid|needlework|רקמ|רקום/.test(fullPatternBlob)) {
-      out.pattern = 'embroidered';
-    } else if (/camo|camouflage|הסוואה|קמופלאז/.test(fullPatternBlob)) {
+  const fullPatternBlob = `${out.name} ${out.title} ${out.caption} ${(Array.isArray(out.tags) ? out.tags : []).join(' ')}`.toLowerCase();
+  const isCapOrHeadwear = /cap|hat|headwear|baseball|כובע/.test(fullPatternBlob) || /headwear|accessories/i.test(`${out.category} ${out.sub_category}`);
+  const hasTextOrWords = /word|words|letter|letters|lettering|text|slogan|typography|patch|emblem|crest|flag|כיתוב|מילה|אותיות|דגל|סמל/.test(fullPatternBlob);
+  const isExplicitEmbroidered = /embroid|needlework|stitch|רקמ|רקום|תפיר/.test(fullPatternBlob);
+
+  if (isExplicitEmbroidered || (isCapOrHeadwear && hasTextOrWords)) {
+    out.pattern = 'embroidered';
+    curPattern = 'embroidered';
+  } else if (!curPattern || curPattern === 'solid') {
+    if (/camo|camouflage|הסוואה|קמופלאז/.test(fullPatternBlob)) {
       out.pattern = 'camouflage';
-    } else if (/print|printed|graphic|logo|lettering|artwork|slogan|הדפס|הדפסה|גרפי|לוגו|כיתוב|איור/.test(fullPatternBlob)) {
+    } else if (/print|printed|graphic|logo|lettering|artwork|slogan|הדפס|הדפסה|גרפי|לוגו|כיתוב|איור/.test(fullPatternBlob) || hasTextOrWords) {
       out.pattern = 'printed';
     } else if (/geometric|גיאומטרי|weave|textured|מרקם|טקסטורה|נקודות|עיגולים|מחורר|dots|eyelet|perforated|waffle|jacquard|pique|subtle/.test(fullPatternBlob)) {
       out.pattern = 'geometric';

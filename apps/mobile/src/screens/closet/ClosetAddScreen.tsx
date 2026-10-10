@@ -440,10 +440,14 @@ export function ClosetAddScreen() {
         // 4. Pattern derivation (with intelligent text extraction fallback if backend returned default/solid)
         let finalPattern = String(analysis.pattern || item.pattern || '').trim().toLowerCase().replace(/\s+/g, '_');
         if (finalPattern === 'embroidery') finalPattern = 'embroidered';
-        if (!finalPattern || finalPattern === 'solid') {
-          if (/embroid|needlework|רקמ|רקום/.test(fullTextBlob)) {
-            finalPattern = 'embroidered';
-          } else if (/graphic|print|slogan|typography|logo|lettering|artwork|illustration|printed/.test(fullTextBlob)) {
+        const isCapOrHeadwear = /cap|hat|headwear|baseball|כובע/.test(fullTextBlob) || /headwear|accessories/i.test(`${catName} ${subCatName}`);
+        const hasTextOrWords = /word|words|letter|letters|lettering|text|slogan|typography|patch|emblem|crest|flag|כיתוב|מילה|אותיות|דגל|סמל/.test(fullTextBlob);
+        const isExplicitEmbroidered = /embroid|needlework|stitch|רקמ|רקום|תפיר/.test(fullTextBlob);
+
+        if (isExplicitEmbroidered || (isCapOrHeadwear && hasTextOrWords)) {
+          finalPattern = 'embroidered';
+        } else if (!finalPattern || finalPattern === 'solid') {
+          if (/graphic|print|slogan|typography|logo|lettering|artwork|illustration|printed/.test(fullTextBlob) || hasTextOrWords) {
             finalPattern = 'graphic';
           } else if (/strip|striped|stripe/.test(fullTextBlob)) {
             finalPattern = 'striped';
