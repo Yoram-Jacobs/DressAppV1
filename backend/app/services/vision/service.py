@@ -64,7 +64,11 @@ def _map_detection_category(raw_cat: str | None) -> str:
         return "Outerwear"
     if c == "bottom":
         return "Bottom"
-    if c in ("dress", "full body", "fullbody"):
+    if c in (
+        "dress", "full body", "fullbody", "full_body",
+        "abaya", "kaftan", "caftan", "jalabiya", "galabiya",
+        "djellaba", "jumpsuit", "romper", "one-piece", "one_piece",
+    ):
         return "Full Body"
     return "Top"
 

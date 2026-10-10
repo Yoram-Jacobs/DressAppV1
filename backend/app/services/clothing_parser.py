@@ -558,6 +558,19 @@ def _is_same_garment_component(
     dx = max(0, max(bx1 - ax2, ax1 - bx2))
     dy = max(0, max(by1 - ay2, ay1 - by2))
 
+    # Guard: Two distinct substantial figures/columns side-by-side with a clear gap between them
+    # are two separate bodies/views (e.g. front & side views, or two models), not parts of one single top!
+    w_a = max(1, ax2 - ax1)
+    w_b = max(1, bx2 - bx1)
+    h_a = max(1, ay2 - ay1)
+    h_b = max(1, by2 - by1)
+    if (
+        dx > max(8, int(0.04 * frame_short))
+        and min(w_a, w_b) >= int(0.12 * frame_short)
+        and min(h_a, h_b) >= int(0.25 * frame_short)
+    ):
+        return False
+
     # General proximity (within 20% of frame short edge)
     if max(dx, dy) <= max(16, int(0.20 * frame_short)):
         return True
@@ -575,6 +588,7 @@ def _is_same_garment_component(
         return True
 
     return False
+
 
 
 def _split_into_spatial_groups(class_binary: np.ndarray) -> list[np.ndarray]:
@@ -1108,8 +1122,8 @@ def _suppress_overlapping_garments(
             if kept_cat != item_cat:
                 garment_set = {"top", "dress", "outerwear"}
                 is_garment_pair = kept_cat in garment_set and item_cat in garment_set
-                is_flatlay_top_bottom = (not has_human) and (count_hint is not None and count_hint <= 1) and (
-                    {kept_cat, item_cat} == {"top", "bottom"} or {kept_cat, item_cat} == {"top", "dress"}
+                is_flatlay_top_bottom = (not has_human) and (
+                    {kept_cat, item_cat} in ({"top", "bottom"}, {"top", "dress"}, {"bottom", "dress"}, {"outerwear", "bottom"})
                 )
                 if not (is_garment_pair or is_flatlay_top_bottom or is_footwear_candidate):
                     # Attached hood / collar rule: if headwear or scarf meets the upper border/neckline of top/outerwear,
@@ -1211,14 +1225,18 @@ def _suppress_overlapping_garments(
                 kept_lbl = "Shoes"
                 kept_item["label"] = "Shoes"
                 kept_item["category"] = "footwear"
+            elif "dress" in (kept_cat, item_cat) or "dress" in (str(kept_lbl).lower(), str(lbl).lower()):
+                kept_lbl = "Dress"
+                kept_item["label"] = "Dress"
+                kept_item["category"] = "dress"
+            elif {kept_cat, item_cat} in ({"top", "bottom"}, {"outerwear", "bottom"}):
+                kept_lbl = "Dress"
+                kept_item["label"] = "Dress"
+                kept_item["category"] = "dress"
             elif (kept_lbl == "Dress" and lbl == "Upper-clothes") or (kept_lbl == "Pants" and lbl == "Upper-clothes"):
-                kept_lbl = "Upper-clothes"
-                kept_item["label"] = "Upper-clothes"
-                kept_item["category"] = "top"
-            elif kept_cat == "bottom" and item_cat == "top":
-                kept_lbl = "Upper-clothes"
-                kept_item["label"] = "Upper-clothes"
-                kept_item["category"] = "top"
+                kept_lbl = "Dress"
+                kept_item["label"] = "Dress"
+                kept_item["category"] = "dress"
             kept[kept_idx] = (
                 kept_lbl,
                 kept_item,
@@ -1278,6 +1296,7 @@ async def parse_garments(
         scale = 512.0 / max(orig_W, orig_H)
         img = img.resize((max(1, int(orig_W * scale)), max(1, int(orig_H * scale))), Image.BILINEAR)
     W, H = img.size
+    img_arr = np.array(img)
 
     # 1. Self-hosted takes precedence (user's future dressapp.co box).
     if settings.CLOTHING_PARSER_ENDPOINT_URL:
@@ -1748,6 +1767,97 @@ async def parse_garments(
                     break
             if not merged_any:
                 break
+
+    # 2a-6) Full-Body / Dress / Abaya / Kaftan / Jumpsuit Consolidation:
+    # SegFormer frequently fragments a long continuous garment (e.g. Abaya, Galabiya, Kaftan,
+    # Djellaba, long dress, maxi dress, jumpsuit) into separate Upper-clothes (top/outerwear)
+    # and Skirt / Pants (bottom).
+    # When an upper garment meets a lower garment at the waist/vertical corridor,
+    # shares the same color/fabric, and spans torso + legs into a full-body silhouette,
+    # consolidate them into a single "Dress" (Full Body) garment!
+    while True:
+        merged_any = False
+        top_candidates = []
+        bottom_candidates = []
+        for k, it in list(by_label.items()):
+            m = it.get("mask")
+            if m is None:
+                continue
+            bb = _mask_bbox(m)
+            if not bb:
+                continue
+            cat = (it.get("category") or "").lower()
+            lbl = (it.get("label") or "").lower()
+            if cat in ("top", "outerwear", "dress"):
+                top_candidates.append((k, bb, it))
+            if cat in ("bottom", "dress") or any(b in lbl for b in ("skirt", "pant", "chino", "trouser")):
+                bottom_candidates.append((k, bb, it))
+
+        for t_k, t_bb, t_it in top_candidates:
+            if merged_any:
+                break
+            ty1, tx1, ty2, tx2 = t_bb
+            t_h = max(1, ty2 - ty1)
+            t_w = max(1, tx2 - tx1)
+            for b_k, b_bb, b_it in bottom_candidates:
+                if t_k == b_k:
+                    continue
+                by1, bx1, by2, bx2 = b_bb
+                b_h = max(1, by2 - by1)
+                b_w = max(1, bx2 - bx1)
+
+                vert_gap = max(0, by1 - ty2) if by1 > ty2 else 0
+                vert_overlap = max(0, min(ty2, by2) - max(ty1, by1))
+                comb_h = max(ty2, by2) - min(ty1, by1)
+                x_inter = max(0, min(tx2, bx2) - max(tx1, bx1))
+                min_w = min(t_w, b_w)
+                x_ratio = x_inter / float(min_w) if min_w > 0 else 0
+
+                is_aligned = (
+                    (ty1 <= by1 + int(0.15 * H))
+                    and (by2 >= ty2 - int(0.15 * H))
+                    and (vert_gap <= max(16, int(0.08 * H)) or vert_overlap > 0)
+                    and (x_ratio >= 0.30 or (x_inter >= max(16, int(0.30 * b_w))))
+                    and (comb_h >= int(0.38 * H))
+                )
+                if not is_aligned:
+                    continue
+
+                color_ok = True
+                if img_arr is not None:
+                    t_pix = img_arr[t_it["mask"] > 0]
+                    b_pix = img_arr[b_it["mask"] > 0]
+                    if len(t_pix) >= 20 and len(b_pix) >= 20:
+                        cdiff = float(np.linalg.norm(t_pix.mean(axis=0) - b_pix.mean(axis=0)))
+                        max_diff = 65.0 if not has_human else 45.0
+                        color_ok = (cdiff <= max_diff)
+
+                if color_ok:
+                    logger.info(
+                        "clothing_parser: consolidating full-body garment '%s' and '%s' into Dress",
+                        t_k, b_k,
+                    )
+                    comb_mask = np.maximum(t_it["mask"], b_it["mask"])
+                    dress_key = "Dress"
+                    suffix = 0
+                    while dress_key in by_label and dress_key not in (t_k, b_k):
+                        suffix += 1
+                        dress_key = f"Dress#{suffix}"
+                    by_label[dress_key] = {
+                        "label": "Dress",
+                        "category": "dress",
+                        "score": max(float(t_it.get("score", 0.95)), float(b_it.get("score", 0.95))),
+                        "mask": comb_mask,
+                    }
+                    if t_k != dress_key and t_k in by_label:
+                        del by_label[t_k]
+                    if b_k != dress_key and b_k in by_label:
+                        del by_label[b_k]
+                    merged_any = True
+                    break
+
+        if not merged_any:
+            break
 
     distinct_cats = {it.get("category") for it in by_label.values()}
     has_torso_clothing = bool(distinct_cats & {"top", "dress", "outerwear"})

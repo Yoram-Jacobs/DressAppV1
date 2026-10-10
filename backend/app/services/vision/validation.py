@@ -3906,6 +3906,12 @@ def _enforce_segformer_category(
     if not segformer_kind:
         return analysis
     kind = segformer_kind.strip().lower()
+    comb_txt = f"{analysis.get('name', '')} {analysis.get('title', '')} {analysis.get('caption', '')} {analysis.get('sub_category', '')} {analysis.get('item_type', '')}".lower()
+    is_cultural_full = any(w in comb_txt for w in ("abaya", "kaftan", "caftan", "jalabiya", "galabiya", "djellaba", "jumpsuit", "romper", "thobe", "kandura", "עבאיה", "גלבייה", "ג'לביה"))
+    if is_cultural_full:
+        analysis["category"] = "Full Body"
+        return analysis
+
     if is_single_item and kind not in ("footwear", "bottom", "accessory", "headwear"):
         return analysis
     allowed = _SEGFORMER_KIND_TO_ALLOWED_CATEGORIES.get(kind)
@@ -4143,32 +4149,37 @@ def _enforce_segformer_category(
 
         elif kind == "dress" or "dress" in lbl_low:
             comb_dress_txt = f"{analysis.get('name', '')} {analysis.get('title', '')} {analysis.get('caption', '')} {analysis.get('sub_category', '')} {analysis.get('item_type', '')}".lower()
-            is_real_long_coat = any(w in comb_dress_txt for w in ("trench coat", "overcoat", "winter parka", "duster coat", "raincoat", "puffer coat")) and not any(w in comb_dress_txt for w in ("peplum", "skirt", "dress", "gown", "suit", "פפלום", "חצאית", "שמלה"))
+            is_cultural_full = any(w in comb_dress_txt for w in ("abaya", "kaftan", "caftan", "jalabiya", "galabiya", "djellaba", "jumpsuit", "romper", "thobe", "kandura", "עבאיה", "גלבייה", "ג'לביה"))
+            is_real_long_coat = (
+                any(w in comb_dress_txt for w in ("trench coat", "overcoat", "winter parka", "duster coat", "raincoat", "puffer coat"))
+                and not any(w in comb_dress_txt for w in ("peplum", "skirt", "dress", "gown", "suit", "פפלום", "חצאית", "שמלה", "abaya", "kaftan", "caftan", "jalabiya", "galabiya", "djellaba", "jumpsuit", "romper", "thobe", "kandura", "עבאיה", "גלבייה", "ג'לביה"))
+            )
             if current.lower() == "outerwear" and not is_real_long_coat:
                 logger.warning(
                     "garment_vision: Overriding Gemini Outerwear to Full Body for dress mask: %r",
                     analysis.get("name"),
                 )
                 analysis["category"] = "Full Body"
-                is_he_local = (language in ("he", "iw")) or any("\u0590" <= ch <= "\u05ea" for ch in comb_dress_txt)
-                is_pep = "peplum" in comb_dress_txt or "פפלום" in comb_dress_txt
-                analysis["sub_category"] = "שמלות" if is_he_local else "Dresses"
-                analysis["item_type"] = ("שמלת פפלום" if is_pep else "חליפת חצאית") if is_he_local else ("Peplum Dress" if is_pep else "Skirt Suit")
-                import re as _re
-                if is_he_local:
-                    if any(w in analysis.get("name", "") for w in ("מעיל", "ז'קט")):
-                        analysis["name"] = _re.sub(r"\b(מעיל|ז'קט)\b", "שמלת פפלום" if is_pep else "חליפת חצאית", analysis["name"]).strip()
-                    if any(w in analysis.get("title", "") for w in ("מעיל", "ז'קט")):
-                        analysis["title"] = _re.sub(r"\b(מעיל|ז'קט)\b", "שמלת פפלום" if is_pep else "חליפת חצאית", analysis["title"]).strip()
-                    if any(w in analysis.get("caption", "") for w in ("מעיל", "ז'קט")):
-                        analysis["caption"] = _re.sub(r"\b(מעיל|ז'קט)\b", "שמלת פפלום" if is_pep else "חליפת חצאית", analysis["caption"]).strip()
-                else:
-                    if any(w in analysis.get("name", "").lower() for w in ("coat", "jacket")):
-                        analysis["name"] = _re.sub(r"(?i)\b(coat|jacket)\b", "Peplum Dress" if is_pep else "Skirt Suit", analysis["name"]).strip()
-                    if any(w in analysis.get("title", "").lower() for w in ("coat", "jacket")):
-                        analysis["title"] = _re.sub(r"(?i)\b(coat|jacket)\b", "Peplum Dress" if is_pep else "Skirt Suit", analysis["title"]).strip()
-                    if any(w in analysis.get("caption", "").lower() for w in ("coat", "jacket")):
-                        analysis["caption"] = _re.sub(r"(?i)\b(coat|jacket)\b", "peplum dress" if is_pep else "skirt suit", analysis["caption"]).strip()
+                if not is_cultural_full and not any(k in str(analysis.get("sub_category", "")).lower() for k in ("abaya", "kaftan", "jalabiya", "galabiya", "jumpsuit", "dresses", "שמלות")):
+                    is_he_local = (language in ("he", "iw")) or any("\u0590" <= ch <= "\u05ea" for ch in comb_dress_txt)
+                    is_pep = "peplum" in comb_dress_txt or "פפלום" in comb_dress_txt
+                    analysis["sub_category"] = "שמלות" if is_he_local else "Dresses"
+                    analysis["item_type"] = ("שמלת פפלום" if is_pep else "חליפת חצאית") if is_he_local else ("Peplum Dress" if is_pep else "Skirt Suit")
+                    import re as _re
+                    if is_he_local:
+                        if any(w in analysis.get("name", "") for w in ("מעיל", "ז'קט")):
+                            analysis["name"] = _re.sub(r"\b(מעיל|ז'קט)\b", "שמלת פפלום" if is_pep else "חליפת חצאית", analysis["name"]).strip()
+                        if any(w in analysis.get("title", "") for w in ("מעיל", "ז'קט")):
+                            analysis["title"] = _re.sub(r"\b(מעיל|ז'קט)\b", "שמלת פפלום" if is_pep else "חליפת חצאית", analysis["title"]).strip()
+                        if any(w in analysis.get("caption", "") for w in ("מעיל", "ז'קט")):
+                            analysis["caption"] = _re.sub(r"\b(מעיל|ז'קט)\b", "שמלת פפלום" if is_pep else "חליפת חצאית", analysis["caption"]).strip()
+                    else:
+                        if any(w in analysis.get("name", "").lower() for w in ("coat", "jacket")):
+                            analysis["name"] = _re.sub(r"(?i)\b(coat|jacket)\b", "Peplum Dress" if is_pep else "Skirt Suit", analysis["name"]).strip()
+                        if any(w in analysis.get("title", "").lower() for w in ("coat", "jacket")):
+                            analysis["title"] = _re.sub(r"(?i)\b(coat|jacket)\b", "Peplum Dress" if is_pep else "Skirt Suit", analysis["title"]).strip()
+                        if any(w in analysis.get("caption", "").lower() for w in ("coat", "jacket")):
+                            analysis["caption"] = _re.sub(r"(?i)\b(coat|jacket)\b", "peplum dress" if is_pep else "skirt suit", analysis["caption"]).strip()
 
         # Ensure sub_category and item_type are not identical
         if analysis.get("sub_category") and analysis.get("item_type"):
@@ -4212,32 +4223,34 @@ def _enforce_segformer_category(
     # If Gemini classified it as a Top or Outerwear, preserve Gemini's rich classification UNLESS it is clearly a dress or skirt suit.
     if current.lower() in ("top", "tops", "outerwear") and kind == "dress":
         comb_dress_txt = f"{analysis.get('name', '')} {analysis.get('title', '')} {analysis.get('caption', '')} {analysis.get('sub_category', '')} {analysis.get('item_type', '')}".lower()
-        is_pep_or_skirt = any(w in comb_dress_txt for w in ("peplum", "skirt", "pencil", "maxi", "midi", "dress", "gown", "פפלום", "חצאית", "שמלה"))
+        is_cultural_full = any(w in comb_dress_txt for w in ("abaya", "kaftan", "caftan", "jalabiya", "galabiya", "djellaba", "jumpsuit", "romper", "thobe", "kandura", "עבאיה", "גלבייה", "ג'לביה"))
+        is_pep_or_skirt = is_cultural_full or any(w in comb_dress_txt for w in ("peplum", "skirt", "pencil", "maxi", "midi", "dress", "gown", "פפלום", "חצאית", "שמלה"))
         if is_pep_or_skirt:
             logger.warning(
                 "garment_vision: Overriding Gemini %r to Full Body for dress/suit mask: %r",
                 current, analysis.get("name"),
             )
             analysis["category"] = "Full Body"
-            is_he_local = (language in ("he", "iw")) or any("\u0590" <= ch <= "\u05ea" for ch in comb_dress_txt)
-            is_pep = "peplum" in comb_dress_txt or "פפלום" in comb_dress_txt
-            analysis["sub_category"] = "שמלות" if is_he_local else "Dresses"
-            analysis["item_type"] = ("שמלת פפלום" if is_pep else "חליפת חצאית") if is_he_local else ("Peplum Dress" if is_pep else "Skirt Suit")
-            import re as _re
-            if is_he_local:
-                if any(w in analysis.get("name", "") for w in ("מעיל", "ז'קט")):
-                    analysis["name"] = _re.sub(r"\b(מעיל|ז'קט)\b", "שמלת פפלום" if is_pep else "חליפת חצאית", analysis["name"]).strip()
-                if any(w in analysis.get("title", "") for w in ("מעיל", "ז'קט")):
-                    analysis["title"] = _re.sub(r"\b(מעיל|ז'קט)\b", "שמלת פפלום" if is_pep else "חליפת חצאית", analysis["title"]).strip()
-                if any(w in analysis.get("caption", "") for w in ("מעיל", "ז'קט")):
-                    analysis["caption"] = _re.sub(r"\b(מעיל|ז'קט)\b", "שמלת פפלום" if is_pep else "חליפת חצאית", analysis["caption"]).strip()
-            else:
-                if any(w in analysis.get("name", "").lower() for w in ("coat", "jacket")):
-                    analysis["name"] = _re.sub(r"(?i)\b(coat|jacket)\b", "Peplum Dress" if is_pep else "Skirt Suit", analysis["name"]).strip()
-                if any(w in analysis.get("title", "").lower() for w in ("coat", "jacket")):
-                    analysis["title"] = _re.sub(r"(?i)\b(coat|jacket)\b", "Peplum Dress" if is_pep else "Skirt Suit", analysis["title"]).strip()
-                if any(w in analysis.get("caption", "").lower() for w in ("coat", "jacket")):
-                    analysis["caption"] = _re.sub(r"(?i)\b(coat|jacket)\b", "peplum dress" if is_pep else "skirt suit", analysis["caption"]).strip()
+            if not is_cultural_full and not any(k in str(analysis.get("sub_category", "")).lower() for k in ("abaya", "kaftan", "jalabiya", "galabiya", "jumpsuit", "dresses", "שמלות")):
+                is_he_local = (language in ("he", "iw")) or any("\u0590" <= ch <= "\u05ea" for ch in comb_dress_txt)
+                is_pep = "peplum" in comb_dress_txt or "פפלום" in comb_dress_txt
+                analysis["sub_category"] = "שמלות" if is_he_local else "Dresses"
+                analysis["item_type"] = ("שמלת פפלום" if is_pep else "חליפת חצאית") if is_he_local else ("Peplum Dress" if is_pep else "Skirt Suit")
+                import re as _re
+                if is_he_local:
+                    if any(w in analysis.get("name", "") for w in ("מעיל", "ז'קט")):
+                        analysis["name"] = _re.sub(r"\b(מעיל|ז'קט)\b", "שמלת פפלום" if is_pep else "חליפת חצאית", analysis["name"]).strip()
+                    if any(w in analysis.get("title", "") for w in ("מעיל", "ז'קט")):
+                        analysis["title"] = _re.sub(r"\b(מעיל|ז'קט)\b", "שמלת פפלום" if is_pep else "חליפת חצאית", analysis["title"]).strip()
+                    if any(w in analysis.get("caption", "") for w in ("מעיל", "ז'קט")):
+                        analysis["caption"] = _re.sub(r"\b(מעיל|ז'קט)\b", "שמלת פפלום" if is_pep else "חליפת חצאית", analysis["caption"]).strip()
+                else:
+                    if any(w in analysis.get("name", "").lower() for w in ("coat", "jacket")):
+                        analysis["name"] = _re.sub(r"(?i)\b(coat|jacket)\b", "Peplum Dress" if is_pep else "Skirt Suit", analysis["name"]).strip()
+                    if any(w in analysis.get("title", "").lower() for w in ("coat", "jacket")):
+                        analysis["title"] = _re.sub(r"(?i)\b(coat|jacket)\b", "Peplum Dress" if is_pep else "Skirt Suit", analysis["title"]).strip()
+                    if any(w in analysis.get("caption", "").lower() for w in ("coat", "jacket")):
+                        analysis["caption"] = _re.sub(r"(?i)\b(coat|jacket)\b", "peplum dress" if is_pep else "skirt suit", analysis["caption"]).strip()
             return analysis
         logger.info(
             "garment_vision: Preserving Gemini %r (%r) over SegFormer 'dress' label",

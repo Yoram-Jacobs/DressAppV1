@@ -2923,7 +2923,7 @@ def test_embroidered_pattern_validation_and_fallback():
 
 def test_validation_multilingual_support_across_all_languages():
     """Verify that validation.py properly resolves patterns, genders, dress codes, and headwear text across all 13 languages."""
-    from backend.app.services.vision.validation import _coerce_single_garment, resolve_garment_gender, _normalise_dress_code
+    from app.services.vision.validation import _coerce_single_garment, resolve_garment_gender, _normalise_dress_code
 
     # 1. Gender aliases in multiple languages
     assert resolve_garment_gender("זכר") == "men"
@@ -3059,6 +3059,111 @@ def test_validation_multilingual_support_across_all_languages():
         "pattern": "無地",
     }, language="ja")
     assert cap_ja["pattern"] == "embroidered"
+
+
+def test_abaya_top_and_bottom_consolidate_into_single_full_body():
+    """When SegFormer fragments an abaya into Upper-clothes and Pants/Skirt, consolidate into single Dress."""
+    H, W = 500, 300
+    top_mask = np.zeros((H, W), dtype=np.uint8)
+    top_mask[80:260, 90:210] = 1
+
+    bottom_mask = np.zeros((H, W), dtype=np.uint8)
+    bottom_mask[255:460, 90:210] = 1
+
+    by_label = {
+        "Upper-clothes": {
+            "label": "Upper-clothes",
+            "category": "top",
+            "score": 0.95,
+            "mask": top_mask,
+        },
+        "Pants": {
+            "label": "Pants",
+            "category": "bottom",
+            "score": 0.92,
+            "mask": bottom_mask,
+        },
+    }
+
+    # In _suppress_overlapping_garments with flatlay/product shot (has_human=False)
+    result = _suppress_overlapping_garments(
+        by_label,
+        has_human=False,
+    )
+
+    assert len(result) == 1, f"Expected 1 consolidated garment, got {len(result)}: {list(result.keys())}"
+    assert "Dress" in result, f"Expected Dress in result, got: {list(result.keys())}"
+    assert result["Dress"]["category"] == "dress"
+
+
+def test_multiview_abaya_side_by_side_consolidates():
+    """Composite abaya photo (front view and profile view) where top and bottom are split into 3 pieces."""
+    from app.services.clothing_parser import _mask_bbox
+
+    H, W = 500, 400
+    # Top mask spans both views (common SegFormer output for composite images)
+    top_mask = np.zeros((H, W), dtype=np.uint8)
+    top_mask[80:250, 60:180] = 1   # left top
+    top_mask[80:250, 220:340] = 1  # right top
+
+    # Left bottom is classified as Pants (zipper / slit)
+    pants_mask = np.zeros((H, W), dtype=np.uint8)
+    pants_mask[245:450, 65:175] = 1
+
+    # Right bottom is classified as Skirt (profile silhouette)
+    skirt_mask = np.zeros((H, W), dtype=np.uint8)
+    skirt_mask[245:450, 225:335] = 1
+
+    by_label = {
+        "Upper-clothes": {
+            "label": "Upper-clothes",
+            "category": "top",
+            "score": 0.95,
+            "mask": top_mask,
+        },
+        "Pants": {
+            "label": "Pants",
+            "category": "bottom",
+            "score": 0.92,
+            "mask": pants_mask,
+        },
+        "Skirt": {
+            "label": "Skirt",
+            "category": "bottom",
+            "score": 0.90,
+            "mask": skirt_mask,
+        },
+    }
+
+    result = _suppress_overlapping_garments(
+        by_label,
+        has_human=False,
+    )
+
+    assert len(result) == 1, f"Expected all pieces to consolidate into 1 Dress, got {len(result)}: {list(result.keys())}"
+    assert "Dress" in result
+    assert result["Dress"]["category"] == "dress"
+
+
+def test_enforce_segformer_category_preserves_abaya_full_body():
+    """Verify that an abaya is enforced to Full Body and retains sub_category Abaya."""
+    analysis = {
+        "name": "Light Blue Hooded Abaya",
+        "title": "Light Blue Hooded Abaya",
+        "category": "Outerwear",
+        "sub_category": "Abaya",
+        "item_type": "Abaya",
+        "colors": ["light blue"],
+    }
+    fixed = _enforce_segformer_category(
+        analysis,
+        segformer_kind="dress",
+        label="dress",
+        is_single_item=True,
+    )
+    assert fixed["category"] == "Full Body"
+    assert fixed["sub_category"] == "Abaya"
+
 
 
 
