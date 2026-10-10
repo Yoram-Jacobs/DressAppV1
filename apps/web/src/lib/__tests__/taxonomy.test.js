@@ -70,4 +70,83 @@ describe('Multilingual Bag and Basket Bag Taxonomy', () => {
     expect(labelForItemType('Basket Bag', mockT)).toBe('Basket bag');
     expect(labelForItemType('Handbag', mockT)).toBe('Handbag');
   });
+
+  test('resolves canonical subcategories for cultural garments across languages', () => {
+    // Galabiya
+    expect(canonicalSubCategoryKey('Galabiya')).toBe('galabiya');
+    expect(canonicalSubCategoryKey('גלבייה')).toBe('galabiya');
+    expect(canonicalSubCategoryKey('جلابية')).toBe('galabiya');
+    expect(canonicalSubCategoryKey('галабея')).toBe('galabiya');
+
+    // Thobe
+    expect(canonicalSubCategoryKey('Thobe')).toBe('thobe');
+    expect(canonicalSubCategoryKey('תוב')).toBe('thobe');
+    expect(canonicalSubCategoryKey('ثوب')).toBe('thobe');
+    expect(canonicalSubCategoryKey('كندورة')).toBe('thobe');
+
+    // Abaya & Kaftan
+    expect(canonicalSubCategoryKey('Abaya')).toBe('abaya');
+    expect(canonicalSubCategoryKey('עבאיה')).toBe('abaya');
+    expect(canonicalSubCategoryKey('عباية')).toBe('abaya');
+    expect(canonicalSubCategoryKey('Kaftan')).toBe('kaftan');
+    expect(canonicalSubCategoryKey('כפתן')).toBe('kaftan');
+    expect(canonicalSubCategoryKey('قفطان')).toBe('kaftan');
+
+    // Kurta & Sherwani
+    expect(canonicalSubCategoryKey('Kurta')).toBe('kurta');
+    expect(canonicalSubCategoryKey('कुर्ता')).toBe('kurta');
+    expect(canonicalSubCategoryKey('קורטה')).toBe('kurta');
+    expect(canonicalSubCategoryKey('Sherwani')).toBe('sherwani');
+    expect(canonicalSubCategoryKey('शेरवानी')).toBe('sherwani');
+    expect(canonicalSubCategoryKey('שרוואני')).toBe('sherwani');
+
+    // Sari & Lehenga
+    expect(canonicalSubCategoryKey('Sari')).toBe('sari');
+    expect(canonicalSubCategoryKey('साड़ी')).toBe('sari');
+    expect(canonicalSubCategoryKey('סארי')).toBe('sari');
+    expect(canonicalSubCategoryKey('Lehenga')).toBe('lehenga');
+    expect(canonicalSubCategoryKey('लेहंगा')).toBe('lehenga');
+    expect(canonicalSubCategoryKey('להנגה')).toBe('lehenga');
+
+    // Hanbok, Kimono, Dirndl, Guayabera
+    expect(canonicalSubCategoryKey('Hanbok')).toBe('hanbok');
+    expect(canonicalSubCategoryKey('한복')).toBe('hanbok');
+    expect(canonicalSubCategoryKey('Kimono')).toBe('kimono');
+    expect(canonicalSubCategoryKey('着物')).toBe('kimono');
+    expect(canonicalSubCategoryKey('Dirndl')).toBe('dirndl');
+    expect(canonicalSubCategoryKey('דירנדל')).toBe('dirndl');
+    expect(canonicalSubCategoryKey('Guayabera')).toBe('guayabera');
+    expect(canonicalSubCategoryKey('גוואיאברה')).toBe('guayabera');
+  });
+
+  test('resolves canonical subcategories for traditional headwear across languages', () => {
+    // Kippah
+    expect(canonicalSubCategoryKey('Kippah')).toBe('kippah');
+    expect(canonicalSubCategoryKey('כיפה')).toBe('kippah');
+    expect(canonicalSubCategoryKey('كيباه')).toBe('kippah');
+    expect(canonicalSubCategoryKey('кипа')).toBe('kippah');
+
+    // Keffiyeh
+    expect(canonicalSubCategoryKey('Keffiyeh')).toBe('keffiyeh');
+    expect(canonicalSubCategoryKey('כאפייה')).toBe('keffiyeh');
+    expect(canonicalSubCategoryKey('كوفية')).toBe('keffiyeh');
+    expect(canonicalSubCategoryKey('شماغ')).toBe('keffiyeh');
+
+    // Turban & Hijab
+    expect(canonicalSubCategoryKey('Turban')).toBe('turban');
+    expect(canonicalSubCategoryKey('טורבן')).toBe('turban');
+    expect(canonicalSubCategoryKey('दस्तार')).toBe('turban');
+    expect(canonicalSubCategoryKey('Hijab')).toBe('hijab');
+    expect(canonicalSubCategoryKey('חיג\'אב')).toBe('hijab');
+    expect(canonicalSubCategoryKey('حجاب')).toBe('hijab');
+
+    // Mitpachat, Shtreimel, Tarboush
+    expect(canonicalSubCategoryKey('Mitpachat')).toBe('mitpachat');
+    expect(canonicalSubCategoryKey('מטפחת')).toBe('mitpachat');
+    expect(canonicalSubCategoryKey('Shtreimel')).toBe('shtreimel');
+    expect(canonicalSubCategoryKey('שטריימל')).toBe('shtreimel');
+    expect(canonicalSubCategoryKey('Tarboush')).toBe('tarboush');
+    expect(canonicalSubCategoryKey('תרבוש')).toBe('tarboush');
+    expect(canonicalSubCategoryKey('طربوش')).toBe('tarboush');
+  });
 });

@@ -16,12 +16,12 @@ export const CATEGORY_OPTIONS = [
 ] as const;
 
 export const SUBCATEGORY_OPTIONS: Record<string, string[]> = {
-  Top: ['T-Shirt', 'Shirt', 'Blouse', 'Sweater', 'Hoodie', 'Polo', 'Tank Top', 'Crop Top', 'Vest', 'Knitwear'],
-  Bottom: ['Jeans', 'Trousers', 'Pants', 'Shorts', 'Skirt', 'Leggings', 'Sweatpants', 'Cargo Pants'],
-  'Full Body': ['Dress', 'Jumpsuit', 'Romper', 'Suit', 'Overall', 'Abaya', 'Kaftan'],
+  Top: ['T-Shirt', 'Shirt', 'Blouse', 'Sweater', 'Hoodie', 'Polo', 'Tank Top', 'Crop Top', 'Vest', 'Knitwear', 'Kurta', 'Guayabera'],
+  Bottom: ['Jeans', 'Trousers', 'Pants', 'Shorts', 'Skirt', 'Leggings', 'Sweatpants', 'Cargo Pants', 'Dhoti', 'Salwar'],
+  'Full Body': ['Dress', 'Jumpsuit', 'Romper', 'Suit', 'Overall', 'Abaya', 'Kaftan', 'Galabiya', 'Thobe', 'Sherwani', 'Sari', 'Lehenga', 'Hanbok', 'Kimono', 'Dirndl'],
   Outerwear: ['Jacket', 'Coat', 'Blazer', 'Trench', 'Cardigan', 'Parka', 'Windbreaker', 'Puffer', 'Bomber'],
   Footwear: ['Sneakers', 'Boots', 'Loafers', 'Sandals', 'Heels', 'Flats', 'Oxfords', 'Slippers', 'Espadrilles'],
-  Accessories: ['Bag', 'Belt', 'Hat', 'Scarf', 'Sunglasses', 'Jewelry', 'Watch', 'Tie', 'Gloves', 'Wallet'],
+  Accessories: ['Bag', 'Belt', 'Hat', 'Scarf', 'Sunglasses', 'Jewelry', 'Watch', 'Tie', 'Gloves', 'Wallet', 'Kippah', 'Keffiyeh', 'Turban', 'Hijab', 'Mitpachat', 'Shtreimel', 'Tarboush'],
 };
 
 export const COLOR_OPTIONS = [
@@ -272,6 +272,32 @@ export const canonicalSubCategoryKey = (raw?: string): string => {
     .replace(/['’`]/g, '')
     .replace(/[\s\/\-]+/g, '_')
     .replace(/[^\p{L}\p{M}\p{N}_]/gu, '');
+
+  // Cultural Traditional Attire & Headwear
+  if (normalized.includes('galabiya') || normalized.includes('djellaba') || normalized.includes('jalabiya') || normalized.includes('גלבייה') || normalized.includes('גלאביה') || normalized.includes('جلابية') || normalized.includes('جلابة') || normalized.includes('галабея') || normalized.includes('galabija')) return 'galabiya';
+  if (normalized.includes('kaftan') || normalized.includes('caftan') || normalized.includes('כפתן') || normalized.includes('قفطان') || normalized.includes('кафтан') || normalized.includes('caftano') || normalized.includes('cafta')) return 'kaftan';
+  if (normalized.includes('thobe') || normalized.includes('thoub') || normalized.includes('kandura') || normalized.includes('dishdasha') || normalized.includes('תוב') || normalized.includes('קנדורה') || normalized.includes('דישדשה') || normalized.includes('ثوب') || normalized.includes('كندورة') || normalized.includes('دشداشة') || normalized.includes('тоб') || normalized.includes('кандура')) return 'thobe';
+  if (normalized.includes('abaya') || normalized.includes('עבאיה') || normalized.includes('عباية') || normalized.includes('عباءة') || normalized.includes('абайя') || normalized.includes('abaia')) return 'abaya';
+  if (normalized.includes('kurta') || normalized.includes('kurti') || normalized.includes('קורטה') || normalized.includes('كورتة') || normalized.includes('كورتا') || normalized.includes('курта') || normalized.includes('कुर्ता')) return 'kurta';
+  if (normalized.includes('sherwani') || normalized.includes('שרוואני') || normalized.includes('שירואני') || normalized.includes('شيرواني') || normalized.includes('шервани') || normalized.includes('शेरवानी') || normalized.includes('scherwani')) return 'sherwani';
+  if (normalized.includes('sari') || normalized.includes('saree') || normalized.includes('סארי') || normalized.includes('ساري') || normalized.includes('сари') || normalized.includes('साड़ी')) return 'sari';
+  if (normalized.includes('lehenga') || normalized.includes('lengha') || normalized.includes('chaniya_choli') || normalized.includes('להנגה') || normalized.includes('ליהנגה') || normalized.includes('لينجا') || normalized.includes('लेहंगा') || normalized.includes('лехенга')) return 'lehenga';
+  if (normalized.includes('hanbok') || normalized.includes('chima_jeogori') || normalized.includes('הנבוק') || normalized.includes('هانبوك') || normalized.includes('ханбок') || normalized.includes('한복')) return 'hanbok';
+  if (normalized.includes('kimono') || normalized.includes('yukata') || normalized.includes('קימונו') || normalized.includes('יוקאטה') || normalized.includes('كيمونو') || normalized.includes('кимоно') || normalized.includes('着物') || normalized.includes('和服') || normalized.includes('浴衣')) return 'kimono';
+  if (normalized.includes('dirndl') || normalized.includes('trachtenkleid') || normalized.includes('דירנדל') || normalized.includes('ديرندل') || normalized.includes('дирндль')) return 'dirndl';
+  if (normalized.includes('guayabera') || normalized.includes('chacabana') || normalized.includes('גוואיאברה') || normalized.includes('גואיברה') || normalized.includes('غوايابيرا') || normalized.includes('гуаябера')) return 'guayabera';
+  if (normalized.includes('dhoti') || normalized.includes('דהוטי') || normalized.includes('دهوتي') || normalized.includes('дхоти') || normalized.includes('धोती')) return 'dhoti';
+  if (normalized.includes('salwar') || normalized.includes('shalwar') || normalized.includes('סלוואר') || normalized.includes('سروال_הנדי') || normalized.includes('шальвары') || normalized.includes('सलवार')) return 'salwar';
+
+  // Traditional Headwear & Accessories
+  if (normalized.includes('kippah') || normalized.includes('yarmulke') || normalized.includes('yarmulka') || normalized.includes('kipa') || normalized.includes('כיפה') || normalized.includes('ירמולקה') || normalized.includes('كيباه') || normalized.includes('кипа') || normalized.includes('किप्पा')) return 'kippah';
+  if (normalized.includes('keffiyeh') || normalized.includes('shemagh') || normalized.includes('ghutra') || normalized.includes('kufiyya') || normalized.includes('כאפייה') || normalized.includes('כפייה') || normalized.includes('שמאג') || normalized.includes('كوفية') || normalized.includes('شماغ') || normalized.includes('غترة') || normalized.includes('куфия') || normalized.includes('шемаг') || normalized.includes('केफ़ियेह')) return 'keffiyeh';
+  if (normalized.includes('turban') || normalized.includes('dastar') || normalized.includes('pagri') || normalized.includes('pagdi') || normalized.includes('טורבן') || normalized.includes('דסטאר') || normalized.includes('טרבן') || normalized.includes('توربان') || normalized.includes('عمامة') || normalized.includes('тюрбан') || normalized.includes('दस्तार') || normalized.includes('पगड़ी')) return 'turban';
+  if (normalized.includes('hijab') || normalized.includes('sheila') || normalized.includes('shayla') || normalized.includes('khimar') || normalized.includes('חיגאב') || normalized.includes('חיג\'אב') || normalized.includes('שיילה') || normalized.includes('חג\'אב') || normalized.includes('حجاب') || normalized.includes('شيلة') || normalized.includes('خمار') || normalized.includes('хиджаб') || normalized.includes('हिजाब')) return 'hijab';
+  if (normalized.includes('mitpachat') || normalized.includes('tichel') || normalized.includes('מטפחת') || normalized.includes('טיכל') || normalized.includes('митпахат') || normalized.includes('тихель') || normalized.includes('मितपचत')) return 'mitpachat';
+  if (normalized.includes('shtreimel') || normalized.includes('spodik') || normalized.includes('שטריימל') || normalized.includes('ספודיק') || normalized.includes('شتريمل') || normalized.includes('штраймл') || normalized.includes('штраймел') || normalized.includes('श्ट्रीमेल')) return 'shtreimel';
+  if (normalized.includes('tarboush') || normalized.includes('tarbush') || normalized.includes('fez') || normalized.includes('תרבוש') || normalized.includes('פז') || normalized.includes('طربوش') || normalized.includes('فاس') || normalized.includes('феска') || normalized.includes('тарбуш') || normalized.includes('तरबश')) return 'tarboush';
+  if (normalized.includes('rumal') || normalized.includes('רומאל') || normalized.includes('رومאל') || normalized.includes('румал') || normalized.includes('रुमाल')) return 'rumal';
 
   if (
     normalized.includes('basket_bag') ||

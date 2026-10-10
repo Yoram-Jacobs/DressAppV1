@@ -153,10 +153,27 @@ This document defines canonical attire protocols, silhouette requirements, stric
 - **Strict Negative Prohibitions**:
   - NO worn-out, stained, distressed casualwear, or faded graphic tees.
 
-### 2.4 Regional Modest Attire Protocols
-- **Arabian Gulf Formal Protocol (البشت والكندورة)**: Tailored floor-length white or wool Thobe with Ghutra/Shemagh and Agal, draped with an embroidered gold *Zari* **Bisht** cloak for formal weddings and diplomacy. Never style a Bisht with jeans or casual t-shirts.
-- **North African Djellaba & Babouche (الجلابة والبلغة)**: Fine-wool hooded Djellaba over a Gandora with handcrafted leather Belgha/Babouche slippers.
-- **Southeast Asian Batik & Baju Melayu (Batik & Baju Melayu)**: Formal long-sleeved silk Batik shirts substitute for Western business suits in Indonesia/Malaysia. Ceremonial Baju Melayu includes the Songket Kain Samping waist-wrap and black velvet Songkok cap.
+### 2.4 North African Galabiya & Djellaba Protocol (الجلابة والجلابية والبلغة)
+- **Occasion Type**: Daily gatherings, cultural celebrations, Maghreb and Egyptian traditional wear.
+- **Requirements**: Loose, ankle-length Galabiya or fine-wool hooded Djellaba draped over a Gandora, paired with handcrafted leather Belgha/Babouche slippers or clean loafers.
+- **Strict Negative Prohibitions**:
+  - NO pairing with formal Western tuxedo jackets, tight distressed denim jeans, or athletic sneakers.
+
+### 2.5 Abaya & Sheila Modest Layering (العباية والشيلة)
+- **Occasion Type**: Daily modesty, sacred gatherings, family visits across the Arab world.
+- **Requirements**: Flowing, floor-length outer Abaya layered gracefully over opaque clothing (trousers, inner slip dress), coordinated with a matching Sheila or Hijab headscarf.
+- **Strict Negative Prohibitions**:
+  - STRICTLY FORBID sheer/transparent outer layers without modest opaque undergarments.
+  - NO pairing with revealing crop tops, shorts, or tight miniskirts.
+
+### 2.6 Arabian Gulf Thobe & Kandura Formal Protocol (البشت والكندورة والثوب)
+- **Occasion Type**: Formal meetings, Friday prayer, weddings, diplomatic functions.
+- **Requirements**: Tailored, crisp ankle-length white or wool Thobe/Kandura/Dishdasha with Ghutra/Shemagh and Agal. For high-formal events, draped with an embroidered gold *Zari* **Bisht** cloak.
+- **Strict Negative Prohibitions**:
+  - Never style a ceremonial Bisht or Thobe with casual athletic hoodies, distressed jeans, or beach sandals.
+
+### 2.7 Southeast Asian Batik & Baju Melayu (Batik & Baju Melayu)
+- Formal long-sleeved silk Batik shirts substitute for Western business suits in Indonesia/Malaysia. Ceremonial Baju Melayu includes the Songket Kain Samping waist-wrap and black velvet Songkok cap.
 
 ---
 
@@ -206,8 +223,20 @@ This document defines canonical attire protocols, silhouette requirements, stric
 ### 3.6 Pongal & Onam Harvest Attire (കേരള ഓണം / பொங்கல்)
 - **Onam**: Traditional Kerala **Kasavu** (cream cotton with woven gold zari border) Set Mundu or saree for women; clean cream Mundu with gold border and shirt or Angavastram for men.
 - **Pongal**: Freshly washed traditional South Indian festive wear: silk Dhotis / Angavastram, Kanchipuram silk sarees in bright turmeric yellow, saffron, and parrot green.
+### 3.7 Kurta & Sherwani Ceremonial Ensembles (कुर्ता और शेरवानी)
+- **Occasion Type**: South Asian formal wear, weddings, festive Puja, Eid, and cultural gatherings.
+- **Requirements**: 
+  - **Kurta**: Straight-cut or flared Kurta paired with Churidar, Pyjama, or Dhoti, layered with a tailored Nehru jacket.
+  - **Sherwani**: Regal, structured knee-length Sherwani paired with silk Churidar and traditional Mojari/Jutti footwear.
 - **Strict Negative Prohibitions**:
-  - NO dark mourning black clothes; avoid Western casual loungewear.
+  - NEVER pair a high-formal ceremonial Sherwani with casual blue denim jeans or athletic running sneakers.
+
+### 3.8 Saree & Lehenga Festive Ensembles (साड़ी और लहंगा)
+- **Occasion Type**: Hindu weddings, festive ceremonies (Diwali, Navratri), receptions.
+- **Requirements**: Six-to-nine yard Saree pleated with fitted blouse and petticoat; or heavy flared Lehenga skirt with embroidered Choli blouse and draped Dupatta.
+- **Strict Negative Prohibitions**:
+  - NO solid unadorned black or plain austere white at Hindu weddings (reserved for mourning).
+  - Avoid revealing clubwear cuts or athletic shoes.
 
 ---
 
