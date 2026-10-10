@@ -63,10 +63,11 @@ RE_TOP_WORDS = re.compile(
     r"\bsweatshirts?\b|\bhoodies?\b|\btank(?:\s+tops?)?\b|\bcrop\s+tops?\b|"
     r"\bpullovers?\b|\bturtlenecks?\b|\bpolos?\b|\bbutton-downs?\b|\bcamisoles?\b|"
     r"\bcardigans?\b|\bknitwears?\b|"
+    r"\bkurtas?\b|\bkurtis?\b|\btunics?\b|\bguayaberas?\b|\bsherwanis?\b|\btops?\b|"
     r"\bחולצה\b|\bחולצת\b|\bחולצות\b|\bגופייה\b|\bגופיית\b|\bגופיות\b|"
     r"\bסוודר\b|\bסוודרים\b|\bקפוצ'ון\b|\bסווטשירט\b|\bפולו\b|\bמכופתרת\b|"
-    r"\bקרדיגן\b|\bסריג\b|\bסריגים\b|"
-    r"\bقميص\b|\bبلوزة\b|\bكنزة\b|\bتي\s*ש?שירט\b|\bهودي\b",
+    r"\bקרדיגן\b|\bסריג\b|\bסריגים\b|\bטוניקה\b|\bקורטה\b|\bגלבייה\b|"
+    r"\bقميص\b|\bبلوزة\b|\bكنزة\b|\bتي\s*ש?שירט\b|\bهودي\b|\bتونيك\b|\bجلابية\b|\bثوب\b",
     re.IGNORECASE,
 )
 

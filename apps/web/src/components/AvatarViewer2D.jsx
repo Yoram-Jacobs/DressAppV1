@@ -212,7 +212,25 @@ export function getTopTopography(garment, hasOuterwear = false) {
     };
   }
 
-  // 2. Standard Top (Default)
+  // 2. Longline tops, Kurtas, Tunics, Galabiyas
+  if (
+    text.includes('kurta') ||
+    text.includes('tunic') ||
+    text.includes('longline') ||
+    text.includes('קפטאן') ||
+    text.includes('גלבייה') ||
+    text.includes('טוניקה') ||
+    (text.includes('long') && (text.includes('shirt') || text.includes('top')))
+  ) {
+    return {
+      classes: hasOuterwear
+        ? 'top-[17.5%] left-1/2 w-[74%] h-[46%] z-[20]'
+        : 'top-[17.5%] left-1/2 w-[84%] h-[48%] z-[20]',
+      align: 'object-top'
+    };
+  }
+
+  // 3. Standard Top (Default)
   // When an outer coat/jacket is worn over top, snug width to torso (w-[70%])
   // so sleeve ends don't peek out laterally as wings behind outerwear.
   return {
@@ -334,7 +352,13 @@ export default function AvatarViewer2D({ shapeParams = {}, measurements: provide
     const allClosetItems = (closetStore.getSnapshot().items || []).filter(Boolean);
 
     const resolveSlot = (roleName, itemObj, dbItem) => {
-      let s = roleName;
+      let s = String(roleName || '').toLowerCase().trim();
+      if (s === 'upper' || s === 'shirt') s = 'top';
+      if (s === 'pants' || s === 'trousers' || s === 'skirt' || s === 'lower') s = 'bottom';
+      if (s === 'shoe' || s === 'footwear') s = 'shoes';
+      if (s === 'full_body' || s === 'one_piece' || s === 'dresses') s = 'dress';
+      if (s === 'jacket' || s === 'coat') s = 'outerwear';
+
       const category = dbItem?.category || itemObj?.category;
       const subCat = String(itemObj?.sub_category || dbItem?.sub_category || '').toLowerCase();
       const itemType = String(itemObj?.item_type || dbItem?.item_type || '').toLowerCase();
@@ -402,7 +426,7 @@ export default function AvatarViewer2D({ shapeParams = {}, measurements: provide
                      name.includes('חגור') ||
                      name.includes('חגורת') ||
                      name.includes('حزام');
-      if (isBelt) {
+      if (isBelt && (s === 'accessory' || s === 'accessories' || !s || s === 'item' || s === 'garment')) {
         s = 'belt';
       }
 
@@ -451,8 +475,8 @@ export default function AvatarViewer2D({ shapeParams = {}, measurements: provide
       // Category / Intrinsic role detectors
       const isShoesByName = /\b(shoes?|sneakers?|boots?|sandals?|heels?|loafers?|slippers?|slides?|mules?|oxford\s+shoes?|oxfords|oxford(?!\s+(shirts?|cloth|cotton|button))|clogs?|נעליים|נעלי|סניקרס|מגפיים|מגפי|מגפונים|סנדלים|עקבים|כפכפים|מוקסינים|حذاء|أحذية|صندل|بوت)\b/i.test(name);
       const isBottomByName = /\b(pants?|cargo|trousers?|jeans?|shorts?|skirts?|sweatpants|joggers?|slacks?|chinos?|leggings?|bermuda|culottes?|trunks?|briefs?|מכנסיים|מכנס|מכנסי|ג'ינס|שורטס|חצאית|חצאיות|טייץ|טייטס|טרנינג|בוקסר|תחתונים|בגד ים|מכנסי ים|ביקיני|بنطلون|بنطال|سروال|شورت|تنورة|جينز)\b/i.test(allText) || isSwimBottom;
-      const isTopByName = /\b(shirts?|t-shirts?|tees?|blouses?|sweaters?|hoodies?|sweatshirts?|crop\s+tops?|tank(?:\s+tops?)?|polos?|pullovers?|turtlenecks?|camisoles?|rash_guards?|חולצה|חולצת|חולצות|גופייה|גופיה|גופיות|סוודר|סוודרים|קפוצ'ון|סווטשירט|פולו|מכופתרת|סריג|סריגים|חולצת גלישה|قميص|بلوزة|كنزة|هودي)\b/i.test(allText) || isSwimTop;
-      const isOuterwearByName = /\b(jackets?|coats?|blazers?|parkas?|trench(?:coats?)?|overcoats?|windbreakers?|puffers?|anoraks?|vests?|ז'קט|ג'קט|מעיל|מעילים|בלייזר|וסט|מקטורן|עליונית|סטرة|جاكيت|معطف|بليزر)\b/i.test(name);
+      const isTopByName = /\b(shirts?|t-shirts?|tees?|blouses?|sweaters?|hoodies?|sweatshirts?|crop\s+tops?|tank(?:\s+tops?)?|polos?|pullovers?|turtlenecks?|camisoles?|rash_guards?|kurtas?|kurtis?|tunics?|kaftans?|caftans?|galabiyas?|thobes?|guayaberas?|sherwanis?|tops?|חולצה|חולצת|חולצות|גופייה|גופיה|גופיות|סוודר|סוודרים|קפוצ'ון|סווטשירט|פולו|מכופתרת|סריג|סריגים|טוניקה|קורטה|גלבייה|חולצת גלישה|قميص|بلوزة|كنزة|هودي|تونيك|جلابية|ثوب)\b/i.test(allText) || isSwimTop;
+      const isOuterwearByName = /\b(jackets?|coats?|blazers?|parkas?|trench(?:coats?)?|overcoats?|windbreakers?|puffers?|anoraks?|vests?|ז'קט|ג'קט|מעיל|מעילים|בלייזר|וסט|מקטורן|עליונית|סטרה|جاكيت|معطف|بليزر)\b/i.test(name);
       const isDressByName = /\b(dresses|dress(?!\s+(pants|trousers|shirts?|shoes?|boots?|code|socks|belt|suit))|gowns?|jumpsuits?|rompers?|dungarees?|overalls?|one_piece|swimsuit|שמלה|שמלת|שמלות|אוברול|סרבל|בגד ים שלם|فستان|فساتين|جمبسوت)\b/i.test(allText) || isOnePieceSwim;
       const isAccessoryByName = isHat || isBelt || isGlasses || isBag || isWatch || /\b(scarves|scarf|neckties?|bow\s*ties?|necklaces?|bracelets?|watches?|earrings?|צעיף|צעיפים|עניבה|עניבות|שרשרת|שרשראות|צמיד|צמידים|שעון|שעונים|עגילים|حزام|قبعة|نظارات|حقيبة|وشاح|ساعة|سوار|قلادة)\b/i.test(name) || /\bties?\b(?!\s*dye)/i.test(name);
 
@@ -493,7 +517,7 @@ export default function AvatarViewer2D({ shapeParams = {}, measurements: provide
         if (s === 'bottom' || s === 'shoes' || s === 'headwear' || s === 'glasses' || s === 'belt' || s === 'bag' || s === 'accessory') {
           return null;
         }
-        if (s === 'top') {
+        if (s === 'top' && !isTopByName) {
           s = 'dress';
         }
       }
@@ -511,7 +535,7 @@ export default function AvatarViewer2D({ shapeParams = {}, measurements: provide
     Object.entries(outfitItems || {}).forEach(([role, item]) => {
       if (item) {
         const itemId = item.closet_item_id || item.id;
-        const closetItem = allClosetItems.find(it => it && it.id === itemId);
+        const closetItem = allClosetItems.find(it => it && (it.id === itemId || it._id === itemId));
         
         let slot = resolveSlot(role, item, closetItem);
         if (!slot) return;
@@ -524,9 +548,9 @@ export default function AvatarViewer2D({ shapeParams = {}, measurements: provide
             groupItems.forEach(gItem => {
               const gSlot = resolveSlot(gItem.category, gItem, gItem);
               res[gSlot] = {
-                url: resolveMediaUrl(bestImageUrl(gItem) || gItem.clean_image_url || gItem.image_data_url || gItem.segmented_image_url || gItem.image_url || gItem.original_image_url),
+                url: resolveMediaUrl(bestImageUrl(gItem) || gItem.clean_image_url || gItem.reconstructed_image_url || gItem.image_data_url || gItem.segmented_image_url || gItem.image_url || gItem.original_image_url),
                 placeholder: resolveMediaUrl(gItem.placeholder_data_url || null),
-                id: gItem.id,
+                id: gItem.id || gItem._id,
                 category: gItem.category || '',
                 sub_category: gItem.sub_category || '',
                 item_type: gItem.item_type || '',
@@ -537,10 +561,26 @@ export default function AvatarViewer2D({ shapeParams = {}, measurements: provide
           }
         }
  
+        const garmentUrl = resolveMediaUrl(
+          bestImageUrl(closetItem) ||
+          bestImageUrl(item) ||
+          item.url ||
+          item.clean_image_url ||
+          item.reconstructed_image_url ||
+          item.image_url ||
+          item.image_data_url ||
+          item.segmented_image_url ||
+          item.original_image_url ||
+          closetItem?.clean_image_url ||
+          closetItem?.reconstructed_image_url ||
+          closetItem?.image_url ||
+          closetItem?.original_image_url
+        );
+
         res[slot] = {
-           url: resolveMediaUrl(bestImageUrl(item) || item.clean_image_url || item.image_data_url || item.segmented_image_url || item.image_url || item.original_image_url || item.url),
-           placeholder: resolveMediaUrl(item.placeholder_data_url || item.placeholder || null),
-           id: item.closet_item_id || item.id || null,
+           url: garmentUrl,
+           placeholder: resolveMediaUrl(item.placeholder_data_url || item.placeholder || closetItem?.placeholder_data_url || null),
+           id: item.closet_item_id || item.id || closetItem?.id || closetItem?._id || null,
            category: item.category || closetItem?.category || '',
            sub_category: item.sub_category || closetItem?.sub_category || '',
            item_type: item.item_type || closetItem?.item_type || '',

@@ -25,21 +25,32 @@ export function OutfitRecommendationCard({ rec, index, sessionId, onItemClick, o
   const { user } = useAuth();
   const items = (rec?.items || []).filter(Boolean);
   const ids = items
-    .map((it) => it?.closet_item_id)
+    .map((it) => it?.closet_item_id || it?.id)
     .filter(Boolean);
   const [images, setImages] = useState({});
   // Map of closet_item_id → fetched item object (for color extraction)
   const [itemData, setItemData] = useState({});
 
   const outfitItemsMap = useMemo(() => {
+    const localItems = (closetStore.getItemsSnapshot() || []).filter(Boolean);
+    const localMap = new Map(localItems.map(it => [it.id, it]));
+
     const map = {};
     items.forEach(it => {
       if (it && it.role) {
-        const itemObj = itemData[it.closet_item_id];
-        map[it.role] = {
-          id: it.closet_item_id,
-          url: images[it.closet_item_id],
-          placeholder: itemObj?.placeholder_data_url || null
+        const itId = it.closet_item_id || it.id;
+        const itemObj = (itId ? itemData[itId] : null) || (itId ? localMap.get(itId) : null);
+        const resolvedUrl = (itId ? images[itId] : null) || (itemObj ? bestImageUrl(itemObj) : null) || it.clean_image_url || it.reconstructed_image_url || it.image_url || it.url || null;
+        const roleKey = String(it.role).toLowerCase().trim();
+        map[roleKey] = {
+          id: itId,
+          closet_item_id: itId,
+          url: resolvedUrl,
+          placeholder: itemObj?.placeholder_data_url || it.placeholder_data_url || null,
+          category: itemObj?.category || it.category || '',
+          sub_category: itemObj?.sub_category || it.sub_category || '',
+          item_type: itemObj?.item_type || it.item_type || '',
+          name: itemObj?.name || itemObj?.title || it.name || it.title || it.description || ''
         };
       }
     });
@@ -116,9 +127,9 @@ export function OutfitRecommendationCard({ rec, index, sessionId, onItemClick, o
       .filter(Boolean);
   }, [items, itemData]);
 
-  const withImages = items.filter((it) => images[it.closet_item_id]);
+  const withImages = items.filter((it) => images[it.closet_item_id || it.id]);
   const heroImage = withImages[0]
-    ? images[withImages[0].closet_item_id]
+    ? images[withImages[0].closet_item_id || withImages[0].id]
     : null;
 
   if (!rec) return null;
