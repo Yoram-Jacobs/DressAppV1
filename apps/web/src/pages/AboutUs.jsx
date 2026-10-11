@@ -212,7 +212,7 @@ export default function AboutUs() {
               <div className="absolute -inset-2 bg-gradient-to-tr from-accent/20 to-persimmon/20 rounded-[calc(var(--radius)+8px)] blur-md opacity-60 group-hover:opacity-100 transition-smooth" />
               <Card className="relative overflow-hidden rounded-[calc(var(--radius)+6px)] border border-border shadow-[var(--shadow-sm)] bg-card">
                 <img 
-                  src="/assets/about/yoram-portrait.jpg" 
+                  src="/assets/about/yoram-suite-face.jpg" 
                   alt="Yoram Jacobs — Founder of DressApp" 
                   className="w-full aspect-[3/4] object-cover object-top"
                   loading="lazy"

@@ -34,7 +34,7 @@ import * as Lucide from 'lucide-react-native';
 import { useTheme } from '@mobile/theme';
 import { fonts, fontSizes, spacing, radii, shadows } from '@mobile/theme/tokens';
 
-const YORAM_PORTRAIT = require('../../../assets/about/yoram-portrait.jpg');
+const YORAM_PORTRAIT = require('../../../assets/about/yoram-suite-face.jpg');
 const YORAM_SOUND_CONSOLE = require('../../../assets/about/yoram-sound-console.jpg');
 const YORAM_STUDIO_CODE = require('../../../assets/about/yoram-studio-code.jpg');
 
