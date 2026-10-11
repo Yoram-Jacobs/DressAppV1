@@ -2493,9 +2493,11 @@ class GarmentVisionService:
                         "sandal", "skirt", "dress", "blouse", "heel", "handbag", "purse", "clutch", "tight", "stocking",
                     ))
                     has_masc_cue = any(
-                        is_distinctly_masculine_garment(d.get("category"), d.get("label"), d.get("label"))
+                        is_distinctly_masculine_garment(d.get("category"), d.get("label"), d.get("label"), name=d.get("label"), full_text=d.get("label"))
                         for d in detections
-                    ) or any(k in cat_labels for k in ("boxers", "tuxedo"))
+                    ) or any(k in cat_labels for k in ("boxers", "tuxedo", "kurta", "sherwani", "thobe", "dishdasha")) or any(
+                        w in str(d.get("label", "")).lower() for d in detections for w in ("kurta", "sherwani", "thobe", "dishdasha", "tuxedo", "boxer")
+                    )
                     if has_human_wearer or len(detections) > 1:
                         if has_fem_cue:
                             photo_model_gender = "women"
@@ -2983,6 +2985,13 @@ class GarmentVisionService:
                                     fallback_type = (det.get("label") or det.get("kind") or "garment").lower()
                                     analysis["item_type"] = fallback_type
                                     analysis["sub_category"] = fallback_type.capitalize()
+                                if not item_mg:
+                                    if analysis.get("gender") == "women" or is_distinctly_feminine_garment(analysis.get("category"), analysis.get("sub_category"), analysis.get("item_type"), name=analysis.get("title")):
+                                        item_mg = "women"
+                                        photo_model_genders[image_idx] = "women"
+                                    elif analysis.get("gender") == "men" or is_distinctly_masculine_garment(analysis.get("category"), analysis.get("sub_category"), analysis.get("item_type"), name=analysis.get("title")):
+                                        item_mg = "men"
+                                        photo_model_genders[image_idx] = "men"
                                 if item_mg in ("men", "women"):
                                     analysis["gender"] = item_mg
                                 analysis = _coerce_single_garment(analysis, user_gender=eff_gender, model_gender=item_mg, language=language)

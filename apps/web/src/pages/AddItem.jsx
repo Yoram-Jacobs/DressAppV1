@@ -539,16 +539,21 @@ const hydrate = (a, user, t, i18n) => {
     out.price_cents = basePrices[out.category] || 2500;
   }
 
-  // 4. Fallback gender: feminine sleeve / cut detection
+  // 4. Fallback gender: feminine sleeve / cut detection or masculine cut detection
   if (!out.gender || out.gender === 'unisex') {
-    const isFemUser = user?.sex === 'female' || user?.gender === 'female' || user?.gender === 'women';
     const femBlob = `${subRaw} ${itemRaw} ${out.name} ${out.title} ${out.caption} ${(Array.isArray(out.tags) ? out.tags : []).join(' ')}`.toLowerCase();
-    const isFemSleeveOrCut = /cap[- ]sleeve|flutter|blouse|sweetheart|peplum|ruffle|scoop|curved|בלוזה|שמלה|חצאית|גופיי|קצרצר|שרוול קצר|עדינ/.test(femBlob);
-    const sizeUpper = String(out.size || '').trim().toUpperCase();
-    const isFemSize = ['XS', 'S', 'XXS', '34', '36', '38'].includes(sizeUpper);
-    const isFemTop = catLower === 'top' && (isFemUser || isFemSleeveOrCut || isFemSize || /תכלת|כחול בהיר|light blue|baby blue/.test(femBlob));
-    if (isFemUser || isFemSleeveOrCut || isFemTop) {
-      out.gender = 'women';
+    const isMascGarment = /men|male|guy|kurta|tuxedo|boxer|sherwani|thobe|dishdasha|גבר|גברים|קורטה/.test(femBlob);
+    if (isMascGarment) {
+      out.gender = 'men';
+    } else {
+      const isFemUser = user?.sex === 'female' || user?.gender === 'female' || user?.gender === 'women';
+      const isFemSleeveOrCut = /cap[- ]sleeve|flutter|blouse|sweetheart|peplum|ruffle|scoop|curved|בלוזה|שמלה|חצאית|גופיי|קצרצר|שרוול קצר|עדינ/.test(femBlob);
+      const sizeUpper = String(out.size || '').trim().toUpperCase();
+      const isFemSize = ['XS', 'S', 'XXS', '34', '36', '38'].includes(sizeUpper);
+      const isFemTop = catLower === 'top' && (isFemUser || isFemSleeveOrCut || isFemSize || /תכלת|כחול בהיר|light blue|baby blue/.test(femBlob));
+      if (isFemUser || isFemSleeveOrCut || isFemTop) {
+        out.gender = 'women';
+      }
     }
   }
 
@@ -1209,25 +1214,39 @@ export default function AddItem() {
     try {
       const res = await api.fetchImageUrl(url.trim());
       if (res?.image_b64) {
-        const b64 = res.image_b64;
+        let filename = "url-upload.jpg";
+        try {
+          const parsedUrl = new URL(url.trim());
+          const cleanPath = parsedUrl.pathname.split("/").filter(Boolean).pop();
+          if (cleanPath && /\.(jpe?g|png|webp|avif)$/i.test(cleanPath)) {
+            filename = cleanPath;
+          }
+        } catch (_) {}
+
         const mime = res.mime_type || "image/jpeg";
+        const byteCharacters = atob(res.image_b64);
+        const byteNumbers = new Array(byteCharacters.length);
+        for (let i = 0; i < byteCharacters.length; i++) {
+          byteNumbers[i] = byteCharacters.charCodeAt(i);
+        }
+        const byteArray = new Uint8Array(byteNumbers);
+        const blob = new Blob([byteArray], { type: mime });
+        let file;
+        try {
+          file = new File([blob], filename, { type: mime });
+        } catch (_) {
+          file = blob;
+          try {
+            Object.defineProperty(file, "name", {
+              value: filename,
+              writable: false,
+              configurable: true,
+            });
+          } catch (_) {
+            file.name = filename;
+          }
+        }
 
-        const cardId = `url-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-        const newCard = {
-          id: cardId,
-          file: null,
-          mime: mime,
-          previewUrl: `data:${mime};base64,${b64}`,
-          base64: b64,
-          status: "scanning",
-          progress: 4,
-          fields: blankFields(),
-          error: null,
-          label: null,
-          sourceFilename: "url-upload.jpg",
-        };
-
-        setCards((prev) => [...prev, newCard]);
         setIsUrlModalOpen(false);
         setUrlInput("");
         toast.success(
@@ -1237,7 +1256,7 @@ export default function AddItem() {
           { id: loadingId },
         );
 
-        analyzeCard(newCard);
+        await handleFiles([file]);
       } else {
         toast.error(
           t("addItem.urlImportFailed", {

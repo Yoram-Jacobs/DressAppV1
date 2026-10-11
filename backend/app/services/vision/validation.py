@@ -150,6 +150,8 @@ _MASCULINE_CUT_KEYWORDS = {
     "boxershorts", "frack", "boxershort", "боксеры", "смокинг",
     "平角裤", "四角裤", "燕尾服", "ボクサーパンツ", "タキシード",
     "बॉक्सर", "टक्सीडो",
+    "kurta", "sherwani", "thobe", "dishdasha", "kandora", "dhoti", "lungi",
+    "קורטה", "ת'וב", "דשדאשה", "שרוואני", "कुर्ता", "शेरवानी",
 }
 _UNISEX_CUT_KEYWORDS = {
     "athletic tank top", "athletic tank", "tank top", "singlet", "running tank",
@@ -230,11 +232,29 @@ def is_distinctly_unisex_garment(
     return any(c in joined for c in _UNISEX_CUT_KEYWORDS)
 
 
-def is_distinctly_masculine_garment(cat: str | None, sub: str | None, itype: str | None) -> bool:
+def is_distinctly_masculine_garment(
+    cat: str | None,
+    sub: str | None,
+    itype: str | None,
+    name: str | None = None,
+    full_text: str | None = None,
+) -> bool:
     """Check if a garment is strictly masculine by silhouette/design."""
     sub_l = str(sub or "").strip().lower()
     it_l = str(itype or "").strip().lower()
-    return any(c in sub_l or c in it_l for c in _MASCULINE_CUT_KEYWORDS)
+    name_l = str(name or "").strip().lower()
+    full_l = str(full_text or "").strip().lower()
+    joined = f"{sub_l} {it_l} {name_l} {full_l}"
+    if any(c in joined for c in _MASCULINE_CUT_KEYWORDS):
+        # Prevent false matching if explicit female kurti or woman garment
+        if not any(fw in joined for fw in ("kurti", "women", "woman", "ladies", "נשים", "לאישה", "نساء")):
+            return True
+    if any(w in joined for w in (
+        "men's", "mens", "for men", "גברים", "לגבר", "للرجال", "رجالي"
+    )):
+        if not any(fw in joined for fw in ("women", "woman", "ladies", "נשים", "לאישה", "نساء")):
+            return True
+    return False
 
 
 
@@ -3345,7 +3365,7 @@ def _coerce_enums(
 
     pat_val = (parsed.get("pattern") or "").strip().lower()
     is_fem_cut = is_distinctly_feminine_garment(cat_lower, sub_lower, itype_lower, name=parsed.get("name"), full_text=full_text_enum, pattern=pat_val)
-    is_masc_cut = is_distinctly_masculine_garment(cat_lower, sub_lower, itype_lower)
+    is_masc_cut = is_distinctly_masculine_garment(cat_lower, sub_lower, itype_lower, name=parsed.get("name"), full_text=full_text_enum)
     is_unisex_cut = is_distinctly_unisex_garment(cat_lower, sub_lower, itype_lower, name=parsed.get("name"), full_text=full_text_enum, pattern=pat_val)
 
     # Feminine tops with floral prints or feminine cuts should NEVER be "Tailored Shirts"
@@ -3381,12 +3401,12 @@ def _coerce_enums(
         parsed["gender"] = "unisex"
     elif g_val == "kids":
         parsed["gender"] = "kids"
-    elif norm_user in ("men", "women"):
-        # Anchor uncertain/neutral basics without clear gender cues to user's profile gender
-        parsed["gender"] = norm_user
     elif g_val in ("women", "men"):
         # Honor model's visual prediction over user profile fallback
         parsed["gender"] = g_val
+    elif norm_user in ("men", "women"):
+        # Anchor uncertain/neutral basics without clear gender cues to user's profile gender
+        parsed["gender"] = norm_user
     elif g_val in _VALID_GENDER:
         parsed["gender"] = g_val
     else:

@@ -210,7 +210,7 @@ GEMINI_VISION_SYSTEM_PROMPT = (
     "  5. FIELD RULES:\n"
     "     • pattern: If the garment has embroidered text/lettering, stitching, raised threads, or embroidery artwork/patches (e.g. embroidered baseball caps with words/teams like 'BRASIL', polo shirts with embroidered crests, stitched patches), set pattern=\"embroidered\". If the garment has printed text, slogans, graphics, artwork, or flat prints, set pattern=\"printed\". NEVER choose \"solid\" if the garment has visible words, text, letters, slogans, graphics, or embroidery! Only use \"solid\" if 100% plain with no text or artwork.\n"
     "     • season: If the piece is versatile and wearable year-round (e.g. standard t-shirt, jeans, hoodie, sneakers), return [\"all\"]. Only restrict to specific seasons if clearly weather-bound (e.g. heavy winter down parka, summer swimwear).\n"
-    "     • gender: Default to \"unisex\" for standard t-shirts, hoodies, and casual pieces unless tailored explicitly for men or women."
+    "     • gender: Default to \"unisex\" for standard t-shirts, hoodies, and casual pieces unless tailored explicitly for men or women. Never default to 'men'."
 )
 
 # Canonical keyed prompt for garment vision workflow on on-prem Eyes / Qwen

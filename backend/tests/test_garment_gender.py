@@ -584,5 +584,24 @@ def test_womens_outfit_ensemble_preserves_gender_and_layering():
     assert tights["gender"] == "women"
 
 
+def test_kurta_men_gender_preserved_even_when_user_is_female():
+    """Verify that Kurta and masculine garments preserve 'men' gender even if user is female."""
+    kurta_item = {
+        "name": "Navy Blue Embroidered Kurta",
+        "title": "Navy Blue Embroidered Kurta",
+        "category": "Top",
+        "sub_category": "Kurta",
+        "item_type": "Kurta",
+        "gender": "men",
+    }
+    # Even if user profile gender is 'women', AI's explicit 'men' and masculine cut MUST be preserved
+    res = _coerce_single_garment(kurta_item, user_gender="women")
+    assert res["gender"] == "men", f"Expected 'men', got '{res['gender']}'"
+
+    res_enums = _coerce_enums(kurta_item, user_gender="women")
+    assert res_enums["gender"] == "men"
+
+
+
 
 
