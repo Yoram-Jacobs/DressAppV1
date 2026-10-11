@@ -240,8 +240,8 @@ def _detect_human_presence(items: list[dict[str, Any]]) -> bool:
 
     # Vertical anatomical arrangement of garments on a standing human model:
     # A human wearer has top strictly above bottom/shoes spanning significant vertical frame.
-    tops = [d for d in items if (d.get("category") or d.get("kind") or "").lower() in ("top", "outerwear") and d.get("bbox")]
-    bottoms = [d for d in items if (d.get("category") or d.get("kind") or "").lower() in ("bottom", "dress") and d.get("bbox")]
+    tops = [d for d in items if (d.get("category") or d.get("kind") or "").lower() in ("top", "outerwear", "dress") and d.get("bbox")]
+    bottoms = [d for d in items if (d.get("category") or d.get("kind") or "").lower() in ("bottom", "pants", "skirt") and d.get("bbox")]
     shoes = [d for d in items if (d.get("category") or d.get("kind") or "").lower() in ("footwear", "shoes") and d.get("bbox")]
     if tops and bottoms:
         min_top_y = min(d["bbox"][0] for d in tops)

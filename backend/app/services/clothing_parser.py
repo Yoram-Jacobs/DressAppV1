@@ -625,7 +625,7 @@ def _split_into_spatial_groups(class_binary: np.ndarray) -> list[np.ndarray]:
     """
     from scipy import ndimage
 
-    if class_binary.sum() < 128:
+    if class_binary.sum() < 32:
         return []
 
     labeled, n = ndimage.label(class_binary)
@@ -770,13 +770,16 @@ def _split_instances(class_mask: np.ndarray) -> list[tuple[str, np.ndarray]]:
         label_name = _id2label.get(cid_i)
         if not label_name:
             continue
-        if _get_label_category(label_name) is None:
+        cat = _get_label_category(label_name)
+        if cat is None:
             continue
         class_binary = (class_mask == cid_i).astype(np.uint8)
 
+        min_px = 24 if cat in ("footwear", "accessory", "headwear") else 48
+
         if label_name in _SINGLE_INSTANCE_CLASSES:
             for sub in _split_into_spatial_groups(class_binary):
-                if int(sub.sum()) >= 128:
+                if int(sub.sum()) >= min_px:
                     out.append((label_name, sub))
             continue
 
@@ -787,7 +790,7 @@ def _split_instances(class_mask: np.ndarray) -> list[tuple[str, np.ndarray]]:
         labeled, n = ndimage.label(class_binary)
         for inst in range(1, n + 1):
             mask = (labeled == inst).astype(np.uint8)
-            if mask.sum() >= 128:  # drop tiny noise
+            if mask.sum() >= min_px:  # drop tiny noise
                 out.append((label_name, mask))
     return out
 
@@ -1506,11 +1509,12 @@ async def parse_garments(
                     continue
                 oy1, ox1, oy2, ox2 = obb
                 o_cat = (other_it.get("category") or "").lower()
+                o_lbl = (other_it.get("label") or "").lower()
 
-                # If there is a genuine tall upper body garment or full-length pants, do not absorb it
-                is_genuine_tall_top = o_cat in ("top", "dress", "outerwear") and oy1 < int(0.20 * H) and (oy2 - oy1) >= int(0.40 * H)
-                is_genuine_tall_bottom = o_cat in ("bottom", "dress") and oy1 < int(0.40 * H) and (oy2 - oy1) >= int(0.45 * H)
-                if is_genuine_tall_top or is_genuine_tall_bottom:
+                # Shoes/footwear must NEVER absorb tops, bottoms, dresses, or outerwear!
+                if o_cat in ("top", "bottom", "dress", "outerwear") or any(
+                    w in o_lbl for w in ("pant", "skirt", "shirt", "jacket", "coat", "dress", "sweater", "hoodie", "top", "trouser", "jean", "chino", "short", "blouse", "t-shirt", "cardigan", "vest")
+                ):
                     continue
 
                 x_inter = max(0, min(sx2, ox2) - max(sx1, ox1))
@@ -1574,14 +1578,10 @@ async def parse_garments(
                 o_cat = (other_it.get("category") or "").lower()
                 o_lbl = (other_it.get("label") or "").lower()
 
-                # If there is a genuine tall upper body garment or full-length pants, do not absorb it
-                is_genuine_tall_top = o_cat in ("top", "dress", "outerwear") and oy1 < int(0.20 * H) and o_h >= int(0.40 * H)
-                is_genuine_tall_bottom = o_cat in ("bottom", "dress") and oy1 < int(0.40 * H) and o_h >= int(0.40 * H)
-                if is_genuine_tall_top or is_genuine_tall_bottom:
-                    continue
-
-                # Shoes/footwear should never be absorbed into a belt
-                if o_cat == "footwear" or "shoe" in o_lbl:
+                # Belt must NEVER absorb tops, bottoms, dresses, outerwear, or footwear!
+                if o_cat in ("top", "bottom", "dress", "outerwear", "footwear") or any(
+                    w in o_lbl for w in ("pant", "skirt", "shirt", "jacket", "coat", "dress", "sweater", "hoodie", "top", "trouser", "jean", "chino", "short", "blouse", "t-shirt", "cardigan", "vest", "shoe", "boot", "sandal")
+                ):
                     continue
 
                 x_inter = max(0, min(bx2, ox2) - max(bx1, ox1))
@@ -1726,15 +1726,10 @@ async def parse_garments(
                 o_cat = (other_it.get("category") or "").lower()
                 o_lbl = (other_it.get("label") or "").lower()
 
-                # Protect genuine tall garments on a person wearing an outfit:
-                if has_human:
-                    is_genuine_tall_top = o_cat in ("top", "dress", "outerwear") and o_h >= int(0.35 * H) and oy2 > int(0.40 * H)
-                    is_genuine_tall_bottom = o_cat in ("bottom", "dress") and o_h >= int(0.35 * H) and oy1 >= int(0.35 * H)
-                    if is_genuine_tall_top or is_genuine_tall_bottom:
-                        continue
-
-                # Shoes/footwear should never be absorbed into a hat
-                if o_cat == "footwear" or "shoe" in o_lbl or "boot" in o_lbl:
+                # Hat must NEVER absorb tops, bottoms, dresses, outerwear, or footwear!
+                if o_cat in ("top", "bottom", "dress", "outerwear", "footwear") or any(
+                    w in o_lbl for w in ("pant", "skirt", "shirt", "jacket", "coat", "dress", "sweater", "hoodie", "top", "trouser", "jean", "chino", "short", "blouse", "t-shirt", "cardigan", "vest", "shoe", "boot", "sandal")
+                ):
                     continue
 
                 x_inter = max(0, min(hx2, ox2) - max(hx1, ox1))
@@ -1768,6 +1763,47 @@ async def parse_garments(
             if not merged_any:
                 break
 
+    # 2a-5b) Anatomical human model detection from garment layout:
+    # A person wearing an outfit has an upper garment (top/dress/outerwear) above a bottom (pants/skirt)
+    # or footwear (shoes) spanning a significant vertical frame height.
+    top_candidates_init = [
+        it for it in by_label.values()
+        if (it.get("category") in ("top", "outerwear", "dress") or any(w in (it.get("label") or "").lower() for w in ("upper", "coat", "jacket", "shirt", "sweater", "dress", "kurta"))) and it.get("mask") is not None
+    ]
+    bottom_candidates_init = [
+        it for it in by_label.values()
+        if (it.get("category") == "bottom" or any(p in (it.get("label") or "").lower() for p in ("pant", "skirt", "trouser", "jean", "short", "chino", "legging")))
+        and it.get("mask") is not None
+    ]
+    footwear_candidates_init = [
+        it for it in by_label.values()
+        if (it.get("category") == "footwear" or "shoe" in (it.get("label") or "").lower() or "boot" in (it.get("label") or "").lower())
+        and it.get("mask") is not None
+    ]
+    if top_candidates_init and bottom_candidates_init:
+        min_top_y = min(_mask_bbox(it["mask"])[0] for it in top_candidates_init if _mask_bbox(it["mask"]))
+        min_bot_y = min(_mask_bbox(it["mask"])[0] for it in bottom_candidates_init if _mask_bbox(it["mask"]))
+        max_bot_y = max(_mask_bbox(it["mask"])[2] for it in bottom_candidates_init if _mask_bbox(it["mask"]))
+        if min_top_y < min_bot_y and (max_bot_y - min_top_y) >= int(0.25 * H):
+            has_human = True
+            has_head = True
+            has_any_human = True
+    elif (top_candidates_init or bottom_candidates_init) and footwear_candidates_init:
+        upper_y = min(
+            _mask_bbox(it["mask"])[0]
+            for it in (top_candidates_init or bottom_candidates_init)
+            if _mask_bbox(it["mask"])
+        )
+        shoe_y = max(
+            _mask_bbox(it["mask"])[2]
+            for it in footwear_candidates_init
+            if _mask_bbox(it["mask"])
+        )
+        if (shoe_y - upper_y) >= int(0.35 * H):
+            has_human = True
+            has_head = True
+            has_any_human = True
+
     # 2a-6) Full-Body / Dress / Abaya / Kaftan / Jumpsuit Consolidation:
     # SegFormer frequently fragments a long continuous garment (e.g. Abaya, Galabiya, Kaftan,
     # Djellaba, long dress, maxi dress, jumpsuit) into separate Upper-clothes (top/outerwear)
@@ -1775,6 +1811,13 @@ async def parse_garments(
     # When an upper garment meets a lower garment at the waist/vertical corridor,
     # shares the same color/fabric, and spans torso + legs into a full-body silhouette,
     # consolidate them into a single "Dress" (Full Body) garment!
+    #
+    # CRITICAL GUARDS:
+    # 1. On a human model (has_human=True), a person wearing a top/kurta and pants/trousers
+    #    is wearing an outfit of separate wearable pieces. Top and Pants MUST NEVER be consolidated!
+    # 2. Pants (pants, trousers, jeans, chinos, joggers) worn with a top or dress must NEVER merge into a dress.
+    # 3. Only consolidate when NOT has_human (flat-lays, ghost mannequins, product photos) or
+    #    when the bottom is a continuous skirt/robe hem (not pants).
     while True:
         merged_any = False
         top_candidates = []
@@ -1799,12 +1842,26 @@ async def parse_garments(
             ty1, tx1, ty2, tx2 = t_bb
             t_h = max(1, ty2 - ty1)
             t_w = max(1, tx2 - tx1)
+            t_lbl = (t_it.get("label") or "").lower()
+            t_cat = (t_it.get("category") or "").lower()
+
             for b_k, b_bb, b_it in bottom_candidates:
                 if t_k == b_k:
                     continue
                 by1, bx1, by2, bx2 = b_bb
                 b_h = max(1, by2 - by1)
                 b_w = max(1, bx2 - bx1)
+                b_lbl = (b_it.get("label") or "").lower()
+                b_cat = (b_it.get("category") or "").lower()
+
+                # Pants must NEVER merge with an upper garment/dress on a human model!
+                is_pants_bottom = any(p in b_lbl for p in ("pant", "trouser", "jean", "chino", "short", "legging", "slack"))
+                if is_pants_bottom and (has_human or t_cat == "dress" or "kurta" in t_lbl or "shirt" in t_lbl):
+                    continue
+
+                # If has_human, an outfit of separate top and bottom must not be fused
+                if has_human and (t_cat in ("top", "outerwear") or is_pants_bottom):
+                    continue
 
                 vert_gap = max(0, by1 - ty2) if by1 > ty2 else 0
                 vert_overlap = max(0, min(ty2, by2) - max(ty1, by1))
@@ -2032,6 +2089,14 @@ async def parse_garments(
                     garment_human_mask = up_m
                 else:
                     garment_human_mask = None
+            elif has_head and ymin > int(0.03 * H):
+                # When SegFormer model has no human classes (e.g. sayeed99/segformer_b3_clothes),
+                # synthesize head mask directly above top collar so the face/beard/hair are excised!
+                head_box = np.zeros((H, W), dtype=np.uint8)
+                head_x1 = max(0, xmin - int(0.15 * (xmax - xmin)))
+                head_x2 = min(W, xmax + int(0.15 * (xmax - xmin)))
+                head_box[0:ymin, head_x1:head_x2] = 1
+                garment_human_mask = (head_box & (class_mask == 0)).astype(np.uint8)
             else:
                 garment_human_mask = None
         else:

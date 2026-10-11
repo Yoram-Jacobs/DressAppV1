@@ -2558,9 +2558,10 @@ class GarmentVisionService:
                         same_zone_or_category = True
 
                 is_single = (
-                    not has_multi_body_zones
+                    not has_human_wearer
+                    and not has_multi_body_zones
                     and (
-                        (count is not None and count <= 1 and not has_human_wearer)
+                        (count is not None and count <= 1)
                         or is_footwear_only
                         or same_zone_or_category
                         or _looks_already_cropped(detections, count_hint=count)

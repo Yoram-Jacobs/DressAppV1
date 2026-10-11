@@ -3912,6 +3912,11 @@ def _enforce_segformer_category(
         analysis["category"] = "Full Body"
         return analysis
 
+    is_kurta_or_tunic = any(w in comb_txt for w in ("kurta", "guayabera"))
+    if is_kurta_or_tunic:
+        analysis["category"] = "Top"
+        return analysis
+
     if is_single_item and kind not in ("footwear", "bottom", "accessory", "headwear"):
         return analysis
     allowed = _SEGFORMER_KIND_TO_ALLOWED_CATEGORIES.get(kind)

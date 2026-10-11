@@ -3165,6 +3165,110 @@ def test_enforce_segformer_category_preserves_abaya_full_body():
     assert fixed["sub_category"] == "Abaya"
 
 
+def test_kurta_and_pants_on_human_model_do_not_consolidate_into_dress():
+    """Verify that Kurta (dress/top) and Pants on a human model are NOT merged into a Dress."""
+    from app.services.clothing_parser import _suppress_overlapping_garments
+
+    H, W = 500, 300
+    # Kurta (top) from y: 80 to 260
+    kurta_mask = np.zeros((H, W), dtype=np.uint8)
+    kurta_mask[80:260, 90:210] = 1
+
+    # Trousers (bottom) from y: 255 to 450
+    pants_mask = np.zeros((H, W), dtype=np.uint8)
+    pants_mask[255:450, 100:200] = 1
+
+    # Footwear (shoes) from y: 440 to 480
+    shoe_mask = np.zeros((H, W), dtype=np.uint8)
+    shoe_mask[440:480, 110:190] = 1
+
+    by_label = {
+        "dress": {
+            "label": "dress",
+            "category": "dress",
+            "score": 0.95,
+            "mask": kurta_mask,
+        },
+        "pants": {
+            "label": "pants",
+            "category": "bottom",
+            "score": 0.94,
+            "mask": pants_mask,
+        },
+        "Shoes": {
+            "label": "Shoes",
+            "category": "footwear",
+            "score": 0.90,
+            "mask": shoe_mask,
+        },
+    }
+
+    result = _suppress_overlapping_garments(
+        by_label,
+        has_human=True,
+    )
+
+    # Must preserve all 3 items (Kurta, Pants, Shoes), never merge into 1 Dress!
+    assert len(result) == 3, f"Expected 3 items, got {len(result)}: {list(result.keys())}"
+    assert "pants" in result, "Pants must not be merged into Dress or Shoes"
+    assert "Shoes" in result, "Shoes must remain distinct"
+    assert "dress" in result or "Dress" in result, "Kurta must remain distinct"
+
+
+def test_shoes_do_not_absorb_pants_or_upper_garments():
+    """Verify footwear consolidation never swallows pants, skirts, tops, or dresses."""
+    from app.services.clothing_parser import _suppress_overlapping_garments
+
+    H, W = 400, 300
+    pants_mask = np.zeros((H, W), dtype=np.uint8)
+    pants_mask[200:350, 100:200] = 1
+
+    shoes_mask = np.zeros((H, W), dtype=np.uint8)
+    shoes_mask[340:390, 100:200] = 1
+
+    by_label = {
+        "pants": {
+            "label": "pants",
+            "category": "bottom",
+            "score": 0.95,
+            "mask": pants_mask,
+        },
+        "Shoes": {
+            "label": "Shoes",
+            "category": "footwear",
+            "score": 0.92,
+            "mask": shoes_mask,
+        },
+    }
+
+    result = _suppress_overlapping_garments(by_label, has_human=True)
+    assert "pants" in result, "Shoes must not absorb adjacent pants"
+    assert "Shoes" in result, "Shoes must remain distinct"
+
+
+def test_enforce_segformer_category_kurta_is_top():
+    """Verify that Kurta is enforced to Top category even if SegFormer detected dress."""
+    from app.services.vision.validation import _enforce_segformer_category
+
+    analysis = {
+        "name": "Navy Blue Embroidered Kurta",
+        "title": "Navy Blue Embroidered Kurta",
+        "category": "Top",
+        "sub_category": "Kurta",
+        "item_type": "Kurta",
+        "is_clothing": True,
+    }
+    fixed = _enforce_segformer_category(
+        analysis,
+        segformer_kind="dress",
+        label="dress",
+        is_single_item=False,
+    )
+    assert fixed["category"] == "Top"
+    assert fixed["sub_category"] == "Kurta"
+
+
+
 
 
 
