@@ -639,4 +639,20 @@ def filter_gender_closet_items(
     return filtered
 
 
+def retrieve_garment_vision_axioms() -> str:
+    """Retrieve canonical cultural & traditional garment taxonomy axioms for GarmentVision.
+
+    Provides ground-truth classification axioms so on-premises Eyes accurately maps
+    cultural and specialized garments into their correct category and sub_category.
+    """
+    return (
+        "GROUND-TRUTH CULTURAL TAXONOMY & CATEGORY AXIOMS:\n"
+        "• Galabiya, Kaftan, Thobe, Abaya, Sari, Lehenga, Hanbok, Kimono, Dirndl -> category:'Full Body' (open Abaya/Kaftan -> 'Outerwear').\n"
+        "• Kurta, Guayabera -> category:'Top'.\n"
+        "• Sherwani, Bisht -> category:'Outerwear' (or 'Top' if single tunic).\n"
+        "• Headwear/Accessories: Kippah/Yarmulke, Keffiyeh/Shemagh, Turban/Dastar/Pagri, Hijab, Mitpachat/Tichel, Shtreimel, Fez -> category:'Accessories', sub_category:'Headwear' (or 'Scarves & Wraps' when draped).\n"
+        "• Modesty & Sacred Attire: Loose unrevealing cuts, opaque natural fabrics (cotton, linen, silk, wool), dignified solid tones."
+    )
+
+
 

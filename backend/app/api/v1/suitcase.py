@@ -257,12 +257,22 @@ async def suitcase_chat(
 
     target_lang = (body.language or user.get("preferred_language") or "en").lower().split("-")[0]
     lang_name = LANG_NAMES.get(target_lang, "English")
-    user_msg = body.message or body.query or ""
+    from app.services.fashion_rules_rag import retrieve_fashion_axioms, format_rules_for_prompt
+    chat_corpus = f"{body.destinations or ''} {body.purpose or ''} {body.preferred_style or ''} {body.notes or ''} {user_msg}"
+    chat_axioms = retrieve_fashion_axioms(
+        user_profile=user,
+        user_text=chat_corpus,
+        top_k=3,
+    )
+    chat_axioms_text = format_rules_for_prompt(chat_axioms, max_chars_per_rule=180)
+    rag_section = f"\nDestination Dress Code & Cultural Axioms (RAG):\n{chat_axioms_text}\n\n" if chat_axioms_text else ""
+
     prompt = (
         "You are DressApp's Suitcase Chat Assistant. The user is planning a trip and gathering details.\n"
         f"Language Instruction: The user's interface language is '{target_lang}' ({lang_name}). Your 'reply' message MUST be written in natural, idiomatic {lang_name} ('{target_lang}').\n"
         "Your task is to analyze the user's message, extract updates to the travel fields, and output a friendly response.\n"
         "You also have visibility into the user's scheduled calendar events/activities during their trip. Use this information to reply intelligently if the user asks about outfits, planning, activities, or the calendar.\n\n"
+        f"{rag_section}"
         "Current fields:\n"
         f"Destinations: {body.destinations or 'None'}\n"
         f"Purpose: {body.purpose or 'None'}\n"
@@ -533,8 +543,30 @@ async def pack_suitcase(
     )
     closet_items = [doc async for doc in cursor]
 
-    # 5. Load safety knowledge RAG context
+    # 5. Load Ground-Truth Fashion Rules RAG and travel safety context
     safety_context = get_safety_knowledge()
+
+    from app.services.fashion_rules_rag import (
+        retrieve_fashion_axioms,
+        format_rules_for_prompt,
+        filter_modesty_closet_items,
+        filter_gender_closet_items,
+    )
+    user_gender = user.get("sex") or user.get("gender")
+    clean_closet = filter_modesty_closet_items(closet_items, user.get("modesty_level"))
+    clean_closet = filter_gender_closet_items(clean_closet, user_gender)
+
+    trip_corpus = f"{body.destinations or ''} {body.purpose or ''} {body.preferred_style or ''} {body.notes or ''} {' '.join(e.get('title', '') for e in events if isinstance(e, dict))}"
+    first_evt = events[0].get("title") if (events and isinstance(events, list) and isinstance(events[0], dict)) else None
+    suitcase_axioms = retrieve_fashion_axioms(
+        user_profile=user,
+        weather=weather_ctx if isinstance(weather_ctx, dict) else None,
+        occasion=body.purpose or first_evt,
+        user_text=trip_corpus,
+        closet_summary=clean_closet,
+        top_k=4,
+    )
+    rag_axioms_text = format_rules_for_prompt(suitcase_axioms, max_chars_per_rule=200)
 
     # 6. Query Gemini to analyze and generate outfits & packing list
     from app.services.user_preferences import render_user_preferences
@@ -548,6 +580,8 @@ async def pack_suitcase(
     base_suitcase_prompt = PROMPT_SUITCASE if eff_provider == "gemma" else GEMINI_SUITCASE_SYSTEM_PROMPT
 
     system_prompt = f"{base_suitcase_prompt}\n{lang_directive}\n"
+    if rag_axioms_text:
+        system_prompt += f"\n{rag_axioms_text}\n"
     if prefs_block:
         system_prompt += f"\nUser's Personal Style & Closet Preferences:\n{prefs_block}\n\n"
 
@@ -562,6 +596,8 @@ async def pack_suitcase(
         f"Calendar Events during trip: {json.dumps(events)}",
         f"Safety Context (RAG): {safety_context}"
     ]
+    if rag_axioms_text:
+        user_brief_parts.append(f"Destination & Activity Fashion Axioms (RAG):\n{rag_axioms_text}")
     if body.current_outfits:
         user_brief_parts.append(f"Current Outfits (to be refined/modified based on user feedback): {json.dumps(body.current_outfits)}")
     if body.current_packing_list:
@@ -569,7 +605,7 @@ async def pack_suitcase(
 
     user_brief_parts.append(
         f"User's Closet Items:\n"
-        f"{json.dumps([{ 'id': it.get('id'), 'title': it.get('title'), 'category': it.get('category'), 'sub_category': it.get('sub_category'), 'color': it.get('color'), 'brand': it.get('brand'), 'material': it.get('material') } for it in closet_items])}"
+        f"{json.dumps([{ 'id': it.get('id'), 'title': it.get('title'), 'category': it.get('category'), 'sub_category': it.get('sub_category'), 'color': it.get('color'), 'brand': it.get('brand'), 'material': it.get('material') } for it in clean_closet])}"
     )
     user_brief_parts.append(lang_directive)
     user_brief = "\n".join(user_brief_parts)

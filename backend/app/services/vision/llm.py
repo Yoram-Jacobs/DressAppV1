@@ -239,6 +239,10 @@ def _build_system_prompt(*, provider: str = "gemini", one_pass: bool = False, us
             from .validation import resolve_garment_gender
             norm_gender = resolve_garment_gender(user_gender) or "unisex"
             prompt = prompt.replace("{DEFAULT_GENDER_HINT}", f"'{norm_gender}'")
+        from app.services.fashion_rules_rag import retrieve_garment_vision_axioms
+        rag_axioms = retrieve_garment_vision_axioms()
+        if rag_axioms:
+            prompt = f"{prompt}\n\n{rag_axioms}"
         if one_pass:
             return prompt + SYSTEM_PROMPT_ONE_PASS_SUFFIX
         return prompt

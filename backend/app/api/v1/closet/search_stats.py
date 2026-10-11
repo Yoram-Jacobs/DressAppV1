@@ -125,11 +125,41 @@ async def _complete_outfit_with_gemma(
     occasion: str | None = None,
     weather_summary: str | None = None,
     language: str = "en",
+    user_profile: dict[str, Any] | None = None,
+    weather_ctx: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     """Complete the outfit using self-hosted Gemma-4 model on the Eyes inference server."""
     from app.services.vision.llm import _call_gemma_space, _extract_json, _LANG_NAMES
+    from app.services.fashion_rules_rag import (
+        retrieve_fashion_axioms,
+        format_rules_for_prompt,
+        filter_modesty_closet_items,
+        filter_gender_closet_items,
+        filter_candidate_closet_by_axioms,
+    )
 
     lang_name = _LANG_NAMES.get(language.lower(), "English")
+    user_gender = (user_profile or {}).get("sex") or (user_profile or {}).get("gender")
+    modesty_level = (user_profile or {}).get("modesty_level")
+
+    # Filter closet candidates by modesty & gender
+    filtered_closet = filter_modesty_closet_items(closet_candidates, modesty_level)
+    filtered_closet = filter_gender_closet_items(filtered_closet, user_gender)
+
+    # Retrieve RAG fashion axioms
+    combined_query = f"{occasion or ''} {weather_summary or ''}"
+    axioms = retrieve_fashion_axioms(
+        user_profile=user_profile,
+        weather=weather_ctx,
+        occasion=occasion,
+        user_text=combined_query,
+        closet_summary=filtered_closet,
+        top_k=3,
+    )
+    axioms_text = format_rules_for_prompt(axioms, max_chars_per_rule=160)
+    filtered_closet = filter_candidate_closet_by_axioms(filtered_closet, axioms)
+    rag_section = f"\nFashion & Etiquette Axioms (RAG):\n{axioms_text}\n" if axioms_text else ""
+
     sys_prompt = (
         "You are The Stylist — DressApp's expert fashion stylist and personal dresser.\n"
         "Your goal is to complete a stylish, cohesive outfit starting from the user's ANCHOR pieces, "
@@ -145,6 +175,7 @@ async def _complete_outfit_with_gemma(
         "- Cohesion: Combine colors, textures, and silhouettes gracefully.\n"
         f"- Target Occasion: {occasion or 'casual / everyday chic'}\n"
         + (f"- Weather Context: {weather_summary}\n" if weather_summary else "")
+        + rag_section
         + f"- Language: Return all descriptive text in fluent {lang_name}.\n\n"
         "Return ONLY a valid JSON object matching this schema:\n"
         "{\n"
@@ -170,7 +201,7 @@ async def _complete_outfit_with_gemma(
     ]
     closet_brief = [
         {"id": c.get("id") or c.get("closet_item_id"), "name": c.get("title") or c.get("name"), "category": c.get("category"), "slot": c.get("norm_cat") or c.get("category"), "color": c.get("color")}
-        for c in closet_candidates
+        for c in filtered_closet
     ]
     market_brief = [
         {"id": m.get("id") or m.get("listing_id"), "name": m.get("title") or m.get("name"), "category": m.get("category")}
@@ -583,6 +614,8 @@ async def complete_outfit(
                 occasion=payload.occasion,
                 weather_summary=weather_summary_text,
                 language=user_lang,
+                user_profile=user,
+                weather_ctx=weather_ctx,
             )
             if gemma_res and gemma_res.get("outfit_recommendations"):
                 rationale = gemma_res.get("reasoning_summary", "") or ""
