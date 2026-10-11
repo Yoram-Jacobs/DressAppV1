@@ -1481,6 +1481,66 @@ def test_hindu_wedding_degradation_and_phantom_shopping_reconciliation():
     assert "shopping recommendations" in spoken.lower() or "traditional attire" in spoken.lower()
 
 
+def test_reconcile_outfit_title_and_shopping_hindu_wedding_phantom_kurta_and_khaki():
+    """Verify that when Gemini generates a title with unowned garments/colors (e.g. Khaki Pants, V-Neck Tee)
+    and hallucinates an unowned traditional kurta in reasoning/spoken, QA engine:
+    1. Retitles truthfully based on actual valid items without mixed Hebrew/English words like 'Smart-חגיגי'.
+    2. Promotes missing Kurta and Churidar to shopping suggestions without dropping Churidar as duplicate pants.
+    3. Scrubs the hallucinated 'featuring a traditional silk kurta...' from spoken_reply and reasoning_summary.
+    """
+    import asyncio
+    from app.services.stylist_qa_engine import evaluate_and_authorize_outfit
+
+    advice = {
+        "spoken_reply": "This outfit is crafted for a Hindu wedding in Mumbai, India, featuring a traditional silk kurta with green and gold embroidery, a formal grey suit vest, and a smart-casual grey v-neck tee.",
+        "reasoning_summary": "This outfit is crafted for a Hindu wedding in Mumbai, India, featuring a traditional silk kurta with green and gold embroidery, a formal grey suit vest, and a smart-casual grey v-neck tee.",
+        "outfit_recommendations": [{
+            "name": "Smart-Casual Grey V-Neck Tee & Khaki Pants",
+            "why": "This outfit combines a formal grey suit vest with a smart-casual grey v-neck tee and khaki pants.",
+            "items": [
+                {"role": "top", "closet_item_id": "vest-1", "name": "Light Grey Suit Vest"},
+                {"role": "bottom", "closet_item_id": "pants-1", "name": "Dark Brown Pleated Pants"},
+                {"role": "shoes", "closet_item_id": "shoes-1", "name": "דובון עם סוליה שחורה"},
+            ]
+        }],
+        "shopping_suggestions": []
+    }
+
+    closet = [
+        {"id": "vest-1", "title": "Light Grey Suit Vest", "category": "outerwear", "sub_category": "vest", "dress_code": "formal"},
+        {"id": "pants-1", "title": "Dark Brown Pleated Pants", "category": "bottom", "sub_category": "pants", "dress_code": "formal"},
+        {"id": "shoes-1", "title": "דובון עם סוליה שחורה", "category": "footwear", "sub_category": "shoes", "dress_code": "formal"},
+    ]
+
+    res = asyncio.run(evaluate_and_authorize_outfit(
+        user_text="Suggest event outfits for a \"Hindu wedding\" at Mumbai, India on 2026-10-12 at 19:00. Details: \"I am invited as a guest of the bride's family.\"",
+        advice_payload=advice,
+        all_closet_items=closet,
+        user_profile={"sex": "male", "preferred_language": "en"},
+    ))
+
+    rec = res["outfit_recommendations"][0]
+
+    # 1. Title Truthfulness: No mixed 'Smart-חגיגי', no 'Khaki', accurately names Vest & Dark Brown Pants
+    assert "חגיגי" not in rec["name"], f"Title mixed Hebrew into English: {rec['name']}"
+    assert "khaki" not in rec["name"].lower(), f"Phantom color khaki found in title: {rec['name']}"
+    assert "tee" not in rec["name"].lower(), f"Phantom garment tee found in title: {rec['name']}"
+    assert "Light Grey Suit Vest" in rec["name"]
+    assert "Dark Brown Pleated Pants" in rec["name"]
+
+    # 2. Shopping suggestions must have Kurta and Churidar
+    shopping = res.get("shopping_suggestions", [])
+    assert any("kurta" in s.lower() for s in shopping), f"Kurta missing from shopping suggestions: {shopping}"
+    assert any("churidar" in s.lower() for s in shopping), f"Churidar missing from shopping suggestions: {shopping}"
+
+    # 3. Spoken and reasoning must NOT claim to feature the unowned kurta
+    spoken = res.get("spoken_reply", "")
+    reasoning = res.get("reasoning_summary", "")
+    assert "featuring a traditional silk kurta" not in spoken.lower(), f"Phantom kurta claim in spoken: {spoken}"
+    assert "featuring a traditional silk kurta" not in reasoning.lower(), f"Phantom kurta claim in reasoning: {reasoning}"
+    assert "shopping suggestions" in spoken.lower() or "traditional attire" in spoken.lower()
+
+
 
 
 

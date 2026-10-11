@@ -1534,11 +1534,24 @@ async def generate_event_proposals(
     )
     from app.services.gemini_stylist import sanitize_stylist_payload
 
+    event_context_parts = []
+    if event_name and event_name.strip():
+        event_context_parts.append(event_name.strip())
+    if location and location.strip():
+        event_context_parts.append(f"at {location.strip()}")
+    if event_prompt and event_prompt.strip():
+        clean_prompt = event_prompt.strip()
+        if event_name and clean_prompt.startswith(f"{event_name}:"):
+            clean_prompt = clean_prompt[len(event_name) + 1:].strip()
+        if clean_prompt and clean_prompt != event_name:
+            event_context_parts.append(f"Details: \"{clean_prompt}\"")
+    full_event_context = " - ".join(event_context_parts) if event_context_parts else (event_prompt or "Special Event")
+
     # Fetch full candidate closet (up to 100 items), prioritizing by style and gender
     raw_closet = await get_rotation_prioritized_closet(
         user_id,
         limit=100,
-        style_dress_for=event_prompt,
+        style_dress_for=full_event_context,
         user_gender=user_gender,
     )
     all_user_closet = filter_gender_closet_items(raw_closet, user_gender)
@@ -1548,7 +1561,7 @@ async def generate_event_proposals(
     try:
         axioms = retrieve_fashion_axioms(
             user_profile=user,
-            user_text=event_prompt,
+            user_text=full_event_context,
             closet_summary=all_user_closet,
             top_k=4,
         )
@@ -1586,7 +1599,7 @@ async def generate_event_proposals(
     try:
         mkt_suggestions = await suggest_for_query(
             user=user,
-            query=event_prompt,
+            query=full_event_context,
             categories=["top", "bottom", "dress", "outerwear", "shoes"],
             per_category=2
         )
@@ -1603,14 +1616,19 @@ async def generate_event_proposals(
     gender_label = f"User Gender: {user_gender} (STRICT: recommend ONLY garments appropriate for this gender).\n" if user_gender else ""
 
     prompt = (
-        f"Generate EXACTLY 3 distinct, complete, and coordinated outfit recommendations for this special event: \"{event_prompt}\".\n"
+        f"Generate EXACTLY 3 distinct, complete, and coordinated outfit recommendations for this special event: \"{full_event_context}\".\n"
         f"Key Requirements:\n"
         f"- {gender_label}"
         f"- Curate 3 DISTINCT looks with different tops, bottoms, and footwear across Outfit 1, 2, and 3. DO NOT repeat the same pieces across outfits unless the closet has no alternatives.\n"
         f"- Every outfit MUST be complete: either (top + bottom) or a dress, plus mandatory footwear (shoes).\n"
-        f"- Strictly respect the dress code, cultural solemnity, and etiquette of \"{event_prompt}\". For weddings and formal events, NEVER recommend casual loungewear, sweatpants, beach slides, flip-flops, shorts, or distressed graphics. Prioritize dress trousers, chinos, button-down shirts, blazers, and dress shoes/loafers.\n"
-        f"- Select garments exclusively from the provided closet_summary in context.\n"
-        f"- In the 'why' rationale, describe ONLY the pieces actually included in 'items'. Do not hallucinate garments that are not present.\n"
+        f"- Strictly respect the dress code, cultural solemnity, and etiquette of \"{full_event_context}\". For weddings and formal events, NEVER recommend casual loungewear, sweatpants, beach slides, flip-flops, shorts, or distressed graphics. Prioritize dress trousers, chinos, button-down shirts, blazers, and dress shoes/loafers.\n"
+        f"- Select garments EXCLUSIVELY from the provided closet_summary in context. You MUST NOT invent or select garments that do not exist in closet_summary.\n"
+        f"- The outfit 'name' and 'why' MUST accurately describe ONLY the garments selected from closet_summary. NEVER include garments, colors, or materials in 'name' or 'why' that are not in 'items'.\n"
+        f"- GRACEFUL DEGRADATION & SHOPPING SUGGESTIONS:\n"
+        f"  If the user's closet lacks traditional, ceremonial, or formal garments required for this event (e.g., Kurta, Churidar, Sherwani for Hindu weddings; Hanbok for Korean events; Kimono for Japanese events; Tuxedo for Black Tie; Galabiya/Abaya for regional events):\n"
+        f"  1. Curate the most formal, respectful combination possible from their available closet (degrading gracefully: formal -> semi-formal -> smart-casual).\n"
+        f"  2. Add the ideal missing traditional and ceremonial pieces to 'shopping_suggestions' (e.g., 'Festive Silk Kurta', 'Churidar Trousers').\n"
+        f"  3. In 'reasoning_summary' and 'spoken_reply', explain that you curated the best available formal look from their current wardrobe and suggested the authentic traditional garments in their shopping recommendations to complete the look. DO NOT claim the curated outfit contains or features garments that are not in 'items'.\n"
     )
     if mkt_summary_str:
         prompt += (
@@ -1635,13 +1653,13 @@ async def generate_event_proposals(
     except Exception as exc:
         logger.warning("Event proposals AI generation failed (%s), using deterministic fallback", exc)
         from app.services.scheduler import _generate_fallback_advice
-        res_json = _generate_fallback_advice(prioritized_closet, style_dress_for=event_prompt)
+        res_json = _generate_fallback_advice(prioritized_closet, style_dress_for=full_event_context)
 
     # Run through Stylist QA Engine to validate completeness, enforce role assignments,
     # prevent gender conflicts, enforce negative constraints, and synchronize 'why' narratives.
     try:
         res_json = await evaluate_and_authorize_outfit(
-            user_text=event_prompt,
+            user_text=full_event_context,
             advice_payload=res_json,
             all_closet_items=all_user_closet,
             user_profile=user,

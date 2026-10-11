@@ -357,10 +357,16 @@ async def trigger_event_proposal(
         update_session,
     )
 
+    full_event_prompt = (
+        f"{payload.event_name}: {payload.prompt}".strip().strip(":")
+        if payload.event_name and payload.prompt
+        else (payload.event_name or payload.prompt or "")
+    )
+
     try:
         advice = await generate_event_proposals(
             user=user,
-            event_prompt=payload.prompt,
+            event_prompt=full_event_prompt,
             location=payload.location,
             event_name=payload.event_name,
         )
@@ -370,7 +376,7 @@ async def trigger_event_proposal(
             from app.services.stylist_scheduler_brain import get_rotation_prioritized_closet
             from app.services.scheduler import _generate_fallback_advice
             raw_closet = await get_rotation_prioritized_closet(user["id"], limit=40)
-            advice = _generate_fallback_advice(raw_closet, style_dress_for=payload.prompt)
+            advice = _generate_fallback_advice(raw_closet, style_dress_for=full_event_prompt)
         except Exception as inner_exc:
             logger.error("Failed to generate fallback event proposals: %s", inner_exc)
             raise HTTPException(status_code=500, detail=str(exc))

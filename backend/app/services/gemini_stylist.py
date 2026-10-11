@@ -613,8 +613,6 @@ def sanitize_stylist_payload(
     if isinstance(advice.get("outfit_recommendations"), list):
         for rec in advice["outfit_recommendations"]:
             if isinstance(rec, dict):
-                if rec.get("name"):
-                    existing_look_tokens.add(str(rec["name"]).lower().strip())
                 for it in rec.get("items") or []:
                     if isinstance(it, dict):
                         d = str(it.get("description") or it.get("name") or "").lower().strip()

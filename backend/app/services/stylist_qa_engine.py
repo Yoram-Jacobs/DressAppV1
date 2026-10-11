@@ -36,7 +36,7 @@ from app.services.stylist_scheduler_brain import (
 logger = logging.getLogger(__name__)
 
 ROLE_ALLOWED_CATEGORIES: dict[str, set[str]] = {
-    "top": {"top", "tops", "shirt", "blouse", "sweater", "hoodie", "cardigan", "t-shirt", "polo"},
+    "top": {"top", "tops", "shirt", "blouse", "sweater", "hoodie", "cardigan", "t-shirt", "polo", "vest"},
     "bottom": {"bottom", "bottoms", "pants", "trousers", "jeans", "shorts", "skirt"},
     "shoes": {"shoes", "footwear", "sneakers", "boots", "loafers", "sandals", "heels", "slippers", "shoe"},
     "outerwear": {"outerwear", "jacket", "coat", "blazer", "cardigan", "trench", "vest"},
@@ -1779,19 +1779,20 @@ def synchronize_outfit_why_narrative(
     # Check for listing phrase after כולל / including / بما في ذلك
     has_including = bool(re.search(r"(?:כולל|הכולל|including|comprenant|incluyendo|bestehend aus|comprendente|inclusief|включая|包括|を含む|जिसमें शामिल)\s+", why, flags=re.IGNORECASE))
 
-    # Check for dropped items mentioned in why that are not in valid_items
+    # Check for dropped items or phantom garments mentioned in why that are not in valid_items
     valid_names_corpus = " ".join(
         str(it.get("name") or it.get("title") or it.get("description") or "").lower()
         for it in valid_items
         if isinstance(it, dict)
     )
     has_phantom_item = False
-    if ("חולצת טי" in why or "חולצה לבנה" in why or "טי לבנה" in why) and ("חולצת טי" not in valid_names_corpus and "טי לבנה" not in valid_names_corpus):
-        has_phantom_item = True
-    if "t-shirt" in why.lower() and "t-shirt" not in valid_names_corpus and "tee" not in valid_names_corpus:
-        has_phantom_item = True
-    for kw in ("blazer", "suit", "sneaker", "sneakers", "boots", "chelsea", "cargo", "בלייזר", "חליפה", "סניקרס", "מגפיים", "דגמ\"ח", "דגמח"):
-        if kw in why.lower() and kw not in valid_names_corpus:
+    why_lower = why.lower()
+    for kw in (
+        "blazer", "suit", "sneaker", "sneakers", "boots", "chelsea", "cargo",
+        "tee", "t-shirt", "v-neck", "khaki", "kurta", "churidar", "sherwani", "sari", "lehenga", "vest",
+        "חולצת טי", "חולצה לבנה", "טי לבנה", "טי שירט", "בלייזר", "חליפה", "סניקרס", "מגפיים", "דגמ\"ח", "דגמח", "חאקי", "קורטה", "שרוואל"
+    ):
+        if kw in why_lower and kw not in valid_names_corpus:
             has_phantom_item = True
             break
 
@@ -1906,6 +1907,38 @@ TRADITIONAL_ETHNIC_KEYWORDS: dict[str, dict[str, Any]] = {
     },
 }
 
+LOCALIZED_TRUTHFUL_WEDDING_TITLE_PREFIX: dict[str, str] = {
+    "en": "Festive Wedding Look",
+    "he": "מראה חגיגי לחתונה",
+    "ar": "إطلالة احتفالية لحفل الزفاف",
+    "es": "Look festivo para boda",
+    "fr": "Tenue festive pour mariage",
+    "de": "Festlicher Hochzeitslook",
+    "it": "Look festivo per matrimonio",
+    "pt": "Visual festivo para casamento",
+    "nl": "Feestelijke bruiloftslook",
+    "ru": "Праздничный образ на свадьбу",
+    "zh": "精选优雅婚礼礼服",
+    "ja": "洗練された結婚式コーディネート",
+    "hi": "शादी के लिए उत्सव परिधान",
+}
+
+LOCALIZED_TRUTHFUL_EVENT_TITLE_PREFIX: dict[str, str] = {
+    "en": "Curated Event Look",
+    "he": "מראה מעוצב לאירוע",
+    "ar": "إطلالة أنيقة للمناسبة",
+    "es": "Look elegante para el evento",
+    "fr": "Tenue élégante pour l'événement",
+    "de": "Elegantes Event-Outfit",
+    "it": "Look elegante per l'evento",
+    "pt": "Visual elegante para o evento",
+    "nl": "Elegante evenementenlook",
+    "ru": "Элегантный образ для мероприятия",
+    "zh": "精选活动着装",
+    "ja": "洗練されたイベントコーディネート",
+    "hi": "सुरुचिपूर्ण कार्यक्रम परिधान",
+}
+
 LOCALIZED_PHANTOM_REPLACED_TITLE: dict[str, str] = {
     "he": "חלופה אלגנטית ומכובדת לאירוע",
     "en": "Curated Elegant Event Alternative",
@@ -1956,6 +1989,108 @@ def _is_garment_in_items(keyword_patterns: list[str], items: list[dict[str, Any]
     return False
 
 
+def generate_truthful_outfit_title(
+    valid_items: list[dict[str, Any]],
+    user_text: str = "",
+    lang: str = "en",
+) -> str:
+    """Generate a truthful, elegant title based purely on the garments actually in valid_items."""
+    base_lang = (lang or "en").lower().strip().split("-")[0].split("_")[0]
+    is_wedding = any(w in user_text.lower() for w in (
+        "wedding", "חתונה", "vivaha", "boda", "mariage", "hochzeit", "casamento", "matrimonio", "נישואין", "חופה", "חתן", "כלה"
+    ))
+    prefix = (
+        LOCALIZED_TRUTHFUL_WEDDING_TITLE_PREFIX.get(base_lang, LOCALIZED_TRUTHFUL_WEDDING_TITLE_PREFIX["en"])
+        if is_wedding
+        else LOCALIZED_TRUTHFUL_EVENT_TITLE_PREFIX.get(base_lang, LOCALIZED_TRUTHFUL_EVENT_TITLE_PREFIX["en"])
+    )
+
+    top_item = None
+    bottom_item = None
+    dress_item = None
+    for it in valid_items:
+        if not isinstance(it, dict):
+            continue
+        r = str(it.get("role") or "").lower()
+        if r in ("dress", "full_body"):
+            dress_item = it
+            break
+        elif r in ("top", "outerwear", "jacket") and not top_item:
+            top_item = it
+        elif r == "bottom" and not bottom_item:
+            bottom_item = it
+
+    if dress_item:
+        d_name = dress_item.get("title") or dress_item.get("name") or "Dress"
+        return f"{prefix}: {d_name}"
+
+    t_name = (top_item.get("title") or top_item.get("name")) if top_item else None
+    b_name = (bottom_item.get("title") or bottom_item.get("name")) if bottom_item else None
+
+    if t_name and b_name:
+        if base_lang == "he":
+            return f"{prefix}: {t_name} ו{b_name}"
+        elif base_lang == "ar":
+            return f"{prefix}: {t_name} مع {b_name}"
+        else:
+            return f"{prefix}: {t_name} & {b_name}"
+    elif t_name:
+        return f"{prefix}: {t_name}"
+    elif b_name:
+        return f"{prefix}: {b_name}"
+    else:
+        return prefix
+
+
+def check_title_has_phantom_elements(title: str, valid_items: list[dict[str, Any]]) -> bool:
+    """Return True if title asserts garment families or specific colors completely absent from valid_items."""
+    if not title:
+        return False
+    t_low = title.lower()
+
+    # 1. Check garment families in title
+    title_fams = extract_shopping_garment_families(t_low)
+    specific_families = {
+        "t_shirt", "v_neck", "crewneck", "polo", "sweater", "cargo_pants",
+        "shorts", "skirt", "dress", "kurta", "churidar", "sherwani", "sari", "lehenga", "tuxedo"
+    }
+    checked_fams = title_fams.intersection(specific_families)
+    if checked_fams:
+        item_fams: set[str] = set()
+        for it in valid_items:
+            if not isinstance(it, dict):
+                continue
+            t = f"{it.get('name') or ''} {it.get('title') or ''} {it.get('description') or ''} {it.get('category') or ''} {it.get('sub_category') or ''}".lower()
+            item_fams.update(extract_shopping_garment_families(t))
+        if any(f not in item_fams for f in checked_fams):
+            return True
+
+    # 2. Check specific distinct colors asserted in title
+    title_colors = extract_shopping_color_families(t_low)
+    if title_colors:
+        item_colors: set[str] = set()
+        for it in valid_items:
+            if not isinstance(it, dict):
+                continue
+            t = f"{it.get('name') or ''} {it.get('title') or ''} {it.get('description') or ''}".lower()
+            item_colors.update(extract_shopping_color_families(t))
+            raw_c = it.get("colors") or it.get("color") or []
+            if isinstance(raw_c, str):
+                raw_c = [raw_c]
+            for c in raw_c:
+                c_str = (c.get("name") if isinstance(c, dict) else str(c)).lower()
+                item_colors.update(extract_shopping_color_families(c_str))
+
+        if any(w in t_low for w in ("khaki", "חאקי")):
+            if not any("khaki" in f"{it.get('name') or ''} {it.get('title') or ''}".lower() for it in valid_items if isinstance(it, dict)):
+                return True
+
+        if any(c not in item_colors for c in title_colors):
+            return True
+
+    return False
+
+
 def reconcile_outfit_title_and_shopping(
     rec: dict[str, Any],
     valid_items: list[dict[str, Any]],
@@ -1964,31 +2099,49 @@ def reconcile_outfit_title_and_shopping(
     lang: str = "he",
     is_wedding: bool = False,
 ) -> None:
-    """Detect phantom ethnic or ceremonial garments in outfit title, promote them to shopping,
-    and retitle outfit to truthfully describe closet garments.
+    """Detect phantom ethnic or ceremonial garments across title, why, and narratives,
+    promote them to shopping suggestions, and retitle outfit to truthfully describe closet garments.
     """
     raw_title = str(rec.get("name") or "").strip()
-    if not raw_title:
-        return
+    raw_why = str(rec.get("why") or "").strip()
+    spoken = str(advice_payload.get("spoken_reply") or "").strip()
+    reasoning = str(advice_payload.get("reasoning_summary") or "").strip()
 
     base_lang = (lang or "he").lower().strip().split("-")[0].split("_")[0]
-    if base_lang not in LOCALIZED_PHANTOM_REPLACED_TITLE:
+    if base_lang not in LOCALIZED_TRUTHFUL_WEDDING_TITLE_PREFIX:
         base_lang = "en"
 
-    detected_phantom_keys = []
+    detected_phantom_keys: list[str] = []
+    combined_texts = f"{raw_title} | {raw_why} | {spoken} | {reasoning}"
+
     for eth_key, meta in TRADITIONAL_ETHNIC_KEYWORDS.items():
         patterns = meta["patterns"]
-        title_matches = any(re.search(pat, raw_title, re.IGNORECASE) for pat in patterns)
-        if title_matches:
+        matches = any(re.search(pat, combined_texts, re.IGNORECASE) for pat in patterns)
+        if matches:
             if not _is_garment_in_items(patterns, valid_items):
                 detected_phantom_keys.append(eth_key)
+
+    # Domain guarantee for Hindu / Indian weddings: If closet lacks ethnic attire, mandate Kurta + Churidar
+    is_hindu_wedding = is_wedding and any(w in user_text.lower() for w in (
+        "hindu", "india", "mumbai", "delhi", "vivaha", "הודית", "הודו"
+    ))
+    if is_hindu_wedding:
+        if "kurta" not in detected_phantom_keys and not _is_garment_in_items(TRADITIONAL_ETHNIC_KEYWORDS["kurta"]["patterns"], valid_items):
+            detected_phantom_keys.append("kurta")
+        if "churidar" not in detected_phantom_keys and not _is_garment_in_items(TRADITIONAL_ETHNIC_KEYWORDS["churidar"]["patterns"], valid_items):
+            detected_phantom_keys.append("churidar")
+
+    # If title has phantom colors/garments even if not ethnic:
+    title_has_phantom = check_title_has_phantom_elements(raw_title, valid_items)
+    if title_has_phantom:
+        rec["name"] = generate_truthful_outfit_title(valid_items, user_text=user_text, lang=lang)
 
     if not detected_phantom_keys:
         return
 
     logger.info(
-        "QA: Detected phantom garment(s) %s in outfit title '%s'. Reconciling to shopping suggestions.",
-        detected_phantom_keys, raw_title,
+        "QA: Detected phantom garment(s) %s in look/context. Reconciling to shopping suggestions.",
+        detected_phantom_keys,
     )
 
     # 1. Promote phantom items to shopping suggestions
@@ -1997,17 +2150,33 @@ def reconcile_outfit_title_and_shopping(
         existing_shopping = []
         advice_payload["shopping_suggestions"] = existing_shopping
 
-    title_parts = [p.strip() for p in re.split(r"\s+(?:with|and|ועם|עם)\s+", raw_title, flags=re.IGNORECASE) if len(p.strip()) >= 3]
-
     items_to_add: list[str] = []
-    for part in title_parts:
-        for pkey in detected_phantom_keys:
-            if any(re.search(pat, part, re.IGNORECASE) for pat in TRADITIONAL_ETHNIC_KEYWORDS[pkey]["patterns"]):
-                items_to_add.append(part)
-                break
 
-    if not items_to_add:
-        for pkey in detected_phantom_keys:
+    # First, try to extract rich descriptive phrases from spoken/reasoning/title
+    for pkey in detected_phantom_keys:
+        extracted = None
+        if pkey == "kurta":
+            m = re.search(r"\b((?:[a-zA-Z\u0590-\u05fe-]+\s+){0,4}kurta(?:\s+[a-zA-Z\u0590-\u05fe-]+){0,6})\b", combined_texts, re.IGNORECASE)
+            if m:
+                cand = m.group(1).strip().strip(",.-")
+                cand = re.sub(r"^(?:a|an|the|featuring|including|with)\s+", "", cand, flags=re.IGNORECASE).strip()
+                cand = re.sub(r"^(?:a|an|the)\s+", "", cand, flags=re.IGNORECASE).strip()
+                if len(cand) >= 5 and "kurta" in cand.lower():
+                    cand = re.sub(r"\s+(?:and|a|an|with)\s*$", "", cand, flags=re.IGNORECASE).strip()
+                    extracted = cand.title() if base_lang != "he" else cand
+        elif pkey == "churidar":
+            m = re.search(r"\b((?:[a-zA-Z\u0590-\u05fe-]+\s+){0,3}(?:churidar|salwar|שרוואל|צ'ורידר)(?:\s+[a-zA-Z\u0590-\u05fe-]+){0,4})\b", combined_texts, re.IGNORECASE)
+            if m:
+                cand = m.group(1).strip().strip(",.-")
+                cand = re.sub(r"^(?:a|an|the|featuring|including|with)\s+", "", cand, flags=re.IGNORECASE).strip()
+                cand = re.sub(r"^(?:a|an|the)\s+", "", cand, flags=re.IGNORECASE).strip()
+                if len(cand) >= 5:
+                    cand = re.sub(r"\s+(?:and|a|an|with)\s*$", "", cand, flags=re.IGNORECASE).strip()
+                    extracted = cand.title() if base_lang != "he" else cand
+
+        if extracted:
+            items_to_add.append(extracted)
+        else:
             if base_lang == "he":
                 items_to_add.append(TRADITIONAL_ETHNIC_KEYWORDS[pkey]["shopping_name_he"])
             else:
@@ -2019,11 +2188,13 @@ def reconcile_outfit_title_and_shopping(
 
     advice_payload["_ethnic_promoted_to_shopping"] = True
 
-    # 2. Rename outfit title truthfully to describe closet items
-    if is_wedding:
-        rec["name"] = LOCALIZED_PHANTOM_WEDDING_TITLE.get(base_lang, LOCALIZED_PHANTOM_WEDDING_TITLE["en"])
-    else:
-        rec["name"] = LOCALIZED_PHANTOM_REPLACED_TITLE.get(base_lang, LOCALIZED_PHANTOM_REPLACED_TITLE["en"])
+    # 2. Retitle if title named any of the phantom keys
+    title_matches_phantom = any(
+        any(re.search(pat, raw_title, re.IGNORECASE) for pat in TRADITIONAL_ETHNIC_KEYWORDS[pkey]["patterns"])
+        for pkey in detected_phantom_keys
+    )
+    if title_matches_phantom or title_has_phantom:
+        rec["name"] = generate_truthful_outfit_title(valid_items, user_text=user_text, lang=lang)
 
     # 3. Scrub phantom mentions from designer_notes
     notes = rec.get("designer_notes")
@@ -2083,15 +2254,23 @@ def sanitize_spoken_reply_and_notes(
             spoken = re.sub(r"(?:חולצת\s+טי\s+עם\s+הדפס\s+נשר|חולצת\s+טי|טי\s+שירט|חולצת\s+טריקו|graphic\s+tee)", "חולצה מכופתרת אלגנטית", spoken)
             spoken = re.sub(r",?\s*(?:עם\s+)?כפתורים\s+כחולים\s+ושרוול\s+קצר", "", spoken)
 
-        if advice.get("_ethnic_promoted_to_shopping"):
+        # Scrub phantom claims like "featuring a traditional silk kurta..."
+        phantom_claims = [
+            r",?\s*(?:featuring|including|paired with|combines?|with)\s+[^.]*?\b(?:kurta|churidar|sherwani|sari|lehenga|kimono|hanbok|galabiya|abaya|thobe)\b[^.]*",
+            r",?\s*(?:כולל|הכולל|הכוללת|עם|בשילוב)\s+[^.]*?\b(?:קורטה|שרוואל|שרוואני|סארי|להנגה|גלביה|עבאיה|ת'וב)\b[^.]*",
+        ]
+        for pat in phantom_claims:
+            spoken = re.sub(pat, "", spoken, flags=re.IGNORECASE)
+
+        if advice.get("_ethnic_promoted_to_shopping") or advice.get("shopping_suggestions"):
             if base_lang == "he":
                 addition_he = " התאמנו עבורך את המראה החגיגי והאלגנטי ביותר מתוך הפריטים הקיימים בארון, ובמקביל הוספנו המלצות רכישה לפריטים המסורתיים המתאימים לאירוע."
                 if not any(w in spoken for w in ("המלצות רכישה", "מתוך הארון", "במקביל")):
-                    spoken = spoken.strip() + addition_he
+                    spoken = spoken.strip().rstrip(".,") + addition_he
             else:
-                addition_en = " We curated an elegant event-appropriate look from your available wardrobe, and included shopping recommendations for the traditional attire."
-                if not any(w in spoken.lower() for w in ("shopping recommendations", "available wardrobe", "traditional attire")):
-                    spoken = spoken.strip() + addition_en
+                addition_en = " Curated best available wardrobe garments honoring the dress code; traditional attire offered as shopping suggestions."
+                if "shopping suggestions" not in spoken.lower():
+                    spoken = spoken.strip().rstrip(".,") + ". " + addition_en
 
         advice["spoken_reply"] = sanitize_stylist_text(spoken, lang=lang)
 
@@ -2119,7 +2298,10 @@ def sanitize_spoken_reply_and_notes(
             if is_church:
                 rec_name = re.sub(r"וקז'ואל|קז'ואל", "ומכובד", rec_name)
             if is_wedding:
-                rec_name = re.sub(r"streetwear|קז'ואל|יומיומי|casual|street\s+style", "חגיגי", rec_name, flags=re.IGNORECASE)
+                if base_lang == "he":
+                    rec_name = re.sub(r"streetwear|קז'ואל|יומיומי|casual|street\s+style", "חגיגי", rec_name, flags=re.IGNORECASE)
+                else:
+                    rec_name = re.sub(r"streetwear|casual|street\s+style", "Festive", rec_name, flags=re.IGNORECASE)
 
             item_descriptions = [
                 str(it.get("description") or it.get("title") or it.get("name") or "").strip().lower()
@@ -2130,15 +2312,14 @@ def sanitize_spoken_reply_and_notes(
                 any(rec_name.lower() == idesc for idesc in item_descriptions if idesc) or
                 re.match(r"^(?:חולצת|חולצה|מכנסי|מכנסיים|מעיל|ז'קט|ג'קט|שמלת|שמלה|נעלי|נעליים|shirt|pants|trousers|jacket|overcoat|dress|shoes)\b", rec_name, re.IGNORECASE) is not None
             )
-            if not rec_name or is_single_garment_name:
+            has_phantom = check_title_has_phantom_elements(rec_name, rec.get("items") or [])
+            if not rec_name or is_single_garment_name or has_phantom:
                 if is_mourning:
                     rec["name"] = LOCALIZED_OUTFIT_NAME_MOURNING.get(base_lang, LOCALIZED_OUTFIT_NAME_MOURNING["en"])
                 elif is_church:
                     rec["name"] = LOCALIZED_OUTFIT_NAME_CHURCH.get(base_lang, LOCALIZED_OUTFIT_NAME_CHURCH["en"])
-                elif is_wedding:
-                    rec["name"] = LOCALIZED_OUTFIT_NAME_WEDDING.get(base_lang, LOCALIZED_OUTFIT_NAME_WEDDING["en"])
                 else:
-                    rec["name"] = LOCALIZED_OUTFIT_NAME_DEFAULT.get(base_lang, LOCALIZED_OUTFIT_NAME_DEFAULT["en"])
+                    rec["name"] = generate_truthful_outfit_title(rec.get("items") or [], user_text=user_text, lang=lang)
             else:
                 rec["name"] = sanitize_stylist_text(rec_name, lang=lang)
 
@@ -2217,15 +2398,17 @@ def sanitize_spoken_reply_and_notes(
         # 3. Reasoning Summary
         reasoning = advice.get("reasoning_summary")
         if reasoning and isinstance(reasoning, str):
-            if advice.get("_ethnic_promoted_to_shopping"):
+            for pat in phantom_claims:
+                reasoning = re.sub(pat, "", reasoning, flags=re.IGNORECASE)
+            if advice.get("_ethnic_promoted_to_shopping") or advice.get("shopping_suggestions"):
                 if base_lang == "he":
                     addition_he = " נבחרו פריטים חלופיים מהארון המכבדים את קוד הלבוש, והפריטים המסורתיים האידיאליים הוצעו כהמלצות רכישה."
                     if not any(w in reasoning for w in ("המלצות רכישה", "קוד הלבוש")):
-                        reasoning = reasoning.strip() + addition_he
+                        reasoning = reasoning.strip().rstrip(".,") + addition_he
                 else:
                     addition_en = " Curated best available wardrobe garments honoring the dress code; traditional attire offered as shopping suggestions."
                     if "shopping suggestions" not in reasoning.lower():
-                        reasoning = reasoning.strip() + addition_en
+                        reasoning = reasoning.strip().rstrip(".,") + ". " + addition_en
             advice["reasoning_summary"] = sanitize_stylist_text(reasoning, lang=lang)
 
 
@@ -2375,8 +2558,9 @@ async def evaluate_and_authorize_outfit(
                     item_data = None
                 else:
                     cat = norm_category(item_data.get("category"))
-                    if allowed_cats and cat not in allowed_cats and str(item_data.get("category") or "").lower() not in allowed_cats:
-                        logger.warning("QA: Mismatch role=%s vs item_cat=%s for cid=%s", role, cat, cid)
+                    sub_cat = str(item_data.get("sub_category") or "").lower().strip()
+                    if allowed_cats and cat not in allowed_cats and str(item_data.get("category") or "").lower() not in allowed_cats and sub_cat not in allowed_cats:
+                        logger.warning("QA: Mismatch role=%s vs item_cat=%s sub_cat=%s for cid=%s", role, cat, sub_cat, cid)
                         is_valid_item = False
                         item_data = None
 
@@ -2950,6 +3134,21 @@ def item_matches_shopping_suggestion(suggestion: str, item: dict[str, Any]) -> b
     item_fams.update(extract_shopping_garment_families(f"{cat} {sub_cat}"))
 
     common_fams = s_fams.intersection(item_fams)
+
+    # 0. Specialized Ethnic & Ceremonial Families MUST be checked FIRST
+    # If a suggestion is for a specialized ethnic garment (e.g. churidar, kurta, sari, sherwani),
+    # it must NEVER be considered 'owned' just because the user has generic pants, shirts, or dresses!
+    ETHNIC_TRADITIONAL_FAMILIES = {
+        "kurta", "churidar", "sherwani", "sari", "lehenga", "tuxedo",
+        "galabiya", "abaya", "thobe", "hanbok", "kimono", "qipao", "sharwal"
+    }
+    ethnic_in_sugg = s_fams.intersection(ETHNIC_TRADITIONAL_FAMILIES)
+    if ethnic_in_sugg:
+        if ethnic_in_sugg.intersection(item_fams):
+            if not s_colors or (s_colors and s_colors.intersection(item_colors)):
+                return True
+        return False
+
     if not common_fams:
         return False
 
@@ -2989,8 +3188,8 @@ def item_matches_shopping_suggestion(suggestion: str, item: dict[str, Any]) -> b
                 return True
         return False
 
-    # 5. Belt / Shoes / Outerwear / Bag / Headwear / Skirt / Dress / Ethnic Traditional
-    for specific_fam in ("belt", "shoes", "outerwear", "bag", "headwear", "skirt", "dress", "kurta", "churidar", "sherwani", "sari", "lehenga", "tuxedo"):
+    # 5. Belt / Shoes / Outerwear / Bag / Headwear / Skirt / Dress
+    for specific_fam in ("belt", "shoes", "outerwear", "bag", "headwear", "skirt", "dress"):
         if specific_fam in s_fams:
             if specific_fam in item_fams:
                 if not s_colors or (s_colors and s_colors.intersection(item_colors)):
