@@ -2,6 +2,26 @@ console.log('👗 DressApp Importer content script loaded on', location.href);
 
 // Style injection removed — bookmarklet handles all migration UI
 
+function safeSendMessage(payload) {
+  return new Promise((resolve) => {
+    try {
+      if (typeof chrome === 'undefined' || !chrome.runtime?.sendMessage) {
+        resolve({ ok: false, error: 'no chrome.runtime' });
+        return;
+      }
+      chrome.runtime.sendMessage(payload, (res) => {
+        if (chrome.runtime.lastError) {
+          resolve({ ok: false, error: chrome.runtime.lastError.message });
+          return;
+        }
+        resolve(res || { ok: false, error: 'empty response' });
+      });
+    } catch (e) {
+      resolve({ ok: false, error: e?.message || 'sendMessage threw' });
+    }
+  });
+}
+
 function initImporter() {
   // Floating widget injection disabled — bookmarklet handles migration widget
   return;
@@ -61,9 +81,7 @@ function initImporter() {
       await new Promise(r => setTimeout(r, 100)); // wait brief frame for layout repaint
       
       try {
-        const res = await new Promise((resolve) => {
-          chrome.runtime.sendMessage({ type: 'CAPTURE_VISIBLE_TAB' }, resolve);
-        });
+        const res = await safeSendMessage({ type: 'CAPTURE_VISIBLE_TAB' });
         if (res && res.ok && res.image_b64) {
           screenshots.push(`data:image/jpeg;base64,${res.image_b64}`);
         } else {
@@ -79,11 +97,9 @@ function initImporter() {
 
     status.innerText = `Sending ${screenshots.length} screenshots to DressApp...`;
     try {
-      const res = await new Promise((resolve) => {
-        chrome.runtime.sendMessage({
-          type: 'SEND_SCREENSHOTS_TO_DRESSAPP',
-          screenshots
-        }, resolve);
+      const res = await safeSendMessage({
+        type: 'SEND_SCREENSHOTS_TO_DRESSAPP',
+        screenshots
       });
       if (res && res.ok) {
         status.innerHTML = '<span style="color:#34d399;font-weight:bold;">✓ Done!</span> Check DressApp tab to finish importing.';
@@ -109,11 +125,9 @@ document.addEventListener('DRESSAPP_BOOKMARKLET_SCREENSHOTS', async (e) => {
   const screenshots = e.detail?.screenshots || [];
   console.log('👗 Importer received bookmarklet screenshots:', screenshots.length);
   try {
-    const res = await new Promise((resolve) => {
-      chrome.runtime.sendMessage({
-        type: 'SEND_SCREENSHOTS_TO_DRESSAPP',
-        screenshots
-      }, resolve);
+    const res = await safeSendMessage({
+      type: 'SEND_SCREENSHOTS_TO_DRESSAPP',
+      screenshots
     });
     if (res && res.ok) {
       console.log('👗 Successfully routed bookmarklet screenshots via extension to DressApp');

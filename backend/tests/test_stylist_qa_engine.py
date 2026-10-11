@@ -1521,12 +1521,13 @@ def test_reconcile_outfit_title_and_shopping_hindu_wedding_phantom_kurta_and_kha
 
     rec = res["outfit_recommendations"][0]
 
-    # 1. Title Truthfulness: No mixed 'Smart-חגיגי', no 'Khaki', accurately names Vest & Dark Brown Pants
+    # 1. Title Truthfulness & Essence/Vibe:
+    # No mixed 'Smart-חגיגי', no 'Khaki', no 'Tee', captures essence & vibe and does NOT just name the bottom garment
     assert "חגיגי" not in rec["name"], f"Title mixed Hebrew into English: {rec['name']}"
     assert "khaki" not in rec["name"].lower(), f"Phantom color khaki found in title: {rec['name']}"
     assert "tee" not in rec["name"].lower(), f"Phantom garment tee found in title: {rec['name']}"
-    assert "Light Grey Suit Vest" in rec["name"]
-    assert "Dark Brown Pleated Pants" in rec["name"]
+    assert "dark brown pleated pants" not in rec["name"].lower(), f"Bottom item name leaked into title: {rec['name']}"
+    assert any(w in rec["name"].lower() for w in ("wedding", "festive", "elegance", "sophisticated", "celebration", "formal")), f"Title does not capture essence & vibe: {rec['name']}" 
 
     # 2. Shopping suggestions must have Kurta and Churidar
     shopping = res.get("shopping_suggestions", [])

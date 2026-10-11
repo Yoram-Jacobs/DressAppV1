@@ -1403,7 +1403,7 @@ async def generate_scheduled_proposals(
         f"{{\n"
         f"  \"reasoning_summary\": string,\n"
         f"  \"outfit_recommendations\": Array<{{\n"
-        f"    \"name\": string, // 3-6 words. Generates a highly descriptive, appealing, and creative style title (e.g., 'Casual Blue & White Summer Hangout', 'Classic Charcoal Streetwear', 'Solid Summer Work Outfit') describing the combined vibe, season, and color combination that reflects the requested style and tags. Avoid generic titles like 'The Look' or 'Outfit 1'.\n"
+        f"    \"name\": string, // 3-6 words. A short descriptive title capturing the outfit's essence and vibe (e.g., 'Casual Blue & White Summer Hangout', 'Classic Charcoal Sophistication', 'Refined Warm Elegance', 'אלגנטיות חגיגית לחתונה'). NEVER use a single garment name or the bottom item name as the outfit title! Avoid generic titles like 'The Look' or 'Outfit 1'.\n"
         f"    \"items\": Array<{{\n"
         f"      \"role\": \"top\"|\"bottom\"|\"outerwear\"|\"shoes\"|\"accessory\"|\"dress\",\n"
         f"      \"description\": string, // Use the item's title/description from the list.\n"

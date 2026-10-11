@@ -1907,36 +1907,287 @@ TRADITIONAL_ETHNIC_KEYWORDS: dict[str, dict[str, Any]] = {
     },
 }
 
+LOCALIZED_ESSENCE_VIBE_TITLES: dict[str, dict[str, list[str]]] = {
+    "wedding": {
+        "en": [
+            "Festive Wedding Elegance",
+            "Sophisticated Wedding Guest",
+            "Modern Tailored Celebration",
+            "Refined Festive Style",
+        ],
+        "he": [
+            "אלגנטיות חגיגית לחתונה",
+            "מראה מוקפד לאירוע חגיגי",
+            "סגנון אלגנטי מעודן לאירוע",
+            "קלאסיקה חגיגית לחתונה",
+        ],
+        "ar": [
+            "إطلالة زفاف راقية واحتفالية",
+            "أناقة عصرية للمناسبات الاحتفالية",
+            "إطلالة مميزة ومحترمة لحفل الزفاف",
+            "أناقة كلاسيكية للحفل",
+        ],
+        "es": [
+            "Elegancia festiva para boda",
+            "Look sofisticado para celebración",
+            "Estilo sastre refinado para evento",
+            "Clásico festivo distinguido",
+        ],
+        "fr": [
+            "Élégance festive pour mariage",
+            "Allure habillée et raffinée",
+            "Style de fête sophistiqué",
+            "Classique festif élégant",
+        ],
+        "de": [
+            "Festliche Hochzeitseleganz",
+            "Raffinierter Look für die Feier",
+            "Moderner maßgeschneiderter Festlook",
+            "Klassische Festtagseleganz",
+        ],
+        "it": [
+            "Eleganza festiva per matrimonio",
+            "Look ricercato per celebrazioni",
+            "Stile sartoriale raffinato",
+            "Classico festivo elegante",
+        ],
+        "pt": [
+            "Elegância festiva para casamento",
+            "Visual sofisticado para celebração",
+            "Estilo elegante e refinado",
+            "Clássico festivo refinado",
+        ],
+        "nl": [
+            "Feestelijke bruiloftselegantie",
+            "Geraffineerde feestelijke stijl",
+            "Moderne geklede uitstraling",
+            "Klassiek feestelijk chic",
+        ],
+        "ru": [
+            "Изысканная свадебная элегантность",
+            "Праздничный утонченный образ",
+            "Современная торжественная классика",
+            "Элегантный праздничный стиль",
+        ],
+        "zh": [
+            "典雅婚礼嘉宾风尚",
+            "精致节日庆典着装",
+            "现代精裁优雅风范",
+            "经典盛典名仕风格",
+        ],
+        "ja": [
+            "洗練された結婚式の装い",
+            "気品ある祝宴コーディネート",
+            "現代的なフォーマルスタイル",
+            "格式ある祝宴エレガンス",
+        ],
+        "hi": [
+            "विवाह के लिए परिष्कृत सुरुचि",
+            "उत्सव के लिए सुरुचिपूर्ण परिधान",
+            "आधुनिक औपचारिक उत्सव शैली",
+            "गरिमापूर्ण वैवाहिक वेशभूषा",
+        ],
+    },
+    "event": {
+        "en": [
+            "Curated Elegant Event Look",
+            "Sophisticated Tailored Formal",
+            "Refined Evening Polish",
+            "Modern Formal Style",
+        ],
+        "he": [
+            "מראה אלגנטי מוקפד לאירוע",
+            "אלגנטיות מחויטת ויוקרתית",
+            "קלאסיקה רשמית ומעודנת",
+            "סגנון ערב יוקרתי",
+        ],
+        "ar": [
+            "إطلالة أنيقة ومحترمة للمناسبة",
+            "أناقة رسمية كلاسيكية",
+            "إطلالة سهرة متألقة",
+            "طراز رسمي عصري",
+        ],
+        "es": [
+            "Look elegante para el evento",
+            "Elegancia sastre sofisticada",
+            "Estilo formal refinado",
+            "Presencia clásica distinguida",
+        ],
+        "fr": [
+            "Tenue élégante pour l'événement",
+            "Élégance habillée sophistiquée",
+            "Style de soirée raffiné",
+            "Classique formel chic",
+        ],
+        "de": [
+            "Elegantes Event-Outfit",
+            "Raffinierte formelle Eleganz",
+            "Klassischer Abendlook",
+            "Moderner formeller Stil",
+        ],
+        "it": [
+            "Look elegante per l'evento",
+            "Eleganza formale sartoriale",
+            "Stile serale raffinato",
+            "Classico formale ricercato",
+        ],
+        "pt": [
+            "Visual elegante para o evento",
+            "Elegância formal sofisticada",
+            "Estilo social refinado",
+            "Presença clássica distinta",
+        ],
+        "nl": [
+            "Elegante evenementenlook",
+            "Geraffineerde formele stijl",
+            "Verfijnde avondlook",
+            "Modern formeel chic",
+        ],
+        "ru": [
+            "Элегантный образ для мероприятия",
+            "Изысканный officialный стиль",
+            "Утонченный вечерний образ",
+            "Современная строгая классика",
+        ],
+        "zh": [
+            "精选活动优雅风采",
+            "考究精裁正式礼服",
+            "精致晚宴风范",
+            "现代正式绅士典范",
+        ],
+        "ja": [
+            "洗練されたイベントスタイル",
+            "気品あるフォーマル装い",
+            "上質なイブニングスタイル",
+            "現代的なフォーマルシック",
+        ],
+        "hi": [
+            "सुरुचिपूर्ण कार्यक्रम परिधान",
+            "परिष्कृत औपचारिक शैली",
+            "सुरुचिपूर्ण शाम का पहनावा",
+            "आधुनिक गरिमापूर्ण वेशभूषा",
+        ],
+    },
+    "smart_casual": {
+        "en": [
+            "Smart-Casual Refinement",
+            "Modern Tailored Ease",
+            "Contemporary Polished Style",
+            "Effortless Everyday Chic",
+        ],
+        "he": [
+            "אלגנט-קז'ואל מוקפד",
+            "תחכום קלאסי נינוח",
+            "סטייל עכשווי מלוטש",
+            "שיק יומיומי מעודן",
+        ],
+        "ar": [
+            "أناقة كاجوال راقية",
+            "إطلالة عصرية مريحة",
+            "طراز يومي مميز ومصقول",
+            "شياكة عفوية متقنة",
+        ],
+        "es": [
+            "Elegancia casual refinada",
+            "Estilo moderno relajado",
+            "Toque contemporáneo pulido",
+            "Chic diario sin esfuerzo",
+        ],
+        "fr": [
+            "Élégance décontractée raffinée",
+            "Allure moderne et décontractée",
+            "Style contemporain soigné",
+            "Chic quotidien naturel",
+        ],
+        "de": [
+            "Raffinierter Smart-Casual-Look",
+            "Moderne entspannte Eleganz",
+            "Gepflegter zeitgemäßer Stil",
+            "Müheloser Tages-Chic",
+        ],
+        "it": [
+            "Eleganza smart-casual raffinata",
+            "Stile moderno disinvolto",
+            "Look contemporaneo curato",
+            "Chic quotidiano impeccabile",
+        ],
+        "pt": [
+            "Elegância casual refinada",
+            "Estilo moderno descontraído",
+            "Visual contemporâneo alinhado",
+            "Chic diário natural",
+        ],
+        "nl": [
+            "Verfijnde smart-casual look",
+            "Moderne ontspannen elegantie",
+            "Eigentijdse verzorgde stijl",
+            "Moeiteloze dagelijkse chic",
+        ],
+        "ru": [
+            "Изысканный смарт-кэжуал",
+            "Современный непринужденный стиль",
+            "Утонченный повседневный шик",
+            "Аккуратная классика на каждый день",
+        ],
+        "zh": [
+            "精雅休闲尚品",
+            "现代从容考究风尚",
+            "当代都市优雅日常",
+            "简约自在格调",
+        ],
+        "ja": [
+            "洗練されたスマートカジュアル",
+            "現代的で軽やかな気品",
+            "上質な日常の装い",
+            "飾らないシックなスタイル",
+        ],
+        "hi": [
+            "सुरुचिपूर्ण स्मार्ट-कैजुअल",
+            "आधुनिक सहज लालित्य",
+            "समकालीन परिष्कृत शैली",
+            "स्वाभाविक सुरुचि",
+        ],
+    },
+}
+
+LOCALIZED_EARTHY_WEDDING_TITLES: dict[str, str] = {
+    "en": "Refined Earthy Elegance",
+    "he": "אלגנטיות מעודנת בגווני אדמה",
+    "ar": "أناقة ترابية راقية للمناسبة",
+    "es": "Elegancia refinada en tonos tierra",
+    "fr": "Élégance raffinée aux tons chauds",
+    "de": "Raffinierte Eleganz in Erdtönen",
+    "it": "Eleganza raffinata nei toni della terra",
+    "pt": "Elegância refinada em tons terrosos",
+    "nl": "Verfijnde elegantie in aardetinten",
+    "ru": "Утонченная элегантность в теплых тонах",
+    "zh": "大地色系典雅名仕风尚",
+    "ja": "アーストーンの気品ある装い",
+    "hi": "प्राकृतिक रंगों में परिष्कृत सुरुचि",
+}
+
+LOCALIZED_EARTHY_EVENT_TITLES: dict[str, str] = {
+    "en": "Refined Earthy Formal",
+    "he": "מראה רשמי מעודן בגווני אדמה",
+    "ar": "طراز رسمي أنيق بألوان ترابية",
+    "es": "Estilo formal refinado en tonos tierra",
+    "fr": "Style formel raffiné aux tons terre",
+    "de": "Raffiniertes formelles Outfit in Erdtönen",
+    "it": "Stile formale ricercato nei toni della terra",
+    "pt": "Estilo social refinado em tons terrosos",
+    "nl": "Verfijnde formele stijl in aardetinten",
+    "ru": "Изысканный классический образ в теплых тонах",
+    "zh": "大地色系精裁正式礼服",
+    "ja": "アーストーンの洗練されたフォーマル",
+    "hi": "प्राकृतिक रंगों में सुरुचिपूर्ण औपचारिक पहनावा",
+}
+
 LOCALIZED_TRUTHFUL_WEDDING_TITLE_PREFIX: dict[str, str] = {
-    "en": "Festive Wedding Look",
-    "he": "מראה חגיגי לחתונה",
-    "ar": "إطلالة احتفالية لحفل الزفاف",
-    "es": "Look festivo para boda",
-    "fr": "Tenue festive pour mariage",
-    "de": "Festlicher Hochzeitslook",
-    "it": "Look festivo per matrimonio",
-    "pt": "Visual festivo para casamento",
-    "nl": "Feestelijke bruiloftslook",
-    "ru": "Праздничный образ на свадьбу",
-    "zh": "精选优雅婚礼礼服",
-    "ja": "洗練された結婚式コーディネート",
-    "hi": "शादी के लिए उत्सव परिधान",
+    k: v[0] for k, v in LOCALIZED_ESSENCE_VIBE_TITLES["wedding"].items()
 }
 
 LOCALIZED_TRUTHFUL_EVENT_TITLE_PREFIX: dict[str, str] = {
-    "en": "Curated Event Look",
-    "he": "מראה מעוצב לאירוע",
-    "ar": "إطلالة أنيقة للمناسبة",
-    "es": "Look elegante para el evento",
-    "fr": "Tenue élégante pour l'événement",
-    "de": "Elegantes Event-Outfit",
-    "it": "Look elegante per l'evento",
-    "pt": "Visual elegante para o evento",
-    "nl": "Elegante evenementenlook",
-    "ru": "Элегантный образ для мероприятия",
-    "zh": "精选活动着装",
-    "ja": "洗練されたイベントコーディネート",
-    "hi": "सुरुचिपूर्ण कार्यक्रम परिधान",
+    k: v[0] for k, v in LOCALIZED_ESSENCE_VIBE_TITLES["event"].items()
 }
 
 LOCALIZED_PHANTOM_REPLACED_TITLE: dict[str, str] = {
@@ -1958,7 +2209,7 @@ LOCALIZED_PHANTOM_REPLACED_TITLE: dict[str, str] = {
 LOCALIZED_PHANTOM_WEDDING_TITLE: dict[str, str] = {
     "he": "חלופה חגיגית ואלגנטית לחתונה",
     "en": "Curated Elegant Wedding Alternative",
-    "ar": "إطلالة بديلة أنيقة וממיזה لحفل الزفاف",
+    "ar": "إطلالة بديلة أنيقة ومميزة لحفل الزفاف",
     "es": "Alternativa elegante para boda",
     "fr": "Alternative élégante pour mariage",
     "de": "Elegante Hochzeits-Alternative",
@@ -1989,57 +2240,115 @@ def _is_garment_in_items(keyword_patterns: list[str], items: list[dict[str, Any]
     return False
 
 
+def is_title_literal_garment_or_bottom(title: str, items: list[dict[str, Any]]) -> bool:
+    """Return True if title is a literal garment name, contains/ends with a bottom item name,
+    or lists raw items with '&' / ':', rather than capturing the outfit's essence and vibe."""
+    if not title:
+        return True
+    t_clean = title.strip().lower()
+
+    # 1. Single garment prefixes in any supported language
+    single_prefix_pattern = (
+        r"^(?:חולצת|חולצה|מכנסי|מכנסיים|מעיל|ז'קט|ג'קט|שמלת|שמלה|נעלי|נעליים|טי-שירט|טי שירט|חצאית|"
+        r"shirt|t-shirt|tee|pants|trousers|slacks|chinos|jeans|skirt|dress|jacket|coat|blazer|shoes|loafers|boots|sneakers)"
+    )
+    if re.match(single_prefix_pattern, t_clean, re.IGNORECASE):
+        return True
+
+    # 2. Literal conjunctions joining garment categories (e.g. "Tee & Pants", "Vest & Trousers", "חולצה ומכנסיים")
+    if re.search(r"\b(?:&|and|with|ו|مع)\b", t_clean):
+        garment_words = {"shirt", "tee", "t-shirt", "vest", "pants", "trousers", "slacks", "jeans", "chinos", "skirt", "dress", "חולצה", "מכנסיים", "וסט", "חצאית", "שמלה"}
+        words = set(re.findall(r"[\w-]+", t_clean))
+        if len(words.intersection(garment_words)) >= 1:
+            return True
+
+    # 3. Check against actual items in outfit
+    for it in items:
+        if not isinstance(it, dict):
+            continue
+        role = str(it.get("role") or "").lower()
+        idesc = str(it.get("description") or it.get("title") or it.get("name") or "").strip().lower()
+        if not idesc:
+            continue
+
+        if t_clean == idesc:
+            return True
+
+        # If title ends with or contains this item's name (especially bottom item)
+        # e.g. "Festive Wedding Look: Dark Brown Pleated Dress Pants"
+        if len(idesc) >= 4:
+            if t_clean.endswith(idesc) or f": {idesc}" in t_clean or f" - {idesc}" in t_clean:
+                return True
+            if role in ("bottom", "top", "shoes") and idesc in t_clean:
+                return True
+
+    # 4. Check for colon followed by raw garment words
+    if ":" in t_clean:
+        after_colon = t_clean.split(":", 1)[1].strip()
+        garment_keywords = ["pants", "trousers", "chinos", "slacks", "jeans", "shirt", "tee", "vest", "blazer", "dress", "מכנסי", "מכנסיים", "חולצה", "וסט"]
+        if any(gw in after_colon for gw in garment_keywords):
+            return True
+
+    return False
+
+
 def generate_truthful_outfit_title(
     valid_items: list[dict[str, Any]],
     user_text: str = "",
     lang: str = "en",
+    outfit_idx: int = 0,
 ) -> str:
-    """Generate a truthful, elegant title based purely on the garments actually in valid_items."""
+    """Generate a short descriptive title that captures the outfit's essence and vibe,
+    NEVER the bottom item name or a single garment name."""
     base_lang = (lang or "en").lower().strip().split("-")[0].split("_")[0]
+    if base_lang not in LOCALIZED_ESSENCE_VIBE_TITLES["wedding"]:
+        base_lang = "en"
+
     is_wedding = any(w in user_text.lower() for w in (
         "wedding", "חתונה", "vivaha", "boda", "mariage", "hochzeit", "casamento", "matrimonio", "נישואין", "חופה", "חתן", "כלה"
     ))
-    prefix = (
-        LOCALIZED_TRUTHFUL_WEDDING_TITLE_PREFIX.get(base_lang, LOCALIZED_TRUTHFUL_WEDDING_TITLE_PREFIX["en"])
-        if is_wedding
-        else LOCALIZED_TRUTHFUL_EVENT_TITLE_PREFIX.get(base_lang, LOCALIZED_TRUTHFUL_EVENT_TITLE_PREFIX["en"])
-    )
+    is_mourning = any(w in user_text.lower() for w in (
+        "shiva", "mourning", "funeral", "שבעה", "אבל", "לוויה", "אזכרה"
+    ))
+    is_church = any(w in user_text.lower() for w in (
+        "church", "vatican", "cathedral", "כנסייה", "ותיקן"
+    ))
+    is_formal_event = is_wedding or any(w in user_text.lower() for w in (
+        "event", "gala", "reception", "formal", "אירוע", "גאלה", "רשמי", "נשף", "ערב"
+    ))
 
-    top_item = None
-    bottom_item = None
-    dress_item = None
+    # Detect color mood from valid_items
+    item_colors: set[str] = set()
     for it in valid_items:
         if not isinstance(it, dict):
             continue
-        r = str(it.get("role") or "").lower()
-        if r in ("dress", "full_body"):
-            dress_item = it
-            break
-        elif r in ("top", "outerwear", "jacket") and not top_item:
-            top_item = it
-        elif r == "bottom" and not bottom_item:
-            bottom_item = it
+        c_list = it.get("colors") or it.get("color") or []
+        if isinstance(c_list, str):
+            c_list = [c_list]
+        for c in c_list:
+            item_colors.update(extract_shopping_color_families(str(c).lower()))
+        txt = f"{it.get('name') or ''} {it.get('title') or ''} {it.get('description') or ''}".lower()
+        item_colors.update(extract_shopping_color_families(txt))
 
-    if dress_item:
-        d_name = dress_item.get("title") or dress_item.get("name") or "Dress"
-        return f"{prefix}: {d_name}"
+    has_earthy = any(c in item_colors for c in ("brown", "khaki", "olive", "camel", "beige", "tan"))
 
-    t_name = (top_item.get("title") or top_item.get("name")) if top_item else None
-    b_name = (bottom_item.get("title") or bottom_item.get("name")) if bottom_item else None
-
-    if t_name and b_name:
-        if base_lang == "he":
-            return f"{prefix}: {t_name} ו{b_name}"
-        elif base_lang == "ar":
-            return f"{prefix}: {t_name} مع {b_name}"
-        else:
-            return f"{prefix}: {t_name} & {b_name}"
-    elif t_name:
-        return f"{prefix}: {t_name}"
-    elif b_name:
-        return f"{prefix}: {b_name}"
+    if is_wedding:
+        if has_earthy and outfit_idx % 2 == 1:
+            return LOCALIZED_EARTHY_WEDDING_TITLES.get(base_lang, LOCALIZED_EARTHY_WEDDING_TITLES["en"])
+        titles = LOCALIZED_ESSENCE_VIBE_TITLES["wedding"].get(base_lang, LOCALIZED_ESSENCE_VIBE_TITLES["wedding"]["en"])
+        return titles[outfit_idx % len(titles)]
+    elif is_mourning:
+        return LOCALIZED_OUTFIT_NAME_MOURNING.get(base_lang, LOCALIZED_OUTFIT_NAME_MOURNING["en"])
+    elif is_church:
+        return LOCALIZED_OUTFIT_NAME_CHURCH.get(base_lang, LOCALIZED_OUTFIT_NAME_CHURCH["en"])
+    elif is_formal_event:
+        if has_earthy and outfit_idx % 2 == 1:
+            return LOCALIZED_EARTHY_EVENT_TITLES.get(base_lang, LOCALIZED_EARTHY_EVENT_TITLES["en"])
+        titles = LOCALIZED_ESSENCE_VIBE_TITLES["event"].get(base_lang, LOCALIZED_ESSENCE_VIBE_TITLES["event"]["en"])
+        return titles[outfit_idx % len(titles)]
     else:
-        return prefix
+        titles = LOCALIZED_ESSENCE_VIBE_TITLES["smart_casual"].get(base_lang, LOCALIZED_ESSENCE_VIBE_TITLES["smart_casual"]["en"])
+        return titles[outfit_idx % len(titles)]
 
 
 def check_title_has_phantom_elements(title: str, valid_items: list[dict[str, Any]]) -> bool:
@@ -2131,10 +2440,11 @@ def reconcile_outfit_title_and_shopping(
         if "churidar" not in detected_phantom_keys and not _is_garment_in_items(TRADITIONAL_ETHNIC_KEYWORDS["churidar"]["patterns"], valid_items):
             detected_phantom_keys.append("churidar")
 
-    # If title has phantom colors/garments even if not ethnic:
+    # If title has phantom colors/garments even if not ethnic or is a literal garment/bottom name:
     title_has_phantom = check_title_has_phantom_elements(raw_title, valid_items)
-    if title_has_phantom:
-        rec["name"] = generate_truthful_outfit_title(valid_items, user_text=user_text, lang=lang)
+    is_literal = is_title_literal_garment_or_bottom(raw_title, valid_items)
+    if title_has_phantom or is_literal:
+        rec["name"] = generate_truthful_outfit_title(valid_items, user_text=user_text, lang=lang, outfit_idx=0)
 
     if not detected_phantom_keys:
         return
@@ -2193,8 +2503,8 @@ def reconcile_outfit_title_and_shopping(
         any(re.search(pat, raw_title, re.IGNORECASE) for pat in TRADITIONAL_ETHNIC_KEYWORDS[pkey]["patterns"])
         for pkey in detected_phantom_keys
     )
-    if title_matches_phantom or title_has_phantom:
-        rec["name"] = generate_truthful_outfit_title(valid_items, user_text=user_text, lang=lang)
+    if title_matches_phantom or title_has_phantom or is_literal:
+        rec["name"] = generate_truthful_outfit_title(valid_items, user_text=user_text, lang=lang, outfit_idx=0)
 
     # 3. Scrub phantom mentions from designer_notes
     notes = rec.get("designer_notes")
@@ -2278,7 +2588,7 @@ def sanitize_spoken_reply_and_notes(
     raw_recs = advice.get("outfit_recommendations", [])
     if isinstance(raw_recs, list):
         cleaned_recs = []
-        for rec in raw_recs:
+        for idx, rec in enumerate(raw_recs):
             if not isinstance(rec, dict):
                 continue
             cleaned_recs.append(rec)
@@ -2303,23 +2613,15 @@ def sanitize_spoken_reply_and_notes(
                 else:
                     rec_name = re.sub(r"streetwear|casual|street\s+style", "Festive", rec_name, flags=re.IGNORECASE)
 
-            item_descriptions = [
-                str(it.get("description") or it.get("title") or it.get("name") or "").strip().lower()
-                for it in rec.get("items", [])
-                if isinstance(it, dict)
-            ]
-            is_single_garment_name = (
-                any(rec_name.lower() == idesc for idesc in item_descriptions if idesc) or
-                re.match(r"^(?:חולצת|חולצה|מכנסי|מכנסיים|מעיל|ז'קט|ג'קט|שמלת|שמלה|נעלי|נעליים|shirt|pants|trousers|jacket|overcoat|dress|shoes)\b", rec_name, re.IGNORECASE) is not None
-            )
+            is_literal = is_title_literal_garment_or_bottom(rec_name, rec.get("items") or [])
             has_phantom = check_title_has_phantom_elements(rec_name, rec.get("items") or [])
-            if not rec_name or is_single_garment_name or has_phantom:
+            if not rec_name or is_literal or has_phantom:
                 if is_mourning:
                     rec["name"] = LOCALIZED_OUTFIT_NAME_MOURNING.get(base_lang, LOCALIZED_OUTFIT_NAME_MOURNING["en"])
                 elif is_church:
                     rec["name"] = LOCALIZED_OUTFIT_NAME_CHURCH.get(base_lang, LOCALIZED_OUTFIT_NAME_CHURCH["en"])
                 else:
-                    rec["name"] = generate_truthful_outfit_title(rec.get("items") or [], user_text=user_text, lang=lang)
+                    rec["name"] = generate_truthful_outfit_title(rec.get("items") or [], user_text=user_text, lang=lang, outfit_idx=idx)
             else:
                 rec["name"] = sanitize_stylist_text(rec_name, lang=lang)
 

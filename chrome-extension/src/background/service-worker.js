@@ -114,21 +114,32 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   };
   const handler = handlers[msg?.type];
   if (!handler) {
-    try {
-      sendResponse({ ok: false, error: `unknown message type ${msg?.type}` });
-    } catch (_) {}
+    // If this message type is not for this listener, return false without sendResponse
+    // so Chrome does not close the channel prematurely or leave a port dangling.
     return false;
   }
+
+  let hasResponded = false;
+  const safeSend = (res) => {
+    if (hasResponded) return;
+    hasResponded = true;
+    try {
+      sendResponse(res);
+    } catch (_) {}
+  };
+
+  const timer = setTimeout(() => {
+    safeSend({ ok: false, error: 'service worker handler timeout' });
+  }, 25000);
+
   handler()
     .then((res) => {
-      try {
-        sendResponse(res);
-      } catch (_) {}
+      clearTimeout(timer);
+      safeSend(res);
     })
     .catch((e) => {
-      try {
-        sendResponse({ ok: false, error: e?.message || 'handler threw' });
-      } catch (_) {}
+      clearTimeout(timer);
+      safeSend({ ok: false, error: e?.message || 'handler threw' });
     });
   return true;
 });
@@ -136,21 +147,29 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
 if (chrome.runtime.onMessageExternal) {
   chrome.runtime.onMessageExternal.addListener((msg, sender, sendResponse) => {
     if (msg?.type !== 'DRESSAPP_EXT_TOKEN') {
-      try {
-        sendResponse({ ok: false, error: 'unsupported external message' });
-      } catch (_) {}
       return false;
     }
+    let hasResponded = false;
+    const safeSend = (res) => {
+      if (hasResponded) return;
+      hasResponded = true;
+      try {
+        sendResponse(res);
+      } catch (_) {}
+    };
+
+    const timer = setTimeout(() => {
+      safeSend({ ok: false, error: 'handoff timeout' });
+    }, 25000);
+
     widgetCore.handleHandoff(chromeStorage, msg)
       .then((res) => {
-        try {
-          sendResponse(res);
-        } catch (_) {}
+        clearTimeout(timer);
+        safeSend(res);
       })
       .catch((e) => {
-        try {
-          sendResponse({ ok: false, error: e?.message || 'handoff threw' });
-        } catch (_) {}
+        clearTimeout(timer);
+        safeSend({ ok: false, error: e?.message || 'handoff threw' });
       });
     return true;
   });

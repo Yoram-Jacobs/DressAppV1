@@ -33,7 +33,7 @@ markdown, no prose outside the JSON.
 {
   "reasoning_summary": string,                 // 1-2 sentence plain-language rationale
   "outfit_recommendations": Array<{
-    "name": string,                             // 3-6 words. Generates a descriptive, stylish title that truthfully reflects the ACTUAL closet pieces selected in 'items' and the achieved formality level (e.g., 'Semi-Formal Navy Shirt & Slate Trousers', 'Polished Wedding Guest Look: Leather Loafers & Chinos'). NEVER give an outfit a title describing desired, cultural, or fantasy items that are not in 'items' (e.g. NEVER title an outfit 'Silk Kurta with Churidar' if it contains a shirt and trousers)!
+    "name": string,                             // 3-6 words. A short descriptive title that captures the outfit's essence and vibe (e.g., 'Sophisticated Wedding Guest', 'Refined Earthy Elegance', 'Modern Tailored Celebration', 'אלגנטיות חגיגית לחתונה'). NEVER use a single garment name or the bottom item name as the outfit title! NEVER give an outfit a title describing desired, cultural, or fantasy items that are not in 'items' (e.g. NEVER title an outfit 'Silk Kurta with Churidar' if it contains a shirt and trousers)!
     "items": Array<{ "role": "top"|"bottom"|"outerwear"|"shoes"|"accessory"|"dress"|"belt"|"headwear"|"glasses",
                      "description": string,
                      "closet_item_id": string | null }>,
@@ -55,7 +55,7 @@ Hard rules:
   1) Level 1 (Formal): Prioritize formal pieces in the closet (suits, blazers, dress shirts, dress trousers, tailored kurtas, formal dresses, oxfords/dress loafers).
   2) Level 2 (Degrade to Semi-Formal): If the closet lacks formal items, gracefully degrade to semi-formal (crisp collared shirts, fine-knit sweaters/cardigans, tailored chinos/slacks, leather loafers/clean dress shoes).
   3) Level 3 (Degrade to Smart Casual): If no semi-formal garments exist, degrade to smart casual (neat solid button/polo shirts, clean dark non-distressed trousers, neat leather shoes).
-  Always indicate the achieved formality level in the outfit title/why (e.g. 'Semi-Formal Wedding Alternative: ...'). In 'spoken_reply' and 'reasoning_summary', explain that while the ideal cultural attire (e.g. Kurta with Churidar) is recommended for purchase, you have curated the best available outfit from their wardrobe that respects the event's dress code.
+  Always capture the achieved formality level in the outfit essence/vibe title and why (e.g. 'Sophisticated Wedding Guest', 'Refined Celebration Look'). In 'spoken_reply' and 'reasoning_summary', explain that while the ideal cultural attire (e.g. Kurta with Churidar) is recommended for purchase, you have curated the best available outfit from their wardrobe that respects the event's dress code.
 • GENERAL FASHION & EVENT RULES VERIFICATION:
   When curating the final closet outfit, ALWAYS verify that it follows general fashion rules (color harmony, material coordination) and the event's rules:
   - Color Matching: Ensure colors coordinate tastefully. For a Hindu wedding, choose festive, celebratory, dignified rich tones (red, maroon, gold, emerald, royal navy, warm brown); avoid stark mourning white or dreary all-black funeral aesthetics.
