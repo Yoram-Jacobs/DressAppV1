@@ -1391,6 +1391,97 @@ def test_multi_outfit_variety_across_recommendations():
     assert not rec1_ids.intersection(rec2_ids), f"Look 1 and Look 2 must have distinct items, got collision: {rec1_ids.intersection(rec2_ids)}"
 
 
+def test_hindu_wedding_degradation_and_phantom_shopping_reconciliation():
+    """Verify that when a user asks for Hindu wedding attire and the closet has no Kurta/Churidar:
+    1. Phantom title 'Black & Gold Silk Kurta with Green Churidar' is promoted to shopping_suggestions.
+    2. Outfit title is rewritten truthfully to reflect the closet-curated alternative.
+    3. Inappropriate casual pieces (cargo pants, bomber jacket, graphic shirt, combat boots) are rejected and replaced by formal/semi-formal garments.
+    4. Designer notes are scrubbed of phantom silk embroidery illusions.
+    5. Spoken reply explains the curated wardrobe look and notes the traditional shopping recommendation.
+    """
+    import asyncio
+    closet = [
+        # Inappropriate casual items
+        {"id": "cargo-1", "title": "Grey Tactical Cargo Pants", "category": "bottom", "sub_category": "pants", "dress_code": "casual"},
+        {"id": "bomber-1", "title": "Black Nylon Bomber Jacket", "category": "outerwear", "sub_category": "jacket", "dress_code": "casual"},
+        {"id": "graphic-1", "title": "T-Shirt with Graphic Eagle Print", "category": "top", "sub_category": "t-shirt", "dress_code": "casual"},
+        {"id": "cboots-1", "title": "Heavy Black Combat Work Boots", "category": "footwear", "sub_category": "boots", "dress_code": "casual"},
+        # Appropriate semi-formal/formal closet items
+        {"id": "chinos-1", "title": "Navy Tailored Chino Trousers", "category": "bottom", "sub_category": "pants", "dress_code": "semi-formal"},
+        {"id": "shirt-1", "title": "Royal Blue Tailored Oxford Shirt", "category": "top", "sub_category": "shirt", "dress_code": "formal"},
+        {"id": "blazer-1", "title": "Charcoal Wool Tailored Blazer", "category": "outerwear", "sub_category": "blazer", "dress_code": "formal"},
+        {"id": "loafers-1", "title": "Dark Brown Leather Dress Loafers", "category": "footwear", "sub_category": "loafers", "dress_code": "formal"},
+    ]
+
+    raw_advice = {
+        "spoken_reply": "Here is an amazing look for the Hindu wedding ceremony.",
+        "reasoning_summary": "Selected ideal attire for the wedding celebration.",
+        "outfit_recommendations": [
+            {
+                "name": "Black & Gold Silk Kurta with Green Churidar",
+                "why": "Curated traditional outfit for the ceremony.",
+                "designer_notes": {
+                    "silhouette": "Traditional silhouette with gold embroidery and silk kurta.",
+                    "texture_balance": "Rich silk kurta paired with textured churidar pants.",
+                    "color_harmony": "Black and gold silk paired with rich emerald green.",
+                },
+                "items": [
+                    {"role": "top", "closet_item_id": "graphic-1", "name": "T-Shirt with Graphic Eagle Print"},
+                    {"role": "bottom", "closet_item_id": "cargo-1", "name": "Grey Tactical Cargo Pants"},
+                    {"role": "outerwear", "closet_item_id": "bomber-1", "name": "Black Nylon Bomber Jacket"},
+                    {"role": "shoes", "closet_item_id": "cboots-1", "name": "Heavy Black Combat Work Boots"},
+                ],
+            }
+        ],
+        "shopping_suggestions": ["Grey Tactical Cargo Pants"],
+    }
+
+    reviewed = asyncio.run(
+        evaluate_and_authorize_outfit(
+            user_text="What should I wear to a Hindu wedding?",
+            advice_payload=raw_advice,
+            all_closet_items=closet,
+            user_profile={"sex": "male", "gender": "male", "preferred_language": "en"},
+        )
+    )
+
+    rec = reviewed["outfit_recommendations"][0]
+
+    # 1. Negative constraint enforcement: cargo pants, bomber jacket, graphic shirt, combat boots must be rejected and replaced
+    rec_ids = [it.get("closet_item_id") for it in rec["items"]]
+    assert "cargo-1" not in rec_ids, "Cargo pants must be rejected for a wedding!"
+    assert "bomber-1" not in rec_ids, "Bomber jacket must be rejected for a wedding!"
+    assert "graphic-1" not in rec_ids, "Graphic t-shirt must be rejected for a wedding!"
+    assert "cboots-1" not in rec_ids, "Heavy combat boots must be rejected for a wedding!"
+
+    # Replacement garments from closet should be formal/semi-formal
+    assert "chinos-1" in rec_ids or any(it.get("role") == "bottom" for it in rec["items"])
+    assert "shirt-1" in rec_ids or any(it.get("role") == "top" for it in rec["items"])
+    assert "loafers-1" in rec_ids or any(it.get("role") in ("shoes", "footwear") for it in rec["items"])
+
+    # 2. Truth in Naming: title must NOT name the missing Kurta or Churidar
+    assert "kurta" not in rec["name"].lower()
+    assert "churidar" not in rec["name"].lower()
+    assert "Alternative" in rec["name"] or "Wedding" in rec["name"]
+
+    # 3. Missing traditional garments must be promoted to shopping_suggestions
+    shopping = reviewed.get("shopping_suggestions", [])
+    assert any("kurta" in s.lower() for s in shopping), f"Kurta missing from shopping suggestions: {shopping}"
+    assert any("churidar" in s.lower() for s in shopping), f"Churidar missing from shopping suggestions: {shopping}"
+    # Already-owned cargo pants must be pruned from shopping
+    assert not any("cargo" in s.lower() for s in shopping), "Owned cargo pants must not be suggested for purchase!"
+
+    # 4. Designer notes must be scrubbed of phantom silk embroidery illusions
+    notes = rec.get("designer_notes", {})
+    assert "silk kurta" not in str(notes).lower()
+    assert "gold embroidery" not in str(notes).lower()
+
+    # 5. Spoken reply and reasoning summary explain the closet curation and shopping recommendations
+    spoken = reviewed.get("spoken_reply", "")
+    assert "shopping recommendations" in spoken.lower() or "traditional attire" in spoken.lower()
+
+
+
 
 
 

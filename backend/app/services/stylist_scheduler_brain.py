@@ -309,14 +309,25 @@ def calculate_garment_style_score(
             return -100
         if any(w in all_text for w in ("shorts", "שורטס", "מכנסיים קצרים")):
             return -100
+        if any(w in all_text for w in ("cargo", "cargos", "דגמ\"ח", "דגמח", "utility pocket", "cargo pants")):
+            return -100
+        if any(w in all_text for w in ("bomber", "windbreaker", "בומבר", "puffer", "פוף", "hoodie", "מעיל בומבר")):
+            return -100
+        if any(w in all_text for w in ("graphic", "graphic accent", "גרפיקה", "slogan", "band tee")):
+            return -80
+        if any(w in all_text for w in ("tall boot", "tall boots", "combat boot", "combat boots", "work boot", "מגפי עבודה")):
+            return -70
         if any(w in all_text for w in ("graffiti", "distressed", "ripped", "קרוע", "שפשופים")):
             return -100
         if any(w in all_text for w in ("tank top", "tank", "sleeveless", "גופייה", "גופיה")):
             return -100
         if "hindu" in prompt_lower or "vivaha" in prompt_lower:
             from app.services.stylist_qa_engine import _item_has_color
-            if _item_has_color(item, "black") and not any(_item_has_color(item, c) for c in ("gold", "red", "yellow")):
+            if _item_has_color(item, "black") and not any(_item_has_color(item, c) for c in ("gold", "red", "yellow", "orange", "maroon", "green")):
                 return -100
+        # Boosts for traditional / ethnic wedding wear (+60)
+        if any(w in all_text for w in ("kurta", "churidar", "sherwani", "nehru", "sari", "lehenga", "קורטה", "צ'ורידר", "שרוואני", "סארי")):
+            score += 60
         # Boosts for elegant / formal wedding attire (+50)
         if any(w in all_text for w in ("button", "collared", "dress shirt", "oxford", "linen", "חולצה מכופתרת", "מכופתרת")):
             score += 50
@@ -324,7 +335,7 @@ def calculate_garment_style_score(
             score += 50
         if any(w in all_text for w in ("blazer", "suit", "jacket", "בלייזר", "חליפה")):
             score += 40
-        if any(w in all_text for w in ("loafer", "derby", "oxford", "chelsea", "boot", "נעלי עור", "מוקסין", "מגפיים")):
+        if any(w in all_text for w in ("loafer", "derby", "oxford", "chelsea", "נעלי עור", "מוקסין", "mojari", "jutti")):
             score += 45
 
     if is_formal_or_smart and not is_swim_beach and not is_sport_gym:

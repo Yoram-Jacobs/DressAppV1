@@ -255,7 +255,7 @@
     "category": "cultural_modesty",
     "title": "Ceremonial Color Etiquette",
     "rule_statement": "Observe cultural venue and ceremony norms: in Western weddings, avoid solid white dresses/gowns (reserved for the bride); in formal joyous occasions, balance solemn darks with uplifting harmonic color accents.",
-    "negative_constraint": "Do not recommend a solid white lace dress to a guest attending a wedding. Strictly forbid beach flip-flops, casual slides, sweatpants, shorts, and distressed streetwear for wedding guests.",
+    "negative_constraint": "Do not recommend a solid white lace dress to a guest attending a wedding. Strictly forbid beach flip-flops, casual slides, sweatpants, shorts, cargo pants with utility pockets, casual bomber jackets, graphic prints, and heavy combat/work boots for wedding guests. When the closet lacks formal attire, degrade to semi-formal or smart-casual and suggest missing formal pieces in shopping suggestions.",
     "criteria": {
       "tags": [
         "wedding",
@@ -388,7 +388,7 @@
     "category": "cultural_modesty",
     "title": "Hindu Wedding & Festival Celebrations (Vivaha & Diwali - विवाह उत्सव)",
     "rule_statement": "For Hindu weddings (Vivaha, Sangeet, Baraat) and festivals like Diwali, wear vibrant, auspicious, opulent celebratory colors (crimson red, deep maroon, gold, saffron, emerald green, royal navy, royal magenta) in traditional silk, brocade, or fine embroidery.",
-    "negative_constraint": "STRICTLY FORBID SOLID BLACK: Black is considered inauspicious at Hindu wedding rituals. STRICTLY FORBID PLAIN UNADORNED WHITE: Plain white is reserved for bereavement and is avoided by wedding guests. STRICTLY FORBID CASUAL WEAR: Flip-flops, beach slides, casual slides, sweatpants, shorts, and graffiti/distressed streetwear are strictly inappropriate for a Hindu wedding.",
+    "negative_constraint": "STRICTLY FORBID SOLID BLACK: Black is considered inauspicious at Hindu wedding rituals. STRICTLY FORBID PLAIN UNADORNED WHITE: Plain white is reserved for bereavement and is avoided by wedding guests. STRICTLY FORBID CASUAL WEAR: Flip-flops, beach slides, casual slides, sweatpants, shorts, cargo pants with utility pockets, casual bomber jackets, graphic shirts/tees, and heavy combat/work boots are strictly inappropriate for a Hindu wedding. If the user's closet lacks traditional ethnic wear (Kurta, Churidar, Sherwani), suggest purchasing them in Stylist Recommendations (shopping suggestions) and gracefully curate the most respectful formal or semi-formal alternative (suit, blazer, tailored trousers, collared shirt, leather loafers).",
     "criteria": {
       "tags": [
         "hindu_wedding",

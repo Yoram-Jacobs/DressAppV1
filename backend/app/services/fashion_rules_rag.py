@@ -582,7 +582,7 @@ def filter_modesty_closet_items(
 
 FEMALE_GARMENT_RE = re.compile(
     r"\b(skirt|חצאית|בולרו|bolero|heels|עקבים|stiletto|טייץ|טייטס|leggings|tights|jeggings|bikini|ביקיני|גופיית כתפיות)\b"
-    r"|\b(?<!dress\s)(?:dress|שמלה)(?!\s*(?:pants|shirt|trousers|shoes|socks|boot|code|vest|חולצה|מכנסיים))\b",
+    r"|\b(?<!dress\s)(?:dress|שמלה)(?!\s*(?:pants|shirt|trousers|shoes|shoe|loafers|loafer|socks|boot|boots|code|vest|watch|חולצה|מכנסיים|נעליים))\b",
     re.IGNORECASE,
 )
 
