@@ -1886,9 +1886,10 @@ def _coerce_single_garment(
     g_val = _GENDER_ALIASES.get(raw_g, raw_g)
 
     pat_val = (res.get("pattern") or "").strip().lower()
-    is_fem_cut = is_distinctly_feminine_garment(cat_lower, sub_lower, itype_lower, name=res.get("name"), full_text=full_text, pattern=pat_val)
-    is_masc_cut = is_distinctly_masculine_garment(cat_lower, sub_lower, itype_lower)
-    is_unisex_cut = is_distinctly_unisex_garment(cat_lower, sub_lower, itype_lower, name=res.get("name"), full_text=full_text, pattern=pat_val)
+    item_display_name = res.get("name") or res.get("title")
+    is_fem_cut = is_distinctly_feminine_garment(cat_lower, sub_lower, itype_lower, name=item_display_name, full_text=full_text, pattern=pat_val)
+    is_masc_cut = is_distinctly_masculine_garment(cat_lower, sub_lower, itype_lower, name=item_display_name, full_text=full_text)
+    is_unisex_cut = is_distinctly_unisex_garment(cat_lower, sub_lower, itype_lower, name=item_display_name, full_text=full_text, pattern=pat_val)
 
     # Feminine tops with floral prints or feminine cuts should NEVER be "Tailored Shirts"
     if is_fem_cut or res.get("gender") == "women" or any(w in full_text for w in ("floral", "flower", "פרח", "blouse", "בלוזה")):
@@ -3364,9 +3365,10 @@ def _coerce_enums(
     itype_lower = str(parsed.get("item_type") or "").strip().lower()
 
     pat_val = (parsed.get("pattern") or "").strip().lower()
-    is_fem_cut = is_distinctly_feminine_garment(cat_lower, sub_lower, itype_lower, name=parsed.get("name"), full_text=full_text_enum, pattern=pat_val)
-    is_masc_cut = is_distinctly_masculine_garment(cat_lower, sub_lower, itype_lower, name=parsed.get("name"), full_text=full_text_enum)
-    is_unisex_cut = is_distinctly_unisex_garment(cat_lower, sub_lower, itype_lower, name=parsed.get("name"), full_text=full_text_enum, pattern=pat_val)
+    item_display_name = parsed.get("name") or parsed.get("title")
+    is_fem_cut = is_distinctly_feminine_garment(cat_lower, sub_lower, itype_lower, name=item_display_name, full_text=full_text_enum, pattern=pat_val)
+    is_masc_cut = is_distinctly_masculine_garment(cat_lower, sub_lower, itype_lower, name=item_display_name, full_text=full_text_enum)
+    is_unisex_cut = is_distinctly_unisex_garment(cat_lower, sub_lower, itype_lower, name=item_display_name, full_text=full_text_enum, pattern=pat_val)
 
     # Feminine tops with floral prints or feminine cuts should NEVER be "Tailored Shirts"
     if is_fem_cut or parsed.get("gender") == "women" or any(w in full_text_enum for w in ("floral", "flower", "פרח", "blouse", "בלוזה")):
@@ -3401,12 +3403,12 @@ def _coerce_enums(
         parsed["gender"] = "unisex"
     elif g_val == "kids":
         parsed["gender"] = "kids"
-    elif g_val in ("women", "men"):
-        # Honor model's visual prediction over user profile fallback
-        parsed["gender"] = g_val
     elif norm_user in ("men", "women"):
         # Anchor uncertain/neutral basics without clear gender cues to user's profile gender
         parsed["gender"] = norm_user
+    elif g_val in ("women", "men"):
+        # Honor model's visual prediction when no user profile gender
+        parsed["gender"] = g_val
     elif g_val in _VALID_GENDER:
         parsed["gender"] = g_val
     else:

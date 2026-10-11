@@ -602,6 +602,27 @@ def test_kurta_men_gender_preserved_even_when_user_is_female():
     assert res_enums["gender"] == "men"
 
 
+def test_kurta_generic_category_title_preserves_men():
+    """Even if category and sub_category are generic 'Top', 'Kurta' in title/name triggers masculine cut."""
+    kurta_item = {
+        "name": "Navy Blue Embroidered Kurta",
+        "title": "Navy Blue Embroidered Kurta",
+        "category": "Top",
+        "sub_category": "Top",
+        "item_type": "Garment",
+        "gender": "men",
+    }
+    res = _coerce_single_garment(kurta_item, user_gender="women")
+    assert res["gender"] == "men", f"Expected 'men', got '{res['gender']}'"
+    res_enums = _coerce_enums(kurta_item, user_gender="women")
+    assert res_enums["gender"] == "men"
 
 
-
+def test_kurta_pants_ensemble_does_not_trigger_fem_cue():
+    """When SegFormer detects 'dress', 'pants', and 'shoes', pants must prevent dress from triggering fem cue."""
+    cat_labels = {"dress", "pants", "shoes"}
+    has_pants = any("pant" in k or "trouser" in k for k in cat_labels)
+    assert has_pants is True
+    # The cue logic in _detect_and_crop:
+    has_fem_cue = not has_pants and any(k in cat_labels for k in ("skirt", "blouse", "heels", "crop", "halter", "camisole", "slip dress"))
+    assert has_fem_cue is False

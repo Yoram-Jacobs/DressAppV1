@@ -2425,7 +2425,7 @@ class GarmentVisionService:
                 (d.get("label") or d.get("category") or "").lower()
                 for d in detections
             }
-            if any(k in cat_labels for k in ("skirt", "dress")):
+            if "pants" not in cat_labels and any(k in cat_labels for k in ("skirt",)):
                 return "women"
 
         return None
@@ -2481,17 +2481,17 @@ class GarmentVisionService:
                         (d.get("label") or d.get("category") or "").lower()
                         for d in detections
                     }
+                    has_pants = any("pant" in k or "trouser" in k for k in cat_labels)
                     has_fem_cue = any(
                         is_distinctly_feminine_garment(d.get("category"), d.get("label"), d.get("label"))
                         for d in detections
-                    ) or any(k in cat_labels for k in (
-                        "skirt", "dress", "sandal", "sandals", "blouse", "heels", "crop", "halter",
-                        "camisole", "flats", "slip dress", "peplum", "ruffle", "floral",
-                        "handbag", "purse", "clutch", "tote bag", "shoulder bag", "crossbody bag",
-                        "skinny jeans", "jeggings", "leggings", "bag", "tights", "stockings",
-                    )) or any(w in str(d.get("label", "")).lower() for d in detections for w in (
-                        "sandal", "skirt", "dress", "blouse", "heel", "handbag", "purse", "clutch", "tight", "stocking",
-                    ))
+                    ) or (
+                        not has_pants and any(k in cat_labels for k in (
+                            "skirt", "blouse", "heels", "crop", "halter",
+                            "camisole", "slip dress", "peplum", "ruffle",
+                            "handbag", "purse", "clutch", "tights", "stockings",
+                        ))
+                    )
                     has_masc_cue = any(
                         is_distinctly_masculine_garment(d.get("category"), d.get("label"), d.get("label"), name=d.get("label"), full_text=d.get("label"))
                         for d in detections
@@ -2499,10 +2499,10 @@ class GarmentVisionService:
                         w in str(d.get("label", "")).lower() for d in detections for w in ("kurta", "sherwani", "thobe", "dishdasha", "tuxedo", "boxer")
                     )
                     if has_human_wearer or len(detections) > 1:
-                        if has_fem_cue:
-                            photo_model_gender = "women"
-                        elif has_masc_cue:
+                        if has_masc_cue and not has_fem_cue:
                             photo_model_gender = "men"
+                        elif has_fem_cue and not has_masc_cue:
+                            photo_model_gender = "women"
 
                 is_footwear_only = bool(
                     detections
@@ -2753,6 +2753,13 @@ class GarmentVisionService:
                 photo_fem_cues: dict[int, list[str]] = defaultdict(list)
                 photo_masc_cues: dict[int, list[str]] = defaultdict(list)
                 photo_has_model: dict[int, bool] = defaultdict(bool)
+                photo_has_pants: dict[int, bool] = defaultdict(bool)
+
+                for slot_idx, (image_idx, det, c_bytes, c_mime) in enumerate(flat_crops):
+                    lbl = (det.get("label") or "").lower()
+                    cat = (det.get("category") or det.get("kind") or "").lower()
+                    if "pant" in lbl or "pant" in cat or "trouser" in lbl:
+                        photo_has_pants[image_idx] = True
 
                 for slot_idx, (image_idx, det, c_bytes, c_mime) in enumerate(flat_crops):
                     has_human = bool(
@@ -2770,18 +2777,19 @@ class GarmentVisionService:
 
                     lbl = (det.get("label") or "").lower()
                     cat = (det.get("category") or det.get("kind") or "").lower()
-                    if is_distinctly_feminine_garment(cat, lbl, lbl) or any(w in f"{cat} {lbl}" for w in ("skirt", "dress", "sandal", "heels", "blouse", "bag", "handbag", "purse", "clutch", "tights", "stockings")):
+                    has_pants = photo_has_pants.get(image_idx, False)
+                    if is_distinctly_feminine_garment(cat, lbl, lbl) or (not has_pants and any(w in f"{cat} {lbl}" for w in ("skirt", "heels", "blouse", "tights", "stockings"))):
                         photo_fem_cues[image_idx].append("fem_garment")
-                    elif is_distinctly_masculine_garment(cat, lbl, lbl) or any(w in f"{cat} {lbl}" for w in ("boxers", "tuxedo")):
+                    elif is_distinctly_masculine_garment(cat, lbl, lbl) or any(w in f"{cat} {lbl}" for w in ("boxers", "tuxedo", "kurta", "sherwani", "thobe")):
                         photo_masc_cues[image_idx].append("masc_garment")
 
                 all_img_indices = set(idx for idx, _, _, _ in flat_crops)
                 for img_i in all_img_indices:
                     if photo_has_model.get(img_i) or len([c for c in flat_crops if c[0] == img_i]) > 1:
-                        if photo_fem_cues.get(img_i):
-                            photo_model_genders[img_i] = "women"
-                        elif photo_masc_cues.get(img_i):
+                        if photo_masc_cues.get(img_i) and not photo_fem_cues.get(img_i):
                             photo_model_genders[img_i] = "men"
+                        elif photo_fem_cues.get(img_i) and not photo_masc_cues.get(img_i):
+                            photo_model_genders[img_i] = "women"
 
                 if active_provider in ("gemma", "dressapp") and settings.EYES_GEMMA_SPACE_URL:
                     batch_system_prompt = _build_system_prompt(one_pass=False, user_gender=eff_gender)
@@ -2851,17 +2859,29 @@ class GarmentVisionService:
                         if not assembled.get("title") and (det.get("label") or det.get("kind")):
                             assembled["title"] = (det.get("label") or det.get("kind")).capitalize()
 
-                        has_human = bool(det.get("has_human_head") or det.get("has_human_skin") or photo_has_model.get(image_idx))
-                        model_g = assembled.get("model_gender") or item_mg
-                        if not model_g and has_human:
-                            if assembled.get("gender") == "women" or assembled.get("model_gender") == "women" or is_distinctly_feminine_garment(
-                                assembled.get("category"), assembled.get("sub_category"), assembled.get("item_type"),
-                                name=assembled.get("name"), full_text=f"{assembled.get('title', '')} {assembled.get('caption', '')}",
-                                pattern=assembled.get("pattern"),
-                            ):
-                                model_g = "women"
-                            elif assembled.get("gender") == "men" or assembled.get("model_gender") == "men":
-                                model_g = "men"
+                        llm_mg = resolve_garment_gender(assembled.get("model_gender"))
+                        llm_g = resolve_garment_gender(assembled.get("gender"))
+                        item_display_name = assembled.get("title") or assembled.get("name")
+                        full_txt = f"{item_display_name or ''} {assembled.get('caption', '')}"
+                        is_masc = is_distinctly_masculine_garment(
+                            assembled.get("category"), assembled.get("sub_category"), assembled.get("item_type"),
+                            name=item_display_name, full_text=full_txt,
+                        )
+                        is_fem = is_distinctly_feminine_garment(
+                            assembled.get("category"), assembled.get("sub_category"), assembled.get("item_type"),
+                            name=item_display_name, full_text=full_txt,
+                            pattern=assembled.get("pattern"),
+                        )
+                        if is_masc or llm_mg == "men" or (llm_g == "men" and not is_fem):
+                            model_g = "men"
+                            photo_model_genders[image_idx] = "men"
+                        elif is_fem or llm_mg == "women" or (llm_g == "women" and not is_masc):
+                            model_g = "women"
+                            photo_model_genders[image_idx] = "women"
+                        elif photo_model_genders.get(image_idx):
+                            model_g = photo_model_genders[image_idx]
+                        else:
+                            model_g = item_mg
 
                         if model_g in ("men", "women"):
                             assembled["model_gender"] = model_g
@@ -2985,15 +3005,31 @@ class GarmentVisionService:
                                     fallback_type = (det.get("label") or det.get("kind") or "garment").lower()
                                     analysis["item_type"] = fallback_type
                                     analysis["sub_category"] = fallback_type.capitalize()
-                                if not item_mg:
-                                    if analysis.get("gender") == "women" or is_distinctly_feminine_garment(analysis.get("category"), analysis.get("sub_category"), analysis.get("item_type"), name=analysis.get("title")):
-                                        item_mg = "women"
-                                        photo_model_genders[image_idx] = "women"
-                                    elif analysis.get("gender") == "men" or is_distinctly_masculine_garment(analysis.get("category"), analysis.get("sub_category"), analysis.get("item_type"), name=analysis.get("title")):
-                                        item_mg = "men"
-                                        photo_model_genders[image_idx] = "men"
+                                llm_mg = resolve_garment_gender(analysis.get("model_gender"))
+                                llm_g = resolve_garment_gender(analysis.get("gender"))
+                                item_display_name = analysis.get("title") or analysis.get("name")
+                                full_txt = f"{item_display_name or ''} {analysis.get('caption', '')}"
+                                is_masc = is_distinctly_masculine_garment(
+                                    analysis.get("category"), analysis.get("sub_category"), analysis.get("item_type"),
+                                    name=item_display_name, full_text=full_txt,
+                                )
+                                is_fem = is_distinctly_feminine_garment(
+                                    analysis.get("category"), analysis.get("sub_category"), analysis.get("item_type"),
+                                    name=item_display_name, full_text=full_txt,
+                                    pattern=analysis.get("pattern"),
+                                )
+                                if is_masc or llm_mg == "men" or (llm_g == "men" and not is_fem):
+                                    item_mg = "men"
+                                    photo_model_genders[image_idx] = "men"
+                                elif is_fem or llm_mg == "women" or (llm_g == "women" and not is_masc):
+                                    item_mg = "women"
+                                    photo_model_genders[image_idx] = "women"
+                                elif photo_model_genders.get(image_idx):
+                                    item_mg = photo_model_genders[image_idx]
+
                                 if item_mg in ("men", "women"):
                                     analysis["gender"] = item_mg
+                                    analysis["model_gender"] = item_mg
                                 analysis = _coerce_single_garment(analysis, user_gender=eff_gender, model_gender=item_mg, language=language)
                                 analysis = _coerce_enums(analysis, user_gender=eff_gender, model_gender=item_mg)
                                 if item_mg in ("men", "women"):
@@ -3159,16 +3195,31 @@ class GarmentVisionService:
                                         analysis["item_type"] = fallback_type
                                         analysis["sub_category"] = fallback_type.capitalize()
 
-                                    if not item_mg:
-                                        if analysis.get("gender") == "women" or is_distinctly_feminine_garment(analysis.get("category"), analysis.get("sub_category"), analysis.get("item_type"), name=analysis.get("title")):
-                                            item_mg = "women"
-                                            photo_model_genders[image_idx] = "women"
-                                        elif analysis.get("gender") == "men" or is_distinctly_masculine_garment(analysis.get("category"), analysis.get("sub_category"), analysis.get("item_type")):
-                                            item_mg = "men"
-                                            photo_model_genders[image_idx] = "men"
+                                    llm_mg = resolve_garment_gender(analysis.get("model_gender"))
+                                    llm_g = resolve_garment_gender(analysis.get("gender"))
+                                    item_display_name = analysis.get("title") or analysis.get("name")
+                                    full_txt = f"{item_display_name or ''} {analysis.get('caption', '')}"
+                                    is_masc = is_distinctly_masculine_garment(
+                                        analysis.get("category"), analysis.get("sub_category"), analysis.get("item_type"),
+                                        name=item_display_name, full_text=full_txt,
+                                    )
+                                    is_fem = is_distinctly_feminine_garment(
+                                        analysis.get("category"), analysis.get("sub_category"), analysis.get("item_type"),
+                                        name=item_display_name, full_text=full_txt,
+                                        pattern=analysis.get("pattern"),
+                                    )
+                                    if is_masc or llm_mg == "men" or (llm_g == "men" and not is_fem):
+                                        item_mg = "men"
+                                        photo_model_genders[image_idx] = "men"
+                                    elif is_fem or llm_mg == "women" or (llm_g == "women" and not is_masc):
+                                        item_mg = "women"
+                                        photo_model_genders[image_idx] = "women"
+                                    elif photo_model_genders.get(image_idx):
+                                        item_mg = photo_model_genders[image_idx]
 
                                     if item_mg in ("men", "women"):
                                         analysis["gender"] = item_mg
+                                        analysis["model_gender"] = item_mg
                                     analysis = _coerce_single_garment(analysis, user_gender=eff_gender, model_gender=item_mg, language=language)
                                     analysis = _coerce_enums(analysis, user_gender=eff_gender, model_gender=item_mg)
                                     if item_mg in ("men", "women"):
