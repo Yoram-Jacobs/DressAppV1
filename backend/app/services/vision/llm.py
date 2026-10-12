@@ -928,9 +928,12 @@ async def call_gemma_space_stream_attributes(
 
         user_hints = []
         lbl_low = (segformer_label or "").lower()
+        is_traditional_top = any(w in lbl_low for w in ("kurta", "sherwani", "thobe", "galabiya", "jalabiya", "kaftan", "caftan", "tunic"))
         if segformer_category and (not is_single_item or segformer_category in ("footwear", "bottom", "accessory", "headwear", "bag")):
             mapped_cat = None
-            if segformer_category == "top":
+            if is_traditional_top:
+                mapped_cat = "Top (Traditional Kurta / Tunic)"
+            elif segformer_category == "top":
                 mapped_cat = "Top or Outerwear"
             elif segformer_category == "bottom":
                 mapped_cat = "Bottom"
@@ -944,14 +947,16 @@ async def call_gemma_space_stream_attributes(
             if mapped_cat:
                 user_hints.append(f"Crop: '{mapped_cat}'. Describe this item only.")
 
-        if "skirt" in lbl_low:
+        if is_traditional_top:
+            user_hints.append("RULE: Traditional Top / Kurta. This crop is an ethnic/traditional top or tunic (category='Top', sub_category='Kurta' or 'Tunic', item_type='Kurta' or 'Tunic'). NEVER classify as Coat, Jacket, Outerwear, or Suit.")
+        elif "skirt" in lbl_low:
             user_hints.append("RULE: Skirt. Lower garment with continuous flare/hem and no leg division is sub_category='Skirt', item_type='Pleated Skirt'|'Midi Skirt'|'A-Line Skirt'|'Mini Skirt'|'Maxi Skirt'. NEVER classify as Pants or Trousers. Accurately report visual fabric color (grey/olive/charcoal), NOT black.")
         elif "bag" in lbl_low or segformer_category == "bag":
             user_hints.append("RULE: Genuine bags/purses only. Handheld water bottles/cups/phones/objects: set is_clothing: false, sub_category='non-clothing', item_type='non-clothing'.")
         elif ("shoe" in lbl_low or segformer_category == "footwear") and "boot" not in lbl_low:
             user_hints.append("RULE: Footwear. Low-cut/athletic: sub_category='Sneakers'|'Shoes'.")
         elif "pants" in lbl_low or (segformer_category == "bottom" and "skirt" not in lbl_low):
-            user_hints.append("RULE: Pants vs Jeans. 5-pocket rivet denim only is 'Jeans'. Chinos/slacks/trousers are sub_category='Pants', item_type='Chinos'|'Tailored Trousers', dress_code='smart-casual'.")
+            user_hints.append("RULE: Lower Body Garment / Pants vs Jeans. This crop is strictly a lower body garment (category='Bottom'). Set sub_category='Pants'|'Jeans'|'Shorts'|'Sweatpants', item_type='Pants'|'Trousers'|'Casual Pants'|'Chinos'|'Salwar Pants'. NEVER classify as Shirt, Button-Up Shirt, Blouse, T-Shirt, Jacket, or Coat.")
 
         if model_gender in ("women", "men"):
             user_hints.append(f"HUMAN MODEL GENDER: Item is worn by an identifiable {model_gender} model. Set gender='{model_gender}' and model_gender='{model_gender}'.")
@@ -967,7 +972,9 @@ async def call_gemma_space_stream_attributes(
             if name in _GARMENT_OBJECT_SCHEMA["properties"]:
                 prop = copy.deepcopy(_GARMENT_OBJECT_SCHEMA["properties"][name])
                 if name == "category" and segformer_category and (not is_single_item or segformer_category in ("footwear", "bottom", "accessory", "headwear", "bag")) and not is_coarse_seg:
-                    if segformer_category == "top":
+                    if is_traditional_top:
+                        prop["enum"] = ["Top"]
+                    elif segformer_category == "top":
                         prop["enum"] = ["Top", "Outerwear"]
                     elif segformer_category == "bottom":
                         prop["enum"] = ["Bottom"]
@@ -979,7 +986,9 @@ async def call_gemma_space_stream_attributes(
                         prop["enum"] = ["Accessories"]
 
                 if name == "sub_category":
-                    if "sunglass" in lbl_low or "glass" in lbl_low:
+                    if is_traditional_top:
+                        prop["enum"] = ["Kurta", "Tunic", "Shirt", "Top", "Long Shirt"]
+                    elif "sunglass" in lbl_low or "glass" in lbl_low:
                         prop["enum"] = [
                             "Sunglasses", "Glasses", "Eyewear", "Classic Sunglasses",
                             "Bag", "Handbag", "Crossbody Bag", "Tote Bag", "Belts", "Headwear", "non-clothing",
@@ -997,6 +1006,10 @@ async def call_gemma_space_stream_attributes(
                     elif ("shoe" in lbl_low or segformer_category == "footwear") and "boot" not in lbl_low:
                         prop["enum"] = [
                             "Sneakers", "Shoes", "Loafers", "Flats", "Heels", "Sandals", "Boots", "Oxfords", "Derbies", "Headwear", "Beanie", "Hat", "non-clothing",
+                        ]
+                    elif segformer_category == "bottom" or any(w in lbl_low for w in ("pants", "trousers", "jeans", "shorts", "sweatpants", "churidar", "salwar", "shalwar")):
+                        prop["enum"] = [
+                            "Pants", "Jeans", "Trousers", "Shorts", "Sweatpants", "Leggings", "Cargo Pants", "Chinos", "Casual Pants"
                         ]
 
                 if name == "price_cents":

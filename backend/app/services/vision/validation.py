@@ -982,6 +982,22 @@ _TOP_CUTS_BY_LANG = {
     "zh": {"windbreaker": "防风夹克", "sweater": "休闲毛衣", "blouse": "优雅衬衫", "top": "休闲上衣"},
 }
 
+_BOTTOM_CUTS_BY_LANG = {
+    "en": {"casual_pants": "Casual Pants", "pants": "Pants"},
+    "he": {"casual_pants": "מכנסי קז'ואל", "pants": "מכנסיים"},
+    "ar": {"casual_pants": "بنطال كاجوال", "pants": "بنطال"},
+    "de": {"casual_pants": "Freizeithose", "pants": "Hose"},
+    "es": {"casual_pants": "Pantalón casual", "pants": "Pantalón"},
+    "fr": {"casual_pants": "Pantalon décontracté", "pants": "Pantalon"},
+    "it": {"casual_pants": "Pantaloni casual", "pants": "Pantaloni"},
+    "pt": {"casual_pants": "Calça casual", "pants": "Calça"},
+    "ru": {"casual_pants": "Повседневные брюки", "pants": "Брюки"},
+    "nl": {"casual_pants": "Casual broek", "pants": "Broek"},
+    "hi": {"casual_pants": "कैजुअल पैंट", "pants": "पतलून"},
+    "ja": {"casual_pants": "カジュアルパンツ", "pants": "パンツ"},
+    "zh": {"casual_pants": "休闲长裤", "pants": "裤子"},
+}
+
 _SKIRT_CUTS_BY_LANG = {
     "en": "A-Line Skirt",
     "he": "חצאית A-Line",
@@ -1063,7 +1079,11 @@ def _sanitize_cross_category_contamination(res: dict[str, Any], language: str | 
     top_cuts = _TOP_CUTS_BY_LANG.get(lang_code, _TOP_CUTS_BY_LANG["en"])
 
     # 1. Top / Outerwear cleanup
-    is_top_cat = cat_l in ("top", "outerwear") or any(w in sub_l or w in name_l for w in _MULTILINGUAL_TOP_TERMS)
+    is_top_cat = (
+        (cat_l in ("top", "outerwear") or any(w in sub_l or w in name_l for w in _MULTILINGUAL_TOP_TERMS))
+        and cat_l not in ("bottom", "footwear", "accessories", "accessory")
+        and not any(w in sub_l for w in _MULTILINGUAL_BOTTOM_TERMS)
+    )
     if is_top_cat:
         if any(w in itype_l for w in _MULTILINGUAL_BOTTOM_TERMS):
             if any(w in name_l or w in sub_l for w in ("jacket", "coat", "windbreaker", "ז'קט", "מעיל", "جاكيت", "jacke", "chaqueta", "veste", "куртка")):
@@ -1141,6 +1161,29 @@ def _sanitize_cross_category_contamination(res: dict[str, Any], language: str | 
         tags = res.get("tags")
         if isinstance(tags, list):
             res["tags"] = [t for t in tags if str(t).strip().lower() not in ("# שקר", "שקר", "lie", "fake", "# פקקים", "פקקים", "# lie", "# fake")]
+
+    # 5. Bottoms / Pants cleanup (purge top / shirt terms hallucinated onto pants)
+    elif cat_l == "bottom" or any(w in sub_l for w in _MULTILINGUAL_PANTS_TERMS) or any(w in itype_l for w in _MULTILINGUAL_PANTS_TERMS):
+        if any(w in itype_l for w in _MULTILINGUAL_TOP_TERMS):
+            bottom_cuts = _BOTTOM_CUTS_BY_LANG.get(lang_code, _BOTTOM_CUTS_BY_LANG["en"])
+            res["item_type"] = bottom_cuts["casual_pants"]
+        if any(w in name_l for w in _MULTILINGUAL_TOP_TERMS):
+            if is_he:
+                cleaned_name = re.sub(r"(?i)\b(חולצה\s+מכופתרת|חולצת\s+טי|חולצה|מעיל|ז'קט|סוודר)\b", "מכנסיים", name_str).strip()
+                cleaned_name = re.sub(r"\bלבנה\b", "לבנים", cleaned_name)
+                cleaned_name = re.sub(r"\bשחורה\b", "שחורים", cleaned_name)
+                res["name"] = cleaned_name or "מכנסי קז'ואל"
+                res["title"] = res["name"]
+            else:
+                cleaned_name = re.sub(r"(?i)\b(button-up\s+shirt|t-shirt|shirt|coat|jacket|sweater|blouse|hoodie)\b", "Pants", name_str).strip()
+                res["name"] = cleaned_name or "Casual Pants"
+                res["title"] = res["name"]
+        if any(w in cap_l for w in _MULTILINGUAL_TOP_TERMS):
+            if is_he:
+                res["caption"] = f"{res.get('name') or 'מכנסיים'} נוחים ומחמיאים בעיצוב איכותי ליומיום."
+            else:
+                tpls = _CAPTION_TEMPLATES.get(lang_code, _CAPTION_TEMPLATES["en"])
+                res["caption"] = tpls["default"].format(name=res.get("name") or tpls["fallback_name"])
 
 
 def _norm_str(v: Any) -> str | None:
@@ -3934,9 +3977,54 @@ def _enforce_segformer_category(
         analysis["category"] = "Full Body"
         return analysis
 
-    is_kurta_or_tunic = any(w in comb_txt for w in ("kurta", "guayabera"))
+    lbl_low = (label or "").lower()
+    is_kurta_or_tunic = (
+        any(w in comb_txt for w in ("kurta", "guayabera", "sherwani", "thobe", "galabiya", "jalabiya", "קורטה", "שרוואני", "ת'וב", "גלבייה"))
+        or any(w in lbl_low for w in ("kurta", "guayabera", "sherwani", "thobe", "galabiya", "jalabiya", "tunic", "קורטה"))
+    )
     if is_kurta_or_tunic:
         analysis["category"] = "Top"
+        curr_cat_l = str(analysis.get("category") or "").strip().lower()
+        curr_sub_l = str(analysis.get("sub_category") or "").strip().lower()
+        curr_itype_l = str(analysis.get("item_type") or "").strip().lower()
+        curr_name_l = str(analysis.get("name") or analysis.get("title") or "").strip().lower()
+
+        # If LLM classified it as Outerwear / Coat / Jacket / מעיל, or if SegFormer detected Kurta, override to Kurta
+        if (
+            curr_cat_l in ("outerwear", "coat", "jacket")
+            or curr_sub_l in ("coat", "jacket", "outerwear", "מעיל", "ז'קט")
+            or any(w in curr_itype_l for w in ("coat", "jacket", "outerwear", "מעיל", "ז'קט"))
+            or any(w in curr_name_l for w in ("coat", "jacket", "מעיל", "ז'קט"))
+            or "kurta" in lbl_low
+            or "kurta" in curr_sub_l
+            or "קורטה" in curr_sub_l
+        ):
+            is_he_local = (language in ("he", "iw")) or any("\u0590" <= ch <= "\u05ea" for ch in comb_txt)
+            analysis["category"] = "Top"
+            analysis["sub_category"] = "קורטה" if is_he_local else "Kurta"
+            analysis["item_type"] = "קורטה" if is_he_local else "Kurta"
+            col_str = ""
+            colors = analysis.get("colors")
+            if isinstance(colors, list) and colors:
+                c0 = str(colors[0].get("name", "")).strip()
+                if c0.lower() not in ("unknown", "other"):
+                    col_str = c0
+            if is_he_local:
+                if col_str.lower() in ("white", "לבן", "לבנה"):
+                    col_str = "לבנה"
+                elif col_str.lower() in ("black", "שחור", "שחורה"):
+                    col_str = "שחורה"
+                new_name = f"קורטה {col_str}".strip() if col_str else "קורטה"
+                analysis["name"] = new_name
+                analysis["title"] = new_name
+                analysis["caption"] = f"{new_name} אלגנטית בעיצוב מסורתי ונוח."
+            else:
+                new_name = f"{col_str} Kurta".strip() if col_str else "Kurta"
+                analysis["name"] = new_name
+                analysis["title"] = new_name
+                analysis["caption"] = f"Traditional {new_name.lower()} crafted for elegant and comfortable wear."
+            analysis["_category_overridden_by"] = "segformer-kurta"
+        _sanitize_cross_category_contamination(analysis, language=language)
         return analysis
 
     if is_single_item and kind not in ("footwear", "bottom", "accessory", "headwear"):
@@ -4145,16 +4233,32 @@ def _enforce_segformer_category(
                 and curr_cat not in ("footwear", "shoes")
                 and any(w in f"{sub_low} {item_low} {curr_name}" for w in ("boot", "shoe", "sneaker", "heel", "sandal", "loafer", "oxford", "מגפ", "נעל", "סניקרס"))
             )
-            if is_footwear_conflict:
+            is_top_conflict = (
+                not is_single_item
+                and (
+                    sub_low in ("shirt", "t-shirt", "blouse", "top", "outerwear", "coat", "jacket")
+                    or any(w in f"{sub_low} {item_low} {curr_name}" for w in (
+                        "shirt", "button-up", "blouse", "t-shirt", "tee", "sweater", "hoodie", "cardigan", "jacket", "coat",
+                        "חולצה", "חולצה מכופתרת", "טי שירט", "מעיל", "ז'קט", "סוודר", "סריג", "קפוצ'ון",
+                        "قميص", "بلوزة", "سترة", "hemd", "bluse", "oberteil", "camisa", "blusa", "chemise", "haut",
+                        "camicia", "camicetta", "рубашка", "блузка", "overhemd", "शर्ट", "ब्लाउज", "シャツ", "ブラウス", "衬衫", "上衣"
+                    ))
+                )
+            )
+            if is_footwear_conflict or is_top_conflict:
                 logger.warning(
-                    "garment_vision: SegFormer-anchored bottom override label=%r kind=%r sub_category=%r -> Pants",
-                    label, kind, analysis.get("sub_category"),
+                    "garment_vision: SegFormer-anchored bottom override label=%r kind=%r sub_category=%r item_type=%r conflict=%s -> Pants",
+                    label, kind, analysis.get("sub_category"), analysis.get("item_type"),
+                    "top" if is_top_conflict else "footwear",
                 )
                 is_he_local = (language in ("he", "iw")) or any("\u0590" <= ch <= "\u05ea" for ch in f"{curr_name} {str(analysis.get('caption', ''))}")
                 is_legging = any(w in curr_name or w in str(analysis.get("caption", "")).lower() for w in ("legging", "skinny", "tight", "טייץ", "סקיני"))
+                analysis["category"] = "Bottom"
                 analysis["sub_category"] = "מכנסיים" if is_he_local else "Pants"
                 if is_legging:
                     analysis["item_type"] = "טייץ" if is_he_local else "Leggings"
+                elif any(w in curr_name or w in str(analysis.get("caption", "")).lower() for w in ("shalwar", "salwar", "churidar", "שרוואל")):
+                    analysis["item_type"] = "מכנסי שרוואל" if is_he_local else "Salwar Pants"
                 else:
                     analysis["item_type"] = "מכנסי קז'ואל" if is_he_local else "Casual Pants"
 
@@ -4165,10 +4269,14 @@ def _enforce_segformer_category(
                     if c0.lower() not in ("unknown", "other"):
                         col_str = c0
                 item_noun = analysis["item_type"]
-                new_title = f"{col_str} {item_noun}".strip() if col_str else item_noun
+                if is_he_local:
+                    col_adj = "לבנים" if col_str.lower() in ("white", "לבן") else ("שחורים" if col_str.lower() in ("black", "שחור") else col_str)
+                    new_title = f"{item_noun} {col_adj}".strip() if col_adj else item_noun
+                else:
+                    new_title = f"{col_str} {item_noun}".strip() if col_str else item_noun
                 analysis["name"] = new_title
                 analysis["title"] = new_title
-                analysis["caption"] = "מכנסיים נוחים ומחמיאים בגזרה מחטבת." if is_he_local else f"Classic {item_noun.lower()} designed for versatile everyday styling."
+                analysis["caption"] = f"{new_title} נוחים ואיכותיים בגזרה מחטבת ונוחה." if is_he_local else f"Classic {item_noun.lower()} designed for versatile everyday styling."
                 curr_size = str(analysis.get("size") or "").strip()
                 if curr_size and (curr_size.replace(".", "").isdigit() or curr_size in ("7.0", "7", "8", "8.5", "9", "9.5", "10", "11", "36", "37", "38", "39", "40", "41", "42", "43", "44", "45")):
                     analysis["size"] = "M"

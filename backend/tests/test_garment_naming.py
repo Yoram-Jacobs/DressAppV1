@@ -525,4 +525,69 @@ def test_segformer_dress_overrides_gemini_coat():
     assert "Coat" not in res["name"]
 
 
+def test_segformer_kurta_overrides_qwen_coat_hebrew():
+    """Verify SegFormer kurta detection overrides Qwen's hallucinated Coat/מעיל to Top/Kurta/קורטה."""
+    from app.services.vision.validation import _enforce_segformer_category
+    raw_analysis = {
+        "is_clothing": True,
+        "category": "Outerwear",
+        "sub_category": "Coat",
+        "item_type": "מעיל",
+        "name": "מעיל לבן",
+        "title": "מעיל לבן",
+        "caption": "מעיל לבן מושלם לעונות הקרירות בעיצוב נקי.",
+        "colors": [{"name": "לבן", "pct": 100}],
+    }
+    res = _enforce_segformer_category(raw_analysis, segformer_kind="top", label="kurta", language="he")
+    assert res["category"] == "Top", f"Expected Top, got: {res['category']}"
+    assert res["sub_category"] == "קורטה", f"Expected קורטה, got: {res['sub_category']}"
+    assert res["item_type"] == "קורטה", f"Expected קורטה, got: {res['item_type']}"
+    assert "מעיל" not in res["name"], f"Expected no מעיל in name, got: {res['name']}"
+    assert "מעיל" not in res["caption"], f"Expected no מעיל in caption, got: {res['caption']}"
+    assert "קורטה" in res["name"]
+    assert "לבנה" in res["name"]
+
+
+def test_segformer_bottom_overrides_qwen_shirt_hebrew():
+    """Verify SegFormer bottom detection overrides Qwen's hallucinated button-up shirt to Bottom/Pants/מכנסיים."""
+    from app.services.vision.validation import _enforce_segformer_category
+    raw_analysis = {
+        "is_clothing": True,
+        "category": "Bottom",
+        "sub_category": "מכנסיים",
+        "item_type": "חולצה מכופתרת",
+        "name": "חולצה מכופתרת לבנה",
+        "title": "חולצה מכופתרת לבנה",
+        "caption": "חולצה מכופתרת לבנה בעיצוב איכותי וקלאסי.",
+        "colors": [{"name": "לבן", "pct": 100}],
+    }
+    res = _enforce_segformer_category(raw_analysis, segformer_kind="bottom", label="pants", language="he")
+    assert res["category"] == "Bottom", f"Expected Bottom, got: {res['category']}"
+    assert res["sub_category"] == "מכנסיים", f"Expected מכנסיים, got: {res['sub_category']}"
+    assert "חולצה" not in res["item_type"], f"Expected no חולצה in item_type, got: {res['item_type']}"
+    assert "חולצה" not in res["name"], f"Expected no חולצה in name, got: {res['name']}"
+    assert "חולצה" not in res["caption"], f"Expected no חולצה in caption, got: {res['caption']}"
+    assert "מכנסי" in res["name"]
+    assert "לבנים" in res["name"]
+
+
+def test_sanitize_cross_category_bottoms_cleans_shirt_terms():
+    """Verify _sanitize_cross_category_contamination purges shirt terms from bottom garments."""
+    from app.services.vision.validation import _sanitize_cross_category_contamination
+    raw_pants = {
+        "is_clothing": True,
+        "category": "Bottom",
+        "sub_category": "Pants",
+        "item_type": "Button-Up Shirt",
+        "name": "White Button-Up Shirt",
+        "title": "White Button-Up Shirt",
+        "caption": "White button-up shirt in crisp cotton.",
+    }
+    _sanitize_cross_category_contamination(raw_pants, language="en")
+    assert raw_pants["item_type"] == "Casual Pants"
+    assert "Shirt" not in raw_pants["name"]
+    assert "shirt" not in raw_pants["caption"].lower()
+
+
+
 
