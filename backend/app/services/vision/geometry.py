@@ -232,7 +232,7 @@ _ACCESSORY_KINDS = {
 def _detect_human_presence(items: list[dict[str, Any]]) -> bool:
     """Return True if a human wearer or model is detected in the image."""
     for d in items:
-        if d.get("has_human_head"):
+        if d.get("has_human_head") or d.get("has_human_skin"):
             return True
         lbl = (d.get("label") or "").lower()
         if any(h in lbl for h in ("person", "model", "woman", "man", "human", "face", "hair", "head", "skin", "body")):

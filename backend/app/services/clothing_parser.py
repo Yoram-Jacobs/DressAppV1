@@ -2076,6 +2076,10 @@ async def parse_garments(
             upper_human_ids = arm_class_ids | head_class_ids
             if upper_human_ids and np.isin(class_mask, list(upper_human_ids)).any():
                 arm_m = np.isin(class_mask, list(upper_human_ids)).astype(np.uint8)
+                if skin_mask_found is not None:
+                    y_grid = np.arange(H)[:, None]
+                    is_waist_or_arm = y_grid <= int(0.55 * H)
+                    arm_m = (arm_m | (skin_mask_found & is_waist_or_arm)).astype(np.uint8)
                 if arm_m.any() and int(arm_m.sum()) >= 80:
                     from scipy import ndimage
                     h_h, h_w = arm_m.shape
@@ -2084,6 +2088,10 @@ async def parse_garments(
                     garment_human_mask = arm_m
                 else:
                     garment_human_mask = None
+            elif skin_mask_found is not None:
+                y_grid = np.arange(H)[:, None]
+                is_waist_or_arm = y_grid <= int(0.55 * H)
+                garment_human_mask = (skin_mask_found & is_waist_or_arm).astype(np.uint8)
             else:
                 garment_human_mask = None
         # 3. Tops, outerwear, dresses: head + arms (never legs)
@@ -2091,6 +2099,8 @@ async def parse_garments(
             upper_human_ids = head_class_ids | arm_class_ids
             if upper_human_ids and np.isin(class_mask, list(upper_human_ids)).any():
                 up_m = np.isin(class_mask, list(upper_human_ids)).astype(np.uint8)
+                if skin_mask_found is not None:
+                    up_m = (up_m | skin_mask_found).astype(np.uint8)
                 if up_m.any() and int(up_m.sum()) >= 80:
                     from scipy import ndimage
                     h_h, h_w = up_m.shape
@@ -2098,7 +2108,9 @@ async def parse_garments(
                     up_m = (ndimage.gaussian_filter(up_m.astype(float), sigma=smooth_sigma) >= 0.5).astype(np.uint8)
                     garment_human_mask = up_m
                 else:
-                    garment_human_mask = None
+                    garment_human_mask = skin_mask_found
+            elif skin_mask_found is not None:
+                garment_human_mask = skin_mask_found
             elif has_head and ymin > int(0.03 * H):
                 # When SegFormer model has no human classes (e.g. sayeed99/segformer_b3_clothes),
                 # synthesize head mask directly above top collar so the face/beard/hair are excised!
@@ -2478,6 +2490,18 @@ def apply_alpha_intersection(
         elif (norm_cat in {"top", "outerwear", "suit", "fullbody", "dress"}) and mask_resized is not None:
             # Hands hanging next to jacket hems or protruding from sleeve cuffs
             is_skin = is_skin & ((mask_resized <= 40) | is_hand_zone)
+
+        # In hand zone / waistband: any skin detection represents human limbs/hands/wrists/fingers.
+        # Morphological dilation fills anti-aliased finger edges, knuckles, nailbeds, and creases,
+        # preventing translucent ghost hands from surviving the Gaussian blur.
+        hand_excise = None
+        if not is_garment_nude and is_skin.any():
+            from scipy import ndimage
+            target_limb_zone = is_hand_zone if norm_cat in {"top", "outerwear", "suit", "fullbody", "dress"} else (is_waist_zone if is_bottom else is_hand_zone)
+            hand_skin_bin = is_skin & target_limb_zone
+            if hand_skin_bin.any():
+                hand_excise = ndimage.binary_dilation(hand_skin_bin, structure=np.ones((5, 5), dtype=bool), iterations=2) & target_limb_zone
+
         if is_skin.any():
             skin_u8 = (is_skin * 255).astype(np.uint8)
             if garment_protect is not None and garment_protect.any():
@@ -2498,6 +2522,8 @@ def apply_alpha_intersection(
                 protect_smooth = ndimage.gaussian_filter(effective_protect.astype(float), sigma=1.2)
                 sub_skin = np.clip(sub_skin * (1.0 - protect_smooth) + 1.0 * protect_smooth, 0.0, 1.0)
             new_alpha = (new_alpha.astype(float) * sub_skin).round().astype(np.uint8)
+            if hand_excise is not None and hand_excise.any():
+                new_alpha = np.where(hand_excise, np.uint8(0), new_alpha)
     except Exception as exc:  # noqa: BLE001
         logger.info(
             "apply_alpha_intersection: skin-chrominance subtraction failed: %s",
@@ -2615,6 +2641,8 @@ def apply_alpha_intersection(
         core_u8 = (effective_core * 255).astype(np.uint8)
         if 'is_skin' in locals() and is_skin is not None and is_skin.any() and not is_garment_nude:
             core_u8 = np.where(is_skin, np.uint8(0), core_u8)
+        if 'hand_excise' in locals() and hand_excise is not None and hand_excise.any() and not is_garment_nude:
+            core_u8 = np.where(hand_excise, np.uint8(0), core_u8)
         if norm_cat in {"top", "outerwear", "dress"}:
             # Preserve crew-neck collar opening at top-center of tops if transparent in input
             non_zero_rows = np.where(mask_resized > 50)[0]
@@ -2637,6 +2665,8 @@ def apply_alpha_intersection(
         target_core_alpha = 250.0 if (norm_cat in {"bottom", "pants", "skirt", "fullbody", "suit"} or not is_multi_segment) else 235.0
         healed_alpha = np.maximum(new_alpha.astype(float), feather_factor * target_core_alpha)
         new_alpha = np.clip(healed_alpha, 0, 255).astype(np.uint8)
+        if 'hand_excise' in locals() and hand_excise is not None and hand_excise.any() and not is_garment_nude:
+            new_alpha = np.where(hand_excise, np.uint8(0), new_alpha)
 
     # Note: SegFormer's coarse mask must NEVER force transparent background pixels (alpha < 128)
     # to 255. Rembg provides studio-grade alpha boundaries; forcing opaque holes creates
