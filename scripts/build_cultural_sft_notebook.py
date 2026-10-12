@@ -69,7 +69,7 @@ os.environ['USE_TF'] = '0'
 os.environ['USE_TORCH'] = '1'
 
 # Install Transformers, PEFT, BitsAndBytes, and Qwen VL Utilities
-!pip install -q -U 'transformers>=4.49.0' accelerate peft 'bitsandbytes>=0.46.1' qwen-vl-utils gguf sentencepiece protobuf paramiko scp datasets pillow
+!pip install -q -U 'transformers>=4.49.0' accelerate peft 'bitsandbytes>=0.46.1' qwen-vl-utils gguf sentencepiece protobuf paramiko scp datasets
 
 # Clone and build llama.cpp for GGUF conversion & quantization utilities
 if not os.path.exists('llama.cpp'):
@@ -107,7 +107,24 @@ except Exception as e:
     cells.append(code(
 """import os, sys, json, tarfile, random
 from pathlib import Path
-from PIL import Image, ImageDraw
+
+# Resilient Pillow loader to handle Colab kernel module cache collisions
+try:
+    from PIL import Image, ImageDraw
+except (ImportError, AttributeError):
+    import subprocess
+    print("🔄 Resolving Colab in-memory Pillow cache collision...")
+    for mod in list(sys.modules.keys()):
+        if mod.startswith("PIL"):
+            del sys.modules[mod]
+    try:
+        from PIL import Image, ImageDraw
+    except (ImportError, AttributeError):
+        subprocess.run([sys.executable, "-m", "pip", "install", "--force-reinstall", "-q", "pillow"])
+        for mod in list(sys.modules.keys()):
+            if mod.startswith("PIL"):
+                del sys.modules[mod]
+        from PIL import Image, ImageDraw
 
 CULTURAL_ASSETS_DIR = Path("assets/cultural")
 CULTURAL_ASSETS_DIR.mkdir(parents=True, exist_ok=True)
