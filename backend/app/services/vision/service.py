@@ -1191,7 +1191,7 @@ class GarmentVisionService:
                         seg_mask = best_det.get("mask") or best_det.get("_mask_bbox")
                         if seg_mask is not None and bool(seg_mask.any()):
                             from app.services import clothing_parser as _cp
-                            h_mask = best_det.get("_human_mask_full") or best_det.get("_global_human_mask")
+                            h_mask = best_det.get("_human_mask_full") if best_det.get("_human_mask_full") is not None else best_det.get("_global_human_mask")
                             refined = _cp.apply_alpha_intersection(
                                 result,
                                 seg_mask,
@@ -1411,7 +1411,7 @@ class GarmentVisionService:
                 if mask_bbox is not None:
                     det["_mask_bbox"] = mask_bbox
             
-            human_full = det.get("_human_mask_full") or det.get("_global_human_mask")
+            human_full = det.get("_human_mask_full") if det.get("_human_mask_full") is not None else det.get("_global_human_mask")
             if human_full is not None and img_size is not None:
                 human_bbox = clothing_parser.slice_mask_to_bbox(
                     human_full, img_size, box_px
