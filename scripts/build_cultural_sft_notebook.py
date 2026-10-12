@@ -69,7 +69,8 @@ os.environ['USE_TF'] = '0'
 os.environ['USE_TORCH'] = '1'
 
 # Install Transformers, PEFT, BitsAndBytes, and Qwen VL Utilities
-!pip install -q -U 'transformers>=4.49.0' accelerate peft 'bitsandbytes>=0.46.1' qwen-vl-utils gguf sentencepiece protobuf paramiko scp datasets
+# Use only-if-needed upgrade strategy so pre-loaded Colab C extensions (like Pillow) are preserved
+!pip install -q -U --upgrade-strategy only-if-needed 'transformers>=4.49.0' accelerate peft 'bitsandbytes>=0.46.1' qwen-vl-utils gguf sentencepiece protobuf paramiko scp datasets
 
 # Clone and build llama.cpp for GGUF conversion & quantization utilities
 if not os.path.exists('llama.cpp'):
@@ -108,23 +109,15 @@ except Exception as e:
 """import os, sys, json, tarfile, random
 from pathlib import Path
 
-# Resilient Pillow loader to handle Colab kernel module cache collisions
+# Resilient Pillow loader handling Colab pre-loaded C-extension mismatches
 try:
     from PIL import Image, ImageDraw
-except (ImportError, AttributeError):
-    import subprocess
-    print("🔄 Resolving Colab in-memory Pillow cache collision...")
-    for mod in list(sys.modules.keys()):
-        if mod.startswith("PIL"):
-            del sys.modules[mod]
-    try:
-        from PIL import Image, ImageDraw
-    except (ImportError, AttributeError):
-        subprocess.run([sys.executable, "-m", "pip", "install", "--force-reinstall", "-q", "pillow"])
-        for mod in list(sys.modules.keys()):
-            if mod.startswith("PIL"):
-                del sys.modules[mod]
-        from PIL import Image, ImageDraw
+except ImportError as e:
+    if "extension was built for another version" in str(e) or "_Ink" in str(e):
+        print("⚠️ Pillow was updated while Colab's Python kernel was already running.")
+        print("➡️ ACTION REQUIRED: Click menu: Runtime -> Restart session (or press Ctrl + M .), then re-run this cell.")
+        raise RuntimeError("Please click 'Runtime -> Restart session' (Ctrl+M .), then continue. All your disk files remain safe!") from e
+    raise
 
 CULTURAL_ASSETS_DIR = Path("assets/cultural")
 CULTURAL_ASSETS_DIR.mkdir(parents=True, exist_ok=True)
