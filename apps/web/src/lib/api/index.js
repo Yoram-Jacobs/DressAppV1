@@ -42,7 +42,7 @@ const { client, API_BASE, tokenStore, userStore } = createApiClient({
 // Backward-compatible merged `api` object
 // (preserves `import { api } from '@/lib/api'` across 46+ files)
 // ============================================================
-const callableStylist = (formData) => stylist.stylist(formData);
+const callableStylist = (formData, config) => stylist.stylist(formData, config);
 Object.assign(callableStylist, stylist);
 
 export const api = buildApi();

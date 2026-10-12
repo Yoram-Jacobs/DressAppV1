@@ -7,6 +7,7 @@ Phase R adds multi-session support:
 """
 from __future__ import annotations
 
+import asyncio
 import logging
 from typing import Any
 
@@ -209,7 +210,7 @@ async def stylist_endpoint(
     all_user_closet = await closet_summary_for(user["id"], limit=500)
     prioritized_closet = await get_rotation_prioritized_closet(
         user["id"],
-        limit=None,
+        limit=30,
         style_dress_for=text,
         user_gender=user_gender,
         recent_item_ids=recent_item_ids,
@@ -466,11 +467,14 @@ async def stylist_endpoint(
     is_corrupted = bool(current_title and any(bad in str(current_title).lower() for bad in ('"action"', '"text"', 'action":', 'text":', '{"', '"}')))
     if (is_untitled or is_corrupted) and final_text:
         try:
-            title = await generate_session_title(
-                final_text,
-                language=user_profile.get("preferred_language") or "en",
-                api_key=api_key_resolved,
-                user=user,
+            title = await asyncio.wait_for(
+                generate_session_title(
+                    final_text,
+                    language=user_profile.get("preferred_language") or "en",
+                    api_key=api_key_resolved,
+                    user=user,
+                ),
+                timeout=4.0,
             )
             if title:
                 await update_session(session["id"], user["id"], title=title)

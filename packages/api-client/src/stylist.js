@@ -2,8 +2,8 @@ import { client } from './_singleton.js';
 
 export const stylist = {
   // stylist — returns raw axios promise for multipart
-  stylist: (formData) =>
-    client.post('/stylist', formData).then((r) => r.data),
+  stylist: (formData, config = {}) =>
+    client.post('/stylist', formData, { timeout: 300000, ...config }).then((r) => r.data),
   stylistHistory: (sessionId = null, limit = 200) =>
     client
       .get('/stylist/history', {

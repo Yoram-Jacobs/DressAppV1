@@ -104,10 +104,10 @@ async def widen_stylist_response(
         out["marketplace_suggestions"] = market[:MAX_MARKETPLACE]
         out["fashion_scout_picks"] = scout[:MAX_TREND_CARDS]
 
-        # Nano Banana visualization gate (choice 2d):
-        # explicit "show me" trigger OR (closet empty AND marketplace empty).
+        # Nano Banana visualization gate:
+        # Strictly require explicit "show me" trigger so routine chat responses aren't blocked by generative image calls.
         explicit = bool(_VISUALIZE_RE.search(user_text or ""))
-        if explicit or (not market and not _closet_has_any_of(closet_summary, gap_categories)):
+        if explicit:
             out["generated_examples"] = await _gather_visualizations(
                 advice=advice,
                 user_text=user_text,

@@ -87,8 +87,20 @@ class GemmaStylistBrain:
         from app.services.vision.llm import _call_gemma_space
         from app.services import provider_activity
 
-        # Gemma on-prem has a 4096 token context window; cap closet items to top 15 so it fits cleanly
-        gemma_closet = closet_summary[:15] if closet_summary else None
+        # Cap closet items to top 12 most relevant items and strip heavy nested structures
+        gemma_closet = None
+        if closet_summary:
+            gemma_closet = [
+                {
+                    "id": it.get("id"),
+                    "title": it.get("title") or it.get("name"),
+                    "category": it.get("category"),
+                    "sub_category": it.get("sub_category"),
+                    "color": it.get("color"),
+                    "material": it.get("material"),
+                }
+                for it in closet_summary[:12]
+            ]
 
         sys_msg, prompt_text = await prepare_stylist_prompt(
             session_id=session_id,
@@ -103,8 +115,12 @@ class GemmaStylistBrain:
             base_system_prompt=PROMPT_STYLIST_CHAT,
         )
 
-        # Append conciseness instruction so Eyes/Gemma completes all outfit recommendations cleanly
-        prompt_text = prompt_text + "\n\nCONCISE REQUIREMENT: Keep descriptions under 10 words and 'why' under 2 sentences to ensure all 3 outfit recommendations are completed."
+        # Append conciseness instruction so Eyes on CPU completes swiftly without timing out
+        prompt_text = (
+            prompt_text
+            + "\n\nCONCISE REQUIREMENT: Return exactly 2 complete, distinct outfit recommendations from the closet. "
+            "Keep descriptions under 8 words and 'why' under 1-2 punchy sentences."
+        )
 
         with provider_activity.Track(
             "gemma-stylist", {"model": self.model, "has_image": bool(image_base64)}
@@ -113,8 +129,9 @@ class GemmaStylistBrain:
                 system_prompt=sys_msg,
                 user_text=prompt_text,
                 image_b64_jpeg=image_base64,
-                max_tokens=2048,
-                temperature=0.3,
+                max_tokens=650,
+                temperature=0.2,
+                timeout=60.0,
             )
         parsed = _parse_json(raw)
 
@@ -128,6 +145,7 @@ class GemmaStylistBrain:
                     all_closet_items=closet_summary or [],
                     user_profile=user_profile,
                 )
+                parsed["qa_authorized"] = True
             except Exception as qa_exc:
                 logger.warning("GemmaStylistBrain QA authorization soft-failed: %s", qa_exc)
 
