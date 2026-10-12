@@ -87,6 +87,21 @@ class GemmaStylistBrain:
         from app.services.vision.llm import _call_gemma_space
         from app.services import provider_activity
 
+        orig_lang = ((user_profile or {}).get("preferred_language") or "en").lower().strip()
+
+        # Translate non-English inbound user query to canonical English so Qwen2.5 understands accurately
+        effective_user_text = user_text
+        if orig_lang != "en" and user_text:
+            try:
+                from app.services.translation_service import translate_text
+                effective_user_text = await translate_text(user_text, target_lang="en", source_lang=orig_lang)
+            except Exception as t_in_err:
+                logger.warning("GemmaStylistBrain inbound translation soft-failed: %s", t_in_err)
+
+        # Force English prompts for Gemma / Eyes so Qwen doesn't hallucinate non-English tokens
+        gemma_profile = dict(user_profile or {})
+        gemma_profile["preferred_language"] = "en"
+
         # Provide the full candidate closet pool with clean, compact fields
         gemma_closet = None
         if closet_summary:
@@ -104,12 +119,12 @@ class GemmaStylistBrain:
 
         sys_msg, prompt_text = await prepare_stylist_prompt(
             session_id=session_id,
-            user_text=user_text,
+            user_text=effective_user_text,
             image_base64=image_base64,
             weather=weather,
             calendar_events=calendar_events,
             cultural_rules=cultural_rules,
-            user_profile=user_profile,
+            user_profile=gemma_profile,
             closet_summary=gemma_closet,
             user_preferences_block=user_preferences_block,
             base_system_prompt=PROMPT_STYLIST_CHAT,
@@ -135,22 +150,29 @@ class GemmaStylistBrain:
             )
         parsed = _parse_json(raw)
 
-        # Route through Stylist QA Engine for validation and role authorization
+        # Route through Stylist QA Engine for validation and role authorization in English
         if parsed.get("outfit_recommendations"):
             try:
                 from app.services.stylist_qa_engine import evaluate_and_authorize_outfit
                 parsed = await evaluate_and_authorize_outfit(
-                    user_text=user_text or "",
+                    user_text=effective_user_text or "",
                     advice_payload=parsed,
                     all_closet_items=closet_summary or [],
-                    user_profile=user_profile,
+                    user_profile=gemma_profile,
                 )
                 parsed["qa_authorized"] = True
             except Exception as qa_exc:
                 logger.warning("GemmaStylistBrain QA authorization soft-failed: %s", qa_exc)
 
-        lang = (user_profile or {}).get("preferred_language") or "en"
-        return sanitize_stylist_payload(parsed, lang=lang)
+        # Translate outbound recommendation payload back to the user's preferred language via Google Translate
+        if orig_lang != "en":
+            try:
+                from app.services.translation_service import translate_stylist_payload
+                parsed = await translate_stylist_payload(parsed, target_lang=orig_lang)
+            except Exception as t_out_err:
+                logger.warning("GemmaStylistBrain outbound translation soft-failed: %s", t_out_err)
+
+        return sanitize_stylist_payload(parsed, lang=orig_lang)
 
 
 # -----------------------------------------------------------------

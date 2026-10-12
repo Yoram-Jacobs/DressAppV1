@@ -107,9 +107,18 @@ async def call_main_llm(
                 provider,
                 bool(effective),
             )
+            pref_lang = ((user or {}).get("preferred_language") or "en").lower().strip()
+            eff_user_text = user_text
+            if pref_lang != "en" and user_text:
+                try:
+                    from app.services.translation_service import translate_text
+                    eff_user_text = await translate_text(user_text, target_lang="en", source_lang=pref_lang)
+                except Exception as t_err:
+                    logger.warning("llm_gateway inbound Eyes translation soft-failed: %s", t_err)
+
             raw_response = await _call_gemma_space(
                 system_prompt=system_prompt or "",
-                user_text=user_text,
+                user_text=eff_user_text,
                 image_b64_jpeg=image_b64_jpeg,
                 max_tokens=max_tokens,
                 temperature=temperature,
@@ -118,6 +127,12 @@ async def call_main_llm(
             )
             cleaned = strip_thinking_tokens(raw_response)
             if cleaned:
+                if pref_lang != "en" and not json_schema:
+                    try:
+                        from app.services.translation_service import translate_text
+                        cleaned = await translate_text(cleaned, target_lang=pref_lang, source_lang="en")
+                    except Exception as t_out_err:
+                        logger.warning("llm_gateway outbound Eyes translation soft-failed: %s", t_out_err)
                 return cleaned
         except Exception as exc:
             logger.warning(

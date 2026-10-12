@@ -959,6 +959,15 @@ class GarmentVisionService:
         if not parsed.get("title"):
             parsed["title"] = "Unnamed garment"
         parsed = _coerce_enums(parsed, user_gender=eff_gender)
+
+        # Google Translate integration: Translate Eyes canonical English attributes to target user language
+        if used_provider in ("gemma", "eyes", "dressapp") and language and language.lower().strip() != "en":
+            try:
+                from app.services.translation_service import translate_garment_attributes
+                parsed = await translate_garment_attributes(parsed, target_lang=language)
+            except Exception as trans_err:
+                logger.warning("Failed to translate Eyes garment attributes to %s: %s", language, trans_err)
+
         parsed["provider_used"] = used_provider
         parsed["model_used"] = used_model
         if used_fallback:
