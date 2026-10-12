@@ -223,13 +223,32 @@ This document defines canonical attire protocols, silhouette requirements, stric
 ### 3.6 Pongal & Onam Harvest Attire (കേരള ഓണം / பொங்கல்)
 - **Onam**: Traditional Kerala **Kasavu** (cream cotton with woven gold zari border) Set Mundu or saree for women; clean cream Mundu with gold border and shirt or Angavastram for men.
 - **Pongal**: Freshly washed traditional South Indian festive wear: silk Dhotis / Angavastram, Kanchipuram silk sarees in bright turmeric yellow, saffron, and parrot green.
-### 3.7 Kurta & Sherwani Ceremonial Ensembles (कुर्ता और शेरवानी)
-- **Occasion Type**: South Asian formal wear, weddings, festive Puja, Eid, and cultural gatherings.
-- **Requirements**: 
-  - **Kurta**: Straight-cut or flared Kurta paired with Churidar, Pyjama, or Dhoti, layered with a tailored Nehru jacket.
-  - **Sherwani**: Regal, structured knee-length Sherwani paired with silk Churidar and traditional Mojari/Jutti footwear.
+### 3.7 Kurta, Sherwani, Achkan & Bandhgala Ceremonial Ensembles (कुर्ता, शेरवानी, अचकन और बंदगला)
+- **Occasion Type**: South Asian high-formal occasions, Hindu/Muslim/Sikh weddings (Baraat, Nikah, Anand Karaj), festive Puja, Eid celebrations, and diplomatic cultural events.
+- **Formality**: Regal traditional high formal / black-tie equivalent.
+- **Taxonomy & Anatomical Silhouette Classifications**:
+  - **Sherwani (शेरवानी / שרוואני)**: Regal, heavily structured knee-length or calf-length formal coat. Features a stiff upright Mandarin / Nehru collar (*Band collar* / *Bain*), full-length central front button placket with ornamental buttons, chest pocket for pocket square (*Pochette*), and long sleeves. Traditionally lined, tailored with structured shoulder pads, and worn over a Kurta and silk Churidar or Dhoti.
+  - **Achkan (अचकन / אצ'קאן)**: Elegant knee-length tailored coat originating in Mughal and Rajput courts. Distinguished from the Sherwani by a more compact, unpadded or lightly padded silhouette crafted from lighter, refined luxury fabrics (fine silk, brocade, raw silk, linen-silk, or chikan embroidery). Features a high stand collar, front button placket (either straight center or traditional asymmetric *angrakha* overlapping closure), and side slits (*chaak*) for grace and mobility.
+  - **Bandhgala / Jodhpuri Suit (बंदगला / בנדגאלה)**: Hip-length Indo-Western structured jacket with a closed Mandarin collar and tailored cuffs, worn with matching tailored trousers.
+  - **Nehru Jacket / Bandi (नेहरू जैकेट / ז'קט נהרו)**: Sleeveless tailored vest with a stand collar, layered over a Kurta for smart-casual to formal festive events.
+  - **Kurta (कुर्ता / קורטה)**: Loose knee-length or calf-length collarless or Mandarin-collar tunic shirt with side slits, worn over Pyjama, Churidar, or Shalwar bottoms.
+- **Critical Vision Distinction: Sherwani / Achkan vs. Western Blazer / Suit Jacket**:
+  - **Collar**: Standing band/Mandarin collar (*NO notch, peak, or shawl lapels*). A garment with a high closed band collar is NEVER a blazer.
+  - **Length**: Hem extends to mid-thigh or knee (blazers stop cleanly at the hips/waist).
+  - **Placket**: Continuous ornate button placket extending down the body with no deep V-neck chest opening.
+  - **Classification Rule**: `category="Outerwear"` (or `"Top"` if single tunic), `sub_category="Sherwani"` or `"Achkan"`, `item_type="Sherwani"` | `"Achkan"` | `"Bandhgala"`. It must **NEVER** be categorized as a Western `Blazer`, `Suit Jacket`, or casual `Jacket`.
+- **Fabrics & Embellishments**:
+  - Jacquard, Raw Silk, Banarasi / Tanchoi Brocade, Velvet, Matka Silk, Chanderi, Pashmina wool, with Zari embroidery, threadwork, and enameled or jewel-encrusted buttons.
 - **Strict Negative Prohibitions**:
-  - NEVER pair a high-formal ceremonial Sherwani with casual blue denim jeans or athletic running sneakers.
+  - **NEVER classify a Sherwani or Achkan as a Western Blazer or Suit**: This is a severe cross-cultural classification hallucination.
+  - **NEVER pair a ceremonial Sherwani, Achkan, or Kurta with casual denim jeans, cargo pants, sweatpants, or athletic running sneakers**.
+  - Solid unadorned black is inauspicious at Hindu weddings and joyous rituals.
+  - Footwear must strictly be traditional handcrafted leather/embroidered **Mojari** / **Jutti**, or formal patent leather dress shoes / loafers.
+- **Approved Multilingual Terms**:
+  - EN: `Sherwani`, `Achkan`, `Bandhgala`, `Nehru Jacket`, `Kurta`
+  - HE: `שרוואני`, `אצ'קאן`, `בנדגאלה`, `ז'קט נהרו`, `קורטה`
+  - AR: `شيرواني`, `أشكان`, `باندغالا`, `سترة نهرو`, `كورتا`
+  - HI: `शेरवानी`, `अचकन`, `बंदगला`, `नेहरू जैकेट`, `कुर्ता`
 
 ### 3.8 Saree & Lehenga Festive Ensembles (साड़ी और लहंगा)
 - **Occasion Type**: Hindu weddings, festive ceremonies (Diwali, Navratri), receptions.

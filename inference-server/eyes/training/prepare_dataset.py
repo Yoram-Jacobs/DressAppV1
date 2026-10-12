@@ -42,45 +42,46 @@ logging.basicConfig(
 logger = logging.getLogger("prepare_dataset")
 
 # Standard taxonomy categories and synonyms
+# Standard taxonomy categories and synonyms
 TAXONOMY_MAP = {
-    "top": ["top", "tops", "shirt", "t_shirt", "tshirt", "sweater", "hoodie", "blouse", "tank", "polo"],
-    "bottom": ["bottom", "bottoms", "pants", "jeans", "shorts", "skirt", "trousers", "joggers", "leggings"],
-    "shoes": ["shoes", "shoe", "footwear", "sneakers", "boots", "sandals", "loafers", "heels", "flats"],
-    "outerwear": ["outerwear", "jacket", "coat", "blazer", "parka", "cardigan", "vest"],
-    "dress": ["dress", "full body", "jumpsuit", "romper", "gown"],
-    "accessory": ["accessory", "accessories", "bag", "belt", "sunglasses", "hat", "scarf", "jewelry", "watch"],
+    "top": ["top", "tops", "shirt", "t_shirt", "tshirt", "sweater", "hoodie", "blouse", "tank", "polo", "kurta", "thobe", "guayabera", "tunic"],
+    "bottom": ["bottom", "bottoms", "pants", "jeans", "shorts", "skirt", "trousers", "joggers", "leggings", "dhoti", "salwar", "churidar"],
+    "shoes": ["shoes", "shoe", "footwear", "sneakers", "boots", "sandals", "loafers", "heels", "flats", "oxfords", "mojari", "jutti"],
+    "outerwear": ["outerwear", "jacket", "coat", "blazer", "parka", "cardigan", "vest", "sherwani", "achkan", "bandhgala", "nehru_jacket", "bisht"],
+    "dress": ["dress", "full body", "jumpsuit", "romper", "gown", "abaya", "kaftan", "caftan", "sari", "saree", "lehenga", "hanbok", "kimono", "dirndl"],
+    "accessory": ["accessory", "accessories", "bag", "belt", "sunglasses", "hat", "scarf", "jewelry", "watch", "turban", "kippah", "hijab", "keffiyeh"],
 }
 
 CATEGORY_ATTRIBUTES = {
     "top": {
-        "sub_categories": ["t_shirt", "button_down", "sweater", "hoodie", "blouse", "polo", "tank_top"],
-        "materials": ["cotton", "linen", "silk", "wool", "polyester", "denim", "knit"],
-        "patterns": ["solid", "striped", "graphic", "floral", "plaid"],
+        "sub_categories": ["t_shirt", "button_down", "sweater", "hoodie", "blouse", "polo", "tank_top", "kurta", "guayabera", "tunic"],
+        "materials": ["cotton", "linen", "silk", "wool", "polyester", "denim", "knit", "raw_silk", "chanderi"],
+        "patterns": ["solid", "striped", "graphic", "floral", "plaid", "embroidered", "chikankari"],
     },
     "bottom": {
-        "sub_categories": ["jeans", "chinos", "trousers", "shorts", "sweatpants", "cargo_pants", "skirt"],
-        "materials": ["denim", "cotton", "wool", "linen", "leather", "spandex"],
-        "patterns": ["solid", "distressed", "washed", "plaid", "camo"],
+        "sub_categories": ["jeans", "chinos", "trousers", "shorts", "sweatpants", "cargo_pants", "skirt", "salwar_pants", "churidar", "dhoti"],
+        "materials": ["denim", "cotton", "wool", "linen", "leather", "spandex", "silk"],
+        "patterns": ["solid", "distressed", "washed", "plaid", "camo", "embroidered"],
     },
     "shoes": {
-        "sub_categories": ["sneakers", "boots", "loafers", "sandals", "dress_shoes", "running_shoes", "flats"],
-        "materials": ["leather", "canvas", "suede", "rubber", "mesh", "synthetic"],
-        "patterns": ["solid", "colorblock", "two_tone"],
+        "sub_categories": ["sneakers", "boots", "loafers", "sandals", "dress_shoes", "running_shoes", "flats", "oxfords", "mojari", "jutti"],
+        "materials": ["leather", "canvas", "suede", "rubber", "mesh", "synthetic", "velvet"],
+        "patterns": ["solid", "colorblock", "two_tone", "embroidered"],
     },
     "outerwear": {
-        "sub_categories": ["denim_jacket", "bomber_jacket", "blazer", "trench_coat", "puffer_jacket", "parka", "overcoat"],
-        "materials": ["wool", "leather", "down", "nylon", "cotton_twill", "fleece"],
-        "patterns": ["solid", "checkered", "houndstooth"],
+        "sub_categories": ["denim_jacket", "bomber_jacket", "blazer", "trench_coat", "puffer_jacket", "parka", "overcoat", "sherwani", "achkan", "bandhgala", "nehru_jacket", "bisht"],
+        "materials": ["wool", "leather", "down", "nylon", "cotton_twill", "fleece", "brocade", "raw_silk", "jacquard", "velvet"],
+        "patterns": ["solid", "checkered", "houndstooth", "embroidered", "zari", "jacquard"],
     },
     "dress": {
-        "sub_categories": ["slip_dress", "wrap_dress", "shirt_dress", "maxi_dress", "cocktail_dress"],
-        "materials": ["silk", "satin", "cotton", "chiffon", "velvet"],
-        "patterns": ["floral", "solid", "polka_dot", "geometric"],
+        "sub_categories": ["slip_dress", "wrap_dress", "shirt_dress", "maxi_dress", "cocktail_dress", "abaya", "kaftan", "saree", "lehenga", "hanbok", "kimono", "dirndl"],
+        "materials": ["silk", "satin", "cotton", "chiffon", "velvet", "linen", "crepe", "georgette", "brocade"],
+        "patterns": ["floral", "solid", "polka_dot", "geometric", "embroidered", "zari"],
     },
     "accessory": {
-        "sub_categories": ["tote_bag", "crossbody_bag", "leather_belt", "sunglasses", "baseball_cap", "beanie", "scarf"],
-        "materials": ["leather", "canvas", "acetate", "metal", "wool", "straw"],
-        "patterns": ["solid", "monogram", "metallic"],
+        "sub_categories": ["tote_bag", "crossbody_bag", "leather_belt", "sunglasses", "baseball_cap", "beanie", "scarf", "turban", "kippah", "hijab", "keffiyeh"],
+        "materials": ["leather", "canvas", "acetate", "metal", "wool", "straw", "silk", "cotton"],
+        "patterns": ["solid", "monogram", "metallic", "embroidered", "houndstooth"],
     },
 }
 

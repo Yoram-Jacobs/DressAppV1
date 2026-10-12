@@ -153,10 +153,27 @@ Este documento define protocolos canónicos de vestimenta, requisitos de silueta
 - **Prohibiciones Negativas Estrictas**:
   - NINGUNA prenda informal desgastada, manchada o rota, ni camisetas gráficas desteñidas.
 
-### 2.4 Protocolos Regionales de Vestimenta Modesta
-- **Protocolo Formal del Golfo Arábigo (البشت والكندورة)**: Thobe blanco o de lana a medida hasta los pies, con Ghutra/Shemagh y Agal, sobre el que se viste una capa **Bisht** bordada con filigrana dorada (*Zari*) para bodas formales y actos diplomáticos. Jamás combine un Bisht con vaqueros o camisetas informales.
-- **Chilaba y Babucha del Norte de África (الجلابة والبلغة)**: Chilaba de lana fina con capucha sobre una gandora, acompañada de babuchas artesanales de cuero Belgha/Babouche.
-- **Batik y Baju Melayu del Sudeste Asiático (Batik & Baju Melayu)**: Las camisas formales de seda de manga larga con estampado Batik sustituyen a los trajes de negocios occidentales en Indonesia y Malasia. El ceremonial Baju Melayu incluye la faja de cintura Songket Kain Samping y el gorro Songkok de terciopelo negro.
+### 2.4 Protocolo de Chilaba y Galabiya del Norte de África (الجلابة والجلابية والبلغة)
+- **Tipo de Ocasión**: Reuniones cotidianas, celebraciones culturales, atuendo tradicional de Egipto y el Magreb.
+- **Requisitos**: Galabiya holgada hasta los tobillos o chilaba (Djellaba) de lana fina con capucha sobre una gandora, acompañada de babuchas artesanales de cuero Belgha/Babouche o mocasines limpios y discretos.
+- **Prohibiciones Negativas Estrictas**:
+  - NUNCA combinar con americanas formales o chaquetas de esmoquin occidentales, vaqueros desgastados o ceñidos, ni zapatillas deportivas.
+
+### 2.5 Superposición Modesta de Abaya y Sheila (العباية والشيلة)
+- **Tipo de Ocasión**: Modestia cotidiana, encuentros sagrados, visitas familiares en todo el mundo árabe.
+- **Requisitos**: Abaya exterior fluida hasta el suelo, superpuesta elegantemente sobre prendas opacas (pantalones, vestido interior tipo combinación), coordinada a juego con un pañuelo Sheila o Hiyab para la cabeza.
+- **Prohibiciones Negativas Estrictas**:
+  - SE PROHÍBEN TERMINANTEMENTE capas exteriores transparentes o translúcidas sin prendas interiores modestas y opacas.
+  - NINGUNA combinación con crop tops reveladores, pantalones cortos o minifaldas ajustadas.
+
+### 2.6 Protocolo Formal de Thobe y Kandura del Golfo Arábigo (البشت والكندورة والثوب)
+- **Tipo de Ocasión**: Reuniones formales, oración de los viernes, bodas, actos diplomáticos.
+- **Requisitos**: Thobe/Kandura/Dishdasha blanco o de lana a medida e impecable hasta los tobillos, con Ghutra/Shemagh y Agal. Para actos de alta gala formal, cubierto con una capa **Bisht** bordada con hilo de oro (*Zari*).
+- **Prohibiciones Negativas Estrictas**:
+  - Jamás combinar un Bisht o Thobe ceremonial con sudaderas deportivas con capucha, vaqueros desgastados o chanclas de playa.
+
+### 2.7 Batik y Baju Melayu del Sudeste Asiático (Batik & Baju Melayu)
+- Las camisas formales de seda de manga larga con estampado Batik sustituyen a los trajes de negocios occidentales en Indonesia y Malasia. El ceremonial Baju Melayu incluye la faja envolvente de cintura Songket Kain Samping y el gorro Songkok de terciopelo negro.
 
 ---
 
@@ -208,6 +225,40 @@ Este documento define protocolos canónicos de vestimenta, requisitos de silueta
 - **Pongal**: Ropa festiva tradicional del sur de la India recién lavada: Dhotis de seda / Angavastram, saris de seda Kanchipuram en tonos brillantes amarillo cúrcuma, azafrán y verde loro.
 - **Prohibiciones Negativas Estrictas**:
   - NINGUNA ropa negra fúnebre de luto; evite ropa informal o de andar por casa occidental.
+
+### 3.7 Conjuntos Ceremoniales Kurta, Sherwani, Achkan y Bandhgala (कुर्ता, शेरवानी, अचकन और बंदगला)
+- **Tipo de Ocasión**: Ocasiones de alta formalidad en el sur de Asia, bodas hindúes, musulmanas y sij (Baraat, Nikah, Anand Karaj), Puja festiva, celebraciones de Eid y eventos culturales diplomáticos.
+- **Formalidad**: Regia tradicional de alta gala / equivalente a black-tie (etiqueta).
+- **Taxonomía y Clasificaciones Anatómicas de Siluetas**:
+  - **Sherwani (शेरवानी / שרוואני)**: Abrigo formal majestuoso, fuertemente estructurado, hasta la rodilla o media pantorrilla. Presenta un cuello alto y rígido tipo mandarín o Nehru (*cuello mao / Band collar / Bain*), botonadura frontal continua con botones ornamentales, bolsillo en el pecho para pañuelo (*Pochette*) y mangas largas. Tradicionalmente con forro interior, confeccionado con hombreras estructuradas y vestido sobre una Kurta y Churidar o Dhoti de seda.
+  - **Achkan (अचकन / אצ'קאן)**: Abrigo sastre elegante hasta la rodilla originario de las cortes mogolas y rajputas. Se distingue del Sherwani por una silueta más compacta, sin relleno o con hombreras muy ligeras, confeccionada en tejidos nobles más livianos y refinados (seda fina, brocado, seda salvaje/cruda, lino y seda o bordados chikan). Cuenta con cuello alto mao, tapeta frontal abotonada (recta centrada o cruzada tradicional asimétrica tipo *angrakha*) y aberturas laterales (*chaak*) que aportan prestancia y movilidad.
+  - **Bandhgala / Traje Jodhpuri (बंदगला / בנדגאלה)**: Chaqueta estructurada indo-occidental hasta la cadera con cuello mandarín cerrado y puños a medida, vestida con pantalones sastre a juego.
+  - **Chaleco Nehru / Bandi (नेहरू जैकेट / ז'קט נהרו)**: Chaleco sastre sin mangas con cuello alto tipo mao, superpuesto sobre una Kurta para eventos festivos de etiqueta casual a formal.
+  - **Kurta (कुर्ता / קורטה)**: Túnica holgada hasta la rodilla o media pantorrilla, sin cuello o con cuello mandarín y aberturas laterales, que se lleva sobre pantalones Pyjama, Churidar o Shalwar.
+- **Distinción Visual Crítica: Sherwani / Achkan vs. Americana / Chaqueta de Traje Occidental**:
+  - **Cuello**: Cuello mao / cuello mandarín erguido (*SIN solapas de muesca, en pico o esmoquin*). Una prenda con cuello mao alto y cerrado NUNCA es una americana/blazer.
+  - **Largo**: El dobladillo llega hasta la mitad del muslo o la rodilla (las americanas occidentales terminan limpiamente a la altura de las caderas/cintura).
+  - **Tapeta**: Hilera continua de botones decorativos a lo largo del torso sin abertura en V profunda en el pecho.
+  - **Regla de Clasificación**: `category="Outerwear"` (o `"Top"` si es túnica simple), `sub_category="Sherwani"` o `"Achkan"`, `item_type="Sherwani"` | `"Achkan"` | `"Bandhgala"`. **NUNCA** debe categorizarse como `Blazer` occidental, `Suit Jacket` o `Jacket` informal.
+- **Tejidos y Ornamentación**:
+  - Jacquard, seda cruda (Raw Silk), brocado Banarasi / Tanchoi, terciopelo, seda Matka, Chanderi, lana de Cachemira (Pashmina), con bordados Zari, labor de hilo y botones esmaltados o con incrustaciones de pedrería.
+- **Prohibiciones Negativas Estrictas**:
+  - **NUNCA clasificar un Sherwani o Achkan como Americana, Blazer o Traje occidental**: Constituye una grave alucinación de clasificación intercultural.
+  - **NUNCA combinar un Sherwani, Achkan o Kurta ceremonial con vaqueros informales, pantalones cargo, pantalones de chándal ni zapatillas de running deportivas**.
+  - El negro sólido sin ornamentar es desfavorable e inauspicioso en bodas y rituales alegres hindúes.
+  - El calzado debe ser estrictamente calzado artesanal tradicional bordado o de cuero tipo **Mojari** / **Jutti**, o zapatos de vestir / mocasines formales de charol.
+- **Términos Multilingües Aprobados**:
+  - EN: `Sherwani`, `Achkan`, `Bandhgala`, `Nehru Jacket`, `Kurta`
+  - HE: `שרוואני`, `אצ'קאן`, `בנדגאלה`, `ז'קט נהרו`, `קורטה`
+  - AR: `شيرواني`, `أشكان`, `باندغالا`, `سترة نهرو`, `كورتا`
+  - HI: `शेरवानी`, `अचकन`, `बंदगला`, `नेहरू जैकेट`, `कुर्ता`
+
+### 3.8 Conjuntos Festivos de Sari y Lehenga (साड़ी और लहंगा)
+- **Tipo de Ocasión**: Bodas hindúes, ceremonias festivas (Diwali, Navratri), recepciones.
+- **Requisitos**: Sari plisado de seis a nueve yardas con blusa entallada y enagua; o falda acampanada pesada Lehenga con blusa Choli bordada y chal Dupatta superpuesto.
+- **Prohibiciones Negativas Estrictas**:
+  - NINGÚN negro sólido liso ni blanco sobrio y austero en bodas hindúes (reservados para el luto).
+  - Evite cortes reveladores de fiesta nocturna de club o calzado deportivo.
 
 ---
 

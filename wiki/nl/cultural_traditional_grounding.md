@@ -209,6 +209,41 @@ Dit document definieert canonieke kledingprotocollen, silhoueteisen, strikte neg
 - **Strikte Negatieve Verboden**:
   - GEEN donkere rouwkleding; vermijd informele westerse loungewear.
 
+### 3.7 Ceremoniële Ensembles: Kurta, Sherwani, Achkan & Bandhgala (कुर्ता, शेरवानी, अचकन और बंदगला)
+- **Type Gelegenheid**: Hoog-formele Zuid-Aziatische gelegenheden, hindoeïstische, islamitische en sikh-bruiloften (Baraat, Nikah, Anand Karaj), feestelijke Puja, Eid-vieringen en diplomatieke culturele evenementen.
+- **Formaliteit**: Koninklijk traditioneel hoog-formeel / equivalent van black-tie.
+- **Taxonomie & Anatomische Silhouetclassificaties**:
+  - **Sherwani (शेरवानी / שרוואני)**: Koninklijke, zwaar gestructureerde formele jas tot op de knie of kuit. Voorzien van een stijve rechtopstaande mandarijn- / Nehru-kraag (*opstaande boord* / *Bain*), een doorlopende knopenlijst aan de voorkant met sierknopen, borstzak voor pochet (*Pochette*) en lange mouwen. Traditioneel gevoerd, met gestructureerde schoudervullingen, gedragen over een Kurta en zijden Churidar of Dhoti.
+  - **Achkan (अचकन / אצ'קאן)**: Elegante op maat gesneden knielange jas met oorsprong aan de hoven van de Mogols en Rajputs. Onderscheidt zich van de Sherwani door een compacter, niet- of licht gevuld silhouet vervaardigd uit lichtere, verfijnde luxestoffen (fijne zijde, brokaat, ruwe zijde/raw silk, linnen-zijde of chikan-borduurwerk). Voorzien van een hoge opstaande kraag, knopenlijst aan de voorkant (recht gecentreerd of traditionele asymmetrische *angrakha*-overslagsluiting) en zijsplitten (*chaak*) voor gratie en bewegingsvrijheid.
+  - **Bandhgala / Jodhpuri-kostuum (बंदगला / בנדגאלה)**: Indo-Westers gestructureerd jasje tot op de heup met een gesloten mandarijnkraag en getailleerde manchetten, gedragen met een bijpassende pantalon.
+  - **Nehru Jacket / Bandi (नेहरू जैकेट / ז'קט נהרו)**: Mouwloos getailleerd gilet met opstaande kraag, als laag gedragen over een Kurta voor smart-casual tot formele feestelijke evenementen.
+  - **Kurta (कुर्ता / קורטה)**: Losse tuniek tot op de knie of kuit, kraagloos of met mandarijnkraag, met zijsplitten, gedragen over een Pyjama-, Churidar- of Shalwar-broek.
+- **Kritiek Visueel Onderscheid voor Computer Vision (Eyes Vision): Sherwani / Achkan vs. Westers Colbert / Kostuumjasje**:
+  - **Kraag**: Opstaande boord / mandarijnkraag (*GEEN revers met inkeping, puntrevers of sjaalkraag*). Een kledingstuk met een hoge gesloten opstaande kraag is NOOIT een colbert.
+  - **Lengte**: De zoom reikt tot halverwege het dijbeen of de knie (colberts eindigen strak bij de heupen/taille).
+  - **Knopenlijst**: Doorlopende sierknopenlijst die over het gehele voorpand naar beneden loopt, zonder diepe V-halsopening op de borst.
+  - **Classificatieregel**: `category="Outerwear"` (of `"Top"` bij een enkele tuniek), `sub_category="Sherwani"` of `"Achkan"`, `item_type="Sherwani"` | `"Achkan"` | `"Bandhgala"`. Mag **NOOIT** worden geclassificeerd als westers `Blazer`, `Suit Jacket` of casual `Jacket`.
+- **Stoffen & Versieringen**:
+  - Jacquard, ruwe zijde (Raw Silk), Banarasi- / Tanchoi-brokaat, fluweel, Matka-zijde, Chanderi, pashminawol, met Zari-goudborduurwerk, draadwerk en geëmailleerde of met juwelen ingelegde knopen.
+- **Strikte Negatieve Verboden**:
+  - **Classificeer een Sherwani of Achkan NOOIT als een westers colbert of pak**: Dit is een ernstige interculturele classificatiehallucinatie.
+  - **Combineer een ceremoniële Sherwani, Achkan of Kurta NOOIT met een casual spijkerbroek, cargobroek, joggingbroek of sportschoenen**.
+  - Effen zwart zonder versiering brengt ongeluk op hindoeïstische bruiloften en vreugdevolle rituelen.
+  - Schoeisel moet strikt bestaan uit traditionele handgemaakte leren/geborduurde **Mojari** / **Jutti**, of formele lakschoenen / geklede loafers.
+- **Goedgekeurde Meertalige Termen**:
+  - EN: `Sherwani`, `Achkan`, `Bandhgala`, `Nehru Jacket`, `Kurta`
+  - HE: `שרוואני`, `אצ'קאן`, `בנדגאלה`, `ז'קט נהרו`, `קורטה`
+  - AR: `شيرواني`, `أشكان`, `باندغالا`, `سترة نهرو`, `كورتا`
+  - HI: `शेरवानी`, `अचकन`, `बंदगला`, `नेहरू जैकेट`, `कुर्ता`
+  - NL: `Sherwani`, `Achkan`, `Bandhgala`, `Nehru Jacket`, `Kurta`
+
+### 3.8 Feestelijke Saree- & Lehenga-Ensembles (साड़ी और लहंगा)
+- **Type Gelegenheid**: Hindoeïstische bruiloften, feestelijke ceremonies (Diwali, Navratri), recepties.
+- **Vereisten**: Saree van zes tot negen yard met nauwkeurige plooien, gedragen met aansluitende blouse en onderrok (petticoat); of een zware wijd uitlopende Lehenga-rok met geborduurde Choli-blouse en gedrapeerde Dupatta-sjaal.
+- **Strikte Negatieve Verboden**:
+  - GEEN effen zwart of eenvoudig sober wit op hindoeïstische bruiloften (voorbehouden aan rouw).
+  - Vermijd provocerende clubkleding of sportschoenen.
+
 ---
 
 ## 4. Boeddhistische Heilige Tradities (พุทธศาสนา / 佛教)

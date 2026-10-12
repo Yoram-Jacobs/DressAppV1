@@ -289,7 +289,7 @@ _GARMENT_OBJECT_SCHEMA: dict[str, Any] = {
                 "T-Shirt", "Shirt", "Sweater", "Hoodie", "Polo", "Blouse", "Tank Top",
                 "Jeans", "Pants", "Shorts", "Skirt", "Sweatpants",
                 "Dresses", "Suits", "Jumpsuit",
-                "Galabiya", "Kaftan", "Thobe", "Abaya", "Kurta", "Sherwani", "Sari", "Lehenga",
+                "Galabiya", "Kaftan", "Thobe", "Abaya", "Kurta", "Sherwani", "Achkan", "Bandhgala", "Nehru Jacket", "Sari", "Lehenga",
                 "Hanbok", "Kimono", "Dirndl", "Guayabera",
                 "Coat", "Jacket", "Blazer", "Cardigan", "Vest",
                 "Oxfords", "Loafers", "Boots", "Sandals", "Sneakers", "Heels", "Pumps", "Flats",
@@ -928,11 +928,14 @@ async def call_gemma_space_stream_attributes(
 
         user_hints = []
         lbl_low = (segformer_label or "").lower()
-        is_traditional_top = any(w in lbl_low for w in ("kurta", "sherwani", "thobe", "galabiya", "jalabiya", "kaftan", "caftan", "tunic"))
+        is_traditional_top = any(w in lbl_low for w in ("kurta", "thobe", "galabiya", "jalabiya", "kaftan", "caftan", "tunic"))
+        is_traditional_coat = any(w in lbl_low for w in ("sherwani", "achkan", "bandhgala", "nehru"))
         if segformer_category and (not is_single_item or segformer_category in ("footwear", "bottom", "accessory", "headwear", "bag")):
             mapped_cat = None
             if is_traditional_top:
                 mapped_cat = "Top (Traditional Kurta / Tunic)"
+            elif is_traditional_coat:
+                mapped_cat = "Outerwear (Traditional Sherwani / Achkan)"
             elif segformer_category == "top":
                 mapped_cat = "Top or Outerwear"
             elif segformer_category == "bottom":
@@ -949,6 +952,8 @@ async def call_gemma_space_stream_attributes(
 
         if is_traditional_top:
             user_hints.append("RULE: Traditional Top / Kurta. This crop is an ethnic/traditional top or tunic (category='Top', sub_category='Kurta' or 'Tunic', item_type='Kurta' or 'Tunic'). NEVER classify as Coat, Jacket, Outerwear, or Suit.")
+        elif is_traditional_coat:
+            user_hints.append("RULE: Traditional Coat / Sherwani / Achkan. This crop is a traditional South Asian structured coat featuring a standing Mandarin/Nehru collar and front button placket (category='Outerwear' or 'Top', sub_category='Sherwani' or 'Achkan', item_type='Sherwani'|'Achkan'|'Bandhgala'). NEVER classify as Blazer, Suit, or Casual Jacket.")
         elif "skirt" in lbl_low:
             user_hints.append("RULE: Skirt. Lower garment with continuous flare/hem and no leg division is sub_category='Skirt', item_type='Pleated Skirt'|'Midi Skirt'|'A-Line Skirt'|'Mini Skirt'|'Maxi Skirt'. NEVER classify as Pants or Trousers. Accurately report visual fabric color (grey/olive/charcoal), NOT black.")
         elif "bag" in lbl_low or segformer_category == "bag":
@@ -974,6 +979,8 @@ async def call_gemma_space_stream_attributes(
                 if name == "category" and segformer_category and (not is_single_item or segformer_category in ("footwear", "bottom", "accessory", "headwear", "bag")) and not is_coarse_seg:
                     if is_traditional_top:
                         prop["enum"] = ["Top"]
+                    elif is_traditional_coat:
+                        prop["enum"] = ["Outerwear", "Top"]
                     elif segformer_category == "top":
                         prop["enum"] = ["Top", "Outerwear"]
                     elif segformer_category == "bottom":
@@ -988,6 +995,8 @@ async def call_gemma_space_stream_attributes(
                 if name == "sub_category":
                     if is_traditional_top:
                         prop["enum"] = ["Kurta", "Tunic", "Shirt", "Top", "Long Shirt"]
+                    elif is_traditional_coat:
+                        prop["enum"] = ["Sherwani", "Achkan", "Bandhgala", "Nehru Jacket", "Coat", "Outerwear"]
                     elif "sunglass" in lbl_low or "glass" in lbl_low:
                         prop["enum"] = [
                             "Sunglasses", "Glasses", "Eyewear", "Classic Sunglasses",

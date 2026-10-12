@@ -589,5 +589,97 @@ def test_sanitize_cross_category_bottoms_cleans_shirt_terms():
     assert "shirt" not in raw_pants["caption"].lower()
 
 
+def test_sherwani_detection_overrides_blazer_hebrew():
+    """Verify Sherwani cues override Qwen's hallucinated blazer to Outerwear/Sherwani/שרוואני."""
+    from app.services.vision.validation import _enforce_segformer_category
+    raw_analysis = {
+        "is_clothing": True,
+        "category": "Outerwear",
+        "sub_category": "Blazer",
+        "item_type": "Blazer",
+        "name": "בלייזר כחול",
+        "title": "בלייזר כחול",
+        "caption": "בלייזר כחול מחויט ואלגנטי בעיצוב שרוואני עם צווארון סיני.",
+        "colors": [{"name": "כחול", "pct": 100}],
+    }
+    res = _enforce_segformer_category(raw_analysis, segformer_kind="outerwear", label="sherwani", language="he")
+    assert res["category"] == "Outerwear", f"Expected Outerwear, got: {res['category']}"
+    assert res["sub_category"] == "שרוואני", f"Expected שרוואני, got: {res['sub_category']}"
+    assert res["item_type"] == "שרוואני", f"Expected שרוואני, got: {res['item_type']}"
+    assert "בלייזר" not in res["name"], f"Expected no בלייזר in name, got: {res['name']}"
+    assert "בלייזר" not in res["caption"], f"Expected no בלייזר in caption, got: {res['caption']}"
+    assert "שרוואני" in res["name"]
+    assert "כחול" in res["name"]
+
+
+def test_achkan_detection_overrides_blazer_english():
+    """Verify Achkan cues override Qwen's hallucinated blazer to Outerwear/Achkan in English."""
+    from app.services.vision.validation import _enforce_segformer_category
+    raw_analysis = {
+        "is_clothing": True,
+        "category": "Outerwear",
+        "sub_category": "Blazer",
+        "item_type": "Blazer",
+        "name": "Blue Blazer",
+        "title": "Blue Blazer",
+        "caption": "Traditional blue silk achkan with standing mandarin collar.",
+        "colors": [{"name": "Blue", "pct": 100}],
+    }
+    res = _enforce_segformer_category(raw_analysis, segformer_kind="top", label="upper-clothes", language="en")
+    assert res["category"] == "Outerwear", f"Expected Outerwear, got: {res['category']}"
+    assert res["sub_category"] == "Achkan", f"Expected Achkan, got: {res['sub_category']}"
+    assert "Blazer" not in res["name"], f"Expected no Blazer in name, got: {res['name']}"
+    assert "Achkan" in res["name"]
+
+
+def test_hand_masking_skin_chrominance_non_nude_coat():
+    """Verify apply_alpha_intersection excises human hand skin at cuffs on non-nude garments even when is_single_item=True."""
+    import numpy as np
+    from PIL import Image
+    import io
+    from app.services.clothing_parser import apply_alpha_intersection
+
+    # 100x100 RGBA image
+    # Background: transparent (0, 0, 0, 0)
+    # Garment body: deep blue (20, 40, 150, 255) in center (y=10..90, x=30..70)
+    # Model hands at lateral cuffs: skin-tone (200, 140, 110, 255) at (y=60..85, x=15..28 and x=72..85)
+    img_arr = np.zeros((100, 100, 4), dtype=np.uint8)
+    img_arr[10:90, 30:70] = [20, 40, 150, 255]  # Deep blue garment
+
+    # Skin color: R=200, G=140, B=110 (cr ~ 152, cb ~ 103, r > g > b, r-g = 60)
+    img_arr[60:85, 15:28] = [200, 140, 110, 255]  # Left hand protruding from cuff
+    img_arr[60:85, 72:85] = [200, 140, 110, 255]  # Right hand protruding from cuff
+
+    buf = io.BytesIO()
+    Image.fromarray(img_arr, mode="RGBA").save(buf, format="PNG")
+    png_bytes = buf.getvalue()
+
+    # SegFormer coarse mask covers the garment AND erroneously leaks slightly over the hands
+    seg_mask = np.zeros((100, 100), dtype=np.uint8)
+    seg_mask[10:90, 30:70] = 255
+    seg_mask[60:85, 15:28] = 120  # SegFormer leaked over hands
+    seg_mask[60:85, 72:85] = 120
+
+    out_png = apply_alpha_intersection(
+        png_bytes,
+        seg_mask_bbox=seg_mask,
+        category="outerwear",
+        label="sherwani",
+        is_single_item=True,
+    )
+    assert out_png is not None, "Expected output PNG bytes"
+    out_arr = np.array(Image.open(io.BytesIO(out_png)))
+
+    # Verify blue garment body is preserved (alpha == 255)
+    assert np.all(out_arr[20:80, 35:65, 3] > 200), "Garment body fabric must be preserved"
+
+    # Verify hands are excised (alpha ~ 0)
+    left_hand_alpha = out_arr[65:80, 18:25, 3]
+    right_hand_alpha = out_arr[65:80, 75:82, 3]
+    assert np.mean(left_hand_alpha) < 40, f"Left hand must be excised, got mean alpha: {np.mean(left_hand_alpha)}"
+    assert np.mean(right_hand_alpha) < 40, f"Right hand must be excised, got mean alpha: {np.mean(right_hand_alpha)}"
+
+
+
 
 

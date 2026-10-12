@@ -153,10 +153,27 @@ Questo documento definisce i protocolli canonici di abbigliamento, i requisiti d
 - **Rigide Proibizioni Negative**:
   - NESSUN abbigliamento informale usurato, macchiato o strappato, né t-shirt grafiche stinte.
 
-### 2.4 Protocolli Regionali di Abbigliamento Modesto
-- **Protocollo Formale del Golfo Arabico (البشت والكندورة)**: Thobe bianco o in lana sartoriale lungo fino ai piedi con Ghutra/Shemagh e Agal, sormontato da un mantello **Bisht** ricamato con filigrana dorata (*Zari*) per matrimoni formali e funzioni diplomatiche. Non abbinare mai un Bisht a jeans o t-shirt casual.
-- **Djellaba e Babbucce del Nord Africa (الجلابة والبلغة)**: Djellaba con cappuccio in lana fine indossata su una gandora, accompagnata da babbucce in pelle artigianale Belgha/Babouche.
-- **Batik e Baju Melayu del Sud-Est Asiatico (Batik & Baju Melayu)**: Camicie formali in seta a maniche lunghe con motivi Batik sostituiscono l'abito da lavoro occidentale in Indonesia e Malesia. L'abito cerimoniale Baju Melayu comprende la fascia in vita Songket Kain Samping e il copricapo in velluto nero Songkok.
+### 2.4 Protocollo della Djellaba e della Galabiya del Nord Africa (الجلابة والجلابية والبلغة)
+- **Tipo di Occasione**: Incontri quotidiani, celebrazioni culturali, abbigliamento tradizionale maghrebino ed egiziano.
+- **Requisiti**: Galabiya ampia fino alle caviglie o Djellaba con cappuccio in lana pregiata indossata su una gandora, accompagnata da babbucce artigianali in cuoio Belgha/Babouche o mocassini eleganti e puliti.
+- **Rigide Proibizioni Negative**:
+  - NON abbinare MAI a giacche da smoking occidentali, jeans attillati o strappati, né a scarpe da ginnastica sportive.
+
+### 2.5 Sovrapposizione Modesta di Abaya e Sheila (العباية والشيلة)
+- **Tipo di Occasione**: Modestia quotidiana, incontri sacri, visite familiari in tutto il mondo arabo.
+- **Requisiti**: Abaya esterna fluida fino a terra, elegantemente sovrapposta a capi opachi (pantaloni, sottoveste coprente), coordinata a un velo per il capo Sheila o Hijab abbinato.
+- **Rigide Proibizioni Negative**:
+  - DIVIETO RIGOROSO di strati esterni trasparenti o velati senza indumenti intimi modesti e coprenti.
+  - NESSUN abbinamento con crop top scollati, pantaloncini corti o minigonne attillate.
+
+### 2.6 Protocollo Formale del Thobe e della Kandura del Golfo Arabico (البشت والكندورة والثوب)
+- **Tipo di Occasione**: Incontri formali, preghiera del venerdì, matrimoni, funzioni diplomatiche.
+- **Requisiti**: Thobe/Kandura/Dishdasha sartoriale impeccabile, bianco o in lana, lungo fino alle caviglie, con Ghutra/Shemagh e Agal. Per eventi di altissima solennità ufficiale, impreziosito da un mantello **Bisht** da cerimonia ricamato con fili d'oro (*Zari*).
+- **Rigide Proibizioni Negative**:
+  - Non abbinare mai un Bisht o Thobe cerimoniale a felpe sportive con cappuccio, jeans strappati o ciabatte da spiaggia.
+
+### 2.7 Batik e Baju Melayu del Sud-Est Asiatico (Batik & Baju Melayu)
+- Le camicie formali in seta a maniche lunghe con motivi Batik sostituiscono l'abito da lavoro occidentale in Indonesia e Malesia. L'abito cerimoniale Baju Melayu include la fascia avvolta in vita Songket Kain Samping e il copricapo in velluto nero Songkok.
 
 ---
 
@@ -208,6 +225,40 @@ Questo documento definisce i protocolli canonici di abbigliamento, i requisiti d
 - **Pongal**: Abiti festivi tradizionali del Sud dell'India appena lavati: Dhoti in seta / Angavastram, saree in seta Kanchipuram dalle tinte vivaci giallo curcuma, zafferano e verde pappagallo.
 - **Rigide Proibizioni Negative**:
   - NESSUN abito nero da lutto; evitare l'abbigliamento casual e informale da casa occidentale.
+
+### 3.7 Completi Cerimoniali Kurta, Sherwani, Achkan e Bandhgala (कुर्ता, शेरवानी, अचकन और बंदगला)
+- **Tipo di Occasione**: Grandi cerimonie di gala dell'Asia meridionale, matrimoni induisti, musulmani e sikh (Baraat, Nikah, Anand Karaj), celebrazioni di Puja, feste di Eid ed eventi culturali diplomatici.
+- **Formalità**: Regale solennità tradizionale di altissimo livello / equivalente al black-tie (smoking).
+- **Tassonomia e Classificazioni Anatomiche della Silhouette**:
+  - **Sherwani (शेरवानी / שרוואני)**: Soprabito formale sontuoso e fortemente strutturato, lungo fino al ginocchio o al polpaccio. Presenta un colletto alla coreana rigido e dritto stile mandarino / Nehru (*colletto a fascia / Band collar / Bain*), abbottonatura frontale centrale per tutta la lunghezza con bottoni ornamentali, taschino sul petto per fazzoletto da taschino (*Pochette*) e maniche lunghe. Tradizionalmente foderato, rifinito con spalline strutturate e indossato sopra una Kurta abbinata a pantaloni Churidar o Dhoti in seta.
+  - **Achkan (अचकन / אצ'קאן)**: Soprabito sartoriale sagomato ed elegante lungo fino al ginocchio, originario delle corti Moghul e Rajput. Si distingue dallo Sherwani per una silhouette più compatta, priva di imbottitura o con spalle molto leggere, confezionata con tessuti nobili più leggeri e raffinati (seta pregiata, broccato, seta grezza, misto lino-seta o ricami chikan). Caratterizzato da colletto alto alla coreana, abbottonatura frontale (dritta al centro o asimmetrica tradizionale a portafoglio stile *angrakha*) e spacchi laterali (*chaak*) per donare grazia e libertà di movimento.
+  - **Bandhgala / Abito Jodhpuri (बंदगला / בנדגאלה)**: Giacca strutturata indo-occidentale lunga fino ai fianchi con colletto mandarino chiuso e polsini sartoriali, indossata con pantaloni sartoriali coordinati.
+  - **Gilet Nehru / Bandi (नेहरू जैकेट / ז'קט נהרו)**: Gilet sartoriale senza maniche con colletto alto alla coreana, indossato sopra una Kurta per eventi da smart-casual a formali.
+  - **Kurta (कुर्ता / קורטה)**: Tunica comoda e morbida lunga fino al ginocchio o al polpaccio, senza colletto o con colletto mandarino e spacchi laterali, portata sopra pantaloni Pyjama, Churidar o Shalwar.
+- **Distinzione Visiva Fondamentale: Sherwani / Achkan vs. Blazer / Giacca da Abito Occidentale**:
+  - **Colletto**: Colletto eretto alla coreana/mandarino (*NESSUN rever dentellato, a lancia o a scialle*). Un capo con collo alto e chiuso non è MAI un blazer.
+  - **Lunghezza**: L'orlo scende fino a metà coscia o al ginocchio (i blazer occidentali terminano con precisione sui fianchi/alla vita).
+  - **Abbottonatura**: Filza continua di bottoni decorativi lungo l'intero busto senza scollatura profonda a V sul petto.
+  - **Regola di Classificazione**: `category="Outerwear"` (o `"Top"` se tunica singola), `sub_category="Sherwani"` o `"Achkan"`, `item_type="Sherwani"` | `"Achkan"` | `"Bandhgala"`. Non deve **MAI** essere classificato come `Blazer`, `Suit Jacket` o `Jacket` casual occidentale.
+- **Tessuti e Decorazioni**:
+  - Jacquard, seta grezza (Raw Silk), broccato Banarasi / Tanchoi, velluto, seta Matka, Chanderi, lana Pashmina del Kashmir, con ricami Zari in filo d'oro, lavorazioni a filo e bottoni smaltati o con gemme incastonate.
+- **Rigide Proibizioni Negative**:
+  - **Non classificare MAI uno Sherwani o un Achkan come Blazer o Abito occidentale**: Costituisce una grave allucinazione di classificazione interculturale.
+  - **Non abbinare MAI uno Sherwani, Achkan o Kurta cerimoniale a jeans casual, pantaloni cargo, tute sportive o scarpe da ginnastica da corsa**.
+  - Il nero a tinta unita senza decorazioni è infausto e porta sfortuna nei matrimoni e nei rituali di gioia induisti.
+  - Le calzature devono essere rigorosamente scarpe artigianali tradizionali in cuoio ricamato **Mojari** / **Jutti**, oppure scarpe stringate eleganti / mocassins formali in vernice.
+- **Termini Multilingue Approvati**:
+  - EN: `Sherwani`, `Achkan`, `Bandhgala`, `Nehru Jacket`, `Kurta`
+  - HE: `שרוואני`, `אצ'קאן`, `בנדגאלה`, `ז'קט נהרו`, `קורטה`
+  - AR: `شيرواني`, `أشكان`, `باندغالا`, `سترة نهرو`, `كورتا`
+  - HI: `शेरवानी`, `अचकन`, `बंदगला`, `नेहरू जैकेट`, `कुर्ता`
+
+### 3.8 Completi Festivi Saree e Lehenga (साड़ी और लहंगा)
+- **Tipo di Occasione**: Matrimoni induisti, cerimonie festive (Diwali, Navratri), ricevimenti.
+- **Requisiti**: Saree plissettato da sei a nove iarde con corpetto su misura (choli) e sottogonna; oppure ampia e ricca gonna svasata Lehenga con corpetto Choli ricamato e stola Dupatta drappeggiata.
+- **Rigide Proibizioni Negative**:
+  - NESSUN nero a tinta unita né bianco candido austero ai matrimoni induisti (riservati al lutto).
+  - Evitare scollature audaci da discoteca o scarpe sportive.
 
 ---
 

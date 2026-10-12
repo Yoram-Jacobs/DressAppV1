@@ -209,6 +209,41 @@ Este documento define protocolos canônicos de vestimenta, requisitos de silhuet
 - **Proibições Negativas Estritas**:
   - NENHUMA roupa preta escura de luto; evite loungewear casual ocidental.
 
+### 3.7 Conjuntos Cerimoniais Kurta, Sherwani, Achkan e Bandhgala (कुर्ता, शेरवानी, अचकन और बंदगला)
+- **Tipo de Ocasião**: Ocasiões de alta formalidade no sul da Ásia, casamentos hindus, muçulmanos e sikhs (Baraat, Nikah, Anand Karaj), Puja festivo, celebrações do Eid e eventos culturais diplomáticos.
+- **Formalidade**: Alta formalidade régia tradicional / equivalente ao traje a rigor (black-tie).
+- **Taxonomia e Classificações Anatômicas de Silhueta**:
+  - **Sherwani (शेरवानी / שרוואני)**: Casaco formal régio e estruturado, de comprimento até o joelho ou panturrilha. Apresenta gola alta mandarim / Nehru rígida (*Band collar* / *Bain*), carcela frontal de botões que se estende por todo o comprimento com botões ornamentais, bolso no peito para lenço de bolso (*Pochette*) e mangas compridas. Tradicionalmente forrado, com ombreiras estruturadas de alfaiataria, usado sobre uma Kurta e calça Churidar de seda ou Dhoti.
+  - **Achkan (अचकन / אצ'קאן)**: Casaco elegante de alfaiataria na altura do joelho, originário das cortes mogóis e rajputas. Distingue-se do Sherwani por uma silhueta mais compacta, sem acolchoamento ou com forro leve, confeccionado em tecidos luxuosos mais leves e refinados (seda pura, brocado, seda rústica/raw silk, linho com seda ou bordado chikan). Apresenta gola alta padre/mandarim, carcela frontal de botões (fechamento reto central ou transpasse assimétrico tradicional *angrakha*) e fendas laterais (*chaak*) para elegância e mobilidade.
+  - **Bandhgala / Terno Jodhpuri (बंदगला / בנדגאלה)**: Jaqueta estruturada indo-ocidental na altura dos quadris, com gola mandarim fechada e punhos de alfaiataria, usada com calças de alfaiataria combinando.
+  - **Colete Nehru / Bandi (नेहरू जैकेट / ז'קט נהרו)**: Colete de alfaiataria sem mangas com gola alta/padre, sobreposto a uma Kurta para ocasiões festivas elegantes (smart-casual a formal).
+  - **Kurta (कुर्ता / קורטה)**: Túnica folgada na altura do joelho ou panturrilha, sem colarinho ou com gola mandarim, com fendas laterais, usada sobre calças Pyjama, Churidar ou Shalwar.
+- **Distinção Visual Crítica de Visão Computacional (Eyes Vision): Sherwani / Achkan vs. Blazer / Paletó Ocidental**:
+  - **Gola/Colarinho**: Gola mandarim / gola padre alta e fechada (*SEM lapela notch, peak ou xale*). Uma peça com gola mandarim fechada NUNCA é um blazer.
+  - **Comprimento**: A barra estende-se até o meio da coxa ou joelho (blazers terminam nitidamente na cintura/quadril).
+  - **Carcela**: Fileira contínua de botões ornamentais estendendo-se por todo o comprimento frontal do corpo, sem abertura profunda em decote V no peito.
+  - **Regra de Classificação**: `category="Outerwear"` (ou `"Top"` se for túnica simples), `sub_category="Sherwani"` ou `"Achkan"`, `item_type="Sherwani"` | `"Achkan"` | `"Bandhgala"`. NUNCA deve ser classificado como `Blazer`, `Suit Jacket` ou jaqueta casual (`Jacket`) ocidental.
+- **Tecidos e Ornamentos**:
+  - Jacquard, Seda Rústica (Raw Silk), Brocado Banarasi / Tanchoi, Veludo, Seda Matka, Chanderi, Lã de Pashmina, com bordados em fio de ouro Zari, trabalhos em linha e botões esmaltados ou incrustados de joias.
+- **Proibições Negativas Estritas**:
+  - **NUNCA classificar um Sherwani ou Achkan como Blazer ou Terno Ocidental**: Esta alucinação constitui um erro grave de classificação transcultural.
+  - **NUNCA combinar um Sherwani, Achkan ou Kurta cerimonial com calças jeans casuais, calças cargo, calças de moletom ou tênis esportivos de corrida**.
+  - Preto sólido liso sem adornos é considerado inauspicioso em casamentos e rituais festivos hindus.
+  - O calçado deve ser estritamente sapatos artesanais tradicionais de couro/bordados **Mojari** / **Jutti**, ou sapatos sociais de verniz / mocassins formais.
+- **Termos Multilíngues Aprovados**:
+  - EN: `Sherwani`, `Achkan`, `Bandhgala`, `Nehru Jacket`, `Kurta`
+  - HE: `שרוואני`, `אצ'קאן`, `בנדגאלה`, `ז'קט נהרו`, `קורטה`
+  - AR: `شيرواني`, `أشكان`, `باندغالا`, `سترة نهرو`, `كورتا`
+  - HI: `शेरवानी`, `अचकन`, `बंदगला`, `नेहरू जैकेट`, `कुर्ता`
+  - PT: `Sherwani`, `Achkan`, `Bandhgala`, `Colete Nehru`, `Kurta`
+
+### 3.8 Conjuntos Festivos de Saree e Lehenga (साड़ी और लहंगा)
+- **Tipo de Ocasião**: Casamentos hindus, cerimônias festivas (Diwali, Navratri), recepções.
+- **Requisitos**: Saree de 6 a 9 jardas com pregas precisas, acompanhado de blusa justa (blouse) e saiote (petticoat); ou saia rodada e pesada Lehenga com blusa Choli bordada e xale Dupatta drapeado.
+- **Proibições Negativas Estritas**:
+  - NENHUM preto sólido liso ou branco austero simples em casamentos hindus (cores reservadas para o luto).
+  - Evitar recortes provocantes de moda balada ou calçados esportivos.
+
 ---
 
 ## 4. Tradições Sagradas Budistas (พุทธศาสนา / 佛教)

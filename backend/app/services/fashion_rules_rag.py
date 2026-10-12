@@ -649,7 +649,8 @@ def retrieve_garment_vision_axioms() -> str:
         "GROUND-TRUTH CULTURAL TAXONOMY & CATEGORY AXIOMS:\n"
         "• Galabiya, Kaftan, Thobe, Abaya, Sari, Lehenga, Hanbok, Kimono, Dirndl -> category:'Full Body' (open Abaya/Kaftan -> 'Outerwear').\n"
         "• Kurta, Guayabera -> category:'Top'.\n"
-        "• Sherwani, Bisht -> category:'Outerwear' (or 'Top' if single tunic).\n"
+        "• Sherwani, Achkan, Bandhgala, Nehru Jacket -> category:'Outerwear' (or 'Top'), sub_category:'Sherwani' or 'Achkan', item_type:'Sherwani'|'Achkan'|'Bandhgala'. Defined by standing Mandarin/Nehru collar, center button placket, long knee-length/hip-length tailored silhouette, slit sides. NEVER classify as western Blazer or standard Suit Jacket.\n"
+        "• Bisht -> category:'Outerwear'.\n"
         "• Headwear/Accessories: Kippah/Yarmulke, Keffiyeh/Shemagh, Turban/Dastar/Pagri, Hijab, Mitpachat/Tichel, Shtreimel, Fez -> category:'Accessories', sub_category:'Headwear' (or 'Scarves & Wraps' when draped).\n"
         "• Modesty & Sacred Attire: Loose unrevealing cuts, opaque natural fabrics (cotton, linen, silk, wool), dignified solid tones."
     )

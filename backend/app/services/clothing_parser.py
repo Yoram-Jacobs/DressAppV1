@@ -1377,38 +1377,48 @@ async def parse_garments(
     }
     has_head = bool(np.isin(class_mask, list(head_class_ids)).sum() >= 30) if head_class_ids else False
     has_any_human = bool(np.isin(class_mask, list(human_class_ids)).sum() >= 80) if human_class_ids else False
+    # Always compute skin chrominance to catch hands, wrists, neck, and limbs
+    # that SegFormer frequently misclassifies as background or outer garment edge.
+    skin_mask_found = None
+    try:
+        arr = np.array(img)
+        r = arr[:, :, 0].astype(float)
+        g = arr[:, :, 1].astype(float)
+        b = arr[:, :, 2].astype(float)
+        cr = 128.0 + 0.5 * r - 0.418688 * g - 0.081312 * b
+        cb = 128.0 - 0.168736 * r - 0.331264 * g + 0.5 * b
+        is_skin = (
+            (cr >= 133.0) & (cr <= 173.0) &
+            (cb >= 77.0) & (cb <= 127.0) &
+            (r > g) & (g > b) &
+            ((r - g) >= 12.0)
+        )
+        garment_occupied = class_mask > 0
+        skin_outside = is_skin & (~garment_occupied)
+        # Also include skin at the periphery/lower/side areas where hands protrude from cuffs
+        y_grid, x_grid = np.ogrid[:H, :W]
+        is_hand_zone_full = (y_grid >= 0.50 * H) | ((y_grid >= 0.40 * H) & ((x_grid <= 0.38 * W) | (x_grid >= 0.62 * W)))
+        skin_protruding = is_skin & is_hand_zone_full
+        skin_combined = skin_outside | skin_protruding
+        skin_px = int(skin_combined.sum())
+        skin_frac = skin_px / float(total)
+        # Relax minimum threshold from 1.5% to 0.2% so cropped model shots with only hands/wrists are detected.
+        if 0.002 <= skin_frac <= 0.28:
+            skin_mask_found = skin_combined.astype(np.uint8)
+            has_any_human = True
+    except Exception:
+        skin_mask_found = None
+
     if human_class_ids and (has_head or has_any_human):
-        human_mask_full = np.isin(class_mask, list(human_class_ids)).astype(np.uint8)
+        seg_human = np.isin(class_mask, list(human_class_ids)).astype(np.uint8)
+        if skin_mask_found is not None:
+            human_mask_full = (seg_human | skin_mask_found).astype(np.uint8)
+        else:
+            human_mask_full = seg_human
+    elif skin_mask_found is not None:
+        human_mask_full = skin_mask_found
     else:
-        # Fashion dataset has no explicit human classes: detect human wearer via skin chrominance
-        # outside garment masks, so hands, neck, face, and bare legs are recognized and excised.
-        try:
-            arr = np.array(img)
-            r = arr[:, :, 0].astype(float)
-            g = arr[:, :, 1].astype(float)
-            b = arr[:, :, 2].astype(float)
-            cr = 128.0 + 0.5 * r - 0.418688 * g - 0.081312 * b
-            cb = 128.0 - 0.168736 * r - 0.331264 * g + 0.5 * b
-            is_skin = (
-                (cr >= 133.0) & (cr <= 173.0) &
-                (cb >= 77.0) & (cb <= 127.0) &
-                (r > g) & (g > b) &
-                ((r - g) >= 12.0)
-            )
-            # Only consider skin where SegFormer did not predict a clothing item
-            garment_occupied = class_mask > 0
-            skin_outside_garments = is_skin & (~garment_occupied)
-            skin_px = int(skin_outside_garments.sum())
-            skin_frac = skin_px / float(total)
-            # A human wearer's exposed skin (face/arms/legs) typically covers 1.5% to 25% of the frame.
-            # If > 28%, it is a warm background surface (bedsheet, table, wall, floor), NOT a human!
-            if 0.015 <= skin_frac <= 0.28:
-                human_mask_full = skin_outside_garments.astype(np.uint8)
-                has_any_human = True
-            else:
-                human_mask_full = None
-        except Exception:
-            human_mask_full = None
+        human_mask_full = None
 
     if human_mask_full is not None:
         if not human_mask_full.any() or int(human_mask_full.sum()) < 80:
@@ -2427,56 +2437,76 @@ def apply_alpha_intersection(
 
     # 2. Human skin chrominance filter outside confident garment body
     # (Excises bare neck skin, hanging hands next to jacket hems, fingers on waistbands, bare legs)
-    if not is_single_item or is_eyewear or is_acc:
-        try:
-            r = arr[:, :, 0].astype(float)
-            g = arr[:, :, 1].astype(float)
-            b = arr[:, :, 2].astype(float)
-            cr = 128.0 + 0.5 * r - 0.418688 * g - 0.081312 * b
-            cb = 128.0 - 0.168736 * r - 0.331264 * g + 0.5 * b
-            is_skin = (
-                (cr >= 133.0) & (cr <= 173.0) &
-                (cb >= 77.0) & (cb <= 127.0) &
-                (r > g) & (g > b) &
-                ((r - g) >= 12.0) &
-                (new_alpha > 30)
+    try:
+        r = arr[:, :, 0].astype(float)
+        g = arr[:, :, 1].astype(float)
+        b = arr[:, :, 2].astype(float)
+        cr = 128.0 + 0.5 * r - 0.418688 * g - 0.081312 * b
+        cb = 128.0 - 0.168736 * r - 0.331264 * g + 0.5 * b
+        is_skin = (
+            (cr >= 133.0) & (cr <= 173.0) &
+            (cb >= 77.0) & (cb <= 127.0) &
+            (r > g) & (g > b) &
+            ((r - g) >= 12.0) &
+            (new_alpha > 30)
+        )
+        # Check if garment fabric itself is skin/nude toned
+        is_garment_nude = False
+        if garment_protect is not None and garment_protect.sum() > 50:
+            core_pts = garment_protect
+            g_r = float(np.median(arr[core_pts, 0]))
+            g_g = float(np.median(arr[core_pts, 1]))
+            g_b = float(np.median(arr[core_pts, 2]))
+            g_cr = 128.0 + 0.5 * g_r - 0.418688 * g_g - 0.081312 * g_b
+            g_cb = 128.0 - 0.168736 * g_r - 0.331264 * g_g + 0.5 * g_b
+            is_garment_nude = bool(
+                (133.0 <= g_cr <= 173.0) and
+                (77.0 <= g_cb <= 127.0) and
+                (g_r > g_g > g_b) and
+                ((g_r - g_g) >= 12.0)
             )
-            if is_bottom and mask_resized is not None:
-                # Hands/wrists resting on the waistband (top 28% of pants crop)
-                y_coords = np.arange(Hc)[:, None]
-                is_waist_zone = y_coords <= (0.28 * Hc)
-                is_skin = is_skin & ((mask_resized <= 40) | is_waist_zone)
-            elif (norm_cat in {"top", "outerwear", "suit", "fullbody", "dress"}) and mask_resized is not None:
-                # Hands hanging next to jacket hems (bottom 25% of jacket crop)
-                y_coords = np.arange(Hc)[:, None]
-                is_hem_zone = y_coords >= (0.75 * Hc)
-                is_skin = is_skin & ((mask_resized <= 40) | is_hem_zone)
-            if is_skin.any():
-                skin_u8 = (is_skin * 255).astype(np.uint8)
-                if garment_protect is not None and garment_protect.any():
-                    skin_clean = np.where(garment_protect, np.uint8(0), skin_u8)
-                elif garment_weight is not None:
-                    skin_clean = (skin_u8.astype(float) * (1.0 - garment_weight)).round().astype(np.uint8)
-                else:
-                    skin_clean = skin_u8
 
-                skin_blur = Image.fromarray(skin_clean, mode="L").filter(ImageFilter.GaussianBlur(radius=1.5))
-                skin_factor = np.array(skin_blur, dtype=float) / 255.0
-                sub_skin = np.clip(1.0 - skin_factor, 0.0, 1.0)
-                if garment_protect is not None and garment_protect.any():
-                    from scipy import ndimage
-                    protect_smooth = ndimage.gaussian_filter(garment_protect.astype(float), sigma=1.2)
-                    sub_skin = np.clip(sub_skin * (1.0 - protect_smooth) + 1.0 * protect_smooth, 0.0, 1.0)
-                new_alpha = (new_alpha.astype(float) * sub_skin).round().astype(np.uint8)
-        except Exception as exc:  # noqa: BLE001
-            logger.info(
-                "apply_alpha_intersection: skin-chrominance subtraction failed: %s",
-                repr(exc)[:120],
-            )
+        y_coords = np.arange(Hc)[:, None]
+        x_coords = np.arange(Wc)[None, :]
+        is_lateral = (x_coords <= (0.38 * Wc)) | (x_coords >= (0.62 * Wc))
+        is_hand_zone = (y_coords >= (0.55 * Hc)) | ((y_coords >= (0.42 * Hc)) & is_lateral)
+
+        if is_bottom and mask_resized is not None:
+            # Hands/wrists resting on the waistband (top 28% of pants crop)
+            is_waist_zone = y_coords <= (0.28 * Hc)
+            is_skin = is_skin & ((mask_resized <= 40) | is_waist_zone)
+        elif (norm_cat in {"top", "outerwear", "suit", "fullbody", "dress"}) and mask_resized is not None:
+            # Hands hanging next to jacket hems or protruding from sleeve cuffs
+            is_skin = is_skin & ((mask_resized <= 40) | is_hand_zone)
+        if is_skin.any():
+            skin_u8 = (is_skin * 255).astype(np.uint8)
+            if garment_protect is not None and garment_protect.any():
+                effective_protect = garment_protect & (~is_hand_zone) if not is_garment_nude else garment_protect
+                skin_clean = np.where(effective_protect, np.uint8(0), skin_u8)
+            elif garment_weight is not None:
+                effective_weight = np.where(is_hand_zone, 0.0, garment_weight) if not is_garment_nude else garment_weight
+                skin_clean = (skin_u8.astype(float) * (1.0 - effective_weight)).round().astype(np.uint8)
+            else:
+                skin_clean = skin_u8
+
+            skin_blur = Image.fromarray(skin_clean, mode="L").filter(ImageFilter.GaussianBlur(radius=1.5))
+            skin_factor = np.array(skin_blur, dtype=float) / 255.0
+            sub_skin = np.clip(1.0 - skin_factor, 0.0, 1.0)
+            if garment_protect is not None and garment_protect.any():
+                from scipy import ndimage
+                effective_protect = garment_protect & (~is_hand_zone) if not is_garment_nude else garment_protect
+                protect_smooth = ndimage.gaussian_filter(effective_protect.astype(float), sigma=1.2)
+                sub_skin = np.clip(sub_skin * (1.0 - protect_smooth) + 1.0 * protect_smooth, 0.0, 1.0)
+            new_alpha = (new_alpha.astype(float) * sub_skin).round().astype(np.uint8)
+    except Exception as exc:  # noqa: BLE001
+        logger.info(
+            "apply_alpha_intersection: skin-chrominance subtraction failed: %s",
+            repr(exc)[:120],
+        )
 
     # 2b. Upper garment neck/head trimming:
     # A human head, neck, chin, or throat must NEVER float above collars or lapels of tops/outerwear/suits!
-    if norm_cat in {"top", "outerwear", "suit", "dress", "fullbody"} and not is_single_item and mask_resized is not None:
+    if norm_cat in {"top", "outerwear", "suit", "dress", "fullbody"} and mask_resized is not None:
         try:
             garment_pts = np.where(mask_resized > 40)
             if len(garment_pts[0]) > 0:
@@ -2581,7 +2611,10 @@ def apply_alpha_intersection(
     # must never be bitten away by background matting salience dropouts!
     # To prevent staircases and sharp cliffs, we smoothly feather the interior core mask with Gaussian blur.
     if garment_core is not None and garment_core.any():
-        core_u8 = (garment_core * 255).astype(np.uint8)
+        effective_core = garment_core & (~is_hand_zone) if (not is_garment_nude and 'is_hand_zone' in locals()) else garment_core
+        core_u8 = (effective_core * 255).astype(np.uint8)
+        if 'is_skin' in locals() and is_skin is not None and is_skin.any() and not is_garment_nude:
+            core_u8 = np.where(is_skin, np.uint8(0), core_u8)
         if norm_cat in {"top", "outerwear", "dress"}:
             # Preserve crew-neck collar opening at top-center of tops if transparent in input
             non_zero_rows = np.where(mask_resized > 50)[0]

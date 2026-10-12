@@ -2209,6 +2209,14 @@ def _coerce_single_garment(
                 # Outerwear & Dresses
                 "jacket": "ז'קט",
                 "blazer": "בלייזר",
+                "sherwani": "שרוואני",
+                "achkan": "אצ'קאן",
+                "bandhgala": "בנדגאלה",
+                "nehru jacket": "ז'קט נהרו",
+                "kurta": "קורטה",
+                "thobe": "ת'וב",
+                "abaya": "עבאיה",
+                "kaftan": "כפתן",
                 "coat": "מעיל",
                 "trench coat": "מעיל טרנץ'",
                 "dress": "שמלה",
@@ -2323,6 +2331,14 @@ def _coerce_single_garment(
                 noun_he = "מכנסי צ'ינו"
             elif "טרנץ'" in caption_str or "trench" in combined_txt:
                 noun_he = "מעיל טרנץ'"
+            elif any(w in caption_str or w in combined_txt for w in ("שרוואני", "sherwani")):
+                noun_he = "שרוואני"
+            elif any(w in caption_str or w in combined_txt for w in ("אצ'קאן", "achkan")):
+                noun_he = "אצ'קאן"
+            elif any(w in caption_str or w in combined_txt for w in ("בנדגאלה", "bandhgala")):
+                noun_he = "בנדגאלה"
+            elif any(w in caption_str or w in combined_txt for w in ("קורטה", "kurta")):
+                noun_he = "קורטה"
             elif "בלייזר" in caption_str or "blazer" in combined_txt:
                 noun_he = "בלייזר"
             elif "קרדיגן" in caption_str or "cardigan" in combined_txt:
@@ -3978,9 +3994,50 @@ def _enforce_segformer_category(
         return analysis
 
     lbl_low = (label or "").lower()
+    is_sherwani_or_achkan = (
+        any(w in comb_txt for w in ("sherwani", "achkan", "bandhgala", "nehru jacket", "שרוואני", "אצ'קאן", "בנדגאלה", "ז'קט נהרו"))
+        or any(w in lbl_low for w in ("sherwani", "achkan", "bandhgala", "nehru"))
+    )
+    if is_sherwani_or_achkan:
+        analysis["category"] = "Outerwear"
+        is_he_local = (language in ("he", "iw")) or any("\u0590" <= ch <= "\u05ea" for ch in comb_txt)
+        is_achkan_term = any(w in comb_txt for w in ("achkan", "אצ'קאן")) or "achkan" in lbl_low
+        canon_term = ("אצ'קאן" if is_achkan_term else "שרוואני") if is_he_local else ("Achkan" if is_achkan_term else "Sherwani")
+        analysis["sub_category"] = canon_term
+        analysis["item_type"] = canon_term
+        col_str = ""
+        colors = analysis.get("colors")
+        if isinstance(colors, list) and colors:
+            c0 = str(colors[0].get("name", "")).strip()
+            if c0.lower() not in ("unknown", "other"):
+                col_str = c0
+        if is_he_local:
+            if col_str.lower() in ("blue", "כחול", "כחולה"):
+                col_he = "כחול"
+            elif col_str.lower() in ("white", "לבן", "לבנה"):
+                col_he = "לבן"
+            elif col_str.lower() in ("black", "שחור", "שחורה"):
+                col_he = "שחור"
+            elif col_str:
+                col_he = he_color_dict.get(col_str.lower(), col_str)
+            else:
+                col_he = ""
+            new_name = f"{canon_term} {col_he}".strip() if col_he else canon_term
+            analysis["name"] = new_name
+            analysis["title"] = new_name
+            analysis["caption"] = f"{new_name} אלגנטי ומלכותי בעיצוב מסורתי עם צווארון עומד."
+        else:
+            new_name = f"{col_str} {canon_term}".strip() if col_str else canon_term
+            analysis["name"] = new_name
+            analysis["title"] = new_name
+            analysis["caption"] = f"Traditional {new_name.lower()} with structured mandarin collar and tailored button placket."
+        analysis["_category_overridden_by"] = "segformer-sherwani"
+        _sanitize_cross_category_contamination(analysis, language=language)
+        return analysis
+
     is_kurta_or_tunic = (
-        any(w in comb_txt for w in ("kurta", "guayabera", "sherwani", "thobe", "galabiya", "jalabiya", "קורטה", "שרוואני", "ת'וב", "גלבייה"))
-        or any(w in lbl_low for w in ("kurta", "guayabera", "sherwani", "thobe", "galabiya", "jalabiya", "tunic", "קורטה"))
+        any(w in comb_txt for w in ("kurta", "guayabera", "thobe", "galabiya", "jalabiya", "קורטה", "ת'וב", "גלבייה"))
+        or any(w in lbl_low for w in ("kurta", "guayabera", "thobe", "galabiya", "jalabiya", "tunic", "קורטה"))
     )
     if is_kurta_or_tunic:
         analysis["category"] = "Top"

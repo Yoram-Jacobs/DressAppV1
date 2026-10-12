@@ -24,7 +24,7 @@ PROMPT_GARMENT_VISION = (
     "• name & title: 2-4 English words [Color] [Material/Cut] [Type]. Never generic ('Garment','Clothing').\n"
     "• category: 'Top'|'Bottom'|'Outerwear'|'Full Body'|'Footwear'|'Accessories'. Sweaters/tees='Top'. Outerwear=coats/jackets. Dresses/sets/robes='Full Body'.\n"
     "• sub_category: Specific cut ('T-Shirt','Sweater','Jeans','Pants','Skirt','Dresses','Suits','Abaya','Kurta','Sherwani','Oxfords','Loafers','Boots','Sandals','Sneakers','Heels','Pumps','Handbag','Headwear','Scarves & Wraps'). Never 'Top'/'Bottom'/'Footwear'.\n"
-    "• Cultural: Galabiya/Kaftan/Thobe/Abaya/Sari/Kimono -> category:'Full Body' (open Abaya/Kaftan -> 'Outerwear'). Kurta -> 'Top'. Sherwani -> 'Outerwear'|'Top'.\n"
+    "• Cultural: Galabiya/Kaftan/Thobe/Abaya/Sari/Kimono -> category:'Full Body' (open Abaya/Kaftan -> 'Outerwear'). Kurta -> 'Top'. Sherwani/Achkan/Bandhgala (standing Mandarin/Nehru collar, long buttoned coat) -> category:'Outerwear' (or 'Top'), sub_category:'Sherwani' or 'Achkan', item_type:'Sherwani'|'Achkan'|'Bandhgala'. NEVER classify as 'Blazer' or standard 'Suit'.\n"
     "• Footwear: Boots='Boots'. Heels='Heels'|'Pumps'. Dress shoes='Oxfords'|'Loafers'. Non-athletic uppers=Leather/Suede (Leather 70%+Rubber 30%), NEVER Cotton/Synthetic.\n"
     "• Bottoms: 'Jeans'=denim. Chinos -> sub_category:'Pants', item_type:'Chinos'. Sweatpants -> dress_code:'casual'|'athletic'.\n"
     "• Accessories: Sunglasses/Handbag/Belts/Headwear/Scarves. Kippah/Hijab/Turban/Keffiyeh -> sub_category:'Headwear', category:'Accessories'. Handbags=Leather/Canvas/Nylon. Non-wearables -> is_clothing:false.\n"

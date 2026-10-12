@@ -153,10 +153,27 @@ Dieses Dokument definiert kanonische Kleidungsprotokolle, Schnitt- und Silhouett
 - **Strikte negative Verbote**:
   - KEINE abgetragene, fleckige oder zerrissene Alltagskleidung oder verblasste Grafik-T-Shirts.
 
-### 2.4 Regionale Protokolle für sittsame Kleidung
-- **Formelles Protokoll der Golfstaaten (البشت والكندورة)**: Bodenlanger weißer oder wollener Thobe nach Maß mit Ghutra/Schemagh und Agal, darüber ein mit goldenen *Zari*-Stickereien verzierter **Bisht**-Umhang für formelle Hochzeiten und diplomatische Anlässe. Niemals einen Bisht mit Jeans oder Freizeit-T-Shirts tragen.
-- **Nordafrikanische Dschellaba & Babuschen (الجلابة والبلغة)**: Feinwollene Kapuzen-Dschellaba über einer Gandora mit handgefertigten Lederpantoffeln (Belgha/Babouche).
-- **Südostasiatisches Batik & Baju Melayu (Batik & Baju Melayu)**: Formelle langärmelige Seidenhemden im Batik-Muster ersetzen in Indonesien und Malaysia den westlichen Businessanzug. Das zeremonielle Baju Melayu umfasst die Songket Kain Samping-Schärpe und die schwarze Samtmütze Songkok.
+### 2.4 Nordafrikanisches Dschellaba- & Galabija-Protokoll (الجلابة والجلابية والبلغة)
+- **Anlasstyp**: Alltägliche Zusammenkünfte, kulturelle Feiern, traditionelle maghrebinische und ägyptische Tracht.
+- **Anforderungen**: Locker fallende, knöchellange Galabija oder feinwollene Kapuzen-Dschellaba über einer Gandora, kombiniert mit handgefertigten Lederpantoffeln (Belgha/Babouche) oder gepflegten Slippern.
+- **Strikte negative Verbote**:
+  - NIEMALS mit formellen westlichen Smokingjacken, engen zerrissenen Jeans oder sportlichen Sneakers kombinieren.
+
+### 2.5 Sittsame Schichtenkleidung aus Abaya & Sheila (العباية والشيلة)
+- **Anlasstyp**: Alltägliche Sittsamkeit, heilige Zusammenkünfte, Familienbesuche in der gesamten arabischen Welt.
+- **Anforderungen**: Fließende, bodenlange Über-Abaya, elegant über blickdichter Kleidung (Stoffhosen, Unterkleid) getragen, abgestimmt mit einem passenden Sheila- oder Hidschab-Kopftuch.
+- **Strikte negative Verbote**:
+  - STRENGSTES VERBOT transparenter oder durchsichtiger Außenschichten ohne sittsame blickdichte Unterkleidung.
+  - KEINE Kombination mit freizügigen bauchfreien Tops (Crop Tops), Shorts oder engen Miniröcken.
+
+### 2.6 Formelles Thobe- & Kandura-Protokoll der arabischen Golfstaaten (البشت والكندورة والثوب)
+- **Anlasstyp**: Formelle Zusammenkünfte, Freitagsgebet, Hochzeiten, diplomatische Anlässe.
+- **Anforderungen**: Maßgeschneiderter, makelloser knöchellanger weißer oder wollener Thobe/Kandura/Dischdascha mit Ghutra/Schemagh und Agal. Zu hochoffiziellen Feierlichkeiten drapiert mit einem festlichen, mit goldenen *Zari*-Stickereien verzierten **Bisht**-Umhang.
+- **Strikte negative Verbote**:
+  - Niemals einen zeremoniellen Bisht oder Thobe mit legeren Sport-Hoodies, zerrissenen Jeans oder Badesandalen stylen.
+
+### 2.7 Südostasiatisches Batik & Baju Melayu (Batik & Baju Melayu)
+- Formelle langärmelige Seidenhemden im Batik-Muster ersetzen in Indonesien und Malaysia den westlichen Businessanzug. Das zeremonielle Baju Melayu umfasst die um die Hüfte gewickelte Songket Kain Samping-Schärpe und die schwarze Samtmütze Songkok.
 
 ---
 
@@ -208,6 +225,40 @@ Dieses Dokument definiert kanonische Kleidungsprotokolle, Schnitt- und Silhouett
 - **Pongal**: Frisch gewaschene traditionelle südindische Festkleidung: Seiden-Dhotis / Angavastram, Kanchipuram-Seidensaris in leuchtendem Kurkumagelb, Safran und Papageiengrün.
 - **Strikte negative Verbote**:
   - KEINE dunkle schwarze Trauerkleidung; westliche legere Loungewear vermeiden.
+
+### 3.7 Festliche Ensembles: Kurta, Sherwani, Achkan & Bandhgala (कुर्ता, शेरवानी, अचकन और बंदगला)
+- **Anlasstyp**: Südasiatische Hochformalität, hinduistische, muslimische und sikhische Hochzeiten (Baraat, Nikah, Anand Karaj), festliche Pujas, Eid-Feierlichkeiten und diplomatisch-kulturelle Veranstaltungen.
+- **Formalität**: Erhabene traditionelle Hochformalität / Äquivalent zum Smoking (Black Tie).
+- **Taxonomie & anatomische Silhouette-Klassifikationen**:
+  - **Sherwani (शेरवानी / שרוואני)**: Majestätischer, stark strukturierter, knie- oder wadenlanger formeller Gehrock. Zeichnet sich durch einen steifen, aufrechten Stehkragen (Mandarin-/Nehru-Kragen / *Band collar* / *Bain*), eine durchgehende vordere Knopfleiste mit Zierknöpfen, eine Brusttasche für ein Einstecktuch (*Pochette*) und lange Ärmel aus. Traditionell gefüttert, mit strukturierten Schulterpolstern geschneidert und über einer Kurta sowie einer seidenen Churidar oder einem Dhoti getragen.
+  - **Achkan (अचकन / אצ'קאן)**: Eleganter, knielanger Maßmantel aus den Höfen der Moguln und Rajputen. Unterscheidet sich vom Sherwani durch eine kompaktere, ungepolsterte oder nur leicht wattierte Silhouette aus leichteren, edlen Luxusstoffen (Feinseide, Brokat, Rohseide, Leinen-Seide oder Chikan-Stickerei). Mit hohem Stehkragen, vorderer Knopfleiste (entweder gerade zentriert oder traditionell asymmetrisch überlappend im *Angrakha*-Stil) und seitlichen Schlitzen (*chaak*) für Anmut und Bewegungsfreiheit.
+  - **Bandhgala / Jodhpuri-Anzug (बंदगला / בנדגאלה)**: Hüftlange indisch-westliche strukturierte Jacke mit geschlossenem Stehkragen und Manschetten, getragen mit passender Maßanzughose.
+  - **Nehru-Weste / Bandi (नेहरू जैकेट / ז'קט נהרו)**: Ärmellose maßgeschneiderte Weste mit Stehkragen, die für festliche Smart-Casual- bis Formal-Anlässe über einer Kurta getragen wird.
+  - **Kurta (कुर्ता / קורטה)**: Locker fallende knie- oder wadenlange Tunika ohne Kragen oder mit Stehkragen und Seitenschlitzen, getragen über Pyjama-, Churidar- oder Shalwar-Hosen.
+- **Kritische visuelle Unterscheidung: Sherwani / Achkan vs. westlicher Blazer / Sakko**:
+  - **Kragen**: Aufrechter Stehkragen / Mandarinkragen (*KEINE Revers mit Einkerbung, Spitzrevers oder Schalkragen*). Ein Kleidungsstück mit hohem, geschlossenem Stehkragen ist NIEMALS ein Blazer.
+  - **Länge**: Saum reicht bis zur Oberschenkelmitte oder zum Knie (westliche Sakkos enden präzise an Hüfte/Taille).
+  - **Knopfleiste**: Durchgehende ornamentale Knopfleiste über die gesamte Rumpflänge ohne tiefen V-Ausschnitt auf der Brust.
+  - **Klassifikationsregel**: `category="Outerwear"` (oder `"Top"` bei einfacher Tunika), `sub_category="Sherwani"` oder `"Achkan"`, `item_type="Sherwani"` | `"Achkan"` | `"Bandhgala"`. Darf **NIEMALS** als westlicher `Blazer`, `Suit Jacket` oder legere `Jacket` kategorisiert werden.
+- **Stoffe & Veredelungen**:
+  - Jacquard, Rohseide (Raw Silk), Banarasi-/Tanchoi-Brokat, Samt, Matka-Seide, Chanderi, Pashmina-Wolle mit Zari-Stickereien, Fadenarbeiten sowie emaillierten oder juwelenbesetzten Knöpfen.
+- **Strikte negative Verbote**:
+  - **NIEMALS einen Sherwani oder Achkan als westlichen Blazer oder Anzug klassifizieren**: Dies stellt eine schwere interkulturelle Klassifikationshalluzination dar.
+  - **NIEMALS einen zeremoniellen Sherwani, Achkan oder eine Kurta mit lässigen Jeans, Cargohosen, Jogginghosen oder Sportsneakers kombinieren**.
+  - Reines, ungemustertes Schwarz gilt bei hinduistischen Hochzeiten und freudigen Ritualen als unheilvoll.
+  - Als Schuhwerk sind ausnahmslos traditionelle handgefertigte bestickte oder lederne **Mojari** / **Jutti** oder formelle Lacklederschuhe / Slipper zulässig.
+- **Genehmigte mehrsprachige Begriffe**:
+  - EN: `Sherwani`, `Achkan`, `Bandhgala`, `Nehru Jacket`, `Kurta`
+  - HE: `שרוואני`, `אצ'קאן`, `בנדגאלה`, `ז'קט נהרו`, `קורטה`
+  - AR: `شيرواني`, `أشكان`, `باندغالا`, `سترة نهرو`, `كورتا`
+  - HI: `शेरवानी`, `अचकन`, `बंदगला`, `नेहरू जैकेट`, `कुर्ता`
+
+### 3.8 Festliche Ensembles: Sari & Lehenga (साड़ी और लहंगा)
+- **Anlasstyp**: Hinduistische Hochzeiten, festliche Zeremonien (Diwali, Navratri), Empfänge.
+- **Anforderungen**: Sechs bis neun Yards langer, kunstvoll plissierter Sari mit taillierter Bluse (Choli) und Unterrock; oder schwerer ausgestellter Lehenga-Rock mit bestickter Choli-Bluse und drapierter Dupatta-Stola.
+- **Strikte negative Verbote**:
+  - KEIN reines, ungemustertes Schwarz oder schlichtes asketisches Weiß bei hinduistischen Hochzeiten (der Trauer vorbehalten).
+  - Freizügige Clubbing-Schnitte oder Sportschuhe strikt vermeiden.
 
 ---
 
