@@ -105,9 +105,14 @@ async def widen_stylist_response(
         out["fashion_scout_picks"] = scout[:MAX_TREND_CARDS]
 
         # Nano Banana visualization gate:
-        # Strictly require explicit "show me" trigger so routine chat responses aren't blocked by generative image calls.
+        # Restrict free users from triggering image generation via Gemini Nano Banana (gemini-3.1-flash-lite-image)
+        # when a user is missing an item and the marketplace has no listings.
+        # Only paid subscribers (manager/professional) or testers can trigger Nano Banana with an explicit request.
+        from app.services.credit_manager import get_user_tier
+        is_free_user = get_user_tier(user) == "free"
         explicit = bool(_VISUALIZE_RE.search(user_text or ""))
-        if explicit:
+
+        if explicit and not is_free_user:
             out["generated_examples"] = await _gather_visualizations(
                 advice=advice,
                 user_text=user_text,
@@ -115,6 +120,8 @@ async def widen_stylist_response(
                 user=user,
                 explicit_trigger=explicit,
             )
+        else:
+            out["generated_examples"] = []
     except Exception as exc:  # noqa: BLE001
         logger.warning("widen_stylist_response soft-failed: %s", repr(exc)[:240])
     return out
@@ -227,6 +234,9 @@ async def _gather_visualizations(
     explicit_trigger: bool,  # noqa: ARG001 — reserved for richer prompts
 ) -> list[dict[str, Any]]:
     if gemini_image_service is None:
+        return []
+    from app.services.credit_manager import get_user_tier
+    if get_user_tier(user) == "free":
         return []
     # Pick at most MAX_VISUALIZATIONS categories — prefer shoes / dress
     # / outerwear since those visually anchor an outfit.

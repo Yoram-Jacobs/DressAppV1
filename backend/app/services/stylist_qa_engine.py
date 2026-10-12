@@ -36,10 +36,10 @@ from app.services.stylist_scheduler_brain import (
 logger = logging.getLogger(__name__)
 
 ROLE_ALLOWED_CATEGORIES: dict[str, set[str]] = {
-    "top": {"top", "tops", "shirt", "blouse", "sweater", "hoodie", "cardigan", "t-shirt", "polo", "vest"},
+    "top": {"top", "tops", "shirt", "blouse", "sweater", "hoodie", "cardigan", "t-shirt", "polo"},
     "bottom": {"bottom", "bottoms", "pants", "trousers", "jeans", "shorts", "skirt"},
     "shoes": {"shoes", "footwear", "sneakers", "boots", "loafers", "sandals", "heels", "slippers", "shoe"},
-    "outerwear": {"outerwear", "jacket", "coat", "blazer", "cardigan", "trench", "vest"},
+    "outerwear": {"outerwear", "jacket", "coat", "blazer", "cardigan", "trench", "vest", "waistcoat"},
     "accessory": {"accessory", "accessories", "bag", "belt", "hat", "glasses", "jewelry", "scarf", "tie", "necktie"},
     "dress": {"dress", "dresses", "one-piece", "jumpsuit"},
     "headwear": {"accessory", "accessories", "hat", "headwear"},
@@ -178,6 +178,8 @@ def check_garment_role_mismatch(item: dict[str, Any], role: str) -> str | None:
             return f"Item '{item_label}' is an accessory but was placed in 'top' role."
         if is_outerwear and not is_top and any(w in title_name_sub for w in ("trench", "coat", "parka", "puffer", "מעיל", "overcoat")):
             return f"Item '{item_label}' is heavy outerwear but was placed in 'top' role."
+        if any(w in title_name_sub for w in ("suit vest", "waistcoat", "וסט מחויט", "וסט חליפה")):
+            return f"Item '{item_label}' is a suit vest/waistcoat and cannot be worn as a standalone top without an underlying shirt."
 
     # 2. Role: BOTTOM — strictly reject tops, footwear, dresses, outerwear, accessories
     elif role_norm == "bottom":
@@ -1315,6 +1317,7 @@ def find_best_garment_replacement(
     axioms: list[Any] | None = None,
     recent_item_ids: set[str] | list[str] | None = None,
     do_dont_negative_rules: list[str] | None = None,
+    is_business_or_meeting: bool = False,
 ) -> dict[str, Any] | None:
     """Search user's closet metadata for the best matching replacement garment for a specific role."""
     allowed_cats = ROLE_ALLOWED_CATEGORIES.get(role, set())
@@ -1390,6 +1393,22 @@ def find_best_garment_replacement(
                         break
             if not is_dd_clean:
                 continue
+
+        if is_business_or_meeting:
+            all_text_it = f"{it.get('title') or ''} {it.get('name') or ''} {it.get('sub_category') or ''}".lower()
+            if role == "bottom" or cat == "bottom":
+                if is_shorts_garment(it, all_text_it, role=role):
+                    continue
+                if any(w in all_text_it for w in ("sweatpants", "joggers", "טרנינג", "distressed", "ripped", "קרוע")):
+                    continue
+            elif role in ("shoes", "footwear") or cat in ("shoes", "footwear"):
+                if any(w in all_text_it for w in ("flip-flop", "slide", "slides", "כפכף", "כפכפים", "running sneaker", "athletic sneaker", "running shoe", "running shoes", "נעלי ריצה", "נעלי ספורט", "gym shoes")):
+                    continue
+            elif role in ("top", "shirt") or cat in ("top", "shirt"):
+                if any(w in all_text_it for w in ("suit vest", "waistcoat", "וסט מחויט", "וסט חליפה")):
+                    continue
+                if any(w in all_text_it for w in ("tank top", "tank", "sleeveless", "גופייה", "crop top", "חולצת בטן")):
+                    continue
 
         score = calculate_garment_style_score(
             it,
@@ -1508,6 +1527,22 @@ LOCALIZED_PALETTE_MOURNING: dict[str, str] = {
     "zh": "深藏青、黑色与炭灰色",
     "ja": "ダークネイビー、ブラック、チャコールグレー",
     "hi": "गहरा नेवी ब्लू, काला और चारकोल ग्रे",
+}
+
+LOCALIZED_COLOR_HARMONY_DEFAULT: dict[str, str] = {
+    "en": "Clean and harmonious color coordination providing a balanced, polished look",
+    "he": "שילוב גוונים נקי והרמוני המעניק מראה מאוזן ומאופק",
+    "ar": "تنسيق ألوان متناسق ونظيف يمنح مظهراً متوازناً وأنيقاً",
+    "es": "Combinación de colores limpia y armoniosa que aporta un aspecto equilibrado",
+    "fr": "Coordination des couleurs harmonieuse et équilibrée",
+    "de": "Harmonische und klare Farbabstimmung für ein ausgewogenes Gesamtbild",
+    "it": "Coordinamento di colori pulito e armonioso per un aspetto equilibrato",
+    "pt": "Combinação de cores limpa e harmoniosa proporcionando um visual equilibrado",
+    "nl": "Harmonieus en evenwichtig kleurgebruik voor een verzorgde uitstraling",
+    "ru": "Гармоничное и сбалансированное сочетание цветов",
+    "zh": "干净和谐的色彩搭配，展现平衡得体的外观",
+    "ja": "調和の取れた配色が、バランスの良い洗練された印象を与えます",
+    "hi": "साफ और सामंजस्यपूर्ण रंग संयोजन जो एक संतुलित रूप प्रदान करता है",
 }
 
 LOCALIZED_DAYTIME_CONDOLENCE: dict[str, str] = {
@@ -1711,6 +1746,13 @@ def _clean_garment_title_for_lang(name: str, base_lang: str) -> str:
         clean = re.sub(r"\bvest\b", "וסט", clean, flags=re.IGNORECASE)
         clean = re.sub(r"\bסינר\b", "וסט", clean)
         clean = re.sub(r"התאוםשתאור", "וסט", clean)
+        clean = re.sub(r"abstract\s+concentric\s+pattern\s+t-?shirt", "חולצת טי בדוגמה מופשטת", clean, flags=re.IGNORECASE)
+        clean = re.sub(r"concentric\s+pattern\s+t-?shirt", "חולצת טי מעוצבת", clean, flags=re.IGNORECASE)
+        clean = re.sub(r"black\s+straight-?leg\s+casual\s+pants", "מכנסיים שחורים ישרים", clean, flags=re.IGNORECASE)
+        clean = re.sub(r"grey\s+athletic\s+running\s+sneakers", "סניקרס ריצה אפורות", clean, flags=re.IGNORECASE)
+        clean = re.sub(r"black\s+tailored\s+suit\s+vest", "וסט מחויט שחור", clean, flags=re.IGNORECASE)
+    # Strip hallucinated transliteration tokens
+    clean = re.sub(r"(?:אוברייד'?|אובריז'?|כנטור|קורטס)\s*", "", clean)
     return clean.strip()
 
 
@@ -2632,38 +2674,58 @@ def sanitize_spoken_reply_and_notes(
 
             notes = rec.get("designer_notes")
             if isinstance(notes, dict):
-                # Color harmony
-                ch = notes.get("color_harmony")
-                if ch and isinstance(ch, str):
-                    # Strip formulaic math tokens like "60-30-10"
-                    ch = re.sub(r"^\s*(?:60[-/:]30[-/:]10|70[-/:]20[-/:]10|1:2(?:\s*Ratio)?|\d+[-/:]\d+[-/:]\d+)\s*[-—:]*\s*", "", ch, flags=re.IGNORECASE)
+                # Check for gibberish hallucination terms or repetitive hallucination loops
+                raw_combined = " ".join(str(v) for v in notes.values()).lower()
+                is_garbled_notes = any(term in raw_combined for term in (
+                    "אוברייד", "אובריז", "כנטור", "קורטס", "חליל", "תאורה אדום", "חליפת ג'ינס", "התרבות העירונית"
+                ))
+                # Check if multiple fields share repetitive endings (>15 chars)
+                values_str = [str(v).strip() for v in notes.values() if isinstance(v, str) and len(str(v).strip()) >= 20]
+                if len(values_str) >= 2 and len(set(v[-20:] for v in values_str)) == 1:
+                    is_garbled_notes = True
+
+                if is_garbled_notes:
                     if is_mourning:
-                        # Remove "אדום" / "red" / "זהב" from mourning palette
-                        mourning_palette = LOCALIZED_PALETTE_MOURNING.get(base_lang, LOCALIZED_PALETTE_MOURNING["en"])
-                        ch = re.sub(r"(?:כחול\s+אדום|אדום|red|זהב|gold)[, ]*", mourning_palette, ch, flags=re.IGNORECASE)
-                    notes["color_harmony"] = sanitize_stylist_text(ch, lang=lang)
-
-                # Texture balance
-                tb = notes.get("texture_balance")
-                if tb and isinstance(tb, str):
-                    # Clean garbled repeating phrases
-                    if any(w in tb.lower() for w in GARBLED_TEXTURE_PATTERNS):
+                        notes["color_harmony"] = LOCALIZED_PALETTE_MOURNING.get(base_lang, LOCALIZED_PALETTE_MOURNING["en"])
+                        notes["texture_balance"] = LOCALIZED_TEXTURE_MOURNING.get(base_lang, LOCALIZED_TEXTURE_MOURNING["en"])
+                        notes["silhouette"] = LOCALIZED_SILHOUETTE_MOURNING.get(base_lang, LOCALIZED_SILHOUETTE_MOURNING["en"])
+                    else:
+                        notes["color_harmony"] = LOCALIZED_COLOR_HARMONY_DEFAULT.get(base_lang, LOCALIZED_COLOR_HARMONY_DEFAULT["en"])
+                        notes["texture_balance"] = LOCALIZED_TEXTURE_DEFAULT.get(base_lang, LOCALIZED_TEXTURE_DEFAULT["en"])
+                        notes["silhouette"] = LOCALIZED_SILHOUETTE_DEFAULT.get(base_lang, LOCALIZED_SILHOUETTE_DEFAULT["en"])
+                else:
+                    # Color harmony
+                    ch = notes.get("color_harmony")
+                    if ch and isinstance(ch, str):
+                        # Strip formulaic math tokens like "60-30-10"
+                        ch = re.sub(r"^\s*(?:60[-/:]30[-/:]10|70[-/:]20[-/:]10|1:2(?:\s*Ratio)?|\d+[-/:]\d+[-/:]\d+)\s*[-—:]*\s*", "", ch, flags=re.IGNORECASE)
                         if is_mourning:
-                            tb = LOCALIZED_TEXTURE_MOURNING.get(base_lang, LOCALIZED_TEXTURE_MOURNING["en"])
-                        else:
-                            tb = LOCALIZED_TEXTURE_DEFAULT.get(base_lang, LOCALIZED_TEXTURE_DEFAULT["en"])
-                    notes["texture_balance"] = sanitize_stylist_text(tb, lang=lang)
+                            # Remove "אדום" / "red" / "זהב" from mourning palette
+                            mourning_palette = LOCALIZED_PALETTE_MOURNING.get(base_lang, LOCALIZED_PALETTE_MOURNING["en"])
+                            ch = re.sub(r"(?:כחול\s+אדום|אדום|red|זהב|gold)[, ]*", mourning_palette, ch, flags=re.IGNORECASE)
+                        notes["color_harmony"] = sanitize_stylist_text(ch, lang=lang)
 
-                # Silhouette
-                sil = notes.get("silhouette")
-                if sil and isinstance(sil, str):
-                    # Clean nonsense like "כפתורים קצרים עם חגורת גב"
-                    if any(w in sil.lower() for w in GARBLED_SILHOUETTE_PATTERNS):
-                        if is_mourning:
-                            sil = LOCALIZED_SILHOUETTE_MOURNING.get(base_lang, LOCALIZED_SILHOUETTE_MOURNING["en"])
-                        else:
-                            sil = LOCALIZED_SILHOUETTE_DEFAULT.get(base_lang, LOCALIZED_SILHOUETTE_DEFAULT["en"])
-                    notes["silhouette"] = sanitize_stylist_text(sil, lang=lang)
+                    # Texture balance
+                    tb = notes.get("texture_balance")
+                    if tb and isinstance(tb, str):
+                        # Clean garbled repeating phrases
+                        if any(w in tb.lower() for w in GARBLED_TEXTURE_PATTERNS):
+                            if is_mourning:
+                                tb = LOCALIZED_TEXTURE_MOURNING.get(base_lang, LOCALIZED_TEXTURE_MOURNING["en"])
+                            else:
+                                tb = LOCALIZED_TEXTURE_DEFAULT.get(base_lang, LOCALIZED_TEXTURE_DEFAULT["en"])
+                        notes["texture_balance"] = sanitize_stylist_text(tb, lang=lang)
+
+                    # Silhouette
+                    sil = notes.get("silhouette")
+                    if sil and isinstance(sil, str):
+                        # Clean nonsense like "כפתורים קצרים עם חגורת גב"
+                        if any(w in sil.lower() for w in GARBLED_SILHOUETTE_PATTERNS):
+                            if is_mourning:
+                                sil = LOCALIZED_SILHOUETTE_MOURNING.get(base_lang, LOCALIZED_SILHOUETTE_MOURNING["en"])
+                            else:
+                                sil = LOCALIZED_SILHOUETTE_DEFAULT.get(base_lang, LOCALIZED_SILHOUETTE_DEFAULT["en"])
+                        notes["silhouette"] = sanitize_stylist_text(sil, lang=lang)
             elif isinstance(notes, str) and notes.strip():
                 clean_str = notes.strip()
                 clean_str = re.sub(r"^\s*(?:60[-/:]30[-/:]10|70[-/:]20[-/:]10|1:2(?:\s*Ratio)?|\d+[-/:]\d+[-/:]\d+)\s*[-—:]*\s*", "", clean_str, flags=re.IGNORECASE)
@@ -2783,6 +2845,13 @@ async def evaluate_and_authorize_outfit(
     is_mourning = _is_mourning_context(user_text)
     is_wedding = any(w in user_text.lower() for w in (
         "wedding", "חתונה", "vivaha", "boda", "mariage", "hochzeit", "casamento", "matrimonio", "נישואין", "חופה", "חתן", "כלה"
+    ))
+    is_business_or_meeting = any(w in user_text.lower() for w in (
+        "meeting", "meetings", "appointment", "consultation", "interview", "job interview",
+        "office", "work", "corporate", "business", "business casual", "business-casual",
+        "city hall", "municipality", "council", "court", "courtroom", "hearing", "conference", "embassy", "consulate",
+        "פגישה", "פגישות", "פגישת", "עירייה", "עיריה", "עיריית", "ראיון", "עבודה", "משרד",
+        "בית משפט", "כנס", "ועידה", "דיון", "שגרירות", "קונסוליה", "משרדי ממשלה"
     ))
 
     # Build lookup map for user's full closet
@@ -2941,6 +3010,38 @@ async def evaluate_and_authorize_outfit(
                         is_valid_item = False
                         item_data = None
 
+            # Check for business / meeting / city hall etiquette violations
+            if is_valid_item and is_business_or_meeting and item_data:
+                all_text_check = f"{item_data.get('title') or ''} {item_data.get('name') or ''} {item_data.get('sub_category') or ''}".lower()
+                cat_qa = norm_category(item_data.get("category"))
+                if role in ("shoes", "footwear") or cat_qa in ("shoes", "footwear"):
+                    if any(w in all_text_check for w in ("flip-flop", "flip flop", "slides", "כפכפים", "כפכפי ים", "סנדלי ים", "נעלי בית", "slippers")):
+                        logger.warning("QA: Meeting violation: footwear '%s' is unacceptable for a meeting", item_data.get("title"))
+                        is_valid_item = False
+                        item_data = None
+                    elif any(w in all_text_check for w in ("running sneaker", "athletic sneaker", "running shoe", "running shoes", "נעלי ריצה", "נעלי ספורט", "gym shoes")):
+                        logger.warning("QA: Meeting violation: athletic running shoes '%s' are unacceptable for an official/business meeting", item_data.get("title"))
+                        is_valid_item = False
+                        item_data = None
+                elif role == "bottom" or cat_qa == "bottom":
+                    if is_shorts_garment(item_data, all_text_check, role=role):
+                        logger.warning("QA: Meeting violation: shorts '%s' are unacceptable for an official/business meeting", item_data.get("title"))
+                        is_valid_item = False
+                        item_data = None
+                    elif any(w in all_text_check for w in ("sweatpants", "joggers", "טרנינג", "מכנסי טרנינג", "distressed", "ripped", "קרעים", "graffiti")):
+                        logger.warning("QA: Meeting violation: bottom '%s' is unacceptable for an official/business meeting", item_data.get("title"))
+                        is_valid_item = False
+                        item_data = None
+                elif role in ("top", "shirt") or cat_qa in ("top", "shirt"):
+                    if any(w in all_text_check for w in ("suit vest", "waistcoat", "וסט מחויט", "וסט חליפה")):
+                        logger.warning("QA: Meeting violation: standalone suit vest '%s' cannot be worn without an underlying shirt", item_data.get("title"))
+                        is_valid_item = False
+                        item_data = None
+                    elif any(w in all_text_check for w in ("tank top", "tank", "sleeveless", "גופייה", "גופיה", "crop top", "חולצת בטן")):
+                        logger.warning("QA: Meeting violation: revealing top '%s' is unacceptable for an official/business meeting", item_data.get("title"))
+                        is_valid_item = False
+                        item_data = None
+
             # Check for negative constraint violations across all retrieved active axioms
             if is_valid_item and item_data and axioms:
                 for ax in axioms:
@@ -3036,6 +3137,7 @@ async def evaluate_and_authorize_outfit(
                     axioms=axioms,
                     recent_item_ids=recent_set,
                     do_dont_negative_rules=do_dont_negative_rules,
+                    is_business_or_meeting=is_business_or_meeting,
                 )
                 if replacement:
                     new_id = str(replacement.get("id") or replacement.get("_id"))
@@ -3054,24 +3156,14 @@ async def evaluate_and_authorize_outfit(
                     continue
 
             # Item is valid and compliant!
-            # Attribute Grounding: ensure item description does not hallucinate false colors that contradict closet item
+            # Attribute Grounding: ground item name and description to actual closet metadata
             if item_data:
                 item_title = item_data.get("title") or item_data.get("name") or ""
-                raw_desc = str(it.get("description") or "")
-                item_color_names = []
-                for c in (item_data.get("colors") or []):
-                    if isinstance(c, dict) and c.get("name"):
-                        item_color_names.append(str(c["name"]).lower())
-                    elif isinstance(c, str):
-                        item_color_names.append(c.lower())
-                if item_color_names:
-                    # If item is red, but description falsely hallucinates blue
-                    if any(c in ("red", "אדום") for c in item_color_names) and not any(c in ("blue", "כחול") for c in item_color_names):
-                        if any(w in raw_desc.lower() for w in ("blue", "כחול", "כחולה", "כחולים")):
-                            it["description"] = item_title
-                            it["name"] = item_title
-                if not it.get("description") or "מונה" in str(it.get("description") or ""):
-                    it["description"] = item_title or str(it.get("description") or "")
+                clean_title = _clean_garment_title_for_lang(item_title, base_lang)
+                it["name"] = clean_title or item_title
+                it["description"] = clean_title or item_title
+                if not it.get("image_url"):
+                    it["image_url"] = item_data.get("image_url") or item_data.get("clean_image_url")
 
             used_item_ids.add(cid)
             roles_present.add(role)

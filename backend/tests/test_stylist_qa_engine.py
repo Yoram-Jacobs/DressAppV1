@@ -1542,6 +1542,66 @@ def test_reconcile_outfit_title_and_shopping_hindu_wedding_phantom_kurta_and_kha
     assert "shopping suggestions" in spoken.lower() or "traditional attire" in spoken.lower()
 
 
+def test_qa_city_hall_meeting_rejects_shorts_running_sneakers_and_suit_vest():
+    import asyncio
+    closet = [
+        {"id": "vest-1", "title": "Black Tailored Suit Vest", "name": "Black Tailored Suit Vest", "category": "Top", "sub_category": "Vests"},
+        {"id": "shirt-1", "title": "Classic Oxford Button-down Shirt", "name": "Classic Oxford Button-down Shirt", "category": "Top", "sub_category": "Shirt"},
+        {"id": "shorts-1", "title": "מכנסיים קצרים שחורים", "name": "מכנסיים קצרים שחורים", "category": "Bottom", "sub_category": "Shorts"},
+        {"id": "pants-1", "title": "Black Straight-Leg Casual Pants", "name": "Black Straight-Leg Casual Pants", "category": "Bottom", "sub_category": "Pants"},
+        {"id": "sneakers-1", "title": "Grey Athletic Running Sneakers", "name": "Grey Athletic Running Sneakers", "category": "Footwear", "sub_category": "Sneakers"},
+        {"id": "shoes-1", "title": "Classic Leather Derby Shoes", "name": "Classic Leather Derby Shoes", "category": "Footwear", "sub_category": "Shoes"},
+    ]
+    raw_advice = {
+        "outfit_recommendations": [
+            {
+                "name": "אלגנט-קז'ואל מוקפד",
+                "items": [
+                    {"role": "top", "description": "אוברייד' י סט אדום", "closet_item_id": "vest-1"},
+                    {"role": "bottom", "description": "מכנסיים קצרים שחורים", "closet_item_id": "shorts-1"},
+                    {"role": "shoes", "description": "Grey Athletic Running Sneakers", "closet_item_id": "sneakers-1"},
+                ],
+                "designer_notes": {
+                    "color_harmony": "אוברייד' י סט אדום עם חליפת ג'ינס מותאמים לדרישות המודרניות של התרבות העירונית.",
+                    "texture_balance": "חליל אוברייד' שחור עם חליפת ג'ינס אדום ותאורה אדום מתאימים לדרישות המודרניות של התרבות העירונית.",
+                    "silhouette": "האוברייד' סט אדום עם חליפת ג'ינס מותאם לדרישות המודרניות של התרבות העירונית.",
+                },
+                "why": "מראה מותאם אישית הכולל אוברייד' י סט אדום, מכנסיים קצרים שחורים ו-Grey Athletic Running Sneakers.",
+            }
+        ]
+    }
+    reviewed = asyncio.run(evaluate_and_authorize_outfit(
+        user_text="לבוש מתאים לפגישה בעירייה",
+        advice_payload=raw_advice,
+        all_closet_items=closet,
+        user_profile={"preferred_language": "he"},
+    ))
+    rec = reviewed["outfit_recommendations"][0]
+
+    # Verify bottom is NOT shorts
+    bottom_item = next(it for it in rec["items"] if it.get("role") == "bottom")
+    assert bottom_item["closet_item_id"] == "pants-1"
+    assert "מכנסיים קצרים" not in bottom_item["description"]
+
+    # Verify shoes are NOT running sneakers
+    shoe_item = next(it for it in rec["items"] if it.get("role") in ("shoes", "footwear"))
+    assert shoe_item["closet_item_id"] == "shoes-1"
+    assert "running" not in shoe_item["description"].lower()
+
+    # Verify top is NOT standalone suit vest
+    top_item = next(it for it in rec["items"] if it.get("role") == "top")
+    assert top_item["closet_item_id"] == "shirt-1"
+
+    # Verify gibberish is eliminated from items, why, and designer_notes
+    assert "אוברייד" not in rec["why"]
+    assert "חליפת ג'ינס" not in rec["why"]
+    for note in rec["designer_notes"].values():
+        assert "אוברייד" not in note
+        assert "חליפת ג'ינס" not in note
+        assert "התרבות העירונית" not in note
+
+
+
 
 
 

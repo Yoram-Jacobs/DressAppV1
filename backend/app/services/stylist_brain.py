@@ -87,7 +87,7 @@ class GemmaStylistBrain:
         from app.services.vision.llm import _call_gemma_space
         from app.services import provider_activity
 
-        # Cap closet items to top 12 most relevant items and strip heavy nested structures
+        # Provide the full candidate closet pool with clean, compact fields
         gemma_closet = None
         if closet_summary:
             gemma_closet = [
@@ -99,7 +99,7 @@ class GemmaStylistBrain:
                     "color": it.get("color"),
                     "material": it.get("material"),
                 }
-                for it in closet_summary[:12]
+                for it in closet_summary
             ]
 
         sys_msg, prompt_text = await prepare_stylist_prompt(

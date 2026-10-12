@@ -283,8 +283,12 @@ def calculate_garment_style_score(
     is_formal_or_smart = any(w in prompt_lower for w in (
         "elegant", "smart casual", "smart-casual", "business", "formal", "party", "birthday", 
         "dinner", "restaurant", "wedding", "cocktail", "celebration", "date night", "asian food",
+        "meeting", "meetings", "appointment", "consultation", "interview", "job interview",
+        "city hall", "municipality", "council", "court", "courtroom", "hearing", "conference", "embassy", "consulate",
         "אלגנטי", "ערב", "מסיבה", "מסעדה", "חתונה", "אירוע", "חגיגי", "יומולדת", "יום הולדת",
-        "office", "משרד", "business-casual", "business casual"
+        "office", "משרד", "business-casual", "business casual",
+        "פגישה", "פגישות", "פגישת", "עירייה", "עיריה", "עיריית", "ראיון", "עבודה",
+        "בית משפט", "כנס", "ועידה", "דיון", "שגרירות", "קונסוליה", "משרדי ממשלה"
     ))
     
     is_swim_beach = bool(re.search(
@@ -344,12 +348,14 @@ def calculate_garment_style_score(
             return -100
         if any(w in all_text for w in ("tank top", "tank", "sleeveless", "גופייה", "גופיה")):
             return -80
-        if any(w in all_text for w in ("sweatpants", "pajama", "sleepwear", "פיג'מה", "טרנינג")):
-            return -70
-        if any(w in all_text for w in ("flip flop", "slide", "slides", "כפכף", "כפכפים")):
-            return -70
-        if any(w in all_text for w in ("running shorts", "gym shorts")):
-            return -60
+        if any(w in all_text for w in ("shorts", "שורטס", "מכנסיים קצרים", "bermuda", "ברמודה")):
+            return -100
+        if any(w in all_text for w in ("sweatpants", "pajama", "sleepwear", "פיג'מה", "טרנינג", "joggers")):
+            return -80
+        if any(w in all_text for w in ("flip flop", "slide", "slides", "כפכף", "כפכפים", "sandals", "סנדלים", "slippers")):
+            return -80
+        if any(w in all_text for w in ("running sneaker", "athletic sneaker", "running shoe", "running shoes", "נעלי ריצה", "נעלי ספורט", "gym shoes")):
+            return -80
             
         # Boosts for elegant / smart casual / work pieces
         if any(w in all_text for w in ("button", "dress shirt", "collared", "polo", "oxford", "linen shirt", "חולצה מכופתרת", "פולו", "מכופתרת")):
