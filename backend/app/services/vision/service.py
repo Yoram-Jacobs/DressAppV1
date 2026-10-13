@@ -1411,11 +1411,12 @@ class GarmentVisionService:
                         d["mask"] = _np.where(combined_bot > 0, _np.uint8(0), d["mask"])
                         new_bb = clothing_parser._mask_bbox(d["mask"])
                         if new_bb is not None:
+                            m_h, m_w = d["mask"].shape[:2]
                             d["bbox"] = [
-                                int(new_bb[0] / img_size[1] * 1000),
-                                int(new_bb[1] / img_size[0] * 1000),
-                                int(new_bb[2] / img_size[1] * 1000),
-                                int(new_bb[3] / img_size[0] * 1000),
+                                int(new_bb[0] / m_h * 1000),
+                                int(new_bb[1] / m_w * 1000),
+                                int(new_bb[2] / m_h * 1000),
+                                int(new_bb[3] / m_w * 1000),
                             ]
 
         for det in useful:
