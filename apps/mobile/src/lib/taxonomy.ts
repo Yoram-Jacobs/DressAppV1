@@ -58,6 +58,7 @@ export const DRESS_CODE_OPTIONS = [
   'formal',
   'athletic',
   'loungewear',
+  'traditional',
 ] as const;
 
 export const CONDITION_OPTIONS = ['bad', 'fair', 'good', 'excellent'] as const;
@@ -346,8 +347,8 @@ export const canonicalSubCategoryKey = (raw?: string): string => {
   if (normalized.includes('necklace') || normalized.includes('שרשרת') || normalized.includes('שרשראות') || normalized.includes('колье') || normalized.includes('цепочк') || normalized.includes('ожерель')) return 'necklaces';
   if (normalized.includes('earring') || normalized.includes('עגיל') || normalized.includes('серьг') || normalized.includes('сережк')) return 'earrings';
   if (normalized.includes('bracelet') || normalized.includes('bangle') || normalized.includes('צמיד') || normalized.includes('браслет')) return 'bracelets_and_bangles';
-  if (normalized.includes('ring') || normalized.includes('טבעת') || normalized.includes('טבעות') || normalized.includes('кольц') || normalized.includes('кольца')) return 'rings';
-  if (normalized.includes('brooch') || normalized.includes('pin') || normalized.includes('סיכת_עיטור') || normalized.includes('סיכות_עיטור') || normalized.includes('סיכה') || normalized.includes('סיכות') || normalized.includes('брошь') || normalized.includes('броши') || normalized.includes('значок')) return 'brooches_and_pins';
+  if ((/(^|_)rings?(_|$)/.test(normalized) || normalized.includes('טבעת') || normalized.includes('טבעות') || normalized.includes('кольц') || normalized.includes('кольца')) && !normalized.includes('spring') && !normalized.includes('string') && !normalized.includes('earring')) return 'rings';
+  if (normalized.includes('brooch') || /(^|_)pins?(_|$)/.test(normalized) || normalized.includes('סיכת_עיטור') || normalized.includes('סיכות_עיטור') || normalized.includes('סיכה') || normalized.includes('סיכות') || normalized.includes('брошь') || normalized.includes('броши') || normalized.includes('значок')) return 'brooches_and_pins';
   if (normalized.includes('watch') || normalized.includes('שעון') || normalized.includes('שעונים') || normalized.includes('часы') || normalized.includes('наручн_час')) return 'watches';
   if (normalized.includes('body_jewelry') || normalized.includes('תכשיט_גוף') || normalized.includes('украшен_для_тел')) return 'body_jewelry';
 

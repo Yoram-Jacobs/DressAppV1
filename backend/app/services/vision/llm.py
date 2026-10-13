@@ -310,7 +310,7 @@ _GARMENT_OBJECT_SCHEMA: dict[str, Any] = {
             "type": "string",
             "enum": [
                 "casual", "smart-casual", "business",
-                "formal", "athletic", "loungewear",
+                "formal", "athletic", "loungewear", "traditional",
             ],
         },
         "season": {

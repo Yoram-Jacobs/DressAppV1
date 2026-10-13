@@ -115,6 +115,7 @@ const DRESS_CODE_OPTIONS = [
   "formal",
   "athletic",
   "loungewear",
+  "traditional",
 ];
 const GENDER_OPTIONS = ["men", "women", "unisex", "kids"];
 const SEASON_OPTIONS = ["spring", "summer", "fall", "winter", "all"];
@@ -539,10 +540,15 @@ const hydrate = (a, user, t, i18n) => {
     out.price_cents = basePrices[out.category] || 2500;
   }
 
+  // Model gender from visual detection takes highest precedence
+  if (out.model_gender === 'women' || out.model_gender === 'men') {
+    out.gender = out.model_gender;
+  }
+
   // 4. Fallback gender: feminine sleeve / cut detection or masculine cut detection
   if (!out.gender || out.gender === 'unisex') {
     const femBlob = `${subRaw} ${itemRaw} ${out.name} ${out.title} ${out.caption} ${(Array.isArray(out.tags) ? out.tags : []).join(' ')}`.toLowerCase();
-    const isMascGarment = /men|male|guy|kurta|tuxedo|boxer|sherwani|thobe|dishdasha|גבר|גברים|קורטה/.test(femBlob);
+    const isMascGarment = /men|male|guy|tuxedo|boxer|sherwani|thobe|dishdasha|גבר|גברים/.test(femBlob);
     if (isMascGarment) {
       out.gender = 'men';
     } else {
@@ -553,6 +559,40 @@ const hydrate = (a, user, t, i18n) => {
       const isFemTop = catLower === 'top' && (isFemUser || isFemSleeveOrCut || isFemSize || /תכלת|כחול בהיר|light blue|baby blue/.test(femBlob));
       if (isFemUser || isFemSleeveOrCut || isFemTop) {
         out.gender = 'women';
+      }
+    }
+  }
+
+  // Cultural attire dress code and tradition inference
+  const subCanonical = canonicalSubCategoryKey(subRaw || itemRaw);
+  const isTraditionalGarment = [
+    'kurta', 'sherwani', 'achkan', 'bandhgala', 'sari', 'lehenga',
+    'galabiya', 'kaftan', 'thobe', 'abaya', 'hanbok', 'kimono',
+    'dirndl', 'guayabera', 'dhoti', 'salwar', 'kippah', 'keffiyeh',
+    'turban', 'hijab', 'mitpachat', 'shtreimel', 'tarboush', 'rumal'
+  ].includes(subCanonical) || /קורטה|שרוואני|אצ'קאן|בנדגאלה|כפתן|עבאיה|גלבייה|תוב|סארי|להנגה|הנבוק|קימונו|דירנדל|גוואיאברה/.test(`${subRaw} ${itemRaw}`);
+
+  if (isTraditionalGarment) {
+    if (!out.dress_code || out.dress_code === 'casual') {
+      out.dress_code = 'traditional';
+    }
+    if (!out.tradition) {
+      const langPrefix = (i18n?.language || 'en').split('-')[0].toLowerCase();
+      const isHeLang = langPrefix === 'he' || langPrefix === 'iw';
+      if (['kurta', 'sherwani', 'achkan', 'bandhgala', 'sari', 'lehenga', 'dhoti', 'salwar', 'turban', 'rumal'].includes(subCanonical) || /קורטה|שרוואני|סארי|להנגה/.test(`${subRaw} ${itemRaw}`)) {
+        out.tradition = isHeLang ? 'הודית' : 'South Asian / Indian';
+      } else if (['galabiya', 'kaftan', 'thobe', 'abaya', 'keffiyeh', 'hijab', 'tarboush'].includes(subCanonical) || /כפתן|עבאיה|גלבייה|תוב|כאפייה/.test(`${subRaw} ${itemRaw}`)) {
+        out.tradition = isHeLang ? 'ערבית / מזרח תיכונית' : 'Middle Eastern / Arab';
+      } else if (['kippah', 'mitpachat', 'shtreimel'].includes(subCanonical) || /כיפה|מטפחת|שטריימל/.test(`${subRaw} ${itemRaw}`)) {
+        out.tradition = isHeLang ? 'יהודית' : 'Jewish';
+      } else if (['kimono'].includes(subCanonical) || /קימונו/.test(`${subRaw} ${itemRaw}`)) {
+        out.tradition = isHeLang ? 'יפנית' : 'Japanese';
+      } else if (['hanbok'].includes(subCanonical) || /הנבוק/.test(`${subRaw} ${itemRaw}`)) {
+        out.tradition = isHeLang ? 'קוריאנית' : 'Korean';
+      } else if (['dirndl'].includes(subCanonical) || /דירנדל/.test(`${subRaw} ${itemRaw}`)) {
+        out.tradition = isHeLang ? 'בווארית / אלפינית' : 'Bavarian / Alpine';
+      } else if (['guayabera'].includes(subCanonical) || /גוואיאברה/.test(`${subRaw} ${itemRaw}`)) {
+        out.tradition = isHeLang ? 'לטינית / קריבית' : 'Latin American / Caribbean';
       }
     }
   }
@@ -569,7 +609,7 @@ const hydrate = (a, user, t, i18n) => {
   }
 
   // 6. Fallback dress code & condition & quality & state
-  if (!out.dress_code) out.dress_code = 'casual';
+  if (!out.dress_code) out.dress_code = isTraditionalGarment ? 'traditional' : 'casual';
   if (!out.condition) out.condition = 'good';
   if (!out.quality) out.quality = 'mid';
   if (!out.state) out.state = 'used';
@@ -666,6 +706,10 @@ const hydrate = (a, user, t, i18n) => {
           out.item_type = t('taxonomy.item_type.ankle_boots', { defaultValue: 'Ankle Boots' });
         } else if (subK === 'sneakers' || /sneaker|סניקרס/i.test(out.sub_category)) {
           out.item_type = t('taxonomy.item_type.low_top_sneakers', { defaultValue: 'Low-top Sneakers' });
+        } else if (subK === 'kurta' || /קורטה|kurta/i.test(out.sub_category)) {
+          out.item_type = (lang === 'he' || lang === 'iw') ? 'קורטה קלאסית' : t('taxonomy.item_type.classic_kurta', { defaultValue: 'Classic Kurta' });
+        } else if (subK === 'sherwani' || /שרוואני|sherwani/i.test(out.sub_category)) {
+          out.item_type = (lang === 'he' || lang === 'iw') ? 'שרוואני קלאסי' : t('taxonomy.item_type.classic_sherwani', { defaultValue: 'Classic Sherwani' });
         } else {
           out.item_type = (lang === 'he' || lang === 'iw') ? `${out.sub_category} קלאסי` : `${out.sub_category} (Classic)`;
         }
@@ -702,7 +746,7 @@ const hydrate = (a, user, t, i18n) => {
       // Deduplicate and localize tags
       if (Array.isArray(out.tags) && out.tags.length > 0) {
         const seen = new Set();
-        const cleanTags = [];
+        const isAccessory = String(out.category || '').toLowerCase() === 'accessories';
         const excluded = new Set([
           String(out.category || '').toLowerCase(),
           String(out.sub_category || '').toLowerCase(),
@@ -712,8 +756,15 @@ const hydrate = (a, user, t, i18n) => {
           "women's clothing", "womens clothing", "men's clothing", "mens clothing",
           "footwear"
         ]);
+        if (!isAccessory) {
+          ['rings', 'ring', 'טבעות', 'טבעת', 'кольца', 'кольцо', 'earrings', 'earring', 'עגילים', 'עגיל', 'necklaces', 'necklace', 'שרשראות', 'שרשרת', 'bracelets', 'bracelet', 'צמידים', 'צמיד'].forEach((j) => excluded.add(j));
+        }
         for (const tg of out.tags) {
           if (!tg) continue;
+          const rawLow = String(tg).trim().toLowerCase();
+          if (!isAccessory && (rawLow === 'rings' || rawLow === 'ring' || rawLow === 'טבעות' || rawLow === 'טבעת')) {
+            continue;
+          }
           const localizedTg = labelForTag(tg, t) || tg;
           const k = String(localizedTg).trim().toLowerCase();
           if (!k || seen.has(k) || excluded.has(k)) continue;
@@ -790,10 +841,12 @@ const hydrate = (a, user, t, i18n) => {
             else if (/קצר|short/.test(captionBlob)) baseNoun = 'מכנסיים קצרים';
             else if (!baseNoun || baseNoun === 'בגד') baseNoun = 'מכנסיים';
           } else if (cat === 'top' || /shirt|top|blouse|חולצ|בלוז|סוודר/.test(subCatKey)) {
-            if (/פולו|polo/.test(captionBlob)) baseNoun = 'חולצת פולו';
+            if (/קורטה|kurta/.test(captionBlob) || subCatKey === 'kurta') baseNoun = 'קורטה';
+            else if (/שרוואני|sherwani/.test(captionBlob) || subCatKey === 'sherwani') baseNoun = 'שרוואני';
+            else if (/פולו|polo/.test(captionBlob)) baseNoun = 'חולצת פולו';
             else if (/מכופתרת|button[-_ ]?down/.test(captionBlob)) baseNoun = 'חולצה מכופתרת';
             else if (/בלוז|blouse/.test(captionBlob)) baseNoun = 'בלוזה';
-            else if (/טי|tee|t-shirt/.test(captionBlob)) baseNoun = 'חולצת טי';
+            else if (/(?:^|[^\u0590-\u05ea])(חולצת טי|חולצת-טי|טי)(?:$|[^\u0590-\u05ea])|tee\b|t-shirt\b/.test(captionBlob) && !/kurta|קורטה/.test(subCatKey)) baseNoun = 'חולצת טי';
             else if (/סוודר|סריג|sweater|knit/.test(captionBlob)) baseNoun = 'סוודר';
             else if (/גופיי|tank/.test(captionBlob)) baseNoun = 'גופייה';
             else if (!baseNoun || baseNoun === 'בגד') baseNoun = 'חולצה';
@@ -915,8 +968,9 @@ const hydrate = (a, user, t, i18n) => {
             if (/camo|הסוואה/.test(comb) && !title?.includes('הסוואה')) cues.push("בהדפס הסוואה");
             if (/knit|סריג|סרוג/.test(comb) && !title?.includes('סריג')) cues.push("במרקם סרוג נעים");
             if (/heel|עקב/.test(comb) && !title?.includes('עקב')) cues.push("עם עקב אלגנטי");
-            const cueText = cues.length ? ` ${cues.join(' ')}` : '';
-            if (cat === 'outerwear' || /מעיל|ז'קט/.test(title)) {
+            if (/קורטה|שרוואני|כפתן|עבאיה|סארי|להנגה/.test(title)) {
+              out.caption = `${title}${cueText} בעיצוב מסורתי אלגנטי ומרשים.`;
+            } else if (cat === 'outerwear' || /מעיל|ז'קט/.test(title)) {
               out.caption = `${title}${cueText} מושלם לעונות הקרירות ולהשלמת המראה.`;
             } else if (cat === 'footwear' || /נעלי|מוקסין|סנדל|מגפ|סניקרס/.test(title)) {
               out.caption = `${title}${cueText} המשלב נוחות וסטייל לכל הופעה.`;

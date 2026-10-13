@@ -150,8 +150,8 @@ _MASCULINE_CUT_KEYWORDS = {
     "boxershorts", "frack", "boxershort", "боксеры", "смокинг",
     "平角裤", "四角裤", "燕尾服", "ボクサーパンツ", "タキシード",
     "बॉक्सर", "टक्सीडो",
-    "kurta", "sherwani", "thobe", "dishdasha", "kandora", "dhoti", "lungi",
-    "קורטה", "ת'וב", "דשדאשה", "שרוואני", "कुर्ता", "शेरवानी",
+    "sherwani", "thobe", "dishdasha", "kandora", "dhoti", "lungi",
+    "ת'וב", "דשדאשה", "שרוואני", "शेरवानी",
 }
 _UNISEX_CUT_KEYWORDS = {
     "athletic tank top", "athletic tank", "tank top", "singlet", "running tank",
@@ -2818,12 +2818,21 @@ def _coerce_single_garment(
             "autumn": "סתיו",
             "vintage": "וינטג'",
             "streetwear": "אופנת רחוב",
+            "traditional": "מסורתי",
+            "ceremonial": "טקסי",
+            "cultural": "מסורתי",
+            "spring": "אביב",
         }
         category_echoes = {
             "women's footwear", "womens footwear", "men's footwear", "mens footwear",
             "footwear", "women's clothing", "womens clothing", "men's clothing", "mens clothing",
             "clothing", "apparel", "garment", "fashion", "נעלי נשים", "נעלי גברים", "הנעלה", "ביגוד"
         }
+        if cat_lower != "accessories":
+            category_echoes.update({
+                "rings", "ring", "טבעת", "טבעות", "earrings", "earring", "עגיל", "עגילים",
+                "necklaces", "necklace", "שרשרת", "שרשראות", "bracelets", "bracelet", "צמיד", "צמידים"
+            })
         # Strip striped tag on footwear unless zebra
         if cat_lower == "footwear" and "zebra" not in full_pat_text and "זברה" not in full_pat_text:
             category_echoes.add("striped")
@@ -2867,6 +2876,13 @@ def _coerce_single_garment(
         res["price_cents"] = int(base_prices.get(cat_lower, 3000) * mult)
 
     _coerce_seasons(res)
+    inferred_dc = _infer_garment_dress_code(res)
+    res["dress_code"] = inferred_dc if inferred_dc in _VALID_DRESS_CODE else "casual"
+    if not res.get("tradition") and res.get("dress_code") == "traditional":
+        inferred_trad = _infer_cultural_tradition(res, language=language)
+        if inferred_trad:
+            res["tradition"] = inferred_trad
+
     _sanitize_cross_category_contamination(res, language=language)
     return res
 
@@ -2883,7 +2899,7 @@ _VALID_CONDITION = {"bad", "fair", "good", "excellent"}
 _VALID_QUALITY = {"budget", "mid", "premium", "luxury"}
 _VALID_GENDER = {"men", "women", "unisex", "kids"}
 _VALID_DRESS_CODE = {
-    "casual", "smart-casual", "business", "formal", "athletic", "loungewear",
+    "casual", "smart-casual", "business", "formal", "athletic", "loungewear", "traditional",
 }
 _VALID_PATTERN = {
     "solid", "striped", "plaid", "floral", "herringbone",
@@ -3245,6 +3261,20 @@ _DRESS_CODE_ALIASES = {
     "औपचारिक": "formal",
     "स्पोर्ट्स": "athletic",
     "लाउंजवियर": "loungewear",
+
+    # Traditional dress codes across languages
+    "traditional": "traditional", "ceremonial": "traditional", "cultural": "traditional",
+    "מסורתי": "traditional", "טקסי": "traditional",
+    "تقليدي": "traditional", "تراثي": "traditional",
+    "tradicional": "traditional",
+    "traditionnel": "traditional",
+    "traditionell": "traditional", "tracht": "traditional",
+    "tradizionale": "traditional",
+    "traditioneel": "traditional",
+    "традиционный": "traditional", "народный": "traditional",
+    "传统": "traditional", "民族": "traditional",
+    "伝統的": "traditional", "和装": "traditional",
+    "पारंपरिक": "traditional",
 }
 
 
@@ -3260,12 +3290,31 @@ def _normalise_dress_code(raw: str | None) -> str | None:
 def _infer_garment_dress_code(parsed: dict[str, Any]) -> str:
     """Infer the dress code of a garment from its taxonomy, cut, and description.
 
-    Valid dress codes: 'casual', 'smart-casual', 'business', 'formal', 'athletic', 'loungewear'.
+    Valid dress codes: 'casual', 'smart-casual', 'business', 'formal', 'athletic', 'loungewear', 'traditional'.
     """
     raw_dc = _normalise_dress_code(parsed.get("dress_code"))
     sub = (parsed.get("sub_category") or "").lower().strip()
     itype = (parsed.get("item_type") or "").lower().strip()
     full_text = f"{parsed.get('title', '')} {parsed.get('name', '')} {sub} {itype} {parsed.get('caption', '')}".lower()
+
+    # Cultural & Traditional Attire (Kurta, Sherwani, Achkan, Bandhgala, Saree, Lehenga, Abaya, Kaftan, Thobe, Galabiya, Djellaba, Hanbok, Kimono, Dirndl, Guayabera, etc.)
+    is_traditional = (
+        raw_dc == "traditional"
+        or any(w in full_text for w in (
+            "kurta", "kurti", "sherwani", "achkan", "bandhgala", "nehru jacket", "saree", "sari", "lehenga", "chaniya choli",
+            "galabiya", "jalabiya", "kaftan", "caftan", "thobe", "thoub", "kandura", "dishdasha", "abaya", "djellaba",
+            "hanbok", "kimono", "yukata", "dirndl", "trachten", "guayabera", "dhoti", "salwar", "shalwar",
+            "kippah", "yarmulke", "keffiyeh", "shemagh", "ghutra", "turban", "dastar", "pagri", "hijab", "mitpachat", "tichel", "shtreimel", "tarboush", "rumal",
+            "קורטה", "שרוואני", "אצ'קאן", "בנדגאלה", "כפתן", "עבאיה", "גלבייה", "ת'וב", "תוב", "סארי", "להנגה", "הנבוק", "קימונו", "דירנדל", "גוואיאברה", "שרוואל", "כיפה", "כאפייה", "טורבן", "חיג'אב", "מטפחת", "שטריימל", "תרבוש",
+            "कुर्ता", "शेरवानी", "अचकन", "साड़ी", "लेहंगा", "धोती", "दुपट्टा"
+        ))
+        or sub in (
+            "kurta", "sherwani", "achkan", "bandhgala", "sari", "lehenga", "galabiya", "kaftan", "thobe", "abaya", "hanbok", "kimono", "dirndl", "guayabera", "dhoti", "salwar",
+            "kippah", "keffiyeh", "turban", "hijab", "mitpachat", "shtreimel", "tarboush", "rumal"
+        )
+    )
+    if is_traditional:
+        return "traditional"
 
     # Athletic fleece pants, trainer pants, joggers, and sweatpants should NEVER be business
     if any(w in full_text for w in (
@@ -3355,6 +3404,42 @@ def _infer_garment_dress_code(parsed: dict[str, Any]) -> str:
     if raw_dc in _VALID_DRESS_CODE:
         return raw_dc
     return "casual"
+
+
+def _infer_cultural_tradition(parsed: dict[str, Any], language: str | None = None) -> str | None:
+    """Infer cultural tradition (Indian, Arab, Jewish, East Asian, Latin American) from garment metadata."""
+    sub = (parsed.get("sub_category") or "").lower().strip()
+    itype = (parsed.get("item_type") or "").lower().strip()
+    comb_txt = f"{parsed.get('name', '')} {parsed.get('title', '')} {parsed.get('caption', '')} {sub} {itype}".lower()
+    is_he_local = ((language or "").lower() in ("he", "iw")) or any("\u0590" <= ch <= "\u05ea" for ch in comb_txt)
+    if any(w in comb_txt for w in (
+        "kurta", "kurti", "sherwani", "achkan", "bandhgala", "saree", "sari", "lehenga",
+        "chaniya choli", "dhoti", "salwar", "shalwar", "dupatta", "nehru jacket",
+        "קורטה", "שרוואני", "אצ'קאן", "בנדגאלה", "סארי", "להנגה", "הודית", "הודי",
+        "कुर्ता", "शेरवानी", "अचकन", "साड़ी", "लेहंगा", "धोती", "दुपट्टा"
+    )) or sub in ("kurta", "sherwani", "achkan", "bandhgala", "sari", "lehenga", "dhoti", "salwar"):
+        return "הודית" if is_he_local else "South Asian / Indian"
+    if any(w in comb_txt for w in (
+        "thobe", "thoub", "dishdasha", "kandura", "abaya", "galabiya", "jalabiya", "kaftan", "caftan",
+        "keffiyeh", "shemagh", "ghutra", "tarboush",
+        "עבאיה", "גלבייה", "ג'לביה", "כפתן", "ת'וב", "תוב", "כאפייה", "תרבוש", "ערבי", "ערבית"
+    )) or sub in ("thobe", "abaya", "galabiya", "kaftan", "keffiyeh"):
+        return "ערבית / מזרח תיכונית" if is_he_local else "Middle Eastern / Arab"
+    if any(w in comb_txt for w in (
+        "kippah", "yarmulke", "tzitzit", "tallit", "shtreimel", "bekishe", "mitpachat", "tichel",
+        "כיפה", "ציצית", "טלית", "שטריימל", "בקיטשע", "מטפחת", "יהודי", "יהודית"
+    )) or sub in ("kippah", "shtreimel", "mitpachat"):
+        return "יהודית" if is_he_local else "Jewish"
+    if any(w in comb_txt for w in (
+        "kimono", "yukata", "hanbok", "qipao", "cheongsam", "hanfu",
+        "קימונו", "הנבוק", "צ'יונגסם"
+    )) or sub in ("kimono", "hanbok"):
+        return "מזרח אסייתית" if is_he_local else "East Asian"
+    if any(w in comb_txt for w in (
+        "guayabera", "גוואיאברה"
+    )) or sub in ("guayabera",):
+        return "לטינו-אמריקאית / קריבית" if is_he_local else "Latin American / Caribbean"
+    return None
 
 
 def _coerce_enums(
@@ -3475,6 +3560,10 @@ def _coerce_enums(
 
     inferred_dc = _infer_garment_dress_code(parsed)
     parsed["dress_code"] = inferred_dc if inferred_dc in _VALID_DRESS_CODE else "casual"
+    if not parsed.get("tradition") and parsed.get("dress_code") == "traditional":
+        inferred_trad = _infer_cultural_tradition(parsed)
+        if inferred_trad:
+            parsed["tradition"] = inferred_trad
 
     if parsed.get("caption"):
         parsed["caption"] = _clean_truncated_caption(parsed["caption"])
@@ -3991,6 +4080,9 @@ def _enforce_segformer_category(
     is_cultural_full = any(w in comb_txt for w in ("abaya", "kaftan", "caftan", "jalabiya", "galabiya", "djellaba", "jumpsuit", "romper", "thobe", "kandura", "עבאיה", "גלבייה", "ג'לביה"))
     if is_cultural_full:
         analysis["category"] = "Full Body"
+        analysis["dress_code"] = "traditional"
+        is_he_local = (language in ("he", "iw")) or any("\u0590" <= ch <= "\u05ea" for ch in comb_txt)
+        analysis["tradition"] = "ערבית / מזרח תיכונית" if is_he_local else "Middle Eastern / Arab"
         return analysis
 
     lbl_low = (label or "").lower()
@@ -4005,6 +4097,8 @@ def _enforce_segformer_category(
         canon_term = ("אצ'קאן" if is_achkan_term else "שרוואני") if is_he_local else ("Achkan" if is_achkan_term else "Sherwani")
         analysis["sub_category"] = canon_term
         analysis["item_type"] = canon_term
+        analysis["dress_code"] = "traditional"
+        analysis["tradition"] = "הודית" if is_he_local else "South Asian / Indian"
         col_str = ""
         colors = analysis.get("colors")
         if isinstance(colors, list) and colors:
@@ -4060,6 +4154,8 @@ def _enforce_segformer_category(
             analysis["category"] = "Top"
             analysis["sub_category"] = "קורטה" if is_he_local else "Kurta"
             analysis["item_type"] = "קורטה" if is_he_local else "Kurta"
+            analysis["dress_code"] = "traditional"
+            analysis["tradition"] = "הודית" if is_he_local else "South Asian / Indian"
             col_str = ""
             colors = analysis.get("colors")
             if isinstance(colors, list) and colors:
@@ -4067,16 +4163,32 @@ def _enforce_segformer_category(
                 if c0.lower() not in ("unknown", "other"):
                     col_str = c0
             if is_he_local:
-                if col_str.lower() in ("white", "לבן", "לבנה"):
-                    col_str = "לבנה"
-                elif col_str.lower() in ("black", "שחור", "שחורה"):
-                    col_str = "שחורה"
-                new_name = f"קורטה {col_str}".strip() if col_str else "קורטה"
+                _fem_colors = {
+                    "צהוב": "צהובה", "yellow": "צהובה",
+                    "לבן": "לבנה", "white": "לבנה",
+                    "שחור": "שחורה", "black": "שחורה",
+                    "כחול": "כחולה", "blue": "כחולה",
+                    "אדום": "אדומה", "red": "אדומה",
+                    "ירוק": "ירוקה", "green": "ירוקה",
+                    "חום": "חומה", "brown": "חומה",
+                    "אפור": "אפורה", "grey": "אפורה", "gray": "אפורה",
+                    "ורוד": "ורודה", "pink": "ורודה",
+                    "כתום": "כתומה", "orange": "כתומה",
+                    "סגול": "סגולה", "purple": "סגולה",
+                    "זית": "זית", "olive": "זית",
+                    "בז'": "בז'", "beige": "בז'",
+                }
+                col_he = _fem_colors.get(col_str.lower(), col_str)
+                is_emb = "embroider" in comb_txt or "רקמ" in comb_txt or analysis.get("pattern") == "embroidered"
+                desc_extra = " רקומה" if is_emb else ""
+                new_name = f"קורטה {col_he}{desc_extra}".strip() if col_he else f"קורטה{desc_extra}"
                 analysis["name"] = new_name
                 analysis["title"] = new_name
                 analysis["caption"] = f"{new_name} אלגנטית בעיצוב מסורתי ונוח."
             else:
-                new_name = f"{col_str} Kurta".strip() if col_str else "Kurta"
+                is_emb = "embroider" in comb_txt or analysis.get("pattern") == "embroidered"
+                desc_extra = " Embroidered" if is_emb else ""
+                new_name = f"{col_str}{desc_extra} Kurta".strip() if col_str else f"Traditional{desc_extra} Kurta"
                 analysis["name"] = new_name
                 analysis["title"] = new_name
                 analysis["caption"] = f"Traditional {new_name.lower()} crafted for elegant and comfortable wear."

@@ -2791,7 +2791,7 @@ class GarmentVisionService:
                     has_pants = photo_has_pants.get(image_idx, False)
                     if is_distinctly_feminine_garment(cat, lbl, lbl) or (not has_pants and any(w in f"{cat} {lbl}" for w in ("skirt", "heels", "blouse", "tights", "stockings"))):
                         photo_fem_cues[image_idx].append("fem_garment")
-                    elif is_distinctly_masculine_garment(cat, lbl, lbl) or any(w in f"{cat} {lbl}" for w in ("boxers", "tuxedo", "kurta", "sherwani", "thobe")):
+                    elif is_distinctly_masculine_garment(cat, lbl, lbl) or any(w in f"{cat} {lbl}" for w in ("boxers", "tuxedo", "sherwani", "thobe")):
                         photo_masc_cues[image_idx].append("masc_garment")
 
                 all_img_indices = set(idx for idx, _, _, _ in flat_crops)
@@ -2883,10 +2883,13 @@ class GarmentVisionService:
                             name=item_display_name, full_text=full_txt,
                             pattern=assembled.get("pattern"),
                         )
-                        if is_masc or llm_mg == "men" or (llm_g == "men" and not is_fem):
+                        if llm_mg in ("men", "women"):
+                            model_g = llm_mg
+                            photo_model_genders[image_idx] = llm_mg
+                        elif is_masc or (llm_g == "men" and not is_fem):
                             model_g = "men"
                             photo_model_genders[image_idx] = "men"
-                        elif is_fem or llm_mg == "women" or (llm_g == "women" and not is_masc):
+                        elif is_fem or (llm_g == "women" and not is_masc):
                             model_g = "women"
                             photo_model_genders[image_idx] = "women"
                         elif photo_model_genders.get(image_idx):
@@ -3029,10 +3032,13 @@ class GarmentVisionService:
                                     name=item_display_name, full_text=full_txt,
                                     pattern=analysis.get("pattern"),
                                 )
-                                if is_masc or llm_mg == "men" or (llm_g == "men" and not is_fem):
+                                if llm_mg in ("men", "women"):
+                                    item_mg = llm_mg
+                                    photo_model_genders[image_idx] = llm_mg
+                                elif is_masc or (llm_g == "men" and not is_fem):
                                     item_mg = "men"
                                     photo_model_genders[image_idx] = "men"
-                                elif is_fem or llm_mg == "women" or (llm_g == "women" and not is_masc):
+                                elif is_fem or (llm_g == "women" and not is_masc):
                                     item_mg = "women"
                                     photo_model_genders[image_idx] = "women"
                                 elif photo_model_genders.get(image_idx):
@@ -3219,10 +3225,13 @@ class GarmentVisionService:
                                         name=item_display_name, full_text=full_txt,
                                         pattern=analysis.get("pattern"),
                                     )
-                                    if is_masc or llm_mg == "men" or (llm_g == "men" and not is_fem):
+                                    if llm_mg in ("men", "women"):
+                                        item_mg = llm_mg
+                                        photo_model_genders[image_idx] = llm_mg
+                                    elif is_masc or (llm_g == "men" and not is_fem):
                                         item_mg = "men"
                                         photo_model_genders[image_idx] = "men"
-                                    elif is_fem or llm_mg == "women" or (llm_g == "women" and not is_masc):
+                                    elif is_fem or (llm_g == "women" and not is_masc):
                                         item_mg = "women"
                                         photo_model_genders[image_idx] = "women"
                                     elif photo_model_genders.get(image_idx):

@@ -680,6 +680,39 @@ def test_hand_masking_skin_chrominance_non_nude_coat():
     assert np.mean(right_hand_alpha) < 40, f"Right hand must be excised, got mean alpha: {np.mean(right_hand_alpha)}"
 
 
+def test_kurta_female_model_traditional_no_rings_hebrew():
+    """Verify Kurta with female model assigns women gender, traditional dress code, Indian tradition, and purges rings/spring tag collision."""
+    raw_kurta = {
+        "is_clothing": True,
+        "category": "Top",
+        "sub_category": "kurta",
+        "item_type": "קורטה",
+        "model_gender": "women",
+        "caption": "קורטה צהובה אלגנטית בעיצוב מסורתי ונוח עם רקמה מעודנת.",
+        "colors": [{"name": "צהוב", "pct": 100}],
+        "fabric_materials": [{"name": "כותנה", "pct": 100}],
+        "season": ["spring", "summer"],
+        "tags": ["kurta", "traditional", "spring", "embroidered"],
+        "name": "קורטה צהובה",
+        "title": "קורטה צהובה",
+    }
+    res = _coerce_single_garment(raw_kurta, language="he")
+    # 1. Name must be Kurta (never חולצת טי) and with feminine agreement
+    assert "קורטה" in res["name"]
+    assert "חולצת טי" not in res["name"]
+    assert "צהובה" in res["name"]
+    # 2. Gender must be women (model in photo is female)
+    assert res.get("gender") == "women"
+    # 3. Dress code must be traditional
+    assert res.get("dress_code") == "traditional"
+    # 4. Tradition must be Indian / South Asian
+    assert res.get("tradition") in ("הודית", "South Asian / Indian")
+    # 5. Tags must NOT contain rings (טבעות) or category leaks
+    for t in res["tags"]:
+        assert t not in ("טבעות", "rings", "ring")
+
+
+
 
 
 
