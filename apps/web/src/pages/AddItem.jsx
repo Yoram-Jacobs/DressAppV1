@@ -969,6 +969,7 @@ const hydrate = (a, user, t, i18n) => {
             if (/camo|הסוואה/.test(comb) && !title?.includes('הסוואה')) cues.push("בהדפס הסוואה");
             if (/knit|סריג|סרוג/.test(comb) && !title?.includes('סריג')) cues.push("במרקם סרוג נעים");
             if (/heel|עקב/.test(comb) && !title?.includes('עקב')) cues.push("עם עקב אלגנטי");
+            const cueText = cues.length ? ` ${cues.join(' ')}` : '';
             if (/קורטה|שרוואני|כפתן|עבאיה|סארי|להנגה/.test(title)) {
               out.caption = `${title}${cueText} בעיצוב מסורתי אלגנטי ומרשים.`;
             } else if (cat === 'outerwear' || /מעיל|ז'קט/.test(title)) {
