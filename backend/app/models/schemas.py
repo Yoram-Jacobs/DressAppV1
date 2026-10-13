@@ -41,7 +41,7 @@ GarmentQuality = Literal["budget", "mid", "premium", "luxury"]
 GarmentGender = Literal["men", "women", "unisex", "kids"]
 MarketplaceIntent = Literal["own", "for_sale", "donate", "swap", "rent"]
 DressCode = Literal[
-    "casual", "smart-casual", "business", "formal", "athletic", "loungewear"
+    "casual", "smart-casual", "business", "formal", "athletic", "loungewear", "traditional"
 ]
 
 
