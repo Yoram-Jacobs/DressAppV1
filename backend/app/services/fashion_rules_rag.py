@@ -504,10 +504,34 @@ def retrieve_fashion_axioms(
     # -------------------------------------------------------------
     # 3. Occasion & Dress Code
     # -------------------------------------------------------------
-    if any(w in text_corpus for w in ("interview", "business", "formal", "suit", "ראיון", "עבודה")):
+    if any(w in text_corpus for w in ("interview", "business", "formal", "suit", "ראיון", "עבודה", "law", "finance")):
         add_rule("rule_occasion_business_formal")
-    elif any(w in text_corpus for w in ("smart-casual", "smart casual", "date", "dinner", "cocktail", "יציאה", "מסעדה")):
+        add_rule("rule_psychology_warmth_competence_navy")
+        add_rule("rule_tailoring_proportions_collar_button")
+        add_rule("rule_accessories_leather_hardware_sync")
+    elif any(w in text_corpus for w in ("black tie", "black-tie", "tuxedo", "gala", "טוקסידו")):
+        add_rule("rule_formal_black_tie_waistband")
+        add_rule("rule_accessories_leather_hardware_sync")
+    elif any(w in text_corpus for w in ("date", "romantic", "sexy", "cocktail", "יציאה", "דייט", "alluring")):
+        add_rule("rule_psychology_singular_reveal")
         add_rule("rule_occasion_smart_casual")
+    elif any(w in text_corpus for w in ("kid", "child", "children", "baby", "infant", "toddler", "ילד", "ילדה", "תינוק", "ילדים")):
+        add_rule("rule_pediatric_textile_sensory_safety")
+    elif any(w in text_corpus for w in ("creative", "tech", "startup", "agency", "nonconformity", "sneaker")):
+        add_rule("rule_style_creative_nonconformity")
+    elif any(w in text_corpus for w in ("smart-casual", "smart casual", "dinner", "מסעדה")):
+        add_rule("rule_occasion_smart_casual")
+
+    # Pattern and season cues
+    if any(w in text_corpus for w in ("pattern", "stripes", "checks", "plaid", "דוגמה", "פסים", "משבצות", "print")):
+        add_rule("rule_pattern_scale_contrast")
+        add_rule("rule_pattern_geometric_contrast")
+
+    if any(w in text_corpus for w in ("season", "palette", "undertone", "12-season", "עונה", "גוון עור", "winter", "autumn", "spring", "summer")):
+        add_rule("rule_color_12_season_flow")
+
+    if any(w in text_corpus for w in ("capsule", "basics", "wardrobe essentials", "בסיס", "staples")):
+        add_rule("rule_capsule_versatility_density")
 
     # -------------------------------------------------------------
     # 4. Color Wheel & Texture Harmonies (Foundational Design Axioms)

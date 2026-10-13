@@ -1399,6 +1399,9 @@ class GarmentVisionService:
             ]
             if bottom_dets:
                 combined_bot = _np.maximum.reduce([bd["mask"] for bd in bottom_dets])
+                bot_ymin = min(bd.get("bbox", [1000, 0, 1000, 0])[0] for bd in bottom_dets)
+                bot_mask_ys = _np.where(combined_bot > 0)[0]
+                bot_mask_ymin = int(bot_mask_ys.min()) if len(bot_mask_ys) > 0 else None
                 for d in useful:
                     k = (d.get("kind") or d.get("category") or "").lower()
                     l = (d.get("label") or "").lower()
@@ -1409,15 +1412,19 @@ class GarmentVisionService:
                             if "dress" in l:
                                 d["label"] = "Top"
                         d["mask"] = _np.where(combined_bot > 0, _np.uint8(0), d["mask"])
+                        if bot_mask_ymin is not None:
+                            d["mask"] = _np.where(_np.arange(d["mask"].shape[0])[:, None] > bot_mask_ymin + 3, _np.uint8(0), d["mask"])
                         new_bb = clothing_parser._mask_bbox(d["mask"])
                         if new_bb is not None:
                             m_h, m_w = d["mask"].shape[:2]
                             d["bbox"] = [
                                 int(new_bb[0] / m_h * 1000),
                                 int(new_bb[1] / m_w * 1000),
-                                int(new_bb[2] / m_h * 1000),
+                                min(int(new_bb[2] / m_h * 1000), bot_ymin),
                                 int(new_bb[3] / m_w * 1000),
                             ]
+                        elif bot_ymin < 1000:
+                            d["bbox"][2] = min(d["bbox"][2], bot_ymin)
 
         for det in useful:
             # Cut the per-bbox crop using the per-category asymmetric

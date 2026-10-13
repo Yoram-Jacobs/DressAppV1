@@ -1505,5 +1505,212 @@
     },
     "priority": 10,
     "example": "Crimson Banarasi silk Saree with gold woven floral motifs, paired with a matching elbow-sleeve brocade blouse, gold Kundan necklace, and gold metallic sandals."
+  },
+  {
+    "id": "rule_pattern_scale_contrast",
+    "category": "texture_material",
+    "title": "Alan Flusser's Pattern Scale Hierarchy",
+    "rule_statement": "Adjacent patterned garments must feature distinctly different physical scales (e.g. macro-scale windowpane jacket over micro-scale grid check shirt or pin-stripe). Ensure one pattern dominates while the secondary remains fine or dense.",
+    "negative_constraint": "Never pair overlapping patterns of identical gauge, width, or millimeter spacing to prevent optical moire vibration.",
+    "criteria": {
+      "tags": [
+        "pattern",
+        "stripes",
+        "checks",
+        "plaid",
+        "tailoring",
+        "mix"
+      ]
+    },
+    "priority": 8,
+    "example": "Macro windowpane sports coat over micro gingham button-down and a solid grenadine silk tie."
+  },
+  {
+    "id": "rule_pattern_geometric_contrast",
+    "category": "texture_material",
+    "title": "Geometric vs Curvilinear Pattern Balancing",
+    "rule_statement": "Balance rectilinear geometric patterns (stripes, checks, windowpanes) by pairing them with curvilinear or organic patterns (paisley, foulard, polka dots, florals) sharing a common base color.",
+    "negative_constraint": "Do not stack identical geometric shapes (e.g. grid check shirt under grid check jacket) without contrasting shapes.",
+    "criteria": {
+      "tags": [
+        "pattern",
+        "foulard",
+        "paisley",
+        "dots",
+        "florals"
+      ]
+    },
+    "priority": 7,
+    "example": "Fine stripe dress shirt paired with a neat geometric foulard or pin-dot silk necktie."
+  },
+  {
+    "id": "rule_color_12_season_flow",
+    "category": "color_harmony",
+    "title": "Munsell 12-Season Personal Color Flow",
+    "rule_statement": "Coordinate garments based on the wearer's dominant personal color dimension: Hue (Warm vs Cool), Value (Light vs Deep), and Chroma (Bright/Clear vs Muted/Soft). Cool/Deep types thrive in sapphire and charcoal; Warm/Muted types thrive in olive, rust, and camel.",
+    "negative_constraint": "Avoid placing stark high-contrast optic white or pitch black next to low-contrast warm/muted complexions; avoid muddy earth tones on high-chroma clear winters.",
+    "criteria": {
+      "tags": [
+        "color",
+        "season",
+        "palette",
+        "undertone",
+        "contrast"
+      ]
+    },
+    "priority": 8,
+    "example": "Deep Winter: Jet black overcoat with royal cobalt scarf. Soft Autumn: Olive field jacket with oatmeal knitwear."
+  },
+  {
+    "id": "rule_accessories_leather_hardware_sync",
+    "category": "occasion_dress_code",
+    "title": "Leather & Hardware Synchronization Protocol",
+    "rule_statement": "Leather accessories (shoes, belt, watch strap, briefcase/bag) must reside within the same chromatic family (black with black; cognac/brown with matching brown). Visible metallic hardware (belt buckle, watch case, cufflinks, jewelry) must harmonize in color temperature (all silver/chrome or all gold/brass).",
+    "negative_constraint": "Strictly forbid pairing black leather dress shoes with a brown leather belt, or clashing bright yellow-gold buckles with chrome steel watch cases.",
+    "criteria": {
+      "dress_codes": [
+        "smart-casual",
+        "business",
+        "formal"
+      ]
+    },
+    "priority": 9,
+    "example": "Dark brown leather Chelsea boots, dark brown calfskin belt with brass buckle, and warm leather-strap gold watch."
+  },
+  {
+    "id": "rule_formal_black_tie_waistband",
+    "category": "occasion_dress_code",
+    "title": "Black Tie Waistband and Lapel Protocol",
+    "rule_statement": "Formal black-tie dinner jackets mandate peak lapels or a shawl collar with matching grosgrain or satin facings, paired with trousers featuring a clean waistband (no belt loops, held by braces or side-tabs) and a single matching side braid.",
+    "negative_constraint": "Never wear a standard leather belt or notch-lapel lounge suit jacket with a formal black-tie tuxedo.",
+    "criteria": {
+      "dress_codes": [
+        "formal",
+        "black-tie",
+        "gala"
+      ]
+    },
+    "priority": 10,
+    "example": "Midnight blue dinner jacket with black silk grosgrain peak lapels, side-tab trousers with matching grosgrain stripe, white marcella bib shirt, black silk bow tie, and patent leather oxfords."
+  },
+  {
+    "id": "rule_tailoring_proportions_collar_button",
+    "category": "silhouette_proportion",
+    "title": "Tailoring Proportions: Collar Line & Bottom Button Axiom",
+    "rule_statement": "On single-breasted two-button or three-button suit jackets and vests, leave the bottom button unfastened to preserve the garment's natural hip flare. Ensure the jacket collar hugs the shirt collar flush (no rear collar gap), showing exactly 1/4 to 1/2 inch of shirt cuff at the wrist.",
+    "negative_constraint": "Never fasten the bottom button of a suit jacket, which creates severe pulling wrinkles ('X-crease') across the torso and distorts the drape.",
+    "criteria": {
+      "dress_codes": [
+        "business",
+        "formal",
+        "smart-casual"
+      ]
+    },
+    "priority": 8,
+    "example": "Navy worsted two-button jacket fastened at top button only, revealing 1/2 inch of crisp white poplin cuff."
+  },
+  {
+    "id": "rule_psychology_singular_reveal",
+    "category": "silhouette_proportion",
+    "title": "Aesthetic Sensuality: The Singular Exposure Axiom",
+    "rule_statement": "Elevated sensual styling preserves erotic curiosity and refinement by exposing only ONE anatomical zone at a time (décolletage OR legs OR open back). Pair body-skimming silhouettes in high-tactile natural fabrics (mulberry silk, fine cashmere, glove leather) rather than compressive tightness.",
+    "negative_constraint": "Avoid simultaneously revealing a plunging neckline, high mini-hemline, and bare back, which destroys aesthetic tension and projects visual desperation.",
+    "criteria": {
+      "tags": [
+        "date",
+        "evening",
+        "romantic",
+        "sexy",
+        "cocktail"
+      ]
+    },
+    "priority": 8,
+    "example": "A high-neck, long-sleeved silk midi dress with a dramatic deep back cut, paired with sleek pointed pumps."
+  },
+  {
+    "id": "rule_psychology_warmth_competence_navy",
+    "category": "occasion_dress_code",
+    "title": "Executive Presence: Warmth vs Competence Balance",
+    "rule_statement": "In high-stakes corporate leadership, client pitches, and negotiations, project unassailable competence and trustworthy warmth simultaneously by selecting Deep Navy or Charcoal worsted wool tailoring over stark pitch black, softened with fine-gauge knitwear or poplin.",
+    "negative_constraint": "Avoid head-to-toe stark black tailoring in collaborative daytime business settings, which triggers subconscious social and referee penalties for aggression and unapproachability (Frank & Gilovich, 1988).",
+    "criteria": {
+      "dress_codes": [
+        "business",
+        "smart-casual"
+      ]
+    },
+    "priority": 8,
+    "example": "Tailored midnight navy blazer over an ivory merino wool crewneck and charcoal trousers."
+  },
+  {
+    "id": "rule_psychology_enclothed_cognition_formal",
+    "category": "silhouette_proportion",
+    "title": "Enclothed Cognition: Architectural Tailoring for Focus",
+    "rule_statement": "Structured tailoring (defined shoulder lines, peaked lapels, clean unbroken vertical columns) increases felt power and abstract cognitive processing (Slepian et al., 2015), priming executive presence, decisive thinking, and high-level focus.",
+    "negative_constraint": "Avoid wearing loose, shapeless, or overly slouchy garments during critical negotiations, interviews, or strategic executive presentations.",
+    "criteria": {
+      "dress_codes": [
+        "business",
+        "formal"
+      ]
+    },
+    "priority": 7,
+    "example": "Single-breasted charcoal blazer with structured roped shoulders, paired with an unbroken column of matching trousers."
+  },
+  {
+    "id": "rule_capsule_versatility_density",
+    "category": "occasion_dress_code",
+    "title": "The Universal Capsule Foundation: High Combinatorial Density",
+    "rule_statement": "Ground the wardrobe in high-GSM, seasonless neutral essentials (Oxford button-downs, raw selvedge denim, deconstructed navy wool blazer, tailored trousers, cashmere knits) that cross-pair seamlessly between casual, smart-casual, and business formal.",
+    "negative_constraint": "Avoid accumulating hyper-specific single-use fast-trend garments that cannot be styled into at least three distinct multi-tier outfits.",
+    "criteria": {
+      "tags": [
+        "capsule",
+        "basics",
+        "minimalist",
+        "versatile",
+        "essentials"
+      ]
+    },
+    "priority": 7,
+    "example": "A single deconstructed navy blazer worn formally with grey wool trousers and tie, or dressed down with white tee and raw denim."
+  },
+  {
+    "id": "rule_pediatric_textile_sensory_safety",
+    "category": "weather_thermodynamics",
+    "title": "Pediatric Health & Sensory Textile Safety (AAP / CPSC)",
+    "rule_statement": "Children's and infants' apparel must prioritize breathable, hypoallergenic 100% GOTS-certified organic cotton or bamboo, tagless flat-locked seams, reinforced double knees, and elasticized waistbands to protect thin skin, prevent atopic dermatitis, and foster fine-motor dressing autonomy (AOTA). Sleepwear must be snug-fit without toxic chemical flame retardants.",
+    "negative_constraint": "STRICTLY FORBID drawstrings or cords on children's hoods, necks, or waists (CPSC strangulation hazard); avoid scratchy synthetic polyester or unlined wool directly against child skin.",
+    "criteria": {
+      "tags": [
+        "kids",
+        "children",
+        "baby",
+        "infant",
+        "toddler",
+        "sleepwear",
+        "sensory"
+      ]
+    },
+    "priority": 10,
+    "example": "Tagless organic cotton zip romper with chin zipper guard, or reinforced-knee cotton joggers with elastic waistband."
+  },
+  {
+    "id": "rule_style_creative_nonconformity",
+    "category": "occasion_dress_code",
+    "title": "The Red Sneakers Effect: Strategic Creative Nonconformity",
+    "rule_statement": "In creative agencies, tech executive suites, and innovative industries, a deliberate signal of nonconformity (e.g. minimalist luxury sneakers with an architectural tailored suit) communicates high autonomy, status, and competence (Bellezza, Gino & Keinan, Harvard/JCR).",
+    "negative_constraint": "Nonconformity must be intentional and pristine; accidental dress code violations, sloppy tailoring, or scuffed footwear signal carelessness rather than elevated status.",
+    "criteria": {
+      "tags": [
+        "creative",
+        "tech",
+        "modern",
+        "nonconformity",
+        "sneakers"
+      ]
+    },
+    "priority": 7,
+    "example": "Architectural charcoal wool tailored suit paired with clean, minimalist white leather luxury sneakers."
   }
 ]
