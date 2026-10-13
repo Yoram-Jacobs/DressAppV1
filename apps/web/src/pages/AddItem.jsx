@@ -564,13 +564,13 @@ const hydrate = (a, user, t, i18n) => {
   }
 
   // Cultural attire dress code and tradition inference
-  const subCanonical = canonicalSubCategoryKey(subRaw || itemRaw);
+  const culturalSubKey = canonicalSubCategoryKey(subRaw || itemRaw);
   const isTraditionalGarment = [
     'kurta', 'sherwani', 'achkan', 'bandhgala', 'sari', 'lehenga',
     'galabiya', 'kaftan', 'thobe', 'abaya', 'hanbok', 'kimono',
     'dirndl', 'guayabera', 'dhoti', 'salwar', 'kippah', 'keffiyeh',
     'turban', 'hijab', 'mitpachat', 'shtreimel', 'tarboush', 'rumal'
-  ].includes(subCanonical) || /קורטה|שרוואני|אצ'קאן|בנדגאלה|כפתן|עבאיה|גלבייה|תוב|סארי|להנגה|הנבוק|קימונו|דירנדל|גוואיאברה/.test(`${subRaw} ${itemRaw}`);
+  ].includes(culturalSubKey) || /קורטה|שרוואני|אצ'קאן|בנדגאלה|כפתן|עבאיה|גלבייה|תוב|סארי|להנגה|הנבוק|קימונו|דירנדל|גוואיאברה/.test(`${subRaw} ${itemRaw}`);
 
   if (isTraditionalGarment) {
     if (!out.dress_code || out.dress_code === 'casual') {
@@ -579,19 +579,19 @@ const hydrate = (a, user, t, i18n) => {
     if (!out.tradition) {
       const langPrefix = (i18n?.language || 'en').split('-')[0].toLowerCase();
       const isHeLang = langPrefix === 'he' || langPrefix === 'iw';
-      if (['kurta', 'sherwani', 'achkan', 'bandhgala', 'sari', 'lehenga', 'dhoti', 'salwar', 'turban', 'rumal'].includes(subCanonical) || /קורטה|שרוואני|סארי|להנגה/.test(`${subRaw} ${itemRaw}`)) {
+      if (['kurta', 'sherwani', 'achkan', 'bandhgala', 'sari', 'lehenga', 'dhoti', 'salwar', 'turban', 'rumal'].includes(culturalSubKey) || /קורטה|שרוואני|סארי|להנגה/.test(`${subRaw} ${itemRaw}`)) {
         out.tradition = isHeLang ? 'הודית' : 'South Asian / Indian';
-      } else if (['galabiya', 'kaftan', 'thobe', 'abaya', 'keffiyeh', 'hijab', 'tarboush'].includes(subCanonical) || /כפתן|עבאיה|גלבייה|תוב|כאפייה/.test(`${subRaw} ${itemRaw}`)) {
+      } else if (['galabiya', 'kaftan', 'thobe', 'abaya', 'keffiyeh', 'hijab', 'tarboush'].includes(culturalSubKey) || /כפתן|עבאיה|גלבייה|תוב|כאפייה/.test(`${subRaw} ${itemRaw}`)) {
         out.tradition = isHeLang ? 'ערבית / מזרח תיכונית' : 'Middle Eastern / Arab';
-      } else if (['kippah', 'mitpachat', 'shtreimel'].includes(subCanonical) || /כיפה|מטפחת|שטריימל/.test(`${subRaw} ${itemRaw}`)) {
+      } else if (['kippah', 'mitpachat', 'shtreimel'].includes(culturalSubKey) || /כיפה|מטפחת|שטריימל/.test(`${subRaw} ${itemRaw}`)) {
         out.tradition = isHeLang ? 'יהודית' : 'Jewish';
-      } else if (['kimono'].includes(subCanonical) || /קימונו/.test(`${subRaw} ${itemRaw}`)) {
+      } else if (['kimono'].includes(culturalSubKey) || /קימונו/.test(`${subRaw} ${itemRaw}`)) {
         out.tradition = isHeLang ? 'יפנית' : 'Japanese';
-      } else if (['hanbok'].includes(subCanonical) || /הנבוק/.test(`${subRaw} ${itemRaw}`)) {
+      } else if (['hanbok'].includes(culturalSubKey) || /הנבוק/.test(`${subRaw} ${itemRaw}`)) {
         out.tradition = isHeLang ? 'קוריאנית' : 'Korean';
-      } else if (['dirndl'].includes(subCanonical) || /דירנדל/.test(`${subRaw} ${itemRaw}`)) {
+      } else if (['dirndl'].includes(culturalSubKey) || /דירנדל/.test(`${subRaw} ${itemRaw}`)) {
         out.tradition = isHeLang ? 'בווארית / אלפינית' : 'Bavarian / Alpine';
-      } else if (['guayabera'].includes(subCanonical) || /גוואיאברה/.test(`${subRaw} ${itemRaw}`)) {
+      } else if (['guayabera'].includes(culturalSubKey) || /גוואיאברה/.test(`${subRaw} ${itemRaw}`)) {
         out.tradition = isHeLang ? 'לטינית / קריבית' : 'Latin American / Caribbean';
       }
     }
