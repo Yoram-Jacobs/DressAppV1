@@ -1384,6 +1384,40 @@ class GarmentVisionService:
             img_size = None
 
         import numpy as _np
+
+        # Multi-item outfit consistency: if both an upper garment (top/dress/outerwear)
+        # and a bottom garment (bottom/skirt/pants) are present:
+        # 1. Any 'dress' is an upper garment (tunic/kurta/top) worn with bottoms.
+        # 2. Subtract bottom masks from upper garment masks and update bbox so the upper crop
+        #    and alpha envelope never contain the skirt or pants!
+        if not is_single_item and len(useful) > 1 and img_size is not None:
+            bottom_dets = [
+                d for d in useful
+                if ((d.get("kind") or d.get("category") or "").lower() == "bottom"
+                    or any(p in (d.get("label") or "").lower() for p in ("skirt", "pant", "trouser", "jean", "short", "chino", "legging")))
+                and d.get("mask") is not None
+            ]
+            if bottom_dets:
+                combined_bot = _np.maximum.reduce([bd["mask"] for bd in bottom_dets])
+                for d in useful:
+                    k = (d.get("kind") or d.get("category") or "").lower()
+                    l = (d.get("label") or "").lower()
+                    if (k in ("dress", "top", "outerwear") or "dress" in l) and d.get("mask") is not None:
+                        if k == "dress" or "dress" in l:
+                            d["kind"] = "top"
+                            d["category"] = "top"
+                            if "dress" in l:
+                                d["label"] = "Top"
+                        d["mask"] = _np.where(combined_bot > 0, _np.uint8(0), d["mask"])
+                        new_bb = clothing_parser._mask_bbox(d["mask"])
+                        if new_bb is not None:
+                            d["bbox"] = [
+                                int(new_bb[0] / img_size[1] * 1000),
+                                int(new_bb[1] / img_size[0] * 1000),
+                                int(new_bb[2] / img_size[1] * 1000),
+                                int(new_bb[3] / img_size[0] * 1000),
+                            ]
+
         for det in useful:
             # Cut the per-bbox crop using the per-category asymmetric
             # padding from _BBOX_PAD_TRBL_BY_CATEGORY. The returned

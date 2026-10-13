@@ -2039,6 +2039,33 @@ async def parse_garments(
                 primary["mask"] = np.maximum(primary["mask"], other["mask"])
         by_label = {primary["label"]: primary}
 
+    # 2f) Upper / Bottom Outfit Separation:
+    # In an outfit where both an upper garment (top/outerwear or SegFormer 'dress'/tunic)
+    # AND a distinct bottom garment (skirt / pants / shorts) are present:
+    # 1. A person wearing a skirt or pants is NOT wearing a one-piece dress; any upper garment
+    #    detected as 'dress' is an upper garment (top / tunic / kurta / kameez) worn over the bottom!
+    #    Demote category to 'top' and label to 'Top'.
+    # 2. SegFormer's upper-body mask frequently leaks down into the lower garment's territory
+    #    (or was trained to predict 'dress' all the way down to mid-calf).
+    #    Excise all bottom garment pixels from the upper garment mask so the upper crop and
+    #    alpha matte terminate cleanly at the upper garment's hem!
+    bottom_masks = [
+        it["mask"] for it in by_label.values()
+        if (it.get("category") == "bottom" or any(p in (it.get("label") or "").lower() for p in ("skirt", "pant", "trouser", "jean", "short", "chino", "legging")))
+        and it.get("mask") is not None
+    ]
+    if bottom_masks:
+        combined_bottom = np.maximum.reduce(bottom_masks)
+        for k, it in list(by_label.items()):
+            cat = (it.get("category") or "").lower()
+            lbl = (it.get("label") or "").lower()
+            if cat in ("top", "outerwear", "dress") and it.get("mask") is not None:
+                if cat == "dress" or "dress" in lbl:
+                    it["category"] = "top"
+                    if "dress" in lbl:
+                        it["label"] = "Top"
+                it["mask"] = np.where(combined_bottom > 0, np.uint8(0), it["mask"])
+
     # 3) Finalise: compute bboxes from merged masks, emit canonical dict.
     out: list[dict[str, Any]] = []
     for item in by_label.values():
@@ -2505,10 +2532,10 @@ def apply_alpha_intersection(
         if is_skin.any():
             skin_u8 = (is_skin * 255).astype(np.uint8)
             if garment_protect is not None and garment_protect.any():
-                effective_protect = garment_protect & (~is_hand_zone) if not is_garment_nude else garment_protect
+                effective_protect = garment_protect & (~hand_excise) if (not is_garment_nude and hand_excise is not None and hand_excise.any()) else garment_protect
                 skin_clean = np.where(effective_protect, np.uint8(0), skin_u8)
             elif garment_weight is not None:
-                effective_weight = np.where(is_hand_zone, 0.0, garment_weight) if not is_garment_nude else garment_weight
+                effective_weight = np.where(hand_excise if (hand_excise is not None and hand_excise.any()) else is_skin, 0.0, garment_weight) if not is_garment_nude else garment_weight
                 skin_clean = (skin_u8.astype(float) * (1.0 - effective_weight)).round().astype(np.uint8)
             else:
                 skin_clean = skin_u8
@@ -2518,7 +2545,7 @@ def apply_alpha_intersection(
             sub_skin = np.clip(1.0 - skin_factor, 0.0, 1.0)
             if garment_protect is not None and garment_protect.any():
                 from scipy import ndimage
-                effective_protect = garment_protect & (~is_hand_zone) if not is_garment_nude else garment_protect
+                effective_protect = garment_protect & (~hand_excise) if (not is_garment_nude and hand_excise is not None and hand_excise.any()) else garment_protect
                 protect_smooth = ndimage.gaussian_filter(effective_protect.astype(float), sigma=1.2)
                 sub_skin = np.clip(sub_skin * (1.0 - protect_smooth) + 1.0 * protect_smooth, 0.0, 1.0)
             new_alpha = (new_alpha.astype(float) * sub_skin).round().astype(np.uint8)
@@ -2577,10 +2604,16 @@ def apply_alpha_intersection(
             else:
                 other_resized = norm_other
 
-            # Protect garment body so adjacent items never bite into or chew the target garment's fabric
-            protect_zone = garment_protect if (garment_protect is not None and garment_protect.any()) else garment_core
-            if protect_zone is not None and protect_zone.any():
-                other_clean = np.where(protect_zone, np.uint8(0), other_resized)
+            # Protect garment body so adjacent items never bite into or chew the target garment's fabric.
+            # CRITICAL: protect_zone must NEVER shield another garment's detected area (> 40)
+            # from being subtracted! If an adjacent item (e.g. skirt/pants under a top, or shoes under pants)
+            # is detected, its pixels belong to that adjacent item.
+            effective_protect = garment_protect if (garment_protect is not None and garment_protect.any()) else garment_core
+            if effective_protect is not None and effective_protect.any():
+                effective_protect = effective_protect & (other_resized <= 40)
+
+            if effective_protect is not None and effective_protect.any():
+                other_clean = np.where(effective_protect, np.uint8(0), other_resized)
             elif garment_weight is not None:
                 other_clean = (other_resized.astype(float) * (1.0 - garment_weight)).round().astype(np.uint8)
             else:
@@ -2589,9 +2622,9 @@ def apply_alpha_intersection(
             other_blur = Image.fromarray(other_clean, mode="L").filter(ImageFilter.GaussianBlur(radius=1.5))
             other_factor = np.array(other_blur, dtype=float) / 255.0
             sub_other = np.clip(1.0 - other_factor, 0.0, 1.0)
-            if protect_zone is not None and protect_zone.any():
+            if effective_protect is not None and effective_protect.any():
                 from scipy import ndimage
-                protect_smooth = ndimage.gaussian_filter(protect_zone.astype(float), sigma=1.2)
+                protect_smooth = ndimage.gaussian_filter(effective_protect.astype(float), sigma=1.2)
                 sub_other = np.clip(sub_other * (1.0 - protect_smooth) + 1.0 * protect_smooth, 0.0, 1.0)
             new_alpha = (new_alpha.astype(float) * sub_other).round().astype(np.uint8)
         except Exception as exc:  # noqa: BLE001
@@ -2637,7 +2670,9 @@ def apply_alpha_intersection(
     # must never be bitten away by background matting salience dropouts!
     # To prevent staircases and sharp cliffs, we smoothly feather the interior core mask with Gaussian blur.
     if garment_core is not None and garment_core.any():
-        effective_core = garment_core & (~is_hand_zone) if (not is_garment_nude and 'is_hand_zone' in locals()) else garment_core
+        effective_core = garment_core & (~hand_excise) if (not is_garment_nude and 'hand_excise' in locals() and hand_excise is not None and hand_excise.any()) else garment_core
+        if other_mask is not None and 'other_resized' in locals() and other_resized is not None and other_resized.any():
+            effective_core = effective_core & (other_resized <= 40)
         core_u8 = (effective_core * 255).astype(np.uint8)
         if 'is_skin' in locals() and is_skin is not None and is_skin.any() and not is_garment_nude:
             core_u8 = np.where(is_skin, np.uint8(0), core_u8)
