@@ -746,6 +746,7 @@ const hydrate = (a, user, t, i18n) => {
       // Deduplicate and localize tags
       if (Array.isArray(out.tags) && out.tags.length > 0) {
         const seen = new Set();
+        const cleanTags = [];
         const isAccessory = String(out.category || '').toLowerCase() === 'accessories';
         const excluded = new Set([
           String(out.category || '').toLowerCase(),
