@@ -1662,7 +1662,7 @@ class GarmentVisionService:
             # outerwear, footwear), corrupting every downstream alpha
             # intersection.
             result = _crop_to_bbox(
-                image_bytes, det["bbox"], category=det.get("kind"),
+                image_bytes, det["bbox"], category=det.get("kind") or det.get("category"),
                 is_single_item=is_single_item,
             )
             if not result:
@@ -1826,7 +1826,7 @@ class GarmentVisionService:
                     refined = _cp.apply_alpha_intersection(
                         matted,
                         seg_mask_bbox,
-                        category=det.get("kind"),
+                        category=det.get("kind") or det.get("category"),
                         label=det.get("label"),
                         human_mask=human_mask_bbox,
                         other_mask=other_mask_bbox,
