@@ -2051,26 +2051,21 @@ async def parse_garments(
             cat = (it.get("category") or "").lower()
             mask = it.get("mask")
             if cat == "dress" and mask is not None:
-                existing_skirt_keys = [sk for sk in by_label if sk != k and sk.lower().startswith("skirt") and by_label[sk].get("mask") is not None]
-                full_mask = mask.copy()
-                if existing_skirt_keys:
-                    for sk in existing_skirt_keys:
-                        full_mask = np.maximum(full_mask, by_label[sk]["mask"])
-                ys, xs = np.where(full_mask > 0)
+                ys, xs = np.where(mask > 0)
                 if len(ys) > 0:
                     ymin, ymax = int(ys.min()), int(ys.max())
                     gh = ymax - ymin
                     if gh >= int(0.35 * H):
                         torso_y1 = ymin + int(0.20 * gh)
-                        torso_y2 = ymin + int(0.48 * gh)
-                        torso_mask = (full_mask > 0) & (np.arange(H)[:, None] >= torso_y1) & (np.arange(H)[:, None] <= torso_y2)
+                        torso_y2 = ymin + int(0.50 * gh)
+                        torso_mask = (mask > 0) & (np.arange(H)[:, None] >= torso_y1) & (np.arange(H)[:, None] <= torso_y2)
                         if torso_mask.sum() >= 40:
                             torso_rgb = img_arr[torso_mask].mean(axis=0)
                             torso_rb = torso_rgb[0] - torso_rgb[2]
-                            scan_start_y = ymin + int(0.50 * gh)
+                            scan_start_y = ymin + int(0.52 * gh)
                             hem_candidates = []
                             for y in range(scan_start_y, ymax):
-                                row_pts = full_mask[y] > 0
+                                row_pts = mask[y] > 0
                                 if row_pts.sum() >= 15:
                                     row_rgb = img_arr[y, row_pts].mean(axis=0)
                                     diff = float(np.linalg.norm(row_rgb - torso_rgb))
@@ -2079,55 +2074,23 @@ async def parse_garments(
                                         hem_candidates.append(y)
                             if hem_candidates:
                                 first_diff_y = min(hem_candidates)
-                                # Advance past thin embroidered hem border (at most 3% of gh) while row median remains strongly upper-colored
-                                hem_split_y = first_diff_y
-                                max_hem_advance = min(ymax - 5, first_diff_y + max(5, int(0.03 * gh)))
-                                for hy in range(first_diff_y, max_hem_advance + 1):
-                                    r_pts = full_mask[hy] > 0
-                                    if r_pts.sum() >= 15:
-                                        r_vals = img_arr[hy, r_pts].astype(float)
-                                        r_rb_arr = r_vals[:, 0] - r_vals[:, 2]
-                                        med_rb = float(np.median(r_rb_arr))
-                                        high_rb_frac = float(np.mean(r_rb_arr >= 55.0))
-                                        if (torso_rb >= 45.0 and (med_rb >= 42.0 or high_rb_frac >= 0.15)):
-                                            hem_split_y = hy + 1
-                                        else:
-                                            break
-                                lower_mask = (full_mask > 0) & (np.arange(H)[:, None] >= hem_split_y)
+                                lower_mask = (mask > 0) & (np.arange(H)[:, None] >= first_diff_y)
                                 lower_frac = int(lower_mask.sum()) / float(total)
                                 if lower_frac >= 0.015:
                                     logger.info(
-                                        "clothing_parser: splitting composite outfit '%s' at hemline y=%d (first_diff=%d) into Top and Skirt (lower_frac=%.4f)",
-                                        k, hem_split_y, first_diff_y, lower_frac,
+                                        "clothing_parser: splitting composite outfit '%s' at hemline y=%d into Top and Skirt (lower_frac=%.4f)",
+                                        k, first_diff_y, lower_frac,
                                     )
-                                    from scipy import ndimage as _ndi
-                                    # Clean horizontal separation: keep upper garment strictly at y < hem_split_y
-                                    upper_mask = np.where(np.arange(H)[:, None] < hem_split_y, mask, np.uint8(0))
-                                    # Close any internal shadow holes or top-edge notches in lower_mask
-                                    lower_bin = lower_mask > 0
-                                    lower_closed = _ndi.binary_closing(lower_bin, structure=np.ones((9, 19), dtype=bool))
-                                    lower_filled = _ndi.binary_fill_holes(lower_closed)
-                                    # Ensure top rows of lower_mask have a smooth horizontal span matching the skirt body just below
-                                    ref_y = min(ymax - 1, hem_split_y + max(6, int(0.03 * gh)))
-                                    ref_cols = np.where(lower_filled[ref_y])[0]
-                                    if len(ref_cols) >= 10:
-                                        rx1, rx2 = int(ref_cols.min()), int(ref_cols.max())
-                                        for ty in range(hem_split_y, min(ymax, hem_split_y + max(8, int(0.04 * gh)))):
-                                            t_cols = np.where(lower_filled[ty] | (full_mask[ty] > 0))[0]
-                                            tx1 = min(rx1, int(t_cols.min())) if len(t_cols) else rx1
-                                            tx2 = max(rx2, int(t_cols.max())) if len(t_cols) else rx2
-                                            lower_filled[ty, tx1 : tx2 + 1] = True
-                                    lower_filled[:hem_split_y, :] = False
-                                    lower_mask = (lower_filled.astype(np.uint8) * np.uint8(255))
-
+                                    upper_mask = np.where(np.arange(H)[:, None] < first_diff_y, mask, np.uint8(0))
                                     it["category"] = "top"
                                     it["label"] = "Top"
                                     it["mask"] = upper_mask
 
                                     # Merge into existing skirt if present, or create Skirt item
+                                    existing_skirt_keys = [sk for sk in by_label if sk.lower().startswith("skirt")]
                                     if existing_skirt_keys:
                                         target_sk_key = existing_skirt_keys[0]
-                                        by_label[target_sk_key]["mask"] = lower_mask
+                                        by_label[target_sk_key]["mask"] = np.maximum(by_label[target_sk_key]["mask"], lower_mask)
                                         by_label[target_sk_key]["label"] = "Skirt"
                                         by_label[target_sk_key]["category"] = "bottom"
                                     else:
@@ -2166,13 +2129,8 @@ async def parse_garments(
     ]
     if bottom_masks:
         combined_bottom = np.maximum.reduce(bottom_masks)
-        bot_ys, bot_xs = np.where(combined_bottom > 0)
+        bot_ys = np.where(combined_bottom > 0)[0]
         bot_min_y = int(bot_ys.min()) if len(bot_ys) > 0 else None
-        col_bot_ymin = np.full(W, H, dtype=int)
-        if len(bot_ys) > 0:
-            np.minimum.at(col_bot_ymin, bot_xs, bot_ys)
-            max_hem_dip = bot_min_y + max(18, int(0.05 * H))
-            col_bot_ymin = np.where(col_bot_ymin < H, np.minimum(col_bot_ymin, max_hem_dip), max_hem_dip)
 
         for k, it in list(by_label.items()):
             cat = (it.get("category") or "").lower()
@@ -2184,8 +2142,8 @@ async def parse_garments(
                         it["label"] = "Top"
                 it["mask"] = np.where(combined_bottom > 0, np.uint8(0), it["mask"])
                 if bot_min_y is not None:
-                    # Upper garment must never extend past the top contour of the bottom garment
-                    it["mask"] = np.where(np.arange(H)[:, None] > (col_bot_ymin[None, :] + 2), np.uint8(0), it["mask"])
+                    # Upper garment must never extend past the top edge of the bottom garment
+                    it["mask"] = np.where(np.arange(H)[:, None] > bot_min_y + 3, np.uint8(0), it["mask"])
 
     # 3) Finalise: compute bboxes from merged masks, emit canonical dict.
     out: list[dict[str, Any]] = []
@@ -2537,43 +2495,14 @@ def apply_alpha_intersection(
         try:
             from scipy import ndimage
             mask_bin_core = mask_resized > 64
-            if is_upper and not is_multi_segment:
-                # Bridge horizontal SegFormer dropouts across contrast chest plackets/yokes or shoulder hair strands
-                # wherever rembg is confidently opaque (arr[:, :, 3] > 128)
-                horiz_kw = max(15, int(0.24 * Wc))
-                bridged_upper = ndimage.binary_closing(mask_bin_core, structure=np.ones((5, horiz_kw), dtype=bool))
-                pts_core = np.where(mask_bin_core)
-                apex_core_y = int(pts_core[0].min()) if len(pts_core[0]) > 0 else 0
-                chest_band = (np.arange(Hc)[:, None] >= apex_core_y + int(0.03 * Hc)) & (np.arange(Hc)[:, None] <= int(0.45 * Hc))
-                mask_bin_core = mask_bin_core | (bridged_upper & (arr[:, :, 3] > 128) & chest_band)
-            if is_bottom and not is_multi_segment:
-                bot_kw = max(35, int(0.22 * Wc))
-                closed_core = ndimage.binary_closing(mask_bin_core, structure=np.ones((7, bot_kw), dtype=bool), iterations=1)
-                filled_core = ndimage.binary_fill_holes(closed_core)
-                if "skirt" in norm_lbl or norm_cat == "skirt":
-                    pts_bot = np.where(filled_core)
-                    if len(pts_bot[0]) > 20:
-                        top_bot_y = int(pts_bot[0].min())
-                        bot_bot_y = int(pts_bot[0].max())
-                        ref_bot_y = min(Hc - 1, top_bot_y + max(8, int(0.26 * (bot_bot_y - top_bot_y))))
-                        ref_x = np.where(filled_core[ref_bot_y])[0]
-                        if len(ref_x) >= 20:
-                            rx1, rx2 = int(ref_x.min()), int(ref_x.max())
-                            for by_r in range(top_bot_y, ref_bot_y):
-                                row_x = np.where(filled_core[by_r])[0]
-                                tx1 = min(rx1, int(row_x.min())) if len(row_x) else rx1
-                                tx2 = max(rx2, int(row_x.max())) if len(row_x) else rx2
-                                filled_core[by_r, tx1 : tx2 + 1] = True
-                garment_protect = filled_core | (mask_resized > 50)
-                garment_core = filled_core
-            else:
-                closed_core = ndimage.binary_closing(mask_bin_core, structure=np.ones((3 if is_multi_segment else 5, 3 if is_multi_segment else 5), dtype=bool), iterations=1)
-                # Fill enclosed holes inside garment body (protects fabric from shadow-dropout chewing).
-                filled_core = closed_core if is_multi_segment else ndimage.binary_fill_holes(closed_core)
-                # garment_protect covers the garment interior where mask is confident or filled
-                garment_protect = filled_core | (mask_resized > 50)
-                core_iter = max(1, min(2, int(round(min(Hc, Wc) * 0.005))))
-                garment_core = ndimage.binary_erosion(filled_core, iterations=core_iter)
+            closed_core = ndimage.binary_closing(mask_bin_core, structure=np.ones((3 if is_multi_segment else 5, 3 if is_multi_segment else 5), dtype=bool), iterations=1)
+            # Fill enclosed holes inside garment body (protects fabric from shadow-dropout chewing).
+            # Bottoms (pants, jeans, chinos) are solid opaque fabric; enclosed holes are dark folds/shadows.
+            filled_core = closed_core if is_multi_segment else ndimage.binary_fill_holes(closed_core)
+            # garment_protect covers the garment interior where mask is confident or filled
+            garment_protect = filled_core | (mask_resized > 50)
+            core_iter = max(1, min(2, int(round(min(Hc, Wc) * 0.005))))
+            garment_core = ndimage.binary_erosion(filled_core, iterations=core_iter)
         except Exception:  # noqa: BLE001
             garment_protect = mask_resized > 50 if mask_resized is not None else None
             garment_core = None
@@ -2684,12 +2613,8 @@ def apply_alpha_intersection(
             is_waist_zone = y_coords <= (0.28 * Hc)
             is_skin = is_skin & ((mask_resized <= 40) | is_waist_zone)
         elif (norm_cat in {"top", "outerwear", "suit", "fullbody", "dress"}) and mask_resized is not None:
-            # Restrict upper-garment skin subtraction to the upper neck opening and hand/arm zones
-            # so peach/rose/gold chest plackets and shoulder embroidery are never chewed!
-            g_pts_skin = np.where(mask_resized > 40)
-            apex_skin_y = int(g_pts_skin[0].min()) if len(g_pts_skin[0]) > 0 else 0
-            is_neck_skin_zone = (y_coords <= (apex_skin_y + int(0.08 * Hc))) & (x_coords >= (0.34 * Wc)) & (x_coords <= (0.66 * Wc))
-            is_skin = is_skin & (is_neck_skin_zone | is_hand_zone)
+            # Hands hanging next to jacket hems or protruding from sleeve cuffs
+            is_skin = is_skin & ((mask_resized <= 40) | is_hand_zone)
 
         # Confident garment fabric must NEVER be classified as skin or excised
         if garment_protect is not None and garment_protect.any():
@@ -2748,6 +2673,25 @@ def apply_alpha_intersection(
                 # Anything above the garment apex is strictly head / neck / background
                 if apex_y > 2:
                     new_alpha[:max(0, apex_y - 2), :] = 0
+
+                # Column-wise contour trimming along the central neckline/collar notch
+                col_min_y = np.full(Wc, Hc, dtype=int)
+                np.minimum.at(col_min_y, xs, ys)
+                # Bounding: a neckline curve never dips deeper than 18% of crop height from apex.
+                # Deeper dips are occlusions (hair, jewelry, scarves, hands) and must NOT slice the garment!
+                max_neck_dip = min(Hc - 1, apex_y + max(12, int(0.18 * Hc)))
+                col_min_y = np.minimum(col_min_y, max_neck_dip)
+
+                # Restrict column trimming to the central neck/throat corridor (20% to 80% of width)
+                # so shoulders, lapels, and fur collars on either side are never truncated.
+                neck_cols = np.zeros(Wc, dtype=bool)
+                neck_cols[int(0.20 * Wc):int(0.80 * Wc)] = True
+                valid_cols = (col_min_y < Hc) & neck_cols
+                if valid_cols.any():
+                    y_indices = np.arange(Hc)[:, None]
+                    # Pixels above the collar in the central neck zone are neck/face/background
+                    above_collar = (y_indices < (col_min_y[None, :] - 3)) & valid_cols[None, :]
+                    new_alpha = np.where(above_collar, np.uint8(0), new_alpha)
         except Exception as _neck_exc:
             logger.debug("apply_alpha_intersection collar neck trim: %s", _neck_exc)
 
@@ -2800,7 +2744,7 @@ def apply_alpha_intersection(
     if mask_resized is not None and not is_single_item:
         try:
             from scipy import ndimage
-            mask_bin = (mask_resized > 50) | (garment_protect if (garment_protect is not None and garment_protect.any()) else False)
+            mask_bin = mask_resized > 50
             closed = ndimage.binary_closing(mask_bin, structure=np.ones((3 if (is_eyewear or is_footwear or is_acc) else 5, 3 if (is_eyewear or is_footwear or is_acc) else 5), dtype=bool), iterations=1)
             filled = closed if is_multi_segment else ndimage.binary_fill_holes(closed)
             
@@ -2851,10 +2795,10 @@ def apply_alpha_intersection(
                 c_x = (l_x + r_x) / 2.0
                 y_idx, x_idx = np.indices((Hc, Wc))
                 is_collar_zone = (
-                    (y_idx >= t_y) & (y_idx <= t_y + 0.14 * g_h) &
-                    (np.abs(x_idx - c_x) <= 0.18 * g_w)
+                    (y_idx >= t_y) & (y_idx <= t_y + 0.35 * g_h) &
+                    (np.abs(x_idx - c_x) <= 0.25 * g_w)
                 )
-                core_u8 = np.where(is_collar_zone & (arr[:, :, 3] < 30), np.uint8(0), core_u8)
+                core_u8 = np.where(is_collar_zone & (new_alpha == 0), np.uint8(0), core_u8)
 
         feather_im = Image.fromarray(core_u8, mode="L").filter(ImageFilter.GaussianBlur(radius=2.0))
         feather_factor = np.array(feather_im, dtype=float) / 255.0
@@ -2895,93 +2839,64 @@ def apply_alpha_intersection(
         except Exception as _hem_exc:
             logger.debug("apply_alpha_intersection hemline cutoff: %s", _hem_exc)
 
-    # 2c-bottom. Lower garment top-edge upper-garment bleed removal (multi-item outfits):
-    # Only strip strongly saturated upper-garment pixels right at the top border (<= 6% of Hc)
-    # of a neutral bottom garment, NEVER touching pleat shadows or waist folds.
+    # 2c-bottom. Non-destructive top-edge chromatic bleed recoloring on bottom garments:
+    # When a bright warm upper garment hem (e.g. mustard-yellow kurta) overlaps the top 16%
+    # of a neutral/ivory skirt or pants cutout, recolor ONLY the RGB channels of those bleed
+    # pixels from the clean skirt fabric directly below in the same column — NEVER modifying
+    # new_alpha so the smooth SegFormer/rembg silhouette remains 100% intact.
     if is_bottom and not is_single_item:
         try:
-            y_coords_arr = np.arange(Hc)[:, None]
-            bot_core_rows = (new_alpha > 120) & (y_coords_arr >= int(0.26 * Hc)) & (y_coords_arr <= int(0.82 * Hc))
-            if bot_core_rows.sum() >= 60:
-                b_r = float(np.median(arr[bot_core_rows, 0]))
-                b_g = float(np.median(arr[bot_core_rows, 1]))
-                b_b = float(np.median(arr[bot_core_rows, 2]))
+            from scipy.ndimage import binary_dilation as _bd_bot
+            b_zone = (new_alpha[int(0.25 * Hc):int(0.82 * Hc), int(0.18 * Wc):int(0.82 * Wc)] > 150)
+            if b_zone.sum() >= 100:
+                b_rgb = arr[int(0.25 * Hc):int(0.82 * Hc), int(0.18 * Wc):int(0.82 * Wc), :3][b_zone].astype(np.float32)
+                b_r = float(np.median(b_rgb[:, 0]))
+                b_g = float(np.median(b_rgb[:, 1]))
+                b_b = float(np.median(b_rgb[:, 2]))
                 b_rb = b_r - b_b
-                b_chroma = max(b_r, b_g, b_b) - min(b_r, b_g, b_b)
-
-                opaque_ys = np.where(new_alpha > 80)[0]
-                top_y0 = int(opaque_ys.min()) if len(opaque_ys) > 0 else 0
-                top_zone = y_coords_arr <= (top_y0 + max(6, int(0.05 * Hc)))
-                r_f = arr[:, :, 0].astype(float)
-                g_f = arr[:, :, 1].astype(float)
-                b_f = arr[:, :, 2].astype(float)
-                px_rb = r_f - b_f
-                px_chroma = np.maximum(np.maximum(r_f, g_f), b_f) - np.minimum(np.minimum(r_f, g_f), b_f)
-
-                top_bleed = (new_alpha > 0) & top_zone & (
-                    (b_chroma <= 32.0) & (px_chroma >= 58.0) & (px_rb >= max(58.0, b_rb + 36.0))
-                )
-                if top_bleed.any():
-                    from scipy import ndimage as _ndi
-                    bleed_dilated = _ndi.binary_dilation(top_bleed, structure=np.ones((3, 3), dtype=bool)) & top_zone
-                    new_alpha = np.where(bleed_dilated, np.uint8(0), new_alpha)
+                b_chroma = float(max(b_r, b_g, b_b) - min(b_r, b_g, b_b))
+                if b_chroma <= 35.0 and b_rb <= 32.0:
+                    y_lim = max(4, int(0.16 * Hc))
+                    top_slice = arr[:y_lim, :, :3].astype(np.float32)
+                    px_rb = top_slice[:, :, 0] - top_slice[:, :, 2]
+                    bleed_px = (new_alpha[:y_lim, :] > 5) & (px_rb >= max(36.0, b_rb + 10.0))
+                    if bleed_px.any():
+                        bleed_px = _bd_bot(bleed_px, structure=np.ones((5, 5), dtype=bool)) & (new_alpha[:y_lim, :] > 0)
+                        ref_y1, ref_y2 = y_lim, min(Hc, int(0.42 * Hc))
+                        for x in range(Wc):
+                            bx = np.where(bleed_px[:, x])[0]
+                            if len(bx) > 0:
+                                r0 = min(Hc - 1, int(bx.max()) + 1)
+                                r1 = min(Hc, r0 + 6)
+                                rep_rgb = np.median(arr[r0:r1, x, :3], axis=0).astype(np.uint8)
+                                arr[bx, x, :3] = rep_rgb
         except Exception as _bot_bleed_exc:
-            logger.debug("apply_alpha_intersection bottom top-edge bleed cleanup: %s", _bot_bleed_exc)
+            logger.debug("apply_alpha_intersection bottom top-edge recolor: %s", _bot_bleed_exc)
 
-    # 2d. Lateral flank hand-excision cleanup:
-    # When a hand resting on the waist/hip is excised from the outer lateral flank of an upper garment,
-    # it can leave a narrow detached outer hook/peninsula (separated from the torso by the excised hand gap)
-    # and a thin fingertip skin rim at the bottom of the pocket. Trim detached outer hooks and fingertip rims
-    # so the side seam follows a smooth, natural contour without synthetic smudge artifacts.
+    # 2d. Lateral hand-excision hook & fingertip-rim cleanup on upper garments:
+    # Remove isolated thin lateral hooks left beside an excised hand without EDT bridging.
     if is_upper and not is_single_item:
         try:
-            from scipy import ndimage
-            r_f = arr[:, :, 0].astype(float)
-            g_f = arr[:, :, 1].astype(float)
-            b_f = arr[:, :, 2].astype(float)
-            cr_f = 128.0 + 0.5 * r_f - 0.418688 * g_f - 0.081312 * b_f
-            cb_f = 128.0 - 0.168736 * r_f - 0.331264 * g_f + 0.5 * b_f
+            from scipy.ndimage import binary_dilation as _bd_up, binary_opening as _bo_up
             y_idx, x_idx = np.indices((Hc, Wc))
-
-            # 1) Strip any residual skin-toned fingertip rim on the outer lateral hip (y = 0.64..0.74 Hc, strictly below sleeve cuffs)
-            is_outer_hip_zone = (
-                (y_idx >= int(0.64 * Hc))
-                & (y_idx <= int(0.74 * Hc))
-                & ((x_idx <= int(0.24 * Wc)) | (x_idx >= int(0.70 * Wc)))
-            )
-            is_finger_rim = (
-                is_outer_hip_zone
-                & (cr_f >= 134.0) & (cr_f <= 172.0)
-                & (cb_f >= 88.0) & (cb_f <= 126.0)
-                & ((r_f - g_f) >= 14.0)
-                & ((g_f - b_f) <= 38.0)
-            )
-            if is_finger_rim.any():
-                rim_dil = ndimage.binary_dilation(is_finger_rim, structure=np.ones((5, 5), dtype=bool), iterations=1) & is_outer_hip_zone
-                new_alpha = np.where(rim_dil, np.uint8(0), new_alpha)
-
-            # 2) On rows in the lower waist/hip hand zone (0.64..0.74 Hc, below sleeve cuffs), remove narrow detached outer hooks
-            # separated from the main central torso by a transparent hand-excision gap (>= 3px wide).
-            cx = Wc // 2
-            max_hook_w = max(18, int(0.06 * Wc))
-            for fy in range(int(0.64 * Hc), int(0.74 * Hc)):
-                if new_alpha[fy, cx] <= 80:
-                    continue
-                # Scan right from center
-                row_a = new_alpha[fy]
-                right_zeros = np.where((np.arange(Wc) > cx) & (row_a < 60))[0]
-                if len(right_zeros) >= 3:
-                    first_zero_r = int(right_zeros[0])
-                    outer_opaque_r = np.where((np.arange(Wc) > first_zero_r) & (row_a >= 60))[0]
-                    if len(outer_opaque_r) > 0 and (int(outer_opaque_r.max()) - int(outer_opaque_r.min()) + 1) <= max_hook_w:
-                        new_alpha[fy, first_zero_r:] = 0
-                # Scan left from center
-                left_zeros = np.where((np.arange(Wc) < cx) & (row_a < 60))[0]
-                if len(left_zeros) >= 3:
-                    last_zero_l = int(left_zeros[-1])
-                    outer_opaque_l = np.where((np.arange(Wc) < last_zero_l) & (row_a >= 60))[0]
-                    if len(outer_opaque_l) > 0 and (int(outer_opaque_l.max()) - int(outer_opaque_l.min()) + 1) <= max_hook_w:
-                        new_alpha[fy, : last_zero_l + 1] = 0
+            torso_bin = new_alpha > 40
+            open_h = max(9, int(0.022 * Hc))
+            open_w = max(15, int(0.042 * Wc))
+            smooth_torso = _bo_up(torso_bin, structure=np.ones((open_h, open_w), dtype=bool))
+            hook_zone = (y_idx >= int(0.64 * Hc)) & (y_idx <= int(0.74 * Hc)) & ((x_idx <= int(0.35 * Wc)) | (x_idx >= int(0.65 * Wc)))
+            if 'hem_cutoff_y' in locals() and hem_cutoff_y is not None:
+                hook_zone = hook_zone & (y_idx <= hem_cutoff_y - 12)
+            protrusions = torso_bin & (~smooth_torso) & hook_zone
+            if protrusions.any():
+                protrusions_dil = _bd_up(protrusions, iterations=1) & hook_zone
+                new_alpha[protrusions_dil] = 0
+            if has_human and 'human_resized' in locals() and human_resized is not None and 't_rb' in locals() and t_rb >= 45.0:
+                hand_rim = _bd_up(human_resized > 90, iterations=4) & (y_idx >= int(0.55 * Hc)) & (y_idx <= int(0.78 * Hc))
+                px_rb = arr[:, :, 0].astype(np.float32) - arr[:, :, 2].astype(np.float32)
+                px_luma = 0.299 * arr[:, :, 0] + 0.587 * arr[:, :, 1] + 0.114 * arr[:, :, 2]
+                finger_halo = hand_rim & (new_alpha > 0) & ((px_rb < 38.0) | (px_luma < 95.0))
+                if finger_halo.any():
+                    new_alpha[_bd_up(finger_halo, iterations=1) & hand_rim] = 0
         except Exception as _flank_exc:
             logger.debug("apply_alpha_intersection flank cleanup: %s", _flank_exc)
 

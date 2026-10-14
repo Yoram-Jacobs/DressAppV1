@@ -135,21 +135,34 @@ def _prepare_vlm_crop_and_color_stats(
 
         if len(core_pts) >= 20:
             b_med = _np.median(core_pts, axis=0)
-            b_rb = float(b_med[0] - b_med[2])  # R - B chroma indicator (high for yellow/orange/gold, low for white/ivory)
+            b_r, b_g, b_b = float(b_med[0]), float(b_med[1]), float(b_med[2])
+            b_rb = b_r - b_b  # R - B chroma indicator (high for yellow/orange/gold, low for white/ivory)
+            b_chroma = float(max(b_r, b_g, b_b) - min(b_r, b_g, b_b))
 
-            # 3) Remove top-edge upper-garment chromatic bleed on bottom crops (or skirt/bottom crops with bright top border)
-            top_band_h = max(2, int(hc * 0.24))
-            top_rgb = rgb[:top_band_h, :].astype(_np.float32)
-            px_diff = _np.sqrt(_np.sum((top_rgb - b_med[None, None, :]) ** 2, axis=2))
-            px_rb = top_rgb[:, :, 0] - top_rgb[:, :, 2]
-            top_bleed = (px_diff >= 45.0) | ((b_rb <= 28.0) & (px_rb >= b_rb + 22.0) & (px_diff >= 26.0))
-            if is_bottom_crop or float(top_bleed[: max(1, int(hc * 0.12)), :].mean()) >= 0.25:
+            # 3) Non-destructively recolor top-edge upper-garment chromatic bleed in the VLM RGB copy ONLY
+            #    (NEVER mutate mask_bbox so rembg/SegFormer alpha matting silhouettes remain 100% untouched!)
+            if is_bottom_crop and b_chroma <= 35.0 and b_rb <= 32.0:
+                top_band_h = max(4, int(hc * 0.16))
+                top_rgb = rgb[:top_band_h, :].astype(_np.float32)
+                px_rb = top_rgb[:, :, 0] - top_rgb[:, :, 2]
+                top_bleed = px_rb >= max(36.0, b_rb + 12.0)
                 if bool(top_bleed.any()):
-                    top_bleed_dil = _bd(top_bleed, iterations=2)
-                    rgb[:top_band_h, :][top_bleed_dil] = _np.array([240, 240, 240], dtype=_np.uint8)
+                    top_bleed_dil = _bd(top_bleed, structure=_np.ones((5, 5), dtype=bool))
+                    ref_y1, ref_y2 = top_band_h, min(hc, int(0.35 * hc))
+                    for x in range(wc):
+                        bx = _np.where(top_bleed_dil[:, x])[0]
+                        if len(bx) > 0:
+                            ref_col = rgb[ref_y1:ref_y2, x, :3].astype(_np.float32)
+                            ref_ok = (ref_col[:, 0] - ref_col[:, 2]) <= (b_rb + 10.0)
+                            if mask_bbox is not None and mask_bbox.shape[:2] == (hc, wc):
+                                ref_ok = ref_ok & (mask_bbox[ref_y1:ref_y2, x] > 127)
+                            ok_idx = _np.where(ref_ok)[0]
+                            if len(ok_idx) >= 3:
+                                rep_rgb = _np.median(rgb[ref_y1 + ok_idx[:8], x, :3], axis=0).astype(_np.uint8)
+                            else:
+                                rep_rgb = _np.array([int(round(b_r)), int(round(b_g)), int(round(b_b))], dtype=_np.uint8)
+                            rgb[bx, x, :3] = rep_rgb
                     modified = True
-                    if mask_bbox is not None and mask_bbox.shape[:2] == (hc, wc):
-                        mask_bbox[:top_band_h, :][top_bleed_dil] = 0
 
             # Re-evaluate interior garment color percentages after top-edge bleed removal
             r_ch = core_pts[:, 0]
@@ -1797,7 +1810,34 @@ class GarmentVisionService:
                                 human_res = norm_human
                             mask_res = _np.where(human_res > 120, _np.uint8(0), mask_res)
                         alpha_im = Image.fromarray(mask_res, mode="L").filter(ImageFilter.GaussianBlur(radius=1.8))
-                        im.putalpha(alpha_im)
+                        im_arr = _np.array(im, dtype=_np.uint8)
+                        alpha_arr = _np.array(alpha_im, dtype=_np.uint8)
+                        im_arr[:, :, 3] = alpha_arr
+                        _det_cat_l = str(det.get("kind") or det.get("category") or det.get("label") or "").lower()
+                        _is_bot_det = _det_cat_l in ("bottom", "skirt", "pants", "jeans", "shorts") or "skirt" in _det_cat_l or "pant" in _det_cat_l
+                        if _is_bot_det and not is_single:
+                            b_zone = (alpha_arr[int(0.25 * Hc):int(0.82 * Hc), int(0.18 * Wc):int(0.82 * Wc)] > 150)
+                            if int(b_zone.sum()) >= 100:
+                                b_rgb = im_arr[int(0.25 * Hc):int(0.82 * Hc), int(0.18 * Wc):int(0.82 * Wc), :3][b_zone].astype(_np.float32)
+                                b_r, b_g, b_b = float(_np.median(b_rgb[:, 0])), float(_np.median(b_rgb[:, 1])), float(_np.median(b_rgb[:, 2]))
+                                b_rb = b_r - b_b
+                                b_chroma = float(max(b_r, b_g, b_b) - min(b_r, b_g, b_b))
+                                if b_chroma <= 35.0 and b_rb <= 32.0:
+                                    y_lim = max(4, int(0.16 * Hc))
+                                    top_slice = im_arr[:y_lim, :, :3].astype(_np.float32)
+                                    px_rb = top_slice[:, :, 0] - top_slice[:, :, 2]
+                                    bleed_px = (alpha_arr[:y_lim, :] > 5) & (px_rb >= max(36.0, b_rb + 10.0))
+                                    if bool(bleed_px.any()):
+                                        bleed_px = ndimage.binary_dilation(bleed_px, structure=_np.ones((5, 5), dtype=bool)) & (alpha_arr[:y_lim, :] > 0)
+                                        ref_y1, ref_y2 = y_lim, min(Hc, int(0.42 * Hc))
+                                        for x in range(Wc):
+                                            bx = _np.where(bleed_px[:, x])[0]
+                                            if len(bx) > 0:
+                                                r0 = min(Hc - 1, int(bx.max()) + 1)
+                                                r1 = min(Hc, r0 + 6)
+                                                rep_rgb = _np.median(im_arr[r0:r1, x, :3], axis=0).astype(_np.uint8)
+                                                im_arr[bx, x, :3] = rep_rgb
+                        im = Image.fromarray(im_arr, mode="RGBA")
                         buf = io.BytesIO()
                         im.save(buf, format="PNG", optimize=True)
                         matted = buf.getvalue()

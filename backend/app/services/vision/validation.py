@@ -4077,7 +4077,15 @@ def _enforce_segformer_category(
         return analysis
     kind = segformer_kind.strip().lower()
     comb_txt = f"{analysis.get('name', '')} {analysis.get('title', '')} {analysis.get('caption', '')} {analysis.get('sub_category', '')} {analysis.get('item_type', '')}".lower()
-    is_cultural_full = any(w in comb_txt for w in ("abaya", "kaftan", "caftan", "jalabiya", "galabiya", "djellaba", "jumpsuit", "romper", "thobe", "kandura", "עבאיה", "גלבייה", "ג'לביה"))
+    is_paired_upper_tunic = (
+        kind == "top"
+        and not is_single_item
+        and any(w in comb_txt for w in ("kaftan", "caftan", "kurta", "kurti", "tunic", "קורטה", "קפטן", "טוניקה"))
+    )
+    is_cultural_full = (
+        not is_paired_upper_tunic
+        and any(w in comb_txt for w in ("abaya", "kaftan", "caftan", "jalabiya", "galabiya", "djellaba", "jumpsuit", "romper", "thobe", "kandura", "עבאיה", "גלבייה", "ג'לביה"))
+    )
     if is_cultural_full:
         analysis["category"] = "Full Body"
         analysis["dress_code"] = "traditional"
@@ -4130,7 +4138,8 @@ def _enforce_segformer_category(
         return analysis
 
     is_kurta_or_tunic = (
-        any(w in comb_txt for w in ("kurta", "guayabera", "thobe", "galabiya", "jalabiya", "קורטה", "ת'וב", "גלבייה"))
+        is_paired_upper_tunic
+        or any(w in comb_txt for w in ("kurta", "guayabera", "thobe", "galabiya", "jalabiya", "קורטה", "ת'וב", "גלבייה"))
         or any(w in lbl_low for w in ("kurta", "guayabera", "thobe", "galabiya", "jalabiya", "tunic", "קורטה"))
     )
     if is_kurta_or_tunic:
@@ -4140,12 +4149,13 @@ def _enforce_segformer_category(
         curr_itype_l = str(analysis.get("item_type") or "").strip().lower()
         curr_name_l = str(analysis.get("name") or analysis.get("title") or "").strip().lower()
 
-        # If LLM classified it as Outerwear / Coat / Jacket / מעיל, or if SegFormer detected Kurta, override to Kurta
+        # If LLM classified it as Outerwear / Coat / Jacket / Kaftan / מעיל, or if SegFormer detected Kurta, override to Kurta
         if (
-            curr_cat_l in ("outerwear", "coat", "jacket")
-            or curr_sub_l in ("coat", "jacket", "outerwear", "מעיל", "ז'קט")
-            or any(w in curr_itype_l for w in ("coat", "jacket", "outerwear", "מעיל", "ז'קט"))
-            or any(w in curr_name_l for w in ("coat", "jacket", "מעיל", "ז'קט"))
+            is_paired_upper_tunic
+            or curr_cat_l in ("outerwear", "coat", "jacket", "full body", "dress")
+            or curr_sub_l in ("coat", "jacket", "outerwear", "kaftan", "caftan", "tunic", "מעיל", "ז'קט", "קפטן")
+            or any(w in curr_itype_l for w in ("coat", "jacket", "outerwear", "kaftan", "caftan", "מעיל", "ז'קט", "קפטן"))
+            or any(w in curr_name_l for w in ("coat", "jacket", "kaftan", "caftan", "מעיל", "ז'קט", "קפטן"))
             or "kurta" in lbl_low
             or "kurta" in curr_sub_l
             or "קורטה" in curr_sub_l
