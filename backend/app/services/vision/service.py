@@ -738,6 +738,7 @@ class GarmentVisionService:
                 "_human_mask_full": p.get("_human_mask_full"),
                 "_global_human_mask": p.get("_global_human_mask"),
                 "has_human_head": p.get("has_human_head", False),
+                "has_human_skin": p.get("has_human_skin", False),
                 "source": "clothing_parser",
             }
             for p in parser_items
@@ -1415,10 +1416,10 @@ class GarmentVisionService:
                                 * max(0, d.get("bbox", [0, 0, 0, 0])[3] - d.get("bbox", [0, 0, 0, 0])[1])
                             ),
                         )
-                        seg_mask = best_det.get("mask") or best_det.get("_mask_bbox")
+                        seg_mask = best_det.get("mask") if best_det.get("mask") is not None else best_det.get("_mask_bbox")
                         if seg_mask is not None and bool(seg_mask.any()):
                             from app.services import clothing_parser as _cp
-                            h_mask = best_det.get("_human_mask_full") if best_det.get("_human_mask_full") is not None else best_det.get("_global_human_mask")
+                            h_mask = best_det.get("_human_mask_full") if best_det.get("_human_mask_full") is not None else (best_det.get("_human_mask_bbox") if best_det.get("_human_mask_bbox") is not None else best_det.get("_global_human_mask"))
                             refined = _cp.apply_alpha_intersection(
                                 result,
                                 seg_mask,

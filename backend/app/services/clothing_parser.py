@@ -1407,6 +1407,8 @@ async def parse_garments(
         if 0.002 <= skin_frac <= 0.28:
             skin_mask_found = skin_combined.astype(np.uint8)
             has_any_human = True
+            if int(skin_outside[:int(0.35 * H), :].sum()) >= 30:
+                has_head = True
     except Exception:
         skin_mask_found = None
 
@@ -2216,7 +2218,13 @@ async def parse_garments(
                 else:
                     garment_human_mask = skin_mask_found
             elif skin_mask_found is not None:
-                garment_human_mask = skin_mask_found
+                garment_human_mask = skin_mask_found.copy()
+                if has_head and ymin > int(0.03 * H):
+                    head_box = np.zeros((H, W), dtype=np.uint8)
+                    head_x1 = max(0, xmin - int(0.15 * (xmax - xmin)))
+                    head_x2 = min(W, xmax + int(0.15 * (xmax - xmin)))
+                    head_box[0:ymin, head_x1:head_x2] = 1
+                    garment_human_mask = (garment_human_mask | (head_box & (class_mask == 0))).astype(np.uint8)
             elif has_head and ymin > int(0.03 * H):
                 # When SegFormer model has no human classes (e.g. sayeed99/segformer_b3_clothes),
                 # synthesize head mask directly above top collar so the face/beard/hair are excised!
@@ -2672,7 +2680,7 @@ def apply_alpha_intersection(
                 apex_y = int(ys.min())
                 # Anything above the garment apex is strictly head / neck / background
                 if apex_y > 2:
-                    new_alpha[:max(0, apex_y - 2), :] = 0
+                    new_alpha[:min(Hc, apex_y + 2), :] = 0
 
                 # Column-wise contour trimming along the central neckline/collar notch
                 col_min_y = np.full(Wc, Hc, dtype=int)
@@ -2877,7 +2885,13 @@ def apply_alpha_intersection(
     # Remove isolated thin lateral hooks left beside an excised hand without EDT bridging.
     if is_upper and not is_single_item:
         try:
-            from scipy.ndimage import binary_dilation as _bd_up, binary_opening as _bo_up
+            from scipy.ndimage import (
+                binary_dilation as _bd_up,
+                binary_opening as _bo_up,
+                distance_transform_edt as _edt_up,
+                gaussian_filter as _gf_up,
+                label as _lbl_up,
+            )
             y_idx, x_idx = np.indices((Hc, Wc))
             torso_bin = new_alpha > 40
             open_h = max(9, int(0.022 * Hc))
@@ -2897,6 +2911,52 @@ def apply_alpha_intersection(
                 finger_halo = hand_rim & (new_alpha > 0) & ((px_rb < 38.0) | (px_luma < 95.0))
                 if finger_halo.any():
                     new_alpha[_bd_up(finger_halo, iterations=1) & hand_rim] = 0
+            # Seamlessly inpaint compact enclosed interior hand islands resting on solid kaftans/dresses
+            if has_human and not is_garment_nude and 't_r' in locals():
+                r_f = arr[:, :, 0].astype(np.float32)
+                g_f = arr[:, :, 1].astype(np.float32)
+                b_f = arr[:, :, 2].astype(np.float32)
+                luma_f = 0.299 * r_f + 0.587 * g_f + 0.114 * b_f
+                cr_f = 128.0 + 0.5 * r_f - 0.418688 * g_f - 0.081312 * b_f
+                cb_f = 128.0 - 0.168736 * r_f - 0.331264 * g_f + 0.5 * b_f
+                px_diff = np.sqrt((r_f - t_r) ** 2 + (g_f - t_g) ** 2 + (b_f - t_b) ** 2)
+                mid_zone = (
+                    (y_idx >= int(0.25 * Hc)) & (y_idx <= int(0.55 * Hc))
+                    & (x_idx >= int(0.25 * Wc)) & (x_idx <= int(0.75 * Wc))
+                )
+                hand_cand = (
+                    (new_alpha > 200) & mid_zone
+                    & (cr_f >= 136.0) & (cr_f <= 172.0)
+                    & (cb_f >= 92.0) & (cb_f <= 124.0)
+                    & (r_f > g_f) & (g_f > b_f)
+                    & ((r_f - g_f) >= 25.0) & ((g_f - b_f) >= 12.0) & ((g_f - b_f) <= 38.0)
+                    & (luma_f >= 55.0) & (luma_f <= 145.0)
+                    & (px_diff >= 75.0)
+                )
+                if int(hand_cand.sum()) >= 150:
+                    labeled_h, n_h = _lbl_up(hand_cand)
+                    interior_hand = np.zeros_like(hand_cand)
+                    for cid in range(1, n_h + 1):
+                        comp = (labeled_h == cid)
+                        csum = int(comp.sum())
+                        if 150 <= csum <= 2500:
+                            interior_hand |= comp
+                    if interior_hand.any():
+                        hand_dil = _bd_up(interior_hand, structure=np.ones((9, 9), dtype=bool)) & (new_alpha > 150)
+                        clean_garment = (new_alpha > 200) & (~hand_dil) & (px_diff <= 40.0)
+                        if clean_garment.any():
+                            _, nearest_idx = _edt_up(~clean_garment, return_indices=True)
+                            ny, nx = nearest_idx[0], nearest_idx[1]
+                            inpainted = arr[:, :, :3].copy().astype(np.float32)
+                            for c in range(3):
+                                ch = inpainted[:, :, c]
+                                ch[hand_dil] = ch[ny[hand_dil], nx[hand_dil]]
+                                inpainted[:, :, c] = _gf_up(ch, sigma=2.5)
+                            blend_w = _gf_up(hand_dil.astype(np.float32), sigma=2.0)[:, :, None]
+                            arr[:, :, :3] = np.clip(
+                                arr[:, :, :3].astype(np.float32) * (1.0 - blend_w) + inpainted * blend_w,
+                                0, 255,
+                            ).astype(np.uint8)
         except Exception as _flank_exc:
             logger.debug("apply_alpha_intersection flank cleanup: %s", _flank_exc)
 
