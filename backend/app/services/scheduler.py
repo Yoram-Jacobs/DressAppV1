@@ -830,7 +830,6 @@ async def check_scheduler_triggers() -> None:
     """Scan user scheduler preferences and trigger push notifications with outfit proposals."""
     try:
         db = get_db()
-        now = datetime.now(timezone.utc)
 
         # Query users with scheduler enabled
         cursor = db.users.find(
@@ -851,39 +850,116 @@ async def check_scheduler_triggers() -> None:
                     continue
 
                 sched = user.get("scheduler_settings") or {}
+                now = datetime.now(timezone.utc)
 
                 # Convert current UTC time to user's local time based on their timezone
                 user_timezone = sched.get("timezone") or "UTC"
                 try:
                     from zoneinfo import ZoneInfo
-                    local_now = now.astimezone(ZoneInfo(user_timezone))
+                    user_tz_obj = ZoneInfo(user_timezone)
+                    local_now = now.astimezone(user_tz_obj)
                 except Exception:
+                    user_tz_obj = timezone.utc
                     local_now = now
-                current_time_str = local_now.strftime("%H:%M")
-                current_day_str = local_now.strftime("%A").lower()
 
-                # Check notification time matches (within 1-minute window)
-                notif_time = sched.get("time") or sched.get("notification_time") or "08:00"
-                if notif_time != current_time_str:
+                current_day_str = local_now.strftime("%A").lower()
+                today_local_str = local_now.strftime("%Y-%m-%d")
+
+                # Parse notification time (supports "8:00" or "08:00")
+                raw_notif_time = str(sched.get("time") or sched.get("notification_time") or "08:00").strip()
+                try:
+                    nh_s, nm_s = raw_notif_time.split(":", 1)
+                    notif_h, notif_m = int(nh_s), int(nm_s)
+                    if not (0 <= notif_h < 24 and 0 <= notif_m < 60):
+                        notif_h, notif_m = 8, 0
+                except Exception:
+                    notif_h, notif_m = 8, 0
+                norm_notif_time = f"{notif_h:02d}:{notif_m:02d}"
+
+                notif_mins = notif_h * 60 + notif_m
+                current_mins = local_now.hour * 60 + local_now.minute
+
+                # Resilient 3-hour catch-up window: fire when current local time is at or up to 180 minutes
+                # past the scheduled notification time, ensuring slow LLM calls for earlier users or container
+                # restarts never cause a user's daily notification to be skipped for the day.
+                diff_mins = current_mins - notif_mins
+                if diff_mins < 0 or diff_mins > 180:
                     continue
 
+                # Target date is ALWAYS tomorrow for scheduled daily outfit proposals
+                is_next_day = True
+                target_date = local_now + timedelta(days=1)
+                target_date_str = target_date.strftime("%Y-%m-%d")
+
+                # Idempotency check: ensure we only fire once per (today_local_str, norm_notif_time)
+                trigger_key = f"{today_local_str}_{norm_notif_time}"
+                if sched.get("last_trigger_key") == trigger_key:
+                    continue
+
+                # If last_trigger_key was not set yet (e.g. legacy user record), check if we already sent
+                # a scheduled notification after today's scheduled time (unless the user changed their time).
+                last_trig_time = sched.get("last_triggered_time")
+                if last_trig_time in (None, norm_notif_time):
+                    scheduled_local_dt = datetime(
+                        local_now.year, local_now.month, local_now.day, notif_h, notif_m, 0, tzinfo=user_tz_obj
+                    )
+                    scheduled_utc_iso = (scheduled_local_dt.astimezone(timezone.utc) - timedelta(minutes=2)).isoformat()
+                    existing_notif = await db.simulated_notifications.find_one(
+                        {
+                            "user_id": user_id,
+                            "payload.target_date": target_date_str,
+                            "created_at": {"$gte": scheduled_utc_iso},
+                        },
+                        {"_id": 1},
+                    )
+                    if existing_notif:
+                        await db.users.update_one(
+                            {"id": user_id},
+                            {
+                                "$set": {
+                                    "scheduler_settings.last_trigger_key": trigger_key,
+                                    "scheduler_settings.last_triggered_local_date": today_local_str,
+                                    "scheduler_settings.last_triggered_time": norm_notif_time,
+                                }
+                            },
+                        )
+                        continue
+
                 # Check frequency
-                frequency = sched.get("frequency") or "everyday"
+                frequency = (sched.get("frequency") or "everyday").strip().lower()
+                chosen_weekday = (sched.get("weekday") or "monday").strip().lower()
+                weekdays_order = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"]
                 if frequency == "weekdays" and current_day_str in ("saturday", "sunday"):
                     continue
                 if frequency == "weekends" and current_day_str not in ("saturday", "sunday"):
                     continue
-                # For "everyday" or specific day matches, continue
-
-                # Check if push notifications are enabled
-                if sched.get("push_enabled") is False:
+                if frequency == "on_weekday" and current_day_str != chosen_weekday:
                     continue
+                if frequency == "twice_a_week":
+                    base_idx = weekdays_order.index(chosen_weekday) if chosen_weekday in weekdays_order else 0
+                    second_day = weekdays_order[(base_idx + 3) % 7]
+                    if current_day_str not in (chosen_weekday, second_day):
+                        continue
+                if frequency == "every_other_day":
+                    yesterday_local_str = (local_now - timedelta(days=1)).strftime("%Y-%m-%d")
+                    if (
+                        sched.get("last_triggered_local_date") == yesterday_local_str
+                        and last_trig_time == norm_notif_time
+                    ):
+                        continue
 
-                # Target date is ALWAYS tomorrow for scheduled daily outfit proposals
-                # This gives users adequate time to inspect, prepare, change, iron, or mend their outfits the day before.
-                is_next_day = True
-                target_date = local_now + timedelta(days=1)
-                target_date_str = target_date.strftime("%Y-%m-%d")
+                # Claim trigger key immediately before slow LLM generation so overlapping/subsequent checks never double-fire
+                await db.users.update_one(
+                    {"id": user_id},
+                    {
+                        "$set": {
+                            "scheduler_settings.last_trigger_key": trigger_key,
+                            "scheduler_settings.last_triggered_local_date": today_local_str,
+                            "scheduler_settings.last_triggered_time": norm_notif_time,
+                            "scheduler_settings.last_triggered_at": now.isoformat(),
+                        }
+                    },
+                )
 
                 # Fetch weather (soft-fail)
                 weather_ctx = None
@@ -905,9 +981,8 @@ async def check_scheduler_triggers() -> None:
                 calendar_events = []
                 try:
                     from app.services.calendar_service import calendar_service
-                    from zoneinfo import ZoneInfo
-                    local_start = datetime(target_date.year, target_date.month, target_date.day, 0, 0, 0, tzinfo=ZoneInfo(user_timezone))
-                    local_end = datetime(target_date.year, target_date.month, target_date.day, 23, 59, 59, tzinfo=ZoneInfo(user_timezone))
+                    local_start = datetime(target_date.year, target_date.month, target_date.day, 0, 0, 0, tzinfo=user_tz_obj)
+                    local_end = datetime(target_date.year, target_date.month, target_date.day, 23, 59, 59, tzinfo=user_tz_obj)
                     time_min = local_start.astimezone(timezone.utc)
                     time_max = local_end.astimezone(timezone.utc)
                     
@@ -999,17 +1074,19 @@ async def check_scheduler_triggers() -> None:
                     )
 
                     # Persist curated proposal to daily_proposals collection for tomorrow (target_date_str)
+                    prop_id = None
                     try:
                         import uuid
+                        prop_id = f"prop_{uuid.uuid4().hex[:12]}"
                         await db.daily_proposals.update_many(
                             {"user_id": user_id, "date": target_date_str},
                             {"$set": {"replaced": True, "dismissed": True}},
                         )
                         prop_doc = {
-                            "id": f"prop_{uuid.uuid4().hex[:12]}",
+                            "id": prop_id,
                             "user_id": user_id,
                             "date": target_date_str,
-                            "language": user_lang,
+                            "language": (user_lang or "en").lower().split("-")[0],
                             "title": outfit_name,
                             "description": prop.get("why") or "Curated based on your style profile, tomorrow's weather conditions, and closet harmony.",
                             "weather_summary": (target_weather.get("description") if target_weather else "Mild & Pleasant"),
@@ -1040,7 +1117,9 @@ async def check_scheduler_triggers() -> None:
                     lightweight_proposals = []
                     for prop in proposals[:1]:
                         p_copy = {
+                            "id": prop_id,
                             "name": prop.get("name"),
+                            "title": prop.get("name"),
                             "reasoning": prop.get("reasoning"),
                             "why": prop.get("why"),
                             "items": [
@@ -1066,9 +1145,19 @@ async def check_scheduler_triggers() -> None:
                         "url": f"/stylist?tab=match&date={target_date_str}&view=proposal", 
                         "target_date": target_date_str,
                         "tag": f"daily-suggestions-{target_date_str}",
+                        "source": "scheduler",
                         "proposals": lightweight_proposals
                     }
                     await send_push_notification(user_id, title, body, payload)
+                    try:
+                        from app.services.sync_service import broadcast_sync_event
+                        await broadcast_sync_event(
+                            user_id,
+                            "daily_suggestions_updated",
+                            {"proposal_id": prop_id, "date": target_date_str},
+                        )
+                    except Exception:
+                        pass
                     logger.info("Sent scheduled notification to user %s for %s", user_id, target_date_str)
 
                 except Exception as trigger_exc:
@@ -1095,7 +1184,8 @@ def start_scheduler() -> None:
         IntervalTrigger(minutes=1),
         id="scheduler_triggers_check",
         replace_existing=True,
-        misfire_grace_time=30,
+        misfire_grace_time=300,
+        coalesce=True,
     )
 
     # Trend-Scout daily run

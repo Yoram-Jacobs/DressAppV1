@@ -525,15 +525,25 @@ async def webpush_subscribe(
 
     sub_dict = payload.model_dump(exclude={"expo_push_token"})
 
-    # Atomically remove any duplicate subscription with this endpoint
+    # Deduplicate existing subscriptions by endpoint and append the current one
+    existing_subs = (user.get("web_push_subscriptions") or [])
+    deduped_subs = []
+    seen_eps = set()
+    for s in existing_subs:
+        ep = s.get("endpoint")
+        if ep and ep != payload.endpoint and ep not in seen_eps:
+            seen_eps.add(ep)
+            deduped_subs.append(s)
+    deduped_subs.append(sub_dict)
+
     await db.users.update_one(
         {"id": user["id"]},
-        {"$pull": {"web_push_subscriptions": {"endpoint": payload.endpoint}}},
-    )
-    # Push the new subscription
-    await db.users.update_one(
-        {"id": user["id"]},
-        {"$push": {"web_push_subscriptions": sub_dict}},
+        {
+            "$set": {
+                "web_push_subscriptions": deduped_subs,
+                "scheduler_settings.push_enabled": True,
+            }
+        },
     )
     logger.info("Registered web push subscription for user_id=%s", user["id"])
     return {"subscribed": True, "provider": "vapid"}
@@ -699,22 +709,21 @@ async def webpush_test(
         "proposals": lightweight_proposals,
     }
 
-    # Record simulated notification so it appears in the in-app notification center
-    await db.simulated_notifications.insert_one({
-        "user_id": user["id"],
-        "title": title,
-        "body": body,
-        "payload": payload,
-        "created_at": datetime.now(timezone.utc).isoformat(),
-        "read": False,
-    })
-
     res = await send_push_notification(
         user_id=user["id"],
         title=title,
         body=body,
         payload=payload,
     )
+    try:
+        from app.services.sync_service import broadcast_sync_event
+        await broadcast_sync_event(
+            user["id"],
+            "daily_suggestions_updated",
+            {"proposal_id": prop.get("id"), "date": target_date_str},
+        )
+    except Exception:
+        pass
     return {"success": True, "result": res, "title": title, "body": body, "target_date": target_date_str}
 
 

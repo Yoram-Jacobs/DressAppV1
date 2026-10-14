@@ -780,6 +780,12 @@ export default function Stylist() {
       setMatchSelectedDay('today');
     } else if (queryDate === tomStr && matchSelectedDay !== 'tomorrow') {
       setMatchSelectedDay('tomorrow');
+    } else if (!queryDate && matchSelectedDay === 'tomorrow') {
+      const hasTom = (proposals || []).some(p => p.date === tomStr) || dailyProposal?.date === tomStr || (outfits || []).some(o => o.usage?.date === tomStr);
+      const hasToday = (proposals || []).some(p => p.date === todayStr) || dailyProposal?.date === todayStr || (outfits || []).some(o => o.usage?.date === todayStr);
+      if (!hasTom && hasToday) {
+        setMatchSelectedDay('today');
+      }
     }
 
     if (activeTab === 'match') {

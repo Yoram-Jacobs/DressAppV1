@@ -261,7 +261,7 @@ export function SchedulerSettings() {
       const schedPayload = {
         ...(user?.scheduler_settings || {}),
         enabled: overrides.enabled !== undefined ? overrides.enabled : enabled,
-        push_enabled: pushEnabled,
+        push_enabled: pushEnabled || Boolean(user?.scheduler_settings?.push_enabled),
         frequency: overrides.frequency !== undefined ? overrides.frequency : frequency,
         weekday: overrides.weekday !== undefined ? overrides.weekday : weekday,
         time: overrides.time !== undefined ? overrides.time : time,

@@ -66,13 +66,9 @@ async def send_push_notification(user_id: str, title: str, body: str, payload: d
         return {k: v for k, v in doc.items() if k != "_id"}
 
     subscriptions = user.get("web_push_subscriptions") or []
-    if not subscriptions:
-        logger.info("No active web push subscriptions registered for user_id=%s", user_id)
-        return {k: v for k, v in doc.items() if k != "_id"}
-
-    # Require VAPID keys to send real push alerts
-    if not settings.VAPID_PUBLIC_KEY or not settings.VAPID_PRIVATE_KEY:
-        logger.warning("VAPID keys not configured in server environment. Skipping browser Web Push.")
+    expo_tokens = user.get("expo_push_tokens") or []
+    if not subscriptions and not expo_tokens:
+        logger.info("No active push subscriptions registered for user_id=%s", user_id)
         return {k: v for k, v in doc.items() if k != "_id"}
 
     # For native browser push, send a truncated body if it is too long or contains newlines,
@@ -111,6 +107,46 @@ async def send_push_notification(user_id: str, title: str, body: str, payload: d
                     else:
                         cta = cta_map["en"]
                 web_push_body = f"{clean_body} · {cta}"
+
+    # Send to Expo push tokens if registered (mobile native clients)
+    if expo_tokens:
+        try:
+            import httpx
+            expo_messages = [
+                {
+                    "to": tok,
+                    "sound": "default",
+                    "title": title,
+                    "body": web_push_body,
+                    "priority": "high",
+                    "ttl": 86400,
+                    "data": {
+                        "url": (payload or {}).get("url") or "/stylist?tab=match",
+                        "target_date": (payload or {}).get("target_date"),
+                        "tag": (payload or {}).get("tag") or "daily-suggestions",
+                    },
+                }
+                for tok in set(expo_tokens)
+                if tok
+            ]
+            if expo_messages:
+                async with httpx.AsyncClient(timeout=10.0) as client:
+                    await client.post(
+                        "https://exp.host/--/api/v2/push/send",
+                        json=expo_messages,
+                        headers={"Accept": "application/json", "Content-Type": "application/json"},
+                    )
+                logger.info("Sent Expo Push to %d token(s) for user_id=%s", len(expo_messages), user_id)
+        except Exception as expo_exc:
+            logger.warning("Failed sending Expo push for user_id=%s: %s", user_id, expo_exc)
+
+    if not subscriptions:
+        return {k: v for k, v in doc.items() if k != "_id"}
+
+    # Require VAPID keys to send real browser push alerts
+    if not settings.VAPID_PUBLIC_KEY or not settings.VAPID_PRIVATE_KEY:
+        logger.warning("VAPID keys not configured in server environment. Skipping browser Web Push.")
+        return {k: v for k, v in doc.items() if k != "_id"}
 
     # Write VAPID private key to a temp file if it's PEM format (starts with ---)
     # or contains newlines, because pywebpush from_string expects DER format.
@@ -151,16 +187,29 @@ async def send_push_notification(user_id: str, title: str, body: str, payload: d
             seen_endpoints.add(endpoint)
             unique_subs.append(sub)
 
+    if len(unique_subs) < len(subscriptions):
+        try:
+            await db.users.update_one(
+                {"id": user_id},
+                {"$set": {"web_push_subscriptions": unique_subs}},
+            )
+        except Exception:
+            pass
+
     # Send web push to each registered subscription endpoint
+    # CRITICAL: ttl=86400 (24h) and Urgency=high are required so FCM (Chrome/Android)
+    # and Mozilla Push queue the notification and wake sleeping/Doze devices instead of
+    # immediately dropping the message (which happens when pywebpush defaults to ttl=0).
     for sub in unique_subs:
         try:
-            # pywebpush blocks synchronously, but since it is a fast HTTP call we can wrap it or call it inline.
-            # In a production environment, this could be delegated to a task runner.
             webpush(
                 subscription_info=sub,
                 data=payload_data_str,
                 vapid_private_key=vapid_key_param,
-                vapid_claims={"sub": f"mailto:{settings.VAPID_CLAIM_EMAIL}"}
+                vapid_claims={"sub": f"mailto:{settings.VAPID_CLAIM_EMAIL}"},
+                ttl=86400,
+                headers={"Urgency": "high"},
+                timeout=10,
             )
             logger.info("Sent Web Push successfully to endpoint=%s", sub.get("endpoint")[:45] + "...")
         except WebPushException as ex:

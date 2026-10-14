@@ -161,10 +161,8 @@ async def get_daily_proposal(
             sort=[("worn", -1), ("created_at", -1)],
         )
         if doc and len(doc.get("items") or []) > 0:
-            doc_lang = doc.get("language")
-            if not doc_lang or doc_lang == user_lang:
-                return doc
-        return await _generate_and_save_daily_proposal(user, date, force=True if doc else False)
+            return doc
+        return await _generate_and_save_daily_proposal(user, date, force=False)
 
     # 2. Check tomorrow's proposal (pushed the day before for advance prep)
     tom_doc = await db.daily_proposals.find_one(
@@ -172,8 +170,6 @@ async def get_daily_proposal(
         {"_id": 0},
         sort=[("worn", -1), ("created_at", -1)],
     )
-    if tom_doc and tom_doc.get("language") and tom_doc.get("language") != user_lang:
-        tom_doc = None
 
     # 3. Check today's proposal (e.g. prepared yesterday for today)
     today_doc = await db.daily_proposals.find_one(
@@ -181,8 +177,6 @@ async def get_daily_proposal(
         {"_id": 0},
         sort=[("worn", -1), ("created_at", -1)],
     )
-    if today_doc and today_doc.get("language") and today_doc.get("language") != user_lang:
-        today_doc = None
 
     all_proposals = [p for p in [today_doc, tom_doc] if p and len(p.get("items") or []) > 0]
 
