@@ -244,6 +244,36 @@ Este documento define protocolos canônicos de vestimenta, requisitos de silhuet
   - NENHUM preto sólido liso ou branco austero simples em casamentos hindus (cores reservadas para o luto).
   - Evitar recortes provocantes de moda balada ou calçados esportivos.
 
+### 3.9 Kaftan vs. Kurta vs. Kurti e o Híbrido Kaftan Kurta (قفطان مقابل كورتا / כפתן מול קורטה / काफ्तान बनाम कुर्ता और कुर्ती)
+Embora tanto o **Kaftan (Caftã)** quanto a **Kurta** sejam túnicas tradicionais amplas e respiráveis, muito valorizadas pelo conforto em climas quentes e pela elegância cultural, eles diferem fundamentalmente em sua **origem histórica, silhueta anatômica, construção de costuras, comprimento, combinação com partes de baixo e adequação aos biotipos**:
+
+- **1. Origem e Linhagem Cultural**:
+  - **Kaftan (Caftã)**: Enraizado na antiga Mesopotâmia, Pérsia e cultura do Oriente Médio (derivado do termo túrquico *kap ton*, que significa "veste que cobre"), alcançou estatuto imperial no **Império Otomano** (onde caftãs de seda, veludo e brocado indicavam patente), no **Marrocos e Norte da África** (*Takchita* e caftãs cerimoniais marroquinos), na **África Ocidental** (túnicas senegalesas e nigerianas) e no traje histórico **russo**, antes de ingressar na moda resort e na alta-costura ocidental nos anos 1960–70.
+  - **Kurta**: Nativa do **Sul da Ásia (Índia e Paquistão)**, com séculos de evolução regional como túnica cotidiana, de trabalho ou cerimonial confeccionada em tradições têxteis do subcontinente (estampas em bloco de Jaipur, bordado Chikankari de Lucknow, bordado Aari e Tilla da Caxemira, seda Chanderi, Khadi e Banarasi).
+  - **Kurti**: Evolução feminina moderna e mais curta da Kurta originada no **Norte da Índia**, desenhada para a mobilidade contemporânea e a fusão indo-ocidental (*Indo-Western*).
+
+- **2. Silhueta, Construção de Costuras e Caimento**:
+  - **Kaftan**: Peça **única (*single-piece*)** larga, solta e fluida, cortada amplamente do ombro à bainha **sem costuras definidas nos ombros, cavas justas ou costuras estruturais na cintura**. Caracteriza-se por amplas **mangas "morcego" (*batwing*)** ou estilo quimono formadas pelo caimento contínuo do tecido, ocasionalmente acinturada por um cordão interno ou cinto.
+  - **Kurta**: Túnica **mais estruturada e de alfaiataria**, construída com **costuras de ombro definidas, mangas assentadas**, decotes estruturados (como a **gola alta Mandarim / Nehru de 2,5 a 4 cm**, decote gota ou vista abotoada) e **fendas laterais (*chaak*)** do quadril à bainha para facilitar o caminhar e a ventilação. Inclui as silhuetas clássicas **reta (*Straight-cut*)**, **evasê (*A-line*)**, **Anarkali** e **Angrakha**.
+  - **Kurti**: Blusa/túnica mais curta que termina na **cintura, no quadril ou na altura da coxa**, incorporando recortes modernos de mangas e decotes (mangas sino, ombro vazado, peplum, estilo camisaria ou bainhas assimétricas).
+
+- **3. Comprimento e Protocolo de Combinação com Partes de Baixo**:
+  - **Kaftan**: Varia do **comprimento no joelho até o chão**; usado predominantemente **sozinho como vestido de peça única**, saída de praia, robe de luxo ou vestido de gala.
+  - **Kurta**: Cai tipicamente até os **joelhos ou meio da panturrilha** e é **quase sempre combinada com partes de baixo** — como **calças pantalona (*palazzo*), churidars, salwars, calças retas cigarrete, shararas, calças dhoti ou saias maxi plissadas** — frequentemente completada com uma **dupatta** ou colete Nehru.
+  - **Kurti**: Chega ao quadril ou coxa e combina facilmente com **calças jeans, jeggings, leggings, calças de alfaiataria, saias ou calças dhoti**, geralmente sem dupatta para faculdade, escritório e passeios casuais.
+
+- **4. Ocasião e Resistência Festiva (Rituais no Chão vs. Recepções de Palco)**:
+  - **Kaftan**: Ideal para moda resort, férias na praia, gestantes e festividades diurnas quentes e úmidas (**Haldi, Mehendi, encontros diurnos de Diwali ou Puja em casa**). Por não ter restrição nas cavas ou na cintura, destaca-se em **longos rituais sentados no chão** e banquetes festivos.
+  - **Conjunto de Kurta (*Kurta Set*)**: Versátil para o dia a dia, **roupa corporativa de escritório** (especialmente kurtas de gola Nehru em cambraia de algodão 60x60 ou linho) e **eventos formais estruturados** (recepções de casamento, fotos oficiais) onde ombros definidos e a dupatta garantem uma silhueta alinhada.
+
+- **5. O Híbrido: Kaftan Kurta e Suit Kaftan (काफ्तान कुर्ता सेट)**:
+  - A moda contemporânea introduziu a **Kaftan Kurta** (e o **Suit Kaftan / Kaftan Kurta Set**), uma peça de fusão que une as **mangas largas morcego e o corpo relaxado de um caftã** com **a gola/vista tradicional, comprimento no joelho/panturrilha, artesanato têxtil indiano (block print, Bandhani, Zari, bordado Aari e Tilla da Caxemira) e combinação com calças coordenadas (retas, tulipa ou palazzo) de uma kurta sul-asiática**.
+
+- **6. Matriz de Biotipo e Seleção de Tecidos**:
+  - **Biotipos Maçã (*Apple*) e Morango / Triângulo Invertido (*Strawberry*)**: Valorizados por **caftãs com decote em V, Kaftan Kurtas cintura império e drapeados diagonais** em tecidos fluidos (**linho puro 55–60 Lea, georgette, cetim modal, crepe de seda ou algodão mulmul**) que deslizam pelo tronco sem marcar; **evitar** algodões rígidos e decotes canoa fechados.
+  - **Biotipos Ampulheta (*Hourglass*) e Estatura Baixa (*Petite*)**: Ficam melhores em **Kurtas retas ou evasê de alfaiataria**, ou **Kaftan Kurtas com cinto/cordão** e calças afuniladas no tornozelo.
+  - **Biotipos Pera (*Pear*) e Plus-Size**: Valorizados por **Kurtas evasê, Anarkali e Kaftan Kurtas com fendas laterais** e decote em V que equilibram a proporção do quadril.
+
 ---
 
 ## 4. Tradições Sagradas Budistas (พุทธศาสนา / 佛教)

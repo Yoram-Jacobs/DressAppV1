@@ -267,6 +267,20 @@ def retrieve_fashion_axioms(
     )):
         add_rule("rule_cultural_kurta_sherwani_pairing")
 
+    # Kaftan vs. Kurta, Hybrid Kaftan Kurta & Kurti Styling Distinctions
+    if any(w in text_corpus for w in (
+        "kaftan", "caftan", "kaftan vs kurta", "kurta vs kaftan", "batwing",
+        "قفطان", "כפתן", "काफ्तान", "kaftan kurta", "suit kaftan", "kaftan set"
+    )):
+        add_rule("rule_cultural_kaftan_vs_kurta_distinction")
+        add_rule("rule_cultural_kaftan_kurta_hybrid")
+
+    if any(w in text_corpus for w in (
+        "kurti", "kurta vs kurti", "kurti vs kurta", "nehru collar", "mandarin collar",
+        "anarkali", "angrakha", "कुर्ती", "קורטי", "كورتي"
+    )):
+        add_rule("rule_cultural_kurta_vs_kurti_styling")
+
     # Traditional Saree & Lehenga Choli Ensemble
     if any(w in text_corpus for w in (
         "sari", "saree", "lehenga", "lehenga choli", "choli", "dupatta",
@@ -672,6 +686,7 @@ def retrieve_garment_vision_axioms() -> str:
     return (
         "GROUND-TRUTH CULTURAL TAXONOMY & CATEGORY AXIOMS:\n"
         "• Galabiya, Kaftan, Thobe, Abaya, Sari, Lehenga, Hanbok, Kimono, Dirndl -> category:'Full Body' (open Abaya/Kaftan -> 'Outerwear').\n"
+        "• Kaftan vs. Kurta vs. Kurti vs. Kaftan Kurta: Kaftan has wide flowing batwing/kimono sleeves cut as a single unstructured piece from shoulder to hem with NO shoulder seams (Middle Eastern/Mesopotamian/Ottoman origin, standalone knee-to-floor dress/robe -> 'Full Body'). Kurta is a South Asian (Indian/Pakistani) tailored tunic with defined shoulder seams, set-in sleeves, stand/Mandarin collar or placket, and side slits ('chaak'), falling to knees/mid-calf and paired with bottoms (palazzos, churidars, salwars, skirts) -> category:'Top', sub_category:'Kurta'. Kurti is a shorter modern hip-to-thigh tunic worn with jeans/leggings -> category:'Top', sub_category:'Kurta'|'Tunic'. Kaftan Kurta is a hybrid fusing wide batwing sleeves with a traditional South Asian kurta neckline/hem worn over trousers -> category:'Top'.\n"
         "• Kurta, Guayabera -> category:'Top'.\n"
         "• Sherwani, Achkan, Bandhgala, Nehru Jacket -> category:'Outerwear' (or 'Top'), sub_category:'Sherwani' or 'Achkan', item_type:'Sherwani'|'Achkan'|'Bandhgala'. Defined by standing Mandarin/Nehru collar, center button placket, long knee-length/hip-length tailored silhouette, slit sides. NEVER classify as western Blazer or standard Suit Jacket.\n"
         "• Bisht -> category:'Outerwear'.\n"

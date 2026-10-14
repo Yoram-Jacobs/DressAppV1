@@ -73,6 +73,216 @@ def _map_detection_category(raw_cat: str | None) -> str:
     return "Top"
 
 
+def _prepare_vlm_crop_and_color_stats(
+    crop_bytes: bytes,
+    det: dict[str, Any] | None = None,
+) -> bytes:
+    """Return a VLM-clean JPEG crop with adjacent-garment bleed removed and
+    populate ``det['_vlm_bytes']``, ``det['_interior_color_stats']``, and
+    ``det['_dominant_color_hint']`` from interior garment pixels.
+
+    Why this matters:
+    - ``_crop_to_bbox`` adds 4% top padding on ``bottom`` crops, which pulls
+      ~8-10% of an upper garment's hem (e.g. a bright mustard-yellow kurta hem)
+      into the top rows of the unmatted rectangular crop sent to ``_vlm_worker``.
+    - Additionally, wavy scalloped hems can dip into the top rows of a skirt crop.
+    - Masking out ``_other_mask_bbox`` and top-edge chromatic bleed before VLM
+      encoding, plus computing ground-truth interior pixel color statistics,
+      prevents a small bright border strip from hijacking the VLM's color/title/caption.
+    """
+    if det is not None and det.get("_vlm_bytes") is not None and det.get("_interior_color_stats") is not None:
+        return det["_vlm_bytes"]
+
+    try:
+        import io as _io
+        import numpy as _np
+        from PIL import Image as _PILImage
+        from scipy.ndimage import binary_dilation as _bd, binary_erosion as _be
+
+        pil_img = _PILImage.open(_io.BytesIO(crop_bytes)).convert("RGB")
+        rgb = _np.asarray(pil_img, dtype=_np.uint8).copy()
+        hc, wc = rgb.shape[:2]
+        if hc < 16 or wc < 16:
+            return crop_bytes
+
+        mask_bbox = det.get("_mask_bbox") if isinstance(det, dict) else None
+        other_bbox = det.get("_other_mask_bbox") if isinstance(det, dict) else None
+        cat_low = ((det.get("kind") or det.get("category") or det.get("label") or "") if isinstance(det, dict) else "").lower()
+        is_bottom_crop = cat_low in ("bottom", "skirt", "pants", "jeans", "shorts") or "skirt" in cat_low or "pant" in cat_low
+        modified = False
+
+        # 1) Mask out pixels belonging to OTHER detected garments (e.g. upper Kurta/Top inside Skirt bbox pad)
+        if other_bbox is not None and other_bbox.shape[:2] == (hc, wc):
+            other_bin = _bd(other_bbox > 40, iterations=3)
+            if mask_bbox is not None and mask_bbox.shape[:2] == (hc, wc):
+                own_core = _be(mask_bbox > 127, iterations=2)
+                bleed_mask = other_bin & (~own_core)
+            else:
+                bleed_mask = other_bin
+            if bool(bleed_mask.any()):
+                rgb[bleed_mask] = _np.array([240, 240, 240], dtype=_np.uint8)
+                modified = True
+
+        # 2) Compute core interior garment color profile (rows 25%..82%, cols 18%..82%)
+        cy1, cy2 = max(1, int(hc * 0.25)), max(2, int(hc * 0.82))
+        cx1, cx2 = max(1, int(wc * 0.18)), max(2, int(wc * 0.82))
+        core_rgb = rgb[cy1:cy2, cx1:cx2].astype(_np.float32)
+        if mask_bbox is not None and mask_bbox.shape[:2] == (hc, wc):
+            core_m = mask_bbox[cy1:cy2, cx1:cx2] > 127
+            core_pts = core_rgb[core_m] if int(core_m.sum()) >= 40 else core_rgb.reshape(-1, 3)
+        else:
+            core_pts = core_rgb.reshape(-1, 3)
+
+        if len(core_pts) >= 20:
+            b_med = _np.median(core_pts, axis=0)
+            b_rb = float(b_med[0] - b_med[2])  # R - B chroma indicator (high for yellow/orange/gold, low for white/ivory)
+
+            # 3) Remove top-edge upper-garment chromatic bleed on bottom crops (or skirt/bottom crops with bright top border)
+            top_band_h = max(2, int(hc * 0.24))
+            top_rgb = rgb[:top_band_h, :].astype(_np.float32)
+            px_diff = _np.sqrt(_np.sum((top_rgb - b_med[None, None, :]) ** 2, axis=2))
+            px_rb = top_rgb[:, :, 0] - top_rgb[:, :, 2]
+            top_bleed = (px_diff >= 45.0) | ((b_rb <= 28.0) & (px_rb >= b_rb + 22.0) & (px_diff >= 26.0))
+            if is_bottom_crop or float(top_bleed[: max(1, int(hc * 0.12)), :].mean()) >= 0.25:
+                if bool(top_bleed.any()):
+                    top_bleed_dil = _bd(top_bleed, iterations=2)
+                    rgb[:top_band_h, :][top_bleed_dil] = _np.array([240, 240, 240], dtype=_np.uint8)
+                    modified = True
+                    if mask_bbox is not None and mask_bbox.shape[:2] == (hc, wc):
+                        mask_bbox[:top_band_h, :][top_bleed_dil] = 0
+
+            # Re-evaluate interior garment color percentages after top-edge bleed removal
+            r_ch = core_pts[:, 0]
+            g_ch = core_pts[:, 1]
+            b_ch = core_pts[:, 2]
+            c_max = _np.maximum(_np.maximum(r_ch, g_ch), b_ch)
+            c_min = _np.minimum(_np.minimum(r_ch, g_ch), b_ch)
+            chroma = c_max - c_min
+            luma = 0.299 * r_ch + 0.587 * g_ch + 0.114 * b_ch
+
+            # Ivory / White / Off-White: high brightness, low chroma (not strongly yellow/saturated)
+            is_ivory_white = (luma >= 165.0) & (chroma <= 42.0) & ((r_ch - b_ch) <= 36.0)
+            # Yellow / Mustard / Gold: warm R & G high, B significantly lower
+            is_yellow = (r_ch >= 140.0) & (g_ch >= 110.0) & ((r_ch - b_ch) > 42.0) & (chroma > 38.0)
+
+            ivory_white_pct = float(is_ivory_white.mean() * 100.0)
+            yellow_pct = float(is_yellow.mean() * 100.0)
+            warm_bias = float(_np.median(r_ch - b_ch))
+
+            if isinstance(det, dict):
+                det["_interior_color_stats"] = {
+                    "ivory_white_pct": round(ivory_white_pct, 1),
+                    "yellow_pct": round(yellow_pct, 1),
+                    "warm_bias": round(warm_bias, 1),
+                    "med_rgb": [int(round(x)) for x in b_med],
+                }
+                if ivory_white_pct >= 68.0 and yellow_pct <= 8.0:
+                    dom_name = "Ivory" if warm_bias >= 6.0 else "White"
+                    det["_dominant_color_hint"] = (
+                        f"GROUND-TRUTH PIXEL COLOR: Over {int(round(ivory_white_pct))}% of this garment's fabric is "
+                        f"{dom_name} (off-white/ivory/white), with <{max(1, int(round(yellow_pct)))}% yellow. "
+                        f"Set primary color to '{dom_name}' (>=90%), include '{dom_name}' in name/title/caption, "
+                        f"and NEVER describe this garment as Yellow."
+                    )
+
+        if modified:
+            buf = _io.BytesIO()
+            _PILImage.fromarray(rgb, mode="RGB").save(buf, format="JPEG", quality=92)
+            vlm_bytes = buf.getvalue()
+        else:
+            vlm_bytes = crop_bytes
+
+        if isinstance(det, dict):
+            det["_vlm_bytes"] = vlm_bytes
+        return vlm_bytes
+    except Exception as _exc:  # noqa: BLE001
+        return crop_bytes
+
+
+def _enforce_pixel_grounded_colors(
+    analysis: dict[str, Any] | None,
+    det: dict[str, Any] | None = None,
+    crop_bytes: bytes | None = None,
+) -> None:
+    """Ensure VLM color breakdown, title, name, and caption cannot hallucinate
+    Yellow/Mustard from a top-edge hem bleed when the garment's interior pixels
+    are predominantly (>65%) Ivory/White and <8% Yellow.
+    """
+    if not isinstance(analysis, dict):
+        return
+    if det is None:
+        det = {}
+    if det.get("_interior_color_stats") is None and crop_bytes:
+        _prepare_vlm_crop_and_color_stats(crop_bytes, det)
+
+    stats = det.get("_interior_color_stats")
+    if not isinstance(stats, dict):
+        return
+
+    ivory_white_pct = float(stats.get("ivory_white_pct", 0.0))
+    yellow_pct = float(stats.get("yellow_pct", 100.0))
+    warm_bias = float(stats.get("warm_bias", 10.0))
+
+    if ivory_white_pct >= 65.0 and yellow_pct <= 8.0:
+        import re as _re
+        dom_color = "Ivory" if warm_bias >= 5.0 else "White"
+        colors = analysis.get("colors")
+        has_false_yellow = False
+        if isinstance(colors, list):
+            for c in colors:
+                if isinstance(c, dict):
+                    cname = str(c.get("name") or "").lower()
+                    cpct = float(c.get("pct") or 0)
+                    if any(w in cname for w in ("yellow", "mustard", "gold", "lemon", "ochre", "amber")) and cpct >= 15:
+                        has_false_yellow = True
+                        break
+                elif isinstance(c, str) and any(w in c.lower() for w in ("yellow", "mustard", "gold")):
+                    has_false_yellow = True
+                    break
+
+        for fld in ("name", "title", "caption", "color", "primary_color"):
+            val = str(analysis.get(fld) or "")
+            if _re.search(r"\b(mustard\s+yellow|bright\s+yellow|light\s+yellow|pale\s+yellow|golden\s+yellow|yellow|mustard)\b", val, flags=_re.I):
+                has_false_yellow = True
+                break
+
+        if has_false_yellow:
+            analysis["colors"] = [{"name": dom_color, "pct": 100}]
+            if "color" in analysis:
+                analysis["color"] = dom_color
+            if "primary_color" in analysis:
+                analysis["primary_color"] = dom_color
+
+            def _replace_yellow_token(text: str) -> str:
+                def _sub_fn(m: "_re.Match[str]") -> str:
+                    word = m.group(0)
+                    if word.isupper():
+                        return dom_color.upper()
+                    if word[0].isupper():
+                        return dom_color
+                    return dom_color.lower()
+
+                out = _re.sub(
+                    r"\b(mustard\s+yellow|bright\s+yellow|light\s+yellow|pale\s+yellow|golden\s+yellow|yellow|mustard)\b",
+                    _sub_fn,
+                    text,
+                    flags=_re.I,
+                )
+                # Also clean up "with white waistband" when the skirt itself is ivory/white
+                out = _re.sub(
+                    r"\bwith\s+(a\s+)?white\s+waistband\b",
+                    "with a fitted waistband",
+                    out,
+                    flags=_re.I,
+                )
+                return out
+
+            for text_fld in ("name", "title", "caption"):
+                val = analysis.get(text_fld)
+                if isinstance(val, str) and val:
+                    analysis[text_fld] = _replace_yellow_token(val)
+
+
 def _align_analyses_to_crops(
     slot_crop_list: list[tuple[int, tuple[int, dict[str, Any], bytes, str]]],
     parsed_items: list[dict[str, Any]],
@@ -959,6 +1169,10 @@ class GarmentVisionService:
         if not parsed.get("title"):
             parsed["title"] = "Unnamed garment"
         parsed = _coerce_enums(parsed, user_gender=eff_gender)
+        if isinstance(image_bytes, (bytes, bytearray)):
+            _enforce_pixel_grounded_colors(parsed, crop_bytes=bytes(image_bytes))
+        elif shrunk_list:
+            _enforce_pixel_grounded_colors(parsed, crop_bytes=shrunk_list[0])
 
         # Google Translate integration: Translate Eyes canonical English attributes to target user language
         if used_provider in ("gemma", "eyes", "dressapp") and language and language.lower().strip() != "en":
@@ -1402,6 +1616,15 @@ class GarmentVisionService:
                 bot_ymin = min(bd.get("bbox", [1000, 0, 1000, 0])[0] for bd in bottom_dets)
                 bot_mask_ys = _np.where(combined_bot > 0)[0]
                 bot_mask_ymin = int(bot_mask_ys.min()) if len(bot_mask_ys) > 0 else None
+                if bot_mask_ymin is not None:
+                    from scipy.ndimage import grey_erosion as _ge_1d
+                    cb_bin = combined_bot > 0
+                    has_bot_col = cb_bin.any(axis=0)
+                    col_first_y = _np.argmax(cb_bin, axis=0)
+                    col_bot_ymin = _np.where(has_bot_col, col_first_y, combined_bot.shape[0] + 10)
+                    col_bot_ymin = _ge_1d(col_bot_ymin, size=15)
+                else:
+                    col_bot_ymin = None
                 for d in useful:
                     k = (d.get("kind") or d.get("category") or "").lower()
                     l = (d.get("label") or "").lower()
@@ -1412,15 +1635,15 @@ class GarmentVisionService:
                             if "dress" in l:
                                 d["label"] = "Top"
                         d["mask"] = _np.where(combined_bot > 0, _np.uint8(0), d["mask"])
-                        if bot_mask_ymin is not None:
-                            d["mask"] = _np.where(_np.arange(d["mask"].shape[0])[:, None] > bot_mask_ymin + 3, _np.uint8(0), d["mask"])
+                        if col_bot_ymin is not None:
+                            d["mask"] = _np.where(_np.arange(d["mask"].shape[0])[:, None] > col_bot_ymin[None, :] + 1, _np.uint8(0), d["mask"])
                         new_bb = clothing_parser._mask_bbox(d["mask"])
                         if new_bb is not None:
                             m_h, m_w = d["mask"].shape[:2]
                             d["bbox"] = [
                                 int(new_bb[0] / m_h * 1000),
                                 int(new_bb[1] / m_w * 1000),
-                                min(int(new_bb[2] / m_h * 1000), bot_ymin),
+                                int(new_bb[2] / m_h * 1000),
                                 int(new_bb[3] / m_w * 1000),
                             ]
                         elif bot_ymin < 1000:
@@ -1477,6 +1700,7 @@ class GarmentVisionService:
 
             if is_single_item:
                 det["is_single_item"] = True
+            _prepare_vlm_crop_and_color_stats(crop_bytes, det)
             out.append((det, crop_bytes, "image/jpeg"))
 
         # Release full-res references
@@ -1675,8 +1899,9 @@ class GarmentVisionService:
         norm_mg = resolve_garment_gender(model_gender)
         async with sem:
             try:
+                vlm_crop_bytes = _prepare_vlm_crop_and_color_stats(crop_bytes, det)
                 analysis = await self.analyze(
-                    crop_bytes,
+                    vlm_crop_bytes,
                     model=self.crop_model,
                     language=language,
                     think=think,
@@ -1694,6 +1919,7 @@ class GarmentVisionService:
                     is_single_item=det.get("is_single_item", False),
                     language=language,
                 )
+                _enforce_pixel_grounded_colors(analysis, det, crop_bytes)
                 if norm_mg in ("men", "women"):
                     analysis["gender"] = norm_mg
                     _coerce_enums(analysis, user_gender=eff_gender, model_gender=norm_mg)
@@ -1814,7 +2040,7 @@ class GarmentVisionService:
         if not think:
             try:
                 t0 = time.perf_counter()
-                crop_bytes_list = [b for _, b, _ in crops]
+                crop_bytes_list = [_prepare_vlm_crop_and_color_stats(b, d) for d, b, _ in crops]
                 # Patch M21 — Thread the per-crop SegFormer kind into
                 # the batched Gemini call. Layer 1 of the category
                 # enforcement: Gemini sees a "CROP CATEGORY HINTS"
@@ -1831,6 +2057,9 @@ class GarmentVisionService:
                 batched_analyses = await self.analyze_batch(
                     crop_bytes_list, language=language, kind_hints=kind_hints, user_gender=eff_gender, model_gender=norm_mg,
                 )
+                if batched_analyses and len(batched_analyses) == len(crops):
+                    for (d, b, _), ana in zip(crops, batched_analyses):
+                        _enforce_pixel_grounded_colors(ana, d, b)
                 logger.info(
                     "_analyse_crops batched OK: %d crops in %.1fs (one Gemini call)",
                     len(crops), time.perf_counter() - t0,
@@ -2849,7 +3078,8 @@ class GarmentVisionService:
 
                     for slot_idx, (image_idx, det, c_bytes, c_mime) in enumerate(flat_crops):
                         item_mg = photo_model_genders.get(image_idx) or det.get("_photo_model_gender")
-                        shrunk = _shrink_for_vision(c_bytes)
+                        vlm_crop_bytes = _prepare_vlm_crop_and_color_stats(c_bytes, det)
+                        shrunk = _shrink_for_vision(vlm_crop_bytes)
                         b64 = base64.b64encode(shrunk).decode("ascii")
                         assembled: dict[str, Any] = {}
                         import uuid
@@ -2867,6 +3097,7 @@ class GarmentVisionService:
                                 user_gender=item_mg or eff_gender,
                                 model_gender=item_mg,
                                 system_prompt=batch_system_prompt,
+                                dominant_color_hint=det.get("_dominant_color_hint"),
                             ):
                                 if "fabric_materials" in partial:
                                     from .validation import sanitize_fabric_materials
@@ -2877,6 +3108,7 @@ class GarmentVisionService:
                                         item_type=assembled.get("item_type"),
                                         full_text=f"{assembled.get('name', '')} {assembled.get('title', '')} {det.get('label', '')}",
                                     )
+                                _enforce_pixel_grounded_colors(partial, det, c_bytes)
                                 assembled.update(partial)
                                 if partial:
                                     await frame_queue.put({
@@ -2896,7 +3128,7 @@ class GarmentVisionService:
                         if gemma_failed or not assembled or len(assembled) < 2:
                             try:
                                 gem_analysis = await self.analyze(
-                                    c_bytes, language=language, think=False, provider="gemini", user_gender=item_mg or eff_gender,
+                                    vlm_crop_bytes, language=language, think=False, provider="gemini", user_gender=item_mg or eff_gender,
                                 )
                                 if isinstance(gem_analysis, dict) and gem_analysis:
                                     assembled = gem_analysis
@@ -2974,6 +3206,7 @@ class GarmentVisionService:
                             is_single_item=det.get("is_single_item", False),
                             language=language,
                         )
+                        _enforce_pixel_grounded_colors(analysis, det, c_bytes)
                         analysis["provider_used"] = assembled.get("provider_used", "gemma")
                         analysis["model_used"] = assembled.get("model_used", "gemma-4-e2b-q4_k_m")
 
@@ -3040,7 +3273,7 @@ class GarmentVisionService:
                         slot_idx = 0
                         image_idx, det, c_bytes, c_mime = flat_crops[0]
                         item_mg = det.get("_photo_model_gender")
-                        raw_for_vision = c_bytes
+                        raw_for_vision = _prepare_vlm_crop_and_color_stats(c_bytes, det)
                         try:
                             analysis = await self.analyze(
                                 raw_for_vision, language=language, think=False, user_gender=item_mg or eff_gender
@@ -3053,6 +3286,7 @@ class GarmentVisionService:
                                     is_single_item=det.get("is_single_item", False),
                                     language=language,
                                 )
+                                _enforce_pixel_grounded_colors(analysis, det, c_bytes)
                                 if not analysis.get("title") and analysis.get("name"):
                                     analysis["title"] = analysis["name"]
                                 if not analysis.get("title") and (det.get("label") or det.get("kind")):
@@ -3091,6 +3325,7 @@ class GarmentVisionService:
                                     analysis["model_gender"] = item_mg
                                 analysis = _coerce_single_garment(analysis, user_gender=eff_gender, model_gender=item_mg, language=language)
                                 analysis = _coerce_enums(analysis, user_gender=eff_gender, model_gender=item_mg)
+                                _enforce_pixel_grounded_colors(analysis, det, c_bytes)
                                 if item_mg in ("men", "women"):
                                     analysis["gender"] = item_mg
                         except Exception as exc:
@@ -3111,6 +3346,8 @@ class GarmentVisionService:
                                     analysis = await self.analyze(
                                         raw_for_vision, language=language, think=False, provider="gemma", user_gender=item_mg or eff_gender
                                     )
+                                    if isinstance(analysis, dict):
+                                        _enforce_pixel_grounded_colors(analysis, det, c_bytes)
                                 except Exception as fallback_exc:
                                     logger.error("Gemma fallback also failed for slot %d: %s", slot_idx, fallback_exc)
                             if not analysis:
@@ -3182,7 +3419,7 @@ class GarmentVisionService:
                         CHUNK_SIZE = max(30, len(flat_crops))
                         for chunk_start in range(0, len(flat_crops), CHUNK_SIZE):
                             chunk_crops = flat_crops[chunk_start : chunk_start + CHUNK_SIZE]
-                            chunk_bytes = [c[2] for c in chunk_crops]
+                            chunk_bytes = [_prepare_vlm_crop_and_color_stats(c[2], c[1]) for c in chunk_crops]
                             chunk_hints = [
                                 (c[1].get("kind") or c[1].get("category") or c[1].get("label"))
                                 for c in chunk_crops
@@ -3222,7 +3459,7 @@ class GarmentVisionService:
                                         analysis.get("category") or analysis.get("sub_category") or analysis.get("item_type")
                                     ):
                                         try:
-                                            raw_fb = c_bytes
+                                            raw_fb = _prepare_vlm_crop_and_color_stats(c_bytes, det)
                                             fb = await self.analyze(
                                                 raw_fb, language=language, think=False, user_gender=item_mg or eff_gender
                                             )
@@ -3245,6 +3482,7 @@ class GarmentVisionService:
                                         is_single_item=det.get("is_single_item", False),
                                         language=language,
                                     )
+                                    _enforce_pixel_grounded_colors(analysis, det, c_bytes)
                                     if not analysis.get("title") and analysis.get("name"):
                                         analysis["title"] = analysis["name"]
                                     if not analysis.get("title") and (det.get("label") or det.get("kind")):

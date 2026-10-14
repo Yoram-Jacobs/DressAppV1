@@ -244,6 +244,36 @@ Dit document definieert canonieke kledingprotocollen, silhoueteisen, strikte neg
   - GEEN effen zwart of eenvoudig sober wit op hindoeïstische bruiloften (voorbehouden aan rouw).
   - Vermijd provocerende clubkleding of sportschoenen.
 
+### 3.9 Kaftan vs. Kurta vs. Kurti & de Hybride Kaftan-Kurta (قفطان مقابل كورتا / כפתן מול קורטה / काफ्तान बनाम कुर्ता और कुर्ती)
+Hoewel zowel de **Kaftan** als de **Kurta** traditionele, luchtige en losvallende tunieken of gewaden zijn die worden gewaardeerd om hun comfort in warme klimaten en hun culturele elegantie, verschillen ze fundamenteel in **historische oorsprong, anatomisch silhouet, naadconstructie, lengte, combinatie met onderkleding en geschiktheid voor verschillende lichaamstypen**:
+
+- **1. Oorsprong & Culturele Afstamming**:
+  - **Kaftan (Caftan)**: Geworteld in het oude Mesopotamië, Perzië en de cultuur van het Midden-Oosten (afgeleid van het Turkse *kap ton*, wat "bedekkend gewaad" betekent). Het bereikte een keizerlijke status in het **Ottomaanse Rijk** (waar kaftans van zijde, fluweel en brokaat de rang aangaven), **Marokko en Noord-Afrika** (*Takchita* en ceremoniële Marokkaanse kaftans), **West-Afrika** (Senegalese en Nigeriaanse gewaden) en de historische **Russische** klederdracht, voordat het in de jaren 1960–70 zijn intrede deed in de westerse resortmode en haute couture.
+  - **Kurta**: Inheems in **Zuid-Azië (India en Pakistan)** met een eeuwenlange regionale geschiedenis als dagelijkse, kantoor- of ceremoniële tuniek in uiteenlopende textieltradities (Jaipur-blokdruk, Lucknowi-Chikankari, Kasjmier Aari- en Tilla-borduurwerk, Chanderi-, Khadi- en Banarasi-zijde).
+  - **Kurti**: Een gemoderniseerde, kortere vrouwelijke evolutie van de Kurta uit **Noord-India**, ontworpen voor hedendaagse bewegingsvrijheid en Indo-Westerse fusie.
+
+- **2. Silhouet, Naadconstructie & Pasvorm**:
+  - **Kaftan**: Een wijd, losvallend **kledingstuk uit één stuk** dat breed van schouder tot zoom is gesneden **zonder gedefinieerde schoudernaden, strakke armsgaten of structurele taillenaden**. Gekenmerkt door wijde, luchtige **"vleermuismouwen" (*batwing sleeves*)** of kimonomouwen die ontstaan door de doorlopende val van de stof, soms in de taille aangesnoerd met een trekkoord of ceintuur.
+  - **Kurta**: Een **meer getailleerde, gestructureerde tuniek** met **gedefinieerde schoudernaden, ingezette mouwen**, gestructureerde halslijnen (zoals een **2,5–4 cm hoge Mandarin- / Nehru-opstaande kraag**, sleutelgathals of knoopsluiting) en **zijsplitten (*chaak*)** van heup tot zoom voor bewegingsvrijheid en luchtcirculatie. Omvat klassieke silhouetten zoals **recht (*Straight-cut*)**, **A-lijn**, **Anarkali** en **Angrakha**.
+  - **Kurti**: Een kortere top die eindigt bij de **taille, heupen of het boven-/middendijbeen**, met moderne mouw- en halsuitsnijdingen (klokmouwen, cold-shoulder, peplum, overhemdstijl of asymmetrische zomen).
+
+- **3. Lengte & Combinatieprotocol voor Onderkleding**:
+  - **Kaftan**: Varieert van **knielengte tot vloerlengte**; wordt hoofdzakelijk **solo gedragen als jurk uit één stuk**, strandcover-up, luxe loungegewaad of dramatische avondjurk.
+  - **Kurta**: Valt doorgaans tot op de **knieën of halverwege de kuit** en wordt **vrijwel altijd gecombineerd met een broek of rok** — zoals **palazzo's, churidars, salwars, rechte sigarettenbroeken, sharara's, dhoti-broeken of geplooide maxi-rokken** — en vaak compleet gemaakt met een **dupatta** of Nehru-vest.
+  - **Kurti**: Valt tot op de heup of dij en laat zich moeiteloos combineren met **spijkerbroeken (jeans), jeggings, leggings, nette broeken, rokken of dhoti-broeken**, meestal zonder dupatta voor studie, kantoor en dagelijkse uitstapjes.
+
+- **4. Gelegenheid & Feestelijk Uithoudingsvermogen (Vloerzitten vs. Podiumrecepties)**:
+  - **Kaftan**: Ideaal voor resortwear, strandvakanties, zwangerschapskleding en warme/vochtige feesten overdag (**Haldi, Mehendi, Diwali-middagen of thuis-Puja**). Omdat een kaftan geen enkele knelling bij armsgaten of taille heeft, blinkt hij uit tijdens **lange rituelen waarbij men op de grond zit** en uitgebreide feestmaaltijden.
+  - **Kurta-set**: Veelzijdig voor dagelijks gebruik, **zakelijke kantoorkleding** (vooral kurta's met Nehru-kraag van ademend 60x60 katoen-cambric of linnen) en **gestructureerde formele evenementen** (huwelijksrecepties, officiële foto's) waarbij gedefinieerde schouders en een vastgespelde dupatta zorgen voor een strak silhouet.
+
+- **5. De Hybride: Kaftan-Kurta & Suit-Kaftan (काफ्तान कुर्ता सेट)**:
+  - De hedendaagse mode heeft de **Kaftan-Kurta** (en **Suit-Kaftan / Kaftan-Kurta-Set**) geïntroduceerd, een fusiekledingstuk dat de **wijde vleermuismouwen en het ontspannen lijf van een kaftan** combineert met **de traditionele kraag/halslijn, knie- tot kuitlengte, Indiaas textielvakmanschap (handblokdruk, Bandhani, Zari, Kasjmier Aari- & Tilla-borduurwerk) en een bijpassende broek (rechte broek, tulpbroek of palazzo) van een Zuid-Aziatische kurta**.
+
+- **6. Matrix voor Lichaamstype & Stofkeuze**:
+  - **Appel- (*Apple*) & Aardbei-figuren (*Inverted Triangle*)**: Flatterend zijn **kaftans met V-hals, Kaftan-Kurta's met empiretaille en diagonale draperingen** in soepel vallende stoffen (**puur 55–60 Lea linnen, georgette, modal-satijn, zijdecrêpe of mulmul-katoen**) die zacht langs het middel glijden; **vermijd** stugge, vierkante katoenen stoffen en hoge boothalzen.
+  - **Zandloper- (*Hourglass*) & Petite-figuren**: Staan het mooist in **getailleerde rechte of A-lijn Kurta's**, of **Kaftan-Kurta's met riem/trekkoord** en enkelhoge, taps toelopende broeken.
+  - **Peer-figuren (*Pear*) & Plus-Size**: Worden prachtig in balans gebracht door **A-lijn Kurta's, Anarkali-Kurta's en Kaftan-Kurta's met zijsplitten** en een V-hals.
+
 ---
 
 ## 4. Boeddhistische Heilige Tradities (พุทธศาสนา / 佛教)

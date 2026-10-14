@@ -260,6 +260,36 @@ Este documento define protocolos canónicos de vestimenta, requisitos de silueta
   - NINGÚN negro sólido liso ni blanco sobrio y austero en bodas hindúes (reservados para el luto).
   - Evite cortes reveladores de fiesta nocturna de club o calzado deportivo.
 
+### 3.9 Kaftan vs. Kurta vs. Kurti y el Híbrido Kaftan Kurta (قفطان مقابل كورتا / כפתן מול קורטה / काफ्तान बनाम कुर्ता और कुर्ती)
+Aunque tanto el **Kaftan (Caftán)** como la **Kurta** son túnicas tradicionales holgadas y transpirables muy valoradas por su comodidad en climas cálidos y su elegancia cultural, difieren fundamentalmente en su **origen histórico, silueta anatómica, construcción de costuras, largo, combinación con prendas inferiores y adaptación al tipo de cuerpo**:
+
+- **1. Origen y Linaje Cultural**:
+  - **Kaftan (Caftán)**: Arraigado en la antigua Mesopotamia, Persia y la cultura de Medio Oriente (derivado del término túrquico *kap ton*, que significa "prenda que cubre"), alcanzando estatus imperial en el **Imperio Otomano** (donde los caftanes de seda, terciopelo y brocado indicaban rango), **Marruecos y el Norte de África** (*Takchita* y caftanes ceremoniales marroquíes), **África Occidental** (túnicas senegalesas y nigerianas) y la vestimenta histórica **rusa**, antes de incorporarse a la moda resort y la alta costura occidental en los años 1960–70.
+  - **Kurta**: Originaria del **Sur de Asia (India y Pakistán)**, con siglos de evolución regional como túnica cotidiana, de oficina o ceremonial elaborada en textiles tradicionales del subcontinente (estampados en bloque de Jaipur, bordado Chikankari de Lucknow, bordado Aari y Tilla de Cachemira, seda Chanderi, Khadi y Banarasi).
+  - **Kurti**: Evolución femenina moderna y más corta de la Kurta originada en el **Norte de la India**, diseñada para la movilidad contemporánea y el estilo fusión indo-occidental (*Indo-Western*).
+
+- **2. Silueta, Construcción de Costuras y Ajuste**:
+  - **Kaftan**: Prenda **de una sola pieza** ancha, suelta y fluida, cortada ampliamente desde el hombro hasta el dobladillo **sin costuras definidas en los hombros, sisas ajustadas ni costuras estructurales en la cintura**. Se caracteriza por amplias **mangas "murciélago" (*batwing*)** o tipo kimono formadas por la caída continua de la tela, ocasionalmente ceñida en la cintura con un cordón interno o cinturón.
+  - **Kurta**: Túnica **más entallada y estructurada**, confeccionada con **costuras de hombro definidas, mangas pegadas**, escotes estructurados (como el **cuello alto Mandarín / Nehru de 1 a 1,5 pulgadas**, escote ojo de cerradura o tapeta abotonada) y **aberturas laterales (*chaak*)** desde la cadera hasta el dobladillo para facilitar el paso y la ventilación. Incluye siluetas clásicas de **corte recto (*Straight-cut*)**, **línea A (*A-line*)**, **Anarkali** y **Angrakha**.
+  - **Kurti**: Top más corto que termina en la **cintura, las caderas o la parte superior/media del muslo**, con cortes modernos de mangas y escotes (mangas acampanadas, hombros descubiertos, peplum, estilo camisero o dobladillos asimétricos).
+
+- **3. Largo y Protocolo de Combinación con Prendas Inferiores**:
+  - **Kaftan**: Varía desde la **altura de la rodilla hasta el suelo**; se lleva principalmente **solo como vestido de una pieza**, salida de playa, túnica de descanso o vestido de noche.
+  - **Kurta**: Cae típicamente hasta las **rodillas o media pantorrilla** y **casi siempre se combina con prendas inferiores** —como **pantalones palazzo, churidars, salwars, pantalones rectos tipo pitillo (*cigarette pants*), shararas, pantalones dhoti o faldas maxi plisadas**— y frecuentemente se completa con un **dupatta** o chaleco Nehru.
+  - **Kurti**: Llega a la cadera o muslo superior y se combina fácilmente con **vaqueros (jeans), jeggings, leggings, pantalones de vestir, faldas o pantalones dhoti**, usualmente sin dupatta para la universidad, la oficina y salidas casuales.
+
+- **4. Ocasión y Resistencia Festiva (Rituales en el Suelo vs. Recepciones en Escenario)**:
+  - **Kaftan**: Ideal para moda resort, vacaciones en la playa, maternidad y festividades diurnas cálidas o húmedas (**Haldi, Mehendi, reuniones diurnas de Diwali o Puja en casa**). Al no tener restricción en sisas ni cintura, sobresale en **rituales prolongados sentados en el suelo** y banquetes festivos.
+  - **Conjunto de Kurta (*Kurta Set*)**: Versátil para el uso diario, **vestimenta corporativa de oficina** (especialmente kurtas con cuello Nehru en cambric de algodón 60x60 o lino) y **eventos formales estructurados** (recepciones de boda, fotografías familiares en escenario) donde los hombros definidos y el dupatta mantienen una silueta impecable.
+
+- **5. El Híbrido: Kaftan Kurta y Suit Kaftan (काफ्तान कुर्ता सेट)**:
+  - La moda contemporánea ha introducido la **Kaftan Kurta** (y el **Suit Kaftan / Kaftan Kurta Set**), una prenda de fusión que une las **mangas anchas murciélago y el cuerpo relajado de un caftán** con el **cuello/tapeta tradicional, largo a la rodilla/pantorrilla, artesanía textil india (estampado en bloque, Bandhani, Zari, bordado Aari y Tilla de Cachemira) y combinación con pantalones a juego (rectos, tulipán o palazzo) de una kurta surasiática**.
+
+- **6. Matriz de Tipo de Cuerpo y Selección de Tejidos**:
+  - **Cuerpos Manzana (*Apple*) y Fresa / Triángulo Invertido (*Strawberry*)**: Favorecidos por **caftanes con escote en V, Kaftan Kurtas de corte imperio y drapeados diagonales** en telas fluidas (**lino puro de 55–60 Lea, georgette, satén modal, crepé de seda o algodón mulmul**) que estilizan el torso sin ceñirse; **evitar** algodones rígidos y cuellos barco cerrados.
+  - **Cuerpos Reloj de Arena (*Hourglass*) y Estaturas Pequeñas (*Petite*)**: Lucen mejor con **Kurtas entalladas rectas o línea A**, o **Kaftan Kurtas con cinturón/cordón en la cintura** y pantalones estrechos al tobillo para no ocultar la figura.
+  - **Cuerpos Pera (*Pear*) y Tallas Grandes (*Plus-Size*)**: Favorecidos por **Kurtas línea A, Anarkali y Kaftan Kurtas con aberturas laterales** y escote en V que equilibran las caderas.
+
 ---
 
 ## 4. Tradiciones Sagradas Budistas (พุทธศาสนา / 佛教)

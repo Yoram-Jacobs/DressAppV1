@@ -882,6 +882,7 @@ async def call_gemma_space_stream_attributes(
     user_gender: str | None = None,
     model_gender: str | None = None,
     system_prompt: str | None = None,
+    dominant_color_hint: str | None = None,
 ) -> "AsyncIterator[tuple[str, list[str], dict[str, Any]]]":
     """Patch M23 — per-attribute streaming for Gemma on CPU.
 
@@ -955,13 +956,16 @@ async def call_gemma_space_stream_attributes(
         elif is_traditional_coat:
             user_hints.append("RULE: Traditional Coat / Sherwani / Achkan. This crop is a traditional South Asian structured coat featuring a standing Mandarin/Nehru collar and front button placket (category='Outerwear' or 'Top', sub_category='Sherwani' or 'Achkan', item_type='Sherwani'|'Achkan'|'Bandhgala'). NEVER classify as Blazer, Suit, or Casual Jacket.")
         elif "skirt" in lbl_low:
-            user_hints.append("RULE: Skirt. Lower garment with continuous flare/hem and no leg division is sub_category='Skirt', item_type='Pleated Skirt'|'Midi Skirt'|'A-Line Skirt'|'Mini Skirt'|'Maxi Skirt'. NEVER classify as Pants or Trousers. Accurately report visual fabric color (grey/olive/charcoal), NOT black.")
+            user_hints.append("RULE: Skirt. Lower garment with continuous flare/hem and no leg division is sub_category='Skirt', item_type='Pleated Skirt'|'Midi Skirt'|'A-Line Skirt'|'Mini Skirt'|'Maxi Skirt'. NEVER classify as Pants or Trousers. Accurately report the true interior fabric color (white/ivory/cream/beige/grey/olive/charcoal) covering >80% of the skirt body; NEVER let a thin top-edge hem from an upper garment override the skirt's true color.")
         elif "bag" in lbl_low or segformer_category == "bag":
             user_hints.append("RULE: Genuine bags/purses only. Handheld water bottles/cups/phones/objects: set is_clothing: false, sub_category='non-clothing', item_type='non-clothing'.")
         elif ("shoe" in lbl_low or segformer_category == "footwear") and "boot" not in lbl_low:
             user_hints.append("RULE: Footwear. Low-cut/athletic: sub_category='Sneakers'|'Shoes'.")
         elif "pants" in lbl_low or (segformer_category == "bottom" and "skirt" not in lbl_low):
             user_hints.append("RULE: Lower Body Garment / Pants vs Jeans. This crop is strictly a lower body garment (category='Bottom'). Set sub_category='Pants'|'Jeans'|'Shorts'|'Sweatpants', item_type='Pants'|'Trousers'|'Casual Pants'|'Chinos'|'Salwar Pants'. NEVER classify as Shirt, Button-Up Shirt, Blouse, T-Shirt, Jacket, or Coat.")
+
+        if dominant_color_hint:
+            user_hints.append(dominant_color_hint)
 
         if model_gender in ("women", "men"):
             user_hints.append(f"HUMAN MODEL GENDER: Item is worn by an identifiable {model_gender} model. Set gender='{model_gender}' and model_gender='{model_gender}'.")

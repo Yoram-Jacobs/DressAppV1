@@ -1712,5 +1712,80 @@
     },
     "priority": 7,
     "example": "Architectural charcoal wool tailored suit paired with clean, minimalist white leather luxury sneakers."
+  },
+  {
+    "id": "rule_cultural_kaftan_vs_kurta_distinction",
+    "category": "cultural_modesty",
+    "title": "Kaftan vs. Kurta: Origin, Silhouette, Construction & Pairing Protocol (قفطان مقابل كورتا / כפתן מול קורטה / काफ्तान बनाम कुर्ता)",
+    "rule_statement": "Distinguish Kaftans and Kurtas by origin, construction, length, and pairing: (1) ORIGIN: The Kaftan (Caftan) originates in ancient Mesopotamia, Persia, and the Middle East (from Turkic 'kap ton' meaning 'covering garment'), spreading through the Ottoman Empire, Morocco/North Africa (Takchita), and West Africa (Senegalese/Nigerian kaftans). The Kurta is indigenous to South Asia (India and Pakistan). (2) SILHOUETTE & CONSTRUCTION: A Kaftan is a wide, loose, flowing single-piece garment cut broadly from shoulder to hem with NO defined shoulder seams or waist seams, characterized by wide 'batwing' or kimono-style sleeves and an unstructured or drawstring-cinched drape. A Kurta is a more tailored, structured tunic with defined shoulder seams, set-in sleeves, structured necklines (Mandarin/Nehru stand collar, keyhole, or button placket), and side slits ('chaak') from hip to hem for ease of movement. (3) LENGTH & PAIRING: Kaftans range from knee-length to floor-length and are worn standalone as a dress, resort cover-up, or formal evening gown. Kurtas fall to the knees or mid-calf and are almost always paired with bottoms (palazzos, churidars, salwars, straight cigarette pants, skirts, or dhoti pants) and often a dupatta.",
+    "negative_constraint": "Never classify a structured shoulder-seamed South Asian Kurta with side slits as a Kaftan, nor classify a wide batwing-sleeved seamless Kaftan as a standard tailored Kurta. Do not leave a traditional knee-length Kurta unpaired without bottoms.",
+    "criteria": {
+      "tags": [
+        "kaftan",
+        "caftan",
+        "kurta",
+        "kurti",
+        "kaftan_vs_kurta",
+        "قفطان",
+        "كورتا",
+        "כפתן",
+        "קורטה",
+        "काफ्तान",
+        "कुर्ता",
+        "batwing",
+        "chaak"
+      ]
+    },
+    "priority": 10,
+    "example": "Standalone floor-length emerald silk Moroccan Kaftan with wide batwing sleeves and gold belt for resort/evening galas; or a tailored mustard-yellow Jaipur cotton Kurta with defined shoulders, side slits, paired with an ivory pleated skirt or palazzo pants for festive daytime wear."
+  },
+  {
+    "id": "rule_cultural_kaftan_kurta_hybrid",
+    "category": "cultural_modesty",
+    "title": "The Hybrid Kaftan Kurta, Body-Type Fit & Festive Endurance Protocol (काफ्तान कुर्ता सेट / כפתן-קורטה)",
+    "rule_statement": "The Kaftan Kurta (and Suit Kaftan / Kaftan Kurta Set) is a modern Indo-Western fusion garment merging the wide, airy batwing sleeves and relaxed shoulder-to-hem drape of a Kaftan with the traditional neckline (V-neck, Mandarin/Nehru collar, or embroidered placket), calf/knee length, and bottom pairing (straight pants, palazzos, or tulip pants) of a South Asian Kurta. (1) BODY-TYPE GUIDANCE: Kaftan silhouettes and V-neck/empire-waist Kaftan Kurtas excel on Apple, Strawberry (inverted triangle), Pear, and Maternity body types because the unconstructed batwing drape skims the midsection without clinging; Hourglass and Petite frames benefit from a drawstring, belted waist, or tailored straight/A-line Kurta to prevent fabric overwhelm. (2) FESTIVE ENDURANCE & OCCASION: Choose Kaftan or Kaftan Kurta sets in breathable linen (55–60 Lea), cotton cambric, modal satin, or georgette for warm, humid climates, daytime Haldi/Mehendi, travel, and floor-sitting Puja rituals (zero waist or armhole restriction). Choose structured Silk, Chanderi, or Brocade Kurta Sets (or Kashmiri Aari/Tilla embroidered Velvet Kaftan Kurtas) for formal stage receptions, office ethnic days, and structured ceremonies.",
+    "negative_constraint": "Avoid stiff, heavy, high-neck, or boxy unshaped fabrics on apple-shaped or petite wearers in kaftan silhouettes, as they add visual bulk around the bust and shoulders. Avoid tight armhole or waist-pinching tailoring for long floor-sitting rituals in humid weather.",
+    "criteria": {
+      "tags": [
+        "kaftan_kurta",
+        "kaftan kurta",
+        "suit kaftan",
+        "kaftan set",
+        "haldi",
+        "mehendi",
+        "diwali",
+        "resort",
+        "apple_body",
+        "maternity",
+        "linen_kaftan",
+        "aari",
+        "tilla"
+      ]
+    },
+    "priority": 9,
+    "example": "A V-neck hand-block printed mulmul cotton Kaftan Kurta with subtle waist drawstring, paired with tapered ivory cotton cigarette pants and juttis for a daytime festive brunch or Puja."
+  },
+  {
+    "id": "rule_cultural_kurta_vs_kurti_styling",
+    "category": "cultural_modesty",
+    "title": "Kurta vs. Kurti & Nehru Collar Styling Protocol (कुर्ता बनाम कुर्ती / קורטה מול קורטי)",
+    "rule_statement": "Differentiate traditional Kurtas from modern Kurtis by length, cut, and styling versatility: (1) KURTA: Traditional unisex or gender-specific South Asian garment extending to the knees, mid-calf, or ankles (including Straight-cut, A-line, Anarkali, and Angrakha silhouettes), crafted in cotton, silk, khadi, chanderi, or brocade and paired with churidars, salwars, palazzos, dhotis, or lehengas/skirts. (2) KURTI: A shorter, modernized feminine tunic originating in Northern India that falls at the waist, hips, or upper/mid-thigh, featuring contemporary sleeve and neckline variations (sleeveless, cold-shoulder, bell sleeves, asymmetrical hems, peplum, shirt-style, or Mandarin/Nehru collar) and styled effortlessly with jeans, jeggings, leggings, trousers, or dhoti pants for college, daily office, and Indo-Western casual wear. (3) NEHRU / MANDARIN COLLAR: A structured 1–1.5 inch stand-up collar with a split V-placket frames the collarbone cleanly for workwear, travel, and formal events without needing a dupatta or heavy necklace (pair with statement earrings or oxidized silver studs instead).",
+    "negative_constraint": "Do not wear heavy chokers or bulky necklaces over a closed Nehru/Mandarin stand collar, as they clash with the structured neckline. Do not confuse a hip-length modern Kurti worn with denim jeans with a traditional calf-length ceremonial Kurta.",
+    "criteria": {
+      "tags": [
+        "kurti",
+        "kurta_vs_kurti",
+        "nehru_collar",
+        "mandarin_collar",
+        "anarkali",
+        "angrakha",
+        "indo_western",
+        "कुर्ती",
+        "קורטי",
+        "كورتي"
+      ]
+    },
+    "priority": 9,
+    "example": "Indigo cotton Nehru-collar straight Kurta with 3/4 sleeves paired with white cigarette pants and oxidized silver jhumkas for smart office wear; or a hip-length printed cotton Kurti paired with blue denim jeans and kolhapuri flats for casual college outings."
   }
 ]

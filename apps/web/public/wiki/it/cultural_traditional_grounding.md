@@ -260,6 +260,36 @@ Questo documento definisce i protocolli canonici di abbigliamento, i requisiti d
   - NESSUN nero a tinta unita né bianco candido austero ai matrimoni induisti (riservati al lutto).
   - Evitare scollature audaci da discoteca o scarpe sportive.
 
+### 3.9 Kaftan vs. Kurta vs. Kurti e l'Ibrido Kaftan Kurta (قفطان مقابل كورتا / כפתן מול קורטה / काफ्तान बनाम कुर्ता और कुर्ती)
+Sebbene sia il **Kaftan (Caftano)** che la **Kurta** siano tuniche o vesti tradizionali morbide e traspiranti, apprezzate per il comfort nei climi caldi e l'eleganza culturale, differiscono profondamente per **origine storica, silhouette anatomica, costruzione delle cuciture, lunghezza, abbinamento con capi inferiori e vestibilità per le diverse morfologie**:
+
+- **1. Origine e Lignaggio Culturale**:
+  - **Kaftan (Caftano)**: Radicato nell'antica Mesopotamia, in Persia e nella cultura mediorientale (derivato dal turco *kap ton*, che significa "veste coprente"), ha raggiunto prestigio imperiale nell'**Impero Ottomano** (dove caftani in seta, velluto e broccato indicavano il rango), in **Marocco e Nord Africa** (*Takchita* e caftani cerimoniali marocchini), in **Africa Occidentale** (vesti senegalesi e nigeriane) e nel costume storico **russo**, prima di entrare nella moda resort e nell'alta moda occidentale negli anni '60 e '70.
+  - **Kurta**: Capo autoctono dell'**Asia Meridionale (India e Pakistan)** con secoli di storia regionale come tunica quotidiana, da ufficio o cerimoniale declinata nelle tradizioni tessili del subcontinente (stampe a blocchi di Jaipur, ricamo Chikankari di Lucknow, ricamo Aari e Tilla del Kashmir, seta Chanderi, Khadi e Banarasi).
+  - **Kurti**: Evoluzione femminile moderna e più corta della Kurta nata nell'**India Settentrionale**, progettata per la mobilità contemporanea e lo stile fusion indo-occidentale (*Indo-Western*).
+
+- **2. Silhouette, Costruzione delle Cuciture e Vestibilità**:
+  - **Kaftan**: Capo **a pezzo unico** ampio, sciolto e fluido, tagliato in larghezza dalla spalla all'orlo **senza cuciture definite sulle spalle, giromanica aderenti o cuciture strutturali in vita**. Caratterizzato da ampie **maniche "a pipistrello" (*batwing*)** o a kimono create dal drappeggio continuo del tessuto, talvolta stretto in vita da una coulisse interna o cintura.
+  - **Kurta**: Tunica **più sartoriale e strutturata**, costruita con **cuciture delle spalle definite, maniche a giro**, scolli strutturati (come il **colletto alla coreana / Mandarino / Nehru alto 2,5–4 cm**, scollo a goccia o abbottonatura frontale) e **spacchi laterali (*chaak*)** dal fianco all'orlo per agevolare il passo e la ventilazione. Comprende le classiche linee **dritta (*Straight-cut*)**, **svasata (*A-line*)**, **Anarkali** e **Angrakha**.
+  - **Kurti**: Top più corto che termina in **vita, sui fianchi o a metà coscia**, con tagli moderni di maniche e scollature (maniche a campana, spalle scoperte, peplum, taglio a camicia o orli asimmetrici).
+
+- **3. Lunghezza e Protocollo di Abbinamento con i Pantaloni/Gonne**:
+  - **Kaftan**: Varia dalla **lunghezza al ginocchio fino a terra**; indossato prevalentemente **da solo come abito**, copricostume da resort, veste da camera di lusso o abito da sera.
+  - **Kurta**: Scende tipicamente fino alle **ginocchia o a metà polpaccio** ed è **quasi sempre abbinata a capi inferiori** — come **pantaloni palazzo, churidar, salwar, pantaloni dritti a sigaretta, sharara, pantaloni dhoti o gonne maxi plissettate** — spesso completata da una **dupatta** o gilet Nehru.
+  - **Kurti**: Arriva al fianco o alla coscia e si abbina facilmente a **jeans in denim, jeggings, leggings, pantaloni a sigaretta, gonne o pantaloni dhoti**, solitamente senza dupatta per università, ufficio e uscite quotidiane.
+
+- **4. Occasione e Resistenza Festiva (Rituali Seduti a Terra vs Ricevimenti Ufficiali)**:
+  - **Kaftan**: Ideale per abbigliamento resort, vacanze al mare, maternità e festività diurne calde e umide (**Haldi, Mehendi, Diwali diurno o Puja in casa**). Privo di costrizioni su giromanica e vita, eccelle durante i **lunghi rituali seduti a terra** e i banchetti festivi.
+  - **Completo Kurta (*Kurta Set*)**: Versatile per l'uso quotidiano, **l'abbigliamento da ufficio** (specialmente kurta con colletto Nehru in cambric di cotone 60x60 o lino) e gli **eventi formali strutturati** (ricevimenti nuziali, foto ufficiali sul palco) dove spalle definite e dupatta fissata garantiscono una linea impeccabile.
+
+- **5. L'Ibrido: Kaftan Kurta e Suit Kaftan (काफ्तान कुर्ता सेट)**:
+  - La moda contemporanea ha introdotto la **Kaftan Kurta** (e il **Suit Kaftan / Kaftan Kurta Set**), un capo fusion che unisce le **ampie maniche a pipistrello e il corpo rilassato del caftano** con **il colletto/abbottonatura tradizionale, l'orlo al ginocchio/polpaccio, l'artigianato tessile indiano (stampe a blocchi, Bandhani, Zari, ricamo Aari e Tilla del Kashmir) e l'abbinamento con pantaloni coordinati (dritti, a tulipano o palazzo) di una kurta sudasiatica**.
+
+- **6. Matrice Morfologica e Scelta dei Tessuti**:
+  - **Morfologie a Mela (*Apple*) e a Fragola / Triangolo Invertito (*Strawberry*)**: Valorizzate da **caftani con scollo a V, Kaftan Kurta stile impero e drappeggi diagonali** in tessuti fluidi (**puro lino 55–60 Lea, georgette, raso modal, crêpe di seta o cotone mulmul**) che accarezzano il busto senza segnare; **evitare** cotoni rigidi e scolli a barca chiusi.
+  - **Morfologie a Clessidra (*Hourglass*) e Statura Minuta (*Petite*)**: Risaltano al meglio in **Kurta sartoriali dritte o A-line**, o **Kaftan Kurta con cintura/coulisse** abbinate a pantaloni affusolati alla caviglia.
+  - **Morfologie a Pera (*Pear*) e Plus-Size**: Valorizzate da **Kurta A-line, Anarkali e Kaftan Kurta con spacchi laterali** e scollo a V che bilanciano le proporzioni dei fianchi.
+
 ---
 
 ## 4. Tradizioni Sacre Buddiste (พุทธศาสนา / 佛教)

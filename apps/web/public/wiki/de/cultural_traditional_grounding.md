@@ -260,6 +260,36 @@ Dieses Dokument definiert kanonische Kleidungsprotokolle, Schnitt- und Silhouett
   - KEIN reines, ungemustertes Schwarz oder schlichtes asketisches Weiß bei hinduistischen Hochzeiten (der Trauer vorbehalten).
   - Freizügige Clubbing-Schnitte oder Sportschuhe strikt vermeiden.
 
+### 3.9 Kaftan vs. Kurta vs. Kurti & der Hybrid Kaftan-Kurta (قفطان مقابل كورتا / כפתן מול קורטה / काफ्तान बनाम कुर्ता और कुर्ती)
+Obwohl sowohl der **Kaftan** als auch die **Kurta** traditionelle, luftig-lockere Tuniken oder Gewänder sind, die für ihren Tragekomfort in warmen Klimazonen und ihre kulturelle Eleganz geschätzt werden, unterscheiden sie sich grundlegend in **ihrer historischen Herkunft, ihrer anatomischen Silhouette, ihrer Nahtkonstruktion, ihrer Länge, ihrer Kombination mit Beinkleidern und ihrer Eignung für verschiedene Figurtypen**:
+
+- **1. Herkunft & kulturelle Abstammung**:
+  - **Kaftan (Caftan)**: Verwurzelt im antiken Mesopotamien, Persien und der Kultur des Nahen Ostens (abgeleitet vom turksprachigen *kap ton*, was „bedeckendes Gewand“ bedeutet). Er erlangte kaiserlichen Status im **Osmanischen Reich** (wo Kaftane aus Seide, Samt und Brokat den Rang anzeigten), in **Marokko und Nordafrika** (*Takchita* und zeremonielle marokkanische Kaftane), in **Westafrika** (senegalesische und nigerianische Gewänder) sowie in der historischen **russischen** Tracht, bevor er in den 1960er- und 70er-Jahren die westliche Resort-Mode und Haute Couture eroberte.
+  - **Kurta**: Beheimatet in **Südasien (Indien und Pakistan)** mit einer jahrhundertelangen regionalen Geschichte als Alltags-, Büro- oder Festtagstunika in vielfältigen Textiltraditionen (Jaipur-Blockdruck, Lucknowi-Chikankari, kaschmirische Aari- und Tilla-Stickerei, Chanderi-, Khadi- und Banarasi-Seide).
+  - **Kurti**: Eine modernisierte, kürzere feminine Weiterentwicklung der Kurta aus **Nordindien**, entworfen für moderne Bewegungsfreiheit und Indo-Western-Fusion.
+
+- **2. Silhouette, Nahtkonstruktion & Passform**:
+  - **Kaftan**: Ein weites, locker fließendes **einteiliges Gewand**, das breit von der Schulter bis zum Saum geschnitten ist – **ohne definierte Schulternähte, enge Armlöcher oder strukturelle Taillennähte**. Charakterisiert durch weite, luftige **„Fledermausärmel“ (*Batwing sleeves*)** oder Kimonoärmel, die durch den durchgehenden Fall des Stoffes entstehen, gelegentlich in der Taille durch einen Tunnelzug oder Gürtel gerafft.
+  - **Kurta**: Eine **stärker taillierte, strukturierte Tunika** mit **definierten Schulternähten, eingesetzten Ärmeln**, strukturierten Ausschnitten (wie dem **2,5–4 cm hohen Mandarin-/Nehru-Stehkragen**, Schlüssellochausschnitt oder vorderer Knopfleiste) sowie **Seitenschlitzen (*Chaak*)** von der Hüfte bis zum Saum für Bewegungsfreiheit und Luftzirkulation. Umfasst klassische Schnitte wie **Straight-cut (gerader Schnitt)**, **A-Linie**, **Anarkali** und **Angrakha**.
+  - **Kurti**: Ein kürzeres Oberteil, das an **Taille, Hüfte oder oberem/mittlerem Oberschenkel** endet und moderne Ärmel- und Ausschnittvarianten (Glockenärmel, Cold-Shoulder, Peplum, Hemdblusenstil oder asymmetrische Säume) aufweist.
+
+- **3. Länge & Kombinationsregeln für Beinkleider**:
+  - **Kaftan**: Reicht von **knielang bis bodenlang**; wird überwiegend **solitär als einteiliges Kleid**, Strandüberwurf, luxuriöses Lounge-Gewand oder dramatische Abendrobe getragen.
+  - **Kurta**: Reicht typischerweise bis zu den **Knien oder zur Wadenmitte** und wird **fast immer mit Beinkleidern kombiniert** – wie **Palazzo-Hosen, Churidars, Salwars, geraden Zigarettenhosen, Shararas, Dhoti-Hosen oder plissierten Maxiröcken** – und oft durch eine **Dupatta** oder Nehru-Weste ergänzt.
+  - **Kurti**: Endet an Hüfte oder Oberschenkel und lässt sich mühelos mit **Denim-Jeans, Jeggings, Leggings, schmalen Stoffhosen, Röcken oder Dhoti-Hosen** kombinieren, meist ohne Dupatta für Universität, Büro und Freizeit.
+
+- **4. Anlass & festliche Ausdauer (Bodensitzen vs. Bühnenempfänge)**:
+  - **Kaftan**: Ideal für Resort-Mode, Urlaub, Umstandsmode und warme/feuchte Tagesfeste (**Haldi, Mehendi, Diwali-Tagesfeiern oder Haus-Puja**). Da weder Armlöcher noch Taille einschnüren, eignet sich der Kaftan hervorragend für **lange Rituale im Schneidersitz auf dem Boden** und ausgedehnte Festessen.
+  - **Kurta-Set**: Vielseitig für den Alltag, **Business-/Bürokleidung** (insbesondere Kurtas mit Nehru-Kragen aus atmungsaktivem 60x60 Baumwoll-Cambric oder Leinen) sowie **strukturierte formelle Anlässe** (Hochzeitsempfänge, offizielle Familienfotos), bei denen definierte Schultern und eine fixierte Dupatta eine präzise Silhouette garantieren.
+
+- **5. Der Hybrid: Kaftan-Kurta & Suit-Kaftan (काफ्तान कुर्ता सेट)**:
+  - Die moderne Mode hat die **Kaftan-Kurta** (bzw. das **Suit-Kaftan / Kaftan-Kurta-Set**) hervorgebracht – ein Fusionskleidungsstück, das die **weiten Fledermausärmel und den entspannten Fall eines Kaftans** mit dem **traditionellen Kragen/Ausschnitt, dem knie- bis wadenlangen Saum, indischer Textilkunst (Handblockdruck, Bandhani, Zari, kaschmirischer Aari- & Tilla-Stickerei) und der passenden Hose (gerade Hose, Tulpenhose oder Palazzo) einer südasiatischen Kurta** vereint.
+
+- **6. Figurtypen- & Stoffauswahl-Matrix**:
+  - **Apfel- (*Apple*) & Erdbeer-Figur (*Inverted Triangle*)**: Profitieren von **Kaftanen mit V-Ausschnitt, Empire-Taillen-Kaftan-Kurtas und diagonalen Drapierungen** aus fließenden Stoffen (**reines 55–60 Lea Leinen, Georgette, Modal-Satin, Seidencrêpe oder Mulmul-Baumwolle**), die Bauch und Schultern sanft umspielen; **vermeiden** Sie steife, kastenförmige Baumwolle und geschlossene U-Boot-Ausschnitte.
+  - **Sanduhr-Figur (*Hourglass*) & zierliche Statur (*Petite*)**: Wirken am besten in **taillierten geraden oder A-Linien-Kurtas** oder **Kaftan-Kurtas mit Gürtel/Tunnelzug** und knöchellangen schmalen Hosen, damit die Silhouette nicht im Stoff versinkt.
+  - **Birnen-Figur (*Pear*) & Plus-Size**: Werden durch **A-Linien-Kurtas, Anarkali-Kurtas und Kaftan-Kurtas mit Seitenschlitzen** und V-Ausschnitt vorteilhaft ausbalanciert.
+
 ---
 
 ## 4. Buddhistische heilige Traditionen (พุทธศาสนา / 佛教)
