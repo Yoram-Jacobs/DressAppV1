@@ -193,7 +193,7 @@ async def stylist_endpoint(
 
     is_first_turn = (session.get("turns") or 0) == 0
 
-    history = await recent_messages(session["id"], limit=8)
+    history = await recent_messages(session["id"], limit=10)
     
     # Extract closet item IDs suggested in recent turns of this session to enforce wardrobe rotation
     recent_item_ids: set[str] = set()
@@ -206,16 +206,29 @@ async def stylist_endpoint(
                     recent_item_ids.add(str(cid))
 
     from app.services.stylist_scheduler_brain import get_rotation_prioritized_closet
+    from app.services.stylist_qa_engine import is_text_only_stylist_query
     user_gender = user.get("sex") or user.get("gender")
     all_user_closet = await closet_summary_for(user["id"], limit=500)
-    prioritized_closet = await get_rotation_prioritized_closet(
-        user["id"],
-        limit=30,
-        style_dress_for=text,
-        user_gender=user_gender,
-        recent_item_ids=recent_item_ids,
-    )
-    closet = prioritized_closet if prioritized_closet else all_user_closet
+    conv_history_list = [
+        {
+            "role": m.get("role"),
+            "transcript": m.get("transcript"),
+            "payload": m.get("assistant_payload"),
+        }
+        for m in history
+    ]
+    if is_text_only_stylist_query(text, conv_history_list):
+        # Provide the complete wardrobe inventory when the user asks to explore/audit/compare their closet
+        closet = all_user_closet
+    else:
+        prioritized_closet = await get_rotation_prioritized_closet(
+            user["id"],
+            limit=30,
+            style_dress_for=text,
+            user_gender=user_gender,
+            recent_item_ids=recent_item_ids,
+        )
+        closet = prioritized_closet if prioritized_closet else all_user_closet
 
 
     user_profile = {
@@ -228,14 +241,7 @@ async def stylist_endpoint(
         "preferred_voice_id": user.get("preferred_voice_id") or voice_id or "aura-2-thalia-en",
         "style_profile": user.get("style_profile"),
         "cultural_context": user.get("cultural_context"),
-        "conversation_history": [
-            {
-                "role": m.get("role"),
-                "transcript": m.get("transcript"),
-                "payload": m.get("assistant_payload"),
-            }
-            for m in history
-        ],
+        "conversation_history": conv_history_list,
     }
 
     user_msg_doc = await append_message(

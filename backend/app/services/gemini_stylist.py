@@ -22,26 +22,28 @@ Deliver expert, warm, practical advice grounded strictly in the user's closet, w
 
 Output contract: Return ONLY a JSON object. No markdown, no prose outside JSON.
 {
-  "reasoning_summary": string, // 1 concise sentence explaining styling rationale and dress code
+  "reasoning_summary": string, // Main chat response shown to the user. For outfit requests: 1-2 concise sentences explaining styling rationale and dress code. For wardrobe audit / missing essentials / comparison / Q&A requests: a comprehensive, well-structured answer (using '• ' bullet points when listing items or gaps).
   "outfit_recommendations": Array<{
     "name": string, // 2-5 words capturing outfit's essence and vibe (e.g. 'Sophisticated Wedding Guest', 'Refined Earthy Elegance', 'אלגנטיות חגיגית לחתונה'). NEVER use garment/bottom names or unowned cultural pieces.
     "items": Array<{ "role": "top"|"bottom"|"outerwear"|"shoes"|"accessory"|"dress"|"belt"|"headwear"|"glasses", "description": string, "closet_item_id": string | null }>,
     "why": string, // 1-2 punchy sentences on color/cut harmony and occasion fit
     "designer_notes": { "color_harmony": string, "texture_balance": string, "silhouette": string },
     "confidence": number // 0-1
-  }>,
-  "shopping_suggestions": Array<string>, // Max 2 key ceremonial/formal pieces to purchase if closet lacks them (e.g. 'Silk Kurta with Churidar', 'Tuxedo'). Empty [] if closet has suitable items. NEVER suggest items resembling existing wardrobe pieces. NO URLs.
+  }>, // Return [] (empty array) when the user asks a pure text question, wardrobe audit, missing essentials list, garment comparison, or follow-up question that does NOT ask to curate an outfit!
+  "shopping_suggestions": Array<string>, // For outfit requests: max 2 key missing pieces if closet lacks them (or []). For wardrobe audit / missing essentials queries: 4-7 specific missing wardrobe staples grounded in closet_inventory_analysis.detected_wardrobe_gaps. NEVER suggest items the user already owns. NO URLs.
   "do_dont": Array<string>, // Exactly 2 crisp bullets in target language (1 Do, 1 Don't)
-  "spoken_reply": string // 1-2 warm conversational sentences introducing the looks and answering user questions
+  "spoken_reply": string // 1-2 warm conversational sentences summarizing your answer for voice playback
 }
 
 HARD RULES:
-1. Complete Outfits & Anatomical Order: Each look MUST include (top+bottom OR dress) + shoes. Order: top/dress -> outerwear -> bottom -> shoes -> accessory. Match role to garment anatomy (never label shoes/pants as top; no duplicate bottoms).
+1. Intent Routing (Outfit Curation vs. Pure Text Q&A):
+   • If the user asks to explore/audit their closet, check for missing essential/elementary garments, compile a recommended shopping/wardrobe completion list, compare garments, or asks a follow-up question that does NOT request wearing/curating an outfit: set "outfit_recommendations": [] and write a thorough, structured answer in "reasoning_summary" (and populate "shopping_suggestions" with specific missing essentials).
+   • If the user asks what to wear or requests an outfit look: each look in "outfit_recommendations" MUST include (top+bottom OR dress) + shoes. Order: top/dress -> outerwear -> bottom -> shoes -> accessory. Match role to garment anatomy (never label shoes/pants as top; no duplicate bottoms).
 2. Formality Degradation Hierarchy: Prioritize: 1) Formal (suits, blazers, dress shirts/trousers, formal kurtas/dresses, dress shoes). 2) If absent, degrade to Semi-Formal (collared shirts, fine knits, tailored chinos/slacks, leather loafers). 3) If absent, degrade to Smart Casual (neat button/polo shirts, clean dark non-distressed pants, neat shoes). Capture achieved formality in title and explain in spoken_reply/reasoning_summary.
 3. Event Rules & Negative Restrictions: Ensure tasteful color harmony (festive rich tones for Hindu weddings; avoid stark funeral mourning white/all-black). For weddings/formal events: NEVER recommend cargo pants (with utility pockets), bomber jackets, athletic hoodies, graphic t-shirts, shorts, beach flip-flops, or heavy rugged combat/work boots!
 4. Cultural & Weather Non-Negotiables: Adhere strictly to cultural rules and forecast weather.
-5. Closet Grounding & Gender Conformance: In 'why' and item descriptions, describe ONLY actual items selected and their real colors from closet_summary (no phantom pieces). Strictly respect user's gender/sex (never cross-gender garments). Rotate garments to provide distinct looks across recommendations. Integrate available closet accessories (belts, hats, glasses, bags).
-6. Multi-turn Coherence: Use user_profile.conversation_history to resolve references, maintain dialogue continuity, and answer user queries directly.
+5. Closet Grounding & Gender Conformance: Describe ONLY actual items and their real colors from closet_summary (no phantom pieces). Strictly respect user's gender/sex (never cross-gender garments). Rotate garments to provide distinct looks across recommendations. Integrate available closet accessories (belts, hats, glasses, bags).
+6. Multi-turn Coherence: Carefully read CONVERSATION_HISTORY to resolve pronouns, follow-up requests (e.g. 'make a list', 'elaborate', 'what else is missing?'), maintain topic continuity, and answer user queries directly.
 """
 
 SYSTEM_PROMPT = GEMINI_SYSTEM_PROMPT
@@ -137,6 +139,40 @@ def _compact_closet_summary(items: list[dict[str, Any]] | None) -> list[dict[str
     return compact
 
 
+def _format_conversation_history_block(conv_hist: list[dict[str, Any]] | None) -> str:
+    """Render recent conversation turns into a compact, readable dialogue transcript for multi-turn memory."""
+    if not conv_hist or not isinstance(conv_hist, list):
+        return ""
+    lines: list[str] = []
+    for idx, turn in enumerate(conv_hist[-8:], start=1):
+        if not isinstance(turn, dict):
+            continue
+        role = str(turn.get("role") or "user").upper()
+        transcript = str(turn.get("transcript") or "").strip()
+        payload = turn.get("payload") or turn.get("assistant_payload") or {}
+        if role == "USER":
+            if transcript:
+                lines.append(f"[{idx}] USER: {transcript}")
+        else:
+            spoken = str(payload.get("spoken_reply") or "").strip() if isinstance(payload, dict) else ""
+            main_text = transcript or spoken
+            shop = payload.get("shopping_suggestions") if isinstance(payload, dict) else None
+            recs = payload.get("outfit_recommendations") if isinstance(payload, dict) else None
+            extras: list[str] = []
+            if isinstance(recs, list) and recs:
+                rec_names = [str(r.get("name") or "") for r in recs if isinstance(r, dict) and r.get("name")]
+                if rec_names:
+                    extras.append(f"outfits_suggested={rec_names}")
+            if isinstance(shop, list) and shop:
+                extras.append(f"shopping_suggestions={shop}")
+            extra_str = f" ({'; '.join(extras)})" if extras else ""
+            if main_text or extra_str:
+                lines.append(f"[{idx}] STYLIST: {main_text}{extra_str}")
+    if not lines:
+        return ""
+    return "CONVERSATION_HISTORY (Recent turns in this chat session — maintain full context & continuity):\n" + "\n".join(lines) + "\n\n"
+
+
 async def prepare_stylist_prompt(
     *,
     session_id: str | None = None,
@@ -169,7 +205,11 @@ async def prepare_stylist_prompt(
         format_rules_for_prompt,
         retrieve_fashion_axioms,
     )
-    from app.services.stylist_qa_engine import filter_candidate_closet_by_axioms
+    from app.services.stylist_qa_engine import (
+        build_closet_inventory_analysis,
+        filter_candidate_closet_by_axioms,
+        is_text_only_stylist_query,
+    )
 
     clean_closet = filter_modesty_closet_items(
         closet_summary, (user_profile or {}).get("modesty_level")
@@ -189,17 +229,42 @@ async def prepare_stylist_prompt(
     if axioms_text:
         sys_msg = sys_msg + "\n\n" + axioms_text + "\n"
 
+    conv_hist = (user_profile or {}).get("conversation_history") if isinstance(user_profile, dict) else None
+    text_only_mode = is_text_only_stylist_query(user_text, conv_hist)
+
     # Candidate closet pre-filter: Purge items violating retrieved RAG negative constraints before LLM inference
-    clean_closet, _ = filter_candidate_closet_by_axioms(
-        clean_closet,
-        axioms,
-        user_profile=user_profile,
-        user_gender=user_gender,
+    # (Skip aggressive occasion pre-filtering when user is auditing/exploring their entire closet)
+    if not text_only_mode:
+        clean_closet, _ = filter_candidate_closet_by_axioms(
+            clean_closet,
+            axioms,
+            user_profile=user_profile,
+            user_gender=user_gender,
+        )
+
+    lang_code = ((user_profile or {}).get("preferred_language") or "en").lower()
+    lang_name = _LANG_NAMES.get(lang_code, "English")
+
+    inventory_analysis = build_closet_inventory_analysis(
+        clean_closet, user_gender=user_gender, lang=lang_code
     )
+
+    if text_only_mode:
+        sys_msg = (
+            sys_msg
+            + "\n\nQUERY MODE — ANALYTICAL / WARDROBE EXPLORATION / MISSING ESSENTIALS Q&A (NO OUTFIT CURATION):\n"
+            "The user is asking an analytical question about their wardrobe inventory, missing essential items, "
+            "a recommended shopping/completion list, garment comparison, or a conversational follow-up — NOT asking to dress the mannequin.\n"
+            "1. You MUST set \"outfit_recommendations\": [] (an empty array).\n"
+            f"2. In \"reasoning_summary\", write a comprehensive, helpful, well-structured response in {lang_name} that directly answers the user's prompt "
+            "(use '• ' bullet points when listing missing items, wardrobe categories, or comparisons, grounded in CONTEXT.closet_inventory_analysis).\n"
+            f"3. In \"shopping_suggestions\", include 4 to 7 specific missing essential items in {lang_name} based on CONTEXT.closet_inventory_analysis.detected_wardrobe_gaps.\n"
+            f"4. In \"spoken_reply\", provide a warm 1-2 sentence spoken summary in {lang_name}.\n"
+        )
 
     safe_profile: dict[str, Any] = {}
     if user_profile:
-        for k in ("name", "preferred_language", "sex", "age_group", "body_measurements", "style_preferences", "modesty_level"):
+        for k in ("name", "display_name", "preferred_language", "sex", "age_group", "body_measurements", "style_preferences", "modesty_level"):
             val = user_profile.get(k)
             if val is not None and val != "" and val != [] and val != {}:
                 safe_profile[k] = val
@@ -207,6 +272,7 @@ async def prepare_stylist_prompt(
     context_block: dict[str, Any] = {
         "weather": weather,
         "user_profile": safe_profile,
+        "closet_inventory_analysis": inventory_analysis,
         "closet_summary": _compact_closet_summary(clean_closet),
     }
     if calendar_events:
@@ -214,14 +280,14 @@ async def prepare_stylist_prompt(
     if cultural_rules:
         context_block["cultural_rules"] = cultural_rules
 
-    lang_code = ((user_profile or {}).get("preferred_language") or "en").lower()
-    lang_name = _LANG_NAMES.get(lang_code, "English")
     lang_preamble = (
         f"OUTPUT LANGUAGE: {lang_name} ({lang_code}). All text fields (reasoning_summary, outfit name/why, item description, do_dont, shopping_suggestions, spoken_reply) MUST be in fluent {lang_name}. Keep JSON keys and enums in English.\n\n"
     )
+    history_block = _format_conversation_history_block(conv_hist)
     context_json = json.dumps(context_block, ensure_ascii=False, separators=(",", ":"), default=str)
     prompt_text = (
         f"{lang_preamble}"
+        f"{history_block}"
         f"USER_REQUEST:\n{user_text}\n\n"
         f"CONTEXT:\n{context_json}\n\n"
         "Return the JSON object now."
@@ -300,7 +366,7 @@ class GeminiStylistService:
                     user_parts=user_parts,
                     model=self.model,
                     response_mime_type="application/json",
-                    max_tokens=1024,
+                    max_tokens=2048,
                 )
             except Exception as exc:
                 if self.api_key and settings.GEMINI_API_KEY and self.api_key != settings.GEMINI_API_KEY:
@@ -311,7 +377,7 @@ class GeminiStylistService:
                         user_parts=user_parts,
                         model=self.model,
                         response_mime_type="application/json",
-                        max_tokens=1024,
+                        max_tokens=2048,
                     )
                 else:
                     raise
@@ -470,10 +536,13 @@ def sanitize_stylist_text(text: str | None, lang: str = "en") -> str:
     clean = re.sub(r"^(כדאי ללבוש)\s+ללבוש\s+", r"כדאי ללבוש ", clean)
     clean = re.sub(r"\b(ללבוש)\s+\1\b", r"\1", clean)
 
-    # 4. Clean Cyrillic tokens when language is not Russian
+    # 4. Clean Cyrillic and stray Arabic tokens when language is not Russian / Arabic
     if base_lang != "ru":
         clean = re.sub(r"\bправило\b", "כלל" if base_lang == "he" else "rule", clean, flags=re.IGNORECASE)
         clean = re.sub(r"[\u0400-\u04ff]+", "", clean)
+    if base_lang not in ("ar", "fa", "ur"):
+        clean = re.sub(r"ח[\u0600-\u06ff]+ה", "חומה", clean)
+        clean = re.sub(r"[\u0600-\u06ff]+", "", clean)
 
     # 5. Strip formulaic math ratio and design rules (e.g. 10–30–60, 60-30-10, 1:2 Ratio)
     clean = re.sub(r"(?:את\s+)?(?:\d+[\s–\-/:]\d+[\s–\-/:]\d+|\d+:\d+(?:\s*Ratio)?)\s*(?:правило|rule|כלל)?", "", clean, flags=re.IGNORECASE)
@@ -491,7 +560,9 @@ def sanitize_stylist_text(text: str | None, lang: str = "en") -> str:
 
     # 7. Hebrew specific token, garment name, and typo corrections
     if base_lang == "he":
-        # Multilingual model token corruptions (Greek/Latin blend, mangled roots)
+        # Mixed-script token glitches inside Hebrew words (e.g. 'חomה' -> 'חומה')
+        clean = re.sub(r"ח(?:om|um|oom)ה", "חומה", clean, flags=re.IGNORECASE)
+        clean = re.sub(r"ח(?:om|um|oom)ות", "חומות", clean, flags=re.IGNORECASE)
         clean = re.sub(r"\bמתא[a-zA-Z]+\b", "מתאים", clean)
         clean = re.sub(r"מתאistes", "מתאים", clean)
         clean = re.sub(r"התאוםשתאור", "וסט", clean)
@@ -549,9 +620,9 @@ def sanitize_stylist_text(text: str | None, lang: str = "en") -> str:
             clean = re.sub(r"\bמושלמת\b", "הולמת", clean)
             clean = re.sub(r"\bמושלם\b", "הולם", clean)
 
-    # 8. Clean double spaces and stray punctuation spacing
+    # 8. Clean double spaces and stray punctuation spacing while preserving newlines
     clean = re.sub(r"[ \t]{2,}", " ", clean)
-    clean = re.sub(r"\s+([,.:;?!])", r"\1", clean)
+    clean = re.sub(r"[ \t]+([,.:;?!])", r"\1", clean)
     clean = re.sub(r",\s*,+", ",", clean)
 
     return clean.strip()

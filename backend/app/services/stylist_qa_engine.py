@@ -2606,15 +2606,15 @@ def sanitize_spoken_reply_and_notes(
             spoken = re.sub(r"(?:חולצת\s+טי\s+עם\s+הדפס\s+נשר|חולצת\s+טי|טי\s+שירט|חולצת\s+טריקו|graphic\s+tee)", "חולצה מכופתרת אלגנטית", spoken)
             spoken = re.sub(r",?\s*(?:עם\s+)?כפתורים\s+כחולים\s+ושרוול\s+קצר", "", spoken)
 
-        # Scrub phantom claims like "featuring a traditional silk kurta..."
+        # Scrub phantom claims like "featuring a traditional silk kurta..." only when ethnic items were promoted
         phantom_claims = [
             r",?\s*(?:featuring|including|paired with|combines?|with)\s+[^.]*?\b(?:kurta|churidar|sherwani|sari|lehenga|kimono|hanbok|galabiya|abaya|thobe)\b[^.]*",
             r",?\s*(?:כולל|הכולל|הכוללת|עם|בשילוב)\s+[^.]*?\b(?:קורטה|שרוואל|שרוואני|סארי|להנגה|גלביה|עבאיה|ת'וב)\b[^.]*",
         ]
-        for pat in phantom_claims:
-            spoken = re.sub(pat, "", spoken, flags=re.IGNORECASE)
+        if advice.get("_ethnic_promoted_to_shopping"):
+            for pat in phantom_claims:
+                spoken = re.sub(pat, "", spoken, flags=re.IGNORECASE)
 
-        if advice.get("_ethnic_promoted_to_shopping") or advice.get("shopping_suggestions"):
             if base_lang == "he":
                 addition_he = " התאמנו עבורך את המראה החגיגי והאלגנטי ביותר מתוך הפריטים הקיימים בארון, ובמקביל הוספנו המלצות רכישה לפריטים המסורתיים המתאימים לאירוע."
                 if not any(w in spoken for w in ("המלצות רכישה", "מתוך הארון", "במקביל")):
@@ -2762,9 +2762,9 @@ def sanitize_spoken_reply_and_notes(
         # 3. Reasoning Summary
         reasoning = advice.get("reasoning_summary")
         if reasoning and isinstance(reasoning, str):
-            for pat in phantom_claims:
-                reasoning = re.sub(pat, "", reasoning, flags=re.IGNORECASE)
-            if advice.get("_ethnic_promoted_to_shopping") or advice.get("shopping_suggestions"):
+            if advice.get("_ethnic_promoted_to_shopping"):
+                for pat in phantom_claims:
+                    reasoning = re.sub(pat, "", reasoning, flags=re.IGNORECASE)
                 if base_lang == "he":
                     addition_he = " נבחרו פריטים חלופיים מהארון המכבדים את קוד הלבוש, והפריטים המסורתיים האידיאליים הוצעו כהמלצות רכישה."
                     if not any(w in reasoning for w in ("המלצות רכישה", "קוד הלבוש")):
@@ -2774,6 +2774,353 @@ def sanitize_spoken_reply_and_notes(
                     if "shopping suggestions" not in reasoning.lower():
                         reasoning = reasoning.strip().rstrip(".,") + ". " + addition_en
             advice["reasoning_summary"] = sanitize_stylist_text(reasoning, lang=lang)
+
+
+_TEXT_ONLY_QUERY_PATTERNS = (
+    # Hebrew: wardrobe exploration, missing essentials, lists, comparisons, search
+    "חקור את ארון",
+    "חקור את הארון",
+    "חקירת ארון",
+    "בדוק את הארון",
+    "בדוק את ארון",
+    "נתח את הארון",
+    "נתח את ארון",
+    "סרוק את הארון",
+    "סרוק את ארון",
+    "מה חסר לי",
+    "מה חסר בארון",
+    "האם חסרים לי",
+    "האם חסר לי",
+    "אילו בגדים חסרים",
+    "איזה בגדים חסרים",
+    "אילו פריטים חסרים",
+    "איזה פריטים חסרים",
+    "בגדים אלמנטריים",
+    "פריטים אלמנטריים",
+    "פריטי בסיס",
+    "בגדי בסיס",
+    "השלמת המלתחה",
+    "להשלים את המלתחה",
+    "להשלמת הארון",
+    "ערוך רשימה",
+    "תערוך רשימה",
+    "תן רשימה",
+    "תכין רשימה",
+    "רשימה של פריטים",
+    "רשימת פריטים",
+    "רשימת בגדים",
+    "רשימת קניות",
+    "פריטים מומלצים להשלמת",
+    "כמה פריטים יש",
+    "כמה בגדים יש",
+    "מה יש לי בארון",
+    "אילו פריטים יש לי",
+    "השווה בין",
+    "השוואה בין",
+    "מה ההבדל בין",
+    "ההבדל בין",
+    # English: wardrobe exploration, missing essentials, lists, comparisons, search
+    "explore the closet",
+    "explore my closet",
+    "explore my wardrobe",
+    "analyze my closet",
+    "analyse my closet",
+    "analyze my wardrobe",
+    "analyse my wardrobe",
+    "audit my closet",
+    "audit my wardrobe",
+    "check my closet",
+    "scan my closet",
+    "what is missing",
+    "what's missing",
+    "do i miss",
+    "am i missing",
+    "missing essential",
+    "missing items",
+    "missing clothes",
+    "missing garments",
+    "elementary clothes",
+    "elementary items",
+    "wardrobe essentials",
+    "closet essentials",
+    "complete my wardrobe",
+    "complete the wardrobe",
+    "completing my wardrobe",
+    "completing the wardrobe",
+    "wardrobe gaps",
+    "closet gaps",
+    "make a list",
+    "create a list",
+    "give me a list",
+    "list of recommended items",
+    "list of missing",
+    "list of items to buy",
+    "shopping list",
+    "how many items",
+    "what do i have in my closet",
+    "compare ",
+    "what is the difference between",
+    "difference between",
+    # Multilingual: Arabic, Spanish, French, German, Italian, Portuguese, Russian, Chinese, Japanese, Hindi
+    "استكشف خزانة",
+    "ما الذي ينقص",
+    "قائمة بالقطع",
+    "explora mi armario",
+    "qué falta en mi armario",
+    "lista de prendas",
+    "explore ma garde-robe",
+    "que manque-t-il",
+    "liste de vêtements",
+    "was fehlt in meinem kleiderschrank",
+    "erstelle eine liste",
+    "cosa manca nel mio guardaroba",
+    "o que falta no meu guarda-roupa",
+    "что не хватает в моем гардеробе",
+    "составь список",
+    "衣橱里缺什么",
+    "缺少什么基本款",
+    "クローゼットに足りない",
+    "अलमारी में क्या कमी है",
+)
+
+_EXPLICIT_OUTFIT_REQUEST_PATTERNS = (
+    "מה ללבוש",
+    "תתאים לי לוק",
+    "תתאימי לי לוק",
+    "תبנה לי לוק",
+    "תבנה לי לוק",
+    "הרכב לי לוק",
+    "הרכב לי הופעה",
+    "תלביש אותי",
+    "what should i wear",
+    "what to wear",
+    "build me an outfit",
+    "put together an outfit",
+    "curate an outfit",
+    "style me for",
+    "dress me for",
+    "outfit for tonight",
+    "outfit for today",
+    "outfit for a ",
+    "לוק להיום",
+    "לוק לערב",
+    "לוק לחתונה",
+    "לוק לפגישה",
+)
+
+_SHORT_FOLLOWUP_PATTERNS = (
+    "ערוך רשימה",
+    "תערוך רשימה",
+    "תן רשימה",
+    "תכין רשימה",
+    "פרט",
+    "תפרט",
+    "אילו עוד",
+    "איזה עוד",
+    "מה עוד",
+    "מה לגבי",
+    "ומה עם",
+    "למה",
+    "מדוע",
+    "איך",
+    "הסבר",
+    "make a list",
+    "list them",
+    "give me a list",
+    "elaborate",
+    "what else",
+    "which ones",
+    "what about",
+    "why",
+    "explain",
+)
+
+
+def is_text_only_stylist_query(
+    user_text: str | None,
+    conversation_history: list[dict[str, Any]] | None = None,
+) -> bool:
+    """Return True when the user's message is an analytical, wardrobe-audit, missing-essentials,
+    search/comparison, or conversational follow-up query that does NOT request curating a mannequin outfit.
+    """
+    if not user_text or not isinstance(user_text, str):
+        return False
+    low = user_text.lower().strip()
+    if not low:
+        return False
+
+    has_explicit_outfit_req = any(p in low for p in _EXPLICIT_OUTFIT_REQUEST_PATTERNS)
+    if has_explicit_outfit_req:
+        return False
+
+    if any(p in low for p in _TEXT_ONLY_QUERY_PATTERNS):
+        return True
+
+    # Check if this is a follow-up question in a multi-turn conversation whose previous turn was text-only
+    if conversation_history and isinstance(conversation_history, list):
+        is_followup_phrase = any(p in low for p in _SHORT_FOLLOWUP_PATTERNS) or (len(low.split()) <= 9 and "?" in low)
+        if is_followup_phrase:
+            for msg in reversed(conversation_history):
+                if not isinstance(msg, dict):
+                    continue
+                role = msg.get("role")
+                if role == "user" and msg.get("transcript"):
+                    prev_user = str(msg.get("transcript") or "").lower()
+                    if any(p in prev_user for p in _TEXT_ONLY_QUERY_PATTERNS):
+                        return True
+                elif role == "assistant":
+                    payload = msg.get("payload") or msg.get("assistant_payload") or {}
+                    if isinstance(payload, dict) and payload.get("outfit_recommendations") == []:
+                        return True
+                    break
+
+    return False
+
+
+def build_closet_inventory_analysis(
+    all_closet_items: list[dict[str, Any]] | None,
+    user_gender: str | None = None,
+    lang: str = "en",
+) -> dict[str, Any]:
+    """Analyze the user's complete closet inventory to provide structured category counts,
+    dress-code distribution, owned item summaries, and grounded missing wardrobe essentials.
+    """
+    items = list(all_closet_items or [])
+    base_lang = (lang or "en").lower().strip().split("-")[0].split("_")[0]
+    is_female = str(user_gender or "").lower().strip() in ("female", "woman", "women", "אישה", "נשים")
+
+    by_category: dict[str, int] = {}
+    by_sub_category: dict[str, int] = {}
+    by_dress_code: dict[str, int] = {}
+    by_color: dict[str, int] = {}
+    compact_inventory: list[str] = []
+
+    all_blob_parts: list[str] = []
+
+    for it in items:
+        if not isinstance(it, dict):
+            continue
+        cat = norm_category(it.get("category")) or str(it.get("category") or "other").lower()
+        by_category[cat] = by_category.get(cat, 0) + 1
+
+        sub_cat = str(it.get("sub_category") or "").strip().lower()
+        if sub_cat:
+            by_sub_category[sub_cat] = by_sub_category.get(sub_cat, 0) + 1
+
+        dc = str(it.get("dress_code") or "casual").strip().lower()
+        by_dress_code[dc] = by_dress_code.get(dc, 0) + 1
+
+        colors = it.get("colors") or it.get("color") or []
+        c_names: list[str] = []
+        if isinstance(colors, list):
+            for c in colors:
+                c_n = str(c.get("name") if isinstance(c, dict) else c).strip().lower()
+                if c_n:
+                    c_names.append(c_n)
+                    by_color[c_n] = by_color.get(c_n, 0) + 1
+        elif isinstance(colors, str) and colors.strip():
+            c_n = colors.strip().lower()
+            c_names.append(c_n)
+            by_color[c_n] = by_color.get(c_n, 0) + 1
+
+        title = str(it.get("title") or it.get("name") or "").strip()
+        mat = str(it.get("material") or "").strip()
+        tags_str = " ".join(str(t) for t in (it.get("tags") or []))
+        item_summary = f"{title} [{cat}/{sub_cat or '-'}, {dc}, {', '.join(c_names[:2]) or '-'}]"
+        compact_inventory.append(item_summary)
+        all_blob_parts.append(f"{title} {cat} {sub_cat} {dc} {' '.join(c_names)} {mat} {tags_str}".lower())
+
+    full_closet_blob = " | ".join(all_blob_parts)
+
+    def _has_any(keywords: tuple[str, ...]) -> bool:
+        return any(kw in full_closet_blob for kw in keywords)
+
+    # Essential wardrobe staples checklist with localized recommendations
+    essentials_checklist = [
+        {
+            "key": "tailored_blazer",
+            "present": _has_any(("blazer", "sport coat", "suit jacket", "בלייזר", "ז'קט מחויט", "ג'קט מחויט")),
+            "he": "בלייזר מחויט בצבע נייבי או אפור פחם (למראה אלגנטי ורשמי)",
+            "en": "Tailored Navy or Charcoal Blazer (for formal & smart-casual versatility)",
+        },
+        {
+            "key": "formal_suit",
+            "present": _has_any(("two-piece suit", "business suit", "formal suit", "tuxedo", "חליפה", "טוקסידו")),
+            "he": "חליפה מחויטת רשמית שלמה לאירועים ומועדים מיוחדים",
+            "en": "Formal Tailored Two-Piece Suit for weddings and formal events",
+        },
+        {
+            "key": "white_dress_shirt",
+            "present": any(
+                ("shirt" in b or "חולצה מכופתרת" in b or "button" in b or "dress shirt" in b or "blouse" in b)
+                and any(w in b for w in ("white", "לבן", "לבנה", "ivory", "שמנת"))
+                for b in all_blob_parts
+            ),
+            "he": "חולצה מכופתרת לבנה קלאסית מכותנה איכותית",
+            "en": "Crisp Classic White Button-Down Dress Shirt",
+        },
+        {
+            "key": "tailored_trousers",
+            "present": _has_any(("dress pants", "dress trousers", "tailored trousers", "slacks", "suit pants", "מכנסיים מחויטים", "מכנס מחויט", "מכנסי חליפה")),
+            "he": "מכנסיים מחויטים אלגנטיים (בצבע שחור, אפור פחם או נייבי)",
+            "en": "Tailored Dress Trousers / Slacks (in Charcoal, Black, or Navy)",
+        },
+        {
+            "key": "chinos",
+            "present": _has_any(("chino", "chinos", "צ'ינו", "צינו", "מכנסי חאקי")),
+            "he": "מכנסי צ'ינו קלאסיים בגוון בז' או חאקי (למראה סמארט-קז'ואל)",
+            "en": "Classic Tailored Chinos in Beige or Khaki (smart-casual staple)",
+        },
+        {
+            "key": "formal_dress_shoes",
+            "present": _has_any(("oxford", "oxfords", "derby", "derbies", "brogue", "loafer", "loafers", "אוקספורד", "מוקסינים", "נעלי עור אלגנטיות", "נעלי ערב")),
+            "he": "נעלי עור אלגנטיות (אוקספורד או מוקסינים שחורים/חומים)",
+            "en": "Formal Leather Dress Shoes (Black/Brown Oxfords or Loafers)",
+        },
+        {
+            "key": "fine_knit_sweater",
+            "present": _has_any(("merino", "cashmere", "cardigan", "pullover", "סריג", "קרדיגן", "סוודר צמר")),
+            "he": "סריג צמר דק (מרינו או קשמיר) או קרדיגן קלאסי לשכבות",
+            "en": "Fine-Knit Merino Sweater or Classic Cardigan for layering",
+        },
+        {
+            "key": "overcoat_trench",
+            "present": _has_any(("overcoat", "trench", "peacoat", "wool coat", "מעיל צמר", "מעיל טרנץ", "מעיל ארוך")),
+            "he": "מעיל צמר קלאסי או מעיל טרנץ' אלגנטי לימי החורף",
+            "en": "Classic Wool Overcoat or Structured Trench Coat",
+        },
+        {
+            "key": "leather_belt",
+            "present": _has_any(("leather belt", "dress belt", "חגורת עור", "חגורה אלגנטית")),
+            "he": "חגורת עור קלאסית תואמת לנעליים האלגנטיות",
+            "en": "Classic Reversible Leather Dress Belt (Black/Brown)",
+        },
+    ]
+
+    if is_female:
+        essentials_checklist.insert(
+            2,
+            {
+                "key": "classic_midi_dress",
+                "present": _has_any(("midi dress", "black dress", "evening dress", "שמלה שחורה", "שמלת מידי", "שמלת ערב")),
+                "he": "שמלה שחורה קלאסית (Little Black Dress) או שמלת מידי אלגנטית",
+                "en": "Classic Little Black Dress (LBD) or Versatile Midi Dress",
+            },
+        )
+
+    detected_gaps: list[str] = []
+    for check in essentials_checklist:
+        if not check["present"]:
+            detected_gaps.append(check["he"] if base_lang == "he" else check["en"])
+
+    return {
+        "total_items": len(items),
+        "by_category": by_category,
+        "by_sub_category": by_sub_category,
+        "by_dress_code": by_dress_code,
+        "dominant_colors": dict(sorted(by_color.items(), key=lambda kv: kv[1], reverse=True)[:8]),
+        "detected_wardrobe_gaps": detected_gaps,
+    }
 
 
 async def evaluate_and_authorize_outfit(
@@ -2830,6 +3177,76 @@ async def evaluate_and_authorize_outfit(
         lang = "en"
 
     base_lang = (lang or "en").lower().strip().split("-")[0].split("_")[0]
+    conv_hist = (user_profile or {}).get("conversation_history") if isinstance(user_profile, dict) else None
+
+    # Pure Text / Analytical / Wardrobe Audit / Missing Essentials Mode:
+    # Do NOT curate or fabricate mannequin outfits when the user asks a text-only question!
+    if is_text_only_stylist_query(user_text, conv_hist):
+        logger.info("QA: Text-only / wardrobe exploration query detected ('%s') — suppressing outfit curation", user_text[:80])
+        advice_payload["outfit_recommendations"] = []
+        advice_payload.pop("_ethnic_promoted_to_shopping", None)
+
+        inventory_analysis = build_closet_inventory_analysis(
+            all_closet_items, user_gender=user_gender, lang=base_lang
+        )
+        gaps = inventory_analysis.get("detected_wardrobe_gaps") or []
+
+        raw_shopping = advice_payload.get("shopping_suggestions") or []
+        if not isinstance(raw_shopping, list):
+            raw_shopping = []
+        filtered_shopping = filter_shopping_suggestions_against_closet(
+            raw_shopping,
+            all_closet_items=all_closet_items,
+            outfit_recommendations=[],
+            lang=lang,
+        )
+        # Enrich shopping_suggestions with grounded wardrobe gaps when exploring missing essentials
+        for gap_item in gaps:
+            if len(filtered_shopping) >= 7:
+                break
+            gap_core = gap_item.split("(")[0].strip().lower()
+            if not any(gap_core[:10] in s.lower() or s.lower()[:10] in gap_core for s in filtered_shopping):
+                filtered_shopping.append(gap_item)
+
+        sanitize_spoken_reply_and_notes(advice_payload, user_text=user_text, lang=lang)
+
+        # Ensure reasoning_summary (rendered as the main chat bubble transcript) is detailed and complete
+        reasoning_str = str(advice_payload.get("reasoning_summary") or "").strip()
+        spoken_str = str(advice_payload.get("spoken_reply") or "").strip()
+        if len(spoken_str) > len(reasoning_str) + 30:
+            reasoning_str = spoken_str
+            advice_payload["reasoning_summary"] = reasoning_str
+
+        # Extract bullet items from reasoning_summary if present so shopping_suggestions stays in sync
+        bullet_items: list[str] = []
+        for line in reasoning_str.splitlines():
+            m_bul = re.match(r"^\s*(?:[•\-\*]|\d+\.)\s+(.+)$", line.strip())
+            if m_bul:
+                b_txt = sanitize_stylist_text(m_bul.group(1).strip(), lang=lang)
+                if len(b_txt) >= 4:
+                    bullet_items.append(b_txt)
+
+        if bullet_items:
+            advice_payload["shopping_suggestions"] = bullet_items[:8]
+        else:
+            advice_payload["shopping_suggestions"] = filtered_shopping[:8]
+            low_q = user_text.lower()
+            wants_list = any(w in low_q for w in ("רשימה", "list", "מה חסר", "האם חסרים", "אלמנטריים", "להשלמת", "missing", "essentials", "gaps"))
+            if wants_list and advice_payload["shopping_suggestions"]:
+                bullets = "\n".join(f"• {s}" for s in advice_payload["shopping_suggestions"])
+                header = "הפריטים המומלצים להשלמת המלתחה שלך:" if base_lang == "he" else "Recommended essential items to complete your wardrobe:"
+                if reasoning_str:
+                    advice_payload["reasoning_summary"] = f"{reasoning_str}\n\n{header}\n{bullets}"
+                else:
+                    advice_payload["reasoning_summary"] = f"{header}\n{bullets}"
+
+        advice_payload["qa_authorized"] = True
+        advice_payload["cultural_audit"] = {
+            "status": "authorized_text_only",
+            "active_axioms": [],
+            "qa_replacements": [],
+        }
+        return advice_payload
 
     # Resolve items suggested recently in this session to enforce wardrobe rotation
     recent_set: set[str] = {str(x) for x in recent_item_ids} if recent_item_ids else set()
@@ -3444,6 +3861,12 @@ SHOPPING_COLOR_FAMILIES: dict[str, set[str]] = {
 }
 
 SHOPPING_GARMENT_FAMILIES: dict[str, set[str]] = {
+    "suit": {"suit", "suits", "two-piece suit", "business suit", "formal suit", "חליפה", "חליפות", "חליפה מחויטת", "חליפה רשמית", "חליפת עסקים", "بدلة", "traje", "costume", "anzug", "abito completo"},
+    "blazer": {"blazer", "blazers", "sport coat", "suit jacket", "בלייזר", "בלייזרים", "בלייזר מחויט", "ז'קט מחויט", "ג'קט מחויט", "بليزر", "veste de costume", "sakko"},
+    "overcoat": {"overcoat", "trench", "trench coat", "peacoat", "wool coat", "מעיל צמר", "מעיל טרנץ'", "מעיל טרנץ", "מעיל ארוך", "מעיל מחויט", "معطف طويل", "ترنش", "gabardina", "manteau", "mantel", "cappotto"},
+    "dress_pants": {"dress pants", "dress trousers", "tailored trousers", "tailored pants", "slacks", "suit pants", "מכנסיים מחויטים", "מכנס מחויט", "מכנסי חליפה", "מכנסיים אלגנטיים", "מכנסי בד מחויטים", "بنطال رسمي", "pantalon de vestir", "pantalon habillé", "anzughose"},
+    "chinos": {"chino", "chinos", "khaki pants", "khakis", "צ'ינו", "צינו", "מכנסי צ'ינו", "מכנסי חאקי", "تشينو", "pantalon chino"},
+    "jeans": {"jeans", "denim pants", "denim", "ג'ינס", "גינס", "מכנסי ג'ינס", "جينز", "vaqueros", "牛仔裤", "जींस"},
     "cargo_pants": {"cargo", "cargos", "cargo pants", "דגמ\"ח", "דגמח", "מכנסי דגמ\"ח", "מכנסי דגמח", "דגמ\"חים", "كارغو", "سروال كارغو", "pantalones cargo", "pantalon cargo", "cargo-hose", "pantaloni cargo"},
     "pants": {"pants", "trousers", "slacks", "chinos", "joggers", "sweatpants", "jeans", "denim", "מכנסיים", "מכנס", "ג'ינס", "גינס", "דנים", "טרנינג", "צ'ינו", "בןטאל", "بنطال", "سروال", "جينز", "pantalones", "pantalon", "hose", "pantaloni", "calças", "broek", "брюки", "штаны", "牛仔裤", "裤子", "长裤", "パンツ", "ズボン", "जींस", "पैंट"},
     "shorts": {"shorts", "bermuda", "שורטס", "מכנסיים קצרים", "מכנס קצר", "ברמודה", "שورت", "سروال قصير", "pantalon corto", "short", "kurze hose", "pantaloncini", "calções", "korte broek", "шорты", "短裤", "ショートパンツ", "शॉर्ट्स"},
@@ -3452,11 +3875,15 @@ SHOPPING_GARMENT_FAMILIES: dict[str, set[str]] = {
     "v_neck": {"v-neck", "v neck", "vneck", "צווארון v", "מפתח v", "וי", "צווארון וי", "فتحة v", "ياقة v", "cuello v", "col v", "v-ausschnitt", "scollo a v", "gola v", "v-hals", "v-образный", "v领", "vネック", "वी-नेक"},
     "crewneck": {"crewneck", "crew-neck", "crew neck", "round neck", "צווארון עגול", "קרו נק", "ياقة مستديرة", "رقبة دائرية", "cuello redondo", "col rond", "rundhals", "girocollo", "gola redonda", "ronde hals", "круглый вырез", "圆领", "クルーネック", "क्रू नेक"},
     "t_shirt": {"t-shirt", "tshirt", "tee", "tees", "חולצת טי", "טי שירט", "טישירט", "טי", "חולצה קצרה", "טי-שירט", "טי שירטס", "חולצות טי", "تي شيرت", "تيشيرت", "camiseta", "maglietta", "футболка", "t恤", "tシャツ", "टी-शर्ट"},
-    "knit_top": {"knit", "knitwear", "knit shirt", "knit top", "סריג", "חולצת סריג", "סריגים", "טריקוטאז'", "מחבוك", "محבוכה", "كنزة", "punto", "tricot", "strick", "maglia", "malha", "breisel", "трикотаж", "вязаный", "针织", "ニット", "बुना हुआ"},
+    "knit_top": {"knit", "knitwear", "knit shirt", "knit top", "merino", "cashmere", "סריג", "חולצת סריג", "סריגים", "סריג צמר", "מרינו", "קשמיר", "טריקוטאז'", "מחבוك", "محבוכה", "كنزة", "punto", "tricot", "strick", "maglia", "malha", "breisel", "трикотаж", "вязаный", "针织", "ニット", "बुना हुआ"},
     "polo": {"polo", "polo shirt", "פולו", "חולצת פולו", "בولو", "قميص بولو"},
+    "dress_shirt": {"dress shirt", "button-down", "button down", "oxford shirt", "collared shirt", "formal shirt", "חולצה מכופתרת", "חולצת כפתורים", "חולצה אלגנטית", "חולצת אוקספורד", "חולצה רשמית", "قميص رسمي", "قميص بأزرار", "camisa de vestir", "chemise habillée", "oberhemd"},
     "shirt": {"shirt", "shirts", "button-down", "button down", "blouse", "חולצה", "חולצות", "חולצת כפתורים", "בלוזה", "قميص", "بلوزة", "camisa", "chemise", "hemd", "camicia", "overhemd", "рубашка", "блузка", "衬衫", "シャツ", "कमीज"},
     "sweater": {"sweater", "sweaters", "jumper", "pullover", "cardigan", "hoodie", "סוודר", "סוודרים", "קרדיגן", "קפוצ'ון", "סריג חם", "سترة", "كنزة صوف", "هودي", "suéter", "pull", "pullover", "maglione", "camisola", "trui", "свитер", "толстовка", "худи", "毛衣", "卫衣", "セーター", "パーカー", "स्वेटर", "हुडी"},
-    "outerwear": {"jacket", "jackets", "blazer", "blazers", "coat", "coats", "outerwear", "bomber", "trench", "parka", "overcoat", "vest", "waistcoat", "ז'קט", "ג'קט", "בלייזר", "מעיל", "מעילים", "וסט", "סוודר", "جاكيت", "سترة", "معطف", "صديري", "chaqueta", "blazer", "manteau", "veste", "gilet", "jacke", "mantel", "weste", "giacca", "cappotto", "gilet", "jaqueta", "casaco", "colete", "jas", "vest", "куртка", "пиджак", "пальто", "жилет", "夹克", "外套", "西装", "大衣", "马甲", "ジャケット", "コート", "ベスト", "जैकेट", "ब्लेज़र", "कोट", "वास्कट"},
+    "outerwear": {"jacket", "jackets", "blazer", "blazers", "coat", "coats", "outerwear", "bomber", "trench", "parka", "overcoat", "vest", "waistcoat", "ז'קט", "ג'קט", "בלייזר", "מעיל", "מעילים", "וסט", "جاكيت", "سترة", "معطف", "صديري", "chaqueta", "blazer", "manteau", "veste", "gilet", "jacke", "mantel", "weste", "giacca", "cappotto", "gilet", "jaqueta", "casaco", "colete", "jas", "vest", "куртка", "пиджак", "пальто", "жилет", "夹克", "外套", "西装", "大衣", "马甲", "ジャケット", "コート", "ベスト", "जैकेट", "ब्लेज़र", "कोट", "वास्कट"},
+    "dress_shoes": {"oxford", "oxfords", "derby", "derbies", "brogues", "monk strap", "dress shoes", "formal shoes", "loafers", "loafer", "מוקסינים", "אוקספורד", "נעלי אוקספורד", "נעלי דרבי", "נעלי עור אלגנטיות", "נעלי ערב", "נעליים אלגנטיות", "נעליים רשמיות", "حذاء رسمي", "أكسفورد", "لوفر", "zapatos de vestir", "mocasines", "chaussures de ville", "mocassins", "ローファー", "皮鞋"},
+    "sneakers": {"sneaker", "sneakers", "trainers", "running shoes", "tennis shoes", "סניקרס", "נעלי ספורט", "נעלי ריצה", "سنيكرز", "zapatillas", "baskets", "tênis", "кроссовки", "球鞋", "スニーカー", "स्नीकर्स"},
+    "boots": {"boot", "boots", "chelsea boots", "combat boots", "ankle boots", "מגפיים", "מגף", "חצי מגף", "חצי מגפיים", "מגפי צ'לסי", "بوت", "botas", "bottes", "stiefel", "stivali", "laarzen", "ботинки", "靴", "ブーツ", "बूट"},
     "shoes": {"shoes", "shoe", "footwear", "sneakers", "boots", "loafers", "oxfords", "sandals", "flats", "heels", "נעליים", "נעל", "נעלי", "סניקרס", "מגפיים", "מוקסינים", "סנדלים", "עקבים", "חצי מגף", "חצי מגפיים", "חذاء", "أحذية", "سنيكرز", "بوت", "صندل", "كعب", "zapatos", "calzado", "zapatillas", "botas", "mocasines", "sandalias", "tacones", "chaussures", "baskets", "bottes", "mocassins", "sandales", "talons", "schuhe", "sneaker", "stiefel", "slipper", "sandalen", "absätze", "scarpe", "stivali", "mocassini", "sandali", "tacchi", "sapatos", "tênis", "botas", "sandálias", "saltos", "schoenen", "laarzen", "обувь", "кроссовки", "ботинки", "туфли", "сандалии", "каблуки", "鞋", "球鞋", "靴", "皮鞋", "凉鞋", "高跟鞋", "スニーカー", "ブーツ", "ローファー", "サンダル", "ヒール", "जूते", "स्नीकर्स", "बूट", "सैंडल", "हील"},
     "belt": {"belt", "belts", "חגורה", "חגורות", "חגורת עור", "חגור", "حزام", "cinturón", "ceinture", "gürtel", "cintura", "cinto", "riem", "ремень", "腰带", "皮带", "ベルト", "बेल्ट"},
     "headwear": {"hat", "hats", "cap", "caps", "beanie", "beret", "כובע", "כובעים", "מגבעת", "כיפה", "קסקט", "קפלוש", "ברט", "קסקט", "قبعة", "sombrero", "gorra", "chapeau", "casquette", "mütze", "hut", "cappello", "berretto", "chapéu", "boné", "hoed", "pet", "шапка", "шляпа", "кепка", "帽子", "ハット", "キャップ", "टोपी"},
@@ -3529,16 +3956,19 @@ def item_matches_shopping_suggestion(suggestion: str, item: dict[str, Any]) -> b
 
     common_fams = s_fams.intersection(item_fams)
 
-    # 0. Specialized Ethnic & Ceremonial Families MUST be checked FIRST
-    # If a suggestion is for a specialized ethnic garment (e.g. churidar, kurta, sari, sherwani),
-    # it must NEVER be considered 'owned' just because the user has generic pants, shirts, or dresses!
-    ETHNIC_TRADITIONAL_FAMILIES = {
+    # 0. Specialized Ethnic, Ceremonial & Distinct Formal Sub-Families MUST be checked FIRST
+    # If a suggestion is for a specific formal/essential garment (e.g. suit, blazer, overcoat, dress_shoes,
+    # dress_pants, chinos, dress_shirt, churidar, kurta, sari, sherwani), it must NEVER be considered 'owned'
+    # just because the user has generic casual pants, t-shirts, sneakers, or a casual jacket!
+    STRICT_SPECIFIC_FAMILIES = {
         "kurta", "churidar", "sherwani", "sari", "lehenga", "tuxedo",
-        "galabiya", "abaya", "thobe", "hanbok", "kimono", "qipao", "sharwal"
+        "galabiya", "abaya", "thobe", "hanbok", "kimono", "qipao", "sharwal",
+        "suit", "blazer", "overcoat", "dress_pants", "chinos", "jeans",
+        "dress_shoes", "sneakers", "boots", "dress_shirt", "knit_top",
     }
-    ethnic_in_sugg = s_fams.intersection(ETHNIC_TRADITIONAL_FAMILIES)
-    if ethnic_in_sugg:
-        if ethnic_in_sugg.intersection(item_fams):
+    specific_in_sugg = s_fams.intersection(STRICT_SPECIFIC_FAMILIES)
+    if specific_in_sugg:
+        if specific_in_sugg.intersection(item_fams):
             if not s_colors or (s_colors and s_colors.intersection(item_colors)):
                 return True
         return False
@@ -3548,7 +3978,7 @@ def item_matches_shopping_suggestion(suggestion: str, item: dict[str, Any]) -> b
 
     # 1. Cargo pants
     if "cargo_pants" in s_fams:
-        if "cargo_pants" in item_fams or "pants" in item_fams:
+        if "cargo_pants" in item_fams:
             if not s_colors or (s_colors and s_colors.intersection(item_colors)):
                 return True
         return False
@@ -3568,22 +3998,22 @@ def item_matches_shopping_suggestion(suggestion: str, item: dict[str, Any]) -> b
 
     # 3. T-shirt / Polo
     if "t_shirt" in s_fams or "polo" in s_fams:
-        if "t_shirt" in item_fams or "polo" in item_fams or "shirt" in item_fams:
+        if "t_shirt" in item_fams or "polo" in item_fams:
             if not s_colors or (s_colors and s_colors.intersection(item_colors)):
                 return True
         return False
 
-    # 4. General pants / jeans
+    # 4. General pants (only when suggestion didn't ask for dress_pants / chinos / jeans)
     if "pants" in s_fams:
-        if "pants" in item_fams or "cargo_pants" in item_fams:
+        if "pants" in item_fams:
             if s_colors and s_colors.intersection(item_colors):
                 return True
             if not s_colors and len(common_fams) >= 1:
                 return True
         return False
 
-    # 5. Belt / Shoes / Outerwear / Bag / Headwear / Skirt / Dress
-    for specific_fam in ("belt", "shoes", "outerwear", "bag", "headwear", "skirt", "dress"):
+    # 5. Belt / Shoes / Outerwear / Bag / Headwear / Skirt / Dress / Sweater / Shirt
+    for specific_fam in ("belt", "shoes", "outerwear", "bag", "headwear", "skirt", "dress", "sweater", "shirt"):
         if specific_fam in s_fams:
             if specific_fam in item_fams:
                 if not s_colors or (s_colors and s_colors.intersection(item_colors)):

@@ -130,12 +130,15 @@ class GemmaStylistBrain:
             base_system_prompt=PROMPT_STYLIST_CHAT,
         )
 
-        # Append conciseness instruction so Eyes on CPU completes swiftly without timing out
-        prompt_text = (
-            prompt_text
-            + "\n\nCONCISE REQUIREMENT: Return exactly 2 complete, distinct outfit recommendations from the closet. "
-            "Keep descriptions under 8 words and 'why' under 1-2 punchy sentences."
-        )
+        from app.services.stylist_qa_engine import is_text_only_stylist_query
+        conv_hist = (user_profile or {}).get("conversation_history") if isinstance(user_profile, dict) else None
+        if not is_text_only_stylist_query(user_text, conv_hist) and not is_text_only_stylist_query(effective_user_text, conv_hist):
+            # Append conciseness instruction so Eyes on CPU completes swiftly without timing out
+            prompt_text = (
+                prompt_text
+                + "\n\nCONCISE REQUIREMENT: Return 1-2 complete, distinct outfit recommendations from the closet. "
+                "Keep descriptions under 8 words and 'why' under 1-2 punchy sentences."
+            )
 
         with provider_activity.Track(
             "gemma-stylist", {"model": self.model, "has_image": bool(image_base64)}
@@ -151,18 +154,17 @@ class GemmaStylistBrain:
         parsed = _parse_json(raw)
 
         # Route through Stylist QA Engine for validation and role authorization in English
-        if parsed.get("outfit_recommendations"):
-            try:
-                from app.services.stylist_qa_engine import evaluate_and_authorize_outfit
-                parsed = await evaluate_and_authorize_outfit(
-                    user_text=effective_user_text or "",
-                    advice_payload=parsed,
-                    all_closet_items=closet_summary or [],
-                    user_profile=gemma_profile,
-                )
-                parsed["qa_authorized"] = True
-            except Exception as qa_exc:
-                logger.warning("GemmaStylistBrain QA authorization soft-failed: %s", qa_exc)
+        try:
+            from app.services.stylist_qa_engine import evaluate_and_authorize_outfit
+            parsed = await evaluate_and_authorize_outfit(
+                user_text=effective_user_text or "",
+                advice_payload=parsed,
+                all_closet_items=closet_summary or [],
+                user_profile=gemma_profile,
+            )
+            parsed["qa_authorized"] = True
+        except Exception as qa_exc:
+            logger.warning("GemmaStylistBrain QA authorization soft-failed: %s", qa_exc)
 
         # Translate outbound recommendation payload back to the user's preferred language via Google Translate
         if orig_lang != "en":
