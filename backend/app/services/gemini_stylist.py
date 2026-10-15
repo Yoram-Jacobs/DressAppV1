@@ -257,11 +257,12 @@ async def prepare_stylist_prompt(
             "a recommended shopping/completion list, garment comparison, or a conversational follow-up — NOT asking to dress the mannequin.\n"
             "1. You MUST set \"outfit_recommendations\": [] (an empty array).\n"
             f"2. In \"reasoning_summary\", write a concise 2-3 sentence analytical overview in natural prose in {lang_name} "
-            "(summarize existing closet strengths and missing areas based on CONTEXT.closet_inventory_analysis; DO NOT use '• ' bullets on narrative sentences and DO NOT repeat the shopping_suggestions items verbatim in reasoning_summary).\n"
-            f"3. In \"shopping_suggestions\", return 5 to 7 focused, concrete, detailed garment specifications in {lang_name} "
-            "(specifying garment type + pieces/cut + color/pattern + fabric/material + occasion/purpose, or specific weather essential, e.g. "
-            "'חליפת שלושה חלקים שחורה חלקה מכותנה לאירועים רשמיים', 'חליפת 2 חלקים כחולה חלקה מבריקה ממשי או פוליאסטר למסיבות', "
-            "'חולצת כפתורים משובצת בצבעי כחול וחום', 'מעיל גשם', 'מגפי גומי' — NEVER vague category labels or conversational prose).\n"
+            "(summarize existing closet strengths and missing areas based on GROUND-TRUTH FASHION DESIGN AXIOMS and CONTEXT.closet_inventory_analysis; "
+            "DO NOT use '• ' bullets on narrative sentences and DO NOT repeat the shopping_suggestions items verbatim in reasoning_summary).\n"
+            f"3. In \"shopping_suggestions\", consult the retrieved GROUND-TRUTH FASHION DESIGN AXIOMS (Essential Wardrobe Pillars 1–4) "
+            f"and CONTEXT.closet_inventory_analysis.detected_wardrobe_gaps to return 5 to 7 focused, concrete, detailed garment specifications in {lang_name} "
+            "that are missing from the user's closet (each item specifying garment type + cut/pieces + color/pattern + fabric/material + occasion/weather purpose — "
+            "NEVER vague category labels or conversational prose).\n"
             f"4. In \"spoken_reply\", provide a warm 1-2 sentence spoken summary in {lang_name}.\n"
         )
 

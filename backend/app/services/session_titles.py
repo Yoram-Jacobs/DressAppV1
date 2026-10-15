@@ -104,32 +104,39 @@ def clean_title(raw: str, fallback_query: str = "") -> str:
             if m:
                 obj = json.loads(m.group(0))
                 if isinstance(obj, dict):
-                    candidate = obj.get("title") or obj.get("text") or obj.get("response") or obj.get("answer")
+                    candidate = (
+                        obj.get("title")
+                        or obj.get("summary")
+                        or obj.get("topic")
+                        or obj.get("text")
+                        or obj.get("response")
+                        or obj.get("answer")
+                    )
                     if candidate and isinstance(candidate, str):
                         text = candidate
         except Exception:
             pass
 
-    # 3. Regex extract "text": "..." or "title": "..." if JSON fragments remain
-    frag_match = re.search(r'"(?:text|title|answer|topic)"\s*:\s*"([^"]+)"', text)
+    # 3. Regex extract "title": "..." / "summary": "..." if JSON fragments remain
+    frag_match = re.search(r'"(?:title|summary|topic|text|answer)"\s*:\s*"([^"]+)"', text)
     if frag_match:
         text = frag_match.group(1)
 
     # 4. Strip remaining quotes, brackets, and prefixes like "action": or "title:" or hallucinated "אצ'ו:"
     text = re.sub(r'^(?:action\s*:\s*"?[^"]*"?\s*,\s*)', '', text, flags=re.IGNORECASE)
-    text = re.sub(r'^(?:title|topic|subject|text|chat|conversation|נושא|כותרת|שיחה|ללבוש|אצ\'ו)\s*:\s*', '', text, flags=re.IGNORECASE)
+    text = re.sub(r'^(?:title|topic|subject|summary|text|chat|conversation|נושא|כותרת|שיחה|ללבוש|אצ\'ו)\s*:\s*', '', text, flags=re.IGNORECASE)
     # If a short prefix before a colon was hallucinated (e.g. "אצ'ו: ..."), drop the prefix or use fallback
     if ":" in text:
         parts = [p.strip() for p in text.split(":", 1)]
         if len(parts) == 2 and len(parts[0].split()) <= 2 and len(parts[1]) >= 4:
             text = parts[1]
 
-    text = text.strip(" \t\n\r\"'`“”‘’[](){}:,;-–—*")
+    text = text.strip(" \t\n\r\"'`“”‘’[](){}:,;-–—*?")
     text = text.splitlines()[0].strip() if text else ""
 
     # 5. Sanity check: if it still has json garbage or hallucinated nonsense, use fallback
     if any(bad in text.lower() for bad in (
-        '"action"', '"text"', '{"', '"}', 'action":', 'text":',
+        '"action"', '"text"', '"summary"', '{"', '"}', 'action":', 'text":', 'summary":',
         "אצ'ו", "מדריך אבזרי לבוש שדרכו", "untitled", "שיחה ללא שם",
     )):
         return _fallback_title(fallback_query)
@@ -138,6 +145,15 @@ def clean_title(raw: str, fallback_query: str = "") -> str:
         return _fallback_title(fallback_query)
 
     return text[:45]
+
+
+_TITLE_JSON_SCHEMA: dict[str, Any] = {
+    "type": "object",
+    "properties": {
+        "title": {"type": "string"},
+    },
+    "required": ["title"],
+}
 
 
 async def generate_session_title(
@@ -152,9 +168,6 @@ async def generate_session_title(
         return "Style advice"
 
     active_key = api_key or settings.GEMINI_API_KEY
-    if not active_key:
-        return _fallback_title(text)
-
     lang_code = (language or "en").lower().strip().split("-")[0].split("_")[0]
     if re.search(r"[\u0590-\u05fe]", text):
         lang_code = "he"
@@ -163,28 +176,30 @@ async def generate_session_title(
     lang_name = _LANG_NAMES.get(lang_code, "the same language as the user query")
 
     system_msg = (
-        f"Summarize the user's message into a short, natural conversation title (3 to 5 words) in {lang_name}, "
-        "just like ChatGPT or Gemini names a chat thread.\n"
-        "STRICT RULES:\n"
-        "1. Use plain, direct words from the user's topic (e.g. 'בדיקת פריטי בסיס בארון', 'רשימת קניות להשלמת המלתחה', 'לבוש מתאים לפגישה בעירייה', 'Summer Wedding Guest Outfit').\n"
-        "2. NEVER invent brand names, proper nouns, colons (:), quotes, markdown, or words unrelated to the prompt.\n"
-        "3. Return ONLY the plain title text (max 38 characters)."
+        f"Summarize the user's message into a short 3 to 5 word topic title in {lang_name} "
+        "using key words from the message. "
+        'Respond ONLY with JSON: {"title": "<3 to 5 word title>"}'
     )
     from app.services.llm_gateway import call_main_llm
     try:
-        # Always force_provider='gemini' so title generation completes in <1s without CPU Eyes round-trip translation
+        # Route to on-prem Qwen2.5-VL-3B ('gemma') with skip_translation=True and _TITLE_JSON_SCHEMA
+        # so Free Tier users do not require cloud Gemini and llama-server's json_mode produces {"title": "..."}
         raw = await call_main_llm(
             system_prompt=system_msg,
             user_text=text[:300],
             max_tokens=40,
             temperature=0.1,
+            json_schema=_TITLE_JSON_SCHEMA,
             model="gemini-3.5-flash-lite",
             api_key=active_key,
-            force_provider="gemini",
+            force_provider="gemma",
             user=user,
+            skip_translation=True,
         )
     except Exception as exc:  # noqa: BLE001
         logger.warning("Session title generation failed: %s", exc)
         return _fallback_title(text)
 
     return clean_title(raw, fallback_query=text)
+
+

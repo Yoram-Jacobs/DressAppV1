@@ -3054,106 +3054,12 @@ def build_closet_inventory_analysis(
         compact_inventory.append(item_summary)
         all_blob_parts.append(f"{title} {cat} {sub_cat} {dc} {' '.join(c_names)} {mat} {tags_str}".lower())
 
-    def _has_item_matching(keywords: tuple[str, ...], exclude: tuple[str, ...] = ()) -> bool:
-        for b in all_blob_parts:
-            if exclude and any(ex in b for ex in exclude):
-                continue
-            if any(kw in b for kw in keywords):
-                return True
-        return False
+    from app.services.fashion_rules_rag import audit_closet_against_rag_essentials
 
-    # Concrete, specific wardrobe staples checklist (garment + pieces/cut + color/pattern + material + occasion/weather)
-    essentials_checklist = [
-        {
-            "key": "three_piece_formal_suit",
-            "present": _has_item_matching(
-                ("three-piece suit", "3-piece suit", "חליפת שלושה חלקים", "חליפת 3 חלקים", "tuxedo", "טוקסידו"),
-                exclude=("suit vest", "וסט חליפה", "וסט מחויט"),
-            ),
-            "he": "חליפת שלושה חלקים שחורה חלקה מכותנה לאירועים רשמיים",
-            "en": "Solid black three-piece cotton suit for formal events",
-        },
-        {
-            "key": "two_piece_party_suit",
-            "present": _has_item_matching(
-                ("two-piece suit", "2-piece suit", "party suit", "silk suit", "חליפת שני חלקים", "חליפת 2 חלקים"),
-                exclude=("suit vest", "וסט חליפה", "וסט מחויט"),
-            ),
-            "he": "חליפת 2 חלקים כחולה חלקה מבריקה ממשי או פוליאסטר למסיבות",
-            "en": "Lustrous solid blue two-piece silk or polyester suit for parties",
-        },
-        {
-            "key": "plaid_button_down_shirt",
-            "present": any(
-                any(p in b for p in ("plaid", "checkered", "flannel", "משובצ", "משבצות"))
-                and any(c1 in b for c1 in ("blue", "navy", "כחול", "נייבי"))
-                and any(c2 in b for c2 in ("brown", "tan", "חום"))
-                for b in all_blob_parts
-            ),
-            "he": "חולצת כפתורים משובצת בצבעי כחול וחום",
-            "en": "Blue and brown plaid button-down shirt",
-        },
-        {
-            "key": "raincoat",
-            "present": _has_item_matching(
-                ("raincoat", "rain jacket", "waterproof coat", "מעיל גשם", "מעיל אטום למים")
-            ),
-            "he": "מעיל גשם",
-            "en": "Waterproof raincoat",
-        },
-        {
-            "key": "rubber_rain_boots",
-            "present": _has_item_matching(
-                ("rain boot", "rain boots", "rubber boot", "rubber boots", "wellington", "מגפי גומי", "מגפי גשם")
-            ),
-            "he": "מגפי גומי",
-            "en": "Waterproof rubber rain boots",
-        },
-        {
-            "key": "white_dress_shirt",
-            "present": any(
-                ("dress shirt" in b or "חולצה מכופתרת" in b or "oxford shirt" in b or "formal shirt" in b)
-                and any(w in b for w in ("white", "לבן", "לבנה"))
-                for b in all_blob_parts
-            ),
-            "he": "חולצה מכופתרת לבנה חלקה מכותנה לאירועים רשמיים",
-            "en": "Solid white cotton button-down dress shirt for formal events",
-        },
-        {
-            "key": "tailored_trousers",
-            "present": _has_item_matching(
-                ("dress pants", "dress trousers", "tailored trousers", "suit pants", "מכנסיים מחויטים", "מכנסי חליפה")
-            ),
-            "he": "מכנסיים מחויטים בגזרה ישרה בצבע אפור פחם מצמר",
-            "en": "Straight-leg charcoal wool tailored dress trousers",
-        },
-        {
-            "key": "formal_dress_shoes",
-            "present": _has_item_matching(
-                ("oxford", "oxfords", "derby", "derbies", "אוקספורד", "נעלי דרבי", "נעלי עור אלגנטיות")
-            ),
-            "he": "נעלי אוקספורד מעור שחור חלק לאירועים רשמיים",
-            "en": "Smooth black leather Oxford dress shoes for formal events",
-        },
-    ]
-
-    if is_female:
-        essentials_checklist.insert(
-            0,
-            {
-                "key": "classic_midi_dress",
-                "present": _has_item_matching(
-                    ("midi dress", "black dress", "evening dress", "שמלה שחורה", "שמלת מידי", "שמלת ערב")
-                ),
-                "he": "שמלת מידי שחורה חלקה ממשי לאירועים רשמיים",
-                "en": "Solid black silk midi dress for formal events",
-            },
-        )
-
-    detected_gaps: list[str] = []
-    for check in essentials_checklist:
-        if not check["present"]:
-            detected_gaps.append(check["he"] if base_lang == "he" else check["en"])
+    rag_audit = audit_closet_against_rag_essentials(
+        items, user_gender=user_gender, lang=base_lang
+    )
+    detected_gaps = rag_audit.get("missing_staples") or []
 
     return {
         "total_items": len(items),
@@ -3161,7 +3067,9 @@ def build_closet_inventory_analysis(
         "by_sub_category": by_sub_category,
         "by_dress_code": by_dress_code,
         "dominant_colors": dict(sorted(by_color.items(), key=lambda kv: kv[1], reverse=True)[:8]),
+        "present_wardrobe_staples": rag_audit.get("present_staples") or [],
         "detected_wardrobe_gaps": detected_gaps,
+        "active_rag_rule_ids": rag_audit.get("active_rag_rule_ids") or [],
     }
 
 
@@ -3242,25 +3150,24 @@ async def evaluate_and_authorize_outfit(
             outfit_recommendations=[],
             lang=lang,
         )
-        # Prioritize concrete, closet-verified wardrobe gaps first, then append non-overlapping LLM suggestions
-        final_shopping: list[str] = list(gaps[:7])
+        # Merge specific LLM suggestions grounded in RAG with RAG-audited closet gaps
+        final_shopping: list[str] = []
         covered_fams: set[str] = set()
-        for g in final_shopping:
-            covered_fams.update(extract_shopping_garment_families(g.lower()))
+        gaps_set = set(gaps)
 
-        for s in filtered_shopping:
-            if len(final_shopping) >= 7:
+        for candidate in list(filtered_shopping) + list(gaps):
+            if len(final_shopping) >= 8:
                 break
-            s_low = s.lower()
-            s_fams = extract_shopping_garment_families(s_low)
-            if any(s_low == existing.lower() or s_low[:16] in existing.lower() for existing in final_shopping):
+            c_low = candidate.lower()
+            c_fams = extract_shopping_garment_families(c_low)
+            if any(c_low == existing.lower() or c_low[:16] in existing.lower() for existing in final_shopping):
                 continue
-            if s_fams and s_fams.issubset(covered_fams):
+            if candidate not in gaps_set and c_fams and c_fams.issubset(covered_fams):
                 continue
-            final_shopping.append(s)
-            covered_fams.update(s_fams)
+            final_shopping.append(candidate)
+            covered_fams.update(c_fams)
 
-        advice_payload["shopping_suggestions"] = final_shopping[:7]
+        advice_payload["shopping_suggestions"] = final_shopping[:8]
         sanitize_spoken_reply_and_notes(advice_payload, user_text=user_text, lang=lang)
 
         # Clean reasoning_summary so it provides a concise analytical overview without
@@ -3291,8 +3198,6 @@ async def evaluate_and_authorize_outfit(
                 ):
                     saw_colon_intro = True
                     continue
-                # If we already had a non-bullet intro paragraph or a colon-terminated intro,
-                # drop subsequent bulleted item lists so reasoning_summary doesn't duplicate shopping_suggestions
                 if is_bullet and (has_non_bullet_intro or saw_colon_intro) and advice_payload["shopping_suggestions"]:
                     continue
                 if not is_bullet:
@@ -3304,10 +3209,18 @@ async def evaluate_and_authorize_outfit(
             if cleaned_lines:
                 advice_payload["reasoning_summary"] = " ".join(cleaned_lines)
 
+        active_rag_ids = [
+            getattr(r, "id", None) or (r.get("id") if isinstance(r, dict) else "")
+            for r in (axioms or [])
+        ]
+        for rid in inventory_analysis.get("active_rag_rule_ids") or []:
+            if rid and rid not in active_rag_ids:
+                active_rag_ids.append(rid)
+
         advice_payload["qa_authorized"] = True
         advice_payload["cultural_audit"] = {
             "status": "authorized_text_only",
-            "active_axioms": [],
+            "active_axioms": [r for r in active_rag_ids if r],
             "qa_replacements": [],
         }
         return advice_payload

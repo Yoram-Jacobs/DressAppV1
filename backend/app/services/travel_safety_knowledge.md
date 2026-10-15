@@ -69,3 +69,19 @@ This document serves as the official reference database for DressApp's Suitcase 
 * **Required Attire**: Modest clothing is mandatory. Women should wear outfits covering their shoulders, chest, and ankles (e.g., salwar kameez or long skirts). Men should wear long trousers and shirts.
 * **Head Covering**: Some temples (especially Sikh Gurudwaras and certain Hindu temples) require visitors to cover their heads with a scarf or bandana.
 * **Footwear & Leather**: Shoes must be removed. Leather belts, bags, or accessories are prohibited inside some shrines due to the sacred status of cattle.
+
+---
+
+## Morocco (Marrakech, Fes, Casablanca, Rabat) & Mosque Visitation (Modesty Zone & Holy Places)
+
+### Cultural Context & Medina Etiquette
+* **Public Modesty**: While Morocco does not legally enforce a religious dress code on tourists, conservative dress is strongly expected in historic medinas, souks, rural villages, and guided cultural tours.
+* **Women**: Loose, breathable clothing covering shoulders, cleavage, and knees (such as linen trousers, midi/maxi skirts, or tunics/kaftans) is recommended for walking tours. Carry a lightweight scarf/pashmina for entering sacred or traditional sites.
+* **Men**: Long breathable trousers (linen or cotton chinos) and collared or short-sleeved shirts are preferred for guided city tours; avoid sleeveless tank tops in medinas.
+
+### Mosque Visitation Rules
+* **Entry & Modesty**: Where mosque entry is permitted (such as the Hassan II Mosque in Casablanca or historic madrasas and religious complexes), strict Islamic modesty applies:
+  * **Coverage**: Both men and women must cover shoulders, upper arms, and legs down to the ankles (no shorts, short skirts, or sleeveless tops). Women must cover their hair with a headscarf.
+  * **Footwear**: Shoes must be removed before stepping onto prayer carpets; wear comfortable slip-on shoes and clean socks.
+  * **Seasonal Layering (Autumn/Winter in Marrakech)**: Daytime temperatures are mild to warm (20–25°C), while desert/Atlas evenings drop sharply (8–12°C)—pack a warm jacket, cardigan, or wool layer for evening tours.
+

@@ -31,6 +31,7 @@ class RuleActivationCriteria(BaseModel):
     requires_layering: bool | None = None
     tags: list[str] = Field(default_factory=list)
     primary_roles: list[str] = Field(default_factory=list)  # ["outerwear", "footwear", "top", "bottom"]
+    essential_staples: list[dict[str, Any]] = Field(default_factory=list)
 
 
 class FashionRule(BaseModel):

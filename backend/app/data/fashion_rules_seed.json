@@ -1787,5 +1787,470 @@
     },
     "priority": 9,
     "example": "Indigo cotton Nehru-collar straight Kurta with 3/4 sleeves paired with white cigarette pants and oxidized silver jhumkas for smart office wear; or a hip-length printed cotton Kurti paired with blue denim jeans and kolhapuri flats for casual college outings."
+  },
+  {
+    "id": "rule_wardrobe_essentials_formal_tailoring",
+    "category": "occasion_dress_code",
+    "title": "Essential Wardrobe Pillar 1: Formal & Event Tailoring Staples (פריטי בסיס לחייטות ואירועים רשמיים)",
+    "rule_statement": "Every complete wardrobe requires foundational formal and event tailoring staples: (1) A tailored dark suit (two-piece or three-piece in solid navy, charcoal, or black worsted wool or cotton) for weddings, ceremonies, and formal events; (2) For women, a classic solid black or navy silk/crepe midi dress for evening and cocktail occasions; (3) A crisp solid white 100% cotton poplin or Oxford button-down dress shirt; (4) Straight-leg charcoal or navy tailored wool dress trousers; and (5) An unstructured navy hopsack or wool blazer that bridges business and smart-casual wear.",
+    "negative_constraint": "Never treat a standalone suit vest, casual graphic tee, or cargo pants as a substitute for a complete formal suit or tailored dress shirt. When recommending missing formal staples, always specify exact garment + cut/pieces + color + fabric + occasion.",
+    "criteria": {
+      "tags": [
+        "wardrobe_essentials",
+        "basic_items",
+        "missing_items",
+        "capsule_staples",
+        "closet_audit",
+        "formal_staples",
+        "פריטי בסיס",
+        "חוסרים בארון",
+        "מה חסר בארון",
+        "השלמת מלתחה"
+      ],
+      "essential_staples": [
+        {
+          "key": "classic_formal_midi_dress",
+          "gender": "female",
+          "match_any": [
+            "midi dress",
+            "black dress",
+            "evening dress",
+            "cocktail dress",
+            "שמלה שחורה",
+            "שמלת מידי",
+            "שמלת ערב"
+          ],
+          "spec_en": "Solid black silk or crepe midi dress for formal events and evening occasions",
+          "spec_he": "שמלת מידי שחורה חלקה ממשי או קרפ לאירועים רשמיים וערבים"
+        },
+        {
+          "key": "tailored_dark_suit",
+          "gender": "all",
+          "match_any": [
+            "two-piece suit",
+            "three-piece suit",
+            "2-piece suit",
+            "3-piece suit",
+            "business suit",
+            "formal suit",
+            "tailored suit",
+            "tuxedo",
+            "חליפה מחויטת",
+            "חליפת שלושה חלקים",
+            "חליפת שני חלקים",
+            "חליפת 2 חלקים",
+            "חליפת עסקים",
+            "חליפה רשמית",
+            "טוקסידו"
+          ],
+          "exclude": [
+            "suit vest",
+            "וסט חליפה",
+            "וסט מחויט",
+            "kaftan"
+          ],
+          "spec_en": "Tailored dark two-piece or three-piece wool/cotton suit in solid navy or black for formal events",
+          "spec_he": "חליפה מחויטת כהה (שני חלקים או שלושה חלקים) מצמר או כותנה בצבע נייבי או שחור חלק לאירועים רשמיים"
+        },
+        {
+          "key": "crisp_white_dress_shirt",
+          "gender": "all",
+          "match_all_groups": [
+            [
+              "dress shirt",
+              "button-down",
+              "button down",
+              "oxford shirt",
+              "formal shirt",
+              "poplin shirt",
+              "חולצה מכופתרת",
+              "חולצת כפתורים",
+              "חולצה אלגנטית",
+              "חולצת אוקספורד"
+            ],
+            [
+              "white",
+              "לבן",
+              "לבנה"
+            ]
+          ],
+          "exclude": [
+            "striped",
+            "plaid",
+            "checkered",
+            "floral",
+            "graphic",
+            "פסים",
+            "מפוספס",
+            "משובץ",
+            "פרחוני"
+          ],
+          "spec_en": "Crisp solid white 100% cotton poplin button-down dress shirt for formal and business wear",
+          "spec_he": "חולצה מכופתרת לבנה חלקה מכותנה פופלין לאירועים רשמיים ופגישות עסקיות"
+        },
+        {
+          "key": "tailored_wool_trousers",
+          "gender": "all",
+          "match_any": [
+            "dress pants",
+            "dress trousers",
+            "tailored trousers",
+            "tailored pants",
+            "suit pants",
+            "slacks",
+            "מכנסיים מחויטים",
+            "מכנס מחויט",
+            "מכנסי חליפה",
+            "מכנסי בד מחויטים"
+          ],
+          "spec_en": "Straight-leg charcoal or navy tailored wool dress trousers",
+          "spec_he": "מכנסיים מחויטים בגזרה ישרה מצמר בצבע אפור פחם או נייבי"
+        },
+        {
+          "key": "navy_unstructured_blazer",
+          "gender": "all",
+          "match_any": [
+            "blazer",
+            "sport coat",
+            "בלייזר",
+            "ז'קט מחויט",
+            "ג'קט מחויט"
+          ],
+          "spec_en": "Unstructured solid navy wool or cotton-linen blazer for smart-casual and business styling",
+          "spec_he": "בלייזר מחויט בצבע כחול נייבי חלק מצמר או פשתן-כותנה לשילובי סמארט-קז'ואל ועסקים"
+        }
+      ]
+    },
+    "priority": 10,
+    "example": "Tailored solid navy two-piece worsted wool suit paired with a crisp white cotton poplin dress shirt."
+  },
+  {
+    "id": "rule_wardrobe_essentials_smart_casual_core",
+    "category": "occasion_dress_code",
+    "title": "Essential Wardrobe Pillar 2: Everyday & Smart-Casual Core Staples (פריטי בסיס יומיומיים וסמארט-קז'ואל)",
+    "rule_statement": "Every versatile everyday wardrobe requires high-combinatorial core separates: (1) Heavyweight solid crewneck t-shirts in neutral anchors (optic white, black, heather grey) made of 100% combed cotton; (2) A smart-casual button-down shirt in light blue Oxford cloth or classic blue/brown plaid flannel; (3) A fine-gauge merino wool or cashmere crewneck/V-neck knit sweater in navy, charcoal, or camel for transitional layering; (4) Clean dark-indigo straight-leg selvedge denim jeans (unripped); and (5) Tailored beige, khaki, or olive cotton-twill chinos.",
+    "negative_constraint": "Do not count loud single-use novelty graphic tees, beach shorts, or heavily ripped/distressed jeans as foundational smart-casual wardrobe basics.",
+    "criteria": {
+      "tags": [
+        "wardrobe_essentials",
+        "basic_items",
+        "missing_items",
+        "capsule_staples",
+        "closet_audit",
+        "smart_casual_staples",
+        "פריטי בסיס",
+        "חוסרים בארון",
+        "מה חסר בארון"
+      ],
+      "essential_staples": [
+        {
+          "key": "neutral_cotton_crewneck_tee",
+          "gender": "all",
+          "match_all_groups": [
+            [
+              "t-shirt",
+              "tshirt",
+              "tee",
+              "crewneck tee",
+              "חולצת טי",
+              "טי שירט",
+              "טישירט"
+            ],
+            [
+              "white",
+              "black",
+              "grey",
+              "gray",
+              "לבן",
+              "לבנה",
+              "שחור",
+              "שחורה",
+              "אפור",
+              "אפורה"
+            ]
+          ],
+          "spec_en": "Heavyweight solid white or black 100% combed cotton crewneck t-shirt for daily layering",
+          "spec_he": "חולצת טי (טישירט) חלקה בצווארון עגול מכותנה סרוקה איכותית בצבע לבן או שחור"
+        },
+        {
+          "key": "smart_casual_oxford_or_plaid_shirt",
+          "gender": "all",
+          "match_all_groups": [
+            [
+              "button-down",
+              "button down",
+              "oxford",
+              "flannel",
+              "plaid shirt",
+              "checkered shirt",
+              "חולצת כפתורים",
+              "חולצה מכופתרת",
+              "חולצת פלנל",
+              "חולצת אוקספורד"
+            ],
+            [
+              "blue",
+              "light blue",
+              "plaid",
+              "checkered",
+              "כחול",
+              "תכלת",
+              "משובצ",
+              "משבצות"
+            ]
+          ],
+          "spec_en": "Smart-casual light-blue Oxford or blue-and-brown plaid cotton button-down shirt",
+          "spec_he": "חולצת כפתורים מכותנה (אוקספורד תכלת חלקה או משובצת בגווני כחול וחום) למראה סמארט-קז'ואל"
+        },
+        {
+          "key": "fine_gauge_knit_sweater",
+          "gender": "all",
+          "match_any": [
+            "merino",
+            "cashmere",
+            "knit sweater",
+            "pullover",
+            "crewneck sweater",
+            "v-neck sweater",
+            "cardigan",
+            "סוודר",
+            "סריג",
+            "קרדיגן",
+            "מרינו",
+            "קשמיר"
+          ],
+          "exclude": [
+            "granny square",
+            "crochet",
+            "קרושה",
+            "graphic"
+          ],
+          "spec_en": "Fine-gauge merino wool or cashmere sweater in navy, charcoal, or camel for transitional layering",
+          "spec_he": "סריג צמר מרינו או קשמיר דק בגוון נייבי, אפור פחם או קאמל לשכבות בעונות מעבר"
+        },
+        {
+          "key": "dark_indigo_denim_jeans",
+          "gender": "all",
+          "match_all_groups": [
+            [
+              "jeans",
+              "denim pants",
+              "ג'ינס",
+              "גינס",
+              "מכנסי ג'ינס"
+            ],
+            [
+              "blue",
+              "indigo",
+              "dark",
+              "navy",
+              "black",
+              "כחול",
+              "אינדיגו",
+              "כהה",
+              "שחור"
+            ]
+          ],
+          "exclude": [
+            "ripped",
+            "distressed",
+            "קרעים",
+            "קרוע",
+            "shorts",
+            "קצר"
+          ],
+          "spec_en": "Clean dark-indigo straight-leg denim jeans without rips for versatile casual and smart-casual wear",
+          "spec_he": "מכנסי ג'ינס בגזרה ישרה בצבע כחול אינדיגו כהה חלק (ללא קרעים) לשילובים יומיומיים ואלגנטיים"
+        },
+        {
+          "key": "cotton_twill_chinos",
+          "gender": "all",
+          "match_any": [
+            "chino",
+            "chinos",
+            "khaki pants",
+            "khakis",
+            "צ'ינו",
+            "צינו",
+            "מכנסי צ'ינו",
+            "מכנסי חאקי"
+          ],
+          "spec_en": "Tailored beige, khaki, or olive cotton-twill chino trousers for smart-casual versatility",
+          "spec_he": "מכנסי צ'ינו מכותנה בגזרה מחויטת בצבע בז', חאקי או זית לשילובי סמארט-קז'ואל"
+        }
+      ]
+    },
+    "priority": 10,
+    "example": "Light-blue Oxford cotton button-down shirt layered under a charcoal merino crewneck sweater with beige cotton-twill chinos."
+  },
+  {
+    "id": "rule_wardrobe_essentials_outerwear_weather",
+    "category": "weather_thermodynamics",
+    "title": "Essential Wardrobe Pillar 3: All-Weather Outerwear & Rain Protection Staples (פריטי בסיס להגנה ממזג אוויר ומעילים)",
+    "rule_statement": "A functional four-season wardrobe must include dedicated outer-shell protection across temperature and precipitation extremes: (1) A waterproof breathable raincoat or classic water-repellent cotton-gabardine trench coat (in beige, olive, or navy) for rainy days; (2) An insulated tailored wool overcoat (charcoal, camel, or black) or thermal down parka for cold winter weather; and (3) A lightweight transitional jacket (denim jacket, suede bomber, or cotton field jacket) for mild autumn/spring layering.",
+    "negative_constraint": "Indoor knit cardigans, hoodies, or unlined suit blazers cannot substitute for a waterproof raincoat or winter overcoat during precipitation and cold fronts.",
+    "criteria": {
+      "tags": [
+        "wardrobe_essentials",
+        "basic_items",
+        "missing_items",
+        "capsule_staples",
+        "closet_audit",
+        "outerwear_staples",
+        "rain_protection",
+        "פריטי בסיס",
+        "מעיל גשם",
+        "חוסרים בארון",
+        "מה חסר בארון"
+      ],
+      "essential_staples": [
+        {
+          "key": "waterproof_raincoat_or_trench",
+          "gender": "all",
+          "match_any": [
+            "raincoat",
+            "rain jacket",
+            "waterproof coat",
+            "waterproof jacket",
+            "trench coat",
+            "trench",
+            "מעיל גשם",
+            "מעיל רוח וגשם",
+            "מעיל אטום למים",
+            "מעיל טרנץ'",
+            "מעיל טרנץ"
+          ],
+          "spec_en": "Waterproof breathable raincoat or classic beige/navy cotton-gabardine trench coat for rainy weather",
+          "spec_he": "מעיל גשם אטום למים או מעיל טרנץ' קלאסי מבד גברדין דוחה מים לימים גשומים"
+        },
+        {
+          "key": "winter_wool_overcoat",
+          "gender": "all",
+          "match_any": [
+            "overcoat",
+            "wool coat",
+            "peacoat",
+            "parka",
+            "puffer",
+            "down coat",
+            "מעיל צמר",
+            "מעיל ארוך",
+            "מעיל פוך",
+            "מעיל חורף"
+          ],
+          "spec_en": "Tailored charcoal, camel, or black wool overcoat for cold winter weather",
+          "spec_he": "מעיל צמר מחויט ארוך בצבע אפור פחם, קאמל או שחור לימי חורף קרים"
+        }
+      ]
+    },
+    "priority": 10,
+    "example": "Classic double-breasted beige cotton-gabardine waterproof trench coat layered over knitwear during rain."
+  },
+  {
+    "id": "rule_wardrobe_essentials_footwear_accessories",
+    "category": "occasion_dress_code",
+    "title": "Essential Wardrobe Pillar 4: Essential Footwear & Leather Accessories (פריטי בסיס בהנעלה ואביזרים חיוניים)",
+    "rule_statement": "Every complete wardrobe requires a three-tier footwear rotation and foundational leather accessories: (1) Smooth black or dark brown full-grain leather Oxford, Derby, or Loafer dress shoes for formal and business occasions (or classic leather pumps/loafers for women); (2) Minimalist clean solid white leather low-top sneakers for daily casual and smart-casual versatility; (3) Weatherproof leather Chelsea boots or waterproof rubber rain boots for wet and winter conditions; and (4) A classic full-grain leather dress belt (black/brown) synchronized with footwear.",
+    "negative_constraint": "Mesh athletic running shoes, beach flip-flops, or canvas house slippers cannot substitute for formal leather dress shoes or waterproof rain/winter boots.",
+    "criteria": {
+      "tags": [
+        "wardrobe_essentials",
+        "basic_items",
+        "missing_items",
+        "capsule_staples",
+        "closet_audit",
+        "footwear_staples",
+        "פריטי בסיס",
+        "מגפי גומי",
+        "חוסרים בארון",
+        "מה חסר בארון"
+      ],
+      "essential_staples": [
+        {
+          "key": "formal_leather_dress_shoes",
+          "gender": "all",
+          "match_any": [
+            "oxford",
+            "oxfords",
+            "derby",
+            "derbies",
+            "brogues",
+            "monk strap",
+            "dress shoes",
+            "formal shoes",
+            "leather loafers",
+            "loafers",
+            "נעלי אוקספורד",
+            "נעלי דרבי",
+            "נעלי עור אלגנטיות",
+            "נעליים אלגנטיות",
+            "נעלי ערב",
+            "מוקסינים מעור"
+          ],
+          "spec_en": "Smooth black or dark-brown leather Oxford or Derby dress shoes for formal occasions",
+          "spec_he": "נעלי אוקספורד או דרבי מעור שחור או חום כהה חלק לאירועים רשמיים ופגישות"
+        },
+        {
+          "key": "minimalist_white_leather_sneakers",
+          "gender": "all",
+          "match_all_groups": [
+            [
+              "sneaker",
+              "sneakers",
+              "סניקרס"
+            ],
+            [
+              "white",
+              "לבן",
+              "לבנה",
+              "לבנות"
+            ]
+          ],
+          "exclude": [
+            "running",
+            "athletic",
+            "grey",
+            "gray",
+            "ריצה",
+            "ספורט",
+            "אפור"
+          ],
+          "spec_en": "Minimalist clean solid white leather low-top sneakers for everyday and smart-casual wear",
+          "spec_he": "סניקרס עור לבנות חלקות בגזרה נקייה ומינימליסטית לשימוש יומיומי וסמארט-קז'ואל"
+        },
+        {
+          "key": "weatherproof_rain_boots",
+          "gender": "all",
+          "match_any": [
+            "rain boot",
+            "rain boots",
+            "rubber boot",
+            "rubber boots",
+            "wellington",
+            "waterproof boot",
+            "waterproof boots",
+            "מגפי גומי",
+            "מגפי גשם",
+            "מגפיים אטומים למים"
+          ],
+          "spec_en": "Waterproof rubber rain boots for heavy rain and wet winter days",
+          "spec_he": "מגפי גומי אטומים למים לימים גשומים וחורפיים"
+        },
+        {
+          "key": "classic_leather_dress_belt",
+          "gender": "all",
+          "match_any": [
+            "belt",
+            "leather belt",
+            "חגורה",
+            "חגורת עור"
+          ],
+          "spec_en": "Classic full-grain black or dark-brown leather dress belt with minimalist buckle",
+          "spec_he": "חגורת עור קלאסית חלקה בצבע שחור או חום כהה עם אבזם מתכת נקי"
+        }
+      ]
+    },
+    "priority": 10,
+    "example": "Smooth black calfskin Oxford dress shoes paired with a matching black full-grain leather belt for formal wear, and waterproof rubber rain boots for wet weather."
   }
 ]

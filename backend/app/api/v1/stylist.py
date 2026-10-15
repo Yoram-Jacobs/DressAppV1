@@ -510,7 +510,7 @@ async def stylist_endpoint(
                     api_key=api_key_resolved,
                     user=user,
                 ),
-                timeout=4.0,
+                timeout=8.0,
             )
         except Exception as exc:  # noqa: BLE001
             logger.warning("Title generation failed for %s: %s", session["id"], exc)

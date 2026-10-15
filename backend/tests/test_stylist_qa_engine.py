@@ -1633,12 +1633,12 @@ def test_wardrobe_audit_shopping_suggestions_focused_concrete_not_vague_or_repea
     """Verify that wardrobe audit / missing essentials queries:
     1. Never copy narrative sentences from reasoning_summary into shopping_suggestions.
     2. Reject vague category strings ('חליפת שלושה חלקים או חליפה מחויטת רשמית שלמה (ז'אקט ומכנסיים תואמים)').
-    3. Produce focused, concrete garment specifications (e.g. 'חליפת שלושה חלקים שחורה חלקה מכותנה לאירועים רשמיים',
-       'חליפת 2 חלקים כחולה חלקה מבריקה ממשי או פוליאסטר למסיבות', 'חולצת כפתורים משובצת בצבעי כחול וחום',
-       'מעיל גשם', 'מגפי גומי') even when the user owns casual shirts, jackets, boots, or a standalone suit vest.
+    3. Retrieve the 4 RAG Wardrobe Essentials rules and produce focused, concrete garment specifications
+       from the RAG knowledge base even when the user owns casual shirts, jackets, boots, or a standalone suit vest.
     """
     import asyncio
     from app.services.stylist_qa_engine import evaluate_and_authorize_outfit
+    from app.services.fashion_rules_rag import WARDROBE_ESSENTIALS_RULE_IDS
 
     closet = [
         {"id": "vest-1", "title": "Black Tailored Suit Vest", "category": "Outerwear", "sub_category": "Vest", "colors": ["black"]},
@@ -1683,16 +1683,21 @@ def test_wardrobe_audit_shopping_suggestions_focused_concrete_not_vague_or_repea
         assert "גמישות מקסימלית" not in s
         assert "ז'אקט ומכנסיים תואמים" not in s
 
-    # All 5 concrete example items must be present in shopping_suggestions
-    assert "חליפת שלושה חלקים שחורה חלקה מכותנה לאירועים רשמיים" in shopping
-    assert "חליפת 2 חלקים כחולה חלקה מבריקה ממשי או פוליאסטר למסיבות" in shopping
-    assert "חולצת כפתורים משובצת בצבעי כחול וחום" in shopping
-    assert "מעיל גשם" in shopping
-    assert "מגפי גומי" in shopping
+    # RAG Wardrobe Essentials rules must be recorded in cultural_audit["active_axioms"]
+    active_axioms = set(reviewed.get("cultural_audit", {}).get("active_axioms", []))
+    assert set(WARDROBE_ESSENTIALS_RULE_IDS).issubset(active_axioms)
+
+    # Focused, concrete RAG-backed missing staples across all 4 pillars must be present
+    joined = " | ".join(shopping)
+    assert "חליפה מחויטת כהה" in joined
+    assert "חולצה מכופתרת לבנה" in joined
+    assert "מעיל גשם" in joined
+    assert "נעלי עור רשמיות" in joined or "סניקרס עור לבנות" in joined
 
     # reasoning_summary should not have leading '• ' bullets on narrative sentences
     assert not reviewed["reasoning_summary"].startswith("•")
 
     from app.services.stylist_qa_engine import is_text_only_stylist_query
     assert is_text_only_stylist_query("אני מבקש שתעבור על הארון שלי ותבדוק איזה פריטים בסיסיים חסרים לי") is True
+
 

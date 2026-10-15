@@ -64,16 +64,17 @@ def get_suitcase_language_directive(code: str | None) -> str:
 GEMINI_SUITCASE_SYSTEM_PROMPT = (
     "You are DressApp’s Traveling AI Stylist. You specialize in building smart packing plans.\n"
     "Your goals are:\n"
-    "1. Select appropriate clothing from the user's Closet honoring weather, duration, scheduled calendar events/activities during the trip. You MUST translate and understand calendar event titles if they are in another language (e.g. Hebrew like 'יום טרקים' = trekking day, 'ארוחת ערב חגיגית' = festive/gala dinner) and design outfits specifically for each day's scheduled activities (e.g., activewear/comfortable athletic shoes for active/trekking days, formalwear/dressy clothes for festive dinners/gala events, or comfortable travel outfits for flight days), while respecting cultural conventions, and strictly adhering to the user's personal style preferences, aesthetic, and outfit-generation rules.\n"
-    "2. Minimize the load: select versatile garments that can be recombined into different outfits (e.g. reuse jeans, shirts, jackets across multiple days).\n"
+    "1. Select appropriate clothing from the user's Closet honoring weather, duration, scheduled calendar events/activities during the trip. You MUST translate and understand calendar event titles if they are in another language (e.g. Hebrew like 'יום טרקים' = trekking day, 'ארוחת ערב חגיגית' = festive/gala dinner) and design outfits specifically for each day's scheduled activities (e.g., activewear/comfortable athletic shoes for active/trekking days, formalwear/dressy clothes for festive dinners/gala events, modest long-sleeved/ankle-length attire for mosque or temple visits, or comfortable travel outfits for flight days), while respecting cultural conventions, and strictly adhering to the user's personal style preferences, aesthetic, and outfit-generation rules.\n"
+    "2. Minimize the load: select versatile garments that can be recombined into different outfits (e.g. reuse jeans, shirts, jackets, shoes across multiple days).\n"
     "3. Highlight cultural or religious dress restrictions of the destination using the provided Safety Context.\n"
     "4. Alert if crucial items are missing.\n"
-    "5. Recommend shopping advisor local store recommendations (search/recommend top 3 fashion stores in the destination area where the user can buy missing items).\n"
-    "6. If 'Current Outfits' and 'Current Packing List' are provided in the input, the user is requesting modifications or refinements to their existing suitcase plan (e.g., as specified in the 'Feedback modification:' section of User Notes). Your primary objective is to execute these requested changes (e.g. replacing a specific outfit, adding or removing specific garments, adjusting for weather changes) while keeping the rest of the outfits and packing checklist as stable and close to the current ones as possible. Do not regenerate everything from scratch if not necessary.\n\n"
+    "5. Recommend shopping advisor local store recommendations (recommend top 3 fashion stores in the destination area where the user can buy missing items).\n"
+    "6. If 'Current Outfits' and 'Current Packing List' are provided in the input, the user is requesting modifications or refinements to their existing suitcase plan. Execute the requested changes while keeping the rest of the outfits as stable as possible.\n"
+    "7. Keep 'reasoning' to 1-2 concise sentences per outfit and item 'description' under 10 words so the JSON response remains compact.\n\n"
     "Output contract: You MUST respond ONLY with a JSON object matching this schema. Do not output markdown code blocks, just raw JSON:\n"
     "{\n"
-    '  "cultural_guidelines": string, // weather-aware, calendar-aware, fashion guidelines on conventions, religion, proper dress codes\n'
-    '  "danger_zones_info": string,   // safety/danger zones alert if applicable (e.g. Iran hijab law warning details), otherwise empty string\n'
+    '  "cultural_guidelines": string,\n'
+    '  "danger_zones_info": string,\n'
     '  "outfits": Array<{\n'
     '    "date": string, // YYYY-MM-DD\n'
     '    "location": string,\n'
@@ -82,7 +83,7 @@ GEMINI_SUITCASE_SYSTEM_PROMPT = (
     '    "items": Array<{\n'
     '      "role": "top" | "bottom" | "outerwear" | "shoes" | "accessory" | "dress",\n'
     '      "description": string,\n'
-    '      "closet_item_id": string | null, // ID of matching closet item, or null if missing\n'
+    '      "closet_item_id": string | null, // exact ID from User Closet Items, or null if missing\n'
     '      "status": "closet" | "missing"\n'
     '    }>,\n'
     '    "reasoning": string\n'
@@ -90,33 +91,31 @@ GEMINI_SUITCASE_SYSTEM_PROMPT = (
     '  "missing_items": Array<{\n'
     '    "role": "top" | "bottom" | "outerwear" | "shoes" | "accessory" | "dress",\n'
     '    "description": string,\n'
-    '    "reason": string\n'
+    '    "reason_needed": string\n'
     '  }>,\n'
     '  "local_fashion_stores": Array<{\n'
     '    "name": string,\n'
     '    "address_or_area": string,\n'
-    '    "reason": string\n'
-    '  }>,\n'
-    '  "packing_checklist": Array<{\n'
-    '    "category": string,\n'
-    '    "items": Array<{\n'
-    '      "name": string,\n'
-    '      "quantity": number,\n'
-    '      "packed": boolean,\n'
-    '      "closet_item_id": string | null\n'
-    '    }>\n'
+    '    "why": string\n'
     '  }>\n'
     "}"
 )
 
 
-def find_closet_match(item: dict, closet_items: list[dict]) -> dict | None:
+def find_closet_match(
+    item: dict,
+    closet_items: list[dict],
+    alias_map: dict[str, dict] | None = None,
+) -> dict | None:
     if not item or not closet_items:
         return None
-    # 1. Try matching by ID first
+    # 1. Try matching by short alias ID or full UUID first
     cid = item.get("closet_item_id") or item.get("id")
-    if cid:
-        match = next((i for i in closet_items if i.get("id") == cid), None)
+    if cid is not None:
+        cid_str = str(cid).strip()
+        if alias_map and cid_str in alias_map:
+            return alias_map[cid_str]
+        match = next((i for i in closet_items if str(i.get("id") or "") == cid_str), None)
         if match:
             return match
     # 2. Fallback: Try matching by description/title/name
@@ -128,6 +127,230 @@ def find_closet_match(item: dict, closet_items: list[dict]) -> dict | None:
             if (title and (title in desc or desc in title)) or (name and (name in desc or desc in name)):
                 return i
     return None
+
+
+_KNOWN_DESTINATIONS_GEO: dict[str, tuple[float, float]] = {
+    "marrakech": (31.6295, -7.9811),
+    "marrakesh": (31.6295, -7.9811),
+    "מרקש": (31.6295, -7.9811),
+    "morocco": (31.6295, -7.9811),
+    "מרוקו": (31.6295, -7.9811),
+    "casablanca": (33.5731, -7.5898),
+    "קזבלנקה": (33.5731, -7.5898),
+    "fes": (34.0181, -5.0078),
+    "פאס": (34.0181, -5.0078),
+    "paris": (48.8566, 2.3522),
+    "פריז": (48.8566, 2.3522),
+    "london": (51.5074, -0.1278),
+    "לונדון": (51.5074, -0.1278),
+    "rome": (41.9028, 12.4964),
+    "רומא": (41.9028, 12.4964),
+    "milan": (45.4642, 9.1900),
+    "מילאנו": (45.4642, 9.1900),
+    "barcelona": (41.3874, 2.1686),
+    "ברצלונה": (41.3874, 2.1686),
+    "madrid": (40.4168, -3.7038),
+    "מדריד": (40.4168, -3.7038),
+    "berlin": (52.5200, 13.4050),
+    "ברלין": (52.5200, 13.4050),
+    "amsterdam": (52.3676, 4.9041),
+    "אמסטרדם": (52.3676, 4.9041),
+    "athens": (37.9838, 23.7275),
+    "אתונה": (37.9838, 23.7275),
+    "istanbul": (41.0082, 28.9784),
+    "איסטנבול": (41.0082, 28.9784),
+    "dubai": (25.2048, 55.2708),
+    "דובאי": (25.2048, 55.2708),
+    "tokyo": (35.6762, 139.6503),
+    "טוקיו": (35.6762, 139.6503),
+    "kyoto": (35.0116, 135.7681),
+    "קיוטו": (35.0116, 135.7681),
+    "bangkok": (13.7563, 100.5018),
+    "בנגקוק": (13.7563, 100.5018),
+    "thailand": (13.7563, 100.5018),
+    "תאילנד": (13.7563, 100.5018),
+    "new york": (40.7128, -74.0060),
+    "ניו יורק": (40.7128, -74.0060),
+    "tel aviv": (32.0853, 34.7818),
+    "תל אביב": (32.0853, 34.7818),
+    "jerusalem": (31.7683, 35.2137),
+    "ירושלים": (31.7683, 35.2137),
+    "eilat": (29.5577, 34.9519),
+    "אילת": (29.5577, 34.9519),
+    "vienna": (48.2082, 16.3738),
+    "וינה": (48.2082, 16.3738),
+    "prague": (50.0755, 14.4378),
+    "פראג": (50.0755, 14.4378),
+    "budapest": (47.4979, 19.0402),
+    "בודפשט": (47.4979, 19.0402),
+    "lisbon": (38.7223, -9.1393),
+    "ליסבון": (38.7223, -9.1393),
+    "cairo": (30.0444, 31.2357),
+    "קהיר": (30.0444, 31.2357),
+    "mumbai": (19.0760, 72.8777),
+    "מומבאי": (19.0760, 72.8777),
+    "delhi": (28.6139, 77.2090),
+    "דלהי": (28.6139, 77.2090),
+    "india": (28.6139, 77.2090),
+    "הודו": (28.6139, 77.2090),
+}
+
+
+async def _fast_geocode_destination(destinations: str) -> tuple[float | None, float | None]:
+    """Resolve destination coordinates in <200ms via known city table or Open-Meteo Geocoding API."""
+    if not destinations:
+        return None, None
+    dest_low = destinations.lower().strip()
+    for key, coords in _KNOWN_DESTINATIONS_GEO.items():
+        if key in dest_low:
+            return coords
+
+    # Try Open-Meteo free geocoding API
+    first_part = re.split(r"[,;/\-]", destinations)[0].strip(" .")
+    if first_part:
+        try:
+            import httpx
+            async with httpx.AsyncClient(timeout=2.5) as cli:
+                resp = await cli.get(
+                    "https://geocoding-api.open-meteo.com/v1/search",
+                    params={"name": first_part, "count": 1, "format": "json"},
+                )
+                if resp.status_code == 200:
+                    results = (resp.json() or {}).get("results") or []
+                    if results:
+                        return float(results[0]["latitude"]), float(results[0]["longitude"])
+        except Exception as exc:
+            logger.debug("Open-Meteo geocoding lookup skipped: %s", exc)
+    return None, None
+
+
+def _select_suitcase_closet_pool(
+    clean_closet: list[dict[str, Any]],
+    max_items: int = 45,
+) -> tuple[list[dict[str, Any]], dict[str, dict[str, Any]]]:
+    """Select a diverse, category-balanced subset of closet items with compact integer alias IDs ('1', '2', ...).
+
+    Prevents large closets (100+ items with 36-char UUIDs) from overflowing the 8192-token context window
+    of on-prem DressApp Eyes (llama-server) and speeds up Gemini generation.
+    """
+    from app.services.stylist_scheduler_brain import norm_category
+
+    buckets: dict[str, list[dict[str, Any]]] = {
+        "top": [],
+        "bottom": [],
+        "shoes": [],
+        "outerwear": [],
+        "dress": [],
+        "accessory": [],
+        "other": [],
+    }
+    for it in clean_closet:
+        c = norm_category(it.get("category"))
+        if c not in buckets:
+            c = "other"
+        buckets[c].append(it)
+
+    selected: list[dict[str, Any]] = []
+    bucket_order = ["top", "bottom", "shoes", "outerwear", "dress", "accessory", "other"]
+    idx = 0
+    while len(selected) < max_items:
+        added_in_round = False
+        for b_name in bucket_order:
+            b_list = buckets[b_name]
+            if idx < len(b_list) and len(selected) < max_items:
+                selected.append(b_list[idx])
+                added_in_round = True
+        if not added_in_round:
+            break
+        idx += 1
+
+    compact_pool: list[dict[str, Any]] = []
+    alias_map: dict[str, dict[str, Any]] = {}
+    for i, it in enumerate(selected, start=1):
+        alias_id = str(i)
+        alias_map[alias_id] = it
+        real_id = str(it.get("id") or "")
+        if real_id:
+            alias_map[real_id] = it
+        entry: dict[str, Any] = {
+            "id": alias_id,
+            "title": (it.get("title") or it.get("name") or "Item")[:55],
+            "category": it.get("category") or "",
+        }
+        if it.get("sub_category"):
+            entry["sub_category"] = it.get("sub_category")
+        col = it.get("color")
+        if col:
+            entry["color"] = col if isinstance(col, str) else str(col)[:30]
+        if it.get("material"):
+            entry["material"] = str(it.get("material"))[:25]
+        compact_pool.append(entry)
+
+    return compact_pool, alias_map
+
+
+def _parse_suitcase_json(raw: str) -> dict[str, Any]:
+    """Resiliently parse and repair JSON emitted by Gemini or DressApp Eyes for Suitcase endpoints."""
+    if isinstance(raw, dict):
+        return raw
+    text = (raw or "").strip()
+    text = re.sub(r"^```(?:json)?\s*|\s*```$", "", text.strip())
+
+    parsed: dict[str, Any] | None = None
+    try:
+        cand = json.loads(text)
+        if isinstance(cand, dict):
+            parsed = cand
+    except Exception:
+        pass
+
+    if parsed is None:
+        match = re.search(r"\{.*\}", text, re.DOTALL)
+        if match:
+            try:
+                cand = json.loads(match.group(0))
+                if isinstance(cand, dict):
+                    parsed = cand
+            except Exception:
+                pass
+
+    if parsed is None:
+        from app.services.gemini_stylist import _repair_truncated_json
+        repaired = _repair_truncated_json(text)
+        if isinstance(repaired, dict):
+            parsed = repaired
+
+    if not isinstance(parsed, dict):
+        logger.error("Suitcase JSON parser could not decode output (len=%d): %s", len(text), text[:250])
+        parsed = {
+            "cultural_guidelines": "",
+            "danger_zones_info": "",
+            "outfits": [],
+            "missing_items": [],
+            "local_fashion_stores": [],
+        }
+
+    # Normalize schema variations between GEMINI_SUITCASE_SYSTEM_PROMPT and PROMPT_SUITCASE
+    if not isinstance(parsed.get("outfits"), list):
+        parsed["outfits"] = []
+    if not isinstance(parsed.get("missing_items"), list):
+        parsed["missing_items"] = []
+    if not isinstance(parsed.get("local_fashion_stores"), list):
+        parsed["local_fashion_stores"] = []
+
+    for m in parsed["missing_items"]:
+        if isinstance(m, dict):
+            reason_val = m.get("reason_needed") or m.get("reason") or ""
+            m["reason_needed"] = reason_val
+            m["reason"] = reason_val
+
+    for s in parsed["local_fashion_stores"]:
+        if isinstance(s, dict):
+            why_val = s.get("why") or s.get("reason") or ""
+            s["why"] = why_val
+            s["reason"] = why_val
+
+    return parsed
 
 
 class SuitcasePackIn(BaseModel):
@@ -204,7 +427,6 @@ def strip_base64_images(val: Any) -> Any:
     return val
 
 
-
 async def generate_text(
     *,
     user_text: str,
@@ -216,6 +438,8 @@ async def generate_text(
     api_key: str | None = None,
     model: str = "gemini-3.5-flash-lite",
     user: dict[str, Any] | None = None,
+    skip_translation: bool = False,
+    timeout: float | None = None,
 ) -> str:
     from app.services.llm_gateway import call_main_llm
 
@@ -224,12 +448,14 @@ async def generate_text(
         system_prompt=system,
         json_schema=response_schema,
         response_mime_type=response_mime_type,
-        max_tokens=max_tokens or 2048,
+        max_tokens=max_tokens or 4096,
         temperature=temperature or 0.1,
         model=model,
         fallback_model=model,
         api_key=api_key,
         user=user,
+        skip_translation=skip_translation,
+        timeout=timeout,
     )
 
 
@@ -239,6 +465,7 @@ async def generate_text(
 async def suitcase_chat(
     body: SuitcaseChatIn, user: dict = Depends(get_current_user)
 ) -> dict[str, Any]:
+    user_msg = (body.message or body.query or "").strip()
     events = []
     if body.departure_time and body.return_time:
         try:
@@ -303,18 +530,17 @@ async def suitcase_chat(
     resp_str = await generate_text(
         user_text=prompt,
         response_mime_type="application/json",
+        max_tokens=1024,
         api_key=user_api_key,
         model=user_model,
         user=user,
     )
-    import re
-    try:
-        return json.loads(resp_str)
-    except json.JSONDecodeError:
-        match = re.search(r'\{.*\}', resp_str, re.DOTALL)
-        if match:
-            return json.loads(match.group(0))
-        raise ValueError(f"Could not parse response: {resp_str}")
+    parsed_chat = _parse_suitcase_json(resp_str)
+    if "reply" not in parsed_chat:
+        parsed_chat["reply"] = ""
+    if "should_regenerate" not in parsed_chat:
+        parsed_chat["should_regenerate"] = False
+    return parsed_chat
 
 
 @router.get("/active")
@@ -478,9 +704,13 @@ async def pack_suitcase(
     try:
         dep_dt = datetime.fromisoformat(body.departure_time.replace("Z", "+00:00"))
         ret_dt = datetime.fromisoformat(body.return_time.replace("Z", "+00:00"))
-        duration_hours = int((ret_dt - dep_dt).total_seconds() / 3600)
+        duration_hours = max(24, int((ret_dt - dep_dt).total_seconds() / 3600))
+        trip_days = max(1, min(14, (ret_dt.date() - dep_dt.date()).days + 1))
     except Exception:
+        dep_dt = now_utc
+        ret_dt = now_utc + timedelta(days=3)
         duration_hours = 72  # fallback 3 days
+        trip_days = 3
 
     # 2. Get user calendar events
     events = []
@@ -489,42 +719,50 @@ async def pack_suitcase(
         events = await calendar_service.get_events_for_user(
             user,
             hours_ahead=max(24, duration_hours),
-            time_min=dep_dt if "dep_dt" in locals() else None,
-            time_max=ret_dt if "ret_dt" in locals() else None
+            time_min=dep_dt,
+            time_max=ret_dt
         )
     except Exception as e:
         logger.warning("Failed to retrieve user calendar events: %s", e)
 
-    from app.services.auth import resolve_user_gemini_api_key, resolve_user_gemini_model
+    from app.services.auth import resolve_user_gemini_api_key, resolve_user_gemini_model, resolve_effective_provider
+    from app.services.eyes_override import get_active_provider
     user_api_key = resolve_user_gemini_api_key(user)
     user_model = resolve_user_gemini_model(user)
+    eff_provider = (resolve_effective_provider(user) or await get_active_provider() or "gemini").lower().strip()
+    is_gemma_provider = eff_provider in ("gemma", "eyes", "dressapp")
 
-    # 3. Get destination coordinates & weather
+    # 3. Get destination coordinates & weather (fast lookup / Open-Meteo geocoding first)
     weather_ctx = None
     weather_summary = "Weather information unavailable."
     try:
-        geo_prompt = (
-            f"Provide the approximate latitude, longitude, and Olson timezone name for "
-            f"the travel destination: '{body.destinations}'. "
-            f"Respond ONLY with a JSON object in this format: "
-            f'{{"lat": float, "lng": float, "timezone": string}}'
-        )
-        geo_str = await generate_text(
-            user_text=geo_prompt,
-            response_mime_type="application/json",
-            api_key=user_api_key,
-            model=user_model,
-            user=user,
-        )
-        geo_data = json.loads(geo_str)
-        lat = geo_data.get("lat")
-        lng = geo_data.get("lng")
-        
+        lat, lng = await _fast_geocode_destination(body.destinations)
+        if lat is None or lng is None:
+            geo_prompt = (
+                f"Provide the approximate latitude, longitude, and Olson timezone name for "
+                f"the travel destination: '{body.destinations}'. "
+                f"Respond ONLY with a JSON object in this format: "
+                f'{{"lat": float, "lng": float, "timezone": string}}'
+            )
+            geo_str = await generate_text(
+                user_text=geo_prompt,
+                response_mime_type="application/json",
+                max_tokens=96,
+                api_key=user_api_key,
+                model=user_model,
+                user=user,
+                skip_translation=True,
+                timeout=12.0,
+            )
+            geo_data = _parse_suitcase_json(geo_str)
+            lat = geo_data.get("lat")
+            lng = geo_data.get("lng")
+
         if lat is not None and lng is not None:
             try:
                 from app.services.weather_service import weather_service
                 if weather_service:
-                    weather_ctx = await weather_service.fetch(lat, lng)
+                    weather_ctx = await weather_service.fetch(float(lat), float(lng))
                     if weather_ctx:
                         weather_summary = (
                             f"Current weather at destination: {weather_ctx.get('temp_c')}°C, "
@@ -568,45 +806,72 @@ async def pack_suitcase(
     )
     rag_axioms_text = format_rules_for_prompt(suitcase_axioms, max_chars_per_rule=200)
 
-    # 6. Query Gemini to analyze and generate outfits & packing list
+    # 6. Select compact, balanced closet pool with short alias IDs ('1', '2', ...)
     from app.services.user_preferences import render_user_preferences
     prefs_block, _ = render_user_preferences(user)
 
     target_lang = (body.language or user.get("preferred_language") or "en").lower().split("-")[0]
-    lang_directive = get_suitcase_language_directive(target_lang)
+    max_closet_pool = 24 if is_gemma_provider else 48
+    compact_pool, alias_map = _select_suitcase_closet_pool(clean_closet, max_items=max_closet_pool)
 
-    from app.services.auth import resolve_effective_provider
-    eff_provider = resolve_effective_provider(user)
-    base_suitcase_prompt = PROMPT_SUITCASE if eff_provider == "gemma" else GEMINI_SUITCASE_SYSTEM_PROMPT
+    # For on-prem DressApp Eyes (gemma / Qwen2.5-VL-3B on CPU), run generation in English
+    # with a concise capsule plan (3-4 core outfits that rotate across trip dates) so CPU
+    # completes in ~15-22s without overflowing context or timing out, then batch-translate to target_lang.
+    prompt_lang = "en" if is_gemma_provider else target_lang
+    lang_directive = get_suitcase_language_directive(prompt_lang)
+    base_suitcase_prompt = PROMPT_SUITCASE if is_gemma_provider else GEMINI_SUITCASE_SYSTEM_PROMPT
+
+    eff_destinations = body.destinations or ""
+    eff_purpose = body.purpose or "vacation"
+    eff_notes = body.notes or "None"
+    if is_gemma_provider and target_lang != "en":
+        try:
+            from app.services.translation_service import translate_batch
+            tr_inputs = [eff_destinations, eff_purpose, eff_notes]
+            tr_outputs = await translate_batch(tr_inputs, target_lang="en", source_lang=target_lang)
+            if len(tr_outputs) == 3:
+                eff_destinations, eff_purpose, eff_notes = tr_outputs[0], tr_outputs[1], tr_outputs[2]
+        except Exception as tr_in_exc:
+            logger.warning("Suitcase inbound translation for Eyes soft-failed: %s", tr_in_exc)
 
     system_prompt = f"{base_suitcase_prompt}\n{lang_directive}\n"
     if rag_axioms_text:
         system_prompt += f"\n{rag_axioms_text}\n"
-    if prefs_block:
+    if prefs_block and not is_gemma_provider:
         system_prompt += f"\nUser's Personal Style & Closet Preferences:\n{prefs_block}\n\n"
 
+    # Keep safety context compact on CPU
+    eff_safety_context = safety_context[:1500] if is_gemma_provider else safety_context
+
     user_brief_parts = [
-        f"Destinations: {body.destinations}",
-        f"Trip Purpose: {body.purpose}",
+        f"Destinations: {eff_destinations}",
+        f"Trip Purpose: {eff_purpose}",
         f"Preferred Style: {body.preferred_style}",
         f"Departure: {body.departure_time}",
         f"Return: {body.return_time}",
-        f"User Notes: {body.notes or 'None'}",
+        f"User Notes: {eff_notes}",
         f"Weather Info: {weather_summary}",
-        f"Calendar Events during trip: {json.dumps(events)}",
-        f"Safety Context (RAG): {safety_context}"
+        f"Calendar Events during trip: {json.dumps(events[:6], ensure_ascii=False)}",
+        f"Safety Context (RAG): {eff_safety_context}",
     ]
     if rag_axioms_text:
         user_brief_parts.append(f"Destination & Activity Fashion Axioms (RAG):\n{rag_axioms_text}")
-    if body.current_outfits:
-        user_brief_parts.append(f"Current Outfits (to be refined/modified based on user feedback): {json.dumps(body.current_outfits)}")
-    if body.current_packing_list:
-        user_brief_parts.append(f"Current Packing List: {json.dumps(body.current_packing_list)}")
+    if body.current_outfits and not is_gemma_provider:
+        user_brief_parts.append(f"Current Outfits (to be refined/modified based on user feedback): {json.dumps(body.current_outfits, ensure_ascii=False)}")
+    if body.current_packing_list and not is_gemma_provider:
+        user_brief_parts.append(f"Current Packing List: {json.dumps(body.current_packing_list, ensure_ascii=False)}")
 
     user_brief_parts.append(
         f"User's Closet Items:\n"
-        f"{json.dumps([{ 'id': it.get('id'), 'title': it.get('title'), 'category': it.get('category'), 'sub_category': it.get('sub_category'), 'color': it.get('color'), 'brand': it.get('brand'), 'material': it.get('material') } for it in clean_closet])}"
+        f"{json.dumps(compact_pool, ensure_ascii=False, separators=(',', ':'))}"
     )
+    if is_gemma_provider:
+        target_outfit_count = min(trip_days, 3)
+        user_brief_parts.append(
+            f"\nCONCISE CAPSULE REQUIREMENT: Return exactly {target_outfit_count} versatile core outfits "
+            f"(using exact 'id' strings from User's Closet Items for 'closet_item_id'), 2-3 'missing_items', "
+            f"and 2 'local_fashion_stores'. Keep descriptions under 8 words and reasoning to 1 sentence."
+        )
     user_brief_parts.append(lang_directive)
     user_brief = "\n".join(user_brief_parts)
 
@@ -614,33 +879,57 @@ async def pack_suitcase(
         user_text=user_brief,
         system=system_prompt,
         response_mime_type="application/json",
+        max_tokens=900 if is_gemma_provider else 8192,
         api_key=user_api_key,
         model=user_model,
         user=user,
+        skip_translation=True,
+        timeout=90.0 if is_gemma_provider else None,
     )
-    analysis = json.loads(analysis_str)
+    analysis = _parse_suitcase_json(analysis_str)
 
-    # 7. Add Marketplace recommendations for missing items
-    missing_items = analysis.get("missing_items") or []
+    outfits = [o for o in (analysis.get("outfits") or []) if isinstance(o, dict)]
+    missing_items = [m for m in (analysis.get("missing_items") or []) if isinstance(m, dict)]
     packing_list = []
-    
-    # Map closet items into the initial packing checklist & populate outfits with images
-    packed_closet_ids = set()
-    outfits = analysis.get("outfits") or []
+    packed_closet_ids: set[str] = set()
+    used_role_ids: set[str] = set()
+    user_gender = user.get("sex") or user.get("gender")
+    trip_context_text = f"{body.destinations or ''} {body.purpose or ''} {body.notes or ''}"
+
+    # 7a. Map closet items onto the base outfits BEFORE outbound translation and BEFORE multi-day cloning
     for outfit in outfits:
         for item in outfit.get("items") or []:
-            match = find_closet_match(item, closet_items)
+            if not isinstance(item, dict):
+                continue
+            match = find_closet_match(item, closet_items, alias_map=alias_map)
+            role = str(item.get("role") or "").lower().strip()
+            if not match and is_gemma_provider and role in ("top", "bottom", "shoes", "outerwear"):
+                try:
+                    from app.services.stylist_qa_engine import find_best_garment_replacement
+                    match = find_best_garment_replacement(
+                        role=role,
+                        all_closet_items=closet_items,
+                        user_text=trip_context_text,
+                        user_gender=user_gender,
+                        exclude_item_ids=used_role_ids,
+                    )
+                    if match and match.get("id"):
+                        used_role_ids.add(str(match["id"]))
+                except Exception:
+                    pass
+
             if match:
                 item["closet_item_id"] = match["id"]
                 item["status"] = "closet"
-                
-                # Attach images directly to the outfit item
+                if match.get("title"):
+                    item["description"] = match.get("title")
+
                 item["thumbnail_data_url"] = match.get("thumbnail_data_url")
                 item["reconstructed_image_url"] = match.get("reconstructed_image_url")
                 item["clean_image_url"] = match.get("clean_image_url")
                 item["segmented_image_url"] = match.get("segmented_image_url")
                 item["original_image_url"] = match.get("original_image_url")
-                
+
                 if match["id"] not in packed_closet_ids:
                     packed_closet_ids.add(match["id"])
                     packing_list.append({
@@ -655,11 +944,67 @@ async def pack_suitcase(
                         "reconstructed_image_url": match.get("reconstructed_image_url"),
                         "clean_image_url": match.get("clean_image_url"),
                         "segmented_image_url": match.get("segmented_image_url"),
-                        "original_image_url": match.get("original_image_url")
+                        "original_image_url": match.get("original_image_url"),
                     })
             else:
                 item["closet_item_id"] = None
                 item["status"] = "missing"
+
+    # 7b. Translate Gemma English output into target_lang BEFORE multi-day cloning (3x fewer strings to translate)
+    if is_gemma_provider and target_lang != "en":
+        try:
+            from app.services.translation_service import translate_batch
+            texts_to_tr: list[str] = []
+            tr_setters: list[Any] = []
+
+            def _queue_tr(obj: dict[str, Any], key: str) -> None:
+                val = obj.get(key)
+                if isinstance(val, str) and val.strip():
+                    texts_to_tr.append(val.strip())
+                    tr_setters.append((obj, key))
+
+            _queue_tr(analysis, "cultural_guidelines")
+            _queue_tr(analysis, "danger_zones_info")
+            for o in outfits:
+                _queue_tr(o, "outfit_name")
+                _queue_tr(o, "location")
+                _queue_tr(o, "reasoning")
+                for itm in o.get("items") or []:
+                    if isinstance(itm, dict):
+                        _queue_tr(itm, "description")
+            for m in missing_items:
+                if isinstance(m, dict):
+                    _queue_tr(m, "description")
+                    _queue_tr(m, "reason_needed")
+            for s in analysis.get("local_fashion_stores") or []:
+                if isinstance(s, dict):
+                    _queue_tr(s, "why")
+
+            if texts_to_tr:
+                translated_list = await translate_batch(texts_to_tr, target_lang=target_lang, source_lang="en")
+                for (target_dict, key), tr_val in zip(tr_setters, translated_list):
+                    if tr_val:
+                        target_dict[key] = tr_val
+                        if key == "reason_needed":
+                            target_dict["reason"] = tr_val
+                        elif key == "why":
+                            target_dict["reason"] = tr_val
+        except Exception as tr_out_exc:
+            logger.warning("Suitcase outbound translation for Eyes soft-failed: %s", tr_out_exc)
+
+    # 7c. If trip_days > returned capsule outfits, expand across all trip dates so every day of the trip is covered
+    if outfits and trip_days > len(outfits):
+        import copy
+        base_count = len(outfits)
+        for day_idx in range(trip_days):
+            day_date = (dep_dt + timedelta(days=day_idx)).strftime("%Y-%m-%d")
+            if day_idx < base_count:
+                outfits[day_idx]["date"] = day_date
+            else:
+                cloned = copy.deepcopy(outfits[day_idx % base_count])
+                cloned["date"] = day_date
+                outfits.append(cloned)
+        analysis["outfits"] = outfits
 
     # Extract missing items from outfits if Gemini omitted them from analysis["missing_items"]
     seen_missing_keys = {
@@ -668,6 +1013,8 @@ async def pack_suitcase(
     }
     for outfit in outfits:
         for item in outfit.get("items") or []:
+            if not isinstance(item, dict):
+                continue
             if item.get("status") == "missing":
                 desc = (item.get("description") or "").strip()
                 key = desc.lower() if desc else (item.get("role") or "missing").lower()
@@ -678,7 +1025,8 @@ async def pack_suitcase(
                     missing_items.append({
                         "role": item.get("role") or "accessory",
                         "description": desc or item.get("role") or "Missing garment",
-                        "reason_needed": f"{outfit_title}{date_info}"
+                        "reason_needed": f"{outfit_title}{date_info}",
+                        "reason": f"{outfit_title}{date_info}",
                     })
 
     # Fetch Marketplace recommendations for missing slots
@@ -705,10 +1053,10 @@ async def pack_suitcase(
             if matching_sugs:
                 rec_source = "Marketplace Suggestion"
                 rec_url = f"/market/{matching_sugs[0]['listing_id']}"
-            elif stores:
+            elif stores and isinstance(stores[0], dict):
                 rec_source = f"Local Store: {stores[0].get('name')}"
 
-            clean_desc = (m.get("description") or role).strip()
+            clean_desc = (m.get("description") or role or "Missing garment").strip()
             clean_desc = re.sub(r'^(?:missing\s*item\s*:\s*|פריט\s*חסר\s*:\s*)', '', clean_desc, flags=re.IGNORECASE).strip()
 
             packing_list.append({
@@ -724,8 +1072,8 @@ async def pack_suitcase(
     # Build response structure
     return {
         "status": "success",
-        "cultural_guidelines": analysis.get("cultural_guidelines"),
-        "danger_zones_info": analysis.get("danger_zones_info"),
+        "cultural_guidelines": analysis.get("cultural_guidelines") or "",
+        "danger_zones_info": analysis.get("danger_zones_info") or "",
         "outfits": outfits,
         "packing_list": packing_list,
         "local_fashion_stores": analysis.get("local_fashion_stores") or [],
@@ -907,7 +1255,7 @@ async def enter_suitcase_location(
     prompt = (
         f"You are a travel modesty and safety advisor. Given the user's location '{body.location}', "
         f"determine if it is a danger modesty zone (where inappropriate outfit can lead to court-martial/death, like Iran) "
-        f"or a holy/cultural place (e.g. temples, churches) that requires specific modest outfits.\n"
+        f"or a holy/cultural place (e.g. temples, churches, mosques) that requires specific modest outfits.\n"
         f"Use the attached guidelines:\n{safety_context}\n\n"
         f"Respond ONLY with a JSON object in this format:\n"
         f'{{"is_danger_zone": boolean, "is_holy_place": boolean, "alert_title": string, "alert_body": string}}'
@@ -920,11 +1268,12 @@ async def enter_suitcase_location(
     resp_str = await generate_text(
         user_text=prompt,
         response_mime_type="application/json",
+        max_tokens=512,
         api_key=user_api_key,
         model=user_model,
         user=user,
     )
-    res = json.loads(resp_str)
+    res = _parse_suitcase_json(resp_str)
 
     if res.get("is_danger_zone") or res.get("is_holy_place"):
         # Send push notification immediately

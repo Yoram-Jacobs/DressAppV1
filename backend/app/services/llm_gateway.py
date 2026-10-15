@@ -64,6 +64,8 @@ async def call_main_llm(
     fallback_model: str | None = None,
     force_provider: str | None = None,
     user: dict[str, Any] | None = None,
+    skip_translation: bool = False,
+    timeout: float | None = None,
 ) -> str:
     """Invokes the primary DressApp LLM (Google Gemini gemini-3.5-flash-lite) with on-prem Eyes Gemma-4-E4B VPS fallback.
 
@@ -81,6 +83,8 @@ async def call_main_llm(
         fallback_model: Backward-compatible alias for target Gemini model name.
         force_provider: Explicit provider override ('gemini' or 'gemma').
         user: Authenticated user object/dict to resolve user-specific provider/model preferences (e.g. Tester group switching).
+        skip_translation: If True, bypass inbound/outbound translation on Eyes calls.
+        timeout: Optional timeout override in seconds for Eyes / Gemma Space calls.
 
     Returns:
         Generated text / JSON string.
@@ -99,6 +103,8 @@ async def call_main_llm(
     if target_model in ("gemini-3.5-flash", "gemini-2.5-flash"):
         target_model = DEFAULT_MAIN_MODEL
 
+    is_json_mode = bool(json_schema or (response_mime_type and "json" in response_mime_type.lower()))
+
     # 1. Gemma-first branch: activated if provider resolved to gemma (e.g., tester user switch or admin override)
     if provider in ("gemma", "eyes", "dressapp") and settings.EYES_GEMMA_SPACE_URL:
         try:
@@ -109,7 +115,7 @@ async def call_main_llm(
             )
             pref_lang = ((user or {}).get("preferred_language") or "en").lower().strip()
             eff_user_text = user_text
-            if pref_lang != "en" and user_text:
+            if not skip_translation and not is_json_mode and pref_lang != "en" and user_text:
                 try:
                     from app.services.translation_service import translate_text
                     eff_user_text = await translate_text(user_text, target_lang="en", source_lang=pref_lang)
@@ -122,12 +128,13 @@ async def call_main_llm(
                 image_b64_jpeg=image_b64_jpeg,
                 max_tokens=max_tokens,
                 temperature=temperature,
+                timeout=timeout,
                 json_schema=json_schema,
                 think=think,
             )
             cleaned = strip_thinking_tokens(raw_response)
             if cleaned:
-                if pref_lang != "en" and not json_schema:
+                if not skip_translation and not is_json_mode and pref_lang != "en":
                     try:
                         from app.services.translation_service import translate_text
                         cleaned = await translate_text(cleaned, target_lang=pref_lang, source_lang="en")

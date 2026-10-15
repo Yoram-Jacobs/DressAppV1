@@ -544,7 +544,39 @@ def retrieve_fashion_axioms(
     if any(w in text_corpus for w in ("season", "palette", "undertone", "12-season", "עונה", "גוון עור", "winter", "autumn", "spring", "summer")):
         add_rule("rule_color_12_season_flow")
 
-    if any(w in text_corpus for w in ("capsule", "basics", "wardrobe essentials", "בסיס", "staples")):
+    # 3b. Wardrobe Essentials / Missing Basic Items / Closet Audit RAG Rules
+    conv_hist = user_profile.get("conversation_history") if isinstance(user_profile, dict) else None
+    hist_corpus = ""
+    if isinstance(conv_hist, list):
+        hist_corpus = " ".join(
+            str(m.get("transcript") or "")
+            for m in conv_hist[-4:]
+            if isinstance(m, dict) and m.get("role") == "user"
+        ).lower()
+    combined_audit_corpus = f"{text_corpus} {hist_corpus}"
+    is_wardrobe_essentials_query = any(
+        w in combined_audit_corpus
+        for w in (
+            "capsule", "basic", "basics", "wardrobe essential", "wardrobe essentials",
+            "essential item", "essential items", "missing item", "missing items",
+            "what is missing", "what's missing", "complete my wardrobe", "complete the wardrobe",
+            "explore my closet", "explore the closet", "audit my closet", "staple", "staples",
+            "בסיס", "בסיסי", "בסיסיים", "פריטי בסיס", "פריטים בסיסיים",
+            "חיוני", "חיוניים", "פריטים חיוניים", "חסר", "חסרים", "מה חסר",
+            "להשלים את המלתחה", "להשלים במלתחה", "לסקור את הארון", "סקירת ארון",
+            "מומלץ להוסיף", "מה כדאי לקנות", "أساسيات", "ناقص", "خزانة",
+        )
+    )
+    if is_wardrobe_essentials_query:
+        for ess_rule_id in (
+            "rule_wardrobe_essentials_formal_tailoring",
+            "rule_wardrobe_essentials_smart_casual_core",
+            "rule_wardrobe_essentials_outerwear_weather",
+            "rule_wardrobe_essentials_footwear_accessories",
+        ):
+            if ess_rule_id in _RULES_BY_ID and ess_rule_id not in selected_ids:
+                selected.append(_RULES_BY_ID[ess_rule_id])
+                selected_ids.add(ess_rule_id)
         add_rule("rule_capsule_versatility_density")
 
     # -------------------------------------------------------------
@@ -563,21 +595,135 @@ def retrieve_fashion_axioms(
     add_rule("rule_texture_weight_matching")
     add_rule("rule_color_neutral_anchor")
 
-    return selected[:top_k]
+    return selected[: max(top_k, 4 if is_wardrobe_essentials_query else top_k)]
+
+
+WARDROBE_ESSENTIALS_RULE_IDS: tuple[str, ...] = (
+    "rule_wardrobe_essentials_formal_tailoring",
+    "rule_wardrobe_essentials_smart_casual_core",
+    "rule_wardrobe_essentials_outerwear_weather",
+    "rule_wardrobe_essentials_footwear_accessories",
+)
+
+
+def audit_closet_against_rag_essentials(
+    closet_items: list[dict[str, Any]] | None,
+    user_gender: str | None = None,
+    lang: str = "en",
+) -> dict[str, Any]:
+    """Audit the user's closet inventory against canonical Wardrobe Essentials rules in the RAG knowledge base.
+
+    Reads ``criteria.essential_staples`` from the 4 ``rule_wardrobe_essentials_*`` rules in the RAG
+    knowledge base and determines which foundational wardrobe staples are present vs. missing.
+    """
+    if not _RULES_CACHE:
+        initialize_rules_cache()
+
+    base_lang = (lang or "en").lower().strip().split("-")[0].split("_")[0]
+    gen_norm = str(user_gender or "").lower().strip()
+    is_female = gen_norm in ("female", "woman", "women", "אישה", "נשים")
+    is_male = gen_norm in ("male", "man", "men", "גבר", "גברים")
+
+    item_blobs: list[str] = []
+    for it in closet_items or []:
+        if not isinstance(it, dict):
+            continue
+        title = str(it.get("title") or it.get("name") or "")
+        cat = str(it.get("category") or "")
+        sub_cat = str(it.get("sub_category") or "")
+        dc = str(it.get("dress_code") or "")
+        mat = str(it.get("material") or "")
+        pat = str(it.get("pattern") or "")
+        tags_str = " ".join(str(t) for t in (it.get("tags") or []))
+        colors = it.get("colors") or it.get("color") or []
+        c_list: list[str] = []
+        if isinstance(colors, list):
+            for c in colors:
+                c_list.append(str(c.get("name") if isinstance(c, dict) else c))
+        elif isinstance(colors, str):
+            c_list.append(colors)
+        item_blobs.append(f"{title} {cat} {sub_cat} {dc} {mat} {pat} {' '.join(c_list)} {tags_str}".lower())
+
+    missing_by_pillar: list[list[str]] = []
+    present_staples: list[str] = []
+    active_rule_ids: list[str] = []
+
+    for r_id in WARDROBE_ESSENTIALS_RULE_IDS:
+        rule = _RULES_BY_ID.get(r_id)
+        if not rule:
+            continue
+        active_rule_ids.append(r_id)
+        pillar_missing: list[str] = []
+        staples = getattr(rule.criteria, "essential_staples", None) or []
+        for staple in staples:
+            if not isinstance(staple, dict):
+                continue
+            target_gender = str(staple.get("gender") or "all").lower()
+            if target_gender == "female" and not is_female:
+                continue
+            if target_gender == "male" and is_female and not is_male:
+                continue
+
+            exclude_kws = [str(x).lower() for x in (staple.get("exclude") or [])]
+            match_any = [str(x).lower() for x in (staple.get("match_any") or [])]
+            match_all_groups = staple.get("match_all_groups") or []
+
+            is_present = False
+            for blob in item_blobs:
+                if exclude_kws and any(ex in blob for ex in exclude_kws):
+                    continue
+                if match_all_groups:
+                    if all(
+                        any(str(kw).lower() in blob for kw in grp)
+                        for grp in match_all_groups
+                        if isinstance(grp, list) and grp
+                    ):
+                        is_present = True
+                        break
+                elif match_any:
+                    if any(kw in blob for kw in match_any):
+                        is_present = True
+                        break
+
+            spec = str(staple.get("spec_he") if base_lang == "he" else staple.get("spec_en") or "").strip()
+            if not spec:
+                continue
+            if is_present:
+                present_staples.append(spec)
+            else:
+                pillar_missing.append(spec)
+        if pillar_missing:
+            missing_by_pillar.append(pillar_missing)
+
+    # Interleave round-robin across the 4 RAG Wardrobe Essentials pillars so top results
+    # always cover Formal Tailoring, Smart-Casual Core, Outerwear/Weather, and Footwear/Accessories
+    missing_staples: list[str] = []
+    max_len = max((len(p) for p in missing_by_pillar), default=0)
+    for idx in range(max_len):
+        for pillar in missing_by_pillar:
+            if idx < len(pillar):
+                missing_staples.append(pillar[idx])
+
+    return {
+        "missing_staples": missing_staples,
+        "present_staples": present_staples,
+        "active_rag_rule_ids": active_rule_ids,
+    }
 
 
 def format_rules_for_prompt(rules: list[FashionRule], max_chars_per_rule: int = 240) -> str:
-    """Format the retrieved rules into a compact prompt string (<150 tokens)."""
+    """Format the retrieved rules into a compact prompt string."""
     if not rules:
         return ""
 
     lines = ["GROUND-TRUTH FASHION DESIGN AXIOMS:"]
     for r in rules:
         stmt = r.rule_statement.strip()
-        if r.negative_constraint and len(stmt) + len(r.negative_constraint) + 12 <= max_chars_per_rule:
+        limit = 450 if r.id in WARDROBE_ESSENTIALS_RULE_IDS else max_chars_per_rule
+        if r.negative_constraint and len(stmt) + len(r.negative_constraint) + 12 <= limit:
             line = f"• [{r.title}]: {stmt} (Avoid: {r.negative_constraint})"
-        elif len(stmt) > max_chars_per_rule:
-            line = f"• [{r.title}]: {stmt[:max_chars_per_rule - 3].rstrip()}..."
+        elif len(stmt) > limit:
+            line = f"• [{r.title}]: {stmt[:limit - 3].rstrip()}..."
         else:
             line = f"• [{r.title}]: {stmt}"
         lines.append(line)
