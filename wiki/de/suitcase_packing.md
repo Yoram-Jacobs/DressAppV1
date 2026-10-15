@@ -1,30 +1,50 @@
 # Koffer-Packassistent
 
-Packen Sie effizient und stressfrei für jedes Reiseziel mit KI-gestützter Wettervorhersage und dialogbasierter Verfeinerung der Checkliste.
+Packen Sie effizient, sicher und respektvoll für jedes weltweite Reiseziel – mit KI-gestützter Wettervorhersage, geopolitischen und religiösen Kleiderordnungs-Schutzregeln sowie dialogbasierter Verfeinerung Ihrer Checkliste.
 
 ## Übersicht
-Der Kofferpackassistent nimmt Ihnen den Reisestress ab: Er analysiert Ihren Reiseplan, das Wetter am Zielort sowie Ihren persönlichen Kleiderschrankkatalog, um eine maßgeschneiderte, tagesgenaue Pack-Checkliste zu erstellen. Angetrieben von **Google Gemini 3.5 Flash-Lite** über `llm_gateway.py` generiert der Assistent in Sekundenschnelle vollständige Packpläne und ermöglicht es Ihnen, Artikel interaktiv per Chat-Dialog anzupassen.
+Der Koffer-Packassistent nimmt Ihnen den Vorbereitungsstress vor der Reise ab, indem er Ihren Reiseplan, das Wetter am Zielort, Kalendertermine und Ihren persönlichen Kleiderschrankkatalog analysiert, um eine maßgeschneiderte, tagesgenaue Pack-Checkliste zu erstellen. Angetrieben von **Google Gemini 3.5 Flash-Lite** und **DressApp Eyes (`Qwen2.5-VL-3B-Instruct`)** über `llm_gateway.py` sowie gestützt auf `travel_safety_knowledge.md`, generiert der Assistent in Sekundenschnelle vollständige Packpläne, warnt Sie vor lokalen Kleidervorschriften oder Gefahrenzonen am Reiseziel und ermöglicht es Ihnen, Artikel interaktiv per Chat-Dialog anzupassen.
 
 ## Voraussetzungen
-- Name der Zielstadt sowie Abreise- und Rückreisedatum.
-- Ein aktiver Kleiderschrankbestand mit mindestens einigen Basiskleidungsstücken.
-- Internetverbindung zum Abrufen der Wettervorhersage für das Reiseziel.
+- Name der Zielstadt oder des Ziellandes sowie Abreise- und Rückreisedatum.
+- Ein aktiver Kleiderschrankbestand mit Basis-Kleidungsstücken.
+- Internetverbindung zum Abrufen der Wettervorhersagen für das Reiseziel.
+
+## Geopolitische, gesetzliche & geo-religiöse Kleiderordnungs-Schutzregeln
+DressApp gleicht Ihr Reiseziel und Ihre geplanten Aktivitäten mit einer kuratierten globalen Sicherheitsdatenbank (`travel_safety_knowledge.md`) ab, die sieben Restriktionsbereiche umfasst:
+
+1. **Staatlich vorgeschriebene religiöse Bedeckungs- & öffentliche Sittlichkeitsvorschriften**:
+   - **Iran & Afghanistan**: Setzt für Frauen das verpflichtende Tragen von Kopftüchern und lockeren, knielangen Tuniken (*Manteau* / *Abaya*) über knöchellangen Hosen/Röcken durch (sowie einen bodenlangen *Tschador* in iranischen Heiligtümern) und blockiert für Männer strikt kurze Hosen und ärmellose Oberteile.
+   - **Saudi-Arabien, Katar, Kuwait, Oman, Bahrain, VAE (Schardscha/Dubai/Abu Dhabi), Brunei, Aceh (Indonesien) & Malaysia (Kelantan/Terengganu)**: Setzt in der Öffentlichkeit eine Bedeckung von den Schultern bis zu den Knien durch, verbietet enge oder transparente Kleidung in Einkaufszentren und Souks, berücksichtigt gesetzliche Cross-Dressing-Verbote und stellt *Ihram*-Regeln für Mekka und Medina bereit.
+   - **Malediven (bewohnte lokale Inseln)**: Weist Reisende darauf hin, dass Bikinis und Baden mit freiem Oberkörper auf bewohnten Einheimischeninseln (z. B. Maafushi, Thoddoo) außerhalb ausgewiesener, umzäunter „Bikini Beaches“ streng illegal sind.
+2. **Gesetzliche Verbote von ziviler Tarnkleidung (Camouflage) & Militärbekleidung**:
+   - Blockiert konsequent Kleidung, Kopfbedeckungen, Schuhe und Rucksäcke mit Tarnmuster in **karibischen Staaten** (Barbados, Jamaika, Trinidad und Tobago, St. Lucia, St. Vincent, Antigua und Barbuda, Grenada, Dominica, St. Kitts und Nevis, Bahamas, Guyana), **afrikanischen Staaten** (Nigeria, Uganda – einschließlich roter Barette –, Simbabwe, Sambia, Ghana, Kenia, Südafrika, Ruanda) sowie auf den **Philippinen, im Oman und in Saudi-Arabien**, wo das Tragen von Tarnmuster durch Zivilisten eine Straftat darstellt.
+3. **Autoritäre, sozialistische & staatlich-identitäre Bekleidungsgesetze**:
+   - Umfasst **Nordkorea (DVRK)** (Verbot von blauen, zerrissenen oder engen Jeans sowie Leder-Trenchcoats; Pflicht zu formellen Anzügen/Kleidern im Kumsusan-Palast und in Mansudae), **Turkmenistan** (Verbot von Herren-Shorts und engen Kleidern in Aschgabat), **Bhutan** (*Driglam Namzha*-Vorschriften mit langärmeligem Kragenhemd und knöchellangem Unterteil sowie Hut- und Schirmverbot in Dzongs), **China** (Gesichtsschleierverbote in Xinjiang und Verbot kaiserlich-japanischer Uniformen in der VR China), **Tschetschenien** (Verbot von Herren-Shorts in Grosny) sowie gesetzliche Symbolverbote in **Russland, Uganda und Nigeria**.
+4. **Säkulare Gesichtsverhüllungsverbote (Burka/Niqab) & Vorschriften zur öffentlichen Laizität**:
+   - Informiert Reisende über gesetzliche Gesichtsverhüllungsverbote im öffentlichen Raum in **Frankreich, der Schweiz, Österreich, Belgien, Dänemark, Bulgarien und den Niederlanden** (öffentliche Verkehrsmittel, Schulen, Krankenhäuser, Regierungsgebäude) sowie in **Québec, Kanada** (öffentliche Dienste gemäß Gesetz 21) und über französische Schwimmbadvorschriften (Verbot von Burkinis und weiten Badeshorts für Männer).
+5. **Majestätsbeleidigung, Nationalflaggen- & politische/totalitäre Symbolverbote**:
+   - Schützt Reisende in **Thailand** (*Lèse-Majesté* Art. 112, Verbot von Aufdrucken der thailändischen Flagge auf Schuhen/Unterkörper, Verbot von Buddha-Motiven und -Tattoos am Unterkörper), **Deutschland & Österreich** (*StGB § 86a* verfassungswidrige Kennzeichen), **der Ukraine, den baltischen Staaten, Polen, Georgien & Moldau** (Verbot von sowjetischem Hammer und Sichel, Georgsband und russischen Militärsymbolen ‚Z‘/‚V‘), **Indonesien** (striktes antikommunistisches Hammer-und-Sichel-Verbot) und **Hongkong** (Verbot aufrührerischer Slogans unter dem Nationalen Sicherheitsgesetz).
+6. **Gefahrenzonen von Gangs, Kartellen, Paramilitärs & territorialen Gruppierungen**:
+   - Warnt Reisende vor lebensgefährlichen Erkennungsmerkmalen verfeindeter Gruppierungen in **brasilianischen Favelas** (drei Adidas-Streifen als Zeichen für TCP/BDM *Tudo 3* gegenüber komplettem Rot/Nike für CV *Tudo 2*, Micky-Maus-Shirts, Joker-/Clown-Tattoos sowie Pflicht zum Abnehmen des Motorradhelms), **El Salvador, Honduras & Guatemala** (Zahlen `13`, `18`, `XIII`, `XVIII`, Nike-Cortez-Schuhe und gotische Tattoos unter dem *Régimen de Excepción*), **Kolumbien** (Tarnkleidung und Gummistiefel in ländlichen Regionen), **Mexiko** (Kappen mit Kartell-Kürzeln `JGL`, `701`, `MZ`, `Chapiza`, `CJNG` sowie taktische Brusttaschen *Pecheras*), **Jamaika** (politische Zonen in Kingston mit JLP-Grün gegenüber PNP-Orange) und **Nordirland / Glasgow** (konfessionell aufgeladene Fußballtrikots in Grenzvierteln).
+7. **Strenge heilige Stätten & religiöse Einrichtungen weltweit**:
+   - Setzt präzise Einlassprotokolle durch für **die Vatikanstadt & italienische Dome** (bedeckte Schultern und Knie; kein Weiß bei Papstaudienzen), **den Berg Athos** (gesetzliches *Avaton*-Zutrittsverbot für Frauen; lange Ärmel und lange Hosen), **östlich-orthodoxe Klöster** (Meteora, Russland, Georgien, Serbien – knöchellange Röcke und Kopftuch für Frauen; Hosenverbot für Frauen), **äthiopisch-orthodoxe Kirchen** (barfuß + weißer *Netela*-Schal), **Jerusalem** (*Kippa* und angemessene Kleidung an der Klagemauer; lockere Knöchel-/Handgelenksbedeckung und Verbot nicht-muslimischer Gebetsgegenstände auf dem Tempelberg / Al-Aqsa; *Tzniut* in Mea Schearim), **Große Moscheen & schiitische Schreine** (Scheich-Zayid-Moschee in Abu Dhabi, Maskat, Casablanca, Istanbul, *Tschador* in Maschhad/Ghom, schwarze *irakische Abaya* in Kerbela/Nadschaf), **hinduistische & jainistische Tempel** (strikte *Ahimsa*-Regel ohne jegliches Leder bei Gürteln/Geldbörsen/Taschen; *Mundu*-Regel mit freiem Oberkörper für Männer in Kerala; *Kamben*-Sarong & *Selendang*-Schärpe auf Bali), **buddhistische Pagoden** (Verbot von Sarongs über kurzen Hosen im Großen Palast von Bangkok; absolutes Schuh- und Sockenverbot in der Shwedagon-Pagode in Myanmar; weiße Kleidung in Kandy), **Sikh-Gurdwaras** (verpflichtende *Rumāl*-/*Dastar*-Kopfbedeckung, Barfuß-Fußwaschung, kein Tabak/Alkohol in den Taschen) sowie **japanische Onsen** (striktes Tattoo-Verbot mit Pflicht zu Abdeckpflastern).
 
 ## Schritt-für-Schritt-Anleitung
-1. **Reise erstellen**: Öffnen Sie den Reiter „Suitcase“ (Koffer), tippen Sie auf **New Trip** (Neue Reise) und geben Sie Zielstadt, Start- und Enddatum sowie den Reisezweck ein (z. B. *Geschäftlich*, *Strandurlaub*, *Städtereise*).
-2. **Packplan generieren**: Tippen Sie auf **Generate Checklist** (Checkliste generieren). Die KI ruft die prognostizierten Temperaturen und Wetterbedingungen für Ihr Reiseziel ab, gleicht diese mit den Artikeln in Ihrem Kleiderschrank ab und erstellt eine ausgewogene Packliste.
-3. **Tägliche Outfits überprüfen**: Prüfen Sie die Tag für Tag vorgeschlagenen Kombinationen und stellen Sie sicher, dass passende Lagen für kühle Vormittage und warme Nachmittage eingeplant sind.
-4. **Per Chat verfeinern**: Benötigen Sie zusätzliche Optionen? Chatten Sie direkt mit dem Packassistenten (z. B. *„Bequeme Laufschuhe hinzufügen“* oder *„Ein Cocktailkleid fürs Abendessen einplanen“*). Die Checkliste aktualisiert sich dynamisch.
-5. **Artikel als gepackt markieren**: Nutzen Sie beim Packen Ihres Gepäcks die interaktiven Kontrollkästchen, um den Überblick darüber zu behalten, was bereits verstaut ist.
-6. **Für Offline-Reisen speichern**: Speichern Sie den fertigen Reiseplan für einen schnellen Zugriff auf Ihrem Gerät – selbst während der Reise ohne Internetverbindung.
+1. **Reise erstellen**: Öffnen Sie den Reiter „Koffer“, tippen Sie auf **Neue Reise** und geben Sie Zielstadt oder Zielland, Start- und Enddatum sowie den Reisezweck ein (z. B. *Geschäftlich*, *Strandurlaub*, *Kultur- & Tempeltour*).
+2. **Packplan generieren**: Tippen Sie auf **Checkliste generieren**. Die KI ruft prognostizierte Temperaturen, Kalendertermine sowie Sicherheits- und Religionsvorschriften des Reiseziels ab, gleicht diese mit den Artikeln in Ihrem Kleiderschrank ab und erstellt eine ausgewogene Packliste.
+3. **Kultur- & Sicherheitshinweise prüfen**: Lesen Sie die Banner **Kulturelle Etikette** und **Gefahrenzonen / Rechtliche Warnhinweise**, um sicherzustellen, dass Ihre gepackten Outfits den lokalen Gesetzen und den Kleiderordnungen heiliger Stätten entsprechen.
+4. **Tägliche Outfits überprüfen**: Prüfen Sie die Tag für Tag vorgeschlagenen Kombinationen und stellen Sie sicher, dass passende Lagen für kühle Vormittage, warme Nachmittage und geplante Aktivitäten eingeplant sind.
+5. **Per Chat verfeinern**: Chatten Sie direkt mit dem Packassistenten (z. B. *„Füge einen bedeckenden Maxirock aus Leinen für Tempelbesuche hinzu“* oder *„Ersetze die Camouflage-Shorts durch beigefarbene Chinos“*). Die Checkliste aktualisiert sich dynamisch.
+6. **Artikel als gepackt markieren & für Offline-Reisen speichern**: Nutzen Sie beim Packen Ihres Gepäcks die interaktiven Kontrollkästchen und speichern Sie den fertigen Reiseplan für den Offline-Zugriff unterwegs.
 
 ## Erwartete Ergebnisse
-Eine umfassende, wetteroptimierte Gepäck-Checkliste, gegliedert nach Kleidungskategorien (Oberteile, Unterteile, Oberbekleidung, Schuhe, Essentials) – ohne doppelte oder überflüssige Teile.
+Eine umfassende, wetteroptimierte sowie rechtlich und kulturell konforme Gepäck-Checkliste, gegliedert nach Kleidungskategorien (Oberteile, Unterteile, Oberbekleidung, Schuhe, Essentials) – ganz ohne verbotene oder überflüssige Teile.
 
 ## Fehlerbehebung
-- **Wettervorhersage nicht verfügbar**: Überprüfen Sie die Schreibweise der Zielstadt; versuchen Sie bei abgelegenen Orten, die nächstgelegene größere Stadt anzugeben.
-- **Checkliste enthält nur wenige Artikel**: Stellen Sie sicher, dass Sie genügend zur Jahreszeit und den erwarteten Temperaturen passende Kleidungsstücke in Ihren Kleiderschrank hochgeladen haben.
-- **Änderungen werden nicht gespeichert**: Vergewissern Sie sich, dass Ihre Netzwerkverbindung aktiv ist, wenn Sie Notizen über den Chat hinzufügen.
+- **Wettervorhersage nicht verfügbar**: Überprüfen Sie die Schreibweise der Zielstadt; geben Sie bei abgelegenen Orten die nächstgelegene größere Stadt an.
+- **Fehlende bedeckende oder wetterspezifische Kleidung**: Prüfen Sie den Bereich **Fehlende Artikel** für gezielte Einkaufsvorschläge und Geschäfte vor Ort am Reiseziel, in denen Sie benötigte Kleidung (z. B. ein Kopftuch, einen *Sarong* oder eine formelle Hose) erwerben können.
+- **Änderungen werden nicht gespeichert**: Vergewissern Sie sich, dass Ihre Netzwerkverbindung aktiv ist, wenn Sie benutzerdefinierte Chat-Anpassungen speichern.
 
 ## Einschränkungen
 - Die automatisierte Wettervorhersage deckt Reisen ab, die bis zu 14 Tage im Voraus geplant sind; weiter in der Zukunft liegende Reisen nutzen historische saisonale Klimadurchschnitte.

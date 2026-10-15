@@ -1,30 +1,50 @@
 # Assistente per la valigia
 
-Preparate la valigia in modo efficiente e senza stress per qualsiasi destinazione con previsioni meteo guidate dall'IA e perfezionamento interattivo della checklist tramite chat.
+Prepara la valigia in modo efficiente, sicuro e rispettoso per qualsiasi destinazione globale grazie alle previsioni meteo basate sull'IA, alle linee guida sui codici di abbigliamento geopolitici e religiosi e al perfezionamento interattivo della checklist tramite chat.
 
 ## Panoramica
-L'Assistente per la valigia elimina l'ansia dei preparativi di viaggio analizzando il vostro itinerario, il meteo a destinazione e il catalogo del vostro guardaroba personale per creare una checklist personalizzata giorno per giorno. Basato su **Google Gemini 3.5 Flash-Lite** tramite `llm_gateway.py`, l'assistente genera piani completi per la valigia in pochi secondi e vi consente di perfezionare gli articoli conversando in chat in modo interattivo.
+L'Assistente per la valigia elimina l'ansia dei preparativi di viaggio analizzando il tuo itinerario, il meteo della destinazione, gli eventi in calendario e il catalogo del tuo guardaroba personale per creare una checklist personalizzata giorno per giorno. Basato su **Google Gemini 3.5 Flash-Lite** e **DressApp Eyes (`Qwen2.5-VL-3B-Instruct`)** tramite `llm_gateway.py` e supportato da `travel_safety_knowledge.md`, l'assistente genera piani completi per la valigia in pochi secondi, ti avvisa sulle leggi locali relative all'abbigliamento o sulle zone a rischio a destinazione e ti consente di perfezionare gli articoli in modo interattivo tramite la chat conversazionale.
 
 ## Prerequisiti
-- Nome della città di destinazione e date di partenza e ritorno.
-- Un inventario attivo nell'armadio con almeno alcuni capi essenziali.
-- Connessione a Internet per scaricare le previsioni meteo della destinazione.
+- Nome della città o del paese di destinazione e date di partenza e ritorno.
+- Un inventario attivo nell'armadio con capi d'abbigliamento essenziali.
+- Connessione a Internet per recuperare le previsioni meteo della destinazione.
+
+## Linee guida geopolitiche, legali e geo-religiose sul codice di abbigliamento
+DressApp incrocia la tua destinazione e le attività in programma con un database globale curato sulla sicurezza (`travel_safety_knowledge.md`) che copre sette ambiti di restrizione:
+
+1. **Regimi statali di modestia religiosa e decenza pubblica**:
+   - **Iran e Afghanistan**: Impone l'obbligo del velo e di tuniche ampie fino al ginocchio (*manteau* / *abaya*) sopra pantaloni o gonne lunghi fino alla caviglia per le donne (oltre al *chador* integrale all'interno dei santuari sacri iraniani), e vieta rigorosamente pantaloncini e maglie smanicate per gli uomini.
+   - **Arabia Saudita, Qatar, Kuwait, Oman, Bahrein, Emirati Arabi Uniti (Sharjah/Dubai/Abu Dhabi), Brunei, Aceh (Indonesia) e Malesia (Kelantan/Terengganu)**: Impone un abbigliamento pubblico sobrio dalle spalle alle ginocchia, vieta abiti attillati o trasparenti nei centri commerciali e nei souq, applica i divieti legali di travestitismo ove previsti e fornisce le regole dell'*Ihram* per La Mecca e Medina.
+   - **Maldive (isole locali abitate)**: Avvisa i viaggiatori che bikini e costume a torso nudo sono severamente illegali sulle isole locali abitate (ad es. Maafushi, Thoddoo) al di fuori delle "Bikini Beach" recintate e autorizzate.
+2. **Divieti legali di abbigliamento mimetico civile e capi militari**:
+   - Blocca rigorosamente abiti, cappelli, scarpe e zaini con fantasia mimetica nelle **nazioni caraibiche** (Barbados, Giamaica, Trinidad e Tobago, Santa Lucia, Saint Vincent, Antigua e Barbuda, Grenada, Dominica, Saint Kitts e Nevis, Bahamas, Guyana), nelle **nazioni africane** (Nigeria, Uganda — inclusi i baschi rossi —, Zimbabwe, Zambia, Ghana, Kenya, Sudafrica, Ruanda) e nelle **Filippine, in Oman e in Arabia Saudita**, dove l'uso civile del mimetico costituisce un reato penale.
+3. **Leggi sull'abbigliamento autoritarie, socialiste e di identità di Stato**:
+   - Copre la **Corea del Nord (RPDC)** (divieto di jeans blu, strappati o attillati e di trench in pelle; obbligo di abiti formali al Palazzo di Kumsusan e a Mansudae), il **Turkmenistan** (divieto di pantaloncini da uomo e abiti attillati ad Ashgabat), il **Bhutan** (regole del *Driglam Namzha* con camicia a maniche lunghe con colletto e capo inferiore fino alla caviglia, senza cappelli o ombrelli all'interno degli Dzong), la **Cina** (divieto di veli integrali nello Xinjiang e divieto nella RPC di uniformi imperiali giapponesi), la **Cecenia** (divieto di pantaloncini da uomo a Grozny) e i divieti legali di simboli in **Russia, Uganda e Nigeria**.
+4. **Divieti laici di copertura del volto (burqa/niqab) e norme sulla laicità pubblica**:
+   - Informa i viaggiatori sui divieti di legge relativi alla copertura del volto nei luoghi pubblici in **Francia, Svizzera, Austria, Belgio, Danimarca, Bulgaria, Paesi Bassi** (trasporti pubblici, scuole, ospedali, edifici governativi) e in **Québec, Canada** (servizi pubblici ai sensi della Legge 21), nonché sui regolamenti delle piscine comunali francesi (che vietano burkini e pantaloncini da bagno larghi da uomo).
+5. **Reati di lesa maestà reale, bandiere nazionali e divieti di simboli politici o totalitari**:
+   - Protegge i viaggiatori in **Thailandia** (*Lesa Maestà* art. 112, divieto di stampe della bandiera thailandese su scarpe o parte inferiore del corpo, divieto di stampe o tatuaggi del Buddha sulla parte inferiore del corpo), **Germania e Austria** (*StGB § 86a* sui simboli incostituzionali), **Ucraina, Stati baltici, Polonia, Georgia e Moldavia** (divieto di falce e martello sovietici, nastro di San Giorgio e simboli militari russi 'Z'/'V'), **Indonesia** (rigido divieto anticomunista di falce e martello) e **Hong Kong** (divieto di slogan sediziosi ai sensi della Legge sulla Sicurezza Nazionale).
+6. **Zone a rischio di gang, cartelli, gruppi paramilitari e fazioni territoriali**:
+   - Mette in guardia i viaggiatori contro gli identificatori letali di fazioni nelle **favelas brasiliane** (le tre strisce Adidas associate a TCP/BDM *Tudo 3* contro il rosso tinta unita/Nike associato a CV *Tudo 2*, magliette di Topolino, tatuaggi di Joker/clown e obbligo di rimuovere il casco da moto), in **El Salvador, Honduras e Guatemala** (numeri `13`, `18`, `XIII`, `XVIII`, scarpe Nike Cortez e tatuaggi gotici sotto il *Régimen de Excepción*), in **Colombia** (mimetico rurale e stivali di gomma da giungla), in **Messico** (cappellini con sigle di cartelli `JGL`, `701`, `MZ`, `Chapiza`, `CJNG` e borse tattiche da petto *pecheras*), in **Giamaica** (zone di guarnigione a Kingston: verde del JLP contro arancione del PNP) e in **Irlanda del Nord / Glasgow** (maglie da calcio settarie nelle zone di confine tra comunità).
+7. **Luoghi sacri rigorosi e istituzioni religiose in tutto il mondo**:
+   - Applica protocolli di ingresso precisi per **Città del Vaticano e Duomi italiani** (spalle e ginocchia coperte; niente abiti bianchi alle Udienze Papali), il **Monte Athos** (*Avaton* legale con ingresso riservato ai soli uomini; maniche lunghe e pantaloni lunghi), i **monasteri ortodossi orientali** (Meteora, Russia, Georgia, Serbia: gonne lunghe fino alla caviglia e foulard sul capo per le donne; divieto di pantaloni per le donne), le **chiese ortodosse etiopi** (piedi scalzi + scialle bianco *Netela*), **Gerusalemme** (*Kippah* e abbigliamento sobrio al Muro Occidentale; copertura ampia fino a caviglie e polsi e divieto di oggetti di preghiera non musulmani sul Monte del Tempio / Al-Aqsa; *Tzniut* a Mea Shearim), le **grandi moschee e i santuari sciiti** (Sheikh Zayed ad Abu Dhabi, Mascate, Casablanca, Istanbul, *Chador* a Mashhad/Qom, *Abaya irachena* nera a Karbala/Najaf), i **templi indù e giainisti** (rigorosa regola *Ahimsa* zero pelle per cinture, portafogli e borse; regola del *Mundu* a torso nudo per gli uomini in Kerala; sarong *Kamben* e fascia *Selendang* a Bali), le **pagode buddiste** (divieto di indossare il sarong sopra i pantaloncini al Grande Palazzo Reale di Bangkok; divieto assoluto di scarpe e calzini alla pagoda Shwedagon in Myanmar; abbigliamento bianco a Kandy), i **Gurdwara sikh** (copricapo obbligatorio *Rumāl*/*Dastar*, lavaggio dei piedi scalzi, zero tabacco o alcol nelle tasche) e gli **Onsen giapponesi** (severo divieto di tatuaggi che richiede cerotti coprenti).
 
 ## Istruzioni passo dopo passo
-1. **Creare un viaggio**: Aprite la scheda Valigia, toccate **Nuovo viaggio** e inserite la città di destinazione, le date di inizio e fine e lo scopo del viaggio (ad esempio, *Lavoro*, *Vacanze al mare*, *Giro turistico informale*).
-2. **Generare il piano per la valigia**: Toccate **Genera checklist**. L'IA recupera le temperature e le condizioni previste per la destinazione, confronta i capi presenti nel vostro armadio ed elabora una lista equilibrata.
-3. **Controllare gli outfit giornalieri**: Esaminate le combinazioni suggerite giorno per giorno, assicurandovi strati adeguati per le mattine fresche e i pomeriggi più caldi.
-4. **Perfezionare tramite chat**: Avete bisogno di alternative? Chattate direttamente con l'assistente per la valigia (ad esempio, *"Aggiungi scarpe da ginnastica comode per camminare"* oppure *"Includi un abito da cocktail per cena"*). La checklist si aggiorna dinamicamente.
-5. **Spuntare i capi preparati**: Utilizzate le caselle di controllo interattive man mano che preparate i bagagli per tenere traccia di ciò che avete già messo in valigia.
-6. **Salvare per l'accesso offline**: Salvate il piano di viaggio completato per accedervi in modo rapido e ottimistico sul dispositivo anche quando siete offline durante gli spostamenti.
+1. **Creare un viaggio**: Apri la scheda Valigia, tocca **Nuovo viaggio** e inserisci la città o il paese di destinazione, le date di inizio e fine e lo scopo del viaggio (ad es. *Lavoro*, *Vacanze al mare*, *Tour culturale e dei templi*).
+2. **Generare il piano per la valigia**: Tocca **Genera checklist**. L'IA recupera le temperature previste, gli eventi in calendario e le norme religiose e di sicurezza della destinazione, li incrocia con i capi del tuo guardaroba e crea una lista equilibrata.
+3. **Controllare gli avvisi culturali e di sicurezza**: Leggi i banner **Etichetta culturale** e **Zone a rischio / Avvisi legali** per assicurarti che gli outfit in valigia rispettino le leggi locali e i codici di abbigliamento dei luoghi sacri.
+4. **Controllare gli outfit giornalieri**: Esamina le combinazioni suggerite giorno per giorno, assicurandoti strati adeguati per le mattine fresche, i pomeriggi caldi e le attività programmate.
+5. **Perfezionare tramite chat conversazionale**: Chatta direttamente con l'assistente per la valigia (ad es. *"Aggiungi una gonna lunga modesta in lino per le visite ai templi"* oppure *"Sostituisci i pantaloncini mimetici con dei chino beige"*). La checklist si aggiorna dinamicamente.
+6. **Spuntare gli articoli preparati e salvare per il viaggio offline**: Usa le caselle di controllo interattive man mano che riempi i bagagli e salva il piano di viaggio completato per accedervi offline durante gli spostamenti.
 
 ## Risultati attesi
-Una checklist per la valigia completa e ottimizzata in base al meteo, organizzata per categorie di abbigliamento (top, pantaloni/gonne, capispalla, scarpe, capi essenziali), senza capi duplicati o superflui.
+Una checklist per la valigia completa, ottimizzata in base al meteo e conforme alle norme legali e culturali, organizzata per categorie di abbigliamento (top, pantaloni/gonne, capispalla, calzature, capi essenziali) senza alcun capo vietato o superfluo.
 
 ## Risoluzione dei problemi
-- **Previsioni meteo non disponibili**: Verificate l'ortografia della città di destinazione; per le località secondarie, provate a specificare la città principale più vicina.
-- **La checklist include pochi capi**: Assicuratevi di aver caricato nel guardaroba un numero sufficiente di capi adatti alla stagione e alle temperature previste a destinazione.
-- **Le modifiche non vengono salvate**: Verificate che la connessione di rete sia attiva quando aggiungete note personalizzate in chat.
+- **Previsioni meteo non disponibili**: Verifica l'ortografia della città di destinazione; per le località remote, specifica la città principale più vicina.
+- **Capi sobri o specifici per il meteo mancanti**: Controlla la sezione **Articoli mancanti** per suggerimenti di acquisto mirati e negozi locali a destinazione in cui reperire l'abbigliamento richiesto (ad es. un foulard, un *sarong* o pantaloni formali).
+- **Le modifiche non vengono salvate**: Verifica che la connessione di rete sia attiva quando salvi gli aggiornamenti personalizzati della chat.
 
 ## Limitazioni
 - Le previsioni meteo automatiche coprono viaggi pianificati fino a 14 giorni di anticipo; per i viaggi oltre questa soglia vengono utilizzate le medie climatiche stagionali storiche.

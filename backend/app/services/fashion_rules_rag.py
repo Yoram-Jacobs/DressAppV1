@@ -486,6 +486,49 @@ def retrieve_fashion_axioms(
     )):
         add_rule("rule_cultural_scottish_burns_night")
 
+    # Geopolitical Statutory Camouflage & Military Apparel Bans
+    if any(w in text_corpus for w in (
+        "barbados", "jamaica", "trinidad", "tobago", "saint lucia", "st lucia", "antigua", "grenada",
+        "dominica", "bahamas", "guyana", "nigeria", "uganda", "zimbabwe", "zambia", "ghana", "kenya",
+        "philippines", "camouflage", "camo", "ברבדוס", "ג'מייקה", "טרינידד", "ניגריה", "אוגנדה", "זימבבואה", "הסוואה", "מנומר צבאי"
+    )):
+        add_rule("rule_geopolitical_camouflage_military_ban")
+
+    # Geopolitical State-Mandated Modesty Regimes
+    if any(w in text_corpus for w in (
+        "iran", "tehran", "isfahan", "shiraz", "mashhad", "qom", "afghanistan", "kabul", "saudi arabia",
+        "riyadh", "jeddah", "brunei", "aceh", "maldives", "maafushi", "sharjah", "qatar", "doha", "kuwait",
+        "oman", "muscat", "kelantan", "terengganu", "karbala", "najaf", "yemen", "sanaa", "somalia",
+        "איראן", "טהרן", "אפגניסטן", "ערב הסעודית", "סעודיה", "ברוניי", "מלדיביים", "קטאר", "דוחא", "עומאן", "כווית", "כארבלא"
+    )):
+        add_rule("rule_geopolitical_state_modesty_regimes")
+
+    # Geopolitical Secular Face-Covering & Public Laïcité Bans
+    if any(w in text_corpus for w in (
+        "france", "paris", "switzerland", "zurich", "geneva", "interlaken", "austria", "vienna",
+        "belgium", "brussels", "denmark", "copenhagen", "netherlands", "amsterdam", "bulgaria",
+        "quebec", "montreal", "niqab", "burqa", "burkini", "צרפת", "פריז", "שווייץ", "אוסטריה", "וינה", "בלגיה", "דנמרק", "קוויבק"
+    )):
+        add_rule("rule_geopolitical_secular_face_cover_bans")
+
+    # Geopolitical Authoritarian Dress Codes, Lèse-Majesté & Symbol Bans
+    if any(w in text_corpus for w in (
+        "north korea", "pyongyang", "dprk", "turkmenistan", "ashgabat", "bhutan", "thimphu", "paro",
+        "thailand", "bangkok", "grand palace", "wat phra kaew", "ukraine", "kyiv", "poland", "lithuania",
+        "latvia", "estonia", "hong kong", "xinjiang", "chechnya", "grozny",
+        "צפון קוריאה", "טורקמניסטן", "בהוטן", "תאילנד", "בנגקוק", "אוקראינה", "הונג קונג", "צ'צ'ניה"
+    )):
+        add_rule("rule_geopolitical_authoritarian_symbol_bans")
+
+    # Geopolitical Gang, Cartel & Territorial Faction Safety
+    if any(w in text_corpus for w in (
+        "brazil", "rio de janeiro", "salvador", "bahia", "fortaleza", "favela", "el salvador",
+        "honduras", "guatemala", "colombia", "medellin", "cali", "mexico", "sinaloa", "culiacan",
+        "jalisco", "tamaulipas", "kingston", "haiti", "port-au-prince", "cape flats", "belfast",
+        "ברזיל", "ריו דה ז'ניירו", "סלבדור", "פאבלה", "אל סלבדור", "הונדורס", "גואטמלה", "קולומביה", "מדיין", "מקסיקו"
+    )):
+        add_rule("rule_geopolitical_territorial_gang_cartel_safety")
+
     # -------------------------------------------------------------
     # 2. Hard Weather & Thermodynamic Constraints
     # -------------------------------------------------------------

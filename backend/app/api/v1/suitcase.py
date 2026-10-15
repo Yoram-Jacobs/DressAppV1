@@ -32,14 +32,98 @@ KNOWLEDGE_PATH = os.path.join(
 )
 
 
-def get_safety_knowledge() -> str:
+def get_safety_knowledge(query_text: str | None = None, max_chars: int | None = None) -> str:
     try:
-        if os.path.exists(KNOWLEDGE_PATH):
-            with open(KNOWLEDGE_PATH, "r", encoding="utf-8") as f:
-                return f.read()
+        if not os.path.exists(KNOWLEDGE_PATH):
+            return ""
+        with open(KNOWLEDGE_PATH, "r", encoding="utf-8") as f:
+            full_text = f.read()
     except Exception as e:
         logger.error("Failed to read safety knowledge file: %s", e)
-    return ""
+        return ""
+
+    if not query_text and max_chars is None:
+        return full_text
+
+    sections = [s.strip() for s in full_text.split("\n---\n") if s.strip()]
+    if len(sections) <= 1:
+        return full_text[:max_chars] if max_chars else full_text
+
+    # Separate header/baseline from specific regional/religious sections
+    baseline_sec = ""
+    candidate_sections: list[str] = []
+    for sec in sections:
+        if sec.startswith("# ") and "\n## " not in sec:
+            continue
+        if "Global Quick-Reference Guardrails" in sec:
+            baseline_sec = re.sub(r"^Keywords:.*$\n?", "", sec, flags=re.MULTILINE).strip()
+        else:
+            candidate_sections.append(sec)
+
+    q_low = (query_text or "").lower().strip()
+    q_tokens = [
+        t for t in re.split(r"[^a-zA-Z0-9\u0590-\u05FF\u0600-\u06FF\u0400-\u04FF\u0900-\u097F\u4e00-\u9fff]+", q_low)
+        if len(t) >= 3
+    ]
+
+    scored: list[tuple[int, str]] = []
+    for sec in candidate_sections:
+        score = 0
+        lines = sec.splitlines()
+        title_line = lines[0].lower() if lines else ""
+        kw_line = ""
+        for ln in lines[:4]:
+            if ln.lower().startswith("keywords:"):
+                kw_line = ln[9:].lower()
+                break
+
+        # Score multi-word and single-word keywords from the Keywords: line
+        if kw_line and q_low:
+            for kw in [k.strip() for k in kw_line.split(",") if k.strip()]:
+                if len(kw) >= 3 and kw in q_low:
+                    score += 30 if " " in kw else 18
+
+        # Score tokens against section title and body
+        sec_low = sec.lower()
+        for tok in q_tokens:
+            if tok in title_line:
+                score += 15
+            elif tok in kw_line:
+                score += 12
+            elif len(tok) >= 4 and tok in sec_low:
+                score += 3
+
+        clean_sec = re.sub(r"^Keywords:.*$\n?", "", sec, flags=re.MULTILINE).strip()
+        if score > 0:
+            scored.append((score, clean_sec))
+
+    scored.sort(key=lambda x: x[0], reverse=True)
+    chosen: list[str] = [s for _, s in scored]
+    if baseline_sec and (not chosen or max_chars is None or sum(len(c) for c in chosen) + len(baseline_sec) <= (max_chars or 8000)):
+        chosen.append(baseline_sec)
+
+    if not chosen:
+        chosen = [re.sub(r"^Keywords:.*$\n?", "", s, flags=re.MULTILINE).strip() for s in candidate_sections[:3]]
+
+    if max_chars is not None and max_chars > 0:
+        acc: list[str] = []
+        used = 0
+        for block in chosen:
+            if used + len(block) + 6 <= max_chars:
+                acc.append(block)
+                used += len(block) + 6
+            elif not acc:
+                acc.append(block[:max_chars])
+                break
+            else:
+                remaining = max_chars - used
+                if remaining > 220:
+                    acc.append(block[:remaining].rsplit("\n", 1)[0])
+                break
+        return "\n\n---\n\n".join(acc)
+
+    return "\n\n---\n\n".join(chosen)
+
 
 
 def get_suitcase_language_directive(code: str | None) -> str:
@@ -492,7 +576,9 @@ async def suitcase_chat(
         top_k=3,
     )
     chat_axioms_text = format_rules_for_prompt(chat_axioms, max_chars_per_rule=180)
-    rag_section = f"\nDestination Dress Code & Cultural Axioms (RAG):\n{chat_axioms_text}\n\n" if chat_axioms_text else ""
+    safety_chat_snippet = get_safety_knowledge(query_text=chat_corpus, max_chars=1400)
+    rag_parts = [p for p in (chat_axioms_text, safety_chat_snippet) if p]
+    rag_section = f"\nDestination Dress Code & Cultural Axioms (RAG):\n" + "\n\n".join(rag_parts) + "\n\n" if rag_parts else ""
 
     prompt = (
         "You are DressApp's Suitcase Chat Assistant. The user is planning a trip and gathering details.\n"
@@ -782,8 +868,6 @@ async def pack_suitcase(
     closet_items = [doc async for doc in cursor]
 
     # 5. Load Ground-Truth Fashion Rules RAG and travel safety context
-    safety_context = get_safety_knowledge()
-
     from app.services.fashion_rules_rag import (
         retrieve_fashion_axioms,
         format_rules_for_prompt,
@@ -840,8 +924,12 @@ async def pack_suitcase(
     if prefs_block and not is_gemma_provider:
         system_prompt += f"\nUser's Personal Style & Closet Preferences:\n{prefs_block}\n\n"
 
-    # Keep safety context compact on CPU
-    eff_safety_context = safety_context[:1500] if is_gemma_provider else safety_context
+    # Retrieve targeted destination & religious institution safety sections (compact on CPU, rich on Gemini)
+    safety_query = f"{body.destinations or ''} {eff_destinations} {body.purpose or ''} {eff_purpose} {body.notes or ''} {eff_notes} {trip_corpus}"
+    eff_safety_context = get_safety_knowledge(
+        query_text=safety_query,
+        max_chars=1800 if is_gemma_provider else 8000,
+    )
 
     user_brief_parts = [
         f"Destinations: {eff_destinations}",
@@ -1250,7 +1338,7 @@ async def enter_suitcase_location(
 ) -> dict[str, Any]:
     """Triggered when user enters a location (danger zone/holy place). Sends appropriate outfit advice push alerts."""
     db = get_db()
-    safety_context = get_safety_knowledge()
+    safety_context = get_safety_knowledge(query_text=body.location, max_chars=2500)
 
     prompt = (
         f"You are a travel modesty and safety advisor. Given the user's location '{body.location}', "
