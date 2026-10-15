@@ -38,10 +38,31 @@ def _safe_session(session: dict) -> dict:
     """Strip Mongo _id to keep the payload JSON-safe and sanitize titles."""
     res = {k: v for k, v in session.items() if k != "_id"}
     title = res.get("title")
-    if title and isinstance(title, str):
-        from app.services.session_titles import clean_title
-        if any(bad in title.lower() for bad in ('"action"', '"text"', 'action":', 'text":', '{"', '"}')):
-            res["title"] = clean_title(title, fallback_query=res.get("snippet") or "Style advice")
+    snippet = str(res.get("snippet") or "").strip()
+    from app.services.session_titles import _fallback_title, clean_title
+
+    if not title or not isinstance(title, str) or title.strip() in (
+        "Untitled chat",
+        "שיחה ללא שם",
+        "New conversation",
+        "Style advice",
+    ):
+        if snippet:
+            res["title"] = _fallback_title(snippet)
+    elif any(
+        bad in title.lower()
+        for bad in (
+            '"action"',
+            '"text"',
+            'action":',
+            'text":',
+            '{"',
+            '"}',
+            "אצ'ו",
+            "מדריך אבזרי לבוש",
+        )
+    ):
+        res["title"] = clean_title(title, fallback_query=snippet or "Style advice")
     return res
 
 
@@ -470,8 +491,17 @@ async def stylist_endpoint(
     final_text = (text or advice.get("transcript") or "").strip()
     current_title = session.get("title")
     is_untitled = not current_title or current_title in ("Untitled chat", "שיחה ללא שם", "New conversation", "Style advice")
-    is_corrupted = bool(current_title and any(bad in str(current_title).lower() for bad in ('"action"', '"text"', 'action":', 'text":', '{"', '"}')))
+    is_corrupted = bool(
+        current_title
+        and any(
+            bad in str(current_title).lower()
+            for bad in ('"action"', '"text"', 'action":', 'text":', '{"', '"}', "אצ'ו", "מדריך אבזרי לבוש")
+        )
+    )
     if (is_untitled or is_corrupted) and final_text:
+        from app.services.session_titles import _fallback_title
+
+        title = None
         try:
             title = await asyncio.wait_for(
                 generate_session_title(
@@ -482,11 +512,13 @@ async def stylist_endpoint(
                 ),
                 timeout=4.0,
             )
-            if title:
-                await update_session(session["id"], user["id"], title=title)
-                session["title"] = title
         except Exception as exc:  # noqa: BLE001
             logger.warning("Title generation failed for %s: %s", session["id"], exc)
+        if not title:
+            title = _fallback_title(final_text)
+        if title:
+            await update_session(session["id"], user["id"], title=title)
+            session["title"] = title
 
     from app.services.sync_service import broadcast_sync_event
     await broadcast_sync_event(user["id"], "stylist_updated", {"action": "message", "session_id": session["id"]})

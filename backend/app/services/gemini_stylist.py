@@ -256,9 +256,12 @@ async def prepare_stylist_prompt(
             "The user is asking an analytical question about their wardrobe inventory, missing essential items, "
             "a recommended shopping/completion list, garment comparison, or a conversational follow-up — NOT asking to dress the mannequin.\n"
             "1. You MUST set \"outfit_recommendations\": [] (an empty array).\n"
-            f"2. In \"reasoning_summary\", write a comprehensive, helpful, well-structured response in {lang_name} that directly answers the user's prompt "
-            "(use '• ' bullet points when listing missing items, wardrobe categories, or comparisons, grounded in CONTEXT.closet_inventory_analysis).\n"
-            f"3. In \"shopping_suggestions\", include 4 to 7 specific missing essential items in {lang_name} based on CONTEXT.closet_inventory_analysis.detected_wardrobe_gaps.\n"
+            f"2. In \"reasoning_summary\", write a concise 2-3 sentence analytical overview in natural prose in {lang_name} "
+            "(summarize existing closet strengths and missing areas based on CONTEXT.closet_inventory_analysis; DO NOT use '• ' bullets on narrative sentences and DO NOT repeat the shopping_suggestions items verbatim in reasoning_summary).\n"
+            f"3. In \"shopping_suggestions\", return 5 to 7 focused, concrete, detailed garment specifications in {lang_name} "
+            "(specifying garment type + pieces/cut + color/pattern + fabric/material + occasion/purpose, or specific weather essential, e.g. "
+            "'חליפת שלושה חלקים שחורה חלקה מכותנה לאירועים רשמיים', 'חליפת 2 חלקים כחולה חלקה מבריקה ממשי או פוליאסטר למסיבות', "
+            "'חולצת כפתורים משובצת בצבעי כחול וחום', 'מעיל גשם', 'מגפי גומי' — NEVER vague category labels or conversational prose).\n"
             f"4. In \"spoken_reply\", provide a warm 1-2 sentence spoken summary in {lang_name}.\n"
         )
 

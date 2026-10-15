@@ -1601,14 +1601,98 @@ def test_qa_city_hall_meeting_rejects_shorts_running_sneakers_and_suit_vest():
         assert "התרבות העירונית" not in note
 
 
+def test_session_title_cleaning_and_fallback_hebrew():
+    """Verify chat titles strip hallucinated prefixes ('אצ'ו:') and conversational fillers
+    to produce clean 3-5 word ChatGPT/Gemini-style topic titles, never untitled or gibberish."""
+    from app.services.session_titles import _fallback_title, clean_title
+    from app.api.v1.stylist import _safe_session
+
+    q1 = "האם חסרים בארון הבגדים פריטי לבוש בסיסיים? אם כן, ערוך רשימה והמלצות לקנייה."
+    q2 = "ערוך רשימה של פריטים מומלצים להשלמת המלתחה."
+
+    # 1. Hallucinated title from screenshot ("אצ'ו: מדריך אבזרי לבוש שדרכו") is repaired via fallback_query
+    repaired = clean_title("אצ'ו: מדריך אבזרי לבוש שדרכו", fallback_query=q1)
+    assert "אצ'ו" not in repaired
+    assert "מדריך אבזרי" not in repaired
+    assert repaired == "בדיקת פריטי בסיס חסרים בארון"
+
+    # 2. Fallback title for q2 produces a clean ChatGPT/Gemini-style topic title
+    fb2 = _fallback_title(q2)
+    assert fb2 == "רשימת פריטים להשלמת המלתחה"
+
+    # 3. _safe_session repairs untitled ("שיחה ללא שם" / None) and hallucinated titles using snippet
+    s_untitled = _safe_session({"id": "s1", "title": None, "snippet": q2})
+    assert s_untitled["title"] == "רשימת פריטים להשלמת המלתחה"
+
+    s_hallucinated = _safe_session({"id": "s2", "title": "אצ'ו: מדריך אבזרי לבוש שדרכו", "snippet": q1})
+    assert "אצ'ו" not in s_hallucinated["title"]
+    assert s_hallucinated["title"] == "בדיקת פריטי בסיס חסרים בארון"
 
 
+def test_wardrobe_audit_shopping_suggestions_focused_concrete_not_vague_or_repeated():
+    """Verify that wardrobe audit / missing essentials queries:
+    1. Never copy narrative sentences from reasoning_summary into shopping_suggestions.
+    2. Reject vague category strings ('חליפת שלושה חלקים או חליפה מחויטת רשמית שלמה (ז'אקט ומכנסיים תואמים)').
+    3. Produce focused, concrete garment specifications (e.g. 'חליפת שלושה חלקים שחורה חלקה מכותנה לאירועים רשמיים',
+       'חליפת 2 חלקים כחולה חלקה מבריקה ממשי או פוליאסטר למסיבות', 'חולצת כפתורים משובצת בצבעי כחול וחום',
+       'מעיל גשם', 'מגפי גומי') even when the user owns casual shirts, jackets, boots, or a standalone suit vest.
+    """
+    import asyncio
+    from app.services.stylist_qa_engine import evaluate_and_authorize_outfit
 
+    closet = [
+        {"id": "vest-1", "title": "Black Tailored Suit Vest", "category": "Outerwear", "sub_category": "Vest", "colors": ["black"]},
+        {"id": "shirt-1", "title": "Solid Blue Casual Shirt", "category": "Top", "sub_category": "Shirt", "colors": ["blue"], "pattern": "solid"},
+        {"id": "jacket-1", "title": "Casual Denim Jacket", "category": "Outerwear", "sub_category": "Jacket", "colors": ["blue"]},
+        {"id": "boots-1", "title": "Brown Leather Chelsea Boots", "category": "Footwear", "sub_category": "Boots", "colors": ["brown"], "material": "leather"},
+        {"id": "pants-1", "title": "Casual Khaki Chinos", "category": "Bottom", "sub_category": "Chinos", "colors": ["khaki"]},
+    ]
 
+    raw_advice = {
+        "reasoning_summary": (
+            "• בהתבסס על ניתוח ארון הבגדים שלך, ניכר שיש לך בסיס עשיר ומגוון מאוד של בגדי קז'ואל.\n"
+            "• עם זאת, קיים מחסור בפריט מפתח אחד עיקרי: חליפת שלושה חלקים או חליפה מחויטת רשמית שלמה (ז'אקט ומכנסיים תואמים) לאירועים רשמיים.\n"
+            "• בנוסף, כדאי להשלים כמה פריטי בסיס עונתיים ויומיומיים כדי ליצור גמישות מקסימלית בשילובים."
+        ),
+        "spoken_reply": "ניתחתי את ארון הבגדים שלך וריכזתי רשימה ממוקדת של פריטים להשלמת המלתחה.",
+        "outfit_recommendations": [],
+        "shopping_suggestions": [
+            "עם זאת, קיים מחסור בפריט מפתח אחד עיקרי: חליפת שלושה חלקים או חליפה מחויטת רשמית שלמה (ז'אקט ומכנסיים תואמים)",
+            "בנוסף, כדאי להשלים כמה פריטי בסיס עונתיים ויומיומיים כדי ליצור גמישות מקסימלית בשילובים",
+        ],
+    }
 
+    reviewed = asyncio.run(
+        evaluate_and_authorize_outfit(
+            user_text="האם חסרים בארון הבגדים פריטי לבוש בסיסיים? אם כן, ערוך רשימה והמלצות לקנייה.",
+            advice_payload=raw_advice,
+            all_closet_items=closet,
+            user_profile={"sex": "male", "preferred_language": "he"},
+        )
+    )
 
+    assert reviewed["outfit_recommendations"] == []
+    shopping = reviewed["shopping_suggestions"]
+    assert len(shopping) >= 5
 
+    # None of the narrative sentences or vague phrases may appear in shopping_suggestions
+    for s in shopping:
+        assert "בהתבסס על" not in s
+        assert "קיים מחסור" not in s
+        assert "כדאי להשלים" not in s
+        assert "גמישות מקסימלית" not in s
+        assert "ז'אקט ומכנסיים תואמים" not in s
 
+    # All 5 concrete example items must be present in shopping_suggestions
+    assert "חליפת שלושה חלקים שחורה חלקה מכותנה לאירועים רשמיים" in shopping
+    assert "חליפת 2 חלקים כחולה חלקה מבריקה ממשי או פוליאסטר למסיבות" in shopping
+    assert "חולצת כפתורים משובצת בצבעי כחול וחום" in shopping
+    assert "מעיל גשם" in shopping
+    assert "מגפי גומי" in shopping
 
+    # reasoning_summary should not have leading '• ' bullets on narrative sentences
+    assert not reviewed["reasoning_summary"].startswith("•")
 
+    from app.services.stylist_qa_engine import is_text_only_stylist_query
+    assert is_text_only_stylist_query("אני מבקש שתעבור על הארון שלי ותבדוק איזה פריטים בסיסיים חסרים לי") is True
 

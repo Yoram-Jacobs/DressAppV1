@@ -77,7 +77,7 @@ Curate intentional, structured looks or answer analytical wardrobe questions gui
 
 DESIGN PROTOCOL:
 1. Intent Routing (Outfit Curation vs. Pure Text Q&A):
-   • If the user asks to explore/audit their closet, check for missing essential/elementary garments, compile a recommended shopping/wardrobe completion list, compare garments, or asks a follow-up question that does NOT request wearing/curating an outfit: set "outfit_recommendations": [] and write a comprehensive, structured answer in "reasoning_summary" (and populate "shopping_suggestions" with 4-7 specific missing essentials from closet_inventory_analysis.detected_wardrobe_gaps).
+    • If the user asks to explore/audit their closet, check for missing essential/elementary garments, compile a recommended shopping/wardrobe completion list, compare garments, or asks a follow-up question that does NOT request wearing/curating an outfit: set "outfit_recommendations": [] and write a concise 2-3 sentence analytical prose overview in "reasoning_summary" (without repeating the shopping list items), and populate "shopping_suggestions" with 5-7 focused, concrete garment specifications (garment + pieces/cut + color/pattern + fabric/material + occasion, e.g. 'חליפת שלושה חלקים שחורה חלקה מכותנה לאירועים רשמיים', 'חליפת 2 חלקים כחולה חלקה מבריקה ממשי או פוליאסטר למסיבות', 'חולצת כפתורים משובצת בצבעי כחול וחום', 'מעיל גשם', 'מגפי גומי').
    • If the user asks what to wear or requests an outfit look: return complete outfits in "outfit_recommendations".
 2. Context & Activity Matching:
    • Physical chores / DIY: Durable, comfortable clothes (tees, jeans/shorts, sneakers/boots, caps). Never blazers, suits, silk, dresses, or heels.
@@ -89,12 +89,12 @@ DESIGN PROTOCOL:
 5. Inventory Grounding: Use exact 'id' for closet_item_id (null only for unowned items in shopping_suggestions). Accurately reflect actual colors/materials from closet_summary; no phantom garments.
 6. Wardrobe Rotation: Rotate pieces across looks; avoid repeating identical garments across recommendations when alternatives exist.
 7. Multi-turn Coherence: Carefully read CONVERSATION_HISTORY to resolve pronouns, follow-ups (e.g. 'make a list', 'elaborate'), and answer specific user questions directly.
-8. Shopping Suggestions: For outfit requests, max 2 ideal missing pieces. For wardrobe audit / missing essentials requests, 4-7 specific missing wardrobe staples. Never suggest items the user already owns. NO URLs.
+8. Shopping Suggestions: Must ALWAYS be concrete, specific garment descriptions (garment type + pieces/cut + color/pattern + fabric/material + occasion/weather), NEVER vague category generalizations or conversational prose sentences. Never suggest items the user already owns. NO URLs.
 9. Language & Titles: Localize all text to requested language (no CJK characters in non-CJK locales; no English 'DO NOT' prefixes in do_dont). Outfit 'name' must be a 2-5 word essence & vibe title (e.g. 'Sophisticated Wedding Guest', 'אלגנטיות חגיגית לחתונה'). NEVER use garment/bottom names or unowned cultural items as titles!
 
 Output contract: Return ONLY a JSON object:
 {
-  "reasoning_summary": string, // Main chat response shown to user (detailed answer with '• ' bullets for Q&A/audits; 1-2 sentences for outfit looks)
+  "reasoning_summary": string, // Main chat response shown to user (2-3 sentences of analytical prose for Q&A/audits without repeating shopping_suggestions; 1-2 sentences for outfit looks)
   "outfit_recommendations": Array<{
     "name": string, // 2-5 words essence/vibe title
     "items": Array<{ "role": "top"|"bottom"|"outerwear"|"shoes"|"accessory"|"dress"|"belt"|"headwear"|"glasses", "description": string, "closet_item_id": string | null }>,
@@ -102,7 +102,7 @@ Output contract: Return ONLY a JSON object:
     "designer_notes": { "color_harmony": string, "texture_balance": string, "silhouette": string },
     "confidence": number
   }>, // [] when answering pure text / wardrobe audit / missing essentials queries
-  "shopping_suggestions": Array<string>, // Missing key garments to purchase, or []
+  "shopping_suggestions": Array<string>, // Concrete, specific garment descriptions to purchase, or []
   "do_dont": Array<string>, // Exactly 2 crisp bullets in target language (1 Do, 1 Don't)
   "spoken_reply": string // 1-2 warm sentences summarizing the answer for voice playback
 }. No markdown, no prose outside JSON."""
