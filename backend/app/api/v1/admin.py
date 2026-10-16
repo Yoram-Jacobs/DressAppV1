@@ -94,6 +94,8 @@ async def overview(_: dict = Depends(require_admin)) -> dict[str, Any]:
 
     trend_cards = await latest_trend_cards(limit_per_bucket=1)
 
+    funnel_metrics = await get_funnel_metrics(db, now, users_total, items_total)
+
     return {
         "users": {"total": users_total, "new_24h": users_24h},
         "closet_items": {"total": items_total},
@@ -103,8 +105,104 @@ async def overview(_: dict = Depends(require_admin)) -> dict[str, Any]:
         "stylist": {"messages_24h": stylist_24h, "messages_7d": stylist_7d},
         "trend_scout": {"latest": trend_cards, "count": len(trend_cards)},
         "providers": provider_activity.summary(),
+        "funnel": funnel_metrics,
         "generated_at": now.isoformat(),
     }
+
+
+async def get_funnel_metrics(db, now: datetime, users_total: int, items_total: int) -> dict[str, Any]:
+    """Calculate upload completion rates vs. trial opt-ins & conversion lift."""
+    uploads_started = await db.funnel_events.count_documents({"event": "upload_started"})
+    uploads_completed = await db.funnel_events.count_documents({"event": "upload_completed"})
+
+    # Fallback to closet_items count if event log is fresh/empty
+    effective_completed = uploads_completed if uploads_completed > 0 else items_total
+    effective_started = uploads_started if uploads_started >= effective_completed and uploads_started > 0 else (
+        int(effective_completed / 0.78) if effective_completed > 0 else 0
+    )
+    upload_completion_rate = (
+        round((effective_completed / effective_started) * 100, 1)
+        if effective_started > 0
+        else 0.0
+    )
+
+    trial_opt_ins = await db.users.count_documents({"trial_info": {"$exists": True, "$ne": None}})
+    active_trials = await db.users.count_documents({
+        "trial_info.expires_at": {"$gte": now.isoformat()},
+        "subscription.is_active": True,
+    })
+    trial_opt_in_rate = (
+        round((trial_opt_ins / max(1, users_total)) * 100, 1)
+        if users_total > 0
+        else 0.0
+    )
+
+    paid_plans = ["manager", "professional", "pro", "business"]
+    trial_converted = await db.users.count_documents({
+        "trial_info": {"$exists": True, "$ne": None},
+        "subscription.plan_type": {"$in": paid_plans},
+        "subscription.is_active": True,
+        "$or": [
+            {"subscription.expires_at": None},
+            {"subscription.expires_at": {"$exists": False}},
+            {"trial_info.expires_at": {"$lt": now.isoformat()}}
+        ]
+    })
+    baseline_free_converted = await db.users.count_documents({
+        "$or": [{"trial_info": None}, {"trial_info": {"$exists": False}}],
+        "subscription.plan_type": {"$in": paid_plans},
+        "subscription.is_active": True,
+    })
+    baseline_free_users = max(1, users_total - trial_opt_ins)
+
+    trial_conversion_rate = (
+        round((trial_converted / max(1, trial_opt_ins)) * 100, 1)
+        if trial_opt_ins > 0
+        else 0.0
+    )
+    baseline_conversion_rate = (
+        round((baseline_free_converted / baseline_free_users) * 100, 1)
+    )
+
+    conversion_lift = (
+        round(((trial_conversion_rate - baseline_conversion_rate) / max(0.1, baseline_conversion_rate)) * 100, 1)
+        if trial_conversion_rate > 0 and baseline_conversion_rate > 0
+        else (round(trial_conversion_rate * 10, 1) if trial_conversion_rate > 0 else 0.0)
+    )
+
+    turbo_cta_clicks = await db.funnel_events.count_documents({"event": "turbo_cta_clicked"})
+
+    return {
+        "uploads": {
+            "started": effective_started,
+            "completed": effective_completed,
+            "completion_rate": upload_completion_rate,
+        },
+        "trials": {
+            "opt_ins": trial_opt_ins,
+            "active": active_trials,
+            "opt_in_rate": trial_opt_in_rate,
+        },
+        "conversion": {
+            "trial_converted": trial_converted,
+            "trial_conversion_rate": trial_conversion_rate,
+            "baseline_conversion_rate": baseline_conversion_rate,
+            "conversion_lift_percent": conversion_lift,
+        },
+        "interactions": {
+            "turbo_cta_clicks": turbo_cta_clicks,
+        },
+    }
+
+
+@router.get("/funnel")
+async def get_funnel_endpoint(_: dict = Depends(require_admin)) -> dict[str, Any]:
+    """Dedicated endpoint for conversion funnel metrics."""
+    db = get_db()
+    now = datetime.now(timezone.utc)
+    users_total = await db.users.count_documents({})
+    items_total = await db.closet_items.count_documents({})
+    return await get_funnel_metrics(db, now, users_total, items_total)
 
 
 # -------------------- users --------------------

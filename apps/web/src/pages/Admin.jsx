@@ -14,7 +14,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import {
   RefreshCcw, Users as UsersIcon, ShoppingBag, Receipt, Activity, Sparkles,
   Settings, KeyRound, AlertTriangle, CheckCircle2, ShieldCheck, ShieldOff,
-  Play, Search, ArrowUp,
+  Play, Search, ArrowUp, TrendingUp, Zap, Clock, Filter, UserCheck, ArrowRight,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { api, campaignApi } from '@/lib/api';
@@ -207,8 +207,20 @@ export default function Admin() {
             >
               {t('campaigns.admin.queueTitle', { defaultValue: 'Campaign Queue' })}
             </TabsTrigger>
+            <TabsTrigger
+              value="funnel"
+              className="
+              rounded-full px-4 py-2 text-[12px] font-semibold
+              text-text-brand transition-colors
+              data-[state=active]:bg-primary-brand data-[state=active]:text-white data-[state=active]:shadow-none
+            "
+              data-testid="admin-tab-funnel"
+            >
+              {t('admin.funnelTitle', { defaultValue: 'Funnel & Conversion' })}
+            </TabsTrigger>
           </TabsList>
           <TabsContent value="overview" className=""><OverviewSection /></TabsContent>
+          <TabsContent value="funnel" className=""><FunnelSection /></TabsContent>
           <TabsContent value="providers" className=""><ProvidersSection /></TabsContent>
           <TabsContent value="trends" className=""><TrendScoutSection /></TabsContent>
           <TabsContent value="users" className=""><UsersSection /></TabsContent>
@@ -287,10 +299,210 @@ function OverviewSection() {
           ))}
         </div>
       </div>
+      {data.funnel && <FunnelHighlights funnel={data.funnel} />}
       <ProvidersInline summary={data.providers || []} />
     </div>
   );
 }
+
+// -------------------- Funnel & Conversion Highlights --------------------
+function FunnelHighlights({ funnel }) {
+  const { t } = useTranslation();
+  if (!funnel) return null;
+
+  const uploads = funnel.uploads || {};
+  const trials = funnel.trials || {};
+  const conv = funnel.conversion || {};
+  const inter = funnel.interactions || {};
+
+  return (
+    <div className="bg-white border border-border shadow-sm p-5 rounded-[12px] space-y-4" data-testid="admin-funnel-highlights">
+      <div className="flex items-center justify-between flex-wrap gap-2">
+        <div>
+          <h3 className="font-bold text-dark-brand text-[16px] flex items-center gap-2">
+            <Filter className="h-4 w-4 text-primary-brand" />
+            {t('admin.funnelTitle', { defaultValue: 'Funnel & Conversion Metrics' })}
+          </h3>
+          <p className="text-[12px] text-text-brand mt-0.5">
+            {t('admin.funnelSubtitle', { defaultValue: 'Baseline upload completion rates vs. trial opt-ins & conversion lift' })}
+          </p>
+        </div>
+        {conv.conversion_lift_percent !== undefined && (
+          <Badge className="bg-emerald-100 text-emerald-900 border border-emerald-300 font-bold px-3 py-1 text-xs gap-1">
+            <TrendingUp className="h-3.5 w-3.5" />
+            {conv.conversion_lift_percent >= 0 ? `+${conv.conversion_lift_percent}%` : `${conv.conversion_lift_percent}%`} {t('admin.conversionLift', { defaultValue: 'Trial Conversion Lift' })}
+          </Badge>
+        )}
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+        {/* Upload Completion Rate */}
+        <div className="p-3.5 rounded-[10px] bg-slate-50 border border-border/80 flex flex-col justify-between">
+          <div className="flex items-center justify-between text-xs text-text-brand font-medium">
+            <span>{t('admin.uploadCompletionRate', { defaultValue: 'Upload Completion Rate' })}</span>
+            <Clock className="h-4 w-4 text-amber-600" />
+          </div>
+          <div className="mt-2">
+            <div className="text-2xl font-bold text-dark-brand">{uploads.completion_rate || 0}%</div>
+            <div className="text-[11px] text-text-brand mt-0.5">
+              {uploads.completed || 0} / {uploads.started || 0} {t('admin.uploadsCompleted', { defaultValue: 'uploads completed' })}
+            </div>
+          </div>
+        </div>
+
+        {/* Trial Opt-Ins */}
+        <div className="p-3.5 rounded-[10px] bg-slate-50 border border-border/80 flex flex-col justify-between">
+          <div className="flex items-center justify-between text-xs text-text-brand font-medium">
+            <span>{t('admin.trialOptIns', { defaultValue: 'Trial Opt-ins' })}</span>
+            <UserCheck className="h-4 w-4 text-primary-brand" />
+          </div>
+          <div className="mt-2">
+            <div className="text-2xl font-bold text-dark-brand">{trials.opt_ins || 0}</div>
+            <div className="text-[11px] text-text-brand mt-0.5">
+              {trials.opt_in_rate || 0}% {t('admin.trialOptInRate', { defaultValue: 'opt-in rate' })} · {trials.active || 0} {t('admin.activeTrials', { defaultValue: 'active' })}
+            </div>
+          </div>
+        </div>
+
+        {/* Trial to Paid Conversion */}
+        <div className="p-3.5 rounded-[10px] bg-slate-50 border border-border/80 flex flex-col justify-between">
+          <div className="flex items-center justify-between text-xs text-text-brand font-medium">
+            <span>{t('admin.trialConversionRate', { defaultValue: 'Trial-to-Paid Rate' })}</span>
+            <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+          </div>
+          <div className="mt-2">
+            <div className="text-2xl font-bold text-dark-brand">{conv.trial_conversion_rate || 0}%</div>
+            <div className="text-[11px] text-text-brand mt-0.5">
+              vs {conv.baseline_conversion_rate || 0}% {t('admin.baselineConversionRate', { defaultValue: 'baseline free' })}
+            </div>
+          </div>
+        </div>
+
+        {/* Turbo CTA Clicks */}
+        <div className="p-3.5 rounded-[10px] bg-slate-50 border border-border/80 flex flex-col justify-between">
+          <div className="flex items-center justify-between text-xs text-text-brand font-medium">
+            <span>{t('admin.turboCtaClicks', { defaultValue: 'Turbo CTA Clicks' })}</span>
+            <Zap className="h-4 w-4 text-amber-500 fill-amber-500" />
+          </div>
+          <div className="mt-2">
+            <div className="text-2xl font-bold text-dark-brand">{inter.turbo_cta_clicks || 0}</div>
+            <div className="text-[11px] text-text-brand mt-0.5">
+              {t('common.unlockInstantTurbo', { defaultValue: '⚡ Unlock Instant Turbo' })}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// -------------------- Full Funnel Section --------------------
+function FunnelSection({ funnel: propFunnel }) {
+  const { t } = useTranslation();
+  const { overview: data } = useAdminStore();
+  const funnel = propFunnel || data?.funnel;
+
+  if (!funnel) {
+    return (
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4" data-testid="admin-funnel-loading">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <Skeleton key={i} className="h-32 w-full rounded-[12px]" />
+        ))}
+      </div>
+    );
+  }
+
+  const uploads = funnel.uploads || {};
+  const trials = funnel.trials || {};
+  const conv = funnel.conversion || {};
+
+  return (
+    <div className="space-y-5" data-testid="admin-funnel-section">
+      <FunnelHighlights funnel={funnel} />
+
+      {/* Visual Funnel Pathway */}
+      <Card className="bg-white border border-border shadow-sm rounded-[12px]">
+        <CardContent className="p-5">
+          <h3 className="font-bold text-dark-brand text-[16px] mb-1">
+            {t('admin.funnelPathwayTitle', { defaultValue: 'Multi-Stage Conversion Pathway' })}
+          </h3>
+          <p className="text-[12px] text-text-brand mb-5">
+            {t('admin.funnelPathwayDesc', { defaultValue: 'How users progress from free standard upload attempts to instant Turbo trial and paid subscriptions.' })}
+          </p>
+
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 relative">
+            {/* Stage 1 */}
+            <div className="rounded-[10px] border border-border bg-card p-4 relative flex flex-col justify-between">
+              <div className="flex items-center justify-between text-xs text-text-brand">
+                <span className="font-bold uppercase tracking-wider text-[11px]">1. {t('admin.stageUploadsStarted', { defaultValue: 'Uploads Started' })}</span>
+                <Clock className="h-4 w-4 text-amber-600" />
+              </div>
+              <div className="my-3">
+                <div className="text-2xl font-bold text-dark-brand">{fmtNum(uploads.started)}</div>
+                <div className="text-xs text-text-brand mt-1">{t('admin.standardQueueAttempts', { defaultValue: 'Standard ~30s queue runs' })}</div>
+              </div>
+              <div className="h-1.5 w-full bg-slate-200 rounded-full overflow-hidden">
+                <div className="h-full bg-amber-500 rounded-full" style={{ width: '100%' }} />
+              </div>
+            </div>
+
+            {/* Stage 2 */}
+            <div className="rounded-[10px] border border-border bg-card p-4 relative flex flex-col justify-between">
+              <div className="flex items-center justify-between text-xs text-text-brand">
+                <span className="font-bold uppercase tracking-wider text-[11px]">2. {t('admin.stageUploadsCompleted', { defaultValue: 'Completed' })}</span>
+                <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+              </div>
+              <div className="my-3">
+                <div className="text-2xl font-bold text-dark-brand">{fmtNum(uploads.completed)}</div>
+                <div className="text-xs text-emerald-700 dark:text-emerald-400 mt-1 font-semibold">
+                  {uploads.completion_rate}% {t('admin.completionRate', { defaultValue: 'completion rate' })}
+                </div>
+              </div>
+              <div className="h-1.5 w-full bg-slate-200 rounded-full overflow-hidden">
+                <div className="h-full bg-emerald-500 rounded-full" style={{ width: `${Math.min(100, uploads.completion_rate || 0)}%` }} />
+              </div>
+            </div>
+
+            {/* Stage 3 */}
+            <div className="rounded-[10px] border border-border bg-card p-4 relative flex flex-col justify-between">
+              <div className="flex items-center justify-between text-xs text-text-brand">
+                <span className="font-bold uppercase tracking-wider text-[11px]">3. {t('admin.stageTrialOptIns', { defaultValue: 'Trial Opt-ins' })}</span>
+                <Zap className="h-4 w-4 text-primary-brand" />
+              </div>
+              <div className="my-3">
+                <div className="text-2xl font-bold text-dark-brand">{fmtNum(trials.opt_ins)}</div>
+                <div className="text-xs text-text-brand mt-1">
+                  {trials.opt_in_rate}% {t('admin.userbaseOptIn', { defaultValue: 'of userbase' })} · {trials.active} {t('admin.activeNow', { defaultValue: 'active' })}
+                </div>
+              </div>
+              <div className="h-1.5 w-full bg-slate-200 rounded-full overflow-hidden">
+                <div className="h-full bg-primary-brand rounded-full" style={{ width: `${Math.min(100, (trials.opt_in_rate || 0) * 2)}%` }} />
+              </div>
+            </div>
+
+            {/* Stage 4 */}
+            <div className="rounded-[10px] border border-emerald-300 bg-emerald-50/50 dark:bg-emerald-950/20 p-4 relative flex flex-col justify-between">
+              <div className="flex items-center justify-between text-xs text-emerald-900 dark:text-emerald-300">
+                <span className="font-bold uppercase tracking-wider text-[11px]">4. {t('admin.stagePaidConverted', { defaultValue: 'Paid Conversion' })}</span>
+                <TrendingUp className="h-4 w-4 text-emerald-600" />
+              </div>
+              <div className="my-3">
+                <div className="text-2xl font-bold text-emerald-900 dark:text-emerald-200">{fmtNum(conv.trial_converted)}</div>
+                <div className="text-xs text-emerald-800 dark:text-emerald-300 mt-1 font-semibold">
+                  {conv.trial_conversion_rate}% {t('admin.conversionRateLabel', { defaultValue: 'rate' })} (+{conv.conversion_lift_percent}% {t('admin.liftShort', { defaultValue: 'lift' })})
+                </div>
+              </div>
+              <div className="h-1.5 w-full bg-emerald-200 rounded-full overflow-hidden">
+                <div className="h-full bg-emerald-600 rounded-full" style={{ width: `${Math.min(100, (conv.trial_conversion_rate || 0) * 3)}%` }} />
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
 function ProvidersInline({ summary }) {
   const { t } = useTranslation();
   if (!summary?.length) {

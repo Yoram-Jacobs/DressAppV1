@@ -10,7 +10,7 @@ from pydantic import BaseModel, ConfigDict
 
 from app.db.database import get_db
 from app.models.schemas import CulturalContext, StyleProfile
-from app.services.auth import get_current_user, verify_password
+from app.services.auth import get_current_user, get_current_user_optional, verify_password
 from app.services.avatar_service import calculate_shape_parameters
 
 logger = logging.getLogger(__name__)
@@ -594,5 +594,28 @@ async def validate_api_key(
         "provider": provider,
         "message": f"{provider} API key format accepted.",
     }
+
+
+class FunnelEventIn(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    event: str  # "upload_started" | "upload_completed" | "turbo_cta_clicked" | "trial_opt_in"
+    metadata: dict[str, Any] | None = None
+
+
+@router.post("/funnel-event")
+async def record_funnel_event(
+    payload: FunnelEventIn,
+    current_user: dict[str, Any] | None = Depends(get_current_user_optional),
+) -> dict[str, Any]:
+    """Record conversion and funnel progression events (uploads, trials, CTA interactions)."""
+    db = get_db()
+    event_doc = {
+        "event": payload.event,
+        "metadata": payload.metadata or {},
+        "user_id": current_user.get("id") if current_user else None,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+    }
+    await db.funnel_events.insert_one(event_doc)
+    return {"status": "ok"}
 
 

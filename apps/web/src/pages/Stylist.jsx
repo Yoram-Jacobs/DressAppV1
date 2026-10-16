@@ -64,6 +64,7 @@ import { bestImageUrl, resolveMediaUrl } from '@/lib/itemImage';
 import { useLocalStorageSync } from '@/lib/useLocalStorageSync';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useTierLimits } from '@/hooks/useTierLimits';
+import { TurboStatusCard } from '@/components/TurboStatusCard';
 import { WaveformAudioPlayer } from '@/components/WaveformAudioPlayer';
 import { ConversationSidebar } from '@/components/stylist/ConversationSidebar';
 import { OutfitCanvasMessage } from '@/components/OutfitCanvas';
@@ -647,7 +648,7 @@ export default function Stylist() {
       return searchTokens.every((token) => allText.includes(token));
     });
   }, [outfits, canvasSearchQuery, closetItems]);
-  const { canAccessScheduler } = useTierLimits();
+  const { canAccessScheduler, isFree } = useTierLimits();
   const { notifications: cachedNotifications, dailyProposal, proposals, generate: generateDailyProposalAction, prewarm: prewarmDaily, act: actDailyProposal } = useDailySuggestionsStore();
   const [generatingDaily, setGeneratingDaily] = useState(false);
   const [matchSelectedDay, setMatchSelectedDay] = useState(() => {
@@ -2441,6 +2442,11 @@ export default function Stylist() {
                 <p className="text-xs text-[var(--text-color)] pt-1 m-0">
                   {t('stylist.thinkingSub', { defaultValue: 'Your stylist is coming up with something...' })}
                 </p>
+                {isFree && (
+                  <div className="pt-2 border-t border-black/[0.06]">
+                    <TurboStatusCard variant="card" context="stylist" />
+                  </div>
+                )}
               </div>
             </div>
           )}

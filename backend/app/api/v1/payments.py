@@ -633,15 +633,26 @@ async def listing_buy_capture(
                     {
                         "_id": 0,
                         "title": 1, "brand": 1,
+                        "reconstructed_image_url": 1,
+                        "reconstruct_image_url": 1,
+                        "clean_image_url": 1,
                         "thumbnail_data_url": 1,
+                        "image_url": 1,
+                        "cutout_url": 1,
+                        "segmented_image_url": 1,
+                        "original_image_url": 1,
+                        "images": 1,
                     },
                 )
                 or {}
             )
         # Fall back to listing fields if we couldn't load the closet item
         item_doc.setdefault("title", (listing_doc or {}).get("title"))
+        item_doc.setdefault("brand", (listing_doc or {}).get("brand"))
+        item_doc.setdefault("reconstructed_image_url", (listing_doc or {}).get("reconstructed_image_url"))
+        item_doc.setdefault("clean_image_url", (listing_doc or {}).get("clean_image_url"))
         if (listing_doc or {}).get("images"):
-            item_doc.setdefault("thumbnail_data_url", listing_doc["images"][0])
+            item_doc.setdefault("images", listing_doc["images"])
 
         gross = int(tx["financial"]["gross_cents"])
         net = int(tx["financial"]["seller_net_cents"])

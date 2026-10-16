@@ -105,7 +105,12 @@
       "campaigns": "Werbekampagnen",
       "moreClosetSlots": "mehr Kleiderschrank-Plätze",
       "moreAiActions": "mehr tägliche KI-Aktionen"
-    }
+    },
+    "standardEngine": "Standard-Engine (~30 Sek.)",
+    "unlockInstantTurbo": "⚡ Sofortiges Turbo freischalten",
+    "standardUploadDesc": "Standard-Warteschlange. Detaillierter Kleidungsscan läuft.",
+    "standardStylistDesc": "Standard-Warteschlange. KI-Stylist erstellt Ihren Look.",
+    "standardSuitcaseDesc": "Standard-Warteschlange. Reisegarderobe wird zusammengestellt."
   },
   "auth": {
     "welcomeBack": "Willkommen zurück",
@@ -870,8 +875,8 @@
     "currencyPlaceholder": "USD",
     "sourceTagPlaceholder": "eigen",
     "gender": "Geschlecht",
-    "eyesSlowNotice": "Standard-KI benötigt 40–60 s. Upgrade auf Manager für sofortige 2-Sekunden-Analyse mit Cloud Gemini!",
-    "skipWaitCta": "⚡ 2 s mit Manager"
+    "eyesSlowNotice": "Standard-Engine (~30 Sek.)",
+    "skipWaitCta": "⚡ Sofortiges Turbo freischalten"
   },
   "itemDetail": {
     "reanalyze": {
@@ -2166,7 +2171,21 @@
     "perDay": "Tag",
     "reject": "Ablehnen",
     "approvePublish": "Genehmigen und veröffentlichen",
-    "noPendingCampaigns": "Keine ausstehenden Kampagnen in der Warteschlange"
+    "noPendingCampaigns": "Keine ausstehenden Kampagnen in der Warteschlange",
+    "funnelTitle": "Funnel- & Conversion-Metriken",
+    "funnelSubtitle": "Upload-Abschlussraten vs. Testphasen-Anmeldungen & Conversion-Lift",
+    "uploadCompletionRate": "Upload-Abschlussrate",
+    "uploadsStarted": "Gestartete Uploads",
+    "uploadsCompleted": "Abgeschlossene Uploads",
+    "trialOptIns": "Testphasen-Anmeldungen",
+    "trialOptInRate": "Testphasen-Quote",
+    "activeTrials": "Aktive Testphasen",
+    "conversionLift": "Conversion-Steigerung durch Testphase",
+    "trialConversionRate": "Test-zu-Zahlend-Quote",
+    "baselineConversionRate": "Basis-Conversion Kostenlos-zu-Zahlend",
+    "turboCtaClicks": "Turbo-CTA Klicks",
+    "funnelPathwayTitle": "Mehrstufiger Conversion-Pfad",
+    "funnelPathwayDesc": "Verlauf der Nutzer von Standard-Uploads über die Sofort-Turbo-Testphase zu bezahlten Abonnements."
   },
   "calendar": {
     "connect": "Google Calendar verbinden",

@@ -74,6 +74,7 @@ import DuplicatePreflightDialog from "@/components/DuplicatePreflightDialog";
 import { DppScanner } from "@/components/DppScanner";
 import { WeightedList, normalizeWeightedTags } from "@/components/WeightedList";
 import { ScanningPipeline } from "@/components/ScanningPipeline";
+import { TurboStatusCard } from "@/components/TurboStatusCard";
 import { useAuth } from "@/lib/auth";
 import { deriveSizeFromPreferences } from "@/lib/size_preferences";
 import {
@@ -2270,6 +2271,9 @@ export default function AddItem() {
     });
     if (!files.length) return;
     console.info(`[AddItem] handleFiles: received ${files.length} valid images`);
+    try {
+      api.recordFunnelEvent?.("upload_started", { count: files.length, isFree });
+    } catch (_) {}
 
     // BG_THRESHOLD: above this we skip the per-card editor and run
     // the auto-save batch path. Anything above 12 is clearly a bulk
@@ -3945,6 +3949,12 @@ export default function AddItem() {
       if (polishCandidates.length) {
         workStore.registerPolishItems(polishCandidates);
       }
+      const successfulCount = results.filter((r) => r.status === "fulfilled" && r.value?.id).length;
+      if (successfulCount > 0) {
+        try {
+          api.recordFunnelEvent?.("upload_completed", { count: successfulCount, isFree });
+        } catch (_) {}
+      }
       if (failures.length) {
         closetStore.recordSaveFailures(failures);
       }
@@ -4343,24 +4353,7 @@ export default function AddItem() {
                   data-testid="bg-batch-progress"
                 />
                 {isFree && (
-                  <div className="mt-2.5 pt-2 border-t border-border/50 flex items-center justify-between gap-2 text-xs">
-                    <span className="text-[11px] text-text-brand flex items-center gap-1.5 min-w-0">
-                      <Clock className="h-3.5 w-3.5 text-amber-500 shrink-0 animate-pulse" />
-                      <span className="truncate">
-                        {t("addItem.eyesSlowNotice", {
-                          defaultValue: "Standard AI takes 40–60s. Upgrade to Manager for instant 2s Cloud Gemini analysis!",
-                        })}
-                      </span>
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => nav("/pricing")}
-                      className="px-2.5 py-1 rounded bg-primary-brand text-white font-bold hover:opacity-90 transition-opacity text-[11px] shrink-0 flex items-center gap-1 cursor-pointer"
-                    >
-                      <Zap className="h-3 w-3 text-amber-300 fill-amber-300" />
-                      {t("addItem.skipWaitCta", { defaultValue: "⚡ 2s with Manager" })}
-                    </button>
-                  </div>
+                  <TurboStatusCard variant="card" context="upload" className="mt-3.5 w-full text-start" />
                 )}
                 {bgBatch.pendingDuplicates ? (
                   // Surfaced inline so the user knows the modal popping
@@ -5614,27 +5607,7 @@ function ItemCard({
                 <ScanningPipeline variant="inline" />
                 <Progress value={progress} className="h-1.5 mt-2" />
                 {isFree && (
-                  <div className="mt-2 pt-2 border-t border-border/60 flex items-center justify-between gap-2 animate-in fade-in duration-300">
-                    <div className="flex items-center gap-1.5 min-w-0">
-                      <Clock className="h-3.5 w-3.5 text-amber-500 shrink-0 animate-pulse" />
-                      <p className="text-[11px] text-text-brand font-medium leading-tight truncate">
-                        {t("addItem.eyesSlowNotice", {
-                          defaultValue: "Standard AI takes 40–60s. Upgrade to Manager for instant 2s Cloud Gemini analysis!",
-                        })}
-                      </p>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        navigate("/pricing");
-                      }}
-                      className="shrink-0 px-2 py-0.5 rounded text-[10px] font-bold bg-primary-brand text-white hover:opacity-90 transition-opacity flex items-center gap-1 shadow-xs cursor-pointer"
-                    >
-                      <Zap className="h-2.5 w-2.5 text-amber-300 fill-amber-300" />
-                      {t("addItem.skipWaitCta", { defaultValue: "⚡ 2s with Manager" })}
-                    </button>
-                  </div>
+                  <TurboStatusCard variant="inline" context="upload" className="mt-2" />
                 )}
               </div>
             )}

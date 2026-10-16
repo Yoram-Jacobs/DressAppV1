@@ -113,18 +113,23 @@ async def _load_listing_item(db, listing: dict) -> dict[str, Any]:
             {
                 "_id": 0,
                 "title": 1, "brand": 1,
+                "reconstructed_image_url": 1,
+                "reconstruct_image_url": 1,
+                "clean_image_url": 1,
                 "thumbnail_data_url": 1,
+                "image_url": 1,
+                "cutout_url": 1,
                 "segmented_image_url": 1,
                 "original_image_url": 1,
+                "images": 1,
             },
         ) or {}
     item.setdefault("title", listing.get("title"))
-    if listing.get("images") and not (
-        item.get("thumbnail_data_url")
-        or item.get("segmented_image_url")
-        or item.get("original_image_url")
-    ):
-        item["thumbnail_data_url"] = listing["images"][0]
+    item.setdefault("brand", listing.get("brand"))
+    item.setdefault("reconstructed_image_url", listing.get("reconstructed_image_url"))
+    item.setdefault("clean_image_url", listing.get("clean_image_url"))
+    if listing.get("images"):
+        item.setdefault("images", listing.get("images"))
     return item
 
 
@@ -272,11 +277,14 @@ async def propose_swap(
         offered_item = {
             "title": offered.get("title"),
             "brand": offered.get("brand"),
-            "thumbnail_data_url": (
-                offered.get("thumbnail_data_url")
-                or offered.get("segmented_image_url")
-                or offered.get("original_image_url")
-            ),
+            "reconstructed_image_url": offered.get("reconstructed_image_url") or offered.get("reconstruct_image_url"),
+            "clean_image_url": offered.get("clean_image_url"),
+            "thumbnail_data_url": offered.get("thumbnail_data_url"),
+            "cutout_url": offered.get("cutout_url"),
+            "image_url": offered.get("image_url"),
+            "segmented_image_url": offered.get("segmented_image_url"),
+            "original_image_url": offered.get("original_image_url"),
+            "images": offered.get("images"),
         }
         if lister.get("email"):
             await es.swap_request(
@@ -621,19 +629,28 @@ async def transaction_action(
                 {"id": (tx.get("swap") or {}).get("offered_item_id")},
                 {
                     "_id": 0, "title": 1, "brand": 1,
+                    "reconstructed_image_url": 1,
+                    "reconstruct_image_url": 1,
+                    "clean_image_url": 1,
                     "thumbnail_data_url": 1,
+                    "image_url": 1,
+                    "cutout_url": 1,
                     "segmented_image_url": 1,
                     "original_image_url": 1,
+                    "images": 1,
                 },
             ) or {}
             offered_card = {
                 "title": offered.get("title"),
                 "brand": offered.get("brand"),
-                "thumbnail_data_url": (
-                    offered.get("thumbnail_data_url")
-                    or offered.get("segmented_image_url")
-                    or offered.get("original_image_url")
-                ),
+                "reconstructed_image_url": offered.get("reconstructed_image_url") or offered.get("reconstruct_image_url"),
+                "clean_image_url": offered.get("clean_image_url"),
+                "thumbnail_data_url": offered.get("thumbnail_data_url"),
+                "cutout_url": offered.get("cutout_url"),
+                "image_url": offered.get("image_url"),
+                "segmented_image_url": offered.get("segmented_image_url"),
+                "original_image_url": offered.get("original_image_url"),
+                "images": offered.get("images"),
             }
             if decision == "accept":
                 confirm_url = f"{_derive_app_url(request)}/transactions/{tx_id}/landing?status=accepted"

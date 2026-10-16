@@ -105,7 +105,12 @@
       "campaigns": "الحملات الإعلانية",
       "moreClosetSlots": "مساحة إضافية في الخزانة",
       "moreAiActions": "المزيد من عمليات AI اليومية"
-    }
+    },
+    "standardEngine": "المحرك القياسي (~30 ثانية)",
+    "unlockInstantTurbo": "⚡ فتح وضع التوربو الفوري",
+    "standardUploadDesc": "قائمة الانتظار القياسية. جارٍ الفحص الدقيق للملابس.",
+    "standardStylistDesc": "قائمة الانتظار القياسية. المنسق الذكي يصمم إطلالتك الآن.",
+    "standardSuitcaseDesc": "قائمة الانتظار القياسية. جاري إعداد خزانة السفر المنسقة."
   },
   "auth": {
     "welcomeBack": "مرحبًا بعودتك",
@@ -870,8 +875,8 @@
     "currencyPlaceholder": "USD",
     "sourceTagPlaceholder": "ملك",
     "gender": "جنس",
-    "eyesSlowNotice": "يستغرق الذكاء الاصطناعي القياسي 40-60 ثانية. قم بالترقية إلى Manager للتحليل الفوري خلال ثانيتين مع Cloud Gemini!",
-    "skipWaitCta": "⚡ ثانيتان مع Manager"
+    "eyesSlowNotice": "المحرك القياسي (~30 ثانية)",
+    "skipWaitCta": "⚡ فتح وضع التوربو الفوري"
   },
   "itemDetail": {
     "reanalyze": {
@@ -2166,7 +2171,21 @@
     "perDay": "يوم",
     "reject": "يرفض",
     "approvePublish": "الموافقة والنشر",
-    "noPendingCampaigns": "لا توجد حملات معلقة في قائمة الانتظار"
+    "noPendingCampaigns": "لا توجد حملات معلقة في قائمة الانتظار",
+    "funnelTitle": "قمع التحويل ومقاييس الأداء",
+    "funnelSubtitle": "معدلات اكتمال الرفع مقارنة بفترات التجربة ونمو التحويل",
+    "uploadCompletionRate": "معدل اكتمال الرفع",
+    "uploadsStarted": "عمليات الرفع التي بدأت",
+    "uploadsCompleted": "عمليات الرفع المكتملة",
+    "trialOptIns": "المشتركون في التجربة",
+    "trialOptInRate": "معدل الاشتراك في التجربة",
+    "activeTrials": "فترات تجريبية نشطة",
+    "conversionLift": "نمو التحويل من التجربة",
+    "trialConversionRate": "معدل التحويل من تجربة لمدفوع",
+    "baselineConversionRate": "التحويل الأساسي من مجاني لمدفوع",
+    "turboCtaClicks": "نقرات زر التوربو",
+    "funnelPathwayTitle": "مسار التحويل متعدد المراحل",
+    "funnelPathwayDesc": "كيف يتدرج المستخدمون من محاولات الرفع المجانية إلى تجربة التوربو الفورية والاشتراك المدفوع."
   },
   "calendar": {
     "connect": "اربط Google Calendar",

@@ -111,7 +111,12 @@
       "campaigns": "קמפיינים ופרסום",
       "moreClosetSlots": "עוד מקומות בארון",
       "moreAiActions": "עוד פעולות AI יומיות"
-    }
+    },
+    "standardEngine": "מנוע רגיל (~30 שנ')",
+    "unlockInstantTurbo": "⚡ שדרגו לטורבו מיידי",
+    "standardUploadDesc": "תור עיבוד רגיל. סריקת בגד מעמיקה מתבצעת כעת.",
+    "standardStylistDesc": "תור עיבוד רגיל. הסטייליסט החכם מרכיב את הלוק שלך.",
+    "standardSuitcaseDesc": "תור עיבוד רגיל. מייצר מלתחת נסיעות מותאמת."
   },
   "auth": {
     "welcomeBack": "ברוך שובך",
@@ -882,8 +887,8 @@
     "currencyPlaceholder": "USD",
     "sourceTagPlaceholder": "שֶׁלוֹ",
     "gender": "מגדר",
-    "eyesSlowNotice": "ה-AI הבסיסי לוקח 40–60 שניות. שדרגו ל-Manager לניתוח מהיר תוך 2 שניות עם Cloud Gemini!",
-    "skipWaitCta": "⚡ תוך 2 שנ' ב-Manager"
+    "eyesSlowNotice": "מנוע רגיל (~30 שנ')",
+    "skipWaitCta": "⚡ שדרגו לטורבו מיידי"
   },
   "itemDetail": {
     "reanalyze": {
@@ -2197,7 +2202,21 @@
     "perDay": "יְוֹם",
     "reject": "לִדחוֹת",
     "approvePublish": "אישור ופרסום",
-    "noPendingCampaigns": "אין קמפיינים ממתינים בתור"
+    "noPendingCampaigns": "אין קמפיינים ממתינים בתור",
+    "funnelTitle": "משפך המרות ומדדי ביצוע",
+    "funnelSubtitle": "שיעורי השלמת העלאות לעומת הרשמה לתקופת ניסיון ועלייה בהמרות",
+    "uploadCompletionRate": "שיעור השלמת העלאות",
+    "uploadsStarted": "העלאות שהחלו",
+    "uploadsCompleted": "העלאות שהושלמו",
+    "trialOptIns": "הרשמות לתקופת ניסיון",
+    "trialOptInRate": "שיעור הרשמה לניסיון",
+    "activeTrials": "תקופות ניסיון פעילות",
+    "conversionLift": "עלייה בהמרות מניסיון",
+    "trialConversionRate": "שיעור המרה מניסיון לתשלום",
+    "baselineConversionRate": "בסיס המרה מחינם לתשלום",
+    "turboCtaClicks": "לחיצות על כפתור טורבו",
+    "funnelPathwayTitle": "מסלול המרה רב-שלבי",
+    "funnelPathwayDesc": "כיצד משתמשים מתקדמים מניסיונות העלאה רגילים לניסיון טורבו ומנוי בתשלום."
   },
   "calendar": {
     "connect": "חבר את Google יומן",

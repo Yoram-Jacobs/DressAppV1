@@ -105,7 +105,12 @@
       "campaigns": "広告キャンペーン",
       "moreClosetSlots": "クローゼット枠の追加",
       "moreAiActions": "毎日のAI利用回数の追加"
-    }
+    },
+    "standardEngine": "標準エンジン（約30秒）",
+    "unlockInstantTurbo": "⚡ インスタントターボを解除",
+    "standardUploadDesc": "標準処理キュー。衣類の詳細スキャンを実行中です。",
+    "standardStylistDesc": "標準処理キュー。AIスタイリストがコーディネートを作成中です。",
+    "standardSuitcaseDesc": "標準処理キュー。旅行向けワードローブを作成中です。"
   },
   "auth": {
     "welcomeBack": "おかえりなさい",
@@ -870,8 +875,8 @@
     "currencyPlaceholder": "USD",
     "sourceTagPlaceholder": "自分の",
     "gender": "性別",
-    "eyesSlowNotice": "標準AIの解析には40〜60秒かかります。ManagerにアップグレードするとCloud Geminiで2秒の高速解析が可能になります！",
-    "skipWaitCta": "⚡ Managerなら2秒"
+    "eyesSlowNotice": "標準エンジン（約30秒）",
+    "skipWaitCta": "⚡ インスタントターボを解除"
   },
   "itemDetail": {
     "reanalyze": {
@@ -2166,7 +2171,21 @@
     "perDay": "日",
     "reject": "拒否する",
     "approvePublish": "承認して公開",
-    "noPendingCampaigns": "キューに保留中のキャンペーンはありません"
+    "noPendingCampaigns": "キューに保留中のキャンペーンはありません",
+    "funnelTitle": "ファネル＆コンバージョン指標",
+    "funnelSubtitle": "アップロード完了率 vs 無料トライアル登録とコンバージョン向上",
+    "uploadCompletionRate": "アップロード完了率",
+    "uploadsStarted": "開始されたアップロード",
+    "uploadsCompleted": "完了したアップロード",
+    "trialOptIns": "トライアル登録数",
+    "trialOptInRate": "トライアル登録率",
+    "activeTrials": "有効なトライアル",
+    "conversionLift": "トライアルによるコンバージョン向上",
+    "trialConversionRate": "トライアルから有料への移行率",
+    "baselineConversionRate": "通常の無料から有料への移行率",
+    "turboCtaClicks": "ターボCTAクリック数",
+    "funnelPathwayTitle": "多段階コンバージョン経路",
+    "funnelPathwayDesc": "無料の標準アップロードからインスタントターボのトライアル、有料サブスクリプションへの進捗状況。"
   },
   "calendar": {
     "connect": "Google カレンダーを接続",

@@ -7,5 +7,9 @@ export const users = {
   saveMigrationCrops: (body) => client.post('/closet/migration/save-crops', body, { timeout: 120000 }).then((r) => r.data),
   deleteAccount: (body) => client.post('/users/me/delete', body).then((r) => r.data),
   validateApiKey: (body) => client.post('/users/validate-api-key', body).then((r) => r.data),
+  recordFunnelEvent: (event, metadata = {}) =>
+    client.post('/users/funnel-event', { event, metadata }).then((r) => r.data).catch(() => ({})),
+  startManagerTrial: () =>
+    client.post('/ai-credits/trial/manager/start').then((r) => r.data),
 };
 

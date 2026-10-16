@@ -105,7 +105,12 @@
       "campaigns": "Рекламные кампании",
       "moreClosetSlots": "больше слотов гардероба",
       "moreAiActions": "больше ежедневных действий ИИ"
-    }
+    },
+    "standardEngine": "Стандартный движок (~30 сек.)",
+    "unlockInstantTurbo": "⚡ Разблокировать Instant Turbo",
+    "standardUploadDesc": "Стандартная очередь обработки. Выполняется глубокий анализ одежды.",
+    "standardStylistDesc": "Стандартная очередь обработки. AI-стилист подбирает ваш образ.",
+    "standardSuitcaseDesc": "Стандартная очередь обработки. Формируется дорожный гардероб."
   },
   "auth": {
     "welcomeBack": "С возвращением",
@@ -870,8 +875,8 @@
     "currencyPlaceholder": "USD",
     "sourceTagPlaceholder": "собственный",
     "gender": "Пол",
-    "eyesSlowNotice": "Стандартный ИИ требует 40–60 с. Перейдите на тариф Manager для мгновенного анализа за 2 с на Cloud Gemini!",
-    "skipWaitCta": "⚡ 2 с на Manager"
+    "eyesSlowNotice": "Стандартный движок (~30 сек.)",
+    "skipWaitCta": "⚡ Разблокировать Instant Turbo"
   },
   "itemDetail": {
     "reanalyze": {
@@ -2166,7 +2171,21 @@
     "perDay": "день",
     "reject": "Отклонять",
     "approvePublish": "Утвердить и опубликовать",
-    "noPendingCampaigns": "Нет ожидающих кампаний в очереди"
+    "noPendingCampaigns": "Нет ожидающих кампаний в очереди",
+    "funnelTitle": "Воронка и метрики конверсии",
+    "funnelSubtitle": "Завершение загрузок vs пробные подписки и рост конверсии",
+    "uploadCompletionRate": "Процент завершения загрузок",
+    "uploadsStarted": "Начатые загрузки",
+    "uploadsCompleted": "Завершенные загрузки",
+    "trialOptIns": "Регистрации на пробный период",
+    "trialOptInRate": "Процент активации триала",
+    "activeTrials": "Активные триалы",
+    "conversionLift": "Прирост конверсии от триала",
+    "trialConversionRate": "Конверсия триала в оплату",
+    "baselineConversionRate": "Базовая конверсия из бесплатного в платный",
+    "turboCtaClicks": "Клики по кнопке Turbo",
+    "funnelPathwayTitle": "Многоэтапный путь конверсии",
+    "funnelPathwayDesc": "Путь пользователей от бесплатных стандартных загрузок к мгновенному триалу Turbo и платной подписке."
   },
   "calendar": {
     "connect": "Подключить Google Calendar",

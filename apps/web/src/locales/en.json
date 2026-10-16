@@ -105,7 +105,12 @@
       "campaigns": "Ad campaigns",
       "moreClosetSlots": "more closet slots",
       "moreAiActions": "more daily AI actions"
-    }
+    },
+    "standardEngine": "Standard Engine (~30s)",
+    "unlockInstantTurbo": "⚡ Unlock Instant Turbo",
+    "standardUploadDesc": "Standard processing queue. Deep clothing scan in progress.",
+    "standardStylistDesc": "Standard processing queue. AI Stylist is crafting your look.",
+    "standardSuitcaseDesc": "Standard processing queue. Generating curated travel wardrobe."
   },
   "auth": {
     "welcomeBack": "Welcome back",
@@ -870,8 +875,8 @@
     "savedOptimistic": "Add to closet",
     "currencyPlaceholder": "USD",
     "sourceTagPlaceholder": "own",
-    "eyesSlowNotice": "Standard AI takes 40–60s. Upgrade to Manager for instant 2s Cloud Gemini analysis!",
-    "skipWaitCta": "⚡ 2s with Manager"
+    "eyesSlowNotice": "Standard Engine (~30s)",
+    "skipWaitCta": "⚡ Unlock Instant Turbo"
   },
   "itemDetail": {
     "reanalyze": {
@@ -2168,7 +2173,21 @@
     "perDay": "day",
     "reject": "Reject",
     "approvePublish": "Approve & Publish",
-    "noPendingCampaigns": "No pending campaigns in queue"
+    "noPendingCampaigns": "No pending campaigns in queue",
+    "funnelTitle": "Funnel & Conversion Metrics",
+    "funnelSubtitle": "Baseline upload completion rates vs. trial opt-ins & conversion lift",
+    "uploadCompletionRate": "Upload Completion Rate",
+    "uploadsStarted": "Uploads Started",
+    "uploadsCompleted": "Uploads Completed",
+    "trialOptIns": "Trial Opt-ins",
+    "trialOptInRate": "Trial Opt-in Rate",
+    "activeTrials": "Active Trials",
+    "conversionLift": "Trial Conversion Lift",
+    "trialConversionRate": "Trial-to-Paid Rate",
+    "baselineConversionRate": "Baseline Free-to-Paid",
+    "turboCtaClicks": "Turbo CTA Clicks",
+    "funnelPathwayTitle": "Multi-Stage Conversion Pathway",
+    "funnelPathwayDesc": "How users progress from free standard upload attempts to instant Turbo trial and paid subscriptions."
   },
   "calendar": {
     "connect": "Connect Google Calendar",

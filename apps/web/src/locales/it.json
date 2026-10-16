@@ -105,7 +105,12 @@
       "campaigns": "Campagne pubblicitarie",
       "moreClosetSlots": "più spazio nel guardaroba",
       "moreAiActions": "più azioni IA giornaliere"
-    }
+    },
+    "standardEngine": "Motore standard (~30s)",
+    "unlockInstantTurbo": "⚡ Sblocca Turbo Istantaneo",
+    "standardUploadDesc": "Coda di elaborazione standard. Scansione approfondita del capo in corso.",
+    "standardStylistDesc": "Coda di elaborazione standard. Lo stylist AI sta creando il tuo look.",
+    "standardSuitcaseDesc": "Coda di elaborazione standard. Generazione del guardaroba da viaggio curato."
   },
   "auth": {
     "welcomeBack": "Bentornato",
@@ -870,8 +875,8 @@
     "currencyPlaceholder": "USD",
     "sourceTagPlaceholder": "Proprio",
     "gender": "Genere",
-    "eyesSlowNotice": "L'IA standard richiede 40–60 s. Passa a Manager per un'analisi istantanea in 2 s con Cloud Gemini!",
-    "skipWaitCta": "⚡ 2 s con Manager"
+    "eyesSlowNotice": "Motore standard (~30s)",
+    "skipWaitCta": "⚡ Sblocca Turbo Istantaneo"
   },
   "itemDetail": {
     "reanalyze": {
@@ -2166,7 +2171,21 @@
     "perDay": "giorno",
     "reject": "Rifiutare",
     "approvePublish": "Approva e pubblica",
-    "noPendingCampaigns": "Nessuna campagna in sospeso in coda"
+    "noPendingCampaigns": "Nessuna campagna in sospeso in coda",
+    "funnelTitle": "Metriche di funnel e conversione",
+    "funnelSubtitle": "Tassi di completamento caricamento vs prove gratuite e incremento conversioni",
+    "uploadCompletionRate": "Tasso di completamento caricamento",
+    "uploadsStarted": "Caricamenti avviati",
+    "uploadsCompleted": "Caricamenti completati",
+    "trialOptIns": "Adesioni alla prova",
+    "trialOptInRate": "Tasso di adesione alla prova",
+    "activeTrials": "Prove attive",
+    "conversionLift": "Incremento conversioni da prova",
+    "trialConversionRate": "Tasso di conversione da prova a pagamento",
+    "baselineConversionRate": "Conversione di base da gratis a pagamento",
+    "turboCtaClicks": "Clic su CTA Turbo",
+    "funnelPathwayTitle": "Percorso di conversione multi-fase",
+    "funnelPathwayDesc": "Come gli utenti avanzano dai caricamenti gratuiti standard alla prova Turbo istantanea e agli abbonamenti a pagamento."
   },
   "calendar": {
     "connect": "Collega Google Calendar",

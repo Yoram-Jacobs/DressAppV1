@@ -105,7 +105,12 @@
       "campaigns": "Campagnes publicitaires",
       "moreClosetSlots": "plus d'emplacements dans le dressing",
       "moreAiActions": "plus d'actions IA quotidiennes"
-    }
+    },
+    "standardEngine": "Moteur standard (~30 s)",
+    "unlockInstantTurbo": "⚡ Débloquer le Turbo instantané",
+    "standardUploadDesc": "File de traitement standard. Analyse approfondie du vêtement en cours.",
+    "standardStylistDesc": "File de traitement standard. Le styliste IA compose votre look.",
+    "standardSuitcaseDesc": "File de traitement standard. Composition de votre garde-robe de voyage en cours."
   },
   "auth": {
     "welcomeBack": "Bon retour",
@@ -870,8 +875,8 @@
     "currencyPlaceholder": "USD",
     "sourceTagPlaceholder": "propre",
     "gender": "Genre",
-    "eyesSlowNotice": "L'IA standard prend 40 à 60 s. Passez à Manager pour une analyse instantanée en 2 s avec Cloud Gemini !",
-    "skipWaitCta": "⚡ 2 s avec Manager"
+    "eyesSlowNotice": "Moteur standard (~30 s)",
+    "skipWaitCta": "⚡ Débloquer le Turbo instantané"
   },
   "itemDetail": {
     "reanalyze": {
@@ -2166,7 +2171,21 @@
     "perDay": "jour",
     "reject": "Rejeter",
     "approvePublish": "Approuver et publier",
-    "noPendingCampaigns": "Aucune campagne en attente dans la file d'attente"
+    "noPendingCampaigns": "Aucune campagne en attente dans la file d'attente",
+    "funnelTitle": "Métriques d'entonnoir et de conversion",
+    "funnelSubtitle": "Taux de complétion des imports vs essais gratuits et hausse de conversion",
+    "uploadCompletionRate": "Taux de complétion des imports",
+    "uploadsStarted": "Imports démarrés",
+    "uploadsCompleted": "Imports terminés",
+    "trialOptIns": "Inscriptions à l'essai",
+    "trialOptInRate": "Taux d'adoption de l'essai",
+    "activeTrials": "Essais actifs",
+    "conversionLift": "Hausse de conversion via l'essai",
+    "trialConversionRate": "Taux de conversion essai-vers-payant",
+    "baselineConversionRate": "Taux de conversion de base gratuit-vers-payant",
+    "turboCtaClicks": "Clics sur le CTA Turbo",
+    "funnelPathwayTitle": "Parcours de conversion multi-étapes",
+    "funnelPathwayDesc": "Progression des utilisateurs depuis les imports standards gratuits vers l'essai Turbo et l'abonnement payant."
   },
   "calendar": {
     "connect": "Connecter Google Calendar",

@@ -105,7 +105,12 @@
       "campaigns": "广告活动",
       "moreClosetSlots": "更多衣橱容量",
       "moreAiActions": "更多每日 AI 操作"
-    }
+    },
+    "standardEngine": "标准引擎（约30秒）",
+    "unlockInstantTurbo": "⚡ 解锁极速 Turbo",
+    "standardUploadDesc": "标准处理队列。正在深度分析服装。",
+    "standardStylistDesc": "标准处理队列。AI 造型师正在设计您的造型。",
+    "standardSuitcaseDesc": "标准处理队列。正在生成精选旅行衣橱。"
   },
   "auth": {
     "welcomeBack": "欢迎回来",
@@ -870,8 +875,8 @@
     "currencyPlaceholder": "USD",
     "sourceTagPlaceholder": "自己的",
     "gender": "性别",
-    "eyesSlowNotice": "标准 AI 分析需 40–60 秒。升级至 Manager 即可享受 Cloud Gemini 极速 2 秒分析！",
-    "skipWaitCta": "⚡ Manager 2秒极速"
+    "eyesSlowNotice": "标准引擎（约30秒）",
+    "skipWaitCta": "⚡ 解锁极速 Turbo"
   },
   "itemDetail": {
     "reanalyze": {
@@ -2166,7 +2171,21 @@
     "perDay": "天",
     "reject": "拒绝",
     "approvePublish": "批准并发布",
-    "noPendingCampaigns": "队列中没有待处理的营销活动"
+    "noPendingCampaigns": "队列中没有待处理的营销活动",
+    "funnelTitle": "漏斗与转化指标",
+    "funnelSubtitle": "上传完成率 vs 试用订阅与转化提升",
+    "uploadCompletionRate": "上传完成率",
+    "uploadsStarted": "已启动的上传",
+    "uploadsCompleted": "已完成的上传",
+    "trialOptIns": "试用开启数",
+    "trialOptInRate": "试用开启率",
+    "activeTrials": "活跃试用期",
+    "conversionLift": "试用带来的转化提升",
+    "trialConversionRate": "试用转付费率",
+    "baselineConversionRate": "免费转付费基准率",
+    "turboCtaClicks": "Turbo 按钮点击数",
+    "funnelPathwayTitle": "多阶段转化路径",
+    "funnelPathwayDesc": "用户如何从免费标准上传过渡到极速 Turbo 试用及付费订阅。"
   },
   "calendar": {
     "connect": "连接 Google Calendar",

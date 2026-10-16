@@ -2,6 +2,7 @@ import { client } from './_singleton.js';
 
 export const admin = {
   adminOverview: () => client.get('/admin/overview').then((r) => r.data),
+  adminFunnelMetrics: () => client.get('/admin/funnel').then((r) => r.data),
   adminUsers: (params = {}) => client.get('/admin/users', { params }).then((r) => r.data),
   adminListings: (params = {}) => client.get('/admin/listings', { params }).then((r) => r.data),
   adminTransactions: (params = {}) => client.get('/admin/transactions', { params }).then((r) => r.data),

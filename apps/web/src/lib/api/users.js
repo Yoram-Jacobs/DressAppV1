@@ -1,4 +1,4 @@
-﻿import { client } from './client.js';
+import { client } from './client.js';
 
 export const users = {
   getMe: () => client.get('/users/me').then((r) => r.data),
@@ -6,4 +6,8 @@ export const users = {
   updateMigrationFlag: (body) => client.patch('/users/migration-flag', body).then((r) => r.data),
   saveMigrationCrops: (body) => client.post('/closet/migration/save-crops', body, { timeout: 120000 }).then((r) => r.data),
   deleteAccount: (body) => client.post('/users/me/delete', body).then((r) => r.data),
+  recordFunnelEvent: (event, metadata = {}) =>
+    client.post('/users/funnel-event', { event, metadata }).then((r) => r.data).catch(() => ({})),
+  startManagerTrial: () =>
+    client.post('/ai-credits/trial/manager/start').then((r) => r.data),
 };

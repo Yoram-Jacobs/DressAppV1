@@ -105,7 +105,12 @@
       "campaigns": "विज्ञापन अभियान",
       "moreClosetSlots": "अधिक अलमारी स्लॉट",
       "moreAiActions": "अधिक दैनिक AI क्रियाएं"
-    }
+    },
+    "standardEngine": "मानक इंजन (~30 से.)",
+    "unlockInstantTurbo": "⚡ तुरंत टर्बो अनलॉक करें",
+    "standardUploadDesc": "मानक प्रसंस्करण कतार। कपड़ों की विस्तृत स्कैनिंग जारी है।",
+    "standardStylistDesc": "मानक प्रसंस्करण कतार। AI स्टाइलिस्ट आपका लुक तैयार कर रहा है।",
+    "standardSuitcaseDesc": "मानक प्रसंस्करण कतार। अनुकूलित यात्रा वार्डरोब तैयार किया जा रहा है।"
   },
   "auth": {
     "welcomeBack": "वापसी पर स्वागत है",
@@ -870,8 +875,8 @@
     "currencyPlaceholder": "USD",
     "sourceTagPlaceholder": "अपना",
     "gender": "लिंग",
-    "eyesSlowNotice": "स्टैंडर्ड AI में 40-60 सेकंड लगते हैं। Cloud Gemini के साथ 2 सेकंड में त्वरित विश्लेषण के लिए Manager में अपग्रेड करें!",
-    "skipWaitCta": "⚡ Manager के साथ 2 सेकंड"
+    "eyesSlowNotice": "मानक इंजन (~30 से.)",
+    "skipWaitCta": "⚡ तुरंत टर्बो अनलॉक करें"
   },
   "itemDetail": {
     "reanalyze": {
@@ -2166,7 +2171,21 @@
     "perDay": "दिन",
     "reject": "अस्वीकार करना",
     "approvePublish": "स्वीकृत करें और प्रकाशित करें",
-    "noPendingCampaigns": "कतार में कोई लंबित अभियान नहीं"
+    "noPendingCampaigns": "कतार में कोई लंबित अभियान नहीं",
+    "funnelTitle": "फ़नल और रूपांतरण मेट्रिक्स",
+    "funnelSubtitle": "अपलोड पूर्णता दर बनाम परीक्षण विकल्प और रूपांतरण वृद्धि",
+    "uploadCompletionRate": "अपलोड पूर्णता दर",
+    "uploadsStarted": "प्रारंभ किए गए अपलोड",
+    "uploadsCompleted": "पूर्ण किए गए अपलोड",
+    "trialOptIns": "परीक्षण विकल्प",
+    "trialOptInRate": "परीक्षण चयन दर",
+    "activeTrials": "सक्रिय परीक्षण",
+    "conversionLift": "परीक्षण रूपांतरण वृद्धि",
+    "trialConversionRate": "परीक्षण-से-सशुल्क दर",
+    "baselineConversionRate": "आधारभूत मुफ़्त-से-भुगतान",
+    "turboCtaClicks": "टर्बो सीटीए क्लिक",
+    "funnelPathwayTitle": "बहु-चरणीय रूपांतरण मार्ग",
+    "funnelPathwayDesc": "उपयोगकर्ता कैसे मुफ़्त मानक अपलोड से तुरंत टर्बो परीक्षण और सशुल्क सदस्यता तक पहुँचते हैं।"
   },
   "calendar": {
     "connect": "Google कैलेंडर जोड़ें",

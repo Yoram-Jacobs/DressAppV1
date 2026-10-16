@@ -582,6 +582,26 @@ __all__ = ["ai_credits_router", "pricing_router"]
 # Trial Endpoints (exposed via ai_credits_router)
 # ============================================================================
 
+@ai_credits_router.post("/trial/manager/start")
+async def start_manager_trial_endpoint(
+    user: dict = Depends(get_current_user)
+) -> Dict[str, Any]:
+    """Start a 7-day Manager trial with instant Turbo speed."""
+    try:
+        db = get_db()
+        await db.funnel_events.insert_one({
+            "event": "trial_opt_in",
+            "metadata": {"trial_type": "manager", "days": 7},
+            "user_id": user.get("id"),
+            "created_at": datetime.now(timezone.utc).isoformat(),
+        })
+        result = await start_pro_trial(user["id"], days=7)
+        return result
+    except Exception as e:
+        logger.error(f"Error starting manager trial: {str(e)}")
+        raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
+
+
 @ai_credits_router.post("/trial/pro/start")
 async def start_pro_trial_endpoint(
     user: dict = Depends(get_current_user)

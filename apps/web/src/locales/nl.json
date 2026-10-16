@@ -105,7 +105,12 @@
       "campaigns": "Advertentiecampagnes",
       "moreClosetSlots": "meer kledingkastplekken",
       "moreAiActions": "meer dagelijkse AI-acties"
-    }
+    },
+    "standardEngine": "Standaard engine (~30s)",
+    "unlockInstantTurbo": "⚡ Ontgrendel Instant Turbo",
+    "standardUploadDesc": "Standaard wachtrij. Diepe kledingscan wordt uitgevoerd.",
+    "standardStylistDesc": "Standaard wachtrij. AI Stylist stelt je look samen.",
+    "standardSuitcaseDesc": "Standaard wachtrij. Samengestelde reisgarderobe wordt gegenereerd."
   },
   "auth": {
     "welcomeBack": "Welkom terug",
@@ -870,8 +875,8 @@
     "currencyPlaceholder": "USD",
     "sourceTagPlaceholder": "eigen",
     "gender": "Geslacht",
-    "eyesSlowNotice": "Standaard AI duurt 40–60 s. Upgrade naar Manager voor directe analyse in 2 s met Cloud Gemini!",
-    "skipWaitCta": "⚡ 2 s met Manager"
+    "eyesSlowNotice": "Standaard engine (~30s)",
+    "skipWaitCta": "⚡ Ontgrendel Instant Turbo"
   },
   "itemDetail": {
     "reanalyze": {
@@ -2166,7 +2171,21 @@
     "perDay": "dag",
     "reject": "Afwijzen",
     "approvePublish": "Goedkeuren en publiceren",
-    "noPendingCampaigns": "Er staan ​​geen lopende campagnes in de wachtrij"
+    "noPendingCampaigns": "Er staan ​​geen lopende campagnes in de wachtrij",
+    "funnelTitle": "Funnel- en conversiestatistieken",
+    "funnelSubtitle": "Upload-voltooiingspercentages vs. proefperiode-aanmeldingen en conversielift",
+    "uploadCompletionRate": "Upload-voltooiingspercentage",
+    "uploadsStarted": "Gestarte uploads",
+    "uploadsCompleted": "Voltooide uploads",
+    "trialOptIns": "Proefperiode-aanmeldingen",
+    "trialOptInRate": "Proefperiode-aanmeldingspercentage",
+    "activeTrials": "Actieve proefperiodes",
+    "conversionLift": "Conversielift door proefperiode",
+    "trialConversionRate": "Conversieratio proef naar betaald",
+    "baselineConversionRate": "Basisconversie gratis naar betaald",
+    "turboCtaClicks": "Turbo CTA-klikken",
+    "funnelPathwayTitle": "Meerstaps conversiepad",
+    "funnelPathwayDesc": "Hoe gebruikers evolueren van gratis standaard uploads naar een instant Turbo-proefperiode en betaalde abonnementen."
   },
   "calendar": {
     "connect": "Verbind Google Agenda",

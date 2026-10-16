@@ -105,7 +105,12 @@
       "campaigns": "Campañas publicitarias",
       "moreClosetSlots": "más espacio en el armario",
       "moreAiActions": "más acciones diarias de IA"
-    }
+    },
+    "standardEngine": "Motor estándar (~30 s)",
+    "unlockInstantTurbo": "⚡ Desbloquear Turbo Instantáneo",
+    "standardUploadDesc": "Cola de procesamiento estándar. Escaneo profundo de prendas en curso.",
+    "standardStylistDesc": "Cola de procesamiento estándar. El estilista de IA está creando tu look.",
+    "standardSuitcaseDesc": "Cola de procesamiento estándar. Generando guardarropa de viaje personalizado."
   },
   "auth": {
     "welcomeBack": "Bienvenido de nuevo",
@@ -870,8 +875,8 @@
     "currencyPlaceholder": "USD",
     "sourceTagPlaceholder": "propio",
     "gender": "Género",
-    "eyesSlowNotice": "La IA estándar tarda entre 40 y 60 s. ¡Actualiza a Manager para un análisis instantáneo en 2 s con Cloud Gemini!",
-    "skipWaitCta": "⚡ 2 s con Manager"
+    "eyesSlowNotice": "Motor estándar (~30 s)",
+    "skipWaitCta": "⚡ Desbloquear Turbo Instantáneo"
   },
   "itemDetail": {
     "reanalyze": {
@@ -2166,7 +2171,21 @@
     "perDay": "día",
     "reject": "Rechazar",
     "approvePublish": "Aprobar y publicar",
-    "noPendingCampaigns": "No hay campañas pendientes en cola"
+    "noPendingCampaigns": "No hay campañas pendientes en cola",
+    "funnelTitle": "Métricas de embudo y conversión",
+    "funnelSubtitle": "Tasas de finalización de subida vs. altas de prueba e incremento de conversión",
+    "uploadCompletionRate": "Tasa de finalización de subida",
+    "uploadsStarted": "Subidas iniciadas",
+    "uploadsCompleted": "Subidas completadas",
+    "trialOptIns": "Altas en prueba gratuita",
+    "trialOptInRate": "Tasa de adopción de prueba",
+    "activeTrials": "Pruebas activas",
+    "conversionLift": "Incremento de conversión por prueba",
+    "trialConversionRate": "Tasa de prueba a pago",
+    "baselineConversionRate": "Conversión base gratis a pago",
+    "turboCtaClicks": "Clics en CTA Turbo",
+    "funnelPathwayTitle": "Ruta de conversión multietapa",
+    "funnelPathwayDesc": "Cómo avanzan los usuarios desde subidas estándar gratuitas hacia la prueba Turbo y suscripciones de pago."
   },
   "calendar": {
     "connect": "Conectar Google Calendar",

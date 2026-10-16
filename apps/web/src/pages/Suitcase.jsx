@@ -51,6 +51,8 @@ import { bestImageUrl } from "@/lib/itemImage";
 import { toast } from "sonner";
 import { labelForCategory, labelForRole } from "@/lib/taxonomy";
 import { useAuth } from "@/lib/auth";
+import { useTierLimits } from "@/hooks/useTierLimits";
+import { TurboStatusCard } from "@/components/TurboStatusCard";
 import { useModalBack } from "@/lib/useModalBack";
 import AvatarViewer from "@/components/AvatarViewer";
 import {
@@ -329,6 +331,7 @@ function OutfitCanvas({
 function Suitcase() {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
+  const { isFree } = useTierLimits();
   const closet = useClosetStore({ prewarm: true });
 
   const suitcaseStoreState = useSuitcaseStore({ prewarm: true });
@@ -1701,6 +1704,9 @@ function Suitcase() {
                             </>
                           )}
                         </Button>
+                        {isFree && packingLoading && (
+                          <TurboStatusCard variant="card" context="suitcase" className="mt-4" />
+                        )}
                       </CardContent>
                     </Card>
                   </div>

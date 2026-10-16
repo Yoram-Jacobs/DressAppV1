@@ -21,10 +21,16 @@ rather than printed as "None" or empty rows.
 from __future__ import annotations
 
 import asyncio
+import base64
+import io
 import logging
 import os
+from pathlib import Path
 from typing import Any
+import uuid
 
+import httpx
+from PIL import Image
 import resend
 
 logger = logging.getLogger(__name__)
@@ -166,23 +172,202 @@ def _btn(label: str, href: str, *, color: str = _BRAND_COLOR) -> str:
     )
 
 
-def _item_card(item: dict[str, Any]) -> str:
+def _pick_best_image_url(item: dict[str, Any]) -> str:
+    """Extract best image candidate from an item dictionary in priority order."""
+    if not isinstance(item, dict):
+        return ""
+
+    # 1. Reconstructed / clean studio cutouts
+    for key in (
+        "reconstructed_image_url",
+        "reconstruct_image_url",
+        "clean_image_url",
+        "cutout_url",
+    ):
+        val = item.get(key)
+        if isinstance(val, str) and val.strip():
+            return val.strip()
+
+    # 2. Thumbnail
+    thumb = item.get("thumbnail_data_url")
+    if isinstance(thumb, str) and thumb.strip():
+        return thumb.strip()
+
+    # 3. Listing images array
+    images = item.get("images")
+    if isinstance(images, list) and images:
+        for img in images:
+            if isinstance(img, str) and img.strip():
+                return img.strip()
+
+    # 4. Generic / legacy fields
+    for key in (
+        "segmented_image_url",
+        "original_image_url",
+        "image_url",
+        "photo_url",
+    ):
+        val = item.get(key)
+        if isinstance(val, str) and val.strip():
+            return val.strip()
+
+    return ""
+
+
+def _bytes_to_cid_attachment(raw_bytes: bytes, attachments: list[dict[str, Any]]) -> str | None:
+    """Normalise image bytes with PIL (resize to 240x240, convert alpha to #fafafa background,
+    compress to compact JPEG), append to attachments as an inline CID attachment, and return
+    the 'cid:<content_id>' reference string.
+    """
+    try:
+        img = Image.open(io.BytesIO(raw_bytes))
+        # Handle alpha/transparency gracefully so cutouts blend seamlessly onto card background
+        if img.mode in ("RGBA", "LA") or (img.mode == "P" and "transparency" in img.info):
+            img = img.convert("RGBA")
+            bg = Image.new("RGB", img.size, (250, 250, 250))  # matches #fafafa card bg
+            bg.paste(img, mask=img.split()[3])
+            img = bg
+        elif img.mode != "RGB":
+            img = img.convert("RGB")
+
+        # 240x240 is 2x retina for 120x120 display in email clients
+        img.thumbnail((240, 240), Image.Resampling.LANCZOS)
+
+        out_io = io.BytesIO()
+        img.save(out_io, format="JPEG", quality=82, optimize=True)
+        jpeg_bytes = out_io.getvalue()
+
+        b64_content = base64.b64encode(jpeg_bytes).decode("ascii")
+        cid = f"item_{uuid.uuid4().hex[:12]}"
+
+        attachments.append({
+            "filename": f"{cid}.jpg",
+            "content": b64_content,
+            "content_type": "image/jpeg",
+            "content_id": cid,
+            "inline_content_id": cid,
+        })
+        return f"cid:{cid}"
+    except Exception as exc:
+        logger.warning("Failed converting image to inline CID attachment: %s", exc)
+        return None
+
+
+async def _resolve_item_image(
+    item: dict[str, Any],
+    attachments: list[dict[str, Any]] | None,
+) -> str:
+    """Resolve an item image into an email-safe URL or CID inline attachment.
+
+    Email clients (especially Gmail, Outlook, Yahoo) strictly block or strip
+    data: URLs in <img> tags. To guarantee display:
+    1. Base64 data: URLs are decoded and converted to JPEG inline CID attachments.
+    2. Local static paths (/static/uploads/...) are read directly from disk
+       and converted to inline CID attachments.
+    3. Remote HTTP/HTTPS URLs are fetched (with 3s timeout) and attached as CID,
+       falling back to public absolute URL if fetch fails.
+    4. Relative paths without local files are converted to absolute URLs
+       prefixed by _APP_URL.
+
+    Returns the string to put in <img src="...">, or empty string if no image available.
+    """
+    raw_src = _pick_best_image_url(item)
+    if not raw_src:
+        return ""
+
+    can_attach = attachments is not None
+
+    # Case 1: Data URL (data:image/...;base64,...)
+    if raw_src.startswith("data:"):
+        if not can_attach:
+            # Cannot use data URL directly in email - webmail blocks it
+            return ""
+        try:
+            _, b64_data = raw_src.split(",", 1)
+            raw_bytes = base64.b64decode(b64_data)
+            cid_src = _bytes_to_cid_attachment(raw_bytes, attachments)
+            return cid_src or ""
+        except Exception as exc:
+            logger.warning("Failed decoding data URL for email: %s", exc)
+            return ""
+
+    # Case 2: Local relative path or static upload (/static/... or uploads/...)
+    clean_path = raw_src.lstrip("/")
+    if clean_path.startswith("static/") or clean_path.startswith("uploads/"):
+        rel = clean_path if clean_path.startswith("uploads/") else clean_path[len("static/"):]
+        backend_dir = Path(__file__).resolve().parent.parent.parent
+        disk_path = backend_dir / "static" / rel
+        if disk_path.exists() and can_attach:
+            try:
+                raw_bytes = disk_path.read_bytes()
+                cid_src = _bytes_to_cid_attachment(raw_bytes, attachments)
+                if cid_src:
+                    return cid_src
+            except Exception as exc:
+                logger.warning("Failed reading local static file %s: %s", disk_path, exc)
+        # Fall back to absolute public URL
+        return f"{_APP_URL}/{clean_path}"
+
+    # Case 3: Absolute HTTP/HTTPS URL
+    if raw_src.startswith("http://") or raw_src.startswith("https://"):
+        # Fix localhost/127.0.0.1 in URLs
+        if "localhost" in raw_src or "127.0.0.1" in raw_src:
+            for prefix in (
+                "http://localhost:8000/", "http://127.0.0.1:8000/",
+                "http://localhost:8001/", "http://127.0.0.1:8001/",
+                "http://localhost:3000/", "http://127.0.0.1:3000/",
+            ):
+                if raw_src.startswith(prefix):
+                    clean_rel = raw_src[len(prefix):]
+                    return await _resolve_item_image({"image_url": f"/{clean_rel}"}, attachments)
+
+        # For remote URLs, try fetching and attaching as CID so image displays
+        # without user needing to click 'Load remote images' in Outlook/Gmail
+        if can_attach:
+            try:
+                async with httpx.AsyncClient(timeout=3.0, follow_redirects=True) as client:
+                    resp = await client.get(raw_src)
+                    if resp.status_code == 200 and resp.content:
+                        cid_src = _bytes_to_cid_attachment(resp.content, attachments)
+                        if cid_src:
+                            return cid_src
+            except Exception as exc:
+                logger.debug("Failed fetching remote image %s for CID attachment: %s", raw_src, exc)
+
+        return raw_src
+
+    # Case 4: Other relative path
+    if raw_src.startswith("/"):
+        return f"{_APP_URL}{raw_src}"
+
+    return raw_src
+
+
+async def _item_card(
+    item: dict[str, Any],
+    attachments: list[dict[str, Any]] | None = None,
+) -> str:
     """Render a small item preview card (image + title + brand)."""
-    title = (item.get("title") or "Untitled item").replace("<", "&lt;")
-    brand = (item.get("brand") or "").replace("<", "&lt;")
-    img = (
-        item.get("thumbnail_data_url")
-        or item.get("segmented_image_url")
-        or item.get("original_image_url")
-        or ""
-    )
-    img_html = ""
-    if img:
+    title = (item.get("title") or "Untitled item").replace("<", "&lt;").replace(">", "&gt;")
+    brand = (item.get("brand") or "").replace("<", "&lt;").replace(">", "&gt;")
+
+    img_src = await _resolve_item_image(item, attachments)
+    if img_src:
         img_html = (
-            f'<img src="{img}" alt="" width="120" height="120" '
+            f'<img src="{img_src}" alt="{title}" width="120" height="120" '
             f'style="display:block;border:0;border-radius:10px;'
-            f'object-fit:cover;background:#eee;">'
+            f'object-fit:cover;background:#fafafa;">'
         )
+    else:
+        # Elegant fallback placeholder icon when no image exists
+        img_html = (
+            '<div style="width:120px;height:120px;border-radius:10px;'
+            'background:#eef4f3;text-align:center;line-height:120px;'
+            'font-size:36px;color:#1F6F6B;">'
+            '👗'
+            '</div>'
+        )
+
     brand_html = (
         f'<div style="color:#888;font-size:12px;margin-top:4px;">{brand}</div>'
         if brand else ""
@@ -190,10 +375,10 @@ def _item_card(item: dict[str, Any]) -> str:
     return (
         '<table role="presentation" cellpadding="0" cellspacing="0" '
         'style="border:1px solid #eee;border-radius:10px;padding:12px;'
-        'margin:12px 0;background:#fafafa;"><tr>'
+        'margin:12px 0;background:#fafafa;width:100%;max-width:540px;"><tr>'
         f'<td valign="top" width="130">{img_html}</td>'
         f'<td valign="top" style="padding-left:14px;">'
-        f'<div style="font-weight:600;font-size:15px;">{title}</div>'
+        f'<div style="font-weight:600;font-size:15px;color:#222;">{title}</div>'
         f'{brand_html}'
         '</td></tr></table>'
     )
@@ -253,10 +438,13 @@ def _contact_block(label: str, person: dict[str, Any]) -> str:
 async def sale_seller(
     *, to: str, seller: dict, buyer: dict, item: dict, gross_cents: int,
     seller_net_cents: int, currency: str, is_rental: bool = False,
+    attachments: list | None = None,
 ) -> dict:
     seller_name = seller.get("display_name") or seller.get("name") or "there"
     gross = f"{currency} {gross_cents/100:.2f}"
     net = f"{currency} {seller_net_cents/100:.2f}"
+    attachments_list = list(attachments or [])
+    card_html = await _item_card(item, attachments=attachments_list)
     
     if is_rental:
         title_text = f"Congratulations! Your item has been rented, {seller_name}! 🎉"
@@ -274,7 +462,7 @@ async def sale_seller(
     body = f"""\
 <h1 style="margin:0 0 14px;font-size:22px;">{title_text}</h1>
 <p>{intro_text}</p>
-{_item_card(item)}
+{card_html}
 <p>
   {price_label}<br>
   Your payout (after fees): <strong>{net}</strong>
@@ -284,7 +472,7 @@ expect dispatch within 3 working days.</p>
 {_contact_block("Buyer contact", buyer)}
 {_btn("View transaction in DressApp", f"{_APP_URL}/transactions")}
 """
-    return await _send(to, subject, _wrap(body, preheader=preheader))
+    return await _send(to, subject, _wrap(body, preheader=preheader), attachments=attachments_list)
 
 
 async def sale_buyer(
@@ -293,6 +481,8 @@ async def sale_buyer(
 ) -> dict:
     buyer_name = buyer.get("display_name") or buyer.get("name") or "there"
     gross = f"{currency} {gross_cents/100:.2f}"
+    attachments_list = list(attachments or [])
+    card_html = await _item_card(item, attachments=attachments_list)
 
     if is_rental:
         title_text = f"You rented it, {buyer_name}! 🛍️"
@@ -312,29 +502,33 @@ async def sale_buyer(
     body = f"""\
 <h1 style="margin:0 0 14px;font-size:22px;">{title_text}</h1>
 <p>{intro_text}</p>
-{_item_card(item)}
+{card_html}
 <p>{price_label}</p>
 <p>The owner has been notified and will dispatch within 3 working days.
 Reach out to them directly if you need to coordinate delivery:</p>
 {_contact_block(contact_label, seller)}
 {_btn("View transaction in DressApp", f"{_APP_URL}/transactions")}
 """
-    return await _send(to, subject, _wrap(body, preheader=preheader), attachments=attachments)
+    return await _send(to, subject, _wrap(body, preheader=preheader), attachments=attachments_list)
 
 
 async def swap_request(
     *, to: str, lister: dict, swapper: dict, listing_item: dict,
     offered_item: dict, accept_url: str, deny_url: str,
+    attachments: list | None = None,
 ) -> dict:
     lister_name = lister.get("display_name") or lister.get("name") or "there"
     swapper_name = swapper.get("display_name") or swapper.get("name") or "Someone"
+    attachments_list = list(attachments or [])
+    listing_card = await _item_card(listing_item, attachments=attachments_list)
+    offered_card = await _item_card(offered_item, attachments=attachments_list)
     body = f"""\
 <h1 style="margin:0 0 14px;font-size:22px;">Hi {lister_name}, you have a swap offer 🔄</h1>
 <p><strong>{swapper_name}</strong> would like to swap their item for your listing:</p>
 <div style="font-size:12px;color:#888;letter-spacing:.06em;text-transform:uppercase;margin-top:18px;">Your listing</div>
-{_item_card(listing_item)}
+{listing_card}
 <div style="font-size:12px;color:#888;letter-spacing:.06em;text-transform:uppercase;margin-top:6px;">In exchange for</div>
-{_item_card(offered_item)}
+{offered_card}
 <table role="presentation" cellpadding="0" cellspacing="0"><tr>
   <td>{_btn("Accept swap", accept_url)}</td>
   <td style="width:8px;"></td>
@@ -342,16 +536,20 @@ async def swap_request(
 </tr></table>
 <p style="font-size:12px;color:#888;">No login required — these links expire in 7 days.</p>
 """
-    return await _send(to, f"Swap offer for {listing_item.get('title','your item')}", _wrap(body, preheader=f"{swapper_name} wants to swap with you."))
+    return await _send(to, f"Swap offer for {listing_item.get('title','your item')}", _wrap(body, preheader=f"{swapper_name} wants to swap with you."), attachments=attachments_list)
 
 
 async def swap_success(
     *, to: str, recipient: dict, counterpart: dict, recipient_item: dict,
     counterpart_item: dict, confirm_url: str, role: str,
+    attachments: list | None = None,
 ) -> dict:
     """Sent to BOTH parties after the swap is accepted. ``role`` is
     "lister" or "swapper" purely to tweak the wording."""
     rec_name = recipient.get("display_name") or recipient.get("name") or "there"
+    attachments_list = list(attachments or [])
+    counterpart_card = await _item_card(counterpart_item, attachments=attachments_list)
+    recipient_card = await _item_card(recipient_item, attachments=attachments_list)
     if role == "lister":
         intro = f"Your swap with <strong>{counterpart.get('display_name') or 'the swapper'}</strong> is on. They will ship you their item below — please ship yours back."
     else:
@@ -360,9 +558,9 @@ async def swap_success(
 <h1 style="margin:0 0 14px;font-size:22px;">Swap confirmed, {rec_name}! 🎉</h1>
 <p>{intro}</p>
 <div style="font-size:12px;color:#888;letter-spacing:.06em;text-transform:uppercase;margin-top:18px;">Item you'll receive</div>
-{_item_card(counterpart_item)}
+{counterpart_card}
 <div style="font-size:12px;color:#888;letter-spacing:.06em;text-transform:uppercase;margin-top:6px;">Item you're sending</div>
-{_item_card(recipient_item)}
+{recipient_card}
 {_contact_block("Their shipping details", counterpart)}
 <p>Please ship within <strong>5 working days</strong>. Once you've received the
 incoming item, click below to confirm receipt:</p>
@@ -370,37 +568,43 @@ incoming item, click below to confirm receipt:</p>
 <p style="font-size:12px;color:#888;">When both parties confirm, the items
 will swap in your closets and the listings will close automatically.</p>
 """
-    return await _send(to, "Swap confirmed — please ship", _wrap(body, preheader="Both parties accepted; ship your item now."))
+    return await _send(to, "Swap confirmed — please ship", _wrap(body, preheader="Both parties accepted; ship your item now."), attachments=attachments_list)
 
 
 async def swap_denied(
     *, to: str, swapper: dict, lister: dict, listing_item: dict, offered_item: dict,
+    attachments: list | None = None,
 ) -> dict:
     name = swapper.get("display_name") or swapper.get("name") or "there"
     lister_name = lister.get("display_name") or "the lister"
+    attachments_list = list(attachments or [])
+    listing_card = await _item_card(listing_item, attachments=attachments_list)
     body = f"""\
 <h1 style="margin:0 0 14px;font-size:22px;">Hi {name},</h1>
 <p>{lister_name} chose not to proceed with the swap this time. No worries —
 their item is back on the marketplace and yours is still in your closet.</p>
-{_item_card(listing_item)}
+{listing_card}
 <p>Plenty of other listings to explore:</p>
 {_btn("Browse the marketplace", f"{_APP_URL}/marketplace")}
 """
-    return await _send(to, "Your swap offer was declined", _wrap(body, preheader="The lister declined; explore other listings."))
+    return await _send(to, "Your swap offer was declined", _wrap(body, preheader="The lister declined; explore other listings."), attachments=attachments_list)
 
 
 async def donation_both(
     *, to: list[str], donor: dict, recipient: dict, item: dict,
+    attachments: list | None = None,
 ) -> dict:
+    attachments_list = list(attachments or [])
+    card_html = await _item_card(item, attachments=attachments_list)
     body = f"""\
 <h1 style="margin:0 0 14px;font-size:22px;">A donation made it home 💚</h1>
 <p>Thank you both for participating in this donation!</p>
-{_item_card(item)}
+{card_html}
 {_contact_block("Donor", donor)}
 {_contact_block("Recipient", recipient)}
 {_btn("View in DressApp", f"{_APP_URL}/transactions")}
 """
-    return await _send(to, f"Donation confirmed: {item.get('title','your item')}", _wrap(body, preheader="Donation completed — thank you both."))
+    return await _send(to, f"Donation confirmed: {item.get('title','your item')}", _wrap(body, preheader="Donation completed — thank you both."), attachments=attachments_list)
 
 
 async def send_thank_you_payment(
