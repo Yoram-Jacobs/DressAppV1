@@ -81,3 +81,53 @@ def test_default_missing_desc_for_role():
     assert "top" in desc_top.lower()
 
 
+def test_deduplicate_sentences():
+    """Verify deduplication removes duplicate prefixes and sentences while preserving unique text."""
+    from app.api.v1.suitcase import _deduplicate_sentences
+
+    raw = (
+        "הנחיות צניעות וקוד לבוש: הנחיות צניעות וקוד לבוש: מומלץ ללבוש בגדים צנועים ומכובדים במקומות ציבוריים.\n\n"
+        "הנחיות צניעות וקוד לבוש: מומלץ ללבוש בגדים צנועים ומכובדים במקומות ציבוריים.\n\n"
+        "אזהרות בטיחות וביטחון: יש להיזהר מכייסים בשווקים."
+    )
+    cleaned = _deduplicate_sentences(raw)
+    assert "מומלץ ללבוש בגדים צנועים ומכובדים במקומות ציבוריים." in cleaned
+    assert "יש להיזהר מכייסים בשווקים." in cleaned
+    # Ensure no duplicate sentence
+    assert cleaned.count("מומלץ ללבוש בגדים צנועים") == 1
+    assert cleaned.count("הנחיות צניעות") == 0  # Prefixes stripped
+
+
+def test_separate_modesty_and_safety():
+    """Verify combined text is cleanly divided into modesty rules vs safety alerts."""
+    from app.api.v1.suitcase import _separate_modesty_and_safety
+
+    combined = (
+        "הנחיות צניעות וקוד לבוש: מומלץ ללבוש בגדים צנועים ומכובדים במקומות ציבוריים, במסגדים ובאתרי קודש.\n\n"
+        "אזהרות בטיחות וביטחון: יש לנקוט במשנה זהירות מפני כייסים בשווקים ולהימנע מסמטאות חשוכות בלילה.\n\n"
+        "הנחיות צניעות וקוד לבוש: מומלץ ללבוש בגדים צנועים ומכובדים במקומות ציבוריים, במסגדים ובאתרי קודש."
+    )
+
+    cult, dang = _separate_modesty_and_safety(None, None, fallback_notes=combined)
+
+    # Modesty must have dress/mosque rules, NOT pickpocket warnings
+    assert "בגדים צנועים" in cult
+    assert "מסגדים" in cult
+    assert "כייסים" not in cult
+    assert "סמטאות" not in cult
+    assert cult.count("בגדים צנועים") == 1
+
+    # Safety must have pickpocket/alley warnings, NOT dress rules
+    assert "כייסים" in dang
+    assert "סמטאות" in dang
+    assert "בגדים צנועים" not in dang
+    assert "מסגדים" not in dang
+    assert dang.count("כייסים") == 1
+
+    # Idempotence check: running again on the output produces identical clean output
+    cult2, dang2 = _separate_modesty_and_safety(cult, dang)
+    assert cult2 == cult
+    assert dang2 == dang
+
+
+

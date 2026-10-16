@@ -251,6 +251,149 @@ def _get_default_missing_desc_for_role(role: str, destination: str = "") -> str:
     return "Essential travel garment"
 
 
+_MODESTY_KEYWORDS = (
+    "modesty", "modest", "cover", "shoulder", "knee", "cleavage", "chest",
+    "dress code", "sacred", "holy", "mosque", "temple", "church", "shrine",
+    "religious", "sleeve", "scarf", "hijab", "abaya", "swimwear", "swimsuit",
+    "shorts", "revealing", "attire", "צניעות", "צנוע", "כיסוי", "ברכיים",
+    "כתפיים", "מחשוף", "חזה", "שמלה", "חצאית", "מסגד", "מסגדים", "מקדש",
+    "כנסייה", "אתרי קודש", "קוד לבוש", "שרוולים", "בגד ים", "בגדי ים",
+    "כיסוי ראש", "רעלה", "חיג'אב", "עבאיה", "גלביה", "לבוש מכבד"
+)
+
+_SAFETY_KEYWORDS = (
+    "safety", "security", "warning", "caution", "pickpocket", "pickpocketing",
+    "theft", "thief", "thieves", "steal", "valuables", "wallet", "alley",
+    "alleys", "unlit", "dark", "nighttime", "evening", "scam", "danger",
+    "dangerous", "crime", "police", "בטיחות", "ביטחון", "אזהרה", "אזהרות",
+    "כיוס", "כייס", "כייסים", "גניבה", "גנבים", "חפצי ערך", "ארנק", "סמטאות",
+    "סמטה", "חשוך", "חשוכות", "מוארות", "שעות הערב", "לילה", "תרמית",
+    "הונאה", "סכנה", "אזור מסוכן", "זהירות", "שמירה", "שוד", "משטרה"
+)
+
+_PREFIX_CLEAN_RE = re.compile(
+    r"^(?:הנחיות\s*צניעות(?:\s*וקוד\s*לבוש)?|אזהרות\s*בטיחות(?:\s*וביטחון)?|"
+    r"modesty\s*(?:&|and)?\s*dress\s*code|safety\s*(?:&|and)?\s*security|"
+    r"modesty\s*notes|safety\s*notes|[\*\-\#\>\s\:\•])+\s*:\s*",
+    re.IGNORECASE
+)
+
+
+def _clean_prefix(text: str) -> str:
+    s = (text or "").strip()
+    while True:
+        m = _PREFIX_CLEAN_RE.match(s)
+        if m:
+            s = s[m.end():].strip()
+        else:
+            break
+    s = re.sub(r"^[\*\-\#\>\s\:\•]+", "", s).strip()
+    return s
+
+
+def _deduplicate_sentences(text: str | None) -> str:
+    """Removes duplicate sentences, paragraphs, or prefixes while preserving order."""
+    if not text:
+        return ""
+    
+    raw_lines = [l.strip() for l in str(text).splitlines() if l.strip()]
+    cleaned_sentences: list[str] = []
+    seen_normalized: set[str] = set()
+
+    for line in raw_lines:
+        line_clean = _clean_prefix(line)
+        if not line_clean:
+            continue
+        parts = [p.strip() for p in re.split(r"(?<=[.!?。])\s+", line_clean) if p.strip()]
+        if not parts:
+            parts = [line_clean]
+
+        for part in parts:
+            s = _clean_prefix(part)
+            if not s:
+                continue
+            norm = re.sub(r"[^\w\u0590-\u05FF\u0600-\u06FF\u4e00-\u9fff]", "", s).lower().strip()
+            norm = " ".join(norm.split())
+            if not norm or len(norm) < 3:
+                continue
+            if norm not in seen_normalized:
+                seen_normalized.add(norm)
+                cleaned_sentences.append(s)
+
+    return " ".join(cleaned_sentences)
+
+
+def _separate_modesty_and_safety(
+    cultural: str | None,
+    danger: str | None,
+    fallback_notes: str | None = None
+) -> tuple[str, str]:
+    """Ensures cultural_guidelines only contains modesty/dress code rules,
+    and danger_zones_info only contains safety/security precautions.
+    Prevents cross-contamination and exponential duplication."""
+    candidates: list[str] = []
+    for src in (cultural, danger, fallback_notes):
+        if src and isinstance(src, str):
+            for line in src.splitlines():
+                line_clean = _clean_prefix(line)
+                if not line_clean:
+                    continue
+                parts = [p.strip() for p in re.split(r"(?<=[.!?。])\s+", line_clean) if p.strip()]
+                candidates.extend(parts or [line_clean])
+
+    modesty_sentences: list[str] = []
+    safety_sentences: list[str] = []
+    seen_modesty: set[str] = set()
+    seen_safety: set[str] = set()
+
+    for c in candidates:
+        s = _clean_prefix(c)
+        if not s:
+            continue
+        s_low = s.lower()
+        norm = re.sub(r"[^\w\u0590-\u05FF\u0600-\u06FF\u4e00-\u9fff]", "", s).lower().strip()
+        norm = " ".join(norm.split())
+        if not norm or len(norm) < 3:
+            continue
+
+        is_modesty = any(k in s_low for k in _MODESTY_KEYWORDS)
+        is_safety = any(k in s_low for k in _SAFETY_KEYWORDS)
+
+        if is_modesty and not is_safety:
+            if norm not in seen_modesty:
+                seen_modesty.add(norm)
+                modesty_sentences.append(s)
+        elif is_safety and not is_modesty:
+            if norm not in seen_safety:
+                seen_safety.add(norm)
+                safety_sentences.append(s)
+        elif is_modesty and is_safety:
+            # Contains both: if modesty dominant, modesty; if safety dominant, safety
+            modesty_hits = sum(1 for k in _MODESTY_KEYWORDS if k in s_low)
+            safety_hits = sum(1 for k in _SAFETY_KEYWORDS if k in s_low)
+            if modesty_hits >= safety_hits:
+                if norm not in seen_modesty:
+                    seen_modesty.add(norm)
+                    modesty_sentences.append(s)
+            else:
+                if norm not in seen_safety:
+                    seen_safety.add(norm)
+                    safety_sentences.append(s)
+        else:
+            # Neither matched explicitly
+            if cultural and s in cultural and norm not in seen_modesty:
+                seen_modesty.add(norm)
+                modesty_sentences.append(s)
+            elif danger and s in danger and norm not in seen_safety:
+                seen_safety.add(norm)
+                safety_sentences.append(s)
+
+    clean_cultural = _deduplicate_sentences(" ".join(modesty_sentences))
+    clean_danger = _deduplicate_sentences(" ".join(safety_sentences))
+
+    return clean_cultural, clean_danger
+
+
 _KNOWN_DESTINATIONS_GEO: dict[str, tuple[float, float]] = {
     "marrakech": (31.6295, -7.9811),
     "marrakesh": (31.6295, -7.9811),
@@ -498,6 +641,8 @@ class SuitcaseApproveIn(BaseModel):
     outfits: list[dict[str, Any]]
     packing_list: list[dict[str, Any]]
     missing_notes: str | None = None
+    cultural_guidelines: str | None = None
+    danger_zones_info: str | None = None
     local_fashion_stores: list[dict[str, Any]] | None = None
     missing_items: list[dict[str, Any]] | None = None
 
@@ -716,15 +861,15 @@ async def get_active_suitcase(user: dict = Depends(get_current_user)) -> dict[st
             if str_field in m and not isinstance(m[str_field], str):
                 m[str_field] = str(m[str_field])
 
-    # Enforce string for notes to prevent React 'Objects are not valid' errors
-    if "missing_notes" in suitcase_dict and not isinstance(suitcase_dict["missing_notes"], str):
-        suitcase_dict["missing_notes"] = str(suitcase_dict["missing_notes"])
-        
-    if "cultural_guidelines" in suitcase_dict and not isinstance(suitcase_dict["cultural_guidelines"], str):
-        suitcase_dict["cultural_guidelines"] = str(suitcase_dict["cultural_guidelines"])
-        
-    if "danger_zones_info" in suitcase_dict and not isinstance(suitcase_dict["danger_zones_info"], str):
-        suitcase_dict["danger_zones_info"] = str(suitcase_dict["danger_zones_info"])
+    # Separate and sanitize modesty vs safety warnings to prevent duplicate accumulation
+    cult, dang = _separate_modesty_and_safety(
+        suitcase_dict.get("cultural_guidelines"),
+        suitcase_dict.get("danger_zones_info"),
+        suitcase_dict.get("missing_notes"),
+    )
+    suitcase_dict["cultural_guidelines"] = cult
+    suitcase_dict["danger_zones_info"] = dang
+    suitcase_dict["missing_notes"] = "\n\n".join(filter(None, [cult, dang]))
 
     for top_level_str in ["destinations", "purpose", "preferred_style", "departure_time", "return_time", "notes"]:
         if top_level_str in suitcase_dict and not isinstance(suitcase_dict[top_level_str], str):
@@ -745,6 +890,16 @@ async def save_active_suitcase(
     body["updated_at"] = datetime.now(timezone.utc).isoformat()
     
     cleaned_body = strip_base64_images(body)
+
+    # Separate and sanitize modesty vs safety warnings before saving
+    cult, dang = _separate_modesty_and_safety(
+        cleaned_body.get("cultural_guidelines"),
+        cleaned_body.get("danger_zones_info"),
+        cleaned_body.get("missing_notes"),
+    )
+    cleaned_body["cultural_guidelines"] = cult
+    cleaned_body["danger_zones_info"] = dang
+    cleaned_body["missing_notes"] = "\n\n".join(filter(None, [cult, dang]))
     
     if "id" not in cleaned_body or not cleaned_body["id"]:
         cleaned_body["id"] = str(uuid.uuid4())
@@ -1019,12 +1174,20 @@ async def pack_suitcase(
     )
     analysis = _parse_suitcase_json(analysis_str)
 
+    # Ensure modesty & safety separation on parsed analysis
+    cult, dang = _separate_modesty_and_safety(
+        analysis.get("cultural_guidelines"),
+        analysis.get("danger_zones_info"),
+    )
+    analysis["cultural_guidelines"] = cult
+    analysis["danger_zones_info"] = dang
+
     # Safety net: ensure cultural_guidelines has modesty details if model omitted them but context has them
     if not analysis.get("cultural_guidelines") and eff_safety_context:
         for line in eff_safety_context.splitlines():
-            line_clean = line.strip().lstrip("*#- ").strip()
+            line_clean = _clean_prefix(line)
             line_low = line_clean.lower()
-            if any(k in line_low for k in ("modesty", "cover", "shoulders", "knees", "cleavage", "scarf", "hijab", "abaya", "mosque", "temple", "swimwear", "צניעות", "כיסוי", "ברכיים", "כתפיים", "מסגד")):
+            if any(k in line_low for k in _MODESTY_KEYWORDS):
                 if len(line_clean) > 20 and not line_clean.startswith("##") and "keywords:" not in line_low:
                     analysis["cultural_guidelines"] = line_clean
                     break
@@ -1032,9 +1195,9 @@ async def pack_suitcase(
     # Safety net: ensure danger_zones_info has security details if model omitted them but context has them
     if not analysis.get("danger_zones_info") and eff_safety_context:
         for line in eff_safety_context.splitlines():
-            line_clean = line.strip().lstrip("*#- ").strip()
+            line_clean = _clean_prefix(line)
             line_low = line_clean.lower()
-            if any(k in line_low for k in ("pickpocket", "safety", "security", "crime", "alley", "theft", "danger", "warning", "בטיחות", "ביטחון", "כיוס", "זהירות", "סמטאות")):
+            if any(k in line_low for k in _SAFETY_KEYWORDS):
                 if len(line_clean) > 20 and not line_clean.startswith("##") and "keywords:" not in line_low:
                     analysis["danger_zones_info"] = line_clean
                     break
@@ -1369,11 +1532,17 @@ async def pack_suitcase(
         except Exception as tr_out_exc:
             logger.warning("Suitcase outbound translation for Eyes soft-failed: %s", tr_out_exc)
 
+    # Clean and separate modesty vs safety text before returning
+    clean_cult, clean_dang = _separate_modesty_and_safety(
+        analysis.get("cultural_guidelines"),
+        analysis.get("danger_zones_info"),
+    )
+
     # Build response structure
     return {
         "status": "success",
-        "cultural_guidelines": analysis.get("cultural_guidelines") or "",
-        "danger_zones_info": analysis.get("danger_zones_info") or "",
+        "cultural_guidelines": clean_cult,
+        "danger_zones_info": clean_dang,
         "outfits": outfits,
         "packing_list": packing_list,
         "local_fashion_stores": analysis.get("local_fashion_stores") or [],
@@ -1386,6 +1555,14 @@ async def approve_suitcase(
     body: SuitcaseApproveIn, user: dict = Depends(get_current_user)
 ) -> dict[str, Any]:
     db = get_db()
+
+    # Separate and clean modesty and safety warnings
+    clean_cult, clean_dang = _separate_modesty_and_safety(
+        body.cultural_guidelines,
+        body.danger_zones_info,
+        body.missing_notes,
+    )
+    clean_missing_notes = "\n\n".join(filter(None, [clean_cult, clean_dang]))
 
     # 2. Save/Update active suitcase state
     suitcase_doc = {
@@ -1400,7 +1577,9 @@ async def approve_suitcase(
         "status": "active",
         "outfits": body.outfits,
         "packing_list": body.packing_list,
-        "missing_notes": body.missing_notes,
+        "cultural_guidelines": clean_cult,
+        "danger_zones_info": clean_dang,
+        "missing_notes": clean_missing_notes,
         "local_fashion_stores": body.local_fashion_stores or [],
         "missing_items": body.missing_items or [],
         "created_at": datetime.now(timezone.utc).isoformat(),

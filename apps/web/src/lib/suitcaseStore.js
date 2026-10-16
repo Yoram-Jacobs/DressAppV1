@@ -26,6 +26,136 @@ export const defaultWelcomeMessage = (t) => [
   }
 ];
 
+const MODESTY_KEYWORDS = [
+  'modesty', 'modest', 'cover', 'shoulder', 'knee', 'cleavage', 'chest',
+  'dress code', 'sacred', 'holy', 'mosque', 'temple', 'church', 'shrine',
+  'religious', 'sleeve', 'scarf', 'hijab', 'abaya', 'swimwear', 'swimsuit',
+  'shorts', 'revealing', 'attire', 'צניעות', 'צנוע', 'כיסוי', 'ברכיים',
+  'כתפיים', 'מחשוף', 'חזה', 'שמלה', 'חצאית', 'מסגד', 'מסגדים', 'מקדש',
+  'כנסייה', 'אתרי קודש', 'קוד לבוש', 'שרוולים', 'בגד ים', 'בגדי ים',
+  'כיסוי ראש', 'רעלה', "חיג'אב", 'עבאיה', 'גלביה', 'לבוש מכבד'
+];
+
+const SAFETY_KEYWORDS = [
+  'safety', 'security', 'warning', 'caution', 'pickpocket', 'pickpocketing',
+  'theft', 'thief', 'thieves', 'steal', 'valuables', 'wallet', 'alley',
+  'alleys', 'unlit', 'dark', 'nighttime', 'evening', 'scam', 'danger',
+  'dangerous', 'crime', 'police', 'בטיחות', 'ביטחון', 'אזהרה', 'אזהרות',
+  'כיוס', 'כייס', 'כייסים', 'גניבה', 'גנבים', 'חפצי ערך', 'ארנק', 'סמטאות',
+  'סמטה', 'חשוך', 'חשוכות', 'מוארות', 'שעות הערב', 'לילה', 'תרמית',
+  'הונאה', 'סכנה', 'אזור מסוכן', 'זהירות', 'שמירה', 'שוד', 'משטרה'
+];
+
+const PREFIX_CLEAN_RE = /^(?:הנחיות\s*צניעות(?:\s*וקוד\s*לבוש)?|אזהרות\s*בטיחות(?:\s*וביטחון)?|modesty\s*(?:&|and)?\s*dress\s*code|safety\s*(?:&|and)?\s*security|modesty\s*notes|safety\s*notes|[\*\-\#\>\s\:\•])+\s*:\s*/i;
+
+export function cleanPrefix(text) {
+  let s = (text || '').trim();
+  while (true) {
+    const m = s.match(PREFIX_CLEAN_RE);
+    if (m) {
+      s = s.slice(m[0].length).trim();
+    } else {
+      break;
+    }
+  }
+  return s.replace(/^[\*\-\#\>\s\:\•]+/, '').trim();
+}
+
+export function deduplicateSentences(text) {
+  if (!text) return '';
+  const lines = String(text).split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+  const cleaned = [];
+  const seen = new Set();
+
+  for (const line of lines) {
+    const lineClean = cleanPrefix(line);
+    if (!lineClean) continue;
+    const parts = lineClean.split(/(?<=[.!?。])\s+/).map(p => p.trim()).filter(Boolean);
+    const candidates = parts.length > 0 ? parts : [lineClean];
+
+    for (const part of candidates) {
+      const s = cleanPrefix(part);
+      if (!s) continue;
+      const norm = s.replace(/[^\w\u0590-\u05FF\u0600-\u06FF\u4e00-\u9fff]/g, '').toLowerCase().trim();
+      if (!norm || norm.length < 3) continue;
+      if (!seen.has(norm)) {
+        seen.add(norm);
+        cleaned.push(s);
+      }
+    }
+  }
+  return cleaned.join(' ');
+}
+
+export function separateModestyAndSafety(cultural, danger, fallbackNotes) {
+  const candidates = [];
+  for (const src of [cultural, danger, fallbackNotes]) {
+    if (src && typeof src === 'string') {
+      const lines = src.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+      for (const line of lines) {
+        const lineClean = cleanPrefix(line);
+        if (!lineClean) continue;
+        const parts = lineClean.split(/(?<=[.!?。])\s+/).map(p => p.trim()).filter(Boolean);
+        candidates.push(...(parts.length > 0 ? parts : [lineClean]));
+      }
+    }
+  }
+
+  const modestySentences = [];
+  const safetySentences = [];
+  const seenModesty = new Set();
+  const seenSafety = new Set();
+
+  for (const c of candidates) {
+    const s = cleanPrefix(c);
+    if (!s) continue;
+    const sLow = s.toLowerCase();
+    const norm = s.replace(/[^\w\u0590-\u05FF\u0600-\u06FF\u4e00-\u9fff]/g, '').toLowerCase().trim();
+    if (!norm || norm.length < 3) continue;
+
+    const isModesty = MODESTY_KEYWORDS.some(k => sLow.includes(k));
+    const isSafety = SAFETY_KEYWORDS.some(k => sLow.includes(k));
+
+    if (isModesty && !isSafety) {
+      if (!seenModesty.has(norm)) {
+        seenModesty.add(norm);
+        modestySentences.push(s);
+      }
+    } else if (isSafety && !isModesty) {
+      if (!seenSafety.has(norm)) {
+        seenSafety.add(norm);
+        safetySentences.push(s);
+      }
+    } else if (isModesty && isSafety) {
+      const modestyHits = MODESTY_KEYWORDS.reduce((acc, k) => acc + (sLow.includes(k) ? 1 : 0), 0);
+      const safetyHits = SAFETY_KEYWORDS.reduce((acc, k) => acc + (sLow.includes(k) ? 1 : 0), 0);
+      if (modestyHits >= safetyHits) {
+        if (!seenModesty.has(norm)) {
+          seenModesty.add(norm);
+          modestySentences.push(s);
+        }
+      } else {
+        if (!seenSafety.has(norm)) {
+          seenSafety.add(norm);
+          safetySentences.push(s);
+        }
+      }
+    } else {
+      if (cultural && cultural.includes(s) && !seenModesty.has(norm)) {
+        seenModesty.add(norm);
+        modestySentences.push(s);
+      } else if (danger && danger.includes(s) && !seenSafety.has(norm)) {
+        seenSafety.add(norm);
+        safetySentences.push(s);
+      }
+    }
+  }
+
+  const cleanCultural = deduplicateSentences(modestySentences.join(' '));
+  const cleanDanger = deduplicateSentences(safetySentences.join(' '));
+  return { cultural: cleanCultural, danger: cleanDanger };
+}
+
 const LOCAL_STORAGE_KEY = 'dressapp_suitcase_store_state';
 
 const _defaultState = {
@@ -168,11 +298,19 @@ export const suitcaseStore = {
 
       let packingData = null;
       if (activeSuitcase) {
+        const { cultural, danger } = separateModestyAndSafety(
+          activeSuitcase.cultural_guidelines,
+          activeSuitcase.danger_zones_info,
+          activeSuitcase.missing_notes
+        );
+        activeSuitcase.cultural_guidelines = cultural;
+        activeSuitcase.danger_zones_info = danger;
+
         packingData = {
           packing_list: activeSuitcase.packing_list || [],
           outfits: activeSuitcase.outfits || [],
-          danger_zones_info: activeSuitcase.missing_notes || '',
-          cultural_guidelines: activeSuitcase.missing_notes || '',
+          danger_zones_info: danger,
+          cultural_guidelines: cultural,
           local_fashion_stores: activeSuitcase.local_fashion_stores || [],
           missing_items: activeSuitcase.missing_items || []
         };
@@ -204,11 +342,19 @@ export const suitcaseStore = {
     const val = typeof activeSuitcase === 'function' ? activeSuitcase(_state.activeSuitcase) : activeSuitcase;
     let packingData = _state.packingData;
     if (val) {
+      const { cultural, danger } = separateModestyAndSafety(
+        val.cultural_guidelines,
+        val.danger_zones_info,
+        val.missing_notes
+      );
+      val.cultural_guidelines = cultural;
+      val.danger_zones_info = danger;
+
       packingData = {
         packing_list: val.packing_list || [],
         outfits: val.outfits || [],
-        danger_zones_info: val.missing_notes || '',
-        cultural_guidelines: val.missing_notes || '',
+        danger_zones_info: danger,
+        cultural_guidelines: cultural,
         local_fashion_stores: val.local_fashion_stores || [],
         missing_items: val.missing_items || []
       };

@@ -46,7 +46,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { api } from "@/lib/api";
 import { useClosetStore } from "@/lib/useClosetStore";
 import { useSuitcaseStore } from "@/lib/useSuitcaseStore";
-import { KNOWN_WELCOME_MESSAGES } from "@/lib/suitcaseStore";
+import { KNOWN_WELCOME_MESSAGES, deduplicateSentences, separateModestyAndSafety } from "@/lib/suitcaseStore";
 import { bestImageUrl } from "@/lib/itemImage";
 import { toast } from "sonner";
 import { labelForCategory, labelForRole } from "@/lib/taxonomy";
@@ -628,6 +628,14 @@ function Suitcase() {
           state.viewState === "reviewing"
             ? state.packingData?.outfits || []
             : [],
+        cultural_guidelines:
+          state.viewState === "reviewing"
+            ? (state.packingData?.cultural_guidelines || "")
+            : (state.activeSuitcase?.cultural_guidelines || ""),
+        danger_zones_info:
+          state.viewState === "reviewing"
+            ? (state.packingData?.danger_zones_info || "")
+            : (state.activeSuitcase?.danger_zones_info || ""),
         missing_notes:
           state.viewState === "reviewing"
             ? [
@@ -636,7 +644,7 @@ function Suitcase() {
               ]
                 .filter(Boolean)
                 .join("\n\n")
-            : "",
+            : (state.activeSuitcase?.missing_notes || ""),
         local_fashion_stores:
           state.viewState === "reviewing"
             ? state.packingData?.local_fashion_stores || []
@@ -803,6 +811,8 @@ function Suitcase() {
               notes: overrides.notes,
               outfits: packed.outfits || [],
               packing_list: packed.packing_list || [],
+              cultural_guidelines: packed.cultural_guidelines || "",
+              danger_zones_info: packed.danger_zones_info || "",
               missing_notes: [
                 packed.cultural_guidelines,
                 packed.danger_zones_info,
@@ -948,11 +958,17 @@ function Suitcase() {
     const currentPackingList = isEditingActive
       ? activeSuitcase?.packing_list
       : packingData?.packing_list;
+    const currentCultural = isEditingActive
+      ? (activeSuitcase?.cultural_guidelines || "")
+      : (packingData?.cultural_guidelines || "");
+    const currentDanger = isEditingActive
+      ? (activeSuitcase?.danger_zones_info || "")
+      : (packingData?.danger_zones_info || "");
     const currentMissingNotes = isEditingActive
       ? activeSuitcase?.missing_notes
       : [
-          packingData?.cultural_guidelines,
-          packingData?.danger_zones_info,
+          currentCultural,
+          currentDanger,
         ]
           .filter(Boolean)
           .join("\n\n");
@@ -988,6 +1004,8 @@ function Suitcase() {
         notes,
         outfits: currentOutfits || [],
         packing_list: currentPackingList || [],
+        cultural_guidelines: currentCultural || "",
+        danger_zones_info: currentDanger || "",
         missing_notes: currentMissingNotes || "",
         local_fashion_stores: currentLocalStores || [],
         missing_items: currentMissingItems || [],
@@ -1748,39 +1766,46 @@ function Suitcase() {
                       <CardContent className="p-5">
                         {/* Modesty or Danger alerts */}
                         {(packingData.danger_zones_info ||
-                          packingData.cultural_guidelines) && (
-                            <div className="rounded-[12px] mb-[15px] border border-red-200 dark:border-red-950/50 bg-red-50/55 dark:bg-red-950/10 p-3 flex flex-col md:flex-row gap-3 items-start">
-                              <AlertTriangle className="h-6 w-6 text-red-500 shrink-0" />
-                              <div className="space-y-1.5 w-full">
-                                <h3 className="text-[12px] font-semibold text-red-500 dark:text-red-300 text-base">
-                                  {t("suitcase.alertTitle", {
-                                    defaultValue:
-                                      "Modesty & Safety Constraints Detected",
-                                  })}
-                                </h3>
-                                {packingData.cultural_guidelines && (
-                                  <p className="text-[12px] text-red-500 dark:text-red-400 leading-relaxed font-semibold">
-                                    <span className="font-bold underline decoration-red-300/60 mr-1 ml-1">
-                                      {t("suitcase.modestyAlertLabel", {
-                                        defaultValue: "Modesty & Dress Code:",
-                                      })}
-                                    </span>
-                                    {packingData.cultural_guidelines}
-                                  </p>
-                                )}
-                                {packingData.danger_zones_info && (
-                                  <p className="text-[12px] text-red-500 dark:text-red-400 leading-relaxed font-semibold">
-                                    <span className="font-bold underline decoration-red-300/60 mr-1 ml-1">
-                                      {t("suitcase.safetyAlertLabel", {
-                                        defaultValue: "Safety & Security:",
-                                      })}
-                                    </span>
-                                    {packingData.danger_zones_info}
-                                  </p>
-                                )}
+                          packingData.cultural_guidelines) && (() => {
+                            const { cultural, danger } = separateModestyAndSafety(
+                              packingData.cultural_guidelines,
+                              packingData.danger_zones_info
+                            );
+                            if (!cultural && !danger) return null;
+                            return (
+                              <div className="rounded-[12px] mb-[15px] border border-red-200 dark:border-red-950/50 bg-red-50/55 dark:bg-red-950/10 p-3 flex flex-col md:flex-row gap-3 items-start">
+                                <AlertTriangle className="h-6 w-6 text-red-500 shrink-0" />
+                                <div className="space-y-1.5 w-full">
+                                  <h3 className="text-[12px] font-semibold text-red-500 dark:text-red-300 text-base">
+                                    {t("suitcase.alertTitle", {
+                                      defaultValue:
+                                        "Modesty & Safety Constraints Detected",
+                                    })}
+                                  </h3>
+                                  {cultural && (
+                                    <p className="text-[12px] text-red-500 dark:text-red-400 leading-relaxed font-semibold">
+                                      <span className="font-bold underline decoration-red-300/60 mr-1 ml-1">
+                                        {t("suitcase.modestyAlertLabel", {
+                                          defaultValue: "Modesty & Dress Code:",
+                                        })}
+                                      </span>
+                                      {cultural}
+                                    </p>
+                                  )}
+                                  {danger && (
+                                    <p className="text-[12px] text-red-500 dark:text-red-400 leading-relaxed font-semibold">
+                                      <span className="font-bold underline decoration-red-300/60 mr-1 ml-1">
+                                        {t("suitcase.safetyAlertLabel", {
+                                          defaultValue: "Safety & Security:",
+                                        })}
+                                      </span>
+                                      {danger}
+                                    </p>
+                                  )}
+                                </div>
                               </div>
-                            </div>
-                          )}
+                            );
+                          })()}
                         <Accordion type="multiple" className="w-full space-y-4">
                           {/* Proposed Daily Outfits */}
                           <AccordionItem
@@ -2413,23 +2438,50 @@ function Suitcase() {
                     </div>
                     <Card className="rounded-[12px] border border-border bg-white shadow-sm overflow-hidden">
                       <CardContent className="p-5">
-                        {/* Danger alert if any */}
-                        {activeSuitcase.missing_notes && (
-                          <div className="rounded-[12px] mb-[15px] border border-red-200 dark:border-red-950/50 bg-red-50/55 dark:bg-red-950/10 p-3 flex flex-col md:flex-row gap-3 items-start">
-                            <AlertTriangle className="h-6 w-6 text-red-500 shrink-0" />
-                            <div className="space-y-1">
-                              <h3 className="text-[12px] font-semibold text-red-500 dark:text-red-300 text-base">
-                                {t("suitcase.safetyNotesHeader", {
-                                  defaultValue:
-                                    "Travel Modesty / Safety Advisor Notes",
-                                })}
-                              </h3>
-                              <p className="text-[12px] text-red-500 dark:text-red-400 leading-relaxed font-semibold whitespace-pre-line">
-                                {activeSuitcase.missing_notes}
-                              </p>
-                            </div>
-                          </div>
-                        )}
+                        {/* Danger / Modesty alert if any */}
+                        {(activeSuitcase.cultural_guidelines ||
+                          activeSuitcase.danger_zones_info ||
+                          activeSuitcase.missing_notes) && (() => {
+                            const { cultural, danger } = separateModestyAndSafety(
+                              activeSuitcase.cultural_guidelines,
+                              activeSuitcase.danger_zones_info,
+                              activeSuitcase.missing_notes
+                            );
+                            if (!cultural && !danger) return null;
+                            return (
+                              <div className="rounded-[12px] mb-[15px] border border-red-200 dark:border-red-950/50 bg-red-50/55 dark:bg-red-950/10 p-3 flex flex-col md:flex-row gap-3 items-start">
+                                <AlertTriangle className="h-6 w-6 text-red-500 shrink-0" />
+                                <div className="space-y-1.5 w-full">
+                                  <h3 className="text-[12px] font-semibold text-red-500 dark:text-red-300 text-base">
+                                    {t("suitcase.alertTitle", {
+                                      defaultValue:
+                                        "Modesty & Safety Constraints Detected",
+                                    })}
+                                  </h3>
+                                  {cultural && (
+                                    <p className="text-[12px] text-red-500 dark:text-red-400 leading-relaxed font-semibold">
+                                      <span className="font-bold underline decoration-red-300/60 mr-1 ml-1">
+                                        {t("suitcase.modestyAlertLabel", {
+                                          defaultValue: "Modesty & Dress Code:",
+                                        })}
+                                      </span>
+                                      {cultural}
+                                    </p>
+                                  )}
+                                  {danger && (
+                                    <p className="text-[12px] text-red-500 dark:text-red-400 leading-relaxed font-semibold">
+                                      <span className="font-bold underline decoration-red-300/60 mr-1 ml-1">
+                                        {t("suitcase.safetyAlertLabel", {
+                                          defaultValue: "Safety & Security:",
+                                        })}
+                                      </span>
+                                      {danger}
+                                    </p>
+                                  )}
+                                </div>
+                              </div>
+                            );
+                          })()}
                         <Accordion type="multiple" className="w-full space-y-4">
                           {/* Proposed Daily Outfits / My Travel Outfits */}
                           <AccordionItem

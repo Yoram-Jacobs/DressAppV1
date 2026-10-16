@@ -59,6 +59,8 @@ export interface ActiveSuitcase {
   outfits?: SuitcaseOutfit[];
   messages?: SuitcaseChatMessage[];
   missing_notes?: string;
+  cultural_guidelines?: string;
+  danger_zones_info?: string;
   local_fashion_stores?: any[];
   missing_items?: any[];
   items?: SuitcaseItem[];
@@ -188,8 +190,8 @@ export const suitcaseStore = {
         packingData = {
           packing_list: activeSuitcase.packing_list || activeSuitcase.items || [],
           outfits: activeSuitcase.outfits || [],
-          danger_zones_info: activeSuitcase.missing_notes || '',
-          cultural_guidelines: activeSuitcase.missing_notes || '',
+          danger_zones_info: activeSuitcase.danger_zones_info || '',
+          cultural_guidelines: activeSuitcase.cultural_guidelines || '',
           local_fashion_stores: activeSuitcase.local_fashion_stores || [],
           missing_items: activeSuitcase.missing_items || [],
         };
@@ -221,8 +223,8 @@ export const suitcaseStore = {
       packingData = {
         packing_list: activeSuitcase.packing_list || activeSuitcase.items || [],
         outfits: activeSuitcase.outfits || [],
-        danger_zones_info: activeSuitcase.missing_notes || '',
-        cultural_guidelines: activeSuitcase.missing_notes || '',
+        danger_zones_info: activeSuitcase.danger_zones_info || '',
+        cultural_guidelines: activeSuitcase.cultural_guidelines || '',
         local_fashion_stores: activeSuitcase.local_fashion_stores || [],
         missing_items: activeSuitcase.missing_items || [],
       };
