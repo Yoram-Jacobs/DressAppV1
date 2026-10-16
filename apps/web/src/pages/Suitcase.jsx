@@ -288,11 +288,18 @@ function OutfitCanvas({
   const outfitItemsMap = useMemo(() => {
     if (!outfit || !Array.isArray(outfit.items)) return {};
     const res = {};
-    outfit.items.filter(Boolean).forEach((item) => {
-      if (item.role && !excludeRoles.includes(item.role)) {
+    outfit.items.filter(Boolean).forEach((item, idx) => {
+      const role = item.role || item.category || 'item';
+      if (!excludeRoles.includes(role)) {
         const match = findClosetMatch(item, closet.items);
         if (match) {
-          res[item.role] = match;
+          const key = `${role}_${idx}`;
+          res[key] = {
+            ...match,
+            role: item.role || match.role || match.category,
+            category: match.category || item.category,
+            name: match.name || match.title || item.name || item.title || item.description
+          };
         }
       }
     });

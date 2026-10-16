@@ -160,10 +160,11 @@ const getOutfitPiecesMap = (o, closetItems = []) => {
   const map = {};
   const garments = Array.isArray(o?.garments) && o.garments.length > 0 ? o.garments : (Array.isArray(o?.items) ? o.items : []);
   if (Array.isArray(garments)) {
-    garments.forEach((g) => {
-      if (g && g.role) {
+    garments.forEach((g, idx) => {
+      if (g) {
         let img = g.image_url || g.clean_image_url || g.thumbnail_data_url;
         let cid = g.closet_item_id || g.id;
+        let matchedCi = null;
         if (Array.isArray(closetItems) && closetItems.length > 0) {
           const ci = closetItems.find(c =>
             (cid && (c.id === cid || c._id === cid)) ||
@@ -172,12 +173,20 @@ const getOutfitPiecesMap = (o, closetItems = []) => {
           if (ci) {
             img = bestImageUrl(ci) || img;
             cid = cid || ci.id;
+            matchedCi = ci;
           }
         }
-        map[g.role] = {
+        const role = g.role || g.category || 'item';
+        const key = `${role}_${idx}`;
+        map[key] = {
           id: cid,
           closet_item_id: cid,
-          image_url: img
+          image_url: img,
+          role: role,
+          category: matchedCi?.category || g.category,
+          sub_category: matchedCi?.sub_category || g.sub_category,
+          name: matchedCi?.name || matchedCi?.title || g.name || g.title,
+          item_type: matchedCi?.item_type || g.item_type
         };
       }
     });
@@ -187,14 +196,15 @@ const getOutfitPiecesMap = (o, closetItems = []) => {
 const getRecommendationPiecesMap = (rec, closetItems) => {
   const map = {};
   if (Array.isArray(rec?.items)) {
-    rec.items.forEach((item) => {
-      if (item && item.role) {
-        const closetItem = closetItems.find(c => c.id === item.closet_item_id);
+    rec.items.forEach((item, idx) => {
+      if (item) {
+        const closetItem = (closetItems || []).find(c => c.id === item.closet_item_id);
+        const role = item.role || closetItem?.category || 'item';
+        const key = `${role}_${idx}`;
         if (closetItem) {
-          map[item.role] = {
+          map[key] = {
             id: closetItem.id,
             closet_item_id: closetItem.id,
-            image_url: closetItem.image_url,
             image_url: bestImageUrl(closetItem) || closetItem.image_url,
             clean_image_url: closetItem.clean_image_url,
             cutout_url: closetItem.cutout_url,
@@ -203,6 +213,16 @@ const getRecommendationPiecesMap = (rec, closetItems) => {
             reconstructed_image_url: closetItem.reconstructed_image_url,
             original_image_url: closetItem.original_image_url,
             image_variants: closetItem.image_variants,
+            role: role,
+            category: closetItem.category,
+            sub_category: closetItem.sub_category,
+            name: closetItem.name || closetItem.title,
+            item_type: closetItem.item_type
+          };
+        } else {
+          map[key] = {
+            ...item,
+            role: role
           };
         }
       }

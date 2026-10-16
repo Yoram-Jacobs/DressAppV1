@@ -117,9 +117,42 @@ export function getBottomTopography(garment) {
   };
 }
 
-export function getDressTopography(garment) {
-  if (!garment) return { classes: 'top-[14.5%] left-1/2 w-[82%] h-[68%] z-[20] drop-shadow-lg', align: 'object-top' };
+export function isStraplessGarment(garment) {
+  if (!garment) return false;
   const text = `${garment.sub_category || ''} ${garment.item_type || ''} ${garment.name || ''} ${garment.category || ''}`.toLowerCase();
+  return (
+    text.includes('strapless') ||
+    text.includes('tube_top') ||
+    text.includes('tube top') ||
+    text.includes('tube_dress') ||
+    text.includes('tube dress') ||
+    text.includes('bandeau') ||
+    text.includes('סטרפלס') ||
+    text.includes('חולצת_צינור') ||
+    text.includes('חולצת צינור') ||
+    text.includes('שמלת_צינור') ||
+    text.includes('שמלת צינור') ||
+    text.includes('בנדו') ||
+    text.includes('بدון حمالات') ||
+    text.includes('سترابلس') ||
+    text.includes('без бретелей') ||
+    text.includes('trägerlos') ||
+    text.includes('sin tirantes') ||
+    text.includes('sans bretelles')
+  );
+}
+
+export function getDressTopography(garment) {
+  if (!garment) return { classes: 'top-[22%] left-1/2 w-[82%] h-[58%] z-[20] drop-shadow-lg', align: 'object-top' };
+  const text = `${garment.sub_category || ''} ${garment.item_type || ''} ${garment.name || ''} ${garment.category || ''}`.toLowerCase();
+
+  // Strapless dresses / jumpsuits anchored lower at bust line
+  if (isStraplessGarment(garment)) {
+    return {
+      classes: 'top-[33%] left-1/2 w-[80%] h-[58%] z-[20] drop-shadow-lg',
+      align: 'object-top'
+    };
+  }
 
   // 1. One-Piece Swimsuit / Bodysuit / Monokini
   if (
@@ -137,7 +170,7 @@ export function getDressTopography(garment) {
     (text.includes('בגד ים') && !text.includes('שני חלקים') && !text.includes('ביקיני'))
   ) {
     return {
-      classes: 'top-[14.5%] left-1/2 w-[68%] h-[42%] z-[20] drop-shadow-lg',
+      classes: 'top-[22%] left-1/2 w-[68%] h-[38%] z-[20] drop-shadow-lg',
       align: 'object-top'
     };
   }
@@ -151,17 +184,21 @@ export function getDressTopography(garment) {
     text.includes('שמלה קצרה')
   ) {
     return {
-      classes: 'top-[14.5%] left-1/2 w-[80%] h-[48%] z-[20] drop-shadow-lg',
+      classes: 'top-[22%] left-1/2 w-[80%] h-[44%] z-[20] drop-shadow-lg',
       align: 'object-top'
     };
   }
 
-  // 3. Maxi Dress / Evening Gown
+  // 3. Maxi Dress / Evening Gown / Full-body Jumpsuit / Galabia
   if (
     text.includes('maxi_dress') ||
     (text.includes('dress') && (text.includes('maxi') || text.includes('long'))) ||
     text.includes('gown') ||
     text.includes('evening_dress') ||
+    text.includes('jumpsuit') ||
+    text.includes('אוברול') ||
+    text.includes('גלבייה') ||
+    text.includes('galabiya') ||
     text.includes('שמלת מקסי') ||
     text.includes('שמלת_מקסי') ||
     text.includes('שמלת ערב') ||
@@ -169,14 +206,14 @@ export function getDressTopography(garment) {
     text.includes('שמלה ארוכה')
   ) {
     return {
-      classes: 'top-[14.5%] left-1/2 w-[84%] h-[72%] z-[20] drop-shadow-lg',
+      classes: 'top-[22%] left-1/2 w-[84%] h-[70%] z-[20] drop-shadow-lg',
       align: 'object-top'
     };
   }
 
   // 4. Midi Dress (Default)
   return {
-    classes: 'top-[14.5%] left-1/2 w-[82%] h-[68%] z-[20] drop-shadow-lg',
+    classes: 'top-[22%] left-1/2 w-[82%] h-[58%] z-[20] drop-shadow-lg',
     align: 'object-top'
   };
 }
@@ -185,12 +222,22 @@ export function getTopTopography(garment, hasOuterwear = false) {
   if (!garment) {
     return {
       classes: hasOuterwear
-        ? 'top-[14.5%] left-1/2 w-[70%] h-[38%] z-[20]'
-        : 'top-[14.5%] left-1/2 w-[82%] h-[38%] z-[20]',
+        ? 'top-[22%] left-1/2 w-[72%] h-[34%] z-[20]'
+        : 'top-[22%] left-1/2 w-[82%] h-[34%] z-[20]',
       align: 'object-top'
     };
   }
   const text = `${garment.sub_category || ''} ${garment.item_type || ''} ${garment.name || ''} ${garment.category || ''}`.toLowerCase();
+
+  // Strapless top anchored at chest/bust line
+  if (isStraplessGarment(garment)) {
+    return {
+      classes: hasOuterwear
+        ? 'top-[33%] left-1/2 w-[68%] h-[18%] z-[20]'
+        : 'top-[33%] left-1/2 w-[72%] h-[18%] z-[20]',
+      align: 'object-top'
+    };
+  }
 
   // 1. Crop tops, sports bras, bralettes, bikini tops
   if (
@@ -206,13 +253,13 @@ export function getTopTopography(garment, hasOuterwear = false) {
   ) {
     return {
       classes: hasOuterwear
-        ? 'top-[14.5%] left-1/2 w-[68%] h-[22%] z-[20]'
-        : 'top-[14.5%] left-1/2 w-[78%] h-[22%] z-[20]',
+        ? 'top-[22%] left-1/2 w-[68%] h-[20%] z-[20]'
+        : 'top-[22%] left-1/2 w-[76%] h-[20%] z-[20]',
       align: 'object-top'
     };
   }
 
-  // 2. Longline tops, Kurtas, Tunics, Galabiyas
+  // 2. Longline tops, Kurtas, Tunics, Galabiyas, Thobes, Kaftans
   if (
     text.includes('kurta') ||
     text.includes('tunic') ||
@@ -220,29 +267,45 @@ export function getTopTopography(garment, hasOuterwear = false) {
     text.includes('קפטאן') ||
     text.includes('גלבייה') ||
     text.includes('טוניקה') ||
+    text.includes('thobe') ||
+    text.includes('ת\'וב') ||
     (text.includes('long') && (text.includes('shirt') || text.includes('top')))
   ) {
     return {
       classes: hasOuterwear
-        ? 'top-[14.5%] left-1/2 w-[74%] h-[48%] z-[20]'
-        : 'top-[14.5%] left-1/2 w-[84%] h-[50%] z-[20]',
+        ? 'top-[22%] left-1/2 w-[74%] h-[48%] z-[20]'
+        : 'top-[22%] left-1/2 w-[84%] h-[50%] z-[20]',
       align: 'object-top'
     };
   }
 
-  // 3. Standard Top (Default)
-  // When an outer coat/jacket is worn over top, snug width to torso (w-[70%])
-  // so sleeve ends don't peek out laterally as wings behind outerwear.
+  // 3. Vests / Waistcoats
+  if (
+    text.includes('vest') ||
+    text.includes('waistcoat') ||
+    text.includes('וסט') ||
+    text.includes('gilet')
+  ) {
+    return {
+      classes: hasOuterwear
+        ? 'top-[22%] left-1/2 w-[72%] h-[30%] z-[20]'
+        : 'top-[22%] left-1/2 w-[78%] h-[30%] z-[20]',
+      align: 'object-top'
+    };
+  }
+
+  // 4. Standard Top (Default: shirts, t-shirts, sweaters, hoodies, polos)
+  // Anchored to shoulders at top-[22%]. When outerwear is worn, snug width to 72%
   return {
     classes: hasOuterwear
-      ? 'top-[14.5%] left-1/2 w-[70%] h-[38%] z-[20]'
-      : 'top-[14.5%] left-1/2 w-[82%] h-[38%] z-[20]',
+      ? 'top-[22%] left-1/2 w-[72%] h-[34%] z-[20]'
+      : 'top-[22%] left-1/2 w-[82%] h-[34%] z-[20]',
     align: 'object-top'
   };
 }
 
 export function getOuterwearTopography(garment) {
-  if (!garment) return { classes: 'top-[14.5%] left-1/2 w-[86%] h-[46%] z-[30] drop-shadow-lg', align: 'object-top' };
+  if (!garment) return { classes: 'top-[21.5%] left-1/2 w-[86%] h-[40%] z-[30] drop-shadow-lg', align: 'object-top' };
   const text = `${garment.sub_category || ''} ${garment.item_type || ''} ${garment.name || ''} ${garment.category || ''}`.toLowerCase();
 
   // 1. Long coats, trench coats, overcoats, dusters, parkas
@@ -256,7 +319,7 @@ export function getOuterwearTopography(garment) {
     (text.includes('coat') && (text.includes('long') || text.includes('maxi')))
   ) {
     return {
-      classes: 'top-[14.5%] left-1/2 w-[88%] h-[63%] z-[30] drop-shadow-lg',
+      classes: 'top-[21.5%] left-1/2 w-[88%] h-[58%] z-[30] drop-shadow-lg',
       align: 'object-top'
     };
   }
@@ -272,14 +335,14 @@ export function getOuterwearTopography(garment) {
     (text.includes('jacket') && text.includes('crop'))
   ) {
     return {
-      classes: 'top-[14.5%] left-1/2 w-[84%] h-[30%] z-[30] drop-shadow-lg',
+      classes: 'top-[21.5%] left-1/2 w-[84%] h-[26%] z-[30] drop-shadow-lg',
       align: 'object-top'
     };
   }
 
   // 3. Standard Jacket / Blazer / Cardigan (Default)
   return {
-    classes: 'top-[14.5%] left-1/2 w-[86%] h-[46%] z-[30] drop-shadow-lg',
+    classes: 'top-[21.5%] left-1/2 w-[86%] h-[40%] z-[30] drop-shadow-lg',
     align: 'object-top'
   };
 }
@@ -396,73 +459,60 @@ export default function AvatarViewer2D({ shapeParams = {}, measurements: provide
       if (s === 'hat' || s === 'cap') s = 'headwear';
       if (s === 'accessories') s = 'accessory';
       if (s === 'footwear') s = 'shoes';
-      if (s === 'belt') s = 'belt';
+      if (s === 'belt' || s === 'belts') s = 'belt';
       if (s === 'glasses' || s === 'sunglasses' || s === 'eyewear') s = 'glasses';
+      if (s === 'earrings' || s === 'earring') s = 'earrings';
+      if (s === 'scarf' || s === 'scarves' || s === 'neckwear' || s === 'tie' || s === 'necklace' || s === 'necklaces') s = 'scarf';
+      if (s === 'watch' || s === 'watches') s = 'watch';
+      if (s === 'gloves' || s === 'glove' || s === 'mittens') s = 'gloves';
+      if (s === 'bag' || s === 'bags') s = 'bag';
 
-      const isHat = /\b(hats?|caps?|beanies?|berets?|fedoras?|visors?|flat\s+caps?|bonnets?|bucket\s+hats?|helmets?|turbans?|kippahs?|yarmulkes?|yamulkas?|keffiyehs?|kaffias?|shemaghs?|ghutras?|agals?|hijabs?|niqabs?|tarbooshes?|fezes?|fez|shtreimels?|sombreros?|panamas?|כובע|קובע|ברט|מצחייה|קסקט|טורבן|כיפה|כיפות|יארמולקה|כפייה|כאפייה|שמאג|עגאל|עקאל|חיג'אב|חג'אב|תרבוש|שטריימל|סומבררו|כומתה|פדורה|בנדנה|מטפחת|סודרא|قبعة|طاقية|كوفية|شماغ|عقال|عمامة|طربوش|حجاب|نقاب)\b/i.test(name) && !/\bcapri\b/i.test(name);
-      if (isHat && (s === 'accessory' || s === 'accessories')) {
-        s = 'headwear';
-      }
+      const isHat = /\b(hats?|caps?|beanies?|berets?|fedoras?|visors?|flat\s+caps?|bonnets?|bucket\s+hats?|helmets?|turbans?|kippahs?|yarmulkes?|yamulkas?|keffiyehs?|kaffias?|shemaghs?|ghutras?|agals?|hijabs?|niqabs?|tarbooshes?|fezes?|fez|shtreimels?|sombreros?|panamas?|headbands?|bandanas?|mitpachat)\b/i.test(allText) ||
+                    /(?:כובע|קובע|ברט|מצחייה|קסקט|טורבן|כיפה|כיפות|יארמולקה|כפייה|כאפייה|שמאג|עגאל|עקאל|חיג['’]אב|חג['’]אב|תרבוש|שטריימל|סומבררו|כומתה|פדורה|בנדנה|מטפחת|סודרא|קשת|סרט ראש|قبعة|طاقية|كوفية|شماغ|عقال|عمامة|طربوش|حجاب|نقاب)/i.test(allText);
 
-      const isBelt = name.includes('belt') ||
-                     name.includes('waistband') ||
-                     name.includes('חגורה') ||
-                     name.includes('חגור') ||
-                     name.includes('חגורת') ||
-                     name.includes('حزام');
-      if (isBelt && (s === 'accessory' || s === 'accessories' || !s || s === 'item' || s === 'garment')) {
-        s = 'belt';
-      }
+      const isBelt = /\b(belts?|waistbands?|sashes?|cummerbunds?)\b/i.test(allText) ||
+                     /(?:חגורה|חגור|חגורות|אבזם|אבזמי|חזאם|حزام|أحزمة|ceintures?|gürtel|cinture?|cinturón|cintos?|ремень|ремни|пояс|腰带|皮带|ベルト)/i.test(allText);
 
-      const isGlasses = name.includes('glasses') || 
-                        name.includes('spectacles') || 
-                        name.includes('sunglasses') || 
-                        name.includes('eyewear') || 
-                        name.includes('shades') ||
-                        name.includes('משקפיים') ||
-                        name.includes('משקפי') ||
-                        name.includes('نظارات') ||
-                        name.includes('نظارة');
-      if (isGlasses && (s === 'accessory' || s === 'accessories')) {
-        s = 'glasses';
-      }
+      const isGlasses = /\b(glasses|sunglasses|spectacles|eyewear|shades|goggles)\b/i.test(allText) ||
+                        /(?:משקפיים|משקפי|משקפי שמש|משקפי_שמש|משקפי ראייה|نظارات|نظارة|نظارات شمسية)/i.test(allText);
 
-      const isBag = name.includes('bag') ||
-                    name.includes('backpack') ||
-                    name.includes('tote') ||
-                    name.includes('clutch') ||
-                    name.includes('purse') ||
-                    name.includes('satchel') ||
-                    name.includes('briefcase') ||
-                    name.includes('duffel') ||
-                    name.includes('תיק') ||
-                    name.includes('ארנק') ||
-                    name.includes('حقيبة') ||
-                    name.includes('شنطة');
-      if (isBag && (s === 'accessory' || s === 'accessories')) {
-        s = 'bag';
-      }
+      const isEarrings = /\b(earrings?|ear\s*studs?|ear\s*cuffs?|hoops?)\b/i.test(allText) ||
+                         /(?:עגילים|עגיל|עגילי|أقراط|حلق|boucles?\s+d['’]oreilles?|ohrringe?|orecchini|pendientes|brincos?|серьги|серьга|耳环|耳圈|ピアス|झुमके)/i.test(allText);
 
-      const isWatch = name.includes('watch') ||
-                      name.includes('timepiece') ||
-                      name.includes('wrist') ||
-                      name.includes('שעון') ||
-                      name.includes('שעוני') ||
-                      name.includes('צמיד') ||
-                      name.includes('צמידי') ||
-                      name.includes('ساعة') ||
-                      name.includes('سوار');
-      if (isWatch && (s === 'accessory' || s === 'accessories' || !s || s === 'item' || s === 'garment')) {
-        s = 'watch';
-      }
+      const isScarf = /\b(scarves|scarf|foulards?|wraps?|shawls?|pashminas?|stoles?|neckties?|bow\s*ties?|ascots?|cravats?|necklaces?|chokers?|pendants?)\b/i.test(allText) ||
+                      /(?:צעיף|צעיפים|עניבה|עניבות|פפיון|של|עליונית צעיף|שרשרת|שרשראות|קולר|תליון|ושاح|ربطة\s*عنق|كرافات|قلادة|عقد|طوق|écharpes?|cravates?|schal|krawatte|sciarpa|bufanda|corbata|cachecol|шарф|галстук|колье|ожерелье|围巾|领带|项链|スカーフ|ネクタイ)/i.test(allText) ||
+                      /\bties?\b(?!\s*dye)/i.test(allText);
+
+      const isWatch = /\b(watch(?:es)?|timepieces?|smartwatch(?:es)?|wristwatches?|bracelets?|bangles?|wristbands?|cuffs?)\b/i.test(allText) ||
+                      /(?:שעון|שעונים|שעון\s*יד|צמיד|צמידים|סמארטוואטש|ساعة|ساعات|ساعة\s*يد|سوار|أساور|montres?|bracelets?|uhr(?:en)?|armband|orologi?o?|reloj(?:es)?|relógio|часы|браслет|手表|腕表|手镯|手链|腕時計|ブレスレット)/i.test(allText);
+
+      const isGloves = /\b(gloves?|mittens?|gauntlets?)\b/i.test(allText) ||
+                       /(?:כפפות|כפפה|כפפות עור|قفازات|قفاز|gants?|handschuhe?|guanti|guantes?|luvas?|перчатки|варежки|手套|手袋)/i.test(allText);
+
+      const isBag = /\b(bags?|backpacks?|totes?|clutches?|purses?|satchels?|briefcases?|duffels?|cross-?body|shoulder\s*bags?)\b/i.test(allText) ||
+                    /(?:תיק|תיקים|ארנק|ארנקים|תרמיל|תרמילים|ילקוט|حقيبة|حقائب|شنطة|شنط|sacs?|taschen?|borse?|bolsos?|bolsas?|сумка|сумки|рюкзак|包|背包|手提包|バッグ|リュック)/i.test(allText);
+
+      if (isHat && (s === 'accessory' || s === 'accessories' || !s || s === 'item' || s === 'garment' || s === 'other')) s = 'headwear';
+      if (isBelt && (s === 'accessory' || s === 'accessories' || !s || s === 'item' || s === 'garment' || s === 'other')) s = 'belt';
+      if (isGlasses && (s === 'accessory' || s === 'accessories' || !s || s === 'item' || s === 'garment' || s === 'other')) s = 'glasses';
+      if (isEarrings && (s === 'accessory' || s === 'accessories' || !s || s === 'item' || s === 'garment' || s === 'other')) s = 'earrings';
+      if (isScarf && (s === 'accessory' || s === 'accessories' || !s || s === 'item' || s === 'garment' || s === 'other')) s = 'scarf';
+      if (isWatch && (s === 'accessory' || s === 'accessories' || !s || s === 'item' || s === 'garment' || s === 'other')) s = 'watch';
+      if (isGloves && (s === 'accessory' || s === 'accessories' || !s || s === 'item' || s === 'garment' || s === 'other')) s = 'gloves';
+      if (isBag && (s === 'accessory' || s === 'accessories' || !s || s === 'item' || s === 'garment' || s === 'other')) s = 'bag';
 
       // Category / Intrinsic role detectors
-      const isShoesByName = /\b(shoes?|sneakers?|boots?|sandals?|heels?|loafers?|slippers?|slides?|mules?|oxford\s+shoes?|oxfords|oxford(?!\s+(shirts?|cloth|cotton|button))|clogs?|נעליים|נעלי|סניקרס|מגפיים|מגפי|מגפונים|סנדלים|עקבים|כפכפים|מוקסינים|حذاء|أحذية|صندل|بوت)\b/i.test(name);
-      const isBottomByName = (/\b(pants?|cargo(?!\s+pocket)|trousers?|jeans?|shorts\b|short\s+pants\b|shorts?(?![\s-_]*(?:sleeves?|sleeved|arm|curt[ao]s?))|skirts?|sweatpants|joggers?|slacks?|chinos?|leggings?|bermuda|culottes?|trunks?|briefs?|מכנסיים|מכנס|מכנסי|ג'ינס|שורטס|חצאית|חצאיות|טייץ|טייטס|טרנינג|בוקסר|תחתונים|בגד ים|מכנסי ים|ביקיני|بنطلون|بنطال|سروال|شورت|تنورة|جينز)\b/i.test(allText) || isSwimBottom) && !/\b(?:short[-_\s]*sleeves?|shortsleeve|חולצה|חולצת|shirt|tee|t-shirt)\b/i.test(allText);
-      const isTopByName = /\b(shirts?|t-shirts?|tees?|blouses?|sweaters?|hoodies?|sweatshirts?|crop\s+tops?|tank(?:\s+tops?)?|polos?|pullovers?|turtlenecks?|camisoles?|rash_guards?|kurtas?|kurtis?|tunics?|kaftans?|caftans?|galabiyas?|thobes?|guayaberas?|sherwanis?|tops?|חולצה|חולצת|חולצות|גופייה|גופיה|גופיות|סוודר|סוודרים|קפוצ'ון|סווטשירט|פולו|מכופתרת|סריג|סריגים|טוניקה|קורטה|גלבייה|חולצת גלישה|قميص|بلوزة|كنزة|هودي|تونيك|جلابية|ثوب)\b/i.test(allText) || isSwimTop;
-      const isOuterwearByName = /\b(jackets?|coats?|blazers?|parkas?|trench(?:coats?)?|overcoats?|windbreakers?|puffers?|anoraks?|vests?|ז'קט|ג'קט|מעיל|מעילים|בלייזר|וסט|מקטורן|עליונית|סטרה|جاكيت|معطف|بليزر)\b/i.test(name);
-      const isDressByName = /\b(dresses|dress(?!\s+(pants|trousers|shirts?|shoes?|boots?|code|socks|belt|suit))|gowns?|jumpsuits?|rompers?|dungarees?|overalls?|one_piece|swimsuit|שמלה|שמלת|שמלות|אוברול|סרבל|בגד ים שלם|فستان|فساتين|جمبسوت)\b/i.test(allText) || isOnePieceSwim;
-      const isAccessoryByName = isHat || isBelt || isGlasses || isBag || isWatch || /\b(scarves|scarf|neckties?|bow\s*ties?|necklaces?|bracelets?|watches?|earrings?|צעיף|צעיפים|עניבה|עניבות|שרשרת|שרשראות|צמיד|צמידים|שעון|שעונים|עגילים|حزام|قبعة|نظارات|حقيبة|وشاح|ساعة|سوار|قلادة)\b/i.test(name) || /\bties?\b(?!\s*dye)/i.test(name);
+      const isShoesByName = /\b(shoes?|sneakers?|boots?|sandals?|heels?|loafers?|slippers?|slides?|mules?|oxford\s+shoes?|oxfords|oxford(?!\s+(shirts?|cloth|cotton|button))|clogs?)\b/i.test(allText) ||
+                            /(?:נעליים|נעלי|סניקרס|מגפיים|מגפי|מגפונים|סנדלים|עקבים|כפכפים|מוקסינים|حذاء|أحذية|صندل|بوت)/i.test(allText);
+      const isBottomByName = ((/\b(pants?|cargo(?!\s+pocket)|trousers?|jeans?|shorts\b|short\s+pants\b|shorts?(?![\s-_]*(?:sleeves?|sleeved|arm|curt[ao]s?))|skirts?|sweatpants|joggers?|slacks?|chinos?|leggings?|bermuda|culottes?|trunks?|briefs?)\b/i.test(allText) ||
+                             /(?:מכנסיים|מכנס|מכנסי|ג'ינס|שורטס|חצאית|חצאיות|טייץ|טייטס|טרנינג|בוקסר|תחתונים|בגד ים|מכנסי ים|ביקיני|בןטלון|بنطال|سروال|شورت|تنورة|جينز)/i.test(allText) || isSwimBottom) && !/\b(?:short[-_\s]*sleeves?|shortsleeve|חולצה|חולצת|shirt|tee|t-shirt)\b/i.test(allText));
+      const isTopByName = /\b(shirts?|t-shirts?|tees?|blouses?|sweaters?|hoodies?|sweatshirts?|crop\s+tops?|tank(?:\s+tops?)?|polos?|pullovers?|turtlenecks?|camisoles?|rash_guards?|kurtas?|kurtis?|tunics?|kaftans?|caftans?|galabiyas?|thobes?|guayaberas?|sherwanis?|tops?)\b/i.test(allText) ||
+                          /(?:חולצה|חולצת|חולצות|גופייה|גופיה|גופיות|סוודר|סוודרים|קפוצ'ון|סווטשירט|פולו|מכופתרת|סריג|סריגים|טוניקה|קורטה|גלבייה|חולצת גלישה|قميص|بلوزة|كنزة|هودي|تونيك|جلابية|ثوب)/i.test(allText) || isSwimTop;
+      const isOuterwearByName = /\b(jackets?|coats?|blazers?|parkas?|trench(?:coats?)?|overcoats?|windbreakers?|puffers?|anoraks?|vests?)\b/i.test(allText) ||
+                                /(?:ז'קט|ג'קט|מעיל|מעילים|בלייזר|וסט|מקטורן|עליונית|סטרה|עליוניות|جاكيت|معطف|بليزر)/i.test(allText);
+      const isDressByName = /\b(dresses|dress(?!\s+(pants|trousers|shirts?|shoes?|boots?|code|socks|belt|suit))|gowns?|jumpsuits?|rompers?|dungarees?|overalls?|one_piece|swimsuit)\b/i.test(allText) ||
+                            /(?:שמלה|שמלת|שמלות|אוברול|סרבל|בגד ים שלם|בגד_ים_שלם|فستان|فساتين|جمبسوت)/i.test(allText) || isOnePieceSwim;
+      const isAccessoryByName = isHat || isBelt || isGlasses || isBag || isWatch || isEarrings || isScarf || isGloves;
 
       // --- Hard Anatomical Safety Guards (All 5 Categories) ---
 
@@ -484,21 +534,21 @@ export default function AvatarViewer2D({ shapeParams = {}, measurements: provide
 
       // 3. Top Safety Guard: Tops can NEVER render on legs, feet, head, face, waist, or bag!
       if (isTopByName && !isBottomByName && !isShoesByName) {
-        if (s === 'bottom' || s === 'shoes' || s === 'headwear' || s === 'glasses' || s === 'belt' || s === 'bag' || s === 'accessory') {
+        if (s === 'bottom' || s === 'shoes' || s === 'headwear' || s === 'glasses' || s === 'belt' || s === 'bag' || s === 'accessory' || s === 'earrings' || s === 'scarf' || s === 'watch' || s === 'gloves') {
           return null;
         }
       }
 
       // 4. Outerwear Safety Guard: Outerwear can NEVER render on legs, feet, head, face, waist, or bag!
       if (isOuterwearByName && !isShoesByName && !isBottomByName) {
-        if (s === 'bottom' || s === 'shoes' || s === 'headwear' || s === 'glasses' || s === 'belt' || s === 'bag' || s === 'accessory') {
+        if (s === 'bottom' || s === 'shoes' || s === 'headwear' || s === 'glasses' || s === 'belt' || s === 'bag' || s === 'accessory' || s === 'earrings' || s === 'scarf' || s === 'watch' || s === 'gloves') {
           return null;
         }
       }
 
       // 5. Full Body / Dress Safety Guard: Dresses can NEVER render on legs, feet, or accessories!
       if (isDressByName) {
-        if (s === 'bottom' || s === 'shoes' || s === 'headwear' || s === 'glasses' || s === 'belt' || s === 'bag' || s === 'accessory') {
+        if (s === 'bottom' || s === 'shoes' || s === 'headwear' || s === 'glasses' || s === 'belt' || s === 'bag' || s === 'accessory' || s === 'earrings' || s === 'scarf' || s === 'watch' || s === 'gloves') {
           return null;
         }
         if (s === 'top' && !isTopByName) {
@@ -516,12 +566,17 @@ export default function AvatarViewer2D({ shapeParams = {}, measurements: provide
       return s;
     };
 
-    Object.entries(outfitItems || {}).forEach(([role, item]) => {
+    const rawItems = Array.isArray(outfitItems)
+      ? outfitItems.map((item, idx) => [`item_${idx}`, item])
+      : Object.entries(outfitItems || {});
+
+    rawItems.forEach(([roleKey, item]) => {
       if (item) {
-        const itemId = item.closet_item_id || item.id;
+        const itemId = item.closet_item_id || item.id || item._id;
         const closetItem = allClosetItems.find(it => it && (it.id === itemId || it._id === itemId));
+        const effectiveRole = item.role || (roleKey && roleKey.includes('_') ? roleKey.split('_')[0] : roleKey);
         
-        let slot = resolveSlot(role, item, closetItem);
+        let slot = resolveSlot(effectiveRole, item, closetItem);
         if (!slot) return;
 
         if (closetItem && closetItem.group_id) {
@@ -531,15 +586,17 @@ export default function AvatarViewer2D({ shapeParams = {}, measurements: provide
           if (categories.size > 1) {
             groupItems.forEach(gItem => {
               const gSlot = resolveSlot(gItem.category, gItem, gItem);
-              res[gSlot] = {
-                url: resolveMediaUrl(bestImageUrl(gItem) || gItem.clean_image_url || gItem.reconstructed_image_url || gItem.image_data_url || gItem.segmented_image_url || gItem.image_url || gItem.original_image_url),
-                placeholder: resolveMediaUrl(gItem.placeholder_data_url || null),
-                id: gItem.id || gItem._id,
-                category: gItem.category || '',
-                sub_category: gItem.sub_category || '',
-                item_type: gItem.item_type || '',
-                name: gItem.name || gItem.title || ''
-              };
+              if (gSlot) {
+                res[gSlot] = {
+                  url: resolveMediaUrl(bestImageUrl(gItem) || gItem.clean_image_url || gItem.reconstructed_image_url || gItem.image_data_url || gItem.segmented_image_url || gItem.image_url || gItem.original_image_url),
+                  placeholder: resolveMediaUrl(gItem.placeholder_data_url || null),
+                  id: gItem.id || gItem._id,
+                  category: gItem.category || '',
+                  sub_category: gItem.sub_category || '',
+                  item_type: gItem.item_type || '',
+                  name: gItem.name || gItem.title || ''
+                };
+              }
             });
             return;
           }
@@ -617,10 +674,13 @@ export default function AvatarViewer2D({ shapeParams = {}, measurements: provide
               className="w-full h-full object-contain rounded-xl drop-shadow-md"
               onError={(e) => { e.currentTarget.style.display = 'none'; }}
             />
-            {/* Render Try-On Garments on top of real body photo */}
-            {renderGarment('headwear', t('taxonomy.categories.headwear', { defaultValue: 'Headwear' }), 'top-[1%] left-1/2 w-[34%] aspect-square z-[50]', { opacity: 0, y: -10, x: "-50%" }, { opacity: 1, y: 0, x: "-50%" }, 'object-bottom', 'contain')}
-            {renderGarment('glasses', t('taxonomy.categories.glasses', { defaultValue: 'Glasses' }), 'top-[11%] left-1/2 w-[18%] h-[4.5%] z-[45]', { opacity: 0, x: "-50%" }, { opacity: 1, x: "-50%" }, 'object-center', 'contain')}
-            {renderGarment('accessory', t('taxonomy.categories.accessory', { defaultValue: 'Accessory' }), 'top-[14.5%] left-1/2 w-[30%] aspect-square z-[35]', { opacity: 0, x: "-50%" }, { opacity: 1, x: "-50%" }, 'object-top', 'contain')}
+            {/* Render Try-On Garments & Accessories on top of real body photo */}
+            {renderGarment('headwear', t('taxonomy.categories.headwear', { defaultValue: 'Headwear' }), 'top-[3.5%] left-1/2 w-[34%] aspect-square z-[50]', { opacity: 0, y: -10, x: "-50%" }, { opacity: 1, y: 0, x: "-50%" }, 'object-bottom', 'contain')}
+            {renderGarment('glasses', t('taxonomy.categories.glasses', { defaultValue: 'Glasses' }), 'top-[15%] left-1/2 w-[20%] h-[5%] z-[48]', { opacity: 0, x: "-50%" }, { opacity: 1, x: "-50%" }, 'object-center', 'contain')}
+            {renderGarment('earrings', t('taxonomy.sub_category.earrings', { defaultValue: 'Earrings' }), 'top-[16.5%] left-1/2 w-[36%] h-[7.5%] z-[46]', { opacity: 0, x: "-50%" }, { opacity: 1, x: "-50%" }, 'object-center', 'contain')}
+            {renderGarment('scarf', t('taxonomy.sub_category.scarves_and_wraps', { defaultValue: 'Scarf' }), 'top-[21.5%] left-1/2 w-[30%] h-[20%] z-[36]', { opacity: 0, y: -5, x: "-50%" }, { opacity: 1, y: 0, x: "-50%" }, 'object-top', 'contain')}
+            {renderGarment('accessory', t('taxonomy.categories.accessory', { defaultValue: 'Accessory' }), 'top-[21.5%] left-1/2 w-[30%] aspect-square z-[35]', { opacity: 0, x: "-50%" }, { opacity: 1, x: "-50%" }, 'object-top', 'contain')}
+
             {garments.dress && garments.dress.url ? (
               renderGarment('dress', t('taxonomy.categories.dress', { defaultValue: 'Dress' }), dressTopo.classes, { opacity: 0, scale: 0.95, x: "-50%" }, { opacity: 1, scale: 1, x: "-50%" }, dressTopo.align, 'contain')
             ) : (
@@ -629,15 +689,18 @@ export default function AvatarViewer2D({ shapeParams = {}, measurements: provide
                 {renderGarment('bottom', t('taxonomy.categories.bottom', { defaultValue: 'Bottom' }), bottomTopo.classes, { opacity: 0, scale: 0.95, x: "-50%" }, { opacity: 1, scale: 1, x: "-50%", scaleX: scales.hips / scales.width }, bottomTopo.align, 'contain')}
               </>
             )}
-            {renderGarment('belt', t('taxonomy.categories.belt', { defaultValue: 'Belt' }), 'top-[41%] left-1/2 w-[62%] h-[5%] z-[25]', { opacity: 0, y: 5, x: "-50%" }, { opacity: 1, y: 0, x: "-50%" }, 'object-center', 'contain')}
+
             {renderGarment('outerwear', t('taxonomy.categories.outerwear', { defaultValue: 'Outerwear' }), outerwearTopo.classes, { opacity: 0, scale: 0.96, x: "-50%" }, { opacity: 1, scale: 1, x: "-50%" }, outerwearTopo.align, 'contain')}
+            {renderGarment('belt', t('taxonomy.categories.belt', { defaultValue: 'Belt' }), 'top-[42.5%] left-1/2 w-[62%] h-[6%] z-[32]', { opacity: 0, y: 5, x: "-50%" }, { opacity: 1, y: 0, x: "-50%" }, 'object-center', 'contain')}
+            {renderGarment('gloves', t('taxonomy.sub_category.gloves', { defaultValue: 'Gloves' }), 'top-[51%] left-1/2 w-[62%] h-[11%] z-[35] drop-shadow-md', { opacity: 0, scale: 0.95, x: "-50%" }, { opacity: 1, scale: 1, x: "-50%" }, 'object-center', 'contain')}
+            {renderGarment('watch', t('taxonomy.sub_category.watches', { defaultValue: 'Watch' }), 'top-[51.5%] left-[72%] w-[13%] aspect-square z-[38] drop-shadow-md', { opacity: 0, scale: 0.9, x: "-50%", y: "-50%" }, { opacity: 1, scale: 1, x: "-50%", y: "-50%" }, 'object-center', 'contain')}
             {renderGarment('shoes', t('taxonomy.categories.shoes', { defaultValue: 'Shoes' }), 'bottom-[0.5%] left-1/2 w-[76%] h-[16%] z-[15]', { opacity: 0, y: 10, x: "-50%" }, { opacity: 1, y: 0, x: "-50%" }, 'object-bottom', 'contain')}
-            {renderGarment('watch', t('taxonomy.sub_category.watch', { defaultValue: 'Watch' }), 'top-[57%] left-[70%] w-[13%] aspect-square z-[35] drop-shadow-md', { opacity: 0, scale: 0.9, x: "-50%", y: "-50%" }, { opacity: 1, scale: 1, x: "-50%", y: "-50%" }, 'object-center', 'contain')}
+
             {garments.bag && garments.bag.url && (
               <motion.div
                 initial={{ opacity: 0, x: 10 }}
                 animate={{ opacity: 1, x: 0 }}
-                className={`absolute top-[44%] right-[-5%] w-[40%] h-[30%] z-[35] drop-shadow-md ${onItemClick && garments.bag.id ? 'cursor-pointer hover:scale-[1.02] transition-transform' : 'pointer-events-none'}`}
+                className={`absolute top-[44%] right-[-6%] w-[38%] h-[30%] z-[35] drop-shadow-md ${onItemClick && garments.bag.id ? 'cursor-pointer hover:scale-[1.02] transition-transform' : 'pointer-events-none'}`}
                 onClick={onItemClick && garments.bag.id ? (e) => { e.stopPropagation(); onItemClick(garments.bag.id); } : undefined}
               >
                 <ImageWithPlaceholder
@@ -664,10 +727,12 @@ export default function AvatarViewer2D({ shapeParams = {}, measurements: provide
             showGuideLines={false}
             className="w-full h-full"
           >
-            {/* ─── Layered Clothes (Segmented transparent PNG overlays) ─── */}
-            {renderGarment('headwear', t('taxonomy.categories.headwear', { defaultValue: 'Headwear' }), 'top-[1%] left-1/2 w-[34%] aspect-square z-[50]', { opacity: 0, y: -10, x: "-50%" }, { opacity: 1, y: 0, x: "-50%" }, 'object-bottom', 'contain')}
-            {renderGarment('glasses', t('taxonomy.categories.glasses', { defaultValue: 'Glasses' }), 'top-[11%] left-1/2 w-[18%] h-[4.5%] z-[45]', { opacity: 0, x: "-50%" }, { opacity: 1, x: "-50%" }, 'object-center', 'contain')}
-            {renderGarment('accessory', t('taxonomy.categories.accessory', { defaultValue: 'Accessory' }), 'top-[14.5%] left-1/2 w-[30%] aspect-square z-[35]', { opacity: 0, x: "-50%" }, { opacity: 1, x: "-50%" }, 'object-top', 'contain')}
+            {/* ─── Layered Clothes & Accessories (Segmented transparent PNG overlays) ─── */}
+            {renderGarment('headwear', t('taxonomy.categories.headwear', { defaultValue: 'Headwear' }), 'top-[3.5%] left-1/2 w-[34%] aspect-square z-[50]', { opacity: 0, y: -10, x: "-50%" }, { opacity: 1, y: 0, x: "-50%" }, 'object-bottom', 'contain')}
+            {renderGarment('glasses', t('taxonomy.categories.glasses', { defaultValue: 'Glasses' }), 'top-[15%] left-1/2 w-[20%] h-[5%] z-[48]', { opacity: 0, x: "-50%" }, { opacity: 1, x: "-50%" }, 'object-center', 'contain')}
+            {renderGarment('earrings', t('taxonomy.sub_category.earrings', { defaultValue: 'Earrings' }), 'top-[16.5%] left-1/2 w-[36%] h-[7.5%] z-[46]', { opacity: 0, x: "-50%" }, { opacity: 1, x: "-50%" }, 'object-center', 'contain')}
+            {renderGarment('scarf', t('taxonomy.sub_category.scarves_and_wraps', { defaultValue: 'Scarf' }), 'top-[21.5%] left-1/2 w-[30%] h-[20%] z-[36]', { opacity: 0, y: -5, x: "-50%" }, { opacity: 1, y: 0, x: "-50%" }, 'object-top', 'contain')}
+            {renderGarment('accessory', t('taxonomy.categories.accessory', { defaultValue: 'Accessory' }), 'top-[21.5%] left-1/2 w-[30%] aspect-square z-[35]', { opacity: 0, x: "-50%" }, { opacity: 1, x: "-50%" }, 'object-top', 'contain')}
 
             {garments.dress && garments.dress.url ? (
               renderGarment('dress', t('taxonomy.categories.dress', { defaultValue: 'Dress' }), dressTopo.classes, { opacity: 0, scale: 0.95, x: "-50%" }, { opacity: 1, scale: 1, x: "-50%" }, dressTopo.align, 'contain')
@@ -678,16 +743,17 @@ export default function AvatarViewer2D({ shapeParams = {}, measurements: provide
               </>
             )}
 
-            {renderGarment('belt', t('taxonomy.categories.belt', { defaultValue: 'Belt' }), 'top-[41%] left-1/2 w-[62%] h-[5%] z-[25]', { opacity: 0, y: 5, x: "-50%" }, { opacity: 1, y: 0, x: "-50%" }, 'object-center', 'contain')}
             {renderGarment('outerwear', t('taxonomy.categories.outerwear', { defaultValue: 'Outerwear' }), outerwearTopo.classes, { opacity: 0, scale: 0.96, x: "-50%" }, { opacity: 1, scale: 1, x: "-50%" }, outerwearTopo.align, 'contain')}
+            {renderGarment('belt', t('taxonomy.categories.belt', { defaultValue: 'Belt' }), 'top-[42.5%] left-1/2 w-[62%] h-[6%] z-[32]', { opacity: 0, y: 5, x: "-50%" }, { opacity: 1, y: 0, x: "-50%" }, 'object-center', 'contain')}
+            {renderGarment('gloves', t('taxonomy.sub_category.gloves', { defaultValue: 'Gloves' }), 'top-[51%] left-1/2 w-[62%] h-[11%] z-[35] drop-shadow-md', { opacity: 0, scale: 0.95, x: "-50%" }, { opacity: 1, scale: 1, x: "-50%" }, 'object-center', 'contain')}
+            {renderGarment('watch', t('taxonomy.sub_category.watches', { defaultValue: 'Watch' }), 'top-[51.5%] left-[72%] w-[13%] aspect-square z-[38] drop-shadow-md', { opacity: 0, scale: 0.9, x: "-50%", y: "-50%" }, { opacity: 1, scale: 1, x: "-50%", y: "-50%" }, 'object-center', 'contain')}
             {renderGarment('shoes', t('taxonomy.categories.shoes', { defaultValue: 'Shoes' }), 'bottom-[0.5%] left-1/2 w-[76%] h-[16%] z-[15]', { opacity: 0, y: 10, x: "-50%" }, { opacity: 1, y: 0, x: "-50%" }, 'object-bottom', 'contain')}
-            {renderGarment('watch', t('taxonomy.sub_category.watch', { defaultValue: 'Watch' }), 'top-[57%] left-[70%] w-[13%] aspect-square z-[35] drop-shadow-md', { opacity: 0, scale: 0.9, x: "-50%", y: "-50%" }, { opacity: 1, scale: 1, x: "-50%", y: "-50%" }, 'object-center', 'contain')}
 
             {garments.bag && garments.bag.url && (
               <motion.div
                 initial={{ opacity: 0, x: 10 }}
                 animate={{ opacity: 1, x: 0 }}
-                className={`absolute top-[44%] right-[-5%] w-[40%] h-[30%] z-[35] drop-shadow-md ${onItemClick && garments.bag.id ? 'cursor-pointer hover:scale-[1.02] transition-transform' : 'pointer-events-none'}`}
+                className={`absolute top-[44%] right-[-6%] w-[38%] h-[30%] z-[35] drop-shadow-md ${onItemClick && garments.bag.id ? 'cursor-pointer hover:scale-[1.02] transition-transform' : 'pointer-events-none'}`}
                 onClick={onItemClick && garments.bag.id ? (e) => { e.stopPropagation(); onItemClick(garments.bag.id); } : undefined}
               >
                 <ImageWithPlaceholder
@@ -706,19 +772,24 @@ export default function AvatarViewer2D({ shapeParams = {}, measurements: provide
       {/* Floating Layer Quick-Select Bar on the Mannequin (allows inspecting covered underlayers) */}
       {onItemClick && Object.keys(garments).length > 0 && (
         <div className="absolute top-2.5 end-2.5 flex flex-col gap-1 z-40 bg-background/85 backdrop-blur-md p-1 rounded-xl border border-border shadow-md opacity-85 hover:opacity-100 transition-opacity">
-          {['headwear', 'outerwear', 'top', 'dress', 'belt', 'bottom', 'shoes', 'bag', 'accessory'].map((slotKey) => {
+          {['headwear', 'glasses', 'earrings', 'scarf', 'outerwear', 'top', 'dress', 'belt', 'watch', 'gloves', 'bottom', 'shoes', 'bag', 'accessory'].map((slotKey) => {
             const g = garments[slotKey];
             if (!g || !g.id) return null;
             const slotIcons = {
               headwear: '🧢',
+              glasses: '🕶️',
+              earrings: '💎',
+              scarf: '🧣',
               outerwear: '🧥',
               top: '👕',
               dress: '👗',
               belt: '🥋',
+              watch: '⌚',
+              gloves: '🧤',
               bottom: '👖',
               shoes: '👞',
               bag: '👜',
-              accessory: '🕶️'
+              accessory: '✨'
             };
             return (
               <button
@@ -738,3 +809,4 @@ export default function AvatarViewer2D({ shapeParams = {}, measurements: provide
     </div>
   );
 }
+
