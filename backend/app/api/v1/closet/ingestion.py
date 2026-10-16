@@ -1475,7 +1475,14 @@ async def clean_item_background(
             "reason": "lightweight_deploy_no_matting",
         }
 
-    crop_url = _get_item_image_url(item)
+    # For background matting, prioritize the un-matted original upload so reruns
+    # never re-matte an already-matted crop and can cleanly recover original pixels.
+    crop_url = (
+        item.get("original_image_url")
+        or (item.get("image_variants") or {}).get("original")
+        or item.get("cropped_image_url")
+        or _get_item_image_url(item)
+    )
     if not crop_url:
         raise HTTPException(
             400, "Item has no cropped image to matte. Re-analyze the item first."
