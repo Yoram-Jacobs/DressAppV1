@@ -2249,7 +2249,9 @@
     "dailyAISuggestions": "Sugerencias diarias de IA",
     "selectSavedOutfit": "Seleccionar atuendo guardado",
     "tomorrowOutfit": "Look programado para mañana",
-    "scheduledTomorrowSuccess": "¡Guardado como look programado para mañana!"
+    "scheduledTomorrowSuccess": "¡Guardado como look programado para mañana!",
+    "today": "Hoy",
+    "tomorrow": "Mañana"
   },
   "seo": {
     "defaultTitle": "DressApp — Tu armario, elevado",

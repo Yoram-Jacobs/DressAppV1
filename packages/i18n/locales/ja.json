@@ -2249,7 +2249,9 @@
     "dailyAISuggestions": "AI の毎日の提案",
     "selectSavedOutfit": "保存した衣装を選択",
     "tomorrowOutfit": "明日の予定コーディネート",
-    "scheduledTomorrowSuccess": "明日のコーディネートとして保存しました！"
+    "scheduledTomorrowSuccess": "明日のコーディネートとして保存しました！",
+    "today": "今日",
+    "tomorrow": "明日"
   },
   "seo": {
     "defaultTitle": "DressApp — あなたのクローゼット、グレードアップ",

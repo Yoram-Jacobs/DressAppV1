@@ -2249,7 +2249,9 @@
     "dailyAISuggestions": "एआई दैनिक सुझाव",
     "selectSavedOutfit": "सहेजे गए आउटफिट का चयन करें",
     "tomorrowOutfit": "कल का शेड्यूल किया गया आउटफिट",
-    "scheduledTomorrowSuccess": "कल के शेड्यूल किए गए आउटफिट के रूप में सहेजा गया!"
+    "scheduledTomorrowSuccess": "कल के शेड्यूल किए गए आउटफिट के रूप में सहेजा गया!",
+    "today": "आज",
+    "tomorrow": "कल"
   },
   "seo": {
     "defaultTitle": "DressApp — आपकी अलमारी, उन्नत",

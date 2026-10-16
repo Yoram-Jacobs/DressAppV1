@@ -2280,7 +2280,9 @@
     "dailyAISuggestions": "הצעות יומיות ב-AI",
     "selectSavedOutfit": "בחר לוק שמור",
     "tomorrowOutfit": "הלוק המתוזמן למחר",
-    "scheduledTomorrowSuccess": "נשמר כלוק המתוזמן למחר!"
+    "scheduledTomorrowSuccess": "נשמר כלוק המתוזמן למחר!",
+    "today": "היום",
+    "tomorrow": "מחר"
   },
   "seo": {
     "defaultTitle": "DressApp — הארון שלך, מוגבה",

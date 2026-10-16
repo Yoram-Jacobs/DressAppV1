@@ -2249,7 +2249,9 @@
     "dailyAISuggestions": "AI每日建议",
     "selectSavedOutfit": "选择已保存的服装",
     "tomorrowOutfit": "明日已安排的穿搭",
-    "scheduledTomorrowSuccess": "已保存为明日穿搭！"
+    "scheduledTomorrowSuccess": "已保存为明日穿搭！",
+    "today": "今天",
+    "tomorrow": "明天"
   },
   "seo": {
     "defaultTitle": "DressApp — 您的衣橱，升级体验",

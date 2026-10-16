@@ -2249,7 +2249,9 @@
     "dailyAISuggestions": "Suggestions quotidiennes de l'IA",
     "selectSavedOutfit": "Sélectionner une tenue enregistrée",
     "tomorrowOutfit": "Tenue programmée pour demain",
-    "scheduledTomorrowSuccess": "Enregistré comme tenue programmée pour demain !"
+    "scheduledTomorrowSuccess": "Enregistré comme tenue programmée pour demain !",
+    "today": "Aujourd’hui",
+    "tomorrow": "Demain"
   },
   "seo": {
     "defaultTitle": "DressApp — Votre dressing sublimé",

@@ -2249,7 +2249,9 @@
     "dailyAISuggestions": "KI-Tägliche Vorschläge",
     "selectSavedOutfit": "Wählen Sie „Gespeichertes Outfit“.",
     "tomorrowOutfit": "Geplantes Outfit für morgen",
-    "scheduledTomorrowSuccess": "Als geplantes Outfit für morgen gespeichert!"
+    "scheduledTomorrowSuccess": "Als geplantes Outfit für morgen gespeichert!",
+    "today": "Heute",
+    "tomorrow": "Morgen"
   },
   "seo": {
     "defaultTitle": "DressApp — Deine Garderobe, veredelt",

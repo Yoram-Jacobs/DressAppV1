@@ -3392,7 +3392,7 @@ export default function Stylist() {
                                         : "bg-neutral-100 hover:bg-neutral-200 text-text-brand"
                                     )}
                                   >
-                                    <span>{t('calendar.today', { defaultValue: 'Today' })} ({todayDate.toLocaleDateString(i18n.language || 'en', { month: 'numeric', day: 'numeric' })})</span>
+                                    <span>{t('calendar.today', { defaultValue: t('common.today', { defaultValue: 'Today' }) })} ({todayDate.toLocaleDateString(i18n.language || 'en', { month: 'numeric', day: 'numeric' })})</span>
                                     {todayOutfit && <Badge className="h-4 px-1 text-[9px] bg-emerald-500 text-white border-none">✓</Badge>}
                                   </button>
                                   <button
@@ -3418,7 +3418,7 @@ export default function Stylist() {
                                     )}
                                   >
                                     <Sparkles className="h-3 w-3" />
-                                    <span>{t('calendar.tomorrow', { defaultValue: 'Tomorrow' })} ({tomorrowDate.toLocaleDateString(i18n.language || 'en', { month: 'numeric', day: 'numeric' })})</span>
+                                    <span>{t('calendar.tomorrow', { defaultValue: t('home.tomorrow', { defaultValue: 'Tomorrow' }) })} ({tomorrowDate.toLocaleDateString(i18n.language || 'en', { month: 'numeric', day: 'numeric' })})</span>
                                     {tomorrowOutfit && <Badge className="h-4 px-1 text-[9px] bg-emerald-500 text-white border-none">✓</Badge>}
                                   </button>
                                 </div>

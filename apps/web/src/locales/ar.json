@@ -2249,7 +2249,9 @@
     "dailyAISuggestions": "اقتراحات يومية لمنظمة العفو الدولية",
     "selectSavedOutfit": "حدد الزي المحفوظ",
     "tomorrowOutfit": "الزي المجدول للغد",
-    "scheduledTomorrowSuccess": "تم الحفظ كزي مجدول للغد!"
+    "scheduledTomorrowSuccess": "تم الحفظ كزي مجدول للغد!",
+    "today": "اليوم",
+    "tomorrow": "غداً"
   },
   "seo": {
     "defaultTitle": "DressApp — خزانتك، بأسلوب راقٍ",

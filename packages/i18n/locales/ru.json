@@ -2249,7 +2249,9 @@
     "dailyAISuggestions": "Ежедневные предложения ИИ",
     "selectSavedOutfit": "Выберите сохраненный наряд",
     "tomorrowOutfit": "Запланированный образ на завтра",
-    "scheduledTomorrowSuccess": "Сохранено как запланированный образ на завтра!"
+    "scheduledTomorrowSuccess": "Сохранено как запланированный образ на завтра!",
+    "today": "Сегодня",
+    "tomorrow": "Завтра"
   },
   "seo": {
     "defaultTitle": "DressApp — ваш гардероб, на высшем уровне",

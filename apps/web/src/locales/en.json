@@ -2251,7 +2251,9 @@
     "schedule": "Schedule",
     "scheduleTitle": "Schedule Outfit",
     "dailyAISuggestions": "AI Daily Suggestions",
-    "selectSavedOutfit": "Select Saved Outfit"
+    "selectSavedOutfit": "Select Saved Outfit",
+    "today": "Today",
+    "tomorrow": "Tomorrow"
   },
   "seo": {
     "defaultTitle": "DressApp — Your closet, elevated",

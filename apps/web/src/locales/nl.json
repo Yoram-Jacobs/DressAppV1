@@ -2249,7 +2249,9 @@
     "dailyAISuggestions": "AI dagelijkse suggesties",
     "selectSavedOutfit": "Selecteer Opgeslagen outfit",
     "tomorrowOutfit": "Geplande outfit voor morgen",
-    "scheduledTomorrowSuccess": "Opgeslagen als geplande outfit voor morgen!"
+    "scheduledTomorrowSuccess": "Opgeslagen als geplande outfit voor morgen!",
+    "today": "Vandaag",
+    "tomorrow": "Morgen"
   },
   "seo": {
     "defaultTitle": "DressApp — Jouw kast, verhoogd",
