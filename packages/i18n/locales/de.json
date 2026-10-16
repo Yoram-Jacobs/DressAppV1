@@ -3792,7 +3792,9 @@
     "localShoppingAdvice": "Lokale Einkaufsberatung",
     "missingItemPrefix": "Fehlender Artikel:",
     "missingGarment": "Fehlendes Kleidungsstück",
-    "defaultOutfitName": "Outfit"
+    "defaultOutfitName": "Outfit",
+    "modestyAlertLabel": "Bescheidenheit & Kleiderordnung:",
+    "safetyAlertLabel": "Sicherheit & Vorsichtsmaßnahmen:"
   },
   "scanning": {
     "bounds": "Kleidungsgrenzen erkennen...",

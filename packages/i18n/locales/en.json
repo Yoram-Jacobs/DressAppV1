@@ -3794,7 +3794,9 @@
     "localShoppingAdvice": "Local Shopping Advice",
     "missingItemPrefix": "Missing item:",
     "missingGarment": "Missing garment",
-    "defaultOutfitName": "Outfit"
+    "defaultOutfitName": "Outfit",
+    "modestyAlertLabel": "Modesty & Dress Code:",
+    "safetyAlertLabel": "Safety & Security:"
   },
   "scanning": {
     "bounds": "Detecting Garment Bounds...",

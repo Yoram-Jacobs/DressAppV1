@@ -3799,7 +3799,9 @@
     "localShoppingAdvice": "स्थानीय खरीदारी सलाह",
     "missingItemPrefix": "लापता वस्तु:",
     "missingGarment": "लापता परिधान",
-    "defaultOutfitName": "पहनावा"
+    "defaultOutfitName": "पहनावा",
+    "modestyAlertLabel": "विनम्रता और ड्रेस कोड दिशानिर्देश:",
+    "safetyAlertLabel": "सुरक्षा और सावधानियां:"
   },
   "scanning": {
     "bounds": "परिधान सीमा का पता लगाया जा रहा है...",

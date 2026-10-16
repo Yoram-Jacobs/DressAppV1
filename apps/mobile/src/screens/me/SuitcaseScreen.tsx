@@ -168,7 +168,11 @@ export function SuitcaseScreen() {
           purpose: selectedPurpose,
           status: 'active',
           packing_list: items,
-          missing_notes: res.weather?.advice || res.cultural_guidelines || res.danger_zones_info,
+          missing_notes: [
+            res.cultural_guidelines,
+            res.danger_zones_info,
+            res.weather?.advice,
+          ].filter(Boolean).join('\n\n'),
         });
 
         // Also persist/approve to backend so web and database stay synchronized
@@ -181,7 +185,10 @@ export function SuitcaseScreen() {
             return_time: retTime,
             outfits: res.outfits || [],
             packing_list: res.packing_list || items,
-            missing_notes: res.danger_zones_info || res.cultural_guidelines || '',
+            missing_notes: [
+              res.cultural_guidelines,
+              res.danger_zones_info,
+            ].filter(Boolean).join('\n\n'),
             local_fashion_stores: res.local_fashion_stores || [],
             missing_items: res.missing_items || [],
           });

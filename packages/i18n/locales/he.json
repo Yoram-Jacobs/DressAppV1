@@ -3851,7 +3851,9 @@
     "localShoppingAdvice": "ייעוץ קניות מקומי",
     "missingItemPrefix": "פריט חסר:",
     "missingGarment": "פריט לבוש חסר",
-    "defaultOutfitName": "אאוטפיט"
+    "defaultOutfitName": "אאוטפיט",
+    "modestyAlertLabel": "הנחיות צניעות וקוד לבוש:",
+    "safetyAlertLabel": "אזהרות בטיחות וביטחון:"
   },
   "scanning": {
     "bounds": "זיהוי גבולות בגד...",

@@ -3796,7 +3796,9 @@
     "localShoppingAdvice": "Lokaal winkeladvies",
     "missingItemPrefix": "Ontbrekend item:",
     "missingGarment": "Ontbrekend kledingstuk",
-    "defaultOutfitName": "Outfit"
+    "defaultOutfitName": "Outfit",
+    "modestyAlertLabel": "Bescheidenheid & kledingvoorschriften:",
+    "safetyAlertLabel": "Veiligheid en voorzorgsmaatregelen:"
   },
   "scanning": {
     "bounds": "Kledinggrenzen detecteren...",

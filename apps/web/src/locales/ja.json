@@ -3796,7 +3796,9 @@
     "localShoppingAdvice": "ローカルショッピングのアドバイス",
     "missingItemPrefix": "不足しているアイテム：",
     "missingGarment": "不足している衣服",
-    "defaultOutfitName": "コーディネート"
+    "defaultOutfitName": "コーディネート",
+    "modestyAlertLabel": "露出制限・服装規定：",
+    "safetyAlertLabel": "安全・防犯上の注意事項："
   },
   "scanning": {
     "bounds": "衣服の境界を検出しています...",

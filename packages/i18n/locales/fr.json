@@ -3792,7 +3792,9 @@
     "localShoppingAdvice": "Conseil shopping local",
     "missingItemPrefix": "Article manquant :",
     "missingGarment": "Vêtement manquant",
-    "defaultOutfitName": "Tenue"
+    "defaultOutfitName": "Tenue",
+    "modestyAlertLabel": "Consignes de décence et code vestimentaire :",
+    "safetyAlertLabel": "Sécurité et précautions :"
   },
   "scanning": {
     "bounds": "Détection des limites des vêtements...",

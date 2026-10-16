@@ -3796,7 +3796,9 @@
     "localShoppingAdvice": "当地购物建议",
     "missingItemPrefix": "缺少物品：",
     "missingGarment": "缺少衣物",
-    "defaultOutfitName": "穿搭"
+    "defaultOutfitName": "穿搭",
+    "modestyAlertLabel": "着装体面与礼仪规范：",
+    "safetyAlertLabel": "安全与防范提示："
   },
   "scanning": {
     "bounds": "检测服装边界...",

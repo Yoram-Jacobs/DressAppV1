@@ -3799,7 +3799,9 @@
     "localShoppingAdvice": "Conselhos de compras locais",
     "missingItemPrefix": "Item em falta:",
     "missingGarment": "Peça de roupa em falta",
-    "defaultOutfitName": "Look"
+    "defaultOutfitName": "Look",
+    "modestyAlertLabel": "Diretrizes de modéstia e código de vestuário:",
+    "safetyAlertLabel": "Segurança e precauções:"
   },
   "scanning": {
     "bounds": "Detectando Limites de Vestuário...",

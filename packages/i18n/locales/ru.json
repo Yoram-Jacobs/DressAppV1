@@ -3801,7 +3801,9 @@
     "localShoppingAdvice": "Местные советы по покупкам",
     "missingItemPrefix": "Недостающий предмет:",
     "missingGarment": "Недостающий предмет одежды",
-    "defaultOutfitName": "Наряд"
+    "defaultOutfitName": "Наряд",
+    "modestyAlertLabel": "Правила скромности и дресс-код:",
+    "safetyAlertLabel": "Безопасность и меры предосторожности:"
   },
   "scanning": {
     "bounds": "Обнаружение границ одежды...",

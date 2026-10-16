@@ -3796,7 +3796,9 @@
     "localShoppingAdvice": "Consigli per lo shopping locale",
     "missingItemPrefix": "Articolo mancante:",
     "missingGarment": "Capo mancante",
-    "defaultOutfitName": "Completo"
+    "defaultOutfitName": "Completo",
+    "modestyAlertLabel": "Linee guida di modestia e codice di abbigliamento:",
+    "safetyAlertLabel": "Sicurezza e precauzioni:"
   },
   "scanning": {
     "bounds": "Rilevamento dei limiti degli indumenti...",

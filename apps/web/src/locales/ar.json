@@ -3793,7 +3793,9 @@
     "localShoppingAdvice": "نصائح تسوق محلية",
     "missingItemPrefix": "عنصر مفقود:",
     "missingGarment": "قطعة ملابس مفقودة",
-    "defaultOutfitName": "طقم ملابس"
+    "defaultOutfitName": "طقم ملابس",
+    "modestyAlertLabel": "إرشادات الحشمة وقواعد اللباس:",
+    "safetyAlertLabel": "تنبيهات السلامة والأمان:"
   },
   "scanning": {
     "bounds": "الكشف عن حدود الملابس...",
