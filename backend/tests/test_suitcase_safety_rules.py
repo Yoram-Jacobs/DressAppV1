@@ -49,3 +49,35 @@ def test_find_closet_match():
     m3 = find_closet_match({"description": "חולצת כפתורים לבנה ארוכה"}, closet)
     assert m3 and m3["id"] == "item-101"
 
+
+def test_normalize_suitcase_item_role():
+    """Verify role normalizer maps synonyms to canonical taxonomy roles."""
+    from app.api.v1.suitcase import _normalize_suitcase_item_role
+
+    assert _normalize_suitcase_item_role("tunic") == "top"
+    assert _normalize_suitcase_item_role("tops") == "top"
+    assert _normalize_suitcase_item_role("shirt") == "top"
+    assert _normalize_suitcase_item_role("bottoms") == "bottom"
+    assert _normalize_suitcase_item_role("pants") == "bottom"
+    assert _normalize_suitcase_item_role("belt") == "accessory"
+    assert _normalize_suitcase_item_role("accessories") == "accessory"
+    assert _normalize_suitcase_item_role("boots") == "shoes"
+    assert _normalize_suitcase_item_role("jacket") == "outerwear"
+    assert _normalize_suitcase_item_role("dress") == "dress"
+
+
+def test_default_missing_desc_for_role():
+    """Verify missing item descriptions are specific and context-aware, never generic."""
+    from app.api.v1.suitcase import _get_default_missing_desc_for_role
+
+    desc_acc = _get_default_missing_desc_for_role("accessory", "Marrakech, Morocco")
+    assert "scarf" in desc_acc.lower() or "accessory" in desc_acc.lower()
+    assert "missing garment" not in desc_acc.lower()
+
+    desc_shoes = _get_default_missing_desc_for_role("shoes", "Marrakech, Morocco")
+    assert "walking shoes" in desc_shoes.lower()
+
+    desc_top = _get_default_missing_desc_for_role("top", "Marrakech, Morocco")
+    assert "top" in desc_top.lower()
+
+

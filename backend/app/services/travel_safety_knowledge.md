@@ -114,8 +114,8 @@ Keywords: maldives, male, hulhumale, maafushi, thoddoo, dhigurah, guraidhoo, ה�
 
 ---
 
-## UAE, Qatar, Kuwait, Oman, Bahrain, Jordan, Egypt, Morocco, Algeria & Tunisia (GCC & MENA Modesty Zones)
-Keywords: uae, dubai, abu dhabi, sharjah, qatar, doha, kuwait, oman, muscat, bahrain, manama, jordan, amman, egypt, cairo, luxor, morocco, marrakech, marrakesh, fes, casablanca, rabat, algeria, tunisia, דובאי, אבו דאבי, שארג'ה, קטאר, דוחא, עומאן, בחריין, ירדן, מצרים, קהיר, מרוקו, מרקש, קזבלנקה, פאס, תוניסיה, الإمارات, دبي, أبوظبي, الشارقة, قطر, الكويت, عمان, البحرين, الأردن, مصر, المغرب, مراكش, الجزائر, تونس
+## United Arab Emirates, Qatar, Kuwait, Oman & Bahrain (GCC Public Modesty Zones)
+Keywords: uae, dubai, abu dhabi, sharjah, qatar, doha, kuwait, oman, muscat, bahrain, manama, דובאי, אבו דאבי, שארג'ה, קטאר, דוחא, עומאן, בחריין, الإمارات, دبي, أبوظبي, الشارقة, قطر, الكويت, عمان, البحرين
 
 ### 1. United Arab Emirates (Sharjah vs. Dubai & Abu Dhabi)
 * **Sharjah (Strictest Emirate — Public Decency Law)**: Both men and women must cover from **shoulders to below the knees** in all public spaces. Swimwear is prohibited on public beaches outside private hotel beaches; cross-dressing is a criminal offense.
@@ -130,7 +130,12 @@ Keywords: uae, dubai, abu dhabi, sharjah, qatar, doha, kuwait, oman, muscat, bah
 * **Oman (Omani Penal Code Art. 265 & 266)**: Cover shoulders and knees in all souqs, malls, and **even when swimming in public wadis** (e.g., Wadi Shab, Bimmah Sinkhole — women and men must wear a T-shirt and knee-length shorts over swimwear in public wadis). **Camouflage clothing is banned** and confiscated at Muscat Airport. Cross-dressing carries up to 1 year imprisonment (Art. 266). At **Sultan Qaboos Grand Mosque**, women must cover hair, wrists, and ankles; men must wear full-length trousers.
 * **Bahrain (Penal Code Art. 350)**: Cover shoulders and knees in traditional souqs (Muharraq, Manama Souq), villages, and mosques.
 
-### 3. Morocco, Egypt, Jordan, Algeria & Tunisia (Medina, Souq & Mosque Etiquette)
+---
+
+## Morocco, Egypt, Jordan, Algeria & Tunisia (North Africa & Levant — Medina, Souq & Mosque Etiquette)
+Keywords: morocco, marrakech, marrakesh, fes, casablanca, rabat, egypt, cairo, luxor, jordan, amman, petra, algeria, tunisia, מרוקו, מרקש, קזבלנקה, פאס, רבאט, מצרים, קהיר, לוקסור, ירדן, עמאן, פטרה, אלג'יריה, תוניסיה, المغرب, مراكش, فاس, الدار البيضاء, الرباط, مصر, القاهرة, الأقصر, الأردن, عمان, الجزائر, تونس
+
+### Legal Context & Cultural Modesty Guardrails
 * **Penal Codes**: Jordan (Art. 320), Egypt (Art. 278), Morocco (Art. 483), Algeria (Art. 333), and Tunisia (Art. 226) all penalize public indecency.
 * **Historic Medinas, Rural Villages & Archaeological Sites (Marrakech, Fes, Cairo, Luxor, Amman, Petra)**:
   * **Women**: Loose, breathable clothing covering shoulders, cleavage, and knees (linen trousers, midi/maxi skirts, kaftans, or tunics) prevents street harassment and shows cultural respect. Carry a lightweight scarf/pashmina for entering sacred sites.

@@ -213,6 +213,44 @@ def find_closet_match(
     return None
 
 
+def _normalize_suitcase_item_role(raw_role: str | None) -> str:
+    """Normalize arbitrary model-emitted role synonyms into canonical taxonomy roles."""
+    r = (raw_role or "").lower().strip()
+    if r in ("top", "tops", "shirt", "blouse", "t-shirt", "tee", "sweater", "hoodie", "tunic", "polo", "tank", "knitwear"):
+        return "top"
+    if r in ("bottom", "bottoms", "pants", "trousers", "jeans", "shorts", "skirt", "chinos", "slacks", "leggings"):
+        return "bottom"
+    if r in ("dress", "dresses", "one-piece", "jumpsuit", "robe", "gown"):
+        return "dress"
+    if r in ("outerwear", "jacket", "coat", "blazer", "cardigan", "trench", "vest", "waistcoat", "parka"):
+        return "outerwear"
+    if r in ("shoes", "footwear", "sneakers", "boots", "loafers", "sandals", "heels", "shoe", "slippers"):
+        return "shoes"
+    if r in ("accessory", "accessories", "belt", "hat", "cap", "bag", "handbag", "scarf", "jewelry", "glasses", "sunglasses", "headwear"):
+        return "accessory"
+    return r or "accessory"
+
+
+def _get_default_missing_desc_for_role(role: str, destination: str = "") -> str:
+    """Provide a helpful, context-specific description for a missing garment role instead of generic 'Missing garment'."""
+    dest_low = (destination or "").lower()
+    is_modest_dest = any(k in dest_low for k in ("morocco", "marrakech", "egypt", "cairo", "dubai", "uae", "jordan", "מרקש", "מרוקו", "דובאי", "קהיר"))
+    norm_r = _normalize_suitcase_item_role(role)
+    if norm_r == "accessory":
+        return "Light scarf for sacred sites and souqs" if is_modest_dest else "Versatile travel accessory"
+    if norm_r == "shoes":
+        return "Comfortable walking shoes for city tours"
+    if norm_r == "outerwear":
+        return "Light evening jacket or layer"
+    if norm_r == "top":
+        return "Breathable modest top" if is_modest_dest else "Casual breathable top"
+    if norm_r == "bottom":
+        return "Full-length comfortable trousers" if is_modest_dest else "Versatile travel trousers"
+    if norm_r == "dress":
+        return "Modest midi or maxi dress" if is_modest_dest else "Comfortable travel dress"
+    return "Essential travel garment"
+
+
 _KNOWN_DESTINATIONS_GEO: dict[str, tuple[float, float]] = {
     "marrakech": (31.6295, -7.9811),
     "marrakesh": (31.6295, -7.9811),
@@ -956,8 +994,11 @@ async def pack_suitcase(
     if is_gemma_provider:
         target_outfit_count = min(trip_days, 3)
         user_brief_parts.append(
-            f"\nCONCISE CAPSULE REQUIREMENT: Return exactly {target_outfit_count} versatile core outfits "
-            f"(using exact 'id' strings from User's Closet Items for 'closet_item_id'), 2-3 'missing_items', "
+            f"\nCONCISE CAPSULE REQUIREMENT: Return exactly {target_outfit_count} DISTINCT daily outfits "
+            f"(Day 1 to Day {target_outfit_count}) with different outfit names, times (morning, afternoon, evening), "
+            f"and rotated closet garments using exact 'id' from User's Closet Items for 'closet_item_id'. "
+            f"Every outfit MUST include at least one top and one bottom (or dress) from the closet items. "
+            f"Provide 2-3 specific 'missing_items' (e.g. 'Light scarf for holy sites', 'Comfortable walking shoes') "
             f"and 2 'local_fashion_stores'. Keep descriptions under 8 words and reasoning to 1 sentence.\n"
             f"• ALERTS REQUIREMENT: Populate BOTH 'cultural_guidelines' (modesty/dress code: shoulders, knees, chest, sacred sites) "
             f"and 'danger_zones_info' (safety/security: pickpockets, night cautions) with 1 concise sentence each."
@@ -1006,14 +1047,15 @@ async def pack_suitcase(
     user_gender = user.get("sex") or user.get("gender")
     trip_context_text = f"{body.destinations or ''} {body.purpose or ''} {body.notes or ''}"
 
-    # 7a. Map closet items onto the base outfits BEFORE outbound translation and BEFORE multi-day cloning
+    # 7a. Map closet items onto the base outfits and normalize roles
     for outfit in outfits:
         for item in outfit.get("items") or []:
             if not isinstance(item, dict):
                 continue
+            role = _normalize_suitcase_item_role(item.get("role"))
+            item["role"] = role
             match = find_closet_match(item, closet_items, alias_map=alias_map)
-            role = str(item.get("role") or "").lower().strip()
-            if not match and is_gemma_provider and role in ("top", "bottom", "shoes", "outerwear"):
+            if not match and is_gemma_provider and role in ("top", "bottom", "shoes", "outerwear", "dress", "accessory"):
                 try:
                     from app.services.stylist_qa_engine import find_best_garment_replacement
                     match = find_best_garment_replacement(
@@ -1059,8 +1101,228 @@ async def pack_suitcase(
             else:
                 item["closet_item_id"] = None
                 item["status"] = "missing"
+                cur_desc = (item.get("description") or "").strip()
+                if not cur_desc or cur_desc.lower() in ("missing garment", "missing", "item", "garment", "null"):
+                    item["description"] = _get_default_missing_desc_for_role(role, body.destinations)
 
-    # 7b. Translate Gemma English output into target_lang BEFORE multi-day cloning (3x fewer strings to translate)
+    # 7b. Safety net: If no closet items were matched but user has closet items, ground outfits with user's wardrobe!
+    if not packed_closet_ids and clean_closet:
+        logger.info("Suitcase fallback: Zero closet items matched by model; auto-grounding outfits with user's wardrobe.")
+        from app.services.stylist_scheduler_brain import norm_category
+        closet_by_cat: dict[str, list[dict[str, Any]]] = {}
+        for c_item in clean_closet:
+            c_cat = norm_category(c_item.get("category"))
+            closet_by_cat.setdefault(c_cat, []).append(c_item)
+
+        for o_idx, outfit in enumerate(outfits):
+            has_closet = any(it.get("status") == "closet" for it in outfit.get("items") or [])
+            if not has_closet:
+                new_items: list[dict[str, Any]] = []
+                tops = closet_by_cat.get("top", [])
+                chosen_top = tops[o_idx % len(tops)] if tops else None
+                bottoms = closet_by_cat.get("bottom", [])
+                chosen_bottom = bottoms[o_idx % len(bottoms)] if bottoms else None
+                shoes = closet_by_cat.get("shoes", [])
+                chosen_shoes = shoes[o_idx % len(shoes)] if shoes else None
+
+                for chosen, chosen_role in [(chosen_top, "top"), (chosen_bottom, "bottom"), (chosen_shoes, "shoes")]:
+                    if chosen:
+                        c_id = chosen["id"]
+                        new_items.append({
+                            "role": chosen_role,
+                            "description": chosen.get("title") or chosen.get("name") or chosen_role,
+                            "closet_item_id": c_id,
+                            "status": "closet",
+                            "thumbnail_data_url": chosen.get("thumbnail_data_url"),
+                            "reconstructed_image_url": chosen.get("reconstructed_image_url"),
+                            "clean_image_url": chosen.get("clean_image_url"),
+                            "segmented_image_url": chosen.get("segmented_image_url"),
+                            "original_image_url": chosen.get("original_image_url"),
+                        })
+                        if c_id not in packed_closet_ids:
+                            packed_closet_ids.add(c_id)
+                            packing_list.append({
+                                "id": c_id,
+                                "title": chosen.get("title") or "Closet item",
+                                "category": chosen.get("category") or chosen_role,
+                                "checked": False,
+                                "is_missing": False,
+                                "recommendation_source": None,
+                                "recommendation_url": None,
+                                "thumbnail_data_url": chosen.get("thumbnail_data_url"),
+                                "reconstructed_image_url": chosen.get("reconstructed_image_url"),
+                                "clean_image_url": chosen.get("clean_image_url"),
+                                "segmented_image_url": chosen.get("segmented_image_url"),
+                                "original_image_url": chosen.get("original_image_url"),
+                            })
+                for orig_it in outfit.get("items") or []:
+                    if orig_it.get("role") in ("accessory", "outerwear"):
+                        new_items.append(orig_it)
+                outfit["items"] = new_items
+
+    # Ensure packing list contains essential closet pieces if still sparse
+    if clean_closet and len(packing_list) < 4:
+        for c_item in clean_closet[:8]:
+            c_id = c_item.get("id")
+            if c_id and c_id not in packed_closet_ids:
+                packed_closet_ids.add(c_id)
+                packing_list.append({
+                    "id": c_id,
+                    "title": c_item.get("title") or "Closet item",
+                    "category": c_item.get("category"),
+                    "checked": False,
+                    "is_missing": False,
+                    "recommendation_source": None,
+                    "recommendation_url": None,
+                    "thumbnail_data_url": c_item.get("thumbnail_data_url"),
+                    "reconstructed_image_url": c_item.get("reconstructed_image_url"),
+                    "clean_image_url": c_item.get("clean_image_url"),
+                    "segmented_image_url": c_item.get("segmented_image_url"),
+                    "original_image_url": c_item.get("original_image_url"),
+                })
+
+    # 7c. Multi-day expansion & diversification: rotate pieces, times, and outfit names
+    if outfits and trip_days > len(outfits):
+        import copy
+        from app.services.stylist_scheduler_brain import norm_category
+        base_count = len(outfits)
+        time_cycle = ["morning", "afternoon", "evening", "all_day"]
+        vibe_titles = [
+            "City Exploration & Sightseeing",
+            "Casual Medina Stroll",
+            "Cultural Afternoon Tour",
+            "Evening Dinner & Leisure",
+            "Relaxed Day Outfit",
+            "Travel & Departure Capsule",
+        ]
+
+        extra_tops = [it for it in clean_closet if norm_category(it.get("category")) == "top"]
+        extra_bottoms = [it for it in clean_closet if norm_category(it.get("category")) == "bottom"]
+
+        for day_idx in range(trip_days):
+            day_date = (dep_dt + timedelta(days=day_idx)).strftime("%Y-%m-%d")
+            if day_idx < base_count:
+                outfits[day_idx]["date"] = day_date
+            else:
+                cloned = copy.deepcopy(outfits[day_idx % base_count])
+                cloned["date"] = day_date
+                # Diversify time of day
+                cloned["time_to_wear"] = time_cycle[day_idx % len(time_cycle)]
+                # Diversify outfit title
+                title_template = vibe_titles[day_idx % len(vibe_titles)]
+                cloned["outfit_name"] = f"Day {day_idx + 1}: {title_template}"
+                cloned["reasoning"] = f"Versatile capsule combination adapted for Day {day_idx + 1}."
+
+                # Rotate garments if multiple pieces exist in wardrobe
+                if extra_tops and len(extra_tops) > 1:
+                    alt_top = extra_tops[day_idx % len(extra_tops)]
+                    for itm in cloned.get("items") or []:
+                        if itm.get("role") == "top":
+                            itm["closet_item_id"] = alt_top["id"]
+                            itm["status"] = "closet"
+                            itm["description"] = alt_top.get("title") or alt_top.get("name") or "Top"
+                            itm["thumbnail_data_url"] = alt_top.get("thumbnail_data_url")
+                            itm["reconstructed_image_url"] = alt_top.get("reconstructed_image_url")
+                            itm["clean_image_url"] = alt_top.get("clean_image_url")
+                            itm["segmented_image_url"] = alt_top.get("segmented_image_url")
+                            itm["original_image_url"] = alt_top.get("original_image_url")
+                            if alt_top["id"] not in packed_closet_ids:
+                                packed_closet_ids.add(alt_top["id"])
+                                packing_list.append({
+                                    "id": alt_top["id"],
+                                    "title": alt_top.get("title") or "Closet item",
+                                    "category": alt_top.get("category") or "top",
+                                    "checked": False,
+                                    "is_missing": False,
+                                    "recommendation_source": None,
+                                    "recommendation_url": None,
+                                    "thumbnail_data_url": alt_top.get("thumbnail_data_url"),
+                                    "reconstructed_image_url": alt_top.get("reconstructed_image_url"),
+                                    "clean_image_url": alt_top.get("clean_image_url"),
+                                    "segmented_image_url": alt_top.get("segmented_image_url"),
+                                    "original_image_url": alt_top.get("original_image_url"),
+                                })
+                            break
+
+                outfits.append(cloned)
+        analysis["outfits"] = outfits
+
+    # 7d. Extract missing items with concrete garment descriptions and fetch marketplace suggestions
+    seen_missing_keys = {
+        (m.get("description") or m.get("role") or "").lower().strip()
+        for m in missing_items
+    }
+    for outfit in outfits:
+        for item in outfit.get("items") or []:
+            if not isinstance(item, dict):
+                continue
+            if item.get("status") == "missing":
+                role_norm = _normalize_suitcase_item_role(item.get("role"))
+                item["role"] = role_norm
+                desc = (item.get("description") or "").strip()
+                if not desc or desc.lower() in ("missing garment", "missing", "item", "garment", "null"):
+                    desc = _get_default_missing_desc_for_role(role_norm, body.destinations)
+                    item["description"] = desc
+                key = desc.lower()
+                if key and key not in seen_missing_keys:
+                    seen_missing_keys.add(key)
+                    outfit_title = outfit.get("outfit_name") or "Outfit"
+                    date_info = f" ({outfit.get('date')})" if outfit.get("date") else ""
+                    missing_items.append({
+                        "role": role_norm,
+                        "description": desc,
+                        "reason_needed": f"{outfit_title}{date_info}",
+                        "reason": f"{outfit_title}{date_info}",
+                    })
+
+    for m in missing_items:
+        role_norm = _normalize_suitcase_item_role(m.get("role"))
+        m["role"] = role_norm
+        cur_desc = (m.get("description") or "").strip()
+        if not cur_desc or cur_desc.lower() in ("missing garment", "missing", "item", "garment", "null"):
+            m["description"] = _get_default_missing_desc_for_role(role_norm, body.destinations)
+
+    # Fetch Marketplace recommendations for missing slots
+    if missing_items:
+        gaps = [{"role": m.get("role") or "accessory"} for m in missing_items]
+        try:
+            suggestions = await suggest_for_gaps(
+                user=user,
+                gaps=gaps,
+                brief=f"{body.purpose} in {body.destinations} style {body.preferred_style}"
+            )
+        except Exception:
+            suggestions = []
+
+        stores = analysis.get("local_fashion_stores") or []
+        for m in missing_items:
+            role = m.get("role") or "accessory"
+            matching_sugs = [s for s in suggestions if s.get("fills_slot") == role]
+
+            rec_source = "Local Shopping Advice"
+            rec_url = None
+            if matching_sugs:
+                rec_source = "Marketplace Suggestion"
+                rec_url = f"/market/{matching_sugs[0]['listing_id']}"
+            elif stores and isinstance(stores[0], dict) and stores[0].get("name"):
+                rec_source = f"Local Store: {stores[0].get('name')}"
+
+            clean_desc = (m.get("description") or _get_default_missing_desc_for_role(role, body.destinations)).strip()
+            clean_desc = re.sub(r'^(?:missing\s*item\s*:\s*|פריט\s*חסר\s*:\s*)', '', clean_desc, flags=re.IGNORECASE).strip()
+            if clean_desc.lower() in ("missing garment", "missing", "garment", "item"):
+                clean_desc = _get_default_missing_desc_for_role(role, body.destinations)
+
+            packing_list.append({
+                "id": f"missing-{role}-{str(uuid.uuid4())[:8]}",
+                "title": clean_desc,
+                "category": role,
+                "checked": False,
+                "is_missing": True,
+                "recommendation_source": rec_source,
+                "recommendation_url": rec_url
+            })
+
+    # 7e. Outbound batch translation for Eyes into target_lang across ALL generated text
     if is_gemma_provider and target_lang != "en":
         try:
             from app.services.translation_service import translate_batch
@@ -1070,8 +1332,9 @@ async def pack_suitcase(
             def _queue_tr(obj: dict[str, Any], key: str) -> None:
                 val = obj.get(key)
                 if isinstance(val, str) and val.strip():
-                    texts_to_tr.append(val.strip())
-                    tr_setters.append((obj, key))
+                    if re.search(r"[a-zA-Z]", val):
+                        texts_to_tr.append(val.strip())
+                        tr_setters.append((obj, key))
 
             _queue_tr(analysis, "cultural_guidelines")
             _queue_tr(analysis, "danger_zones_info")
@@ -1080,12 +1343,16 @@ async def pack_suitcase(
                 _queue_tr(o, "location")
                 _queue_tr(o, "reasoning")
                 for itm in o.get("items") or []:
-                    if isinstance(itm, dict):
+                    if isinstance(itm, dict) and itm.get("status") == "missing":
                         _queue_tr(itm, "description")
             for m in missing_items:
                 if isinstance(m, dict):
                     _queue_tr(m, "description")
                     _queue_tr(m, "reason_needed")
+            for p in packing_list:
+                if isinstance(p, dict) and p.get("is_missing"):
+                    _queue_tr(p, "title")
+                    _queue_tr(p, "recommendation_source")
             for s in analysis.get("local_fashion_stores") or []:
                 if isinstance(s, dict):
                     _queue_tr(s, "why")
@@ -1101,83 +1368,6 @@ async def pack_suitcase(
                             target_dict["reason"] = tr_val
         except Exception as tr_out_exc:
             logger.warning("Suitcase outbound translation for Eyes soft-failed: %s", tr_out_exc)
-
-    # 7c. If trip_days > returned capsule outfits, expand across all trip dates so every day of the trip is covered
-    if outfits and trip_days > len(outfits):
-        import copy
-        base_count = len(outfits)
-        for day_idx in range(trip_days):
-            day_date = (dep_dt + timedelta(days=day_idx)).strftime("%Y-%m-%d")
-            if day_idx < base_count:
-                outfits[day_idx]["date"] = day_date
-            else:
-                cloned = copy.deepcopy(outfits[day_idx % base_count])
-                cloned["date"] = day_date
-                outfits.append(cloned)
-        analysis["outfits"] = outfits
-
-    # Extract missing items from outfits if Gemini omitted them from analysis["missing_items"]
-    seen_missing_keys = {
-        (m.get("description") or m.get("role") or "").lower().strip()
-        for m in missing_items
-    }
-    for outfit in outfits:
-        for item in outfit.get("items") or []:
-            if not isinstance(item, dict):
-                continue
-            if item.get("status") == "missing":
-                desc = (item.get("description") or "").strip()
-                key = desc.lower() if desc else (item.get("role") or "missing").lower()
-                if key and key not in seen_missing_keys:
-                    seen_missing_keys.add(key)
-                    outfit_title = outfit.get("outfit_name") or "Outfit"
-                    date_info = f" ({outfit.get('date')})" if outfit.get("date") else ""
-                    missing_items.append({
-                        "role": item.get("role") or "accessory",
-                        "description": desc or item.get("role") or "Missing garment",
-                        "reason_needed": f"{outfit_title}{date_info}",
-                        "reason": f"{outfit_title}{date_info}",
-                    })
-
-    # Fetch Marketplace recommendations for missing slots
-    if missing_items:
-        gaps = [{"role": m.get("role") or "accessory"} for m in missing_items]
-        try:
-            suggestions = await suggest_for_gaps(
-                user=user,
-                gaps=gaps,
-                brief=f"{body.purpose} in {body.destinations} style {body.preferred_style}"
-            )
-        except Exception:
-            suggestions = []
-
-        # Merge suggestions into missing items in the packing checklist
-        for m in missing_items:
-            role = m.get("role")
-            matching_sugs = [s for s in suggestions if s.get("fills_slot") == role]
-            
-            # Format recommendation
-            rec_source = "Local Shopping Advice"
-            rec_url = None
-            stores = analysis.get("local_fashion_stores") or []
-            if matching_sugs:
-                rec_source = "Marketplace Suggestion"
-                rec_url = f"/market/{matching_sugs[0]['listing_id']}"
-            elif stores and isinstance(stores[0], dict):
-                rec_source = f"Local Store: {stores[0].get('name')}"
-
-            clean_desc = (m.get("description") or role or "Missing garment").strip()
-            clean_desc = re.sub(r'^(?:missing\s*item\s*:\s*|פריט\s*חסר\s*:\s*)', '', clean_desc, flags=re.IGNORECASE).strip()
-
-            packing_list.append({
-                "id": f"missing-{role}-{str(uuid.uuid4())[:8]}",
-                "title": clean_desc,
-                "category": role,
-                "checked": False,
-                "is_missing": True,
-                "recommendation_source": rec_source,
-                "recommendation_url": rec_url
-            })
 
     # Build response structure
     return {

@@ -177,21 +177,39 @@ export function formatReasonNeeded(reason, t) {
   return trimmed;
 }
 
-export function formatChecklistItemTitle(title, isMissing, t) {
+export function formatChecklistItemTitle(title, isMissing, t, category = "") {
   if (!title) return "";
   const clean = String(title).replace(/^(?:missing\s*item\s*:\s*|פריט\s*חסר\s*:\s*)/i, "").trim();
+  let localized = clean;
+  if (/^missing\s*garment$/i.test(clean) || /^פריט\s*לבוש\s*חסר$/i.test(clean)) {
+    if (category) {
+      const catLabel = labelForRole(category, t);
+      localized = catLabel || t("suitcase.missingGarment", { defaultValue: "Missing garment" });
+    } else {
+      localized = t("suitcase.missingGarment", { defaultValue: "Missing garment" });
+    }
+  } else if (/^(?:top|bottom|shoes?|outerwear|dress|accessory|accessories)$/i.test(clean)) {
+    localized = labelForRole(clean, t) || clean;
+  }
   if (isMissing || /^(?:missing\s*item\s*:|פריט\s*חסר\s*:)/i.test(String(title))) {
     const prefix = t("suitcase.missingItemPrefix", { defaultValue: "Missing item:" });
-    return `${prefix} ${clean}`;
+    return `${prefix} ${localized}`;
   }
-  return clean;
+  return localized;
 }
 
-export function formatMissingItemDescription(description, t) {
-  if (!description) return t("suitcase.missingGarment", { defaultValue: "Missing garment" });
-  const clean = String(description).replace(/^(?:missing\s*item\s*:\s*|פריט\s*חסר\s*:\s*)/i, "").trim();
-  if (/^missing\s*garment$/i.test(clean)) {
+export function formatMissingItemDescription(description, t, role = "") {
+  const clean = String(description || "").replace(/^(?:missing\s*item\s*:\s*|פריט\s*חסר\s*:\s*)/i, "").trim();
+  const isGeneric = !clean || /^missing\s*garment$/i.test(clean) || /^פריט\s*לבוש\s*חסר$/i.test(clean) || /^missing$/i.test(clean);
+  if (isGeneric) {
+    if (role) {
+      const roleLabel = labelForRole(role, t);
+      if (roleLabel) return roleLabel;
+    }
     return t("suitcase.missingGarment", { defaultValue: "Missing garment" });
+  }
+  if (/^(?:top|bottom|shoes?|outerwear|dress|accessory|accessories)$/i.test(clean)) {
+    return labelForRole(clean, t) || clean;
   }
   return clean;
 }
@@ -2047,7 +2065,7 @@ function Suitcase() {
                                                       <p
                                                         className={`text-[12px] font-semibold text-text-brand truncate ${item.checked ? "line-through text-text-brand" : ""}`}
                                                       >
-                                                        {formatChecklistItemTitle(item.title, item.is_missing, t)}
+                                                        {formatChecklistItemTitle(item.title, item.is_missing, t, item.category)}
                                                       </p>
                                                     </div>
                                                     {item.recommendation_source && (
@@ -2250,7 +2268,7 @@ function Suitcase() {
                                         {labelForRole(m.role, t)}
                                       </Badge>
                                       <h4 className="text-[14px] font-semibold text-dark-brand">
-                                        {formatMissingItemDescription(m.description, t)}
+                                        {formatMissingItemDescription(m.description, t, m.role)}
                                       </h4>
                                       {m.reason_needed && (
                                         <p className="text-[12px] text-text-brand font-semibold">
@@ -2638,7 +2656,7 @@ function Suitcase() {
                                                   <p
                                                     className={`text-[12px] font-semibold text-text-brand truncate ${item.checked ? "line-through text-text-brand" : ""}`}
                                                   >
-                                                    {formatChecklistItemTitle(item.title, item.is_missing, t)}
+                                                    {formatChecklistItemTitle(item.title, item.is_missing, t, item.category)}
                                                   </p>
                                                 </div>
                                                 {item.recommendation_source && (
@@ -2795,7 +2813,7 @@ function Suitcase() {
                                         {labelForRole(m.role, t)}
                                       </Badge>
                                       <h4 className="text-[14px] font-semibold text-dark-brand">
-                                        {formatMissingItemDescription(m.description, t)}
+                                        {formatMissingItemDescription(m.description, t, m.role)}
                                       </h4>
                                       {m.reason_needed && (
                                         <p className="text-[12px] text-text-brand font-semibold">
@@ -3203,7 +3221,7 @@ function Suitcase() {
                             {labelForRole(m.role, t)}
                           </Badge>
                           <h5 className="text-[12px] font-semibold text-dark-brand">
-                            {formatMissingItemDescription(m.description, t)}
+                            {formatMissingItemDescription(m.description, t, m.role)}
                           </h5>
                           {m.reason_needed && (
                             <p className="text-[11px] text-text-brand font-semibold">
@@ -3232,7 +3250,7 @@ function Suitcase() {
                       >
                         <div className="h-2 w-2 rounded-full bg-primary-brand shrink-0" />
                         <span className="text-[10px] font-semibold text-text-brand truncate">
-                          {formatChecklistItemTitle(it.title, it.is_missing, t)}
+                          {formatChecklistItemTitle(it.title, it.is_missing, t, it.category)}
                         </span>
                         <Badge
                           variant="outline"
