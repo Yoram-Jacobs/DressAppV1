@@ -1,11 +1,11 @@
-import { useMemo, useState, useEffect } from 'react';
+import { useMemo, useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { bestImageUrl, resolveMediaUrl } from '@/lib/itemImage';
 import { closetStore } from '@/lib/closetStore';
 import { useAuth } from '@/lib/auth';
 import ImageWithPlaceholder from '@/components/ImageWithPlaceholder';
-import DynamicAvatar from '@/components/DynamicAvatar';
+import DynamicAvatar, { getAvatarGeometry } from '@/components/DynamicAvatar';
 
 // ─── Dynamic Anatomical Topography Helpers ───
 export function getBottomTopography(garment) {
@@ -348,10 +348,144 @@ export function getOuterwearTopography(garment) {
   };
 }
 
-// In-memory cache for dynamically trimmed garment data URLs
-const trimmedImageCache = new Map();
+// ─── Garment Shoulder Line Detection & Metrics Calculation ───
+export function calculateGarmentShoulderLine(alphaArray, w, h) {
+  let topY = -1;
+  let bottomY = -1;
+  for (let y = 0; y < h; y++) {
+    const rowOffset = y * w;
+    for (let x = 0; x < w; x++) {
+      if (alphaArray[rowOffset + x] > 20) {
+        if (topY === -1) topY = y;
+        bottomY = y;
+        break;
+      }
+    }
+  }
 
-function AutoTrimmedGarmentImage({ src, placeholder, alt, objectFitMode = 'contain', imgAlignClass = 'object-top' }) {
+  if (topY === -1) {
+    return { shoulderYRatio: 0.13, shoulderCenterXRatio: 0.50, shoulderWidthRatio: 0.60 };
+  }
+
+  const garmentH = bottomY - topY + 1;
+  const maxScanY = Math.min(bottomY, topY + Math.floor(garmentH * 0.42));
+
+  const yIndices = [];
+  const lefts = [];
+  const rights = [];
+  const widths = [];
+  const centers = [];
+
+  for (let y = topY; y < maxScanY; y++) {
+    let minX = -1;
+    let maxX = -1;
+    const rowOffset = y * w;
+    for (let x = 0; x < w; x++) {
+      if (alphaArray[rowOffset + x] > 20) {
+        if (minX === -1) minX = x;
+        maxX = x;
+      }
+    }
+    if (minX !== -1) {
+      yIndices.push(y - topY);
+      lefts.push(minX);
+      rights.push(maxX);
+      widths.push(maxX - minX + 1);
+      centers.push((minX + maxX) / 2);
+    }
+  }
+
+  const n = widths.length;
+  if (n < 10) {
+    return { shoulderYRatio: 0.13, shoulderCenterXRatio: 0.50, shoulderWidthRatio: 0.60 };
+  }
+
+  // Moving average smoothing (kernel size 5)
+  const k = Math.max(3, Math.min(9, Math.floor(n / 8) | 1));
+  const halfK = Math.floor(k / 2);
+  const smoothW = new Float64Array(n);
+  const smoothLeft = new Float64Array(n);
+  const smoothRight = new Float64Array(n);
+
+  for (let i = 0; i < n; i++) {
+    let sumW = 0, sumL = 0, sumR = 0, count = 0;
+    for (let j = Math.max(0, i - halfK); j <= Math.min(n - 1, i + halfK); j++) {
+      sumW += widths[j];
+      sumL += lefts[j];
+      sumR += rights[j];
+      count++;
+    }
+    smoothW[i] = sumW / count;
+    smoothLeft[i] = sumL / count;
+    smoothRight[i] = sumR / count;
+  }
+
+  // Check sleeveless peak in upper 25% (shoulder strap tips before armhole cutaways)
+  const upper25Len = Math.min(n, Math.floor(garmentH * 0.25));
+  let peakIdx = 0;
+  let maxW = -1;
+  for (let i = 0; i < upper25Len; i++) {
+    if (smoothW[i] > maxW) {
+      maxW = smoothW[i];
+      peakIdx = i;
+    }
+  }
+
+  let isSleeveless = false;
+  if (peakIdx > 5 && peakIdx < upper25Len - 3) {
+    if (smoothW[peakIdx] > smoothW[peakIdx + 3] + 2) {
+      isSleeveless = true;
+    }
+  }
+
+  let chosenIdx = peakIdx;
+  if (!isSleeveless) {
+    // Sleeved: find elbow where rate of left/right expansion flattens into shoulder/arm drop
+    const slopeSum = new Float64Array(n);
+    for (let i = 1; i < n - 1; i++) {
+      const dL = Math.abs(smoothLeft[i + 1] - smoothLeft[i - 1]) / 2;
+      const dR = Math.abs(smoothRight[i + 1] - smoothRight[i - 1]) / 2;
+      slopeSum[i] = dL + dR;
+    }
+
+    const minIdx = Math.max(2, Math.min(Math.floor(garmentH * 0.06), n - 5));
+    const maxIdx = Math.max(minIdx + 2, Math.min(Math.floor(garmentH * 0.22), n - 2));
+
+    let minSlope = Infinity;
+    for (let i = minIdx; i <= maxIdx; i++) {
+      if (slopeSum[i] < minSlope) {
+        minSlope = slopeSum[i];
+        chosenIdx = i;
+      }
+    }
+  }
+
+  const shoulderY = yIndices[chosenIdx];
+  const shoulderW = widths[chosenIdx];
+  const shoulderCx = centers[chosenIdx];
+
+  return {
+    shoulderY,
+    shoulderYRatio: Math.max(0.04, Math.min(0.24, shoulderY / garmentH)),
+    shoulderCx,
+    shoulderCenterXRatio: Math.max(0.35, Math.min(0.65, shoulderCx / w)),
+    shoulderW,
+    shoulderWidthRatio: Math.max(0.35, Math.min(0.85, shoulderW / w))
+  };
+}
+
+// In-memory cache for dynamically trimmed garment data URLs and detected shoulder landmarks
+const trimmedImageCache = new Map();
+const trimmedImageMetricsCache = new Map();
+
+function AutoTrimmedGarmentImage({
+  src,
+  placeholder,
+  alt,
+  objectFitMode = 'contain',
+  imgAlignClass = 'object-top',
+  onMetricsReady
+}) {
   const [activeSrc, setActiveSrc] = useState(() => (src && trimmedImageCache.has(src) ? trimmedImageCache.get(src) : src));
 
   useEffect(() => {
@@ -362,6 +496,9 @@ function AutoTrimmedGarmentImage({ src, placeholder, alt, objectFitMode = 'conta
 
     if (trimmedImageCache.has(src)) {
       setActiveSrc(trimmedImageCache.get(src));
+      if (onMetricsReady && trimmedImageMetricsCache.has(src)) {
+        onMetricsReady(trimmedImageMetricsCache.get(src));
+      }
       return;
     }
 
@@ -403,8 +540,7 @@ function AutoTrimmedGarmentImage({ src, placeholder, alt, objectFitMode = 'conta
           }
         }
 
-        // If no significant padding (padding <= 3px on all sides), keep original url
-        if (!hasAlpha || (minX <= 3 && minY <= 3 && maxX >= w - 4 && maxY >= h - 4)) {
+        if (!hasAlpha) {
           trimmedImageCache.set(src, src);
           if (isMounted) setActiveSrc(src);
           return;
@@ -418,6 +554,31 @@ function AutoTrimmedGarmentImage({ src, placeholder, alt, objectFitMode = 'conta
         cropCanvas.height = cropH;
         const cropCtx = cropCanvas.getContext('2d');
         cropCtx.drawImage(canvas, minX, minY, cropW, cropH, 0, 0, cropW, cropH);
+
+        // Analyze alpha channel on cropped garment to calculate shoulder line
+        const croppedImgData = cropCtx.getImageData(0, 0, cropW, cropH);
+        const croppedData = croppedImgData.data;
+        const croppedAlpha = new Uint8ClampedArray(cropW * cropH);
+        for (let i = 0; i < cropW * cropH; i++) {
+          croppedAlpha[i] = croppedData[i * 4 + 3];
+        }
+
+        const shoulderMetrics = calculateGarmentShoulderLine(croppedAlpha, cropW, cropH);
+        const fullMetrics = {
+          ...shoulderMetrics,
+          aspectRatio: cropW / cropH,
+          naturalWidth: cropW,
+          naturalHeight: cropH
+        };
+        trimmedImageMetricsCache.set(src, fullMetrics);
+        if (onMetricsReady) onMetricsReady(fullMetrics);
+
+        // If no significant padding (padding <= 3px on all sides), keep original url
+        if (minX <= 3 && minY <= 3 && maxX >= w - 4 && maxY >= h - 4) {
+          trimmedImageCache.set(src, src);
+          if (isMounted) setActiveSrc(src);
+          return;
+        }
 
         const resultDataUrl = cropCanvas.toDataURL('image/png');
         trimmedImageCache.set(src, resultDataUrl);
@@ -438,7 +599,7 @@ function AutoTrimmedGarmentImage({ src, placeholder, alt, objectFitMode = 'conta
     return () => {
       isMounted = false;
     };
-  }, [src]);
+  }, [src, onMetricsReady]);
 
   return (
     <ImageWithPlaceholder
@@ -744,15 +905,99 @@ export default function AvatarViewer2D({ shapeParams = {}, measurements: provide
   const topTopo = useMemo(() => getTopTopography(garments.top, hasOuterwear), [garments.top, hasOuterwear]);
   const outerwearTopo = useMemo(() => getOuterwearTopography(garments.outerwear), [garments.outerwear]);
 
+  const avatarGeometry = useMemo(() => {
+    return getAvatarGeometry({
+      height: computedMeasurements.height,
+      shoulders: computedMeasurements.shoulders,
+      gender: computedMeasurements.gender || sex
+    });
+  }, [computedMeasurements.height, computedMeasurements.shoulders, computedMeasurements.gender, sex]);
+
+  const [garmentMetrics, setGarmentMetrics] = useState({});
+
+  const handleMetricsReady = useCallback((slot, m) => {
+    setGarmentMetrics(prev => {
+      if (prev[slot] && prev[slot].shoulderYRatio === m.shoulderYRatio && prev[slot].aspectRatio === m.aspectRatio) {
+        return prev;
+      }
+      return { ...prev, [slot]: m };
+    });
+  }, []);
+
   const renderGarment = (roleKey, altText, extraClasses = '', initial = {}, animate = {}, imgAlignClass = 'object-top', objectFitMode = 'contain') => {
     const garment = garments[roleKey];
     if (!garment || !garment.url) return null;
     const clickable = onItemClick && garment.id;
+
+    // Check if garment is shoulder-anchored (top, outerwear, dress) vs bust-anchored (strapless)
+    const garmentText = `${garment.name || ''} ${garment.sub_category || ''} ${garment.item_type || ''} ${garment.category || ''}`;
+    const isStrapless = /\b(strapless|tube\s*top|bandeau|off[\s-_]*shoulder)\b/i.test(garmentText);
+    const isShoulderAnchored = (roleKey === 'top' || roleKey === 'outerwear' || roleKey === 'dress') && !isStrapless;
+
+    let dynamicStyle = undefined;
+    let effectiveInitial = initial;
+    let effectiveAnimate = animate;
+    let effectiveClasses = extraClasses;
+
+    if (isShoulderAnchored) {
+      const defaultMetrics = {
+        top: { shoulderYRatio: 0.13, shoulderCenterXRatio: 0.50, shoulderWidthRatio: 0.60, aspectRatio: 1.25 },
+        outerwear: { shoulderYRatio: 0.136, shoulderCenterXRatio: 0.50, shoulderWidthRatio: 0.51, aspectRatio: 1.45 },
+        dress: { shoulderYRatio: 0.12, shoulderCenterXRatio: 0.50, shoulderWidthRatio: 0.58, aspectRatio: 0.85 }
+      };
+
+      const m = garmentMetrics[roleKey] || trimmedImageMetricsCache.get(garment.url) || defaultMetrics[roleKey] || defaultMetrics.top;
+
+      // Outerwear drapes slightly wider (1.09x) over underlayers (1.03x)
+      const spanMultiplier = roleKey === 'outerwear' ? 1.09 : 1.03;
+      const targetSpan = avatarGeometry.shoulderWidthPercent * spanMultiplier;
+
+      // Rendered width based on shoulder span (clamped between 52% and 96%)
+      const renderedWidth = Math.max(52, Math.min(96, targetSpan / Math.max(0.3, m.shoulderWidthRatio)));
+
+      // In aspect-[1/2] container, H_rendered = W_rendered / aspectRatio * 0.5
+      const renderedHeight = (renderedWidth / Math.max(0.35, m.aspectRatio)) * 0.5;
+
+      // Shoulder offset in % of container height
+      const shoulderOffsetY = m.shoulderYRatio * renderedHeight;
+
+      // Align garment shoulder line with avatar shoulder line:
+      const dynamicTop = avatarGeometry.shoulderYPercent - shoulderOffsetY;
+
+      // Shoulder horizontal center offset:
+      const translateX = -m.shoulderCenterXRatio * 100;
+
+      dynamicStyle = {
+        top: `${dynamicTop.toFixed(2)}%`,
+        left: '50%',
+        width: `${renderedWidth.toFixed(2)}%`,
+        height: `${renderedHeight.toFixed(2)}%`
+      };
+
+      // Strip hard-coded top-*, left-*, w-*, h-* classes, keep z-index and shadows
+      effectiveClasses = extraClasses
+        .replace(/\btop-\[[^\]]+\]/g, '')
+        .replace(/\bleft-\S+/g, '')
+        .replace(/\bw-\[[^\]]+\]/g, '')
+        .replace(/\bh-\[[^\]]+\]/g, '')
+        .trim();
+
+      effectiveInitial = {
+        ...initial,
+        x: `${translateX.toFixed(2)}%`
+      };
+      effectiveAnimate = {
+        ...animate,
+        x: `${translateX.toFixed(2)}%`
+      };
+    }
+
     return (
       <motion.div
-        initial={initial}
-        animate={animate}
-        className={`absolute drop-shadow-md ${extraClasses} ${clickable ? 'cursor-pointer hover:scale-[1.02] transition-transform' : 'pointer-events-none'}`}
+        initial={effectiveInitial}
+        animate={effectiveAnimate}
+        style={dynamicStyle}
+        className={`absolute drop-shadow-md ${effectiveClasses} ${clickable ? 'cursor-pointer hover:scale-[1.02] transition-transform' : 'pointer-events-none'}`}
         onClick={clickable ? (e) => { e.stopPropagation(); onItemClick(garment.id); } : undefined}
       >
         <AutoTrimmedGarmentImage
@@ -761,6 +1006,7 @@ export default function AvatarViewer2D({ shapeParams = {}, measurements: provide
           alt={altText}
           objectFitMode={objectFitMode}
           imgAlignClass={imgAlignClass}
+          onMetricsReady={(metrics) => handleMetricsReady(roleKey, metrics)}
         />
       </motion.div>
     );

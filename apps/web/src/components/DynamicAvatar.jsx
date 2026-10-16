@@ -6,6 +6,37 @@ import React, { useMemo } from 'react';
  * Generates an SVG mannequin silhouette using dynamic cubic Bezier curves (C & S commands).
  * Fixed viewBox (0 0 200 450) ensures dramatic 1-to-1 dynamic morphing when parameters change.
  */
+export function getAvatarGeometry({
+  height = 170,
+  shoulders = 40,
+  gender = 'female'
+} = {}) {
+  const numH = Math.max(130, Math.min(215, Number(height) || 170));
+  const numSh = Math.max(28, Math.min(58, Number(shoulders) || 40));
+  const isMale = String(gender).toLowerCase() === 'male';
+
+  const viewBoxHeight = 450;
+  const totalBodySvgHeight = 360 * (numH / 170.0);
+  const yHeadTop = (viewBoxHeight - totalBodySvgHeight) / 2 + 10;
+  const headHeight = totalBodySvgHeight / 7.3;
+  const yChin = yHeadTop + headHeight;
+  const neckHeight = totalBodySvgHeight * 0.045;
+  const yShoulders = yChin + neckHeight;
+  const wShoulders = isMale ? (numSh * 1.05) : (numSh * 0.92);
+
+  // In aspect-[1/2] container:
+  const shoulderYPercent = (yShoulders / viewBoxHeight) * 100;
+  const shoulderWidthPercent = ((wShoulders * 4) / viewBoxHeight) * 100;
+
+  return {
+    yShoulders,
+    wShoulders,
+    shoulderYPercent,
+    shoulderWidthPercent,
+    isMale
+  };
+}
+
 export default function DynamicAvatar({
   height = 170,
   shoulders = 40,
