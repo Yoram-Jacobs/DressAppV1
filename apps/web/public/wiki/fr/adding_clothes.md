@@ -1,43 +1,41 @@
-# Numérisation & Ajout de Vêtements
+# Numérisation et Ajout de Vêtements
 
-Numérisez votre garde-robe physique en quelques secondes grâce au scan IA multimodal, au détourage intelligent et à la reconstruction d'image automatique.
+Numérisez votre garde-robe physique en quelques secondes grâce au scan IA multimodal, au détourage intelligent de l'arrière-plan et à la reconstruction d'image automatique.
 
 ## Vue d'ensemble
-Ajoutez vos vêtements via l'appareil photo en direct, l'importation multiple depuis la galerie, les codes QR du Passeport Numérique des Produits (DPP) ou vos factures numériques (OCR). L'IA locale intégrée détourage automatiquement les arrière-plans, extrait plus de 20 attributs de mode et prépare des clichés de studio sans nécessiter de clé API.
+Ajoutez vos vêtements via l'appareil photo en direct, l'importation d'images multiples depuis la galerie, les codes QR du Passeport Numérique des Produits (DPP) ou vos reçus numériques (OCR de factures). L'IA sur site intégrée supprime automatiquement les arrière-plans, étiquette plus de 20 attributs de mode et prépare des détourages de qualité studio sans aucune clé API requise.
 
 ## Prérequis
-- Photos claires et bien éclairées de vos vêtements (selfies miroir, photos en pied ou vêtements à plat).
-- Autorisation d'accès à l'appareil photo pour scanner les articles et les codes QR.
+- Photos claires et bien éclairées de vos vêtements (selfies devant un miroir, photos de tenues en pied ou vêtements posés à plat).
+- Autorisation d'accès à l'appareil photo pour scanner les articles physiques et les codes QR.
 - Reçus numériques ou captures d'écran de factures (PDF / PNG / JPEG) pour vos achats en ligne.
-- *(Facultatif)* Une clé personnelle Google Gemini API si vous souhaitez utiliser la retouche photo générative Nano Banana.
 
 ## Instructions étape par étape
 
-1. **Prise de vue & Importation interactive** :
-   - Cliquez sur **Ajouter un article** &rarr; choisissez **Prendre une photo** ou sélectionnez une ou plusieurs images sur votre appareil.
-   - La détection de doublons intégrée vérifie instantanément si vous avez déjà ajouté ce vêtement.
-2. **Segmentation IA & Détection multi-articles** :
-   - Le modèle de vision isole chaque pièce distincte (vestes, hauts, jupes, pantalons, chaussures, accessoires) en une seule étape.
-3. **Détourage IA & Clichés Studio Professionnels** :
-   - Le moteur de traitement intégré supprime automatiquement les arrière-plans pour créer des images PNG transparentes et nettes pour tous les comptes.
-4. **Extraction automatique des métadonnées** :
-   - L'IA locale extrait plus de 20 critères de mode (couleurs, composition des tissus, sous-catégorie, code vestimentaire, marque et état).
-5. **Restauration photo générative avancée (Nano Banana)** :
-   - Pour les utilisateurs disposant d'une clé personnelle Google Gemini API, Nano Banana analyse les parties masquées ou tronquées (sacs, mains, bords de cadre) et reconstruit le tissu manquant.
-6. **Reçus numériques & Balises DPP** :
-   - Passez à **Import Numérique** pour analyser vos confirmations de commande et enregistrer le prix d'achat et les tailles exactes.
-   - Cliquez sur **Scanner QR (DPP)** sur l'étiquette pour charger les données de traçabilité européenne et les conseils d'entretien.
+1. **Prise de vue et importation interactive** :
+   - Appuyez sur **Ajouter un article** &rarr; sélectionnez **Prendre une photo** ou téléversez une ou plusieurs photos de tenues depuis votre appareil.
+   - La détection de doublons intégrée vérifie instantanément si vous avez déjà importé ce même vêtement.
+2. **Segmentation IA et détection multi-articles** :
+   - Le modèle de vision isole chaque vêtement distinct (vestes, hauts, jupes, pantalons, chaussures, accessoires) en un seul passage.
+3. **Détourage IA et clichés de studio nets** :
+   - Le pipeline de vision intégré supprime automatiquement les arrière-plans pour générer des images PNG transparentes et nettes pour tous les comptes.
+4. **Étiquetage automatique des métadonnées** :
+   - Les comptes du forfait Gratuit (Free Tier) utilisent le moteur sur site **Eyes** de DressApp (actuellement un modèle `Qwen 2.5 VL 3B` affiné), tandis que les abonnés aux forfaits **Manager** et **Professional** bénéficient du modèle Cloud rapide (`Google Gemini 3.5 Flash`) pour extraire plus de 20 attributs de mode (couleurs, composition des tissus, sous-catégorie, code vestimentaire, marque et état).
+5. **Réparation photo générative avancée (Nano Banana)** :
+   - Nano Banana inspecte les articles recadrés pour détecter les occultations (sacs, mains) et les bords du cadre, complétant et reconstruisant automatiquement le tissu manquant pour obtenir des photographies de studio complètes sans aucune clé API externe requise.
+6. **Reçus numériques et balises DPP** :
+   - Passez à **Import numérique** pour analyser vos e-mails de confirmation de commande ou vos factures, verrouillant ainsi le prix d'achat et les tailles vérifiées.
+   - Appuyez sur **Scanner QR (DPP)** sur l'étiquette pour importer les informations de traçabilité du Passeport Numérique des Produits de l'UE et les consignes d'entretien.
 7. **Enregistrer dans le dressing** :
-   - Cliquez sur **Enregistrer**. Les articles apparaissent instantanément dans votre dressing.
+   - Appuyez sur **Enregistrer**. Les articles apparaissent immédiatement dans la grille de votre dressing.
 
 ## Résultats attendus
-Chaque pièce apparaît sous la forme d'un cliché de studio centré et net, doté d'attributs de recherche précis et d'un étiquetage complet.
+Chaque vêtement apparaît dans votre garde-robe numérique sous la forme d'une photographie de qualité studio centrée et nette, dotée d'attributs de recherche entièrement indexés et d'étiquettes taxonomiques riches.
 
 ## Dépannage
-- **Vêtements tronqués sur la photo** : Centrez bien le vêtement sur un fond contrasté. Si vous avez configuré une clé API, Nano Banana peut reconstruire automatiquement les cols ou les ourlets coupés.
-- **Éclairage & Contraste** : Pour les vêtements sombres, privilégiez un arrière-plan clair et lumineux.
-- **Erreurs de lecture de facture** : Utilisez le sélecteur interactif sur la photo de la facture pour désigner manuellement les lignes de produits.
+- **Vêtements coupés ou partiels sur les photos** : Centrez soigneusement le vêtement sur un arrière-plan contrasté. Nano Banana peut reconstruire automatiquement les cols ou les ourlets coupés.
+- **Éclairage et contraste** : Pour de meilleurs résultats sur les vêtements sombres, photographiez-les sur un fond clair contrasté.
+- **Erreurs de correspondance OCR sur les reçus** : Utilisez le sélecteur de zone interactif sur les images de reçus pour désigner manuellement les lignes de produits individuelles.
 
 ## Limites
-- Les imports groupés volumineux (>5 articles) sont traités en tâche de fond pour garantir la réactivité de l'interface.
-- La retouche photo générative Nano Banana nécessite une clé personnelle Google Gemini API fournie par l'utilisateur.
+- Les importations par lots en haute résolution (> 5 articles) sont traitées via des files d'attente asynchrones en arrière-plan afin de garantir une performance réactive sans expiration du délai du navigateur.

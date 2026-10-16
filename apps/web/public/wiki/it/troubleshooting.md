@@ -1,39 +1,39 @@
-# Risoluzione dei problemi e soluzioni utili
+# Risoluzione dei Problemi e Soluzioni Utili
 
-Risposte rapide e semplici a domande frequenti, permessi, limiti dell'armadio e avvisi sull'IA.
+Soluzioni rapide e semplici per domande frequenti, autorizzazioni e limiti dell'app.
 
 ## Panoramica
-Trova soluzioni rapide per l'accesso alla fotocamera, i tempi di caricamento, la capacità massima dell'armadio, le impostazioni audio e le notifiche di fallback dell'IA.
+Trova risposte immediate per l'accesso alla fotocamera, domande sulla velocità di caricamento, limiti di capienza del guardaroba, impostazioni audio e avvisi sull'IA, così da tornare a creare i tuoi look senza alcuno sforzo.
 
 ## Prerequisiti
 - Una connessione Internet attiva.
-- Un browser web moderno (si consiglia Google Chrome o Safari) o l'app mobile DressApp.
+- Un browser web moderno (si consiglia Google Chrome o Apple Safari) o l'app mobile DressApp.
 
-## Istruzioni passo passo
+## Istruzioni passo dopo passo
 1. **La fotocamera non si accende**:
-   - Apri le impostazioni del browser o del dispositivo, cerca **DressApp** e assicurati che il permesso **Fotocamera** sia impostato su "Consenti". Ricarica la pagina.
-2. **Messaggio "Capienza del guardaroba esaurita"**:
-   - Gli account gratuiti possono conservare fino a **150 capi** di base.
-   - Puoi invitare amici per ottenere **+10 slot aggiuntivi** per ogni iscrizione (fino a 150 capi), eliminare i capi inutilizzati o toccare **Passa a Pro** ($10/mese) per avere spazio illimitato.
-3. **Digitazione vocale o audio non rispondono**:
-   - Verifica che i permessi del microfono siano concessi nel browser.
-   - Assicurati che il volume del dispositivo non sia disattivato o in modalità "Non disturbare".
-4. **Le foto impiegano tempo per l'elaborazione**:
-   - Gli scatti con più capi richiedono qualche secondo per lo scontorno trasparente, l'analisi dei bordi e l'estrazione delle caratteristiche di moda. L'elaborazione avviene in background.
+   - Apri le impostazioni del browser o del dispositivo, trova **DressApp** e assicurati che le autorizzazioni della **Fotocamera** siano impostate su "Consenti". Ricarica la pagina.
+2. **Messaggio "Capienza del guardaroba raggiunta"**:
+   - Gli account gratuiti possono archiviare fino a **150 capi** di base.
+   - Puoi invitare gli amici per ottenere **+10 slot extra** per ogni iscrizione (fino a un massimo di 150 capi), eliminare i vestiti che non indossi più o toccare **Passa a Manager** ($10/mese) o **Professional** ($15/mese) per ottenere spazio di archiviazione illimitato.
+3. **La digitazione vocale o la riproduzione audio non funziona**:
+   - Verifica che le autorizzazioni del microfono siano consentite nelle impostazioni del browser.
+   - Controlla che il volume del telefono o del computer sia alzato e non sia disattivato o in modalità "Non disturbare".
+4. **Le foto impiegano tempo per essere elaborate**:
+   - Gli outfit composti da più capi richiedono alcuni istanti mentre l'IA scontorna gli sfondi, verifica la completezza dell'immagine ed estrae i tag di abbigliamento. Gli articoli vengono elaborati in modo fluido uno per uno; puoi continuare a navigare nell'app mentre il processo si completa!
 5. **Avviso "Utilizzo dello Stylist della Piattaforma (Quota Fallback)"**:
-   - Se hai inserito una chiave API personale Google Gemini e questa ha esaurito la quota o superato i limiti di frequenza (`429 Too Many Requests`), DressApp reindirizza automaticamente la richiesta al modello locale Gemma-4-E4B. Il tuo consulto di stile non fallirà mai! Puoi verificare la tua quota su Google AI Studio o proseguire con l'IA interna.
-6. **Messaggio "Chiave API richiesta (403)" su Trend Scout o Nano Banana**:
-   - I canali moda di Trend Scout e il ritocco fotografico Nano Banana richiedono una chiave personale di Google Gemini API. Puoi ottenerne una gratis su [Google AI Studio](https://aistudio.google.com/) e inserirla in **Profilo** (`/me`) &rarr; **Configurazione IA**.
-7. **Collegamento a Google Calendar**:
-   - Vai su **Profilo** &rarr; **Google Calendar** e tocca **Connetti** per autorizzare la sincronizzazione dei tuoi impegni.
+   - Se il modello IA cloud esterno raggiunge temporaneamente un limite di frequenza `429 Too Many Requests`, DressApp lo intercetta automaticamente e completa la tua richiesta di styling utilizzando il nostro modello integrato on-premises **Eyes** (attualmente un modello `Qwen 2.5 VL 3B` ottimizzato). La tua richiesta di styling non andrà mai in crash né fallirà con un errore!
+6. **Accesso all'IA Cloud veloce e a Trend Scout**:
+   - Gli utenti gratuiti usufruiscono del modello on-premises **Eyes** (`Qwen 2.5 VL 3B`) di DressApp senza alcuna configurazione. L'upgrade al piano **Manager** ($10/mese) o **Professional** ($15/mese) sblocca l'instradamento prioritario verso il modello IA Cloud veloce (attualmente **Google Gemini 3.5 Flash**) e il pieno accesso all'intelligenza moda quotidiana di Trend Scout.
+7. **Collegamento di Google Calendar**:
+   - Vai su **Profilo** &rarr; **Google Calendar** e tocca **Connetti**. Autorizza i permessi del calendario affinché lo Stylist possa controllare i tuoi impegni giornalieri.
 
 ## Risultati attesi
-Risoluzione rapida di ogni dubbio per utilizzare il guardaroba digitale senza pensieri.
+Risoluzione rapida dei problemi più comuni per far funzionare il tuo guardaroba digitale senza intoppi.
 
 ## Risoluzione dei problemi
-- **Il problema persiste?** Effettua il logout e accedi nuovamente, oppure cancella la cronologia/cache del browser.
-- **Visualizzazione lingue RTL**: In ebraico e arabo, il testo e i menu si invertono automaticamente a destra.
+- **Riscontri ancora problemi?** Esci dal tuo account ed effettua nuovamente l'accesso, oppure svuota la cache del browser per aggiornare la sessione.
+- **Visualizzazione delle lingue RTL**: In ebraico e arabo, il testo e le schede si specchiano automaticamente verso destra per una lettura naturale.
 
 ## Limitazioni
-- L'importazione da app concorrenti richiede un browser desktop e non è supportata su dispositivi mobili.
-- Trend Scout e il ritocco immagini con Nano Banana richiedono una chiave personale Google Gemini API.
+- Le importazioni del guardaroba digitale da app concorrenti richiedono un browser desktop e non possono essere avviate da smartphone.
+- L'instradamento al modello Cloud veloce (`Gemini 3.5 Flash`) e l'accesso completo ai canali moda di Trend Scout richiedono un piano **Manager** o **Professional** attivo.

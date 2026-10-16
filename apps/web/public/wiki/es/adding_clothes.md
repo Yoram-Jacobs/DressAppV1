@@ -1,43 +1,41 @@
-# Registro y adición de prendas
+# Registro y Adición de Prendas
 
 Digitaliza tu guardarropa físico en segundos con escaneo de IA multimodal, eliminación inteligente del fondo y reconstrucción automática de imágenes.
 
 ## Resumen
-Registra prendas mediante fotos en directo con la cámara, subidas múltiples desde la galería, códigos QR del Pasaporte Digital de Producto (DPP) o recibos digitales (OCR de facturas). La IA integrada en el servidor recorta fondos automáticamente, etiqueta más de 20 atributos de moda y prepara fotos limpias de estudio sin necesidad de claves API.
+Registra prendas mediante fotos en directo con la cámara, subidas múltiples desde la galería, códigos QR del Pasaporte Digital de Producto (DPP) o recibos digitales (OCR de facturas). La IA integrada en servidores propios (on-premises) recorta los fondos automáticamente, etiqueta más de 20 atributos de moda y prepara fotografías limpias de estudio sin necesidad de claves de API.
 
 ## Requisitos previos
 - Fotografías claras y bien iluminadas de las prendas (selfies frente al espejo, fotos de cuerpo entero o prendas extendidas).
-- Permiso de cámara para escanear prendas y códigos QR.
-- Recibos digitales o capturas de facturas (PDF / PNG / JPEG) para compras online.
-- *(Opcional)* Una clave personal de Google Gemini API si deseas usar la reconstrucción fotográfica generativa de Nano Banana.
+- Permiso de cámara para escanear prendas físicas y códigos QR.
+- Recibos digitales o capturas de facturas (PDF / PNG / JPEG) para compras de comercio electrónico.
 
 ## Instrucciones paso a paso
 
 1. **Subida y captura interactiva**:
-   - Pulsa **Añadir prenda** &rarr; selecciona **Tomar foto** o sube una o más fotos desde tu dispositivo.
-   - La detección de duplicados integrada comprueba al instante si ya habías subido la misma prenda.
-2. **Segmentación por IA y detección múltiple**:
-   - El modelo de visión aísla prendas individuales (chaquetas, camisetas, faldas, pantalones, calzado, accesorios) en un solo análisis.
+   - Pulsa **Añadir prenda** &rarr; selecciona **Tomar foto** o sube una o más fotos de atuendos desde tu dispositivo.
+   - La detección de duplicados integrada comprueba al instante si ya habías subido la misma prenda anteriormente.
+2. **Segmentación por IA y detección de múltiples prendas**:
+   - El modelo de visión aísla distintas prendas (chaquetas, partes superiores, faldas, pantalones, calzado, accesorios) en una sola pasada.
 3. **Recorte con IA y fotos limpias de estudio**:
-   - El procesador visual integrado elimina automáticamente los fondos, generando imágenes PNG transparentes y nítidas para todas las cuentas.
+   - El flujo de visión integrado elimina automáticamente los fondos, generando imágenes PNG transparentes y nítidas para todas las cuentas.
 4. **Etiquetado automático de metadatos**:
-   - La IA local extrae más de 20 atributos de moda (colores, composición del tejido, subcategoría, código de vestimenta, marca y estado).
-5. **Reparación generativa avanzada (Nano Banana)**:
-   - Para usuarios con clave personal de Google Gemini API, Nano Banana detecta partes cortadas u ocultas (bolsos, manos) y reconstruye la tela faltante para crear fotos de estudio completas.
+   - Las cuentas del nivel gratuito (Free Tier) utilizan el motor **Eyes** en servidores propios de DressApp (actualmente un modelo `Qwen 2.5 VL 3B` ajustado), mientras que los usuarios de los planes **Manager** y **Professional** disfrutan del modelo rápido en la nube (`Google Gemini 3.5 Flash`) para extraer más de 20 atributos de moda (colores, composición del tejido, subcategoría, código de vestimenta, marca y estado).
+5. **Reparación fotográfica generativa avanzada (Nano Banana)**:
+   - Nano Banana inspecciona las prendas recortadas en busca de oclusiones (bolsos, manos) y bordes del encuadre, reconstruyendo y completando automáticamente el tejido faltante para crear fotografías de estudio completas sin requerir claves de API externas.
 6. **Recibos digitales y etiquetas DPP**:
-   - Accede a **Importación digital** para procesar facturas o confirmaciones de compra, guardando precio y tallas verificadas.
-   - Pulsa **Escanear QR (DPP)** en la etiqueta para importar datos de sostenibilidad y consejos de cuidado del Pasaporte Digital Europeo.
+   - Cambia a **Importación digital** para analizar correos de confirmación de pedidos o facturas, fijando el precio de compra y las tallas verificadas.
+   - Pulsa **Escanear QR (DPP)** en la etiqueta para importar datos de la cadena de suministro y pautas de cuidado del Pasaporte Digital de Producto de la UE.
 7. **Guardar en el armario**:
-   - Pulsa **Guardar**. Las prendas aparecerán de inmediato en la cuadrícula de tu armario.
+   - Pulsa **Guardar**. Los artículos aparecen inmediatamente en la cuadrícula de tu armario.
 
 ## Resultados esperados
-Cada prenda queda registrada como una fotografía de estudio limpia y centrada, con atributos de búsqueda completos y etiquetas taxonómicas detalladas.
+Cada prenda aparece en tu armario digital como una fotografía centrada y limpia con calidad de estudio, con atributos de búsqueda totalmente indexados y etiquetas taxonómicas detalladas.
 
 ## Solución de problemas
-- **Prendas cortadas en la foto**: Centra bien la prenda sobre un fondo contrastado. Si tienes una clave API configurada, Nano Banana completará cuellos o dobladillos cortados automáticamente.
-- **Iluminación y contraste**: Para prendas oscuras, toma la fotografía sobre fondos claros y con buen contraste.
-- **Errores en la lectura de facturas**: Utiliza el selector interactivo sobre la imagen de la factura para marcar manualmente las líneas de producto.
+- **Prendas cortadas o parciales en las fotos**: Centra limpiamente la prenda sobre un fondo que contraste. Nano Banana puede reconstruir cuellos o dobladillos cortados de forma automática.
+- **Iluminación y contraste**: Para obtener mejores resultados con prendas oscuras, fotografíalas sobre fondos claros que contrasten.
+- **Errores en el OCR de recibos**: Utiliza el selector de recuadro interactivo sobre las imágenes de los recibos para señalar manualmente cada línea de producto.
 
 ## Limitaciones
-- Las subidas masivas de alta resolución (>5 prendas) se procesan en segundo plano para garantizar una navegación fluida sin bloqueos.
-- La reconstrucción fotorrealista de imágenes con Nano Banana requiere una clave personal de Google Gemini API.
+- Las subidas por lotes en alta resolución (>5 artículos) se procesan mediante colas asíncronas en segundo plano para garantizar un rendimiento fluido sin tiempos de espera agotados en el navegador.

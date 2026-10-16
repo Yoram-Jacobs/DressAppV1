@@ -1,16 +1,16 @@
-# Profil, mensurations et configuration (`/me`)
+# Profil, Mensurations et Configuration (`/me`)
 
-Gérez vos mensurations physiques, votre teint, vos découpes photo corporelles, vos préférences vestimentaires, vos identifiants de modèles d'IA et vos intégrations système sur votre tableau de bord de profil personnel.
+Gérez vos mensurations physiques, votre teint de peau, vos découpes photo corporelles, vos préférences de style, vos paramètres de modèles d'IA et vos intégrations système sur le tableau de bord de votre profil personnel.
 
 ## Vue d'ensemble
-La page **Profil & Paramètres** (`https://dressapp.co/me`) sert de centre névralgique de contrôle pour votre écosystème DressApp. Elle regroupe vos paramètres anthropométriques physiques, l'espace d'essayage virtuel d'avatar numérique, vos contraintes de style, vos préférences régionales, vos clés de modèles d'IA et vos calendriers de notifications push.
+La page **Profil et Paramètres** (`https://dressapp.co/me`) sert de centre de contrôle principal pour votre écosystème DressApp. Elle regroupe vos paramètres anthropométriques physiques, votre scène d'essayage virtuel d'avatar numérique, vos contraintes de style, vos préférences régionales, vos paramètres de modèles d'IA et vos programmations de notifications push.
 
 ---
 
 ## Prérequis
 - Un compte DressApp actif.
-- (Optionnel) Autorisations d'accès à l'appareil photo pour téléverser une photo plein pied.
-- (Optionnel) Autorisations de localisation pour le ciblage des campagnes de stylistes locaux, les préférences culturelles et les prévisions météorologiques.
+- (Facultatif) Autorisations d'accès à l'appareil photo pour le téléversement d'une photo en pied.
+- (Facultatif) Autorisations de localisation pour le ciblage des campagnes de stylistes locaux, les préférences culturelles et les prévisions météorologiques.
 
 ---
 
@@ -20,141 +20,140 @@ La page **Profil & Paramètres** (`https://dressapp.co/me`) sert de centre névr
 Situés tout en haut du tableau de bord `/me` :
 - **En-tête** : Affiche le statut et le titre de votre compte.
 - **Cartes Explorer** : Raccourcis rapides vers les sections principales de l'application :
-  - **Trend Scout** (`/trends`) : Consultez les flux d'actualités mode quotidiennes sélectionnés par l'IA.
+  - **Trend Scout** (`/trends`) : Consultez les flux quotidiens d'actualités mode sélectionnés par l'IA.
   - **Tenues** (`/outfits`) : Accédez à votre calendrier de tenues enregistrées.
-  - **Experts** (`/experts`) : Parcourez les stylistes et retoucheurs locaux.
-  - **Déballé / Stats** (`/me/stats`) : Visualisez la valorisation de votre garde-robe, le coût par utilisation et la répartition des couleurs.
+  - **Experts** (`/experts`) : Parcourez les stylistes et tailleurs locaux.
+  - **Déballé / Stats** (`/me/stats`) : Visualisez la valorisation de votre garde-robe, le coût par port et la répartition des couleurs.
 
-### 2. Carte de sélection de langue et de voix
+### 2. Carte de sélection de la langue et de la voix
 Mise en évidence pour une accessibilité immédiate :
-- **Sélecteur de langue** : Choisissez parmi 12 langues prises en charge (*anglais, espagnol, français, allemand, italien, portugais, russe, chinois, japonais, arabe, hindi, hébreu*). Le choix d'une langue actualise automatiquement les textes de l'interface et applique le modèle vocal Text-to-Speech (TTS) régional par défaut.
+- **Sélecteur de langue** : Choisissez parmi 12 langues prises en charge (*anglais, espagnol, français, allemand, italien, portugais, russe, chinois, japonais, arabe, hindi, hébreu*). La sélection d'une langue met automatiquement à jour la langue de l'interface et associe le modèle vocal de synthèse vocale (TTS) régional par défaut.
 
 ---
 
 ### 3. Carte d'identité et coordonnées personnelles (`ProfileDetailsCard`)
 
-Comprend 9 panneaux déroulants en accordéon pour gérer votre identité, vos tailles et le rendu de votre avatar :
+Comprend 9 panneaux déroulants en accordéon gérant votre identité personnelle, vos tailles et le rendu de votre avatar :
 
 #### Panneau A : Identité
-- **Prénom & Nom** : Champs d'identification personnelle.
+- **Prénom et Nom** : Champs d'identification personnelle.
 - **Adresse e-mail** : Affichage en lecture seule de votre adresse e-mail enregistrée.
-- **Date de naissance** : Utilisée pour affiner le ciblage démographique des tendances.
-- *Badge d'auto-remplissage Google* : S'affiche automatiquement si votre profil a été créé via Google OAuth.
+- **Date de naissance** : Utilisée pour personnaliser le score démographique des tendances.
+- *Badge de remplissage automatique Google* : S'affiche automatiquement si votre profil a été initialisé via Google OAuth.
 
 #### Panneau B : Contact et adresse de livraison
-- **Numéro de téléphone** : Requis pour recevoir les alertes SMS/Push des suggestions du programmateur quotidien et des campagnes d'experts locaux.
-- **Ligne d'adresse 1** : Intègre l'autocomplétion au niveau de la rue via OpenStreetMap (Nominatim). La sélection d'une suggestion remplit automatiquement la Ligne 1, la Ville, la Région, le Code postal et le Pays.
-- **Ligne d'adresse 2, Ville, Région, Code postal** : Champs d'adresse manuels pour l'expédition sur le marketplace.
+- **Numéro de téléphone** : Requis pour recevoir les alertes SMS/Push des propositions du planificateur quotidien et des campagnes d'experts locaux.
+- **Adresse Ligne 1** : Intègre l'autocomplétion au niveau de la rue via OpenStreetMap (Nominatim). La sélection d'une suggestion remplit automatiquement la Ligne 1, la Ville, la Région, le Code postal et le Pays.
+- **Adresse Ligne 2, Ville, Région, Code postal** : Champs d'adresse manuels pour l'expédition sur la place de marché.
 - **Pays** : Liste déroulante hors ligne consultable par nom de pays ou code ISO-2.
 
 #### Panneau C : Données démographiques
-- **Sexe** : Sélectionnez *Femme* ou *Homme* pour configurer les mensurations de référence et la classification des vêtements.
-- **Statut personnel** : Choisissez entre *Célibataire*, *Marié(e)*, *Divorcé(e)* ou *Veuf/Veuve*.
-- **Profession** : Saisie en texte libre (par exemple *Étudiant(e)*, *Responsable marketing*, *Barista*). Alimente l'algorithme de classement Trend Scout afin de prioriser les actualités de mode pertinentes.
+- **Sexe** : Sélectionnez *Femme* ou *Homme* pour configurer les mensurations corporelles de base et la taxonomie des vêtements.
+- **Situation familiale** : Sélectionnez *Célibataire*, *Marié(e)*, *Divorcé(e)* ou *Veuf/Veuve*.
+- **Profession** : Saisie en texte libre (par ex. *Étudiant(e)*, *Responsable marketing*, *Barista*). Alimente l'algorithme de personnalisation de Trend Scout afin de prioriser les actualités de style pertinentes.
 
-#### Guide résumé : Synchroniser les données manquantes du profil Google (re-consentement People API)
-Si vous vous êtes connecté avec Google avant que DressApp ne demande l'accès aux détails de profil de la **People API** (téléphone, adresse, sexe, date de naissance), ces champs peuvent rester vides. Vous pouvez les synchroniser en un clic :
+#### Guide résumé : Synchroniser les données manquantes du profil Google (nouveau consentement People API)
+Si vous vous êtes connecté avec Google avant que DressApp ne demande l'accès aux détails de votre profil via la **People API** (téléphone, adresse, genre, date de naissance), ces champs peuvent rester vides. Vous pouvez les synchroniser en un clic :
 
-1. **Ouvrez l'accordéon Contact ou Démographie** — vous verrez un bouton **"Synchroniser depuis Google"** (icône d'actualisation) à côté du titre de la section.
-2. **Cliquez sur "Synchroniser depuis Google"** — si les portées d'autorisation requises pour People API n'avaient pas été accordées lors de votre connexion initiale, DressApp le détecte et affiche une notification informative : *"Google a besoin de votre autorisation pour accéder aux informations de votre profil. Vous allez être redirigé vers Google pour donner votre accord."*
-3. **Accordez votre consentement sur l'écran Google** — vous êtes redirigé vers l'écran de consentement Google OAuth. Cochez les cases **Infos de profil** (nom, e-mail, photo) et **Coordonnées** (téléphone, adresse, sexe, anniversaire).
-4. **Retour automatique et remplissage instantané** — après accord, Google vous redirige vers DressApp. La fonction `syncGoogleProfile()` s'exécute automatiquement en appelant le point de terminaison backend `/auth/google/sync-profile` qui :
-   - Récupère votre téléphone, adresse, sexe et date de naissance depuis Google People API
-   - Remplit les champs vides dans les volets **Contact** (téléphone, adresse) et **Démographie** (sexe, date de naissance)
-   - Enregistre immédiatement les mises à jour sur votre profil
-5. **Terminé** — votre profil est désormais complet sans aucune saisie manuelle.
+1. **Ouvrez l'accordéon Contact ou Données démographiques** — vous verrez un bouton **« Synchroniser depuis Google »** (icône d'actualisation) à côté du titre de la section.
+2. **Cliquez sur « Synchroniser depuis Google »** — si les autorisations requises pour la People API n'avaient pas été accordées lors de votre connexion initiale, DressApp le détecte et affiche un message d'information : *« Google a besoin de votre autorisation pour accéder aux détails du profil. Vous allez être redirigé vers Google pour accorder l'accès. »*
+3. **Accordez votre consentement sur l'écran de Google** — vous êtes redirigé vers l'écran de consentement OAuth de Google. Cochez les cases **Infos du profil** (nom, e-mail, photo) et **Coordonnées** (téléphone, adresse, genre, date de naissance).
+4. **Retour et remplissage automatiques** — après validation, Google vous redirige vers DressApp. La fonction `syncGoogleProfile()` s'exécute automatiquement, appelant le point de terminaison backend `/auth/google/sync-profile` qui :
+   - Récupère votre téléphone, votre adresse, votre genre et votre date de naissance depuis l'API Google People
+   - Remplit les champs vides dans les panneaux **Contact** (téléphone, adresse) et **Données démographiques** (sexe, date de naissance)
+   - Enregistre instantanément les mises à jour dans votre profil
+5. **Terminé** — votre profil est désormais complet sans saisie manuelle.
 
-> **Remarque** : Le bouton "Synchroniser depuis Google" apparaît également dans l'en-tête de la page (à côté du bouton principal "Synchroniser le profil Google") et fonctionne de la même manière — il synchronise l'ensemble des données Google disponibles en une seule action.
+> **Remarque** : Le bouton « Synchroniser depuis Google » apparaît également dans l'en-tête de la page (à côté du bouton principal « Synchroniser le profil Google ») et fonctionne exactement de la même manière — il synchronise toutes les données disponibles du profil Google en une seule fois.
 
 #### Panneau D : Préférences et unités de mesure
-- **Unité de poids** : Basculez entre kilogrammes (`kg`) et livres (`lb`).
-- **Unité de longueur** : Basculez entre centimètres (`cm`) et pouces (`in`).
+- **Unité de poids** : Basculez entre les kilogrammes (`kg`) et les livres (`lb`).
+- **Unité de longueur** : Basculez entre les centimètres (`cm`) et les pouces (`in`).
 
-#### Panneau E : Photos et espace avatar numérique
-- **Colonne de gauche — Sélection de photos** :
-  - *Photo du visage* : Téléversez une miniature pour votre avatar.
-  - *Photo plein pied* : Téléversez une photo de votre corps complet. Le système exécute automatiquement le détourage local U2-Net (`rembg`) pour supprimer l'arrière-plan.
-  - *Bouton supprimer la photo* : Suppression en un clic de votre découpe photo, rétablissant instantanément le mannequin vectoriel SVG 2D sans aucun temps de chargement.
+#### Panneau E : Photos et scène de l'avatar numérique
+- **Colonne de gauche — Sélecteurs de photos** :
+  - *Photo du visage* : Téléversez une miniature d'avatar.
+  - *Photo en pied* : Téléversez une photographie de votre corps entier. Le système exécute automatiquement un détourage local U2-Net (`rembg`) pour supprimer l'arrière-plan.
+  - *Bouton Supprimer la photo* : Suppression en un clic de votre découpe photo, rétablissant instantanément le mannequin vectoriel SVG 2D sur la scène d'essayage sans aucune latence d'interface.
 - **Colonne de droite — Avatar numérique et scène d'essayage** :
-  - **Nuancier de teint** : Palette interactive pour choisir le teint de peau de votre mannequin.
-  - **Toile d'essayage de l'avatar** : Affiche les vêtements sur votre silhouette détourée ou sur le mannequin vectoriel dynamique de Bézier (`DynamicAvatar.jsx`) grâce à des repères morphologiques étalonnés (`top-[14.5%]` pour l'encolure et `top-[36.5%]` pour la ceinture).
+  - **Sélecteur de teint de peau** : Palette de couleurs interactive pour choisir le teint de peau de votre mannequin.
+  - **Toile d'essayage de l'avatar** : Affiche les vêtements par-dessus votre découpe photo ou sur le mannequin vectoriel dynamique de Bézier (`DynamicAvatar.jsx`) à l'aide de repères anatomiques calibrés (`top-[14.5%]` du col à l'encolure et `top-[36.5%]` de la ceinture à la taille).
 
 #### Panneau F : Profil de style
-- **Esthétiques** : Mots-clés de style séparés par des virgules (par exemple *Minimaliste, Streetwear, Vintage*).
-- **Palette de couleurs** : Nuances favorites (par exemple *Pastels, Tons terreux, Monochrome*).
-- **À éviter** : Couleurs ou catégories de vêtements à exclure impérativement des recommandations de l'IA (par exemple *Jaune, Crop tops*).
-- **Pudeur vestimentaire culturelle** : Choisissez votre niveau de couvrance (*Décontracté/Libre*, *Modéré*, *Conservateur*) pour guider la coupe des tenues proposées par l'AI Stylist.
+- **Esthétiques** : Mots-clés de style séparés par des virgules (par ex. *Minimaliste, Streetwear, Vintage*).
+- **Palette de couleurs** : Nuances de couleurs préférées (par ex. *Pastels, Tons terreux, Monochrome*).
+- **À éviter** : Couleurs ou types de vêtements à exclure strictement des recommandations de l'IA (par ex. *Jaune, Crop Tops*).
+- **Pudeur vestimentaire culturelle** : Sélectionnez le niveau de pudeur (*Décontracté/Libre*, *Modéré*, *Conservateur*) pour guider le niveau de couvrance des tenues de l'AI Stylist.
 
-#### Panneau G : Mensurations corporelles et tailles (Prédicteur de taille ANSUR II)
-- **Mode d'intégration / Nouveau départ** : Renseignez 4 données de base : **Taille**, **Poids**, **Tour de taille** et **Longueur du pied**. Le modèle de régression multivariable intégré scikit-learn ANSUR II déduit automatiquement 6 mensurations morphologiques :
-  - *Épaules*, *Tour de poitrine*, *Hanches*, *Longueur de manche*, *Entrejambe* et *Longueur extérieure*.
-- **Conversion automatique des tailles** : Une fois les mensurations estimées, des algorithmes déterministes renseignent instantanément **toutes les tailles du commerce standard**, jusqu'à la pointure de chaussures :
+#### Panneau G : Mensurations corporelles et tailles (Prédicteur de tailles ANSUR II)
+- **Mode d'intégration / Nouveau départ** : Saisissez 4 données de base : **Taille (Hauteur)**, **Poids**, **Tour de taille** et **Longueur du pied**. Le modèle de régression multi-sorties intégré scikit-learn ANSUR II prédit automatiquement 6 mensurations structurelles :
+  - *Épaules*, *Poitrine / Buste*, *Hanches*, *Longueur de manche*, *Entrejambe* et *Longueur extérieure de jambe*.
+- **Conversion automatique des tailles** : Une fois les mensurations structurelles prédites, des algorithmes déterministes renseignent instantanément **toutes les tailles commerciales standard**, jusqu'à la pointure de chaussures :
   - *Taille de chemise décontractée* (XS–XXL selon le tour de poitrine)
-  - *Tour de taille de pantalon* (en pouces, converti depuis les cm de taille)
-  - *Pointure US* (formules homme/femme selon la longueur du pied)
-  - *Taille de robe femme* (US 0–14+ selon la taille)
-  - *Taille de soutien-gorge* (tour de dos + bonnet calculés d'après le buste/sous-buste)
-- **Mode d'édition détaillée** : Après le remplissage automatique, affinez les 15 paramètres de tailles (dont taille de chemise, pantalon, chaussures, soutien-gorge, robe) et les attributs capillaires (*Longueur, Type, Couleur, Style*).
-- **Bascule d'unités en direct** : Passez de *kg/cm* à *lb/in* — toutes les valeurs sont instantanément converties sans nécessiter de nouvelle prédiction.
+  - *Tour de taille de pantalon* (en pouces, converti à partir du tour de taille en cm)
+  - *Pointure US* (formules Homme/Femme basées sur la longueur du pied)
+  - *Taille de robe femme* (US 0–14+ selon le tour de taille)
+  - *Taille de soutien-gorge* (tour de dos + bonnet calculés à partir du buste et du dessous de poitrine)
+- **Mode d'édition détaillée** : Après le remplissage automatique, ajustez finement l'ensemble des 15 paramètres de taille (dont la taille de chemise, de pantalon, de chaussures, de soutien-gorge et de robe) ainsi que les attributs capillaires (*Longueur, Type, Couleur, Coiffure*).
+- **Bascule d'unités en direct** : Basculez entre *kg/cm* et *lb/in* — toutes les valeurs sont converties instantanément sans nécessiter de nouvelle prédiction.
 
 #### Panneau H : Inscription à l'annuaire des professionnels et experts
-- **Bouton styliste professionnel** : Enregistrez-vous comme professionnel de la mode vérifié (styliste, tailleur, créateur).
-- **Coordonnées professionnelles** : Indiquez le nom commercial, l'adresse, le téléphone, l'e-mail, le site web et la description pour figurer dans l'annuaire `/experts` et sur le bandeau d'actualités régionales.
+- **Option Styliste professionnel** : Enregistrez-vous en tant que professionnel de la mode vérifié (styliste, tailleur, créateur).
+- **Coordonnées professionnelles** : Saisissez le nom de l'entreprise, l'adresse, le téléphone, l'e-mail, le site web et la description pour apparaître dans l'annuaire `/experts` et le bandeau de campagnes régionales.
 
-#### Panneau I : Paramètres de virement PayPal
-- **E-mail de réception PayPal** : Saisissez votre adresse PayPal afin de percevoir les paiements issus de vos ventes sur le marketplace et de vos campagnes de stylisme.
+#### Panneau I : Paramètres de versement PayPal
+- **E-mail de réception PayPal** : Saisissez votre adresse e-mail PayPal pour recevoir les paiements de vos ventes sur la place de marché et de vos campagnes d'expert actives.
 
 ---
 
 ### 4. Carte en accordéon des préférences système
 
-Gère les paramètres généraux, les abonnements et les intégrations d'IA :
+Gère les paramètres système, les abonnements et les intégrations d'IA :
 
-- **Configuration de l'IA** :
-  - *Mode standard (Moteur principal de production)* : Propulsé par **Google Gemini 3.5 Flash-Lite** via `llm_gateway.py`. Offre des conseils de style instantanés sans configuration initiale et sans clé API requise.
-  - *Filet de sécurité pour les quotas sur site* : Si les plafonds d'appels cloud (`429` / `RESOURCE_EXHAUSTED`) sont atteints, les requêtes basculent automatiquement vers le conteneur auto-hébergé et affiné **Gemma-4-E4B** sur le port 7860, évitant ainsi toute coupure de service.
-  - *Mode clés API personnalisées (BYOK)* : Connectez votre propre clé API Google Gemini pour débloquer des quotas de développement plus larges et des outils génératifs cloud tels que le radar quotidien Trend Scout et la reconstruction d'images Nano Banana.
-- **Abonnements et limites de garde-robe** :
-  - Consultez le niveau actuel de votre compte (**Free** : limite de 50 articles baseline contre **Manager** (10\$/mois) ou **Professional** (15\$/mois) : articles illimités).
-  - Accédez à la **page Tarifs** (`/pricing` ou cliquez sur la carte de votre offre) pour consulter le tableau comparatif, choisir une formule ou acheter des packs de crédits prépayés sans expiration.
-  - Mettez à niveau votre compte via PayPal Subscriptions ou la passerelle Atzmai pour les paiements locaux en Israël en ILS (Bit / carte bancaire).
-  - Copier le **lien de parrainage** : Vous rapporte +10 emplacements de garde-robe supplémentaires pour chaque proche inscrit (jusqu'à 150 articles au total).
-- **Programmateur et rappels push** :
-  - Activez ou désactivez les notifications de propositions matinales de tenues.
-  - Définissez la fréquence (*Chaque jour*, *Un jour sur deux*, *Deux fois par semaine*, *En semaine*), l'heure (par exemple *07:00*) et les exigences de style vestimentaire (*Décontracté*, *Formel*, *Sportif*, *Personnalisé*).
-  - Activez les notifications push Web VAPID sur votre navigateur.
+- **Routage des modèles d'IA (Architecture multiniveau — Zero BYOK)** :
+  - *Forfait Gratuit (Moteur Eyes sur site)* : Les utilisateurs du forfait gratuit bénéficient du moteur sur site auto-hébergé **Eyes** de DressApp (actuellement un modèle **Qwen 2.5 VL 3B** affiné) sur le port 7860, sans aucune clé API personnelle requise.
+  - *Forfaits Manager et Professional (Modèle Cloud rapide)* : Les abonnés aux forfaits **Manager** et **Professional** bénéficient d'un routage prioritaire vers le modèle d'IA Cloud rapide (actuellement **Google Gemini 3.5 Flash** via `llm_gateway.py`).
+  - *Filet de sécurité sur site pour les quotas* : Si des limites de débit cloud externes (`429` / `RESOURCE_EXHAUSTED`) sont rencontrées, les requêtes basculent automatiquement vers le conteneur auto-hébergé **Eyes** (`Qwen 2.5 VL 3B`) sur le port 7860, garantissant que votre conversation de stylisme n'est jamais interrompue.
+- **Abonnement et limites de garde-robe** :
+  - Consultez le palier actuel de votre compte (**Free** : limite de base de 150 articles contre **Manager** (10 $/mois) ou **Professional** (15 $/mois) : articles illimités + modèle d'IA Cloud rapide).
+  - Accédez à la **page Tarifs** (`/pricing` ou cliquez sur la carte de votre forfait) pour consulter le tableau comparatif des paliers, sélectionner un forfait ou acheter des packs de crédits prépayés sans date d'expiration.
+  - Passez à un forfait supérieur via PayPal Subscriptions ou la passerelle Atzmai pour les transactions locales en Israël en ILS (Bit / carte bancaire).
+  - Copiez le **lien de parrainage** : Octroie +10 emplacements de capacité de garde-robe pour chaque ami qui s'inscrit (jusqu'à 150 articles maximum).
+- **Planificateur et rappels push** :
+  - Activez ou désactivez les notifications matinales de propositions de tenues.
+  - Définissez la fréquence (*Tous les jours*, *Un jour sur deux*, *Deux fois par semaine*, *En semaine*), l'heure (par ex. *07:00*) et les exigences de code vestimentaire (*Décontracté*, *Formel*, *Sportif*, *Personnalisé*).
+  - Activez les alertes push VAPID du navigateur.
 - **Préférences de notifications de campagnes** :
-  - Réglages fins pour *Push/E-mail mode locale*, *Alertes promotions*, *Mode écoresponsable*, *Offres de luxe* et *Styliste personnel*.
-  - Ajustez le curseur **Distance maximale de campagne** (de 5 km à 50 km).
-- **Connexion Google Calendar** : Bouton d'autorisation OAuth pour synchroniser vos événements personnels avec l'AI Stylist.
-- **Carte des services de localisation** : Activez ou désactivez la géolocalisation GPS pour recevoir les recommandations d'experts à proximité et des prévisions météo hyperlocales.
-- **Bouton inviter des amis** : Copiez votre lien de parrainage à partager.
-- **Assistant de shopping** : Consultez les informations relatives à l'extension Chrome Web Store ou générez un **Bookmarklet universel** (`javascript:...`) pour comparer immédiatement vos tailles sur les sites d'e-commerce.
+  - Interrupteurs granulaires pour *Push/E-mail mode locale*, *Alertes soldes*, *Mode durable*, *Promos de luxe* et *Styliste personnel*.
+  - Ajustez le curseur **Distance maximale des campagnes** (de 5 km à 50 km).
+- **Connexion Google Calendar** : Bouton OAuth permettant de synchroniser vos événements de calendrier personnel avec l'AI Stylist.
+- **Carte des services de localisation** : Activez ou désactivez les autorisations de localisation GPS pour obtenir des flux d'experts adaptés à votre distance et une météo hyperlocale.
+- **Bouton Inviter des amis** : Copiez votre lien de parrainage partageable.
+- **Assistant Shopping** : Accédez aux détails de l'extension Chrome Web Store ou générez un **Bookmarklet universel** (`javascript:...`) pour comparer instantanément les tailles sur les sites d'e-commerce.
 
 ---
 
-### 5. Actions de compte et diagnostics
-- **Se déconnecter** : Fermez votre session active.
-- **Supprimer mon compte** : Lien pour supprimer définitivement les données de votre compte.
-- **Panneau développeur** : Console de diagnostic pour vérifier l'environnement. Authentifiée via Google OAuth (`dressappdeveloper@gmail.com`).
+### 5. Actions du compte et diagnostics
+- **Se déconnecter** : Déconnectez-vous de votre session actuelle.
+- **Supprimer mon compte** : Lien permettant de purger définitivement toutes les données du compte.
+- **Panneau développeur** : Vue de diagnostic pour les tests d'environnement. Authentifiée via Google OAuth (`dressappdeveloper@gmail.com`).
 
 ---
 
 ## Résultats attendus
-- Synchronisation instantanée des paramètres morphologiques, du teint de peau et des photos détourées sur la toile d'essayage d'avatar 2D.
-- Aucune requête réseau inutile lors de la navigation entre les onglets de configuration.
-- Suggestions de tenues de l'AI Stylist personnalisées, respectant vos exigences de couvrance et votre planning.
+- Synchronisation instantanée des mensurations physiques, du teint de peau et des découpes photo sur la toile d'essayage de l'avatar 2D.
+- Aucune requête réseau inactive lors de la navigation entre les panneaux de paramètres.
+- Propositions de tenues personnalisées de l'AI Stylist alignées sur vos règles de pudeur et votre emploi du temps.
 
 ---
 
 ## Dépannage
-- **L'arrière-plan de la photo n'est pas effacé** : Vérifiez que la photo importée vous représente en entier avec un éclairage net contrastant avec le décor.
-- **Les notifications push n'arrivent pas** : Vérifiez que les autorisations de notification sont accordées dans le navigateur et qu'un numéro de téléphone est renseigné sous *Contact*.
-- **L'autocomplétion d'adresse ne répond pas** : Assurez-vous d'avoir une connexion Internet active pour interroger OpenStreetMap Nominatim.
+- **L'arrière-plan de la photo n'est pas supprimé** : Assurez-vous que la photo téléversée est une photo en pied avec un éclairage d'arrière-plan bien contrasté.
+- **Les alertes push n'arrivent pas** : Vérifiez que les autorisations de notification du navigateur sont activées et qu'un numéro de téléphone est enregistré sous *Contact*.
+- **L'autocomplétion d'adresse ne répond pas** : Vérifiez que votre connexion Internet est active pour les requêtes OpenStreetMap Nominatim.
 
 ---
 
 ## Limites
-- La capacité de stockage du compte Free Tier est bridée à 50 pièces par défaut, sauf extension via les parrainages (+10 places par invité jusqu'à 150 pièces au maximum) ou mise à niveau vers Manager ou Professional.
-- Les fonctionnalités génératives cloud à fort coût de calcul (radar Trend Scout et reconstruction photo Nano Banana) nécessitent une clé API personnelle Google Gemini fournie par l'utilisateur.
-- Le mode avec clé API personnelle basculera de manière fluide vers le moteur intégré Gemma-4-E4B en cas de dépassement de quota auprès du fournisseur externe.
+- L'espace de compte du forfait Gratuit est plafonné à 150 articles et utilise le modèle sur site Eyes (`Qwen 2.5 VL 3B`), sauf mise à niveau vers le forfait **Manager** ou **Professional** pour un stockage illimité et l'accès au modèle Cloud rapide (`Gemini 3.5 Flash`).
+- Si les quotas cloud sont temporairement atteints, les requêtes basculent de manière transparente vers le moteur sur site intégré Eyes (`Qwen 2.5 VL 3B`) sans interrompre la session.

@@ -1,156 +1,217 @@
-# Allgemeine Geschäftsbedingungen
+# Allgemeine Geschäftsbedingungen (Nutzungsbedingungen)
 
-**Wirksames Datum:** July 27, 2026
-**Zuletzt aktualisiert:** July 27, 2026
+**Datum des Inkrafttretens:** 27. Juli 2026  
+**Zuletzt aktualisiert:** 16. Oktober 2026  
+**App-Version:** 1.0.5  
+**Offizielle Website:** [https://dressapp.co](https://dressapp.co)  
 
-Willkommen bei DressApp („DressApp", „wir", „unser" oder „uns"). Diese Allgemeinen Geschäftsbedingungen („AGB") regeln Ihren Zugriff auf und die Nutzung der DressApp mobilen und webbasierten Anwendung, einschließlich aller Funktionen, Inhalte und Dienstleistungen, die über die Anwendung angeboten werden (zusammenfassend als „Dienstleistung" bezeichnet).
+Willkommen bei **DressApp** („DressApp", „wir", „unser" oder „uns"), einer intelligenten Plattform für digitale Garderobenverwaltung, Stilplanung, einen Peer-to-Peer-Kleidermarktplatz und einen persönlichen KI-Stylisten, die von der **DressApp Ltd.** entwickelt und betrieben wird. Diese Allgemeinen Geschäftsbedingungen („AGB" oder „Bedingungen") regeln Ihren Zugriff auf und Ihre Nutzung der mobilen Anwendungen und Webanwendungen von DressApp, der APIs und der verbundenen Dienste, einschließlich aller Funktionen, Inhalte und Dienstleistungen, die über die Anwendung angeboten werden (zusammenfassend der „Dienst").
 
-Durch die Installation, den Zugriff oder die Nutzung von DressApp bestätigen Sie, dass Sie diese AGB gelesen, verstanden und mit deren Einhaltung einverstanden sind. Wenn Sie diesen AGB nicht zustimmen, dürfen Sie die Dienstleistung nicht installieren oder nutzen.
-
----
-
-## 1. Annahme und Geltungsbereich
-
-1.1. Ihre Installation, Ihr Zugriff oder Ihre Nutzung von DressApp stellt Ihre vollständige und bedingungslose Annahme dieser AGB sowie aller darin referenzierten zusätzlichen Richtlinien oder Leitlinien dar.
-
-1.2. DressApp ist eine internationale Anwendung, die weltweit zugänglich ist. Sie sind allein dafür verantwortlich, dass Ihre Nutzung der Dienstleistung mit allen geltenden lokalen Gesetzen und Vorschriften in Ihrem Gerichtsstand übereinstimmt. DressApp übernimmt keine Gewährleistung dafür, dass die Dienstleistung oder deren Inhalte in Standorten, in denen eine solche Nutzung gegen geltendes Recht verstoßen würde, angemessen oder verfügbar sind.
-
-1.3. Diese AGB bilden eine rechtlich verbindliche Vereinbarung zwischen Ihnen und DressApp. Im Falle eines Konflikts zwischen diesen AGB und zusätzlichen Bedingungen, die von Drittanbieter-Plattformen (wie dem Apple App Store oder Google Play Store) präsentiert werden, haben diese AGB den Vorrang, soweit dies durch geltendes Recht zulässig ist.
+Durch die Installation, den Zugriff, die Erstellung eines Kontos oder die Nutzung von DressApp bestätigen Sie, dass Sie diese Bedingungen und unsere [Datenschutzerklärung](https://dressapp.co/privacy), die durch Bezugnahme Bestandteil dieser Bedingungen ist, gelesen und verstanden haben und sich mit deren Geltung einverstanden erklären. Wenn Sie diesen Bedingungen nicht zustimmen, dürfen Sie den Dienst weder installieren noch darauf zugreifen oder ihn nutzen.
 
 ---
 
-## 2. Kontoerstellung und Teilnahmevoraussetzungen
+## 1. Annahme und Geltungsbereich der Vereinbarung
 
-2.1. Es besteht **kein Mindestalter** für die Nutzung von DressApp. Die Dienstleistung steht allen Nutzern unabhängig vom Alter offen.
+1.1. Ihre Installation, Ihr Zugriff auf oder Ihre Nutzung von DressApp stellt Ihre vollständige und vorbehaltlose Annahme dieser Bedingungen sowie aller zusätzlichen Richtlinien oder Leitlinien dar, auf die hierin verwiesen wird.
 
-2.2. Zum Erstellen eines Kontos können Sie bestimmte Angaben benötigen, darunter, aber nicht beschränkt auf, Ihren Namen, Ihre E-Mail-Adresse und Ihre Authentifizierungsdaten. Sie erklären sich damit einverstanden, während des Registrierungsvorgangs genaue, aktuelle und vollständige Angaben zu machen und diese Angaben auf dem neuesten Stand zu halten.
+1.2. DressApp ist eine internationale Anwendung, die weltweit zugänglich ist. Sie sind dafür verantwortlich sicherzustellen, dass Ihre Nutzung des Dienstes mit allen geltenden lokalen Gesetzen und Vorschriften Ihrer Rechtsordnung übereinstimmt. DressApp gibt keine Zusicherung ab, dass der Dienst oder seine Inhalte an Orten geeignet oder verfügbar sind, an denen ein solcher Zugriff gegen lokales Recht verstoßen würde.
 
-2.3. Sie tragen allein die Verantwortung für die Vertraulichkeit Ihrer Kontozugangsdaten (einschließlich etwaiger Benutzername, Passwort oder Authentifizierungs-Token). Sie übernehmen die volle Verantwortung für alle Aktivitäten, die unter Ihrem Konto erfolgen.
+1.3. Diese Bedingungen bilden einen rechtsverbindlichen Vertrag zwischen Ihnen und der **DressApp Ltd.** Im Falle eines Widerspruchs zwischen diesen Bedingungen und zusätzlichen Bedingungen, die von Drittanbieter-Vertriebsplattformen (wie dem Apple App Store oder dem Google Play Store) vorgelegt werden, haben diese Bedingungen in Bezug auf Ihr Verhältnis zu DressApp im gesetzlich maximal zulässigen Umfang Vorrang, während die zwingenden Bedingungen des Plattformanbieters Ihre Nutzung seines Marktplatzes regeln.
 
-2.4. Sie verpflichten sich, (a) Ihre Kontozugangsdaten nicht mit Dritten zu teilen, (b) nicht das Konto eines anderen Nutzers ohne Genehmigung zu nutzen, und (c) DressApp unverzüglich über jede unbefugte Nutzung oder jeden unbefugten Zugriff auf Ihr Konto zu informieren.
+---
 
-2.5. DressApp behält sich das Recht vor, Konten zu sperren oder zu kündigen, die gegen diese AGB verstoßen, einschließlich Konten, die an betrügerischen, missbräuchlichen oder rechtswidrigen Aktivitäten teilnehmen.
+## 2. Kontoerstellung, Mindestalter und Sicherheit
+
+2.1. **Mindestalter.** Im Einklang mit unserer Datenschutzerklärung müssen Sie mindestens **sechzehn (16) Jahre alt** sein (oder das in Ihrer Rechtsordnung erforderliche gesetzliche Mindestalter für die digitale Einwilligung bzw. Geschäftsfähigkeit erreicht haben, je nachdem, welches Alter höher ist), um ein Konto zu erstellen und den Dienst zu nutzen. Wenn Sie mindestens 16 Jahre alt sind, aber die gesetzliche Volljährigkeit in Ihrer Rechtsordnung noch nicht erreicht haben, dürfen Sie den Dienst – und insbesondere den Marktplatz, kostenpflichtige Funktionen und das Expertenverzeichnis – nur unter der Aufsicht eines Elternteils oder Erziehungsberechtigten nutzen, der sich bereit erklärt, in Ihrem Namen an diese Bedingungen gebunden zu sein. Wir erheben wissentlich keine personenbezogenen Daten von Kindern unter 16 Jahren und gestatten diesen auch keine Kontoregistrierung.
+
+2.2. **Registrierungsdaten.** Um ein Konto zu erstellen, müssen Sie gegebenenfalls bestimmte Angaben machen, darunter Ihren Namen, Ihre E-Mail-Adresse und Authentifizierungsdaten (oder sich über unterstützte OAuth-Drittanbieter wie Google Sign-In authentifizieren). Sie verpflichten sich, bei der Registrierung wahrheitsgemäße, aktuelle und vollständige Angaben zu machen und diese Daten stets aktuell zu halten.
+
+2.3. **Kontosicherheit.** Sie sind allein dafür verantwortlich, die Vertraulichkeit Ihrer Kontozugangsdaten (einschließlich Benutzernamen, Passwort oder Authentifizierungs-Token) zu wahren. Sie übernehmen die volle Verantwortung für alle Aktivitäten, die über Ihr Konto stattfinden.
+
+2.4. **Unbefugter Zugriff.** Sie verpflichten sich, (a) Ihre Kontozugangsdaten nicht an Dritte weiterzugeben, (b) kein Konto eines anderen Nutzers ohne dessen Genehmigung zu verwenden und (c) DressApp unverzüglich unter [dev@dressapp.co](mailto:dev@dressapp.co) über jeden unbefugten Zugriff auf Ihr Konto oder dessen unbefugte Nutzung zu informieren.
+
+2.5. **Kontokontingente und Empfehlungsprogramme.** Konten der kostenlosen Tarifstufe (Free Tier) unterliegen Plattform-Speicher- und Nutzungsobergrenzen (wie z. B. einem Standardlimit von 150 katalogisierten Kleidungsstücken und Basis-KI-Verarbeitungskontingenten). Sofern DressApp Werbe-Empfehlungs- oder Einladungsprogramme anbietet, verpflichten Sie sich, keine gefälschten, automatisierten oder doppelten Konten („Selbstempfehlungen") zu erstellen, um Kontingentgrenzen oder Werbeprämien zu manipulieren. DressApp behält sich das Recht vor, Prämien zu widerrufen oder Konten zu sperren, die Empfehlungsmechanismen missbrauchen.
 
 ---
 
 ## 3. Nutzergenerierte Inhalte und Fotos
 
-3.1. **Eigentum.** Sie behalten das volle Eigentum an allen nutzergenerierten Inhalten („UGC"), die Sie in die Dienstleistung hochladen, einschließlich, aber nicht beschränkt auf, Kleidungsfotografien, Bilder von Garderobenartikeln, Körpermaßdaten, Stilpräferenzen und jegliche anderen persönlichen Medien oder Daten, die Sie einreichen. DressApp erhebt keinen Anspruch auf Ihr Eigentum an UGC.
+3.1. **Eigentum.** Sie behalten das uneingeschränkte Eigentum an allen nutzergenerierten Inhalten („UGC", User-Generated Content), die Sie in den Dienst hochladen oder dort einreichen, einschließlich Kleidungsfotografien, Bildern von Garderobenartikeln, Metadaten des Digitalen Produktpasses (DPP), Körpermaßdaten, Outfit-Kombinationen, Marktplatz-Inseraten und Stilpräferenzen. DressApp erhebt keinen Eigentumsanspruch an Ihren UGC.
 
-3.2. **Lizenzgewährung.** Durch die Nutzung der Dienstleistung gewähren Sie DressApp eine nicht-exklusive, weltweite, gebührenfreie, unterlizenzierbare und übertragbare Lizenz zur Speicherung, Verarbeitung, Anzeige und Übertragung Ihres UGC ausschließlich zum Zweck der Bereitstellung, des Betriebs, der Aufrechterhaltung und der Optimierung der Dienstleistung. Dies umfasst, ohne Einschränkung, die Bereitstellung von KI-gestützter Outfit-Generierung, Hintergrundentfernung, automatischer Kleidungskennzeichnung, Schätzung von Körpermaßen und wetterbasierten Stilempfehlungen.
+3.2. **Lizenzgewährung zum Betrieb des Dienstes.** Durch das Einreichen von UGC in den Dienst gewähren Sie der DressApp Ltd. eine nicht-exklusive, weltweite, gebührenfreie, unterlizenzierbare (ausschließlich an unsere Hosting-, Cloud-Infrastruktur- und KI-Verarbeitungs-Auftragsverarbeiter) und übertragbare Lizenz, Ihre UGC zu hosten, zu speichern, zwischenzuspeichern (Caching), zu verarbeiten, zu reproduzieren, zu modifizieren (wie z. B. das Freistellen von Kleidungsstücken durch Hintergrundentfernung oder generatives Inpainting), anzuzeigen und zu übertragen, und zwar ausschließlich zum Zweck der Bereitstellung, des Betriebs, der Sicherung, der Wartung und der Optimierung des Dienstes. Wenn Sie ein Marktplatz-Inserat oder ein Expertenprofil bzw. eine Werbekampagne veröffentlichen, beinhaltet diese Lizenz das Recht, dieses Inserat oder diese Kampagne anderen Nutzern des Dienstes öffentlich anzuzeigen.
 
-3.3. **Lizenzumfang.** Die in Abschnitt 3.2 gewährte Lizenz beschränkt sich auf die Funktionalität der Dienstleistung, wie sie in der Benutzeroberfläche und der Dokumentation beschrieben ist. DressApp darf Ihr UGC nicht für Zwecke verwenden, die über die Bereitstellung der Dienstleistung hinausgehen, ohne Ihre ausdrückliche Zustimmung.
+3.3. **Lizenzumfang und anonymisierte Verbesserung von Kleidungsmodellen.**
+   (a) Sofern in diesen Bedingungen nicht ausdrücklich gestattet oder mit Ihrer ausdrücklichen Einwilligung versehen, verwendet DressApp Ihre personenbezogenen UGC nicht für kommerzielle Zwecke, die nicht mit dem Dienst in Zusammenhang stehen.
+   (b) Um die Genauigkeit der proprietären lokalen Computer-Vision- und Kleidungsklassifizierungs-Engine von DressApp („The Eyes") aufrechtzuerhalten und zu verbessern, kann DressApp de-identifizierte, vom Hintergrund isolierte Kleidungsausschnitte und zugehörige nicht-personenbezogene Kleidungstaxonomie-Labels (z. B. Kategorie, Farbe, Stoff, Muster) von bestätigten Garderobenartikeln für die interne Qualitätssicherung und das Modell-Fine-Tuning verwenden.
+   (c) **Strikter Ausschluss von Google-Nutzerdaten und persönlicher Identität:** In strikter Übereinstimmung mit unserer Datenschutzerklärung und der Richtlinie für Nutzerdaten der Google API-Dienste (Anforderungen zur eingeschränkten Nutzung / Limited Use) werden Google-Nutzerdaten (einschließlich Google Kalender-Terminen und Google-Profildaten), Gesichtsbilder und personenbezogene Nutzerdatensätze **niemals** verwendet, um allgemeine oder nicht-personalisierte KI- oder Machine-Learning-Modelle zu trainieren, feinabzustimmen (Fine-Tuning) oder zu verbessern.
+   (d) Bei Löschung Ihres Kontos gemäß Abschnitt 10.2 werden Ihre UGC dauerhaft aus unseren aktiven Datenbanken gelöscht.
 
-3.4. **Inhaltsbeschränkungen.** Sie erklären sich damit einverstanden, kein UGC hochzuladen, zu übertragen oder verfügbar zu machen, das:
+3.4. **Inhaltsbeschränkungen.** Sie sichern zu und gewährleisten, dass Sie Eigentümer Ihrer UGC sind oder über alle erforderlichen Rechte und Genehmigungen zum Einreichen Ihrer UGC verfügen, und Sie verpflichten sich, keine UGC hochzuladen, zu inserieren, zu übertragen oder anderweitig verfügbar zu machen, die:
 
-   (a) rechtswidrig, schädlich, bedrohlich, missbräuchlich, belästigend, verleumderisch oder eine Verletzung der Privatsphäre einer anderen Person ist;
+   (a) rechtswidrig, schädlich, bedrohlich, missbräuchlich, belästigend, verleumderisch, diskriminierend sind oder in die Privatsphäre einer anderen Person eingreifen (einschließlich unbefugter Fotografien Dritter);
 
-   (b) gegen geistige Eigentumsrechte, Datenschutzrechte oder andere Rechte Dritter verstößt;
+   (b) Urheberrechte, Markenrechte, Geschäftsgeheimnisse, Gesetze gegen Produktfälschungen, Persönlichkeitsrechte, Datenschutzrechte oder sonstige Schutzrechte Dritter verletzen;
 
-   (c) explizite, pornografische oder sexuell anzügliche Inhalte enthält;
+   (c) explizites Material, Nacktheit, pornografische oder sexuell anzügliche Inhalte enthalten;
 
-   (d) Malware, Viren oder anderen schädlichen Code enthält;
+   (d) Malware, Viren, beschädigte Dateien oder sonstigen schädlichen Code enthalten;
 
-   (e) dazu bestimmt ist, das ordnungsgemäße Funktionieren der Dienstleistung oder eines Drittsystems zu stören; oder
+   (e) darauf ausgelegt sind, das ordnungsgemäße Funktionieren des Dienstes, seiner KI-Pipelines (einschließlich Prompt-Injection-Angriffen) oder eines Systems Dritter zu stören oder zu manipulieren; oder
 
-   (f) falsche oder irreführende Informationen enthält.
+   (f) falsche, täuschende oder irreführende Informationen enthalten (einschließlich falscher Angaben zu Echtheit, Marke oder Zustand von Marktplatz-Artikeln oder Expertenqualifikationen).
 
-3.5. **Inhaltsmoderation.** DressApp behält sich das Recht vor, UGC zu prüfen, zu überwachen und zu entfernen, wenn es nach eigenem Ermessen feststellt, dass dieses gegen diese AGB verstößt oder schädlich, anstößig oder anderweitig unangemessen ist. DressApp ist jedoch nicht verpflichtet, UGC zu überwachen, und haftet nicht für UGC, das von Nutzern gepostet wird.
+3.5. **Inhaltsmoderation.** DressApp behält sich das Recht vor, übernimmt jedoch keine aktive Verpflichtung, UGC oder Inserate jederzeit nach eigenem Ermessen zu überprüfen, zu überwachen, zu filtern, abzulehnen oder zu entfernen, wenn DressApp feststellt, dass solche Inhalte gegen diese Bedingungen oder geltendes Recht verstoßen. DressApp haftet weder für von Nutzern veröffentlichte UGC noch für deren Entfernung oder Nichtentfernung.
 
 ---
 
 ## 4. Geistiges Eigentum und Lizenz zur Nutzung der Anwendung
 
-4.1. **Eigentum von DressApp.** Alle Rechte am geistigen Eigentum an der Dienstleistung, einschließlich, aber nicht beschränkt auf den Quellcode, Algorithmen, Benutzeroberflächendesign, Grafiken, Symbole, Bilder, Audio-Clips, Videoclips, Texte, Marken, Logos, Firmennamen und proprietäre Funktionen (zusammenfassend als „DressApp-IP" bezeichnet), sind und bleiben ausschließliches Eigentum von DressApp und deren Lizenzgebern.
+4.1. **Eigentum von DressApp.** Alle Rechte am geistigen Eigentum an dem und in Bezug auf den Dienst, einschließlich Quellcode, Computer-Vision-Pipelines, KI-Prompts und Orchestrierungsarchitekturen, Benutzeroberflächendesign, Grafiken, Icons, Bildern, Audioclips, Texten, Marken, Logos, Handelsnamen und proprietären Funktionen (zusammenfassend das „DressApp-IP"), sind und bleiben das ausschließliche Eigentum der DressApp Ltd. und ihrer Lizenzgeber.
 
-4.2. **Begrenzte Lizenz.** Vorbehaltlich Ihrer Einhaltung dieser AGB gewährt DressApp Ihnen eine begrenzte, nicht-exklusive, nicht übertragbare und widerrufliche Lizenz zum Zugriff auf und zur Nutzung der Dienstleistung für Ihre persönliche, nicht-kommerzielle Nutzung. Diese Lizenz umfasst nicht das Recht, (a) den Quellcode, zugrunde liegende Ideen, Algorithmen oder Methoden der Dienstleistung zu rekonstruieren, zu dekompilieren, zu disassemblieren oder anderweitig zu versuchen, diese abzuleiten; (b) Daten aus der Dienstleistung systematisch abzurufen, zu crawlen oder zu extrahieren; (c) die DressApp-IP zu kopieren, zu verändern, anzupassen, zu übersetzen oder abgeleitete Werke davon zu erstellen; (d) die Dienstleistung zum Aufbau eines konkurrierenden Produkts oder einer konkurrierenden Dienstleistung zu nutzen; (e) Rechte an der Dienstleistung zu verbreiten, unterzulizenzieren, zu verkaufen, zu vermieten, zu verleihen oder anderweitig zu übertragen; oder (f) die Dienstleistung zu einem rechtswidrigen Zweck zu nutzen.
+4.2. **Beschränkte Lizenz.** Vorbehaltlich Ihrer fortlaufenden Einhaltung dieser Bedingungen gewährt Ihnen DressApp eine beschränkte, nicht-exklusive, nicht übertragbare, nicht unterlizenzierbare, widerrufliche Lizenz zur Installation, zum Zugriff auf und zur Nutzung des Dienstes für Ihre persönliche, nicht-kommerzielle Nutzung (mit Ausnahme autorisierter professioneller Stylisten, Schneider und Werbetreibender, die die Experten- und Kampagnenfunktionen gemäß Abschnitt 7 nutzen). Diese Lizenz beinhaltet nicht das Recht:
 
-4.3. **Drittanbieter-Komponenten.** Die Dienstleistung kann Drittanbieter-Bibliotheken, APIs oder Dienste enthalten. Ihre Nutzung solcher Komponenten unterliegt den geltenden Lizenzbedingungen Dritter.
+   (a) den Quellcode, die zugrunde liegenden Ideen, Modellgewichte, System-Prompts, Algorithmen oder Methoden des Dienstes zurückzuentwickeln (Reverse Engineering), zu dekompilieren, zu disassemblieren oder anderweitig zu versuchen, diese abzuleiten;
 
----
+   (b) Daten, Trendberichte, Garderobenbilder oder Marktplatz-Inserate mithilfe automatisierter Verfahren (Scraping, Crawling, Spidering) systematisch aus dem Dienst zu extrahieren;
 
-## 5. KI-Funktionen und Haftungsausschlüsse
+   (c) das DressApp-IP zu kopieren, zu modifizieren, anzupassen, zu übersetzen oder abgeleitete Werke davon zu erstellen;
 
-5.1. **KI-gestützte Funktionen.** DressApp bietet mehrere Funktionen an, die auf künstlicher Intelligenz basieren, einschließlich automatischer Kleidungskennzeichnung, Schätzung von Körpermaßen, Outfit-Generierung und wetterbasierter Stilempfehlungen (zusammenfassend als „KI-Funktionen" bezeichnet).
+   (d) den Dienst oder seine Ausgaben zu verwenden, um ein konkurrierendes Produkt, einen konkurrierenden Dienst oder ein konkurrierendes Machine-Learning-Modell zu entwickeln, einem Benchmarking zu unterziehen oder zu trainieren;
 
-5.2. **Keine Garantie für Richtigkeit.** Die KI-Funktionen werden **„wie besehen"** und **„wie verfügbar"** ausschließlich zu Informations- und Stilzwecken bereitgestellt. DressApp garantiert nicht, dass die KI-Funktionen für einen bestimmten Nutzer, Körpertyp, Kleidungsstil oder Stilszenario genaue, präzise oder geeignete Ergebnisse liefern.
+   (e) den Dienst zu vertreiben, unterzulizenzieren, zu verkaufen, zu vermieten, zu verleasen oder Rechte daran anderweitig zu übertragen; oder
 
-5.3. **Schätzung von Körpermaßen.** Automatische Schätzungen von Körpermaßen, die durch die Dienstleistung generiert werden, sind Annäherungen und sollten nicht als genaue Messwerte herangezogen werden. Die tatsächliche Passform von Kleidungsstücken kann je nach Marke, Schnitt, Stoff und individueller Körperform variieren. Nutzer sollten bei Kaufentscheidungen die Größentabellen der Kleidungshersteller konsultieren.
+   (f) Nutzungskontingente, Ratenbegrenzungen (Rate Limits), Guthabenschranken (Credit Gates), heuristische Sicherheitsfilter oder Sicherheitsmechanismen des Dienstes zu umgehen, zu deaktivieren oder auszuhebeln.
 
-5.4. **Outfit-Empfehlungen.** Outfit-Vorschläge, die von der KI generiert werden, sind algorithmische Empfehlungen und stellen keine professionelle Mode- oder Stilberatung dar. DressApp haftet nicht für Entscheidungen, die auf KI-generierten Outfit-Vorschlägen basieren.
-
-5.5. **Beschränkungen der KI.** Die KI-Funktionen können in bestimmten Fällen Ergebnisse liefern, die unangemessen, ungenau oder anstößig sind. DressApp gewährleistet nicht, dass die KI-Funktionen unterbrechungsfrei, fehlerfrei oder frei von schädlichen Ausgaben sind.
+4.3. **Drittanbieter-Komponenten und Integrationen.** Der Dienst integriert oder nutzt Dienste und APIs von Drittanbietern (darunter Google Cloud / Gemini APIs, Google Calendar API, Deepgram, Open-Meteo und PayPal). Ihre Nutzung optionaler Drittanbieter-Integrationen unterliegt den jeweiligen Geschäftsbedingungen und Datenschutzrichtlinien dieser Drittanbieter.
 
 ---
 
-## 6. Bezahlte Funktionen und Abonnements
+## 5. KI-Funktionen, gestuftes Modell-Routing und Haftungsausschlüsse
 
-6.1. **Abrechnung.** Bestimmte Funktionen der Dienstleistung können auf Bezahlbasis angeboten werden, einschließlich Abonnementpläne, Einmalkäufe oder In-App-Guthaben. Alle Gebühren werden in der zum Zeitpunkt des Kaufs in der Dienstleistung angezeigten Währung abgerechnet.
+5.1. **KI-gestützte Funktionen.** DressApp bietet Funktionen auf Basis künstlicher Intelligenz und maschinellen Lernens, darunter automatische Kleidungssegmentierung und Hintergrund-Matting, Kennzeichnung von Kleidungsattributen („The Eyes"), generatives Bild-Inpainting und Kleidungsrekonstruktion („Nano Banana"), dialogorientiertes Text- und Sprach-Styling („KI-Stylist"), Generierung von Koffer-Packlisten, Schätzung von Körpermaßen und autonome Modetrend-Erkennung („Trend Scout") (zusammenfassend die „KI-Funktionen").
 
-6.2. **Automatische Verlängerung.** Sofern Sie die automatische Verlängerung nicht mindestens 24 Stunden vor Ende des aktuellen Abrechnungszeitraums deaktivieren, verlängert sich Ihr Abonnement automatisch zum gleichen Tarif. Sie können Ihr Abonnement verwalten und die automatische Verlängerung über die Geräteeinstellungen oder die Konto-Einstellungen innerhalb der Dienstleistung deaktivieren.
+5.2. **Gestuftes KI-Modell-Routing und Failover.** Der Zugriff auf bestimmte zugrunde liegende KI-Inferenz-Engines hängt von Ihrem aktiven Abonnementtarif ab:
+   (a) **Kostenloser Tarif / Free Tier (Lokale „Eyes"-Engine):** Nutzer des kostenlosen Tarifs werden von dem selbst gehosteten lokalen (On-Premises) Computer-Vision- und Sprachmodell von DressApp („The Eyes", derzeit betrieben mit einem feinabgestimmten Qwen 2.5 VL 3B Modell) bedient.
+   (b) **Manager- und Professional-Tarife (Schnelles Cloud-KI-Modell):** Abonnenten aktiver **Manager**- und **Professional**-Tarife erhalten vorrangigen Zugriff auf schnelle Cloud-Basismodelle (derzeit Google Gemini 3.5 Flash) für Kleidungsanalysen, dialogorientiertes Styling, Kofferplanung und Trend-Lokalisierung.
+   (c) **Modellweiterentwicklung und automatisches Failover:** DressApp behält sich das Recht vor, die zugrunde liegenden lokalen oder Cloud-basierten KI-Modelle jederzeit zu aktualisieren, zu ersetzen oder feinabzustimmen, um Geschwindigkeit, Genauigkeit oder Plattformstabilität zu optimieren. Im Falle vorübergehender Ratenbegrenzungen des Cloud-Anbieters, Kontingentausschöpfung oder Ausfällen vorgelagerter Dienste können Anfragen automatisch auf die lokale Eyes-Engine von DressApp zurückfallen (Fallback), sodass Ihre Nutzung des Dienstes ohne Unterbrechung fortgesetzt werden kann.
 
-6.3. **Abrechnung durch Dritte.** Käufe, die über den Apple App Store oder Google Play Store getätigt werden, unterliegen den jeweiligen Nutzungsbedingungen und Rückerstattungsrichtlinien der Plattform. DressApp richtet sich nach den Rückerstattungs- und Abrechnungsrichtlinien von Apple Inc. und Google LLC, soweit anwendbar. Für Käufe, die direkt über DressApp getätigt werden, werden Rückerstattungsanfragen von Fall zu Fall nach dem alleinigen Ermessen von DressApp geprüft.
+5.3. **Keine Garantie für Richtigkeit.** Die KI-Funktionen werden **„wie besehen" („as-is")** und **„wie verfügbar" („as available")** ausschließlich zu Informations-, Organisations- und Styling-Unterhaltungszwecken bereitgestellt. Generative KI-Modelle sind ihrer Natur nach probabilistisch und können gelegentlich Attribute halluzinieren, Kleidungsstücke falsch klassifizieren, Bilder beim Inpainting verzerren oder unpassende Kombinationen vorschlagen. DressApp übernimmt keine Garantie dafür, dass die KI-Funktionen für einen bestimmten Nutzer, Körpertyp, ein bestimmtes Kleidungsstück, Klima oder einen Dresscode genaue, präzise oder geeignete Ergebnisse liefern.
 
-6.4. **Preisänderungen.** DressApp behält sich das Recht vor, Abonnementpreise jederzeit zu ändern. Preisänderungen treten zu Beginn Ihres nächsten Abrechnungszyklus in Kraft. Sie werden über etwaige Preisänderungen im Voraus über die Dienstleistung informieren lassen.
+5.4. **Maß- und Passformschätzung.** Vom Dienst generierte automatische Schätzungen von Körpermaßen und Visualisierungen virtueller Avatare sind lediglich Näherungswerte und dürfen nicht als präzise Schneider- oder medizinische Maße herangezogen werden. Die tatsächliche Passform von Kleidungsstücken variiert je nach Marke, Schnitt, Stoffelastizität und individueller Anatomie. Nutzer sollten Größen vor dem Kauf oder der Änderung von Kleidungsstücken stets anhand der Größentabellen des Herstellers überprüfen.
 
-6.5. **Steuern.** Alle Preise sind ohne die jeweils geltenden Steuern, die Sie, soweit gesetzlich gefordert, zu zahlen haben.
-
----
-
-## 7. Haftungsbeschränkung und Gewährleistungsausschluss
-
-7.1. **„Wie besehen" und „wie verfügbar".** Die Dienstleistung wird **„wie besehen"** und **„wie verfügbar"** bereitgestellt. Soweit durch geltendes Recht zulässig, schließt DressApp sämtliche Gewährleistungen aus, ob ausdrücklich, konkludent, gesetzlich oder mündlich, einschließlich, aber nicht beschränkt auf konkludentere Gewährleistungen der Marktgängigkeit, der Eignung für einen bestimmten Zweck und der Nichtverletzung von Rechten Dritter.
-
-7.2. **Keine Gewährleistung für Ergebnisse.** DressApp gewährleistet nicht, dass die Dienstleistung unterbrechungsfrei, fehlerfrei, sicher ist oder dass durch die Nutzung der Dienstleistung oder ihrer KI-Funktionen bestimmte Ergebnisse erzielt werden.
-
-7.3. **Haftungsbeschränkung.** Soweit durch israelisches Recht und geltende internationale Vorschriften zulässig, haftet DressApp, seine verbundenen Unternehmen, Gesellschafter, Geschäftsführer, Mitarbeiter, Vertreter oder Lizenzgeber in keinem Fall für indirekte, zufällige, besondere, Folgeschäden, Strafschäden oder Muster-Schäden, einschließlich, aber nicht beschränkt auf Verlust von Gewinnen, Umsätzen, Daten oder Geschäftsgut, die aus Ihrer Nutzung der Dienstleistung oder der Unfähigkeit, die Dienstleistung zu nutzen, entstehen oder damit im Zusammenhang stehen, unabhängig von der Rechtsgrundlage, auf der sich der Anspruch stützt.
-
-7.4. **Haftungsgrenze.** Die gesamte haftungsrechtliche Verantwortung von DressApp für alle Ansprüche, die aus diesen AGB oder der Dienstleistung entstehen oder damit in Zusammenhang stehen, darf den Gesamtbetrag der Gebühren, sofern von Ihnen an DressApp in den zwölf (12) Monaten vor dem Anspruch gezahlt, nicht übersteigen.
-
-7.5. **Verbraucherschutz.** Nichts in diesen AGB ist so auszulegen, dass es die Haftung von DressApp für Tod oder Personenschäden, die durch Fahrlässigkeit verursacht wurden, oder für jede andere Haftung, die durch geltendes Recht nicht eingeschränkt oder ausgeschlossen werden kann, einschließlich der israelischen Verbraucherschutzbestimmungen, einschränkt oder ausschließt.
+5.5. **Styling- und Trendempfehlungen.** Outfit-Vorschläge, kalenderbasierte Looks, Packlisten und Trend-Scout-Berichte stellen keine professionelle Mode-, Sicherheits- oder Wetterschutzberatung dar. Sie sind allein dafür verantwortlich, die tatsächlichen Wetterbedingungen, Sicherheitsanforderungen und Dresscodes zu prüfen, bevor Sie sich auf eine KI-Empfehlung verlassen.
 
 ---
 
-## 8. Kündigung und Kontolöschung
+## 6. Marktplatz (Tauschen, Verkaufen & Spenden) und Expertenverzeichnis
 
-8.1. **Kündigung durch DressApp.** DressApp kann Ihr Konto und Ihren Zugriff auf die Dienstleistung, ganz oder teilweise, nach eigenem Ermessen und ohne vorherige Ankündigung sperren oder kündigen, wenn Sie gegen diese AGB verstoßen, rechtswidrige Aktivitäten ausüben oder wenn DressApp feststellt, dass die Fortführung Ihres Kontos der Dienstleistung oder anderen Nutzern zum Nachteil gereicht.
+6.1. **Ausschließliche Plattformfunktion.** DressApp bietet einen Community-Marktplatz, auf dem Nutzer Garderobenartikel zum Verkauf, zum Tausch oder als Spende anbieten können, sowie ein Expertenverzeichnis, das Nutzer mit unabhängigen professionellen Stylisten, Schneidern und Textilpflegespezialisten vernetzt. **Die DressApp Ltd. agiert ausschließlich als neutraler Technologie-Schauplatz und Vermittler.** DressApp ist weder Käufer, Verkäufer, Makler, Auktionator, Kommissionär, Versanddienstleister noch Arbeitgeber oder Vertreter eines Nutzers oder gelisteten Experten.
 
-8.2. **Kündigung durch den Nutzer.** Sie können Ihr Konto und alle zugehörigen Daten jederzeit über die Konto-Einstellungen innerhalb der Dienstleistung löschen. Nach der Kontolöschung werden Ihr UGC und Ihre personenbezogenen Daten gemäß unserer Datenschutzerklärung dauerhaft aus den aktiven Systemen von DressApp entfernt.
+6.2. **Transaktionen zwischen Nutzern sowie zwischen Nutzern und Experten.** Jede Vereinbarung über den Verkauf, den Tausch, die Spende, die Änderung oder das Styling von Kleidungsstücken ist ausschließlich ein direkter Vertrag zwischen den beteiligten Nutzern bzw. zwischen dem Nutzer und dem unabhängigen Experten. DressApp ist nicht Vertragspartei solcher Transaktionen und gibt keinerlei Zusicherungen oder Gewährleistungen ab hinsichtlich:
+   (a) der Existenz, Qualität, Sicherheit, Hygiene, Rechtmäßigkeit, Echtheit oder des Zustands von auf dem Marktplatz angebotenen Kleidungsstücken;
+   (b) der Richtigkeit oder Genauigkeit der Angebotsbeschreibung eines Nutzers, der Daten des Digitalen Produktpasses (DPP) oder der Preisgestaltung;
+   (c) der Fähigkeit von Verkäufern zur Eigentumsübertragung oder der Zahlungsfähigkeit von Käufern; oder
+   (d) der Qualifikationen, Zulassungen, Versicherungen, Arbeitsqualität oder des Verhaltens von im Expertenverzeichnis aufgeführten Schneidern, Stylisten oder Fachleuten Dritter.
 
-8.3. **Auswirkungen der Kündigung.** Mit der Kündigung oder Löschung Ihres Kontos erlischt Ihre Lizenz zur Nutzung der Dienstleistung sofort. Die Abschnitte 3 (Nutzergenerierte Inhalte und Fotos), 4 (Geistiges Eigentum), 7 (Haftungsbeschränkung), 9 (Anwendbares Recht und Streitbeilegung) und 10 (Allgemeine Bestimmungen) bleiben nach der Kündigung in Kraft.
+6.3. **Verbotene Marktplatz-Artikel.** Sie dürfen nur echte, saubere und rechtmäßig in Ihrem Eigentum stehende Bekleidung, Schuhe und Modeaccessoires anbieten. Es ist Ihnen strengstens untersagt, gefälschte Waren, Replikate oder Markenimitate, gestohlenes Eigentum, Gefahrstoffe, Waffen, zurückgerufene Artikel, gebrauchte Unterwäsche oder Intimbekleidung, die gegen Hygienestandards verstößt, oder Nicht-Bekleidungsartikel anzubieten, die nach geltendem Recht oder den Regeln der Zahlungsdienstleister verboten sind.
 
-8.4. **Datenspeicherung.** Nach der Kontolöschung kann DressApp bestimmte Daten für einen angemessenen Zeitraum speichern, wie es durch geltendes Recht, berechtigte geschäftliche Zwecke oder zur Erfüllung gesetzlicher Pflichten erforderlich ist.
-
----
-
-## 9. Anwendbares Recht und Streitbeilegung
-
-9.1. **Anwendbares Recht.** Diese AGB sowie alle daraus oder im Zusammenhang mit ihnen entstehenden Streitigkeiten unterliegen dem Recht des Staates Israel, unter Ausschluss seiner Kollisionsnormen.
-
-9.2. **Ausschließlicher Gerichtsstand.** Der ausschließliche Gerichtsstand für alle Streitigkeiten, die aus diesen AGB entstehen oder mit ihnen im Zusammenhang stehen, liegt bei den zuständigen Gerichten des Staates Israel. Sie stimmen der Zuständigkeit dieser Gerichte unwiderruflich zu und verzichten auf etwaige Einwendungen aufgrund des ungeeigneten Gerichtsstands (forum non conveniens) oder ähnlicher Gründe.
-
-9.3. **Streitbeilegung.** Soweit durch geltendes Recht zulässig, werden die Parteien zunächst versuchen, jeden Streit, der aus diesen AGB entsteht, durch eine gutgläubige Verhandlung beizulegen. Wird der Streit innerhalb von dreißig (30) Tagen nicht beigelegt, kann jede Partei ihre Rechtsbehelfe bei den zuständigen Gerichten in Israel suchen.
+6.4. **Risikoübernahme & Haftungsfreistellung bei Streitigkeiten.** Sie übernehmen alle Risiken, die mit der Interaktion, dem Versand, der Bezahlung oder persönlichen Treffen mit anderen über den Dienst gefundenen Nutzern oder Experten verbunden sind. Sollten Sie eine Streitigkeit mit einem oder mehreren Nutzern oder Experten haben, stellen Sie hiermit die DressApp Ltd., ihre leitenden Angestellten, Direktoren, Mitarbeiter und Vertreter von sämtlichen Ansprüchen, Forderungen und Schäden (tatsächlichen Schäden und Folgeschäden) jeder Art und Natur, ob bekannt oder unbekannt, frei, die aus solchen Streitigkeiten entstehen oder in irgendeiner Weise damit zusammenhängen.
 
 ---
 
-## 10. Allgemeine Bestimmungen
+## 7. Kostenpflichtige Funktionen, virtuelle Credits, Abonnements und Werbekampagnen
 
-10.1. **Gesamte Vereinbarung.** Diese AGB, zusammen mit unserer Datenschutzerklärung und allen anderen darin referenzierten Richtlinien, bilden die gesamte Vereinbarung zwischen Ihnen und DressApp hinsichtlich der Dienstleistung und ersetzen alle früheren oder zeitgleichen mündlichen oder schriftlichen Mitteilungen und Vereinbarungen.
+7.1. **Abrechnung und Zahlungsabwicklung.** Bestimmte Funktionen des Dienstes werden gegen Entgelt angeboten, darunter Abonnementtarife (**Manager**- und **Professional**-Tarife), im Voraus erworbene virtuelle Guthabenpunkte („Credits") und selbstverwaltete Werbekampagnen („Werbekampagnen"). Zahlungen werden über autorisierte Drittanbieter-Zahlungsdienstleister (wie PayPal, Stripe, Apple App Store oder Google Play Store) abgewickelt. Alle Gebühren werden in der beim Checkout angezeigten Währung abgerechnet.
 
-10.2. **Änderungen.** DressApp behält sich das Recht vor, diese AGB jederzeit zu ändern oder zu ersetzen. Wesentliche Änderungen werden Ihnen über die Dienstleistung oder per E-Mail vor dem Wirksamkeitsdatum der Änderungen mitgeteilt. Ihre fortgesetzte Nutzung der Dienstleistung nach dem Wirksamkeitsdatum der Änderungen stellt Ihre Annahme der überarbeiteten AGB dar.
+7.2. **Virtuelle Credits.** Innerhalb von DressApp erworbene oder gewährte Credits stellen eine beschränkte, nicht übertragbare, nicht einlösbare Lizenz für den Zugriff auf bestimmte Premium-Rechenaktionen innerhalb des Dienstes dar (wie z. B. erweitertes KI-Styling oder Nano-Banana-Bildrekonstruktion). Credits haben **keinen Barwert**, sind kein persönliches Eigentum, können nicht gegen Bargeld oder gesetzliche Zahlungsmittel eingetauscht werden, sind nicht zwischen Konten übertragbar und sind nicht erstattungsfähig, außer soweit dies nach geltendem Verbraucherschutzrecht zwingend vorgeschrieben ist. Ungenutzte Aktions- oder gekaufte Credits verfallen bei Kontolöschung oder außerordentlicher Kündigung aus wichtigem Grund.
 
-10.3. **Salvatorische Klausel.** Sollte eine Bestimmung dieser AGB von einem zuständigen Gericht für ungültig oder nicht durchsetzbar erklärt werden, bleiben die übrigen Bestimmungen in vollem Umfang gültig und wirksam.
+7.3. **Abonnements und automatische Verlängerung.** Wenn Sie ein wiederkehrendes Abonnement abschließen, verlängert sich Ihr Abonnement am Ende jedes Abrechnungszeitraums automatisch zum jeweils gültigen Tarif, sofern Sie das Abonnement oder die automatische Verlängerung nicht mindestens vierundzwanzig (24) Stunden vor dem Verlängerungsdatum kündigen bzw. deaktivieren. Sie können die automatische Verlängerung jederzeit über Ihre Kontoeinstellungen oder über die Abonnementverwaltung des jeweiligen App Stores (Apple App Store oder Google Play Store) kündigen.
 
-10.4. **Verzicht.** Die Nichtdurchsetzung eines Rechts oder einer Bestimmung dieser AGB durch DressApp stellt keinen Verzicht auf dieses Recht oder diese Bestimmung dar.
+7.4. **Selbstverwaltete Experten-Werbekampagnen.** Registrierte Experten und Unternehmen können Werbeplatzierungen erwerben (wie z. B. tägliche Werbeticker-Platzierungen für 1,00 USD im Home-Feed). Alle Werbemittel und Links von Werbekampagnen müssen Abschnitt 3.4 dieser Bedingungen entsprechen, wahrheitsgemäß und nicht irreführend sein und unterliegen jederzeit der Genehmigung und Entfernung durch DressApp. Gebühren für Werbekampagnen werden im Voraus oder nach einem wiederkehrenden täglichen Zeitplan abgerechnet, wie beim Checkout autorisiert, und sind nicht erstattungsfähig, sobald Impressionen oder Platzierungszeiträume begonnen haben.
 
-10.5. **Abtretung.** Sie dürfen Ihre Rechte oder Pflichten aus diesen AGB ohne die vorherige schriftliche Zustimmung von DressApp nicht abtreten oder übertragen. DressApp kann diese AGB, ganz oder teilweise, an einen Nachfolger, ein verbundenes Unternehmen oder im Rahmen einer Fusion, Übernahme oder des Verkaufs aller oder wesentlicher Teile seiner Vermögenswerte abtreten.
+7.5. **Rückerstattungen und Widerrufsrechte für Verbraucher.**
+   (a) **App-Store-Käufe:** Käufe, die über den Apple App Store oder Google Play Store getätigt werden, unterliegen den Rückerstattungsrichtlinien der Apple Inc. bzw. der Google LLC.
+   (b) **Direkte Web-Käufe:** Soweit nicht durch zwingendes gesetzliches Recht anders vorgeschrieben (einschließlich anwendbarer Bestimmungen des israelischen Verbraucherschutzgesetzes von 1981 über Fernabsatzgeschäfte vor Inanspruchnahme der Dienstleistung), sind Zahlungen für verbrauchte Credits, aktive Werbekampagnen und angebrochene Abonnementzeiträume nicht erstattungsfähig. Kulanzanträge auf Rückerstattung können zur Einzelfallprüfung an [dev@dressapp.co](mailto:dev@dressapp.co) gerichtet werden.
 
-10.6. **Mitteilungen.** Alle Mitteilungen, die unter diesen AGB verlangt oder erlaubt sind, werden über die Dienstleistung, per E-Mail oder auf andere Weise, wie in der Datenschutzerklärung beschrieben, übermittelt.
-
-10.7. **Höhere Gewalt.** DressApp haftet nicht für Verzögerungen oder Ausfälle bei der Leistungserbringung, die auf Ursachen zurückzuführen sind, die außerhalb seines vernünftigen Einflussbereichs liegen, einschließlich, aber nicht beschränkt auf, höhere Gewalt, Krieg, Terrorismus, Unruhen, Embargos, Handlungen zivil- oder militärrechtlicher Behörden, Brände, Überschwemmungen, Erdbeben, Pandemien oder Ausfälle von Telekommunikations- oder Internetinfrastruktur.
+7.6. **Preisänderungen und Steuern.** DressApp behält sich das Recht vor, die Preise für Abonnements, Credits oder Werbekampagnen jederzeit zu ändern. Bei wiederkehrenden Abonnements werden wir Sie mit einer angemessenen Frist im Voraus über jede Preiserhöhung informieren, bevor diese in Ihrem nächsten Abrechnungszeitraum wirksam wird. Alle angegebenen Preise verstehen sich zuzüglich geltender Mehrwertsteuer (MwSt.), Umsatzsteuer oder Quellensteuer, sofern nicht ausdrücklich anders angegeben.
 
 ---
 
-**Kontaktieren Sie uns:**
+## 8. Schadloshaltung (Freistellung)
 
-Bei Fragen zu diesen Allgemeinen Geschäftsbedingungen erreichen Sie uns über die App-Einstellungen oder über das Kontaktformular auf unserer Website unter dressapp.co.
+8.1. **Freistellung durch den Nutzer.** Im gesetzlich maximal zulässigen Umfang verpflichten Sie sich, die **DressApp Ltd.**, ihre verbundenen Unternehmen sowie deren jeweilige leitende Angestellte, Direktoren, Mitarbeiter, Auftragnehmer, Vertreter und Lizenzgeber von sämtlichen Ansprüchen, Verbindlichkeiten, Schadensersatzforderungen, Verlusten, Urteilen, Bußgeldern, Kosten und Aufwendungen Dritter (einschließlich angemessener Anwalts- und Prozesskosten) freizustellen, zu verteidigen und schadlos zu halten, die sich ergeben aus oder in Zusammenhang stehen mit:
+   (a) Ihrem Zugriff auf oder Ihrer Nutzung (bzw. Ihrem Missbrauch) des Dienstes;
+   (b) jeglichen UGC, Garderobenfotografien, Marktplatz-Inseraten oder Werbekampagnen, die Sie über den Dienst hochladen, veröffentlichen oder übertragen (einschließlich jeglicher Ansprüche, dass Ihre UGC oder angebotenen Waren geistiges Eigentum Dritter, Datenschutzrechte oder Gesetze gegen Produktfälschungen verletzen);
+   (c) jeglicher Transaktion, Streitigkeit oder Interaktion zwischen Ihnen und einem anderen Nutzer oder Experten über den Marktplatz oder das Expertenverzeichnis;
+   (d) Ihrem Verstoß gegen diese Bedingungen; oder
+   (e) Ihrem Verstoß gegen geltende Gesetze, Vorschriften oder Rechte Dritter.
+
+8.2. **Verfahren.** DressApp behält sich das Recht vor, auf Ihre Kosten die ausschließliche Verteidigung und Kontrolle über jede Angelegenheit zu übernehmen, für die Sie uns schadlos halten müssen, und Sie erklären sich bereit, nach Treu und Glauben bei unserer Verteidigung gegen solche Ansprüche mitzuwirken. Sie dürfen keinen Anspruch durch Vergleich beilegen, der DressApp ein Verschulden zuweist oder DressApp eine Verpflichtung auferlegt, ohne unsere vorherige schriftliche Zustimmung einzuholen.
+
+---
+
+## 9. Haftungsbeschränkung und Gewährleistungsausschluss
+
+9.1. **„Wie besehen" und „wie verfügbar".** Der Dienst wird auf der Basis **„wie besehen" („as-is")** und **„wie verfügbar" („as available")** bereitgestellt. Im gesetzlich maximal zulässigen Umfang lehnt die DressApp Ltd. alle ausdrücklichen, stillschweigenden, gesetzlichen oder mündlichen Gewährleistungen ab, einschließlich, aber nicht beschränkt auf stillschweigende Gewährleistungen der Marktgängigkeit, der Eignung für einen bestimmten Zweck, des Rechtsmangels, der Richtigkeit von KI-Ausgaben und der Nichtverletzung von Rechten Dritter.
+
+9.2. **Keine Gewährleistung für Ergebnisse oder Verfügbarkeit.** DressApp übernimmt keine Gewähr dafür, dass der Dienst ununterbrochen, rechtzeitig, fehlerfrei oder vollkommen sicher zur Verfügung steht, dass Mängel behoben werden oder dass durch die Nutzung des Dienstes bestimmte Styling-, Geschäfts- oder Garderobenergebnisse erzielt werden.
+
+9.3. **Ausschluss von Folgeschäden.** Soweit nach israelischem Recht und geltenden internationalen Vorschriften maximal zulässig, haften die DressApp Ltd., ihre verbundenen Unternehmen, leitenden Angestellten, Direktoren, Mitarbeiter, Vertreter oder Lizenzgeber in keinem Fall für indirekte, zufällige, besondere, Folge-, Straf- oder exemplarische Schäden, einschließlich, aber nicht beschränkt auf entgangenen Gewinn, Umsatzeinbußen, Datenverlust, Verlust von Garderobenartikeln, Marktplatzerlösen oder Firmenwert (Goodwill) oder Kosten für die Beschaffung von Ersatzgütern oder -dienstleistungen, die sich aus oder im Zusammenhang mit Ihrer Nutzung oder Unfähigkeit zur Nutzung des Dienstes ergeben, unabhängig von der Rechtstheorie (Vertrag, unerlaubte Handlung, Fahrlässigkeit, Gefährdungshaftung oder anderweitig), auf die sich ein solcher Anspruch stützt, selbst wenn DressApp auf die Möglichkeit solcher Schäden hingewiesen wurde.
+
+9.4. **Haftungshöchstgrenze.** Soweit nach geltendem Recht maximal zulässig, übersteigt die gesamte kumulative Gesamthaftung der DressApp Ltd. für sämtliche Ansprüche aus oder im Zusammenhang mit diesen Bedingungen oder dem Dienst nicht den höheren der folgenden Beträge: (a) den Gesamtbetrag der Gebühren, die Sie in den zwölf (12) Monaten unmittelbar vor dem schadensbegründenden Ereignis tatsächlich an die DressApp Ltd. gezahlt haben, oder (b) fünfzig US-Dollar (50,00 USD) (oder den Gegenwert in Neuen Israelischen Schekeln).
+
+9.5. **Zwingende Verbraucherschutzrechte.** Nichts in diesen Bedingungen ist so auszulegen, dass dadurch die Haftung der DressApp Ltd. für Tod oder Körperverletzung aufgrund ihrer Fahrlässigkeit, für Betrug oder arglistige Täuschung oder für eine sonstige gesetzliche Haftung beschränkt oder ausgeschlossen wird, die nach geltendem zwingendem Recht, einschließlich des israelischen Gesetzes über Standardverträge von 1982 und des israelischen Verbraucherschutzgesetzes von 1981, nicht beschränkt oder ausgeschlossen werden kann.
+
+---
+
+## 10. Kündigung und Kontolöschung
+
+10.1. **Kündigung durch DressApp.** DressApp kann Ihr Konto, Ihre Marktplatz-Inserate, Ihre Werbekampagnen oder Ihren Zugriff auf den Dienst ganz oder teilweise sofort und ohne vorherige Ankündigung sperren, einschränken oder kündigen, wenn: (a) Sie wesentlich oder wiederholt gegen diese Bedingungen verstoßen; (b) wir begründeten Verdacht auf betrügerische, gefälschte, missbräuchliche oder rechtswidrige Aktivitäten haben; (c) wir gesetzlich oder durch eine behördliche Anordnung dazu verpflichtet sind; oder (d) die Fortführung Ihres Kontos ein Sicherheits-, Betriebs- oder Rechtsrisiko für den Dienst oder andere Nutzer darstellt.
+
+10.2. **Kündigung und Ein-Klick-Löschung durch den Nutzer.** Sie können diese Bedingungen jederzeit kündigen und Ihr Konto sowie alle zugehörigen Daten über **Einstellungen → Konto → Konto löschen** innerhalb des Dienstes löschen oder indem Sie eine E-Mail von Ihrer registrierten E-Mail-Adresse mit dem Betreff „Delete My Account" (Mein Konto löschen) an [dev@dressapp.co](mailto:dev@dressapp.co) senden. Nach der Kontolöschung werden Ihre UGC, Garderobenartikel, Outfits und personenbezogenen Daten innerhalb von dreißig (30) Tagen gemäß Abschnitt 5.3 unserer Datenschutzerklärung dauerhaft aus unseren aktiven Systemen gelöscht.
+
+10.3. **Wirkung der Kündigung und Fortbestand von Bestimmungen.** Mit der Kündigung oder Löschung Ihres Kontos erlöschen Ihre Lizenz zur Nutzung des Dienstes sowie etwaige ungenutzte Credits mit sofortiger Wirkung, und die von Ihnen gemäß Abschnitt 3.2 gewährte Lizenz zum Hosten und Anzeigen Ihrer UGC endet (mit Ausnahme von de-identifizierten Modellgewichten, die bereits vor der Löschung gemäß Abschnitt 3.3(b) trainiert wurden, sowie der vorübergehenden Backup-Aufbewahrung gemäß Abschnitt 10.4). Die Abschnitte 3.1 (Eigentum), 3.3(b)–(c), 4 (Geistiges Eigentum), 5.2–5.5 (KI-Haftungsausschlüsse), 6 (Marktplatz- & Experten-Haftungsausschlüsse), 7.2 & 7.5 (Credit- & Rückerstattungsbedingungen), 8 (Schadloshaltung), 9 (Haftungsbeschränkung), 11 (Anwendbares Recht und Streitbeilegung) und 12 (Allgemeine Bestimmungen) bleiben auch nach einer Beendigung dieser Bedingungen wirksam.
+
+10.4. **Gesetzliche Datenaufbewahrung.** Ungeachtet einer Kontolöschung kann die DressApp Ltd. streng begrenzte Transaktions-, Abrechnungs- oder Sicherheits-Audit-Protokolle für den Zeitraum aufbewahren, der nach geltendem Steuer-, Buchhaltungs- oder Gesetzesrecht erforderlich ist oder der zur Geltendmachung, Ausübung oder Verteidigung von Rechtsansprüchen im Einklang mit unserer Datenschutzerklärung notwendig ist.
+
+---
+
+## 11. Anwendbares Recht und Streitbeilegung
+
+11.1. **Anwendbares Recht.** Diese Bedingungen und alle Streitigkeiten, Ansprüche oder Kontroversen, die sich aus oder im Zusammenhang mit ihnen oder dem Dienst ergeben (einschließlich außervertraglicher Streitigkeiten oder Ansprüche), unterliegen den Gesetzen des **Staates Israel** und sind nach diesen auszulegen, unter Ausschluss seiner Kollisionsnormen. Das Übereinkommen der Vereinten Nationen über Verträge über den internationalen Warenkauf (CISG / UN-Kaufrecht) findet keine Anwendung.
+
+11.2. **Informelle Streitbeilegung.** Bevor ein formelles Gerichtsverfahren eingeleitet wird, vereinbaren Sie und DressApp, zunächst zu versuchen, jede Streitigkeit informell und nach Treu und Glauben beizulegen, indem eine schriftliche Mitteilung mit einer Beschreibung des Anspruchs und der geforderten Abhilfe gesendet wird (an DressApp unter [dev@dressapp.co](mailto:dev@dressapp.co) bzw. an Sie an Ihre registrierte E-Mail-Adresse). Wird die Streitigkeit nicht innerhalb von dreißig (30) Tagen nach Erhalt einer solchen Mitteilung beigelegt, kann jede Partei formelle rechtliche Schritte gemäß Abschnitt 11.3 einleiten.
+
+11.3. **Ausschließliche Zuständigkeit und Gerichtsstand.** Vorbehaltlich zwingender Verbrauchergerichtsstandsrechte nach den Gesetzen des Landes Ihres gewöhnlichen Aufenthalts, auf die vertraglich nicht verzichtet werden kann, sind für alle Streitigkeiten aus oder im Zusammenhang mit diesen Bedingungen oder dem Dienst ausschließlich die zuständigen Gerichte im **Bezirk Süd (Be'er-Sheva) oder im Bezirk Tel Aviv-Jaffa des Staates Israel** zuständig. Sie unterwerfen sich unwiderruflich der persönlichen Zuständigkeit dieser Gerichte und verzichten auf jeden Einwand wegen eines ungeeigneten Gerichtsstands (*forum non conveniens*) oder örtlicher Unzuständigkeit.
+
+---
+
+## 12. Allgemeine Bestimmungen
+
+12.1. **Gesamte Vereinbarung.** Diese Bedingungen bilden zusammen mit unserer [Datenschutzerklärung](https://dressapp.co/privacy) und etwaigen ergänzenden Bedingungen für bestimmte kostenpflichtige Funktionen die gesamte Vereinbarung zwischen Ihnen und der DressApp Ltd. in Bezug auf den Dienst und ersetzen alle früheren oder gleichzeitigen mündlichen oder schriftlichen Absprachen und Vereinbarungen.
+
+12.2. **Änderungen.** DressApp behält sich das Recht vor, diese Bedingungen von Zeit zu Zeit zu ändern oder zu aktualisieren, um neue Funktionen, technologische Änderungen oder gesetzliche Anforderungen abzubilden. Wenn wir wesentliche Änderungen vornehmen, aktualisieren wir das Datum „Zuletzt aktualisiert" oben in diesen Bedingungen und benachrichtigen Sie vor Inkrafttreten der Änderungen über eine In-App-Benachrichtigung oder per E-Mail an Ihre registrierte Adresse. Ihr fortgesetzter Zugriff auf oder Ihre fortgesetzte Nutzung des Dienstes nach dem Datum des Inkrafttretens der aktualisierten Bedingungen gilt als Annahme der überarbeiteten Bedingungen. Wenn Sie den aktualisierten Bedingungen nicht zustimmen, müssen Sie die Nutzung des Dienstes einstellen und Ihr Konto löschen.
+
+12.3. **Salvatorische Klausel.** Sollte eine Bestimmung dieser Bedingungen von einem zuständigen Gericht für ungültig, rechtswidrig oder nicht durchsetzbar erklärt werden, wird diese Bestimmung im geringstmöglichen Umfang so abgeändert, dass sie durchsetzbar ist (oder gestrichen, falls eine Abänderung nicht möglich ist), und die übrigen Bestimmungen dieser Bedingungen bleiben in vollem Umfang in Kraft und wirksam.
+
+12.4. **Kein Rechtsverzicht.** Das Versäumnis oder die Verzögerung seitens der DressApp Ltd., ein Recht, eine Befugnis oder eine Bestimmung dieser Bedingungen auszuüben oder durchzusetzen, gilt nicht als Verzicht auf dieses Recht oder diese Bestimmung; ebenso wenig schließt eine einzelne oder teilweise Ausübung desselben eine andere oder weitere Ausübung dieses oder eines anderen Rechts aus.
+
+12.5. **Abtretung.** Sie dürfen diese Bedingungen oder Ihre daraus resultierenden Rechte oder Pflichten ohne die vorherige schriftliche Zustimmung der DressApp Ltd. weder abtreten noch delegieren oder übertragen; jeder Versuch einer Abtretung unter Verstoß hiergegen ist null und nichtig. Die DressApp Ltd. kann diese Bedingungen ganz oder teilweise ohne Einschränkung frei an ein verbundenes Unternehmen oder im Zusammenhang mit einer Fusion, einer Übernahme, einer Unternehmensumstrukturierung oder dem Verkauf aller oder im Wesentlichen aller ihrer Vermögenswerte abtreten oder übertragen.
+
+12.6. **Elektronische Mitteilungen.** Sie erklären sich damit einverstanden, alle Vereinbarungen, Mitteilungen, Offenlegungen und sonstigen Kommunikationen, auf die sich diese Bedingungen beziehen, auf elektronischem Wege zu erhalten, einschließlich per E-Mail an Ihre registrierte E-Mail-Adresse oder durch Veröffentlichung von Benachrichtigungen innerhalb des Dienstes.
+
+12.7. **Höhere Gewalt.** Die DressApp Ltd. haftet nicht für Verzögerungen, Unterbrechungen oder die Nichterfüllung von Verpflichtungen aus diesen Bedingungen, die auf Ursachen zurückzuführen sind, die außerhalb ihrer zumutbaren Kontrolle liegen, einschließlich Naturkatastrophen, Krieg, bewaffneter Konflikte, Terrorismus, Unruhen, Arbeitskämpfen, Embargos, Maßnahmen ziviler oder militärischer Behörden, Pandemien, Stromausfällen oder Ausfällen bzw. Ausfallzeiten von Drittanbieter-Cloud-Providern, KI-Modell-Endpunkten oder der Internet-Infrastruktur.
+
+---
+
+## 13. Kontaktinformationen
+
+Wenn Sie Fragen, rechtliche Mitteilungen oder Anfragen zu diesen Allgemeinen Geschäftsbedingungen haben, kontaktieren Sie uns bitte:
+
+- **Rechtsträger:** DressApp Ltd.
+- **Primärer rechtlicher & technischer Kontakt:** [dev@dressapp.co](mailto:dev@dressapp.co)
+- **Nutzersupport-Kontakt:** [lokoprod@gmail.com](mailto:lokoprod@gmail.com)
+- **Postanschrift:** DressApp Ltd., 11 Hanoter St, 8442711 Be'er-Sheva, Israel
+- **Offizielle Website:** [https://dressapp.co](https://dressapp.co)
+- **Spezielle Datenschutz-URL:** [https://dressapp.co/privacy](https://dressapp.co/privacy)

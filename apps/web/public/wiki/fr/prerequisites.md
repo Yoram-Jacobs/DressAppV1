@@ -1,31 +1,30 @@
-# Prérequis et guide de configuration
+# Prérequis et Guide de Configuration
 
-Avant de commencer avec DressApp, assurez-vous que votre appareil est configuré pour tirer pleinement parti de toutes les fonctionnalités et des services de stylisme.
+Avant de vous lancer dans DressApp, assurez-vous que votre système est configuré pour tirer parti de l'ensemble des fonctionnalités et services de stylisme.
 
 ## Vue d'ensemble
-Ce document présente la configuration matérielle requise, les autorisations de navigateur et les paramètres d'IA nécessaires pour utiliser DressApp de manière fluide. DressApp fonctionne immédiatement dès l'installation sans aucune clé d'API requise, tout en offrant des options avancées pour les utilisateurs expérimentés.
+Ce document présente la configuration matérielle requise, les autorisations du navigateur et les paliers d'IA des forfaits d'abonnement nécessaires au bon fonctionnement de DressApp. DressApp fonctionne immédiatement dès l'installation, sans aucune clé API requise.
 
 ## Prérequis
-- Un smartphone, une tablette ou un ordinateur moderne (iOS, Android, macOS, Windows, Linux).
-- Autorisation de la caméra activée (pour photographier vos vêtements et scanner les QR codes DPP).
-- Autorisation du microphone activée (pour le stylisme vocal mains libres).
-- Autorisation de localisation (pour des recommandations adaptées à la météo locale).
-- *(Facultatif)* Une clé d'API Google Gemini gratuite si vous souhaitez accéder aux flux de mode Trend Scout, à la retouche photo Nano Banana ou à vos propres quotas cloud. Les comptes gratuits n'ont PAS besoin de clé d'API pour utiliser DressApp.
+- Un smartphone, une tablette ou un PC moderne (iOS, Android, macOS, Windows, Linux).
+- Autorisation d'accès à la caméra activée (pour photographier les vêtements et scanner les étiquettes DPP).
+- Autorisation d'accès au microphone activée (pour les demandes de stylisme vocal mains libres).
+- Autorisation de localisation (pour les recommandations de style adaptées à la météo locale).
 
 ## Instructions étape par étape
-1. **Accorder les autorisations**: Acceptez les demandes d'accès à la caméra, au microphone et à la localisation pour les mises à jour météo en direct.
-2. **Commencez votre stylisme immédiatement (Formule Gratuite)**: Votre compte dispose du moteur d'IA local intégré de DressApp (Gemma-4-E4B optimisé) et de 10 crédits de stylisme quotidiens offerts, sans aucune configuration technique.
-3. **Clé d'API personnelle facultative (BYOK)**: Pour débloquer Trend Scout et la retouche photo générative Nano Banana, ouvrez **Profil** (/me) &rarr; **Configuration IA** et collez votre clé gratuite obtenue sur [Google AI Studio](https://aistudio.google.com/).
-4. **Associer Google Calendar**: Connectez votre calendrier Google dans votre profil afin que le styliste tienne compte de vos réunions, sorties et événements prévus.
+1. **Autoriser les permissions** : Acceptez les demandes d'accès à la caméra du navigateur ou de l'application lors de la capture d'articles, au microphone pour les conversations vocales et à la localisation pour les mises à jour météo locales en direct.
+2. **Commencer le stylisme immédiatement (Forfait Gratuit)** : Votre compte Gratuit est équipé de l'IA sur site intégrée **Eyes** de DressApp (actuellement un modèle **Qwen 2.5 VL 3B** affiné) et de crédits de stylisme quotidiens offerts, sans aucune configuration requise.
+3. **Passer au forfait supérieur pour l'IA Cloud rapide (Forfaits Manager et Professional)** : Les utilisateurs abonnés aux forfaits **Manager** et **Professional** bénéficient automatiquement d'un routage prioritaire vers le modèle d'IA Cloud rapide (actuellement **Google Gemini 3.5 Flash**), ainsi que d'un accès complet à la veille mode Trend Scout et à la reconstruction photo Nano Banana.
+4. **Associer Google Calendar** : Dans votre Profil, connectez votre compte Google Calendar pour permettre à l'AI Stylist de connaître vos réunions professionnelles, soirées et séances de sport à venir.
 
 ## Résultats attendus
-Vous bénéficierez d'une numérisation rapide de vos vêtements, du détourage transparent automatique de vos photos, de conseils de style vocaux, d'alertes météo et de tenues adaptées à votre planning.
+Vous profiterez d'une numérisation fluide par appareil photo, d'un détourage automatique sur fond transparent, de conseils de style vocaux, d'alertes météo locales et de recommandations de tenues synchronisées avec votre calendrier.
 
 ## Dépannage
-- **Météo locale indisponible**: Vérifiez si les services de localisation sont désactivés dans les paramètres de votre navigateur ou de votre système.
-- **Problèmes de microphone**: Assurez-vous que DressApp est autorisé à utiliser le microphone et qu'aucune autre application ne le verrouille.
-- **Ai-je besoin d'une clé d'API?**: Non ! Les utilisateurs gratuits peuvent numériser leurs vêtements, organiser leur garde-robe et dialoguer avec le styliste sans aucune clé d'API.
+- **Aucune météo locale** : Vérifiez si les autorisations de localisation sont désactivées dans les paramètres de confidentialité de votre système d'exploitation ou de votre navigateur.
+- **Problèmes de microphone** : Vérifiez que les autorisations de microphone sont accordées pour DressApp et qu'aucune autre application ne verrouille exclusivement l'entrée audio.
+- **Ai-je besoin d'une clé API ?** : Non ! Le système BYOK (Bring Your Own Key) a été retiré. Les utilisateurs gratuits utilisent notre moteur sur site Eyes (`Qwen 2.5 VL 3B`), tandis que les abonnés aux forfaits Manager et Professional bénéficient automatiquement du modèle Cloud rapide (`Gemini 3.5 Flash`).
 
 ## Limites
-- La transcription vocale locale fonctionne de manière optimale sur les navigateurs basés sur Chromium (Chrome, Edge) et Safari.
-- Les flux Trend Scout et la reconstruction d'images Nano Banana nécessitent une clé d'API Google Gemini personnelle.
+- La reconnaissance vocale locale fonctionne de manière optimale sur les navigateurs modernes basés sur Chromium (Google Chrome, Microsoft Edge) et sur Safari.
+- Le routage vers le modèle cloud rapide (`Gemini 3.5 Flash`) et les canaux de mode Trend Scout sont disponibles avec les forfaits Manager et Professional.

@@ -16,15 +16,15 @@ DressApp is an AI-driven personal wardrobe manager, styling advisor, and circula
 
 ### Technology Architecture
 - **Monorepo Structure**: Turborepo workspace linking applications (`apps/web`, `apps/mobile`, `apps/android-twa`) and shared libraries (`packages/api-client`, `packages/i18n`, `packages/types`).
-- **Backend Edge**: Python 3.11 with FastAPI, using asynchronous Motor drivers connected to a hosted MongoDB Atlas M10 cluster.
+- **Backend Edge**: Python 3.11 with FastAPI, using asynchronous Motor drivers connected to a dedicated on-premises MongoDB 7.0 database on NVMe storage.
 - **Frontend SPA & Mobile**:
   - **Web**: React 19 single-page application utilizing `useSyncExternalStore` custom stores (`stylistStore`, `dailySuggestionsStore`, `useOutfitStore`, `useClosetStore`, `useSuitcaseStore`), Tailwind CSS, Shadcn/UI primitives, and `react-i18next` supporting 13 localized languages.
   - **Mobile**: Expo SDK 53 / React Native 0.79 with React Navigation Native Stack, NativeWind styling, and offline SWR caching via `MobileClosetRepository`.
 - **State & Network Optimization**: In-flight request deduplication, 15-minute store caching, and `visibilitychange` tab revalidation yielding zero background GET requests when idle.
-- **Local Machine Learning & Sizing**: CPU-local U2-Net (`rembg`) background matting, SegFormer-b2 clothing parsing, Fashion-CLIP embeddings, and ANSUR II physical body measurement regression model (`body_predictor.py`). Includes the dedicated on-premise `dressapp-eyes` container running fine-tuned `gemma-4-E4B-it-Q3_K_M.gguf` via `llama-server` on port 7860 (~2.85 GB RAM) for Free Tier styling and automated quota fallback.
-- **Conversational STT/TTS**: Real-time client-side Web Speech recognition fallback, multimodal server-side Gemini 2.5 Flash modulations, and on-device offline Piper/Sherpa-ONNX engines.
+- **Local Machine Learning & Sizing**: CPU-local U2-Net (`rembg`) background matting, SegFormer-b2 clothing parsing, Fashion-CLIP embeddings, and ANSUR II physical body measurement regression model (`body_predictor.py`). Includes the dedicated on-premises `dressapp-eyes` container running a fine-tuned `Qwen2.5-VL-3B-Instruct` model (`Qwen2.5-VL-3B-Instruct-Q4_K_M.gguf` + `mmproj`) via `llama-server` on port 7860 (~2.8 GB RAM) for Free Tier users and automated quota fallback.
+- **Conversational STT/TTS**: Real-time client-side Web Speech recognition fallback, multimodal server-side Gemini modulations, and on-device offline Piper/Sherpa-ONNX engines.
 - **External Integration Services**: OpenWeatherMap API for weather fetching, Google Calendar OAuth for daily schedule exports, OpenStreetMap (Nominatim) address autocomplete, and PayPal Subscriptions/Checkout REST APIs.
-- **Production Host**: Hetzner Cloud CPX32 VPS (4 AMD vCPUs, 8 GB RAM) at `dressapp.co`, running a 4-container Docker Compose stack (`backend`, `eyes`, `frontend`, `caddy`) with Caddy 2 automated TLS reverse proxying.
+- **Production Host**: Hetzner Cloud CPX32 VPS (4 AMD vCPUs, 8 GB RAM) at `dressapp.co`, running a 5-container Docker Compose stack (`dressapp-mongo`, `dressapp-backend`, `dressapp-eyes`, `dressapp-frontend`, `caddy`) with Caddy 2 automated TLS reverse proxying.
 
 ---
 
@@ -32,14 +32,15 @@ DressApp is an AI-driven personal wardrobe manager, styling advisor, and circula
 
 ### Host Environment Requirements
 - **Hardware**: Minimum 8 GB RAM VPS (e.g., Hetzner CPX32 hosting the production `dressapp.co`).
-- **Dependencies**: Docker & Docker Compose stack (including backend, eyes inference server, frontend, and Caddy TLS termination).
+- **Dependencies**: Docker & Docker Compose stack (including on-premises MongoDB 7.0, backend, eyes inference server, frontend, and Caddy TLS termination).
 - **Environment Variables**: API keys configuration (`GEMINI_API_KEY`, `EYES_API_TOKEN`, `DEEPGRAM_API_KEY`, `OPENWEATHER_API_KEY`, `PAYPAL_LIVE_CLIENT_ID/SECRET`, and Google Calendar OAuth tokens).
 
 ### User App Requirements
 - **Web Browser**: Google Chrome or Apple Safari (required for full voice feature compatibility).
 - **Permissions**: Grant Camera permission (for clothing snapshots and QR scans), Microphone permission (for voice styling), and Location permission (for local weather styling).
-- **Zero API Key Requirement for Free Tier**: Free accounts work immediately out of the box using DressApp's built-in on-premises Gemma-4-E4B model and 10 daily complimentary credits. No external API key is needed.
-- **Optional BYOK Keys**: A personal Google Gemini API key is optional, unlocking Trend Scout daily feeds, Nano Banana generative photo reconstruction, and personal cloud quotas.
+- **Zero-BYOK Tiered AI Architecture**: BYOK (user-supplied API keys) is retired; no external API key is ever required from users:
+  - **Free Tier**: Uses DressApp's built-in on-premises **Eyes** engine (currently a fine-tuned `Qwen 2.5 VL 3B` model) out of the box.
+  - **Manager & Professional Plans**: Enjoy priority routing to the fast Cloud AI model (currently **Google Gemini 3.5 Flash**).
 
 ---
 
@@ -111,9 +112,9 @@ Describe styling dilemmas and receive hands-free spoken outfit advice.
 3. Speak your request (e.g., "What top matches my beige trousers for a rainy outdoor lunch?").
 4. If Web Speech is supported, your voice transcribes live in the input box. If not, the app records a WebM file and uploads it.
 5. **Multi-Tier Brain Resolution**:
-   - **Primary Production Engine (Google Gemini 3.5 Flash-Lite)**: By default, your styling queries route to Google Gemini 3.5 Flash-Lite via `llm_gateway.py`. This delivers sub-350ms initial token latency, natural conversational advice, and precise JSON schema matching across complex wardrobe inventories.
-   - **On-Premises VPS Eyes (`gemma-4-E4B`) — Free Tier & Quota Safety Net**: The self-hosted, fine-tuned **Gemma-4-E4B** engine running in `dressapp-eyes` on port 7860 acts as the zero-cost offline baseline and transparent quota safety fallback.
-   - **Transparent Quota Fallback**: If external API limits or quota errors (`429` / `RESOURCE_EXHAUSTED`) occur, the backend seamlessly falls back to on-premise Gemma-4-E4B. An informative banner (*"Using Platform Stylist (Quota Fallback)"*) appears above the assistant's reply so your styling session is never interrupted by a 500 error.
+   - **Manager & Professional Plans — Fast Cloud Model (Google Gemini 3.5 Flash)**: Paid subscribers on the **Manager** and **Professional** plans route to **Google Gemini 3.5 Flash** (`gemini-3.5-flash-lite`) via `llm_gateway.py`, delivering sub-350ms initial token latency, natural conversational advice, and precise JSON schema matching across complex wardrobe inventories.
+   - **Free Tier — On-Premises VPS Eyes (Fine-Tuned `Qwen 2.5 VL 3B`)**: Free-tier users are served by DressApp's self-hosted, fine-tuned **Qwen 2.5 VL 3B** engine running in `dressapp-eyes` on port 7860.
+   - **Transparent Quota Fallback**: If external cloud API limits or quota errors (`429` / `RESOURCE_EXHAUSTED`) occur, the backend seamlessly falls back to on-premises Eyes (`Qwen 2.5 VL 3B`). An informative banner (*"Using Platform Stylist (Quota Fallback)"*) appears above the assistant's reply so your styling session is never interrupted by a 500 error.
 6. The stylist presents head-to-toe matching outfit cards with detailed styling rationales.
 7. Spoken audio advice plays automatically using preselected voice profiles (`puck`, `aoede`, or `charon`).
 8. Tap **Play reply** (or **Replay** in RTL mode) on the card to replay the voice audio anytime.
@@ -148,14 +149,13 @@ The Profile page serves as the core control panel for DressApp. Configuration fi
    - **Why does it matter?**: It tailors default recommendations and scores content algorithms.
    - **Subsystem Dependencies**: The sex selection directly affects the ranking logic of daily Trend Scout cards. If a news card category mismatches the user's sex, the algorithm applies a -2.0 score penalty, demoting it in the feed.
 
-6. **AI Configuration (Platform Default vs BYOK Keys, Quota Fallback, Credits)**
-   - **Why does it matter?**: It controls LLM brain routing, billing tiers, and feature gating.
+6. **AI Configuration & Subscription Plans (Tiered Model Routing, Quota Fallback, Credits)**
+   - **Why does it matter?**: It governs LLM brain routing, subscription tiers, and credit balances (with zero BYOK configuration required).
    - **Subsystem Dependencies**:
-     - **Primary Production Engine (Google Gemini 3.5 Flash-Lite)**: Powers all core styling, migration, and planning flows via `llm_gateway.py` with zero setup required by the user.
-     - **On-Premises VPS Eyes (`gemma-4-E4B`)**: Evaluates unauthenticated background tasks and acts as the transparent quota fallback engine whenever Google API calls encounter `429` / `RESOURCE_EXHAUSTED`.
-     - **Custom API Key Mode (BYOK)**: Entering a personal Google Gemini API key (from Google AI Studio) unlocks higher-tier models (`gemini-2.5-pro`) and enables restricted generative tools (**Trend Scout** daily fashion radar and **Nano Banana** photo inpainting).
-     - **Automated Quota Fallback**: If a custom BYOK key triggers rate limits (`429`), `RESOURCE_EXHAUSTED`, or spending cap errors, `FallbackBrain` immediately redirects the request to on-premises Gemma-4-E4B, rendering a non-blocking notification banner (`stylist.fallbackQuotaBanner`) without interrupting the styling conversation.
-     - **Trial & Paid Plans**: Free baseline (50 garments), Manager tier, and Professional tier. If credits are exhausted, the app enters an async pause-and-resume wait state (up to 60s) checking for top-up events.
+     - **Manager & Professional Plans (Fast Cloud Model)**: Subscribers on the **Manager** and **Professional** plans enjoy priority routing to the fast Cloud AI model (currently **Google Gemini 3.5 Flash** / `gemini-3.5-flash-lite`) across all core styling, migration, and planning flows via `llm_gateway.py`.
+     - **Free Tier (On-Premises VPS Eyes)**: Free-tier users are powered by DressApp's on-premises **Eyes** engine (currently a fine-tuned **Qwen 2.5 VL 3B** model) at zero variable cloud cost.
+     - **Automated Quota Fallback**: If external cloud calls encounter rate limits (`429`), `RESOURCE_EXHAUSTED`, or upstream timeouts, `FallbackBrain` immediately redirects the request to on-premises Eyes (`Qwen 2.5 VL 3B`), rendering a non-blocking notification banner (`stylist.fallbackQuotaBanner`) without interrupting the styling conversation.
+     - **Trial & Paid Plans**: Free baseline, Manager tier, and Professional tier. If credits are exhausted, the app enters an async pause-and-resume wait state (up to 60s) checking for top-up events.
 
 7. **Scheduler & Push (Frequency, daily alarm, style focus)**
    - **Why does it matter?**: It manages automatic daily style pushes.

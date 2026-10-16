@@ -36,14 +36,16 @@ export function parseMarkdown(mdText) {
       if (matchText.startsWith('**') && matchText.endsWith('**')) {
         parts.push(<strong key={keyIdx++} className="font-bold text-dark-brand">{matchText.slice(2, -2)}</strong>);
       } else if (matchText.startsWith('`') && matchText.endsWith('`')) {
-        parts.push(<code key={keyIdx++} className="px-1.5 py-0.5 rounded bg-secondary/50 text-xs font-mono">{matchText.slice(1, -1)}</code>);
+        parts.push(<bdi key={keyIdx++}><code dir="ltr" className="px-1.5 py-0.5 rounded bg-secondary/50 text-xs font-mono">{matchText.slice(1, -1)}</code></bdi>);
       } else if (matchText.startsWith('[') && matchText.includes('](')) {
         const label = matchText.substring(1, matchText.indexOf(']'));
         const href = matchText.substring(matchText.indexOf('](') + 2, matchText.length - 1);
         parts.push(
-          <a key={keyIdx++} href={href} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline font-medium">
-            {label}
-          </a>
+          <bdi key={keyIdx++}>
+            <a href={href} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline font-medium">
+              {label}
+            </a>
+          </bdi>
         );
       }
 
@@ -61,12 +63,12 @@ export function parseMarkdown(mdText) {
   let codeLines = [];
 
   for (let idx = 0; idx < lines.length; idx++) {
-    const line = lines[idx].trim();
+    const line = lines[idx].replace(/^(\\u200[ef]|[\u200E\u200F\uFEFF])+/g, '').trim();
 
     if (line.startsWith('```')) {
       if (inCode) {
         elements.push(
-          <pre key={`code-${idx}`} className="p-4 rounded-lg bg-secondary/30 border border-border/40 font-mono text-xs overflow-x-auto my-4 text-foreground">
+          <pre key={`code-${idx}`} dir="ltr" className="p-4 rounded-lg bg-secondary/30 border border-border/40 font-mono text-xs overflow-x-auto my-4 text-foreground text-left">
             {codeLines.join('\n')}
           </pre>
         );
@@ -96,13 +98,13 @@ export function parseMarkdown(mdText) {
       continue;
     }
     if (line.startsWith('- ') || line.startsWith('* ')) { listItems.push(line.slice(2)); continue; }
-    if (/^\d+\.\s/.test(line)) {
+    if (/^\d+(?:\.\d+)*\.\s/.test(line)) {
       flushList(idx);
-      const m = line.match(/^\d+\.\s(.*)/);
+      const m = line.match(/^(\d+(?:\.\d+)*\.)\s+(.*)/);
       elements.push(
-        <div key={`num-${idx}`} className="flex gap-3 my-2 text-sm text-muted-foreground">
-          <span className="font-bold text-primary shrink-0">{line.match(/^\d+/)[0]}.</span>
-          <p className="pt-0.5">{parseInline(m[1])}</p>
+        <div key={`num-${idx}`} className="flex gap-2.5 my-2 text-[14px] font-semibold text-text-brand leading-relaxed">
+          <span dir="ltr" className="font-bold text-primary shrink-0">{m[1]}</span>
+          <p className="m-0">{parseInline(m[2])}</p>
         </div>
       );
       continue;

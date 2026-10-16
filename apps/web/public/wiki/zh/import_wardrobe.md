@@ -1,7 +1,7 @@
 # 从其他应用导入您的衣橱（竞合迁移）
 
 ## 概述
-如果您已经在其他衣橱应用（如 Whering、Acloset 或 Stylebook）中对衣服进行了分类整理，则无需从头开始。DressApp 配备了智能的 **Desktop Wardrobe Migration Agent**（通过浏览器书签小程序 bookmarklet），它可以抓取您旧的衣橱页面，捕获您的衣服卡片，并自动将其上传 to DressApp。随后，我们的 AI 会在后台自动识别衣服的颜色、品牌、面料和类别。
+如果您已经在其他衣橱应用（如 Whering、Acloset 或 Stylebook）中对衣服进行了分类整理，则无需从头开始。DressApp 配备了智能的 **Desktop Wardrobe Migration Agent**（通过浏览器书签小程序 bookmarklet），它可以抓取您旧的衣橱页面，捕获您的衣服卡片，并自动将其上传到 DressApp。随后，我们的 AI 会在后台自动识别衣服的颜色、品牌、面料和类别。
 
 ## 前提条件
 - **台式电脑**：迁移书签小程序需要台式电脑浏览器支持（Chrome、Edge 或 Safari）。不支持移动设备或平板电脑。

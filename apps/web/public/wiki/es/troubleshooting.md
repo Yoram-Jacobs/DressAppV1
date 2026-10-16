@@ -1,39 +1,39 @@
-# Solución de problemas y respuestas útiles
+# Solución de Problemas y Respuestas Útiles
 
-Soluciones rápidas y sencillas para dudas comunes, permisos, límites de capacidad y avisos de claves de IA.
+Soluciones rápidas y sencillas para preguntas frecuentes, permisos y límites de la aplicación.
 
 ## Descripción general
-Encuentre respuestas rápidas sobre acceso a la cámara, velocidad de procesamiento, límites de prendas, configuración de audio y avisos de IA para disfrutar de su armario digital sin interrupciones.
+Encuentra respuestas rápidas sobre acceso a la cámara, tiempos de subida, límites de capacidad del armario, configuración de audio y avisos de IA para que puedas volver a crear tus looks sin esfuerzo.
 
 ## Requisitos previos
-- Una conexión a internet activa.
+- Una conexión a Internet activa.
 - Un navegador web moderno (se recomienda Google Chrome o Apple Safari) o la aplicación móvil de DressApp.
 
 ## Instrucciones paso a paso
-1. **La cámara no se activa**:
-   - Abra la configuración de su dispositivo o navegador, busque **DressApp** y asegúrese de que el permiso de **Cámara** esté en "Permitir". Recargue la página.
+1. **La cámara no se enciende**:
+   - Abre la configuración de tu navegador o dispositivo, busca **DressApp** y asegúrate de que los permisos de **Cámara** estén configurados en "Permitir". Recarga la página.
 2. **Mensaje "Capacidad del armario alcanzada"**:
    - Las cuentas gratuitas almacenan hasta **150 prendas** como base.
-   - Puedes invitar amigos para obtener **+10 espacios adicionales** por cada registro (hasta un máximo de 150 prendas), eliminar ropa que no uses o pulsar en **Mejorar a Pro** ($10/mes) para almacenamiento ilimitado.
-3. **El dictado por voz o el audio no responden**:
-   - Verifique que los permisos de micrófono estén permitidos en su navegador.
-   - Asegúrese de que el volumen de su dispositivo no esté silenciado ni en modo "No molestar".
+   - Puedes invitar a amigos para obtener **+10 espacios adicionales** por cada registro (hasta un máximo de 150 artículos), eliminar ropa que no uses o tocar **Mejorar a Manager** (\$10/mes) o **Professional** (\$15/mes) para obtener almacenamiento ilimitado.
+3. **El dictado por voz o la reproducción de audio no funcionan**:
+   - Verifica que los permisos de micrófono estén permitidos en la configuración de tu navegador.
+   - Comprueba que el volumen de tu teléfono u ordenador esté subido y que no esté silenciado ni en modo "No molestar".
 4. **Las fotos tardan en procesarse**:
-   - Las fotos con varios artículos toman unos instantes mientras la IA elimina el fondo, revisa la prenda y extrae etiquetas de moda. El proceso se realiza en segundo plano.
-5. **Aviso "Usando estilista de la plataforma (Quota Fallback)"**:
-   - Si ingresó una clave de API de Google Gemini y esta superó el límite de solicitudes (`429 Too Many Requests`) o agotó su cuota diaria, DressApp lo detecta de inmediato y completa la respuesta con nuestro modelo local Gemma-4-E4B. ¡Su solicitud nunca fallará con un error! Puede revisar su cuota en Google AI Studio o seguir utilizando el motor local.
-6. **Mensaje "Clave de API requerida (403)" en Trend Scout o Nano Banana**:
-   - Los canales de moda de Trend Scout y la reparación fotográfica de Nano Banana requieren una clave de API personal de Google Gemini. Puede obtener una gratis en [Google AI Studio](https://aistudio.google.com/) e ingresarla en **Perfil** (`/me`) &rarr; **Configuración de IA**.
+   - Los atuendos con varias prendas toman unos instantes mientras la IA recorta los fondos, inspecciona la integridad de la imagen y extrae las etiquetas de ropa. Los artículos se procesan de forma fluida uno por uno; ¡puedes seguir navegando por la aplicación mientras terminan!
+5. **Aviso "Usando estilista de la plataforma (Respaldo por cuota)"**:
+   - Si el modelo externo de IA en la nube alcanza temporalmente un límite de velocidad `429 Too Many Requests`, DressApp lo detecta automáticamente y completa tu solicitud de estilismo utilizando nuestro modelo **Eyes** en servidores propios integrado (actualmente un modelo `Qwen 2.5 VL 3B` ajustado). ¡Tu solicitud de estilismo nunca se bloqueará ni fallará con un error!
+6. **Acceso a la IA rápida en la nube y a Trend Scout**:
+   - Los usuarios gratuitos disfrutan del modelo **Eyes** en servidores propios (`Qwen 2.5 VL 3B`) de DressApp sin configuración alguna. Al actualizar al plan **Manager** (\$10/mes) o **Professional** (\$15/mes), se desbloquea el enrutamiento prioritario hacia el modelo rápido de IA en la nube (actualmente **Google Gemini 3.5 Flash**) y el acceso completo a la inteligencia diaria de moda de Trend Scout.
 7. **Conectar Google Calendar**:
-   - Diríjase a **Perfil** &rarr; **Google Calendar** y pulse **Conectar** para autorizar los permisos de agenda.
+   - Ve a **Perfil** &rarr; **Google Calendar** y toca **Conectar**. Autoriza los permisos del calendario para que el estilista pueda consultar tus eventos diarios.
 
 ## Resultados esperados
-Resolución rápida de dudas frecuentes para que su experiencia de estilismo sea fluida y agradable.
+Resolución rápida de problemas comunes para que tu armario digital funcione sin contratiempos.
 
 ## Solución de problemas
-- **¿Persiste el inconveniente?** Cierre sesión y vuelva a ingresar, o limpie la caché de su navegador.
-- **Idiomas RTL**: En hebreo y árabe, los textos y pestañas se invierten automáticamente a la derecha para una lectura natural.
+- **¿Sigues experimentando problemas?** Cierra sesión en tu cuenta y vuelve a entrar, o borra la caché de tu navegador para actualizar tu sesión.
+- **Visualización en idiomas RTL**: En hebreo y árabe, el texto y las pestañas se invierten automáticamente hacia la derecha para una lectura natural.
 
 ## Limitaciones
-- La importación desde aplicaciones de la competencia requiere un navegador de escritorio y no funciona en teléfonos móviles.
-- Trend Scout y la reparación con Nano Banana requieren una clave personal de Google Gemini API.
+- Las importaciones de armarios digitales desde aplicaciones de la competencia requieren un navegador de escritorio y no pueden iniciarse desde teléfonos móviles.
+- El enrutamiento al modelo rápido en la nube (`Gemini 3.5 Flash`) y los canales completos de moda de Trend Scout requieren un plan **Manager** o **Professional** activo.

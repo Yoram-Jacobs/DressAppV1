@@ -110,12 +110,12 @@ If you signed in with Google before DressApp requested access to your **People A
 
 Manages system-level settings, subscriptions, and AI integrations:
 
-- **AI Configuration**:
-  - *Standard Mode (Primary Production Engine)*: Powered by **Google Gemini 3.5 Flash-Lite** via `llm_gateway.py`. Delivers lightning-fast styling with zero initial setup and no personal API keys required.
-  - *On-Premises Quota Safety Net*: If cloud rate limits (`429` / `RESOURCE_EXHAUSTED`) are hit, queries automatically fall back to the self-hosted, fine-tuned **Gemma-4-E4B** container on port 7860, ensuring your styling conversation is never interrupted.
-  - *Custom API Keys Mode (BYOK)*: Connect your own Google Gemini API key to unlock advanced developer quotas and cloud generative tools like Trend Scout daily radar and Nano Banana photo reconstruction.
+- **AI Model Routing (Tiered Architecture — Zero BYOK)**:
+  - *Free Tier (On-Premises Eyes)*: Free-tier users are powered by DressApp's self-hosted, on-premises **Eyes** engine (currently a fine-tuned **Qwen 2.5 VL 3B** model) on port 7860 with zero personal API keys required.
+  - *Manager & Professional Plans (Fast Cloud Model)*: Subscribers on the **Manager** and **Professional** plans enjoy priority routing to the fast Cloud AI model (currently **Google Gemini 3.5 Flash** via `llm_gateway.py`).
+  - *On-Premises Quota Safety Net*: If external cloud rate limits (`429` / `RESOURCE_EXHAUSTED`) are encountered, queries automatically fall back to the self-hosted **Eyes** (`Qwen 2.5 VL 3B`) container on port 7860, ensuring your styling conversation is never interrupted.
 - **Subscription & Closet Limits**:
-  - View current account tier (**Free**: 50-item limit baseline vs **Manager** ($10/mo) or **Professional** ($15/mo): Unlimited items).
+  - View current account tier (**Free**: 150-item limit baseline vs **Manager** ($10/mo) or **Professional** ($15/mo): Unlimited items + fast Cloud AI model).
   - Access the **Pricing page** (`/pricing` or click on your plan card) to view the tier comparison table, select a plan, or purchase non-expiring prepaid credit packs.
   - Upgrade via PayPal Subscriptions or the Atzmai Gateway for local Israeli ILS (Bit / credit card) transactions.
   - Copy **Referral Link**: Grants +10 closet capacity slots for each friend who registers (up to 150 items max).
@@ -155,6 +155,5 @@ Manages system-level settings, subscriptions, and AI integrations:
 ---
 
 ## Limitations
-- Free tier account space is capped at 1150 items baseline unless expanded via referral bonus (+10 slots per invite up to 150 items max) or upgrading to the Manager or Professional tier.
-- High-cost cloud generative endpoints (Trend Scout radar and Nano Banana photo reconstruction) require a user-supplied personal Google Gemini API key.
-- Custom API key mode will gracefully fall back to the built-in Gemma-4-E4B engine if the external provider runs out of quota.
+- Free tier account space is capped at 150 items and uses the on-premises Eyes (`Qwen 2.5 VL 3B`) model unless upgraded to the **Manager** or **Professional** plan for unlimited storage and the fast Cloud model (`Gemini 3.5 Flash`).
+- If cloud quotas are temporarily reached, requests gracefully fall back to the built-in on-premises Eyes (`Qwen 2.5 VL 3B`) engine without interrupting the session.

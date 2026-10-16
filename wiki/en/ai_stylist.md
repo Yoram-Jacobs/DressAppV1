@@ -5,16 +5,14 @@ Engage with an intelligent personal stylist that knows your wardrobe, the weathe
 ## Overview
 The AI Stylist is your personal fashion companion. You can chat with it by typing or speaking out loud just like a friend. The Stylist checks your local forecast, glances at your Google Calendar events, and suggests complete, stylish outfits assembled directly from clothes you already own.
 
-DressApp's styling brain is driven by a resilient multi-tier intelligence architecture:
-- **Primary Production Engine (Google Gemini 3.5 Flash-Lite)**: Powers all core styling conversations out of the box via `llm_gateway.py`. It delivers lightning-fast responses (sub-350ms TTFT) with zero initial configuration and zero friction—no personal API keys required to start styling!
-- **On-Premises VPS Eyes (`gemma-4-E4B`) — Free Tier & Quota Safety Net**: A dedicated, fine-tuned `gemma-4-E4B` model running locally in the `dressapp-eyes` container on port 7860 of the Hetzner CPX32 VPS. It provides a zero-variable-cost baseline for Free Tier accounts and serves as a transparent fallback. If Google Gemini API limits (`429` / `RESOURCE_EXHAUSTED`) are encountered, queries automatically redirect to on-prem Gemma without failing or raising 500 errors.
-- **Custom BYOK Cloud Models**: Users can optionally provide their own Google Gemini API key in Profile settings to access higher-tier models (`gemini-2.5-pro`) or unlock advanced generative tools (Nano Banana photo reconstruction).
+DressApp's styling brain is driven by a resilient, zero-BYOK multi-tier intelligence architecture:
+- **Manager & Professional Plans — Fast Cloud Model (Google Gemini 3.5 Flash)**: Subscribers on the **Manager** and **Professional** plans enjoy priority routing to the fast Cloud AI model (currently **Google Gemini 3.5 Flash** via `llm_gateway.py`), delivering lightning-fast responses (sub-350ms TTFT) with zero configuration required.
+- **Free Tier — On-Premises Eyes (`Qwen 2.5 VL 3B`) & Quota Safety Net**: Free-tier users are powered by DressApp's dedicated, fine-tuned **Qwen 2.5 VL 3B** model running locally in the `dressapp-eyes` container on port 7860 of the Hetzner CPX32 VPS. It also serves as a transparent safety fallback for paid tiers: if cloud API rate limits (`429` / `RESOURCE_EXHAUSTED`) are encountered, queries automatically redirect to on-premises Eyes without failing or raising 500 errors.
 
 ## Prerequisites
 - At least one top, one bottom, and one footwear item uploaded to your closet.
 - Microphone permission enabled if you wish to use hands-free voice styling.
 - *(Optional)* Connected Google Calendar to make outfit suggestions occasion-aware.
-- *(Optional)* Personal Google Gemini API key if you wish to use your own cloud developer quota.
 
 ## Step-by-Step Instructions
 1. **Open the Stylist**: Tap the **AI Stylist** tab from the bottom navigation bar.
@@ -25,13 +23,13 @@ DressApp's styling brain is driven by a resilient multi-tier intelligence archit
 6. **Save Your Favorites**: Tap **Save to Diary** to schedule the look on your personal wardrobe calendar.
 
 ## Expected Results
-Personalized, weather-appropriate outfit suggestions displayed on your screen, complete with spoken rationales explaining why the pieces match. If external API quotas are temporarily exhausted, an informational banner indicates that the built-in on-premises Stylist fulfilled your request seamlessly.
+Personalized, weather-appropriate outfit suggestions displayed on your screen, complete with spoken rationales explaining why the pieces match. If external cloud API quotas are temporarily exhausted, an informational banner indicates that the built-in on-premises Eyes Stylist fulfilled your request seamlessly.
 
 ## Troubleshooting
 - **Microphone not picking up words**: Check your browser or device permissions to ensure DressApp has permission to access your microphone.
 - **Stylist suggests too many repeat outfits**: Log your daily outfits in the calendar so the Stylist knows what you recently wore and prioritizes unworn clothes.
-- **"Using Platform Stylist (Quota Fallback)" Banner**: This appears when external API rate limits are hit. The app smoothly answered your question using DressApp's built-in on-prem Gemma engine with no disruption to your conversation.
+- **"Using Platform Stylist (Quota Fallback)" Banner**: This appears when external cloud API rate limits are hit. The app smoothly answered your question using DressApp's built-in on-premises Eyes (`Qwen 2.5 VL 3B`) engine with no disruption to your conversation.
 
 ## Limitations
 - The Stylist works strictly with items in your closet; it cannot recommend pieces you haven't uploaded yet.
-- Free Tier users receive complimentary styling credits that refresh automatically, while Pro and Tester accounts enjoy elevated monthly quotas.
+- Free Tier users use the on-premises Eyes model with complimentary styling credits that refresh automatically, while Manager and Professional accounts enjoy the fast Cloud model (`Gemini 3.5 Flash`) and elevated monthly quotas.

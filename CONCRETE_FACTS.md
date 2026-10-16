@@ -67,7 +67,7 @@ quantization / memory / latency decisions assume this exact host.
 | --- | --- | --- | --- |
 | `dressapp-mongo` | `mongo:7` | `27017` | Production database — on-prem MongoDB 7.0 with persistent storage on fast local NVMe at `/mnt/dressapp-db-data`. WiredTiger cache capped at 0.75 GB. Migrated off MongoDB Atlas M10 on 2026-10-04. |
 | `dressapp-backend` | [`backend/`](backend/) via [`deploy/Dockerfile.backend`](deploy/Dockerfile.backend) | (behind ingress) | FastAPI app — closet, marketplace, stylist, payments |
-| `dressapp-eyes` | [`inference-server/eyes/`](inference-server/eyes/) via [`inference-server/eyes/Dockerfile`](inference-server/eyes/Dockerfile) | `7860` | Live on-prem inference server (`llama-server` + FastAPI proxy) running `Qwen2.5-VL-3B-Instruct-Q4_K_M.gguf` + `mmproj-Qwen2.5-VL-3B-Instruct-f16.gguf` (~2.8 GB resident RAM, NaViT dynamic aspect ratio, native clothing tag OCR). Platform default for Free Tier & background tasks, and transparent safety fallback on BYOK quota exhaustion (`429`/`RESOURCE_EXHAUSTED`). Migrated from corrupt Gemma-4 E4B on 2026-10-05. |
+| `dressapp-eyes` | [`inference-server/eyes/`](inference-server/eyes/) via [`inference-server/eyes/Dockerfile`](inference-server/eyes/Dockerfile) | `7860` | Live on-prem inference server (`llama-server` + FastAPI proxy) running fine-tuned `Qwen2.5-VL-3B-Instruct-Q4_K_M.gguf` + `mmproj-Qwen2.5-VL-3B-Instruct-f16.gguf` (~2.8 GB resident RAM, NaViT dynamic aspect ratio, native clothing tag OCR). Default engine for **Free Tier** users & background tasks, and transparent safety fallback on cloud quota exhaustion (`429`/`RESOURCE_EXHAUSTED`). Migrated from corrupt Gemma-4 E4B on 2026-10-05. |
 | `dressapp-frontend` | [`apps/web/`](apps/web/) via [`deploy/Dockerfile.frontend`](deploy/Dockerfile.frontend) | `3000` | React 19 SPA served by Nginx |
 | `caddy` | [`deploy/Caddyfile`](deploy/Caddyfile) | `80`, `443` | Reverse proxy terminating TLS via Let's Encrypt |
 
@@ -85,7 +85,7 @@ lives strictly in `deploy/.env` on the VPS — never in the repo.
 | --- | --- | --- |
 | `EYES_GEMMA_SPACE_URL` | `http://eyes:7860` | Internal docker DNS target for [`backend/app/services/vision/service.py`](backend/app/services/vision/service.py) calls |
 | `EYES_PROVIDER` | `gemini` \| `gemma` | Env-default provider (defaults to `gemini` with `gemma` as fallback). **Use the runtime override below to switch in production** — do not edit this on the fly. |
-| `DEFAULT_STYLIST_MODEL` | `gemini-3.5-flash-lite` | Default primary LLM model across all 6 core backend pipelines |
+| `DEFAULT_STYLIST_MODEL` | `gemini-3.5-flash-lite` | Default primary LLM model across all 6 core backend pipelines for paid tiers |
 | `EYES_API_TOKEN` | (secret) | Bearer token required by `dressapp-eyes` `/predict` and `/transcribe` |
 | `GEMINI_API_KEY` | (secret) | Google AI Studio key for the native `google-genai` SDK. Drives **every** Gemini call (primary stylist brain, wardrobe migration, suitcase, session titles, trend scout, vision verifier). Required whenever the production provider is `gemini`. |
 | `GOOGLE_API_KEY` | (secret, optional) | Canonical Google SDK name. `config.py` aliases it into `GEMINI_API_KEY` when the latter is unset, so only one of the two needs to be defined. |
@@ -101,18 +101,17 @@ lives strictly in `deploy/.env` on the VPS — never in the repo.
 
 ### Multi-Tier AI Routing & Quota Fallback (Locked Production Rules)
 
-1. **Primary Production Engine (Google Gemini 3.5 Flash-Lite)**:
-   - All 6 interactive and core pipelines (Stylist Brain, Wardrobe Migration, Suitcase Planner, Trend Scout localization, Session Titles, Closet Ingestion) route by default to **Google Gemini** (`gemini-3.5-flash-lite`) via [`backend/app/services/llm_gateway.py`](backend/app/services/llm_gateway.py).
+1. **Manager & Professional Plans — Fast Cloud Model (Google Gemini 3.5 Flash)**:
+   - Paid subscribers on the **Manager** and **Professional** plans enjoy priority routing across all interactive and core pipelines (Stylist Brain, Wardrobe Migration, Suitcase Planner, Trend Scout localization, Session Titles, Closet Ingestion) to **Google Gemini 3.5 Flash** (`gemini-3.5-flash-lite`) via [`backend/app/services/llm_gateway.py`](backend/app/services/llm_gateway.py).
    - Driven by native `google-genai` SDK with strict JSON schema enforcement (`response_schema`), sub-350ms TTFT, and ultra-cost-effective rates ($0.30/1M input, $2.50/1M output).
-2. **On-Prem VPS Eyes (`Qwen2.5-VL-3B-Instruct`) — Free-Tier & Offline Baseline**:
-   - `dressapp-eyes` container running `Qwen2.5-VL-3B-Instruct-Q4_K_M.gguf` with `mmproj-Qwen2.5-VL-3B-Instruct-f16.gguf` on port 7860 of the Hetzner CPX32 VPS.
-   - Preserves native non-square aspect ratios via NaViT, extracts text from clothing tags, and provides clean structured JSON responses.
-   - Serves as the zero-variable-cost baseline for Free Tier accounts or offline modes (`force_provider="gemma"`) and background tasks.
+2. **Free Tier — On-Premises VPS Eyes (Fine-Tuned `Qwen2.5-VL-3B-Instruct`)**:
+   - **BYOK is retired.** Free-tier users never supply personal API keys; instead, they use the DressApp on-premises **Eyes** engine (`dressapp-eyes` container running fine-tuned `Qwen2.5-VL-3B-Instruct-Q4_K_M.gguf` with `mmproj-Qwen2.5-VL-3B-Instruct-f16.gguf` on port 7860 of the Hetzner CPX32 VPS).
+   - Preserves native non-square aspect ratios via NaViT, extracts text from clothing tags, and provides clean structured JSON responses at zero variable cloud cost.
 3. **Transparent Quota Safety Net**:
    - If Google Gemini external calls encounter rate limits (`429`), quota exhaustion (`RESOURCE_EXHAUSTED`), spending caps, or network timeouts, `call_main_llm` and `FallbackBrain` (`backend/app/services/stylist_brain.py`) catch the exception and immediately route the query to on-prem Eyes.
    - The response includes `provider_fallback: "gemma"` and `fallback_from_quota: True`, displaying an informational banner in the UI (`stylist.fallbackQuotaBanner`) without interrupting the user or failing with a 500 error.
-4. **Strict Cost Protection Perimeter (Tier Gating)**:
-   - High-cost generative cloud endpoints (**Trend Scout** and **Nano Banana** photo reconstruction/inpainting) strictly require validated user-supplied API keys (HTTP 403 / clarify prompt for users without custom keys).
+4. **Zero-BYOK Platform Architecture**:
+   - User-supplied third-party API keys (BYOK) are retired across the platform. Model selection and compute quotas are governed strictly by the user's subscription tier (**Free** vs. **Manager** / **Professional**) and platform credit ledger.
 5. **Headless Model Fine-Tuning & Scheduling Rule**:
    - Eyes fine-tuning is scheduled weekly (`.github/workflows/eyes-finetune.yml`) utilizing **RunPod serverless GPU pods** ([`inference-server/eyes/training/train_eyes_lora.py`](inference-server/eyes/training/train_eyes_lora.py)) with multi-tier candidate failover, strict regression gating, and GGUF quantization.
    - **Scheduling Rule (Locked):** The fine-tuning workflow applies ONLY when there are **>= 500 newly added and approved items** in the on-prem DressApp database (`closet_items`) since the last watermark (`eyes_finetune_state`). If there are fewer than 500 new items, the routine is safely skipped (`should_train=false`) to protect model weight integrity from distortion caused by training repeatedly on small or static datasets. Manual override is available via `force_training=true` in `workflow_dispatch`.
@@ -204,7 +203,7 @@ docker compose up -d --force-recreate eyes
 | [`inference-server/eyes/test_images/`](inference-server/eyes/test_images/) | **Canonical real-photograph test dataset** — 30 outfit JPGs (`0001.jpg`…`0030.jpg`) with companion `.json` ground-truth labels. Use this for backend SegFormer / rembg / matte diagnostics, Eyes benchmark runs, frontend bulk-upload tests. Do NOT delete or mutate. |
 | [`deploy/`](deploy/) | Production Docker Compose, Caddyfile, and environment configurations |
 | [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) | Comprehensive monorepo technical architecture specification |
-| [`docs/MONGODB_SCHEMA.md`](docs/MONGODB_SCHEMA.md) | 15-collection MongoDB Atlas schema specification |
+| [`docs/MONGODB_SCHEMA.md`](docs/MONGODB_SCHEMA.md) | 15-collection on-premises MongoDB 7.0 schema specification |
 | [`CONTEXT.md`](CONTEXT.md) | Single-context repository reference and domain models |
 | [`User-manual.md`](User-manual.md) | Complete user guide and operations manual |
 | [`CONCRETE_FACTS.md`](CONCRETE_FACTS.md) | **This file.** Authoritative production facts and deployment topology. |

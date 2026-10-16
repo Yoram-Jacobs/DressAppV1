@@ -1,31 +1,30 @@
-# Vereisten en configuratiehandleiding
+# Vereisten & Installatiegids
 
-Zorg ervoor dat uw systeem correct is ingesteld voordat u DressApp gaat gebruiken, zodat u optimaal profiteert van alle styling- en AI-functies.
+Voordat u aan de slag gaat met DressApp, zorgt u ervoor dat uw systeem goed is ingesteld om alle functies en stylingdiensten optimaal te benutten.
 
 ## Overzicht
-Dit document beschrijft de hardwarevereisten, browsertoestemmingen en AI-configuratieopties die nodig zijn om DressApp soepel te laten werken. DressApp is ontworpen om direct uit de doos te werken zonder externe API-sleutels, met optionele integraties voor geavanceerde gebruikers.
+Dit document behandelt de hardwarevereisten, browsermachtigingen en de AI-niveaus van de abonnementen die nodig zijn om DressApp soepel te laten werken. DressApp werkt direct uit de doos, zonder dat er API-sleutels nodig zijn.
 
 ## Vereisten
 - Een moderne smartphone, tablet of pc (iOS, Android, macOS, Windows, Linux).
-- Cameratoestemming ingeschakeld (voor het fotograferen van kleding en scannen van DPP-tags).
-- Microfoontoestemming ingeschakeld (voor handsfree gesproken stylingverzoeken).
-- Locatietoestemming (voor weersafhankelijke outfitvoorstellen).
-- *(Optioneel)* Een gratis Google Gemini API-sleutel als u geavanceerde functies wilt gebruiken zoals Trend Scout-nieuwsfeeds, Nano Banana fotoreparatie of uw eigen cloudquota. Gratis accounts hebben GEEN API-sleutel nodig om DressApp te gebruiken.
+- Cameramachtiging ingeschakeld (voor het fotograferen van kleding en het scannen van DPP-tags).
+- Microfoonmachtiging ingeschakeld (voor handsfree spraakverzoeken aan de stylist).
+- Locatiemachtiging (voor lokale weersafhankelijke stylingaanbevelingen).
 
-## Stapsgewijze instructies
-1. **Toestemmingen verlenen**: Accepteer de browser- of app-meldingen voor camera, microfoon en locatie voor live weerupdates.
-2. **Direct beginnen met stylen (Gratis niveau)**: Uw account is direct uitgerust met DressApp's ingebouwde on-premise AI (fijnafgestemd Gemma-4-E4B) en 10 gratis dagelijkse stylingcredits zonder dat configuratie nodig is.
-3. **Optionele eigen API-sleutel (BYOK)**: Om Trend Scout of Nano Banana fotobewerking te ontgrendelen, gaat u naar **Profiel** (/me) &rarr; **AI-configuratie** en vult u uw gratis sleutel van [Google AI Studio](https://aistudio.google.com/) in.
-4. **Google Agenda koppelen**: Koppel uw Google Agenda in uw profiel zodat de stylist rekening houdt met uw vergaderingen en geplande activiteiten.
+## Stapsgewijze Instructies
+1. **Machtigingen Toestaan**: Accepteer de verzoeken van uw browser of app voor cameratoegang bij het vastleggen van items, microfoontoegang voor spraakgesprekken en locatietoegang voor live lokale weerupdates.
+2. **Direct Starten met Stylen (Gratis Abonnement / Free Tier)**: Uw gratis account is standaard uitgerust met de ingebouwde on-premises **Eyes**-AI van DressApp (momenteel een gefinetuned **Qwen 2.5 VL 3B**-model) en gratis dagelijkse stylingcredits, zonder dat u iets hoeft in te stellen.
+3. **Upgraden voor Snelle Cloud-AI (Manager- & Professional-abonnementen)**: Gebruikers met een **Manager**- of **Professional**-abonnement profiteren automatisch van prioriteitsroutering naar het snelle Cloud AI-model (momenteel **Google Gemini 3.5 Flash**), evenals volledige toegang tot Trend Scout-mode-intelligentie en Nano Banana-fotoreconstructie.
+4. **Google Agenda Koppelen**: Verbind onder uw Profiel uw Google Agenda om de AI-Stylist inzicht te geven in aankomende zakelijke vergaderingen, feestjes en sportsessies.
 
-## Verwachte resultaten
-U geniet van een naadloze kledingdigitalisering, automatische transparante achtergrondverwijdering, gesproken stylingadvies, lokale weerberichten en kalendersynchrone outfitvoorstellen.
+## Verwachte Resultaten
+U profiteert van het naadloos toevoegen van kleding via de camera, automatische uitsneden met transparante achtergrond, gesproken stylingadvies, lokale weersmeldingen en op uw agenda afgestemde outfitaanbevelingen.
 
 ## Probleemoplossing
-- **Geen lokaal weer beschikbaar**: Controleer of locatieservices zijn ingeschakeld in uw browser- of systeeminstellingen.
-- **Microfoonproblemen**: Zorg ervoor dat DressApp toegang heeft tot de microfoon en dat geen andere app de ingang blokkeert.
-- **Heb ik een API-sleutel nodig?**: Nee! Gratis gebruikers kunnen kleding digitaliseren, hun kledingkast beheren en met de stylist praten zonder externe sleutels in te voeren.
+- **Geen Lokaal Weer**: Controleer of locatiemachtigingen zijn uitgeschakeld in de privacy-instellingen van uw besturingssysteem of browser.
+- **Microfoonproblemen**: Controleer of microfoonmachtigingen zijn toegestaan voor DressApp en of een andere applicatie de audio-invoer niet exclusief blokkeert.
+- **Heb ik een API-sleutel nodig?**: Nee! BYOK (Bring Your Own Key) is afgeschaft. Gratis gebruikers maken gebruik van onze on-premises Eyes-engine (`Qwen 2.5 VL 3B`), terwijl abonnees met een Manager- of Professional-abonnement automatisch profiteren van het snelle Cloudmodel (`Gemini 3.5 Flash`).
 
 ## Beperkingen
-- Lokale spraakherkenning werkt het best in Chromium-browsers (Chrome, Edge) en Safari.
-- Trend Scout-feeds en Nano Banana fotoreparatie vereisen een persoonlijke Google Gemini API-sleutel.
+- Lokale spraakherkenning werkt het beste op moderne Chromium-gebaseerde browsers (Google Chrome, Microsoft Edge) en Safari.
+- Snelle cloudmodelroutering (`Gemini 3.5 Flash`) en de modekanalen van Trend Scout zijn beschikbaar binnen het Manager- en Professional-abonnement.

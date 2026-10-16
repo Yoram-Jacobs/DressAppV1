@@ -7,7 +7,7 @@ This document provides a comprehensive, authoritative breakdown of the DressApp 
 ## 1. Executive Summary & Value Proposition
 
 ### High-Level Overview
-The DressApp Admin Panel is the centralized hub for platform oversight, monetization auditing, AI model configuration, and system diagnostics. It provides administrators with a real-time, high-fidelity lens into platform health, marketplace transaction volumes, user AI credit consumption, and downstream AI microservice performance without requiring direct terminal or database shell access.
+The DressApp Admin Panel is the centralized hub for platform oversight, monetization auditing, AI model configuration, and system diagnostics. It provides administrators with a real-time, high-fidelity lens into platform health, marketplace transaction volumes, user AI credit consumption, user tier distribution, and downstream AI microservice performance without requiring direct terminal or database shell access.
 
 ### Architectural Flow
 The following diagram illustrates how the frontend dashboard interfaces with the backend services, queries MongoDB Atlas collections, and conducts downstream health probes:

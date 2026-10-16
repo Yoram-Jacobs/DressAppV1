@@ -94,4 +94,4 @@ graph TD
 
 ### Synchronisation Frontend (`workStore.js` & `itemImage.js`)
 - **Résolution Centralisée d'Image (`itemImage.js`) :** `bestImageUrl()` donne la priorité absolue à `reconstructed_image_url`, garantissant que les images réparées par IA remplacent immédiatement les vignettes brutes temporaires.
-- **Sondage Multi-Pages (`workStore.js`) :** Suit globalement les tâches de reconstruction en arrière-plan à travers la navigation de l'application, injectant automatiquement les documents mis à jour dans `closetStore`.
+- **Sondage Multi-Pages (`workStore.js`) :** Suivra globalement les tâches de reconstruction en arrière-plan à travers la navigation de l'application, injectant automatiquement les documents mis à jour dans `closetStore`.

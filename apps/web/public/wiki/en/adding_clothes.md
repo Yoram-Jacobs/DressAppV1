@@ -9,7 +9,6 @@ Ingest clothes using live camera snaps, multi-image gallery uploads, Digital Pro
 - Clear, well-lit photos of garments (mirror selfies, full-body outfit photos, or flat lays).
 - Camera access for scanning physical items and QR codes.
 - Digital receipts or invoice screenshots (PDF / PNG / JPEG) for e-commerce purchases.
-- *(Optional)* A personal Google Gemini API key if you want to use Nano Banana generative photo reconstruction and studio inpainting.
 
 ## Step-by-Step Instructions
 
@@ -21,9 +20,9 @@ Ingest clothes using live camera snaps, multi-image gallery uploads, Digital Pro
 3. **AI Matting & Clean Studio Photos**:
    - The built-in vision pipeline automatically keys out backgrounds into crisp, transparent PNG images for all accounts.
 4. **Automatic Metadata Tagging**:
-   - The on-premises AI extracts 20+ fashion attributes (colors, fabric composition, sub-category, dress code, brand, and condition).
+   - Free Tier accounts use DressApp's on-premises **Eyes** engine (currently a fine-tuned `Qwen 2.5 VL 3B` model), while **Manager** and **Professional** plan users enjoy the fast Cloud model (`Google Gemini 3.5 Flash`) to extract 20+ fashion attributes (colors, fabric composition, sub-category, dress code, brand, and condition).
 5. **Advanced Generative Photo Repair (Nano Banana)**:
-   - For users with a personal Google Gemini API key, Nano Banana inspects cropped items for occlusions (bags, hands) and frame boundaries, automatically outpainting and reconstructing missing fabric into complete studio photographs.
+   - Nano Banana inspects cropped items for occlusions (bags, hands) and frame boundaries, automatically outpainting and reconstructing missing fabric into complete studio photographs with zero external API keys required.
 6. **Digital Receipts & DPP Tags**:
    - Switch to **Digital Import** to parse order confirmation emails or invoices, locking purchase price and verified sizes.
    - Tap **Scan QR (DPP)** on the label to import EU Digital Product Passport supply chain facts and care guidelines.
@@ -34,10 +33,9 @@ Ingest clothes using live camera snaps, multi-image gallery uploads, Digital Pro
 Every garment appears in your digital wardrobe as a centered, clean studio-quality photograph with fully indexed search attributes and rich taxonomy tags.
 
 ## Troubleshooting
-- **Cut-Off / Partial Garments in Photos**: Cleanly center the garment against a contrasting background. If you have an API key configured, Nano Banana can reconstruct clipped collars or hems automatically.
+- **Cut-Off / Partial Garments in Photos**: Cleanly center the garment against a contrasting background. Nano Banana can reconstruct clipped collars or hems automatically.
 - **Lighting & Contrast**: For best results on dark garments, photograph against contrasting light backgrounds.
 - **Receipt OCR Mismatches**: Use the interactive box selector on receipt images to manually designate individual product lines.
 
 ## Limitations
 - High-resolution batch uploads (>5 items) process via asynchronous background queues to guarantee responsive performance without browser timeout.
-- Nano Banana photorealistic image inpainting requires a user-supplied Google Gemini API key.

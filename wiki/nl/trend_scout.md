@@ -1,70 +1,93 @@
-# Trend Scout & Persoonlijke Mode-inspiratie
+# Trend Scout & Persoonlijke Inspiratie
 
-Ontdek dagelijks wereldwijde modetrends, lokale stijlupdates en creëer trending looks direct opnieuw met kleding uit uw eigen kast.
+Ontdek dagelijkse wereldwijde modetrends, de lokale stijlradar en stel trending looks direct samen met kleding uit uw eigen kledingkast.
 
 ---
 
 ## 1. Overzicht
-Trend Scout is uw dagelijkse mode-radar binnen DressApp. Elke ochtend verzamelt het actuele modereports, catwalkrecensies, duurzame textielinnovaties en streetstyle-bewegingen van toonaangevende publicaties wereldwijd.
+Trend Scout is uw dagelijkse mode-intelligentieradar binnen DressApp. Elke ochtend verzamelt het systeem het laatste modenieuws, catwalkrecensies, duurzame textielinnovaties en streetstyle-bewegingen van gerenommeerde modepublicaties wereldwijd.
 
-Onderverdeeld in **7 themakanalen**, stemt Trend Scout nieuws af op uw demografisch profiel en woonplaats. Met de kenmerkende 1-klikfunctie **"Stijl met mijn kledingkast" (Style with My Closet)** analyseert de AI-stylist de esthetiek van de trend en selecteert passende kledingstukken die u al bezit!
+Onderverdeeld in **7 samengestelde kanalen** personaliseert Trend Scout stijlverhalen op basis van uw demografische profiel en locatie. Met de kenmerkende 1-klikfunctie **"Style met Mijn Kledingkast" (Style with My Closet)** scant onze AI-Stylist de esthetische kenmerken van elke trend (kleurenpalet, silhouet, texturen) en selecteert bijpassende kledingstukken die al in uw gedigitaliseerde garderobe hangen — zodat u vandaag nog high-fashion trends kunt dragen zonder iets nieuws te kopen!
 
 ---
 
 ## 2. Vereisten
-- **Eigen AI API-sleutel (BYOK)**: Trend Scout vereist een persoonlijke Google Gemini API-sleutel (gratis via [Google AI Studio](https://aistudio.google.com/)), ingesteld onder **Profiel > AI-configuratie** voor live artikelsynthese.
-- **Actief abonnement**: Beschikbaar in de plannen **Manager** ($10/mnd) en **Professional** ($15/mnd). Gratis accounts hebben toegang tot een preview.
-- **Gedigitaliseerde kleding**: Minimaal 5 tot 10 kledingstukken in uw kast voor accurate suggesties.
-- **Locatietoegang**: Voor lokaal modenieuws en ontwerpersevenementen in uw regio.
-- **Profielgegevens**: Stel uw voorkeuren in voor een optimaal afgestemde feed.
+Om optimaal gebruik te maken van Trend Scout, zorgt u ervoor dat u beschikt over:
+- **Een Actief Abonnement**: Trend Scout is beschikbaar binnen het **Manager**-abonnement ($ 10/mnd) en het **Professional**-abonnement ($ 15/mnd), aangedreven door ons snelle Cloud AI-model (momenteel **Google Gemini 3.5 Flash**) zonder dat er persoonlijke API-sleutels nodig zijn. Gratis accounts kunnen een voorbeeld bekijken en op elk gewenst moment upgraden.
+- **Gedigitaliseerde Garderobe-items**: Ten minste 5 tot 10 kledingstukken in uw digitale kledingkast, zodat de AI-Stylist nauwkeurige outfitvoorstellen voor "Style met Mijn Kledingkast" kan doen.
+- **Locatietoegang**: Stelt Trend Scout in staat om lokaal nieuws, regionale boetiek-highlights en binnenlandse mode-evenementen af te stemmen op uw stad en land.
+- **Demografische Gegevens in Instellingen**: Door uw geslacht, levensstijl en esthetische voorkeuren op te geven, geeft uw feed voorrang aan looks die zijn afgestemd op uw persoonlijke smaak.
 
 ---
 
-## 3. Stapsgewijze instructies
+## 3. Stapsgewijze Instructies
 
-### Stap 1: Trend Scout openen
-1. Klik in het hoofdmenu op **Trend Scout** (trend-icoon 📈).
-2. Uw gepersonaliseerde Daily Edit op basis van uw woonland wordt geladen.
+### Stap 1: Open Trend Scout
+1. Klik of tik in de hoofdnavigatie op **Trend Scout** (zoek naar het trendpictogram 📈 in uw menu of de Stylist-zijbalk).
+2. De pagina wordt geladen met uw gepersonaliseerde Daily Edit-feed, afgestemd op uw thuisland.
 
-### Stap 2: Bladeren door de 7 kanalen
-Kies bovenaan de gewenste categorie:
-- 📍 **Lokaal nieuws**: Regionale mode-evenementen en boetieks.
-- 👑 **Catwalk (Runway)**: Haute couture en modeweken.
-- 👟 **Street Style**: Eigentijdse urban wear en sneakercultuur.
-- 🌿 **Duurzaamheid**: Circulaire mode en eco-materialen.
-- ✨ **Influencers & Iconen**: Rode loper en creator-looks.
-- ♻️ **Vintage & Archief**: Tweedehands kleding en vintage denim.
-- 🔧 **Verzorging & Herstel**: Kledingonderhoud en schoenreparatie.
+### Stap 2: Blader door de 7 Samengestelde Kanalen
+Filter artikelen door de categorietabbladen bovenaan uw feed te selecteren:
+- 📍 **Lokaal Nieuws (Local News)**: Regionale mode-evenementen, debuten van binnenlandse ontwerpers en nieuws van lokale boetieks bij u in de buurt.
+- 👑 **Catwalk (Runway)**: High-fashion recensies, seizoensgebonden Haute Couture-shows en opkomende designer-trends.
+- 👟 **Street Style**: Dagelijkse urban kleding, sneakercultuur en hedendaagse casual combinaties.
+- 🌿 **Duurzaamheid (Sustainability)**: Milieuvriendelijke mode, circulair textiel, zero-waste-initiatieven en ethisch kledingonderhoud.
+- ✨ **Influencers & Iconen (Influencers & Icons)**: Virale social-stylingbewegingen, rode-loper-highlights en door creators geïnspireerde esthetiek.
+- ♻️ **Vintage / Archief (Vintage / Archival)**: Tweedehandscultuur, pre-loved selecties, retro denim en tijdloze archiefmode.
+- 🔧 **Onderhoud & Reparatie (Care & Repairs)**: Praktische gidsen voor een langere levensduur van kleding, onderhoud van delicate stoffen, herstelwerkzaamheden en sneakerrestauratie.
 
-### Stap 3: Wisselen tussen dames- en herenmode
-- Schakel eenvoudig tussen **Damesmode** en **Herenmode** via de knop in de header.
+### Stap 3: Schakel Geslachtstargeting Om
+- Schakel op elk moment tussen **Damesmode (Women's Fashion)** en **Herenmode (Men's Fashion)** met de keuzeknop in de koptekst.
+- De feed filtert artikelen dynamisch en herberekent aanbevelingen op basis van het geselecteerde geslacht.
 
-### Stap 4: 1-klik "Stijl met mijn kledingkast"
-1. Klik op een trendkaart op **Stijl met mijn kledingkast**.
-2. De AI-stylist opent direct en toont kledingstukken uit uw kast die de outfit nabootsen.
-3. Bekijk de outfit op uw avatar en sla deze op in uw kledingkalender.
+### Stap 4: 1-Klik "Style met Mijn Kledingkast"
+1. Wanneer u een trend ziet die u aanspreekt, bekijkt u de trendkaart.
+2. Klik op de knop **Style met Mijn Kledingkast (Style with My Closet)**.
+3. De AI-Stylist opent onmiddellijk met de esthetische parameters van de trend en toont kledingstukken uit uw kast die de look nabootsen.
+4. Bekijk een voorbeeld van de resulterende outfit op uw 2D-avatar en sla deze op in uw Garderobedagboek!
 
-### Stap 5: Personalisatie aanpassen (Instellingen ⚙️)
-1. Klik op het **tandwiel-icoon ⚙️**.
-2. Kies uw gewenste stijltags en klik op **Opslaan & Feed vernieuwen**.
+### Stap 5: Personalisatie & Sociale Feeds Aanpassen (Instellingen ⚙️)
+1. Klik op **Instellingen (tandwielpictogram ⚙️)** in de koptekst van Trend Scout.
+2. **Stijlesthetiek (Style Aesthetics)**: Kies uit 10 samengestelde stijltags (zoals *Quiet Luxury*, *Vintage*, *Minimalist*, *Streetwear*, *Old Money*, *Boho & Casual*, *Cyberpunk*, *Y2K*, *Classic Business* of *Athleisure*), of typ uw eigen aangepaste stijl.
+3. **Gekoppelde Platformen (Connected Platforms)**: Koppel uw socialmedia-accounts (Instagram, Pinterest, TikTok, Facebook, Threads of X), zodat DressApp aansluit bij uw bredere mode-interesses.
+4. **Kledingkastprofiel (Closet Profile)**: Bekijk het kleur- en silhouetprofiel van uw kledingkast dat automatisch door DressApp is berekend.
+5. Tik op **Opslaan & Feed Vernieuwen (Save & Refresh Feed)** om uw dagelijkse trendkaarten direct opnieuw af te stemmen.
 
-### Stap 6: Het originele artikel lezen
-- Klik op **"Lezen op [Publicatie]"** om het volledige artikel op Vogue, GQ of Elle te openen.
-
----
-
-## 4. Probleemoplossing
-
-### Melding "Trend Scout vereist een aangepaste API-sleutel (403)"
-- **Oorzaak**: Er is nog geen persoonlijke Google Gemini API-sleutel ingesteld.
-- **Oplossing**: Ga naar **Profiel > AI-configuratie** en voer uw gratis sleutel van [Google AI Studio](https://aistudio.google.com/) in.
-
-### Melding "Trend Scout is een Premium-functie"
-- **Oplossing**: Upgrade naar het Manager- of Professional-abonnement.
+### Stap 6: Lees Volledige Originele Artikelen & Realtime Vernieuwen
+- Tik op **"Lees op [Publicatie]" (Read at [Publication])** op een kaart om het originele artikel rechtstreeks te openen bij publicaties zoals Vogue, GQ, Elle of Hypebeast.
+- Wilt u nu meteen het laatste modenieuws zien? Klik op de knop **Vernieuwen (🔄)** in de koptekst om direct een live radarscan uit te voeren.
 
 ---
 
-## 5. Beperkingen
-- **API-sleutel vereist**: Uitsluitend beschikbaar voor gebruikers met een eigen Google Gemini API-sleutel.
-- **Zuiver redactioneel**: Geen opdringerige advertenties of affiliate-popups.
-- **Afhankelijk van uw kast**: De stylist kan alleen items voorstellen die u reeds heeft toegevoegd.
+## 4. Verwachte Resultaten
+- Een overzichtelijke, redactionele feed van tijdschriftkwaliteit met afbeeldingen in hoge resolutie, categoriebadges, geslachtsindicatoren en datumstempels.
+- Trendkaarten die nauwkeurig zijn afgestemd op uw persoonlijke stijl en lokale omgeving.
+- Directe garderobesuggesties die laten zien hoe u de nieuwste trends kunt dragen met de kleding die u al bezit.
+
+---
+
+## 5. Probleemoplossing
+
+### Mijn feed zegt "Trend Scout is Premium"
+- **Oorzaak**: Uw account heeft momenteel het gratis abonnement (Free Tier).
+- **Oplossing**: Tik op **Abonnement Upgraden (Upgrade Plan)** om u te abonneren op het **Manager**-abonnement ($ 10/mnd) of **Professional**-abonnement ($ 15/mnd) om Trend Scout en het snelle Cloud AI-model te ontgrendelen.
+
+### De kaarten tonen geen nieuws uit mijn eigen land
+- **Oorzaak**: Locatiemachtigingen zijn mogelijk uitgeschakeld of uw profieladres is nog niet ingesteld.
+- **Oplossing**: Controleer de locatiemachtigingen van uw browser of mobiele app, of stel uw thuisland in onder **Profiel > Instellingen > Locatiediensten**.
+
+### Ik zie artikelen die niet passen bij mijn voorkeursstijl of geslacht
+- **Oorzaak**: De geslachtsschakelaar staat mogelijk op de andere modus, of uw stijltags zijn leeg.
+- **Oplossing**: Zet de schakelaar **Dames / Heren** in de koptekst om, of open **Instellingen ⚙️** en selecteer uw gewenste stijlesthetiek.
+
+### Kaarten worden niet vernieuwd of tonen oudere datums
+- **Oorzaak**: Problemen met de netwerkverbinding of gecachete feedgegevens.
+- **Oplossing**: Tik op de knop **Vernieuwen (🔄)** in de koptekst (of veeg omlaag op mobiel om te vernieuwen) om live gegevens op te halen.
+
+---
+
+## 6. Beperkingen
+- **Toegang via Abonnement**: Volledige live feeds van Trend Scout zijn beschikbaar binnen de **Manager**- en **Professional**-abonnementen.
+- **Redactionele Focus**: Trend Scout is ontworpen voor pure mode-inspiratie en educatie. Agressieve winkeladvertenties, affiliate pop-ups en commerciële winkelwagentjes worden bewust weggefilterd.
+- **Kledingkast-matching**: De AI kan trends alleen stylen met items die u hebt gedigitaliseerd. Hoe meer kleding u in uw kledingkast scant, hoe creatiever uw trend-outfitvoorstellen zullen zijn!
+- **Offline Modus**: Hoewel eerder bekeken kaarten en gidsen in de cache worden bewaard, is voor live crawlen en het lezen van externe bronartikelen een actieve internetverbinding vereist.

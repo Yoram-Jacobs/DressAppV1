@@ -1,7 +1,7 @@
 # DressApp Privacy Policy
 
 **Effective Date:** September 23, 2026  
-**Last Updated:** September 23, 2026  
+**Last Updated:** October 16, 2026  
 **App Version:** 1.0.5  
 **Official Website:** [https://dressapp.co](https://dressapp.co)  
 **Dedicated Privacy URL:** [https://dressapp.co/privacy](https://dressapp.co/privacy)  
@@ -88,9 +88,9 @@ We process non-Google personal information on the following legal bases:
 We implement robust administrative, technical, and physical security measures designed to protect your sensitive data against unauthorized access, alteration, disclosure, or destruction:
 
 - **Encryption in Transit:** 100% of data transmitted between your browser/app and our servers is encrypted using modern **HTTPS and Transport Layer Security (TLS 1.3 / TLS 1.2)**.
-- **Encryption at Rest:** All stored database records, profile entries, and OAuth credentials are encrypted at rest using industry-standard **AES-256 encryption** within enterprise-grade MongoDB Atlas cloud clusters.
+- **Isolated Self-Hosted Database & Storage Protection:** All database records, wardrobe metadata, profile entries, and encrypted OAuth credentials are stored on DressApp's isolated, self-managed **on-premises MongoDB 7.0 database** hosted on dedicated **Hetzner Cloud (EU)** NVMe storage, isolated within an internal private container network with no public database port exposure and protected by AES-256 encryption for sensitive tokens and automated local backups.
 - **Cryptographic Password Protection:** User passwords are encrypted with bcrypt hashing incorporating per-user salts.
-- **Access Control:** Production infrastructure access is strictly restricted through multi-factor authentication (MFA), least-privilege role-based access controls (RBAC), and continuous audit logging.
+- **Access Control:** Production infrastructure access is strictly restricted through SSH key authentication, multi-factor authentication (MFA), least-privilege role-based access controls (RBAC), and continuous audit logging.
 
 ---
 
@@ -123,11 +123,11 @@ All data is completely destroyed within 30 days of the deletion request.
 
 ## 6. Data Sharing, Disclosures, and Third Parties
 
-We do not sell, rent, or trade your personal data. We disclose information only to vetted service providers who assist us in operating our platform, strictly bound by data processing agreements:
+We do not sell, rent, or trade your personal data. Core database storage and baseline computer vision ("The Eyes") are operated directly by DressApp on our isolated, self-managed on-premises server infrastructure without third-party database SaaS intermediaries. We disclose information only to vetted infrastructure and service providers who assist us in operating our platform, strictly bound by data processing agreements:
 
 | Service Provider | Data Disclosed | Purpose |
 |---|---|---|
-| **MongoDB Atlas** | Encrypted account data, wardrobe metadata, images | Cloud database hosting with enterprise encryption at rest |
+| **Hetzner Online GmbH (EU Infrastructure)** | Encrypted server volumes hosting DressApp's self-managed on-premises MongoDB database, wardrobe media, and on-premises AI inference | Dedicated European virtual private server (VPS) and NVMe storage infrastructure (GDPR-compliant EU data center) |
 | **Google Cloud Platform / Google APIs** | OAuth authentication tokens, styling query prompts | User authentication and Gemini AI styling analysis |
 | **Stripe / PayPal** | Payment transaction tokens, billing metadata | PCI-compliant payment processing (card numbers never touch our servers) |
 | **Resend / Transactional Mailer** | Email address, user display name | Delivery of critical system notices and password resets |

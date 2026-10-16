@@ -1,266 +1,171 @@
 # DressApp Privacybeleid
 
-**Inwerkingtredingdatum:** 27 juli 2026
-**Laatst bijgewerkt:** 27 juli 2026
+**Ingangsdatum:** 23 september 2026  
+**Laatst bijgewerkt:** 16 oktober 2026  
+**App-versie:** 1.0.5  
+**Officiële website:** [https://dressapp.co](https://dressapp.co)  
+**Speciale privacy-URL:** [https://dressapp.co/privacy](https://dressapp.co/privacy)  
 
-Dit Privacybeleid beschrijft hoe DressApp ("wij", "ons" of "we") uw persoonsgegevens verzamelt, gebruikt, opslaat, deelt en beschermt wanneer u onze digitale garderobe- en styling-app gebruikt.
+Welkom bij **DressApp** ("wij", "we", "onze", "ons" of "de Applicatie"). DressApp is een intelligent platform voor digitale garderobeplanning, stijladvies en een persoonlijke AI-stylist, ontwikkeld en geëxploiteerd door **DressApp Ltd.**
 
-Lees dit beleid zorgvuldig. Door het gebruik van DressApp gaat u akkoord met de hier beschreven datapraktijken. Als u het niet eens bent, gebruikt u de app niet.
-
----
-
-## 1. Informatie die We Verzamelen
-
-### 1.1 Account- en Profielinformatie
-Wanneer u een account aanmaakt of zich aanmeldt via sociale login, verzamelen we:
-
-- **E-mailadres** — gebruikt voor accountidentificatie, authenticatie en transactiecommunicatie.
-- **Wachtwoord** — opgeslagen als cryptografische hash; we slaan nooit wachtwoorden op in cleartext.
-- **Weergavenaam** — uw gekozen publieke naam binnen de app.
-- **Voornaam en achternaam** — gevuld via Google OAuth-profiel of handmatig ingevoerd; te allen tijde bewerkbaar.
-- **Telefoonnummer** — optioneel; gebruikt voor accountherstel en meldingen.
-- **Geboortedatum** — optioneel; gebruikt voor leeftijdsgebonden inhoudsfiltering.
-- **Geslacht** — optioneel; gebruikt voor lichaamsmaataanbevelingen en avatar.
-- **Burgerlijke staat** — optioneel (single, getrouwd, gescheiden, weduwe).
-- **Adres** — optioneel; gestructureerd als {regel1, regel2, stad, regio, land, postcode}.
-- **Voorkeurstaal en -regio** — gebruikt om de app-ervaring te localiseren.
-- **Voorkeursstem** — gebruikt voor AI-stylist spraakoutput.
-- **Avatar en profielfoto's** — gezichts- en lichaamsfoto, opgeslagen als base64-data-URLs in MongoDB (beperkt tot ~500 KB elk aan de clientzijde).
-- **Lichaamsmaten** — lengte, gewicht, borst, taille, heupen en andere maten gebruikt voor avatar-generatie en pasvormaanbevelingen.
-- **Haarprofiel** — lengte, type, kleur en stijl (optioneel).
-- **Thuislocatie** — stad, land en coördinaten (lat/long), gebruikt voor weergebaseerde outfitaanbevelingen en campagnetargeting.
-- **Stijlprofiel en culturele context** — uw stijlvoorkeuren en culturele achtergrond voor gepersonaliseerde aanbevelingen.
-
-### 1.2 Garderobe- en Mediagegevens
-DressApp is een digitale garderobe-app. De volgende gegevens zijn essentieel voor de werking van de app:
-
-- **Garderobefoto's** — afbeeldingen van uw kledingstukken die u uploadt. Deze worden in de browser verwerkt voor achtergrondverwijdering (matting) en vervolgens opgeslagen als data-URLs in MongoDB.
-- **Kledingmetadata** — categorie (Bovenstuk, Onderstuk, Schoenen, Jas, Jurk, Accessoire), merk, kleur, maat, seizoen, traditie, kledingcode, geslacht en subcategorie-tags.
-- **Outfitgegevens** — opgeslagen outfitcombinaties die meerdere garderobestukken met elkaar verbinden.
-- **Marktplaatsadvertenties** — als u artikelen verkoopt of ruilt, advertentiedetails inclusief foto's, prijs en verzendinformatie.
-- **Reis-/paklijstgegevens** — paklijsten voor reizen met artikelen, hoeveelheden en doeltags (bijv. "Wandelen / Buitenshuis").
-
-### 1.3 Apparaatmachtingen
-DressApp vraagt de volgende apparaatmachtingen aan:
-
-- **Camera** — om foto's van kledingstukken direct in de app te capturen.
-- **Fotobibliotheek / bestandstoegang** — om bestaande foto's te selecteren voor upload.
-- **Geolocatie** — grove locatie-toegang om weergegevens op te halen en outfits te suggereren. U kunt deze machting op elk moment weigeren of intrekken.
-- **Meldingen** — optionele pushmeldingen voor campagnewijzigingen en stylistaanbevelingen.
-
-### 1.4 AI en Machine Learning
-DressApp gebruikt apparaat- en serverzijde AI voor de volgende doeleinden:
-
-- **Achtergrondverwijdering (matting)** — uw geüploade kledingfoto's worden verwerkt via de `rembg` / u2netp-pipeline om schone uitsneden te extraheren. Deze verwerking vindt plaats op de server.
-- **Lichaamsvoorspelling** — het SegFormer-model schat lichaamsmaten uit volledige outfitfoto's.
-- **Kledingclassificatie** — CLIP-gebaseerde classificatie tagt items met categorieën, kleuren en merken.
-- **Stylistaanbevelingen** — de Google Gemini API verwerkt uw garderobedata om outfitsuggesties en stijltips te genereren.
-- **Avatargeneratie** — 3D-avatar-vormparameters worden berekend uit lichaamsmaten voor virtueel passen.
-
-**Belangrijk:** Door gebruikers geüploade foto's worden **niet** gebruikt om machine learning-modellen te trainen. Ze worden uitsluitend verwerkt om de kernfuncties van de app te bieden en worden niet gedeeld met trainingspipelines.
-
-### 1.5 Gebruiksgegevens en Analyse
-We verzamelen geaggregeerde, anonieme gebruiksgegevens om de app te verbeteren:
-
-- Activiteits- en functionaliteitsgebruikspatronen.
-- Iteminteractiedata (weergaven, bewerkingen, verwijderingen).
-- Apparaatidentificatoren (IP-adres, besturingssysteemversie, browsertype).
-- Campagneanalyse (advertentie-impressies, klikken, weergaven) — gekoppeld aan campagne-IDs, niet aan individuele gebruikersidentiteiten.
-
-We gebruiken **geen** derde-partij analyse-SDKs (geen Mixpanel, Firebase Analytics, Amplitude, Sentry, LogRocket of vergelijkbare). Alle analyse wordt intern beheerd.
-
-### 1.6 Betalingsgegevens
-Als u de marktplaats- of abonnementsfuncties van DressApp gebruikt, verzamelen we:
-
-- **Stripe** — Stripe-account-ID, abonnements-ID en betalingsintentie-IDs. Creditcardnummers worden nooit op onze servers opgeslagen; ze worden direct door Stripe verwerkt.
-- **PayPal** — PayPal-ontvanger-e-mail en bestel-/vangst-IDs.
-- **Apple Pay / Google Play** — betalingstokens verwerkt door de respectieve platform-SDKs; we slaan kaartgegevens niet op.
-
-### 1.7 Derde-partij Authenticatiegegevens
-- **Google OAuth** — wanneer u inlogt met Google, ontvangen en slaan we een versleuteld OAuth-token (`google_oauth`-veld) op dat wordt gebruikt om toegang te krijgen tot uw Google-profiel (naam, e-mail, foto) en, optioneel, Google Calendar en People API voor planning- en contactfuncties.
+In dit Privacybeleid wordt in detail uitgelegd hoe wij persoonsgegevens raadplegen, verzamelen, gebruiken, verwerken, opslaan, verstrekken, bewaren en beveiligen wanneer u ons webplatform, onze mobiele applicaties en gekoppelde diensten gebruikt. Lees dit document zorgvuldig door. Door een account aan te maken of DressApp te gebruiken, erkent u de werkwijzen die in dit beleid worden beschreven en gaat u hiermee akkoord.
 
 ---
 
-## 2. Hoe We Uw Gegevens Gebruiken
+## 1. Gegevens die Wij Verzamelen en Raadplegen
 
-We gebruiken uw gegevens voor de volgende doeleinden:
+Wij verzamelen gegevens die u rechtstreeks aan ons verstrekt, gegevens die automatisch worden verzameld via interactie met uw apparaat, en gegevens die worden verkregen via geautoriseerde integraties van derden.
 
-| Doel | Wettelijke grondslag (AVG) | Gegevenstypen |
+### 1.1 Account- & Identiteitsgegevens
+- **Authenticatiegegevens:** E-mailadres en cryptografisch gehashte wachtwoorden (gesalt met bcrypt). Wij slaan nooit wachtwoorden in platte tekst op.
+- **Profielgegevens:** Weergavenaam, voornaam, achternaam, telefoonnummer (optioneel), geboortedatum (optioneel) en geslacht (optioneel, gebruikt voor stijladvies op maat en avatargeometrie).
+- **Demografische & Maatgegevens:** Lichaamsmaten (lengte, gewicht, borstomvang, taille, heupen, binnenbeenlengte, armlengte), voorkeur voor huidskleur en haarprofiel (optioneel) om virtuele pas-avatars en nauwkeurig pasvormadvies te genereren.
+- **Locatiegegevens:** Stad, land en globale geografische coördinaten (breedte-/lengtegraad) die met uw toestemming worden verstrekt om lokale weersomstandigheden op te halen voor weersbestendige dagelijkse outfitaanbevelingen.
+
+### 1.2 Digitale Garderobe, Media en Outfits
+- **Kledingfoto's:** Afbeeldingen van kledingstukken die u fotografeert of uploadt naar uw digitale kledingkast.
+- **Kledingmetadata:** Artikelcategorie (Bovenstuk, Onderstuk, Schoenen, Bovenkleding, Jurk, Accessoire), merk, kleurenpalet, stofsamenstelling, formaliteit/kledingvoorschrift, seizoen en staat-tags.
+- **Outfits & Looks:** Door de gebruiker gemaakte outfitcombinaties, ingeplande agendalooks en kofferpaklijsten.
+- **Marktplaatscontent:** Artikeladvertenties die zijn aangemaakt voor verkoop, ruil of donatie, inclusief beschrijvingen, vraagprijzen en leveringsvoorkeuren.
+
+### 1.3 Apparaatmachtigingen
+- **Camera:** Wordt uitsluitend gebruikt wanneer u rechtstreeks in de app foto's van kledingstukken maakt.
+- **Fotobibliotheek:** Wordt uitsluitend gebruikt wanneer u bestaande foto's van kledingstukken of profielavatars kiest om te uploaden.
+- **Pushmeldingen:** Worden alleen met uw toestemming gebruikt om dagelijkse outfitherinneringen, updates van de inpakassistent en belangrijke beveiligingswaarschuwingen te sturen.
+
+---
+
+## 2. Google-gebruikersgegevens & Bekendmaking van Beperkt Gebruik (Limited Use)
+
+DressApp biedt optionele integraties met Google om het inloggen van gebruikers en gepersonaliseerde planning te vergemakkelijken. In dit gedeelte wordt expliciet beschreven welke Google-gebruikersgegevens worden geraadpleegd, hoe deze worden gebruikt en opgeslagen, en hoe wij voldoen aan de strenge privacynormen van Google.
+
+> ### Beleid voor gebruikersgegevens van Google API-services — Verklaring inzake Beperkt Gebruik (Limited Use)
+> **Het gebruik door DressApp en de doorgifte aan enige andere app van informatie die is ontvangen van Google API's voldoet aan het [Beleid voor gebruikersgegevens van Google API-services (Google API Services User Data Policy)](https://developers.google.com/terms/api-services-user-data-policy), inclusief de vereisten voor Beperkt Gebruik (Limited Use).**
+
+### 2.1 Welke Google-gebruikersgegevens Wij Raadplegen
+
+| Google API-scope | Geraadpleegde Gegevens | Specifiek Doel in DressApp |
 |---|---|---|
-| Kernapp-functies leveren (garderobe-organisatie, outfitcreatie, avatargeneratie) | Contractuele noodzaak | Garderobefoto's, metadata, lichaamsmaten |
-| Achtergrondverwijdering en kledingmatting verwerken | Contractuele noodzaak | Geüploade kledingfoto's |
-| AI-stylistaanbevelingen genereren | Rechtmatig belang | Garderobemetadata, stijlprofiel |
-| Weergegevens ophalen voor outfitaanbevelingen | Toestemming (locatiemachting) | Thuislocatie (schatting) |
-| Gebruikersaccounts authenticatiëren en beheren | Contractuele noodzaak | E-mail, wachtwoordhash, OAuth-tokens |
-| Transactie-e-mails verzenden (accountbevestigingen, wachtwoordreset, verwijderingsbevestigingen) | Contractuele noodzaak | E-mailadres |
-| Marktplaatsbetalingen verwerken | Contractuele noodzaak | Stripe/PayPal-tokens, facturatieinfo |
-| Fraude/missbruik detecteren en voorkomen | Rechtmatig belang | IP-adres, apparaatidentificatoren |
-| App-functionaliteit verbeteren (geaggregeerde analyses) | Rechtmatig belang | Anonieme gebruiksgegevens |
-| Wettelijke verplichten nakomen | Wettelijke verplichting | Alle gegevens volgens wettelijke vereisten |
+| `openid`<br>`userinfo.email`<br>`userinfo.profile` | Google-gebruikers-ID, primair e-mailadres, volledige naam en URL van de profielfoto-avatar. | Om uw identiteit te verifiëren, uw DressApp-gebruikersaccount aan te maken en te beveiligen, en uw naam en profielavatar weer te geven in uw persoonlijke garderobedashboard. |
+| `https://www.googleapis.com/auth/calendar.events.readonly` | Samenvattingen van Google Agenda-afspraken, begin-/eindtijdstempels, locaties en afspraakbeschrijvingen. | Alleen-lezen toegang die uitsluitend door de AI Stylist-functie wordt gebruikt om outfitsuggesties af te stemmen op uw werkelijke agenda (bijv. het voorstellen van zakelijke kleding voor geplande vergaderingen, sportkleding voor trainingen of formele kleding voor avondevenementen). |
+| `https://www.googleapis.com/auth/user.birthday.read`<br>`https://www.googleapis.com/auth/user.gender.read` | Geboortedatum en geslacht (indien ingevuld in uw Google-profiel en uitdrukkelijk toegestaan). | Gebruikt voor het kalibreren van maatalgoritmen voor uw lichaamsavatar, leeftijdsgeschikt stijladvies en pasvormaanbevelingen. |
+| `https://www.googleapis.com/auth/user.phonenumbers.read`<br>`https://www.googleapis.com/auth/user.addresses.read` | Telefoonnummer en adres (indien ingevuld in uw Google-profiel en uitdrukkelijk toegestaan). | Uitsluitend gebruikt om na uitdrukkelijke bevestiging van de gebruiker verzendadressen vooraf in te vullen voor marktplaatstransacties en voor accountherstel. |
+
+### 2.2 Hoe Wij Google-gebruikersgegevens Gebruiken
+- Google-gebruikersgegevens worden **uitsluitend gebruikt voor het leveren en verbeteren van gebruikersgerichte functies** van de DressApp-applicatie (authenticatie, instellen van het gebruikersprofiel en op uw agenda afgestemde outfitaanbevelingen).
+- Wij verwerken titels en tijdstempels van Google Agenda-afspraken in het tijdelijke werkgeheugen om dagelijkse garderobe-aanbevelingen en paklijsten te genereren.
+
+### 2.3 Strikte Verboden en Beschermingsmaatregelen voor Google-gebruikersgegevens
+- **Geen Modeltraining:** Google-gebruikersgegevens en gegevens van Google Workspace API's worden **NIET** gebruikt voor het ontwikkelen, verbeteren of trainen van algemene of niet-gepersonaliseerde modellen voor kunstmatige intelligentie (AI) of machine learning (ML).
+- **Geen Advertenties:** Wij gebruiken, verzenden of verstrekken Google-gebruikersgegevens **NIET** voor het weergeven van advertenties, waaronder gerichte, gepersonaliseerde, retargeting- of op interesses gebaseerde advertenties.
+- **Geen Gegevensmakelaars / Doorverkoop:** Wij verkopen, verhuren, licentiëren of verhandelen Google-gebruikersgegevens onder geen enkele omstandigheid aan derden, gegevensmakelaars of informatie-wederverkopers.
+- **Geen Krediet- of Leningsbeoordeling:** Google-gebruikersgegevens worden nooit gebruikt om de kredietwaardigheid te bepalen of voor kredietverstrekkingsdoeleinden.
+- **Beperkingen op Menselijke Toegang:** Menselijke werknemers, opdrachtnemers en ontwikkelaars lezen uw Google-gebruikersgegevens **NIET**, tenzij:
+  1. U uitdrukkelijke, bevestigende toestemming hebt gegeven voor een specifieke probleemoplossingssessie;
+  2. Dit strikt noodzakelijk is voor beveiligingsonderzoeken (zoals onderzoek naar misbruik, fraude of malware);
+  3. Dit vereist is om te voldoen aan toepasselijke dwingende wetgeving of geldige overheidsbevelen; of
+  4. De gegevens zijn geaggregeerd en geanonimiseerd voor interne technische werkzaamheden.
 
 ---
 
-## 3. Gegevensopslag en Beveiliging
+## 3. Hoe Wij Algemene Gegevens Verwerken en Gebruiken
 
-### 3.1 Opslag
-- **Database:** MongoDB Atlas (cloud-gehost, gratis M0-niveau of betaald niveau afhankelijk van de implementatie).
-- **Afbeeldingen:** Garderobefoto's worden opgeslagen als base64-gecodeerde data-URLs in MongoDB-documenten. Elke afbeelding is beperkt tot ~500 KB aan de clientzijde vóór upload.
-- **Modelcache:** AI-modelgewichten (SegFormer, u2netp) worden gecacheerd op persistente Docker-volumes op de productieserver om herhaalde downloads bij elke aanvraag te voorkomen.
-- **Geen externe blob-opslag** wordt momenteel gebruikt voor afbeeldingen; alle beeldgegevens bevinden zich in MongoDB.
+Wij verwerken niet-Google persoonsgegevens op basis van de volgende wettelijke grondslagen:
 
-### 3.2 Beveiliging
-- Alle gegevens in transit zijn versleuteld via **HTTPS/TLS 1.3**.
-- Wachtwoorden worden opgeslagen als **bcrypt-hashes** — nooit in cleartext.
-- Google OAuth-tokens zijn versleuteld opgeslagen in rust.
-- Betaalgegevens (Stripe/PayPal-tokens) worden nooit in cleartext op onze servers opgeslagen; we slaan alleen referentie-IDs op.
-- MongoDB Atlas biedt **versleuteling op schijf** en **versleuteling in transit** standaard.
-- Toegang tot de database is beperkt tot de backend-applicatie via verbindingsreeksreferenties.
-
-### 3.3 Gegevensretentie
-- Uw gegevens worden bewaard zolang uw account actief is.
-- Na accountverwijdering (zie Sectie 5) worden alle persoonsgegevens binnen 30 dagen permanent uit MongoDB verwijderd.
-- Geaggregeerde, anonieme analysegegevens kunnen oneindig worden bewaard en kunnen niet worden teruggevoerd naar individuele gebruikers.
-
----
-
-## 4. Gegevensdeling en Derde Partijen
-
-We delen uw gegevens met de volgende derde partijen alleen zoals hieronder beschreven:
-
-| Derde partij | Gedeelde gegevens | Doel |
+| Verwerkingsactiviteit | Wettelijke Grondslag (AVG / Wereldwijde Normen) | Gebruikte Gegevenscategorieën |
 |---|---|---|
-| **MongoDB Atlas** | Alle gebruikersgegevens en garderobeafbeeldingen | Cloud database-hosting |
-| **Google (OAuth)** | E-mail, naam, profielfoto | Authenticatie en profielcreatie |
-| **Google Calendar API** | Calendargebeurtenisgegevens (indien verbonden) | Stylist-planningfuncties |
-| **Google People API** | Contactgegevens (indien verbonden) | Sociale functies |
-| **Google Gemini API** | Garderobemetadata en itembeschrijvingen | AI-stylistaanbevelingen |
-| **Stripe** | Betalingstokens, facturatieinfo | Betalingsverwerking |
-| **PayPal** | Betalingstokens, facturatieinfo | Betalingsverwerking |
-| **Resend / SendGrid** | E-mailadres en naam | Levering van transactie-e-mails |
-
-**We verkopen uw persoonsgegevens of garderobeafbeeldingen NIET aan derde partijen makelaars, adverteerders of data-aggregators.**
+| Indexeren en catalogiseren van digitale garderobe en maken van outfits | Uitvoering van een overeenkomst | Kledingfoto's, categorieën, kleuren, metadata |
+| AI-achtergrondverwijdering en extractie van transparante kledinguitsneden | Uitvoering van een overeenkomst | Geüploade kledingfoto's |
+| AI Stylist look-aanbevelingen & stijladvies | Gerechtvaardigd belang / Toestemming | Garderobemetadata, stijlvoorkeuren |
+| Weersbestendige outfitplanning | Toestemming (locatiemachtiging) | Globale locatie (stad/coördinaten) |
+| Transactionele communicatie (beveiligingsmeldingen, wachtwoordherstel) | Uitvoering van een overeenkomst | E-mailadres van het account |
+| Marktplaatstransacties en betalingsverwerking | Uitvoering van een overeenkomst | Tokens van betalingsproviders (Stripe/PayPal), transactiegeschiedenis |
 
 ---
 
-## 5. Uw Rechten en Accountverwijdering
+## 4. Gegevensopslag, Beveiliging en Beschermingsmechanismen
 
-Onder de AVG (EU/EEA), de CCPA (Californië) en andere toepasselijke privacywetten heeft u de volgende rechten:
+Wij implementeren robuuste administratieve, technische en fysieke beveiligingsmaatregelen die zijn ontworpen om uw gevoelige gegevens te beschermen tegen ongeautoriseerde toegang, wijziging, openbaarmaking of vernietiging:
 
-### 5.1 Toegang en Export
-U kunt een kopie van alle persoonsgegevens die wij over u hebben vragen door ons te contacteren (zie Sectie 6). We verstrekken een JSON-export van uw accountgegevens, inclusief garderobestukken, outfits en profielinformatie.
-
-### 5.2 Correctie
-U kunt uw profielinformatie op elk moment bijwerken of corrigeren via de Instellingen-pagina van de app. Bewerkbare velden omvatten: weergavenaam, voornaam en achternaam, telefoon, geboortedatum, adres, lichaamsmaten, thuislocatie en stijlvoorkeuren.
-
-### 5.3 Verwijdering (Recht op vergetelheid)
-U kunt uw account en alle bijbehorende gegevens op elk moment verwijderen:
-
-- **In de app:** Ga naar Instellingen → Account → Account verwijderen.
-- **API:** Stuur een `POST`-verzoek naar `/api/v1/users/me/delete` (geauthenticeerd).
-
-Accountverwijdering activeert een **cascadeverwijdering** over alle collecties:
-- Gebruikersdocument
-- Alle garderobestukken (foto's en metadata)
-- Alle outfits
-- Alle marktplaatsadvertenties
-- Alle reistaschen en paklijsten
-- Alle stylist-sessies en berichten
-- Alle kredietopnames en transactierecords
-- Alle embeddings (AI- gegenereerde gegevens)
-- Alle webpush-abonnementen
-
-Een bevestigingsmail wordt naar uw geregistreerde e-mailadres gestuurd.
-
-### 5.4 Data Portabiliteit
-U kunt uw gegevens op elk moment aanvragen in een gestructureerd, machineleesbaar formaat (JSON). Neem contact met ons op via de gegevens in Sectie 6.
-
-### 5.5 Toestemming intrekken
-U kunt uw toestemming voor locatie-toegang, camera-toegang en marketingcommunicatie op elk moment intrekken via de apparaatinstellingen of de Instellingen-pagina van de app. Het intrekken van toestemming kan bepaalde app-functies beperken (bijv. weergebaseerde outfitaanbevelingen).
-
-### 5.6 Recht van Beroep (LGPD Art. 18, AVG Art. 21)
-Onder de LGPD (Brazilië) en de AVG (EU/EEA) heeft u het recht om bezwaar te maken tegen de verwerking van uw persoonsgegevens voor specifieke doeleinden, waaronder:
-- Verwerking op basis van rechtmatig belang
-- Directe marketing
-- Profiling en geautomatiseerde besluitvorming (inclusief AI-gebaseerde stylistaanbevelingen)
-
-Om bezwaar te maken, neem contact met ons op via de gegevens in Sectie 6.
-
-### 5.7 Internationale Gegevensoverdrachten
-DressApp is een internationale applicatie. Uw gegevens kunnen worden overgedragen en verwerkt in landen buiten uw woonland, waaronder Israël en de Verenigde Staten. Wij garanderen dat alle overdrachten worden geregeld door adequaat beschermingsmaatregelen, inclusief Standaard Contractuele Clausules (SCC) wanneer dit door de toepasselijke wet wordt vereist.
+- **Versleuteling tijdens Overdracht (Encryption in Transit):** 100% van de gegevens die tussen uw browser/app en onze servers worden verzonden, wordt versleuteld met behulp van moderne **HTTPS en Transport Layer Security (TLS 1.3 / TLS 1.2)**.
+- **Geïsoleerde Zelfgehoste Database & Opslagbescherming:** Alle databaserecords, garderobemetadata, profielgegevens en versleutelde OAuth-inloggegevens worden opgeslagen in de geïsoleerde, in eigen beheer zijnde **on-premises MongoDB 7.0-database** van DressApp, gehost op speciale **Hetzner Cloud (EU)** NVMe-opslag; deze is geïsoleerd binnen een intern privé-containernetwerk zonder openbare blootstelling van databasepoorten en wordt beschermd door AES-256-versleuteling voor gevoelige tokens en geautomatiseerde lokale back-ups.
+- **Cryptografische Wachtwoordbescherming:** Gebruikerswachtwoorden worden versleuteld met bcrypt-hashing inclusief unieke salts per gebruiker.
+- **Toegangscontrole:** Toegang tot de productie-infrastructuur is strikt beperkt via SSH-sleutelauthenticatie, multi-factor-authenticatie (MFA), op rollen gebaseerde toegangscontrole met minimale rechten (least-privilege RBAC) en continue auditlogging.
 
 ---
 
-## 6. Contactinformatie
+## 5. Bewaring en Verwijdering van Gegevens
 
-Voor privacy gerelateerde vragen, verzoeken tot gegevens toegang, verwijderingsverzoeken of het melden van een privacy zorg, neem contact met ons op:
+### 5.1 Bewaartermijn
+- Wij bewaren uw persoonsgegevens en garderoberecords zolang uw DressApp-gebruikersaccount actief blijft.
+- Google OAuth-toegangstokens en agendacache worden alleen bewaard zolang de Google-integratie actief en door u geautoriseerd blijft.
 
-**E-mail:** dev@dressapp.co
-**Adres:** DressApp, 11 Hanoter St, 8442711 Be'er-Sheva, Israël
+### 5.2 Google-integraties Ontkoppelen
+- U kunt uw Google-account of Google Agenda-integratie op elk moment rechtstreeks in de app ontkoppelen via **Instellingen → Integraties → Google ontkoppelen** (Settings → Integrations → Disconnect Google).
+- U kunt de machtigingen van DressApp ook rechtstreeks intrekken via uw [Beveiligingsinstellingen van uw Google-account](https://myaccount.google.com/permissions).
+- Na ontkoppeling worden opgeslagen Google OAuth-tokens en in cache bewaarde agendagegevens onmiddellijk gewist uit onze actieve systemen.
 
-We zullen op alle geldende verzoeken binnen 30 dagen reageren, zoals vereist door toepasselijke privacy wetten inclusief AVG, CCPA, LGPD, PIPEDA en andere internationale gegevensbeschermingsregelgeving.
+### 5.3 Accountverwijdering & Recht op Gegevenswissing
+U hebt het absolute recht om uw account en alle bijbehorende gegevens op elk moment te verwijderen:
+- **Verwijdering met Één Klik in de App:** Ga naar **Instellingen → Account → Account verwijderen** (Settings → Account → Delete Account).
+- **Via E-mailverzoek:** Stuur een e-mail vanaf uw geregistreerde e-mailadres naar [dev@dressapp.co](mailto:dev@dressapp.co) met als onderwerp "Delete My Account" (Verwijder mijn account).
 
-Voor Verzoeken tot Toegang door Betreffenden (DSAR's), voeg het e-mailadres van uw account toe en een beschrijving van de gegevens waarop u toegang wilt of die u wilt wijzigen.
+Accountverwijdering voert een onmiddellijke, onomkeerbare cascadeverwijdering uit in alle databases, waarbij het volgende permanent wordt gewist:
+- Uw gebruikersprofiel, identiteitsgegevens en inloggegevens;
+- Alle garderobe-items, geüploade foto's en vrijstaande afbeeldingen zonder achtergrond;
+- Alle opgeslagen outfits, lookbook-items en paklijsten;
+- Alle marktplaatsadvertenties en transactieverwijzingen;
+- Alle gespreksgeschiedenissen met de AI-stylist, vector-embeddings en Google-tokens.
+
+Alle gegevens worden binnen 30 dagen na het verwijderingsverzoek volledig vernietigd.
 
 ---
 
-## 7. Privacy van Minderjarigen
+## 6. Gegevensdeling, Verstrekking en Derden
 
-DressApp is niet bedoeld voor kinderen onder de 16 jaar (of de van toepassing zijnde leeftijd van digitale toestemming in uw jurisdictie, welk hoger is). We verzamelen niet bewust persoonsgegevens van personen jonger dan deze leeftijd. Als wij weten dat een minderjarige ons persoonsgegevens heeft verstrekt, zullen we maatregelen nemen om deze tijdig te verwijderen.
+Wij verkopen, verhuren of verhandelen uw persoonsgegevens niet. De kern-databaseopslag en basis computer vision ("The Eyes") worden rechtstreeks door DressApp geëxploiteerd op onze geïsoleerde, in eigen beheer zijnde on-premises serverinfrastructuur zonder tussenkomst van externe database-SaaS-aanbieders. Wij verstrekken uitsluitend gegevens aan gescreende infrastructuur- en dienstverleners die ons ondersteunen bij het exploiteren van ons platform en die strikt gebonden zijn aan verwerkersovereenkomsten:
 
-Als u een ouder of wettelijke voogd bent en denkt dat uw kind ons persoonsgegevens heeft verstrekt, neem dan contact met ons op via dev@dressapp.co en we zullen onmiddellijk optreden.
-
----
-
-## 8. Internationale Conformiteit
-
-DressApp is ontworpen om in alle landen te werken. Dit Privacybeleid is opgesteld om te voldoen aan de volgende internationale gegevensbeschermingskaders:
-
-| Kader | Jurisdictie | Belangrijkste gedekte bepalingen |
+| Dienstverlener | Verstrekte Gegevens | Doel |
 |---|---|---|
-| **AVG** | EU/EEA | Wettelijke grondslag, rechten van de betrokkene, DPO-contact, internationale overdrachten, melding van schendingen |
-| **CCPA/CPRA** | Californië, VS | Recht om te weten, te verwijderen, te kiezen voor geen verkoop, niet-discriminatie |
-| **LGPD** | Brazilië | Wettelijke grondslag, rechten van de betrokkene, DPO, internationale overdrachten, toestemming |
-| **PIPEDA** | Canada | Toestemming, toegang, correctie, verantwoordelijkheid, melding van schendingen |
-| **POPIA** | Zuid-Afrika | Wettelijke verwerking, rechten van de betrokkene, grensoverschrijdende overdracht |
-| **PDPA** | Thailand | Toestemming, rechten van de betrokkene, internationale overdracht |
-| **PDPL** | Saoedi-Arabië | Wettelijke grondslag, rechten van de betrokkene, internationale overdracht |
-
-Wanneer de wet van een specifieke jurisdictie aanvullende rechten of beschermingen vereist die verder gaan dan wat in dit beleid wordt beschreven, passen deze aanvullende rechten toe.
+| **Hetzner Online GmbH (EU-infrastructuur)** | Versleutelde servervolumes waarop de zelfbeheerde on-premises MongoDB-database van DressApp, garderobemedia en on-premises AI-inferentie worden gehost | Speciale Europese Virtual Private Server (VPS) en NVMe-opslaginfrastructuur (AVG-conform EU-datacenter) |
+| **Google Cloud Platform / Google API's** | OAuth-authenticatietokens, stylingvraag-prompts | Gebruikersauthenticatie en Gemini AI-stylinganalyse |
+| **Stripe / PayPal** | Betalingstransactietokens, factureringsmetadata | PCI-conforme betalingsverwerking (kaartnummers raken nooit onze servers) |
+| **Resend / Transactionele E-maildienst** | E-mailadres, weergavenaam van gebruiker | Bezorging van essentiële systeemmeldingen en wachtwoordherstel |
 
 ---
 
-## 9. Wijzigingen in dit Privacybeleid
+## 7. Internationale Privacyrechten (AVG/GDPR, CCPA/CPRA, LGPD, PIPEDA)
 
-We kunnen dit Privacybeleid van tijd tot tijd bijwerken. We zullen u op de hoogte stellen van wezenlijke wijzigingen via:
-
-- Het publiceren van de bijgewerkte politiek op deze pagina met een herziene "Inwerkingtredingsdatum".
-- Het verzenden van een e-mailmelding naar uw geregistreerde e-mailadres voor wezenlijke wijzigingen.
-- Het weergeven van een kennisgeving in de app de volgende keer dat u deze opent.
-
-Wij moedigen u aan om dit beleid periodiek te herzien.
-
----
-
-## 10. Inwerkingtredingsdatum en Toepasselijk Recht
-
-Dit Privacybeleid is inwerking getreden op **27 juli 2026**.
-
-DressApp is een internationale applicatie die in alle landen opereert. Dit beleid wordt geregeld door de principes van de **Algemene Verordening Gegevensbescherming (AVG)** — EU/EEA, de **California Consumer Privacy Act (CCPA)** — Verenigde Staten, de **Lei Geral de Proteção de Dados (LGPD)** — Brazilië, de **Personal Information Protection and Electronic Documents Act (PIPEDA)** — Canada en andere toepasselijke internationale gegevensbeschermingswetten. In geval van conflict tussen deze kaders, geldt de beschermendere standaard voor de gebruiker.
+Afhankelijk van uw geografische locatie beschikt u over specifieke wettelijke privacyrechten:
+- **Recht op Inzage / Overdraagbaarheid:** U kunt een volledige, machineleesbare JSON-kopie opvragen van alle persoonsgegevens die wij over u bewaren.
+- **Recht op Rectificatie:** U kunt onjuiste persoonsgegevens op elk moment bijwerken of corrigeren in de app-instellingen.
+- **Recht op Gegevenswissing:** U kunt verzoeken om permanente verwijdering van uw persoonsgegevens zoals uiteengezet in Artikel 5.
+- **Recht op Beperking of Bezwaar:** U kunt op elk moment bezwaar maken tegen geautomatiseerde profilering of uw toestemming voor locatie-/cameraverwerking intrekken.
+- **Non-discriminatie:** Wij zullen u nooit discrimineren, diensten weigeren of prijzen aanpassen omdat u gebruik hebt gemaakt van uw privacyrechten.
 
 ---
 
-## 11. App Store Conformiteit
+## 8. Privacy van Kinderen
 
-Dit Privacybeleid is openbaar gehost op:
-
-**https://dressapp.co/privacy**
-
-Het wordt verwezen naar in:
-- **Apple App Store Connect** — App Privacy sectie
-- **Google Play Console** — Data Safety sectie
-- **App-instellingen** — een directe koppeling is beschikbaar in het Instellingenmenu
-- **Onboarding-proces** — een privacykennisgeving wordt getoond tijdens de eerste accountinstelling
+DressApp is uitsluitend bestemd voor personen van ten minste 16 jaar oud (of de wettelijke minimumleeftijd voor digitale toestemming in uw rechtsgebied). Wij vragen of verzamelen niet bewust persoonsgegevens van kinderen jonger dan 16 jaar. Indien wij ontdekken dat een minderjarige jonger dan 16 jaar ons persoonsgegevens heeft verstrekt, zullen wij dergelijke gegevens onmiddellijk van onze servers verwijderen.
 
 ---
 
-*DressApp respecteert uw privacy en is committed aan transparante datapraktijken. Als u vragen heeft over dit beleid of over hoe wij uw gegevens verwerken, neem dan contact met ons op via dev@dressapp.co.*
+## 9. Wijzigingen in Dit Privacybeleid
+
+Wij kunnen dit Privacybeleid periodiek bijwerken om wijzigingen in onze diensten, technologische ontwikkelingen of wettelijke vereisten weer te geven. Wanneer er updates plaatsvinden, herzien wij de datum "Laatst bijgewerkt" bovenaan dit beleid en stellen wij gebruikers bij wezenlijke wijzigingen op de hoogte via een aankondiging in de app of een e-mailmelding. Wij raden u aan deze pagina regelmatig te raadplegen.
+
+---
+
+## 10. Contactgegevens & Vragen over Gegevensbescherming
+
+Als u vragen, zorgen, feedback of verzoeken hebt met betrekking tot dit Privacybeleid of uw persoonsgegevens, kunt u contact opnemen met ons Gegevensbeschermingsteam:
+
+- **Organisatie:** DressApp Ltd.
+- **Primair Privacycontact:** [dev@dressapp.co](mailto:dev@dressapp.co)
+- **Contact Gebruikersservice:** [lokoprod@gmail.com](mailto:lokoprod@gmail.com)
+- **Postadres:** DressApp Ltd., 11 Hanoter St, 8442711 Be'er-Sheva, Israël
+- **Officiële Website:** [https://dressapp.co](https://dressapp.co)
+- **Speciale Privacy-URL:** [https://dressapp.co/privacy](https://dressapp.co/privacy)
+
+Wij zetten ons in om alle privacyvragen spoedig en uiterlijk binnen dertig (30) dagen na ontvangst te behandelen en op te lossen.

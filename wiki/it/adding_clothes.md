@@ -1,43 +1,41 @@
-# Acquisizione e aggiunta capi
+# Acquisizione e Aggiunta di Capi
 
-Digitalizza il tuo guardaroba reale in pochi secondi grazie alla scansione AI multimodale, alla rimozione intelligente dello sfondo e al completamento automatico delle immagini.
+Digitalizza il tuo guardaroba fisico in pochi secondi grazie alla scansione IA multimodale, alla rimozione intelligente dello sfondo e al completamento automatico delle immagini.
 
 ## Panoramica
-Carica i tuoi capi tramite scatti live della fotocamera, caricamento multiplo dalla galleria, codici QR del Passaporto Digitale del Prodotto (DPP) o scontrini digitali (OCR fatture). L'AI integrata nel server rimuove automaticamente gli sfondi, assegna oltre 20 attributi di moda e prepara foto da studio pulite senza bisogno di alcuna chiave API.
+Carica i tuoi capi tramite scatti dal vivo della fotocamera, caricamenti multipli dalla galleria, codici QR del Passaporto Digitale del Prodotto (DPP) o ricevute digitali (OCR delle fatture). L'IA on-premises integrata rimuove automaticamente gli sfondi, assegna oltre 20 attributi di moda e prepara ritagli di qualità da studio senza richiedere alcuna chiave API.
 
 ## Prerequisiti
-- Foto chiare e ben illuminate dei capi (selfie allo specchio, foto a figura intera o capi stesi in piano).
-- Autorizzazione all'accesso alla fotocamera per scansionare capi e codici QR.
-- Ricevute digitali o screenshot di fatture (PDF / PNG / JPEG) per gli acquisti online.
-- *(Facoltativo)* Una chiave Google Gemini API personale per utilizzare la ricostruzione fotografica generativa di Nano Banana.
+- Foto chiare e ben illuminate dei capi (selfie allo specchio, foto di outfit a figura intera o capi stesi in piano).
+- Autorizzazione di accesso alla fotocamera per scansionare capi fisici e codici QR.
+- Ricevute digitali o screenshot di fatture (PDF / PNG / JPEG) per gli acquisti e-commerce.
 
-## Istruzioni passo-passo
+## Istruzioni passo dopo passo
 
 1. **Scatto e caricamento interattivo**:
-   - Tocca **Aggiungi capo** &rarr; seleziona **Scatta foto** o carica una o più foto dal tuo dispositivo.
-   - Il rilevamento duplicati integrato controlla all'istante se il capo è già presente nel guardaroba.
-2. **Segmentazione AI e rilevamento capi multipli**:
-   - Il modello visivo isola i singoli capi (giacche, maglie, gonne, pantaloni, calzature, accessori) in un unico passaggio.
-3. **Scontorno AI e foto da studio perfette**:
-   - La pipeline visiva integrata rimuove automaticamente lo sfondo creando immagini PNG trasparenti e nitide per tutti gli account.
-4. **Tagging automatico dei metadati**:
-   - L'AI locale estrae oltre 20 caratteristiche di moda (colori, composizione dei tessuti, sottocategoria, dress code, brand e condizioni).
+   - Tocca **Aggiungi capo** &rarr; seleziona **Scatta foto** o carica una o più foto di outfit dal tuo dispositivo.
+   - Il rilevamento duplicati integrato verifica all'istante se hai già caricato lo stesso indumento.
+2. **Segmentazione IA e rilevamento multi-capo**:
+   - Il modello visivo isola i singoli capi distinti (giacche, top, gonne, pantaloni, calzature, accessori) in un unico passaggio.
+3. **Scontorno IA e foto da studio nitide**:
+   - La pipeline visiva integrata rimuove automaticamente gli sfondi creando immagini PNG trasparenti e nitide per tutti gli account.
+4. **Etichettatura automatica dei metadati**:
+   - Gli account del piano Gratuito (Free Tier) utilizzano il motore on-premises **Eyes** di DressApp (attualmente un modello `Qwen 2.5 VL 3B` ottimizzato), mentre gli utenti dei piani **Manager** e **Professional** usufruiscono del modello Cloud veloce (`Google Gemini 3.5 Flash`) per estrarre oltre 20 attributi di moda (colori, composizione dei tessuti, sottocategoria, dress code, marchio e condizioni).
 5. **Riparazione fotografica generativa avanzata (Nano Banana)**:
-   - Per gli utenti con una chiave Google Gemini API personale, Nano Banana analizza parti coperte o tagliate (borse, mani) e ricostruisce il tessuto mancante per ottenere foto da studio complete.
+   - Nano Banana ispeziona i capi ritagliati per rilevare occlusioni (borse, mani) e bordi dell'inquadratura, ricostruendo e completando automaticamente il tessuto mancante per ottenere fotografie da studio complete senza alcuna chiave API esterna richiesta.
 6. **Ricevute digitali e tag DPP**:
-   - Passa a **Importazione digitale** per leggere le fatture e memorizzare prezzo d'acquisto e taglie verificate.
-   - Tocca **Scansiona QR (DPP)** sull'etichetta per importare la tracciabilità europea e le istruzioni di lavaggio.
+   - Passa a **Importazione digitale** per analizzare le email di conferma d'ordine o le fatture, salvando in modo verificato prezzo d'acquisto e taglie.
+   - Tocca **Scansiona QR (DPP)** sull'etichetta per importare i dati sulla filiera del Passaporto Digitale del Prodotto dell'UE e le istruzioni di lavaggio.
 7. **Salva nel guardaroba**:
-   - Tocca **Salva**. I capi appaiono immediatamente nella griglia del tuo armadio.
+   - Tocca **Salva**. I capi appaiono immediatamente nella griglia del tuo guardaroba.
 
 ## Risultati attesi
-Ogni capo viene archiviato come una fotografia da studio centrata e nitida, arricchita da attributi di ricerca indicizzati e categorie dettagliate.
+Ogni capo appare nel tuo guardaroba digitale come una fotografia centrata, pulita e di qualità da studio, completa di attributi di ricerca indicizzati e ricchi tag tassonomici.
 
 ## Risoluzione dei problemi
-- **Capi tagliati nella foto**: Centra bene il capo su uno sfondo a contrasto. Con una chiave API configurata, Nano Banana può completare bordi o colletti tagliati in automatico.
-- **Illuminazione e contrasto**: Per capi scuri, scatta le foto su uno sfondo chiaro e contrastato.
-- **Errori di lettura dello scontrino**: Usa il selettore interattivo sull'immagine dello scontrino per evidenziare manualmente le righe dei prodotti.
+- **Capi tagliati o parziali nelle foto**: Centra bene il capo su uno sfondo a contrasto. Nano Banana può ricostruire automaticamente colletti o orli tagliati.
+- **Illuminazione e contrasto**: Per risultati ottimali sui capi scuri, scatta le foto su uno sfondo chiaro a contrasto.
+- **Errori OCR sulle ricevute**: Usa il selettore di riquadro interattivo sulle immagini delle ricevute per indicare manualmente le singole righe di prodotto.
 
 ## Limitazioni
-- I caricamenti multipli ad alta risoluzione (>5 capi) vengono elaborati in background per garantire la fluidità del browser.
-- Il ritocco fotografico fotorealistico Nano Banana richiede una chiave Google Gemini API personale.
+- I caricamenti multipli ad alta risoluzione (> 5 capi) vengono elaborati tramite code asincrone in background per garantire prestazioni fluide senza timeout del browser.

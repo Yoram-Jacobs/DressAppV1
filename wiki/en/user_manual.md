@@ -15,11 +15,11 @@ DressApp is an AI-driven personal wardrobe manager, styling advisor, and circula
 - **Cost-Per-Wear (CPW) Analytics**: Insights into wardrobe capitalization value, utilization rates, and usage optimization.
 
 ### Technology Architecture
-- **Backend Edge**: Python 3.11 with FastAPI, using asynchronous Motor drivers connected to a MongoDB Atlas cluster.
-- **Frontend SPA**: React 19 single-page application utilizing `useSyncExternalStore` custom stores (`stylistStore`, `dailySuggestionsStore`, `useOutfitStore`, `useClosetStore`, `useSuitcaseStore`), Tailwind CSS, Shadcn/UI primitives, and `react-i18next` supporting 12 locales.
+- **Backend Edge**: Python 3.11 with FastAPI, using asynchronous Motor drivers connected to a dedicated on-premises MongoDB 7.0 database on NVMe storage.
+- **Frontend SPA**: React 19 single-page application utilizing `useSyncExternalStore` custom stores (`stylistStore`, `dailySuggestionsStore`, `useOutfitStore`, `useClosetStore`, `useSuitcaseStore`), Tailwind CSS, Shadcn/UI primitives, and `react-i18next` supporting 13 locales.
 - **State & Network Optimization**: In-flight request deduplication, 15-minute store caching, and `visibilitychange` tab revalidation yielding zero background GET requests when idle.
-- **Local Machine Learning & Sizing**: CPU-local U2-Net (`rembg`) background matting, SegFormer-b2 clothing parsing, Fashion-CLIP embeddings, and ANSUR II physical body measurement regression model (`body_predictor.py`). Optionally routes to self-hosted GPU containers (SegFormer-b3 + BiRefNet) for fast operations.
-- **Conversational STT/TTS**: Real-time client-side Web Speech recognition fallback, multimodal server-side Gemini 2.5 Flash modulations, and on-device offline Piper/Sherpa-ONNX engines.
+- **Local Machine Learning & Sizing**: CPU-local U2-Net (`rembg`) background matting, SegFormer-b2 clothing parsing, Fashion-CLIP embeddings, and ANSUR II physical body measurement regression model (`body_predictor.py`). Includes the dedicated on-premises `dressapp-eyes` container running a fine-tuned `Qwen 2.5 VL 3B` model (`Qwen2.5-VL-3B-Instruct-Q4_K_M.gguf` + `mmproj`) on port 7860 for Free Tier users and automated quota fallback.
+- **Conversational STT/TTS**: Real-time client-side Web Speech recognition fallback, multimodal server-side Gemini modulations, and on-device offline Piper/Sherpa-ONNX engines.
 - **External Integration Services**: OpenWeatherMap API for weather fetching, Google Calendar OAuth for daily schedule exports, OpenStreetMap (Nominatim) address autocomplete, and PayPal Subscriptions/Checkout REST APIs.
 
 ---
@@ -27,13 +27,14 @@ DressApp is an AI-driven personal wardrobe manager, styling advisor, and circula
 ## 2. Prerequisites
 
 ### Host Environment Requirements
-- **Hardware**: Minimum 4 GB RAM VPS (e.g., Hetzner VPS hosting the production `dressapp.co`).
-- **Dependencies**: Docker & Docker Compose stack (including backend, frontend, and Caddy TLS termination).
-- **Environment Variables**: API keys configuration (`GEMINI_API_KEY`, `DEEPGRAM_API_KEY`, `OPENWEATHER_API_KEY`, `PAYPAL_LIVE_CLIENT_ID/SECRET`, and Google Calendar OAuth tokens).
+- **Hardware**: Minimum 8 GB RAM VPS (e.g., Hetzner CPX32 VPS hosting the production `dressapp.co`).
+- **Dependencies**: Docker & Docker Compose stack (including on-premises MongoDB 7.0, backend, eyes inference server, frontend, and Caddy TLS termination).
+- **Environment Variables**: API keys configuration (`GEMINI_API_KEY`, `EYES_API_TOKEN`, `DEEPGRAM_API_KEY`, `OPENWEATHER_API_KEY`, `PAYPAL_LIVE_CLIENT_ID/SECRET`, and Google Calendar OAuth tokens).
 
 ### User App Requirements
 - **Web Browser**: Google Chrome or Apple Safari (required for full voice feature compatibility).
 - **Permissions**: Grant Camera permission (for clothing snapshots and QR scans) and Microphone permission (for voice conversation).
+- **Zero-BYOK Tiered AI**: Free users use DressApp's on-premises Eyes (`Qwen 2.5 VL 3B`) model; Manager and Professional plan users enjoy the fast Cloud model (`Gemini 3.5 Flash`). No user-supplied API keys are needed.
 - **Network**: Active connection for LLM processing, with IndexedDB caching providing offline catalog browsing.
 
 ---
@@ -74,7 +75,7 @@ Describe styling dilemmas and receive hands-free spoken outfit advice.
 2. Click the microphone icon `[Microphone]` in the chat input bar.
 3. Speak your request (e.g., "What top matches my beige trousers for a rainy outdoor lunch?").
 4. If Web Speech is supported, your voice transcribes live in the input box. If not, the app records a WebM file and uploads it.
-5. The backend routes the voice query to the local Gemma4 container (falling back to Gemini 2.5 Flash transcription if offline).
+5. The backend routes queries for Free users to the on-premises Eyes container (fine-tuned `Qwen 2.5 VL 3B`) and routes Manager and Professional plan users to the fast Cloud model (`Google Gemini 3.5 Flash`), with automatic fallback to on-premises Eyes on cloud rate limits.
 6. The stylist processes your wardrobe history, local weather forecasts, and calendar events to formulate a styling proposal.
 7. The stylist speaks the response using preselected voice profiles (`puck`, `aoede`, or `charon`).
 8. Tap **Play reply** (or **Replay** in Hebrew mode) on the card to replay the voice audio.
@@ -109,9 +110,9 @@ The Profile page serves as the core control panel for DressApp. Configuration fi
    - **Why does it matter?**: It tailors default recommendations and scores content algorithms.
    - **Subsystem Dependencies**: The sex selection directly affects the ranking logic of daily Trend Scout cards. If a news card category mismatches the user's sex, the algorithm applies a -2.0 score penalty, demoting it in the feed.
 
-6. **AI Configuration (SaaS keys, edge mode, credits)**
-   - **Why does it matter?**: It determines billing routing, operational performance, and network offline status.
-   - **Subsystem Dependencies**: Routes text/audio generation queries. Standard setups consume DressApp system credits. Inputting personal API keys (Google AI Studio, Anthropic, OpenAI) redirects charges to the user's developer billing accounts. Selecting edge local mode routes queries to the offline Gemma container.
+6. **AI Model Routing & Subscription Plans (Zero-BYOK Tiered Routing & Credits)**
+   - **Why does it matter?**: It determines tiered model routing and credit consumption with zero user API keys required.
+   - **Subsystem Dependencies**: Free-tier users route to the on-premises Eyes container (fine-tuned `Qwen 2.5 VL 3B`). Manager and Professional plan subscribers route to the fast Cloud model (`Google Gemini 3.5 Flash`), with automatic quota fallback to on-premises Eyes.
 
 7. **Scheduler & Push (Frequency, daily alarm, style focus)**
    - **Why does it matter?**: It manages automatic daily style pushes.

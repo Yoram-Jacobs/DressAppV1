@@ -11,11 +11,11 @@ export default function TermsOfService() {
   const { content, loading } = useLegalPage({
     basePath: '/legal',
     filename: 'TERMS_OF_SERVICE',
-    fallbackToDefault: false,
+    fallbackToDefault: true,
   });
 
   const lang = (i18n.language || 'en').split('-')[0].toLowerCase();
-  const isRTL = lang === 'ar';
+  const isRTL = lang === 'ar' || lang === 'he';
   const canonicalUrl = lang === 'en'
     ? 'https://dressapp.co/terms'
     : `https://dressapp.co/terms?lang=${lang}`;
@@ -98,7 +98,7 @@ export default function TermsOfService() {
             {!loading && content && (
               <div
                 dir={isRTL ? 'rtl' : 'ltr'}
-                className="space-y-2"
+                className="space-y-2 text-start"
               >
                 {parseMarkdown(content)}
               </div>

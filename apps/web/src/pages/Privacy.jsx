@@ -14,6 +14,7 @@ export default function Privacy() {
   });
 
   const lang = (i18n.language || 'en').split('-')[0].toLowerCase();
+  const isRTL = lang === 'ar' || lang === 'he';
   const canonicalUrl = lang === 'en'
     ? 'https://dressapp.co/privacy'
     : `https://dressapp.co/privacy?lang=${lang}`;
@@ -94,7 +95,10 @@ export default function Privacy() {
               </div>
             )}
             {!loading && content && (
-              <div className="space-y-2">
+              <div
+                dir={isRTL ? 'rtl' : 'ltr'}
+                className="space-y-2 text-start"
+              >
                 {parseMarkdown(content)}
               </div>
             )}
