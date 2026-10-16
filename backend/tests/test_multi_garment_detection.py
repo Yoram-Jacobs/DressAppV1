@@ -1153,6 +1153,35 @@ def test_apply_alpha_intersection_single_item_bypass():
     assert res == dummy_bytes, "Single item must bypass alpha intersection completely"
 
 
+def test_apply_alpha_intersection_accessories_bypass():
+    """Verify that accessories (belts, bags, scarves, jewelry) bypass mask intersection and preserve pristine rembg output."""
+    from app.services.clothing_parser import apply_alpha_intersection
+    import io
+    from PIL import Image
+
+    # Synthetic brown leather belt
+    img = Image.new("RGBA", (100, 100), (0, 0, 0, 0))
+    for y in range(30, 70):
+        for x in range(20, 80):
+            img.putpixel((x, y), (140, 80, 45, 255))
+    buf = io.BytesIO()
+    img.save(buf, format="PNG")
+    matted_bytes = buf.getvalue()
+
+    # Fragmented SegFormer mask (only covers 5x5 corner of belt)
+    broken_seg = np.zeros((100, 100), dtype=np.uint8)
+    broken_seg[30:35, 20:25] = 255
+
+    for acc_cat in ("Accessories", "accessory", "belt", "bag", "jewelry"):
+        res = apply_alpha_intersection(
+            matted_bytes,
+            seg_mask_bbox=broken_seg,
+            category=acc_cat,
+            label="Black Leather Dress Belt",
+        )
+        assert res == matted_bytes, f"Accessory category {acc_cat} must return pristine matted bytes without SegFormer eating"
+
+
 def test_apply_alpha_intersection_preserves_crewneck_opening():
     """Verify that crew-neck collar opening in tops is not filled in by hole filling."""
     from app.services.clothing_parser import apply_alpha_intersection

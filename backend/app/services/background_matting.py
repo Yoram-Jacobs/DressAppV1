@@ -129,7 +129,10 @@ def drop_disconnected_islands(
             continue
         comp_mask = labeled == idx
         min_dist = float(dist_from_dom[comp_mask].min()) if comp_mask.any() else 999.0
-        if min_dist <= 12.0:
+        # Tolerant proximity threshold: coiled belts, folded straps, shoe laces, or multi-piece garments
+        # may have gaps up to 25px or 3% of the image dimension.
+        prox_threshold = max(25.0, float(min(arr.shape[:2])) * 0.03)
+        if min_dist <= prox_threshold:
             if s < max_size * min_area_ratio:
                 drop_indices.append(idx)
         else:

@@ -2465,6 +2465,18 @@ def apply_alpha_intersection(
         norm_cat in {"footwear", "shoes"}
         or any(w in norm_lbl for w in ("shoe", "boot", "sneaker", "sandal", "slipper", "clog", "heel", "flopper", "slides"))
     )
+    is_acc = bool(
+        norm_cat in {"accessory", "accessories", "headwear", "bag", "belt", "jewelry"}
+        or any(w in norm_lbl for w in ("hat", "cap", "beanie", "bag", "belt", "necklace", "watch", "bracelet", "scarf", "tie", "gloves", "wallet"))
+        or any(w in str(category).lower() for w in ("accessory", "accessories", "bag", "belt", "jewelry", "חגור", "תיק", "כובע", "צעיף"))
+    )
+    if is_acc and not is_eyewear:
+        # Accessories (belts, bags, scarves, hats, jewelry, watches) are packshots or flat-lays
+        # with no body/limb occlusion. SegFormer human body parsing and skin chrominance filtering
+        # must NEVER touch accessories, as rembg provides the complete studio cutout and SegFormer
+        # or skin filtering would fracture or chew leather, buckles, and straps.
+        return matted_png_bytes
+
     _dilate_pct = _resolve_dilate_pct_for_category(category, label=label)
     if is_eyewear:
         _dilate_pct = min(_dilate_pct, 0.015)
@@ -2623,10 +2635,15 @@ def apply_alpha_intersection(
         elif (norm_cat in {"top", "outerwear", "suit", "fullbody", "dress"}) and mask_resized is not None:
             # Hands hanging next to jacket hems or protruding from sleeve cuffs
             is_skin = is_skin & ((mask_resized <= 40) | is_hand_zone)
+        else:
+            is_skin = np.zeros_like(is_skin, dtype=bool)
 
-        # Confident garment fabric must NEVER be classified as skin or excised
+        # Confident garment fabric must NEVER be classified as skin or excised.
+        # On non-nude garments, hands protruding from sleeve cuffs / waistbands are not shielded by garment_protect.
         if garment_protect is not None and garment_protect.any():
-            is_skin = is_skin & (~garment_protect)
+            limb_shield = is_hand_zone if norm_cat in {"top", "outerwear", "suit", "fullbody", "dress"} else (is_waist_zone if is_bottom else False)
+            protect_skin = garment_protect if is_garment_nude else (garment_protect & (~limb_shield))
+            is_skin = is_skin & (~protect_skin)
 
         # In hand zone / waistband: any skin detection represents human limbs/hands/wrists/fingers.
         # Morphological dilation fills anti-aliased finger edges, knuckles, nailbeds, and creases,

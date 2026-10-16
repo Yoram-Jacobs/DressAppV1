@@ -31,6 +31,12 @@ def test_pick_segformer_mask_for_category():
     assert mask is not None
     assert np.array_equal(mask, mock_mask)
 
+    # Accessories and headwear must return (None, None) to prevent SegFormer fragmentation
+    for acc_cat in ("Accessories", "accessory", "belt", "bag", "headwear"):
+        acc_mask, acc_human = closet_service.pick_segformer_mask_for_category(garments, acc_cat)
+        assert acc_mask is None, f"{acc_cat} must not return a SegFormer mask"
+        assert acc_human is None, f"{acc_cat} must not return a human mask"
+
 def test_safe_analysis():
     # Valid fields
     parsed = {"title": "Red Dress", "category": "Full Body"}

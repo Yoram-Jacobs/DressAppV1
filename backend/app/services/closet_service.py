@@ -79,6 +79,11 @@ def pick_segformer_mask_for_category(
         if category
         else None
     )
+    if target_kind in ("accessory", "headwear"):
+        # SegFormer ATR human parser cannot reliably segment standalone accessories
+        # (belts, bags, scarves, hats, jewelry). Returning None, None ensures rembg's
+        # clean studio cutout is preserved without being eaten or fragmented.
+        return None, None
 
     def _area(g: Dict[str, Any]) -> int:
         m = g.get("mask")
@@ -326,6 +331,7 @@ async def run_background_matte(
                 category=category,
                 human_mask=human_mask,
                 is_padded_canvas=True,
+                is_single_item=True,
             )
             if refined:
                 logger.info(

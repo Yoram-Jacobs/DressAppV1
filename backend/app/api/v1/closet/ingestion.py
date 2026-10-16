@@ -1489,7 +1489,15 @@ async def clean_item_background(
 
     from app.services import clothing_parser as _cp
 
-    if settings.USE_LOCAL_CLOTHING_PARSER:
+    cat_str = str(item.get("category") or "").strip().lower()
+    sub_str = str(item.get("sub_category") or item.get("item_type") or item.get("title") or "").strip().lower()
+    is_acc_item = (
+        cat_str in {"accessory", "accessories", "headwear", "bag", "bags", "belt", "belts", "jewelry"}
+        or any(w in sub_str for w in ("hat", "cap", "beanie", "bag", "belt", "necklace", "watch", "bracelet", "scarf", "tie", "gloves", "wallet"))
+        or any(w in cat_str for w in ("accessory", "accessories", "bag", "belt", "jewelry", "חגור", "תיק", "כובע", "צעיף"))
+    )
+
+    if settings.USE_LOCAL_CLOTHING_PARSER and not is_acc_item:
         # Patch: Run rembg and SegFormer concurrently to halve the latency
         bg_task = asyncio.create_task(background_matting.remove_background(crop_bytes))
         cp_task = asyncio.create_task(_cp.parse_garments(crop_bytes))
@@ -1533,9 +1541,11 @@ async def clean_item_background(
     # crop. All SegFormer / intersection failures are SOFT — they fall
     # back to the rembg-only output that ``remove_background`` already
     # returned, so this never regresses the legacy behaviour.
+    # Single closet items and accessories skip SegFormer truncation so
+    # isolated straps, buckles, belts, and collars are never eaten.
     refined_png: bytes = result["image_png"]
     intersection_applied = False
-    if settings.USE_LOCAL_CLOTHING_PARSER:
+    if settings.USE_LOCAL_CLOTHING_PARSER and not is_acc_item:
         seg_mask = None
         human_mask = None
         try:
@@ -1563,6 +1573,7 @@ async def clean_item_background(
                     category=item.get("category"),
                     label=item.get("sub_category") or item.get("item_type") or item.get("title"),
                     human_mask=human_mask,
+                    is_single_item=True,
                 )
                 if maybe_refined:
                     logger.info(
