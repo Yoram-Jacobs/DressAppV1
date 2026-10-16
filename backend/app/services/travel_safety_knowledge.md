@@ -136,6 +136,9 @@ Keywords: uae, dubai, abu dhabi, sharjah, qatar, doha, kuwait, oman, muscat, bah
   * **Women**: Loose, breathable clothing covering shoulders, cleavage, and knees (linen trousers, midi/maxi skirts, kaftans, or tunics) prevents street harassment and shows cultural respect. Carry a lightweight scarf/pashmina for entering sacred sites.
   * **Men**: Long breathable trousers (linen or cotton chinos) and collared or short-sleeved shirts; avoid walking shirtless or wearing sleeveless tank tops in medinas.
 * **Mosque Visitation (Hassan II Mosque in Casablanca, Al-Azhar & Muhammad Ali Mosques in Cairo, King Abdullah I Mosque in Amman)**: Both men and women must cover shoulders, upper arms, and legs to the ankles; women must cover their hair; shoes must be removed before stepping onto prayer carpets.
+* **Safety & Security Warnings (Medinas & Crowded Souqs)**:
+  * Beware of pickpocketing, bag snatching, and distraction scams in crowded souqs (e.g. Jemaa el-Fnaa in Marrakech, Khan el-Khalili in Cairo).
+  * Avoid unlit or deserted narrow alleys (*derbs*) alone late at night; keep valuables in zipped front pockets or cross-body bags.
 
 ---
 

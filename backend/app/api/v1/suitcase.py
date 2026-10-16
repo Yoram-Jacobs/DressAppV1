@@ -150,7 +150,7 @@ GEMINI_SUITCASE_SYSTEM_PROMPT = (
     "Your goals are:\n"
     "1. Select appropriate clothing from the user's Closet honoring weather, duration, scheduled calendar events/activities during the trip. You MUST translate and understand calendar event titles if they are in another language (e.g. Hebrew like 'יום טרקים' = trekking day, 'ארוחת ערב חגיגית' = festive/gala dinner) and design outfits specifically for each day's scheduled activities (e.g., activewear/comfortable athletic shoes for active/trekking days, formalwear/dressy clothes for festive dinners/gala events, modest long-sleeved/ankle-length attire for mosque or temple visits, or comfortable travel outfits for flight days), while respecting cultural conventions, and strictly adhering to the user's personal style preferences, aesthetic, and outfit-generation rules.\n"
     "2. Minimize the load: select versatile garments that can be recombined into different outfits (e.g. reuse jeans, shirts, jackets, shoes across multiple days).\n"
-    "3. Highlight cultural or religious dress restrictions of the destination using the provided Safety Context.\n"
+    "3. In 'cultural_guidelines', detail modesty and dress codes (covering shoulders, knees, chest, sacred sites). In 'danger_zones_info', detail safety and security precautions (pickpocketing, night cautions) using the provided Safety Context.\n"
     "4. Alert if crucial items are missing.\n"
     "5. Recommend shopping advisor local store recommendations (recommend top 3 fashion stores in the destination area where the user can buy missing items).\n"
     "6. If 'Current Outfits' and 'Current Packing List' are provided in the input, the user is requesting modifications or refinements to their existing suitcase plan. Execute the requested changes while keeping the rest of the outfits as stable as possible.\n"
@@ -958,7 +958,9 @@ async def pack_suitcase(
         user_brief_parts.append(
             f"\nCONCISE CAPSULE REQUIREMENT: Return exactly {target_outfit_count} versatile core outfits "
             f"(using exact 'id' strings from User's Closet Items for 'closet_item_id'), 2-3 'missing_items', "
-            f"and 2 'local_fashion_stores'. Keep descriptions under 8 words and reasoning to 1 sentence."
+            f"and 2 'local_fashion_stores'. Keep descriptions under 8 words and reasoning to 1 sentence.\n"
+            f"• ALERTS REQUIREMENT: Populate BOTH 'cultural_guidelines' (modesty/dress code: shoulders, knees, chest, sacred sites) "
+            f"and 'danger_zones_info' (safety/security: pickpockets, night cautions) with 1 concise sentence each."
         )
     user_brief_parts.append(lang_directive)
     user_brief = "\n".join(user_brief_parts)
@@ -975,6 +977,26 @@ async def pack_suitcase(
         timeout=90.0 if is_gemma_provider else None,
     )
     analysis = _parse_suitcase_json(analysis_str)
+
+    # Safety net: ensure cultural_guidelines has modesty details if model omitted them but context has them
+    if not analysis.get("cultural_guidelines") and eff_safety_context:
+        for line in eff_safety_context.splitlines():
+            line_clean = line.strip().lstrip("*#- ").strip()
+            line_low = line_clean.lower()
+            if any(k in line_low for k in ("modesty", "cover", "shoulders", "knees", "cleavage", "scarf", "hijab", "abaya", "mosque", "temple", "swimwear", "צניעות", "כיסוי", "ברכיים", "כתפיים", "מסגד")):
+                if len(line_clean) > 20 and not line_clean.startswith("##") and "keywords:" not in line_low:
+                    analysis["cultural_guidelines"] = line_clean
+                    break
+
+    # Safety net: ensure danger_zones_info has security details if model omitted them but context has them
+    if not analysis.get("danger_zones_info") and eff_safety_context:
+        for line in eff_safety_context.splitlines():
+            line_clean = line.strip().lstrip("*#- ").strip()
+            line_low = line_clean.lower()
+            if any(k in line_low for k in ("pickpocket", "safety", "security", "crime", "alley", "theft", "danger", "warning", "בטיחות", "ביטחון", "כיוס", "זהירות", "סמטאות")):
+                if len(line_clean) > 20 and not line_clean.startswith("##") and "keywords:" not in line_low:
+                    analysis["danger_zones_info"] = line_clean
+                    break
 
     outfits = [o for o in (analysis.get("outfits") or []) if isinstance(o, dict)]
     missing_items = [m for m in (analysis.get("missing_items") or []) if isinstance(m, dict)]

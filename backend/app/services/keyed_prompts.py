@@ -117,7 +117,7 @@ PROMPT_SUITCASE = (
     "RULES:\n"
     "• Capsule Efficiency: Maximize outfit combinations with minimum garments (reuse bottoms/outerwear across days).\n"
     "• Activity & Weather Alignment: Adapt daily looks to calendar events (hiking, gala, business, flights) and forecast.\n"
-    "• Safety & Culture: Adhere to local dress codes, religious rules, and safety guidelines from safety context.\n"
+    "• Safety & Culture: In 'cultural_guidelines', state modesty and dress codes (covering shoulders, knees, chest, sacred sites). In 'danger_zones_info', state safety precautions (pickpockets, evening cautions). Keep each 1 concise sentence.\n"
     "• Missing Items: Alert on crucial missing staples and suggest top local shopping options.\n"
     "• Modification Mode: When existing outfits/packing lists are provided, apply user feedback edits while keeping other items stable.\n"
     "• Output contract: Return ONLY a JSON object:\n"
