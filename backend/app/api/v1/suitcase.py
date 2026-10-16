@@ -150,7 +150,7 @@ GEMINI_SUITCASE_SYSTEM_PROMPT = (
     "Your goals are:\n"
     "1. Select appropriate clothing from the user's Closet honoring weather, duration, scheduled calendar events/activities during the trip. You MUST translate and understand calendar event titles if they are in another language (e.g. Hebrew like 'יום טרקים' = trekking day, 'ארוחת ערב חגיגית' = festive/gala dinner) and design outfits specifically for each day's scheduled activities (e.g., activewear/comfortable athletic shoes for active/trekking days, formalwear/dressy clothes for festive dinners/gala events, modest long-sleeved/ankle-length attire for mosque or temple visits, or comfortable travel outfits for flight days), while respecting cultural conventions, and strictly adhering to the user's personal style preferences, aesthetic, and outfit-generation rules.\n"
     "2. Minimize the load: select versatile garments that can be recombined into different outfits (e.g. reuse jeans, shirts, jackets, shoes across multiple days).\n"
-    "3. Highlight cultural, religious, and modesty dress restrictions of the destination using the provided Safety Context. In 'cultural_guidelines', you MUST detail explicit modesty limitations (required coverage for shoulders, knees, chest, sacred/religious site etiquette, headscarf expectations, and street vs resort swimwear limits). In 'danger_zones_info', detail safety and security precautions (pickpocketing, night safety, transport precautions).\n"
+    "3. Highlight cultural or religious dress restrictions of the destination using the provided Safety Context.\n"
     "4. Alert if crucial items are missing.\n"
     "5. Recommend shopping advisor local store recommendations (recommend top 3 fashion stores in the destination area where the user can buy missing items).\n"
     "6. If 'Current Outfits' and 'Current Packing List' are provided in the input, the user is requesting modifications or refinements to their existing suitcase plan. Execute the requested changes while keeping the rest of the outfits as stable as possible.\n"
@@ -202,29 +202,14 @@ def find_closet_match(
         match = next((i for i in closet_items if str(i.get("id") or "") == cid_str), None)
         if match:
             return match
-        # Extract digits if LLM returned "Item 1", "#1", "garment_1"
-        digits = re.findall(r"\d+", cid_str)
-        if digits and alias_map and digits[0] in alias_map:
-            return alias_map[digits[0]]
-
     # 2. Fallback: Try matching by description/title/name
     desc = (item.get("description") or item.get("title") or "").lower().strip()
     if desc:
-        desc_tokens = set(re.findall(r"\w{3,}", desc))
-        best_overlap = 0
-        best_item = None
         for i in closet_items:
-            title = (i.get("title") or i.get("name") or "").lower().strip()
-            if title and (title in desc or desc in title):
+            title = (i.get("title") or "").lower().strip()
+            name = (i.get("name") or "").lower().strip()
+            if (title and (title in desc or desc in title)) or (name and (name in desc or desc in name)):
                 return i
-            title_tokens = set(re.findall(r"\w{3,}", title))
-            if title_tokens and desc_tokens:
-                overlap = len(title_tokens & desc_tokens)
-                if overlap > best_overlap:
-                    best_overlap = overlap
-                    best_item = i
-        if best_overlap >= 1 and best_item:
-            return best_item
     return None
 
 
@@ -943,7 +928,7 @@ async def pack_suitcase(
     safety_query = f"{body.destinations or ''} {eff_destinations} {body.purpose or ''} {eff_purpose} {body.notes or ''} {eff_notes} {trip_corpus}"
     eff_safety_context = get_safety_knowledge(
         query_text=safety_query,
-        max_chars=2600 if is_gemma_provider else 8000,
+        max_chars=1800 if is_gemma_provider else 8000,
     )
 
     user_brief_parts = [
@@ -968,21 +953,12 @@ async def pack_suitcase(
         f"User's Closet Items:\n"
         f"{json.dumps(compact_pool, ensure_ascii=False, separators=(',', ':'))}"
     )
-    user_brief_parts.append(
-        "\nCRITICAL CLOSET PACKING MANDATE: Every outfit MUST be constructed from the garments in 'User's Closet Items' above. "
-        "You MUST assign existing closet item IDs to 'closet_item_id' (e.g. '1', '2', etc.) and set 'status': 'closet'. "
-        "Every look must contain a real top and bottom (or dress) from the closet items. "
-        "Do NOT return 'closet_item_id': null or 'status': 'missing' if a suitable closet item is present."
-    )
     if is_gemma_provider:
         target_outfit_count = min(trip_days, 3)
         user_brief_parts.append(
             f"\nCONCISE CAPSULE REQUIREMENT: Return exactly {target_outfit_count} versatile core outfits "
             f"(using exact 'id' strings from User's Closet Items for 'closet_item_id'), 2-3 'missing_items', "
-            f"and 2 'local_fashion_stores'. Keep descriptions under 8 words and reasoning to 1 sentence.\n"
-            f"REQUIRED ALERTS:\n"
-            f"- 'cultural_guidelines': Must explicitly detail modesty limitations (covering shoulders, knees, chest, sacred sites, headscarf).\n"
-            f"- 'danger_zones_info': Must detail safety and security warnings (pickpockets in crowded areas, nighttime precautions)."
+            f"and 2 'local_fashion_stores'. Keep descriptions under 8 words and reasoning to 1 sentence."
         )
     user_brief_parts.append(lang_directive)
     user_brief = "\n".join(user_brief_parts)
@@ -991,7 +967,7 @@ async def pack_suitcase(
         user_text=user_brief,
         system=system_prompt,
         response_mime_type="application/json",
-        max_tokens=1800 if is_gemma_provider else 8192,
+        max_tokens=900 if is_gemma_provider else 8192,
         api_key=user_api_key,
         model=user_model,
         user=user,
@@ -1000,55 +976,22 @@ async def pack_suitcase(
     )
     analysis = _parse_suitcase_json(analysis_str)
 
-    # Safety net: ensure cultural_guidelines has modesty details if eff_safety_context contains them
-    if not analysis.get("cultural_guidelines") and eff_safety_context:
-        modesty_lines = []
-        for line in eff_safety_context.splitlines():
-            line_clean = line.strip().lstrip("*#- ").strip()
-            line_low = line_clean.lower()
-            if any(k in line_low for k in ("modesty", "cover", "shoulders", "knees", "cleavage", "scarf", "hijab", "abaya", "mosque", "temple", "swimwear", "bikini", "צניעות", "כיסוי", "ברכיים", "כתפיים", "מסגד", "בית כנסת", "בגד ים")):
-                if len(line_clean) > 20 and not line_clean.startswith("##") and "keywords:" not in line_low:
-                    modesty_lines.append(line_clean)
-                    if len(modesty_lines) >= 2:
-                        break
-        if modesty_lines:
-            analysis["cultural_guidelines"] = " ".join(modesty_lines)
-
-    # Safety net: ensure danger_zones_info has security details if eff_safety_context contains them
-    if not analysis.get("danger_zones_info") and eff_safety_context:
-        safety_lines = []
-        for line in eff_safety_context.splitlines():
-            line_clean = line.strip().lstrip("*#- ").strip()
-            line_low = line_clean.lower()
-            if any(k in line_low for k in ("pickpocket", "safety", "security", "crime", "alley", "night", "theft", "valuables", "scam", "danger", "warning", "police", "בטיחות", "ביטחון", "כיוס", "גניבה", "זהירות", "סמטאות", "לילה")):
-                if len(line_clean) > 20 and not line_clean.startswith("##") and "keywords:" not in line_low:
-                    safety_lines.append(line_clean)
-                    if len(safety_lines) >= 3:
-                        break
-        if safety_lines:
-            analysis["danger_zones_info"] = " ".join(safety_lines)
-
     outfits = [o for o in (analysis.get("outfits") or []) if isinstance(o, dict)]
     missing_items = [m for m in (analysis.get("missing_items") or []) if isinstance(m, dict)]
     packing_list = []
     packed_closet_ids: set[str] = set()
+    used_role_ids: set[str] = set()
     user_gender = user.get("sex") or user.get("gender")
     trip_context_text = f"{body.destinations or ''} {body.purpose or ''} {body.notes or ''}"
 
     # 7a. Map closet items onto the base outfits BEFORE outbound translation and BEFORE multi-day cloning
     for outfit in outfits:
-        outfit_used_ids: set[str] = set()
         for item in outfit.get("items") or []:
             if not isinstance(item, dict):
                 continue
             match = find_closet_match(item, closet_items, alias_map=alias_map)
             role = str(item.get("role") or "").lower().strip()
-            if role == "tops":
-                role = "top"
-            elif role == "bottoms":
-                role = "bottom"
-
-            if not match and role in ("top", "bottom", "shoes", "outerwear", "dress", "accessory"):
+            if not match and is_gemma_provider and role in ("top", "bottom", "shoes", "outerwear"):
                 try:
                     from app.services.stylist_qa_engine import find_best_garment_replacement
                     match = find_best_garment_replacement(
@@ -1056,15 +999,15 @@ async def pack_suitcase(
                         all_closet_items=closet_items,
                         user_text=trip_context_text,
                         user_gender=user_gender,
-                        exclude_item_ids=outfit_used_ids,
+                        exclude_item_ids=used_role_ids,
                     )
-                except Exception as r_exc:
-                    logger.warning("Garment replacement soft-failed: %s", r_exc)
+                    if match and match.get("id"):
+                        used_role_ids.add(str(match["id"]))
+                except Exception:
+                    pass
 
             if match:
-                match_id = str(match["id"])
-                outfit_used_ids.add(match_id)
-                item["closet_item_id"] = match_id
+                item["closet_item_id"] = match["id"]
                 item["status"] = "closet"
                 if match.get("title"):
                     item["description"] = match.get("title")
@@ -1075,10 +1018,10 @@ async def pack_suitcase(
                 item["segmented_image_url"] = match.get("segmented_image_url")
                 item["original_image_url"] = match.get("original_image_url")
 
-                if match_id not in packed_closet_ids:
-                    packed_closet_ids.add(match_id)
+                if match["id"] not in packed_closet_ids:
+                    packed_closet_ids.add(match["id"])
                     packing_list.append({
-                        "id": match_id,
+                        "id": match["id"],
                         "title": match.get("title") or "Closet item",
                         "category": match.get("category"),
                         "checked": False,
@@ -1094,27 +1037,6 @@ async def pack_suitcase(
             else:
                 item["closet_item_id"] = None
                 item["status"] = "missing"
-
-    # Safety net: If closet has items but packing_list is empty, populate from closet
-    if not packing_list and closet_items:
-        for it in (clean_closet or closet_items)[:12]:
-            it_id = str(it.get("id"))
-            if it_id and it_id not in packed_closet_ids:
-                packed_closet_ids.add(it_id)
-                packing_list.append({
-                    "id": it_id,
-                    "title": it.get("title") or it.get("name") or "Closet item",
-                    "category": it.get("category"),
-                    "checked": False,
-                    "is_missing": False,
-                    "recommendation_source": None,
-                    "recommendation_url": None,
-                    "thumbnail_data_url": it.get("thumbnail_data_url"),
-                    "reconstructed_image_url": it.get("reconstructed_image_url"),
-                    "clean_image_url": it.get("clean_image_url"),
-                    "segmented_image_url": it.get("segmented_image_url"),
-                    "original_image_url": it.get("original_image_url"),
-                })
 
     # 7b. Translate Gemma English output into target_lang BEFORE multi-day cloning (3x fewer strings to translate)
     if is_gemma_provider and target_lang != "en":

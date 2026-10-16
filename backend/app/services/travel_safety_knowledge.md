@@ -114,8 +114,8 @@ Keywords: maldives, male, hulhumale, maafushi, thoddoo, dhigurah, guraidhoo, ה�
 
 ---
 
-## United Arab Emirates (Sharjah, Dubai & Abu Dhabi Modesty & Decency Zones)
-Keywords: uae, dubai, abu dhabi, sharjah, איחוד האמירויות, דובאי, אבו דאבי, שארג'ה, الإمارات, دبي, أبوظبي, الشارقة
+## UAE, Qatar, Kuwait, Oman, Bahrain, Jordan, Egypt, Morocco, Algeria & Tunisia (GCC & MENA Modesty Zones)
+Keywords: uae, dubai, abu dhabi, sharjah, qatar, doha, kuwait, oman, muscat, bahrain, manama, jordan, amman, egypt, cairo, luxor, morocco, marrakech, marrakesh, fes, casablanca, rabat, algeria, tunisia, דובאי, אבו דאבי, שארג'ה, קטאר, דוחא, עומאן, בחריין, ירדן, מצרים, קהיר, מרוקו, מרקש, קזבלנקה, פאס, תוניסיה, الإمارات, دبي, أبوظبي, الشارقة, قطر, الكويت, عمان, البحرين, الأردن, مصر, المغرب, مراكش, الجزائر, تونس
 
 ### 1. United Arab Emirates (Sharjah vs. Dubai & Abu Dhabi)
 * **Sharjah (Strictest Emirate — Public Decency Law)**: Both men and women must cover from **shoulders to below the knees** in all public spaces. Swimwear is prohibited on public beaches outside private hotel beaches; cross-dressing is a criminal offense.
@@ -124,35 +124,18 @@ Keywords: uae, dubai, abu dhabi, sharjah, איחוד האמירויות, דוב�
   * **Shopping Malls (Dubai Mall, Mall of the Emirates, Yas Mall) & Government Offices**: Official entrance signs require covered shoulders and knees (no booty shorts, sheer dresses, or micro-crop tops).
   * **Sheikh Zayed Grand Mosque (Abu Dhabi)**: Strictest dress-code enforcement in the UAE. Women must cover hair completely with a headscarf, arms to the **wrists**, and legs to the **ankles** in loose, opaque garments (tight leggings, skinny jeans, or ankle-baring pants are rejected at security). Men must wear long trousers and sleeved shirts, and cover any visible tattoos depicting faces, religious figures, or profanity.
 
----
-
-## Qatar, Kuwait, Oman & Bahrain (GCC Public Modesty Zones)
-Keywords: qatar, doha, kuwait, oman, muscat, bahrain, manama, קטאר, דוחא, כווית, עומאן, מסקט, בחריין, מנאמה, قطر, الكويت, عمان, البحرين
-
+### 2. Qatar, Kuwait, Oman & Bahrain
 * **Qatar (Penal Code Art. 290 & *Al-Fanar* Code)**: Cover shoulders to knees in Souq Waqif, Katara Cultural Village, museums, malls, and public buildings. Tight lycra leggings, spaghetti straps, and men's short-shorts are denied entry at malls; public indecency carries up to **6 months imprisonment or QAR 3,000 fine**.
 * **Kuwait (Penal Code Art. 198)**: Strict public modesty in malls and streets; **Art. 198 criminalizes "imitating the appearance of the opposite sex"** (cross-dressing) with up to **1 year imprisonment or KWD 1,000 fine**. Bikinis are banned on public beaches.
 * **Oman (Omani Penal Code Art. 265 & 266)**: Cover shoulders and knees in all souqs, malls, and **even when swimming in public wadis** (e.g., Wadi Shab, Bimmah Sinkhole — women and men must wear a T-shirt and knee-length shorts over swimwear in public wadis). **Camouflage clothing is banned** and confiscated at Muscat Airport. Cross-dressing carries up to 1 year imprisonment (Art. 266). At **Sultan Qaboos Grand Mosque**, women must cover hair, wrists, and ankles; men must wear full-length trousers.
 * **Bahrain (Penal Code Art. 350)**: Cover shoulders and knees in traditional souqs (Muharraq, Manama Souq), villages, and mosques.
 
----
-
-## Morocco, Egypt, Jordan, Algeria & Tunisia (North Africa & Levant — Medina, Souq & Mosque Modesty)
-Keywords: morocco, marrakech, marrakesh, fes, casablanca, rabat, egypt, cairo, luxor, jordan, amman, petra, algeria, tunisia, מרוקו, מרקש, קזבלנקה, פאס, רבאט, מצרים, קהיר, לוקסור, ירדן, עמאן, פטרה, אלג'יריה, תוניסיה, المغرب, مراكش, فاس, الدار البيضاء, الرباط, مصر, القاهرة, الأقصر, الأردن, عمان, الجزائر, تونس
-
-### Legal Context & Cultural Modesty Guardrails
-* **Penal Codes**: Jordan (Art. 320), Egypt (Art. 278), Morocco (Art. 483), Algeria (Art. 333), and Tunisia (Art. 226) all penalize public indecency and public modesty offenses.
-* **Historic Medinas, Souqs, Rural Villages & Archaeological Sites (Marrakech, Fes, Cairo, Luxor, Amman, Petra)**:
-  * **Women's Modesty Requirements**: Wear loose, breathable clothing covering shoulders, cleavage/chest, and knees (linen trousers, midi/maxi skirts, kaftans, long tunics, shirts with sleeves). Avoid revealing crop tops, low-cut necklines, mini shorts, or see-through sheer fabrics in public streets, markets, and medinas to prevent street harassment and honor local cultural standards. Carry a lightweight scarf or pashmina at all times for quick cover.
-  * **Men's Modesty Requirements**: Long breathable trousers (linen or cotton chinos) and collared or sleeved shirts. Avoid walking shirtless or wearing sleeveless muscle shirts/tank tops in medinas and traditional neighborhoods.
-  * **Swimwear Boundaries**: Bikinis and swimsuits are permitted strictly within enclosed private hotel pools and private beach resorts. They are strictly prohibited on city streets, public medinas, or walking to/from lodging.
-* **Mosque & Sacred Site Visitation (Hassan II Mosque in Casablanca, Koutoubia exterior in Marrakech, Al-Azhar & Muhammad Ali Mosques in Cairo, King Abdullah I Mosque in Amman)**:
-  * Both men and women must fully cover shoulders, upper arms to wrists, and legs to the ankles.
-  * Women must cover their hair completely with a scarf/headcover.
-  * Footwear must be removed before entering prayer carpet areas.
-* **Safety & Security Warnings (Medinas & Crowded Markets)**:
-  * Beware of pickpocketing, bag snatching, and distraction scams in crowded souqs (e.g. Jemaa el-Fnaa in Marrakech, Khan el-Khalili in Cairo).
-  * Avoid unlit or deserted narrow alleys (*derbs*) alone late at night.
-  * Keep valuables, wallets, and phones zipped inside front cross-body bags.
+### 3. Morocco, Egypt, Jordan, Algeria & Tunisia (Medina, Souq & Mosque Etiquette)
+* **Penal Codes**: Jordan (Art. 320), Egypt (Art. 278), Morocco (Art. 483), Algeria (Art. 333), and Tunisia (Art. 226) all penalize public indecency.
+* **Historic Medinas, Rural Villages & Archaeological Sites (Marrakech, Fes, Cairo, Luxor, Amman, Petra)**:
+  * **Women**: Loose, breathable clothing covering shoulders, cleavage, and knees (linen trousers, midi/maxi skirts, kaftans, or tunics) prevents street harassment and shows cultural respect. Carry a lightweight scarf/pashmina for entering sacred sites.
+  * **Men**: Long breathable trousers (linen or cotton chinos) and collared or short-sleeved shirts; avoid walking shirtless or wearing sleeveless tank tops in medinas.
+* **Mosque Visitation (Hassan II Mosque in Casablanca, Al-Azhar & Muhammad Ali Mosques in Cairo, King Abdullah I Mosque in Amman)**: Both men and women must cover shoulders, upper arms, and legs to the ankles; women must cover their hair; shoes must be removed before stepping onto prayer carpets.
 
 ---
 
