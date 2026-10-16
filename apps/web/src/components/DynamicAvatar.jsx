@@ -68,8 +68,8 @@ export default function DynamicAvatar({
     // Anatomical Ellipse Divisor (~2.65) to convert circumferences to flat front widths
     const DIVISOR = 2.65;
     
-    // Male and Female shape parameters
-    const wShoulders = isMale ? (numSh * 1.25) : (numSh * 1.0);
+    // Male and Female shape parameters (calibrated to realistic human proportions)
+    const wShoulders = isMale ? (numSh * 1.05) : (numSh * 0.92);
     const wChest = isMale ? ((numCh / DIVISOR) * 1.1) : ((numCh / DIVISOR) * 0.95);
     const wWaist = isMale ? ((numW / DIVISOR) * 1.02) : ((numW / DIVISOR) * 0.82);
     const wHip = isMale ? ((numHip / DIVISOR) * 0.92) : ((numHip / DIVISOR) * 1.08);

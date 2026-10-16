@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { bestImageUrl, resolveMediaUrl } from '@/lib/itemImage';
@@ -348,6 +348,110 @@ export function getOuterwearTopography(garment) {
   };
 }
 
+// In-memory cache for dynamically trimmed garment data URLs
+const trimmedImageCache = new Map();
+
+function AutoTrimmedGarmentImage({ src, placeholder, alt, objectFitMode = 'contain', imgAlignClass = 'object-top' }) {
+  const [activeSrc, setActiveSrc] = useState(() => (src && trimmedImageCache.has(src) ? trimmedImageCache.get(src) : src));
+
+  useEffect(() => {
+    if (!src || typeof src !== 'string' || src.startsWith('data:image/svg')) {
+      setActiveSrc(src);
+      return;
+    }
+
+    if (trimmedImageCache.has(src)) {
+      setActiveSrc(trimmedImageCache.get(src));
+      return;
+    }
+
+    let isMounted = true;
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+
+    img.onload = () => {
+      try {
+        const w = img.naturalWidth;
+        const h = img.naturalHeight;
+        if (!w || !h) {
+          if (isMounted) setActiveSrc(src);
+          return;
+        }
+
+        const canvas = document.createElement('canvas');
+        canvas.width = w;
+        canvas.height = h;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0);
+
+        const imgData = ctx.getImageData(0, 0, w, h);
+        const data = imgData.data;
+
+        let minX = w, minY = h, maxX = 0, maxY = 0;
+        let hasAlpha = false;
+
+        for (let y = 0; y < h; y++) {
+          for (let x = 0; x < w; x++) {
+            const a = data[(y * w + x) * 4 + 3];
+            if (a > 20) {
+              hasAlpha = true;
+              if (x < minX) minX = x;
+              if (x > maxX) maxX = x;
+              if (y < minY) minY = y;
+              if (y > maxY) maxY = y;
+            }
+          }
+        }
+
+        // If no significant padding (padding <= 3px on all sides), keep original url
+        if (!hasAlpha || (minX <= 3 && minY <= 3 && maxX >= w - 4 && maxY >= h - 4)) {
+          trimmedImageCache.set(src, src);
+          if (isMounted) setActiveSrc(src);
+          return;
+        }
+
+        const cropW = Math.max(1, maxX - minX + 1);
+        const cropH = Math.max(1, maxY - minY + 1);
+
+        const cropCanvas = document.createElement('canvas');
+        cropCanvas.width = cropW;
+        cropCanvas.height = cropH;
+        const cropCtx = cropCanvas.getContext('2d');
+        cropCtx.drawImage(canvas, minX, minY, cropW, cropH, 0, 0, cropW, cropH);
+
+        const resultDataUrl = cropCanvas.toDataURL('image/png');
+        trimmedImageCache.set(src, resultDataUrl);
+        if (isMounted) setActiveSrc(resultDataUrl);
+      } catch {
+        // Fallback to src on any canvas/CORS error
+        trimmedImageCache.set(src, src);
+        if (isMounted) setActiveSrc(src);
+      }
+    };
+
+    img.onerror = () => {
+      if (isMounted) setActiveSrc(src);
+    };
+
+    img.src = src;
+
+    return () => {
+      isMounted = false;
+    };
+  }, [src]);
+
+  return (
+    <ImageWithPlaceholder
+      src={activeSrc}
+      placeholder={placeholder}
+      alt={alt}
+      objectFit={objectFitMode}
+      imgClassName={imgAlignClass}
+      className="w-full h-full"
+    />
+  );
+}
+
 export default function AvatarViewer2D({ shapeParams = {}, measurements: providedMeasurements, skinColor = '#9CA3AF', sex = 'female', outfitItems = {}, onItemClick, bodyPhotoUrl }) {
   const { t } = useTranslation();
   const { user } = useAuth();
@@ -651,13 +755,12 @@ export default function AvatarViewer2D({ shapeParams = {}, measurements: provide
         className={`absolute drop-shadow-md ${extraClasses} ${clickable ? 'cursor-pointer hover:scale-[1.02] transition-transform' : 'pointer-events-none'}`}
         onClick={clickable ? (e) => { e.stopPropagation(); onItemClick(garment.id); } : undefined}
       >
-        <ImageWithPlaceholder
+        <AutoTrimmedGarmentImage
           src={garment.url}
           placeholder={garment.placeholder}
           alt={altText}
-          objectFit={objectFitMode}
-          imgClassName={imgAlignClass}
-          className="w-full h-full"
+          objectFitMode={objectFitMode}
+          imgAlignClass={imgAlignClass}
         />
       </motion.div>
     );
@@ -704,12 +807,11 @@ export default function AvatarViewer2D({ shapeParams = {}, measurements: provide
                 className={`absolute top-[44%] right-[-6%] w-[38%] h-[30%] z-[35] drop-shadow-md ${onItemClick && garments.bag.id ? 'cursor-pointer hover:scale-[1.02] transition-transform' : 'pointer-events-none'}`}
                 onClick={onItemClick && garments.bag.id ? (e) => { e.stopPropagation(); onItemClick(garments.bag.id); } : undefined}
               >
-                <ImageWithPlaceholder
+                <AutoTrimmedGarmentImage
                   src={garments.bag.url}
                   placeholder={garments.bag.placeholder}
                   alt={t('taxonomy.sub_category.bag', { defaultValue: 'Bag' })}
-                  objectFit="contain"
-                  className="w-full h-full"
+                  objectFitMode="contain"
                 />
               </motion.div>
             )}
@@ -757,12 +859,11 @@ export default function AvatarViewer2D({ shapeParams = {}, measurements: provide
                 className={`absolute top-[44%] right-[-6%] w-[38%] h-[30%] z-[35] drop-shadow-md ${onItemClick && garments.bag.id ? 'cursor-pointer hover:scale-[1.02] transition-transform' : 'pointer-events-none'}`}
                 onClick={onItemClick && garments.bag.id ? (e) => { e.stopPropagation(); onItemClick(garments.bag.id); } : undefined}
               >
-                <ImageWithPlaceholder
+                <AutoTrimmedGarmentImage
                   src={garments.bag.url}
                   placeholder={garments.bag.placeholder}
                   alt={t('taxonomy.sub_category.bag', { defaultValue: 'Bag' })}
-                  objectFit="contain"
-                  className="w-full h-full"
+                  objectFitMode="contain"
                 />
               </motion.div>
             )}
