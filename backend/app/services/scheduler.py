@@ -155,8 +155,11 @@ def _generate_fallback_advice(
     occupation: str | None = None,
     respect_occupation: bool = False,
     lang: str = "en",
+    recent_item_weights: dict[str, int] | None = None,
+    exclude_item_ids: set[str] | list[str] | None = None,
+    target_date_str: str | None = None,
 ) -> dict[str, Any]:
-    """Generate outfit recommendations based on closet items and user preferences, with strict category validation."""
+    """Generate outfit recommendations based on closet items and user preferences, with strict category validation and rotation."""
     if not closet_items:
         return {
             "reasoning_summary": "No clothing items available in closet.",
@@ -232,7 +235,7 @@ def _generate_fallback_advice(
                 has_exact_tag_match = True
                 break
 
-    # Score item helper
+    # Score item helper with recency and wear penalties
     def score_item(it: dict) -> int:
         score = calculate_garment_style_score(
             it, 
@@ -243,8 +246,41 @@ def _generate_fallback_advice(
         )
         if matches_season_func(it, target_season):
             score += 10
-        return score
 
+        cid = str(it.get("id") or "")
+        days_ago = (recent_item_weights or {}).get(cid)
+        if days_ago is not None:
+            if days_ago <= 0:
+                score -= 1000
+            elif days_ago == 1:
+                score -= 600
+            elif days_ago == 2:
+                score -= 400
+            elif days_ago == 3:
+                score -= 200
+            else:
+                score -= 100
+        elif exclude_item_ids and cid in exclude_item_ids:
+            score -= 600
+
+        last_worn = str(it.get("last_worn_at") or "")
+        if last_worn and target_date_str:
+            try:
+                lw_date = datetime.strptime(last_worn[:10], "%Y-%m-%d").date()
+                tgt_date = datetime.strptime(str(target_date_str)[:10], "%Y-%m-%d").date()
+                diff_days = (tgt_date - lw_date).days
+                if diff_days <= 0:
+                    score -= 1000
+                elif diff_days == 1:
+                    score -= 600
+                elif diff_days == 2:
+                    score -= 400
+            except Exception:
+                pass
+
+        wear_count = it.get("wear_count") or 0
+        score -= min(wear_count * 10, 100)
+        return score
 
     # Sort each bucket by score descending
     tops.sort(key=score_item, reverse=True)
@@ -904,25 +940,36 @@ async def check_scheduler_triggers() -> None:
                         local_now.year, local_now.month, local_now.day, notif_h, notif_m, 0, tzinfo=user_tz_obj
                     )
                     scheduled_utc_iso = (scheduled_local_dt.astimezone(timezone.utc) - timedelta(minutes=2)).isoformat()
-                    existing_notif = await db.simulated_notifications.find_one(
-                        {
-                            "user_id": user_id,
-                            "payload.target_date": target_date_str,
-                            "created_at": {"$gte": scheduled_utc_iso},
-                        },
-                        {"_id": 1},
-                    )
-                    if existing_notif:
-                        await db.users.update_one(
-                            {"id": user_id},
+                    existing_notif = None
+                    try:
+                        notif_op = db.simulated_notifications.find_one(
                             {
-                                "$set": {
-                                    "scheduler_settings.last_trigger_key": trigger_key,
-                                    "scheduler_settings.last_triggered_local_date": today_local_str,
-                                    "scheduler_settings.last_triggered_time": norm_notif_time,
-                                }
+                                "user_id": user_id,
+                                "payload.target_date": target_date_str,
+                                "created_at": {"$gte": scheduled_utc_iso},
                             },
+                            {"_id": 1},
                         )
+                        if inspect.isawaitable(notif_op):
+                            existing_notif = await notif_op
+                    except Exception:
+                        pass
+                    if existing_notif:
+                        try:
+                            up_op = db.users.update_one(
+                                {"id": user_id},
+                                {
+                                    "$set": {
+                                        "scheduler_settings.last_trigger_key": trigger_key,
+                                        "scheduler_settings.last_triggered_local_date": today_local_str,
+                                        "scheduler_settings.last_triggered_time": norm_notif_time,
+                                    }
+                                },
+                            )
+                            if inspect.isawaitable(up_op):
+                                await up_op
+                        except Exception:
+                            pass
                         continue
 
                 # Check frequency
@@ -949,7 +996,8 @@ async def check_scheduler_triggers() -> None:
                         continue
 
                 # Claim trigger key immediately before slow LLM generation so overlapping/subsequent checks never double-fire
-                await db.users.update_one(
+                import inspect
+                claim_op = db.users.update_one(
                     {"id": user_id},
                     {
                         "$set": {
@@ -960,6 +1008,8 @@ async def check_scheduler_triggers() -> None:
                         }
                     },
                 )
+                if inspect.isawaitable(claim_op):
+                    await claim_op
 
                 # Fetch weather (soft-fail)
                 weather_ctx = None
@@ -1022,7 +1072,8 @@ async def check_scheduler_triggers() -> None:
 
                 try:
                     try:
-                        from app.services.stylist_scheduler_brain import generate_scheduled_proposals
+                        from app.services.stylist_scheduler_brain import generate_scheduled_proposals, get_recent_wardrobe_history
+                        recent_weights, _ = await get_recent_wardrobe_history(user_id, target_date_str=target_date_str, lookback_days=5)
                         proposals_result = await generate_scheduled_proposals(
                             user_clean, 
                             style_option, 
@@ -1051,6 +1102,8 @@ async def check_scheduler_triggers() -> None:
                             occupation=user_occ if respect_occ else None,
                             respect_occupation=respect_occ,
                             lang=(user.get("preferred_language") or "en").lower().split("-")[0],
+                            recent_item_weights=recent_weights if "recent_weights" in locals() else None,
+                            target_date_str=target_date_str,
                         )
                         proposals = fallback_result.get("outfit_recommendations") or []
 
@@ -1078,10 +1131,12 @@ async def check_scheduler_triggers() -> None:
                     try:
                         import uuid
                         prop_id = f"prop_{uuid.uuid4().hex[:12]}"
-                        await db.daily_proposals.update_many(
+                        up_many_op = db.daily_proposals.update_many(
                             {"user_id": user_id, "date": target_date_str},
                             {"$set": {"replaced": True, "dismissed": True}},
                         )
+                        if inspect.isawaitable(up_many_op):
+                            await up_many_op
                         prop_doc = {
                             "id": prop_id,
                             "user_id": user_id,
@@ -1109,7 +1164,21 @@ async def check_scheduler_triggers() -> None:
                             "created_at": datetime.now(timezone.utc).isoformat(),
                             "updated_at": datetime.now(timezone.utc).isoformat(),
                         }
-                        await db.daily_proposals.insert_one(prop_doc)
+                        ins_op = db.daily_proposals.insert_one(prop_doc)
+                        if inspect.isawaitable(ins_op):
+                            await ins_op
+
+                        suggested_cids = [it.get("id") or it.get("closet_item_id") for it in prop_doc.get("items", []) if it.get("id") or it.get("closet_item_id")]
+                        if suggested_cids:
+                            try:
+                                cl_op = db.closet_items.update_many(
+                                    {"id": {"$in": suggested_cids}, "user_id": user_id},
+                                    {"$set": {"last_suggested_at": target_date_str, "updated_at": datetime.now(timezone.utc).isoformat()}}
+                                )
+                                if inspect.isawaitable(cl_op):
+                                    await cl_op
+                            except Exception as sug_err:
+                                logger.warning("Failed to update last_suggested_at in scheduler: %s", sug_err)
                     except Exception as p_save_err:
                         logger.warning("Failed to save scheduled daily proposal to db: %s", p_save_err)
 

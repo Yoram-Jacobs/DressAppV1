@@ -256,8 +256,8 @@ def calculate_garment_style_score(
         if is_legal_or_corporate:
             if any(w in all_text for w in ("suit", "blazer", "dress shirt", "button", "collared", "oxford", "derby", "loafer", "slacks", "trouser", "tailored", "חליפה", "בלייזר", "מכופתרת", "מחויט", "מוקסין")):
                 score += 45
-            if any(w in all_text for w in ("sweatpants", "tank top", "flip flop", "slides", "cargo shorts", "טרנינג", "גופייה", "כפכף")):
-                score -= 50
+            if any(w in all_text for w in ("sweatpants", "tank top", "flip flop", "slides", "cargo shorts", "טרנינג", "גופייה", "כפכף", "joggers")):
+                score -= 200
 
         elif is_trade_or_physical:
             # Boost utility pants, work boots, safety footwear, durable t-shirts/hoodies
@@ -528,6 +528,106 @@ def _item_has_any_tag(item: dict, target_tags: list[str]) -> bool:
 item_has_any_tag = _item_has_any_tag
 
 
+async def get_recent_wardrobe_history(
+    user_id: str,
+    target_date_str: str | None = None,
+    lookback_days: int = 5,
+) -> tuple[dict[str, int], list[dict[str, Any]]]:
+    """Retrieve items worn or scheduled in recent days to enforce genuine wardrobe rotation.
+    
+    Returns:
+        recency_map: dict of garment_id -> days_ago (0 = today/target date, 1 = yesterday, etc.)
+        summary: list of recent item descriptors for LLM prompt context
+    """
+    db = get_db()
+    if not target_date_str:
+        target_date_str = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    try:
+        ref_dt = datetime.strptime(str(target_date_str)[:10], "%Y-%m-%d").date()
+    except Exception:
+        ref_dt = datetime.now(timezone.utc).date()
+
+    start_dt = ref_dt - timedelta(days=lookback_days)
+    start_str = start_dt.strftime("%Y-%m-%d")
+
+    recency_map: dict[str, int] = {}
+    summary: list[dict[str, Any]] = []
+    seen_ids: set[str] = set()
+
+    # 1. Query daily proposals in the lookback window
+    try:
+        cursor = db.daily_proposals.find({
+            "user_id": user_id,
+            "date": {"$gte": start_str, "$lte": target_date_str},
+        })
+        if hasattr(cursor, "sort"):
+            cursor = cursor.sort("date", -1)
+
+        if hasattr(cursor, "__aiter__"):
+            async for prop in cursor:
+                p_date_str = prop.get("date") or ""
+                try:
+                    p_dt = datetime.strptime(str(p_date_str)[:10], "%Y-%m-%d").date()
+                    days_ago = (ref_dt - p_dt).days
+                except Exception:
+                    days_ago = 1
+
+                for it in (prop.get("items") or []):
+                    cid = str(it.get("closet_item_id") or it.get("id") or "")
+                    if not cid:
+                        continue
+                    if cid not in recency_map or days_ago < recency_map[cid]:
+                        recency_map[cid] = days_ago
+                    if cid not in seen_ids:
+                        seen_ids.add(cid)
+                        summary.append({
+                            "id": cid,
+                            "name": it.get("name") or it.get("title") or "Garment",
+                            "role": it.get("role") or it.get("category") or "garment",
+                            "days_ago": days_ago,
+                            "date": p_date_str,
+                        })
+    except Exception as exc:
+        logger.warning("Error fetching recent daily proposals history: %s", exc)
+
+    # 2. Query logged outfits in recent days
+    try:
+        outfits_cursor = db.outfits.find({
+            "user_id": user_id,
+            "created_at": {"$gte": (datetime.now(timezone.utc) - timedelta(days=lookback_days)).isoformat()},
+        })
+        if hasattr(outfits_cursor, "sort"):
+            outfits_cursor = outfits_cursor.sort("created_at", -1)
+
+        if hasattr(outfits_cursor, "__aiter__"):
+            async for outfit in outfits_cursor:
+                o_date_str = (outfit.get("usage") or {}).get("date") or outfit.get("date_worn") or (outfit.get("created_at") or "")[:10]
+                try:
+                    o_dt = datetime.strptime(str(o_date_str)[:10], "%Y-%m-%d").date()
+                    days_ago = (ref_dt - o_dt).days
+                except Exception:
+                    days_ago = 1
+
+                for it in (outfit.get("garments") or outfit.get("items") or []):
+                    cid = str(it.get("closet_item_id") or it.get("id") or "")
+                    if not cid:
+                        continue
+                    if cid not in recency_map or days_ago < recency_map[cid]:
+                        recency_map[cid] = days_ago
+                    if cid not in seen_ids:
+                        seen_ids.add(cid)
+                        summary.append({
+                            "id": cid,
+                            "name": it.get("name") or it.get("title") or "Garment",
+                            "role": it.get("role") or it.get("category") or "garment",
+                            "days_ago": days_ago,
+                            "date": o_date_str,
+                        })
+    except Exception as exc:
+        logger.warning("Error fetching recent logged outfits history: %s", exc)
+
+    return recency_map, summary
+
 
 async def get_rotation_prioritized_closet(
     user_id: str,
@@ -540,6 +640,8 @@ async def get_rotation_prioritized_closet(
     respect_occupation: bool = False,
     user_gender: str | None = None,
     recent_item_ids: list[str] | set[str] | None = None,
+    recent_item_weights: dict[str, int] | None = None,
+    target_date: str | None = None,
 ) -> list[dict[str, Any]]:
     """Fetch closet items prioritized for rotation, matching tag restrictions and weather/season.
 
@@ -589,6 +691,28 @@ async def get_rotation_prioritized_closet(
                 if len(all_cats) > 1:
                     final_items.extend(g_members)
         items = final_items
+
+    # Auto-fetch recent wardrobe history if not explicitly provided
+    if recent_item_weights is None and recent_item_ids is None:
+        try:
+            recent_item_weights, _ = await get_recent_wardrobe_history(
+                user_id, target_date_str=target_date, lookback_days=5
+            )
+        except Exception as rh_err:
+            logger.warning("Failed to auto-fetch recent wardrobe history: %s", rh_err)
+            recent_item_weights = {}
+
+    item_recency_map: dict[str, int] = dict(recent_item_weights or {})
+    if recent_item_ids:
+        for rid in recent_item_ids:
+            s_rid = str(rid)
+            if s_rid not in item_recency_map:
+                item_recency_map[s_rid] = 0
+
+    try:
+        ref_date = datetime.strptime(str(target_date)[:10], "%Y-%m-%d").date() if target_date else datetime.now(timezone.utc).date()
+    except Exception:
+        ref_date = datetime.now(timezone.utc).date()
 
     # If is_tags_filter and filter_tags not passed, derive from style_dress_for
     if is_tags_filter and not filter_tags and style_dress_for:
@@ -640,10 +764,48 @@ async def get_rotation_prioritized_closet(
     items = filter_gender_closet_items(items, user_gender)
 
     is_male = str(user_gender or "").lower().strip() in ("male", "man", "men", "גבר")
-    recent_set = {str(x) for x in recent_item_ids} if recent_item_ids else set()
 
-    # Rotation sort key: un-recent first, matches criteria, un-suggested/un-worn, oldest suggested, lowest wear, rot_hash
+    # Rotation sort key: heavily penalize recent items, prioritize unworn/fewer wears, highest style & season score, date-salted rotation
     def sort_key(item: dict[str, Any]) -> tuple:
+        cid = str(item.get("id") or item.get("_id") or "")
+
+        # Recency penalty: heavily penalize items worn or scheduled in recent days
+        # 0 days ago (today/target date): 1000
+        # 1 day ago (yesterday): 600
+        # 2 days ago: 400
+        # 3 days ago: 200
+        # 4-5 days ago: 100
+        days_ago = item_recency_map.get(cid)
+        recent_penalty = 0
+        if days_ago is not None:
+            if days_ago <= 0:
+                recent_penalty = 1000
+            elif days_ago == 1:
+                recent_penalty = 600
+            elif days_ago == 2:
+                recent_penalty = 400
+            elif days_ago == 3:
+                recent_penalty = 200
+            else:
+                recent_penalty = 100
+
+        # Also check item's last_worn_at field
+        last_worn = str(item.get("last_worn_at") or "")
+        if last_worn:
+            try:
+                lw_date = datetime.strptime(last_worn[:10], "%Y-%m-%d").date()
+                diff_days = (ref_date - lw_date).days
+                if diff_days <= 0:
+                    recent_penalty = max(recent_penalty, 1000)
+                elif diff_days == 1:
+                    recent_penalty = max(recent_penalty, 600)
+                elif diff_days == 2:
+                    recent_penalty = max(recent_penalty, 400)
+                elif diff_days == 3:
+                    recent_penalty = max(recent_penalty, 200)
+            except Exception:
+                pass
+
         style_score = calculate_garment_style_score(
             item, 
             style_dress_for, 
@@ -654,25 +816,21 @@ async def get_rotation_prioritized_closet(
         )
         matches_season = matches_season_func(item, target_season)
         season_score = 10 if matches_season else 0
-        
-        cid = str(item.get("id") or item.get("_id") or "")
-        is_recent = 1 if (cid and cid in recent_set) else 0
 
-        last_sug = item.get("last_suggested_at") or ""
-        last_worn = item.get("last_worn_at") or ""
         wear_count = item.get("wear_count") or 0
-        
-        sug_val = last_sug if last_sug else "0000-00-00"
-        worn_val = last_worn if last_worn else "0000-00-00"
-        
-        # Salt hash based on user, garment ID and query to break ties deterministically across queries
-        rot_hash = abs(hash(f"{user_id}_{cid}_{style_dress_for or ''}")) % 1000
+        wear_penalty = min(wear_count * 10, 100)
 
-        # is_recent=0 comes first (penalize items suggested in current session turns).
-        # Style score is PRIMARY (-style_score: highest score first).
-        # Season is secondary (-season_score).
-        # Rotation (sug_val, worn_val, wear_count, rot_hash) is tie-breaker among matching items.
-        return (is_recent, -style_score, -season_score, sug_val, worn_val, wear_count, rot_hash)
+        # Dynamic daily rotation hash (changes every single day to rotate ties across days)
+        date_seed = str(target_date or ref_date.strftime("%Y-%m-%d"))
+        rot_hash = abs(hash(f"{user_id}_{cid}_{style_dress_for or ''}_{date_seed}")) % 1000
+
+        # Sort order:
+        # 1. recent_penalty: 0 for fresh items (FIRST!), 100-1000 for recent items (LAST!)
+        # 2. wear_penalty: items with fewer wears come first among items of equal match
+        # 3. -style_score: highest style match first
+        # 4. -season_score: season match bonus
+        # 5. rot_hash: deterministic daily pseudo-random rotation
+        return (recent_penalty, wear_penalty, -style_score, -season_score, rot_hash)
 
     # Partition items into category buckets using global norm_category
     buckets: dict[str, list[dict[str, Any]]] = {
@@ -740,17 +898,17 @@ async def get_rotation_prioritized_closet(
     # Target distribution ratios for a balanced candidate pool
     if is_tags_filter:
         target_ratios = {
-            "top": 0.45,
-            "bottom": 0.45,
-            "shoes": 0.10,
+            "top": 0.40,
+            "bottom": 0.40,
+            "shoes": 0.20,
             "dress": 0.0,
             "outerwear": 0.0 if not buckets["outerwear"] else 0.1,
             "accessory": 0.0 if not buckets["accessory"] else 0.05,
         }
         min_quotas = {
-            "top": 4 if buckets["top"] else 0,
-            "bottom": 4 if buckets["bottom"] else 0,
-            "shoes": 2 if buckets["shoes"] else 0,
+            "top": 6 if buckets["top"] else 0,
+            "bottom": 6 if buckets["bottom"] else 0,
+            "shoes": 3 if buckets["shoes"] else 0,
             "dress": 0 if is_male else (1 if buckets["dress"] else 0),
             "outerwear": 1 if buckets["outerwear"] else 0,
             "accessory": 1 if buckets["accessory"] else 0,
@@ -822,12 +980,18 @@ async def update_suggested_timestamps(closet_item_ids: list[str]) -> None:
     """Update last_suggested_at timestamp for list of closet item IDs."""
     if not closet_item_ids:
         return
-    db = get_db()
-    now = datetime.now(timezone.utc).isoformat()
-    await db.closet_items.update_many(
-        {"id": {"$in": closet_item_ids}},
-        {"$set": {"last_suggested_at": now}}
-    )
+    try:
+        import inspect
+        db = get_db()
+        now = datetime.now(timezone.utc).isoformat()
+        res = db.closet_items.update_many(
+            {"id": {"$in": closet_item_ids}},
+            {"$set": {"last_suggested_at": now}}
+        )
+        if inspect.isawaitable(res):
+            await res
+    except Exception as exc:
+        logger.warning("Failed to update last_suggested_at timestamps: %s", exc)
 
 
 async def check_event_similarities(
@@ -1220,16 +1384,29 @@ async def generate_scheduled_proposals(
         except Exception as cal_exc:
             logger.warning("Failed to fetch calendar events in scheduler brain: %s", cal_exc)
 
-    # Fetch closet items prioritized by tag restriction and weather/season matching
+    # Fetch recent wardrobe history for genuine rotation across days
+    recent_item_weights, recent_items_summary = await get_recent_wardrobe_history(
+        user_id,
+        target_date_str=target_date_str,
+        lookback_days=5,
+    )
+    if exclude_item_ids:
+        for eid in exclude_item_ids:
+            recent_item_weights[str(eid)] = 0
+
+    # Fetch closet items prioritized by tag restriction, rotation, and weather/season matching
     raw_closet = await get_rotation_prioritized_closet(
         user_id,
-        limit=15,
+        limit=25,
         style_dress_for=style_dress_for,
         weather=weather,
         filter_tags=filter_tags,
         is_tags_filter=is_tags_filter,
         occupation=user_occupation if respect_occupation else None,
         respect_occupation=respect_occupation,
+        user_gender=user.get("gender"),
+        recent_item_weights=recent_item_weights,
+        target_date=target_date_str,
     )
     
     # If exclude_item_ids passed (e.g. from previous daily proposals today), prioritize fresh items
@@ -1353,6 +1530,22 @@ async def generate_scheduled_proposals(
         f"- Give the outfit an authentic, stylish {lang_name} name suited to the occasion, style, and context.\n\n"
     )
 
+    recent_items_prompt_section = ""
+    if recent_items_summary:
+        lines = []
+        for ri in recent_items_summary[:8]:
+            role = ri.get("role", "garment")
+            name = ri.get("name", "Item")
+            days_ago = ri.get("days_ago", 1)
+            day_str = "today" if days_ago == 0 else ("yesterday" if days_ago == 1 else f"{days_ago} days ago")
+            lines.append(f"     • {name} ({role}) - worn/scheduled {day_str}")
+        recent_items_prompt_section = (
+            f"   - RECENTLY WORN / SCHEDULED ITEMS (DO NOT REPEAT):\n"
+            + "\n".join(lines) + "\n"
+            f"     • ROTATION MANDATE: The user explicitly requires diverse daily wardrobe rotation. You MUST NOT select the garments listed above unless there are NO other garments available in that category in the closet inventory below.\n"
+            f"     • Pick fresh, unworn pieces from the closet items below to create an exciting, new combination!\n"
+        )
+
     prompt = (
         f"PERSONA & EXPERTISE:\n"
         f"You are a senior fashion stylist and dresser with 30 years of experience in multi-nationality and cultural fashion and trends. "
@@ -1375,9 +1568,10 @@ async def generate_scheduled_proposals(
         f"{tag_vibe_rule}"
         f"   - Only when no matching tags are found for an essential category or to complete the full-body outfit (e.g. if there are no shoes with the tag), select neutral complementary items from the closet inventory below to complete the full-body outfit.\n"
         f"{occupation_rule}"
-        f"4. ROTATION & DIVERSITY:\n"
+        f"4. STRICT WARDROBE ROTATION & DIVERSITY (MANDATORY):\n"
+        f"{recent_items_prompt_section}"
         f"   - Rotate items within categories: make every item count and get used.\n"
-        f"   - Select a fresh, cohesive combination suited for the day.\n"
+        f"   - Select a fresh, cohesive combination suited for {day_label}.\n"
         f"5. NEVER MIX CATEGORIES (STRICT ANATOMICAL ROLES):\n"
         f"   - A garment's 'role' MUST strictly match its anatomical category:\n"
         f"     • Category 'Top' / 'Tops' / 'Shirts' MUST have role: 'top'.\n"

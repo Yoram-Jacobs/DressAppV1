@@ -268,6 +268,37 @@ async def act_on_daily_proposal(
         if not res:
             raise HTTPException(status_code=404, detail="Proposal not found")
 
+    # Update closet items wear_count and last_worn_at on wear/unwear
+    if body.action == "wear":
+        worn_item_ids = [it.get("id") or it.get("closet_item_id") for it in (res.get("items") or []) if it.get("id") or it.get("closet_item_id")]
+        if worn_item_ids:
+            try:
+                await db.closet_items.update_many(
+                    {"id": {"$in": worn_item_ids}, "user_id": user["id"]},
+                    {
+                        "$inc": {"wear_count": 1},
+                        "$set": {
+                            "last_worn_at": today_str,
+                            "updated_at": datetime.now(timezone.utc).isoformat(),
+                        }
+                    }
+                )
+            except Exception as w_err:
+                logger.warning("Failed to increment wear count for items: %s", w_err)
+    elif body.action == "unwear":
+        unworn_item_ids = [it.get("id") or it.get("closet_item_id") for it in (res.get("items") or []) if it.get("id") or it.get("closet_item_id")]
+        if unworn_item_ids:
+            try:
+                await db.closet_items.update_many(
+                    {"id": {"$in": unworn_item_ids}, "user_id": user["id"], "wear_count": {"$gt": 0}},
+                    {
+                        "$inc": {"wear_count": -1},
+                        "$set": {"updated_at": datetime.now(timezone.utc).isoformat()},
+                    }
+                )
+            except Exception as uw_err:
+                logger.warning("Failed to decrement wear count for items: %s", uw_err)
+
     # If worn, purge unselected intermediate daily proposals for this user & date
     if body.action == "wear":
         try:
@@ -315,16 +346,24 @@ async def _generate_and_save_daily_proposal(
             {"$set": {"worn": False, "replaced": True, "dismissed": True}},
         )
 
-    # Gather items already used in today's proposals to avoid repeats on "New Look"
+    # Gather items already used in recent proposals (up to 5 days back) to enforce genuine multi-day rotation
+    from app.services.stylist_scheduler_brain import get_recent_wardrobe_history
+    recent_item_weights, recent_items_summary = await get_recent_wardrobe_history(
+        user["id"], target_date_str=date_str, lookback_days=5
+    )
+    past_item_ids: set[str] = set(recent_item_weights.keys())
+
+    # Also include any items from proposals for today's date
     past_proposals_cursor = db.daily_proposals.find({"user_id": user["id"], "date": date_str})
     past_proposals = [doc async for doc in past_proposals_cursor]
-    past_item_ids: set[str] = set()
     for pdp in past_proposals:
         for it in (pdp.get("items") or []):
             if it.get("id"):
-                past_item_ids.add(it["id"])
+                past_item_ids.add(str(it["id"]))
+                recent_item_weights[str(it["id"])] = 0
             if it.get("closet_item_id"):
-                past_item_ids.add(it["closet_item_id"])
+                past_item_ids.add(str(it["closet_item_id"]))
+                recent_item_weights[str(it["closet_item_id"])] = 0
 
     # Fetch user's closet items with slim projection to eliminate heavy binary/base64 payload
     _CLOSET_ITEM_PROJECTION = {
@@ -466,14 +505,46 @@ async def _generate_and_save_daily_proposal(
             tagged_accessories = [i for i in accessories if item_has_any_tag(i, filter_tags)]
             accessories = tagged_accessories
 
-        # Sort each bucket: unused today first, then matching custom style tag, then lowest wear count, with random jitter
+        # Sort each bucket: heavily penalize recent items, prioritize unworn/fewer wears, matching custom style tag, with date-salted jitter
         def _fallback_sort_key(item: dict) -> tuple:
-            iid = item.get("id")
-            already_used = 1 if (iid in past_item_ids) else 0
+            iid = str(item.get("id") or "")
+            days_ago = recent_item_weights.get(iid)
+            recent_penalty = 0
+            if days_ago is not None:
+                if days_ago <= 0:
+                    recent_penalty = 1000
+                elif days_ago == 1:
+                    recent_penalty = 600
+                elif days_ago == 2:
+                    recent_penalty = 400
+                elif days_ago == 3:
+                    recent_penalty = 200
+                else:
+                    recent_penalty = 100
+            elif iid in past_item_ids:
+                recent_penalty = 600
+
+            last_worn = str(item.get("last_worn_at") or "")
+            if last_worn:
+                try:
+                    lw_date = datetime.strptime(last_worn[:10], "%Y-%m-%d").date()
+                    tgt_date = datetime.strptime(str(date_str)[:10], "%Y-%m-%d").date()
+                    diff_days = (tgt_date - lw_date).days
+                    if diff_days <= 0:
+                        recent_penalty = max(recent_penalty, 1000)
+                    elif diff_days == 1:
+                        recent_penalty = max(recent_penalty, 600)
+                    elif diff_days == 2:
+                        recent_penalty = max(recent_penalty, 400)
+                except Exception:
+                    pass
+
             style_score = calculate_garment_style_score(item, effective_occasion, is_tags_mode=is_tags_mode)
             wear_count = item.get("wear_count") or 0
-            jitter = random.random()
-            return (already_used, -style_score, wear_count, jitter)
+            wear_penalty = min(wear_count * 10, 100)
+            date_seed = f"{date_str}_{iid}"
+            jitter = (abs(hash(date_seed)) % 1000) / 1000.0
+            return (recent_penalty, wear_penalty, -style_score, jitter)
 
         tops.sort(key=_fallback_sort_key)
         bottoms.sort(key=_fallback_sort_key)
@@ -709,5 +780,15 @@ async def _generate_and_save_daily_proposal(
     }
     
     await db.daily_proposals.insert_one(proposal)
-    
+
+    suggested_cids = [it.get("id") or it.get("closet_item_id") for it in selected_items if it.get("id") or it.get("closet_item_id")]
+    if suggested_cids:
+        try:
+            await db.closet_items.update_many(
+                {"id": {"$in": suggested_cids}, "user_id": user["id"]},
+                {"$set": {"last_suggested_at": date_str, "updated_at": datetime.now(timezone.utc).isoformat()}}
+            )
+        except Exception as sug_err:
+            logger.warning("Failed to update last_suggested_at on closet items: %s", sug_err)
+
     return {k: v for k, v in proposal.items() if k != "_id"}
