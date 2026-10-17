@@ -751,7 +751,6 @@ async def get_rotation_prioritized_closet(
     
     if not target_season:
         # Fallback to current calendar month
-        from datetime import datetime
         now_month = datetime.now().month
         if now_month in [5, 6, 7, 8, 9]:
             target_season = "summer"
