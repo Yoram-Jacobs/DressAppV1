@@ -294,9 +294,11 @@ def resolve_user_gemini_model(user: dict[str, Any] | None = None) -> str:
         selected = ai_config.get("selected_model")
         if selected and isinstance(selected, str) and selected.strip():
             selected = selected.strip()
-            # Normalize legacy deprecated model strings to cost-effective gemini-3.5-flash-lite
+            # Normalize legacy/invalid model strings
             if selected in ("gemini-2.5-flash", "gemini-3.5-flash"):
                 return "gemini-3.5-flash-lite"
+            if selected in ("gemini-3.5-pro", "gemini-pro", "models/gemini-3.5-pro"):
+                return "gemini-2.5-pro"
             return selected
     return default_model
 

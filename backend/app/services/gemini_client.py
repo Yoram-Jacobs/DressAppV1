@@ -382,6 +382,10 @@ def _normalise_model(model: str) -> str:
     # If the model name is not a valid Gemini model identifier (e.g. 'Eyes v1', 'gemma')
     if not clean.lower().startswith("gemini") and not clean.lower().startswith("models/"):
         return DEFAULT_VISION_MODEL
+    # Normalize non-existent gemini-3.5-pro to official gemini-2.5-pro
+    clean_lower = clean.lower()
+    if clean_lower in ("gemini-3.5-pro", "models/gemini-3.5-pro", "gemini-pro"):
+        return "gemini-2.5-pro"
     return clean
 
 
