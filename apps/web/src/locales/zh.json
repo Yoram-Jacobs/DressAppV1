@@ -890,7 +890,9 @@
       "massUpgradeRequired": "衣橱与衣物堆批量上传功能仅在管理版和专业版方案中提供。",
       "massMonthlyLimitReached": "已达到每月影棚重建上限（{{limit}}次/月），将在下一个计费周期重置。",
       "stageCataloging": "正在编目照片中的衣物…",
-      "stageReconstructing": "正在重建影棚卡片 ({{completed}}/{{total}})…"
+      "stageReconstructing": "正在重建影棚卡片 ({{completed}}/{{total}})…",
+      "autoTitle": "自动识别（混合）",
+      "autoDesc": "同时自动分类并处理单件衣物、真人穿搭及整柜/衣物堆。"
     }
   },
   "itemDetail": {

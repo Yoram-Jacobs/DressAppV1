@@ -890,7 +890,9 @@
       "massUpgradeRequired": "Der Massen-Upload für Kleiderschrank & Stapel ist in den Tarifen Manager und Professional verfügbar.",
       "massMonthlyLimitReached": "Monatliches Limit für Studio-Rekonstruktionen ({{limit}}/Monat) erreicht. Wird im nächsten Abrechnungszeitraum zurückgesetzt.",
       "stageCataloging": "Kleidungsstücke im Foto werden katalogisiert…",
-      "stageReconstructing": "Studio-Karten werden erstellt ({{completed}}/{{total}})…"
+      "stageReconstructing": "Studio-Karten werden erstellt ({{completed}}/{{total}})…",
+      "autoTitle": "Automatische Erkennung (Gemischt)",
+      "autoDesc": "Erkennt und verarbeitet automatisch Einzelteile, Outfits und volle Schränke gleichzeitig."
     }
   },
   "itemDetail": {

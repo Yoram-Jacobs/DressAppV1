@@ -890,7 +890,9 @@
       "massUpgradeRequired": "Il caricamento multiplo da armadio e pila è disponibile nei piani Manager e Professional.",
       "massMonthlyLimitReached": "Limite mensile di ricostruzione da studio ({{limit}}/mese) raggiunto. Si azzera al prossimo ciclo di fatturazione.",
       "stageCataloging": "Catalogazione dei capi nella foto…",
-      "stageReconstructing": "Ricostruzione schede da studio ({{completed}}/{{total}})…"
+      "stageReconstructing": "Ricostruzione schede da studio ({{completed}}/{{total}})…",
+      "autoTitle": "Rilevamento automatico (misto)",
+      "autoDesc": "Indirizza automaticamente capi singoli, outfit completi e pile di vestiti simultaneamente."
     }
   },
   "itemDetail": {

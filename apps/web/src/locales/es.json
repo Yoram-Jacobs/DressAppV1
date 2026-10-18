@@ -890,7 +890,9 @@
       "massUpgradeRequired": "La carga masiva de armario y pila está disponible en los planes Manager y Profesional.",
       "massMonthlyLimitReached": "Se alcanzó el límite mensual de reconstrucción de estudio ({{limit}}/mes). Se restablece en tu próximo ciclo de facturación.",
       "stageCataloging": "Catalogando prendas en la foto…",
-      "stageReconstructing": "Reconstruyendo tarjetas de estudio ({{completed}}/{{total}})…"
+      "stageReconstructing": "Reconstruyendo tarjetas de estudio ({{completed}}/{{total}})…",
+      "autoTitle": "Detección automática (mixta)",
+      "autoDesc": "Enruta automáticamente prendas individuales, atuendos completos y armarios simultáneamente."
     }
   },
   "itemDetail": {

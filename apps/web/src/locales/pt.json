@@ -890,7 +890,9 @@
       "massUpgradeRequired": "O envio em massa de armário e pilha está disponível nos planos Manager e Profissional.",
       "massMonthlyLimitReached": "Limite mensal de reconstrução de estúdio ({{limit}}/mês) atingido. Será redefinido no próximo ciclo de faturação.",
       "stageCataloging": "Catalogando peças na foto…",
-      "stageReconstructing": "Reconstruindo cartões de estúdio ({{completed}}/{{total}})…"
+      "stageReconstructing": "Reconstruindo cartões de estúdio ({{completed}}/{{total}})…",
+      "autoTitle": "Deteção automática (mista)",
+      "autoDesc": "Encaminha automaticamente peças únicas, visuais completos e armários em simultâneo."
     }
   },
   "itemDetail": {

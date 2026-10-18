@@ -890,7 +890,9 @@
       "massUpgradeRequired": "L'import en masse de placard et pile est disponible avec les forfaits Manager et Professionnel.",
       "massMonthlyLimitReached": "Limite mensuelle de reconstruction studio ({{limit}}/mois) atteinte. Réinitialisation au prochain cycle de facturation.",
       "stageCataloging": "Catalogage des vêtements sur la photo…",
-      "stageReconstructing": "Reconstruction des fiches studio ({{completed}}/{{total}})…"
+      "stageReconstructing": "Reconstruction des fiches studio ({{completed}}/{{total}})…",
+      "autoTitle": "Détection automatique (mixte)",
+      "autoDesc": "Achemine automatiquement les pièces uniques, tenues portées et armoires simultanément."
     }
   },
   "itemDetail": {

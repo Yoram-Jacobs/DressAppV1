@@ -890,7 +890,9 @@
       "massUpgradeRequired": "クローゼット・まとめ撮り機能はマネージャーおよびプロフェッショナルプランでご利用いただけます。",
       "massMonthlyLimitReached": "月間スタジオ再構築上限（月{{limit}}回）に達しました。次回の請求サイクルでリセットされます。",
       "stageCataloging": "写真内の衣類をカタログ化中…",
-      "stageReconstructing": "スタジオカードを再構築中 ({{completed}}/{{total}})…"
+      "stageReconstructing": "スタジオカードを再構築中 ({{completed}}/{{total}})…",
+      "autoTitle": "自動検出（混合）",
+      "autoDesc": "単品アイテム、着用コーディネート、クローゼットの山を自動で同時に判別・処理します。"
     }
   },
   "itemDetail": {

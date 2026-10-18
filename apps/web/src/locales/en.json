@@ -890,7 +890,9 @@
       "massUpgradeRequired": "Mass Closet & Pile upload is available on Manager and Professional plans.",
       "massMonthlyLimitReached": "Monthly studio reconstruction limit ({{limit}}/month) reached. Resets on your next billing cycle.",
       "stageCataloging": "Cataloging garments in photo…",
-      "stageReconstructing": "Rebuilding studio cards ({{completed}}/{{total}})…"
+      "stageReconstructing": "Rebuilding studio cards ({{completed}}/{{total}})…",
+      "autoTitle": "Auto-Detect (Mixed)",
+      "autoDesc": "Automatically routes single items, worn outfits, and closet piles simultaneously."
     }
   },
   "itemDetail": {

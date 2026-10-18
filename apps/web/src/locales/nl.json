@@ -890,7 +890,9 @@
       "massUpgradeRequired": "Massa-upload voor kledingkast en stapel is beschikbaar in de Manager- en Professional-abonnementen.",
       "massMonthlyLimitReached": "Maandelijkse limiet voor studio-reconstructies ({{limit}}/maand) bereikt. Wordt gereset bij je volgende factureringscyclus.",
       "stageCataloging": "Kledingstukken op de foto catalogiseren…",
-      "stageReconstructing": "Studiokaarten opbouwen ({{completed}}/{{total}})…"
+      "stageReconstructing": "Studiokaarten opbouwen ({{completed}}/{{total}})…",
+      "autoTitle": "Automatische detectie (gemengd)",
+      "autoDesc": "Verwerkt automatisch losse kledingstukken, gedragen outfits en kledingstapels tegelijk."
     }
   },
   "itemDetail": {

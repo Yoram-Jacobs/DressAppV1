@@ -902,7 +902,9 @@
       "massUpgradeRequired": "העלאה מרוכזת של ארון או ערימת בגדים זמינה במסלולי מנהל ומקצועי בלבד.",
       "massMonthlyLimitReached": "הגעת למכסת שחזורי הסטודיו החודשית ({{limit}} בחודש). המכסה תתאפס במחזור החיוב הבא.",
       "stageCataloging": "מקטלג את פריטי הלבוש בתמונה…",
-      "stageReconstructing": "בונה תמונות סטודיו ({{completed}} מתוך {{total}})…"
+      "stageReconstructing": "בונה תמונות סטודיו ({{completed}} מתוך {{total}})…",
+      "autoTitle": "זיהוי אוטומטי (משולב)",
+      "autoDesc": "מזהה ומנתב אוטומטית פריטים בודדים, תלבושות וארונות עמוסים במקביל."
     }
   },
   "itemDetail": {

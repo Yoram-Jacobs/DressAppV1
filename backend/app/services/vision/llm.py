@@ -810,11 +810,14 @@ GROUP_ANALYZE_SYSTEM_PROMPT = (
 
 
 DETECT_SYSTEM_PROMPT = (
-    "Detect visible wearable fashion items (clothing, outerwear, footwear, bags, accessories, jewelry). Ignore body and background.\n"
+    "Detect visible wearable fashion items and classify the photo's wardrobe scene:\n"
+    "• scene_type: 'single' (one garment laid flat or on a single hanger, or single footwear/bag), "
+    "'worn_outfit' (garments worn by a human model/person), or "
+    "'mass_closet_or_pile' (multiple garments hanging side-by-side in a closet/wardrobe/rack, or a pile/stack/heap of garments on floor/bed/surface).\n"
     "• Discard non-wearable items: water bottles, cups, flasks, phones, keys, cameras, food, furniture.\n"
     "• Tight bbox [ymin, xmin, ymax, xmax] in 0..1000 grid. Pairs=1 box. Bags=bag body only. No duplicate boxes.\n"
-    'Return raw JSON: {"items": [{"label": "name", "kind": "garment"|"outerwear"|"footwear"|"bag"|"accessory"|"jewelry", "bbox": [ymin, xmin, ymax, xmax]}]}\n'
-    'If uncertain: {"items": [{"label": "garment", "kind": "garment", "bbox": [0, 0, 1000, 1000]}]}'
+    'Return raw JSON: {"scene_type": "single"|"worn_outfit"|"mass_closet_or_pile", "items": [{"label": "name", "kind": "garment"|"outerwear"|"footwear"|"bag"|"accessory"|"jewelry", "bbox": [ymin, xmin, ymax, xmax]}]}\n'
+    'If uncertain: {"scene_type": "single", "items": [{"label": "garment", "kind": "garment", "bbox": [0, 0, 1000, 1000]}]}'
 )
 
 
