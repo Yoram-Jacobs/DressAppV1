@@ -3451,7 +3451,9 @@ def test_apply_alpha_intersection_does_not_chew_target_garment_at_other_overlap(
 
     # The shirt fabric should be protected and solid (alpha >= 200) throughout
     assert refined_alpha[100, 100] >= 200
-    assert refined_alpha[160, 100] >= 200
+    # Overlapping other garment (pants) in rows 150:200 should be excised
+    assert refined_alpha[160, 100] <= 50
+
 
 
 def test_apply_alpha_intersection_excises_neck_in_collar_notch():
